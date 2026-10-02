@@ -113,7 +113,7 @@ export function explainName(
         kind: 'колонка по выбору',
         title: `${table?.label ?? decl.from} → ${column?.label ?? columnKey}`,
         facts: [...ownerFact, ['строка', `та, что пришла во входе «${param.label ?? param.key}»`],
-          ...(column?.kind === 'expr' ? [['считается', `${owner ?? 'листом, где читают'} — формулой из ячейки`] as [string, string]] : [])],
+          ...(column?.expr ? [['считается', `${owner ?? 'листом, где читают'} — формулой колонки`] as [string, string]] : [])],
         from: callersOf(system, effectId, param.key),
         shown: [], users: [],
         ...(decl.from ? { go: { label: `открыть таблицу «${table?.label ?? decl.from}»`, pick: { activeTab: 'dictionaries', activeTableId: decl.from } } } : {}),

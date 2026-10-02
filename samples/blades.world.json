@@ -170,7 +170,9 @@
             "key": "resolve",
             "label": "Воля",
             "kind": "number",
-            "expr": "если(@attune > 0, 1, 0) + если(@command > 0, 1, 0) + если(@consort > 0, 1, 0) + если(@sway > 0, 1, 0)",
+            "expr": {
+              "expr": "если(@attune > 0, 1, 0) + если(@command > 0, 1, 0) + если(@consort > 0, 1, 0) + если(@sway > 0, 1, 0)"
+            },
             "block": "Действия"
           },
           {
@@ -305,7 +307,7 @@
           {
             "key": "rating",
             "label": "Рейтинг действия",
-            "kind": "expr"
+            "kind": "number"
           }
         ],
         "bindings": [
@@ -638,7 +640,9 @@
         "description": "Пул к6 по рейтингу «Драка».",
         "table": "move",
         "cells": {
-          "rating": "@носитель.skirmish"
+          "rating": {
+            "expr": "@носитель.skirmish"
+          }
         }
       },
       {
@@ -647,7 +651,9 @@
         "description": "Пул к6 по рейтингу «Скрытность».",
         "table": "move",
         "cells": {
-          "rating": "@носитель.prowl"
+          "rating": {
+            "expr": "@носитель.prowl"
+          }
         }
       },
       {
@@ -656,7 +662,9 @@
         "description": "Пул к6 по рейтингу «Ловкость рук».",
         "table": "move",
         "cells": {
-          "rating": "@носитель.finesse"
+          "rating": {
+            "expr": "@носитель.finesse"
+          }
         }
       },
       {
@@ -665,7 +673,9 @@
         "description": "Пул к6 по рейтингу «Убеждение».",
         "table": "move",
         "cells": {
-          "rating": "@носитель.sway"
+          "rating": {
+            "expr": "@носитель.sway"
+          }
         }
       },
       {
@@ -674,7 +684,9 @@
         "description": "Пул к6 по рейтингу «Изучение».",
         "table": "move",
         "cells": {
-          "rating": "@носитель.study"
+          "rating": {
+            "expr": "@носитель.study"
+          }
         }
       },
       {

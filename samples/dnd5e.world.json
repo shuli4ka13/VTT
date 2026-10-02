@@ -144,7 +144,9 @@
           {
             "key": "prof_bonus",
             "label": "Бонус мастерства",
-            "expr": "таблица(\"levels\", @level, \"prof\")",
+            "expr": {
+              "expr": "таблица(\"levels\", @level, \"prof\")"
+            },
             "block": "Прогрессия"
           },
           {
@@ -166,7 +168,9 @@
           {
             "key": "initiative",
             "label": "Инициатива",
-            "expr": "@abilities.ловкость.mod",
+            "expr": {
+              "expr": "@abilities.ловкость.mod"
+            },
             "roll": {
               "label": "Инициатива",
               "tags": [
@@ -184,13 +188,17 @@
           {
             "key": "passive_perception",
             "label": "Пассивная внимательность",
-            "expr": "10 + @skills.внимательность.total",
+            "expr": {
+              "expr": "10 + @skills.внимательность.total"
+            },
             "block": "Чувства и движение"
           },
           {
             "key": "speed",
             "label": "Скорость, футов",
-            "expr": "или(@race.speed, 30)",
+            "expr": {
+              "expr": "или(@race.speed, 30)"
+            },
             "block": "Чувства и движение"
           },
           {
@@ -225,13 +233,17 @@
           {
             "key": "ac_dex",
             "label": "Ловкость в классе брони",
-            "expr": "@abilities.ловкость.mod",
+            "expr": {
+              "expr": "@abilities.ловкость.mod"
+            },
             "block": "Защита"
           },
           {
             "key": "ac",
             "label": "Класс брони",
-            "expr": "@ac_base + если(@armor_heavy, 0, @ac_dex)",
+            "expr": {
+              "expr": "@ac_base + если(@armor_heavy, 0, @ac_dex)"
+            },
             "block": "Защита"
           },
           {
@@ -248,7 +260,9 @@
             "kind": "number",
             "default": 8,
             "min": 0,
-            "max": "@hp_max",
+            "max": {
+              "expr": "@hp_max"
+            },
             "control": "bar",
             "block": "Здоровье"
           },
@@ -263,7 +277,9 @@
           {
             "key": "hit_die",
             "label": "Кость хитов",
-            "expr": "или(@class_name.hit_die, @race.size.hit_die, \"1к8\")",
+            "expr": {
+              "expr": "или(@class_name.hit_die, @race.size.hit_die, \"1к8\")"
+            },
             "block": "Здоровье"
           },
           {
@@ -272,7 +288,9 @@
             "kind": "number",
             "default": 1,
             "min": 0,
-            "max": "@level",
+            "max": {
+              "expr": "@level"
+            },
             "control": "stepper",
             "block": "Здоровье"
           },
@@ -306,25 +324,33 @@
           {
             "key": "down",
             "label": "Без сил",
-            "expr": "@hp_current <= 0",
+            "expr": {
+              "expr": "@hp_current <= 0"
+            },
             "block": "Здоровье"
           },
           {
             "key": "up",
             "label": "На ногах",
-            "expr": "@hp_current > 0",
+            "expr": {
+              "expr": "@hp_current > 0"
+            },
             "block": "Здоровье"
           },
           {
             "key": "is_dead",
             "label": "Три провала",
-            "expr": "@death_fail >= 3",
+            "expr": {
+              "expr": "@death_fail >= 3"
+            },
             "block": "Здоровье"
           },
           {
             "key": "is_stable",
             "label": "Три успеха",
-            "expr": "@death_ok >= 3",
+            "expr": {
+              "expr": "@death_ok >= 3"
+            },
             "block": "Здоровье"
           },
           {
@@ -349,25 +375,33 @@
           {
             "key": "sneak_dice",
             "label": "Костей скрытой атаки",
-            "expr": "округлить вверх(@level / 2)",
+            "expr": {
+              "expr": "округлить вверх(@level / 2)"
+            },
             "block": "Атака"
           },
           {
             "key": "spell_mod",
             "label": "Заклинательный модификатор",
-            "expr": "или(@class_name.spell_ability.mod, @abilities.харизма.mod)",
+            "expr": {
+              "expr": "или(@class_name.spell_ability.mod, @abilities.харизма.mod)"
+            },
             "block": "Магия"
           },
           {
             "key": "spell_dc",
             "label": "Сложность заклинаний",
-            "expr": "8 + @prof_bonus + @spell_mod",
+            "expr": {
+              "expr": "8 + @prof_bonus + @spell_mod"
+            },
             "block": "Магия"
           },
           {
             "key": "spell_attack",
             "label": "Атака заклинанием",
-            "expr": "@prof_bonus + @spell_mod",
+            "expr": {
+              "expr": "@prof_bonus + @spell_mod"
+            },
             "block": "Магия"
           },
           {
@@ -382,20 +416,26 @@
           {
             "key": "attuned",
             "label": "Настроено предметов",
-            "expr": "сколько(строки(\"wondrous\", \"attunement\"), да)",
+            "expr": {
+              "expr": "сколько(строки(\"wondrous\", \"attunement\"), да)"
+            },
             "max": 3,
             "block": "Магия"
           },
           {
             "key": "cantrip_dice",
             "label": "Костей заговора",
-            "expr": "таблица(\"levels\", @level, \"cantrips\")",
+            "expr": {
+              "expr": "таблица(\"levels\", @level, \"cantrips\")"
+            },
             "block": "Магия"
           },
           {
             "key": "rage_damage",
             "label": "Урон ярости",
-            "expr": "если(пусто(@class_name.progression), 0, таблица(@class_name.progression, @level, \"rage_damage\"))",
+            "expr": {
+              "expr": "если(пусто(@class_name.progression), 0, таблица(@class_name.progression, @level, \"rage_damage\"))"
+            },
             "block": "Ресурсы класса"
           },
           {
@@ -461,7 +501,9 @@
             "label": "Осталось",
             "kind": "number",
             "min": 0,
-            "max": "@строка.max",
+            "max": {
+              "expr": "@строка.max"
+            },
             "control": "pips",
             "title": "{label}"
           }
@@ -532,7 +574,9 @@
             "key": "max",
             "label": "Всего",
             "kind": "number",
-            "expr": "таблица(\"spell_slots\", @caster_level, @строка)",
+            "expr": {
+              "expr": "таблица(\"spell_slots\", @caster_level, @строка)"
+            },
             "title": "Всего ячеек {key}-го круга",
             "block": "Ячейки заклинаний"
           },
@@ -541,7 +585,9 @@
             "label": "Осталось",
             "kind": "number",
             "min": 0,
-            "max": "@строка.max",
+            "max": {
+              "expr": "@строка.max"
+            },
             "title": "Ячейки {key}-го круга",
             "block": "Ячейки заклинаний",
             "control": "pips",
@@ -613,7 +659,9 @@
             "label": "Осталось",
             "kind": "number",
             "min": 0,
-            "max": "@строка.max",
+            "max": {
+              "expr": "@строка.max"
+            },
             "title": "{label}: осталось",
             "block": "Ресурсы класса",
             "control": "stepper",
@@ -1527,7 +1575,9 @@
             "key": "mod",
             "label": "Модификатор",
             "kind": "number",
-            "expr": "округлить вниз((@строка.score - 10) / 2)",
+            "expr": {
+              "expr": "округлить вниз((@строка.score - 10) / 2)"
+            },
             "title": "Модификатор: {label}",
             "block": "Модификаторы",
             "roll": {
@@ -1557,7 +1607,9 @@
             "key": "save_prof",
             "label": "Владение",
             "kind": "number",
-            "expr": "большее из(@строка.save_extra, если(есть(@class_name.saves, @строка), 1, 0))",
+            "expr": {
+              "expr": "большее из(@строка.save_extra, если(есть(@class_name.saves, @строка), 1, 0))"
+            },
             "title": "Владение: спасбросок {label}",
             "block": "Спасброски"
           },
@@ -1565,7 +1617,9 @@
             "key": "save",
             "label": "Спасбросок",
             "kind": "number",
-            "expr": "@строка.mod + @строка.save_prof * @prof_bonus",
+            "expr": {
+              "expr": "@строка.mod + @строка.save_prof * @prof_bonus"
+            },
             "title": "Спасбросок: {label}",
             "block": "Спасброски",
             "roll": {
@@ -1633,7 +1687,9 @@
             "key": "total",
             "label": "Навык",
             "kind": "number",
-            "expr": "@строка.ability.mod + @строка.prof * @prof_bonus",
+            "expr": {
+              "expr": "@строка.ability.mod + @строка.prof * @prof_bonus"
+            },
             "title": "{label}",
             "roll": {
               "label": "Проверка: {label}",

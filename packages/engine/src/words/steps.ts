@@ -37,16 +37,16 @@ export const STEP_WORDS = {
     label: 'Проверка',
     hint: 'Сравнить число или бросок с порогом. Можно остановить цепочку при провале или при успехе.',
     slots: [
-      { key: 'value', label: 'Что проверяем', kind: 'ref', main: true, required: true, allow: ['ref', 'expr', 'const', 'param'] },
-      { key: 'versus', label: 'С чем', kind: 'ref', main: true, required: true, allow: ['ref', 'expr', 'const', 'param'] },
+      { key: 'value', label: 'Что проверяем', kind: 'ref', main: true, required: true, allow: ['expr'] },
+      { key: 'versus', label: 'С чем', kind: 'ref', main: true, required: true, allow: ['expr'] },
       {
         key: 'successWhen', label: 'Успех, если', kind: 'choice', fallback: 'atLeast',
         options: ['atLeast', 'notOver', 'over', 'under', 'equals'],
         choice: [['atLeast', 'не меньше порога'], ['notOver', 'не больше порога'],
           ['over', 'строго больше'], ['under', 'строго меньше'], ['equals', 'ровно порог']],
       },
-      { key: 'succeedOn', label: 'Всегда успех, если на кости не меньше', kind: 'ref', allow: ['expr', 'const', 'param', 'prop', 'empty'] },
-      { key: 'failOn', label: 'Всегда провал, если на кости не больше', kind: 'ref', allow: ['expr', 'const', 'param', 'prop', 'empty'] },
+      { key: 'succeedOn', label: 'Всегда успех, если на кости не меньше', kind: 'ref', allow: ['expr', 'empty'] },
+      { key: 'failOn', label: 'Всегда провал, если на кости не больше', kind: 'ref', allow: ['expr', 'empty'] },
       {
         key: 'continueOn', label: 'Дальше при', kind: 'choice', options: ['success', 'fail', 'always'], fallback: 'success',
         choice: [['success', 'успехе'], ['fail', 'провале'], ['always', 'всегда — ветвят следующие шаги']],
@@ -71,13 +71,13 @@ export const STEP_WORDS = {
     label: 'Изменение',
     hint: 'Изменить поле листа: @цель.хиты, @носитель.ки. Единственный шаг, который меняет значения.',
     slots: [
-      { key: 'target', label: 'Какое поле меняем', kind: 'field', main: true, required: true, allow: ['expr', 'param'] },
+      { key: 'target', label: 'Какое поле меняем', kind: 'field', main: true, required: true, allow: ['expr'] },
       {
         key: 'direction', label: 'Как', kind: 'choice', main: true, fallback: 'subtract',
         options: ['add', 'subtract', 'set'],
         choice: [['subtract', 'вычесть'], ['add', 'прибавить'], ['set', 'задать']],
       },
-      { key: 'value', label: 'Сколько', kind: 'ref', main: true, required: true, allow: ['ref', 'expr', 'const', 'param'] },
+      { key: 'value', label: 'Сколько', kind: 'ref', main: true, required: true, allow: ['expr'] },
     ],
     outputs: [
       { path: '.amount', label: 'сколько применилось', kind: 'number' },
@@ -120,7 +120,7 @@ export const STEP_WORDS = {
     label: 'Перебросить',
     hint: 'Увидев кости: перебросить кости, на которых выпало не больше числа. Остальные остаются.',
     slots: [
-      { key: 'upTo', label: 'Перебросить, где выпало не больше', kind: 'ref', main: true, required: true, allow: ['expr', 'const', 'param', 'prop'] },
+      { key: 'upTo', label: 'Перебросить, где выпало не больше', kind: 'ref', main: true, required: true, allow: ['expr'] },
     ],
     outputs: [],
     reasons: {},
@@ -130,7 +130,7 @@ export const STEP_WORDS = {
     label: 'Прибавить',
     hint: 'Увидев кости: прибавить к итогу число или кость. Натуральная кость не меняется.',
     slots: [
-      { key: 'value', label: 'Сколько', kind: 'ref', main: true, required: true, allow: ['expr', 'const', 'param', 'prop'] },
+      { key: 'value', label: 'Сколько', kind: 'ref', main: true, required: true, allow: ['expr'] },
     ],
     outputs: [],
     reasons: {},

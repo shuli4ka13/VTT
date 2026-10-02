@@ -8,7 +8,7 @@ const tinySystem = (columns, tables = {}) => ({ id: 'tiny', name: 'Крошеч�
 const tinySheet = values => ({ id: 't', systemId: 'tiny', name: 'Т', values, has: [], effects: [] });
 
 const stored = (tag, def) => ({ key: tag, label: tag, kind: typeof def, default: def, block: 'g' });
-const formula = (tag, expr) => ({ key: tag, label: tag, expr: expr, block: 'g' });
+const formula = (tag, expr) => ({ key: tag, label: tag, expr: { expr }, block: 'g' });
 
 group('движок вычислений', () => {
   group('источники значения', () => {
@@ -40,7 +40,7 @@ group('движок вычислений', () => {
 
     test('аргумент таблицы — тоже формула, а не только прямая ссылка', () => {
       const sys = tinySystem(
-        [stored('n', 4), { key: 'grade', label: 'grade', expr: 'таблица("t", #n * 2)', block: 'g' }],
+        [stored('n', 4), { key: 'grade', label: 'grade', expr: { expr: 'таблица("t", #n * 2)' }, block: 'g' }],
         { t: { label: 't', key: 'range', columns: [{ key: 'value', label: 'сколько', kind: 'text' }],
           rows: [{ from: 1, to: 7, cells: { value: 'мало' } }, { from: 8, to: 20, cells: { value: 'много' } }] } });
       eq(calc(sys, tinySheet({ n: 4 }), 'grade'), 'много');

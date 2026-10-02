@@ -13,7 +13,7 @@ const base = {
       label: 'Характеристики', owner: 'sheet', block: 'Характеристики',
       columns: [
         { key: 'score', label: 'Значение', kind: 'number', default: 10 },
-        { key: 'mod', label: 'Модификатор', kind: 'number', expr: 'округлить вниз((@строка.score - 10) / 2)', title: 'Модификатор: {label}', block: 'Модификаторы' },
+        { key: 'mod', label: 'Модификатор', kind: 'number', expr: { expr: 'округлить вниз((@строка.score - 10) / 2)' }, title: 'Модификатор: {label}', block: 'Модификаторы' },
       ],
       rows: [{ value: 'сила', label: 'Сила' }, { value: 'ловкость', label: 'Ловкость' }],
     },
@@ -21,7 +21,7 @@ const base = {
       label: 'Навыки', owner: 'sheet', block: 'Навыки',
       columns: [
         { key: 'ability', label: 'Характеристика', kind: 'choice', from: 'abilities' },
-        { key: 'total', label: 'Навык', kind: 'number', expr: '@строка.ability.mod + 1' },
+        { key: 'total', label: 'Навык', kind: 'number', expr: { expr: '@строка.ability.mod + 1' } },
       ],
       rows: [{ value: 'атлетика', label: 'Атлетика', cells: { ability: 'сила' } }],
     },
@@ -84,7 +84,7 @@ group('таблица на листе: пустая клетка — ввод, �
     const off = copy();
     delete off.tables!.skills!.owner;
     ok(!fieldsOf(off).some(f => f.cell?.table === 'skills'));
-    eq(at('x', withColumn(off, { key: 'x', label: 'x', expr: '@skills.атлетика.total' })), 4);
+    eq(at('x', withColumn(off, { key: 'x', label: 'x', expr: { expr: '@skills.атлетика.total' } })), 4);
   });
 
   test('владелец таблицы — стол или группа: клетки лежат там', () => {
@@ -98,13 +98,13 @@ group('таблица на листе: пустая клетка — ввод, �
 
   test('адрес идёт по ссылке: навык → характеристика → модификатор', () => {
     eq(at('skills.атлетика.total'), 4);
-    eq(at('via', withColumn(base, { key: 'via', label: 'через ссылку', expr: '@skills.атлетика.ability.mod' })), 3);
+    eq(at('via', withColumn(base, { key: 'via', label: 'через ссылку', expr: { expr: '@skills.атлетика.ability.mod' } })), 3);
   });
 
   test('выбор строки на листе по-прежнему ведёт в таблицу', () => {
     const picked = withColumn(
       withColumn(base, { key: 'pick', label: 'Выбор', kind: 'choice', from: 'abilities', default: 'сила' }),
-      { key: 'picked', label: 'Модификатор выбранной', expr: '@pick.mod' });
+      { key: 'picked', label: 'Модификатор выбранной', expr: { expr: '@pick.mod' } });
     eq(at('picked', picked), 3);
   });
 

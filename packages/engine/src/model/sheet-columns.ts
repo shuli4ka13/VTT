@@ -24,7 +24,7 @@ export function cellSource(column: TableColumn, row?: TableRow): CellSource {
   const cell = (row?.cells ?? {})[column.key];
   if (isFormulaCell(cell)) return { kind: 'formula', expr: cell.expr };
   if (cell !== undefined && cell !== '') return { kind: 'value', value: cell };
-  if (column.expr !== undefined) return { kind: 'formula', expr: column.expr };
+  if (column.expr !== undefined) return { kind: 'formula', expr: column.expr.expr };
   return { kind: 'input' };
 }
 
@@ -177,15 +177,18 @@ const valueOf = (column: TableColumn, start: unknown): FieldValue => {
     kind: 'stored', type,
     ...(column.from && type === 'choice' ? { from: column.from } : {}),
     default: (start ?? ZERO[type]) as number | string | boolean,
-    ...(column.min !== undefined ? { min: column.min } : {}),
-    ...(column.max !== undefined ? { max: column.max } : {}),
+    ...boundsOf(column),
   };
 };
 
-const boundsOf = (column: TableColumn): { min?: number | string; max?: number | string } => ({
-  ...(column.min !== undefined ? { min: column.min } : {}),
-  ...(column.max !== undefined ? { max: column.max } : {}),
-});
+const flatBound = (bound: unknown): number | string => (typeof bound === 'number' ? bound : String((bound as { expr?: unknown }).expr ?? ''));
+
+function boundsOf(column: TableColumn): { min?: number | string; max?: number | string } {
+  return {
+    ...(column.min !== undefined ? { min: flatBound(column.min) } : {}),
+    ...(column.max !== undefined ? { max: flatBound(column.max) } : {}),
+  };
+}
 
 const livesOf = (table: Table): { lives?: 'group' | 'desk' } => {
   const holder = holderOf(table);
@@ -201,7 +204,7 @@ function singleFields(tableId: string, table: Table): Field[] {
       ...(group ? { group } : {}),
       ...(column.roll ? { roll: column.roll } : {}),
       ...(column.control ? { control: column.control } : {}),
-      value: column.expr !== undefined ? { kind: 'formula', expr: column.expr, ...boundsOf(column) } : valueOf(column, column.default),
+      value: column.expr !== undefined ? { kind: 'formula', expr: column.expr.expr, ...boundsOf(column) } : valueOf(column, column.default),
       ...livesOf(table),
       home: tableId,
     };

@@ -7,8 +7,8 @@ const make = (over: Partial<System> = {}): System => ({
   tables: {
     лист: { shape: 'single', columns: [
       { key: 'str', label: 'Сила', kind: 'number', default: 10, block: 'Характеристики' },
-      { key: 'acr', label: 'Акробатика', expr: '#dex_mod', block: 'Навыки от ловкости' },
-      { key: 'ath', label: 'Атлетика', expr: '#str_mod', block: 'Навыки' },
+      { key: 'acr', label: 'Акробатика', expr: { expr: '#dex_mod' }, block: 'Навыки от ловкости' },
+      { key: 'ath', label: 'Атлетика', expr: { expr: '#str_mod' }, block: 'Навыки' },
     ] },
     saves: {
       label: 'Спасброски', owner: 'sheet', block: 'Навыки',

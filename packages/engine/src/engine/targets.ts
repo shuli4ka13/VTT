@@ -29,7 +29,7 @@ function cellTargets(system: System): Target[] {
     if (table.shape === 'single' || table.shape === 'book') continue;
     const name = table.label || id;
     for (const column of (table.columns ?? [])) {
-      if (column.kind !== 'expr' && column.kind !== 'number') continue;
+      if (column.kind !== 'number') continue;
       const colName = column.label || column.key;
       out.push({
         tag: columnTagOf(id, column.key),

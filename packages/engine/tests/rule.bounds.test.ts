@@ -4,11 +4,11 @@ import { exchange } from './play.ts';
 const sys: any = {
   id: 'границы',
   tables: { лист: { shape: 'single', columns: [
-    { key: 'хп', label: 'Хиты', kind: 'number', default: 10, min: 0, max: '#макс' },
+    { key: 'хп', label: 'Хиты', kind: 'number', default: 10, min: 0, max: { expr: '#макс' } },
     { key: 'макс', label: 'Максимум', kind: 'number', default: 20 },
     { key: 'жар', label: 'Температура', kind: 'number' },
     { key: 'имя', label: 'Имя', kind: 'text', default: 'Мирра' },
-    { key: 'кривое', label: 'Кривая граница', kind: 'number', max: '#имя' },
+    { key: 'кривое', label: 'Кривая граница', kind: 'number', max: { expr: '#имя' } },
   ] } },
   effects: {},
 };

@@ -126,7 +126,7 @@ group('бросок несёт несколько меток, одна прих�
     constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
     tables: { лист: { shape: 'single', columns: [
       { key: 'лов', label: 'Ловкость', kind: 'number', default: 2 },
-      { key: 'спас_лов', label: 'Спасбросок Ловкости', expr: '@лов' },
+      { key: 'спас_лов', label: 'Спасбросок Ловкости', expr: { expr: '@лов' } },
       { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
     ] },
       rolls: { label: 'Броски', key: 'word', rows: [{ value: 'спас' }] },

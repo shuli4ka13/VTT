@@ -169,7 +169,9 @@
           {
             "key": "composure",
             "label": "Самообладание",
-            "expr": "большее из(0, @willpower + @charisma + @wound_mod + @condition_mod)",
+            "expr": {
+              "expr": "большее из(0, @willpower + @charisma + @wound_mod + @condition_mod)"
+            },
             "roll": {
               "label": "Самообладание",
               "die": "pool",
@@ -185,7 +187,9 @@
           {
             "key": "judge_intentions",
             "label": "Проницательность",
-            "expr": "большее из(0, @willpower + @intuition + @wound_mod + @condition_mod)",
+            "expr": {
+              "expr": "большее из(0, @willpower + @intuition + @wound_mod + @condition_mod)"
+            },
             "roll": {
               "label": "Проницательность",
               "die": "pool",
@@ -201,7 +205,9 @@
           {
             "key": "memory",
             "label": "Память",
-            "expr": "большее из(0, @logic + @intuition + @wound_mod + @condition_mod)",
+            "expr": {
+              "expr": "большее из(0, @logic + @intuition + @wound_mod + @condition_mod)"
+            },
             "roll": {
               "label": "Память",
               "die": "pool",
@@ -217,7 +223,9 @@
           {
             "key": "lift_carry",
             "label": "Поднятие тяжестей",
-            "expr": "большее из(0, @body + @strength + @wound_mod + @condition_mod)",
+            "expr": {
+              "expr": "большее из(0, @body + @strength + @wound_mod + @condition_mod)"
+            },
             "roll": {
               "label": "Поднятие тяжестей",
               "die": "pool",
@@ -262,13 +270,17 @@
           {
             "key": "defense_rating",
             "label": "Значение защиты",
-            "expr": "@body + @armor_worn + @armor_extra + @armor_natural + если(@metatype != \"\", таблица(\"metatypes\", @metatype, \"dermal\"), 0) + @cover",
+            "expr": {
+              "expr": "@body + @armor_worn + @armor_extra + @armor_natural + если(@metatype != \"\", таблица(\"metatypes\", @metatype, \"dermal\"), 0) + @cover"
+            },
             "block": "Защита"
           },
           {
             "key": "defense_pool",
             "label": "Защита: набор (Реакция + Интуиция)",
-            "expr": "большее из(0, @reaction + @intuition + @cover + @wound_mod + @condition_mod)",
+            "expr": {
+              "expr": "большее из(0, @reaction + @intuition + @cover + @wound_mod + @condition_mod)"
+            },
             "roll": {
               "label": "Защита",
               "die": "pool",
@@ -284,43 +296,57 @@
           {
             "key": "unarmed_rating",
             "label": "Значение атаки без оружия",
-            "expr": "@strength + @reaction",
+            "expr": {
+              "expr": "@strength + @reaction"
+            },
             "block": "Защита"
           },
           {
             "key": "physical_max",
             "label": "Счётчик здоровья: ячеек",
-            "expr": "8 + округлить вверх(@body / 2) + если(@metatype != \"\", таблица(\"metatypes\", @metatype, \"toughness\"), 0)",
+            "expr": {
+              "expr": "8 + округлить вверх(@body / 2) + если(@metatype != \"\", таблица(\"metatypes\", @metatype, \"toughness\"), 0)"
+            },
             "block": "Счётчики"
           },
           {
             "key": "stun_max",
             "label": "Счётчик оглушения: ячеек",
-            "expr": "8 + округлить вверх(@willpower / 2)",
+            "expr": {
+              "expr": "8 + округлить вверх(@willpower / 2)"
+            },
             "block": "Счётчики"
           },
           {
             "key": "stun_overflow",
             "label": "Лишний оглушающий — в физический",
-            "expr": "большее из(0, @stun - @stun_max)",
+            "expr": {
+              "expr": "большее из(0, @stun - @stun_max)"
+            },
             "block": "Счётчики"
           },
           {
             "key": "physical_total",
             "label": "Физический урон с переливом",
-            "expr": "@physical + @stun_overflow",
+            "expr": {
+              "expr": "@physical + @stun_overflow"
+            },
             "block": "Счётчики"
           },
           {
             "key": "critical",
             "label": "Критический урон",
-            "expr": "большее из(0, @physical_total - @physical_max)",
+            "expr": {
+              "expr": "большее из(0, @physical_total - @physical_max)"
+            },
             "block": "Счётчики"
           },
           {
             "key": "wound_mod",
             "label": "Штраф за раны",
-            "expr": "0 - округлить вниз(меньшее из(@stun, @stun_max) / 3) - округлить вниз(меньшее из(@physical_total, @physical_max) / 3)",
+            "expr": {
+              "expr": "0 - округлить вниз(меньшее из(@stun, @stun_max) / 3) - округлить вниз(меньшее из(@physical_total, @physical_max) / 3)"
+            },
             "block": "Счётчики"
           },
           {
@@ -332,31 +358,41 @@
           {
             "key": "knocked_out",
             "label": "Счётчик оглушения полон",
-            "expr": "@stun >= @stun_max",
+            "expr": {
+              "expr": "@stun >= @stun_max"
+            },
             "block": "Счётчики"
           },
           {
             "key": "bleeding_out",
             "label": "Счётчик здоровья полон",
-            "expr": "@physical_total >= @physical_max",
+            "expr": {
+              "expr": "@physical_total >= @physical_max"
+            },
             "block": "Счётчики"
           },
           {
             "key": "is_dead",
             "label": "Критический урон достиг Тело × 2",
-            "expr": "@critical >= @body * 2",
+            "expr": {
+              "expr": "@critical >= @body * 2"
+            },
             "block": "Счётчики"
           },
           {
             "key": "conscious",
             "label": "В сознании",
-            "expr": "все(@stun < @stun_max, @physical_total < @physical_max)",
+            "expr": {
+              "expr": "все(@stun < @stun_max, @physical_total < @physical_max)"
+            },
             "block": "Счётчики"
           },
           {
             "key": "initiative",
             "label": "Уровень инициативы",
-            "expr": "@reaction + @intuition + @wound_mod + @condition_mod",
+            "expr": {
+              "expr": "@reaction + @intuition + @wound_mod + @condition_mod"
+            },
             "block": "Инициатива"
           },
           {
@@ -777,7 +813,9 @@
             "key": "pool",
             "label": "Набор",
             "kind": "number",
-            "expr": "большее из(0, если(@строка.rank > 0, @строка.rank + @строка.attribute, если(@строка.untrained, @строка.attribute - 1, 0)) + @wound_mod + @condition_mod)",
+            "expr": {
+              "expr": "большее из(0, если(@строка.rank > 0, @строка.rank + @строка.attribute, если(@строка.untrained, @строка.attribute - 1, 0)) + @wound_mod + @condition_mod)"
+            },
             "title": "{label}: набор",
             "block": "Наборы кубиков",
             "roll": {

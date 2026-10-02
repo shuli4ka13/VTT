@@ -80,7 +80,7 @@ group('проверки конструктора про стол', () => {
 
 group('стол в формулах листа', () => {
   const withSheetFormula = (expr: string, desk = false) => {
-    return withColumn(system, { key: 'атака', label: 'Атака', expr }, desk ? 'desk' : 'sheet');
+    return withColumn(system, { key: 'атака', label: 'Атака', expr: { expr } }, desk ? 'desk' : 'sheet');
   };
 
   test('поле листа читает стол через @стол', async () => {

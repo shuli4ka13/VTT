@@ -8,8 +8,8 @@ import type { Reader } from '../../engine/use-calc.ts';
 
 const system = {
   tables: { лист: { shape: 'single', columns: [
-    { key: 'хиты', label: 'Хиты', kind: 'number', default: 10, min: 0, max: '#максимум', control: 'bar', block: 'Состояние' },
-    { key: 'максимум', label: 'Максимум', expr: '20', block: 'Состояние' },
+    { key: 'хиты', label: 'Хиты', kind: 'number', default: 10, min: 0, max: { expr: '#максимум' }, control: 'bar', block: 'Состояние' },
+    { key: 'максимум', label: 'Максимум', expr: { expr: '20' }, block: 'Состояние' },
     { key: 'провалы', label: 'Провалы', kind: 'number', min: 0, max: 3, control: 'pips', block: 'Состояние' },
     { key: 'броня', label: 'Броня', kind: 'number', default: 2, min: 0, max: 5, control: 'stepper', block: 'Состояние' },
     { key: 'тяжёлый', label: 'Тяжёлый доспех', kind: 'boolean', control: 'toggle', block: 'Состояние' },

@@ -501,7 +501,7 @@ describe('поле стало верным', () => {
       id: 'порог', name: 'С порогом',
       tables: { лист: { shape: 'single', columns: [
         { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
-        { key: 'без_сил', label: 'Без сил', expr: '#хиты <= 0' },
+        { key: 'без_сил', label: 'Без сил', expr: { expr: '#хиты <= 0' } },
       ] } },
       effects: {
         без_сознания: { label: 'Без сознания', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },

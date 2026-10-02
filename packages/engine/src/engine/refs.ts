@@ -1,3 +1,4 @@
+import { isFormulaCell } from '../model/sheet-columns.ts';
 import { compile } from '../formula/index.ts';
 import type { Tools, Value } from '../formula/index.ts';
 import { EngineError } from './errors.ts';
@@ -257,9 +258,7 @@ function recordNamesInline(expr: string, ctx: RefContext): string {
   const props = ctx.props;
   const text = (name: string): string => {
     const value = props[name];
-    const formula = typeof value === 'string' && recordKinds(ctx.pass.system)
-      .some(([, kind]) => (kind.columns ?? []).some(prop => prop.key === name && prop.kind === 'expr'));
-    return formula ? String(value) : JSON.stringify(value ?? null);
+    return isFormulaCell(value) ? value.expr : JSON.stringify(value ?? null);
   };
   const lone = /^\s*[@#]([\p{L}\p{N}_]+)\s*$/u.exec(expr);
   if (lone && lone[1]! in props) return text(lone[1]!);
@@ -276,9 +275,7 @@ const declaredProp = (system: System, name: string): boolean =>
 
 function recordValue(name: string, ctx: RefContext): unknown {
   const value = ctx.props![name];
-  const formula = recordKinds(ctx.pass.system)
-      .some(([, kind]) => (kind.columns ?? []).some(prop => prop.key === name && prop.kind === 'expr'));
-  return formula && typeof value === 'string' ? evaluate(value, ctx) : value;
+  return isFormulaCell(value) ? evaluate(value.expr, ctx) : value;
 }
 
 function who(ctx: RefContext): string {

@@ -364,7 +364,7 @@ describe('Словари: кости, правки броска, таблицы'
       ...state,
       system: {
         ...emptySystem(),
-        tables: { лист: { shape: 'single', columns: [{ key: 'pb', label: 'Бонус мастерства', expr: 'таблица("proficiency", #level)' }] }, proficiency: { label: 'Бонус мастерства', key: 'range',
+        tables: { лист: { shape: 'single', columns: [{ key: 'pb', label: 'Бонус мастерства', expr: { expr: 'таблица("proficiency", #level)' } }] }, proficiency: { label: 'Бонус мастерства', key: 'range',
           columns: [{ key: 'value', label: 'значение', kind: 'number' }], rows: [{ from: 1, to: 4, cells: { value: 2 } }] } },
       },
       activeEffectId: null,

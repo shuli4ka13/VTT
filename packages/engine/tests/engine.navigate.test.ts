@@ -11,8 +11,8 @@ const система = {
     { key: 'сила', label: 'Сила', kind: 'number', default: 3 },
     { key: 'хиты', label: 'Хиты', kind: 'number', default: 50 },
     { key: 'класс', label: 'Класс', kind: 'choice', from: 'классы', default: 'воин' },
-    { key: 'кость_хитов', label: 'Кость хитов', expr: '@класс.кость' },
-    { key: 'природа_класса', label: 'Природа', expr: '@класс.урон.природа' },
+    { key: 'кость_хитов', label: 'Кость хитов', expr: { expr: '@класс.кость' } },
+    { key: 'природа_класса', label: 'Природа', expr: { expr: '@класс.урон.природа' } },
   ] },
     природы: { label: 'Природа урона', key: 'word', rows: [{ value: 'физ', label: 'физический' }, { value: 'стих', label: 'стихийный' }] },
     урон: {
@@ -70,14 +70,14 @@ group('ссылка на таблицу читается через точку',
   });
 
   test('опечатка в колонке называется словами и перечисляет, что есть', () => {
-    const кривая = withColumn(система, { key: 'х', label: 'х', expr: '@класс.кост' });
+    const кривая = withColumn(система, { key: 'х', label: 'х', expr: { expr: '@класс.кост' } });
     const беда = throws(() => calc(кривая, лист(), 'х'));
     ok(String(беда.message).includes('кост'), String(беда.message));
     ok(String(беда.message).includes('Кость хитов'), String(беда.message));
   });
 
   test('идти дальше обычной колонки некуда — так и сказано', () => {
-    const кривая = withColumn(система, { key: 'х', label: 'х', expr: '@класс.кость.ещё' });
+    const кривая = withColumn(система, { key: 'х', label: 'х', expr: { expr: '@класс.кость.ещё' } });
     const беда = throws(() => calc(кривая, лист(), 'х'));
     ok(String(беда.message).includes('не из таблицы'), String(беда.message));
   });

@@ -37,7 +37,7 @@ describe('колонка персонажа: человеческие теги',
         ...state.system,
         tables: { лист: { shape: 'single', columns: [
           { key: 'урон', label: 'Урон', kind: 'number', block: 'Блок' },
-          { key: 'field_2', label: 'Итог', expr: '#урон + 1', block: 'Блок' },
+          { key: 'field_2', label: 'Итог', expr: { expr: '#урон + 1' }, block: 'Блок' },
         ] } },
       },
       activeFieldTag: 'урон',

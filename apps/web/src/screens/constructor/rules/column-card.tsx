@@ -1,5 +1,7 @@
+import { BoundField } from '../bound-field.tsx';
+import type { Bound } from '../bound-field.tsx';
 import type { ReactNode } from 'react';
-import { Card, CardHead, Field, Input, Button, DangerButton, Fold, Select, LabelInput } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Field, Button, DangerButton, Fold, Select, LabelInput } from '../../../ui/primitives.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import type { System, ValueKind } from '@vtt/schema';
 
@@ -9,8 +11,8 @@ export interface ColumnShape {
   from?: string;
   many?: boolean;
   expr?: string;
-  min?: string | number;
-  max?: string | number;
+  min?: Bound;
+  max?: Bound;
 }
 
 export interface ColumnPatch {
@@ -19,12 +21,10 @@ export interface ColumnPatch {
   from?: string | null;
   many?: boolean;
   expr?: string | null;
-  min?: string | number | null;
-  max?: string | number | null;
+  min?: Bound | null;
+  max?: Bound | null;
 }
 
-const bound = (text: string): string | number | null =>
-  (!text.trim() ? null : /^-?\d+$/.test(text) ? Number(text) : text);
 
 export function ColumnCard({ column, kinds, tables, many, formulaHint, where, names, system, onChange, onDelete, onClose, extra, preview }: {
   column: ColumnShape;
@@ -92,10 +92,10 @@ export function ColumnCard({ column, kinds, tables, many, formulaHint, where, na
           {column.kind === 'number' ? (
             <div className="row">
               <Field label="Не ниже">
-                <Input mono value={column.min === undefined ? '' : String(column.min)} onChange={text => onChange({ min: bound(text) })} />
+                <BoundField value={column.min} onChange={next => onChange({ min: next })} />
               </Field>
               <Field label="Не выше">
-                <Input mono value={column.max === undefined ? '' : String(column.max)} onChange={text => onChange({ max: bound(text) })} />
+                <BoundField value={column.max} onChange={next => onChange({ max: next })} />
               </Field>
             </div>
           ) : null}

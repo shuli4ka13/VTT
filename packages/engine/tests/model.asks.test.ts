@@ -72,7 +72,7 @@ group('значение, которое называет человек за с�
 group('граница вопроса — формула по листу действующего', () => {
   const capped = {
     ...system,
-    effects: { ...system.effects, выстрел: { ...system.effects.выстрел, params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }, { key: 'дистанция', label: 'Дистанция', kind: 'number', min: 0, max: '@hp', ask: { by: 'actor' } }] } },
+    effects: { ...system.effects, выстрел: { ...system.effects.выстрел, params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }, { key: 'дистанция', label: 'Дистанция', kind: 'number', min: 0, max: { expr: '@hp' }, ask: { by: 'actor' } }] } },
   } as unknown as System;
   const asked = asksOf('ствол:0', { system: capped, compendium });
   const pass = (hp: number) => newPass(capped, { ...sheet('я'), values: { hp } }, { compendium });

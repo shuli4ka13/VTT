@@ -11,7 +11,7 @@ const system = {
     { key: 'сила', label: 'Сила', kind: 'number', default: 2 },
   ] }, группа: { shape: 'single', owner: 'group', columns: [
     { key: 'урон', label: 'Урон отряда', kind: 'number' },
-    { key: 'выбыло', label: 'Выбыло', expr: 'округлить вниз(@урон / 3)' },
+    { key: 'выбыло', label: 'Выбыло', expr: { expr: 'округлить вниз(@урон / 3)' } },
   ] } , приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [] } },
   effects: {
     удар: { label: 'Удар', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],  steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'apply', target: { expr: '@цель.урон' }, direction: 'add', value: { expr: '4' } }] },

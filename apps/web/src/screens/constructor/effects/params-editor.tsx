@@ -5,6 +5,7 @@ import { ASKABLE } from '@vtt/engine/model/asks';
 import { freeId, useWorld } from '../../../store/world.ts';
 import { followKey, referenced } from '../keys.ts';
 import { KeyField } from '../../../ui/key-field.tsx';
+import { BoundField } from '../bound-field.tsx';
 import { Card, CardHead, Input, Select, Button } from '../../../ui/primitives.tsx';
 import { SheetGrid } from '../../../ui/sheet-grid.tsx';
 import type { GridColumn } from '../../../ui/sheet-grid.tsx';
@@ -27,10 +28,11 @@ const COLUMNS: GridColumn[] = [
   { key: 'main', label: 'Правят сопротивления', width: 180, hint: 'это число меняют сопротивления и уязвимости цели: урон, лечение. Одно на эффект' },
   { key: 'required', label: 'Обязателен', width: 100 },
   { key: 'many', label: 'Список', width: 80, hint: 'для входа-листа: несколько листов сразу (цели)' },
+  { key: 'bounds', label: 'Границы', width: 170, hint: 'для числа: не ниже и не выше — числом или формулой, например @удача' },
   { key: 'key', label: 'Имя в формулах', width: 150, hint: 'как вход зовётся в формулах: @имя. Идёт за названием, пока на него никто не ссылается' },
 ];
 
-const RARE = ['hint', 'main', 'required', 'many', 'key'];
+const RARE = ['hint', 'main', 'required', 'many', 'bounds', 'key'];
 
 type Loose = Param & { role?: string; optional?: boolean };
 
@@ -65,7 +67,7 @@ export function ParamsEditor({ effect, system, onEdit }: {
   const rekey = (param: Loose, next: string) => change(param.key, t => { t.key = next; });
   const tables = choiceTables(system).map(([key, list]) => [key, list.label || key] as const);
   const [more, setMore] = useState(false);
-  const full = more || params.some(p => p.ask?.hint || p.role === 'amount' || p.optional || p.many);
+  const full = more || params.some(p => p.ask?.hint || p.role === 'amount' || p.optional || p.many || p.min !== undefined || p.max !== undefined);
   const columns = full ? COLUMNS : COLUMNS.filter(c => !RARE.includes(c.key));
 
   return (
@@ -146,6 +148,12 @@ export function ParamsEditor({ effect, system, onEdit }: {
                   onChange={e => change(param.key, t => { if (e.target.checked) t.many = true; else delete t.many; })}
                 />
               ) : <span key={`${param.key}:many`} className="faint">—</span>,
+              kind === 'number' ? (
+                <span key={`${param.key}:bounds`} className="inline inline--tight">
+                  <BoundField value={param.min} placeholder="не ниже" onChange={next => change(param.key, t => { if (next === null) delete t.min; else t.min = next; })} />
+                  <BoundField value={param.max} placeholder="не выше" onChange={next => change(param.key, t => { if (next === null) delete t.max; else t.max = next; })} />
+                </span>
+              ) : <span key={`${param.key}:bounds`} className="faint">—</span>,
               <KeyField key={`${param.key}:key`} value={param.key} locked={referenced(world(), param.key)} taken={keys} onChange={next => rekey(param, next)} />,
               <Button key={`${param.key}:drop`} size="sm" variant="ghost" title="убрать вход" onClick={() => onEdit(draft => {
                 draft.params = (draft.params ?? []).filter(p => p.key !== param.key);

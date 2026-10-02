@@ -24,13 +24,13 @@ describe('таблица на листе', () => {
     editRules(draft => {
       draft.tables!.abilities!.columns = [
         { key: 'score', label: 'Значение', kind: 'number' },
-        { key: 'mod', label: 'Модификатор', kind: 'number', expr: '@строка.score' },
+        { key: 'mod', label: 'Модификатор', kind: 'number', expr: { expr: '@строка.score' } },
       ];
     });
     expect(fieldsOf(useWorld.getState().system).map(f => f.tag)).toEqual(['abilities.сила.score', 'abilities.сила.mod', 'abilities.ловкость.score', 'abilities.ловкость.mod']);
 
     editRules(draft => {
-      draft.tables!.abilities!.columns![1]!.expr = 'округлить вниз((@строка.score - 10) / 2)';
+      draft.tables!.abilities!.columns![1]!.expr = { expr: 'округлить вниз((@строка.score - 10) / 2)' };
     });
     const mods = fieldsOf(useWorld.getState().system).filter(f => f.cell?.column === 'mod');
     expect(mods.map(f => (f.value as { expr: string }).expr)).toEqual(['округлить вниз((@abilities.сила.score - 10) / 2)', 'округлить вниз((@abilities.ловкость.score - 10) / 2)']);
@@ -49,7 +49,7 @@ describe('таблица на листе', () => {
     const { editSystem } = useWorld.getState();
     editSystem(draft => {
       delete draft.tables!.abilities!.owner;
-      draft.tables!.abilities!.columns = [{ key: 'mod', label: 'Модификатор', kind: 'number', expr: 'округлить вниз((@строка.value - 10) / 2)' }];
+      draft.tables!.abilities!.columns = [{ key: 'mod', label: 'Модификатор', kind: 'number', expr: { expr: 'округлить вниз((@строка.value - 10) / 2)' } }];
       placeOnSheet(draft, 'abilities');
     });
     const fields = fieldsOf(useWorld.getState().system);

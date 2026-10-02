@@ -131,37 +131,49 @@
           {
             "key": "str_mod",
             "label": "Модификатор Силы",
-            "expr": "округлить вниз((#str - 10) / 2)",
+            "expr": {
+              "expr": "округлить вниз((#str - 10) / 2)"
+            },
             "block": "Модификаторы"
           },
           {
             "key": "dex_mod",
             "label": "Модификатор Ловкости",
-            "expr": "округлить вниз((#dex - 10) / 2)",
+            "expr": {
+              "expr": "округлить вниз((#dex - 10) / 2)"
+            },
             "block": "Модификаторы"
           },
           {
             "key": "con_mod",
             "label": "Модификатор Телосложения",
-            "expr": "округлить вниз((#con - 10) / 2)",
+            "expr": {
+              "expr": "округлить вниз((#con - 10) / 2)"
+            },
             "block": "Модификаторы"
           },
           {
             "key": "int_mod",
             "label": "Модификатор Интеллекта",
-            "expr": "округлить вниз((#int - 10) / 2)",
+            "expr": {
+              "expr": "округлить вниз((#int - 10) / 2)"
+            },
             "block": "Модификаторы"
           },
           {
             "key": "wis_mod",
             "label": "Модификатор Мудрости",
-            "expr": "округлить вниз((#wis - 10) / 2)",
+            "expr": {
+              "expr": "округлить вниз((#wis - 10) / 2)"
+            },
             "block": "Модификаторы"
           },
           {
             "key": "cha_mod",
             "label": "Модификатор Харизмы",
-            "expr": "округлить вниз((#cha - 10) / 2)",
+            "expr": {
+              "expr": "округлить вниз((#cha - 10) / 2)"
+            },
             "block": "Модификаторы"
           },
           {
@@ -182,7 +194,9 @@
           {
             "key": "prof_bonus",
             "label": "Бонус мастерства",
-            "expr": "таблица(\"proficiency\", #level)",
+            "expr": {
+              "expr": "таблица(\"proficiency\", #level)"
+            },
             "block": "Прогрессия"
           },
           {
@@ -191,7 +205,9 @@
             "kind": "number",
             "default": 2,
             "min": 0,
-            "max": "#level",
+            "max": {
+              "expr": "#level"
+            },
             "control": "pips",
             "block": "Прогрессия"
           },
@@ -207,7 +223,9 @@
           {
             "key": "athletics",
             "label": "Атлетика",
-            "expr": "#str_mod + #athletics_prof * #prof_bonus",
+            "expr": {
+              "expr": "#str_mod + #athletics_prof * #prof_bonus"
+            },
             "roll": {
               "label": "Проверка: Атлетика",
               "tags": [
@@ -232,7 +250,9 @@
           {
             "key": "acrobatics",
             "label": "Акробатика",
-            "expr": "#dex_mod + #acrobatics_prof * #prof_bonus",
+            "expr": {
+              "expr": "#dex_mod + #acrobatics_prof * #prof_bonus"
+            },
             "roll": {
               "label": "Проверка: Акробатика",
               "tags": [
@@ -257,7 +277,9 @@
           {
             "key": "sleight_of_hand",
             "label": "Ловкость рук",
-            "expr": "#dex_mod + #sleight_of_hand_prof * #prof_bonus",
+            "expr": {
+              "expr": "#dex_mod + #sleight_of_hand_prof * #prof_bonus"
+            },
             "roll": {
               "label": "Проверка: Ловкость рук",
               "tags": [
@@ -282,7 +304,9 @@
           {
             "key": "stealth",
             "label": "Скрытность",
-            "expr": "#dex_mod + #stealth_prof * #prof_bonus",
+            "expr": {
+              "expr": "#dex_mod + #stealth_prof * #prof_bonus"
+            },
             "roll": {
               "label": "Проверка: Скрытность",
               "tags": [
@@ -307,7 +331,9 @@
           {
             "key": "arcana",
             "label": "Магия",
-            "expr": "#int_mod + #arcana_prof * #prof_bonus",
+            "expr": {
+              "expr": "#int_mod + #arcana_prof * #prof_bonus"
+            },
             "roll": {
               "label": "Проверка: Магия",
               "tags": [
@@ -332,7 +358,9 @@
           {
             "key": "history",
             "label": "История",
-            "expr": "#int_mod + #history_prof * #prof_bonus",
+            "expr": {
+              "expr": "#int_mod + #history_prof * #prof_bonus"
+            },
             "roll": {
               "label": "Проверка: История",
               "tags": [
@@ -357,7 +385,9 @@
           {
             "key": "investigation",
             "label": "Анализ",
-            "expr": "#int_mod + #investigation_prof * #prof_bonus",
+            "expr": {
+              "expr": "#int_mod + #investigation_prof * #prof_bonus"
+            },
             "roll": {
               "label": "Проверка: Анализ",
               "tags": [
@@ -382,7 +412,9 @@
           {
             "key": "nature",
             "label": "Природа",
-            "expr": "#int_mod + #nature_prof * #prof_bonus",
+            "expr": {
+              "expr": "#int_mod + #nature_prof * #prof_bonus"
+            },
             "roll": {
               "label": "Проверка: Природа",
               "tags": [
@@ -407,7 +439,9 @@
           {
             "key": "religion",
             "label": "Религия",
-            "expr": "#int_mod + #religion_prof * #prof_bonus",
+            "expr": {
+              "expr": "#int_mod + #religion_prof * #prof_bonus"
+            },
             "roll": {
               "label": "Проверка: Религия",
               "tags": [
@@ -432,7 +466,9 @@
           {
             "key": "animal_handling",
             "label": "Уход за животными",
-            "expr": "#wis_mod + #animal_handling_prof * #prof_bonus",
+            "expr": {
+              "expr": "#wis_mod + #animal_handling_prof * #prof_bonus"
+            },
             "roll": {
               "label": "Проверка: Уход за животными",
               "tags": [
@@ -457,7 +493,9 @@
           {
             "key": "insight",
             "label": "Проницательность",
-            "expr": "#wis_mod + #insight_prof * #prof_bonus",
+            "expr": {
+              "expr": "#wis_mod + #insight_prof * #prof_bonus"
+            },
             "roll": {
               "label": "Проверка: Проницательность",
               "tags": [
@@ -482,7 +520,9 @@
           {
             "key": "medicine",
             "label": "Медицина",
-            "expr": "#wis_mod + #medicine_prof * #prof_bonus",
+            "expr": {
+              "expr": "#wis_mod + #medicine_prof * #prof_bonus"
+            },
             "roll": {
               "label": "Проверка: Медицина",
               "tags": [
@@ -507,7 +547,9 @@
           {
             "key": "perception",
             "label": "Внимательность",
-            "expr": "#wis_mod + #perception_prof * #prof_bonus",
+            "expr": {
+              "expr": "#wis_mod + #perception_prof * #prof_bonus"
+            },
             "roll": {
               "label": "Проверка: Внимательность",
               "tags": [
@@ -532,7 +574,9 @@
           {
             "key": "survival",
             "label": "Выживание",
-            "expr": "#wis_mod + #survival_prof * #prof_bonus",
+            "expr": {
+              "expr": "#wis_mod + #survival_prof * #prof_bonus"
+            },
             "roll": {
               "label": "Проверка: Выживание",
               "tags": [
@@ -557,7 +601,9 @@
           {
             "key": "deception",
             "label": "Обман",
-            "expr": "#cha_mod + #deception_prof * #prof_bonus",
+            "expr": {
+              "expr": "#cha_mod + #deception_prof * #prof_bonus"
+            },
             "roll": {
               "label": "Проверка: Обман",
               "tags": [
@@ -582,7 +628,9 @@
           {
             "key": "intimidation",
             "label": "Запугивание",
-            "expr": "#cha_mod + #intimidation_prof * #prof_bonus",
+            "expr": {
+              "expr": "#cha_mod + #intimidation_prof * #prof_bonus"
+            },
             "roll": {
               "label": "Проверка: Запугивание",
               "tags": [
@@ -607,7 +655,9 @@
           {
             "key": "performance",
             "label": "Выступление",
-            "expr": "#cha_mod + #performance_prof * #prof_bonus",
+            "expr": {
+              "expr": "#cha_mod + #performance_prof * #prof_bonus"
+            },
             "roll": {
               "label": "Проверка: Выступление",
               "tags": [
@@ -632,7 +682,9 @@
           {
             "key": "persuasion",
             "label": "Убеждение",
-            "expr": "#cha_mod + #persuasion_prof * #prof_bonus",
+            "expr": {
+              "expr": "#cha_mod + #persuasion_prof * #prof_bonus"
+            },
             "roll": {
               "label": "Проверка: Убеждение",
               "tags": [
@@ -662,7 +714,9 @@
           {
             "key": "ac",
             "label": "Класс брони",
-            "expr": "@ac_base + если(@armor_heavy, 0, @dex_mod)",
+            "expr": {
+              "expr": "@ac_base + если(@armor_heavy, 0, @dex_mod)"
+            },
             "block": "Защита"
           },
           {
@@ -677,7 +731,9 @@
           {
             "key": "dex_save",
             "label": "Спасбросок Ловкости",
-            "expr": "#dex_mod + #dex_save_prof * #prof_bonus",
+            "expr": {
+              "expr": "#dex_mod + #dex_save_prof * #prof_bonus"
+            },
             "roll": {
               "label": "Спасбросок Ловкости",
               "tags": [
@@ -703,7 +759,9 @@
             "kind": "number",
             "default": 1,
             "min": 0,
-            "max": "#hp_max",
+            "max": {
+              "expr": "#hp_max"
+            },
             "control": "bar",
             "block": "Здоровье"
           },
@@ -736,25 +794,33 @@
           {
             "key": "down",
             "label": "Без сил",
-            "expr": "#hp_current <= 0",
+            "expr": {
+              "expr": "#hp_current <= 0"
+            },
             "block": "Здоровье"
           },
           {
             "key": "up",
             "label": "На ногах",
-            "expr": "#hp_current > 0",
+            "expr": {
+              "expr": "#hp_current > 0"
+            },
             "block": "Здоровье"
           },
           {
             "key": "attack_bonus",
             "label": "Бонус атаки",
-            "expr": "#str_mod + #prof_bonus",
+            "expr": {
+              "expr": "#str_mod + #prof_bonus"
+            },
             "block": "Атака"
           },
           {
             "key": "spell_dc",
             "label": "Сложность заклинаний",
-            "expr": "8 + #prof_bonus + #cha_mod",
+            "expr": {
+              "expr": "8 + #prof_bonus + #cha_mod"
+            },
             "block": "Атака"
           },
           {
@@ -956,7 +1022,7 @@
           {
             "key": "save_by",
             "label": "Чем спасаются",
-            "kind": "expr"
+            "kind": "number"
           },
           {
             "key": "status",
@@ -1042,7 +1108,7 @@
           {
             "key": "save_by",
             "label": "Чем спасаются",
-            "kind": "expr"
+            "kind": "number"
           },
           {
             "key": "damage_dice",
@@ -2793,7 +2859,9 @@
         "table": "attack-spell",
         "cells": {
           "damage_dice": "2d6",
-          "save_by": "@носитель.dex_save",
+          "save_by": {
+            "expr": "@носитель.dex_save"
+          },
           "status": "poisoned",
           "damage_type": "яд"
         }
@@ -2839,7 +2907,9 @@
         "description": "Взрыв по области: спасбросок Ловкости, при успехе — половина урона.",
         "table": "area-spell",
         "cells": {
-          "save_by": "@носитель.dex_save",
+          "save_by": {
+            "expr": "@носитель.dex_save"
+          },
           "damage_dice": "6d6",
           "damage_type": "огонь"
         }

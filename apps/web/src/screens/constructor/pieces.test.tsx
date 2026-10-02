@@ -83,7 +83,7 @@ describe('вид поля на листе выбирается в констру
       ...state,
       system: {
         ...emptySystem(),
-        tables: { лист: { shape: 'single', columns: [{ key: 'мод', label: 'Мод', expr: '1' }] } },
+        tables: { лист: { shape: 'single', columns: [{ key: 'мод', label: 'Мод', expr: { expr: '1' } }] } },
       },
       activeFieldTag: 'мод',
     }));

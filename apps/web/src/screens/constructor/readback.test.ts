@@ -7,7 +7,7 @@ const system = {
   tables: { лист: { shape: 'single', columns: [
     { key: 'armor', label: 'Класс брони', kind: 'number', default: 10 },
     { key: 'wounds', label: 'Текущие хиты', kind: 'number', default: 10 },
-    { key: 'power_mod', label: 'Мод Силы', expr: '1' },
+    { key: 'power_mod', label: 'Мод Силы', expr: { expr: '1' } },
   ] } },
   constants: { lead: { label: 'Ведущая кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
   effects: { poison: { label: 'Отравлен', activation: 'passive', modifiers: [] } },

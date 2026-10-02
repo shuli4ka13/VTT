@@ -214,13 +214,17 @@
           {
             "key": "emp",
             "label": "Эмпатия",
-            "expr": "округлить вниз(@humanity / 10)",
+            "expr": {
+              "expr": "округлить вниз(@humanity / 10)"
+            },
             "block": "Характеристики"
           },
           {
             "key": "hp_max",
             "label": "Максимум хитов",
-            "expr": "10 + 5 * округлить вверх((@body + @will) / 2)",
+            "expr": {
+              "expr": "10 + 5 * округлить вверх((@body + @will) / 2)"
+            },
             "block": "Состояние"
           },
           {
@@ -229,14 +233,18 @@
             "kind": "number",
             "default": 45,
             "min": 0,
-            "max": "@hp_max",
+            "max": {
+              "expr": "@hp_max"
+            },
             "control": "bar",
             "block": "Состояние"
           },
           {
             "key": "wound_at",
             "label": "Порог серьёзной раны",
-            "expr": "округлить вверх(@hp_max / 2) - 1",
+            "expr": {
+              "expr": "округлить вверх(@hp_max / 2) - 1"
+            },
             "block": "Состояние"
           },
           {
@@ -245,7 +253,9 @@
             "kind": "number",
             "default": 6,
             "min": 0,
-            "max": "@luck",
+            "max": {
+              "expr": "@luck"
+            },
             "control": "pips",
             "block": "Состояние"
           },
@@ -258,13 +268,17 @@
           {
             "key": "seriously",
             "label": "Тяжело ранен",
-            "expr": "@hp <= @wound_at",
+            "expr": {
+              "expr": "@hp <= @wound_at"
+            },
             "block": "Состояние"
           },
           {
             "key": "mortal",
             "label": "При смерти",
-            "expr": "@hp <= 0",
+            "expr": {
+              "expr": "@hp <= 0"
+            },
             "block": "Состояние"
           },
           {
@@ -551,7 +565,9 @@
             "key": "total",
             "label": "Всего",
             "kind": "number",
-            "expr": "@строка.stat + @строка.rank",
+            "expr": {
+              "expr": "@строка.stat + @строка.rank"
+            },
             "title": "{label} — всего",
             "roll": {
               "label": "Проверка: {label}",
@@ -1271,7 +1287,9 @@
               "hint": "Каждое очко удачи — плюс один к броску. Тратится сразу."
             },
             "min": 0,
-            "max": "@luck_left"
+            "max": {
+              "expr": "@luck_left"
+            }
           },
           {
             "key": "damage_dice",

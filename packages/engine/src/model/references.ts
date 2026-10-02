@@ -2,6 +2,7 @@ import { tagWords } from '../engine/roll-tags.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import type { System, Compendium, Effect, Step, Modifier, Guard, Param } from './types.ts';
 import { compile } from '../formula/index.ts';
+import { isFormulaCell } from './sheet-columns.ts';
 import type { Node } from '../formula/index.ts';
 import { registry } from '../engine/steps/index.ts';
 import { recordsOf, recordKinds, kindsOf } from './owned.ts';
@@ -477,8 +478,8 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
       const props = new Set(columns.map(c => c.key));
       for (const column of columns) {
         const cell = (record.cells ?? {})[column.key];
-        if (typeof cell !== 'string' || !cell.includes('@') || (column.kind !== 'number' && column.kind !== 'expr')) continue;
-        exprRefs(cell, { ...from, key: column.key }, sheetScope(props, [HOLDER]), out);
+        if (!isFormulaCell(cell)) continue;
+        exprRefs(cell.expr, { ...from, key: column.key }, sheetScope(props, [HOLDER]), out);
       }
       modifierRefs(system, record.modifiers, from, out, record.table ? new Set((system.tables?.[record.table]?.columns ?? []).map(c => c.key)) : undefined);
     }

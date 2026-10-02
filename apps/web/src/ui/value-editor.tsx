@@ -3,7 +3,7 @@ import { listOf } from '@vtt/engine/model/lists';
 import { rowTables } from '@vtt/engine/model/tables';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { recordsOf } from '@vtt/engine/model/owned';
-import { Input, NumInput, Select } from './primitives.tsx';
+import { Input, Select } from './primitives.tsx';
 import { MultiChoice } from './multi-choice.tsx';
 import { DiceProp } from './dice-prop.tsx';
 import { FormulaField } from './formula-field.tsx';
@@ -26,7 +26,22 @@ export function ValueEditor({ type, value, system, compendium, onlyWorn, except,
   onChange: (value: unknown) => void;
 }) {
   const kind = type.kind ?? 'text';
-  if (kind === 'number') return <NumInput value={Number(value ?? 0)} onCommit={onChange} />;
+  if (kind === 'number') {
+    const formula = value && typeof value === 'object' && 'expr' in (value as object) ? String((value as { expr: unknown }).expr) : null;
+    return (
+      <FormulaField
+        value={formula ?? (value === undefined || value === null ? '' : String(value))}
+        system={system}
+        where="клетка"
+        placeholder="число или формула"
+        onCommit={text => {
+          const clean = text.trim();
+          if (!clean) { onChange(0); return; }
+          onChange(/^-?\d+(\.\d+)?$/.test(clean) ? Number(clean) : { expr: clean });
+        }}
+      />
+    );
+  }
   if (kind === 'boolean') {
     return (
       <Select
@@ -90,9 +105,6 @@ export function ValueEditor({ type, value, system, compendium, onlyWorn, except,
         onChange={next => onChange(options.find(o => String(o.value) === next)?.value ?? next)}
       />
     );
-  }
-  if (kind === 'expr') {
-    return <FormulaField value={String(value ?? '')} system={system} where="формула свойства" placeholder="формула" onCommit={onChange} />;
   }
   return <Input placeholder="слово" value={String(value ?? '')} onChange={onChange} />;
 }

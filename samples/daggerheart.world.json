@@ -234,7 +234,9 @@
           {
             "key": "tier",
             "label": "Ступень",
-            "expr": "если(@level >= 8, 4, если(@level >= 5, 3, если(@level >= 2, 2, 1)))",
+            "expr": {
+              "expr": "если(@level >= 8, 4, если(@level >= 5, 3, если(@level >= 2, 2, 1)))"
+            },
             "block": "Прогрессия"
           },
           {
@@ -255,7 +257,9 @@
           {
             "key": "evasion",
             "label": "Уклонение",
-            "expr": "если(@class != \"\", таблица(\"classes\", @class, \"evasion\"), 10) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"evasion_bonus\"), 0) + @evasion_bonus",
+            "expr": {
+              "expr": "если(@class != \"\", таблица(\"classes\", @class, \"evasion\"), 10) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"evasion_bonus\"), 0) + @evasion_bonus"
+            },
             "block": "Уклонение и броня"
           },
           {
@@ -292,13 +296,17 @@
           {
             "key": "major",
             "label": "Порог серьёзного урона",
-            "expr": "если(@major_base > 0, @major_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, @level)",
+            "expr": {
+              "expr": "если(@major_base > 0, @major_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, @level)"
+            },
             "block": "Пороги урона"
           },
           {
             "key": "severe",
             "label": "Порог тяжёлого урона",
-            "expr": "если(@severe_base > 0, @severe_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, 2 * @level)",
+            "expr": {
+              "expr": "если(@severe_base > 0, @severe_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, 2 * @level)"
+            },
             "block": "Пороги урона"
           },
           {
@@ -311,7 +319,9 @@
           {
             "key": "hp_max",
             "label": "Хиты: клеток",
-            "expr": "если(@class != \"\", таблица(\"classes\", @class, \"hp\"), 0) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"hp_bonus\"), 0) + @hp_extra",
+            "expr": {
+              "expr": "если(@class != \"\", таблица(\"classes\", @class, \"hp\"), 0) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"hp_bonus\"), 0) + @hp_extra"
+            },
             "block": "Здоровье"
           },
           {
@@ -332,7 +342,9 @@
           {
             "key": "stress_max",
             "label": "Стресс: клеток",
-            "expr": "6 + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"stress_bonus\"), 0) + @stress_extra",
+            "expr": {
+              "expr": "6 + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"stress_bonus\"), 0) + @stress_extra"
+            },
             "block": "Здоровье"
           },
           {
@@ -346,19 +358,25 @@
           {
             "key": "down",
             "label": "Последний хит отмечен",
-            "expr": "все(@hp_max > 0, @hp >= @hp_max)",
+            "expr": {
+              "expr": "все(@hp_max > 0, @hp >= @hp_max)"
+            },
             "block": "Здоровье"
           },
           {
             "key": "stress_full",
             "label": "Весь Стресс отмечен",
-            "expr": "все(@stress_max > 0, @stress >= @stress_max)",
+            "expr": {
+              "expr": "все(@stress_max > 0, @stress >= @stress_max)"
+            },
             "block": "Здоровье"
           },
           {
             "key": "stress_free",
             "label": "Есть свободный Стресс",
-            "expr": "@stress < @stress_max",
+            "expr": {
+              "expr": "@stress < @stress_max"
+            },
             "block": "Здоровье"
           },
           {

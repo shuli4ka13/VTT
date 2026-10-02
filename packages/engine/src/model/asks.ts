@@ -34,7 +34,9 @@ const boundOf = (bound: unknown, actor: Pass | undefined): number | null => {
   if (bound === undefined || bound === null || bound === '') return null;
   if (typeof bound === 'number') return bound;
   if (!actor) return null;
-  const value = compile(String(bound)).evaluate(actor.resolve);
+  const text = typeof bound === 'object' ? String((bound as { expr?: unknown }).expr ?? '') : String(bound);
+  if (!text.trim()) return null;
+  const value = compile(text).evaluate(actor.resolve);
   return typeof value === 'number' ? value : null;
 };
 

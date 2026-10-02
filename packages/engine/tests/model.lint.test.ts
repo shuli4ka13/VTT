@@ -70,7 +70,7 @@ group('линт: висячие ссылки называются словами
   test('кость инициативы, таблица поля, правило для всех, правка броска', () => {
     const system = bare();
     system.initiative = { die: 'нет_кости', tags: ['нет_броска'] } as never;
-    system.tables = withColumn(system, { key: 'lvl', label: 'Ур', expr: 'таблица("нет_таблицы", #hp)' }).tables;
+    system.tables = withColumn(system, { key: 'lvl', label: 'Ур', expr: { expr: 'таблица("нет_таблицы", #hp)' } }).tables;
     system.grants = ['нет_правила'];
     system.effects.buff = { label: 'y', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', edit: 'нет_правки' }] } as never;
     const found = errorTexts(system).join('\n');
@@ -153,7 +153,7 @@ group('линт: чьё поле', () => {
 
   test('имя листа в формулах листа не нужно: голое имя вне эффекта — законно', () => {
     const system = bare();
-    system.tables = withColumn(system, { key: 'вдвое', label: 'Вдвое', expr: '@hp * 2' }).tables;
+    system.tables = withColumn(system, { key: 'вдвое', label: 'Вдвое', expr: { expr: '@hp * 2' } }).tables;
     eq(errorTexts(system).join(''), '');
   });
 

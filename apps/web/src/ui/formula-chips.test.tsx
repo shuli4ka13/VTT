@@ -7,7 +7,7 @@ import { withColumn } from '@vtt/engine/model/sheet-columns';
 
 const system = {
   tables: { лист: { shape: 'single', columns: [
-    { key: 'бонус_атаки', label: 'Бонус атаки', expr: '1' },
+    { key: 'бонус_атаки', label: 'Бонус атаки', expr: { expr: '1' } },
     { key: 'сила', label: 'Сила', kind: 'number', default: 10 },
   ] } },
   constants: {}, effects: {},

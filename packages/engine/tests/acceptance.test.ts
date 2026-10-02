@@ -40,7 +40,7 @@ group('критерии приёмки', () => {
 
   test('3. новый стат и новый предмет с бонусом добавляются только правкой данных', () => {
 
-    const extended = withColumn(system, { key: 'initiative', label: 'Инициатива', expr: '#dex_mod + #prof_bonus', block: 'Атака' });
+    const extended = withColumn(system, { key: 'initiative', label: 'Инициатива', expr: { expr: '#dex_mod + #prof_bonus' }, block: 'Атака' });
     const book = {
       records: [...compendium.records, {
         id: 'cloak-of-speed',
@@ -79,7 +79,7 @@ group('критерии приёмки', () => {
   });
 
   test('7. циклическая формула даёт внятную ошибку, а не зависание', () => {
-    const looped = editColumn(system, 'ac', column => ({ ...column, expr: '#ac + 1' }));
+    const looped = editColumn(system, 'ac', column => ({ ...column, expr: { expr: '#ac + 1' } }));
     const err = throws(() => calc(looped, arven, 'ac'), CycleError);
     ok(err.message.includes('ac → ac'), `путь в сообщении: ${err.message}`);
   });

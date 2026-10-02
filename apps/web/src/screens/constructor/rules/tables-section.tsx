@@ -249,7 +249,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, extr
 
   return (
     <ColumnCard
-      column={{ label: column.label ?? '', kind: column.kind ?? (single ? 'number' : 'text'), from: column.from, many: column.many, expr: column.expr, min: column.min, max: column.max }}
+      column={{ label: column.label ?? '', kind: column.kind ?? (single ? 'number' : 'text'), from: column.from, many: column.many, expr: column.expr?.expr, min: column.min, max: column.max }}
       kinds={single ? FIELD_KINDS : book ? PROP_KINDS : COLUMN_KINDS}
       tables={others}
       many={!single}
@@ -267,7 +267,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, extr
       }}
       onClose={onClose}
       preview={single && column.expr !== undefined
-        ? <LiveValue system={system} compendium={compendium} tag={column.key} source={column.expr} /> : null}
+        ? <LiveValue system={system} compendium={compendium} tag={column.key} source={column.expr.expr} /> : null}
       extra={single ? <>
         <Field label="Чьё значение">
           <Select
@@ -297,7 +297,7 @@ function applyPatch(c: TableColumn, patch: ColumnPatch): void {
   }
   if (patch.from !== undefined) { if (patch.from) c.from = patch.from; else delete c.from; }
   if (patch.many !== undefined) { if (patch.many) c.many = true; else delete c.many; }
-  if (patch.expr !== undefined) { if (patch.expr !== null) c.expr = patch.expr; else delete c.expr; }
+  if (patch.expr !== undefined) { if (patch.expr !== null) c.expr = { expr: patch.expr }; else delete c.expr; }
   if (patch.min !== undefined) { if (patch.min !== null) c.min = patch.min; else delete c.min; }
   if (patch.max !== undefined) { if (patch.max !== null) c.max = patch.max; else delete c.max; }
 }

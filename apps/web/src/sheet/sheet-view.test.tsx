@@ -9,7 +9,7 @@ const system = {
   tables: { лист: { shape: 'single', columns: [
     { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 14, roll: { label: 'Проверка Ловкости' }, block: 'Характеристики' },
     { key: 'хиты', label: 'Хиты', kind: 'number', default: 20, block: 'Здоровье' },
-    { key: 'броня', label: 'Броня', expr: '10', block: 'Здоровье' },
+    { key: 'броня', label: 'Броня', expr: { expr: '10' }, block: 'Здоровье' },
   ] } },
 } as unknown as System;
 
