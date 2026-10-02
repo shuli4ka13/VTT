@@ -1,6 +1,6 @@
 import { group, test, eq, deepEq, throws } from './harness.ts';
 import { dieConstant, unfoldDice } from '../src/engine/lead-die.ts';
-import { rollLead } from './legacy.ts';
+import { rollLead } from './kit.ts';
 
 const queue = (...values) => {
   const rest = [...values];

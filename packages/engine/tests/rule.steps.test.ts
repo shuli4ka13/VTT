@@ -1,6 +1,6 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import { registerStepType, registry } from '../src/engine/steps/index.ts';
-import { runSteps } from './legacy.ts';
+import { runSteps } from './kit.ts';
 
 const sys = {
   id: 'stub-sys',

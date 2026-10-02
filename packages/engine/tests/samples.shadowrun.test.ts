@@ -2,7 +2,7 @@ import { group, test, eq, ok } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { exchange } from './play.ts';
 import { fieldCheck } from '../src/engine/check.ts';
-import { rollCheck } from './legacy.ts';
+import { rollCheck } from './kit.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 

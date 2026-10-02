@@ -1,6 +1,6 @@
 import { group, test, eq, deepEq } from './harness.ts';
 import { exchange } from './play.ts';
-import { rollLead } from './legacy.ts';
+import { rollLead } from './kit.ts';
 
 const queue = (...values: number[]) => {
   const rest = [...values];

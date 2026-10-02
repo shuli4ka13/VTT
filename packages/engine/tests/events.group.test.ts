@@ -1,7 +1,7 @@
 import { group, test, eq, deepEq } from './harness.ts';
 import { exchange } from './play.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
-import { rollInitiative } from './legacy.ts';
+import { rollInitiative } from './kit.ts';
 import { sharedOf } from '../src/events/desk.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 

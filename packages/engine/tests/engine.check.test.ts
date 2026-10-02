@@ -1,7 +1,7 @@
 import { group, test, eq, ok, throws } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { fieldCheck } from '../src/engine/check.ts';
-import { rollCheck, rollInitiative } from './legacy.ts';
+import { rollCheck, rollInitiative } from './kit.ts';
 import { lintSystem } from '../src/model/lint.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 

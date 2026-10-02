@@ -1,6 +1,6 @@
 import { group, test, eq, ok } from './harness.ts';
 import { fieldOf, momentOf, MOMENTS } from '../src/events/moments.ts';
-import { fireMoments, fireCrossings } from './legacy.ts';
+import { fireMoments, fireCrossings } from './kit.ts';
 import { PLAYABLE_WORLDS as SAMPLE_WORLDS } from '../src/model/systems.ts';
 import type { System, Sheet, Effect, Compendium } from '../src/model/types.ts';
 

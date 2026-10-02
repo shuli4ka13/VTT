@@ -1,6 +1,6 @@
 import { group, test, eq, ok } from './harness.ts';
 import { slots } from '../src/engine/steps/threshold.ts';
-import { runSteps } from './legacy.ts';
+import { runSteps } from './kit.ts';
 import { exchange } from './play.ts';
 
 const queue = (...values) => { let i = 0; return () => values[i++] ?? 1; };

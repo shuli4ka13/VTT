@@ -1,6 +1,6 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import { exchange } from './play.ts';
-import { rollNotation } from './legacy.ts';
+import { rollNotation } from './kit.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import { serializeSheet } from '../src/model/serialize.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';

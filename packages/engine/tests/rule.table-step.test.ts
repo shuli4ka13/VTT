@@ -1,5 +1,5 @@
 import { group, test, eq, throws } from './harness.ts';
-import { runSteps } from './legacy.ts';
+import { runSteps } from './kit.ts';
 import type { System, Sheet } from '../src/model/types.ts';
 
 const system = {

@@ -1,5 +1,5 @@
 import { group, test, eq, deepEq } from './harness.ts';
-import { fireMoments } from './legacy.ts';
+import { fireMoments } from './kit.ts';
 import { subscribers, subscriberByKey, listening } from '../src/events/bus.ts';
 import type { System, Sheet } from '../src/model/types.ts';
 

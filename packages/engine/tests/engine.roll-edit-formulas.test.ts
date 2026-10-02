@@ -1,5 +1,5 @@
 import { group, test, eq, deepEq } from './harness.ts';
-import { rollLead } from './legacy.ts';
+import { rollLead } from './kit.ts';
 import { rollEdits } from '../src/core/edits.ts';
 import { newPass } from '../src/engine/calc.ts';
 import type { System, Sheet, DieConstant } from '../src/model/types.ts';
