@@ -98,7 +98,8 @@ export const column = columnValue.extend({
   block: z.string().optional(),
   title: z.string().optional(),
   onSheet: z.boolean().optional(),
-}).passthrough();
+  optional: z.boolean().optional(),
+}).strict();
 
 export const groupSpec = z.object({
   parent: z.string().optional(),
@@ -142,7 +143,7 @@ export const valueModifier = z.object({
     column: z.string().min(1),
     is: tableValue,
   }).optional(),
-}).passthrough();
+}).strict();
 
 
 export const editModifier = z.object({
@@ -180,14 +181,9 @@ export const param = column.extend({
 
   role: z.enum(['amount']).optional(),
   optional: z.boolean().optional(),
-}).passthrough();
+}).strict();
 
 export const guard = formula;
-
-export const scale = z.object({
-  times: z.number().positive(),
-  when: guard.optional(),
-});
 
 export const step = z.object({
   id: z.string().optional(),
@@ -273,7 +269,7 @@ export const table = z.object({
   grants: z.array(z.string().min(1)).optional(),
   bindings: z.array(binding).optional(),
   modifiers: z.array(modifier).optional(),
-}).passthrough();
+}).strict();
 
 export const sheetKind = z.object({
   extends: z.string().min(1).optional(),
@@ -300,7 +296,6 @@ export const system = z.object({
   tables: z.record(z.string(), table).optional(),
   tags: z.record(z.string(), tagContract).optional(),
   roll_edits: z.record(z.string(), rollEdit).optional(),
-  advantage: z.object({ methods: z.record(z.string(), z.boolean()).optional() }).passthrough().optional(),
 
   initiative: z.lazy(() => rollSpec).optional(),
 
@@ -395,7 +390,6 @@ export type Ask = z.infer<typeof ask>;
 export type Control = z.infer<typeof control>;
 export type FieldOption = z.infer<typeof fieldOption>;
 export type Guard = z.infer<typeof guard>;
-export type Scale = z.infer<typeof scale>;
 export type Handler = z.infer<typeof handler>;
 export type Effect = z.infer<typeof effect>;
 export type Binding = z.infer<typeof binding>;

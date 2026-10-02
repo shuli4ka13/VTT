@@ -40,7 +40,7 @@ function assemble(): { system: System; compendium: Compendium; sheets: Sheet[]; 
   system.effects[effect.key] = effect.value;
 
   const kind = newRecordKind(system);
-  kind.value.kind = 'action';
+  kind.value.use = 'action';
   kind.value.label = 'Приём';
   kind.value.bindings = [newBinding(system)];
   (system.tables ??= {})[kind.key] = kind.value;

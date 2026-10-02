@@ -1,4 +1,5 @@
 import { compile } from '@vtt/engine/formula';
+import { STEP_WORDS } from '@vtt/engine/words/steps';
 import type { Step } from '@vtt/schema';
 
 export type CardKind = 'check' | 'change' | 'number' | 'split' | 'seen' | 'unknown';
@@ -132,3 +133,11 @@ export function removeSteps(steps: Step[], indices: number[]): Removal {
   kept.forEach((step, at) => sweep(step as Record<string, unknown>, at, ''));
   return { steps: kept, cleared };
 }
+
+export function retype(draft: Step, type: string): void {
+  const words = (STEP_WORDS as Record<string, { slots?: readonly { key: string }[] }>)[type];
+  const keep = new Set(['id', 'type', 'when', ...(words?.slots ?? []).map(slot => slot.key)]);
+  (draft as { type: string }).type = type;
+  for (const key of Object.keys(draft)) if (!keep.has(key)) delete (draft as Record<string, unknown>)[key];
+}
+

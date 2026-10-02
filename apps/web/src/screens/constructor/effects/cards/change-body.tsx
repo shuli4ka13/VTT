@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import type { System, Step, SlotRef, ValueKind } from '@vtt/schema';
 import { Field, Segmented, Select } from '../../../../ui/primitives.tsx';
 import type { CardGroup } from '../../cards.ts';
+import { retype } from '../../cards.ts';
 import { parseRollExpr, badFormula, exprText } from '../../roll-expr.ts';
 import { FormulaField } from '../../../../ui/formula-field.tsx';
 import type { BarApi } from '../../../../store/formula-bar.ts';
@@ -323,15 +324,15 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
         onChange={next => edit(applyIndex, draft => {
           const d = draft as any;
           if (next === 'status') {
-            draft.type = 'status';
+            retype(draft, 'status');
             d.mode ??= 'apply';
           } else if (next === 'emit') {
-            draft.type = 'emit';
+            retype(draft, 'emit');
             d.event ??= firstEvent ?? '';
             const main = amountParamOf(system.effects[String(d.event)]);
             if (group.amount?.id && main) d.args = { ...(d.args ?? {}), [main.key]: { expr: `@${group.amount.id}` } };
           } else {
-            draft.type = 'apply';
+            retype(draft, 'apply');
             d.direction ??= 'subtract';
             d.targetModifiers ??= true;
           }

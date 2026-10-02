@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useWorld, emptySystem } from '../../../store/world.ts';
-import { BRICKS } from '../cards.ts';
+import { BRICKS, retype } from '../cards.ts';
 import { newEffect, newCalled } from '../factory.ts';
 import { trial, mannequin } from '@vtt/engine/events/trial';
 import { lintSystem, errorsOf } from '@vtt/engine/model/lint';
@@ -105,11 +105,9 @@ describe('собранное шагами конструктора работа�
     const id = newManual();
     addStep(id, 'change');
     fill(id, 1, step => {
-      step.type = 'emit';
+      retype(step, 'emit');
       step.event = made.key;
       step.args = { лист: { expr: '@цель' }, amount: { expr: '7' } };
-      delete step.target;
-      delete step.direction;
     });
 
     const system = useWorld.getState().system;
