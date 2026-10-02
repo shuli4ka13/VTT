@@ -246,7 +246,7 @@ describe('моменты хода', () => {
       id: 'яд', name: 'С ядом',
       tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } },
       constants: { к20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
-      initiative: { die: { constant: 'к20' } },
+      initiative: { die: 'к20' },
       effects: {
         отравление: {
           label: 'Отравление', activation: 'passive',
@@ -394,7 +394,7 @@ describe('вопросы к человеку не теряют названно�
       roll_edits: { плюс: { label: 'Плюс', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }] } },
       effects: {
         удар: button('Удар', [
-          { id: 'бросок_к', type: 'roll', die: { constant: 'к20' }, by: { expr: '@действующий' } },
+          { id: 'бросок_к', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
           { id: 'бросок', type: 'check', value: { expr: '@бросок_к' }, versus: { expr: '0' }, continueOn: 'success' },
           sub('@цель.хиты', '@сила'),
         ], {
@@ -450,7 +450,7 @@ describe('цель правит свой бросок, увидев его', () 
       roll_edits: { удача: { label: 'Удача', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }] } },
       effects: {
         залп: button('Залп', [
-          { id: 'спас_к', type: 'roll', die: { constant: 'к20' }, by: { expr: '@цель' } },
+          { id: 'спас_к', type: 'roll', die: 'к20', by: { expr: '@цель' } },
           { id: 'спас', type: 'check', value: { expr: '@спас_к' }, versus: { expr: '11' }, continueOn: 'fail' },
           sub('@цель.хиты', '6'),
         ]),
@@ -507,7 +507,7 @@ describe('поле стало верным', () => {
         без_сознания: { label: 'Без сознания', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
         падение: {
           label: 'Падение', activation: 'passive',
-          on: [{ on: 'field:без_сил', if: { expr: '@лист == @носитель' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'без_сознания' }, to: { expr: '@носитель' } }] }],
+          on: [{ on: 'field:без_сил', if: { expr: '@лист == @носитель' }, steps: [{ type: 'status', mode: 'apply', effect: 'без_сознания', to: { expr: '@носитель' } }] }],
         },
       },
       grants: ['падение'],
@@ -781,7 +781,7 @@ describe('реакция после разрешения', () => {
           on: [{ on: 'done:удар', if: { expr: '@действующий == @носитель' }, steps: [sub('@носитель.видел', '@носитель.хиты', 'set')] }],
         },
         удар: button('Удар', [
-          { id: 'бросок_к', type: 'roll', die: { constant: 'к20' }, by: { expr: '@действующий' } },
+          { id: 'бросок_к', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
           { id: 'бросок', type: 'check', value: { expr: '@бросок_к' }, versus: { expr: '0' }, continueOn: 'success' },
           sub('@цель.хиты', '5'),
         ]),

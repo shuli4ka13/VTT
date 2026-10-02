@@ -16,7 +16,7 @@ const queue = (...values: number[]) => {
 const ACTOR = { key: 'действующий', kind: 'sheet' };
 const TARGETS = { key: 'цели', kind: 'sheet', many: true };
 const EACH = { type: 'each', of: 'цели', as: 'цель' };
-const roll = (extra: Record<string, unknown> = {}) => ({ id: 'бросок', type: 'roll', die: { constant: 'к20' }, tags: ['атака'], by: { expr: '@действующий' }, against: { expr: '@цель' }, ...extra });
+const roll = (extra: Record<string, unknown> = {}) => ({ id: 'бросок', type: 'roll', die: 'к20', tags: ['атака'], by: { expr: '@действующий' }, against: { expr: '@цель' }, ...extra });
 const mine = '@бросающий == @носитель';
 
 const world = (effects: Record<string, unknown>): System => ({
@@ -126,7 +126,7 @@ group('увидев кости на броске по полю листа', () =
       везунчик: { label: 'Везунчик', activation: 'passive', on: [{ on: 'seen', if: { expr: mine }, steps: [{ type: 'roll-reroll', upTo: { expr: '1' } }] }] },
       вдохновение: { label: 'Вдохновение', activation: 'passive', on: [{ on: 'seen', confirm: true, if: { expr: mine }, steps: [{ type: 'roll-plus', value: { expr: '10' } }] }] },
     });
-    const field = { ...system, tables: { ...system.tables, лист: { ...(system.tables as never as Record<string, { columns: unknown[] }>).лист, columns: [...(system.tables as never as Record<string, { columns: unknown[] }>).лист.columns, { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 0, roll: { die: { constant: 'к20' }, tags: ['атака'] } }] } } } as never;
+    const field = { ...system, tables: { ...system.tables, лист: { ...(system.tables as never as Record<string, { columns: unknown[] }>).лист, columns: [...(system.tables as never as Record<string, { columns: unknown[] }>).лист.columns, { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 0, roll: { die: 'к20', tags: ['атака'] } }] } } } as never;
     const sheets = [sheet('а', ['везунчик', 'вдохновение'])];
     const first = perform({ system: field, compendium: book, clock: null, sheets, die: queue(1, 12) }, { op: 'roll', sheetId: 'а', tag: 'ловкость' });
     eq(first.kind, 'paused');

@@ -17,14 +17,16 @@ export function notationOf(system: System, key: string): string {
 }
 
 export function dieRef(count: number, sides: number, system: System, picked?: string | null): SlotRef {
-  if (picked && notationOf(system, picked) === `${count}d${sides}`) return { constant: picked } as SlotRef;
+  if (picked && notationOf(system, picked) === `${count}d${sides}`) return picked;
   const known = Object.entries(system.constants ?? {}).find(([, c]) =>
     c.kind === 'die' && c.dice?.length === 1
     && (c.dice[0]!.count ?? 1) === count && c.dice[0]!.sides === sides && !c.dice[0]!.name
 
     && (!c.read || c.read === 'sum'));
-  return (known ? { constant: known[0] } : { const: `${count}d${sides}` }) as SlotRef;
+  return known ? known[0] : { expr: `"${count}d${sides}"` };
 }
+
+export const unquote = (text: string): string => text.trim().replace(/^(["'])(.*)\1$/su, '$2');
 
 export type NameRef = (name: string) => SlotRef | null;
 
@@ -46,15 +48,12 @@ export function parseRollExpr(text: string, system: System, picked?: string | nu
 export function formatRollExpr(roll: unknown, system: System): string {
   const r = (roll ?? {}) as { die?: unknown; bonus?: unknown };
   let head = '';
-  if (r.die && typeof r.die === 'object') {
-    if ('constant' in r.die) head = dieWord(system, String((r.die as { constant: unknown }).constant));
-    else if ('const' in r.die) head = asDice(String((r.die as { const: unknown }).const));
-  }
+  if (typeof r.die === 'string' && r.die) head = dieWord(system, r.die);
+  else if (r.die && typeof r.die === 'object' && 'expr' in r.die) head = asDice(unquote(String((r.die as { expr: unknown }).expr)));
   let tail = '';
   if (r.bonus && typeof r.bonus === 'object') {
     const b = r.bonus as Record<string, unknown>;
     if ('expr' in b) tail = String(b.expr);
-    else if ('const' in b) tail = String(b.const);
   }
   return [head, tail].filter(Boolean).join(' + ');
 }
@@ -84,6 +83,5 @@ export function exprText(bonus: unknown): string {
   if (!bonus || typeof bonus !== 'object') return '';
   const b = bonus as Record<string, unknown>;
   if ('expr' in b) return String(b.expr ?? '');
-  if ('const' in b) return String(b.const ?? '');
   return '';
 }

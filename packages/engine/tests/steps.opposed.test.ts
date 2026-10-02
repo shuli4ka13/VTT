@@ -23,18 +23,18 @@ const system = {
     вырваться: {
       label: 'Вырваться', activation: 'manual', params: [ACTOR, TARGETS],
       steps: [
-        { id: 'хватка', type: 'roll', die: { constant: 'пул_атаки' }, by: { expr: '@действующий' }, against: { expr: 'первый(@цели)' } },
+        { id: 'хватка', type: 'roll', die: 'пул_атаки', by: { expr: '@действующий' }, against: { expr: 'первый(@цели)' } },
         EACH,
-        { id: 'рывок', type: 'roll', die: { constant: 'пул_защиты' }, by: { expr: '@цель' }, against: { expr: '@действующий' } },
+        { id: 'рывок', type: 'roll', die: 'пул_защиты', by: { expr: '@цель' }, against: { expr: '@действующий' } },
         { id: 'вырвался', type: 'check', value: { expr: '@рывок' }, versus: { expr: '@хватка' }, successWhen: 'atLeast' },
       ],
     },
     выстрел: {
       label: 'Выстрел', activation: 'manual', params: [ACTOR, TARGETS],
       steps: [
-        { id: 'прицел', type: 'roll', die: { constant: 'пул_атаки' }, tags: ['атака'], by: { expr: '@действующий' }, against: { expr: 'первый(@цели)' } },
+        { id: 'прицел', type: 'roll', die: 'пул_атаки', tags: ['атака'], by: { expr: '@действующий' }, against: { expr: 'первый(@цели)' } },
         EACH,
-        { id: 'защита', type: 'roll', die: { constant: 'пул_защиты' }, tags: ['защита'], by: { expr: '@цель' }, against: { expr: '@действующий' } },
+        { id: 'защита', type: 'roll', die: 'пул_защиты', tags: ['защита'], by: { expr: '@цель' }, against: { expr: '@действующий' } },
         { id: 'попал', type: 'check', value: { expr: '@прицел' }, versus: { expr: '@защита' }, successWhen: 'over' },
         { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '2 + @попал.margin' } },
       ],

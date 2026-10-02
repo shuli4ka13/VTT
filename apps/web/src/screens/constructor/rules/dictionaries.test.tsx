@@ -347,7 +347,7 @@ describe('Словари: кости, правки броска, таблицы'
         effects: {
           hit: {
             label: 'Удар', activation: 'manual', params: [],
-            steps: [{ id: 'удар_бросок', type: 'roll', die: { constant: 'lead' }, by: { expr: '@действующий' } }],
+            steps: [{ id: 'удар_бросок', type: 'roll', die: 'lead', by: { expr: '@действующий' } }],
           },
         },
       },

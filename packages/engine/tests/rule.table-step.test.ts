@@ -39,7 +39,7 @@ const run = (steps: object[], rolls: number[] = []) => exec(steps, rolls);
 group('шаг «таблица»', () => {
   test('бросок 2к6 читается строкой таблицы и попадает в поле', () => {
     const out = run([
-      { id: 'исход', type: 'table', table: { const: 'травмы' }, dice: { const: '2d6' } },
+      { id: 'исход', type: 'table', table: 'травмы', dice: { expr: '"2d6"' } },
       { type: 'apply', target: { expr: '@носитель.травма' }, direction: 'set', value: { expr: '@исход' } },
     ], [6, 6]);
     eq(out.results.исход, 'потеря глаза');
@@ -48,22 +48,22 @@ group('шаг «таблица»', () => {
   });
 
   test('без костей читается по числу — дистанция даёт сложность', () => {
-    const out = run([{ id: 'порог', type: 'table', table: { const: 'сложность' }, value: { expr: '9' } }]);
+    const out = run([{ id: 'порог', type: 'table', table: 'сложность', value: { expr: '9' } }]);
     eq(out.results.порог, 15);
   });
 
   test('имя таблицы приходит и параметром', () => {
     const out = exec(
-      [{ id: 'итог', type: 'table', table: { param: 'какая' }, value: { expr: '3' } }],
+      [{ id: 'итог', type: 'table', table: { expr: '@какая' }, value: { expr: '3' } }],
       [], { какая: 'травмы' }, [{ key: 'какая', label: 'Какая таблица', kind: 'choice' }],
     );
     eq(out.results.итог, 'синяк');
   });
 
   test('таблицы нет, аргумента нет, число вне диапазонов — внятные отказы', () => {
-    throws(() => run([{ type: 'table', table: { const: 'нет_такой' }, value: { expr: '1' } }]), 'нет_такой');
-    throws(() => run([{ type: 'table', table: { const: 'травмы' } }]), 'нужен аргумент');
+    throws(() => run([{ type: 'table', table: 'нет_такой', value: { expr: '1' } }]), 'нет_такой');
+    throws(() => run([{ type: 'table', table: 'травмы' }]), 'нужен аргумент');
     throws(() => run([{ type: 'table' }]), 'какую таблицу');
-    throws(() => run([{ type: 'table', table: { const: 'травмы' }, value: { expr: '99' } }]), 'не попадает');
+    throws(() => run([{ type: 'table', table: 'травмы', value: { expr: '99' } }]), 'не попадает');
   });
 });

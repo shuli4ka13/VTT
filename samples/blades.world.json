@@ -374,9 +374,7 @@
           {
             "id": "бросок_бросок",
             "type": "roll",
-            "die": {
-              "constant": "pool"
-            },
+            "die": "pool",
             "tags": [
               "действие",
               {
@@ -458,9 +456,7 @@
           {
             "id": "бросок_бросок",
             "type": "roll",
-            "die": {
-              "constant": "resist_pool"
-            },
+            "die": "resist_pool",
             "tags": [
               "сопротивление",
               {
@@ -535,9 +531,7 @@
           {
             "id": "бросок_бросок",
             "type": "roll",
-            "die": {
-              "constant": "pool"
-            },
+            "die": "pool",
             "tags": [
               "действие",
               {

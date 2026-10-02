@@ -25,10 +25,10 @@ const system = {
       label: 'Сторож', activation: 'passive',
       on: [{ on: 'gained:ярость', if: { expr: '@лист == @носитель' }, steps: [add('замечено', 1)] }, { on: 'lost:ярость', if: { expr: '@лист == @носитель' }, steps: [add('замечено', 10)] }],
     },
-    впасть: { label: 'Впасть в ярость', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }], steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'status', mode: 'apply', effect: { const: 'ярость' }, to: { expr: '@цель' } }] },
-    успокоиться: { label: 'Успокоиться', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }], steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'status', mode: 'remove', effect: { const: 'ярость' }, to: { expr: '@цель' } }] },
-    пинг: { label: 'Пинг', activation: 'passive', attach: [{ type: 'status', mode: 'remove', effect: { const: 'пинг' }, to: { expr: '@носитель' } }, { type: 'status', mode: 'apply', effect: { const: 'понг' }, to: { expr: '@носитель' } }] },
-    понг: { label: 'Понг', activation: 'passive', attach: [{ type: 'status', mode: 'remove', effect: { const: 'понг' }, to: { expr: '@носитель' } }, { type: 'status', mode: 'apply', effect: { const: 'пинг' }, to: { expr: '@носитель' } }] },
+    впасть: { label: 'Впасть в ярость', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }], steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'status', mode: 'apply', effect: 'ярость', to: { expr: '@цель' } }] },
+    успокоиться: { label: 'Успокоиться', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }], steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'status', mode: 'remove', effect: 'ярость', to: { expr: '@цель' } }] },
+    пинг: { label: 'Пинг', activation: 'passive', attach: [{ type: 'status', mode: 'remove', effect: 'пинг', to: { expr: '@носитель' } }, { type: 'status', mode: 'apply', effect: 'понг', to: { expr: '@носитель' } }] },
+    понг: { label: 'Понг', activation: 'passive', attach: [{ type: 'status', mode: 'remove', effect: 'понг', to: { expr: '@носитель' } }, { type: 'status', mode: 'apply', effect: 'пинг', to: { expr: '@носитель' } }] },
   },
   
 } as unknown as System;

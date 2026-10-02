@@ -28,7 +28,7 @@ const rule: any = {
   params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
   steps: [
     { type: 'each', of: 'цели', as: 'цель' },
-    { id: 'try_бросок', type: 'roll', die: { constant: 'pool_die' }, bonus: { expr: '0' }, by: { expr: '@действующий' } },
+    { id: 'try_бросок', type: 'roll', die: 'pool_die', bonus: { expr: '0' }, by: { expr: '@действующий' } },
     { id: 'try', type: 'check', value: { expr: '@try_бросок' }, versus: { expr: '2' } },
   ],
 };

@@ -144,7 +144,7 @@ group('бросок несёт несколько меток, одна прих�
         params: [ACTOR, TARGETS, { key: 'чем', label: 'Чем спасаются', kind: 'choice', from: 'черты' }],
         steps: [
           EACH,
-          { id: 'спас_бросок', type: 'roll', die: { constant: 'к20' }, bonus: { expr: '@цель.чем.спас' }, tags: ['спас', { expr: '@чем' }], by: { expr: '@цель' }, against: { expr: '@действующий' } },
+          { id: 'спас_бросок', type: 'roll', die: 'к20', bonus: { expr: '@цель.чем.спас' }, tags: ['спас', { expr: '@чем' }], by: { expr: '@цель' }, against: { expr: '@действующий' } },
           { id: 'спас', type: 'check', value: { expr: '@спас_бросок' }, versus: { expr: '12' }, continueOn: 'always' },
         ],
       },
@@ -186,8 +186,8 @@ group('общий держатель: взялся за новое — стар�
       концентрация: { label: 'Концентрация', activation: 'passive', on: [{ on: 'moment:scene-end', steps: [] }] },
       благословлён: { label: 'Благословлён', activation: 'passive', modifiers: [] },
       ускорен: { label: 'Ускорен', activation: 'passive', modifiers: [] },
-      благословение: { label: 'Благословение', activation: 'manual', bond: { effect: 'концентрация', by: 'действующий' }, params: [ACTOR, TARGETS], steps: [EACH, { type: 'status', mode: 'apply', effect: { const: 'благословлён' }, to: { expr: '@цель' } }] },
-      ускорение: { label: 'Ускорение', activation: 'manual', bond: { effect: 'концентрация', by: 'действующий' }, params: [ACTOR, TARGETS], steps: [EACH, { type: 'status', mode: 'apply', effect: { const: 'ускорен' }, to: { expr: '@цель' } }] },
+      благословение: { label: 'Благословение', activation: 'manual', bond: { effect: 'концентрация', by: 'действующий' }, params: [ACTOR, TARGETS], steps: [EACH, { type: 'status', mode: 'apply', effect: 'благословлён', to: { expr: '@цель' } }] },
+      ускорение: { label: 'Ускорение', activation: 'manual', bond: { effect: 'концентрация', by: 'действующий' }, params: [ACTOR, TARGETS], steps: [EACH, { type: 'status', mode: 'apply', effect: 'ускорен', to: { expr: '@цель' } }] },
     },
     
   } as unknown as System;
@@ -240,13 +240,13 @@ group('наложенное помнит число, штрафная кость
         label: 'Горит', activation: 'passive', params: [{ key: 'сила', label: 'Сила', kind: 'number', optional: true }],
         on: [{ on: 'moment:turn-start', steps: [{ type: 'apply', target: { expr: '@носитель.хиты' }, direction: 'subtract', value: { expr: '@сила' } }] }],
       },
-      поджечь: { label: 'Поджечь', activation: 'manual', params: [ACTOR, TARGETS], steps: [EACH, { type: 'status', mode: 'apply', effect: { const: 'горит' }, to: { expr: '@цель' }, args: { сила: { expr: '4' } } }] },
+      поджечь: { label: 'Поджечь', activation: 'manual', params: [ACTOR, TARGETS], steps: [EACH, { type: 'status', mode: 'apply', effect: 'горит', to: { expr: '@цель' }, args: { сила: { expr: '4' } } }] },
       порченый: { label: 'Порченый', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['атака'], if: OWN, edit: 'порча' }] },
       удар: {
         label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS],
         steps: [
           EACH,
-          { id: 'hit_бросок', type: 'roll', die: { constant: 'к20' }, tags: ['атака'], by: { expr: '@действующий' }, against: { expr: '@цель' } },
+          { id: 'hit_бросок', type: 'roll', die: 'к20', tags: ['атака'], by: { expr: '@действующий' }, against: { expr: '@цель' } },
           { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '@цель.кд' } },
           { id: 'dmg', type: 'roll', fixed: { expr: "кинуть('1d6', если(@hit.natural >= @действующий.крит_от, 2, 1))" } },
           { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@dmg' } },

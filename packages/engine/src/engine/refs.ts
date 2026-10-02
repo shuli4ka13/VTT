@@ -1,4 +1,3 @@
-import { dieText } from './lead-die.ts';
 import { compile } from '../formula/index.ts';
 import type { Tools, Value } from '../formula/index.ts';
 import { EngineError } from './errors.ts';
@@ -65,7 +64,7 @@ export function sheetHead(name: string, sheets: Sheets | undefined): { head: str
 
 const DESK_NAME = 'стол';
 
-const FORMS = ['expr', 'const', 'param', 'prop', 'tag', 'constant'];
+const FORMS = ['expr'];
 
 type AnyRef = Record<string, unknown>;
 
@@ -78,36 +77,7 @@ const stepInto = (at: unknown, key: string): unknown => {
 
 const knownOf = (ctx: RefContext): Record<string, unknown> => ({ ...(ctx.sender ?? {}), ...(ctx.results ?? {}) });
 
-function paramValue(key: string, optional: boolean, ctx: RefContext): unknown {
-  const decl = (ctx.paramDefs || []).find(p => p.key === key);
-  if (!decl) {
-    throw new EngineError(`${who(ctx)}: эффект не объявляет параметра «${key}»`);
-  }
-  const value = fromArgs(key, ctx);
-  if (value === undefined || value === '' || value === null) {
-    if (optional) return null;
-    throw new EngineError(`${who(ctx)}: параметр «${key}» не заполнен`);
-  }
-
-  if (isFormula(decl, value)) return evaluate(value, inRecord(ctx));
-  return value;
-}
-
 const inRecord = (ctx: RefContext): RefContext => (ctx.props ? { ...ctx, recordScope: true } : ctx);
-
-function propValue(key: string, optional: boolean, ctx: RefContext): unknown {
-  if (!ctx.props) {
-    if (optional) return null;
-    throw new EngineError(
-      `${who(ctx)}: неоткуда взять свойство «${key}» — у источника нет записи со свойствами`);
-  }
-  if (ctx.props[key] === undefined) {
-    if (optional) return null;
-    throw new EngineError(
-      `${who(ctx)}: запись-источник не заполнила свойство «${key}»`);
-  }
-  return ctx.props[key];
-}
 
 const isFormula = (decl: Param | undefined, value: unknown): value is string =>
   decl?.kind === 'number' && typeof value === 'string';
@@ -121,26 +91,19 @@ function fromArgs(key: string, ctx: RefContext): unknown {
   const arg = (ctx.params || {})[key];
   if (arg === null || typeof arg !== 'object') return arg;
   if ('sheet' in arg && 'tag' in arg) return arg;
-  if ('prop' in arg) return (ctx.props || {})[String((arg as AnyRef).prop)];
-  if ('const' in arg) return (arg as AnyRef).const;
   if ('expr' in arg) {
     const source = String((arg as AnyRef).expr);
     const decl = (ctx.paramDefs || []).find(p => p.key === key);
     return !decl || decl.kind === 'number' ? recordNamesInline(source, ctx) : evaluate(source, inRecord(ctx));
   }
   throw new EngineError(
-    `${who(ctx)}: аргумент «${key}» неизвестной формы ${JSON.stringify(arg)} — умею значение, { const }, { prop } или { expr }`);
+    `${who(ctx)}: аргумент «${key}» неизвестной формы ${JSON.stringify(arg)} — умею значение или { expr }`);
 }
 
 export function resolveRef(ref: unknown, ctx: RefContext): unknown {
   if (ref === null || ref === undefined || typeof ref !== 'object') return ref ?? null;
   const r = ref as AnyRef;
-  if ('const' in r) return r.const;
   if ('expr' in r) return evaluate(r.expr, ctx);
-  if ('param' in r) return paramValue(String(r.param), Boolean(r.optional), ctx);
-  if ('prop' in r) return propValue(String(r.prop), Boolean(r.optional), ctx);
-  if ('tag' in r) return ctx.pass.resolve(String(r.tag));
-  if ('constant' in r) return dieText(ctx.pass.system, String(r.constant));
   return unknownForm(r, ctx);
 }
 
@@ -263,7 +226,6 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
 export function lonelyField(ref: unknown, system?: System): string | null {
   if (!ref || typeof ref !== 'object') return null;
   const r = ref as AnyRef;
-  if ('tag' in r) return String(r.tag);
   if (!('expr' in r) || typeof r.expr !== 'string') return null;
   const exact = /^\s*[@#]([\p{L}\p{N}_.-]+)\s*$/u.exec(r.expr);
   if (!exact) return null;

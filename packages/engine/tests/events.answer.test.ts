@@ -25,7 +25,7 @@ const system = {
       params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
       steps: [
         { type: 'each', of: 'цели', as: 'цель' },
-        { id: 'нанесено', type: 'emit', effect: 'урон', args: { лист: { expr: '@цель' }, сколько: { const: 10 } } },
+        { id: 'нанесено', type: 'emit', effect: 'урон', args: { лист: { expr: '@цель' }, сколько: { expr: '10' } } },
         { type: 'emit', effect: 'лечение', args: { лист: { expr: '@действующий' }, сколько: { expr: 'округлить вниз(@нанесено.amount / 2)' } } },
       ],
     },

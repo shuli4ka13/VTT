@@ -199,7 +199,7 @@ group('образец D&D: урон сперва съедает временны
           params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
           steps: [
             { type: 'each', of: 'цели', as: 'цель' },
-            { type: 'emit', effect: 'damage', args: { лист: { expr: '@цель' }, источник: { expr: '@действующий' }, amount: { const: amount }, damage_type: { const: 'рубящий' } } },
+            { type: 'emit', effect: 'damage', args: { лист: { expr: '@цель' }, источник: { expr: '@действующий' }, amount: { expr: String(amount) }, damage_type: { expr: '"рубящий"' } } },
           ],
         },
       },

@@ -60,14 +60,14 @@ describe('проверка одной формулой', () => {
 
   it('атака: кость, метки, прибавка и поле цели', () => {
     expect(parseCheck('кинуть(@lead, @атака, @ловкость) + 2 >= @цель.ac', system)).toEqual({
-      roll: { die: { constant: 'lead' }, bonus: { expr: '2' }, tags: ['атака', 'ловкость'] },
+      roll: { die: 'lead', bonus: { expr: '2' }, tags: ['атака', 'ловкость'] },
       successWhen: 'atLeast',
       versus: { expr: '@цель.ac' },
     });
   });
 
   it('кость числом находится среди костей системы, а кость чужого листа — не кость системы', () => {
-    expect(parseCheck('кинуть(1к20) <= 10', system)).toMatchObject({ roll: { die: { constant: 'lead' } }, successWhen: 'notOver' });
+    expect(parseCheck('кинуть(1к20) <= 10', system)).toMatchObject({ roll: { die: 'lead' }, successWhen: 'notOver' });
     expect(parseCheck('кинуть(@цель.lead) >= 12', system)).toHaveProperty('error');
     expect(parseCheck('кинуть(2к6) >= 7', system)).toHaveProperty('error');
   });
@@ -87,11 +87,11 @@ describe('проверка одной формулой', () => {
   });
 
   it('метка может прийти входом', () => {
-    const asName = (name: string) => (name === 'чем' ? ({ param: 'чем' } as never) : null);
+    const asName = (name: string) => (name === 'чем' ? ({ expr: '@чем' } as never) : null);
     expect(parseCheck('кинуть(@lead, @атака, @чем) >= 10', system, asName)).toMatchObject({
       roll: { tags: ['атака', { expr: '@чем' }] },
     });
-    expect(formatCheck({ die: { constant: 'lead' }, tags: ['атака', { expr: '@чем' }] }, { versus: { expr: '10' } }))
+    expect(formatCheck({ die: 'lead', tags: ['атака', { expr: '@чем' }] }, { versus: { expr: '10' } }))
       .toBe('кинуть(@lead, @атака, @чем) >= 10');
   });
 });

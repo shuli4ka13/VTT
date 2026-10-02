@@ -75,8 +75,8 @@ group('формула видит результат шага выше', () => {
           params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
           steps: [
             { type: 'each', of: 'цели', as: 'цель' },
-            { id: 'бросок', type: 'roll', die: { constant: 'к20' }, by: { expr: '@действующий' } },
-            { id: 'урон', type: 'roll', die: { const: '1d6' },
+            { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
+            { id: 'урон', type: 'roll', die: { expr: '"1d6"' },
               count: { expr: 'если(@бросок.natural >= @действующий.порог, 2, 1)' } },
             { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@урон' } },
           ],

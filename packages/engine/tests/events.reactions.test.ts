@@ -18,7 +18,7 @@ const shieldWorld: any = {
     ...system.effects,
     shield: {
       label: 'Щит', activation: 'passive',
-      on: [{ on: 'before:атака', confirm: true, if: { expr: 'все(@цель == @носитель, @hit.success)' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'shield_up' }, to: { expr: '@носитель' } }] }],
+      on: [{ on: 'before:атака', confirm: true, if: { expr: 'все(@цель == @носитель, @hit.success)' }, steps: [{ type: 'status', mode: 'apply', effect: 'shield_up', to: { expr: '@носитель' } }] }],
     },
     shield_up: {
       label: 'Под щитом', activation: 'passive', duration: { kind: 'turns', max: 1 },
@@ -117,7 +117,7 @@ group('подписка на исходящее: вампиризм и метк�
       },
       brand: {
         label: 'Метка охотника', activation: 'passive', duration: { kind: 'permanent' },
-        on: [{ on: 'after:fire_bolt', if: { expr: 'все(@действующий == @носитель, @hit.success)' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'poisoned' }, to: { expr: '@цель' } }] }],
+        on: [{ on: 'after:fire_bolt', if: { expr: 'все(@действующий == @носитель, @hit.success)' }, steps: [{ type: 'status', mode: 'apply', effect: 'poisoned', to: { expr: '@цель' } }] }],
       },
     },
   };
@@ -234,7 +234,7 @@ group('триггер до разрешения: срабатывает молч
       ...system.effects,
       brace: {
         label: 'Стойка', activation: 'passive',
-        on: [{ on: 'before:strike', if: { expr: '@цель == @носитель' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'wall' }, to: { expr: '@носитель' } }] }],
+        on: [{ on: 'before:strike', if: { expr: '@цель == @носитель' }, steps: [{ type: 'status', mode: 'apply', effect: 'wall', to: { expr: '@носитель' } }] }],
       },
       wall: {
         label: 'Стена', activation: 'passive', duration: { kind: 'turns', max: 1 },

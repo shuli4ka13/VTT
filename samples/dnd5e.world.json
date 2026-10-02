@@ -174,9 +174,7 @@
                 "ловкость",
                 "инициатива"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@initiative"
               }
@@ -1538,9 +1536,7 @@
                 "проверка",
                 "{value}"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@строка.mod"
               }
@@ -1578,9 +1574,7 @@
                 "спасбросок",
                 "{value}"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@строка.save"
               }
@@ -1648,9 +1642,7 @@
                 "{ability}",
                 "{value}"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@строка.total"
               }
@@ -2960,9 +2952,7 @@
       }
     },
     "initiative": {
-      "die": {
-        "constant": "lead_die"
-      },
+      "die": "lead_die",
       "bonus": {
         "expr": "@initiative"
       },
@@ -3022,9 +3012,7 @@
           {
             "id": "hit_бросок",
             "type": "roll",
-            "die": {
-              "constant": "lead_die"
-            },
+            "die": "lead_die",
             "bonus": {
               "expr": "@attack_with"
             },
@@ -3364,9 +3352,7 @@
           {
             "id": "hit_бросок",
             "type": "roll",
-            "die": {
-              "constant": "lead_die"
-            },
+            "die": "lead_die",
             "bonus": {
               "expr": "@действующий.spell_attack"
             },
@@ -3505,9 +3491,7 @@
           {
             "id": "save_бросок",
             "type": "roll",
-            "die": {
-              "constant": "lead_die"
-            },
+            "die": "lead_die",
             "bonus": {
               "expr": "@цель.save_by.save"
             },
@@ -3561,8 +3545,7 @@
             "type": "status",
             "mode": "apply",
             "effect": {
-              "param": "status",
-              "optional": true
+              "expr": "@status"
             },
             "to": {
               "expr": "@цель"
@@ -3661,9 +3644,7 @@
           {
             "id": "hit_бросок",
             "type": "roll",
-            "die": {
-              "constant": "lead_die"
-            },
+            "die": "lead_die",
             "bonus": {
               "expr": "@действующий.spell_attack"
             },
@@ -3730,8 +3711,7 @@
             "type": "status",
             "mode": "apply",
             "effect": {
-              "param": "status",
-              "optional": true
+              "expr": "@status"
             },
             "to": {
               "expr": "@цель"
@@ -3804,9 +3784,7 @@
           {
             "id": "save_бросок",
             "type": "roll",
-            "die": {
-              "constant": "lead_die"
-            },
+            "die": "lead_die",
             "bonus": {
               "expr": "@цель.save_by.save"
             },
@@ -3928,9 +3906,7 @@
           {
             "id": "save_бросок",
             "type": "roll",
-            "die": {
-              "constant": "lead_die"
-            },
+            "die": "lead_die",
             "bonus": {
               "expr": "@цель.save_by.save"
             },
@@ -3984,8 +3960,7 @@
             "type": "status",
             "mode": "apply",
             "effect": {
-              "param": "status",
-              "optional": true
+              "expr": "@status"
             },
             "to": {
               "expr": "@цель"
@@ -4108,9 +4083,7 @@
           {
             "id": "save_бросок",
             "type": "roll",
-            "die": {
-              "constant": "lead_die"
-            },
+            "die": "lead_die",
             "bonus": {
               "expr": "@цель.save_by.save"
             },
@@ -4143,7 +4116,7 @@
             "type": "status",
             "mode": "apply",
             "effect": {
-              "param": "status"
+              "expr": "@status"
             },
             "to": {
               "expr": "@цель"
@@ -4194,9 +4167,7 @@
           {
             "id": "save_бросок",
             "type": "roll",
-            "die": {
-              "constant": "lead_die"
-            },
+            "die": "lead_die",
             "bonus": {
               "expr": "@цель.save_by.save"
             },
@@ -4229,7 +4200,7 @@
             "type": "status",
             "mode": "apply",
             "effect": {
-              "param": "status"
+              "expr": "@status"
             },
             "to": {
               "expr": "@цель"
@@ -4279,7 +4250,7 @@
             "type": "status",
             "mode": "apply",
             "effect": {
-              "param": "status"
+              "expr": "@status"
             },
             "to": {
               "expr": "@цель"
@@ -4322,7 +4293,7 @@
             "type": "status",
             "mode": "apply",
             "effect": {
-              "param": "status"
+              "expr": "@status"
             },
             "to": {
               "expr": "@цель"
@@ -4401,8 +4372,7 @@
             "type": "status",
             "mode": "remove",
             "effect": {
-              "param": "cure",
-              "optional": true
+              "expr": "@cure"
             },
             "to": {
               "expr": "@цель"
@@ -4440,7 +4410,7 @@
             "type": "status",
             "mode": "remove",
             "effect": {
-              "param": "cure"
+              "expr": "@cure"
             },
             "to": {
               "expr": "@цель"
@@ -4659,9 +4629,7 @@
           {
             "type": "status",
             "mode": "apply",
-            "effect": {
-              "const": "raging"
-            },
+            "effect": "raging",
             "to": {
               "expr": "@действующий"
             }
@@ -4719,9 +4687,7 @@
           {
             "type": "status",
             "mode": "apply",
-            "effect": {
-              "const": "reckless"
-            },
+            "effect": "reckless",
             "to": {
               "expr": "@действующий"
             }
@@ -4755,9 +4721,7 @@
           {
             "type": "status",
             "mode": "apply",
-            "effect": {
-              "const": "bardic_ready"
-            },
+            "effect": "bardic_ready",
             "to": {
               "expr": "@цель"
             }
@@ -4908,9 +4872,7 @@
           {
             "id": "save_бросок",
             "type": "roll",
-            "die": {
-              "constant": "lead_die"
-            },
+            "die": "lead_die",
             "bonus": {
               "expr": "@цель.abilities.мудрость.save"
             },
@@ -4940,9 +4902,7 @@
           {
             "type": "status",
             "mode": "apply",
-            "effect": {
-              "const": "frightened"
-            },
+            "effect": "frightened",
             "to": {
               "expr": "@цель"
             }
@@ -5000,9 +4960,7 @@
           {
             "type": "status",
             "mode": "apply",
-            "effect": {
-              "const": "dodging"
-            },
+            "effect": "dodging",
             "to": {
               "expr": "@действующий"
             }
@@ -5050,9 +5008,7 @@
           {
             "type": "status",
             "mode": "apply",
-            "effect": {
-              "const": "dashing"
-            },
+            "effect": "dashing",
             "to": {
               "expr": "@цель"
             }
@@ -5123,9 +5079,7 @@
           {
             "id": "sneak_бросок",
             "type": "roll",
-            "die": {
-              "constant": "lead_die"
-            },
+            "die": "lead_die",
             "bonus": {
               "expr": "@действующий.skills.скрытность.total"
             },
@@ -5161,9 +5115,7 @@
           {
             "type": "status",
             "mode": "apply",
-            "effect": {
-              "const": "hidden"
-            },
+            "effect": "hidden",
             "to": {
               "expr": "@цель"
             }
@@ -5211,9 +5163,7 @@
           {
             "type": "status",
             "mode": "apply",
-            "effect": {
-              "const": "helped"
-            },
+            "effect": "helped",
             "to": {
               "expr": "@цель"
             },
@@ -5629,9 +5579,7 @@
           {
             "type": "status",
             "mode": "apply",
-            "effect": {
-              "const": "dead"
-            },
+            "effect": "dead",
             "to": {
               "expr": "@лист"
             },
@@ -6379,9 +6327,7 @@
               {
                 "type": "status",
                 "mode": "apply",
-                "effect": {
-                  "const": "shield_up"
-                },
+                "effect": "shield_up",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -6439,9 +6385,7 @@
               {
                 "id": "save_бросок",
                 "type": "roll",
-                "die": {
-                  "constant": "lead_die"
-                },
+                "die": "lead_die",
                 "bonus": {
                   "expr": "@источник.abilities.ловкость.save"
                 },
@@ -6541,9 +6485,7 @@
               {
                 "type": "status",
                 "mode": "apply",
-                "effect": {
-                  "const": "uncanny_up"
-                },
+                "effect": "uncanny_up",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -6726,9 +6668,7 @@
               {
                 "id": "save_бросок",
                 "type": "roll",
-                "die": {
-                  "constant": "lead_die"
-                },
+                "die": "lead_die",
                 "bonus": {
                   "expr": "@носитель.abilities.телосложение.save"
                 },
@@ -6755,9 +6695,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "blinded"
-                },
+                "effect": "blinded",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -6841,9 +6779,7 @@
               {
                 "id": "save_бросок",
                 "type": "roll",
-                "die": {
-                  "constant": "lead_die"
-                },
+                "die": "lead_die",
                 "bonus": {
                   "expr": "@носитель.abilities.мудрость.save"
                 },
@@ -6870,9 +6806,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "frightened"
-                },
+                "effect": "frightened",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -6924,9 +6858,7 @@
           {
             "type": "status",
             "mode": "remove",
-            "effect": {
-              "const": "concentration"
-            },
+            "effect": "concentration",
             "to": {
               "expr": "@носитель"
             }
@@ -7040,9 +6972,7 @@
               {
                 "id": "save_бросок",
                 "type": "roll",
-                "die": {
-                  "constant": "lead_die"
-                },
+                "die": "lead_die",
                 "bonus": {
                   "expr": "@носитель.abilities.мудрость.save"
                 },
@@ -7069,9 +6999,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "paralyzed"
-                },
+                "effect": "paralyzed",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -7302,9 +7230,7 @@
               {
                 "id": "save_бросок",
                 "type": "roll",
-                "die": {
-                  "constant": "lead_die"
-                },
+                "die": "lead_die",
                 "bonus": {
                   "expr": "@носитель.abilities.сила.save"
                 },
@@ -7331,9 +7257,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "restrained"
-                },
+                "effect": "restrained",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -7468,9 +7392,7 @@
           {
             "type": "status",
             "mode": "apply",
-            "effect": {
-              "const": "prone"
-            },
+            "effect": "prone",
             "to": {
               "expr": "@носитель"
             }
@@ -7705,9 +7627,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "uncanny_up"
-                },
+                "effect": "uncanny_up",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -7934,9 +7854,7 @@
               {
                 "id": "save_бросок",
                 "type": "roll",
-                "die": {
-                  "constant": "lead_die"
-                },
+                "die": "lead_die",
                 "bonus": {
                   "expr": "@носитель.abilities.мудрость.save"
                 },
@@ -7963,9 +7881,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "slowed"
-                },
+                "effect": "slowed",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -8709,9 +8625,7 @@
               {
                 "id": "save_бросок",
                 "type": "roll",
-                "die": {
-                  "constant": "lead_die"
-                },
+                "die": "lead_die",
                 "bonus": {
                   "expr": "@носитель.abilities.телосложение.save"
                 },
@@ -8738,9 +8652,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "concentration"
-                },
+                "effect": "concentration",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -8768,9 +8680,7 @@
               {
                 "id": "спас_бросок",
                 "type": "roll",
-                "die": {
-                  "constant": "lead_die"
-                },
+                "die": "lead_die",
                 "tags": [
                   "спасбросок"
                 ],
@@ -8865,9 +8775,7 @@
               {
                 "type": "status",
                 "mode": "apply",
-                "effect": {
-                  "const": "unconscious"
-                },
+                "effect": "unconscious",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -8875,9 +8783,7 @@
               {
                 "type": "status",
                 "mode": "apply",
-                "effect": {
-                  "const": "dying"
-                },
+                "effect": "dying",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -8905,9 +8811,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "unconscious"
-                },
+                "effect": "unconscious",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -8915,9 +8819,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "dying"
-                },
+                "effect": "dying",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -8925,9 +8827,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "stable"
-                },
+                "effect": "stable",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -9000,9 +8900,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "dying"
-                },
+                "effect": "dying",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -9010,9 +8908,7 @@
               {
                 "type": "status",
                 "mode": "apply",
-                "effect": {
-                  "const": "dead"
-                },
+                "effect": "dead",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -9040,9 +8936,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "dying"
-                },
+                "effect": "dying",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -9050,9 +8944,7 @@
               {
                 "type": "status",
                 "mode": "apply",
-                "effect": {
-                  "const": "stable"
-                },
+                "effect": "stable",
                 "to": {
                   "expr": "@носитель"
                 }

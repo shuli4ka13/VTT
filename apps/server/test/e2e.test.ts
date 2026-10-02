@@ -502,7 +502,7 @@ describe('концентрация снимается с листа', () => {
         держу: {
           label: 'Держу', activation: 'manual', bond: { effect: 'держит', by: 'действующий' },
           params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
-          steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'status', mode: 'apply', effect: { const: 'связан' }, to: { expr: '@цель' } }],
+          steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'status', mode: 'apply', effect: 'связан', to: { expr: '@цель' } }],
         },
         связан: { label: 'Связан', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
         держит: { label: 'Держит', activation: 'passive', duration: { kind: 'permanent' } },

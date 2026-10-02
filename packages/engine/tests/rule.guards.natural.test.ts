@@ -24,7 +24,7 @@ const run = (steps: object[], die: number) => {
 };
 
 group('условие шага по числу и степени', () => {
-  const roll = { id: 'hit_бросок', type: 'roll', die: { constant: 'd20' }, bonus: { expr: '5' }, by: { expr: '@действующий' } };
+  const roll = { id: 'hit_бросок', type: 'roll', die: 'd20', bonus: { expr: '5' }, by: { expr: '@действующий' } };
   const hit = { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '1' } };
 
   test('«выпало на костях» — без прибавок: крит при natural ≥ 20', () => {

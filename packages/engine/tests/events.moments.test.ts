@@ -122,7 +122,7 @@ group('поле стало верным', () => {
       без_сознания: { label: 'Без сознания', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
       падение: {
         label: 'Падение', activation: 'passive',
-        on: [{ on: 'field:без_сил', if: { expr: '@лист == @носитель' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'без_сознания' }, to: { expr: '@носитель' } }] }],
+        on: [{ on: 'field:без_сил', if: { expr: '@лист == @носитель' }, steps: [{ type: 'status', mode: 'apply', effect: 'без_сознания', to: { expr: '@носитель' } }] }],
       },
     },
     grants: ['падение'],

@@ -9,8 +9,8 @@ const broken = (): System => {
   const system = emptySystem();
   system.effects.thorns = { label: 'Шипы', activation: 'passive', on: [{ on: '', steps: [] }] } as never;
   system.effects.hit = {
-    label: 'Удар', activation: 'manual',
-    steps: [{ type: 'apply', target: { tag: 'нет_поля' }, value: { expr: '1' } }],
+    label: 'Удар', activation: 'manual', params: [{ key: 'цель', kind: 'sheet' }],
+    steps: [{ type: 'apply', target: { expr: '@цель.нет_поля' }, value: { expr: '1' } }],
   } as never;
   return system;
 };

@@ -338,9 +338,7 @@
       }
     },
     "initiative": {
-      "die": {
-        "constant": "lead_die"
-      },
+      "die": "lead_die",
       "bonus": {
         "expr": "@abilities.ловкость.mod + @level"
       }
@@ -423,9 +421,7 @@
           {
             "id": "hit_бросок",
             "type": "roll",
-            "die": {
-              "constant": "lead_die"
-            },
+            "die": "lead_die",
             "bonus": {
               "expr": "@attack_with + @действующий.level + @стол.escalation"
             },
@@ -553,9 +549,7 @@
           {
             "id": "hit_бросок",
             "type": "roll",
-            "die": {
-              "constant": "lead_die"
-            },
+            "die": "lead_die",
             "bonus": {
               "expr": "@to_hit"
             },

@@ -65,7 +65,6 @@ function choiceArgs(system: System, table: string): { where: Where; args: Loose;
 
 const constOf = (arg: unknown): unknown => {
   if (!arg || typeof arg !== 'object') return undefined;
-  if ('const' in (arg as Loose)) return (arg as Loose).const;
   const text = /^\s*"([^"]*)"\s*$/.exec(String((arg as Loose).expr ?? ''));
   return text ? text[1] : undefined;
 };

@@ -17,7 +17,7 @@ const withProbe = (tags: string[]) => {
       amount: { expr: '10' },
       лист: { expr: '@цель' },
       источник: { expr: '@действующий' },
-      ...Object.fromEntries(tags.map(tag => [tag.startsWith('по ') ? 'aim' : 'damage_type', { const: tag }])),
+      ...Object.fromEntries(tags.map(tag => [tag.startsWith('по ') ? 'aim' : 'damage_type', { expr: JSON.stringify(tag) }])),
     } }],
   } as never;
   system.tables = { ...system.tables, проба: { shape: 'book', use: 'action', label: 'Проба' } } as never;

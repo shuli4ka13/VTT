@@ -67,12 +67,22 @@ const whoOf = (effect: Effect, ref: unknown): string => {
 
 export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs: string, names?: Names): Segment {
   if (ref === null || ref === undefined || ref === '') return hole(emptyAs);
+  if (typeof ref === 'string') {
+    if (system.constants?.[ref]) {
+      const reading = readingWord(system, ref);
+      return seg(reading ? `${dieWord(system, ref)} (${reading})` : dieWord(system, ref));
+    }
+    if (system.effects?.[ref]) return seg(`«${system.effects[ref]!.label ?? ref}»`);
+    if (system.tables?.[ref]) return seg(`«${system.tables[ref]!.label ?? ref}»`);
+    return seg(ref);
+  }
   if (typeof ref !== 'object') return seg(String(ref));
   const r = ref as Record<string, unknown>;
-  if ('const' in r) return r.const === '' || r.const == null ? hole(emptyAs) : seg(asDice(String(r.const)));
   if ('expr' in r) {
     const text = String(r.expr ?? '').trim();
     if (!text) return hole(emptyAs);
+    const literal = /^(["'])(.*)\1$/su.exec(text);
+    if (literal) return seg(asDice(literal[2]!));
     const alone = /^@([\p{L}\p{N}_.]+)$/u.exec(text)?.[1];
     if (alone) {
       const head = alone.split('.')[0]!;
@@ -87,17 +97,6 @@ export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs
       }
     }
     return seg(formulaAsLabels(system, text, names));
-  }
-  if ('tag' in r) return seg(`«${labelOfTag(system, String(r.tag))}»`);
-  if ('param' in r) {
-    const declared = effect.params?.find(p => p.key === r.param);
-    return hole(`вход «${declared?.label ?? String(r.param)}»`);
-  }
-  if ('prop' in r) return hole(`свойство записи «${String(r.prop)}»`);
-  if ('constant' in r) {
-    const name = String(r.constant);
-    const reading = readingWord(system, name);
-    return seg(reading ? `${dieWord(system, name)} (${reading})` : dieWord(system, name));
   }
   return hole(emptyAs);
 }
@@ -186,8 +185,8 @@ export function changeReadback(step: Step, amount: Step | null, system: System, 
   if (step.type === 'status') {
     const ref = s.effect;
     let what: Segment;
-    if (ref && typeof ref === 'object' && 'const' in ref) {
-      const id = String((ref as any).const ?? '');
+    if (typeof ref === 'string') {
+      const id = ref;
       const known = id ? system.effects?.[id] : undefined;
       what = known ? seg(`«${known.label ?? id}».`) : hole(`«${id || '?'}» — в системе нет`);
     } else what = refSegment(ref, system, effect, 'какое состояние?', names);
@@ -223,9 +222,11 @@ export function sendReadback(step: Step, system: System, effect: Effect, names?:
   const amount = !main ? [] : [sent === undefined ? hole('сколько?') : refSegment(sent, system, effect, 'сколько?', names)];
   const word = (t: unknown): string => {
     if (typeof t === 'string') return t;
-    const r = (t ?? {}) as Record<string, unknown>;
-    if ('const' in r) return String(r.const);
-    const param = typeof r.param === 'string' ? effect.params?.find(p => p.key === r.param) : undefined;
+    const text = String(((t ?? {}) as Record<string, unknown>).expr ?? '').trim();
+    const literal = /^(["'])(.*)\1$/su.exec(text);
+    if (literal) return literal[2]!;
+    const input = /^@([\p{L}\p{N}_]+)$/u.exec(text)?.[1];
+    const param = input ? effect.params?.find(p => p.key === input) : undefined;
     return param ? String(param.label ?? param.key) : '…';
   };
   const chosen = (event?.params ?? []).filter(p => p.kind === 'choice' && args[p.key] !== undefined).map(p => word(args[p.key]));

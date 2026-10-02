@@ -113,32 +113,17 @@ function slotRefs(value: unknown, slotKind: string | undefined, from: Where, sco
     }
     return;
   }
+  if (typeof value === 'string') {
+    const kind = NAMED[slotKind ?? ''];
+    if (kind && value) out.push({ kind, key: value, from });
+    return;
+  }
   if (typeof value !== 'object') return;
   const r = value as Record<string, unknown>;
-  if ('tag' in r) {
-    if (r.tag) out.push({ kind: 'field', key: String(r.tag), from });
-    return;
-  }
-  if ('constant' in r) {
-    if (r.constant) out.push({ kind: 'constant', key: String(r.constant), from });
-    return;
-  }
-  if ('param' in r) {
-    out.push({ kind: 'param', key: String(r.param), from, scope: 'chain' });
-    return;
-  }
-  if ('prop' in r) {
-    if (r.prop) out.push({ kind: 'prop', key: String(r.prop), from });
-    return;
-  }
-  if ('expr' in r) {
-    exprRefs(String(r.expr ?? ''), from, scope, out);
-    return;
-  }
-  if ('const' in r && slotKind === 'effectRef') {
-    if (typeof r.const === 'string' && r.const) out.push({ kind: 'effect', key: r.const, from });
-  }
+  if ('expr' in r) exprRefs(String(r.expr ?? ''), from, scope, out);
 }
+
+const NAMED: Record<string, RefKind> = { effectRef: 'effect', constantRef: 'constant', tableRef: 'table' };
 
 export const tablesIn = (source: string): string[] => {
   let ast: Node;
@@ -211,7 +196,7 @@ export function chainRefs(
     const scope: ChainScope = { params, earlier: new Set(earlier), sheets: new Set(named), bare: true, later };
     const mod = registry.get(step.type);
     for (const slot of (mod?.slots ?? []) as { key: string; kind?: string; refersTo?: string }[]) {
-      const kind = slot.refersTo === 'effect' ? 'effectRef' : slot.kind;
+      const kind = slot.refersTo ? `${slot.refersTo}Ref` : slot.kind;
       slotRefs(readPath(step, slot.key), kind, from, scope, out);
     }
     guardRefs(step.if, from, scope, out);
@@ -418,7 +403,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
   for (const field of fieldsOf(system)) {
     const from: Where = { tab: 'sheet', field: field.tag };
     for (const tag of field.roll?.tags ?? []) out.push({ kind: 'roll', key: tag, from });
-    if (field.roll?.die?.constant) out.push({ kind: 'constant', key: field.roll.die.constant, from });
+    if (field.roll?.die) out.push({ kind: 'constant', key: field.roll.die, from });
     if (field.value.kind === 'formula') exprRefs(field.value.expr, from, noScope, out);
     if (field.value.kind === 'stored' && field.value.type === 'choice') out.push({ kind: 'table', key: field.value.from ?? '', from });
     if (field.lives === 'desk') {
@@ -439,6 +424,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
 
   for (const [id, effect] of Object.entries(system.effects ?? {})) effectRefs(system, id, effect, out);
 
+  const allProps = new Set(kindsOf(system).flatMap(([, spec]) => (spec.columns ?? []).map(p => p.key)));
   for (const [kind, spec] of kindsOf(system)) {
     const own = new Set((spec.columns ?? []).map(p => p.key));
     for (const prop of spec.columns ?? []) typedRefs(prop, { tab: 'records', kind, part: 'props', key: prop.key }, out);
@@ -447,13 +433,14 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
       if (binding.effect) out.push({ kind: 'effect', key: binding.effect, from });
       const bound = system.effects?.[binding.effect]?.params ?? [];
       const argScope = sheetScope(new Set([...bound.filter(p => p.kind !== 'sheet').map(p => p.key), ...own]), [...bound.filter(p => p.kind === 'sheet').map(p => p.key), HOLDER]);
+      const paramNames = new Set(bound.map(p => p.key));
       for (const arg of Object.values(binding.args ?? {})) {
-        if (arg && typeof arg === 'object' && 'prop' in arg) {
-          const key = String(arg.prop ?? '');
-          if (key) out.push({ kind: 'prop', key, from, scope: own.has(key) ? kind : 'foreign' });
-        } else {
-          slotRefs(arg, undefined, from, argScope, out);
-        }
+        const expr = arg && typeof arg === 'object' && 'expr' in arg ? String((arg as { expr: unknown }).expr) : '';
+        let deps: readonly string[] = [];
+        try { deps = expr ? compile(expr).deps : []; } catch { deps = []; }
+        const foreign = deps.map(dep => dep.split('.')[0]!).filter(head => !own.has(head) && !paramNames.has(head) && head !== HOLDER && allProps.has(head));
+        for (const key of new Set(foreign)) out.push({ kind: 'prop', key, from, scope: 'foreign' });
+        if (!foreign.length) slotRefs(arg, undefined, from, argScope, out);
       }
     });
     modifierRefs(system, spec.modifiers, { tab: 'records', kind, part: 'modifiers' }, out, spec.shape === 'book' ? own : undefined);
@@ -474,7 +461,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
 
   if (system.initiative) {
     const from: Where = { tab: 'rules', section: 'initiative' };
-    if (system.initiative.die?.constant) out.push({ kind: 'constant', key: system.initiative.die.constant, from });
+    if (system.initiative.die) out.push({ kind: 'constant', key: system.initiative.die, from });
     if (system.initiative.bonus) slotRefs(system.initiative.bonus, undefined, from, noScope, out);
     for (const tag of system.initiative.tags ?? []) out.push({ kind: 'roll', key: tag, from });
   }

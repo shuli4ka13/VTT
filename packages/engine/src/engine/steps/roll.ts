@@ -22,14 +22,14 @@ const LITERAL = /^(\d+)?\s*[dдк]\s*(\d+)$/iu;
 
 export function specOf(ctx: StepContext, die: unknown, count: unknown, roller: string | null = null): Spec {
   let spec: Spec;
-  if (die && typeof die === 'object' && 'const' in (die as object)) {
-    const text = String((die as { const: unknown }).const ?? '');
+  if (typeof die === 'string' && die) {
+    spec = parse(dieConstant(ctx.system, die), (ref, what) => (roller ? ctx.numberOn(roller, ref, what) : ctx.number(ref, what)));
+  } else if (die && typeof die === 'object' && 'expr' in (die as object)) {
+    const text = String(ctx.value(die) ?? '');
     if (!LITERAL.test(text.trim())) throw new EngineError(`«${text}» — не запись кости; жду вроде «1к20» или «2к6»`);
     spec = parse(text);
   } else {
-    const constant = (die as { constant?: string } | undefined)?.constant;
-    if (!constant) throw new EngineError(`${who(ctx)}: броску нужна кость — константа системы или запись вроде «1к20»`);
-    spec = parse(dieConstant(ctx.system, constant), (ref, what) => (roller ? ctx.numberOn(roller, ref, what) : ctx.number(ref, what)));
+    throw new EngineError(`${who(ctx)}: броску нужна кость — константа системы или запись вроде «1к20»`);
   }
   if (count === undefined || count === null) return spec;
   return withCount(spec, ctx.number(count, 'сколько костей'), who(ctx));

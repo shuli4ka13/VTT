@@ -22,7 +22,7 @@ const sheet = { id: 'герой', values: {}, effects: [] };
 
 const rule: any = {
   steps: [
-    { id: 'roll', type: 'roll', die: { constant: 'пул' }, bonus: { expr: '0' }, tags: ['проверка'], by: { expr: '@действующий' } },
+    { id: 'roll', type: 'roll', die: 'пул', bonus: { expr: '0' }, tags: ['проверка'], by: { expr: '@действующий' } },
     { id: 'крит', type: 'check', value: { expr: '@roll.atMax' }, versus: { expr: '2' } },
   ],
 };

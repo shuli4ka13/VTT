@@ -14,7 +14,7 @@ const system = {
     { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
   ] } , оружие: {
       shape: 'book', use: 'item', label: 'Оружие', columns: [{ key: 'урон', label: 'Урон', kind: 'number' }],
-      bindings: [{ label: 'Ударить', effect: 'удар', args: { урон: { prop: 'урон' } } }],
+      bindings: [{ label: 'Ударить', effect: 'удар', args: { урон: { expr: '@урон' } } }],
     }, щит: { shape: 'book', use: 'item', label: 'Щит', columns: [] } },
   effects: {
     удар: {

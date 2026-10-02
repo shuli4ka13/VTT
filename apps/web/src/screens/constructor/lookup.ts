@@ -44,14 +44,11 @@ const argText = (arg: unknown, props: ReadonlySet<string> = new Set()): string =
   if (arg === null || arg === undefined || arg === '') return '';
   if (typeof arg !== 'object') return String(arg);
   const a = arg as Loose;
-  if ('prop' in a) return `свойство записи «${a.prop}»`;
-  if ('const' in a) return String(a.const);
   if ('expr' in a) {
     const lone = /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String(a.expr));
     return lone && props.has(lone[1]!) ? `свойство записи «${lone[1]}»` : String(a.expr);
   }
   if ('table' in a) return `таблица «${a.table}» → ${a.column ?? 'значение'}`;
-  if ('param' in a) return `вход «${a.param}»`;
   return JSON.stringify(a);
 };
 

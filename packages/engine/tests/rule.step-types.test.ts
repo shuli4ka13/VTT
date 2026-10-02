@@ -59,11 +59,11 @@ const run = (steps, opts: any = {}) => {
   };
 };
 
-const viaInput = (key, kind = 'number') => ({ paramDefs: [{ key, kind }], params: { [key]: { prop: key } } });
+const viaInput = (key, kind = 'number') => ({ paramDefs: [{ key, kind }], params: { [key]: { expr: `@${key}` } } });
 
 const attack = (rollOver = {}, checkOver = {}) => [
   {
-    id: 'hit_бросок', type: 'roll', die: { constant: 'lead_die' }, bonus: { expr: '@действующий.attack_bonus' }, tags: ['атака'],
+    id: 'hit_бросок', type: 'roll', die: 'lead_die', bonus: { expr: '@действующий.attack_bonus' }, tags: ['атака'],
     by: { expr: '@действующий' }, against: { expr: '@цель' },
     ...rollOver,
   },
@@ -102,7 +102,7 @@ group('шаги «бросок» и «проверка»', () => {
   test('бросок цели: бросает цель, своими модификаторами, а проверка читает его', () => {
     const save = [
       {
-        id: 'save_бросок', type: 'roll', die: { constant: 'lead_die' }, bonus: HERE('dex_save'), tags: ['спасбросок'],
+        id: 'save_бросок', type: 'roll', die: 'lead_die', bonus: HERE('dex_save'), tags: ['спасбросок'],
         by: { expr: '@цель' }, against: { expr: '@действующий' },
       },
       { id: 'save', type: 'check', value: { expr: '@save_бросок' }, versus: { expr: '@действующий.spell_dc' }, continueOn: 'fail' },
@@ -263,7 +263,7 @@ group('шаг «состояние»', () => {
     ...SYS,
     effects: { ...SYS.effects, poisoned: { ...SYS.effects.poisoned, reapply: stacking } },
   });
-  const poison = { type: 'status', effect: { const: 'poisoned' }, to: { expr: '@цель' } };
+  const poison = { type: 'status', effect: 'poisoned', to: { expr: '@цель' } };
   const twice = sys => run([poison, poison], { sys });
 
   test('вешает эффект на цель', () => {
@@ -289,20 +289,20 @@ group('шаг «состояние»', () => {
   });
 
   test('режим «снять» убирает висящий эффект', () => {
-    const out = run([{ type: 'status', mode: 'remove', effect: { const: 'poisoned' }, to: { expr: '@цель' } }],
+    const out = run([{ type: 'status', mode: 'remove', effect: 'poisoned', to: { expr: '@цель' } }],
       { targetSheet: { ...mirra, effects: [{ effectId: 'poisoned' }] } });
     deepEq(out.sheet.effects, []);
     deepEq(out.removed, ['poisoned']);
   });
 
   test('пустой слот — законная пустота: шаг молчит, а не падает', () => {
-    const out = run([{ type: 'status', effect: { const: null }, to: { expr: '@цель' } }]);
+    const out = run([{ type: 'status', effect: null, to: { expr: '@цель' } }]);
     deepEq(out.sheet.effects, mirra.effects, 'ничего не наложено');
     eq(out.trace[0].effect, null, 'и в журнале это видно');
   });
 
   test('эффект, которого система не объявляет, — внятная ошибка', () => {
-    throws(() => run([{ type: 'status', effect: { const: 'нетакого' }, to: { expr: '@цель' } }]), 'нетакого');
+    throws(() => run([{ type: 'status', effect: 'нетакого', to: { expr: '@цель' } }]), 'нетакого');
   });
 });
 
@@ -311,7 +311,7 @@ group('линт шага — для приговора в конструктор
   test('бросок: без кости и формулы — беда видна без выполнения', () => {
     const { lint } = rollStep;
     ok(lint({ type: 'roll' }).includes('кост'));
-    eq(lint({ type: 'roll', die: { constant: 'lead_die' } }), null);
+    eq(lint({ type: 'roll', die: 'lead_die' }), null);
     eq(lint({ type: 'roll', fixed: { expr: '3' } }), null);
   });
 
@@ -334,12 +334,12 @@ group('шаг «бросок» и кость из словаря системы'
   const withDice = (dice: unknown) => ({ id: 'n', type: 'roll', die: dice });
 
   test('ссылка на кость системы разворачивается в бросок', () => {
-    const out = run([withDice({ constant: 'lead_die' })] as never, { die: queue(7) });
+    const out = run([withDice('lead_die')] as never, { die: queue(7) });
     eq(out.results.n.total, 7);
   });
 
   test('кости, которой нет, отказ называет по имени', () => {
-    throws(() => run([withDice({ constant: 'нет_такой' })] as never), 'нет_такой');
+    throws(() => run([withDice('нет_такой')] as never), 'нет_такой');
   });
 
   test('составная кость в броске складывается: сумма всех граней', () => {
@@ -347,7 +347,7 @@ group('шаг «бросок» и кость из словаря системы'
       ...SYS,
       constants: { ...SYS.constants, пул: { label: 'Пул', kind: 'die', dice: [{ count: 2, sides: 6 }, { count: 1, sides: 8 }] } },
     };
-    const out = run([withDice({ constant: 'пул' })] as never, { sys, die: queue(3, 4, 5) });
+    const out = run([withDice('пул')] as never, { sys, die: queue(3, 4, 5) });
     eq(out.results.n.total, 12);
   });
 });

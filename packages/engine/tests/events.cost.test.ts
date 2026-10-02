@@ -93,7 +93,7 @@ group('в цене цель не названа', () => {
 group('цена — только плата', () => {
   test('наложение эффекта в цене — предупреждение линта', async () => {
     const { lintSystem } = await import('../src/model/lint.ts');
-    const sys = { ...system, effects: { ...system.effects, снаряд: { ...(system.effects as any).снаряд, cost: [{ type: 'status', mode: 'apply', effect: { const: 'удар' } }] } } } as unknown as System;
+    const sys = { ...system, effects: { ...system.effects, снаряд: { ...(system.effects as any).снаряд, cost: [{ type: 'status', mode: 'apply', effect: 'удар' }] } } } as unknown as System;
     ok(lintSystem(sys, compendium).some(p => p.level === 'warn' && p.text.includes('не плата')));
   });
 });

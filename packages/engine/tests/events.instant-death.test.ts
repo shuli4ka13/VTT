@@ -13,7 +13,7 @@ const sys: any = {
       params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }, { key: 'величина', label: 'Урон', kind: 'number' }],
       steps: [
         { type: 'each', of: 'цели', as: 'цель' },
-        { id: 'урон', type: 'roll', die: { const: '1d1' }, bonus: { expr: '@величина' } },
+        { id: 'урон', type: 'roll', die: { expr: '"1d1"' }, bonus: { expr: '@величина' } },
         { id: 'рана', type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '@урон' } },
       ],
     },
@@ -21,7 +21,7 @@ const sys: any = {
       label: 'Мгновенная смерть', activation: 'passive',
       on: [{ on: 'after:удар', if: { expr: '@цель == @носитель' }, steps: [
         { type: 'check', value: { expr: '@рана.overkill' }, versus: { expr: '@носитель.хп_макс' }, successWhen: 'atLeast', continueOn: 'success' },
-        { type: 'status', mode: 'apply', effect: { const: 'мёртв' }, to: { expr: '@носитель' } },
+        { type: 'status', mode: 'apply', effect: 'мёртв', to: { expr: '@носитель' } },
       ] }],
     },
     мёртв: { label: 'Мёртв', activation: 'passive' },

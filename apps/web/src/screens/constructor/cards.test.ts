@@ -7,7 +7,7 @@ const steps = (list: object[]) => list as unknown as Step[];
 const system = { tables: {}, constants: { lead: { label: 'Ведущая кость', kind: 'die', dice: [{ sides: 20 }] } }, effects: {} } as unknown as System;
 
 const pair = (id: string) => [
-  { id: `${id}_бросок`, type: 'roll', die: { constant: 'lead' }, by: { expr: '@действующий' } },
+  { id: `${id}_бросок`, type: 'roll', die: 'lead', by: { expr: '@действующий' } },
   { id, type: 'check', value: { expr: `@${id}_бросок` }, versus: { expr: '10' } },
 ];
 
@@ -151,9 +151,9 @@ describe('удаление шага чистит ссылки на него', ()
   it('ссылка на результат, условие «выполнять» и вложенная прибавка очищаются, формула — только называется', () => {
     const list = steps([
       { id: 'hit', type: 'check', value: { expr: '@цель.хп' }, versus: { expr: '10' } },
-      { id: 'n', type: 'roll', die: { const: '1d8' } },
+      { id: 'n', type: 'roll', die: { expr: '"1d8"' } },
       { type: 'apply', target: { expr: '@цель.hp' }, value: { expr: '@n' }, if: { expr: '@hit.success' } },
-      { id: 'again', type: 'roll', die: { constant: 'lead' }, bonus: { expr: '@n' } },
+      { id: 'again', type: 'roll', die: 'lead', bonus: { expr: '@n' } },
       { type: 'check', value: { expr: '@again' }, versus: { expr: '#n + 1' } },
     ]);
     const removal = removeSteps(list, [1]);

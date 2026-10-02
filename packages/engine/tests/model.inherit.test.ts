@@ -12,11 +12,11 @@ group('основа: эффект берёт у основы и дописыва
       заклинание: {
         label: 'Заклинание',
         params: [{ key: 'круг', label: 'Каким кругом', kind: 'number' }],
-        cost: [{ type: 'emit', effect: 'ячейка', args: { круг: { param: 'круг' } } }],
+        cost: [{ type: 'emit', effect: 'ячейка', args: { круг: { expr: '@круг' } } }],
       },
       огненный_шар: {
         extends: 'заклинание', label: 'Огненный шар', activation: 'manual',
-        steps: [{ type: 'emit', effect: 'урон', args: { сколько: { const: 28 } } }],
+        steps: [{ type: 'emit', effect: 'урон', args: { сколько: { expr: '28' } } }],
       },
     }));
 
@@ -80,7 +80,7 @@ group('основа: тип записи', () => {
       оружие: {
         shape: 'book', use: 'item', label: 'Оружие',
         columns: [{ key: 'кость', label: 'Кость урона' }, { key: 'тип', label: 'Тип урона' }],
-        bindings: [{ label: 'Удар', effect: 'удар', args: { чем: '#сила', кость: { prop: 'кость' } } }],
+        bindings: [{ label: 'Удар', effect: 'удар', args: { чем: '#сила', кость: { expr: '@кость' } } }],
       },
       фехтовальное: {
         shape: 'book', use: 'item', extends: 'оружие', label: 'Оружие фехтовальное',
@@ -93,7 +93,7 @@ group('основа: тип записи', () => {
     eq(ф.columns?.length, 2, 'оба свойства достались от основы');
     eq(ф.bindings?.length, 1, 'привязка не задвоилась');
     eq(ф.bindings?.[0]?.label, 'Выстрел', 'кнопку можно переназвать');
-    deepEq(ф.bindings?.[0]?.args, { чем: '#ловкость', кость: { prop: 'кость' } });
+    deepEq(ф.bindings?.[0]?.args, { чем: '#ловкость', кость: { expr: '@кость' } });
   });
 });
 

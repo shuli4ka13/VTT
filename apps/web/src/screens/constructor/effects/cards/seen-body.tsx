@@ -1,7 +1,7 @@
 import type { Step } from '@vtt/schema';
 import { STEP_WORDS } from '@vtt/engine/words/steps';
 import { Field, Select } from '../../../../ui/primitives.tsx';
-import { SlotInput } from '../../slot-input.tsx';
+import { ValueField } from '../../value-field.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 
@@ -32,9 +32,9 @@ export function SeenBody({ step, context, edit }: { step: Step; context: SlotCon
         }
         return (
           <Field key={slot.key} label={slot.label}>
-            <SlotInput
+            <ValueField
               where={`${words?.label ?? step.type} · ${slot.label.toLowerCase()}`}
-              value={read[slot.key] as never} context={context} allow={slot.allow as never}
+              value={read[slot.key] as never} context={context}
               onChange={next => edit(0, draft => {
                 const it = draft as unknown as Loose;
                 if (next === null || next === undefined) delete it[slot.key]; else it[slot.key] = next;

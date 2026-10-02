@@ -558,9 +558,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@строка.total"
               }
@@ -1221,9 +1219,7 @@
       }
     },
     "initiative": {
-      "die": {
-        "constant": "lead_die"
-      },
+      "die": "lead_die",
       "bonus": {
         "expr": "@ref"
       },
@@ -1307,9 +1303,7 @@
           {
             "id": "hit_бросок",
             "type": "roll",
-            "die": {
-              "constant": "lead_die"
-            },
+            "die": "lead_die",
             "bonus": {
               "expr": "@прицел"
             },
@@ -1348,9 +1342,7 @@
           {
             "id": "dv",
             "type": "table",
-            "table": {
-              "const": "dv_range"
-            },
+            "table": "dv_range",
             "value": {
               "expr": "@distance"
             }
@@ -1467,11 +1459,9 @@
           {
             "id": "что",
             "type": "table",
-            "table": {
-              "const": "injuries"
-            },
+            "table": "injuries",
             "dice": {
-              "const": "1d10"
+              "expr": "\"1d10\""
             }
           },
           {
@@ -1869,9 +1859,7 @@
               {
                 "id": "спас_бросок",
                 "type": "roll",
-                "die": {
-                  "constant": "lead_die"
-                },
+                "die": "lead_die",
                 "bonus": {
                   "expr": "@носитель.death_penalty"
                 },

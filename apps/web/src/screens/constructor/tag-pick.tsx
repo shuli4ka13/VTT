@@ -1,16 +1,13 @@
 import { useState } from 'react';
 import { Chip, Input, Select, Button } from '../../ui/primitives.tsx';
 
-export type Tag = string | { param: string };
+export type Tag = string;
 
-const same = (a: Tag, b: Tag): boolean =>
-  (typeof a === 'string' && typeof b === 'string' && a === b)
-  || (typeof a === 'object' && typeof b === 'object' && a.param === b.param);
+const same = (a: Tag, b: Tag): boolean => a === b;
 
-export function TagPick({ value, known, fromRecord, onChange }: {
+export function TagPick({ value, known, onChange }: {
   value: Tag[];
   known: string[];
-  fromRecord: { key: string; label: string }[];
   onChange: (next: Tag[]) => void;
 }) {
   const [typing, setTyping] = useState(false);
@@ -21,7 +18,6 @@ export function TagPick({ value, known, fromRecord, onChange }: {
   const drop = (tag: Tag) => onChange(value.filter(other => !same(other, tag)));
 
   const freeWords = known.filter(word => !has(word));
-  const freeProps = fromRecord.filter(prop => !has({ param: prop.key }));
 
   const commit = () => {
     const clean = draft.trim();
@@ -35,16 +31,7 @@ export function TagPick({ value, known, fromRecord, onChange }: {
       {value.length ? (
         <div className="inline inline--tight">
           {value.map((tag, at) => (
-            <Chip
-              key={at}
-              active={typeof tag === 'string'}
-              title={typeof tag === 'string' ? undefined : 'значение придёт из записи компендиума'}
-              onRemove={() => drop(tag)}
-            >
-              {typeof tag === 'string'
-                ? tag
-                : `${fromRecord.find(p => p.key === tag.param)?.label ?? tag.param} — из записи`}
-            </Chip>
+            <Chip key={at} active onRemove={() => drop(tag)}>{tag}</Chip>
           ))}
         </div>
       ) : null}
@@ -64,14 +51,12 @@ export function TagPick({ value, known, fromRecord, onChange }: {
           options={[
             ['', '+ метка…'],
             ...freeWords.map(word => [`слово:${word}`, word] as const),
-            ...freeProps.map(prop => [`запись:${prop.key}`, `${prop.label} — из записи`] as const),
             ['своя', 'своя, новая…'],
           ] as never}
           onChange={(picked: string) => {
             if (!picked) return;
             if (picked === 'своя') { setTyping(true); return; }
-            if (picked.startsWith('запись:')) add({ param: picked.slice('запись:'.length) });
-            else add(picked.slice('слово:'.length));
+            add(picked.slice('слово:'.length));
           }}
         />
       )}

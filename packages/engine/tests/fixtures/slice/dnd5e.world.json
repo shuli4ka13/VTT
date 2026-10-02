@@ -36,9 +36,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@str"
               }
@@ -55,9 +53,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@dex"
               }
@@ -74,9 +70,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@con"
               }
@@ -93,9 +87,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@int"
               }
@@ -112,9 +104,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@wis"
               }
@@ -131,9 +121,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@cha"
               }
@@ -225,9 +213,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@athletics"
               }
@@ -252,9 +238,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@acrobatics"
               }
@@ -279,9 +263,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@sleight_of_hand"
               }
@@ -306,9 +288,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@stealth"
               }
@@ -333,9 +313,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@arcana"
               }
@@ -360,9 +338,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@history"
               }
@@ -387,9 +363,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@investigation"
               }
@@ -414,9 +388,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@nature"
               }
@@ -441,9 +413,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@religion"
               }
@@ -468,9 +438,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@animal_handling"
               }
@@ -495,9 +463,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@insight"
               }
@@ -522,9 +488,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@medicine"
               }
@@ -549,9 +513,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@perception"
               }
@@ -576,9 +538,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@survival"
               }
@@ -603,9 +563,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@deception"
               }
@@ -630,9 +588,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@intimidation"
               }
@@ -657,9 +613,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@performance"
               }
@@ -684,9 +638,7 @@
               "tags": [
                 "проверка"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@persuasion"
               }
@@ -731,9 +683,7 @@
               "tags": [
                 "спасбросок"
               ],
-              "die": {
-                "constant": "lead_die"
-              },
+              "die": "lead_die",
               "bonus": {
                 "expr": "@dex_save"
               }
@@ -1157,9 +1107,7 @@
           {
             "id": "hit_бросок",
             "type": "roll",
-            "die": {
-              "constant": "lead_die"
-            },
+            "die": "lead_die",
             "bonus": {
               "expr": "@действующий.attack_bonus"
             },
@@ -1304,9 +1252,7 @@
           {
             "id": "save_бросок",
             "type": "roll",
-            "die": {
-              "constant": "lead_die"
-            },
+            "die": "lead_die",
             "bonus": {
               "expr": "@save"
             },
@@ -1353,8 +1299,7 @@
             "type": "status",
             "mode": "apply",
             "effect": {
-              "param": "status",
-              "optional": true
+              "expr": "@status"
             },
             "to": {
               "expr": "@цель"
@@ -1453,8 +1398,7 @@
             "type": "status",
             "mode": "remove",
             "effect": {
-              "param": "cure",
-              "optional": true
+              "expr": "@cure"
             },
             "to": {
               "expr": "@цель"
@@ -1523,9 +1467,7 @@
           {
             "id": "hit_бросок",
             "type": "roll",
-            "die": {
-              "constant": "lead_die"
-            },
+            "die": "lead_die",
             "bonus": {
               "expr": "@действующий.attack_bonus"
             },
@@ -1647,9 +1589,7 @@
           {
             "type": "status",
             "mode": "apply",
-            "effect": {
-              "const": "blessed"
-            },
+            "effect": "blessed",
             "to": {
               "expr": "@цель"
             }
@@ -1744,9 +1684,7 @@
           {
             "id": "save_бросок",
             "type": "roll",
-            "die": {
-              "constant": "lead_die"
-            },
+            "die": "lead_die",
             "bonus": {
               "expr": "@save_by"
             },
@@ -2054,9 +1992,7 @@
               {
                 "type": "status",
                 "mode": "apply",
-                "effect": {
-                  "const": "shield_up"
-                },
+                "effect": "shield_up",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -2282,9 +2218,7 @@
               {
                 "id": "спас_бросок",
                 "type": "roll",
-                "die": {
-                  "constant": "lead_die"
-                },
+                "die": "lead_die",
                 "tags": [
                   "спасбросок"
                 ],
@@ -2378,9 +2312,7 @@
               {
                 "type": "status",
                 "mode": "apply",
-                "effect": {
-                  "const": "unconscious"
-                },
+                "effect": "unconscious",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -2388,9 +2320,7 @@
               {
                 "type": "status",
                 "mode": "apply",
-                "effect": {
-                  "const": "dying"
-                },
+                "effect": "dying",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -2419,9 +2349,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "unconscious"
-                },
+                "effect": "unconscious",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -2429,9 +2357,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "dying"
-                },
+                "effect": "dying",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -2509,9 +2435,7 @@
               {
                 "id": "save_бросок",
                 "type": "roll",
-                "die": {
-                  "constant": "lead_die"
-                },
+                "die": "lead_die",
                 "bonus": {
                   "expr": "@источник.dex_save"
                 },
@@ -2766,9 +2690,7 @@
       }
     },
     "initiative": {
-      "die": {
-        "constant": "lead_die"
-      },
+      "die": "lead_die",
       "bonus": {
         "expr": "#dex_mod"
       },

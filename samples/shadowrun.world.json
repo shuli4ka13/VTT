@@ -172,9 +172,7 @@
             "expr": "большее из(0, @willpower + @charisma + @wound_mod + @condition_mod)",
             "roll": {
               "label": "Самообладание",
-              "die": {
-                "constant": "pool"
-              },
+              "die": "pool",
               "tags": [
                 "проверка"
               ],
@@ -190,9 +188,7 @@
             "expr": "большее из(0, @willpower + @intuition + @wound_mod + @condition_mod)",
             "roll": {
               "label": "Проницательность",
-              "die": {
-                "constant": "pool"
-              },
+              "die": "pool",
               "tags": [
                 "проверка"
               ],
@@ -208,9 +204,7 @@
             "expr": "большее из(0, @logic + @intuition + @wound_mod + @condition_mod)",
             "roll": {
               "label": "Память",
-              "die": {
-                "constant": "pool"
-              },
+              "die": "pool",
               "tags": [
                 "проверка"
               ],
@@ -226,9 +220,7 @@
             "expr": "большее из(0, @body + @strength + @wound_mod + @condition_mod)",
             "roll": {
               "label": "Поднятие тяжестей",
-              "die": {
-                "constant": "pool"
-              },
+              "die": "pool",
               "tags": [
                 "проверка"
               ],
@@ -279,9 +271,7 @@
             "expr": "большее из(0, @reaction + @intuition + @cover + @wound_mod + @condition_mod)",
             "roll": {
               "label": "Защита",
-              "die": {
-                "constant": "pool"
-              },
+              "die": "pool",
               "tags": [
                 "проверка"
               ],
@@ -792,9 +782,7 @@
             "block": "Наборы кубиков",
             "roll": {
               "label": "Проверка: {label}",
-              "die": {
-                "constant": "pool"
-              },
+              "die": "pool",
               "count": {
                 "expr": "@строка.pool"
               },
@@ -1395,9 +1383,7 @@
       }
     },
     "initiative": {
-      "die": {
-        "constant": "init_die"
-      },
+      "die": "init_die",
       "bonus": {
         "expr": "@initiative"
       },
@@ -1520,9 +1506,7 @@
           {
             "id": "атака_бросок",
             "type": "roll",
-            "die": {
-              "constant": "pool"
-            },
+            "die": "pool",
             "count": {
               "expr": "большее из(0, @attack_pool + таблица(\"edge_actions\", или(@приём, \"нет\"), \"pool\"))"
             },
@@ -1580,9 +1564,7 @@
           {
             "id": "атака_против",
             "type": "roll",
-            "die": {
-              "constant": "pool"
-            },
+            "die": "pool",
             "count": {
               "expr": "@цель.defense_pool"
             },
@@ -1621,9 +1603,7 @@
           {
             "id": "сопротивление_бросок",
             "type": "roll",
-            "die": {
-              "constant": "pool"
-            },
+            "die": "pool",
             "count": {
               "expr": "@цель.body"
             },
@@ -1677,9 +1657,7 @@
           {
             "type": "status",
             "mode": "apply",
-            "effect": {
-              "const": "shocked"
-            },
+            "effect": "shocked",
             "to": {
               "expr": "@цель"
             },
@@ -1690,9 +1668,7 @@
           {
             "type": "status",
             "mode": "apply",
-            "effect": {
-              "const": "prone"
-            },
+            "effect": "prone",
             "to": {
               "expr": "@цель"
             },
@@ -1971,9 +1947,7 @@
           {
             "id": "помощь_бросок",
             "type": "roll",
-            "die": {
-              "constant": "pool"
-            },
+            "die": "pool",
             "count": {
               "expr": "@healer_pool"
             },
@@ -2040,9 +2014,7 @@
           {
             "id": "заживление_бросок",
             "type": "roll",
-            "die": {
-              "constant": "pool"
-            },
+            "die": "pool",
             "count": {
               "expr": "@действующий.body + @действующий.willpower"
             },
@@ -2106,9 +2078,7 @@
           {
             "id": "заживление_бросок",
             "type": "roll",
-            "die": {
-              "constant": "pool"
-            },
+            "die": "pool",
             "count": {
               "expr": "@действующий.body * 2"
             },
@@ -2177,9 +2147,7 @@
           {
             "type": "status",
             "mode": "remove",
-            "effect": {
-              "const": "prone"
-            },
+            "effect": "prone",
             "to": {
               "expr": "@цель"
             }
@@ -2733,9 +2701,7 @@
               {
                 "type": "status",
                 "mode": "apply",
-                "effect": {
-                  "const": "unconscious"
-                },
+                "effect": "unconscious",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -2763,9 +2729,7 @@
               {
                 "type": "status",
                 "mode": "apply",
-                "effect": {
-                  "const": "bleeding"
-                },
+                "effect": "bleeding",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -2793,9 +2757,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "bleeding"
-                },
+                "effect": "bleeding",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -2803,9 +2765,7 @@
               {
                 "type": "status",
                 "mode": "apply",
-                "effect": {
-                  "const": "dead"
-                },
+                "effect": "dead",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -2833,9 +2793,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "unconscious"
-                },
+                "effect": "unconscious",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -2843,9 +2801,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "bleeding"
-                },
+                "effect": "bleeding",
                 "to": {
                   "expr": "@носитель"
                 }

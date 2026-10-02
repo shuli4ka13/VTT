@@ -76,7 +76,7 @@ export function ColumnOnSheet({ tableId, column, system }: { tableId: string; co
             onChange={next => edit(draft => {
               if (!next) { delete draft.roll; return; }
               const die = dieEntries(system)[0]?.[0];
-              const roll = draft.roll ?? { ...(single ? { label: `Проверка: ${draft.label ?? draft.key}` } : {}), ...(die ? { die: { constant: die } } : {}) };
+              const roll = draft.roll ?? { ...(single ? { label: `Проверка: ${draft.label ?? draft.key}` } : {}), ...(die ? { die } : {}) };
               if (next === 'pool') { roll.count = { expr: self }; delete roll.bonus; } else { roll.bonus = { expr: self }; delete roll.count; }
               draft.roll = roll;
             })}
@@ -84,11 +84,11 @@ export function ColumnOnSheet({ tableId, column, system }: { tableId: string; co
           {column.roll ? (
             <>
               <Select
-                value={column.roll.die?.constant ?? ''}
+                value={column.roll.die ?? ''}
                 options={[['', '— какой костью —'], ...dieEntries(system).map(([key, c]) => [key, c.label || key] as const)] as never}
                 onChange={key => edit(draft => {
                   if (!draft.roll) return;
-                  if (key) draft.roll.die = { constant: key }; else delete draft.roll.die;
+                  if (key) draft.roll.die = key; else delete draft.roll.die;
                 })}
               />
               <RollTagsPick

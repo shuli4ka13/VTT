@@ -152,8 +152,8 @@ describe('EffectsTab: палитра трёх понятий', () => {
         ...state.system,
         effects: {
           strike: {
-            label: 'Атака', activation: 'manual', params: [],
-            steps: [{ type: 'apply', target: { tag: 'hp_current' }, value: { expr: '1' } }],
+            label: 'Атака', activation: 'manual', params: [{ key: 'цель', kind: 'sheet' }],
+            steps: [{ type: 'apply', target: { expr: '@цель.hp_current' }, value: { expr: '1' } }],
           },
         },
       },
@@ -178,7 +178,7 @@ describe('ссылка на результат шага', () => {
             label: 'Атака', activation: 'manual',
             params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }],
             steps: [
-              { id: 'бросок_бросок', type: 'roll', die: { constant: 'lead' }, by: { expr: '@действующий' } },
+              { id: 'бросок_бросок', type: 'roll', die: 'lead', by: { expr: '@действующий' } },
               { id: 'бросок', type: 'check', value: { expr: '@бросок_бросок' }, versus: { expr: '10' } },
               { id: 'сколько', type: 'roll' },
             ],
@@ -384,9 +384,9 @@ describe('крит — обычная формула, а не особый сл�
             label: 'Удар', activation: 'manual',
             params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }],
             steps: [
-              { id: 'проверка_бросок', type: 'roll', die: { constant: 'к20' }, by: { expr: '@действующий' } },
+              { id: 'проверка_бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
               { id: 'проверка', type: 'check', value: { expr: '@проверка_бросок' }, versus: { expr: '10' } },
-              { id: 'урон', type: 'roll', die: { const: '2d6' } },
+              { id: 'урон', type: 'roll', die: { expr: '"2d6"' } },
             ],
           },
         },
@@ -430,7 +430,7 @@ describe('крит — обычная формула, а не особый сл�
 
     const шаг = useWorld.getState().system.effects.удар!.steps![2]! as Record<string, unknown>;
     expect(шаг.fixed, 'недобранное имя в систему не попало').toBeUndefined();
-    expect(шаг.die).toEqual({ const: '2d6' });
+    expect(шаг.die).toEqual({ expr: '"2d6"' });
   });
 
   it('незнакомое имя в строке предлагается взять из записи под тем же ключом', () => {

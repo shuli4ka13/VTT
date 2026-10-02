@@ -31,7 +31,7 @@ function assemble(): { system: System; compendium: Compendium; sheets: Sheet[]; 
   const [roll, check] = bricks('check', system) as [Record<string, any>, Record<string, any>];
   check.versus = { expr: '5' };
   const amount = bricks('number', system, ['проверка', 'проверка_бросок'])[0] as Record<string, any>;
-  amount.die = { const: '1d4' };
+  amount.die = { expr: '"1d4"' };
   delete amount.fixed;
   const change = bricks('change', system)[0] as Record<string, any>;
   change.target = { expr: `@цель.${hits.key}` };

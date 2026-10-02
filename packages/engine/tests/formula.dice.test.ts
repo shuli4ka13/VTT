@@ -11,7 +11,7 @@ const система = {
     { key: 'сила', label: 'Сила', kind: 'number', default: 3 },
   ] } , оружие: {
       shape: 'book', use: 'item', label: 'Оружие', columns: [{ key: 'кость', label: 'Кость урона', kind: 'dice' }],
-      bindings: [{ label: 'Удар', effect: 'удар', args: { кость: { prop: 'кость' } } }],
+      bindings: [{ label: 'Удар', effect: 'удар', args: { кость: { expr: '@кость' } } }],
     } },
   constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
   effects: {
@@ -20,7 +20,7 @@ const система = {
       params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }, { key: 'кость', label: 'Кость урона', kind: 'dice' }],
       steps: [
         { type: 'each', of: 'цели', as: 'цель' },
-        { id: 'бросок', type: 'roll', die: { constant: 'к20' }, by: { expr: '@действующий' } },
+        { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
         {
           id: 'урон', type: 'roll',
           fixed: { expr: 'кинуть(@кость, если(@бросок.natural >= @действующий.порог, 2, 1)) + @действующий.сила' },

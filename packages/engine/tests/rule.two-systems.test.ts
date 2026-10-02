@@ -179,7 +179,7 @@ group('две системы одними слотами', () => {
             cells: { damage_dice: '1d12', damage_type: 'рубящий' }, modifiers: [],
 
             bindings: [{ label: 'Удар', effect: 'strike',
-              args: { damage_dice: { prop: 'damage_dice' }, damage_type: { prop: 'damage_type' } } }] }],
+              args: { damage_dice: { expr: '@damage_dice' }, damage_type: { expr: '@damage_type' } } }] }],
       };
       const margined = {
         ...system,

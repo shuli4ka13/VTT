@@ -6,7 +6,7 @@ const system = {
   id: 'общий-кусок', name: 'общий кусок',
   tables: { лист: { shape: 'single', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 40, min: 0 }] } , оружие: {
       shape: 'book', use: 'item', label: 'Оружие', columns: [{ key: 'кость', label: 'Кость урона', kind: 'dice' }],
-      bindings: [{ label: 'Удар', effect: 'меч', args: { кость: { prop: 'кость' } } }],
+      bindings: [{ label: 'Удар', effect: 'меч', args: { кость: { expr: '@кость' } } }],
     }, чары: { shape: 'book', use: 'action', label: 'Чары', columns: [], bindings: [{ label: 'Сотворить', effect: 'шар', args: {} }] } },
   effects: {
     урон_костями: {
@@ -25,12 +25,12 @@ const system = {
     меч: {
       label: 'Удар мечом', activation: 'manual',
       params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }, { key: 'кость', label: 'Кость урона', kind: 'dice' }],
-      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'emit', effect: 'урон_костями', args: { лист: { expr: '@цель' }, кость: { expr: '@кость' }, сколько: { const: 2 } } }],
+      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'emit', effect: 'урон_костями', args: { лист: { expr: '@цель' }, кость: { expr: '@кость' }, сколько: { expr: '2' } } }],
     },
     шар: {
       label: 'Огненный шар', activation: 'manual',
       params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
-      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'emit', effect: 'урон_костями', args: { лист: { expr: '@цель' }, кость: { const: '1d6' }, сколько: { const: 8 } } }],
+      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'emit', effect: 'урон_костями', args: { лист: { expr: '@цель' }, кость: { expr: '"1d6"' }, сколько: { expr: '8' } } }],
     },
   },
   

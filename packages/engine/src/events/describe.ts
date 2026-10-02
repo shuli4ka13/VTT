@@ -3,7 +3,6 @@ import { breakReasonWord, registry as stepRegistry } from '../engine/steps/index
 import { outcomeWords, rollName } from '../engine/roll-tags.ts';
 import type { System, Sheet } from '../model/types.ts';
 import { fieldOf, hasField } from '../model/sheet-columns.ts';
-import { recordKinds } from '../model/owned.ts';
 import { forcedWords } from '../words/steps.ts';
 
 const tagsOfStep = (step: Record<string, any> | undefined, trace?: Record<string, any>): string[] =>
@@ -96,17 +95,8 @@ export function describeEntry(
     return found?.label ?? name;
   };
   const refLabel = (ref: any): string | null => {
+    if (typeof ref === 'string') return system.constants?.[ref]?.label ?? system.effects?.[ref]?.label ?? system.tables?.[ref]?.label ?? ref;
     if (!ref || typeof ref !== 'object') return null;
-    if ('param' in ref) return effect?.params?.find((p: any) => p.key === ref.param)?.label ?? String(ref.param);
-    if ('tag' in ref) return labelOf(String(ref.tag));
-    if ('prop' in ref) {
-      for (const [, kind] of recordKinds(system)) {
-        const prop = kind.columns?.find(p => p.key === ref.prop);
-        if (prop) return prop.label ?? String(ref.prop);
-      }
-      return String(ref.prop);
-    }
-    if ('constant' in ref) return system.constants?.[String(ref.constant)]?.label ?? String(ref.constant);
     if ('expr' in ref) {
       const exact = /^[@#]([\p{L}\p{N}_.-]+)$/u.exec(String(ref.expr).trim());
       if (exact) return nameLabel(exact[1]!);

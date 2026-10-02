@@ -19,7 +19,7 @@ const hero = { ...effect, params: [...(effect.params ?? []), { key: 'атаку�
 
 describe('checkReadback', () => {
   it('бросок с «Бросает» читается фразой с лейблами системы, без первого лица', () => {
-    const roll = { id: 'hit_бросок', type: 'roll', die: { constant: 'lead' }, bonus: { expr: '#power_mod' }, by: { expr: '@атакующий' }, against: { expr: '@цель' } } as unknown as Step;
+    const roll = { id: 'hit_бросок', type: 'roll', die: 'lead', bonus: { expr: '#power_mod' }, by: { expr: '@атакующий' }, against: { expr: '@цель' } } as unknown as Step;
     const step = {
       id: 'hit', type: 'check', successWhen: 'atLeast', continueOn: 'success',
       value: { expr: '@hit_бросок' }, versus: { expr: '@цель.armor' },
@@ -29,7 +29,7 @@ describe('checkReadback', () => {
   });
 
   it('пустой бросок — оранжевые пропуски: кто бросает и с чем сравнить', () => {
-    const roll = { type: 'roll', die: { constant: 'lead' } } as unknown as Step;
+    const roll = { type: 'roll', die: 'lead' } as unknown as Step;
     const step = { type: 'check', value: { expr: '@x' } } as unknown as Step;
     expect(joinReadback(checkReadback(step, roll, system, effect)))
       .toBe('⟨кто?⟩ бросает 1к20 — с ⟨с чем сравнить?⟩. Не добросил — эффект кончается.');
@@ -44,20 +44,20 @@ describe('checkReadback', () => {
 
 describe('changeReadback', () => {
   it('вычитание со склеенным числом: кости из записи + прибавка', () => {
-    const amount = { id: 'dmg', type: 'roll', die: { param: 'p_1' }, bonus: { expr: '#power_mod' } } as unknown as Step;
+    const amount = { id: 'dmg', type: 'roll', die: { expr: '@p_1' }, bonus: { expr: '#power_mod' } } as unknown as Step;
     const apply = { type: 'apply', target: { expr: '@цель.wounds' }, direction: 'subtract', value: { expr: '@dmg' } } as unknown as Step;
     expect(joinReadback(changeReadback(apply, amount, system, hero)))
       .toBe('«Текущие хиты» (цель) уменьшается на ⟨вход «кость урона»⟩ + Мод Силы.');
   });
 
   it('состояние по id читается лейблом, на кого вешается — по листу', () => {
-    const step = { type: 'status', mode: 'apply', effect: { const: 'poison' }, to: { expr: '@цель' } } as unknown as Step;
+    const step = { type: 'status', mode: 'apply', effect: 'poison', to: { expr: '@цель' } } as unknown as Step;
     expect(joinReadback(changeReadback(step, null, system, hero)))
       .toBe('На «цель» вешается состояние «Отравлен».');
   });
 
   it('состояние без листа — пропуск «кто?»', () => {
-    const step = { type: 'status', mode: 'apply', effect: { const: 'poison' } } as unknown as Step;
+    const step = { type: 'status', mode: 'apply', effect: 'poison' } as unknown as Step;
     expect(joinReadback(changeReadback(step, null, system, effect)))
       .toBe('На ⟨кто?⟩ вешается состояние «Отравлен».');
   });
@@ -65,12 +65,12 @@ describe('changeReadback', () => {
 
 describe('numberReadback', () => {
   it('одиночное число: машинное имя в пересказ не попадает', () => {
-    const step = { id: 'dmg', type: 'roll', die: { const: '2d6' } } as unknown as Step;
+    const step = { id: 'dmg', type: 'roll', die: { expr: '"2d6"' } } as unknown as Step;
     expect(joinReadback(numberReadback(step, system, effect))).toBe('Считается число: 2к6.');
   });
 
   it('число с «Бросает» — чей-то бросок, назван листом', () => {
-    const step = { id: 'dmg', type: 'roll', die: { const: '2d6' }, by: { expr: '@атакующий' } } as unknown as Step;
+    const step = { id: 'dmg', type: 'roll', die: { expr: '"2d6"' }, by: { expr: '@атакующий' } } as unknown as Step;
     expect(joinReadback(numberReadback(step, system, hero))).toBe('«Атакующий» бросает: 2к6.');
   });
 });
@@ -155,7 +155,7 @@ describe('dieReadback — кость словами', () => {
 
 describe('крит в пересказе', () => {
   it('без удвоения фраза прежняя', () => {
-    const step = { id: 'dmg', type: 'roll', die: { const: '2d6' } } as unknown as Step;
+    const step = { id: 'dmg', type: 'roll', die: { expr: '"2d6"' } } as unknown as Step;
     expect(joinReadback(numberReadback(step, system, effect))).toBe('Считается число: 2к6.');
   });
 });

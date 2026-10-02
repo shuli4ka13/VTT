@@ -31,7 +31,7 @@ function world(effects: Record<string, unknown>, extra: Record<string, unknown> 
       лист: { shape: 'single', owner: 'sheet', columns: [
         { key: 'хп', label: 'Хиты', kind: 'number', default: 20, min: 0, max: 30 },
         { key: 'ки', label: 'Ки', kind: 'number', default: 0 },
-        { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 0, roll: { die: { constant: 'к20' } } },
+        { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 0, roll: { die: 'к20' } },
       ] },
       казна: { shape: 'single', owner: 'group', columns: [{ key: 'золото', label: 'Золото', kind: 'number', default: 0 }] },
       приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] },
@@ -79,7 +79,7 @@ describe('проба внутри прогона', () => {
   it('не ставит паузу: вопрос «кости выпали» в теле не опережает окно «до»', () => {
     const system = world({
       удар: button([
-        { id: 'б_бросок', type: 'roll', die: { constant: 'к20' }, by: { expr: '@цель' } },
+        { id: 'б_бросок', type: 'roll', die: 'к20', by: { expr: '@цель' } },
         { id: 'б', type: 'check', value: { expr: '@б_бросок' }, versus: { expr: '10' }, continueOn: 'always' },
       ]),
       щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @носитель' }, confirm: true, steps: [] }] },
@@ -150,7 +150,7 @@ describe('бросок вне действия', () => {
     const system = world({
       удар: button([]),
       шустрый: { label: 'Шустрый', activation: 'passive', on: [{ on: 'seen', if: { expr: '@бросающий == @носитель' }, steps: [{ type: 'roll-plus', value: { expr: '10' } }] }] },
-    }, { initiative: { die: { constant: 'к20' } } });
+    }, { initiative: { die: 'к20' } });
     const out = perform({ system, compendium: book, clock: null, sheets: [sheet('а'), sheet('б', {}, ['шустрый'])], die: queue(15, 8) }, { op: 'turn', turn: 'start' });
     expect(out.kind).toBe('done');
     expect(out.clock?.order).toEqual(['б', 'а']);
@@ -227,7 +227,7 @@ describe('формы эффекта', () => {
 
   it('висящий эффект хранит входы: наложенный со сложностью читает её в своей подписке', () => {
     const system = world({
-      удар: button([{ type: 'status', effect: { const: 'метка' }, to: { expr: '@цель' }, args: { сила: { expr: '4' } } }]),
+      удар: button([{ type: 'status', effect: 'метка', to: { expr: '@цель' }, args: { сила: { expr: '4' } } }]),
       метка: { label: 'Метка', activation: 'passive', params: [{ key: 'сила', kind: 'number', optional: true }], on: [
         { on: 'moment:turn-end', if: { expr: '@ходит == @носитель' }, steps: [sub('@сила', '@носитель.хп')] },
       ] },
@@ -283,7 +283,7 @@ describe('по ревью постройки', () => {
   it('держание не утекает во вложенный вызов: наложенное «Уроном» не держится', () => {
     const system = world({
       удар: { ...button([{ type: 'emit', effect: 'урон', args: { лист: { expr: '@цель' } } }]), bond: { effect: 'держу', by: 'действующий' } },
-      урон: { label: 'Урон', params: [{ key: 'лист', kind: 'sheet' }], steps: [{ type: 'status', effect: { const: 'шрам' }, to: { expr: '@лист' } }] },
+      урон: { label: 'Урон', params: [{ key: 'лист', kind: 'sheet' }], steps: [{ type: 'status', effect: 'шрам', to: { expr: '@лист' } }] },
       держу: { label: 'Держу', activation: 'passive' },
       шрам: { label: 'Шрам', activation: 'passive' },
     });

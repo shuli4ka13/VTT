@@ -621,7 +621,7 @@ export class Run {
       if (param.kind === 'sheet' || param.kind === 'field') continue;
       let value: unknown;
       try {
-        value = ctx.value({ param: param.key, optional: true });
+        value = ctx.value({ expr: `@${param.key}` });
       } catch (err) {
         if (!isRuleError(err)) throw err;
         continue;
@@ -986,7 +986,7 @@ export class Run {
     };
     const sink = newSink();
     const ctx = this.ctx(frame, {}, {}, path, sink, new Set());
-    const spec = parse(dieConstant(this.system, check.die.constant), (ref, what) => ctx.number(ref, what));
+    const spec = parse(dieConstant(this.system, check.die), (ref, what) => ctx.number(ref, what));
     const sized = check.count === undefined || check.count === null ? spec : withCount(spec, ctx.number(check.count, `${owner} · сколько костей`), owner);
     const thrown = ctx.roll(sized, [...(check.tags ?? [])], sheetId, null);
     const bonus = (check.bonus ? ctx.optional(check.bonus, `${owner} · прибавка`) ?? 0 : 0) + thrown.bonus;

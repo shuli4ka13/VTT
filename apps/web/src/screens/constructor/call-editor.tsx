@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { System, Param, SlotRef } from '@vtt/schema';
 import { Field, Select } from '../../ui/primitives.tsx';
-import { SlotInput, type SlotOption } from './slot-input.tsx';
+import { ValueField, type SlotOption } from './value-field.tsx';
 import type { SlotContext, SlotKind } from './slots.tsx';
 import { listOf } from '@vtt/engine/model/lists';
 import { paramsOf } from '@vtt/engine/model/inherit';
@@ -15,7 +15,7 @@ export interface CallInput {
 function rowsAsOptions(system: System, need: Param): SlotOption[] {
   if (need.kind !== 'choice' || !need.from) return [];
   const group = `«${system.tables?.[need.from]?.label || need.from}»`;
-  return (listOf(system, need.from) ?? []).map(row => ({ group, label: row.label, ref: { expr: JSON.stringify(row.value) } as SlotRef }));
+  return (listOf(system, need.from) ?? []).map(row => ({ group, label: row.label, formula: JSON.stringify(row.value) }));
 }
 
 function status(input: CallInput): { text: string; bad: boolean } {
@@ -69,7 +69,7 @@ export function CallEditor({ system, effect, effects, onEffect, args, fromProps,
             return (
               <div className="pair" key={input.param.key}>
                 <span className="call-args__name">{input.param.label ?? input.param.key}</span>
-                <SlotInput
+                <ValueField
                   where={`${where} · ${input.param.label ?? input.param.key}`}
                   value={input.value as never}
                   context={context}

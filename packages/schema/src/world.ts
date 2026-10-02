@@ -2,15 +2,7 @@ import { z } from 'zod';
 
 export const formula = z.object({ expr: z.string() }).strict();
 
-export const slotRef = z.union([
-  formula,
-  z.object({ tag: z.string() }).strict(),
-  z.object({ param: z.string(), optional: z.boolean().optional() }).strict(),
-  z.object({ prop: z.string(), optional: z.boolean().optional() }).strict(),
-  z.object({ constant: z.string() }).strict(),
-  z.object({ const: z.unknown() }).strict()
-    .refine(value => 'const' in value, { message: 'ссылка неизвестной формы' }),
-]);
+export const slotRef = z.union([formula, z.string()]);
 
 const bound = z.union([z.number(), z.string()]);
 
@@ -34,7 +26,7 @@ export const fieldOption = z.object({
 export const control = z.enum(['stepper', 'pips', 'toggle', 'ring', 'bar', 'die', 'choice']);
 
 export const rollSpec = z.object({
-  die: z.object({ constant: z.string().min(1) }),
+  die: z.string().min(1),
   count: formula.optional(),
   bonus: formula.optional(),
   tags: z.array(z.string().min(1)).optional(),
@@ -42,7 +34,7 @@ export const rollSpec = z.object({
 
 export const diceTerm = z.object({
 
-  count: z.union([z.number().int().positive(), slotRef]).optional(),
+  count: z.union([z.number().int().positive(), formula]).optional(),
   sides: z.number().int().positive(),
 
   name: z.string().optional(),

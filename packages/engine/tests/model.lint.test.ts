@@ -69,7 +69,7 @@ group('линт: висячие ссылки называются словами
 
   test('кость инициативы, таблица поля, правило для всех, правка броска', () => {
     const system = bare();
-    system.initiative = { die: { constant: 'нет_кости' }, tags: ['нет_броска'] } as never;
+    system.initiative = { die: 'нет_кости', tags: ['нет_броска'] } as never;
     system.tables = withColumn(system, { key: 'lvl', label: 'Ур', expr: 'таблица("нет_таблицы", #hp)' }).tables;
     system.grants = ['нет_правила'];
     system.effects.buff = { label: 'y', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', edit: 'нет_правки' }] } as never;
@@ -80,7 +80,7 @@ group('линт: висячие ссылки называются словами
   });
 
   test('ссылка на шаг выше по цепочке — законна, ниже — нет', () => {
-    const roll = { id: 'бросок', type: 'roll', die: { constant: 'd20' } } as unknown as Step;
+    const roll = { id: 'бросок', type: 'roll', die: 'd20' } as unknown as Step;
     const okSystem = withEffect('e', { params: [WHO] as never, steps: [roll, mend('@действующий.hp', '@бросок')] });
     eq(errorTexts(okSystem).join(''), '');
     const badSystem = withEffect('e', { params: [WHO] as never, steps: [mend('@действующий.hp', '@бросок'), roll] });
@@ -106,15 +106,15 @@ group('линт: висячие ссылки называются словами
   });
 
   test('вход, названный как вызов несуществующего листа, — «вход не объявлен»', () => {
-    const system = withEffect('e', { params: [WHO] as never, steps: [{ type: 'apply', target: { expr: '@действующий.hp' }, direction: 'add', value: { param: 'нету' } }] as never });
-    ok(errorTexts(system).some(t => t.includes('вход «нету» эффектом не объявлен')), errorTexts(system).join('|'));
+    const system = withEffect('e', { params: [WHO] as never, steps: [{ type: 'apply', target: { expr: '@действующий.hp' }, direction: 'add', value: { expr: '@нету' } }] as never });
+    ok(errorTexts(system).some(t => t.includes('«нету» — нет ни входа, ни шага')), errorTexts(system).join('|'));
   });
 
   test('условие срабатывания смотрит на шаг слушаемого эффекта', () => {
     const system = withEffect('strike', {
       params: [WHO] as never,
       steps: [
-        { id: 'бросок', type: 'roll', die: { constant: 'd20' } },
+        { id: 'бросок', type: 'roll', die: 'd20' },
         { id: 'hit', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
       ] as Step[],
     });
@@ -289,7 +289,7 @@ group('линт: слушатели, круги, входы', () => {
   test('привязка берёт свойство, которого у этого типа нет', () => {
     const system = withEffect('strike', { params: [{ key: 'dice' }], steps: [] });
     system.tables = {
-      weapon: { shape: 'book', use: 'item', label: 'Оружие', columns: [{ key: 'dmg' }], bindings: [{ label: 'Удар', effect: 'strike', args: { dice: { prop: 'other' } } }] },
+      weapon: { shape: 'book', use: 'item', label: 'Оружие', columns: [{ key: 'dmg' }], bindings: [{ label: 'Удар', effect: 'strike', args: { dice: { expr: '@other' } } }] },
       armor: { shape: 'book', use: 'item', label: 'Броня', columns: [{ key: 'other' }] },
     } as never;
     ok(errorTexts(system).some(t => t.includes('«other» не объявлено у этого типа')), errorTexts(system).join('|'));

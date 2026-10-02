@@ -28,7 +28,7 @@ const система = {
       columns: [{ key: 'кость', label: 'Кость хитов', kind: 'number' }, { key: 'урон', label: 'Любимый урон', kind: 'choice', from: 'урон' }],
       rows: [{ value: 'воин', cells: { кость: 10, урон: 'рубящий' } }, { value: 'маг', cells: { кость: 6, урон: 'огонь' } }],
     },
-   меч: { shape: 'book', use: 'action', label: 'Приём', bindings: [{ label: 'Удар', effect: 'удар', args: { тип: { const: 'рубящий' } } }] }, факел: { shape: 'book', use: 'action', label: 'Приём', bindings: [{ label: 'Удар', effect: 'удар', args: { тип: { const: 'огонь' } } }] } },
+   меч: { shape: 'book', use: 'action', label: 'Приём', bindings: [{ label: 'Удар', effect: 'удар', args: { тип: { expr: '"рубящий"' } } }] }, факел: { shape: 'book', use: 'action', label: 'Приём', bindings: [{ label: 'Удар', effect: 'удар', args: { тип: { expr: '"огонь"' } } }] } },
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',

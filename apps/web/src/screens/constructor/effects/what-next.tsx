@@ -50,7 +50,7 @@ export function meddlersOf(system: System, eventId: string): Meddler[] {
       const m = loose(modifier);
       if (m.kind !== 'edit' || m.call !== eventId) continue;
       const raw = m.value && typeof m.value === 'object' ? loose(m.value) : null;
-      const value = raw ? String(raw.expr ?? raw.const ?? '') : String(m.value ?? '');
+      const value = raw ? String(raw.expr ?? '') : String(m.value ?? '');
       const op = String(m.op ?? 'add');
       const by = effect.label ?? 'правило';
       const where = whereText(system, m.where);

@@ -104,7 +104,7 @@ const blankCheck = (system: System, taken: string[]): Step[] => {
   const id = freeId(taken, 'проверка');
   const roll = freeId([...taken, id], `${id}_бросок`);
   return [
-    { id: roll, type: 'roll', ...(die ? { die: { constant: die } } : {}), by: { expr: '@действующий' } } as unknown as Step,
+    { id: roll, type: 'roll', ...(die ? { die } : {}), by: { expr: '@действующий' } } as unknown as Step,
     { id, type: 'check', value: { expr: `@${roll}` }, versus: { expr: '10' }, successWhen: 'atLeast', continueOn: 'success' } as unknown as Step,
   ];
 };
@@ -132,8 +132,8 @@ export const BRICKS: StepTemplate[] = [
     hint: 'Прочитать строку таблицы по броску или числу: травма, исход, сложность по дистанции.',
     make: (system, taken) => [{
       id: freeId(taken, 'таблица'), type: 'table',
-      table: { const: rowTables(system)[0]?.[0] ?? '' },
-      dice: { const: dice(1, 6) },
+      table: rowTables(system)[0]?.[0] ?? '',
+      dice: { expr: JSON.stringify(dice(1, 6)) },
     } as unknown as Step],
   },
   {

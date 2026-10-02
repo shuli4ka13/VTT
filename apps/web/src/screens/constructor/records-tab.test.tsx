@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { RecordsTab } from './records-tab.tsx';
 import { useWorld } from '../../store/world.ts';
-import { optionsFor } from './slot-input.tsx';
+import { optionsFor } from './value-field.tsx';
 
 const строкаВхода = (подпись: string) => [...document.querySelectorAll('.pair')].find(el => el.textContent?.includes(подпись))!;
 

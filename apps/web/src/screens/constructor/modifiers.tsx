@@ -287,13 +287,13 @@ function EventCondition({ system, effect, modifier, onChange }: {
     <>
       <Field label="По меткам" hint="Пусто — по любой метке.">
         <TagPick
-          value={words(m.anyTags)} known={known} fromRecord={[]}
+          value={words(m.anyTags)} known={known}
           onChange={next => onChange(d => { const list = next.map(String); if (list.length) d.anyTags = list; else delete d.anyTags; })}
         />
       </Field>
       <Field label="Кроме меток">
         <TagPick
-          value={words(m.notTags)} known={known} fromRecord={[]}
+          value={words(m.notTags)} known={known}
           onChange={next => onChange(d => { const list = next.map(String); if (list.length) d.notTags = list; else delete d.notTags; })}
         />
       </Field>

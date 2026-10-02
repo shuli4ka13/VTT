@@ -46,7 +46,7 @@ group('степени успеха', () => {
 
   const rule: any = {
     steps: [
-      { id: 'move_бросок', type: 'roll', die: { constant: 'пара' }, bonus: { expr: '0' }, tags: ['ход'], by: { expr: '@действующий' } },
+      { id: 'move_бросок', type: 'roll', die: 'пара', bonus: { expr: '0' }, tags: ['ход'], by: { expr: '@действующий' } },
       { id: 'move', type: 'check', value: { expr: '@move_бросок' }, versus: { expr: '7' }, degrees: { table: 'исходы', of: 'total' } },
     ],
   };

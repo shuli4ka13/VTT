@@ -46,7 +46,7 @@ group('формула входа в кнопке записи видит сво�
 
   test('в шагах самого эффекта свойства записи по имени не видны — только через вход', () => {
     const system = withStrikeArgs({}, [
-      { id: 'hit_бросок', type: 'roll', die: { constant: 'lead_die' }, bonus: { expr: '@wield.attack' }, tags: ['атака'], by: { expr: '@действующий' } },
+      { id: 'hit_бросок', type: 'roll', die: 'lead_die', bonus: { expr: '@wield.attack' }, tags: ['атака'], by: { expr: '@действующий' } },
     ]);
     throws(() => firstBonus(system));
   });

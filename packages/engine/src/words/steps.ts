@@ -14,10 +14,10 @@ export const STEP_WORDS = {
     label: 'Бросок',
     hint: `Бросить кости или посчитать число. Если указано, кто бросает, — это чей-то бросок: на него действуют правки и «увидев кости». Без этого — просто расчёт. Кость пишется как ${diceExample}.`,
     slots: [
-      { key: 'die', label: 'Кость', kind: 'ref', main: true, allow: ['constant', 'const', 'empty'] },
-      { key: 'count', label: 'Сколько костей', kind: 'ref', allow: ['expr', 'const', 'param', 'prop', 'empty'] },
-      { key: 'fixed', label: 'Формула', kind: 'ref', main: true, allow: ['expr', 'const', 'param', 'prop', 'empty'] },
-      { key: 'bonus', label: 'Прибавка', kind: 'ref', main: true, allow: ['expr', 'const', 'param', 'prop', 'empty'] },
+      { key: 'die', label: 'Кость', kind: 'ref', main: true, allow: ['name', 'expr', 'empty'], refersTo: 'constant' },
+      { key: 'count', label: 'Сколько костей', kind: 'ref', allow: ['expr', 'empty'] },
+      { key: 'fixed', label: 'Формула', kind: 'ref', main: true, allow: ['expr', 'empty'] },
+      { key: 'bonus', label: 'Прибавка', kind: 'ref', main: true, allow: ['expr', 'empty'] },
       { key: 'by', label: 'Кто бросает', kind: 'sheet', allow: ['expr', 'empty'] },
       { key: 'against', label: 'Против кого', kind: 'sheet', allow: ['expr', 'empty'] },
       { key: 'tags', label: 'Метки броска', kind: 'roll', allow: [] },
@@ -101,8 +101,8 @@ export const STEP_WORDS = {
     label: 'Докинуть',
     hint: 'Увидев кости: докинуть ещё к выпавшему и, если нужно, оставить лучшую или худшую. Выпавшее остаётся.',
     slots: [
-      { key: 'count', label: 'Сколько костей', kind: 'ref', main: true, required: true, allow: ['expr', 'const', 'param', 'prop'] },
-      { key: 'sides', label: 'Сколько граней', kind: 'ref', allow: ['expr', 'const', 'empty'] },
+      { key: 'count', label: 'Сколько костей', kind: 'ref', main: true, required: true, allow: ['expr'] },
+      { key: 'sides', label: 'Сколько граней', kind: 'ref', allow: ['expr', 'empty'] },
       {
         key: 'keep', label: 'Оставить', kind: 'choice', options: ['', 'best', 'worst'], fallback: '',
         choice: [['', 'все'], ['best', 'лучшую'], ['worst', 'худшую']],
@@ -146,7 +146,7 @@ export const STEP_WORDS = {
       },
       {
         key: 'effect', label: 'Какой эффект', kind: 'ref', main: true, required: true,
-        allow: ['prop', 'const', 'param', 'empty'], refersTo: 'effect',
+        allow: ['name', 'expr', 'empty'], refersTo: 'effect',
       },
       { key: 'to', label: 'На кого', kind: 'sheet', main: true, required: true, allow: ['expr'] },
       { key: 'args', label: 'Что наложенное запомнит', kind: 'args', allow: [] },
@@ -159,9 +159,9 @@ export const STEP_WORDS = {
     label: 'Таблица',
     hint: 'Прочитать строку таблицы по числу или броску: травма, исход, сложность по дистанции.',
     slots: [
-      { key: 'table', label: 'Какая таблица', kind: 'ref', main: true, required: true, allow: ['const', 'param', 'prop'] },
-      { key: 'dice', label: 'Бросить', kind: 'ref', main: true, allow: ['const', 'param', 'prop', 'constant', 'empty'] },
-      { key: 'value', label: 'Или взять число', kind: 'ref', main: true, allow: ['ref', 'expr', 'const', 'param', 'prop', 'empty'] },
+      { key: 'table', label: 'Какая таблица', kind: 'ref', main: true, required: true, allow: ['name', 'expr'], refersTo: 'table' },
+      { key: 'dice', label: 'Бросить', kind: 'ref', main: true, allow: ['name', 'expr', 'empty'], refersTo: 'constant' },
+      { key: 'value', label: 'Или взять число', kind: 'ref', main: true, allow: ['expr', 'empty'] },
     ],
     outputs: [{ path: '', label: 'строка таблицы', kind: 'text' }],
     reasons: {},

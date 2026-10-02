@@ -21,7 +21,7 @@ const EACH = { type: 'each', of: 'жертвы', as: 'цель' };
 
 const damageArgs = (amount: unknown, tags: string[], who: unknown = { expr: '@цель' }, by: unknown = { expr: '@действующий' }) => ({
   лист: who, обидчик: by, сколько: amount,
-  ...Object.fromEntries(tags.map(tag => [SOURCES.includes(tag) ? 'природа' : 'тип', { const: tag }])),
+  ...Object.fromEntries(tags.map(tag => [SOURCES.includes(tag) ? 'природа' : 'тип', { expr: JSON.stringify(tag) }])),
 });
 
 const strike = (id: string, label: string, amount: number, tags: string[]) => ({
@@ -178,7 +178,7 @@ group('реакции слушают слово, а не имя эффекта',
       ...spiky.effects,
       сосредоточен: {
         label: 'Сосредоточен', activation: 'passive', duration: { kind: 'permanent' },
-        on: [{ on: 'after:урон', if: { expr: '@лист == @носитель' }, steps: [{ type: 'status', mode: 'remove', effect: { const: 'сосредоточен' }, to: { expr: '@носитель' } }] }],
+        on: [{ on: 'after:урон', if: { expr: '@лист == @носитель' }, steps: [{ type: 'status', mode: 'remove', effect: 'сосредоточен', to: { expr: '@носитель' } }] }],
       },
     });
     const r = exchange({

@@ -44,7 +44,7 @@ function firstChoice(effect: Effect, key: string): string | null {
     const slots = (registry.get(step.type)?.slots ?? []) as { key: string; options?: readonly string[] }[];
     for (const slot of slots) {
       const value = (step as Record<string, unknown>)[slot.key];
-      if (value && typeof value === 'object' && (value as { param?: unknown }).param === key && slot.options?.length) {
+      if (value && typeof value === 'object' && String((value as { expr?: unknown }).expr ?? '').trim() === `@${key}` && slot.options?.length) {
         return String(slot.options[0]);
       }
     }

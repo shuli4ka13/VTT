@@ -8,7 +8,7 @@ const system = {
   id: 'x', name: 'x', tables: {}, constants: { d20: { kind: 'die', dice: [{ count: 1, sides: 20 }] } },
   effects: {
     удар: { label: 'Удар', activation: 'manual', params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }], steps: [
-      { id: 'hit_бросок', type: 'roll', die: { constant: 'd20' }, by: { expr: '@действующий' } },
+      { id: 'hit_бросок', type: 'roll', die: 'd20', by: { expr: '@действующий' } },
       { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '10' } },
     ] },
     r: { label: 'r', activation: 'passive', on: [] },

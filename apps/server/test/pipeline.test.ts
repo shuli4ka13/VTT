@@ -14,7 +14,7 @@ const system = {
   tables: {
     лист: { shape: 'single', owner: 'sheet', columns: [
       { key: 'хп', label: 'Хиты', kind: 'number', default: 20, min: 0, max: 30 },
-      { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 0, roll: { die: { constant: 'к20' } } },
+      { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 0, roll: { die: 'к20' } },
     ] },
     приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] },
   },

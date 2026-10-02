@@ -39,7 +39,7 @@ const base = {
       label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS],
       steps: [
         EACH,
-        { id: 'бросок', type: 'roll', die: { constant: 'к20' }, tags: ['атака'], by: { expr: '@действующий' }, against: { expr: '@цель' } },
+        { id: 'бросок', type: 'roll', die: 'к20', tags: ['атака'], by: { expr: '@действующий' }, against: { expr: '@цель' } },
         { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '1' }, continueOn: 'always' },
         { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1к6')" } },
         { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '@урон' } },
@@ -49,7 +49,7 @@ const base = {
       label: 'Ядовитый плевок', activation: 'manual', params: [ACTOR, TARGETS],
       steps: [
         EACH,
-        { id: 'спас', type: 'roll', die: { constant: 'к20' }, tags: ['спасбросок'], by: { expr: '@цель' }, against: { expr: '@действующий' } },
+        { id: 'спас', type: 'roll', die: 'к20', tags: ['спасбросок'], by: { expr: '@цель' }, against: { expr: '@действующий' } },
         { type: 'check', value: { expr: '@спас' }, versus: { expr: '10' }, continueOn: 'always' },
       ],
     },

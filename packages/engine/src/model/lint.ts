@@ -125,17 +125,15 @@ function stepProblems(steps: Step[], whereOf: (index: number) => Where): Problem
       out.push({ where, level: 'error', text: `движок не знает типа ${STEP.gen} «${step.type}»` });
       return;
     }
-    for (const slot of (mod.slots ?? []) as { key: string; label: string; required?: boolean }[]) {
+    for (const slot of (mod.slots ?? []) as { key: string; label: string; kind?: string; required?: boolean }[]) {
       const value = slot.key.split('.').reduce<unknown>((node, key) =>
         (node == null || typeof node !== 'object' ? undefined : (node as Record<string, unknown>)[key]), step);
       if (slot.required && (value === null || value === undefined)) {
         out.push({ where, level: 'error', text: `не заполнено: ${slot.label.toLowerCase()}` });
         break;
       }
-      if (value && typeof value === 'object') {
-        const r = value as Record<string, unknown>;
-        if ('prop' in r && !String(r.prop ?? '')) out.push({ where, level: 'error', text: `${slot.label.toLowerCase()}: свойство не выбрано` });
-        if ('tag' in r && !String(r.tag ?? '')) out.push({ where, level: 'error', text: `${slot.label.toLowerCase()}: поле не выбрано` });
+      if (slot.kind === 'ref' && value && typeof value === 'object' && !Array.isArray(value) && !('expr' in value)) {
+        out.push({ where, level: 'error', text: `${slot.label.toLowerCase()}: ссылка старой формы ${JSON.stringify(value)} — нужно имя или формула` });
       }
     }
     if (step.id) earlier.add(String(step.id));
@@ -306,7 +304,7 @@ function fieldRollProblems(system: System): Problem[] {
   for (const field of fieldsOf(system)) {
     if (!field.roll) continue;
     const where = { tab: 'sheet' as const, field: field.tag };
-    const die = field.roll.die?.constant;
+    const die = field.roll.die;
     if (!die) { out.push({ where, level: 'error', text: `по полю «${field.label}» бросают, но кость не выбрана` }); continue; }
     const constant = system.constants?.[die];
     if (field.roll.count && constant?.kind === 'die' && (constant.dice ?? []).length !== 1) {
@@ -644,7 +642,7 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
       });
       chain.steps.forEach((step, index) => {
         if (step.type !== 'status') return;
-        const target = (step as { effect?: { const?: unknown } }).effect?.const;
+        const target = (step as { effect?: unknown }).effect;
         const declared = typeof target === 'string' ? system.effects[target]?.params : undefined;
         if (!declared) return;
         for (const key of Object.keys(((step as { args?: Record<string, unknown> }).args) ?? {})) {

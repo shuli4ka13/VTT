@@ -25,7 +25,7 @@ const sys: any = {
       params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
       steps: [
         { type: 'each', of: 'цели', as: 'цель' },
-        { id: 'скрыт', type: 'roll', die: { constant: 'lead' }, bonus: { expr: '@действующий.скрытность' }, tags: ['скрытность'], by: { expr: '@действующий' } },
+        { id: 'скрыт', type: 'roll', die: 'lead', bonus: { expr: '@действующий.скрытность' }, tags: ['скрытность'], by: { expr: '@действующий' } },
         { id: 'бросок', type: 'check', value: { expr: '@скрыт' }, versus: { expr: '15' } },
       ],
     },

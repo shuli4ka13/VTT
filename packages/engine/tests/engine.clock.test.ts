@@ -192,7 +192,7 @@ group('ход в бою: наложенный эффект получает ср
       ...system.effects,
       bless_action: { label: 'Благословить', activation: 'manual',
         params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
-        steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'status', mode: 'apply', effect: { const: 'timed' }, to: { expr: '@цель' } }] },
+        steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'status', mode: 'apply', effect: 'timed', to: { expr: '@цель' } }] },
       timed: { label: 'На два раунда', activation: 'passive', duration: { kind: 'rounds', max: 2 }, modifiers: [] },
     },
   };

@@ -19,7 +19,7 @@ const withActor: Effect = {
 
 describe('problemOf: имя внутри формулы слота', () => {
   const roll = (bonus: string) => ({
-    type: 'roll', die: { constant: 'd20' }, bonus: { expr: bonus }, by: { expr: '@действующий' },
+    type: 'roll', die: 'd20', bonus: { expr: bonus }, by: { expr: '@действующий' },
   }) as unknown as Step;
 
   it('ловит несуществующее поле листа в формуле прибавки броска', () => {

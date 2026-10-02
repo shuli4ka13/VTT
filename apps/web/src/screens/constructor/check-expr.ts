@@ -1,7 +1,7 @@
 import type { System, SlotRef } from '@vtt/schema';
 import { asDice } from '../../words.ts';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
-import { dieRef } from './roll-expr.ts';
+import { dieRef, unquote } from './roll-expr.ts';
 import type { NameRef } from './roll-expr.ts';
 
 export type RollTag = string | SlotRef;
@@ -87,13 +87,13 @@ function rollSide(text: string, system: System, asName?: NameRef): RollSide | nu
   if (dieName) {
     const key = dieName;
     if (!system.constants?.[key]) return { roll: { tags: [] }, error: `«${key}» — не кость системы` };
-    die = { constant: key } as SlotRef;
+    die = key;
   } else {
     const m = /^(\d+)?\s*[dдк]\s*(\d+)$/iu.exec(dieText);
     if (!m) return { roll: { tags: [] }, error: 'первое в «кинуть(…)» — кость: «1к20» или кость системы через @' };
-    const found = dieRef(Number(m[1] ?? 1), Number(m[2]), system) as Record<string, unknown>;
-    if (!('constant' in found)) return { roll: { tags: [] }, error: `в системе нет кости ${asDice(`${m[1] ?? 1}d${m[2]}`)} — заведите её в «Правилах» или выберите через @` };
-    die = found as SlotRef;
+    const found = dieRef(Number(m[1] ?? 1), Number(m[2]), system);
+    if (typeof found !== 'string') return { roll: { tags: [] }, error: `в системе нет кости ${asDice(`${m[1] ?? 1}d${m[2]}`)} — заведите её в «Правилах» или выберите через @` };
+    die = found;
   }
 
   const words = tagWords(system);
@@ -101,7 +101,7 @@ function rollSide(text: string, system: System, asName?: NameRef): RollSide | nu
   for (const text of tagTexts.filter(Boolean)) {
     const name = bareName(text);
     const input = name && asName ? asName(name) : null;
-    const tag = name && words.has(name) ? name : input && 'param' in (input as object) ? { expr: `@${name}` } : !name && text.includes('"') ? tailRef(text) : null;
+    const tag = name && words.has(name) ? name : input && typeof input === 'object' ? { expr: `@${name}` } : !name && text.includes('"') ? tailRef(text) : null;
     if (!tag) {
       return { roll: { tags: [] }, error: `после кости в «кинуть(…)» — метки через @: строки таблиц или входы, а «${text}» не из них` };
     }
@@ -143,18 +143,14 @@ function refText(ref: unknown): string {
   if (!ref || typeof ref !== 'object') return ref === undefined || ref === null ? '' : String(ref);
   const r = ref as Record<string, unknown>;
   if ('expr' in r) return String(r.expr ?? '');
-  if ('const' in r) return String(r.const ?? '');
-  for (const key of ['param', 'constant'] as const) {
-    if (key in r) return `@${String(r[key])}`;
-  }
   return '';
 }
 
 function rollText(roll: CheckRoll | undefined): string {
-  const die = roll?.die as Record<string, unknown> | undefined;
-  const head = !die ? '' : 'constant' in die
-    ? `@${String(die.constant)}`
-    : asDice(String(die.const ?? ''));
+  const die = roll?.die as unknown;
+  const head = !die ? '' : typeof die === 'string'
+    ? `@${die}`
+    : asDice(unquote(String((die as { expr?: unknown }).expr ?? '')));
   const many = roll?.count ? ` * ${refText(roll.count)}` : '';
   const kind = (roll?.tags ?? []).map(tag => `, ${typeof tag === 'string' ? `@${tag}` : refText(tag)}`).join('');
   const tail = refText(roll?.bonus);

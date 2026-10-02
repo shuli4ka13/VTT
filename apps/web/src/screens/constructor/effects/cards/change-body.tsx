@@ -7,7 +7,10 @@ import { parseRollExpr, badFormula, exprText } from '../../roll-expr.ts';
 import { FormulaField } from '../../../../ui/formula-field.tsx';
 import type { BarApi } from '../../../../store/formula-bar.ts';
 import { labelOfTag } from '../../../../ui/formula.tsx';
-import { SlotInput, chipOf, type SlotOption } from '../../slot-input.tsx';
+import { EffectPick, effectNameOf } from '../../effect-pick.tsx';
+import { dieWord, readingWord } from '../../readback.ts';
+import { unquote } from '../../roll-expr.ts';
+import { asDice } from '../../../../words.ts';
 import { outputRefs, stepNames, inputBadges } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn, WithNumber } from '../words.ts';
@@ -89,7 +92,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
     const a = apply as Record<string, any>;
     const value = a.value;
     const written = value && typeof value === 'object'
-      ? 'expr' in value ? String(value.expr) : 'const' in value ? String(value.const) : ''
+      ? 'expr' in value ? String(value.expr) : ''
       : '';
     const direction = String(a.direction ?? 'subtract');
     if (direction === 'set') return written;
@@ -104,7 +107,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
 
   const dice = (amount as Record<string, any> | undefined)?.die;
   const bonus = (amount as Record<string, any> | undefined)?.bonus;
-  const diceChip = chipOf(dice, context);
+  const diceChip = dieChip(dice, context);
   const bonusText = exprText(bonus);
   const both = Boolean(diceChip && bonusText);
 
@@ -214,7 +217,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   const needs = (context.effect.params ?? []).map(p => ({
     group: 'из записи',
     label: p.label ?? p.key,
-    onPick: (insert: (piece: string) => string, bar: BarApi) => { bar.dismiss(); putIntoAmount({ param: p.key } as SlotRef, insert); },
+    onPick: (insert: (piece: string) => string, bar: BarApi) => { bar.dismiss(); putIntoAmount({ expr: `@${p.key}` }, insert); },
   }));
   if (onCreateFromRecord) {
     needs.push({
@@ -247,7 +250,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
     needs.push({
       group: 'кость системы',
       label: c.label || key,
-      onPick: (insert: (piece: string) => string, bar: BarApi) => { bar.dismiss(); putIntoAmount({ constant: key } as SlotRef, insert); },
+      onPick: (insert: (piece: string) => string, bar: BarApi) => { bar.dismiss(); putIntoAmount(key, insert); },
     });
   }
 
@@ -305,11 +308,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
   const firstEvent = calledOf(system)[0]?.[0];
 
   const fromRecord = (label: string, kind: ValueKind) =>
-    onAddParam ? () => ({ param: onAddParam(label, kind) }) : undefined;
-
-  const statusOptions: SlotOption[] = Object.entries(system.effects ?? {})
-    .filter(([, e]) => (e.activation ?? 'manual') === 'passive')
-    .map(([id, e]) => ({ group: 'Состояния', label: e.label ?? id, ref: { const: id } }));
+    onAddParam ? (): SlotRef => ({ expr: `@${onAddParam(label, kind)}` }) : undefined;
 
   return (
     <>
@@ -369,11 +368,14 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
             />
           </Field>
           <Field label="Какое">
-            <SlotInput
-              where="изменение · какое"
-              value={step.effect} context={context} extraOptions={statusOptions} keep={['const', 'param']}
-              onChange={next => edit(applyIndex, draft => { (draft as any).effect = next ?? undefined; })}
-              onCreateFromRecord={fromRecord('какое', 'effect')}
+            <EffectPick
+              value={step.effect}
+              system={system}
+              only={effect => (effect.activation ?? 'manual') === 'passive'}
+              inputs={context.effect.params ?? []}
+              {...(onAddParam ? { onCreateParam: () => onAddParam('какое', 'effect') } : {})}
+              empty="— какое состояние —"
+              onChange={next => edit(applyIndex, draft => { if (next) (draft as any).effect = next; else delete (draft as any).effect; })}
             />
           </Field>
           <Field label={String(step.mode ?? 'apply') === 'remove' ? 'С кого' : 'На кого'} needed={!step.to}>
@@ -401,7 +403,7 @@ function StatusArgs({ step, context, onChange }: {
   onChange: (key: string, expr: string) => void;
 }) {
   if (String(step.mode ?? 'apply') === 'remove') return null;
-  const id = step.effect && typeof step.effect === 'object' && 'const' in step.effect ? String(step.effect.const) : '';
+  const id = effectNameOf(step.effect);
   const params = context.system.effects[id]?.params ?? [];
   if (!params.length) return null;
   return (
@@ -421,3 +423,17 @@ function StatusArgs({ step, context, onChange }: {
     </>
   );
 }
+
+function dieChip(dice: unknown, context: SlotContext): { label: string } | null {
+  if (typeof dice === 'string' && dice) {
+    const reading = readingWord(context.system, dice);
+    const die = dieWord(context.system, dice);
+    return { label: reading ? `${die} (${reading})` : die };
+  }
+  const expr = dice && typeof dice === 'object' ? String((dice as { expr?: unknown }).expr ?? '').trim() : '';
+  if (!expr) return null;
+  const input = /^@([\p{L}\p{N}_]+)$/u.exec(expr)?.[1];
+  if (input) return { label: context.effect.params?.find(p => p.key === input)?.label ?? input };
+  return { label: asDice(unquote(expr)) };
+}
+

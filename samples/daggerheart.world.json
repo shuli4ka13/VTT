@@ -110,9 +110,7 @@
             "max": 6,
             "roll": {
               "label": "Бросок: Проворство",
-              "die": {
-                "constant": "duality"
-              },
+              "die": "duality",
               "tags": [
                 "действие",
                 "герой",
@@ -132,9 +130,7 @@
             "max": 6,
             "roll": {
               "label": "Бросок: Сила",
-              "die": {
-                "constant": "duality"
-              },
+              "die": "duality",
               "tags": [
                 "действие",
                 "герой",
@@ -154,9 +150,7 @@
             "max": 6,
             "roll": {
               "label": "Бросок: Искусность",
-              "die": {
-                "constant": "duality"
-              },
+              "die": "duality",
               "tags": [
                 "действие",
                 "герой",
@@ -176,9 +170,7 @@
             "max": 6,
             "roll": {
               "label": "Бросок: Чутьё",
-              "die": {
-                "constant": "duality"
-              },
+              "die": "duality",
               "tags": [
                 "действие",
                 "герой",
@@ -198,9 +190,7 @@
             "max": 6,
             "roll": {
               "label": "Бросок: Присутствие",
-              "die": {
-                "constant": "duality"
-              },
+              "die": "duality",
               "tags": [
                 "действие",
                 "герой",
@@ -220,9 +210,7 @@
             "max": 6,
             "roll": {
               "label": "Бросок: Знание",
-              "die": {
-                "constant": "duality"
-              },
+              "die": "duality",
               "tags": [
                 "действие",
                 "герой",
@@ -1563,9 +1551,7 @@
           {
             "id": "бросок_бросок",
             "type": "roll",
-            "die": {
-              "constant": "duality"
-            },
+            "die": "duality",
             "bonus": {
               "expr": "таблица(\"traits\", @trait, \"value\") + @опыт"
             },
@@ -1674,9 +1660,7 @@
           {
             "id": "бросок_бросок",
             "type": "roll",
-            "die": {
-              "constant": "duality"
-            },
+            "die": "duality",
             "bonus": {
               "expr": "таблица(\"traits\", @trait, \"value\") + @attack_bonus"
             },
@@ -1773,9 +1757,7 @@
           {
             "id": "удар_бросок",
             "type": "roll",
-            "die": {
-              "constant": "adversary_die"
-            },
+            "die": "adversary_die",
             "bonus": {
               "expr": "@действующий.attack_mod"
             },
@@ -1948,9 +1930,7 @@
           {
             "type": "status",
             "mode": "remove",
-            "effect": {
-              "const": "death_move"
-            },
+            "effect": "death_move",
             "to": {
               "expr": "@цель"
             }
@@ -1958,9 +1938,7 @@
           {
             "type": "status",
             "mode": "apply",
-            "effect": {
-              "const": "dead"
-            },
+            "effect": "dead",
             "to": {
               "expr": "@цель"
             }
@@ -1989,9 +1967,7 @@
           {
             "id": "шрам_бросок",
             "type": "roll",
-            "die": {
-              "constant": "hope_die"
-            },
+            "die": "hope_die",
             "tags": [
               "смерть"
             ],
@@ -2010,9 +1986,7 @@
           {
             "type": "status",
             "mode": "remove",
-            "effect": {
-              "const": "death_move"
-            },
+            "effect": "death_move",
             "to": {
               "expr": "@цель"
             }
@@ -2020,9 +1994,7 @@
           {
             "type": "status",
             "mode": "apply",
-            "effect": {
-              "const": "unconscious"
-            },
+            "effect": "unconscious",
             "to": {
               "expr": "@цель"
             }
@@ -2076,9 +2048,7 @@
           {
             "id": "бросок_бросок",
             "type": "roll",
-            "die": {
-              "constant": "duality"
-            },
+            "die": "duality",
             "tags": [
               "смерть"
             ],
@@ -2147,9 +2117,7 @@
           {
             "type": "status",
             "mode": "remove",
-            "effect": {
-              "const": "death_move"
-            },
+            "effect": "death_move",
             "to": {
               "expr": "@цель"
             }
@@ -2157,9 +2125,7 @@
           {
             "type": "status",
             "mode": "apply",
-            "effect": {
-              "const": "dead"
-            },
+            "effect": "dead",
             "to": {
               "expr": "@цель"
             },
@@ -2206,9 +2172,7 @@
           {
             "type": "status",
             "mode": "remove",
-            "effect": {
-              "const": "unconscious"
-            },
+            "effect": "unconscious",
             "to": {
               "expr": "@цель"
             }
@@ -2370,9 +2334,7 @@
           {
             "type": "status",
             "mode": "remove",
-            "effect": {
-              "const": "unconscious"
-            },
+            "effect": "unconscious",
             "to": {
               "expr": "@цель"
             }
@@ -2629,9 +2591,7 @@
           {
             "type": "status",
             "mode": "remove",
-            "effect": {
-              "const": "unconscious"
-            },
+            "effect": "unconscious",
             "to": {
               "expr": "@цель"
             }
@@ -2688,9 +2648,7 @@
           {
             "type": "status",
             "mode": "apply",
-            "effect": {
-              "const": "merciless"
-            },
+            "effect": "merciless",
             "to": {
               "expr": "@цель"
             }
@@ -2747,9 +2705,7 @@
           {
             "type": "status",
             "mode": "apply",
-            "effect": {
-              "const": "dodging"
-            },
+            "effect": "dodging",
             "to": {
               "expr": "@цель"
             }
@@ -2806,9 +2762,7 @@
           {
             "type": "status",
             "mode": "apply",
-            "effect": {
-              "const": "distracted"
-            },
+            "effect": "distracted",
             "to": {
               "expr": "@цель"
             }
@@ -3154,9 +3108,7 @@
               {
                 "type": "status",
                 "mode": "apply",
-                "effect": {
-                  "const": "vulnerable"
-                },
+                "effect": "vulnerable",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -3184,9 +3136,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "vulnerable"
-                },
+                "effect": "vulnerable",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -3224,9 +3174,7 @@
               {
                 "type": "status",
                 "mode": "apply",
-                "effect": {
-                  "const": "death_move"
-                },
+                "effect": "death_move",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -3287,9 +3235,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "merciless"
-                },
+                "effect": "merciless",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -3302,9 +3248,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "merciless"
-                },
+                "effect": "merciless",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -3342,9 +3286,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "dodging"
-                },
+                "effect": "dodging",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -3357,9 +3299,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "dodging"
-                },
+                "effect": "dodging",
                 "to": {
                   "expr": "@носитель"
                 }
@@ -3372,9 +3312,7 @@
               {
                 "type": "status",
                 "mode": "remove",
-                "effect": {
-                  "const": "dodging"
-                },
+                "effect": "dodging",
                 "to": {
                   "expr": "@носитель"
                 }

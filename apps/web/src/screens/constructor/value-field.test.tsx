@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
 import { render, fireEvent, screen } from '@testing-library/react';
-import { optionsFor, SlotInput, normalizeDice, asText, grownFrom } from './slot-input.tsx';
+import { optionsFor, ValueField, normalizeDice, asText, grownFrom } from './value-field.tsx';
 import type { SlotContext } from './slots.tsx';
 import type { System, Effect } from '@vtt/schema';
 
@@ -29,16 +29,16 @@ describe('normalizeDice', () => {
 });
 
 describe('optionsFor', () => {
-  it('собирает поля, запись, результаты и кости; prop не предлагает', () => {
-    const groups = new Set(optionsFor(ctx, undefined, []).map(o => o.group));
-    expect(groups).toEqual(new Set(['Поля листа', 'Входы эффекта', 'Результаты шагов', 'Кости']));
+  it('собирает поля, входы и результаты; prop без записи не предлагает', () => {
+    const groups = new Set(optionsFor(ctx, undefined).map(o => o.group));
+    expect(groups).toEqual(new Set(['Поля', 'Входы эффекта', 'Результаты шагов']));
     const withSheets: SlotContext = { ...ctx, sheets: new Map([['цель', 'цель'], ['действующий', 'Кто действует']]) };
-    expect(new Set(optionsFor(withSheets, undefined, []).map(o => o.group))).toContain('Поля: цель');
-    expect(optionsFor(withSheets, ['tag'], []).map(o => o.name)).toEqual(['цель.armor', 'действующий.armor']);
+    expect(new Set(optionsFor(withSheets, undefined).map(o => o.group))).toContain('Поля: цель');
+    expect(optionsFor(withSheets, ['tag']).map(o => o.name)).toEqual(['цель.armor', 'действующий.armor']);
   });
   it('allow сужает список', () => {
 
-    expect(optionsFor(ctx, ['ref'], []).map(o => o.label)).toEqual([
+    expect(optionsFor(ctx, ['ref']).map(o => o.label)).toEqual([
       'шаг 1 · Проверка — да или нет: проверка пройдена',
       'шаг 1 · Проверка — на сколько перебил порог',
       'шаг 1 · Проверка — сколько вышло всего',
@@ -51,7 +51,7 @@ describe('optionsFor', () => {
   });
 });
 
-describe('SlotInput', () => {
+describe('ValueField', () => {
   const typeAt = (text: string) => {
     const input = screen.getByRole('textbox') as HTMLInputElement;
     fireEvent.focus(input);
@@ -60,7 +60,7 @@ describe('SlotInput', () => {
   };
 
   it('на фокус подсказок нет — они открываются только собачкой', () => {
-    render(<SlotInput value={undefined} onChange={() => {}} context={ctx} />);
+    render(<ValueField value={undefined} onChange={() => {}} context={ctx} />);
     fireEvent.focus(screen.getByRole('textbox'));
     expect(document.querySelector('.slot__menu')).toBeNull();
     typeAt('@');
@@ -69,7 +69,7 @@ describe('SlotInput', () => {
 
   it('выбор варианта по @ пишет имя в формулу', () => {
     let got: unknown = 'untouched';
-    render(<SlotInput value={undefined} onChange={next => { got = next; }} context={ctx} />);
+    render(<ValueField value={undefined} onChange={next => { got = next; }} context={ctx} />);
     const input = typeAt('@Класс');
     fireEvent.mouseDown(screen.getAllByText('Класс брони')[0]!);
     expect(got, 'выбор вставляет фишку, а не закрывает правку').toBe('untouched');
@@ -77,18 +77,10 @@ describe('SlotInput', () => {
     expect(got).toEqual({ expr: '@armor' });
   });
 
-  it('где имя — само значение (какое поле менять), выбор отдаёт ссылку на поле', () => {
-    let got: unknown = 'untouched';
-    render(<SlotInput value={undefined} onChange={next => { got = next; }} context={ctx} allow={['tag', 'param']} keep={['tag', 'param']} />);
-    const input = typeAt('@Класс');
-    fireEvent.mouseDown(screen.getAllByText('Класс брони')[0]!);
-    fireEvent.keyDown(document.querySelector('input.chips__text') ?? input, { key: 'Enter' });
-    expect(got).toEqual({ tag: 'armor' });
-  });
 
   it('стрелки двигают подсветку, Enter выбирает подсвеченное', () => {
     let got: unknown = 'untouched';
-    render(<SlotInput value={undefined} onChange={next => { got = next; }} context={ctx} />);
+    render(<ValueField value={undefined} onChange={next => { got = next; }} context={ctx} />);
     const input = typeAt('@');
     const lit = () => document.querySelector('.slot__option--lit')?.textContent;
     const first = lit();
@@ -105,57 +97,37 @@ describe('SlotInput', () => {
 
   it('набранное число — тоже формула', () => {
     let got: unknown = 'untouched';
-    render(<SlotInput value={undefined} onChange={next => { got = next; }} context={ctx} />);
+    render(<ValueField value={undefined} onChange={next => { got = next; }} context={ctx} />);
     const input = screen.getByRole('textbox');
     fireEvent.change(input, { target: { value: '7' } });
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(got).toEqual({ expr: '7' });
   });
 
-  it('в аргументе вызова число остаётся значением', () => {
-    let got: unknown = 'untouched';
-    render(<SlotInput value={undefined} onChange={next => { got = next; }} context={ctx} keep={['const']} />);
-    const input = screen.getByRole('textbox');
-    fireEvent.change(input, { target: { value: '7' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
-    expect(got).toEqual({ const: 7 });
-  });
 
-  it('dice: набранная нотация «1к8» уходит как const NdM по Enter', () => {
+  it('dice: набранная нотация «1к8» уходит записью кости в формуле', () => {
     let got: unknown = 'untouched';
-    render(<SlotInput value={undefined} onChange={next => { got = next; }} context={ctx} dice />);
+    render(<ValueField value={undefined} onChange={next => { got = next; }} context={ctx} dice />);
     const input = screen.getByRole('textbox');
     fireEvent.change(input, { target: { value: '1к8' } });
     fireEvent.keyDown(input, { key: 'Enter' });
-    expect(got).toEqual({ const: '1d8' });
+    expect(got).toEqual({ expr: '"1d8"' });
   });
 
-  it('крестик на фишке очищает слот', () => {
-    let got: unknown = 'untouched';
-    render(<SlotInput value={{ tag: 'armor' }} onChange={next => { got = next; }} context={ctx} />);
-    fireEvent.mouseDown(screen.getByLabelText('убрать поле'));
-    fireEvent.keyDown(screen.getAllByRole('textbox').at(-1)!, { key: 'Enter' });
-    expect(got).toBeNull();
-  });
 
-  it('значение с именем показано той же фишкой, что и в строке формул, — без второй фишки', () => {
-    render(<SlotInput value={{ tag: 'armor' }} onChange={() => {}} context={ctx} />);
-    expect(screen.getAllByText('Класс брони')).toHaveLength(1);
-    expect(screen.queryByLabelText('убрать')).toBeNull();
-  });
 
   it('пункт «новая вход» зовёт колбэк и коммитит его ref', () => {
     let got: unknown = null;
-    render(<SlotInput value={undefined} onChange={next => { got = next; }} context={ctx}
-      onCreateFromRecord={() => ({ param: 'новая' })} />);
+    render(<ValueField value={undefined} onChange={next => { got = next; }} context={ctx}
+      onCreateParam={() => 'новая'} />);
     typeAt('@');
     fireEvent.mouseDown(screen.getByText(/новый вход/));
     fireEvent.keyDown([...document.querySelectorAll('input.chips__text')].at(-1)!, { key: 'Enter' });
-    expect(got).toEqual({ param: 'новая' });
+    expect(got).toEqual({ expr: '@новая' });
   });
 });
 
-describe('SlotInput: дописывание после фишки', () => {
+describe('ValueField: дописывание после фишки', () => {
   it('набранное после фишки не приклеивается к тегу', () => {
     let value: unknown = { expr: '@сила' };
     const onChange = (next: unknown) => { value = next; };
@@ -164,13 +136,13 @@ describe('SlotInput: дописывание после фишки', () => {
       system: { ...ctx.system, tables: { лист: { shape: 'single', columns: [{ key: 'сила', label: 'Сила', kind: 'number', default: 10 }] } } } as never,
     };
     const { rerender } = render(
-      <SlotInput value={value} onChange={onChange} context={ctxWithField} />,
+      <ValueField value={value} onChange={onChange} context={ctxWithField} />,
     );
 
     for (const step of [' ', ' +', ' + ', ' + 2']) {
       const tail = screen.getAllByRole('textbox').at(-1) as HTMLInputElement;
       fireEvent.change(tail, { target: { value: step } });
-      rerender(<SlotInput value={value} onChange={onChange} context={ctxWithField} />);
+      rerender(<ValueField value={value} onChange={onChange} context={ctxWithField} />);
     }
     const tail = screen.getAllByRole('textbox').at(-1) as HTMLInputElement;
     fireEvent.keyDown(tail, { key: 'Enter' });
@@ -179,21 +151,16 @@ describe('SlotInput: дописывание после фишки', () => {
 });
 
 describe('фишка дорастает до формулы', () => {
-  it('поле листа превращается в текст формулы', () => {
-    expect(asText({ tag: 'сила' })).toBe('@сила');
-  });
-
   it('свойство записи тоже, чтобы к нему можно было дописать', () => {
-    expect(asText({ prop: 'кость_урона' })).toBe('@кость_урона');
+    expect(asText({ expr: '@кость_урона' })).toBe('@кость_урона');
   });
 
   it('набранное со знака дописывается к тому, что уже стоит', () => {
-    expect(grownFrom({ prop: 'кость_урона' }, ' + 2')).toEqual({ expr: '@кость_урона + 2' });
-    expect(grownFrom({ tag: 'сила' }, '* 2')).toEqual({ expr: '@сила * 2' });
+    expect(grownFrom({ expr: '@кость_урона' }, ' + 2')).toEqual({ expr: '@кость_урона + 2' });
   });
 
   it('набранное без знака заменяет, а не дописывает', () => {
-    expect(grownFrom({ prop: 'кость_урона' }, '7')).toBeNull();
+    expect(grownFrom({ expr: '@кость_урона' }, '7')).toBeNull();
     expect(grownFrom(null, '+ 2')).toBeNull();
   });
 });

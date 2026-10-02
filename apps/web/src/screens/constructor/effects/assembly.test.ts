@@ -54,7 +54,7 @@ describe('собранное шагами конструктора работа�
     fill(id, 1, step => {
       step.target = { expr: '@цель.временные' };
       step.direction = 'subtract';
-      step.value = { const: 8 };
+      step.value = { expr: '8' };
     });
     addStep(id, 'change');
     fill(id, 2, step => {
@@ -76,7 +76,7 @@ describe('собранное шагами конструктора работа�
     const id = newManual();
     const [roll, check] = addSteps(id, 'check') as [Step, Step];
     fill(id, 1, step => {
-      step.die = { constant: 'к20' };
+      step.die = 'к20';
     });
     fill(id, 2, step => {
       step.versus = { expr: '@цель.броня' };

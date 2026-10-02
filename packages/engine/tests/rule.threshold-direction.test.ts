@@ -15,7 +15,7 @@ const sheet = { id: 'испытуемый', values: {}, effects: [] };
 const run = (successWhen, rolled, versus, extra = {}) => {
   const rule = {
     steps: [
-      { id: 'try_бросок', type: 'roll', die: { constant: 'lead_die' }, bonus: { expr: '0' }, by: { expr: '@носитель' } },
+      { id: 'try_бросок', type: 'roll', die: 'lead_die', bonus: { expr: '0' }, by: { expr: '@носитель' } },
       {
         id: 'try', type: 'check', value: { expr: '@try_бросок' },
         ...(successWhen ? { successWhen } : {}),
@@ -70,7 +70,7 @@ group('проверка: направление успеха объявляет�
           params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
           steps: [
             { type: 'each', of: 'цели', as: 'цель' },
-            { id: 'try_бросок', type: 'roll', die: { constant: 'lead_die' }, bonus: { expr: '0' }, by: { expr: '@цель' }, against: { expr: '@действующий' } },
+            { id: 'try_бросок', type: 'roll', die: 'lead_die', bonus: { expr: '0' }, by: { expr: '@цель' }, against: { expr: '@действующий' } },
             { id: 'try', type: 'check', value: { expr: '@try_бросок' }, successWhen: 'notOver', versus: { expr: '40' } },
           ],
         },

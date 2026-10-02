@@ -11,12 +11,12 @@ const system = {
 describe('parseRollExpr', () => {
   it('кость из словаря становится ссылкой на константу', () => {
     expect(parseRollExpr('1к20 + #бонус_атаки', system))
-      .toEqual({ die: { constant: 'lead' }, bonus: { expr: '#бонус_атаки' } });
+      .toEqual({ die: 'lead', bonus: { expr: '#бонус_атаки' } });
   });
 
   it('чужая кость — литералом, число — числом', () => {
     expect(parseRollExpr('2к6 + 3', system))
-      .toEqual({ die: { const: '2d6' }, bonus: { expr: '3' } });
+      .toEqual({ die: { expr: '"2d6"' }, bonus: { expr: '3' } });
   });
 
   it('кость с чтением, отличным от суммы, не подменяет литерал', () => {
@@ -25,7 +25,7 @@ describe('parseRollExpr', () => {
       ...system,
       constants: { pool: { kind: 'die', dice: [{ count: 1, sides: 20 }], read: 'best' } },
     } as unknown as System;
-    expect(parseRollExpr('1к20', withPool)).toEqual({ die: { const: '1d20' }, bonus: null });
+    expect(parseRollExpr('1к20', withPool)).toEqual({ die: { expr: '"1d20"' }, bonus: null });
   });
 
   it('выбранная в подсказке кость связывается даже с чужим чтением', () => {
@@ -33,17 +33,17 @@ describe('parseRollExpr', () => {
       ...system,
       constants: { pool: { label: 'Пул', kind: 'die', dice: [{ count: 5, sides: 10 }], read: 'count' } },
     } as unknown as System;
-    expect(parseRollExpr('5d10', withPool, 'pool')).toEqual({ die: { constant: 'pool' }, bonus: null });
-    expect(parseRollExpr('5d10', withPool)).toEqual({ die: { const: '5d10' }, bonus: null },
+    expect(parseRollExpr('5d10', withPool, 'pool')).toEqual({ die: 'pool', bonus: null });
+    expect(parseRollExpr('5d10', withPool)).toEqual({ die: { expr: '"5d10"' }, bonus: null },
       'без выбора — по-прежнему литерал');
   });
 
   it('выбор перестаёт действовать, когда нотацию переписали руками', () => {
-    expect(parseRollExpr('2d6', system, 'lead')).toEqual({ die: { const: '2d6' }, bonus: null });
+    expect(parseRollExpr('2d6', system, 'lead')).toEqual({ die: { expr: '"2d6"' }, bonus: null });
   });
 
   it('кость без счёта и без хвоста', () => {
-    expect(parseRollExpr('к20', system)).toEqual({ die: { constant: 'lead' }, bonus: null });
+    expect(parseRollExpr('к20', system)).toEqual({ die: 'lead', bonus: null });
   });
 
   it('строка без кости — внятная ошибка', () => {
@@ -57,16 +57,16 @@ describe('parseRollExpr', () => {
 
 describe('formatRollExpr', () => {
   it('константа и формула собираются обратно в строку', () => {
-    expect(formatRollExpr({ die: { constant: 'lead' }, bonus: { expr: '#бонус_атаки' } }, system))
+    expect(formatRollExpr({ die: 'lead', bonus: { expr: '#бонус_атаки' } }, system))
       .toBe('1к20 + #бонус_атаки');
   });
 
   it('литерал остаётся латиницей', () => {
-    expect(formatRollExpr({ die: { const: '2d6' } }, system)).toBe('2к6');
+    expect(formatRollExpr({ die: { expr: '"2d6"' } }, system)).toBe('2к6');
   });
 
   it('прибавка — формула как есть', () => {
-    const как = (bonus: unknown) => formatRollExpr({ die: { const: '1d20' }, bonus }, system);
+    const как = (bonus: unknown) => formatRollExpr({ die: { expr: '"1d20"' }, bonus }, system);
     expect(как({ expr: '@attack_with' })).toBe('1к20 + @attack_with');
     expect(как({ expr: '@сила + 2' })).toBe('1к20 + @сила + 2');
   });
@@ -80,7 +80,7 @@ describe('formatRollExpr', () => {
 describe('parseAmountExpr', () => {
   it('кость с прибавкой делится как в броске', () => {
     expect(parseAmountExpr('1d8 + #мод', system))
-      .toEqual({ die: { const: '1d8' }, bonus: { expr: '#мод' } });
+      .toEqual({ die: { expr: '"1d8"' }, bonus: { expr: '#мод' } });
   });
 
   it('без кости вся строка — величина', () => {
@@ -95,7 +95,7 @@ describe('parseAmountExpr', () => {
 
 describe('formatAmountExpr', () => {
   it('кость и прибавка собираются в одну строку', () => {
-    expect(formatAmountExpr({ dice: { const: '1d8' }, bonus: { expr: '#мод' } }, system))
+    expect(formatAmountExpr({ dice: { expr: '"1d8"' }, bonus: { expr: '#мод' } }, system))
       .toBe('1к8 + #мод');
   });
 });

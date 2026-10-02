@@ -65,7 +65,7 @@ group('таблица на листе: пустая клетка — ввод, �
 
   test('вид одной клетки лежит у строки и перебивает вид колонки', () => {
     const own = copy();
-    own.tables!.abilities!.rows![0]!.view = { mod: { label: 'Мощь', block: 'Бой', roll: { die: { constant: 'к20' }, bonus: { expr: '@строка.mod' } } } };
+    own.tables!.abilities!.rows![0]!.view = { mod: { label: 'Мощь', block: 'Бой', roll: { die: 'к20', bonus: { expr: '@строка.mod' } } } };
     const field = fieldOf(own, 'abilities.сила.mod')!;
     eq(field.label, 'Мощь');
     eq(field.group, 'Бой');

@@ -15,7 +15,7 @@ const effect = { params: [] } as unknown as Effect;
 const sheets = new Map([['цель', 'цель'], ['действующий', 'Кто действует']]);
 
 const attackSteps = () => [
-  { id: 'hit_бросок', type: 'roll', die: { constant: 'lead' }, by: { expr: '@действующий' } },
+  { id: 'hit_бросок', type: 'roll', die: 'lead', by: { expr: '@действующий' } },
   { id: 'hit', type: 'check', successWhen: 'atLeast', continueOn: 'success', value: { expr: '@hit_бросок' }, versus: { expr: '10' } },
   { id: 'n', type: 'roll' },
   { type: 'apply', target: { expr: '@цель.armor' }, direction: 'subtract', value: { expr: '@n' } },
@@ -38,7 +38,7 @@ describe('GroupCard', () => {
     expect(draft.type).toBe('roll');
     expect(draft.by).toEqual({ expr: '@цель' });
     expect(draft.against).toEqual({ expr: '@цель' });
-    expect(draft.die).toEqual({ constant: 'lead' });
+    expect(draft.die).toEqual('lead');
 
     edits.length = 0;
     fireEvent.change(by, { target: { value: '' } });
@@ -64,7 +64,7 @@ describe('GroupCard', () => {
     fireEvent.change(value, { target: { value: ' + 1d8' } });
     fireEvent.keyDown(value, { key: 'Enter' });
 
-    expect(amount.die).toEqual({ const: '1d8' });
+    expect(amount.die).toEqual({ expr: '"1d8"' });
 
     expect(apply.value).toEqual({ expr: '@n' });
     expect(apply.direction).toBe('set');
@@ -187,7 +187,7 @@ describe('GroupCard: изменение как вызов', () => {
 
 describe('GroupCard: величина из записи', () => {
   const steps = () => [
-    { id: 'n', type: 'roll', die: { param: 'кость_урона' } },
+    { id: 'n', type: 'roll', die: { expr: '@кость_урона' } },
     { type: 'apply', target: { expr: '@цель.armor' }, direction: 'subtract', value: { expr: '@n' } },
   ] as unknown as Step[];
   const withParam = { params: [{ key: 'кость_урона', label: 'Кость урона', kind: 'dice' }] } as unknown as Effect;
@@ -219,7 +219,7 @@ describe('GroupCard: величина из записи', () => {
 
     expect(apply.value).toEqual({ expr: '@цель.armor - @n - 2' });
     expect(apply.direction).toBe('set');
-    expect(amount.die).toEqual({ param: 'кость_урона' }, 'величина осталась своей');
+    expect(amount.die).toEqual({ expr: '@кость_урона' }, 'величина осталась своей');
   });
 });
 
@@ -230,7 +230,7 @@ const checkCell = (): HTMLElement => {
 
 describe('GroupCard: проверка одной формулой', () => {
   const checkSteps = () => [
-    { id: 'c_бросок', type: 'roll', die: { constant: 'lead' }, by: { expr: '@действующий' } },
+    { id: 'c_бросок', type: 'roll', die: 'lead', by: { expr: '@действующий' } },
     { id: 'c', type: 'check', successWhen: 'atLeast', continueOn: 'success', value: { expr: '@c_бросок' }, versus: { expr: '10' } },
   ] as unknown as Step[];
 
@@ -260,7 +260,7 @@ describe('GroupCard: проверка одной формулой', () => {
 
   it('правка строки раскладывается по частям: бросок отдельно, сравнение отдельно', () => {
     const { roll, check } = typed(') + 2 >= @цель.armor');
-    expect(roll.die).toEqual({ constant: 'lead' });
+    expect(roll.die).toEqual('lead');
     expect(roll.bonus).toEqual({ expr: '2' });
     expect(roll.by).toEqual({ expr: '@действующий' });
     expect(check.versus).toEqual({ expr: '@цель.armor' });
@@ -283,7 +283,7 @@ describe('GroupCard: проверка одной формулой', () => {
 
 describe('GroupCard: присланное число по слагаемым', () => {
   const steps = () => [
-    { id: 'n', type: 'roll', die: { param: 'кость_урона' }, bonus: { expr: '@armor' } },
+    { id: 'n', type: 'roll', die: { expr: '@кость_урона' }, bonus: { expr: '@armor' } },
     { type: 'apply', target: { expr: '@цель.armor' }, direction: 'subtract', value: { expr: '@n' } },
   ] as unknown as Step[];
   const withParam = { params: [{ key: 'кость_урона', label: 'Кость урона', kind: 'dice' }] } as unknown as Effect;
@@ -350,7 +350,7 @@ describe('GroupCard: изменение само заводит число', () 
     fireEvent.keyDown(value, { key: 'Enter' });
 
     expect(steps).toHaveLength(2);
-    expect(steps[0]).toMatchObject({ type: 'roll', die: { const: '1d8' } });
+    expect(steps[0]).toMatchObject({ type: 'roll', die: { expr: '"1d8"' } });
     expect((steps[1] as any).value).toEqual({ expr: '@n' });
   });
 
@@ -367,7 +367,7 @@ describe('GroupCard: изменение само заводит число', () 
     fireEvent.keyUp(value, { key: '@' });
     fireEvent.mouseDown(screen.getByText('Кость урона'));
 
-    expect(steps[0]).toMatchObject({ type: 'roll', die: { param: 'урон' } });
+    expect(steps[0]).toMatchObject({ type: 'roll', die: { expr: '@урон' } });
     expect((steps[1] as any).value).toEqual({ expr: '@цель.armor - @n' });
   });
 

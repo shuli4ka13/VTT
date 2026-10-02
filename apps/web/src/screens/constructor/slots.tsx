@@ -111,8 +111,8 @@ export function namesOf(ctx: SlotContext): Map<string, string> {
 
 export function refForName(ctx: SlotContext, name: string): SlotRef | null {
   if (hasField(ctx.system, name)) return null;
-  if ((ctx.effect.params ?? []).some(param => param.key === name)) return { param: name };
-  if (ctx.system.constants?.[name]) return { constant: name };
+  if ((ctx.effect.params ?? []).some(param => param.key === name)) return { expr: `@${name}` };
+  if (ctx.system.constants?.[name]) return name;
   return null;
 }
 

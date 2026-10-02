@@ -71,7 +71,7 @@ describe('новое ядро: сознательные изменения', () 
   it('эффект, снятый подпиской раньше в том же моменте, уже не срабатывает', () => {
     const system = world({
       удар: button([hit('1')]),
-      лёд: { label: 'Лёд', activation: 'passive', on: [{ ...mine, steps: [{ type: 'status', mode: 'remove', effect: { const: 'огонь' }, to: { expr: '@носитель' } }] }] },
+      лёд: { label: 'Лёд', activation: 'passive', on: [{ ...mine, steps: [{ type: 'status', mode: 'remove', effect: 'огонь', to: { expr: '@носитель' } }] }] },
       огонь: { label: 'Огонь', activation: 'passive', on: [{ ...mine, steps: [hit('5', '@носитель.хп')] }] },
     });
     const out = play(system, [sheet('а'), sheet('б', {}, [{ effectId: 'лёд' }, { effectId: 'огонь' }])], 'б', []);
@@ -91,8 +91,8 @@ describe('новое ядро: сознательные изменения', () 
   it('встречный бросок цели получает правки «бросок по мне» нападающего и заявки цели', () => {
     const system = world({
       удар: button([
-        { id: 'атака', type: 'roll', die: { constant: 'к20' }, by: { expr: '@действующий' }, against: { expr: '@цель' } },
-        { id: 'защита', type: 'roll', die: { constant: 'к20' }, by: { expr: '@цель' }, against: { expr: '@действующий' } },
+        { id: 'атака', type: 'roll', die: 'к20', by: { expr: '@действующий' }, against: { expr: '@цель' } },
+        { id: 'защита', type: 'roll', die: 'к20', by: { expr: '@цель' }, against: { expr: '@действующий' } },
         { id: 'спор', type: 'check', value: { expr: '@атака' }, versus: { expr: '@защита' } },
         hit('3'),
       ]),
@@ -110,7 +110,7 @@ describe('новое ядро: сознательные изменения', () 
     const system = world({
       удар: button([
         { id: 'сила', type: 'roll', fixed: { expr: '2' } },
-        { id: 'бросок', type: 'roll', die: { constant: 'к20' }, by: { expr: '@действующий' }, if: { expr: '@сила > 3' } },
+        { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' }, if: { expr: '@сила > 3' } },
         hit('1'),
       ]),
       удача: { label: 'Удача', activation: 'passive', on: [{ on: 'seen', if: { expr: '@бросающий == @носитель' }, steps: [hit('1', '@носитель.ки'), { type: 'roll-plus', value: { expr: '0' } }] }] },
@@ -138,7 +138,7 @@ describe('новое ядро: сознательные изменения', () 
   it('кинуть() в прибавке броска бросает свою кость, а не делит ключ с ведущей', () => {
     const system = world({
       удар: button([
-        { id: 'бр', type: 'roll', die: { constant: 'к20' }, bonus: { expr: "кинуть('1к4')" }, by: { expr: '@действующий' } },
+        { id: 'бр', type: 'roll', die: 'к20', bonus: { expr: "кинуть('1к4')" }, by: { expr: '@действующий' } },
         { id: 'б', type: 'check', value: { expr: '@бр' }, versus: { expr: '100' }, continueOn: 'always' },
       ]),
     });
@@ -159,7 +159,7 @@ describe('новое ядро: сознательные изменения', () 
 
   it('«при наложении» двух копий одним действием — у каждой своя кость', () => {
     const system = world({
-      удар: button([{ type: 'status', effect: { const: 'яд' }, to: { expr: '@цель' } }, { type: 'status', effect: { const: 'яд' }, to: { expr: '@цель' } }]),
+      удар: button([{ type: 'status', effect: 'яд', to: { expr: '@цель' } }, { type: 'status', effect: 'яд', to: { expr: '@цель' } }]),
       яд: { label: 'Яд', activation: 'passive', reapply: 'stack', attach: [hit("кинуть('1к6')", '@носитель.хп')] },
     });
     const out = play(system, [sheet('а'), sheet('б')], 'б', [3, 4]);

@@ -7,12 +7,6 @@ const nameOf = (ref: unknown): string | null => {
   if (typeof ref === 'number') return String(ref);
   if (typeof ref !== 'object') return `'${String(ref)}'`;
   const r = ref as Loose;
-  if ('const' in r) {
-    const value = r.const;
-    return typeof value === 'number' ? String(value) : `'${String(value)}'`;
-  }
-  if ('param' in r) return `@${String(r.param)}`;
-  if ('prop' in r) return `@${String(r.prop)}`;
   if ('expr' in r) {
     const text = String(r.expr).trim();
     return /^@[\p{L}\p{N}_.]+$/u.test(text) ? text : `(${text})`;
@@ -24,8 +18,8 @@ export function asOneFormula(step: Step): string | null {
   const s = step as Loose;
   if (s.type !== 'roll' || s.die === undefined) return null;
   const die = s.die as Loose;
-  if (!die || typeof die !== 'object' || !('const' in die)) return null;
-  const dice = JSON.stringify(String(die.const));
+  if (!die || typeof die !== 'object' || !('expr' in die)) return null;
+  const dice = String(die.expr).trim();
   const times = nameOf(s.count);
   const parts = [times ? `кинуть(${dice}, ${times})` : `кинуть(${dice})`];
   const fixed = nameOf(s.fixed);

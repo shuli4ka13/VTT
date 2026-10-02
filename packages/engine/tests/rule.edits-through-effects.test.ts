@@ -32,7 +32,7 @@ const victim = { id: 'цель', systemId: 'чужой-мир', name: 'цель'
 
 const rule = {
   steps: [
-    { id: 'try_бросок', type: 'roll', die: { constant: 'кость' }, bonus: { expr: '0' }, tags: ['проверка'], by: { expr: '@действующий' } },
+    { id: 'try_бросок', type: 'roll', die: 'кость', bonus: { expr: '0' }, tags: ['проверка'], by: { expr: '@действующий' } },
     { id: 'try', type: 'check', value: { expr: '@try_бросок' }, versus: { expr: '8' } },
   ],
 };
@@ -139,7 +139,7 @@ group('любой бросок ловит правку, ничего для эт
   const cursed = (ids: string[]) => ({ ...sheet([]), effects: ids.map(effectId => ({ effectId })) });
 
   const attackSteps = [
-    { id: 'hit_бросок', type: 'roll', die: { constant: 'к20' }, bonus: { expr: '0' }, tags: ['атака'], by: { expr: '@действующий' }, against: { expr: '@цель' } },
+    { id: 'hit_бросок', type: 'roll', die: 'к20', bonus: { expr: '0' }, tags: ['атака'], by: { expr: '@действующий' }, against: { expr: '@цель' } },
     { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '1' } },
   ];
   const attack = (sys: any, sh: any, ...dice: number[]) => play(sys, sh, attackSteps, queue(...dice)).trace[0] as any;
@@ -173,7 +173,7 @@ group('любой бросок ловит правку, ничего для эт
     const sys = withRule('disadvantage');
     const target = { ...cursed(['всякий']), id: 'цель' };
     const save = [
-      { id: 'спас_бросок', type: 'roll', die: { constant: 'к20' }, bonus: { expr: '0' }, tags: ['спас'], by: { expr: '@цель' }, against: { expr: '@действующий' } },
+      { id: 'спас_бросок', type: 'roll', die: 'к20', bonus: { expr: '0' }, tags: ['спас'], by: { expr: '@цель' }, against: { expr: '@действующий' } },
       { id: 'спас', type: 'check', value: { expr: '@спас_бросок' }, versus: { expr: '1' } },
     ];
     const t = play(sys, sheet([]), save, queue(19, 2), [target]).trace[0] as any;
@@ -192,7 +192,7 @@ group('переворот к100 доезжает через эффект — п�
   });
   const under = {
     steps: [
-      { id: 'try_бросок', type: 'roll', die: { constant: 'сотня' }, bonus: { expr: '0' }, tags: ['проверка'], by: { expr: '@действующий' } },
+      { id: 'try_бросок', type: 'roll', die: 'сотня', bonus: { expr: '0' }, tags: ['проверка'], by: { expr: '@действующий' } },
       { id: 'try', type: 'check', value: { expr: '@try_бросок' }, versus: { expr: '45' }, successWhen: 'notOver' },
     ],
   };

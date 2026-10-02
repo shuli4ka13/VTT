@@ -127,7 +127,7 @@ group('новое ядро: урон бросается, только когда
   const steps = [
     { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d6')" } },
     EACH,
-    { id: 'бросок', type: 'roll', die: { constant: 'к20' }, by: { expr: '@действующий' } },
+    { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
     { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@цель.хп - 10' } },
     hit('@урон'),
   ];
@@ -155,7 +155,7 @@ group('новое ядро: броски действующего не деля�
   test('величина и проверка, брошенные заранее, берут разные кости', () => {
     const steps = [
       { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d6')" } },
-      { id: 'бросок', type: 'roll', die: { constant: 'к20' }, by: { expr: '@действующий' } },
+      { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
       { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
       EACH,
       hit('@урон'),
@@ -168,7 +168,7 @@ group('новое ядро: броски действующего не деля�
 
   test('ложное «когда» у броска после проверки — кость не брошена', () => {
     const steps = [
-      { id: 'бросок', type: 'roll', die: { constant: 'к20' }, by: { expr: '@действующий' } },
+      { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
       { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
       { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d6')" }, if: { expr: '@бросок.natural >= 20' } },
       EACH,
