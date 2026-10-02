@@ -1,6 +1,6 @@
 import { useWorld } from '../../store/world.ts';
 import { BlockPick } from './block-pick.tsx';
-import { RollTagsPick } from './roll-tags-pick.tsx';
+import { TagsField } from './tags-field.tsx';
 import { dieEntries } from './rules/dice-section.tsx';
 import { CONTROLS } from '../../sheet/controls/index.tsx';
 import { Card, CardHead, Field, Input, Select, Chip } from '../../ui/primitives.tsx';
@@ -91,12 +91,17 @@ export function ColumnOnSheet({ tableId, column, system }: { tableId: string; co
                   if (key) draft.roll.die = key; else delete draft.roll.die;
                 })}
               />
-              <RollTagsPick
+              <TagsField
                 system={system}
                 value={column.roll.tags}
+                templates={single ? [] : [
+                  { value: '{value}', label: 'ключ строки' },
+                  ...(table.columns ?? []).filter(other => other.key !== column.key).map(other => ({ value: `{${other.key}}`, label: `«${other.label || other.key}» строки` })),
+                ]}
                 onChange={tags => edit(draft => {
                   if (!draft.roll) return;
-                  if (tags.length) draft.roll.tags = tags; else delete draft.roll.tags;
+                  const list = tags.filter((t): t is string => typeof t === 'string');
+                  if (list.length) draft.roll.tags = list; else delete draft.roll.tags;
                 })}
               />
             </>

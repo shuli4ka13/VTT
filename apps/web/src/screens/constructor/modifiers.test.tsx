@@ -23,7 +23,7 @@ describe('редактор модификаторов', () => {
     expect(screen.getByText('атака')).toBeTruthy();
     const more = screen.getByDisplayValue('+ ещё…') as HTMLSelectElement;
     expect(optionsOf(more)).toContain('спасбросок');
-    expect(more.querySelector('optgroup')?.getAttribute('label')).toBe('Броски');
+    expect(more.querySelector('optgroup')?.getAttribute('label')).toBe('метки бросков · Броски');
   });
 
   it('«Кого касается» пишет условие про носителя в if, а записанное условие показывает выбранным', () => {

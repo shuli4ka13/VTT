@@ -6,8 +6,7 @@ import { installMethod, recipesToInstall } from '@vtt/engine/model/advantage-met
 import { tagsOf, tagTablesOf, listOf as rowsFrom, amountParamOf } from '@vtt/engine/model/lists';
 import { calledOf } from '@vtt/engine/engine/effects';
 import { ROLL_CALL, CALL_WORDS } from '@vtt/engine/words/calls';
-import { TagPick, type Tag } from './tag-pick.tsx';
-import { RollTagsPick } from './roll-tags-pick.tsx';
+import { TagsField } from './tags-field.tsx';
 import { callNamesOf } from '@vtt/engine/model/references';
 import { ConditionField } from './condition-field.tsx';
 
@@ -231,10 +230,11 @@ function EditBody({ system, modifier, calls, edits, recipes, onChange, onPickEdi
             />
           </Field>
           <Field label="С метками" hint="Бросок должен нести все метки. Пусто — любой бросок.">
-            <RollTagsPick
+            <TagsField
               system={system}
               value={(m.tags as string[] | undefined)}
-              onChange={tags => onChange(d => { if (tags.length) d.tags = tags; else delete d.tags; })}
+              empty="любой бросок"
+              onChange={tags => onChange(d => { const list = tags.filter((t): t is string => typeof t === 'string'); if (list.length) d.tags = list; else delete d.tags; })}
             />
           </Field>
           {m.param === 'edits' ? (
@@ -281,20 +281,20 @@ function EventCondition({ system, effect, modifier, onChange }: {
   const where = m.where as { table: string; column: string; is: unknown } | undefined;
   const column = columns.find(c => c.table === where?.table && c.key === where?.column);
   const values = column?.kind === 'choice' ? (rowsFrom(system, column.from) ?? []) : [];
-  const words = (raw: unknown): Tag[] => (Array.isArray(raw) ? raw.map(String) : []);
+  const words = (raw: unknown): string[] => (Array.isArray(raw) ? raw.map(String) : []);
 
   return (
     <>
       <Field label="По меткам" hint="Пусто — по любой метке.">
-        <TagPick
-          value={words(m.anyTags)} known={known}
-          onChange={next => onChange(d => { const list = next.map(String); if (list.length) d.anyTags = list; else delete d.anyTags; })}
+        <TagsField
+          system={system} value={words(m.anyTags)} known={known} empty="любая метка"
+          onChange={next => onChange(d => { const list = next.filter((t): t is string => typeof t === 'string'); if (list.length) d.anyTags = list; else delete d.anyTags; })}
         />
       </Field>
       <Field label="Кроме меток">
-        <TagPick
-          value={words(m.notTags)} known={known}
-          onChange={next => onChange(d => { const list = next.map(String); if (list.length) d.notTags = list; else delete d.notTags; })}
+        <TagsField
+          system={system} value={words(m.notTags)} known={known} empty="+ кроме метки…"
+          onChange={next => onChange(d => { const list = next.filter((t): t is string => typeof t === 'string'); if (list.length) d.notTags = list; else delete d.notTags; })}
         />
       </Field>
       {columns.length ? (
