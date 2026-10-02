@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { paramsOf } from '@vtt/engine/model/inherit';
+import { EffectPick } from '../effect-pick.tsx';
 import { useWorld } from '../../../store/world.ts';
 import { newHandler, payStep } from '../factory.ts';
 import { Card, CardHead, Field, Input, Select, DangerButton, LabelInput, Button, Empty } from '../../../ui/primitives.tsx';
@@ -162,13 +164,26 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           ]}
         />
 
-        {launch.kind !== 'manual' ? (
+        {launch.kind === 'manual' ? (
           <Extras
             items={[{
-              key: 'duration', label: 'сколько висит', on: !!effect.duration || !!effect.bond,
+              key: 'bond', label: 'держание', on: !!effect.bond,
+              add: () => edit(draft => {
+                const holder = Object.entries(system.effects).find(([key, other]) => key !== id && (other.activation ?? 'manual') === 'passive')?.[0];
+                const by = paramsOf(system, draft).find(p => p.kind === 'sheet' && !p.many)?.key;
+                if (holder && by) draft.bond = { effect: holder, by };
+              }),
+              drop: () => edit(draft => { delete draft.bond; }),
+              node: <Bond effect={effect} system={system} id={id} edit={edit} />,
+            }]}
+          />
+        ) : (
+          <Extras
+            items={[{
+              key: 'duration', label: 'сколько висит', on: !!effect.duration,
               add: () => edit(draft => { draft.duration = { kind: 'permanent' }; }),
-              drop: () => edit(draft => { delete draft.duration; delete draft.bond; delete draft.reapply; }),
-              node: <Lifetime effect={effect} system={system} id={id} edit={edit} />,
+              drop: () => edit(draft => { delete draft.duration; delete draft.reapply; }),
+              node: <Lifetime effect={effect} system={system} edit={edit} />,
             }, {
               key: 'grants', label: 'что даёт', on: !!effect.grants,
               add: () => edit(draft => { draft.grants = []; }),
@@ -181,10 +196,10 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
               ),
             }]}
           />
-        ) : null}
+        )}
       </Card>
 
-      {pipeline ? <ParamsEditor effect={effect} system={system} onEdit={edit} /> : null}
+      <ParamsEditor effect={effect} system={system} onEdit={edit} />
 
       {pipeline ? (
         <>
@@ -344,52 +359,25 @@ const idleWords = (effect: Effect): string => {
     : 'шагов ещё нет — эффект ничего не делает';
 };
 
-function Lifetime({ effect, system, id, edit }: {
-  effect: Effect; system: System; id: string; edit: (change: (draft: Effect) => void) => void;
+function Lifetime({ effect, system, edit }: {
+  effect: Effect; system: System; edit: (change: (draft: Effect) => void) => void;
 }) {
   const kind = effect.duration?.kind ?? 'permanent';
-  const sheets = (effect.params ?? []).filter(param => param.kind === 'sheet');
-  const holders = Object.entries(system.effects)
-    .filter(([key, other]) => key !== id && (other.activation ?? 'manual') !== 'manual');
-  const button = (effect.activation ?? 'manual') === 'manual';
+  const sheets = paramsOf(system, effect).filter(param => param.kind === 'sheet' && !param.many);
 
   return (
     <div className="stack stack--tight">
-      {button ? (
-        <Field label="Держание" hint="Концентрация: наложенное этим действием держится, пока у листа есть эффект-держатель; взялся за новое — старое спало.">
-          <Select
-            value={effect.bond?.effect ?? ''}
-            options={[['', 'не держится'], ...holders.map(([key, other]) => [key, `держит «${other.label ?? key}»`] as const)] as never}
-            onChange={next => edit(draft => {
-              if (!next) { delete draft.bond; return; }
-              draft.bond = { effect: next, by: draft.bond?.by ?? sheets[0]?.key ?? '' };
-            })}
-          />
-        </Field>
-      ) : null}
-      {button && effect.bond ? (
-        <Field label="Держатель у листа">
-          <Select
-            value={effect.bond.by}
-            options={sheets.map(param => [param.key, `«${param.label ?? param.key}»`] as const) as never}
-            onChange={next => edit(draft => { if (draft.bond) draft.bond.by = next; })}
-          />
-        </Field>
-      ) : null}
+      <Field label="Сколько висит">
+        <Select
+          value={kind}
+          options={DURATION_OPTIONS as never}
+          onChange={next => edit(draft => {
+            draft.duration = COUNTED.has(next) ? { kind: next, max: draft.duration?.max ?? 1 } : { kind: next };
+          })}
+        />
+      </Field>
 
-      {button ? null : (
-        <Field label="Сколько висит">
-          <Select
-            value={kind}
-            options={DURATION_OPTIONS as never}
-            onChange={next => edit(draft => {
-              draft.duration = COUNTED.has(next) ? { kind: next, max: draft.duration?.max ?? 1 } : { kind: next };
-            })}
-          />
-        </Field>
-      )}
-
-      {!button && COUNTED.has(kind) ? (
+      {COUNTED.has(kind) ? (
         <Field label="Сколько">
           <Input
             type="number" value={effect.duration?.max ?? 1}
@@ -400,7 +388,7 @@ function Lifetime({ effect, system, id, edit }: {
         </Field>
       ) : null}
 
-      {!button && kind === 'turns' ? (
+      {kind === 'turns' ? (
         <Field label="Спадает" hint="«В начале хода» — как «до начала следующего хода»: щит, уклонение.">
           <Select
             value={effect.duration?.ends ?? 'turn-end'}
@@ -413,7 +401,7 @@ function Lifetime({ effect, system, id, edit }: {
         </Field>
       ) : null}
 
-      {!button && kind === 'turns' ? (
+      {kind === 'turns' ? (
         <Field label="Чьи ходы считать" hint="Лист из входа — как «до начала следующего хода того, кто наложил»: вход заполняет шаг «наложить».">
           <Select
             value={effect.duration?.by ?? ''}
@@ -469,6 +457,32 @@ function EffectName({ id, locked, taken, onChange }: { id: string; locked: boole
           <KeyField value={id} locked={locked} taken={taken} onChange={onChange} />
         </>
       ) : <Button size="sm" variant="ghost" title="как эффект зовётся в кнопках, подписках и вызовах" onClick={() => setOpen(true)}>имя в формулах…</Button>}
+    </div>
+  );
+}
+
+function Bond({ effect, system, id, edit }: {
+  effect: Effect; system: System; id: string; edit: (change: (draft: Effect) => void) => void;
+}) {
+  const sheets = paramsOf(system, effect).filter(param => param.kind === 'sheet' && !param.many);
+  return (
+    <div className="row">
+      <Field label="Держит" hint="Концентрация: наложенное этим действием держится, пока у листа есть эффект-держатель; взялся за новое — старое спало.">
+        <EffectPick
+          value={effect.bond?.effect || null}
+          system={system}
+          only={other => (other.activation ?? 'manual') === 'passive' && other !== system.effects[id]}
+          empty="— какой висящий —"
+          onChange={next => edit(draft => { if (typeof next === 'string') draft.bond = { effect: next, by: draft.bond?.by ?? sheets[0]?.key ?? '' }; })}
+        />
+      </Field>
+      <Field label="У кого">
+        <Select
+          value={effect.bond?.by ?? ''}
+          options={sheets.map(param => [param.key, `«${param.label ?? param.key}»`] as const) as never}
+          onChange={next => edit(draft => { if (draft.bond && next) draft.bond.by = next; })}
+        />
+      </Field>
     </div>
   );
 }

@@ -49,7 +49,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
       .map(b => b.textContent!.trim())
       .filter(t => !CREATE_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`)
         && t !== '+ вызываемый' && t !== '+ новый' && t !== '+ блок'
-        && t !== '+ вход' && !t.startsWith('+ в «')
+        && t !== '+ вход' && t !== '+ держание' && !t.startsWith('+ в «')
         && !['+ блок', '+ метки', '+ описание для игрока', '+ занимает', '+ какие метки бывают', '+ сколько висит', '+ на основе'].includes(t));
     expect(palette).toEqual(['+ проверка', '+ изменение', '+ таблица', '+ для каждой цели', '+ число']);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);

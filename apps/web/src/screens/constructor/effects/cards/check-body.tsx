@@ -2,7 +2,7 @@ import { SheetPick } from '../../sheet-pick.tsx';
 import { sheetChoices } from '../../slots.tsx';
 import { useMemo, useState } from 'react';
 import type { System } from '@vtt/schema';
-import { Select, Input } from '../../../../ui/primitives.tsx';
+import { Select, Input, Fold, Field } from '../../../../ui/primitives.tsx';
 import { FieldRow } from '../../../../ui/field-row.tsx';
 import type { RowField } from '../../../../ui/field-row.tsx';
 import { FormulaField } from '../../../../ui/formula-field.tsx';
@@ -97,7 +97,28 @@ export function CheckBody({ step, roll, context, edit, system }: {
       node: <NoteField value={step.note} onChange={next => edit(at, draft => { if (next) loose(draft).note = next; else delete loose(draft).note; })} />,
     },
   ];
-  return <FieldRow id={roll ? 'check-roll' : 'check-plain'} fields={fields} />;
+  const forced = (key: 'succeedOn' | 'failOn') => (
+    <FormulaField
+      value={String((step[key] as { expr?: unknown } | undefined)?.expr ?? '')}
+      system={system}
+      where={`проверка · ${key === 'succeedOn' ? 'всегда успех' : 'всегда провал'}`}
+      placeholder={key === 'succeedOn' ? 'например: 20' : 'например: 1'}
+      onCommit={text => edit(at, draft => { const d = loose(draft); if (text.trim()) d[key] = { expr: text.trim() }; else delete d[key]; })}
+    />
+  );
+  return (
+    <>
+      <FieldRow id={roll ? 'check-roll' : 'check-plain'} fields={fields} />
+      {roll ? (
+        <Fold title="ещё" summary={step.succeedOn || step.failOn ? 'есть «всегда успех / провал»' : 'всегда успех или провал на кости'}>
+          <div className="row">
+            <Field label="Всегда успех, если на кости не меньше" hint="Натуральная 20: что бы ни прибавили, это успех.">{forced('succeedOn')}</Field>
+            <Field label="Всегда провал, если на кости не больше" hint="Натуральная 1: что бы ни прибавили, это провал.">{forced('failOn')}</Field>
+          </div>
+        </Fold>
+      ) : null}
+    </>
+  );
 }
 
 const quoted = (text: string): string => (text.includes('"') ? `'${text}'` : `"${text}"`);
