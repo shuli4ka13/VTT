@@ -7,7 +7,7 @@ import { rowOf } from './tables.ts';
 import { referencedTable, splitPath, walk } from './navigate.ts';
 import { VALUE_COLUMN } from '../model/tables.ts';
 import { ownerOf, RECEIVER, SENDER, DESK } from './owners.ts';
-import { rollNotation, multiplyNotation } from './dice.ts';
+import { diceTools } from '../core/roll.ts';
 import type { Param, Die, System } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 import { hasField } from '../model/sheet-columns.ts';
@@ -311,18 +311,7 @@ function rowsOfTable(system: System, pass: Pass, name: string, column: string, o
 
 export function toolsOf(system: System, pass: Pass, owner: string, die?: Die): Tools {
   return {
-    ...(die ? {
-      roll: (notation: string, times: number, keep?: number) => {
-        if (Math.floor(times) < 1) return 0;
-        const written = times > 1 ? multiplyNotation(notation, Math.floor(times)) : notation;
-        const rolled = rollNotation(written, die);
-        if (keep === undefined) return rolled.total;
-        const sorted = [...rolled.rolls].sort((a, b) => (keep > 0 ? b - a : a - b));
-        return sorted.slice(0, Math.abs(keep)).reduce((sum, value) => sum + value, 0);
-      },
-    } : {}),
-    peak: (notation: string, times: number) => (Math.floor(times) < 1 ? 0
-      : rollNotation(times > 1 ? multiplyNotation(notation, Math.floor(times)) : notation, sides => sides).total),
+    ...diceTools(die),
     table: (name, key, column) => {
       const read = (one: unknown) => readCell(system, pass, name, one, column ?? VALUE_COLUMN, owner);
       if (!Array.isArray(key)) return read(key) as Value;
