@@ -1,6 +1,7 @@
 import { isDesk } from '../engine/owners.ts';
 import { holderOf } from './view.ts';
 import type { Op } from './perform.ts';
+import type { Clock } from '../engine/clock.ts';
 import type { System, Sheet } from '../model/types.ts';
 
 export interface Member {
@@ -19,6 +20,7 @@ export interface Room {
   system: System;
   sheets: readonly Sheet[];
   members: readonly Member[];
+  clock?: Clock | null;
 }
 
 const isGroup = (sheet: Sheet, sheets: readonly Sheet[]): boolean => sheets.some(other => other.group === sheet.id);
@@ -70,6 +72,9 @@ export function authorize(room: Room, userId: string, want: Want): string | null
   }
   if (want.hidden && me.role !== 'gm') return 'втайне бросает только ведущий';
   if (want.op.op === 'set') return mayField(room, me, want.op.sheetId, want.op.tag);
+  if (want.op.op === 'turn' && want.op.turn === 'next' && me.role !== 'gm') {
+    return me.sheetId && room.clock?.active === me.sheetId ? null : 'следующий ход передаёт ведущий или тот, чей сейчас ход';
+  }
   const subject = subjectOf(want.op);
   return subject ? maySheet(room, me, subject) : null;
 }

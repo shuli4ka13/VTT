@@ -1,5 +1,5 @@
 import { expectAction } from '@vtt/engine/events/trial';
-import { mayAnswer } from '../../engine/rights.ts';
+import { mayAnswer, mayPassTurn } from '../../engine/rights.ts';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { useRoom } from '../../store/room.ts';
@@ -160,6 +160,7 @@ function DeskPanel({ room, desk }: { room: RoomState; desk: Sheet }) {
 }
 
 function Combat({ room, onError }: { room: RoomState; onError: (message: string | null) => void }) {
+  const userId = useSession(s => s.userId);
   const clock = room.clock;
   const nameOf = (id: string) => room.sheets.find(s => s.id === id)?.name ?? id;
   const send = (op: 'start' | 'next' | 'stop' | 'scene' | 'short-rest' | 'long-rest') => {
@@ -180,7 +181,9 @@ function Combat({ room, onError }: { room: RoomState; onError: (message: string 
           <>
             {fighting
               ? <>
-                  <Button size="sm" variant="primary" disabled={waiting} title={why} onClick={() => send('next')}>Следующий ход</Button>
+                  {mayPassTurn(room, userId)
+                    ? <Button size="sm" variant="primary" disabled={waiting} title={why} onClick={() => send('next')}>Следующий ход</Button>
+                    : null}
                   <Button size="sm" disabled={waiting} title={why} onClick={() => send('stop')}>Конец боя</Button>
                 </>
               : <Button size="sm" variant="primary" disabled={waiting} title={why} onClick={() => send('start')}>{room.system.initiative ? 'Инициатива' : 'Начать бой'}</Button>}

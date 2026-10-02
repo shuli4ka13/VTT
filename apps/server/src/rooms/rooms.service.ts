@@ -244,7 +244,9 @@ export class RoomsService {
   }
 
   private allow(room: RoomRow, userId: string, want: Want, refusalIsBad = false): void {
-    const why = authorize({ system: this.worldOf(room).system, sheets: this.store.sheets(room.id), members: this.store.members(room.id) }, userId, want);
+    const why = authorize({
+      system: this.worldOf(room).system, sheets: this.store.sheets(room.id), members: this.store.members(room.id), clock: this.store.clock(room.id),
+    }, userId, want);
     if (!why) return;
     if (refusalIsBad && why !== 'вы не в этой комнате') throw new BadRequestException(why);
     throw new ForbiddenException(why);

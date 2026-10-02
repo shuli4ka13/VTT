@@ -6,7 +6,11 @@ const roomOf = (room: RoomState): Room => ({
   system: room.system as System,
   sheets: room.sheets,
   members: room.members.map(m => ({ userId: m.userId, role: m.role === 'gm' ? 'gm' : 'player', sheetId: m.sheetId ?? null })),
+  clock: room.clock ?? null,
 });
+
+export const mayPassTurn = (room: RoomState, userId: string): boolean =>
+  authorize(roomOf(room), userId, { kind: 'world', op: { op: 'turn', turn: 'next' } }) === null;
 
 export const mayAnswer = (room: RoomState, userId: string, sheetId: string): boolean =>
   authorize(roomOf(room), userId, { kind: 'answer', sheetId }) === null;
