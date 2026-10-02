@@ -10,27 +10,37 @@ export interface StepWords {
 }
 
 export const STEP_WORDS = {
-  threshold: {
-    label: 'Проверка',
-    hint: `Бросок против величины. Не вышло — цепочка обрывается. Кость пишется как ${diceExample}.`,
+  roll: {
+    label: 'Бросок',
+    hint: `Бросить кости или посчитать число. Если указано, кто бросает, — это чей-то бросок: на него действуют правки и «увидев кости». Без этого — просто расчёт. Кость пишется как ${diceExample}.`,
     slots: [
-      { key: 'roll.die', label: 'Кость', kind: 'ref', main: true, required: true, allow: ['constant'] },
-      { key: 'roll.count', label: 'Сколько костей', kind: 'ref', allow: ['expr', 'const', 'param', 'prop', 'empty'] },
+      { key: 'die', label: 'Кость', kind: 'ref', main: true, allow: ['constant', 'const', 'empty'] },
+      { key: 'count', label: 'Сколько костей', kind: 'ref', allow: ['expr', 'const', 'param', 'prop', 'empty'] },
+      { key: 'fixed', label: 'Формула', kind: 'ref', main: true, allow: ['expr', 'const', 'param', 'prop', 'empty'] },
+      { key: 'bonus', label: 'Прибавка', kind: 'ref', main: true, allow: ['expr', 'const', 'param', 'prop', 'empty'] },
+      { key: 'by', label: 'Кто бросает', kind: 'sheet', allow: ['expr', 'empty'] },
+      { key: 'against', label: 'Против кого', kind: 'sheet', allow: ['expr', 'empty'] },
+      { key: 'tags', label: 'Метки броска', kind: 'roll', allow: [] },
+    ],
+    outputs: [
+      { path: '', label: 'сколько вышло всего, с прибавками', kind: 'number' },
+      { path: '.natural', label: 'что выпало на костях, без прибавок', kind: 'number' },
+      { path: '.rolled', label: 'сколько костей бросили', kind: 'number' },
+      { path: '.atMax', label: 'сколько костей легло максимумом', kind: 'number' },
+      { path: '.atMin', label: 'сколько костей легло единицей', kind: 'number' },
+      { path: '.edited', label: 'да или нет: бросок правили', kind: 'boolean' },
+    ],
+    reasons: {},
+    breakLines: {},
+  },
+  check: {
+    label: 'Проверка',
+    hint: 'Сравнить число или бросок с порогом. Можно остановить цепочку при провале или при успехе.',
+    slots: [
+      { key: 'value', label: 'Что проверяем', kind: 'ref', main: true, required: true, allow: ['ref', 'expr', 'const', 'param'] },
+      { key: 'versus', label: 'С чем', kind: 'ref', main: true, required: true, allow: ['ref', 'expr', 'const', 'param'] },
       {
-        key: 'roll.bonus', label: 'Прибавка к броску', kind: 'ref', main: true,
-        allow: ['expr', 'const', 'param', 'prop', 'empty'],
-      },
-      {
-        key: 'versus', label: 'Против чего', kind: 'ref', main: true, required: true,
-        allow: ['tag', 'expr', 'const', 'param', 'ref'],
-      },
-      { key: 'roll.tags', label: 'Метки броска', kind: 'roll', allow: [] },
-      {
-        key: 'side', label: 'Кто бросает', kind: 'choice', options: ['sender', 'target'], fallback: 'sender',
-        choice: [['sender', 'отправитель — это атака'], ['target', 'цель — это спасбросок']],
-      },
-      {
-        key: 'successWhen', label: 'Успех, если бросок', kind: 'choice', fallback: 'atLeast',
+        key: 'successWhen', label: 'Успех, если', kind: 'choice', fallback: 'atLeast',
         options: ['atLeast', 'notOver', 'over', 'under', 'equals'],
         choice: [['atLeast', 'не меньше порога'], ['notOver', 'не больше порога'],
           ['over', 'строго больше'], ['under', 'строго меньше'], ['equals', 'ровно порог']],
@@ -42,70 +52,26 @@ export const STEP_WORDS = {
         choice: [['success', 'успехе'], ['fail', 'провале'], ['always', 'всегда — ветвят следующие шаги']],
       },
       { key: 'degrees', label: 'Степени успеха', kind: 'degrees' },
+      { key: 'note', label: 'Что сказать при остановке', kind: 'text', allow: [] },
     ],
     outputs: [
-      { path: '.success', label: 'да или нет: взят ли порог', kind: 'boolean' },
+      { path: '.success', label: 'да или нет: проверка пройдена', kind: 'boolean' },
       { path: '.margin', label: 'на сколько перебил порог', kind: 'number' },
-      { path: '.total', label: 'сколько вышло всего, с прибавками', kind: 'number' },
+      { path: '.total', label: 'сколько вышло всего', kind: 'number' },
       { path: '.natural', label: 'что выпало на костях, без прибавок', kind: 'number' },
       { path: '.degree', label: 'какая ступень успеха', kind: 'text' },
-      { path: '.rolled', label: 'сколько костей бросили', kind: 'number' },
+      { path: '.versus', label: 'порог', kind: 'number' },
       { path: '.atMax', label: 'сколько костей легло максимумом', kind: 'number' },
       { path: '.atMin', label: 'сколько костей легло единицей', kind: 'number' },
-      { path: '.edited', label: 'да или нет: бросок правили', kind: 'boolean' },
-      { path: '.versus', label: 'сколько вышло у второй стороны: порог или встречный бросок', kind: 'number' },
-      { path: '.versusNatural', label: 'встречный бросок — что выпало на костях', kind: 'number' },
     ],
-    reasons: { 'threshold-miss': 'промах', 'threshold-held': 'цель устояла' },
-    breakLines: { success: 'если порог не взят — промах', fail: 'если порог взят — цель устояла' },
-  },
-  compare: {
-    label: 'Сравнение',
-    hint: 'Величина против поля цели. Не дотянула — цепочка обрывается.',
-    slots: [
-      { key: 'value', label: 'Что сравниваем', kind: 'ref', main: true, required: true, allow: ['ref', 'expr', 'const'] },
-      {
-        key: 'versus', label: 'С чем', kind: 'ref', main: true, required: true,
-        allow: ['tag', 'expr', 'const', 'param', 'ref'],
-      },
-      {
-        key: 'breakIf', label: 'Обрыв когда', kind: 'choice', options: ['less', 'atMost', 'never'], fallback: 'less',
-        choice: [['less', 'величина меньше'], ['atMost', 'величина не больше'], ['never', 'никогда']],
-      },
-      { key: 'note', label: 'Что сказать при обрыве', kind: 'text', allow: [] },
-    ],
-    outputs: [{ path: '.margin', label: 'разница', kind: 'number' }],
-    reasons: { 'compare-short': 'не пробило' },
-    breakLines: {
-      less: 'если величина меньше порога — не пробило',
-      atMost: 'если величина не выше порога — не пробило',
-    },
-  },
-  amount: {
-    label: 'Число',
-    hint: 'Вычислить число: бросок, превышение или фикс записи.',
-    slots: [
-      {
-        key: 'source', label: 'Откуда число', kind: 'choice', options: ['roll', 'margin', 'item'], main: true, fallback: 'roll',
-        choice: [['roll', 'свой бросок костей'], ['margin', 'превышение шага'], ['item', 'фикс записи']],
-      },
-      { key: 'dice', label: 'Кости', kind: 'ref', main: true, allow: ['prop', 'const', 'param', 'constant', 'empty'] },
-      { key: 'bonus', label: 'Прибавка', kind: 'ref', main: true, allow: ['expr', 'const', 'param', 'empty'] },
-      { key: 'fixed', label: 'Фикс записи', kind: 'ref', allow: ['prop', 'const', 'param', 'empty'] },
-      { key: 'margin', label: 'Превышение шага', kind: 'ref', allow: ['ref', 'empty'] },
-      { key: 'count', label: 'Сколько раз кинуть кости', kind: 'ref', allow: ['expr', 'const', 'param', 'tag', 'empty'] },
-      { key: 'double', label: 'Удвоить кости, если', kind: 'guard' },
-      { key: 'scale', label: 'Взять долю, если', kind: 'scale' },
-    ],
-    outputs: [{ path: '', label: 'посчитанное число', kind: 'number' }],
-    reasons: {},
-    breakLines: {},
+    reasons: { 'check-miss': 'не вышло', 'check-held': 'устоял' },
+    breakLines: { success: 'если не вышло — стоп', fail: 'если вышло — стоп' },
   },
   apply: {
     label: 'Изменение',
-    hint: 'Изменить поле цели. Единственный шаг, который что-то меняет.',
+    hint: 'Изменить поле листа: @цель.хиты, @носитель.ки. Единственный шаг, который меняет значения.',
     slots: [
-      { key: 'target', label: 'Какое поле меняем', kind: 'tag', main: true, required: true, allow: ['tag', 'param'] },
+      { key: 'target', label: 'Какое поле меняем', kind: 'field', main: true, required: true, allow: ['expr', 'param'] },
       {
         key: 'direction', label: 'Как', kind: 'choice', main: true, fallback: 'subtract',
         options: ['add', 'subtract', 'set'],
@@ -113,7 +79,7 @@ export const STEP_WORDS = {
       },
       { key: 'value', label: 'Сколько', kind: 'ref', main: true, required: true, allow: ['ref', 'expr', 'const', 'param'] },
       {
-        key: 'targetModifiers', label: 'Сопротивления цели', kind: 'flag', fallback: 'true',
+        key: 'targetModifiers', label: 'Правки поля на листе', kind: 'flag', fallback: 'true',
         choice: [['true', 'учитываются'], ['false', 'не учитываются']],
       },
     ],
@@ -126,8 +92,11 @@ export const STEP_WORDS = {
   },
   each: {
     label: 'Для каждой цели',
-    hint: 'Делит цепочку действия: шаги выше выполняются один раз у действующего, шаги ниже — у каждой цели по очереди.',
-    slots: [],
+    hint: 'Делит цепочку действия: шаги выше выполняются один раз, шаги ниже — для каждого листа из списка по очереди.',
+    slots: [
+      { key: 'of', label: 'Из какого списка', kind: 'input', main: true, required: true, allow: [] },
+      { key: 'as', label: 'Как назвать каждого', kind: 'text', main: true, required: true, allow: [] },
+    ],
     outputs: [],
     reasons: {},
     breakLines: {},
@@ -173,7 +142,7 @@ export const STEP_WORDS = {
   },
   status: {
     label: 'Состояние',
-    hint: 'Повесить эффект на цель или снять его.',
+    hint: 'Повесить эффект на лист или снять его.',
     slots: [
       {
         key: 'mode', label: 'Что делаем', kind: 'choice', options: ['apply', 'remove'], main: true, fallback: 'apply',
@@ -183,7 +152,8 @@ export const STEP_WORDS = {
         key: 'effect', label: 'Какой эффект', kind: 'ref', main: true, required: true,
         allow: ['prop', 'const', 'param', 'empty'], refersTo: 'effect',
       },
-      { key: 'carry', label: 'Что наложенное запомнит', kind: 'ref', allow: ['ref', 'expr', 'const', 'param', 'empty'] },
+      { key: 'to', label: 'На кого', kind: 'sheet', main: true, required: true, allow: ['expr'] },
+      { key: 'args', label: 'Что наложенное запомнит', kind: 'args', allow: [] },
     ],
     outputs: [],
     reasons: {},
@@ -214,7 +184,7 @@ export const STEP_WORDS = {
     ],
     outputs: [
       { path: '.incoming', label: 'отправлено', kind: 'number' },
-      { path: '.amount', label: 'дошло до цели', kind: 'number' },
+      { path: '.amount', label: 'дошло после правок', kind: 'number' },
     ],
     reasons: { 'emit-stopped': 'общий эффект оборвался' },
     breakLines: { strict: 'если общий эффект оборвался — обрыв и здесь' },

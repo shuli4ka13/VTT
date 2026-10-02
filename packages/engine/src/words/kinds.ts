@@ -13,17 +13,18 @@ export const KIND_LABEL: Record<Kind, string> = {
   choice: 'из таблицы',
   effect: 'эффект',
   record: 'запись',
-  tag: 'поле листа',
+  field: 'поле листа',
   table: 'таблица',
+  sheet: 'лист',
 };
 
-const ORDER: Kind[] = ['number', 'text', 'boolean', 'expr', 'dice', 'choice', 'effect', 'record', 'tag', 'table'];
+const ORDER: Kind[] = ['number', 'text', 'boolean', 'expr', 'dice', 'choice', 'effect', 'record', 'field', 'table', 'sheet'];
 
 const ALLOWED: Record<KindPlace, Kind[]> = {
   field: ['number', 'text', 'boolean', 'choice'],
-  table: ['number', 'text', 'boolean', 'dice', 'choice', 'effect', 'tag', 'table'],
+  table: ['number', 'text', 'boolean', 'dice', 'choice', 'effect', 'field', 'table'],
   prop: ['number', 'text', 'boolean', 'expr', 'dice', 'choice', 'effect', 'record'],
-  param: ['number', 'text', 'boolean', 'dice', 'choice', 'effect', 'tag'],
+  param: ['number', 'text', 'boolean', 'dice', 'choice', 'effect', 'field', 'sheet'],
 };
 
 export const kindsFor = (place: KindPlace): readonly (readonly [Kind, string])[] =>
@@ -32,4 +33,4 @@ export const kindsFor = (place: KindPlace): readonly (readonly [Kind, string])[]
 export const kindWord = (kind: string | undefined): string => KIND_LABEL[(kind ?? 'number') as Kind] ?? String(kind);
 
 export const isReference = (kind: string | undefined): boolean =>
-  kind === 'choice' || kind === 'effect' || kind === 'record' || kind === 'tag' || kind === 'table';
+  kind === 'choice' || kind === 'effect' || kind === 'record' || kind === 'field' || kind === 'table' || kind === 'sheet';

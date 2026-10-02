@@ -10,7 +10,13 @@ export const mayBreak = false;
 
 export const icon = '⟳';
 
-export const traceLine = (): string => 'для каждой цели';
+export const traceLine = (): string => 'для каждого';
+
+export function lint(step: { of?: unknown; as?: unknown }) {
+  if (typeof step.of !== 'string' || !step.of) return 'не сказано, из какого списка брать листы';
+  if (typeof step.as !== 'string' || !step.as) return 'не сказано, как назвать каждый лист';
+  return null;
+}
 
 export function finish() {
   return { value: null, trace: {}, break: null };

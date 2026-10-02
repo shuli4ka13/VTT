@@ -4,7 +4,6 @@ import type { Effect, Sheet, System, WornEffect } from '../model/types.ts';
 
 export type TurnEdge = 'turn-end' | 'turn-start';
 
-export type Whose = 'own' | 'source';
 
 export interface Expired { sheetId: string; effectId: string }
 
@@ -13,8 +12,7 @@ export interface Lapse { moment: string; sheetId: string }
 export const edgeOf = (effect: Effect | null | undefined): TurnEdge =>
   (effect?.duration?.ends === 'turn-start' ? 'turn-start' : 'turn-end');
 
-export const whoseOf = (effect: Effect | null | undefined): Whose =>
-  (effect?.duration?.whose === 'source' ? 'source' : 'own');
+export const ticksBy = (effect: Effect | null | undefined): string | null => effect?.duration?.by ?? null;
 
 export const burnsUse = (effect: Effect | null | undefined): boolean => durationOf(effect) === 'uses';
 
@@ -34,7 +32,8 @@ function tickTurn(system: System, owner: string, entry: WornEffect, event: Lapse
   if (typeof entry.turnsLeft !== 'number') return undefined;
   const effect = findEffect(system, entry.effectId);
   if (edgeOf(effect) !== event.moment) return undefined;
-  const counts = whoseOf(effect) === 'source' ? entry.from === event.sheetId : owner === event.sheetId;
+  const by = ticksBy(effect);
+  const counts = by ? entry.args?.[by] === event.sheetId : owner === event.sheetId;
   if (!counts) return undefined;
   const turnsLeft = entry.turnsLeft - 1;
   return turnsLeft > 0 ? { ...entry, turnsLeft } : null;

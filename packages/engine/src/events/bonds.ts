@@ -3,12 +3,7 @@ import type { System, Sheet, WornEffect } from '../model/types.ts';
 
 export interface BondBreak { sheetId: string; effectId: string; by: string; from: string }
 
-export const holdsBond = (effect: { bond?: boolean | string } | null | undefined): boolean => Boolean(effect?.bond);
-
-export const holderOf = (effectId: string, effect: { bond?: boolean | string } | null | undefined): string | null => {
-  if (!effect?.bond) return null;
-  return typeof effect.bond === 'string' ? effect.bond : effectId;
-};
+export const holdsBond = (effect: { bond?: { effect: string; by: string } } | null | undefined): boolean => Boolean(effect?.bond);
 
 export function releaseHolder(
   system: System, sheets: Sheet[], casterId: string, holder: string,
@@ -21,11 +16,8 @@ export function releaseHolder(
   return sweepBonds(system, freed);
 }
 
-const held = (entry: WornEffect): { from: string; by: string } | null => {
-  const from = entry.from;
-  const by = entry.by;
-  return typeof from === 'string' && typeof by === 'string' ? { from, by } : null;
-};
+const held = (entry: WornEffect): { from: string; by: string } | null =>
+  (entry.bond ? { from: entry.bond.sheet, by: entry.bond.by } : null);
 
 export function sweepBonds(system: System, sheets: Sheet[]): { sheets: Sheet[]; broken: BondBreak[] } {
   const wearing = new Map<string, Set<string>>();
@@ -49,8 +41,3 @@ export function sweepBonds(system: System, sheets: Sheet[]): { sheets: Sheet[]; 
 
   return { sheets: next, broken };
 }
-
-export const sharedHolderOf = (system: System, effectId: string): string | null => {
-  const bond = system.effects[effectId]?.bond;
-  return typeof bond === 'string' ? bond : null;
-};

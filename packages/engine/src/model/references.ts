@@ -1,21 +1,21 @@
 import { tagWords } from '../engine/roll-tags.ts';
 import { ROLL_CALL } from '../words/calls.ts';
-import { ownerOf } from '../engine/owners.ts';
 import type { System, Compendium, Effect, Step, Modifier, Guard } from './types.ts';
 import { compile } from '../formula/index.ts';
 import type { Node } from '../formula/index.ts';
 import { registry } from '../engine/steps/index.ts';
-import { calledOf } from '../engine/effects.ts';
 import { recordsOf, recordKinds, kindsOf } from './owned.ts';
 
-export { EVENT_PREFIX, MOMENT_PREFIX, FIELD_PREFIX } from '../events/bus.ts';
-import { rolledBySender, SUMMARY_KEYS } from '../engine/rolled.ts';
-import { EVENT_PREFIX, MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, isActionMoment } from '../events/bus.ts';
-import { fieldsOf, hasField } from './sheet-columns.ts';
+export { MOMENT_PREFIX, FIELD_PREFIX } from '../events/bus.ts';
+import { MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, ANY_ACTION, callHappening, SEEN } from '../events/bus.ts';
+import type { Phase } from '../events/bus.ts';
+import { fieldsOf } from './sheet-columns.ts';
 
-export const EVENT_RESULTS = ['event', 'event_amount', 'event_incoming'] as const;
+export const SEED_RESULTS = ['moment', 'field', 'about', 'roll', 'метки'] as const;
 
-export const SEED_RESULTS = ['worn', 'moment', 'field'] as const;
+export const HOLDER = 'носитель';
+
+export const DESK_NAME = 'стол';
 
 export const LISTEN = 'listen';
 
@@ -84,9 +84,15 @@ const readPath = (step: unknown, path: string): unknown =>
 export interface ChainScope {
   params: Set<string>;
   earlier: Set<string>;
-  eventChain: boolean;
+  sheets: Set<string>;
+  bare: boolean;
   later?: Set<string>;
 }
+
+export const sheetScope = (params: Set<string>, sheets: Iterable<string>, earlier: Iterable<string> = []): ChainScope =>
+  ({ params, earlier: new Set(earlier), sheets: new Set(sheets), bare: true });
+
+export const plainScope = (): ChainScope => ({ params: new Set(), earlier: new Set(), sheets: new Set(), bare: false });
 
 function slotRefs(value: unknown, slotKind: string | undefined, from: Where, scope: ChainScope, out: Reference[]): void {
   if (value === null || value === undefined) return;
@@ -156,16 +162,16 @@ export function exprRefs(source: string, from: Where, scope: ChainScope, out: Re
   if (!deps) return;
   for (const table of tablesIn(text)) out.push({ kind: 'table', key: table, from });
   for (const dep of deps) {
-    const owned = ownerOf(dep);
-    if (owned) {
-      const parts = owned.rest.split('.');
-      const head = parts[0]!;
-      if (owned.rest.includes('.') && scope.params.has(head)) continue;
-      out.push({ kind: 'field', key: head, from, scope: `owner:${owned.owner}`, ...(parts.length > 1 ? { path: owned.rest } : {}) });
+    const dotAt = dep.indexOf('.');
+    const top = dotAt > 0 ? dep.slice(0, dotAt) : dep;
+    const rest = dotAt > 0 ? dep.slice(dotAt + 1) : '';
+    if (scope.sheets.has(top) || top === DESK_NAME) {
+      if (!rest) continue;
+      const parts = rest.split('.');
+      out.push({ kind: 'field', key: parts[0]!, from, scope: top === DESK_NAME ? 'desk' : 'sheet', ...(parts.length > 1 ? { path: rest } : {}) });
       continue;
     }
     if (scope.earlier.has(dep) || scope.params.has(dep)) continue;
-    if (scope.eventChain && (EVENT_RESULTS as readonly string[]).includes(dep)) continue;
     if (scope.later?.has(dep)) {
       out.push({ kind: 'step', key: dep, from, scope: 'chain' });
       continue;
@@ -176,11 +182,11 @@ export function exprRefs(source: string, from: Where, scope: ChainScope, out: Re
       const head = dep.slice(0, dot);
       if (scope.earlier.has(head) || scope.params.has(head)) continue;
       if ((SEED_RESULTS as readonly string[]).includes(head)) continue;
-      if (scope.eventChain && (EVENT_RESULTS as readonly string[]).includes(head)) continue;
       out.push({ kind: 'step', key: head, from, scope: 'dotted', path: dep });
       continue;
     }
-    out.push({ kind: 'field', key: dep, from, scope: 'plain' });
+    if ((SEED_RESULTS as readonly string[]).includes(dep)) continue;
+    out.push({ kind: 'field', key: dep, from, scope: scope.bare ? 'bare' : 'plain' });
   }
 }
 
@@ -189,15 +195,16 @@ function guardRefs(guard: Guard | undefined, from: Where, scope: ChainScope, out
 }
 
 export function chainRefs(
-  steps: Step[], whereOf: (index: number) => Where, params: Set<string>, eventChain: boolean, seeds: string[] = [],
+  steps: Step[], whereOf: (index: number) => Where, params: Set<string>, sheets: Iterable<string>, seeds: string[] = [],
 ): Reference[] {
   const out: Reference[] = [];
   const earlier = new Set<string>(seeds);
+  const named = new Set(sheets);
   const ids = steps.map(step => step.id).filter((id): id is string => Boolean(id));
   steps.forEach((step, index) => {
     const from = whereOf(index);
     const later = new Set(ids.filter(id => !earlier.has(id)));
-    const scope: ChainScope = { params, earlier: new Set(earlier), eventChain, later };
+    const scope: ChainScope = { params, earlier: new Set(earlier), sheets: new Set(named), bare: true, later };
     const mod = registry.get(step.type);
     for (const slot of (mod?.slots ?? []) as { key: string; kind?: string; refersTo?: string }[]) {
       const kind = slot.refersTo === 'effect' ? 'effectRef' : slot.kind;
@@ -205,6 +212,8 @@ export function chainRefs(
     }
     guardRefs(step.when, from, scope, out);
     if (step.id) earlier.add(String(step.id));
+    const loop = (step as { as?: unknown }).as;
+    if (step.type === 'each' && typeof loop === 'string' && loop) named.add(loop);
   });
   for (const ref of out) if (ref.kind === 'param' && !params.has(ref.key)) ref.scope = 'missing';
   return out;
@@ -221,9 +230,19 @@ function rowFree(text: string, from: Where, own: Set<string> | undefined, out: R
   });
 }
 
-export const CALL_ARG = /@вызов\.[\p{L}\p{N}_]+/gu;
+export interface CallNames { sheets: string[]; values: string[] }
 
-function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[], own?: Set<string>): void {
+export function callNamesOf(system: System, key: string): CallNames {
+  if (key === ROLL_CALL) return { sheets: ['бросающий', 'против'], values: ['метки'] };
+  const effect = system.effects?.[key];
+  const params = effect?.params ?? [];
+  return {
+    sheets: params.filter(p => p.kind === 'sheet').map(p => p.key),
+    values: [...params.filter(p => p.kind !== 'sheet').map(p => p.key), 'метки'],
+  };
+}
+
+function modifierRefs(system: System, list: Modifier[] | undefined, from: Where, out: Reference[], own?: Set<string>): void {
   for (const mod of list ?? []) {
     const target = String((mod as { target?: string }).target ?? '');
     if (mod.kind === 'edit') {
@@ -233,14 +252,16 @@ function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[
       } else {
         out.push({ kind: 'effect', key: mod.call, from });
       }
-    } else if (target && !target.includes(':') && target !== '*') {
-      out.push({ kind: 'field', key: target, from });
+      const names = callNamesOf(system, mod.call);
+      const scope = sheetScope(new Set(names.values), [...names.sheets, HOLDER]);
+      if (mod.if?.expr.trim()) exprRefs(rowFree(mod.if.expr, from, own, out), from, scope, out);
+      if (mod.value?.expr.trim()) exprRefs(rowFree(mod.value.expr, from, own, out), from, scope, out);
+    } else {
+      if (target && !target.includes(':') && target !== '*') out.push({ kind: 'field', key: target, from });
+      const condition = (mod as { condition?: { expr: string } }).condition;
+      if (condition?.expr.trim()) exprRefs(rowFree(condition.expr, from, own, out), from, plainScope(), out);
+      if (mod.value?.expr.trim()) exprRefs(rowFree(mod.value.expr, from, own, out), from, plainScope(), out);
     }
-    const noScope = { params: new Set<string>(), earlier: new Set<string>(), eventChain: false };
-    if (mod.condition?.expr.trim()) exprRefs(rowFree(mod.condition.expr, from, own, out), from, noScope, out);
-    if (mod.value?.expr.trim()) exprRefs(rowFree(mod.value.expr, from, own, out), from, noScope, out);
-    const when = (mod as { when?: { expr?: string } }).when?.expr;
-    if (when?.trim()) exprRefs(rowFree(when.replace(CALL_ARG, '0'), from, own, out), from, noScope, out);
     const where = (mod as { where?: { table?: unknown } }).where;
     if (where && typeof where.table === 'string' && where.table) out.push({ kind: 'table', key: where.table, from, scope: 'condition' });
   }
@@ -248,22 +269,53 @@ function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[
 
 export const TARGETS_SEED = 'цели';
 
-export const DONE_OUTCOME = 'done-outcome';
+export type Listener =
+  | { kind: 'call'; phase: Phase; key: string }
+  | { kind: 'seen' | 'empty' }
+  | { kind: 'moment' | 'field' | 'gained' | 'lost' | 'unknown'; key: string };
 
-export function listenerOf(
-  { on, of }: { on?: string; of?: string },
-): { kind: 'any' | 'event' | 'effect' | 'moment' | 'field' | 'gained' | 'lost' | 'empty' | 'unknown'; key?: string } {
+export function listenerOf({ on }: { on?: string }): Listener {
   if (!on) return { kind: 'empty' };
-  if (isActionMoment(on)) {
-    if (!of) return { kind: 'any' };
-    if (of.startsWith(EVENT_PREFIX)) return { kind: 'event', key: of.slice(EVENT_PREFIX.length) };
-    return { kind: 'effect', key: of };
-  }
+  if (on === SEEN) return { kind: 'seen' };
+  const call = callHappening(on);
+  if (call) return { kind: 'call', phase: call.phase, key: call.of };
   if (on.startsWith(MOMENT_PREFIX)) return { kind: 'moment', key: on.slice(MOMENT_PREFIX.length) };
   if (on.startsWith(FIELD_PREFIX)) return { kind: 'field', key: on.slice(FIELD_PREFIX.length) };
   if (on.startsWith(GAINED_PREFIX)) return { kind: 'gained', key: on.slice(GAINED_PREFIX.length) };
   if (on.startsWith(LOST_PREFIX)) return { kind: 'lost', key: on.slice(LOST_PREFIX.length) };
   return { kind: 'unknown', key: on };
+}
+
+export interface HeardNames { sheets: string[]; seeds: string[]; listened: Effect | null }
+
+export function heardNames(system: System, listener: Listener): HeardNames {
+  if (listener.kind === 'seen') return { sheets: ['бросающий', 'против'], seeds: ['roll'], listened: null };
+  if (listener.kind === 'moment') return { sheets: ['ходит'], seeds: ['moment'], listened: null };
+  if (listener.kind === 'gained' || listener.kind === 'lost') return { sheets: ['лист'], seeds: ['about'], listened: null };
+  if (listener.kind === 'field') return { sheets: ['лист'], seeds: ['field'], listened: null };
+  if (listener.kind !== 'call') return { sheets: [], seeds: [], listened: null };
+  if (listener.key === ANY_ACTION) return { sheets: [], seeds: [], listened: null };
+  const contract = system.tags?.[listener.key];
+  if (contract) {
+    const inputs = contract.inputs ?? [];
+    return {
+      sheets: [...inputs.filter(i => i.kind === 'sheet').map(i => i.key), ...(contract.each ? [contract.each] : [])],
+      seeds: [...inputs.filter(i => i.kind !== 'sheet').map(i => i.key), ...(contract.outputs ?? []), ...(listener.phase === 'done' ? [TARGETS_SEED] : [])],
+      listened: null,
+    };
+  }
+  const effect = system.effects?.[listener.key] ?? null;
+  const params = effect?.params ?? [];
+  const loop = (effect?.steps ?? []).find(step => step.type === 'each') as { as?: string } | undefined;
+  return {
+    sheets: [...params.filter(p => p.kind === 'sheet').map(p => p.key), ...(loop?.as ? [loop.as] : [])],
+    seeds: [
+      ...params.filter(p => p.kind !== 'sheet').map(p => p.key),
+      ...(effect?.steps ?? []).map(step => step.id).filter((id): id is string => Boolean(id)),
+      ...(listener.phase === 'done' ? [TARGETS_SEED] : []),
+    ],
+    listened: effect,
+  };
 }
 
 function typedRefs(spec: { kind?: string; from?: string }, from: Where, out: Reference[]): void {
@@ -273,52 +325,43 @@ function typedRefs(spec: { kind?: string; from?: string }, from: Where, out: Ref
 }
 
 function effectRefs(system: System, id: string, effect: Effect, out: Reference[]): void {
-  const params = new Set((effect.params ?? []).map(p => p.key));
+  const sheetKeys = (effect.params ?? []).filter(p => p.kind === 'sheet').map(p => p.key);
+  const params = new Set((effect.params ?? []).filter(p => p.kind !== 'sheet').map(p => p.key));
   for (const param of effect.params ?? []) typedRefs(param, { tab: 'effects', effect: id, part: 'params', key: param.key }, out);
-  const called = calledOf(system).some(([key]) => key === id);
-  out.push(...chainRefs(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, called));
-  out.push(...chainRefs(effect.cost ?? [], step => ({ tab: 'effects', effect: id, step, part: 'cost' }), params, false));
+  out.push(...chainRefs(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, sheetKeys));
+  out.push(...chainRefs(effect.cost ?? [], step => ({ tab: 'effects', effect: id, step, part: 'cost' }), params, sheetKeys));
   (effect.on ?? []).forEach((handler, index) => {
     const head: Where = { tab: 'effects', effect: id, part: 'on', handler: index };
     const heard = listenerOf(handler);
-    const seeds = handler.on === 'done' ? [TARGETS_SEED] : [];
-    out.push(...chainRefs(handler.steps ?? [], step => ({ tab: 'effects', effect: id, handler: index, step }), params, heard.kind === 'event', seeds));
-    out.push(...chainRefs(handler.cost ?? [], step => ({ tab: 'effects', effect: id, handler: index, step, part: 'cost' }), params, false));
-    if (heard.kind === 'event') out.push({ kind: 'event', key: heard.key!, from: head });
-    if (heard.kind === 'effect') out.push({ kind: 'effect', key: heard.key!, from: head, scope: LISTEN });
-    if (heard.kind === 'gained' || heard.kind === 'lost') out.push({ kind: 'effect', key: heard.key!, from: head });
-    if (heard.kind === 'field') out.push({ kind: 'field', key: heard.key!, from: head });
+    const names = heardNames(system, heard);
+    const sheets = [...names.sheets, ...sheetKeys, HOLDER];
+    out.push(...chainRefs(handler.steps ?? [], step => ({ tab: 'effects', effect: id, handler: index, step }), params, sheets, names.seeds));
+    out.push(...chainRefs(handler.cost ?? [], step => ({ tab: 'effects', effect: id, handler: index, step, part: 'cost' }), params, sheets, names.seeds));
+    if (heard.kind === 'call' && heard.key !== ANY_ACTION && !system.tags?.[heard.key]) {
+      out.push({ kind: 'effect', key: heard.key, from: head, scope: LISTEN });
+    }
+    if (heard.kind === 'gained' || heard.kind === 'lost') out.push({ kind: 'effect', key: heard.key, from: head });
+    if (heard.kind === 'field') out.push({ kind: 'field', key: heard.key, from: head });
     if (handler.if) {
       const found: Reference[] = [];
-      exprRefs(handler.if.expr, head, { params, earlier: new Set(seeds), eventChain: heard.kind === 'event' }, found);
-      const listened = heard.kind === 'effect' ? system.effects[heard.key!] : undefined;
-      const listenedSteps = new Set((listened?.steps ?? []).map(s => s.id).filter(Boolean));
-      const absent = heard.kind === 'effect' && !listened;
+      exprRefs(handler.if.expr, head, sheetScope(params, sheets, names.seeds), found);
       for (const ref of found) {
-        if (ref.kind === 'field' && listenedSteps.has(ref.key)) continue;
-        if (absent && (ref.kind === 'field' || ref.kind === 'step') && !hasField(system, ref.key)) {
+        if (ref.kind === 'step' && heard.kind === 'call' && !names.listened && system.effects?.[heard.key] === undefined && !system.tags?.[heard.key]) {
           out.push({ ...ref, scope: LISTEN });
           continue;
         }
-        if (ref.kind !== 'step') { out.push(ref); continue; }
-        if (seeds.includes(ref.key)) continue;
-        const step = (listened?.steps ?? []).find(s => s.id === ref.key);
-        if (listened && !step) {
-          out.push({ ...ref, scope: `listened:${heard.key}` });
+        if (ref.kind === 'step' && names.listened) {
+          out.push({ ...ref, scope: `listened:${heard.kind === 'call' ? heard.key : ''}` });
           continue;
         }
-        const tail = ref.path?.split('.')[1];
-        if (step && handler.on === 'done' && !(rolledBySender(step) && tail && (SUMMARY_KEYS as readonly string[]).includes(tail))) {
-          out.push({ ...ref, scope: DONE_OUTCOME });
-        }
+        out.push(ref);
       }
     }
-    for (const tag of handler.tags ?? []) out.push({ kind: 'roll', key: tag, from: head });
   });
   for (const turn of ['attach', 'detach'] as const) {
-    out.push(...chainRefs(effect[turn] ?? [], step => ({ tab: 'effects', effect: id, step, part: turn }), params, false));
+    out.push(...chainRefs(effect[turn] ?? [], step => ({ tab: 'effects', effect: id, step, part: turn }), params, [...sheetKeys, HOLDER]));
   }
-  modifierRefs(effect.modifiers, { tab: 'effects', effect: id, part: 'modifiers' }, out);
+  modifierRefs(system, effect.modifiers, { tab: 'effects', effect: id, part: 'modifiers' }, out);
   for (const key of effect.grants ?? []) out.push({ kind: 'effect', key, from: { tab: 'effects', effect: id, part: 'grants' } });
 }
 
@@ -339,7 +382,7 @@ export function withAddresses(system: System, refs: Reference[]): Reference[] {
 
 export function referencesOf(system: System, compendium?: Compendium): Reference[] {
   const out: Reference[] = [];
-  const noScope: ChainScope = { params: new Set(), earlier: new Set(), eventChain: false };
+  const noScope = plainScope();
 
   for (const field of fieldsOf(system)) {
     const from: Where = { tab: 'sheet', field: field.tag };
@@ -371,16 +414,18 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
     (spec.bindings ?? []).forEach((binding, index) => {
       const from: Where = { tab: 'records', kind, part: 'bindings', binding: index };
       if (binding.effect) out.push({ kind: 'effect', key: binding.effect, from });
+      const bound = system.effects?.[binding.effect]?.params ?? [];
+      const argScope = sheetScope(new Set(bound.filter(p => p.kind !== 'sheet').map(p => p.key)), [...bound.filter(p => p.kind === 'sheet').map(p => p.key), HOLDER]);
       for (const arg of Object.values(binding.args ?? {})) {
         if (arg && typeof arg === 'object' && 'prop' in arg) {
           const key = String(arg.prop ?? '');
           if (key) out.push({ kind: 'prop', key, from, scope: own.has(key) ? kind : 'foreign' });
         } else {
-          slotRefs(arg, undefined, from, noScope, out);
+          slotRefs(arg, undefined, from, argScope, out);
         }
       }
     });
-    modifierRefs(spec.modifiers, { tab: 'records', kind, part: 'modifiers' }, out, spec.shape === 'book' ? own : undefined);
+    modifierRefs(system, spec.modifiers, { tab: 'records', kind, part: 'modifiers' }, out, spec.shape === 'book' ? own : undefined);
     for (const id of spec.grants ?? []) out.push({ kind: 'effect', key: id, from: { tab: 'records', kind, part: 'grants' } });
   }
 
@@ -410,7 +455,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
       if (record.table) out.push({ kind: 'recordKind', key: String(record.table), from });
       for (const id of record.grants ?? []) out.push({ kind: 'effect', key: id, from });
       for (const binding of record.bindings ?? []) if (binding.effect) out.push({ kind: 'effect', key: binding.effect, from });
-      modifierRefs(record.modifiers, from, out, record.table ? new Set((system.tables?.[record.table]?.columns ?? []).map(c => c.key)) : undefined);
+      modifierRefs(system, record.modifiers, from, out, record.table ? new Set((system.tables?.[record.table]?.columns ?? []).map(c => c.key)) : undefined);
     }
   }
 

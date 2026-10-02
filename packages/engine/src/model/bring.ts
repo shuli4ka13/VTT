@@ -50,7 +50,7 @@ function tableDeps(system: System, key: string): Part[] {
       for (const value of Array.isArray(cell) ? cell : [cell]) {
         if (typeof value !== 'string' || !value) continue;
         if (column.kind === 'effect') out.push({ kind: 'effect', key: value });
-        if (column.kind === 'tag') out.push({ kind: 'field', key: value });
+        if (column.kind === 'field') out.push({ kind: 'field', key: value });
         if (column.kind === 'table' && system.tables?.[value]) out.push({ kind: 'table', key: value });
       }
     }

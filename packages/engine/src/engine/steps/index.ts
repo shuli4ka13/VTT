@@ -1,7 +1,6 @@
 import { EngineError } from '../errors.ts';
-import * as threshold from './threshold.ts';
-import * as amount from './amount.ts';
-import * as compare from './compare.ts';
+import * as roll from './roll.ts';
+import * as check from './check.ts';
 import * as apply from './apply.ts';
 import * as status from './status.ts';
 import * as emit from './emit.ts';
@@ -28,16 +27,25 @@ export interface StepContext {
   number(ref: unknown, what: string): number;
   optional(ref: unknown, what: string): number | null;
   holds(guard: unknown): boolean;
-  roll(side: 'sender' | 'target', spec: Spec, tags: string[]): Thrown;
-  read(tag: string): unknown;
-  write(tag: string, value: StoredValue): void;
-  attach(effectId: string, carry?: number): void;
-  detach(effectId: string): void;
+  sheet(ref: unknown, what: string): string | null;
+  numberOn(sheetId: string, ref: unknown, what: string): number;
+  field(ref: unknown): FieldRef;
+  view(sheetId: string): Pass;
+  rolled(name: string): Record<string, unknown> | null;
+  roll(spec: Spec, tags: string[], by: string | null, against: string | null): Thrown;
+  read(sheetId: string, tag: string): unknown;
+  write(sheetId: string, tag: string, value: StoredValue): void;
+  attach(sheetId: string, effectId: string, args: Record<string, StoredValue>): void;
+  detach(sheetId: string, effectId: string): void;
   edited(call: string, param: string, base: number, tags: string[], args: Record<string, unknown>): number;
   call(event: string, args: Record<string, unknown>, payload: EmittedEvent): NestedRun;
-  reply(event: string, args: Record<string, unknown>): void;
   seenRoll?: { value: Roll };
   using(die: Die): StepContext;
+}
+
+export interface FieldRef {
+  sheet: string;
+  tag: string;
 }
 
 export interface StepResult {
@@ -47,11 +55,6 @@ export interface StepResult {
   roll?: RollResult;
 }
 
-export interface Prepared {
-  summary?: RollResult;
-  [k: string]: unknown;
-}
-
 export interface StepModule {
   type: string;
   label?: string;
@@ -59,15 +62,11 @@ export interface StepModule {
   slots?: unknown;
   outputs?: unknown;
 
-  prepare?: (step: StepData, ctx: StepContext) => Prepared;
-
-  finish(step: StepData, ctx: StepContext, prepared?: Prepared): StepResult;
+  finish(step: StepData, ctx: StepContext): StepResult;
   lint?: (...args: never[]) => unknown;
   traceLine?: (...args: never[]) => unknown;
 
   reasonWord?: (reason: string) => string | null;
-
-  once?: (step: StepData) => boolean;
 
   mayBreak?: boolean;
 
@@ -95,7 +94,7 @@ export function registerStepType(mod: StepModule): StepModule {
   return mod;
 }
 
-for (const mod of [threshold, amount, compare, apply, status, emit, table, each, rollAdd, rollReroll, rollPlus]) {
+for (const mod of [roll, check, apply, status, emit, table, each, rollAdd, rollReroll, rollPlus]) {
   registerStepType(mod as unknown as StepModule);
 }
 

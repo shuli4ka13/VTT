@@ -11,7 +11,7 @@ export const icon = '↻';
 export const traceLine = (t: { before: number; after: number; rolls: number[] }): string =>
   `переброшено: [${t.rolls.join(', ')}] — итог ${t.before} → ${t.after}`;
 
-const runner: Pick<StepModule, 'once' | 'mayBreak' | 'prepare' | 'finish' | 'splits'> = {
+const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
   finish: (step, ctx) => operate(ctx, 'Перебросить', { kind: 'reroll', upTo: ctx.number(step.upTo, 'до какого значения перебрасывать') }),
 };
 

@@ -4,7 +4,6 @@ import { ROLL_CALL } from '../words/calls.ts';
 import { amountParamOf } from '../model/lists.ts';
 import { wornEffects, activationOf } from './effects.ts';
 import { EngineError } from './errors.ts';
-import { FormulaRuntimeError } from '../formula/errors.ts';
 import { anyRowSays } from './tables.ts';
 import { findRecord, kindOfRecord, sheetKindOf, propsOf } from '../model/owned.ts';
 import { tagsHold } from './roll-tags.ts';
@@ -30,8 +29,7 @@ export interface CollectedModifiers {
 
 type EditModifier = Extract<Modifier, { kind: 'edit' }>;
 
-export const editKey = (call: string, param: string, as?: string): string =>
-  `${as ? `${as}:` : ''}${call}.${param}`;
+export const editKey = (call: string, param: string): string => `${call}.${param}`;
 
 const assertCall = (system: System, mod: EditModifier, owner?: string): void => {
   if (mod.call === ROLL_CALL) {
@@ -75,7 +73,7 @@ export function collectModifiers(
     for (const mod of source.modifiers) {
       if (mod.kind === 'edit') {
         assertCall(system, mod, source.label);
-        put(buckets.edits, editKey(mod.call, mod.param, mod.as), { ...mod, source });
+        put(buckets.edits, editKey(mod.call, mod.param), { ...mod, source });
         continue;
       }
       assertTarget(system, mod.target, source.label);
@@ -168,43 +166,14 @@ export function stackWith<M extends SourcedModifier>(
 
 export const VALUE_OPS = ['set', 'add', 'mul', 'floor', 'cap'];
 
-export const editsOf = (pass: Pass, call: string, param: string, as?: string): SourcedModifier[] =>
-  (pass?.modifiers ? pass.modifiers.edits.get(editKey(call, param, as)) || [] : []);
-
-export const CALL_NAME = 'вызов';
-
-export function callHolds(mod: SourcedModifier, pass: Pass, args: Record<string, unknown>): boolean {
-  const when = (mod as { when?: { expr?: string } }).when;
-  if (!when?.expr?.trim()) return true;
-  const prefix = `${CALL_NAME}.`;
-  let result: unknown;
-  try {
-    result = compile(when.expr).evaluate(
-      name => (name.startsWith(prefix) ? (args[name.slice(prefix.length)] ?? null) as never : pass.resolve(name)),
-      toolsOf(pass.system, pass, 'условие правки'));
-  } catch (err) {
-    if (err instanceof FormulaRuntimeError) return false;
-    throw err;
-  }
-  if (typeof result !== 'boolean') {
-    throw new EngineError(`условие правки «${when.expr}» источника «${mod.source.label}» должно давать да или нет`);
-  }
-  return result;
-}
-
-export function editNumber(
-  pass: Pass, call: string, param: string, base: number, tags: readonly string[], args: Record<string, unknown> = {},
-): number {
-  const active = editsOf(pass, call, param)
-    .filter(m => conditionHolds(m, pass) && editMatches(m, tags, pass.system) && callHolds(m, pass, args));
-  return active.length ? Number(stackNumber(active, base, `${call}.${param}`, pass)) : base;
-}
+export const editsOf = (pass: Pass, call: string, param: string): SourcedModifier[] =>
+  (pass?.modifiers ? pass.modifiers.edits.get(editKey(call, param)) || [] : []);
 
 export function resolveRoll(
   _system: System, _sheet: Sheet, rollTags: readonly (string | null | undefined)[], pass: Pass,
 ): RollResolution {
   const tags = [...new Set(rollTags.filter((t): t is string => Boolean(t)))];
-  const held = rollHeld(pass, null, tags);
+  const held = rollHeld([{ id: pass.sheet.id, view: pass }], pass.sheet.id, null, tags);
   const { edits, bonus } = rollEdits(held, [], pass, tags);
   return { tags, edits, bonus, sources: held.map(m => ({ ...m.source, edit: m.edit })) };
 }
@@ -263,11 +232,12 @@ function tagsMatch(mod: SourcedModifier, tags: string[], system: System): boolea
 
 
 function conditionHolds(mod: SourcedModifier, pass: Pass): boolean {
-  if (!mod.condition) return true;
-  const result = compile(mod.condition.expr).evaluate(pass.resolve, toolsOf(pass.system, pass, 'условие модификатора'));
+  const condition = (mod as { condition?: { expr: string } }).condition;
+  if (!condition) return true;
+  const result = compile(condition.expr).evaluate(pass.resolve, toolsOf(pass.system, pass, 'условие модификатора'));
   if (typeof result !== 'boolean') {
     throw new EngineError(
-      `условие «${mod.condition.expr}» источника «${mod.source.label}» должно давать да или нет`);
+      `условие «${condition.expr}» источника «${mod.source.label}» должно давать да или нет`);
   }
   return result;
 }

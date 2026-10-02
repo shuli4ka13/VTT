@@ -1,4 +1,5 @@
-import { rollHeld, rollEdits } from './edits.ts';
+import { rollEdits } from './edits.ts';
+import type { Held } from './edits.ts';
 import { parse, times, start, keep, result } from './dice.ts';
 import type { Roll, RollResult, Spec } from './dice.ts';
 import type { Pass } from '../engine/calc.ts';
@@ -8,7 +9,7 @@ import type { Die } from '../model/types.ts';
 export interface Throw {
   spec: Spec;
   roller: Pass;
-  against: Pass | null;
+  held: Held[];
   tags: readonly string[];
   claims: readonly string[];
   die: Die;
@@ -22,8 +23,7 @@ export interface Thrown {
 }
 
 export function throwDice(t: Throw): Thrown {
-  const held = rollHeld(t.roller, t.against, t.tags);
-  const { edits, bonus } = rollEdits(held, t.claims, t.roller, t.tags);
+  const { edits, bonus } = rollEdits(t.held, t.claims, t.roller, t.tags);
   const thrown = start(t.spec, edits, t.die, t.tags);
   const roll = t.seen ? t.seen(thrown) : thrown;
   return { roll, result: result(roll), bonus };

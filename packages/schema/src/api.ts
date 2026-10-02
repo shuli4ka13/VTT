@@ -91,7 +91,7 @@ export const member = z.object({
 export const pendingState = z.object({
   id: z.string(),
   sheetId: z.string(),
-  stage: z.enum(['target', 'after', 'seen', 'moment']),
+  stage: z.enum(['target', 'after', 'done', 'seen', 'moment']),
   question: z.string(),
   options: z.array(z.object({ id: z.string(), label: z.string() })),
   preview: z.array(z.string()),
@@ -145,12 +145,9 @@ export const actIntent = z.object({
   roomId: z.string(),
   actionId: z.string().min(1),
   fromId: z.string().min(1),
-  toId: z.string().min(1),
+  toIds: z.array(z.string().min(1)),
 
-  toIds: z.array(z.string().min(1)).optional(),
-
-  edits: z.array(z.string().min(1)).optional(),
-  targetEdits: z.array(z.string().min(1)).optional(),
+  claims: z.record(z.string().min(1), z.array(z.string().min(1))).optional(),
 
   inputs: z.record(z.string().min(1), z.union([z.number(), z.string()])).optional(),
 

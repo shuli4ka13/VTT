@@ -1,7 +1,5 @@
 import { z } from 'zod';
 
-export const refSide = z.enum(['sender', 'target']);
-
 export const formula = z.object({ expr: z.string() }).strict();
 
 export const slotRef = z.union([
@@ -16,7 +14,7 @@ export const slotRef = z.union([
 
 const bound = z.union([z.number(), z.string()]);
 
-export const valueKind = z.enum(['number', 'text', 'boolean', 'expr', 'dice', 'choice', 'effect', 'record', 'tag', 'table']);
+export const valueKind = z.enum(['number', 'text', 'boolean', 'expr', 'dice', 'choice', 'effect', 'record', 'field', 'table', 'sheet']);
 
 const typed = {
   kind: valueKind.optional(),
@@ -151,12 +149,11 @@ export const editModifier = z.object({
   kind: z.literal('edit'),
   call: z.string().min(1),
   param: z.string(),
-  as: z.enum(['against']).optional(),
   edit: z.string().optional(),
   op: z.string().optional(),
   value: formula.optional(),
   stacking: z.string().optional(),
-  condition: formula.optional(),
+  if: formula.optional(),
   tags: z.array(z.string().min(1)).optional(),
   anyTags: z.array(z.string().min(1)).optional(),
   notTags: z.array(z.string().min(1)).optional(),
@@ -165,8 +162,7 @@ export const editModifier = z.object({
     column: z.string().min(1),
     is: tableValue,
   }).optional(),
-  when: formula.optional(),
-}).passthrough();
+}).strict();
 
 export const modifier = z.discriminatedUnion('kind', [valueModifier, editModifier]);
 
@@ -196,28 +192,31 @@ export const scale = z.object({
 export const step = z.object({
   id: z.string().optional(),
   type: z.string().min(1),
-  side: refSide.optional(),
 
   when: guard.optional(),
 }).passthrough();
 
 export const handler = z.object({
-  on: z.string(),
-  of: z.string().min(1).optional(),
+  on: z.string().min(1),
+  if: guard.optional(),
   confirm: z.boolean().optional(),
-  to: z.enum(['self', 'other']).optional(),
-  if: guard.nullable().optional(),
-  as: z.enum(['against']).optional(),
-  tags: z.array(z.string().min(1)).optional(),
-  watch: z.boolean().optional(),
   cost: z.array(step).optional(),
   steps: z.array(step).optional(),
+}).strict();
+
+export const tagContract = z.object({
+  label: z.string().optional(),
+  includes: z.array(z.string().min(1)).optional(),
+  inputs: z.array(z.object({ key: z.string().min(1), kind: valueKind, many: z.boolean().optional() }).strict()).optional(),
+  each: z.string().min(1).optional(),
+  outputs: z.array(z.string().min(1)).optional(),
 }).strict();
 
 export const effect = z.object({
   extends: z.string().min(1).optional(),
   group: z.string().optional(),
-  bond: z.union([z.boolean(), z.string().min(1)]).optional(),
+  tags: z.array(z.string().min(1)).optional(),
+  bond: z.object({ effect: z.string().min(1), by: z.string().min(1) }).strict().optional(),
   label: z.string().optional(),
   icon: z.string().optional(),
   description: z.string().optional(),
@@ -226,8 +225,8 @@ export const effect = z.object({
     kind: durationKind,
     max: z.number().int().positive().optional(),
     ends: z.enum(['turn-end', 'turn-start']).optional(),
-    whose: z.enum(['own', 'source']).optional(),
-  }).optional(),
+    by: z.string().min(1).optional(),
+  }).strict().optional(),
   reapply: reapply.optional(),
   params: z.array(param).optional(),
   steps: z.array(step).optional(),
@@ -238,15 +237,18 @@ export const effect = z.object({
   attach: z.array(step).optional(),
   detach: z.array(step).optional(),
   grants: z.array(z.string().min(1)).optional(),
-}).passthrough().refine(effect => !('self' in effect), 'поле self переименовано в cost (цена) — переведите мир проходом samples/convert');
+}).strict();
 
 export const bindingArg = formula;
+
+export const tableFill = z.enum(['actor', 'targets']);
 
 export const binding = z.object({
   label: z.string().optional(),
   effect: z.string(),
+  table: z.record(z.string(), tableFill).optional(),
   args: z.record(z.string(), bindingArg).optional(),
-}).passthrough();
+}).strict();
 
 export const tableShape = z.enum(['rows', 'single', 'book']);
 export const tableOwner = z.enum(['sheet', 'group', 'desk']);
@@ -296,6 +298,7 @@ export const system = z.object({
   sheets: z.record(z.string(), sheetKind).optional(),
   constants: z.record(z.string(), systemConstant).optional(),
   tables: z.record(z.string(), table).optional(),
+  tags: z.record(z.string(), tagContract).optional(),
   roll_edits: z.record(z.string(), rollEdit).optional(),
   advantage: z.object({ methods: z.record(z.string(), z.boolean()).optional() }).passthrough().optional(),
 
@@ -309,8 +312,15 @@ export const storedValue = z.union([z.number(), z.string(), z.boolean(), z.null(
 
 export const wornEffect = z.object({
   effectId: z.string().min(1),
+  inst: z.string().min(1).optional(),
   usesLeft: z.number().int().optional(),
-}).catchall(storedValue);
+  turnsLeft: z.number().int().optional(),
+  until: z.number().int().optional(),
+  combat: z.boolean().optional(),
+  scene: z.boolean().optional(),
+  args: z.record(z.string(), storedValue).optional(),
+  bond: z.object({ sheet: z.string().min(1), by: z.string().min(1) }).strict().optional(),
+}).strict();
 
 export const owned = z.object({
   of: z.string().min(1),
@@ -358,7 +368,6 @@ export type SlotRef = z.infer<typeof slotRef>;
 export type Formula = z.infer<typeof formula>;
 export type RollSpec = z.infer<typeof rollSpec>;
 export type ValueKind = z.infer<typeof valueKind>;
-export type RefSide = z.infer<typeof refSide>;
 export type Tag = z.infer<typeof tag>;
 export type DiceTerm = z.infer<typeof diceTerm>;
 export type DiceReading = z.infer<typeof diceReading>;
@@ -390,6 +399,8 @@ export type Scale = z.infer<typeof scale>;
 export type Handler = z.infer<typeof handler>;
 export type Effect = z.infer<typeof effect>;
 export type Binding = z.infer<typeof binding>;
+export type TagContract = z.infer<typeof tagContract>;
+export type TableFill = z.infer<typeof tableFill>;
 export type BindingArg = z.infer<typeof bindingArg>;
 export type SheetKind = z.infer<typeof sheetKind>;
 export type TableUse = z.infer<typeof tableUse>;

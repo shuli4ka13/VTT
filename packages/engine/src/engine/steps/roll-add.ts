@@ -11,7 +11,7 @@ export const icon = '+🎲';
 export const traceLine = (t: { before: number; after: number; rolls: number[] }): string =>
   `докинуто: [${t.rolls.join(', ')}] — итог ${t.before} → ${t.after}`;
 
-const runner: Pick<StepModule, 'once' | 'mayBreak' | 'prepare' | 'finish' | 'splits'> = {
+const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
   finish(step, ctx) {
     const keep = step.keep === 'best' || step.keep === 'worst' ? step.keep : undefined;
     const sides = ctx.optional(step.sides, 'грани докинутой кости');

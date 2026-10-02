@@ -1,5 +1,6 @@
 import { EngineError } from '../errors.ts';
 import type { StepContext, StepModule } from './index.ts';
+import type { StoredValue } from '../../model/types.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 
 export const type = 'status';
@@ -24,17 +25,30 @@ export function traceLine(t: any, h: any) {
 
 const who = (ctx: StepContext): string => ctx.owner || 'правило';
 
-const runner: Pick<StepModule, 'once' | 'mayBreak' | 'prepare' | 'finish' | 'splits'> = {
+const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
   finish(step, ctx) {
     const mode = String(step.mode || 'apply');
     if (!(mode in MODES)) throw new EngineError(`${who(ctx)}: у шага «состояние» нет режима «${mode}»; умею ${Object.keys(MODES).join(', ')}`);
     const id = ctx.value(step.effect);
     if (id === null || id === undefined || id === '') return { value: null, trace: { mode, effect: null }, break: null };
     if (typeof id !== 'string') throw new EngineError(`${who(ctx)}: состоянию нужен id эффекта, а пришло ${JSON.stringify(id)}`);
-    const carry = mode === 'apply' ? ctx.optional(step.carry, 'число, которое запомнит наложенное') : null;
-    if (mode === 'remove') ctx.detach(id);
-    else ctx.attach(id, carry === null ? undefined : carry);
-    return { value: id, trace: { mode, effect: id, ...(carry === null ? {} : { carry }) }, break: null };
+    const to = ctx.sheet(step.to, 'на кого');
+    if (!to) throw new EngineError(`${who(ctx)}: шагу «состояние» не сказано, на чей лист`);
+    if (mode === 'remove') {
+      ctx.detach(to, id);
+      return { value: id, trace: { mode, effect: id, sheet: to }, break: null };
+    }
+    const args: Record<string, StoredValue> = {};
+    for (const [key, ref] of Object.entries((step.args ?? {}) as Record<string, unknown>)) {
+      const value = ctx.value(ref);
+      if (value === null || value === undefined || value === '') continue;
+      if (typeof value !== 'number' && typeof value !== 'string' && typeof value !== 'boolean') {
+        throw new EngineError(`${who(ctx)}: наложенное запоминает число, строку или лист, а «${key}» дал ${JSON.stringify(value)}`);
+      }
+      args[key] = value;
+    }
+    ctx.attach(to, id, args);
+    return { value: id, trace: { mode, effect: id, sheet: to, ...(Object.keys(args).length ? { args } : {}) }, break: null };
   },
 };
 

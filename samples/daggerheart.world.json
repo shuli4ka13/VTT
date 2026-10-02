@@ -1525,6 +1525,11 @@
         "description": "Кости двойственности + черта (+2 за опыт, если потратить Надежду) против сложности, которую называет ведущий. Дубль — крит: успех при любом итоге.",
         "params": [
           {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
             "key": "trait",
             "label": "Черта",
             "kind": "choice",
@@ -1556,39 +1561,46 @@
         ],
         "steps": [
           {
+            "id": "бросок_бросок",
+            "type": "roll",
+            "die": {
+              "constant": "duality"
+            },
+            "bonus": {
+              "expr": "таблица(\"traits\", @trait, \"value\") + @опыт"
+            },
+            "tags": [
+              "действие",
+              "герой",
+              {
+                "expr": "@trait"
+              }
+            ],
+            "by": {
+              "expr": "@действующий"
+            }
+          },
+          {
             "id": "бросок",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "duality"
-              },
-              "bonus": {
-                "expr": "таблица(\"traits\", @trait, \"value\") + @опыт"
-              },
-              "tags": [
-                "действие",
-                "герой",
-                {
-                  "expr": "@trait"
-                }
-              ]
+            "type": "check",
+            "value": {
+              "expr": "@бросок_бросок"
             },
             "versus": {
-              "expr": "@сложность"
+              "expr": "(@сложность)"
             },
             "continueOn": "always"
           }
         ],
         "cost": [
           {
-            "type": "compare",
+            "type": "check",
             "value": {
-              "expr": "@hope"
+              "expr": "@действующий.hope"
             },
             "versus": {
-              "expr": "1"
+              "expr": "(1)"
             },
-            "breakIf": "less",
             "note": "на опыт нужна Надежда",
             "when": {
               "expr": "@опыт > 0"
@@ -1597,7 +1609,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "hope"
+              "expr": "@действующий.hope"
             },
             "direction": "subtract",
             "value": {
@@ -1616,6 +1628,17 @@
         "activation": "manual",
         "description": "Кости двойственности + черта оружия против сложности противника. Попал — кости урона по числу мастерства плюс прибавка; на крите сверху максимум костей урона.",
         "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          },
           {
             "key": "trait",
             "label": "Черта оружия",
@@ -1650,43 +1673,57 @@
         ],
         "steps": [
           {
+            "id": "бросок_бросок",
+            "type": "roll",
+            "die": {
+              "constant": "duality"
+            },
+            "bonus": {
+              "expr": "таблица(\"traits\", @trait, \"value\") + @attack_bonus"
+            },
+            "tags": [
+              "атака",
+              "герой"
+            ],
+            "by": {
+              "expr": "@действующий"
+            },
+            "against": {
+              "expr": "первый(@цели)"
+            }
+          },
+          {
+            "type": "roll",
+            "fixed": {
+              "expr": "(кинуть(@damage_die, @действующий.proficiency + @extra_die, @действующий.proficiency) + @damage_bonus + если(@бросок_бросок.parts.надежда == @бросок_бросок.parts.страх, @действующий.proficiency * @die_size, 0))"
+            },
+            "id": "урон"
+          },
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
             "id": "бросок",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "duality"
-              },
-              "bonus": {
-                "expr": "таблица(\"traits\", @trait, \"value\") + @attack_bonus"
-              },
-              "tags": [
-                "атака",
-                "герой"
-              ]
+            "type": "check",
+            "value": {
+              "expr": "@бросок_бросок"
             },
             "versus": {
-              "expr": "@получатель.difficulty"
+              "expr": "(@цель.difficulty)"
             },
             "continueOn": "always"
           },
           {
-            "type": "compare",
+            "type": "check",
             "value": {
               "expr": "если(любое(@бросок.success, @бросок.parts.надежда == @бросок.parts.страх), 1, 0)"
             },
             "versus": {
-              "expr": "1"
+              "expr": "(1)"
             },
-            "breakIf": "less",
             "note": "промах"
-          },
-          {
-            "id": "урон",
-            "type": "amount",
-            "source": "item",
-            "fixed": {
-              "expr": "кинуть(@damage_die, @отправитель.proficiency + @extra_die, @отправитель.proficiency) + @damage_bonus + если(@бросок.parts.надежда == @бросок.parts.страх, @отправитель.proficiency * @die_size, 0)"
-            }
           },
           {
             "type": "emit",
@@ -1694,6 +1731,12 @@
             "args": {
               "amount": {
                 "expr": "@урон"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           }
@@ -1705,6 +1748,17 @@
         "activation": "manual",
         "description": "к20 + модификатор атаки против уклонения героя; натуральная 20 попадает всегда. Попал — урон приёма; на натуральной 20 сверху максимум костей урона.",
         "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          },
           {
             "key": "damage_dice",
             "label": "Кость урона",
@@ -1718,33 +1772,48 @@
         ],
         "steps": [
           {
-            "id": "удар",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "adversary_die"
-              },
-              "bonus": {
-                "expr": "@attack_mod"
-              },
-              "tags": [
-                "атака",
-                "противник"
-              ]
+            "id": "удар_бросок",
+            "type": "roll",
+            "die": {
+              "constant": "adversary_die"
             },
-            "versus": {
-              "expr": "@получатель.evasion"
+            "bonus": {
+              "expr": "@действующий.attack_mod"
             },
-            "succeedOn": {
-              "expr": "20"
+            "tags": [
+              "атака",
+              "противник"
+            ],
+            "by": {
+              "expr": "@действующий"
+            },
+            "against": {
+              "expr": "первый(@цели)"
             }
           },
           {
-            "id": "урон",
-            "type": "amount",
-            "source": "item",
+            "type": "roll",
             "fixed": {
-              "expr": "кинуть(@damage_dice) + @damage_bonus + если(@удар.natural >= 20, максимум костей(@damage_dice), 0)"
+              "expr": "(кинуть(@damage_dice) + @damage_bonus + если(@удар_бросок.natural >= 20, максимум костей(@damage_dice), 0))"
+            },
+            "id": "урон"
+          },
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "id": "удар",
+            "type": "check",
+            "value": {
+              "expr": "@удар_бросок"
+            },
+            "versus": {
+              "expr": "(@цель.evasion)"
+            },
+            "succeedOn": {
+              "expr": "20"
             }
           },
           {
@@ -1753,6 +1822,12 @@
             "args": {
               "amount": {
                 "expr": "@урон"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           }
@@ -1764,6 +1839,17 @@
         "description": "Урон против порогов: ниже серьёзного — одна клетка хитов, от серьёзного — две, от тяжёлого — три. Бронеслот игрок отмечает сам действием «Отметить бронеслот».",
         "params": [
           {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true
+          },
+          {
             "key": "amount",
             "label": "Сколько урона",
             "kind": "number",
@@ -1774,11 +1860,11 @@
           {
             "type": "apply",
             "target": {
-              "tag": "hp"
+              "expr": "@лист.hp"
             },
             "direction": "add",
             "value": {
-              "expr": "если(@event.amount >= @severe, 3, если(@event.amount >= @major, 2, если(@event.amount >= 1, 1, 0)))"
+              "expr": "если(@amount >= @лист.severe, 3, если(@amount >= @лист.major, 2, если(@amount >= 1, 1, 0)))"
             },
             "targetModifiers": false
           }
@@ -1791,31 +1877,34 @@
         "description": "После урона: отметить бронеслот и отметить на одну клетку хитов меньше. При броне 0 нельзя.",
         "steps": [
           {
-            "type": "compare",
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "check",
             "value": {
-              "expr": "@armor_score - @armor_marked"
+              "expr": "@действующий.armor_score - @действующий.armor_marked"
             },
             "versus": {
-              "expr": "1"
+              "expr": "(1)"
             },
-            "breakIf": "less",
             "note": "свободных бронеслотов нет"
           },
           {
-            "type": "compare",
+            "type": "check",
             "value": {
-              "expr": "@hp"
+              "expr": "@действующий.hp"
             },
             "versus": {
-              "expr": "1"
+              "expr": "(1)"
             },
-            "breakIf": "less",
             "note": "снимать нечего"
           },
           {
             "type": "apply",
             "target": {
-              "tag": "armor_marked"
+              "expr": "@цель.armor_marked"
             },
             "direction": "add",
             "value": {
@@ -1826,11 +1915,1021 @@
           {
             "type": "apply",
             "target": {
-              "tag": "hp"
+              "expr": "@цель.hp"
             },
             "direction": "subtract",
             "value": {
               "expr": "1"
+            },
+            "targetModifiers": false
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "blaze_of_glory": {
+        "label": "Сгореть во славе",
+        "group": "Смертельные ходы",
+        "activation": "manual",
+        "description": "Последнее действие автоматически критически удаётся (с одобрения ведущего), затем герой уходит за завесу смерти.",
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "status",
+            "mode": "remove",
+            "effect": {
+              "const": "death_move"
+            },
+            "to": {
+              "expr": "@цель"
+            }
+          },
+          {
+            "type": "status",
+            "mode": "apply",
+            "effect": {
+              "const": "dead"
+            },
+            "to": {
+              "expr": "@цель"
+            }
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "avoid_death": {
+        "label": "Избежать смерти",
+        "group": "Смертельные ходы",
+        "activation": "manual",
+        "description": "Герой без сознания до лечения клетки хитов или долгого отдыха. Кость Надежды не больше уровня — шрам: вычеркнуть клетку Надежды.",
+        "steps": [
+          {
+            "id": "шрам_бросок",
+            "type": "roll",
+            "die": {
+              "constant": "hope_die"
+            },
+            "tags": [
+              "смерть"
+            ],
+            "by": {
+              "expr": "@действующий"
+            },
+            "against": {
+              "expr": "первый(@цели)"
+            }
+          },
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "status",
+            "mode": "remove",
+            "effect": {
+              "const": "death_move"
+            },
+            "to": {
+              "expr": "@цель"
+            }
+          },
+          {
+            "type": "status",
+            "mode": "apply",
+            "effect": {
+              "const": "unconscious"
+            },
+            "to": {
+              "expr": "@цель"
+            }
+          },
+          {
+            "id": "шрам",
+            "type": "check",
+            "value": {
+              "expr": "@шрам_бросок"
+            },
+            "versus": {
+              "expr": "(@действующий.level)"
+            },
+            "successWhen": "notOver",
+            "continueOn": "always"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.scars"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "1"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@шрам.success"
+            }
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "risk_it_all": {
+        "label": "Рискнуть всем",
+        "group": "Смертельные ходы",
+        "activation": "manual",
+        "description": "Кости двойственности: больше на Надежде — на ногах и снять хиты по значению кости Надежды; на Страхе — смерть; дубль — снять все хиты и весь Стресс.",
+        "steps": [
+          {
+            "id": "бросок_бросок",
+            "type": "roll",
+            "die": {
+              "constant": "duality"
+            },
+            "tags": [
+              "смерть"
+            ],
+            "by": {
+              "expr": "@действующий"
+            },
+            "against": {
+              "expr": "первый(@цели)"
+            }
+          },
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "id": "бросок",
+            "type": "check",
+            "value": {
+              "expr": "@бросок_бросок"
+            },
+            "versus": {
+              "expr": "(0)"
+            },
+            "continueOn": "always"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.hp"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "меньшее из(@действующий.hp, @бросок.parts.надежда)"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@бросок.parts.надежда > @бросок.parts.страх"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.hp"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "0"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@бросок.parts.надежда == @бросок.parts.страх"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.stress"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "0"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@бросок.parts.надежда == @бросок.parts.страх"
+            }
+          },
+          {
+            "type": "status",
+            "mode": "remove",
+            "effect": {
+              "const": "death_move"
+            },
+            "to": {
+              "expr": "@цель"
+            }
+          },
+          {
+            "type": "status",
+            "mode": "apply",
+            "effect": {
+              "const": "dead"
+            },
+            "to": {
+              "expr": "@цель"
+            },
+            "when": {
+              "expr": "@бросок.parts.страх > @бросок.parts.надежда"
+            }
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "tend_wounds": {
+        "label": "Перевязать раны",
+        "group": "Отдых",
+        "activation": "manual",
+        "description": "Короткий отдых: снять 1к4 + ступень клеток хитов.",
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.hp"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "меньшее из(@действующий.hp, кинуть(\"1к4\") + @действующий.tier)"
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "status",
+            "mode": "remove",
+            "effect": {
+              "const": "unconscious"
+            },
+            "to": {
+              "expr": "@цель"
+            }
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "clear_stress": {
+        "label": "Снять Стресс",
+        "group": "Отдых",
+        "activation": "manual",
+        "description": "Короткий отдых: снять 1к4 + ступень Стресса.",
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.stress"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "меньшее из(@действующий.stress, кинуть(\"1к4\") + @действующий.tier)"
+            },
+            "targetModifiers": false
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "repair_armor": {
+        "label": "Починить доспех",
+        "group": "Отдых",
+        "activation": "manual",
+        "description": "Короткий отдых: освободить 1к4 + ступень бронеслотов.",
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.armor_marked"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "меньшее из(@действующий.armor_marked, кинуть(\"1к4\") + @действующий.tier)"
+            },
+            "targetModifiers": false
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "prepare": {
+        "label": "Подготовиться",
+        "group": "Отдых",
+        "activation": "manual",
+        "description": "Короткий или долгий отдых: получить Надежду; вместе с партией — по 2.",
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.hope"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "если(@вместе >= 1, 2, 1)"
+            },
+            "targetModifiers": false
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          },
+          {
+            "key": "вместе",
+            "label": "С партией: 1 — да, 0 — нет",
+            "kind": "number",
+            "ask": {
+              "by": "actor"
+            },
+            "min": 0,
+            "max": 1
+          }
+        ]
+      },
+      "tend_all": {
+        "label": "Залечить все раны",
+        "group": "Отдых",
+        "activation": "manual",
+        "description": "Долгий отдых: снять все хиты.",
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.hp"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "0"
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "status",
+            "mode": "remove",
+            "effect": {
+              "const": "unconscious"
+            },
+            "to": {
+              "expr": "@цель"
+            }
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "clear_all_stress": {
+        "label": "Снять весь Стресс",
+        "group": "Отдых",
+        "activation": "manual",
+        "description": "Долгий отдых: снять весь Стресс.",
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.stress"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "0"
+            },
+            "targetModifiers": false
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "repair_all": {
+        "label": "Починить весь доспех",
+        "group": "Отдых",
+        "activation": "manual",
+        "description": "Долгий отдых: освободить все бронеслоты.",
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.armor_marked"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "0"
+            },
+            "targetModifiers": false
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "gm_short_rest": {
+        "label": "Страх: короткий отдых",
+        "group": "Ведущий",
+        "activation": "manual",
+        "description": "Партия на коротком отдыхе — ведущий получает 1к4 Страха.",
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@стол.fear"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "кинуть(\"1к4\")"
+            },
+            "targetModifiers": false
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "gm_long_rest": {
+        "label": "Страх: долгий отдых",
+        "group": "Ведущий",
+        "activation": "manual",
+        "description": "Партия на долгом отдыхе — ведущий получает 1к4 + число героев Страха.",
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@стол.fear"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "кинуть(\"1к4\") + @героев"
+            },
+            "targetModifiers": false
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          },
+          {
+            "key": "героев",
+            "label": "Героев в партии",
+            "kind": "number",
+            "ask": {
+              "by": "gm"
+            },
+            "min": 1,
+            "max": 8
+          }
+        ]
+      },
+      "frontline_tank": {
+        "label": "Frontline Tank",
+        "group": "Способности Надежды",
+        "activation": "manual",
+        "description": "Страж: за 3 Надежды освободить 2 бронеслота.",
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.armor_marked"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "меньшее из(@действующий.armor_marked, 2)"
+            },
+            "targetModifiers": false
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "event": "spend",
+            "args": {
+              "what": {
+                "expr": "@действующий.hope"
+              },
+              "amount": {
+                "expr": "3"
+              },
+              "note": {
+                "expr": "\"нужно 3 Надежды\""
+              },
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            },
+            "strict": true
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "life_support": {
+        "label": "Life Support",
+        "group": "Способности Надежды",
+        "activation": "manual",
+        "description": "Серафим: за 3 Надежды снять клетку хитов у союзника в ближней дистанции.",
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.hp"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "меньшее из(@действующий.hp, 1)"
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "status",
+            "mode": "remove",
+            "effect": {
+              "const": "unconscious"
+            },
+            "to": {
+              "expr": "@цель"
+            }
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "event": "spend",
+            "args": {
+              "what": {
+                "expr": "@действующий.hope"
+              },
+              "amount": {
+                "expr": "3"
+              },
+              "note": {
+                "expr": "\"нужно 3 Надежды\""
+              },
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            },
+            "strict": true
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "no_mercy": {
+        "label": "No Mercy",
+        "group": "Способности Надежды",
+        "activation": "manual",
+        "description": "Воин: за 3 Надежды +1 к броскам атаки до следующего отдыха.",
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "status",
+            "mode": "apply",
+            "effect": {
+              "const": "merciless"
+            },
+            "to": {
+              "expr": "@цель"
+            }
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "event": "spend",
+            "args": {
+              "what": {
+                "expr": "@действующий.hope"
+              },
+              "amount": {
+                "expr": "3"
+              },
+              "note": {
+                "expr": "\"нужно 3 Надежды\""
+              },
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            },
+            "strict": true
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "rogues_dodge": {
+        "label": "Rogue’s Dodge",
+        "group": "Способности Надежды",
+        "activation": "manual",
+        "description": "Плут: за 3 Надежды +2 к уклонению, пока по вам не попадут атакой или до отдыха.",
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "status",
+            "mode": "apply",
+            "effect": {
+              "const": "dodging"
+            },
+            "to": {
+              "expr": "@цель"
+            }
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "event": "spend",
+            "args": {
+              "what": {
+                "expr": "@действующий.hope"
+              },
+              "amount": {
+                "expr": "3"
+              },
+              "note": {
+                "expr": "\"нужно 3 Надежды\""
+              },
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            },
+            "strict": true
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "make_a_scene": {
+        "label": "Make a Scene",
+        "group": "Способности Надежды",
+        "activation": "manual",
+        "description": "Бард: за 3 Надежды отвлечь цель в ближней дистанции — её Сложность −2.",
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "status",
+            "mode": "apply",
+            "effect": {
+              "const": "distracted"
+            },
+            "to": {
+              "expr": "@цель"
+            }
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "event": "spend",
+            "args": {
+              "what": {
+                "expr": "@действующий.hope"
+              },
+              "amount": {
+                "expr": "3"
+              },
+              "note": {
+                "expr": "\"нужно 3 Надежды\""
+              },
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            },
+            "strict": true
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "spend": {
+        "label": "Потратить",
+        "group": "Вызываемые",
+        "description": "Проверить, что запаса хватает, и отнять. Не хватает — действие обрывается.",
+        "activation": "manual",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true
+          },
+          {
+            "key": "what",
+            "label": "Что тратим",
+            "kind": "field"
+          },
+          {
+            "key": "amount",
+            "label": "Сколько",
+            "kind": "number"
+          },
+          {
+            "key": "note",
+            "label": "Если не хватает",
+            "kind": "text",
+            "optional": true
+          }
+        ],
+        "steps": [
+          {
+            "type": "check",
+            "value": {
+              "expr": "@what"
+            },
+            "versus": {
+              "expr": "(@amount)"
+            },
+            "note": {
+              "expr": "@note"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@what"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "@amount"
             },
             "targetModifiers": false
           }
@@ -1846,16 +2945,15 @@
         "description": "После броска двойственности: больше выпало на Надежде — Надежда герою; на Страхе — Страх ведущему; дубль — крит: Надежда и минус один Стресс.",
         "on": [
           {
-            "on": "done",
-            "of": "action_roll",
+            "on": "done:action_roll",
             "if": {
-              "expr": "@бросок.parts.надежда > @бросок.parts.страх"
+              "expr": "все(@действующий == @носитель, @бросок.parts.надежда > @бросок.parts.страх)"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "tag": "hope"
+                  "expr": "@носитель.hope"
                 },
                 "direction": "add",
                 "value": {
@@ -1866,16 +2964,15 @@
             ]
           },
           {
-            "on": "done",
-            "of": "action_roll",
+            "on": "done:action_roll",
             "if": {
-              "expr": "@бросок.parts.страх > @бросок.parts.надежда"
+              "expr": "все(@действующий == @носитель, @бросок.parts.страх > @бросок.parts.надежда)"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "tag": "fear"
+                  "expr": "@стол.fear"
                 },
                 "direction": "add",
                 "value": {
@@ -1886,16 +2983,15 @@
             ]
           },
           {
-            "on": "done",
-            "of": "action_roll",
+            "on": "done:action_roll",
             "if": {
-              "expr": "@бросок.parts.надежда == @бросок.parts.страх"
+              "expr": "все(@действующий == @носитель, @бросок.parts.надежда == @бросок.parts.страх)"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "tag": "hope"
+                  "expr": "@носитель.hope"
                 },
                 "direction": "add",
                 "value": {
@@ -1906,7 +3002,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "stress"
+                  "expr": "@носитель.stress"
                 },
                 "direction": "subtract",
                 "value": {
@@ -1914,22 +3010,21 @@
                 },
                 "targetModifiers": false,
                 "when": {
-                  "expr": "@stress >= 1"
+                  "expr": "@носитель.stress >= 1"
                 }
               }
             ]
           },
           {
-            "on": "done",
-            "of": "hero_attack",
+            "on": "done:hero_attack",
             "if": {
-              "expr": "@бросок.parts.надежда > @бросок.parts.страх"
+              "expr": "все(@действующий == @носитель, @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх)"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "tag": "hope"
+                  "expr": "@носитель.hope"
                 },
                 "direction": "add",
                 "value": {
@@ -1940,16 +3035,15 @@
             ]
           },
           {
-            "on": "done",
-            "of": "hero_attack",
+            "on": "done:hero_attack",
             "if": {
-              "expr": "@бросок.parts.страх > @бросок.parts.надежда"
+              "expr": "все(@действующий == @носитель, @бросок_бросок.parts.страх > @бросок_бросок.parts.надежда)"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "tag": "fear"
+                  "expr": "@стол.fear"
                 },
                 "direction": "add",
                 "value": {
@@ -1960,16 +3054,15 @@
             ]
           },
           {
-            "on": "done",
-            "of": "hero_attack",
+            "on": "done:hero_attack",
             "if": {
-              "expr": "@бросок.parts.надежда == @бросок.parts.страх"
+              "expr": "все(@действующий == @носитель, @бросок_бросок.parts.надежда == @бросок_бросок.parts.страх)"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "tag": "hope"
+                  "expr": "@носитель.hope"
                 },
                 "direction": "add",
                 "value": {
@@ -1980,7 +3073,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "stress"
+                  "expr": "@носитель.stress"
                 },
                 "direction": "subtract",
                 "value": {
@@ -1988,7 +3081,7 @@
                 },
                 "targetModifiers": false,
                 "when": {
-                  "expr": "@stress >= 1"
+                  "expr": "@носитель.stress >= 1"
                 }
               }
             ]
@@ -2012,7 +3105,9 @@
             "call": "roll",
             "param": "edits",
             "edit": "advantage",
-            "as": "against"
+            "if": {
+              "expr": "@против == @носитель"
+            }
           },
           {
             "tags": [
@@ -2022,7 +3117,9 @@
             "call": "roll",
             "param": "edits",
             "edit": "gm_advantage",
-            "as": "against"
+            "if": {
+              "expr": "@против == @носитель"
+            }
           }
         ]
       },
@@ -2043,7 +3140,9 @@
             "call": "roll",
             "param": "edits",
             "edit": "disadvantage",
-            "as": "against"
+            "if": {
+              "expr": "@против == @носитель"
+            }
           },
           {
             "tags": [
@@ -2053,7 +3152,9 @@
             "call": "roll",
             "param": "edits",
             "edit": "gm_disadvantage",
-            "as": "against"
+            "if": {
+              "expr": "@против == @носитель"
+            }
           }
         ]
       },
@@ -2079,12 +3180,18 @@
         "on": [
           {
             "on": "field:stress_full",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
             "steps": [
               {
                 "type": "status",
                 "mode": "apply",
                 "effect": {
                   "const": "vulnerable"
+                },
+                "to": {
+                  "expr": "@носитель"
                 }
               }
             ]
@@ -2103,12 +3210,18 @@
         "on": [
           {
             "on": "field:stress_free",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
             "steps": [
               {
                 "type": "status",
                 "mode": "remove",
                 "effect": {
                   "const": "vulnerable"
+                },
+                "to": {
+                  "expr": "@носитель"
                 }
               }
             ]
@@ -2137,173 +3250,21 @@
         "on": [
           {
             "on": "field:down",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
             "steps": [
               {
                 "type": "status",
                 "mode": "apply",
                 "effect": {
                   "const": "death_move"
+                },
+                "to": {
+                  "expr": "@носитель"
                 }
               }
             ]
-          }
-        ]
-      },
-      "blaze_of_glory": {
-        "label": "Сгореть во славе",
-        "group": "Смертельные ходы",
-        "activation": "manual",
-        "description": "Последнее действие автоматически критически удаётся (с одобрения ведущего), затем герой уходит за завесу смерти.",
-        "steps": [
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "death_move"
-            }
-          },
-          {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "const": "dead"
-            }
-          }
-        ]
-      },
-      "avoid_death": {
-        "label": "Избежать смерти",
-        "group": "Смертельные ходы",
-        "activation": "manual",
-        "description": "Герой без сознания до лечения клетки хитов или долгого отдыха. Кость Надежды не больше уровня — шрам: вычеркнуть клетку Надежды.",
-        "steps": [
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "death_move"
-            }
-          },
-          {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "const": "unconscious"
-            }
-          },
-          {
-            "id": "шрам",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "hope_die"
-              },
-              "tags": [
-                "смерть"
-              ]
-            },
-            "versus": {
-              "expr": "@level"
-            },
-            "successWhen": "notOver",
-            "continueOn": "always"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "scars"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "1"
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@шрам.success"
-            }
-          }
-        ]
-      },
-      "risk_it_all": {
-        "label": "Рискнуть всем",
-        "group": "Смертельные ходы",
-        "activation": "manual",
-        "description": "Кости двойственности: больше на Надежде — на ногах и снять хиты по значению кости Надежды; на Страхе — смерть; дубль — снять все хиты и весь Стресс.",
-        "steps": [
-          {
-            "id": "бросок",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "duality"
-              },
-              "tags": [
-                "смерть"
-              ]
-            },
-            "versus": {
-              "expr": "0"
-            },
-            "continueOn": "always"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hp"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "меньшее из(@hp, @бросок.parts.надежда)"
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@бросок.parts.надежда > @бросок.parts.страх"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hp"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "0"
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@бросок.parts.надежда == @бросок.parts.страх"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "stress"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "0"
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@бросок.parts.надежда == @бросок.parts.страх"
-            }
-          },
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "death_move"
-            }
-          },
-          {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "const": "dead"
-            },
-            "when": {
-              "expr": "@бросок.parts.страх > @бросок.parts.надежда"
-            }
           }
         ]
       },
@@ -2327,329 +3288,6 @@
         "description": "Не двигается и не действует, по нему нельзя атаковать. Приходит в себя, когда союзник снимет клетку хитов или после долгого отдыха.",
         "modifiers": []
       },
-      "tend_wounds": {
-        "label": "Перевязать раны",
-        "group": "Отдых",
-        "activation": "manual",
-        "description": "Короткий отдых: снять 1к4 + ступень клеток хитов.",
-        "steps": [
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hp"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "меньшее из(@hp, кинуть(\"1к4\") + @tier)"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "unconscious"
-            }
-          }
-        ]
-      },
-      "clear_stress": {
-        "label": "Снять Стресс",
-        "group": "Отдых",
-        "activation": "manual",
-        "description": "Короткий отдых: снять 1к4 + ступень Стресса.",
-        "steps": [
-          {
-            "type": "apply",
-            "target": {
-              "tag": "stress"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "меньшее из(@stress, кинуть(\"1к4\") + @tier)"
-            },
-            "targetModifiers": false
-          }
-        ]
-      },
-      "repair_armor": {
-        "label": "Починить доспех",
-        "group": "Отдых",
-        "activation": "manual",
-        "description": "Короткий отдых: освободить 1к4 + ступень бронеслотов.",
-        "steps": [
-          {
-            "type": "apply",
-            "target": {
-              "tag": "armor_marked"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "меньшее из(@armor_marked, кинуть(\"1к4\") + @tier)"
-            },
-            "targetModifiers": false
-          }
-        ]
-      },
-      "prepare": {
-        "label": "Подготовиться",
-        "group": "Отдых",
-        "activation": "manual",
-        "description": "Короткий или долгий отдых: получить Надежду; вместе с партией — по 2.",
-        "steps": [
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hope"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "если(@вместе >= 1, 2, 1)"
-            },
-            "targetModifiers": false
-          }
-        ],
-        "params": [
-          {
-            "key": "вместе",
-            "label": "С партией: 1 — да, 0 — нет",
-            "kind": "number",
-            "ask": {
-              "by": "actor"
-            },
-            "min": 0,
-            "max": 1
-          }
-        ]
-      },
-      "tend_all": {
-        "label": "Залечить все раны",
-        "group": "Отдых",
-        "activation": "manual",
-        "description": "Долгий отдых: снять все хиты.",
-        "steps": [
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hp"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "0"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "unconscious"
-            }
-          }
-        ]
-      },
-      "clear_all_stress": {
-        "label": "Снять весь Стресс",
-        "group": "Отдых",
-        "activation": "manual",
-        "description": "Долгий отдых: снять весь Стресс.",
-        "steps": [
-          {
-            "type": "apply",
-            "target": {
-              "tag": "stress"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "0"
-            },
-            "targetModifiers": false
-          }
-        ]
-      },
-      "repair_all": {
-        "label": "Починить весь доспех",
-        "group": "Отдых",
-        "activation": "manual",
-        "description": "Долгий отдых: освободить все бронеслоты.",
-        "steps": [
-          {
-            "type": "apply",
-            "target": {
-              "tag": "armor_marked"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "0"
-            },
-            "targetModifiers": false
-          }
-        ]
-      },
-      "gm_short_rest": {
-        "label": "Страх: короткий отдых",
-        "group": "Ведущий",
-        "activation": "manual",
-        "description": "Партия на коротком отдыхе — ведущий получает 1к4 Страха.",
-        "steps": [
-          {
-            "type": "apply",
-            "target": {
-              "tag": "fear"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "кинуть(\"1к4\")"
-            },
-            "targetModifiers": false
-          }
-        ]
-      },
-      "gm_long_rest": {
-        "label": "Страх: долгий отдых",
-        "group": "Ведущий",
-        "activation": "manual",
-        "description": "Партия на долгом отдыхе — ведущий получает 1к4 + число героев Страха.",
-        "steps": [
-          {
-            "type": "apply",
-            "target": {
-              "tag": "fear"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "кинуть(\"1к4\") + @героев"
-            },
-            "targetModifiers": false
-          }
-        ],
-        "params": [
-          {
-            "key": "героев",
-            "label": "Героев в партии",
-            "kind": "number",
-            "ask": {
-              "by": "gm"
-            },
-            "min": 1,
-            "max": 8
-          }
-        ]
-      },
-      "frontline_tank": {
-        "label": "Frontline Tank",
-        "group": "Способности Надежды",
-        "activation": "manual",
-        "description": "Страж: за 3 Надежды освободить 2 бронеслота.",
-        "steps": [
-          {
-            "type": "apply",
-            "target": {
-              "tag": "armor_marked"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "меньшее из(@armor_marked, 2)"
-            },
-            "targetModifiers": false
-          }
-        ],
-        "cost": [
-          {
-            "type": "emit",
-            "event": "spend",
-            "strict": true,
-            "args": {
-              "what": {
-                "expr": "@hope"
-              },
-              "amount": {
-                "expr": "3"
-              },
-              "note": {
-                "expr": "\"нужно 3 Надежды\""
-              }
-            }
-          }
-        ]
-      },
-      "life_support": {
-        "label": "Life Support",
-        "group": "Способности Надежды",
-        "activation": "manual",
-        "description": "Серафим: за 3 Надежды снять клетку хитов у союзника в ближней дистанции.",
-        "steps": [
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hp"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "меньшее из(@hp, 1)"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "unconscious"
-            }
-          }
-        ],
-        "cost": [
-          {
-            "type": "emit",
-            "event": "spend",
-            "strict": true,
-            "args": {
-              "what": {
-                "expr": "@hope"
-              },
-              "amount": {
-                "expr": "3"
-              },
-              "note": {
-                "expr": "\"нужно 3 Надежды\""
-              }
-            }
-          }
-        ]
-      },
-      "no_mercy": {
-        "label": "No Mercy",
-        "group": "Способности Надежды",
-        "activation": "manual",
-        "description": "Воин: за 3 Надежды +1 к броскам атаки до следующего отдыха.",
-        "steps": [
-          {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "const": "merciless"
-            }
-          }
-        ],
-        "cost": [
-          {
-            "type": "emit",
-            "event": "spend",
-            "strict": true,
-            "args": {
-              "what": {
-                "expr": "@hope"
-              },
-              "amount": {
-                "expr": "3"
-              },
-              "note": {
-                "expr": "\"нужно 3 Надежды\""
-              }
-            }
-          }
-        ]
-      },
       "merciless": {
         "label": "Без пощады",
         "group": "Состояния",
@@ -2669,6 +3307,9 @@
             "op": "add",
             "value": {
               "expr": "1"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель"
             }
           }
         ],
@@ -2681,6 +3322,9 @@
                 "mode": "remove",
                 "effect": {
                   "const": "merciless"
+                },
+                "to": {
+                  "expr": "@носитель"
                 }
               }
             ]
@@ -2693,42 +3337,12 @@
                 "mode": "remove",
                 "effect": {
                   "const": "merciless"
+                },
+                "to": {
+                  "expr": "@носитель"
                 }
               }
             ]
-          }
-        ]
-      },
-      "rogues_dodge": {
-        "label": "Rogue’s Dodge",
-        "group": "Способности Надежды",
-        "activation": "manual",
-        "description": "Плут: за 3 Надежды +2 к уклонению, пока по вам не попадут атакой или до отдыха.",
-        "steps": [
-          {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "const": "dodging"
-            }
-          }
-        ],
-        "cost": [
-          {
-            "type": "emit",
-            "event": "spend",
-            "strict": true,
-            "args": {
-              "what": {
-                "expr": "@hope"
-              },
-              "amount": {
-                "expr": "3"
-              },
-              "note": {
-                "expr": "\"нужно 3 Надежды\""
-              }
-            }
           }
         ]
       },
@@ -2753,14 +3367,19 @@
         ],
         "on": [
           {
-            "on": "affected",
-            "of": "event:damage",
+            "on": "after:damage",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
             "steps": [
               {
                 "type": "status",
                 "mode": "remove",
                 "effect": {
                   "const": "dodging"
+                },
+                "to": {
+                  "expr": "@носитель"
                 }
               }
             ]
@@ -2773,6 +3392,9 @@
                 "mode": "remove",
                 "effect": {
                   "const": "dodging"
+                },
+                "to": {
+                  "expr": "@носитель"
                 }
               }
             ]
@@ -2785,42 +3407,12 @@
                 "mode": "remove",
                 "effect": {
                   "const": "dodging"
+                },
+                "to": {
+                  "expr": "@носитель"
                 }
               }
             ]
-          }
-        ]
-      },
-      "make_a_scene": {
-        "label": "Make a Scene",
-        "group": "Способности Надежды",
-        "activation": "manual",
-        "description": "Бард: за 3 Надежды отвлечь цель в ближней дистанции — её Сложность −2.",
-        "steps": [
-          {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "const": "distracted"
-            }
-          }
-        ],
-        "cost": [
-          {
-            "type": "emit",
-            "event": "spend",
-            "strict": true,
-            "args": {
-              "what": {
-                "expr": "@hope"
-              },
-              "amount": {
-                "expr": "3"
-              },
-              "note": {
-                "expr": "\"нужно 3 Надежды\""
-              }
-            }
           }
         ]
       },
@@ -2841,56 +3433,6 @@
               "expr": "-2"
             },
             "stacking": "sum"
-          }
-        ]
-      },
-      "spend": {
-        "label": "Потратить",
-        "group": "Вызываемые",
-        "description": "Проверить, что запаса хватает, и отнять. Не хватает — действие обрывается.",
-        "activation": "manual",
-        "params": [
-          {
-            "key": "what",
-            "label": "Что тратим",
-            "kind": "tag"
-          },
-          {
-            "key": "amount",
-            "label": "Сколько",
-            "kind": "number"
-          },
-          {
-            "key": "note",
-            "label": "Если не хватает",
-            "kind": "text",
-            "optional": true
-          }
-        ],
-        "steps": [
-          {
-            "type": "compare",
-            "value": {
-              "expr": "@what"
-            },
-            "versus": {
-              "expr": "@amount"
-            },
-            "breakIf": "less",
-            "note": {
-              "expr": "@note"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "param": "what"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "@amount"
-            },
-            "targetModifiers": false
           }
         ]
       }

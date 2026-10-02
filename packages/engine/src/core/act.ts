@@ -1,6 +1,6 @@
 import { actionOf, effectLabelOf } from '../events/actions.ts';
 import { requireEffect, isPipeline } from '../engine/effects.ts';
-import { releaseHolder, holderOf, sharedHolderOf } from '../events/bonds.ts';
+import { releaseHolder } from '../events/bonds.ts';
 import { refusalWords } from '../events/refusal.ts';
 import { propsOf, entryOf } from '../model/owned.ts';
 import { EngineError } from '../engine/errors.ts';
@@ -8,23 +8,24 @@ import { render } from './render.ts';
 import { External, Pause, emptyJournal } from './external.ts';
 import { Path } from './path.ts';
 import { Run, newSink, reportOf } from './run.ts';
-import { runnerOf, onceStep } from './steps.ts';
+import { runnerOf } from './steps.ts';
+import { keysOf } from './subs.ts';
 import { CUT_WORDS } from './limits.ts';
 import type { Journal, Mode, Question } from './external.ts';
-import type { Frame, Memo, Delivery, Delivered, Claims } from './run.ts';
+import type { Frame, Delivery, Delivered, Claims, Lazy } from './run.ts';
+import type { Bound } from '../engine/refs.ts';
 import type { Entry } from './log.ts';
 import type { RollResult } from './dice.ts';
 import type { StepData } from './steps.ts';
 import type { Clock } from '../engine/clock.ts';
-import type { System, Sheet, Compendium, Die } from '../model/types.ts';
+import type { System, Sheet, Compendium, Die, Effect, Binding, TableFill } from '../model/types.ts';
 
 export interface ActIntent {
   actionId: string;
   fromId: string;
   toIds: string[];
   inputs?: Record<string, number | string>;
-  edits?: string[];
-  targetEdits?: string[];
+  claims?: Record<string, string[]>;
 }
 
 export interface ActWorld {
@@ -66,121 +67,140 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
   }
 }
 
+export function tableOf(binding: Binding, effect: Effect): Record<string, TableFill> {
+  if (binding.table) return binding.table;
+  const sheets = (effect.params ?? []).filter(param => param.kind === 'sheet');
+  const actor = sheets.find(param => !param.many);
+  const targets = sheets.find(param => param.many);
+  return { ...(actor ? { [actor.key]: 'actor' as const } : {}), ...(targets ? { [targets.key]: 'targets' as const } : {}) };
+}
+
 export function runAct(run: Run, intent: ActIntent, root: Path): void {
   const { system, compendium } = run.world;
   const { state } = run;
   const targets = [...new Set(intent.toIds)];
-  {
-    const action = actionOf(intent.actionId, { system, compendium });
-    const effect = requireEffect(system, action.effect, `действие «${action.label}»`);
-    if (!isPipeline(effect)) {
-      throw new EngineError(`действие «${action.label}» зовёт пассивный эффект «${effect.label || action.effect}» — его вешают, а не применяют`);
-    }
-    const actor = intent.fromId;
-    const actorSheet = run.sheet(actor);
-    if (!actorSheet) throw new EngineError(`в комнате нет листа «${actor}»`);
-    for (const id of targets) if (!run.sheet(id)) throw new EngineError(`в комнате нет листа «${id}»`);
-    const inputs = intent.inputs && Object.keys(intent.inputs).length ? intent.inputs : undefined;
-    const args = (action.binding.args || {}) as Record<string, unknown>;
-    const props = propsOf(action.record, system, entryOf(actorSheet, action.record.id));
-    const paramDefs = effect.params ?? [];
-    const claims: Claims = {
-      ...(intent.edits?.length ? { sender: intent.edits } : {}),
-      ...(intent.targetEdits?.length ? { receiver: intent.targetEdits } : {}),
-    };
-
-    const top = (path: Path, owner: string, extra: Partial<Frame> = {}): Frame => ({
-      path, effectId: action.effect, label: action.label, owner,
-      here: actor, names: actor, sender: actor, receiver: null, opponent: targets[0] ?? null,
-      args, paramDefs, props, ...(inputs ? { inputs } : {}), claims, actor: false, hop: 0, source: actor, ...extra,
-    });
-
-    if (effect.cost?.length) {
-      const sink = newSink();
-      const ran = run.exec(top(root.phase('cost'), `стоимость действия «${action.label}»`, { opponent: null, alone: true }), effect.cost, sink);
-      const report = reportOf('cost', action.effect, actor, action.label, sink, ran.stopped, false);
-      const why = refusalWords(report, system);
-      if (why) throw new EngineError(`«${action.label}» не состоялось: ${why}`);
-      if (sink.changes.length || sink.effects.length || sink.removed.length) state.write({ fromId: actor, toId: actor, report });
-      state.write(...sink.after);
-    }
-
-    const shared = sharedHolderOf(system, action.effect);
-    if (shared) {
-      const released = releaseHolder(system, [...state.sheets], actor, shared);
-      state.replace(released.sheets);
-      for (const broken of released.broken) {
-        state.write({ text: `«${effectLabelOf(system, broken.effectId)}» спало с ${run.sheet(broken.sheetId)?.name ?? broken.sheetId}: наложивший взялся за новое` });
-      }
-    }
-
-    const steps = effect.steps ?? [];
-    const split = steps.findIndex(step => runnerOf(step.type).splits === true);
-    const label = `эффект «${effect.label || action.effect}»`;
-    let body = steps;
-    let seed: Record<string, unknown> = {};
-    let rolls: Record<string, RollResult> = {};
-    let memo: Memo | undefined;
-
-    if (split >= 0) {
-      const sink = newSink();
-      const ran = run.exec(top(root, label), steps.slice(0, split), sink);
-      if (ran.stopped) {
-        const why = refusalWords(reportOf('effect', action.effect, actor, action.label, sink, ran.stopped, false), system);
-        throw new EngineError(`«${action.label}» не состоялось: ${why ?? 'цепочка оборвана'}`);
-      }
-      if (sink.changes.length || sink.effects.length || sink.removed.length) {
-        state.write({ fromId: actor, toId: actor, report: reportOf('effect', action.effect, actor, action.label, sink, null, false) });
-      }
-      state.write(...sink.after);
-      body = steps.slice(split + 1);
-      seed = ran.results;
-      rolls = ran.rolls;
-    } else {
-      const stepIds = new Set(steps.map(step => step.id).filter((id): id is string => typeof id === 'string' && id !== ''));
-      memo = { top: top(root, label), steps, stepIds };
-      const gate = steps.findIndex(step => onceStep(step as StepData) && runnerOf(step.type).mayBreak === true);
-      steps.forEach((step, index) => {
-        if (onceStep(step as StepData) && (gate < 0 || index <= gate)) run.memoized(memo!, index);
-      });
-    }
-
-    const holder = holderOf(action.effect, effect);
-    const delivered: Record<string, Delivered> = {};
-    const calls: Delivery[] = targets.map(to => ({
-      from: actor, to, effectId: action.effect, label: action.label, steps: body, path: root.at(to), hop: 0, top: true,
-      seed, args, paramDefs, props, ...(inputs ? { inputs } : {}), claims, ...(memo ? { memo } : {}),
-      ...(Object.keys(rolls).length ? { rolls } : {}),
-    }));
-    run.group(calls, (out, entries) => {
-      if (holder) {
-        const caster = run.sheet(actor)!;
-        if (!(caster.effects ?? []).some(entry => entry.effectId === holder)) {
-          state.put({ ...caster, effects: [...(caster.effects ?? []), { effectId: holder }] });
-        }
-      }
-      const sink = newSink();
-      run.fire('acted', 'action', actor, action.effect, out.emitted, out.results, out.call.to, out.call.path.phase('acted'), 0, sink);
-      for (const report of sink.reactions) entries.push({ fromId: actor, toId: actor, report });
-      entries.push(...sink.after);
-      delivered[out.call.to] = out;
-    }, entries => state.write(...entries));
-
-    const summaries: Record<string, RollResult> = { ...rolls };
-    if (memo) {
-      steps.forEach((step, index) => {
-        const id = (step as StepData).id;
-        const made = state.memo(root.step(id ?? index).key) as { summary?: RollResult } | undefined;
-        if (id != null && made?.summary) summaries[id] = made.summary;
-      });
-    }
-    const table = targets.filter(id => delivered[id]).map(id => ({ ...delivered[id]!.results, лист: id }));
-    const done = newSink();
-    run.fire('done', 'any', actor, action.effect, targets.flatMap(id => delivered[id]?.emitted ?? []),
-      { ...summaries, цели: table }, null, root.phase('done'), 0, done);
-    for (const report of done.reactions) state.write({ fromId: actor, toId: actor, report });
-    state.write(...done.after);
+  const action = actionOf(intent.actionId, { system, compendium });
+  const effect = requireEffect(system, action.effect, `действие «${action.label}»`);
+  if (!isPipeline(effect)) {
+    throw new EngineError(`действие «${action.label}» зовёт пассивный эффект «${effect.label || action.effect}» — его вешают, а не применяют`);
   }
+  const actor = intent.fromId;
+  const actorSheet = run.sheet(actor);
+  if (!actorSheet) throw new EngineError(`в комнате нет листа «${actor}»`);
+  for (const id of targets) if (!run.sheet(id)) throw new EngineError(`в комнате нет листа «${id}»`);
+  const inputs = intent.inputs && Object.keys(intent.inputs).length ? intent.inputs : undefined;
+  const args = (action.binding.args || {}) as Record<string, unknown>;
+  const props = propsOf(action.record, system, entryOf(actorSheet, action.record.id));
+  const paramDefs = effect.params ?? [];
+  const claims: Claims = intent.claims ?? {};
+  const table = tableOf(action.binding, effect);
+
+  const bound: Record<string, Bound> = { носитель: actor };
+  for (const param of paramDefs) {
+    if (param.kind !== 'sheet') continue;
+    bound[param.key] = table[param.key] === 'actor' ? actor : table[param.key] === 'targets' ? (param.many ? targets : targets[0] ?? null) : null;
+  }
+  const bondSheet = effect.bond ? bound[effect.bond.by] : null;
+  const bond = effect.bond && typeof bondSheet === 'string' ? { sheet: bondSheet, by: effect.bond.effect } : undefined;
+
+  const top = (path: Path, owner: string, extra: Partial<Frame> = {}): Frame => ({
+    path, effectId: action.effect, label: action.label, owner, home: actor, bound,
+    args, paramDefs, props, ...(inputs ? { inputs } : {}), claims, hop: 0, inSub: false, ...(bond ? { bond } : {}), ...extra,
+  });
+
+  if (effect.cost?.length) {
+    const sink = newSink();
+    const ran = run.exec(top(root.phase('cost'), `стоимость действия «${action.label}»`, { alone: true }), effect.cost, sink);
+    const report = reportOf('cost', action.effect, actor, action.label, sink, ran.stopped, false);
+    const why = refusalWords(report, system);
+    if (why) throw new EngineError(`«${action.label}» не состоялось: ${why}`);
+    if (sink.changes.length || sink.effects.length || sink.removed.length) state.write({ fromId: actor, toId: actor, report });
+    state.write(...sink.after);
+  }
+
+  if (effect.bond && bond) {
+    const released = releaseHolder(system, [...state.sheets], bond.sheet, bond.by);
+    state.replace(released.sheets);
+    for (const broken of released.broken) {
+      state.write({ text: `«${effectLabelOf(system, broken.effectId)}» спало с ${run.sheet(broken.sheetId)?.name ?? broken.sheetId}: наложивший взялся за новое` });
+    }
+  }
+
+  const steps = effect.steps ?? [];
+  const split = steps.findIndex(step => runnerOf(step.type).splits === true);
+  const label = `эффект «${effect.label || action.effect}»`;
+  const keys = keysOf(system, action.effect, true);
+  let calls: Delivery[];
+  let lazy: Lazy | undefined;
+  let shared: Record<string, unknown> = {};
+  let sharedRolls: Record<string, RollResult> = {};
+
+  const base = {
+    effectId: action.effect, label: action.label, hop: 0, top: true, home: actor, keys,
+    args, paramDefs, props, ...(inputs ? { inputs } : {}), claims, ...(bond ? { bond } : {}),
+  };
+
+  if (split >= 0) {
+    const each = steps[split] as StepData;
+    const pre = steps.slice(0, split);
+    const isLazy = (step: StepData): boolean => step.type === 'roll' && (step.by === undefined || step.by === null) && typeof step.id === 'string';
+    const preFrame = top(root, label);
+    lazy = {
+      frame: preFrame,
+      steps: new Map(pre.flatMap((step, index) => (isLazy(step as StepData) ? [[String(step.id), { step: step as StepData, index }] as const] : []))),
+      stepIds: new Set(pre.map(step => step.id).filter((id): id is string => typeof id === 'string' && id !== '')),
+    };
+    preFrame.lazy = lazy;
+    const sink = newSink();
+    const ran = run.exec(preFrame, pre.filter(step => !isLazy(step as StepData)), sink);
+    if (ran.stopped) {
+      const why = refusalWords(reportOf('effect', action.effect, actor, action.label, sink, ran.stopped, false), system);
+      throw new EngineError(`«${action.label}» не состоялось: ${why ?? 'цепочка оборвана'}`);
+    }
+    if (sink.changes.length || sink.effects.length || sink.removed.length) {
+      state.write({ fromId: actor, toId: actor, report: reportOf('effect', action.effect, actor, action.label, sink, null, false) });
+    }
+    state.write(...sink.after);
+    shared = ran.results;
+    sharedRolls = ran.rolls;
+    const rolls: Record<string, RollResult> = ran.rolls;
+    const of = String(each.of ?? '');
+    const as = String(each.as ?? '');
+    const list = bound[of];
+    const ids = Array.isArray(list) ? list : typeof list === 'string' ? [list] : [];
+    calls = ids.map((to): Delivery => ({
+      ...base, steps: steps.slice(split + 1), path: root.at(to), subject: to, bound: { ...bound, [as]: to },
+      seed: ran.results, ...(Object.keys(rolls).length ? { rolls } : {}), lazy: lazy!,
+    }));
+  } else {
+    calls = [{ ...base, steps, path: root, subject: null, bound }];
+  }
+
+  const delivered: Delivered[] = [];
+  run.group(calls, root, out => {
+    if (bond) {
+      const holder = run.sheet(bond.sheet)!;
+      if (!(holder.effects ?? []).some(entry => entry.effectId === bond.by)) {
+        state.put({ ...holder, effects: [...(holder.effects ?? []), { effectId: bond.by }] });
+      }
+    }
+    delivered.push(out);
+  }, entries => state.write(...entries));
+
+  const summaries: Record<string, unknown> = { ...shared };
+  const doneRolls: Record<string, RollResult> = { ...sharedRolls };
+  for (const id of lazy?.steps.keys() ?? []) {
+    const made = state.memo(root.step(id).key) as { value: unknown; roll?: RollResult } | undefined;
+    if (made) summaries[id] = made.value;
+    if (made?.roll) doneRolls[id] = made.roll;
+  }
+  const rows = delivered.filter(out => out.call.subject).map(out => ({ ...out.results, лист: out.call.subject }));
+  const sink = newSink();
+  const seed = { ...summaries, цели: rows };
+  run.hear({ keys: keys.map(key => `done:${key}`), names: bound, seed, rolls: doneRolls, path: root.phase('done'), hop: 0, owner: sub => `«${sub.effect.label || sub.effectId}» — «${action.label}» завершено` }, sink);
+  for (const report of sink.reactions) state.write({ fromId: actor, toId: actor, report });
+  state.write(...sink.after);
+  state.write(...run.window('done', keys.map(key => `done:${key}`), bound, seed, root, action.label, doneRolls));
 }
 
 export { CUT_WORDS };

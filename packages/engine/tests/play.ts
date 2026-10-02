@@ -38,8 +38,10 @@ export function exchange(args: PlayArgs): Played {
     }, {
       actionId: args.actionId, fromId: args.fromId, toIds,
       ...(args.inputs ? { inputs: args.inputs } : {}),
-      ...(args.claims?.source?.length ? { edits: args.claims.source } : {}),
-      ...(args.claims?.target?.length ? { targetEdits: args.claims.target } : {}),
+      ...(args.claims ? { claims: {
+        ...(args.claims.source?.length ? { [args.fromId]: args.claims.source } : {}),
+        ...(args.claims.target?.length && toIds[0] ? { [toIds[0]]: args.claims.target } : {}),
+      } } : {}),
     });
     if (out.kind === 'done') {
       const reports = out.entries.filter((entry): entry is Exclude<Entry, { text: string }> => !('text' in entry));

@@ -116,7 +116,7 @@ function rowPath(system: System, tableId: string, row: TableRow, path: string[])
     if (!target) throw new EngineError(`${where}: «${String(cell)}» нет в таблице «${column.from}»`);
     return rowPath(system, column.from!, target, rest);
   }
-  if (column.kind === 'tag') return `@${String(cell)}${rest.length ? `.${rest.join('.')}` : ''}`;
+  if (column.kind === 'field') return `@${String(cell)}${rest.length ? `.${rest.join('.')}` : ''}`;
   if (rest.length) throw new EngineError(`${where}: «${column.label || head}» — не ссылка, дальше идти некуда`);
   return literal(cell);
 }

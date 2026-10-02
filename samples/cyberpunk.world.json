@@ -530,7 +530,7 @@
           {
             "key": "stat",
             "label": "Характеристика",
-            "kind": "tag"
+            "kind": "field"
           },
           {
             "key": "start",
@@ -1239,6 +1239,17 @@
         "activation": "manual",
         "params": [
           {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          },
+          {
             "key": "damage_type",
             "label": "Тип урона",
             "kind": "choice",
@@ -1284,6 +1295,57 @@
         ],
         "steps": [
           {
+            "type": "roll",
+            "fixed": {
+              "expr": "(@действующий.skills.пистолеты.total)"
+            },
+            "bonus": {
+              "expr": "(@spend_luck - если(@aim == \"по голове\", 8, 0))"
+            },
+            "id": "прицел"
+          },
+          {
+            "id": "hit_бросок",
+            "type": "roll",
+            "die": {
+              "constant": "lead_die"
+            },
+            "bonus": {
+              "expr": "@прицел"
+            },
+            "tags": [
+              "атака"
+            ],
+            "by": {
+              "expr": "@действующий"
+            },
+            "against": {
+              "expr": "первый(@цели)"
+            }
+          },
+          {
+            "type": "roll",
+            "fixed": {
+              "expr": "(кинуть(@damage_dice))"
+            },
+            "id": "dmg"
+          },
+          {
+            "type": "roll",
+            "fixed": {
+              "expr": "(5)"
+            },
+            "when": {
+              "expr": "@dmg.atMax >= 2"
+            },
+            "id": "boom"
+          },
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
             "id": "dv",
             "type": "table",
             "table": {
@@ -1294,51 +1356,13 @@
             }
           },
           {
-            "id": "прицел",
-            "type": "amount",
-            "source": "item",
-            "fixed": {
-              "expr": "@отправитель.skills.пистолеты.total"
-            },
-            "bonus": {
-              "expr": "@spend_luck - если(@aim == \"по голове\", 8, 0)"
-            }
-          },
-          {
             "id": "hit",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "lead_die"
-              },
-              "bonus": {
-                "expr": "@прицел"
-              },
-              "tags": [
-                "атака"
-              ]
+            "type": "check",
+            "value": {
+              "expr": "@hit_бросок"
             },
             "versus": {
-              "expr": "@dv"
-            }
-          },
-          {
-            "id": "dmg",
-            "type": "amount",
-            "source": "item",
-            "fixed": {
-              "expr": "кинуть(@damage_dice)"
-            }
-          },
-          {
-            "id": "boom",
-            "type": "amount",
-            "source": "item",
-            "fixed": {
-              "expr": "5"
-            },
-            "when": {
-              "expr": "@dmg.atMax >= 2"
+              "expr": "(@dv)"
             }
           },
           {
@@ -1353,15 +1377,18 @@
               },
               "aim": {
                 "expr": "@aim"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           },
           {
             "type": "emit",
             "event": "damage",
-            "when": {
-              "expr": "@dmg.atMax >= 2"
-            },
             "args": {
               "amount": {
                 "expr": "@boom"
@@ -1371,7 +1398,16 @@
               },
               "aim": {
                 "expr": "@aim"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
+            },
+            "when": {
+              "expr": "@dmg.atMax >= 2"
             }
           }
         ],
@@ -1380,12 +1416,20 @@
           {
             "type": "emit",
             "event": "cost_action",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            },
             "strict": true
           },
           {
             "type": "apply",
             "target": {
-              "tag": "luck_left"
+              "expr": "@действующий.luck_left"
             },
             "direction": "subtract",
             "value": {
@@ -1393,6 +1437,9 @@
             },
             "targetModifiers": false
           }
+        ],
+        "tags": [
+          "атака"
         ]
       },
       "injury_roll": {
@@ -1400,8 +1447,25 @@
         "icon": "🩸",
         "description": "Две шестёрки на костях урона — травма по таблице.",
         "activation": "manual",
-        "params": [],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ],
         "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
           {
             "id": "что",
             "type": "table",
@@ -1415,7 +1479,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "injury"
+              "expr": "@цель.injury"
             },
             "direction": "set",
             "value": {
@@ -1426,250 +1490,27 @@
         ],
         "group": "Состояния"
       },
-      "wired": {
-        "label": "Вживлённые рефлексы",
-        "icon": "⚡",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "description": "Имплант: преимущество на броски атаки.",
-        "modifiers": [
-          {
-            "tags": [
-              "атака"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "advantage"
-          }
-        ],
-        "group": "Состояния"
-      },
-      "bleeding": {
-        "label": "Кровотечение",
-        "icon": "🩸",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "description": "В начале своего хода теряешь 2 хита мимо брони, пока рану не заткнут.",
-        "params": [],
-        "group": "Состояния",
-        "on": [
-          {
-            "on": "moment:turn-start",
-            "steps": [
-              {
-                "type": "emit",
-                "event": "damage",
-                "args": {
-                  "amount": {
-                    "expr": "2"
-                  },
-                  "damage_type": {
-                    "expr": "\"кровотечение\""
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "serious_wound_rule": {
-        "label": "Тяжёлая рана",
-        "icon": "🩹",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "description": "Хиты ниже половины максимума — минус два ко всем проверкам и атакам (спасброски — без штрафа).",
-        "modifiers": [
-          {
-            "condition": {
-              "expr": "@seriously"
-            },
-            "tags": [
-              "атака"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "bonus",
-            "op": "add",
-            "value": {
-              "expr": "-2"
-            }
-          },
-          {
-            "condition": {
-              "expr": "@seriously"
-            },
-            "tags": [
-              "проверка"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "bonus",
-            "op": "add",
-            "value": {
-              "expr": "-2"
-            }
-          }
-        ],
-        "group": "Состояния"
-      },
-      "crit_rule": {
-        "label": "Критический бросок",
-        "icon": "🎲",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "description": "Десятка на ведущей кости проверки или атаки — бросаешь ещё и прибавляешь; единица — бросаешь ещё и вычитаешь. Спасброски — без этого.",
-        "modifiers": [
-          {
-            "tags": [
-              "атака"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "crit_up"
-          },
-          {
-            "tags": [
-              "атака"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "crit_down"
-          },
-          {
-            "tags": [
-              "проверка"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "crit_up"
-          },
-          {
-            "tags": [
-              "проверка"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "crit_down"
-          }
-        ],
-        "group": "Состояния"
-      },
-      "death_save": {
-        "label": "Спасбросок от смерти",
-        "icon": "💀",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "description": "Хиты на нуле: в начале своего хода к10 минус штраф строго ниже Телосложения, иначе смерть. Каждый спасбросок увеличивает штраф на 1; на новой грани смерти штраф снова 0.",
-        "params": [],
-        "group": "Состояния",
-        "on": [
-          {
-            "on": "moment:turn-start",
-            "if": {
-              "expr": "@mortal"
-            },
-            "steps": [
-              {
-                "id": "спас",
-                "type": "threshold",
-                "roll": {
-                  "die": {
-                    "constant": "lead_die"
-                  },
-                  "tags": [
-                    "спасбросок"
-                  ],
-                  "bonus": {
-                    "expr": "@death_penalty"
-                  }
-                },
-                "versus": {
-                  "expr": "@отправитель.body"
-                },
-                "successWhen": "under",
-                "continueOn": "always"
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "tag": "death_penalty"
-                },
-                "direction": "add",
-                "value": {
-                  "expr": "1"
-                },
-                "targetModifiers": false
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "tag": "dead"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "да"
-                },
-                "targetModifiers": false,
-                "when": {
-                  "expr": "не(@спас.success)"
-                }
-              }
-            ]
-          },
-          {
-            "on": "field:mortal",
-            "steps": [
-              {
-                "type": "apply",
-                "target": {
-                  "tag": "death_penalty"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "0"
-                },
-                "targetModifiers": false
-              }
-            ]
-          }
-        ]
-      },
       "damage": {
         "label": "Урон",
         "steps": [
           {
-            "id": "сквозь_броню",
-            "type": "compare",
+            "type": "check",
             "value": {
-              "expr": "@event.amount"
+              "expr": "@amount"
             },
             "versus": {
-              "expr": "@получатель.sp_body"
+              "expr": "(@лист.sp_body)"
             },
-            "breakIf": "atMost",
+            "successWhen": "over",
+            "id": "сквозь_броню",
             "when": {
-              "expr": "все(есть(@event.tags, \"по телу\"), есть(таблица(\"damage_types\", @event.tags, \"armor\"), \"через броню\"))"
+              "expr": "все(есть(@метки, \"по телу\"), есть(таблица(\"damage_types\", @метки, \"armor\"), \"через броню\"))"
             }
           },
           {
             "type": "apply",
             "target": {
-              "tag": "hp"
+              "expr": "@лист.hp"
             },
             "direction": "subtract",
             "value": {
@@ -1677,13 +1518,13 @@
             },
             "targetModifiers": false,
             "when": {
-              "expr": "все(есть(@event.tags, \"по телу\"), есть(таблица(\"damage_types\", @event.tags, \"armor\"), \"через броню\"))"
+              "expr": "все(есть(@метки, \"по телу\"), есть(таблица(\"damage_types\", @метки, \"armor\"), \"через броню\"))"
             }
           },
           {
             "type": "apply",
             "target": {
-              "tag": "sp_body"
+              "expr": "@лист.sp_body"
             },
             "direction": "subtract",
             "value": {
@@ -1691,43 +1532,47 @@
             },
             "targetModifiers": false,
             "when": {
-              "expr": "все(есть(@event.tags, \"по телу\"), есть(таблица(\"damage_types\", @event.tags, \"armor\"), \"через броню\"))"
+              "expr": "все(есть(@метки, \"по телу\"), есть(таблица(\"damage_types\", @метки, \"armor\"), \"через броню\"))"
             }
           },
           {
-            "id": "сквозь_шлем",
-            "type": "compare",
+            "type": "check",
             "value": {
-              "expr": "@event.amount"
+              "expr": "@amount"
             },
             "versus": {
-              "expr": "@получатель.sp_head"
+              "expr": "(@лист.sp_head)"
             },
-            "breakIf": "atMost",
+            "successWhen": "over",
+            "id": "сквозь_шлем",
             "when": {
-              "expr": "все(есть(@event.tags, \"по голове\"), есть(таблица(\"damage_types\", @event.tags, \"armor\"), \"через броню\"))"
+              "expr": "все(есть(@метки, \"по голове\"), есть(таблица(\"damage_types\", @метки, \"armor\"), \"через броню\"))"
             }
+          },
+          {
+            "type": "roll",
+            "fixed": {
+              "expr": "(@сквозь_шлем.margin)"
+            },
+            "when": {
+              "expr": "все(есть(@метки, \"по голове\"), есть(таблица(\"damage_types\", @метки, \"armor\"), \"через броню\"))"
+            },
+            "id": "в_голову_всего"
           },
           {
             "id": "в_голову",
-            "type": "amount",
-            "source": "margin",
-            "margin": {
-              "expr": "@сквозь_шлем.margin"
-            },
-            "scale": {
-              "times": {
-                "expr": "2"
-              }
+            "type": "roll",
+            "fixed": {
+              "expr": "если(да, округлить вниз((@в_голову_всего) * (2)), @в_голову_всего)"
             },
             "when": {
-              "expr": "все(есть(@event.tags, \"по голове\"), есть(таблица(\"damage_types\", @event.tags, \"armor\"), \"через броню\"))"
+              "expr": "все(есть(@метки, \"по голове\"), есть(таблица(\"damage_types\", @метки, \"armor\"), \"через броню\"))"
             }
           },
           {
             "type": "apply",
             "target": {
-              "tag": "hp"
+              "expr": "@лист.hp"
             },
             "direction": "subtract",
             "value": {
@@ -1735,13 +1580,13 @@
             },
             "targetModifiers": false,
             "when": {
-              "expr": "все(есть(@event.tags, \"по голове\"), есть(таблица(\"damage_types\", @event.tags, \"armor\"), \"через броню\"))"
+              "expr": "все(есть(@метки, \"по голове\"), есть(таблица(\"damage_types\", @метки, \"armor\"), \"через броню\"))"
             }
           },
           {
             "type": "apply",
             "target": {
-              "tag": "sp_head"
+              "expr": "@лист.sp_head"
             },
             "direction": "subtract",
             "value": {
@@ -1749,25 +1594,36 @@
             },
             "targetModifiers": false,
             "when": {
-              "expr": "все(есть(@event.tags, \"по голове\"), есть(таблица(\"damage_types\", @event.tags, \"armor\"), \"через броню\"))"
+              "expr": "все(есть(@метки, \"по голове\"), есть(таблица(\"damage_types\", @метки, \"armor\"), \"через броню\"))"
             }
           },
           {
             "type": "apply",
             "target": {
-              "tag": "hp"
+              "expr": "@лист.hp"
             },
             "direction": "subtract",
             "value": {
-              "expr": "@event.amount"
+              "expr": "@amount"
             },
             "targetModifiers": false,
             "when": {
-              "expr": "есть(таблица(\"damage_types\", @event.tags, \"armor\"), \"мимо брони\")"
+              "expr": "есть(таблица(\"damage_types\", @метки, \"armor\"), \"мимо брони\")"
             }
           }
         ],
         "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true
+          },
           {
             "key": "amount",
             "label": "Сколько урона",
@@ -1789,6 +1645,312 @@
           }
         ]
       },
+      "cost_action": {
+        "label": "Стоимость: действие",
+        "group": "Стоимость",
+        "activation": "manual",
+        "description": "Списывается только в бою. Не хватило — действие не состоялось.",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true
+          }
+        ],
+        "steps": [
+          {
+            "type": "check",
+            "value": {
+              "expr": "@лист.turn_action"
+            },
+            "versus": {
+              "expr": "(1)"
+            },
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@лист.turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "1"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ]
+      },
+      "wired": {
+        "label": "Вживлённые рефлексы",
+        "icon": "⚡",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Имплант: преимущество на броски атаки.",
+        "modifiers": [
+          {
+            "tags": [
+              "атака"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "advantage",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            }
+          }
+        ],
+        "group": "Состояния"
+      },
+      "bleeding": {
+        "label": "Кровотечение",
+        "icon": "🩸",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "В начале своего хода теряешь 2 хита мимо брони, пока рану не заткнут.",
+        "params": [],
+        "group": "Состояния",
+        "on": [
+          {
+            "on": "moment:turn-start",
+            "if": {
+              "expr": "@ходит == @носитель"
+            },
+            "steps": [
+              {
+                "type": "emit",
+                "event": "damage",
+                "args": {
+                  "amount": {
+                    "expr": "2"
+                  },
+                  "damage_type": {
+                    "expr": "\"кровотечение\""
+                  },
+                  "лист": {
+                    "expr": "@носитель"
+                  },
+                  "источник": {
+                    "expr": "@носитель"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "serious_wound_rule": {
+        "label": "Тяжёлая рана",
+        "icon": "🩹",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Хиты ниже половины максимума — минус два ко всем проверкам и атакам (спасброски — без штрафа).",
+        "modifiers": [
+          {
+            "tags": [
+              "атака"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "bonus",
+            "op": "add",
+            "value": {
+              "expr": "-2"
+            },
+            "if": {
+              "expr": "все(@бросающий == @носитель, @носитель.seriously)"
+            }
+          },
+          {
+            "tags": [
+              "проверка"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "bonus",
+            "op": "add",
+            "value": {
+              "expr": "-2"
+            },
+            "if": {
+              "expr": "все(@бросающий == @носитель, @носитель.seriously)"
+            }
+          }
+        ],
+        "group": "Состояния"
+      },
+      "crit_rule": {
+        "label": "Критический бросок",
+        "icon": "🎲",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Десятка на ведущей кости проверки или атаки — бросаешь ещё и прибавляешь; единица — бросаешь ещё и вычитаешь. Спасброски — без этого.",
+        "modifiers": [
+          {
+            "tags": [
+              "атака"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "crit_up",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            }
+          },
+          {
+            "tags": [
+              "атака"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "crit_down",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            }
+          },
+          {
+            "tags": [
+              "проверка"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "crit_up",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            }
+          },
+          {
+            "tags": [
+              "проверка"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "crit_down",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            }
+          }
+        ],
+        "group": "Состояния"
+      },
+      "death_save": {
+        "label": "Спасбросок от смерти",
+        "icon": "💀",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Хиты на нуле: в начале своего хода к10 минус штраф строго ниже Телосложения, иначе смерть. Каждый спасбросок увеличивает штраф на 1; на новой грани смерти штраф снова 0.",
+        "params": [],
+        "group": "Состояния",
+        "on": [
+          {
+            "on": "moment:turn-start",
+            "if": {
+              "expr": "все(@ходит == @носитель, @носитель.mortal)"
+            },
+            "steps": [
+              {
+                "id": "спас_бросок",
+                "type": "roll",
+                "die": {
+                  "constant": "lead_die"
+                },
+                "bonus": {
+                  "expr": "@носитель.death_penalty"
+                },
+                "tags": [
+                  "спасбросок"
+                ],
+                "by": {
+                  "expr": "@носитель"
+                }
+              },
+              {
+                "id": "спас",
+                "type": "check",
+                "value": {
+                  "expr": "@спас_бросок"
+                },
+                "versus": {
+                  "expr": "(@носитель.body)"
+                },
+                "successWhen": "under",
+                "continueOn": "always"
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.death_penalty"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "1"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.dead"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "да"
+                },
+                "targetModifiers": false,
+                "when": {
+                  "expr": "не(@спас.success)"
+                }
+              }
+            ]
+          },
+          {
+            "on": "field:mortal",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.death_penalty"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "0"
+                },
+                "targetModifiers": false
+              }
+            ]
+          }
+        ]
+      },
       "battle_start": {
         "label": "Начало боя",
         "group": "Общие правила",
@@ -1805,7 +1967,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "battle"
+                  "expr": "@стол.battle"
                 },
                 "direction": "set",
                 "value": {
@@ -1816,7 +1978,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_action"
+                  "expr": "@носитель.turn_action"
                 },
                 "direction": "set",
                 "value": {
@@ -1827,7 +1989,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_move"
+                  "expr": "@носитель.turn_move"
                 },
                 "direction": "set",
                 "value": {
@@ -1855,7 +2017,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "battle"
+                  "expr": "@стол.battle"
                 },
                 "direction": "set",
                 "value": {
@@ -1879,11 +2041,14 @@
         "on": [
           {
             "on": "moment:turn-start",
+            "if": {
+              "expr": "@ходит == @носитель"
+            },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_action"
+                  "expr": "@носитель.turn_action"
                 },
                 "direction": "set",
                 "value": {
@@ -1894,7 +2059,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_move"
+                  "expr": "@носитель.turn_move"
                 },
                 "direction": "set",
                 "value": {
@@ -1903,43 +2068,6 @@
                 "targetModifiers": false
               }
             ]
-          }
-        ]
-      },
-      "cost_action": {
-        "label": "Стоимость: действие",
-        "group": "Стоимость",
-        "activation": "manual",
-        "description": "Списывается только в бою. Не хватило — действие не состоялось.",
-        "params": [],
-        "steps": [
-          {
-            "type": "compare",
-            "value": {
-              "expr": "@получатель.turn_action"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "1"
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
           }
         ]
       }
@@ -1951,7 +2079,27 @@
       "serious_wound_rule",
       "death_save",
       "crit_rule"
-    ]
+    ],
+    "tags": {
+      "атака": {
+        "label": "Атака",
+        "inputs": [
+          {
+            "key": "действующий",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ],
+        "each": "цель",
+        "outputs": [
+          "hit"
+        ]
+      }
+    }
   },
   "compendium": {
     "records": [

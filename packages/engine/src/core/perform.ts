@@ -254,7 +254,13 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
       run.state.write({ text: 'Сцена закрыта' });
     }
     run.clock = next;
-    for (const event of momentsOfTurn(turn, before, next, [...run.state.sheets])) run.moment(event.moment, event.sheetId, root);
+    const events = momentsOfTurn(turn, before, next, [...run.state.sheets]);
+    for (const [index, event] of events.entries()) {
+      if (index > 0 && events[index - 1]!.moment === event.moment) continue;
+      const subjects: string[] = [];
+      for (let at = index; at < events.length && events[at]!.moment === event.moment; at += 1) subjects.push(events[at]!.sheetId);
+      run.moment(event.moment, subjects, root);
+    }
     return true;
   },
 

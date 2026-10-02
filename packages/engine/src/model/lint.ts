@@ -1,10 +1,9 @@
-import { isActionMoment, ACTION_MOMENTS } from '../events/bus.ts';
+import { SEEN_LABEL, ANY_ACTION, PHASES } from '../events/bus.ts';
 import type { System, Compendium, Effect, Step } from './types.ts';
 import { registry } from '../engine/steps/index.ts';
 import { STEP_WORDS } from '../words/steps.ts';
 import { ROLL_CALL, CALL_WORDS } from '../words/calls.ts';
 import { modifierLists } from './integrity.ts';
-import { CALL_ARG } from './references.ts';
 import { calledOf, chainsOfEffect } from '../engine/effects.ts';
 import { basedOn, paramsOf } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
@@ -12,11 +11,10 @@ import { recordsOf, argsWithProps, propKeysOf, recordKinds, kindsOf, kindOf, isB
 import { blockNames } from './blocks.ts';
 import { MOMENTS } from '../events/moments.ts';
 import { TABS, STEP } from '../words/glossary.ts';
-import { DESK, RECEIVER, SENDER } from '../engine/owners.ts';
 import {
   referencesOf, declaredOf, chainRefs, listenerOf, withAddresses,
   type Where, type Reference, type RefKind, type Declared,
-  LISTEN, DONE_OUTCOME, TARGETS_SEED,
+  LISTEN,
 } from './references.ts';
 import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, rowKeyOf } from './sheet-columns.ts';
 
@@ -45,22 +43,19 @@ const NAMES: Record<Exclude<RefKind, 'param' | 'step'>, (key: string) => string>
 
 const sameWhere = (a: Where, b: Where): boolean => JSON.stringify(a) === JSON.stringify(b);
 
-interface Chain { steps: Step[]; where: (step: number) => Where; eventChain: boolean; part?: 'cost' }
+interface Chain { steps: Step[]; where: (step: number) => Where; part?: 'cost' }
 
-const hearsEvent = (effect: Effect): boolean => (effect.on ?? []).some(h => listenerOf(h).kind === 'event');
-
-function chainsOf(id: string, effect: Effect, called: boolean): Chain[] {
+function chainsOf(id: string, effect: Effect): Chain[] {
   const out: Chain[] = [
-    { steps: effect.steps ?? [], where: step => ({ tab: 'effects', effect: id, step }), eventChain: called },
-    { steps: effect.cost ?? [], where: step => ({ tab: 'effects', effect: id, step, part: 'cost' }), eventChain: false, part: 'cost' },
+    { steps: effect.steps ?? [], where: step => ({ tab: 'effects', effect: id, step }) },
+    { steps: effect.cost ?? [], where: step => ({ tab: 'effects', effect: id, step, part: 'cost' }), part: 'cost' },
   ];
   (effect.on ?? []).forEach((handler, index) => {
-    const event = listenerOf(handler).kind === 'event';
-    out.push({ steps: handler.steps ?? [], where: step => ({ tab: 'effects', effect: id, handler: index, step }), eventChain: event });
-    out.push({ steps: handler.cost ?? [], where: step => ({ tab: 'effects', effect: id, handler: index, step, part: 'cost' }), eventChain: false, part: 'cost' });
+    out.push({ steps: handler.steps ?? [], where: step => ({ tab: 'effects', effect: id, handler: index, step }) });
+    out.push({ steps: handler.cost ?? [], where: step => ({ tab: 'effects', effect: id, handler: index, step, part: 'cost' }), part: 'cost' });
   });
   for (const turn of ['attach', 'detach'] as const) {
-    out.push({ steps: effect[turn] ?? [], where: step => ({ tab: 'effects', effect: id, step, part: turn }), eventChain: false });
+    out.push({ steps: effect[turn] ?? [], where: step => ({ tab: 'effects', effect: id, step, part: turn }) });
   }
   return out;
 }
@@ -74,19 +69,15 @@ const stepsAt = (system: System, where: Where): Step[] | undefined => {
 };
 
 function ownerText(ref: Reference, system: System): string | null {
-  if (ref.kind === 'field' && ref.scope === 'plain') {
-    const field = fieldOf(system, ref.key);
-    return field?.lives === 'desk' ? `поле «${field.label}» лежит на столе — пишите @стол.${field.tag}` : null;
-  }
-  if (ref.kind !== 'field' || !ref.scope?.startsWith('owner:')) return null;
-  const owner = ref.scope.slice('owner:'.length);
+  if (ref.kind !== 'field') return null;
   const field = fieldOf(system, ref.key);
-  if (!field) return null;
-  if (owner === RECEIVER && ref.from.part === 'cost') {
-    return `в шагах отправителя получателя нет — они идут один раз до всех целей; пишите @отправитель.${field.tag}`;
+  if (ref.scope === 'bare') {
+    if (field?.lives === 'desk') return `поле «${field.label}» лежит на столе — пишите @стол.${field.tag}`;
+    return field ? `«${field.tag}» — чьё поле? Пишите через лист: @носитель.${field.tag}, @цель.${field.tag} или другой вход-лист` : null;
   }
-  if (field.lives === 'desk' && owner !== DESK) return `поле «${field.label}» лежит на столе, а не на листе ${owner === SENDER ? 'отправителя' : 'получателя'} — пишите @стол.${field.tag}`;
-  if (field.lives !== 'desk' && owner === DESK) return `поле «${field.label}» лежит на листе персонажа, а не на столе — пишите @отправитель.${field.tag} или @получатель.${field.tag}`;
+  if (!field) return null;
+  if (ref.scope === 'desk' && field.lives !== 'desk') return `поле «${field.label}» лежит на листе, а не на столе — пишите через вход-лист`;
+  if (ref.scope === 'sheet' && field.lives === 'desk') return `поле «${field.label}» лежит на столе — пишите @стол.${field.tag}`;
   return null;
 }
 
@@ -96,9 +87,6 @@ function danglingText(ref: Reference, declared: Declared): string | null {
     return ref.scope === 'missing' ? `вход «${ref.key}» эффектом не объявлен` : null;
   }
   if (ref.kind === 'step') {
-    if (ref.scope === DONE_OUTCOME) {
-      return `«${ACTION_MOMENTS.done.label}» срабатывает один раз на все цели — итог «${ref.path ?? ref.key}» у каждой цели свой: берите его из таблицы целей, например сколько(@${TARGETS_SEED}.${ref.path ?? ref.key}, да)`;
-    }
     if (ref.scope?.startsWith('listened:')) {
       return `в эффекте «${ref.scope.slice('listened:'.length)}» нет ${STEP.gen} «${ref.key}» — условию срабатывания не на что смотреть`;
     }
@@ -109,16 +97,16 @@ function danglingText(ref: Reference, declared: Declared): string | null {
     return `свойство «${ref.key}» не объявлено у этого типа записи — привязка возьмёт его не оттуда`;
   }
   if (ref.kind === 'field' && !declared.field.has(ref.key) && declared.effect.has(ref.key)
-    && (ref.scope === 'plain' || ref.scope?.startsWith('owner:'))) return null;
+    && (ref.scope === 'plain' || ref.scope === 'bare' || ref.scope === 'sheet')) return null;
   if (ref.kind === 'field' && ref.scope === 'plain' && !declared.field.has(ref.key) && declared.prop.has(ref.key)) return null;
   if (ref.kind === 'field' && ref.path === ref.key && declared.table.has(ref.key.split('.')[0]!)) return null;
-  if (ref.kind === 'field' && ref.scope === 'plain' && ref.from.tab === 'effects' && !declared.field.has(ref.key)) {
-    return `«${ref.key}» — нет ни поля листа, ни входа эффекта с таким именем: заведите поле на вкладке «Лист» или вход у эффекта`;
+  if (ref.kind === 'field' && ref.scope === 'bare' && !declared.field.has(ref.key)) {
+    return `«${ref.key}» — нет ни входа, ни шага с таким именем`;
   }
   return declared[ref.kind].has(ref.key) ? null : NAMES[ref.kind](ref.key);
 }
 
-function stepProblems(steps: Step[], whereOf: (index: number) => Where, params: Set<string>, eventChain: boolean): Problem[] {
+function stepProblems(steps: Step[], whereOf: (index: number) => Where): Problem[] {
   const out: Problem[] = [];
   const earlier = new Set<string>();
   steps.forEach((step, index) => {
@@ -143,7 +131,6 @@ function stepProblems(steps: Step[], whereOf: (index: number) => Where, params: 
     }
     if (step.id) earlier.add(String(step.id));
   });
-  void params; void eventChain;
   return out;
 }
 
@@ -169,14 +156,14 @@ export interface EarlierStep { id: string; type: string }
 
 export function lintStep(step: Step, system: System, effect: Effect, earlier: EarlierStep[]): Problem | null {
   const where: Where = { tab: 'effects', effect: effect.label ?? '', step: 0 };
-  const inChain = hearsEvent(effect) || calledOf(system).some(([key, other]) =>
-    other === effect || system.effects[key] === effect || (!!effect.label && other.label === effect.label));
-  const [structural] = stepProblems([step], () => where, new Set(), inChain);
+  const [structural] = stepProblems([step], () => where);
   if (structural) return structural;
   const declared = declaredOf(system);
-  const params = new Set(paramsOf(system, effect).map(p => p.key));
+  const all = paramsOf(system, effect);
+  const params = new Set(all.filter(p => p.kind !== 'sheet').map(p => p.key));
+  const sheets = [...all.filter(p => p.kind === 'sheet').map(p => p.key), 'носитель', ...earlier.filter(e => e.type === 'each').map(e => e.id)];
   const known = new Set(earlier.map(e => e.id));
-  const refs = withAddresses(system, chainRefs([step], () => where, params, inChain))
+  const refs = withAddresses(system, chainRefs([step], () => where, params, sheets))
     .filter(ref => !(ref.kind === 'step' && known.has(ref.key)))
     .filter(ref => !(ref.kind === 'field' && known.has(ref.key)));
   const [first] = refProblems(refs, declared, () => false, system);
@@ -198,8 +185,7 @@ function cycleProblems(system: System): Problem[] {
       for (const called of emitsOf(handler.steps)) link(effectNode(id), effectNode(called));
       if (handler.confirm) continue;
       const heard = listenerOf(handler);
-      if (heard.kind === 'event') link(effectNode(heard.key!), effectNode(id));
-      if (heard.kind === 'effect') link(effectNode(heard.key!), effectNode(id));
+      if (heard.kind === 'call' && system.effects[heard.key]) link(effectNode(heard.key), effectNode(id));
     }
   }
 
@@ -237,37 +223,19 @@ function listenerProblems(system: System): Problem[] {
       const where: Where = { tab: 'effects', effect: id, part: 'on', handler: index };
       const heard = listenerOf(handler);
       if (heard.kind === 'empty') {
-        out.push({ where, level: 'error', text: 'не сказано, когда срабатывает — выберите, что случилось' });
+        out.push({ where, level: 'error', text: 'не сказано, на что срабатывает — выберите, что случилось' });
       }
       if (heard.kind === 'unknown') {
-        out.push({ where, level: 'error', text: `такого «когда» нет: «${heard.key}»` });
+        out.push({ where, level: 'error', text: `такого «что случилось» нет: «${heard.key}»` });
       }
-      if (handler.watch && (handler.as || String(handler.of ?? '').startsWith('event:'))) {
-        out.push({ where, level: 'error', text: '«наблюдаю» слушает чужое действие целиком: «бросок по мне» и «пришёл вызов» с ним не сочетаются' });
+      if (heard.kind === 'call' && heard.key !== ANY_ACTION && !system.effects[heard.key] && !system.tags?.[heard.key]) {
+        out.push({ where, level: 'warn', text: `подписка ждёт «${heard.key} — ${PHASES[heard.phase].label}», а такого эффекта или метки в системе нет — не сработает` });
       }
-      if (handler.watch && handler.confirm && handler.on === 'affected') {
-        out.push({ where, level: 'error', text: `наблюдатель «${ACTION_MOMENTS.affected.label}» срабатывает молча — спросить здесь нельзя` });
-      }
-      if (handler.watch && handler.on !== 'seen' && handler.on !== 'affected') {
-        out.push({ where, level: 'error', text: `«наблюдаю» бывает только у «${ACTION_MOMENTS.seen.label}» и «${ACTION_MOMENTS.affected.label}»` });
-      }
-      if (handler.of && !isActionMoment(handler.on)) {
-        out.push({ where, level: 'error', text: 'какое действие слушать, выбирают только у моментов действия' });
-      }
-      if (isActionMoment(handler.on)) {
-        const moment = ACTION_MOMENTS[handler.on];
-        if (moment.asks === 'never' && handler.confirm) {
-          out.push({ where, level: 'error', text: `«${moment.label}» срабатывает молча — спросить здесь нельзя` });
-        }
-        if (!moment.replies && handler.to === 'other') {
-          out.push({ where, level: 'error', text: `«${moment.label}» — ответить другому нельзя, только себе` });
-        }
-      }
-      if (heard.kind === 'moment' && !MOMENT_KEYS.has(heard.key!)) {
+      if (heard.kind === 'moment' && !MOMENT_KEYS.has(heard.key)) {
         out.push({ where, level: 'error', text: `такого момента нет: «${heard.key}» — стол знает ${[...MOMENT_KEYS].join(', ')}` });
       }
-      if ((heard.kind === 'gained' || heard.kind === 'lost') && system.effects[heard.key!]
-        && (system.effects[heard.key!]!.activation ?? 'manual') === 'manual') {
+      if ((heard.kind === 'gained' || heard.kind === 'lost') && system.effects[heard.key]
+        && (system.effects[heard.key]!.activation ?? 'manual') === 'manual') {
         out.push({ where, level: 'error', text: 'слушать, что появилось или ушло, можно только эффект, который висит' });
       }
     });
@@ -355,7 +323,7 @@ function seenProblems(system: System): Problem[] {
     ];
     for (const [steps, where, allowed] of lanes) {
       (steps ?? []).forEach((step, index) => {
-        if (seenOnly(step) && !allowed) out.push({ where: where(index), level: 'error', text: `«${registry.get(step.type)?.label}» работает только в подписке «${ACTION_MOMENTS.seen.label}»` });
+        if (seenOnly(step) && !allowed) out.push({ where: where(index), level: 'error', text: `«${registry.get(step.type)?.label}» работает только в подписке «${SEEN_LABEL}»` });
       });
     }
   }
@@ -366,7 +334,7 @@ function costProblems(system: System): Problem[] {
   const out: Problem[] = [];
   const pays = (step: Step): boolean => {
     const s = step as { type?: string; direction?: string };
-    return s.type === 'emit' || s.type === 'compare' || (s.type === 'apply' && s.direction === 'subtract');
+    return s.type === 'emit' || s.type === 'check' || (s.type === 'apply' && s.direction === 'subtract');
   };
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
     const chains: [Step[] | undefined, (step: number) => Where][] = [
@@ -397,11 +365,6 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
       if (mod.kind !== 'edit') continue;
       const call = String(mod.call);
       const at = { ...where, part: 'modifiers' };
-      const known = call === ROLL_CALL ? ['метки'] : (system.effects?.[call]?.params ?? []).map(p => p.key);
-      const when = (mod.when as { expr?: string } | undefined)?.expr ?? '';
-      for (const name of [...when.matchAll(CALL_ARG)].map(m => m[0].slice('@вызов.'.length))) {
-        if (!known.includes(name)) out.push({ where: at, level: 'error', text: `в условии правки «@вызов.${name}» — у вызова нет такого входа; есть: ${known.join(', ') || '(ничего)'}` });
-      }
       if (call === ROLL_CALL) {
         if (!(String(mod.param) in CALL_WORDS.roll.params)) out.push({ where: at, level: 'error', text: `у броска нет параметра «${String(mod.param)}»` });
         else if (mod.param === 'edits' && !mod.edit) out.push({ where: at, level: 'error', text: 'правка броска не выбрана' });
@@ -413,7 +376,6 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
         out.push({ where: at, level: 'error', text: `правка вызывает «${call}», а такого эффекта нет` });
         continue;
       }
-      if (mod.as) out.push({ where: { ...where, part: 'modifiers' }, level: 'error', text: `«${CALL_WORDS.against}» бывает только у броска, а правка вызывает «${effect.label || call}»` });
       const param = (effect.params ?? []).find(p => p.key === mod.param);
       if (!param) out.push({ where: { ...where, part: 'modifiers' }, level: 'error', text: `у «${effect.label || call}» нет входа «${String(mod.param)}» — править нечего` });
       else if (param.role !== 'amount') out.push({ where: { ...where, part: 'modifiers' }, level: 'error', text: `правка «${effect.label || call}» правит пока только величину, а «${param.label || param.key}» — не она` });
@@ -444,7 +406,7 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
     for (const handler of effect.on ?? []) {
       for (const event of emittedBy(handler.steps)) emitted.add(event);
       const heard = listenerOf(handler);
-      if (heard.kind === 'event') heardEvents.add(heard.key!);
+      if (heard.kind === 'call') heardEvents.add(heard.key);
     }
   }
   for (const key of emitted) {
@@ -492,7 +454,7 @@ function paramProblems(system: System): Problem[] {
     }
   }
   for (const [id, effect] of Object.entries(system.effects)) {
-    for (const { steps, where: whereOf } of chainsOf(id, effect, false)) {
+    for (const { steps, where: whereOf } of chainsOf(id, effect)) {
       steps.forEach((step, index) => {
         const raw = step as unknown as Record<string, unknown>;
         if (step.type !== 'emit' || !raw.event) return;
@@ -534,13 +496,11 @@ function paramProblems(system: System): Problem[] {
 
 export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   const declared = declaredOf(system);
-  const called = new Set(calledOf(system).map(([key]) => key));
   const out: Problem[] = [];
 
   for (const [id, effect] of Object.entries(system.effects)) {
-    const params = new Set((effect.params ?? []).map(p => p.key));
-    for (const chain of chainsOf(id, effect, called.has(id))) {
-      out.push(...stepProblems(chain.steps, chain.where, params, chain.eventChain));
+    for (const chain of chainsOf(id, effect)) {
+      out.push(...stepProblems(chain.steps, chain.where));
       const splits = chain.steps.flatMap((step, index) => (registry.get(step.type)?.splits ? [index] : []));
       for (const index of splits.slice(1)) {
         out.push({ where: chain.where(index), level: 'error', text: `«${STEP_WORDS.each.label}» в цепочке может быть только один` });

@@ -6,7 +6,6 @@ import { readCell } from './cells.ts';
 import { rowOf } from './tables.ts';
 import { referencedTable, splitPath, walk } from './navigate.ts';
 import { VALUE_COLUMN } from '../model/tables.ts';
-import { ownerOf, SENDER, DESK } from './owners.ts';
 import { diceTools } from '../core/roll.ts';
 import type { Param, Die, System } from '../model/types.ts';
 import type { Pass } from './calc.ts';
@@ -41,8 +40,30 @@ export interface RefContext {
 
   recordScope?: boolean;
 
-  direct?: { me: Pass; target: Pass | null; names?: Pass };
+  sheets?: Sheets;
+
+  bare?: boolean;
+
+  lazy?: (name: string) => void;
 }
+
+export type Bound = string | readonly string[] | null;
+
+export interface Sheets {
+  bound: Readonly<Record<string, Bound>>;
+  view: (id: string) => Pass;
+}
+
+const hasOwn = (record: object, key: string): boolean => Object.prototype.hasOwnProperty.call(record, key);
+
+export function sheetHead(name: string, sheets: Sheets | undefined): { head: string; rest: string | null } | null {
+  if (!sheets) return null;
+  const dot = name.indexOf('.');
+  const head = dot > 0 ? name.slice(0, dot) : name;
+  return hasOwn(sheets.bound, head) ? { head, rest: dot > 0 ? name.slice(dot + 1) : null } : null;
+}
+
+const DESK_NAME = 'стол';
 
 const FORMS = ['expr', 'const', 'param', 'prop', 'tag', 'constant'];
 
@@ -99,12 +120,12 @@ function fromArgs(key: string, ctx: RefContext): unknown {
   if (asked !== undefined) return asked;
   const arg = (ctx.params || {})[key];
   if (arg === null || typeof arg !== 'object') return arg;
+  if ('sheet' in arg && 'tag' in arg) return arg;
   if ('prop' in arg) return (ctx.props || {})[String((arg as AnyRef).prop)];
   if ('const' in arg) return (arg as AnyRef).const;
   if ('expr' in arg) {
     const source = String((arg as AnyRef).expr);
     const decl = (ctx.paramDefs || []).find(p => p.key === key);
-    if (decl?.kind === 'tag') return lonelyField(arg, ctx.pass.system) ?? evaluate(source, inRecord(ctx));
     return !decl || decl.kind === 'number' ? recordNamesInline(source, ctx) : evaluate(source, inRecord(ctx));
   }
   throw new EngineError(
@@ -182,20 +203,26 @@ export function toolsOf(system: System, pass: Pass, owner: string, die?: Die): T
   };
 }
 
-function evaluate(expr: unknown, given: RefContext): unknown {
-  const ctx = given.direct?.names ? { ...given, pass: given.direct.names, direct: { ...given.direct, names: undefined } } : given;
+function evaluate(expr: unknown, ctx: RefContext): unknown {
   const results = ctx.results ?? {};
   const known = knownOf(ctx);
   const system = ctx.pass.system;
   const resolve = (name: string): unknown => {
-    const owned = ownerOf(name);
-    if (ctx.direct && owned && owned.owner !== DESK) {
-      const pass = owned.owner === SENDER ? ctx.direct.me : ctx.direct.target;
-      if (!pass) throw new EngineError(`${who(ctx)}: «${owned.rest}» получателя здесь не прочитать — у этого вызова нет цели`);
-      return evaluate(`@${owned.rest}`, { ...ctx, pass });
+    if (ctx.lazy) ctx.lazy(name.split('.')[0]!);
+    const onSheet = sheetHead(name, ctx.sheets);
+    if (onSheet) {
+      const bound = ctx.sheets!.bound[onSheet.head] ?? null;
+      if (onSheet.rest === null) return bound;
+      if (bound === null) throw new EngineError(`${who(ctx)}: «${onSheet.head}» не задан — «${onSheet.rest}» прочитать не у кого`);
+      const view = ctx.sheets!.view;
+      const rest = onSheet.rest;
+      const split = splitPath(rest);
+      const table = split && !isField(system, rest) ? referencedTable(system, split.head, ctx.paramDefs) : undefined;
+      const read = (id: string): unknown => (split && table
+        ? walk(system, view(id), table, resolve(split.head), split.path, who(ctx))
+        : view(id).resolve(rest));
+      return Array.isArray(bound) ? bound.map(read) : read(bound as string);
     }
-    if (owned?.owner === DESK) return ctx.pass.resolve(name);
-    if (owned) return resolve(owned.rest);
     if (name in results && !isField(system, name)) return results[name];
     const dot = name.indexOf('.');
     if (dot > 0) {
@@ -219,6 +246,9 @@ function evaluate(expr: unknown, given: RefContext): unknown {
         throw new EngineError(`${who(ctx)}: шаг «${split?.head ?? name}» ещё не прошёл — его результата здесь нет`);
       }
     }
+    if (ctx.sheets && !ctx.bare && !name.startsWith(`${DESK_NAME}.`)) {
+      throw new EngineError(`${who(ctx)}: «${name}» — чьё поле? Пишите через лист: ${Object.keys(ctx.sheets.bound).map(one => `@${one}.${name}`).join(', ') || `@носитель.${name}`}`);
+    }
     return ctx.pass.resolve(name);
   };
   const tools = toolsOf(system, ctx.pass, who(ctx), ctx.die);
@@ -237,8 +267,7 @@ export function lonelyField(ref: unknown, system?: System): string | null {
   if (!('expr' in r) || typeof r.expr !== 'string') return null;
   const exact = /^\s*[@#]([\p{L}\p{N}_.-]+)\s*$/u.exec(r.expr);
   if (!exact) return null;
-  const owned = ownerOf(exact[1]!);
-  const name = owned ? owned.rest : exact[1]!;
+  const name = exact[1]!;
   return !name.includes('.') || (system && hasField(system, name)) ? name : null;
 }
 
@@ -253,8 +282,11 @@ function namedValue(name: string, ctx: RefContext): unknown {
     if (decl.optional) return null;
     throw new EngineError(`${who(ctx)}: параметр «${name}» не заполнен`);
   }
+  if (decl.kind === 'field' && typeof value === 'object' && 'sheet' in value && 'tag' in value) {
+    const field = value as { sheet: string; tag: string };
+    return (ctx.sheets ? ctx.sheets.view(field.sheet) : ctx.pass).resolve(field.tag);
+  }
   if (typeof value === 'object') return undefined;
-  if (decl.kind === 'tag' && typeof value === 'string') return ctx.pass.resolve(value);
   return isFormula(decl, value) ? evaluate(value, inRecord(ctx)) : value;
 }
 
@@ -271,7 +303,7 @@ function recordNamesInline(expr: string, ctx: RefContext): string {
   if (lone && lone[1]! in props) return text(lone[1]!);
   let out = expr;
   for (const name of compile(expr).deps) {
-    if (ownerOf(name) || !(name in props)) continue;
+    if (!(name in props)) continue;
     out = out.replace(nameRegex(name), `(${text(name)})`);
   }
   return out;

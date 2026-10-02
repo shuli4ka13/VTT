@@ -1,69 +1,74 @@
-import { compile } from '../formula/index.ts';
-import { FormulaRuntimeError } from '../formula/errors.ts';
-import { EngineError } from '../engine/errors.ts';
-import { toolsOf } from '../engine/refs.ts';
+import { EngineError, isRuleError } from '../engine/errors.ts';
+import { resolveRef } from '../engine/refs.ts';
+import type { RefContext, Bound } from '../engine/refs.ts';
 import { ROLL_CALL } from '../words/calls.ts';
-import { editsOf, editMatches, stackWith, withValues, claimedModifiers, CALL_NAME } from '../engine/modifiers.ts';
+import { editsOf, editMatches, stackWith, withValues, claimedModifiers } from '../engine/modifiers.ts';
 import type { SourcedModifier } from '../engine/modifiers.ts';
 import type { Pass } from '../engine/calc.ts';
 import type { RollEdit } from '../model/types.ts';
 
 export type EditMod = Extract<SourcedModifier, { kind: 'edit' }>;
 
-export type Held = EditMod & { view: Pass };
+export type Held = EditMod & { view: Pass; ref: RefContext };
+
+export interface Holder {
+  id: string;
+  view: Pass;
+}
 
 export interface Gather {
   call: string;
   param: string;
-  as?: 'against';
   tags: readonly string[];
-  args: Record<string, unknown>;
+  names: Record<string, Bound>;
+  values: Record<string, unknown>;
+  view: (id: string) => Pass;
 }
 
 const who = (mod: SourcedModifier): string => mod.source.label || mod.source.id;
 
-function evaluate(expr: string, view: Pass, args: Record<string, unknown>, owner: string): unknown {
-  const prefix = `${CALL_NAME}.`;
-  return compile(expr).evaluate(
-    name => (name.startsWith(prefix) ? (args[name.slice(prefix.length)] ?? null) as never : view.resolve(name)),
-    toolsOf(view.system, view, owner));
+function refOf(holder: Holder, spec: Gather, owner: string): RefContext {
+  return {
+    pass: holder.view, owner, results: { ...spec.values, метки: [...spec.tags] },
+    sheets: { bound: { ...spec.names, носитель: holder.id }, view: spec.view },
+  };
 }
 
-function holds(expr: string | undefined, view: Pass, args: Record<string, unknown>, mod: SourcedModifier, what: string): boolean {
-  if (!expr?.trim()) return true;
-  let result: unknown;
+function holds(mod: EditMod, ref: RefContext): boolean {
+  const condition = (mod as { if?: { expr: string } }).if;
+  if (!condition?.expr?.trim()) return true;
+  let value: unknown;
   try {
-    result = evaluate(expr, view, args, what);
+    value = resolveRef(condition, ref);
   } catch (err) {
-    if (err instanceof FormulaRuntimeError) return false;
+    if (isRuleError(err)) return false;
     throw err;
   }
-  if (typeof result !== 'boolean') throw new EngineError(`${what} «${expr}» у «${who(mod)}» должно давать да или нет`);
-  return result;
+  if (typeof value !== 'boolean') throw new EngineError(`условие правки «${condition.expr}» у «${who(mod)}» должно давать да или нет`);
+  return value;
 }
 
-export function gather(view: Pass, spec: Gather): Held[] {
-  return (editsOf(view, spec.call, spec.param, spec.as) as EditMod[])
-    .filter(mod => holds((mod as { condition?: { expr: string } }).condition?.expr, view, {}, mod, 'условие правки')
-      && editMatches(mod, spec.tags, view.system)
-      && holds((mod as { when?: { expr: string } }).when?.expr, view, spec.args, mod, 'условие по вызову'))
-    .map(mod => ({ ...mod, view }));
+export function gather(holders: readonly Holder[], spec: Gather): Held[] {
+  return holders.flatMap(holder => (editsOf(holder.view, spec.call, spec.param) as EditMod[])
+    .filter(mod => editMatches(mod, spec.tags, holder.view.system))
+    .map(mod => ({ ...mod, view: holder.view, ref: refOf(holder, spec, `правка «${who(mod)}»`) }))
+    .filter(mod => holds(mod, mod.ref)));
 }
 
-export function amountOf(held: Held, args: Record<string, unknown> = {}): number {
+export function amountOf(held: Held): number {
   const raw = (held as { value?: { expr: string } }).value;
   if (!raw?.expr?.trim()) throw new EngineError(`правка «${who(held)}»: не задано, на сколько`);
-  const value = evaluate(raw.expr, held.view, args, 'правка');
+  const value = resolveRef(raw, held.ref);
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     throw new EngineError(`правка «${who(held)}»: «${raw.expr}» дала не число`);
   }
   return value;
 }
 
-export function stack(held: Held[], base: number, label: string, args: Record<string, unknown> = {}): number {
+export function stack(held: Held[], base: number, label: string): number {
   const numbers = held.filter(mod => mod.op);
   if (!numbers.length) return base;
-  return Number(stackWith(numbers, base, label, mod => amountOf(mod, args)));
+  return Number(stackWith(numbers, base, label, mod => amountOf(mod)));
 }
 
 export interface RollEdits {
@@ -75,7 +80,7 @@ export function rollEdits(held: Held[], claims: readonly string[], roller: Pass,
   const system = roller.system;
   const named = [
     ...held.filter(mod => mod.edit),
-    ...(claimedModifiers(system, [...claims]) as EditMod[]).map((mod): Held => ({ ...mod, view: roller })),
+    ...(claimedModifiers(system, [...claims]) as EditMod[]).map((mod): Held => ({ ...mod, view: roller, ref: { pass: roller } })),
   ];
   const dictionary = system.roll_edits || {};
   const first = new Map<string, Held>();
@@ -89,16 +94,19 @@ export function rollEdits(held: Held[], claims: readonly string[], roller: Pass,
     const canceledBy = dictionary[key]!.canceledBy;
     return !canceledBy || !keys.includes(canceledBy);
   });
-  const args = { метки: [...tags] };
   return {
     edits: surviving.map(key => withValues({ ...dictionary[key]!, label: dictionary[key]!.label || key }, first.get(key)!.view)),
-    bonus: stack(held.filter(mod => !mod.edit), 0, tags.join(', ') || ROLL_CALL, args),
+    bonus: stack(held.filter(mod => !mod.edit), 0, tags.join(', ') || ROLL_CALL),
   };
 }
 
-export function rollHeld(roller: Pass, against: Pass | null, tags: readonly string[]): Held[] {
-  const args = { метки: [...tags] };
-  const own = (param: string) => gather(roller, { call: ROLL_CALL, param, tags, args });
-  const theirs = (param: string) => (against ? gather(against, { call: ROLL_CALL, param, as: 'against', tags, args }) : []);
-  return [...own('edits'), ...own('bonus'), ...theirs('edits'), ...theirs('bonus')];
+export function rollHeld(holders: readonly Holder[], rollerId: string, againstId: string | null, tags: readonly string[]): Held[] {
+  const view = (id: string): Pass => {
+    const found = holders.find(holder => holder.id === id);
+    if (!found) throw new EngineError(`бросок: листа «${id}» нет среди носителей`);
+    return found.view;
+  };
+  const names: Record<string, Bound> = { бросающий: rollerId, против: againstId };
+  const spec = (param: string): Gather => ({ call: ROLL_CALL, param, tags, names, values: {}, view });
+  return [...gather(holders, spec('edits')), ...gather(holders, spec('bonus'))];
 }

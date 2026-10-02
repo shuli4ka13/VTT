@@ -69,6 +69,14 @@ const FUNCTIONS: Record<string, Fn> = {
       return found;
     },
   },
+  первый: {
+    arity: 1,
+    apply: () => 0,
+    raw: args => {
+      const list = listOf(args[0]).filter(value => value !== null && value !== undefined && value !== '');
+      return (list[0] ?? null) as Value;
+    },
+  },
   пусто: {
     arity: 1,
     apply: () => 0,

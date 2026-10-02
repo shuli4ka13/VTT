@@ -351,6 +351,17 @@
         "group": "Вызываемые",
         "params": [
           {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true
+          },
+          {
             "key": "amount",
             "label": "Сколько урона",
             "kind": "number",
@@ -361,13 +372,13 @@
           {
             "type": "apply",
             "target": {
-              "tag": "hp"
+              "expr": "@лист.hp"
             },
             "direction": "subtract",
-            "targetModifiers": false,
             "value": {
-              "expr": "@event.amount"
-            }
+              "expr": "@amount"
+            },
+            "targetModifiers": false
           }
         ]
       },
@@ -377,6 +388,17 @@
         "activation": "manual",
         "description": "к20 + модификатор + уровень + кость эскалации против КЗ. Попал — кость оружия за каждый уровень, на 20 вдвое. Промах — урон, равный уровню.",
         "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          },
           {
             "key": "weapon_die",
             "label": "Кость оружия",
@@ -395,38 +417,50 @@
         ],
         "steps": [
           {
-            "type": "each"
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "id": "hit_бросок",
+            "type": "roll",
+            "die": {
+              "constant": "lead_die"
+            },
+            "bonus": {
+              "expr": "@attack_with + @действующий.level + @стол.escalation"
+            },
+            "tags": [
+              "атака"
+            ],
+            "by": {
+              "expr": "@действующий"
+            },
+            "against": {
+              "expr": "@цель"
+            }
           },
           {
             "id": "hit",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "lead_die"
-              },
-              "bonus": {
-                "expr": "@attack_with + @отправитель.level + @стол.escalation"
-              },
-              "tags": [
-                "атака"
-              ]
+            "type": "check",
+            "value": {
+              "expr": "@hit_бросок"
             },
             "versus": {
-              "expr": "@получатель.ac"
+              "expr": "(@цель.ac)"
             },
             "successWhen": "atLeast",
             "continueOn": "always"
           },
           {
-            "id": "dmg",
-            "type": "amount",
-            "source": "item",
+            "type": "roll",
             "fixed": {
-              "expr": "кинуть(@weapon_die, @отправитель.level * если(@hit.natural >= 20, 2, 1)) + @damage_with"
+              "expr": "(кинуть(@weapon_die, @действующий.level * если(@hit.natural >= 20, 2, 1)) + @damage_with)"
             },
             "when": {
               "expr": "@hit.success"
-            }
+            },
+            "id": "dmg"
           },
           {
             "type": "emit",
@@ -434,6 +468,12 @@
             "args": {
               "amount": {
                 "expr": "@dmg"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             },
             "when": {
@@ -445,7 +485,13 @@
             "event": "damage",
             "args": {
               "amount": {
-                "expr": "@отправитель.level"
+                "expr": "@действующий.level"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             },
             "when": {
@@ -457,8 +503,19 @@
           {
             "type": "emit",
             "event": "cost_standard",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            },
             "strict": true
           }
+        ],
+        "tags": [
+          "атака"
         ]
       },
       "monster_attack": {
@@ -467,6 +524,17 @@
         "activation": "manual",
         "description": "Монстры бьют фиксированным уроном и кость эскалации не получают.",
         "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          },
           {
             "key": "to_hit",
             "label": "Бонус атаки",
@@ -480,24 +548,37 @@
         ],
         "steps": [
           {
-            "type": "each"
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "id": "hit_бросок",
+            "type": "roll",
+            "die": {
+              "constant": "lead_die"
+            },
+            "bonus": {
+              "expr": "@to_hit"
+            },
+            "tags": [
+              "атака"
+            ],
+            "by": {
+              "expr": "@действующий"
+            },
+            "against": {
+              "expr": "@цель"
+            }
           },
           {
             "id": "hit",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "lead_die"
-              },
-              "bonus": {
-                "expr": "@to_hit"
-              },
-              "tags": [
-                "атака"
-              ]
+            "type": "check",
+            "value": {
+              "expr": "@hit_бросок"
             },
             "versus": {
-              "expr": "@получатель.ac"
+              "expr": "(@цель.ac)"
             },
             "successWhen": "atLeast"
           },
@@ -507,6 +588,12 @@
             "args": {
               "amount": {
                 "expr": "@hit_damage"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           }
@@ -515,8 +602,19 @@
           {
             "type": "emit",
             "event": "cost_standard",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            },
             "strict": true
           }
+        ],
+        "tags": [
+          "атака"
         ]
       },
       "new_round": {
@@ -526,15 +624,33 @@
         "description": "Кость эскалации растёт на единицу, но не выше 6. Только если ведущий ведёт раунды без часов: при ходах по инициативе кость растёт сама в начале раунда — не жмите вместе.",
         "steps": [
           {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
             "type": "apply",
             "target": {
-              "tag": "escalation"
+              "expr": "@стол.escalation"
             },
             "direction": "set",
-            "targetModifiers": false,
             "value": {
               "expr": "меньшее из(6, @стол.escalation + 1)"
-            }
+            },
+            "targetModifiers": false
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
           }
         ]
       },
@@ -545,14 +661,80 @@
         "description": "Кость эскалации сбрасывается.",
         "steps": [
           {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
             "type": "apply",
             "target": {
-              "tag": "escalation"
+              "expr": "@стол.escalation"
             },
             "direction": "set",
-            "targetModifiers": false,
             "value": {
               "expr": "0"
+            },
+            "targetModifiers": false
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "cost_standard": {
+        "label": "Стоимость: стандартное",
+        "group": "Стоимость",
+        "activation": "manual",
+        "description": "Списывается только в бою. Не хватило — действие не состоялось.",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true
+          }
+        ],
+        "steps": [
+          {
+            "type": "check",
+            "value": {
+              "expr": "@лист.turn_standard"
+            },
+            "versus": {
+              "expr": "(1)"
+            },
+            "note": "стандартное действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@лист.turn_standard"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "1"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
             }
           }
         ]
@@ -573,7 +755,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "battle"
+                  "expr": "@стол.battle"
                 },
                 "direction": "set",
                 "value": {
@@ -584,7 +766,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_standard"
+                  "expr": "@носитель.turn_standard"
                 },
                 "direction": "set",
                 "value": {
@@ -595,7 +777,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_move"
+                  "expr": "@носитель.turn_move"
                 },
                 "direction": "set",
                 "value": {
@@ -606,7 +788,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_quick"
+                  "expr": "@носитель.turn_quick"
                 },
                 "direction": "set",
                 "value": {
@@ -634,7 +816,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "battle"
+                  "expr": "@стол.battle"
                 },
                 "direction": "set",
                 "value": {
@@ -658,11 +840,14 @@
         "on": [
           {
             "on": "moment:turn-start",
+            "if": {
+              "expr": "@ходит == @носитель"
+            },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_standard"
+                  "expr": "@носитель.turn_standard"
                 },
                 "direction": "set",
                 "value": {
@@ -673,7 +858,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_move"
+                  "expr": "@носитель.turn_move"
                 },
                 "direction": "set",
                 "value": {
@@ -684,7 +869,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_quick"
+                  "expr": "@носитель.turn_quick"
                 },
                 "direction": "set",
                 "value": {
@@ -693,43 +878,6 @@
                 "targetModifiers": false
               }
             ]
-          }
-        ]
-      },
-      "cost_standard": {
-        "label": "Стоимость: стандартное",
-        "group": "Стоимость",
-        "activation": "manual",
-        "description": "Списывается только в бою. Не хватило — действие не состоялось.",
-        "params": [],
-        "steps": [
-          {
-            "type": "compare",
-            "value": {
-              "expr": "@получатель.turn_standard"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "breakIf": "less",
-            "note": "стандартное действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_standard"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "1"
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
           }
         ]
       },
@@ -749,7 +897,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "escalation"
+                  "expr": "@стол.escalation"
                 },
                 "direction": "set",
                 "value": {
@@ -784,6 +932,26 @@
         "hint": "Общий стол комнаты: кость эскалации и бой.",
         "grants": [
           "escalation_round"
+        ]
+      }
+    },
+    "tags": {
+      "атака": {
+        "label": "Атака",
+        "inputs": [
+          {
+            "key": "действующий",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ],
+        "each": "цель",
+        "outputs": [
+          "hit"
         ]
       }
     }

@@ -766,7 +766,7 @@
           {
             "key": "attribute",
             "label": "Характеристика",
-            "kind": "tag"
+            "kind": "field"
           },
           {
             "key": "untrained",
@@ -1413,6 +1413,17 @@
         "description": "Навык оружия + Проворство против Реакции + Интуиции цели. Значение атаки оружия на дистанции против значения защиты цели: если у атакующего больше на 4 — ему очко Преимущества (защитнику образец очко не начисляет). Попадание при успехах не меньше, чем у защиты; чистые успехи — к урону, при ничьей — базовый урон. Сопротивление — Тело. Урон больше Тела — «Распластан».",
         "params": [
           {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          },
+          {
             "key": "attack_pool",
             "label": "Набор атаки",
             "kind": "number"
@@ -1500,28 +1511,50 @@
         ],
         "steps": [
           {
-            "id": "атк",
-            "type": "amount",
-            "source": "item",
+            "type": "roll",
             "fixed": {
-              "expr": "если(@дистанция == \"вплотную\", @ar1, если(@дистанция == \"близкая\", @ar2, если(@дистанция == \"средняя\", @ar3, если(@дистанция == \"дальняя\", @ar4, @ar5)))) + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"ar\")"
+              "expr": "(если(@дистанция == \"вплотную\", @ar1, если(@дистанция == \"близкая\", @ar2, если(@дистанция == \"средняя\", @ar3, если(@дистанция == \"дальняя\", @ar4, @ar5)))) + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"ar\"))"
+            },
+            "id": "атк"
+          },
+          {
+            "id": "атака_бросок",
+            "type": "roll",
+            "die": {
+              "constant": "pool"
+            },
+            "count": {
+              "expr": "большее из(0, @attack_pool + таблица(\"edge_actions\", или(@приём, \"нет\"), \"pool\"))"
+            },
+            "tags": [
+              "атака"
+            ],
+            "by": {
+              "expr": "@действующий"
+            },
+            "against": {
+              "expr": "первый(@цели)"
             }
           },
           {
-            "type": "compare",
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "check",
             "value": {
               "expr": "@атк"
             },
             "versus": {
-              "expr": "1"
+              "expr": "(1)"
             },
-            "breakIf": "less",
             "note": "на этой дистанции оружие не бьёт"
           },
           {
             "type": "apply",
             "target": {
-              "tag": "edge_left"
+              "expr": "@цель.edge_left"
             },
             "direction": "add",
             "value": {
@@ -1529,13 +1562,13 @@
             },
             "targetModifiers": false,
             "when": {
-              "expr": "все(@атк - @получатель.defense_rating <= -4, все(@получатель.edge_left < 7, @получатель.edge_gained < 2))"
+              "expr": "все(@атк - @цель.defense_rating <= -4, все(@цель.edge_left < 7, @цель.edge_gained < 2))"
             }
           },
           {
             "type": "apply",
             "target": {
-              "tag": "edge_gained"
+              "expr": "@цель.edge_gained"
             },
             "direction": "add",
             "value": {
@@ -1543,74 +1576,84 @@
             },
             "targetModifiers": false,
             "when": {
-              "expr": "все(@атк - @получатель.defense_rating <= -4, все(@получатель.edge_left < 7, @получатель.edge_gained < 2))"
+              "expr": "все(@атк - @цель.defense_rating <= -4, все(@цель.edge_left < 7, @цель.edge_gained < 2))"
+            }
+          },
+          {
+            "id": "атака_против",
+            "type": "roll",
+            "die": {
+              "constant": "pool"
+            },
+            "count": {
+              "expr": "@цель.defense_pool"
+            },
+            "tags": [
+              "защита"
+            ],
+            "by": {
+              "expr": "@цель"
+            },
+            "against": {
+              "expr": "@действующий"
             }
           },
           {
             "id": "атака",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "pool"
-              },
-              "count": {
-                "expr": "большее из(0, @attack_pool + таблица(\"edge_actions\", или(@приём, \"нет\"), \"pool\"))"
-              },
-              "tags": [
-                "атака"
-              ]
+            "type": "check",
+            "value": {
+              "expr": "@атака_бросок"
             },
             "versus": {
-              "roll": {
-                "die": {
-                  "constant": "pool"
-                },
-                "count": {
-                  "expr": "@получатель.defense_pool"
-                },
-                "tags": [
-                  "защита"
-                ]
-              }
+              "expr": "@атака_против"
             },
             "successWhen": "atLeast",
             "continueOn": "always"
           },
           {
-            "type": "compare",
+            "type": "check",
             "value": {
               "expr": "@атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака.versusNatural"
             },
             "versus": {
-              "expr": "0"
+              "expr": "(0)"
             },
-            "breakIf": "less",
             "note": "промах: успехов атаки меньше, чем у защиты"
           },
           {
+            "id": "сопротивление_бросок",
+            "type": "roll",
+            "die": {
+              "constant": "pool"
+            },
+            "count": {
+              "expr": "@цель.body"
+            },
+            "tags": [
+              "сопротивление"
+            ],
+            "by": {
+              "expr": "@цель"
+            },
+            "against": {
+              "expr": "@действующий"
+            }
+          },
+          {
             "id": "сопротивление",
-            "type": "threshold",
-            "side": "target",
-            "roll": {
-              "die": {
-                "constant": "pool"
-              },
-              "count": {
-                "expr": "@получатель.body"
-              },
-              "tags": [
-                "сопротивление"
-              ]
+            "type": "check",
+            "value": {
+              "expr": "@сопротивление_бросок"
             },
             "versus": {
-              "expr": "0"
+              "expr": "(0)"
             },
             "continueOn": "always"
           },
           {
             "type": "apply",
             "target": {
-              "tag": "physical"
+              "expr": "@цель.physical"
             },
             "direction": "add",
             "value": {
@@ -1624,7 +1667,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "stun"
+              "expr": "@цель.stun"
             },
             "direction": "add",
             "value": {
@@ -1641,6 +1684,9 @@
             "effect": {
               "const": "shocked"
             },
+            "to": {
+              "expr": "@цель"
+            },
             "when": {
               "expr": "все(@electric >= 1, большее из(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака.versusNatural - @сопротивление.natural) >= 1)"
             }
@@ -1651,35 +1697,37 @@
             "effect": {
               "const": "prone"
             },
+            "to": {
+              "expr": "@цель"
+            },
             "when": {
-              "expr": "большее из(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака.versusNatural - @сопротивление.natural) > @получатель.body"
+              "expr": "большее из(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака.versusNatural - @сопротивление.natural) > @цель.body"
             }
           },
           {
             "type": "apply",
             "target": {
-              "tag": "stun"
+              "expr": "@цель.stun"
             },
             "direction": "set",
             "value": {
-              "expr": "@получатель.stun_max"
+              "expr": "@цель.stun_max"
             },
             "targetModifiers": false,
             "when": {
-              "expr": "все(таблица(\"edge_actions\", или(@приём, \"нет\"), \"knockout\") >= 1, большее из(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака.versusNatural - @сопротивление.natural) > @получатель.willpower)"
+              "expr": "все(таблица(\"edge_actions\", или(@приём, \"нет\"), \"knockout\") >= 1, большее из(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака.versusNatural - @сопротивление.natural) > @цель.willpower)"
             }
           }
         ],
         "cost": [
           {
-            "type": "compare",
+            "type": "check",
             "value": {
-              "expr": "@edge_left"
+              "expr": "@действующий.edge_left"
             },
             "versus": {
-              "expr": "3"
+              "expr": "(3)"
             },
-            "breakIf": "less",
             "note": "нужно 3 очка Преимущества",
             "when": {
               "expr": "(если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) >= 1"
@@ -1688,7 +1736,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "edge_left"
+              "expr": "@действующий.edge_left"
             },
             "direction": "subtract",
             "value": {
@@ -1702,28 +1750,33 @@
           {
             "type": "emit",
             "event": "spend",
-            "strict": true,
             "args": {
               "what": {
-                "expr": "@edge_left"
+                "expr": "@действующий.edge_left"
               },
               "amount": {
                 "expr": "таблица(\"edge_actions\", или(@приём, \"нет\"), \"cost\")"
               },
               "note": {
                 "expr": "\"на приём не хватает Преимущества\""
+              },
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
-            }
+            },
+            "strict": true
           },
           {
-            "type": "compare",
+            "type": "check",
             "value": {
-              "expr": "@complex_left"
+              "expr": "@действующий.complex_left"
             },
             "versus": {
-              "expr": "1"
+              "expr": "(1)"
             },
-            "breakIf": "less",
             "note": "сложное действие на этом ходу уже потрачено",
             "when": {
               "expr": "@стол.battle >= 1"
@@ -1732,7 +1785,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "complex_left"
+              "expr": "@действующий.complex_left"
             },
             "direction": "subtract",
             "value": {
@@ -1742,6 +1795,513 @@
             "when": {
               "expr": "@стол.battle >= 1"
             }
+          }
+        ]
+      },
+      "second_wind": {
+        "label": "Второе дыхание",
+        "group": "Преимущество",
+        "activation": "manual",
+        "description": "За 3 очка Преимущества — освободить 1 ячейку оглушения.",
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.stun"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "меньшее из(@действующий.stun, 1)"
+            },
+            "targetModifiers": false
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "event": "spend",
+            "args": {
+              "what": {
+                "expr": "@действующий.edge_left"
+              },
+              "amount": {
+                "expr": "3"
+              },
+              "note": {
+                "expr": "\"нужно 3 очк. Преимущества\""
+              },
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            },
+            "strict": true
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "shrug_off": {
+        "label": "Ранен не так сильно",
+        "group": "Преимущество",
+        "activation": "manual",
+        "description": "За 4 очка Преимущества — освободить 1 ячейку здоровья.",
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.physical"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "меньшее из(@действующий.physical, 1)"
+            },
+            "targetModifiers": false
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "event": "spend",
+            "args": {
+              "what": {
+                "expr": "@действующий.edge_left"
+              },
+              "amount": {
+                "expr": "4"
+              },
+              "note": {
+                "expr": "\"нужно 4 очк. Преимущества\""
+              },
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            },
+            "strict": true
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "scene_start": {
+        "label": "Начало сцены",
+        "group": "Преимущество",
+        "activation": "manual",
+        "description": "В начале сцены очков Преимущества — сколько характеристика Преимущество.",
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.edge_left"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "@действующий.edge"
+            },
+            "targetModifiers": false
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "first_aid": {
+        "label": "Первая помощь",
+        "group": "Лечение",
+        "activation": "manual",
+        "description": "Биотехнологии + Логика, порог 5 − Сущность цели, в течение минуты после боя. Чистый успех — 1 оглушающий, два — 1 физический.",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          },
+          {
+            "key": "healer_pool",
+            "label": "Набор",
+            "kind": "number"
+          }
+        ],
+        "steps": [
+          {
+            "id": "помощь_бросок",
+            "type": "roll",
+            "die": {
+              "constant": "pool"
+            },
+            "count": {
+              "expr": "@healer_pool"
+            },
+            "tags": [
+              "лечение"
+            ],
+            "by": {
+              "expr": "@действующий"
+            },
+            "against": {
+              "expr": "первый(@цели)"
+            }
+          },
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "id": "помощь",
+            "type": "check",
+            "value": {
+              "expr": "@помощь_бросок"
+            },
+            "versus": {
+              "expr": "(большее из(0, округлить вниз(5 - @цель.essence)))"
+            },
+            "continueOn": "always"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.stun"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "меньшее из(@цель.stun, большее из(0, @помощь.margin))"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@помощь.success"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.physical"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "меньшее из(@цель.physical, округлить вниз(большее из(0, @помощь.margin - @цель.stun) / 2))"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@помощь.success"
+            }
+          }
+        ]
+      },
+      "rest_hour": {
+        "label": "Час отдыха",
+        "group": "Лечение",
+        "activation": "manual",
+        "description": "Тело + Воля: каждый успех — 1 оглушающий.",
+        "steps": [
+          {
+            "id": "заживление_бросок",
+            "type": "roll",
+            "die": {
+              "constant": "pool"
+            },
+            "count": {
+              "expr": "@действующий.body + @действующий.willpower"
+            },
+            "tags": [
+              "лечение"
+            ],
+            "by": {
+              "expr": "@действующий"
+            },
+            "against": {
+              "expr": "первый(@цели)"
+            }
+          },
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "id": "заживление",
+            "type": "check",
+            "value": {
+              "expr": "@заживление_бросок"
+            },
+            "versus": {
+              "expr": "(0)"
+            },
+            "continueOn": "always"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.stun"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "меньшее из(@действующий.stun, @заживление.natural)"
+            },
+            "targetModifiers": false
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "rest_day": {
+        "label": "День отдыха",
+        "group": "Лечение",
+        "activation": "manual",
+        "description": "Тело + Тело: каждый успех — 1 физический.",
+        "steps": [
+          {
+            "id": "заживление_бросок",
+            "type": "roll",
+            "die": {
+              "constant": "pool"
+            },
+            "count": {
+              "expr": "@действующий.body * 2"
+            },
+            "tags": [
+              "лечение"
+            ],
+            "by": {
+              "expr": "@действующий"
+            },
+            "against": {
+              "expr": "первый(@цели)"
+            }
+          },
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "id": "заживление",
+            "type": "check",
+            "value": {
+              "expr": "@заживление_бросок"
+            },
+            "versus": {
+              "expr": "(0)"
+            },
+            "continueOn": "always"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.physical"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "меньшее из(@действующий.physical, @заживление.natural)"
+            },
+            "targetModifiers": false
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "stand_up": {
+        "label": "Встать",
+        "group": "Действия",
+        "activation": "manual",
+        "description": "Простое действие: снять «Распластан».",
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "status",
+            "mode": "remove",
+            "effect": {
+              "const": "prone"
+            },
+            "to": {
+              "expr": "@цель"
+            }
+          }
+        ],
+        "cost": [
+          {
+            "type": "check",
+            "value": {
+              "expr": "@действующий.simple_left"
+            },
+            "versus": {
+              "expr": "(1)"
+            },
+            "note": "простых действий не осталось",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.simple_left"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "1"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ]
+      },
+      "spend": {
+        "label": "Потратить",
+        "group": "Вызываемые",
+        "description": "Проверить, что запаса хватает, и отнять. Не хватает — действие обрывается.",
+        "activation": "manual",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true
+          },
+          {
+            "key": "what",
+            "label": "Что тратим",
+            "kind": "field"
+          },
+          {
+            "key": "amount",
+            "label": "Сколько",
+            "kind": "number"
+          },
+          {
+            "key": "note",
+            "label": "Если не хватает",
+            "kind": "text",
+            "optional": true
+          }
+        ],
+        "steps": [
+          {
+            "type": "check",
+            "value": {
+              "expr": "@what"
+            },
+            "versus": {
+              "expr": "(@amount)"
+            },
+            "note": {
+              "expr": "@note"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@what"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "@amount"
+            },
+            "targetModifiers": false
           }
         ]
       },
@@ -1756,17 +2316,15 @@
         "description": "Значение атаки больше значения защиты цели на 4 и больше — очко Преимущества атакующему (не больше 7).",
         "on": [
           {
-            "on": "affected",
-            "of": "ranged_attack",
-            "to": "other",
+            "on": "after:ranged_attack",
             "if": {
-              "expr": "@атк - @defense_rating >= 4"
+              "expr": "все(@цель == @носитель, @атк - @носитель.defense_rating >= 4, не(пусто(@действующий)))"
             },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "tag": "edge_left"
+                  "expr": "@действующий.edge_left"
                 },
                 "direction": "add",
                 "value": {
@@ -1774,13 +2332,13 @@
                 },
                 "targetModifiers": false,
                 "when": {
-                  "expr": "все(@получатель.edge_left < 7, @получатель.edge_gained < 2)"
+                  "expr": "все(@действующий.edge_left < 7, @действующий.edge_gained < 2)"
                 }
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "edge_gained"
+                  "expr": "@действующий.edge_gained"
                 },
                 "direction": "add",
                 "value": {
@@ -1788,7 +2346,7 @@
                 },
                 "targetModifiers": false,
                 "when": {
-                  "expr": "все(@получатель.edge_left < 7, @получатель.edge_gained < 2)"
+                  "expr": "все(@действующий.edge_left < 7, @действующий.edge_gained < 2)"
                 }
               }
             ]
@@ -1807,23 +2365,32 @@
         "on": [
           {
             "on": "seen",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
             "confirm": true,
             "cost": [
               {
                 "type": "emit",
                 "event": "spend",
-                "strict": true,
                 "args": {
                   "what": {
-                    "expr": "@edge_left"
+                    "expr": "@носитель.edge_left"
                   },
                   "amount": {
                     "expr": "4"
                   },
                   "note": {
                     "expr": "\"нужно 4 очк. Преимущества\""
+                  },
+                  "лист": {
+                    "expr": "@носитель"
+                  },
+                  "источник": {
+                    "expr": "@носитель"
                   }
-                }
+                },
+                "strict": true
               }
             ],
             "steps": [
@@ -1849,30 +2416,39 @@
         "on": [
           {
             "on": "seen",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
             "confirm": true,
             "cost": [
               {
                 "type": "emit",
                 "event": "spend",
-                "strict": true,
                 "args": {
                   "what": {
-                    "expr": "@edge_left"
+                    "expr": "@носитель.edge_left"
                   },
                   "amount": {
                     "expr": "4"
                   },
                   "note": {
                     "expr": "\"нужно 4 очк. Преимущества\""
+                  },
+                  "лист": {
+                    "expr": "@носитель"
+                  },
+                  "источник": {
+                    "expr": "@носитель"
                   }
-                }
+                },
+                "strict": true
               }
             ],
             "steps": [
               {
                 "type": "roll-add",
                 "count": {
-                  "expr": "@edge"
+                  "expr": "@носитель.edge"
                 },
                 "explode": true
               }
@@ -1896,7 +2472,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "edge_gained"
+                  "expr": "@носитель.edge_gained"
                 },
                 "direction": "set",
                 "value": {
@@ -1920,22 +2496,25 @@
         "on": [
           {
             "on": "moment:turn-start",
+            "if": {
+              "expr": "@ходит == @носитель"
+            },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "tag": "simple_left"
+                  "expr": "@носитель.simple_left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "меньшее из(5, 1 + @init_dice)"
+                  "expr": "меньшее из(5, 1 + @носитель.init_dice)"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "complex_left"
+                  "expr": "@носитель.complex_left"
                 },
                 "direction": "set",
                 "value": {
@@ -1963,7 +2542,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "battle"
+                  "expr": "@стол.battle"
                 },
                 "direction": "set",
                 "value": {
@@ -1991,7 +2570,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "battle"
+                  "expr": "@стол.battle"
                 },
                 "direction": "set",
                 "value": {
@@ -2000,99 +2579,6 @@
                 "targetModifiers": false
               }
             ]
-          }
-        ]
-      },
-      "second_wind": {
-        "label": "Второе дыхание",
-        "group": "Преимущество",
-        "activation": "manual",
-        "description": "За 3 очка Преимущества — освободить 1 ячейку оглушения.",
-        "steps": [
-          {
-            "type": "apply",
-            "target": {
-              "tag": "stun"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "меньшее из(@stun, 1)"
-            },
-            "targetModifiers": false
-          }
-        ],
-        "cost": [
-          {
-            "type": "emit",
-            "event": "spend",
-            "strict": true,
-            "args": {
-              "what": {
-                "expr": "@edge_left"
-              },
-              "amount": {
-                "expr": "3"
-              },
-              "note": {
-                "expr": "\"нужно 3 очк. Преимущества\""
-              }
-            }
-          }
-        ]
-      },
-      "shrug_off": {
-        "label": "Ранен не так сильно",
-        "group": "Преимущество",
-        "activation": "manual",
-        "description": "За 4 очка Преимущества — освободить 1 ячейку здоровья.",
-        "steps": [
-          {
-            "type": "apply",
-            "target": {
-              "tag": "physical"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "меньшее из(@physical, 1)"
-            },
-            "targetModifiers": false
-          }
-        ],
-        "cost": [
-          {
-            "type": "emit",
-            "event": "spend",
-            "strict": true,
-            "args": {
-              "what": {
-                "expr": "@edge_left"
-              },
-              "amount": {
-                "expr": "4"
-              },
-              "note": {
-                "expr": "\"нужно 4 очк. Преимущества\""
-              }
-            }
-          }
-        ]
-      },
-      "scene_start": {
-        "label": "Начало сцены",
-        "group": "Преимущество",
-        "activation": "manual",
-        "description": "В начале сцены очков Преимущества — сколько характеристика Преимущество.",
-        "steps": [
-          {
-            "type": "apply",
-            "target": {
-              "tag": "edge_left"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@edge"
-            },
-            "targetModifiers": false
           }
         ]
       },
@@ -2107,10 +2593,9 @@
         "description": "Единицы больше чем на половине кубиков атаки — сбой.",
         "on": [
           {
-            "on": "done",
-            "of": "ranged_attack",
+            "on": "done:ranged_attack",
             "if": {
-              "expr": "все(@атака.atMin * 2 > @атака.rolled, @атака.natural >= 1)"
+              "expr": "все(@действующий == @носитель, все(@атака_бросок.atMin * 2 > @атака_бросок.rolled, @атака_бросок.natural >= 1))"
             },
             "steps": []
           }
@@ -2127,150 +2612,11 @@
         "description": "Сбой без единого успеха.",
         "on": [
           {
-            "on": "done",
-            "of": "ranged_attack",
+            "on": "done:ranged_attack",
             "if": {
-              "expr": "все(@атака.atMin * 2 > @атака.rolled, @атака.natural == 0)"
+              "expr": "все(@действующий == @носитель, все(@атака_бросок.atMin * 2 > @атака_бросок.rolled, @атака_бросок.natural == 0))"
             },
             "steps": []
-          }
-        ]
-      },
-      "first_aid": {
-        "label": "Первая помощь",
-        "group": "Лечение",
-        "activation": "manual",
-        "description": "Биотехнологии + Логика, порог 5 − Сущность цели, в течение минуты после боя. Чистый успех — 1 оглушающий, два — 1 физический.",
-        "params": [
-          {
-            "key": "healer_pool",
-            "label": "Набор",
-            "kind": "number"
-          }
-        ],
-        "steps": [
-          {
-            "id": "помощь",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "pool"
-              },
-              "count": {
-                "expr": "@healer_pool"
-              },
-              "tags": [
-                "лечение"
-              ]
-            },
-            "versus": {
-              "expr": "большее из(0, округлить вниз(5 - @получатель.essence))"
-            },
-            "continueOn": "always"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "stun"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "меньшее из(@получатель.stun, большее из(0, @помощь.margin))"
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@помощь.success"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "physical"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "меньшее из(@получатель.physical, округлить вниз(большее из(0, @помощь.margin - @получатель.stun) / 2))"
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@помощь.success"
-            }
-          }
-        ]
-      },
-      "rest_hour": {
-        "label": "Час отдыха",
-        "group": "Лечение",
-        "activation": "manual",
-        "description": "Тело + Воля: каждый успех — 1 оглушающий.",
-        "steps": [
-          {
-            "id": "заживление",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "pool"
-              },
-              "count": {
-                "expr": "@body + @willpower"
-              },
-              "tags": [
-                "лечение"
-              ]
-            },
-            "versus": {
-              "expr": "0"
-            },
-            "continueOn": "always"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "stun"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "меньшее из(@stun, @заживление.natural)"
-            },
-            "targetModifiers": false
-          }
-        ]
-      },
-      "rest_day": {
-        "label": "День отдыха",
-        "group": "Лечение",
-        "activation": "manual",
-        "description": "Тело + Тело: каждый успех — 1 физический.",
-        "steps": [
-          {
-            "id": "заживление",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "pool"
-              },
-              "count": {
-                "expr": "@body * 2"
-              },
-              "tags": [
-                "лечение"
-              ]
-            },
-            "versus": {
-              "expr": "0"
-            },
-            "continueOn": "always"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "physical"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "меньшее из(@physical, @заживление.natural)"
-            },
-            "targetModifiers": false
           }
         ]
       },
@@ -2366,51 +2712,6 @@
         "description": "−4 к проверкам против источника или для защиты от него.",
         "modifiers": []
       },
-      "stand_up": {
-        "label": "Встать",
-        "group": "Действия",
-        "activation": "manual",
-        "description": "Простое действие: снять «Распластан».",
-        "steps": [
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "prone"
-            }
-          }
-        ],
-        "cost": [
-          {
-            "type": "compare",
-            "value": {
-              "expr": "@simple_left"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "breakIf": "less",
-            "note": "простых действий не осталось",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "simple_left"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "1"
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          }
-        ]
-      },
       "unconscious": {
         "label": "Без сознания",
         "group": "Состояния",
@@ -2453,12 +2754,18 @@
         "on": [
           {
             "on": "field:knocked_out",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
             "steps": [
               {
                 "type": "status",
                 "mode": "apply",
                 "effect": {
                   "const": "unconscious"
+                },
+                "to": {
+                  "expr": "@носитель"
                 }
               }
             ]
@@ -2477,12 +2784,18 @@
         "on": [
           {
             "on": "field:bleeding_out",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
             "steps": [
               {
                 "type": "status",
                 "mode": "apply",
                 "effect": {
                   "const": "bleeding"
+                },
+                "to": {
+                  "expr": "@носитель"
                 }
               }
             ]
@@ -2501,12 +2814,18 @@
         "on": [
           {
             "on": "field:is_dead",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
             "steps": [
               {
                 "type": "status",
                 "mode": "remove",
                 "effect": {
                   "const": "bleeding"
+                },
+                "to": {
+                  "expr": "@носитель"
                 }
               },
               {
@@ -2514,6 +2833,9 @@
                 "mode": "apply",
                 "effect": {
                   "const": "dead"
+                },
+                "to": {
+                  "expr": "@носитель"
                 }
               }
             ]
@@ -2532,12 +2854,18 @@
         "on": [
           {
             "on": "field:conscious",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
             "steps": [
               {
                 "type": "status",
                 "mode": "remove",
                 "effect": {
                   "const": "unconscious"
+                },
+                "to": {
+                  "expr": "@носитель"
                 }
               },
               {
@@ -2545,59 +2873,12 @@
                 "mode": "remove",
                 "effect": {
                   "const": "bleeding"
+                },
+                "to": {
+                  "expr": "@носитель"
                 }
               }
             ]
-          }
-        ]
-      },
-      "spend": {
-        "label": "Потратить",
-        "group": "Вызываемые",
-        "description": "Проверить, что запаса хватает, и отнять. Не хватает — действие обрывается.",
-        "activation": "manual",
-        "params": [
-          {
-            "key": "what",
-            "label": "Что тратим",
-            "kind": "tag"
-          },
-          {
-            "key": "amount",
-            "label": "Сколько",
-            "kind": "number"
-          },
-          {
-            "key": "note",
-            "label": "Если не хватает",
-            "kind": "text",
-            "optional": true
-          }
-        ],
-        "steps": [
-          {
-            "type": "compare",
-            "value": {
-              "expr": "@what"
-            },
-            "versus": {
-              "expr": "@amount"
-            },
-            "breakIf": "less",
-            "note": {
-              "expr": "@note"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "param": "what"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "@amount"
-            },
-            "targetModifiers": false
           }
         ]
       }
@@ -3764,7 +4045,7 @@
             "effect": "first_aid",
             "args": {
               "healer_pool": {
-                "expr": "@skills.биотехнологии.pool"
+                "expr": "@носитель.skills.биотехнологии.pool"
               }
             }
           }

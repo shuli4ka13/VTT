@@ -1,5 +1,4 @@
 import { EngineError } from '../errors.ts';
-import { lonelyField } from '../refs.ts';
 import { requireCalled } from '../effects.ts';
 import { amountParamOf } from '../../model/lists.ts';
 import type { EmittedEvent } from '../rule.ts';
@@ -28,10 +27,9 @@ export function lint(step: StepData) {
 
 export function traceLine(t: any, h: any) {
   const name = typeof h?.eventLabel === 'function' ? h.eventLabel(t.event) : t.event;
-  if (t.to === 'sender') return `отвечает отправителю: зовёт «${name}» у него`;
   const tags = t.tags?.length ? ` [${t.tags.join(', ')}]` : '';
   const mods = t.incoming !== t.amount
-    ? ` (отправлено ${t.incoming}, после модификаторов цели ${t.amount})`
+    ? ` (отправлено ${t.incoming}, после правок ${t.amount})`
     : '';
   return `зовёт «${name}»${tags}: ${t.amount}${mods}`;
 }
@@ -50,7 +48,7 @@ function chosenTags(params: { key: string; kind?: string; from?: string }[], arg
   return out;
 }
 
-const runner: Pick<StepModule, 'once' | 'mayBreak' | 'prepare' | 'finish' | 'splits'> = {
+const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
   mayBreak: true,
   finish(step, ctx) {
     const id = String(step.event ?? '');
@@ -58,13 +56,9 @@ const runner: Pick<StepModule, 'once' | 'mayBreak' | 'prepare' | 'finish' | 'spl
     const params = spec.params ?? [];
     const args: Record<string, unknown> = {};
     for (const [key, ref] of Object.entries((step.args ?? {}) as Record<string, unknown>)) {
-      const field = params.find(p => p.key === key)?.kind === 'tag' ? lonelyField(ref, ctx.system) : null;
-      const value = field ?? ctx.value(ref);
+      const kind = params.find(p => p.key === key)?.kind;
+      const value = kind === 'field' ? ctx.field(ref) : kind === 'sheet' ? ctx.value(ref) : ctx.value(ref);
       if (value !== null && value !== undefined) args[key] = value;
-    }
-    if (step.to === 'sender') {
-      ctx.reply(id, args);
-      return { value: { event: id, answered: true, args }, trace: { event: id, to: 'sender', args }, break: null };
     }
     const main = amountParamOf(spec);
     const incoming = main && args[main.key] !== undefined ? Number(args[main.key]) : 0;
@@ -86,10 +80,3 @@ const runner: Pick<StepModule, 'once' | 'mayBreak' | 'prepare' | 'finish' | 'spl
 
 
 export const { mayBreak, finish } = runner;
-
-export function answerSteps(call: { event: string; args: Record<string, unknown> }): StepData[] {
-  return [{
-    type, event: call.event,
-    args: Object.fromEntries(Object.entries(call.args).map(([key, value]) => [key, { const: value }])),
-  } as StepData];
-}

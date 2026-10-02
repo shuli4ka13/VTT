@@ -1,16 +1,13 @@
 import { wornEffects, findEffect } from '../engine/effects.ts';
 import type { System, Sheet, Compendium, Effect, Handler } from '../model/types.ts';
-import type { EmittedEvent } from '../engine/rule.ts';
-import type { ActionMoment } from './action-moments.ts';
 
-export const EVENT_PREFIX = 'event:';
 export const MOMENT_PREFIX = 'moment:';
 export const FIELD_PREFIX = 'field:';
 export const GAINED_PREFIX = 'gained:';
 export const LOST_PREFIX = 'lost:';
 
-export { ACTION_MOMENTS, isActionMoment } from './action-moments.ts';
-export type { ActionMoment } from './action-moments.ts';
+export { PHASES, SEEN, SEEN_LABEL, ANY_ACTION, isPhase, callHappening, happeningOf } from './happenings.ts';
+export type { Phase } from './happenings.ts';
 
 export interface Subscriber {
   id: string;
@@ -20,25 +17,11 @@ export interface Subscriber {
   key: string;
 }
 
-export type Occasion =
-  | { kind: 'moment'; moment: string }
-  | { kind: 'field'; tag: string }
-  | { kind: 'gained'; effect: string }
-  | { kind: 'lost'; effect: string }
-  | { kind: 'action'; moment: ActionMoment; confirm: boolean; effect: string; emitted: EmittedEvent[]; watch?: boolean };
-
 export const handlerKey = (id: string, index: number): string => (index ? `${id}#${index}` : id);
 
 export const asks = (handler: Handler): boolean => handler.confirm === true;
-export const runsAtOther = (handler: Handler): boolean => handler.to === 'other';
 
 export const handlersOf = (effect: Effect | null | undefined): Handler[] => effect?.on ?? [];
-
-export function hears(of: string | undefined, effectId: string, emitted: EmittedEvent[]): EmittedEvent | undefined | null {
-  if (!of) return undefined;
-  if (of.startsWith(EVENT_PREFIX)) return emitted.filter(e => `${EVENT_PREFIX}${e.event}` === of).at(-1) ?? null;
-  return of === effectId ? undefined : null;
-}
 
 export function subscribers(
   system: System, sheet: Sheet, { compendium }: { compendium?: Compendium | null } = {},
@@ -46,36 +29,6 @@ export function subscribers(
   return wornEffects(system, sheet, { strict: false, compendium }).flatMap(({ id, effect }) => handlersOf(effect).map((handler, index) => ({
     id, effect, handler, index, key: handlerKey(id, index),
   })));
-}
-
-export interface Heard extends Subscriber { heard?: EmittedEvent }
-
-export function listening(
-  system: System, sheet: Sheet, occasion: Occasion, options: { compendium?: Compendium | null } = {},
-): Heard[] {
-  const out: Heard[] = [];
-  for (const sub of subscribers(system, sheet, options)) {
-    const { handler } = sub;
-    if (occasion.kind === 'moment') {
-      if (handler.on === `${MOMENT_PREFIX}${occasion.moment}`) out.push(sub);
-      continue;
-    }
-    if (occasion.kind === 'field') {
-      if (handler.on === `${FIELD_PREFIX}${occasion.tag}`) out.push(sub);
-      continue;
-    }
-    if (occasion.kind === 'gained' || occasion.kind === 'lost') {
-      const prefix = occasion.kind === 'gained' ? GAINED_PREFIX : LOST_PREFIX;
-      if (handler.on === `${prefix}${occasion.effect}`) out.push(sub);
-      continue;
-    }
-    if (handler.on !== occasion.moment || asks(handler) !== occasion.confirm) continue;
-    if (Boolean(handler.watch) !== Boolean(occasion.watch)) continue;
-    const heard = hears(handler.of, occasion.effect, occasion.emitted);
-    if (heard === null) continue;
-    out.push(heard ? { ...sub, heard } : sub);
-  }
-  return out;
 }
 
 export function subscriberByKey(system: System, key: string): Subscriber | null {

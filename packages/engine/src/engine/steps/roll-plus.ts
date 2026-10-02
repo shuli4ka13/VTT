@@ -10,7 +10,7 @@ export const mayBreak = false;
 export const icon = '+';
 export const traceLine = (t: { before: number; after: number }): string => `прибавлено — итог ${t.before} → ${t.after}`;
 
-const runner: Pick<StepModule, 'once' | 'mayBreak' | 'prepare' | 'finish' | 'splits'> = {
+const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
   finish: (step, ctx) => operate(ctx, 'Прибавить', { kind: 'plus', value: ctx.number(step.value, 'сколько прибавить') }),
 };
 
