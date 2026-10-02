@@ -141,7 +141,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
           <textarea
             className="textarea"
             value={record.description ?? ''}
-            onChange={e => edit(draft => { draft.description = e.target.value; })}
+            onChange={e => edit(draft => { if (e.target.value) draft.description = e.target.value; else delete draft.description; })}
           />
         </Field>
       </Card>
@@ -178,7 +178,11 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
                   compendium={compendium}
                   onlyWorn
                   except={record.id}
-                  onChange={next => edit(draft => { (draft.cells ??= {})[prop.key] = next; })}
+                  onChange={next => edit(draft => {
+                    const cells = (draft.cells ??= {});
+                    if (next === undefined || next === '' || (Array.isArray(next) && !next.length)) delete cells[prop.key];
+                    else cells[prop.key] = next;
+                  })}
                 />
               </Field>
             ))}

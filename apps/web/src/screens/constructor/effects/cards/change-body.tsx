@@ -134,7 +134,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
     ),
   } : undefined;
 
-  const DICE = /(\d+)?\s*[dдк]\s*(\d+)/iu;
+  const DICE = /(?<![\p{L}\p{N}_@.])(\d+)?\s*[dдк]\s*(\d+)/iu;
 
   const mentions = (text: string, id: string) =>
     new RegExp(`[@#]${id}(?![\\p{L}\\p{N}_])`, 'u').test(text);
@@ -171,14 +171,16 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   const commit = (typed: string) => {
     const text = typed.trim();
 
-    const rolled = text.match(DICE);
+    const rolled = text.replace(/"[^"]*"|'[^']*'/g, m => ' '.repeat(m.length)).match(DICE);
     if (rolled) {
       const notation = `${rolled[1] ?? 1}d${rolled[2]}`;
       const picked = parseRollExpr(notation, context.system).die;
 
+      const at = rolled.index ?? 0;
+      const swap = (put: string) => `${text.slice(0, at)}${put}${text.slice(at + rolled[0].length)}`;
       const next = (name: string) => (mentions(text, name.slice(1))
-        ? text.replace(DICE, '').replace(/\+\s*\+/g, '+').replace(/[-+*/]\s*$/, '').replace(/\s+/g, ' ').trim()
-        : text.replace(DICE, name));
+        ? swap('').replace(/\+\s*\+/g, '+').replace(/[-+*/]\s*$/, '').replace(/\s+/g, ' ').trim()
+        : swap(name));
 
       const bad = badFormula({ expr: next('@x') });
       if (bad) { setTrouble(bad); return; }

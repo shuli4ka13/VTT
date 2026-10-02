@@ -404,7 +404,6 @@
             "versus": {
               "expr": "4"
             },
-            "successWhen": "atLeast",
             "continueOn": "always",
             "degrees": {
               "table": "outcome",
@@ -486,7 +485,6 @@
             "versus": {
               "expr": "4"
             },
-            "successWhen": "atLeast",
             "continueOn": "always"
           },
           {
@@ -561,7 +559,6 @@
             "versus": {
               "expr": "4"
             },
-            "successWhen": "atLeast",
             "continueOn": "always",
             "degrees": {
               "table": "outcome",

@@ -50,8 +50,9 @@ describe('собранное шагами конструктора работа�
 
   it('хвост «временные хиты → хиты»: перебор первого изменения уходит во второе', () => {
     const id = newManual();
-    const first = addStep(id, 'change');
+    addStep(id, 'change');
     fill(id, 1, step => {
+      step.id = 'временные_сняты';
       step.target = { expr: '@цель.временные' };
       step.direction = 'subtract';
       step.value = { expr: '8' };
@@ -60,7 +61,7 @@ describe('собранное шагами конструктора работа�
     fill(id, 2, step => {
       step.target = { expr: '@цель.хиты' };
       step.direction = 'subtract';
-      step.value = { expr: `@${first.id}.overkill` };
+      step.value = { expr: '@временные_сняты.overkill' };
     });
 
     const system = useWorld.getState().system;

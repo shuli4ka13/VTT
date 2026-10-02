@@ -75,8 +75,7 @@ export const newCost = (system: System): Made<Effect> => ({
 export const costsOf = (system: System): [string, Effect][] =>
   Object.entries(system.effects ?? {}).filter(([, effect]) => effect.group === COST_BLOCK);
 
-export const payStep = (id: string, taken: readonly string[] = []): Step =>
-  ({ id: freeId([...taken], 'стоимость'), type: 'emit', effect: id } as unknown as Step);
+export const payStep = (id: string): Step => ({ type: 'emit', effect: id } as unknown as Step);
 
 export const newCalled = (system: System): Made<Effect> => {
   const field = fieldsOf(system).find(f => f.value.kind === 'stored' && f.value.type === 'number');
@@ -105,7 +104,7 @@ const blankCheck = (system: System, taken: string[]): Step[] => {
   const roll = freeId([...taken, id], `${id}_бросок`);
   return [
     { id: roll, type: 'roll', ...(die ? { die } : {}), by: { expr: '@действующий' } } as unknown as Step,
-    { id, type: 'check', value: { expr: `@${roll}` }, versus: { expr: '10' }, successWhen: 'atLeast', continueOn: 'success' } as unknown as Step,
+    { id, type: 'check', value: { expr: `@${roll}` }, versus: { expr: '10' } } as unknown as Step,
   ];
 };
 
@@ -123,9 +122,7 @@ export const BRICKS: StepTemplate[] = [
   {
     key: 'change', label: '+ изменение',
     hint: 'Изменить поле листа или повесить состояние. Единственное, что меняет мир.',
-    make: (_system, taken) => [{
-      id: freeId(taken, 'изменение'), type: 'apply', direction: 'subtract',
-    } as unknown as Step],
+    make: () => [{ type: 'apply', direction: 'subtract' } as unknown as Step],
   },
   {
     key: 'table', label: '+ таблица',

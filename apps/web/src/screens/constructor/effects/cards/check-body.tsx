@@ -10,7 +10,7 @@ import { namesOf, refForName, inputBadges } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { badFormula } from '../../roll-expr.ts';
-import { parseCheck, formatCheck } from '../../check-expr.ts';
+import { parseCheck, formatCheck, comparison } from '../../check-expr.ts';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { rowTables } from '@vtt/engine/model/tables';
 
@@ -18,12 +18,13 @@ const loose = (draft: unknown): Record<string, any> => draft as Record<string, a
 
 const SUCCESS = [['atLeast', 'не меньше порога'], ['over', 'строго больше'], ['notOver', 'не больше порога'], ['under', 'строго меньше'], ['equals', 'ровно порог']] as const;
 
-export function CheckBody({ step, roll, context, edit, system }: {
+export function CheckBody({ step, roll, context, edit, system, onUnpair }: {
   step: any;
   roll: any | null;
   context: SlotContext;
   edit: EditFn;
   system: System;
+  onUnpair?: () => void;
 }) {
   const at = roll ? 1 : 0;
   const tables = rowTables(system);
@@ -35,7 +36,7 @@ export function CheckBody({ step, roll, context, edit, system }: {
       hint: roll
         ? 'кинуть(кость, метки) + прибавка, знак и порог. Метки — строки таблиц («атака», «ловкость»); по ним правки находят бросок. Поля — через лист: @цель.кд'
         : 'Число, знак и порог: @носитель.ки >= 1',
-      node: <CheckFormula step={step} roll={roll} context={context} edit={edit} />,
+      node: <CheckFormula step={step} roll={roll} context={context} edit={edit} {...(onUnpair ? { onUnpair } : {})} />,
     },
     ...(roll ? [{
       key: 'by', label: 'Бросает', width: 170,
@@ -63,7 +64,7 @@ export function CheckBody({ step, roll, context, edit, system }: {
         <Select
           value={String(step.continueOn ?? 'success')}
           options={[['success', 'успехе'], ['fail', 'провале'], ['always', 'всегда']] as const}
-          onChange={next => edit(at, draft => { loose(draft).continueOn = next; })}
+          onChange={next => edit(at, draft => { if (next === 'success') delete loose(draft).continueOn; else loose(draft).continueOn = next; })}
         />
       ),
     },
@@ -109,7 +110,7 @@ export function CheckBody({ step, roll, context, edit, system }: {
   return (
     <>
       <FieldRow id={roll ? 'check-roll' : 'check-plain'} fields={fields} />
-      {roll ? (
+      {roll || readsRoll(step, context) ? (
         <Fold title="ещё" summary={step.succeedOn || step.failOn ? 'есть «всегда успех / провал»' : 'всегда успех или провал на кости'}>
           <div className="row">
             <Field label="Всегда успех, если на кости не меньше" hint="Натуральная 20: что бы ни прибавили, это успех.">{forced('succeedOn')}</Field>
@@ -120,6 +121,15 @@ export function CheckBody({ step, roll, context, edit, system }: {
     </>
   );
 }
+
+const readsRoll = (step: any, context: SlotContext): boolean => {
+  const name = /^@([\p{L}\p{N}_]+)$/u.exec(String(step.value?.expr ?? '').trim())?.[1];
+  return Boolean(name && context.earlier.some(e => e.id === name && e.type === 'roll'));
+};
+
+const setSuccessWhen = (d: Record<string, unknown>, op: string): void => {
+  if (op === 'atLeast') delete d.successWhen; else d.successWhen = op;
+};
 
 const quoted = (text: string): string => (text.includes('"') ? `'${text}'` : `"${text}"`);
 
@@ -140,7 +150,7 @@ function NoteField({ value, onChange }: { value: unknown; onChange: (next: { exp
   return <Input value={draft ?? shown} placeholder="например: не хватает ячейки" onChange={setDraft} onBlur={commit} />;
 }
 
-function CheckFormula({ step, roll, context, edit }: { step: any; roll: any | null; context: SlotContext; edit: EditFn }) {
+function CheckFormula({ step, roll, context, edit, onUnpair }: { step: any; roll: any | null; context: SlotContext; edit: EditFn; onUnpair?: () => void }) {
   const [draft, setDraft] = useState<string | null>(null);
   const [trouble, setTrouble] = useState<string | null>(null);
   const names = useMemo(() => {
@@ -151,16 +161,19 @@ function CheckFormula({ step, roll, context, edit }: { step: any; roll: any | nu
 
   const drop = () => { setDraft(null); setTrouble(null); };
   const commit = (text: string) => {
-    if (!roll) {
-      const match = /^(.*?)(>=|<=|==|>|<)(.*)$/su.exec(text.trim());
-      if (!match) { setTrouble('проверка — это сравнение: «@носитель.ки >= 1»'); return; }
-      const ops: Record<string, string> = { '>=': 'atLeast', '<=': 'notOver', '==': 'equals', '>': 'over', '<': 'under' };
-      edit(0, target => {
+    const cmp = comparison(text.trim());
+    const plain = Boolean(cmp && !cmp.left.startsWith('кинуть('));
+    if (!roll || (plain && onUnpair)) {
+      if (!cmp || !cmp.left || !cmp.right) { setTrouble('проверка — это сравнение: «@носитель.ки >= 1»'); return; }
+      const bad = badFormula({ expr: cmp.left }) ?? badFormula({ expr: cmp.right });
+      if (bad) { setTrouble(bad); return; }
+      edit(roll ? 1 : 0, target => {
         const d = loose(target);
-        d.value = { expr: match[1]!.trim() };
-        d.versus = { expr: match[3]!.trim() };
-        d.successWhen = ops[match[2]!];
+        d.value = { expr: cmp.left };
+        d.versus = { expr: cmp.right };
+        setSuccessWhen(d, cmp.op);
       });
+      if (roll) onUnpair?.();
       drop();
       return;
     }
@@ -177,7 +190,7 @@ function CheckFormula({ step, roll, context, edit }: { step: any; roll: any | nu
     });
     edit(1, target => {
       const d = loose(target);
-      d.successWhen = parsed.successWhen;
+      setSuccessWhen(d, parsed.successWhen);
       d.versus = parsed.versus;
     });
     drop();

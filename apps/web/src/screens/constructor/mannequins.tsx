@@ -11,11 +11,18 @@ export function Mannequins({ system, editSystem }: { system: System; editSystem:
   const stored = fieldsOf(system).filter(field => field.value.kind === 'stored' && !field.cell && (field.lives ?? 'sheet') === 'sheet');
   const kept = (system.mannequins ?? []).some(one => one.id === who);
   const put = (tag: string, text: string) => editSystem(draft => {
-    const list = (draft.mannequins ??= []);
-    let own = list.find(one => one.id === who);
-    if (!own) { own = structuredClone(sheet) as Sheet; list.push(own); }
     const value = text.trim() === '' ? undefined : /^-?\d+(\.\d+)?$/.test(text.trim()) ? Number(text.trim()) : text;
-    if (value === undefined) delete own.values[tag]; else own.values[tag] = value;
+    let own = (draft.mannequins ?? []).find(one => one.id === who);
+    if (value === undefined) {
+      if (!own) return;
+      delete own.values[tag];
+      if (Object.keys(own.values).length) return;
+      draft.mannequins = draft.mannequins!.filter(one => one.id !== who);
+      if (!draft.mannequins.length) delete draft.mannequins;
+      return;
+    }
+    if (!own) { own = structuredClone(sheet) as Sheet; (draft.mannequins ??= []).push(own); }
+    own.values[tag] = value;
   });
   return (
     <Card>

@@ -3,7 +3,7 @@ import { kindsFor } from '@vtt/engine/words/kinds';
 import { choiceTables } from '@vtt/engine/model/tables';
 import { ASKABLE } from '@vtt/engine/model/asks';
 import { freeId, useWorld } from '../../../store/world.ts';
-import { followKey, referenced } from '../keys.ts';
+import { followKey, paramUsed } from '../keys.ts';
 import { KeyField } from '../../../ui/key-field.tsx';
 import { BoundField } from '../bound-field.tsx';
 import { Card, CardHead, Input, Select, Button } from '../../../ui/primitives.tsx';
@@ -36,7 +36,8 @@ const RARE = ['hint', 'main', 'required', 'many', 'bounds', 'key'];
 
 type Loose = Param & { role?: string; optional?: boolean };
 
-export function ParamsEditor({ effect, system, onEdit }: {
+export function ParamsEditor({ id, effect, system, onEdit }: {
+  id: string;
   effect: Effect;
   system: System;
   onEdit: (change: (draft: Effect) => void) => void;
@@ -56,12 +57,12 @@ export function ParamsEditor({ effect, system, onEdit }: {
       else if (p.key === key || on) delete p.role;
     }
   });
-  const world = () => { const st = useWorld.getState(); return { s: st.system, c: st.compendium, sh: st.sheets }; };
+  const used = (key: string) => { const st = useWorld.getState(); return paramUsed(st.system, st.compendium, id, key); };
   const keys = params.map(p => p.key);
   const relabel = (param: Loose, next: string) => onEdit(draft => {
     const target = draft.params?.find(p => p.key === param.key) as Loose | undefined;
     if (!target) return;
-    target.key = followKey({ world: world(), key: target.key, base: 'вход', before: target.label ?? '', after: next, taken: keys });
+    target.key = followKey({ used: used(target.key), key: target.key, base: 'вход', before: target.label ?? '', after: next, taken: keys });
     target.label = next;
   });
   const rekey = (param: Loose, next: string) => change(param.key, t => { t.key = next; });
@@ -154,7 +155,7 @@ export function ParamsEditor({ effect, system, onEdit }: {
                   <BoundField value={param.max} placeholder="не выше" onChange={next => change(param.key, t => { if (next === null) delete t.max; else t.max = next; })} />
                 </span>
               ) : <span key={`${param.key}:bounds`} className="faint">—</span>,
-              <KeyField key={`${param.key}:key`} value={param.key} locked={referenced(world(), param.key)} taken={keys} onChange={next => rekey(param, next)} />,
+              <KeyField key={`${param.key}:key`} value={param.key} locked={used(param.key)} taken={keys} onChange={next => rekey(param, next)} />,
               <Button key={`${param.key}:drop`} size="sm" variant="ghost" title="убрать вход" onClick={() => onEdit(draft => {
                 draft.params = (draft.params ?? []).filter(p => p.key !== param.key);
               })}>×</Button>,

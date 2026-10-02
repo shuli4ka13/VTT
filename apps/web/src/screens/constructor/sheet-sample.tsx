@@ -11,14 +11,21 @@ export function setSample(draft: System, tag: string, value: StoredValue): void 
   const field = fieldOf(draft, tag);
   const table = field ? draft.tables?.[field.home] : undefined;
   if (!field || !table || field.value.kind !== 'stored' || value === null) return;
+  const blank = value === '';
   if (field.cell) {
     const mark = field.cell;
     const row = (table.rows ?? []).find(r => rowKeyOf(r) === mark.row);
-    if (row) row.view = { ...row.view, [mark.column]: { ...row.view?.[mark.column], default: value } };
+    if (!row) return;
+    const { default: _old, ...rest } = row.view?.[mark.column] ?? {};
+    const next = blank ? rest : { ...rest, default: value };
+    const views = { ...row.view };
+    if (Object.keys(next).length) views[mark.column] = next; else delete views[mark.column];
+    if (Object.keys(views).length) row.view = views; else delete row.view;
     return;
   }
   const column = (table.columns ?? []).find(c => c.key === tag);
-  if (column) column.default = value;
+  if (!column) return;
+  if (blank) delete column.default; else column.default = value;
 }
 
 export function SheetSample({ system, picked, onPick }: { system: System; picked?: string | null; onPick?: (tag: string) => void }) {
@@ -55,7 +62,11 @@ export function SheetSample({ system, picked, onPick }: { system: System; picked
         badge="образец"
         {...(onPick ? { onPick } : {})}
         picked={picked ?? null}
-        onChange={(tag, value) => editSystem(draft => setSample(draft, tag, value))}
+        onChange={(tag, value) => {
+          const now = reader.valueOf(tag);
+          if (now.ok && now.value === value) return;
+          editSystem(draft => setSample(draft, tag, value));
+        }}
       />
     </>
   );

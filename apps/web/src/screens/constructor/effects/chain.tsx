@@ -142,6 +142,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
             folded={!opened[foldKey(group)]}
             onFold={() => toggleFold(foldKey(group))}
             onMoveLane={onMoveLane ? to => onMoveLane(group.indices, to) : undefined}
+            {...(group.kind === 'check' && group.amount ? { onUnpair: () => edit(draft => { draft.steps = (draft.steps ?? []).filter((_, i) => i !== group.indices[0]); }) } : {})}
             problemAction={donorFix ? (
               <Button size="sm" onClick={() => copyDonorBlock(donorFix.donor, donorFix.group)}>
                 {`взять блок «${donorFix.group}» из «${donorFix.donor.name}»`}

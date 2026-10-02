@@ -79,10 +79,11 @@ describe('BRICKS', () => {
     }
   });
 
-  it('каждый шаг палитры получает имя сам, и оно не сталкивается с занятыми', () => {
+  it('шаг палитры с итогом получает имя сам, и оно не сталкивается с занятыми; изменение — без имени', () => {
     for (const brick of BRICKS) {
       const made = brick.make(system, []);
       if (made[0]!.type === 'each') continue;
+      if (made[0]!.type === 'apply') { expect(made[0]!.id).toBeUndefined(); continue; }
       for (const step of made) expect(step.id, brick.key).toBeTruthy();
       const used = made.map(step => String(step.id));
       const again = brick.make(system, used);

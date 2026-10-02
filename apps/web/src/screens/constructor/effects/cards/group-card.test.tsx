@@ -281,7 +281,7 @@ describe('GroupCard: проверка одной формулой', () => {
     expect(roll.bonus).toEqual({ expr: '2' });
     expect(roll.by).toEqual({ expr: '@действующий' });
     expect(check.versus).toEqual({ expr: '@цель.armor' });
-    expect(check.successWhen).toBe('atLeast');
+    expect(check.successWhen).toBeUndefined();
   });
 
   it('справа встречный бросок — ошибка: защита — отдельный шаг «бросок» того, кто защищается', () => {

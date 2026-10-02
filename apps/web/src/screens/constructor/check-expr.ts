@@ -49,7 +49,7 @@ function splitTop(text: string, sep: string): string[] {
   return out.map(part => part.trim());
 }
 
-function comparison(text: string): { left: string; op: string; right: string } | null {
+export function comparison(text: string): { left: string; op: string; right: string } | null {
   let depth = 0;
   for (let i = 0; i < text.length; i++) {
     const ch = text[i]!;

@@ -54,7 +54,7 @@ describe('стоимость эффекта — одним выбором', () =
     };
     const { rerender } = render(view());
     fireEvent.change(screen.getByDisplayValue('+ стоимость'), { target: { value: 'cost_action' } });
-    expect(useWorld.getState().system.effects.удар!.cost).toEqual([{ id: 'стоимость', type: 'emit', effect: 'cost_action' }]);
+    expect(useWorld.getState().system.effects.удар!.cost).toEqual([{ type: 'emit', effect: 'cost_action' }]);
     rerender(view());
     expect(screen.getByText(/1 · Стоимость/)).toBeTruthy();
     expect(document.querySelector('.chip--on')?.textContent).toBe('цена');

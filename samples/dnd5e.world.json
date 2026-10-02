@@ -3575,7 +3575,6 @@
             "versus": {
               "expr": "@действующий.spell_dc"
             },
-            "successWhen": "atLeast",
             "continueOn": "fail"
           },
           {
@@ -3868,7 +3867,6 @@
             "versus": {
               "expr": "@действующий.spell_dc"
             },
-            "successWhen": "atLeast",
             "continueOn": "always"
           },
           {
@@ -3990,7 +3988,6 @@
             "versus": {
               "expr": "@действующий.spell_dc"
             },
-            "successWhen": "atLeast",
             "continueOn": "fail"
           },
           {
@@ -4167,7 +4164,6 @@
             "versus": {
               "expr": "@действующий.spell_dc"
             },
-            "successWhen": "atLeast",
             "continueOn": "fail"
           },
           {
@@ -4251,7 +4247,6 @@
             "versus": {
               "expr": "@действующий.spell_dc"
             },
-            "successWhen": "atLeast",
             "continueOn": "fail"
           },
           {
@@ -4954,7 +4949,6 @@
             "versus": {
               "expr": "@действующий.spell_dc"
             },
-            "successWhen": "atLeast",
             "continueOn": "fail"
           },
           {
@@ -5167,7 +5161,6 @@
             "versus": {
               "expr": "@цель.passive_perception"
             },
-            "successWhen": "atLeast",
             "continueOn": "success"
           },
           {
@@ -6495,7 +6488,6 @@
                 "versus": {
                   "expr": "@носитель.spell_dc"
                 },
-                "successWhen": "atLeast",
                 "continueOn": "always"
               },
               {
@@ -6775,7 +6767,6 @@
                 "versus": {
                   "expr": "@запомнено"
                 },
-                "successWhen": "atLeast",
                 "continueOn": "success"
               },
               {
@@ -6886,7 +6877,6 @@
                 "versus": {
                   "expr": "@запомнено"
                 },
-                "successWhen": "atLeast",
                 "continueOn": "success"
               },
               {
@@ -7079,7 +7069,6 @@
                 "versus": {
                   "expr": "@запомнено"
                 },
-                "successWhen": "atLeast",
                 "continueOn": "success"
               },
               {
@@ -7337,7 +7326,6 @@
                 "versus": {
                   "expr": "@запомнено"
                 },
-                "successWhen": "atLeast",
                 "continueOn": "success"
               },
               {
@@ -7961,7 +7949,6 @@
                 "versus": {
                   "expr": "@запомнено"
                 },
-                "successWhen": "atLeast",
                 "continueOn": "success"
               },
               {
@@ -8732,7 +8719,6 @@
                 "versus": {
                   "expr": "(большее из(10, округлить вниз(@amount / 2)))"
                 },
-                "successWhen": "atLeast",
                 "continueOn": "fail"
               },
               {
@@ -8783,7 +8769,6 @@
                 "versus": {
                   "expr": "10"
                 },
-                "successWhen": "atLeast",
                 "continueOn": "always"
               },
               {
@@ -10937,8 +10922,7 @@
         "cells": {
           "damage_die": "1d8",
           "damage_type": "излучение",
-          "save_by": "ловкость",
-          "status": ""
+          "save_by": "ловкость"
         }
       },
       {
@@ -10949,8 +10933,7 @@
         "cells": {
           "damage_die": "1d12",
           "damage_type": "яд",
-          "save_by": "телосложение",
-          "status": ""
+          "save_by": "телосложение"
         }
       },
       {
@@ -10961,8 +10944,7 @@
         "cells": {
           "damage_die": "1d8",
           "damage_type": "некротический",
-          "save_by": "мудрость",
-          "status": ""
+          "save_by": "мудрость"
         }
       },
       {
@@ -11062,8 +11044,7 @@
           "damage_die": "1d10",
           "dice_count": 3,
           "dice_up": 1,
-          "damage_type": "некротический",
-          "status": ""
+          "damage_type": "некротический"
         }
       },
       {
@@ -11076,8 +11057,7 @@
           "damage_die": "1d8",
           "dice_count": 3,
           "dice_up": 1,
-          "damage_type": "огонь",
-          "status": ""
+          "damage_type": "огонь"
         }
       },
       {
@@ -11090,8 +11070,7 @@
           "damage_die": "1d6",
           "dice_count": 6,
           "dice_up": 2,
-          "damage_type": "огонь",
-          "status": ""
+          "damage_type": "огонь"
         }
       },
       {
@@ -11147,8 +11126,7 @@
           "damage_die": "1d6",
           "dice_count": 10,
           "dice_up": 3,
-          "damage_type": "силовой",
-          "status": ""
+          "damage_type": "силовой"
         }
       },
       {
@@ -11315,8 +11293,7 @@
           "spell_level": 1,
           "heal_die": "1d8",
           "dice_count": 1,
-          "dice_up": 1,
-          "cure": ""
+          "dice_up": 1
         }
       },
       {
@@ -11328,8 +11305,7 @@
           "spell_level": 1,
           "heal_die": "1d4",
           "dice_count": 1,
-          "dice_up": 1,
-          "cure": ""
+          "dice_up": 1
         }
       },
       {
@@ -11341,8 +11317,7 @@
           "spell_level": 5,
           "heal_die": "1d8",
           "dice_count": 3,
-          "dice_up": 1,
-          "cure": ""
+          "dice_up": 1
         }
       },
       {

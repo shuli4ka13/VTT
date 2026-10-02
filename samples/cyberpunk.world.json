@@ -407,7 +407,7 @@
           {
             "key": "value",
             "label": "значение",
-            "kind": "number"
+            "kind": "text"
           }
         ],
         "rows": [
@@ -1311,10 +1311,7 @@
           {
             "type": "roll",
             "fixed": {
-              "expr": "@действующий.skills.пистолеты.total"
-            },
-            "bonus": {
-              "expr": "(@spend_luck - если(@aim == \"по голове\", 8, 0))"
+              "expr": "@действующий.skills.пистолеты.total + (@spend_luck - если(@aim == \"по голове\", 8, 0))"
             },
             "id": "прицел"
           },

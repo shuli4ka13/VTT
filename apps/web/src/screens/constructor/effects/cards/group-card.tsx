@@ -41,7 +41,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, onMoveLane, folded = false, onFold, sheets,
+  edit, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, onMoveLane, folded = false, onFold, sheets, onUnpair,
 }: {
   group: CardGroup;
   position: number;
@@ -66,6 +66,7 @@ export function GroupCard({
   folded?: boolean;
   onFold?: () => void;
   sheets?: SheetNames;
+  onUnpair?: () => void;
 }) {
   const context: SlotContext = { system, effect, earlier, ...(sheets ? { sheets } : {}) };
   const step = group.step as any;
@@ -137,7 +138,7 @@ export function GroupCard({
           actions={actions}
         />
         {problem ? <Verdict tone="bad" action={problemAction}>{problem.text}</Verdict> : null}
-        {group.kind === 'check' ? <CheckBody step={step} roll={group.amount} context={context} edit={edit} system={system} /> : null}
+        {group.kind === 'check' ? <CheckBody step={step} roll={group.amount} context={context} edit={edit} system={system} {...(onUnpair ? { onUnpair } : {})} /> : null}
         {group.kind === 'seen' ? <SeenBody step={step} context={context} edit={edit} /> : null}
         {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} withNumber={withNumber} system={system} onAddParam={onAddParam} onOpenEffect={onOpenEffect} lane={lane} /> : null}
         {group.kind === 'number'
@@ -166,7 +167,7 @@ function summaryOf(group: CardGroup, system: System, effect: Effect, names: Map<
 function StepName({ group, effect, edit }: { group: CardGroup; effect: Effect; edit: (k: number, change: (draft: Step) => void) => void }) {
   const [open, setOpen] = useState(false);
   const id = group.step.id ? String(group.step.id) : '';
-  if (!id) return null;
+  if (!id && group.step.type !== 'apply') return null;
   if (!open) {
     return (
       <div className="inline inline--tight step-name">
@@ -178,13 +179,13 @@ function StepName({ group, effect, edit }: { group: CardGroup; effect: Effect; e
   const taken = [...(effect.steps ?? []), ...(effect.cost ?? [])].map(s => String(s.id ?? '')).filter(Boolean);
   const roll = group.amount?.id ? String(group.amount.id) : '';
   const rename = (next: string) => {
-    edit(group.amount ? 1 : 0, draft => { draft.id = next; });
+    edit(group.amount ? 1 : 0, draft => { if (next) draft.id = next; else delete draft.id; });
     if (group.kind === 'check' && roll === `${id}_бросок` && !taken.includes(`${next}_бросок`)) edit(0, draft => { draft.id = `${next}_бросок`; });
   };
   return (
     <div className="inline inline--tight step-name">
       <span className="faint">имя в формулах</span>
-      <KeyField value={id} locked={referenced({ s: st.system, c: st.compendium }, id, effect)} taken={taken} onChange={rename} />
+      <KeyField value={id} locked={Boolean(id) && referenced({ s: st.system, c: st.compendium }, id, effect)} taken={taken} onChange={rename} />
     </div>
   );
 }

@@ -11,7 +11,7 @@ import { ModifiersEditor } from '../modifiers.tsx';
 import { LAUNCH_KINDS, launchHint, titleOf } from './words.ts';
 import { HandlerCard } from './handler-card.tsx';
 import type { Place } from '@vtt/engine/model/names-at';
-import { followKey, referenced } from '../keys.ts';
+import { followKey, effectUsed } from '../keys.ts';
 import { KeyField } from '../../../ui/key-field.tsx';
 import { Chain, type Lane } from './chain.tsx';
 import { groupSteps } from '../cards.ts';
@@ -64,7 +64,6 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
 
   const shiftLane = (indices: number[], to: Lane) => edit(draft => { shiftBetween(draft, indices, to); });
 
-  const world = () => { const st = useWorld.getState(); return { s: st.system, c: st.compendium, sh: st.sheets }; };
   const rekey = (next: string) => {
     if (next === id || system.effects[next]) return;
     editSystem(draft => {
@@ -73,7 +72,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
     pick({ activeEffectId: next });
   };
   const relabel = (label: string) => {
-    const next = followKey({ world: world(), key: id, base: 'effect', before: effect.label ?? '', after: label, taken: Object.keys(system.effects) });
+    const next = followKey({ used: effectUsed(system, useWorld.getState().compendium, id), key: id, base: 'effect', before: effect.label ?? '', after: label, taken: Object.keys(system.effects) });
     edit(draft => { draft.label = label; });
     if (next !== id) rekey(next);
   };
@@ -96,7 +95,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           }
         />
 
-        <EffectName id={id} locked={referenced(world(), id)} taken={Object.keys(system.effects)} onChange={rekey} />
+        <EffectName id={id} locked={effectUsed(system, useWorld.getState().compendium, id)} taken={Object.keys(system.effects)} onChange={rekey} />
         <FieldRow
           id="effect-head"
           fields={[
@@ -219,7 +218,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
         <Inherited base={effect.extends} system={system} onOpen={() => pick({ activeEffectId: effect.extends! })} />
       ) : null}
 
-      <ParamsEditor effect={effect} system={system} onEdit={edit} />
+      <ParamsEditor id={id} effect={effect} system={system} onEdit={edit} />
 
       {pipeline ? (
         <>
@@ -230,10 +229,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
             onMoveLane={moveLane}
             startAt={groupSteps(effect.cost ?? []).length}
             lead={<SelfTrack id={id} at={index => ({ part: 'cost', index })} effect={effect} system={system} edit={edit} onMoveLane={moveLane} />}
-            onAddCost={id => edit(draft => {
-              const taken = (draft.cost ?? []).map(s => String(s.id ?? ''));
-              (draft.cost ??= []).unshift(payStep(id, taken));
-            })}
+            onAddCost={id => edit(draft => { (draft.cost ??= []).unshift(payStep(id)); })}
           />
         </>
       ) : (
@@ -358,10 +354,7 @@ function Handlers({ id, effect, system, edit }: {
               onRoll={handler.on === 'seen'}
               startAt={groupSteps(carrier.cost ?? []).length}
               lead={<SelfTrack id={id} at={step => ({ part: 'handler-cost', handler: index, index: step })} effect={carrier} system={system} edit={editCarrier} onMoveLane={moveLane} />}
-              {...(handler.confirm ? { onAddCost: (cost: string) => editCarrier(draft => {
-                const taken = (draft.cost ?? []).map(s => String(s.id ?? ''));
-                (draft.cost ??= []).unshift(payStep(cost, taken));
-              }) } : {})}
+              {...(handler.confirm ? { onAddCost: (cost: string) => editCarrier(draft => { (draft.cost ??= []).unshift(payStep(cost)); }) } : {})}
             />
           </div>
         );

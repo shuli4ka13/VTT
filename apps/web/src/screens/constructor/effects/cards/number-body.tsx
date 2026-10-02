@@ -17,10 +17,11 @@ type Loose = Record<string, unknown>;
 
 const loose = (draft: unknown): Loose => draft as Loose;
 
-const textOf = (step: Loose): string => {
-  const fixed = step.fixed as { expr?: unknown } | undefined;
-  return typeof fixed?.expr === 'string' ? fixed.expr : '';
-};
+const textOf = (step: Loose): string =>
+  [step.fixed, step.bonus]
+    .map(part => (part as { expr?: unknown } | undefined)?.expr)
+    .filter((part): part is string => typeof part === 'string' && part.trim() !== '')
+    .join(' + ');
 
 export function NumberBody({ step, context, edit, onAddParam }: {
   step: Step;
