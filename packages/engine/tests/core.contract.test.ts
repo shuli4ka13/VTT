@@ -310,3 +310,28 @@ describe('по ревью постройки', () => {
   });
 });
 
+
+describe('правка висящего видит его входы', () => {
+  const system = world({
+    удар: button([{ type: 'emit', event: 'урон', args: { лист: { expr: '@цель' }, источник: { expr: '@действующий' }, сколько: { expr: '2' } } }]),
+    урон: { label: 'Урон', params: [{ key: 'лист', kind: 'sheet' }, { key: 'источник', kind: 'sheet' }, { key: 'сколько', kind: 'number', role: 'amount' }], steps: [sub('@сколько', '@лист.хп')] },
+    метка: {
+      label: 'Метка охотника', activation: 'passive',
+      params: [{ key: 'охотник', kind: 'sheet' }, { key: 'прибавка', kind: 'number' }],
+      modifiers: [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'add', value: { expr: '@прибавка' }, if: { expr: 'все(@лист == @носитель, @источник == @охотник)' } }],
+    },
+  });
+  const marked = (hunter: string) => sheet('б', {}, [], { effects: [{ effectId: 'метка', args: { охотник: hunter, прибавка: 3 } }] } as never);
+
+  it('бьёт охотник — прибавка из входа', () => {
+    expect(value(strike(system, [sheet('а'), marked('а')], 'б', []), 'б', 'хп')).toBe(15);
+  });
+
+  it('бьёт другой — правка молчит', () => {
+    expect(value(strike(system, [sheet('а'), marked('в')], 'б', []), 'б', 'хп')).toBe(18);
+  });
+
+  it('проверка системы знает имена входов в правке', () => {
+    expect(errorsOf(lintSystem(system)).map(p => p.text)).toEqual([]);
+  });
+});

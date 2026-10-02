@@ -1,6 +1,6 @@
 import { tagWords } from '../engine/roll-tags.ts';
 import { ROLL_CALL } from '../words/calls.ts';
-import type { System, Compendium, Effect, Step, Modifier, Guard } from './types.ts';
+import type { System, Compendium, Effect, Step, Modifier, Guard, Param } from './types.ts';
 import { compile } from '../formula/index.ts';
 import type { Node } from '../formula/index.ts';
 import { registry } from '../engine/steps/index.ts';
@@ -246,7 +246,7 @@ export function callNamesOf(system: System, key: string): CallNames {
   };
 }
 
-function modifierRefs(system: System, list: Modifier[] | undefined, from: Where, out: Reference[], own?: Set<string>): void {
+function modifierRefs(system: System, list: Modifier[] | undefined, from: Where, out: Reference[], own?: Set<string>, inputs: Param[] = []): void {
   for (const mod of list ?? []) {
     const target = String((mod as { target?: string }).target ?? '');
     if (mod.kind === 'edit') {
@@ -257,7 +257,10 @@ function modifierRefs(system: System, list: Modifier[] | undefined, from: Where,
         out.push({ kind: 'effect', key: mod.call, from });
       }
       const names = callNamesOf(system, mod.call);
-      const scope = sheetScope(new Set(names.values), [...names.sheets, HOLDER]);
+      const scope = sheetScope(
+        new Set([...names.values, ...inputs.filter(p => p.kind !== 'sheet').map(p => p.key)]),
+        [...names.sheets, ...inputs.filter(p => p.kind === 'sheet').map(p => p.key), HOLDER],
+      );
       if (mod.if?.expr.trim()) exprRefs(rowFree(mod.if.expr, from, own, out), from, scope, out);
       if (mod.value?.expr.trim()) exprRefs(rowFree(mod.value.expr, from, own, out), from, scope, out);
     } else {
@@ -389,7 +392,7 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
   for (const turn of ['attach', 'detach'] as const) {
     out.push(...chainRefs(effect[turn] ?? [], step => ({ tab: 'effects', effect: id, step, part: turn }), params, [...sheetKeys, HOLDER]));
   }
-  modifierRefs(system, effect.modifiers, { tab: 'effects', effect: id, part: 'modifiers' }, out);
+  modifierRefs(system, effect.modifiers, { tab: 'effects', effect: id, part: 'modifiers' }, out, undefined, effect.params ?? []);
   for (const key of effect.grants ?? []) out.push({ kind: 'effect', key, from: { tab: 'effects', effect: id, part: 'grants' } });
 }
 

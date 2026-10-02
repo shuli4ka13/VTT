@@ -35,7 +35,7 @@ export function asOneFormula(step: Step): string | null {
   return parts.join(' + ');
 }
 
-export interface RollCall { before: string; dice: string; times: string | null; after: string }
+export interface RollCall { before: string; dice: string; times: string | null; keep: string | null; after: string }
 
 const ROLL = 'кинуть';
 
@@ -56,19 +56,19 @@ export function findRoll(expr: unknown): RollCall | null {
     } else if (ch === ',' && depth === 1) commas.push(i);
   }
   if (close < 0) return null;
-  const inside = expr.slice(open + 1, close);
-  const cut = commas.length ? commas[0]! - open - 1 : -1;
+  const parts = [open, ...commas, close].slice(0, -1).map((from, i, all) => expr.slice(from + 1, all[i + 1] ?? close).trim());
   return {
     before: expr.slice(0, at),
-    dice: (cut < 0 ? inside : inside.slice(0, cut)).trim(),
-    times: cut < 0 ? null : inside.slice(cut + 1).trim() || null,
+    dice: parts[0] ?? '',
+    times: parts[1] || null,
+    keep: parts.slice(2).join(', ') || null,
     after: expr.slice(close + 1),
   };
 }
 
 export function writeRoll(call: RollCall): string {
-  const inside = call.times ? `${call.dice}, ${call.times}` : call.dice;
-  return `${call.before}${ROLL}(${inside})${call.after}`;
+  const args = [call.dice, ...(call.times || call.keep ? [call.times || '1'] : []), ...(call.keep ? [call.keep] : [])];
+  return `${call.before}${ROLL}(${args.join(', ')})${call.after}`;
 }
 
 export function factorsOf(times: string): string[] {

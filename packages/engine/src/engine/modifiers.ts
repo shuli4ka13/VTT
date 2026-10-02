@@ -7,7 +7,7 @@ import { EngineError } from './errors.ts';
 import { anyRowSays } from './tables.ts';
 import { findRecord, kindOfRecord, sheetKindOf, propsOf } from '../model/owned.ts';
 import { tagsHold } from './roll-tags.ts';
-import type { System, Sheet, Compendium, Modifier, RollEdit } from '../model/types.ts';
+import type { System, Sheet, Compendium, Modifier, RollEdit, Param } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 import { withRecord } from '../model/sheet-columns.ts';
 import { toolsOf } from './refs.ts';
@@ -18,6 +18,8 @@ export interface ModifierSource {
   id: string;
   label?: string;
   modifiers: Modifier[];
+  params?: Param[];
+  args?: Record<string, unknown>;
 }
 
 export type SourcedModifier = Modifier & { source: ModifierSource };
@@ -108,9 +110,12 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
     if (item.modifiers?.length) sources.push({ type: 'item', id: item.id, label: item.label, modifiers: mine(item.modifiers) });
   }
 
-  for (const { id, effect } of wornEffects(system, sheet, { compendium })) {
+  for (const { id, effect, entry } of wornEffects(system, sheet, { compendium })) {
     if (activationOf(effect) !== 'passive') continue;
-    sources.push({ type: 'effect', id, label: effect.label || id, modifiers: effect.modifiers || [] });
+    sources.push({
+      type: 'effect', id, label: effect.label || id, modifiers: effect.modifiers || [],
+      ...(effect.params?.length ? { params: effect.params, args: (entry.args ?? {}) as Record<string, unknown> } : {}),
+    });
   }
 
   return sources;

@@ -3,6 +3,7 @@ import { critOf, setCrit, armorOf, setArmor, armorTail, CRIT_RULE, CRIT_EDIT } f
 import { lintSystem, errorsOf } from '../src/model/lint.ts';
 import { PLAYABLE_WORLDS as SAMPLE_WORLDS } from '../src/model/systems.ts';
 import { exchange } from './play.ts';
+import { compile } from '../src/formula/index.ts';
 import type { System, Compendium, Sheet } from '../src/model/types.ts';
 
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
@@ -56,7 +57,7 @@ group('тогл крита пишет данные, а не код', () => {
     deepEq(голые, [
       '(кинуть(@damage_dice) + @damage_with)',
       '(кинуть(@damage_die, @действующий.cantrip_dice))',
-      '(кинуть(@damage_die, (@dice_count + (@slot - @spell_level) * @dice_up)))',
+      '(кинуть(@damage_die, @dice_count + (@slot - @spell_level) * @dice_up))',
     ]);
     setCrit(system, 'double');
     setCrit(system, 'off');
@@ -84,10 +85,18 @@ group('тогл брони переписывает общий эффект ур
 
   test('«вычитание и износ» даёт те же шаги, что собраны в образце RED руками для тела', () => {
     const system = red();
-    const bodyBranch = clone(system.effects.damage!.steps!.slice(0, 3))
-      .map(step => { delete (step as Record<string, unknown>).when; return step; });
+    const before = clone(system.effects.damage!.steps);
     setArmor(system, 'ablation', { event: 'damage', armor: 'sp_body', hp: 'hp' });
-    deepEq(system.effects.damage!.steps, bodyBranch);
+    deepEq(system.effects.damage!.steps, before);
+  });
+
+  test('переписывается только ветка выбранной брони: голова и «мимо брони» на месте, условие ветки сохранено', () => {
+    const system = red();
+    const before = clone(system.effects.damage!.steps!);
+    setArmor(system, 'threshold', { event: 'damage', armor: 'sp_body', hp: 'hp' });
+    const after = system.effects.damage!.steps!;
+    deepEq(after.slice(2), before.slice(3));
+    deepEq(after.slice(0, 2).map(step => (step as { when?: unknown }).when), [before[0]!.when, before[0]!.when]);
   });
 
   test('переписанный хвост работает за столом: урон 7 сквозь броню 11 по порогу не проходит', () => {
@@ -104,5 +113,27 @@ group('тогл брони переписывает общий эффект ур
     const after = out.sheets.find(s => s.id === to!.id)!;
     eq(Number(after.values.hp), hpBefore, 'по порогу малый урон не прошёл');
     eq(Number(after.values.sp_body), Number(to!.values.sp_body), 'броня по порогу не изнашивается');
+  });
+});
+
+group('крит вдвое не ломает «кинуть» с тремя аргументами', () => {
+  const dh = () => clone(SAMPLE_WORLDS.find(w => (w.system as System).name === 'Daggerheart')!.system as System);
+  const formulas = (system: System): string[] => Object.values(system.effects).flatMap(effect => (effect.steps ?? [])
+    .map(step => (step as { fixed?: { expr?: unknown } }).fixed?.expr)
+    .filter((expr): expr is string => typeof expr === 'string' && expr.includes('кинуть(')));
+
+  test('после «вдвое» формулы разбираются, третий аргумент остаётся третьим', () => {
+    const system = dh();
+    setCrit(system, 'double');
+    for (const expr of formulas(system)) compile(expr);
+    ok(formulas(system).some(expr => /кинуть\(@damage_die, .*если\(.*, 2, 1\), @действующий\.proficiency\)/.test(expr)), formulas(system).join('\n'));
+  });
+
+  test('туда и обратно — формулы прежние', () => {
+    const system = dh();
+    const before = formulas(system);
+    setCrit(system, 'double');
+    setCrit(system, 'off');
+    deepEq(formulas(system), before);
   });
 });

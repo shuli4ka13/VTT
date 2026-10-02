@@ -79,10 +79,9 @@ const withoutDoubler = (step: Record<string, unknown>): void => {
   const fixed = step.fixed as { expr?: unknown } | undefined;
   const call = findRoll(fixed?.expr);
   if (!call || !call.times) return;
-  const kept = factorsOf(bare(call.times))
-    .filter(part => !DOUBLER.test(bare(part)))
-    .map(tight);
-  step.fixed = { ...fixed, expr: writeRoll({ ...call, times: kept.length ? kept.join(' * ') : null }) };
+  const kept = factorsOf(bare(call.times)).filter(part => !DOUBLER.test(bare(part)));
+  const times = kept.length === 1 ? bare(kept[0]!) : kept.length ? kept.map(tight).join(' * ') : null;
+  step.fixed = { ...fixed, expr: writeRoll({ ...call, times }) };
 };
 
 const withDoubler = (step: Record<string, unknown>, check: string): void => {
@@ -172,5 +171,13 @@ export function setArmor(draft: System, choice: ArmorChoice, at: { event: string
   const params = called.params ?? [];
   const amount = params.find(param => param.role === 'amount')?.key ?? 'amount';
   const sheet = params.find(param => param.kind === 'sheet')?.key ?? 'лист';
-  called.steps = armorTail(choice, at.armor, at.hp, amount, sheet);
+  const steps = (called.steps ?? []) as Record<string, unknown>[];
+  const anchor = steps.find(step => fieldIn(step.versus) === at.armor || fieldIn(step.target) === at.armor)
+    ?? steps.find(step => step.type === 'apply' && fieldIn(step.target) === at.hp);
+  const when = anchor?.when;
+  const same = (step: Record<string, unknown>): boolean => JSON.stringify(step.when) === JSON.stringify(when);
+  const tail = armorTail(choice, at.armor, at.hp, amount, sheet).map(step => (when ? { ...step, when } : step) as Step);
+  if (!anchor) { called.steps = tail; return; }
+  const from = steps.findIndex(same);
+  called.steps = [...steps.slice(0, from).filter(step => !same(step)), ...tail, ...steps.slice(from).filter(step => !same(step))] as Step[];
 }

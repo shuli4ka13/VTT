@@ -27,10 +27,22 @@ export interface Gather {
 
 const who = (mod: SourcedModifier): string => mod.source.label || mod.source.id;
 
-function refOf(holder: Holder, spec: Gather, owner: string): RefContext {
+function inputsOf(mod: SourcedModifier): { sheets: Record<string, Bound>; values: Record<string, unknown> } {
+  const sheets: Record<string, Bound> = {};
+  const values: Record<string, unknown> = {};
+  for (const param of mod.source.params ?? []) {
+    const value = mod.source.args?.[param.key];
+    if (param.kind === 'sheet') sheets[param.key] = typeof value === 'string' ? value : null;
+    else if (typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean') values[param.key] = value;
+  }
+  return { sheets, values };
+}
+
+function refOf(mod: SourcedModifier, holder: Holder, spec: Gather, owner: string): RefContext {
+  const own = inputsOf(mod);
   return {
-    pass: holder.view, owner, results: { ...spec.values, метки: [...spec.tags] },
-    sheets: { bound: { ...spec.names, носитель: holder.id }, view: spec.view },
+    pass: holder.view, owner, results: { ...own.values, ...spec.values, метки: [...spec.tags] },
+    sheets: { bound: { ...own.sheets, ...spec.names, носитель: holder.id }, view: spec.view },
   };
 }
 
@@ -51,7 +63,7 @@ function holds(mod: EditMod, ref: RefContext): boolean {
 export function gather(holders: readonly Holder[], spec: Gather): Held[] {
   return holders.flatMap(holder => (editsOf(holder.view, spec.call, spec.param) as EditMod[])
     .filter(mod => editMatches(mod, spec.tags, holder.view.system))
-    .map(mod => ({ ...mod, view: holder.view, ref: refOf(holder, spec, `правка «${who(mod)}»`) }))
+    .map(mod => ({ ...mod, view: holder.view, ref: refOf(mod, holder, spec, `правка «${who(mod)}»`) }))
     .filter(mod => holds(mod, mod.ref)));
 }
 

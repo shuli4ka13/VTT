@@ -11,6 +11,14 @@ const tagsOfStep = (step: Record<string, any> | undefined, trace?: Record<string
 
 const rollTitle = (tags: string[], fallback: string): string => (tags.length ? `${fallback} (${rollName(tags)})` : fallback);
 
+const columnLabel = (system: System, key: string): string | null => {
+  for (const table of Object.values(system.tables ?? {})) {
+    const column = table.columns?.find(c => c.key === key);
+    if (column?.label) return column.label;
+  }
+  return null;
+};
+
 const rollsText = (trace: Record<string, unknown>): string => {
   const rolls = (trace.rolls as number[]) ?? [];
   return trace.kept != null && rolls.length > 1 ? `[${rolls.join(', ')}] → ${trace.kept}` : `[${rolls.join(', ')}]`;
@@ -29,7 +37,7 @@ export function previewLines(system: System, effectId: string, trace: Record<str
     if (one.type !== 'check') continue;
     const words = outcomeWords(system, (one.tags as string[] | undefined) ?? []);
     const forced = one.forced != null ? ` (${forcedWords(Number(one.forced), Boolean(one.success))})` : '';
-    const named = typeof one.versusTag === 'string' ? `${fieldOf(system, one.versusTag)?.label ?? one.versusTag} ` : '';
+    const named = typeof one.versusTag === 'string' ? `${fieldOf(system, one.versusTag)?.label ?? columnLabel(system, one.versusTag) ?? one.versusTag} ` : '';
     lines.push(`против ${named}${one.versus}: ${one.success ? words.success : words.fail}${forced}`);
   }
   void effectId;
@@ -54,19 +62,30 @@ export function describeEntry(
     return `${field?.label ?? c.tag}: ${c.from} → ${c.to}`;
   });
   const labelOf = (tag: string) =>
-    fieldOf(system, tag)?.label ?? tag;
+    fieldOf(system, tag)?.label ?? columnLabel(system, tag) ?? tag;
   const effect = system.effects[String(entry.report.effect)] as any;
   const stepOf = (trace: Record<string, unknown>) => (effect?.steps ?? [])
     .find((step: any, index: number) => String(step.id ?? index) === String(trace.step));
   const params: { key: string; label?: string; kind?: string }[] = effect?.params ?? [];
+  const sheetHeads = new Set([
+    ...params.filter(p => p.kind === 'sheet').map(p => p.key),
+    ...(effect?.steps ?? []).filter((step: any) => step.type === 'each' && step.as).map((step: any) => String(step.as)),
+    'носитель',
+  ]);
   const nameLabel = (name: string): string => {
     const dot = name.indexOf('.');
     const rest = dot > 0 ? name.slice(dot + 1) : '';
-    const sheet = dot > 0 && !hasField(system, name) && (params.some(p => p.key === name.slice(0, dot) && p.kind === 'sheet') || hasField(system, rest));
+    const sheet = dot > 0 && !hasField(system, name) && (sheetHeads.has(name.slice(0, dot)) || hasField(system, rest));
     if (sheet) return nameLabel(rest);
-    if (name.includes('.') && !hasField(system, name)) return outputLabel(name);
+    if (name.includes('.') && !hasField(system, name)) {
+      const output = outputLabel(name);
+      return output !== name ? output : name.split('.').map(labelOf).join(' · ');
+    }
     const param = params.find(p => p.key === name);
-    return param ? String(param.label ?? name) : labelOf(name);
+    if (param) return String(param.label ?? name);
+    const source = (effect?.steps ?? []).find((step: any) => String(step.id) === name);
+    if (source?.type === 'roll') return rollTitle((source.tags ?? []) as string[], source.by ? 'бросок' : 'расчёт');
+    return labelOf(name);
   };
   const outputLabel = (name: string): string => {
     const [head, ...path] = name.split('.');
@@ -91,6 +110,7 @@ export function describeEntry(
     if ('expr' in ref) {
       const exact = /^[@#]([\p{L}\p{N}_.-]+)$/u.exec(String(ref.expr).trim());
       if (exact) return nameLabel(exact[1]!);
+      if (String(ref.expr).includes('(')) return null;
       const needs = new Map<string, string>(
         ((effect?.params ?? []) as { key: string; label?: string }[]).map(p => [String(p.key), String(p.label ?? p.key)]));
       return String(ref.expr).replace(/[@#]([\p{L}\p{N}_.-]+)|[\p{L}\p{N}_-]+/gu,
