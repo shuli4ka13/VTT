@@ -305,7 +305,7 @@ export const wornEffect = z.object({
   combat: z.boolean().optional(),
   scene: z.boolean().optional(),
   args: z.record(z.string(), storedValue).optional(),
-  bond: z.object({ sheet: z.string().min(1), by: z.string().min(1) }).strict().optional(),
+  bond: z.object({ sheet: z.string().min(1), effect: z.string().min(1) }).strict().optional(),
 }).strict();
 
 export const owned = z.object({

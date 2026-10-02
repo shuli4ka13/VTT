@@ -97,7 +97,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
     bound[param.key] = table[param.key] === 'actor' ? actor : table[param.key] === 'targets' ? (param.many ? targets : targets[0] ?? null) : null;
   }
   const bondSheet = effect.bond ? bound[effect.bond.by] : null;
-  const bond = effect.bond && typeof bondSheet === 'string' ? { sheet: bondSheet, by: effect.bond.effect } : undefined;
+  const bond = effect.bond && typeof bondSheet === 'string' ? { sheet: bondSheet, effect: effect.bond.effect } : undefined;
 
   const top = (path: Path, owner: string, extra: Partial<Frame> = {}): Frame => ({
     path, effectId: action.effect, label: action.label, owner, home: actor, bound,
@@ -115,7 +115,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
   }
 
   if (effect.bond && bond) {
-    const released = releaseHolder(system, [...state.sheets], bond.sheet, bond.by);
+    const released = releaseHolder(system, [...state.sheets], bond.sheet, bond.effect);
     state.replace(released.sheets);
     for (const broken of released.broken) {
       state.write({ text: `«${effectLabelOf(system, broken.effectId)}» спало с ${run.sheet(broken.sheetId)?.name ?? broken.sheetId}: наложивший взялся за новое` });
@@ -176,8 +176,8 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
   run.group(calls, root, out => {
     if (bond) {
       const holder = run.sheet(bond.sheet)!;
-      if (!(holder.effects ?? []).some(entry => entry.effectId === bond.by)) {
-        state.put({ ...holder, effects: [...(holder.effects ?? []), { effectId: bond.by }] });
+      if (!(holder.effects ?? []).some(entry => entry.effectId === bond.effect)) {
+        state.put({ ...holder, effects: [...(holder.effects ?? []), { effectId: bond.effect }] });
       }
     }
     delivered.push(out);

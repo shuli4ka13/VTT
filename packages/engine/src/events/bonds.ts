@@ -1,7 +1,7 @@
 import { findEffect } from '../engine/effects.ts';
 import type { System, Sheet, WornEffect } from '../model/types.ts';
 
-export interface BondBreak { sheetId: string; effectId: string; by: string; from: string }
+export interface BondBreak { sheetId: string; effectId: string; holder: string; from: string }
 
 export const holdsBond = (effect: { bond?: { effect: string; by: string } } | null | undefined): boolean => Boolean(effect?.bond);
 
@@ -16,8 +16,8 @@ export function releaseHolder(
   return sweepBonds(system, freed);
 }
 
-const held = (entry: WornEffect): { from: string; by: string } | null =>
-  (entry.bond ? { from: entry.bond.sheet, by: entry.bond.by } : null);
+const held = (entry: WornEffect): { from: string; holder: string } | null =>
+  (entry.bond ? { from: entry.bond.sheet, holder: entry.bond.effect } : null);
 
 export function sweepBonds(system: System, sheets: Sheet[]): { sheets: Sheet[]; broken: BondBreak[] } {
   const wearing = new Map<string, Set<string>>();
@@ -31,8 +31,8 @@ export function sweepBonds(system: System, sheets: Sheet[]): { sheets: Sheet[]; 
     const left = worn.filter(entry => {
       const bond = held(entry);
       if (!bond) return true;
-      if (!findEffect(system, bond.by)) return true;
-      const alive = wearing.get(bond.from)?.has(bond.by) ?? false;
+      if (!findEffect(system, bond.holder)) return true;
+      const alive = wearing.get(bond.from)?.has(bond.holder) ?? false;
       if (!alive) broken.push({ sheetId: sheet.id, effectId: entry.effectId, ...bond });
       return alive;
     });

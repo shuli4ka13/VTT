@@ -48,7 +48,7 @@ group('D&D: невероятное уклонение спадает само п
 group('D&D: потерял сознание — концентрация прервалась', () => {
   test('без сознания включает «недееспособен», тот снимает концентрацию, благословение спадает с союзника', () => {
     const mirra = worn(sheetOf('mirra'), [{ effectId: 'concentration' }]);
-    const sil = worn(sheetOf('sil'), [{ effectId: 'blessed', bond: { sheet: 'mirra', by: 'concentration' } }]);
+    const sil = worn(sheetOf('sil'), [{ effectId: 'blessed', bond: { sheet: 'mirra', effect: 'concentration' } }]);
     const out = exchange({
       system, compendium: dnd.compendium, die: sides => sides,
       sheets: [sheetOf('ogre'), mirra, sil], actionId: 'ogre_club:0', fromId: 'ogre', toId: 'mirra',

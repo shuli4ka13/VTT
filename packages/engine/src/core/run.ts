@@ -91,7 +91,7 @@ export interface Frame {
   claims: Claims;
   hop: number;
   inSub: boolean;
-  bond?: { sheet: string; by: string };
+  bond?: { sheet: string; effect: string };
   seenRoll?: { value: Roll };
   lazy?: Lazy;
   alone?: boolean;
@@ -124,7 +124,7 @@ export interface Delivery {
   inputs?: Record<string, number | string>;
   claims?: Claims;
   lazy?: Lazy;
-  bond?: { sheet: string; by: string };
+  bond?: { sheet: string; effect: string };
   offset?: number;
   lead?: Record<string, unknown>[];
 }

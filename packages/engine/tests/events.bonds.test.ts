@@ -35,7 +35,7 @@ group('эффект, который держится другим эффекто
     const worn = out.sheets.find(s => s.id === 'воин')!.effects!;
     eq(worn.length, 1);
     eq(worn[0]!.effectId, 'благословлён');
-    deepEq(worn[0]!.bond, { sheet: 'жрец', by: 'благословение' });
+    deepEq(worn[0]!.bond, { sheet: 'жрец', effect: 'благословение' });
   });
 
   test('заклинатель сам получает пометку концентрации — иначе связанное спало бы сразу', () => {
@@ -49,7 +49,7 @@ group('эффект, который держится другим эффекто
   });
 
   test('пока жрец носит источник — связанное держится на всех', () => {
-    const bonded = { effectId: 'благословлён', bond: { sheet: 'жрец', by: 'благословение' } };
+    const bonded = { effectId: 'благословлён', bond: { sheet: 'жрец', effect: 'благословение' } };
     const sheets = [
       sheet('жрец', [{ effectId: 'благословение' }]),
       sheet('воин', [bonded]), sheet('лучник', [bonded]),
@@ -60,10 +60,10 @@ group('эффект, который держится другим эффекто
   });
 
   test('источник снят — связанное спадает со всех и названо', () => {
-    const bonded = { effectId: 'благословлён', bond: { sheet: 'жрец', by: 'благословение' } };
+    const bonded = { effectId: 'благословлён', bond: { sheet: 'жрец', effect: 'благословение' } };
     const out = sweepBonds(system, [sheet('жрец'), sheet('воин', [bonded]), sheet('лучник', [bonded])]);
     eq(out.broken.length, 2);
-    ok(out.broken.every(b => b.effectId === 'благословлён' && b.from === 'жрец' && b.by === 'благословение'));
+    ok(out.broken.every(b => b.effectId === 'благословлён' && b.from === 'жрец' && b.holder === 'благословение'));
     eq(out.sheets.find(s => s.id === 'воин')!.effects!.length, 0);
     eq(out.sheets.find(s => s.id === 'лучник')!.effects!.length, 0);
   });
