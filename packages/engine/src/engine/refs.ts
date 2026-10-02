@@ -31,7 +31,7 @@ export interface RefContext {
 
   results?: Record<string, unknown>;
 
-  sender?: Record<string, unknown>;
+  rolls?: Record<string, unknown>;
 
   stepIds?: ReadonlySet<string>;
 
@@ -76,7 +76,7 @@ const stepInto = (at: unknown, key: string): unknown => {
   return at && typeof at === 'object' ? (at as AnyRef)[key] : undefined;
 };
 
-const knownOf = (ctx: RefContext): Record<string, unknown> => ({ ...(ctx.sender ?? {}), ...(ctx.results ?? {}) });
+const knownOf = (ctx: RefContext): Record<string, unknown> => ({ ...(ctx.rolls ?? {}), ...(ctx.results ?? {}) });
 
 const inRecord = (ctx: RefContext): RefContext => (ctx.props ? { ...ctx, recordScope: true } : ctx);
 
@@ -191,7 +191,7 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
     const dot = name.indexOf('.');
     if (dot > 0) {
       const head = name.slice(0, dot);
-      for (const held of [known[head], ctx.sender?.[head]]) {
+      for (const held of [known[head], ctx.rolls?.[head]]) {
         if (!held || typeof held !== 'object') continue;
         const value = name.slice(dot + 1).split('.')
           .reduce<unknown>(stepInto, held);

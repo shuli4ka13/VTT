@@ -78,14 +78,9 @@ export const isCalled = (ctx: SlotContext): boolean =>
   Boolean(amountParamOf(ctx.effect))
   || calledOf(ctx.system).some(([, effect]) => effect === ctx.effect);
 
-export function eventNames(effect: Effect): [string, string][] {
-  void effect;
-  return EVENT_NAMES;
-}
-
 export function stepNames(ctx: SlotContext): Map<string, string> {
   const out = new Map<string, string>();
-  if (isCalled(ctx)) for (const [key, label] of eventNames(ctx.effect)) out.set(key, label);
+  if (isCalled(ctx)) for (const [key, label] of EVENT_NAMES) out.set(key, label);
   for (const [key, constant] of Object.entries(ctx.system.constants ?? {})) {
     out.set(key, (constant as { label?: string }).label ?? key);
   }

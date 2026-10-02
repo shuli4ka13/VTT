@@ -4,7 +4,7 @@ import { Readback } from './cards/group-card.tsx';
 import { groupSteps } from '../cards.ts';
 import { stepNames } from '../slots.tsx';
 import { CARD_TITLES, titleOf } from './words.ts';
-import { checkReadback, changeReadback, numberReadback, sendReadback, joinReadback } from '../readback.ts';
+import { checkReadback, changeReadback, numberReadback, sendReadback } from '../readback.ts';
 import type { Segment } from '../readback.ts';
 import { formulaAsLabels } from '../../../ui/formula.tsx';
 
@@ -149,12 +149,3 @@ export function WhatNext({ open, onClose, system, eventId, onEdit }: {
     </Drawer>
   );
 }
-
-export const whatNextSummary = (system: System, eventId: string): string => {
-  const called = system.effects?.[eventId];
-  if (!called) return '';
-  const steps = (called.steps ?? []) as Step[];
-  const first = groupSteps(steps)[0];
-  if (!first) return 'ничего не делает';
-  return joinReadback(linesOf(first.kind, first.step, first.amount, system, called, namesInside(system, called)));
-};

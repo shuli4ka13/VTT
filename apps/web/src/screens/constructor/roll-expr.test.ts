@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseRollExpr, formatRollExpr, parseAmountExpr, formatAmountExpr } from './roll-expr.ts';
+import { parseRollExpr, formatRollExpr } from './roll-expr.ts';
 import type { System } from '@vtt/schema';
 
 const system = {
@@ -74,28 +74,5 @@ describe('formatRollExpr', () => {
   it('набранная прибавка остаётся формулой — даже одно имя', () => {
     expect(parseRollExpr('1к20 + @attack_with', system, null).bonus).toEqual({ expr: '@attack_with' });
     expect(parseRollExpr('1к20 + @attack_with + 2', system, null).bonus).toEqual({ expr: '@attack_with + 2' });
-  });
-});
-
-describe('parseAmountExpr', () => {
-  it('кость с прибавкой делится как в броске', () => {
-    expect(parseAmountExpr('1d8 + #мод', system))
-      .toEqual({ die: { expr: '"1d8"' }, bonus: { expr: '#мод' } });
-  });
-
-  it('без кости вся строка — величина', () => {
-    expect(parseAmountExpr('#мод + 2', system)).toEqual({ die: undefined, bonus: { expr: '#мод + 2' } });
-    expect(parseAmountExpr('3', system)).toEqual({ die: undefined, bonus: { expr: '3' } });
-  });
-
-  it('пусто — пустая величина', () => {
-    expect(parseAmountExpr('', system)).toEqual({ die: undefined, bonus: null });
-  });
-});
-
-describe('formatAmountExpr', () => {
-  it('кость и прибавка собираются в одну строку', () => {
-    expect(formatAmountExpr({ dice: { expr: '"1d8"' }, bonus: { expr: '#мод' } }, system))
-      .toBe('1к8 + #мод');
   });
 });

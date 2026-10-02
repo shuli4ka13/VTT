@@ -52,17 +52,6 @@ const OP_NOT: Record<string, string> = { atLeast: '<', notOver: '>', over: '≤'
 export function breakLine(group: CardGroup) {
   if (group.kind !== 'check') return null;
   const s = group.step as any;
-  if (group.step.type === 'compare') {
-    if (s.breakIf === 'never') return null;
-    const broken = s.breakIf === 'atMost' ? '≤' : '<';
-    const pass = s.breakIf === 'atMost' ? '>' : '≥';
-    return (
-      <div className="card-forks">
-        <p className="card-break card-break--on">{pass} — цепочка продолжается</p>
-        <p className="card-break">{broken} — эффект кончается здесь</p>
-      </div>
-    );
-  }
   if ((s.continueOn ?? 'success') === 'always') return null;
   const op = String(s.successWhen ?? 'atLeast');
   const onSuccess = (s.continueOn ?? 'success') === 'success';

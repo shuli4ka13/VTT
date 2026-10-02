@@ -66,7 +66,7 @@ group('критерии приёмки', () => {
     eq(b.ac, 14);
   });
 
-  test('5. вызов с одного листа меняет значение у второго, расчёт — у получателя', () => {
+  test('5. вызов с одного листа меняет значение у второго, расчёт — у цели', () => {
     const die = (...values) => { const q = [...values]; return () => q.shift(); };
     const before = calc(system, mirra, 'hp_current', newPass(system, mirra, { compendium }));
     const out = exchange({ system, compendium, die: die(18, 6), sheets: [arven, mirra], actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id });
@@ -74,8 +74,8 @@ group('критерии приёмки', () => {
     const trace = out.reports.flatMap(r => (r.report as any).trace as any[]);
     const after = calc(system, sheet, 'hp_current', newPass(system, sheet, { compendium }));
 
-    eq(trace.find(t => t.step === 'hit').versus, 14, 'класс брони посчитан получателем по его листу');
-    ok(after < before, `значение у получателя изменилось: ${before} → ${after}`);
+    eq(trace.find(t => t.step === 'hit').versus, 14, 'класс брони посчитан целью по его листу');
+    ok(after < before, `значение у цели изменилось: ${before} → ${after}`);
   });
 
   test('7. циклическая формула даёт внятную ошибку, а не зависание', () => {

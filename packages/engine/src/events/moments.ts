@@ -69,7 +69,7 @@ export function momentsOfTurn(op: TurnOp, before: Clock, after: Clock, sheets: S
 }
 
 
-export const wornSeed = (entry: WornEffect | undefined): Record<string, unknown> => ({ carry: null, ...(entry ?? {}) });
+export const wornSeed = (entry: WornEffect | undefined): Record<string, unknown> => ({ ...(entry ?? {}) });
 
 export const wornEntry = (sheet: Sheet, effectId: string): Record<string, unknown> =>
   wornSeed((sheet.effects ?? []).find(entry => entry.effectId === effectId));

@@ -3,11 +3,9 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { world as W } from '@vtt/schema';
 import type { System, Compendium, Sheet, Effect, Column } from '@vtt/schema';
-import type { Field } from '@vtt/engine/model/types';
 import { lazyStorage } from './lazy-storage.ts';
-import { blockOf } from '@vtt/engine/model/blocks';
 import { withLibrary } from '@vtt/engine/model/owned';
-import { fieldsOf, forgetFields } from '@vtt/engine/model/sheet-columns';
+import { forgetFields } from '@vtt/engine/model/sheet-columns';
 
 const fresh = (system: System): System => { forgetFields(system); return system; };
 
@@ -183,28 +181,6 @@ export const takeRestoreProblem = (): string | null => {
   const problem = restoreProblem;
   restoreProblem = null;
   return problem;
-};
-
-export const fieldsByGroup = (system: System): [string, Field[]][] => {
-  const groups = new Map<string, Field[]>();
-  for (const field of fieldsOf(system)) {
-    const key = field.group ?? 'Без блока';
-    const list = groups.get(key);
-    if (list) list.push(field);
-    else groups.set(key, [field]);
-  }
-  return [...groups];
-};
-
-export const effectsByCategory = (system: System): [string, [string, Effect][]][] => {
-  const groups = new Map<string, [string, Effect][]>();
-  for (const [id, effect] of Object.entries(system.effects)) {
-    const key = blockOf(system, effect) ?? 'Без блока';
-    const list = groups.get(key);
-    if (list) list.push([id, effect]);
-    else groups.set(key, [[id, effect]]);
-  }
-  return [...groups];
 };
 
 export const slugOf = (label: string): string =>

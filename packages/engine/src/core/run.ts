@@ -318,7 +318,7 @@ export class Run {
     const ref: RefContext = {
       pass: this.view(frame.home), die, owner: frame.owner, props: frame.props, paramDefs: frame.paramDefs, params: frame.args,
       ...(frame.inputs ? { inputs: frame.inputs } : {}),
-      results, sender: rolls, stepIds,
+      results, rolls, stepIds,
       ...(frame.alone ? { alone: true } : {}),
       ...(frame.bound ? { sheets: { bound: frame.bound, view: (id: string) => this.view(id) } } : {}),
       ...(lazy ? { lazy: (name: string) => this.lazyValue(lazy, name, results, rolls, sink) } : {}),
@@ -705,7 +705,7 @@ export class Run {
     try {
       const hanging = this.hanging(sub);
       return holdsNow(sub.handler.if, {
-        pass: this.view(sub.sheetId), results: seed, sender: rolls, owner: `подписка «${labelOf(sub)}»`,
+        pass: this.view(sub.sheetId), results: seed, rolls, owner: `подписка «${labelOf(sub)}»`,
         ...(Object.keys(hanging.inputs).length ? { inputs: hanging.inputs } : {}),
         paramDefs: sub.effect.params ?? [],
         sheets: { bound: this.boundFor(sub, names), view: id => this.view(id) },

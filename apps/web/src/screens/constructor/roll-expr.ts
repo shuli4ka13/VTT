@@ -58,18 +58,6 @@ export function formatRollExpr(roll: unknown, system: System): string {
   return [head, tail].filter(Boolean).join(' + ');
 }
 
-export function parseAmountExpr(text: string, system: System, picked?: string | null): ParsedRoll {
-  const t = text.trim();
-  if (!t) return { die: undefined, bonus: null };
-  if (HEAD.test(t)) return parseRollExpr(t, system, picked);
-  return { die: undefined, bonus: { expr: t } };
-}
-
-export function formatAmountExpr(amount: unknown, system: System): string {
-  const a = (amount ?? {}) as { dice?: unknown; bonus?: unknown };
-  return formatRollExpr({ die: a.dice, bonus: a.bonus }, system);
-}
-
 export function badFormula(bonus: unknown): string | null {
   if (!bonus || typeof bonus !== 'object' || !('expr' in (bonus as object))) return null;
   const text = String((bonus as { expr: unknown }).expr ?? '').trim();

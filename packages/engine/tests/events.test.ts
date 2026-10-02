@@ -38,12 +38,12 @@ const hit = (actionId, from, to, die, sys = system, book = compendium) => {
 };
 
 group('вызов действия', () => {
-  group('отправитель', () => {
+  group('действующий', () => {
     test('неизвестное действие — внятная ошибка', () => {
       throws(() => hit('нетакого', arven, mirra, queue()), 'нетакого');
     });
 
-    test('сложность спасброска считается отправителем по СВОЕЙ системе', () => {
+    test('сложность спасброска считается действующим по СВОЕЙ системе', () => {
       const { reportOf } = hit('poison-spray:0', mirra, arven, queue(5, 3, 4), savingBy());
       eq(reportOf(arven).trace[1].versus, 13, '8 + бонус мастерства 2 + Харизма 3');
       eq(reportOf(arven).trace[0].bonus, 1, 'а спасбросок Ловкости посчитан целью');
@@ -76,15 +76,15 @@ group('вызов действия', () => {
     });
   });
 
-  group('получатель считает сам', () => {
-    test('попадание определяется классом брони получателя, а не отправителя', () => {
+  group('цель считает сам', () => {
+    test('попадание определяется классом брони цели, а не действующего', () => {
       const other = { ...arven, id: 'arven2' };
       const { reportOf } = hit('longsword-item:0', arven, [mirra, other], queue(9, 5, 5));
       eq(reportOf(mirra).trace[0].success, true, 'у Мирры класс брони 14');
       eq(reportOf(other).trace[0].success, false, 'у Арвен в кольчуге 16');
     });
 
-    test('один и тот же бросок по двум получателям даёт разный исход', () => {
+    test('один и тот же бросок по двум целям даёт разный исход', () => {
       const other = { ...arven, id: 'arven2' };
       const { reportOf } = hit('longsword-item:0', arven, [mirra, other], queue(9, 5, 5));
       const a = reportOf(mirra), b = reportOf(other);
@@ -93,7 +93,7 @@ group('вызов действия', () => {
       eq(b.trace[0].versus, 16);
     });
 
-    test('попадание снимает хиты у получателя', () => {
+    test('попадание снимает хиты у цели', () => {
       const { sheetOf } = hit('longsword-item:0', arven, mirra, queue(15, 5));
       eq(sheetOf(mirra).values.hp_current, 13, '21 минус 8');
     });
@@ -104,7 +104,7 @@ group('вызов действия', () => {
       eq(sheetOf(arven).values.hp_current, 44);
     });
 
-    test('лист получателя не мутируется — возвращается новый', () => {
+    test('лист цели не мутируется — возвращается новый', () => {
       const before = serializeSheet(mirra);
       const { sheetOf } = hit('longsword-item:0', arven, mirra, queue(15, 5));
       eq(serializeSheet(mirra), before, 'исходный лист остался прежним');
@@ -117,10 +117,10 @@ group('вызов действия', () => {
     });
   });
 
-  group('спасбросок отыгрывается на стороне получателя', () => {
+  group('спасбросок отыгрывается на стороне цели', () => {
     const poison = (target, die) => hit('poison-spray:0', mirra, target, die, savingBy());
 
-    test('получатель бросает своим спасброском против присланной сложности', () => {
+    test('цель бросает своим спасброском против присланной сложности', () => {
       const { reportOf } = poison(arven, queue(5, 3, 4));
       eq(reportOf(arven).trace[0].bonus, 1, 'спасбросок Ловкости Арвен — посчитан ЕЮ');
       eq(reportOf(arven).trace[0].total, 6);
@@ -140,7 +140,7 @@ group('вызов действия', () => {
       deepEq(sheetOf(arven).effects, arven.effects);
     });
 
-    test('свои модификаторы броска получатель применяет сам', () => {
+    test('свои модификаторы броска цель применяет сам', () => {
       const shakenSys = { ...system, effects: { ...system.effects,
         shaken: {
           label: 'Потрясён', activation: 'passive', duration: { kind: 'permanent' },
@@ -167,14 +167,14 @@ group('вызов действия', () => {
   });
 
   group('критерий приёмки №5', () => {
-    test('вызов с одного листа меняет значение у второго, расчёт — у получателя', () => {
+    test('вызов с одного листа меняет значение у второго, расчёт — у цели', () => {
       const before = calc(system, mirra, 'hp_current', newPass(system, mirra, { compendium }));
       const { sheetOf, reportOf } = hit('longsword-item:0', arven, mirra, queue(15, 5));
       const sheet = sheetOf(mirra);
       const after = calc(system, sheet, 'hp_current', newPass(system, sheet, { compendium }));
 
-      ok(after < before, 'значение у получателя изменилось');
-      eq(reportOf(mirra).trace[0].versus, 14, 'класс брони посчитан ПОЛУЧАТЕЛЕМ');
+      ok(after < before, 'значение у цели изменилось');
+      eq(reportOf(mirra).trace[0].versus, 14, 'класс брони посчитан ЦЕЛЬЮ');
     });
   });
 });

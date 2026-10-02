@@ -27,7 +27,7 @@ const runRule = (sys: any, rule: any, sender: any, target: any, die: () => numbe
     effects: { ...sys.effects, 'правило': { label: 'правило', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }], ...rule, steps: [{ type: 'each', of: 'цели', as: 'цель' }, ...rule.steps] } },
   };
   const book: any = { records: [{ id: 'правило', table: 'приём', label: 'правило', bindings: [{ label: 'правило', effect: 'правило', args: {} }] }] };
-  const from = { ...sender, id: 'отправитель-теста', has: [...(sender.has ?? []), { of: 'правило' }], effects: sender.effects ?? [] };
+  const from = { ...sender, id: 'действующий-теста', has: [...(sender.has ?? []), { of: 'правило' }], effects: sender.effects ?? [] };
   const out = exchange({ system: full, compendium: book, die, sheets: [from, target], actionId: 'правило:0', fromId: from.id, toId: target.id });
   const report = out.reports[0]!.report;
   return { sheet: out.sheets.find((s: any) => s.id === target.id)!, trace: report.trace as any[], stopped: report.stopped as any };

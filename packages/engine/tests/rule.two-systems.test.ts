@@ -142,7 +142,7 @@ group('две системы одними слотами', () => {
       ok(hp(boom) < hp(plain), `${hp(boom)} должно быть меньше ${hp(plain)}`);
     });
 
-    test('лист получателя после выстрела — по-прежнему законный DTO', () => {
+    test('лист цели после выстрела — по-прежнему законный DTO', () => {
       const out = shoot([15, 6, 6, 6], { distance: 3, spend_luck: 0 });
       serializeSheet(out.sheets.find(s => s.id === 'raze')!);
     });

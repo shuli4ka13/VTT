@@ -58,7 +58,6 @@ export function groupSteps(list: Step[]): CardGroup[] {
   for (let i = 0; i < list.length; i++) {
     const step = list[i]!;
     const next = list[i + 1];
-    const source = (step as any).source;
 
     const owned = step.type === 'roll' && (step as { by?: unknown }).by !== undefined;
     if (owned && step.id && next?.type === 'check' && takesWhole((next as { value?: unknown }).value, step.id)
@@ -73,7 +72,6 @@ export function groupSteps(list: Step[]): CardGroup[] {
       : call?.value;
     const glue = step.type === 'roll' && !owned && step.id
       && (next?.type === 'apply' || next?.type === 'status')
-      && source === undefined
       && (takesWhole(carried, step.id) || names(next!, step.id))
       && list.every((other, j) => j === i || j === i + 1 || !mentions(other, step.id!));
     if (glue) {

@@ -30,7 +30,7 @@ const hitBy = (sys, sheet, dice) => exchange({
   sheets: [arven, sheet], actionId: 'longsword-item:0', fromId: 'arven', toId: 'mirra',
 });
 
-group('триггерные эффекты: ответка получателя', () => {
+group('триггерные эффекты: ответка цели', () => {
   test('попали — триггер отвечает записью в обратную сторону', () => {
     const r = hitBy(thorny(), spiked(mirra), [15, 5, 3]);
     const strike = r.reports.find(x => x.toId === 'mirra')!;
@@ -48,7 +48,7 @@ group('триггерные эффекты: ответка получателя'
     eq(r.sheets.find(s => s.id === 'arven').values.hp_current, 44);
   });
 
-  test('ответку считает ЕЁ получатель, своей системой и своим листом', () => {
+  test('ответку считает ЕЁ цель, своей системой и своим листом', () => {
     const sys = thorny();
     const before = arven.values.hp_current;
     const { sheets, reports } = exchange({

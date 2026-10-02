@@ -111,9 +111,6 @@ export const listRooms = (): Promise<RoomSummary[]> =>
 export const createRoom = (worldId: string, title: string): Promise<RoomSummary> =>
   post('/rooms', api.roomSummary, { worldId, title });
 
-export const joinRoom = (roomId: string): Promise<RoomState> =>
-  post(`/rooms/${roomId}/join`, api.roomState, {});
-
 export const roomState = (roomId: string): Promise<RoomState> =>
   call(`/rooms/${roomId}`, api.roomState);
 

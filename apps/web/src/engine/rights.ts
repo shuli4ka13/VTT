@@ -21,6 +21,3 @@ export const maySheet = (room: RoomState, userId: string, sheetId: string): bool
 
 export const mayField = (room: RoomState, userId: string, sheetId: string, tag: string): boolean =>
   authorize(roomOf(room), userId, { kind: 'world', op: { op: 'set', sheetId, tag, value: null } }) === null;
-
-export const isGm = (room: RoomState, userId: string): boolean =>
-  room.members.some(m => m.userId === userId && m.role === 'gm');

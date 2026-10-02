@@ -44,6 +44,6 @@ describe('адрес проблемы открывает нужное место
   it('подпись места — словами системы', () => {
     expect(whereLabel({ tab: 'effects', effect: 'hit', step: 0 }, system)).toBe('Эффекты · эффект «Удар» · шаг 1');
     expect(whereLabel({ tab: 'rules', section: 'grants' }, system)).toBe('Правила · действуют на всех');
-    expect(whereLabel({ tab: 'records', kind: 'weapon', binding: 0 }, system)).toBe('Типы записей · «Оружие» · кнопка 1');
+    expect(whereLabel({ tab: 'records', kind: 'weapon', binding: 0 }, system)).toBe('Вещи и умения · «Оружие» · кнопка 1');
   });
 });

@@ -113,7 +113,7 @@ export interface Expected { lines: string[]; trouble: string | null }
 export function expectAction(
   world: { system: System; compendium: Compendium; clock: Clock | null },
   sheets: Sheet[],
-  intent: { actionId: string; fromId: string; toIds: string[]; inputs?: Record<string, number | string>; edits?: string[]; targetEdits?: string[] },
+  intent: { actionId: string; fromId: string; toIds: string[]; inputs?: Record<string, number | string>; claims?: Record<string, string[]> },
 ): Expected {
   try {
     const out = act({ ...world, sheets, die: dieOf('avg'), journal: emptyJournal(), mode: 'preview' }, intent);
