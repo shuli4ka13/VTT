@@ -1,5 +1,6 @@
 import { group, test, eq, deepEq, throws } from './harness.ts';
-import { dieConstant, rollLead, unfoldDice } from '../src/engine/lead-die.ts';
+import { dieConstant, unfoldDice } from '../src/engine/lead-die.ts';
+import { rollLead } from './legacy.ts';
 
 const queue = (...values) => {
   const rest = [...values];
@@ -41,10 +42,10 @@ group('ведущая кость', () => {
 
   group('total есть всегда', () => {
     test('одна к20: total равен выпавшему, именованных частей нет', () => {
-      const { grown: _grown, keeps: _keeps, reading: _reading, plus: _plus, applied: _applied, exploded: _exploded, natural: _natural, ...seen } = rollLead(d20, queue(14));
+      const { roll: _roll, ...seen } = rollLead(d20, queue(14));
       deepEq(seen, {
-        edits: [], versusShift: 0, degreeShift: 0, read: 'sum', entries: [{ value: 14, sides: 20, from: 0 }],
-        rolls: [14], raw: [14], kept: 14, total: 14, parts: {},
+        rolls: [14], raw: [14], kept: 14, total: 14, natural: 14, parts: {},
+        edits: [], versusShift: 0, degreeShift: 0, read: 'sum',
         tally: { dice: 1, atMax: 0, atMin: 0 },
       });
     });
@@ -200,7 +201,7 @@ group('ведущая кость', () => {
     });
 
     test('rollLead с неразвёрнутой ссылкой — ошибка отсылает к развёртке', () => {
-      throws(() => rollLead(poolDef, queue(1)), 'unfoldDice');
+      throws(() => rollLead(poolDef, queue(1)), 'счёт костей');
     });
   });
 

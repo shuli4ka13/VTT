@@ -1,6 +1,6 @@
-import { packRef, resolveNumber, resolveRef, lonelyField } from '../refs.ts';
 import { EngineError } from '../errors.ts';
-import type { StepData, StepContext } from './index.ts';
+import { lonelyField } from '../refs.ts';
+import type { StepData, StepContext, StepModule } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 
 export const type = 'compare';
@@ -21,7 +21,6 @@ const BREAKS: Record<string, (margin: number) => boolean> = {
   never: () => false,
 };
 
-export const mayBreak = true;
 
 export const icon = '⇄';
 
@@ -31,43 +30,32 @@ export function traceLine(t: any, h: any) {
     + (t.passed ? `прошло (разница ${t.margin})` : `не прошло (${t.margin})`);
 }
 
-export function pack(step: StepData, ctx: StepContext) {
-  const breakIf = step.breakIf || 'less';
-  if (!BREAKS[String(breakIf)]) {
-    throw new EngineError(
-      `${ctx.owner || 'правило'}: неизвестное условие обрыва «${breakIf}» — умею: ${Object.keys(BREAKS).join(', ')}`);
-  }
-  const of = lonelyField(step.value, ctx.system);
-  const against = lonelyField(step.versus, ctx.system);
-  return {
-    value: packRef(step.value, ctx),
-    versus: packRef(step.versus, ctx),
-    ...(of ? { of } : {}),
-    ...(against ? { against } : {}),
-    breakIf,
-    ...noteOf(step.note, ctx),
-  };
-}
+const who = (ctx: StepContext): string => ctx.owner || 'правило';
 
-function noteOf(note: unknown, ctx: StepContext): { note?: string } {
-  const text = note && typeof note === 'object' ? resolveRef(packRef(note, ctx), ctx) : note;
-  return typeof text === 'string' && text.trim() ? { note: text.trim() } : {};
-}
+const runner: Pick<StepModule, 'once' | 'mayBreak' | 'prepare' | 'finish' | 'splits'> = {
+  mayBreak: true,
+  finish(step, ctx) {
+    const breakIf = String(step.breakIf || 'less');
+    if (!BREAKS[breakIf]) throw new EngineError(`${who(ctx)}: неизвестное условие обрыва «${breakIf}» — умею: ${Object.keys(BREAKS).join(', ')}`);
+    const value = ctx.number(step.value, 'сравниваемая величина');
+    const versus = ctx.number(step.versus, 'сравнению не с чем сопоставить величину');
+    const margin = value - versus;
+    const broke = BREAKS[breakIf]!(margin);
+    const of = lonelyField(step.value, ctx.system);
+    const against = lonelyField(step.versus, ctx.system);
+    const noteRaw = step.note && typeof step.note === 'object' ? ctx.value(step.note) : step.note;
+    const note = typeof noteRaw === 'string' && noteRaw.trim() ? noteRaw.trim() : null;
+    return {
+      value: { margin, value, versus },
+      trace: {
+        value, ...(of ? { of } : {}),
+        versus: against ? { tag: against, value: versus } : { value: versus },
+        margin, passed: !broke,
+      },
+      break: broke ? { reason: 'compare-short', ...(note ? { note } : {}) } : null,
+    };
+  },
+};
 
-export function resolve(step: StepData, ctx: StepContext) {
-  const value = resolveNumber(step.value, ctx, 'сравниваемая величина');
-  const versus = resolveNumber(step.versus, ctx, 'сравнению не с чем сопоставить величину');
-  const margin = value - versus;
-  const broke = BREAKS[String(step.breakIf)]!(margin);
 
-  return {
-    value: { margin, value, versus },
-    trace: {
-      value,
-      ...(step.of ? { of: step.of } : {}),
-      versus: step.against ? { tag: step.against, value: versus } : { value: versus },
-      margin, passed: !broke,
-    },
-    break: broke ? { reason: 'compare-short', ...(step.note ? { note: String(step.note) } : {}) } : null,
-  };
-}
+export const { mayBreak, finish } = runner;

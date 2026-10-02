@@ -1,5 +1,5 @@
 import { group, test, eq, throws } from './harness.ts';
-import { rollNotation } from '../src/engine/dice.ts';
+import { rollNotation } from './legacy.ts';
 group('запись кости: как обещает ошибка, так и принимается', () => {
   test('«1к6», «к6», «2d6» и «2К6» читаются одинаково', () => {
     const one = () => 3;

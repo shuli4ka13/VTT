@@ -1,6 +1,6 @@
 import { group, test, eq, deepEq, throws } from './harness.ts';
 import { exchange } from './play.ts';
-import { fireMoments } from '../src/events/moments.ts';
+import { fireMoments } from './legacy.ts';
 import { lintSystem, errorsOf } from '../src/model/lint.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 

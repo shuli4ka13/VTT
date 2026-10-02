@@ -1,5 +1,6 @@
 import { group, test, eq } from './harness.ts';
-import { fireMoments, momentsOfTurn } from '../src/events/moments.ts';
+import { momentsOfTurn } from '../src/events/moments.ts';
+import { fireMoments } from './legacy.ts';
 import { grantedTo } from '../src/engine/effects.ts';
 import { idleClock, startCombat } from '../src/engine/clock.ts';
 import type { System, Sheet } from '../src/model/types.ts';

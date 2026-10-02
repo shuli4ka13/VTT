@@ -1,5 +1,6 @@
-import { group, test, eq, ok, throws } from './harness.ts';
-import { fireMoments, fireCrossings, fieldOf, momentOf, MOMENTS } from '../src/events/moments.ts';
+import { group, test, eq, ok } from './harness.ts';
+import { fieldOf, momentOf, MOMENTS } from '../src/events/moments.ts';
+import { fireMoments, fireCrossings } from './legacy.ts';
 import { PLAYABLE_WORLDS as SAMPLE_WORLDS } from '../src/model/systems.ts';
 import type { System, Sheet, Effect, Compendium } from '../src/model/types.ts';
 
@@ -71,10 +72,10 @@ group('шина моментов', () => {
       .sheets[0]!.values.хиты, 17, 'яд есть — сработало');
   });
 
-  test('бесконечный каскад обрывается внятной ошибкой', () => {
+  test('сорок копий эффекта — сорок законных срабатываний, а не «без остановки»', () => {
     const many = Array.from({ length: 40 }, () => 'отравление');
-    throws(() => fireMoments([{ moment: 'turn-start', sheetId: 'а' }], [sheet(many)], world as never),
-      'без остановки');
+    const out = fireMoments([{ moment: 'turn-start', sheetId: 'а' }], [sheet(many)], world as never);
+    eq(out.reports.length, 40);
   });
 
   test('активируемый эффект моментом не будится', () => {

@@ -1,5 +1,5 @@
 import { group, test, eq, deepEq } from './harness.ts';
-import { rollLead } from '../src/engine/lead-die.ts';
+import { rollLead } from './legacy.ts';
 import type { DieConstant, RollEdit } from '../src/model/types.ts';
 
 const к20: DieConstant = { label: 'Кость проверки', kind: 'die', dice: [{ count: 1, sides: 20 }] };

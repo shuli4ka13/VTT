@@ -1,5 +1,5 @@
 import { group, test, eq, deepEq } from './harness.ts';
-import { rollLead, seeRoll } from '../src/engine/lead-die.ts';
+import { rollLead, seeRoll } from './legacy.ts';
 import type { DieConstant } from '../src/model/types.ts';
 
 const queue = (...values: number[]) => () => values.shift() ?? 1;

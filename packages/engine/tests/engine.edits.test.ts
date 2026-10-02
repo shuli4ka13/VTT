@@ -1,6 +1,7 @@
 import { group, test, eq, deepEq, throws } from './harness.ts';
 import { newPass } from '../src/engine/calc.ts';
-import { editNumber, resolveRoll, incomingRollModifiers } from '../src/engine/modifiers.ts';
+import { editNumber, resolveRoll } from '../src/engine/modifiers.ts';
+import { rollHeld } from '../src/core/edits.ts';
 import { asEdits } from '../../../samples/convert/edits.ts';
 import type { System, Sheet } from '../src/model/types.ts';
 
@@ -64,7 +65,7 @@ group('правка вызова работает', () => {
   test('бросок по мне — as: against', () => {
     const fresh = { kind: 'edit', call: 'roll', param: 'edits', edit: 'disadvantage', tags: ['атака'], as: 'against' };
     const p = pass([fresh]);
-    eq(incomingRollModifiers(['атака'], p).length, 1);
+    eq(rollHeld(newPass(p.system, { id: 'другой', systemId: 'п', name: 'другой', values: {}, has: [], effects: [] } as never), p, ['атака']).length, 1);
     eq(resolveRoll(p.system, p.sheet, ['атака'], p).edits.length, 0, 'свой бросок она не трогает');
   });
 

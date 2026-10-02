@@ -1,6 +1,8 @@
 import { group, test, eq, ok } from './harness.ts';
 import { exchange } from './play.ts';
-import { multiplyNotation } from '../src/engine/dice.ts';
+import { times, parse, notationOf } from '../src/core/dice.ts';
+
+const multiplyNotation = (notation: unknown, n: number): string => notationOf(times(parse(String(notation)), Math.max(1, Math.floor(n)))).replace('к', 'd');
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const system = {

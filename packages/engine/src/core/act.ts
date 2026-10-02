@@ -55,12 +55,12 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
     runAct(run, intent, root);
     run.settle(world.sheets, root);
     const log = [...state.log];
-    return { kind: 'done', sheets: [...state.sheets], log: render(log, system, compendium, state.sheets), entries: log, journal: ext.settled(), fresh: ext.fresh };
+    return { kind: 'done', sheets: [...state.sheets], log: render(log, system, state.sheets), entries: log, journal: ext.settled(), fresh: ext.fresh };
   } catch (err) {
     if (!(err instanceof Pause)) throw err;
     const log = [...state.log];
     return {
-      kind: 'paused', sheets: [...state.sheets], log: render(log, system, compendium, state.sheets), entries: log,
+      kind: 'paused', sheets: [...state.sheets], log: render(log, system, state.sheets), entries: log,
       journal: ext.snapshot(), fresh: ext.fresh, question: err.question,
     };
   }

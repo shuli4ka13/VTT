@@ -1,5 +1,4 @@
 import { EngineError } from '../errors.ts';
-import type { LeadRoll } from '../lead-die.ts';
 import * as threshold from './threshold.ts';
 import * as amount from './amount.ts';
 import * as compare from './compare.ts';
@@ -11,61 +10,45 @@ import * as each from './each.ts';
 import * as rollAdd from './roll-add.ts';
 import * as rollReroll from './roll-reroll.ts';
 import * as rollPlus from './roll-plus.ts';
-import type { Step, System, Sheet, Die, StoredValue, Effect, WornEffect, Param } from '../../model/types.ts';
-import type { RefContext } from '../refs.ts';
-import type { SourcedModifier } from '../modifiers.ts';
+import type { Step, System, Die, StoredValue } from '../../model/types.ts';
 import type { EmittedEvent, NestedRun } from '../rule.ts';
+import type { Pass } from '../calc.ts';
+import type { Roll, RollResult, Spec } from '../../core/dice.ts';
+import type { Thrown } from '../../core/roll.ts';
 
 export type StepData = Step & Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-export interface StepContext extends RefContext {
+export interface StepContext {
   system: System;
-  sheet: Sheet;
+  owner: string;
   die: Die;
-
-  read?: (tag: string) => unknown;
-
-  write?: (tag: string, value: StoredValue) => void;
-
-  attach?: (id: string, extra?: Record<string, number>) => void;
-  detach?: (id: string) => void;
-
-  against?: (tags: readonly string[]) => SourcedModifier[];
-
-  claims?: string[];
-
-  emit?: (event: EmittedEvent) => void;
-
-  run?: (
-    steps: Step[], seed: Record<string, unknown>, within?: string,
-    params?: Record<string, unknown>, paramDefs?: Param[],
-  ) => NestedRun;
-
-  expiry?: (effect: Effect) => Partial<WornEffect>;
-
-  bond?: { from: string; by: string };
-
-  source?: string;
-
-  sender?: Record<string, unknown>;
-
-  shared?: readonly Sheet[] | null;
-
-  answer?: (call: { event: string; args: Record<string, unknown> }) => void;
-
-
-  seenRoll?: { value: LeadRoll };
-
-  seen?: (rolled: LeadRoll, tags: readonly string[], rollerId: string) => LeadRoll;
-  [k: string]: unknown;
+  here: Pass;
+  value(ref: unknown): unknown;
+  known(ref: unknown): boolean;
+  number(ref: unknown, what: string): number;
+  optional(ref: unknown, what: string): number | null;
+  holds(guard: unknown): boolean;
+  roll(side: 'sender' | 'target', spec: Spec, tags: string[]): Thrown;
+  read(tag: string): unknown;
+  write(tag: string, value: StoredValue): void;
+  attach(effectId: string, carry?: number): void;
+  detach(effectId: string): void;
+  edited(call: string, param: string, base: number, tags: string[], args: Record<string, unknown>): number;
+  call(event: string, args: Record<string, unknown>, payload: EmittedEvent): NestedRun;
+  reply(event: string, args: Record<string, unknown>): void;
+  seenRoll?: { value: Roll };
+  using(die: Die): StepContext;
 }
 
 export interface StepResult {
   value?: unknown;
+  trace: Record<string, unknown>;
+  break?: { reason: string; note?: string } | null;
+  roll?: RollResult;
+}
 
-  trace?: Record<string, unknown>;
-
-  break?: { reason?: string; note?: string } | null;
+export interface Prepared {
+  summary?: RollResult;
   [k: string]: unknown;
 }
 
@@ -76,15 +59,17 @@ export interface StepModule {
   slots?: unknown;
   outputs?: unknown;
 
-  pack(step: StepData, ctx: StepContext): Record<string, unknown>;
+  prepare?: (step: StepData, ctx: StepContext) => Prepared;
 
-  resolve(step: StepData, ctx: StepContext): StepResult;
+  finish(step: StepData, ctx: StepContext, prepared?: Prepared): StepResult;
   lint?: (...args: never[]) => unknown;
   traceLine?: (...args: never[]) => unknown;
 
   reasonWord?: (reason: string) => string | null;
 
   once?: (step: StepData) => boolean;
+
+  mayBreak?: boolean;
 
   splits?: boolean;
 
@@ -100,7 +85,7 @@ export function breakReasonWord(type: string, reason: string): string {
 export const registry = new Map<string, StepModule>();
 
 export function registerStepType(mod: StepModule): StepModule {
-  for (const part of ['type', 'pack', 'resolve']) {
+  for (const part of ['type', 'finish']) {
     if (!mod || (mod as Record<string, unknown>)[part] === undefined) {
       throw new EngineError(
         `тип шага «${mod && mod.type ? mod.type : '?'}» не годится в реестр: не хватает «${part}»`);

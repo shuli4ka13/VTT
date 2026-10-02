@@ -1,7 +1,5 @@
 import { group, test, eq, throws } from './harness.ts';
-import { Runner, newSink } from '../src/lang/run.ts';
-import { State } from '../src/lang/state.ts';
-import { External, emptyJournal } from '../src/lang/journal.ts';
+import { runSteps } from './legacy.ts';
 import type { System, Sheet } from '../src/model/types.ts';
 
 const system = {
@@ -32,14 +30,8 @@ const compendium = { records: [] };
 const exec = (steps: object[], rolls: number[], params: Record<string, unknown> = {}, paramDefs: object[] = []) => {
   let at = 0;
   const die = () => rolls[at++] ?? 1;
-  const state = new State([sheet], system, compendium as never, null);
-  const runner = new Runner(state, new External(emptyJournal(), die));
-  const sink = newSink();
-  const ran = runner.exec({
-    scope: 'rule', me: sheet.id, here: sheet.id, target: sheet.id, effectId: 'e', owner: 'тест',
-    args: params, paramDefs: paramDefs as never, props: null, source: sheet.id, hop: 0, names: 'here',
-  }, steps as never, sink);
-  return { results: ran.results, trace: sink.trace, sheet: state.get(sheet.id) };
+  const ran = runSteps(system, [sheet], sheet.id, steps as never, die, params, paramDefs as never, compendium as never);
+  return { results: ran.results, trace: ran.sink.trace, sheet: ran.sheets.find(s => s.id === sheet.id)! };
 };
 
 const run = (steps: object[], rolls: number[] = []) => exec(steps, rolls);

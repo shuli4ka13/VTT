@@ -12,10 +12,6 @@ export const icon = '⟳';
 
 export const traceLine = (): string => 'для каждой цели';
 
-export function pack() {
-  return {};
-}
-
-export function resolve() {
+export function finish() {
   return { value: null, trace: {}, break: null };
 }

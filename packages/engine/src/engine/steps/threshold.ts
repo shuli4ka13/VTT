@@ -1,9 +1,11 @@
-import { resolveRoll, claimedModifiers } from '../modifiers.ts';
-import { lookupDegree } from '../tables.ts';
-import { dieConstant, rollLead, unfoldDice, withCount } from '../lead-die.ts';
-import { packRef, resolveRef, resolveNumber, resolveOptionalNumber, lonelyField } from '../refs.ts';
 import { EngineError } from '../errors.ts';
-import type { StepData, StepContext } from './index.ts';
+import { dieConstant } from '../lead-die.ts';
+import { lookupDegree } from '../tables.ts';
+import { lonelyField } from '../refs.ts';
+import { parse, withCount } from '../../core/dice.ts';
+import type { RollResult, Spec } from '../../core/dice.ts';
+import type { Thrown } from '../../core/roll.ts';
+import type { StepData, StepContext, StepModule } from './index.ts';
 import { STEP_WORDS, forcedWords, type StepWords } from '../../words/steps.ts';
 
 export const type = 'threshold';
@@ -19,39 +21,33 @@ export function reasonWord(reason: string): string | null {
   return words.reasons[reason] ?? null;
 }
 
+const who = (ctx: StepContext): string => ctx.owner || 'правило';
+
 const LITERAL = /^(\d+)?\s*[dдк]\s*(\d+)$/iu;
 
-function dieOf(system: Parameters<typeof dieConstant>[0], die: unknown) {
+function specOf(ctx: StepContext, die: unknown, count: unknown): Spec {
+  let spec: Spec;
   if (die && typeof die === 'object' && 'const' in (die as object)) {
     const text = String((die as { const: unknown }).const ?? '');
-    const m = text.trim().match(LITERAL);
-    if (!m) {
-      throw new EngineError(`«${text}» — не запись кости; жду вроде «1к20» или «2к6»`);
-    }
-    return { label: text, kind: 'die' as const, dice: [{ count: Number(m[1] ?? 1), sides: Number(m[2]) }] };
+    if (!LITERAL.test(text.trim())) throw new EngineError(`«${text}» — не запись кости; жду вроде «1к20» или «2к6»`);
+    spec = parse(text);
+  } else {
+    const constant = (die as { constant?: string } | undefined)?.constant;
+    if (!constant) throw new EngineError(`${who(ctx)}: порогу нужна кость — слот roll.die ссылается на константу системы`);
+    spec = parse(dieConstant(ctx.system, constant), (ref, what) => ctx.number(ref, what));
   }
-  return dieConstant(system, (die as { constant: string }).constant);
+  if (count === undefined || count === null) return spec;
+  return withCount(spec, ctx.number(count, 'сколько костей'), who(ctx));
 }
 
-const tagList = (tags: unknown): unknown[] => (Array.isArray(tags) ? tags : []);
-
-const packTags = (tags: unknown, ctx: StepContext): unknown[] =>
-  tagList(tags).map(tag => (typeof tag === 'string' ? tag : packRef(tag, ctx)));
-
-function tagsHere(tags: unknown, ctx: StepContext): string[] {
-  return [...new Set(tagList(tags).flatMap(tag => {
+function tagsOf(raw: unknown, ctx: StepContext): string[] {
+  const list = Array.isArray(raw) ? raw : [];
+  return [...new Set(list.flatMap(tag => {
     if (typeof tag === 'string') return [tag];
-    const value = resolveRef(tag, ctx);
+    const value = ctx.value(tag);
     if (Array.isArray(value)) return value.map(String);
     return value === null || value === undefined || value === '' ? [] : [String(value)];
   }))];
-}
-
-function unfold(die: unknown, ctx: StepContext, count?: unknown, packed = false) {
-  const resolver = (ref: unknown, what: string) => resolveNumber(packRef(ref, ctx), ctx, what);
-  const many = count === undefined || count === null ? undefined
-    : resolveNumber(packed ? count : packRef(count, ctx), ctx, 'сколько костей');
-  return unfoldDice(withCount(dieOf(ctx.system, die), many, ctx.owner || 'проверка'), resolver);
 }
 
 const OUTCOMES: Record<string, (total: number, versus: number) => { success: boolean; margin: number }> = {
@@ -59,20 +55,110 @@ const OUTCOMES: Record<string, (total: number, versus: number) => { success: boo
   notOver: (total, versus) => ({ success: total <= versus, margin: versus - total }),
   over: (total, versus) => ({ success: total > versus, margin: total - versus }),
   under: (total, versus) => ({ success: total < versus, margin: versus - total }),
-
   equals: (total, versus) => ({ success: total === versus, margin: -Math.abs(total - versus) }),
 };
-
-export const once = (step: StepData): boolean => (step.side || 'sender') !== 'target';
-
-export const mayBreak = true;
-
-export const icon = '⌖';
 
 type RollSpec = { die?: unknown; count?: unknown; bonus?: unknown; tags?: unknown[] };
 
 const opposedOf = (versus: unknown): RollSpec | null =>
   (versus && typeof versus === 'object' && 'roll' in (versus as object) ? (versus as { roll: RollSpec }).roll : null);
+
+const summaryOf = (thrown: Thrown, bonus: number | null): RollResult =>
+  ({ ...thrown.result, total: thrown.result.total + (bonus ?? 0) + thrown.bonus });
+
+const runner: Pick<StepModule, 'once' | 'mayBreak' | 'prepare' | 'finish'> = {
+  once: step => (step.side || 'sender') !== 'target',
+  mayBreak: true,
+  prepare(step, ctx) {
+    const roll = step.roll || {};
+    const tags = tagsOf(roll.tags, ctx);
+    const thrown = ctx.roll('sender', specOf(ctx, roll.die, roll.count), tags);
+    const bonus = roll.bonus !== undefined && roll.bonus !== null && ctx.known(roll.bonus)
+      ? (ctx.optional(roll.bonus, 'бонус порога') ?? 0) : null;
+    return { thrown, tags, bonus, summary: summaryOf(thrown, bonus) };
+  },
+  finish(step, ctx, prepared) {
+    const side = step.side || 'sender';
+    const roll = step.roll || {};
+    const early = side === 'target' ? versusOf(step.versus, side, ctx) : null;
+    let thrown = prepared?.thrown as Thrown | undefined;
+    let tags = (prepared?.tags as string[] | undefined) ?? [];
+    if (!thrown) {
+      tags = tagsOf(roll.tags, ctx);
+      thrown = ctx.roll(side, specOf(ctx, roll.die, roll.count), tags);
+    }
+    const known = prepared?.bonus as number | null | undefined;
+    const bonus = (known ?? ctx.optional(roll.bonus, 'бонус порога') ?? 0) + thrown.bonus;
+    const rolled = thrown.result;
+    const total = rolled.total + bonus;
+    const shift = thrown.roll.claim.versusShift;
+    const successWhen = OUTCOMES[String(step.successWhen)] ? String(step.successWhen) : 'atLeast';
+    const eased = successWhen === 'notOver' || successWhen === 'under' ? -shift : shift;
+    const against = early ?? versusOf(step.versus, side, ctx);
+    const versus = against.value + eased;
+    const judged = OUTCOMES[successWhen]!(total, versus);
+    const succeedOn = ctx.optional(step.succeedOn, 'кость верного успеха');
+    const failOn = ctx.optional(step.failOn, 'кость верного провала');
+    const natural = rolled.natural;
+    const forced = failOn !== null && natural <= failOn ? false : succeedOn !== null && natural >= succeedOn ? true : null;
+    const success = forced ?? judged.success;
+    const scale = step.degrees && step.degrees.table ? step.degrees : null;
+    const degree = scale
+      ? lookupDegree(ctx.system, scale.table, scale.of === 'margin' ? judged.margin : total, thrown.roll.claim.degreeShift, ctx.owner)
+      : null;
+    const lone = lonelyField(step.versus, ctx.system);
+    const faces = thrown.roll.dice.map(d => (d.minus ? -d.face : d.face));
+    const value = {
+      success, margin: judged.margin, total, natural,
+      rolled: rolled.rolled, atMax: rolled.atMax, atMin: rolled.atMin, edited: rolled.edited,
+      ...(scale ? { degree } : {}),
+      dice: rolled.dice, parts: rolled.parts, versus,
+      ...(against.against ? { against: against.against, versusNatural: against.against.natural } : {}),
+    };
+    const goOn = step.continueOn === 'always' ? true : step.continueOn === 'fail' ? !success : success;
+    return {
+      value,
+      roll: { ...rolled, total },
+      trace: {
+        rolls: rolled.dice.rolls, kept: rolled.dice.kept, bonus, total,
+        ...(tags.length ? { tags } : {}),
+        ...(faces.some((v, i) => v !== rolled.dice.rolls[i]) ? { raw: faces } : {}),
+        ...(thrown.roll.claim.read.kind !== 'sum' ? { read: thrown.roll.claim.read.kind } : {}),
+        ...(thrown.roll.edits.length ? { edits: thrown.roll.edits } : {}),
+        versus: lone ? { tag: lone, value: versus } : { value: versus },
+        margin: judged.margin, success,
+        ...(forced !== null ? { forced: natural } : {}),
+        ...(against.against ? { against: against.against } : {}),
+        ...(scale ? { degree } : {}),
+        ...(Object.keys(rolled.parts).length ? { parts: rolled.parts } : {}),
+      },
+      break: goOn ? null : { reason: step.continueOn === 'fail' ? 'threshold-held' : 'threshold-miss' },
+    };
+  },
+};
+
+function versusOf(versus: unknown, side: string, ctx: StepContext): { value: number; against?: Record<string, any> } {
+  const opposed = opposedOf(versus);
+  if (!opposed) return { value: ctx.number(versus, 'порогу не с чем сравнить бросок') };
+  const tags = tagsOf(opposed.tags, ctx);
+  const thrown = ctx.roll(side === 'target' ? 'sender' : 'target', specOf(ctx, opposed.die, opposed.count), tags);
+  const bonus = (ctx.optional(opposed.bonus, 'прибавка встречного броска') ?? 0) + thrown.bonus;
+  const total = thrown.result.total + bonus;
+  const read = thrown.roll.claim.read.kind;
+  return {
+    value: total,
+    against: {
+      natural: thrown.result.natural, total, bonus, rolls: thrown.result.dice.rolls, kept: thrown.result.dice.kept,
+      ...(read !== 'sum' ? { read } : {}),
+      ...(tags.length ? { tags } : {}),
+    },
+  };
+}
+
+
+export const { once, mayBreak, prepare, finish } = runner;
+
+export const icon = '⌖';
 
 export function lint(step: StepData) {
   if (!step.roll || !step.roll.die || !step.roll.die.constant) {
@@ -83,49 +169,6 @@ export function lint(step: StepData) {
     return 'встречному броску нужна кость';
   }
   return null;
-}
-
-function rollHere(spec: RollSpec, ctx: StepContext, packed = false) {
-  const tags = tagsHere(packed ? spec.tags : packTags(spec.tags, ctx), ctx);
-  const mods = resolveRoll(
-    ctx.system, ctx.sheet, tags, ctx.pass,
-    claimedModifiers(ctx.system, ctx.claims ?? []) as never);
-  const thrown = rollLead(unfold(spec.die, ctx, spec.count, packed), ctx.die, mods.edits);
-  const rolled = ctx.seen ? ctx.seen(thrown, tags, ctx.sheet.id) : thrown;
-  return { rolled, modBonus: mods.bonus, tags };
-}
-
-function packVersus(versus: unknown, rollerSide: string, ctx: StepContext): unknown {
-  const opposed = opposedOf(versus);
-  if (!opposed) return packRef(versus, ctx);
-  if (rollerSide === 'target') {
-    const sender = ctx.direct?.me;
-    const own: StepContext = sender && sender.sheet && sender.sheet.id !== ctx.sheet.id
-      ? { ...ctx, sheet: sender.sheet, pass: sender, claims: undefined } : ctx;
-    const { rolled, modBonus, tags } = rollHere(opposed, own);
-    return { rolled, bonus: packRef(opposed.bonus, ctx), modBonus, tags };
-  }
-  return { roll: { die: opposed.die, ...countPacked(opposed.count, ctx), bonus: packRef(opposed.bonus, ctx), tags: packTags(opposed.tags, ctx) } };
-}
-
-function versusOf(packed: any, ctx: StepContext): { value: number; against?: Record<string, unknown> } {
-  if (packed && typeof packed === 'object' && ('rolled' in packed || 'roll' in packed)) {
-    const here = 'rolled' in packed
-      ? { rolled: packed.rolled, modBonus: packed.modBonus || 0, tags: (packed.tags ?? []) as string[] }
-      : rollHere(packed.roll, ctx, true);
-    const bonusRef = 'rolled' in packed ? packed.bonus : packed.roll.bonus;
-    const bonus = (resolveOptionalNumber(bonusRef, ctx, 'прибавка встречного броска') ?? 0) + here.modBonus;
-    const total = here.rolled.total + bonus;
-    return {
-      value: total,
-      against: {
-        natural: here.rolled.natural ?? here.rolled.total, total, bonus, rolls: here.rolled.rolls, kept: here.rolled.kept,
-        ...(here.rolled.read && here.rolled.read !== 'sum' ? { read: here.rolled.read } : {}),
-        ...(here.tags.length ? { tags: here.tags } : {}),
-      },
-    };
-  }
-  return { value: resolveNumber(packed, ctx, 'порогу не с чем сравнить бросок') };
 }
 
 export function traceLine(t: any, h: any) {
@@ -156,118 +199,3 @@ export function traceLine(t: any, h: any) {
   return `проверка${checkName}: ${dice} + ${t.bonus} = ${t.total} против ${opposed}${versusName}${t.versus.value} — ${verdict}${edits}${parts}`;
 }
 
-const countPacked = (count: unknown, ctx: StepContext): { count?: unknown } =>
-  (count === undefined || count === null ? {} : { count: packRef(count, ctx) });
-
-export function pack(step: StepData, ctx: StepContext) {
-  const roll = step.roll || {};
-  if (!roll.die || !roll.die.constant) {
-    throw new EngineError(
-      `${ctx.owner || 'правило'}: порогу нужна кость — слот roll.die ссылается на константу системы, например { constant: 'lead_die' }`);
-  }
-  const base = {
-    side: step.side || 'sender',
-    continueOn: step.continueOn || 'success',
-    successWhen: step.successWhen || 'atLeast',
-    versus: packVersus(step.versus, step.side || 'sender', ctx),
-    ...(lonelyField(step.versus, ctx.system) ? { against: lonelyField(step.versus, ctx.system) } : {}),
-
-    ...(step.degrees && step.degrees.table ? { degrees: step.degrees } : {}),
-    ...(step.succeedOn !== undefined && step.succeedOn !== null ? { succeedOn: packRef(step.succeedOn, ctx) } : {}),
-    ...(step.failOn !== undefined && step.failOn !== null ? { failOn: packRef(step.failOn, ctx) } : {}),
-  };
-
-  if (base.side === 'target') {
-
-    return { ...base, roll: { die: roll.die, ...countPacked(roll.count, ctx), bonus: packRef(roll.bonus, ctx), tags: packTags(roll.tags, ctx) } };
-  }
-
-  const tags = tagsHere(packTags(roll.tags, ctx), ctx);
-  const extra = [
-    ...(ctx.against ? ctx.against(tags) : []),
-    ...claimedModifiers(ctx.system, ctx.claims ?? []),
-  ];
-  const mods = resolveRoll(ctx.system, ctx.sheet, tags, ctx.pass, extra);
-  const thrown = rollLead(unfold(roll.die, ctx, roll.count), ctx.die, mods.edits);
-  const rolled = ctx.seen ? ctx.seen(thrown, tags, ctx.sheet.id) : thrown;
-  return { ...base, tags, rolled, bonus: packRef(roll.bonus, ctx), modBonus: mods.bonus };
-}
-
-export function resolve(step: StepData, ctx: StepContext) {
-  let rolled = step.rolled;
-  let modBonus = step.modBonus || 0;
-  let tags: string[] = (step.tags ?? []) as string[];
-
-  if (!rolled) {
-    tags = tagsHere(step.roll.tags, ctx);
-    const mods = resolveRoll(
-      ctx.system, ctx.sheet, tags, ctx.pass,
-      claimedModifiers(ctx.system, ctx.claims ?? []));
-    const thrown = rollLead(unfold(step.roll.die, ctx, step.roll.count, true), ctx.die, mods.edits);
-    rolled = ctx.seen ? ctx.seen(thrown, tags, ctx.sheet.id) : thrown;
-    modBonus = mods.bonus;
-  }
-
-  const bonusRef = step.rolled ? step.bonus : step.roll.bonus;
-  const bonus = (resolveOptionalNumber(bonusRef, ctx, 'бонус порога') ?? 0) + modBonus;
-  const total = rolled.total + bonus;
-
-  const shift = rolled.versusShift || 0;
-  const eased = (String(step.successWhen) === 'notOver' || String(step.successWhen) === 'under')
-    ? -shift : shift;
-  const against = versusOf(step.versus, ctx);
-  const versus = against.value + eased;
-  const outcome = OUTCOMES[String(step.successWhen)] || OUTCOMES.atLeast!;
-  const judged = outcome(total, versus);
-  const margin = judged.margin;
-  const succeedOn = resolveOptionalNumber(step.succeedOn, ctx, 'кость верного успеха');
-  const failOn = resolveOptionalNumber(step.failOn, ctx, 'кость верного провала');
-  const natural = rolled.natural ?? rolled.total;
-  const forced = failOn !== null && natural <= failOn ? false
-    : succeedOn !== null && natural >= succeedOn ? true : null;
-  const success = forced ?? judged.success;
-
-  const scale = step.degrees && step.degrees.table ? step.degrees : null;
-  const degree = scale
-    ? lookupDegree(
-      ctx.system, scale.table,
-      scale.of === 'margin' ? margin : total,
-      rolled.degreeShift || 0, ctx.owner)
-    : null;
-
-  const value = {
-    success, margin, total,
-    natural,
-    rolled: rolled.tally?.dice ?? rolled.rolls.length,
-    atMax: rolled.tally?.atMax ?? 0,
-    atMin: rolled.tally?.atMin ?? 0,
-    edited: (rolled.edits?.length ?? 0) > 0,
-    ...(scale ? { degree } : {}),
-    dice: { rolls: rolled.rolls, kept: rolled.kept },
-    parts: rolled.parts || {},
-    versus,
-    ...(against.against ? { against: against.against, versusNatural: against.against.natural } : {}),
-  };
-
-  const goOn = step.continueOn === 'always' ? true : step.continueOn === 'fail' ? !success : success;
-  return {
-    value,
-    trace: {
-      rolls: rolled.rolls, kept: rolled.kept, bonus, total,
-      ...(tags.length ? { tags } : {}),
-      ...(rolled.raw && rolled.raw.some((v: number, i: number) => v !== rolled.rolls[i]) ? { raw: rolled.raw } : {}),
-
-      ...(rolled.read && rolled.read !== 'sum' ? { read: rolled.read } : {}),
-      ...(rolled.edits?.length ? { edits: rolled.edits } : {}),
-      versus: step.against ? { tag: step.against, value: versus } : { value: versus },
-      margin, success,
-      ...(forced !== null ? { forced: natural } : {}),
-      ...(against.against ? { against: against.against } : {}),
-      ...(scale ? { degree } : {}),
-      ...(Object.keys(rolled.parts || {}).length ? { parts: rolled.parts } : {}),
-    },
-    break: goOn ? null : {
-      reason: step.continueOn === 'fail' ? 'threshold-held' : 'threshold-miss',
-    },
-  };
-}

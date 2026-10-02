@@ -1,6 +1,6 @@
 import { group, test, eq, deepEq } from './harness.ts';
-import { rollLead } from '../src/engine/lead-die.ts';
-import { resolveRoll } from '../src/engine/modifiers.ts';
+import { rollLead } from './legacy.ts';
+import { rollEdits } from '../src/core/edits.ts';
 import { newPass } from '../src/engine/calc.ts';
 import type { System, Sheet, DieConstant } from '../src/model/types.ts';
 
@@ -17,9 +17,7 @@ const sheet = { id: 'а', systemId: 'с', name: 'А', values: { грань: 3 },
 
 group('правка броска с формулой и подрыв шестёрок', () => {
   test('число добавленных костей — из листа того, кто бросает', () => {
-    const { edits } = resolveRoll(system, sheet, [], newPass(system, sheet), [
-      { kind: 'edit', call: 'roll', param: 'edits', edit: 'выжать', source: { type: 'claim', id: 'выжать', modifiers: [] } } as never,
-    ]);
+    const { edits } = rollEdits([], ['выжать'], newPass(system, sheet), []);
     deepEq(edits[0]!.ops[0], { op: 'addDie', count: 3 });
   });
 

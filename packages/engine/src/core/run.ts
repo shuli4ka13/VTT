@@ -15,9 +15,8 @@ import { requireEffect, requireCalled, reapplyOf, usesMax } from '../engine/effe
 import { expiryOf } from '../engine/clock.ts';
 import { whoseOf, burnsUse } from '../events/durations.ts';
 import { refusalWords } from '../events/refusal.ts';
-import { tagsHold, rollName, outcomeWords } from '../engine/roll-tags.ts';
-import { forcedWords } from '../words/steps.ts';
-import { fieldOf } from '../model/sheet-columns.ts';
+import { tagsHold, rollName } from '../engine/roll-tags.ts';
+import { previewLines } from '../events/describe.ts';
 import { answerSteps } from '../engine/steps/emit.ts';
 import { CALL_NAME } from '../engine/modifiers.ts';
 import { Views } from './view.ts';
@@ -473,7 +472,7 @@ export class Run {
         if (offers.length) {
           entries.push(...this.ask({
             key: call.path.ask('target', call.to).key, sheetId: call.to, window: 'target', label: call.top ? '' : call.label,
-            offers: offers.map(offer => offer.offer), results: tried.results, preview: call.top ? previewOf(this.system, tried) : [],
+            offers: offers.map(offer => offer.offer), results: tried.results, preview: call.top ? previewLines(this.system, tried.call.effectId, tried.report.trace) : [],
           }, offers, call.from, call.hop, call.path.ask('target', call.to)));
           flush(entries);
         }
@@ -685,17 +684,18 @@ export class Run {
     this.state.put({ ...sheet, effects });
   }
 
-  moment(moment: MomentKey, sheetId: string, path: Path): void {
+  moment(moment: MomentKey, sheetId: string, path: Path): { sheetId: string; effectId: string }[] {
     const lapsed = lapse({ moment, sheetId }, [...this.state.sheets], this.system, this.clock);
     this.state.replace(lapsed.sheets);
     for (const gone of lapsed.expired) {
       this.state.write({ text: `«${effectLabelOf(this.system, gone.effectId)}» спало с ${this.sheet(gone.sheetId)?.name ?? gone.sheetId}` });
     }
     const sheet = this.sheet(sheetId);
-    if (!sheet) return;
+    if (!sheet) return lapsed.expired;
     const seed = { moment: { moment, sheet: sheetId, round: this.clock?.round ?? 0 } };
     this.hooked(sheetId, { kind: 'moment', moment }, path.phase(moment), seed, MOMENTS[moment],
       sub => `момент «${MOMENTS[moment]}» у «${labelOf(sub)}»`);
+    return lapsed.expired;
   }
 
   private hooked(sheetId: string, hearing: Hearing, path: Path, seed: Record<string, unknown>, about: string, owner: (sub: Sub) => string): void {
@@ -760,11 +760,11 @@ export class Run {
     throw new EngineError(`наложения, поля и связи будят друг друга без остановки: больше ${this.limits.settleRounds} кругов`);
   }
 
-  private lifecycle(from: Sheet[], path: Path): void {
+  lifecycle(from: Sheet[], path: Path): void {
     let previous = from;
     for (let wave = 0; ; wave += 1) {
       if (wave > this.limits.settleRounds * 4) throw new EngineError('наложения и спадания будят друг друга без остановки');
-      const changes = lifecycleChanges(previous, [...this.state.sheets], { system: this.system, compendium: this.world.compendium, die: () => 1 });
+      const changes = lifecycleChanges(previous, [...this.state.sheets], { system: this.system, compendium: this.world.compendium });
       previous = [...this.state.sheets];
       if (!changes.length) return;
       for (const change of changes) {
@@ -790,7 +790,7 @@ export class Run {
     }
   }
 
-  private crossings(from: Sheet[], path: Path): boolean {
+  crossings(from: Sheet[], path: Path): boolean {
     let previous = from;
     let any = false;
     for (let wave = 0; ; wave += 1) {
@@ -966,35 +966,6 @@ export class Run {
     }
     return cell.value;
   }
-}
-
-function previewOf(system: System, tried: Delivered): string[] {
-  const steps = (system.effects[tried.call.effectId]?.steps ?? []) as StepData[];
-  const traces = tried.report.trace.filter(trace => trace.type === 'threshold' && !trace.skipped && !trace.within);
-  const sideOf = (trace: Record<string, unknown>): string => {
-    const step = steps.find((one, index) => String(one.id ?? index) === String(trace.step));
-    return String(step?.side ?? 'sender');
-  };
-  const rollsOf = (trace: Record<string, unknown>): string => {
-    const rolls = (trace.rolls as number[]) ?? [];
-    return trace.kept != null && rolls.length > 1 ? `[${rolls.join(', ')}] → ${trace.kept}` : `[${rolls.join(', ')}]`;
-  };
-  const lines: string[] = [];
-  for (const trace of traces) {
-    if (sideOf(trace) === 'target') continue;
-    const tags = (trace.tags as string[] | undefined) ?? [];
-    const title = tags.length ? `Бросок (${rollName(tags)})` : 'Бросок';
-    lines.push(`${title}: ${rollsOf(trace)}${trace.bonus ? ` + ${trace.bonus}` : ''} = ${trace.total}`);
-  }
-  for (const trace of traces) {
-    const versus = trace.versus as { tag?: string; value?: number } | undefined;
-    const named = versus?.tag ? fieldOf(system, versus.tag)?.label ?? versus.tag : 'порог';
-    const own = sideOf(trace) === 'target' ? `бросок цели ${rollsOf(trace)} + ${trace.bonus ?? 0} = ${trace.total} ` : '';
-    const words = outcomeWords(system, (trace.tags as string[] | undefined) ?? []);
-    const forced = trace.forced != null ? ` (${forcedWords(Number(trace.forced), Boolean(trace.success))})` : '';
-    lines.push(`${own}против ${named} ${versus?.value}: ${trace.success ? words.success : words.fail}${forced}`);
-  }
-  return lines;
 }
 
 export type { Window };

@@ -58,14 +58,14 @@ export function perform(world: PerformWorld, op: Op): Performed {
     if (settles) run.settle(before, root);
     const log = [...run.state.log];
     return {
-      kind: 'done', sheets: [...run.state.sheets], clock: run.clock, log: render(log, world.system, world.compendium, run.state.sheets),
+      kind: 'done', sheets: [...run.state.sheets], clock: run.clock, log: render(log, world.system, run.state.sheets),
       entries: log, journal: ext.settled(), fresh: ext.fresh,
     };
   } catch (err) {
     if (!(err instanceof Pause)) throw err;
     const log = [...run.state.log];
     return {
-      kind: 'paused', sheets: [...run.state.sheets], clock: world.clock, log: render(log, world.system, world.compendium, run.state.sheets),
+      kind: 'paused', sheets: [...run.state.sheets], clock: world.clock, log: render(log, world.system, run.state.sheets),
       entries: log, journal: ext.snapshot(), fresh: ext.fresh, question: err.question,
     };
   }
@@ -90,6 +90,20 @@ function bound(run: Run, sheetId: string, raw: unknown, what: string): number | 
   const value = typeof raw === 'number' ? raw : compile(String(raw)).evaluate(run.view(sheetId).resolve);
   if (typeof value !== 'number') throw new EngineError(`${what} — не число`);
   return value;
+}
+
+export interface InitiativeRoll { sheetId: string; rolls: number[]; total: number; edits: string[] }
+
+export function initiative(run: Run, root: Path): { order: string[]; rolls: InitiativeRoll[] } {
+  const spec = run.system.initiative;
+  const fighters = run.state.sheets.filter(sheet => !isDesk(sheet) && !run.state.sheets.some(other => other.group === sheet.id));
+  if (!spec) return { order: fighters.map(sheet => sheet.id), rolls: [] };
+  const rolls = fighters.map((sheet): InitiativeRoll => {
+    const checked = run.check(sheet.id, spec as never, root.phase('initiative').at(sheet.id), 'инициатива');
+    run.state.write(...checked.entries);
+    return { sheetId: sheet.id, rolls: checked.thrown.result.dice.rolls, total: checked.total, edits: checked.thrown.roll.edits };
+  });
+  return { order: [...rolls].sort((a, b) => b.total - a.total).map(r => r.sheetId), rolls };
 }
 
 const OPS: { [K in Op['op']]: Handler<K> } = {
@@ -219,18 +233,10 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
         const unknown = line.find(id => !run.sheet(id));
         if (unknown) throw new EngineError(`в комнате нет листа «${unknown}»`);
       } else {
-        const spec = run.system.initiative;
-        const fighters = run.state.sheets.filter(sheet => !isDesk(sheet) && !run.state.sheets.some(other => other.group === sheet.id));
-        if (spec) {
-          const rolls = fighters.map(sheet => {
-            const checked = run.check(sheet.id, spec as never, root.phase('initiative').at(sheet.id), 'инициатива');
-            run.state.write(...checked.entries);
-            return { sheetId: sheet.id, total: checked.total };
-          });
-          line = [...rolls].sort((a, b) => b.total - a.total).map(r => r.sheetId);
-          run.state.write({ text: `Инициатива: ${[...rolls].sort((a, b) => b.total - a.total).map(r => `${nameOf(r.sheetId)} ${r.total}`).join(', ')}` });
-        } else {
-          line = fighters.map(sheet => sheet.id);
+        const rolled = initiative(run, root);
+        line = rolled.order;
+        if (rolled.rolls.length) {
+          run.state.write({ text: `Инициатива: ${[...rolled.rolls].sort((a, b) => b.total - a.total).map(r => `${nameOf(r.sheetId)} ${r.total}`).join(', ')}` });
         }
       }
       next = startCombat(before, line);

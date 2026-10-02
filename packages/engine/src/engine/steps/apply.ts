@@ -2,11 +2,11 @@ import { compile } from '../../formula/index.ts';
 import { findField } from '../calc.ts';
 import { applyValueModifiers } from '../modifiers.ts';
 import { incomingTagOf } from '../targets.ts';
-import { packRef, resolveNumber, resolveRef } from '../refs.ts';
 import { EngineError } from '../errors.ts';
-import type { StepData, StepContext } from './index.ts';
+import type { Pass } from '../calc.ts';
+import type { StoredValue } from '../../model/types.ts';
+import type { StepData, StepContext, StepModule } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
-import type { System, StoredValue } from '../../model/types.ts';
 
 export const type = 'apply';
 const words: StepWords = STEP_WORDS.apply;
@@ -39,95 +39,46 @@ export function traceLine(t: any, h: any) {
   return `применено: ${h.labelOf(t.target)} ${t.from} → ${t.to} (${sign}${t.amount})${mods}`;
 }
 
-export function pack(step: StepData, ctx: StepContext) {
-  const direction = step.direction || 'subtract';
-  if (!DIRECTIONS[direction]) {
-    throw new EngineError(
-      `${ctx.owner || 'правило'}: неизвестное направление «${direction}» — умею: ${Object.keys(DIRECTIONS).join(', ')}`);
-  }
-  return {
-    target: packRef(step.target, ctx),
-    direction,
-    value: packRef(step.value, ctx),
-    targetModifiers: !!step.targetModifiers,
-  };
-}
+const who = (ctx: StepContext): string => ctx.owner || 'правило';
 
-export function resolve(step: StepData, ctx: StepContext) {
-  const tag = tagOf(step.target, ctx);
-  const field = assertWritable(ctx.system, tag);
-  const direction = String(step.direction);
-  const from = ctx.read!(tag);
-
-  if (direction === 'set' && (typeof from !== 'number' || typeof resolveRef(step.value, ctx) !== 'number')) {
-    const to = resolveRef(step.value, ctx) as StoredValue;
-    ctx.write!(tag, to);
-    return {
-      value: { amount: to, from, to, overkill: 0 },
-      trace: { target: tag, direction, incoming: to, amount: to, from, to },
-      break: null,
-    };
-  }
-  if (typeof from !== 'number') {
-    throw new EngineError(
-      `поле «${tag}» держит не число (${typeof from}) — прибавлять и вычитать нечего`);
-  }
-
-  const value = resolveNumber(step.value, ctx, 'величина применения');
-  const incoming = direction === 'set' ? Math.abs(value - from) : value;
-  const amount = step.targetModifiers
-    ? Math.floor(Number(applyValueModifiers(incoming, incomingTagOf(tag), ctx.pass)))
-    : incoming;
-
-  const raw = direction === 'set'
-    ? from + Math.sign(value - from) * amount
-    : DIRECTIONS[direction]!(from, amount);
-  const { to, overkill } = clampToField(raw, field, ctx);
-
-  ctx.write!(tag, to);
-
-  return {
-
-    value: { amount, from, to, overkill },
-    trace: { target: tag, direction, incoming, amount, from, to },
-    break: null,
-  };
-}
-
-function clampToField(
-  raw: number, field: { value: Record<string, unknown> }, ctx: StepContext,
-): { to: number; overkill: number } {
-  const low = boundOf(field.value.min, ctx, 'нижняя граница поля');
-  const high = boundOf(field.value.max, ctx, 'верхняя граница поля');
-  if (low !== null && raw < low) return { to: low, overkill: low - raw };
-  if (high !== null && raw > high) return { to: high, overkill: 0 };
-  return { to: raw, overkill: 0 };
-}
-
-function boundOf(bound: unknown, ctx: StepContext, what: string): number | null {
+function boundOf(bound: unknown, pass: Pass, what: string): number | null {
   if (bound === undefined || bound === null || bound === '') return null;
-  const value = typeof bound === 'number' ? bound : compile(String(bound)).evaluate(ctx.pass.resolve);
-  if (typeof value !== 'number') {
-    throw new EngineError(`${what} — не число (${JSON.stringify(bound)} даёт ${typeof value})`);
-  }
+  const value = typeof bound === 'number' ? bound : compile(String(bound)).evaluate(pass.resolve);
+  if (typeof value !== 'number') throw new EngineError(`${what} — не число (${JSON.stringify(bound)} даёт ${typeof value})`);
   return value;
 }
 
-function tagOf(ref: unknown, ctx: StepContext): string {
-  if (typeof ref === 'string') return ref;
-  if (ref && typeof ref === 'object' && 'tag' in ref) return String((ref as { tag: unknown }).tag);
-  const resolved = resolveRef(ref, ctx);
-  if (typeof resolved === 'string') return resolved;
-  throw new EngineError(
-    `${ctx.owner || 'правило'}: мишень применения должна быть тегом, а пришло ${JSON.stringify(ref)}`);
-}
+const runner: Pick<StepModule, 'once' | 'mayBreak' | 'prepare' | 'finish' | 'splits'> = {
+  finish(step, ctx) {
+    const direction = String(step.direction || 'subtract');
+    if (!DIRECTIONS[direction]) throw new EngineError(`${who(ctx)}: неизвестное направление «${direction}» — умею: ${Object.keys(DIRECTIONS).join(', ')}`);
+    const target = step.target;
+    const tag = typeof target === 'string' ? target
+      : target && typeof target === 'object' && 'tag' in target ? String(target.tag)
+        : String(ctx.value(target));
+    const field = findField(ctx.system, tag);
+    if (!field) throw new EngineError(`система не объявляет поля «${tag}» — применять некуда`);
+    if (field.value.kind !== 'stored') throw new EngineError(`в поле «${tag}» нельзя писать: его считает движок по формуле, а не эффект`);
+    const from = ctx.read(tag);
+    const raw = ctx.value(step.value);
+    if (direction === 'set' && (typeof from !== 'number' || typeof raw !== 'number')) {
+      ctx.write(tag, raw as StoredValue);
+      return { value: { amount: raw, from, to: raw, overkill: 0 }, trace: { target: tag, direction, incoming: raw, amount: raw, from, to: raw }, break: null };
+    }
+    if (typeof from !== 'number') throw new EngineError(`поле «${tag}» держит не число (${typeof from}) — прибавлять и вычитать нечего`);
+    if (typeof raw !== 'number') throw new EngineError(`${who(ctx)}: величина применения — не число (даёт ${raw === null ? 'пусто' : typeof raw})`);
+    const value = raw;
+    const incoming = direction === 'set' ? Math.abs(value - from) : value;
+    const amountNow = step.targetModifiers ? Math.floor(Number(applyValueModifiers(incoming, incomingTagOf(tag), ctx.here))) : incoming;
+    const next = direction === 'set' ? from + Math.sign(value - from) * amountNow : DIRECTIONS[direction]!(from, amountNow);
+    const low = boundOf(field.value.min, ctx.here, 'нижняя граница поля');
+    const high = boundOf(field.value.max, ctx.here, 'верхняя граница поля');
+    const to = low !== null && next < low ? low : high !== null && next > high ? high : next;
+    const overkill = low !== null && next < low ? low - next : 0;
+    ctx.write(tag, to);
+    return { value: { amount: amountNow, from, to, overkill }, trace: { target: tag, direction, incoming, amount: amountNow, from, to }, break: null };
+  },
+};
 
-function assertWritable(system: System, tag: string) {
-  const field = findField(system, tag);
-  if (!field) throw new EngineError(`система не объявляет поля «${tag}» — применять некуда`);
-  if (field.value.kind !== 'stored') {
-    throw new EngineError(
-      `в поле «${tag}» нельзя писать: его считает движок по формуле, а не эффект`);
-  }
-  return field;
-}
+
+export const { finish } = runner;

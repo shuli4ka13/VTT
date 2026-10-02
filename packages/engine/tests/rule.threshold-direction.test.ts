@@ -1,8 +1,6 @@
 import { group, test, eq, ok } from './harness.ts';
 import { slots } from '../src/engine/steps/threshold.ts';
-import { Runner, newSink } from '../src/lang/run.ts';
-import { State } from '../src/lang/state.ts';
-import { External, emptyJournal } from '../src/lang/journal.ts';
+import { runSteps } from './legacy.ts';
 import { exchange } from './play.ts';
 
 const queue = (...values) => { let i = 0; return () => values[i++] ?? 1; };
@@ -24,14 +22,8 @@ const run = (successWhen, rolled, versus, extra = {}) => {
       ...extra,
     }],
   };
-  const state = new State([sheet as never], sys as never, { records: [] } as never, null);
-  const runner = new Runner(state, new External(emptyJournal(), queue(rolled)));
-  const sink = newSink();
-  const ran = runner.exec({
-    scope: 'rule', me: sheet.id, here: sheet.id, target: sheet.id, effectId: 'e', owner: 'тест',
-    args: {}, paramDefs: [], props: null, source: sheet.id, hop: 0, names: 'here',
-  }, rule.steps as never, sink);
-  return ran as { results: Record<string, any>; stopped: unknown };
+  const ran = runSteps(sys as never, [sheet as never], sheet.id, rule.steps as never, queue(rolled));
+  return ran as unknown as { results: Record<string, any>; stopped: unknown };
 };
 
 group('порог: направление успеха объявляется слотом', () => {

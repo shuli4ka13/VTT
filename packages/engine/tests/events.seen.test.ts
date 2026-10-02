@@ -1,8 +1,8 @@
 import { group, test, eq, ok } from './harness.ts';
-import { act, NEW_CORE } from './core-switch.ts';
+import { act } from '../src/core/act.ts';
 import { CUT_WORDS } from '../src/core/limits.ts';
-import { emptyJournal } from '../src/lang/journal.ts';
-import type { Journal } from '../src/lang/journal.ts';
+import { emptyJournal } from '../src/core/external.ts';
+import type { Journal } from '../src/core/external.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const queue = (...values: number[]) => {
@@ -111,16 +111,22 @@ group('увидев кости: поздние броски видят, что �
 });
 
 group('увидев кости на броске по полю листа', () => {
-  test('без вопроса — срабатывает, с вопросом — молчит (вопросов вне действия нет)', async () => {
-    const { checkSeen } = await import('../src/lang/check.ts');
+  test('без вопроса — срабатывает сразу, с вопросом — спрашивает (вопросы есть в любой операции)', async () => {
+    const { perform } = await import('../src/core/perform.ts');
     const system = world({
       везунчик: { label: 'Везунчик', activation: 'passive', on: [{ on: 'seen', steps: [{ type: 'roll-reroll', upTo: { expr: '1' } }] }] },
       вдохновение: { label: 'Вдохновение', activation: 'passive', on: [{ on: 'seen', confirm: true, steps: [{ type: 'roll-plus', value: { expr: '10' } }] }] },
     });
+    const field = { ...system, tables: { ...system.tables, лист: { ...(system.tables as never as Record<string, { columns: unknown[] }>).лист, columns: [...(system.tables as never as Record<string, { columns: unknown[] }>).лист.columns, { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 0, roll: { die: { constant: 'к20' }, tags: ['атака'] } }] } } } as never;
     const sheets = [sheet('а', ['везунчик', 'вдохновение'])];
-    const out = checkSeen({ system, compendium: book, die: queue(1, 12) }, sheets, 'а', { die: { constant: 'к20' }, tags: ['атака'] }, 'проверка');
-    eq(out.total, 12);
-    ok(out.lines.some(line => line.includes('Везунчик')), out.lines.join(' | '));
+    const first = perform({ system: field, compendium: book, clock: null, sheets, die: queue(1, 12) }, { op: 'roll', sheetId: 'а', tag: 'ловкость' });
+    eq(first.kind, 'paused');
+    if (first.kind !== 'paused') return;
+    eq(first.question.window, 'seen');
+    const second = perform({ system: field, compendium: book, clock: null, sheets, die: queue(), journal: { ...first.journal, answers: { ...first.journal.answers, [first.question.key]: ['вдохновение'] } } }, { op: 'roll', sheetId: 'а', tag: 'ловкость' });
+    eq(second.kind, 'done');
+    ok(second.log[0]!.includes('= 22'), second.log.join(' | '));
+    ok(second.log.some(line => line.includes('Везунчик')), second.log.join(' | '));
   });
 });
 
@@ -174,20 +180,14 @@ group('ожидание для кнопки', () => {
 });
 
 group('ядро: по ревью', () => {
-  test('вызов, будящий подписку на себя же, обрывается ошибкой словами, а не переполнением стека', () => {
+  test('подписка, будящая сама себя, упирается в глубину обработчика: отказ обработчика и строка в журнале', () => {
     const system = world({
       удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'emit', event: 'эхо' }] },
       эхо: { label: 'Эхо', activation: 'manual', params: [], steps: [] },
       отзвук: { label: 'Отзвук', activation: 'passive', on: [{ on: 'targeted', of: 'event:эхо', steps: [{ type: 'emit', event: 'эхо' }] }] },
     });
-    if (NEW_CORE) {
-      const out = play(system, [sheet('а'), sheet('б', ['отзвук'])], []);
-      ok(out.log.includes(CUT_WORDS), 'обработчик упёрся в глубину — отказ обработчика, строка в журнале');
-      return;
-    }
-    let message = '';
-    try { play(system, [sheet('а'), sheet('б', ['отзвук'])], []); } catch (err) { message = (err as Error).message; }
-    ok(message.includes('похоже, идут по кругу'), message);
+    const out = play(system, [sheet('а'), sheet('б', ['отзвук'])], []);
+    ok(out.log.includes(CUT_WORDS), 'обработчик упёрся в глубину — отказ обработчика, строка в журнале');
   });
 
   test('ложное «когда» у броска действующего — кость не брошена, реакции на неё не будят', () => {

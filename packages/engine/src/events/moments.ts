@@ -1,18 +1,11 @@
-import { newPass, calc } from '../engine/calc.ts';
-import { State } from '../lang/state.ts';
-import { External, emptyJournal } from '../lang/journal.ts';
-import { Runner, newSink, reportOf } from '../lang/run.ts';
-import { holdsNow } from '../engine/refs.ts';
-import { lapse, burnsUse, spendUse } from './durations.ts';
-import type { Expired } from './durations.ts';
-import type { Clock } from '../engine/clock.ts';
-import { listening, subscribers, MOMENT_PREFIX, FIELD_PREFIX } from './bus.ts';
-import { EngineError, isRuleError } from '../engine/errors.ts';
 import { effectLabelOf } from './actions.ts';
-import { isShared, isDesk, sharedOf } from './desk.ts';
-import type { Report, WorldContext } from '../lang/types.ts';
-import type { Sheet, System, Effect, Handler, Step, WornEffect } from '../model/types.ts';
+import { isShared, isDesk } from './desk.ts';
+import { MOMENT_PREFIX } from './bus.ts';
 import { fieldOf as columnField } from '../model/sheet-columns.ts';
+import type { Report } from '../core/log.ts';
+import type { Clock } from '../engine/clock.ts';
+import type { System, Sheet, WornEffect } from '../model/types.ts';
+import { FIELD_PREFIX } from './bus.ts';
 
 
 export const MOMENTS = {
@@ -48,13 +41,6 @@ export interface MomentEvent {
   sheetId: string;
 }
 
-export interface MomentRun {
-  sheets: Sheet[];
-  reports: Fired[];
-
-  expired?: Expired[];
-}
-
 export type TurnOp = 'start' | 'next' | 'stop' | 'scene' | 'short-rest' | 'long-rest';
 
 export function momentsOfTurn(op: TurnOp, before: Clock, after: Clock, sheets: Sheet[]): MomentEvent[] {
@@ -82,83 +68,6 @@ export function momentsOfTurn(op: TurnOp, before: Clock, after: Clock, sheets: S
   return everyone('scene-end');
 }
 
-const MAX_FIRES = 32;
-
-export interface Firing {
-  sheetId: string;
-  id: string;
-  effect: Effect;
-  steps: Step[] | undefined;
-  owner: string;
-  label: string;
-  seed: Record<string, unknown>;
-  handler?: Handler;
-}
-
-export type Fired = { sheetId: string; report: Report };
-
-export function fire(firing: Firing, sheets: Sheet[], world: WorldContext): { sheets: Sheet[]; fired: Fired } | null {
-  const live = sheets.find(s => s.id === firing.sheetId);
-  if (!live) return null;
-  const { id, effect, owner, seed, handler } = firing;
-  if (handler && !holds(handler, live, seed, owner, world, sheets)) return null;
-
-  const state = new State([...sheets], world.system, world.compendium, world.clock ?? null);
-  const run = new Runner(state, new External(emptyJournal(), world.die, true));
-  const sink = newSink();
-  const ran = run.exec({
-    scope: `${firing.sheetId}:${id}`, me: firing.sheetId, here: firing.sheetId, target: firing.sheetId, effectId: id, owner,
-    args: (effect.args || {}) as Record<string, unknown>, paramDefs: effect.params ?? [], props: null,
-    source: firing.sheetId, hop: 0, names: 'here',
-  }, firing.steps ?? [], sink, seed);
-  if (handler && burnsUse(effect)) state.put(spendUse(state.get(firing.sheetId), id));
-  const known = new Set(sheets.map(s => s.id));
-  return {
-    sheets: state.sheets.filter(s => known.has(s.id)),
-    fired: {
-      sheetId: firing.sheetId,
-      report: (() => {
-        const report = reportOf('moment', id, firing.sheetId, firing.label, sink, ran.stopped, false);
-        const later = sink.after.flatMap(entry => ('report' in entry ? [entry.report] : []));
-        return later.length ? { ...report, reactions: [...(report.reactions ?? []), ...later] } : report;
-      })(),
-    },
-  };
-}
-
-export function fireMoments(events: MomentEvent[], sheets: Sheet[], world: WorldContext): MomentRun {
-  let updated = sheets;
-  const reports: Fired[] = [];
-  const expired: Expired[] = [];
-
-  for (const event of events) {
-    let fired = 0;
-    const lapsed = lapse(event, updated, world.system, world.clock);
-    updated = lapsed.sheets;
-    expired.push(...lapsed.expired);
-
-    const sheet = updated.find(s => s.id === event.sheetId);
-    if (!sheet) continue;
-
-    for (const { id, effect, handler } of listening(world.system, sheet, { kind: 'moment', moment: event.moment }, { compendium: world.compendium })) {
-      if (fired++ >= MAX_FIRES) {
-        throw new EngineError(`моменты срабатывают без остановки: больше ${MAX_FIRES} за один ход`);
-      }
-      const live = updated.find(s => s.id === event.sheetId)!;
-      const done = fire({
-        sheetId: event.sheetId, id, effect, handler, steps: handler.steps,
-        owner: `момент «${MOMENTS[event.moment]}» у «${effect.label ?? id}»`,
-        label: effect.label ?? id,
-        seed: { moment: { moment: event.moment, sheet: event.sheetId, round: world.clock?.round ?? 0 }, worn: wornEntry(live, id) },
-      }, updated, world);
-      if (!done) continue;
-      updated = done.sheets;
-      reports.push(done.fired);
-    }
-  }
-
-  return { sheets: updated, reports, expired };
-}
 
 export const wornSeed = (entry: WornEffect | undefined): Record<string, unknown> => ({ carry: null, ...(entry ?? {}) });
 
@@ -168,82 +77,8 @@ export const wornEntry = (sheet: Sheet, effectId: string): Record<string, unknow
 export const fieldOf = (on: string | undefined): string | null =>
   (on && on.startsWith(FIELD_PREFIX) ? on.slice(FIELD_PREFIX.length) : null);
 
-const truthy = (value: unknown): boolean =>
-  value === true || (typeof value === 'number' && value !== 0) || (typeof value === 'string' && value !== '');
-
-const valuesOf = (sheet: Sheet, world: WorldContext, sheets: readonly Sheet[]): (tag: string) => unknown => {
-  let pass: ReturnType<typeof newPass> | null = null;
-  return tag => {
-    try {
-      return calc(world.system, sheet, tag, pass ??= newPass(world.system, sheet, { compendium: world.compendium, shared: sharedOf(world.system, sheets) }));
-    } catch (err) {
-      if (isRuleError(err)) return undefined;
-      throw err;
-    }
-  };
-};
-
-export function fireCrossings(before: Sheet[], after: Sheet[], world: WorldContext): MomentRun {
-  let updated = after;
-  let previous = before;
-  const reports: Fired[] = [];
-  let fired = 0;
-
-  for (;;) {
-    const wave: { sheetId: string; id: string; effect: Effect; handler: Handler; tag: string; value: unknown }[] = [];
-    for (const sheet of updated) {
-      const was = previous.find(s => s.id === sheet.id);
-      if (!was || was === sheet) continue;
-      const now = valuesOf(sheet, world, updated);
-      const then = valuesOf(was, world, previous);
-      for (const { id, effect, handler } of subscribers(world.system, sheet, { compendium: world.compendium })) {
-        const tag = fieldOf(handler.on);
-        if (!tag) continue;
-        const value = now(tag);
-        if (!truthy(value) || truthy(then(tag))) continue;
-        wave.push({ sheetId: sheet.id, id, effect, handler, tag, value });
-      }
-    }
-    if (!wave.length) break;
-    previous = updated;
-
-    for (const { sheetId, id, effect, handler, tag, value } of wave) {
-      if (fired++ >= MAX_FIRES) {
-        throw new EngineError(`поля будят эффекты без остановки: больше ${MAX_FIRES} срабатываний за раз`);
-      }
-      const live = updated.find(s => s.id === sheetId)!;
-      const label = columnField(world.system, tag)?.label ?? tag;
-      const done = fire({
-        sheetId, id, effect, handler, steps: handler.steps,
-        owner: `поле «${label}» стало верным у «${effect.label ?? id}»`,
-        label: effect.label ?? id,
-        seed: { field: { tag, value }, worn: wornEntry(live, id) },
-      }, updated, world);
-      if (!done) continue;
-      updated = done.sheets;
-      reports.push(done.fired);
-    }
-  }
-
-  return { sheets: updated, reports };
-}
-
-function holds(
-  handler: Handler, sheet: Sheet, seed: Record<string, unknown>, owner: string, world: WorldContext, sheets: readonly Sheet[],
-): boolean {
-  const condition = handler.if;
-  if (!condition) return true;
-  const pass = newPass(world.system, sheet, { compendium: world.compendium, shared: sharedOf(world.system, sheets) });
-  try {
-    return holdsNow(condition, { pass, owner, results: seed });
-  } catch (err) {
-    if (isRuleError(err)) return false;
-    throw err;
-  }
-}
-
 export const describeMoment = (
-  world: WorldContext, entry: { sheetId: string; report: Report }, sheets: Sheet[],
+  world: { system: System }, entry: { sheetId: string; report: Report }, sheets: Sheet[],
 ): string => {
   const who = sheets.find(s => s.id === entry.sheetId)?.name ?? entry.sheetId;
   const what = entry.report.label || effectLabelOf(world.system, entry.report.effect);

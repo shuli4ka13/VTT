@@ -1,7 +1,8 @@
 import { group, test, eq, deepEq, throws, ok } from './harness.ts';
 import { grantedTo } from '../src/engine/effects.ts';
 import { exchange } from './play.ts';
-import { fireLifecycle, lifecycleChanges } from '../src/events/lifecycle.ts';
+import { lifecycleChanges } from '../src/events/lifecycle.ts';
+import { fireLifecycle } from './legacy.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const add = (tag: string, n: number) => ({ type: 'apply', target: { tag }, direction: 'add', value: { expr: `${JSON.stringify(n)}` } });

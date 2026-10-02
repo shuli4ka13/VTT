@@ -1,6 +1,5 @@
-import { packRef, resolveRef, resolveOptionalNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
-import type { StepData, StepContext } from './index.ts';
+import type { StepContext, StepModule } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 
 export const type = 'status';
@@ -23,37 +22,21 @@ export function traceLine(t: any, h: any) {
     : `состояние: наложено «${h.effectLabel(t.effect)}»`;
 }
 
-export function pack(step: StepData, ctx: StepContext) {
-  return {
-    mode: modeOf(step, ctx), effect: packRef(step.effect, ctx),
-    ...(step.carry !== undefined && step.carry !== null ? { carry: packRef(step.carry, ctx) } : {}),
-  };
-}
+const who = (ctx: StepContext): string => ctx.owner || 'правило';
 
-export function resolve(step: StepData, ctx: StepContext) {
-  const mode = modeOf(step, ctx);
-  const id = resolveRef(step.effect, ctx);
+const runner: Pick<StepModule, 'once' | 'mayBreak' | 'prepare' | 'finish' | 'splits'> = {
+  finish(step, ctx) {
+    const mode = String(step.mode || 'apply');
+    if (!(mode in MODES)) throw new EngineError(`${who(ctx)}: у шага «состояние» нет режима «${mode}»; умею ${Object.keys(MODES).join(', ')}`);
+    const id = ctx.value(step.effect);
+    if (id === null || id === undefined || id === '') return { value: null, trace: { mode, effect: null }, break: null };
+    if (typeof id !== 'string') throw new EngineError(`${who(ctx)}: состоянию нужен id эффекта, а пришло ${JSON.stringify(id)}`);
+    const carry = mode === 'apply' ? ctx.optional(step.carry, 'число, которое запомнит наложенное') : null;
+    if (mode === 'remove') ctx.detach(id);
+    else ctx.attach(id, carry === null ? undefined : carry);
+    return { value: id, trace: { mode, effect: id, ...(carry === null ? {} : { carry }) }, break: null };
+  },
+};
 
-  if (id === null || id === undefined || id === '') {
-    return { value: null, trace: { mode, effect: null }, break: null };
-  }
-  if (typeof id !== 'string') {
-    throw new EngineError(
-      `${ctx.owner || 'правило'}: состоянию нужен id эффекта, а пришло ${JSON.stringify(id)}`);
-  }
 
-  const carry = mode === 'apply' ? resolveOptionalNumber(step.carry, ctx, 'число, которое запомнит наложенное') : null;
-  if (mode === 'remove') ctx.detach!(id);
-  else ctx.attach!(id, carry === null ? undefined : { carry });
-
-  return { value: id, trace: { mode, effect: id, ...(carry === null ? {} : { carry }) }, break: null };
-}
-
-function modeOf(step: StepData, ctx: StepContext): string {
-  const mode = String(step.mode || 'apply');
-  if (!(mode in MODES)) {
-    throw new EngineError(
-      `${ctx.owner || 'правило'}: у шага «состояние» нет режима «${mode}»; умею ${Object.keys(MODES).join(', ')}`);
-  }
-  return mode;
-}
+export const { finish } = runner;

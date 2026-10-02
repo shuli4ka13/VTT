@@ -3,11 +3,11 @@ import { SAMPLE_WORLDS } from '../src/model/systems.ts';
 import { flattenSystem } from '../src/model/inherit.ts';
 import { availableActions } from '../src/events/actions.ts';
 import { idleClock, startCombat } from '../src/engine/clock.ts';
-import { act } from './core-switch.ts';
-import { emptyJournal } from '../src/lang/journal.ts';
+import { act } from '../src/core/act.ts';
+import { emptyJournal } from '../src/core/external.ts';
 import { isRuleError } from '../src/engine/errors.ts';
-import type { ActIntent, ActOutcome } from '../src/lang/act.ts';
-import type { Journal, Question } from '../src/lang/journal.ts';
+import type { ActIntent, ActOutcome } from '../src/core/act.ts';
+import type { Journal, Question } from '../src/core/external.ts';
 import type { Sheet, System, Compendium } from '../src/model/types.ts';
 
 const SEEDS = Number(process.env.FUZZ_SEEDS ?? 6);

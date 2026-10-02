@@ -1,6 +1,6 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import { exchange, deliverMany } from './play.ts';
-import { CUT_WORDS } from '../src/lang/limits.ts';
+import { CUT_WORDS } from '../src/core/limits.ts';
 
 const queue = (...values: number[]) => {
   const rest = [...values];

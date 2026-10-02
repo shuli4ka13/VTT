@@ -12,27 +12,31 @@ const tagsOfStep = (step: Record<string, any> | undefined, trace?: Record<string
 
 const rollTitle = (tags: string[], fallback: string): string => (tags.length ? `${fallback} (${rollName(tags)})` : fallback);
 
-export function previewLines(hoisted: Record<string, any>[], system: System, dry: { report: { trace: Record<string, any>[] } } | null): string[] {
+export function previewLines(system: System, effectId: string, trace: Record<string, unknown>[]): string[] {
+  const steps = (system.effects[effectId]?.steps ?? []) as { id?: string | null; side?: string }[];
+  const traces = trace.filter(trace => trace.type === 'threshold' && !trace.skipped && !trace.within);
+  const sideOf = (trace: Record<string, unknown>): string => {
+    const step = steps.find((one, index) => String(one.id ?? index) === String(trace.step));
+    return String(step?.side ?? 'sender');
+  };
+  const rollsOf = (trace: Record<string, unknown>): string => {
+    const rolls = (trace.rolls as number[]) ?? [];
+    return trace.kept != null && rolls.length > 1 ? `[${rolls.join(', ')}] → ${trace.kept}` : `[${rolls.join(', ')}]`;
+  };
   const lines: string[] = [];
-  const steps = hoisted;
-  for (const step of steps) {
-    if (step.type !== 'threshold' || !step.rolled) continue;
-    const check = rollTitle(tagsOfStep(step), 'Бросок');
-    const bonus = typeof step.bonus?.const === 'number' ? step.bonus.const + (step.modBonus ?? 0) : (step.modBonus ?? 0);
-    const rolls = step.rolled.kept != null && step.rolled.rolls.length > 1
-      ? `[${step.rolled.rolls.join(', ')}] → ${step.rolled.kept}` : `[${step.rolled.rolls.join(', ')}]`;
-    lines.push(`${check}: ${rolls}${bonus ? ` + ${bonus}` : ''} = ${step.rolled.total + bonus}`);
+  for (const trace of traces) {
+    if (sideOf(trace) === 'target') continue;
+    const tags = (trace.tags as string[] | undefined) ?? [];
+    const title = tags.length ? `Бросок (${rollName(tags)})` : 'Бросок';
+    lines.push(`${title}: ${rollsOf(trace)}${trace.bonus ? ` + ${trace.bonus}` : ''} = ${trace.total}`);
   }
-  const packed = new Set(steps.filter(s => s.type === 'threshold' && s.rolled).map(s => String(s.id ?? '')));
-  for (const trace of dry?.report.trace ?? []) {
-    if (trace.type !== 'threshold' || trace.skipped) continue;
-    const versus = trace.versus?.tag
-      ? fieldOf(system, trace.versus.tag)?.label ?? trace.versus.tag : 'порог';
-    const own = !packed.has(String(trace.step ?? '')) && Array.isArray(trace.rolls)
-      ? `бросок цели [${trace.rolls.join(', ')}] + ${trace.bonus ?? 0} = ${trace.total} ` : '';
-    const step = steps.find(s => String(s.id ?? '') === String(trace.step ?? ''));
-    const words = outcomeWords(system, tagsOfStep(step, trace));
-    lines.push(`${own}против ${versus} ${trace.versus?.value}: ${trace.success ? words.success : words.fail}${trace.forced != null ? ` (${forcedWords(trace.forced, Boolean(trace.success))})` : ''}`);
+  for (const trace of traces) {
+    const versus = trace.versus as { tag?: string; value?: number } | undefined;
+    const named = versus?.tag ? fieldOf(system, versus.tag)?.label ?? versus.tag : 'порог';
+    const own = sideOf(trace) === 'target' ? `бросок цели ${rollsOf(trace)} + ${trace.bonus ?? 0} = ${trace.total} ` : '';
+    const words = outcomeWords(system, (trace.tags as string[] | undefined) ?? []);
+    const forced = trace.forced != null ? ` (${forcedWords(Number(trace.forced), Boolean(trace.success))})` : '';
+    lines.push(`${own}против ${named} ${versus?.value}: ${trace.success ? words.success : words.fail}${forced}`);
   }
   return lines;
 }

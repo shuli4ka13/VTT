@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { SAMPLE_WORLDS } from '../src/model/systems.ts';
 import { flattenSystem } from '../src/model/inherit.ts';
-import { rollLead, seeRoll } from '../src/engine/lead-die.ts';
+import { rollLead, seeRoll } from './legacy.ts';
 import { parse, start, result, see, keep, times, faces } from '../src/core/dice.ts';
 import type { SeenOp } from '../src/core/dice.ts';
 import type { DieConstant, RollEdit } from '../src/model/types.ts';

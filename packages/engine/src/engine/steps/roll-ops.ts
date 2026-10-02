@@ -1,31 +1,16 @@
-import { packRef, resolveNumber, resolveOptionalNumber } from '../refs.ts';
-import { seeRoll } from '../lead-die.ts';
-import type { SeenOp, LeadRoll } from '../lead-die.ts';
 import { EngineError } from '../errors.ts';
-import type { StepData, StepContext } from './index.ts';
+import { result, see } from '../../core/dice.ts';
+import type { SeenOp } from '../../core/dice.ts';
+import type { StepContext, StepResult } from './index.ts';
 
-export interface SeenCell { value: LeadRoll }
+const who = (ctx: StepContext): string => ctx.owner || 'правило';
 
-const cellOf = (ctx: StepContext, label: string): SeenCell => {
-  const cell = ctx.seenRoll as SeenCell | undefined;
-  if (!cell) throw new EngineError(`${ctx.owner || 'правило'}: «${label}» работает только в подписке «увидев кости»`);
-  return cell;
-};
-
-export const packed = (keys: readonly string[]) => (step: StepData, ctx: StepContext): Record<string, unknown> =>
-  Object.fromEntries(keys.filter(key => step[key] !== undefined && step[key] !== null && step[key] !== '')
-    .map(key => [key, key === 'keep' || key === 'explode' ? step[key] : packRef(step[key], ctx)]));
-
-export function operate(ctx: StepContext, label: string, op: SeenOp) {
-  const cell = cellOf(ctx, label);
-  const before = cell.value.total;
-  cell.value = seeRoll(cell.value, op, ctx.die);
-  return {
-    value: { total: cell.value.total, rolls: cell.value.rolls },
-    trace: { op: op.kind, before, after: cell.value.total, rolls: cell.value.rolls },
-    break: null,
-  };
+export function operate(ctx: StepContext, label: string, op: SeenOp): StepResult {
+  const cell = ctx.seenRoll;
+  if (!cell) throw new EngineError(`${who(ctx)}: «${label}» работает только в подписке «увидев кости»`);
+  const before = result(cell.value).total;
+  cell.value = see(cell.value, op, ctx.die);
+  const after = result(cell.value);
+  return { value: { total: after.total, rolls: after.dice.rolls }, trace: { op: op.kind, before, after: after.total, rolls: after.dice.rolls }, break: null };
 }
 
-export const numberOf = (ref: unknown, ctx: StepContext, what: string): number => resolveNumber(ref, ctx, what);
-export const optionalNumber = (ref: unknown, ctx: StepContext, what: string): number | null => resolveOptionalNumber(ref, ctx, what);

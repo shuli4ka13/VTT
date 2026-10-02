@@ -1,8 +1,6 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import { registerStepType, registry } from '../src/engine/steps/index.ts';
-import { Runner, newSink } from '../src/lang/run.ts';
-import { State } from '../src/lang/state.ts';
-import { External, emptyJournal } from '../src/lang/journal.ts';
+import { runSteps } from './legacy.ts';
 
 const sys = {
   id: 'stub-sys',
@@ -21,32 +19,28 @@ const echo = {
   type: 'эхо-заглушка',
   label: 'Эхо',
   slots: [],
-  pack: step => ({ note: step.note }),
-  resolve: step => ({ value: step.note, trace: { note: step.note } }),
+  finish: step => ({ value: step.note, trace: { note: step.note } }),
 };
 
 const stop = {
   type: 'стоп-заглушка',
   label: 'Стоп',
   slots: [],
-  pack: () => ({}),
-  resolve: () => ({ value: null, trace: { до: 'сюда дошли' }, break: { reason: 'заглушка сказала хватит' } }),
+  finish: () => ({ value: null, trace: { до: 'сюда дошли' }, break: { reason: 'заглушка сказала хватит' } }),
 };
 
 const reader = {
   type: 'читатель-заглушка',
   label: 'Читатель',
   slots: [],
-  pack: step => ({ of: step.of }),
-  resolve: (step, ctx) => ({ value: ctx.results[step.of] * 2, trace: { взял: step.of } }),
+  finish: (step, ctx) => ({ value: ctx.value({ expr: `@${step.of}` }) * 2, trace: { взял: step.of } }),
 };
 
 const writer = {
   type: 'писатель-заглушка',
   label: 'Писатель',
   slots: [],
-  pack: step => ({ target: step.target, to: step.to }),
-  resolve: (step, ctx) => {
+  finish: (step, ctx) => {
     const from = ctx.read(step.target);
     ctx.write(step.target, step.to);
     return { value: step.to, trace: { было: from, стало: step.to } };
@@ -57,21 +51,14 @@ const sticker = {
   type: 'наклейка-заглушка',
   label: 'Наклейка',
   slots: [],
-  pack: step => ({ status: step.status }),
-  resolve: (step, ctx) => { ctx.attach(step.status); return { value: step.status, trace: { повесил: step.status } }; },
+  finish: (step, ctx) => { ctx.attach(step.status); return { value: step.status, trace: { повесил: step.status } }; },
 };
 
 for (const mod of [echo, stop, reader, writer, sticker]) registerStepType(mod);
 
 const run = steps => {
-  const state = new State([sheet], sys, { records: [] }, null);
-  const runner = new Runner(state, new External(emptyJournal(), () => 1));
-  const sink = newSink();
-  const ran = runner.exec({
-    scope: 'rule', me: sheet.id, here: sheet.id, target: sheet.id, effectId: 'e', owner: 'Правило из заглушек',
-    args: {}, paramDefs: [], props: null, source: sheet.id, hop: 0, names: 'here',
-  }, steps, sink);
-  return { results: ran.results, stopped: ran.stopped, trace: sink.trace, changes: sink.changes, effects: sink.effects, sheet: state.get(sheet.id) };
+  const ran = runSteps(sys, [sheet], sheet.id, steps, () => 1);
+  return { results: ran.results, stopped: ran.stopped, trace: ran.sink.trace, changes: ran.sink.changes, effects: ran.sink.effects, sheet: ran.sheets.find(s => s.id === sheet.id) };
 };
 
 group('ядро правил', () => {
@@ -85,7 +72,7 @@ group('ядро правил', () => {
       throws(() => registerStepType({ type: 'половинка' }), 'половинка');
     });
 
-    test('тип-заглушка проходит через ядро целиком: pack, resolve, результат по имени', () => {
+    test('тип-заглушка проходит через ядро целиком: исполнение, результат по имени', () => {
       const out = run([{ id: 'a', type: 'эхо-заглушка', note: 42 }]);
       eq(out.results.a, 42);
       eq(out.stopped, null);
@@ -186,7 +173,7 @@ if (inNode) {
 
   group('ядро правил › ядро не знает типов шагов', () => {
 
-    const CORE = ['src/engine/rule.ts', 'src/lang/run.ts', 'src/lang/act.ts', 'src/lang/journal.ts', 'src/lang/state.ts'];
+    const CORE = ['src/engine/rule.ts', 'src/core/run.ts', 'src/core/act.ts', 'src/core/perform.ts', 'src/core/state.ts', 'src/core/external.ts', 'src/core/path.ts', 'src/core/subs.ts', 'src/core/steps.ts'];
 
     test('в исходниках ядра нет ни одного имени зарегистрированного типа', () => {
       const hits = [];

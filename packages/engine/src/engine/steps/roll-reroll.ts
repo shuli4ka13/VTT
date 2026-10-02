@@ -1,6 +1,6 @@
+import { operate } from './roll-ops.ts';
+import type { StepModule } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
-import { packed, operate, numberOf } from './roll-ops.ts';
-import type { StepData, StepContext } from './index.ts';
 
 export const type = 'roll-reroll';
 const words: StepWords = STEP_WORDS['roll-reroll'];
@@ -11,8 +11,9 @@ export const icon = '↻';
 export const traceLine = (t: { before: number; after: number; rolls: number[] }): string =>
   `переброшено: [${t.rolls.join(', ')}] — итог ${t.before} → ${t.after}`;
 
-export const pack = packed(['upTo']);
+const runner: Pick<StepModule, 'once' | 'mayBreak' | 'prepare' | 'finish' | 'splits'> = {
+  finish: (step, ctx) => operate(ctx, 'Перебросить', { kind: 'reroll', upTo: ctx.number(step.upTo, 'до какого значения перебрасывать') }),
+};
 
-export function resolve(step: StepData, ctx: StepContext) {
-  return operate(ctx, label, { kind: 'reroll', upTo: numberOf(step.upTo, ctx, 'до какого значения перебрасывать') });
-}
+
+export const { finish } = runner;

@@ -1,7 +1,7 @@
 import { group, test, eq, ok } from './harness.ts';
-import { act } from './core-switch.ts';
-import { emptyJournal } from '../src/lang/journal.ts';
-import type { Journal } from '../src/lang/journal.ts';
+import { act } from '../src/core/act.ts';
+import { emptyJournal } from '../src/core/external.ts';
+import type { Journal } from '../src/core/external.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const queue = (...values: number[]) => {

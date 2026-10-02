@@ -12,6 +12,7 @@ import type { System, Sheet, Compendium, Modifier, RollEdit } from '../model/typ
 import type { Pass } from './calc.ts';
 import { withRecord } from '../model/sheet-columns.ts';
 import { toolsOf } from './refs.ts';
+import { rollHeld, rollEdits } from '../core/edits.ts';
 
 export interface ModifierSource {
   type: 'item' | 'kind' | 'effect' | 'claim';
@@ -200,38 +201,12 @@ export function editNumber(
 }
 
 export function resolveRoll(
-  system: System, _sheet: Sheet, rollTags: readonly (string | null | undefined)[], pass: Pass,
-  extra: SourcedModifier[] = [],
+  _system: System, _sheet: Sheet, rollTags: readonly (string | null | undefined)[], pass: Pass,
 ): RollResolution {
   const tags = [...new Set(rollTags.filter((t): t is string => Boolean(t)))];
-  const mods = [
-    ...rollEditsOf(pass, tags),
-    ...extra,
-  ];
-
-  const named = [...new Set(mods.map(m => m.edit).filter(Boolean))] as string[];
-  const dictionary = system.roll_edits || {};
-  for (const key of named) {
-    if (!dictionary[key]) {
-      throw new EngineError(
-        `модификатор ссылается на правку броска «${key}», которой нет в словаре системы`);
-    }
-  }
-
-  const surviving = named.filter(key => {
-    const canceledBy = dictionary[key]!.canceledBy;
-    return !canceledBy || !named.includes(canceledBy);
-  });
-
-  const numbers = mods.filter(m => m.op);
-  const bonus = numbers.length ? Number(stackNumber(numbers, 0, tags.join(', ') || ROLL_CALL, pass)) : 0;
-
-  return {
-    tags,
-    edits: surviving.map(key => withValues({ ...dictionary[key]!, label: dictionary[key]!.label || key }, pass)),
-    bonus,
-    sources: mods.map(m => ({ ...m.source, edit: m.edit })),
-  };
+  const held = rollHeld(pass, null, tags);
+  const { edits, bonus } = rollEdits(held, [], pass, tags);
+  return { tags, edits, bonus, sources: held.map(m => ({ ...m.source, edit: m.edit })) };
 }
 
 const isFormula = (value: unknown): value is { expr: string } =>
@@ -246,14 +221,6 @@ export function withValues(edit: RollEdit & { label: string }, pass: Pass): Roll
     return [key, number];
   })) as typeof op);
   return { ...edit, ops };
-}
-
-const rollEditsOf = (pass: Pass, tags: readonly string[], as?: string): SourcedModifier[] =>
-  [...editsOf(pass, ROLL_CALL, 'edits', as), ...editsOf(pass, ROLL_CALL, 'bonus', as)]
-    .filter(m => conditionHolds(m, pass) && editMatches(m, tags, pass.system) && callHolds(m, pass, { метки: [...tags] }));
-
-export function incomingRollModifiers(rollTags: readonly string[], pass: Pass): SourcedModifier[] {
-  return rollEditsOf(pass, rollTags, 'against');
 }
 
 export function claimedModifiers(system: System, keys: string[]): SourcedModifier[] {

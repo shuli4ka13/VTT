@@ -1,6 +1,6 @@
+import { operate } from './roll-ops.ts';
+import type { StepModule } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
-import { packed, operate, numberOf } from './roll-ops.ts';
-import type { StepData, StepContext } from './index.ts';
 
 export const type = 'roll-plus';
 const words: StepWords = STEP_WORDS['roll-plus'];
@@ -10,8 +10,9 @@ export const mayBreak = false;
 export const icon = '+';
 export const traceLine = (t: { before: number; after: number }): string => `прибавлено — итог ${t.before} → ${t.after}`;
 
-export const pack = packed(['value']);
+const runner: Pick<StepModule, 'once' | 'mayBreak' | 'prepare' | 'finish' | 'splits'> = {
+  finish: (step, ctx) => operate(ctx, 'Прибавить', { kind: 'plus', value: ctx.number(step.value, 'сколько прибавить') }),
+};
 
-export function resolve(step: StepData, ctx: StepContext) {
-  return operate(ctx, label, { kind: 'plus', value: numberOf(step.value, ctx, 'сколько прибавить') });
-}
+
+export const { finish } = runner;

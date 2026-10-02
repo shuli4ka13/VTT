@@ -1,9 +1,9 @@
 import { readCell } from '../cells.ts';
 import { VALUE_COLUMN } from '../../model/tables.ts';
-import { rollNotation } from '../dice.ts';
-import { packRef, resolveNumber, resolveRef } from '../refs.ts';
 import { EngineError } from '../errors.ts';
-import type { StepData, StepContext } from './index.ts';
+import { start, result } from '../../core/dice.ts';
+import { diceOf } from './dice-ref.ts';
+import type { StepContext, StepModule } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 
 export const type = 'table';
@@ -20,47 +20,30 @@ export function traceLine(t: any, h: any) {
   return `таблица «${name}»: ${rolls}${t.value} → ${t.result}`;
 }
 
-const nameOf = (packed: unknown, ctx: StepContext): string => {
-  const value = resolveRef(packed, ctx);
-  const name = typeof value === 'string' ? value.trim() : '';
-  if (!name) throw new EngineError(`${ctx.owner || 'правило'}: шагу «таблица» не сказано, какую таблицу читать`);
-  return name;
+const who = (ctx: StepContext): string => ctx.owner || 'правило';
+
+const runner: Pick<StepModule, 'finish'> = {
+  finish(step, ctx) {
+    const name = String(ctx.value(step.table) ?? '').trim();
+    if (!name) throw new EngineError(`${who(ctx)}: шагу «таблица» не сказано, какую таблицу читать`);
+    const rolls: number[] = [];
+    let value: number;
+    if (step.dice !== undefined && step.dice !== null) {
+      const spec = diceOf(step.dice, ctx);
+      if (!spec) throw new EngineError(`${who(ctx)}: шагу «таблица» нужен аргумент — число или кости`);
+      const rolled = result(start(spec, [], ctx.die));
+      rolls.push(...rolled.dice.rolls);
+      value = rolled.total;
+    } else if (step.value !== undefined && step.value !== null) {
+      value = ctx.number(step.value, 'аргумент таблицы');
+    } else {
+      throw new EngineError(`${who(ctx)}: шагу «таблица» нужен аргумент — число или кости`);
+    }
+    const column = typeof step.column === 'string' && step.column ? step.column : VALUE_COLUMN;
+    const found = readCell(ctx.system, ctx.here, name, value, column, ctx.owner);
+    return { value: found, trace: { table: name, value, ...(rolls.length ? { rolls } : {}), result: found }, break: null };
+  },
 };
 
-export function pack(step: StepData, ctx: StepContext) {
-  if (!step.table) throw new EngineError(`${ctx.owner || 'правило'}: шагу «таблица» не сказано, какую таблицу читать`);
 
-  const packed: Record<string, unknown> = { table: packRef(step.table, ctx) };
-  if (step.dice !== undefined && step.dice !== null) {
-    packed.dice = packRef(step.dice, ctx);
-  } else if (step.value !== undefined && step.value !== null) {
-    packed.value = packRef(step.value, ctx);
-  } else {
-    throw new EngineError(`${ctx.owner || 'правило'}: шагу «таблица» нужен аргумент — число или кости`);
-  }
-  return packed;
-}
-
-export function resolve(step: StepData, ctx: StepContext) {
-  const table = nameOf(step.table, ctx);
-  const rolls: number[] = [];
-  let value: number;
-
-  if (step.dice !== undefined && step.dice !== null) {
-    const notation = resolveRef(step.dice, ctx);
-    const thrown = rollNotation(notation, ctx.die);
-    rolls.push(...thrown.rolls);
-    value = thrown.total;
-  } else {
-    value = resolveNumber(step.value, ctx, 'аргумент таблицы');
-  }
-
-  const column = typeof step.column === 'string' && step.column ? step.column : VALUE_COLUMN;
-  const result = readCell(ctx.system, ctx.pass, table, value, column, ctx.owner);
-
-  return {
-    value: result,
-    trace: { table, value, ...(rolls.length ? { rolls } : {}), result },
-    break: null,
-  };
-}
+export const { finish } = runner;

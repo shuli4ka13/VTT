@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { world as W } from '@vtt/schema';
-import { act } from '@vtt/engine/lang/act';
-import { emptyJournal } from '@vtt/engine/lang/journal';
+import { act } from '@vtt/engine/core/act';
+import { emptyJournal } from '@vtt/engine/core/external';
 import { emptySystem } from '../../store/world.ts';
 import { newColumn, newDie, newEffect, newRecordKind, newBinding, BRICKS } from './factory.ts';
 import type { System, Compendium, Sheet, Step } from '@vtt/schema';

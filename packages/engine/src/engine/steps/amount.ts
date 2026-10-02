@@ -1,9 +1,9 @@
-import { rollNotation, multiplyNotation } from '../dice.ts';
-import { dieText } from '../lead-die.ts';
-import { packRef, resolveRef, resolveOptionalNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
-import type { StepData, StepContext } from './index.ts';
-import { guardHolds, packGuardRef } from '../rule.ts';
+import { start, result, times } from '../../core/dice.ts';
+import type { RollResult } from '../../core/dice.ts';
+import type { Die } from '../../model/types.ts';
+import { diceOf } from './dice-ref.ts';
+import type { StepData, StepContext, StepModule } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 
 export const type = 'amount';
@@ -12,9 +12,7 @@ export const { label, hint, slots, outputs } = words;
 
 export const SOURCES = ['roll', 'margin', 'item'];
 
-export const once = (): boolean => true;
 
-export const mayBreak = false;
 
 export const icon = 'Σ';
 
@@ -41,131 +39,99 @@ export function traceLine(t: any) {
   return `расчёт: ${formula} = ${t.total}`;
 }
 
-function diceRef(ref: unknown, ctx: StepContext): unknown {
-  if (!ref || typeof ref !== 'object' || !('constant' in ref)) return ref;
-  return { const: dieText(ctx.system, String((ref as { constant: unknown }).constant)) };
+const who = (ctx: StepContext): string => ctx.owner || 'правило';
+
+function watchedDie(ctx: StepContext, thrown: { sides: number; value: number }[]): Die {
+  return sides => { const value = ctx.die(sides); thrown.push({ sides, value }); return value; };
 }
 
-export function pack(step: StepData, ctx: StepContext) {
-  const source = constant(packRef(step.source, ctx), ctx, 'источник величины');
-  if (!SOURCES.includes(source)) {
-    throw new EngineError(
-      `${who(ctx)}: неизвестный источник величины «${source}» — умею: ${SOURCES.join(', ')}`);
-  }
-
-  const written = step.dice ? constant(packRef(diceRef(step.dice, ctx), ctx), ctx, 'кости величины') : null;
-  const times = timesNow(step, ctx);
-  const plain = written !== null && times !== null ? countedNotation(written, times) : written;
-  const doubled = plain !== null && doublesNow(step, ctx);
-  const notation = doubled ? multiplyNotation(plain, 2) : plain;
-  const thrown: { sides: number; value: number }[] = [];
-  const watched: StepContext = { ...ctx, die: sides => { const value = ctx.die(sides); thrown.push({ sides, value }); return value; } };
-  const fixed = step.fixed !== undefined ? packRef(step.fixed, watched) : null;
-  const bonus = step.bonus !== undefined ? packRef(step.bonus, ctx) : null;
-  const margin = step.margin !== undefined ? packRef(step.margin, ctx) : null;
-
-  if (source === 'roll' && !written) {
-    throw new EngineError(`${who(ctx)}: источнику «свой бросок» нужны кости — слот dice пуст`);
-  }
-  const deferred = typeof fixed === 'object' && fixed !== null
-    && 'later' in (fixed as Record<string, unknown>);
-  if (source === 'item' && !deferred
-    && (fixed === null || (typeof fixed === 'object' && (fixed as any).const == null))) {
-    throw new EngineError(`${who(ctx)}: источнику «фикс предмета» нужен заполненный слот fixed`);
-  }
-  if (source === 'margin' && !margin) {
-    throw new EngineError(
-      `${who(ctx)}: источнику «превышение» нужен слот margin — превышение какого шага брать?`);
-  }
-
+function tally(thrown: { sides: number; value: number }[]): Pick<RollResult, 'rolled' | 'atMax' | 'atMin'> {
   return {
-    source,
-    rolled: notation ? rollNotation(notation, ctx.die) : fromFormula(thrown),
-    ...(doubled ? { doubled: true } : {}),
-    ...(times !== null ? { times } : {}),
-    ...(step.scale ? {
-      scale: {
-        times: packRef(step.scale.times, ctx),
-        ...(step.scale.when ? { when: packGuardRef(step.scale.when, ctx) } : {}),
+    rolled: thrown.length,
+    atMax: thrown.filter(one => one.value === one.sides).length,
+    atMin: thrown.filter(one => one.value === 1).length,
+  };
+}
+
+function withDie<T>(ctx: StepContext, die: Die, work: (inner: StepContext) => T): T {
+  return work(ctx.using(die));
+}
+
+const runner: Pick<StepModule, 'once' | 'mayBreak' | 'prepare' | 'finish' | 'splits'> = {
+  once: () => true,
+  prepare(step, ctx) {
+    const source = String(ctx.value(step.source) ?? step.source);
+    if (!SOURCES.includes(source)) throw new EngineError(`${who(ctx)}: неизвестный источник величины «${source}» — умею: ${SOURCES.join(', ')}`);
+    const written = diceOf(step.dice, ctx);
+    if (source === 'roll' && !written) throw new EngineError(`${who(ctx)}: источнику «свой бросок» нужны кости — слот dice пуст`);
+    if (source === 'margin' && !step.margin) throw new EngineError(`${who(ctx)}: источнику «превышение» нужен слот margin — превышение какого шага брать?`);
+    const many = step.count === undefined || step.count === null ? null : Math.max(0, Math.floor(ctx.number(step.count, 'сколько раз кинуть кости')));
+    const doubled = written !== null && many !== 0 && step.double !== undefined && step.double !== null && ctx.holds(step.double);
+    const spec = written === null || many === 0 ? null : times(written, (many ?? 1) * (doubled ? 2 : 1));
+    const formula: { sides: number; value: number }[] = [];
+    const slot = (ref: unknown, what: string, watched: boolean): number | null | undefined => {
+      if (ref === undefined || ref === null) return null;
+      if (!ctx.known(ref)) return undefined;
+      return watched ? withDie(ctx, watchedDie(ctx, formula), inner => inner.optional(ref, what)) : ctx.optional(ref, what);
+    };
+    const fixed = slot(step.fixed, 'фикс величины', true);
+    if (source === 'item' && fixed === null) throw new EngineError(`${who(ctx)}: источнику «фикс предмета» нужен заполненный слот fixed`);
+    const bonus = slot(step.bonus, 'бонус величины', false);
+    const margin = slot(step.margin, 'превышение для величины', false);
+    const notated: { sides: number; value: number }[] = [];
+    const rolled = spec ? start(spec, [], watchedDie(ctx, notated)) : null;
+    const thrown = rolled ? notated : formula;
+    const rolls = thrown.map(one => one.value);
+    const natural = rolls.reduce((sum, v) => sum + v, 0);
+    const constBonus = typeof bonus === 'number' && step.bonus && typeof step.bonus === 'object' && 'const' in step.bonus ? bonus : 0;
+    const summary: RollResult = {
+      total: (rolled ? result(rolled).total : natural) + constBonus, natural,
+      ...tally(thrown), edited: false, dice: { rolls, kept: null }, parts: {}, tags: [],
+    };
+    const scaled = step.scale !== undefined && step.scale !== null;
+    const whole = !scaled && fixed !== undefined && bonus !== undefined && margin !== undefined;
+    return {
+      ...(whole ? { value: (rolled ? result(rolled).total : 0) + (fixed ?? 0) + (bonus ?? 0) + (margin ?? 0) } : {}),
+      source, notation: spec ? `${spec.terms[0]!.count}d${spec.terms[0]!.sides}` : null,
+      diceTotal: rolled ? result(rolled).total : 0, rolls, thrown,
+      ...(doubled ? { doubled: true } : {}), ...(many !== null ? { times: many } : {}),
+      fixed, bonus, margin, summary,
+    };
+  },
+  finish(step, ctx, prepared) {
+    const p = prepared ?? runner.prepare!(step, ctx);
+    const thrown = [...(p.thrown as { sides: number; value: number }[])];
+    const late = (known: unknown, ref: unknown, what: string): number => (known === undefined
+      ? ctx.optional(ref, what) ?? 0
+      : (known as number | null) ?? 0);
+    const flat = late(p.fixed, step.fixed, 'фикс величины');
+    const bonus = late(p.bonus, step.bonus, 'бонус величины');
+    const margin = late(p.margin, step.margin, 'превышение для величины');
+    const full = (p.diceTotal as number) + flat + bonus + margin;
+    const scale = step.scale as { times?: unknown; when?: unknown } | undefined;
+    let share: number | null = null;
+    if (scale) {
+      const n = Number(ctx.value(scale.times));
+      if (!Number.isFinite(n) || n <= 0) throw new EngineError(`${who(ctx)}: доля величины должна быть положительным числом, а пришло ${JSON.stringify(scale.times)}`);
+      share = ctx.holds(scale.when) ? n : null;
+    }
+    const total = share === null ? full : Math.floor(full * share);
+    const rolls = thrown.map(one => one.value);
+    return {
+      value: total,
+      roll: { ...(p.summary as RollResult), dice: { rolls, kept: null }, ...tally(thrown) },
+      trace: {
+        source: p.source, notation: p.notation, rolls,
+        ...(p.doubled ? { doubled: true } : {}),
+        ...(p.times !== undefined ? { times: p.times } : {}),
+        ...(share === null ? {} : { share, full }),
+        flat, bonus, margin, total,
       },
-    } : {}),
-    fixed, bonus, margin,
-  };
-}
+      break: null,
+    };
+  },
+};
 
-function fromFormula(thrown: { sides: number; value: number }[]) {
-  return {
-    notation: null, rolls: thrown.map(one => one.value), total: 0,
-    ...(thrown.length ? {
-      tally: {
-        dice: thrown.length,
-        atMax: thrown.filter(one => one.value === one.sides).length,
-        atMin: thrown.filter(one => one.value === 1).length,
-      },
-    } : {}),
-  };
-}
 
-function timesNow(step: StepData, ctx: StepContext): number | null {
-  if (step.count === undefined || step.count === null) return null;
-  const raw = constant(packRef(step.count, ctx), ctx, 'сколько раз кинуть кости');
-  const times = Number(raw);
-  if (!Number.isFinite(times)) {
-    throw new EngineError(`${who(ctx)}: «сколько раз кинуть кости» должно быть числом, а пришло ${JSON.stringify(raw)}`);
-  }
-  return Math.max(0, Math.floor(times));
-}
-
-function countedNotation(notation: unknown, times: number): string | null {
-  if (times <= 0) return null;
-  return multiplyNotation(notation, times);
-}
-
-function doublesNow(step: StepData, ctx: StepContext): boolean {
-  if (step.double === undefined || step.double === null) return false;
-  return guardHolds(step.double, ctx);
-}
-
-export function resolve(step: StepData, ctx: StepContext) {
-  const flat = resolveOptionalNumber(step.fixed, ctx, 'фикс величины') ?? 0;
-  const bonus = resolveOptionalNumber(step.bonus, ctx, 'бонус величины') ?? 0;
-  const margin = resolveOptionalNumber(step.margin, ctx, 'превышение для величины') ?? 0;
-  const full = step.rolled.total + flat + bonus + margin;
-  const share = shareOf(step, ctx);
-  const total = share === null ? full : Math.floor(full * share);
-
-  return {
-    value: total,
-    trace: {
-      source: step.source,
-      notation: step.rolled.notation, rolls: step.rolled.rolls,
-      ...(step.doubled ? { doubled: true } : {}),
-      ...(step.times !== undefined ? { times: step.times } : {}),
-      ...(share === null ? {} : { share, full }),
-      flat, bonus, margin, total,
-    },
-    break: null,
-  };
-}
-
-function shareOf(step: StepData, ctx: StepContext): number | null {
-  const scale = step.scale as { times?: unknown; when?: unknown } | undefined;
-  if (!scale) return null;
-  const times = Number(resolveRef(scale.times, ctx));
-  if (!Number.isFinite(times) || times <= 0) {
-    throw new EngineError(`${who(ctx)}: доля величины должна быть положительным числом, а пришло ${JSON.stringify(scale.times)}`);
-  }
-  return guardHolds(scale.when, ctx) ? times : null;
-}
-
-function constant(packed: unknown, ctx: StepContext, what: string): any {
-  if (packed === null || typeof packed !== 'object') return packed;
-  if ('const' in packed) return packed.const;
-  if ('expr' in packed && (packed as Record<string, unknown>).later) return resolveRef(packed, ctx);
-  throw new EngineError(
-    `${who(ctx)}: ${what} должен быть известен отправителю, а пришло ${JSON.stringify(packed)}`);
-}
-
-function who(ctx: StepContext): string {
-  return ctx.owner || 'правило';
-}
+export const { once, prepare, finish } = runner;
+export const mayBreak = false;

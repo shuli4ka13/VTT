@@ -1,8 +1,10 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import {
-  idleClock, inCombat, expiryOf, startCombat, stopCombat, nextTurn, rollInitiative,
+  idleClock, inCombat, expiryOf, startCombat, stopCombat, nextTurn,
 } from '../src/engine/clock.ts';
-import { fireMoments, momentsOfTurn } from '../src/events/moments.ts';
+import { rollInitiative } from './legacy.ts';
+import { momentsOfTurn } from '../src/events/moments.ts';
+import { fireMoments } from './legacy.ts';
 import type { TurnOp } from '../src/events/moments.ts';
 import type { Clock } from '../src/engine/clock.ts';
 import { exchange } from './play.ts';

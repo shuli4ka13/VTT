@@ -1,6 +1,6 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import { exchange } from './play.ts';
-import type { Question } from '../src/lang/journal.ts';
+import type { Question } from '../src/core/external.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
 import { withColumn } from '../src/model/sheet-columns.ts';
 
