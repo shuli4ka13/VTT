@@ -8,7 +8,7 @@ import { useWorld, freeId, randomTag } from '../../store/world.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
 import { blockTree, BlockBranches } from '../constructor/block-tree.tsx';
 import {
-  Card, CardHead, Field, Empty, Verdict, DangerButton, LabelInput, Button,
+  Card, CardHead, Field, Empty, Verdict, DangerButton, LabelInput, Button, Select,
 } from '../../ui/primitives.tsx';
 import { ModifiersEditor } from '../constructor/modifiers.tsx';
 import { RecordView } from '../../sheet/record-view.tsx';
@@ -130,6 +130,13 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
           badge={<span className="chip">{kind?.label ?? 'тип неизвестен'}</span>}
           actions={<DangerButton size="sm" onConfirm={remove}>Удалить</DangerButton>}
         />
+        <Field label="Таблица записи" hint="Из какой книги эта запись: от неё берутся колонки и общие кнопки.">
+          <Select<string>
+            value={String(record.table ?? '')}
+            options={recordKinds(system).map(([key, other]) => [key, other.label || key] as const)}
+            onChange={next => edit(draft => { draft.table = next; })}
+          />
+        </Field>
         <Field label="Описание">
           <textarea
             className="textarea"
@@ -220,10 +227,10 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
         </Card>
       ) : null}
 
-      {kind?.use === 'item' ? (
+      {kind ? (
         <ModifiersEditor
           system={system}
-          title="Что правит эта вещь"
+          title={kind.use === 'item' ? 'Что правит эта вещь' : 'Что правит эта запись'}
           empty={{
             title: 'Своих правок у вещи нет',
             hint: 'Добавка поверх общей для типа: кольцо даёт +1 к защите, проклятый клинок — помеху. Общее для всех вещей типа живёт на самом типе записи и здесь не повторяется.',

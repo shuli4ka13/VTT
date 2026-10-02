@@ -14,7 +14,7 @@ import { TableColumnCard } from './rules/tables-section.tsx';
 import { useState } from 'react';
 import { BlockPick, fieldBlocks } from './block-pick.tsx';
 import { GrantsEditor } from './grants-editor.tsx';
-import { argsWithProps, propKeysOf, recordKinds, sheetKinds, kindsOf } from '@vtt/engine/model/owned';
+import { argsWithProps, propKeysOf, recordKinds, sheetKinds, kindsOf, recordsOf } from '@vtt/engine/model/owned';
 import { DESK_ID } from '@vtt/engine/engine/owners';
 import type { AnyKind } from '@vtt/engine/model/owned';
 import { blockOf } from '@vtt/engine/model/blocks';
@@ -154,10 +154,13 @@ export function RecordsTab() {
 function BuiltIn({ kindId, system }: { kindId: string; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
   const records = (system.library ?? []).filter(record => record.table === kindId);
-  if (!records.length) return null;
+  const book = useWorld(s => s.compendium);
+  const candidates = recordsOf(book).filter(record => record.table === kindId && !records.some(own => own.id === record.id));
+  if (!records.length && !candidates.length) return null;
 
   return (
     <Fold title="Едут вместе с системой" count={records.length}>
+      <span className="faint">Встроенные записи системы — едут в любой мир на этой системе, перед книгами.</span>
       <div className="inline inline--tight">
         {records.map(record => (
           <Chip
@@ -171,6 +174,16 @@ function BuiltIn({ kindId, system }: { kindId: string; system: System }) {
             {record.label ?? record.id}
           </Chip>
         ))}
+        {candidates.length ? (
+          <Select<string>
+            value=""
+            options={[['', '+ из книги…'], ...candidates.map(record => [record.id, record.label ?? record.id] as const)]}
+            onChange={id => {
+              const found = candidates.find(record => record.id === id);
+              if (found) editSystem(draft => { draft.library = [...(draft.library ?? []), structuredClone(found)]; });
+            }}
+          />
+        ) : null}
       </div>
     </Fold>
   );
