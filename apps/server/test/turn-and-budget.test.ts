@@ -855,7 +855,7 @@ describe('отдых и плата ячейкой', () => {
           ],
         },
         стрела: button('Стрела', [sub('@цель.хиты', '4')], {
-          cost: [{ type: 'emit', event: 'ячейка', args: { лист: { expr: '@действующий' } }, strict: true }],
+          cost: [{ type: 'emit', event: 'ячейка', args: { лист: { expr: '@действующий' } } }],
         }),
         сон: {
           label: 'Сон', activation: 'passive',

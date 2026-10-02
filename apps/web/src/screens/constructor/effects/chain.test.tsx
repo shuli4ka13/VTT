@@ -21,7 +21,7 @@ describe('стоимость эффекта — одним выбором', () =
     const effect = { label: 'Удар', steps } as unknown as Effect;
     render(<Chain id="удар" placeAt={index => ({ part: 'steps', index })} effect={effect} system={useWorld.getState().system} lane="steps"
       edit={change => change(effect)}
-      onAddCost={id => { (effect.steps ??= []).unshift({ id: 'стоимость', type: 'emit', event: id, strict: true } as never); }} />);
+      onAddCost={id => { (effect.steps ??= []).unshift({ id: 'стоимость', type: 'emit', event: id } as never); }} />);
     return effect;
   };
 
@@ -30,7 +30,7 @@ describe('стоимость эффекта — одним выбором', () =
     const pick = screen.getByDisplayValue('+ стоимость') as HTMLSelectElement;
     expect([...pick.options].map(o => o.textContent)).toEqual(['+ стоимость', 'Стоимость: действие', '+ новая стоимость…']);
     fireEvent.change(pick, { target: { value: 'cost_action' } });
-    expect(effect.steps![0]).toEqual({ id: 'стоимость', type: 'emit', event: 'cost_action', strict: true });
+    expect(effect.steps![0]).toEqual({ id: 'стоимость', type: 'emit', event: 'cost_action' });
   });
 
   it('«+ новая стоимость» заводит эффект в блоке «Стоимость» и сразу его зовёт', () => {
@@ -38,7 +38,7 @@ describe('стоимость эффекта — одним выбором', () =
     fireEvent.change(screen.getByDisplayValue('+ стоимость'), { target: { value: ':новая' } });
     const made = Object.entries(useWorld.getState().system.effects).find(([id]) => id.startsWith('стоимость'))!;
     expect(made[1]).toMatchObject({ group: 'Стоимость' });
-    expect(effect.steps![0]).toMatchObject({ type: 'emit', event: made[0], strict: true });
+    expect(effect.steps![0]).toMatchObject({ type: 'emit', event: made[0] });
   });
 
   it('без «onAddCost» (цепочка хука или подписки без решения) выбора стоимости нет', () => {
@@ -54,14 +54,14 @@ describe('стоимость эффекта — одним выбором', () =
     };
     const { rerender } = render(view());
     fireEvent.change(screen.getByDisplayValue('+ стоимость'), { target: { value: 'cost_action' } });
-    expect(useWorld.getState().system.effects.удар!.cost).toEqual([{ id: 'стоимость', type: 'emit', event: 'cost_action', strict: true }]);
+    expect(useWorld.getState().system.effects.удар!.cost).toEqual([{ id: 'стоимость', type: 'emit', event: 'cost_action' }]);
     rerender(view());
     expect(screen.getByText(/1 · Стоимость/)).toBeTruthy();
     expect(document.querySelector('.chip--on')?.textContent).toBe('цена');
   });
 
   it('шаг, зовущий эффект из блока «Стоимость», так и подписан', () => {
-    const effect = { label: 'Удар', steps: [{ id: 'стоимость', type: 'emit', event: 'cost_action', strict: true }] } as unknown as Effect;
+    const effect = { label: 'Удар', steps: [{ id: 'стоимость', type: 'emit', event: 'cost_action' }] } as unknown as Effect;
     render(<Chain id="удар" placeAt={index => ({ part: "steps", index })} effect={effect} system={withCost()} lane="steps" edit={() => {}} />);
     expect(screen.getByText(/1 · Стоимость/)).toBeTruthy();
   });

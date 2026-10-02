@@ -95,6 +95,7 @@ export interface Frame {
   seenRoll?: { value: Roll };
   lazy?: Lazy;
   alone?: boolean;
+  cost?: boolean;
   offset?: number;
 }
 
@@ -374,6 +375,7 @@ export class Run {
       edited: (call, param, base, tags, args) => this.edited(call, param, base, tags, args),
       call: (event, args, payload) => this.callEvent(frame, event, payload, args, sink, path),
       ...(frame.seenRoll ? { seenRoll: frame.seenRoll } : {}),
+      ...(frame.cost ? { inCost: true } : {}),
       using: (other: Die) => this.ctx(frame, results, rolls, path, sink, stepIds, other),
     } as Omit<Ctx, 'here'>;
     return Object.defineProperty(ctx, 'here', { get: () => this.view(frame.home), enumerable: true }) as Ctx;
@@ -726,7 +728,7 @@ export class Run {
 
   private pay(sub: Sub, path: Path, names: Record<string, Bound>, seed: Record<string, unknown>, hop: number, rolls: Record<string, RollResult> = {}): { why: string | null; report: Report; after: Entry[]; changed: boolean } {
     const own = newSink();
-    const ran = this.exec(this.subFrame(sub, path, hop, `плата за «${labelOf(sub)}»`, names), sub.handler.cost ?? [], own, seed, undefined, rolls);
+    const ran = this.exec({ ...this.subFrame(sub, path, hop, `плата за «${labelOf(sub)}»`, names), cost: true }, sub.handler.cost ?? [], own, seed, undefined, rolls);
     const report = reportOf('effect', sub.effectId, sub.sheetId, labelOf(sub), own, ran.stopped, false);
     return { why: refusalWords(report, this.system), report, after: own.after, changed: own.changes.length > 0 || own.effects.length > 0 || own.removed.length > 0 || own.after.length > 0 };
   }

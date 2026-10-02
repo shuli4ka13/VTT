@@ -173,17 +173,13 @@ export const STEP_WORDS = {
     slots: [
       { key: 'event', label: 'Кого зовём', kind: 'event', main: true, required: true, allow: [] },
       { key: 'args', label: 'Что передаётся', kind: 'args', main: true, allow: [] },
-      {
-        key: 'strict', label: 'Если общий эффект оборвался', kind: 'flag', fallback: 'false',
-        choice: [['false', 'идти дальше'], ['true', 'оборваться тоже']],
-      },
     ],
     outputs: [
       { path: '.incoming', label: 'отправлено', kind: 'number' },
       { path: '.amount', label: 'дошло после правок', kind: 'number' },
     ],
     reasons: { 'emit-stopped': 'общий эффект оборвался' },
-    breakLines: { strict: 'если общий эффект оборвался — обрыв и здесь' },
+    breakLines: {},
   },
 } as const satisfies Record<string, StepWords>;
 

@@ -32,7 +32,7 @@ const system = {
     стрела: {
       label: 'Волшебная стрела', activation: 'manual',
       params: [ACTOR, TARGETS, { key: 'круг', label: 'Каким кругом', kind: 'number', min: 1, max: 2, ask: { by: 'actor' } }],
-      cost: [{ type: 'emit', event: 'ячейка', args: { лист: { expr: '@действующий' }, круг: { expr: '@круг' } }, strict: true }],
+      cost: [{ type: 'emit', event: 'ячейка', args: { лист: { expr: '@действующий' }, круг: { expr: '@круг' } } }],
       steps: [
         EACH,
         { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d4', 2 + @круг)" }, bonus: { expr: '2 + @круг' } },

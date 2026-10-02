@@ -76,7 +76,7 @@ export const costsOf = (system: System): [string, Effect][] =>
   Object.entries(system.effects ?? {}).filter(([, effect]) => effect.group === COST_BLOCK);
 
 export const payStep = (id: string, taken: readonly string[] = []): Step =>
-  ({ id: freeId([...taken], 'стоимость'), type: 'emit', event: id, strict: true } as unknown as Step);
+  ({ id: freeId([...taken], 'стоимость'), type: 'emit', event: id } as unknown as Step);
 
 export const newCalled = (system: System): Made<Effect> => {
   const field = fieldsOf(system).find(f => f.value.kind === 'stored' && f.value.type === 'number');

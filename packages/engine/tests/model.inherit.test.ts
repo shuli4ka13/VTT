@@ -12,7 +12,7 @@ group('основа: эффект берёт у основы и дописыва
       заклинание: {
         label: 'Заклинание',
         params: [{ key: 'круг', label: 'Каким кругом', kind: 'number' }],
-        cost: [{ type: 'emit', event: 'ячейка', args: { круг: { param: 'круг' } }, strict: true }],
+        cost: [{ type: 'emit', event: 'ячейка', args: { круг: { param: 'круг' } } }],
       },
       огненный_шар: {
         extends: 'заклинание', label: 'Огненный шар', activation: 'manual',

@@ -40,6 +40,7 @@ export interface StepContext {
   edited(call: string, param: string, base: number, tags: string[], args: Record<string, unknown>): number;
   call(event: string, args: Record<string, unknown>, payload: EmittedEvent): NestedRun;
   seenRoll?: { value: Roll };
+  inCost?: boolean;
   using(die: Die): StepContext;
 }
 

@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import type { System } from '@vtt/schema';
-import { Field, Select, Button } from '../../../../ui/primitives.tsx';
+import { Button } from '../../../../ui/primitives.tsx';
 import { CallEditor } from '../../call-editor.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { calledOf } from '@vtt/engine/engine/effects';
-import { Extras } from './extras.tsx';
 import { WhatNext, meddlersOf } from '../what-next.tsx';
 
 const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
@@ -51,27 +50,6 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
         system={system}
         eventId={String(step.event ?? '')}
         onEdit={id => onOpenEffect?.(id)}
-      />
-
-      <Extras
-        items={[
-          {
-            key: 'strict', label: 'обрывать всё, если вызванный оборвался', on: !!step.strict,
-            add: () => edit(at, draft => { loose(draft).strict = true; }),
-            drop: () => edit(at, draft => { delete loose(draft).strict; }),
-            node: (
-              <Field label="Если вызванный оборвался" hint="«Оборваться тоже» — для платы: нет ячейки, значит и заклинания нет.">
-                <Select
-                  value={step.strict ? 'true' : 'false'}
-                  options={[['false', 'идти дальше'], ['true', 'оборваться тоже']] as const}
-                  onChange={next => edit(at, draft => {
-                    if (next === 'true') loose(draft).strict = true; else delete loose(draft).strict;
-                  })}
-                />
-              </Field>
-            ),
-          },
-        ]}
       />
     </>
   );

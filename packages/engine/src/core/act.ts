@@ -106,7 +106,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
 
   if (effect.cost?.length) {
     const sink = newSink();
-    const ran = run.exec(top(root.phase('cost'), `стоимость действия «${action.label}»`, { alone: true }), effect.cost, sink);
+    const ran = run.exec(top(root.phase('cost'), `стоимость действия «${action.label}»`, { alone: true, cost: true }), effect.cost, sink);
     const report = reportOf('cost', action.effect, actor, action.label, sink, ran.stopped, false);
     const why = refusalWords(report, system);
     if (why) throw new EngineError(`«${action.label}» не состоялось: ${why}`);

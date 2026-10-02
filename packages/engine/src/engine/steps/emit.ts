@@ -10,10 +10,6 @@ const words: StepWords = STEP_WORDS.emit;
 export const { label, hint, slots, outputs } = words;
 
 
-export function breakLine(step: StepData) {
-  return step.strict ? words.breakLines.strict ?? null : null;
-}
-
 export function reasonWord(reason: string): string | null {
   return words.reasons[reason] ?? null;
 }
@@ -73,7 +69,7 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
     return {
       value: payload,
       trace: { event: id, incoming, amount: payload.amount, tags, ...(received ? { received } : {}) },
-      break: step.strict && received ? { reason: 'emit-stopped', ...(note ? { note } : {}) } : null,
+      break: ctx.inCost && received ? { reason: 'emit-stopped', ...(note ? { note } : {}) } : null,
     };
   },
 };
