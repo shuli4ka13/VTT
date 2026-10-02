@@ -132,8 +132,7 @@ const threshold: Runner = {
     const rolled = thrown.result;
     const total = rolled.total + bonus;
     const shift = thrown.roll.claim.versusShift;
-    const successWhen = String(step.successWhen || 'atLeast');
-    if (!OUTCOMES[successWhen]) throw new EngineError(`${who(ctx)}: неизвестное условие успеха «${successWhen}»`);
+    const successWhen = OUTCOMES[String(step.successWhen)] ? String(step.successWhen) : 'atLeast';
     const eased = successWhen === 'notOver' || successWhen === 'under' ? -shift : shift;
     const against = early ?? versusOf(step.versus, side, ctx);
     const versus = against.value + eased;
@@ -234,19 +233,21 @@ const amount: Runner = {
     if (source === 'roll' && !written) throw new EngineError(`${who(ctx)}: источнику «свой бросок» нужны кости — слот dice пуст`);
     if (source === 'margin' && !step.margin) throw new EngineError(`${who(ctx)}: источнику «превышение» нужен слот margin — превышение какого шага брать?`);
     const many = step.count === undefined || step.count === null ? null : Math.max(0, Math.floor(ctx.number(step.count, 'сколько раз кинуть кости')));
-    const doubled = written !== null && step.double !== undefined && step.double !== null && ctx.holds(step.double);
-    const spec = written === null ? null : times(written, (many ?? 1) * (doubled ? 2 : 1));
-    const thrown: { sides: number; value: number }[] = [];
-    const rolled = spec && spec.terms.every(t => t.count > 0) ? start(spec, [], watchedDie(ctx, thrown)) : null;
-    const slot = (ref: unknown, what: string): number | null | undefined => {
+    const doubled = written !== null && many !== 0 && step.double !== undefined && step.double !== null && ctx.holds(step.double);
+    const spec = written === null || many === 0 ? null : times(written, (many ?? 1) * (doubled ? 2 : 1));
+    const formula: { sides: number; value: number }[] = [];
+    const slot = (ref: unknown, what: string, watched: boolean): number | null | undefined => {
       if (ref === undefined || ref === null) return null;
       if (!ctx.known(ref)) return undefined;
-      return withDie(ctx, watchedDie(ctx, thrown), inner => inner.optional(ref, what));
+      return watched ? withDie(ctx, watchedDie(ctx, formula), inner => inner.optional(ref, what)) : ctx.optional(ref, what);
     };
-    const fixed = slot(step.fixed, 'фикс величины');
+    const fixed = slot(step.fixed, 'фикс величины', true);
     if (source === 'item' && fixed === null) throw new EngineError(`${who(ctx)}: источнику «фикс предмета» нужен заполненный слот fixed`);
-    const bonus = slot(step.bonus, 'бонус величины');
-    const margin = slot(step.margin, 'превышение для величины');
+    const bonus = slot(step.bonus, 'бонус величины', false);
+    const margin = slot(step.margin, 'превышение для величины', false);
+    const notated: { sides: number; value: number }[] = [];
+    const rolled = spec ? start(spec, [], watchedDie(ctx, notated)) : null;
+    const thrown = rolled ? notated : formula;
     const rolls = thrown.map(one => one.value);
     const natural = rolls.reduce((sum, v) => sum + v, 0);
     const constBonus = typeof bonus === 'number' && step.bonus && typeof step.bonus === 'object' && 'const' in step.bonus ? bonus : 0;
@@ -268,7 +269,7 @@ const amount: Runner = {
     const p = prepared ?? amount.prepare!(step, ctx);
     const thrown = [...(p.thrown as { sides: number; value: number }[])];
     const late = (known: unknown, ref: unknown, what: string): number => (known === undefined
-      ? withDie(ctx, watchedDie(ctx, thrown), inner => inner.optional(ref, what) ?? 0)
+      ? ctx.optional(ref, what) ?? 0
       : (known as number | null) ?? 0);
     const flat = late(p.fixed, step.fixed, 'фикс величины');
     const bonus = late(p.bonus, step.bonus, 'бонус величины');

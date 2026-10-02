@@ -36,6 +36,7 @@ export function diceTools(die?: Die): Pick<Tools, 'roll' | 'peak'> {
         if (Math.floor(many) < 1) return 0;
         const rolled = start(times(parse(notation), many), [], die);
         if (best === undefined) return result(rolled).total;
+        if (Math.abs(best) < 1) return 0;
         return keep(rolled.dice, Math.abs(best), best > 0 ? 'best' : 'worst', 'main').reduce((sum, d) => sum + d.value, 0);
       },
     } : {}),

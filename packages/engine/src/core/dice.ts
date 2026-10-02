@@ -32,6 +32,7 @@ export interface Roll {
   edits: string[];
   plus: number;
   tags: string[];
+  exploded: boolean;
 }
 
 export interface RollResult {
@@ -73,6 +74,9 @@ export function parse(input: string | DieConstant, countOf?: CountOf): Spec {
 }
 
 export function withCount(spec: Spec, count: number, owner: string): Spec {
+  if (!Number.isInteger(count) || count < 0) {
+    throw new EngineError(`${owner}: счёт костей «${spec.label || '?'}» должен быть целым не меньше нуля, а вышло ${count}`);
+  }
   if (spec.terms.length !== 1) {
     throw new EngineError(`${owner}: число костей задаёт проверка, а кость «${spec.label || '?'}» составная — возьмите кость из одного вида`);
   }
@@ -171,7 +175,10 @@ const RESULT: Record<string, ResultOp> = {
         const d = out[at]!;
         if (!main(d, part) || d.value !== d.sides) continue;
         const face = roll(d.sides);
-        out.push({ id: fresh(), sides: d.sides, ...(d.part ? { part: d.part } : {}), face, value: face, from: d.id });
+        out.push({
+          id: fresh(), sides: d.sides, face, value: d.minus ? -face : face, from: d.from ?? d.id,
+          ...(d.part ? { part: d.part } : {}), ...(d.extra ? { extra: true } : {}), ...(d.minus ? { minus: true } : {}),
+        });
         guard += 1;
       }
       return out;
@@ -258,6 +265,7 @@ export function start(spec: Spec, edits: (RollEdit & { label?: string })[], die:
   return {
     claim, dice: applyResults(dice, results, die, nextId(dice)), results,
     edits: edits.map(edit => edit.label || '').filter(Boolean), plus: 0, tags: [...tags],
+    exploded: results.some(edit => (edit.ops ?? []).some(op => op.op === 'explode')),
   };
 }
 
@@ -265,7 +273,7 @@ export function keep(dice: readonly Rolled[], n: number, from: 'best' | 'worst',
   const inScope = (d: Rolled): boolean => !d.extra && (
     scope === 'main' ? true : scope === 'unnamed' ? !d.part : d.part === scope.part);
   const pool = dice.filter(inScope);
-  const chosen = new Set([...pool].sort((a, b) => (from === 'best' ? b.value - a.value : a.value - b.value)).slice(0, Math.max(0, Math.floor(n))));
+  const chosen = new Set([...pool].sort((a, b) => (from === 'best' ? b.value - a.value : a.value - b.value)).slice(0, Math.max(1, Math.floor(n))));
   return dice.filter(d => !inScope(d) || chosen.has(d));
 }
 
@@ -328,8 +336,6 @@ export type SeenOp =
 
 const EXPLODE: RollEdit = { label: '', ops: [{ op: 'explode', apart: true }] };
 
-const explodes = (roll: Roll): boolean => roll.results.some(edit => (edit.ops ?? []).some(op => op.op === 'explode'));
-
 export function see(roll: Roll, op: SeenOp, die: Die): Roll {
   if (op.kind === 'plus') return { ...roll, plus: roll.plus + op.value };
   const fresh = nextId(roll.dice);
@@ -353,14 +359,13 @@ export function see(roll: Roll, op: SeenOp, die: Die): Roll {
   const grown = applyResults(added, roll.results, die, fresh);
   const before = op.keep ? roll.dice.map(d => (taken.has(d) ? d : { ...d, out: true })) : roll.dice;
   const dice = !op.explode ? [...before, ...grown]
-    : explodes(roll) ? [...before, ...applyResults(grown, [EXPLODE], die, fresh)]
+    : roll.exploded ? [...before, ...applyResults(grown, [EXPLODE], die, fresh)]
       : applyResults([...before, ...grown], [EXPLODE], die, fresh);
   const held = [...taken].filter(d => !d.extra && !d.part).length;
   const keeps: Keep[] = op.keep
     ? [...roll.claim.keeps.filter(k => typeof k.scope === 'object'), { n: Math.max(1, held), from: op.keep, scope: 'unnamed' }]
     : roll.claim.keeps;
   return {
-    ...roll, dice, claim: { ...roll.claim, keeps },
-    results: op.explode && !explodes(roll) ? [...roll.results, EXPLODE] : roll.results,
+    ...roll, dice, claim: { ...roll.claim, keeps }, exploded: roll.exploded || Boolean(op.explode),
   };
 }
