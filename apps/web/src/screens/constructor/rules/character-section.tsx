@@ -9,7 +9,7 @@ import { freeGroupName, renameGroup } from '../groups.ts';
 import { sheetKinds } from '@vtt/engine/model/owned';
 import { hasDesk } from '@vtt/engine/events/desk';
 import { DESK_ID } from '@vtt/engine/engine/owners';
-import { Card, CardHead, Button, Empty, LabelInput, DangerButton } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Button, Empty, LabelInput, DangerButton, Select } from '../../../ui/primitives.tsx';
 import { newColumn } from '../factory.ts';
 import type { UsageIndex } from '../usage.ts';
 import { kindWord } from '@vtt/engine/words/kinds';
@@ -78,7 +78,7 @@ export function CharacterSection({ system, editSystem }: {
   const kinds = sheetKinds(system);
   const kind = of ? system.sheets?.[of] : undefined;
   const active = fieldsOf(system).filter(isCharacterColumn).find(f => f.tag === picked) ?? null;
-  const tree = blockTree<FieldModel>(system, fieldsOf(system), field => field.group);
+  const tree = blockTree<FieldModel>(system, fieldsOf(system), field => field.group, true);
   const names: string[] = [];
   const collect = (nodes: BlockNode<FieldModel>[]) => { for (const node of nodes) { names.push(node.name); collect(node.children); } };
   collect(tree);
@@ -121,6 +121,7 @@ export function CharacterSection({ system, editSystem }: {
   const openTable = open ? system.tables?.[open.table] : undefined;
   const openColumn = open ? openTable?.columns?.find(c => c.key === open.column) : undefined;
 
+  const inside = (node: BlockNode<FieldModel>): string[] => node.children.flatMap(child => [child.name, ...inside(child)]);
   const branch = (nodes: BlockNode<FieldModel>[], depth: number): ReactNode => nodes.map(node => {
     const { plain, tables } = partsOf(node.items, system);
     const on = shown(node.name);
@@ -131,7 +132,24 @@ export function CharacterSection({ system, editSystem }: {
             <input type="checkbox" checked={on} title={on ? 'есть на этом листе' : 'нет на этом листе'} onChange={() => toggle(node.name)} />
           ) : null}
           <BlockName value={node.name} onCommit={next => editSystem(draft => renameGroup(draft, node.name, next))} />
-          <span className="block-head__more"><Button size="sm" variant="ghost" title={`блок внутри «${node.name}»`} onClick={() => addBlock(node.name)}>+ блок внутрь</Button></span>
+          <span className="block-head__more">
+            <Button size="sm" variant="ghost" title={`блок внутри «${node.name}»`} onClick={() => addBlock(node.name)}>+ блок внутрь</Button>
+            <Select<string>
+              value={system.groups?.[node.name]?.parent ?? ''}
+              options={[['', 'на верхнем уровне'], ...names.filter(other => other !== node.name && !inside(node).includes(other)).map(other => [other, `внутри «${other}»`] as const)]}
+              onChange={next => editSystem(draft => {
+                const groups = (draft.groups ??= {});
+                const own = (groups[node.name] ??= {});
+                if (next) own.parent = next; else delete own.parent;
+              })}
+            />
+            {!node.items.length && !node.children.length ? (
+              <Button size="sm" variant="ghost" title="пустой блок — убрать" onClick={() => editSystem(draft => {
+                delete draft.groups?.[node.name];
+                for (const group of Object.values(draft.groups ?? {})) if (group.parent === node.name) delete group.parent;
+              })}>×</Button>
+            ) : null}
+          </span>
         </div>
         {plain.length || tables.length ? (
           <div className="inline inline--tight">

@@ -47,3 +47,27 @@ describe('листы: блоки и типы', () => {
     expect(fieldsOf(useWorld.getState().system).some(f => f.group === 'Снаряжение')).toBe(true);
   });
 });
+
+describe('блоки: родитель и пустой блок', () => {
+  afterEach(() => { cleanup(); });
+
+  it('блок переносится внутрь другого, пустой блок убирается', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: { ...state.system, groups: { Бой: {}, Оружие: {}, Пустой: {} }, tables: { лист: { shape: 'single', columns: [
+        { key: 'hp', label: 'Хиты', kind: 'number', block: 'Бой' },
+        { key: 'atk', label: 'Атака', kind: 'number', block: 'Оружие' },
+      ] } } },
+    }));
+    render(<Sheets />);
+    const parentOf = (block: string) => [...document.querySelectorAll('.block-head')]
+      .find(head => (head.querySelector('input.block-name') as HTMLInputElement | null)?.value === block)!
+      .querySelector('select') as HTMLSelectElement;
+    fireEvent.change(parentOf('Оружие'), { target: { value: 'Бой' } });
+    expect(useWorld.getState().system.groups?.Оружие?.parent).toBe('Бой');
+    const empty = [...document.querySelectorAll('.block-head')]
+      .find(head => (head.querySelector('input.block-name') as HTMLInputElement | null)?.value === 'Пустой')!;
+    fireEvent.click(empty.querySelector('button[title="пустой блок — убрать"]')!);
+    expect(useWorld.getState().system.groups?.Пустой).toBeUndefined();
+  });
+});
