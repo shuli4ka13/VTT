@@ -34,7 +34,7 @@ const strike = (id: string, label: string, amount: number, tags: string[]) => ({
 });
 
 const world = (extraEffects: Record<string, unknown> = {}, receive: unknown[] | undefined = [
-  { type: 'apply', target: { expr: '@лист.хп' }, direction: 'subtract', value: { expr: '@сколько' }, targetModifiers: false },
+  { type: 'apply', target: { expr: '@лист.хп' }, direction: 'subtract', value: { expr: '@сколько' } },
 ]) => ({
   id: 'вызовы',
   effects: {
@@ -121,8 +121,6 @@ group('сопротивления по тегам', () => {
       { kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, stacking: 'max', anyTags: ['огонь'], if: { expr: '@лист == @носитель' } }]),
     броня: passive('Тяжёлая броня', [
       { kind: 'edit', call: 'урон', param: 'сколько', op: 'add', value: { expr: '-3' }, stacking: 'sum', notTags: ['магический'], if: { expr: '@лист == @носитель' } }]),
-    камень: passive('Каменная кожа', [
-      { kind: 'value', target: 'incoming:хп', op: 'mul', value: { expr: '0.5' }, stacking: 'max' }]),
   });
 
   test('сопротивление огню половинит огонь и молчит на рубящий', () => {
@@ -139,13 +137,6 @@ group('сопротивления по тегам', () => {
     const t = hit(resist, 'огонь', foe(['огнеупор'])).report.trace[1]!;
     eq(t.incoming, 8);
     eq(t.amount, 4);
-  });
-
-  test('старое сопротивление на поле продолжает работать, если приём его учитывает', () => {
-    const sys = world({ камень: resist.effects.камень }, [
-      { type: 'apply', target: { expr: '@лист.хп' }, direction: 'subtract', value: { expr: '@сколько' }, targetModifiers: true },
-    ]);
-    eq(hit(sys, 'удар', foe(['камень'])).sheet.values.хп, 16);
   });
 });
 
@@ -241,7 +232,7 @@ group('реакции слушают слово, а не имя эффекта',
       },
       лечение: {
         label: 'Лечение', params: [{ key: 'лист', label: 'Лист', kind: 'sheet' }, { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }],
-        steps: [{ type: 'apply', target: { expr: '@лист.хп' }, direction: 'add', value: { expr: '@сколько' }, targetModifiers: false }],
+        steps: [{ type: 'apply', target: { expr: '@лист.хп' }, direction: 'add', value: { expr: '@сколько' } }],
       },
     });
     const r = exchange({

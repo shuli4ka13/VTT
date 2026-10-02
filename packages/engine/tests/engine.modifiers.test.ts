@@ -338,20 +338,17 @@ group('модификаторы', () => {
   });
 
   group('словарь мишеней выводится из системы', () => {
-    test('в него попадают все поля и входящее хранимых полей — бросков и вызовов там нет', () => {
+    test('в него попадают все поля и ячейки таблиц — бросков, вызовов и входящего там нет', () => {
       const all = targets(system);
-      const incoming = fieldsOf(system).filter(f => f.value.kind === 'stored').length;
       const cells = Object.values(system.tables ?? {}).filter(table => table.shape !== 'single' && table.shape !== 'book').reduce((n, table) => {
         const columns = (table.columns ?? []).filter(c => c.kind === 'expr' || c.kind === 'number').length;
         const rows = table.key === 'range' ? 0 : (table.rows ?? []).filter(r => r.value !== undefined).length;
         return n + columns * (1 + rows);
       }, 0);
-      eq(all.length, fieldsOf(system).length + incoming + cells,
-        'поля, входящее хранимых и ячейки таблиц; бросок и вызов правит правка вызова');
+      eq(all.length, fieldsOf(system).length + cells,
+        'поля и ячейки таблиц; бросок, вызов и входящее число правит правка вызова');
       ok(!all.some(t => t.tag.startsWith('roll:') || t.tag.startsWith('event:')), 'бросков и вызовов среди мишеней поля нет');
       ok(all.some(t => t.tag === 'ac' && t.kind === 'value'));
-      ok(all.some(t => t.tag === 'incoming:hp_current' && t.kind === 'incoming'),
-        'на входящее вешаются сопротивления');
     });
 
     test('мишень отдаёт человеческий лейбл, а не тег', () => {

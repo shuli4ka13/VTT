@@ -196,7 +196,7 @@ const PARAMETRIC = {
     { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: 'или(@versus, @цель.ac)' } },
     { id: 'dmg', type: 'roll', fixed: { expr: 'кинуть(@damage_dice)' }, bonus: { expr: '@damage_bonus' } },
     { type: 'apply', target: { expr: '@цель.hp_current' }, direction: 'subtract',
-      value: { expr: '@dmg' }, targetModifiers: true },
+      value: { expr: '@dmg' } },
   ],
 };
 const paramSys = { ...system, effects: { ...system.effects, parametric: PARAMETRIC } };

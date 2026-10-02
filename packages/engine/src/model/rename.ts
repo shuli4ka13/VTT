@@ -21,7 +21,6 @@ export function renameDeep<T>(value: T, map: Map<string, string>, key?: string):
   if (typeof value === 'string') {
     if (key && EXACT_KEYS.has(key) && map.has(value)) return map.get(value) as T;
     if (value.startsWith('field:') && map.has(value.slice(6))) return `field:${map.get(value.slice(6))}` as T;
-    if (value.startsWith('incoming:') && map.has(value.slice(9))) return `incoming:${map.get(value.slice(9))}` as T;
     return (value.includes('@') ? renameText(value, map) : value) as T;
   }
   if (Array.isArray(value)) return value.map(item => renameDeep(item, map)) as T;

@@ -428,8 +428,8 @@ group('развёртка наследования', () => {
 
 group('линт: у шага только поля его типа', () => {
   test('чужое поле — ошибка с именем поля', () => {
-    const system = withEffect('hit', { params: [WHO] as never, steps: [{ type: 'emit', event: 'x', targetModifiers: true } as unknown as Step] });
-    ok(errorTexts(system).some(t => t.includes('нет поля «targetModifiers»')), errorTexts(system).join('\n'));
+    const system = withEffect('hit', { params: [WHO] as never, steps: [{ type: 'emit', event: 'x', лишнее: true } as unknown as Step] });
+    ok(errorTexts(system).some(t => t.includes('нет поля «лишнее»')), errorTexts(system).join('\n'));
   });
 
   test('общие поля id, type, when допустимы у любого шага', () => {

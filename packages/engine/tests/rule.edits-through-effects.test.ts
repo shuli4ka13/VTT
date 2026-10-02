@@ -220,7 +220,7 @@ group('исход шага помнит, была ли правка', () => {
   });
   const steps = [
     ...rule.steps,
-    { type: 'apply', target: { expr: '@цель.флаг' }, direction: 'add', targetModifiers: false, when: { expr: '@try.edited' }, value: { expr: '1' } },
+    { type: 'apply', target: { expr: '@цель.флаг' }, direction: 'add', when: { expr: '@try.edited' }, value: { expr: '1' } },
   ];
   const flag = (sys: any, sh: any, ...dice: number[]) =>
     Number(play(flagged(sys), sh, steps, queue(...dice)).out.sheets.find(s => s.id === 'цель')!.values.флаг ?? 0);

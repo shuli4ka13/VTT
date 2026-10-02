@@ -3,7 +3,6 @@ import { exchange } from './play.ts';
 import * as rollStep from '../src/engine/steps/roll.ts';
 import * as checkStep from '../src/engine/steps/check.ts';
 import * as applyStep from '../src/engine/steps/apply.ts';
-import { targets, incomingTagOf } from '../src/engine/targets.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
 
 const queue = (...values) => {
@@ -22,17 +21,6 @@ const HERE = (field: string) => ({ expr: `@цель.${field}` });
 const SYS = {
   ...system,
   constants: { lead_die: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
-};
-
-const TOUGH = {
-  ...SYS,
-  effects: {
-    ...SYS.effects,
-    tough: {
-      label: 'Толстая кожа', activation: 'passive', duration: { kind: 'permanent' },
-      modifiers: [{ kind: 'value', target: 'incoming:hp_current', op: 'mul', value: { expr: '0.5' }, stacking: 'max' }],
-    },
-  },
 };
 
 const run = (steps, opts: any = {}) => {
@@ -260,22 +248,6 @@ group('шаг «применить»', () => {
     eq(out.sheet.values.hp_current, 5);
   });
 
-  test('модификаторы цели: сопротивление половинит входящее, округляя вниз', () => {
-    const stony = { ...mirra, effects: [{ effectId: 'tough' }] };
-    const out = run([{ type: 'apply', target: HERE('hp_current'), direction: 'subtract', value: { expr: '9' }, targetModifiers: true }],
-      { sys: TOUGH, targetSheet: stony });
-    eq(out.sheet.values.hp_current, 17, '21 минус округлить вниз(9/2)');
-    eq(out.trace[0].incoming, 9, 'в трассе видно, что пришло…');
-    eq(out.trace[0].amount, 4, '…и что осталось после сопротивлений');
-  });
-
-  test('без targetModifiers сопротивление не участвует — лечение и износ идут мимо него', () => {
-    const stony = { ...mirra, effects: [{ effectId: 'tough' }] };
-    const out = run([{ type: 'apply', target: HERE('hp_current'), direction: 'subtract', value: { expr: '9' }, targetModifiers: false }],
-      { sys: TOUGH, targetSheet: stony });
-    eq(out.sheet.values.hp_current, 12, '21 минус все 9');
-  });
-
   test('в вычисляемое поле писать нельзя — его считает движок, а не эффект', () => {
     throws(() => run([{ type: 'apply', target: HERE('ac'), direction: 'subtract', value: { expr: '1' } }]), 'ac');
   });
@@ -355,17 +327,6 @@ group('линт шага — для приговора в конструктор
     ok(lint({ type: 'apply', value: { expr: '1' } }).includes('поле'));
     ok(lint({ type: 'apply', target: { expr: '@цель.hp' } }).includes('величин'));
     eq(lint({ type: 'apply', target: { expr: '@цель.hp' }, value: { expr: '1' } }), null);
-  });
-});
-
-group('мишени «входящее»', () => {
-  test('словарь мишеней выводит входящее для хранимых полей', () => {
-    const list = targets(SYS);
-    const incoming = list.find(t => t.tag === incomingTagOf('hp_current'));
-    ok(incoming, 'у хранимого поля есть мишень входящего');
-    eq(incoming.kind, 'incoming');
-    eq(incoming.from, 'hp_current');
-    ok(!list.some(t => t.tag === incomingTagOf('ac')), 'у формульного поля входящего нет: в него не пишут');
   });
 });
 

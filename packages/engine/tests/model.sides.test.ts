@@ -6,7 +6,7 @@ describe('имя листа — хозяин поля', () => {
   const ACTOR = { key: 'действующий', kind: 'sheet' };
   const TARGETS = { key: 'цели', kind: 'sheet', many: true };
   const EACH = { type: 'each', of: 'цели', as: 'цель' };
-  const hurt = (who: string, amount: string) => ({ type: 'apply', target: { expr: `@${who}.хп` }, direction: 'subtract', targetModifiers: false, value: { expr: amount } });
+  const hurt = (who: string, amount: string) => ({ type: 'apply', target: { expr: `@${who}.хп` }, direction: 'subtract', value: { expr: amount } });
 
   const system = {
     id: 'стороны', name: 'стороны',

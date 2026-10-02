@@ -18,7 +18,7 @@ const attackSteps = () => [
   { id: 'hit_бросок', type: 'roll', die: { constant: 'lead' }, by: { expr: '@действующий' } },
   { id: 'hit', type: 'check', successWhen: 'atLeast', continueOn: 'success', value: { expr: '@hit_бросок' }, versus: { expr: '10' } },
   { id: 'n', type: 'roll' },
-  { type: 'apply', target: { expr: '@цель.armor' }, direction: 'subtract', targetModifiers: true, value: { expr: '@n' } },
+  { type: 'apply', target: { expr: '@цель.armor' }, direction: 'subtract', value: { expr: '@n' } },
 ] as unknown as Step[];
 
 describe('GroupCard', () => {
@@ -118,7 +118,7 @@ describe('GroupCard: условие выполнения шага', () => {
   const earlier = [{ id: 'hit', type: 'check', at: 1, title: 'Проверка' }];
 
   it('когда выше есть проверка с исходом да/нет, «Только если» предлагает её исход', () => {
-    const steps = [{ type: 'apply', direction: 'subtract', targetModifiers: true, value: { expr: '4' } }] as unknown as Step[];
+    const steps = [{ type: 'apply', direction: 'subtract', value: { expr: '4' } }] as unknown as Step[];
     const group = groupSteps(steps)[0]!;
     const apply = steps[0] as any;
     render(<GroupCard group={group} position={2} system={system} effect={effect}
@@ -148,7 +148,7 @@ describe('GroupCard: изменение как вызов', () => {
   it('где есть вызываемый эффект, у изменения появляется третий режим, переводящий шаг в emit', () => {
     const steps = [
       { id: 'n', type: 'roll' },
-      { type: 'apply', target: { expr: '@цель.armor' }, direction: 'subtract', targetModifiers: true, value: { expr: '@n' } },
+      { type: 'apply', target: { expr: '@цель.armor' }, direction: 'subtract', value: { expr: '@n' } },
     ] as unknown as Step[];
     const group = groupSteps(steps)[0]!;
     const apply = steps[1] as any;

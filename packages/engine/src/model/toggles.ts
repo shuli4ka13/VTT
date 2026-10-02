@@ -131,16 +131,16 @@ export function armorTail(choice: ArmorChoice, armor: string, hp: string, amount
   const value = { expr: `@${amount}` };
   const field = (tag: string) => ({ expr: `@${sheet}.${tag}` });
   if (choice === 'none') {
-    return [{ type: 'apply', target: field(hp), direction: 'subtract', value, targetModifiers: true } as Step];
+    return [{ type: 'apply', target: field(hp), direction: 'subtract', value } as Step];
   }
   const through = { type: 'check', value, versus: field(armor), successWhen: 'over', id: ARMOR_STEP } as Step;
   if (choice === 'threshold') {
-    return [through, { type: 'apply', target: field(hp), direction: 'subtract', value, targetModifiers: false } as Step];
+    return [through, { type: 'apply', target: field(hp), direction: 'subtract', value } as Step];
   }
   return [
     through,
-    { type: 'apply', target: field(hp), direction: 'subtract', value: { expr: `@${ARMOR_STEP}.margin` }, targetModifiers: false } as Step,
-    { type: 'apply', target: field(armor), direction: 'subtract', value: { expr: '1' }, targetModifiers: false } as Step,
+    { type: 'apply', target: field(hp), direction: 'subtract', value: { expr: `@${ARMOR_STEP}.margin` } } as Step,
+    { type: 'apply', target: field(armor), direction: 'subtract', value: { expr: '1' } } as Step,
   ];
 }
 

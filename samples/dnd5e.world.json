@@ -4403,8 +4403,7 @@
             "direction": "add",
             "value": {
               "expr": "@amt"
-            },
-            "targetModifiers": false
+            }
           },
           {
             "type": "status",
@@ -4516,8 +4515,7 @@
             "direction": "add",
             "value": {
               "expr": "@amt"
-            },
-            "targetModifiers": false
+            }
           }
         ],
         "cost": [
@@ -4564,8 +4562,7 @@
             "direction": "add",
             "value": {
               "expr": "@amt"
-            },
-            "targetModifiers": false
+            }
           }
         ],
         "cost": [
@@ -4628,7 +4625,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@стол.battle >= 1"
             }
@@ -4862,8 +4858,7 @@
             "direction": "add",
             "value": {
               "expr": "@amount"
-            },
-            "targetModifiers": false
+            }
           }
         ],
         "cost": [
@@ -5297,8 +5292,7 @@
             "direction": "add",
             "value": {
               "expr": "@amt"
-            },
-            "targetModifiers": false
+            }
           }
         ],
         "cost": [
@@ -5367,7 +5361,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@стол.battle >= 1"
             }
@@ -5415,7 +5408,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@стол.battle >= 1"
             }
@@ -5463,7 +5455,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@стол.battle >= 1"
             }
@@ -5511,7 +5502,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@стол.battle >= 1"
             }
@@ -5559,7 +5549,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "все(@стол.battle >= 1, @лист.turn.атаки.left < 1)"
             }
@@ -5573,7 +5562,6 @@
             "value": {
               "expr": "@лист.attacks_per_action"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "все(@стол.battle >= 1, @лист.turn.атаки.left < 1)"
             }
@@ -5587,7 +5575,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@стол.battle >= 1"
             }
@@ -5639,7 +5626,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@лист.hp_current <= 0"
             }
@@ -5653,8 +5639,7 @@
             "direction": "subtract",
             "value": {
               "expr": "@amount"
-            },
-            "targetModifiers": false
+            }
           },
           {
             "type": "apply",
@@ -5665,8 +5650,7 @@
             "direction": "subtract",
             "value": {
               "expr": "@по_временным.overkill"
-            },
-            "targetModifiers": false
+            }
           },
           {
             "type": "status",
@@ -5729,7 +5713,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@circle == 1"
             }
@@ -5757,7 +5740,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@circle == 2"
             }
@@ -5785,7 +5767,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@circle == 3"
             }
@@ -5813,7 +5794,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@circle == 4"
             }
@@ -5841,7 +5821,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@circle == 5"
             }
@@ -5869,7 +5848,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@circle == 6"
             }
@@ -5897,7 +5875,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@circle == 7"
             }
@@ -5925,7 +5902,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@circle == 8"
             }
@@ -5953,7 +5929,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@circle == 9"
             }
@@ -6015,8 +5990,7 @@
             "direction": "subtract",
             "value": {
               "expr": "@amount"
-            },
-            "targetModifiers": false
+            }
           }
         ]
       },
@@ -8858,7 +8832,6 @@
                 "value": {
                   "expr": "1"
                 },
-                "targetModifiers": false,
                 "when": {
                   "expr": "@спас.success"
                 }
@@ -8872,7 +8845,6 @@
                 "value": {
                   "expr": "1"
                 },
-                "targetModifiers": false,
                 "when": {
                   "expr": "не(@спас.success)"
                 }
@@ -8886,7 +8858,6 @@
                 "value": {
                   "expr": "1"
                 },
-                "targetModifiers": false,
                 "when": {
                   "expr": "@спас.natural <= 1"
                 }
@@ -8900,7 +8871,6 @@
                 "value": {
                   "expr": "1"
                 },
-                "targetModifiers": false,
                 "when": {
                   "expr": "@спас.natural >= 20"
                 }
@@ -9003,8 +8973,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "0"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9014,8 +8983,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "0"
-                },
-                "targetModifiers": false
+                }
               }
             ]
           },
@@ -9030,8 +8998,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "0"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9041,8 +9008,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "0"
-                },
-                "targetModifiers": false
+                }
               }
             ]
           }
@@ -9161,8 +9127,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9172,8 +9137,7 @@
                 "direction": "subtract",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               }
             ]
           }
@@ -9200,8 +9164,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.hp_max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9211,8 +9174,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "0"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9222,8 +9184,7 @@
                 "direction": "add",
                 "value": {
                   "expr": "большее из(1, округлить вниз(@носитель.level / 2))"
-                },
-                "targetModifiers": false
+                }
               }
             ]
           }
@@ -9250,8 +9211,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.slots.круг_1.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9261,8 +9221,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.slots.круг_2.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9272,8 +9231,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.slots.круг_3.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9283,8 +9241,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.slots.круг_4.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9294,8 +9251,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.slots.круг_5.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9305,8 +9261,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.slots.круг_6.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9316,8 +9271,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.slots.круг_7.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9327,8 +9281,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.slots.круг_8.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9338,8 +9291,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.slots.круг_9.max"
-                },
-                "targetModifiers": false
+                }
               }
             ]
           }
@@ -9366,8 +9318,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.resources.ki.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9377,8 +9328,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.resources.channel.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9388,8 +9338,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.resources.second_wind.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9399,8 +9348,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.resources.action_surge.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9410,8 +9358,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.resources.superiority.max"
-                },
-                "targetModifiers": false
+                }
               }
             ]
           },
@@ -9426,8 +9373,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.resources.ki.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9437,8 +9383,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.resources.channel.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9448,8 +9393,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.resources.second_wind.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9459,8 +9403,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.resources.action_surge.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9470,8 +9413,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.resources.superiority.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9481,8 +9423,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.resources.rages.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9492,8 +9433,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.resources.bardic.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9503,8 +9443,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.resources.lay_on_hands.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9514,8 +9453,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.resources.sorcery.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9525,8 +9463,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.resources.luck.max"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9536,8 +9473,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "@носитель.resources.relentless.max"
-                },
-                "targetModifiers": false
+                }
               }
             ]
           }
@@ -9564,8 +9500,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9575,8 +9510,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "1 + меньшее из(1, @носитель.hasted)"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9586,8 +9520,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9597,8 +9530,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9608,8 +9540,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9619,8 +9550,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "0"
-                },
-                "targetModifiers": false
+                }
               }
             ]
           }
@@ -9647,8 +9577,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "0"
-                },
-                "targetModifiers": false
+                }
               }
             ]
           }
@@ -9678,8 +9607,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "1 + меньшее из(1, @носитель.hasted)"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9689,8 +9617,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9700,8 +9627,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9711,8 +9637,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -9722,8 +9647,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "0"
-                },
-                "targetModifiers": false
+                }
               }
             ]
           }
@@ -9749,8 +9673,7 @@
                 "direction": "subtract",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               }
             ]
           }

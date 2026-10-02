@@ -129,20 +129,11 @@ export const rollEdit = z.object({
 
 export const valueModifier = z.object({
   kind: z.literal('value'),
-  target: z.string().refine(target => !/^(event:|roll:|incoming:roll:)/.test(target), 'вызов и бросок правит правка вызова (kind: edit), а не поле'),
+  target: z.string().refine(target => !/^(event:|roll:|incoming:)/.test(target), 'вызов, бросок и входящее число правит правка вызова (kind: edit), а не поле'),
   op: z.string(),
   value: formula,
   stacking: z.string().optional(),
   condition: formula.optional(),
-
-  tags: z.array(z.string().min(1)).optional(),
-  notTags: z.array(z.string().min(1)).optional(),
-
-  where: z.object({
-    table: z.string().min(1),
-    column: z.string().min(1),
-    is: tableValue,
-  }).optional(),
 }).strict();
 
 

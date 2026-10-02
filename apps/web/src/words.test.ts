@@ -39,7 +39,7 @@ const sources = all.filter(f => !/\.test\.tsx?$/.test(f.path) && !/\/tests?\//.t
 
 const LATIN_DICE = /\b\d+d\d+\b/;
 const HASH_NAME = /(`#\$\{|['"]#[\p{L}])/u;
-const MACHINE_KEY = /«(on\.\d+\.on|successWhen|continueOn|targetModifiers|effectId|fromId|toId|activation|rk|steps\.\d+)»/;
+const MACHINE_KEY = /«(on\.\d+\.on|successWhen|continueOn|effectId|fromId|toId|activation|rk|steps\.\d+)»/;
 
 describe('одно слово на одно понятие', () => {
   it('запрещённые основы не встречаются ни в коде, ни в тестах четырёх пакетов', () => {

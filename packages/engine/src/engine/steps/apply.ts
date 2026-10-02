@@ -1,7 +1,5 @@
 import { compile } from '../../formula/index.ts';
 import { findField } from '../calc.ts';
-import { applyValueModifiers } from '../modifiers.ts';
-import { incomingTagOf } from '../targets.ts';
 import { EngineError } from '../errors.ts';
 import type { Pass } from '../calc.ts';
 import type { StoredValue } from '../../model/types.ts';
@@ -33,10 +31,7 @@ export function lint(step: StepData) {
 
 export function traceLine(t: any, h: any) {
   const sign = t.direction === 'add' ? '+' : t.direction === 'subtract' ? '−' : '=';
-  const mods = t.incoming !== t.amount
-    ? ` (входящее ${t.incoming}, после правок поля ${t.amount})`
-    : '';
-  return `применено: ${h.labelOf(t.target)} ${t.from} → ${t.to} (${sign}${t.amount})${mods}`;
+  return `применено: ${h.labelOf(t.target)} ${t.from} → ${t.to} (${sign}${t.amount})`;
 }
 
 const who = (ctx: StepContext): string => ctx.owner || 'правило';
@@ -67,7 +62,7 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
     if (typeof raw !== 'number') throw new EngineError(`${who(ctx)}: величина применения — не число (даёт ${raw === null ? 'пусто' : typeof raw})`);
     const value = raw;
     const incoming = direction === 'set' ? Math.abs(value - from) : value;
-    const amountNow = step.targetModifiers ? Math.floor(Number(applyValueModifiers(incoming, incomingTagOf(tag), here))) : incoming;
+    const amountNow = incoming;
     const next = direction === 'set' ? from + Math.sign(value - from) * amountNow : DIRECTIONS[direction]!(from, amountNow);
     const low = boundOf(field.value.min, here, 'нижняя граница поля');
     const high = boundOf(field.value.max, here, 'верхняя граница поля');

@@ -19,7 +19,7 @@ const system = {
       ],
       steps: [
         { id: 'н', type: 'roll', fixed: { expr: 'кинуть(@кость, @сколько)' } },
-        { type: 'apply', target: { expr: '@лист.хп' }, direction: 'subtract', value: { expr: '@н' }, targetModifiers: false },
+        { type: 'apply', target: { expr: '@лист.хп' }, direction: 'subtract', value: { expr: '@н' } },
       ],
     },
     меч: {

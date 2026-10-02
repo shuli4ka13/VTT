@@ -677,7 +677,7 @@ describe('вопросы на ответках', () => {
       effects: {
         урон: {
           label: 'Урон', params: [{ key: 'раненый', kind: 'sheet' }, { key: 'обидчик', kind: 'sheet' }, { key: 'сколько', label: 'Сколько', kind: 'number' }],
-          steps: [{ ...sub('@раненый.хиты', '@сколько'), targetModifiers: false }],
+          steps: [{ ...sub('@раненый.хиты', '@сколько') }],
         },
         удар: button('Удар', [{ type: 'emit', event: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' }, сколько: { expr: '5' } } }]),
         возмездие: {

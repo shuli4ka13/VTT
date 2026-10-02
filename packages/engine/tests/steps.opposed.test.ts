@@ -36,7 +36,7 @@ const system = {
         EACH,
         { id: 'защита', type: 'roll', die: { constant: 'пул_защиты' }, tags: ['защита'], by: { expr: '@цель' }, against: { expr: '@действующий' } },
         { id: 'попал', type: 'check', value: { expr: '@прицел' }, versus: { expr: '@защита' }, successWhen: 'over' },
-        { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', targetModifiers: false, value: { expr: '2 + @попал.margin' } },
+        { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '2 + @попал.margin' } },
       ],
     },
   },

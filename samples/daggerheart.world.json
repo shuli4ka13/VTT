@@ -1615,7 +1615,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@опыт > 0"
             }
@@ -1865,8 +1864,7 @@
             "direction": "add",
             "value": {
               "expr": "если(@amount >= @лист.severe, 3, если(@amount >= @лист.major, 2, если(@amount >= 1, 1, 0)))"
-            },
-            "targetModifiers": false
+            }
           }
         ]
       },
@@ -1909,8 +1907,7 @@
             "direction": "add",
             "value": {
               "expr": "1"
-            },
-            "targetModifiers": false
+            }
           },
           {
             "type": "apply",
@@ -1920,8 +1917,7 @@
             "direction": "subtract",
             "value": {
               "expr": "1"
-            },
-            "targetModifiers": false
+            }
           }
         ],
         "params": [
@@ -2052,7 +2048,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@шрам.success"
             }
@@ -2119,7 +2114,6 @@
             "value": {
               "expr": "меньшее из(@действующий.hp, @бросок.parts.надежда)"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@бросок.parts.надежда > @бросок.parts.страх"
             }
@@ -2133,7 +2127,6 @@
             "value": {
               "expr": "0"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@бросок.parts.надежда == @бросок.parts.страх"
             }
@@ -2147,7 +2140,6 @@
             "value": {
               "expr": "0"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@бросок.parts.надежда == @бросок.parts.страх"
             }
@@ -2209,8 +2201,7 @@
             "direction": "subtract",
             "value": {
               "expr": "меньшее из(@действующий.hp, кинуть(\"1к4\") + @действующий.tier)"
-            },
-            "targetModifiers": false
+            }
           },
           {
             "type": "status",
@@ -2256,8 +2247,7 @@
             "direction": "subtract",
             "value": {
               "expr": "меньшее из(@действующий.stress, кинуть(\"1к4\") + @действующий.tier)"
-            },
-            "targetModifiers": false
+            }
           }
         ],
         "params": [
@@ -2293,8 +2283,7 @@
             "direction": "subtract",
             "value": {
               "expr": "меньшее из(@действующий.armor_marked, кинуть(\"1к4\") + @действующий.tier)"
-            },
-            "targetModifiers": false
+            }
           }
         ],
         "params": [
@@ -2330,8 +2319,7 @@
             "direction": "add",
             "value": {
               "expr": "если(@вместе >= 1, 2, 1)"
-            },
-            "targetModifiers": false
+            }
           }
         ],
         "params": [
@@ -2377,8 +2365,7 @@
             "direction": "set",
             "value": {
               "expr": "0"
-            },
-            "targetModifiers": false
+            }
           },
           {
             "type": "status",
@@ -2424,8 +2411,7 @@
             "direction": "set",
             "value": {
               "expr": "0"
-            },
-            "targetModifiers": false
+            }
           }
         ],
         "params": [
@@ -2461,8 +2447,7 @@
             "direction": "set",
             "value": {
               "expr": "0"
-            },
-            "targetModifiers": false
+            }
           }
         ],
         "params": [
@@ -2498,8 +2483,7 @@
             "direction": "add",
             "value": {
               "expr": "кинуть(\"1к4\")"
-            },
-            "targetModifiers": false
+            }
           }
         ],
         "params": [
@@ -2535,8 +2519,7 @@
             "direction": "add",
             "value": {
               "expr": "кинуть(\"1к4\") + @героев"
-            },
-            "targetModifiers": false
+            }
           }
         ],
         "params": [
@@ -2582,8 +2565,7 @@
             "direction": "subtract",
             "value": {
               "expr": "меньшее из(@действующий.armor_marked, 2)"
-            },
-            "targetModifiers": false
+            }
           }
         ],
         "cost": [
@@ -2643,8 +2625,7 @@
             "direction": "subtract",
             "value": {
               "expr": "меньшее из(@действующий.hp, 1)"
-            },
-            "targetModifiers": false
+            }
           },
           {
             "type": "status",
@@ -2930,8 +2911,7 @@
             "direction": "subtract",
             "value": {
               "expr": "@amount"
-            },
-            "targetModifiers": false
+            }
           }
         ]
       },
@@ -2958,8 +2938,7 @@
                 "direction": "add",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               }
             ]
           },
@@ -2977,8 +2956,7 @@
                 "direction": "add",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               }
             ]
           },
@@ -2996,8 +2974,7 @@
                 "direction": "add",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -3008,7 +2985,6 @@
                 "value": {
                   "expr": "1"
                 },
-                "targetModifiers": false,
                 "when": {
                   "expr": "@носитель.stress >= 1"
                 }
@@ -3029,8 +3005,7 @@
                 "direction": "add",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               }
             ]
           },
@@ -3048,8 +3023,7 @@
                 "direction": "add",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               }
             ]
           },
@@ -3067,8 +3041,7 @@
                 "direction": "add",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -3079,7 +3052,6 @@
                 "value": {
                   "expr": "1"
                 },
-                "targetModifiers": false,
                 "when": {
                   "expr": "@носитель.stress >= 1"
                 }

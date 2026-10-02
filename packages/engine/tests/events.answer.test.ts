@@ -9,12 +9,12 @@ const system = {
     урон: {
       label: 'Урон',
       params: [{ key: 'лист', label: 'Лист', kind: 'sheet' }, { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }],
-      steps: [{ type: 'apply', target: { expr: '@лист.хп' }, direction: 'subtract', targetModifiers: false, value: { expr: '@сколько' } }],
+      steps: [{ type: 'apply', target: { expr: '@лист.хп' }, direction: 'subtract', value: { expr: '@сколько' } }],
     },
     лечение: {
       label: 'Лечение',
       params: [{ key: 'лист', label: 'Лист', kind: 'sheet' }, { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }],
-      steps: [{ type: 'apply', target: { expr: '@лист.хп' }, direction: 'add', targetModifiers: false, value: { expr: '@сколько' } }],
+      steps: [{ type: 'apply', target: { expr: '@лист.хп' }, direction: 'add', value: { expr: '@сколько' } }],
     },
     сопротивление: {
       label: 'Сопротивление', activation: 'passive', duration: { kind: 'permanent' },

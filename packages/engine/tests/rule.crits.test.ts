@@ -48,7 +48,7 @@ const probed = (sys: any, rule: any, stepId: string, sender: any, die: () => num
   const columns = PROBE_KEYS.map(key => ({ key: `зонд_${key}`, label: key, kind: 'number', default: -1 }));
   const withProbe: any = { ...sys, tables: { ...sys.tables, лист: { shape: 'single', columns: [...(sys.tables.лист?.columns ?? []), ...columns] } } };
   const at = rule.steps.findIndex((step: any) => step.id === stepId) + 1;
-  const writes = PROBE_KEYS.map(key => ({ type: 'apply', target: { expr: `@цель.зонд_${key}` }, direction: 'set', targetModifiers: false, value: { expr: `@${stepId}.${key}` } }));
+  const writes = PROBE_KEYS.map(key => ({ type: 'apply', target: { expr: `@цель.зонд_${key}` }, direction: 'set', value: { expr: `@${stepId}.${key}` } }));
   const steps = [...rule.steps.slice(0, at), ...writes, ...rule.steps.slice(at)];
   const target = { id: 'цель-теста', values: {}, effects: [] };
   const out = runRule(withProbe, { ...rule, steps }, sender, target, die);

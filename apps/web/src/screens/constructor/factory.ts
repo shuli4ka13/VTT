@@ -63,8 +63,8 @@ export const newTable = (system: System): Made<Table> => ({
   value: { label: '', key: 'word', rows: [{ value: '' }] },
 });
 
-export const simpleReceive = (tag: string, direction: 'subtract' | 'add', targetModifiers: boolean): Step => ({
-  type: 'apply', target: { expr: `@лист.${tag}` }, direction, value: { expr: '@amount' }, targetModifiers,
+export const simpleReceive = (tag: string, direction: 'subtract' | 'add'): Step => ({
+  type: 'apply', target: { expr: `@лист.${tag}` }, direction, value: { expr: '@amount' },
 } as unknown as Step);
 
 export const newCost = (system: System): Made<Effect> => ({
@@ -85,7 +85,7 @@ export const newCalled = (system: System): Made<Effect> => {
     value: {
       label: '',
       params: [{ key: 'лист', label: 'Лист', kind: 'sheet' }, { key: 'amount', label: 'Сколько', kind: 'number', role: 'amount' }],
-      steps: field ? [simpleReceive(field.tag, 'subtract', true)] : [],
+      steps: field ? [simpleReceive(field.tag, 'subtract')] : [],
     } as Effect,
   };
 };
@@ -124,7 +124,7 @@ export const BRICKS: StepTemplate[] = [
     key: 'change', label: '+ изменение',
     hint: 'Изменить поле листа или повесить состояние. Единственное, что меняет мир.',
     make: (_system, taken) => [{
-      id: freeId(taken, 'изменение'), type: 'apply', direction: 'subtract', targetModifiers: true,
+      id: freeId(taken, 'изменение'), type: 'apply', direction: 'subtract',
     } as unknown as Step],
   },
   {

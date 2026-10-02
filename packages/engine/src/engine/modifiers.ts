@@ -121,16 +121,15 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
   return sources;
 }
 
-export interface ModifierContext { tags?: string[] }
 
 export function applyValueModifiers(
-  base: unknown, tag: string, pass: Pass, context: ModifierContext = {},
+  base: unknown, tag: string, pass: Pass,
 ): unknown {
   if (!pass.modifiers) return base;
   const mods = pass.modifiers.value.get(tag);
   if (!mods || mods.length === 0) return base;
 
-  const active = mods.filter(m => conditionHolds(m, pass) && tagsMatch(m, context.tags ?? [], pass.system));
+  const active = mods.filter(m => conditionHolds(m, pass));
   if (active.length === 0) return base;
 
   return stackNumber(active, base, tag, pass);
@@ -222,16 +221,6 @@ export function editMatches(mod: SourcedModifier, tags: readonly string[], syste
   if (any?.length && !any.some(t => tags.includes(t))) return false;
   if (avoid?.length && avoid.some(t => tags.includes(t))) return false;
   if (where && !anyRowSays(system, [...tags], where)) return false;
-  return true;
-}
-
-function tagsMatch(mod: SourcedModifier, tags: string[], system: System): boolean {
-  const want = (mod as { tags?: string[] }).tags;
-  const avoid = (mod as { notTags?: string[] }).notTags;
-  const where = (mod as { where?: { table: string; column: string; is: unknown } }).where;
-  if (want?.length && !want.some(t => tags.includes(t))) return false;
-  if (avoid?.length && avoid.some(t => tags.includes(t))) return false;
-  if (where && !anyRowSays(system, tags, where)) return false;
   return true;
 }
 

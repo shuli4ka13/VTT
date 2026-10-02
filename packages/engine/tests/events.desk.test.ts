@@ -17,8 +17,8 @@ const system = {
       params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
       steps: [
         { type: 'each', of: 'цели', as: 'цель' },
-        { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', targetModifiers: false, value: { expr: '3 + @стол.эскалация' } },
-        { type: 'apply', target: { expr: '@стол.страх' }, direction: 'add', targetModifiers: false, value: { expr: '1' } },
+        { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '3 + @стол.эскалация' } },
+        { type: 'apply', target: { expr: '@стол.страх' }, direction: 'add', value: { expr: '1' } },
       ],
     },
   },

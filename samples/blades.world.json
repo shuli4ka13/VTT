@@ -430,7 +430,6 @@
             "value": {
               "expr": "меньшее из(8, @стол.alarm + 1)"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "есть(@бросок.degree, \"успех с последствием\")"
             }
@@ -444,7 +443,6 @@
             "value": {
               "expr": "меньшее из(8, @стол.alarm + 2)"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "есть(@бросок.degree, \"провал\")"
             }
@@ -511,8 +509,7 @@
             "direction": "add",
             "value": {
               "expr": "если(все(@действующий.resolve > 0, сколько(@бросок.dice.rolls, 6) >= 2), -1, 6 - @бросок.natural)"
-            },
-            "targetModifiers": false
+            }
           }
         ],
         "params": [
@@ -583,8 +580,7 @@
             "direction": "set",
             "value": {
               "expr": "большее из(0, @действующий.heat - если(все(@rating > 0, сколько(@бросок.dice.rolls, 6) >= 2), 5, если(@бросок.natural >= 6, 3, если(@бросок.natural >= 4, 2, 1))))"
-            },
-            "targetModifiers": false
+            }
           }
         ],
         "params": [

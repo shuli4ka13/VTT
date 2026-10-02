@@ -4,7 +4,7 @@ import { isRange } from '../model/tables.ts';
 import type { System } from '../model/types.ts';
 import { fieldsOf } from '../model/sheet-columns.ts';
 
-export type TargetKind = 'value' | 'incoming' | 'cell';
+export type TargetKind = 'value' | 'cell';
 
 export interface Target {
   tag: string;
@@ -15,19 +15,9 @@ export interface Target {
   from?: string;
 }
 
-export const incomingTagOf = (tag: string) => `incoming:${tag}`;
-
 export function targets(system: System): Target[] {
   return [
     ...fieldsOf(system).map((f): Target => ({ tag: f.tag, label: f.label, group: f.group, kind: 'value' })),
-
-    ...fieldsOf(system).filter(f => f.value.kind === 'stored').map((f): Target => ({
-      tag: incomingTagOf(f.tag),
-      label: `Входящее: ${f.label}`,
-      group: f.group,
-      kind: 'incoming',
-      from: f.tag,
-    })),
 
     ...cellTargets(system),
   ];

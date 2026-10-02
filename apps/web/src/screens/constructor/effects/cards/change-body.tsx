@@ -12,7 +12,6 @@ import { outputRefs, stepNames, inputBadges } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn, WithNumber } from '../words.ts';
 import { SendBody } from './send-body.tsx';
-import { Extras } from './extras.tsx';
 import { calledOf } from '@vtt/engine/engine/effects';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import { tight } from '@vtt/engine/model/amounts';
@@ -334,7 +333,6 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
           } else {
             retype(draft, 'apply');
             d.direction ??= 'subtract';
-            d.targetModifiers ??= true;
           }
         })}
       />
@@ -352,24 +350,6 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
             amount={group.amount ?? undefined} apply={step} applyIndex={applyIndex}
             context={context} edit={edit} withNumber={withNumber}
             onCreateFromRecord={fromRecord('сколько — кости', 'dice')} />
-
-          <Extras
-            items={[{
-              key: 'targetModifiers', label: 'не слушать правки поля',
-              on: step.targetModifiers === false,
-              add: () => edit(applyIndex, draft => { (draft as any).targetModifiers = false; }),
-              drop: () => edit(applyIndex, draft => { (draft as any).targetModifiers = true; }),
-              node: (
-                <Field label="Правки поля" hint="Всё, что на листе правит приходящее в это поле число: состояния, черты.">
-                  <Select
-                    value={String(step.targetModifiers ?? true)}
-                    options={[['true', 'слушаются'], ['false', 'не слушаются']] as const}
-                    onChange={next => edit(applyIndex, draft => { (draft as any).targetModifiers = next === 'true'; })}
-                  />
-                </Field>
-              ),
-            }]}
-          />
         </>
       ) : null}
 

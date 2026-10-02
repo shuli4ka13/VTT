@@ -41,7 +41,7 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
   editSystem?: (change: (draft: System) => void) => void;
 }) {
   const all = targets(system) as { tag: string; label: string; kind: string; group?: string }[];
-  const valueTargets = all.filter(t => t.kind === 'value' || t.kind === 'incoming' || t.kind === 'cell');
+  const valueTargets = all.filter(t => t.kind === 'value' || t.kind === 'cell');
   const calls = calledOf(system).filter(([, effect]) => amountParamOf(effect));
   const edits = Object.entries(system.roll_edits ?? {});
   const recipes = editSystem ? recipesToInstall(system) : [];
@@ -101,7 +101,7 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
                 <Select
                   value={modifier.target}
                   options={[['', '— выберите, что правим —'],
-                    ...valueTargets.map(t => [t.tag, t.kind === 'incoming' ? `${t.label}` : t.label] as const)] as never}
+                    ...valueTargets.map(t => [t.tag, t.label] as const)] as never}
                   onChange={target => onEdit(draft => { (draft[index] as { target: string }).target = target; })}
                 />
               </Field>

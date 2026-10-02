@@ -377,8 +377,7 @@
             "direction": "subtract",
             "value": {
               "expr": "@amount"
-            },
-            "targetModifiers": false
+            }
           }
         ]
       },
@@ -636,8 +635,7 @@
             "direction": "set",
             "value": {
               "expr": "меньшее из(6, @стол.escalation + 1)"
-            },
-            "targetModifiers": false
+            }
           }
         ],
         "params": [
@@ -673,8 +671,7 @@
             "direction": "set",
             "value": {
               "expr": "0"
-            },
-            "targetModifiers": false
+            }
           }
         ],
         "params": [
@@ -732,7 +729,6 @@
             "value": {
               "expr": "1"
             },
-            "targetModifiers": false,
             "when": {
               "expr": "@стол.battle >= 1"
             }
@@ -760,8 +756,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -771,8 +766,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -782,8 +776,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -793,8 +786,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               }
             ]
           }
@@ -821,8 +813,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "0"
-                },
-                "targetModifiers": false
+                }
               }
             ]
           }
@@ -852,8 +843,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -863,8 +853,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               },
               {
                 "type": "apply",
@@ -874,8 +863,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "1"
-                },
-                "targetModifiers": false
+                }
               }
             ]
           }
@@ -902,8 +890,7 @@
                 "direction": "set",
                 "value": {
                   "expr": "если(@moment.round > 1, меньшее из(6, @стол.escalation + 1), 0)"
-                },
-                "targetModifiers": false
+                }
               }
             ]
           }

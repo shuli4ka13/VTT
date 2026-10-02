@@ -78,10 +78,6 @@ export const STEP_WORDS = {
         choice: [['subtract', 'вычесть'], ['add', 'прибавить'], ['set', 'задать']],
       },
       { key: 'value', label: 'Сколько', kind: 'ref', main: true, required: true, allow: ['ref', 'expr', 'const', 'param'] },
-      {
-        key: 'targetModifiers', label: 'Правки поля на листе', kind: 'flag', fallback: 'true',
-        choice: [['true', 'учитываются'], ['false', 'не учитываются']],
-      },
     ],
     outputs: [
       { path: '.amount', label: 'сколько применилось', kind: 'number' },
