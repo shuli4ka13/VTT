@@ -293,6 +293,11 @@ const CREATED: [RegExp, string][] = [
   [/\.steps\[\]\.(of|as)$/, '«+ для каждой цели»'],
 ];
 
+const BY_BUILD: [RegExp, string][] = [
+  [/\.(on\[\]\.)?steps\[\]\.value$/, 'проверка по своему броску — build.test: «Атака», «Адское возмездие», «Атака героя»'],
+  [/^system\.effects\.\*\.group$/, 'новый блок «+ новый» — build.test: «Атака», «Выстрел»'],
+];
+
 const SKIP = [/^sheets\b/, /\.id$/, /^system\.(id|name|title)$/, /\.type$/, /^title$/];
 
 describe('опись путей пресетов: каждое значение ставится полем конструктора', () => {
@@ -323,11 +328,13 @@ describe('опись путей пресетов: каждое значение 
         const created = CREATED.find(([rule]) => rule.test(pattern));
         silent = true;
         const ok = !required && !created && viewsFor(world, path).some(view => restores(world, blanked, view, value));
-        const verdict = required || created ? 'кнопкой' : ok ? 'есть' : silent ? 'умолч' : 'НЕТ ';
-        report.push(`${verdict}  ${pattern}  ← ${path.join('.')} = ${JSON.stringify(value).slice(0, 60)}${created ? `  (${created[1]})` : ''}`);
+        const built = !ok && !required && !created ? BY_BUILD.find(([rule]) => rule.test(pattern)) : undefined;
+        const verdict = required || created ? 'кнопкой' : ok ? 'есть' : built ? 'сборкой' : silent ? 'умолч' : 'НЕТ ';
+        const why = created?.[1] ?? built?.[1];
+        report.push(`${verdict}  ${pattern}  ← ${path.join('.')} = ${JSON.stringify(value).slice(0, 60)}${why ? `  (${why})` : ''}`);
       }
       if (process.env.COVERAGE_OUT) writeFileSync(`${process.env.COVERAGE_OUT}/${sample.system.id}.txt`, report.join('\n'));
-      expect(report.length).toBeGreaterThan(0);
+      expect(report.filter(line => line.startsWith('НЕТ'))).toEqual([]);
     }, 3_600_000);
   }
 
