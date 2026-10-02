@@ -437,7 +437,7 @@ describe('GroupCard: отдельный бросок с «Бросает»', () 
 });
 
 describe('GroupCard: взять из таблицы', () => {
-  it('шаг «таблица» — своя карточка: правка числа не стирает таблицу', () => {
+  it('шаг «таблица» — свой вид: правка числа не стирает таблицу', () => {
     const step = { id: 'dv', type: 'table', table: 'броски', value: { expr: '@distance' } } as Record<string, any>;
     const withTable = { ...system, tables: { ...(system.tables ?? {}), броски: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }] } } } as typeof system;
     const group = groupSteps([step as unknown as Step])[0]!;
