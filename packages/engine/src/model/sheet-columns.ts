@@ -173,10 +173,12 @@ export const defaultLabel = (column: TableColumn, first: boolean): string =>
 const valueOf = (column: TableColumn, start: unknown): FieldValue => {
   const kind = column.kind ?? 'number';
   const type = (STORED.includes(kind) ? kind : 'text') as 'number' | 'text' | 'boolean' | 'choice';
+  const many = type === 'choice' && column.many === true;
   return {
     kind: 'stored', type,
     ...(column.from && type === 'choice' ? { from: column.from } : {}),
-    default: (start ?? ZERO[type]) as number | string | boolean,
+    ...(many ? { many: true as const } : {}),
+    default: (many ? (Array.isArray(start) ? start : []) : start ?? ZERO[type]) as number | string | boolean,
     ...boundsOf(column),
   };
 };

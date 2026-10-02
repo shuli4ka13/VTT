@@ -26,7 +26,7 @@ export interface ColumnPatch {
 }
 
 
-export function ColumnCard({ column, kinds, tables, many, formulaHint, where, names, system, onChange, onDelete, onClose, extra, preview }: {
+export function ColumnCard({ column, kinds, tables, many, formulaHint, where, names, system, onChange, onDelete, onClose, lead, extra, preview }: {
   column: ColumnShape;
   kinds: readonly (readonly [string, string])[];
   tables: [string, string][];
@@ -38,6 +38,7 @@ export function ColumnCard({ column, kinds, tables, many, formulaHint, where, na
   onChange: (patch: ColumnPatch) => void;
   onDelete: (() => void) | null;
   onClose: () => void;
+  lead?: ReactNode;
   extra?: ReactNode;
   preview?: ReactNode;
 }) {
@@ -87,6 +88,7 @@ export function ColumnCard({ column, kinds, tables, many, formulaHint, where, na
         />
       </Field>
       {preview}
+      {lead}
       {column.kind === 'number' || extra ? (
         <Fold title="ещё" summary="на листе, бросок, границы">
           {column.kind === 'number' ? (

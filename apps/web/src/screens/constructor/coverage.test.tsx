@@ -117,14 +117,20 @@ const reveal = (): void => {
   document.querySelectorAll('details').forEach(d => { d.open = true; });
 };
 
-const FIELDS = 'select, input, textarea';
+const FIELDS = 'select, input, textarea, [role="radiogroup"]';
 
 const fields = (): Element[] => [...document.querySelectorAll(FIELDS)].filter(el => {
   const chips = el.closest('.chips');
   return !chips || chips.querySelector('input.chips__text') === el;
 });
 
+const radioName = (radio: Element): string => (radio.getAttribute('aria-label') ?? radio.textContent ?? '').trim();
+
 const shownOf = (el: Element): string => {
+  if (el.getAttribute('role') === 'radiogroup') {
+    const on = el.querySelector('[role="radio"][aria-checked="true"]');
+    return on ? radioName(on) : '';
+  }
   const chips = el.closest('.chips');
   if (chips) return chips.getAttribute('data-value') ?? '';
   const input = el as HTMLInputElement;
@@ -144,6 +150,11 @@ const textsOf = (value: unknown): string[] => {
 };
 
 function setTo(el: Element, texts: string[]): void {
+  if (el.getAttribute('role') === 'radiogroup') {
+    const radio = [...el.querySelectorAll('[role="radio"]')].find(r => texts.includes(radioName(r)));
+    if (radio && radio.getAttribute('aria-checked') !== 'true') fireEvent.click(radio);
+    return;
+  }
   if (el instanceof HTMLSelectElement) {
     const option = [...el.options].find(o => texts.includes(o.value) || texts.includes((o.textContent ?? '').trim()));
     if (option) fireEvent.change(el, { target: { value: option.value } });

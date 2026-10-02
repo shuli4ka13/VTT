@@ -2,7 +2,8 @@ import { useWorld } from '../../store/world.ts';
 import { BlockPick } from './block-pick.tsx';
 import { TagsField } from './tags-field.tsx';
 import { dieEntries } from './rules/dice-section.tsx';
-import { CONTROLS } from '../../sheet/controls/index.tsx';
+import { ViewGallery } from './view-gallery.tsx';
+import { familyOf } from '../../sheet/views/index.tsx';
 import { Field, Input, Select, Chip } from '../../ui/primitives.tsx';
 import { isRange } from '@vtt/engine/model/tables';
 import { ROW, cellSource, onSheet, isSingle, fieldsOf } from '@vtt/engine/model/sheet-columns';
@@ -45,17 +46,7 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
           <BlockPick of="fields" system={system} value={column.block ?? table.block}
             onChange={next => edit(draft => { if (next) draft.block = next; else delete draft.block; })} />
         </Field>
-        {stored ? (
-          <Field label="Как выглядит">
-            <Select
-              value={column.control ?? ''}
-              options={[['', 'обычное поле'],
-                ...(Object.keys(CONTROLS) as (keyof typeof CONTROLS)[]).map(key => [key, CONTROLS[key]] as const)] as never}
-              onChange={next => edit(draft => { if (next) draft.control = next as Column['control']; else delete draft.control; })}
-            />
-          </Field>
-        ) : null}
-        {stored ? (
+        {stored && !column.many ? (
           <Field label="В новом листе">
             <Input value={column.default === undefined ? '' : String(column.default)}
               onChange={text => edit(draft => { if (!text.trim()) delete draft.default; else draft.default = parseStart(text); })} />
@@ -113,5 +104,22 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
         </div>
       </Field>
     </>
+  );
+}
+
+export function ColumnViewField({ tableId, column, system }: { tableId: string; column: Column; system: System }) {
+  const editColumn = useWorld(s => s.editColumn);
+  const table = system.tables![tableId]!;
+  const stored = isSingle(table) ? column.expr === undefined : (table.rows ?? []).some(row => cellSource(column, row).kind === 'input');
+  return (
+    <Field label="Вид">
+      <ViewGallery
+        value={column.control}
+        family={familyOf(column.kind ?? (column.expr === undefined ? 'number' : undefined), column.many, !stored)}
+        computed={!stored}
+        plain={stored ? { label: 'Обычное поле', hint: 'окошко для числа или текста' } : { label: 'Просто число', hint: 'значение как есть' }}
+        onChange={next => editColumn(tableId, column.key, draft => { if (next) draft.control = next; else delete draft.control; })}
+      />
+    </Field>
   );
 }

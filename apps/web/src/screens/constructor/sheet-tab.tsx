@@ -2,7 +2,9 @@ import { Mannequins } from './mannequins.tsx';
 import { useWorld } from '../../store/world.ts';
 import { Columns } from '../../ui/layout.tsx';
 import { useLookupPane } from './lookup-panel.tsx';
-import { Select, Button, Empty, DangerButton } from '../../ui/primitives.tsx';
+import { Select, Button, Empty, DangerButton, Field } from '../../ui/primitives.tsx';
+import { ViewGallery } from './view-gallery.tsx';
+import { familyOf, VIEWS } from '../../sheet/views/index.tsx';
 import { DonorPalette } from './donors.tsx';
 import { newColumn } from './factory.ts';
 import { addColumn, CharacterSection } from './rules/character-section.tsx';
@@ -15,7 +17,7 @@ import { SheetSample } from './sheet-sample.tsx';
 import { NO_BLOCK } from '@vtt/engine/model/blocks';
 import type { System } from '@vtt/schema';
 import type { Field as FieldModel } from '@vtt/engine/model/types';
-import { fieldOf } from '@vtt/engine/model/sheet-columns';
+import { fieldOf, rowKeyOf, cellSource } from '@vtt/engine/model/sheet-columns';
 
 export function SheetTab() {
   const system = useWorld(s => s.system);
@@ -86,6 +88,7 @@ function ViewPanel({ field, system }: { field: FieldModel; system: System }) {
       <TableColumnCard id={field.home} table={table} column={column} system={system}
         edit={change => editSystem(draft => { const target = draft.tables?.[field.home]; if (target) change(target); })}
         onClose={() => pick({ activeFieldTag: null })} />
+      {field.cell ? <RowView field={field} system={system} /> : null}
       <div className="inline inline--tight">
         {field.cell ? (
           <>
@@ -104,5 +107,38 @@ function ViewPanel({ field, system }: { field: FieldModel; system: System }) {
         )}
       </div>
     </>
+  );
+}
+
+function RowView({ field, system }: { field: FieldModel; system: System }) {
+  const editSystem = useWorld(s => s.editSystem);
+  const mark = field.cell!;
+  const table = system.tables?.[mark.table];
+  const column = table?.columns?.find(c => c.key === mark.column);
+  const row = table?.rows?.find(r => rowKeyOf(r) === mark.row);
+  if (!table || !column || !row) return null;
+  const computed = cellSource(column, row).kind === 'formula';
+  const own = row.view?.[mark.column]?.control;
+  const inherited = column.control ? VIEWS[column.control].label.toLowerCase() : computed ? 'просто число' : 'обычное поле';
+  return (
+    <Field label={`Вид только у «${field.label}»`}>
+      <ViewGallery
+        label={`Вид только у «${field.label}»`}
+        value={own}
+        family={familyOf(column.kind ?? (computed ? undefined : 'number'), column.many, computed)}
+        computed={computed}
+        plain={{ label: 'Как у колонки', hint: `колонка: ${inherited}` }}
+        onChange={next => editSystem(draft => {
+          const target = draft.tables?.[mark.table]?.rows?.find(r => rowKeyOf(r) === mark.row);
+          if (!target) return;
+          const views = { ...target.view };
+          const { control: _old, ...rest } = views[mark.column] ?? {};
+          if (next && next !== column.control) views[mark.column] = { ...rest, control: next };
+          else if (Object.keys(rest).length) views[mark.column] = rest;
+          else delete views[mark.column];
+          if (Object.keys(views).length) target.view = views; else delete target.view;
+        })}
+      />
+    </Field>
   );
 }

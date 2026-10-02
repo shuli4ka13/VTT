@@ -15,7 +15,7 @@ import type { Column, RollSpec, Control } from '@vtt/schema';
 export type TableColumn = Column;
 
 export type FieldValue =
-  | { kind: 'stored'; type: 'number' | 'text' | 'boolean' | 'choice'; from?: string; default: number | string | boolean; min?: number | string; max?: number | string }
+  | { kind: 'stored'; type: 'number' | 'text' | 'boolean' | 'choice'; from?: string; many?: true; default: number | string | boolean | (number | string | boolean)[]; min?: number | string; max?: number | string }
   | { kind: 'formula'; expr: string; min?: number | string; max?: number | string };
 
 export interface CellMark { table: string; row: string; column: string }

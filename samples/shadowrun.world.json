@@ -273,7 +273,8 @@
             "expr": {
               "expr": "@body + @armor_worn + @armor_extra + @armor_natural + если(@metatype != \"\", таблица(\"metatypes\", @metatype, \"dermal\"), 0) + @cover"
             },
-            "block": "Защита"
+            "block": "Защита",
+            "control": "big"
           },
           {
             "key": "defense_pool",
@@ -347,7 +348,8 @@
             "expr": {
               "expr": "0 - округлить вниз(меньшее из(@stun, @stun_max) / 3) - округлить вниз(меньшее из(@physical_total, @physical_max) / 3)"
             },
-            "block": "Счётчики"
+            "block": "Счётчики",
+            "control": "signed"
           },
           {
             "key": "condition_mod",
@@ -361,7 +363,8 @@
             "expr": {
               "expr": "@stun >= @stun_max"
             },
-            "block": "Счётчики"
+            "block": "Счётчики",
+            "control": "toggle"
           },
           {
             "key": "bleeding_out",
@@ -369,7 +372,8 @@
             "expr": {
               "expr": "@physical_total >= @physical_max"
             },
-            "block": "Счётчики"
+            "block": "Счётчики",
+            "control": "toggle"
           },
           {
             "key": "is_dead",
@@ -377,7 +381,8 @@
             "expr": {
               "expr": "@critical >= @body * 2"
             },
-            "block": "Счётчики"
+            "block": "Счётчики",
+            "control": "toggle"
           },
           {
             "key": "conscious",
@@ -385,7 +390,8 @@
             "expr": {
               "expr": "все(@stun < @stun_max, @physical_total < @physical_max)"
             },
-            "block": "Счётчики"
+            "block": "Счётчики",
+            "control": "toggle"
           },
           {
             "key": "initiative",
@@ -393,7 +399,8 @@
             "expr": {
               "expr": "@reaction + @intuition + @wound_mod + @condition_mod"
             },
-            "block": "Инициатива"
+            "block": "Инициатива",
+            "control": "big"
           },
           {
             "key": "init_dice",

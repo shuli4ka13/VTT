@@ -27,6 +27,7 @@ import { result, parse, withCount, start } from './dice.ts';
 import { dieConstant } from '../engine/lead-die.ts';
 import type { Check } from '../engine/check.ts';
 import { subsOf, same, instOf, keysOf } from './subs.ts';
+import { same as sameValue } from '../model/sheet-columns.ts';
 import { runnerOf } from './steps.ts';
 import type { Clock } from '../engine/clock.ts';
 import type { Pass } from '../engine/calc.ts';
@@ -462,7 +463,7 @@ export class Run {
 
   private write(sheetId: string, tag: string, value: StoredValue, sink: Sink): void {
     const from = this.read(sheetId, tag);
-    if (Object.is(from, value)) return;
+    if (sameValue(from, value)) return;
     const holder = this.sheet(this.holder(sheetId, tag))!;
     sink.changes.push({ tag, from, to: value, sheetId: holder.id });
     this.state.put({ ...holder, values: { ...holder.values, [tag]: value } });

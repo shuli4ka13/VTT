@@ -271,7 +271,8 @@
             "expr": {
               "expr": "@hp <= @wound_at"
             },
-            "block": "Состояние"
+            "block": "Состояние",
+            "control": "toggle"
           },
           {
             "key": "mortal",
@@ -279,7 +280,8 @@
             "expr": {
               "expr": "@hp <= 0"
             },
-            "block": "Состояние"
+            "block": "Состояние",
+            "control": "toggle"
           },
           {
             "key": "death_penalty",

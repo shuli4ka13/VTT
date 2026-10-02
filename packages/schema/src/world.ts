@@ -23,7 +23,7 @@ export const fieldOption = z.object({
   label: z.string().min(1),
 });
 
-export const control = z.enum(['stepper', 'pips', 'toggle', 'ring', 'bar', 'die', 'choice']);
+export const control = z.enum(['signed', 'big', 'stepper', 'slider', 'pips', 'charges', 'bar', 'toggle', 'ring', 'choice', 'chips', 'die']);
 
 export const rollSpec = z.object({
   die: z.string().min(1),
@@ -66,18 +66,20 @@ export const dieConstant = z.object({
 
 export const tableValue = z.union([z.number(), z.string(), z.boolean()]);
 
+const startValue = z.union([tableValue, z.array(tableValue)]);
+
 export const cellView = z.object({
   label: z.string().optional(),
   block: z.string().optional(),
   roll: z.lazy(() => rollSpec.partial()).optional(),
   control: control.optional(),
-  default: tableValue.optional(),
+  default: startValue.optional(),
 });
 
 export const columnValue = z.object({
   ...typed,
   expr: formula.optional(),
-  default: tableValue.optional(),
+  default: startValue.optional(),
   min: bound.optional(),
   max: bound.optional(),
 });
@@ -290,7 +292,7 @@ export const system = z.object({
   library: z.array(z.lazy(() => compendiumRecord)).optional(),
 }).passthrough();
 
-export const storedValue = z.union([z.number(), z.string(), z.boolean(), z.null()]);
+export const storedValue = z.union([z.number(), z.string(), z.boolean(), z.null(), z.array(z.union([z.number(), z.string(), z.boolean()]))]);
 
 export const wornEffect = z.object({
   effectId: z.string().min(1),

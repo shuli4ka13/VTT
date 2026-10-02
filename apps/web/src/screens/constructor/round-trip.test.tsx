@@ -48,7 +48,14 @@ const labelOf = (el: Element): string => {
   return `${el.tagName.toLowerCase()}${head ? ` «${head.trim().slice(0, 40)}»` : ''} = ${JSON.stringify((el as HTMLInputElement).value)}`;
 };
 
+const IDLE = 'select, input, textarea, [role="radiogroup"]';
+
 const idle = (el: Element): void => {
+  if (el.getAttribute('role') === 'radiogroup') {
+    const on = el.querySelector('[role="radio"][aria-checked="true"]');
+    if (on) fireEvent.click(on);
+    return;
+  }
   if (el instanceof HTMLSelectElement) {
     const value = el.value;
     const other = [...el.options].find(o => o.value !== value)?.value;
@@ -99,9 +106,9 @@ describe('пресет не портится редактором: холост�
         load(base, view.pick);
         render(view.ui());
         reveal();
-        const count = document.querySelectorAll('select, input, textarea').length;
+        const count = document.querySelectorAll(IDLE).length;
         for (let index = 0; index < count; index++) {
-          const el = document.querySelectorAll('select, input, textarea')[index];
+          const el = document.querySelectorAll(IDLE)[index];
           if (!el || (el as HTMLInputElement).disabled) continue;
           const label = labelOf(el);
           act(() => { idle(el); });

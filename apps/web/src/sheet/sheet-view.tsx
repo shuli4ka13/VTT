@@ -98,7 +98,7 @@ function TableBlock({ system, tableId, fields, cell }: {
   };
   const at = new Map(fields.map(f => [`${f.cell!.row}.${f.cell!.column}`, f]));
   return (
-    <div className="sheet-table" style={{ gridTemplateColumns: `minmax(110px, max-content) repeat(${columns.length}, minmax(80px, 160px))` }}>
+    <div className="sheet-table" style={{ gridTemplateColumns: `minmax(110px, max-content) repeat(${columns.length}, minmax(80px, max-content))` }}>
       <span />
       {columns.map(key => <span key={key} className="field__label">{columnLabel(key)}</span>)}
       {rows.map(row => (

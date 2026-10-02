@@ -6,6 +6,7 @@ import { App } from './app.tsx';
 import './ui/tokens.css';
 import './ui/primitives.css';
 import './ui/layout.css';
+import './sheet/views/views.css';
 
 const queries = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },

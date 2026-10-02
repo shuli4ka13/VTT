@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { screen, fireEvent, cleanup } from '@testing-library/react';
+import { screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { renderOpen } from '../../testing/render-open.tsx';
 import { useWorld, emptySystem } from '../../store/world.ts';
 import { SheetTab } from './sheet-tab.tsx';
@@ -65,20 +65,20 @@ describe('вид поля на листе выбирается в констру
     }));
   });
 
-  it('выбор «полоса запаса» ложится в поле, а «обычное поле» убирает его', () => {
+  const gallery = (name = 'Вид') => screen.getByRole('radiogroup', { name });
+  const tile = (name: string, group = 'Вид') => within(gallery(group)).getByRole('radio', { name });
+
+  it('плитка «Полоса» ложится в поле, а «Обычное поле» убирает вид', () => {
     renderOpen(<SheetTab />);
-    const picker = [...document.querySelectorAll('select')]
-      .find(el => [...el.options].some(o => o.value === 'bar'))!;
-    expect(picker).toBeTruthy();
-
-    fireEvent.change(picker, { target: { value: 'bar' } });
+    fireEvent.click(tile('Полоса'));
     expect(fieldsOf(useWorld.getState().system)[0]!.control).toBe('bar');
+    expect(tile('Полоса').getAttribute('aria-checked')).toBe('true');
 
-    fireEvent.change(picker, { target: { value: '' } });
+    fireEvent.click(tile('Обычное поле'));
     expect('control' in useWorld.getState().system.tables!.лист!.columns![0]!).toBe(false);
   });
 
-  it('у вычисляемого поля вида не спрашивают — его не правят руками', () => {
+  it('посчитанному полю предлагают только виды показа', () => {
     useWorld.setState(state => ({
       ...state,
       system: {
@@ -88,8 +88,28 @@ describe('вид поля на листе выбирается в констру
       activeFieldTag: 'мод',
     }));
     renderOpen(<SheetTab />);
-    const picker = [...document.querySelectorAll('select')]
-      .find(el => [...el.options].some(o => o.value === 'bar'));
-    expect(picker).toBeUndefined();
+    expect(within(gallery()).queryByRole('radio', { name: 'Минус и плюс' })).toBeNull();
+    fireEvent.click(tile('Со знаком'));
+    expect(useWorld.getState().system.tables!.лист!.columns![0]!.control).toBe('signed');
+  });
+
+  it('у одной строки таблицы свой вид, «Как у колонки» снимает его', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        tables: { навыки: { owner: 'sheet', key: 'word', columns: [{ key: 'ранг', label: 'Ранг', kind: 'number', control: 'stepper' }],
+          rows: [{ value: 'атлетика', label: 'Атлетика' }, { value: 'скрытность', label: 'Скрытность' }] } },
+      } as never,
+      activeFieldTag: 'навыки.атлетика.ранг',
+    }));
+    renderOpen(<SheetTab />);
+    const group = screen.getAllByRole('radiogroup').find(el => /^Вид только у/.test(el.getAttribute('aria-label') ?? ''))!;
+    fireEvent.click(within(group).getByRole('radio', { name: 'Точки' }));
+    const rows = () => useWorld.getState().system.tables!.навыки!.rows!;
+    expect(rows()[0]!.view).toEqual({ ранг: { control: 'pips' } });
+    expect(rows()[1]!.view).toBeUndefined();
+    fireEvent.click(within(group).getByRole('radio', { name: 'Как у колонки' }));
+    expect(rows()[0]!.view).toBeUndefined();
   });
 });

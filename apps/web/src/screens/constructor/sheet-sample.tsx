@@ -11,7 +11,7 @@ export function setSample(draft: System, tag: string, value: StoredValue): void 
   const field = fieldOf(draft, tag);
   const table = field ? draft.tables?.[field.home] : undefined;
   if (!field || !table || field.value.kind !== 'stored' || value === null) return;
-  const blank = value === '';
+  const blank = value === '' || (Array.isArray(value) && !value.length);
   if (field.cell) {
     const mark = field.cell;
     const row = (table.rows ?? []).find(r => rowKeyOf(r) === mark.row);

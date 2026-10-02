@@ -260,7 +260,8 @@
             "expr": {
               "expr": "если(@class != \"\", таблица(\"classes\", @class, \"evasion\"), 10) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"evasion_bonus\"), 0) + @evasion_bonus"
             },
-            "block": "Уклонение и броня"
+            "block": "Уклонение и броня",
+            "control": "big"
           },
           {
             "key": "armor_score",
@@ -361,7 +362,8 @@
             "expr": {
               "expr": "все(@hp_max > 0, @hp >= @hp_max)"
             },
-            "block": "Здоровье"
+            "block": "Здоровье",
+            "control": "toggle"
           },
           {
             "key": "stress_full",
@@ -369,7 +371,8 @@
             "expr": {
               "expr": "все(@stress_max > 0, @stress >= @stress_max)"
             },
-            "block": "Здоровье"
+            "block": "Здоровье",
+            "control": "toggle"
           },
           {
             "key": "stress_free",

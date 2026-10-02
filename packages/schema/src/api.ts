@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { system, compendium, sheet } from './world.ts';
+import { system, compendium, sheet, storedValue } from './world.ts';
 
 export const loginRequest = z.object({
   name: z.string().min(1).max(64),
@@ -186,7 +186,7 @@ export const clientMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('room:turn'), intent: turnIntent }),
   z.object({ type: z.literal('room:answer'), intent: answerIntent }),
   z.object({ type: z.literal('room:cancel'), intent: cancelIntent }),
-  z.object({ type: z.literal('sheet:set'), roomId: z.string(), sheetId: z.string(), tag: z.string(), value: z.union([z.number(), z.string(), z.boolean(), z.null()]) }),
+  z.object({ type: z.literal('sheet:set'), roomId: z.string(), sheetId: z.string(), tag: z.string(), value: storedValue }),
 
   z.object({ type: z.literal('sheet:create'), roomId: z.string(), name: z.string().min(1).max(64), of: z.string().min(1).optional() }),
 

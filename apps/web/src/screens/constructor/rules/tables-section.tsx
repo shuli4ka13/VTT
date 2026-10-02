@@ -1,4 +1,5 @@
-import { ColumnSheetFields } from '../table-field.tsx';
+import { ColumnSheetFields, ColumnViewField } from '../table-field.tsx';
+import { viewsFor, familyOf } from '../../../sheet/views/index.tsx';
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
 import { ROW, isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields } from '@vtt/engine/model/sheet-columns';
 import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty, Field, Chip } from '../../../ui/primitives.tsx';
@@ -287,7 +288,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, extr
       column={{ label: column.label ?? '', kind: column.kind ?? (single ? 'number' : 'text'), from: column.from, many: column.many, expr: column.expr?.expr, min: column.min, max: column.max }}
       kinds={single ? FIELD_KINDS : book ? PROP_KINDS : COLUMN_KINDS}
       tables={others}
-      many={!single}
+      many
       formulaHint={single ? 'Формула для всех листов' : book ? 'Формула для всех записей' : 'Формула для всех строк'}
       where={`${table.label || id} · ${name}`}
       {...(single ? {} : { names: rowNames(system, id) })}
@@ -303,6 +304,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, extr
       onClose={onClose}
       preview={single && column.expr !== undefined
         ? <LiveValue system={system} compendium={compendium} tag={column.key} source={column.expr.expr} /> : null}
+      lead={single || onSheet(table) ? <ColumnViewField tableId={id} column={column} system={system} /> : null}
       extra={<>
         {single || onSheet(table) ? <ColumnSheetFields tableId={id} column={column} system={system} /> : null}
         {book ? (
@@ -342,10 +344,12 @@ function applyPatch(c: TableColumn, patch: ColumnPatch): void {
     if (patch.kind !== 'number') { delete c.min; delete c.max; }
   }
   if (patch.from !== undefined) { if (patch.from) c.from = patch.from; else delete c.from; }
-  if (patch.many !== undefined) { if (patch.many) c.many = true; else delete c.many; }
+  if (patch.many !== undefined && Boolean(patch.many) !== Boolean(c.many)) { delete c.default; if (patch.many) c.many = true; else delete c.many; }
   if (patch.expr !== undefined) { if (patch.expr !== null) c.expr = { expr: patch.expr }; else delete c.expr; }
   if (patch.min !== undefined) { if (patch.min !== null) c.min = patch.min; else delete c.min; }
   if (patch.max !== undefined) { if (patch.max !== null) c.max = patch.max; else delete c.max; }
+  const computed = c.expr !== undefined;
+  if (c.control && !viewsFor(familyOf(c.kind ?? (computed ? undefined : 'number'), c.many, computed), computed).includes(c.control)) delete c.control;
 }
 
 const defaultWidth = (column?: TableColumn): number =>

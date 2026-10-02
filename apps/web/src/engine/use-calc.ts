@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import type { System, Sheet, Compendium } from '@vtt/schema';
+import type { System, Sheet, Compendium, FieldOption } from '@vtt/schema';
+import { compile } from '@vtt/engine/formula';
 import { newPass, calc, findField, livesOn } from '@vtt/engine/engine/calc';
 import { hasDesk, blankDesk } from '@vtt/engine/events/desk';
 import { resolveRoll } from '@vtt/engine/engine/modifiers';
@@ -17,6 +18,8 @@ export interface Reader {
   rollOf: (tags: string[]) => RollResolution | null;
 
   storedOf?: (tag: string) => unknown;
+
+  measure?: (expr: string) => Computed;
 }
 
 export function useReader(system: System, sheet: Sheet | null, compendium: Compendium, shared?: readonly Sheet[] | null, only?: Scope): Reader {
@@ -26,6 +29,7 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
         valueOf: () => ({ ok: false, error: 'персонаж не выбран' }),
         rollOf: () => null,
         storedOf: () => undefined,
+        measure: () => ({ ok: false, error: 'персонаж не выбран' }),
       };
       return idle;
     }
@@ -41,6 +45,7 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
         valueOf: () => ({ ok: false, error: message }),
         rollOf: () => null,
         storedOf: tag => sheet.values[tag],
+        measure: () => ({ ok: false, error: message }),
       };
       return broken;
     }
@@ -60,14 +65,22 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
         const value = holder.values[tag];
         return value !== undefined ? value : field?.value.kind === 'stored' ? field.value.default : undefined;
       },
+      measure: expr => {
+        try { return { ok: true, value: compile(expr).evaluate(pass.resolve) }; }
+        catch (err) { return { ok: false, error: (err as Error).message }; }
+      },
     };
     return reader;
 
   }, [system, sheet, compendium, shared, only]);
 }
 
-export function show(value: Computed): { text: string; title?: string; bad: boolean } {
+export function show(value: Computed, options?: FieldOption[]): { text: string; title?: string; bad: boolean } {
   if (!value.ok) return { text: '—', title: value.error, bad: true };
+  if (Array.isArray(value.value)) {
+    const labels = value.value.map(item => options?.find(option => String(option.value) === String(item))?.label ?? String(item));
+    return { text: labels.length ? labels.join(', ') : '—', bad: false };
+  }
   if (typeof value.value === 'boolean') return { text: value.value ? 'да' : 'нет', bad: false };
   if (value.value === null || value.value === undefined) return { text: '—', bad: false };
   return { text: String(value.value), bad: false };
