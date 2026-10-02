@@ -65,7 +65,7 @@ export function perform(world: PerformWorld, op: Op): Performed {
     if (!(err instanceof Pause)) throw err;
     const log = [...run.state.log];
     return {
-      kind: 'paused', sheets: [...run.state.sheets], clock: run.clock, log: render(log, world.system, world.compendium, run.state.sheets),
+      kind: 'paused', sheets: [...run.state.sheets], clock: world.clock, log: render(log, world.system, world.compendium, run.state.sheets),
       entries: log, journal: ext.snapshot(), fresh: ext.fresh, question: err.question,
     };
   }

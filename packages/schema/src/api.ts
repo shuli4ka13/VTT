@@ -91,7 +91,7 @@ export const member = z.object({
 export const pendingState = z.object({
   id: z.string(),
   sheetId: z.string(),
-  stage: z.enum(['target', 'after', 'seen']),
+  stage: z.enum(['target', 'after', 'seen', 'moment']),
   question: z.string(),
   options: z.array(z.object({ id: z.string(), label: z.string() })),
   preview: z.array(z.string()),

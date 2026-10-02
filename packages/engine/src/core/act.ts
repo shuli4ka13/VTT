@@ -11,7 +11,7 @@ import { Run, newSink, reportOf } from './run.ts';
 import { runnerOf, onceStep } from './steps.ts';
 import { CUT_WORDS } from './limits.ts';
 import type { Journal, Mode, Question } from './external.ts';
-import type { Frame, Memo, Delivery, Delivered } from './run.ts';
+import type { Frame, Memo, Delivery, Delivered, Claims } from './run.ts';
 import type { Entry } from './log.ts';
 import type { RollResult } from './dice.ts';
 import type { StepData } from './steps.ts';
@@ -84,9 +84,10 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
     const args = (action.binding.args || {}) as Record<string, unknown>;
     const props = propsOf(action.record, system, entryOf(actorSheet, action.record.id));
     const paramDefs = effect.params ?? [];
-    const claims: Record<string, readonly string[]> = {};
-    for (const id of targets) if (intent.targetEdits?.length) claims[id] = intent.targetEdits;
-    if (intent.edits?.length) claims[actor] = intent.edits;
+    const claims: Claims = {
+      ...(intent.edits?.length ? { sender: intent.edits } : {}),
+      ...(intent.targetEdits?.length ? { receiver: intent.targetEdits } : {}),
+    };
 
     const top = (path: Path, owner: string, extra: Partial<Frame> = {}): Frame => ({
       path, effectId: action.effect, label: action.label, owner,
@@ -139,9 +140,8 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
       const stepIds = new Set(steps.map(step => step.id).filter((id): id is string => typeof id === 'string' && id !== ''));
       memo = { top: top(root, label), steps, stepIds };
       const gate = steps.findIndex(step => onceStep(step as StepData) && runnerOf(step.type).mayBreak === true);
-      const sink = newSink();
       steps.forEach((step, index) => {
-        if (onceStep(step as StepData) && (gate < 0 || index <= gate)) run.memoized(memo!, index, sink);
+        if (onceStep(step as StepData) && (gate < 0 || index <= gate)) run.memoized(memo!, index);
       });
     }
 

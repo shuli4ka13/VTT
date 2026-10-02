@@ -1,6 +1,8 @@
 import type { Die } from '../model/types.ts';
 import type { Path, Window } from './path.ts';
 
+export type { Window };
+
 export interface Journal {
   dice: Record<string, number>;
   answers: Record<string, string[]>;

@@ -28,15 +28,17 @@ export function instOf(entry: WornEffect, granted: boolean, nth: number): string
   return granted ? `+${entry.effectId}` : `${entry.effectId}@${nth}`;
 }
 
-export function subsOf(system: System, sheet: Sheet, compendium: Compendium | null): Sub[] {
+export type InstOf = (entry: WornEffect, granted: boolean, nth: number) => string;
+
+export function subsOf(system: System, sheet: Sheet, compendium: Compendium | null, inst: InstOf = instOf): Sub[] {
   const seen = new Map<string, number>();
   const attached = new Set(sheet.effects ?? []);
   return wornEffects(system, sheet, { strict: false, compendium }).flatMap(({ id, effect, entry }) => {
     const nth = seen.get(id) ?? 0;
     seen.set(id, nth + 1);
-    const inst = instOf(entry, !attached.has(entry), nth);
+    const own = inst(entry, !attached.has(entry), nth);
     return handlersOf(effect).map((handler, index): Sub => ({
-      sheetId: sheet.id, effectId: id, effect, handler, key: handlerKey(id, index), inst, entry,
+      sheetId: sheet.id, effectId: id, effect, handler, key: handlerKey(id, index), inst: own, entry,
     }));
   });
 }

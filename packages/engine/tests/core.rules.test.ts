@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { act } from '../src/core/act.ts';
 import { emptyJournal } from '../src/core/external.ts';
+import { perform } from '../src/core/perform.ts';
+import { CUT_WORDS } from '../src/core/limits.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const queue = (...values: number[]) => {
@@ -122,5 +124,72 @@ describe('новое ядро: сознательные изменения', () 
     const second = act({ system, compendium: book, clock: null, sheets, die: queue(), journal: { ...first.journal, answers: { ...first.journal.answers, [first.question.key]: ['парир'] } } }, { actionId: 'приём:0', fromId: 'а', toIds: ['б'] });
     expect(second.kind).toBe('done');
     expect(second.sheets.find(s => s.id === 'б')!.effects).toEqual([{ effectId: 'парир', usesLeft: 1 }]);
+  });
+
+  it('кинуть() в прибавке порога бросает свою кость, а не делит ключ с ведущей', () => {
+    const system = world({
+      удар: { label: 'Удар', activation: 'manual', steps: [{ id: 'б', type: 'threshold', roll: { die: { constant: 'к20' }, bonus: { expr: "кинуть('1к4')" } }, versus: { expr: '100' }, continueOn: 'always' }] },
+    });
+    const out = play(system, [sheet('а'), sheet('б')], 'б', [15, 3]);
+    expect(out.kind).toBe('done');
+    expect(JSON.stringify(out.entries)).toContain('"total":18');
+  });
+
+  it('стопка без id копий: первая сгорела — вторая всё равно срабатывает и сгорает сама', () => {
+    const system = world({
+      удар: { label: 'Удар', activation: 'manual', steps: [hit('1')] },
+      щит: { label: 'Щит', activation: 'passive', reapply: 'stack', duration: { kind: 'uses', max: 1 }, on: [{ on: 'affected', of: 'удар', steps: [{ type: 'apply', target: { tag: 'хп' }, direction: 'add', value: { expr: '1' } }] }] },
+    });
+    const out = play(system, [sheet('а'), sheet('б', {}, [{ effectId: 'щит', usesLeft: 1 }, { effectId: 'щит', usesLeft: 1 }])], 'б', []);
+    expect(value(out, 'б', 'хп')).toBe(21);
+    expect(out.sheets.find(s => s.id === 'б')!.effects).toEqual([]);
+  });
+
+  it('«при наложении» двух копий одним действием — у каждой своя кость', () => {
+    const system = world({
+      удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'status', effect: { const: 'яд' } }, { type: 'status', effect: { const: 'яд' } }] },
+      яд: { label: 'Яд', activation: 'passive', reapply: 'stack', attach: [hit("кинуть('1к6')")] },
+    });
+    const out = play(system, [sheet('а'), sheet('б')], 'б', [3, 4]);
+    expect(value(out, 'б', 'хп')).toBe(13);
+  });
+
+  it('предел во вложенной доставке — отказ обработчика целиком: цена и заряд не тратятся', () => {
+    const system = world({
+      удар: { label: 'Удар', activation: 'manual', steps: [hit('1')] },
+      месть: {
+        label: 'Месть', activation: 'passive', duration: { kind: 'uses', max: 3 },
+        on: [{ on: 'affected', of: 'удар', to: 'other', cost: [hit('1', 'ки')], steps: [hit('2')] }],
+      },
+    }, { limits: { budget: 0 } } as never);
+    const out = play(system, [sheet('а'), sheet('б', { ки: 2 }, [{ effectId: 'месть', usesLeft: 3 }])], 'б', []);
+    expect(value(out, 'б', 'ки')).toBe(2);
+    expect(out.sheets.find(s => s.id === 'б')!.effects).toEqual([{ effectId: 'месть', usesLeft: 3 }]);
+    expect(value(out, 'а', 'хп')).toBe(20);
+    expect(out.log).toContain(CUT_WORDS);
+  });
+
+  it('подписка на момент с вопросом спрашивает; «другому» без другого не платит и не тратит заряд', () => {
+    const system = world({
+      удар: { label: 'Удар', activation: 'manual', steps: [hit('1')] },
+      вдох: { label: 'Второе дыхание', activation: 'passive', on: [{ on: 'moment:turn-start', confirm: true, steps: [{ type: 'apply', target: { tag: 'хп' }, direction: 'add', value: { expr: '3' } }] }] },
+      шип: { label: 'Шип', activation: 'passive', duration: { kind: 'uses', max: 2 }, on: [{ on: 'moment:turn-start', to: 'other', steps: [hit('1')] }] },
+    });
+    const sheets = [sheet('а', {}, [{ effectId: 'вдох' }, { effectId: 'шип', usesLeft: 2 }]), sheet('б')];
+    const first = perform({ system, compendium: book, clock: null, sheets, die: queue() }, { op: 'turn', turn: 'start', order: ['а', 'б'] });
+    expect(first.kind).toBe('paused');
+    if (first.kind !== 'paused') return;
+    expect(first.question.window).toBe('moment');
+    expect(first.clock).toBeNull();
+    const second = perform({ system, compendium: book, clock: null, sheets, die: queue(), journal: { ...first.journal, answers: { ...first.journal.answers, [first.question.key]: ['вдох'] } } }, { op: 'turn', turn: 'start', order: ['а', 'б'] });
+    expect(second.kind).toBe('done');
+    expect(value(second, 'а', 'хп')).toBe(23);
+    expect(second.sheets.find(s => s.id === 'а')!.effects).toContainEqual({ effectId: 'шип', usesLeft: 2 });
+  });
+
+  it('{ tag } в значении читается на листе, где идёт шаг (у цели)', () => {
+    const system = world({ удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { tag: 'ки' } }] } });
+    const out = play(system, [sheet('а', { ки: 2 }), sheet('б', { ки: 7 })], 'б', []);
+    expect(value(out, 'б', 'хп')).toBe(13);
   });
 });

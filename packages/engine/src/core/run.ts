@@ -71,6 +71,11 @@ export function reportOf(kind: Report['kind'], effect: string, from: string, lab
   };
 }
 
+export interface Claims {
+  sender?: readonly string[];
+  receiver?: readonly string[];
+}
+
 export interface Memo {
   top: Frame;
   steps: Step[];
@@ -91,7 +96,7 @@ export interface Frame {
   paramDefs: Param[];
   props: Record<string, unknown> | null;
   inputs?: Record<string, number | string>;
-  claims: Readonly<Record<string, readonly string[]>>;
+  claims: Claims;
   actor: boolean;
   hop: number;
   source: string;
@@ -121,7 +126,7 @@ export interface Delivery {
   paramDefs?: Param[];
   props?: Record<string, unknown> | null;
   inputs?: Record<string, number | string>;
-  claims?: Readonly<Record<string, readonly string[]>>;
+  claims?: Claims;
   memo?: Memo;
   rolls?: Record<string, RollResult>;
 }
@@ -154,16 +159,38 @@ export class Run {
   private readonly chain: string[] = [];
   private probing = 0;
   private seeing = 0;
+  private readonly insts = new WeakMap<WornEffect, string>();
   clock: Clock | null;
 
   constructor(readonly world: World, readonly ext: External) {
     this.clock = world.clock;
+    for (const sheet of world.sheets) {
+      const counts = new Map<string, number>();
+      for (const entry of sheet.effects ?? []) {
+        const nth = counts.get(entry.effectId) ?? 0;
+        counts.set(entry.effectId, nth + 1);
+        this.insts.set(entry, instOf(entry, false, nth));
+      }
+    }
     this.views = new Views(world.system, world.compendium);
     this.limits = limitsOf(world.system);
     this.state = new State(world.sheets, this.limits.budget);
   }
 
   get system(): System { return this.world.system; }
+
+  readonly instOf = (entry: WornEffect, granted: boolean, nth: number): string =>
+    (typeof (entry as { inst?: unknown }).inst === 'string' && (entry as { inst?: string }).inst) || (granted ? `+${entry.effectId}` : this.insts.get(entry) ?? `${entry.effectId}@${nth}`);
+
+  subs(sheet: Sheet): Sub[] {
+    return subsOf(this.system, sheet, this.world.compendium, this.instOf);
+  }
+
+  private instIn(sheets: readonly Sheet[], sheetId: string, entry: WornEffect): string {
+    const list = sheets.find(s => s.id === sheetId)?.effects ?? [];
+    const nth = list.filter(other => other.effectId === entry.effectId).indexOf(entry);
+    return this.instOf(entry, false, Math.max(0, nth));
+  }
 
   get isProbing(): boolean { return this.probing > 0; }
 
@@ -205,7 +232,7 @@ export class Run {
       const runner = runnerOf(step.type);
       let prepared: Prepared | undefined;
       if (runner.prepare && runner.once?.(step) && frame.memo) {
-        const memo = this.memoized(frame.memo, index, sink);
+        const memo = this.memoized(frame.memo, index);
         if (memo && 'skipped' in memo) {
           sink.trace.push({ step: name, type: step.type, skipped: true, ...mark });
           continue;
@@ -224,7 +251,7 @@ export class Run {
     return { results, rolls: known, stopped: null };
   }
 
-  memoized(memo: Memo, index: number, sink: Sink): Prepared | { skipped: true } | null {
+  memoized(memo: Memo, index: number): Prepared | { skipped: true } | null {
     const step = memo.steps[index] as StepData;
     const name = step.id ?? index;
     const path = memo.top.path.step(name);
@@ -248,7 +275,6 @@ export class Run {
     }
     this.state.remember(path.key, made);
     this.state.write(...own.after);
-    sink.reactions.push(...own.reactions);
     return made;
   }
 
@@ -256,7 +282,7 @@ export class Run {
     const names = this.view(frame.names);
     const die = given ?? this.ext.dice(path);
     const ref: RefContext = {
-      pass: names, die, owner: frame.owner, props: frame.props, paramDefs: frame.paramDefs, params: frame.args,
+      pass: this.view(frame.here), die, owner: frame.owner, props: frame.props, paramDefs: frame.paramDefs, params: frame.args,
       ...(frame.inputs ? { inputs: frame.inputs } : {}),
       results, sender: rolls, stepIds,
       ...(frame.alone ? { alone: true } : {}),
@@ -291,7 +317,7 @@ export class Run {
         if (typeof value !== 'boolean') throw new EngineError(`${frame.owner || 'правило'}: условие шага должно давать да/нет, а дало ${JSON.stringify(value)}`);
         return value;
       },
-      roll: (side, spec, tags) => this.roll(frame, side, spec, tags, path.nth(rollsMade++), sink),
+      roll: (side, spec, tags) => this.roll(frame, side, spec, tags, path.phase('roll').nth(rollsMade++), sink),
       read: tag => this.read(frame.here, tag),
       write: (tag, value) => this.write(frame.here, tag, value, sink),
       attach: (effectId, carry) => this.attach(frame, effectId, carry, sink, path),
@@ -328,8 +354,9 @@ export class Run {
     const rollerId = side === 'sender' ? frame.names : (frame.receiver ?? frame.names);
     const pick = (...ids: (string | null | undefined)[]): string | null => ids.find(id => id && id !== rollerId) ?? null;
     const againstId = side === 'sender' ? pick(frame.opponent, frame.receiver, frame.sender) : pick(frame.names, frame.sender);
+    const claims = side === 'sender' ? frame.claims.sender : frame.receiver ? frame.claims.receiver : undefined;
     return throwDice({
-      spec, tags, claims: frame.claims[rollerId] ?? [],
+      spec, tags, claims: claims ?? [],
       roller: this.view(rollerId),
       against: againstId && this.sheet(againstId) ? this.view(againstId) : null,
       die: this.ext.dice(path),
@@ -447,7 +474,8 @@ export class Run {
           entries.push(...this.ask({
             key: call.path.ask('target', call.to).key, sheetId: call.to, window: 'target', label: call.top ? '' : call.label,
             offers: offers.map(offer => offer.offer), results: tried.results, preview: call.top ? previewOf(this.system, tried) : [],
-          }, offers, call.effectId, tried.emitted, call.from, call.hop, call.path.ask('target', call.to)));
+          }, offers, call.from, call.hop, call.path.ask('target', call.to)));
+          flush(entries);
         }
         const sink = newSink();
         const out = this.body(call, sink);
@@ -455,7 +483,7 @@ export class Run {
         delivered?.(out, entries);
         done.push(out);
       } catch (err) {
-        if (!(err instanceof Limit)) throw err;
+        if (!(err instanceof Limit) || this.handlers.length) throw err;
         entries.push({ text: CUT_WORDS });
       }
       flush(entries);
@@ -469,7 +497,7 @@ export class Run {
       entries.push(...this.ask({
         key: path.key, sheetId: call.to, window: 'after', label: call.top ? '' : call.label,
         offers: offers.map(offer => offer.offer), results: out.results, preview: [],
-      }, offers, call.effectId, out.emitted, call.from, call.hop, path));
+      }, offers, call.from, call.hop, path));
       flush(entries);
     }
     return collected;
@@ -500,7 +528,7 @@ export class Run {
     const sheet = this.sheet(sheetId);
     if (!sheet) return;
     const hearing: Hearing = { kind: 'action', moment, level, effect: effectId, emitted, confirm: false, watch: false };
-    for (const sub of subsOf(this.system, sheet, this.world.compendium)) {
+    for (const sub of this.subs(sheet)) {
       const got = heard(sub, hearing);
       if (!got) continue;
       const out = this.react(sub, {
@@ -520,7 +548,7 @@ export class Run {
       if (sheet.id === actorId || sheet.id === targetId) continue;
       const live = this.sheet(sheet.id);
       if (!live) continue;
-      for (const sub of subsOf(this.system, live, this.world.compendium)) {
+      for (const sub of this.subs(live)) {
         const got = heard(sub, hearing);
         if (!got) continue;
         const out = this.react(sub, {
@@ -536,7 +564,7 @@ export class Run {
 
   private live(sub: Sub): Sub | null {
     const sheet = this.sheet(sub.sheetId);
-    return sheet ? subsOf(this.system, sheet, this.world.compendium).find(other => same(other, sub)) ?? null : null;
+    return sheet ? this.subs(sheet).find(other => same(other, sub)) ?? null : null;
   }
 
   private holds(sub: Sub, seed: Record<string, unknown>): boolean {
@@ -586,6 +614,7 @@ export class Run {
       if (o.chosen) entries.push({ text: `«${label}» не состоялось: условие уже не выполняется` });
       return { lead, entries };
     }
+    if (sub.handler.to === 'other' && !o.other) return { lead, entries };
     const mark = sub.key;
     if (this.handlers.filter(one => one === mark).length >= this.limits.handlerDepth) {
       return { lead, entries: [{ text: CUT_WORDS }] };
@@ -646,9 +675,12 @@ export class Run {
     for (const entry of sheet.effects ?? []) {
       const nth = counts.get(entry.effectId) ?? 0;
       counts.set(entry.effectId, nth + 1);
-      if (entry.effectId !== sub.effectId || instOf(entry, false, nth) !== sub.inst) { effects.push(entry); continue; }
+      if (entry.effectId !== sub.effectId || this.instOf(entry, false, nth) !== sub.inst) { effects.push(entry); continue; }
       const left = Number(entry.usesLeft ?? 1) - 1;
-      if (left > 0) effects.push({ ...entry, usesLeft: left });
+      if (left <= 0) continue;
+      const next = { ...entry, usesLeft: left };
+      this.insts.set(next, sub.inst);
+      effects.push(next);
     }
     this.state.put({ ...sheet, effects });
   }
@@ -662,15 +694,42 @@ export class Run {
     const sheet = this.sheet(sheetId);
     if (!sheet) return;
     const seed = { moment: { moment, sheet: sheetId, round: this.clock?.round ?? 0 } };
-    for (const sub of subsOf(this.system, sheet, this.world.compendium)) {
-      if (!heard(sub, { kind: 'moment', moment })) continue;
-      this.momentReact(sub, path.phase(moment).handler(sheetId, sub.key, sub.inst), seed,
-        `момент «${MOMENTS[moment]}» у «${labelOf(sub)}»`, labelOf(sub));
-    }
+    this.hooked(sheetId, { kind: 'moment', moment }, path.phase(moment), seed, MOMENTS[moment],
+      sub => `момент «${MOMENTS[moment]}» у «${labelOf(sub)}»`);
   }
 
-  private momentReact(sub: Sub, path: Path, seed: Record<string, unknown>, owner: string, label: string, builtin = false): void {
-    const out = this.react(sub, { path, seed, other: null, hop: 0, chosen: false, owner, kind: 'moment', label, builtin });
+  private hooked(sheetId: string, hearing: Hearing, path: Path, seed: Record<string, unknown>, about: string, owner: (sub: Sub) => string): void {
+    const sheet = this.sheet(sheetId);
+    if (!sheet) return;
+    const all = this.subs(sheet).filter(sub => heard(sub, hearing));
+    for (const sub of all.filter(one => !one.handler.confirm)) {
+      this.momentReact(sub, path.handler(sheetId, sub.key, sub.inst), seed, owner(sub), labelOf(sub));
+    }
+    const qpath = path.ask('moment', sheetId);
+    const byKey = new Map<string, { offer: Offer; subs: { sub: Sub }[] }>();
+    for (const sub of all.filter(one => one.handler.confirm)) {
+      const live = this.live(sub);
+      if (!live) continue;
+      const full = { ...seed, worn: wornSeed(live.entry) };
+      if (!this.holds(live, full) || this.refusal(live, qpath.pick(live.key).pay(), full, 0)) continue;
+      const known = byKey.get(live.key);
+      if (known) known.subs.push({ sub: live });
+      else byKey.set(live.key, { offer: { id: live.key, label: labelOf(live) }, subs: [{ sub: live }] });
+    }
+    if (!byKey.size) return;
+    const { chosen, skipped } = this.choose({
+      key: qpath.key, sheetId, window: 'moment', label: about, offers: [...byKey.values()].map(one => one.offer), results: seed, preview: [],
+    });
+    for (const id of chosen) {
+      const found = byKey.get(id)!;
+      const pick = found.subs.find(({ sub }) => this.live(sub) && !this.refusal(sub, qpath.pick(id).pay(), { ...seed, worn: wornSeed(sub.entry) }, 0)) ?? found.subs[0]!;
+      this.momentReact(pick.sub, qpath.pick(id), seed, owner(pick.sub), labelOf(pick.sub), false, true);
+    }
+    if (skipped) this.state.write({ text: `${this.sheet(sheetId)?.name ?? sheetId} пропускает реакцию` });
+  }
+
+  private momentReact(sub: Sub, path: Path, seed: Record<string, unknown>, owner: string, label: string, builtin = false, chosen = false): void {
+    const out = this.react(sub, { path, seed, other: null, hop: 0, chosen, owner, kind: 'moment', label, builtin });
     const nested = [...out.lead, ...out.entries];
     const folded = nested.flatMap(entry => ('report' in entry ? [entry.report] : []));
     if (out.report) {
@@ -708,15 +767,15 @@ export class Run {
       const changes = lifecycleChanges(previous, [...this.state.sheets], { system: this.system, compendium: this.world.compendium, die: () => 1 });
       previous = [...this.state.sheets];
       if (!changes.length) return;
-      for (const [n, change] of changes.entries()) {
+      for (const change of changes) {
         const effect = this.system.effects[change.entry.effectId];
         if (!effect) continue;
         const live = this.sheet(change.sheetId);
         if (!live) continue;
         const name = effect.label ?? change.entry.effectId;
         const own = effect[change.turn];
-        const inst = (change.entry as { inst?: string }).inst ?? `${change.entry.effectId}@${n}`;
-        const at = path.nth(wave).phase(change.turn).at(change.sheetId).phase(change.entry.effectId);
+        const inst = this.instIn(change.turn === 'attach' ? this.state.sheets : previous, change.sheetId, change.entry);
+        const at = path.nth(wave).phase(change.turn).at(change.sheetId).phase(change.entry.effectId).phase(inst);
         if (own?.length) {
           const hook: Sub = {
             sheetId: change.sheetId, effectId: change.entry.effectId, effect, entry: change.entry, inst,
@@ -725,13 +784,8 @@ export class Run {
           this.momentReact(hook, at.phase('hook'), {}, `«${name}» ${HOOK_WORDS[change.turn]}`, `${name} · ${HOOK_WORDS[change.turn]}`, true);
         }
         const hearing: Hearing = change.turn === 'attach' ? { kind: 'gained', effect: change.entry.effectId } : { kind: 'lost', effect: change.entry.effectId };
-        const sheet = this.sheet(change.sheetId);
-        if (!sheet) continue;
-        for (const sub of subsOf(this.system, sheet, this.world.compendium)) {
-          if (!heard(sub, hearing)) continue;
-          this.momentReact(sub, at.handler(change.sheetId, sub.key, sub.inst), { about: { carry: null, ...change.entry } },
-            `«${name}» ${HEARD_WORDS[change.turn]} у «${labelOf(sub)}»`, labelOf(sub));
-        }
+        this.hooked(change.sheetId, hearing, at, { about: { carry: null, ...change.entry } }, `«${name}» ${HEARD_WORDS[change.turn]}`,
+          sub => `«${name}» ${HEARD_WORDS[change.turn]} у «${labelOf(sub)}»`);
       }
     }
   }
@@ -742,25 +796,25 @@ export class Run {
     for (let wave = 0; ; wave += 1) {
       if (wave > this.limits.settleRounds * 4) throw new EngineError('поля будят эффекты без остановки');
       const now = [...this.state.sheets];
-      const found: { sub: Sub; tag: string; value: unknown }[] = [];
+      const found = new Map<string, { sheetId: string; tag: string; value: unknown }>();
       for (const sheet of now) {
         const was = previous.find(s => s.id === sheet.id);
         if (!was || was === sheet) continue;
-        for (const sub of subsOf(this.system, sheet, this.world.compendium)) {
+        for (const sub of this.subs(sheet)) {
           const tag = sub.handler.on?.startsWith('field:') ? sub.handler.on.slice('field:'.length) : null;
-          if (!tag) continue;
+          if (!tag || found.has(`${sheet.id}\u0000${tag}`)) continue;
           const after = this.valueIn(now, sheet.id, tag);
           if (!truthy(after) || truthy(this.valueIn(previous, sheet.id, tag))) continue;
-          found.push({ sub, tag, value: after });
+          found.set(`${sheet.id}\u0000${tag}`, { sheetId: sheet.id, tag, value: after });
         }
       }
       previous = now;
-      if (!found.length) return any;
+      if (!found.size) return any;
       any = true;
-      for (const { sub, tag, value } of found) {
+      for (const { sheetId, tag, value } of found.values()) {
         const label = findField(this.system, tag)?.label ?? tag;
-        this.momentReact(sub, path.nth(wave).handler(sub.sheetId, sub.key, sub.inst), { field: { tag, value } },
-          `поле «${label}» стало верным у «${labelOf(sub)}»`, labelOf(sub));
+        this.hooked(sheetId, { kind: 'field', tag }, path.nth(wave).phase(tag), { field: { tag, value } }, `поле «${label}» стало верным`,
+          sub => `поле «${label}» стало верным у «${labelOf(sub)}»`);
       }
     }
   }
@@ -804,7 +858,7 @@ export class Run {
     if (!sheet) return [];
     const hearing: Hearing = { kind: 'action', moment: window === 'target' ? 'targeted' : 'affected', level: 'any', effect: effectId, emitted, confirm: true, watch: false };
     const byKey = new Map<string, { offer: Offer; subs: { sub: Sub; event?: EmittedEvent }[] }>();
-    for (const sub of subsOf(this.system, sheet, this.world.compendium)) {
+    for (const sub of this.subs(sheet)) {
       const got = heard(sub, hearing);
       if (!got) continue;
       const seed = { ...withEvent(results, got.event), worn: wornSeed(sub.entry) };
@@ -817,13 +871,17 @@ export class Run {
     return [...byKey.values()];
   }
 
-  ask(question: Question, offers: { offer: Offer; subs: { sub: Sub; event?: EmittedEvent }[] }[], _effectId: string,
-    _emitted: readonly EmittedEvent[], other: string | null, hop: number, path: Path): Entry[] {
+  ask(question: Question, offers: { offer: Offer; subs: { sub: Sub; event?: EmittedEvent }[] }[],
+    other: string | null, hop: number, path: Path): Entry[] {
     const { chosen, skipped } = this.choose(question);
     const entries: Entry[] = [];
     for (const id of chosen) {
       const found = offers.find(offer => offer.offer.id === id)!;
-      const pick = found.subs.find(({ sub }) => this.live(sub)) ?? found.subs[0]!;
+      const ready = ({ sub, event }: { sub: Sub; event?: EmittedEvent }): boolean => {
+        const live = this.live(sub);
+        return Boolean(live) && !this.refusal(live!, path.pick(id).pay(), { ...withEvent(question.results, event), worn: wornSeed(live!.entry) }, hop);
+      };
+      const pick = found.subs.find(ready) ?? found.subs.find(({ sub }) => this.live(sub)) ?? found.subs[0]!;
       const out = this.react(pick.sub, {
         path: path.pick(id), seed: withEvent(question.results, pick.event), other, hop, chosen: true,
         owner: `реакция «${labelOf(pick.sub)}»`,
@@ -863,7 +921,7 @@ export class Run {
           const sheet = this.sheet(sheetId);
           if (!sheet) return [];
           const hearing: Hearing = { kind: 'action', moment: 'seen', level: 'any', effect: effectId, emitted: [], confirm, watch };
-          return subsOf(this.system, sheet, this.world.compendium)
+          return this.subs(sheet)
             .filter(sub => heard(sub, hearing) && (watch || sub.handler.as === as) && tagsHold(sub.handler.tags, tags));
         };
         for (const sub of listening(false)) {
