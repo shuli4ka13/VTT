@@ -8,6 +8,7 @@ import { useWorld } from '../../../store/world.ts';
 import { openAll } from '../../../testing/render-open.tsx';
 import { within, stepCard } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
+import { groupSteps } from '../cards.ts';
 
 const worldOf = (id: string) => SAMPLE_WORLDS.find(w => w.system.id === id)!;
 
@@ -30,6 +31,8 @@ const nameStep = (card: HTMLElement, name: string): void => {
   const fresh = stepCard(new RegExp(`^${title} · `));
   within(fresh).type(fresh.querySelector<HTMLElement>('.step-name input')!, name);
 };
+
+const groupsBefore = (effect: Effect): number => groupSteps(effect.cost ?? []).length + groupSteps(effect.steps ?? []).length;
 
 const built = (id: string): Effect | undefined => useWorld.getState().system.effects[id];
 
@@ -266,5 +269,309 @@ describe('эффекты пресетов собираются в констру
 
     dump({ got: built('shoot') ?? useWorld.getState().system.effects, goal });
     expect(built('shoot')).toEqual(goal);
+  });
+
+  it('D&D «Концентрация» (concentration): висящий, подписка «урон — после», снимает себя', { timeout: 60000 }, () => {
+    const [goal] = start('dnd5e', ['concentration']);
+    const ui = within();
+    ui.click('+ срабатывает сам');
+    ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Концентрация');
+    ui.click('имя в формулах…');
+    ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'concentration');
+    ui.select('Блок', 'Заклинания');
+    ui.type('Описание', goal!.description!);
+    ui.select('Что именно', 'damage');
+    ui.select('Когда именно', 'after');
+    ui.select('Кого касается', '@лист == @носитель');
+
+    ui.click('+ проверка');
+    let card = stepCard(/^1 · /);
+    within(card).formula('Проверка', 'кинуть(@lead_die, @спасбросок, @телосложение) + @носитель.abilities.телосложение.save >= (большее из(10, округлить вниз(@amount / 2)))');
+    within(card).select('Дальше при', 'fail');
+    nameStep(card, 'save');
+
+    ui.click('+ изменение');
+    card = stepCard(/^2 · /);
+    within(card).click('состояние');
+    card = stepCard(/^2 · /);
+    within(card).select('Что делаем', 'remove');
+    within(card).select('Какое', 'concentration');
+    within(card).select('С кого', 'носитель');
+
+    dump({ got: built('concentration') ?? useWorld.getState().system.effects, goal });
+    expect(built('concentration')).toEqual(goal);
+  });
+
+  it('D&D «Заклинание» и «усиление с концентрацией»: основа с ценой, потомок с держанием и состоянием из входа', { timeout: 90000 }, () => {
+    const [goalBase, goalHeld] = start('dnd5e', ['spell', 'spell_buff_held']);
+    const ui = within();
+    ui.click('+ вызываемый');
+    ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Заклинание');
+    ui.click('имя в формулах…');
+    ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'spell');
+    ui.select('Блок', 'Заклинания');
+    ui.type('Описание', goalBase!.description!);
+    within(stepCard(/^1 · /)).click('Удалить');
+    within(stepCard(/^1 · /)).click('точно убрать');
+
+    if (ui.has('ещё')) ui.click('ещё');
+    const param = (row: number, label: string, kind: string, key: string, more: { ask?: string; hint?: string; min?: string; max?: string } = {}) => {
+      if (row >= (built('spell')!.params ?? []).length) ui.click('+ вход');
+      ui.type(ui.cell('Название', row), label);
+      ui.select(ui.cell('Тип', row), kind);
+      if (more.ask) ui.select(ui.cell('Если не передали', row), more.ask);
+      if (more.hint) ui.type(ui.cell('Подсказка за столом', row), more.hint);
+      if (more.min !== undefined) ui.type(ui.cell('Границы', row).querySelector<HTMLInputElement>('input[placeholder="не ниже"]')!, more.min);
+      if (more.max !== undefined) ui.type(ui.cell('Границы', row).querySelector<HTMLInputElement>('input[placeholder="не выше"]')!, more.max);
+      ui.type(ui.cell('Имя в формулах', row), key);
+    };
+    param(0, 'Кто действует', 'sheet', 'действующий');
+    param(1, 'Круг заклинания', 'number', 'spell_level');
+    ui.check('«Круг заклинания» правят сопротивления', false);
+    param(2, 'Каким кругом', 'number', 'slot', { ask: 'actor', hint: (goalBase!.params ?? [])[2]!.ask!.hint!, min: '1', max: '9' });
+
+    ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_action');
+    let card = stepCard(/^1 · /);
+    within(card).formula(within(card).arg('Лист'), '@действующий');
+    within(card).formula(within(card).arg('Источник'), '@действующий');
+    ui.click('+ проверка');
+    card = stepCard(/^2 · /);
+    within(card).formula('Проверка', '@slot >= @spell_level');
+    card = stepCard(/^2 · /);
+    within(card).type('Что сказать при остановке', 'круг ячейки ниже круга заклинания');
+    nameStep(card, '');
+    within(stepCard(/^2 · /)).click('цена');
+    ui.click('+ изменение');
+    card = stepCard(/^3 · /);
+    within(card).click('вызов');
+    card = stepCard(/^3 · /);
+    within(card).select('Какой эффект', 'spell_slot');
+    for (const [name, text] of [['Круг ячейки', '@slot'], ['Лист', '@действующий'], ['Источник', '@действующий']] as const) {
+      within(card).formula(within(card).arg(name), text);
+    }
+    within(stepCard(/^3 · /)).click('цена');
+    expect(built('spell')).toEqual(goalBase);
+
+    ui.click('+ кнопкой');
+    ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, goalHeld!.label!);
+    ui.click('имя в формулах…');
+    ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'spell_buff_held');
+    ui.select('Блок', 'Заклинания');
+    ui.type('Описание', goalHeld!.description!);
+    ui.select('На основе', 'spell');
+    within(ui.cell('Название', 0).parentElement!).click('×');
+    ui.click('+ вход');
+    ui.type(ui.cell('Название', 1), 'Состояние');
+    ui.select(ui.cell('Тип', 1), 'effect');
+    ui.type(ui.cell('Имя в формулах', 1), 'status');
+    ui.check('«Состояние» обязателен', false);
+    ui.click('+ держание');
+    ui.select('Держит', 'concentration');
+    ui.select('У кого', 'действующий');
+
+    ui.click('+ изменение');
+    let held = stepCard(/^2 · /);
+    within(held).click('состояние');
+    held = stepCard(/^2 · /);
+    within(held).select('Какое', ':вход:status');
+    within(held).select('На кого', 'цель');
+    held = stepCard(/^2 · /);
+    within(held).formula('Запомнит: Кто наложил', '@действующий');
+    dump({ got: built('spell_buff_held'), goal: goalHeld });
+    expect(built('spell_buff_held')).toEqual(goalHeld);
+  });
+
+  it('Daggerheart «Двойственность» (duality): подписки «завершено», поле стола, условие на шаге', { timeout: 90000 }, () => {
+    const [goal] = start('daggerheart', ['duality']);
+    const ui = within();
+    ui.click('+ срабатывает сам');
+    ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Двойственность');
+    ui.click('имя в формулах…');
+    ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'duality');
+    ui.select('Блок', 'Правила');
+    ui.type('Описание', goal!.description!);
+
+    const handlerAt = (n: number): HTMLElement => stepCard(new RegExp(`^Подписка №${n}`)).parentElement!;
+    const change = (n: number, at: number, owner: string, field: string, how: string, value: string, when?: string) => {
+      within(handlerAt(n)).click('+ изменение');
+      const card = () => stepCard(new RegExp(`^${at} · `), handlerAt(n));
+      within(card()).select('У кого', owner);
+      within(card()).select('Какое поле', field);
+      within(card()).select('Как', how);
+      within(card()).formula('Сколько', value);
+      if (when) {
+        within(card()).select('Делать', 'формулой…');
+        within(card()).formula('Условие', when);
+      }
+    };
+    const cases: [string, string, string][] = [
+      ['action_roll', '@бросок.parts.надежда > @бросок.parts.страх', 'hope'],
+      ['action_roll', '@бросок.parts.страх > @бросок.parts.надежда', 'fear'],
+      ['action_roll', '@бросок.parts.надежда == @бросок.parts.страх', 'crit'],
+      ['hero_attack', '@бросок_бросок.parts.надежда > @бросок_бросок.parts.страх', 'hope'],
+      ['hero_attack', '@бросок_бросок.parts.страх > @бросок_бросок.parts.надежда', 'fear'],
+      ['hero_attack', '@бросок_бросок.parts.надежда == @бросок_бросок.parts.страх', 'crit'],
+    ];
+    cases.forEach(([listened, rule, gain], index) => {
+      const n = index + 1;
+      if (n > 1) ui.click('+ когда');
+      const head = () => stepCard(new RegExp(`^Подписка №${n}`));
+      within(head()).select('Что именно', listened);
+      within(head()).select('Когда именно', 'done');
+      within(head()).select('Кого касается', '@действующий == @носитель');
+      within(head()).select('Ещё условие', 'формулой…');
+      within(head()).formula('Условие', rule);
+      if (gain === 'fear') change(n, 1, 'стол', 'fear', 'add', '1');
+      else change(n, 1, 'носитель', 'hope', 'add', '1');
+      if (gain === 'crit') change(n, 2, 'носитель', 'stress', 'subtract', '1', '@носитель.stress >= 1');
+    });
+
+    dump({ got: built('duality'), goal });
+    expect(built('duality')).toEqual(goal);
+  });
+
+  it('Daggerheart «Атака героя» (hero_attack): кости двойственности, проверка-формула с заметкой', { timeout: 90000 }, () => {
+    const [goal] = start('daggerheart', ['hero_attack']);
+    const ui = within();
+    ui.click('+ кнопкой');
+    ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Атака героя');
+    ui.click('имя в формулах…');
+    ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'hero_attack');
+    ui.select('Блок', 'Атака');
+    ui.type('Описание', goal!.description!);
+    if (ui.has('ещё')) ui.click('ещё');
+    const param = (row: number, label: string, kind: string, key: string, from?: string) => {
+      if (row >= (built('hero_attack')!.params ?? []).length) ui.click('+ вход');
+      ui.type(ui.cell('Название', row), label);
+      ui.select(ui.cell('Тип', row), kind);
+      if (from) ui.select(ui.cell('Из таблицы', row), from);
+      ui.type(ui.cell('Имя в формулах', row), key);
+    };
+    (goal!.params ?? []).slice(2).forEach((p, index) => param(index + 2, p.label!, p.kind!, p.key, p.from));
+
+    ui.click('+ число');
+    let card = stepCard(/^2 · /);
+    within(card).select('Бросает', 'действующий');
+    card = stepCard(/^2 · /);
+    within(card).formula('Сколько', 'кинуть(@duality, @атака, @герой) + таблица("traits", @trait, "value") + @attack_bonus');
+    within(card).select('Против кого', 'первый(@цели)');
+    nameStep(card, 'бросок_бросок');
+    within(stepCard(/^2 · /)).click('↑');
+
+    ui.click('+ число');
+    card = stepCard(/^3 · /);
+    within(card).formula('Сколько', String((goal!.steps![1] as { fixed: { expr: string } }).fixed.expr));
+    nameStep(card, 'урон');
+    within(stepCard(/^3 · /)).click('↑');
+
+    ui.click('+ проверка');
+    card = stepCard(/^4 · /);
+    within(card).formula('Проверка', '@бросок_бросок >= @цель.difficulty');
+    card = stepCard(/^4 · /);
+    within(card).select('Дальше при', 'always');
+    nameStep(card, 'бросок');
+
+    ui.click('+ проверка');
+    card = stepCard(/^5 · /);
+    within(card).formula('Проверка', 'если(любое(@бросок.success, @бросок.parts.надежда == @бросок.parts.страх), 1, 0) >= 1');
+    card = stepCard(/^5 · /);
+    within(card).type('Что сказать при остановке', 'промах');
+    nameStep(card, '');
+
+    ui.click('+ изменение');
+    within(stepCard(/^6 · /)).click('вызов');
+    card = stepCard(/^6 · /);
+    within(card).select('Какой эффект', 'damage');
+    for (const [name, text] of [['Сколько урона', '@урон'], ['Лист', '@цель'], ['Источник', '@действующий']] as const) {
+      within(stepCard(/^6 · /)).formula(within(stepCard(/^6 · /)).arg(name), text);
+    }
+    dump({ got: built('hero_attack'), goal });
+    expect(built('hero_attack')).toEqual(goal);
+  });
+
+  it('Shadowrun «Атаковать» (ranged_attack) по формам: защита и сопротивление в цикле, счёт успехов', { timeout: 90000 }, () => {
+    const world = structuredClone(worldOf('shadowrun6'));
+    const goal = structuredClone(world.system.effects.ranged_attack!);
+    world.system.effects.ranged_attack!.steps = goal.steps!.slice(0, 6);
+    useWorld.setState(state => ({
+      ...state, system: world.system as System, compendium: world.compendium,
+      activeEffectId: 'ranged_attack', activeFieldTag: null, activeRecordKind: null, activeSheetKind: null,
+    }));
+    render(<EffectsTab />);
+    openAll();
+    const ui = within();
+    const at = (n: number) => stepCard(new RegExp(`^${n} · `));
+    const first = groupsBefore(world.system.effects.ranged_attack!) + 1;
+
+    ui.click('+ число');
+    within(at(first)).select('Бросает', 'цель');
+    within(at(first)).formula('Сколько', 'кинуть(@pool * @цель.defense_pool, @защита)');
+    within(at(first)).select('Против кого', 'действующий');
+    nameStep(at(first), 'атака_против');
+
+    ui.click('+ проверка');
+    within(at(first + 1)).formula('Проверка', '@атака_бросок >= @атака_против');
+    within(at(first + 1)).select('Дальше при', 'always');
+    nameStep(at(first + 1), 'атака');
+
+    ui.click('+ проверка');
+    within(at(first + 2)).formula('Проверка', '@атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural >= 0');
+    within(at(first + 2)).type('Что сказать при остановке', 'промах: успехов атаки меньше, чем у защиты');
+    nameStep(at(first + 2), '');
+
+    ui.click('+ проверка');
+    within(at(first + 3)).formula('Проверка', 'кинуть(@pool * @цель.body, @сопротивление) >= 0');
+    within(at(first + 3)).select('Бросает', 'цель');
+    within(at(first + 3)).select('Против кого', 'действующий');
+    within(at(first + 3)).select('Дальше при', 'always');
+    nameStep(at(first + 3), 'сопротивление');
+
+    const got = built('ranged_attack')!;
+    dump({ got: { ...got, steps: got.steps }, goal: { ...goal, steps: goal.steps!.slice(0, 11) } });
+    expect(got.steps).toEqual(goal.steps!.slice(0, 11));
+  });
+
+  it('Blades «Залечь на дно» (lay_low): условная метка броска, степени успеха, «стало» формулой', { timeout: 90000 }, () => {
+    const [goal] = start('blades', ['lay_low']);
+    const ui = within();
+    ui.click('+ кнопкой');
+    ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Залечь на дно');
+    ui.click('имя в формулах…');
+    ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'lay_low');
+    within(ui.cell('Блок')).click('+ новый');
+    ui.type(ui.cell('Блок'), 'Банда');
+    within(ui.cell('Блок')).click('завести');
+    ui.type('Описание', goal!.description!);
+    if (ui.has('ещё')) ui.click('ещё');
+    ui.click('+ вход');
+    ui.type(ui.cell('Название', 2), 'Рейтинг действия');
+    ui.select(ui.cell('Если не передали', 2), 'actor');
+    ui.type(ui.cell('Подсказка за столом', 2), (goal!.params ?? [])[2]!.ask!.hint!);
+    ui.type(ui.cell('Границы', 2).querySelector<HTMLInputElement>('input[placeholder="не ниже"]')!, '0');
+    ui.type(ui.cell('Границы', 2).querySelector<HTMLInputElement>('input[placeholder="не выше"]')!, '4');
+    ui.type(ui.cell('Имя в формулах', 2), 'rating');
+
+    ui.click('+ число');
+    const at = (n: number) => stepCard(new RegExp(`^${n} · `));
+    within(at(2)).select('Бросает', 'действующий');
+    within(at(2)).formula('Сколько', 'кинуть(@pool, @действие, если(@rating == 0, "нулевой", ""))');
+    within(at(2)).select('Против кого', 'первый(@цели)');
+    nameStep(at(2), 'бросок_бросок');
+    within(at(2)).click('↑');
+
+    ui.click('+ проверка');
+    within(at(3)).formula('Проверка', '@бросок_бросок >= 4');
+    within(at(3)).select('Дальше при', 'always');
+    within(at(3)).select('Степени успеха', 'outcome');
+    nameStep(at(3), 'бросок');
+
+    ui.click('+ изменение');
+    within(at(4)).select('У кого', 'цель');
+    within(at(4)).select('Какое поле', 'heat');
+    within(at(4)).select('Как', 'set');
+    within(at(4)).formula('Сколько', String((goal!.steps![3] as { value: { expr: string } }).value.expr));
+
+    dump({ got: built('lay_low'), goal });
+    expect(built('lay_low')).toEqual(goal);
   });
 });

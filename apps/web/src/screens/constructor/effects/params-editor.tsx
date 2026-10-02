@@ -67,8 +67,9 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
   });
   const rekey = (param: Loose, next: string) => change(param.key, t => { t.key = next; });
   const tables = choiceTables(system).map(([key, list]) => [key, list.label || key] as const);
-  const [more, setMore] = useState(false);
-  const full = more || params.some(p => p.ask?.hint || p.role === 'amount' || p.optional || p.many || p.min !== undefined || p.max !== undefined);
+  const rare = params.some(p => p.ask?.hint || p.role === 'amount' || p.optional || p.many || p.min !== undefined || p.max !== undefined);
+  const [more, setMore] = useState(rare);
+  const full = more || rare;
   const columns = full ? COLUMNS : COLUMNS.filter(c => !RARE.includes(c.key));
 
   return (

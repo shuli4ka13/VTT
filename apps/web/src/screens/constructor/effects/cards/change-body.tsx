@@ -38,7 +38,8 @@ function TargetPick({ target, context, onChange }: {
   const sheets = [...(context.sheets ?? new Map<string, string>())];
   const desk = fieldsOf(system).some(f => f.lives === 'desk');
   const fieldParams = (context.effect.params ?? []).filter(p => p.kind === 'field');
-  const owner = picked?.sheet ?? (param ? `:${param}` : sheets[0]?.[0] ?? '');
+  const [chosen, setChosen] = useState<string | null>(null);
+  const owner = picked?.sheet ?? (param ? `:${param}` : chosen ?? sheets[0]?.[0] ?? '');
   const options: (readonly [string, string])[] = [
     ...sheets.map(([name, label]) => [name, `«${label}»`] as const),
     ...(desk ? [[DESK_ID, 'стол'] as const] : []),
@@ -52,8 +53,9 @@ function TargetPick({ target, context, onChange }: {
           value={owner}
           options={options.length ? options : [['', '— у эффекта нет входов-листов —']]}
           onChange={next => {
-            if (next.startsWith(':')) onChange({ expr: `@${next.slice(1)}` });
-            else onChange(picked ? { expr: `@${next}.${picked.tag}` } : null);
+            if (next.startsWith(':')) { onChange({ expr: `@${next.slice(1)}` }); return; }
+            setChosen(next);
+            onChange(picked ? { expr: `@${next}.${picked.tag}` } : null);
           }}
         />
       </Field>
@@ -398,7 +400,11 @@ function StatusArgs({ step, context, onChange }: {
 }) {
   if (String(step.mode ?? 'apply') === 'remove') return null;
   const id = effectNameOf(step.effect);
-  const params = context.system.effects[id]?.params ?? [];
+  const known = context.system.effects[id];
+  const params = known ? known.params ?? [] : typeof step.effect !== 'object' || !step.effect ? [] : [...new Map(Object.values(context.system.effects)
+    .filter(effect => effect.activation === 'passive')
+    .flatMap(effect => effect.params ?? [])
+    .map(param => [param.key, param] as const)).values()];
   if (!params.length) return null;
   return (
     <>

@@ -22,9 +22,20 @@ function passesArg(node: unknown, effectId: string, key: string): boolean {
   return Object.values(o).some(value => passesArg(value, effectId, key));
 }
 
+function loopsOver(node: unknown, key: string): boolean {
+  if (Array.isArray(node)) return node.some(item => loopsOver(item, key));
+  if (!node || typeof node !== 'object') return false;
+  const o = node as Record<string, unknown>;
+  if (o.type === 'each' && o.of === key) return true;
+  return Object.values(o).some(value => loopsOver(value, key));
+}
+
 export function paramUsed(system: System, compendium: Compendium | undefined, effectId: string, key: string): boolean {
   const own = system.effects[effectId];
-  if (own && referenced(own, key)) return true;
+  if (own) {
+    if (new RegExp(`[@#]${escape(key)}(?![\\p{L}\\p{N}_])`, 'u').test(JSON.stringify(own))) return true;
+    if (loopsOver(own, key) || own.bond?.by === key || own.duration?.by === key) return true;
+  }
   return passesArg(system, effectId, key) || passesArg(compendium, effectId, key);
 }
 

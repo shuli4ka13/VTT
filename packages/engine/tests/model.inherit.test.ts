@@ -1,5 +1,6 @@
 import { group, test, eq, deepEq, ok, throws } from './harness.ts';
 import { flattenSystem, hasBases } from '../src/model/inherit.ts';
+import { lintSystem } from '../src/model/lint.ts';
 import type { System } from '../src/model/types.ts';
 
 const sys = (effects: Record<string, unknown>, records: Record<string, unknown> = {}): System => ({
@@ -102,5 +103,29 @@ group('основ нет — система не трогается', () => {
     const плоская = sys({ а: { label: 'А' } });
     eq(hasBases(плоская), false);
     eq(flattenSystem(плоская), плоская);
+  });
+});
+
+group('конструктор: основа пропала — экран не падает, проблема видна', () => {
+  const broken = () => sys({
+    огненный_шар: { extends: 'заклинание', label: 'Огненный шар', params: [{ key: 'круг', label: 'Круг', kind: 'number' }], steps: [] },
+    петля_а: { extends: 'петля_б', label: 'А', steps: [] },
+    петля_б: { extends: 'петля_а', label: 'Б', steps: [] },
+  });
+
+  test('мягкий режим не бросает и оставляет своё', () => {
+    const flat = flattenSystem(broken(), true);
+    deepEq(flat.effects.огненный_шар!.params!.map(p => p.key), ['круг']);
+    ok(flat.effects.петля_а);
+  });
+
+  test('строгий режим бросает, как раньше', () => {
+    throws(() => flattenSystem(broken()));
+  });
+
+  test('линт называет недостающую основу и круг', () => {
+    const texts = lintSystem(flattenSystem(broken(), true)).filter(p => p.level === 'error').map(p => p.text);
+    ok(texts.some(t => t.includes('основы «заклинание» в системе нет')), texts.join(' | '));
+    ok(texts.some(t => t.includes('по кругу')), texts.join(' | '));
   });
 });

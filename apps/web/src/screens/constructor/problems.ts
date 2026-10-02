@@ -18,7 +18,7 @@ export function useProblems(): Problem[] {
   const mode = useWorld(s => s.origin.mode);
   const book = mode === 'compendium' || compendium.records?.length
     ? compendium : undefined;
-  return useMemo(() => lintSystem(flattenSystem(system), book), [system, book]);
+  return useMemo(() => lintSystem(flattenSystem(system, true), book), [system, book]);
 }
 
 export const whereLabel = (where: Where, system: System): string => describeWhere(where, system);

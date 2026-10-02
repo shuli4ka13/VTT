@@ -179,7 +179,7 @@ function StepName({ group, effect, edit }: { group: CardGroup; effect: Effect; e
   const taken = [...(effect.steps ?? []), ...(effect.cost ?? [])].map(s => String(s.id ?? '')).filter(Boolean);
   const roll = group.amount?.id ? String(group.amount.id) : '';
   const rename = (next: string) => {
-    const follows = group.kind === 'check' && roll === `${id}_бросок` && !taken.includes(`${next}_бросок`);
+    const follows = Boolean(next) && group.kind === 'check' && roll === `${id}_бросок` && !taken.includes(`${next}_бросок`);
     edit(group.amount ? 1 : 0, draft => {
       if (next) draft.id = next; else delete draft.id;
       if (follows) (draft as { value?: unknown }).value = { expr: `@${next}_бросок` };
@@ -189,7 +189,7 @@ function StepName({ group, effect, edit }: { group: CardGroup; effect: Effect; e
   return (
     <div className="inline inline--tight step-name">
       <span className="faint">имя в формулах</span>
-      <KeyField value={id} locked={Boolean(id) && referenced({ s: st.system, c: st.compendium }, id, { steps: effect.steps ?? [], cost: effect.cost ?? [] })} taken={taken} onChange={rename} />
+      <KeyField optional value={id} locked={Boolean(id) && referenced({ s: st.system, c: st.compendium }, id, { steps: effect.steps ?? [], cost: effect.cost ?? [] })} taken={taken} onChange={rename} />
     </div>
   );
 }

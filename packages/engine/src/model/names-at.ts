@@ -124,7 +124,7 @@ const dedupe = (names: NameAt[]): NameAt[] => {
 };
 
 export function namesAt(raw: System, effectId: string, place: Place): NameAt[] {
-  const system = flattenSystem(raw);
+  const system = flattenSystem(raw, true);
   const effect = system.effects?.[effectId];
   if (!effect) return [];
   const inputs = (effect.params ?? []).map(param => fromParam(param, 'input'));

@@ -99,8 +99,8 @@ export function within(root: ParentNode = document) {
   return { arg, args, button, has, click, cell, field, select, type, formula, check };
 }
 
-export const stepCard = (title: RegExp): HTMLElement => {
-  const heads = [...document.querySelectorAll<HTMLElement>('.card')];
+export const stepCard = (title: RegExp, root: ParentNode = document): HTMLElement => {
+  const heads = [...root.querySelectorAll<HTMLElement>('.card')];
   const head = (card: HTMLElement) => textOf(card.querySelector('.card__head, .step-fold, .step-fold__row') ?? card).replace(/^[▾▸]\s*/, '');
   const found = heads.find(card => title.test(head(card)));
   if (!found) throw new Error(`нет шага ${String(title)}; есть: ${heads.map(c => textOf(c.querySelector('.card__head, .step-fold__row') ?? c).slice(0, 40)).join(' | ')}`);

@@ -8,20 +8,33 @@ const MAX_CHAIN = 8;
 
 type Loose = Record<string, unknown>;
 
-function lineOf(id: string, basesOf: (key: string) => string | undefined, what: string): string[] {
+export function lineTrouble(id: string, basesOf: (key: string) => string | undefined, exists: (key: string) => boolean): string | null {
   const chain: string[] = [];
   let at: string | undefined = id;
   while (at) {
-    if (chain.includes(at)) {
-      throw new EngineError(`${what} «${id}»: основы идут по кругу — ${[...chain, at].join(' → ')}`);
-    }
+    if (chain.includes(at)) return `основы идут по кругу — ${[...chain, at].join(' → ')}`;
     chain.push(at);
-    if (chain.length > MAX_CHAIN) {
-      throw new EngineError(`${what} «${id}»: основ больше ${MAX_CHAIN} — ${chain.join(' → ')}`);
-    }
-    at = basesOf(at);
+    if (chain.length > MAX_CHAIN) return `основ больше ${MAX_CHAIN} — ${chain.join(' → ')}`;
+    const next = basesOf(at);
+    if (next && !exists(next)) return `основы «${next}» в системе нет`;
+    at = next;
   }
-  return chain.reverse();
+  return null;
+}
+
+function lineOf(id: string, basesOf: (key: string) => string | undefined, exists: (key: string) => boolean, what: string, lenient: boolean): string[] {
+  const chain: string[] = [];
+  let at: string | undefined = id;
+  while (at && !chain.includes(at) && chain.length < MAX_CHAIN + 1) {
+    chain.push(at);
+    const next = basesOf(at);
+    at = next && exists(next) ? next : undefined;
+  }
+  if (!lenient) {
+    const trouble = lineTrouble(id, basesOf, exists);
+    if (trouble) throw new EngineError(`${what} «${id}»: ${trouble}`);
+  }
+  return chain.slice(0, MAX_CHAIN).reverse();
 }
 
 const byKey = <T extends { key: string }>(base: T[], own: T[]): T[] => {
@@ -102,18 +115,12 @@ export function hasBases(system: System): boolean {
 
 const flattened = new WeakSet<System>();
 
-export function flattenSystem(system: System): System {
+export function flattenSystem(system: System, lenient = false): System {
   if (flattened.has(system) || !hasBases(system)) return system;
 
   const effects: Record<string, Effect> = {};
   for (const id of Object.keys(system.effects ?? {})) {
-    const line = lineOf(id, key => {
-      const at = basedOn(system.effects?.[key]);
-      if (at && !system.effects?.[at]) {
-        throw new EngineError(`эффект «${key}»: основы «${at}» в системе нет`);
-      }
-      return at;
-    }, 'эффект');
+    const line = lineOf(id, key => basedOn(system.effects?.[key]), key => Boolean(system.effects?.[key]), 'эффект', lenient);
     effects[id] = line.reduce<Effect>(
       (done, key) => (done ? mergeEffect(done, system.effects[key]!) : system.effects[key]!),
       undefined as unknown as Effect,
@@ -123,11 +130,7 @@ export function flattenSystem(system: System): System {
   const flat = <K extends Table | SheetKind>(all: Record<string, K>, mine: (key: string) => boolean): Record<string, K> => {
     const out: Record<string, K> = { ...all };
     for (const id of Object.keys(all).filter(mine)) {
-      const line = lineOf(id, key => {
-        const at = basedOn(all[key]);
-        if (at && !(all[at] && mine(at))) throw new EngineError(`тип записи «${key}»: основы «${at}» в системе нет`);
-        return at;
-      }, 'тип записи');
+      const line = lineOf(id, key => basedOn(all[key]), key => Boolean(all[key] && mine(key)), 'тип записи', lenient);
       out[id] = line.reduce<K>((done, key) => (done ? mergeKind(done, all[key]!) : all[key]!), undefined as unknown as K);
     }
     return out;

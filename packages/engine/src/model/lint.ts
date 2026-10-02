@@ -5,7 +5,7 @@ import { STEP_WORDS } from '../words/steps.ts';
 import { ROLL_CALL, CALL_WORDS } from '../words/calls.ts';
 import { modifierLists } from './integrity.ts';
 import { calledOf, chainsOfEffect } from '../engine/effects.ts';
-import { basedOn, paramsOf } from './inherit.ts';
+import { basedOn, paramsOf, lineTrouble } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
 import { recordsOf, argsWithProps, propKeysOf, recordKinds, kindsOf, kindOf, isBook } from './owned.ts';
 import { blockNames } from './blocks.ts';
@@ -615,6 +615,8 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
     new Map((effect.params ?? []).filter(p => p.kind === 'sheet').map(p => [p.key, Boolean(p.many)]));
   for (const [id, effect] of Object.entries(system.effects)) {
     const where: Where = { tab: 'effects', effect: id };
+    const bases = lineTrouble(id, key => basedOn(system.effects[key]), key => Boolean(system.effects[key]));
+    if (bases) out.push({ where, level: 'error', text: bases });
     const sheets = sheetsOf(effect);
     const paid = emittedBy(effect.cost);
     for (const twice of new Set(paid.filter((key, index) => paid.indexOf(key) !== index))) {

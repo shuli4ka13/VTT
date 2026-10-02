@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Input } from './primitives.tsx';
 import { keyOf } from '../screens/constructor/keys.ts';
 
-export function KeyField({ value, locked, taken, onChange }: {
+export function KeyField({ value, locked, taken, onChange, optional = false }: {
   value: string;
+  optional?: boolean;
   locked: boolean;
   taken: readonly string[];
   onChange: (next: string) => void;
@@ -19,10 +20,10 @@ export function KeyField({ value, locked, taken, onChange }: {
       <Input
         mono
         value={draft ?? value}
-        invalid={!next || busy}
+        invalid={(!next && !optional) || busy}
         onChange={setDraft}
         onBlur={() => {
-          if (draft !== null && next && !busy && next !== value) onChange(next);
+          if (draft !== null && !busy && next !== value && (next || optional)) onChange(next);
           setDraft(null);
         }}
       />

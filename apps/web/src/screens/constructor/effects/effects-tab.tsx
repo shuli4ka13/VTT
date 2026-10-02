@@ -103,7 +103,7 @@ export function EffectsTab() {
       }}
       main={{
         body: active && activeId
-          ? <EffectEditor id={activeId} effect={active} system={system} />
+          ? <EffectEditor key={activeId} id={activeId} effect={active} system={system} />
           : <Empty
               title="Выберите эффект слева"
               hint="Эффект — единица автоматизации: всё, что мир делает сам. Проверки, изменения полей, состояния — а как их назвать, решаете вы."
