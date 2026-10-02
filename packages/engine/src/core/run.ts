@@ -485,7 +485,7 @@ export class Run {
       });
       if (out.report) sink.reactions.push(out.report);
       if (out.spent) sink.spent.push(out.spent);
-      sink.after.push(...out.entries);
+      sink.after.push(...out.lead, ...out.entries);
     }
   }
 
@@ -505,7 +505,7 @@ export class Run {
           other: actorId, hop, chosen: false, owner: `триггер «${labelOf(sub)}»`,
         });
         if (out.report) sink.reactions.push(out.report);
-        sink.after.push(...out.entries);
+        sink.after.push(...out.lead, ...out.entries);
       }
     }
   }
@@ -548,27 +548,28 @@ export class Run {
   react(found: Sub, o: {
     path: Path; seed: Record<string, unknown> | (() => Record<string, unknown>); other: string | null; hop: number;
     chosen: boolean; owner: string; roll?: { value: Roll };
-  }): { report?: Report; entries: Entry[]; spent?: string } {
+  }): { lead: Entry[]; report?: Report; entries: Entry[]; spent?: string } {
     const entries: Entry[] = [];
+    const lead: Entry[] = [];
     const label = labelOf(found);
     const sub = this.live(found);
     if (!sub) {
       if (o.chosen) entries.push({ text: `«${label}» не состоялось: эффекта уже нет` });
-      return { entries };
+      return { lead, entries };
     }
     const seed = { ...(typeof o.seed === 'function' ? o.seed() : o.seed), worn: wornSeed(sub.entry) };
     if (!this.holds(sub, seed)) {
       if (o.chosen) entries.push({ text: `«${label}» не состоялось: условие уже не выполняется` });
-      return { entries };
+      return { lead, entries };
     }
     const mark = sub.key;
     if (this.handlers.filter(one => one === mark).length >= this.limits.handlerDepth) {
-      return { entries: [{ text: CUT_WORDS }] };
+      return { lead, entries: [{ text: CUT_WORDS }] };
     }
     const why = this.refusal(sub, o.path.pay(), seed, o.hop);
     if (why) {
       if (o.chosen) entries.push({ text: `«${label}» не состоялось: ${why}` });
-      return { entries };
+      return { lead, entries };
     }
     this.state.begin();
     this.handlers.push(mark);
@@ -578,9 +579,9 @@ export class Run {
         const paid = this.pay(sub, o.path.pay(), seed, o.hop);
         if (paid.why) {
           this.state.rollback();
-          return { entries: [{ text: `«${label}» не состоялось: ${paid.why}` }] };
+          return { lead, entries: [{ text: `«${label}» не состоялось: ${paid.why}` }] };
         }
-        if (paid.changed) entries.push({ fromId: sub.sheetId, toId: sub.sheetId, report: paid.report });
+        if (paid.changed) lead.push({ fromId: sub.sheetId, toId: sub.sheetId, report: paid.report });
       }
       if (sub.handler.to === 'other') {
         if (o.other) {
@@ -599,14 +600,14 @@ export class Run {
       const spent = burnsUse(sub.effect);
       if (spent) this.burn(sub);
       this.state.commit();
-      return { ...(report ? { report } : {}), entries, ...(spent ? { spent: sub.effectId } : {}) };
+      return { lead, ...(report ? { report } : {}), entries, ...(spent ? { spent: sub.effectId } : {}) };
     } catch (err) {
       if (!(err instanceof Limit)) {
         this.state.rollback();
         throw err;
       }
       this.state.rollback();
-      return { entries: [{ text: CUT_WORDS }] };
+      return { lead: [], entries: [{ text: CUT_WORDS }] };
     } finally {
       this.handlers.pop();
     }
@@ -667,6 +668,7 @@ export class Run {
         path: path.pick(id), seed: withEvent(question.results, pick.event), other, hop, chosen: true,
         owner: `реакция «${labelOf(pick.sub)}»`,
       });
+      entries.push(...out.lead);
       if (out.report) entries.push({ fromId: pick.sub.sheetId, toId: pick.sub.sheetId, report: out.report });
       entries.push(...out.entries);
     }
@@ -709,6 +711,7 @@ export class Run {
             path: path.phase('seen').handler(sheetId, sub.key, sub.inst), seed, other: null, hop, chosen: false,
             owner: `«${labelOf(sub)}» — увидев кости`, roll: cell,
           });
+          sink.after.push(...out.lead);
           if (out.report) sink.after.push({ fromId: sheetId, toId: sheetId, report: out.report });
           sink.after.push(...out.entries);
         }
@@ -734,6 +737,7 @@ export class Run {
           const out = this.react(pick.sub, {
             path: qpath.pick(id), seed, other: null, hop, chosen: true, owner: `«${labelOf(pick.sub)}» — увидев кости`, roll: cell,
           });
+          sink.after.push(...out.lead);
           if (out.report) sink.after.push({ fromId: sheetId, toId: sheetId, report: out.report });
           sink.after.push(...out.entries);
         }
