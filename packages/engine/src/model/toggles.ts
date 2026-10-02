@@ -174,9 +174,9 @@ export function setArmor(draft: System, choice: ArmorChoice, at: { event: string
   const steps = (called.steps ?? []) as Record<string, unknown>[];
   const anchor = steps.find(step => fieldIn(step.versus) === at.armor || fieldIn(step.target) === at.armor)
     ?? steps.find(step => step.type === 'apply' && fieldIn(step.target) === at.hp);
-  const when = anchor?.when;
-  const same = (step: Record<string, unknown>): boolean => JSON.stringify(step.when) === JSON.stringify(when);
-  const tail = armorTail(choice, at.armor, at.hp, amount, sheet).map(step => (when ? { ...step, when } : step) as Step);
+  const when = anchor?.if;
+  const same = (step: Record<string, unknown>): boolean => JSON.stringify(step.if) === JSON.stringify(when);
+  const tail = armorTail(choice, at.armor, at.hp, amount, sheet).map(step => (when ? { ...step, if: when } : step) as Step);
   if (!anchor) { called.steps = tail; return; }
   const from = steps.findIndex(same);
   called.steps = [...steps.slice(0, from).filter(step => !same(step)), ...tail, ...steps.slice(from).filter(step => !same(step))] as Step[];

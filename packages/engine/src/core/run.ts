@@ -268,7 +268,7 @@ export class Run {
       const name = step.id ?? (frame.offset ?? 0) + index;
       const ctx = this.ctx(frame, results, known, frame.path.step(name), sink, stepIds);
       const mark = within ? { within } : {};
-      if (!ctx.holds(step.when)) {
+      if (!ctx.holds(step.if)) {
         sink.trace.push({ step: name, type: step.type, skipped: true, ...mark });
         continue;
       }
@@ -299,7 +299,7 @@ export class Run {
     if (!made) {
       const own = newSink();
       const ctx = this.ctx(lazy.frame, { ...results }, { ...rolls }, path, own, lazy.stepIds);
-      if (!ctx.holds(found.step.when)) return;
+      if (!ctx.holds(found.step.if)) return;
       const out = runnerOf(found.step.type).finish(found.step, ctx);
       made = { value: out.value, ...(out.roll ? { roll: out.roll } : {}) };
       this.state.remember(path.key, made);

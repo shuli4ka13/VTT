@@ -214,7 +214,7 @@ export function chainRefs(
       const kind = slot.refersTo === 'effect' ? 'effectRef' : slot.kind;
       slotRefs(readPath(step, slot.key), kind, from, scope, out);
     }
-    guardRefs(step.when, from, scope, out);
+    guardRefs(step.if, from, scope, out);
     if (step.id) earlier.add(String(step.id));
     const loop = (step as { as?: unknown }).as;
     if (step.type === 'each' && typeof loop === 'string' && loop) named.add(loop);
@@ -265,7 +265,7 @@ function modifierRefs(system: System, list: Modifier[] | undefined, from: Where,
       if (mod.value?.expr.trim()) exprRefs(rowFree(mod.value.expr, from, own, out), from, scope, out);
     } else {
       if (target && !target.includes(':') && target !== '*') out.push({ kind: 'field', key: target, from });
-      const condition = (mod as { condition?: { expr: string } }).condition;
+      const condition = (mod as { if?: { expr: string } }).if;
       if (condition?.expr.trim()) exprRefs(rowFree(condition.expr, from, own, out), from, plainScope(), out);
       if (mod.value?.expr.trim()) exprRefs(rowFree(mod.value.expr, from, own, out), from, plainScope(), out);
     }

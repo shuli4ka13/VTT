@@ -456,7 +456,7 @@
             "fixed": {
               "expr": "(кинуть(@weapon_die, @действующий.level * если(@hit.natural >= 20, 2, 1)) + @damage_with)"
             },
-            "when": {
+            "if": {
               "expr": "@hit.success"
             },
             "id": "dmg"
@@ -475,7 +475,7 @@
                 "expr": "@действующий"
               }
             },
-            "when": {
+            "if": {
               "expr": "@hit.success"
             }
           },
@@ -493,7 +493,7 @@
                 "expr": "@действующий"
               }
             },
-            "when": {
+            "if": {
               "expr": "не(@hit.success)"
             }
           }
@@ -714,7 +714,7 @@
               "expr": "1"
             },
             "note": "стандартное действие на этом ходу уже потрачено",
-            "when": {
+            "if": {
               "expr": "@стол.battle >= 1"
             }
           },
@@ -727,7 +727,7 @@
             "value": {
               "expr": "1"
             },
-            "when": {
+            "if": {
               "expr": "@стол.battle >= 1"
             }
           }

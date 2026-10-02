@@ -1,3 +1,4 @@
+import { CALL_TAGS } from '@vtt/engine/model/references';
 import type { System } from '@vtt/schema';
 import { tagsOf, listOf } from '@vtt/engine/model/lists';
 import { Field, Fold, Select, Input } from '../../../../ui/primitives.tsx';
@@ -14,13 +15,13 @@ import { readGuard, writeGuard } from '../../guard-expr.ts';
 import type { When, RowIs } from '../../guard-expr.ts';
 import { rowTables } from '@vtt/engine/model/tables';
 
-const EVENT_TAGS = 'event.tags';
+const EVENT_TAGS = CALL_TAGS;
 
 const EVENT_TAGS_LABEL = 'метки вызова';
 
 const BY_FORMULA = ':формула';
 
-type WhenStep = { when?: { expr: string } };
+type WhenStep = { if?: { expr: string } };
 
 const numberWords = (when: When): string => {
   const low = when.atLeast?.trim();
@@ -55,7 +56,7 @@ export const guardWords = (expr: string | undefined, earlier: EarlierStep[], sys
 };
 
 export function whenSegments(step: unknown, earlier: EarlierStep[], system: System): Segment[] {
-  const words = guardWords((step as WhenStep | null)?.when?.expr, earlier, system);
+  const words = guardWords((step as WhenStep | null)?.if?.expr, earlier, system);
   return words ? [{ text: `Только если ${words}.` }] : [];
 }
 
@@ -73,7 +74,7 @@ export function ConditionFold({ group, earlier, edit, context }: {
   edit: EditFn;
   context: SlotContext;
 }) {
-  const written = (group.step as WhenStep).when?.expr ?? null;
+  const written = (group.step as WhenStep).if?.expr ?? null;
   const when = readGuard(written);
   const custom = written !== null && written.trim() !== '' && when === null;
   const system = context.system;
@@ -85,7 +86,7 @@ export function ConditionFold({ group, earlier, edit, context }: {
   const setAll = (change: (draft: WhenStep) => void) =>
     group.indices.forEach((_, k) => edit(k, draft => change(draft as WhenStep)));
   const put = (next: When | null) => setAll(draft => {
-    if (next) draft.when = { expr: writeGuard(next) }; else delete draft.when;
+    if (next) draft.if = { expr: writeGuard(next) }; else delete draft.if;
   });
   const keep = (next: Partial<When>) => {
     if (!when) return;
@@ -112,7 +113,7 @@ export function ConditionFold({ group, earlier, edit, context }: {
             options={[['', 'всегда'], ...outputs.map(o => [o.ref, `если ${o.label}`] as const), [BY_FORMULA, 'формулой…']] as never}
             onChange={next => {
               if (!next) { put(null); return; }
-              if (next === BY_FORMULA) { setAll(draft => { draft.when = { expr: written ?? '' }; }); return; }
+              if (next === BY_FORMULA) { setAll(draft => { draft.if = { expr: written ?? '' }; }); return; }
               put({ ref: next });
             }}
           />
@@ -127,7 +128,7 @@ export function ConditionFold({ group, earlier, edit, context }: {
               extraNames={namesOf(context)}
               {...(context.sheets ? { sheets: context.sheets } : {})}
               placeholder="например: @попадание.natural >= 19"
-              onCommit={next => setAll(draft => { if (next.trim()) draft.when = { expr: next }; else delete draft.when; })}
+              onCommit={next => setAll(draft => { if (next.trim()) draft.if = { expr: next }; else delete draft.if; })}
             />
           </Field>
         ) : null}

@@ -119,9 +119,9 @@ export function removeSteps(steps: Step[], indices: number[]): Removal {
         const expr = String(value.expr ?? '');
         if (![...ids].some(id => readsStep(expr, id))) continue;
         const lone = loneName(value);
-        if (key === 'when' || (lone && ids.has(lone.split('.')[0]!))) {
+        if (key === 'if' || (lone && ids.has(lone.split('.')[0]!))) {
           delete node[key];
-          cleared.push({ step: at, slot: key === 'when' ? 'выполнять' : slot });
+          cleared.push({ step: at, slot: key === 'if' ? 'выполнять' : slot });
         } else {
           cleared.push({ step: at, slot: `${slot} (формула)` });
         }
@@ -136,7 +136,7 @@ export function removeSteps(steps: Step[], indices: number[]): Removal {
 
 export function retype(draft: Step, type: string): void {
   const words = (STEP_WORDS as Record<string, { slots?: readonly { key: string }[] }>)[type];
-  const keep = new Set(['id', 'type', 'when', ...(words?.slots ?? []).map(slot => slot.key)]);
+  const keep = new Set(['id', 'type', 'if', ...(words?.slots ?? []).map(slot => slot.key)]);
   (draft as { type: string }).type = type;
   for (const key of Object.keys(draft)) if (!keep.has(key)) delete (draft as Record<string, unknown>)[key];
 }

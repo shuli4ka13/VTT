@@ -90,7 +90,7 @@ group('линт: висячие ссылки называются словами
   test('условие «только если» ссылается на шаг выше', () => {
     const system = withEffect('e', {
       params: [WHO] as never,
-      steps: [{ ...mend('@действующий.hp'), when: { expr: '@нет.success' } }] as Step[],
+      steps: [{ ...mend('@действующий.hp'), if: { expr: '@нет.success' } }] as Step[],
     });
     ok(errorTexts(system).some(t => t.includes('«нет» выше по цепочке нет')), errorTexts(system).join('|'));
   });
@@ -433,7 +433,7 @@ group('линт: у шага только поля его типа', () => {
   });
 
   test('общие поля id, type, when допустимы у любого шага', () => {
-    const system = withEffect('hit', { params: [WHO] as never, steps: [{ id: 'a', type: 'apply', when: { expr: 'да' }, target: { expr: '@действующий.hp' }, direction: 'add', value: { expr: '1' } } as unknown as Step] });
+    const system = withEffect('hit', { params: [WHO] as never, steps: [{ id: 'a', type: 'apply', if: { expr: 'да' }, target: { expr: '@действующий.hp' }, direction: 'add', value: { expr: '1' } } as unknown as Step] });
     ok(!errorTexts(system).some(t => t.includes('нет поля')), errorTexts(system).join('\n'));
   });
 });

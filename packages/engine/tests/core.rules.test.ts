@@ -110,7 +110,7 @@ describe('новое ядро: сознательные изменения', () 
     const system = world({
       удар: button([
         { id: 'сила', type: 'roll', fixed: { expr: '2' } },
-        { id: 'бросок', type: 'roll', die: { constant: 'к20' }, by: { expr: '@действующий' }, when: { expr: '@сила > 3' } },
+        { id: 'бросок', type: 'roll', die: { constant: 'к20' }, by: { expr: '@действующий' }, if: { expr: '@сила > 3' } },
         hit('1'),
       ]),
       удача: { label: 'Удача', activation: 'passive', on: [{ on: 'seen', if: { expr: '@бросающий == @носитель' }, steps: [hit('1', '@носитель.ки'), { type: 'roll-plus', value: { expr: '0' } }] }] },

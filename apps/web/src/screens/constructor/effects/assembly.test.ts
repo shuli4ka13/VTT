@@ -86,13 +86,13 @@ describe('собранное шагами конструктора работа�
       step.target = { expr: '@цель.хиты' };
       step.direction = 'subtract';
       step.value = { expr: '6' };
-      step.when = { expr: `@${check.id}.natural >= 20` };
+      step.if = { expr: `@${check.id}.natural >= 20` };
     });
 
     const system = useWorld.getState().system;
     expect(roll.type).toBe('roll');
     expect(errorsOf(lintSystem(system))).toEqual([]);
-    expect(system.effects[id]!.steps![3]!.when).toEqual({ expr: `@${check.id}.natural >= 20` });
+    expect(system.effects[id]!.steps![3]!.if).toEqual({ expr: `@${check.id}.natural >= 20` });
 
     expect(played(system, id, { хиты: 20, броня: 10 }, 'max').sheets.find(s => s.id === 'б')!.values.хиты).toBe(14);
     expect(played(system, id, { хиты: 20, броня: 1 }, 'min').sheets.find(s => s.id === 'б')!.values.хиты).toBe(20);

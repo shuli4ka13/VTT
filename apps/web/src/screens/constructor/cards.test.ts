@@ -152,13 +152,13 @@ describe('удаление шага чистит ссылки на него', ()
     const list = steps([
       { id: 'hit', type: 'check', value: { expr: '@цель.хп' }, versus: { expr: '10' } },
       { id: 'n', type: 'roll', die: { const: '1d8' } },
-      { type: 'apply', target: { expr: '@цель.hp' }, value: { expr: '@n' }, when: { expr: '@hit.success' } },
+      { type: 'apply', target: { expr: '@цель.hp' }, value: { expr: '@n' }, if: { expr: '@hit.success' } },
       { id: 'again', type: 'roll', die: { constant: 'lead' }, bonus: { expr: '@n' } },
       { type: 'check', value: { expr: '@again' }, versus: { expr: '#n + 1' } },
     ]);
     const removal = removeSteps(list, [1]);
     expect(removal.steps).toHaveLength(4);
-    expect(removal.steps[1]).toEqual({ type: 'apply', target: { expr: '@цель.hp' }, when: { expr: '@hit.success' } });
+    expect(removal.steps[1]).toEqual({ type: 'apply', target: { expr: '@цель.hp' }, if: { expr: '@hit.success' } });
     expect((removal.steps[2] as { bonus?: unknown }).bonus).toBeUndefined();
     expect(removal.cleared).toEqual([
       { step: 1, slot: 'value' },

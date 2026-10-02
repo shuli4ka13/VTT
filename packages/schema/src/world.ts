@@ -133,7 +133,7 @@ export const valueModifier = z.object({
   op: z.string(),
   value: formula,
   stacking: z.string().optional(),
-  condition: formula.optional(),
+  if: formula.optional(),
 }).strict();
 
 
@@ -174,18 +174,16 @@ export const param = column.extend({
   optional: z.boolean().optional(),
 }).strict();
 
-export const guard = formula;
-
 export const step = z.object({
   id: z.string().optional(),
   type: z.string().min(1),
 
-  when: guard.optional(),
+  if: formula.optional(),
 }).passthrough();
 
 export const handler = z.object({
   on: z.string().min(1),
-  if: guard.optional(),
+  if: formula.optional(),
   confirm: z.boolean().optional(),
   cost: z.array(step).optional(),
   steps: z.array(step).optional(),
@@ -380,7 +378,7 @@ export type Step = z.infer<typeof step>;
 export type Ask = z.infer<typeof ask>;
 export type Control = z.infer<typeof control>;
 export type FieldOption = z.infer<typeof fieldOption>;
-export type Guard = z.infer<typeof guard>;
+export type Guard = z.infer<typeof formula>;
 export type Handler = z.infer<typeof handler>;
 export type Effect = z.infer<typeof effect>;
 export type Binding = z.infer<typeof binding>;

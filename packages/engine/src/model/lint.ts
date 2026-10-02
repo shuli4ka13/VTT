@@ -637,7 +637,7 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
       chain.steps.forEach((step, index) => {
         const words = (STEP_WORDS as Record<string, { slots?: readonly { key: string }[] }>)[step.type];
         if (!words) return;
-        const known = new Set(['id', 'type', 'when', ...(words.slots ?? []).map(slot => slot.key)]);
+        const known = new Set(['id', 'type', 'if', ...(words.slots ?? []).map(slot => slot.key)]);
         for (const key of Object.keys(step)) {
           if (!known.has(key)) out.push({ where: chain.where(index), level: 'error', text: `у шага «${words === undefined ? step.type : (words as { label?: string }).label ?? step.type}» нет поля «${key}»` });
         }

@@ -44,9 +44,9 @@ group('ветвление по исходу: стражи на шагах', () =
   const halfOnSave = [
     save, saveCheck,
     { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '8' },
-      when: { expr: 'не(@спас.success)' } },
+      if: { expr: 'не(@спас.success)' } },
     { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '4' },
-      when: { expr: '@спас.success' } },
+      if: { expr: '@спас.success' } },
   ];
 
   test('провалил спасбросок — полный урон, шаг «половина» пропущен', () => {
@@ -67,9 +67,9 @@ group('ветвление по исходу: стражи на шагах', () =
       save,
       { ...saveCheck, degrees: { table: 'исход', of: 'total' } },
       { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '10' },
-        when: { expr: '@спас.degree == "полный"' } },
+        if: { expr: '@спас.degree == "полный"' } },
       { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '3' },
-        when: { expr: '@спас.degree == "частичный"' } },
+        if: { expr: '@спас.degree == "частичный"' } },
     ];
     eq(play(graded, 17).sheet.values.хп, 10, 'полный успех');
     eq(play(graded, 11).sheet.values.хп, 17, 'частичный');
@@ -79,7 +79,7 @@ group('ветвление по исходу: стражи на шагах', () =
   test('страж-формула действующего считается его листом (шестой уровень), а не цели (третий)', () => {
     const steps = [
       { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '5' },
-        when: { expr: '@действующий.уровень >= 5' } },
+        if: { expr: '@действующий.уровень >= 5' } },
     ];
     eq(play(steps).sheet.values.хп, 15);
   });
@@ -87,7 +87,7 @@ group('ветвление по исходу: стражи на шагах', () =
   test('страж-формула цели считается её листом', () => {
     const steps = [
       { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '5' },
-        when: { expr: '@цель.уровень >= 5' } },
+        if: { expr: '@цель.уровень >= 5' } },
     ];
     eq(play(steps).sheet.values.хп, 20, 'у цели третий уровень — шаг пропущен');
   });
@@ -95,7 +95,7 @@ group('ветвление по исходу: стражи на шагах', () =
   test('страж, дающий не да/нет, — внятная ошибка', () => {
     const steps = [
       { id: 'n', type: 'roll', fixed: { expr: '3' } },
-      { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '5' }, when: { expr: '@n' } },
+      { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '5' }, if: { expr: '@n' } },
     ];
     throws(() => play(steps), 'да/нет');
   });

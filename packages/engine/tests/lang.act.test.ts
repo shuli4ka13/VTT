@@ -170,7 +170,7 @@ group('новое ядро: броски действующего не деля�
     const steps = [
       { id: 'бросок', type: 'roll', die: { constant: 'к20' }, by: { expr: '@действующий' } },
       { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
-      { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d6')" }, when: { expr: '@бросок.natural >= 20' } },
+      { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d6')" }, if: { expr: '@бросок.natural >= 20' } },
       EACH,
       hit('1'),
     ];

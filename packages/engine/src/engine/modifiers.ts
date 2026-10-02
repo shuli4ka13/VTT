@@ -226,7 +226,7 @@ export function editMatches(mod: SourcedModifier, tags: readonly string[], syste
 
 
 function conditionHolds(mod: SourcedModifier, pass: Pass): boolean {
-  const condition = (mod as { condition?: { expr: string } }).condition;
+  const condition = (mod as { if?: { expr: string } }).if;
   if (!condition) return true;
   const result = compile(condition.expr).evaluate(pass.resolve, toolsOf(pass.system, pass, 'условие модификатора'));
   if (typeof result !== 'boolean') {

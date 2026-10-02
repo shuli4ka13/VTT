@@ -130,7 +130,7 @@ group('модификаторы', () => {
   group('условия', () => {
     const conditional = cond => ({
       id: 'cond', label: 'Условный', slot: 'ring',
-      modifiers: [{ kind: 'value', target: 'ac', op: 'add', value: { expr: '10' }, stacking: 'sum', condition: { expr: cond } }],
+      modifiers: [{ kind: 'value', target: 'ac', op: 'add', value: { expr: '10' }, stacking: 'sum', if: { expr: cond } }],
     });
 
     test('модификатор с истинным условием применяется', () => {

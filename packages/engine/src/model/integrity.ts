@@ -105,7 +105,7 @@ function stepConditions(system: System): StepCondition[] {
   const visit = (steps: unknown, where: (at: number) => Where) => {
     if (!Array.isArray(steps)) return;
     for (const [at, step] of steps.entries()) {
-      const when = (step as Loose).when as { expr?: unknown } | undefined;
+      const when = (step as Loose).if as { expr?: unknown } | undefined;
       if (!when || typeof when.expr !== 'string') continue;
       for (const found of conditionsIn(when.expr)) {
         out.push({

@@ -141,15 +141,15 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
           ) : null}
 
           {modifier.kind === 'value' ? (
-            <Fold title="Только если" summary={modifier.condition?.expr ? `если ${formulaAsLabels(system, modifier.condition.expr)}` : 'всегда'}>
+            <Fold title="Только если" summary={modifier.if?.expr ? `если ${formulaAsLabels(system, modifier.if.expr)}` : 'всегда'}>
               <Field label="Условие" hint="На листе носителя. Пусто — всегда.">
                 <FormulaInput
                   where="модификатор · только когда"
                   system={system}
-                  value={modifier.condition?.expr ?? ''}
+                  value={modifier.if?.expr ?? ''}
                   onChange={expr => onEdit(draft => {
-                    const d = draft[index] as { condition?: { expr: string } };
-                    if (expr.trim()) d.condition = { expr }; else delete d.condition;
+                    const d = draft[index] as { if?: { expr: string } };
+                    if (expr.trim()) d.if = { expr }; else delete d.if;
                   })}
                   placeholder="например: @тяжёлая броня"
                 />
@@ -179,7 +179,7 @@ function EditBody({ system, modifier, calls, edits, recipes, onChange, onPickEdi
   const effect = isRoll ? undefined : system.effects[call];
   const amount = amountParamOf(effect);
   const pickCall = (next: string) => onChange(d => {
-    for (const key of ['edit', 'op', 'value', 'stacking', 'as', 'tags', 'anyTags', 'notTags', 'where', 'when']) delete d[key];
+    for (const key of ['edit', 'op', 'value', 'stacking', 'as', 'tags', 'anyTags', 'notTags', 'where']) delete d[key];
     d.call = next;
     if (next === ROLL_CALL) { d.param = 'edits'; d.edit = edits[0]?.[0] ?? ''; return; }
     d.param = amountParamOf(system.effects[next])?.key ?? '';
@@ -266,19 +266,6 @@ function EditBody({ system, modifier, calls, edits, recipes, onChange, onPickEdi
           <EventCondition system={system} effect={effect} modifier={modifier} onChange={onChange} />
         </>
       )}
-      <Field
-        label="Только если по вызову"
-        hint={isRoll ? 'Формула над броском: @вызов.метки — его метки. Пусто — всегда.' : `Формула над тем, что пришло в вызов: ${(effect?.params ?? []).map(p => `@вызов.${p.key}`).join(', ') || 'входов нет'}. Пусто — всегда.`}
-      >
-        <FormulaInput
-          where="правка вызова · только если по вызову"
-          system={system}
-          extraNames={new Map(isRoll ? [['вызов.метки', 'метки броска']] : (effect?.params ?? []).map(p => [`вызов.${p.key}`, `вызов → ${p.label || p.key}`]))}
-          value={(m.when as { expr?: string } | undefined)?.expr ?? ''}
-          onChange={expr => onChange(d => { if (expr.trim()) d.when = { expr }; else delete d.when; })}
-          placeholder={isRoll ? 'например: есть(@вызов.метки, "атака")' : 'например: @вызов.сколько >= 10'}
-        />
-      </Field>
     </div>
   );
 }

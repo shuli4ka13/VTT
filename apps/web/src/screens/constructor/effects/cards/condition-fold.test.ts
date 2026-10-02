@@ -8,12 +8,12 @@ const system = { constants: {}, effects: {},
 
 describe('пересказ условия по меткам вызова', () => {
   it('метка и строка метки — словами, без ключей', () => {
-    const when = { ref: 'event.tags', has: 'по телу', where: { table: 'damage_types', column: 'armor', is: 'через броню' } };
+    const when = { ref: 'метки', has: 'по телу', where: { table: 'damage_types', column: 'armor', is: 'через броню' } };
     expect(whenWords(when, [], system)).toBe('метки вызова: есть «по телу» и у метки «Броня» = «через броню»');
   });
 
   it('только строка метки', () => {
-    const when = { ref: 'event.tags', where: { table: 'damage_types', column: 'armor', is: 'мимо брони' } };
+    const when = { ref: 'метки', where: { table: 'damage_types', column: 'armor', is: 'мимо брони' } };
     expect(whenWords(when, [], system)).toBe('метки вызова: у метки «Броня» = «мимо брони»');
   });
 });

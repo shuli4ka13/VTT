@@ -127,7 +127,7 @@ describe('GroupCard: условие выполнения шага', () => {
     const selects = [...document.querySelectorAll('select')] as HTMLSelectElement[];
     const picker = selects.find(el => [...el.options].some(o => o.value === 'hit.success'))!;
     fireEvent.change(picker, { target: { value: 'hit.success' } });
-    expect(apply.when).toEqual({ expr: '@hit.success' });
+    expect(apply.if).toEqual({ expr: '@hit.success' });
   });
 
   it('без проверок выше условие всё равно задаётся — формулой', () => {

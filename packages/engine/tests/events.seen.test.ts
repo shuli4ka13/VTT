@@ -214,7 +214,7 @@ group('ядро: по ревью', () => {
       удар: {
         label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS],
         steps: [
-          EACH, roll({ when: { expr: 'нет' } }),
+          EACH, roll({ if: { expr: 'нет' } }),
           { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '1' } },
         ],
       },
