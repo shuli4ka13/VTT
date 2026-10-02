@@ -46,9 +46,14 @@ function play(ctx: Ctx, sheets: Sheet[], intent: ActIntent, random: () => number
   const die = (sides: number) => 1 + Math.floor(random() * sides);
   const asked: string[] = [];
   const history: Journal[] = [];
+  const shown: string[][] = [];
   for (let round = 0; round < 64; round++) {
     const out = act({ ...ctx, sheets, die, journal }, intent);
+    for (const earlier of shown) {
+      expect(out.log.slice(0, earlier.length), 'журнал на паузе — начало следующего: сервер дописывает только хвост').toEqual(earlier);
+    }
     if (out.kind === 'done') return { out, asked, history };
+    shown.push(out.log);
     expect(asked, `вопрос «${out.question.key}» задан повторно`).not.toContain(out.question.key);
     expect(out.question.offers.length, `вопрос «${out.question.key}» без вариантов`).toBeGreaterThan(0);
     const ids = out.question.offers.map(o => o.id);
