@@ -23,7 +23,9 @@ import { State } from './state.ts';
 import { limitsOf, CUT_WORDS } from './limits.ts';
 import { gather, stack } from './edits.ts';
 import { throwDice } from './roll.ts';
-import { result } from './dice.ts';
+import { result, parse, withCount } from './dice.ts';
+import { dieConstant } from '../engine/lead-die.ts';
+import type { Check } from '../engine/check.ts';
 import { subsOf, heard, same, instOf } from './subs.ts';
 import { runnerOf } from './steps.ts';
 import type { Clock } from '../engine/clock.ts';
@@ -149,8 +151,10 @@ export class Run {
   private readonly chain: string[] = [];
   private probing = 0;
   private seeing = 0;
+  clock: Clock | null;
 
   constructor(readonly world: World, readonly ext: External) {
+    this.clock = world.clock;
     this.views = new Views(world.system, world.compendium);
     this.limits = limitsOf(world.system);
     this.state = new State(world.sheets, this.limits.budget);
@@ -361,7 +365,7 @@ export class Run {
     const fresh: WornEffect = {
       effectId,
       ...(carry !== undefined ? { carry } : {}),
-      ...expiryOf(effect, this.world.clock),
+      ...expiryOf(effect, this.clock),
       ...(whoseOf(effect) === 'source' && frame.source ? { from: frame.source } : {}),
       ...(frame.bond ? { from: frame.bond.from, by: frame.bond.by } : {}),
       ...(reapplyOf(effect) === 'stack' ? { inst: this.ext.id(path.phase('inst').phase(effectId)) } : {}),
@@ -638,14 +642,14 @@ export class Run {
   }
 
   moment(moment: MomentKey, sheetId: string, path: Path): void {
-    const lapsed = lapse({ moment, sheetId }, [...this.state.sheets], this.system, this.world.clock);
+    const lapsed = lapse({ moment, sheetId }, [...this.state.sheets], this.system, this.clock);
     this.state.replace(lapsed.sheets);
     for (const gone of lapsed.expired) {
       this.state.write({ text: `«${effectLabelOf(this.system, gone.effectId)}» спало с ${this.sheet(gone.sheetId)?.name ?? gone.sheetId}` });
     }
     const sheet = this.sheet(sheetId);
     if (!sheet) return;
-    const seed = { moment: { moment, sheet: sheetId, round: this.world.clock?.round ?? 0 } };
+    const seed = { moment: { moment, sheet: sheetId, round: this.clock?.round ?? 0 } };
     for (const sub of subsOf(this.system, sheet, this.world.compendium)) {
       if (!heard(sub, { kind: 'moment', moment })) continue;
       this.momentReact(sub, path.phase(moment).handler(sheetId, sub.key, sub.inst), seed,
@@ -756,6 +760,20 @@ export class Run {
       if (isRuleError(err)) return undefined;
       throw err;
     }
+  }
+
+  check(sheetId: string, check: Check, path: Path, owner: string): { thrown: Thrown; bonus: number; total: number; entries: Entry[] } {
+    const frame: Frame = {
+      path, effectId: '', label: owner, owner, here: sheetId, names: sheetId, sender: sheetId, receiver: sheetId, opponent: null,
+      args: {}, paramDefs: [], props: null, claims: {}, actor: false, hop: 0, source: sheetId,
+    };
+    const sink = newSink();
+    const ctx = this.ctx(frame, {}, {}, path, sink, new Set());
+    const spec = parse(dieConstant(this.system, check.die.constant), (ref, what) => ctx.number(ref, what));
+    const sized = check.count === undefined || check.count === null ? spec : withCount(spec, ctx.number(check.count, `${owner} · сколько костей`), owner);
+    const thrown = ctx.roll('sender', sized, [...(check.tags ?? [])]);
+    const bonus = (check.bonus ? ctx.optional(check.bonus, `${owner} · прибавка`) ?? 0 : 0) + thrown.bonus;
+    return { thrown, bonus, total: thrown.result.total + bonus, entries: sink.after };
   }
 
   private choose(question: Question): { chosen: string[]; skipped: boolean } {

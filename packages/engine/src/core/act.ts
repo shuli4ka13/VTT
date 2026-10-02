@@ -51,9 +51,26 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
   const run = new Run({ system, compendium, clock, sheets: world.sheets }, ext);
   const { state } = run;
   const root = Path.op('act');
-  const targets = [...new Set(intent.toIds)];
-
   try {
+    runAct(run, intent, root);
+    run.settle(world.sheets, root);
+    const log = [...state.log];
+    return { kind: 'done', sheets: [...state.sheets], log: render(log, system, compendium, state.sheets), entries: log, journal: ext.settled(), fresh: ext.fresh };
+  } catch (err) {
+    if (!(err instanceof Pause)) throw err;
+    const log = [...state.log];
+    return {
+      kind: 'paused', sheets: [...state.sheets], log: render(log, system, compendium, state.sheets), entries: log,
+      journal: ext.snapshot(), fresh: ext.fresh, question: err.question,
+    };
+  }
+}
+
+export function runAct(run: Run, intent: ActIntent, root: Path): void {
+  const { system, compendium } = run.world;
+  const { state } = run;
+  const targets = [...new Set(intent.toIds)];
+  {
     const action = actionOf(intent.actionId, { system, compendium });
     const effect = requireEffect(system, action.effect, `действие «${action.label}»`);
     if (!isPipeline(effect)) {
@@ -163,17 +180,6 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
       { ...summaries, цели: table }, null, root.phase('done'), 0, done);
     for (const report of done.reactions) state.write({ fromId: actor, toId: actor, report });
     state.write(...done.after);
-
-    run.settle(world.sheets, root);
-    const log = [...state.log];
-    return { kind: 'done', sheets: [...state.sheets], log: render(log, system, compendium, state.sheets), entries: log, journal: ext.settled(), fresh: ext.fresh };
-  } catch (err) {
-    if (!(err instanceof Pause)) throw err;
-    const log = [...state.log];
-    return {
-      kind: 'paused', sheets: [...state.sheets], log: render(log, system, compendium, state.sheets), entries: log,
-      journal: ext.snapshot(), fresh: ext.fresh, question: err.question,
-    };
   }
 }
 
