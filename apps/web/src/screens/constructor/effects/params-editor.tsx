@@ -158,6 +158,7 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
               <KeyField key={`${param.key}:key`} value={param.key} locked={used(param.key)} taken={keys} onChange={next => rekey(param, next)} />,
               <Button key={`${param.key}:drop`} size="sm" variant="ghost" title="убрать вход" onClick={() => onEdit(draft => {
                 draft.params = (draft.params ?? []).filter(p => p.key !== param.key);
+                if (!draft.params.length) delete draft.params;
               })}>×</Button>,
             ];
             return full ? cells : cells.filter((_, at) => at >= COLUMNS.length || !RARE.includes(COLUMNS[at]!.key));

@@ -222,7 +222,13 @@ export function Chip({ children, onClick, onRemove, active, title }: {
   if (onClick) classes.push('chip--action');
   if (active) classes.push('chip--on');
   return (
-    <span className={classes.join(' ')} title={title} onClick={onClick}>
+    <span
+      className={classes.join(' ')} title={title} onClick={onClick}
+      {...(onClick ? {
+        role: 'button', tabIndex: 0,
+        onKeyDown: (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } },
+      } : {})}
+    >
       <span className="nowrap">{children}</span>
       {onRemove ? (
         <button type="button" className="chip__x" aria-label="убрать" onClick={e => { e.stopPropagation(); onRemove(); }}>

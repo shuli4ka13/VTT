@@ -94,7 +94,9 @@ export function within(root: ParentNode = document) {
     return found;
   };
 
-  return { arg, button, has, click, cell, field, select, type, formula, check };
+  const args = (): string[] => [...root.querySelectorAll<HTMLElement>('.pair .call-args__name')].map(textOf);
+
+  return { arg, args, button, has, click, cell, field, select, type, formula, check };
 }
 
 export const stepCard = (title: RegExp): HTMLElement => {

@@ -106,7 +106,8 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
                   value={pipeline ? 'manual' : 'passive'}
                   options={LAUNCH_KINDS.map(k => [k.key, k.label] as const)}
                   onChange={next => edit(draft => {
-                    draft.activation = activationFor({ ...launchOf(draft), kind: next });
+                    const activation = activationFor({ ...launchOf(draft), kind: next });
+                    if (activation === 'manual') delete draft.activation; else draft.activation = activation;
                     if (next === 'manual') draft.steps ??= [];
                   })}
                 />

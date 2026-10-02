@@ -388,7 +388,6 @@
       "hero_attack": {
         "label": "Атака героя",
         "group": "Атака",
-        "activation": "manual",
         "description": "к20 + модификатор + уровень + кость эскалации против КЗ. Попал — кость оружия за каждый уровень, на 20 вдвое. Промах — урон, равный уровню.",
         "params": [
           {
@@ -520,7 +519,6 @@
       "monster_attack": {
         "label": "Атака монстра",
         "group": "Атака",
-        "activation": "manual",
         "description": "Монстры бьют фиксированным уроном и кость эскалации не получают.",
         "params": [
           {
@@ -615,7 +613,6 @@
       "new_round": {
         "label": "Новый раунд",
         "group": "Бой",
-        "activation": "manual",
         "description": "Кость эскалации растёт на единицу, но не выше 6. Только если ведущий ведёт раунды без часов: при ходах по инициативе кость растёт сама в начале раунда — не жмите вместе.",
         "steps": [
           {
@@ -651,7 +648,6 @@
       "end_battle": {
         "label": "Конец боя",
         "group": "Бой",
-        "activation": "manual",
         "description": "Кость эскалации сбрасывается.",
         "steps": [
           {
@@ -687,7 +683,6 @@
       "cost_standard": {
         "label": "Стоимость: стандартное",
         "group": "Стоимость",
-        "activation": "manual",
         "description": "Списывается только в бою. Не хватило — действие не состоялось.",
         "params": [
           {
@@ -741,7 +736,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "params": [],
         "on": [
           {
             "on": "moment:combat-start",
@@ -798,7 +792,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "params": [],
         "on": [
           {
             "on": "moment:combat-end",
@@ -825,7 +818,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "params": [],
         "on": [
           {
             "on": "moment:turn-start",
@@ -875,7 +867,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "params": [],
         "on": [
           {
             "on": "moment:round-start",

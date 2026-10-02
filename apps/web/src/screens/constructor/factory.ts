@@ -18,7 +18,7 @@ export const newEffect = (system: System, kind: LaunchKind): Made<Effect> => ({
   key: freeId(Object.keys(system.effects), 'effect'),
   value: kind === 'manual'
     ? {
-      label: 'Новый эффект', activation: 'manual',
+      label: 'Новый эффект',
       params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true }],
       steps: [{ type: 'each', of: 'цели', as: 'цель' } as unknown as Step],
     }
@@ -69,7 +69,7 @@ export const simpleReceive = (tag: string, direction: 'subtract' | 'add'): Step 
 
 export const newCost = (system: System): Made<Effect> => ({
   key: freeId(Object.keys(system.effects ?? {}), 'стоимость'),
-  value: { label: `${COST_BLOCK}: новая`, group: COST_BLOCK, activation: 'manual', params: [], steps: [] },
+  value: { label: `${COST_BLOCK}: новая`, group: COST_BLOCK, steps: [] },
 });
 
 export const costsOf = (system: System): [string, Effect][] =>
