@@ -1,5 +1,5 @@
 import { group, test, eq, ok } from './harness.ts';
-import { act } from '../src/lang/act.ts';
+import { act } from './core-switch.ts';
 import { emptyJournal } from '../src/lang/journal.ts';
 import type { Journal } from '../src/lang/journal.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';

@@ -1,4 +1,4 @@
-import { act } from '../src/lang/act.ts';
+import { act } from './core-switch.ts';
 import { emptyJournal } from '../src/lang/journal.ts';
 import type { Journal, Question } from '../src/lang/journal.ts';
 import type { Entry } from '../src/lang/run.ts';

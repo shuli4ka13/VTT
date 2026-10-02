@@ -15,6 +15,7 @@ export interface Report {
   changes: Change[];
   effects: string[];
   removed: string[];
+  spent: string[];
   emitted: EmittedEvent[];
   reactions?: Report[];
 }

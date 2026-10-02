@@ -1,6 +1,5 @@
 import { group, test, ok, eq } from './harness.ts';
 import { exchange } from './play.ts';
-import { MAX_CALL_DEPTH } from '../src/engine/rule.ts';
 import { EngineError } from '../src/engine/errors.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
 import type { System, Effect } from '../src/model/types.ts';
@@ -28,7 +27,7 @@ group('один путь вызова', () => {
     } catch (err) { caught = err; }
     ok(caught instanceof EngineError, `ожидалась EngineError, получено ${String(caught)}`);
     const text = (caught as Error).message;
-    ok(text.includes(`глубже ${MAX_CALL_DEPTH}`), text);
+    ok(/вызовы вложены глубже \d+/.test(text), text);
     ok(text.includes('damage → damage'), text);
   });
 

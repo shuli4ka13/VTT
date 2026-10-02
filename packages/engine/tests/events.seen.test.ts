@@ -1,5 +1,6 @@
 import { group, test, eq, ok } from './harness.ts';
-import { act } from '../src/lang/act.ts';
+import { act, NEW_CORE } from './core-switch.ts';
+import { CUT_WORDS } from '../src/core/limits.ts';
 import { emptyJournal } from '../src/lang/journal.ts';
 import type { Journal } from '../src/lang/journal.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
@@ -179,6 +180,11 @@ group('ядро: по ревью', () => {
       эхо: { label: 'Эхо', activation: 'manual', params: [], steps: [] },
       отзвук: { label: 'Отзвук', activation: 'passive', on: [{ on: 'targeted', of: 'event:эхо', steps: [{ type: 'emit', event: 'эхо' }] }] },
     });
+    if (NEW_CORE) {
+      const out = play(system, [sheet('а'), sheet('б', ['отзвук'])], []);
+      ok(out.log.includes(CUT_WORDS), 'обработчик упёрся в глубину — отказ обработчика, строка в журнале');
+      return;
+    }
     let message = '';
     try { play(system, [sheet('а'), sheet('б', ['отзвук'])], []); } catch (err) { message = (err as Error).message; }
     ok(message.includes('похоже, идут по кругу'), message);
