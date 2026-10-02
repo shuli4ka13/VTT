@@ -1,6 +1,6 @@
 import type { System, Modifier } from '@vtt/schema';
-import { Card, CardHead, Field, Input, Select, Button, Empty, Fold, DangerButton } from '../../ui/primitives.tsx';
-import { FormulaInput, formulaAsLabels } from '../../ui/formula.tsx';
+import { Card, CardHead, Field, Input, Select, Button, Empty, DangerButton } from '../../ui/primitives.tsx';
+import { FormulaInput } from '../../ui/formula.tsx';
 import { targets } from '@vtt/engine/engine/targets';
 import { installMethod, recipesToInstall } from '@vtt/engine/model/advantage-methods';
 import { tagsOf, tagTablesOf, listOf as rowsFrom, amountParamOf } from '@vtt/engine/model/lists';
@@ -9,7 +9,7 @@ import { ROLL_CALL, CALL_WORDS } from '@vtt/engine/words/calls';
 import { TagPick, type Tag } from './tag-pick.tsx';
 import { RollTagsPick } from './roll-tags-pick.tsx';
 import { callNamesOf } from '@vtt/engine/model/references';
-import { holderPhrase, splitIf, joinIf } from './effects/names.ts';
+import { ConditionField } from './condition-field.tsx';
 
 const OPS = [
   ['add', 'прибавить'],
@@ -141,20 +141,17 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
           ) : null}
 
           {modifier.kind === 'value' ? (
-            <Fold title="Только если" summary={modifier.if?.expr ? `если ${formulaAsLabels(system, modifier.if.expr)}` : 'всегда'}>
-              <Field label="Условие" hint="На листе носителя. Пусто — всегда.">
-                <FormulaInput
-                  where="модификатор · только когда"
-                  system={system}
-                  value={modifier.if?.expr ?? ''}
-                  onChange={expr => onEdit(draft => {
-                    const d = draft[index] as { if?: { expr: string } };
-                    if (expr.trim()) d.if = { expr }; else delete d.if;
-                  })}
-                  placeholder="например: @тяжёлая броня"
-                />
-              </Field>
-            </Fold>
+            <ConditionField
+              value={modifier.if?.expr}
+              onChange={expr => onEdit(draft => {
+                const d = draft[index] as { if?: { expr: string } };
+                if (expr) d.if = { expr }; else delete d.if;
+              })}
+              system={system}
+              where="модификатор · только когда"
+              placeholder="например: @тяжёлая_броня"
+              ruleHint="На листе носителя. Не сошлось — правка не действует."
+            />
           ) : (
             <Concern system={system} modifier={modifier as Loose} onChange={change => onEdit(draft => { change(draft[index] as Loose); })} />
           )}
@@ -339,35 +336,20 @@ function Concern({ system, modifier, onChange }: {
   onChange: (change: (draft: Loose) => void) => void;
 }) {
   const call = String(modifier.call ?? ROLL_CALL);
-  const names = callNamesOf(system, call).sheets;
+  const params = new Map((system.effects[call]?.params ?? []).map(p => [p.key, p.label ?? p.key]));
   const words: Record<string, string> = { бросающий: 'бросает носитель', против: 'бросают против носителя' };
-  const phrases = names.map(name => [holderPhrase(name), words[name] ?? `«${name}» — носитель`] as const);
-  const written = (modifier.if as { expr?: string } | undefined)?.expr;
-  const { holder, rest } = splitIf(written, phrases.map(([expr]) => expr));
-  const set = (nextHolder: string, nextRest: string) => onChange(d => {
-    const expr = joinIf(nextHolder, nextRest);
-    if (expr) d.if = { expr }; else delete d.if;
-  });
+  const holders = callNamesOf(system, call).sheets.map(name => [name, words[name] ?? `«${params.get(name) ?? name}» — носитель`] as const);
   return (
     <div className="row">
-      <Field label="Кого касается" hint="Носитель — лист, на котором висит эта правка.">
-        <Select<string>
-          value={holder}
-          options={[['', 'всех — без условия'], ...phrases]}
-          onChange={next => set(next, rest)}
-        />
-      </Field>
-      <Fold title="Только если" summary={rest ? `если ${formulaAsLabels(system, rest)}` : 'больше условий нет'}>
-        <Field label="Условие" hint="Поля пишутся через лист: @носитель.поле. Входы вызова — по имени.">
-          <FormulaInput
-            where="правка · только если"
-            system={system}
-            value={rest}
-            onChange={expr => set(holder, expr)}
-            placeholder="например: @носитель.ярость > 0"
-          />
-        </Field>
-      </Fold>
+      <ConditionField
+        value={(modifier.if as { expr?: string } | undefined)?.expr}
+        onChange={expr => onChange(d => { if (expr) d.if = { expr }; else delete d.if; })}
+        system={system}
+        holders={holders}
+        where="правка · только если"
+        placeholder="например: @носитель.ярость > 0"
+        holderHint="Носитель — лист, на котором висит эта правка."
+      />
     </div>
   );
 }

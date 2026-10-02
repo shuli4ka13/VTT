@@ -1,5 +1,4 @@
-import { Card, CardHead, Field, Select, Fold, DangerButton } from '../../../ui/primitives.tsx';
-import { FormulaField } from '../../../ui/formula-field.tsx';
+import { Card, CardHead, Field, Select, DangerButton } from '../../../ui/primitives.tsx';
 import { registry } from '@vtt/engine/engine/steps/index';
 import { MOMENTS as TIMES } from '@vtt/engine/events/moments';
 import { MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, PHASES, SEEN, SEEN_LABEL, ANY_ACTION, callHappening, happeningOf } from '@vtt/engine/events/bus';
@@ -7,7 +6,9 @@ import type { Phase } from '@vtt/engine/events/bus';
 import type { MomentKey } from '@vtt/engine/events/moments';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { TARGETS_SEED } from '@vtt/engine/model/references';
-import { sheetsAt, holderPhrase, splitIf, joinIf } from './names.ts';
+import { sheetsAt } from './names.ts';
+import { namesAt } from '@vtt/engine/model/names-at';
+import { ConditionField } from '../condition-field.tsx';
 import type { System, Handler } from '@vtt/schema';
 
 type Kind = 'call' | 'seen' | 'moment' | 'field' | 'gained' | 'lost';
@@ -75,11 +76,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
   const phase = callHappening(handler.on)?.phase ?? 'before';
   const sheets = sheetsAt(system, id, { part: 'handler-if', handler: index });
   const names = [...sheets].filter(([name]) => name !== 'носитель');
-  const holders = names.map(([name]) => holderPhrase(name));
-  const { holder, rest } = splitIf(handler.if?.expr, holders);
   const outcomes = kind === 'call' && subject ? outcomesOf(system, subject, phase) : [];
-  const pickedOutcome = outcomes.find(([expr]) => expr === rest.trim())?.[0] ?? null;
-  const formula = rest && !pickedOutcome ? rest : null;
   const watchable = fieldsOf(system).filter(f => f.value.kind !== 'stored' || f.value.type === 'boolean');
   const hanging = Object.entries(system.effects).filter(([key, e]) => key !== id && (e.activation ?? 'manual') === 'passive');
   const actions = Object.entries(system.effects).filter(([key, e]) => key !== id && (e.activation ?? 'manual') === 'manual');
@@ -98,10 +95,10 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
         : `${PREFIX[nextKind]}${nextSubject}`;
     delete draft.if;
   });
-  const setIf = (nextHolder: string, nextRest: string) => edit(draft => {
-    const expr = joinIf(nextHolder, nextRest);
+  const setIf = (expr: string | null) => edit(draft => {
     if (expr) draft.if = { expr }; else delete draft.if;
   });
+  const visible = new Map(namesAt(system, id, { part: 'handler-if', handler: index }).map(one => [one.name, one.label]));
 
   return (
     <Card>
@@ -136,13 +133,18 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
       </div>
 
       <div className="row">
-        <Field label="Кого касается" hint="Носитель — лист, на котором висит эта подписка.">
-          <Select<string>
-            value={holder}
-            options={[['', 'всех — без условия'], ...names.map(([name, label]) => [holderPhrase(name), `«${label}» — носитель`] as const)]}
-            onChange={next => setIf(next, rest)}
-          />
-        </Field>
+        <ConditionField
+          value={handler.if?.expr}
+          onChange={setIf}
+          system={system}
+          holders={names.map(([name, label]) => [name, `«${label}» — носитель`] as const)}
+          phrases={outcomes.map(([expr, label]) => ({ expr, label }))}
+          names={visible}
+          sheets={sheets}
+          where={`подписка №${index + 1} · только если`}
+          placeholder={phase === 'done' ? 'например: сколько(@итоги.hit.success, да) >= 1' : 'например: @носитель.хиты <= 0'}
+          holderHint="Носитель — лист, на котором висит эта подписка."
+        />
         <Field label="Решение">
           <Select<string>
             value={handler.confirm ? 'ask' : ''}
@@ -151,27 +153,6 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
           />
         </Field>
       </div>
-
-      <Fold title="Только если" summary={formula ? `если ${formula}` : pickedOutcome ? `если ${outcomes.find(([expr]) => expr === pickedOutcome)?.[1]}` : 'больше условий нет'}>
-        <Field label="Ещё условие">
-          <Select<string>
-            value={formula !== null ? ':формула' : pickedOutcome ?? ''}
-            options={[['', 'нет'], ...outcomes, [':формула', 'формулой…']]}
-            onChange={next => setIf(holder, next === ':формула' ? (formula ?? '') || 'да' : next)}
-          />
-          {formula !== null ? (
-            <FormulaField
-              value={formula}
-              system={system}
-              where={`подписка №${index + 1} · только если`}
-              sheets={sheets}
-              {...(phase === 'done' && kind === 'call' ? { extraNames: new Map([[TARGETS_SEED, 'итоги по целям: строка на цель']]) } : {})}
-              placeholder={phase === 'done' ? 'например: сколько(@итоги.hit.success, да) >= 1' : 'например: @носитель.хиты <= 0'}
-              onCommit={next => setIf(holder, next)}
-            />
-          ) : null}
-        </Field>
-      </Fold>
     </Card>
   );
 }

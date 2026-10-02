@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { System } from '@vtt/schema';
-import { whenWords } from './condition-fold.tsx';
+import { whenWords } from '../../condition-field.tsx';
 
 const system = { constants: {}, effects: {},
   tables: { damage_types: { label: 'Типы урона', key: 'word', columns: [{ key: 'armor', label: 'Броня', kind: 'choice', from: 'armor_pass' }], rows: [] } },
@@ -9,11 +9,11 @@ const system = { constants: {}, effects: {},
 describe('пересказ условия по меткам вызова', () => {
   it('метка и строка метки — словами, без ключей', () => {
     const when = { ref: 'метки', has: 'по телу', where: { table: 'damage_types', column: 'armor', is: 'через броню' } };
-    expect(whenWords(when, [], system)).toBe('метки вызова: есть «по телу» и у метки «Броня» = «через броню»');
+    expect(whenWords(when, ref => (ref === 'метки' ? 'метки вызова' : ref), system)).toBe('метки вызова: есть «по телу» и у метки «Броня» = «через броню»');
   });
 
   it('только строка метки', () => {
     const when = { ref: 'метки', where: { table: 'damage_types', column: 'armor', is: 'мимо брони' } };
-    expect(whenWords(when, [], system)).toBe('метки вызова: у метки «Броня» = «мимо брони»');
+    expect(whenWords(when, ref => (ref === 'метки' ? 'метки вызова' : ref), system)).toBe('метки вызова: у метки «Броня» = «мимо брони»');
   });
 });

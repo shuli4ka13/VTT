@@ -85,3 +85,32 @@ export function writeGuard(when: When): string {
   const joined = parts.length > 1 ? `все(${parts.join(', ')})` : parts[0]!;
   return when.not ? `не(${joined})` : joined;
 }
+
+const tidy = (expr: string): string => {
+  try { return printFormula(compile(expr).ast); } catch { return expr.trim(); }
+};
+
+export function splitHolder(expr: string | undefined | null, holders: readonly string[]): { holder: string; rest: string } {
+  const text = (expr ?? '').trim();
+  if (!text) return { holder: '', rest: '' };
+  const wanted = new Map(holders.map(phrase => [tidy(phrase), phrase]));
+  let ast: Node;
+  try { ast = compile(text).ast; } catch { return { holder: '', rest: text }; }
+  const whole = wanted.get(printFormula(ast));
+  if (whole) return { holder: whole, rest: '' };
+  if (ast.kind !== 'Call' || ast.name !== 'все') return { holder: '', rest: text };
+  const at = ast.args.findIndex(arg => wanted.has(printFormula(arg)));
+  if (at < 0) return { holder: '', rest: text };
+  const others = ast.args.filter((_, index) => index !== at).map(arg => printFormula(arg));
+  return { holder: wanted.get(printFormula(ast.args[at]!))!, rest: others.length === 1 ? others[0]! : `все(${others.join(', ')})` };
+}
+
+export function joinHolder(holder: string, rest: string): string | null {
+  const tail = rest.trim();
+  if (!holder) return tail || null;
+  if (!tail) return holder;
+  let ast: Node | null = null;
+  try { ast = compile(tail).ast; } catch { ast = null; }
+  const parts = ast && ast.kind === 'Call' && ast.name === 'все' ? ast.args.map(arg => printFormula(arg)) : [tail];
+  return `все(${[holder, ...parts].join(', ')})`;
+}

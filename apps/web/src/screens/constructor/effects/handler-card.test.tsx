@@ -7,7 +7,7 @@ import type { System, Handler } from '@vtt/schema';
 const system = {
   id: 'x', name: 'x', tables: {}, constants: { d20: { kind: 'die', dice: [{ count: 1, sides: 20 }] } },
   effects: {
-    удар: { label: 'Удар', activation: 'manual', steps: [
+    удар: { label: 'Удар', activation: 'manual', params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }], steps: [
       { id: 'hit_бросок', type: 'roll', die: { constant: 'd20' }, by: { expr: '@действующий' } },
       { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '10' } },
     ] },
@@ -41,7 +41,7 @@ describe('«когда»: исходы под момент', () => {
     cleanup();
     const { view } = card({ on: 'done:удар', if: { expr: 'сколько(@итоги.hit.success, да) >= 1' }, steps: [] });
     expect((conditionSelect() as HTMLSelectElement).value).toBe(':формула');
-    expect(view.container.textContent).toContain('если сколько(@итоги.hit.success, да) >= 1');
+    expect(view.container.textContent).toContain('если сколько(итоги.hit.success, да) >= 1');
   });
 
   it('у «завершено» нет выбора «Кому», зато есть «Кого касается»', () => {
