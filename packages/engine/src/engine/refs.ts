@@ -223,7 +223,7 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
         : view(id).resolve(rest));
       return Array.isArray(bound) ? bound.map(read) : read(bound as string);
     }
-    if (name in results && !isField(system, name)) return results[name];
+    if (name in results && (ctx.sheets || !isField(system, name))) return results[name];
     const dot = name.indexOf('.');
     if (dot > 0) {
       const head = name.slice(0, dot);
@@ -234,7 +234,7 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
         if (value !== undefined) return value;
       }
     }
-    if (!isField(system, name)) {
+    if (ctx.sheets || !isField(system, name)) {
       if (ctx.recordScope && ctx.props && name in ctx.props) return recordValue(name, ctx);
       if (ctx.recordScope && ctx.props && declaredProp(system, name)) return null;
       const named = namedValue(name, ctx);

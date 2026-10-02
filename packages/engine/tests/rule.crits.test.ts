@@ -22,19 +22,19 @@ const sheet = { id: 'герой', values: {}, effects: [] };
 
 const rule: any = {
   steps: [
-    {
-      id: 'roll', type: 'threshold',
-      roll: { die: { constant: 'пул' }, bonus: { expr: '0' }, tags: ['проверка'] },
-      versus: { expr: '4' },
-    },
-    { id: 'крит', type: 'compare', value: { expr: '@roll.atMax' }, versus: { expr: '2' }, breakIf: 'less' },
+    { id: 'roll', type: 'roll', die: { constant: 'пул' }, bonus: { expr: '0' }, tags: ['проверка'], by: { expr: '@действующий' } },
+    { id: 'крит', type: 'check', value: { expr: '@roll.atMax' }, versus: { expr: '2' } },
   ],
 };
+
+const ACTOR = { key: 'действующий', kind: 'sheet' };
+const TARGETS = { key: 'цели', kind: 'sheet', many: true };
+const EACH = { type: 'each', of: 'цели', as: 'цель' };
 
 const runRule = (sys: any, rule: any, sender: any, target: any, die: () => number, base: any = { records: [] }) => {
   const full: any = {
     ...sys, tables: { ...sys.tables, приём: { shape: 'book', use: 'action', label: 'Приём' } },
-    effects: { ...sys.effects, 'правило': { label: 'правило', activation: 'manual', ...rule } },
+    effects: { ...sys.effects, 'правило': { label: 'правило', activation: 'manual', params: [ACTOR, TARGETS], ...rule, steps: [EACH, ...rule.steps] } },
   };
   const book: any = { ...base, records: [...base.records, { id: 'правило', table: 'приём', label: 'правило', bindings: [{ label: 'правило', effect: 'правило', args: {} }] }] };
   const from = { ...sender, id: 'отправитель-теста', has: [...(sender.has ?? []), { of: 'правило' }], effects: sender.effects ?? [] };
@@ -48,7 +48,7 @@ const probed = (sys: any, rule: any, stepId: string, sender: any, die: () => num
   const columns = PROBE_KEYS.map(key => ({ key: `зонд_${key}`, label: key, kind: 'number', default: -1 }));
   const withProbe: any = { ...sys, tables: { ...sys.tables, лист: { shape: 'single', columns: [...(sys.tables.лист?.columns ?? []), ...columns] } } };
   const at = rule.steps.findIndex((step: any) => step.id === stepId) + 1;
-  const writes = PROBE_KEYS.map(key => ({ type: 'apply', target: { tag: `зонд_${key}` }, direction: 'set', targetModifiers: false, value: { expr: `@${stepId}.${key}` } }));
+  const writes = PROBE_KEYS.map(key => ({ type: 'apply', target: { expr: `@цель.зонд_${key}` }, direction: 'set', targetModifiers: false, value: { expr: `@${stepId}.${key}` } }));
   const steps = [...rule.steps.slice(0, at), ...writes, ...rule.steps.slice(at)];
   const target = { id: 'цель-теста', values: {}, effects: [] };
   const out = runRule(withProbe, { ...rule, steps }, sender, target, die);
@@ -97,7 +97,7 @@ group('криты и глитчи собираются автором', () => {
       effects: {
         всегда: {
           label: 'Взрывные кости', activation: 'passive', duration: { kind: 'permanent' },
-          modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['проверка'], edit: 'взрыв' }],
+          modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['проверка'], if: { expr: '@бросающий == @носитель' }, edit: 'взрыв' }],
         },
       },
     };

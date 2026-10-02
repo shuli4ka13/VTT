@@ -39,24 +39,26 @@ group('степени успеха', () => {
       ...sys.effects,
       [id]: {
         label: id, activation: 'passive', duration: { kind: 'permanent' },
-        modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['ход'], edit }],
+        modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['ход'], if: { expr: '@бросающий == @носитель' }, edit }],
       },
     },
   });
 
   const rule: any = {
-    steps: [{
-      id: 'move', type: 'threshold',
-      roll: { die: { constant: 'пара' }, bonus: { expr: '0' }, tags: ['ход'] },
-      versus: { expr: '7' },
-      degrees: { table: 'исходы', of: 'total' },
-    }],
+    steps: [
+      { id: 'move_бросок', type: 'roll', die: { constant: 'пара' }, bonus: { expr: '0' }, tags: ['ход'], by: { expr: '@действующий' } },
+      { id: 'move', type: 'check', value: { expr: '@move_бросок' }, versus: { expr: '7' }, degrees: { table: 'исходы', of: 'total' } },
+    ],
   };
+
+  const ACTOR = { key: 'действующий', kind: 'sheet' };
+  const TARGETS = { key: 'цели', kind: 'sheet', many: true };
+  const EACH = { type: 'each', of: 'цели', as: 'цель' };
 
   const runRule = (sys: any, rule: any, sender: any, target: any, die: () => number, base: any = { records: [] }) => {
     const full: any = {
       ...sys, tables: { ...sys.tables, приём: { shape: 'book', use: 'action', label: 'Приём' } },
-      effects: { ...sys.effects, 'правило': { label: 'правило', activation: 'manual', ...rule } },
+      effects: { ...sys.effects, 'правило': { label: 'правило', activation: 'manual', params: [ACTOR, TARGETS], ...rule, steps: [EACH, ...rule.steps] } },
     };
     const book: any = { ...base, records: [...base.records, { id: 'правило', table: 'приём', label: 'правило', bindings: [{ label: 'правило', effect: 'правило', args: {} }] }] };
     const from = { ...sender, id: 'отправитель-теста', has: [...(sender.has ?? []), { of: 'правило' }], effects: sender.effects ?? [] };
@@ -68,7 +70,7 @@ group('степени успеха', () => {
   const play = (world: any, effects: string[], die: () => number, ruleOf: any = rule) => {
     const sheet = { id: 'герой', values: {}, effects: effects.map(effectId => ({ effectId })) };
     const out = runRule(world, ruleOf, sheet, { id: 'цель-теста', values: {}, effects: [] }, die);
-    const t = out.trace[0]!;
+    const t = out.trace.find(line => line.step === 'move')!;
     return { results: { move: { ...(('degree' in t) ? { degree: t.degree } : {}), success: t.success } } as any };
   };
   const run = (world: any, effects: string[], ...dice: number[]) => play(world, effects, queue(...dice));
@@ -97,7 +99,7 @@ group('степени успеха', () => {
   });
 
   test('мир без объявленной шкалы живёт как раньше: степени нет вовсе', () => {
-    const plain: any = { steps: [{ ...rule.steps[0], degrees: undefined }] };
+    const plain: any = { steps: [rule.steps[0], { ...rule.steps[1], degrees: undefined }] };
     const r = play(sys, [], queue(3, 4), plain);
     eq('degree' in (r.results.move as object), false, 'ключа нет — старые правила не изменились');
     eq(r.results.move.success, true);

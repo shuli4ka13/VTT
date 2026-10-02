@@ -132,10 +132,9 @@ export async function playScenario(scenario: Scenario): Promise<Played> {
       if ('act' in step) {
         const targets = Array.isArray(step.to) ? step.to : [step.to];
         await settle(rooms.act(userId, {
-          roomId, actionId: step.act, fromId: step.from, toId: targets[0]!,
-          ...(targets.length > 1 ? { toIds: targets } : {}),
+          roomId, actionId: step.act, fromId: step.from, toIds: targets,
           ...(step.inputs ? { inputs: step.inputs } : {}),
-          ...(step.edits ? { edits: step.edits } : {}),
+          ...(step.edits ? { claims: { [step.from]: step.edits } } : {}),
         }), step.answers, step.refused);
       } else if ('turn' in step) {
         await settle(rooms.turn(userId, { roomId, op: step.turn, ...(step.order ? { order: step.order } : {}) }), step.answers);

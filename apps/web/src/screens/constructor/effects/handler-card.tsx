@@ -2,67 +2,78 @@ import { Card, CardHead, Field, Select, Fold, DangerButton } from '../../../ui/p
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { registry } from '@vtt/engine/engine/steps/index';
 import { MOMENTS as TIMES } from '@vtt/engine/events/moments';
-import { MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, ACTION_MOMENTS, isActionMoment } from '@vtt/engine/events/bus';
-import type { ActionMoment } from '@vtt/engine/events/bus';
+import { MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, PHASES, SEEN, SEEN_LABEL, ANY_ACTION, callHappening, happeningOf } from '@vtt/engine/events/bus';
+import type { Phase } from '@vtt/engine/events/bus';
 import type { MomentKey } from '@vtt/engine/events/moments';
-
-import { MOMENTS, ASK } from './words.ts';
-import type { Moment } from './words.ts';
-import type { System, Handler } from '@vtt/schema';
-import { calledOf } from '@vtt/engine/engine/effects';
-import { CALL_WORDS } from '@vtt/engine/words/calls';
-import { RollTagsPick } from '../roll-tags-pick.tsx';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { TARGETS_SEED } from '@vtt/engine/model/references';
+import { handlerSheets, holderPhrase } from './names.ts';
+import type { System, Handler } from '@vtt/schema';
 
-function conditionsOf(system: System, listened: string | undefined): (readonly [string, string])[] {
-  const source = listened ? system.effects[listened] : undefined;
+type Kind = 'call' | 'seen' | 'moment' | 'field' | 'gained' | 'lost';
+
+const KINDS: readonly (readonly [Kind, string])[] = [
+  ['call', 'действие или вызов'],
+  ['seen', SEEN_LABEL],
+  ['moment', 'время'],
+  ['field', 'поле стало верным'],
+  ['gained', 'эффект появился на листе'],
+  ['lost', 'эффект ушёл с листа'],
+];
+
+const PHASE_OPTIONS = (Object.keys(PHASES) as Phase[]).map(key => [key, `${PHASES[key].label} — ${PHASES[key].note}`] as const);
+
+const kindOf = (on: string): Kind => {
+  if (on === SEEN) return 'seen';
+  if (on.startsWith(MOMENT_PREFIX)) return 'moment';
+  if (on.startsWith(FIELD_PREFIX)) return 'field';
+  if (on.startsWith(GAINED_PREFIX)) return 'gained';
+  if (on.startsWith(LOST_PREFIX)) return 'lost';
+  return 'call';
+};
+
+const subjectOf = (on: string): string => {
+  const call = callHappening(on);
+  if (call) return call.of;
+  const at = on.indexOf(':');
+  return at > 0 ? on.slice(at + 1) : '';
+};
+
+const PREFIX: Record<Exclude<Kind, 'call' | 'seen'>, string> = {
+  moment: MOMENT_PREFIX, field: FIELD_PREFIX, gained: GAINED_PREFIX, lost: LOST_PREFIX,
+};
+
+function outcomesOf(system: System, listened: string): (readonly [string, string])[] {
+  const source = system.effects[listened];
   if (!source) return [];
   const out: (readonly [string, string])[] = [];
   (source.steps ?? []).forEach((step, index) => {
     if (!step.id) return;
-    const mod = registry.get(step.type);
-    for (const output of (mod?.outputs ?? []) as { path: string; label: string; kind?: string }[]) {
+    for (const output of (registry.get(step.type)?.outputs ?? []) as { path: string; label: string; kind?: string }[]) {
       if (output.kind !== 'boolean') continue;
-      out.push([`${step.id}${output.path}`, `шаг ${index + 1} · ${output.label}`] as const);
+      out.push([`@${step.id}${output.path}`, `шаг ${index + 1} · ${output.label}`] as const);
     }
   });
   return out;
 }
 
-function conditionsOfAny(system: System): (readonly [string, string])[] {
-  const seen = new Map<string, string>();
-  for (const [key, effect] of Object.entries(system.effects)) {
-    if ((effect.activation ?? 'manual') !== 'manual') continue;
-    for (const [ref, label] of conditionsOf(system, key)) if (!seen.has(ref)) seen.set(ref, label);
+const splitIf = (expr: string | undefined, holders: string[]): { holder: string; rest: string } => {
+  const text = (expr ?? '').trim();
+  if (!text) return { holder: '', rest: '' };
+  if (holders.includes(text)) return { holder: text, rest: '' };
+  const both = /^все\((.*)\)$/su.exec(text);
+  if (both) {
+    const [first, ...others] = both[1]!.split(/,\s*/u);
+    if (first && holders.includes(first.trim())) return { holder: first.trim(), rest: others.join(', ') };
   }
-  return [...seen].map(([ref, label]) => [ref, label] as const);
-}
-
-const BY_FORMULA = ':формула';
-
-const SEED_NAMES = new Map([['worn.carry', 'запомненное число'], ['вызов.я', 'кто действует'], ['вызов.цель', 'на кого действуют'], ['roll.natural', 'что выпало на костях'], ['roll.total', 'итог броска']]);
-
-const DONE_NAMES = new Map([...SEED_NAMES, [TARGETS_SEED, 'цели действия: строка на цель']]);
-
-export const momentOf = (handler: Handler): Moment | null =>
-  (isActionMoment(handler.on) ? (handler.confirm ? `${ASK}${handler.on}` : handler.on) : null);
-
-const isMomentValue = (value: string): value is Moment => MOMENTS.some(([key]) => key === value);
-
-const applyMoment = (draft: Handler, moment: Moment): void => {
-  const on = (moment.startsWith(ASK) ? moment.slice(ASK.length) : moment) as ActionMoment;
-  draft.on = on;
-  if (moment.startsWith(ASK)) draft.confirm = true; else delete draft.confirm;
-  if (!ACTION_MOMENTS[on].replies) delete draft.to;
-  if (on !== 'seen') { delete draft.as; delete draft.tags; }
-  if (on !== 'seen' && on !== 'affected') delete draft.watch;
+  return { holder: '', rest: text };
 };
 
-const outcomesOf = (moment: Moment | null, found: (readonly [string, string])[]): (readonly [string, string])[] =>
-  (moment === 'done'
-    ? found.map(([ref, label]) => [`сколько(@${TARGETS_SEED}.${ref}, да) >= 1`, `хоть по одной цели: ${label}`] as const)
-    : found.map(([ref, label]) => [`@${ref}`, label] as const));
+const joinIf = (holder: string, rest: string): string | null => {
+  const parts = [holder, rest.trim()].filter(Boolean);
+  if (!parts.length) return null;
+  return parts.length === 1 ? parts[0]! : `все(${parts.join(', ')})`;
+};
 
 export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
   id: string;
@@ -72,141 +83,109 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
   edit: (change: (draft: Handler) => void) => void;
   onRemove: () => void;
 }) {
-  const moment = momentOf(handler);
-  const listened = handler.of;
-  const anyAction = !listened;
-  const isMoment = moment === null;
-  const hanging = Object.entries(system.effects).filter(([key, e]) => key !== id && (e.activation ?? 'manual') === 'passive');
-  const conditions = outcomesOf(moment, isMoment ? [] : anyAction ? conditionsOfAny(system) : conditionsOf(system, listened));
+  const effect = system.effects[id]!;
+  const kind = kindOf(handler.on ?? '');
+  const subject = subjectOf(handler.on ?? '');
+  const phase = callHappening(handler.on)?.phase ?? 'before';
+  const sheets = handlerSheets(system, effect, handler);
+  const names = [...sheets].filter(([name]) => name !== 'носитель');
+  const holders = names.map(([name]) => holderPhrase(name));
+  const { holder, rest } = splitIf(handler.if?.expr, holders);
+  const outcomes = kind === 'call' && subject ? outcomesOf(system, subject) : [];
+  const pickedOutcome = outcomes.find(([expr]) => expr === rest.trim())?.[0] ?? null;
+  const formula = rest && !pickedOutcome ? rest : null;
   const watchable = fieldsOf(system).filter(f => f.value.kind !== 'stored' || f.value.type === 'boolean');
-  const replies = isActionMoment(handler.on) ? ACTION_MOMENTS[handler.on].replies : null;
-  const written = handler.if?.expr ?? null;
-  const picked = written !== null ? conditions.find(([expr]) => written.trim() === expr)?.[0] ?? null : null;
-  const formula = written !== null && picked === null ? written : null;
+  const hanging = Object.entries(system.effects).filter(([key, e]) => key !== id && (e.activation ?? 'manual') === 'passive');
+  const actions = Object.entries(system.effects).filter(([key, e]) => key !== id && (e.activation ?? 'manual') === 'manual');
+  const tags = Object.entries(system.tags ?? {});
+
+  const subjects: (readonly [string, string])[] = kind === 'call'
+    ? [[ANY_ACTION, 'любое действие кнопкой'], ...tags.map(([key, tag]) => [key, `всё с меткой «${tag.label ?? key}»`] as const), ...actions.map(([key, e]) => [key, `«${e.label ?? key}»`] as const)]
+    : kind === 'moment' ? (Object.keys(TIMES) as MomentKey[]).map(key => [key, TIMES[key]] as const)
+      : kind === 'field' ? watchable.map(f => [f.tag, `«${f.label}»`] as const)
+        : kind === 'gained' || kind === 'lost' ? hanging.map(([key, e]) => [key, `«${e.label ?? key}»`] as const)
+          : [];
+
+  const setOn = (nextKind: Kind, nextSubject: string, nextPhase: Phase) => edit(draft => {
+    draft.on = nextKind === 'seen' ? SEEN
+      : nextKind === 'call' ? happeningOf(nextPhase, nextSubject || ANY_ACTION)
+        : `${PREFIX[nextKind]}${nextSubject}`;
+    delete draft.if;
+  });
+  const setIf = (nextHolder: string, nextRest: string) => edit(draft => {
+    const expr = joinIf(nextHolder, nextRest);
+    if (expr) draft.if = { expr }; else delete draft.if;
+  });
 
   return (
     <Card>
       <CardHead
-        title={`Когда №${index + 1}`}
-        sub="Что случилось — и что эффект делает в ответ."
+        title={`Подписка №${index + 1}`}
+        sub="На что откликается эффект, кого это касается и что он делает в ответ."
         actions={<DangerButton size="sm" onConfirm={onRemove}>Удалить</DangerButton>}
       />
 
       <div className="row">
-        <Field label="Когда" needed={!handler.on}>
-          <Select
-            value={moment ?? handler.on ?? ''}
-            options={[
-              ...(handler.on ? [] : [['', '— когда —'] as const]),
-              ...MOMENTS,
-              ...(Object.keys(TIMES) as MomentKey[])
-                .map(key => [`${MOMENT_PREFIX}${key}`, `время: ${TIMES[key]}`] as const),
-              ...watchable
-                .map(f => [`${FIELD_PREFIX}${f.tag}`, `поле «${f.label}» стало верным`] as const),
-              ...hanging
-                .map(([key, e]) => [`${GAINED_PREFIX}${key}`, `на мне появилось «${e.label ?? key}»`] as const),
-              ...hanging
-                .map(([key, e]) => [`${LOST_PREFIX}${key}`, `с меня ушло «${e.label ?? key}»`] as const),
-            ] as never}
-            onChange={next => edit(draft => {
-              if (isMomentValue(next)) { applyMoment(draft, next); return; }
-              draft.on = next;
-              delete draft.of; delete draft.confirm; delete draft.to; delete draft.as; delete draft.tags; delete draft.watch;
-            })}
+        <Field label="Что случилось" needed={!handler.on}>
+          <Select<Kind>
+            value={kind}
+            options={KINDS}
+            onChange={next => setOn(next, '', 'before')}
           />
         </Field>
-
-        {isMoment ? null : (
-          <Field label="Какое действие">
-            <Select
-              value={listened ?? ''}
-              options={[
-                ['', 'любое'] as const,
-                ...calledOf(system)
-                  .map(([key, e]) => [`event:${key}`, `пришёл «${e.label || key}»`] as const),
-                ...Object.entries(system.effects)
-                  .filter(([key, e]) => key !== id && (e.activation ?? 'manual') === 'manual')
-                  .map(([key, e]) => [key, `действие «${e.label ?? key}»`] as const),
-              ] as never}
-              onChange={next => edit(draft => { if (next) draft.of = next; else delete draft.of; })}
+        {kind === 'seen' ? null : (
+          <Field label={kind === 'call' ? 'Что именно' : kind === 'moment' ? 'Когда' : 'Какое'} needed={!subject}>
+            <Select<string>
+              value={subject}
+              options={[...(subject ? [] : [['', '— выберите —'] as const]), ...subjects]}
+              onChange={next => setOn(kind, next, phase)}
             />
           </Field>
         )}
+        {kind === 'call' ? (
+          <Field label="Когда именно" hint={PHASES[phase].note}>
+            <Select<Phase> value={phase} options={PHASE_OPTIONS} onChange={next => setOn(kind, subject, next)} />
+          </Field>
+        ) : null}
+      </div>
 
-        <Fold title="Только если" summary={formula !== null ? `если ${formula}` : picked ? `если ${conditions.find(([ref]) => ref === picked)?.[1] ?? picked}` : 'всегда'}>
-        <Field
-          label="Делать"
-          hint={formula !== null ? 'Сработает, только когда формула верна.'
-            : isMoment ? 'У времени, поля и появления эффекта нет исходов — выберите «формулой…», если нужно условие.'
-              : conditions.length ? undefined : 'У того, что слушаем, нет шагов с исходом «да/нет» — сработает всегда.'}
-        >
+      <div className="row">
+        <Field label="Кого касается" hint="Носитель — лист, на котором висит эта подписка.">
           <Select<string>
-            value={formula !== null ? BY_FORMULA : picked ?? ''}
-            options={[['', 'всегда'], ...conditions, [BY_FORMULA, 'формулой…']]}
-            onChange={next => edit(draft => {
-              if (next === BY_FORMULA) draft.if = { expr: written ?? '' };
-              else if (next) draft.if = { expr: next };
-              else delete draft.if;
-            })}
+            value={holder}
+            options={[['', 'всех — без условия'], ...names.map(([name, label]) => [holderPhrase(name), `«${label}» — носитель`] as const)]}
+            onChange={next => setIf(next, rest)}
+          />
+        </Field>
+        <Field label="Решение">
+          <Select<string>
+            value={handler.confirm ? 'ask' : ''}
+            options={[['', 'срабатывает само'], ['ask', 'решает игрок носителя']]}
+            onChange={next => edit(draft => { if (next) draft.confirm = true; else delete draft.confirm; })}
+          />
+        </Field>
+      </div>
+
+      <Fold title="Только если" summary={formula ? `если ${formula}` : pickedOutcome ? `если ${outcomes.find(([expr]) => expr === pickedOutcome)?.[1]}` : 'больше условий нет'}>
+        <Field label="Ещё условие">
+          <Select<string>
+            value={formula !== null ? ':формула' : pickedOutcome ?? ''}
+            options={[['', 'нет'], ...outcomes, [':формула', 'формулой…']]}
+            onChange={next => setIf(holder, next === ':формула' ? (formula ?? '') || 'да' : next)}
           />
           {formula !== null ? (
             <FormulaField
               value={formula}
               system={system}
-              where={`когда №${index + 1} · только если`}
-              extraNames={moment === 'done' ? DONE_NAMES : SEED_NAMES}
-              owners
-              placeholder={moment === 'done' ? 'например: сколько(@цели.hit.success, да) >= 1' : 'например: @получатель.хиты <= 0'}
-              onCommit={next => edit(draft => { draft.if = { expr: next }; })}
+              where={`подписка №${index + 1} · только если`}
+              sheets={sheets}
+              {...(phase === 'done' && kind === 'call' ? { extraNames: new Map([[TARGETS_SEED, 'итоги по целям: строка на цель']]) } : {})}
+              placeholder={phase === 'done' ? 'например: сколько(@итоги.hit.success, да) >= 1' : 'например: @носитель.хиты <= 0'}
+              onCommit={next => setIf(holder, next)}
             />
           ) : null}
         </Field>
-        </Fold>
-
-        {!replies ? null : (
-          <Field label="Кому" hint="Куда уходит цепочка шагов этого «когда».">
-            <Select
-              value={handler.to ?? 'self'}
-              options={[['self', 'себе'], ['other', replies]] as never}
-              onChange={next => edit(draft => { if (next === 'other') draft.to = 'other'; else delete draft.to; })}
-            />
-          </Field>
-        )}
-      </div>
-
-      {handler.on === 'affected' ? (
-        <Field label="На кого" hint="«На другого» — наблюдатель: слышит чужое действие; кто и на кого — @вызов.я и @вызов.цель.">
-          <Select
-            value={handler.watch ? 'watch' : ''}
-            options={[['', 'на меня'], ['watch', 'на другого — наблюдаю']] as never}
-            onChange={next => edit(draft => { if (next) draft.watch = true; else delete draft.watch; })}
-          />
-        </Field>
-      ) : null}
-
-      {handler.on === 'seen' ? (
-        <div className="row">
-          <Field label="Чей бросок">
-            <Select
-              value={handler.watch ? 'watch' : handler.as ?? ''}
-              options={[['', 'мой'], ['against', CALL_WORDS.against], ['watch', 'чужой — наблюдаю']] as never}
-              onChange={next => edit(draft => {
-                delete draft.as; delete draft.watch;
-                if (next === 'against') draft.as = 'against';
-                if (next === 'watch') draft.watch = true;
-              })}
-            />
-          </Field>
-          <Field label="С метками" hint="Бросок должен нести все метки. Пусто — любой бросок.">
-            <RollTagsPick
-              system={system}
-              value={handler.tags}
-              onChange={tags => edit(draft => { if (tags.length) draft.tags = tags; else delete draft.tags; })}
-            />
-          </Field>
-        </div>
-      ) : null}
-
+      </Fold>
     </Card>
   );
 }

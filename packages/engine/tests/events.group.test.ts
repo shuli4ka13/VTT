@@ -14,7 +14,7 @@ const system = {
     { key: 'выбыло', label: 'Выбыло', expr: 'округлить вниз(@урон / 3)' },
   ] } , приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [] } },
   effects: {
-    удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'урон' }, direction: 'add', value: { expr: '4' } }] },
+    удар: { label: 'Удар', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],  steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'apply', target: { expr: '@цель.урон' }, direction: 'add', value: { expr: '4' } }] },
   },
   
 } as unknown as System;

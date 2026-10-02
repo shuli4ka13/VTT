@@ -268,7 +268,7 @@ function modifierRefs(system: System, list: Modifier[] | undefined, from: Where,
   }
 }
 
-export const TARGETS_SEED = 'цели';
+export const TARGETS_SEED = 'итоги';
 
 export type Listener =
   | { kind: 'call'; phase: Phase; key: string }
@@ -307,12 +307,15 @@ export function heardNames(system: System, listener: Listener): HeardNames {
   }
   const effect = system.effects?.[listener.key] ?? null;
   const params = effect?.params ?? [];
-  const loop = (effect?.steps ?? []).find(step => step.type === 'each') as { as?: string } | undefined;
+  const steps = effect?.steps ?? [];
+  const split = steps.findIndex(step => step.type === 'each');
+  const loop = split >= 0 ? steps[split] as { as?: string } : undefined;
+  const visible = listener.phase === 'done' && split >= 0 ? steps.slice(0, split) : steps;
   return {
-    sheets: [...params.filter(p => p.kind === 'sheet').map(p => p.key), ...(loop?.as ? [loop.as] : [])],
+    sheets: [...params.filter(p => p.kind === 'sheet').map(p => p.key), ...(loop?.as && listener.phase !== 'done' ? [loop.as] : [])],
     seeds: [
       ...params.filter(p => p.kind !== 'sheet').map(p => p.key),
-      ...(effect?.steps ?? []).map(step => step.id).filter((id): id is string => Boolean(id)),
+      ...visible.map(step => step.id).filter((id): id is string => Boolean(id)),
       ...(listener.phase === 'done' ? [TARGETS_SEED] : []),
     ],
     listened: effect,
@@ -336,8 +339,12 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
     const heard = listenerOf(handler);
     const names = heardNames(system, heard);
     const sheets = [...names.sheets, ...sheetKeys, HOLDER];
-    out.push(...chainRefs(handler.steps ?? [], step => ({ tab: 'effects', effect: id, handler: index, step }), params, sheets, names.seeds));
-    out.push(...chainRefs(handler.cost ?? [], step => ({ tab: 'effects', effect: id, handler: index, step, part: 'cost' }), params, sheets, names.seeds));
+    const weak = heard.kind === 'call' && heard.key !== ANY_ACTION && !system.effects?.[heard.key] && !system.tags?.[heard.key];
+    const soften = (refs: Reference[]): Reference[] => (weak
+      ? refs.map(ref => (ref.kind === 'step' || (ref.kind === 'field' && ref.scope === 'bare') ? { ...ref, scope: LISTEN } : ref))
+      : refs);
+    out.push(...soften(chainRefs(handler.steps ?? [], step => ({ tab: 'effects', effect: id, handler: index, step }), params, sheets, names.seeds)));
+    out.push(...soften(chainRefs(handler.cost ?? [], step => ({ tab: 'effects', effect: id, handler: index, step, part: 'cost' }), params, sheets, names.seeds)));
     if (heard.kind === 'call' && heard.key !== ANY_ACTION && !system.tags?.[heard.key]) {
       out.push({ kind: 'effect', key: heard.key, from: head, scope: LISTEN });
     }
@@ -346,9 +353,9 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
     if (handler.if) {
       const found: Reference[] = [];
       exprRefs(handler.if.expr, head, sheetScope(params, sheets, names.seeds), found);
-      for (const ref of found) {
-        if (ref.kind === 'step' && heard.kind === 'call' && !names.listened && system.effects?.[heard.key] === undefined && !system.tags?.[heard.key]) {
-          out.push({ ...ref, scope: LISTEN });
+      for (const ref of soften(found)) {
+        if (ref.scope === LISTEN) {
+          out.push(ref);
           continue;
         }
         if (ref.kind === 'step' && names.listened) {

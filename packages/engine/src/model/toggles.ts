@@ -1,5 +1,4 @@
 import { ROLL_CALL } from '../words/calls.ts';
-import { lonelyField } from '../engine/refs.ts';
 import { findRoll, writeRoll, factorsOf, bare, tight } from './amounts.ts';
 import type { System, Step } from './types.ts';
 
@@ -36,17 +35,23 @@ export const CRIT_EDIT = 'crit_explode';
 export const CRIT_RULE = 'crit_explode_rule';
 export const ARMOR_STEP = 'сквозь_броню';
 
+const owned = (step: Step): boolean => {
+  const by = (step as { by?: unknown }).by;
+  return by !== undefined && by !== null;
+};
+
 const amountsAfterCheck = (steps: Step[]): { check: Step; amount: Step }[] => {
   const out: { check: Step; amount: Step }[] = [];
   let check: Step | null = null;
   for (const step of steps) {
+    if (step.type !== 'roll') continue;
     const s = step as Record<string, unknown>;
-    if (step.type === 'threshold') {
-      check = (s.side ?? 'sender') === 'sender' && step.id ? step : null;
+    if (owned(step)) {
+      check = step.id ? step : null;
       continue;
     }
-    if (step.type !== 'amount' || !check) continue;
-    const rolls = s.dice !== undefined || findRoll((s.fixed as { expr?: unknown } | undefined)?.expr) !== null;
+    if (!check) continue;
+    const rolls = s.die !== undefined || findRoll((s.fixed as { expr?: unknown } | undefined)?.expr) !== null;
     if (rolls) out.push({ check, amount: step });
   }
   return out;
@@ -62,7 +67,7 @@ export function critOf(system: System): CritChoice {
 }
 
 const isDoubling = (step: Record<string, unknown>): boolean => {
-  if (step.double !== undefined) return true;
+  if (step.type !== 'roll' || owned(step as Step)) return false;
   const count = step.count as { expr?: unknown } | undefined;
   if (typeof count?.expr === 'string' && DOUBLER.test(count.expr)) return true;
   const call = findRoll((step.fixed as { expr?: unknown } | undefined)?.expr);
@@ -96,7 +101,6 @@ export function setCrit(draft: System, choice: CritChoice): void {
   for (const effect of Object.values(draft.effects)) {
     for (const step of effect.steps ?? []) {
       const loose = step as Record<string, unknown>;
-      delete loose.double;
       if (!isDoubling(loose)) continue;
       delete loose.count;
       withoutDoubler(loose);
@@ -124,35 +128,40 @@ export function setCrit(draft: System, choice: CritChoice): void {
   }
 }
 
-export function armorTail(choice: ArmorChoice, armor: string, hp: string): Step[] {
+export function armorTail(choice: ArmorChoice, armor: string, hp: string, amount = 'amount', sheet = 'лист'): Step[] {
+  const value = { expr: `@${amount}` };
+  const field = (tag: string) => ({ expr: `@${sheet}.${tag}` });
   if (choice === 'none') {
-    return [{ type: 'apply', target: { tag: hp }, direction: 'subtract', value: { expr: '@event.amount' }, targetModifiers: true } as Step];
+    return [{ type: 'apply', target: field(hp), direction: 'subtract', value, targetModifiers: true } as Step];
   }
+  const through = { type: 'check', value, versus: field(armor), successWhen: 'over', id: ARMOR_STEP } as Step;
   if (choice === 'threshold') {
-    return [
-      { id: ARMOR_STEP, type: 'compare', value: { expr: '@event.amount' }, versus: { expr: `@получатель.${armor}` }, breakIf: 'atMost' } as Step,
-      { type: 'apply', target: { tag: hp }, direction: 'subtract', value: { expr: '@event.amount' }, targetModifiers: false } as Step,
-    ];
+    return [through, { type: 'apply', target: field(hp), direction: 'subtract', value, targetModifiers: false } as Step];
   }
   return [
-    { id: ARMOR_STEP, type: 'compare', value: { expr: '@event.amount' }, versus: { expr: `@получатель.${armor}` }, breakIf: 'atMost' } as Step,
-    { type: 'apply', target: { tag: hp }, direction: 'subtract', value: { expr: `@${ARMOR_STEP}.margin` }, targetModifiers: false } as Step,
-    { type: 'apply', target: { tag: armor }, direction: 'subtract', value: { expr: '1' }, targetModifiers: false } as Step,
+    through,
+    { type: 'apply', target: field(hp), direction: 'subtract', value: { expr: `@${ARMOR_STEP}.margin` }, targetModifiers: false } as Step,
+    { type: 'apply', target: field(armor), direction: 'subtract', value: { expr: '1' }, targetModifiers: false } as Step,
   ];
 }
 
 export interface ArmorReading { choice: ArmorChoice; armor: string | null; hp: string | null }
 
+const fieldIn = (ref: unknown): string | null => {
+  const expr = ref && typeof ref === 'object' && 'expr' in ref ? String((ref as { expr: unknown }).expr) : '';
+  return /^\s*@[\p{L}\p{N}_]+\.([\p{L}\p{N}_.]+)\s*$/u.exec(expr)?.[1] ?? null;
+};
+
 export function armorOf(system: System, event: string): ArmorReading {
   const steps = (system.effects?.[event]?.steps ?? []) as Record<string, unknown>[];
   const first = steps[0];
-  const armorTag = lonelyField(first?.versus, system);
-  if (!first || first.type !== 'compare' || !armorTag) return { choice: 'none', armor: null, hp: null };
+  const armorTag = fieldIn(first?.versus);
+  if (!first || first.type !== 'check' || !armorTag) return { choice: 'none', armor: null, hp: null };
   const armor = armorTag;
   const applies = steps.filter(s => s.type === 'apply');
-  const hp = applies.map(s => (s.target as { tag?: string } | undefined)?.tag).find(tag => tag && tag !== armor) ?? null;
-  const wears = applies.some(s => (s.target as { tag?: string } | undefined)?.tag === armor);
-  if (String(first.breakIf ?? 'less') === 'atMost' && !wears) return { choice: 'threshold', armor, hp };
+  const hp = applies.map(s => fieldIn(s.target)).find(tag => tag && tag !== armor) ?? null;
+  const wears = applies.some(s => fieldIn(s.target) === armor);
+  if (String(first.successWhen ?? 'atLeast') === 'over' && !wears) return { choice: 'threshold', armor, hp };
   if (wears) return { choice: 'ablation', armor, hp };
   return { choice: 'none', armor, hp };
 }
@@ -160,5 +169,8 @@ export function armorOf(system: System, event: string): ArmorReading {
 export function setArmor(draft: System, choice: ArmorChoice, at: { event: string; armor: string; hp: string }): void {
   const called = draft.effects?.[at.event];
   if (!called) return;
-  called.steps = armorTail(choice, at.armor, at.hp);
+  const params = called.params ?? [];
+  const amount = params.find(param => param.role === 'amount')?.key ?? 'amount';
+  const sheet = params.find(param => param.kind === 'sheet')?.key ?? 'лист';
+  called.steps = armorTail(choice, at.armor, at.hp, amount, sheet);
 }

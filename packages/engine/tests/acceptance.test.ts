@@ -71,10 +71,10 @@ group('критерии приёмки', () => {
     const before = calc(system, mirra, 'hp_current', newPass(system, mirra, { compendium }));
     const out = exchange({ system, compendium, die: die(18, 6), sheets: [arven, mirra], actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id });
     const sheet = out.sheets.find(x => x.id === mirra.id)!;
-    const report = out.reports[0]!.report as any;
+    const trace = out.reports.flatMap(r => (r.report as any).trace as any[]);
     const after = calc(system, sheet, 'hp_current', newPass(system, sheet, { compendium }));
 
-    eq(report.trace[0].versus.value, 14, 'класс брони посчитан получателем по его листу');
+    eq(trace.find(t => t.step === 'hit').versus, 14, 'класс брони посчитан получателем по его листу');
     ok(after < before, `значение у получателя изменилось: ${before} → ${after}`);
   });
 
@@ -196,7 +196,11 @@ group('образец D&D: урон сперва съедает временны
         ...dnd.effects,
         проба: {
           label: 'Урон', activation: 'manual',
-          steps: [{ type: 'emit', event: 'damage', args: { amount: { const: amount }, damage_type: { const: 'рубящий' } } }],
+          params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
+          steps: [
+            { type: 'each', of: 'цели', as: 'цель' },
+            { type: 'emit', event: 'damage', args: { лист: { expr: '@цель' }, источник: { expr: '@действующий' }, amount: { const: amount }, damage_type: { const: 'рубящий' } } },
+          ],
         },
       },
     } as unknown as System;

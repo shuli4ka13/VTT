@@ -25,17 +25,17 @@ const runRule = (sys: any, rule: any, sender: any, target: any, die: () => numbe
   return { sheet: out.sheets.find((s: any) => s.id === target.id)!, trace: report.trace as any[], stopped: report.stopped as any };
 };
 
-const run = (steps: any[], target: any, sys: any = TOUGH) => runRule(sys, { params: [], steps }, arven, target, () => 1, compendium);
+const run = (steps: any[], target: any, sys: any = TOUGH) => runRule(sys, { params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }], steps: [{ type: 'each', of: 'цели', as: 'цель' }, ...steps] }, arven, target, () => 1, compendium);
 
 const stony = { ...mirra, values: { ...mirra.values, hp_current: 22 }, effects: [{ effectId: 'tough' }] };
-const eight = { id: 'dmg', type: 'amount', source: 'item', fixed: { expr: '8' } };
+const eight = { id: 'dmg', type: 'roll', fixed: { expr: '8' } };
 
 group('направление «задать» и сопротивления цели', () => {
   test('сопротивление режет РАЗНИЦУ, а не итоговое значение поля', () => {
     const r = run([
       eight,
-      { type: 'apply', target: { tag: 'hp_current' }, direction: 'set',
-        value: { expr: '@получатель.hp_current - #dmg' }, targetModifiers: true },
+      { type: 'apply', target: { expr: '@цель.hp_current' }, direction: 'set',
+        value: { expr: '@цель.hp_current - @dmg' }, targetModifiers: true },
     ], stony);
     eq(r.sheet.values.hp_current, 18, '22 − округлить вниз(8 × 0.5) = 18, а не округлить вниз(14 × 0.5) = 7');
     eq(r.trace[1]!.incoming, 8);
@@ -45,7 +45,7 @@ group('направление «задать» и сопротивления ц�
   test('«вычесть» с тем же числом даёт тот же итог: направления равноправны', () => {
     const r = run([
       eight,
-      { type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract',
+      { type: 'apply', target: { expr: '@цель.hp_current' }, direction: 'subtract',
         value: { expr: '@dmg' }, targetModifiers: true },
     ], stony);
     eq(r.sheet.values.hp_current, 18);
@@ -54,15 +54,15 @@ group('направление «задать» и сопротивления ц�
   test('без сопротивлений «задать» пишет ровно то, что сказано', () => {
     const r = run([
       eight,
-      { type: 'apply', target: { tag: 'hp_current' }, direction: 'set',
-        value: { expr: '@получатель.hp_current - #dmg' }, targetModifiers: false },
+      { type: 'apply', target: { expr: '@цель.hp_current' }, direction: 'set',
+        value: { expr: '@цель.hp_current - @dmg' }, targetModifiers: false },
     ], stony);
     eq(r.sheet.values.hp_current, 14);
   });
 
   test('«задать» вверх — лечение: сопротивление режет прибавку', () => {
     const r = run([
-      { type: 'apply', target: { tag: 'hp_current' }, direction: 'set',
+      { type: 'apply', target: { expr: '@цель.hp_current' }, direction: 'set',
         value: { expr: '30' }, targetModifiers: true },
     ], { ...stony, values: { ...stony.values, hp_max: 40 } });
     eq(r.sheet.values.hp_current, 26, '22 + округлить вниз(8 × 0.5)');
@@ -70,7 +70,7 @@ group('направление «задать» и сопротивления ц�
 
   test('текстовое поле «задать» по-прежнему просто присваивает', () => {
     const r = run([
-      { type: 'apply', target: { tag: 'alignment' }, direction: 'set', value: { expr: '"хаотично-добрый"' } },
+      { type: 'apply', target: { expr: '@цель.alignment' }, direction: 'set', value: { expr: '"хаотично-добрый"' } },
     ], stony);
     eq(r.sheet.values.alignment, 'хаотично-добрый');
   });

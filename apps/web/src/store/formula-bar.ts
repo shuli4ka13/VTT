@@ -1,3 +1,4 @@
+import type { SheetNames } from '../ui/formula-chips.tsx';
 import { create } from 'zustand';
 import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
@@ -22,7 +23,7 @@ export interface FormulaTarget {
   names?: Record<string, ReactNode>;
   extraNames?: Map<string, string>;
   badges?: Map<string, string>;
-  owners?: boolean;
+  sheets?: SheetNames;
   placeholder?: string;
   options?: BarOption[];
   onChange?: (text: string) => void;

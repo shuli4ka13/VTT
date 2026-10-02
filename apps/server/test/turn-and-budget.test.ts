@@ -12,6 +12,14 @@ import { sliceWorld } from './slice.ts';
 
 const { system: dnd, compendium, sheets } = sliceWorld();
 
+const ACTOR = { key: 'действующий', kind: 'sheet' };
+const TARGETS = { key: 'цели', kind: 'sheet', many: true };
+const EACH = { type: 'each', of: 'цели', as: 'цель' };
+const button = (label: string, steps: unknown[], extra: Record<string, unknown> = {}) =>
+  ({ label, activation: 'manual', ...extra, params: [ACTOR, TARGETS, ...((extra.params as unknown[]) ?? [])], steps: [EACH, ...steps] });
+const sub = (field: string, amount: string, direction = 'subtract') =>
+  ({ type: 'apply', target: { expr: field }, direction, value: { expr: amount } });
+
 let app: INestApplication;
 let db: Database;
 let idAt = 0;
@@ -65,7 +73,7 @@ describe('часы и траты хода не портятся', () => {
     await as(http().post(`/rooms/${roomId}/turn`)).send({ roomId, op: 'start', order: [arven.id, mirra.id] }).expect(201);
 
     const paused = await as(http().post(`/rooms/${roomId}/act`))
-      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id }).expect(201);
+      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toIds: [mirra.id] }).expect(201);
     expect(paused.body.pending).toBeTruthy();
 
     for (const op of ['next', 'stop', 'scene']) {
@@ -83,9 +91,9 @@ describe('часы и траты хода не портятся', () => {
     const { as, roomId, arven, mirra } = await table();
     await as(http().post(`/rooms/${roomId}/turn`)).send({ roomId, op: 'start', order: [mirra.id, arven.id] }).expect(201);
 
-    const spray = { roomId, actionId: 'poison-spray:0', fromId: mirra.id, toId: arven.id };
+    const spray = { roomId, actionId: 'poison-spray:0', fromId: mirra.id, toIds: [arven.id] };
     const broken = await as(http().post(`/rooms/${roomId}/act`))
-      .send({ ...spray, targetEdits: ['нет_такой_правки'] })
+      .send({ ...spray, claims: { [arven.id]: ['нет_такой_правки'] } })
       .expect(400);
     expect(broken.body.message).toContain('нет_такой_правки');
 
@@ -110,7 +118,7 @@ describe('пробный расчёт и итог бросают одни кос
       ...dnd,
       effects: {
         ...dnd.effects,
-        watch: { label: 'Настороже', activation: 'passive', duration: { kind: 'permanent' }, params: [], on: [{ on: 'targeted', confirm: true, steps: [] }] },
+        watch: { label: 'Настороже', activation: 'passive', duration: { kind: 'permanent' }, params: [], on: [{ on: 'before:save', if: { expr: '@цель == @носитель' }, confirm: true, steps: [] }] },
       },
     };
     const token = (await http().post('/auth/login').send({ name: 'Страж' })).body.token as string;
@@ -129,10 +137,10 @@ describe('пробный расчёт и итог бросают одни кос
     await app.get(RoomsService).setBelonging(me, roomId, arven.id, 'effects', 'watch', true);
 
     const paused = await as(http().post(`/rooms/${roomId}/act`))
-      .send({ roomId, actionId: 'poison-spray:0', fromId: mirra.id, toId: arven.id }).expect(201);
+      .send({ roomId, actionId: 'poison-spray:0', fromId: mirra.id, toIds: [arven.id] }).expect(201);
     expect(paused.body.pending?.sheetId).toBe(arven.id);
     const previewed = paused.body.pending.preview.join(' · ');
-    const rolled = previewed.match(/бросок цели \[([^\]]+)\]/);
+    const rolled = previewed.match(/Бросок \(спасбросок\): \[([^\]]+)\]/);
     expect(rolled, previewed).toBeTruthy();
 
     const answered = await as(http().post(`/rooms/${roomId}/answer`))
@@ -148,17 +156,17 @@ describe('публикация проверяет систему линтом', 
     const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
     const system = {
       name: 'Сломанная', tables: {},
-      effects: { thorns: { label: 'Шипы', activation: 'passive', on: [{ on: '', to: 'other', steps: [] }] } },
+      effects: { thorns: { label: 'Шипы', activation: 'passive', on: [{ on: 'вымысел', steps: [] }] } },
     };
     const id = (await as(http().post('/systems')).send({ title: 'Сломанная', system })).body.id as string;
     const rejected = await as(http().post(`/systems/${id}/publish`)).send({}).expect(400);
     expect(rejected.body.message).toContain('1 ошибка');
     expect(rejected.body.issues[0]).toContain('Эффекты · эффект «Шипы»');
-    expect(rejected.body.issues[0]).toContain('не сказано, когда срабатывает');
+    expect(rejected.body.issues[0]).toContain('такого «что случилось» нет');
 
     await as(http().put(`/systems/${id}`)).send({
       title: 'Сломанная',
-      system: { ...system, effects: { thorns: { ...system.effects.thorns, on: [{ on: 'affected', to: 'other', steps: [] }] } } },
+      system: { ...system, effects: { thorns: { ...system.effects.thorns, on: [{ on: 'moment:turn-start', steps: [] }] } } },
     }).expect(200);
     await as(http().post(`/systems/${id}/publish`)).send({}).expect(201);
   });
@@ -173,11 +181,9 @@ describe('значение, которое называет человек за 
       id: 'ask', name: 'Со спросом',
       tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } , ствол: { shape: 'book', use: 'action', label: 'Ствол', columns: [], bindings: [{ label: 'Выстрел', effect: 'выстрел', args: {} }] } },
       effects: {
-        выстрел: {
-          label: 'Выстрел', activation: 'manual',
+        выстрел: button('Выстрел', [sub('@цель.хиты', '@дистанция')], {
           params: [{ key: 'дистанция', label: 'Дистанция', kind: 'number', min: 1, max: 50, ask: { by: 'actor' } }],
-          steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@дистанция' } }],
-        },
+        }),
       },
       
     };
@@ -196,7 +202,7 @@ describe('значение, которое называет человек за 
     const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол' })).body.id as string;
 
     const act = (inputs?: Record<string, unknown>) => as(http().post(`/rooms/${roomId}/act`))
-      .send({ roomId, actionId: 'ствол:0', fromId: 'а', toId: 'б', ...(inputs ? { inputs } : {}) });
+      .send({ roomId, actionId: 'ствол:0', fromId: 'а', toIds: ['б'], ...(inputs ? { inputs } : {}) });
 
     expect((await act().expect(400)).body.message).toContain('Дистанция');
     expect((await act({ дистанция: 0 }).expect(400)).body.message).toContain('не меньше 1');
@@ -220,11 +226,11 @@ describe('одно действие по нескольким целям', () =>
     expect(state.sheets.length).toBeGreaterThan(1);
 
     const done = await as(http().post(`/rooms/${roomId}/act`)).send({
-      roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id, toIds: [mirra.id, third.id],
+      roomId, actionId: 'longsword-item:0', fromId: arven.id, toIds: [mirra.id, third.id],
     }).expect(201);
 
     const said = done.body.log.map((entry: { text: string }) => entry.text).join('\n');
-    const hits = said.split('\n').filter((line: string) => line.includes('применяет'));
+    const hits = said.split('\n').filter((line: string) => line.includes('применяет') && line.includes(' по '));
     expect(hits.length, said).toBe(2);
     expect(hits[0]).toContain(mirra.name);
     expect(hits[1]).toContain('Третий');
@@ -245,7 +251,7 @@ describe('моменты хода', () => {
         отравление: {
           label: 'Отравление', activation: 'passive',
           duration: { kind: 'permanent' },
-          on: [{ on: 'moment:turn-start', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '3' } }] }],
+          on: [{ on: 'moment:turn-start', if: { expr: '@ходит == @носитель' }, steps: [sub('@носитель.хиты', '3')] }],
         },
       },
     };
@@ -292,14 +298,12 @@ describe('ячейка тратится один раз на действие', 
         { key: 'целей', label: 'Целей', kind: 'number', default: 0 },
       ] } , свиток: { shape: 'book', use: 'action', label: 'Свиток', columns: [], bindings: [{ label: 'Огненный шар', effect: 'шар', args: {} }] } },
       effects: {
-        шар: {
-          label: 'Огненный шар', activation: 'manual',
-          cost: [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'subtract', value: { expr: '1' } }],
-          steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '5' } }],
-        },
+        шар: button('Огненный шар', [sub('@цель.хиты', '5')], {
+          cost: [sub('@действующий.ячейки', '1')],
+        }),
         счёт: {
           label: 'Счёт целей', activation: 'passive', duration: { kind: 'permanent' },
-          on: [{ on: 'done', of: 'шар', steps: [{ type: 'apply', target: { tag: 'целей' }, direction: 'add', value: { expr: 'сколько(@цели.лист)' } }] }],
+          on: [{ on: 'done:шар', if: { expr: '@действующий == @носитель' }, steps: [sub('@носитель.целей', 'сколько(@цели)', 'add')] }],
         },
       },
       
@@ -321,7 +325,7 @@ describe('ячейка тратится один раз на действие', 
     const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол ячеек' })).body.id as string;
 
     const done = await as(http().post(`/rooms/${roomId}/act`)).send({
-      roomId, actionId: 'свиток:0', fromId: 'маг', toId: 'а', toIds: ['а', 'б', 'в'],
+      roomId, actionId: 'свиток:0', fromId: 'маг', toIds: ['а', 'б', 'в'],
     }).expect(201);
 
     const after = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
@@ -339,7 +343,7 @@ describe('появилось и ушло с листа', () => {
     const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
     const me = (await as(http().get('/auth/me'))).body.userId as string;
 
-    const add = (tag: string) => ({ type: 'apply', target: { tag }, direction: 'add', value: { expr: '1' } });
+    const add = (tag: string) => sub(`@носитель.${tag}`, '1', 'add');
     const system = {
       id: 'вещи', name: 'С вещами',
       tables: { лист: { shape: 'single', columns: [
@@ -349,7 +353,7 @@ describe('появилось и ушло с листа', () => {
       effects: {
         заточка: { label: 'Заточка', activation: 'passive', attach: [add('надето')] },
         бафф: { label: 'Бафф', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
-        сторож: { label: 'Сторож', activation: 'passive', on: [{ on: 'lost:бафф', steps: [add('снято')] }] },
+        сторож: { label: 'Сторож', activation: 'passive', on: [{ on: 'lost:бафф', if: { expr: '@лист == @носитель' }, steps: [add('снято')] }] },
       },
       grants: ['сторож'],
       
@@ -389,17 +393,16 @@ describe('вопросы к человеку не теряют названно�
       constants: { к20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
       roll_edits: { плюс: { label: 'Плюс', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }] } },
       effects: {
-        удар: {
-          label: 'Удар', activation: 'manual',
+        удар: button('Удар', [
+          { id: 'бросок_к', type: 'roll', die: { constant: 'к20' }, by: { expr: '@действующий' } },
+          { id: 'бросок', type: 'check', value: { expr: '@бросок_к' }, versus: { expr: '0' }, continueOn: 'success' },
+          sub('@цель.хиты', '@сила'),
+        ], {
           params: [{ key: 'сила', label: 'Сила', kind: 'number', min: 1, max: 10, ask: { by: 'actor' } }],
-          steps: [
-            { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { expr: '0' }, continueOn: 'success' },
-            { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@сила' } },
-          ],
-        },
+        }),
         вдохновение: {
           label: 'Вдохновение', activation: 'passive',
-          on: [{ on: 'seen', confirm: true, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
+          on: [{ on: 'seen', if: { expr: '@бросающий == @носитель' }, confirm: true, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
         },
       },
       
@@ -421,7 +424,7 @@ describe('вопросы к человеку не теряют названно�
     const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол вопросов' })).body.id as string;
 
     const paused = await as(http().post(`/rooms/${roomId}/act`)).send({
-      roomId, actionId: 'приём:0', fromId: 'боец', toId: 'цель', inputs: { сила: 7 },
+      roomId, actionId: 'приём:0', fromId: 'боец', toIds: ['цель'], inputs: { сила: 7 },
     }).expect(201);
     expect(paused.body.pending?.options.map((o: { id: string }) => o.id)).toEqual(['вдохновение']);
 
@@ -446,16 +449,14 @@ describe('цель правит свой бросок, увидев его', () 
       constants: { к20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
       roll_edits: { удача: { label: 'Удача', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }] } },
       effects: {
-        залп: {
-          label: 'Залп', activation: 'manual',
-          steps: [
-            { id: 'спас', type: 'threshold', side: 'target', roll: { die: { constant: 'к20' } }, versus: { expr: '11' }, continueOn: 'fail' },
-            { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '6' } },
-          ],
-        },
+        залп: button('Залп', [
+          { id: 'спас_к', type: 'roll', die: { constant: 'к20' }, by: { expr: '@цель' } },
+          { id: 'спас', type: 'check', value: { expr: '@спас_к' }, versus: { expr: '11' }, continueOn: 'fail' },
+          sub('@цель.хиты', '6'),
+        ]),
         везение: {
           label: 'Везение', activation: 'passive',
-          on: [{ on: 'seen', confirm: true, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
+          on: [{ on: 'seen', if: { expr: '@бросающий == @носитель' }, confirm: true, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
         },
       },
       
@@ -477,7 +478,7 @@ describe('цель правит свой бросок, увидев его', () 
     const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол спасбросков' })).body.id as string;
 
     const paused = await as(http().post(`/rooms/${roomId}/act`)).send({
-      roomId, actionId: 'приём:0', fromId: 'стрелок', toId: 'цель',
+      roomId, actionId: 'приём:0', fromId: 'стрелок', toIds: ['цель'],
     }).expect(201);
     expect(paused.body.pending?.options.map((o: { id: string }) => o.id)).toEqual(['везение']);
 
@@ -506,7 +507,7 @@ describe('поле стало верным', () => {
         без_сознания: { label: 'Без сознания', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
         падение: {
           label: 'Падение', activation: 'passive',
-          on: [{ on: 'field:без_сил', steps: [{ type: 'status', mode: 'apply', effect: { const: 'без_сознания' } }] }],
+          on: [{ on: 'field:без_сил', if: { expr: '@лист == @носитель' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'без_сознания' }, to: { expr: '@носитель' } }] }],
         },
       },
       grants: ['падение'],
@@ -545,14 +546,14 @@ describe('права за столом', () => {
     await http().post(`/rooms/${roomId}/join`).set('Authorization', `Bearer ${owner.token}`).expect(201);
     await rooms.claimSheet(owner.userId, roomId, arven.id);
 
-    await expect(rooms.act(other.userId, { roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id }))
+    await expect(rooms.act(other.userId, { roomId, actionId: 'longsword-item:0', fromId: arven.id, toIds: [mirra.id] }))
       .rejects.toThrow('чужой лист');
     await expect(rooms.setBelonging(other.userId, roomId, arven.id, 'has', 'chain-mail', false))
       .rejects.toThrow('чужой лист');
 
     await rooms.setValue(gm, roomId, arven.id, 'inspiration', 1);
     await rooms.setBelonging(gm, roomId, arven.id, 'effects', 'inspire', true);
-    const paused = await rooms.act(owner.userId, { roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id });
+    const paused = await rooms.act(owner.userId, { roomId, actionId: 'longsword-item:0', fromId: arven.id, toIds: [mirra.id] });
     expect(paused.pending?.sheetId).toBe(arven.id);
     await expect(rooms.answer(other.userId, { roomId, pendingId: paused.pending!.id, chosen: [] }))
       .rejects.toThrow('чужой лист');
@@ -570,8 +571,7 @@ describe('два сообщения стола сразу', () => {
     const system = {
       id: 'гонка', name: 'Гонка',
       tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } , приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
-      effects: { удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '5' } }] } },
-      
+      effects: { удар: button('Удар', [sub('@цель.хиты', '5')]) },
     };
     const book = { records: [{ id: 'приём', table: 'приём', label: 'Удар', cells: {} }] };
     const sheet = (id: string) => ({ id, systemId: 'гонка', name: id, values: { хиты: 20 }, has: [{ of: 'приём' }], effects: [] });
@@ -585,8 +585,8 @@ describe('два сообщения стола сразу', () => {
     const rooms = app.get(RoomsService);
 
     await Promise.all([
-      rooms.act(me, { roomId, actionId: 'приём:0', fromId: 'а', toId: 'б' }),
-      rooms.act(me, { roomId, actionId: 'приём:0', fromId: 'а', toId: 'б' }),
+      rooms.act(me, { roomId, actionId: 'приём:0', fromId: 'а', toIds: ['б'] }),
+      rooms.act(me, { roomId, actionId: 'приём:0', fromId: 'а', toIds: ['б'] }),
       rooms.setValue(me, roomId, 'а', 'хиты', 11),
     ]);
     const after = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
@@ -603,8 +603,8 @@ describe('отмена действия ведущим', () => {
       id: 'отмена', name: 'С отменой',
       tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
       effects: {
-        удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '5' } }] },
-        ответ: { label: 'Ответ', activation: 'passive', on: [{ on: 'affected', of: 'удар', to: 'other', confirm: true, steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '1' } }] }] },
+        удар: button('Удар', [sub('@цель.хиты', '5')]),
+        ответ: { label: 'Ответ', activation: 'passive', on: [{ on: 'after:удар', if: { expr: '@цель == @носитель' }, confirm: true, steps: [sub('@действующий.хиты', '1')] }] },
       },
     };
     const book = { records: [{ id: 'приём', table: 'приём', label: 'Удар', cells: {} }] };
@@ -616,7 +616,7 @@ describe('отмена действия ведущим', () => {
     const worldId = (await as(http().post('/worlds')).send({ title: 'Мир отмены', systemId, compendiumIds: [bookId], sheets: [sheet('а', []), sheet('б', ['ответ'])] })).body.id;
     const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол отмены' })).body.id as string;
 
-    const hit = await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'приём:0', fromId: 'а', toId: 'б' }).expect(201);
+    const hit = await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'приём:0', fromId: 'а', toIds: ['б'] }).expect(201);
     expect(hit.body.pending?.sheetId).toBe('б');
     const between = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
     expect(between.find((s: { id: string }) => s.id === 'б').values.хиты, 'промежуточно удар виден').toBe(15);
@@ -632,34 +632,24 @@ describe('отмена действия ведущим', () => {
 });
 
 describe('цепочка ответок', () => {
-  it('шипы против шипов идут до предела, и журнал говорит, что цепочка оборвана', async () => {
+  it('шипы против шипов без вопроса к человеку — отказ при публикации словами, а не бесконечная цепочка', async () => {
     const token = (await http().post('/auth/login').send({ name: 'Ведущий шипов' })).body.token as string;
     const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
     const system = {
       id: 'шипы', name: 'С шипами',
       tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
       effects: {
-        удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '1' } }] },
+        урон: { label: 'Урон', params: [{ key: 'раненый', kind: 'sheet' }, { key: 'обидчик', kind: 'sheet' }], steps: [sub('@раненый.хиты', '1')] },
+        удар: button('Удар', [{ type: 'emit', event: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' } } }]),
         шипы: {
           label: 'Шипы', activation: 'passive',
-          on: [{ on: 'affected', to: 'other', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '1' } }] }],
+          on: [{ on: 'after:урон', if: { expr: '@раненый == @носитель' }, steps: [{ type: 'emit', event: 'урон', args: { раненый: { expr: '@обидчик' }, обидчик: { expr: '@раненый' } } }] }],
         },
       },
     };
-    const book = { records: [{ id: 'приём', table: 'приём', label: 'Удар', cells: {} }] };
-    const sheet = (id: string) => ({ id, systemId: 'шипы', name: id, values: { хиты: 20 }, has: [{ of: 'приём' }], effects: [{ effectId: 'шипы' }] });
     const systemId = (await as(http().post('/systems')).send({ title: 'С шипами', system })).body.id;
-    const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга шипов', systemId, compendium: book })).body.id;
-    await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
-    await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
-    const worldId = (await as(http().post('/worlds')).send({ title: 'Мир шипов', systemId, compendiumIds: [bookId], sheets: [sheet('а'), sheet('б')] })).body.id;
-    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол шипов' })).body.id as string;
-
-    const done = await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'приём:0', fromId: 'а', toId: 'б' }).expect(201);
-    expect(done.body.log.map((e: { text: string }) => e.text).join('\n')).toContain('цепочка ответов оборвана');
-    const after = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
-    expect(after.find((s: { id: string }) => s.id === 'б').values.хиты, 'удар и две ответки').toBe(17);
-    expect(after.find((s: { id: string }) => s.id === 'а').values.хиты, 'две ответки').toBe(18);
+    const rejected = await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(400);
+    expect(rejected.body.issues.join(' ')).toContain('вызовы идут по кругу');
   });
 });
 
@@ -672,13 +662,13 @@ describe('вопросы на ответках', () => {
       tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
       effects: {
         урон: {
-          label: 'Урон', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }],
-          steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@event.amount' }, targetModifiers: false }],
+          label: 'Урон', params: [{ key: 'раненый', kind: 'sheet' }, { key: 'обидчик', kind: 'sheet' }, { key: 'сколько', label: 'Сколько', kind: 'number' }],
+          steps: [{ ...sub('@раненый.хиты', '@сколько'), targetModifiers: false }],
         },
-        удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'emit', event: 'урон', args: { сколько: { expr: '5' } } }] },
+        удар: button('Удар', [{ type: 'emit', event: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' }, сколько: { expr: '5' } } }]),
         возмездие: {
           label: 'Возмездие', activation: 'passive',
-          on: [{ on: 'affected', of: 'event:урон', to: 'other', confirm: true, steps: [{ type: 'emit', event: 'урон', args: { сколько: { expr: '2' } } }] }],
+          on: [{ on: 'after:урон', if: { expr: '@раненый == @носитель' }, confirm: true, steps: [{ type: 'emit', event: 'урон', args: { раненый: { expr: '@обидчик' }, обидчик: { expr: '@раненый' }, сколько: { expr: '2' } } }] }],
         },
       },
     };
@@ -693,14 +683,14 @@ describe('вопросы на ответках', () => {
     const hp = async () => Object.fromEntries((await as(http().get(`/rooms/${roomId}`))).body.sheets.map((s: { id: string; values: { хиты: number } }) => [s.id, s.values.хиты]));
     const answer = (pending: { id: string }, chosen: string[]) => as(http().post(`/rooms/${roomId}/answer`)).send({ roomId, pendingId: pending.id, chosen }).expect(201);
 
-    const hit = await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'приём:0', fromId: 'а', toId: 'б' }).expect(201);
+    const hit = await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'приём:0', fromId: 'а', toIds: ['б'] }).expect(201);
     expect(hit.body.pending?.sheetId).toBe('б');
     expect(await hp()).toEqual({ а: 20, б: 15 });
 
     const first = await answer(hit.body.pending, ['возмездие']);
     expect(first.body.pending?.sheetId, 'ответка дошла — теперь спрашивают нападавшего').toBe('а');
     expect(first.body.pending?.stage).toBe('after');
-    expect(first.body.pending?.question).toContain('ответкой «Возмездие»');
+    expect(first.body.pending?.question).toContain('ответкой «Урон»');
     expect(await hp()).toEqual({ а: 18, б: 15 });
 
     const second = await answer(first.body.pending, ['возмездие']);
@@ -719,14 +709,16 @@ describe('вопросы на ответках', () => {
       id: 'заслон', name: 'С заслоном',
       tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
       effects: {
-        удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '5' } }] },
+        урон: { label: 'Урон', params: [{ key: 'раненый', kind: 'sheet' }, { key: 'обидчик', kind: 'sheet' }, { key: 'сколько', kind: 'number' }], steps: [sub('@раненый.хиты', '@сколько')] },
+        удар: button('Удар', [{ type: 'emit', event: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' }, сколько: { expr: '5' } } }]),
         шипы: {
           label: 'Шипы', activation: 'passive',
-          on: [{ on: 'affected', of: 'удар', to: 'other', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '2' } }] }],
+          on: [{ on: 'after:урон', if: { expr: '@раненый == @носитель' }, steps: [{ type: 'emit', event: 'шип', args: { жертва: { expr: '@обидчик' } } }] }],
         },
+        шип: { label: 'Шип', params: [{ key: 'жертва', kind: 'sheet' }], steps: [sub('@жертва.хиты', '2')] },
         заслон: {
           label: 'Заслон', activation: 'passive',
-          on: [{ on: 'targeted', of: 'шипы', confirm: true, steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'add', value: { expr: '3' } }] }],
+          on: [{ on: 'before:шип', if: { expr: '@жертва == @носитель' }, confirm: true, steps: [sub('@носитель.хиты', '3', 'add')] }],
         },
       },
     };
@@ -740,17 +732,17 @@ describe('вопросы на ответках', () => {
     const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол заслона' })).body.id as string;
     const hp = async () => Object.fromEntries((await as(http().get(`/rooms/${roomId}`))).body.sheets.map((s: { id: string; values: { хиты: number } }) => [s.id, s.values.хиты]));
 
-    const hit = await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'приём:0', fromId: 'а', toId: 'б' }).expect(201);
+    const hit = await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'приём:0', fromId: 'а', toIds: ['б'] }).expect(201);
     expect(hit.body.pending?.sheetId).toBe('а');
     expect(hit.body.pending?.stage).toBe('target');
-    expect(hit.body.pending?.question).toContain('ответкой «Шипы»');
+    expect(hit.body.pending?.question).toContain('ответкой «Шип»');
     expect(await hp(), 'удар прошёл, шипы ещё нет').toEqual({ а: 20, б: 15, в: 20 });
 
     const done = await as(http().post(`/rooms/${roomId}/answer`)).send({ roomId, pendingId: hit.body.pending.id, chosen: ['заслон'] }).expect(201);
     expect(done.body.pending).toBeNull();
     expect(await hp(), 'заслон +3, потом шипы −2').toEqual({ а: 21, б: 15, в: 20 });
 
-    const two = await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'приём:0', fromId: 'а', toId: 'б', toIds: ['б', 'в'] }).expect(201);
+    const two = await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'приём:0', fromId: 'а', toIds: ['б', 'в'] }).expect(201);
     expect(two.body.pending?.sheetId, 'вопрос на ответке посреди списка целей').toBe('а');
     expect(await hp(), 'первая цель получила, вторая ещё нет').toEqual({ а: 21, б: 10, в: 20 });
     const rest = await as(http().post(`/rooms/${roomId}/answer`)).send({ roomId, pendingId: two.body.pending.id, chosen: [] }).expect(201);
@@ -771,18 +763,16 @@ describe('реакция после разрешения', () => {
       effects: {
         итог: {
           label: 'Итог', activation: 'passive',
-          on: [{ on: 'done', of: 'удар', steps: [{ type: 'apply', target: { tag: 'видел' }, direction: 'set', value: { expr: '@хиты' } }] }],
+          on: [{ on: 'done:удар', if: { expr: '@действующий == @носитель' }, steps: [sub('@носитель.видел', '@носитель.хиты', 'set')] }],
         },
-        удар: {
-          label: 'Удар', activation: 'manual',
-          steps: [
-            { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { expr: '0' }, continueOn: 'success' },
-            { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '5' } },
-          ],
-        },
+        удар: button('Удар', [
+          { id: 'бросок_к', type: 'roll', die: { constant: 'к20' }, by: { expr: '@действующий' } },
+          { id: 'бросок', type: 'check', value: { expr: '@бросок_к' }, versus: { expr: '0' }, continueOn: 'success' },
+          sub('@цель.хиты', '5'),
+        ]),
         возмездие: {
           label: 'Возмездие', activation: 'passive',
-          on: [{ on: 'affected', of: 'удар', to: 'other', confirm: true, steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '2' } }] }],
+          on: [{ on: 'after:удар', if: { expr: '@цель == @носитель' }, confirm: true, steps: [sub('@действующий.хиты', '2')] }],
         },
       },
       
@@ -804,7 +794,7 @@ describe('реакция после разрешения', () => {
     const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол возмездия' })).body.id as string;
 
     const hit = await as(http().post(`/rooms/${roomId}/act`)).send({
-      roomId, actionId: 'приём:0', fromId: 'боец', toId: 'цель',
+      roomId, actionId: 'приём:0', fromId: 'боец', toIds: ['цель'],
     }).expect(201);
     expect(hit.body.pending?.stage).toBe('after');
     expect(hit.body.pending?.sheetId).toBe('цель');
@@ -843,20 +833,18 @@ describe('отдых и плата ячейкой', () => {
       ] } , чары: { shape: 'book', use: 'action', label: 'Чары', columns: [], bindings: [{ label: 'Стрела', effect: 'стрела', args: {} }] } },
       effects: {
         ячейка: {
-          label: 'Ячейка',
+          label: 'Ячейка', params: [{ key: 'лист', kind: 'sheet' }],
           steps: [
-            { id: 'есть', type: 'compare', value: { expr: '@получатель.ячейки' }, versus: { expr: '1' }, breakIf: 'less' },
-            { type: 'apply', target: { tag: 'ячейки' }, direction: 'subtract', value: { expr: '1' } },
+            { id: 'есть', type: 'check', value: { expr: '@лист.ячейки' }, versus: { expr: '1' }, note: 'не хватает «Ячейки»' },
+            sub('@лист.ячейки', '1'),
           ],
         },
-        стрела: {
-          label: 'Стрела', activation: 'manual',
-          cost: [{ type: 'emit', event: 'ячейка', amount: { expr: '1' }, strict: true }],
-          steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '4' } }],
-        },
+        стрела: button('Стрела', [sub('@цель.хиты', '4')], {
+          cost: [{ type: 'emit', event: 'ячейка', args: { лист: { expr: '@действующий' } }, strict: true }],
+        }),
         сон: {
           label: 'Сон', activation: 'passive',
-          on: [{ on: 'moment:long-rest', steps: [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'set', value: { expr: '1' } }] }],
+          on: [{ on: 'moment:long-rest', steps: [sub('@носитель.ячейки', '1', 'set')] }],
         },
       },
       grants: ['сон'],
@@ -871,7 +859,7 @@ describe('отдых и плата ячейкой', () => {
     await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
     const worldId = (await as(http().post('/worlds')).send({ title: 'Мир отдыха', systemId, compendiumIds: [bookId], sheets: [sheet('маг'), sheet('цель')] })).body.id;
     const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол отдыха' })).body.id as string;
-    const shot = { roomId, actionId: 'стрела:0', fromId: 'маг', toId: 'цель' };
+    const shot = { roomId, actionId: 'стрела:0', fromId: 'маг', toIds: ['цель'] };
 
     await as(http().post(`/rooms/${roomId}/act`)).send(shot).expect(201);
     const refused = await as(http().post(`/rooms/${roomId}/act`)).send(shot).expect(400);
@@ -926,7 +914,7 @@ describe('группа листов за столом', () => {
       tables: { группа: { shape: 'single', owner: 'group', columns: [
     { key: 'урон', label: 'Урон отряда', kind: 'number' },
   ] } , приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [] } },
-      effects: { удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'урон' }, direction: 'add', value: { expr: '3' } }] } },
+      effects: { удар: button('Удар', [sub('@цель.урон', '3', 'add')]) },
       
     };
     const book = { records: [{ id: 'удар', table: 'приём', label: 'Удар', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] }] };
@@ -946,7 +934,7 @@ describe('группа листов за столом', () => {
     expect(joined.log.map(e => e.text).join(' ')).toContain('в группе «отряд»');
     await expect(rooms.setSheetGroup(me, roomId, 'отряд', 'гоблин')).rejects.toThrow('группа для других');
 
-    await rooms.act(me, { roomId, actionId: 'удар:0', fromId: 'герой', toId: 'гоблин' });
+    await rooms.act(me, { roomId, actionId: 'удар:0', fromId: 'герой', toIds: ['гоблин'] });
     const state = (await as(http().get(`/rooms/${roomId}`))).body.sheets as { id: string; values: Record<string, number> }[];
     expect(state.find(s => s.id === 'отряд')!.values.урон).toBe(3);
     expect(state.find(s => s.id === 'гоблин')!.values.урон).toBeUndefined();

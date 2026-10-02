@@ -9,7 +9,7 @@ import { fieldsOf } from '../src/model/sheet-columns.ts';
 
 const system = {
   id: 'в', name: 'в',
-  tables: { лист: { shape: 'single', columns: [
+  tables: { лист: { shape: 'single', owner: 'sheet', columns: [
     { key: 'кд', label: 'Класс брони', kind: 'number', default: 10 },
     { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
   ] } , оружие: {
@@ -19,8 +19,8 @@ const system = {
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
-      params: [{ key: 'урон', label: 'Урон', kind: 'number' }],
-      steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@урон' } }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }, { key: 'урон', label: 'Урон', kind: 'number' }],
+      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@урон' } }],
     },
     зоркость: { label: 'Зоркость', activation: 'passive', modifiers: [] },
   },

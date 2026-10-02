@@ -107,7 +107,7 @@ function RoomTable({ room }: { room: RoomState }) {
                     key={sheet.id}
                     type="button"
                     className={`token ${sheet.id === from ? 'token--from' : ''} ${to.includes(sheet.id) ? 'token--to' : ''}`}
-                    title={sheet.id === from ? 'действует' : to.includes(sheet.id) ? 'цель — клик снимает' : 'клик: цель; без отправителя — станет отправителем'}
+                    title={sheet.id === from ? 'действует' : to.includes(sheet.id) ? 'цель — клик снимает' : 'клик: цель; если никто не действует — станет действующим'}
                     onClick={() => {
                       if (sheet.id === from) { setFrom(null); return; }
                       if (!from) { setFrom(sheet.id); return; }
@@ -256,6 +256,13 @@ function Prompt({ room, onError }: { room: RoomState; onError: (message: string 
   );
 }
 
+function claimsOf(actorId: string, targets: Sheet[], mine: string[], theirs: string[]): { claims?: Record<string, string[]> } {
+  const claims: Record<string, string[]> = {};
+  if (mine.length) claims[actorId] = [...mine];
+  if (theirs.length) for (const sheet of targets) claims[sheet.id] = [...new Set([...(claims[sheet.id] ?? []), ...theirs])];
+  return Object.keys(claims).length ? { claims } : {};
+}
+
 function ClaimRow({ label, edits, picked, onToggle }: {
   label: string;
   edits: [string, { label?: string }][];
@@ -292,7 +299,7 @@ function Actions({ room, sender, targets, onError, onClear }: {
     (list.includes(key) ? list.filter(k => k !== key) : [...list, key]);
 
   if (!sender) {
-    return <Empty title="Кто действует?" hint="Кликните фишку — она станет отправителем." />;
+    return <Empty title="Кто действует?" hint="Кликните фишку — этот лист и будет действовать." />;
   }
 
   let available: { id: string; label: string }[] = [];
@@ -315,13 +322,13 @@ function Actions({ room, sender, targets, onError, onClear }: {
         <Fold
           title="Правки броска"
           summary={[...mine, ...theirs].length
-            ? [...mine.map(k => `мой: ${edits.find(([key]) => key === k)?.[1].label ?? k}`),
+            ? [...mine.map(k => `${sender.name}: ${edits.find(([key]) => key === k)?.[1].label ?? k}`),
               ...theirs.map(k => `цели: ${edits.find(([key]) => key === k)?.[1].label ?? k}`)].join(', ')
             : 'ничего не заявлено'}
         >
           <div className="stack stack--tight">
-            <ClaimRow label="мой бросок" edits={edits} picked={mine} onToggle={key => setMine(flip(mine, key))} />
-            <ClaimRow label="бросок цели" edits={edits} picked={theirs} onToggle={key => setTheirs(flip(theirs, key))} />
+            <ClaimRow label={`броски ${sender.name}`} edits={edits} picked={mine} onToggle={key => setMine(flip(mine, key))} />
+            {targets.length ? <ClaimRow label="броски целей" edits={edits} picked={theirs} onToggle={key => setTheirs(flip(theirs, key))} /> : null}
           </div>
         </Fold>
       ) : null}
@@ -348,13 +355,14 @@ function Actions({ room, sender, targets, onError, onClear }: {
                 disabled={Boolean(room.pending)}
                 expect={request => {
                   if (!sender) return null;
+                  const chosen = (targets.length ? targets : [sender]).map(sheet => sheet.id);
                   const found = expectAction(
                     { system: room.system as never, compendium: room.compendium as never, clock: room.clock ?? null },
                     room.sheets as never,
                     {
-                      actionId: request.actionId, fromId: sender.id, toIds: (targets.length ? targets : [sender]).map(sheet => sheet.id),
+                      actionId: request.actionId, fromId: sender.id, toIds: chosen,
                       ...(request.inputs ? { inputs: request.inputs } : {}),
-                      ...(mine.length ? { edits: mine } : {}), ...(theirs.length ? { targetEdits: theirs } : {}),
+                      ...claimsOf(sender.id, targets, mine, theirs),
                     });
                   return found.trouble ? `не выйдет: ${found.trouble}` : found.lines.join('\n');
                 }}
@@ -362,11 +370,9 @@ function Actions({ room, sender, targets, onError, onClear }: {
                   onError(null);
                   tableSocket.act({
                     roomId: room.id, actionId: request.actionId,
-                    fromId: sender.id, toId: (targets[0] ?? sender).id,
-                    ...(targets.length > 1 ? { toIds: targets.map(sheet => sheet.id) } : {}),
+                    fromId: sender.id, toIds: (targets.length ? targets : [sender]).map(sheet => sheet.id),
                     ...(request.inputs ? { inputs: request.inputs } : {}),
-                    ...(mine.length ? { edits: mine } : {}),
-                    ...(theirs.length ? { targetEdits: theirs } : {}),
+                    ...claimsOf(sender.id, targets, mine, theirs),
                     ...(secret ? { hidden: true } : {}),
                   });
                   setMine([]);

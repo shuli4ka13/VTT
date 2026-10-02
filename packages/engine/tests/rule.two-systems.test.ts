@@ -3,8 +3,6 @@ import { bindingsOf } from '../src/events/actions.ts';
 import { exchange } from './play.ts';
 import { serializeSheet } from '../src/model/serialize.ts';
 import { system, arven, mirra, compendium, cyberpunk, cpCompendium, silver, raze } from './fixtures.ts';
-import { AMOUNT_SOURCES } from '../src/model/amount-sources.ts';
-import { SOURCES } from '../src/engine/steps/amount.ts';
 
 const queue = (...values) => {
   const rest = [...values];
@@ -22,39 +20,42 @@ const sheetOf = (out, id) => out.sheets.find(s => s.id === id);
 
 group('две системы одними слотами', () => {
   group('A: срез 5e', () => {
-    test('полный ход: порог → величина → применить, трасса несёт все числа', () => {
+    const sharedReport = out => out.reports.find(entry => entry.report.kind === 'effect' && entry.toId === entry.fromId).report;
+
+    test('полный ход: бросок → проверка → вызов урона → применить, трасса несёт все числа', () => {
       const out = play5('longsword-item:0', arven, mirra, [10, 5]);
       const report = effectReport(out);
       const sheet = sheetOf(out, mirra.id);
 
       eq(report.stopped, null);
-      eq(report.trace.length, 5, 'три шага удара и два шага общего эффекта «Урон»');
-      deepEq(report.trace[0].versus, { tag: 'ac', value: 14 }, 'КД посчитан получателем');
-      eq(report.trace[0].total, 16, 'бросок 10 плюс бонус атаки 6');
+      eq(report.trace.length, 5, 'проверка, ленивый расчёт урона, вызов урона и два применения в общем эффекте «Урон»');
+      eq(sharedReport(out).trace[0].total, 16, 'бросок 10 плюс бонус атаки 6 — один раз, до целей');
+      eq(report.trace[0].versus, 14, 'КД посчитан целью');
+      eq(report.trace[0].total, 16);
       eq(report.trace[0].margin, 2);
-      eq(report.trace[1].total, 8, 'кость меча 5 плюс Сила 3');
+      eq(report.trace[1].total, 8, 'урон считается при первом обращении: кость меча 5 плюс Сила 3');
       eq(report.trace[2].event, 'damage', 'удар не трогает хиты сам — отправляет посчитанное');
       deepEq(report.trace[2].tags, ['рубящий'], 'тип урона приехал из записи оружия');
       eq(report.trace[2].amount, 8);
       eq(report.trace[4].within, 'damage', 'хиты снимает общий эффект');
       eq(report.trace[4].from, 21);
       eq(report.trace[4].to, 13);
-      deepEq(report.changes, [{ tag: 'hp_current', from: 21, to: 13 }],
+      deepEq(report.changes, [{ tag: 'hp_current', from: 21, to: 13, sheetId: mirra.id }],
         'временные хиты были нулём и нулём остались — в изменениях их нет');
       eq(sheet.values.hp_current, 13);
     });
 
-    test('промах: обрыв на пороге, в журнале threshold-miss, цель не тронута', () => {
+    test('промах: обрыв на проверке, в журнале check-miss, цель не тронута', () => {
       const out = play5('longsword-item:0', arven, mirra, [2, 5]);
       const report = effectReport(out);
       const sheet = sheetOf(out, mirra.id);
-      eq(report.stopped.reason, 'threshold-miss');
+      eq(report.stopped.reason, 'check-miss');
       eq(report.trace.length, 1, 'после обрыва шаги не исполнялись');
       eq(sheet.values.hp_current, 21);
       deepEq(report.changes, []);
     });
 
-    test('сопротивление цели половинит урон — модификаторы цели включены в правиле', () => {
+    test('сопротивление цели половинит урон — правка вызова «Урон» у носителя-цели', () => {
       const stony = { ...mirra, effects: [{ effectId: 'stoneskin' }] };
       const out = play5('longsword-item:0', arven, stony, [10, 5]);
       const report = effectReport(out);
@@ -64,14 +65,14 @@ group('две системы одними слотами', () => {
       eq(sheet.values.hp_current, 17);
     });
 
-    test('спасбросок — то же правило порога, бросает и считает получатель', () => {
+    test('спасбросок — бросает и считает цель, урон бросается после него', () => {
       const failed = play5('poison-spray:0', mirra, arven, [3, 4, 5]);
       eq(effectReport(failed).stopped, null, 'спас провален — цепочка дошла до конца');
-      eq(sheetOf(failed, arven.id).values.hp_current, 37, '44 минус 2d6=7');
+      eq(sheetOf(failed, arven.id).values.hp_current, 35, '44 минус 4+5');
       deepEq(sheetOf(failed, arven.id).effects, [...arven.effects, { effectId: 'poisoned' }]);
 
-      const held = play5('poison-spray:0', mirra, arven, [3, 4, 19]);
-      eq(effectReport(held).stopped.reason, 'threshold-held', 'спасся — обрыв, и он различим в журнале');
+      const held = play5('poison-spray:0', mirra, arven, [19, 4, 5]);
+      eq(effectReport(held).stopped.reason, 'check-held', 'спасся — обрыв, и он различим в журнале');
       eq(sheetOf(held, arven.id).values.hp_current, 44);
       deepEq(sheetOf(held, arven.id).effects, arven.effects);
     });
@@ -108,11 +109,12 @@ group('две системы одними слотами', () => {
 
     test('дистанция даёт сложность по таблице, удача прибавляется к броску и тратится', () => {
       const out = shoot([4, 3, 3, 3], { distance: 30, spend_luck: 2 });
-      const main = out.reports.find(entry => entry.report.kind === 'effect')!.report;
+      const shared = out.reports.find(entry => entry.report.kind === 'effect' && entry.toId === entry.fromId)!.report;
+      const main = out.reports.find(entry => entry.report.kind === 'effect' && entry.toId !== entry.fromId)!.report;
       const dv = main.trace.find(line => line.step === 'dv') as { result: number };
       eq(dv.result, 25, '30 метров — сложность 25');
 
-      const hit = main.trace.find(line => line.step === 'hit') as { bonus: number; total: number };
+      const hit = shared.trace.find(line => line.step === 'hit_бросок') as { bonus: number; total: number };
       eq(hit.bonus, 16, 'навык с рефлексами 14 плюс два очка удачи');
       eq(hit.total, 20, 'кость 4 плюс 16');
 
@@ -186,7 +188,7 @@ group('две системы одними слотами', () => {
           strike: {
             ...system.effects.strike,
             steps: system.effects.strike.steps.map(s => s.id === 'dmg'
-              ? { ...s, source: 'margin', margin: { expr: '@hit.margin' } }
+              ? { ...s, fixed: { expr: `${s.fixed.expr} + 2` } }
               : s),
           },
         },
@@ -200,10 +202,10 @@ group('две системы одними слотами', () => {
       const swordNow = strike(margined, compendium, 'longsword-item:0', [10, 5]);
       const axeNow = strike(margined, book, 'axe-item:0', [10, 7]);
 
-      eq(swordWas.trace[1].total, 8, 'было: кость 5 плюс Сила 3');
-      eq(axeWas.trace[1].total, 10, 'было: кость 7 плюс та же Сила 3');
-      eq(swordNow.trace[1].total, 10, 'стало: плюс превышение 2 — записи не правили');
-      eq(axeNow.trace[1].total, 12, 'стало: и у второй записи тоже');
+      eq(swordWas.trace[2].amount, 8, 'было: кость 5 плюс Сила 3');
+      eq(axeWas.trace[2].amount, 10, 'было: кость 7 плюс та же Сила 3');
+      eq(swordNow.trace[2].amount, 10, 'стало: плюс два в формуле урона — записи не правили');
+      eq(axeNow.trace[2].amount, 12, 'стало: и у второй записи тоже');
     });
   });
 
@@ -227,20 +229,6 @@ group('две системы одними слотами', () => {
     test('у 5e и киберпанка разные ведущие кости — и это только данные', () => {
       deepEq(system.constants.lead_die.dice, [{ count: 1, sides: 20 }]);
       deepEq(cyberpunk.constants.lead_die.dice, [{ count: 1, sides: 10 }]);
-    });
-  });
-
-  group('словарь источников величины', () => {
-    test('движок и словарь конструктора согласованы', () => {
-      deepEq(AMOUNT_SOURCES.map(s => s.id).sort(), [...SOURCES].sort(),
-        'каждому источнику движка — статья словаря, и наоборот');
-    });
-
-    test('у каждой статьи есть лейбл и примеры реальных систем', () => {
-      for (const src of AMOUNT_SOURCES) {
-        ok(src.label, `${src.id}: нужен человеческий лейбл`);
-        ok((src.examples || []).length, `${src.id}: нужны примеры`);
-      }
     });
   });
 

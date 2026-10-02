@@ -15,37 +15,44 @@ const passive = (label: string, modifiers: unknown[]) =>
 
 const SOURCES = ['магический'];
 
-const damageArgs = (amount: unknown, tags: string[]) => ({
-  сколько: amount,
-  ...Object.fromEntries(tags.map(tag => [SOURCES.includes(tag) ? 'источник' : 'тип', { const: tag }])),
+const ACTOR = { key: 'действующий', kind: 'sheet' };
+const TARGETS = { key: 'жертвы', kind: 'sheet', many: true };
+const EACH = { type: 'each', of: 'жертвы', as: 'цель' };
+
+const damageArgs = (amount: unknown, tags: string[], who: unknown = { expr: '@цель' }, by: unknown = { expr: '@действующий' }) => ({
+  лист: who, обидчик: by, сколько: amount,
+  ...Object.fromEntries(tags.map(tag => [SOURCES.includes(tag) ? 'природа' : 'тип', { const: tag }])),
 });
 
 const strike = (id: string, label: string, amount: number, tags: string[]) => ({
-  label, activation: 'manual',
+  label, activation: 'manual', params: [ACTOR, TARGETS],
   steps: [
-    { id: 'n', type: 'amount', source: 'item', fixed: { expr: `${JSON.stringify(amount)}` } },
+    EACH,
+    { id: 'n', type: 'roll', fixed: { expr: `${JSON.stringify(amount)}` } },
     { type: 'emit', event: 'урон', args: damageArgs({ expr: '@n' }, tags) },
   ],
 });
 
 const world = (extraEffects: Record<string, unknown> = {}, receive: unknown[] | undefined = [
-  { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '@event.amount' }, targetModifiers: false },
+  { type: 'apply', target: { expr: '@лист.хп' }, direction: 'subtract', value: { expr: '@сколько' }, targetModifiers: false },
 ]) => ({
   id: 'вызовы',
   effects: {
     удар: strike('удар', 'Удар', 8, ['рубящий']),
     огонь: strike('огонь', 'Огненный шар', 8, ['огонь', 'магический']),
-    сигнал: { label: 'Тревога', activation: 'manual', steps: [{ type: 'emit', event: 'тревога' }] },
+    сигнал: { label: 'Тревога', activation: 'manual', params: [ACTOR, TARGETS], steps: [EACH, { type: 'emit', event: 'тревога', args: { лист: { expr: '@цель' } } }] },
     урон: {
       label: 'Урон',
       params: [
+        { key: 'лист', label: 'Лист', kind: 'sheet' },
+        { key: 'обидчик', label: 'Обидчик', kind: 'sheet', optional: true },
         { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' },
         { key: 'тип', label: 'Тип', kind: 'choice', from: 'типы', optional: true },
-        { key: 'источник', label: 'Источник', kind: 'choice', from: 'источники', optional: true },
+        { key: 'природа', label: 'Природа', kind: 'choice', from: 'источники', optional: true },
       ],
       ...(receive ? { steps: receive } : {}),
     },
-    тревога: { label: 'Тревога' },
+    тревога: { label: 'Тревога', params: [{ key: 'лист', label: 'Лист', kind: 'sheet' }] },
     ...extraEffects,
   },
   tables: { лист: { shape: 'single', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 20, min: 0 }] },
@@ -73,6 +80,7 @@ const hit = (sys: any, action: string, target: any, ...dice: number[]) => {
     sheet: played.sheets.find(s => s.id === 'враг')!,
     report: played.reports.find(entry => !entry.report.reply && entry.toId === 'враг')!.report,
     replies: played.reports.filter(entry => entry.report.reply),
+    hero: played.sheets.find(s => s.id === 'герой')!,
   };
 };
 
@@ -80,7 +88,7 @@ group('вызываемый эффект как провод: отправите
   test('урон доезжает по правилу приёма из словаря', () => {
     const out = hit(world(), 'удар', foe());
     eq(out.sheet.values.хп, 12);
-    deepEq(out.report.emitted, [{ event: 'урон', amount: 8, incoming: 8, tags: ['рубящий'] }]);
+    deepEq(out.report.emitted.map(({ event, amount, incoming, tags }) => ({ event, amount, incoming, tags })), [{ event: 'урон', amount: 8, incoming: 8, tags: ['рубящий'] }]);
   });
 
   test('в трассе сначала вызов, потом его шаги с пометкой, откуда они', () => {
@@ -91,7 +99,7 @@ group('вызываемый эффект как провод: отправите
   });
 
   test('необъявленный вызов — ошибка перечисляет известные эффекты', () => {
-    const sys: any = world({ чужое: { label: 'Чужое', activation: 'manual', steps: [{ type: 'emit', event: 'котик' }] } });
+    const sys: any = world({ чужое: { label: 'Чужое', activation: 'manual', params: [ACTOR, TARGETS], steps: [EACH, { type: 'emit', event: 'котик' }] } });
     const withAction = { ...book, records: [...book.records, { id: 'чужое', table: 'приём', label: 'Чужое', bindings: [{ label: 'Чужое', effect: 'чужое', args: {} }] }] };
     throws(() => exchange({
       system: sys, compendium: withAction as any, die: queue(), sheets: [{ ...hero(), has: [...hero().has, { of: 'чужое' }] } as any, foe() as any],
@@ -110,9 +118,9 @@ group('вызываемый эффект как провод: отправите
 group('сопротивления по тегам', () => {
   const resist = world({
     огнеупор: passive('Сопротивление огню', [
-      { kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, stacking: 'max', anyTags: ['огонь'] }]),
+      { kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, stacking: 'max', anyTags: ['огонь'], if: { expr: '@лист == @носитель' } }]),
     броня: passive('Тяжёлая броня', [
-      { kind: 'edit', call: 'урон', param: 'сколько', op: 'add', value: { expr: '-3' }, stacking: 'sum', notTags: ['магический'] }]),
+      { kind: 'edit', call: 'урон', param: 'сколько', op: 'add', value: { expr: '-3' }, stacking: 'sum', notTags: ['магический'], if: { expr: '@лист == @носитель' } }]),
     камень: passive('Каменная кожа', [
       { kind: 'value', target: 'incoming:хп', op: 'mul', value: { expr: '0.5' }, stacking: 'max' }]),
   });
@@ -135,7 +143,7 @@ group('сопротивления по тегам', () => {
 
   test('старое сопротивление на поле продолжает работать, если приём его учитывает', () => {
     const sys = world({ камень: resist.effects.камень }, [
-      { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '@event.amount' }, targetModifiers: true },
+      { type: 'apply', target: { expr: '@лист.хп' }, direction: 'subtract', value: { expr: '@сколько' }, targetModifiers: true },
     ]);
     eq(hit(sys, 'удар', foe(['камень'])).sheet.values.хп, 16);
   });
@@ -145,15 +153,21 @@ group('реакции слушают слово, а не имя эффекта',
   const spiky = world({
     шипы: {
       label: 'Шипы', activation: 'passive', duration: { kind: 'permanent' },
-      on: [{ on: 'affected', of: 'event:урон', to: 'other', if: null, steps: [{ type: 'emit', event: 'урон', args: damageArgs({ expr: '@event.amount' }, ['колющий']) }] }],
+      on: [{ on: 'after:урон', if: { expr: 'все(@лист == @носитель, не(пусто(@обидчик)), @обидчик != @носитель)' }, steps: [{ type: 'emit', event: 'урон', args: damageArgs({ expr: '@сколько' }, ['колющий'], { expr: '@обидчик' }, { expr: '@носитель' }) }] }],
     },
     сторож: {
       label: 'Сторож', activation: 'passive', duration: { kind: 'permanent' },
-      on: [{ on: 'affected', of: 'event:тревога', to: 'other', steps: [{ type: 'apply', target: { tag: 'хп' }, direction: 'add', value: { expr: '1' } }] }],
+      on: [{ on: 'after:тревога', if: { expr: '@лист == @носитель' }, steps: [{ type: 'apply', target: { expr: '@носитель.хп' }, direction: 'add', value: { expr: '1' } }] }],
     },
   });
 
   test('шипы отвечают и на удар, и на огненный шар — оба посылают «урон»', () => {
+    eq(hit(spiky, 'удар', foe(['шипы'])).hero.values.хп, 12);
+    eq(hit(spiky, 'огонь', foe(['шипы'])).hero.values.хп, 12);
+    eq(hit(spiky, 'тревога', foe(['шипы'])).hero.values.хп, 20, 'тревога — не урон');
+  });
+
+  test('ответка шипов записана в журнал действия отдельным отчётом', () => {
     eq(hit(spiky, 'удар', foe(['шипы'])).replies.length, 1);
     eq(hit(spiky, 'огонь', foe(['шипы'])).replies.length, 1);
     eq(hit(spiky, 'тревога', foe(['шипы'])).replies.length, 0, 'тревога — не урон');
@@ -173,7 +187,7 @@ group('реакции слушают слово, а не имя эффекта',
       ...spiky.effects,
       сосредоточен: {
         label: 'Сосредоточен', activation: 'passive', duration: { kind: 'permanent' },
-        on: [{ on: 'affected', of: 'event:урон', steps: [{ type: 'status', mode: 'remove', effect: { const: 'сосредоточен' } }] }],
+        on: [{ on: 'after:урон', if: { expr: '@лист == @носитель' }, steps: [{ type: 'status', mode: 'remove', effect: { const: 'сосредоточен' }, to: { expr: '@носитель' } }] }],
       },
     });
     const r = exchange({
@@ -185,15 +199,34 @@ group('реакции слушают слово, а не имя эффекта',
     deepEq(me.effects, [], 'шипы ранили — сосредоточенность сорвалась');
   });
 
-  test('шипы против шипов: ответки идут до предела глубины, и видно, что цепочка оборвана', () => {
-    const r = exchange({
-      system: spiky as any, compendium: book as any, die: queue(), sheets: [hero(['шипы']) as any, foe(['шипы']) as any],
-      actionId: 'удар:0', fromId: 'герой', toId: 'враг',
-    });
-    eq(r.reports.filter(entry => entry.report.reply).length, 4, 'четыре ответки — предел глубины');
+  const fixedSpikes = world({
+    ...spiky.effects,
+    шипы: {
+      label: 'Шипы', activation: 'passive', duration: { kind: 'permanent' },
+      on: [{ on: 'after:урон', if: { expr: 'все(@лист == @носитель, не(пусто(@обидчик)), @обидчик != @носитель)' }, steps: [{ type: 'emit', event: 'урон', args: damageArgs({ expr: '8' }, ['колющий'], { expr: '@обидчик' }, { expr: '@носитель' }) }] }],
+    },
+  });
+  const spikesAgainstSpikes = (sys: any) => exchange({
+    system: sys, compendium: book as any, die: queue(), sheets: [hero(['шипы']) as any, foe(['шипы']) as any],
+    actionId: 'удар:0', fromId: 'герой', toId: 'враг',
+  });
+
+  test('шипы против шипов: ответки идут до предела глубины', () => {
+    const r = spikesAgainstSpikes(fixedSpikes);
     eq(r.sheets.find(s => s.id === 'враг')!.values.хп, 0, 'удар, вторая и четвёртая ответки: 20 − 24, не ниже нуля');
     eq(r.sheets.find(s => s.id === 'герой')!.values.хп, 4, 'первая и третья: 20 − 16');
+  });
+
+  test('шипы против шипов: четыре ответки записаны в журнал, и видно, что цепочка оборвана', () => {
+    const r = spikesAgainstSpikes(fixedSpikes);
+    eq(r.reports.filter(entry => entry.report.reply).length, 4, 'четыре ответки — предел глубины');
     ok(r.log.includes(CUT_WORDS), 'в журнале сказано, что цепочка оборвана');
+  });
+
+  test('шипы против шипов: вторая ответка читает входы вызова «Урон», посланного первой', () => {
+    const r = spikesAgainstSpikes(spiky);
+    eq(r.sheets.find(s => s.id === 'враг')!.values.хп, 0);
+    eq(r.sheets.find(s => s.id === 'герой')!.values.хп, 4);
   });
 
   test('ответ из тела ответки доходит: вампирские шипы ранят и лечат хозяина', () => {
@@ -201,14 +234,14 @@ group('реакции слушают слово, а не имя эффекта',
       ...spiky.effects,
       шипы: {
         label: 'Вампирские шипы', activation: 'passive', duration: { kind: 'permanent' },
-        on: [{ on: 'affected', of: 'event:урон', to: 'other', steps: [
-          { type: 'emit', event: 'урон', args: damageArgs({ expr: '4' }, ['колющий']) },
-          { type: 'emit', event: 'лечение', to: 'sender', args: { сколько: { expr: '4' } } },
+        on: [{ on: 'after:урон', if: { expr: 'все(@лист == @носитель, не(пусто(@обидчик)), @обидчик != @носитель)' }, steps: [
+          { type: 'emit', event: 'урон', args: damageArgs({ expr: '4' }, ['колющий'], { expr: '@обидчик' }, { expr: '@носитель' }) },
+          { type: 'emit', event: 'лечение', args: { лист: { expr: '@носитель' }, сколько: { expr: '4' } } },
         ] }],
       },
       лечение: {
-        label: 'Лечение', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }],
-        steps: [{ type: 'apply', target: { tag: 'хп' }, direction: 'add', value: { expr: '@event.amount' }, targetModifiers: false }],
+        label: 'Лечение', params: [{ key: 'лист', label: 'Лист', kind: 'sheet' }, { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }],
+        steps: [{ type: 'apply', target: { expr: '@лист.хп' }, direction: 'add', value: { expr: '@сколько' }, targetModifiers: false }],
       },
     });
     const r = exchange({
@@ -221,8 +254,7 @@ group('реакции слушают слово, а не имя эффекта',
   });
 
   test('сигнал без приёма будит реакцию на самом себе', () => {
-    const sys = { ...spiky, effects: { ...spiky.effects, сторож: { ...spiky.effects.сторож, on: [{ ...spiky.effects.сторож.on[0], to: 'self' }] } } };
-    const out = hit(sys, 'тревога', foe(['сторож']));
+    const out = hit(spiky, 'тревога', foe(['сторож']));
     eq(out.sheet.values.хп, 21);
   });
 });
@@ -231,8 +263,8 @@ group('«я совершил действие» — один раз на все 
   const tally = world({
     итог: {
       label: 'Итог', activation: 'passive', duration: { kind: 'uses', max: 2 },
-      on: [{ on: 'done', of: 'удар', steps: [
-        { type: 'apply', target: { tag: 'хп' }, direction: 'set', value: { expr: 'сумма(@цели.n) + сколько(@цели.лист)' } },
+      on: [{ on: 'done:удар', if: { expr: '@действующий == @носитель' }, steps: [
+        { type: 'apply', target: { expr: '@носитель.хп' }, direction: 'set', value: { expr: 'сумма(@итоги.n) + сколько(@итоги.лист)' } },
       ] }],
     },
   });
@@ -251,8 +283,18 @@ group('«я совершил действие» — один раз на все 
     eq(me.effects[0]!.usesLeft, 1);
   });
 
+  test('таблица «итоги» в «завершено» не путается со входом-списком «цели»', () => {
+    const same = world({
+      удар: { ...strike('удар', 'Удар', 8, ['рубящий']), params: [ACTOR, { key: 'цели', kind: 'sheet', many: true }], steps: [{ type: 'each', of: 'цели', as: 'цель' }, ...strike('удар', 'Удар', 8, ['рубящий']).steps.slice(1)] },
+      итог: tally.effects.итог,
+    });
+    const sheets = [{ ...hero(), effects: [{ effectId: 'итог', usesLeft: 2 }] }, foe(), { ...foe(), id: 'враг2' }];
+    const out = deliverMany({ system: same as any, compendium: book as any, die: queue(), sheets: sheets as any, actionId: 'удар:0', fromId: 'герой', toIds: ['враг', 'враг2'] });
+    eq(out.sheets.find(s => s.id === 'герой')!.values.хп, 18);
+  });
+
   test('кривое условие подписки — подписка молчит, ход не падает', () => {
-    const broken = world({ итог: { ...tally.effects.итог, on: [{ ...tally.effects.итог.on[0], if: { expr: '@цели.n > 0' } }] } });
+    const broken = world({ итог: { ...tally.effects.итог, on: [{ ...tally.effects.итог.on[0], if: { expr: '@итоги.n > 0' } }] } });
     const r = exchange({
       system: broken as any, compendium: book as any, die: queue(), sheets: [hero(['итог']) as any, foe() as any],
       actionId: 'удар:0', fromId: 'герой', toId: 'враг',

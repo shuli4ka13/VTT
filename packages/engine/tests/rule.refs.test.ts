@@ -15,11 +15,15 @@ const sender = () => ({
   owner: 'эффект «Тестовый»',
 });
 
-const target = () => ({
-  pass: newPass(system, arven, { compendium }),
-  results: { hit: { margin: 2, dice: { rolls: [10], kept: 10 } } },
-  owner: 'конверт «Тестовый»',
-});
+const target = () => {
+  const pass = newPass(system, arven, { compendium });
+  return {
+    pass,
+    sheets: { bound: { цель: arven.id }, view: () => pass },
+    results: { hit: { margin: 2, dice: { rolls: [10], kept: 10 } } },
+    owner: 'конверт «Тестовый»',
+  };
+};
 
 group('структурные ссылки', () => {
   group('необязательные ссылки: для взаимоисключающих слотов', () => {
@@ -44,17 +48,17 @@ group('структурные ссылки', () => {
     });
   });
 
-  group('фаза получателя: resolveRef', () => {
+  group('ссылки по имени листа: resolveRef', () => {
     test('литералы и const дают значение', () => {
       eq(resolveRef(5, target()), 5);
       eq(resolveRef({ const: 0 }, target()), 0);
     });
 
-    test('выражение цели считается листом получателя', () => {
-      eq(resolveRef({ expr: '@получатель.dex_save', of: 'target' }, target()), 1);
+    test('выражение через имя листа считается этим листом', () => {
+      eq(resolveRef({ expr: '@цель.dex_save' }, target()), 1);
     });
 
-    test('тег считается формулами получателя', () => {
+    test('тег считается формулами листа', () => {
       eq(resolveRef({ tag: 'hp_max' }, target()), 44);
     });
 
@@ -73,7 +77,7 @@ group('структурные ссылки', () => {
 
     test('resolveNumber сторожит нечисло', () => {
       eq(resolveNumber({ const: 7 }, target(), 'урон'), 7);
-      throws(() => resolveNumber({ expr: '@получатель.race', of: 'target' }, target(), 'урон'), 'race');
+      throws(() => resolveNumber({ expr: '@цель.race' }, target(), 'урон'), 'race');
     });
   });
 });

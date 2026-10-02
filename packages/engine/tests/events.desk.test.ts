@@ -14,9 +14,11 @@ const system = {
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
       steps: [
-        { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', targetModifiers: false, value: { expr: '3 + @стол.эскалация' } },
-        { type: 'apply', target: { tag: 'страх' }, direction: 'add', targetModifiers: false, value: { expr: '1' } },
+        { type: 'each', of: 'цели', as: 'цель' },
+        { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', targetModifiers: false, value: { expr: '3 + @стол.эскалация' } },
+        { type: 'apply', target: { expr: '@стол.страх' }, direction: 'add', targetModifiers: false, value: { expr: '1' } },
       ],
     },
   },
@@ -62,10 +64,10 @@ group('стол — третий участник с полями', () => {
 });
 
 group('проверки конструктора про стол', () => {
-  test('поле стола, написанное как поле получателя, — ошибка словами', async () => {
+  test('поле стола, написанное голым именем, — ошибка словами', async () => {
     const { lintSystem, errorsOf } = await import('../src/model/lint.ts');
     const wrong = JSON.parse(JSON.stringify(system)) as System;
-    (wrong.effects.удар!.steps![0] as { value: { expr: string } }).value.expr = '3 + @получатель.эскалация';
+    (wrong.effects.удар!.steps![1] as { value: { expr: string } }).value.expr = '3 + @эскалация';
     const texts = errorsOf(lintSystem(wrong, book)).map(p => p.text);
     ok(texts.some(t => t.includes('лежит на столе') && t.includes('@стол.эскалация')), texts.join(' | '));
   });

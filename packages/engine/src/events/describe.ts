@@ -1,6 +1,5 @@
 import { effectLabelOf } from './actions.ts';
 import { breakReasonWord, registry as stepRegistry } from '../engine/steps/index.ts';
-import { ownerOf, OWNER_WORDS } from '../engine/owners.ts';
 import { outcomeWords, rollName } from '../engine/roll-tags.ts';
 import type { System, Sheet } from '../model/types.ts';
 import { fieldOf, hasField } from '../model/sheet-columns.ts';
@@ -12,32 +11,27 @@ const tagsOfStep = (step: Record<string, any> | undefined, trace?: Record<string
 
 const rollTitle = (tags: string[], fallback: string): string => (tags.length ? `${fallback} (${rollName(tags)})` : fallback);
 
+const rollsText = (trace: Record<string, unknown>): string => {
+  const rolls = (trace.rolls as number[]) ?? [];
+  return trace.kept != null && rolls.length > 1 ? `[${rolls.join(', ')}] → ${trace.kept}` : `[${rolls.join(', ')}]`;
+};
+
 export function previewLines(system: System, effectId: string, trace: Record<string, unknown>[]): string[] {
-  const steps = (system.effects[effectId]?.steps ?? []) as { id?: string | null; side?: string }[];
-  const traces = trace.filter(trace => trace.type === 'threshold' && !trace.skipped && !trace.within);
-  const sideOf = (trace: Record<string, unknown>): string => {
-    const step = steps.find((one, index) => String(one.id ?? index) === String(trace.step));
-    return String(step?.side ?? 'sender');
-  };
-  const rollsOf = (trace: Record<string, unknown>): string => {
-    const rolls = (trace.rolls as number[]) ?? [];
-    return trace.kept != null && rolls.length > 1 ? `[${rolls.join(', ')}] → ${trace.kept}` : `[${rolls.join(', ')}]`;
-  };
+  const shown = trace.filter(one => !one.skipped && !one.within);
   const lines: string[] = [];
-  for (const trace of traces) {
-    if (sideOf(trace) === 'target') continue;
-    const tags = (trace.tags as string[] | undefined) ?? [];
+  for (const one of shown) {
+    if (one.type !== 'roll' || !one.by) continue;
+    const tags = (one.tags as string[] | undefined) ?? [];
     const title = tags.length ? `Бросок (${rollName(tags)})` : 'Бросок';
-    lines.push(`${title}: ${rollsOf(trace)}${trace.bonus ? ` + ${trace.bonus}` : ''} = ${trace.total}`);
+    lines.push(`${title}: ${rollsText(one)}${one.bonus ? ` + ${one.bonus}` : ''} = ${one.total}`);
   }
-  for (const trace of traces) {
-    const versus = trace.versus as { tag?: string; value?: number } | undefined;
-    const named = versus?.tag ? fieldOf(system, versus.tag)?.label ?? versus.tag : 'порог';
-    const own = sideOf(trace) === 'target' ? `бросок цели ${rollsOf(trace)} + ${trace.bonus ?? 0} = ${trace.total} ` : '';
-    const words = outcomeWords(system, (trace.tags as string[] | undefined) ?? []);
-    const forced = trace.forced != null ? ` (${forcedWords(Number(trace.forced), Boolean(trace.success))})` : '';
-    lines.push(`${own}против ${named} ${versus?.value}: ${trace.success ? words.success : words.fail}${forced}`);
+  for (const one of shown) {
+    if (one.type !== 'check') continue;
+    const words = outcomeWords(system, (one.tags as string[] | undefined) ?? []);
+    const forced = one.forced != null ? ` (${forcedWords(Number(one.forced), Boolean(one.success))})` : '';
+    lines.push(`против ${one.versus}: ${one.success ? words.success : words.fail}${forced}`);
   }
+  void effectId;
   return lines;
 }
 
@@ -63,11 +57,13 @@ export function describeEntry(
   const effect = system.effects[String(entry.report.effect)] as any;
   const stepOf = (trace: Record<string, unknown>) => (effect?.steps ?? [])
     .find((step: any, index: number) => String(step.id ?? index) === String(trace.step));
+  const params: { key: string; label?: string; kind?: string }[] = effect?.params ?? [];
   const nameLabel = (name: string): string => {
-    const owned = ownerOf(name);
-    if (owned) return `${nameLabel(owned.rest)} ${OWNER_WORDS[owned.owner]}`;
+    const dot = name.indexOf('.');
+    const rest = dot > 0 ? name.slice(dot + 1) : '';
+    const sheet = dot > 0 && !hasField(system, name) && (params.some(p => p.key === name.slice(0, dot) && p.kind === 'sheet') || hasField(system, rest));
+    if (sheet) return nameLabel(rest);
     if (name.includes('.') && !hasField(system, name)) return outputLabel(name);
-    const params: { key: string; label?: string }[] = effect?.params ?? [];
     const param = params.find(p => p.key === name);
     return param ? String(param.label ?? name) : labelOf(name);
   };
@@ -103,41 +99,29 @@ export function describeEntry(
   };
   const namedTrace = (trace: Record<string, any>): string | null => {
     const step = stepOf(trace);
-    if (trace.type === 'threshold') {
+    if (trace.type === 'roll' && trace.by) {
       const raw: number[] = Array.isArray(trace.raw) ? trace.raw : [];
       const shown = ((trace.rolls ?? []) as number[])
         .map((v, i) => (raw.length === trace.rolls.length && raw[i] !== v ? `${raw[i]}→${v}` : String(v)))
         .join(', ');
-      const rolls = trace.kept != null && trace.rolls?.length > 1 ? `[${shown}] → ${trace.kept}` : `[${shown}]`;
-      const check = rollTitle(tagsOfStep(step, trace), 'Проверка');
+      const rolls = trace.read === 'count' ? `[${shown}] → успехов ${trace.total - trace.bonus}`
+        : trace.kept != null && trace.rolls?.length > 1 ? `[${shown}] → ${trace.kept}` : `[${shown}]`;
+      const title = rollTitle(tagsOfStep(step, trace), 'Бросок');
       const edits = trace.edits?.length ? ` (${trace.edits.join(', ')})` : '';
-      const bonus = step?.roll?.bonus ? ` + ${refLabel(step.roll.bonus) ?? 'Бонус'}: ${trace.bonus}` : '';
-      const versus = trace.versus?.tag ? labelOf(String(trace.versus.tag))
-        : (refLabel(step?.versus) ?? 'порог');
+      const bonus = step?.bonus ? ` + ${refLabel(step.bonus) ?? 'Бонус'}: ${trace.bonus}` : trace.bonus ? ` + ${trace.bonus}` : '';
+      const parts = trace.parts && Object.keys(trace.parts).length
+        ? ' · ' + Object.entries(trace.parts).map(([k, v]) => `${k}: ${v}`).join(', ') : '';
+      return `${title}: ${rolls}${edits}${bonus} = ${trace.total}${parts}`;
+    }
+    if (trace.type === 'check') {
+      const versus = refLabel(step?.versus) ?? 'порог';
       const degree = trace.degree !== undefined && trace.degree !== null ? `, степень ${trace.degree}` : '';
-      const words = outcomeWords(system, tagsOfStep(step, trace));
+      const words = outcomeWords(system, (trace.tags as string[] | undefined) ?? []);
       const forced = trace.forced != null ? ` (${forcedWords(trace.forced, Boolean(trace.success))})` : '';
       const verdict = (trace.success ? words.success : words.fail) + forced + degree;
-      return `${check}: ${rolls}${edits}${bonus} = ${trace.total} против ${versus}: ${trace.versus?.value} — ${verdict}`;
-    }
-    if (trace.type === 'amount') {
-      const terms: string[] = [];
-      const own = trace.rolls?.length && trace.notation;
-      if (own) {
-        const value = trace.rolls.reduce((sum: number, die: number) => sum + die, 0);
-        terms.push(`${refLabel(step?.dice) ?? 'Бросок'}: ${value}`);
-      }
-      const thrown = trace.rolls?.length && !own ? ` [${trace.rolls.join(', ')}]` : '';
-      if (step?.fixed !== undefined) terms.push(`${refLabel(step.fixed) ?? 'Значение'}${thrown}: ${trace.flat}`);
-      if (step?.bonus !== undefined) terms.push(`${refLabel(step.bonus) ?? 'Бонус'}: ${trace.bonus}`);
-      if (step?.margin !== undefined) terms.push(`${refLabel(step.margin) ?? 'Запас'}: ${trace.margin}`);
-      const sum = terms.join(' + ') || '0';
-      if (trace.share === undefined || trace.share === null) {
-        return terms.length === 1 && trace.total === trace.rolls?.reduce?.((a: number, b: number) => a + b, 0)
-          ? sum : `${sum} = ${trace.total}`;
-      }
-      const share = trace.share === 0.5 ? 'половина' : `доля ${trace.share}`;
-      return `${sum} = ${trace.full} → ${share}: ${trace.total}`;
+      const tags = (trace.tags as string[] | undefined) ?? [];
+      const title = tags.length ? rollTitle(tags, 'Проверка') : refLabel(step?.value) ?? 'Проверка';
+      return `${title}: ${trace.total} против ${versus}: ${trace.versus} — ${verdict}`;
     }
     return null;
   };

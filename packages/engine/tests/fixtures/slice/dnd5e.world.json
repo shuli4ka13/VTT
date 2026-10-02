@@ -1132,6 +1132,17 @@
         "activation": "manual",
         "params": [
           {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          },
+          {
             "key": "damage_dice",
             "label": "Кость урона",
             "kind": "dice"
@@ -1144,35 +1155,47 @@
         ],
         "steps": [
           {
-            "id": "hit",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "lead_die"
-              },
-              "bonus": {
-                "expr": "#attack_bonus"
-              },
-              "tags": [
-                "атака"
-              ]
+            "id": "hit_бросок",
+            "type": "roll",
+            "die": {
+              "constant": "lead_die"
             },
-            "versus": {
-              "expr": "@получатель.ac"
+            "bonus": {
+              "expr": "@действующий.attack_bonus"
+            },
+            "tags": [
+              "атака"
+            ],
+            "by": {
+              "expr": "@действующий"
+            },
+            "against": {
+              "expr": "первый(@цели)"
             }
           },
           {
-            "id": "dmg",
-            "type": "amount",
-            "source": "roll",
-            "dice": {
-              "param": "damage_dice"
+            "type": "roll",
+            "fixed": {
+              "expr": "кинуть(@damage_dice, (1) * если((@hit_бросок.natural >= 20), 2, 1))"
             },
             "bonus": {
-              "expr": "#str_mod"
+              "expr": "@действующий.str_mod"
             },
-            "double": {
-              "expr": "@hit.natural >= 20"
+            "id": "dmg"
+          },
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "id": "hit",
+            "type": "check",
+            "value": {
+              "expr": "@hit_бросок"
+            },
+            "versus": {
+              "expr": "@цель.ac"
             }
           },
           {
@@ -1184,6 +1207,12 @@
               },
               "damage_type": {
                 "expr": "@damage_type"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           }
@@ -1192,14 +1221,13 @@
         "group": "Атака",
         "cost": [
           {
-            "type": "compare",
+            "type": "check",
             "value": {
-              "expr": "@turn_action"
+              "expr": "@действующий.turn_action"
             },
             "versus": {
               "expr": "1"
             },
-            "breakIf": "less",
             "note": "действие на этом ходу уже потрачено",
             "when": {
               "expr": "@стол.battle >= 1"
@@ -1208,7 +1236,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "turn_action"
+              "expr": "@действующий.turn_action"
             },
             "direction": "subtract",
             "value": {
@@ -1219,6 +1247,9 @@
               "expr": "@стол.battle >= 1"
             }
           }
+        ],
+        "tags": [
+          "атака"
         ]
       },
       "save": {
@@ -1226,6 +1257,17 @@
         "icon": "☄",
         "activation": "manual",
         "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          },
           {
             "key": "save",
             "label": "Чем спасается цель",
@@ -1249,32 +1291,46 @@
         ],
         "steps": [
           {
-            "id": "save",
-            "type": "threshold",
-            "side": "target",
-            "roll": {
-              "die": {
-                "constant": "lead_die"
-              },
-              "bonus": {
-                "expr": "@save"
-              },
-              "tags": [
-                "спасбросок"
-              ]
+            "type": "roll",
+            "fixed": {
+              "expr": "кинуть(@damage_dice, 1)"
             },
-            "versus": {
-              "expr": "#spell_dc"
-            },
-            "continueOn": "fail"
+            "id": "dmg"
           },
           {
-            "id": "dmg",
-            "type": "amount",
-            "source": "roll",
-            "dice": {
-              "param": "damage_dice"
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "id": "save_бросок",
+            "type": "roll",
+            "die": {
+              "constant": "lead_die"
+            },
+            "bonus": {
+              "expr": "@save"
+            },
+            "tags": [
+              "спасбросок"
+            ],
+            "by": {
+              "expr": "@цель"
+            },
+            "against": {
+              "expr": "@действующий"
             }
+          },
+          {
+            "id": "save",
+            "type": "check",
+            "value": {
+              "expr": "@save_бросок"
+            },
+            "versus": {
+              "expr": "@действующий.spell_dc"
+            },
+            "continueOn": "fail"
           },
           {
             "type": "emit",
@@ -1285,6 +1341,12 @@
               },
               "damage_type": {
                 "expr": "@damage_type"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           },
@@ -1294,20 +1356,27 @@
             "effect": {
               "param": "status",
               "optional": true
+            },
+            "to": {
+              "expr": "@цель"
+            },
+            "args": {
+              "наложил": {
+                "expr": "@действующий"
+              }
             }
           }
         ],
         "group": "Атака",
         "cost": [
           {
-            "type": "compare",
+            "type": "check",
             "value": {
-              "expr": "@turn_action"
+              "expr": "@действующий.turn_action"
             },
             "versus": {
               "expr": "1"
             },
-            "breakIf": "less",
             "note": "действие на этом ходу уже потрачено",
             "when": {
               "expr": "@стол.battle >= 1"
@@ -1316,7 +1385,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "turn_action"
+              "expr": "@действующий.turn_action"
             },
             "direction": "subtract",
             "value": {
@@ -1335,6 +1404,17 @@
         "activation": "manual",
         "params": [
           {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          },
+          {
             "key": "heal_dice",
             "label": "Кость лечения",
             "kind": "dice"
@@ -1347,20 +1427,24 @@
         ],
         "steps": [
           {
-            "id": "amt",
-            "type": "amount",
-            "source": "roll",
-            "dice": {
-              "param": "heal_dice"
+            "type": "roll",
+            "fixed": {
+              "expr": "кинуть(@heal_dice, 1)"
             },
             "bonus": {
-              "expr": "#cha_mod"
-            }
+              "expr": "@действующий.cha_mod"
+            },
+            "id": "amt"
+          },
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
           },
           {
             "type": "apply",
             "target": {
-              "tag": "hp_current"
+              "expr": "@цель.hp_current"
             },
             "direction": "add",
             "value": {
@@ -1374,6 +1458,9 @@
             "effect": {
               "param": "cure",
               "optional": true
+            },
+            "to": {
+              "expr": "@цель"
             }
           }
         ],
@@ -1381,14 +1468,13 @@
         "group": "Лечение",
         "cost": [
           {
-            "type": "compare",
+            "type": "check",
             "value": {
-              "expr": "@turn_action"
+              "expr": "@действующий.turn_action"
             },
             "versus": {
               "expr": "1"
             },
-            "breakIf": "less",
             "note": "действие на этом ходу уже потрачено",
             "when": {
               "expr": "@стол.battle >= 1"
@@ -1397,7 +1483,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "turn_action"
+              "expr": "@действующий.turn_action"
             },
             "direction": "subtract",
             "value": {
@@ -1411,7 +1497,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "slots_1"
+              "expr": "@действующий.slots_1"
             },
             "direction": "subtract",
             "value": {
@@ -1424,32 +1510,59 @@
         "label": "Огненный снаряд",
         "icon": "🔥",
         "activation": "manual",
-        "params": [],
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ],
         "steps": [
           {
-            "id": "hit",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "lead_die"
-              },
-              "bonus": {
-                "expr": "#attack_bonus"
-              },
-              "tags": [
-                "атака"
-              ]
+            "id": "hit_бросок",
+            "type": "roll",
+            "die": {
+              "constant": "lead_die"
             },
-            "versus": {
-              "expr": "@получатель.ac"
+            "bonus": {
+              "expr": "@действующий.attack_bonus"
+            },
+            "tags": [
+              "атака"
+            ],
+            "by": {
+              "expr": "@действующий"
+            },
+            "against": {
+              "expr": "первый(@цели)"
             }
           },
           {
-            "id": "dmg",
-            "type": "amount",
-            "source": "roll",
-            "dice": {
-              "const": "1d10"
+            "type": "roll",
+            "fixed": {
+              "expr": "кинуть(\"1d10\", 1)"
+            },
+            "id": "dmg"
+          },
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "id": "hit",
+            "type": "check",
+            "value": {
+              "expr": "@hit_бросок"
+            },
+            "versus": {
+              "expr": "@цель.ac"
             }
           },
           {
@@ -1464,6 +1577,12 @@
               },
               "damage_source": {
                 "expr": "\"магический\""
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           }
@@ -1471,14 +1590,13 @@
         "group": "Атака",
         "cost": [
           {
-            "type": "compare",
+            "type": "check",
             "value": {
-              "expr": "@turn_action"
+              "expr": "@действующий.turn_action"
             },
             "versus": {
               "expr": "1"
             },
-            "breakIf": "less",
             "note": "действие на этом ходу уже потрачено",
             "when": {
               "expr": "@стол.battle >= 1"
@@ -1487,7 +1605,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "turn_action"
+              "expr": "@действующий.turn_action"
             },
             "direction": "subtract",
             "value": {
@@ -1497,6 +1615,297 @@
             "when": {
               "expr": "@стол.battle >= 1"
             }
+          }
+        ],
+        "tags": [
+          "атака"
+        ]
+      },
+      "bless": {
+        "label": "Благословение",
+        "icon": "✨",
+        "description": "Тратит ячейку 1-го круга. Пока держишь концентрацию, цели получают +1к4 к любому броску.",
+        "activation": "manual",
+        "bond": {
+          "effect": "bless",
+          "by": "действующий"
+        },
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ],
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "type": "status",
+            "mode": "apply",
+            "effect": {
+              "const": "blessed"
+            },
+            "to": {
+              "expr": "@цель"
+            }
+          }
+        ],
+        "group": "Поддержка",
+        "cost": [
+          {
+            "type": "check",
+            "value": {
+              "expr": "@действующий.turn_action"
+            },
+            "versus": {
+              "expr": "1"
+            },
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "1"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.slots_1"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "fireball": {
+        "label": "Огненный шар",
+        "icon": "💥",
+        "description": "Тратит ячейку. Каждая цель делает спасбросок Ловкости: провал — полный урон, успех — половина. Ведущий называет, кто попал в область.",
+        "activation": "manual",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true
+          },
+          {
+            "key": "save_by",
+            "label": "Чем спасается цель",
+            "kind": "number"
+          },
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "text"
+          }
+        ],
+        "steps": [
+          {
+            "type": "roll",
+            "fixed": {
+              "expr": "кинуть(@damage_dice, 1)"
+            },
+            "id": "dmg_всего"
+          },
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
+          {
+            "id": "save_бросок",
+            "type": "roll",
+            "die": {
+              "constant": "lead_die"
+            },
+            "bonus": {
+              "expr": "@save_by"
+            },
+            "tags": [
+              "спасбросок"
+            ],
+            "by": {
+              "expr": "@цель"
+            },
+            "against": {
+              "expr": "@действующий"
+            }
+          },
+          {
+            "id": "save",
+            "type": "check",
+            "value": {
+              "expr": "@save_бросок"
+            },
+            "versus": {
+              "expr": "@действующий.spell_dc"
+            },
+            "successWhen": "atLeast",
+            "continueOn": "always"
+          },
+          {
+            "id": "dmg",
+            "type": "roll",
+            "fixed": {
+              "expr": "если(@save.success, округлить вниз((@dmg_всего) * (0.5)), @dmg_всего)"
+            }
+          },
+          {
+            "type": "emit",
+            "event": "damage",
+            "args": {
+              "amount": {
+                "expr": "@dmg"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
+              },
+              "damage_source": {
+                "expr": "\"магический\""
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ],
+        "group": "Атака",
+        "cost": [
+          {
+            "type": "check",
+            "value": {
+              "expr": "@действующий.turn_action"
+            },
+            "versus": {
+              "expr": "1"
+            },
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "1"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.slots_1"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "damage": {
+        "label": "Урон",
+        "steps": [
+          {
+            "type": "apply",
+            "id": "по_временным",
+            "target": {
+              "expr": "@лист.hp_temp"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "@amount"
+            },
+            "targetModifiers": true
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@лист.hp_current"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "@по_временным.overkill"
+            },
+            "targetModifiers": false
+          }
+        ],
+        "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true
+          },
+          {
+            "key": "amount",
+            "label": "Сколько урона",
+            "kind": "number",
+            "role": "amount"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types",
+            "optional": true
+          },
+          {
+            "key": "damage_source",
+            "label": "Источник урона",
+            "kind": "choice",
+            "from": "damage_source",
+            "optional": true
           }
         ]
       },
@@ -1516,7 +1925,10 @@
             "kind": "edit",
             "call": "roll",
             "param": "edits",
-            "edit": "disadvantage"
+            "edit": "disadvantage",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            }
           }
         ],
         "steps": [],
@@ -1543,7 +1955,10 @@
             ],
             "kind": "edit",
             "call": "damage",
-            "param": "amount"
+            "param": "amount",
+            "if": {
+              "expr": "@лист == @носитель"
+            }
           }
         ],
         "steps": [],
@@ -1569,7 +1984,10 @@
             "param": "amount",
             "anyTags": [
               "огонь"
-            ]
+            ],
+            "if": {
+              "expr": "@лист == @носитель"
+            }
           }
         ],
         "steps": [],
@@ -1588,7 +2006,10 @@
             "kind": "edit",
             "call": "roll",
             "param": "edits",
-            "edit": "bless"
+            "edit": "bless",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            }
           }
         ],
         "steps": [],
@@ -1605,30 +2026,20 @@
         "params": [],
         "on": [
           {
-            "on": "targeted",
+            "on": "before:атака",
             "if": {
-              "expr": "@hit.success"
+              "expr": "все(@цель == @носитель, @hit.success)"
             },
-            "steps": [
-              {
-                "type": "status",
-                "mode": "apply",
-                "effect": {
-                  "const": "shield_up"
-                }
-              }
-            ],
             "confirm": true,
             "cost": [
               {
-                "type": "compare",
+                "type": "check",
                 "value": {
-                  "expr": "@turn_reaction"
+                  "expr": "@носитель.turn_reaction"
                 },
                 "versus": {
                   "expr": "1"
                 },
-                "breakIf": "less",
                 "note": "реакция уже потрачена",
                 "when": {
                   "expr": "@стол.battle >= 1"
@@ -1637,7 +2048,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_reaction"
+                  "expr": "@носитель.turn_reaction"
                 },
                 "direction": "subtract",
                 "value": {
@@ -1646,6 +2057,18 @@
                 "targetModifiers": false,
                 "when": {
                   "expr": "@стол.battle >= 1"
+                }
+              }
+            ],
+            "steps": [
+              {
+                "type": "status",
+                "mode": "apply",
+                "effect": {
+                  "const": "shield_up"
+                },
+                "to": {
+                  "expr": "@носитель"
                 }
               }
             ]
@@ -1689,14 +2112,14 @@
           {
             "on": "seen",
             "if": {
-              "expr": "#inspiration > 0"
+              "expr": "все(@бросающий == @носитель, @носитель.inspiration > 0)"
             },
             "confirm": true,
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "tag": "inspiration"
+                  "expr": "@носитель.inspiration"
                 },
                 "direction": "subtract",
                 "value": {
@@ -1733,7 +2156,9 @@
             "call": "roll",
             "param": "edits",
             "edit": "advantage",
-            "as": "against"
+            "if": {
+              "expr": "@против == @носитель"
+            }
           },
           {
             "tags": [
@@ -1742,7 +2167,10 @@
             "kind": "edit",
             "call": "roll",
             "param": "edits",
-            "edit": "disadvantage"
+            "edit": "disadvantage",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            }
           }
         ],
         "steps": [],
@@ -1757,16 +2185,16 @@
         },
         "modifiers": [
           {
-            "condition": {
-              "expr": "#armor_heavy"
-            },
             "tags": [
               "проверка"
             ],
             "kind": "edit",
             "call": "roll",
             "param": "edits",
-            "edit": "disadvantage"
+            "edit": "disadvantage",
+            "if": {
+              "expr": "все(@бросающий == @носитель, @носитель.armor_heavy)"
+            }
           }
         ],
         "steps": [],
@@ -1781,16 +2209,16 @@
         },
         "modifiers": [
           {
-            "condition": {
-              "expr": "#prof_bonus >= 4"
-            },
             "tags": [
               "проверка"
             ],
             "kind": "edit",
             "call": "roll",
             "param": "edits",
-            "edit": "advantage"
+            "edit": "advantage",
+            "if": {
+              "expr": "все(@бросающий == @носитель, @носитель.prof_bonus >= 4)"
+            }
           }
         ],
         "steps": [],
@@ -1808,20 +2236,17 @@
         "params": [],
         "on": [
           {
-            "on": "affected",
-            "of": "strike",
-            "to": "other",
+            "on": "after:strike",
             "if": {
-              "expr": "@hit.success"
+              "expr": "все(@цель == @носитель, @hit.success, не(пусто(@действующий)))"
             },
             "steps": [
               {
-                "id": "back",
-                "type": "amount",
-                "source": "roll",
-                "dice": {
-                  "const": "1d4"
-                }
+                "type": "roll",
+                "fixed": {
+                  "expr": "кинуть(\"1d4\", 1)"
+                },
+                "id": "back"
               },
               {
                 "type": "emit",
@@ -1835,6 +2260,12 @@
                   },
                   "damage_source": {
                     "expr": "\"магический\""
+                  },
+                  "лист": {
+                    "expr": "@действующий"
+                  },
+                  "источник": {
+                    "expr": "@носитель"
                   }
                 }
               }
@@ -1842,182 +2273,6 @@
           }
         ],
         "group": "Состояния"
-      },
-      "bless": {
-        "label": "Благословение",
-        "icon": "✨",
-        "description": "Тратит ячейку 1-го круга. Пока держишь концентрацию, цели получают +1к4 к любому броску.",
-        "activation": "manual",
-        "bond": true,
-        "params": [],
-        "steps": [
-          {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "const": "blessed"
-            }
-          }
-        ],
-        "group": "Поддержка",
-        "cost": [
-          {
-            "type": "compare",
-            "value": {
-              "expr": "@turn_action"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "1"
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_1"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "1"
-            }
-          }
-        ]
-      },
-      "fireball": {
-        "label": "Огненный шар",
-        "icon": "💥",
-        "description": "Тратит ячейку. Каждая цель делает спасбросок Ловкости: провал — полный урон, успех — половина. Ведущий называет, кто попал в область.",
-        "activation": "manual",
-        "params": [
-          {
-            "key": "save_by",
-            "label": "Чем спасается цель",
-            "kind": "number"
-          },
-          {
-            "key": "damage_dice",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "text"
-          }
-        ],
-        "steps": [
-          {
-            "id": "save",
-            "type": "threshold",
-            "side": "target",
-            "roll": {
-              "die": {
-                "constant": "lead_die"
-              },
-              "bonus": {
-                "expr": "@save_by"
-              },
-              "tags": [
-                "спасбросок"
-              ]
-            },
-            "versus": {
-              "expr": "#spell_dc"
-            },
-            "successWhen": "atLeast",
-            "continueOn": "always"
-          },
-          {
-            "id": "dmg",
-            "type": "amount",
-            "source": "roll",
-            "dice": {
-              "param": "damage_dice"
-            },
-            "scale": {
-              "times": {
-                "expr": "0.5"
-              },
-              "when": {
-                "expr": "@save.success"
-              }
-            }
-          },
-          {
-            "type": "emit",
-            "event": "damage",
-            "args": {
-              "amount": {
-                "expr": "@dmg"
-              },
-              "damage_type": {
-                "expr": "@damage_type"
-              },
-              "damage_source": {
-                "expr": "\"магический\""
-              }
-            }
-          }
-        ],
-        "group": "Атака",
-        "cost": [
-          {
-            "type": "compare",
-            "value": {
-              "expr": "@turn_action"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "1"
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_1"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "1"
-            }
-          }
-        ]
       },
       "dying": {
         "label": "При смерти",
@@ -2032,19 +2287,27 @@
           {
             "on": "moment:turn-start",
             "if": {
-              "expr": "#hp_current <= 0"
+              "expr": "все(@ходит == @носитель, @носитель.hp_current <= 0)"
             },
             "steps": [
               {
+                "id": "спас_бросок",
+                "type": "roll",
+                "die": {
+                  "constant": "lead_die"
+                },
+                "tags": [
+                  "спасбросок"
+                ],
+                "by": {
+                  "expr": "@носитель"
+                }
+              },
+              {
                 "id": "спас",
-                "type": "threshold",
-                "roll": {
-                  "die": {
-                    "constant": "lead_die"
-                  },
-                  "tags": [
-                    "спасбросок"
-                  ]
+                "type": "check",
+                "value": {
+                  "expr": "@спас_бросок"
                 },
                 "versus": {
                   "expr": "10"
@@ -2055,7 +2318,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "death_ok"
+                  "expr": "@носитель.death_ok"
                 },
                 "direction": "add",
                 "value": {
@@ -2069,7 +2332,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "death_fail"
+                  "expr": "@носитель.death_fail"
                 },
                 "direction": "add",
                 "value": {
@@ -2083,7 +2346,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "death_fail"
+                  "expr": "@носитель.death_fail"
                 },
                 "direction": "add",
                 "value": {
@@ -2122,12 +2385,18 @@
         "on": [
           {
             "on": "field:down",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
             "steps": [
               {
                 "type": "status",
                 "mode": "apply",
                 "effect": {
                   "const": "unconscious"
+                },
+                "to": {
+                  "expr": "@носитель"
                 }
               },
               {
@@ -2135,6 +2404,9 @@
                 "mode": "apply",
                 "effect": {
                   "const": "dying"
+                },
+                "to": {
+                  "expr": "@носитель"
                 }
               }
             ]
@@ -2154,12 +2426,18 @@
         "on": [
           {
             "on": "field:up",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
             "steps": [
               {
                 "type": "status",
                 "mode": "remove",
                 "effect": {
                   "const": "unconscious"
+                },
+                "to": {
+                  "expr": "@носитель"
                 }
               },
               {
@@ -2167,12 +2445,15 @@
                 "mode": "remove",
                 "effect": {
                   "const": "dying"
+                },
+                "to": {
+                  "expr": "@носитель"
                 }
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "death_ok"
+                  "expr": "@носитель.death_ok"
                 },
                 "direction": "set",
                 "value": {
@@ -2183,7 +2464,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "death_fail"
+                  "expr": "@носитель.death_fail"
                 },
                 "direction": "set",
                 "value": {
@@ -2207,45 +2488,84 @@
         "params": [],
         "on": [
           {
-            "on": "affected",
-            "of": "event:damage",
-            "to": "other",
-            "steps": [
+            "on": "after:damage",
+            "if": {
+              "expr": "все(@лист == @носитель, не(пусто(@источник)))"
+            },
+            "confirm": true,
+            "cost": [
               {
-                "id": "save",
-                "type": "threshold",
-                "side": "target",
-                "roll": {
-                  "die": {
-                    "constant": "lead_die"
-                  },
-                  "bonus": {
-                    "expr": "@получатель.dex_save"
-                  },
-                  "tags": [
-                    "спасбросок"
-                  ]
+                "type": "check",
+                "value": {
+                  "expr": "@носитель.turn_reaction"
                 },
                 "versus": {
-                  "expr": "#spell_dc"
+                  "expr": "1"
+                },
+                "note": "реакция уже потрачена",
+                "when": {
+                  "expr": "@стол.battle >= 1"
+                }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.turn_reaction"
+                },
+                "direction": "subtract",
+                "value": {
+                  "expr": "1"
+                },
+                "targetModifiers": false,
+                "when": {
+                  "expr": "@стол.battle >= 1"
+                }
+              }
+            ],
+            "steps": [
+              {
+                "id": "save_бросок",
+                "type": "roll",
+                "die": {
+                  "constant": "lead_die"
+                },
+                "bonus": {
+                  "expr": "@источник.dex_save"
+                },
+                "tags": [
+                  "спасбросок"
+                ],
+                "by": {
+                  "expr": "@источник"
+                },
+                "against": {
+                  "expr": "@носитель"
+                }
+              },
+              {
+                "id": "save",
+                "type": "check",
+                "value": {
+                  "expr": "@save_бросок"
+                },
+                "versus": {
+                  "expr": "@носитель.spell_dc"
                 },
                 "successWhen": "atLeast",
                 "continueOn": "always"
               },
               {
-                "id": "dmg",
-                "type": "amount",
-                "source": "roll",
-                "dice": {
-                  "const": "2d10"
+                "type": "roll",
+                "fixed": {
+                  "expr": "кинуть(\"2d10\", 1)"
                 },
-                "scale": {
-                  "times": {
-                    "expr": "0.5"
-                  },
-                  "when": {
-                    "expr": "@save.success"
-                  }
+                "id": "dmg_всего"
+              },
+              {
+                "id": "dmg",
+                "type": "roll",
+                "fixed": {
+                  "expr": "если(@save.success, округлить вниз((@dmg_всего) * (0.5)), @dmg_всего)"
                 }
               },
               {
@@ -2260,94 +2580,19 @@
                   },
                   "damage_source": {
                     "expr": "\"магический\""
+                  },
+                  "лист": {
+                    "expr": "@источник"
+                  },
+                  "источник": {
+                    "expr": "@носитель"
                   }
-                }
-              }
-            ],
-            "confirm": true,
-            "cost": [
-              {
-                "type": "compare",
-                "value": {
-                  "expr": "@turn_reaction"
-                },
-                "versus": {
-                  "expr": "1"
-                },
-                "breakIf": "less",
-                "note": "реакция уже потрачена",
-                "when": {
-                  "expr": "@стол.battle >= 1"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "tag": "turn_reaction"
-                },
-                "direction": "subtract",
-                "value": {
-                  "expr": "1"
-                },
-                "targetModifiers": false,
-                "when": {
-                  "expr": "@стол.battle >= 1"
                 }
               }
             ]
           }
         ],
         "group": "Реакции"
-      },
-      "damage": {
-        "label": "Урон",
-        "steps": [
-          {
-            "id": "по_временным",
-            "type": "apply",
-            "target": {
-              "tag": "hp_temp"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "@event.amount"
-            },
-            "targetModifiers": true
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hp_current"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "@по_временным.overkill"
-            },
-            "targetModifiers": false
-          }
-        ],
-        "params": [
-          {
-            "key": "amount",
-            "label": "Сколько урона",
-            "kind": "number",
-            "role": "amount"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "choice",
-            "from": "damage_types",
-            "optional": true
-          },
-          {
-            "key": "damage_source",
-            "label": "Источник урона",
-            "kind": "choice",
-            "from": "damage_source",
-            "optional": true
-          }
-        ]
       },
       "battle_start": {
         "label": "Начало боя",
@@ -2363,7 +2608,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "battle"
+                  "expr": "@стол.battle"
                 },
                 "direction": "set",
                 "value": {
@@ -2374,7 +2619,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_action"
+                  "expr": "@носитель.turn_action"
                 },
                 "direction": "set",
                 "value": {
@@ -2385,7 +2630,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_reaction"
+                  "expr": "@носитель.turn_reaction"
                 },
                 "direction": "set",
                 "value": {
@@ -2411,7 +2656,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "battle"
+                  "expr": "@стол.battle"
                 },
                 "direction": "set",
                 "value": {
@@ -2433,11 +2678,14 @@
         "on": [
           {
             "on": "moment:turn-start",
+            "if": {
+              "expr": "@ходит == @носитель"
+            },
             "steps": [
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_action"
+                  "expr": "@носитель.turn_action"
                 },
                 "direction": "set",
                 "value": {
@@ -2448,7 +2696,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_reaction"
+                  "expr": "@носитель.turn_reaction"
                 },
                 "direction": "set",
                 "value": {
@@ -2554,6 +2802,26 @@
         "icon": "👹",
         "hint": "Лист противника."
       }
+    },
+    "tags": {
+      "атака": {
+        "label": "Атака",
+        "inputs": [
+          {
+            "key": "действующий",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ],
+        "each": "цель",
+        "outputs": [
+          "hit"
+        ]
+      }
     }
   },
   "compendium": {
@@ -2602,7 +2870,7 @@
         "table": "attack-spell",
         "cells": {
           "damage_dice": "2d6",
-          "save_by": "@получатель.dex_save",
+          "save_by": "@носитель.dex_save",
           "status": "poisoned",
           "damage_type": "яд"
         }
@@ -2648,7 +2916,7 @@
         "description": "Взрыв по области: спасбросок Ловкости, при успехе — половина урона.",
         "table": "area-spell",
         "cells": {
-          "save_by": "@получатель.dex_save",
+          "save_by": "@носитель.dex_save",
           "damage_dice": "6d6",
           "damage_type": "огонь"
         }

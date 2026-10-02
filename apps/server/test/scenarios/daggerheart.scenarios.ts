@@ -56,7 +56,7 @@ export const scenarios: Scenario[] = [
     world: 'daggerheart',
     dice: [9, 2],
     steps: [{ act: 'act:0', from: 'bran', to: 'bran', inputs: { trait: 'проворство', 'опыт': 2, 'сложность': 14 } }],
-    expect: { values: { bran: { hope: 2 }, 'стол': { fear: 0 } }, log: ['= 15 против'] },
+    expect: { values: { bran: { hope: 2 }, 'стол': { fear: 0 } }, log: ['15 против'] },
   },
   {
     name: 'опыт: Надежды нет — платить нечем, бросок не совершается и кости не бросаются',
@@ -91,7 +91,7 @@ export const scenarios: Scenario[] = [
       { act: 'longsword:0', from: 'bran', to: 'sniper' },
       { act: 'longsword:0', from: 'bran', to: 'bandit' },
     ],
-    expect: { values: { lackey: { hp: 3 }, sniper: { hp: 3 }, bandit: { hp: 1 } }, log: ['= 14 против Сложность: 9', '= 14 против Сложность: 13', '= 15 против Сложность: 12'] },
+    expect: { values: { lackey: { hp: 3 }, sniper: { hp: 3 }, bandit: { hp: 1 } }, log: ['14 против Сложность: 9', '14 против Сложность: 13', '15 против Сложность: 12'] },
   },
   {
     name: 'атака противника: пороги урона героя, щит и Галапа поднимают порог, дальше Бран получает больше',

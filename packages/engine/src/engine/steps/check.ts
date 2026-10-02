@@ -40,10 +40,21 @@ function rollOf(ref: unknown, ctx: StepContext): Record<string, any> | null {
   return name ? ctx.rolled(name) : null;
 }
 
+function fieldOfRef(ref: unknown, ctx: StepContext): string | null {
+  if (!ref || typeof ref !== 'object' || !('expr' in ref)) return null;
+  if (!/^\s*@[\p{L}\p{N}_.]+\s*$/u.test(String((ref as { expr: unknown }).expr))) return null;
+  try {
+    return ctx.field(ref).tag;
+  } catch {
+    return null;
+  }
+}
+
 export function finish(step: StepData, ctx: StepContext) {
   const total = ctx.number(step.value, 'что проверяем');
   const roll = rollOf(step.value, ctx);
-  const successWhen = OUTCOMES[String(step.successWhen)] ? String(step.successWhen) : 'atLeast';
+  const successWhen = step.successWhen === undefined ? 'atLeast' : String(step.successWhen);
+  if (!OUTCOMES[successWhen]) throw new EngineError(`${who(ctx)}: неизвестный вид сравнения «${successWhen}» — умею: ${Object.keys(OUTCOMES).join(', ')}`);
   const shift = Number(roll?.versusShift ?? 0);
   const eased = successWhen === 'notOver' || successWhen === 'under' ? -shift : shift;
   const raw = ctx.number(step.versus, 'проверке не с чем сравнить');
@@ -64,6 +75,7 @@ export function finish(step: StepData, ctx: StepContext) {
   const noteRaw = step.note && typeof step.note === 'object' ? ctx.value(step.note) : step.note;
   const note = typeof noteRaw === 'string' && noteRaw.trim() ? noteRaw.trim() : null;
   const goOn = step.continueOn === 'always' ? true : step.continueOn === 'fail' ? !success : success;
+  const of = fieldOfRef(step.value, ctx);
   return {
     value: {
       success, margin: judged.margin, total, versus,
@@ -71,7 +83,8 @@ export function finish(step: StepData, ctx: StepContext) {
       ...(scale ? { degree } : {}),
     },
     trace: {
-      total, versus, margin: judged.margin, success,
+      total, versus, margin: judged.margin, success, passed: goOn, value: total, ...(of ? { of } : {}),
+      ...(roll && Array.isArray(roll.tags) && roll.tags.length ? { tags: roll.tags } : {}),
       ...(forced !== null ? { forced: natural } : {}),
       ...(scale ? { degree } : {}),
     },

@@ -40,7 +40,7 @@ group('шаг «таблица»', () => {
   test('бросок 2к6 читается строкой таблицы и попадает в поле', () => {
     const out = run([
       { id: 'исход', type: 'table', table: { const: 'травмы' }, dice: { const: '2d6' } },
-      { type: 'apply', target: { tag: 'травма' }, direction: 'set', value: { expr: '@исход' } },
+      { type: 'apply', target: { expr: '@носитель.травма' }, direction: 'set', value: { expr: '@исход' } },
     ], [6, 6]);
     eq(out.results.исход, 'потеря глаза');
     eq(out.sheet.values.травма, 'потеря глаза');

@@ -64,7 +64,7 @@ describe('журнал стола: намерение + кости = тот же
     const first = await stand(lcg(20260930));
     const [arven, mirra] = first.sheets;
     const me = first.userId;
-    const act = (edits?: string[]) => ({ op: 'act', userId: me, input: { roomId: first.roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id, ...(edits ? { edits } : {}) } });
+    const act = (edits?: string[]) => ({ op: 'act', userId: me, input: { roomId: first.roomId, actionId: 'longsword-item:0', fromId: arven.id, toIds: [mirra.id], ...(edits ? { claims: { [arven.id]: edits } } : {}) } });
     const script = [
       act(), act(['advantage']),
       { op: 'set', userId: me, input: { sheetId: mirra.id, tag: 'hp_current', value: 3 } },
@@ -106,7 +106,7 @@ describe('журнал стола: намерение + кости = тот же
 
   it('отказанный ход в журнал не попадает, чужой журнал не читается', async () => {
     const room = await stand(() => 1);
-    await expect(room.rooms.act(room.userId, { roomId: room.roomId, actionId: 'нет-такого:0', fromId: room.sheets[0].id, toId: room.sheets[1].id })).rejects.toThrow();
+    await expect(room.rooms.act(room.userId, { roomId: room.roomId, actionId: 'нет-такого:0', fromId: room.sheets[0].id, toIds: [room.sheets[1].id] })).rejects.toThrow();
     expect(await room.journal()).toEqual([]);
     await expect(room.rooms.journal('чужой', room.roomId)).rejects.toThrow('участники');
     await room.close();

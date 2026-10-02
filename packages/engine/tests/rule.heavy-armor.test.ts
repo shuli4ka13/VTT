@@ -21,12 +21,13 @@ const sys: any = {
   },
   effects: {
     sneak: {
-      label: 'Красться', activation: 'manual', params: [],
-      steps: [{
-        id: 'бросок', type: 'threshold',
-        roll: { die: { constant: 'lead' }, bonus: { expr: '#скрытность' }, tags: ['скрытность'] },
-        versus: { expr: '15' },
-      }],
+      label: 'Красться', activation: 'manual',
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
+      steps: [
+        { type: 'each', of: 'цели', as: 'цель' },
+        { id: 'скрыт', type: 'roll', die: { constant: 'lead' }, bonus: { expr: '@действующий.скрытность' }, tags: ['скрытность'], by: { expr: '@действующий' } },
+        { id: 'бросок', type: 'check', value: { expr: '@скрыт' }, versus: { expr: '15' } },
+      ],
     },
   },
 };
@@ -34,7 +35,7 @@ const sys: any = {
 const compendium: any = {
   records: [{
     id: 'кольчуга', table: 'доспех', label: 'Кольчуга',
-    modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['скрытность'], edit: 'помеха' }],
+    modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['скрытность'], if: { expr: '@бросающий == @носитель' }, edit: 'помеха' }],
   }],
 };
 
@@ -55,7 +56,7 @@ const runRule = (sys: any, rule: any, sender: any, target: any, die: () => numbe
 const sneakIn = (world: any, equipped: string[], ...dice: number[]) => {
   const sheet = hero(equipped);
   const out = runRule(world, world.effects.sneak, sheet, { id: 'цель-теста', values: {}, effects: [] }, queue(...dice), compendium);
-  const t = out.trace[0]!;
+  const t = out.trace.find(line => line.step === 'бросок')!;
   return { trace: out.trace, results: { бросок: { total: t.total, success: t.success } } as any };
 };
 const sneak = (equipped: string[], ...dice: number[]) => sneakIn(sys, equipped, ...dice);
@@ -91,7 +92,7 @@ group('тяжёлый доспех мешает красться', () => {
       effects: {
         sneak: {
           ...sys.effects.sneak,
-          steps: [{ ...sys.effects.sneak.steps[0], roll: { ...sys.effects.sneak.steps[0].roll, tags: [], bonus: { expr: '3' } } }],
+          steps: sys.effects.sneak.steps.map((step: any) => (step.id === 'скрыт' ? { ...step, tags: [], bonus: { expr: '3' } } : step)),
         },
       },
     };

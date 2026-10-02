@@ -3057,7 +3057,7 @@
               "expr": "@hit_бросок"
             },
             "versus": {
-              "expr": "(@цель.ac)"
+              "expr": "@цель.ac"
             },
             "succeedOn": {
               "expr": "20"
@@ -3313,7 +3313,7 @@
               "expr": "@slot"
             },
             "versus": {
-              "expr": "(@spell_level)"
+              "expr": "@spell_level"
             },
             "note": "круг ячейки ниже круга заклинания"
           },
@@ -3404,7 +3404,7 @@
               "expr": "@hit_бросок"
             },
             "versus": {
-              "expr": "(@цель.ac)"
+              "expr": "@цель.ac"
             },
             "succeedOn": {
               "expr": "20"
@@ -3537,7 +3537,7 @@
               "expr": "@save_бросок"
             },
             "versus": {
-              "expr": "(@действующий.spell_dc)"
+              "expr": "@действующий.spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -3704,7 +3704,7 @@
               "expr": "@hit_бросок"
             },
             "versus": {
-              "expr": "(@цель.ac)"
+              "expr": "@цель.ac"
             },
             "succeedOn": {
               "expr": "20"
@@ -3853,7 +3853,7 @@
               "expr": "@save_бросок"
             },
             "versus": {
-              "expr": "(@действующий.spell_dc)"
+              "expr": "@действующий.spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "always"
@@ -3862,7 +3862,7 @@
             "id": "dmg",
             "type": "roll",
             "fixed": {
-              "expr": "если((@save.success), округлить вниз((@dmg_всего) * (0.5)), @dmg_всего)"
+              "expr": "если(@save.success, округлить вниз((@dmg_всего) * (0.5)), @dmg_всего)"
             }
           },
           {
@@ -3992,7 +3992,7 @@
               "expr": "@save_бросок"
             },
             "versus": {
-              "expr": "(@действующий.spell_dc)"
+              "expr": "@действующий.spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -4202,7 +4202,7 @@
               "expr": "@save_бросок"
             },
             "versus": {
-              "expr": "(@действующий.spell_dc)"
+              "expr": "@действующий.spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -4303,7 +4303,7 @@
               "expr": "@save_бросок"
             },
             "versus": {
-              "expr": "(@действующий.spell_dc)"
+              "expr": "@действующий.spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -5120,7 +5120,7 @@
               "expr": "@save_бросок"
             },
             "versus": {
-              "expr": "(@действующий.spell_dc)"
+              "expr": "@действующий.spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -5346,7 +5346,7 @@
               "expr": "@sneak_бросок"
             },
             "versus": {
-              "expr": "(@цель.passive_perception)"
+              "expr": "@цель.passive_perception"
             },
             "successWhen": "atLeast",
             "continueOn": "success"
@@ -5516,7 +5516,7 @@
               "expr": "@лист.turn.действие.left"
             },
             "versus": {
-              "expr": "(1)"
+              "expr": "1"
             },
             "note": "действие на этом ходу уже потрачено",
             "when": {
@@ -5564,7 +5564,7 @@
               "expr": "@лист.turn.бонусное.left"
             },
             "versus": {
-              "expr": "(1)"
+              "expr": "1"
             },
             "note": "бонусное действие на этом ходу уже потрачено",
             "when": {
@@ -5612,7 +5612,7 @@
               "expr": "@лист.turn.реакция.left"
             },
             "versus": {
-              "expr": "(1)"
+              "expr": "1"
             },
             "note": "реакция уже потрачена",
             "when": {
@@ -5660,7 +5660,7 @@
               "expr": "@лист.turn.раз_за_ход.left"
             },
             "versus": {
-              "expr": "(1)"
+              "expr": "1"
             },
             "note": "это бывает раз за ход",
             "when": {
@@ -5708,7 +5708,7 @@
               "expr": "@лист.turn.действие.left"
             },
             "versus": {
-              "expr": "(1)"
+              "expr": "1"
             },
             "note": "действие на этом ходу уже потрачено",
             "when": {
@@ -5877,7 +5877,7 @@
               "expr": "@лист.slots.круг_1.left"
             },
             "versus": {
-              "expr": "(1)"
+              "expr": "1"
             },
             "note": "нет ячейки 1-го круга",
             "id": "есть_1",
@@ -5905,7 +5905,7 @@
               "expr": "@лист.slots.круг_2.left"
             },
             "versus": {
-              "expr": "(1)"
+              "expr": "1"
             },
             "note": "нет ячейки 2-го круга",
             "id": "есть_2",
@@ -5933,7 +5933,7 @@
               "expr": "@лист.slots.круг_3.left"
             },
             "versus": {
-              "expr": "(1)"
+              "expr": "1"
             },
             "note": "нет ячейки 3-го круга",
             "id": "есть_3",
@@ -5961,7 +5961,7 @@
               "expr": "@лист.slots.круг_4.left"
             },
             "versus": {
-              "expr": "(1)"
+              "expr": "1"
             },
             "note": "нет ячейки 4-го круга",
             "id": "есть_4",
@@ -5989,7 +5989,7 @@
               "expr": "@лист.slots.круг_5.left"
             },
             "versus": {
-              "expr": "(1)"
+              "expr": "1"
             },
             "note": "нет ячейки 5-го круга",
             "id": "есть_5",
@@ -6017,7 +6017,7 @@
               "expr": "@лист.slots.круг_6.left"
             },
             "versus": {
-              "expr": "(1)"
+              "expr": "1"
             },
             "note": "нет ячейки 6-го круга",
             "id": "есть_6",
@@ -6045,7 +6045,7 @@
               "expr": "@лист.slots.круг_7.left"
             },
             "versus": {
-              "expr": "(1)"
+              "expr": "1"
             },
             "note": "нет ячейки 7-го круга",
             "id": "есть_7",
@@ -6073,7 +6073,7 @@
               "expr": "@лист.slots.круг_8.left"
             },
             "versus": {
-              "expr": "(1)"
+              "expr": "1"
             },
             "note": "нет ячейки 8-го круга",
             "id": "есть_8",
@@ -6101,7 +6101,7 @@
               "expr": "@лист.slots.круг_9.left"
             },
             "versus": {
-              "expr": "(1)"
+              "expr": "1"
             },
             "note": "нет ячейки 9-го круга",
             "id": "есть_9",
@@ -6166,7 +6166,7 @@
               "expr": "@what"
             },
             "versus": {
-              "expr": "(@amount)"
+              "expr": "@amount"
             },
             "note": {
               "expr": "@note"
@@ -6684,7 +6684,7 @@
                   "expr": "@save_бросок"
                 },
                 "versus": {
-                  "expr": "(@носитель.spell_dc)"
+                  "expr": "@носитель.spell_dc"
                 },
                 "successWhen": "atLeast",
                 "continueOn": "always"
@@ -6700,7 +6700,7 @@
                 "id": "dmg",
                 "type": "roll",
                 "fixed": {
-                  "expr": "если((@save.success), округлить вниз((@dmg_всего) * (0.5)), @dmg_всего)"
+                  "expr": "если(@save.success, округлить вниз((@dmg_всего) * (0.5)), @dmg_всего)"
                 }
               },
               {
@@ -6971,7 +6971,7 @@
                   "expr": "@save_бросок"
                 },
                 "versus": {
-                  "expr": "(@запомнено)"
+                  "expr": "@запомнено"
                 },
                 "successWhen": "atLeast",
                 "continueOn": "success"
@@ -7086,7 +7086,7 @@
                   "expr": "@save_бросок"
                 },
                 "versus": {
-                  "expr": "(@запомнено)"
+                  "expr": "@запомнено"
                 },
                 "successWhen": "atLeast",
                 "continueOn": "success"
@@ -7285,7 +7285,7 @@
                   "expr": "@save_бросок"
                 },
                 "versus": {
-                  "expr": "(@запомнено)"
+                  "expr": "@запомнено"
                 },
                 "successWhen": "atLeast",
                 "continueOn": "success"
@@ -7547,7 +7547,7 @@
                   "expr": "@save_бросок"
                 },
                 "versus": {
-                  "expr": "(@запомнено)"
+                  "expr": "@запомнено"
                 },
                 "successWhen": "atLeast",
                 "continueOn": "success"
@@ -8179,7 +8179,7 @@
                   "expr": "@save_бросок"
                 },
                 "versus": {
-                  "expr": "(@запомнено)"
+                  "expr": "@запомнено"
                 },
                 "successWhen": "atLeast",
                 "continueOn": "success"
@@ -9009,7 +9009,7 @@
                   "expr": "@спас_бросок"
                 },
                 "versus": {
-                  "expr": "(10)"
+                  "expr": "10"
                 },
                 "successWhen": "atLeast",
                 "continueOn": "always"
@@ -9315,7 +9315,7 @@
                   "expr": "@носитель.resources.relentless.left"
                 },
                 "versus": {
-                  "expr": "(1)"
+                  "expr": "1"
                 }
               },
               {

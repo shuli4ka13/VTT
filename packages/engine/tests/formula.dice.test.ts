@@ -5,7 +5,7 @@ import type { System } from '../src/model/types.ts';
 
 const система = {
   id: 'ф', name: 'ф',
-  tables: { лист: { shape: 'single', columns: [
+  tables: { лист: { shape: 'single', owner: 'sheet', columns: [
     { key: 'хиты', label: 'Хиты', kind: 'number', default: 100, min: 0 },
     { key: 'порог', label: 'Крит от', kind: 'number', default: 20 },
     { key: 'сила', label: 'Сила', kind: 'number', default: 3 },
@@ -17,14 +17,15 @@ const система = {
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
-      params: [{ key: 'кость', label: 'Кость урона', kind: 'dice' }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }, { key: 'кость', label: 'Кость урона', kind: 'dice' }],
       steps: [
-        { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { expr: '0' } },
+        { type: 'each', of: 'цели', as: 'цель' },
+        { id: 'бросок', type: 'roll', die: { constant: 'к20' }, by: { expr: '@действующий' } },
         {
-          id: 'урон', type: 'amount', source: 'item',
-          fixed: { expr: 'кинуть(@кость, если(@бросок.natural >= @порог, 2, 1)) + @сила' },
+          id: 'урон', type: 'roll',
+          fixed: { expr: 'кинуть(@кость, если(@бросок.natural >= @действующий.порог, 2, 1)) + @действующий.сила' },
         },
-        { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@урон' } },
+        { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@урон' } },
       ],
     },
   },
@@ -43,7 +44,7 @@ const лист = (порог: number) => ({
 const бей = (порог: number, выпало: number) => {
   const цель = { id: 'цель', systemId: 'ф', name: 'цель', values: {}, has: [], effects: [] } as never;
   const out = exchange({ system: система, compendium: книга, die: () => выпало, sheets: [лист(порог), цель], actionId: 'меч:0', fromId: 'я', toId: 'цель' });
-  return out.reports[0]!.report.trace.find((t: Record<string, unknown>) => t.type === 'amount') as Record<string, unknown>;
+  return out.reports[0]!.report.trace.find((t: Record<string, unknown>) => t.step === 'урон') as Record<string, unknown>;
 };
 
 group('кость бросается прямо в формуле', () => {

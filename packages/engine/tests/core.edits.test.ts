@@ -3,6 +3,7 @@ import { SAMPLE_WORLDS } from '../src/model/systems.ts';
 import { flattenSystem } from '../src/model/inherit.ts';
 import { Views, holderOf } from '../src/core/view.ts';
 import { rollHeld, rollEdits, gather, stack } from '../src/core/edits.ts';
+import { lintSystem, errorsOf } from '../src/model/lint.ts';
 import { calc } from '../src/engine/calc.ts';
 import { amountParamOf } from '../src/model/lists.ts';
 import type { Sheet, System } from '../src/model/types.ts';
@@ -18,17 +19,18 @@ const wearing = (sheet: Sheet, effectId: string): Sheet => ({ ...sheet, effects:
 describe('правки на листе-держателе', () => {
   const base = flattenSystem(world.system);
   const system = withEffect(base, 'уклон', [
-    { kind: 'edit', call: 'roll', param: 'bonus', as: 'against', op: 'add', value: { expr: '-@ac' } },
+    { kind: 'edit', call: 'roll', param: 'bonus', if: { expr: '@против == @носитель' }, op: 'add', value: { expr: '-@носитель.ac' } },
   ]);
   const attacker = world.sheets.find((s: Sheet) => s.id === 'ogre')!;
   const target = wearing(world.sheets.find((s: Sheet) => s.id === 'arven')!, 'уклон');
   const sheets = [attacker, target];
   const views = new Views(system, world.compendium);
+  const holders = sheets.map(s => ({ id: s.id, view: views.of(sheets, s.id) }));
 
   it('прибавка «бросок по мне» считается по листу, где висит правка, — по цели', () => {
     const roller = views.of(sheets, attacker.id);
     const against = views.of(sheets, target.id);
-    const held = rollHeld(roller, against, ['атака']);
+    const held = rollHeld(holders, attacker.id, target.id, ['атака']);
     const { bonus } = rollEdits(held, [], roller, ['атака']);
     const targetAc = Number(calc(system, target, 'ac', against));
     const attackerAc = Number(calc(system, attacker, 'ac', roller));
@@ -38,7 +40,7 @@ describe('правки на листе-держателе', () => {
 
   it('без противника правок «по мне» нет', () => {
     const roller = views.of(sheets, attacker.id);
-    expect(rollEdits(rollHeld(roller, null, ['атака']), [], roller, ['атака']).bonus).toBe(0);
+    expect(rollEdits(rollHeld(holders, attacker.id, null, ['атака']), [], roller, ['атака']).bonus).toBe(0);
   });
 
   it('заявленная правка броска собирается словарём; неизвестная — ошибка словами', () => {
@@ -55,18 +57,26 @@ describe('условие правки: одна политика', () => {
   const damage = Object.keys(base.effects).find(id => amountParamOf(base.effects[id]!)?.key === 'amount')!;
   const views = (system: System) => new Views(system, world.compendium);
 
-  const spec = { call: damage, param: 'amount', tags: [], args: {} };
+  const spec = (sheets: Sheet[], system: System, values: Record<string, unknown> = {}) => ({
+    call: damage, param: 'amount', tags: [], names: {}, values, view: (id: string) => views(system).of(sheets, id),
+  });
+  const holders = (system: System) => {
+    const sheets = sheet(system);
+    return { sheets, list: [{ id: 'arven', view: views(system).of(sheets, 'arven') }] };
+  };
 
-  it('опечатка в условии правки всплывает, а не глотается', () => {
-    const typo = withEffect(base, 'x', [{ kind: 'edit', call: damage, param: 'amount', op: 'mul', value: { expr: '0.5' }, condition: { expr: '@нет_такого_поля > 0' } }]);
-    expect(() => gather(views(typo).of(sheet(typo), 'arven'), spec)).toThrow();
+  it('опечатка в условии правки: на столе правка не подходит, а проверка системы называет её ошибкой', () => {
+    const typo = withEffect(base, 'x', [{ kind: 'edit', call: damage, param: 'amount', op: 'mul', value: { expr: '0.5' }, if: { expr: '@носитель.нет_такого_поля > 0' } }]);
+    const { sheets, list } = holders(typo);
+    expect(gather(list, spec(sheets, typo))).toEqual([]);
+    expect(errorsOf(lintSystem(typo)).some(problem => problem.text.includes('«нет_такого_поля»'))).toBe(true);
   });
 
-  it('«только если по вызову» видит аргументы вызова', () => {
-    const ok = withEffect(base, 'x', [{ kind: 'edit', call: damage, param: 'amount', op: 'mul', value: { expr: '0.5' }, when: { expr: '@вызов.amount > 5' } }]);
-    const okView = views(ok).of(sheet(ok), 'arven');
-    expect(stack(gather(okView, { ...spec, args: { amount: 10 } }), 10, 'урон')).toBe(5);
-    expect(stack(gather(okView, { ...spec, args: { amount: 3 } }), 3, 'урон')).toBe(3);
+  it('условие правки видит входы вызова', () => {
+    const ok = withEffect(base, 'x', [{ kind: 'edit', call: damage, param: 'amount', op: 'mul', value: { expr: '0.5' }, if: { expr: '@amount > 5' } }]);
+    const { sheets, list } = holders(ok);
+    expect(stack(gather(list, spec(sheets, ok, { amount: 10 })), 10, 'урон')).toBe(5);
+    expect(stack(gather(list, spec(sheets, ok, { amount: 3 })), 3, 'урон')).toBe(3);
   });
 });
 

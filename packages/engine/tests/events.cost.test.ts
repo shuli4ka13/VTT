@@ -11,12 +11,14 @@ const system = {
   effects: {
     снаряд: {
       label: 'Снаряд', activation: 'manual',
-      cost: [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'subtract', value: { expr: '1' } }],
-      steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '4' } }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
+      cost: [{ type: 'apply', target: { expr: '@действующий.ячейки' }, direction: 'subtract', value: { expr: '1' } }],
+      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '4' } }],
     },
     удар: {
       label: 'Удар', activation: 'manual',
-      steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '2' } }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
+      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '2' } }],
     },
   },
   
@@ -70,25 +72,21 @@ group('цена действия', () => {
   });
 });
 
-group('в шагах отправителя получателя нет', () => {
+group('в цене цель не названа', () => {
   const withSelf = (self: unknown[], params: unknown[] = [], args: Record<string, unknown> = {}) => ({
     ...system,
-    effects: { ...system.effects, снаряд: { ...(system.effects as any).снаряд, cost: self, params } },
+    effects: { ...system.effects, снаряд: { ...(system.effects as any).снаряд, cost: self, params: [...(system.effects as any).снаряд.params, ...params] } },
     tables: { ...system.tables, заклинание: { ...(system.tables as any).заклинание, bindings: [{ label: 'Снаряд', effect: 'снаряд', args }] } },
   }) as unknown as System;
 
-  test('поле получателя прямо в шаге отправителя — ошибка словами, а не свой лист молча', () => {
-    const sys = withSelf([{ type: 'apply', target: { tag: 'ячейки' }, direction: 'set', value: { expr: '@получатель.хиты' } }]);
-    throws(() => exchange({ system: sys, compendium, die: () => 1, sheets: [sheet('маг'), sheet('цель')], actionId: 'снаряд:0', fromId: 'маг', toId: 'цель' }), 'получателя здесь не прочитать');
+  test('поле цели прямо в цене — ошибка словами, а не свой лист молча', () => {
+    const sys = withSelf([{ type: 'apply', target: { expr: '@действующий.ячейки' }, direction: 'set', value: { expr: '@цель.хиты' } }]);
+    throws(() => exchange({ system: sys, compendium, die: () => 1, sheets: [sheet('маг'), sheet('цель')], actionId: 'снаряд:0', fromId: 'маг', toId: 'цель' }), 'цель');
   });
 
-  test('вход-формула с полем получателя, пришедшая из записи в шаг отправителя, — та же ошибка', () => {
-    const sys = withSelf(
-      [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'subtract', value: { expr: '@сколько + 0' } }],
-      [{ key: 'сколько', label: 'Сколько', kind: 'number' }],
-      { сколько: '@получатель.хиты' },
-    );
-    throws(() => exchange({ system: sys, compendium, die: () => 1, sheets: [sheet('маг'), sheet('цель')], actionId: 'снаряд:0', fromId: 'маг', toId: 'цель' }), 'получателя здесь не прочитать');
+  test('голое имя поля в цене — ошибка «чьё поле», а не свой лист молча', () => {
+    const sys = withSelf([{ type: 'apply', target: { expr: '@действующий.ячейки' }, direction: 'subtract', value: { expr: '@хиты' } }]);
+    throws(() => exchange({ system: sys, compendium, die: () => 1, sheets: [sheet('маг'), sheet('цель')], actionId: 'снаряд:0', fromId: 'маг', toId: 'цель' }), 'чьё поле');
   });
 });
 

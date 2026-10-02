@@ -22,7 +22,8 @@ group('одно действие на несколько целей', () => {
       actionId: 'longsword-item:0', fromId: arven.id, toIds: targets.map(t => t.id),
     });
 
-    eq(out.reports.length, 3, 'по отчёту на цель');
+    eq(out.reports.filter(r => r.toId !== arven.id).length, 3, 'по отчёту на цель');
+    eq(out.reports.filter(r => r.toId === arven.id).length, 1, 'общие шаги до цикла — один отчёт действующего');
     const hits = out.sheets.filter(s => s.id.startsWith('цель')).map(s => Number(s.values.hp_current));
     eq(new Set(hits).size, 1, 'урон одинаковый — кости брошены один раз');
     ok(hits[0]! < Number(mirra.values.hp_current), `хиты не изменились: ${hits.join(',')}`);

@@ -42,8 +42,7 @@ type Started = Omit<PendingRecord, 'id' | 'question'>;
 
 type RoomRow = { id: string; system: string; compendium: string };
 
-const targetsOf = (intent: ActIntent): string[] =>
-  (intent.toIds?.length ? [...new Set(intent.toIds)] : [intent.toId]);
+const targetsOf = (intent: ActIntent): string[] => [...new Set(intent.toIds)];
 
 const missing = (message: string): boolean => /^в комнате нет листа/.test(message);
 
@@ -132,8 +131,7 @@ export class RoomsService {
       intent: {
         actionId: intent.actionId, fromId: intent.fromId, toIds: targetsOf(intent),
         ...(intent.inputs ? { inputs: intent.inputs } : {}),
-        ...(intent.edits?.length ? { edits: intent.edits } : {}),
-        ...(intent.targetEdits?.length ? { targetEdits: intent.targetEdits } : {}),
+        ...(intent.claims && Object.keys(intent.claims).length ? { claims: intent.claims } : {}),
       },
     };
     return this.world(intent.roomId, userId, 'act', intent, op, Boolean(intent.hidden));

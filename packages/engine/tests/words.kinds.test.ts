@@ -13,8 +13,8 @@ group('один словарь видов на таблицы, свойства 
     ok(!kindsFor('table').some(([kind]) => kind === 'record'), 'система не ссылается на книгу');
   });
 
-  test('ссылки — это внешние ключи: таблица, эффект, запись, поле', () => {
-    for (const kind of ['choice', 'effect', 'record', 'tag']) ok(isReference(kind), kind);
-    for (const kind of ['number', 'text', 'expr', 'dice']) ok(!isReference(kind), kind);
+  test('ссылки — это внешние ключи: таблица, эффект, запись, поле, лист', () => {
+    for (const kind of ['choice', 'effect', 'record', 'field', 'table', 'sheet']) ok(isReference(kind), kind);
+    for (const kind of ['number', 'text', 'expr', 'dice', 'tag']) ok(!isReference(kind), kind);
   });
 });

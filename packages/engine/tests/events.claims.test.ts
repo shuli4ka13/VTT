@@ -1,7 +1,6 @@
 import { group, test, eq, deepEq, throws } from './harness.ts';
 import { exchange } from './play.ts';
-import { withColumn } from '../src/model/sheet-columns.ts';
-import { system, arven, mirra, compendium, sheets } from './fixtures.ts';
+import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const queue = (...values: number[]) => {
   const rest = [...values];
@@ -11,29 +10,73 @@ const queue = (...values: number[]) => {
   };
 };
 
-const passive = (label: string, target: string, edit: string, condition: string | null = null) => {
-  const incoming = target.startsWith('incoming:');
-  const tag = target.replace(/^incoming:/, '');
-  return {
-    label, activation: 'passive', duration: { kind: 'permanent' },
-    modifiers: [{
-      kind: 'edit', call: 'roll', param: 'edits', ...(incoming ? { as: 'against' } : {}),
-      ...(tag === 'roll:any' ? {} : { tags: [tag] }), edit, ...(condition ? { condition: { expr: condition } } : {}),
-    }],
-  };
-};
-const withEffects = (extra: Record<string, unknown>) => ({ ...system, effects: { ...system.effects, ...extra } });
+const ACTOR = { key: 'действующий', kind: 'sheet' };
+const TARGETS = { key: 'цели', kind: 'sheet', many: true };
+const EACH = { type: 'each', of: 'цели', as: 'цель' };
 
-const strike = (sys: any, from: any, to: any, dice: number[], claims?: { source?: string[]; target?: string[] }) =>
+const passive = (label: string, edit: string, condition: string, tags: string[] | null = ['атака']) => ({
+  label, activation: 'passive', duration: { kind: 'permanent' },
+  modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', ...(tags ? { tags } : {}), edit, if: { expr: condition } }],
+});
+
+const base = {
+  id: 'заявки', name: 'Заявки',
+  constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
+  roll_edits: {
+    advantage: { label: 'Преимущество', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }], canceledBy: 'disadvantage' },
+    disadvantage: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }], canceledBy: 'advantage' },
+  },
+  tables: {
+    лист: { shape: 'single', owner: 'sheet', columns: [
+      { key: 'хп', label: 'Хиты', kind: 'number', default: 20 },
+      { key: 'уровень', label: 'Уровень', kind: 'number', default: 3 },
+      { key: 'вдохновение', label: 'Вдохновение', kind: 'number', default: 0, min: 0 },
+    ] },
+    приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }, { label: 'Яд', effect: 'яд', args: {} }] },
+  },
+  effects: {
+    удар: {
+      label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS],
+      steps: [
+        EACH,
+        { id: 'бросок', type: 'roll', die: { constant: 'к20' }, tags: ['атака'], by: { expr: '@действующий' }, against: { expr: '@цель' } },
+        { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '1' }, continueOn: 'always' },
+        { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1к6')" } },
+        { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '@урон' } },
+      ],
+    },
+    яд: {
+      label: 'Ядовитый плевок', activation: 'manual', params: [ACTOR, TARGETS],
+      steps: [
+        EACH,
+        { id: 'спас', type: 'roll', die: { constant: 'к20' }, tags: ['спасбросок'], by: { expr: '@цель' }, against: { expr: '@действующий' } },
+        { type: 'check', value: { expr: '@спас' }, versus: { expr: '10' }, continueOn: 'always' },
+      ],
+    },
+    отравлен: passive('Отравлен', 'disadvantage', '@бросающий == @носитель'),
+  },
+} as unknown as System;
+
+const withEffects = (extra: Record<string, unknown>): System => ({ ...base, effects: { ...base.effects, ...extra } }) as System;
+
+const compendium = { records: [{ id: 'приём', table: 'приём', label: 'Приём', cells: {} }] } as unknown as Compendium;
+
+const make = (id: string, extra: Partial<Sheet> & { values?: Record<string, number> } = {}): Sheet =>
+  ({ id, systemId: 'заявки', name: id, values: { хп: 20, уровень: 3 }, has: [{ of: 'приём' }], effects: [], ...extra } as unknown as Sheet);
+
+const arven = make('arven');
+const mirra = make('mirra');
+
+const strike = (sys: System, from: Sheet, to: Sheet, dice: number[], claims?: { source?: string[]; target?: string[] }, actionId = 'приём:0') =>
   exchange({
     system: sys, compendium, die: queue(...dice), sheets: [from, to],
-    actionId: 'longsword-item:0', fromId: from.id, toId: to.id, ...(claims ? { claims } : {}),
+    actionId, fromId: from.id, toId: to.id, ...(claims ? { claims } : {}),
   });
-const hitTrace = (r: ReturnType<typeof exchange>) => r.reports[0]!.report.trace[0] as any;
+const hitTrace = (r: ReturnType<typeof exchange>) => r.reports.find(x => x.report.kind === 'effect')!.report.trace[0] as any;
 
 group('заявка правки за столом', () => {
   const attack = (claims: string[], sheet = arven, ...dice: number[]) =>
-    hitTrace(strike(system, sheet, mirra, dice, { source: claims }));
+    hitTrace(strike(base, sheet, mirra, dice, { source: claims }));
 
   test('игрок просит преимущество — костей две, берётся лучшая, журнал называет правку', () => {
     const t = attack(['advantage'], arven, 4, 18, 5);
@@ -43,38 +86,35 @@ group('заявка правки за столом', () => {
   });
 
   test('заявка не отменяет закон словаря: отравленный с преимуществом бросает одну кость', () => {
-    const t = attack(['advantage'], { ...arven, effects: [{ effectId: 'poisoned' }] }, 11, 5);
+    const t = attack(['advantage'], make('arven', { effects: [{ effectId: 'отравлен' }] } as never), 11, 5);
     deepEq(t.rolls, [11]);
     eq(t.edits, undefined);
   });
 
   test('заявка на правку, которой нет в словаре, — ошибка перечисляет словарь', () => {
-    throws(() => strike(system, arven, mirra, [1, 1], { source: ['котик'] }), 'котик');
+    throws(() => strike(base, arven, mirra, [1, 1], { source: ['котик'] }), 'котик');
   });
 
-  test('заявка за цель: спасбросок бросается с преимуществом, считает получатель', () => {
-    const r = exchange({
-      system, compendium, die: queue(3, 4, 2, 19, 5, 5, 5), sheets: [mirra, arven],
-      actionId: 'poison-spray:0', fromId: 'mirra', toId: 'arven', claims: { target: ['advantage'] },
-    });
+  test('заявка за цель: спасбросок бросается с преимуществом, считает бросающий — цель', () => {
+    const r = strike(base, mirra, arven, [2, 19, 5], { target: ['advantage'] }, 'приём:1');
     const t = r.reports[0]!.report.trace[0] as any;
     deepEq(t.rolls, [2, 19]);
     eq(t.kept, 19);
   });
 
-  test('ход целиком несёт заявку отправителя', () => {
+  test('ход целиком несёт заявку действующего', () => {
     const r = exchange({
-      system, compendium, die: queue(4, 18, 5, 6, 6, 6, 6), sheets,
-      actionId: 'longsword-item:0', fromId: 'arven', toId: 'mirra',
+      system: base, compendium, die: queue(4, 18, 5, 6, 6, 6, 6), sheets: [arven, mirra],
+      actionId: 'приём:0', fromId: 'arven', toId: 'mirra',
       claims: { source: ['advantage'] },
     });
     deepEq((r.reports[0]!.report.trace[0] as any).rolls, [4, 18]);
   });
 });
 
-group('цель видна отправителю: состояния цели правят бросок по ней', () => {
-  const prone = withEffects({ prone: passive('Лежит', 'incoming:атака', 'advantage') });
-  const lying = { ...mirra, effects: [{ effectId: 'prone' }] };
+group('цель видна действующему: состояния цели правят бросок по ней', () => {
+  const prone = withEffects({ лежит: passive('Лежит', 'advantage', '@против == @носитель') });
+  const lying = make('mirra', { effects: [{ effectId: 'лежит' }] } as never);
 
   test('по лежащей цели атакуют с преимуществом — правку даёт лист ЦЕЛИ', () => {
     const t = hitTrace(strike(prone, arven, lying, [4, 18, 5]));
@@ -87,62 +127,63 @@ group('цель видна отправителю: состояния цели �
   });
 
   test('условие правки цели считается по листу ЦЕЛИ', () => {
-    const sys = withEffects({ prone: passive('Лежит', 'incoming:атака', 'advantage', '#level >= 5') });
-    deepEq(hitTrace(strike(sys, arven, { ...mirra, effects: [{ effectId: 'prone' }] }, [4, 5])).rolls, [4], 'у Мирры третий уровень — условие ложно');
+    const sys = withEffects({ лежит: passive('Лежит', 'advantage', 'все(@против == @носитель, @носитель.уровень >= 5)') });
+    deepEq(hitTrace(strike(sys, arven, lying, [4, 5])).rolls, [4], 'у Мирры третий уровень — условие ложно');
   });
 
   test('правка цели гасится помехой нападающего по закону словаря', () => {
-    const t = hitTrace(strike(prone, { ...arven, effects: [{ effectId: 'poisoned' }] }, lying, [11, 5]));
+    const t = hitTrace(strike(prone, make('arven', { effects: [{ effectId: 'отравлен' }] } as never), lying, [11, 5]));
     deepEq(t.rolls, [11]);
   });
 
   test('«против меня» не трогает собственные броски цели', () => {
-    const armed = { ...lying, has: [{ of: 'longsword-item' }] };
-    deepEq(hitTrace(strike(prone, armed, arven, [9, 5])).rolls, [9]);
+    deepEq(hitTrace(strike(prone, lying, arven, [9, 5])).rolls, [9]);
   });
 
   test('«против любого броска по мне» ловит и атаку', () => {
-    const sys = withEffects({ shaken: passive('Дрожит', 'incoming:roll:any', 'advantage') });
-    deepEq(hitTrace(strike(sys, arven, { ...mirra, effects: [{ effectId: 'shaken' }] }, [4, 18, 5])).rolls, [4, 18]);
+    const sys = withEffects({ дрожит: passive('Дрожит', 'advantage', '@против == @носитель', null) });
+    deepEq(hitTrace(strike(sys, arven, make('mirra', { effects: [{ effectId: 'дрожит' }] } as never), [4, 18, 5])).rolls, [4, 18]);
   });
 
   test('ход целиком: сервер держит оба листа и подставляет цель сам', () => {
     const r = exchange({
       system: prone, compendium, die: queue(4, 18, 5, 6, 6, 6, 6), sheets: [arven, lying],
-      actionId: 'longsword-item:0', fromId: 'arven', toId: 'mirra',
+      actionId: 'приём:0', fromId: 'arven', toId: 'mirra',
     });
     deepEq((r.reports[0]!.report.trace[0] as any).rolls, [4, 18]);
   });
 });
 
 group('правка после того, как бросок увиден: выпавшее остаётся', () => {
-  const luckWorld: any = {
-    ...withColumn(system, { key: 'inspiration', label: 'Вдохновение', kind: 'number', default: 1, min: 0 }),
-    effects: {
-      ...system.effects,
-      inspire: {
-        label: 'Вдохновение: перебросить', activation: 'passive',
-        on: [{ on: 'seen', confirm: true, if: { expr: '#inspiration > 0' }, steps: [{ type: 'apply', target: { tag: 'inspiration' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
-      },
+  const luckWorld = withEffects({
+    вдохновение: {
+      label: 'Вдохновение: перебросить', activation: 'passive',
+      on: [{
+        on: 'seen', confirm: true, if: { expr: 'все(@бросающий == @носитель, @носитель.вдохновение > 0)' },
+        steps: [
+          { type: 'apply', target: { expr: '@носитель.вдохновение' }, direction: 'subtract', value: { expr: '1' } },
+          { type: 'roll-add', count: { expr: '1' }, keep: 'best' },
+        ],
+      }],
     },
-  };
-  const inspired = { ...arven, values: { ...arven.values, inspiration: 1 }, effects: [{ effectId: 'inspire' }] };
+  });
+  const inspired = make('arven', { values: { хп: 20, уровень: 3, вдохновение: 1 }, effects: [{ effectId: 'вдохновение' }] } as never);
 
   test('преимущество, заявленное после броска, добавляет кость, а не перебрасывает старую', () => {
     const r = exchange({
-      system: luckWorld, compendium, die: queue(7, 18, 3), sheets: [inspired, mirra],
-      actionId: 'longsword-item:0', fromId: 'arven', toId: 'mirra',
-      answer: q => (q.window === 'seen' ? ['inspire'] : []),
+      system: luckWorld, compendium, die: queue(7, 3, 18), sheets: [inspired, mirra],
+      actionId: 'приём:0', fromId: 'arven', toId: 'mirra',
+      answer: q => (q.window === 'seen' ? ['вдохновение'] : []),
     });
-    const main = r.reports.find(x => x.report.effect === 'strike')!.report;
+    const main = r.reports.find(x => x.report.effect === 'удар')!.report;
     const t = main.trace[0] as any;
     deepEq(t.rolls, [7, 18], 'старая семёрка на месте, новая кость добавлена');
     eq(t.kept, 18);
-    const dmg = main.trace.find((x: any) => x.type === 'amount') as any;
+    const dmg = main.trace.find((x: any) => x.fixed !== undefined) as any;
     deepEq(dmg.rolls, [3], 'кости урона не перебрасывались');
   });
 
   test('заявка стола до броска бросает обе кости сразу', () => {
-    deepEq(hitTrace(strike(system, arven, mirra, [2, 18, 5], { source: ['advantage'] })).rolls, [2, 18]);
+    deepEq(hitTrace(strike(base, arven, mirra, [2, 18, 5], { source: ['advantage'] })).rolls, [2, 18]);
   });
 });

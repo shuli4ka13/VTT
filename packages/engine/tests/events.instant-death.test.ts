@@ -10,18 +10,18 @@ const sys: any = {
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
-      params: [{ key: 'величина', label: 'Урон', kind: 'number' }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }, { key: 'величина', label: 'Урон', kind: 'number' }],
       steps: [
-        { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d1' }, bonus: { expr: '@величина' } },
-        { id: 'рана', type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '@урон' } },
+        { type: 'each', of: 'цели', as: 'цель' },
+        { id: 'урон', type: 'roll', die: { const: '1d1' }, bonus: { expr: '@величина' } },
+        { id: 'рана', type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '@урон' } },
       ],
     },
     мгновенная_смерть: {
       label: 'Мгновенная смерть', activation: 'passive',
-      on: [{ on: 'affected', of: 'удар', steps: [
-
-        { type: 'compare', value: { expr: '@рана.overkill' }, versus: { expr: '@получатель.хп_макс' }, breakIf: 'less' },
-        { type: 'status', mode: 'apply', effect: { const: 'мёртв' } },
+      on: [{ on: 'after:удар', if: { expr: '@цель == @носитель' }, steps: [
+        { type: 'check', value: { expr: '@рана.overkill' }, versus: { expr: '@носитель.хп_макс' }, successWhen: 'atLeast', continueOn: 'success' },
+        { type: 'status', mode: 'apply', effect: { const: 'мёртв' }, to: { expr: '@носитель' } },
       ] }],
     },
     мёртв: { label: 'Мёртв', activation: 'passive' },
@@ -76,7 +76,7 @@ group('мгновенная смерть — реакция на себя', () =
     eq(out.sheet.values.хп, 3, '6 − (1+2)');
     eq(dead(out), false);
 
-    eq((out.report.reactions ?? [])[0]?.stopped?.reason, 'compare-short');
+    eq((out.report.reactions ?? [])[0]?.stopped?.reason, 'check-miss');
   });
 
 });

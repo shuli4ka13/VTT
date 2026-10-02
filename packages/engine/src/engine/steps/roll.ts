@@ -12,6 +12,8 @@ export const { label, hint, slots, outputs } = words;
 
 export const mayBreak = false;
 
+export const lazy = (step: StepData): boolean => (step.by === undefined || step.by === null) && typeof step.id === 'string';
+
 export const icon = '⚄';
 
 const who = (ctx: StepContext): string => ctx.owner || 'правило';
@@ -98,9 +100,9 @@ export function traceLine(t: any) {
     : t.kept != null && t.rolls.length > 1 ? `[${t.rolls.join(', ')}] → ${t.kept}`
       : t.rolls.length ? `[${t.rolls.join(', ')}]` : '';
   const parts = t.parts && Object.keys(t.parts).length ? ' · ' + Object.entries(t.parts).map(([k, v]) => `${k}: ${v}`).join(', ') : '';
-  const edits = t.edits?.length ? ` · ${t.edits.join(', ')}` : '';
-  const sum = [dice, t.fixed ? String(t.fixed) : '', t.bonus ? String(t.bonus) : ''].filter(Boolean).join(' + ').replace(/\+ -/g, '− ') || '0';
-  return `бросок${name}: ${sum} = ${t.total}${edits}${parts}`;
+  const edits = t.edits?.length ? ` (${t.edits.join(', ')})` : '';
+  const sum = (t.fixed !== undefined ? [dice, t.bonus ? String(t.bonus) : ''] : [dice, t.bonus ? String(t.bonus) : '']).filter(Boolean).join(' + ').replace(/\+ -/g, '− ') || '0';
+  return `${t.by ? 'бросок' : 'расчёт'}${name}: ${sum}${edits} = ${t.total}${parts}`;
 }
 
 

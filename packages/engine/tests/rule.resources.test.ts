@@ -4,6 +4,11 @@ import { fireMoments } from './kit.ts';
 import { lintSystem, errorsOf } from '../src/model/lint.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
+const ACTOR = { key: 'действующий', kind: 'sheet' };
+const TARGETS = { key: 'цели', kind: 'sheet', many: true };
+const EACH = { type: 'each', of: 'цели', as: 'цель' };
+const OWN = { expr: '@бросающий == @носитель' };
+
 const system = {
   id: 'r', name: 'r',
   tables: { лист: { shape: 'single', columns: [
@@ -16,33 +21,36 @@ const system = {
   effects: {
     ячейка: {
       label: 'Ячейка заклинания',
-      params: [{ key: 'круг', label: 'Круг', kind: 'number', role: 'amount' }],
+      params: [{ key: 'лист', label: 'Чья ячейка', kind: 'sheet' }, { key: 'круг', label: 'Круг', kind: 'number', role: 'amount' }],
       steps: [
-        { id: 'есть_1', type: 'compare', value: { expr: '@получатель.ячейки_1' }, versus: { expr: '1' }, breakIf: 'less', when: { expr: '@event.amount == 1' } },
-        { type: 'apply', target: { tag: 'ячейки_1' }, direction: 'subtract', value: { expr: '1' }, when: { expr: '@event.amount == 1' } },
-        { id: 'есть_2', type: 'compare', value: { expr: '@получатель.ячейки_2' }, versus: { expr: '1' }, breakIf: 'less', when: { expr: '@event.amount == 2' } },
-        { type: 'apply', target: { tag: 'ячейки_2' }, direction: 'subtract', value: { expr: '1' }, when: { expr: '@event.amount == 2' } },
+        { id: 'есть_1', type: 'check', value: { expr: '@лист.ячейки_1' }, versus: { expr: '1' }, note: 'не хватает ячейки 1-го круга', when: { expr: '@круг == 1' } },
+        { type: 'apply', target: { expr: '@лист.ячейки_1' }, direction: 'subtract', value: { expr: '1' }, when: { expr: '@круг == 1' } },
+        { id: 'есть_2', type: 'check', value: { expr: '@лист.ячейки_2' }, versus: { expr: '1' }, note: 'не хватает ячейки 2-го круга', when: { expr: '@круг == 2' } },
+        { type: 'apply', target: { expr: '@лист.ячейки_2' }, direction: 'subtract', value: { expr: '1' }, when: { expr: '@круг == 2' } },
       ],
     },
     стрела: {
       label: 'Волшебная стрела', activation: 'manual',
-      params: [{ key: 'круг', label: 'Каким кругом', kind: 'number', min: 1, max: 2, ask: { by: 'actor' } }],
-      cost: [{ type: 'emit', event: 'ячейка', args: { круг: { param: 'круг' } }, strict: true }],
+      params: [ACTOR, TARGETS, { key: 'круг', label: 'Каким кругом', kind: 'number', min: 1, max: 2, ask: { by: 'actor' } }],
+      cost: [{ type: 'emit', event: 'ячейка', args: { лист: { expr: '@действующий' }, круг: { expr: '@круг' } }, strict: true }],
       steps: [
-        { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d4' }, count: { expr: '2 + #круг' }, bonus: { expr: '2 + #круг' } },
-        { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@урон' } },
+        EACH,
+        { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d4', 2 + @круг)" }, bonus: { expr: '2 + @круг' } },
+        { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@урон' } },
       ],
     },
     скрытая: {
       label: 'Скрытая атака', activation: 'manual',
+      params: [ACTOR, TARGETS],
       steps: [
-        { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d6' }, count: { expr: 'округлить вверх(#уровень / 2)' } },
-        { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@урон' } },
+        EACH,
+        { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d6', округлить вверх(@действующий.уровень / 2))" } },
+        { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@урон' } },
       ],
     },
     сон: {
       label: 'Долгий отдых: ячейки', activation: 'passive',
-      on: [{ on: 'moment:long-rest', steps: [{ type: 'apply', target: { tag: 'ячейки_1' }, direction: 'set', value: { expr: '@получатель.ячейки_1_всего' } }] }],
+      on: [{ on: 'moment:long-rest', steps: [{ type: 'apply', target: { expr: '@носитель.ячейки_1' }, direction: 'set', value: { expr: '@носитель.ячейки_1_всего' } }] }],
     },
   },
   grants: ['сон'],
@@ -63,9 +71,8 @@ group('счёт костей числом и названное игроком �
 
   test('«круг» из вопроса входит и в число костей, и в прибавку', () => {
     const out = cast(1);
-    const trace = out.reports.at(-1)!.report.trace[0] as { rolls: number[]; bonus: number; times: number };
+    const trace = out.reports.at(-1)!.report.trace[0] as { rolls: number[]; bonus: number };
     eq(trace.rolls.length, 3, 'две кости плюс круг');
-    eq(trace.times, 3);
     eq(trace.bonus, 3);
     eq(out.sheets.find(s => s.id === 'цель')!.values.хиты, 40 - 9 - 3);
   });
@@ -80,8 +87,9 @@ group('счёт костей числом и названное игроком �
 
   test('ноль раз — костей нет вовсе, а шаг не падает', () => {
     const none = { ...system, effects: { ...system.effects, скрытая: { ...system.effects.скрытая, steps: [
-      { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d6' }, count: { expr: '0' }, bonus: { expr: '2' } },
-      { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@урон' } },
+      EACH,
+      { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d6', 0)" }, bonus: { expr: '2' } },
+      { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@урон' } },
     ] } } } as unknown as System;
     const out = exchange({
       system: none, compendium: book, die: () => { throw new Error('кость не должна кидаться'); },
@@ -97,9 +105,9 @@ group('плата ресурсом: общий эффект оборвался �
     eq(out.sheets.find(s => s.id === 'маг')!.values.ячейки_1, 0);
   });
 
-  test('ячейки нет — отказ словами, с именем поля и остатком', () => {
-    throws(() => cast(2), 'не хватает «Ячейки 2-го круга»');
-    throws(() => cast(1, [sheet('маг', { ячейки_1: 0 }), sheet('цель')]), 'сейчас 0');
+  test('ячейки нет — отказ словами автора: какого круга не хватает', () => {
+    throws(() => cast(2), 'не хватает ячейки 2-го круга');
+    throws(() => cast(1, [sheet('маг', { ячейки_1: 0 }), sheet('цель')]), 'не хватает ячейки 1-го круга');
   });
 });
 
@@ -130,15 +138,15 @@ group('бросок несёт несколько меток, одна прих�
      чары: { shape: 'book', use: 'action', label: 'Чары', columns: [], bindings: [{ label: 'Шар', effect: 'шар', args: { чем: 'лов' } }] } },
     roll_edits: { помеха: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }] } },
     effects: {
-      опутан: { label: 'Опутан', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['спас', 'лов'], edit: 'помеха' }] },
+      опутан: { label: 'Опутан', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['спас', 'лов'], if: OWN, edit: 'помеха' }] },
       шар: {
         label: 'Шар', activation: 'manual',
-        params: [{ key: 'чем', label: 'Чем спасаются', kind: 'choice', from: 'черты' }],
-        steps: [{
-          id: 'спас', type: 'threshold', side: 'target',
-          roll: { die: { constant: 'к20' }, bonus: { expr: '@получатель.чем.спас' }, tags: ['спас', { param: 'чем' }] },
-          versus: { expr: '12' }, continueOn: 'always',
-        }],
+        params: [ACTOR, TARGETS, { key: 'чем', label: 'Чем спасаются', kind: 'choice', from: 'черты' }],
+        steps: [
+          EACH,
+          { id: 'спас_бросок', type: 'roll', die: { constant: 'к20' }, bonus: { expr: '@цель.чем.спас' }, tags: ['спас', { expr: '@чем' }], by: { expr: '@цель' }, against: { expr: '@действующий' } },
+          { id: 'спас', type: 'check', value: { expr: '@спас_бросок' }, versus: { expr: '12' }, continueOn: 'always' },
+        ],
       },
     },
     
@@ -165,7 +173,7 @@ group('бросок несёт несколько меток, одна прих�
     eq(trace.kept, 4);
   });
 
-  test('прибавка — колонка выбранной строки, посчитанная листом получателя', () => {
+  test('прибавка — колонка выбранной строки, посчитанная листом цели', () => {
     eq(cast([], { лов: 5 }).bonus, 5, 'Ловкость цели, а не мага');
   });
 });
@@ -178,8 +186,8 @@ group('общий держатель: взялся за новое — стар�
       концентрация: { label: 'Концентрация', activation: 'passive', on: [{ on: 'moment:scene-end', steps: [] }] },
       благословлён: { label: 'Благословлён', activation: 'passive', modifiers: [] },
       ускорен: { label: 'Ускорен', activation: 'passive', modifiers: [] },
-      благословение: { label: 'Благословение', activation: 'manual', bond: 'концентрация', steps: [{ type: 'status', mode: 'apply', effect: { const: 'благословлён' } }] },
-      ускорение: { label: 'Ускорение', activation: 'manual', bond: 'концентрация', steps: [{ type: 'status', mode: 'apply', effect: { const: 'ускорен' } }] },
+      благословение: { label: 'Благословение', activation: 'manual', bond: { effect: 'концентрация', by: 'действующий' }, params: [ACTOR, TARGETS], steps: [EACH, { type: 'status', mode: 'apply', effect: { const: 'благословлён' }, to: { expr: '@цель' } }] },
+      ускорение: { label: 'Ускорение', activation: 'manual', bond: { effect: 'концентрация', by: 'действующий' }, params: [ACTOR, TARGETS], steps: [EACH, { type: 'status', mode: 'apply', effect: { const: 'ускорен' }, to: { expr: '@цель' } }] },
     },
     
   } as unknown as System;
@@ -229,24 +237,26 @@ group('наложенное помнит число, штрафная кость
     roll_edits: { порча: { label: 'Порча', ops: [{ op: 'bonusDie', sides: 4, minus: true }] } },
     effects: {
       горит: {
-        label: 'Горит', activation: 'passive',
-        on: [{ on: 'moment:turn-start', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@worn.carry' } }] }],
+        label: 'Горит', activation: 'passive', params: [{ key: 'сила', label: 'Сила', kind: 'number', optional: true }],
+        on: [{ on: 'moment:turn-start', steps: [{ type: 'apply', target: { expr: '@носитель.хиты' }, direction: 'subtract', value: { expr: '@сила' } }] }],
       },
-      поджечь: { label: 'Поджечь', activation: 'manual', steps: [{ type: 'status', mode: 'apply', effect: { const: 'горит' }, carry: { expr: '4' } }] },
-      порченый: { label: 'Порченый', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['атака'], edit: 'порча' }] },
+      поджечь: { label: 'Поджечь', activation: 'manual', params: [ACTOR, TARGETS], steps: [EACH, { type: 'status', mode: 'apply', effect: { const: 'горит' }, to: { expr: '@цель' }, args: { сила: { expr: '4' } } }] },
+      порченый: { label: 'Порченый', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['атака'], if: OWN, edit: 'порча' }] },
       удар: {
-        label: 'Удар', activation: 'manual',
+        label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS],
         steps: [
-          { id: 'hit', type: 'threshold', roll: { die: { constant: 'к20' }, tags: ['атака'] }, versus: { expr: '@получатель.кд' } },
-          { id: 'dmg', type: 'amount', source: 'roll', dice: { const: '1d6' }, double: { expr: '@hit.natural >= @крит_от' } },
-          { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@dmg' } },
+          EACH,
+          { id: 'hit_бросок', type: 'roll', die: { constant: 'к20' }, tags: ['атака'], by: { expr: '@действующий' }, against: { expr: '@цель' } },
+          { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '@цель.кд' } },
+          { id: 'dmg', type: 'roll', fixed: { expr: "кинуть('1d6', если(@hit.natural >= @действующий.крит_от, 2, 1))" } },
+          { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@dmg' } },
         ],
       },
       парирование: {
         label: 'Парирование', activation: 'passive',
-        on: [{ on: 'targeted', confirm: true, cost: [
-          { type: 'compare', value: { expr: '@заряды' }, versus: { expr: '1' }, breakIf: 'less' },
-          { type: 'apply', target: { tag: 'заряды' }, direction: 'subtract', value: { expr: '1' } },
+        on: [{ on: 'before:удар', if: { expr: '@цель == @носитель' }, confirm: true, cost: [
+          { type: 'check', value: { expr: '@носитель.заряды' }, versus: { expr: '1' } },
+          { type: 'apply', target: { expr: '@носитель.заряды' }, direction: 'subtract', value: { expr: '1' } },
         ], steps: [] }],
       },
     },
@@ -259,7 +269,7 @@ group('наложенное помнит число, штрафная кость
 
   test('состояние запомнило четвёрку и в начале хода снимает именно её', () => {
     const lit = exchange({ system: sys, compendium: acts, die: () => 1, sheets: [who('маг'), who('цель')], actionId: 'а:0', fromId: 'маг', toId: 'цель' });
-    deepEq(lit.sheets.find(s => s.id === 'цель')!.effects, [{ effectId: 'горит', carry: 4 }]);
+    deepEq(lit.sheets.find(s => s.id === 'цель')!.effects, [{ effectId: 'горит', args: { сила: 4 } }]);
     const burnt = fireMoments([{ moment: 'turn-start', sheetId: 'цель' }], lit.sheets, { system: sys, compendium: acts, die: () => 1 });
     eq(burnt.sheets.find(s => s.id === 'цель')!.values.хиты, 26);
   });
@@ -275,10 +285,10 @@ group('наложенное помнит число, штрафная кость
   test('порог крита берётся с листа бьющего: девятнадцать уже удваивает кости', () => {
     const at19 = [19, 2, 2];
     const crit = exchange({ system: sys, compendium: acts, die: () => at19.shift() ?? 1, sheets: [who('воин'), who('цель')], actionId: 'б:0', fromId: 'воин', toId: 'цель' });
-    eq((crit.reports[0]!.report.trace[1] as { rolls: number[] }).rolls.length, 2);
+    eq((crit.reports[0]!.report.trace[2] as { rolls: number[] }).rolls.length, 2);
     const at18 = [18, 2];
     const plain = exchange({ system: sys, compendium: acts, die: () => at18.shift() ?? 1, sheets: [who('воин'), who('цель')], actionId: 'б:0', fromId: 'воин', toId: 'цель' });
-    eq((plain.reports[0]!.report.trace[1] as { rolls: number[] }).rolls.length, 1);
+    eq((plain.reports[0]!.report.trace[2] as { rolls: number[] }).rolls.length, 1);
   });
 
   test('реакция платит своей дорожкой: нет заряда — не предложена, есть — предложена и списан', () => {

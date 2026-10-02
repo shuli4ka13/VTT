@@ -25,12 +25,16 @@ group('кубики', () => {
   });
 });
 
+const savingBy = target => ({ ...system, effects: { ...system.effects, save: { ...system.effects.save, steps: system.effects.save.steps.map(step =>
+  (step.id === 'save_бросок' ? { ...step, bonus: { expr: '@цель.dex_save' } } : step)) } } });
+
 const hit = (actionId, from, to, die, sys = system, book = compendium) => {
   const targets = Array.isArray(to) ? to : [to];
   const out = exchange({ system: sys, compendium: book, die, sheets: [from, ...targets], actionId, fromId: from.id, toIds: targets.map(t => t.id) });
   const sheetOf = t => out.sheets.find(s => s.id === t.id);
   const reportOf = t => out.reports.find(r => r.toId === t.id).report;
-  return { out, sheetOf, reportOf };
+  const stepOf = id => out.reports.flatMap(r => r.report.trace).find(t => t.step === id);
+  return { out, sheetOf, reportOf, stepOf };
 };
 
 group('вызов действия', () => {
@@ -40,8 +44,8 @@ group('вызов действия', () => {
     });
 
     test('сложность спасброска считается отправителем по СВОЕЙ системе', () => {
-      const { reportOf } = hit('poison-spray:0', mirra, arven, queue(3, 4, 5));
-      eq(reportOf(arven).trace[0].versus.value, 13, '8 + бонус мастерства 2 + Харизма 3');
+      const { reportOf } = hit('poison-spray:0', mirra, arven, queue(5, 3, 4), savingBy());
+      eq(reportOf(arven).trace[1].versus, 13, '8 + бонус мастерства 2 + Харизма 3');
       eq(reportOf(arven).trace[0].bonus, 1, 'а спасбросок Ловкости посчитан целью');
     });
 
@@ -49,15 +53,15 @@ group('вызов действия', () => {
       const blessedSys = { ...system, effects: { ...system.effects,
         blessed: {
           label: 'Благословение', activation: 'passive', duration: { kind: 'permanent' },
-          modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', tags: ['атака'], op: 'add', value: { expr: '4' }, stacking: 'sum' }],
+          modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', tags: ['атака'], op: 'add', value: { expr: '4' }, stacking: 'sum', if: { expr: '@бросающий == @носитель' } }],
         } } };
       const sheet = { ...arven, effects: [{ effectId: 'blessed' }] };
 
       const plain = hit('longsword-item:0', arven, mirra, queue(10, 5));
       const boosted = hit('longsword-item:0', sheet, mirra, queue(10, 5), blessedSys);
 
-      eq(plain.reportOf(mirra).trace[0].total, 16, 'кость 10 плюс свой бонус атаки 6');
-      eq(boosted.reportOf(mirra).trace[0].total, 20, 'та же кость, но плюс 4 от эффекта');
+      eq(plain.stepOf('hit_бросок').total, 16, 'кость 10 плюс свой бонус атаки 6');
+      eq(boosted.stepOf('hit_бросок').total, 20, 'та же кость, но плюс 4 от эффекта');
     });
 
     test('записи лежат в компендиуме, а автоматизация — в системе', () => {
@@ -85,8 +89,8 @@ group('вызов действия', () => {
       const { reportOf } = hit('longsword-item:0', arven, [mirra, other], queue(9, 5, 5));
       const a = reportOf(mirra), b = reportOf(other);
       ok(a.trace[0].success !== b.trace[0].success);
-      eq(a.trace[0].versus.value, 14);
-      eq(b.trace[0].versus.value, 16);
+      eq(a.trace[0].versus, 14);
+      eq(b.trace[0].versus, 16);
     });
 
     test('попадание снимает хиты у получателя', () => {
@@ -96,7 +100,7 @@ group('вызов действия', () => {
 
     test('промах не меняет ничего', () => {
       const { sheetOf, reportOf } = hit('longsword-item:0', mirra, arven, queue(2, 5));
-      eq(reportOf(arven).stopped.reason, 'threshold-miss');
+      eq(reportOf(arven).stopped.reason, 'check-miss');
       eq(sheetOf(arven).values.hp_current, 44);
     });
 
@@ -114,24 +118,24 @@ group('вызов действия', () => {
   });
 
   group('спасбросок отыгрывается на стороне получателя', () => {
-    const poison = (target, die) => hit('poison-spray:0', mirra, target, die);
+    const poison = (target, die) => hit('poison-spray:0', mirra, target, die, savingBy());
 
     test('получатель бросает своим спасброском против присланной сложности', () => {
-      const { reportOf } = poison(arven, queue(3, 4, 5));
+      const { reportOf } = poison(arven, queue(5, 3, 4));
       eq(reportOf(arven).trace[0].bonus, 1, 'спасбросок Ловкости Арвен — посчитан ЕЮ');
       eq(reportOf(arven).trace[0].total, 6);
-      eq(reportOf(arven).trace[0].success, false);
+      eq(reportOf(arven).trace[1].success, false);
     });
 
     test('провал снимает хиты и вешает эффект', () => {
-      const { sheetOf } = poison(arven, queue(3, 4, 5));
+      const { sheetOf } = poison(arven, queue(5, 3, 4));
       eq(sheetOf(arven).values.hp_current, 37, '44 минус 7');
       deepEq(sheetOf(arven).effects, [...arven.effects, { effectId: 'poisoned' }]);
     });
 
     test('успех не делает ничего — и в журнале это обрыв порога, не промах', () => {
-      const { sheetOf, reportOf } = poison(arven, queue(3, 4, 19));
-      eq(reportOf(arven).stopped.reason, 'threshold-held');
+      const { sheetOf, reportOf } = poison(arven, queue(19));
+      eq(reportOf(arven).stopped.reason, 'check-held');
       eq(sheetOf(arven).values.hp_current, 44);
       deepEq(sheetOf(arven).effects, arven.effects);
     });
@@ -140,24 +144,24 @@ group('вызов действия', () => {
       const shakenSys = { ...system, effects: { ...system.effects,
         shaken: {
           label: 'Потрясён', activation: 'passive', duration: { kind: 'permanent' },
-          modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['спасбросок'], edit: 'disadvantage' }],
+          modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['спасбросок'], edit: 'disadvantage', if: { expr: '@бросающий == @носитель' } }],
         } } };
       const sheet = { ...arven, effects: [{ effectId: 'shaken' }] };
-      const { reportOf } = hit('poison-spray:0', mirra, sheet, queue(3, 4, 19, 5), shakenSys);
+      const { reportOf } = hit('poison-spray:0', mirra, sheet, queue(19, 5, 3, 4), { ...savingBy(), effects: { ...savingBy().effects, shaken: shakenSys.effects.shaken } });
       deepEq(reportOf(sheet).trace[0].rolls, [19, 5]);
       eq(reportOf(sheet).trace[0].kept, 5, 'взята худшая кость');
-      eq(reportOf(sheet).trace[0].success, false);
+      eq(reportOf(sheet).trace[1].success, false);
     });
 
     test('хиты не уходят ниже нуля', () => {
       const weak = { ...arven, values: { ...arven.values, hp_current: 3 } };
-      const { sheetOf } = poison(weak, queue(3, 4, 5));
+      const { sheetOf } = poison(weak, queue(5, 3, 4));
       eq(sheetOf(weak).values.hp_current, 0);
     });
 
     test('повторное наложение того же эффекта не дублируется', () => {
       const already = { ...arven, effects: [{ effectId: 'poisoned' }] };
-      const { sheetOf } = poison(already, queue(3, 4, 5));
+      const { sheetOf } = poison(already, queue(5, 3, 4));
       eq(sheetOf(already).effects.length, 1);
     });
   });
@@ -170,7 +174,7 @@ group('вызов действия', () => {
       const after = calc(system, sheet, 'hp_current', newPass(system, sheet, { compendium }));
 
       ok(after < before, 'значение у получателя изменилось');
-      deepEq(reportOf(mirra).trace[0].versus, { tag: 'ac', value: 14 }, 'класс брони посчитан ПОЛУЧАТЕЛЕМ');
+      eq(reportOf(mirra).trace[0].versus, 14, 'класс брони посчитан ПОЛУЧАТЕЛЕМ');
     });
   });
 });
@@ -178,17 +182,20 @@ group('вызов действия', () => {
 const PARAMETRIC = {
   label: 'Параметрический удар', activation: 'manual',
   params: [
+    { key: 'действующий', kind: 'sheet' },
+    { key: 'цели', kind: 'sheet', many: true },
     { key: 'bonus', label: 'Бонус проверки', kind: 'number' },
-    { key: 'versus', label: 'Против чего', kind: 'number' },
+    { key: 'versus', label: 'Против чего', kind: 'number', optional: true },
+    { key: 'damage_dice', label: 'Кость урона', kind: 'dice' },
     { key: 'damage_bonus', label: 'Бонус урона', kind: 'number' },
   ],
   steps: [
-    { id: 'hit', type: 'threshold',
-      roll: { die: { constant: 'lead_die' }, bonus: { expr: '@bonus' }, tags: ['атака'] },
-      versus: { expr: '@versus' } },
-    { id: 'dmg', type: 'amount', source: 'roll',
-      dice: { prop: 'damage_dice' }, bonus: { expr: '@damage_bonus' } },
-    { type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract',
+    { type: 'each', of: 'цели', as: 'цель' },
+    { id: 'hit_бросок', type: 'roll', die: { constant: 'lead_die' }, bonus: { expr: '@bonus' }, tags: ['атака'],
+      by: { expr: '@действующий' }, against: { expr: '@цель' } },
+    { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: 'или(@versus, @цель.ac)' } },
+    { id: 'dmg', type: 'roll', fixed: { expr: 'кинуть(@damage_dice)' }, bonus: { expr: '@damage_bonus' } },
+    { type: 'apply', target: { expr: '@цель.hp_current' }, direction: 'subtract',
       value: { expr: '@dmg' }, targetModifiers: true },
   ],
 };
@@ -203,7 +210,7 @@ group('действие не даёт целиться в бессмыслицу
   const withStrike = args => paramBook('bogus', args);
 
   test('сравнивать бросок с текстовым полем нельзя — внятная ошибка, а не тихое «мимо»', () => {
-    const book = withStrike({ bonus: '#attack_bonus', versus: '@получатель.race', damage_bonus: '0' });
+    const book = withStrike({ bonus: { expr: '@носитель.attack_bonus' }, versus: { expr: '@носитель.race' }, damage_bonus: { expr: '0' } });
     throws(() => hit('bogus:0', arven, mirra, queue(15, 5, 5), paramSys, book), 'race');
   });
 });
@@ -212,19 +219,19 @@ group('в параметрах эффекта живут выражения, а 
   const withStrike = args => paramBook('custom', args);
 
   test('бонус проверки — выражение, а не один тег', () => {
-    const book = withStrike({ bonus: '#attack_bonus + 2', versus: '@получатель.ac', damage_bonus: '#str_mod' });
-    const { reportOf } = hit('custom:0', arven, mirra, queue(10, 4), paramSys, book);
-    eq(reportOf(mirra).trace[0].total, 18, 'кость 10 плюс бонус атаки 6 плюс двойка из выражения');
+    const book = withStrike({ bonus: { expr: '@носитель.attack_bonus + 2' }, damage_bonus: { expr: '@носитель.str_mod' } });
+    const { stepOf } = hit('custom:0', arven, mirra, queue(10, 4), paramSys, book);
+    eq(stepOf('hit_бросок').total, 18, 'кость 10 плюс бонус атаки 6 плюс двойка из выражения');
   });
 
   test('бонус урона задаётся выражением', () => {
-    const book = withStrike({ bonus: '#attack_bonus', versus: '@получатель.ac', damage_bonus: '#str_mod * 2' });
+    const book = withStrike({ bonus: { expr: '@носитель.attack_bonus' }, damage_bonus: { expr: '@носитель.str_mod * 2' } });
     const { reportOf } = hit('custom:0', arven, mirra, queue(10, 4), paramSys, book);
-    eq(reportOf(mirra).trace[1].total, 10, 'кость 4 плюс удвоенная Сила 6');
+    eq(reportOf(mirra).trace.find(t => t.step === 'dmg').total, 10, 'кость 4 плюс удвоенная Сила 6');
   });
 
   test('битое выражение в параметре — внятная ошибка', () => {
-    const book = withStrike({ bonus: '#attack_bonus +', versus: '@получатель.ac', damage_bonus: '0' });
+    const book = withStrike({ bonus: { expr: '@носитель.attack_bonus +' }, damage_bonus: { expr: '0' } });
     throws(() => hit('custom:0', arven, mirra, queue(10, 4), paramSys, book));
   });
 });

@@ -1,3 +1,4 @@
+import type { SheetNames } from './formula-chips.tsx';
 import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
@@ -16,7 +17,7 @@ export interface FormulaFieldProps {
   names?: Record<string, ReactNode>;
   extraNames?: Map<string, string>;
   badges?: Map<string, string>;
-  owners?: boolean;
+  sheets?: SheetNames;
   placeholder?: string;
   options?: BarOption[];
   prefix?: ReactNode;
@@ -29,7 +30,7 @@ export function FormulaField(props: FormulaFieldProps) {
   const hosted = useFormulaBar(s => s.hosts > 0);
   const spot = useFormulaBar(s => (s.target?.id === id ? s.target : null));
   const open = useFormulaBar(s => s.open);
-  const { value, system, names, extraNames, badges, owners, placeholder, prefix, invalid } = props;
+  const { value, system, names, extraNames, badges, sheets, placeholder, prefix, invalid } = props;
 
   if (!hosted) return <InlineFormula {...props} />;
 
@@ -39,7 +40,7 @@ export function FormulaField(props: FormulaFieldProps) {
         ...(names ? { names } : {}),
         ...(extraNames ? { extraNames } : {}),
         ...(badges ? { badges } : {}),
-        ...(owners ? { owners } : {}),
+        ...(sheets ? { sheets } : {}),
         ...(placeholder ? { placeholder } : {}),
         ...(props.options ? { options: props.options } : {}),
         ...(props.onChange ? { onChange: props.onChange } : {}),
@@ -63,7 +64,7 @@ export function FormulaField(props: FormulaFieldProps) {
           {...(names ? { names } : {})}
           {...(extraNames ? { extraNames } : {})}
           {...(badges ? { badges } : {})}
-          {...(owners ? { owners: true } : {})}
+          {...(sheets ? { sheets } : {})}
           {...(placeholder ? { placeholder } : {})}
           readOnly
           onChipPick={(name, label) => useLookup.getState().show({ name, label, where: props.where })}
@@ -74,7 +75,7 @@ export function FormulaField(props: FormulaFieldProps) {
   );
 }
 
-function InlineFormula({ value, system, onChange, onCommit, onCancel, names, extraNames, badges, owners, placeholder, options, prefix }: FormulaFieldProps) {
+function InlineFormula({ value, system, onChange, onCommit, onCancel, names, extraNames, badges, sheets, placeholder, options, prefix }: FormulaFieldProps) {
   const [text, setText] = useState<string | null>(null);
   const current = text ?? value;
   const write = (next: string) => { setText(next); onChange?.(next); };
@@ -87,7 +88,7 @@ function InlineFormula({ value, system, onChange, onCommit, onCancel, names, ext
       {...(names ? { names } : {})}
       {...(extraNames ? { extraNames } : {})}
       {...(badges ? { badges } : {})}
-      {...(owners ? { owners: true } : {})}
+      {...(sheets ? { sheets } : {})}
       {...(placeholder ? { placeholder } : {})}
       {...(prefix ? { prefix } : {})}
       calculator

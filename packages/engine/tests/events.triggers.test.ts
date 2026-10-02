@@ -33,17 +33,19 @@ const hitBy = (sys, sheet, dice) => exchange({
 group('триггерные эффекты: ответка получателя', () => {
   test('попали — триггер отвечает записью в обратную сторону', () => {
     const r = hitBy(thorny(), spiked(mirra), [15, 5, 3]);
-    eq(r.reports.length, 2, 'удар и ровно одна ответка');
-    const reply = r.reports[1];
-    eq(reply.fromId, 'mirra', 'отвечает тот, на ком висел триггер');
-    eq(reply.toId, 'arven', 'а целью становится исходный отправитель');
-    eq(reply.report.reply, true, 'запись помечена как ответка');
-    eq(reply.report.effect, 'thorns');
+    const strike = r.reports.find(x => x.toId === 'mirra')!;
+    const replies = strike.report.reactions ?? [];
+    eq(replies.length, 1, 'ровно одна ответка, вложенная в отчёт удара');
+    eq(replies[0]!.from, 'mirra', 'отвечает тот, на ком висел триггер');
+    eq(replies[0]!.effect, 'thorns');
+    eq(replies[0]!.emitted.map(e => e.event).join(), 'damage');
+    eq(r.sheets.find(s => s.id === 'arven').values.hp_current, 44 - 3, 'а целью становится исходный действующий');
   });
 
   test('промахнулись — триггер молчит: условие смотрит в трассу вызова', () => {
     const r = hitBy(thorny(), spiked(mirra), [2, 5]);
-    eq(r.reports.length, 1);
+    ok(r.reports.every(x => !(x.report.reactions ?? []).length), 'ответок нет');
+    eq(r.sheets.find(s => s.id === 'arven').values.hp_current, 44);
   });
 
   test('ответку считает ЕЁ получатель, своей системой и своим листом', () => {
@@ -55,10 +57,9 @@ group('триггерные эффекты: ответка получателя'
       fromId: 'arven', toId: 'mirra',
     });
 
-    eq(reports.length, 2, 'ход — цепочка: удар и ответка');
     const back = sheets.find(s => s.id === 'arven');
     eq(back.values.hp_current, before - 3, 'урон шипов посчитан у Арвен');
-    eq(reports[1].report.reply, true, 'вторая запись журнала помечена как ответка');
+    eq(reports.find(r => r.toId === 'mirra').report.reactions.length, 1, 'ответка записана в отчёте удара');
   });
 
   test('ответка не будит ответку: каскад ограничен глубиной 1', () => {
@@ -68,7 +69,9 @@ group('триггерные эффекты: ответка получателя'
       sheets: [spiked(arven), spiked(mirra)], actionId: 'longsword-item:0',
       fromId: 'arven', toId: 'mirra',
     });
-    eq(reports.length, 2, 'удар и одна ответка — и всё');
+    const reactions = reports.flatMap(r => r.report.reactions ?? []);
+    eq(reactions.length, 1, 'одна ответка — и всё');
+    eq(reactions[0].from, 'mirra');
   });
 
   test('триггер слушает КОНКРЕТНЫЙ эффект, а не любой вызов', () => {
@@ -98,7 +101,7 @@ group('длительность: счётчик срабатываний', () =>
   test('на нуле эффект спадает сам', () => {
     const r = hitBy(thorny(), spiked(mirra, 1), [15, 5, 3]);
     deepEq(r.sheets.find(s => s.id === 'mirra').effects, [], 'последнее срабатывание унесло эффект с листа');
-    eq(r.reports.length, 2, 'но само срабатывание состоялось');
+    eq(r.reports.find(x => x.toId === 'mirra').report.reactions.length, 1, 'но само срабатывание состоялось');
   });
 
   test('промах счётчик не тратит', () => {

@@ -1587,7 +1587,7 @@
               "expr": "@бросок_бросок"
             },
             "versus": {
-              "expr": "(@сложность)"
+              "expr": "@сложность"
             },
             "continueOn": "always"
           }
@@ -1599,7 +1599,7 @@
               "expr": "@действующий.hope"
             },
             "versus": {
-              "expr": "(1)"
+              "expr": "1"
             },
             "note": "на опыт нужна Надежда",
             "when": {
@@ -1711,7 +1711,7 @@
               "expr": "@бросок_бросок"
             },
             "versus": {
-              "expr": "(@цель.difficulty)"
+              "expr": "@цель.difficulty"
             },
             "continueOn": "always"
           },
@@ -1721,7 +1721,7 @@
               "expr": "если(любое(@бросок.success, @бросок.parts.надежда == @бросок.parts.страх), 1, 0)"
             },
             "versus": {
-              "expr": "(1)"
+              "expr": "1"
             },
             "note": "промах"
           },
@@ -1810,7 +1810,7 @@
               "expr": "@удар_бросок"
             },
             "versus": {
-              "expr": "(@цель.evasion)"
+              "expr": "@цель.evasion"
             },
             "succeedOn": {
               "expr": "20"
@@ -1887,7 +1887,7 @@
               "expr": "@действующий.armor_score - @действующий.armor_marked"
             },
             "versus": {
-              "expr": "(1)"
+              "expr": "1"
             },
             "note": "свободных бронеслотов нет"
           },
@@ -1897,7 +1897,7 @@
               "expr": "@действующий.hp"
             },
             "versus": {
-              "expr": "(1)"
+              "expr": "1"
             },
             "note": "снимать нечего"
           },
@@ -2038,7 +2038,7 @@
               "expr": "@шрам_бросок"
             },
             "versus": {
-              "expr": "(@действующий.level)"
+              "expr": "@действующий.level"
             },
             "successWhen": "notOver",
             "continueOn": "always"
@@ -2106,7 +2106,7 @@
               "expr": "@бросок_бросок"
             },
             "versus": {
-              "expr": "(0)"
+              "expr": "0"
             },
             "continueOn": "always"
           },
@@ -2916,7 +2916,7 @@
               "expr": "@what"
             },
             "versus": {
-              "expr": "(@amount)"
+              "expr": "@amount"
             },
             "note": {
               "expr": "@note"

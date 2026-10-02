@@ -7,16 +7,19 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 const world = (versus: string, extra: Record<string, unknown>): System => ({
   id: 'н', name: 'н',
   tables: {
-    лист: { shape: 'single', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 50 }] },
+    лист: { shape: 'single', owner: 'sheet', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 50 }] },
     приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] },
   },
   constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
       steps: [
-        { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' }, bonus: { expr: '5' } }, versus: { expr: versus }, ...extra },
-        { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '1' } },
+        { type: 'each', of: 'цели', as: 'цель' },
+        { id: 'бросок', type: 'roll', die: { constant: 'к20' }, bonus: { expr: '5' }, by: { expr: '@действующий' }, against: { expr: '@цель' } },
+        { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: versus }, ...extra },
+        { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '1' } },
       ],
     },
   },

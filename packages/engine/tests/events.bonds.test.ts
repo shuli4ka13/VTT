@@ -1,4 +1,4 @@
-import { group, test, eq, ok } from './harness.ts';
+import { group, test, eq, ok, deepEq } from './harness.ts';
 import { sweepBonds } from '../src/events/bonds.ts';
 import { exchange } from './play.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
@@ -8,8 +8,9 @@ const system = {
   tables: { лист: { shape: 'single', columns: [{ key: 'бонус', label: 'Бонус', kind: 'number' }] } , молитва: { shape: 'book', use: 'action', label: 'Молитва', columns: [], bindings: [{ label: 'Благословение', effect: 'благословение', args: {} }] } },
   effects: {
     благословение: {
-      label: 'Благословение', activation: 'manual', bond: true,
-      steps: [{ type: 'status', mode: 'apply', effect: { const: 'благословлён' } }],
+      label: 'Благословение', activation: 'manual', bond: { effect: 'благословение', by: 'действующий' },
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
+      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'status', mode: 'apply', effect: { const: 'благословлён' }, to: { expr: '@цель' } }],
     },
     благословлён: {
       label: 'Благословлён', activation: 'passive', duration: { kind: 'permanent' },
@@ -34,8 +35,7 @@ group('эффект, который держится другим эффекто
     const worn = out.sheets.find(s => s.id === 'воин')!.effects!;
     eq(worn.length, 1);
     eq(worn[0]!.effectId, 'благословлён');
-    eq(worn[0]!.from, 'жрец');
-    eq(worn[0]!.by, 'благословение');
+    deepEq(worn[0]!.bond, { sheet: 'жрец', by: 'благословение' });
   });
 
   test('заклинатель сам получает пометку концентрации — иначе связанное спало бы сразу', () => {
@@ -49,7 +49,7 @@ group('эффект, который держится другим эффекто
   });
 
   test('пока жрец носит источник — связанное держится на всех', () => {
-    const bonded = { effectId: 'благословлён', from: 'жрец', by: 'благословение' };
+    const bonded = { effectId: 'благословлён', bond: { sheet: 'жрец', by: 'благословение' } };
     const sheets = [
       sheet('жрец', [{ effectId: 'благословение' }]),
       sheet('воин', [bonded]), sheet('лучник', [bonded]),
@@ -60,10 +60,10 @@ group('эффект, который держится другим эффекто
   });
 
   test('источник снят — связанное спадает со всех и названо', () => {
-    const bonded = { effectId: 'благословлён', from: 'жрец', by: 'благословение' };
+    const bonded = { effectId: 'благословлён', bond: { sheet: 'жрец', by: 'благословение' } };
     const out = sweepBonds(system, [sheet('жрец'), sheet('воин', [bonded]), sheet('лучник', [bonded])]);
     eq(out.broken.length, 2);
-    ok(out.broken.every(b => b.effectId === 'благословлён' && b.from === 'жрец'));
+    ok(out.broken.every(b => b.effectId === 'благословлён' && b.from === 'жрец' && b.by === 'благословение'));
     eq(out.sheets.find(s => s.id === 'воин')!.effects!.length, 0);
     eq(out.sheets.find(s => s.id === 'лучник')!.effects!.length, 0);
   });
@@ -75,13 +75,12 @@ group('эффект, который держится другим эффекто
 
   test('эффект без bond связей не заводит', () => {
     const plain = structuredClone(system) as System;
-    delete (plain.effects.благословение as { bond?: boolean }).bond;
+    delete (plain.effects.благословение as { bond?: unknown }).bond;
     const out = exchange({
       system: plain, compendium, die: () => 1, sheets: [sheet('жрец'), sheet('воин')],
       actionId: 'молитва:0', fromId: 'жрец', toId: 'воин',
     });
     const worn = out.sheets.find(s => s.id === 'воин')!.effects![0]!;
-    eq(worn.from, undefined);
-    eq(worn.by, undefined);
+    eq(worn.bond, undefined);
   });
 });

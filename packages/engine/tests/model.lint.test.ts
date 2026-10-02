@@ -1,12 +1,16 @@
-import { group, test, eq, ok } from './harness.ts';
+import { group, test, eq, ok, deepEq } from './harness.ts';
 import { lintSystem, lintStep, errorsOf } from '../src/model/lint.ts';
-import { referencesOf, listenerOf } from '../src/model/references.ts';
+import { referencesOf, listenerOf, heardNames } from '../src/model/references.ts';
 import { PLAYABLE_SYSTEMS as SAMPLE_SYSTEMS, PLAYABLE_WORLDS as SAMPLE_WORLDS } from '../src/model/systems.ts';
 import type { System, Effect, Step } from '../src/model/types.ts';
 import { withColumn } from '../src/model/sheet-columns.ts';
 
 const bare = (): System => ({
-  id: 'x', name: 'x', tables: { лист: { shape: 'single', columns: [{ key: 'hp', label: 'Хиты', kind: 'number', default: 10 }] } },
+  id: 'x', name: 'x',
+  tables: {
+    лист: { shape: 'single', owner: 'sheet', columns: [{ key: 'hp', label: 'Хиты', kind: 'number', default: 10 }] },
+    казна: { shape: 'single', owner: 'desk', columns: [{ key: 'страх', label: 'Страх', kind: 'number', default: 0 }] },
+  },
   effects: {}, constants: { d20: { kind: 'die', dice: [{ count: 1, sides: 20 }] } },
 }) as unknown as System;
 
@@ -15,6 +19,9 @@ const withEffect = (id: string, effect: Partial<Effect>): System => {
   system.effects[id] = { label: id, activation: 'manual', steps: [], ...effect } as Effect;
   return system;
 };
+
+const WHO = { key: 'действующий', kind: 'sheet' };
+const mend = (field: string, amount = '1') => ({ type: 'apply', target: { expr: field }, direction: 'add', value: { expr: amount } }) as unknown as Step;
 
 const texts = (system: System) => lintSystem(system).map(p => `${p.level}: ${p.text}`);
 const errorTexts = (system: System) => errorsOf(lintSystem(system)).map(p => p.text);
@@ -29,8 +36,8 @@ group('линт: образцы чисты', () => {
 });
 
 group('линт: висячие ссылки называются словами экрана', () => {
-  test('поле, которого нет — с подсказкой завести его на «Листе»', () => {
-    const system = withEffect('hit', { steps: [{ type: 'apply', target: { tag: 'нет_такого' }, value: { expr: '1' } }] as Step[] });
+  test('поле, которого нет, — с подсказкой завести его на «Листе»', () => {
+    const system = withEffect('hit', { params: [WHO] as never, steps: [mend('@действующий.нет_такого')] });
     const [problem] = errorsOf(lintSystem(system));
     ok(problem?.text.includes('«нет_такого»'), problem?.text);
     ok(problem?.text.includes('Лист'), problem?.text);
@@ -39,14 +46,15 @@ group('линт: висячие ссылки называются словами
     eq(problem?.where.step, 0);
   });
 
-  test('слушатель эффекта, которого нет', () => {
-    const system = withEffect('t', { activation: 'passive', on: [{ on: 'affected', of: 'event:нету', to: 'other', steps: [] }] });
-    ok(errorTexts(system).some(t => t.includes('общего эффекта «нету»')), errorTexts(system).join('|'));
+  test('подписка на появление эффекта, которого нет, — ошибка', () => {
+    const system = withEffect('t', { activation: 'passive', on: [{ on: 'gained:нету', steps: [] }] });
+    ok(errorTexts(system).some(t => t.includes('эффекта «нету» в системе нет')), errorTexts(system).join('|'));
   });
 
-  test('подписка на эффект, которого пока нет, — не ошибка: сработает, когда он появится', () => {
-    const system = withEffect('t', { activation: 'passive', on: [{ on: 'affected', of: 'нет_эффекта', to: 'other', steps: [] }] });
+  test('подписка на вызов эффекта, которого пока нет, — предупреждение, не ошибка: сработает, когда он появится', () => {
+    const system = withEffect('t', { activation: 'passive', on: [{ on: 'after:нет_эффекта', steps: [] }] });
     ok(!errorTexts(system).some(t => t.includes('нет_эффекта')), errorTexts(system).join('|'));
+    ok(texts(system).some(t => t.startsWith('warn') && t.includes('«нет_эффекта — после»')), texts(system).join('|'));
   });
 
   test('привязка типа записи к несуществующему эффекту', () => {
@@ -71,33 +79,47 @@ group('линт: висячие ссылки называются словами
   });
 
   test('ссылка на шаг выше по цепочке — законна, ниже — нет', () => {
-    const okSystem = withEffect('e', {
-      steps: [{ id: 'roll', type: 'amount', source: 'roll', dice: { constant: 'd20' } }, { type: 'apply', target: { tag: 'hp' }, value: { expr: '@roll' } }] as Step[],
-    });
+    const roll = { id: 'бросок', type: 'roll', die: { constant: 'd20' } } as unknown as Step;
+    const okSystem = withEffect('e', { params: [WHO] as never, steps: [roll, mend('@действующий.hp', '@бросок')] });
     eq(errorTexts(okSystem).join(''), '');
-    const badSystem = withEffect('e', {
-      steps: [{ type: 'apply', target: { tag: 'hp' }, value: { expr: '@roll' } }, { id: 'roll', type: 'amount', source: 'roll', dice: { constant: 'd20' } }] as Step[],
-    });
-    ok(errorTexts(badSystem).some(t => t.includes('«roll» выше по цепочке нет')), errorTexts(badSystem).join('|'));
+    const badSystem = withEffect('e', { params: [WHO] as never, steps: [mend('@действующий.hp', '@бросок'), roll] });
+    ok(errorTexts(badSystem).some(t => t.includes('«бросок» выше по цепочке нет')), errorTexts(badSystem).join('|'));
   });
 
   test('условие «только если» ссылается на шаг выше', () => {
     const system = withEffect('e', {
-      steps: [{ type: 'apply', target: { tag: 'hp' }, value: { expr: '1' }, when: { expr: '@нет.success' } }] as Step[],
+      params: [WHO] as never,
+      steps: [{ ...mend('@действующий.hp'), when: { expr: '@нет.success' } }] as Step[],
     });
     ok(errorTexts(system).some(t => t.includes('«нет» выше по цепочке нет')), errorTexts(system).join('|'));
   });
 
   test('вход, которую эффект не объявил', () => {
-    const system = withEffect('e', { params: [], steps: [{ type: 'apply', target: { tag: 'hp' }, value: { expr: '@dmg' } }] as Step[] });
-    ok(errorTexts(system).some(t => t.includes('«dmg» — нет ни поля листа, ни входа эффекта')), errorTexts(system).join('|'));
+    const system = withEffect('e', { params: [WHO] as never, steps: [mend('@действующий.hp', '@dmg')] });
+    ok(errorTexts(system).some(t => t.includes('«dmg» — нет ни входа, ни шага с таким именем')), errorTexts(system).join('|'));
+  });
+
+  test('вход, объявленный эффектом, читается по имени', () => {
+    const system = withEffect('e', { params: [WHO, { key: 'сколько', kind: 'number' }] as never, steps: [mend('@действующий.hp', '@сколько')] });
+    eq(errorTexts(system).join(''), '');
+  });
+
+  test('вход, названный как вызов несуществующего листа, — «вход не объявлен»', () => {
+    const system = withEffect('e', { params: [WHO] as never, steps: [{ type: 'apply', target: { expr: '@действующий.hp' }, direction: 'add', value: { param: 'нету' } }] as never });
+    ok(errorTexts(system).some(t => t.includes('вход «нету» эффектом не объявлен')), errorTexts(system).join('|'));
   });
 
   test('условие срабатывания смотрит на шаг слушаемого эффекта', () => {
-    const system = withEffect('strike', { steps: [{ id: 'hit', type: 'threshold', roll: { die: { constant: 'd20' } }, versus: { expr: '10' } }] as Step[] });
-    system.effects.thorns = { label: 'Шипы', activation: 'passive', on: [{ on: 'affected', of: 'strike', to: 'other', if: { expr: '@hit.success' }, steps: [] }] } as never;
+    const system = withEffect('strike', {
+      params: [WHO] as never,
+      steps: [
+        { id: 'бросок', type: 'roll', die: { constant: 'd20' } },
+        { id: 'hit', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
+      ] as Step[],
+    });
+    system.effects.thorns = { label: 'Шипы', activation: 'passive', on: [{ on: 'after:strike', if: { expr: '@hit.success' }, steps: [] }] } as never;
     eq(errorTexts(system).join(''), '');
-    system.effects.thorns = { label: 'Шипы', activation: 'passive', on: [{ on: 'affected', of: 'strike', to: 'other', if: { expr: '@miss.success' }, steps: [] }] } as never;
+    system.effects.thorns = { label: 'Шипы', activation: 'passive', on: [{ on: 'after:strike', if: { expr: '@miss.success' }, steps: [] }] } as never;
     ok(errorTexts(system).some(t => t.includes('нет шага «miss»')), errorTexts(system).join('|'));
   });
 
@@ -107,77 +129,124 @@ group('линт: висячие ссылки называются словами
     eq(errorTexts(system).join(''), '');
   });
 
-  test('в шагах вызываемого эффекта «event.amount» — не висячая ссылка', () => {
+  test('в шагах вызываемого эффекта сумма читается по имени входа — не висячая ссылка', () => {
     const system = bare();
-    system.effects.damage = { label: 'Урон', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '@event.amount' } }] } as never;
+    system.effects.damage = {
+      label: 'Урон', params: [{ key: 'раненый', kind: 'sheet' }, { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }],
+      steps: [{ type: 'apply', target: { expr: '@раненый.hp' }, direction: 'subtract', value: { expr: '@сколько' } }],
+    } as never;
     eq(errorTexts(system).join(''), '');
   });
 });
 
-group('линт: чей лист в шагах отправителя', () => {
-  test('@получатель в шагах отправителя — ошибка с подсказкой, как написать', () => {
-    const system = withEffect('a', { cost: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '@получатель.hp' } }] as Step[] });
-    ok(errorTexts(system).some(text => text.includes('в шагах отправителя получателя нет') && text.includes('@отправитель.hp')), errorTexts(system).join('\n'));
+group('линт: чьё поле', () => {
+  test('голое имя поля в эффекте — ошибка с подсказкой, как написать', () => {
+    const system = withEffect('a', { params: [WHO] as never, steps: [mend('@действующий.hp', '@hp')] });
+    ok(errorTexts(system).some(text => text.includes('«hp» — чьё поле?') && text.includes('@носитель.hp') && text.includes('@цель.hp')), errorTexts(system).join('\n'));
   });
 
-  test('@получатель в шагах получателя — законно', () => {
-    const system = withEffect('a', { steps: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '@получатель.hp' } }] as Step[] });
-    eq(errorTexts(system).filter(text => text.includes('получателя нет')).length, 0);
+  test('голое имя поля в условии подписки — тоже «чьё поле?»', () => {
+    const system = withEffect('a', { activation: 'passive', on: [{ on: 'moment:turn-start', if: { expr: '@hp > 1' }, steps: [] }] });
+    ok(errorTexts(system).some(text => text.includes('«hp» — чьё поле?')), errorTexts(system).join('\n'));
+  });
+
+  test('имя листа в формулах листа не нужно: голое имя вне эффекта — законно', () => {
+    const system = bare();
+    system.tables = withColumn(system, { key: 'вдвое', label: 'Вдвое', expr: '@hp * 2' }).tables;
+    eq(errorTexts(system).join(''), '');
+  });
+
+  test('поле стола — через @стол; через лист — отказ с подсказкой', () => {
+    const good = withEffect('a', { params: [WHO] as never, steps: [mend('@стол.страх')] });
+    eq(errorTexts(good).join(''), '');
+    const viaSheet = withEffect('a', { params: [WHO] as never, steps: [mend('@действующий.страх')] });
+    ok(errorTexts(viaSheet).some(text => text.includes('лежит на столе') && text.includes('@стол.страх')), errorTexts(viaSheet).join('\n'));
+    const bareDesk = withEffect('a', { params: [WHO] as never, steps: [mend('@действующий.hp', '@страх')] });
+    ok(errorTexts(bareDesk).some(text => text.includes('лежит на столе') && text.includes('@стол.страх')), errorTexts(bareDesk).join('\n'));
+  });
+
+  test('поле листа через @стол — отказ: оно лежит на листе', () => {
+    const system = withEffect('a', { params: [WHO] as never, steps: [mend('@стол.hp')] });
+    ok(errorTexts(system).some(text => text.includes('лежит на листе, а не на столе')), errorTexts(system).join('\n'));
+  });
+
+  test('@носитель в подписке — лист, на котором она висит', () => {
+    const system = withEffect('a', { activation: 'passive', on: [{ on: 'moment:turn-start', if: { expr: '@ходит == @носитель' }, steps: [mend('@носитель.hp')] }] });
+    eq(errorTexts(system).join(''), '');
   });
 });
 
 group('линт: слушатели, круги, входы', () => {
   test('«когда» без «что случилось» — ошибка человеческим текстом', () => {
-    const system = withEffect('t', { activation: 'passive', on: [{ on: '', to: 'other', steps: [] }] });
+    const system = withEffect('t', { activation: 'passive', on: [{ on: '', steps: [] }] });
     const [problem] = errorsOf(lintSystem(system));
-    ok(problem?.text.includes('не сказано, когда срабатывает'), problem?.text);
+    ok(problem?.text.includes('не сказано, на что срабатывает'), problem?.text);
     eq(problem?.where.part, 'on');
     eq(problem?.where.handler, 0);
   });
 
-  test('«когда» знает только свои моменты и их сочетания', () => {
+  test('«что случилось» знает только свои слова: фазы вызова, кости, моменты, появление и поле', () => {
     const texts = (handler: Record<string, unknown>) => errorTexts(withEffect('r', { activation: 'passive', on: [{ steps: [], ...handler } as never] }));
-    ok(texts({ on: 'strike' }).some(t => t.includes('такого «когда» нет')));
-    ok(texts({ on: 'moment:turn-start', of: 'strike' }).some(t => t.includes('только у моментов действия')));
-    ok(texts({ on: 'acted', confirm: true }).some(t => t.includes('спросить здесь нельзя')));
-    ok(texts({ on: 'targeted', to: 'other' }).some(t => t.includes('ответить другому нельзя')));
-    eq(texts({ on: 'targeted', confirm: true }).length, 0, 'любое действие — законно');
-    ok(texts({ on: 'done', to: 'other' }).some(t => t.includes('ответить другому нельзя')));
-    ok(texts({ on: 'done', confirm: true }).some(t => t.includes('спросить здесь нельзя')));
+    ok(texts({ on: 'strike' }).some(t => t.includes('такого «что случилось» нет')));
+    ok(texts({ on: 'sneeze:strike' }).some(t => t.includes('такого «что случилось» нет')));
+    ok(texts({ on: 'before:' }).some(t => t.includes('такого «что случилось» нет')));
+    ok(texts({ on: 'moment:когда-нибудь' }).some(t => t.includes('такого момента нет')));
+    ok(texts({ on: 'gained:пусто' }).some(t => t.includes('эффекта «пусто» в системе нет')));
+    eq(texts({ on: 'before:strike', confirm: true }).length, 0, 'спросить перед вызовом — законно');
+    eq(texts({ on: 'after:strike', confirm: true }).length, 0, 'и после — законно');
+    eq(texts({ on: 'done:strike', confirm: true }).length, 0, 'и по завершении — законно');
+    eq(texts({ on: 'seen', confirm: true }).length, 0, 'и «кости выпали» — законно');
+    eq(texts({ on: 'before:*' }).length, 0, 'любое действие — законно');
     eq(texts({
-      on: 'done', if: { expr: 'сколько(@цели.hit.success, да) >= 1' },
-      steps: [{ type: 'apply', target: { tag: 'hp' }, direction: 'add', value: { expr: 'сумма(@цели.dmg)' } }],
-    }).length, 0, '«я совершил действие» знает таблицу целей');
-    eq(texts({ on: 'done', if: { expr: 'сколько(@цели) >= 2' }, steps: [] }).length, 0, 'и голое @цели — тоже');
+      on: 'done:strike', if: { expr: 'сколько(@цели.hit.success, да) >= 1' },
+      steps: [{ type: 'apply', target: { expr: '@носитель.hp' }, direction: 'add', value: { expr: 'сумма(@цели.dmg)' } }],
+    }).length, 0, '«завершено» знает таблицу целей');
+    eq(texts({ on: 'done:strike', if: { expr: 'сколько(@цели) >= 2' }, steps: [] }).length, 0, 'и голое @цели — тоже');
   });
 
-  test('«я совершил действие» не читает итог одной цели — только свои броски и таблицу целей', () => {
+  test('подписка видит входы того, что слушает, и переменную его цикла; чужое имя — «чьё поле?»', () => {
     const system = withEffect('удар', {
-      steps: [{ id: 'hit', type: 'threshold', roll: { die: { constant: 'd20' } }, versus: { expr: '10' } }] as Step[],
+      params: [WHO, { key: 'цели', kind: 'sheet', many: true }] as never,
+      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { id: 'hit', type: 'check', value: { expr: '1' }, versus: { expr: '0' } }] as Step[],
     });
-    system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'done', of: 'удар', if: { expr: '@hit.success' }, steps: [] }] } as Effect;
-    ok(errorTexts(system).some(t => t.includes('итог «hit.success» у каждой цели свой')));
-    system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'done', of: 'удар', if: { expr: '@hit.natural >= 20' }, steps: [] }] } as Effect;
-    eq(errorTexts(system).length, 0, 'свой бросок — можно');
-    system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'acted', of: 'удар', if: { expr: '@hit.success' }, steps: [] }] } as Effect;
-    eq(errorTexts(system).length, 0, '«на цель» видит итог цели');
+    system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @носитель и @действующий != @носитель' }, steps: [] }] } as Effect;
+    eq(errorTexts(system).join(''), '');
+    system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@враг == @носитель' }, steps: [] }] } as Effect;
+    ok(errorTexts(system).some(t => t.includes('«враг» — нет ни входа, ни шага')), errorTexts(system).join('|'));
+  });
+
+  test('у броска подписка видит бросающего и противника', () => {
+    const system = withEffect('r', { activation: 'passive', on: [{ on: 'seen', if: { expr: '@бросающий == @носитель или @против == @носитель' }, steps: [] }] });
+    eq(errorTexts(system).join(''), '');
   });
 
   test('вызовы по кругу: эффект зовёт тот, на который сам и срабатывает', () => {
     const system = withEffect('loop', {
       activation: 'passive',
-      on: [{ on: 'affected', of: 'event:damage', to: 'other', steps: [{ type: 'emit', event: 'damage' }] as Step[] }],
+      on: [{ on: 'after:damage', steps: [{ type: 'emit', event: 'damage', args: { раненый: { expr: '@раненый' }, сколько: { expr: '1' } } }] as Step[] }],
     });
-    system.effects.damage = { label: 'Урон', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [] } as never;
+    system.effects.damage = { label: 'Урон', params: [{ key: 'раненый', kind: 'sheet' }, { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [] } as never;
     const found = errorTexts(system).find(t => t.includes('по кругу'));
     ok(found, errorTexts(system).join('|'));
     ok(found!.includes('«loop»') && found!.includes('«Урон»'), found);
   });
 
   test('без круга — тишина', () => {
-    const system = withEffect('a', { steps: [{ type: 'emit', event: 'damage' }] as Step[] });
-    system.effects.damage = { label: 'Урон', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '@event.amount' } }] } as never;
+    const system = withEffect('a', { params: [WHO] as never, steps: [{ type: 'emit', event: 'damage', args: { раненый: { expr: '@действующий' }, сколько: { expr: '1' } } }] as Step[] });
+    system.effects.damage = { label: 'Урон', params: [{ key: 'раненый', kind: 'sheet' }, { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [{ type: 'apply', target: { expr: '@раненый.hp' }, direction: 'subtract', value: { expr: '@сколько' } }] } as never;
     ok(!texts(system).some(t => t.includes('по кругу')));
+  });
+
+  test('вызов не заполняет вход вызываемого эффекта — ошибка', () => {
+    const system = withEffect('a', { params: [WHO] as never, steps: [{ type: 'emit', event: 'damage', args: { сколько: { expr: '1' } } }] as Step[] });
+    system.effects.damage = { label: 'Урон', params: [{ key: 'раненый', label: 'Раненый', kind: 'sheet' }, { key: 'сколько', kind: 'number' }], steps: [] } as never;
+    ok(errorTexts(system).some(t => t.includes('не заполняет его вход «Раненый»')), errorTexts(system).join('|'));
+  });
+
+  test('«для каждого» в одной цепочке может быть только один', () => {
+    const each = { type: 'each', of: 'цели', as: 'цель' } as unknown as Step;
+    const system = withEffect('a', { params: [WHO, { key: 'цели', kind: 'sheet', many: true }] as never, steps: [each, mend('@цель.hp'), each] });
+    ok(errorTexts(system).some(t => t.includes('может быть только один')), errorTexts(system).join('|'));
   });
 
   test('эффект зовут, а он ничего не делает — предупреждение', () => {
@@ -193,6 +262,21 @@ group('линт: слушатели, круги, входы', () => {
     const [problem] = errorsOf(lintSystem(system));
     ok(problem?.text.includes('не заполняет вход «Кость урона»'), problem?.text);
     eq(problem?.where.binding, 0);
+  });
+
+  test('кнопка заполняет входы-листы сама: первый одиночный — нажавший, список — выбранные; лишний лист — ошибка', () => {
+    const system = withEffect('strike', { params: [WHO, { key: 'цели', kind: 'sheet', many: true }], steps: [] });
+    system.tables = { weapon: { shape: 'book', use: 'item', label: 'Оружие', columns: [], bindings: [{ label: 'Удар', effect: 'strike', args: {} }] } } as never;
+    eq(errorTexts(system).join(''), '');
+    system.effects.strike = { label: 'strike', activation: 'manual', params: [WHO, { key: 'второй', label: 'Второй', kind: 'sheet' }], steps: [] } as never;
+    const [problem] = errorsOf(lintSystem(system));
+    ok(problem?.text.includes('не заполняет вход «Второй»'), problem?.text);
+  });
+
+  test('необязательный вход-лист кнопка закрывать не обязана', () => {
+    const system = withEffect('strike', { params: [WHO, { key: 'второй', label: 'Второй', kind: 'sheet', optional: true }], steps: [] });
+    system.tables = { weapon: { shape: 'book', use: 'item', label: 'Оружие', columns: [], bindings: [{ label: 'Удар', effect: 'strike', args: {} }] } } as never;
+    eq(errorTexts(system).join(''), '');
   });
 
   test('вход, которую спрашивают за столом, привязка закрывать не обязана', () => {
@@ -237,8 +321,8 @@ group('линт одного шага — то, что раньше считал
   });
 
   test('формула с именем шага выше — не беда, с чужим именем — беда', () => {
-    const step = { type: 'apply', target: { tag: 'hp' }, value: { expr: '#n + 1' } } as unknown as Step;
-    eq(lintStep(step, bare(), effect, [{ id: 'n', type: 'amount' }]), null);
+    const step = { type: 'apply', target: { expr: '@носитель.hp' }, value: { expr: '@n + 1' } } as unknown as Step;
+    eq(lintStep(step, bare(), effect, [{ id: 'n', type: 'roll' }]), null);
     const problem = lintStep(step, bare(), effect, []);
     eq(problem?.fix?.tag, 'n');
   });
@@ -252,14 +336,35 @@ group('ссылки и слушатели', () => {
     ok(refs.some(r => r.kind === 'effect' && r.from.section === 'grants'));
   });
 
-  test('listenerOf разбирает три вида слушателя и пустоту', () => {
-    eq(listenerOf({ on: 'affected' }).kind, 'any');
-    eq(listenerOf({ on: 'affected', of: 'event:damage' }).key, 'damage');
-    eq(listenerOf({ on: 'acted', of: 'strike' }).kind, 'effect');
-    eq(listenerOf({ on: 'moment:turn-start' }).kind, 'moment');
+  test('listenerOf разбирает «что случилось» и пустоту', () => {
+    deepEq(listenerOf({ on: 'after:damage' }), { kind: 'call', phase: 'after', key: 'damage' });
+    deepEq(listenerOf({ on: 'before:*' }), { kind: 'call', phase: 'before', key: '*' });
+    deepEq(listenerOf({ on: 'done:strike' }), { kind: 'call', phase: 'done', key: 'strike' });
+    deepEq(listenerOf({ on: 'seen' }), { kind: 'seen' });
+    deepEq(listenerOf({ on: 'moment:turn-start' }), { kind: 'moment', key: 'turn-start' });
+    deepEq(listenerOf({ on: 'field:hp' }), { kind: 'field', key: 'hp' });
+    deepEq(listenerOf({ on: 'gained:poisoned' }), { kind: 'gained', key: 'poisoned' });
+    deepEq(listenerOf({ on: 'lost:poisoned' }), { kind: 'lost', key: 'poisoned' });
     eq(listenerOf({ on: 'strike' }).kind, 'unknown');
+    eq(listenerOf({ on: 'before:' }).kind, 'unknown');
     eq(listenerOf({ on: '' }).kind, 'empty');
     eq(listenerOf({}).kind, 'empty');
+  });
+
+  test('heardNames: имена, которые слушатель получает от того, что случилось', () => {
+    const system = withEffect('удар', {
+      params: [WHO, { key: 'цели', kind: 'sheet', many: true }, { key: 'бонус', kind: 'number' }] as never,
+      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { id: 'hit', type: 'check', value: { expr: '1' }, versus: { expr: '0' } }] as Step[],
+    });
+    deepEq(heardNames(system, listenerOf({ on: 'seen' })).sheets, ['бросающий', 'против']);
+    deepEq(heardNames(system, listenerOf({ on: 'moment:turn-start' })).sheets, ['ходит']);
+    deepEq(heardNames(system, listenerOf({ on: 'gained:x' })).sheets, ['лист']);
+    const struck = heardNames(system, listenerOf({ on: 'after:удар' }));
+    deepEq(struck.sheets, ['действующий', 'цели', 'цель']);
+    deepEq(struck.seeds, ['бонус', 'hit']);
+    const done = heardNames(system, listenerOf({ on: 'done:удар' }));
+    ok(done.seeds.includes('итоги'));
+    ok(!done.seeds.includes('hit'), 'итог шага внутри цикла у каждой цели свой — в «завершено» его нет');
   });
 });
 

@@ -447,7 +447,7 @@
               "expr": "@hit_бросок"
             },
             "versus": {
-              "expr": "(@цель.ac)"
+              "expr": "@цель.ac"
             },
             "successWhen": "atLeast",
             "continueOn": "always"
@@ -578,7 +578,7 @@
               "expr": "@hit_бросок"
             },
             "versus": {
-              "expr": "(@цель.ac)"
+              "expr": "@цель.ac"
             },
             "successWhen": "atLeast"
           },
@@ -716,7 +716,7 @@
               "expr": "@лист.turn_standard"
             },
             "versus": {
-              "expr": "(1)"
+              "expr": "1"
             },
             "note": "стандартное действие на этом ходу уже потрачено",
             "when": {

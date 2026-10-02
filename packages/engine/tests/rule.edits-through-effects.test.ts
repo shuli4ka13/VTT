@@ -1,6 +1,5 @@
 import { group, test, eq, deepEq } from './harness.ts';
 import { exchange } from './play.ts';
-import { system as dnd, arven, mirra, compendium as dndBook } from './fixtures.ts';
 
 const queue = (...values: number[]) => {
   const rest = [...values];
@@ -10,9 +9,14 @@ const queue = (...values: number[]) => {
   };
 };
 
+const ACTOR = { key: 'действующий', kind: 'sheet' };
+const TARGETS = { key: 'цели', kind: 'sheet', many: true };
+const EACH = { type: 'each', of: 'цели', as: 'цель' };
+const OWN = { expr: '@бросающий == @носитель' };
+
 const passive = (label: string, edit: string) => ({
   label, activation: 'passive', duration: { kind: 'permanent' },
-  modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['проверка'], edit }],
+  modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['проверка'], if: OWN, edit }],
 });
 
 const world = (edits: Record<string, unknown>, effects: string[]) => ({
@@ -27,11 +31,10 @@ const sheet = (effects: string[]) => ({ id: 'герой', systemId: 'чужой-
 const victim = { id: 'цель', systemId: 'чужой-мир', name: 'цель', values: {}, has: [], effects: [] };
 
 const rule = {
-  steps: [{
-    id: 'try', type: 'threshold',
-    roll: { die: { constant: 'кость' }, bonus: { expr: '0' }, tags: ['проверка'] },
-    versus: { expr: '8' },
-  }],
+  steps: [
+    { id: 'try_бросок', type: 'roll', die: { constant: 'кость' }, bonus: { expr: '0' }, tags: ['проверка'], by: { expr: '@действующий' } },
+    { id: 'try', type: 'check', value: { expr: '@try_бросок' }, versus: { expr: '8' } },
+  ],
 };
 
 const bookOf = (steps: unknown[]) => ({
@@ -39,22 +42,22 @@ const bookOf = (steps: unknown[]) => ({
   steps,
 });
 
-const play = (sys: any, sh: any, steps: unknown[], die: (sides: number) => number) => {
+const play = (sys: any, sh: any, steps: unknown[], die: (sides: number) => number, others: any[] = [victim], toId = 'цель') => {
   const full = {
     ...sys,
     tables: { ...sys.tables, действие: { shape: 'book', use: 'action', label: 'Действие' } },
-    effects: { ...sys.effects, проба: { label: 'Проба', activation: 'manual', steps } },
+    effects: { ...sys.effects, проба: { label: 'Проба', activation: 'manual', params: [ACTOR, TARGETS], steps: [EACH, ...steps] } },
   };
   const out = exchange({
-    system: full, compendium: bookOf(steps) as any, die, sheets: [sh, victim] as any, actionId: 'проба:0', fromId: 'герой', toId: 'цель',
+    system: full, compendium: bookOf(steps) as any, die, sheets: [sh, ...others] as any, actionId: 'проба:0', fromId: sh.id, toId,
   });
-  const trace = out.reports.find(r => r.toId === 'цель')!.report.trace as any[];
+  const trace = out.reports.find(r => r.toId === toId)!.report.trace as any[];
   return { trace, out };
 };
 
 const run = (sys: any, sh: any, ...dice: number[]) => {
   const { trace } = play(sys, sh, rule.steps, queue(...dice));
-  return { trace, results: { try: trace[0] } as any };
+  return { trace, roll: trace[0], results: { try: trace[1] } as any };
 };
 
 group('механики разных систем доезжают через эффект', () => {
@@ -69,7 +72,7 @@ group('механики разных систем доезжают через э
   test('Blades: эффект добавляет кость в пул', () => {
     const sys = world({ помощь: { label: 'Помощь напарника', ops: [{ op: 'addDie' }] } }, ['помощь']);
     const r = run(sys, sheet(['помощь']), 2, 6);
-    deepEq(r.trace[0].rolls, [2, 6], 'костей стало две');
+    deepEq(r.roll.rolls, [2, 6], 'костей стало две');
     eq(r.results.try.total, 8, 'чтение мира — сумма, значит сумма обеих');
   });
 
@@ -79,7 +82,7 @@ group('механики разных систем доезжают через э
     const с = run(sys, sheet(['фора']), 6);
     eq(без.results.try.success, false, '6 против 8 — не дотянул');
     eq(с.results.try.success, true, 'порог стал 5 — тот же бросок прошёл');
-    deepEq(с.trace[0].rolls, [6], 'кости не тронуты');
+    deepEq(с.roll.rolls, [6], 'кости не тронуты');
   });
 
   test('Savage Worlds: эффект делает кость взрывной — правка РЕЗУЛЬТАТА', () => {
@@ -109,31 +112,41 @@ group('механики разных систем доезжают через э
     sys.tables.rolls.rows.push({ value: 'другой' });
     sys.effects.помощь.modifiers[0].tags = ['другой'];
     const r = run(sys, sheet(['помощь']), 5);
-    deepEq(r.trace[0].rolls, [5], 'одна кость: правка висит на другой мишени');
+    deepEq(r.roll.rolls, [5], 'одна кость: правка висит на другой мишени');
   });
 });
 
 group('любой бросок ловит правку, ничего для этого не объявляя', () => {
+  const base = (): any => ({
+    id: 'чужой-мир',
+    tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }, { value: 'спас' }] } },
+    constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
+    roll_edits: {
+      advantage: { label: 'Преимущество', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }], canceledBy: 'disadvantage' },
+      disadvantage: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }], canceledBy: 'advantage' },
+    },
+    effects: {},
+  });
   const withRule = (edit: string) => ({
-    ...dnd,
+    ...base(),
     effects: {
-      ...dnd.effects,
       всякий: {
         label: 'Проклятие невезения', activation: 'passive', duration: { kind: 'permanent' },
-        modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', edit }],
+        modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', if: OWN, edit }],
       },
     },
   });
-  const cursed = (sys: any, ids: string[]) => ({ ...arven, effects: ids.map(effectId => ({ effectId })) });
+  const cursed = (ids: string[]) => ({ ...sheet([]), effects: ids.map(effectId => ({ effectId })) });
 
-  const attack = (sys: any, sheet: any, ...dice: number[]) =>
-    exchange({
-      system: sys, compendium: dndBook, die: queue(...dice), sheets: [sheet, mirra], actionId: 'longsword-item:0', fromId: sheet.id, toId: mirra.id,
-    }).reports.find(r => r.toId === mirra.id)!.report.trace[0] as any;
+  const attackSteps = [
+    { id: 'hit_бросок', type: 'roll', die: { constant: 'к20' }, bonus: { expr: '0' }, tags: ['атака'], by: { expr: '@действующий' }, against: { expr: '@цель' } },
+    { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '1' } },
+  ];
+  const attack = (sys: any, sh: any, ...dice: number[]) => play(sys, sh, attackSteps, queue(...dice)).trace[0] as any;
 
   test('правка «на любой бросок» достаёт атаку, хотя та объявлена «Броском атаки»', () => {
     const sys = withRule('disadvantage');
-    const t = attack(sys, cursed(sys, ['всякий']), 18, 4, 5);
+    const t = attack(sys, cursed(['всякий']), 18, 4);
     deepEq(t.rolls, [18, 4], 'кости две — общая мишень сработала');
     eq(t.kept, 4, 'взята худшая');
     deepEq(t.edits, ['Помеха']);
@@ -141,7 +154,7 @@ group('любой бросок ловит правку, ничего для эт
 
   test('преимущество «на любой бросок» работает так же — порода одна', () => {
     const sys = withRule('advantage');
-    const t = attack(sys, cursed(sys, ['всякий']), 4, 18, 5);
+    const t = attack(sys, cursed(['всякий']), 4, 18);
     eq(t.kept, 18, 'взята лучшая');
   });
 
@@ -149,19 +162,21 @@ group('любой бросок ловит правку, ничего для эт
     const sys: any = withRule('disadvantage');
     sys.effects.фланг = {
       label: 'Во фланге', activation: 'passive', duration: { kind: 'permanent' },
-      modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['атака'], edit: 'advantage' }],
+      modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['атака'], if: OWN, edit: 'advantage' }],
     };
-    const t = attack(sys, cursed(sys, ['всякий', 'фланг']), 18, 4, 5);
+    const t = attack(sys, cursed(['всякий', 'фланг']), 18);
     deepEq(t.rolls, [18], 'одна кость: гашение не смотрит, с какой мишени пришла правка');
     eq(t.edits, undefined, 'правок не осталось — трасса о них и не заикается');
   });
 
-  test('спасбросок ЦЕЛИ ловит её собственную общую правку — считает получатель', () => {
+  test('спасбросок ЦЕЛИ ловит её собственную общую правку — бросает цель', () => {
     const sys = withRule('disadvantage');
-    const target = cursed(sys, ['всякий']);
-    const t = exchange({
-      system: sys, compendium: dndBook, die: queue(3, 4, 19, 2), sheets: [mirra, target], actionId: 'poison-spray:0', fromId: mirra.id, toId: target.id,
-    }).reports.find(r => r.toId === target.id)!.report.trace[0] as any;
+    const target = { ...cursed(['всякий']), id: 'цель' };
+    const save = [
+      { id: 'спас_бросок', type: 'roll', die: { constant: 'к20' }, bonus: { expr: '0' }, tags: ['спас'], by: { expr: '@цель' }, against: { expr: '@действующий' } },
+      { id: 'спас', type: 'check', value: { expr: '@спас_бросок' }, versus: { expr: '1' } },
+    ];
+    const t = play(sys, sheet([]), save, queue(19, 2), [target]).trace[0] as any;
     deepEq(t.rolls, [19, 2], 'проклятие висит на ЦЕЛИ, и бросает его она');
     eq(t.kept, 2);
   });
@@ -176,15 +191,14 @@ group('переворот к100 доезжает через эффект — п�
     effects: lucky ? { удача: passive('удача', 'удача') } : {},
   });
   const under = {
-    steps: [{
-      id: 'try', type: 'threshold',
-      roll: { die: { constant: 'сотня' }, bonus: { expr: '0' }, tags: ['проверка'] },
-      versus: { expr: '45' }, successWhen: 'notOver',
-    }],
+    steps: [
+      { id: 'try_бросок', type: 'roll', die: { constant: 'сотня' }, bonus: { expr: '0' }, tags: ['проверка'], by: { expr: '@действующий' } },
+      { id: 'try', type: 'check', value: { expr: '@try_бросок' }, versus: { expr: '45' }, successWhen: 'notOver' },
+    ],
   };
   const underRun = (s: any, sh: any, ...dice: number[]) => {
     const { trace } = play(s, sh, under.steps, queue(...dice));
-    return { trace, results: { try: trace[0] } as any };
+    return { trace, roll: trace[0], results: { try: trace[1] } as any };
   };
 
   test('без правки 71 против 45 «не выше» — провал', () => {
@@ -195,7 +209,7 @@ group('переворот к100 доезжает через эффект — п�
     const r = underRun(sys(true), sheet(['удача']), 71);
     eq(r.results.try.success, true);
     eq(r.results.try.total, 17);
-    deepEq(r.trace[0].edits, ['Удача']);
+    deepEq(r.roll.edits, ['Удача']);
   });
 });
 
@@ -206,7 +220,7 @@ group('исход шага помнит, была ли правка', () => {
   });
   const steps = [
     ...rule.steps,
-    { type: 'apply', target: { tag: 'флаг' }, direction: 'add', targetModifiers: false, when: { expr: '@try.edited' }, value: { expr: '1' } },
+    { type: 'apply', target: { expr: '@цель.флаг' }, direction: 'add', targetModifiers: false, when: { expr: '@try.edited' }, value: { expr: '1' } },
   ];
   const flag = (sys: any, sh: any, ...dice: number[]) =>
     Number(play(flagged(sys), sh, steps, queue(...dice)).out.sheets.find(s => s.id === 'цель')!.values.флаг ?? 0);

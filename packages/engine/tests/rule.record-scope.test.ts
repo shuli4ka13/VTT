@@ -20,8 +20,8 @@ const firstBonus = (system: System): number => {
     system, compendium: dnd.compendium as Compendium, die: () => 10, sheets,
     actionId: 'longsword:0', fromId: 'arven', toId: 'goblin',
   });
-  const threshold = out.reports.flatMap(entry => entry.report.trace).find(t => (t as { type?: string }).type === 'threshold') as { bonus: number };
-  return threshold.bonus;
+  const rolled = out.reports.flatMap(entry => entry.report.trace).find(t => (t as { step?: string }).step === 'hit_бросок') as { bonus: number };
+  return rolled.bonus;
 };
 
 group('формула входа в кнопке записи видит свойства записи', () => {
@@ -46,7 +46,7 @@ group('формула входа в кнопке записи видит сво�
 
   test('в шагах самого эффекта свойства записи по имени не видны — только через вход', () => {
     const system = withStrikeArgs({}, [
-      { id: 'hit', type: 'threshold', roll: { die: { constant: 'lead_die' }, bonus: { expr: '@wield.attack' }, tags: ['атака'] }, versus: { expr: '@получатель.ac' } },
+      { id: 'hit_бросок', type: 'roll', die: { constant: 'lead_die' }, bonus: { expr: '@wield.attack' }, tags: ['атака'], by: { expr: '@действующий' } },
     ]);
     throws(() => firstBonus(system));
   });

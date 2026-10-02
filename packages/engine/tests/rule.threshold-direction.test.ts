@@ -1,5 +1,5 @@
 import { group, test, eq, ok } from './harness.ts';
-import { slots } from '../src/engine/steps/threshold.ts';
+import { slots } from '../src/engine/steps/check.ts';
 import { runSteps } from './kit.ts';
 import { exchange } from './play.ts';
 
@@ -14,19 +14,21 @@ const sheet = { id: 'испытуемый', values: {}, effects: [] };
 
 const run = (successWhen, rolled, versus, extra = {}) => {
   const rule = {
-    steps: [{
-      id: 'try', type: 'threshold',
-      ...(successWhen ? { successWhen } : {}),
-      roll: { die: { constant: 'lead_die' }, bonus: { expr: '0' }, check: null },
-      versus: { expr: `${JSON.stringify(versus)}` },
-      ...extra,
-    }],
+    steps: [
+      { id: 'try_бросок', type: 'roll', die: { constant: 'lead_die' }, bonus: { expr: '0' }, by: { expr: '@носитель' } },
+      {
+        id: 'try', type: 'check', value: { expr: '@try_бросок' },
+        ...(successWhen ? { successWhen } : {}),
+        versus: { expr: `${JSON.stringify(versus)}` },
+        ...extra,
+      },
+    ],
   };
   const ran = runSteps(sys as never, [sheet as never], sheet.id, rule.steps as never, queue(rolled));
   return ran as unknown as { results: Record<string, any>; stopped: unknown };
 };
 
-group('порог: направление успеха объявляется слотом', () => {
+group('проверка: направление успеха объявляется слотом', () => {
   test('умолчание — как было: не меньше порога, равенство в пользу бросающего', () => {
     ok(run(null, 15, 15).results.try.success, 'ровно порог — взят');
     ok(!run(null, 14, 15).results.try.success, 'недобор — не взят');
@@ -54,7 +56,7 @@ group('порог: направление успеха объявляется с
     ok(!run('notOver', 10, 40).stopped, 'успех — цепочка живёт');
   });
 
-  test('порог на стороне цели бросает цель и следует направлению', () => {
+  test('бросок цели читается проверкой и следует направлению', () => {
     const world = {
       id: 'спасбросок', name: 'спасбросок',
       constants: { lead_die: { label: 'Сотка', kind: 'die', dice: [{ count: 1, sides: 100 }] } },
@@ -65,11 +67,12 @@ group('порог: направление успеха объявляется с
       effects: {
         спас: {
           label: 'Спасбросок', activation: 'manual',
-          steps: [{
-            id: 'try', type: 'threshold', side: 'target', successWhen: 'notOver',
-            roll: { die: { constant: 'lead_die' }, bonus: { expr: '0' }, check: null },
-            versus: { expr: '40' },
-          }],
+          params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
+          steps: [
+            { type: 'each', of: 'цели', as: 'цель' },
+            { id: 'try_бросок', type: 'roll', die: { constant: 'lead_die' }, bonus: { expr: '0' }, by: { expr: '@цель' }, against: { expr: '@действующий' } },
+            { id: 'try', type: 'check', value: { expr: '@try_бросок' }, successWhen: 'notOver', versus: { expr: '40' } },
+          ],
         },
       },
     };

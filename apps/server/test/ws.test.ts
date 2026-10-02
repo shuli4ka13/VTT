@@ -111,7 +111,7 @@ describe('канал стола', () => {
     const [arven, mirra] = state.state.sheets;
     const delivered = waitFor(second, 'room:delta');
     say(first, 'room:act', {
-      intent: { roomId: room.id, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id },
+      intent: { roomId: room.id, actionId: 'longsword-item:0', fromId: arven.id, toIds: [mirra.id] },
     });
 
     const delta = await delivered;
@@ -138,7 +138,7 @@ describe('канал стола', () => {
     const socket = await open();
     const failure = waitFor(socket, 'error');
     say(socket, 'room:act', {
-      intent: { roomId: 'r', actionId: 'a:0', fromId: 'x', toId: 'y' },
+      intent: { roomId: 'r', actionId: 'a:0', fromId: 'x', toIds: ['y'] },
     });
 
     const message = await failure;

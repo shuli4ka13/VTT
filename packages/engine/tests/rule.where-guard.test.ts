@@ -12,8 +12,11 @@ const withProbe = (tags: string[]) => {
   const system = мир.system as System;
   system.effects.проба = {
     label: 'Проба', activation: 'manual',
-    steps: [{ type: 'emit', event: 'damage', args: {
+    params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
+    steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'emit', event: 'damage', args: {
       amount: { expr: '10' },
+      лист: { expr: '@цель' },
+      источник: { expr: '@действующий' },
       ...Object.fromEntries(tags.map(tag => [tag.startsWith('по ') ? 'aim' : 'damage_type', { const: tag }])),
     } }],
   } as never;

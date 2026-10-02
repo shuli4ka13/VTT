@@ -238,7 +238,7 @@ group('модификаторы', () => {
     test('условие правила считается по каждому листу отдельно', () => {
       const sys = withRule({
         kind: 'edit', label: 'Мастерство даёт фору', call: 'roll', param: 'edits', tags: ['проверка'],
-        edit: 'advantage', condition: { expr: '#prof_bonus >= 3' },
+        edit: 'advantage', if: { expr: '@носитель.prof_bonus >= 3' },
       });
       eq(resolveRoll(sys, arven, ['проверка'], newPass(sys, arven, { compendium })).edits.length,
         1, 'у Арвен бонус мастерства 3');
@@ -278,7 +278,7 @@ group('модификаторы', () => {
 
     const bonus = (value, condition = null) => withEffects({
       guidance: passive('Наставление',
-        [{ kind: 'edit', call: 'roll', param: 'bonus', tags: ['проверка'], op: 'add', value: typeof value === 'object' ? value : { expr: String(value) }, stacking: 'sum', ...(condition ? { condition: { expr: condition } } : {}) }]),
+        [{ kind: 'edit', call: 'roll', param: 'bonus', tags: ['проверка'], op: 'add', value: typeof value === 'object' ? value : { expr: String(value) }, stacking: 'sum', ...(condition ? { if: { expr: condition } } : {}) }]),
     });
     const hung = { ...arven, effects: [{ effectId: 'guidance' }] };
     const roll = sys => resolveRoll(sys, hung, ['проверка'], newPass(sys, hung, { compendium }));
@@ -292,7 +292,7 @@ group('модификаторы', () => {
     });
 
     test('прибавка может быть формулой', () => {
-      eq(roll(bonus({ expr: '#prof_bonus' })).bonus, 3, 'бонус мастерства Арвен');
+      eq(roll(bonus({ expr: '@носитель.prof_bonus' })).bonus, 3, 'бонус мастерства Арвен');
     });
 
     test('прибавка не отменяет и не заменяет преимущество', () => {
@@ -323,7 +323,7 @@ group('модификаторы', () => {
     });
 
     test('прибавка с ложным условием не применяется', () => {
-      eq(roll(bonus(5, '#level >= 99')).bonus, 0);
+      eq(roll(bonus(5, '@носитель.level >= 99')).bonus, 0);
     });
 
     test('эффект может править и значение поля, не только бросок', () => {

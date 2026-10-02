@@ -13,6 +13,12 @@ const queue = (...values: number[]) => {
   };
 };
 
+const ACTOR = { key: 'действующий', kind: 'sheet' };
+const TARGETS = { key: 'цели', kind: 'sheet', many: true };
+const EACH = { type: 'each', of: 'цели', as: 'цель' };
+const roll = (extra: Record<string, unknown> = {}) => ({ id: 'бросок', type: 'roll', die: { constant: 'к20' }, tags: ['атака'], by: { expr: '@действующий' }, against: { expr: '@цель' }, ...extra });
+const mine = '@бросающий == @носитель';
+
 const world = (effects: Record<string, unknown>): System => ({
   id: 'к', name: 'к',
   tables: {
@@ -23,10 +29,12 @@ const world = (effects: Record<string, unknown>): System => ({
   constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
   effects: {
     удар: {
-      label: 'Удар', activation: 'manual',
+      label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS],
       steps: [
-        { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' }, tags: ['атака'] }, versus: { expr: '10' } },
-        { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '5' } },
+        EACH,
+        roll(),
+        { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
+        { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '5' } },
       ],
     },
     ...effects,
@@ -43,7 +51,7 @@ const play = (system: System, sheets: Sheet[], dice: number[], journal: Journal 
 
 group('увидев кости', () => {
   test('без вопроса: перебросить единицу — и удар попал', () => {
-    const system = world({ везунчик: { label: 'Везунчик', activation: 'passive', on: [{ on: 'seen', tags: ['атака'], steps: [{ type: 'roll-reroll', upTo: { expr: '1' } }] }] } });
+    const system = world({ везунчик: { label: 'Везунчик', activation: 'passive', on: [{ on: 'seen', if: { expr: 'все(' + mine + ', есть(@roll.tags, "атака"))' }, steps: [{ type: 'roll-reroll', upTo: { expr: '1' } }] }] } });
     const out = play(system, [sheet('а', ['везунчик']), sheet('б')], [1, 15]);
     eq(out.kind, 'done');
     eq(hp(out, 'б'), 15);
@@ -54,8 +62,8 @@ group('увидев кости', () => {
       вдохновение: {
         label: 'Вдохновение', activation: 'passive',
         on: [{
-          on: 'seen', confirm: true,
-          cost: [{ type: 'apply', target: { tag: 'удача' }, direction: 'subtract', value: { expr: '1' } }],
+          on: 'seen', confirm: true, if: { expr: mine },
+          cost: [{ type: 'apply', target: { expr: '@носитель.удача' }, direction: 'subtract', value: { expr: '1' } }],
           steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }],
         }],
       },
@@ -74,7 +82,7 @@ group('увидев кости', () => {
   });
 
   test('бросок по мне: цель видит кости нападающего и отнимает от итога', () => {
-    const system = world({ насмешка: { label: 'Насмешка', activation: 'passive', on: [{ on: 'seen', as: 'against', steps: [{ type: 'roll-plus', value: { expr: '-5' } }] }] } });
+    const system = world({ насмешка: { label: 'Насмешка', activation: 'passive', on: [{ on: 'seen', if: { expr: '@против == @носитель' }, steps: [{ type: 'roll-plus', value: { expr: '-5' } }] }] } });
     const out = play(system, [sheet('а'), sheet('б', ['насмешка'])], [12]);
     eq(hp(out, 'б'), 20, '12 − 5 = 7 против 10 — промах');
   });
@@ -96,14 +104,15 @@ group('увидев кости: поздние броски видят, что �
   test('реакция потратила удачу — величина после проверки читает уже потраченное', () => {
     const system = world({
       удар: {
-        label: 'Удар', activation: 'manual',
+        label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS],
         steps: [
-          { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' }, tags: ['атака'] }, versus: { expr: '10' } },
-          { id: 'урон', type: 'amount', source: 'item', fixed: { expr: '5 + @удача * 10' } },
-          { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '@урон' } },
+          EACH, roll(),
+          { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
+          { id: 'урон', type: 'roll', fixed: { expr: '5 + @действующий.удача * 10' } },
+          { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '@урон' } },
         ],
       },
-      жертва: { label: 'Жертва', activation: 'passive', on: [{ on: 'seen', steps: [{ type: 'apply', target: { tag: 'удача' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-plus', value: { expr: '0' } }] }] },
+      жертва: { label: 'Жертва', activation: 'passive', on: [{ on: 'seen', if: { expr: mine }, steps: [{ type: 'apply', target: { expr: '@носитель.удача' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-plus', value: { expr: '0' } }] }] },
     });
     const out = play(system, [{ ...sheet('а', ['жертва']), values: { удача: 1 } } as Sheet, sheet('б')], [15]);
     eq(hp(out, 'б'), 15, 'удача уже 0: урон 5, а не 15');
@@ -114,8 +123,8 @@ group('увидев кости на броске по полю листа', () =
   test('без вопроса — срабатывает сразу, с вопросом — спрашивает (вопросы есть в любой операции)', async () => {
     const { perform } = await import('../src/core/perform.ts');
     const system = world({
-      везунчик: { label: 'Везунчик', activation: 'passive', on: [{ on: 'seen', steps: [{ type: 'roll-reroll', upTo: { expr: '1' } }] }] },
-      вдохновение: { label: 'Вдохновение', activation: 'passive', on: [{ on: 'seen', confirm: true, steps: [{ type: 'roll-plus', value: { expr: '10' } }] }] },
+      везунчик: { label: 'Везунчик', activation: 'passive', on: [{ on: 'seen', if: { expr: mine }, steps: [{ type: 'roll-reroll', upTo: { expr: '1' } }] }] },
+      вдохновение: { label: 'Вдохновение', activation: 'passive', on: [{ on: 'seen', confirm: true, if: { expr: mine }, steps: [{ type: 'roll-plus', value: { expr: '10' } }] }] },
     });
     const field = { ...system, tables: { ...system.tables, лист: { ...(system.tables as never as Record<string, { columns: unknown[] }>).лист, columns: [...(system.tables as never as Record<string, { columns: unknown[] }>).лист.columns, { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 0, roll: { die: { constant: 'к20' }, tags: ['атака'] } }] } } } as never;
     const sheets = [sheet('а', ['везунчик', 'вдохновение'])];
@@ -133,7 +142,7 @@ group('увидев кости на броске по полю листа', () =
 group('наблюдатели: реакции третьих лиц', () => {
   test('бард видит бросок врага по союзнику и режет его — вопрос задают барду', () => {
     const system = world({
-      насмешка: { label: 'Язвительная насмешка', activation: 'passive', on: [{ on: 'seen', watch: true, confirm: true, steps: [{ type: 'roll-plus', value: { expr: '-5' } }] }] },
+      насмешка: { label: 'Язвительная насмешка', activation: 'passive', on: [{ on: 'seen', confirm: true, if: { expr: '@бросающий != @носитель' }, steps: [{ type: 'roll-plus', value: { expr: '-5' } }] }] },
     });
     const sheets = [sheet('а'), sheet('б'), sheet('бард', ['насмешка'])];
     const first = play(system, sheets, [12]);
@@ -147,7 +156,7 @@ group('наблюдатели: реакции третьих лиц', () => {
 
   test('«когда кого-то ранили» слышит третий лист, а не сама цель', () => {
     const system = world({
-      сочувствие: { label: 'Сочувствие', activation: 'passive', on: [{ on: 'affected', watch: true, if: { expr: '@вызов.цель == "б"' }, steps: [{ type: 'apply', target: { tag: 'удача' }, direction: 'add', value: { expr: '1' } }] }] },
+      сочувствие: { label: 'Сочувствие', activation: 'passive', on: [{ on: 'after:удар', if: { expr: '@цель != @носитель' }, steps: [{ type: 'apply', target: { expr: '@носитель.удача' }, direction: 'add', value: { expr: '1' } }] }] },
     });
     const out = play(system, [sheet('а'), sheet('б', ['сочувствие']), sheet('в', ['сочувствие'])], [15]);
     eq(out.sheets.find(s => s.id === 'в')!.values.удача ?? 1, 2, 'наблюдатель отозвался');
@@ -158,7 +167,7 @@ group('наблюдатели: реакции третьих лиц', () => {
 group('наблюдатели: по ревью', () => {
   test('два наблюдателя с одним эффектом бросают каждый свою кость', () => {
     const system = world({
-      порча: { label: 'Порча', activation: 'passive', on: [{ on: 'seen', watch: true, steps: [{ type: 'roll-plus', value: { expr: "0 - кинуть('1d4')" } }] }] },
+      порча: { label: 'Порча', activation: 'passive', on: [{ on: 'seen', if: { expr: '@бросающий != @носитель' }, steps: [{ type: 'roll-plus', value: { expr: "0 - кинуть('1d4')" } }] }] },
     });
     const out = play(system, [sheet('а'), sheet('б'), sheet('в', ['порча']), sheet('г', ['порча'])], [14, 1, 4]);
     eq(hp(out, 'б'), 20, '14 − 1 − 4 = 9 — промах; с одинаковыми костями было бы 14 − 1 − 1 = 12 и попадание');
@@ -169,7 +178,7 @@ group('ожидание для кнопки', () => {
   test('кости по среднему, на вопросы «нет», листы не тронуты', async () => {
     const { expectAction } = await import('../src/events/trial.ts');
     const system = world({
-      вдохновение: { label: 'Вдохновение', activation: 'passive', on: [{ on: 'seen', confirm: true, steps: [{ type: 'roll-plus', value: { expr: '-20' } }] }] },
+      вдохновение: { label: 'Вдохновение', activation: 'passive', on: [{ on: 'seen', confirm: true, if: { expr: mine }, steps: [{ type: 'roll-plus', value: { expr: '-20' } }] }] },
     });
     const sheets = [sheet('а', ['вдохновение']), sheet('б')];
     const out = expectAction({ system, compendium: book, clock: null }, sheets, { actionId: 'приём:0', fromId: 'а', toIds: ['б'] });
@@ -180,11 +189,21 @@ group('ожидание для кнопки', () => {
 });
 
 group('ядро: по ревью', () => {
+  test('подписка, будящая сама себя, обрывается пределом, а действие завершается', () => {
+    const system = world({
+      удар: { label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS], steps: [EACH, { type: 'emit', event: 'эхо' }] },
+      эхо: { label: 'Эхо', activation: 'manual', params: [], steps: [] },
+      отзвук: { label: 'Отзвук', activation: 'passive', on: [{ on: 'after:эхо', steps: [{ type: 'emit', event: 'эхо' }] }] },
+    });
+    const out = play(system, [sheet('а'), sheet('б', ['отзвук'])], []);
+    eq(out.kind, 'done');
+  });
+
   test('подписка, будящая сама себя, упирается в глубину обработчика: отказ обработчика и строка в журнале', () => {
     const system = world({
-      удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'emit', event: 'эхо' }] },
+      удар: { label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS], steps: [EACH, { type: 'emit', event: 'эхо' }] },
       эхо: { label: 'Эхо', activation: 'manual', params: [], steps: [] },
-      отзвук: { label: 'Отзвук', activation: 'passive', on: [{ on: 'targeted', of: 'event:эхо', steps: [{ type: 'emit', event: 'эхо' }] }] },
+      отзвук: { label: 'Отзвук', activation: 'passive', on: [{ on: 'after:эхо', steps: [{ type: 'emit', event: 'эхо' }] }] },
     });
     const out = play(system, [sheet('а'), sheet('б', ['отзвук'])], []);
     ok(out.log.includes(CUT_WORDS), 'обработчик упёрся в глубину — отказ обработчика, строка в журнале');
@@ -193,13 +212,13 @@ group('ядро: по ревью', () => {
   test('ложное «когда» у броска действующего — кость не брошена, реакции на неё не будят', () => {
     const system = world({
       удар: {
-        label: 'Удар', activation: 'manual',
+        label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS],
         steps: [
-          { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' }, tags: ['атака'] }, versus: { expr: '10' }, when: { expr: 'нет' } },
-          { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '1' } },
+          EACH, roll({ when: { expr: 'нет' } }),
+          { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '1' } },
         ],
       },
-      плата: { label: 'Плата', activation: 'passive', on: [{ on: 'seen', steps: [{ type: 'apply', target: { tag: 'удача' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-plus', value: { expr: '0' } }] }] },
+      плата: { label: 'Плата', activation: 'passive', on: [{ on: 'seen', if: { expr: mine }, steps: [{ type: 'apply', target: { expr: '@носитель.удача' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-plus', value: { expr: '0' } }] }] },
     });
     const out = play(system, [{ ...sheet('а', ['плата']), values: { удача: 1 } } as Sheet, sheet('б')], []);
     eq(out.kind, 'done');
@@ -209,7 +228,7 @@ group('ядро: по ревью', () => {
   test('две выбранные реакции на один ресурс: вторая пропускается с причиной, действие не падает', () => {
     const shield = (label: string) => ({
       label, activation: 'passive',
-      on: [{ on: 'targeted', confirm: true, cost: [{ type: 'compare', value: { expr: '@удача' }, versus: { expr: '1' }, breakIf: 'less', note: 'нет удачи' }, { type: 'apply', target: { tag: 'удача' }, direction: 'subtract', value: { expr: '1' } }], steps: [] }],
+      on: [{ on: 'before:удар', confirm: true, if: { expr: '@цель == @носитель' }, cost: [{ type: 'check', value: { expr: '@носитель.удача' }, versus: { expr: '1' }, note: 'нет удачи' }, { type: 'apply', target: { expr: '@носитель.удача' }, direction: 'subtract', value: { expr: '1' } }], steps: [] }],
     });
     const system = world({ р1: shield('Р1'), р2: shield('Р2') });
     const sheets = [sheet('а'), { ...sheet('б', ['р1', 'р2']), values: { удача: 1 } } as Sheet];
@@ -225,16 +244,16 @@ group('ядро: по ревью', () => {
 group('ядро: по ревью Fable', () => {
   const split = (extra: Record<string, unknown>) => world({
     удар: {
-      label: 'Удар', activation: 'manual',
+      label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS],
       steps: [
-        { type: 'each' },
-        { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' }, tags: ['атака'] }, versus: { expr: '15' } },
-        { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '5' } },
+        EACH, roll(),
+        { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '15' } },
+        { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '5' } },
       ],
     },
     ...extra,
   });
-  const plus5 = { label: '+5', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '5' }, tags: ['атака'] }] };
+  const plus5 = { label: '+5', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '5' }, tags: ['атака'], if: { expr: mine } }] };
 
   test('после «Для каждой цели» атаку бросает нападающий: его +5 работает, +5 цели — нет', () => {
     eq(hp(play(split({ плюс: plus5 }), [sheet('а', ['плюс']), sheet('б')], [11]), 'б'), 15, '11 + 5 = 16 против 15 — попадание');
@@ -242,13 +261,13 @@ group('ядро: по ревью Fable', () => {
   });
 
   test('после «Для каждой цели» «бросок по мне» у цели срезает атаку, у нападающего — нет', () => {
-    const cut = { label: 'Насмешка', activation: 'passive', on: [{ on: 'seen', as: 'against', steps: [{ type: 'roll-plus', value: { expr: '-5' } }] }] };
+    const cut = { label: 'Насмешка', activation: 'passive', on: [{ on: 'seen', if: { expr: '@против == @носитель' }, steps: [{ type: 'roll-plus', value: { expr: '-5' } }] }] };
     eq(hp(play(split({ насмешка: cut }), [sheet('а'), sheet('б', ['насмешка'])], [16]), 'б'), 20, '16 − 5 = 11 — промах');
     eq(hp(play(split({ насмешка: cut }), [sheet('а', ['насмешка']), sheet('б')], [16]), 'б'), 15, 'своё «по мне» нападающему атаку не режет');
   });
 
   test('две копии в стопке — у каждой своя кость', () => {
-    const system = world({ порча: { label: 'Порча', activation: 'passive', reapply: 'stack', on: [{ on: 'seen', steps: [{ type: 'roll-plus', value: { expr: "0 - кинуть('1d4')" } }] }] } });
+    const system = world({ порча: { label: 'Порча', activation: 'passive', reapply: 'stack', on: [{ on: 'seen', if: { expr: mine }, steps: [{ type: 'roll-plus', value: { expr: "0 - кинуть('1d4')" } }] }] } });
     const out = play(system, [sheet('а', ['порча', 'порча']), sheet('б')], [14, 1, 4]);
     eq(hp(out, 'б'), 20, '14 − 1 − 4 = 9 — промах; с одной костью на обе было бы 12');
   });
@@ -256,8 +275,8 @@ group('ядро: по ревью Fable', () => {
   test('одноразовый эффект с двумя подписками срабатывает один раз', () => {
     const system = world({
       разок: { label: 'Разок', activation: 'passive', duration: { kind: 'uses', max: 1 }, on: [
-        { on: 'seen', steps: [{ type: 'roll-plus', value: { expr: '1' } }] },
-        { on: 'seen', steps: [{ type: 'roll-plus', value: { expr: '10' } }] },
+        { on: 'seen', if: { expr: mine }, steps: [{ type: 'roll-plus', value: { expr: '1' } }] },
+        { on: 'seen', if: { expr: mine }, steps: [{ type: 'roll-plus', value: { expr: '10' } }] },
       ] },
     });
     const out = play(system, [{ ...sheet('а'), effects: [{ effectId: 'разок', usesLeft: 1 }] } as unknown as Sheet, sheet('б')], [5]);
@@ -265,7 +284,7 @@ group('ядро: по ревью Fable', () => {
   });
 
   test('повтор id в ответе выполняет реакцию один раз', () => {
-    const system = world({ вд: { label: 'Вд', activation: 'passive', on: [{ on: 'seen', confirm: true, steps: [{ type: 'roll-plus', value: { expr: '3' } }] }] } });
+    const system = world({ вд: { label: 'Вд', activation: 'passive', on: [{ on: 'seen', confirm: true, if: { expr: mine }, steps: [{ type: 'roll-plus', value: { expr: '3' } }] }] } });
     const sheets = [sheet('а', ['вд']), sheet('б')];
     const first = play(system, sheets, [5]);
     if (first.kind !== 'paused') { ok(false, 'ждали вопрос'); return; }

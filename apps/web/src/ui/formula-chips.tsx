@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { matchTagQuery } from './tag-suggest.tsx';
 import { fieldPaths } from './paths.ts';
-import { ownerOf, OWNERS, SENDER, RECEIVER, DESK } from '@vtt/engine/engine/owners';
+import { DESK_ID } from '@vtt/engine/engine/owners';
 import { fieldsOf, fieldOf, hasField } from '@vtt/engine/model/sheet-columns';
 
 const plainLabel = (system: System, tag: string, extra?: Map<string, string>): string =>
@@ -15,8 +15,17 @@ const statesOf = (system: System): { tag: string; label: string }[] =>
     .filter(([, effect]) => effect.activation === 'passive')
     .map(([tag, effect]) => ({ tag, label: effect.label ?? tag }));
 
-const labelOfTag = (system: System, tag: string, extra?: Map<string, string>): string => {
-  const owned = ownerOf(tag);
+export type SheetNames = ReadonlyMap<string, string>;
+
+const onSheet = (tag: string, sheets?: SheetNames): { head: string; rest: string } | null => {
+  const dot = tag.indexOf('.');
+  if (dot <= 0) return null;
+  const head = tag.slice(0, dot);
+  return head === DESK_ID || sheets?.has(head) ? { head, rest: tag.slice(dot + 1) } : null;
+};
+
+const labelOfTag = (system: System, tag: string, extra?: Map<string, string>, sheets?: SheetNames): string => {
+  const owned = onSheet(tag, sheets);
   return owned ? plainLabel(system, owned.rest, extra) : plainLabel(system, tag, extra);
 };
 
@@ -80,7 +89,7 @@ export function joinParts(parts: Part[]): string {
   return parts.map(p => ('tag' in p ? `@${p.tag}` : p.text)).join('');
 }
 
-export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, badges, owners, extraOptions, calculator, readOnly, autoFocus, onChipPick }: {
+export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, badges, sheets, extraOptions, calculator, readOnly, autoFocus, onChipPick }: {
   value: string;
   onChange: (next: string) => void;
   system: System;
@@ -100,7 +109,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
 
   extraNames?: Map<string, string>;
 
-  owners?: boolean;
+  sheets?: SheetNames;
 
   extraOptions?: { group: string; label: string; name?: string; onPick: (insert: (piece: string) => string) => void }[];
 
@@ -117,11 +126,11 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   const paths = useMemo(() => fieldPaths(system), [system]);
   const parts = useMemo(
     () => partsOf(value, tag => {
-      const owned = ownerOf(tag);
+      const owned = onSheet(tag, sheets);
       if (owned) return knownSheetName(system, owned.rest, paths) || Boolean(extraNames?.has(owned.rest));
-      return knownSheetName(system, tag, paths) || Boolean(names?.[tag]) || Boolean(extraNames?.has(tag));
+      return knownSheetName(system, tag, paths) || Boolean(names?.[tag]) || Boolean(extraNames?.has(tag)) || Boolean(sheets?.has(tag));
     }),
-    [value, system, names, extraNames, paths],
+    [value, system, names, extraNames, paths, sheets],
   );
   const host = useRef<HTMLDivElement>(null);
   const inputs = useRef(new Map<number, HTMLInputElement>());
@@ -131,12 +140,21 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   const [closed, setClosed] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const focusOnce = useRef(Boolean(autoFocus));
+  const sideOf = (tag: string) => {
+    const owned = onSheet(tag, sheets);
+    if (!owned) return null;
+    return (
+      <span className={`chips__side chips__side--${owned.head === DESK_ID ? 'desk' : 'sheet'}`} title={owned.head === DESK_ID ? 'поле стола' : `поле листа «${sheets?.get(owned.head) ?? owned.head}»`}>
+        {owned.head === DESK_ID ? 'стол' : sheets?.get(owned.head) ?? owned.head}
+      </span>
+    );
+  };
   const badge = (tag: string) => (badges?.has(tag)
     ? <span className="chips__side chips__side--input" title="вход эффекта: значение приносит тот, кто вызывает">{badges.get(tag)}</span>
     : null);
 
   const fields = useMemo(() => {
-    const desk = fieldsOf(system).filter(f => f.lives === 'desk').map(f => ({ tag: `${DESK}.${f.tag}`, label: f.label ?? f.tag, group: 'стол' }));
+    const desk = fieldsOf(system).filter(f => f.lives === 'desk').map(f => ({ tag: `${DESK_ID}.${f.tag}`, label: f.label ?? f.tag, group: 'стол' }));
     const sheet = [
       ...fieldsOf(system).filter(f => f.lives !== 'desk').map(f => ({ tag: f.tag, label: f.label ?? f.tag, via: false })),
       ...[...paths].map(([tag, label]) => ({ tag, label, via: true })),
@@ -144,19 +162,21 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
     const offered = new Set((extraOptions ?? []).map(o => o.name).filter(Boolean));
     const local = [...(extraNames ?? [])].filter(([tag]) => !offered.has(tag)).map(([tag, label]) => ({ tag, label, group: 'здесь же' }));
     const states = statesOf(system);
-    if (!owners) {
+    if (!sheets?.size) {
       return [
         ...local, ...sheet.map(f => ({ tag: f.tag, label: f.label, group: f.via ? 'по ссылке' : 'поле' })),
         ...states.map(s => ({ ...s, group: 'висит на листе' })), ...desk,
       ];
     }
+    const named = [...sheets];
     return [
       ...local,
-      ...OWNERS.flatMap(owner => sheet.map(f => ({ tag: `${owner}.${f.tag}`, label: f.label, group: `поле ${owner === SENDER ? 'отправителя' : 'получателя'}` }))),
-      ...OWNERS.flatMap(owner => states.map(s => ({ tag: `${owner}.${s.tag}`, label: s.label, group: `висит на ${owner === SENDER ? 'отправителе' : 'получателе'}` }))),
+      ...named.map(([name, label]) => ({ tag: name, label, group: 'листы' })),
+      ...named.flatMap(([name, label]) => sheet.map(f => ({ tag: `${name}.${f.tag}`, label: f.label, group: `поле: ${label}` }))),
+      ...named.flatMap(([name, label]) => states.map(s => ({ tag: `${name}.${s.tag}`, label: s.label, group: `висит: ${label}` }))),
       ...desk,
     ];
-  }, [system, extraNames, extraOptions, paths, owners]);
+  }, [system, extraNames, extraOptions, paths, sheets]);
 
   const commitParts = (next: Part[], focusAt?: { index: number; caret: number }) => {
     onChange(joinParts(next));
@@ -284,15 +304,11 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
               key={index}
               className={`chips__chip${onChipPick ? ' chips__chip--pick' : ''}`}
               title={onChipPick ? 'откуда это и где видно' : undefined}
-              onClick={onChipPick ? e => { e.stopPropagation(); onChipPick(part.tag, labelOfTag(system, part.tag, extraNames)); } : undefined}
+              onClick={onChipPick ? e => { e.stopPropagation(); onChipPick(part.tag, labelOfTag(system, part.tag, extraNames, sheets)); } : undefined}
             >
-              <span>{shortLabel(labelOfTag(system, part.tag, extraNames))}</span>
+              <span>{shortLabel(labelOfTag(system, part.tag, extraNames, sheets))}</span>
               {badge(part.tag)}
-              {ownerOf(part.tag) ? (
-                <span className={`chips__side chips__side--${ownerOf(part.tag)!.owner === DESK ? 'desk' : ownerOf(part.tag)!.owner === SENDER ? 'sender' : 'receiver'}`}>
-                  {ownerOf(part.tag)!.owner}
-                </span>
-              ) : null}
+              {sideOf(part.tag)}
             </span>
           )
         ) : <span key={index} className="chips__word">{part.text}</span>))}
@@ -316,30 +332,14 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
           ) : (
           <span key={index} className="chips__chip">
             <span
-              title={onChipPick ? `${labelOfTag(system, part.tag, extraNames)} — откуда это и где видно` : labelOfTag(system, part.tag, extraNames)}
+              title={onChipPick ? `${labelOfTag(system, part.tag, extraNames, sheets)} — откуда это и где видно` : labelOfTag(system, part.tag, extraNames, sheets)}
               className={onChipPick ? 'chips__name--pick' : undefined}
-              onMouseDown={onChipPick ? e => { e.preventDefault(); onChipPick(part.tag, labelOfTag(system, part.tag, extraNames)); } : undefined}
+              onMouseDown={onChipPick ? e => { e.preventDefault(); onChipPick(part.tag, labelOfTag(system, part.tag, extraNames, sheets)); } : undefined}
             >
-              {shortLabel(labelOfTag(system, part.tag, extraNames))}
+              {shortLabel(labelOfTag(system, part.tag, extraNames, sheets))}
             </span>
             {badge(part.tag)}
-            {ownerOf(part.tag)?.owner === DESK ? (
-              <span className="chips__side chips__side--desk">стол</span>
-            ) : ownerOf(part.tag) ? (
-              <button
-                type="button"
-                className={`chips__side chips__side--pick chips__side--${ownerOf(part.tag)!.owner === SENDER ? 'sender' : 'receiver'}`}
-                title={ownerOf(part.tag)!.owner === SENDER
-                  ? 'поле отправителя: он считает его у себя и присылает числом. Щёлкните — взять у получателя'
-                  : 'поле получателя: он досчитает его своим листом. Щёлкните — взять у отправителя'}
-                onMouseDown={e => {
-                  e.preventDefault();
-                  const owned = ownerOf(part.tag)!;
-                  const flipped = `${owned.owner === SENDER ? RECEIVER : SENDER}.${owned.rest}`;
-                  commitParts(parts.map((p, i) => (i === index ? { tag: flipped } : p)));
-                }}
-              >{ownerOf(part.tag)!.owner}</button>
-            ) : null}
+            {sideOf(part.tag)}
             <button
               type="button" className="chips__x" aria-label="убрать поле"
               onMouseDown={e => { e.preventDefault(); dropChip(index); }}

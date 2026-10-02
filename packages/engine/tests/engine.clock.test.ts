@@ -60,7 +60,7 @@ const durations = {
   x: { label: 'Икс', activation: 'passive', duration: { kind: 'turns', max: 1 } },
   y: { label: 'Игрек', activation: 'passive', duration: { kind: 'turns', max: 1 } },
   щит: { label: 'Щит', activation: 'passive', duration: { kind: 'turns', max: 1, ends: 'turn-start' } },
-  помощь: { label: 'Помощь', activation: 'passive', duration: { kind: 'turns', max: 1, ends: 'turn-start', whose: 'source' } },
+  помощь: { label: 'Помощь', activation: 'passive', duration: { kind: 'turns', max: 1, ends: 'turn-start', by: 'маг' } },
 };
 const lapseWorld = (clock: Clock) => ({ system: { id: 'с', tables: {}, effects: durations } as any, compendium: { records: [] }, die: () => 1, clock });
 
@@ -119,7 +119,7 @@ group('часы боя двигают ход, срок спадает на мо�
   });
 
   test('«до начала хода того, кто наложил» считает ходы наложившего, а не носителя', () => {
-    const sheets = [sheet('a'), sheet('b', [{ effectId: 'помощь', turnsLeft: 1, from: 'a' }])];
+    const sheets = [sheet('a'), sheet('b', [{ effectId: 'помощь', turnsLeft: 1, args: { маг: 'a' } }])];
     const one = turn('next', fighting(), sheets);
     deepEq(one.expired, [], 'начался ход b — но наложил a');
     const two = turn('next', one.clock, one.sheets);
@@ -191,7 +191,8 @@ group('ход в бою: наложенный эффект получает ср
     effects: {
       ...system.effects,
       bless_action: { label: 'Благословить', activation: 'manual',
-        steps: [{ type: 'status', mode: 'apply', effect: { const: 'timed' } }] },
+        params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
+        steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'status', mode: 'apply', effect: { const: 'timed' }, to: { expr: '@цель' } }] },
       timed: { label: 'На два раунда', activation: 'passive', duration: { kind: 'rounds', max: 2 }, modifiers: [] },
     },
   };

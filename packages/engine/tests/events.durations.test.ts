@@ -6,9 +6,9 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 const system = {
   id: 'с', name: 'с', tables: { приём: { shape: 'book', use: 'action', label: 'Приём' } },
   effects: {
-    помочь: { label: 'Помочь', activation: 'manual', steps: [{ type: 'status', mode: 'apply', effect: { const: 'помощь' } }] },
-    помощь: { label: 'Помощь', activation: 'passive', duration: { kind: 'turns', max: 1, ends: 'turn-start', whose: 'source' } },
-    отвлечь: { label: 'Отвлечь', activation: 'manual', steps: [{ type: 'status', mode: 'apply', effect: { const: 'отвлечён' } }] },
+    помочь: { label: 'Помочь', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],  steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'status', mode: 'apply', effect: { const: 'помощь' }, to: { expr: '@цель' }, args: { помогающий: { expr: '@действующий' } } }] },
+    помощь: { label: 'Помощь', activation: 'passive', params: [{ key: 'помогающий', kind: 'sheet', optional: true }], duration: { kind: 'turns', max: 1, ends: 'turn-start', by: 'помогающий' } },
+    отвлечь: { label: 'Отвлечь', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],  steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'status', mode: 'apply', effect: { const: 'отвлечён' }, to: { expr: '@цель' } }] },
     отвлечён: { label: 'Отвлечён', activation: 'passive', duration: { kind: 'turns', max: 1 } },
   },
   
@@ -31,12 +31,12 @@ const apply = (action: string) => {
 
 group('срок по ходам наложившего', () => {
   test('наложенное помнит, кто наложил, — по его ходам оно и спадёт', () => {
-    deepEq(apply('помочь:0'), [{ effectId: 'помощь', turnsLeft: 1, from: 'а' }]);
+    deepEq(apply('помочь:0'), [{ effectId: 'помощь', args: { помогающий: 'а' }, turnsLeft: 1 }]);
   });
 
   test('свой срок имени наложившего не хранит — лист не пухнет', () => {
     const worn = apply('отвлечь:0');
     eq(worn.length, 1);
-    eq('from' in worn[0]!, false);
+    eq('args' in worn[0]!, false);
   });
 });

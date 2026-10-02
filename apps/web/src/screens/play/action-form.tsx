@@ -8,8 +8,6 @@ import type { System, Compendium, Sheet } from '@vtt/schema';
 export interface ActionRequest {
   actionId: string;
   inputs?: Record<string, number | string>;
-  edits?: string[];
-  targetEdits?: string[];
 }
 
 export function ActionForm({ system, compendium, actor, actionId, label, disabled, onAct, expect }: {

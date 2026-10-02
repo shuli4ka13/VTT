@@ -13,13 +13,12 @@ const system = {
   effects: {
     отравление: {
       label: 'Отравление', activation: 'passive',
-      on: [{ on: 'moment:turn-start', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '3' } }] }],
+      on: [{ on: 'moment:turn-start', if: { expr: '@ходит == @носитель' }, steps: [{ type: 'apply', target: { expr: '@носитель.хиты' }, direction: 'subtract', value: { expr: '3' } }] }],
     },
     передышка: {
       label: 'Передышка', activation: 'passive',
-      on: [{ on: 'moment:turn-end', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'add', value: { expr: '1' } }] }],
+      on: [{ on: 'moment:turn-end', if: { expr: '@ходит == @носитель' }, steps: [{ type: 'apply', target: { expr: '@носитель.хиты' }, direction: 'add', value: { expr: '1' } }] }],
     },
-    кнопка: { label: 'Кнопка', activation: 'manual', steps: [] },
   },
 } as unknown as System;
 
@@ -64,7 +63,7 @@ group('шина моментов', () => {
 
   test('условие на срабатывании проверяется', () => {
     const picky = structuredClone(system) as System;
-    (picky.effects.отравление as Effect).on![0]!.if = { expr: '#яд' };
+    (picky.effects.отравление as Effect).on![0]!.if = { expr: 'все(@ходит == @носитель, @носитель.яд)' };
     const ctx = { ...world, system: picky };
     eq(fireMoments([{ moment: 'turn-start', sheetId: 'а' }], [sheet(['отравление'])], ctx as never)
       .sheets[0]!.values.хиты, 20, 'яда нет — молчит');
@@ -76,14 +75,6 @@ group('шина моментов', () => {
     const many = Array.from({ length: 40 }, () => 'отравление');
     const out = fireMoments([{ moment: 'turn-start', sheetId: 'а' }], [sheet(many)], world as never);
     eq(out.reports.length, 40);
-  });
-
-  test('активируемый эффект моментом не будится', () => {
-    const manual = structuredClone(system) as System;
-    (manual.effects.кнопка as Effect).trigger = { on: 'moment:turn-start' } as never;
-    const out = fireMoments([{ moment: 'turn-start', sheetId: 'а' }], [sheet(['кнопка'])],
-      { ...world, system: manual } as never);
-    eq(out.reports.length, 0);
   });
 });
 
@@ -131,7 +122,7 @@ group('поле стало верным', () => {
       без_сознания: { label: 'Без сознания', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
       падение: {
         label: 'Падение', activation: 'passive',
-        on: [{ on: 'field:без_сил', steps: [{ type: 'status', mode: 'apply', effect: { const: 'без_сознания' } }] }],
+        on: [{ on: 'field:без_сил', if: { expr: '@лист == @носитель' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'без_сознания' }, to: { expr: '@носитель' } }] }],
       },
     },
     grants: ['падение'],

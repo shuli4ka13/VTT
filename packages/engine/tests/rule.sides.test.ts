@@ -1,4 +1,4 @@
-import { group, test, eq } from './harness.ts';
+import { group, test, eq, throws } from './harness.ts';
 import { exchange } from './play.ts';
 
 const queue = (...values: number[]) => {
@@ -24,7 +24,7 @@ const цель = { id: 'цель', values: { хп: 20, сила: 1 }, effects: [
 const runRule = (sys: any, rule: any, sender: any, target: any, die: () => number) => {
   const full: any = {
     ...sys, tables: { ...sys.tables, приём: { shape: 'book', use: 'action', label: 'Приём' } },
-    effects: { ...sys.effects, 'правило': { label: 'правило', activation: 'manual', ...rule } },
+    effects: { ...sys.effects, 'правило': { label: 'правило', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }], ...rule, steps: [{ type: 'each', of: 'цели', as: 'цель' }, ...rule.steps] } },
   };
   const book: any = { records: [{ id: 'правило', table: 'приём', label: 'правило', bindings: [{ label: 'правило', effect: 'правило', args: {} }] }] };
   const from = { ...sender, id: 'отправитель-теста', has: [...(sender.has ?? []), { of: 'правило' }], effects: sender.effects ?? [] };
@@ -35,48 +35,47 @@ const runRule = (sys: any, rule: any, sender: any, target: any, die: () => numbe
 
 const hit = (rule: any) => runRule(sys, rule, атакующий, цель, queue(4));
 
-group('чей лист считает слагаемое', () => {
-  test('прибавка ВНУТРИ числа считается отправителем — его Силой', () => {
+const sub = { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '@урон' } };
+const setHp = (expr: string) => ({ type: 'apply', target: { expr: '@цель.хп' }, direction: 'set', value: { expr } });
+
+group('чей лист считает слагаемое: имя листа называет автор', () => {
+  test('прибавка внутри числа — Сила действующего, если так написано', () => {
     const rule: any = {
       steps: [
-        { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d8' }, bonus: { expr: '#сила' } },
-        { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '@урон' } },
+        { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d8') + @действующий.сила" } },
+        sub,
       ],
     };
     eq(hit(rule).sheet.values.хп, 11, '20 − (4 + Сила АТАКУЮЩЕГО 5)');
   });
 
-  test('та же прибавка В ВЫРАЖЕНИИ считается целью — её Силой', () => {
+  test('та же прибавка силой цели — другое число', () => {
     const rule: any = {
       steps: [
-        { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d8' } },
-        { type: 'apply', target: { tag: 'хп' }, direction: 'set', value: { expr: '@получатель.хп - (#урон + @получатель.сила)' } },
+        { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d8')" } },
+        setHp('@цель.хп - (@урон + @цель.сила)'),
       ],
     };
-    eq(hit(rule).sheet.values.хп, 15, '20 − (4 + Сила ЦЕЛИ 1) — другое число, и молча');
+    eq(hit(rule).sheet.values.хп, 15, '20 − (4 + Сила ЦЕЛИ 1)');
   });
 
-  test('имя с хозяином «отправитель» берёт его Силу', () => {
+  test('в одном выражении живут оба листа, каждый под своим именем', () => {
     const rule: any = {
       steps: [
-        { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d8' } },
-        { type: 'apply', target: { tag: 'хп' }, direction: 'set',
-          value: { expr: '@получатель.хп - (#урон + @отправитель.сила)' } },
+        { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d8')" } },
+        setHp('@цель.хп - @урон - @действующий.сила + @цель.сила'),
       ],
     };
-    eq(hit(rule).sheet.values.хп, 11, '20 − (4 + Сила АТАКУЮЩЕГО 5): та же формула, другая сторона');
+    eq(hit(rule).sheet.values.хп, 12, '20 − 4 − 5 + 1');
   });
 
-  test('в одном выражении живут оба листа', () => {
+  test('голое имя поля — ошибка словами: чьё поле?', () => {
     const rule: any = {
       steps: [
-        { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d8' } },
-        { type: 'apply', target: { tag: 'хп' }, direction: 'set',
-
-          value: { expr: '@получатель.хп - #урон - @отправитель.сила + @отправитель.сила' } },
+        { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d8')" } },
+        setHp('@цель.хп - (@урон + @сила)'),
       ],
     };
-
-    eq(hit(rule).sheet.values.хп, 16, '20 − 4 − 5 + 5: оба вхождения имени считает отправитель');
+    throws(() => hit(rule), 'чьё поле');
   });
 });

@@ -402,7 +402,7 @@
               "expr": "@бросок_бросок"
             },
             "versus": {
-              "expr": "(4)"
+              "expr": "4"
             },
             "successWhen": "atLeast",
             "continueOn": "always",
@@ -488,7 +488,7 @@
               "expr": "@бросок_бросок"
             },
             "versus": {
-              "expr": "(4)"
+              "expr": "4"
             },
             "successWhen": "atLeast",
             "continueOn": "always"
@@ -566,7 +566,7 @@
               "expr": "@бросок_бросок"
             },
             "versus": {
-              "expr": "(4)"
+              "expr": "4"
             },
             "successWhen": "atLeast",
             "continueOn": "always",

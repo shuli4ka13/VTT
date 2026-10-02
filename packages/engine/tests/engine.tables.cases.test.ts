@@ -64,7 +64,7 @@ group('формула видит результат шага выше', () => {
   test('крит пишется формулой, порог берётся с листа', () => {
     const система = {
       id: 'к', name: 'к',
-      tables: { лист: { shape: 'single', columns: [
+      tables: { лист: { shape: 'single', owner: 'sheet', columns: [
         { key: 'хиты', label: 'Хиты', kind: 'number', default: 100, min: 0 },
         { key: 'порог', label: 'Крит от', kind: 'number', default: 20 },
       ] } , приём: { shape: 'book', use: 'action', label: 'Приём', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
@@ -72,11 +72,13 @@ group('формула видит результат шага выше', () => {
       effects: {
         удар: {
           label: 'Удар', activation: 'manual',
+          params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
           steps: [
-            { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { expr: '0' } },
-            { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d6' },
-              count: { expr: 'если(@бросок.natural >= @порог, 2, 1)' } },
-            { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@урон' } },
+            { type: 'each', of: 'цели', as: 'цель' },
+            { id: 'бросок', type: 'roll', die: { constant: 'к20' }, by: { expr: '@действующий' } },
+            { id: 'урон', type: 'roll', die: { const: '1d6' },
+              count: { expr: 'если(@бросок.natural >= @действующий.порог, 2, 1)' } },
+            { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@урон' } },
           ],
         },
       },
@@ -91,7 +93,8 @@ group('формула видит результат шага выше', () => {
     const кости = (порог: number, выпало: number): string => {
       const цель = { id: 'цель', systemId: 'к', name: 'цель', values: {}, has: [], effects: [] } as never;
       const итог = exchange({ system: система, compendium: книга, die: () => выпало, sheets: [лист(порог), цель], actionId: 'приём:0', fromId: 'я', toId: 'цель' });
-      return String(итог.reports[0]!.report.trace.find((t: Record<string, unknown>) => t.type === 'amount')?.notation);
+      const брошено = (итог.reports[0]!.report.trace.find((t: Record<string, unknown>) => t.step === 'урон')?.rolls ?? []) as number[];
+      return `${брошено.length}d6`;
     };
 
     eq(кости(20, 10), '1d6', 'обычный бросок — одна кость');

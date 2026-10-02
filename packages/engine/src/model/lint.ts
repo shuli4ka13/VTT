@@ -72,6 +72,7 @@ const stepsAt = (system: System, where: Where): Step[] | undefined => {
 function ownerText(ref: Reference, system: System): string | null {
   if (ref.kind !== 'field') return null;
   const field = fieldOf(system, ref.key);
+  if (ref.scope === 'plain' && field?.lives === 'desk') return `поле «${field.label}» лежит на столе — пишите @стол.${field.tag}`;
   if (ref.scope === 'bare') {
     if (field?.lives === 'desk') return `поле «${field.label}» лежит на столе — пишите @стол.${field.tag}`;
     return field ? `«${field.tag}» — чьё поле? Пишите через лист: @носитель.${field.tag}, @цель.${field.tag} или другой вход-лист` : null;

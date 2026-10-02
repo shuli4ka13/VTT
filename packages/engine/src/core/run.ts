@@ -182,6 +182,7 @@ export class Run {
   private probing = 0;
   private seeing = 0;
   private readonly insts = new WeakMap<WornEffect, string>();
+  private mark: { sink: Sink; at: number; count: number } | null = null;
   clock: Clock | null;
 
   constructor(readonly world: World, readonly ext: External) {
@@ -267,9 +268,16 @@ export class Run {
         sink.trace.push({ step: name, type: step.type, skipped: true, ...mark });
         continue;
       }
-      const at = sink.trace.length;
-      const out = runnerOf(step.type).finish(step, ctx);
-      sink.trace.splice(at, 0, { step: name, type: step.type, ...mark, ...out.trace });
+      const outer = this.mark;
+      const here = { sink, at: sink.trace.length, count: 0 };
+      this.mark = here;
+      let out;
+      try {
+        out = runnerOf(step.type).finish(step, ctx);
+      } finally {
+        this.mark = outer;
+      }
+      sink.trace.splice(here.at + here.count, 0, { step: name, type: step.type, ...mark, ...out.trace });
       if (step.id != null) results[step.id] = out.value;
       if (step.id != null && out.roll) known[step.id] = out.roll;
       if (out.break) {
@@ -279,7 +287,7 @@ export class Run {
     return { results, rolls: known, stopped: null };
   }
 
-  private lazyValue(lazy: Lazy, name: string, results: Record<string, unknown>, rolls: Record<string, RollResult>): void {
+  private lazyValue(lazy: Lazy, name: string, results: Record<string, unknown>, rolls: Record<string, RollResult>, sink: Sink): void {
     const found = lazy.steps.get(name);
     if (!found || name in results) return;
     const path = lazy.frame.path.step(name);
@@ -292,6 +300,9 @@ export class Run {
       made = { value: out.value, ...(out.roll ? { roll: out.roll } : {}) };
       this.state.remember(path.key, made);
       this.state.write(...own.after);
+      const entry = { step: name, type: found.step.type, ...out.trace };
+      if (this.mark?.sink === sink) sink.trace.splice(this.mark.at + this.mark.count++, 0, entry);
+      else sink.trace.push(entry);
     }
     results[name] = made.value;
     if (made.roll) rolls[name] = made.roll;
@@ -306,7 +317,7 @@ export class Run {
       results, sender: rolls, stepIds,
       ...(frame.alone ? { alone: true } : {}),
       ...(frame.bound ? { sheets: { bound: frame.bound, view: (id: string) => this.view(id) } } : {}),
-      ...(lazy ? { lazy: (name: string) => this.lazyValue(lazy, name, results, rolls) } : {}),
+      ...(lazy ? { lazy: (name: string) => this.lazyValue(lazy, name, results, rolls, sink) } : {}),
     };
     const sheetOf = (refValue: unknown, what: string): string | null => {
       const value = resolveRef(refValue, ref);
@@ -349,7 +360,7 @@ export class Run {
       field: refValue => this.fieldOf(frame, refValue, ref),
       view: sheetId => this.view(sheetId),
       rolled: name => {
-        if (lazy && !(name in results)) this.lazyValue(lazy, name, results, rolls);
+        if (lazy && !(name in results)) this.lazyValue(lazy, name, results, rolls, sink);
         return (rolls[name] as unknown as Record<string, unknown> | undefined) ?? null;
       },
       roll: (spec, tags, by, against) => this.roll(frame, spec, tags, by, against, path.phase('roll').nth(rollsMade++), sink),
@@ -494,18 +505,19 @@ export class Run {
       throw new EngineError(`${frame.owner || 'правило'}: вызовы вложены глубже ${this.limits.callDepth} — похоже, идут по кругу: ${[...this.chain, event].join(' → ')}`);
     }
     const names = namesOf(callee.params, args);
-    const values = valuesOf(callee.params, args);
+    const values = { ...valuesOf(callee.params, args), метки: payload.tags };
     const home = Object.values(names).find((id): id is string => typeof id === 'string') ?? frame.home;
     const at = path.call(event);
     const keys = keysOf(this.system, event, false);
     const emitted: EmittedEvent = { ...payload, names, values };
     sink.emitted.push(emitted);
     if (frame.inSub) {
-      const { delivered } = this.group([{
+      const { entries, delivered } = this.group([{
         effectId: event, label: callee.label || event, steps: callee.steps ?? [], path: at, hop: frame.hop + 1, top: false,
-        home, subject: null, bound: names, keys, args: values, paramDefs: callee.params ?? [],
+        home, subject: null, bound: names, keys, args: values, paramDefs: callee.params ?? [], seed: { метки: payload.tags },
         ...(frame.bond ? { bond: frame.bond } : {}),
       }], at);
+      sink.after.push(...entries);
       const out = delivered[0];
       return { results: out?.results ?? {}, stopped: out?.report.stopped ?? null };
     }
@@ -518,7 +530,7 @@ export class Run {
         home, bound: names, args: values, paramDefs: callee.params ?? [], props: null, claims: {}, hop: frame.hop, inSub: false,
         ...(frame.bond ? { bond: frame.bond } : {}),
       };
-      const ran = this.exec(inner, callee.steps ?? [], sink, {}, event);
+      const ran = this.exec(inner, callee.steps ?? [], sink, { метки: payload.tags }, event);
       this.hear({ keys: keys.map(key => `after:${key}`), names, seed: { ...values, ...ran.results }, path: at.phase('after'), hop: frame.hop, owner: sub => `«${labelOf(sub)}» — после «${callee.label || event}»` }, sink);
       return { results: ran.results, stopped: ran.stopped };
     } finally {
@@ -606,10 +618,11 @@ export class Run {
       ...(call.bond ? { bond: call.bond } : {}),
       ...(call.lazy ? { lazy: call.lazy } : {}),
     };
-    const seed = call.seed ?? {};
+    const given = call.top ? {} : Object.fromEntries(Object.entries(call.args ?? {}).filter(([, value]) => value === null || typeof value !== 'object'));
+    const seed = { ...given, ...(call.seed ?? {}) };
     this.hear({ keys: call.keys.map(key => `before:${key}`), names: call.bound, seed, rolls: call.rolls ?? {}, path: call.path.phase('before'), hop: call.hop, owner: sub => `«${labelOf(sub)}» — до «${call.label}»` }, sink);
     const ran = this.exec(frame, call.steps, sink, seed, undefined, call.rolls ?? {});
-    this.hear({ keys: call.keys.map(key => `after:${key}`), names: call.bound, seed: ran.results, rolls: ran.rolls, path: call.path.phase('after'), hop: call.hop, owner: sub => `«${labelOf(sub)}» — после «${call.label}»` }, sink);
+    this.hear({ keys: call.keys.map(key => `after:${key}`), names: call.bound, seed: { ...given, ...ran.results }, rolls: ran.rolls, path: call.path.phase('after'), hop: call.hop, owner: sub => `«${labelOf(sub)}» — после «${call.label}»` }, sink);
     const report = reportOf('effect', call.effectId, call.home, call.label, sink, ran.stopped, call.hop > 0);
     return { call, results: ran.results, rolls: ran.rolls, emitted: sink.emitted, report };
   }

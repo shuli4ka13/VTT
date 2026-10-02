@@ -17,8 +17,8 @@ const shieldWorld: any = {
   effects: {
     ...system.effects,
     shield: {
-      label: 'Щит', activation: 'passive', cost: 'reaction',
-      on: [{ on: 'targeted', confirm: true, if: { expr: '@hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'shield_up' } }] }],
+      label: 'Щит', activation: 'passive',
+      on: [{ on: 'before:атака', confirm: true, if: { expr: 'все(@цель == @носитель, @hit.success)' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'shield_up' }, to: { expr: '@носитель' } }] }],
     },
     shield_up: {
       label: 'Под щитом', activation: 'passive', duration: { kind: 'turns', max: 1 },
@@ -31,6 +31,8 @@ const shielded = { ...mirra, effects: [{ effectId: 'shield' }] };
 const play = (sys: any, sheets: any[], dice: number[], answer?: (q: Question) => string[], from = 'arven', to = 'mirra', actionId = 'longsword-item:0') =>
   exchange({ system: sys, compendium, die: queue(...dice), sheets, actionId, fromId: from, toId: to, ...(answer ? { answer } : {}) });
 const ids = (q: Question) => q.offers.map(o => o.id);
+const stepOf = (played: ReturnType<typeof exchange>, step: string): any =>
+  played.reports.flatMap(x => x.report.trace).find(t => t.step === step);
 
 group('реакция цели: пауза перед разрешением', () => {
   const attack = (target: any, dice: number[], answer?: (q: Question) => string[], sys: any = shieldWorld) =>
@@ -52,12 +54,12 @@ group('реакция цели: пауза перед разрешением', (
 
   test('игрок применил «Щит» — броня выросла, и та же атака промахнулась', () => {
     const plain = attack(shielded, [9, 5]);
-    eq((plain.reports[0]!.report.trace[0] as any).success, true, 'без щита 15 против 14 — попадание');
+    eq(stepOf(plain, 'hit').success, true, 'без щита 15 против 14 — попадание');
 
     const r = attack(shielded, [9, 5], q => (q.window === 'target' ? ['shield'] : []));
     deepEq(r.sheets.find(s => s.id === 'mirra')!.effects.map(e => e.effectId), ['shield', 'shield_up']);
     const strike = r.reports.find(x => x.report.effect === 'strike')!.report;
-    eq((strike.trace[0] as any).success, false, 'та же кость, но 15 против 19');
+    eq(stepOf(r, 'hit').success, false, 'та же кость, но 15 против 19');
     eq(r.sheets.find(s => s.id === 'mirra')!.values.hp_current, mirra.values.hp_current);
   });
 
@@ -80,7 +82,7 @@ group('увидев кости: решил докинуть', () => {
       ...system.effects,
       inspire: {
         label: 'Вдохновение: перебросить', activation: 'passive',
-        on: [{ on: 'seen', confirm: true, if: { expr: '#inspiration > 0' }, steps: [{ type: 'apply', target: { tag: 'inspiration' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
+        on: [{ on: 'seen', confirm: true, if: { expr: 'все(@бросающий == @носитель, @носитель.inspiration > 0)' }, steps: [{ type: 'apply', target: { expr: '@носитель.inspiration' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
       },
     },
   };
@@ -110,12 +112,12 @@ group('подписка на исходящее: вампиризм и метк�
       ...system.effects,
       vampiric: {
         label: 'Вампиризм', activation: 'passive', duration: { kind: 'permanent' },
-        on: [{ on: 'acted', of: 'event:damage', steps: [{ type: 'apply', target: { tag: 'hp_current' }, direction: 'add',
-          value: { expr: 'округлить вниз(#event_amount / 2)' }, targetModifiers: false }] }],
+        on: [{ on: 'after:damage', if: { expr: '@источник == @носитель' }, steps: [{ type: 'apply', target: { expr: '@носитель.hp_current' }, direction: 'add',
+          value: { expr: 'округлить вниз(@amount / 2)' }, targetModifiers: false }] }],
       },
       brand: {
         label: 'Метка охотника', activation: 'passive', duration: { kind: 'permanent' },
-        on: [{ on: 'acted', of: 'fire_bolt', to: 'other', if: { expr: '@hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'poisoned' } }] }],
+        on: [{ on: 'after:fire_bolt', if: { expr: 'все(@действующий == @носитель, @hit.success)' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'poisoned' }, to: { expr: '@цель' } }] }],
       },
     },
   };
@@ -126,7 +128,7 @@ group('подписка на исходящее: вампиризм и метк�
       system: vampWorld, compendium, die: queue(15, 8, 6), sheets: [{ ...caster, effects: [{ effectId: 'vampiric' }] }, mirra],
       actionId: 'fire-bolt:0', fromId: 'arven', toId: 'mirra',
     });
-    const dealt = r.reports[0]!.report.emitted[0]!.amount;
+    const dealt = r.reports.flatMap(x => x.report.emitted).find(e => e.event === 'damage')!.amount;
     ok(dealt > 0, 'урон дошёл');
     eq(r.sheets.find(s => s.id === 'arven')!.values.hp_current, 10 + Math.floor(dealt / 2));
     ok(r.log.some(line => line.includes('Вампиризм')), 'журнал называет срабатывание вампиризма');
@@ -138,7 +140,7 @@ group('подписка на исходящее: вампиризм и метк�
       actionId: 'fire-bolt:0', fromId: 'arven', toId: 'mirra',
     });
     eq(r.sheets.find(s => s.id === 'arven')!.values.hp_current, 10);
-    eq(r.reports.length, 1);
+    eq(r.reports.flatMap(x => x.report.emitted).length, 0, 'урон не вызывался');
   });
 
   test('«кому: цели» — исходящий триггер шлёт цели свой конверт', () => {
@@ -147,7 +149,8 @@ group('подписка на исходящее: вампиризм и метк�
       actionId: 'fire-bolt:0', fromId: 'arven', toId: 'mirra',
     });
     ok(r.sheets.find(s => s.id === 'mirra')!.effects.some(e => e.effectId === 'poisoned'));
-    eq(r.reports[1]!.report.reply, true);
+    const brand = r.reports.find(x => x.toId === 'mirra')!.report.reactions!.find(x => x.label === 'Метка охотника')!;
+    deepEq(brand.effects, ['poisoned']);
   });
 });
 
@@ -158,7 +161,7 @@ group('вопрос «увидев кости» видит факты собст
       ...system.effects,
       inspire: {
         label: 'Вдохновение: перебросить', activation: 'passive',
-        on: [{ on: 'seen', confirm: true, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
+        on: [{ on: 'seen', confirm: true, if: { expr: '@бросающий == @носитель' }, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
       },
     },
   };
@@ -196,8 +199,8 @@ group('реакция после разрешения: «на меня поде�
     effects: {
       ...system.effects,
       rebuke: {
-        label: 'Возмездие', activation: 'passive', cost: 'reaction',
-        on: [{ on: 'affected', of: 'strike', to: 'other', confirm: true, if: { expr: '@hit.success' }, steps: [{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { expr: '3' } }] }],
+        label: 'Возмездие', activation: 'passive',
+        on: [{ on: 'after:strike', confirm: true, if: { expr: 'все(@цель == @носитель, @hit.success)' }, steps: [{ type: 'apply', target: { expr: '@действующий.hp_current' }, direction: 'subtract', value: { expr: '3' } }] }],
       },
     },
   };
@@ -219,9 +222,8 @@ group('реакция после разрешения: «на меня поде�
     const r = strike(vengeful, [9, 5], q => (q.window === 'after' ? ['rebuke'] : []));
     eq(r.sheets.find(s => s.id === 'mirra')!.values.hp_current, (mirra.values.hp_current as number) - 8, 'себе возмездие ничего не делает');
     eq(r.sheets.find(s => s.id === 'arven')!.values.hp_current, (arven.values.hp_current as number) - 3);
-    const reply = r.reports.find(x => x.report.reply)!;
+    const reply = r.reports.find(x => x.report.effect === 'rebuke')!;
     eq(reply.fromId, 'mirra');
-    eq(reply.toId, 'arven');
   });
 });
 
@@ -232,7 +234,7 @@ group('триггер до разрешения: срабатывает молч
       ...system.effects,
       brace: {
         label: 'Стойка', activation: 'passive',
-        on: [{ on: 'targeted', of: 'strike', steps: [{ type: 'status', mode: 'apply', effect: { const: 'wall' } }] }],
+        on: [{ on: 'before:strike', if: { expr: '@цель == @носитель' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'wall' }, to: { expr: '@носитель' } }] }],
       },
       wall: {
         label: 'Стена', activation: 'passive', duration: { kind: 'turns', max: 1 },
@@ -244,11 +246,10 @@ group('триггер до разрешения: срабатывает молч
 
   test('атака, которая попала бы, промахивается по поднятой броне', () => {
     const plain = play(braceWorld, [arven, mirra], [9, 5]);
-    ok((plain.reports[0]!.report.trace[0] as any).success, 'без стойки попадание');
+    ok(stepOf(plain, 'hit').success, 'без стойки попадание');
 
     const guarded = play(braceWorld, [arven, braced], [9, 5]);
-    const hit = guarded.reports.find(x => x.report.effect === 'strike')!.report;
-    ok(!(hit.trace[0] as any).success, 'со стойкой промах');
+    ok(!stepOf(guarded, 'hit').success, 'со стойкой промах');
     ok(guarded.sheets.find(s => s.id === 'mirra')!.effects.some(e => e.effectId === 'wall'));
   });
 });

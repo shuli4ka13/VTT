@@ -25,11 +25,12 @@ const sys: any = {
 };
 
 const rule: any = {
-  steps: [{
-    id: 'try', type: 'threshold',
-    roll: { die: { constant: 'pool_die' }, bonus: { expr: '0' }, check: null },
-    versus: { expr: '2' },
-  }],
+  params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
+  steps: [
+    { type: 'each', of: 'цели', as: 'цель' },
+    { id: 'try_бросок', type: 'roll', die: { constant: 'pool_die' }, bonus: { expr: '0' }, by: { expr: '@действующий' } },
+    { id: 'try', type: 'check', value: { expr: '@try_бросок' }, versus: { expr: '2' } },
+  ],
 };
 
 const runRule = (sys: any, rule: any, sender: any, target: any, die: () => number, base: any = { records: [] }) => {
@@ -46,7 +47,7 @@ const runRule = (sys: any, rule: any, sender: any, target: any, die: () => numbe
 
 const run = (sheet: any, ...dice: number[]) => {
   const out = runRule(sys, rule, sheet, { id: 'цель-теста', values: {}, effects: [] }, queue(...dice));
-  const t = out.trace[0]!;
+  const t = out.trace.find(line => line.step === 'try')!;
   return { results: { try: { total: t.total, success: t.success, margin: t.margin } } as any };
 };
 

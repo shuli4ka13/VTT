@@ -36,27 +36,27 @@ group('тогл крита пишет данные, а не код', () => {
     setCrit(system, 'off');
     setCrit(system, 'double');
     const lineOf = (effect: string): string => {
-      const step = system.effects[effect]!.steps!.find(s => s.type === 'amount') as Record<string, unknown>;
+      const step = system.effects[effect]!.steps!.find(s => s.type === 'roll' && !(s as { by?: unknown }).by) as Record<string, unknown>;
       return String((step.fixed as { expr?: unknown } | undefined)?.expr ?? '');
     };
-    eq(lineOf('strike'), 'кинуть(@damage_dice, если(@hit.atMax >= 1, 2, 1)) + @damage_with');
-    ok(!lineOf('spell_save_half').includes('? 2 : 1'),
-      'после спасброска цели удвоения нет — это не атака');
+    eq(lineOf('strike'), '(кинуть(@damage_dice, если(@hit_бросок.atMax >= 1, 2, 1)) + @damage_with)');
+    ok(!lineOf('spell_save_half').includes('atMax'),
+      'урон Огненного шара бросается до спасбросков — удвоения нет, это не атака');
     eq(errorsOf(lintSystem(system)).length, 0);
   });
 
   test('удвоение снимается из той же строки, не оставляя мусора', () => {
     const system = dnd();
     const lineOf = (effect: string): string => {
-      const step = system.effects[effect]!.steps!.find(s => s.type === 'amount') as Record<string, unknown>;
+      const step = system.effects[effect]!.steps!.find(s => s.type === 'roll' && !(s as { by?: unknown }).by) as Record<string, unknown>;
       return String((step.fixed as { expr?: unknown } | undefined)?.expr ?? '');
     };
     setCrit(system, 'off');
     const голые = ['strike', 'cantrip_attack', 'spell_attack'].map(lineOf);
     deepEq(голые, [
-      'кинуть(@damage_dice) + @damage_with',
-      'кинуть(@damage_die, @отправитель.cantrip_dice)',
-      'кинуть(@damage_die, (@dice_count + (@slot - @spell_level) * @dice_up))',
+      '(кинуть(@damage_dice) + @damage_with)',
+      '(кинуть(@damage_die, @действующий.cantrip_dice))',
+      '(кинуть(@damage_die, (@dice_count + (@slot - @spell_level) * @dice_up)))',
     ]);
     setCrit(system, 'double');
     setCrit(system, 'off');
@@ -79,7 +79,7 @@ group('тогл брони переписывает общий эффект ур
     setArmor(system, 'threshold', { event: 'damage', armor: 'sp_body', hp: 'hp' });
     eq(armorOf(system, 'damage').choice, 'threshold');
     eq(errorsOf(lintSystem(system)).length, 0);
-    deepEq(armorTail('threshold', 'sp_body', 'hp').map(s => s.type), ['compare', 'apply']);
+    deepEq(armorTail('threshold', 'sp_body', 'hp').map(s => s.type), ['check', 'apply']);
   });
 
   test('«вычитание и износ» даёт те же шаги, что собраны в образце RED руками для тела', () => {

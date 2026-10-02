@@ -27,7 +27,7 @@ export function FormulaBar() {
         {...(target.names ? { names: target.names } : {})}
         {...(target.extraNames ? { extraNames: target.extraNames } : {})}
         {...(target.badges ? { badges: target.badges } : {})}
-        {...(target.owners ? { owners: true } : {})}
+        {...(target.sheets ? { sheets: target.sheets } : {})}
         placeholder={target.placeholder ?? 'формула — наберите @ и начало названия'}
         calculator
         autoFocus

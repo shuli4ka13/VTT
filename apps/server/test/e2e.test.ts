@@ -167,7 +167,7 @@ describe('сквозной прогон стенда', () => {
 
     const res = await http().post(`/rooms/${roomId}/act`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id })
+      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toIds: [mirra.id] })
       .expect(201);
 
     expect(res.body.sheets.length).toBeGreaterThan(0);
@@ -182,7 +182,7 @@ describe('сквозной прогон стенда', () => {
     const journal = res.body.log.map((l: { text: string }) => l.text).join(' · ');
     expect(journal).toContain('Арвен');
     expect(journal).toContain('(атака):');
-    expect(journal).toContain('Кость урона:');
+    expect(journal).toContain('зовёт «Урон»');
     expect(journal).toContain('применено:');
   });
 
@@ -195,7 +195,7 @@ describe('сквозной прогон стенда', () => {
     await http().post(`/rooms/${roomId}/act`)
       .set('Authorization', `Bearer ${token}`)
       .send({
-        roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id,
+        roomId, actionId: 'longsword-item:0', fromId: arven.id, toIds: [mirra.id],
         damage: 9999, hp_current: 0,
       })
       .expect(201);
@@ -215,7 +215,7 @@ describe('сквозной прогон стенда', () => {
 
     const res = await http().post(`/rooms/${roomId}/act`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ roomId, actionId: 'нет-такого:0', fromId: arven.id, toId: mirra.id })
+      .send({ roomId, actionId: 'нет-такого:0', fromId: arven.id, toIds: [mirra.id] })
       .expect(400);
     expect(res.body.message).toContain('нет-такого');
   });
@@ -228,7 +228,7 @@ describe('сквозной прогон стенда', () => {
 
     await http().post(`/rooms/${roomId}/act`)
       .set('Authorization', `Bearer ${other.body.token}`)
-      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id })
+      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toIds: [mirra.id] })
       .expect(403);
   });
 
@@ -240,7 +240,7 @@ describe('сквозной прогон стенда', () => {
 
     const res = await http().post(`/rooms/${roomId}/act`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id, edits: ['advantage'] })
+      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toIds: [mirra.id], claims: { [arven.id]: ['advantage'] } })
       .expect(201);
     const journal = res.body.log.map((l: { text: string }) => l.text).join(' · ');
     expect(journal).toContain('Преимущество');
@@ -253,7 +253,7 @@ describe('сквозной прогон стенда', () => {
 
     const res = await http().post(`/rooms/${roomId}/act`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id, edits: ['котик'] })
+      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toIds: [mirra.id], claims: { [arven.id]: ['котик'] } })
       .expect(400);
     expect(res.body.message).toContain('котик');
   });
@@ -282,7 +282,7 @@ describe('сквозной прогон стенда', () => {
     const [arven, mirra] = state.body.sheets;
     const swing = () => http().post(`/rooms/${roomId}/act`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id });
+      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toIds: [mirra.id] });
 
     await swing().expect(201);
     const denied = await swing().expect(400);
@@ -317,7 +317,7 @@ describe('сквозной прогон стенда', () => {
 
     const swing = () => http().post(`/rooms/${roomId}/act`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id });
+      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toIds: [mirra.id] });
 
     const paused = await swing().expect(201);
     expect(paused.body.pending).toBeTruthy();
@@ -353,7 +353,7 @@ describe('сквозной прогон стенда', () => {
 
     const paused = await http().post(`/rooms/${roomId}/act`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id })
+      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toIds: [mirra.id] })
       .expect(201);
     expect(paused.body.pending).toBeTruthy();
 
@@ -500,8 +500,9 @@ describe('концентрация снимается с листа', () => {
       tables: { лист: { shape: 'single', columns: [{ key: 'бонус', label: 'Бонус', kind: 'number' }] } , жест: { shape: 'book', use: 'action', label: 'Жест', columns: [], bindings: [{ label: 'Держу', effect: 'держу', args: {} }] } },
       effects: {
         держу: {
-          label: 'Держу', activation: 'manual', bond: true,
-          steps: [{ type: 'status', mode: 'apply', effect: { const: 'связан' } }],
+          label: 'Держу', activation: 'manual', bond: { effect: 'держу', by: 'действующий' },
+          params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
+          steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'status', mode: 'apply', effect: { const: 'связан' }, to: { expr: '@цель' } }],
         },
         связан: { label: 'Связан', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
       },
@@ -522,7 +523,7 @@ describe('концентрация снимается с листа', () => {
     const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол связей' })).body.id as string;
 
     await as(http().post(`/rooms/${roomId}/act`))
-      .send({ roomId, actionId: 'жест:0', fromId: 'жрец', toId: 'воин' }).expect(201);
+      .send({ roomId, actionId: 'жест:0', fromId: 'жрец', toIds: ['воин'] }).expect(201);
 
     const rooms = await import('../src/rooms/rooms.service.ts').then(m => app.get(m.RoomsService));
     const after = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
@@ -553,7 +554,7 @@ describe('скрытый бросок ведущего', () => {
     const roomId = (await as(gm.token)(http().post('/rooms')).send({ worldId, title: 'Стол тайн' })).body.id as string;
     await as(player.token)(http().post(`/rooms/${roomId}/join`)).send({});
     const [arven, mirra] = (await as(gm.token)(http().get(`/rooms/${roomId}`))).body.sheets;
-    const swing = { roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id, hidden: true };
+    const swing = { roomId, actionId: 'longsword-item:0', fromId: arven.id, toIds: [mirra.id], hidden: true };
 
     await as(player.token)(http().post(`/rooms/${roomId}/act`)).send(swing).expect(403);
     await as(gm.token)(http().post(`/rooms/${roomId}/act`)).send(swing).expect(201);
@@ -592,7 +593,7 @@ describe('скрытое действие с вопросом в журнале 
     await rooms.setBelonging(gmId, roomId, arven.id, 'effects', 'inspire', true);
 
     const paused = await as(gm.token)(http().post(`/rooms/${roomId}/act`))
-      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id, hidden: true }).expect(201);
+      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toIds: [mirra.id], hidden: true }).expect(201);
     expect(paused.body.pending).toBeTruthy();
     await as(gm.token)(http().post(`/rooms/${roomId}/answer`))
       .send({ roomId, pendingId: paused.body.pending.id, chosen: ['inspire'] }).expect(201);

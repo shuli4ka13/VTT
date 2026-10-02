@@ -20,6 +20,7 @@ import type { StepData } from './steps.ts';
 import type { Clock } from '../engine/clock.ts';
 import type { System, Sheet, Compendium, Die } from '../model/types.ts';
 import { tableOf } from '../model/buttons.ts';
+import { TARGETS_SEED } from '../model/references.ts';
 
 export { tableOf };
 
@@ -138,7 +139,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
   if (split >= 0) {
     const each = steps[split] as StepData;
     const pre = steps.slice(0, split);
-    const isLazy = (step: StepData): boolean => step.type === 'roll' && (step.by === undefined || step.by === null) && typeof step.id === 'string';
+    const isLazy = (step: StepData): boolean => runnerOf(step.type).lazy?.(step) === true;
     const preFrame = top(root, label);
     lazy = {
       frame: preFrame,
@@ -189,9 +190,13 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
     if (made) summaries[id] = made.value;
     if (made?.roll) doneRolls[id] = made.roll;
   }
+  if (split < 0 && delivered[0]) {
+    Object.assign(summaries, delivered[0].results);
+    Object.assign(doneRolls, delivered[0].rolls);
+  }
   const rows = delivered.filter(out => out.call.subject).map(out => ({ ...out.results, лист: out.call.subject }));
   const sink = newSink();
-  const seed = { ...summaries, цели: rows };
+  const seed = { ...summaries, [TARGETS_SEED]: rows };
   run.hear({ keys: keys.map(key => `done:${key}`), names: bound, seed, rolls: doneRolls, path: root.phase('done'), hop: 0, owner: sub => `«${sub.effect.label || sub.effectId}» — «${action.label}» завершено` }, sink);
   for (const report of sink.reactions) state.write({ fromId: actor, toId: actor, report });
   state.write(...sink.after);

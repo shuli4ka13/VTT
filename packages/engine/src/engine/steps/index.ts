@@ -70,6 +70,8 @@ export interface StepModule {
 
   mayBreak?: boolean;
 
+  lazy?: (step: StepData) => boolean;
+
   splits?: boolean;
 
   seen?: boolean;

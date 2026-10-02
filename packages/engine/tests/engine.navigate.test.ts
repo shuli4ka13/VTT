@@ -7,7 +7,7 @@ import { withColumn } from '../src/model/sheet-columns.ts';
 const система = {
   id: 'н', name: 'н',
   constants: {},
-  tables: { лист: { shape: 'single', columns: [
+  tables: { лист: { shape: 'single', owner: 'sheet', columns: [
     { key: 'сила', label: 'Сила', kind: 'number', default: 3 },
     { key: 'хиты', label: 'Хиты', kind: 'number', default: 50 },
     { key: 'класс', label: 'Класс', kind: 'choice', from: 'классы', default: 'воин' },
@@ -32,10 +32,11 @@ const система = {
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
-      params: [{ key: 'тип', label: 'Тип урона', kind: 'choice', from: 'урон' }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }, { key: 'тип', label: 'Тип урона', kind: 'choice', from: 'урон' }],
       steps: [
-        { id: 'сколько', type: 'amount', source: 'item', fixed: { expr: '5 + @тип.прибавка' } },
-        { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@сколько' } },
+        { type: 'each', of: 'цели', as: 'цель' },
+        { id: 'сколько', type: 'roll', fixed: { expr: '5 + @тип.прибавка' } },
+        { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@сколько' } },
       ],
     },
   },
@@ -62,7 +63,7 @@ group('ссылка на таблицу читается через точку',
     const бей = (action: string) => {
       const цель = { id: 'цель', systemId: 'н', name: 'цель', values: {}, has: [], effects: [] } as unknown as Sheet;
       const итог = exchange({ system: система, compendium: книга, die: () => 1, sheets: [лист(), цель], actionId: action, fromId: 'я', toId: 'цель' });
-      return (итог.reports[0]!.report.trace.find((t: Record<string, unknown>) => t.type === 'amount') as Record<string, unknown>).total;
+      return (итог.reports[0]!.report.trace.find((t: Record<string, unknown>) => t.step === 'сколько') as Record<string, unknown>).total;
     };
     eq(бей('меч:0'), 5 + 3, 'рубящий: прибавка — Сила');
     eq(бей('факел:0'), 5 + 2, 'огонь: прибавка — 2');

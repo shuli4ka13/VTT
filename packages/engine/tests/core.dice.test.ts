@@ -117,11 +117,12 @@ describe('разбор записи и отбор', () => {
 describe('бросок — одна функция, стороны явные', async () => {
   const { throwDice, diceTools } = await import('../src/core/roll.ts');
   const { Views } = await import('../src/core/view.ts');
+  const { rollHeld } = await import('../src/core/edits.ts');
   const world = SAMPLE_WORLDS.find(w => w.system.id === 'dnd5e')!;
   const base = flattenSystem(world.system);
   const advantage = Object.entries(base.roll_edits ?? {}).find(([, e]) => (e.ops ?? []).some(op => op.op === 'keepBest'))![0];
   const system = { ...base, effects: { ...base.effects, лежит: { label: 'лежит', activation: 'passive', modifiers: [
-    { kind: 'edit', call: 'roll', param: 'edits', as: 'against', edit: advantage },
+    { kind: 'edit', call: 'roll', param: 'edits', if: { expr: '@против == @носитель' }, edit: advantage },
   ] } as never } };
   const attacker = world.sheets.find((s: { id: string }) => s.id === 'orc')!;
   const target = { ...world.sheets.find((s: { id: string }) => s.id === 'arven')!, effects: [{ effectId: 'лежит' }] };
@@ -129,8 +130,13 @@ describe('бросок — одна функция, стороны явные', 
 
   it('правка «по мне» с противника работает в любом броске, где он — против', () => {
     const spec = parse('к20');
-    const plain = throwDice({ spec, roller: views.of([attacker, target], attacker.id), against: null, tags: [], claims: [], die: replay([3, 18]) });
-    const versus = throwDice({ spec, roller: views.of([attacker, target], attacker.id), against: views.of([attacker, target], target.id), tags: [], claims: [], die: replay([3, 18]) });
+    const sheets = [attacker, target];
+    const holders = sheets.map(s => ({ id: s.id, view: views.of(sheets, s.id) }));
+    const throwAgainst = (againstId: string | null) => throwDice({
+      spec, roller: views.of(sheets, attacker.id), held: rollHeld(holders, attacker.id, againstId, []), tags: [], claims: [], die: replay([3, 18]),
+    });
+    const plain = throwAgainst(null);
+    const versus = throwAgainst(target.id);
     expect(plain.result.total).toBe(3);
     expect(versus.result.total).toBe(18);
   });

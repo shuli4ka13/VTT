@@ -6,7 +6,7 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const system = {
   id: 's', name: 's',
-  tables: { лист: { shape: 'single', columns: [{ key: 'hp', label: 'Хиты', kind: 'number', default: 10 }] } , weapon: {
+  tables: { лист: { shape: 'single', owner: 'sheet', columns: [{ key: 'hp', label: 'Хиты', kind: 'number', default: 10 }] } , weapon: {
       shape: 'book', use: 'item', label: 'Оружие',
       columns: [{ key: 'урон', kind: 'number' }, { key: 'заметка', kind: 'text' }],
       bindings: [{ label: 'Удар', effect: 'hit' }],
@@ -14,8 +14,8 @@ const system = {
   effects: {
     hit: {
       label: 'Удар', activation: 'manual',
-      params: [{ key: 'урон', kind: 'number' }, { key: 'заметка', kind: 'text', optional: true }],
-      steps: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '@урон' } }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }, { key: 'урон', kind: 'number' }, { key: 'заметка', kind: 'text', optional: true }],
+      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'apply', target: { expr: '@цель.hp' }, direction: 'subtract', value: { expr: '@урон' } }],
     },
   },
   

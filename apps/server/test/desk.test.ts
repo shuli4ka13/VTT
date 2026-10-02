@@ -19,9 +19,11 @@ const system = {
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
       steps: [
-        { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', targetModifiers: false, value: { expr: '2 + @стол.страх' } },
-        { type: 'apply', target: { tag: 'страх' }, direction: 'add', targetModifiers: false, value: { expr: '1' } },
+        { type: 'each', of: 'цели', as: 'цель' },
+        { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', targetModifiers: false, value: { expr: '2 + @стол.страх' } },
+        { type: 'apply', target: { expr: '@стол.страх' }, direction: 'add', targetModifiers: false, value: { expr: '1' } },
       ],
     },
   },
@@ -68,8 +70,8 @@ describe('стол комнаты', () => {
     const desk = before.sheets.find((s: { id: string }) => s.id === 'стол');
     expect(desk?.name).toBe('Стол');
 
-    await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'удар:0', fromId: 'бьёт', toId: 'держит' }).then(r => { if (r.status !== 201) throw new Error(JSON.stringify(r.body)); });
-    await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'удар:0', fromId: 'бьёт', toId: 'держит' }).then(r => { if (r.status !== 201) throw new Error(JSON.stringify(r.body)); });
+    await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'удар:0', fromId: 'бьёт', toIds: ['держит'] }).then(r => { if (r.status !== 201) throw new Error(JSON.stringify(r.body)); });
+    await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'удар:0', fromId: 'бьёт', toIds: ['держит'] }).then(r => { if (r.status !== 201) throw new Error(JSON.stringify(r.body)); });
 
     const after = (await as(http().get(`/rooms/${roomId}`))).body;
     expect(after.sheets.find((s: { id: string }) => s.id === 'стол').values.страх).toBe(2);
@@ -107,7 +109,7 @@ describe('система без компендиума доходит до иг�
     const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол' })).body.id as string;
     const room = (await as(http().get(`/rooms/${roomId}`))).body;
     expect(room.compendium.records.map((r: { id: string }) => r.id)).toEqual(['меч']);
-    const act = await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: '+удар', fromId: 'бьёт', toId: 'держит' });
+    const act = await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: '+удар', fromId: 'бьёт', toIds: ['держит'] });
     if (act.status !== 201) throw new Error(JSON.stringify(act.body));
     const after = (await as(http().get(`/rooms/${roomId}`))).body;
     expect(after.sheets.find((s: { id: string }) => s.id === 'держит').values.хп).toBe(18);
