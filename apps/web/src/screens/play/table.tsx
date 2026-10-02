@@ -131,6 +131,7 @@ function RoomTable({ room }: { room: RoomState }) {
               targets={targets}
               onError={setError}
               onClear={() => { setFrom(null); setTo([]); }}
+              onSelf={() => { if (sender) setTo([sender.id]); }}
             /> : null}
           </>
         ),
@@ -282,11 +283,12 @@ function ClaimRow({ label, edits, picked, onToggle }: {
   );
 }
 
-function Actions({ room, sender, targets, onError, onClear }: {
+function Actions({ room, sender, targets, onError, onClear, onSelf }: {
   room: RoomState;
   sender: Sheet | null;
   targets: Sheet[];
   onClear: () => void;
+  onSelf: () => void;
   onError: (message: string | null) => void;
 }) {
   const [mine, setMine] = useState<string[]>([]);
@@ -316,8 +318,11 @@ function Actions({ room, sender, targets, onError, onClear }: {
         title={`${sender.name} действует`}
         badge={targets.length
           ? <span className="inline inline--tight">{targets.map(sheet => <Chip key={sheet.id}>по {sheet.name}</Chip>)}</span>
-          : <span className="faint">на себя — или выберите цель, можно несколько</span>}
-        actions={<Button size="sm" variant="ghost" onClick={onClear}>сбросить выбор</Button>}
+          : <span className="faint">без целей — выберите цель, можно несколько</span>}
+        actions={<>
+          {targets.some(sheet => sheet.id === sender.id) ? null : <Button size="sm" variant="ghost" onClick={onSelf}>на себя</Button>}
+          <Button size="sm" variant="ghost" onClick={onClear}>сбросить выбор</Button>
+        </>}
       />
       {edits.length && available.length ? (
         <Fold
@@ -356,7 +361,7 @@ function Actions({ room, sender, targets, onError, onClear }: {
                 disabled={Boolean(room.pending)}
                 expect={request => {
                   if (!sender) return null;
-                  const chosen = (targets.length ? targets : [sender]).map(sheet => sheet.id);
+                  const chosen = targets.map(sheet => sheet.id);
                   const found = expectAction(
                     { system: room.system as never, compendium: room.compendium as never, clock: room.clock ?? null },
                     room.sheets as never,
@@ -371,7 +376,7 @@ function Actions({ room, sender, targets, onError, onClear }: {
                   onError(null);
                   tableSocket.act({
                     roomId: room.id, actionId: request.actionId,
-                    fromId: sender.id, toIds: (targets.length ? targets : [sender]).map(sheet => sheet.id),
+                    fromId: sender.id, toIds: targets.map(sheet => sheet.id),
                     ...(request.inputs ? { inputs: request.inputs } : {}),
                     ...claimsOf(sender.id, targets, mine, theirs),
                     ...(secret ? { hidden: true } : {}),

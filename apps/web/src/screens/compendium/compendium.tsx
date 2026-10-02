@@ -76,9 +76,9 @@ export function CompendiumScreen() {
         head: 'Завести запись',
         body: kinds.length === 0
           ? <Empty
-            title="Типов записей ещё нет"
+            title="Книг ещё нет"
             hint={origin.systemMine
-              ? `Типы записей объявляются в конструкторе системы, на вкладке «${TABS.records}».`
+              ? `Книги-таблицы объявляются в конструкторе системы, на вкладке «${TABS.records}».`
               : `В системе «${origin.systemTitle ?? system.name}» не объявлено ни одного типа записей — `
                 + 'заводить вещи не из чего. Это делает автор системы: попросите его добавить типы '
                 + 'и опубликовать систему заново.'}
@@ -148,7 +148,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
 
       {!kind ? (
         <Verdict tone="bad">
-          Рода «{String(record.table)}» в системе нет — запись не знает, что о ней спрашивать.
+          Таблицы «{String(record.table)}» в системе нет — запись не знает, что о ней спрашивать.
         </Verdict>
       ) : null}
 

@@ -1,3 +1,4 @@
+import { TABS } from '../../words.ts';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { splitPath } from '@vtt/engine/engine/navigate';
 import { choiceTableOf } from '@vtt/engine/model/lists';
@@ -141,7 +142,7 @@ export function explainName(
       : value.kind === 'table' ? `по таблице «${system.tables?.[value.table]?.label ?? value.table}»`
         : `хранится, по умолчанию ${String(value.default ?? '—')}`;
     return {
-      kind: field.lives === 'desk' ? 'поле стола' : field.lives === 'group' ? 'поле группы' : 'поле листа',
+      kind: field.lives === 'desk' ? 'колонка стола' : field.lives === 'group' ? 'колонка группы' : 'колонка листа',
       title: field.label ?? field.tag,
       facts: [...ownerFact, ['как получается', how]],
       from: [value.kind === 'stored' ? 'вписывают на листе или меняют эффекты' : 'считается само из других полей'],
@@ -217,7 +218,7 @@ export function explainName(
       facts: [['тип', kindWord(prop.kind)]],
       from: [`заполняют записи компендиума типа «${kind.label ?? kindKey}»: ${records.length}`],
       shown: [], users: [],
-      go: { label: 'открыть «Типы записей»', pick: { activeTab: 'records', activeRecordKind: kindKey } },
+      go: { label: `открыть «${TABS.records}»`, pick: { activeTab: 'records', activeRecordKind: kindKey } },
     };
   }
 

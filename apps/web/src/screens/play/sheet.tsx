@@ -149,7 +149,7 @@ function ClaimRow({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   if (holder && holder.userId === userId) {
     return (
       <div className="inline inline--tight">
-        <Chip active>мой лист</Chip>
+        <Chip active>ваш лист</Chip>
         <Button size="sm" variant="ghost" onClick={() => tableSocket.claimSheet(room.id, null)}>отпустить</Button>
       </div>
     );

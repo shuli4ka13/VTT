@@ -53,7 +53,7 @@ export function copyDonorBlock(donor: System, group: string): void {
 
 const PART_WORDS: Record<PartKind, string> = {
   field: 'Поля', group: 'Блоки', effect: 'Эффекты', table: 'Таблицы',
-  constant: 'Кости', rollEdit: 'Правки броска', recordKind: 'Типы записей', record: 'Записи',
+  constant: 'Кости', rollEdit: 'Правки броска', recordKind: 'Книги', record: 'Записи',
 };
 
 const PART_ORDER: PartKind[] = ['field', 'effect', 'record', 'recordKind', 'table', 'rollEdit', 'constant', 'group'];

@@ -38,21 +38,21 @@ export function GateScreen() {
 
           <div className="roles__grid">
             <button type="button" className="role" onClick={() => navigate('/author/start')}>
-              <span className="role__name">Собираю систему</span>
+              <span className="role__name">Автор системы</span>
               <span className="role__hint">
-                Поля листа, кости, эффекты — механика мира. Своя система, свои правила.
+                Лист, таблицы, кости, эффекты — механика мира. Своя система, свои правила.
               </span>
             </button>
 
             <button type="button" className="role" onClick={() => navigate('/book/start')}>
-              <span className="role__name">Собираю компендиум</span>
+              <span className="role__name">Автор книги</span>
               <span className="role__hint">
                 Вещи для готовой системы: оружие, заклинания, доспехи. Система может быть чужой.
               </span>
             </button>
 
             <button type="button" className="role" onClick={() => navigate('/play/table')}>
-              <span className="role__name">Мы играем</span>
+              <span className="role__name">Игра</span>
               <span className="role__hint">Открыть опубликованный мир, вести персонажа, ходить за столом.</span>
             </button>
           </div>

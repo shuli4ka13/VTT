@@ -120,7 +120,7 @@ export function RecordsTab() {
     <Columns
       {...(lookup ? { right: lookup } : {})}
       left={{
-        head: 'типы записей',
+        head: 'книги',
         tools: <Button size="sm" onClick={() => addTo(freeGroupName(system, 'Новый блок'))}>+ блок</Button>,
         body: kinds.length === 0
           ? <Empty
