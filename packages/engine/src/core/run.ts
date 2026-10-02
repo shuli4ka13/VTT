@@ -4,7 +4,13 @@ import { resolveRef, resolveNumber, resolveOptionalNumber, holdsNow } from '../e
 import type { RefContext } from '../engine/refs.ts';
 import { ownerOf, RECEIVER } from '../engine/owners.ts';
 import { splitPath } from '../engine/navigate.ts';
-import { findField } from '../engine/calc.ts';
+import { findField, calc } from '../engine/calc.ts';
+import { lapse } from '../events/durations.ts';
+import { sweepBonds } from '../events/bonds.ts';
+import { lifecycleChanges, HOOK_WORDS, HEARD_WORDS } from '../events/lifecycle.ts';
+import { MOMENTS } from '../events/moments.ts';
+import type { MomentKey } from '../events/moments.ts';
+import { effectLabelOf } from '../events/actions.ts';
 import { requireEffect, requireCalled, reapplyOf, usesMax } from '../engine/effects.ts';
 import { expiryOf } from '../engine/clock.ts';
 import { whoseOf, burnsUse } from '../events/durations.ts';
@@ -131,6 +137,9 @@ const withEvent = (results: Record<string, unknown>, event: EmittedEvent | undef
 const wornSeed = (entry: WornEffect): Record<string, unknown> => ({ carry: null, ...entry });
 
 const labelOf = (sub: Sub): string => sub.effect.label || sub.effectId;
+
+const truthy = (value: unknown): boolean =>
+  value === true || (typeof value === 'number' && value !== 0) || (typeof value === 'string' && value !== '');
 
 export class Run {
   readonly views: Views;
@@ -547,12 +556,12 @@ export class Run {
 
   react(found: Sub, o: {
     path: Path; seed: Record<string, unknown> | (() => Record<string, unknown>); other: string | null; hop: number;
-    chosen: boolean; owner: string; roll?: { value: Roll };
+    chosen: boolean; owner: string; roll?: { value: Roll }; builtin?: boolean; kind?: Report['kind']; label?: string;
   }): { lead: Entry[]; report?: Report; entries: Entry[]; spent?: string } {
     const entries: Entry[] = [];
     const lead: Entry[] = [];
-    const label = labelOf(found);
-    const sub = this.live(found);
+    const label = o.label ?? labelOf(found);
+    const sub = o.builtin ? found : this.live(found);
     if (!sub) {
       if (o.chosen) entries.push({ text: `«${label}» не состоялось: эффекта уже нет` });
       return { lead, entries };
@@ -566,7 +575,7 @@ export class Run {
     if (this.handlers.filter(one => one === mark).length >= this.limits.handlerDepth) {
       return { lead, entries: [{ text: CUT_WORDS }] };
     }
-    const why = this.refusal(sub, o.path.pay(), seed, o.hop);
+    const why = o.builtin ? null : this.refusal(sub, o.path.pay(), seed, o.hop);
     if (why) {
       if (o.chosen) entries.push({ text: `«${label}» не состоялось: ${why}` });
       return { lead, entries };
@@ -575,7 +584,7 @@ export class Run {
     this.handlers.push(mark);
     try {
       let report: Report | undefined;
-      if (sub.handler.cost?.length) {
+      if (!o.builtin && sub.handler.cost?.length) {
         const paid = this.pay(sub, o.path.pay(), seed, o.hop);
         if (paid.why) {
           this.state.rollback();
@@ -594,10 +603,10 @@ export class Run {
       } else {
         const own = newSink();
         const ran = this.exec(this.selfFrame(sub, o.path, o.hop, o.owner, o.roll), sub.handler.steps ?? [], own, seed);
-        report = reportOf('effect', sub.effectId, sub.sheetId, label, own, ran.stopped, false);
+        report = reportOf(o.kind ?? 'effect', sub.effectId, sub.sheetId, label, own, ran.stopped, false);
         entries.push(...own.after);
       }
-      const spent = burnsUse(sub.effect);
+      const spent = !o.builtin && burnsUse(sub.effect);
       if (spent) this.burn(sub);
       this.state.commit();
       return { lead, ...(report ? { report } : {}), entries, ...(spent ? { spent: sub.effectId } : {}) };
@@ -626,6 +635,127 @@ export class Run {
       if (left > 0) effects.push({ ...entry, usesLeft: left });
     }
     this.state.put({ ...sheet, effects });
+  }
+
+  moment(moment: MomentKey, sheetId: string, path: Path): void {
+    const lapsed = lapse({ moment, sheetId }, [...this.state.sheets], this.system, this.world.clock);
+    this.state.replace(lapsed.sheets);
+    for (const gone of lapsed.expired) {
+      this.state.write({ text: `«${effectLabelOf(this.system, gone.effectId)}» спало с ${this.sheet(gone.sheetId)?.name ?? gone.sheetId}` });
+    }
+    const sheet = this.sheet(sheetId);
+    if (!sheet) return;
+    const seed = { moment: { moment, sheet: sheetId, round: this.world.clock?.round ?? 0 } };
+    for (const sub of subsOf(this.system, sheet, this.world.compendium)) {
+      if (!heard(sub, { kind: 'moment', moment })) continue;
+      this.momentReact(sub, path.phase(moment).handler(sheetId, sub.key, sub.inst), seed,
+        `момент «${MOMENTS[moment]}» у «${labelOf(sub)}»`, labelOf(sub));
+    }
+  }
+
+  private momentReact(sub: Sub, path: Path, seed: Record<string, unknown>, owner: string, label: string, builtin = false): void {
+    const out = this.react(sub, { path, seed, other: null, hop: 0, chosen: false, owner, kind: 'moment', label, builtin });
+    const nested = [...out.lead, ...out.entries];
+    const folded = nested.flatMap(entry => ('report' in entry ? [entry.report] : []));
+    if (out.report) {
+      this.state.write({
+        fromId: sub.sheetId, toId: sub.sheetId,
+        report: folded.length ? { ...out.report, reactions: [...(out.report.reactions ?? []), ...folded] } : out.report,
+      });
+    }
+    this.state.write(...nested.filter(entry => !('report' in entry)));
+  }
+
+  settle(before: readonly Sheet[], path: Path): void {
+    let hookedFrom = [...before];
+    let crossedFrom = [...before];
+    for (let round = 0; round < this.limits.settleRounds; round += 1) {
+      const at = path.phase('settle').nth(round);
+      this.lifecycle(hookedFrom, at.phase('life'));
+      hookedFrom = [...this.state.sheets];
+      const crossed = this.crossings(crossedFrom, at.phase('cross'));
+      crossedFrom = [...this.state.sheets];
+      const swept = sweepBonds(this.system, [...this.state.sheets]);
+      this.state.replace(swept.sheets);
+      for (const broken of swept.broken) {
+        this.state.write({ text: `«${effectLabelOf(this.system, broken.effectId)}» спало с ${this.sheet(broken.sheetId)?.name ?? broken.sheetId}: держать стало нечем` });
+      }
+      if (!crossed && !swept.broken.length) return;
+    }
+    throw new EngineError(`наложения, поля и связи будят друг друга без остановки: больше ${this.limits.settleRounds} кругов`);
+  }
+
+  private lifecycle(from: Sheet[], path: Path): void {
+    let previous = from;
+    for (let wave = 0; ; wave += 1) {
+      if (wave > this.limits.settleRounds * 4) throw new EngineError('наложения и спадания будят друг друга без остановки');
+      const changes = lifecycleChanges(previous, [...this.state.sheets], { system: this.system, compendium: this.world.compendium, die: () => 1 });
+      previous = [...this.state.sheets];
+      if (!changes.length) return;
+      for (const [n, change] of changes.entries()) {
+        const effect = this.system.effects[change.entry.effectId];
+        if (!effect) continue;
+        const live = this.sheet(change.sheetId);
+        if (!live) continue;
+        const name = effect.label ?? change.entry.effectId;
+        const own = effect[change.turn];
+        const inst = (change.entry as { inst?: string }).inst ?? `${change.entry.effectId}@${n}`;
+        const at = path.nth(wave).phase(change.turn).at(change.sheetId).phase(change.entry.effectId);
+        if (own?.length) {
+          const hook: Sub = {
+            sheetId: change.sheetId, effectId: change.entry.effectId, effect, entry: change.entry, inst,
+            handler: { on: change.turn, steps: own } as Sub['handler'], key: `${change.entry.effectId}:${change.turn}`,
+          };
+          this.momentReact(hook, at.phase('hook'), {}, `«${name}» ${HOOK_WORDS[change.turn]}`, `${name} · ${HOOK_WORDS[change.turn]}`, true);
+        }
+        const hearing: Hearing = change.turn === 'attach' ? { kind: 'gained', effect: change.entry.effectId } : { kind: 'lost', effect: change.entry.effectId };
+        const sheet = this.sheet(change.sheetId);
+        if (!sheet) continue;
+        for (const sub of subsOf(this.system, sheet, this.world.compendium)) {
+          if (!heard(sub, hearing)) continue;
+          this.momentReact(sub, at.handler(change.sheetId, sub.key, sub.inst), { about: { carry: null, ...change.entry } },
+            `«${name}» ${HEARD_WORDS[change.turn]} у «${labelOf(sub)}»`, labelOf(sub));
+        }
+      }
+    }
+  }
+
+  private crossings(from: Sheet[], path: Path): boolean {
+    let previous = from;
+    let any = false;
+    for (let wave = 0; ; wave += 1) {
+      if (wave > this.limits.settleRounds * 4) throw new EngineError('поля будят эффекты без остановки');
+      const now = [...this.state.sheets];
+      const found: { sub: Sub; tag: string; value: unknown }[] = [];
+      for (const sheet of now) {
+        const was = previous.find(s => s.id === sheet.id);
+        if (!was || was === sheet) continue;
+        for (const sub of subsOf(this.system, sheet, this.world.compendium)) {
+          const tag = sub.handler.on?.startsWith('field:') ? sub.handler.on.slice('field:'.length) : null;
+          if (!tag) continue;
+          const after = this.valueIn(now, sheet.id, tag);
+          if (!truthy(after) || truthy(this.valueIn(previous, sheet.id, tag))) continue;
+          found.push({ sub, tag, value: after });
+        }
+      }
+      previous = now;
+      if (!found.length) return any;
+      any = true;
+      for (const { sub, tag, value } of found) {
+        const label = findField(this.system, tag)?.label ?? tag;
+        this.momentReact(sub, path.nth(wave).handler(sub.sheetId, sub.key, sub.inst), { field: { tag, value } },
+          `поле «${label}» стало верным у «${labelOf(sub)}»`, labelOf(sub));
+      }
+    }
+  }
+
+  private valueIn(sheets: readonly Sheet[], sheetId: string, tag: string): unknown {
+    try {
+      return calc(this.system, this.views.sheet(sheets, sheetId)!, tag, this.views.of(sheets, sheetId));
+    } catch (err) {
+      if (isRuleError(err)) return undefined;
+      throw err;
+    }
   }
 
   private choose(question: Question): { chosen: string[]; skipped: boolean } {

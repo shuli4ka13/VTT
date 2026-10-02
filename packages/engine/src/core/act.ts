@@ -4,7 +4,7 @@ import { releaseHolder, holderOf, sharedHolderOf } from '../events/bonds.ts';
 import { refusalWords } from '../events/refusal.ts';
 import { propsOf, entryOf } from '../model/owned.ts';
 import { EngineError } from '../engine/errors.ts';
-import { render, settleLines } from '../lang/act.ts';
+import { render } from './render.ts';
 import { External, Pause, emptyJournal } from './external.ts';
 import { Path } from './path.ts';
 import { Run, newSink, reportOf } from './run.ts';
@@ -164,15 +164,14 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
     for (const report of done.reactions) state.write({ fromId: actor, toId: actor, report });
     state.write(...done.after);
 
+    run.settle(world.sheets, root);
     const log = [...state.log];
-    const lines = render(log as never, system, [...state.sheets]);
-    const final = settleLines({ system, compendium, clock, die: ext.dice(root.phase('settle')) }, world.sheets, [...state.sheets], lines, log as never);
-    return { kind: 'done', sheets: final, log: lines, entries: log, journal: ext.settled(), fresh: ext.fresh };
+    return { kind: 'done', sheets: [...state.sheets], log: render(log, system, compendium, state.sheets), entries: log, journal: ext.settled(), fresh: ext.fresh };
   } catch (err) {
     if (!(err instanceof Pause)) throw err;
     const log = [...state.log];
     return {
-      kind: 'paused', sheets: [...state.sheets], log: render(log as never, system, [...state.sheets]), entries: log,
+      kind: 'paused', sheets: [...state.sheets], log: render(log, system, compendium, state.sheets), entries: log,
       journal: ext.snapshot(), fresh: ext.fresh, question: err.question,
     };
   }
