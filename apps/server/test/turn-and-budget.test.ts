@@ -643,7 +643,7 @@ describe('цепочка ответок', () => {
         удар: button('Удар', [{ type: 'emit', event: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' } } }]),
         шипы: {
           label: 'Шипы', activation: 'passive',
-          on: [{ on: 'after:урон', if: { expr: '@раненый == @носитель' }, steps: [{ type: 'emit', event: 'урон', args: { раненый: { expr: '@обидчик' }, обидчик: { expr: '@раненый' } } }] }],
+          on: [{ on: 'after:урон', steps: [{ type: 'emit', event: 'урон', args: { раненый: { expr: '@обидчик' }, обидчик: { expr: '@раненый' } } }] }],
         },
       },
     };
@@ -726,7 +726,8 @@ describe('вопросы на ответках', () => {
     const sheet = (id: string, worn: string[]) => ({ id, systemId: 'заслон', name: id, values: { хиты: 20 }, has: [{ of: 'приём' }], effects: worn.map(effectId => ({ effectId })) });
     const systemId = (await as(http().post('/systems')).send({ title: 'С заслоном', system })).body.id;
     const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга заслона', systemId, compendium: book })).body.id;
-    await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
+    const pub = await as(http().post(`/systems/${systemId}/publish`)).send({});
+    expect(pub.body.issues ?? []).toEqual([]);
     await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
     const worldId = (await as(http().post('/worlds')).send({ title: 'Мир заслона', systemId, compendiumIds: [bookId], sheets: [sheet('а', ['заслон']), sheet('б', ['шипы']), sheet('в', [])] })).body.id;
     const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол заслона' })).body.id as string;

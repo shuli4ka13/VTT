@@ -63,7 +63,7 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
     const main = amountParamOf(spec);
     const incoming = main && args[main.key] !== undefined ? Number(args[main.key]) : 0;
     if (!Number.isFinite(incoming)) throw new EngineError(`«${main!.label ?? main!.key}» вызова «${spec.label ?? id}»: ждали число, пришло «${String(args[main!.key])}»`);
-    const tags = chosenTags(params, args);
+    const tags = [...new Set([...(spec.tags ?? []), ...chosenTags(params, args)])];
     const amountNow = main ? Math.floor(ctx.edited(id, main.key, incoming, tags, args)) : incoming;
     if (main) args[main.key] = amountNow;
     const payload: EmittedEvent = { event: id, amount: amountNow, incoming, tags };

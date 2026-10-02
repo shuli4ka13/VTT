@@ -166,7 +166,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
     const ids = Array.isArray(list) ? list : typeof list === 'string' ? [list] : [];
     calls = ids.map((to): Delivery => ({
       ...base, steps: steps.slice(split + 1), path: root.at(to), subject: to, bound: { ...bound, [as]: to },
-      seed: ran.results, ...(Object.keys(rolls).length ? { rolls } : {}), lazy: lazy!,
+      seed: ran.results, ...(Object.keys(rolls).length ? { rolls } : {}), lazy: lazy!, offset: split + 1, lead: sink.trace,
     }));
   } else {
     calls = [{ ...base, steps, path: root, subject: null, bound }];
@@ -196,7 +196,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
   }
   const rows = delivered.filter(out => out.call.subject).map(out => ({ ...out.results, лист: out.call.subject }));
   const sink = newSink();
-  const seed = { ...summaries, [TARGETS_SEED]: rows };
+  const seed = { ...run.argValues(top(root.phase('done'), label)), ...summaries, [TARGETS_SEED]: rows };
   run.hear({ keys: keys.map(key => `done:${key}`), names: bound, seed, rolls: doneRolls, path: root.phase('done'), hop: 0, owner: sub => `«${sub.effect.label || sub.effectId}» — «${action.label}» завершено` }, sink);
   for (const report of sink.reactions) state.write({ fromId: actor, toId: actor, report });
   state.write(...sink.after);

@@ -76,6 +76,7 @@ export function finish(step: StepData, ctx: StepContext) {
   const note = typeof noteRaw === 'string' && noteRaw.trim() ? noteRaw.trim() : null;
   const goOn = step.continueOn === 'always' ? true : step.continueOn === 'fail' ? !success : success;
   const of = fieldOfRef(step.value, ctx);
+  const against = fieldOfRef(step.versus, ctx);
   return {
     value: {
       success, margin: judged.margin, total, versus,
@@ -83,7 +84,7 @@ export function finish(step: StepData, ctx: StepContext) {
       ...(scale ? { degree } : {}),
     },
     trace: {
-      total, versus, margin: judged.margin, success, passed: goOn, value: total, ...(of ? { of } : {}),
+      total, versus, margin: judged.margin, success, passed: goOn, value: total, ...(of ? { of } : {}), ...(against ? { versusTag: against } : {}),
       ...(roll && Array.isArray(roll.tags) && roll.tags.length ? { tags: roll.tags } : {}),
       ...(forced !== null ? { forced: natural } : {}),
       ...(scale ? { degree } : {}),

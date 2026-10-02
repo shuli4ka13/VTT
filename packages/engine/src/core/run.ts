@@ -95,6 +95,7 @@ export interface Frame {
   seenRoll?: { value: Roll };
   lazy?: Lazy;
   alone?: boolean;
+  offset?: number;
 }
 
 export interface Ran {
@@ -123,6 +124,8 @@ export interface Delivery {
   claims?: Claims;
   lazy?: Lazy;
   bond?: { sheet: string; by: string };
+  offset?: number;
+  lead?: Record<string, unknown>[];
 }
 
 export interface Delivered {
@@ -261,7 +264,7 @@ export class Run {
     ]);
     for (const [index, raw] of steps.entries()) {
       const step = raw as StepData;
-      const name = step.id ?? index;
+      const name = step.id ?? (frame.offset ?? 0) + index;
       const ctx = this.ctx(frame, results, known, frame.path.step(name), sink, stepIds);
       const mark = within ? { within } : {};
       if (!ctx.holds(step.when)) {
@@ -514,8 +517,7 @@ export class Run {
     if (frame.inSub) {
       const { entries, delivered } = this.group([{
         effectId: event, label: callee.label || event, steps: callee.steps ?? [], path: at, hop: frame.hop + 1, top: false,
-        home, subject: null, bound: names, keys, args: values, paramDefs: callee.params ?? [], seed: { метки: payload.tags },
-        ...(frame.bond ? { bond: frame.bond } : {}),
+        home: frame.home, subject: home, bound: names, keys, args: values, paramDefs: callee.params ?? [], seed: { метки: payload.tags },
       }], at);
       sink.after.push(...entries);
       const out = delivered[0];
@@ -524,12 +526,13 @@ export class Run {
     if (this.handlers.length) this.spend();
     this.chain.push(event);
     try {
-      this.hear({ keys: keys.map(key => `before:${key}`), names, seed: values, path: at.phase('before'), hop: frame.hop, owner: sub => `«${labelOf(sub)}» — до «${callee.label || event}»` }, sink);
       const inner: Frame = {
         path: at, effectId: event, label: callee.label || event, owner: `вызов «${callee.label || event}»`,
         home, bound: names, args: values, paramDefs: callee.params ?? [], props: null, claims: {}, hop: frame.hop, inSub: false,
-        ...(frame.bond ? { bond: frame.bond } : {}),
       };
+      const before = keys.map(key => `before:${key}`);
+      const peek = this.listens(before) ? this.probe(() => this.exec(inner, callee.steps ?? [], newSink(), { метки: payload.tags }, event)) : null;
+      this.hear({ keys: before, names, seed: { ...values, ...(peek?.results ?? {}) }, rolls: peek?.rolls ?? {}, path: at.phase('before'), hop: frame.hop, owner: sub => `«${labelOf(sub)}» — до «${callee.label || event}»` }, sink);
       const ran = this.exec(inner, callee.steps ?? [], sink, { метки: payload.tags }, event);
       this.hear({ keys: keys.map(key => `after:${key}`), names, seed: { ...values, ...ran.results }, path: at.phase('after'), hop: frame.hop, owner: sub => `«${labelOf(sub)}» — после «${callee.label || event}»` }, sink);
       return { results: ran.results, stopped: ran.stopped };
@@ -563,7 +566,7 @@ export class Run {
           const asked = this.ask({
             key: qpath.key, sheetId: holder.id, window: 'target', label: call.top ? '' : call.label,
             offers: offers.map(found => found.offer), results: tried.results,
-            preview: call.top ? previewLines(this.system, call.effectId, tried.report.trace) : [],
+            preview: call.top ? previewLines(this.system, call.effectId, [...(call.lead ?? []), ...tried.report.trace]) : [],
           }, offers, call.hop, qpath);
           entries.push(...asked.entries);
           flush(entries);
@@ -573,7 +576,7 @@ export class Run {
           }
         }
         const sink = newSink();
-        const out = this.body(call, sink);
+        const out = this.body(call, sink, tried);
         entries.push({ fromId: call.home, toId: call.subject ?? call.home, report: out.report }, ...sink.after);
         delivered?.(out, entries);
         done.push(out);
@@ -608,7 +611,28 @@ export class Run {
     return { entries: collected, delivered: done };
   }
 
-  body(call: Delivery, sink: Sink): Delivered {
+  argValues(frame: Frame): Record<string, unknown> {
+    const ctx = this.ctx(frame, {}, {}, frame.path.phase('args'), newSink(), new Set());
+    const out: Record<string, unknown> = {};
+    const tags: string[] = [...(this.system.effects[frame.effectId]?.tags ?? [])];
+    for (const param of frame.paramDefs) {
+      if (param.kind === 'sheet' || param.kind === 'field') continue;
+      let value: unknown;
+      try {
+        value = ctx.value({ param: param.key, optional: true });
+      } catch (err) {
+        if (!isRuleError(err)) throw err;
+        continue;
+      }
+      if (value === null || value === undefined || (typeof value === 'object' && !Array.isArray(value))) continue;
+      out[param.key] = value;
+      if (param.kind === 'choice' && param.from) tags.push(...(Array.isArray(value) ? value.map(String) : [String(value)]));
+    }
+    out.метки = tags;
+    return out;
+  }
+
+  body(call: Delivery, sink: Sink, tried?: { results: Record<string, unknown>; rolls: Record<string, RollResult> }): Delivered {
     const frame: Frame = {
       path: call.path, effectId: call.effectId, label: call.label, owner: `эффект «${call.label}»`,
       home: call.home, bound: call.bound,
@@ -617,14 +641,22 @@ export class Run {
       claims: call.claims ?? {}, hop: call.hop, inSub: false,
       ...(call.bond ? { bond: call.bond } : {}),
       ...(call.lazy ? { lazy: call.lazy } : {}),
+      ...(call.offset ? { offset: call.offset } : {}),
     };
-    const given = call.top ? {} : Object.fromEntries(Object.entries(call.args ?? {}).filter(([, value]) => value === null || typeof value !== 'object'));
+    const given = call.top
+      ? this.argValues(frame)
+      : Object.fromEntries(Object.entries(call.args ?? {}).filter(([, value]) => value === null || typeof value !== 'object'));
     const seed = { ...given, ...(call.seed ?? {}) };
-    this.hear({ keys: call.keys.map(key => `before:${key}`), names: call.bound, seed, rolls: call.rolls ?? {}, path: call.path.phase('before'), hop: call.hop, owner: sub => `«${labelOf(sub)}» — до «${call.label}»` }, sink);
+    this.hear({ keys: call.keys.map(key => `before:${key}`), names: call.bound, seed: { ...seed, ...(tried?.results ?? {}) }, rolls: { ...(call.rolls ?? {}), ...(tried?.rolls ?? {}) }, path: call.path.phase('before'), hop: call.hop, owner: sub => `«${labelOf(sub)}» — до «${call.label}»` }, sink);
     const ran = this.exec(frame, call.steps, sink, seed, undefined, call.rolls ?? {});
     this.hear({ keys: call.keys.map(key => `after:${key}`), names: call.bound, seed: { ...given, ...ran.results }, rolls: ran.rolls, path: call.path.phase('after'), hop: call.hop, owner: sub => `«${labelOf(sub)}» — после «${call.label}»` }, sink);
     const report = reportOf('effect', call.effectId, call.home, call.label, sink, ran.stopped, call.hop > 0);
     return { call, results: ran.results, rolls: ran.rolls, emitted: sink.emitted, report };
+  }
+
+  private listens(keys: readonly string[]): boolean {
+    const wanted = new Set(keys);
+    return this.holders().some(holder => this.subs(holder).some(sub => wanted.has(sub.handler.on) && !sub.handler.confirm));
   }
 
   hear(hearing: Hearing, sink: Sink): void {
@@ -658,13 +690,13 @@ export class Run {
     for (const param of sub.effect.params ?? []) {
       const value = args[param.key];
       if (sheets.has(param.key)) bound[param.key] = typeof value === 'string' ? value : null;
-      else if (typeof value === 'number' || typeof value === 'string') inputs[param.key] = value;
+      else if (typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean') inputs[param.key] = value as never;
     }
     return { bound, inputs };
   }
 
   private boundFor(sub: Sub, names: Record<string, Bound>): Record<string, Bound> {
-    return { ...names, ...this.hanging(sub).bound, носитель: sub.sheetId };
+    return { ...this.hanging(sub).bound, ...names, носитель: sub.sheetId };
   }
 
   private holds(sub: Sub, names: Record<string, Bound>, seed: Record<string, unknown>, rolls: Record<string, RollResult> = {}): boolean {
@@ -692,11 +724,11 @@ export class Run {
     };
   }
 
-  private pay(sub: Sub, path: Path, names: Record<string, Bound>, seed: Record<string, unknown>, hop: number, rolls: Record<string, RollResult> = {}): { why: string | null; report: Report; changed: boolean } {
+  private pay(sub: Sub, path: Path, names: Record<string, Bound>, seed: Record<string, unknown>, hop: number, rolls: Record<string, RollResult> = {}): { why: string | null; report: Report; after: Entry[]; changed: boolean } {
     const own = newSink();
     const ran = this.exec(this.subFrame(sub, path, hop, `плата за «${labelOf(sub)}»`, names), sub.handler.cost ?? [], own, seed, undefined, rolls);
     const report = reportOf('effect', sub.effectId, sub.sheetId, labelOf(sub), own, ran.stopped, false);
-    return { why: refusalWords(report, this.system), report, changed: own.changes.length > 0 || own.effects.length > 0 || own.removed.length > 0 };
+    return { why: refusalWords(report, this.system), report, after: own.after, changed: own.changes.length > 0 || own.effects.length > 0 || own.removed.length > 0 || own.after.length > 0 };
   }
 
   refusal(sub: Sub, path: Path, names: Record<string, Bound>, seed: Record<string, unknown>, hop: number, rolls: Record<string, RollResult> = {}): string | null {
@@ -733,6 +765,7 @@ export class Run {
       return { lead, entries };
     }
     this.state.begin();
+    if (!this.handlers.length) this.state.budget = this.limits.budget;
     this.handlers.push(mark);
     try {
       if (!o.builtin && sub.handler.cost?.length) {
@@ -741,7 +774,7 @@ export class Run {
           this.state.rollback();
           return { lead, entries: [{ text: `«${label}» не состоялось: ${paid.why}` }] };
         }
-        if (paid.changed) lead.push({ fromId: sub.sheetId, toId: sub.sheetId, report: paid.report });
+        if (paid.changed) lead.push({ fromId: sub.sheetId, toId: sub.sheetId, report: paid.report }, ...paid.after);
       }
       const own = newSink();
       const ran = this.exec(this.subFrame(sub, o.path, o.hop, o.owner, o.names, o.roll), sub.handler.steps ?? [], own, seed, undefined, rolls);

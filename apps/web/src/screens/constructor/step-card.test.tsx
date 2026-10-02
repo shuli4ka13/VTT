@@ -40,8 +40,8 @@ describe('problemOf: имя внутри формулы слота', () => {
     expect(problem?.text).toContain('чьё поле');
   });
 
-  it('недописанная формула — не приговор этого места, молчит', () => {
-    expect(problemOf(roll('@нез +'), systemWithDie(), withActor, [])).toBeNull();
+  it('сохранённая формула, которая не разбирается, — приговор шага', () => {
+    expect(problemOf(roll('@нез +'), systemWithDie(), withActor, [])?.text).toMatch(/не разбирается/);
   });
 });
 

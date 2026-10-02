@@ -9,13 +9,15 @@ import { basedOn, paramsOf } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
 import { recordsOf, argsWithProps, propKeysOf, recordKinds, kindsOf, kindOf, isBook } from './owned.ts';
 import { blockNames } from './blocks.ts';
+import { bindingsOf } from '../events/actions.ts';
+import { kindOfRecord } from './owned.ts';
 import { tableOf } from './buttons.ts';
 import { MOMENTS } from '../events/moments.ts';
 import { TABS, STEP } from '../words/glossary.ts';
 import {
   referencesOf, declaredOf, chainRefs, listenerOf, withAddresses,
   type Where, type Reference, type RefKind, type Declared,
-  LISTEN,
+  LISTEN, contractsOf,
 } from './references.ts';
 import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, rowKeyOf } from './sheet-columns.ts';
 
@@ -30,7 +32,7 @@ export interface Problem {
   fix?: Fix;
 }
 
-const NAMES: Record<Exclude<RefKind, 'param' | 'step'>, (key: string) => string> = {
+const NAMES: Record<Exclude<RefKind, 'param' | 'step' | 'syntax'>, (key: string) => string> = {
   field: key => `поля «${key}» в системе нет — заведите его на вкладке «${TABS.sheet}»`,
   effect: key => `эффекта «${key}» в системе нет`,
   constant: key => `кости «${key}» в системе нет`,
@@ -85,6 +87,10 @@ function ownerText(ref: Reference, system: System): string | null {
 
 function danglingText(ref: Reference, declared: Declared): string | null {
   if (ref.scope === LISTEN) return null;
+  if (ref.kind === 'syntax') return `формула «${ref.key}» не разбирается — проверьте скобки и знаки; «и» / «или» пишутся как все(…) / любое(…)`;
+  if (ref.kind === 'field' && ref.scope === 'bare' && !declared.field.has(ref.key) && declared.effect.has(ref.key)) {
+    return `«${ref.key}» — сколько раз висит эффект на листе: пишите через лист, например @носитель.${ref.key}`;
+  }
   if (ref.kind === 'param') {
     return ref.scope === 'missing' ? `вход «${ref.key}» эффектом не объявлен` : null;
   }
@@ -186,7 +192,7 @@ function cycleProblems(system: System): Problem[] {
     for (const called of chainsOfEffect(effect).flatMap(emitsOf)) link(effectNode(id), effectNode(called));
     for (const handler of effect.on ?? []) {
       for (const called of emitsOf(handler.steps)) link(effectNode(id), effectNode(called));
-      if (handler.confirm) continue;
+      if (handler.confirm || handler.if) continue;
       const heard = listenerOf(handler);
       if (heard.kind === 'call' && system.effects[heard.key]) link(effectNode(heard.key), effectNode(id));
     }
@@ -533,6 +539,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   }, system));
 
   out.push(...listenerProblems(system));
+  out.push(...shapeProblems(system, compendium));
   out.push(...cycleProblems(system));
   out.push(...paramProblems(system));
   out.push(...orphanProblems(system, compendium));
@@ -595,4 +602,96 @@ export function describeWhere(where: Where, system: System, compendium?: Compend
     }
   }
   return parts.join(' · ');
+}
+
+function shapeProblems(system: System, compendium?: Compendium): Problem[] {
+  const out: Problem[] = [];
+  const called = new Set(Object.values(system.effects).flatMap(effect => [
+    effect.steps ?? [], effect.cost ?? [], effect.attach ?? [], effect.detach ?? [],
+    ...(effect.on ?? []).map(handler => handler.cost ?? []),
+  ].flatMap(emittedBy)));
+  const sheetsOf = (effect: Effect): Map<string, boolean> =>
+    new Map((effect.params ?? []).filter(p => p.kind === 'sheet').map(p => [p.key, Boolean(p.many)]));
+  for (const [id, effect] of Object.entries(system.effects)) {
+    const where: Where = { tab: 'effects', effect: id };
+    const sheets = sheetsOf(effect);
+    (effect.steps ?? []).forEach((step, index) => {
+      if (step.type !== 'each') return;
+      const of = String((step as { of?: unknown }).of ?? '');
+      if (!sheets.get(of)) out.push({ where: { ...where, step: index }, level: 'error', text: `«для каждого» перебирает «${of || '?'}», а такого входа-списка листов у эффекта нет` });
+      if (called.has(id)) out.push({ where: { ...where, step: index }, level: 'error', text: 'вызываемый эффект не перебирает цели — «для каждого» работает только у действия кнопкой' });
+    });
+    if (effect.bond) {
+      if (!sheets.has(effect.bond.by)) out.push({ where, level: 'error', text: `держатель выдаётся листу «${effect.bond.by}», а такого входа-листа у эффекта нет` });
+      const holder = system.effects[effect.bond.effect];
+      if (!holder || (holder.activation ?? 'manual') !== 'passive') out.push({ where, level: 'error', text: `держит «${effect.bond.effect}» — это должен быть висящий эффект` });
+    }
+    if (effect.duration?.by && !sheets.has(effect.duration.by)) {
+      out.push({ where, level: 'error', text: `срок считает ходы листа «${effect.duration.by}», а такого входа-листа у эффекта нет` });
+    }
+    for (const chain of chainsOf(id, effect)) {
+      chain.steps.forEach((step, index) => {
+        if (step.type !== 'status') return;
+        const target = (step as { effect?: { const?: unknown } }).effect?.const;
+        const declared = typeof target === 'string' ? system.effects[target]?.params : undefined;
+        if (!declared) return;
+        for (const key of Object.keys(((step as { args?: Record<string, unknown> }).args) ?? {})) {
+          if (!declared.some(p => p.key === key)) out.push({ where: chain.where(index), level: 'error', text: `«${system.effects[target as string]?.label ?? target}» не объявляет входа «${key}» — запомнить нечего` });
+        }
+      });
+    }
+    for (const tag of effect.tags ?? []) {
+      for (const contract of contractsOf(system, tag)) {
+        for (const input of contract.inputs ?? []) {
+          const param = (effect.params ?? []).find(p => p.key === input.key);
+          if (!param || param.kind !== input.kind || Boolean(param.many) !== Boolean(input.many)) {
+            out.push({ where, level: 'error', text: `метка «${tag}» требует вход «${input.key}» (${input.kind}${input.many ? ', список' : ''}) — у эффекта его нет или он другого вида` });
+          }
+        }
+        const steps = effect.steps ?? [];
+        const split = steps.findIndex(step => step.type === 'each');
+        if (contract.each && (split < 0 || (steps[split] as { as?: unknown }).as !== contract.each)) {
+          out.push({ where, level: 'error', text: `метка «${tag}» требует «для каждого» с именем «${contract.each}»` });
+        }
+        for (const output of contract.outputs ?? []) {
+          const at = steps.findIndex(step => step.id === output);
+          if (at < 0 || (contract.each && at < split)) out.push({ where, level: 'error', text: `метка «${tag}» требует шаг «${output}» внутри «для каждого»` });
+        }
+      }
+    }
+    (effect.on ?? []).forEach((handler, index) => {
+      const heard = listenerOf(handler);
+      if (heard.kind !== 'call' || heard.phase !== 'before' || !handler.confirm) return;
+      if (called.has(heard.key) && !Object.values(system.tables ?? {}).some(table => (table.bindings ?? []).some(b => b.effect === heard.key))) {
+        out.push({ where: { tab: 'effects', effect: id, part: 'on', handler: index }, level: 'error', text: `«${system.effects[heard.key]?.label ?? heard.key}» вызывается внутри других эффектов — спросить игрока до него нельзя, только сработать само` });
+      }
+    });
+  }
+  for (const key of Object.keys(system.tags ?? {})) {
+    if (system.effects[key]) out.push({ where: { tab: 'effects', effect: key }, level: 'error', text: `«${key}» — и метка с договором, и эффект: подписка «${key}» станет двусмысленной` });
+  }
+  const lists = [
+    ...kindsOf(system).flatMap(([kind, spec]) => (spec.bindings ?? []).map((binding, index) => ({ binding, where: { tab: 'records' as const, kind, part: 'bindings', binding: index }, props: propKeysOf(spec) }))),
+    ...recordsOf(compendium).filter(record => record.bindings?.length).flatMap(record => bindingsOf(record, system).map(binding => ({ binding, where: { tab: 'book' as const, record: record.id }, props: propKeysOf(kindOfRecord(system, record)) }))),
+  ];
+  for (const { binding, where, props } of lists) {
+    const effect = system.effects[binding.effect];
+    if (!effect) continue;
+    const table = tableOf(binding, effect);
+    const sheets = sheetsOf(effect);
+    const fills = Object.entries(table);
+    if (fills.filter(([, fill]) => fill === 'actor').length !== 1 && sheets.size) out.push({ where, level: 'error', text: `кнопка «${binding.label ?? effect.label ?? binding.effect}»: ровно один вход заполняет «кто нажал»` });
+    if (fills.filter(([, fill]) => fill === 'targets').length > 1) out.push({ where, level: 'error', text: `кнопка «${binding.label ?? effect.label ?? binding.effect}»: «выбранные» заполняет не больше одного входа` });
+    for (const [key, fill] of fills) {
+      if (!sheets.has(key)) out.push({ where, level: 'error', text: `кнопка «${binding.label ?? effect.label ?? binding.effect}» заполняет «${key}», а такого входа-листа нет` });
+      else if (fill === 'actor' && sheets.get(key)) out.push({ where, level: 'error', text: `«кто нажал» — один лист, а вход «${key}» — список` });
+    }
+    if (where.tab !== 'book') continue;
+    const args = argsWithProps(system, binding, props) ?? {};
+    for (const param of effect.params ?? []) {
+      if (args[param.key] !== undefined || table[param.key] || param.ask || param.optional) continue;
+      out.push({ where, level: 'error', text: `кнопка «${binding.label ?? effect.label ?? binding.effect}» не заполняет вход «${param.label ?? param.key}» эффекта «${effect.label ?? binding.effect}»` });
+    }
+  }
+  return out;
 }

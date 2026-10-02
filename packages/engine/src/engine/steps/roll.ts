@@ -101,7 +101,9 @@ export function traceLine(t: any) {
       : t.rolls.length ? `[${t.rolls.join(', ')}]` : '';
   const parts = t.parts && Object.keys(t.parts).length ? ' · ' + Object.entries(t.parts).map(([k, v]) => `${k}: ${v}`).join(', ') : '';
   const edits = t.edits?.length ? ` (${t.edits.join(', ')})` : '';
-  const sum = (t.fixed !== undefined ? [dice, t.bonus ? String(t.bonus) : ''] : [dice, t.bonus ? String(t.bonus) : '']).filter(Boolean).join(' + ').replace(/\+ -/g, '− ') || '0';
+  const plain = Array.isArray(t.rolls) && t.rolls.reduce((sum: number, v: number) => sum + v, 0) === t.fixed;
+  const fixed = t.fixed !== undefined && t.fixed !== 0 && !plain ? String(t.fixed) : '';
+  const sum = [fixed && dice ? `${dice} → ${fixed}` : dice || fixed, t.bonus ? String(t.bonus) : ''].filter(Boolean).join(' + ').replace(/\+ -/g, '− ') || '0';
   return `${t.by ? 'бросок' : 'расчёт'}${name}: ${sum}${edits} = ${t.total}${parts}`;
 }
 

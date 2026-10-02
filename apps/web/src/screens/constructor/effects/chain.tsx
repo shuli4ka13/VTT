@@ -55,9 +55,9 @@ export function Chain({ effect, system, edit, title = 'Шаги', empty = 'ша�
   const earlierOf = (index: number) =>
     steps.slice(0, index)
       .map((step, at) => ({ step, at }))
-      .filter(({ step }) => step.id)
+      .filter(({ step }) => step.id || (step.type === 'each' && (step as { as?: unknown }).as))
       .map(({ step, at }) => ({
-        id: String(step.id), type: step.type, at: cardAt(at), title: cardTitle(cards, at, system),
+        id: String(step.type === 'each' ? (step as { as?: unknown }).as : step.id), type: step.type, at: cardAt(at), title: cardTitle(cards, at, system),
       }));
 
   const problems = steps.map((step, index) => problemOf(step, system, effect, earlierOf(index)));

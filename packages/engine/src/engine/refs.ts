@@ -219,7 +219,7 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
       const split = splitPath(rest);
       const table = split && !isField(system, rest) ? referencedTable(system, split.head, ctx.paramDefs) : undefined;
       const read = (id: string): unknown => (split && table
-        ? walk(system, view(id), table, resolve(split.head), split.path, who(ctx))
+        ? walk(system, view(id), table, (ctx.paramDefs ?? []).some(p => p.key === split.head) ? resolve(split.head) : view(id).resolve(split.head), split.path, who(ctx))
         : view(id).resolve(rest));
       return Array.isArray(bound) ? bound.map(read) : read(bound as string);
     }

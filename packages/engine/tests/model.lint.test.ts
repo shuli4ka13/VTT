@@ -209,14 +209,14 @@ group('линт: слушатели, круги, входы', () => {
       params: [WHO, { key: 'цели', kind: 'sheet', many: true }] as never,
       steps: [{ type: 'each', of: 'цели', as: 'цель' }, { id: 'hit', type: 'check', value: { expr: '1' }, versus: { expr: '0' } }] as Step[],
     });
-    system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @носитель и @действующий != @носитель' }, steps: [] }] } as Effect;
+    system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'before:удар', if: { expr: 'все(@цель == @носитель, @действующий != @носитель)' }, steps: [] }] } as Effect;
     eq(errorTexts(system).join(''), '');
     system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@враг == @носитель' }, steps: [] }] } as Effect;
     ok(errorTexts(system).some(t => t.includes('«враг» — нет ни входа, ни шага')), errorTexts(system).join('|'));
   });
 
   test('у броска подписка видит бросающего и противника', () => {
-    const system = withEffect('r', { activation: 'passive', on: [{ on: 'seen', if: { expr: '@бросающий == @носитель или @против == @носитель' }, steps: [] }] });
+    const system = withEffect('r', { activation: 'passive', on: [{ on: 'seen', if: { expr: 'любое(@бросающий == @носитель, @против == @носитель)' }, steps: [] }] });
     eq(errorTexts(system).join(''), '');
   });
 
@@ -361,7 +361,7 @@ group('ссылки и слушатели', () => {
     deepEq(heardNames(system, listenerOf({ on: 'gained:x' })).sheets, ['лист']);
     const struck = heardNames(system, listenerOf({ on: 'after:удар' }));
     deepEq(struck.sheets, ['действующий', 'цели', 'цель']);
-    deepEq(struck.seeds, ['бонус', 'hit']);
+    deepEq(struck.seeds, ['бонус', 'hit', 'метки']);
     const done = heardNames(system, listenerOf({ on: 'done:удар' }));
     ok(done.seeds.includes('итоги'));
     ok(!done.seeds.includes('hit'), 'итог шага внутри цикла у каждой цели свой — в «завершено» его нет');
@@ -379,5 +379,24 @@ group('линт: моменты хода', () => {
     const [problem] = errorsOf(lintSystem(system));
     ok(problem?.text.includes('«когда-нибудь»'), problem?.text);
     ok(problem?.text.includes('turn-start'), problem?.text);
+  });
+});
+
+group('линт: вопрос «до» у вложенного вызова', () => {
+  const nested = (from: 'steps' | 'handler'): System => {
+    const system = withEffect('шип', { params: [{ key: 'жертва', kind: 'sheet' }] as never, steps: [mend('@жертва.hp')] });
+    const emit = { type: 'emit', event: 'шип', args: { жертва: { expr: '@носитель' } } } as unknown as Step;
+    system.effects.удар = { label: 'Удар', activation: 'manual', params: [WHO] as never, steps: from === 'steps' ? [emit] : [] } as Effect;
+    system.effects.шипы = { label: 'Шипы', activation: 'passive', on: from === 'handler' ? [{ on: 'after:удар', steps: [emit] }] : [] } as Effect;
+    system.effects.заслон = { label: 'Заслон', activation: 'passive', on: [{ on: 'before:шип', confirm: true, steps: [] }] } as Effect;
+    return system;
+  };
+
+  test('вызов из шагов эффекта — спросить до него нельзя', () => {
+    ok(errorTexts(nested('steps')).some(t => t.includes('спросить игрока до него нельзя')), errorTexts(nested('steps')).join('\n'));
+  });
+
+  test('вызов из подписки идёт доставкой с вопросами — спросить можно', () => {
+    ok(!errorTexts(nested('handler')).some(t => t.includes('спросить игрока до него нельзя')), errorTexts(nested('handler')).join('\n'));
   });
 });

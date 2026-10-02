@@ -29,7 +29,8 @@ export function previewLines(system: System, effectId: string, trace: Record<str
     if (one.type !== 'check') continue;
     const words = outcomeWords(system, (one.tags as string[] | undefined) ?? []);
     const forced = one.forced != null ? ` (${forcedWords(Number(one.forced), Boolean(one.success))})` : '';
-    lines.push(`против ${one.versus}: ${one.success ? words.success : words.fail}${forced}`);
+    const named = typeof one.versusTag === 'string' ? `${fieldOf(system, one.versusTag)?.label ?? one.versusTag} ` : '';
+    lines.push(`против ${named}${one.versus}: ${one.success ? words.success : words.fail}${forced}`);
   }
   void effectId;
   return lines;
@@ -114,7 +115,7 @@ export function describeEntry(
       return `${title}: ${rolls}${edits}${bonus} = ${trace.total}${parts}`;
     }
     if (trace.type === 'check') {
-      const versus = refLabel(step?.versus) ?? 'порог';
+      const versus = typeof trace.versusTag === 'string' ? labelOf(trace.versusTag) : refLabel(step?.versus) ?? 'порог';
       const degree = trace.degree !== undefined && trace.degree !== null ? `, степень ${trace.degree}` : '';
       const words = outcomeWords(system, (trace.tags as string[] | undefined) ?? []);
       const forced = trace.forced != null ? ` (${forcedWords(trace.forced, Boolean(trace.success))})` : '';

@@ -1627,7 +1627,7 @@
         "description": "Тратит ячейку 1-го круга. Пока держишь концентрацию, цели получают +1к4 к любому броску.",
         "activation": "manual",
         "bond": {
-          "effect": "bless",
+          "effect": "concentration",
           "by": "действующий"
         },
         "params": [
@@ -2707,6 +2707,14 @@
             ]
           }
         ]
+      },
+      "concentration": {
+        "label": "Концентрация",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "params": []
       }
     },
     "grants": [

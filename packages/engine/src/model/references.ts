@@ -11,7 +11,9 @@ import { MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, ANY_ACTION, ca
 import type { Phase } from '../events/bus.ts';
 import { fieldsOf } from './sheet-columns.ts';
 
-export const SEED_RESULTS = ['moment', 'field', 'about', 'roll', 'метки'] as const;
+export const CALL_TAGS = 'метки';
+
+const TURN_MOMENTS = new Set(['turn-start', 'turn-end']);
 
 export const HOLDER = 'носитель';
 
@@ -37,7 +39,7 @@ export interface Where {
 
 export type RefKind =
   | 'field' | 'effect' | 'constant' | 'table' | 'rollEdit' | 'event' | 'roll'
-  | 'param' | 'step' | 'prop' | 'recordKind';
+  | 'param' | 'step' | 'prop' | 'recordKind' | 'syntax';
 
 export interface Reference {
   kind: RefKind;
@@ -159,7 +161,10 @@ export function exprRefs(source: string, from: Where, scope: ChainScope, out: Re
   const text = source.trim();
   if (!text) return;
   const deps = formulaDeps(text);
-  if (!deps) return;
+  if (!deps) {
+    out.push({ kind: 'syntax', key: text, from });
+    return;
+  }
   for (const table of tablesIn(text)) out.push({ kind: 'table', key: table, from });
   for (const dep of deps) {
     const dotAt = dep.indexOf('.');
@@ -182,11 +187,9 @@ export function exprRefs(source: string, from: Where, scope: ChainScope, out: Re
     if (dot > 0) {
       const head = dep.slice(0, dot);
       if (scope.earlier.has(head) || scope.params.has(head)) continue;
-      if ((SEED_RESULTS as readonly string[]).includes(head)) continue;
       out.push({ kind: 'step', key: head, from, scope: 'dotted', path: dep });
       continue;
     }
-    if ((SEED_RESULTS as readonly string[]).includes(dep)) continue;
     out.push({ kind: 'field', key: dep, from, scope: scope.bare ? 'bare' : 'plain' });
   }
 }
@@ -291,17 +294,18 @@ export interface HeardNames { sheets: string[]; seeds: string[]; listened: Effec
 
 export function heardNames(system: System, listener: Listener): HeardNames {
   if (listener.kind === 'seen') return { sheets: ['бросающий', 'против'], seeds: ['roll'], listened: null };
-  if (listener.kind === 'moment') return { sheets: ['ходит'], seeds: ['moment'], listened: null };
+  if (listener.kind === 'moment') return { sheets: TURN_MOMENTS.has(listener.key) ? ['ходит'] : [], seeds: ['moment'], listened: null };
   if (listener.kind === 'gained' || listener.kind === 'lost') return { sheets: ['лист'], seeds: ['about'], listened: null };
   if (listener.kind === 'field') return { sheets: ['лист'], seeds: ['field'], listened: null };
   if (listener.kind !== 'call') return { sheets: [], seeds: [], listened: null };
   if (listener.key === ANY_ACTION) return { sheets: [], seeds: [], listened: null };
-  const contract = system.tags?.[listener.key];
-  if (contract) {
-    const inputs = contract.inputs ?? [];
+  const contracts = contractsOf(system, listener.key);
+  if (contracts.length) {
+    const inputs = contracts.flatMap(contract => contract.inputs ?? []);
+    const done = listener.phase === 'done';
     return {
-      sheets: [...inputs.filter(i => i.kind === 'sheet').map(i => i.key), ...(contract.each ? [contract.each] : [])],
-      seeds: [...inputs.filter(i => i.kind !== 'sheet').map(i => i.key), ...(contract.outputs ?? []), ...(listener.phase === 'done' ? [TARGETS_SEED] : [])],
+      sheets: [...inputs.filter(i => i.kind === 'sheet').map(i => i.key), ...(done ? [] : contracts.flatMap(contract => (contract.each ? [contract.each] : [])))],
+      seeds: [...inputs.filter(i => i.kind !== 'sheet').map(i => i.key), ...(done ? [] : contracts.flatMap(contract => contract.outputs ?? [])), CALL_TAGS, ...(done ? [TARGETS_SEED] : [])],
       listened: null,
     };
   }
@@ -316,10 +320,26 @@ export function heardNames(system: System, listener: Listener): HeardNames {
     seeds: [
       ...params.filter(p => p.kind !== 'sheet').map(p => p.key),
       ...visible.map(step => step.id).filter((id): id is string => Boolean(id)),
+      CALL_TAGS,
       ...(listener.phase === 'done' ? [TARGETS_SEED] : []),
     ],
     listened: effect,
   };
+}
+
+export function contractsOf(system: System, tag: string): NonNullable<System['tags']>[string][] {
+  const out: NonNullable<System['tags']>[string][] = [];
+  const seen = new Set<string>();
+  const visit = (key: string): void => {
+    if (seen.has(key)) return;
+    seen.add(key);
+    const contract = system.tags?.[key];
+    if (!contract) return;
+    out.push(contract);
+    for (const included of contract.includes ?? []) visit(included);
+  };
+  visit(tag);
+  return out;
 }
 
 function typedRefs(spec: { kind?: string; from?: string }, from: Where, out: Reference[]): void {
@@ -332,8 +352,8 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
   const sheetKeys = (effect.params ?? []).filter(p => p.kind === 'sheet').map(p => p.key);
   const params = new Set((effect.params ?? []).filter(p => p.kind !== 'sheet').map(p => p.key));
   for (const param of effect.params ?? []) typedRefs(param, { tab: 'effects', effect: id, part: 'params', key: param.key }, out);
-  out.push(...chainRefs(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, sheetKeys));
-  out.push(...chainRefs(effect.cost ?? [], step => ({ tab: 'effects', effect: id, step, part: 'cost' }), params, sheetKeys));
+  out.push(...chainRefs(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, sheetKeys, [CALL_TAGS]));
+  out.push(...chainRefs(effect.cost ?? [], step => ({ tab: 'effects', effect: id, step, part: 'cost' }), params, sheetKeys, [CALL_TAGS]));
   (effect.on ?? []).forEach((handler, index) => {
     const head: Where = { tab: 'effects', effect: id, part: 'on', handler: index };
     const heard = listenerOf(handler);
@@ -423,7 +443,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
       const from: Where = { tab: 'records', kind, part: 'bindings', binding: index };
       if (binding.effect) out.push({ kind: 'effect', key: binding.effect, from });
       const bound = system.effects?.[binding.effect]?.params ?? [];
-      const argScope = sheetScope(new Set(bound.filter(p => p.kind !== 'sheet').map(p => p.key)), [...bound.filter(p => p.kind === 'sheet').map(p => p.key), HOLDER]);
+      const argScope = sheetScope(new Set([...bound.filter(p => p.kind !== 'sheet').map(p => p.key), ...own]), [...bound.filter(p => p.kind === 'sheet').map(p => p.key), HOLDER]);
       for (const arg of Object.values(binding.args ?? {})) {
         if (arg && typeof arg === 'object' && 'prop' in arg) {
           const key = String(arg.prop ?? '');
@@ -463,6 +483,13 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
       if (record.table) out.push({ kind: 'recordKind', key: String(record.table), from });
       for (const id of record.grants ?? []) out.push({ kind: 'effect', key: id, from });
       for (const binding of record.bindings ?? []) if (binding.effect) out.push({ kind: 'effect', key: binding.effect, from });
+      const columns = record.table ? system.tables?.[record.table]?.columns ?? [] : [];
+      const props = new Set(columns.map(c => c.key));
+      for (const column of columns) {
+        const cell = (record.cells ?? {})[column.key];
+        if (typeof cell !== 'string' || !cell.includes('@') || (column.kind !== 'number' && column.kind !== 'expr')) continue;
+        exprRefs(cell, { ...from, key: column.key }, sheetScope(props, [HOLDER]), out);
+      }
       modifierRefs(system, record.modifiers, from, out, record.table ? new Set((system.tables?.[record.table]?.columns ?? []).map(c => c.key)) : undefined);
     }
   }

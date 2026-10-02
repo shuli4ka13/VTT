@@ -500,11 +500,12 @@ describe('концентрация снимается с листа', () => {
       tables: { лист: { shape: 'single', columns: [{ key: 'бонус', label: 'Бонус', kind: 'number' }] } , жест: { shape: 'book', use: 'action', label: 'Жест', columns: [], bindings: [{ label: 'Держу', effect: 'держу', args: {} }] } },
       effects: {
         держу: {
-          label: 'Держу', activation: 'manual', bond: { effect: 'держу', by: 'действующий' },
+          label: 'Держу', activation: 'manual', bond: { effect: 'держит', by: 'действующий' },
           params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
           steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'status', mode: 'apply', effect: { const: 'связан' }, to: { expr: '@цель' } }],
         },
         связан: { label: 'Связан', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
+        держит: { label: 'Держит', activation: 'passive', duration: { kind: 'permanent' } },
       },
       
     };
@@ -528,9 +529,9 @@ describe('концентрация снимается с листа', () => {
     const rooms = await import('../src/rooms/rooms.service.ts').then(m => app.get(m.RoomsService));
     const after = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
     expect(after.find((s: { id: string }) => s.id === 'воин').effects).toHaveLength(1);
-    expect(after.find((s: { id: string }) => s.id === 'жрец').effects[0].effectId).toBe('держу');
+    expect(after.find((s: { id: string }) => s.id === 'жрец').effects[0].effectId).toBe('держит');
 
-    const dropped = await rooms.setBelonging(me, roomId, 'жрец', 'effects', 'держу', false);
+    const dropped = await rooms.setBelonging(me, roomId, 'жрец', 'effects', 'держит', false);
     expect(dropped.log.map((e: { text: string }) => e.text).join(' ')).toContain('держать стало нечем');
     const cleared = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
     expect(cleared.find((s: { id: string }) => s.id === 'воин').effects).toHaveLength(0);
