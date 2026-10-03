@@ -41,11 +41,12 @@ export function Lobby() {
                   hint="Создайте стол из опубликованного мира — список ниже."
                 />
               : (
-                <div className="stack stack--tight">
+                <div className="rooms">
                   {rooms.map(room => (
-                    <Button key={room.id} wide onClick={() => join(room.id)}>
-                      {room.title} · за столом: {room.memberCount}
-                    </Button>
+                    <button key={room.id} type="button" className="room" onClick={() => join(room.id)}>
+                      <span className="room__name">{room.title}</span>
+                      <span className="room__meta">за столом: {room.memberCount}</span>
+                    </button>
                   ))}
                 </div>
               )}

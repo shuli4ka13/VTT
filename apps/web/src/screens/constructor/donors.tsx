@@ -133,7 +133,7 @@ function Pieces({ donor }: { donor: System }) {
           onClick={() => bring(`«${piece.label}»`, current => bringPiece(current, piece))}
           style={added.length ? undefined : { opacity: 0.5, cursor: 'default' }}
         >
-          <span className="card__title" style={{ fontSize: 'var(--fs-4)' }}>{piece.label}</span>
+          <span className="card__title">{piece.label}</span>
           <span className="card__sub card__sub--clamp">{added.length ? piece.hint : 'уже в системе'}</span>
         </button>
       ))}
@@ -176,7 +176,7 @@ function Blocks({ donor }: { donor: System }) {
             onClick={() => copyDonorBlock(donor, group)}
             style={already ? { opacity: 0.5, cursor: 'default' } : undefined}
           >
-            <span className="card__title" style={{ fontSize: 'var(--fs-4)' }}>{group}</span>
+            <span className="card__title">{group}</span>
             <span className="card__sub">
               {already ? 'уже в системе' : `полей: ${count}`}
               {!already && brings.length > 1 ? ` · и ещё ${brings.length - 1} блок(а)` : ''}
@@ -213,7 +213,7 @@ function Effects({ donor }: { donor: System }) {
             onClick={() => copy(id, effect)}
             style={already ? { opacity: 0.5, cursor: 'default' } : undefined}
           >
-            <span className="card__title" style={{ fontSize: 'var(--fs-4)' }}>{effect.label ?? id}</span>
+            <span className="card__title">{effect.label ?? id}</span>
             <span className="card__sub">
               {already ? 'уже в системе' : `${effect.group ?? 'Механики'} · ${activationWord(effect)}`}
             </span>

@@ -44,10 +44,11 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
   };
 
   return (
-    <>
-      <Card>
-        <CardHead title={sheet.name ?? sheet.id} badge={badge ? <Chip>{badge}</Chip> : undefined} />
-      </Card>
+    <div className="sheet">
+      <div className="sheet__top">
+        <h2 className="sheet__name">{sheet.name ?? sheet.id}</h2>
+        {badge ? <Chip>{badge}</Chip> : null}
+      </div>
 
       {shown.map(([group, fields]) => (
         <Card key={group}>
@@ -61,7 +62,7 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
           )))}
         </Card>
       ))}
-    </>
+    </div>
   );
 }
 

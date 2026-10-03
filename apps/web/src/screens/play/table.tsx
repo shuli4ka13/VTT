@@ -114,6 +114,7 @@ function RoomTable({ room }: { room: RoomState }) {
                       setTo(ids => (ids.includes(sheet.id) ? ids.filter(id => id !== sheet.id) : [...ids, sheet.id]));
                     }}
                   >
+                    <span className="token__face" aria-hidden="true">{initialsOf(sheet.name ?? sheet.id)}</span>
                     <span className="token__name">{sheet.name ?? sheet.id}</span>
                     {pinned ? <span className="token__hp num">{String(sheet.values[pinned] ?? '—')}</span> : null}
                   </button>
@@ -350,7 +351,7 @@ function Actions({ room, sender, targets, onError, onClear, onSelf }: {
             У этого листа нет применимых действий — наденьте предмет или выучите приём на листе персонажа.
           </span>
         : (
-          <div className="inline inline--tight">
+          <div className="inline inline--tight actions">
             {available.map(action => (
               <ActionForm
                 key={action.id}
@@ -399,3 +400,6 @@ const timeOf = (at: string): string => {
     ? ''
     : `${String(stamp.getHours()).padStart(2, '0')}:${String(stamp.getMinutes()).padStart(2, '0')}`;
 };
+
+const initialsOf = (name: string): string =>
+  name.split(/[\s-]+/u).filter(Boolean).slice(0, 2).map(word => word[0]!.toUpperCase()).join('');

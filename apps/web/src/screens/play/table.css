@@ -1,28 +1,56 @@
 .tokens {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
   gap: var(--s-3);
 }
 
 .token {
+  --ring: var(--kind-check);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--s-2);
-  padding: var(--s-4);
-  background: var(--surface-2);
-  border: 2px solid var(--border);
+  gap: 6px;
+  padding: var(--s-3) var(--s-2);
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: var(--r-3);
+  color: var(--text-muted);
   cursor: pointer;
-  min-height: 84px;
-  justify-content: center;
+  transition: background 120ms ease, border-color 120ms ease;
 }
-.token:hover { border-color: var(--border-strong); }
-.token--from { border-color: var(--accent); background: var(--accent-soft); }
-.token--to { border-color: var(--danger); background: var(--danger-soft); }
+.token:hover { background: var(--surface-2); border-color: var(--border); }
+.token__face {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid var(--ring);
+  background: color-mix(in srgb, var(--ring) 16%, var(--bg));
+  color: var(--ring);
+  font-size: var(--fs-4);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: box-shadow 150ms ease, border-color 150ms ease;
+}
+.token--from { color: var(--text); }
+.token--from .token__face { --ring: var(--warn); box-shadow: 0 0 0 3px var(--warn-soft), 0 0 18px rgb(251 191 36 / 0.35); }
+.token--to { color: var(--text); }
+.token--to .token__face { --ring: var(--danger); box-shadow: 0 0 0 3px var(--danger-soft), 0 0 18px rgb(248 113 113 / 0.35); }
 
-.token__name { font-size: var(--fs-3); }
-.token__hp { font-size: var(--fs-6); font-weight: 650; }
+.token__name { font-size: var(--fs-2); text-align: center; line-height: 1.25; }
+.token__hp { font-family: var(--font-mono); font-size: var(--fs-5); font-weight: 700; color: var(--kind-number); }
+
+.actions { gap: var(--s-2); }
+.actions .btn--primary {
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--accent-hover);
+  border-radius: var(--r-full);
+  padding-inline: var(--s-4);
+  font-weight: 600;
+}
+.actions .btn--primary:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 
 .log-line {
   font-size: var(--fs-2);

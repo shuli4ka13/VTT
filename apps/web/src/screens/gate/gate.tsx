@@ -28,7 +28,8 @@ export function GateScreen() {
 
   return (
     <div className="roles">
-      <h1 className="roles__title"><em>VTT</em> — конструктор систем и стол</h1>
+      <div className="roles__eyebrow">Конструктор систем · стол</div>
+      <h1 className="roles__title"><em>VTT</em> — ролевые системы своими руками</h1>
 
       {signed ? (
         <>
@@ -38,6 +39,8 @@ export function GateScreen() {
 
           <div className="roles__grid">
             <button type="button" className="role" onClick={() => navigate('/author/start')}>
+              <span className="role__mark" />
+              <span className="role__tag">механика</span>
               <span className="role__name">Автор системы</span>
               <span className="role__hint">
                 Лист, таблицы, кости, эффекты — механика мира. Своя система, свои правила.
@@ -45,6 +48,8 @@ export function GateScreen() {
             </button>
 
             <button type="button" className="role" onClick={() => navigate('/book/start')}>
+              <span className="role__mark" />
+              <span className="role__tag">содержимое</span>
               <span className="role__name">Автор книги</span>
               <span className="role__hint">
                 Вещи для готовой системы: оружие, заклинания, доспехи. Система может быть чужой.
@@ -52,6 +57,8 @@ export function GateScreen() {
             </button>
 
             <button type="button" className="role" onClick={() => navigate('/play/table')}>
+              <span className="role__mark" />
+              <span className="role__tag">за столом</span>
               <span className="role__name">Игра</span>
               <span className="role__hint">Открыть опубликованный мир, вести персонажа, ходить за столом.</span>
             </button>

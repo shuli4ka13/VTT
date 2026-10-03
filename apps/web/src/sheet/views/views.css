@@ -391,3 +391,82 @@ span.v-chip { cursor: default; }
   line-height: 1.3;
 }
 .view-gallery__tile--on .view-gallery__name { color: var(--text); font-weight: 600; }
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sheet__top {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+.sheet__name {
+  margin: 0;
+  font-family: var(--font-head);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.sheet > .card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-3);
+  padding: 13px 15px;
+  gap: 10px;
+}
+.sheet > .card:nth-of-type(6n + 1) { --dot: var(--kind-table); }
+.sheet > .card:nth-of-type(6n + 2) { --dot: var(--kind-change); }
+.sheet > .card:nth-of-type(6n + 3) { --dot: var(--cyan); }
+.sheet > .card:nth-of-type(6n + 4) { --dot: var(--from-record); }
+.sheet > .card:nth-of-type(6n + 5) { --dot: var(--pink); }
+.sheet > .card:nth-of-type(6n) { --dot: var(--kind-number); }
+
+.sheet .row { gap: 9px; }
+.sheet .row > .field,
+.sheet .row > .sheet-pick > .field {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 7px 11px;
+  gap: 3px;
+  min-height: 58px;
+  justify-content: space-between;
+}
+.sheet .row > .field .field__label,
+.sheet .row > .sheet-pick > .field .field__label {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+}
+.sheet .row > .field > .inline > .input,
+.sheet .row > .field > .inline > .select,
+.sheet .row > .sheet-pick > .field > .inline > .input,
+.sheet .row > .sheet-pick > .field > .inline > .select {
+  background: transparent;
+  border-color: transparent;
+  padding: 0;
+  min-height: 24px;
+  font-size: var(--fs-4);
+  font-weight: 600;
+}
+.sheet .row > .field > .inline > .input:focus,
+.sheet .row > .sheet-pick > .field > .inline > .input:focus { color: var(--accent); }
+.sheet .row > .field > .inline > .select option { background: var(--surface-2); }
+.sheet .row .input.input--shown {
+  border: 0;
+  padding: 0;
+  min-height: 24px;
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--kind-number);
+}
+.sheet .sheet-table .input--shown {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--kind-number);
+  border-color: transparent;
+}
+.sheet .sheet-table__row { font-size: var(--fs-3); }
+.sheet .sheet-table > .field__label { font-size: 9px; }
