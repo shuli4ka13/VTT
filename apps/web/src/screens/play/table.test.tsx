@@ -102,6 +102,25 @@ describe('выбор целей на столе', () => {
   });
 });
 
+describe('стороны фишек: взятые игроками листы — свои, остальные — чужие', () => {
+  afterEach(() => { cleanup(); });
+  const token = (name: string) => screen.getAllByText(name)[0]!.closest('button')!;
+
+  it('пока никто не взял лист, сторон нет', () => {
+    useRoom.setState(state => ({ ...state, room: room(null), log: [], error: null }));
+    renderOpen(<TableScreen />);
+    expect(token('Арвен').className).not.toMatch(/token--(ally|foe)/);
+  });
+
+  it('лист игрока — свой, остальные — чужие', () => {
+    const base = room(null);
+    useRoom.setState(state => ({ ...state, room: { ...base, members: [...base.members, { userId: 'и', name: 'Игрок', role: 'player', sheetId: 'а' }] } as RoomState, log: [], error: null }));
+    renderOpen(<TableScreen />);
+    expect(token('Арвен').className).toContain('token--ally');
+    expect(token('Мирра').className).toContain('token--foe');
+  });
+});
+
 describe('вопрос стола: отвечает владелец листа или ведущий', () => {
   const asked = (): RoomState => ({
     ...room(null),

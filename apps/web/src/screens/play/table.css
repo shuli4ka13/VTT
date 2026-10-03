@@ -5,7 +5,7 @@
 }
 
 .token {
-  --ring: var(--kind-check);
+  --ring: var(--accent);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -33,10 +33,27 @@
   letter-spacing: 0.02em;
   transition: box-shadow 150ms ease, border-color 150ms ease;
 }
+.token--ally { --ring: var(--kind-check); }
+.token--foe { --ring: var(--danger); }
 .token--from { color: var(--text); }
-.token--from .token__face { --ring: var(--warn); box-shadow: 0 0 0 3px var(--warn-soft), 0 0 18px rgb(251 191 36 / 0.35); }
+.token--from .token__face { border-color: var(--warn); box-shadow: 0 0 0 3px var(--warn-soft), 0 0 18px rgb(251 191 36 / 0.35); }
 .token--to { color: var(--text); }
-.token--to .token__face { --ring: var(--danger); box-shadow: 0 0 0 3px var(--danger-soft), 0 0 18px rgb(248 113 113 / 0.35); }
+.token--to .token__face { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 30%, transparent), 0 0 18px color-mix(in srgb, var(--ring) 45%, transparent); }
+.token__face { position: relative; }
+.token__aim {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: var(--on-accent);
+  font-size: 13px;
+  line-height: 1;
+}
 
 .token__name { font-size: var(--fs-2); text-align: center; line-height: 1.25; }
 .token__hp { font-family: var(--font-mono); font-size: var(--fs-5); font-weight: 700; color: var(--kind-number); }

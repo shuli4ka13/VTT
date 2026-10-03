@@ -38,6 +38,7 @@ function RoomTable({ room }: { room: RoomState }) {
   const sender = room.sheets.find(s => s.id === from) ?? null;
   const targets = room.sheets.filter(s => to.includes(s.id));
   const people = room.sheets.filter(s => !isDesk(s));
+  const party = new Set(room.members.map(member => member.sheetId).filter((id): id is string => Boolean(id)));
   const desk = room.sheets.find(isDesk) ?? null;
   const deskFields = fieldsOf(room.system).filter(f => f.lives === 'desk');
 
@@ -106,7 +107,7 @@ function RoomTable({ room }: { room: RoomState }) {
                   <button
                     key={sheet.id}
                     type="button"
-                    className={`token ${sheet.id === from ? 'token--from' : ''} ${to.includes(sheet.id) ? 'token--to' : ''}`}
+                    className={`token ${party.size ? (party.has(sheet.id) ? 'token--ally' : 'token--foe') : ''} ${sheet.id === from ? 'token--from' : ''} ${to.includes(sheet.id) ? 'token--to' : ''}`}
                     title={sheet.id === from ? 'действует' : to.includes(sheet.id) ? 'цель — клик снимает' : 'клик: цель; если никто не действует — станет действующим'}
                     onClick={() => {
                       if (sheet.id === from) { setFrom(null); return; }
@@ -114,7 +115,10 @@ function RoomTable({ room }: { room: RoomState }) {
                       setTo(ids => (ids.includes(sheet.id) ? ids.filter(id => id !== sheet.id) : [...ids, sheet.id]));
                     }}
                   >
-                    <span className="token__face" aria-hidden="true">{initialsOf(sheet.name ?? sheet.id)}</span>
+                    <span className="token__face" aria-hidden="true">
+                      {initialsOf(sheet.name ?? sheet.id)}
+                      {to.includes(sheet.id) ? <span className="token__aim">◎</span> : null}
+                    </span>
                     <span className="token__name">{sheet.name ?? sheet.id}</span>
                     {pinned ? <span className="token__hp num">{String(sheet.values[pinned] ?? '—')}</span> : null}
                   </button>
