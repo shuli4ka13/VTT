@@ -108,10 +108,10 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
   );
 }
 
-const holds = (part: SheetPart, table: string, column: string, row?: string): boolean =>
+export const holds = (part: SheetPart, table: string, column: string, row?: string): boolean =>
   part.table === table && (!part.columns || part.columns.includes(column)) && (!row || !part.rows || part.rows.includes(row));
 
-export function BlockViewField({ tableId, column, system, block, row }: { tableId: string; column: Column; system: System; block: string; row?: string }) {
+export function BlockViewField({ tableId, column, system, block, row, cell = row }: { tableId: string; column: Column; system: System; block: string; row?: string; cell?: string }) {
   const editColumn = useWorld(s => s.editColumn);
   const editSystem = useWorld(s => s.editSystem);
   const table = system.tables![tableId]!;
@@ -119,13 +119,14 @@ export function BlockViewField({ tableId, column, system, block, row }: { tableI
   const own = row ? (table.rows ?? []).find(r => rowKeyOf(r) === row) : undefined;
   const stored = single ? column.expr === undefined : own ? cellSource(column, own).kind === 'input' : (table.rows ?? []).some(r => cellSource(column, r).kind === 'input');
   const edit = (change: (draft: Column) => void) => editColumn(tableId, column.key, change);
-  const part = (system.blocks ?? []).find(b => b.name === block)?.parts.find(p => holds(p, tableId, column.key, row));
+  const part = (system.blocks ?? []).find(b => b.name === block)?.parts.find(p => holds(p, tableId, column.key, cell));
   const key = row ? `${row}.${column.key}` : column.key;
   const control = part?.views?.[key];
+  const base = part?.views?.[column.key];
   const kind = control?.kind;
   const lacking = kind ? viewNeeds(kind, column) : [];
   const editView = (change: (views: Record<string, Control>) => void) => editSystem(draft => {
-    const target = (draft.blocks ?? []).find(b => b.name === block)?.parts.find(p => holds(p, tableId, column.key, row));
+    const target = (draft.blocks ?? []).find(b => b.name === block)?.parts.find(p => holds(p, tableId, column.key, cell));
     if (!target) return;
     const views = { ...target.views };
     change(views);
@@ -159,7 +160,7 @@ export function BlockViewField({ tableId, column, system, block, row }: { tableI
           family={columnFamily(column)}
           computed={!stored}
           plain={row
-            ? { label: 'Как у колонки', hint: 'вид колонки в этом блоке' }
+            ? { label: 'Как у колонки', hint: base ? `вид колонки в этом блоке: ${VIEWS[base.kind].label}` : 'у колонки в этом блоке вида нет — обычное поле' }
             : stored ? { label: 'Обычное поле', hint: 'окошко для числа или текста' } : { label: 'Просто число', hint: 'значение как есть' }}
           needs={next => viewNeeds(next, column)}
           onChange={next => editView(views => {
@@ -175,7 +176,7 @@ export function BlockViewField({ tableId, column, system, block, row }: { tableI
           })}
         />
       </Field>
-      {kind && !row && (lacking.length || takesBounds(kind, column) || TAKES_STEP.includes(kind) || ['bar', 'toggle', 'ring', 'choice', 'chips'].includes(kind)) ? (
+      {kind && (!row || !base) && (lacking.length || takesBounds(kind, column) || TAKES_STEP.includes(kind) || ['bar', 'toggle', 'ring', 'choice', 'chips'].includes(kind)) ? (
         <div className="view-settings">
           {lacking.length ? <Verdict tone="warn">Виду «{VIEWS[kind].label}» не хватает: {lacking.join(', ')}. Пока не задано, на листе вместо него «—».</Verdict> : null}
           {takesBounds(kind, column) ? (

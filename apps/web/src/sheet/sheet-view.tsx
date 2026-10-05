@@ -105,7 +105,9 @@ function sectionTitle(field: FieldModel, system: System, reader: Reader): [strin
   const options = by ? optionsOf(system, by) : [];
   const at = options.findIndex(option => String(option.value) === String(value));
   if (at >= 0) return [options[at]!.label, at];
-  if (typeof value === 'boolean') return [value ? by?.control?.yes ?? 'да' : by?.control?.no ?? 'нет', value ? 1 : 0];
+  const part = (system.blocks ?? []).find(block => block.name === field.group)?.parts.find(p => p.table === field.home && p.by);
+  const view = part?.by ? part.views?.[part.by] : undefined;
+  if (typeof value === 'boolean') return [value ? view?.yes ?? 'да' : view?.no ?? 'нет', value ? 1 : 0];
   return [value === undefined || value === null || value === '' ? '—' : String(value), Number.MAX_SAFE_INTEGER];
 }
 

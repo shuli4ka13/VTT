@@ -10,7 +10,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useUsage } from './usage.ts';
 import { Segmented } from '../../ui/primitives.tsx';
-import { placeOnSheet, sheetTables, BlockViewField } from './table-field.tsx';
+import { placeOnSheet, sheetTables, BlockViewField, holds } from './table-field.tsx';
 import { TableColumnCard } from './rules/tables-section.tsx';
 import { BlockPanel } from './block-panel.tsx';
 import { RowPanel } from './row-panel.tsx';
@@ -102,13 +102,13 @@ function ViewPanel({ field, system }: { field: FieldModel; system: System }) {
   if (!table || !column) return null;
   const homes = (field.placements ?? []).map(place => place.group);
   const block = activeIn && homes.includes(activeIn) ? activeIn : homes[0];
-  const view = block ? (system.blocks ?? []).find(b => b.name === block)?.parts.find(p => p.table === field.home && (!p.columns || p.columns.includes(column.key)))?.views?.[column.key] : undefined;
+  const view = (field.placements ?? []).find(place => place.group === block)?.control;
 
   return (
     <>
       {block ? (
         <Card>
-          <BlockViewField tableId={field.home} column={column} system={system} block={block} />
+          <BlockViewField tableId={field.home} column={column} system={system} block={block} {...(field.cell ? { cell: field.cell.row } : {})} />
           {field.cell ? <BlockViewField tableId={field.home} column={column} system={system} block={block} row={field.cell.row} /> : null}
           {homes.length > 1 ? <span className="faint">Поле стоит и в других блоках: {homes.filter(h => h !== block).join(', ')} — там вид свой.</span> : null}
         </Card>
@@ -144,9 +144,10 @@ function ColumnPanel({ table: id, column: key, system }: { table: string; column
   const activeIn = useWorld(s => s.activeIn);
   const table = system.tables![id]!;
   const column = table.columns!.find(c => c.key === key)!;
+  const placed = activeIn !== null && (system.blocks ?? []).some(b => b.name === activeIn && b.parts.some(p => holds(p, id, key)));
   return (
     <>
-      {activeIn ? <Card><BlockViewField tableId={id} column={column} system={system} block={activeIn} /></Card> : null}
+      {placed ? <Card><BlockViewField tableId={id} column={column} system={system} block={activeIn} /></Card> : null}
       <TableColumnCard id={id} table={table} column={column} system={system}
         edit={change => editSystem(draft => { const target = draft.tables?.[id]; if (target) change(target); })}
         onClose={() => pick({ activeColumn: null })} />

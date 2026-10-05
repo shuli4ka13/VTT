@@ -139,4 +139,24 @@ describe('вид поля на листе выбирается в констру
     fireEvent.click(within(group).getByRole('radio', { name: 'Как у колонки' }));
     expect(part().views).toEqual({ ранг: { kind: 'stepper', step: 2 } });
   });
+
+  it('вид колонки ложится в ту часть блока, через которую выбрана строка', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        tables: { навыки: { owner: 'sheet', key: 'word', columns: [{ key: 'ранг', label: 'Ранг', kind: 'number' }],
+          rows: [{ value: 'атлетика', label: 'Атлетика' }, { value: 'скрытность', label: 'Скрытность' }] } },
+        blocks: [{ name: 'Навыки', parts: [{ table: 'навыки', rows: ['атлетика'] }, { table: 'навыки', rows: ['скрытность'] }] }],
+      } as never,
+      activeFieldTag: 'навыки.скрытность.ранг',
+      activeIn: 'Навыки',
+    }));
+    renderOpen(<SheetTab />);
+    fireEvent.click(tile('Полоса'));
+    const parts = useWorld.getState().system.blocks![0]!.parts;
+    expect(parts[0]!.views).toBeUndefined();
+    expect(parts[1]!.views).toEqual({ ранг: { kind: 'bar' } });
+    expect(fieldsOf(useWorld.getState().system).find(f => f.tag === 'навыки.скрытность.ранг')!.control).toEqual({ kind: 'bar' });
+  });
 });
