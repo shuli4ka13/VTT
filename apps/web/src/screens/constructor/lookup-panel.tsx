@@ -31,7 +31,7 @@ function LookupPanel({ at }: { at: Looked }) {
   const usage = useUsage();
   const [sheet] = mannequinsOf(system);
   const reader = useReader(system, sheet ?? null, compendium);
-  const told = explainName(system, compendium, effectId, at.name, usage);
+  const told = explainName(system, compendium, effectId, at.name, usage, at.table);
 
   return (
     <>

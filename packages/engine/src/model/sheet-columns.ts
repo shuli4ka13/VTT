@@ -144,6 +144,47 @@ function rowPath(system: System, tableId: string, row: TableRow, path: string[])
   return literal(cell);
 }
 
+export interface RowStep { column: string; table: string; key: string; via?: string }
+
+export function rowSteps(system: System, tableId: string, path: string[], row?: TableRow): RowStep[] {
+  const out: RowStep[] = [];
+  let table = system.tables?.[tableId];
+  let tableKey = tableId;
+  let at: TableRow | undefined = row;
+  for (const [index, key] of path.entries()) {
+    const column = (table?.columns ?? []).find(c => c.key === key);
+    if (!table || !column) return [];
+    const last = index === path.length - 1;
+    const link = !last && column.kind === 'choice' && column.from ? column.from : undefined;
+    const cell = at ? cellSource(column, at) : undefined;
+    const target = link && cell?.kind === 'value'
+      ? (system.tables?.[link]?.rows ?? []).find(r => String(r.value) === String(cell.value))
+      : undefined;
+    out.push({
+      column: column.label || column.key,
+      table: table.label || tableKey,
+      key: tableKey,
+      ...(link ? { via: target ? (target.label ?? String(target.value)) : (system.tables?.[link]?.label || link) } : {}),
+    });
+    if (!link) break;
+    table = system.tables?.[link];
+    tableKey = link;
+    at = target;
+  }
+  return out;
+}
+
+export function rowWords(system: System, tableId: string, row: TableRow, expr: string): string {
+  return expr
+    .replace(ROW_REF, (whole, tail: string) => {
+      const steps = rowSteps(system, tableId, tail ? tail.slice(1).split('.') : [], row);
+      if (!steps.length) return tail ? whole : String(row.label ?? row.value);
+      return steps.map(step => step.via ?? step.column).join(' · ');
+    })
+    .replace(/@([\p{L}\p{N}_.]+)/gu, (whole, tag: string) => fieldOf(system, tag)?.label ?? whole)
+    .replace(/\*/g, '×');
+}
+
 export const withRow = (system: System, tableId: string, row: TableRow, expr: string): string =>
   expr.replace(ROW_REF, (_, tail: string) => rowPath(system, tableId, row, tail ? tail.slice(1).split('.') : []));
 

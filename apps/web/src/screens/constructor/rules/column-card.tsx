@@ -26,7 +26,8 @@ export interface ColumnPatch {
 }
 
 
-export function ColumnCard({ column, kinds, tables, many, formulaHint, where, names, system, onChange, onDelete, onClose, lead, extra, preview, bounds = true }: {
+export function ColumnCard({ column, kinds, tables, many, formulaHint, where, names, system, onChange, onDelete, onClose, lead, extra, preview, bounds = true, table }: {
+  table?: string;
   column: ColumnShape;
   kinds: readonly (readonly [string, string])[];
   tables: [string, string][];
@@ -83,6 +84,7 @@ export function ColumnCard({ column, kinds, tables, many, formulaHint, where, na
           value={column.expr ?? ''}
           system={system}
           where={where}
+          {...(table ? { table } : {})}
           {...(names ? { extraNames: names } : {})}
           placeholder="нет — значение вписывают"
           onChange={next => onChange({ expr: next.trim() ? next : null })}

@@ -14,7 +14,7 @@ import type { EarlierStep } from './slots.tsx';
 import { usersOf } from './usage.ts';
 import type { UsageIndex } from './usage.ts';
 import type { WorldState } from '../../store/world.ts';
-import { fieldOf } from '@vtt/engine/model/sheet-columns';
+import { fieldOf, rowSteps, ROW } from '@vtt/engine/model/sheet-columns';
 
 type Pick = Parameters<WorldState['pick']>[0];
 
@@ -75,9 +75,41 @@ function callersOf(system: System, effectId: string, key: string): string[] {
 
 const usersBy = (usage: UsageIndex, kind: RefKind, key: string, system: System) => usersOf(usage, kind, key, system);
 
+function explainRow(system: System, tableId: string, name: string): Explained | null {
+  const table = system.tables?.[tableId];
+  const path = name.split('.').slice(1);
+  if (!table || name.split('.')[0] !== ROW) return null;
+  const rows = table.rows ?? [];
+  const first = rows[0];
+  const steps = rowSteps(system, tableId, path, first);
+  if (path.length && !steps.length) return null;
+  const tableName = table.label || tableId;
+  const facts: [string, string][] = [['строка', `та же, что у клетки: своя у каждой строки «${tableName}»`]];
+  steps.forEach((step, index) => {
+    const linked = index < steps.length - 1;
+    facts.push([step.column, linked
+      ? `колонка таблицы «${step.table}» — ссылка: ведёт в строку другой таблицы`
+      : `колонка таблицы «${step.table}»`]);
+  });
+  const example = first && steps.length
+    ? `у «${first.label ?? String(first.value)}»: ${steps.map(step => step.via ?? step.column).join(' · ')}`
+    : null;
+  const target = steps.length ? steps[steps.length - 1]!.key : tableId;
+  return {
+    kind: 'клетка этой строки',
+    title: steps.length ? steps.map(step => step.column).join(' · ') : 'эта строка',
+    facts: example ? [...facts, ['пример', example]] : facts,
+    from: [`формула колонки одна на все строки таблицы «${tableName}»; у каждой строки «строка» — она сама`],
+    shown: [], users: [],
+    ...(target ? { go: { label: 'открыть таблицу', pick: { activeTab: 'dictionaries', activeTableId: target } } } : {}),
+  };
+}
+
 export function explainName(
-  system: System, compendium: Compendium | undefined, effectId: string | null, name: string, usage: UsageIndex,
+  system: System, compendium: Compendium | undefined, effectId: string | null, name: string, usage: UsageIndex, tableId?: string,
 ): Explained {
+  const own = tableId ? explainRow(system, tableId, name) : null;
+  if (own) return own;
   const effect = effectId ? system.effects?.[effectId] : undefined;
   const params = effect?.params ?? [];
   const dot = name.indexOf('.');

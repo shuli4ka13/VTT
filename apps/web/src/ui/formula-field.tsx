@@ -23,6 +23,7 @@ export interface FormulaFieldProps {
   prefix?: ReactNode;
   invalid?: boolean;
   barValue?: string;
+  table?: string;
 }
 
 export function FormulaField(props: FormulaFieldProps) {
@@ -37,6 +38,7 @@ export function FormulaField(props: FormulaFieldProps) {
   const shown = spot ? spot.value : value;
   const start = () => open({
         id, where: props.where, value: props.barValue ?? value, system,
+        ...(props.table ? { table: props.table } : {}),
         ...(names ? { names } : {}),
         ...(extraNames ? { extraNames } : {}),
         ...(badges ? { badges } : {}),
@@ -67,7 +69,7 @@ export function FormulaField(props: FormulaFieldProps) {
           {...(sheets ? { sheets } : {})}
           {...(placeholder ? { placeholder } : {})}
           readOnly
-          onChipPick={(name, label) => useLookup.getState().show({ name, label, where: props.where })}
+          onChipPick={(name, label) => useLookup.getState().show({ name, label, where: props.where, ...(props.table ? { table: props.table } : {}) })}
           onChange={() => {}}
         />
       ) : null}

@@ -158,7 +158,7 @@ export function ColumnViewField({ tableId, column, system }: { tableId: string; 
           })}
         />
       </Field>
-      {kind ? (
+      {kind && (lacking.length || takesBounds(kind, column) || TAKES_STEP.includes(kind) || ['bar', 'toggle', 'ring', 'choice', 'chips'].includes(kind)) ? (
         <div className="view-settings">
           {lacking.length ? <Verdict tone="warn">Виду «{VIEWS[kind].label}» не хватает: {lacking.join(', ')}. Пока не задано, на листе вместо него «—».</Verdict> : null}
           {takesBounds(kind, column) ? (

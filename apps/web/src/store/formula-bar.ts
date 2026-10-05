@@ -18,6 +18,7 @@ export interface BarOption {
 export interface FormulaTarget {
   id: string;
   where: string;
+  table?: string;
   value: string;
   system: System;
   names?: Record<string, ReactNode>;

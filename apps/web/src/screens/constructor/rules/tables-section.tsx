@@ -1,7 +1,7 @@
 import { ColumnSheetFields, ColumnViewField } from '../table-field.tsx';
 import { viewsFor, columnFamily, takesBounds } from '../../../sheet/views/index.tsx';
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
-import { ROW, isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields } from '@vtt/engine/model/sheet-columns';
+import { ROW, isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowWords } from '@vtt/engine/model/sheet-columns';
 import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty, Field, Chip } from '../../../ui/primitives.tsx';
 import { LiveValue } from '../live-value.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
@@ -285,6 +285,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, extr
 
   return (
     <ColumnCard
+      table={id}
       column={{ label: column.label ?? '', kind: column.kind ?? (single ? 'number' : 'text'), from: column.from, many: column.many, expr: column.expr?.expr, min: column.min, max: column.max }}
       kinds={single ? FIELD_KINDS : book ? PROP_KINDS : COLUMN_KINDS}
       tables={others}
@@ -353,7 +354,7 @@ function applyPatch(c: TableColumn, patch: ColumnPatch): void {
 }
 
 const defaultWidth = (column?: TableColumn): number =>
-  (!column ? 200 : column.expr !== undefined ? 200 : column.kind === 'choice' && column.many ? 220 : 150);
+  (!column ? 200 : column.expr !== undefined ? 360 : column.kind === 'choice' && column.many ? 220 : 150);
 
 function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
   picked: string | null;
@@ -407,7 +408,7 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
       <SheetGrid id={`table.${id}`} columns={gridColumns} tailHead={<Button size="sm" variant="ghost" title="добавить колонку" onClick={addColumn}>+</Button>}>
           {rows.map((row, i) => (
             <RowCells
-              key={i} row={row} at={i} rowKey={key} columns={columns} system={system} placed={placed}
+              key={i} tableId={id} row={row} at={i} rowKey={key} columns={columns} system={system} placed={placed}
               users={key === 'range' ? [] : rowUsers(system, id, row.value, compendium).map(u => u.text)}
               onRename={to => (row.value === undefined || row.value === ''
                 ? edit(draft => { const target = draft.rows?.[i]; if (target) target.value = to as never; })
@@ -434,7 +435,12 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
 
 const TYPED = ['number', 'text', 'dice'];
 
-function CellEditor({ column, value, system, where, names, placed, onChange }: {
+const spoken = (system: System, tableId: string, row: TableRow, expr: string): string => {
+  try { return `= ${rowWords(system, tableId, row, expr)}`; } catch { return '= как у колонки'; }
+};
+
+function CellEditor({ column, value, system, where, names, placed, inherited, onChange }: {
+  inherited?: string;
   column: TableColumn;
   value: unknown;
   system: System;
@@ -457,7 +463,7 @@ function CellEditor({ column, value, system, where, names, placed, onChange }: {
     );
   }
   const empty = value === undefined || value === '';
-  const hint = column.expr !== undefined ? '= как у колонки' : placed ? 'вводит игрок' : '';
+  const hint = column.expr !== undefined ? inherited ?? '= как у колонки' : placed ? 'вводит игрок' : '';
   if (!TYPED.includes(column.kind ?? 'text')) {
     return <ValueEditor type={column} value={empty ? '' : value} system={system} {...(hint ? { blank: hint } : {})} onChange={next => onChange(next === '' ? undefined : next)} />;
   }
@@ -482,7 +488,8 @@ function CellEditor({ column, value, system, where, names, placed, onChange }: {
   );
 }
 
-function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRename, taken, where, placed, names }: {
+function RowCells({ tableId, row, at, rowKey, columns, system, edit, setCell, users, onRename, taken, where, placed, names }: {
+  tableId: string;
   placed: boolean;
   names: Map<string, string>;
   row: TableRow;
@@ -522,6 +529,7 @@ function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRe
           where={where(column)}
           names={names}
           placed={placed}
+          inherited={column.expr !== undefined ? spoken(system, tableId, row, column.expr.expr) : undefined}
           onChange={value => setCell(at, column.key, value)}
         />
       ))}
