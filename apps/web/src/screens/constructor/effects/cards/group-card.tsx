@@ -73,7 +73,7 @@ export function GroupCard({
 
   const actions = (
     <>
-      {onMoveLane ? (
+      {onMoveLane && (lane === 'cost' || !folded) ? (
         <Chip
           active={lane === 'cost'}
           title={lane === 'cost'
@@ -90,10 +90,12 @@ export function GroupCard({
 
   if (group.kind === 'split') {
     return (
-      <Card>
-        <CardHead title={`${position} · ${STEP_WORDS.each.label}`} actions={actions} />
-        <span className="faint">{STEP_WORDS.each.hint}</span>
-      </Card>
+      <div className="steps__split" title={STEP_WORDS.each.hint}>
+        <span className="steps__split-title">{position} · {STEP_WORDS.each.label}</span>
+        <span className="step-fold__summary">шаги ниже — по очереди для каждой цели, выше — один раз</span>
+        <span className="spacer" />
+        {actions}
+      </div>
     );
   }
 
@@ -125,7 +127,6 @@ export function GroupCard({
             {actions}
           </div>
         </Card>
-        {breakLine(group)}
       </>
     );
   }
@@ -146,9 +147,9 @@ export function GroupCard({
           : null}
         {group.kind === 'table' ? <TableBody step={step} context={context} edit={edit} system={system} /> : null}
         <ConditionFold group={group} earlier={earlier} edit={edit} context={context} />
+        {breakLine(group)}
         <StepName group={group} effect={effect} edit={edit} />
       </Card>
-      {breakLine(group)}
     </>
   );
 }

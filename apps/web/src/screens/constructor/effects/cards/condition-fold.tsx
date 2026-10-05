@@ -58,9 +58,9 @@ export function breakLine(group: CardGroup) {
   const sign = OP_SIGN[op] ?? '≥';
   const not = OP_NOT[op] ?? '<';
   return (
-    <div className="card-forks">
-      <p className="card-break card-break--on">{onSuccess ? sign : not} — цепочка продолжается</p>
-      <p className="card-break">{onSuccess ? not : sign} — эффект кончается здесь</p>
-    </div>
+    <p className="card-forks">
+      <span className="card-break card-break--on">{onSuccess ? sign : not} — дальше</span>
+      <span className="card-break">{onSuccess ? not : sign} — шаги ниже не идут</span>
+    </p>
   );
 }

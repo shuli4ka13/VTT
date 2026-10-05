@@ -58,7 +58,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
       .map((step, at) => ({ step, at }))
       .filter(({ step }) => step.id || (step.type === 'each' && (step as { as?: unknown }).as))
       .map(({ step, at }) => ({
-        id: String(step.type === 'each' ? (step as { as?: unknown }).as : step.id), type: step.type, at: cardAt(at), title: cardTitle(cards, at, system),
+        id: String(step.type === 'each' ? (step as { as?: unknown }).as : step.id), type: step.type, at: startAt + cardAt(at), title: cardTitle(cards, at, system),
       }));
 
   const problems = steps.map((step, index) => problemOf(step, system, effect, earlierOf(index)));
@@ -83,6 +83,93 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     if (fresh.length) setOpen(fresh, true);
   }, [name, signature, setOpen]);
 
+  const cardOf = (group: (typeof cards)[number], at: number) => {
+    const problem = group.indices.map(i => problems[i]).find(Boolean) ?? null;
+
+    const donorFix = problem?.missingField ? findDonorBlock(problem.missingField) : null;
+
+    return (
+      <GroupCard
+        key={group.indices[0]}
+        group={group}
+        position={startAt + at + 1}
+        system={system}
+        effect={effect}
+        earlier={[
+          ...earlierOf(group.indices[0]!),
+          ...(group.amount?.id
+            ? [{ id: String(group.amount.id), type: 'roll', at: 0, title: 'здесь же' }]
+            : []),
+        ]}
+        problem={problem}
+        sheets={sheetsAt(system, id, placeAt(group.indices[0]!))}
+        lane={lane}
+        folded={!opened[foldKey(group)]}
+        onFold={() => toggleFold(foldKey(group))}
+        onMoveLane={onMoveLane ? to => onMoveLane(group.indices, to) : undefined}
+        {...(group.kind === 'check' && group.amount ? { onUnpair: () => edit(draft => { draft.steps = (draft.steps ?? []).filter((_, i) => i !== group.indices[0]); }) } : {})}
+        problemAction={donorFix ? (
+          <Button size="sm" onClick={() => copyDonorBlock(donorFix.donor, donorFix.group)}>
+            {`взять блок «${donorFix.group}» из «${donorFix.donor.name}»`}
+          </Button>
+        ) : undefined}
+        onAddParam={addParam}
+        onOpenEffect={onOpenEffect}
+        edit={(k, change) => edit(draft => {
+          const index = group.indices[k] ?? group.indices[0]!;
+          change(draft.steps![index]!);
+        })}
+
+        withNumber={change => edit(draft => {
+          const steps = draft.steps ?? (draft.steps = []);
+          const applyAt = group.indices[group.indices.length - 1]!;
+          let amountAt = group.amount ? group.indices[0]! : -1;
+          if (amountAt < 0) {
+            const taken = steps.map(step => step.id).filter(Boolean) as string[];
+            steps.splice(applyAt, 0, {
+              id: freeId(taken, 'n'), type: 'roll',
+            } as never);
+            amountAt = applyAt;
+          }
+          const amount = steps[amountAt]!;
+          change(amount, steps[amountAt + 1]!, String(amount.id));
+        })}
+        onDelete={() => {
+          const before = structuredClone(steps);
+          const removal = removeSteps(steps, group.indices);
+          edit(draft => { draft.steps = removal.steps; });
+          const where = (c: { step: number; slot: string }) => `${STEP.one} ${c.step + 1} · ${c.slot.replace(/ \(формула\)$/, '')}`;
+          const cleared = removal.cleared.filter(c => !c.slot.endsWith('(формула)'));
+          const left = removal.cleared.filter(c => c.slot.endsWith('(формула)'));
+          const title = cardTitle(cards, group.indices[0]!, system);
+          setRemoved({
+            before,
+            after: JSON.stringify(removal.steps),
+            text: [
+              `Убран ${STEP.one} ${at + 1}${title ? ` · ${title}` : ''}`,
+              cleared.length ? `ссылки на него очищены: ${cleared.map(where).join(', ')}` : '',
+              left.length ? `остались в формулах — поправьте: ${left.map(where).join(', ')}` : '',
+            ].filter(Boolean).join('; '),
+          });
+        }}
+        onMoveUp={at === 0 ? undefined : () => edit(draft => {
+          draft.steps = moveGroup(draft.steps ?? [], at, -1);
+        })}
+        onMoveDown={at === cards.length - 1 ? undefined : () => edit(draft => {
+          draft.steps = moveGroup(draft.steps ?? [], at, 1);
+        })}
+      />
+    );
+  };
+
+  const splitAt = cards.findIndex(card => card.kind === 'split');
+  const list = splitAt < 0 ? cards.map((group, at) => cardOf(group, at)) : (
+    <>
+      {cards.slice(0, splitAt + 1).map((group, at) => cardOf(group, at))}
+      <div className="steps__each">{cards.slice(splitAt + 1).map((group, at) => cardOf(group, splitAt + 1 + at))}</div>
+    </>
+  );
+
   return (
     <>
       {bare ? null : <div className="inline">
@@ -100,8 +187,6 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
             ? <Verdict tone="ok">эффект верный · {STEP.manyGen} {cards.length + startAt}</Verdict>
             : <Verdict tone="warn">{empty}</Verdict>}
       </div>}
-      {lead}
-
       {removed && removed.after === JSON.stringify(steps) ? (
         <Verdict
           tone="warn"
@@ -118,84 +203,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         </Verdict>
       ) : null}
 
-      {cards.map((group, at) => {
-        const problem = group.indices.map(i => problems[i]).find(Boolean) ?? null;
-
-        const donorFix = problem?.missingField ? findDonorBlock(problem.missingField) : null;
-
-        return (
-          <GroupCard
-            key={group.indices[0]}
-            group={group}
-            position={startAt + at + 1}
-            system={system}
-            effect={effect}
-            earlier={[
-              ...earlierOf(group.indices[0]!),
-              ...(group.amount?.id
-                ? [{ id: String(group.amount.id), type: 'roll', at: 0, title: 'здесь же' }]
-                : []),
-            ]}
-            problem={problem}
-            sheets={sheetsAt(system, id, placeAt(group.indices[0]!))}
-            lane={lane}
-            folded={!opened[foldKey(group)]}
-            onFold={() => toggleFold(foldKey(group))}
-            onMoveLane={onMoveLane ? to => onMoveLane(group.indices, to) : undefined}
-            {...(group.kind === 'check' && group.amount ? { onUnpair: () => edit(draft => { draft.steps = (draft.steps ?? []).filter((_, i) => i !== group.indices[0]); }) } : {})}
-            problemAction={donorFix ? (
-              <Button size="sm" onClick={() => copyDonorBlock(donorFix.donor, donorFix.group)}>
-                {`взять блок «${donorFix.group}» из «${donorFix.donor.name}»`}
-              </Button>
-            ) : undefined}
-            onAddParam={addParam}
-            onOpenEffect={onOpenEffect}
-            edit={(k, change) => edit(draft => {
-              const index = group.indices[k] ?? group.indices[0]!;
-              change(draft.steps![index]!);
-            })}
-
-            withNumber={change => edit(draft => {
-              const steps = draft.steps ?? (draft.steps = []);
-              const applyAt = group.indices[group.indices.length - 1]!;
-              let amountAt = group.amount ? group.indices[0]! : -1;
-              if (amountAt < 0) {
-                const taken = steps.map(step => step.id).filter(Boolean) as string[];
-                steps.splice(applyAt, 0, {
-                  id: freeId(taken, 'n'), type: 'roll',
-                } as never);
-                amountAt = applyAt;
-              }
-              const amount = steps[amountAt]!;
-              change(amount, steps[amountAt + 1]!, String(amount.id));
-            })}
-            onDelete={() => {
-              const before = structuredClone(steps);
-              const removal = removeSteps(steps, group.indices);
-              edit(draft => { draft.steps = removal.steps; });
-              const where = (c: { step: number; slot: string }) => `${STEP.one} ${c.step + 1} · ${c.slot.replace(/ \(формула\)$/, '')}`;
-              const cleared = removal.cleared.filter(c => !c.slot.endsWith('(формула)'));
-              const left = removal.cleared.filter(c => c.slot.endsWith('(формула)'));
-              const title = cardTitle(cards, group.indices[0]!, system);
-              setRemoved({
-                before,
-                after: JSON.stringify(removal.steps),
-                text: [
-                  `Убран ${STEP.one} ${at + 1}${title ? ` · ${title}` : ''}`,
-                  cleared.length ? `ссылки на него очищены: ${cleared.map(where).join(', ')}` : '',
-                  left.length ? `остались в формулах — поправьте: ${left.map(where).join(', ')}` : '',
-                ].filter(Boolean).join('; '),
-              });
-            }}
-            onMoveUp={at === 0 ? undefined : () => edit(draft => {
-              draft.steps = moveGroup(draft.steps ?? [], at, -1);
-            })}
-            onMoveDown={at === cards.length - 1 ? undefined : () => edit(draft => {
-              draft.steps = moveGroup(draft.steps ?? [], at, 1);
-            })}
-          />
-        );
-      })}
+      {bare ? list : <div className="steps">{lead}{list}</div>}
 
       {bare ? null : <div className="inline inline--tight">
         {[...BRICKS, ...(onRoll ? SEEN_BRICKS : [])].map(b => (
