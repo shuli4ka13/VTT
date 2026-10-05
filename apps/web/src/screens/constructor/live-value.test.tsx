@@ -26,7 +26,7 @@ describe('живое значение под формулой колонки п�
   });
   afterEach(() => { cleanup(); });
 
-  it('считает формулу на манекене, пересказывает её словами и называет зависимости', () => {
+  it('считает формулу на новом листе, пересказывает её словами и называет зависимости', () => {
     render(<Sheets />);
     expect(document.body.textContent).toContain('= 2');
     expect(document.body.textContent).toContain('(Сила - 10) / 2');

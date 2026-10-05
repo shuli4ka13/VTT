@@ -26,7 +26,7 @@ export function LiveValue({ system, compendium, tag, source }: {
     <div className="stack stack--tight live">
       <span className={`live__value ${value.bad ? 'field__error' : ''}`} title={value.title}>
         = {value.text}{' '}
-        <Tip text="Манекен — пробный лист с значениями по умолчанию; так автор видит формулу в числах, не заводя персонажа."><span className="faint">на манекене</span></Tip>
+        <Tip text="Новый лист со значениями по умолчанию: так формула видна в числах без персонажа."><span className="faint">на новом листе</span></Tip>
       </span>
       {words && words !== source ? <span className="faint">{words}</span> : null}
       {deps.length ? (

@@ -7,8 +7,8 @@ export type { DiceMode };
 export { DICE_MODES };
 
 export const MANNEQUINS: { id: string; name: string }[] = [
-  { id: 'манекен_а', name: 'А' },
-  { id: 'манекен_б', name: 'Б' },
+  { id: 'проба_а', name: 'А' },
+  { id: 'проба_б', name: 'Б' },
 ];
 
 export const mannequinsOf = (system: System): Sheet[] =>

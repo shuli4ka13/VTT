@@ -7,7 +7,8 @@ import { familyOf, viewNeeds, VIEWS } from '../../sheet/views/index.tsx';
 import { DonorPalette } from './donors.tsx';
 import { newColumn } from './factory.ts';
 import { addColumn, CharacterSection } from './rules/character-section.tsx';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { useUsage } from './usage.ts';
 import { Segmented } from '../../ui/primitives.tsx';
 import { placeOnSheet, sheetTables } from './table-field.tsx';
@@ -21,9 +22,11 @@ import { fieldOf, rowKeyOf, cellSource } from '@vtt/engine/model/sheet-columns';
 export function SheetTab() {
   const system = useWorld(s => s.system);
   const activeTag = useWorld(s => s.activeFieldTag);
+  const activeColumn = useWorld(s => s.activeColumn);
   const pick = useWorld(s => s.pick);
   const editSystem = useWorld(s => s.editSystem);
   const active = activeTag ? fieldOf(system, activeTag) ?? null : null;
+  const docked = Boolean(active) || Boolean(activeColumn && system.tables?.[activeColumn.table]?.columns?.some(c => c.key === activeColumn.column));
   const tables = sheetTables(system);
   const right = useLookupPane({ head: 'Готовое из образцов', body: <DonorPalette kind="blocks" /> });
   const kindPicked = useWorld(s => s.activeSheetKind);
@@ -52,9 +55,12 @@ export function SheetTab() {
             ) : null}
           </>
         ),
+        ...(docked ? { pinned: true } : {}),
         body: active
-          ? <ViewPanel field={active} system={system} />
-          : <Empty title="Щёлкните поле на листе" />,
+          ? <Docked at={active.tag}><ViewPanel field={active} system={system} /></Docked>
+          : docked
+            ? <Docked at={`${activeColumn!.table}.${activeColumn!.column}`}><ColumnPanel table={activeColumn!.table} column={activeColumn!.column} system={system} /></Docked>
+            : <Empty title="Щёлкните поле на листе" />,
       }}
       main={{
         body: (
@@ -65,8 +71,8 @@ export function SheetTab() {
               onChange={next => setView(next as 'sample' | 'kinds')}
             />
             {view === 'sample'
-              ? <SheetSample system={system} picked={activeTag} onPick={tag => pick({ activeFieldTag: tag, activeGroupName: null })} />
-              : <CharacterSection system={system} editSystem={editSystem} usage={usage} onTable={id => pick({ activeTab: 'dictionaries', activeTableId: id })} />}
+              ? <SheetSample system={system} picked={activeTag} onPick={tag => pick({ activeFieldTag: tag, activeGroupName: null, activeColumn: null })} />
+              : <CharacterSection docked system={system} editSystem={editSystem} usage={usage} onTable={id => pick({ activeTab: 'dictionaries', activeTableId: id })} />}
           </>
         ),
       }}
@@ -147,4 +153,22 @@ function RowView({ field, system }: { field: FieldModel; system: System }) {
       ) : null}
     </Field>
   );
+}
+
+function ColumnPanel({ table: id, column: key, system }: { table: string; column: string; system: System }) {
+  const editSystem = useWorld(s => s.editSystem);
+  const pick = useWorld(s => s.pick);
+  const table = system.tables![id]!;
+  const column = table.columns!.find(c => c.key === key)!;
+  return (
+    <TableColumnCard id={id} table={table} column={column} system={system}
+      edit={change => editSystem(draft => { const target = draft.tables?.[id]; if (target) change(target); })}
+      onClose={() => pick({ activeColumn: null })} />
+  );
+}
+
+function Docked({ at, children }: { at: string; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => { ref.current?.scrollIntoView?.({ block: 'start', behavior: 'smooth' }); }, [at]);
+  return <div ref={ref} className="stack">{children}</div>;
 }

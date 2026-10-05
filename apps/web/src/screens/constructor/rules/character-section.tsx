@@ -64,7 +64,8 @@ function BlockName({ value, onCommit }: { value: string; onCommit: (next: string
 
 type Picked = { table: string; column: string } | null;
 
-export function CharacterSection({ system, editSystem }: {
+export function CharacterSection({ system, editSystem, docked }: {
+  docked?: boolean;
   system: System;
   editSystem: WorldState['editSystem'];
   usage?: UsageIndex;
@@ -74,7 +75,8 @@ export function CharacterSection({ system, editSystem }: {
   const pick = useWorld(s => s.pick);
   const of = useWorld(s => s.activeSheetKind) ?? '';
   const setOf = (key: string) => pick({ activeSheetKind: key || null });
-  const [cell, setCell] = useState<Picked>(null);
+  const cell = useWorld(s => s.activeColumn) as Picked;
+  const setCell = (next: Picked) => pick({ activeColumn: next });
   const kinds = sheetKinds(system);
   const kind = of ? system.sheets?.[of] : undefined;
   const active = fieldsOf(system).filter(isCharacterColumn).find(f => f.tag === picked) ?? null;
@@ -216,7 +218,7 @@ export function CharacterSection({ system, editSystem }: {
           <SheetKindEditor id={of} kind={kind} system={system} />
         </>
       ) : null}
-      {open && openTable && openColumn ? (
+      {!docked && open && openTable && openColumn ? (
         <TableColumnCard id={open.table} table={openTable} column={openColumn} system={system}
           edit={change => editSystem(draft => { const target = draft.tables?.[open.table]; if (target) change(target); })}
           onClose={() => { setCell(null); pick({ activeFieldTag: null }); }} />

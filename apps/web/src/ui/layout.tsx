@@ -29,11 +29,11 @@ export function Columns({ left, main, right }: { left?: Pane; main: { body: Reac
   const [leftFolded, toggleLeft] = useFold('left', left?.head);
   const [rightFolded, toggleRight] = useFold('right', right?.head);
   const shape = left && right ? '' : left ? 'columns--left-only' : right ? 'columns--right-only' : 'columns--one';
-  const folds = `${left && leftFolded ? ' columns--l-folded' : ''}${right && rightFolded && !right.pinned ? ' columns--r-folded' : ''}`;
+  const folds = `${left && leftFolded && !left.pinned ? ' columns--l-folded' : ''}${right && rightFolded && !right.pinned ? ' columns--r-folded' : ''}`;
 
   return (
     <div className={`columns ${shape}${folds}`}>
-      {left ? <Column kind="side" pane={left} folded={leftFolded} onFold={toggleLeft} /> : null}
+      {left ? <Column kind="side" pane={left} folded={leftFolded && !left.pinned} onFold={toggleLeft} /> : null}
       <div className="column column--main">
         <div className="column__inner">{main.body}</div>
       </div>

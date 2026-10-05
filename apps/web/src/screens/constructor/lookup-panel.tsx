@@ -49,7 +49,7 @@ function LookupPanel({ at }: { at: Looked }) {
 
       {told.field && sheet ? (
         <Card>
-          <CardHead title="На листе" sub={`манекен «${sheet.name}»`} />
+          <CardHead title="На листе" sub="новый лист" />
           <SheetView system={system} sheet={sheet} reader={reader} only={[told.field]} />
         </Card>
       ) : null}

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { screen, fireEvent, cleanup, within } from '@testing-library/react';
+import { screen, fireEvent, cleanup, within, act } from '@testing-library/react';
 import { renderOpen } from '../../testing/render-open.tsx';
 import { useWorld, emptySystem } from '../../store/world.ts';
 import { SheetTab } from './sheet-tab.tsx';
@@ -88,6 +88,17 @@ describe('вид поля на листе выбирается в констру
     expect(columns.map(c => c.key)).toEqual(['хиты_max', 'хиты']);
     expect(columns[1]!.max).toEqual({ expr: '@хиты_max' });
     expect(screen.queryByText(/не хватает: верх/)).toBeNull();
+  });
+
+  it('в «блоках и типах листов» редактор поля открывается слева, а не в общем списке', () => {
+    renderOpen(<SheetTab />);
+    fireEvent.click(screen.getByRole('button', { name: 'блоки и типы листов' }));
+    act(() => { useWorld.setState(state => ({ ...state, activeFieldTag: null })); });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Хиты' }).find(b => b.closest('.column--main'))!);
+    const side = document.querySelector('.column--side')!;
+    const main = document.querySelector('.column--main')!;
+    expect(side.querySelector('[role="radiogroup"][aria-label="Вид"]')).toBeTruthy();
+    expect(main.querySelector('[role="radiogroup"][aria-label="Вид"]')).toBeNull();
   });
 
   it('посчитанному полю предлагают только виды показа', () => {
