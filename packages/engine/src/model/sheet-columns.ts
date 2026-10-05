@@ -50,7 +50,9 @@ export const viewOf = (table: Table | undefined, column: string, row?: TableRow)
     ...(spec?.control !== undefined ? { control: spec.control } : {}),
     ...(spec?.default !== undefined ? { default: spec.default } : {}),
   };
-  return { ...own, ...row?.view?.[column] };
+  const mine = row?.view?.[column];
+  const control = mine?.control ? { ...spec?.control, ...mine.control } : own.control;
+  return { ...own, ...mine, ...(control ? { control } : {}) };
 };
 
 function token(system: System, table: Table, row: TableRow, name: string): string {
@@ -87,6 +89,27 @@ function deep(system: System, table: Table, row: TableRow, value: unknown): unkn
 }
 
 const STORED = ['number', 'text', 'boolean', 'choice'];
+
+const TYPE_WORDS: Record<string, string> = { number: 'число', text: 'текст', boolean: 'да или нет', choice: 'вариант' };
+
+export const valueWord = (value: unknown): string =>
+  (typeof value === 'boolean' ? (value ? 'да' : 'нет')
+    : Array.isArray(value) ? (value.length ? value.map(valueWord).join(', ') : '—')
+      : value === null || value === undefined || value === '' ? '—' : String(value));
+
+export function misfit(field: Pick<Field, 'label' | 'value'>, value: unknown): string | null {
+  if (field.value.kind !== 'stored' || value === null || value === undefined) return null;
+  const { type, many } = field.value;
+  if (Array.isArray(value) !== Boolean(many)) {
+    return many ? `«${field.label}» хранит список значений` : `«${field.label}» хранит одно значение, а не список`;
+  }
+  const items = Array.isArray(value) ? value : [value];
+  const ok = items.every(item => (type === 'number' ? typeof item === 'number'
+    : type === 'boolean' ? typeof item === 'boolean'
+      : type === 'text' ? typeof item === 'string'
+        : typeof item !== 'object'));
+  return ok ? null : `«${field.label}» хранит ${TYPE_WORDS[type] ?? type}, а пришло ${JSON.stringify(value)}`;
+}
 
 const ZERO: Record<string, unknown> = { number: 0, text: '', boolean: false, choice: '' };
 

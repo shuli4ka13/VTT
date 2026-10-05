@@ -32,21 +32,22 @@ export function FieldCell({ field, system, sheet, reader, onChange, onRoll, bare
     : computed!.ok ? computed!.value : undefined;
   const editable = stored && onChange ? onChange : null;
 
-  const spec = field.control ? VIEWS[field.control] : null;
-  const fits = spec && (stored ? Boolean(editable) || spec.shows : spec.shows) && (value === undefined || value === null || spec.fits(value));
+  const kind = field.control?.kind;
+  const spec = kind ? VIEWS[kind] : null;
+  const fits = spec && (stored ? Boolean(editable) || spec.shows : spec.shows) && spec.fits(value);
   if (spec && fits && (stored || computed!.ok)) {
-    const write = editable
-      ? (next: StoredValue) => editable(field.tag, field.value.kind === 'stored' && field.value.type === 'number' && typeof next === 'boolean' ? (next ? 1 : 0) : next)
-      : undefined;
+    const { kind: _kind, ...settings } = field.control!;
+    const write = editable ? (next: StoredValue) => editable(field.tag, next) : undefined;
     return (
       <Group label={label}>
-        <div className={`v-cell v-cell--${field.control}`}>
+        <div className={`v-cell v-cell--${kind}`}>
           <spec.draw
             value={value}
             label={field.label}
             min={boundOf(field.value.min, reader)}
             max={boundOf(field.value.max, reader)}
             options={options}
+            control={settings}
             {...(write ? { onChange: write } : {})}
           />
           {roll}

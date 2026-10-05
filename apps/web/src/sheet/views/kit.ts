@@ -1,4 +1,4 @@
-import type { FieldOption, StoredValue } from '@vtt/schema';
+import type { Control, FieldOption, StoredValue } from '@vtt/schema';
 
 export interface ViewProps {
   value: unknown;
@@ -6,36 +6,42 @@ export interface ViewProps {
   min?: number;
   max?: number;
   options?: FieldOption[];
+  control?: Omit<Control, 'kind'>;
   onChange?: (value: StoredValue) => void;
 }
+
+export const MOST_DOTS = 20;
 
 export const clamp = (value: number, min?: number, max?: number): number => {
   const low = typeof min === 'number' ? Math.max(min, value) : value;
   return typeof max === 'number' ? Math.min(max, low) : low;
 };
 
-export const numberOf = (value: unknown): number => {
-  const n = typeof value === 'number' ? value : typeof value === 'boolean' ? Number(value) : Number(value ?? 0);
-  return Number.isFinite(n) ? n : 0;
+export const blank = (value: unknown): boolean => value === null || value === undefined || value === '';
+
+export const numberOf = (value: unknown): number | null => {
+  if (blank(value)) return null;
+  const n = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(n) ? n : null;
 };
 
 export const signed = (n: number): string => (n < 0 ? `−${Math.abs(n)}` : `+${n}`);
 
 export const listOf = (value: unknown): unknown[] =>
-  Array.isArray(value) ? value : value === null || value === undefined || value === '' ? [] : [value];
+  Array.isArray(value) ? value : blank(value) ? [] : [value];
 
 export const same = (a: unknown, b: unknown): boolean => String(a) === String(b);
 
 export const labelOf = (options: FieldOption[] | undefined, value: unknown): string =>
   options?.find(option => same(option.value, value))?.label ?? String(value ?? '');
 
-export const slotsOf = (max: number | undefined, value: number, fallback = 5): number =>
-  Math.max(0, Math.min(20, Math.round(typeof max === 'number' ? max : Math.max(value, fallback))));
+export const shareOf = (now: number, min: number, max: number): number =>
+  (max > min ? Math.max(0, Math.min(1, (now - min) / (max - min))) : 0);
 
-export const shareOf = (now: number, min = 0, max?: number): number => {
-  const top = typeof max === 'number' && max > min ? max : Math.max(now, min + 1);
-  return Math.max(0, Math.min(1, (now - min) / (top - min)));
+export const toneOf = (share: number, worse: 'low' | 'high' = 'low'): 'ok' | 'warn' | 'danger' => {
+  const bad = worse === 'low' ? 1 - share : share;
+  return bad >= 0.75 ? 'danger' : bad >= 0.5 ? 'warn' : 'ok';
 };
 
-export const toneOf = (share: number): 'ok' | 'warn' | 'danger' =>
-  share <= 0.25 ? 'danger' : share <= 0.5 ? 'warn' : 'ok';
+export const roundTo = (value: number, step: number, min = 0): number =>
+  Math.round((value - min) / step) * step + min;

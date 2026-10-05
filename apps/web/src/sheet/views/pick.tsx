@@ -3,8 +3,8 @@ import { labelOf, listOf, same } from './kit.ts';
 import type { ViewProps } from './kit.ts';
 import type { FieldOption } from '@vtt/schema';
 
-export function Toggle({ value, label, onChange }: ViewProps) {
-  const on = Boolean(value);
+export function Toggle({ value, label, control, onChange }: ViewProps) {
+  const on = value === true;
   return (
     <button
       type="button"
@@ -17,32 +17,24 @@ export function Toggle({ value, label, onChange }: ViewProps) {
       onClick={() => onChange?.(!on)}
     >
       <span className="v-toggle__track"><span className="v-toggle__knob" /></span>
-      <span className="v-toggle__text">{on ? 'да' : 'нет'}</span>
+      <span className="v-toggle__text">{on ? control?.yes ?? 'да' : control?.no ?? 'нет'}</span>
     </button>
   );
 }
 
-const STEPS: FieldOption[] = [
-  { value: 0, label: 'нет' }, { value: 1, label: 'владение' }, { value: 2, label: 'мастерство' },
-];
-
-const stepsOf = (min = 0, max?: number): FieldOption[] => {
-  if (typeof max !== 'number' || max < min) return STEPS;
-  if (min >= 0 && max <= 2) return STEPS.slice(min, max + 1);
-  return Array.from({ length: Math.min(8, max - min + 1) }, (_, at) => ({ value: min + at, label: String(min + at) }));
-};
-
-export function Ring({ value, label, options, min, max, onChange }: ViewProps) {
-  const steps = options?.length ? options : stepsOf(min, max);
-  const at = Math.max(0, steps.findIndex(step => same(step.value, value ?? steps[0]!.value)));
-  const share = steps.length > 1 ? at / (steps.length - 1) : 1;
+export function Ring({ value, label, options, onChange }: ViewProps) {
+  const steps = options ?? [];
+  if (!steps.length) return <span className="v-empty" title="ступени — строки таблицы вариантов; задаются в конструкторе">вариантов ещё нет</span>;
+  const at = steps.findIndex(step => same(step.value, value));
+  const share = at < 0 ? 0 : steps.length > 1 ? at / (steps.length - 1) : 1;
   const length = 2 * Math.PI * 8;
   const next = steps[(at + 1) % steps.length]!;
+  const name = at < 0 ? '—' : steps[at]!.label;
   return (
     <button
       type="button"
-      className={`v-ring${at ? ' v-ring--on' : ''}`}
-      title={`${label}: ${steps[at]?.label ?? ''}. Клик — следующая ступень.`}
+      className={`v-ring${at > 0 ? ' v-ring--on' : ''}`}
+      title={`${label}: ${name}. Клик — следующая ступень.`}
       disabled={!onChange}
       onClick={() => onChange?.(next.value)}
     >
@@ -52,7 +44,7 @@ export function Ring({ value, label, options, min, max, onChange }: ViewProps) {
           strokeDasharray={`${share * length} ${length}`} transform="rotate(-90 10 10)" />
         {share >= 1 && steps.length > 1 ? <circle cx="10" cy="10" r="3.5" className="v-ring__core" /> : null}
       </svg>
-      <span className="v-ring__text">{steps[at]?.label ?? ''}</span>
+      <span className="v-ring__text">{name}</span>
     </button>
   );
 }
@@ -118,7 +110,6 @@ export function Die({ value, label, onChange }: ViewProps) {
       <input
         aria-label={label}
         value={draft ?? text}
-        placeholder="1к6"
         onChange={event => setDraft(event.target.value)}
         onBlur={event => { if (event.target.value !== text) onChange(event.target.value); setDraft(null); }}
         onKeyDown={event => { if (event.key === 'Enter') event.currentTarget.blur(); }}

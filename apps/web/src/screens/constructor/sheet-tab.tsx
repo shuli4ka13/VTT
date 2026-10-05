@@ -4,7 +4,7 @@ import { Columns } from '../../ui/layout.tsx';
 import { useLookupPane } from './lookup-panel.tsx';
 import { Select, Button, Empty, DangerButton, Field } from '../../ui/primitives.tsx';
 import { ViewGallery } from './view-gallery.tsx';
-import { familyOf, VIEWS } from '../../sheet/views/index.tsx';
+import { familyOf, viewNeeds, VIEWS } from '../../sheet/views/index.tsx';
 import { DonorPalette } from './donors.tsx';
 import { newColumn } from './factory.ts';
 import { addColumn, CharacterSection } from './rules/character-section.tsx';
@@ -118,8 +118,9 @@ function RowView({ field, system }: { field: FieldModel; system: System }) {
   const row = table?.rows?.find(r => rowKeyOf(r) === mark.row);
   if (!table || !column || !row) return null;
   const computed = cellSource(column, row).kind === 'formula';
-  const own = row.view?.[mark.column]?.control;
-  const inherited = column.control ? VIEWS[column.control].label.toLowerCase() : computed ? 'просто число' : 'обычное поле';
+  const own = row.view?.[mark.column]?.control?.kind;
+  const inherited = column.control ? VIEWS[column.control.kind].label.toLowerCase() : computed ? 'просто число' : 'обычное поле';
+  const lacking = own ? viewNeeds(own, column) : [];
   return (
     <Field label={`Вид только у «${field.label}»`}>
       <ViewGallery
@@ -128,17 +129,23 @@ function RowView({ field, system }: { field: FieldModel; system: System }) {
         family={familyOf(column.kind ?? (computed ? undefined : 'number'), column.many, computed)}
         computed={computed}
         plain={{ label: 'Как у колонки', hint: `колонка: ${inherited}` }}
+        needs={next => viewNeeds(next, column)}
         onChange={next => editSystem(draft => {
           const target = draft.tables?.[mark.table]?.rows?.find(r => rowKeyOf(r) === mark.row);
           if (!target) return;
           const views = { ...target.view };
           const { control: _old, ...rest } = views[mark.column] ?? {};
-          if (next && next !== column.control) views[mark.column] = { ...rest, control: next };
+          if (next && next !== column.control?.kind) views[mark.column] = { ...rest, control: { kind: next } };
           else if (Object.keys(rest).length) views[mark.column] = rest;
           else delete views[mark.column];
           if (Object.keys(views).length) target.view = views; else delete target.view;
         })}
       />
+      {own ? (
+        <span className="faint">
+          Границы, шаг и подписи — общие, в колонке «{column.label || column.key}».{lacking.length ? ` Не хватает: ${lacking.join(', ')}.` : ''}
+        </span>
+      ) : null}
     </Field>
   );
 }

@@ -1,7 +1,7 @@
 import { effectLabelOf } from './actions.ts';
 import { isShared, isDesk } from './desk.ts';
 import { MOMENT_PREFIX } from './bus.ts';
-import { fieldOf as columnField } from '../model/sheet-columns.ts';
+import { fieldOf as columnField, valueWord } from '../model/sheet-columns.ts';
 import type { Report } from '../core/log.ts';
 import type { Clock } from '../engine/clock.ts';
 import type { System, Sheet, WornEffect } from '../model/types.ts';
@@ -85,7 +85,7 @@ export const describeMoment = (
   const changes = (entry.report.changes as { tag: string; from: unknown; to: unknown }[])
     .map(change => {
       const field = columnField(world.system, change.tag);
-      return `${field?.label ?? change.tag}: ${change.from} → ${change.to}`;
+      return `${field?.label ?? change.tag}: ${valueWord(change.from)} → ${valueWord(change.to)}`;
     });
   return changes.length ? `${who}: «${what}» — ${changes.join(', ')}` : `${who}: «${what}»`;
 };

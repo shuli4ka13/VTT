@@ -9,6 +9,7 @@ import { basedOn, paramsOf, lineTrouble } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
 import { recordsOf, argsWithProps, propKeysOf, recordKinds, kindsOf, kindOf, isBook } from './owned.ts';
 import { blockNames } from './blocks.ts';
+import { columnFamily, viewsFor, viewNeeds, VIEW_LABELS } from './views.ts';
 import { bindingsOf } from '../events/actions.ts';
 import { kindOfRecord } from './owned.ts';
 import { tableOf } from './buttons.ts';
@@ -302,6 +303,35 @@ function rowNameProblems(system: System): Problem[] {
   return out;
 }
 
+function viewProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  for (const [id, table] of Object.entries(system.tables ?? {})) {
+    if (!onSheet(table)) continue;
+    const where = { tab: 'rules' as const, section: 'tables', key: id };
+    for (const column of table.columns ?? []) {
+      const name = column.label || column.key;
+      const views = [
+        ...(column.control ? [{ kind: column.control.kind, who: `колонка «${name}»` }] : []),
+        ...(table.rows ?? []).flatMap(row => {
+          const own = row.view?.[column.key]?.control;
+          return own ? [{ kind: own.kind, who: `«${name}» у строки «${row.label ?? String(row.value)}»` }] : [];
+        }),
+      ];
+      const family = columnFamily(column);
+      const computed = column.expr !== undefined;
+      for (const view of views) {
+        if (family && !viewsFor(family, computed).includes(view.kind) && !(computed && !column.kind)) {
+          out.push({ where, level: 'warn', text: `${view.who}: вид «${VIEW_LABELS[view.kind]}» не подходит к типу значения — на листе будет обычное поле` });
+          continue;
+        }
+        const needs = viewNeeds(view.kind, column);
+        if (needs.length) out.push({ where, level: 'warn', text: `${view.who}: виду «${VIEW_LABELS[view.kind]}» не хватает — ${needs.join(', ')}; на листе вместо него будет «—»` });
+      }
+    }
+  }
+  return out;
+}
+
 function fieldRollProblems(system: System): Problem[] {
   const out: Problem[] = [];
   for (const field of fieldsOf(system)) {
@@ -548,7 +578,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...editProblems(system, compendium));
   out.push(...costProblems(system));
   out.push(...seenProblems(system));
-  out.push(...fieldRollProblems(system));
+  out.push(...fieldRollProblems(system), ...viewProblems(system));
   out.push(...fieldNameProblems(system));
   out.push(...rowNameProblems(system));
   out.push(...tableFieldProblems(system));

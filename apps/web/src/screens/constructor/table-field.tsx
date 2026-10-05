@@ -1,13 +1,14 @@
-import { useWorld } from '../../store/world.ts';
+import { useWorld, freeId } from '../../store/world.ts';
 import { BlockPick } from './block-pick.tsx';
 import { TagsField } from './tags-field.tsx';
 import { dieEntries } from './rules/dice-section.tsx';
 import { ViewGallery } from './view-gallery.tsx';
-import { familyOf } from '../../sheet/views/index.tsx';
-import { Field, Input, Select, Chip } from '../../ui/primitives.tsx';
+import { VIEWS, columnFamily, viewNeeds, TAKES_BOUNDS, TAKES_STEP } from '../../sheet/views/index.tsx';
+import { BoundField } from './bound-field.tsx';
+import { Field, Input, Select, Chip, Button, NumInput, Segmented, Verdict } from '../../ui/primitives.tsx';
 import { isRange } from '@vtt/engine/model/tables';
 import { ROW, cellSource, onSheet, isSingle, fieldsOf } from '@vtt/engine/model/sheet-columns';
-import type { System, Column } from '@vtt/schema';
+import type { System, Column, Control } from '@vtt/schema';
 
 export const sheetTables = (system: System): [string, string][] =>
   Object.entries(system.tables ?? {})
@@ -109,17 +110,103 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
 
 export function ColumnViewField({ tableId, column, system }: { tableId: string; column: Column; system: System }) {
   const editColumn = useWorld(s => s.editColumn);
+  const editSystem = useWorld(s => s.editSystem);
   const table = system.tables![tableId]!;
-  const stored = isSingle(table) ? column.expr === undefined : (table.rows ?? []).some(row => cellSource(column, row).kind === 'input');
+  const single = isSingle(table);
+  const stored = single ? column.expr === undefined : (table.rows ?? []).some(row => cellSource(column, row).kind === 'input');
+  const edit = (change: (draft: Column) => void) => editColumn(tableId, column.key, change);
+  const kind = column.control?.kind;
+  const lacking = kind ? viewNeeds(kind, column) : [];
+  const setControl = (patch: Partial<Control>) => edit(draft => {
+    const next = { ...(draft.control ?? { kind: kind! }), ...patch } as Record<string, unknown>;
+    for (const [key, value] of Object.entries(patch)) if (value === undefined) delete next[key];
+    draft.control = next as Control;
+  });
+  const addTop = () => {
+    const taken = [...fieldsOf(system).map(f => f.tag), ...(table.columns ?? []).map(c => c.key), ...Object.keys(system.tables ?? {})];
+    const key = freeId(taken, `${column.key}_max`);
+    const name = column.label || column.key;
+    editSystem(draft => {
+      const target = draft.tables?.[tableId];
+      if (!target) return;
+      const columns = (target.columns ??= []);
+      const at = columns.findIndex(c => c.key === column.key);
+      columns.splice(at, 0, { key, label: `Максимум: ${name}`, kind: 'number' });
+      const own = columns.find(c => c.key === column.key);
+      if (own) own.max = { expr: single ? `@${key}` : `@${ROW}.${key}` };
+    });
+  };
   return (
-    <Field label="Вид">
-      <ViewGallery
-        value={column.control}
-        family={familyOf(column.kind ?? (column.expr === undefined ? 'number' : undefined), column.many, !stored)}
-        computed={!stored}
-        plain={stored ? { label: 'Обычное поле', hint: 'окошко для числа или текста' } : { label: 'Просто число', hint: 'значение как есть' }}
-        onChange={next => editColumn(tableId, column.key, draft => { if (next) draft.control = next; else delete draft.control; })}
-      />
-    </Field>
+    <>
+      <Field label="Вид">
+        <ViewGallery
+          value={kind}
+          family={columnFamily(column)}
+          computed={!stored}
+          plain={stored ? { label: 'Обычное поле', hint: 'окошко для числа или текста' } : { label: 'Просто число', hint: 'значение как есть' }}
+          needs={next => viewNeeds(next, column)}
+          onChange={next => edit(draft => {
+            if (!next) { delete draft.control; return; }
+            const keep = draft.control ?? { kind: next };
+            draft.control = {
+              kind: next,
+              ...(TAKES_STEP.includes(next) && keep.step !== undefined ? { step: keep.step } : {}),
+              ...(next === 'bar' && keep.worse ? { worse: keep.worse } : {}),
+              ...(next === 'toggle' && keep.yes ? { yes: keep.yes } : {}),
+              ...(next === 'toggle' && keep.no ? { no: keep.no } : {}),
+            };
+          })}
+        />
+      </Field>
+      {kind ? (
+        <div className="view-settings">
+          {lacking.length ? <Verdict tone="warn">Виду «{VIEWS[kind].label}» не хватает: {lacking.join(', ')}. Пока не задано, на листе вместо него «—».</Verdict> : null}
+          {TAKES_BOUNDS.includes(kind) ? (
+            <div className="row">
+              <Field label={kind === 'slider' ? 'Низ' : 'Не ниже'}>
+                <BoundField value={column.min} onChange={next => edit(draft => { if (next === null) delete draft.min; else draft.min = next; })} />
+              </Field>
+              <Field label={kind === 'stepper' ? 'Не выше' : 'Верх — сколько всего'}>
+                <BoundField value={column.max} placeholder="число или формула: 3, @макс"
+                  onChange={next => edit(draft => { if (next === null) delete draft.max; else draft.max = next; })} />
+              </Field>
+            </div>
+          ) : null}
+          {TAKES_BOUNDS.includes(kind) && column.max === undefined && kind !== 'stepper' ? (
+            <Button size="sm" variant="ghost" onClick={addTop}>+ колонка для верха</Button>
+          ) : null}
+          {TAKES_STEP.includes(kind) ? (
+            <Field label="Шаг">
+              <NumInput value={column.control?.step ?? 1} least={0}
+                onCommit={n => setControl({ step: n > 0 && n !== 1 ? n : undefined })} />
+            </Field>
+          ) : null}
+          {kind === 'bar' ? (
+            <Field label="Красная, когда">
+              <Segmented value={column.control?.worse ?? 'low'}
+                options={[{ key: 'low', label: 'мало' }, { key: 'high', label: 'много' }]}
+                onChange={next => setControl({ worse: next === 'high' ? 'high' : undefined })} />
+            </Field>
+          ) : null}
+          {kind === 'toggle' ? (
+            <div className="row">
+              <Field label="Подпись «да»">
+                <Input value={column.control?.yes ?? ''} placeholder="да" onChange={text => setControl({ yes: text.trim() || undefined })} />
+              </Field>
+              <Field label="Подпись «нет»">
+                <Input value={column.control?.no ?? ''} placeholder="нет" onChange={text => setControl({ no: text.trim() || undefined })} />
+              </Field>
+            </div>
+          ) : null}
+          {kind === 'ring' || kind === 'choice' || kind === 'chips' ? (
+            <span className="faint">
+              {column.from
+                ? <>Ступени — строки таблицы «{system.tables?.[column.from]?.label || column.from}» по порядку; подписи берутся оттуда.</>
+                : <>Варианты задаются так: тип «выбор» → «Из таблицы».</>}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+    </>
   );
 }

@@ -95,6 +95,24 @@
       }
     },
     "tables": {
+      "prof_steps": {
+        "label": "Владение",
+        "key": "number",
+        "rows": [
+          {
+            "value": 0,
+            "label": "нет"
+          },
+          {
+            "value": 1,
+            "label": "владение"
+          },
+          {
+            "value": 2,
+            "label": "мастерство"
+          }
+        ]
+      },
       "лист": {
         "label": "Лист",
         "shape": "single",
@@ -138,7 +156,9 @@
             "default": 1,
             "min": 1,
             "max": 20,
-            "control": "stepper",
+            "control": {
+              "kind": "stepper"
+            },
             "block": "Прогрессия"
           },
           {
@@ -148,7 +168,9 @@
               "expr": "таблица(\"levels\", @level, \"prof\")"
             },
             "block": "Прогрессия",
-            "control": "signed"
+            "control": {
+              "kind": "signed"
+            }
           },
           {
             "key": "inspiration",
@@ -156,7 +178,9 @@
             "kind": "number",
             "min": 0,
             "max": 1,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Прогрессия"
           },
           {
@@ -185,7 +209,9 @@
               }
             },
             "block": "Чувства и движение",
-            "control": "signed"
+            "control": {
+              "kind": "signed"
+            }
           },
           {
             "key": "passive_perception",
@@ -229,7 +255,9 @@
             "key": "armor_heavy",
             "label": "Доспех тяжёлый",
             "kind": "boolean",
-            "control": "toggle",
+            "control": {
+              "kind": "toggle"
+            },
             "block": "Защита"
           },
           {
@@ -247,7 +275,9 @@
               "expr": "@ac_base + если(@armor_heavy, 0, @ac_dex)"
             },
             "block": "Защита",
-            "control": "big"
+            "control": {
+              "kind": "big"
+            }
           },
           {
             "key": "hp_max",
@@ -266,7 +296,9 @@
             "max": {
               "expr": "@hp_max"
             },
-            "control": "bar",
+            "control": {
+              "kind": "bar"
+            },
             "block": "Здоровье"
           },
           {
@@ -274,7 +306,9 @@
             "label": "Временные хиты",
             "kind": "number",
             "min": 0,
-            "control": "stepper",
+            "control": {
+              "kind": "stepper"
+            },
             "block": "Здоровье"
           },
           {
@@ -294,7 +328,9 @@
             "max": {
               "expr": "@level"
             },
-            "control": "stepper",
+            "control": {
+              "kind": "stepper"
+            },
             "block": "Здоровье"
           },
           {
@@ -303,7 +339,9 @@
             "kind": "number",
             "min": 0,
             "max": 3,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Здоровье"
           },
           {
@@ -312,7 +350,9 @@
             "kind": "number",
             "min": 0,
             "max": 3,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Здоровье"
           },
           {
@@ -321,7 +361,9 @@
             "kind": "number",
             "min": 0,
             "max": 6,
-            "control": "stepper",
+            "control": {
+              "kind": "stepper"
+            },
             "block": "Здоровье"
           },
           {
@@ -331,7 +373,9 @@
               "expr": "@hp_current <= 0"
             },
             "block": "Здоровье",
-            "control": "toggle"
+            "control": {
+              "kind": "toggle"
+            }
           },
           {
             "key": "up",
@@ -340,7 +384,9 @@
               "expr": "@hp_current > 0"
             },
             "block": "Здоровье",
-            "control": "toggle"
+            "control": {
+              "kind": "toggle"
+            }
           },
           {
             "key": "is_dead",
@@ -349,7 +395,9 @@
               "expr": "@death_fail >= 3"
             },
             "block": "Здоровье",
-            "control": "toggle"
+            "control": {
+              "kind": "toggle"
+            }
           },
           {
             "key": "is_stable",
@@ -358,7 +406,9 @@
               "expr": "@death_ok >= 3"
             },
             "block": "Здоровье",
-            "control": "toggle"
+            "control": {
+              "kind": "toggle"
+            }
           },
           {
             "key": "attacks_per_action",
@@ -367,7 +417,9 @@
             "default": 1,
             "min": 1,
             "max": 4,
-            "control": "stepper",
+            "control": {
+              "kind": "stepper"
+            },
             "block": "Атака"
           },
           {
@@ -402,7 +454,9 @@
               "expr": "8 + @prof_bonus + @spell_mod"
             },
             "block": "Магия",
-            "control": "big"
+            "control": {
+              "kind": "big"
+            }
           },
           {
             "key": "spell_attack",
@@ -411,7 +465,9 @@
               "expr": "@prof_bonus + @spell_mod"
             },
             "block": "Магия",
-            "control": "signed"
+            "control": {
+              "kind": "signed"
+            }
           },
           {
             "key": "caster_level",
@@ -419,7 +475,9 @@
             "kind": "number",
             "min": 0,
             "max": 20,
-            "control": "stepper",
+            "control": {
+              "kind": "stepper"
+            },
             "block": "Магия"
           },
           {
@@ -452,7 +510,9 @@
             "label": "Кость превосходства",
             "kind": "text",
             "default": "1к8",
-            "control": "die",
+            "control": {
+              "kind": "die"
+            },
             "block": "Ресурсы класса"
           },
           {
@@ -486,10 +546,10 @@
           {
             "key": "battle",
             "label": "Идёт бой",
-            "kind": "number",
-            "min": 0,
-            "max": 1,
-            "control": "toggle",
+            "kind": "boolean",
+            "control": {
+              "kind": "toggle"
+            },
             "block": "В бою"
           }
         ]
@@ -513,7 +573,9 @@
             "max": {
               "expr": "@строка.max"
             },
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "title": "{label}"
           }
         ],
@@ -599,7 +661,9 @@
             },
             "title": "Ячейки: {label}",
             "block": "Ячейки заклинаний",
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "default": 0
           }
         ],
@@ -673,7 +737,9 @@
             },
             "title": "{label}: осталось",
             "block": "Ресурсы класса",
-            "control": "stepper",
+            "control": {
+              "kind": "stepper"
+            },
             "default": 0
           }
         ],
@@ -1386,7 +1452,9 @@
             "kind": "choice",
             "from": "taken",
             "default": "как есть",
-            "control": "choice",
+            "control": {
+              "kind": "choice"
+            },
             "block": "Стойкость к урону",
             "title": "{label}"
           }
@@ -1600,25 +1668,27 @@
                 "expr": "@строка.mod"
               }
             },
-            "control": "signed"
+            "control": {
+              "kind": "signed"
+            }
           },
           {
             "key": "save_extra",
             "label": "Владение сверх класса",
-            "kind": "number",
-            "min": 0,
-            "max": 1,
+            "kind": "boolean",
             "title": "Владение сверх класса: спасбросок {label}",
             "block": "Спасброски",
-            "control": "ring",
-            "default": 0
+            "control": {
+              "kind": "toggle"
+            },
+            "default": false
           },
           {
             "key": "save_prof",
             "label": "Владение",
             "kind": "number",
             "expr": {
-              "expr": "большее из(@строка.save_extra, если(есть(@class_name.saves, @строка), 1, 0))"
+              "expr": "большее из(если(@строка.save_extra, 1, 0), если(есть(@class_name.saves, @строка), 1, 0))"
             },
             "title": "Владение: спасбросок {label}",
             "block": "Спасброски"
@@ -1643,7 +1713,9 @@
                 "expr": "@строка.save"
               }
             },
-            "control": "signed"
+            "control": {
+              "kind": "signed"
+            }
           }
         ],
         "rows": [
@@ -1687,12 +1759,13 @@
           {
             "key": "prof",
             "label": "Владение",
-            "kind": "number",
-            "min": 0,
-            "max": 2,
+            "kind": "choice",
             "title": "Владение: {label}",
-            "control": "ring",
-            "default": 0
+            "control": {
+              "kind": "ring"
+            },
+            "default": 0,
+            "from": "prof_steps"
           },
           {
             "key": "total",
@@ -1714,7 +1787,9 @@
                 "expr": "@строка.total"
               }
             },
-            "control": "signed"
+            "control": {
+              "kind": "signed"
+            }
           }
         ],
         "rows": [
@@ -4627,7 +4702,7 @@
               "expr": "1"
             },
             "if": {
-              "expr": "@стол.battle >= 1"
+              "expr": "@стол.battle"
             }
           }
         ],
@@ -5303,7 +5378,7 @@
               "expr": "\"действие на этом ходу уже потрачено\""
             },
             "if": {
-              "expr": "@стол.battle >= 1"
+              "expr": "@стол.battle"
             }
           },
           {
@@ -5316,7 +5391,7 @@
               "expr": "1"
             },
             "if": {
-              "expr": "@стол.battle >= 1"
+              "expr": "@стол.battle"
             }
           }
         ]
@@ -5351,7 +5426,7 @@
               "expr": "\"бонусное действие на этом ходу уже потрачено\""
             },
             "if": {
-              "expr": "@стол.battle >= 1"
+              "expr": "@стол.battle"
             }
           },
           {
@@ -5364,7 +5439,7 @@
               "expr": "1"
             },
             "if": {
-              "expr": "@стол.battle >= 1"
+              "expr": "@стол.battle"
             }
           }
         ]
@@ -5399,7 +5474,7 @@
               "expr": "\"реакция уже потрачена\""
             },
             "if": {
-              "expr": "@стол.battle >= 1"
+              "expr": "@стол.battle"
             }
           },
           {
@@ -5412,7 +5487,7 @@
               "expr": "1"
             },
             "if": {
-              "expr": "@стол.battle >= 1"
+              "expr": "@стол.battle"
             }
           }
         ]
@@ -5447,7 +5522,7 @@
               "expr": "\"это бывает раз за ход\""
             },
             "if": {
-              "expr": "@стол.battle >= 1"
+              "expr": "@стол.battle"
             }
           },
           {
@@ -5460,7 +5535,7 @@
               "expr": "1"
             },
             "if": {
-              "expr": "@стол.battle >= 1"
+              "expr": "@стол.battle"
             }
           }
         ]
@@ -5495,7 +5570,7 @@
               "expr": "\"действие на этом ходу уже потрачено\""
             },
             "if": {
-              "expr": "все(@стол.battle >= 1, @лист.turn.атаки.left < 1)"
+              "expr": "все(@стол.battle, @лист.turn.атаки.left < 1)"
             }
           },
           {
@@ -5508,7 +5583,7 @@
               "expr": "1"
             },
             "if": {
-              "expr": "все(@стол.battle >= 1, @лист.turn.атаки.left < 1)"
+              "expr": "все(@стол.battle, @лист.turn.атаки.left < 1)"
             }
           },
           {
@@ -5521,7 +5596,7 @@
               "expr": "@лист.attacks_per_action"
             },
             "if": {
-              "expr": "все(@стол.battle >= 1, @лист.turn.атаки.left < 1)"
+              "expr": "все(@стол.battle, @лист.turn.атаки.left < 1)"
             }
           },
           {
@@ -5534,7 +5609,7 @@
               "expr": "1"
             },
             "if": {
-              "expr": "@стол.battle >= 1"
+              "expr": "@стол.battle"
             }
           }
         ]
@@ -9381,7 +9456,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "1"
+                  "expr": "да"
                 }
               },
               {
@@ -9457,7 +9532,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "0"
+                  "expr": "нет"
                 }
               }
             ]
@@ -12277,7 +12352,7 @@
       "systemId": "dnd5e",
       "name": "Стол",
       "values": {
-        "battle": 0
+        "battle": false
       },
       "has": [],
       "effects": []

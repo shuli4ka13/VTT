@@ -236,7 +236,9 @@
             "max": {
               "expr": "@hp_max"
             },
-            "control": "bar",
+            "control": {
+              "kind": "bar"
+            },
             "block": "Состояние"
           },
           {
@@ -256,7 +258,9 @@
             "max": {
               "expr": "@luck"
             },
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Состояние"
           },
           {
@@ -272,7 +276,9 @@
               "expr": "@hp <= @wound_at"
             },
             "block": "Состояние",
-            "control": "toggle"
+            "control": {
+              "kind": "toggle"
+            }
           },
           {
             "key": "mortal",
@@ -281,7 +287,9 @@
               "expr": "@hp <= 0"
             },
             "block": "Состояние",
-            "control": "toggle"
+            "control": {
+              "kind": "toggle"
+            }
           },
           {
             "key": "death_penalty",
@@ -295,7 +303,9 @@
             "key": "dead",
             "label": "Мёртв",
             "kind": "boolean",
-            "control": "toggle",
+            "control": {
+              "kind": "toggle"
+            },
             "block": "Состояние"
           },
           {
@@ -304,7 +314,9 @@
             "kind": "number",
             "default": 11,
             "min": 0,
-            "control": "stepper",
+            "control": {
+              "kind": "stepper"
+            },
             "block": "Броня"
           },
           {
@@ -313,7 +325,9 @@
             "kind": "number",
             "default": 11,
             "min": 0,
-            "control": "stepper",
+            "control": {
+              "kind": "stepper"
+            },
             "block": "Броня"
           },
           {
@@ -323,7 +337,9 @@
             "default": 1,
             "min": 0,
             "max": 1,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "В бою"
           },
           {
@@ -333,7 +349,9 @@
             "default": 1,
             "min": 0,
             "max": 1,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "В бою"
           }
         ]
@@ -346,10 +364,10 @@
           {
             "key": "battle",
             "label": "Идёт бой",
-            "kind": "number",
-            "min": 0,
-            "max": 1,
-            "control": "toggle",
+            "kind": "boolean",
+            "control": {
+              "kind": "toggle"
+            },
             "block": "В бою"
           }
         ]
@@ -560,7 +578,9 @@
             "min": 0,
             "max": 10,
             "title": "{label}",
-            "control": "stepper",
+            "control": {
+              "kind": "stepper"
+            },
             "default": "{start}"
           },
           {
@@ -1668,7 +1688,7 @@
               "expr": "\"действие на этом ходу уже потрачено\""
             },
             "if": {
-              "expr": "@стол.battle >= 1"
+              "expr": "@стол.battle"
             }
           },
           {
@@ -1681,7 +1701,7 @@
               "expr": "1"
             },
             "if": {
-              "expr": "@стол.battle >= 1"
+              "expr": "@стол.battle"
             }
           }
         ]
@@ -1956,7 +1976,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "1"
+                  "expr": "да"
                 }
               },
               {
@@ -2002,7 +2022,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "0"
+                  "expr": "нет"
                 }
               }
             ]
@@ -2208,7 +2228,7 @@
       "systemId": "cp-slice",
       "name": "Стол",
       "values": {
-        "battle": 0
+        "battle": false
       },
       "has": [],
       "effects": []

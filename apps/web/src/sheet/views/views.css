@@ -470,3 +470,32 @@ span.v-chip { cursor: default; }
 }
 .sheet .sheet-table__row { font-size: var(--fs-3); }
 .sheet .sheet-table > .field__label { font-size: 9px; }
+
+.v-missing {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.4em;
+  height: 26px;
+  padding: 0 var(--s-2);
+  border: 1px dashed var(--warn);
+  border-radius: var(--r-1);
+  color: var(--warn);
+  cursor: help;
+}
+.view-settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-2);
+  background: var(--surface-2);
+}
+.view-gallery__tile--lacking .view-gallery__preview { outline: 1px dashed color-mix(in srgb, var(--warn) 60%, transparent); }
+.view-gallery__note {
+  font-size: 10px;
+  color: var(--warn);
+  text-align: center;
+  line-height: 1.2;
+}

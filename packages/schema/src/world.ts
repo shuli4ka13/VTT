@@ -23,7 +23,15 @@ export const fieldOption = z.object({
   label: z.string().min(1),
 });
 
-export const control = z.enum(['signed', 'big', 'stepper', 'slider', 'pips', 'charges', 'bar', 'toggle', 'ring', 'choice', 'chips', 'die']);
+export const controlKind = z.enum(['signed', 'big', 'stepper', 'slider', 'pips', 'charges', 'bar', 'toggle', 'ring', 'choice', 'chips', 'die']);
+
+export const control = z.object({
+  kind: controlKind,
+  step: z.number().positive().optional(),
+  worse: z.enum(['low', 'high']).optional(),
+  yes: z.string().min(1).optional(),
+  no: z.string().min(1).optional(),
+}).strict();
 
 export const rollSpec = z.object({
   die: z.string().min(1),
@@ -377,6 +385,7 @@ export type Param = z.infer<typeof param>;
 export type Step = z.infer<typeof step>;
 export type Ask = z.infer<typeof ask>;
 export type Control = z.infer<typeof control>;
+export type ControlKind = z.infer<typeof controlKind>;
 export type FieldOption = z.infer<typeof fieldOption>;
 export type Guard = z.infer<typeof formula>;
 export type Handler = z.infer<typeof handler>;

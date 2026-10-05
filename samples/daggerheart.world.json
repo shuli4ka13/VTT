@@ -261,7 +261,9 @@
               "expr": "если(@class != \"\", таблица(\"classes\", @class, \"evasion\"), 10) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"evasion_bonus\"), 0) + @evasion_bonus"
             },
             "block": "Уклонение и броня",
-            "control": "big"
+            "control": {
+              "kind": "big"
+            }
           },
           {
             "key": "armor_score",
@@ -277,7 +279,9 @@
             "kind": "number",
             "min": 0,
             "max": 12,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Уклонение и броня"
           },
           {
@@ -330,7 +334,9 @@
             "label": "Хиты отмечены",
             "kind": "number",
             "min": 0,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Здоровье"
           },
           {
@@ -353,7 +359,9 @@
             "label": "Стресс отмечен",
             "kind": "number",
             "min": 0,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Здоровье"
           },
           {
@@ -363,7 +371,9 @@
               "expr": "все(@hp_max > 0, @hp >= @hp_max)"
             },
             "block": "Здоровье",
-            "control": "toggle"
+            "control": {
+              "kind": "toggle"
+            }
           },
           {
             "key": "stress_full",
@@ -372,7 +382,9 @@
               "expr": "все(@stress_max > 0, @stress >= @stress_max)"
             },
             "block": "Здоровье",
-            "control": "toggle"
+            "control": {
+              "kind": "toggle"
+            }
           },
           {
             "key": "stress_free",
@@ -389,7 +401,9 @@
             "default": 2,
             "min": 0,
             "max": 6,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Надежда"
           },
           {

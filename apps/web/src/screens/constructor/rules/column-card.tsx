@@ -26,7 +26,7 @@ export interface ColumnPatch {
 }
 
 
-export function ColumnCard({ column, kinds, tables, many, formulaHint, where, names, system, onChange, onDelete, onClose, lead, extra, preview }: {
+export function ColumnCard({ column, kinds, tables, many, formulaHint, where, names, system, onChange, onDelete, onClose, lead, extra, preview, bounds = true }: {
   column: ColumnShape;
   kinds: readonly (readonly [string, string])[];
   tables: [string, string][];
@@ -39,6 +39,7 @@ export function ColumnCard({ column, kinds, tables, many, formulaHint, where, na
   onDelete: (() => void) | null;
   onClose: () => void;
   lead?: ReactNode;
+  bounds?: boolean;
   extra?: ReactNode;
   preview?: ReactNode;
 }) {
@@ -89,9 +90,9 @@ export function ColumnCard({ column, kinds, tables, many, formulaHint, where, na
       </Field>
       {preview}
       {lead}
-      {column.kind === 'number' || extra ? (
+      {(bounds && column.kind === 'number') || extra ? (
         <Fold title="ещё" summary="на листе, бросок, границы">
-          {column.kind === 'number' ? (
+          {bounds && column.kind === 'number' ? (
             <div className="row">
               <Field label="Не ниже">
                 <BoundField value={column.min} onChange={next => onChange({ min: next })} />

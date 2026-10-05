@@ -1,5 +1,6 @@
 import { compile } from '../../formula/index.ts';
 import { findField } from '../calc.ts';
+import { misfit } from '../../model/sheet-columns.ts';
 import { EngineError } from '../errors.ts';
 import type { Pass } from '../calc.ts';
 import type { StoredValue } from '../../model/types.ts';
@@ -55,6 +56,8 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
     const from = ctx.read(sheet, tag);
     const raw = ctx.value(step.value);
     if (direction === 'set' && (typeof from !== 'number' || typeof raw !== 'number')) {
+      const wrong = misfit(field, raw);
+      if (wrong) throw new EngineError(`${who(ctx)}: ${wrong}`);
       ctx.write(sheet, tag, raw as StoredValue);
       return { value: { amount: raw, from, to: raw, overkill: 0 }, trace: { sheet, target: tag, direction, incoming: raw, amount: raw, from, to: raw }, break: null };
     }

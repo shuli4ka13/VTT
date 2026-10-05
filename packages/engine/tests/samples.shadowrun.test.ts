@@ -72,8 +72,8 @@ group('Shadowrun 6: атака', () => {
 });
 
 group('Shadowrun 6: Преимущество и действия', () => {
-  const desk = (battle: number) => ({ id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: { battle }, has: [], effects: [] }) as unknown as Sheet;
-  const hit = (from: Sheet, to: Sheet, action: string, die: () => number, inputs: Record<string, unknown>, battle = 0) => exchange({
+  const desk = (battle: boolean) => ({ id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: { battle }, has: [], effects: [] }) as unknown as Sheet;
+  const hit = (from: Sheet, to: Sheet, action: string, die: () => number, inputs: Record<string, unknown>, battle = false) => exchange({
     system, compendium, die, sheets: [from, to, desk(battle)], actionId: action, fromId: from.id, toId: to.id,
     inputs: { дистанция: 'близкая', ...inputs } as never,
   });
@@ -93,10 +93,10 @@ group('Shadowrun 6: Преимущество и действия', () => {
   });
 
   test('в бою атака тратит сложное действие; второго нет', () => {
-    const first = hit(sheetOf('razor', { complex_left: 1 }), sheetOf('humanis'), 'predator_vi:0', dice(), {}, 1);
+    const first = hit(sheetOf('razor', { complex_left: 1 }), sheetOf('humanis'), 'predator_vi:0', dice(), {}, true);
     eq(after(first, 'razor').values.complex_left, 0);
     let refused = '';
-    try { hit(sheetOf('razor', { complex_left: 0 }), sheetOf('humanis'), 'predator_vi:0', dice(), {}, 1); } catch (err) { refused = (err as Error).message; }
+    try { hit(sheetOf('razor', { complex_left: 0 }), sheetOf('humanis'), 'predator_vi:0', dice(), {}, true); } catch (err) { refused = (err as Error).message; }
     ok(refused.includes('сложное действие'), refused);
   });
 });

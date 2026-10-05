@@ -8,7 +8,7 @@ import { expiryOf, inCombat, startCombat, nextTurn, stopCombat } from '../engine
 import { momentsOfTurn } from '../events/moments.ts';
 import { fieldCheck } from '../engine/check.ts';
 import { newBreaches } from '../engine/limits.ts';
-import { fieldOf } from '../model/sheet-columns.ts';
+import { fieldOf, misfit } from '../model/sheet-columns.ts';
 import { DESK_ID, isDesk } from '../engine/owners.ts';
 import { External, Pause, emptyJournal } from './external.ts';
 import { Path } from './path.ts';
@@ -144,9 +144,8 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     if (!field) throw new EngineError(`система не объявляет поля «${tag}»`);
     if (field.value.kind !== 'stored') throw new EngineError(`поле «${field.label}» считает движок по правилу — вписать в него значение нельзя`);
     const holder = sheetOf(run, run.views.holderOf(run.state.sheets, sheetOf(run, sheetId).id, tag));
-    if (Array.isArray(value) !== Boolean(field.value.many)) {
-      throw new EngineError(field.value.many ? `«${field.label}» хранит список значений` : `«${field.label}» хранит одно значение, а не список`);
-    }
+    const wrong = misfit(field, value);
+    if (wrong) throw new EngineError(wrong);
     if (typeof value === 'number') {
       const low = bound(run, holder.id, field.value.min, 'нижняя граница поля');
       const high = bound(run, holder.id, field.value.max, 'верхняя граница поля');

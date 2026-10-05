@@ -64,7 +64,9 @@
             "kind": "number",
             "min": 0,
             "max": 4,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Действия"
           },
           {
@@ -73,7 +75,9 @@
             "kind": "number",
             "min": 0,
             "max": 4,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Действия"
           },
           {
@@ -82,7 +86,9 @@
             "kind": "number",
             "min": 0,
             "max": 4,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Действия"
           },
           {
@@ -91,7 +97,9 @@
             "kind": "number",
             "min": 0,
             "max": 4,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Действия"
           },
           {
@@ -100,7 +108,9 @@
             "kind": "number",
             "min": 0,
             "max": 4,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Действия"
           },
           {
@@ -109,7 +119,9 @@
             "kind": "number",
             "min": 0,
             "max": 4,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Действия"
           },
           {
@@ -118,7 +130,9 @@
             "kind": "number",
             "min": 0,
             "max": 4,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Действия"
           },
           {
@@ -127,7 +141,9 @@
             "kind": "number",
             "min": 0,
             "max": 4,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Действия"
           },
           {
@@ -136,7 +152,9 @@
             "kind": "number",
             "min": 0,
             "max": 4,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Действия"
           },
           {
@@ -145,7 +163,9 @@
             "kind": "number",
             "min": 0,
             "max": 4,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Действия"
           },
           {
@@ -154,7 +174,9 @@
             "kind": "number",
             "min": 0,
             "max": 4,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Действия"
           },
           {
@@ -163,7 +185,9 @@
             "kind": "number",
             "min": 0,
             "max": 4,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Действия"
           },
           {
@@ -181,7 +205,9 @@
             "kind": "number",
             "min": 0,
             "max": 9,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Состояние"
           }
         ]
@@ -197,7 +223,9 @@
             "kind": "number",
             "min": 0,
             "max": 8,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Стол"
           }
         ]
@@ -213,7 +241,9 @@
             "kind": "number",
             "min": 0,
             "max": 9,
-            "control": "stepper",
+            "control": {
+              "kind": "stepper"
+            },
             "block": "Банда"
           },
           {

@@ -2,7 +2,7 @@ import { effectLabelOf } from './actions.ts';
 import { breakReasonWord, registry as stepRegistry } from '../engine/steps/index.ts';
 import { outcomeWords, rollName } from '../engine/roll-tags.ts';
 import type { System, Sheet } from '../model/types.ts';
-import { fieldOf, hasField } from '../model/sheet-columns.ts';
+import { fieldOf, hasField, valueWord } from '../model/sheet-columns.ts';
 import { forcedWords } from '../words/steps.ts';
 
 const tagsOfStep = (step: Record<string, any> | undefined, trace?: Record<string, any>): string[] =>
@@ -58,7 +58,7 @@ export function describeEntry(
   const changes = (entry.report.changes ?? []) as { tag: string; from: unknown; to: unknown }[];
   const shown = changes.map(c => {
     const field = fieldOf(system, c.tag);
-    return `${field?.label ?? c.tag}: ${c.from} → ${c.to}`;
+    return `${field?.label ?? c.tag}: ${valueWord(c.from)} → ${valueWord(c.to)}`;
   });
   const labelOf = (tag: string) =>
     fieldOf(system, tag)?.label ?? columnLabel(system, tag) ?? tag;

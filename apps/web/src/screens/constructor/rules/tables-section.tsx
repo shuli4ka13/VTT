@@ -1,5 +1,5 @@
 import { ColumnSheetFields, ColumnViewField } from '../table-field.tsx';
-import { viewsFor, familyOf } from '../../../sheet/views/index.tsx';
+import { viewsFor, columnFamily, TAKES_BOUNDS } from '../../../sheet/views/index.tsx';
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
 import { ROW, isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields } from '@vtt/engine/model/sheet-columns';
 import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty, Field, Chip } from '../../../ui/primitives.tsx';
@@ -305,6 +305,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, extr
       preview={single && column.expr !== undefined
         ? <LiveValue system={system} compendium={compendium} tag={column.key} source={column.expr.expr} /> : null}
       lead={single || onSheet(table) ? <ColumnViewField tableId={id} column={column} system={system} /> : null}
+      bounds={!((single || onSheet(table)) && column.control && TAKES_BOUNDS.includes(column.control.kind))}
       extra={<>
         {single || onSheet(table) ? <ColumnSheetFields tableId={id} column={column} system={system} /> : null}
         {book ? (
@@ -348,8 +349,7 @@ function applyPatch(c: TableColumn, patch: ColumnPatch): void {
   if (patch.expr !== undefined) { if (patch.expr !== null) c.expr = { expr: patch.expr }; else delete c.expr; }
   if (patch.min !== undefined) { if (patch.min !== null) c.min = patch.min; else delete c.min; }
   if (patch.max !== undefined) { if (patch.max !== null) c.max = patch.max; else delete c.max; }
-  const computed = c.expr !== undefined;
-  if (c.control && !viewsFor(familyOf(c.kind ?? (computed ? undefined : 'number'), c.many, computed), computed).includes(c.control)) delete c.control;
+  if (c.control && !viewsFor(columnFamily(c), c.expr !== undefined).includes(c.control.kind)) delete c.control;
 }
 
 const defaultWidth = (column?: TableColumn): number =>

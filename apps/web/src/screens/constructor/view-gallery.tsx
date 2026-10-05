@@ -1,15 +1,16 @@
 import type { ReactNode } from 'react';
-import type { Control } from '@vtt/schema';
+import type { ControlKind } from '@vtt/schema';
 import { VIEWS, viewsFor } from '../../sheet/views/index.tsx';
 import type { ValueFamily } from '../../sheet/views/index.tsx';
 
-export function ViewGallery({ value, family, computed, label = 'Вид', plain, onChange }: {
-  value: Control | undefined;
+export function ViewGallery({ value, family, computed, label = 'Вид', plain, needs, onChange }: {
+  value: ControlKind | undefined;
   family: ValueFamily | null;
   computed: boolean;
   label?: string;
   plain: { label: string; hint: string };
-  onChange: (next: Control | undefined) => void;
+  needs?: (kind: ControlKind) => string[];
+  onChange: (next: ControlKind | undefined) => void;
 }) {
   const keys = viewsFor(family, computed);
   const known = value === undefined || keys.includes(value);
@@ -21,9 +22,13 @@ export function ViewGallery({ value, family, computed, label = 'Вид', plain, 
       </Tile>
       {shown.map(key => {
         const spec = VIEWS[key];
+        const off = !known && key === value;
+        const lacking = off ? [] : needs?.(key) ?? [];
         return (
-          <Tile key={key} on={value === key} title={spec.label} hint={known || key !== value ? spec.hint : 'не подходит к типу значения'}
-            off={!known && key === value} onPick={() => onChange(key)}>
+          <Tile key={key} on={value === key} title={spec.label}
+            hint={off ? 'не подходит к типу значения' : lacking.length ? `${spec.hint}; не хватает: ${lacking.join(', ')}` : spec.hint}
+            note={off ? 'не подходит' : lacking.length ? `нужен ${lacking[0]}` : undefined}
+            off={off} onPick={() => onChange(key)}>
             <spec.draw {...spec.sample} label={spec.label} />
           </Tile>
         );
@@ -32,8 +37,8 @@ export function ViewGallery({ value, family, computed, label = 'Вид', plain, 
   );
 }
 
-function Tile({ on, off, title, hint, onPick, children }: {
-  on: boolean; off?: boolean; title: string; hint: string; onPick: () => void; children: ReactNode;
+function Tile({ on, off, title, hint, note, onPick, children }: {
+  on: boolean; off?: boolean; title: string; hint: string; note?: string; onPick: () => void; children: ReactNode;
 }) {
   return (
     <div
@@ -42,12 +47,13 @@ function Tile({ on, off, title, hint, onPick, children }: {
       aria-checked={on}
       aria-label={title}
       title={hint}
-      className={`view-gallery__tile${on ? ' view-gallery__tile--on' : ''}${off ? ' view-gallery__tile--off' : ''}`}
+      className={`view-gallery__tile${on ? ' view-gallery__tile--on' : ''}${off ? ' view-gallery__tile--off' : ''}${note ? ' view-gallery__tile--lacking' : ''}`}
       onClick={onPick}
       onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onPick(); } }}
     >
       <span className="view-gallery__preview" aria-hidden="true">{children}</span>
       <span className="view-gallery__name">{title}</span>
+      {note ? <span className="view-gallery__note">{note}</span> : null}
     </div>
   );
 }

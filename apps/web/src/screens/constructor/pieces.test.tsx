@@ -71,11 +71,23 @@ describe('вид поля на листе выбирается в констру
   it('плитка «Полоса» ложится в поле, а «Обычное поле» убирает вид', () => {
     renderOpen(<SheetTab />);
     fireEvent.click(tile('Полоса'));
-    expect(fieldsOf(useWorld.getState().system)[0]!.control).toBe('bar');
+    expect(fieldsOf(useWorld.getState().system)[0]!.control).toEqual({ kind: 'bar' });
     expect(tile('Полоса').getAttribute('aria-checked')).toBe('true');
 
     fireEvent.click(tile('Обычное поле'));
     expect('control' in useWorld.getState().system.tables!.лист!.columns![0]!).toBe(false);
+  });
+
+  it('«Точки» без верха: плитка и панель говорят, чего не хватает; «+ колонка для верха» заводит колонку и ссылку', () => {
+    renderOpen(<SheetTab />);
+    expect(tile('Точки').textContent).toContain('нужен верх');
+    fireEvent.click(tile('Точки'));
+    expect(screen.getByText(/не хватает: верх/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '+ колонка для верха' }));
+    const columns = useWorld.getState().system.tables!.лист!.columns!;
+    expect(columns.map(c => c.key)).toEqual(['хиты_max', 'хиты']);
+    expect(columns[1]!.max).toEqual({ expr: '@хиты_max' });
+    expect(screen.queryByText(/не хватает: верх/)).toBeNull();
   });
 
   it('посчитанному полю предлагают только виды показа', () => {
@@ -90,7 +102,7 @@ describe('вид поля на листе выбирается в констру
     renderOpen(<SheetTab />);
     expect(within(gallery()).queryByRole('radio', { name: 'Минус и плюс' })).toBeNull();
     fireEvent.click(tile('Со знаком'));
-    expect(useWorld.getState().system.tables!.лист!.columns![0]!.control).toBe('signed');
+    expect(useWorld.getState().system.tables!.лист!.columns![0]!.control).toEqual({ kind: 'signed' });
   });
 
   it('у одной строки таблицы свой вид, «Как у колонки» снимает его', () => {
@@ -98,7 +110,7 @@ describe('вид поля на листе выбирается в констру
       ...state,
       system: {
         ...emptySystem(),
-        tables: { навыки: { owner: 'sheet', key: 'word', columns: [{ key: 'ранг', label: 'Ранг', kind: 'number', control: 'stepper' }],
+        tables: { навыки: { owner: 'sheet', key: 'word', columns: [{ key: 'ранг', label: 'Ранг', kind: 'number', control: { kind: 'stepper', step: 2 } }],
           rows: [{ value: 'атлетика', label: 'Атлетика' }, { value: 'скрытность', label: 'Скрытность' }] } },
       } as never,
       activeFieldTag: 'навыки.атлетика.ранг',
@@ -107,7 +119,7 @@ describe('вид поля на листе выбирается в констру
     const group = screen.getAllByRole('radiogroup').find(el => /^Вид только у/.test(el.getAttribute('aria-label') ?? ''))!;
     fireEvent.click(within(group).getByRole('radio', { name: 'Точки' }));
     const rows = () => useWorld.getState().system.tables!.навыки!.rows!;
-    expect(rows()[0]!.view).toEqual({ ранг: { control: 'pips' } });
+    expect(rows()[0]!.view).toEqual({ ранг: { control: { kind: 'pips' } } });
     expect(rows()[1]!.view).toBeUndefined();
     fireEvent.click(within(group).getByRole('radio', { name: 'Как у колонки' }));
     expect(rows()[0]!.view).toBeUndefined();

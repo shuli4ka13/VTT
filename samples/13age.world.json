@@ -43,7 +43,9 @@
             "default": 1,
             "min": 1,
             "max": 10,
-            "control": "stepper",
+            "control": {
+              "kind": "stepper"
+            },
             "block": "Характеристики"
           },
           {
@@ -85,7 +87,9 @@
             "default": 1,
             "min": 0,
             "max": 1,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "В бою"
           },
           {
@@ -95,7 +99,9 @@
             "default": 1,
             "min": 0,
             "max": 1,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "В бою"
           },
           {
@@ -105,7 +111,9 @@
             "default": 1,
             "min": 0,
             "max": 1,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "В бою"
           }
         ]
@@ -121,16 +129,18 @@
             "kind": "number",
             "min": 0,
             "max": 6,
-            "control": "stepper",
+            "control": {
+              "kind": "stepper"
+            },
             "block": "Стол"
           },
           {
             "key": "battle",
             "label": "Идёт бой",
-            "kind": "number",
-            "min": 0,
-            "max": 1,
-            "control": "toggle",
+            "kind": "boolean",
+            "control": {
+              "kind": "toggle"
+            },
             "block": "В бою"
           }
         ]
@@ -149,7 +159,9 @@
             "max": {
               "expr": "@hp_max"
             },
-            "control": "bar",
+            "control": {
+              "kind": "bar"
+            },
             "block": "Здоровье"
           },
           {
@@ -241,7 +253,9 @@
             },
             "title": "Модификатор: {label}",
             "block": "Модификаторы",
-            "control": "signed"
+            "control": {
+              "kind": "signed"
+            }
           }
         ],
         "rows": [
@@ -709,7 +723,7 @@
               "expr": "\"стандартное действие на этом ходу уже потрачено\""
             },
             "if": {
-              "expr": "@стол.battle >= 1"
+              "expr": "@стол.battle"
             }
           },
           {
@@ -722,7 +736,7 @@
               "expr": "1"
             },
             "if": {
-              "expr": "@стол.battle >= 1"
+              "expr": "@стол.battle"
             }
           }
         ]
@@ -746,7 +760,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "1"
+                  "expr": "да"
                 }
               },
               {
@@ -802,7 +816,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "0"
+                  "expr": "нет"
                 }
               }
             ]
@@ -1201,7 +1215,7 @@
       "name": "Стол",
       "values": {
         "escalation": 0,
-        "battle": 0
+        "battle": false
       },
       "has": [],
       "effects": []

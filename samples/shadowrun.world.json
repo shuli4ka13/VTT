@@ -274,7 +274,9 @@
               "expr": "@body + @armor_worn + @armor_extra + @armor_natural + если(@metatype != \"\", таблица(\"metatypes\", @metatype, \"dermal\"), 0) + @cover"
             },
             "block": "Защита",
-            "control": "big"
+            "control": {
+              "kind": "big"
+            }
           },
           {
             "key": "defense_pool",
@@ -349,7 +351,9 @@
               "expr": "0 - округлить вниз(меньшее из(@stun, @stun_max) / 3) - округлить вниз(меньшее из(@physical_total, @physical_max) / 3)"
             },
             "block": "Счётчики",
-            "control": "signed"
+            "control": {
+              "kind": "signed"
+            }
           },
           {
             "key": "condition_mod",
@@ -364,7 +368,9 @@
               "expr": "@stun >= @stun_max"
             },
             "block": "Счётчики",
-            "control": "toggle"
+            "control": {
+              "kind": "toggle"
+            }
           },
           {
             "key": "bleeding_out",
@@ -373,7 +379,9 @@
               "expr": "@physical_total >= @physical_max"
             },
             "block": "Счётчики",
-            "control": "toggle"
+            "control": {
+              "kind": "toggle"
+            }
           },
           {
             "key": "is_dead",
@@ -382,7 +390,9 @@
               "expr": "@critical >= @body * 2"
             },
             "block": "Счётчики",
-            "control": "toggle"
+            "control": {
+              "kind": "toggle"
+            }
           },
           {
             "key": "conscious",
@@ -391,7 +401,9 @@
               "expr": "все(@stun < @stun_max, @physical_total < @physical_max)"
             },
             "block": "Счётчики",
-            "control": "toggle"
+            "control": {
+              "kind": "toggle"
+            }
           },
           {
             "key": "initiative",
@@ -400,7 +412,9 @@
               "expr": "@reaction + @intuition + @wound_mod + @condition_mod"
             },
             "block": "Инициатива",
-            "control": "big"
+            "control": {
+              "kind": "big"
+            }
           },
           {
             "key": "init_dice",
@@ -418,7 +432,9 @@
             "default": 2,
             "min": 0,
             "max": 5,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Инициатива"
           },
           {
@@ -428,7 +444,9 @@
             "default": 1,
             "min": 0,
             "max": 1,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Инициатива"
           }
         ]
@@ -441,7 +459,7 @@
           {
             "key": "battle",
             "label": "Идёт бой",
-            "kind": "number",
+            "kind": "boolean",
             "block": "Стол"
           }
         ]
@@ -458,7 +476,9 @@
             "default": 2,
             "min": 0,
             "max": 7,
-            "control": "pips",
+            "control": {
+              "kind": "pips"
+            },
             "block": "Особые"
           },
           {
@@ -1795,7 +1815,7 @@
               "expr": "\"сложное действие на этом ходу уже потрачено\""
             },
             "if": {
-              "expr": "@стол.battle >= 1"
+              "expr": "@стол.battle"
             }
           },
           {
@@ -1808,7 +1828,7 @@
               "expr": "1"
             },
             "if": {
-              "expr": "@стол.battle >= 1"
+              "expr": "@стол.battle"
             }
           }
         ]
@@ -2206,7 +2226,7 @@
               "expr": "\"простых действий не осталось\""
             },
             "if": {
-              "expr": "@стол.battle >= 1"
+              "expr": "@стол.battle"
             }
           },
           {
@@ -2219,7 +2239,7 @@
               "expr": "1"
             },
             "if": {
-              "expr": "@стол.battle >= 1"
+              "expr": "@стол.battle"
             }
           }
         ],
@@ -2523,7 +2543,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "1"
+                  "expr": "да"
                 }
               }
             ]
@@ -2549,7 +2569,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "0"
+                  "expr": "нет"
                 }
               }
             ]
@@ -4437,7 +4457,7 @@
       "systemId": "shadowrun6",
       "name": "Стол",
       "values": {
-        "battle": 0
+        "battle": false
       },
       "has": [],
       "effects": []
