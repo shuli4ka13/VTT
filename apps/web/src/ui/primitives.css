@@ -662,3 +662,26 @@
   white-space: nowrap;
   border: 0;
 }
+
+.row-formula {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 4px;
+  width: 100%;
+  min-height: 32px;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, #000 85%, transparent);
+  padding: 3px var(--s-2);
+  border: 1px dashed var(--border);
+  border-radius: var(--r-2);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--fs-2);
+  text-align: left;
+  cursor: text;
+}
+.row-formula:hover { border-color: var(--border-strong); }
+.row-formula .chips__chip { font-size: var(--fs-2); padding: 0 var(--s-2); }
+.row-formula__text { white-space: pre; }

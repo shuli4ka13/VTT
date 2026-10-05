@@ -44,7 +44,8 @@ export function Field({ label, hint, error, needed, children }: {
   );
 }
 
-export function Input({ value, onChange, placeholder, mono, invalid, type = 'text', onBlur, onKeyDown }: {
+export function Input({ value, onChange, placeholder, mono, invalid, type = 'text', onBlur, onKeyDown, autoFocus }: {
+  autoFocus?: boolean;
   value: string | number;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -64,6 +65,7 @@ export function Input({ value, onChange, placeholder, mono, invalid, type = 'tex
       onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
       onBlur={onBlur}
       onKeyDown={onKeyDown}
+      autoFocus={autoFocus}
     />
   );
 }

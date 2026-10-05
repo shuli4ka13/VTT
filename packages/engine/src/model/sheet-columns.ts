@@ -174,17 +174,32 @@ export function rowSteps(system: System, tableId: string, path: string[], row?: 
   return out;
 }
 
-export function rowWords(system: System, tableId: string, row: TableRow, expr: string): string {
-  return expr
-    .replace(ROW_REF, (whole, tail: string) => {
-      const steps = rowSteps(system, tableId, tail ? tail.slice(1).split('.') : [], row);
-      if (!steps.length) return tail ? whole : String(row.label ?? row.value);
-      const landed = [...steps].reverse().find(step => step.via)?.via ?? String(row.label ?? row.value);
-      return `${landed} · ${steps[steps.length - 1]!.column}`;
-    })
-    .replace(/@([\p{L}\p{N}_.]+)/gu, (whole, tag: string) => fieldOf(system, tag)?.label ?? whole)
-    .replace(/\*/g, '×');
+export type RowPiece = { text: string } | { chip: string };
+
+export function rowPieces(system: System, tableId: string, row: TableRow, expr: string): RowPiece[] {
+  const out: RowPiece[] = [];
+  const pattern = new RegExp(`@${ROW}((?:\\.[\\p{L}\\p{N}_]+)*)|@([\\p{L}\\p{N}_.]+)`, 'gu');
+  let at = 0;
+  for (const match of expr.matchAll(pattern)) {
+    if (match.index! > at) out.push({ text: expr.slice(at, match.index).replace(/\*/g, '×') });
+    at = match.index! + match[0].length;
+    if (match[2] !== undefined) {
+      const label = fieldOf(system, match[2])?.label;
+      out.push(label ? { chip: label } : { text: match[0] });
+      continue;
+    }
+    const tail = match[1] ?? '';
+    const steps = rowSteps(system, tableId, tail ? tail.slice(1).split('.') : [], row);
+    if (!steps.length) { out.push(tail ? { text: match[0] } : { chip: String(row.label ?? row.value) }); continue; }
+    const landed = [...steps].reverse().find(step => step.via)?.via ?? String(row.label ?? row.value);
+    out.push({ chip: `${landed} · ${steps[steps.length - 1]!.column}` });
+  }
+  if (at < expr.length) out.push({ text: expr.slice(at).replace(/\*/g, '×') });
+  return out;
 }
+
+export const rowWords = (system: System, tableId: string, row: TableRow, expr: string): string =>
+  rowPieces(system, tableId, row, expr).map(piece => ('chip' in piece ? piece.chip : piece.text)).join('');
 
 export const withRow = (system: System, tableId: string, row: TableRow, expr: string): string =>
   expr.replace(ROW_REF, (_, tail: string) => rowPath(system, tableId, row, tail ? tail.slice(1).split('.') : []));

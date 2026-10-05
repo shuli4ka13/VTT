@@ -4,7 +4,8 @@ import { renameLayoutColumn } from '@vtt/engine/model/layout';
 export { rowNames } from '../row-names.ts';
 import { viewsFor, columnFamily, takesBounds } from '../../../sheet/views/index.tsx';
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
-import { isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowWords } from '@vtt/engine/model/sheet-columns';
+import { isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowPieces } from '@vtt/engine/model/sheet-columns';
+import type { RowPiece } from '@vtt/engine/model/sheet-columns';
 import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty, Field, Chip } from '../../../ui/primitives.tsx';
 import { LiveValue } from '../live-value.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
@@ -426,12 +427,12 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
 
 const TYPED = ['number', 'text', 'dice'];
 
-export const spoken = (system: System, tableId: string, row: TableRow, expr: string): string => {
-  try { return `= ${rowWords(system, tableId, row, expr)}`; } catch { return '= как у колонки'; }
+export const spoken = (system: System, tableId: string, row: TableRow, expr: string): RowPiece[] | undefined => {
+  try { return rowPieces(system, tableId, row, expr); } catch { return undefined; }
 };
 
 export function CellEditor({ column, value, system, where, names, placed, inherited, onChange }: {
-  inherited?: string;
+  inherited?: RowPiece[];
   column: TableColumn;
   value: unknown;
   system: System;
@@ -454,7 +455,7 @@ export function CellEditor({ column, value, system, where, names, placed, inheri
     );
   }
   const empty = value === undefined || value === '';
-  const hint = column.expr !== undefined ? inherited ?? '= как у колонки' : placed ? 'вводит игрок' : '';
+  const hint = column.expr !== undefined ? '= как у колонки' : placed ? 'вводит игрок' : '';
   if (!TYPED.includes(column.kind ?? 'text')) {
     return <ValueEditor type={column} value={empty ? '' : value} system={system} blank={hint || '— нет —'} onChange={next => onChange(next === '' ? undefined : next)} />;
   }
@@ -467,10 +468,22 @@ export function CellEditor({ column, value, system, where, names, placed, inheri
     else if (column.kind === 'number') onChange(/^-?\d+(\.\d+)?$/.test(text) ? Number(text) : { expr: text });
     else onChange(text);
   };
+  if (column.expr !== undefined && empty && draft === null && inherited) {
+    return (
+      <button type="button" className="row-formula"
+        title={`${inherited.map(piece => ('chip' in piece ? piece.chip : piece.text)).join('')} — формула колонки для этой строки; щёлкните, чтобы вписать строке своё`}
+        onClick={() => setDraft('')}>
+        {inherited.map((piece, at) => ('chip' in piece
+          ? <span key={at} className="chips__chip">{piece.chip}</span>
+          : <span key={at} className="row-formula__text">{piece.text}</span>))}
+      </button>
+    );
+  }
   return (
     <Input
       value={draft ?? (empty ? '' : String(value))}
       mono={column.kind !== 'text'}
+      autoFocus={draft === '' && empty}
       placeholder={hint}
       onChange={setDraft}
       onBlur={commit}

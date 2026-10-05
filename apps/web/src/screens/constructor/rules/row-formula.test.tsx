@@ -12,14 +12,15 @@ const dnd = structuredClone(SAMPLE_SYSTEMS.find(s => s.id === 'dnd5e')) as unkno
 describe('формула колонки у строки — словами этой строки', () => {
   afterEach(() => { cleanup(); });
 
-  it('клетка «Навык» у Атлетики показывает свою формулу, а не «= как у колонки»', () => {
+  it('клетка «Навык» у Атлетики показывает формулу строки чипами', () => {
     Element.prototype.scrollIntoView = () => {};
     useWorld.setState(state => ({ ...state, system: dnd, activeTableId: 'skills' }));
     render(<RulesTab />);
-    const hints = [...document.querySelectorAll('details[open] input')].map(i => (i as HTMLInputElement).placeholder);
-    expect(hints).toContain('= Сила · Модификатор + Атлетика · Владение × Бонус мастерства');
-    expect(hints).toContain('= Ловкость · Модификатор + Скрытность · Владение × Бонус мастерства');
-    expect(hints).not.toContain('= как у колонки');
+    const shown = [...document.querySelectorAll('details[open] .row-formula')].map(node => node.textContent);
+    expect(shown).toContain('Сила · Модификатор + Атлетика · Владение × Бонус мастерства');
+    expect(shown).toContain('Ловкость · Модификатор + Скрытность · Владение × Бонус мастерства');
+    const chips = [...document.querySelectorAll('details[open] .row-formula')][0]!.querySelectorAll('.chips__chip');
+    expect([...chips].map(chip => chip.textContent)).toEqual(['Сила · Модификатор', 'Атлетика · Владение', 'Бонус мастерства']);
   });
 
   it('справка по «строка.ability.mod» объясняет путь, а не «не найдено»', () => {
