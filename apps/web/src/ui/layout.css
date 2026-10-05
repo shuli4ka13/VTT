@@ -420,7 +420,12 @@
 .block-fold__head::-webkit-details-marker { display: none; }
 .block-fold__head::before { content: '▸'; color: var(--text-faint); transition: transform 120ms ease; }
 .block-fold[open] > .block-fold__head::before { transform: rotate(90deg); }
-.block-fold__name { font-family: var(--font-head); font-weight: 700; font-size: var(--fs-4); }
+.block-fold__name {
+  padding: 0; border: 0; border-bottom: 1px dashed transparent; background: none; color: inherit; cursor: pointer; text-align: left;
+  font-family: var(--font-head); font-weight: 700; font-size: var(--fs-4);
+}
+.block-fold__name:hover { color: var(--accent-hover); border-bottom-color: var(--accent); }
+.block-fold__name--on { color: var(--accent); border-bottom-color: var(--accent); }
 .block-fold__count {
   min-width: 20px; padding: 0 6px; border-radius: var(--r-full);
   background: var(--surface-3); color: var(--text-muted); font-size: var(--fs-1); text-align: center;

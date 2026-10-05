@@ -117,6 +117,11 @@ export function CharacterSection({ system, editSystem, docked }: {
   const sourceOf = (block: SheetBlock): string => block.parts
     .map(part => `${system.tables?.[part.table]?.label || part.table}${part.by ? ` · по «${system.tables?.[part.table]?.columns?.find(c => c.key === part.by)?.label ?? part.by}»` : ''}`)
     .join(', ');
+  const from = (block: SheetBlock): string => {
+    if (!block.parts.length) return 'пока пусто';
+    const same = block.parts.length === 1 && !block.parts[0]!.by && (system.tables?.[block.parts[0]!.table]?.label || block.parts[0]!.table) === block.name;
+    return same ? '' : `из: ${sourceOf(block)}`;
+  };
   const branch = (nodes: BlockNode[], depth: number): ReactNode => nodes.map(({ block, children }) => {
     const on = shown(block.name);
     const count = fieldCount(block);
@@ -127,11 +132,10 @@ export function CharacterSection({ system, editSystem, docked }: {
             <input type="checkbox" checked={on} title={on ? 'есть на этом листе' : 'нет на этом листе'}
               onClick={event => event.stopPropagation()} onChange={() => toggle(block.name)} />
           ) : null}
-          <span className="block-fold__name">{block.name}</span>
+          <button type="button" className={`block-fold__name${block.name === activeBlock ? ' block-fold__name--on' : ''}`} title="настройки блока"
+            onClick={event => { event.preventDefault(); pickBlock(block.name); }}>{block.name}</button>
           <span className="block-fold__count">{count}</span>
-          <span className="block-fold__from">{sourceOf(block) || 'пока пусто'}{children.length ? ` · внутри блоков: ${children.length}` : ''}</span>
-          <Button size="sm" variant={block.name === activeBlock ? 'primary' : 'ghost'} title="настройки блока"
-            onClick={() => pickBlock(block.name)}>настроить</Button>
+          <span className="block-fold__from">{from(block)}{children.length ? ` · внутри блоков: ${children.length}` : ''}</span>
         </summary>
         <div className="block-fold__body">
           {block.parts.map(part => describe(part, block.name))}
