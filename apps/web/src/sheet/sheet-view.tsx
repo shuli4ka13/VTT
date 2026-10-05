@@ -57,14 +57,7 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
         <Card key={group}>
           <CardHead title={onPickBlock ? <button type="button" className="sheet-pick__head" title="настройки блока" onClick={() => onPickBlock(group)}>{group}</button> : group} />
           {piecesOf(fields).map(piece => (piece.table ? (
-            <Fragment key={piece.table}>
-              {sectionsOf(piece.fields, system, reader).map(part => (
-                <div key={part.title ?? ''} className={part.title ? 'sheet-section' : undefined}>
-                  {part.title ? <h4 className="sheet-section__title">{part.title}</h4> : null}
-                  <TableBlock system={system} tableId={piece.table!} fields={part.fields} cell={cell} {...(onPickRow ? { onPickRow } : {})} />
-                </div>
-              ))}
-            </Fragment>
+            <TableBlock key={piece.table} system={system} tableId={piece.table!} sections={sectionsOf(piece.fields, system, reader)} cell={cell} {...(onPickRow ? { onPickRow } : {})} />
           ) : (
             <div key={piece.fields[0]!.tag} className="row">
               {piece.fields.map(field => cell(field))}
@@ -115,15 +108,15 @@ function sectionTitle(field: FieldModel, system: System, reader: Reader): [strin
   return [value === undefined || value === null || value === '' ? '—' : String(value), Number.MAX_SAFE_INTEGER];
 }
 
-function TableBlock({ system, tableId, fields, cell, onPickRow }: {
+function TableBlock({ system, tableId, sections, cell, onPickRow }: {
   onPickRow?: (table: string, row: string) => void;
   system: System;
   tableId: string;
-  fields: FieldModel[];
+  sections: { title: string | null; fields: FieldModel[] }[];
   cell: (field: FieldModel, bare?: boolean) => ReactNode;
 }) {
   const table = system.tables?.[tableId];
-  const rows = [...new Set(fields.map(f => f.cell!.row))];
+  const fields = sections.flatMap(part => part.fields);
   const columns = [...new Set(fields.map(f => f.cell!.column))];
   const rowLabel = (key: string) => {
     const row = (table?.rows ?? []).find(r => rowKeyOf(r) === key);
@@ -138,15 +131,20 @@ function TableBlock({ system, tableId, fields, cell, onPickRow }: {
     <div className="sheet-table" style={{ gridTemplateColumns: `minmax(110px, max-content) repeat(${columns.length}, minmax(80px, max-content))` }}>
       <span />
       {columns.map(key => <span key={key} className="field__label">{columnLabel(key)}</span>)}
-      {rows.map(row => (
-        <Fragment key={row}>
-          {onPickRow
-            ? <button type="button" className="sheet-table__row sheet-pick__head" title="эта строка таблицы" onClick={() => onPickRow(tableId, row)}>{rowLabel(row)}</button>
-            : <span className="sheet-table__row">{rowLabel(row)}</span>}
-          {columns.map(key => {
-            const field = at.get(`${row}.${key}`);
-            return field ? <Fragment key={key}>{cell(field, true)}</Fragment> : <span key={key} />;
-          })}
+      {sections.map(part => (
+        <Fragment key={part.title ?? ''}>
+          {part.title ? <h4 className="sheet-section__title sheet-table__section">{part.title}</h4> : null}
+          {[...new Set(part.fields.map(f => f.cell!.row))].map(row => (
+            <Fragment key={row}>
+              {onPickRow
+                ? <button type="button" className="sheet-table__row sheet-pick__head" title="эта строка таблицы" onClick={() => onPickRow(tableId, row)}>{rowLabel(row)}</button>
+                : <span className="sheet-table__row">{rowLabel(row)}</span>}
+              {columns.map(key => {
+                const field = at.get(`${row}.${key}`);
+                return field ? <Fragment key={key}>{cell(field, true)}</Fragment> : <span key={key} />;
+              })}
+            </Fragment>
+          ))}
         </Fragment>
       ))}
     </div>

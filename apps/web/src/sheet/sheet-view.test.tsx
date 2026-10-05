@@ -20,6 +20,17 @@ const reader: Reader = {
   rollOf: () => null,
 };
 
+
+const underTitles = (): Record<string, string> => {
+  const out: Record<string, string> = {};
+  let title = '';
+  for (const node of document.querySelectorAll('.sheet-table__section, .sheet-table__row')) {
+    if (node.classList.contains('sheet-table__section')) title = node.textContent ?? '';
+    else out[node.textContent ?? ''] = title;
+  }
+  return out;
+};
+
 describe('лист за столом', () => {
   afterEach(() => { cleanup(); });
 
@@ -72,10 +83,7 @@ describe('лист за столом', () => {
     render(<SheetView system={grouped} sheet={{ id: 'б', name: 'Бор', values: {} } as unknown as Sheet} reader={reader} onChange={() => {}} />);
     const titles = [...document.querySelectorAll('.sheet-section__title')].map(node => node.textContent);
     expect(titles).toEqual(['Сила', 'Ловкость']);
-    const sections = [...document.querySelectorAll('.sheet-section')];
-    expect(sections[1]!.textContent).toContain('Акробатика');
-    expect(sections[1]!.textContent).toContain('Скрытность');
-    expect(sections[0]!.textContent).toContain('Атлетика');
+    expect(underTitles()).toEqual({ Атлетика: 'Сила', Акробатика: 'Ловкость', Скрытность: 'Ловкость' });
   });
 
   it('группировка по колонке, которую вписывает игрок, — по значениям этого листа, в порядке вариантов', () => {
@@ -97,9 +105,6 @@ describe('лист за столом', () => {
     render(<SheetView system={grouped} sheet={{ id: 'в', name: 'Вера', values } as unknown as Sheet} reader={own} onChange={() => {}} />);
     const titles = [...document.querySelectorAll('.sheet-section__title')].map(node => node.textContent);
     expect(titles).toEqual(['нет', 'владение', 'мастерство']);
-    const sections = [...document.querySelectorAll('.sheet-section')];
-    expect(sections[0]!.textContent).toContain('Акробатика');
-    expect(sections[1]!.textContent).toContain('Скрытность');
-    expect(sections[2]!.textContent).toContain('Атлетика');
+    expect(underTitles()).toEqual({ Акробатика: 'нет', Скрытность: 'владение', Атлетика: 'мастерство' });
   });
 });

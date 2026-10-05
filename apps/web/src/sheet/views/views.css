@@ -521,3 +521,4 @@ span.v-chip { cursor: default; }
   border-bottom: 1px dashed transparent;
 }
 .sheet-pick__head:hover { color: var(--accent-hover); border-bottom-color: var(--accent); }
+.sheet-table__section { grid-column: 1 / -1; margin: var(--s-2) 0 0; }
