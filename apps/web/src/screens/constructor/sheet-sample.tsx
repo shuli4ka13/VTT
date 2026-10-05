@@ -28,7 +28,10 @@ export function setSample(draft: System, tag: string, value: StoredValue): void 
   if (blank) delete column.default; else column.default = value;
 }
 
-export function SheetSample({ system, picked, onPick }: { system: System; picked?: string | null; onPick?: (tag: string) => void }) {
+export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: {
+  system: System; picked?: string | null; onPick?: (tag: string) => void;
+  onPickBlock?: (name: string) => void; onPickRow?: (table: string, row: string) => void;
+}) {
   const compendium = useBook();
   const editSystem = useWorld(s => s.editSystem);
   const kinds = sheetKinds(system);
@@ -61,6 +64,8 @@ export function SheetSample({ system, picked, onPick }: { system: System; picked
         only={only}
         badge="образец"
         {...(onPick ? { onPick } : {})}
+        {...(onPickBlock ? { onPickBlock } : {})}
+        {...(onPickRow ? { onPickRow } : {})}
         picked={picked ?? null}
         onChange={(tag, value) => {
           const now = reader.valueOf(tag);

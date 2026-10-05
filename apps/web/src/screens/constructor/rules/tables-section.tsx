@@ -426,11 +426,11 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
 
 const TYPED = ['number', 'text', 'dice'];
 
-const spoken = (system: System, tableId: string, row: TableRow, expr: string): string => {
+export const spoken = (system: System, tableId: string, row: TableRow, expr: string): string => {
   try { return `= ${rowWords(system, tableId, row, expr)}`; } catch { return '= как у колонки'; }
 };
 
-function CellEditor({ column, value, system, where, names, placed, inherited, onChange }: {
+export function CellEditor({ column, value, system, where, names, placed, inherited, onChange }: {
   inherited?: string;
   column: TableColumn;
   value: unknown;

@@ -9,7 +9,9 @@ import { fieldsOf, rowKeyOf, fieldOf } from '@vtt/engine/model/sheet-columns';
 import { optionsOf } from '@vtt/engine/model/lists';
 import { fieldsByBlock } from '@vtt/engine/model/blocks';
 
-export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only, fields, onPick, picked }: {
+export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only, fields, onPick, picked, onPickBlock, onPickRow }: {
+  onPickBlock?: (name: string) => void;
+  onPickRow?: (table: string, row: string) => void;
   system: System;
   fields?: FieldModel[];
   sheet: Sheet;
@@ -53,13 +55,13 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
 
       {shown.map(([group, fields]) => (
         <Card key={group}>
-          <CardHead title={group} />
+          <CardHead title={onPickBlock ? <button type="button" className="sheet-pick__head" title="настройки блока" onClick={() => onPickBlock(group)}>{group}</button> : group} />
           {piecesOf(fields).map(piece => (piece.table ? (
             <Fragment key={piece.table}>
               {sectionsOf(piece.fields, system, reader).map(part => (
                 <div key={part.title ?? ''} className={part.title ? 'sheet-section' : undefined}>
                   {part.title ? <h4 className="sheet-section__title">{part.title}</h4> : null}
-                  <TableBlock system={system} tableId={piece.table!} fields={part.fields} cell={cell} />
+                  <TableBlock system={system} tableId={piece.table!} fields={part.fields} cell={cell} {...(onPickRow ? { onPickRow } : {})} />
                 </div>
               ))}
             </Fragment>
@@ -109,10 +111,12 @@ function sectionTitle(field: FieldModel, system: System, reader: Reader): [strin
   const options = by ? optionsOf(system, by) : [];
   const at = options.findIndex(option => String(option.value) === String(value));
   if (at >= 0) return [options[at]!.label, at];
+  if (typeof value === 'boolean') return [value ? by?.control?.yes ?? 'да' : by?.control?.no ?? 'нет', value ? 1 : 0];
   return [value === undefined || value === null || value === '' ? '—' : String(value), Number.MAX_SAFE_INTEGER];
 }
 
-function TableBlock({ system, tableId, fields, cell }: {
+function TableBlock({ system, tableId, fields, cell, onPickRow }: {
+  onPickRow?: (table: string, row: string) => void;
   system: System;
   tableId: string;
   fields: FieldModel[];
@@ -136,7 +140,9 @@ function TableBlock({ system, tableId, fields, cell }: {
       {columns.map(key => <span key={key} className="field__label">{columnLabel(key)}</span>)}
       {rows.map(row => (
         <Fragment key={row}>
-          <span className="sheet-table__row">{rowLabel(row)}</span>
+          {onPickRow
+            ? <button type="button" className="sheet-table__row sheet-pick__head" title="эта строка таблицы" onClick={() => onPickRow(tableId, row)}>{rowLabel(row)}</button>
+            : <span className="sheet-table__row">{rowLabel(row)}</span>}
           {columns.map(key => {
             const field = at.get(`${row}.${key}`);
             return field ? <Fragment key={key}>{cell(field, true)}</Fragment> : <span key={key} />;

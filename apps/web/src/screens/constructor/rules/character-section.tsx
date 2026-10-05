@@ -47,7 +47,7 @@ export function CharacterSection({ system, editSystem, docked }: {
   const of = useWorld(s => s.activeSheetKind) ?? '';
   const setOf = (key: string) => pick({ activeSheetKind: key || null });
   const cell = useWorld(s => s.activeColumn) as Picked;
-  const setCell = (next: Picked) => pick({ activeColumn: next });
+  const setCell = (next: Picked) => pick({ activeColumn: next, activeRow: null });
   const kinds = sheetKinds(system);
   const kind = of ? system.sheets?.[of] : undefined;
   const blocks = system.blocks ?? [];
@@ -72,19 +72,19 @@ export function CharacterSection({ system, editSystem, docked }: {
   const addBlock = (parent?: string) => {
     const name = freeBlockName(system, 'Новый блок');
     editSystem(draft => { (draft.blocks ??= []).push({ name, ...(parent ? { parent } : {}), parts: [] }); });
-    pick({ activeBlock: name, activeFieldTag: null, activeColumn: null });
+    pick({ activeBlock: name, activeFieldTag: null, activeColumn: null, activeRow: null });
   };
   const addType = () => {
     const key = freeId([...Object.keys(system.sheets ?? {}), ...Object.keys(system.tables ?? {})], 'лист');
     editSystem(draft => { (draft.sheets ??= {})[key] = { label: 'Новый тип листа' }; });
     setOf(key);
   };
-  const pickField = (tag: string) => { pick({ activeColumn: null, activeBlock: null, activeFieldTag: tag === picked ? null : tag }); };
+  const pickField = (tag: string) => { pick({ activeColumn: null, activeBlock: null, activeRow: null, activeFieldTag: tag === picked ? null : tag }); };
   const pickCell = (next: Picked) => {
-    pick({ activeFieldTag: null, activeBlock: null });
+    pick({ activeFieldTag: null, activeBlock: null, activeRow: null });
     setCell(cell && next && cell.table === next.table && cell.column === next.column ? null : next);
   };
-  const pickBlock = (name: string) => pick({ activeBlock: name === activeBlock ? null : name, activeFieldTag: null, activeColumn: null });
+  const pickBlock = (name: string) => pick({ activeBlock: name === activeBlock ? null : name, activeFieldTag: null, activeColumn: null, activeRow: null });
   const open: Picked = cell ?? (active ? { table: active.home, column: active.tag } : null);
   const openTable = open ? system.tables?.[open.table] : undefined;
   const openColumn = open ? openTable?.columns?.find(c => c.key === open.column) : undefined;

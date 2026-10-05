@@ -362,6 +362,7 @@ export function sectionOf(system: System, part: SheetPart, field: Field): Pick<F
   if (value === undefined || value === null || value === '') return {};
   const options = column.kind === 'choice' && column.from ? system.tables?.[column.from]?.rows ?? [] : [];
   const at = options.findIndex(r => String(r.value) === String(value));
+  if (typeof value === 'boolean') return { section: value ? column.control?.yes ?? 'да' : column.control?.no ?? 'нет', sectionAt: value ? 1 : 0 };
   return at >= 0 ? { section: String(options[at]!.label ?? options[at]!.value), sectionAt: at } : { section: String(value) };
 }
 
