@@ -27,6 +27,7 @@
       "Чувства и движение": {},
       "Защита": {},
       "Здоровье": {},
+      "Блок монстра": {},
       "Атака": {},
       "В бою": {},
       "Магия": {},
@@ -282,10 +283,22 @@
           {
             "key": "hp_max",
             "label": "Максимум хитов",
-            "kind": "number",
-            "default": 8,
-            "min": 1,
+            "expr": {
+              "expr": "если(пусто(@class_name), @hp_block, максимум костей(@hit_die) + (@level - 1) * (округлить вниз(максимум костей(@hit_die) / 2) + 1) + @level * @abilities.телосложение.mod) + @hp_bonus"
+            },
             "block": "Здоровье"
+          },
+          {
+            "key": "hp_bonus",
+            "label": "Прибавка к максимуму хитов",
+            "kind": "number",
+            "block": "Здоровье"
+          },
+          {
+            "key": "hp_block",
+            "label": "Хиты из блока монстра",
+            "kind": "number",
+            "block": "Блок монстра"
           },
           {
             "key": "hp_current",
@@ -9707,6 +9720,26 @@
             }
           }
         ]
+      },
+      "dwarven_toughness": {
+        "label": "Дварфская выносливость",
+        "group": "Черты",
+        "description": "Максимум хитов выше на 1 за каждый уровень.",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "hp_max",
+            "op": "add",
+            "value": {
+              "expr": "@level"
+            },
+            "stacking": "sum"
+          }
+        ]
       }
     },
     "grants": [
@@ -9733,7 +9766,6 @@
           "abilities.харизма.score": 10,
           "level": 5,
           "caster_level": 5,
-          "hp_max": 40,
           "hp_current": 40,
           "slots.круг_1.left": 4,
           "slots.круг_2.left": 3,
@@ -9759,7 +9791,8 @@
           "resources.relentless.max": 1,
           "resources.relentless.left": 1,
           "inspiration": 1,
-          "hit_dice_left": 5
+          "hit_dice_left": 5,
+          "hp_block": 40
         },
         "has": [],
         "effects": []
@@ -9776,10 +9809,10 @@
           "abilities.мудрость.score": 10,
           "abilities.харизма.score": 10,
           "level": 5,
-          "hp_max": 40,
           "hp_current": 40,
           "ac_base": 13,
-          "hit_dice_left": 5
+          "hit_dice_left": 5,
+          "hp_block": 40
         },
         "has": [],
         "effects": []
@@ -9800,6 +9833,28 @@
           "disengage",
           "hide",
           "help"
+        ],
+        "blocks": [
+          "Личное дело",
+          "Характеристики",
+          "Модификаторы",
+          "Прогрессия",
+          "Спасброски",
+          "Навыки от силы",
+          "Навыки от ловкости",
+          "Навыки от интеллекта",
+          "Навыки от мудрости",
+          "Навыки от харизмы",
+          "Чувства и движение",
+          "Защита",
+          "Здоровье",
+          "Атака",
+          "В бою",
+          "Магия",
+          "Ячейки заклинаний",
+          "Ресурсы класса",
+          "Богатство",
+          "Стойкость к урону"
         ]
       },
       "противник": {
@@ -9822,6 +9877,7 @@
           "Чувства и движение",
           "Защита",
           "Здоровье",
+          "Блок монстра",
           "В бою",
           "Стойкость к урону"
         ],
@@ -11730,6 +11786,18 @@
         }
       },
       {
+        "id": "trait_dwarf_toughness",
+        "label": "Дварфская выносливость",
+        "description": "Максимум хитов выше на 1 за каждый уровень.",
+        "grants": [
+          "dwarven_toughness"
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Дварф"
+        }
+      },
+      {
         "id": "trait_infernal",
         "label": "Дьявольское наследие",
         "description": "Сопротивление урону огнём.",
@@ -11973,8 +12041,7 @@
         "skills.выживание.prof": 1,
         "skills.запугивание.prof": 2,
         "languages": "Общий, Дварфский",
-        "hp_max": 44,
-        "hp_current": 44,
+        "hp_current": 49,
         "hp_temp": 0,
         "hit_dice_left": 5,
         "crit_from": 19,
@@ -12047,8 +12114,7 @@
         "skills.убеждение.prof": 2,
         "darkvision": 60,
         "languages": "Общий, Инфернальный",
-        "hp_max": 33,
-        "hp_current": 33,
+        "hp_current": 32,
         "hit_dice_left": 5,
         "slots.круг_1.left": 4,
         "slots.круг_2.left": 3,
@@ -12138,8 +12204,7 @@
         "skills.история.prof": 1,
         "darkvision": 60,
         "languages": "Общий, Дварфский",
-        "hp_max": 38,
-        "hp_current": 38,
+        "hp_current": 48,
         "hit_dice_left": 5,
         "slots.круг_1.left": 4,
         "slots.круг_2.left": 3,
@@ -12193,6 +12258,9 @@
         },
         {
           "of": "trait_dwarf_resilience"
+        },
+        {
+          "of": "trait_dwarf_toughness"
         }
       ],
       "effects": []
@@ -12222,8 +12290,7 @@
         "skills.скрытность.prof": 2,
         "skills.ловкость_рук.prof": 2,
         "languages": "Общий, Воровской жаргон",
-        "hp_max": 33,
-        "hp_current": 33,
+        "hp_current": 38,
         "hit_dice_left": 5,
         "resources.luck.max": 3,
         "resources.luck.left": 3,
@@ -12279,10 +12346,10 @@
         "abilities.харизма.score": 8,
         "level": 1,
         "darkvision": 60,
-        "hp_max": 7,
         "hp_current": 7,
         "hit_dice_left": 1,
-        "ac_base": 15
+        "ac_base": 15,
+        "hp_block": 7
       },
       "has": [
         {
@@ -12307,10 +12374,10 @@
         "abilities.харизма.score": 10,
         "level": 2,
         "darkvision": 60,
-        "hp_max": 15,
         "hp_current": 15,
         "hit_dice_left": 2,
-        "ac_base": 13
+        "ac_base": 13,
+        "hp_block": 15
       },
       "has": [
         {
@@ -12335,10 +12402,10 @@
         "abilities.харизма.score": 7,
         "level": 7,
         "darkvision": 60,
-        "hp_max": 59,
         "hp_current": 59,
         "hit_dice_left": 7,
-        "ac_base": 11
+        "ac_base": 11,
+        "hp_block": 59
       },
       "has": [
         {

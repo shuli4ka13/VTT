@@ -18385,14 +18385,14 @@ exports[`итоги действий: dnd5e > arven · handaxe:0 1`] = `
   "→ arven · high · бой": {
     "arven": {
       "values": {
-        "hp_current": 28,
+        "hp_current": 33,
       },
     },
   },
   "→ arven · high · вне боя": {
     "arven": {
       "values": {
-        "hp_current": 28,
+        "hp_current": 33,
       },
     },
   },
@@ -18403,14 +18403,14 @@ exports[`итоги действий: dnd5e > arven · handaxe:0 1`] = `
   "→ doran · high · бой": {
     "doran": {
       "values": {
-        "hp_current": 22,
+        "hp_current": 32,
       },
     },
   },
   "→ doran · high · вне боя": {
     "doran": {
       "values": {
-        "hp_current": 22,
+        "hp_current": 32,
       },
     },
   },
@@ -18449,14 +18449,14 @@ exports[`итоги действий: dnd5e > arven · handaxe:0 1`] = `
   "→ mirra · high · бой": {
     "mirra": {
       "values": {
-        "hp_current": 17,
+        "hp_current": 16,
       },
     },
   },
   "→ mirra · high · вне боя": {
     "mirra": {
       "values": {
-        "hp_current": 17,
+        "hp_current": 16,
       },
     },
   },
@@ -18515,14 +18515,14 @@ exports[`итоги действий: dnd5e > arven · handaxe:0 1`] = `
   "→ sil · high · бой": {
     "sil": {
       "values": {
-        "hp_current": 17,
+        "hp_current": 22,
       },
     },
   },
   "→ sil · high · вне боя": {
     "sil": {
       "values": {
-        "hp_current": 17,
+        "hp_current": 22,
       },
     },
   },
@@ -18538,14 +18538,14 @@ exports[`итоги действий: dnd5e > arven · longsword:0 1`] = `
   "→ arven · high · бой": {
     "arven": {
       "values": {
-        "hp_current": 24,
+        "hp_current": 29,
       },
     },
   },
   "→ arven · high · вне боя": {
     "arven": {
       "values": {
-        "hp_current": 24,
+        "hp_current": 29,
       },
     },
   },
@@ -18556,14 +18556,14 @@ exports[`итоги действий: dnd5e > arven · longsword:0 1`] = `
   "→ doran · high · бой": {
     "doran": {
       "values": {
-        "hp_current": 18,
+        "hp_current": 28,
       },
     },
   },
   "→ doran · high · вне боя": {
     "doran": {
       "values": {
-        "hp_current": 18,
+        "hp_current": 28,
       },
     },
   },
@@ -18602,14 +18602,14 @@ exports[`итоги действий: dnd5e > arven · longsword:0 1`] = `
   "→ mirra · high · бой": {
     "mirra": {
       "values": {
-        "hp_current": 13,
+        "hp_current": 12,
       },
     },
   },
   "→ mirra · high · вне боя": {
     "mirra": {
       "values": {
-        "hp_current": 13,
+        "hp_current": 12,
       },
     },
   },
@@ -18668,14 +18668,14 @@ exports[`итоги действий: dnd5e > arven · longsword:0 1`] = `
   "→ sil · high · бой": {
     "sil": {
       "values": {
-        "hp_current": 13,
+        "hp_current": 18,
       },
     },
   },
   "→ sil · high · вне боя": {
     "sil": {
       "values": {
-        "hp_current": 13,
+        "hp_current": 18,
       },
     },
   },
@@ -21310,14 +21310,14 @@ exports[`итоги действий: dnd5e > doran · mace:0 1`] = `
   "→ arven · high · бой": {
     "arven": {
       "values": {
-        "hp_current": 30,
+        "hp_current": 35,
       },
     },
   },
   "→ arven · high · вне боя": {
     "arven": {
       "values": {
-        "hp_current": 30,
+        "hp_current": 35,
       },
     },
   },
@@ -21328,14 +21328,14 @@ exports[`итоги действий: dnd5e > doran · mace:0 1`] = `
   "→ doran · high · бой": {
     "doran": {
       "values": {
-        "hp_current": 24,
+        "hp_current": 34,
       },
     },
   },
   "→ doran · high · вне боя": {
     "doran": {
       "values": {
-        "hp_current": 24,
+        "hp_current": 34,
       },
     },
   },
@@ -21374,14 +21374,14 @@ exports[`итоги действий: dnd5e > doran · mace:0 1`] = `
   "→ mirra · high · бой": {
     "mirra": {
       "values": {
-        "hp_current": 19,
+        "hp_current": 18,
       },
     },
   },
   "→ mirra · high · вне боя": {
     "mirra": {
       "values": {
-        "hp_current": 19,
+        "hp_current": 18,
       },
     },
   },
@@ -21428,14 +21428,14 @@ exports[`итоги действий: dnd5e > doran · mace:0 1`] = `
   "→ sil · high · бой": {
     "sil": {
       "values": {
-        "hp_current": 19,
+        "hp_current": 24,
       },
     },
   },
   "→ sil · high · вне боя": {
     "sil": {
       "values": {
-        "hp_current": 19,
+        "hp_current": 24,
       },
     },
   },
@@ -21453,28 +21453,28 @@ exports[`итоги действий: dnd5e > doran · sacred_flame:0 1`] = `
   "→ arven · low · бой": {
     "arven": {
       "values": {
-        "hp_current": 42,
+        "hp_current": 47,
       },
     },
   },
   "→ arven · low · вне боя": {
     "arven": {
       "values": {
-        "hp_current": 42,
+        "hp_current": 47,
       },
     },
   },
   "→ arven · walk · бой": {
     "arven": {
       "values": {
-        "hp_current": 39,
+        "hp_current": 44,
       },
     },
   },
   "→ arven · walk · вне боя": {
     "arven": {
       "values": {
-        "hp_current": 39,
+        "hp_current": 44,
       },
     },
   },
@@ -21483,28 +21483,28 @@ exports[`итоги действий: dnd5e > doran · sacred_flame:0 1`] = `
   "→ doran · low · бой": {
     "doran": {
       "values": {
-        "hp_current": 36,
+        "hp_current": 46,
       },
     },
   },
   "→ doran · low · вне боя": {
     "doran": {
       "values": {
-        "hp_current": 36,
+        "hp_current": 46,
       },
     },
   },
   "→ doran · walk · бой": {
     "doran": {
       "values": {
-        "hp_current": 33,
+        "hp_current": 43,
       },
     },
   },
   "→ doran · walk · вне боя": {
     "doran": {
       "values": {
-        "hp_current": 33,
+        "hp_current": 43,
       },
     },
   },
@@ -21543,28 +21543,28 @@ exports[`итоги действий: dnd5e > doran · sacred_flame:0 1`] = `
   "→ mirra · low · бой": {
     "mirra": {
       "values": {
-        "hp_current": 31,
+        "hp_current": 30,
       },
     },
   },
   "→ mirra · low · вне боя": {
     "mirra": {
       "values": {
-        "hp_current": 31,
+        "hp_current": 30,
       },
     },
   },
   "→ mirra · walk · бой": {
     "mirra": {
       "values": {
-        "hp_current": 28,
+        "hp_current": 27,
       },
     },
   },
   "→ mirra · walk · вне боя": {
     "mirra": {
       "values": {
-        "hp_current": 28,
+        "hp_current": 27,
       },
     },
   },
@@ -21633,28 +21633,28 @@ exports[`итоги действий: dnd5e > doran · sacred_flame:0 1`] = `
   "→ sil · low · бой": {
     "sil": {
       "values": {
-        "hp_current": 31,
+        "hp_current": 36,
       },
     },
   },
   "→ sil · low · вне боя": {
     "sil": {
       "values": {
-        "hp_current": 31,
+        "hp_current": 36,
       },
     },
   },
   "→ sil · walk · бой": {
     "sil": {
       "values": {
-        "hp_current": 28,
+        "hp_current": 33,
       },
     },
   },
   "→ sil · walk · вне боя": {
     "sil": {
       "values": {
-        "hp_current": 28,
+        "hp_current": 33,
       },
     },
   },
@@ -23217,14 +23217,14 @@ exports[`итоги действий: dnd5e > goblin · goblin_scimitar:0 1`] = 
   "→ arven · high · бой": {
     "arven": {
       "values": {
-        "hp_current": 30,
+        "hp_current": 35,
       },
     },
   },
   "→ arven · high · вне боя": {
     "arven": {
       "values": {
-        "hp_current": 30,
+        "hp_current": 35,
       },
     },
   },
@@ -23235,14 +23235,14 @@ exports[`итоги действий: dnd5e > goblin · goblin_scimitar:0 1`] = 
   "→ doran · high · бой": {
     "doran": {
       "values": {
-        "hp_current": 24,
+        "hp_current": 34,
       },
     },
   },
   "→ doran · high · вне боя": {
     "doran": {
       "values": {
-        "hp_current": 24,
+        "hp_current": 34,
       },
     },
   },
@@ -23281,14 +23281,14 @@ exports[`итоги действий: dnd5e > goblin · goblin_scimitar:0 1`] = 
   "→ mirra · high · бой": {
     "mirra": {
       "values": {
-        "hp_current": 19,
+        "hp_current": 18,
       },
     },
   },
   "→ mirra · high · вне боя": {
     "mirra": {
       "values": {
-        "hp_current": 19,
+        "hp_current": 18,
       },
     },
   },
@@ -23335,14 +23335,14 @@ exports[`итоги действий: dnd5e > goblin · goblin_scimitar:0 1`] = 
   "→ sil · high · бой": {
     "sil": {
       "values": {
-        "hp_current": 19,
+        "hp_current": 24,
       },
     },
   },
   "→ sil · high · вне боя": {
     "sil": {
       "values": {
-        "hp_current": 19,
+        "hp_current": 24,
       },
     },
   },
@@ -24956,14 +24956,14 @@ exports[`итоги действий: dnd5e > mirra · dagger:0 1`] = `
   "→ arven · high · бой": {
     "arven": {
       "values": {
-        "hp_current": 33,
+        "hp_current": 38,
       },
     },
   },
   "→ arven · high · вне боя": {
     "arven": {
       "values": {
-        "hp_current": 33,
+        "hp_current": 38,
       },
     },
   },
@@ -24974,14 +24974,14 @@ exports[`итоги действий: dnd5e > mirra · dagger:0 1`] = `
   "→ doran · high · бой": {
     "doran": {
       "values": {
-        "hp_current": 27,
+        "hp_current": 37,
       },
     },
   },
   "→ doran · high · вне боя": {
     "doran": {
       "values": {
-        "hp_current": 27,
+        "hp_current": 37,
       },
     },
   },
@@ -25010,14 +25010,14 @@ exports[`итоги действий: dnd5e > mirra · dagger:0 1`] = `
   "→ mirra · high · бой": {
     "mirra": {
       "values": {
-        "hp_current": 22,
+        "hp_current": 21,
       },
     },
   },
   "→ mirra · high · вне боя": {
     "mirra": {
       "values": {
-        "hp_current": 22,
+        "hp_current": 21,
       },
     },
   },
@@ -25064,14 +25064,14 @@ exports[`итоги действий: dnd5e > mirra · dagger:0 1`] = `
   "→ sil · high · бой": {
     "sil": {
       "values": {
-        "hp_current": 22,
+        "hp_current": 27,
       },
     },
   },
   "→ sil · high · вне боя": {
     "sil": {
       "values": {
-        "hp_current": 22,
+        "hp_current": 27,
       },
     },
   },
@@ -25087,14 +25087,14 @@ exports[`итоги действий: dnd5e > mirra · fire_bolt:0 1`] = `
   "→ arven · high · бой": {
     "arven": {
       "values": {
-        "hp_current": 4,
+        "hp_current": 9,
       },
     },
   },
   "→ arven · high · вне боя": {
     "arven": {
       "values": {
-        "hp_current": 4,
+        "hp_current": 9,
       },
     },
   },
@@ -25104,37 +25104,15 @@ exports[`итоги действий: dnd5e > mirra · fire_bolt:0 1`] = `
   "→ arven · walk · вне боя": {},
   "→ doran · high · бой": {
     "doran": {
-      "effects": [
-        {
-          "effectId": "unconscious",
-        },
-        {
-          "effectId": "dying",
-        },
-        {
-          "effectId": "prone",
-        },
-      ],
       "values": {
-        "hp_current": 0,
+        "hp_current": 8,
       },
     },
   },
   "→ doran · high · вне боя": {
     "doran": {
-      "effects": [
-        {
-          "effectId": "unconscious",
-        },
-        {
-          "effectId": "dying",
-        },
-        {
-          "effectId": "prone",
-        },
-      ],
       "values": {
-        "hp_current": 0,
+        "hp_current": 8,
       },
     },
   },
@@ -25173,14 +25151,14 @@ exports[`итоги действий: dnd5e > mirra · fire_bolt:0 1`] = `
   "→ mirra · high · бой": {
     "mirra": {
       "values": {
-        "hp_current": 13,
+        "hp_current": 12,
       },
     },
   },
   "→ mirra · high · вне боя": {
     "mirra": {
       "values": {
-        "hp_current": 13,
+        "hp_current": 12,
       },
     },
   },
@@ -27221,14 +27199,14 @@ exports[`итоги действий: dnd5e > ogre · ogre_club:0 1`] = `
   "→ arven · high · бой": {
     "arven": {
       "values": {
-        "hp_current": 8,
+        "hp_current": 13,
       },
     },
   },
   "→ arven · high · вне боя": {
     "arven": {
       "values": {
-        "hp_current": 8,
+        "hp_current": 13,
       },
     },
   },
@@ -27239,14 +27217,14 @@ exports[`итоги действий: dnd5e > ogre · ogre_club:0 1`] = `
   "→ doran · high · бой": {
     "doran": {
       "values": {
-        "hp_current": 2,
+        "hp_current": 12,
       },
     },
   },
   "→ doran · high · вне боя": {
     "doran": {
       "values": {
-        "hp_current": 2,
+        "hp_current": 12,
       },
     },
   },
@@ -27370,37 +27348,15 @@ exports[`итоги действий: dnd5e > ogre · ogre_club:0 1`] = `
   "→ orc · walk · вне боя": {},
   "→ sil · high · бой": {
     "sil": {
-      "effects": [
-        {
-          "effectId": "unconscious",
-        },
-        {
-          "effectId": "dying",
-        },
-        {
-          "effectId": "prone",
-        },
-      ],
       "values": {
-        "hp_current": 0,
+        "hp_current": 2,
       },
     },
   },
   "→ sil · high · вне боя": {
     "sil": {
-      "effects": [
-        {
-          "effectId": "unconscious",
-        },
-        {
-          "effectId": "dying",
-        },
-        {
-          "effectId": "prone",
-        },
-      ],
       "values": {
-        "hp_current": 0,
+        "hp_current": 2,
       },
     },
   },
@@ -28967,14 +28923,14 @@ exports[`итоги действий: dnd5e > orc · orc_greataxe:0 1`] = `
   "→ arven · high · бой": {
     "arven": {
       "values": {
-        "hp_current": 17,
+        "hp_current": 22,
       },
     },
   },
   "→ arven · high · вне боя": {
     "arven": {
       "values": {
-        "hp_current": 17,
+        "hp_current": 22,
       },
     },
   },
@@ -28985,14 +28941,14 @@ exports[`итоги действий: dnd5e > orc · orc_greataxe:0 1`] = `
   "→ doran · high · бой": {
     "doran": {
       "values": {
-        "hp_current": 11,
+        "hp_current": 21,
       },
     },
   },
   "→ doran · high · вне боя": {
     "doran": {
       "values": {
-        "hp_current": 11,
+        "hp_current": 21,
       },
     },
   },
@@ -29031,14 +28987,14 @@ exports[`итоги действий: dnd5e > orc · orc_greataxe:0 1`] = `
   "→ mirra · high · бой": {
     "mirra": {
       "values": {
-        "hp_current": 6,
+        "hp_current": 5,
       },
     },
   },
   "→ mirra · high · вне боя": {
     "mirra": {
       "values": {
-        "hp_current": 6,
+        "hp_current": 5,
       },
     },
   },
@@ -29085,14 +29041,14 @@ exports[`итоги действий: dnd5e > orc · orc_greataxe:0 1`] = `
   "→ sil · high · бой": {
     "sil": {
       "values": {
-        "hp_current": 6,
+        "hp_current": 11,
       },
     },
   },
   "→ sil · high · вне боя": {
     "sil": {
       "values": {
-        "hp_current": 6,
+        "hp_current": 11,
       },
     },
   },
@@ -30846,14 +30802,14 @@ exports[`итоги действий: dnd5e > sil · dagger:0 1`] = `
   "→ arven · high · бой": {
     "arven": {
       "values": {
-        "hp_current": 32,
+        "hp_current": 37,
       },
     },
   },
   "→ arven · high · вне боя": {
     "arven": {
       "values": {
-        "hp_current": 32,
+        "hp_current": 37,
       },
     },
   },
@@ -30864,14 +30820,14 @@ exports[`итоги действий: dnd5e > sil · dagger:0 1`] = `
   "→ doran · high · бой": {
     "doran": {
       "values": {
-        "hp_current": 26,
+        "hp_current": 36,
       },
     },
   },
   "→ doran · high · вне боя": {
     "doran": {
       "values": {
-        "hp_current": 26,
+        "hp_current": 36,
       },
     },
   },
@@ -30900,14 +30856,14 @@ exports[`итоги действий: dnd5e > sil · dagger:0 1`] = `
   "→ mirra · high · бой": {
     "mirra": {
       "values": {
-        "hp_current": 21,
+        "hp_current": 20,
       },
     },
   },
   "→ mirra · high · вне боя": {
     "mirra": {
       "values": {
-        "hp_current": 21,
+        "hp_current": 20,
       },
     },
   },
@@ -30966,14 +30922,14 @@ exports[`итоги действий: dnd5e > sil · dagger:0 1`] = `
   "→ sil · high · бой": {
     "sil": {
       "values": {
-        "hp_current": 21,
+        "hp_current": 26,
       },
     },
   },
   "→ sil · high · вне боя": {
     "sil": {
       "values": {
-        "hp_current": 21,
+        "hp_current": 26,
       },
     },
   },
@@ -31335,14 +31291,14 @@ exports[`итоги действий: dnd5e > sil · rapier:0 1`] = `
   "→ arven · high · бой": {
     "arven": {
       "values": {
-        "hp_current": 24,
+        "hp_current": 29,
       },
     },
   },
   "→ arven · high · вне боя": {
     "arven": {
       "values": {
-        "hp_current": 24,
+        "hp_current": 29,
       },
     },
   },
@@ -31353,14 +31309,14 @@ exports[`итоги действий: dnd5e > sil · rapier:0 1`] = `
   "→ doran · high · бой": {
     "doran": {
       "values": {
-        "hp_current": 18,
+        "hp_current": 28,
       },
     },
   },
   "→ doran · high · вне боя": {
     "doran": {
       "values": {
-        "hp_current": 18,
+        "hp_current": 28,
       },
     },
   },
@@ -31399,14 +31355,14 @@ exports[`итоги действий: dnd5e > sil · rapier:0 1`] = `
   "→ mirra · high · бой": {
     "mirra": {
       "values": {
-        "hp_current": 13,
+        "hp_current": 12,
       },
     },
   },
   "→ mirra · high · вне боя": {
     "mirra": {
       "values": {
-        "hp_current": 13,
+        "hp_current": 12,
       },
     },
   },
@@ -31465,14 +31421,14 @@ exports[`итоги действий: dnd5e > sil · rapier:0 1`] = `
   "→ sil · high · бой": {
     "sil": {
       "values": {
-        "hp_current": 13,
+        "hp_current": 18,
       },
     },
   },
   "→ sil · high · вне боя": {
     "sil": {
       "values": {
-        "hp_current": 13,
+        "hp_current": 18,
       },
     },
   },
@@ -31488,14 +31444,14 @@ exports[`итоги действий: dnd5e > sil · shortbow:0 1`] = `
   "→ arven · high · бой": {
     "arven": {
       "values": {
-        "hp_current": 28,
+        "hp_current": 33,
       },
     },
   },
   "→ arven · high · вне боя": {
     "arven": {
       "values": {
-        "hp_current": 28,
+        "hp_current": 33,
       },
     },
   },
@@ -31506,14 +31462,14 @@ exports[`итоги действий: dnd5e > sil · shortbow:0 1`] = `
   "→ doran · high · бой": {
     "doran": {
       "values": {
-        "hp_current": 22,
+        "hp_current": 32,
       },
     },
   },
   "→ doran · high · вне боя": {
     "doran": {
       "values": {
-        "hp_current": 22,
+        "hp_current": 32,
       },
     },
   },
@@ -31552,14 +31508,14 @@ exports[`итоги действий: dnd5e > sil · shortbow:0 1`] = `
   "→ mirra · high · бой": {
     "mirra": {
       "values": {
-        "hp_current": 17,
+        "hp_current": 16,
       },
     },
   },
   "→ mirra · high · вне боя": {
     "mirra": {
       "values": {
-        "hp_current": 17,
+        "hp_current": 16,
       },
     },
   },
@@ -31618,14 +31574,14 @@ exports[`итоги действий: dnd5e > sil · shortbow:0 1`] = `
   "→ sil · high · бой": {
     "sil": {
       "values": {
-        "hp_current": 17,
+        "hp_current": 22,
       },
     },
   },
   "→ sil · high · вне боя": {
     "sil": {
       "values": {
-        "hp_current": 17,
+        "hp_current": 22,
       },
     },
   },
