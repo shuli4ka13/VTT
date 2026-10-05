@@ -459,7 +459,7 @@ function CellEditor({ column, value, system, where, names, placed, onChange }: {
   const empty = value === undefined || value === '';
   const hint = column.expr !== undefined ? '= как у колонки' : placed ? 'вводит игрок' : '';
   if (!TYPED.includes(column.kind ?? 'text')) {
-    return <ValueEditor type={column} value={empty ? '' : value} system={system} onChange={next => onChange(next === '' ? undefined : next)} />;
+    return <ValueEditor type={column} value={empty ? '' : value} system={system} {...(hint ? { blank: hint } : {})} onChange={next => onChange(next === '' ? undefined : next)} />;
   }
   const commit = () => {
     if (draft === null) return;

@@ -14,8 +14,10 @@ export interface ValueType {
   many?: boolean;
 }
 
-export function ValueEditor({ type, value, system, compendium, onlyWorn, except, onChange }: {
+export function ValueEditor({ type, value, system, compendium, onlyWorn, except, blank, onChange }: {
   type: ValueType;
+
+  blank?: string;
   value: unknown;
   system: System;
   compendium?: Compendium;
@@ -43,11 +45,12 @@ export function ValueEditor({ type, value, system, compendium, onlyWorn, except,
     );
   }
   if (kind === 'boolean') {
+    const empty = value === undefined || value === null || value === '';
     return (
       <Select
-        value={value === true ? 'да' : 'нет'}
-        options={[['да', 'да'], ['нет', 'нет']] as const}
-        onChange={next => onChange(next === 'да')}
+        value={blank && empty ? '' : value === true ? 'да' : 'нет'}
+        options={[...(blank ? [['', blank] as const] : []), ['да', 'да'] as const, ['нет', 'нет'] as const] as never}
+        onChange={next => onChange(next === '' ? '' : next === 'да')}
       />
     );
   }
@@ -100,7 +103,7 @@ export function ValueEditor({ type, value, system, compendium, onlyWorn, except,
     return (
       <Select
         value={String(value ?? '')}
-        options={[['', options.length ? '— выберите —' : '— таблица не выбрана —'],
+        options={[['', blank ?? (options.length ? '— выберите —' : '— таблица не выбрана —')],
           ...options.map(o => [String(o.value), o.label] as const)] as never}
         onChange={next => onChange(options.find(o => String(o.value) === next)?.value ?? next)}
       />
