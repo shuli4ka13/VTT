@@ -4,7 +4,8 @@ import { TagsField } from './tags-field.tsx';
 import { dieEntries } from './rules/dice-section.tsx';
 import { ViewGallery } from './view-gallery.tsx';
 import { VIEWS, columnFamily, viewNeeds, takesBounds, TAKES_STEP } from '../../sheet/views/index.tsx';
-import { BoundField } from './bound-field.tsx';
+import { BoundFormula } from './bound-field.tsx';
+import { rowNames } from './row-names.ts';
 import { Field, Input, Select, Chip, Button, NumInput, Segmented, Verdict } from '../../ui/primitives.tsx';
 import { isRange } from '@vtt/engine/model/tables';
 import { ROW, cellSource, onSheet, isSingle, fieldsOf } from '@vtt/engine/model/sheet-columns';
@@ -164,10 +165,11 @@ export function ColumnViewField({ tableId, column, system }: { tableId: string; 
           {takesBounds(kind, column) ? (
             <div className="row">
               <Field label={kind === 'slider' || kind === 'ring' || kind === 'choice' ? 'Низ' : 'Не ниже'}>
-                <BoundField value={column.min} onChange={next => edit(draft => { if (next === null) delete draft.min; else draft.min = next; })} />
+                <BoundFormula value={column.min} system={system} table={tableId} {...(single ? {} : { names: rowNames(system, tableId) })} where={`${table.label || tableId} · ${column.label || column.key} · низ`}
+                  onChange={next => edit(draft => { if (next === null) delete draft.min; else draft.min = next; })} />
               </Field>
               <Field label={kind === 'stepper' ? 'Не выше' : kind === 'ring' || kind === 'choice' ? 'Верх' : 'Верх — сколько всего'}>
-                <BoundField value={column.max} placeholder="число или формула: 3, @макс"
+                <BoundFormula value={column.max} system={system} table={tableId} {...(single ? {} : { names: rowNames(system, tableId) })} where={`${table.label || tableId} · ${column.label || column.key} · верх`} placeholder="число или формула: 3 или @ и название"
                   onChange={next => edit(draft => { if (next === null) delete draft.max; else draft.max = next; })} />
               </Field>
             </div>

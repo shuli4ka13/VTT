@@ -1,4 +1,4 @@
-import { BoundField } from '../bound-field.tsx';
+import { BoundFormula } from '../bound-field.tsx';
 import type { Bound } from '../bound-field.tsx';
 import type { ReactNode } from 'react';
 import { Card, CardHead, Field, Button, DangerButton, Fold, Select, LabelInput } from '../../../ui/primitives.tsx';
@@ -97,10 +97,10 @@ export function ColumnCard({ column, kinds, tables, many, formulaHint, where, na
           {bounds && column.kind === 'number' ? (
             <div className="row">
               <Field label="Не ниже">
-                <BoundField value={column.min} onChange={next => onChange({ min: next })} />
+                <BoundFormula value={column.min} system={system} where={`${where} · не ниже`} {...(table ? { table } : {})} {...(names ? { names } : {})} onChange={next => onChange({ min: next })} />
               </Field>
               <Field label="Не выше">
-                <BoundField value={column.max} onChange={next => onChange({ max: next })} />
+                <BoundFormula value={column.max} system={system} where={`${where} · не выше`} {...(table ? { table } : {})} {...(names ? { names } : {})} onChange={next => onChange({ max: next })} />
               </Field>
             </div>
           ) : null}

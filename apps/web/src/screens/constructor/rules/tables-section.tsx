@@ -1,7 +1,9 @@
 import { ColumnSheetFields, ColumnViewField } from '../table-field.tsx';
+import { rowNames } from '../row-names.ts';
+export { rowNames } from '../row-names.ts';
 import { viewsFor, columnFamily, takesBounds } from '../../../sheet/views/index.tsx';
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
-import { ROW, isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowWords } from '@vtt/engine/model/sheet-columns';
+import { isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowWords } from '@vtt/engine/model/sheet-columns';
 import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty, Field, Chip } from '../../../ui/primitives.tsx';
 import { LiveValue } from '../live-value.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
@@ -207,19 +209,6 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
   );
 }
 
-export function rowNames(system: System, tableId: string): Map<string, string> {
-  const table = system.tables?.[tableId];
-  const out = new Map<string, string>([[ROW, 'эта строка']]);
-  for (const column of table?.columns ?? []) {
-    const name = column.label || column.key;
-    out.set(`${ROW}.${column.key}`, name);
-    if (column.kind !== 'choice' || !column.from) continue;
-    for (const other of system.tables?.[column.from]?.columns ?? []) {
-      out.set(`${ROW}.${column.key}.${other.key}`, `${name} · ${other.label || other.key}`);
-    }
-  }
-  return out;
-}
 
 const kindLabel = (column: TableColumn): string =>
   `${kindWord(column.kind)}${column.expr !== undefined ? ' · формула' : ''}`;
