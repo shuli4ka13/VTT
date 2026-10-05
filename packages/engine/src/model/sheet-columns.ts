@@ -1,6 +1,6 @@
 import { EngineError } from '../engine/errors.ts';
 import type { System, Table, TableRow, TableColumn, CellView, Field, FieldValue, CellMark, Holder, Placement } from './types.ts';
-import type { SheetPart } from '@vtt/schema';
+import type { SheetPart, Control } from '@vtt/schema';
 
 export type { CellMark };
 
@@ -47,12 +47,9 @@ export const viewOf = (table: Table | undefined, column: string, row?: TableRow)
   const own: CellView = {
     ...(spec?.title !== undefined ? { label: spec.title } : {}),
     ...(spec?.roll !== undefined ? { roll: spec.roll } : {}),
-    ...(spec?.control !== undefined ? { control: spec.control } : {}),
     ...(spec?.default !== undefined ? { default: spec.default } : {}),
   };
-  const mine = row?.view?.[column];
-  const control = mine?.control ? { ...spec?.control, ...mine.control } : own.control;
-  return { ...own, ...mine, ...(control ? { control } : {}) };
+  return { ...own, ...row?.view?.[column] };
 };
 
 function token(system: System, table: Table, row: TableRow, name: string): string {
@@ -283,7 +280,6 @@ function singleFields(tableId: string, table: Table): Field[] {
       tag: column.key,
       label: column.label ?? column.key,
       ...(column.roll ? { roll: column.roll } : {}),
-      ...(column.control ? { control: column.control } : {}),
       value: column.expr !== undefined ? { kind: 'formula', expr: column.expr.expr, ...boundsOf(column) } : valueOf(column, column.default),
       ...livesOf(table),
       home: tableId,
@@ -307,7 +303,6 @@ function rowFields(system: System, tableId: string, table: Table): Field[] {
         tag: addressOf(tableId, row, column.key),
         label: fill(system, table, row, view.label ?? defaultLabel(column, at === 0)),
         ...(roll ? { roll } : {}),
-        ...(view.control ? { control: view.control } : {}),
         value,
         ...livesOf(table),
         home: tableId,
@@ -365,6 +360,13 @@ const partHas = (part: SheetPart, field: Field): boolean =>
   && (!part.columns || part.columns.includes(field.cell?.column ?? field.tag))
   && (!part.rows || (field.cell !== undefined && part.rows.includes(field.cell.row)));
 
+export function viewIn(part: SheetPart, field: Field): Control | undefined {
+  const column = field.cell?.column ?? field.tag;
+  const own = field.cell ? part.views?.[`${field.cell.row}.${column}`] : undefined;
+  const base = part.views?.[column];
+  return own ? { ...base, ...own } : base;
+}
+
 export function sectionOf(system: System, part: SheetPart, field: Field): Pick<Field, 'section' | 'sectionAt' | 'sectionBy'> {
   if (!part.by || !field.cell) return {};
   const table = system.tables?.[field.home];
@@ -377,7 +379,7 @@ export function sectionOf(system: System, part: SheetPart, field: Field): Pick<F
   if (value === undefined || value === null || value === '') return {};
   const options = column.kind === 'choice' && column.from ? system.tables?.[column.from]?.rows ?? [] : [];
   const at = options.findIndex(r => String(r.value) === String(value));
-  if (typeof value === 'boolean') return { section: value ? column.control?.yes ?? 'да' : column.control?.no ?? 'нет', sectionAt: value ? 1 : 0 };
+  if (typeof value === 'boolean') return { section: value ? part.views?.[column.key]?.yes ?? 'да' : part.views?.[column.key]?.no ?? 'нет', sectionAt: value ? 1 : 0 };
   return at >= 0 ? { section: String(options[at]!.label ?? options[at]!.value), sectionAt: at } : { section: String(value) };
 }
 
@@ -387,7 +389,9 @@ function placeFields(system: System, base: Built): Built {
     const placements: Placement[] = [];
     for (const block of blocks) {
       const part = block.parts.find(p => partHas(p, field));
-      if (part) placements.push({ group: block.name, ...sectionOf(system, part, field) });
+      if (!part) continue;
+      const control = viewIn(part, field);
+      placements.push({ group: block.name, ...sectionOf(system, part, field), ...(control ? { control } : {}) });
     }
     if (!placements.length) return field;
     return { ...field, ...placements[0], placements };

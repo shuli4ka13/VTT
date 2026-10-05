@@ -1,8 +1,7 @@
-import { ColumnSheetFields, ColumnViewField } from '../table-field.tsx';
+import { ColumnSheetFields } from '../table-field.tsx';
 import { rowNames } from '../row-names.ts';
 import { renameLayoutColumn } from '@vtt/engine/model/layout';
 export { rowNames } from '../row-names.ts';
-import { viewsFor, columnFamily, takesBounds } from '../../../sheet/views/index.tsx';
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
 import { isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowPieces } from '@vtt/engine/model/sheet-columns';
 import type { RowPiece } from '@vtt/engine/model/sheet-columns';
@@ -238,8 +237,10 @@ export function moveColumn(draft: System, tableId: string, key: string, holder: 
   draft.tables = withColumn(draft, column, holder).tables;
 }
 
-export function TableColumnCard({ id, table, column, system, edit, onClose, extra }: {
+export function TableColumnCard({ id, table, column, system, edit, onClose, extra, lead, bounds = true }: {
   extra?: ReactNode;
+  lead?: ReactNode;
+  bounds?: boolean;
   id: string;
   table: Table;
   column: TableColumn;
@@ -297,8 +298,8 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, extr
       onClose={onClose}
       preview={single && column.expr !== undefined
         ? <LiveValue system={system} compendium={compendium} tag={column.key} source={column.expr.expr} /> : null}
-      lead={single || onSheet(table) ? <ColumnViewField tableId={id} column={column} system={system} /> : null}
-      bounds={!((single || onSheet(table)) && column.control && takesBounds(column.control.kind, column))}
+      lead={lead}
+      bounds={bounds}
       extra={<>
         {single || onSheet(table) ? <ColumnSheetFields tableId={id} column={column} system={system} /> : null}
         {book ? (
@@ -342,7 +343,6 @@ function applyPatch(c: TableColumn, patch: ColumnPatch): void {
   if (patch.expr !== undefined) { if (patch.expr !== null) c.expr = { expr: patch.expr }; else delete c.expr; }
   if (patch.min !== undefined) { if (patch.min !== null) c.min = patch.min; else delete c.min; }
   if (patch.max !== undefined) { if (patch.max !== null) c.max = patch.max; else delete c.max; }
-  if (c.control && !viewsFor(columnFamily(c), c.expr !== undefined).includes(c.control.kind)) delete c.control;
 }
 
 const defaultWidth = (column?: TableColumn): number =>

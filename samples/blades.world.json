@@ -60,120 +60,84 @@
             "label": "Охота",
             "kind": "number",
             "min": 0,
-            "max": 4,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 4
           },
           {
             "key": "study",
             "label": "Изучение",
             "kind": "number",
             "min": 0,
-            "max": 4,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 4
           },
           {
             "key": "survey",
             "label": "Разведка",
             "kind": "number",
             "min": 0,
-            "max": 4,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 4
           },
           {
             "key": "tinker",
             "label": "Механика",
             "kind": "number",
             "min": 0,
-            "max": 4,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 4
           },
           {
             "key": "finesse",
             "label": "Ловкость рук",
             "kind": "number",
             "min": 0,
-            "max": 4,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 4
           },
           {
             "key": "prowl",
             "label": "Скрытность",
             "kind": "number",
             "min": 0,
-            "max": 4,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 4
           },
           {
             "key": "skirmish",
             "label": "Драка",
             "kind": "number",
             "min": 0,
-            "max": 4,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 4
           },
           {
             "key": "wreck",
             "label": "Разрушение",
             "kind": "number",
             "min": 0,
-            "max": 4,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 4
           },
           {
             "key": "attune",
             "label": "Мистика",
             "kind": "number",
             "min": 0,
-            "max": 4,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 4
           },
           {
             "key": "command",
             "label": "Приказ",
             "kind": "number",
             "min": 0,
-            "max": 4,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 4
           },
           {
             "key": "consort",
             "label": "Связи",
             "kind": "number",
             "min": 0,
-            "max": 4,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 4
           },
           {
             "key": "sway",
             "label": "Убеждение",
             "kind": "number",
             "min": 0,
-            "max": 4,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 4
           },
           {
             "key": "resolve",
@@ -188,10 +152,7 @@
             "label": "Стресс",
             "kind": "number",
             "min": 0,
-            "max": 9,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 9
           }
         ]
       },
@@ -205,10 +166,7 @@
             "label": "Часы тревоги",
             "kind": "number",
             "min": 0,
-            "max": 8,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 8
           }
         ]
       },
@@ -222,10 +180,7 @@
             "label": "Жар банды",
             "kind": "number",
             "min": 0,
-            "max": 9,
-            "control": {
-              "kind": "stepper"
-            }
+            "max": 9
           },
           {
             "key": "rep",
@@ -648,7 +603,45 @@
               "consort",
               "sway",
               "resolve"
-            ]
+            ],
+            "views": {
+              "hunt": {
+                "kind": "pips"
+              },
+              "study": {
+                "kind": "pips"
+              },
+              "survey": {
+                "kind": "pips"
+              },
+              "tinker": {
+                "kind": "pips"
+              },
+              "finesse": {
+                "kind": "pips"
+              },
+              "prowl": {
+                "kind": "pips"
+              },
+              "skirmish": {
+                "kind": "pips"
+              },
+              "wreck": {
+                "kind": "pips"
+              },
+              "attune": {
+                "kind": "pips"
+              },
+              "command": {
+                "kind": "pips"
+              },
+              "consort": {
+                "kind": "pips"
+              },
+              "sway": {
+                "kind": "pips"
+              }
+            }
           }
         ]
       },
@@ -659,7 +652,12 @@
             "table": "лист",
             "columns": [
               "stress"
-            ]
+            ],
+            "views": {
+              "stress": {
+                "kind": "pips"
+              }
+            }
           }
         ]
       },
@@ -667,7 +665,12 @@
         "name": "Стол",
         "parts": [
           {
-            "table": "стол"
+            "table": "стол",
+            "views": {
+              "alarm": {
+                "kind": "pips"
+              }
+            }
           }
         ]
       },
@@ -675,7 +678,12 @@
         "name": "Банда",
         "parts": [
           {
-            "table": "группа"
+            "table": "группа",
+            "views": {
+              "heat": {
+                "kind": "stepper"
+              }
+            }
           }
         ]
       }

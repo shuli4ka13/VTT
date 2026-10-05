@@ -29,7 +29,7 @@ export function setSample(draft: System, tag: string, value: StoredValue): void 
 }
 
 export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: {
-  system: System; picked?: string | null; onPick?: (tag: string) => void;
+  system: System; picked?: string | null; onPick?: (tag: string, block?: string) => void;
   onPickBlock?: (name: string) => void; onPickRow?: (table: string, row: string) => void;
 }) {
   const compendium = useBook();

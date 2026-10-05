@@ -59,6 +59,7 @@ describe('вид поля на листе выбирается в констру
       system: {
         ...emptySystem(),
         tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 10 }] } },
+        blocks: [{ name: 'Здоровье', parts: [{ table: 'лист' }] }],
       },
       activeFieldTag: 'хиты',
       activeGroupName: null,
@@ -67,15 +68,18 @@ describe('вид поля на листе выбирается в констру
 
   const gallery = (name = 'Вид') => screen.getByRole('radiogroup', { name });
   const tile = (name: string, group = 'Вид') => within(gallery(group)).getByRole('radio', { name });
+  const part = () => useWorld.getState().system.blocks![0]!.parts[0]!;
 
-  it('плитка «Полоса» ложится в поле, а «Обычное поле» убирает вид', () => {
+  it('плитка «Полоса» ложится в блок, а не в таблицу; «Обычное поле» убирает вид', () => {
     renderOpen(<SheetTab />);
     fireEvent.click(tile('Полоса'));
     expect(fieldsOf(useWorld.getState().system)[0]!.control).toEqual({ kind: 'bar' });
+    expect(part().views).toEqual({ хиты: { kind: 'bar' } });
+    expect('control' in useWorld.getState().system.tables!.лист!.columns![0]!).toBe(false);
     expect(tile('Полоса').getAttribute('aria-checked')).toBe('true');
 
     fireEvent.click(tile('Обычное поле'));
-    expect('control' in useWorld.getState().system.tables!.лист!.columns![0]!).toBe(false);
+    expect(part().views).toBeUndefined();
   });
 
   it('«Точки» без верха: плитка и панель говорят, чего не хватает; «+ колонка для верха» заводит колонку и ссылку', () => {
@@ -107,32 +111,32 @@ describe('вид поля на листе выбирается в констру
       system: {
         ...emptySystem(),
         tables: { лист: { shape: 'single', columns: [{ key: 'мод', label: 'Мод', expr: { expr: '1' } }] } },
+        blocks: [{ name: 'Здоровье', parts: [{ table: 'лист' }] }],
       },
       activeFieldTag: 'мод',
     }));
     renderOpen(<SheetTab />);
     expect(within(gallery()).queryByRole('radio', { name: 'Минус и плюс' })).toBeNull();
     fireEvent.click(tile('Со знаком'));
-    expect(useWorld.getState().system.tables!.лист!.columns![0]!.control).toEqual({ kind: 'signed' });
+    expect(part().views).toEqual({ мод: { kind: 'signed' } });
   });
 
-  it('у одной строки таблицы свой вид, «Как у колонки» снимает его', () => {
+  it('у одной строки в блоке свой вид, «Как у колонки» снимает его', () => {
     useWorld.setState(state => ({
       ...state,
       system: {
         ...emptySystem(),
-        tables: { навыки: { owner: 'sheet', key: 'word', columns: [{ key: 'ранг', label: 'Ранг', kind: 'number', control: { kind: 'stepper', step: 2 } }],
+        tables: { навыки: { owner: 'sheet', key: 'word', columns: [{ key: 'ранг', label: 'Ранг', kind: 'number' }],
           rows: [{ value: 'атлетика', label: 'Атлетика' }, { value: 'скрытность', label: 'Скрытность' }] } },
+        blocks: [{ name: 'Навыки', parts: [{ table: 'навыки', views: { ранг: { kind: 'stepper', step: 2 } } }] }],
       } as never,
       activeFieldTag: 'навыки.атлетика.ранг',
     }));
     renderOpen(<SheetTab />);
     const group = screen.getAllByRole('radiogroup').find(el => /^Вид только у/.test(el.getAttribute('aria-label') ?? ''))!;
     fireEvent.click(within(group).getByRole('radio', { name: 'Точки' }));
-    const rows = () => useWorld.getState().system.tables!.навыки!.rows!;
-    expect(rows()[0]!.view).toEqual({ ранг: { control: { kind: 'pips' } } });
-    expect(rows()[1]!.view).toBeUndefined();
+    expect(part().views).toEqual({ ранг: { kind: 'stepper', step: 2 }, 'атлетика.ранг': { kind: 'pips' } });
     fireEvent.click(within(group).getByRole('radio', { name: 'Как у колонки' }));
-    expect(rows()[0]!.view).toBeUndefined();
+    expect(part().views).toEqual({ ранг: { kind: 'stepper', step: 2 } });
   });
 });

@@ -241,9 +241,6 @@
             "label": "Значение защиты",
             "expr": {
               "expr": "@body + @armor_worn + @armor_extra + @armor_natural + если(@metatype != \"\", таблица(\"metatypes\", @metatype, \"dermal\"), 0) + @cover"
-            },
-            "control": {
-              "kind": "big"
             }
           },
           {
@@ -310,9 +307,6 @@
             "label": "Штраф за раны",
             "expr": {
               "expr": "0 - округлить вниз(меньшее из(@stun, @stun_max) / 3) - округлить вниз(меньшее из(@physical_total, @physical_max) / 3)"
-            },
-            "control": {
-              "kind": "signed"
             }
           },
           {
@@ -325,9 +319,6 @@
             "label": "Счётчик оглушения полон",
             "expr": {
               "expr": "@stun >= @stun_max"
-            },
-            "control": {
-              "kind": "toggle"
             }
           },
           {
@@ -335,9 +326,6 @@
             "label": "Счётчик здоровья полон",
             "expr": {
               "expr": "@physical_total >= @physical_max"
-            },
-            "control": {
-              "kind": "toggle"
             }
           },
           {
@@ -345,9 +333,6 @@
             "label": "Критический урон достиг Тело × 2",
             "expr": {
               "expr": "@critical >= @body * 2"
-            },
-            "control": {
-              "kind": "toggle"
             }
           },
           {
@@ -355,9 +340,6 @@
             "label": "В сознании",
             "expr": {
               "expr": "все(@stun < @stun_max, @physical_total < @physical_max)"
-            },
-            "control": {
-              "kind": "toggle"
             }
           },
           {
@@ -365,9 +347,6 @@
             "label": "Уровень инициативы",
             "expr": {
               "expr": "@reaction + @intuition + @wound_mod + @condition_mod"
-            },
-            "control": {
-              "kind": "big"
             }
           },
           {
@@ -384,10 +363,7 @@
             "kind": "number",
             "default": 2,
             "min": 0,
-            "max": 5,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 5
           },
           {
             "key": "complex_left",
@@ -395,10 +371,7 @@
             "kind": "number",
             "default": 1,
             "min": 0,
-            "max": 1,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 1
           }
         ]
       },
@@ -425,10 +398,7 @@
             "kind": "number",
             "default": 2,
             "min": 0,
-            "max": 7,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 7
           },
           {
             "key": "edge_gained",
@@ -2930,7 +2900,12 @@
             "columns": [
               "edge_left",
               "edge_gained"
-            ]
+            ],
+            "views": {
+              "edge_left": {
+                "kind": "pips"
+              }
+            }
           }
         ]
       },
@@ -2978,7 +2953,12 @@
               "defense_rating",
               "defense_pool",
               "unarmed_rating"
-            ]
+            ],
+            "views": {
+              "defense_rating": {
+                "kind": "big"
+              }
+            }
           }
         ]
       },
@@ -2999,7 +2979,24 @@
               "bleeding_out",
               "is_dead",
               "conscious"
-            ]
+            ],
+            "views": {
+              "wound_mod": {
+                "kind": "signed"
+              },
+              "knocked_out": {
+                "kind": "toggle"
+              },
+              "bleeding_out": {
+                "kind": "toggle"
+              },
+              "is_dead": {
+                "kind": "toggle"
+              },
+              "conscious": {
+                "kind": "toggle"
+              }
+            }
           },
           {
             "table": "группа",
@@ -3020,7 +3017,18 @@
               "init_dice",
               "simple_left",
               "complex_left"
-            ]
+            ],
+            "views": {
+              "initiative": {
+                "kind": "big"
+              },
+              "simple_left": {
+                "kind": "pips"
+              },
+              "complex_left": {
+                "kind": "pips"
+              }
+            }
           }
         ]
       },

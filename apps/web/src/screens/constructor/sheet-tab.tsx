@@ -1,9 +1,8 @@
 import { useWorld } from '../../store/world.ts';
 import { Columns } from '../../ui/layout.tsx';
 import { useLookupPane } from './lookup-panel.tsx';
-import { Select, Button, Empty, DangerButton, Field } from '../../ui/primitives.tsx';
-import { ViewGallery } from './view-gallery.tsx';
-import { familyOf, viewNeeds, VIEWS } from '../../sheet/views/index.tsx';
+import { Select, Button, Empty, DangerButton, Card } from '../../ui/primitives.tsx';
+import { takesBounds } from '../../sheet/views/index.tsx';
 import { DonorPalette } from './donors.tsx';
 import { newColumn } from './factory.ts';
 import { addColumn, CharacterSection } from './rules/character-section.tsx';
@@ -11,14 +10,14 @@ import { useState, useRef, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useUsage } from './usage.ts';
 import { Segmented } from '../../ui/primitives.tsx';
-import { placeOnSheet, sheetTables } from './table-field.tsx';
+import { placeOnSheet, sheetTables, BlockViewField } from './table-field.tsx';
 import { TableColumnCard } from './rules/tables-section.tsx';
 import { BlockPanel } from './block-panel.tsx';
 import { RowPanel } from './row-panel.tsx';
 import { SheetSample } from './sheet-sample.tsx';
 import type { System } from '@vtt/schema';
 import type { Field as FieldModel } from '@vtt/engine/model/types';
-import { fieldOf, rowKeyOf, cellSource } from '@vtt/engine/model/sheet-columns';
+import { fieldOf, rowKeyOf } from '@vtt/engine/model/sheet-columns';
 
 export function SheetTab() {
   const system = useWorld(s => s.system);
@@ -82,7 +81,7 @@ export function SheetTab() {
             />
             {view === 'sample'
               ? <SheetSample system={system} picked={activeTag}
-                  onPick={tag => pick({ activeFieldTag: tag, activeGroupName: null, activeColumn: null, activeBlock: null, activeRow: null })}
+                  onPick={(tag, block) => pick({ activeFieldTag: tag, activeIn: block ?? null, activeGroupName: null, activeColumn: null, activeBlock: null, activeRow: null })}
                   onPickBlock={name => pick({ activeBlock: name, activeFieldTag: null, activeColumn: null, activeRow: null })}
                   onPickRow={(table, row) => pick({ activeRow: { table, row }, activeFieldTag: null, activeColumn: null, activeBlock: null })} />
               : <CharacterSection docked system={system} editSystem={editSystem} usage={usage} onTable={id => pick({ activeTab: 'dictionaries', activeTableId: id })} />}
@@ -97,16 +96,27 @@ export function SheetTab() {
 function ViewPanel({ field, system }: { field: FieldModel; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
+  const activeIn = useWorld(s => s.activeIn);
   const table = system.tables?.[field.home];
   const column = table?.columns?.find(c => c.key === (field.cell?.column ?? field.tag));
   if (!table || !column) return null;
+  const homes = (field.placements ?? []).map(place => place.group);
+  const block = activeIn && homes.includes(activeIn) ? activeIn : homes[0];
+  const view = block ? (system.blocks ?? []).find(b => b.name === block)?.parts.find(p => p.table === field.home && (!p.columns || p.columns.includes(column.key)))?.views?.[column.key] : undefined;
 
   return (
     <>
+      {block ? (
+        <Card>
+          <BlockViewField tableId={field.home} column={column} system={system} block={block} />
+          {field.cell ? <BlockViewField tableId={field.home} column={column} system={system} block={block} row={field.cell.row} /> : null}
+          {homes.length > 1 ? <span className="faint">Поле стоит и в других блоках: {homes.filter(h => h !== block).join(', ')} — там вид свой.</span> : null}
+        </Card>
+      ) : <span className="faint">Поле не стоит ни в одном блоке — вид задаётся в блоке.</span>}
       <TableColumnCard id={field.home} table={table} column={column} system={system}
+        bounds={!(view && takesBounds(view.kind, column))}
         edit={change => editSystem(draft => { const target = draft.tables?.[field.home]; if (target) change(target); })}
         onClose={() => pick({ activeFieldTag: null })} />
-      {field.cell ? <RowView field={field} system={system} /> : null}
       <div className="inline inline--tight">
         {field.cell ? (
           <>
@@ -128,55 +138,19 @@ function ViewPanel({ field, system }: { field: FieldModel; system: System }) {
   );
 }
 
-function RowView({ field, system }: { field: FieldModel; system: System }) {
-  const editSystem = useWorld(s => s.editSystem);
-  const mark = field.cell!;
-  const table = system.tables?.[mark.table];
-  const column = table?.columns?.find(c => c.key === mark.column);
-  const row = table?.rows?.find(r => rowKeyOf(r) === mark.row);
-  if (!table || !column || !row) return null;
-  const computed = cellSource(column, row).kind === 'formula';
-  const own = row.view?.[mark.column]?.control?.kind;
-  const inherited = column.control ? VIEWS[column.control.kind].label.toLowerCase() : computed ? 'просто число' : 'обычное поле';
-  const lacking = own ? viewNeeds(own, column) : [];
-  return (
-    <Field label={`Вид только у «${field.label}»`}>
-      <ViewGallery
-        label={`Вид только у «${field.label}»`}
-        value={own}
-        family={familyOf(column.kind ?? (computed ? undefined : 'number'), column.many, computed)}
-        computed={computed}
-        plain={{ label: 'Как у колонки', hint: `колонка: ${inherited}` }}
-        needs={next => viewNeeds(next, column)}
-        onChange={next => editSystem(draft => {
-          const target = draft.tables?.[mark.table]?.rows?.find(r => rowKeyOf(r) === mark.row);
-          if (!target) return;
-          const views = { ...target.view };
-          const { control: _old, ...rest } = views[mark.column] ?? {};
-          if (next && next !== column.control?.kind) views[mark.column] = { ...rest, control: { kind: next } };
-          else if (Object.keys(rest).length) views[mark.column] = rest;
-          else delete views[mark.column];
-          if (Object.keys(views).length) target.view = views; else delete target.view;
-        })}
-      />
-      {own ? (
-        <span className="faint">
-          Границы, шаг и подписи — общие, в колонке «{column.label || column.key}».{lacking.length ? ` Не хватает: ${lacking.join(', ')}.` : ''}
-        </span>
-      ) : null}
-    </Field>
-  );
-}
-
 function ColumnPanel({ table: id, column: key, system }: { table: string; column: string; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
+  const activeIn = useWorld(s => s.activeIn);
   const table = system.tables![id]!;
   const column = table.columns!.find(c => c.key === key)!;
   return (
-    <TableColumnCard id={id} table={table} column={column} system={system}
-      edit={change => editSystem(draft => { const target = draft.tables?.[id]; if (target) change(target); })}
-      onClose={() => pick({ activeColumn: null })} />
+    <>
+      {activeIn ? <Card><BlockViewField tableId={id} column={column} system={system} block={activeIn} /></Card> : null}
+      <TableColumnCard id={id} table={table} column={column} system={system}
+        edit={change => editSystem(draft => { const target = draft.tables?.[id]; if (target) change(target); })}
+        onClose={() => pick({ activeColumn: null })} />
+    </>
   );
 }
 

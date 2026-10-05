@@ -305,27 +305,25 @@ function rowNameProblems(system: System): Problem[] {
 
 function viewProblems(system: System): Problem[] {
   const out: Problem[] = [];
-  for (const [id, table] of Object.entries(system.tables ?? {})) {
-    if (!onSheet(table)) continue;
-    const where = { tab: 'rules' as const, section: 'tables', key: id };
-    for (const column of table.columns ?? []) {
-      const name = column.label || column.key;
-      const views = [
-        ...(column.control ? [{ kind: column.control.kind, who: `колонка «${name}»` }] : []),
-        ...(table.rows ?? []).flatMap(row => {
-          const own = row.view?.[column.key]?.control;
-          return own ? [{ kind: own.kind, who: `«${name}» у строки «${row.label ?? String(row.value)}»` }] : [];
-        }),
-      ];
-      const family = columnFamily(column);
-      const computed = column.expr !== undefined;
-      for (const view of views) {
+  const where = { tab: 'sheet' as const };
+  for (const block of system.blocks ?? []) {
+    for (const part of block.parts) {
+      const table = system.tables?.[part.table];
+      for (const [key, view] of Object.entries(part.views ?? {})) {
+        const [first, second] = key.split('.');
+        const columnKey = second ?? first!;
+        const column = (table?.columns ?? []).find(c => c.key === columnKey);
+        if (!column) { out.push({ where, level: 'warn', text: `блок «${block.name}»: вид задан колонке «${columnKey}», а её нет` }); continue; }
+        const row = second ? (table?.rows ?? []).find(r => rowKeyOf(r) === first) : undefined;
+        const who = `блок «${block.name}», «${column.label || column.key}»${row ? ` у строки «${row.label ?? String(row.value)}»` : ''}`;
+        const family = columnFamily(column);
+        const computed = column.expr !== undefined;
         if (family && !viewsFor(family, computed).includes(view.kind) && !(computed && !column.kind)) {
-          out.push({ where, level: 'warn', text: `${view.who}: вид «${VIEW_LABELS[view.kind]}» не подходит к типу значения — на листе будет обычное поле` });
+          out.push({ where, level: 'warn', text: `${who}: вид «${VIEW_LABELS[view.kind]}» не подходит к типу значения — на листе будет обычное поле` });
           continue;
         }
         const needs = viewNeeds(view.kind, column);
-        if (needs.length) out.push({ where, level: 'warn', text: `${view.who}: виду «${VIEW_LABELS[view.kind]}» не хватает — ${needs.join(', ')}; на листе вместо него будет «—»` });
+        if (needs.length) out.push({ where, level: 'warn', text: `${who}: виду «${VIEW_LABELS[view.kind]}» не хватает — ${needs.join(', ')}; на листе вместо него будет «—»` });
       }
     }
   }

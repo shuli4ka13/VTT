@@ -79,9 +79,9 @@ export function CharacterSection({ system, editSystem, docked }: {
     editSystem(draft => { (draft.sheets ??= {})[key] = { label: 'Новый тип листа' }; });
     setOf(key);
   };
-  const pickField = (tag: string) => { pick({ activeColumn: null, activeBlock: null, activeRow: null, activeFieldTag: tag === picked ? null : tag }); };
-  const pickCell = (next: Picked) => {
-    pick({ activeFieldTag: null, activeBlock: null, activeRow: null });
+  const pickField = (tag: string, block?: string) => { pick({ activeColumn: null, activeBlock: null, activeRow: null, activeIn: block ?? null, activeFieldTag: tag === picked ? null : tag }); };
+  const pickCell = (next: Picked, block?: string) => {
+    pick({ activeFieldTag: null, activeBlock: null, activeRow: null, activeIn: block ?? null });
     setCell(cell && next && cell.table === next.table && cell.column === next.column ? null : next);
   };
   const pickBlock = (name: string) => pick({ activeBlock: name === activeBlock ? null : name, activeFieldTag: null, activeColumn: null, activeRow: null });
@@ -89,7 +89,7 @@ export function CharacterSection({ system, editSystem, docked }: {
   const openTable = open ? system.tables?.[open.table] : undefined;
   const openColumn = open ? openTable?.columns?.find(c => c.key === open.column) : undefined;
 
-  const describe = (part: SheetPart): ReactNode => {
+  const describe = (part: SheetPart, blockName?: string): ReactNode => {
     const table = system.tables?.[part.table];
     const single = table?.shape === 'single';
     const placed = new Set(fieldsOf(system).filter(f => f.home === part.table).map(f => f.cell?.column ?? f.tag));
@@ -102,7 +102,7 @@ export function CharacterSection({ system, editSystem, docked }: {
           const on = single ? picked === column.key : cell?.table === part.table && cell.column === column.key;
           return (
             <Button key={column.key} size="sm" variant={on ? 'primary' : 'ghost'}
-              onClick={() => (single ? pickField(column.key) : pickCell({ table: part.table, column: column.key }))}>
+              onClick={() => (single ? pickField(column.key, blockName) : pickCell({ table: part.table, column: column.key }, blockName))}>
               {column.label || column.key}{column.expr !== undefined ? ' =' : ''}
             </Button>
           );
@@ -134,7 +134,7 @@ export function CharacterSection({ system, editSystem, docked }: {
             onClick={() => pickBlock(block.name)}>настроить</Button>
         </summary>
         <div className="block-fold__body">
-          {block.parts.map(describe)}
+          {block.parts.map(part => describe(part, block.name))}
           <div className="inline inline--tight">
             <Button size="sm" variant="ghost" title={`новая колонка листа в блоке «${block.name}»`} onClick={() => add(block.name)}>+ колонка</Button>
             <Button size="sm" variant="ghost" title={`блок внутри «${block.name}»`} onClick={() => addBlock(block.name)}>+ блок внутрь</Button>

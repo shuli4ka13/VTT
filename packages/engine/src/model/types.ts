@@ -22,7 +22,7 @@ export interface CellMark { table: string; row: string; column: string }
 
 export type Holder = 'sheet' | 'group' | 'desk';
 
-export interface Placement { group: string; section?: string; sectionAt?: number; sectionBy?: string }
+export interface Placement { group: string; section?: string; sectionAt?: number; sectionBy?: string; control?: Control }
 
 export interface Field {
   tag: string;

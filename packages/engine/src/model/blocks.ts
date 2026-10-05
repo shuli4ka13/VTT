@@ -54,7 +54,7 @@ export function fieldsByBlock(system: System, fields: readonly Field[] = fieldsO
     if (!field.placements?.length) { put(NO_BLOCK, field); continue; }
     for (const place of field.placements) {
       if (!shown(place.group)) continue;
-      const { section: _s, sectionAt: _a, sectionBy: _b, ...rest } = field;
+      const { section: _s, sectionAt: _a, sectionBy: _b, control: _c, ...rest } = field;
       put(place.group, { ...rest, ...place });
     }
   }

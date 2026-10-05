@@ -118,19 +118,13 @@
             "kind": "number",
             "default": 1,
             "min": 1,
-            "max": 20,
-            "control": {
-              "kind": "stepper"
-            }
+            "max": 20
           },
           {
             "key": "prof_bonus",
             "label": "Бонус мастерства",
             "expr": {
               "expr": "таблица(\"levels\", @level, \"prof\")"
-            },
-            "control": {
-              "kind": "signed"
             }
           },
           {
@@ -138,10 +132,7 @@
             "label": "Вдохновение",
             "kind": "number",
             "min": 0,
-            "max": 1,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 1
           },
           {
             "key": "xp",
@@ -166,9 +157,6 @@
               "bonus": {
                 "expr": "@initiative"
               }
-            },
-            "control": {
-              "kind": "signed"
             }
           },
           {
@@ -207,10 +195,7 @@
           {
             "key": "armor_heavy",
             "label": "Доспех тяжёлый",
-            "kind": "boolean",
-            "control": {
-              "kind": "toggle"
-            }
+            "kind": "boolean"
           },
           {
             "key": "ac_dex",
@@ -224,9 +209,6 @@
             "label": "Класс брони",
             "expr": {
               "expr": "@ac_base + если(@armor_heavy, 0, @ac_dex)"
-            },
-            "control": {
-              "kind": "big"
             }
           },
           {
@@ -254,19 +236,13 @@
             "min": 0,
             "max": {
               "expr": "@hp_max"
-            },
-            "control": {
-              "kind": "bar"
             }
           },
           {
             "key": "hp_temp",
             "label": "Временные хиты",
             "kind": "number",
-            "min": 0,
-            "control": {
-              "kind": "stepper"
-            }
+            "min": 0
           },
           {
             "key": "hit_die",
@@ -283,9 +259,6 @@
             "min": 0,
             "max": {
               "expr": "@level"
-            },
-            "control": {
-              "kind": "stepper"
             }
           },
           {
@@ -293,39 +266,27 @@
             "label": "Спасброски от смерти: успехи",
             "kind": "number",
             "min": 0,
-            "max": 3,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 3
           },
           {
             "key": "death_fail",
             "label": "Спасброски от смерти: провалы",
             "kind": "number",
             "min": 0,
-            "max": 3,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 3
           },
           {
             "key": "exhaustion",
             "label": "Истощение",
             "kind": "number",
             "min": 0,
-            "max": 6,
-            "control": {
-              "kind": "stepper"
-            }
+            "max": 6
           },
           {
             "key": "down",
             "label": "Без сил",
             "expr": {
               "expr": "@hp_current <= 0"
-            },
-            "control": {
-              "kind": "toggle"
             }
           },
           {
@@ -333,9 +294,6 @@
             "label": "На ногах",
             "expr": {
               "expr": "@hp_current > 0"
-            },
-            "control": {
-              "kind": "toggle"
             }
           },
           {
@@ -343,9 +301,6 @@
             "label": "Три провала",
             "expr": {
               "expr": "@death_fail >= 3"
-            },
-            "control": {
-              "kind": "toggle"
             }
           },
           {
@@ -353,9 +308,6 @@
             "label": "Три успеха",
             "expr": {
               "expr": "@death_ok >= 3"
-            },
-            "control": {
-              "kind": "toggle"
             }
           },
           {
@@ -364,10 +316,7 @@
             "kind": "number",
             "default": 1,
             "min": 1,
-            "max": 4,
-            "control": {
-              "kind": "stepper"
-            }
+            "max": 4
           },
           {
             "key": "crit_from",
@@ -396,9 +345,6 @@
             "label": "Сложность заклинаний",
             "expr": {
               "expr": "8 + @prof_bonus + @spell_mod"
-            },
-            "control": {
-              "kind": "big"
             }
           },
           {
@@ -406,9 +352,6 @@
             "label": "Атака заклинанием",
             "expr": {
               "expr": "@prof_bonus + @spell_mod"
-            },
-            "control": {
-              "kind": "signed"
             }
           },
           {
@@ -416,10 +359,7 @@
             "label": "Уровень заклинателя",
             "kind": "number",
             "min": 0,
-            "max": 20,
-            "control": {
-              "kind": "stepper"
-            }
+            "max": 20
           },
           {
             "key": "attuned",
@@ -447,10 +387,7 @@
             "key": "superiority_die",
             "label": "Кость превосходства",
             "kind": "text",
-            "default": "1к8",
-            "control": {
-              "kind": "die"
-            }
+            "default": "1к8"
           },
           {
             "key": "gp",
@@ -480,10 +417,7 @@
           {
             "key": "battle",
             "label": "Идёт бой",
-            "kind": "boolean",
-            "control": {
-              "kind": "toggle"
-            }
+            "kind": "boolean"
           }
         ]
       },
@@ -504,9 +438,6 @@
             "min": 0,
             "max": {
               "expr": "@строка.max"
-            },
-            "control": {
-              "kind": "pips"
             },
             "title": "{label}"
           }
@@ -591,9 +522,6 @@
               "expr": "@строка.max"
             },
             "title": "Ячейки: {label}",
-            "control": {
-              "kind": "pips"
-            },
             "default": 0
           }
         ],
@@ -665,9 +593,6 @@
               "expr": "@строка.max"
             },
             "title": "{label}: осталось",
-            "control": {
-              "kind": "stepper"
-            },
             "default": 0
           }
         ],
@@ -1380,9 +1305,6 @@
             "kind": "choice",
             "from": "taken",
             "default": "как есть",
-            "control": {
-              "kind": "choice"
-            },
             "title": "{label}"
           }
         ],
@@ -1592,9 +1514,6 @@
               "bonus": {
                 "expr": "@строка.mod"
               }
-            },
-            "control": {
-              "kind": "signed"
             }
           },
           {
@@ -1602,9 +1521,6 @@
             "label": "Владение сверх класса",
             "kind": "boolean",
             "title": "Владение сверх класса: спасбросок {label}",
-            "control": {
-              "kind": "toggle"
-            },
             "default": false
           },
           {
@@ -1634,9 +1550,6 @@
               "bonus": {
                 "expr": "@строка.save"
               }
-            },
-            "control": {
-              "kind": "signed"
             }
           }
         ],
@@ -1683,9 +1596,6 @@
             "label": "Владение",
             "kind": "choice",
             "title": "Владение: {label}",
-            "control": {
-              "kind": "ring"
-            },
             "default": 0,
             "from": "prof_steps"
           },
@@ -1708,9 +1618,6 @@
               "bonus": {
                 "expr": "@строка.total"
               }
-            },
-            "control": {
-              "kind": "signed"
             }
           }
         ],
@@ -9769,7 +9676,12 @@
             "table": "abilities",
             "columns": [
               "mod"
-            ]
+            ],
+            "views": {
+              "mod": {
+                "kind": "signed"
+              }
+            }
           }
         ]
       },
@@ -9783,7 +9695,18 @@
               "prof_bonus",
               "inspiration",
               "xp"
-            ]
+            ],
+            "views": {
+              "level": {
+                "kind": "stepper"
+              },
+              "prof_bonus": {
+                "kind": "signed"
+              },
+              "inspiration": {
+                "kind": "pips"
+              }
+            }
           }
         ]
       },
@@ -9796,7 +9719,15 @@
               "save_extra",
               "save_prof",
               "save"
-            ]
+            ],
+            "views": {
+              "save_extra": {
+                "kind": "toggle"
+              },
+              "save": {
+                "kind": "signed"
+              }
+            }
           }
         ]
       },
@@ -9805,7 +9736,15 @@
         "parts": [
           {
             "table": "skills",
-            "by": "ability"
+            "by": "ability",
+            "views": {
+              "prof": {
+                "kind": "ring"
+              },
+              "total": {
+                "kind": "signed"
+              }
+            }
           }
         ]
       },
@@ -9820,7 +9759,12 @@
               "speed",
               "darkvision",
               "languages"
-            ]
+            ],
+            "views": {
+              "initiative": {
+                "kind": "signed"
+              }
+            }
           }
         ]
       },
@@ -9834,7 +9778,15 @@
               "armor_heavy",
               "ac_dex",
               "ac"
-            ]
+            ],
+            "views": {
+              "armor_heavy": {
+                "kind": "toggle"
+              },
+              "ac": {
+                "kind": "big"
+              }
+            }
           }
         ]
       },
@@ -9857,7 +9809,39 @@
               "up",
               "is_dead",
               "is_stable"
-            ]
+            ],
+            "views": {
+              "hp_current": {
+                "kind": "bar"
+              },
+              "hp_temp": {
+                "kind": "stepper"
+              },
+              "hit_dice_left": {
+                "kind": "stepper"
+              },
+              "death_ok": {
+                "kind": "pips"
+              },
+              "death_fail": {
+                "kind": "pips"
+              },
+              "exhaustion": {
+                "kind": "stepper"
+              },
+              "down": {
+                "kind": "toggle"
+              },
+              "up": {
+                "kind": "toggle"
+              },
+              "is_dead": {
+                "kind": "toggle"
+              },
+              "is_stable": {
+                "kind": "toggle"
+              }
+            }
           }
         ]
       },
@@ -9881,7 +9865,12 @@
               "attacks_per_action",
               "crit_from",
               "sneak_dice"
-            ]
+            ],
+            "views": {
+              "attacks_per_action": {
+                "kind": "stepper"
+              }
+            }
           }
         ]
       },
@@ -9889,10 +9878,20 @@
         "name": "В бою",
         "parts": [
           {
-            "table": "стол"
+            "table": "стол",
+            "views": {
+              "battle": {
+                "kind": "toggle"
+              }
+            }
           },
           {
-            "table": "turn"
+            "table": "turn",
+            "views": {
+              "left": {
+                "kind": "pips"
+              }
+            }
           }
         ]
       },
@@ -9908,7 +9907,18 @@
               "caster_level",
               "attuned",
               "cantrip_dice"
-            ]
+            ],
+            "views": {
+              "spell_dc": {
+                "kind": "big"
+              },
+              "spell_attack": {
+                "kind": "signed"
+              },
+              "caster_level": {
+                "kind": "stepper"
+              }
+            }
           }
         ]
       },
@@ -9916,7 +9926,12 @@
         "name": "Ячейки заклинаний",
         "parts": [
           {
-            "table": "slots"
+            "table": "slots",
+            "views": {
+              "left": {
+                "kind": "pips"
+              }
+            }
           }
         ],
         "parent": "Магия"
@@ -9929,14 +9944,24 @@
             "columns": [
               "rage_damage",
               "superiority_die"
-            ]
+            ],
+            "views": {
+              "superiority_die": {
+                "kind": "die"
+              }
+            }
           },
           {
             "table": "resources",
             "columns": [
               "max",
               "left"
-            ]
+            ],
+            "views": {
+              "left": {
+                "kind": "stepper"
+              }
+            }
           }
         ]
       },
@@ -9957,7 +9982,12 @@
         "name": "Стойкость к урону",
         "parts": [
           {
-            "table": "damage_types"
+            "table": "damage_types",
+            "views": {
+              "taken": {
+                "kind": "choice"
+              }
+            }
           }
         ]
       }

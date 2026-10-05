@@ -35,10 +35,7 @@
             "kind": "number",
             "default": 1,
             "min": 1,
-            "max": 10,
-            "control": {
-              "kind": "stepper"
-            }
+            "max": 10
           },
           {
             "key": "ac",
@@ -74,10 +71,7 @@
             "kind": "number",
             "default": 1,
             "min": 0,
-            "max": 1,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 1
           },
           {
             "key": "turn_move",
@@ -85,10 +79,7 @@
             "kind": "number",
             "default": 1,
             "min": 0,
-            "max": 1,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 1
           },
           {
             "key": "turn_quick",
@@ -96,10 +87,7 @@
             "kind": "number",
             "default": 1,
             "min": 0,
-            "max": 1,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 1
           }
         ]
       },
@@ -113,18 +101,12 @@
             "label": "Кость эскалации",
             "kind": "number",
             "min": 0,
-            "max": 6,
-            "control": {
-              "kind": "stepper"
-            }
+            "max": 6
           },
           {
             "key": "battle",
             "label": "Идёт бой",
-            "kind": "boolean",
-            "control": {
-              "kind": "toggle"
-            }
+            "kind": "boolean"
           }
         ]
       },
@@ -141,9 +123,6 @@
             "min": 0,
             "max": {
               "expr": "@hp_max"
-            },
-            "control": {
-              "kind": "bar"
             }
           },
           {
@@ -230,10 +209,7 @@
             "expr": {
               "expr": "округлить вниз((@строка.score - 10) / 2)"
             },
-            "title": "Модификатор: {label}",
-            "control": {
-              "kind": "signed"
-            }
+            "title": "Модификатор: {label}"
           }
         ],
         "rows": [
@@ -930,7 +906,12 @@
             "table": "лист",
             "columns": [
               "level"
-            ]
+            ],
+            "views": {
+              "level": {
+                "kind": "stepper"
+              }
+            }
           },
           {
             "table": "abilities",
@@ -947,7 +928,12 @@
             "table": "abilities",
             "columns": [
               "mod"
-            ]
+            ],
+            "views": {
+              "mod": {
+                "kind": "signed"
+              }
+            }
           }
         ]
       },
@@ -977,7 +963,12 @@
             "table": "группа",
             "columns": [
               "hp"
-            ]
+            ],
+            "views": {
+              "hp": {
+                "kind": "bar"
+              }
+            }
           }
         ]
       },
@@ -988,7 +979,12 @@
             "table": "стол",
             "columns": [
               "escalation"
-            ]
+            ],
+            "views": {
+              "escalation": {
+                "kind": "stepper"
+              }
+            }
           }
         ]
       },
@@ -1001,13 +997,29 @@
               "turn_standard",
               "turn_move",
               "turn_quick"
-            ]
+            ],
+            "views": {
+              "turn_standard": {
+                "kind": "pips"
+              },
+              "turn_move": {
+                "kind": "pips"
+              },
+              "turn_quick": {
+                "kind": "pips"
+              }
+            }
           },
           {
             "table": "стол",
             "columns": [
               "battle"
-            ]
+            ],
+            "views": {
+              "battle": {
+                "kind": "toggle"
+              }
+            }
           }
         ]
       },

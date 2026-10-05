@@ -7,8 +7,8 @@ import { BoundFormula } from './bound-field.tsx';
 import { rowNames } from './row-names.ts';
 import { Field, Input, Select, Chip, Button, NumInput, Segmented, Verdict } from '../../ui/primitives.tsx';
 import { isRange } from '@vtt/engine/model/tables';
-import { ROW, cellSource, onSheet, isSingle, fieldsOf } from '@vtt/engine/model/sheet-columns';
-import type { System, Column, Control } from '@vtt/schema';
+import { ROW, cellSource, onSheet, isSingle, fieldsOf, rowKeyOf } from '@vtt/engine/model/sheet-columns';
+import type { System, Column, Control, SheetPart } from '@vtt/schema';
 
 export const sheetTables = (system: System): [string, string][] =>
   Object.entries(system.tables ?? {})
@@ -108,19 +108,33 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
   );
 }
 
-export function ColumnViewField({ tableId, column, system }: { tableId: string; column: Column; system: System }) {
+const holds = (part: SheetPart, table: string, column: string, row?: string): boolean =>
+  part.table === table && (!part.columns || part.columns.includes(column)) && (!row || !part.rows || part.rows.includes(row));
+
+export function BlockViewField({ tableId, column, system, block, row }: { tableId: string; column: Column; system: System; block: string; row?: string }) {
   const editColumn = useWorld(s => s.editColumn);
   const editSystem = useWorld(s => s.editSystem);
   const table = system.tables![tableId]!;
   const single = isSingle(table);
-  const stored = single ? column.expr === undefined : (table.rows ?? []).some(row => cellSource(column, row).kind === 'input');
+  const own = row ? (table.rows ?? []).find(r => rowKeyOf(r) === row) : undefined;
+  const stored = single ? column.expr === undefined : own ? cellSource(column, own).kind === 'input' : (table.rows ?? []).some(r => cellSource(column, r).kind === 'input');
   const edit = (change: (draft: Column) => void) => editColumn(tableId, column.key, change);
-  const kind = column.control?.kind;
+  const part = (system.blocks ?? []).find(b => b.name === block)?.parts.find(p => holds(p, tableId, column.key, row));
+  const key = row ? `${row}.${column.key}` : column.key;
+  const control = part?.views?.[key];
+  const kind = control?.kind;
   const lacking = kind ? viewNeeds(kind, column) : [];
-  const setControl = (patch: Partial<Control>) => edit(draft => {
-    const next = { ...(draft.control ?? { kind: kind! }), ...patch } as Record<string, unknown>;
-    for (const [key, value] of Object.entries(patch)) if (value === undefined) delete next[key];
-    draft.control = next as Control;
+  const editView = (change: (views: Record<string, Control>) => void) => editSystem(draft => {
+    const target = (draft.blocks ?? []).find(b => b.name === block)?.parts.find(p => holds(p, tableId, column.key, row));
+    if (!target) return;
+    const views = { ...target.views };
+    change(views);
+    if (Object.keys(views).length) target.views = views; else delete target.views;
+  });
+  const setControl = (patch: Partial<Control>) => editView(views => {
+    const next = { ...(views[key] ?? { kind: kind! }), ...patch } as Record<string, unknown>;
+    for (const [name, value] of Object.entries(patch)) if (value === undefined) delete next[name];
+    views[key] = next as Control;
   });
   const addTop = () => {
     const taken = [...fieldsOf(system).map(f => f.tag), ...(table.columns ?? []).map(c => c.key), ...Object.keys(system.tables ?? {})];
@@ -138,17 +152,20 @@ export function ColumnViewField({ tableId, column, system }: { tableId: string; 
   };
   return (
     <>
-      <Field label="Вид">
+      <Field label={row ? `Вид только у «${own?.label ?? row}»` : `Вид в блоке «${block}»`}>
         <ViewGallery
+          label={row ? `Вид только у «${own?.label ?? row}»` : 'Вид'}
           value={kind}
           family={columnFamily(column)}
           computed={!stored}
-          plain={stored ? { label: 'Обычное поле', hint: 'окошко для числа или текста' } : { label: 'Просто число', hint: 'значение как есть' }}
+          plain={row
+            ? { label: 'Как у колонки', hint: 'вид колонки в этом блоке' }
+            : stored ? { label: 'Обычное поле', hint: 'окошко для числа или текста' } : { label: 'Просто число', hint: 'значение как есть' }}
           needs={next => viewNeeds(next, column)}
-          onChange={next => edit(draft => {
-            if (!next) { delete draft.control; return; }
-            const keep = draft.control ?? { kind: next };
-            draft.control = {
+          onChange={next => editView(views => {
+            if (!next) { delete views[key]; return; }
+            const keep = views[key] ?? { kind: next };
+            views[key] = {
               kind: next,
               ...(TAKES_STEP.includes(next) && keep.step !== undefined ? { step: keep.step } : {}),
               ...(next === 'bar' && keep.worse ? { worse: keep.worse } : {}),
@@ -158,7 +175,7 @@ export function ColumnViewField({ tableId, column, system }: { tableId: string; 
           })}
         />
       </Field>
-      {kind && (lacking.length || takesBounds(kind, column) || TAKES_STEP.includes(kind) || ['bar', 'toggle', 'ring', 'choice', 'chips'].includes(kind)) ? (
+      {kind && !row && (lacking.length || takesBounds(kind, column) || TAKES_STEP.includes(kind) || ['bar', 'toggle', 'ring', 'choice', 'chips'].includes(kind)) ? (
         <div className="view-settings">
           {lacking.length ? <Verdict tone="warn">Виду «{VIEWS[kind].label}» не хватает: {lacking.join(', ')}. Пока не задано, на листе вместо него «—».</Verdict> : null}
           {takesBounds(kind, column) ? (
@@ -178,13 +195,13 @@ export function ColumnViewField({ tableId, column, system }: { tableId: string; 
           ) : null}
           {TAKES_STEP.includes(kind) ? (
             <Field label="Шаг">
-              <NumInput value={column.control?.step ?? 1} least={0}
+              <NumInput value={control?.step ?? 1} least={0}
                 onCommit={n => setControl({ step: n > 0 && n !== 1 ? n : undefined })} />
             </Field>
           ) : null}
           {kind === 'bar' ? (
             <Field label="Красная, когда">
-              <Segmented value={column.control?.worse ?? 'low'}
+              <Segmented value={control?.worse ?? 'low'}
                 options={[{ key: 'low', label: 'мало' }, { key: 'high', label: 'много' }]}
                 onChange={next => setControl({ worse: next === 'high' ? 'high' : undefined })} />
             </Field>
@@ -192,10 +209,10 @@ export function ColumnViewField({ tableId, column, system }: { tableId: string; 
           {kind === 'toggle' || ((kind === 'ring' || kind === 'choice') && column.kind === 'boolean') ? (
             <div className="row">
               <Field label="Подпись «да»">
-                <Input value={column.control?.yes ?? ''} placeholder="да" onChange={text => setControl({ yes: text.trim() || undefined })} />
+                <Input value={control?.yes ?? ''} placeholder="да" onChange={text => setControl({ yes: text.trim() || undefined })} />
               </Field>
               <Field label="Подпись «нет»">
-                <Input value={column.control?.no ?? ''} placeholder="нет" onChange={text => setControl({ no: text.trim() || undefined })} />
+                <Input value={control?.no ?? ''} placeholder="нет" onChange={text => setControl({ no: text.trim() || undefined })} />
               </Field>
             </div>
           ) : null}

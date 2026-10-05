@@ -171,10 +171,7 @@
             "key": "inspiration",
             "label": "Вдохновение",
             "kind": "number",
-            "min": 0,
-            "control": {
-              "kind": "pips"
-            }
+            "min": 0
           },
           {
             "key": "prof_bonus",
@@ -191,9 +188,6 @@
             "min": 0,
             "max": {
               "expr": "#level"
-            },
-            "control": {
-              "kind": "pips"
             }
           },
           {
@@ -201,10 +195,7 @@
             "label": "Владение: Атлетика",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "control": {
-              "kind": "ring"
-            }
+            "max": 2
           },
           {
             "key": "athletics",
@@ -228,10 +219,7 @@
             "label": "Владение: Акробатика",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "control": {
-              "kind": "ring"
-            }
+            "max": 2
           },
           {
             "key": "acrobatics",
@@ -255,10 +243,7 @@
             "label": "Владение: Ловкость рук",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "control": {
-              "kind": "ring"
-            }
+            "max": 2
           },
           {
             "key": "sleight_of_hand",
@@ -282,10 +267,7 @@
             "label": "Владение: Скрытность",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "control": {
-              "kind": "ring"
-            }
+            "max": 2
           },
           {
             "key": "stealth",
@@ -309,10 +291,7 @@
             "label": "Владение: Магия",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "control": {
-              "kind": "ring"
-            }
+            "max": 2
           },
           {
             "key": "arcana",
@@ -336,10 +315,7 @@
             "label": "Владение: История",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "control": {
-              "kind": "ring"
-            }
+            "max": 2
           },
           {
             "key": "history",
@@ -363,10 +339,7 @@
             "label": "Владение: Анализ",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "control": {
-              "kind": "ring"
-            }
+            "max": 2
           },
           {
             "key": "investigation",
@@ -390,10 +363,7 @@
             "label": "Владение: Природа",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "control": {
-              "kind": "ring"
-            }
+            "max": 2
           },
           {
             "key": "nature",
@@ -417,10 +387,7 @@
             "label": "Владение: Религия",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "control": {
-              "kind": "ring"
-            }
+            "max": 2
           },
           {
             "key": "religion",
@@ -444,10 +411,7 @@
             "label": "Владение: Уход за животными",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "control": {
-              "kind": "ring"
-            }
+            "max": 2
           },
           {
             "key": "animal_handling",
@@ -471,10 +435,7 @@
             "label": "Владение: Проницательность",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "control": {
-              "kind": "ring"
-            }
+            "max": 2
           },
           {
             "key": "insight",
@@ -498,10 +459,7 @@
             "label": "Владение: Медицина",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "control": {
-              "kind": "ring"
-            }
+            "max": 2
           },
           {
             "key": "medicine",
@@ -525,10 +483,7 @@
             "label": "Владение: Внимательность",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "control": {
-              "kind": "ring"
-            }
+            "max": 2
           },
           {
             "key": "perception",
@@ -552,10 +507,7 @@
             "label": "Владение: Выживание",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "control": {
-              "kind": "ring"
-            }
+            "max": 2
           },
           {
             "key": "survival",
@@ -579,10 +531,7 @@
             "label": "Владение: Обман",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "control": {
-              "kind": "ring"
-            }
+            "max": 2
           },
           {
             "key": "deception",
@@ -606,10 +555,7 @@
             "label": "Владение: Запугивание",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "control": {
-              "kind": "ring"
-            }
+            "max": 2
           },
           {
             "key": "intimidation",
@@ -633,10 +579,7 @@
             "label": "Владение: Выступление",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "control": {
-              "kind": "ring"
-            }
+            "max": 2
           },
           {
             "key": "performance",
@@ -660,10 +603,7 @@
             "label": "Владение: Убеждение",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "control": {
-              "kind": "ring"
-            }
+            "max": 2
           },
           {
             "key": "persuasion",
@@ -691,10 +631,7 @@
           {
             "key": "armor_heavy",
             "label": "Доспех тяжёлый",
-            "kind": "boolean",
-            "control": {
-              "kind": "toggle"
-            }
+            "kind": "boolean"
           },
           {
             "key": "ac",
@@ -708,10 +645,7 @@
             "label": "Владение: Спасбросок Ловкости",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "control": {
-              "kind": "ring"
-            }
+            "max": 2
           },
           {
             "key": "dex_save",
@@ -744,39 +678,27 @@
             "min": 0,
             "max": {
               "expr": "#hp_max"
-            },
-            "control": {
-              "kind": "bar"
             }
           },
           {
             "key": "hp_temp",
             "label": "Временные ХП",
             "kind": "number",
-            "min": 0,
-            "control": {
-              "kind": "stepper"
-            }
+            "min": 0
           },
           {
             "key": "death_ok",
             "label": "Успехи спасбросков от смерти",
             "kind": "number",
             "min": 0,
-            "max": 3,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 3
           },
           {
             "key": "death_fail",
             "label": "Провалы спасбросков от смерти",
             "kind": "number",
             "min": 0,
-            "max": 3,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 3
           },
           {
             "key": "down",
@@ -2849,7 +2771,15 @@
               "inspiration",
               "prof_bonus",
               "slots_1"
-            ]
+            ],
+            "views": {
+              "inspiration": {
+                "kind": "pips"
+              },
+              "slots_1": {
+                "kind": "pips"
+              }
+            }
           }
         ]
       },
@@ -2861,7 +2791,12 @@
             "columns": [
               "athletics_prof",
               "athletics"
-            ]
+            ],
+            "views": {
+              "athletics_prof": {
+                "kind": "ring"
+              }
+            }
           }
         ]
       },
@@ -2877,7 +2812,18 @@
               "sleight_of_hand",
               "stealth_prof",
               "stealth"
-            ]
+            ],
+            "views": {
+              "acrobatics_prof": {
+                "kind": "ring"
+              },
+              "sleight_of_hand_prof": {
+                "kind": "ring"
+              },
+              "stealth_prof": {
+                "kind": "ring"
+              }
+            }
           }
         ]
       },
@@ -2897,7 +2843,24 @@
               "nature",
               "religion_prof",
               "religion"
-            ]
+            ],
+            "views": {
+              "arcana_prof": {
+                "kind": "ring"
+              },
+              "history_prof": {
+                "kind": "ring"
+              },
+              "investigation_prof": {
+                "kind": "ring"
+              },
+              "nature_prof": {
+                "kind": "ring"
+              },
+              "religion_prof": {
+                "kind": "ring"
+              }
+            }
           }
         ]
       },
@@ -2917,7 +2880,24 @@
               "perception",
               "survival_prof",
               "survival"
-            ]
+            ],
+            "views": {
+              "animal_handling_prof": {
+                "kind": "ring"
+              },
+              "insight_prof": {
+                "kind": "ring"
+              },
+              "medicine_prof": {
+                "kind": "ring"
+              },
+              "perception_prof": {
+                "kind": "ring"
+              },
+              "survival_prof": {
+                "kind": "ring"
+              }
+            }
           }
         ]
       },
@@ -2935,7 +2915,21 @@
               "performance",
               "persuasion_prof",
               "persuasion"
-            ]
+            ],
+            "views": {
+              "deception_prof": {
+                "kind": "ring"
+              },
+              "intimidation_prof": {
+                "kind": "ring"
+              },
+              "performance_prof": {
+                "kind": "ring"
+              },
+              "persuasion_prof": {
+                "kind": "ring"
+              }
+            }
           }
         ]
       },
@@ -2950,7 +2944,15 @@
               "ac",
               "dex_save_prof",
               "dex_save"
-            ]
+            ],
+            "views": {
+              "armor_heavy": {
+                "kind": "toggle"
+              },
+              "dex_save_prof": {
+                "kind": "ring"
+              }
+            }
           }
         ]
       },
@@ -2967,7 +2969,21 @@
               "death_fail",
               "down",
               "up"
-            ]
+            ],
+            "views": {
+              "hp_current": {
+                "kind": "bar"
+              },
+              "hp_temp": {
+                "kind": "stepper"
+              },
+              "death_ok": {
+                "kind": "pips"
+              },
+              "death_fail": {
+                "kind": "pips"
+              }
+            }
           }
         ]
       },

@@ -234,9 +234,6 @@
             "label": "Уклонение",
             "expr": {
               "expr": "если(@class != \"\", таблица(\"classes\", @class, \"evasion\"), 10) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"evasion_bonus\"), 0) + @evasion_bonus"
-            },
-            "control": {
-              "kind": "big"
             }
           },
           {
@@ -251,10 +248,7 @@
             "label": "Бронеслоты отмечены",
             "kind": "number",
             "min": 0,
-            "max": 12,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 12
           },
           {
             "key": "major_base",
@@ -299,10 +293,7 @@
             "key": "hp",
             "label": "Хиты отмечены",
             "kind": "number",
-            "min": 0,
-            "control": {
-              "kind": "pips"
-            }
+            "min": 0
           },
           {
             "key": "stress_extra",
@@ -321,19 +312,13 @@
             "key": "stress",
             "label": "Стресс отмечен",
             "kind": "number",
-            "min": 0,
-            "control": {
-              "kind": "pips"
-            }
+            "min": 0
           },
           {
             "key": "down",
             "label": "Последний хит отмечен",
             "expr": {
               "expr": "все(@hp_max > 0, @hp >= @hp_max)"
-            },
-            "control": {
-              "kind": "toggle"
             }
           },
           {
@@ -341,9 +326,6 @@
             "label": "Весь Стресс отмечен",
             "expr": {
               "expr": "все(@stress_max > 0, @stress >= @stress_max)"
-            },
-            "control": {
-              "kind": "toggle"
             }
           },
           {
@@ -359,10 +341,7 @@
             "kind": "number",
             "default": 2,
             "min": 0,
-            "max": 6,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 6
           },
           {
             "key": "scars",
@@ -3422,7 +3401,15 @@
               "evasion",
               "armor_score",
               "armor_marked"
-            ]
+            ],
+            "views": {
+              "evasion": {
+                "kind": "big"
+              },
+              "armor_marked": {
+                "kind": "pips"
+              }
+            }
           }
         ]
       },
@@ -3455,7 +3442,21 @@
               "down",
               "stress_full",
               "stress_free"
-            ]
+            ],
+            "views": {
+              "hp": {
+                "kind": "pips"
+              },
+              "stress": {
+                "kind": "pips"
+              },
+              "down": {
+                "kind": "toggle"
+              },
+              "stress_full": {
+                "kind": "toggle"
+              }
+            }
           }
         ]
       },
@@ -3467,7 +3468,12 @@
             "columns": [
               "hope",
               "scars"
-            ]
+            ],
+            "views": {
+              "hope": {
+                "kind": "pips"
+              }
+            }
           }
         ]
       },

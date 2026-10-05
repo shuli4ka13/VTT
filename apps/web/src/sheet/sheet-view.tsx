@@ -21,7 +21,7 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
   onRoll?: (tag: string) => void;
   badge?: string;
   only?: string[];
-  onPick?: (tag: string) => void;
+  onPick?: (tag: string, block?: string) => void;
   picked?: string | null;
 }) {
   const all = fields ?? fieldsOf(system);
@@ -41,7 +41,7 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
       />
     );
     return onPick ? (
-      <div key={field.tag} className={`sheet-pick${picked === field.tag ? ' sheet-pick--on' : ''}`} onClick={() => onPick(field.tag)}>
+      <div key={field.tag} className={`sheet-pick${picked === field.tag ? ' sheet-pick--on' : ''}`} onClick={() => onPick(field.tag, field.group)}>
         {view}
       </div>
     ) : view;

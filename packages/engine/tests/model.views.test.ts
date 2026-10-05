@@ -29,11 +29,13 @@ describe('виды полей: что обязательно и что к как
   });
 
   it('линт предупреждает о виде без верха и о виде не к типу', () => {
-    const found = lintSystem(system([
-      { key: 'запас', label: 'Запас', kind: 'number', control: { kind: 'pips' } },
-      { key: 'бой', label: 'Бой', kind: 'number', control: { kind: 'toggle' } },
-      { key: 'хиты', label: 'Хиты', kind: 'number', max: 10, control: { kind: 'bar' } },
-    ])).filter(p => /виду|не подходит/.test(p.text)).map(p => p.text);
+    const s = system([
+      { key: 'запас', label: 'Запас', kind: 'number' },
+      { key: 'бой', label: 'Бой', kind: 'number' },
+      { key: 'хиты', label: 'Хиты', kind: 'number', max: 10 },
+    ]);
+    s.blocks = [{ name: 'Лист', parts: [{ table: 'лист', views: { запас: { kind: 'pips' }, бой: { kind: 'toggle' }, хиты: { kind: 'bar' } } }] }];
+    const found = lintSystem(s).filter(p => /виду|не подходит/.test(p.text)).map(p => p.text);
     expect(found).toHaveLength(2);
     expect(found[0]).toMatch(/«Запас».*Точки.*верх/);
     expect(found[1]).toMatch(/«Бой».*Переключатель.*не подходит/);

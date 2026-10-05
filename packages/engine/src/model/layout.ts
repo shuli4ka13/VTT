@@ -10,6 +10,10 @@ export function renameLayoutColumn(system: System, table: string, from: string, 
     if (part.table !== table) continue;
     if (part.columns) part.columns = part.columns.map(key => (key === from ? to : key));
     if (part.by === from) part.by = to;
+    if (part.views) part.views = Object.fromEntries(Object.entries(part.views).map(([key, view]) => {
+      const [a, b] = key.split('.');
+      return [b === undefined ? (a === from ? to : a) : `${a}.${b === from ? to : b}`, view];
+    }));
   }
 }
 
@@ -18,7 +22,12 @@ export function renameLayoutRow(system: System, table: string, from: unknown, to
   const next = rowKeyOf({ value: to } as never);
   if (old === next) return;
   for (const part of parts(system)) {
-    if (part.table === table && part.rows) part.rows = part.rows.map(key => (key === old ? next : key));
+    if (part.table !== table) continue;
+    if (part.rows) part.rows = part.rows.map(key => (key === old ? next : key));
+    if (part.views) part.views = Object.fromEntries(Object.entries(part.views).map(([key, view]) => {
+      const [a, b] = key.split('.');
+      return [b !== undefined && a === old ? `${next}.${b}` : key, view];
+    }));
   }
 }
 
@@ -46,6 +55,11 @@ export function tidyLayout(system: System): void {
         if (rows.length < rowKeys.length) next.rows = rows;
       }
       if (part.by && keys.includes(part.by)) next.by = part.by;
+      const views = Object.entries(part.views ?? {}).filter(([key]) => {
+        const [a, b] = key.split('.');
+        return b === undefined ? keys.includes(a!) : rowKeys.includes(a!) && keys.includes(b);
+      });
+      if (views.length) next.views = Object.fromEntries(views);
       return [next];
     });
   }

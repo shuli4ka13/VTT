@@ -187,9 +187,6 @@
             "min": 0,
             "max": {
               "expr": "@hp_max"
-            },
-            "control": {
-              "kind": "bar"
             }
           },
           {
@@ -207,9 +204,6 @@
             "min": 0,
             "max": {
               "expr": "@luck"
-            },
-            "control": {
-              "kind": "pips"
             }
           },
           {
@@ -222,9 +216,6 @@
             "label": "Тяжело ранен",
             "expr": {
               "expr": "@hp <= @wound_at"
-            },
-            "control": {
-              "kind": "toggle"
             }
           },
           {
@@ -232,9 +223,6 @@
             "label": "При смерти",
             "expr": {
               "expr": "@hp <= 0"
-            },
-            "control": {
-              "kind": "toggle"
             }
           },
           {
@@ -247,30 +235,21 @@
           {
             "key": "dead",
             "label": "Мёртв",
-            "kind": "boolean",
-            "control": {
-              "kind": "toggle"
-            }
+            "kind": "boolean"
           },
           {
             "key": "sp_head",
             "label": "Броня головы",
             "kind": "number",
             "default": 11,
-            "min": 0,
-            "control": {
-              "kind": "stepper"
-            }
+            "min": 0
           },
           {
             "key": "sp_body",
             "label": "Броня тела",
             "kind": "number",
             "default": 11,
-            "min": 0,
-            "control": {
-              "kind": "stepper"
-            }
+            "min": 0
           },
           {
             "key": "turn_action",
@@ -278,10 +257,7 @@
             "kind": "number",
             "default": 1,
             "min": 0,
-            "max": 1,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 1
           },
           {
             "key": "turn_move",
@@ -289,10 +265,7 @@
             "kind": "number",
             "default": 1,
             "min": 0,
-            "max": 1,
-            "control": {
-              "kind": "pips"
-            }
+            "max": 1
           }
         ]
       },
@@ -304,10 +277,7 @@
           {
             "key": "battle",
             "label": "Идёт бой",
-            "kind": "boolean",
-            "control": {
-              "kind": "toggle"
-            }
+            "kind": "boolean"
           }
         ]
       },
@@ -517,9 +487,6 @@
             "min": 0,
             "max": 10,
             "title": "{label}",
-            "control": {
-              "kind": "stepper"
-            },
             "default": "{start}"
           },
           {
@@ -2019,7 +1986,24 @@
               "mortal",
               "death_penalty",
               "dead"
-            ]
+            ],
+            "views": {
+              "hp": {
+                "kind": "bar"
+              },
+              "luck_left": {
+                "kind": "pips"
+              },
+              "seriously": {
+                "kind": "toggle"
+              },
+              "mortal": {
+                "kind": "toggle"
+              },
+              "dead": {
+                "kind": "toggle"
+              }
+            }
           }
         ]
       },
@@ -2031,7 +2015,15 @@
             "columns": [
               "sp_head",
               "sp_body"
-            ]
+            ],
+            "views": {
+              "sp_head": {
+                "kind": "stepper"
+              },
+              "sp_body": {
+                "kind": "stepper"
+              }
+            }
           }
         ]
       },
@@ -2046,7 +2038,12 @@
               "чтение_по_губам",
               "внимательность",
               "выслеживание"
-            ]
+            ],
+            "views": {
+              "rank": {
+                "kind": "stepper"
+              }
+            }
           }
         ],
         "parent": "Навыки"
@@ -2063,7 +2060,12 @@
               "выносливость",
               "стойкость_к_пыткам_и_наркотикам",
               "скрытность"
-            ]
+            ],
+            "views": {
+              "rank": {
+                "kind": "stepper"
+              }
+            }
           }
         ],
         "parent": "Навыки"
@@ -2078,7 +2080,12 @@
               "пилотирование_воздух",
               "пилотирование_море",
               "верховая_езда"
-            ]
+            ],
+            "views": {
+              "rank": {
+                "kind": "stepper"
+              }
+            }
           }
         ],
         "parent": "Навыки"
@@ -2105,7 +2112,12 @@
               "наука",
               "тактика",
               "выживание_в_глуши"
-            ]
+            ],
+            "views": {
+              "rank": {
+                "kind": "stepper"
+              }
+            }
           }
         ],
         "parent": "Навыки"
@@ -2120,7 +2132,12 @@
               "уклонение",
               "боевые_искусства",
               "холодное_оружие"
-            ]
+            ],
+            "views": {
+              "rank": {
+                "kind": "stepper"
+              }
+            }
           }
         ],
         "parent": "Навыки"
@@ -2133,7 +2150,12 @@
             "rows": [
               "актёрство",
               "игра_на_инструменте"
-            ]
+            ],
+            "views": {
+              "rank": {
+                "kind": "stepper"
+              }
+            }
           }
         ],
         "parent": "Навыки"
@@ -2149,7 +2171,12 @@
               "пистолеты",
               "тяжёлое_оружие",
               "длинноствольное"
-            ]
+            ],
+            "views": {
+              "rank": {
+                "kind": "stepper"
+              }
+            }
           }
         ],
         "parent": "Навыки"
@@ -2169,7 +2196,12 @@
               "знание_улиц",
               "торговля",
               "стиль_и_гардероб"
-            ]
+            ],
+            "views": {
+              "rank": {
+                "kind": "stepper"
+              }
+            }
           }
         ],
         "parent": "Навыки"
@@ -2195,7 +2227,12 @@
               "карманная_кража",
               "морская_техника",
               "оружейное_дело"
-            ]
+            ],
+            "views": {
+              "rank": {
+                "kind": "stepper"
+              }
+            }
           }
         ],
         "parent": "Навыки"
@@ -2208,10 +2245,23 @@
             "columns": [
               "turn_action",
               "turn_move"
-            ]
+            ],
+            "views": {
+              "turn_action": {
+                "kind": "pips"
+              },
+              "turn_move": {
+                "kind": "pips"
+              }
+            }
           },
           {
-            "table": "стол"
+            "table": "стол",
+            "views": {
+              "battle": {
+                "kind": "toggle"
+              }
+            }
           }
         ]
       }

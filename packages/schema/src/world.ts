@@ -79,7 +79,6 @@ const startValue = z.union([tableValue, z.array(tableValue)]);
 export const cellView = z.object({
   label: z.string().optional(),
   roll: z.lazy(() => rollSpec.partial()).optional(),
-  control: control.optional(),
   default: startValue.optional(),
 });
 
@@ -95,7 +94,6 @@ export const column = columnValue.extend({
   key: tag,
   label: z.string().optional(),
   roll: z.lazy(() => rollSpec.partial({ die: true }).extend({ label: z.string().optional() })).optional(),
-  control: control.optional(),
   title: z.string().optional(),
   onSheet: z.boolean().optional(),
   optional: z.boolean().optional(),
@@ -106,6 +104,7 @@ export const sheetPart = z.object({
   columns: z.array(z.string().min(1)).optional(),
   rows: z.array(z.string().min(1)).optional(),
   by: z.string().min(1).optional(),
+  views: z.record(z.string(), control).optional(),
 }).strict();
 
 export const sheetBlock = z.object({

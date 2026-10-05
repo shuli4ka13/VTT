@@ -6,7 +6,18 @@ import { VIEWS, VIEW_KEYS, viewsFor } from './index.tsx';
 import type { System, Sheet } from '@vtt/schema';
 import type { Reader } from '../../engine/use-calc.ts';
 
-const system = {
+const laid = (input: unknown): System => {
+  const out = structuredClone(input) as System;
+  const views: Record<string, unknown> = {};
+  for (const column of out.tables!.лист!.columns ?? []) {
+    const own = column as { key: string; control?: unknown };
+    if (own.control) { views[own.key] = own.control; delete own.control; }
+  }
+  out.blocks = [{ name: 'Лист', parts: [{ table: 'лист', views } as never] }];
+  return out;
+};
+
+const system = laid({
   tables: { лист: { shape: 'single', columns: [
     { key: 'хиты', label: 'Хиты', kind: 'number', default: 10, min: 0, max: { expr: '#максимум' }, control: { kind: 'bar' } },
     { key: 'максимум', label: 'Максимум', expr: { expr: '20' } },
@@ -29,7 +40,7 @@ const system = {
     владение: { key: 'number', rows: [{ value: 0, label: 'нет' }, { value: 1, label: 'владение' }] },
     урон: { key: 'word', rows: [{ value: 'огонь', label: 'огонь' }, { value: 'холод', label: 'холод' }, { value: 'яд', label: 'яд' }] },
   },
-} as unknown as System;
+});
 
 const values = { груз: 9, шум: 5, хиты: 7, провалы: 1, броня: 2, тяжёлый: false, огонь: 0.5, атлетика: 0, сопр: ['яд'], заряды: 2, шаг: 3 };
 const sheet = { id: 'а', name: 'Арвен', values } as unknown as Sheet;
@@ -85,11 +96,11 @@ describe('виды полей листа', () => {
 
   it('кружок у «да/нет» — две ступени с подписями автора, у числа — цифры от низа до верха, у посчитанного — только показ', () => {
     const out: [string, unknown][] = [];
-    const local = { tables: { лист: { shape: 'single', columns: [
+    const local = laid({ tables: { лист: { shape: 'single', columns: [
       { key: 'спас', label: 'Спас', kind: 'boolean', control: { kind: 'ring', yes: 'владеет', no: 'не владеет' } },
       { key: 'ранг', label: 'Ранг', kind: 'number', min: 1, max: 3, control: { kind: 'choice' } },
       { key: 'итог', label: 'Итог', expr: { expr: '2' }, min: 0, max: 2, control: { kind: 'ring' } },
-    ] } } } as unknown as System;
+    ] } } });
     const values: Record<string, unknown> = { спас: false, ранг: 1 };
     render(<SheetView system={local} sheet={{ id: 'в', values } as unknown as Sheet}
       reader={{ valueOf: tag => ({ ok: true, value: tag === 'итог' ? 2 : values[tag] }), rollOf: () => null, storedOf: tag => values[tag], measure: expr => ({ ok: true, value: Number(expr) }) }}
@@ -203,9 +214,9 @@ describe('виды полей листа', () => {
 
   it('со знаком: ввод «+5» пишет число по уходу из поля', () => {
     const out: [string, unknown][] = [];
-    const local = { ...system, tables: { лист: { shape: 'single', columns: [
+    const local = laid({ ...system, tables: { лист: { shape: 'single', columns: [
       { key: 'бонус', label: 'Бонус', kind: 'number', control: { kind: 'signed' } },
-    ] } } } as unknown as System;
+    ] } } });
     render(<SheetView system={local} sheet={{ id: 'б', values: { бонус: 1 } } as unknown as Sheet}
       reader={{ valueOf: () => ({ ok: true, value: 1 }), rollOf: () => null, storedOf: () => 1 }}
       onChange={(tag, value) => { out.push([tag, value]); }} />);
