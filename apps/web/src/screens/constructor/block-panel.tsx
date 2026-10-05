@@ -96,16 +96,15 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
 
   return (
     <Card>
-      <CardHead title={`Блок «${block.name}»`} actions={<Button size="sm" variant="ghost" onClick={() => pick({ activeBlock: null })}>×</Button>} />
-      <Field label="Название">
-        <LabelInput value={block.name} placeholder="как зовётся блок"
+      <CardHead
+        title={<LabelInput value={block.name} placeholder="как зовётся блок"
           onCommit={next => {
             const clean = next.trim();
             if (!clean || clean === name || (system.blocks ?? []).some(other => other.name === clean)) return;
             editSystem(draft => renameBlock(draft, name, clean));
             pick({ activeBlock: clean });
-          }} />
-      </Field>
+          }} />}
+        actions={<Button size="sm" variant="ghost" onClick={() => pick({ activeBlock: null })}>×</Button>} />
       <Field label="Внутри блока">
         <Select<string> label="внутри блока" value={block.parent ?? ''}
           options={[['', 'на верхнем уровне'], ...parents.map(p => [p, p] as const)]}

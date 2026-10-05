@@ -24,7 +24,7 @@ describe('образец листа: заголовок блока и назва
     act(() => { useWorld.setState(state => ({ ...state, system: system(), activeFieldTag: null, activeBlock: null, activeRow: null, activeColumn: null })); });
     renderOpen(<SheetTab />);
     fireEvent.click(screen.getByRole('button', { name: 'Навыки' }));
-    expect(screen.getByText('Блок «Навыки»')).toBeTruthy();
+    expect((screen.getByPlaceholderText('как зовётся блок') as HTMLInputElement).value).toBe('Навыки');
     fireEvent.click(screen.getByRole('button', { name: 'Атлетика' }));
     expect(screen.getByText('Строка «Атлетика»')).toBeTruthy();
     expect(document.querySelector('.column--side')!.textContent).toContain('Характеристика');
