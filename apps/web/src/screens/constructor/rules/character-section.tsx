@@ -1,66 +1,35 @@
 import { SheetKindEditor } from '../records-tab.tsx';
-import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { blockTree } from '../block-tree.tsx';
-import type { BlockNode } from '../block-tree.tsx';
 import { TableColumnCard } from './tables-section.tsx';
 import { useWorld, freeId } from '../../../store/world.ts';
-import { freeGroupName, renameGroup, groupChain } from '../groups.ts';
 import { sheetKinds } from '@vtt/engine/model/owned';
-import { blockUse, blockNames } from '@vtt/engine/model/blocks';
 import { hasDesk } from '@vtt/engine/events/desk';
 import { DESK_ID } from '@vtt/engine/engine/owners';
 import { Card, CardHead, Button, Empty, LabelInput, DangerButton, Select } from '../../../ui/primitives.tsx';
 import { newColumn } from '../factory.ts';
+import { freeBlockName, addColumnToBlock, SHEET_TABLE } from '../block-panel.tsx';
 import type { UsageIndex } from '../usage.ts';
-import { kindWord } from '@vtt/engine/words/kinds';
-import type { System, Column } from '@vtt/schema';
+import type { System, Column, SheetBlock, SheetPart } from '@vtt/schema';
 import type { Field as FieldModel, Holder } from '@vtt/engine/model/types';
 import type { WorldState } from '../../../store/world.ts';
-import { fieldsOf, withColumn, rowKeyOf } from '@vtt/engine/model/sheet-columns';
+import { fieldsOf, withColumn, singleTableOf } from '@vtt/engine/model/sheet-columns';
 
 export const isCharacterColumn = (field: FieldModel): boolean => !field.cell;
 
-const kindOf = (field: FieldModel): string =>
-  (field.value.kind === 'formula' ? 'формула' : kindWord(field.value.type));
-
-export function addColumn(draft: System, column: Column, holder: Holder = 'sheet'): void {
+export function addColumn(draft: System, column: Column, holder: Holder = 'sheet', block?: string): void {
   draft.tables = withColumn(draft, column, holder).tables;
+  if (block) addColumnToBlock(draft, block, singleTableOf(draft, holder) ?? SHEET_TABLE, column.key);
 }
 
-interface TablePart { table: string; columns: string[]; rows: string[] }
+interface BlockNode { block: SheetBlock; children: BlockNode[] }
 
-function partsOf(fields: FieldModel[], system: System): { plain: FieldModel[]; tables: TablePart[] } {
-  const plain: FieldModel[] = [];
-  const tables: TablePart[] = [];
-  for (const field of fields) {
-    if (!field.cell) { plain.push(field); continue; }
-    const { table, row, column } = field.cell;
-    let part = tables.find(p => p.table === table);
-    if (!part) { part = { table, columns: [], rows: [] }; tables.push(part); }
-    if (!part.columns.includes(column)) part.columns.push(column);
-    if (!part.rows.includes(row)) part.rows.push(row);
-  }
-  for (const part of tables) {
-    const order = (system.tables?.[part.table]?.columns ?? []).map(c => c.key);
-    part.columns.sort((x, y) => order.indexOf(x) - order.indexOf(y));
-  }
-  return { plain, tables };
-}
-
-function BlockName({ value, onCommit }: { value: string; onCommit: (next: string) => void }) {
-  const [draft, setDraft] = useState<string | null>(null);
-  const shown = draft ?? value;
-  return (
-    <input
-      className="block-name"
-      value={shown}
-      style={{ width: `${Math.max(6, shown.length + 4)}ch` }}
-      onChange={e => setDraft(e.target.value)}
-      onBlur={() => { if (draft !== null && draft.trim() && draft !== value) onCommit(draft.trim()); setDraft(null); }}
-      onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-    />
-  );
+function treeOf(blocks: SheetBlock[]): BlockNode[] {
+  const names = new Set(blocks.map(b => b.name));
+  const make = (block: SheetBlock, seen: string[]): BlockNode => ({
+    block,
+    children: blocks.filter(b => b.parent === block.name && !seen.includes(b.name)).map(b => make(b, [...seen, b.name])),
+  });
+  return blocks.filter(b => !b.parent || !names.has(b.parent) || b.parent === b.name).map(b => make(b, [b.name]));
 }
 
 type Picked = { table: string; column: string } | null;
@@ -74,21 +43,17 @@ export function CharacterSection({ system, editSystem, docked }: {
 }) {
   const picked = useWorld(s => s.activeFieldTag);
   const pick = useWorld(s => s.pick);
+  const activeBlock = useWorld(s => s.activeBlock);
   const of = useWorld(s => s.activeSheetKind) ?? '';
   const setOf = (key: string) => pick({ activeSheetKind: key || null });
   const cell = useWorld(s => s.activeColumn) as Picked;
   const setCell = (next: Picked) => pick({ activeColumn: next });
   const kinds = sheetKinds(system);
   const kind = of ? system.sheets?.[of] : undefined;
+  const blocks = system.blocks ?? [];
+  const names = blocks.map(b => b.name);
+  const tree = treeOf(blocks);
   const active = fieldsOf(system).filter(isCharacterColumn).find(f => f.tag === picked) ?? null;
-  const foreign = new Set(blockNames(system)
-    .filter(name => { const use = blockUse(system, name); return use.effects > 0 || use.records > 0; })
-    .flatMap(name => groupChain(system, name)));
-  const sheetBlock = (name: string) => !foreign.has(name);
-  const tree = blockTree<FieldModel>(system, fieldsOf(system), field => field.group, sheetBlock);
-  const names: string[] = [];
-  const collect = (nodes: BlockNode<FieldModel>[]) => { for (const node of nodes) { names.push(node.name); collect(node.children); } };
-  collect(tree);
 
   const shown = (block: string) => !kind?.blocks || kind.blocks.includes(block);
   const toggle = (block: string) => editSystem(draft => {
@@ -98,106 +63,85 @@ export function CharacterSection({ system, editSystem, docked }: {
     const next = now.includes(block) ? now.filter(b => b !== block) : [...now, block];
     if (names.every(name => next.includes(name))) delete target.blocks; else target.blocks = next;
   });
-  const add = (group: string) => {
-    const made = newColumn(system, group);
-    editSystem(draft => addColumn(draft, made.value));
+  const add = (block?: string) => {
+    const made = newColumn(system);
+    editSystem(draft => addColumn(draft, made.value, 'sheet', block));
     setCell(null);
-    pick({ activeFieldTag: made.key });
+    pick({ activeFieldTag: made.key, activeBlock: null });
   };
   const addBlock = (parent?: string) => {
-    const name = freeGroupName(system, 'Новый блок');
-    const made = newColumn(system, name);
-    editSystem(draft => {
-      (draft.groups ??= {})[name] = parent ? { parent } : {};
-      addColumn(draft, made.value);
-    });
-    setCell(null);
-    pick({ activeFieldTag: made.key });
+    const name = freeBlockName(system, 'Новый блок');
+    editSystem(draft => { (draft.blocks ??= []).push({ name, ...(parent ? { parent } : {}), parts: [] }); });
+    pick({ activeBlock: name, activeFieldTag: null, activeColumn: null });
   };
   const addType = () => {
     const key = freeId([...Object.keys(system.sheets ?? {}), ...Object.keys(system.tables ?? {})], 'лист');
     editSystem(draft => { (draft.sheets ??= {})[key] = { label: 'Новый тип листа' }; });
     setOf(key);
   };
-  const pickField = (tag: string) => { setCell(null); pick({ activeFieldTag: tag === picked ? null : tag }); };
+  const pickField = (tag: string) => { pick({ activeColumn: null, activeBlock: null, activeFieldTag: tag === picked ? null : tag }); };
   const pickCell = (next: Picked) => {
-    pick({ activeFieldTag: null });
+    pick({ activeFieldTag: null, activeBlock: null });
     setCell(cell && next && cell.table === next.table && cell.column === next.column ? null : next);
   };
+  const pickBlock = (name: string) => pick({ activeBlock: name === activeBlock ? null : name, activeFieldTag: null, activeColumn: null });
   const open: Picked = cell ?? (active ? { table: active.home, column: active.tag } : null);
   const openTable = open ? system.tables?.[open.table] : undefined;
   const openColumn = open ? openTable?.columns?.find(c => c.key === open.column) : undefined;
 
-  const inside = (node: BlockNode<FieldModel>): string[] => node.children.flatMap(child => [child.name, ...inside(child)]);
-  const branch = (nodes: BlockNode<FieldModel>[], depth: number): ReactNode => nodes.map(node => {
-    const { plain, tables } = partsOf(node.items, system);
-    const on = shown(node.name);
+  const describe = (part: SheetPart): ReactNode => {
+    const table = system.tables?.[part.table];
+    const single = table?.shape === 'single';
+    const placed = new Set(fieldsOf(system).filter(f => f.home === part.table).map(f => f.cell?.column ?? f.tag));
+    const columns = (table?.columns ?? []).filter(c => (!part.columns || part.columns.includes(c.key)) && placed.has(c.key));
+    const by = part.by ? table?.columns?.find(c => c.key === part.by) : undefined;
     return (
-      <div key={node.name} className={`stack stack--tight${depth ? ' list__nest' : ''}${on ? '' : ' faint'}`}>
+      <div key={`${part.table}|${part.by ?? ''}|${(part.columns ?? []).join(',')}`} className="inline inline--tight">
+        <span className="faint">{table?.label || part.table}:</span>
+        {columns.map(column => {
+          const on = single ? picked === column.key : cell?.table === part.table && cell.column === column.key;
+          return (
+            <Button key={column.key} size="sm" variant={on ? 'primary' : 'ghost'}
+              onClick={() => (single ? pickField(column.key) : pickCell({ table: part.table, column: column.key }))}>
+              {column.label || column.key}{column.expr !== undefined ? ' =' : ''}
+            </Button>
+          );
+        })}
+        {part.rows ? <span className="faint">· строки: {part.rows.length}</span> : null}
+        {by ? <span className="faint">· группировать по «{by.label || by.key}»</span> : null}
+      </div>
+    );
+  };
+
+  const branch = (nodes: BlockNode[], depth: number): ReactNode => nodes.map(({ block, children }) => {
+    const on = shown(block.name);
+    return (
+      <div key={block.name} className={`stack stack--tight${depth ? ' list__nest' : ''}${on ? '' : ' faint'}`}>
         <div className="inline inline--tight block-head">
           {kind ? (
-            <input type="checkbox" checked={on} title={on ? 'есть на этом листе' : 'нет на этом листе'} onChange={() => toggle(node.name)} />
+            <input type="checkbox" checked={on} title={on ? 'есть на этом листе' : 'нет на этом листе'} onChange={() => toggle(block.name)} />
           ) : null}
-          <BlockName value={node.name} onCommit={next => editSystem(draft => renameGroup(draft, node.name, next))} />
+          <Button size="sm" variant={block.name === activeBlock ? 'primary' : 'ghost'} title="настройки блока" onClick={() => pickBlock(block.name)}>{block.name}</Button>
           <span className="block-head__more">
-            <Button size="sm" variant="ghost" title={`блок внутри «${node.name}»`} onClick={() => addBlock(node.name)}>+ блок внутрь</Button>
-            <Select<string>
-              label={`где лежит блок «${node.name}»`}
-              value={system.groups?.[node.name]?.parent ?? ''}
-              options={[['', 'на верхнем уровне'], ...names.filter(other => other !== node.name && !inside(node).includes(other)).map(other => [other, `внутри «${other}»`] as const)]}
-              onChange={next => editSystem(draft => {
-                const groups = (draft.groups ??= {});
-                const own = (groups[node.name] ??= {});
-                if (next) own.parent = next; else delete own.parent;
-              })}
-            />
-            {!node.items.length && !node.children.length ? (
-              <Button size="sm" variant="ghost" title="пустой блок — убрать" onClick={() => editSystem(draft => {
-                delete draft.groups?.[node.name];
-                for (const group of Object.values(draft.groups ?? {})) if (group.parent === node.name) delete group.parent;
-              })}>×</Button>
-            ) : null}
+            <Button size="sm" variant="ghost" title={`колонка в блоке «${block.name}»`} onClick={() => add(block.name)}>+</Button>
+            <Button size="sm" variant="ghost" title={`блок внутри «${block.name}»`} onClick={() => addBlock(block.name)}>+ блок внутрь</Button>
           </span>
         </div>
-        {plain.length || tables.length ? (
-          <div className="inline inline--tight">
-            {plain.map(field => (
-              <Button key={field.tag} size="sm" variant={field.tag === picked ? 'primary' : 'ghost'}
-                title={kindOf(field)} onClick={() => pickField(field.tag)}>
-                {field.label}{field.value.kind === 'formula' ? ' =' : ''}
-              </Button>
-            ))}
-            {tables.map(part => {
-              const table = system.tables?.[part.table];
-              const all = (table?.rows ?? []).length;
-              const rowName = (key: string) => {
-                const row = (table?.rows ?? []).find(r => rowKeyOf(r) === key);
-                return row?.label ?? String(row?.value ?? key);
-              };
-              return (
-                <span key={part.table} className="inline inline--tight">
-                  <span className="faint" title={part.rows.length < all ? part.rows.map(rowName).join(', ') : `все строки: ${all}`}>
-                    ▦ {table?.label || part.table}{part.rows.length < all ? ` (${part.rows.map(rowName).join(', ')})` : ''}:
-                  </span>
-                  {part.columns.map(column => {
-                    const spec = table?.columns?.find(c => c.key === column);
-                    const on = cell?.table === part.table && cell.column === column;
-                    return (
-                      <Button key={column} size="sm" variant={on ? 'primary' : 'ghost'} onClick={() => pickCell({ table: part.table, column })}>
-                        {spec?.label || column}{spec?.expr !== undefined ? ' =' : ''}
-                      </Button>
-                    );
-                  })}
-                </span>
-              );
-            })}
-            <Button size="sm" variant="ghost" title={`колонка в блоке «${node.name}»`} onClick={() => add(node.name)}>+</Button>
-          </div>
-        ) : null}
-        {branch(node.children, depth + 1)}
+        {block.parts.map(describe)}
+        {branch(children, depth + 1)}
       </div>
     );
   });
+
+  const placed = new Set(fieldsOf(system).filter(f => f.group).map(f => `${f.home}.${f.cell?.column ?? f.tag}`));
+  const loose: { table: string; column: string; label: string; single: boolean }[] = [];
+  for (const field of fieldsOf(system)) {
+    const column = field.cell?.column ?? field.tag;
+    const id = `${field.home}.${column}`;
+    if (placed.has(id) || loose.some(l => `${l.table}.${l.column}` === id)) continue;
+    const spec = system.tables?.[field.home]?.columns?.find(c => c.key === column);
+    loose.push({ table: field.home, column, label: spec?.label || field.label, single: !field.cell });
+  }
 
   return (
     <Card>
@@ -228,8 +172,23 @@ export function CharacterSection({ system, editSystem, docked }: {
           edit={change => editSystem(draft => { const target = draft.tables?.[open.table]; if (target) change(target); })}
           onClose={() => { setCell(null); pick({ activeFieldTag: null }); }} />
       ) : null}
-      {tree.length === 0 ? <Empty title="Лист пока пуст" /> : null}
+      {tree.length === 0 && loose.length === 0 ? <Empty title="Лист пока пуст" /> : null}
       {branch(tree, 0)}
+      {loose.length ? (
+        <div className="stack stack--tight">
+          <span className="faint">Без блока</span>
+          <div className="inline inline--tight">
+            {loose.map(item => (
+              <span key={`${item.table}.${item.column}`} className="inline inline--tight">
+                <Button size="sm" variant="ghost"
+                  onClick={() => (item.single ? pickField(item.column) : pickCell({ table: item.table, column: item.column }))}>{item.label}</Button>
+                <Select<string> label={`«${item.label}»: в блок`} value="" options={[['', 'в блок…'], ...names.map(n => [n, n] as const)]}
+                  onChange={name => name && editSystem(draft => addColumnToBlock(draft, name, item.table, item.column))} />
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </Card>
   );
 }

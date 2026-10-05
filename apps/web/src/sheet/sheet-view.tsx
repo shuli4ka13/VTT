@@ -54,7 +54,14 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
         <Card key={group}>
           <CardHead title={group} />
           {piecesOf(fields).map(piece => (piece.table ? (
-            <TableBlock key={piece.table} system={system} tableId={piece.table} fields={piece.fields} cell={cell} />
+            <Fragment key={piece.table}>
+              {sectionsOf(piece.fields).map(part => (
+                <div key={part.title ?? ''} className={part.title ? 'sheet-section' : undefined}>
+                  {part.title ? <h4 className="sheet-section__title">{part.title}</h4> : null}
+                  <TableBlock system={system} tableId={piece.table!} fields={part.fields} cell={cell} />
+                </div>
+              ))}
+            </Fragment>
           ) : (
             <div key={piece.fields[0]!.tag} className="row">
               {piece.fields.map(field => cell(field))}
@@ -76,6 +83,17 @@ function piecesOf(fields: FieldModel[]): Piece[] {
     const same = table ? out.find(piece => piece.table === table) : last && !last.table ? last : undefined;
     if (same) same.fields.push(field);
     else out.push({ table, fields: [field] });
+  }
+  return out;
+}
+
+function sectionsOf(fields: FieldModel[]): { title: string | null; fields: FieldModel[] }[] {
+  const out: { title: string | null; fields: FieldModel[] }[] = [];
+  for (const field of fields) {
+    const title = field.section ?? null;
+    const part = out.find(item => item.title === title);
+    if (part) part.fields.push(field);
+    else out.push({ title, fields: [field] });
   }
   return out;
 }

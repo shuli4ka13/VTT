@@ -6,9 +6,11 @@ type Loose = Record<string, unknown>;
 
 export const NO_BLOCK = 'Без блока';
 
+export const sheetBlockNames = (system: System): string[] => (system.blocks ?? []).map(block => block.name);
+
 export function blockNames(system: System): string[] {
   const out = new Set<string>(Object.keys(system.groups ?? {}));
-  for (const field of fieldsOf(system)) if (field.group) out.add(field.group);
+  for (const name of sheetBlockNames(system)) out.add(name);
   for (const effect of Object.values(system.effects ?? {})) {
     if (effect.group) out.add(effect.group);
   }
@@ -42,7 +44,7 @@ export function blockUse(system: System, name: string): BlockUse {
 
 export function fieldsByBlock(system: System, fields: readonly Field[] = fieldsOf(system)): [string, Field[]][] {
   const blocks = new Map<string, Field[]>();
-  for (const name of Object.keys(system.groups ?? {})) blocks.set(name, []);
+  for (const name of sheetBlockNames(system)) blocks.set(name, []);
   for (const field of fields) {
     const key = field.group ?? NO_BLOCK;
     const list = blocks.get(key);

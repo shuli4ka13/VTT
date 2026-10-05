@@ -375,9 +375,9 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
   });
 
   const placed = onSheet(table);
-  const lead = byRange ? ['от', 'до'] : [key === 'number' ? 'число' : 'слово', 'подпись', ...(placed ? ['блок на листе'] : [])];
+  const lead = byRange ? ['от', 'до'] : [key === 'number' ? 'число' : 'слово', 'подпись'];
   const gridColumns: GridColumn[] = [
-    ...lead.map(name => ({ key: `:${name}`, label: name, width: byRange ? 90 : name === 'блок на листе' ? 150 : defaultWidth() })),
+    ...lead.map(name => ({ key: `:${name}`, label: name, width: byRange ? 90 : defaultWidth() })),
     ...columns.map(c => ({
       key: c.key, label: c.label || c.key, sub: kindLabel(c), width: defaultWidth(c),
       active: picked === c.key, onClick: () => onPick(picked === c.key ? null : c.key),
@@ -506,7 +506,6 @@ function RowCells({ tableId, row, at, rowKey, columns, system, edit, setCell, us
         <>
           <KeyInput value={row.value} numeric={rowKey === 'number'} taken={taken} onRename={onRename} />
           <Input value={row.label ?? ''} placeholder="как показать" onChange={next => set(r => { if (next.trim()) r.label = next; else delete r.label; })} />
-          {placed ? <Input value={row.block ?? ''} placeholder="блок" onChange={next => set(r => { if (next.trim()) r.block = next; else delete r.block; })} /> : null}
         </>
       )}
       {columns.map(column => (

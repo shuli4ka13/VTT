@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import { CharacterSection } from './character-section.tsx';
+import { SheetTab } from '../sheet-tab.tsx';
 import type { System } from '@vtt/schema';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 
@@ -12,17 +13,30 @@ function Sheets() {
   return <CharacterSection system={system} editSystem={editSystem} />;
 }
 
-
 const system = (): System => ({
   ...emptySystem(),
-  tables: { лист: { shape: 'single', columns: [
-    { key: 'hp', label: 'Хиты', kind: 'number', block: 'Здоровье' },
-    { key: 'gold', label: 'Золото', kind: 'number', block: 'Богатство' },
-  ] } },
+  tables: {
+    лист: { shape: 'single', columns: [
+      { key: 'hp', label: 'Хиты', kind: 'number' },
+      { key: 'gold', label: 'Золото', kind: 'number' },
+      { key: 'loose', label: 'Ничьё', kind: 'number' },
+    ] },
+    навыки: {
+      label: 'Навыки', owner: 'sheet',
+      columns: [{ key: 'ability', label: 'Характеристика', kind: 'number' }, { key: 'bonus', label: 'Бонус', kind: 'number' }],
+      rows: [{ value: 'воля', label: 'Воля', cells: { ability: 'мудрость' } }],
+    },
+  },
+  blocks: [
+    { name: 'Здоровье', parts: [{ table: 'лист', columns: ['hp'] }] },
+    { name: 'Богатство', parts: [{ table: 'лист', columns: ['gold'] }] },
+  ],
 } as System);
 
+const blocksNow = () => useWorld.getState().system.blocks!;
+
 describe('листы: блоки и типы', () => {
-  beforeEach(() => { useWorld.setState(state => ({ ...state, system: system(), activeFieldTag: null })); });
+  beforeEach(() => { useWorld.setState(state => ({ ...state, system: system(), activeFieldTag: null, activeBlock: null, activeColumn: null })); });
   afterEach(() => { cleanup(); });
 
   it('«+ тип листа» заводит тип, снятая отметка убирает блок с этого типа', () => {
@@ -37,37 +51,52 @@ describe('листы: блоки и типы', () => {
     expect(useWorld.getState().system.sheets?.[key]?.blocks).toBeUndefined();
   });
 
-  it('«+ блок» заводит блок с колонкой, название блока правится на месте', () => {
+  it('«+ блок» заводит пустой блок и выбирает его', () => {
     render(<Sheets />);
     fireEvent.click(screen.getByText('+ блок'));
-    expect(fieldsOf(useWorld.getState().system).some(f => f.group === 'Новый блок')).toBe(true);
-    const name = screen.getAllByDisplayValue('Новый блок').find(el => el.tagName === 'INPUT')!;
-    fireEvent.change(name, { target: { value: 'Снаряжение' } });
-    fireEvent.blur(name);
-    expect(fieldsOf(useWorld.getState().system).some(f => f.group === 'Снаряжение')).toBe(true);
+    expect(blocksNow().map(b => b.name)).toContain('Новый блок');
+    expect(blocksNow().find(b => b.name === 'Новый блок')!.parts).toEqual([]);
+    expect(useWorld.getState().activeBlock).toBe('Новый блок');
   });
-});
 
-describe('блоки: родитель и пустой блок', () => {
-  afterEach(() => { cleanup(); });
+  it('часть «таблица навыки, группировать по характеристике»', () => {
+    render(<SheetTab />);
+    fireEvent.click(screen.getByText('+ блок'));
+    fireEvent.click(screen.getByText('+ часть'));
+    fireEvent.change(screen.getByLabelText('таблица части'), { target: { value: 'навыки' } });
+    fireEvent.change(screen.getByLabelText('группировать по'), { target: { value: 'ability' } });
+    const block = blocksNow().find(b => b.name === 'Новый блок')!;
+    expect(block.parts).toEqual([{ table: 'навыки', by: 'ability' }]);
+    const field = fieldsOf(useWorld.getState().system).find(f => f.cell?.column === 'bonus')!;
+    expect(field.group).toBe('Новый блок');
+    expect(field.section).toBe('мудрость');
+  });
 
-  it('блок переносится внутрь другого, пустой блок убирается', () => {
+  it('переименование блока обновляет типы листов и вложенные блоки', () => {
     useWorld.setState(state => ({
       ...state,
-      system: { ...state.system, groups: { Бой: {}, Оружие: {}, Пустой: {} }, tables: { лист: { shape: 'single', columns: [
-        { key: 'hp', label: 'Хиты', kind: 'number', block: 'Бой' },
-        { key: 'atk', label: 'Атака', kind: 'number', block: 'Оружие' },
-      ] } } },
+      system: {
+        ...state.system,
+        blocks: [...state.system.blocks!, { name: 'Запас', parent: 'Богатство', parts: [] }],
+        sheets: { hero: { label: 'Герой', blocks: ['Богатство', 'Запас'] } },
+      },
+      activeBlock: 'Богатство',
     }));
+    render(<SheetTab />);
+    const name = screen.getByPlaceholderText('как зовётся блок');
+    fireEvent.change(name, { target: { value: 'Казна' } });
+    fireEvent.blur(name);
+    const system = useWorld.getState().system;
+    expect(system.blocks!.map(b => b.name)).toEqual(['Здоровье', 'Казна', 'Запас']);
+    expect(system.blocks![2]!.parent).toBe('Казна');
+    expect(system.sheets!.hero!.blocks).toEqual(['Казна', 'Запас']);
+  });
+
+  it('поле без блока показано внизу, «в блок…» дописывает колонку в часть', () => {
     render(<Sheets />);
-    const parentOf = (block: string) => [...document.querySelectorAll('.block-head')]
-      .find(head => (head.querySelector('input.block-name') as HTMLInputElement | null)?.value === block)!
-      .querySelector('select') as HTMLSelectElement;
-    fireEvent.change(parentOf('Оружие'), { target: { value: 'Бой' } });
-    expect(useWorld.getState().system.groups?.Оружие?.parent).toBe('Бой');
-    const empty = [...document.querySelectorAll('.block-head')]
-      .find(head => (head.querySelector('input.block-name') as HTMLInputElement | null)?.value === 'Пустой')!;
-    fireEvent.click(empty.querySelector('button[title="пустой блок — убрать"]')!);
-    expect(useWorld.getState().system.groups?.Пустой).toBeUndefined();
+    expect(screen.getByText('Без блока')).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('«Ничьё»: в блок'), { target: { value: 'Здоровье' } });
+    expect(blocksNow()[0]!.parts).toEqual([{ table: 'лист', columns: ['hp', 'loose'] }]);
+    expect(screen.queryByLabelText('«Ничьё»: в блок')).toBeNull();
   });
 });

@@ -1,5 +1,6 @@
 import { EngineError } from '../engine/errors.ts';
 import type { System, Table, TableRow, TableColumn, CellView, Field, FieldValue, CellMark, Holder } from './types.ts';
+import type { SheetPart } from '@vtt/schema';
 
 export type { CellMark };
 
@@ -45,7 +46,6 @@ export const viewOf = (table: Table | undefined, column: string, row?: TableRow)
   const spec = (table?.columns ?? []).find(c => c.key === column);
   const own: CellView = {
     ...(spec?.title !== undefined ? { label: spec.title } : {}),
-    ...(spec?.block !== undefined ? { block: spec.block } : {}),
     ...(spec?.roll !== undefined ? { roll: spec.roll } : {}),
     ...(spec?.control !== undefined ? { control: spec.control } : {}),
     ...(spec?.default !== undefined ? { default: spec.default } : {}),
@@ -264,11 +264,9 @@ const livesOf = (table: Table): { lives?: 'group' | 'desk' } => {
 
 function singleFields(tableId: string, table: Table): Field[] {
   return (table.columns ?? []).map((column): Field => {
-    const group = column.block ?? table.block;
     return {
       tag: column.key,
       label: column.label ?? column.key,
-      ...(group ? { group } : {}),
       ...(column.roll ? { roll: column.roll } : {}),
       ...(column.control ? { control: column.control } : {}),
       value: column.expr !== undefined ? { kind: 'formula', expr: column.expr.expr, ...boundsOf(column) } : valueOf(column, column.default),
@@ -289,12 +287,10 @@ function rowFields(system: System, tableId: string, table: Table): Field[] {
       const value: FieldValue = source.kind === 'formula'
         ? rowRefs(system, tableId, row, { kind: 'formula', expr: withRow(system, tableId, row, source.expr), ...boundsOf(column) }) as FieldValue
         : rowRefs(system, tableId, row, deep(system, table, row, valueOf(column, view.default))) as FieldValue;
-      const group = row.block ?? (view.block !== undefined ? fill(system, table, row, view.block) : table.block);
       const roll = view.roll ? rowRefs(system, tableId, row, deep(system, table, row, view.roll)) as Field['roll'] : undefined;
       out.push({
         tag: addressOf(tableId, row, column.key),
         label: fill(system, table, row, view.label ?? defaultLabel(column, at === 0)),
-        ...(group ? { group } : {}),
         ...(roll ? { roll } : {}),
         ...(view.control ? { control: view.control } : {}),
         value,
@@ -315,7 +311,7 @@ export function tableFields(system: System, tableId: string): Field[] {
 
 export interface FieldProblem { table: string; message: string }
 
-interface Built { fields: Field[]; byTag: Map<string, Field>; problems: FieldProblem[] }
+interface Built { fields: Field[]; byTag: Map<string, Field>; problems: FieldProblem[]; layout?: unknown; placed?: Built }
 
 const EMPTY: Built = { fields: [], byTag: new Map(), problems: [] };
 
@@ -339,7 +335,44 @@ function builtOf(system: System): Built {
   if (!tables) return EMPTY;
   let hit = built.get(tables);
   if (!hit) { hit = buildFields(system); built.set(tables, hit); }
-  return hit;
+  if (!hit.placed || hit.layout !== system.blocks) { hit.placed = placeFields(system, hit); hit.layout = system.blocks; }
+  return hit.placed;
+}
+
+const partHas = (part: SheetPart, field: Field): boolean =>
+  part.table === field.home
+  && (!part.columns || part.columns.includes(field.cell?.column ?? field.tag))
+  && (!part.rows || (field.cell !== undefined && part.rows.includes(field.cell.row)));
+
+export function sectionOf(system: System, part: SheetPart, field: Field): string | undefined {
+  if (!part.by || !field.cell) return undefined;
+  const table = system.tables?.[field.home];
+  const row = (table?.rows ?? []).find(r => rowKeyOf(r) === field.cell!.row);
+  const column = (table?.columns ?? []).find(c => c.key === part.by);
+  if (!row || !column) return undefined;
+  const source = cellSource(column, row);
+  const value = source.kind === 'value' ? source.value : undefined;
+  if (value === undefined || value === null || value === '') return undefined;
+  const target = column.kind === 'choice' && column.from
+    ? (system.tables?.[column.from]?.rows ?? []).find(r => String(r.value) === String(value))
+    : undefined;
+  return target ? String(target.label ?? target.value) : String(value);
+}
+
+function placeFields(system: System, base: Built): Built {
+  const blocks = system.blocks ?? [];
+  const fields = base.fields.map(field => {
+    for (const block of blocks) {
+      const part = block.parts.find(p => partHas(p, field));
+      if (!part) continue;
+      const section = sectionOf(system, part, field);
+      return { ...field, group: block.name, ...(section ? { section } : {}) };
+    }
+    return field;
+  });
+  const byTag = new Map<string, Field>();
+  for (const field of fields) if (!byTag.has(field.tag)) byTag.set(field.tag, field);
+  return { fields, byTag, problems: base.problems };
 }
 
 export const forgetFields = (system: System): void => { if (system.tables) built.delete(system.tables); };

@@ -10,15 +10,15 @@ const base = {
   tables: {
     лист: { shape: 'single', columns: [{ key: 'level', label: 'Уровень', kind: 'number', default: 1 }] },
     abilities: {
-      label: 'Характеристики', owner: 'sheet', block: 'Характеристики',
+      label: 'Характеристики', owner: 'sheet',
       columns: [
         { key: 'score', label: 'Значение', kind: 'number', default: 10 },
-        { key: 'mod', label: 'Модификатор', kind: 'number', expr: { expr: 'округлить вниз((@строка.score - 10) / 2)' }, title: 'Модификатор: {label}', block: 'Модификаторы' },
+        { key: 'mod', label: 'Модификатор', kind: 'number', expr: { expr: 'округлить вниз((@строка.score - 10) / 2)' }, title: 'Модификатор: {label}' },
       ],
       rows: [{ value: 'сила', label: 'Сила' }, { value: 'ловкость', label: 'Ловкость' }],
     },
     skills: {
-      label: 'Навыки', owner: 'sheet', block: 'Навыки',
+      label: 'Навыки', owner: 'sheet',
       columns: [
         { key: 'ability', label: 'Характеристика', kind: 'choice', from: 'abilities' },
         { key: 'total', label: 'Навык', kind: 'number', expr: { expr: '@строка.ability.mod + 1' } },
@@ -26,6 +26,11 @@ const base = {
       rows: [{ value: 'атлетика', label: 'Атлетика', cells: { ability: 'сила' } }],
     },
   },
+  blocks: [
+    { name: 'Характеристики', parts: [{ table: 'abilities', columns: ['score'] }] },
+    { name: 'Модификаторы', parts: [{ table: 'abilities', columns: ['mod'] }] },
+    { name: 'Навыки', parts: [{ table: 'skills', by: 'ability' }] },
+  ],
 } as unknown as System;
 
 const sheet = { id: 'h', systemId: 's', name: 'h', values: { 'abilities.сила.score': 16 }, has: [], effects: [] } as Sheet;
@@ -49,6 +54,17 @@ group('таблица на листе: пустая клетка — ввод, �
     eq(at('abilities.ловкость.score'), 10);
   });
 
+  test('блок листа — кусок таблицы: колонки, строки, группировка по колонке', () => {
+    const skill = fieldOf(base, 'skills.атлетика.total')!;
+    eq(skill.group, 'Навыки');
+    eq(skill.section, 'Сила');
+    const only = copy();
+    only.blocks = [{ name: 'Сила', parts: [{ table: 'abilities', rows: ['сила'] }] }];
+    eq(fieldOf(only, 'abilities.сила.score')!.group, 'Сила');
+    eq(fieldOf(only, 'abilities.ловкость.score')!.group, undefined);
+    eq(fieldOf(only, 'level')!.group, undefined);
+  });
+
   test('таблица листа из одной строки: колонка зовётся своим именем', () => {
     const field = fieldOf(base, 'level')!;
     eq(field.home, 'лист');
@@ -65,10 +81,9 @@ group('таблица на листе: пустая клетка — ввод, �
 
   test('вид одной клетки лежит у строки и перебивает вид колонки', () => {
     const own = copy();
-    own.tables!.abilities!.rows![0]!.view = { mod: { label: 'Мощь', block: 'Бой', roll: { die: 'к20', bonus: { expr: '@строка.mod' } } } };
+    own.tables!.abilities!.rows![0]!.view = { mod: { label: 'Мощь', roll: { die: 'к20', bonus: { expr: '@строка.mod' } } } };
     const field = fieldOf(own, 'abilities.сила.mod')!;
     eq(field.label, 'Мощь');
-    eq(field.group, 'Бой');
     eq(field.roll!.bonus!.expr, '@abilities.сила.mod');
     eq(fieldOf(own, 'abilities.ловкость.mod')!.label, 'Модификатор: Ловкость');
   });

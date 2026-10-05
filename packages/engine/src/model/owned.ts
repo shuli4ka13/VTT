@@ -79,7 +79,8 @@ export function blockLine(system: System, block: string | undefined): string[] {
   let at = block;
   while (at && !out.includes(at)) {
     out.push(at);
-    at = system.groups?.[at]?.parent;
+    const name: string = at;
+    at = (system.blocks ?? []).find(block => block.name === name)?.parent ?? system.groups?.[name]?.parent;
   }
   return out;
 }

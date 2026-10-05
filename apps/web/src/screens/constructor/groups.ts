@@ -69,14 +69,6 @@ export function renameGroup(draft: System, from: string, to: string): void {
       if (other.parent === from) other.parent = clean;
     }
   }
-  for (const table of Object.values(draft.tables ?? {})) {
-    if (table.block === from) table.block = clean;
-    for (const column of table.columns ?? []) if (column.block === from) column.block = clean;
-    for (const row of table.rows ?? []) {
-      if (row.block === from) row.block = clean;
-      for (const view of Object.values(row.view ?? {})) if (view.block === from) view.block = clean;
-    }
-  }
   for (const kind of Object.values(draft.sheets ?? {})) {
     if (kind.blocks) kind.blocks = kind.blocks.map(block => (block === from ? clean : block));
   }

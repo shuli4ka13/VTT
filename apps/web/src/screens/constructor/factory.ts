@@ -1,7 +1,6 @@
 import { STEP_WORDS } from '@vtt/engine/words/steps';
 import { freeId } from '../../store/world.ts';
 import { dice } from '../../words.ts';
-import { NO_BLOCK } from '@vtt/engine/model/blocks';
 import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
 import { COST_BLOCK } from '@vtt/engine/words/glossary';
 import type { System, Effect, Handler, Binding, Step, SystemConstant, RollEdit, Table, Column } from '@vtt/schema';
@@ -28,9 +27,9 @@ export const newEffect = (system: System, kind: LaunchKind): Made<Effect> => ({
     },
 });
 
-export const newColumn = (system: System, block: string): Made<Column> => {
+export const newColumn = (system: System, _block?: string): Made<Column> => {
   const key = freeId([...fieldsOf(system).map(f => f.tag), ...Object.keys(system.tables ?? {})], 'field');
-  return { key, value: { key, label: 'Новое поле', kind: 'number', ...(block && block !== NO_BLOCK ? { block } : {}) } };
+  return { key, value: { key, label: 'Новое поле', kind: 'number' } };
 };
 
 export const newRecordKind = (system: System): Made<RecordKind> => ({

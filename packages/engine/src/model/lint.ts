@@ -8,7 +8,7 @@ import { calledOf, chainsOfEffect } from '../engine/effects.ts';
 import { basedOn, paramsOf, lineTrouble } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
 import { recordsOf, argsWithProps, propKeysOf, recordKinds, kindsOf, kindOf, isBook } from './owned.ts';
-import { blockNames } from './blocks.ts';
+import { sheetBlockNames } from './blocks.ts';
 import { columnFamily, viewsFor, viewNeeds, VIEW_LABELS } from './views.ts';
 import { bindingsOf } from '../events/actions.ts';
 import { kindOfRecord } from './owned.ts';
@@ -426,12 +426,32 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
 
 function sheetKindProblems(system: System): Problem[] {
   const out: Problem[] = [];
-  const known = new Set(blockNames(system));
+  const known = new Set([...sheetBlockNames(system), ...(system.blocks ?? []).flatMap(b => (b.parent ? [b.parent] : []))]);
   for (const [key, kind] of Object.entries(system.sheets ?? {})) {
     for (const block of kind.blocks ?? []) {
       if (!known.has(block)) {
         out.push({ where: { tab: 'records', kind: key }, level: 'warn', text: `тип листа «${kind.label || key}» показывает блок «${block}», которого на листе нет` });
       }
+    }
+  }
+  return out;
+}
+
+function layoutProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  const where = { tab: 'sheet' as const };
+  const seen = new Set<string>();
+  for (const block of system.blocks ?? []) {
+    if (seen.has(block.name)) out.push({ where, level: 'error', text: `блок листа «${block.name}» назван дважды` });
+    seen.add(block.name);
+    for (const part of block.parts) {
+      const table = system.tables?.[part.table];
+      if (!table) { out.push({ where, level: 'error', text: `блок «${block.name}» берёт таблицу «${part.table}», а её нет` }); continue; }
+      const keys = new Set((table.columns ?? []).map(c => c.key));
+      for (const column of part.columns ?? []) if (!keys.has(column)) out.push({ where, level: 'error', text: `блок «${block.name}»: в таблице «${table.label || part.table}» нет колонки «${column}»` });
+      if (part.by && !keys.has(part.by)) out.push({ where, level: 'error', text: `блок «${block.name}» группирует по колонке «${part.by}», а её нет` });
+      const rows = new Set((table.rows ?? []).map(r => rowKeyOf(r)));
+      for (const row of part.rows ?? []) if (!rows.has(row)) out.push({ where, level: 'warn', text: `блок «${block.name}»: в таблице «${table.label || part.table}» нет строки «${row}»` });
     }
   }
   return out;
@@ -574,7 +594,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...cycleProblems(system));
   out.push(...paramProblems(system));
   out.push(...orphanProblems(system, compendium));
-  out.push(...sheetKindProblems(system));
+  out.push(...sheetKindProblems(system), ...layoutProblems(system));
   out.push(...editProblems(system, compendium));
   out.push(...costProblems(system));
   out.push(...seenProblems(system));

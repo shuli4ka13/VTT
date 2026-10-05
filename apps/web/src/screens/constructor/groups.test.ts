@@ -1,19 +1,18 @@
 import { describe, it, expect } from 'vitest';
 import type { System } from '@vtt/schema';
-import { fieldOf, forgetFields } from '@vtt/engine/model/sheet-columns';
 import { groupTree, subtreeNames, renameGroup, freeGroupName } from './groups.ts';
 
 const make = (over: Partial<System> = {}): System => ({
   tables: {
     лист: { shape: 'single', columns: [
-      { key: 'str', label: 'Сила', kind: 'number', default: 10, block: 'Характеристики' },
-      { key: 'acr', label: 'Акробатика', expr: { expr: '#dex_mod' }, block: 'Навыки от ловкости' },
-      { key: 'ath', label: 'Атлетика', expr: { expr: '#str_mod' }, block: 'Навыки' },
+      { key: 'str', label: 'Сила', kind: 'number', default: 10 },
+      { key: 'acr', label: 'Акробатика', expr: { expr: '#dex_mod' } },
+      { key: 'ath', label: 'Атлетика', expr: { expr: '#str_mod' } },
     ] },
     saves: {
-      label: 'Спасброски', owner: 'sheet', block: 'Навыки',
-      columns: [{ key: 'bonus', label: 'Бонус', kind: 'number', block: 'Навыки' }],
-      rows: [{ value: 'воля', block: 'Навыки', view: { bonus: { block: 'Навыки' } } }],
+      label: 'Спасброски', owner: 'sheet',
+      columns: [{ key: 'bonus', label: 'Бонус', kind: 'number' }],
+      rows: [{ value: 'воля' }],
     },
   },
   groups: {
@@ -21,6 +20,11 @@ const make = (over: Partial<System> = {}): System => ({
     'Навыки': {},
     'Навыки от ловкости': { parent: 'Навыки' },
   },
+  blocks: [
+    { name: 'Характеристики', parts: [{ table: 'лист', columns: ['str'] }] },
+    { name: 'Навыки', parts: [{ table: 'лист', columns: ['ath'] }, { table: 'saves' }] },
+    { name: 'Навыки от ловкости', parent: 'Навыки', parts: [{ table: 'лист', columns: ['acr'] }] },
+  ],
   sheets: { hero: { blocks: ['Навыки'] } },
   effects: {},
   ...over,
@@ -51,14 +55,9 @@ describe('groupTree', () => {
 });
 
 describe('renameGroup', () => {
-  it('тянет за собой колонки, таблицы, строки, вид клеток, типы листов и ссылки детей', () => {
+  it('тянет за собой типы листов и ссылки детей', () => {
     const system = make();
     renameGroup(system, 'Навыки', 'Умения');
-    forgetFields(system);
-    expect(fieldOf(system, 'ath')!.group).toBe('Умения');
-    expect(fieldOf(system, 'saves.воля.bonus')!.group).toBe('Умения');
-    const saves = system.tables!.saves!;
-    expect([saves.block, saves.columns![0]!.block, saves.rows![0]!.block, saves.rows![0]!.view!.bonus!.block]).toEqual(['Умения', 'Умения', 'Умения', 'Умения']);
     expect(system.sheets!.hero!.blocks).toEqual(['Умения']);
     expect(system.groups!['Умения']).toBeTruthy();
     expect(system.groups!['Навыки']).toBeUndefined();

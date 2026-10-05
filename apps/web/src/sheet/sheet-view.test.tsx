@@ -50,4 +50,31 @@ describe('лист за столом', () => {
     expect(document.querySelectorAll('input')).toHaveLength(0);
     expect(document.body.textContent).toContain('Арвен');
   });
+
+  it('поля с одной подписью раздела выводятся подразделом с заголовком', () => {
+    const grouped = {
+      tables: {
+        abilities: { shape: 'rows', columns: [{ key: 'name', label: 'Название', kind: 'text' }], rows: [
+          { value: 'str', label: 'Сила' },
+          { value: 'dex', label: 'Ловкость' },
+        ] },
+        навыки: { shape: 'rows', owner: 'sheet', columns: [
+          { key: 'ability', label: 'Характеристика', kind: 'choice', from: 'abilities' },
+          { key: 'prof', label: 'Мастерство', kind: 'number' },
+        ], rows: [
+          { value: 'athletics', label: 'Атлетика', cells: { ability: 'str' } },
+          { value: 'acrobatics', label: 'Акробатика', cells: { ability: 'dex' } },
+          { value: 'stealth', label: 'Скрытность', cells: { ability: 'dex' } },
+        ] },
+      },
+      blocks: [{ name: 'Навыки', parts: [{ table: 'навыки', by: 'ability' }] }],
+    } as unknown as System;
+    render(<SheetView system={grouped} sheet={{ id: 'б', name: 'Бор', values: {} } as unknown as Sheet} reader={reader} onChange={() => {}} />);
+    const titles = [...document.querySelectorAll('.sheet-section__title')].map(node => node.textContent);
+    expect(titles).toEqual(['Сила', 'Ловкость']);
+    const sections = [...document.querySelectorAll('.sheet-section')];
+    expect(sections[1]!.textContent).toContain('Акробатика');
+    expect(sections[1]!.textContent).toContain('Скрытность');
+    expect(sections[0]!.textContent).toContain('Атлетика');
+  });
 });

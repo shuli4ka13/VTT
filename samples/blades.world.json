@@ -4,9 +4,6 @@
     "id": "blades",
     "name": "Blades in the Dark",
     "groups": {
-      "Действия": {},
-      "Состояние": {},
-      "Стол": {},
       "Банда": {},
       "Ремесло": {},
       "Приёмы": {}
@@ -66,8 +63,7 @@
             "max": 4,
             "control": {
               "kind": "pips"
-            },
-            "block": "Действия"
+            }
           },
           {
             "key": "study",
@@ -77,8 +73,7 @@
             "max": 4,
             "control": {
               "kind": "pips"
-            },
-            "block": "Действия"
+            }
           },
           {
             "key": "survey",
@@ -88,8 +83,7 @@
             "max": 4,
             "control": {
               "kind": "pips"
-            },
-            "block": "Действия"
+            }
           },
           {
             "key": "tinker",
@@ -99,8 +93,7 @@
             "max": 4,
             "control": {
               "kind": "pips"
-            },
-            "block": "Действия"
+            }
           },
           {
             "key": "finesse",
@@ -110,8 +103,7 @@
             "max": 4,
             "control": {
               "kind": "pips"
-            },
-            "block": "Действия"
+            }
           },
           {
             "key": "prowl",
@@ -121,8 +113,7 @@
             "max": 4,
             "control": {
               "kind": "pips"
-            },
-            "block": "Действия"
+            }
           },
           {
             "key": "skirmish",
@@ -132,8 +123,7 @@
             "max": 4,
             "control": {
               "kind": "pips"
-            },
-            "block": "Действия"
+            }
           },
           {
             "key": "wreck",
@@ -143,8 +133,7 @@
             "max": 4,
             "control": {
               "kind": "pips"
-            },
-            "block": "Действия"
+            }
           },
           {
             "key": "attune",
@@ -154,8 +143,7 @@
             "max": 4,
             "control": {
               "kind": "pips"
-            },
-            "block": "Действия"
+            }
           },
           {
             "key": "command",
@@ -165,8 +153,7 @@
             "max": 4,
             "control": {
               "kind": "pips"
-            },
-            "block": "Действия"
+            }
           },
           {
             "key": "consort",
@@ -176,8 +163,7 @@
             "max": 4,
             "control": {
               "kind": "pips"
-            },
-            "block": "Действия"
+            }
           },
           {
             "key": "sway",
@@ -187,8 +173,7 @@
             "max": 4,
             "control": {
               "kind": "pips"
-            },
-            "block": "Действия"
+            }
           },
           {
             "key": "resolve",
@@ -196,8 +181,7 @@
             "kind": "number",
             "expr": {
               "expr": "если(@attune > 0, 1, 0) + если(@command > 0, 1, 0) + если(@consort > 0, 1, 0) + если(@sway > 0, 1, 0)"
-            },
-            "block": "Действия"
+            }
           },
           {
             "key": "stress",
@@ -207,8 +191,7 @@
             "max": 9,
             "control": {
               "kind": "pips"
-            },
-            "block": "Состояние"
+            }
           }
         ]
       },
@@ -225,8 +208,7 @@
             "max": 8,
             "control": {
               "kind": "pips"
-            },
-            "block": "Стол"
+            }
           }
         ]
       },
@@ -243,37 +225,32 @@
             "max": 9,
             "control": {
               "kind": "stepper"
-            },
-            "block": "Банда"
+            }
           },
           {
             "key": "rep",
             "label": "Репутация",
             "kind": "number",
-            "min": 0,
-            "block": "Банда"
+            "min": 0
           },
           {
             "key": "coin",
             "label": "Монеты банды",
             "kind": "number",
             "default": 2,
-            "min": 0,
-            "block": "Банда"
+            "min": 0
           },
           {
             "key": "wanted",
             "label": "Уровень розыска",
             "kind": "number",
-            "min": 0,
-            "block": "Банда"
+            "min": 0
           },
           {
             "key": "tier",
             "label": "Ярус",
             "kind": "number",
-            "min": 0,
-            "block": "Банда"
+            "min": 0
           }
         ]
       },
@@ -650,6 +627,58 @@
     },
     "grants": [
       "zero_rating_rule"
+    ],
+    "blocks": [
+      {
+        "name": "Действия",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "hunt",
+              "study",
+              "survey",
+              "tinker",
+              "finesse",
+              "prowl",
+              "skirmish",
+              "wreck",
+              "attune",
+              "command",
+              "consort",
+              "sway",
+              "resolve"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Состояние",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "stress"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Стол",
+        "parts": [
+          {
+            "table": "стол"
+          }
+        ]
+      },
+      {
+        "name": "Банда",
+        "parts": [
+          {
+            "table": "группа"
+          }
+        ]
+      }
     ]
   },
   "compendium": {

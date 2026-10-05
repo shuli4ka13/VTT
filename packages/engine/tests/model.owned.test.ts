@@ -65,10 +65,13 @@ group('что есть у листа: запись со своим состоя�
 group('тип листа — как запись, которую лист носит всегда', () => {
   const withKinds = {
     ...system,
-    groups: { Защита: {}, Магия: {}, Щиты: { parent: 'Защита' } },
+    blocks: [
+      { name: 'Щиты', parent: 'Защита', parts: [{ table: 'лист', columns: ['кд'] }] },
+      { name: 'Магия', parts: [{ table: 'лист', columns: ['ячейки'] }] },
+    ],
     tables: { лист: { shape: 'single', columns: [
-      { key: 'кд', label: 'Класс брони', kind: 'number', default: 10, block: 'Щиты' },
-      { key: 'ячейки', label: 'Ячейки', kind: 'number', default: 2, block: 'Магия' },
+      { key: 'кд', label: 'Класс брони', kind: 'number', default: 10 },
+      { key: 'ячейки', label: 'Ячейки', kind: 'number', default: 2 },
     ] } },
     sheets: {
       противник: {

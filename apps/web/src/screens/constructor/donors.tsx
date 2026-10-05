@@ -52,11 +52,11 @@ export function copyDonorBlock(donor: System, group: string): void {
 }
 
 const PART_WORDS: Record<PartKind, string> = {
-  field: 'Поля', group: 'Блоки', effect: 'Эффекты', table: 'Таблицы',
+  field: 'Поля', group: 'Папки', block: 'Блоки листа', effect: 'Эффекты', table: 'Таблицы',
   constant: 'Кости', rollEdit: 'Правки броска', recordKind: 'Книги', record: 'Записи',
 };
 
-const PART_ORDER: PartKind[] = ['field', 'effect', 'record', 'recordKind', 'table', 'rollEdit', 'constant', 'group'];
+const PART_ORDER: PartKind[] = ['field', 'block', 'effect', 'record', 'recordKind', 'table', 'rollEdit', 'constant', 'group'];
 
 function partLabel(system: System, part: Part): string {
   switch (part.kind) {
@@ -68,6 +68,7 @@ function partLabel(system: System, part: Part): string {
     case 'recordKind': return kindOf(system, part.key)?.label ?? part.key;
     case 'record': return system.library?.find(r => r.id === part.key)?.label ?? part.key;
     case 'group': return part.key;
+    case 'block': return part.key;
   }
 }
 

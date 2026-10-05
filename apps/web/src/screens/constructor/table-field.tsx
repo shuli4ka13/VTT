@@ -1,5 +1,4 @@
 import { useWorld, freeId } from '../../store/world.ts';
-import { BlockPick } from './block-pick.tsx';
 import { TagsField } from './tags-field.tsx';
 import { dieEntries } from './rules/dice-section.tsx';
 import { ViewGallery } from './view-gallery.tsx';
@@ -20,7 +19,11 @@ export function placeOnSheet(draft: System, tableId: string): void {
   const table = draft.tables?.[tableId];
   if (!table) return;
   table.owner = 'sheet';
-  table.block ??= table.label || tableId;
+  const name = table.label || tableId;
+  const blocks = (draft.blocks ??= []);
+  const own = blocks.find(block => block.name === name);
+  if (!own) blocks.push({ name, parts: [{ table: tableId }] });
+  else if (!own.parts.some(part => part.table === tableId)) own.parts.push({ table: tableId });
   if ((table.columns ?? []).some(column => (table.rows ?? []).some(row => cellSource(column, row).kind === 'input'))) return;
   const columns = (table.columns ??= []);
   const taken = new Set(columns.map(c => c.key));
@@ -44,10 +47,6 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
     <>
       <div className="inline inline--tight"><Chip>{stored ? 'вводит игрок' : 'считается'}</Chip></div>
       <div className="row">
-        <Field label="Блок">
-          <BlockPick of="fields" system={system} value={column.block ?? table.block}
-            onChange={next => edit(draft => { if (next) draft.block = next; else delete draft.block; })} />
-        </Field>
         {stored && !column.many ? (
           <Field label="В новом листе">
             <Input value={column.default === undefined ? '' : String(column.default)}

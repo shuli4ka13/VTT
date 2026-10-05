@@ -4,39 +4,7 @@
     "id": "dnd5e",
     "name": "D&D 5e",
     "groups": {
-      "Личное дело": {},
-      "Характеристики": {},
-      "Модификаторы": {},
-      "Прогрессия": {},
-      "Спасброски": {},
-      "Навыки от силы": {
-        "parent": "Навыки"
-      },
-      "Навыки от ловкости": {
-        "parent": "Навыки"
-      },
-      "Навыки от интеллекта": {
-        "parent": "Навыки"
-      },
-      "Навыки от мудрости": {
-        "parent": "Навыки"
-      },
-      "Навыки от харизмы": {
-        "parent": "Навыки"
-      },
-      "Чувства и движение": {},
-      "Защита": {},
-      "Здоровье": {},
-      "Блок монстра": {},
       "Атака": {},
-      "В бою": {},
-      "Магия": {},
-      "Ячейки заклинаний": {
-        "parent": "Магия"
-      },
-      "Ресурсы класса": {},
-      "Богатство": {},
-      "Стойкость к урону": {},
       "Механика": {},
       "Заклинания": {
         "parent": "Механика"
@@ -80,8 +48,7 @@
       },
       "Бестиарий": {
         "parent": "Книга"
-      },
-      "Навыки": {}
+      }
     },
     "constants": {
       "lead_die": {
@@ -122,33 +89,28 @@
             "key": "race",
             "label": "Раса",
             "kind": "choice",
-            "from": "races",
-            "block": "Личное дело"
+            "from": "races"
           },
           {
             "key": "class_name",
             "label": "Класс",
             "kind": "choice",
-            "from": "classes",
-            "block": "Личное дело"
+            "from": "classes"
           },
           {
             "key": "subclass",
             "label": "Подкласс",
-            "kind": "text",
-            "block": "Личное дело"
+            "kind": "text"
           },
           {
             "key": "background",
             "label": "Предыстория",
-            "kind": "text",
-            "block": "Личное дело"
+            "kind": "text"
           },
           {
             "key": "alignment",
             "label": "Мировоззрение",
-            "kind": "text",
-            "block": "Личное дело"
+            "kind": "text"
           },
           {
             "key": "level",
@@ -159,8 +121,7 @@
             "max": 20,
             "control": {
               "kind": "stepper"
-            },
-            "block": "Прогрессия"
+            }
           },
           {
             "key": "prof_bonus",
@@ -168,7 +129,6 @@
             "expr": {
               "expr": "таблица(\"levels\", @level, \"prof\")"
             },
-            "block": "Прогрессия",
             "control": {
               "kind": "signed"
             }
@@ -181,15 +141,13 @@
             "max": 1,
             "control": {
               "kind": "pips"
-            },
-            "block": "Прогрессия"
+            }
           },
           {
             "key": "xp",
             "label": "Опыт",
             "kind": "number",
-            "min": 0,
-            "block": "Прогрессия"
+            "min": 0
           },
           {
             "key": "initiative",
@@ -209,7 +167,6 @@
                 "expr": "@initiative"
               }
             },
-            "block": "Чувства и движение",
             "control": {
               "kind": "signed"
             }
@@ -219,38 +176,33 @@
             "label": "Пассивная внимательность",
             "expr": {
               "expr": "10 + @skills.внимательность.total"
-            },
-            "block": "Чувства и движение"
+            }
           },
           {
             "key": "speed",
             "label": "Скорость, футов",
             "expr": {
               "expr": "или(@race.speed, 30)"
-            },
-            "block": "Чувства и движение"
+            }
           },
           {
             "key": "darkvision",
             "label": "Тёмное зрение, футов",
             "kind": "number",
-            "min": 0,
-            "block": "Чувства и движение"
+            "min": 0
           },
           {
             "key": "languages",
             "label": "Языки",
             "kind": "text",
-            "default": "Общий",
-            "block": "Чувства и движение"
+            "default": "Общий"
           },
           {
             "key": "ac_base",
             "label": "База доспеха",
             "kind": "number",
             "default": 10,
-            "min": 0,
-            "block": "Защита"
+            "min": 0
           },
           {
             "key": "armor_heavy",
@@ -258,16 +210,14 @@
             "kind": "boolean",
             "control": {
               "kind": "toggle"
-            },
-            "block": "Защита"
+            }
           },
           {
             "key": "ac_dex",
             "label": "Ловкость в классе брони",
             "expr": {
               "expr": "@abilities.ловкость.mod"
-            },
-            "block": "Защита"
+            }
           },
           {
             "key": "ac",
@@ -275,7 +225,6 @@
             "expr": {
               "expr": "@ac_base + если(@armor_heavy, 0, @ac_dex)"
             },
-            "block": "Защита",
             "control": {
               "kind": "big"
             }
@@ -285,20 +234,17 @@
             "label": "Максимум хитов",
             "expr": {
               "expr": "если(пусто(@class_name), @hp_block, максимум костей(@hit_die) + (@level - 1) * (округлить вниз(максимум костей(@hit_die) / 2) + 1) + @level * @abilities.телосложение.mod) + @hp_bonus"
-            },
-            "block": "Здоровье"
+            }
           },
           {
             "key": "hp_bonus",
             "label": "Прибавка к максимуму хитов",
-            "kind": "number",
-            "block": "Здоровье"
+            "kind": "number"
           },
           {
             "key": "hp_block",
             "label": "Хиты из блока монстра",
-            "kind": "number",
-            "block": "Блок монстра"
+            "kind": "number"
           },
           {
             "key": "hp_current",
@@ -311,8 +257,7 @@
             },
             "control": {
               "kind": "bar"
-            },
-            "block": "Здоровье"
+            }
           },
           {
             "key": "hp_temp",
@@ -321,16 +266,14 @@
             "min": 0,
             "control": {
               "kind": "stepper"
-            },
-            "block": "Здоровье"
+            }
           },
           {
             "key": "hit_die",
             "label": "Кость хитов",
             "expr": {
               "expr": "или(@class_name.hit_die, @race.size.hit_die, \"1к8\")"
-            },
-            "block": "Здоровье"
+            }
           },
           {
             "key": "hit_dice_left",
@@ -343,8 +286,7 @@
             },
             "control": {
               "kind": "stepper"
-            },
-            "block": "Здоровье"
+            }
           },
           {
             "key": "death_ok",
@@ -354,8 +296,7 @@
             "max": 3,
             "control": {
               "kind": "pips"
-            },
-            "block": "Здоровье"
+            }
           },
           {
             "key": "death_fail",
@@ -365,8 +306,7 @@
             "max": 3,
             "control": {
               "kind": "pips"
-            },
-            "block": "Здоровье"
+            }
           },
           {
             "key": "exhaustion",
@@ -376,8 +316,7 @@
             "max": 6,
             "control": {
               "kind": "stepper"
-            },
-            "block": "Здоровье"
+            }
           },
           {
             "key": "down",
@@ -385,7 +324,6 @@
             "expr": {
               "expr": "@hp_current <= 0"
             },
-            "block": "Здоровье",
             "control": {
               "kind": "toggle"
             }
@@ -396,7 +334,6 @@
             "expr": {
               "expr": "@hp_current > 0"
             },
-            "block": "Здоровье",
             "control": {
               "kind": "toggle"
             }
@@ -407,7 +344,6 @@
             "expr": {
               "expr": "@death_fail >= 3"
             },
-            "block": "Здоровье",
             "control": {
               "kind": "toggle"
             }
@@ -418,7 +354,6 @@
             "expr": {
               "expr": "@death_ok >= 3"
             },
-            "block": "Здоровье",
             "control": {
               "kind": "toggle"
             }
@@ -432,8 +367,7 @@
             "max": 4,
             "control": {
               "kind": "stepper"
-            },
-            "block": "Атака"
+            }
           },
           {
             "key": "crit_from",
@@ -441,24 +375,21 @@
             "kind": "number",
             "default": 20,
             "min": 18,
-            "max": 20,
-            "block": "Атака"
+            "max": 20
           },
           {
             "key": "sneak_dice",
             "label": "Костей скрытой атаки",
             "expr": {
               "expr": "округлить вверх(@level / 2)"
-            },
-            "block": "Атака"
+            }
           },
           {
             "key": "spell_mod",
             "label": "Заклинательный модификатор",
             "expr": {
               "expr": "или(@class_name.spell_ability.mod, @abilities.харизма.mod)"
-            },
-            "block": "Магия"
+            }
           },
           {
             "key": "spell_dc",
@@ -466,7 +397,6 @@
             "expr": {
               "expr": "8 + @prof_bonus + @spell_mod"
             },
-            "block": "Магия",
             "control": {
               "kind": "big"
             }
@@ -477,7 +407,6 @@
             "expr": {
               "expr": "@prof_bonus + @spell_mod"
             },
-            "block": "Магия",
             "control": {
               "kind": "signed"
             }
@@ -490,8 +419,7 @@
             "max": 20,
             "control": {
               "kind": "stepper"
-            },
-            "block": "Магия"
+            }
           },
           {
             "key": "attuned",
@@ -499,24 +427,21 @@
             "expr": {
               "expr": "сколько(строки(\"wondrous\", \"attunement\"), да)"
             },
-            "max": 3,
-            "block": "Магия"
+            "max": 3
           },
           {
             "key": "cantrip_dice",
             "label": "Костей заговора",
             "expr": {
               "expr": "таблица(\"levels\", @level, \"cantrips\")"
-            },
-            "block": "Магия"
+            }
           },
           {
             "key": "rage_damage",
             "label": "Урон ярости",
             "expr": {
               "expr": "если(пусто(@class_name.progression), 0, таблица(@class_name.progression, @level, \"rage_damage\"))"
-            },
-            "block": "Ресурсы класса"
+            }
           },
           {
             "key": "superiority_die",
@@ -525,29 +450,25 @@
             "default": "1к8",
             "control": {
               "kind": "die"
-            },
-            "block": "Ресурсы класса"
+            }
           },
           {
             "key": "gp",
             "label": "Золотые",
             "kind": "number",
-            "min": 0,
-            "block": "Богатство"
+            "min": 0
           },
           {
             "key": "sp",
             "label": "Серебряные",
             "kind": "number",
-            "min": 0,
-            "block": "Богатство"
+            "min": 0
           },
           {
             "key": "cp",
             "label": "Медные",
             "kind": "number",
-            "min": 0,
-            "block": "Богатство"
+            "min": 0
           }
         ]
       },
@@ -562,8 +483,7 @@
             "kind": "boolean",
             "control": {
               "kind": "toggle"
-            },
-            "block": "В бою"
+            }
           }
         ]
       },
@@ -571,7 +491,6 @@
         "label": "За ход",
         "key": "word",
         "owner": "sheet",
-        "block": "В бою",
         "columns": [
           {
             "key": "max",
@@ -661,8 +580,7 @@
             "expr": {
               "expr": "таблица(\"spell_slots\", @caster_level, @строка)"
             },
-            "title": "Всего ячеек: {label}",
-            "block": "Ячейки заклинаний"
+            "title": "Всего ячеек: {label}"
           },
           {
             "key": "left",
@@ -673,7 +591,6 @@
               "expr": "@строка.max"
             },
             "title": "Ячейки: {label}",
-            "block": "Ячейки заклинаний",
             "control": {
               "kind": "pips"
             },
@@ -737,7 +654,6 @@
             "kind": "number",
             "min": 0,
             "title": "{label}: всего",
-            "block": "Ресурсы класса",
             "default": 0
           },
           {
@@ -749,7 +665,6 @@
               "expr": "@строка.max"
             },
             "title": "{label}: осталось",
-            "block": "Ресурсы класса",
             "control": {
               "kind": "stepper"
             },
@@ -1468,7 +1383,6 @@
             "control": {
               "kind": "choice"
             },
-            "block": "Стойкость к урону",
             "title": "{label}"
           }
         ],
@@ -1658,7 +1572,6 @@
             "min": 1,
             "max": 30,
             "title": "{label}",
-            "block": "Характеристики",
             "default": 10
           },
           {
@@ -1669,7 +1582,6 @@
               "expr": "округлить вниз((@строка.score - 10) / 2)"
             },
             "title": "Модификатор: {label}",
-            "block": "Модификаторы",
             "roll": {
               "label": "Проверка: {label}",
               "tags": [
@@ -1690,7 +1602,6 @@
             "label": "Владение сверх класса",
             "kind": "boolean",
             "title": "Владение сверх класса: спасбросок {label}",
-            "block": "Спасброски",
             "control": {
               "kind": "toggle"
             },
@@ -1703,8 +1614,7 @@
             "expr": {
               "expr": "большее из(если(@строка.save_extra, 1, 0), если(есть(@class_name.saves, @строка), 1, 0))"
             },
-            "title": "Владение: спасбросок {label}",
-            "block": "Спасброски"
+            "title": "Владение: спасбросок {label}"
           },
           {
             "key": "save",
@@ -1714,7 +1624,6 @@
               "expr": "@строка.mod + @строка.save_prof * @prof_bonus"
             },
             "title": "Спасбросок: {label}",
-            "block": "Спасброски",
             "roll": {
               "label": "Спасбросок: {label}",
               "tags": [
@@ -1811,144 +1720,126 @@
             "label": "Атлетика",
             "cells": {
               "ability": "сила"
-            },
-            "block": "Навыки от силы"
+            }
           },
           {
             "value": "акробатика",
             "label": "Акробатика",
             "cells": {
               "ability": "ловкость"
-            },
-            "block": "Навыки от ловкости"
+            }
           },
           {
             "value": "ловкость_рук",
             "label": "Ловкость рук",
             "cells": {
               "ability": "ловкость"
-            },
-            "block": "Навыки от ловкости"
+            }
           },
           {
             "value": "скрытность",
             "label": "Скрытность",
             "cells": {
               "ability": "ловкость"
-            },
-            "block": "Навыки от ловкости"
+            }
           },
           {
             "value": "магия",
             "label": "Магия",
             "cells": {
               "ability": "интеллект"
-            },
-            "block": "Навыки от интеллекта"
+            }
           },
           {
             "value": "история",
             "label": "История",
             "cells": {
               "ability": "интеллект"
-            },
-            "block": "Навыки от интеллекта"
+            }
           },
           {
             "value": "анализ",
             "label": "Анализ",
             "cells": {
               "ability": "интеллект"
-            },
-            "block": "Навыки от интеллекта"
+            }
           },
           {
             "value": "природа",
             "label": "Природа",
             "cells": {
               "ability": "интеллект"
-            },
-            "block": "Навыки от интеллекта"
+            }
           },
           {
             "value": "религия",
             "label": "Религия",
             "cells": {
               "ability": "интеллект"
-            },
-            "block": "Навыки от интеллекта"
+            }
           },
           {
             "value": "уход_за_животными",
             "label": "Уход за животными",
             "cells": {
               "ability": "мудрость"
-            },
-            "block": "Навыки от мудрости"
+            }
           },
           {
             "value": "проницательность",
             "label": "Проницательность",
             "cells": {
               "ability": "мудрость"
-            },
-            "block": "Навыки от мудрости"
+            }
           },
           {
             "value": "медицина",
             "label": "Медицина",
             "cells": {
               "ability": "мудрость"
-            },
-            "block": "Навыки от мудрости"
+            }
           },
           {
             "value": "внимательность",
             "label": "Внимательность",
             "cells": {
               "ability": "мудрость"
-            },
-            "block": "Навыки от мудрости"
+            }
           },
           {
             "value": "выживание",
             "label": "Выживание",
             "cells": {
               "ability": "мудрость"
-            },
-            "block": "Навыки от мудрости"
+            }
           },
           {
             "value": "обман",
             "label": "Обман",
             "cells": {
               "ability": "харизма"
-            },
-            "block": "Навыки от харизмы"
+            }
           },
           {
             "value": "запугивание",
             "label": "Запугивание",
             "cells": {
               "ability": "харизма"
-            },
-            "block": "Навыки от харизмы"
+            }
           },
           {
             "value": "выступление",
             "label": "Выступление",
             "cells": {
               "ability": "харизма"
-            },
-            "block": "Навыки от харизмы"
+            }
           },
           {
             "value": "убеждение",
             "label": "Убеждение",
             "cells": {
               "ability": "харизма"
-            },
-            "block": "Навыки от харизмы"
+            }
           }
         ],
         "owner": "sheet"
@@ -9774,11 +9665,7 @@
           "Модификаторы",
           "Прогрессия",
           "Спасброски",
-          "Навыки от силы",
-          "Навыки от ловкости",
-          "Навыки от интеллекта",
-          "Навыки от мудрости",
-          "Навыки от харизмы",
+          "Навыки",
           "Чувства и движение",
           "Защита",
           "Здоровье",
@@ -9847,7 +9734,234 @@
           "hit"
         ]
       }
-    }
+    },
+    "blocks": [
+      {
+        "name": "Личное дело",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "race",
+              "class_name",
+              "subclass",
+              "background",
+              "alignment"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Характеристики",
+        "parts": [
+          {
+            "table": "abilities",
+            "columns": [
+              "score"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Модификаторы",
+        "parts": [
+          {
+            "table": "abilities",
+            "columns": [
+              "mod"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Прогрессия",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "level",
+              "prof_bonus",
+              "inspiration",
+              "xp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Спасброски",
+        "parts": [
+          {
+            "table": "abilities",
+            "columns": [
+              "save_extra",
+              "save_prof",
+              "save"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Навыки",
+        "parts": [
+          {
+            "table": "skills",
+            "by": "ability"
+          }
+        ]
+      },
+      {
+        "name": "Чувства и движение",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "initiative",
+              "passive_perception",
+              "speed",
+              "darkvision",
+              "languages"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Защита",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "ac_base",
+              "armor_heavy",
+              "ac_dex",
+              "ac"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Здоровье",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "hp_max",
+              "hp_bonus",
+              "hp_current",
+              "hp_temp",
+              "hit_die",
+              "hit_dice_left",
+              "death_ok",
+              "death_fail",
+              "exhaustion",
+              "down",
+              "up",
+              "is_dead",
+              "is_stable"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Блок монстра",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "hp_block"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Атака",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "attacks_per_action",
+              "crit_from",
+              "sneak_dice"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "В бою",
+        "parts": [
+          {
+            "table": "стол"
+          },
+          {
+            "table": "turn"
+          }
+        ]
+      },
+      {
+        "name": "Магия",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "spell_mod",
+              "spell_dc",
+              "spell_attack",
+              "caster_level",
+              "attuned",
+              "cantrip_dice"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Ячейки заклинаний",
+        "parts": [
+          {
+            "table": "slots"
+          }
+        ],
+        "parent": "Магия"
+      },
+      {
+        "name": "Ресурсы класса",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "rage_damage",
+              "superiority_die"
+            ]
+          },
+          {
+            "table": "resources",
+            "columns": [
+              "max",
+              "left"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Богатство",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "gp",
+              "sp",
+              "cp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Стойкость к урону",
+        "parts": [
+          {
+            "table": "damage_types"
+          }
+        ]
+      }
+    ]
   },
   "compendium": {
     "records": [

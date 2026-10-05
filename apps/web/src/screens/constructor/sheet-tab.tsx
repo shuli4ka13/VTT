@@ -13,8 +13,8 @@ import { useUsage } from './usage.ts';
 import { Segmented } from '../../ui/primitives.tsx';
 import { placeOnSheet, sheetTables } from './table-field.tsx';
 import { TableColumnCard } from './rules/tables-section.tsx';
+import { BlockPanel } from './block-panel.tsx';
 import { SheetSample } from './sheet-sample.tsx';
-import { NO_BLOCK } from '@vtt/engine/model/blocks';
 import type { System } from '@vtt/schema';
 import type { Field as FieldModel } from '@vtt/engine/model/types';
 import { fieldOf, rowKeyOf, cellSource } from '@vtt/engine/model/sheet-columns';
@@ -25,8 +25,10 @@ export function SheetTab() {
   const activeColumn = useWorld(s => s.activeColumn);
   const pick = useWorld(s => s.pick);
   const editSystem = useWorld(s => s.editSystem);
+  const activeBlock = useWorld(s => s.activeBlock);
   const active = activeTag ? fieldOf(system, activeTag) ?? null : null;
-  const docked = Boolean(active) || Boolean(activeColumn && system.tables?.[activeColumn.table]?.columns?.some(c => c.key === activeColumn.column));
+  const blockOpen = Boolean(activeBlock && system.blocks?.some(b => b.name === activeBlock));
+  const docked = Boolean(active) || blockOpen || Boolean(activeColumn && system.tables?.[activeColumn.table]?.columns?.some(c => c.key === activeColumn.column));
   const tables = sheetTables(system);
   const right = useLookupPane({ head: 'Готовое из образцов', body: <DonorPalette kind="blocks" /> });
   const kindPicked = useWorld(s => s.activeSheetKind);
@@ -34,9 +36,9 @@ export function SheetTab() {
   const usage = useUsage();
 
   const add = () => {
-    const made = newColumn(system, NO_BLOCK);
-    editSystem(draft => addColumn(draft, made.value));
-    pick({ activeFieldTag: made.key });
+    const made = newColumn(system);
+    editSystem(draft => addColumn(draft, made.value, 'sheet', blockOpen ? activeBlock! : undefined));
+    pick({ activeFieldTag: made.key, activeBlock: null });
   };
 
   return (
@@ -58,7 +60,9 @@ export function SheetTab() {
         ...(docked ? { pinned: true } : {}),
         body: active
           ? <Docked at={active.tag}><ViewPanel field={active} system={system} /></Docked>
-          : docked
+          : blockOpen && !(activeColumn && system.tables?.[activeColumn.table]?.columns?.some(c => c.key === activeColumn.column))
+            ? <Docked at={`блок|${activeBlock}`}><BlockPanel name={activeBlock!} system={system} /></Docked>
+            : docked
             ? <Docked at={`${activeColumn!.table}.${activeColumn!.column}`}><ColumnPanel table={activeColumn!.table} column={activeColumn!.column} system={system} /></Docked>
             : <Empty title="Щёлкните поле на листе" />,
       }}
@@ -71,7 +75,7 @@ export function SheetTab() {
               onChange={next => setView(next as 'sample' | 'kinds')}
             />
             {view === 'sample'
-              ? <SheetSample system={system} picked={activeTag} onPick={tag => pick({ activeFieldTag: tag, activeGroupName: null, activeColumn: null })} />
+              ? <SheetSample system={system} picked={activeTag} onPick={tag => pick({ activeFieldTag: tag, activeGroupName: null, activeColumn: null, activeBlock: null })} />
               : <CharacterSection docked system={system} editSystem={editSystem} usage={usage} onTable={id => pick({ activeTab: 'dictionaries', activeTableId: id })} />}
           </>
         ),

@@ -4,13 +4,6 @@
     "id": "13age",
     "name": "13th Age",
     "groups": {
-      "Характеристики": {},
-      "Модификаторы": {},
-      "Защита": {},
-      "Здоровье": {},
-      "Стол": {},
-      "В бою": {},
-      "Толпа": {},
       "Атака": {},
       "Бой": {},
       "Вызываемые": {},
@@ -45,40 +38,35 @@
             "max": 10,
             "control": {
               "kind": "stepper"
-            },
-            "block": "Характеристики"
+            }
           },
           {
             "key": "ac",
             "label": "Защита от оружия (КЗ)",
             "kind": "number",
             "default": 12,
-            "min": 0,
-            "block": "Защита"
+            "min": 0
           },
           {
             "key": "pd",
             "label": "Физическая защита (ФЗ)",
             "kind": "number",
             "default": 11,
-            "min": 0,
-            "block": "Защита"
+            "min": 0
           },
           {
             "key": "md",
             "label": "Ментальная защита (МЗ)",
             "kind": "number",
             "default": 11,
-            "min": 0,
-            "block": "Защита"
+            "min": 0
           },
           {
             "key": "hp_max",
             "label": "Максимум хитов",
             "kind": "number",
             "default": 20,
-            "min": 1,
-            "block": "Здоровье"
+            "min": 1
           },
           {
             "key": "turn_standard",
@@ -89,8 +77,7 @@
             "max": 1,
             "control": {
               "kind": "pips"
-            },
-            "block": "В бою"
+            }
           },
           {
             "key": "turn_move",
@@ -101,8 +88,7 @@
             "max": 1,
             "control": {
               "kind": "pips"
-            },
-            "block": "В бою"
+            }
           },
           {
             "key": "turn_quick",
@@ -113,8 +99,7 @@
             "max": 1,
             "control": {
               "kind": "pips"
-            },
-            "block": "В бою"
+            }
           }
         ]
       },
@@ -131,8 +116,7 @@
             "max": 6,
             "control": {
               "kind": "stepper"
-            },
-            "block": "Стол"
+            }
           },
           {
             "key": "battle",
@@ -140,8 +124,7 @@
             "kind": "boolean",
             "control": {
               "kind": "toggle"
-            },
-            "block": "В бою"
+            }
           }
         ]
       },
@@ -161,23 +144,20 @@
             },
             "control": {
               "kind": "bar"
-            },
-            "block": "Здоровье"
+            }
           },
           {
             "key": "mook_hp",
             "label": "Хиты одного в толпе",
             "kind": "number",
-            "min": 0,
-            "block": "Толпа"
+            "min": 0
           },
           {
             "key": "mooks_left",
             "label": "Сколько в толпе стоит",
             "expr": {
               "expr": "если(@mook_hp > 0, округлить вверх(большее из(0, @hp) / @mook_hp), 1)"
-            },
-            "block": "Толпа"
+            }
           }
         ]
       },
@@ -241,7 +221,6 @@
             "min": 3,
             "max": 24,
             "title": "{label}",
-            "block": "Характеристики",
             "default": 10
           },
           {
@@ -252,7 +231,6 @@
               "expr": "округлить вниз((@строка.score - 10) / 2)"
             },
             "title": "Модификатор: {label}",
-            "block": "Модификаторы",
             "control": {
               "kind": "signed"
             }
@@ -943,7 +921,109 @@
           "hit"
         ]
       }
-    }
+    },
+    "blocks": [
+      {
+        "name": "Характеристики",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "level"
+            ]
+          },
+          {
+            "table": "abilities",
+            "columns": [
+              "score"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Модификаторы",
+        "parts": [
+          {
+            "table": "abilities",
+            "columns": [
+              "mod"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Защита",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "ac",
+              "pd",
+              "md"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Здоровье",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "hp_max"
+            ]
+          },
+          {
+            "table": "группа",
+            "columns": [
+              "hp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Стол",
+        "parts": [
+          {
+            "table": "стол",
+            "columns": [
+              "escalation"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "В бою",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "turn_standard",
+              "turn_move",
+              "turn_quick"
+            ]
+          },
+          {
+            "table": "стол",
+            "columns": [
+              "battle"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Толпа",
+        "parts": [
+          {
+            "table": "группа",
+            "columns": [
+              "mook_hp",
+              "mooks_left"
+            ]
+          }
+        ]
+      }
+    ]
   },
   "compendium": {
     "records": [

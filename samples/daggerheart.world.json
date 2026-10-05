@@ -4,15 +4,6 @@
     "id": "daggerheart",
     "name": "Daggerheart",
     "groups": {
-      "Личное дело": {},
-      "Черты": {},
-      "Прогрессия": {},
-      "Уклонение и броня": {},
-      "Пороги урона": {},
-      "Здоровье": {},
-      "Надежда": {},
-      "Противник": {},
-      "Стол": {},
       "Действия": {},
       "Атака": {},
       "Вызываемые": {},
@@ -22,7 +13,6 @@
       "Отдых": {},
       "Способности Надежды": {},
       "Ведущий": {},
-      "Листы": {},
       "Снаряжение": {},
       "Приёмы": {}
     },
@@ -73,34 +63,29 @@
             "key": "class",
             "label": "Класс",
             "kind": "choice",
-            "from": "classes",
-            "block": "Личное дело"
+            "from": "classes"
           },
           {
             "key": "ancestry",
             "label": "Происхождение",
             "kind": "choice",
-            "from": "ancestries",
-            "block": "Личное дело"
+            "from": "ancestries"
           },
           {
             "key": "community",
             "label": "Община",
             "kind": "choice",
-            "from": "communities",
-            "block": "Личное дело"
+            "from": "communities"
           },
           {
             "key": "exp1",
             "label": "Опыт 1 (+2)",
-            "kind": "text",
-            "block": "Личное дело"
+            "kind": "text"
           },
           {
             "key": "exp2",
             "label": "Опыт 2 (+2)",
-            "kind": "text",
-            "block": "Личное дело"
+            "kind": "text"
           },
           {
             "key": "agility",
@@ -119,8 +104,7 @@
               "bonus": {
                 "expr": "@agility"
               }
-            },
-            "block": "Черты"
+            }
           },
           {
             "key": "strength",
@@ -139,8 +123,7 @@
               "bonus": {
                 "expr": "@strength"
               }
-            },
-            "block": "Черты"
+            }
           },
           {
             "key": "finesse",
@@ -159,8 +142,7 @@
               "bonus": {
                 "expr": "@finesse"
               }
-            },
-            "block": "Черты"
+            }
           },
           {
             "key": "instinct",
@@ -179,8 +161,7 @@
               "bonus": {
                 "expr": "@instinct"
               }
-            },
-            "block": "Черты"
+            }
           },
           {
             "key": "presence",
@@ -199,8 +180,7 @@
               "bonus": {
                 "expr": "@presence"
               }
-            },
-            "block": "Черты"
+            }
           },
           {
             "key": "knowledge",
@@ -219,8 +199,7 @@
               "bonus": {
                 "expr": "@knowledge"
               }
-            },
-            "block": "Черты"
+            }
           },
           {
             "key": "level",
@@ -228,16 +207,14 @@
             "kind": "number",
             "default": 1,
             "min": 0,
-            "max": 10,
-            "block": "Прогрессия"
+            "max": 10
           },
           {
             "key": "tier",
             "label": "Ступень",
             "expr": {
               "expr": "если(@level >= 8, 4, если(@level >= 5, 3, если(@level >= 2, 2, 1)))"
-            },
-            "block": "Прогрессия"
+            }
           },
           {
             "key": "proficiency",
@@ -245,14 +222,12 @@
             "kind": "number",
             "default": 1,
             "min": 1,
-            "max": 6,
-            "block": "Прогрессия"
+            "max": 6
           },
           {
             "key": "evasion_bonus",
             "label": "Уклонение: прибавка",
-            "kind": "number",
-            "block": "Уклонение и броня"
+            "kind": "number"
           },
           {
             "key": "evasion",
@@ -260,7 +235,6 @@
             "expr": {
               "expr": "если(@class != \"\", таблица(\"classes\", @class, \"evasion\"), 10) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"evasion_bonus\"), 0) + @evasion_bonus"
             },
-            "block": "Уклонение и броня",
             "control": {
               "kind": "big"
             }
@@ -270,8 +244,7 @@
             "label": "Броня",
             "kind": "number",
             "min": 0,
-            "max": 12,
-            "block": "Уклонение и броня"
+            "max": 12
           },
           {
             "key": "armor_marked",
@@ -281,53 +254,46 @@
             "max": 12,
             "control": {
               "kind": "pips"
-            },
-            "block": "Уклонение и броня"
+            }
           },
           {
             "key": "major_base",
             "label": "Порог серьёзного: основа",
             "kind": "number",
-            "min": 0,
-            "block": "Пороги урона"
+            "min": 0
           },
           {
             "key": "severe_base",
             "label": "Порог тяжёлого: основа",
             "kind": "number",
-            "min": 0,
-            "block": "Пороги урона"
+            "min": 0
           },
           {
             "key": "major",
             "label": "Порог серьёзного урона",
             "expr": {
               "expr": "если(@major_base > 0, @major_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, @level)"
-            },
-            "block": "Пороги урона"
+            }
           },
           {
             "key": "severe",
             "label": "Порог тяжёлого урона",
             "expr": {
               "expr": "если(@severe_base > 0, @severe_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, 2 * @level)"
-            },
-            "block": "Пороги урона"
+            }
           },
           {
             "key": "hp_extra",
             "label": "Хиты: дополнительные клетки",
             "kind": "number",
-            "min": 0,
-            "block": "Здоровье"
+            "min": 0
           },
           {
             "key": "hp_max",
             "label": "Хиты: клеток",
             "expr": {
               "expr": "если(@class != \"\", таблица(\"classes\", @class, \"hp\"), 0) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"hp_bonus\"), 0) + @hp_extra"
-            },
-            "block": "Здоровье"
+            }
           },
           {
             "key": "hp",
@@ -336,23 +302,20 @@
             "min": 0,
             "control": {
               "kind": "pips"
-            },
-            "block": "Здоровье"
+            }
           },
           {
             "key": "stress_extra",
             "label": "Стресс: дополнительные клетки",
             "kind": "number",
-            "min": 0,
-            "block": "Здоровье"
+            "min": 0
           },
           {
             "key": "stress_max",
             "label": "Стресс: клеток",
             "expr": {
               "expr": "6 + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"stress_bonus\"), 0) + @stress_extra"
-            },
-            "block": "Здоровье"
+            }
           },
           {
             "key": "stress",
@@ -361,8 +324,7 @@
             "min": 0,
             "control": {
               "kind": "pips"
-            },
-            "block": "Здоровье"
+            }
           },
           {
             "key": "down",
@@ -370,7 +332,6 @@
             "expr": {
               "expr": "все(@hp_max > 0, @hp >= @hp_max)"
             },
-            "block": "Здоровье",
             "control": {
               "kind": "toggle"
             }
@@ -381,7 +342,6 @@
             "expr": {
               "expr": "все(@stress_max > 0, @stress >= @stress_max)"
             },
-            "block": "Здоровье",
             "control": {
               "kind": "toggle"
             }
@@ -391,8 +351,7 @@
             "label": "Есть свободный Стресс",
             "expr": {
               "expr": "@stress < @stress_max"
-            },
-            "block": "Здоровье"
+            }
           },
           {
             "key": "hope",
@@ -403,47 +362,41 @@
             "max": 6,
             "control": {
               "kind": "pips"
-            },
-            "block": "Надежда"
+            }
           },
           {
             "key": "scars",
             "label": "Шрамы (вычеркнутые клетки Надежды)",
             "kind": "number",
             "min": 0,
-            "max": 6,
-            "block": "Надежда"
+            "max": 6
           },
           {
             "key": "difficulty",
             "label": "Сложность",
             "kind": "number",
             "default": 11,
-            "min": 1,
-            "block": "Противник"
+            "min": 1
           },
           {
             "key": "adversary_hp",
             "label": "Хиты противника",
             "kind": "number",
             "default": 3,
-            "min": 1,
-            "block": "Противник"
+            "min": 1
           },
           {
             "key": "adversary_stress",
             "label": "Стресс противника",
             "kind": "number",
             "default": 2,
-            "min": 0,
-            "block": "Противник"
+            "min": 0
           },
           {
             "key": "attack_mod",
             "label": "Модификатор атаки",
             "kind": "number",
-            "default": 1,
-            "block": "Противник"
+            "default": 1
           }
         ]
       },
@@ -457,8 +410,7 @@
             "label": "Страх ведущего",
             "kind": "number",
             "min": 0,
-            "max": 12,
-            "block": "Стол"
+            "max": 12
           }
         ]
       },
@@ -3414,7 +3366,134 @@
           "Противник"
         ]
       }
-    }
+    },
+    "blocks": [
+      {
+        "name": "Личное дело",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "class",
+              "ancestry",
+              "community",
+              "exp1",
+              "exp2"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Черты",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "agility",
+              "strength",
+              "finesse",
+              "instinct",
+              "presence",
+              "knowledge"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Прогрессия",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "level",
+              "tier",
+              "proficiency"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Уклонение и броня",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "evasion_bonus",
+              "evasion",
+              "armor_score",
+              "armor_marked"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Пороги урона",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "major_base",
+              "severe_base",
+              "major",
+              "severe"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Здоровье",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "hp_extra",
+              "hp_max",
+              "hp",
+              "stress_extra",
+              "stress_max",
+              "stress",
+              "down",
+              "stress_full",
+              "stress_free"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Надежда",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "hope",
+              "scars"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Противник",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "difficulty",
+              "adversary_hp",
+              "adversary_stress",
+              "attack_mod"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Стол",
+        "parts": [
+          {
+            "table": "стол"
+          }
+        ]
+      }
+    ]
   },
   "compendium": {
     "records": [

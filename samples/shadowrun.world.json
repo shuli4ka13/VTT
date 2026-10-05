@@ -4,22 +4,12 @@
     "id": "shadowrun6",
     "name": "Shadowrun: Шестой мир",
     "groups": {
-      "Личное дело": {},
-      "Характеристики": {},
-      "Особые": {},
-      "Навыки": {},
-      "Наборы кубиков": {},
-      "Защита": {},
-      "Счётчики": {},
-      "Инициатива": {},
-      "Стол": {},
       "Атака": {},
       "Преимущество": {},
       "Лечение": {},
       "Действия": {},
       "Состояния": {},
       "Общие правила": {},
-      "Листы": {},
       "Снаряжение": {},
       "Приёмы": {}
     },
@@ -59,8 +49,7 @@
             "label": "Метатип",
             "kind": "choice",
             "from": "metatypes",
-            "default": "человек",
-            "block": "Личное дело"
+            "default": "человек"
           },
           {
             "key": "body",
@@ -68,8 +57,7 @@
             "kind": "number",
             "default": 3,
             "min": 0,
-            "max": 13,
-            "block": "Характеристики"
+            "max": 13
           },
           {
             "key": "agility",
@@ -77,8 +65,7 @@
             "kind": "number",
             "default": 3,
             "min": 0,
-            "max": 13,
-            "block": "Характеристики"
+            "max": 13
           },
           {
             "key": "reaction",
@@ -86,8 +73,7 @@
             "kind": "number",
             "default": 3,
             "min": 0,
-            "max": 13,
-            "block": "Характеристики"
+            "max": 13
           },
           {
             "key": "strength",
@@ -95,8 +81,7 @@
             "kind": "number",
             "default": 3,
             "min": 0,
-            "max": 13,
-            "block": "Характеристики"
+            "max": 13
           },
           {
             "key": "willpower",
@@ -104,8 +89,7 @@
             "kind": "number",
             "default": 3,
             "min": 0,
-            "max": 13,
-            "block": "Характеристики"
+            "max": 13
           },
           {
             "key": "logic",
@@ -113,8 +97,7 @@
             "kind": "number",
             "default": 3,
             "min": 0,
-            "max": 13,
-            "block": "Характеристики"
+            "max": 13
           },
           {
             "key": "intuition",
@@ -122,8 +105,7 @@
             "kind": "number",
             "default": 3,
             "min": 0,
-            "max": 13,
-            "block": "Характеристики"
+            "max": 13
           },
           {
             "key": "charisma",
@@ -131,8 +113,7 @@
             "kind": "number",
             "default": 3,
             "min": 0,
-            "max": 13,
-            "block": "Характеристики"
+            "max": 13
           },
           {
             "key": "edge",
@@ -140,8 +121,7 @@
             "kind": "number",
             "default": 2,
             "min": 1,
-            "max": 7,
-            "block": "Особые"
+            "max": 7
           },
           {
             "key": "essence",
@@ -149,22 +129,19 @@
             "kind": "number",
             "default": 6,
             "min": 0,
-            "max": 6,
-            "block": "Особые"
+            "max": 6
           },
           {
             "key": "magic",
             "label": "Магия",
             "kind": "number",
-            "min": 0,
-            "block": "Особые"
+            "min": 0
           },
           {
             "key": "resonance",
             "label": "Резонанс",
             "kind": "number",
-            "min": 0,
-            "block": "Особые"
+            "min": 0
           },
           {
             "key": "composure",
@@ -181,8 +158,7 @@
               "count": {
                 "expr": "@composure"
               }
-            },
-            "block": "Наборы кубиков"
+            }
           },
           {
             "key": "judge_intentions",
@@ -199,8 +175,7 @@
               "count": {
                 "expr": "@judge_intentions"
               }
-            },
-            "block": "Наборы кубиков"
+            }
           },
           {
             "key": "memory",
@@ -217,8 +192,7 @@
               "count": {
                 "expr": "@memory"
               }
-            },
-            "block": "Наборы кубиков"
+            }
           },
           {
             "key": "lift_carry",
@@ -235,37 +209,32 @@
               "count": {
                 "expr": "@lift_carry"
               }
-            },
-            "block": "Наборы кубиков"
+            }
           },
           {
             "key": "armor_worn",
             "label": "Броня: надетое",
             "kind": "number",
-            "min": 0,
-            "block": "Защита"
+            "min": 0
           },
           {
             "key": "armor_extra",
             "label": "Броня: шлем, щит, накладки",
             "kind": "number",
-            "min": 0,
-            "block": "Защита"
+            "min": 0
           },
           {
             "key": "armor_natural",
             "label": "Броня: аугментации (кожные пластины)",
             "kind": "number",
-            "min": 0,
-            "block": "Защита"
+            "min": 0
           },
           {
             "key": "cover",
             "label": "Укрытие (0–4)",
             "kind": "number",
             "min": 0,
-            "max": 4,
-            "block": "Защита"
+            "max": 4
           },
           {
             "key": "defense_rating",
@@ -273,7 +242,6 @@
             "expr": {
               "expr": "@body + @armor_worn + @armor_extra + @armor_natural + если(@metatype != \"\", таблица(\"metatypes\", @metatype, \"dermal\"), 0) + @cover"
             },
-            "block": "Защита",
             "control": {
               "kind": "big"
             }
@@ -293,56 +261,49 @@
               "count": {
                 "expr": "@defense_pool"
               }
-            },
-            "block": "Защита"
+            }
           },
           {
             "key": "unarmed_rating",
             "label": "Значение атаки без оружия",
             "expr": {
               "expr": "@strength + @reaction"
-            },
-            "block": "Защита"
+            }
           },
           {
             "key": "physical_max",
             "label": "Счётчик здоровья: ячеек",
             "expr": {
               "expr": "8 + округлить вверх(@body / 2) + если(@metatype != \"\", таблица(\"metatypes\", @metatype, \"toughness\"), 0)"
-            },
-            "block": "Счётчики"
+            }
           },
           {
             "key": "stun_max",
             "label": "Счётчик оглушения: ячеек",
             "expr": {
               "expr": "8 + округлить вверх(@willpower / 2)"
-            },
-            "block": "Счётчики"
+            }
           },
           {
             "key": "stun_overflow",
             "label": "Лишний оглушающий — в физический",
             "expr": {
               "expr": "большее из(0, @stun - @stun_max)"
-            },
-            "block": "Счётчики"
+            }
           },
           {
             "key": "physical_total",
             "label": "Физический урон с переливом",
             "expr": {
               "expr": "@physical + @stun_overflow"
-            },
-            "block": "Счётчики"
+            }
           },
           {
             "key": "critical",
             "label": "Критический урон",
             "expr": {
               "expr": "большее из(0, @physical_total - @physical_max)"
-            },
-            "block": "Счётчики"
+            }
           },
           {
             "key": "wound_mod",
@@ -350,7 +311,6 @@
             "expr": {
               "expr": "0 - округлить вниз(меньшее из(@stun, @stun_max) / 3) - округлить вниз(меньшее из(@physical_total, @physical_max) / 3)"
             },
-            "block": "Счётчики",
             "control": {
               "kind": "signed"
             }
@@ -358,8 +318,7 @@
           {
             "key": "condition_mod",
             "label": "Штраф от состояний",
-            "kind": "number",
-            "block": "Счётчики"
+            "kind": "number"
           },
           {
             "key": "knocked_out",
@@ -367,7 +326,6 @@
             "expr": {
               "expr": "@stun >= @stun_max"
             },
-            "block": "Счётчики",
             "control": {
               "kind": "toggle"
             }
@@ -378,7 +336,6 @@
             "expr": {
               "expr": "@physical_total >= @physical_max"
             },
-            "block": "Счётчики",
             "control": {
               "kind": "toggle"
             }
@@ -389,7 +346,6 @@
             "expr": {
               "expr": "@critical >= @body * 2"
             },
-            "block": "Счётчики",
             "control": {
               "kind": "toggle"
             }
@@ -400,7 +356,6 @@
             "expr": {
               "expr": "все(@stun < @stun_max, @physical_total < @physical_max)"
             },
-            "block": "Счётчики",
             "control": {
               "kind": "toggle"
             }
@@ -411,7 +366,6 @@
             "expr": {
               "expr": "@reaction + @intuition + @wound_mod + @condition_mod"
             },
-            "block": "Инициатива",
             "control": {
               "kind": "big"
             }
@@ -422,8 +376,7 @@
             "kind": "number",
             "default": 1,
             "min": 1,
-            "max": 5,
-            "block": "Инициатива"
+            "max": 5
           },
           {
             "key": "simple_left",
@@ -434,8 +387,7 @@
             "max": 5,
             "control": {
               "kind": "pips"
-            },
-            "block": "Инициатива"
+            }
           },
           {
             "key": "complex_left",
@@ -446,8 +398,7 @@
             "max": 1,
             "control": {
               "kind": "pips"
-            },
-            "block": "Инициатива"
+            }
           }
         ]
       },
@@ -459,8 +410,7 @@
           {
             "key": "battle",
             "label": "Идёт бой",
-            "kind": "boolean",
-            "block": "Стол"
+            "kind": "boolean"
           }
         ]
       },
@@ -478,30 +428,26 @@
             "max": 7,
             "control": {
               "kind": "pips"
-            },
-            "block": "Особые"
+            }
           },
           {
             "key": "edge_gained",
             "label": "Преимущества получено за раунд (не больше 2)",
             "kind": "number",
             "min": 0,
-            "max": 2,
-            "block": "Особые"
+            "max": 2
           },
           {
             "key": "physical",
             "label": "Физический урон",
             "kind": "number",
-            "min": 0,
-            "block": "Счётчики"
+            "min": 0
           },
           {
             "key": "stun",
             "label": "Оглушающий урон",
             "kind": "number",
-            "min": 0,
-            "block": "Счётчики"
+            "min": 0
           }
         ]
       },
@@ -831,7 +777,6 @@
             "min": 0,
             "max": 10,
             "title": "{label}",
-            "block": "Навыки",
             "default": 0
           },
           {
@@ -842,7 +787,6 @@
               "expr": "большее из(0, если(@строка.rank > 0, @строка.rank + @строка.attribute, если(@строка.untrained, @строка.attribute - 1, 0)) + @wound_mod + @condition_mod)"
             },
             "title": "{label}: набор",
-            "block": "Наборы кубиков",
             "roll": {
               "label": "Проверка: {label}",
               "die": "pool",
@@ -2938,7 +2882,157 @@
           "Инициатива"
         ]
       }
-    }
+    },
+    "blocks": [
+      {
+        "name": "Личное дело",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "metatype"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Характеристики",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "body",
+              "agility",
+              "reaction",
+              "strength",
+              "willpower",
+              "logic",
+              "intuition",
+              "charisma"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Особые",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "edge",
+              "essence",
+              "magic",
+              "resonance"
+            ]
+          },
+          {
+            "table": "группа",
+            "columns": [
+              "edge_left",
+              "edge_gained"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Навыки",
+        "parts": [
+          {
+            "table": "skills",
+            "columns": [
+              "rank"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Наборы кубиков",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "composure",
+              "judge_intentions",
+              "memory",
+              "lift_carry"
+            ]
+          },
+          {
+            "table": "skills",
+            "columns": [
+              "pool"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Защита",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "armor_worn",
+              "armor_extra",
+              "armor_natural",
+              "cover",
+              "defense_rating",
+              "defense_pool",
+              "unarmed_rating"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Счётчики",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "physical_max",
+              "stun_max",
+              "stun_overflow",
+              "physical_total",
+              "critical",
+              "wound_mod",
+              "condition_mod",
+              "knocked_out",
+              "bleeding_out",
+              "is_dead",
+              "conscious"
+            ]
+          },
+          {
+            "table": "группа",
+            "columns": [
+              "physical",
+              "stun"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Инициатива",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "initiative",
+              "init_dice",
+              "simple_left",
+              "complex_left"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Стол",
+        "parts": [
+          {
+            "table": "стол"
+          }
+        ]
+      }
+    ]
   },
   "compendium": {
     "records": [

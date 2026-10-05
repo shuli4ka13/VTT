@@ -499,3 +499,13 @@ span.v-chip { cursor: default; }
   text-align: center;
   line-height: 1.2;
 }
+
+.sheet-section { margin-top: var(--s-2); }
+.sheet-section__title {
+  margin: 0 0 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}

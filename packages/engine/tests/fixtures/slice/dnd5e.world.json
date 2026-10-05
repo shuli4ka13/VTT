@@ -11,20 +11,17 @@
           {
             "key": "race",
             "label": "Раса",
-            "kind": "text",
-            "block": "Личное дело"
+            "kind": "text"
           },
           {
             "key": "class_name",
             "label": "Класс",
-            "kind": "text",
-            "block": "Личное дело"
+            "kind": "text"
           },
           {
             "key": "alignment",
             "label": "Мировоззрение",
-            "kind": "text",
-            "block": "Личное дело"
+            "kind": "text"
           },
           {
             "key": "str",
@@ -40,8 +37,7 @@
               "bonus": {
                 "expr": "@str"
               }
-            },
-            "block": "Характеристики"
+            }
           },
           {
             "key": "dex",
@@ -57,8 +53,7 @@
               "bonus": {
                 "expr": "@dex"
               }
-            },
-            "block": "Характеристики"
+            }
           },
           {
             "key": "con",
@@ -74,8 +69,7 @@
               "bonus": {
                 "expr": "@con"
               }
-            },
-            "block": "Характеристики"
+            }
           },
           {
             "key": "int",
@@ -91,8 +85,7 @@
               "bonus": {
                 "expr": "@int"
               }
-            },
-            "block": "Характеристики"
+            }
           },
           {
             "key": "wis",
@@ -108,8 +101,7 @@
               "bonus": {
                 "expr": "@wis"
               }
-            },
-            "block": "Характеристики"
+            }
           },
           {
             "key": "cha",
@@ -125,79 +117,71 @@
               "bonus": {
                 "expr": "@cha"
               }
-            },
-            "block": "Характеристики"
+            }
           },
           {
             "key": "str_mod",
             "label": "Модификатор Силы",
             "expr": {
               "expr": "округлить вниз((#str - 10) / 2)"
-            },
-            "block": "Модификаторы"
+            }
           },
           {
             "key": "dex_mod",
             "label": "Модификатор Ловкости",
             "expr": {
               "expr": "округлить вниз((#dex - 10) / 2)"
-            },
-            "block": "Модификаторы"
+            }
           },
           {
             "key": "con_mod",
             "label": "Модификатор Телосложения",
             "expr": {
               "expr": "округлить вниз((#con - 10) / 2)"
-            },
-            "block": "Модификаторы"
+            }
           },
           {
             "key": "int_mod",
             "label": "Модификатор Интеллекта",
             "expr": {
               "expr": "округлить вниз((#int - 10) / 2)"
-            },
-            "block": "Модификаторы"
+            }
           },
           {
             "key": "wis_mod",
             "label": "Модификатор Мудрости",
             "expr": {
               "expr": "округлить вниз((#wis - 10) / 2)"
-            },
-            "block": "Модификаторы"
+            }
           },
           {
             "key": "cha_mod",
             "label": "Модификатор Харизмы",
             "expr": {
               "expr": "округлить вниз((#cha - 10) / 2)"
-            },
-            "block": "Модификаторы"
+            }
           },
           {
             "key": "level",
             "label": "Уровень",
             "kind": "number",
-            "default": 1,
-            "block": "Прогрессия"
+            "default": 1
           },
           {
             "key": "inspiration",
             "label": "Вдохновение",
             "kind": "number",
             "min": 0,
-            "control": { "kind": "pips" },
-            "block": "Прогрессия"
+            "control": {
+              "kind": "pips"
+            }
           },
           {
             "key": "prof_bonus",
             "label": "Бонус мастерства",
             "expr": {
               "expr": "таблица(\"proficiency\", #level)"
-            },
-            "block": "Прогрессия"
+            }
           },
           {
             "key": "slots_1",
@@ -208,8 +192,9 @@
             "max": {
               "expr": "#level"
             },
-            "control": { "kind": "pips" },
-            "block": "Прогрессия"
+            "control": {
+              "kind": "pips"
+            }
           },
           {
             "key": "athletics_prof",
@@ -217,8 +202,9 @@
             "kind": "number",
             "min": 0,
             "max": 2,
-            "control": { "kind": "ring" },
-            "block": "Навыки от силы"
+            "control": {
+              "kind": "ring"
+            }
           },
           {
             "key": "athletics",
@@ -235,8 +221,7 @@
               "bonus": {
                 "expr": "@athletics"
               }
-            },
-            "block": "Навыки от силы"
+            }
           },
           {
             "key": "acrobatics_prof",
@@ -244,8 +229,9 @@
             "kind": "number",
             "min": 0,
             "max": 2,
-            "control": { "kind": "ring" },
-            "block": "Навыки от ловкости"
+            "control": {
+              "kind": "ring"
+            }
           },
           {
             "key": "acrobatics",
@@ -262,8 +248,7 @@
               "bonus": {
                 "expr": "@acrobatics"
               }
-            },
-            "block": "Навыки от ловкости"
+            }
           },
           {
             "key": "sleight_of_hand_prof",
@@ -271,8 +256,9 @@
             "kind": "number",
             "min": 0,
             "max": 2,
-            "control": { "kind": "ring" },
-            "block": "Навыки от ловкости"
+            "control": {
+              "kind": "ring"
+            }
           },
           {
             "key": "sleight_of_hand",
@@ -289,8 +275,7 @@
               "bonus": {
                 "expr": "@sleight_of_hand"
               }
-            },
-            "block": "Навыки от ловкости"
+            }
           },
           {
             "key": "stealth_prof",
@@ -298,8 +283,9 @@
             "kind": "number",
             "min": 0,
             "max": 2,
-            "control": { "kind": "ring" },
-            "block": "Навыки от ловкости"
+            "control": {
+              "kind": "ring"
+            }
           },
           {
             "key": "stealth",
@@ -316,8 +302,7 @@
               "bonus": {
                 "expr": "@stealth"
               }
-            },
-            "block": "Навыки от ловкости"
+            }
           },
           {
             "key": "arcana_prof",
@@ -325,8 +310,9 @@
             "kind": "number",
             "min": 0,
             "max": 2,
-            "control": { "kind": "ring" },
-            "block": "Навыки от интеллекта"
+            "control": {
+              "kind": "ring"
+            }
           },
           {
             "key": "arcana",
@@ -343,8 +329,7 @@
               "bonus": {
                 "expr": "@arcana"
               }
-            },
-            "block": "Навыки от интеллекта"
+            }
           },
           {
             "key": "history_prof",
@@ -352,8 +337,9 @@
             "kind": "number",
             "min": 0,
             "max": 2,
-            "control": { "kind": "ring" },
-            "block": "Навыки от интеллекта"
+            "control": {
+              "kind": "ring"
+            }
           },
           {
             "key": "history",
@@ -370,8 +356,7 @@
               "bonus": {
                 "expr": "@history"
               }
-            },
-            "block": "Навыки от интеллекта"
+            }
           },
           {
             "key": "investigation_prof",
@@ -379,8 +364,9 @@
             "kind": "number",
             "min": 0,
             "max": 2,
-            "control": { "kind": "ring" },
-            "block": "Навыки от интеллекта"
+            "control": {
+              "kind": "ring"
+            }
           },
           {
             "key": "investigation",
@@ -397,8 +383,7 @@
               "bonus": {
                 "expr": "@investigation"
               }
-            },
-            "block": "Навыки от интеллекта"
+            }
           },
           {
             "key": "nature_prof",
@@ -406,8 +391,9 @@
             "kind": "number",
             "min": 0,
             "max": 2,
-            "control": { "kind": "ring" },
-            "block": "Навыки от интеллекта"
+            "control": {
+              "kind": "ring"
+            }
           },
           {
             "key": "nature",
@@ -424,8 +410,7 @@
               "bonus": {
                 "expr": "@nature"
               }
-            },
-            "block": "Навыки от интеллекта"
+            }
           },
           {
             "key": "religion_prof",
@@ -433,8 +418,9 @@
             "kind": "number",
             "min": 0,
             "max": 2,
-            "control": { "kind": "ring" },
-            "block": "Навыки от интеллекта"
+            "control": {
+              "kind": "ring"
+            }
           },
           {
             "key": "religion",
@@ -451,8 +437,7 @@
               "bonus": {
                 "expr": "@religion"
               }
-            },
-            "block": "Навыки от интеллекта"
+            }
           },
           {
             "key": "animal_handling_prof",
@@ -460,8 +445,9 @@
             "kind": "number",
             "min": 0,
             "max": 2,
-            "control": { "kind": "ring" },
-            "block": "Навыки от мудрости"
+            "control": {
+              "kind": "ring"
+            }
           },
           {
             "key": "animal_handling",
@@ -478,8 +464,7 @@
               "bonus": {
                 "expr": "@animal_handling"
               }
-            },
-            "block": "Навыки от мудрости"
+            }
           },
           {
             "key": "insight_prof",
@@ -487,8 +472,9 @@
             "kind": "number",
             "min": 0,
             "max": 2,
-            "control": { "kind": "ring" },
-            "block": "Навыки от мудрости"
+            "control": {
+              "kind": "ring"
+            }
           },
           {
             "key": "insight",
@@ -505,8 +491,7 @@
               "bonus": {
                 "expr": "@insight"
               }
-            },
-            "block": "Навыки от мудрости"
+            }
           },
           {
             "key": "medicine_prof",
@@ -514,8 +499,9 @@
             "kind": "number",
             "min": 0,
             "max": 2,
-            "control": { "kind": "ring" },
-            "block": "Навыки от мудрости"
+            "control": {
+              "kind": "ring"
+            }
           },
           {
             "key": "medicine",
@@ -532,8 +518,7 @@
               "bonus": {
                 "expr": "@medicine"
               }
-            },
-            "block": "Навыки от мудрости"
+            }
           },
           {
             "key": "perception_prof",
@@ -541,8 +526,9 @@
             "kind": "number",
             "min": 0,
             "max": 2,
-            "control": { "kind": "ring" },
-            "block": "Навыки от мудрости"
+            "control": {
+              "kind": "ring"
+            }
           },
           {
             "key": "perception",
@@ -559,8 +545,7 @@
               "bonus": {
                 "expr": "@perception"
               }
-            },
-            "block": "Навыки от мудрости"
+            }
           },
           {
             "key": "survival_prof",
@@ -568,8 +553,9 @@
             "kind": "number",
             "min": 0,
             "max": 2,
-            "control": { "kind": "ring" },
-            "block": "Навыки от мудрости"
+            "control": {
+              "kind": "ring"
+            }
           },
           {
             "key": "survival",
@@ -586,8 +572,7 @@
               "bonus": {
                 "expr": "@survival"
               }
-            },
-            "block": "Навыки от мудрости"
+            }
           },
           {
             "key": "deception_prof",
@@ -595,8 +580,9 @@
             "kind": "number",
             "min": 0,
             "max": 2,
-            "control": { "kind": "ring" },
-            "block": "Навыки от харизмы"
+            "control": {
+              "kind": "ring"
+            }
           },
           {
             "key": "deception",
@@ -613,8 +599,7 @@
               "bonus": {
                 "expr": "@deception"
               }
-            },
-            "block": "Навыки от харизмы"
+            }
           },
           {
             "key": "intimidation_prof",
@@ -622,8 +607,9 @@
             "kind": "number",
             "min": 0,
             "max": 2,
-            "control": { "kind": "ring" },
-            "block": "Навыки от харизмы"
+            "control": {
+              "kind": "ring"
+            }
           },
           {
             "key": "intimidation",
@@ -640,8 +626,7 @@
               "bonus": {
                 "expr": "@intimidation"
               }
-            },
-            "block": "Навыки от харизмы"
+            }
           },
           {
             "key": "performance_prof",
@@ -649,8 +634,9 @@
             "kind": "number",
             "min": 0,
             "max": 2,
-            "control": { "kind": "ring" },
-            "block": "Навыки от харизмы"
+            "control": {
+              "kind": "ring"
+            }
           },
           {
             "key": "performance",
@@ -667,8 +653,7 @@
               "bonus": {
                 "expr": "@performance"
               }
-            },
-            "block": "Навыки от харизмы"
+            }
           },
           {
             "key": "persuasion_prof",
@@ -676,8 +661,9 @@
             "kind": "number",
             "min": 0,
             "max": 2,
-            "control": { "kind": "ring" },
-            "block": "Навыки от харизмы"
+            "control": {
+              "kind": "ring"
+            }
           },
           {
             "key": "persuasion",
@@ -694,30 +680,28 @@
               "bonus": {
                 "expr": "@persuasion"
               }
-            },
-            "block": "Навыки от харизмы"
+            }
           },
           {
             "key": "ac_base",
             "label": "База доспеха",
             "kind": "number",
-            "default": 10,
-            "block": "Защита"
+            "default": 10
           },
           {
             "key": "armor_heavy",
             "label": "Доспех тяжёлый",
             "kind": "boolean",
-            "control": { "kind": "toggle" },
-            "block": "Защита"
+            "control": {
+              "kind": "toggle"
+            }
           },
           {
             "key": "ac",
             "label": "Класс брони",
             "expr": {
               "expr": "@ac_base + если(@armor_heavy, 0, @dex_mod)"
-            },
-            "block": "Защита"
+            }
           },
           {
             "key": "dex_save_prof",
@@ -725,8 +709,9 @@
             "kind": "number",
             "min": 0,
             "max": 2,
-            "control": { "kind": "ring" },
-            "block": "Защита"
+            "control": {
+              "kind": "ring"
+            }
           },
           {
             "key": "dex_save",
@@ -743,15 +728,13 @@
               "bonus": {
                 "expr": "@dex_save"
               }
-            },
-            "block": "Защита"
+            }
           },
           {
             "key": "hp_max",
             "label": "Максимум ХП",
             "kind": "number",
-            "default": 1,
-            "block": "Здоровье"
+            "default": 1
           },
           {
             "key": "hp_current",
@@ -762,16 +745,18 @@
             "max": {
               "expr": "#hp_max"
             },
-            "control": { "kind": "bar" },
-            "block": "Здоровье"
+            "control": {
+              "kind": "bar"
+            }
           },
           {
             "key": "hp_temp",
             "label": "Временные ХП",
             "kind": "number",
             "min": 0,
-            "control": { "kind": "stepper" },
-            "block": "Здоровье"
+            "control": {
+              "kind": "stepper"
+            }
           },
           {
             "key": "death_ok",
@@ -779,8 +764,9 @@
             "kind": "number",
             "min": 0,
             "max": 3,
-            "control": { "kind": "pips" },
-            "block": "Здоровье"
+            "control": {
+              "kind": "pips"
+            }
           },
           {
             "key": "death_fail",
@@ -788,40 +774,37 @@
             "kind": "number",
             "min": 0,
             "max": 3,
-            "control": { "kind": "pips" },
-            "block": "Здоровье"
+            "control": {
+              "kind": "pips"
+            }
           },
           {
             "key": "down",
             "label": "Без сил",
             "expr": {
               "expr": "#hp_current <= 0"
-            },
-            "block": "Здоровье"
+            }
           },
           {
             "key": "up",
             "label": "На ногах",
             "expr": {
               "expr": "#hp_current > 0"
-            },
-            "block": "Здоровье"
+            }
           },
           {
             "key": "attack_bonus",
             "label": "Бонус атаки",
             "expr": {
               "expr": "#str_mod + #prof_bonus"
-            },
-            "block": "Атака"
+            }
           },
           {
             "key": "spell_dc",
             "label": "Сложность заклинаний",
             "expr": {
               "expr": "8 + #prof_bonus + #cha_mod"
-            },
-            "block": "Атака"
+            }
           },
           {
             "key": "turn_action",
@@ -2809,7 +2792,198 @@
           "hit"
         ]
       }
-    }
+    },
+    "blocks": [
+      {
+        "name": "Личное дело",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "race",
+              "class_name",
+              "alignment"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Характеристики",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "str",
+              "dex",
+              "con",
+              "int",
+              "wis",
+              "cha"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Модификаторы",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "str_mod",
+              "dex_mod",
+              "con_mod",
+              "int_mod",
+              "wis_mod",
+              "cha_mod"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Прогрессия",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "level",
+              "inspiration",
+              "prof_bonus",
+              "slots_1"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Навыки от силы",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "athletics_prof",
+              "athletics"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Навыки от ловкости",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "acrobatics_prof",
+              "acrobatics",
+              "sleight_of_hand_prof",
+              "sleight_of_hand",
+              "stealth_prof",
+              "stealth"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Навыки от интеллекта",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "arcana_prof",
+              "arcana",
+              "history_prof",
+              "history",
+              "investigation_prof",
+              "investigation",
+              "nature_prof",
+              "nature",
+              "religion_prof",
+              "religion"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Навыки от мудрости",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "animal_handling_prof",
+              "animal_handling",
+              "insight_prof",
+              "insight",
+              "medicine_prof",
+              "medicine",
+              "perception_prof",
+              "perception",
+              "survival_prof",
+              "survival"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Навыки от харизмы",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "deception_prof",
+              "deception",
+              "intimidation_prof",
+              "intimidation",
+              "performance_prof",
+              "performance",
+              "persuasion_prof",
+              "persuasion"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Защита",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "ac_base",
+              "armor_heavy",
+              "ac",
+              "dex_save_prof",
+              "dex_save"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Здоровье",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "hp_max",
+              "hp_current",
+              "hp_temp",
+              "death_ok",
+              "death_fail",
+              "down",
+              "up"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Атака",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "attack_bonus",
+              "spell_dc"
+            ]
+          }
+        ]
+      }
+    ]
   },
   "compendium": {
     "records": [

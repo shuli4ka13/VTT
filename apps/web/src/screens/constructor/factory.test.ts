@@ -47,8 +47,12 @@ for (const [name, base] of BASES) {
 
     it('новое поле проходит схему', () => {
       const system = base();
-      system.tables = withColumn(system, newColumn(system, 'Новый блок').value).tables;
+      system.tables = withColumn(system, newColumn(system).value).tables;
       expect(issuesOf(system)).toEqual([]);
+    });
+
+    it('новая колонка без блока', () => {
+      expect(newColumn(base()).value).not.toHaveProperty('block');
     });
 
     it('новый тип записи со свойством проходит схему', () => {

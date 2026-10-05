@@ -15,8 +15,8 @@ function Sheets() {
 const system = (): System => ({
   ...emptySystem(),
   tables: { лист: { shape: 'single', columns: [
-    { key: 'сила', label: 'Сила', kind: 'number', default: 14, block: 'Характеристики' },
-    { key: 'мод', label: 'Модификатор Силы', expr: { expr: '(#сила - 10) / 2' }, block: 'Характеристики' },
+    { key: 'сила', label: 'Сила', kind: 'number', default: 14 },
+    { key: 'мод', label: 'Модификатор Силы', expr: { expr: '(#сила - 10) / 2' } },
   ] } },
 } as System);
 

@@ -1,11 +1,11 @@
 import { referencesOf, formulaDeps, LISTEN } from './references.ts';
 import type { Reference, Where } from './references.ts';
 import { basedOn } from './inherit.ts';
-import { isFormulaCell, fieldsOf, fieldOf, hasField } from './sheet-columns.ts';
+import { isFormulaCell, fieldsOf, fieldOf, hasField, rowKeyOf } from './sheet-columns.ts';
 import type { System, Table } from './types.ts';
-import { isBook, kindOf } from './owned.ts';
+import { isBook, kindOf, blockLine } from './owned.ts';
 
-export type PartKind = 'field' | 'group' | 'effect' | 'table' | 'constant' | 'rollEdit' | 'recordKind' | 'record';
+export type PartKind = 'field' | 'group' | 'block' | 'effect' | 'table' | 'constant' | 'rollEdit' | 'recordKind' | 'record';
 
 export interface Part { kind: PartKind; key: string }
 
@@ -68,15 +68,6 @@ function rowTables(system: System): Map<string, string> {
   return out;
 }
 
-function groupLine(system: System, group: string | undefined): string[] {
-  const out: string[] = [];
-  let at = group;
-  while (at && system.groups?.[at] && !out.includes(at)) {
-    out.push(at);
-    at = system.groups[at]!.parent;
-  }
-  return out;
-}
 
 export function dependencies(donor: System): (part: Part) => Part[] {
   const byOwner = new Map<string, Part[]>();
@@ -103,7 +94,7 @@ export function dependencies(donor: System): (part: Part) => Part[] {
     const out = [...byOwner.get(partKey(part)) ?? []];
     if (part.kind === 'field') {
       const field = fieldOf(donor, part.key);
-      for (const group of groupLine(donor, field?.group)) out.push({ kind: 'group', key: group });
+      if (field?.group && (donor.blocks ?? []).some(block => block.name === field.group)) out.push({ kind: 'block', key: field.group });
       if (field?.cell) out.push({ kind: 'table', key: field.cell.table });
     }
     if (part.kind === 'table') {
@@ -129,6 +120,10 @@ export function dependencies(donor: System): (part: Part) => Part[] {
       const parent = donor.groups?.[part.key]?.parent;
       if (parent) out.push({ kind: 'group', key: parent });
     }
+    if (part.kind === 'block') {
+      const block = (donor.blocks ?? []).find(b => b.name === part.key);
+      if (block?.parent && (donor.blocks ?? []).some(b => b.name === block.parent)) out.push({ kind: 'block', key: block.parent });
+    }
     return out;
   };
 }
@@ -137,6 +132,7 @@ const exists = (system: System, part: Part): boolean => {
   switch (part.kind) {
     case 'field': return hasField(system, part.key);
     case 'group': return Boolean(system.groups?.[part.key]);
+    case 'block': return (system.blocks ?? []).some(block => block.name === part.key);
     case 'effect': return Boolean(system.effects?.[part.key]);
     case 'table': return Boolean(system.tables?.[part.key]);
     case 'constant': return Boolean(system.constants?.[part.key]);
@@ -163,7 +159,7 @@ export function closure(donor: System, roots: Part[]): Part[] {
 
 export const blockParts = (donor: System, block: string): Part[] =>
   fieldsOf(donor)
-    .filter(field => groupLine(donor, field.group).includes(block))
+    .filter(field => blockLine(donor, field.group).includes(block))
     .map(field => ({ kind: 'field' as const, key: field.tag }));
 
 function copyColumn(target: System, donor: System, tag: string): void {
@@ -180,6 +176,14 @@ function copyPart(target: System, donor: System, part: Part): void {
   switch (part.kind) {
     case 'field': copyColumn(target, donor, part.key); return;
     case 'group': (target.groups ??= {})[part.key] = clone(donor.groups![part.key]!); return;
+    case 'block': {
+      const from = clone((donor.blocks ?? []).find(block => block.name === part.key)!);
+      const blocks = (target.blocks ??= []);
+      const have = blocks.find(block => block.name === from.name);
+      if (!have) { blocks.push(from); return; }
+      for (const piece of from.parts) if (!have.parts.some(p => JSON.stringify(p) === JSON.stringify(piece))) have.parts.push(piece);
+      return;
+    }
     case 'effect': target.effects[part.key] = clone(donor.effects[part.key]!); return;
     case 'table': target.tables = { ...target.tables, [part.key]: clone(donor.tables![part.key]!) }; return;
     case 'constant': (target.constants ??= {})[part.key] = clone(donor.constants![part.key]!); return;
@@ -208,5 +212,29 @@ export function bringIn(target: System, donor: System, roots: Part[], grants: st
   for (const key of grants) {
     if (!(system.grants ?? []).includes(key)) system.grants = [...system.grants ?? [], key];
   }
+  pruneBlocks(system, donor);
   return { system, added, kept };
+}
+
+function pruneBlocks(system: System, donor: System): void {
+  if (!system.blocks) return;
+  for (const block of system.blocks) {
+    block.parts = block.parts.flatMap(part => {
+      const table = system.tables?.[part.table];
+      if (!table) return [];
+      const keys = new Set((table.columns ?? []).map(c => c.key));
+      const rows = new Set((table.rows ?? []).map(r => rowKeyOf(r)));
+      const donorTable = donor.tables?.[part.table];
+      const columns = part.columns
+        ? part.columns.filter(key => keys.has(key))
+        : donorTable && (donorTable.columns ?? []).some(c => !keys.has(c.key)) ? (donorTable.columns ?? []).map(c => c.key).filter(key => keys.has(key)) : undefined;
+      if (columns && !columns.length) return [];
+      const kept = part.rows?.filter(row => rows.has(row));
+      if (kept && !kept.length) return [];
+      return [{ ...part, ...(columns ? { columns } : {}), ...(kept ? { rows: kept } : {}), ...(part.by && !keys.has(part.by) ? { by: undefined } : {}) }]
+        .map(clean => { if (clean.by === undefined) delete clean.by; return clean; });
+    });
+  }
+  system.blocks = system.blocks.filter(block => block.parts.length > 0);
+  if (!system.blocks.length) delete system.blocks;
 }

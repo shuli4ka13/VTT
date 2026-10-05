@@ -78,7 +78,6 @@ const startValue = z.union([tableValue, z.array(tableValue)]);
 
 export const cellView = z.object({
   label: z.string().optional(),
-  block: z.string().optional(),
   roll: z.lazy(() => rollSpec.partial()).optional(),
   control: control.optional(),
   default: startValue.optional(),
@@ -97,10 +96,22 @@ export const column = columnValue.extend({
   label: z.string().optional(),
   roll: z.lazy(() => rollSpec.partial({ die: true }).extend({ label: z.string().optional() })).optional(),
   control: control.optional(),
-  block: z.string().optional(),
   title: z.string().optional(),
   onSheet: z.boolean().optional(),
   optional: z.boolean().optional(),
+}).strict();
+
+export const sheetPart = z.object({
+  table: z.string().min(1),
+  columns: z.array(z.string().min(1)).optional(),
+  rows: z.array(z.string().min(1)).optional(),
+  by: z.string().min(1).optional(),
+}).strict();
+
+export const sheetBlock = z.object({
+  name: z.string().min(1),
+  parent: z.string().min(1).optional(),
+  parts: z.array(sheetPart),
 }).strict();
 
 export const groupSpec = z.object({
@@ -110,7 +121,6 @@ export const groupSpec = z.object({
 export const tableRow = z.object({
   value: tableValue.optional(),
   label: z.string().optional(),
-  block: z.string().optional(),
 
   from: z.number().optional(),
   to: z.number().optional(),
@@ -277,6 +287,7 @@ export const system = z.object({
   name: z.string().optional(),
   fields: z.never({ message: 'полей больше нет — это колонки таблицы листа (system.tables, shape: single)' }).optional(),
   groups: z.record(z.string(), groupSpec).optional(),
+  blocks: z.array(sheetBlock).optional(),
   effects: z.record(z.string(), effect),
 
   grants: z.array(z.string()).optional(),
@@ -384,6 +395,8 @@ export type Param = z.infer<typeof param>;
 export type Step = z.infer<typeof step>;
 export type Ask = z.infer<typeof ask>;
 export type Control = z.infer<typeof control>;
+export type SheetBlock = z.infer<typeof sheetBlock>;
+export type SheetPart = z.infer<typeof sheetPart>;
 export type ControlKind = z.infer<typeof controlKind>;
 export type FieldOption = z.infer<typeof fieldOption>;
 export type Guard = z.infer<typeof formula>;
