@@ -1,6 +1,5 @@
 import { useWorld } from '../../store/world.ts';
 import { Card, CardHead, Field, Select, Button, DangerButton, LabelInput } from '../../ui/primitives.tsx';
-import { renameGroup } from './groups.ts';
 import { onSheet, rowKeyOf } from '@vtt/engine/model/sheet-columns';
 import { isRange } from '@vtt/engine/model/tables';
 import type { System, SheetBlock, SheetPart } from '@vtt/schema';
@@ -22,12 +21,14 @@ export function freeBlockName(system: System, base: string): string {
 
 export function renameBlock(draft: System, from: string, to: string): void {
   const clean = to.trim();
-  if (!clean || clean === from) return;
+  if (!clean || clean === from || (draft.blocks ?? []).some(block => block.name === clean)) return;
   for (const block of draft.blocks ?? []) {
     if (block.name === from) block.name = clean;
     if (block.parent === from) block.parent = clean;
   }
-  renameGroup(draft, from, clean);
+  for (const kind of Object.values(draft.sheets ?? {})) {
+    if (kind.blocks) kind.blocks = kind.blocks.map(name => (name === from ? clean : name));
+  }
 }
 
 export function removeBlock(draft: System, name: string): void {
@@ -73,7 +74,7 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
         <LabelInput value={block.name} placeholder="как зовётся блок"
           onCommit={next => {
             const clean = next.trim();
-            if (!clean || clean === name) return;
+            if (!clean || clean === name || (system.blocks ?? []).some(other => other.name === clean)) return;
             editSystem(draft => renameBlock(draft, name, clean));
             pick({ activeBlock: clean });
           }} />

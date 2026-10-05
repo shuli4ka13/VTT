@@ -311,7 +311,7 @@ export function tableFields(system: System, tableId: string): Field[] {
 
 export interface FieldProblem { table: string; message: string }
 
-interface Built { fields: Field[]; byTag: Map<string, Field>; problems: FieldProblem[]; layout?: unknown; placed?: Built }
+interface Built { fields: Field[]; byTag: Map<string, Field>; problems: FieldProblem[] }
 
 const EMPTY: Built = { fields: [], byTag: new Map(), problems: [] };
 
@@ -335,9 +335,15 @@ function builtOf(system: System): Built {
   if (!tables) return EMPTY;
   let hit = built.get(tables);
   if (!hit) { hit = buildFields(system); built.set(tables, hit); }
-  if (!hit.placed || hit.layout !== system.blocks) { hit.placed = placeFields(system, hit); hit.layout = system.blocks; }
-  return hit.placed;
+  if (!system.blocks) return hit;
+  let byTables = placedCache.get(system.blocks);
+  if (!byTables) { byTables = new WeakMap(); placedCache.set(system.blocks, byTables); }
+  let placed = byTables.get(hit);
+  if (!placed) { placed = placeFields(system, hit); byTables.set(hit, placed); }
+  return placed;
 }
+
+const placedCache = new WeakMap<object, WeakMap<Built, Built>>();
 
 const partHas = (part: SheetPart, field: Field): boolean =>
   part.table === field.home
@@ -361,14 +367,17 @@ export function sectionOf(system: System, part: SheetPart, field: Field): string
 
 function placeFields(system: System, base: Built): Built {
   const blocks = system.blocks ?? [];
-  const fields = base.fields.map(field => {
+  const find = (field: Field, named: boolean): [string, SheetPart] | null => {
     for (const block of blocks) {
-      const part = block.parts.find(p => partHas(p, field));
-      if (!part) continue;
-      const section = sectionOf(system, part, field);
-      return { ...field, group: block.name, ...(section ? { section } : {}) };
+      for (const part of block.parts) if (Boolean(part.columns) === named && partHas(part, field)) return [block.name, part];
     }
-    return field;
+    return null;
+  };
+  const fields = base.fields.map(field => {
+    const hit = find(field, true) ?? find(field, false);
+    if (!hit) return field;
+    const section = sectionOf(system, hit[1], field);
+    return { ...field, group: hit[0], ...(section ? { section } : {}) };
   });
   const byTag = new Map<string, Field>();
   for (const field of fields) if (!byTag.has(field.tag)) byTag.set(field.tag, field);

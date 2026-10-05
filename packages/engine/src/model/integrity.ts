@@ -1,3 +1,4 @@
+import { renameLayoutRow } from './layout.ts';
 import { rowsOf } from './tables.ts';
 import { recordsOf, recordKinds, kindsOf } from './owned.ts';
 import { compile } from '../formula/index.ts';
@@ -259,6 +260,7 @@ export function renameRow(system: System, table: string, from: unknown, to: unkn
   for (const row of rowsOf(system.tables?.[table])) {
     if (same(row.value, from)) row.value = to as never;
   }
+  renameLayoutRow(system, table, from, to);
   for (const other of Object.values(system.tables ?? {})) {
     for (const column of (other.columns ?? [])) {
       if (column.kind !== 'choice' || column.from !== table) continue;

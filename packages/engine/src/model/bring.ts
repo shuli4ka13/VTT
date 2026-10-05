@@ -4,6 +4,8 @@ import { basedOn } from './inherit.ts';
 import { isFormulaCell, fieldsOf, fieldOf, hasField, rowKeyOf } from './sheet-columns.ts';
 import type { System, Table } from './types.ts';
 import { isBook, kindOf, blockLine } from './owned.ts';
+import { tidyLayout } from './layout.ts';
+import type { SheetPart } from '@vtt/schema';
 
 export type PartKind = 'field' | 'group' | 'block' | 'effect' | 'table' | 'constant' | 'rollEdit' | 'recordKind' | 'record';
 
@@ -176,14 +178,7 @@ function copyPart(target: System, donor: System, part: Part): void {
   switch (part.kind) {
     case 'field': copyColumn(target, donor, part.key); return;
     case 'group': (target.groups ??= {})[part.key] = clone(donor.groups![part.key]!); return;
-    case 'block': {
-      const from = clone((donor.blocks ?? []).find(block => block.name === part.key)!);
-      const blocks = (target.blocks ??= []);
-      const have = blocks.find(block => block.name === from.name);
-      if (!have) { blocks.push(from); return; }
-      for (const piece of from.parts) if (!have.parts.some(p => JSON.stringify(p) === JSON.stringify(piece))) have.parts.push(piece);
-      return;
-    }
+    case 'block': return;
     case 'effect': target.effects[part.key] = clone(donor.effects[part.key]!); return;
     case 'table': target.tables = { ...target.tables, [part.key]: clone(donor.tables![part.key]!) }; return;
     case 'constant': (target.constants ??= {})[part.key] = clone(donor.constants![part.key]!); return;
@@ -204,37 +199,53 @@ export function bringIn(target: System, donor: System, roots: Part[], grants: st
   const order = new Map(fieldsOf(donor).map((field, at) => [field.tag, at]));
   const had = new Set(parts.filter(part => exists(system, part)).map(partKey));
   const fields = parts.filter(p => p.kind === 'field').sort((a, b) => (order.get(a.key) ?? 0) - (order.get(b.key) ?? 0));
-  for (const part of [...parts.filter(p => p.kind !== 'field'), ...fields]) {
+  const blocks = parts.filter(p => p.kind === 'block');
+  for (const part of [...parts.filter(p => p.kind !== 'field' && p.kind !== 'block'), ...fields]) {
     if (had.has(partKey(part))) { kept.push(part); continue; }
     copyPart(system, donor, part);
     added.push(part);
   }
+  const fresh = new Set<SheetPart>();
+  const arrived = new Set<string>();
+  for (const part of blocks) {
+    const from = clone((donor.blocks ?? []).find(block => block.name === part.key)!);
+    const list = (system.blocks ??= []);
+    const have = list.find(block => block.name === from.name);
+    const pieces = have ? from.parts.filter(piece => !have.parts.some(p => JSON.stringify(p) === JSON.stringify(piece))) : from.parts;
+    for (const piece of pieces) fresh.add(piece);
+    if (have) { have.parts.push(...pieces); kept.push(part); } else { list.push(from); added.push(part); arrived.add(from.name); }
+  }
   for (const key of grants) {
     if (!(system.grants ?? []).includes(key)) system.grants = [...system.grants ?? [], key];
   }
-  pruneBlocks(system, donor);
+  pruneBlocks(system, donor, fresh, arrived);
   return { system, added, kept };
 }
 
-function pruneBlocks(system: System, donor: System): void {
-  if (!system.blocks) return;
+function pruneBlocks(system: System, donor: System, fresh: Set<SheetPart>, arrived: Set<string>): void {
+  if (!system.blocks || !fresh.size) return;
   for (const block of system.blocks) {
     block.parts = block.parts.flatMap(part => {
+      if (!fresh.has(part)) return [part];
       const table = system.tables?.[part.table];
       if (!table) return [];
       const keys = new Set((table.columns ?? []).map(c => c.key));
       const rows = new Set((table.rows ?? []).map(r => rowKeyOf(r)));
-      const donorTable = donor.tables?.[part.table];
+      const missing = (donor.tables?.[part.table]?.columns ?? []).some(c => !keys.has(c.key));
       const columns = part.columns
         ? part.columns.filter(key => keys.has(key))
-        : donorTable && (donorTable.columns ?? []).some(c => !keys.has(c.key)) ? (donorTable.columns ?? []).map(c => c.key).filter(key => keys.has(key)) : undefined;
+        : missing ? (table.columns ?? []).map(c => c.key) : undefined;
       if (columns && !columns.length) return [];
       const kept = part.rows?.filter(row => rows.has(row));
       if (kept && !kept.length) return [];
-      return [{ ...part, ...(columns ? { columns } : {}), ...(kept ? { rows: kept } : {}), ...(part.by && !keys.has(part.by) ? { by: undefined } : {}) }]
-        .map(clean => { if (clean.by === undefined) delete clean.by; return clean; });
+      const next: SheetPart = { table: part.table };
+      if (columns) next.columns = columns;
+      if (kept) next.rows = kept;
+      if (part.by && keys.has(part.by)) next.by = part.by;
+      return [next];
     });
   }
-  system.blocks = system.blocks.filter(block => block.parts.length > 0);
-  if (!system.blocks.length) delete system.blocks;
+  const blocks = system.blocks;
+  system.blocks = blocks.filter(block => !arrived.has(block.name) || block.parts.length > 0 || blocks.some(other => other.parent === block.name));
+  tidyLayout(system);
 }

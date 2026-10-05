@@ -29,12 +29,12 @@ describe('problemOf: имя внутри формулы слота', () => {
   });
 
   it('поле, объявленное в системе и названное через лист, формулу не ломает', () => {
-    const system: System = { ...systemWithDie(), tables: { лист: { shape: 'single', columns: [{ key: 'attack_bonus', label: 'Бонус атаки', kind: 'number', block: 'Атака' }] } } };
+    const system: System = { ...systemWithDie(), tables: { лист: { shape: 'single', columns: [{ key: 'attack_bonus', label: 'Бонус атаки', kind: 'number' }] } } };
     expect(problemOf(roll('@действующий.attack_bonus'), system, withActor, [])).toBeNull();
   });
 
   it('поле без листа — приговор: чьё это поле', () => {
-    const system: System = { ...systemWithDie(), tables: { лист: { shape: 'single', columns: [{ key: 'attack_bonus', label: 'Бонус атаки', kind: 'number', block: 'Атака' }] } } };
+    const system: System = { ...systemWithDie(), tables: { лист: { shape: 'single', columns: [{ key: 'attack_bonus', label: 'Бонус атаки', kind: 'number' }] } } };
     const problem = problemOf(roll('@attack_bonus'), system, withActor, []);
     expect(problem?.missingField).toBe('attack_bonus');
     expect(problem?.text).toContain('чьё поле');

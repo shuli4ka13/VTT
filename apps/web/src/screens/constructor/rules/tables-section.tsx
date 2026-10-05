@@ -1,5 +1,6 @@
 import { ColumnSheetFields, ColumnViewField } from '../table-field.tsx';
 import { rowNames } from '../row-names.ts';
+import { renameLayoutColumn } from '@vtt/engine/model/layout';
 export { rowNames } from '../row-names.ts';
 import { viewsFor, columnFamily, takesBounds } from '../../../sheet/views/index.tsx';
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
@@ -223,6 +224,7 @@ export function renameColumn(draft: System, tableId: string, key: string, label:
   const column = draft.tables?.[tableId]?.columns?.find(c => c.key === key);
   if (!column) return;
   column.label = label;
+  if (fresh !== key) renameLayoutColumn(draft, tableId, key, fresh);
   column.key = fresh;
 }
 

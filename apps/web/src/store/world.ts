@@ -1,3 +1,4 @@
+import { tidyLayout } from '@vtt/engine/model/layout';
 import { useMemo } from 'react';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -96,6 +97,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
   editSystem: edit => set(state => {
     const draft = structuredClone(state.system);
     edit(draft);
+    tidyLayout(draft);
     return { system: fresh(draft) };
   }),
 

@@ -9,7 +9,7 @@ const withTable = (): System => ({
   ...emptySystem(),
   tables: {
     abilities: {
-      label: 'Характеристики', owner: 'sheet', block: 'Характеристики',
+      label: 'Характеристики', owner: 'sheet',
       columns: [],
       rows: [{ value: 'сила', label: 'Сила' }, { value: 'ловкость', label: 'Ловкость' }],
     },
