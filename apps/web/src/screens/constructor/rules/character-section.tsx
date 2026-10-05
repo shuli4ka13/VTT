@@ -113,27 +113,39 @@ export function CharacterSection({ system, editSystem, docked }: {
     );
   };
 
+  const fieldCount = (block: SheetBlock): number => fieldsOf(system).filter(f => (f.placements ?? []).some(place => place.group === block.name)).length;
+  const sourceOf = (block: SheetBlock): string => block.parts
+    .map(part => `${system.tables?.[part.table]?.label || part.table}${part.by ? ` · по «${system.tables?.[part.table]?.columns?.find(c => c.key === part.by)?.label ?? part.by}»` : ''}`)
+    .join(', ');
   const branch = (nodes: BlockNode[], depth: number): ReactNode => nodes.map(({ block, children }) => {
     const on = shown(block.name);
+    const count = fieldCount(block);
     return (
-      <div key={block.name} className={`stack stack--tight${depth ? ' list__nest' : ''}${on ? '' : ' faint'}`}>
-        <div className="inline inline--tight block-head">
+      <details key={block.name} className={`block-fold${depth ? ' block-fold--nested' : ''}${on ? '' : ' faint'}`} open={block.name === activeBlock || undefined}>
+        <summary className="block-fold__head">
           {kind ? (
-            <input type="checkbox" checked={on} title={on ? 'есть на этом листе' : 'нет на этом листе'} onChange={() => toggle(block.name)} />
+            <input type="checkbox" checked={on} title={on ? 'есть на этом листе' : 'нет на этом листе'}
+              onClick={event => event.stopPropagation()} onChange={() => toggle(block.name)} />
           ) : null}
-          <Button size="sm" variant={block.name === activeBlock ? 'primary' : 'ghost'} title="настройки блока" onClick={() => pickBlock(block.name)}>{block.name}</Button>
-          <span className="block-head__more">
-            <Button size="sm" variant="ghost" title={`колонка в блоке «${block.name}»`} onClick={() => add(block.name)}>+</Button>
+          <span className="block-fold__name">{block.name}</span>
+          <span className="block-fold__count">{count}</span>
+          <span className="block-fold__from">{sourceOf(block) || 'пока пусто'}{children.length ? ` · внутри блоков: ${children.length}` : ''}</span>
+          <Button size="sm" variant={block.name === activeBlock ? 'primary' : 'ghost'} title="настройки блока"
+            onClick={() => pickBlock(block.name)}>настроить</Button>
+        </summary>
+        <div className="block-fold__body">
+          {block.parts.map(describe)}
+          <div className="inline inline--tight">
+            <Button size="sm" variant="ghost" title={`новая колонка листа в блоке «${block.name}»`} onClick={() => add(block.name)}>+ колонка</Button>
             <Button size="sm" variant="ghost" title={`блок внутри «${block.name}»`} onClick={() => addBlock(block.name)}>+ блок внутрь</Button>
-          </span>
+          </div>
+          {branch(children, depth + 1)}
         </div>
-        {block.parts.map(describe)}
-        {branch(children, depth + 1)}
-      </div>
+      </details>
     );
   });
 
-  const placed = new Set(fieldsOf(system).filter(f => f.group).map(f => `${f.home}.${f.cell?.column ?? f.tag}`));
+  const placed = new Set(fieldsOf(system).filter(f => f.placements?.length).map(f => `${f.home}.${f.cell?.column ?? f.tag}`));
   const loose: { table: string; column: string; label: string; single: boolean }[] = [];
   for (const field of fieldsOf(system)) {
     const column = field.cell?.column ?? field.tag;

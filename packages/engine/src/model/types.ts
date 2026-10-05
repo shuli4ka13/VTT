@@ -22,6 +22,8 @@ export interface CellMark { table: string; row: string; column: string }
 
 export type Holder = 'sheet' | 'group' | 'desk';
 
+export interface Placement { group: string; section?: string; sectionAt?: number; sectionBy?: string }
+
 export interface Field {
   tag: string;
   label: string;
@@ -29,6 +31,7 @@ export interface Field {
   section?: string;
   sectionAt?: number;
   sectionBy?: string;
+  placements?: Placement[];
   roll?: Partial<RollSpec> & { label?: string };
   value: FieldValue;
   control?: Control;

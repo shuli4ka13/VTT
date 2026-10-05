@@ -62,11 +62,11 @@ describe('листы: блоки и типы', () => {
   it('часть «таблица навыки, группировать по характеристике»', () => {
     render(<SheetTab />);
     fireEvent.click(screen.getByText('+ блок'));
-    fireEvent.click(screen.getByText('+ часть'));
-    fireEvent.change(screen.getByLabelText('таблица части'), { target: { value: 'навыки' } });
+    fireEvent.change(screen.getByLabelText('добавить поля из таблицы'), { target: { value: 'навыки' } });
     fireEvent.change(screen.getByLabelText('группировать по'), { target: { value: 'ability' } });
     const block = blocksNow().find(b => b.name === 'Новый блок')!;
-    expect(block.parts).toEqual([{ table: 'навыки', by: 'ability' }]);
+    expect(block.parts[0]!.table).toBe('навыки');
+    expect(block.parts[0]!.by).toBe('ability');
     const field = fieldsOf(useWorld.getState().system).find(f => f.cell?.column === 'bonus')!;
     expect(field.group).toBe('Новый блок');
     expect(field.section).toBe('мудрость');

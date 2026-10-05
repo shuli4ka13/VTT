@@ -96,7 +96,7 @@ export function dependencies(donor: System): (part: Part) => Part[] {
     const out = [...byOwner.get(partKey(part)) ?? []];
     if (part.kind === 'field') {
       const field = fieldOf(donor, part.key);
-      if (field?.group && (donor.blocks ?? []).some(block => block.name === field.group)) out.push({ kind: 'block', key: field.group });
+      for (const place of field?.placements ?? []) out.push({ kind: 'block', key: place.group });
       if (field?.cell) out.push({ kind: 'table', key: field.cell.table });
     }
     if (part.kind === 'table') {
@@ -161,7 +161,7 @@ export function closure(donor: System, roots: Part[]): Part[] {
 
 export const blockParts = (donor: System, block: string): Part[] =>
   fieldsOf(donor)
-    .filter(field => blockLine(donor, field.group).includes(block))
+    .filter(field => (field.placements ?? []).some(place => blockLine(donor, place.group).includes(block)))
     .map(field => ({ kind: 'field' as const, key: field.tag }));
 
 function copyColumn(target: System, donor: System, tag: string): void {

@@ -19,10 +19,11 @@ const system = (): System => ({
 } as unknown as System);
 
 describe('раскладка листа следует за правками таблиц', () => {
-  it('явно названная колонка важнее части «все колонки», даже если та раньше', () => {
+  it('поле стоит во всех блоках, куда его поставили, по порядку блоков', () => {
     const s = system();
-    expect(fieldOf(s, 'кд')!.group).toBe('Защита');
-    expect(fieldOf(s, 'хиты')!.group).toBe('Всё');
+    expect(fieldOf(s, 'кд')!.placements!.map(p => p.group)).toEqual(['Всё', 'Защита']);
+    expect(fieldOf(s, 'хиты')!.placements!.map(p => p.group)).toEqual(['Всё']);
+    expect(fieldOf(s, 'навыки.атлетика.ранг')!.placements).toEqual([{ group: 'Навыки', sectionBy: 'навыки.атлетика.база' }]);
   });
 
   it('переименование колонки и строки правит ссылки в блоках', () => {

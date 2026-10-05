@@ -36,20 +36,27 @@ export interface BlockUse { fields: number; effects: number; records: number }
 
 export function blockUse(system: System, name: string): BlockUse {
   let fields = 0; let effects = 0; let records = 0;
-  for (const field of fieldsOf(system)) if (field.group === name) fields += 1;
+  for (const field of fieldsOf(system)) if ((field.placements ?? []).some(place => place.group === name)) fields += 1;
   for (const effect of Object.values(system.effects ?? {})) if (blockOf(system, effect) === name) effects += 1;
   for (const [, kind] of kindsOf(system)) if (blockOf(system, kind) === name) records += 1;
   return { fields, effects, records };
 }
 
-export function fieldsByBlock(system: System, fields: readonly Field[] = fieldsOf(system)): [string, Field[]][] {
+export function fieldsByBlock(system: System, fields: readonly Field[] = fieldsOf(system), shown: (block: string) => boolean = () => true): [string, Field[]][] {
   const blocks = new Map<string, Field[]>();
   for (const name of sheetBlockNames(system)) blocks.set(name, []);
-  for (const field of fields) {
-    const key = field.group ?? NO_BLOCK;
+  const put = (key: string, field: Field) => {
     const list = blocks.get(key);
     if (list) list.push(field);
     else blocks.set(key, [field]);
+  };
+  for (const field of fields) {
+    if (!field.placements?.length) { put(NO_BLOCK, field); continue; }
+    for (const place of field.placements) {
+      if (!shown(place.group)) continue;
+      const { section: _s, sectionAt: _a, sectionBy: _b, ...rest } = field;
+      put(place.group, { ...rest, ...place });
+    }
   }
   return [...blocks].filter(([, list]) => list.length > 0);
 }

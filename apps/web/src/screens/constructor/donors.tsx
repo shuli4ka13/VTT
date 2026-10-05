@@ -7,7 +7,7 @@ import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
 import { bringIn, blockParts, closure } from '@vtt/engine/model/bring';
 import type { Part, PartKind } from '@vtt/engine/model/bring';
 import { PIECES, bringPiece, donorOf } from '@vtt/engine/model/pieces';
-import { groupChain, subtreeNames } from './groups.ts';
+import { blockLine } from '@vtt/engine/model/owned';
 import { launchOf, LAUNCHES } from '@vtt/engine/model/effect-kinds';
 import { fieldsOf, fieldOf } from '@vtt/engine/model/sheet-columns';
 import { kindOf } from '@vtt/engine/model/owned';
@@ -148,8 +148,8 @@ function Blocks({ donor }: { donor: System }) {
   const blocks = useMemo(() => {
     const names = new Map<string, number>();
     for (const field of fieldsOf(donor)) {
-      const key = groupChain(donor, field.group ?? 'Без блока').at(-1)!;
-      names.set(key, (names.get(key) ?? 0) + 1);
+      const roots = new Set((field.placements ?? []).map(place => blockLine(donor, place.group).at(-1)!));
+      for (const key of roots.size ? roots : ['Без блока']) names.set(key, (names.get(key) ?? 0) + 1);
     }
     return [...names];
   }, [donor]);
@@ -159,13 +159,12 @@ function Blocks({ donor }: { donor: System }) {
   return (
     <div className="palette">
       {blocks.map(([group, count]) => {
-        const inside = new Set(subtreeNames(donor, group));
-        const fields = fieldsOf(donor).filter(f => inside.has(f.group ?? 'Без блока'));
+        const fields = fieldsOf(donor).filter(f => (f.placements ?? []).some(place => blockLine(donor, place.group).includes(group)));
         const already = fields.every(f => have.has(f.tag));
         const brings = [...new Set(
           closure(donor, blockParts(donor, group))
             .filter(part => part.kind === 'field')
-            .map(part => groupChain(donor, fieldOf(donor, part.key)?.group ?? 'Без блока').at(-1)!),
+            .flatMap(part => (fieldOf(donor, part.key)?.placements ?? []).map(place => blockLine(donor, place.group).at(-1)!)),
         )];
 
         return (

@@ -8,6 +8,7 @@ import type { Field as FieldModel } from '@vtt/engine/model/types';
 import { fieldsOf, rowKeyOf, fieldOf } from '@vtt/engine/model/sheet-columns';
 import { optionsOf } from '@vtt/engine/model/lists';
 import { fieldsByBlock } from '@vtt/engine/model/blocks';
+import { blockShown } from '@vtt/engine/model/owned';
 
 export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only, fields, onPick, picked, onPickBlock, onPickRow }: {
   onPickBlock?: (name: string) => void;
@@ -24,7 +25,7 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
   picked?: string | null;
 }) {
   const all = fields ?? fieldsOf(system);
-  const shown = fieldsByBlock(system, only ? all.filter(f => only.includes(f.tag)) : all);
+  const shown = fieldsByBlock(system, only ? all.filter(f => only.includes(f.tag)) : all, blockShown(system, sheet));
 
   const cell = (field: FieldModel, bare = false) => {
     const view = (

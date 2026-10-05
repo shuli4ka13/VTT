@@ -85,10 +85,17 @@ export function blockLine(system: System, block: string | undefined): string[] {
   return out;
 }
 
-export function shownOn(system: System, sheet: Sheet | null | undefined): (field: { group?: string }) => boolean {
+export function shownOn(system: System, sheet: Sheet | null | undefined): (field: { group?: string; placements?: { group: string }[] }) => boolean {
   const blocks = sheetKindOf(system, sheet)?.blocks;
   if (!blocks?.length) return () => true;
-  return field => blockLine(system, field.group).some(block => blocks.includes(block));
+  const visible = blockShown(system, sheet);
+  return field => (field.placements?.length ? field.placements.some(place => visible(place.group)) : visible(field.group));
+}
+
+export function blockShown(system: System, sheet: Sheet | null | undefined): (block: string | undefined) => boolean {
+  const blocks = sheetKindOf(system, sheet)?.blocks;
+  if (!blocks?.length) return () => true;
+  return block => blockLine(system, block).some(name => blocks.includes(name));
 }
 
 export const propKeysOf = (kind: RecordKind | undefined): Set<string> => new Set((kind?.columns ?? []).map(prop => prop.key));

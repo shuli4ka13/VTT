@@ -1,5 +1,5 @@
 import { EngineError } from '../engine/errors.ts';
-import type { System, Table, TableRow, TableColumn, CellView, Field, FieldValue, CellMark, Holder } from './types.ts';
+import type { System, Table, TableRow, TableColumn, CellView, Field, FieldValue, CellMark, Holder, Placement } from './types.ts';
 import type { SheetPart } from '@vtt/schema';
 
 export type { CellMark };
@@ -383,16 +383,14 @@ export function sectionOf(system: System, part: SheetPart, field: Field): Pick<F
 
 function placeFields(system: System, base: Built): Built {
   const blocks = system.blocks ?? [];
-  const find = (field: Field, named: boolean): [string, SheetPart] | null => {
-    for (const block of blocks) {
-      for (const part of block.parts) if (Boolean(part.columns) === named && partHas(part, field)) return [block.name, part];
-    }
-    return null;
-  };
   const fields = base.fields.map(field => {
-    const hit = find(field, true) ?? find(field, false);
-    if (!hit) return field;
-    return { ...field, group: hit[0], ...sectionOf(system, hit[1], field) };
+    const placements: Placement[] = [];
+    for (const block of blocks) {
+      const part = block.parts.find(p => partHas(p, field));
+      if (part) placements.push({ group: block.name, ...sectionOf(system, part, field) });
+    }
+    if (!placements.length) return field;
+    return { ...field, ...placements[0], placements };
   });
   const byTag = new Map<string, Field>();
   for (const field of fields) if (!byTag.has(field.tag)) byTag.set(field.tag, field);

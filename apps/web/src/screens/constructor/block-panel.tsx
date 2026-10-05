@@ -1,6 +1,6 @@
 import { useWorld } from '../../store/world.ts';
 import { Card, CardHead, Field, Select, Button, DangerButton, LabelInput } from '../../ui/primitives.tsx';
-import { onSheet, rowKeyOf } from '@vtt/engine/model/sheet-columns';
+import { onSheet, rowKeyOf, fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { isRange } from '@vtt/engine/model/tables';
 import type { System, SheetBlock, SheetPart } from '@vtt/schema';
 
@@ -49,6 +49,33 @@ export function addColumnToBlock(draft: System, name: string, table: string, key
   else if (part.columns && !part.columns.includes(key)) part.columns.push(key);
 }
 
+export function homesOf(system: System, table: string, column: string): string[] {
+  const field = fieldsOf(system).find(f => f.home === table && (f.cell?.column ?? f.tag) === column);
+  return (field?.placements ?? []).map(place => place.group);
+}
+
+function groupsOf(system: System, table: string, keys: string[], self: string, chosen: string[]): [string, string[]][] {
+  const shown = new Set(fieldsOf(system).filter(f => f.home === table).map(f => f.cell?.column ?? f.tag));
+  const out = new Map<string, string[]>();
+  const put = (title: string, key: string) => out.set(title, [...out.get(title) ?? [], key]);
+  for (const key of keys.filter(k => shown.has(k))) {
+    if (chosen.includes(key)) { put('в этом блоке', key); continue; }
+    const homes = homesOf(system, table, key).filter(home => home !== self);
+    put(homes.length ? `уже в «${homes[0]}»` : 'ни в одном блоке', key);
+  }
+  const order = (title: string) => (title === 'в этом блоке' ? 0 : title === 'ни в одном блоке' ? 1 : 2);
+  return [...out].sort((a, b) => order(a[0]) - order(b[0]));
+}
+
+export function newPart(system: System, table: string): SheetPart {
+  const keys = (system.tables?.[table]?.columns ?? []).map(c => c.key);
+  const shown = new Set(fieldsOf(system).filter(f => f.home === table).map(f => f.cell?.column ?? f.tag));
+  const free = keys.filter(key => shown.has(key) && !homesOf(system, table, key).length);
+  if (free.length) return { table, columns: free };
+  const first = keys.find(key => shown.has(key)) ?? keys[0];
+  return { table, columns: first ? [first] : [] };
+}
+
 export function BlockPanel({ name, system }: { name: string; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
@@ -93,23 +120,34 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
         const chosenRows = part.rows ?? rows.map(rowKeyOf);
         return (
           <div key={index} className="stack stack--tight">
-            <Field label="Часть блока: таблица">
+            <Field label="Поля из таблицы" hint="таблицы, чьи значения живут у листа: «Лист» — поля персонажа, «Стол», и таблицы «своё у каждого листа»">
               <Select<string> label="таблица части" value={part.table}
                 options={tables.map(([id, label]) => [id, label] as const)}
-                onChange={next => editPart(index, target => { target.table = next; delete target.columns; delete target.rows; delete target.by; })} />
+                onChange={next => edit(target => { target.parts[index] = newPart(system, next); })} />
             </Field>
             <Field label="Колонки">
-              <div className="inline inline--tight">
-                {columns.map(column => (
-                  <label key={column.key} className="inline inline--tight">
-                    <input type="checkbox" checked={chosen.includes(column.key)}
-                      onChange={() => editPart(index, target => {
-                        const now = target.columns ?? columns.map(c => c.key);
-                        const next = now.includes(column.key) ? now.filter(k => k !== column.key) : columns.map(c => c.key).filter(k => k === column.key || now.includes(k));
-                        if (next.length === columns.length) delete target.columns; else target.columns = next;
-                      })} />
-                    {column.label || column.key}
-                  </label>
+              <div className="stack stack--tight">
+                {groupsOf(system, part.table, columns.map(c => c.key), name, chosen).map(([title, keys]) => (
+                  <div key={title} className="stack stack--tight block-pick">
+                    <span className="block-pick__title">{title}</span>
+                    <div className="inline inline--tight">
+                      {keys.map(key => {
+                        const column = columns.find(c => c.key === key)!;
+                        const on = chosen.includes(key);
+                        return (
+                          <label key={key} className="inline inline--tight">
+                            <input type="checkbox" checked={on}
+                              onChange={() => editPart(index, target => {
+                                const all = columns.map(c => c.key);
+                                const now = target.columns ?? all;
+                                target.columns = on ? now.filter(k => k !== key) : all.filter(k => k === key || now.includes(k));
+                              })} />
+                            {column.label || column.key}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
                 ))}
               </div>
             </Field>
@@ -139,12 +177,14 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
                 options={[['', 'не группировать'], ...columns.map(c => [c.key, c.label || c.key] as const)]}
                 onChange={next => editPart(index, target => { if (next) target.by = next; else delete target.by; })} />
             </Field>
-            <DangerButton size="sm" onConfirm={() => edit(target => { target.parts.splice(index, 1); })}>Удалить часть</DangerButton>
+            <DangerButton size="sm" onConfirm={() => edit(target => { target.parts.splice(index, 1); })}>Убрать поля этой таблицы</DangerButton>
           </div>
         );
       })}
       <div className="inline inline--tight">
-        <Button size="sm" onClick={() => edit(target => { target.parts.push({ table: tables[0]?.[0] ?? SHEET_TABLE }); })}>+ часть</Button>
+        <Select<string> label="добавить поля из таблицы" value=""
+          options={[['', '+ поля из таблицы…'], ...tables.map(([id, label]) => [id, label] as const)]}
+          onChange={id => { if (id) edit(target => { target.parts.push(newPart(system, id)); }); }} />
         <DangerButton size="sm" onConfirm={() => { editSystem(draft => removeBlock(draft, name)); pick({ activeBlock: null }); }}>Удалить блок</DangerButton>
       </div>
     </Card>
