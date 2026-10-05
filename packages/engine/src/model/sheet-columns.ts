@@ -179,7 +179,8 @@ export function rowWords(system: System, tableId: string, row: TableRow, expr: s
     .replace(ROW_REF, (whole, tail: string) => {
       const steps = rowSteps(system, tableId, tail ? tail.slice(1).split('.') : [], row);
       if (!steps.length) return tail ? whole : String(row.label ?? row.value);
-      return steps.map(step => step.via ?? step.column).join(' · ');
+      const landed = [...steps].reverse().find(step => step.via)?.via ?? String(row.label ?? row.value);
+      return `${landed} · ${steps[steps.length - 1]!.column}`;
     })
     .replace(/@([\p{L}\p{N}_.]+)/gu, (whole, tag: string) => fieldOf(system, tag)?.label ?? whole)
     .replace(/\*/g, '×');

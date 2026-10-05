@@ -17,8 +17,8 @@ describe('формула колонки у строки — словами эт�
     useWorld.setState(state => ({ ...state, system: dnd, activeTableId: 'skills' }));
     render(<RulesTab />);
     const hints = [...document.querySelectorAll('details[open] input')].map(i => (i as HTMLInputElement).placeholder);
-    expect(hints).toContain('= Сила · Модификатор + Владение × Бонус мастерства');
-    expect(hints).toContain('= Ловкость · Модификатор + Владение × Бонус мастерства');
+    expect(hints).toContain('= Сила · Модификатор + Атлетика · Владение × Бонус мастерства');
+    expect(hints).toContain('= Ловкость · Модификатор + Скрытность · Владение × Бонус мастерства');
     expect(hints).not.toContain('= как у колонки');
   });
 

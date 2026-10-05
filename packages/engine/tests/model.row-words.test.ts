@@ -10,8 +10,11 @@ const total = skills.columns!.find(c => c.key === 'total')!.expr!.expr;
 
 describe('формула колонки словами для строки', () => {
   it('у каждой строки своя: ссылка на характеристику раскрыта подписью её строки', () => {
-    expect(rowWords(dnd, 'skills', row('атлетика'), total)).toBe('Сила · Модификатор + Владение × Бонус мастерства');
-    expect(rowWords(dnd, 'skills', row('скрытность'), total)).toBe('Ловкость · Модификатор + Владение × Бонус мастерства');
+    expect(rowWords(dnd, 'skills', row('атлетика'), total)).toBe('Сила · Модификатор + Атлетика · Владение × Бонус мастерства');
+    expect(rowWords(dnd, 'skills', row('скрытность'), total)).toBe('Ловкость · Модификатор + Скрытность · Владение × Бонус мастерства');
+    const mod = dnd.tables!.abilities!.columns!.find(c => c.key === 'mod')!.expr!.expr;
+    const strength = dnd.tables!.abilities!.rows!.find(r => r.value === 'сила')!;
+    expect(rowWords(dnd, 'abilities', strength, mod)).toBe('округлить вниз((Сила · Значение - 10) / 2)');
   });
 
   it('путь по строке объяснён шагами: колонка, таблица, куда ведёт ссылка', () => {

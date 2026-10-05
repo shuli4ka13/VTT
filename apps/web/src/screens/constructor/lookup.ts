@@ -92,7 +92,7 @@ function explainRow(system: System, tableId: string, name: string): Explained | 
       : `колонка таблицы «${step.table}»`]);
   });
   const example = first && steps.length
-    ? `у «${first.label ?? String(first.value)}»: ${steps.map(step => step.via ?? step.column).join(' · ')}`
+    ? `у «${first.label ?? String(first.value)}»: ${[...steps].reverse().find(step => step.via)?.via ?? first.label ?? String(first.value)} · ${steps[steps.length - 1]!.column}`
     : null;
   const target = steps.length ? steps[steps.length - 1]!.key : tableId;
   return {
