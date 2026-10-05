@@ -9,6 +9,10 @@ let token: string | null = localStorage.getItem('vtt.token');
 
 export const currentToken = () => token;
 
+let lost: (() => void) | null = null;
+
+export const onSessionLost = (listener: () => void): void => { lost = listener; };
+
 export function setToken(next: string | null): void {
   token = next;
   if (next) localStorage.setItem('vtt.token', next);
@@ -36,7 +40,7 @@ async function call<S extends ZodType>(path: string, schema: S, init?: RequestIn
 
   if (!response.ok) {
 
-    if (response.status === 401) setToken(null);
+    if (response.status === 401) { setToken(null); lost?.(); }
     const message = typeof body?.message === 'string' ? body.message : `запрос не прошёл (${response.status})`;
     throw new ApiError(message, response.status, body?.issues ?? []);
   }

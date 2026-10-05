@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { login, setToken, currentToken } from '../api/client.ts';
+import { login, setToken, currentToken, onSessionLost } from '../api/client.ts';
 
 export interface SessionState {
   name: string;
@@ -36,3 +36,5 @@ export const useSession = create<SessionState>()(persist(set => ({
     signed: Boolean(currentToken()),
   }),
 }));
+
+onSessionLost(() => useSession.setState({ signed: false }));
