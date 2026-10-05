@@ -12,7 +12,7 @@ export interface BlockNode<T> {
   children: BlockNode<T>[];
 }
 
-export function blockTree<T>(system: System, items: T[], blockOfItem: (item: T) => string | undefined, keepEmpty = false): BlockNode<T>[] {
+export function blockTree<T>(system: System, items: T[], blockOfItem: (item: T) => string | undefined, keepEmpty: boolean | ((name: string) => boolean) = false): BlockNode<T>[] {
   const inside = new Map<string, T[]>();
   const order: string[] = [];
   const remember = (name: string) => {
@@ -40,7 +40,8 @@ export function blockTree<T>(system: System, items: T[], blockOfItem: (item: T) 
     else roots.push(node);
   }
 
-  const alive = (node: BlockNode<T>): boolean => keepEmpty || node.items.length > 0 || node.children.some(alive);
+  const empty = (name: string): boolean => (typeof keepEmpty === 'function' ? keepEmpty(name) : keepEmpty);
+  const alive = (node: BlockNode<T>): boolean => node.items.length > 0 || node.children.some(alive) || empty(node.name);
   const keep = (list: BlockNode<T>[]): BlockNode<T>[] => list
     .filter(alive)
     .map(node => ({ ...node, children: keep(node.children) }));

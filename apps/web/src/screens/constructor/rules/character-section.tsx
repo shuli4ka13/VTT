@@ -5,8 +5,9 @@ import { blockTree } from '../block-tree.tsx';
 import type { BlockNode } from '../block-tree.tsx';
 import { TableColumnCard } from './tables-section.tsx';
 import { useWorld, freeId } from '../../../store/world.ts';
-import { freeGroupName, renameGroup } from '../groups.ts';
+import { freeGroupName, renameGroup, groupChain } from '../groups.ts';
 import { sheetKinds } from '@vtt/engine/model/owned';
+import { blockUse, blockNames } from '@vtt/engine/model/blocks';
 import { hasDesk } from '@vtt/engine/events/desk';
 import { DESK_ID } from '@vtt/engine/engine/owners';
 import { Card, CardHead, Button, Empty, LabelInput, DangerButton, Select } from '../../../ui/primitives.tsx';
@@ -80,7 +81,11 @@ export function CharacterSection({ system, editSystem, docked }: {
   const kinds = sheetKinds(system);
   const kind = of ? system.sheets?.[of] : undefined;
   const active = fieldsOf(system).filter(isCharacterColumn).find(f => f.tag === picked) ?? null;
-  const tree = blockTree<FieldModel>(system, fieldsOf(system), field => field.group, true);
+  const foreign = new Set(blockNames(system)
+    .filter(name => { const use = blockUse(system, name); return use.effects > 0 || use.records > 0; })
+    .flatMap(name => groupChain(system, name)));
+  const sheetBlock = (name: string) => !foreign.has(name);
+  const tree = blockTree<FieldModel>(system, fieldsOf(system), field => field.group, sheetBlock);
   const names: string[] = [];
   const collect = (nodes: BlockNode<FieldModel>[]) => { for (const node of nodes) { names.push(node.name); collect(node.children); } };
   collect(tree);

@@ -58,3 +58,24 @@ describe('колонка персонажа: человеческие теги',
     expect(field.tag).toBe('урон');
   });
 });
+
+describe('блоки листа: папки эффектов на «Листе» не показываются', () => {
+  it('пустой блок листа виден, а группа эффектов без полей — нет', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...state.system,
+        groups: { Механика: {}, Черты: { parent: 'Механика' }, 'Новый блок': {} },
+        tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', block: 'Здоровье' }] } },
+        effects: { крепкий: { label: 'Крепкий', group: 'Черты', activation: 'passive' } },
+      },
+      activeFieldTag: null,
+    }));
+    render(<Sheets />);
+    const text = document.body.textContent ?? '';
+    expect(text).toContain('Здоровье');
+    expect(text).toContain('Новый блок');
+    expect(text).not.toContain('Механика');
+    expect(text).not.toContain('Черты');
+  });
+});
