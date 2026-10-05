@@ -3,7 +3,8 @@ import { Field, Input, Button, NumInput, Select } from '../ui/primitives.tsx';
 import { show } from '../engine/use-calc.ts';
 import { VIEWS } from './views/index.tsx';
 import type { Reader } from '../engine/use-calc.ts';
-import type { Sheet, System, StoredValue } from '@vtt/schema';
+import type { Sheet, System, StoredValue, FieldOption } from '@vtt/schema';
+import { MOST_STEPS } from '@vtt/engine/model/views';
 import type { Field as FieldModel } from '@vtt/engine/model/types';
 import { optionsOf } from '@vtt/engine/model/lists';
 
@@ -38,15 +39,19 @@ export function FieldCell({ field, system, sheet, reader, onChange, onRoll, bare
   if (spec && fits && (stored || computed!.ok)) {
     const { kind: _kind, ...settings } = field.control!;
     const write = editable ? (next: StoredValue) => editable(field.tag, next) : undefined;
+    const min = boundOf(field.value.min, reader);
+    const max = boundOf(field.value.max, reader);
+    const boolean = field.value.kind === 'stored' ? field.value.type === 'boolean' : typeof value === 'boolean';
+    const steps = (kind === 'ring' || kind === 'choice') && !options.length ? stepsOf(boolean, min, max, settings) : options;
     return (
       <Group label={label}>
         <div className={`v-cell v-cell--${kind}`}>
           <spec.draw
             value={value}
             label={field.label}
-            min={boundOf(field.value.min, reader)}
-            max={boundOf(field.value.max, reader)}
-            options={options}
+            min={min}
+            max={max}
+            options={steps}
             control={settings}
             {...(write ? { onChange: write } : {})}
           />
@@ -135,6 +140,12 @@ function Shown({ label, text, title, bad, roll }: {
       </div>
     </Field>
   );
+}
+
+function stepsOf(boolean: boolean, min: number | undefined, max: number | undefined, control: { yes?: string; no?: string }): FieldOption[] {
+  if (boolean) return [{ value: false, label: control.no ?? 'нет' }, { value: true, label: control.yes ?? 'да' }];
+  if (min === undefined || max === undefined || max < min || max - min + 1 > MOST_STEPS) return [];
+  return Array.from({ length: max - min + 1 }, (_, at) => ({ value: min + at, label: String(min + at) }));
 }
 
 function boundOf(bound: number | string | undefined, reader: Reader): number | undefined {

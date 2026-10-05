@@ -14,14 +14,18 @@ describe('виды полей: что обязательно и что к как
     expect(viewNeeds('pips', {})).toEqual(['верх']);
     expect(viewNeeds('slider', { max: 5 })).toEqual(['низ']);
     expect(viewNeeds('ring', { kind: 'choice' })).toEqual(['таблица вариантов']);
+    expect(viewNeeds('ring', { kind: 'boolean' })).toEqual([]);
+    expect(viewNeeds('ring', { kind: 'number', min: 0 })).toEqual(['верх']);
+    expect(viewNeeds('choice', { kind: 'number', min: 0, max: 20 })).toEqual(['не больше 8 ступеней']);
     expect(viewNeeds('signed', {})).toEqual([]);
   });
 
-  it('переключатель — только у «да/нет», кружок — только у выбора', () => {
+  it('переключатель — только у «да/нет»; кружок и кнопки — у выбора, «да/нет» и числа; посчитанному — тоже', () => {
     expect(viewsFor('number', false)).not.toContain('toggle');
-    expect(viewsFor('number', false)).not.toContain('ring');
-    expect(viewsFor('boolean', false)).toEqual(['toggle']);
+    expect(viewsFor('number', false)).toContain('ring');
+    expect(viewsFor('boolean', false)).toEqual(['toggle', 'ring', 'choice']);
     expect(viewsFor('choice', false)).toEqual(['ring', 'choice']);
+    expect(viewsFor('number', true)).toContain('ring');
   });
 
   it('линт предупреждает о виде без верха и о виде не к типу', () => {

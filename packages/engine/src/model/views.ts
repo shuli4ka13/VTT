@@ -10,11 +10,13 @@ export const VIEW_LABELS: Record<ControlKind, string> = {
   bar: 'Полоса', toggle: 'Переключатель', ring: 'Кружок ступеней', choice: 'Кнопки выбора', chips: 'Метки', die: 'Кость',
 };
 
-export const SHOWS_ONLY: ControlKind[] = ['signed', 'big', 'pips', 'charges', 'bar', 'toggle', 'chips'];
+export const SHOWS_ONLY: ControlKind[] = ['signed', 'big', 'pips', 'charges', 'bar', 'toggle', 'ring', 'choice', 'chips'];
+
+export const MOST_STEPS = 8;
 
 export const FITTING: Record<ValueFamily, ControlKind[]> = {
-  number: ['signed', 'big', 'stepper', 'slider', 'pips', 'charges', 'bar'],
-  boolean: ['toggle'],
+  number: ['signed', 'big', 'stepper', 'slider', 'pips', 'charges', 'bar', 'ring', 'choice'],
+  boolean: ['toggle', 'ring', 'choice'],
   choice: ['ring', 'choice'],
   many: ['chips'],
   dice: ['die'],
@@ -22,6 +24,9 @@ export const FITTING: Record<ValueFamily, ControlKind[]> = {
 };
 
 export const TAKES_BOUNDS: ControlKind[] = ['stepper', 'slider', 'pips', 'charges', 'bar'];
+
+export const takesBounds = (kind: ControlKind, column: Pick<TableColumn, 'kind'>): boolean =>
+  TAKES_BOUNDS.includes(kind) || ((kind === 'ring' || kind === 'choice') && column.kind !== 'choice' && column.kind !== 'boolean');
 
 export const TAKES_STEP: ControlKind[] = ['stepper', 'slider'];
 
@@ -45,6 +50,12 @@ export function viewNeeds(kind: ControlKind, column: Pick<TableColumn, 'kind' | 
   const out: string[] = [];
   if ((kind === 'pips' || kind === 'charges' || kind === 'bar' || kind === 'slider') && column.max === undefined) out.push('верх');
   if (kind === 'slider' && column.min === undefined) out.push('низ');
-  if ((kind === 'ring' || kind === 'choice' || kind === 'chips') && !column.from) out.push('таблица вариантов');
+  if (kind === 'chips' && !column.from) out.push('таблица вариантов');
+  if ((kind === 'ring' || kind === 'choice') && column.kind === 'choice' && !column.from) out.push('таблица вариантов');
+  if ((kind === 'ring' || kind === 'choice') && column.kind !== 'choice' && column.kind !== 'boolean') {
+    if (column.min === undefined) out.push('низ');
+    if (column.max === undefined) out.push('верх');
+    if (typeof column.min === 'number' && typeof column.max === 'number' && column.max - column.min + 1 > MOST_STEPS) out.push(`не больше ${MOST_STEPS} ступеней`);
+  }
   return out;
 }

@@ -1,5 +1,5 @@
 import { ColumnSheetFields, ColumnViewField } from '../table-field.tsx';
-import { viewsFor, columnFamily, TAKES_BOUNDS } from '../../../sheet/views/index.tsx';
+import { viewsFor, columnFamily, takesBounds } from '../../../sheet/views/index.tsx';
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
 import { ROW, isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields } from '@vtt/engine/model/sheet-columns';
 import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty, Field, Chip } from '../../../ui/primitives.tsx';
@@ -305,7 +305,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, extr
       preview={single && column.expr !== undefined
         ? <LiveValue system={system} compendium={compendium} tag={column.key} source={column.expr.expr} /> : null}
       lead={single || onSheet(table) ? <ColumnViewField tableId={id} column={column} system={system} /> : null}
-      bounds={!((single || onSheet(table)) && column.control && TAKES_BOUNDS.includes(column.control.kind))}
+      bounds={!((single || onSheet(table)) && column.control && takesBounds(column.control.kind, column))}
       extra={<>
         {single || onSheet(table) ? <ColumnSheetFields tableId={id} column={column} system={system} /> : null}
         {book ? (

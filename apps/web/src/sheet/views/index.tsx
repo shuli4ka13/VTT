@@ -6,7 +6,7 @@ import { Toggle, Ring, Choice, Chips, Die } from './pick.tsx';
 import type { ViewProps } from './kit.ts';
 
 export type { ViewProps } from './kit.ts';
-export { viewsFor, familyOf, columnFamily, viewNeeds, TAKES_BOUNDS, TAKES_STEP } from '@vtt/engine/model/views';
+export { viewsFor, familyOf, columnFamily, viewNeeds, takesBounds, TAKES_BOUNDS, TAKES_STEP } from '@vtt/engine/model/views';
 export type { ValueFamily } from '@vtt/engine/model/views';
 
 export interface ViewSpec {
@@ -34,8 +34,8 @@ const SPECS: Record<ControlKind, Omit<ViewSpec, 'label' | 'shows'>> = {
   charges: { hint: 'запас по кругу', fits: blankOr(isNumber), draw: Charges, sample: { value: 4, max: 6 } },
   bar: { hint: 'запас полосой, цвет по остатку', fits: blankOr(isNumber), draw: Bar, sample: { value: 27, max: 45 } },
   toggle: { hint: 'да или нет', fits: blankOr(value => typeof value === 'boolean'), draw: Toggle, sample: { value: true } },
-  ring: { hint: 'ступени по кругу, из таблицы вариантов', fits: () => true, draw: Ring, sample: { value: 1, options: SAMPLE_STEPS } },
-  choice: { hint: 'одно из вариантов кнопками', fits: () => true, draw: Choice, sample: { value: 1, options: SAMPLE_STEPS } },
+  ring: { hint: 'ступени по кругу: варианты, да/нет или числа', fits: () => true, draw: Ring, sample: { value: 1, options: SAMPLE_STEPS } },
+  choice: { hint: 'одна ступень кнопками', fits: () => true, draw: Choice, sample: { value: 1, options: SAMPLE_STEPS } },
   chips: { hint: 'несколько вариантов сразу', fits: () => true, draw: Chips, sample: { value: ['a', 'c'], options: SAMPLE_PICKS } },
   die: { hint: 'кость записью', fits: blankOr(value => typeof value === 'string'), draw: Die, sample: { value: '1к8' } },
 };

@@ -3,7 +3,7 @@ import { BlockPick } from './block-pick.tsx';
 import { TagsField } from './tags-field.tsx';
 import { dieEntries } from './rules/dice-section.tsx';
 import { ViewGallery } from './view-gallery.tsx';
-import { VIEWS, columnFamily, viewNeeds, TAKES_BOUNDS, TAKES_STEP } from '../../sheet/views/index.tsx';
+import { VIEWS, columnFamily, viewNeeds, takesBounds, TAKES_STEP } from '../../sheet/views/index.tsx';
 import { BoundField } from './bound-field.tsx';
 import { Field, Input, Select, Chip, Button, NumInput, Segmented, Verdict } from '../../ui/primitives.tsx';
 import { isRange } from '@vtt/engine/model/tables';
@@ -161,18 +161,18 @@ export function ColumnViewField({ tableId, column, system }: { tableId: string; 
       {kind ? (
         <div className="view-settings">
           {lacking.length ? <Verdict tone="warn">Виду «{VIEWS[kind].label}» не хватает: {lacking.join(', ')}. Пока не задано, на листе вместо него «—».</Verdict> : null}
-          {TAKES_BOUNDS.includes(kind) ? (
+          {takesBounds(kind, column) ? (
             <div className="row">
-              <Field label={kind === 'slider' ? 'Низ' : 'Не ниже'}>
+              <Field label={kind === 'slider' || kind === 'ring' || kind === 'choice' ? 'Низ' : 'Не ниже'}>
                 <BoundField value={column.min} onChange={next => edit(draft => { if (next === null) delete draft.min; else draft.min = next; })} />
               </Field>
-              <Field label={kind === 'stepper' ? 'Не выше' : 'Верх — сколько всего'}>
+              <Field label={kind === 'stepper' ? 'Не выше' : kind === 'ring' || kind === 'choice' ? 'Верх' : 'Верх — сколько всего'}>
                 <BoundField value={column.max} placeholder="число или формула: 3, @макс"
                   onChange={next => edit(draft => { if (next === null) delete draft.max; else draft.max = next; })} />
               </Field>
             </div>
           ) : null}
-          {TAKES_BOUNDS.includes(kind) && column.max === undefined && kind !== 'stepper' ? (
+          {takesBounds(kind, column) && column.max === undefined && kind !== 'stepper' ? (
             <Button size="sm" variant="ghost" onClick={addTop}>+ колонка для верха</Button>
           ) : null}
           {TAKES_STEP.includes(kind) ? (
@@ -188,7 +188,7 @@ export function ColumnViewField({ tableId, column, system }: { tableId: string; 
                 onChange={next => setControl({ worse: next === 'high' ? 'high' : undefined })} />
             </Field>
           ) : null}
-          {kind === 'toggle' ? (
+          {kind === 'toggle' || ((kind === 'ring' || kind === 'choice') && column.kind === 'boolean') ? (
             <div className="row">
               <Field label="Подпись «да»">
                 <Input value={column.control?.yes ?? ''} placeholder="да" onChange={text => setControl({ yes: text.trim() || undefined })} />
@@ -200,9 +200,13 @@ export function ColumnViewField({ tableId, column, system }: { tableId: string; 
           ) : null}
           {kind === 'ring' || kind === 'choice' || kind === 'chips' ? (
             <span className="faint">
-              {column.from
-                ? <>Ступени — строки таблицы «{system.tables?.[column.from]?.label || column.from}» по порядку; подписи берутся оттуда.</>
-                : <>Варианты задаются так: тип «выбор» → «Из таблицы».</>}
+              {column.kind === 'boolean'
+                ? <>Две ступени: «нет» и «да» — подписи выше.</>
+                : column.kind !== 'choice' && kind !== 'chips'
+                  ? <>Ступени — числа от низа до верха (не больше 8). Нужны слова — тип «выбор» и таблица.</>
+                  : column.from
+                    ? <>Ступени — строки таблицы «{system.tables?.[column.from]?.label || column.from}» по порядку; подписи берутся оттуда.</>
+                    : <>Варианты задаются так: тип «выбор» → «Из таблицы».</>}
             </span>
           ) : null}
         </div>

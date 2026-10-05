@@ -83,6 +83,24 @@ describe('виды полей листа', () => {
     expect(screen.queryByText(/владение|мастерство/)).toBeNull();
   });
 
+  it('кружок у «да/нет» — две ступени с подписями автора, у числа — цифры от низа до верха, у посчитанного — только показ', () => {
+    const out: [string, unknown][] = [];
+    const local = { tables: { лист: { shape: 'single', columns: [
+      { key: 'спас', label: 'Спас', kind: 'boolean', control: { kind: 'ring', yes: 'владеет', no: 'не владеет' } },
+      { key: 'ранг', label: 'Ранг', kind: 'number', min: 1, max: 3, control: { kind: 'choice' } },
+      { key: 'итог', label: 'Итог', expr: { expr: '2' }, min: 0, max: 2, control: { kind: 'ring' } },
+    ] } } } as unknown as System;
+    const values: Record<string, unknown> = { спас: false, ранг: 1 };
+    render(<SheetView system={local} sheet={{ id: 'в', values } as unknown as Sheet}
+      reader={{ valueOf: tag => ({ ok: true, value: tag === 'итог' ? 2 : values[tag] }), rollOf: () => null, storedOf: tag => values[tag], measure: expr => ({ ok: true, value: Number(expr) }) }}
+      onChange={(tag, value) => { out.push([tag, value]); }} />);
+    fireEvent.click(screen.getByTitle(/^Спас: не владеет/));
+    fireEvent.click(screen.getByRole('radio', { name: '3' }));
+    expect(out).toEqual([['спас', true], ['ранг', 3]]);
+    const shown = screen.getByTitle(/^Итог: 2/) as HTMLButtonElement;
+    expect(shown.disabled).toBe(true);
+  });
+
   it('пусто — не ноль', () => {
     const Bar = VIEWS.bar.draw;
     render(<Bar value={null} label="Хиты" max={10} />);
@@ -105,7 +123,7 @@ describe('виды полей листа', () => {
     expect(viewsFor('number', true)).not.toContain('stepper');
     expect(viewsFor('number', true)).toEqual(expect.arrayContaining(['signed', 'big', 'pips', 'bar']));
     expect(viewsFor('many', false)).toEqual(['chips']);
-    expect(viewsFor('boolean', false)).toEqual(['toggle']);
+    expect(viewsFor('boolean', false)).toEqual(['toggle', 'ring', 'choice']);
     expect(viewsFor(null, true).every(key => VIEWS[key].shows)).toBe(true);
   });
 
