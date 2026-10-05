@@ -102,8 +102,9 @@ export function CharacterSection({ system, editSystem, docked }: {
           const on = single ? picked === column.key : cell?.table === part.table && cell.column === column.key;
           return (
             <Button key={column.key} size="sm" variant={on ? 'primary' : 'ghost'}
+              {...(column.expr !== undefined ? { title: 'считается формулой' } : {})}
               onClick={() => (single ? pickField(column.key, blockName) : pickCell({ table: part.table, column: column.key }, blockName))}>
-              {column.label || column.key}{column.expr !== undefined ? ' =' : ''}
+              {column.label || column.key}
             </Button>
           );
         })}

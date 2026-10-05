@@ -344,9 +344,9 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
             <div className="inline inline--tight">
               {props.map(prop => (
                 <Button key={prop.key} size="sm" variant={prop.key === picked ? 'primary' : 'ghost'}
-                  title={propDestiny(system, kind, prop.key)}
+                  title={[propDestiny(system, kind, prop.key), prop.expr !== undefined ? 'считается формулой' : ''].filter(Boolean).join(' · ')}
                   onClick={() => setPicked(prop.key === picked ? null : prop.key)}>
-                  {prop.label || prop.key}{prop.expr !== undefined ? ' =' : ''}
+                  {prop.label || prop.key}
                 </Button>
               ))}
             </div>
