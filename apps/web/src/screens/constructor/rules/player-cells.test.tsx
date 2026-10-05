@@ -5,7 +5,7 @@ import { useWorld } from '../../../store/world.ts';
 import { RulesTab } from './rules-tab.tsx';
 import type { System } from '@vtt/schema';
 
-describe('таблица с владельцем: пустая клетка — «вводит игрок», а не «выберите»', () => {
+describe('пустая клетка-выбор: «вводит игрок» у таблицы с владельцем, «— нет —» у справочника, но не «выберите»', () => {
   afterEach(() => { cleanup(); });
 
   it('выбор и «да/нет» подписывают пустую клетку так же, как число; выбор «вводит игрок» снимает значение', () => {
@@ -30,5 +30,20 @@ describe('таблица с владельцем: пустая клетка — 
     const fixed = selects.find(s => s.value === '1')!;
     fireEvent.change(fixed, { target: { value: '' } });
     expect(useWorld.getState().system.tables!.навыки!.rows![0]!.cells?.владение).toBeUndefined();
+  });
+
+  it('в справочнике пустая клетка — «— нет —»', () => {
+    Element.prototype.scrollIntoView = () => {};
+    const system = { constants: {}, effects: {},
+      tables: {
+        черты: { label: 'Черты', key: 'word', rows: [{ value: 'сила', label: 'Сила' }] },
+        классы: { label: 'Классы', key: 'word', columns: [{ key: 'черта', label: 'Черта', kind: 'choice', from: 'черты' }], rows: [{ value: 'воин' }] },
+      },
+    } as unknown as System;
+    useWorld.setState(state => ({ ...state, system, activeTableId: 'классы' }));
+    render(<RulesTab />);
+    const shown = [...document.querySelectorAll('details[open] select')].map(s => (s as HTMLSelectElement).selectedOptions[0]?.textContent);
+    expect(shown).toContain('— нет —');
+    expect(shown).not.toContain('— выберите —');
   });
 });
