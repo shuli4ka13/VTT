@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useWorld, useBook } from '../../../store/world.ts';
 import { Card, CardHead, Select, Verdict, Empty, Segmented } from '../../../ui/primitives.tsx';
 import { SheetView } from '../../../sheet/sheet-view.tsx';
 import { useReader } from '../../../engine/use-calc.ts';
 import { useDryRun, mannequinsOf, DICE_MODES } from '../../../engine/dry-run.ts';
 import type { DiceMode } from '../../../engine/dry-run.ts';
+import type { Sheet, StoredValue } from '@vtt/schema';
 import { DonorPalette } from '../donors.tsx';
 import { fieldOf } from '@vtt/engine/model/sheet-columns';
 
@@ -16,10 +17,19 @@ export function PreviewPanel({ effectId }: { effectId: string | null }) {
   const [tab, setTab] = useState<'donors' | 'trial'>('donors');
   const [dice, setDice] = useState<DiceMode>('avg');
 
-  const run = useDryRun(system, compendium, tab === 'trial' ? effectId : null, dice);
-  const [before, after] = mannequinsOf(system);
-  const target = run?.sheets.find(sheet => sheet.id === after!.id) ?? after!;
+  const [own, setOwn] = useState<Record<string, Record<string, StoredValue>>>({});
+  const pair = useMemo<Sheet[]>(
+    () => mannequinsOf(system).map(sheet => ({ ...sheet, values: { ...sheet.values, ...own[sheet.id] } })),
+    [system, own],
+  );
+  const [before, after] = pair as [Sheet, Sheet];
+  const run = useDryRun(system, compendium, tab === 'trial' ? effectId : null, dice, pair);
+  const target = run?.sheets.find(sheet => sheet.id === after.id) ?? after;
+  const actorReader = useReader(system, before, compendium);
+  const targetReader = useReader(system, after, compendium);
   const reader = useReader(system, target, compendium);
+  const write = (sheetId: string) => (tag: string, value: StoredValue) =>
+    setOwn(current => ({ ...current, [sheetId]: { ...current[sheetId], [tag]: value } }));
 
   return (
     <>
@@ -33,7 +43,7 @@ export function PreviewPanel({ effectId }: { effectId: string | null }) {
 
       {tab === 'trial' ? (
         !effectId
-          ? <Empty title="Выберите эффект" hint="Проба показывает, что он сделает с манекеном Б." />
+          ? <Empty title="Выберите эффект" hint="Проба показывает, что эффект сделает: А применяет его к Б." />
           : (
             <>
               <Card>
@@ -61,7 +71,14 @@ export function PreviewPanel({ effectId }: { effectId: string | null }) {
                 </Card>
               ) : null}
 
-              <SheetView system={system} sheet={target} reader={reader} badge="манекен" />
+              <SheetView system={system} sheet={target} reader={reader} badge="после пробы" />
+
+              <Card>
+                <CardHead title="Кто участвует" sub="Два новых листа. Числа можно поправить — только для пробы, ничего не сохраняется." />
+                {Object.keys(own).length ? <button type="button" className="linkish" onClick={() => setOwn({})}>вернуть как в новом листе</button> : null}
+              </Card>
+              <SheetView system={system} sheet={before} reader={actorReader} badge="действует" onChange={write(before.id)} />
+              <SheetView system={system} sheet={after} reader={targetReader} badge="цель" onChange={write(after.id)} />
             </>
           )
       ) : null}

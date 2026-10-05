@@ -11,11 +11,8 @@ export const MANNEQUINS: { id: string; name: string }[] = [
   { id: 'манекен_б', name: 'Б' },
 ];
 
-export const mannequinsOf = (system: System): Sheet[] => {
-  const kept = system.mannequins ?? [];
-  return MANNEQUINS.map(({ id, name }) =>
-    kept.find(sheet => sheet.id === id) ?? (mannequin(system as never, id, name) as Sheet));
-};
+export const mannequinsOf = (system: System): Sheet[] =>
+  MANNEQUINS.map(({ id, name }) => mannequin(system as never, id, name) as Sheet);
 
 export interface DryRun {
   lines: string[];
@@ -25,9 +22,9 @@ export interface DryRun {
 }
 
 export function dryRun(
-  system: System, compendium: Compendium | undefined, effectId: string, dice: DiceMode,
+  system: System, compendium: Compendium | undefined, effectId: string, dice: DiceMode, pair: Sheet[] = mannequinsOf(system),
 ): DryRun {
-  const [from, to] = mannequinsOf(system);
+  const [from, to] = pair;
   try {
     const out = trial({ system: system as never, compendium: compendium as never, effectId, from: from as never, to: to as never, dice, random: Math.random });
     const changes = out.reports.flatMap(entry =>
@@ -42,10 +39,10 @@ export function dryRun(
 }
 
 export function useDryRun(
-  system: System, compendium: Compendium | undefined, effectId: string | null, dice: DiceMode,
+  system: System, compendium: Compendium | undefined, effectId: string | null, dice: DiceMode, pair?: Sheet[],
 ): DryRun | null {
   return useMemo(
-    () => (effectId ? dryRun(system, compendium, effectId, dice) : null),
-    [system, compendium, effectId, dice],
+    () => (effectId ? dryRun(system, compendium, effectId, dice, pair) : null),
+    [system, compendium, effectId, dice, pair],
   );
 }

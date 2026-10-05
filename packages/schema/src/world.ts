@@ -296,7 +296,6 @@ export const system = z.object({
     probes: z.number().int().positive().optional(),
   }).strict().optional(),
 
-  mannequins: z.array(z.lazy(() => sheet)).optional(),
   library: z.array(z.lazy(() => compendiumRecord)).optional(),
 }).passthrough();
 

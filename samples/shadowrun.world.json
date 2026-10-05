@@ -2868,48 +2868,6 @@
       "glitch",
       "critical_glitch"
     ],
-    "mannequins": [
-      {
-        "id": "манекен-а",
-        "systemId": "shadowrun6",
-        "name": "Манекен А",
-        "values": {
-          "body": 4,
-          "agility": 4,
-          "reaction": 4,
-          "strength": 4,
-          "willpower": 4,
-          "logic": 4,
-          "intuition": 4,
-          "charisma": 4,
-          "edge_left": 7,
-          "skills.стрельба.rank": 4,
-          "skills.биотехнологии.rank": 2
-        },
-        "has": [],
-        "effects": []
-      },
-      {
-        "id": "манекен-б",
-        "systemId": "shadowrun6",
-        "name": "Манекен Б",
-        "values": {
-          "body": 4,
-          "agility": 4,
-          "reaction": 4,
-          "strength": 4,
-          "willpower": 4,
-          "logic": 4,
-          "intuition": 4,
-          "charisma": 4,
-          "edge_left": 7,
-          "skills.стрельба.rank": 4,
-          "skills.биотехнологии.rank": 2
-        },
-        "has": [],
-        "effects": []
-      }
-    ],
     "sheets": {
       "runner": {
         "label": "Раннер",

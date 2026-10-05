@@ -23,18 +23,18 @@ const system = (): System => ({
   },
 } as unknown as System);
 
-describe('проба на манекене', () => {
+describe('проба: А применяет эффект к Б', () => {
   beforeEach(() => { useWorld.setState(state => ({ ...state, system: system() })); });
   afterEach(() => { cleanup(); });
 
-  it('показывает журнал, изменение поля и сам лист манекена', () => {
+  it('показывает журнал, изменение поля и лист цели после пробы', () => {
     render(<PreviewPanel effectId="удар" />);
     fireEvent.click(screen.getByText('Проба'));
 
     const shown = () => document.body.textContent ?? '';
     expect(shown()).toContain('А применяет «Удар» по Б');
     expect(shown()).toContain('Хиты: 20 → 16');
-    expect(shown()).toContain('манекен');
+    expect(shown()).toContain('после пробы');
   });
 
   it('кость выбирается: минимум и максимум дают разные числа', () => {
@@ -49,6 +49,17 @@ describe('проба на манекене', () => {
 
     fireEvent.change(dice, { target: { value: 'min' } });
     expect(document.body.textContent).toContain('Хиты: 20 → 19');
+  });
+
+  it('числа участников правятся прямо в пробе и сразу меняют итог', () => {
+    render(<PreviewPanel effectId="удар" />);
+    fireEvent.click(screen.getByText('Проба'));
+    const hp = [...document.querySelectorAll('input')].filter(i => i.closest('.sheet') && (i as HTMLInputElement).value === '20');
+    const targetHp = hp[hp.length - 1] as HTMLInputElement;
+    fireEvent.change(targetHp, { target: { value: '30' } });
+    fireEvent.blur(targetHp);
+    expect(document.body.textContent).toContain('Хиты: 30 → 26');
+    expect(useWorld.getState().system.tables!.лист!.columns![0]!.default).toBe(20);
   });
 
   it('у висящего эффекта проба отказывается словами, а не молчит', () => {

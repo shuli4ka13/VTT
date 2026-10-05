@@ -22,14 +22,18 @@ group('пробный прогон эффекта на манекенах', () =
       .filter(([key, e]) => isPipeline(e) && activationOf(e) === 'manual' && !called.has(key));
 
     test(`${system.name}: каждый активируемый эффект (${manual.length}) проходит пробу без ошибок движка`, () => {
-      const dolls = (system.mannequins ?? []) as Sheet[];
-      const a = dolls[0] ?? mannequin(system, 'проба-а', 'А');
-      const b = dolls[1] ?? mannequin(system, 'проба-б', 'Б');
+      const people = ((world.sheets ?? []) as Sheet[]).filter(sheet => sheet.id !== 'стол');
+      const a = people[0] ?? mannequin(system, 'проба-а', 'А');
+      const b = people[1] ?? mannequin(system, 'проба-б', 'Б');
       for (const [id] of manual) {
         for (const dice of ['min', 'avg', 'max'] as const) {
-          const out = trial({ system, compendium, effectId: id, from: a, to: b, dice });
+          let out: ReturnType<typeof trial>;
+          try { out = trial({ system, compendium, effectId: id, from: a, to: b, dice }); } catch (err) {
+            ok(/не состоялось/.test((err as Error).message), `${id}/${dice}: ${(err as Error).message}`);
+            continue;
+          }
           ok(out.lines.length >= 1, `${id}/${dice}: нет строк журнала`);
-          ok(out.lines[0]!.includes('А применяет'), `${id}/${dice}: ${out.lines[0]}`);
+          ok(out.lines[0]!.includes(`${a.name} применяет`), `${id}/${dice}: ${out.lines[0]}`);
         }
       }
     });

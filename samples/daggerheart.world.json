@@ -3354,44 +3354,6 @@
         ]
       }
     },
-    "mannequins": [
-      {
-        "id": "манекен-а",
-        "systemId": "daggerheart",
-        "name": "Манекен А",
-        "values": {
-          "class": "Воин (Warrior)",
-          "agility": 1,
-          "strength": 1,
-          "finesse": 1,
-          "instinct": 1,
-          "presence": 1,
-          "knowledge": 1,
-          "difficulty": 12,
-          "hope": 6
-        },
-        "has": [],
-        "effects": []
-      },
-      {
-        "id": "манекен-б",
-        "systemId": "daggerheart",
-        "name": "Манекен Б",
-        "values": {
-          "class": "Воин (Warrior)",
-          "agility": 1,
-          "strength": 1,
-          "finesse": 1,
-          "instinct": 1,
-          "presence": 1,
-          "knowledge": 1,
-          "difficulty": 12,
-          "hope": 6
-        },
-        "has": [],
-        "effects": []
-      }
-    ],
     "sheets": {
       "hero": {
         "label": "Герой",

@@ -239,13 +239,6 @@ describe('манекены системы', () => {
   it('система может хранить листы-манекены для предпросмотра, необязательно', () => {
     const base = { name: 'x', tables: {}, effects: {} };
     expect(W.system.safeParse(base).success).toBe(true);
-    const withDolls = {
-      ...base,
-      mannequins: [{ id: 'а', systemId: 'x', name: 'А', values: {}, has: [], effects: [] }],
-    };
-    expect(W.system.safeParse(withDolls).success).toBe(true);
-    const broken = { ...base, mannequins: [{ id: 'а', name: 'А', values: { hp: 3 } }] };
-    expect(W.system.safeParse(broken).success).toBe(false);
   });
 });
 

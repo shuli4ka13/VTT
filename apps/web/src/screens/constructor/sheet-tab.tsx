@@ -1,4 +1,3 @@
-import { Mannequins } from './mannequins.tsx';
 import { useWorld } from '../../store/world.ts';
 import { Columns } from '../../ui/layout.tsx';
 import { useLookupPane } from './lookup-panel.tsx';
@@ -55,7 +54,7 @@ export function SheetTab() {
         ),
         body: active
           ? <ViewPanel field={active} system={system} />
-          : <><Empty title="Щёлкните поле на листе" /><Mannequins system={system} editSystem={editSystem} /></>,
+          : <Empty title="Щёлкните поле на листе" />,
       }}
       main={{
         body: (
