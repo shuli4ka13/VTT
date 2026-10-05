@@ -350,19 +350,19 @@ const partHas = (part: SheetPart, field: Field): boolean =>
   && (!part.columns || part.columns.includes(field.cell?.column ?? field.tag))
   && (!part.rows || (field.cell !== undefined && part.rows.includes(field.cell.row)));
 
-export function sectionOf(system: System, part: SheetPart, field: Field): string | undefined {
-  if (!part.by || !field.cell) return undefined;
+export function sectionOf(system: System, part: SheetPart, field: Field): Pick<Field, 'section' | 'sectionAt' | 'sectionBy'> {
+  if (!part.by || !field.cell) return {};
   const table = system.tables?.[field.home];
   const row = (table?.rows ?? []).find(r => rowKeyOf(r) === field.cell!.row);
   const column = (table?.columns ?? []).find(c => c.key === part.by);
-  if (!row || !column) return undefined;
+  if (!row || !column) return {};
   const source = cellSource(column, row);
-  const value = source.kind === 'value' ? source.value : undefined;
-  if (value === undefined || value === null || value === '') return undefined;
-  const target = column.kind === 'choice' && column.from
-    ? (system.tables?.[column.from]?.rows ?? []).find(r => String(r.value) === String(value))
-    : undefined;
-  return target ? String(target.label ?? target.value) : String(value);
+  if (source.kind !== 'value') return { sectionBy: addressOf(field.home, row, column.key) };
+  const value = source.value;
+  if (value === undefined || value === null || value === '') return {};
+  const options = column.kind === 'choice' && column.from ? system.tables?.[column.from]?.rows ?? [] : [];
+  const at = options.findIndex(r => String(r.value) === String(value));
+  return at >= 0 ? { section: String(options[at]!.label ?? options[at]!.value), sectionAt: at } : { section: String(value) };
 }
 
 function placeFields(system: System, base: Built): Built {
@@ -376,8 +376,7 @@ function placeFields(system: System, base: Built): Built {
   const fields = base.fields.map(field => {
     const hit = find(field, true) ?? find(field, false);
     if (!hit) return field;
-    const section = sectionOf(system, hit[1], field);
-    return { ...field, group: hit[0], ...(section ? { section } : {}) };
+    return { ...field, group: hit[0], ...sectionOf(system, hit[1], field) };
   });
   const byTag = new Map<string, Field>();
   for (const field of fields) if (!byTag.has(field.tag)) byTag.set(field.tag, field);

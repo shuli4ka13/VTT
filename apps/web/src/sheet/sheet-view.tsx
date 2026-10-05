@@ -5,7 +5,8 @@ import { FieldCell } from './field-cell.tsx';
 import type { Reader } from '../engine/use-calc.ts';
 import type { Sheet, System, StoredValue } from '@vtt/schema';
 import type { Field as FieldModel } from '@vtt/engine/model/types';
-import { fieldsOf, rowKeyOf } from '@vtt/engine/model/sheet-columns';
+import { fieldsOf, rowKeyOf, fieldOf } from '@vtt/engine/model/sheet-columns';
+import { optionsOf } from '@vtt/engine/model/lists';
 import { fieldsByBlock } from '@vtt/engine/model/blocks';
 
 export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only, fields, onPick, picked }: {
@@ -55,7 +56,7 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
           <CardHead title={group} />
           {piecesOf(fields).map(piece => (piece.table ? (
             <Fragment key={piece.table}>
-              {sectionsOf(piece.fields).map(part => (
+              {sectionsOf(piece.fields, system, reader).map(part => (
                 <div key={part.title ?? ''} className={part.title ? 'sheet-section' : undefined}>
                   {part.title ? <h4 className="sheet-section__title">{part.title}</h4> : null}
                   <TableBlock system={system} tableId={piece.table!} fields={part.fields} cell={cell} />
@@ -87,15 +88,28 @@ function piecesOf(fields: FieldModel[]): Piece[] {
   return out;
 }
 
-function sectionsOf(fields: FieldModel[]): { title: string | null; fields: FieldModel[] }[] {
-  const out: { title: string | null; fields: FieldModel[] }[] = [];
+function sectionsOf(fields: FieldModel[], system: System, reader: Reader): { title: string | null; fields: FieldModel[] }[] {
+  const out: { title: string | null; at: number; fields: FieldModel[] }[] = [];
   for (const field of fields) {
-    const title = field.section ?? null;
+    const [title, at] = sectionTitle(field, system, reader);
     const part = out.find(item => item.title === title);
     if (part) part.fields.push(field);
-    else out.push({ title, fields: [field] });
+    else out.push({ title, at, fields: [field] });
   }
-  return out;
+  return out.map((part, order) => ({ ...part, order })).sort((a, b) => a.at - b.at || a.order - b.order);
+}
+
+function sectionTitle(field: FieldModel, system: System, reader: Reader): [string | null, number] {
+  if (field.section !== undefined) return [field.section, field.sectionAt ?? Number.MAX_SAFE_INTEGER];
+  if (!field.sectionBy) return [null, Number.MAX_SAFE_INTEGER];
+  const stored = reader.storedOf?.(field.sectionBy);
+  const computed = stored === undefined ? reader.valueOf(field.sectionBy) : null;
+  const value = stored !== undefined ? stored : computed?.ok ? computed.value : undefined;
+  const by = fieldOf(system, field.sectionBy);
+  const options = by ? optionsOf(system, by) : [];
+  const at = options.findIndex(option => String(option.value) === String(value));
+  if (at >= 0) return [options[at]!.label, at];
+  return [value === undefined || value === null || value === '' ? '—' : String(value), Number.MAX_SAFE_INTEGER];
 }
 
 function TableBlock({ system, tableId, fields, cell }: {

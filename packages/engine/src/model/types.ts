@@ -27,6 +27,8 @@ export interface Field {
   label: string;
   group?: string;
   section?: string;
+  sectionAt?: number;
+  sectionBy?: string;
   roll?: Partial<RollSpec> & { label?: string };
   value: FieldValue;
   control?: Control;

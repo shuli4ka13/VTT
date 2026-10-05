@@ -77,4 +77,29 @@ describe('лист за столом', () => {
     expect(sections[1]!.textContent).toContain('Скрытность');
     expect(sections[0]!.textContent).toContain('Атлетика');
   });
+
+  it('группировка по колонке, которую вписывает игрок, — по значениям этого листа, в порядке вариантов', () => {
+    const grouped = {
+      tables: {
+        ступени: { key: 'number', rows: [{ value: 0, label: 'нет' }, { value: 1, label: 'владение' }, { value: 2, label: 'мастерство' }] },
+        навыки: { owner: 'sheet', key: 'word', columns: [
+          { key: 'prof', label: 'Владение', kind: 'choice', from: 'ступени', default: 0 },
+        ], rows: [
+          { value: 'athletics', label: 'Атлетика' },
+          { value: 'acrobatics', label: 'Акробатика' },
+          { value: 'stealth', label: 'Скрытность' },
+        ] },
+      },
+      blocks: [{ name: 'Навыки', parts: [{ table: 'навыки', by: 'prof' }] }],
+    } as unknown as System;
+    const values: Record<string, unknown> = { 'навыки.athletics.prof': 2, 'навыки.stealth.prof': 1 };
+    const own: Reader = { valueOf: tag => ({ ok: true, value: values[tag] ?? 0 }), rollOf: () => null, storedOf: tag => values[tag] ?? 0 };
+    render(<SheetView system={grouped} sheet={{ id: 'в', name: 'Вера', values } as unknown as Sheet} reader={own} onChange={() => {}} />);
+    const titles = [...document.querySelectorAll('.sheet-section__title')].map(node => node.textContent);
+    expect(titles).toEqual(['нет', 'владение', 'мастерство']);
+    const sections = [...document.querySelectorAll('.sheet-section')];
+    expect(sections[0]!.textContent).toContain('Акробатика');
+    expect(sections[1]!.textContent).toContain('Скрытность');
+    expect(sections[2]!.textContent).toContain('Атлетика');
+  });
 });
