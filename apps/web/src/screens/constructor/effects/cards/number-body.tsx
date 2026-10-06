@@ -1,3 +1,4 @@
+import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { SheetPick } from '../../sheet-pick.tsx';
 import { parseRoll, formatRoll } from '../../check-expr.ts';
 import { refForName, sheetChoices } from '../../slots.tsx';
@@ -41,7 +42,7 @@ export function NumberBody({ step, context, edit, onAddParam }: {
 
   const unknown = [...new Set([...shown.matchAll(/@([\p{L}\p{N}_.]+)/gu)].map(m => m[1]!))]
     .filter(name => !name.includes('.'))
-    .filter(name => !names.has(name) && !hasField(context.system, name));
+    .filter(name => !names.has(name) && !hasField(context.system, name) && !tagWords(context.system).has(name));
 
   const commit = (typed: string) => {
     if (owned) {

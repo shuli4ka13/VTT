@@ -5,6 +5,7 @@ import { matchTagQuery } from './tag-suggest.tsx';
 import { fieldPaths } from './paths.ts';
 import { DESK_ID } from '@vtt/engine/engine/owners';
 import { fieldsOf, fieldOf, hasField } from '@vtt/engine/model/sheet-columns';
+import { tagWords } from '@vtt/engine/engine/roll-tags';
 
 const plainLabel = (system: System, tag: string, extra?: Map<string, string>): string =>
   fieldOf(system, tag)?.label ?? extra?.get(tag) ?? fieldPaths(system).get(tag)
@@ -144,13 +145,14 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   onChipPick?: (tag: string, label: string) => void;
 }) {
   const paths = useMemo(() => fieldPaths(system), [system]);
+  const marks = useMemo(() => tagWords(system), [system]);
   const parts = useMemo(
     () => partsOf(value, tag => {
       const owned = onSheet(tag, sheets);
       if (owned) return knownSheetName(system, owned.rest, paths) || Boolean(extraNames?.has(owned.rest));
-      return knownSheetName(system, tag, paths) || Boolean(names?.[tag]) || Boolean(extraNames?.has(tag)) || Boolean(sheets?.has(tag));
+      return knownSheetName(system, tag, paths) || Boolean(names?.[tag]) || Boolean(extraNames?.has(tag)) || Boolean(sheets?.has(tag)) || marks.has(tag);
     }),
-    [value, system, names, extraNames, paths, sheets],
+    [value, system, names, extraNames, paths, sheets, marks],
   );
   const host = useRef<HTMLDivElement>(null);
   const inputs = useRef(new Map<number, HTMLInputElement>());
@@ -171,7 +173,9 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   };
   const badge = (tag: string) => (badges?.has(tag)
     ? <span className="chips__side chips__side--input" title="вход эффекта: значение приносит тот, кто вызывает">{badges.get(tag)}</span>
-    : null);
+    : marks.has(tag) && !hasField(system, tag) && !extraNames?.has(tag)
+      ? <span className="chips__side chips__side--mark" title={`метка броска из таблицы «${marks.get(tag)}»: по ней бросок находят правки — преимущество, «Благословение», «Щит»`}>метка</span>
+      : null);
 
   const fields = useMemo(() => {
     const desk = fieldsOf(system).filter(f => f.lives === 'desk').map(f => ({ tag: `${DESK_ID}.${f.tag}`, label: f.label ?? f.tag, group: 'стол' }));
