@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
-import type { System, Param, SlotRef } from '@vtt/schema';
+import type { System, Param, SlotRef, Effect } from '@vtt/schema';
+import { paymentsOf } from '@vtt/engine/model/payments';
 import { Field, Select, Button } from '../../ui/primitives.tsx';
 import { FormulaView } from '../../ui/formula-field.tsx';
 import { ValueField, asText, type SlotOption } from './value-field.tsx';
@@ -54,13 +55,33 @@ export function placeOf(input: CallInput, props: ReadonlySet<string>): Place {
   return 'computed';
 }
 
-function valueShown(system: System, input: CallInput, names?: Map<string, string>): ReactNode {
+function namesFor(system: System, called: Effect | undefined, args: Record<string, unknown> | undefined, names?: Map<string, string>): { extra: Map<string, string>; sheets: Map<string, string> } {
+  const extra = new Map(names ?? []);
+  const sheets = new Map<string, string>();
+  for (const param of called?.params ?? []) {
+    if (param.kind === 'sheet') sheets.set(param.key, param.label ?? param.key);
+    else if (!extra.has(param.key)) extra.set(param.key, param.label ?? param.key);
+  }
+  for (const { payment } of called ? paymentsOf(system, called, args ?? {}) : []) {
+    for (const param of payment.params ?? []) if (param.ask && !extra.has(param.key)) extra.set(param.key, param.label ?? param.key);
+  }
+  return { extra, sheets };
+}
+
+function valueShown(system: System, input: CallInput, names?: Map<string, string>, sheets?: Map<string, string>): ReactNode {
   if (input.param.kind === 'effect') {
     const id = effectOf(input.value) ?? (input.param.default !== undefined ? String(input.param.default) : null);
-    return id ? <span className="chips__chip"><span>{system.effects[id]?.label || id}</span></span> : <span className="faint">не передаётся</span>;
+    if (!id) return <span className="faint">{input.param.optional ? 'нет' : 'не передаётся'}</span>;
+    const chip = <span className="chips__chip"><span>{system.effects[id]?.label || id}</span></span>;
+    return effectOf(input.value) ? chip : <span>{chip} <span className="faint">— как у эффекта</span></span>;
   }
-  if (input.value === undefined || input.value === null) return <span className="faint">не передаётся</span>;
-  return <FormulaView value={asText(input.value) ?? ''} system={system} {...(names ? { extraNames: names } : {})} />;
+  if (input.value === undefined || input.value === null) {
+    if (input.param.default !== undefined) return <span>{String(input.param.default)} <span className="faint">— как у эффекта</span></span>;
+    return <span className="faint">{input.param.optional ? 'нет' : 'не передаётся'}</span>;
+  }
+  const literal = effectOf(input.value);
+  if (literal !== null) return <span>«{literal}»</span>;
+  return <FormulaView value={asText(input.value) ?? ''} system={system} {...(names ? { extraNames: names } : {})} {...(sheets ? { sheets } : {})} />;
 }
 
 export function CallSummary({ system, effect, args, props, names, label }: {
@@ -76,6 +97,7 @@ export function CallSummary({ system, effect, args, props, names, label }: {
   const inputs = paramsOf(system, called)
     .filter(param => param.kind !== 'sheet')
     .map(param => ({ param, value: args?.[param.key], fromProp: props.has(param.key) }));
+  const shownNames = namesFor(system, called, args, names);
   const computed = inputs.filter(input => placeOf(input, props) === 'computed');
   const asked = inputs.filter(input => placeOf(input, props) === 'asked');
   if (!computed.length && !asked.length) return null;
@@ -85,7 +107,7 @@ export function CallSummary({ system, effect, args, props, names, label }: {
       {computed.map(input => (
         <div className="pair" key={input.param.key}>
           <span className="call-args__name">{input.param.label ?? input.param.key}</span>
-          <span className="call-group__value">← {valueShown(system, input, names)}</span>
+          <span className="call-group__value">← {valueShown(system, input, shownNames.extra, shownNames.sheets)}</span>
         </div>
       ))}
       {asked.length ? <span className="faint">спросят за столом: {asked.map(input => input.param.label ?? input.param.key).join(', ')}</span> : null}
@@ -163,7 +185,8 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, fromP
     );
   });
 
-  const shownValue = (input: CallInput): ReactNode => valueShown(system, input, names);
+  const shownNames = namesFor(system, called, args, names);
+  const shownValue = (input: CallInput): ReactNode => valueShown(system, input, shownNames.extra, shownNames.sheets);
 
   const groups = () => {
     const props = fromProps ?? new Set<string>();
