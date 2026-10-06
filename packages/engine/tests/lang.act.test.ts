@@ -15,8 +15,8 @@ const queue = (...values: number[]) => {
 const hit = (amount: string, field = '@цель.хп') => ({ type: 'apply', target: { expr: field }, direction: 'subtract', value: { expr: amount } });
 
 const ACTOR = { key: 'действующий', kind: 'sheet' };
-const TARGETS = { key: 'цели', kind: 'sheet', many: true };
-const EACH = { type: 'each', of: 'цели', as: 'цель' };
+const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
+const EACH = { type: 'each', of: 'цели' };
 const D20 = { constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } } };
 
 const button = (steps: unknown[]) => ({ label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS], steps });

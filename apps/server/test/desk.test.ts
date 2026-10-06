@@ -19,9 +19,9 @@ const system = {
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
       steps: [
-        { type: 'each', of: 'цели', as: 'цель' },
+        { type: 'each', of: 'цели' },
         { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '2 + @стол.страх' } },
         { type: 'apply', target: { expr: '@стол.страх' }, direction: 'add', value: { expr: '1' } },
       ],

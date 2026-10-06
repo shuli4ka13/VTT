@@ -1,3 +1,4 @@
+import { loopOf } from '../engine/steps/each.ts';
 import { effectLabelOf } from './actions.ts';
 import { breakReasonWord, registry as stepRegistry } from '../engine/steps/index.ts';
 import { outcomeWords, rollName } from '../engine/roll-tags.ts';
@@ -68,7 +69,7 @@ export function describeEntry(
   const params: { key: string; label?: string; kind?: string }[] = effect?.params ?? [];
   const sheetHeads = new Set([
     ...params.filter(p => p.kind === 'sheet').map(p => p.key),
-    ...(effect?.steps ?? []).filter((step: any) => step.type === 'each' && step.as).map((step: any) => String(step.as)),
+    ...(effect?.steps ?? []).filter((step: any) => step.type === 'each').map((step: any) => loopOf(params as never, step)?.key).filter(Boolean) as string[],
     'носитель',
   ]);
   const nameLabel = (name: string): string => {

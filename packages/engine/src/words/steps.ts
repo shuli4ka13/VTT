@@ -91,7 +91,6 @@ export const STEP_WORDS = {
     hint: 'Делит цепочку действия: шаги выше выполняются один раз, шаги ниже — для каждого листа из списка по очереди.',
     slots: [
       { key: 'of', label: 'Из какого списка', kind: 'input', main: true, required: true, allow: [] },
-      { key: 'as', label: 'Как назвать каждого', kind: 'text', main: true, required: true, allow: [] },
     ],
     outputs: [],
     reasons: {},

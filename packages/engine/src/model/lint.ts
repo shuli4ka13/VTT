@@ -1,3 +1,4 @@
+import { loopOf } from '../engine/steps/each.ts';
 import { chosenEffect, choicesOfInput, emittedChoices, kindsChoosing } from './payments.ts';
 import { SEEN_LABEL, ANY_ACTION, PHASES } from '../events/bus.ts';
 import type { System, Compendium, Effect, Step } from './types.ts';
@@ -689,6 +690,10 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
       if (step.type !== 'each') return;
       const of = String((step as { of?: unknown }).of ?? '');
       if (!sheets.get(of)) out.push({ where: { ...where, step: index }, level: 'error', text: `«для каждого» перебирает «${of || '?'}», а такого входа-списка листов у эффекта нет` });
+      else if (!loopOf(effect.params, step as { of?: unknown })) {
+        const list = effect.params?.find(p => p.key === of);
+        out.push({ where: { ...where, part: 'params', key: of }, level: 'error', text: `у входа «${list?.label ?? of}» не сказано, как зовётся один из списка` });
+      }
       if (called.has(id)) out.push({ where: { ...where, step: index }, level: 'error', text: 'вызываемый эффект не перебирает цели — «для каждого» работает только у действия кнопкой' });
     });
     if (effect.bond) {
@@ -728,7 +733,7 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
         }
         const steps = effect.steps ?? [];
         const split = steps.findIndex(step => step.type === 'each');
-        if (contract.each && (split < 0 || (steps[split] as { as?: unknown }).as !== contract.each)) {
+        if (contract.each && (split < 0 || loopOf(effect.params, steps[split] as { of?: unknown })?.key !== contract.each)) {
           out.push({ where, level: 'error', text: `метка «${tag}» требует «для каждого» с именем «${contract.each}»` });
         }
         for (const output of contract.outputs ?? []) {

@@ -183,14 +183,14 @@ const PARAMETRIC = {
   label: 'Параметрический удар', activation: 'manual',
   params: [
     { key: 'действующий', kind: 'sheet' },
-    { key: 'цели', kind: 'sheet', many: true },
+    { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } },
     { key: 'bonus', label: 'Бонус проверки', kind: 'number' },
     { key: 'versus', label: 'Против чего', kind: 'number', optional: true },
     { key: 'damage_dice', label: 'Кость урона', kind: 'dice' },
     { key: 'damage_bonus', label: 'Бонус урона', kind: 'number' },
   ],
   steps: [
-    { type: 'each', of: 'цели', as: 'цель' },
+    { type: 'each', of: 'цели' },
     { id: 'hit_бросок', type: 'roll', die: 'lead_die', bonus: { expr: '@bonus' }, tags: ['атака'],
       by: { expr: '@действующий' }, against: { expr: '@цель' } },
     { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: 'или(@versus, @цель.ac)' } },

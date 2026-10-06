@@ -11,8 +11,8 @@ const queue = (...values: number[]) => {
 };
 
 const ACTOR = { key: 'действующий', kind: 'sheet' };
-const TARGETS = { key: 'цели', kind: 'sheet', many: true };
-const EACH = { type: 'each', of: 'цели', as: 'цель' };
+const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
+const EACH = { type: 'each', of: 'цели' };
 
 const passive = (label: string, edit: string, condition: string, tags: string[] | null = ['атака']) => ({
   label, activation: 'passive', duration: { kind: 'permanent' },

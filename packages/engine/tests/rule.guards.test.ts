@@ -30,7 +30,7 @@ const book: any = { records: [{ id: 'e', table: 'приём', label: 'E', bindin
 const play = (steps: any[], ...dice: number[]) => {
   const full: any = {
     ...sys, tables: { ...sys.tables, приём: { shape: 'book', use: 'action', label: 'Приём' } },
-    effects: { e: { label: 'E', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }], steps: [{ type: 'each', of: 'цели', as: 'цель' }, ...steps] } },
+    effects: { e: { label: 'E', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }], steps: [{ type: 'each', of: 'цели' }, ...steps] } },
   };
   const out = exchange({ system: full, compendium: book, die: queue(...dice), sheets: [sender, target] as any, actionId: 'e:0', fromId: 'маг', toId: 'цель' });
   const report = out.reports[0]!.report;

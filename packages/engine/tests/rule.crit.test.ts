@@ -23,8 +23,8 @@ const sheet = (id: string): Sheet => ({
 const book = { records: [{ id: 'е', table: 'действие', label: 'е', bindings: [{ label: 'е', effect: 'е', args: {} }] }] } as unknown as Compendium;
 
 const ACTOR = { key: 'действующий', kind: 'sheet' };
-const TARGETS = { key: 'цели', kind: 'sheet', many: true };
-const EACH = { type: 'each', of: 'цели', as: 'цель' };
+const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
+const EACH = { type: 'each', of: 'цели' };
 
 const resolve = (stepList: unknown[], rolls: number[]) => {
   let at = 0;

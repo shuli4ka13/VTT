@@ -6,9 +6,9 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 const system = {
   id: 'с', name: 'с', tables: { приём: { shape: 'book', use: 'action', label: 'Приём' } },
   effects: {
-    помочь: { label: 'Помочь', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],  steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'status', mode: 'apply', effect: 'помощь', to: { expr: '@цель' }, args: { помогающий: { expr: '@действующий' } } }] },
+    помочь: { label: 'Помочь', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],  steps: [{ type: 'each', of: 'цели' }, { type: 'status', mode: 'apply', effect: 'помощь', to: { expr: '@цель' }, args: { помогающий: { expr: '@действующий' } } }] },
     помощь: { label: 'Помощь', activation: 'passive', params: [{ key: 'помогающий', kind: 'sheet', optional: true }], duration: { kind: 'turns', max: 1, ends: 'turn-start', by: 'помогающий' } },
-    отвлечь: { label: 'Отвлечь', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],  steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'status', mode: 'apply', effect: 'отвлечён', to: { expr: '@цель' } }] },
+    отвлечь: { label: 'Отвлечь', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],  steps: [{ type: 'each', of: 'цели' }, { type: 'status', mode: 'apply', effect: 'отвлечён', to: { expr: '@цель' } }] },
     отвлечён: { label: 'Отвлечён', activation: 'passive', duration: { kind: 'turns', max: 1 } },
   },
   

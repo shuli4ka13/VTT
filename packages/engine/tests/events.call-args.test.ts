@@ -24,13 +24,13 @@ const system = {
     },
     меч: {
       label: 'Удар мечом', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }, { key: 'кость', label: 'Кость урона', kind: 'dice' }],
-      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'emit', effect: 'урон_костями', args: { лист: { expr: '@цель' }, кость: { expr: '@кость' }, сколько: { expr: '2' } } }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }, { key: 'кость', label: 'Кость урона', kind: 'dice' }],
+      steps: [{ type: 'each', of: 'цели' }, { type: 'emit', effect: 'урон_костями', args: { лист: { expr: '@цель' }, кость: { expr: '@кость' }, сколько: { expr: '2' } } }],
     },
     шар: {
       label: 'Огненный шар', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
-      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'emit', effect: 'урон_костями', args: { лист: { expr: '@цель' }, кость: { expr: '"1d6"' }, сколько: { expr: '8' } } }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
+      steps: [{ type: 'each', of: 'цели' }, { type: 'emit', effect: 'урон_костями', args: { лист: { expr: '@цель' }, кость: { expr: '"1d6"' }, сколько: { expr: '8' } } }],
     },
   },
   
@@ -76,7 +76,7 @@ group('вызов передаёт вызванному его входы', () =
       ...system,
       effects: {
         ...system.effects,
-        шар: { label: 'Огненный шар', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }], steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'emit', effect: 'урон_костями', args: { лист: { expr: '@цель' } } }] },
+        шар: { label: 'Огненный шар', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }], steps: [{ type: 'each', of: 'цели' }, { type: 'emit', effect: 'урон_костями', args: { лист: { expr: '@цель' } } }] },
       },
     } as unknown as System;
     const беда = throws(() => hit('шар:0', 5, дырявый));

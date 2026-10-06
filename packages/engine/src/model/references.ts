@@ -1,4 +1,5 @@
 import { paymentsOf } from './payments.ts';
+import { loopOf } from '../engine/steps/each.ts';
 import { tagWords } from '../engine/roll-tags.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import type { System, Compendium, Effect, Step, Modifier, Guard, Param } from './types.ts';
@@ -187,6 +188,7 @@ function guardRefs(guard: Guard | undefined, from: Where, scope: ChainScope, out
 
 export function chainRefs(
   steps: Step[], whereOf: (index: number) => Where, params: Set<string>, sheets: Iterable<string>, seeds: string[] = [],
+  defs: readonly Param[] = [],
 ): Reference[] {
   const out: Reference[] = [];
   const earlier = new Set<string>(seeds);
@@ -203,8 +205,8 @@ export function chainRefs(
     }
     guardRefs(step.if, from, scope, out);
     if (step.id) earlier.add(String(step.id));
-    const loop = (step as { as?: unknown }).as;
-    if (step.type === 'each' && typeof loop === 'string' && loop) named.add(loop);
+    const loop = step.type === 'each' ? loopOf(defs, step as { of?: unknown })?.key : undefined;
+    if (loop) named.add(loop);
   });
   for (const ref of out) if (ref.kind === 'param' && !params.has(ref.key)) ref.scope = 'missing';
   return out;
@@ -303,10 +305,10 @@ export function heardNames(system: System, listener: Listener): HeardNames {
   const params = effect?.params ?? [];
   const steps = effect?.steps ?? [];
   const split = steps.findIndex(step => step.type === 'each');
-  const loop = split >= 0 ? steps[split] as { as?: string } : undefined;
+  const loop = split >= 0 ? loopOf(params, steps[split] as { of?: unknown })?.key : undefined;
   const visible = listener.phase === 'done' && split >= 0 ? steps.slice(0, split) : steps;
   return {
-    sheets: [...params.filter(p => p.kind === 'sheet').map(p => p.key), ...(loop?.as && listener.phase !== 'done' ? [loop.as] : [])],
+    sheets: [...params.filter(p => p.kind === 'sheet').map(p => p.key), ...(loop && listener.phase !== 'done' ? [loop] : [])],
     seeds: [
       ...params.filter(p => p.kind !== 'sheet').map(p => p.key),
       ...visible.map(step => step.id).filter((id): id is string => Boolean(id)),
@@ -345,7 +347,7 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
     typedRefs(param, { tab: 'effects', effect: id, part: 'params', key: param.key }, out);
     if (param.kind === 'effect' && typeof param.default === 'string' && param.default) out.push({ kind: 'effect', key: param.default, from: { tab: 'effects', effect: id, part: 'params', key: param.key } });
   }
-  out.push(...chainRefs(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, sheetKeys, [CALL_TAGS]));
+  out.push(...chainRefs(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, sheetKeys, [CALL_TAGS], effect.params ?? []));
   out.push(...chainRefs(effect.cost ?? [], step => ({ tab: 'effects', effect: id, step, part: 'cost' }), params, sheetKeys, [CALL_TAGS]));
   (effect.on ?? []).forEach((handler, index) => {
     const head: Where = { tab: 'effects', effect: id, part: 'on', handler: index };

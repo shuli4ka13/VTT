@@ -301,7 +301,7 @@ const CREATED: [RegExp, string][] = [
   [/\.modifiers\[\]\.kind$/, '«+ правка поля» или «+ правка вызова»'],
   [/^system\.constants\.\*\.kind$/, '«+ кость» в «Правилах»'],
   [/^system\.tables\.\*\.(shape|key|owner)$/, 'вид таблицы выбирается при создании'],
-  [/\.steps\[\]\.(of|as)$/, '«+ для каждого из списка»'],
+  [/\.steps\[\]\.of$/, '«+ для каждого из списка»'],
 ];
 
 const BY_BUILD: [RegExp, string][] = [

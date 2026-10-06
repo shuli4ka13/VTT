@@ -58,7 +58,7 @@ describe('RecordsTab: тип видит входы эффекта', () => {
         effects: {
           hit: { label: 'Удар', activation: 'manual', params: [
             { key: 'действующий', label: 'Кто действует', kind: 'sheet' },
-            { key: 'цели', label: 'Цели', kind: 'sheet', many: true },
+            { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' } },
           ], steps: [] },
         },
       },

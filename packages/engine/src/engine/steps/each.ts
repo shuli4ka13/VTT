@@ -12,11 +12,15 @@ export const icon = '⟳';
 
 export const traceLine = (): string => 'для каждого';
 
-export function lint(step: { of?: unknown; as?: unknown }) {
+export function lint(step: { of?: unknown }) {
   if (typeof step.of !== 'string' || !step.of) return 'не сказано, из какого списка брать листы';
-  if (typeof step.as !== 'string' || !step.as) return 'не сказано, как назвать каждый лист';
   return null;
 }
+
+export const loopOf = (params: readonly { key: string; label?: string; item?: { key: string; label?: string } }[] | undefined, step: { of?: unknown }): { key: string; label: string } | null => {
+  const list = (params ?? []).find(param => param.key === step.of);
+  return list?.item ? { key: list.item.key, label: list.item.label ?? list.item.key } : null;
+};
 
 export function finish() {
   return { value: null, trace: {}, break: null };

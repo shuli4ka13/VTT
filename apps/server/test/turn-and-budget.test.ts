@@ -13,8 +13,8 @@ import { sliceWorld } from './slice.ts';
 const { system: dnd, compendium, sheets } = sliceWorld();
 
 const ACTOR = { key: 'действующий', kind: 'sheet' };
-const TARGETS = { key: 'цели', kind: 'sheet', many: true };
-const EACH = { type: 'each', of: 'цели', as: 'цель' };
+const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
+const EACH = { type: 'each', of: 'цели' };
 const button = (label: string, steps: unknown[], extra: Record<string, unknown> = {}) =>
   ({ label, activation: 'manual', ...extra, params: [ACTOR, TARGETS, ...((extra.params as unknown[]) ?? [])], steps: [EACH, ...steps] });
 const sub = (field: string, amount: string, direction = 'subtract') =>

@@ -11,14 +11,14 @@ const system = {
   effects: {
     снаряд: {
       label: 'Снаряд', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
       cost: [{ type: 'apply', target: { expr: '@действующий.ячейки' }, direction: 'subtract', value: { expr: '1' } }],
-      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '4' } }],
+      steps: [{ type: 'each', of: 'цели' }, { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '4' } }],
     },
     удар: {
       label: 'Удар', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
-      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '2' } }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
+      steps: [{ type: 'each', of: 'цели' }, { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '2' } }],
     },
   },
   

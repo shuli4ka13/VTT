@@ -180,6 +180,7 @@ export const ask = z.object({
 
 export const param = column.extend({
   ask: ask.optional(),
+  item: z.object({ key: tag, label: z.string().optional() }).strict().optional(),
 
   role: z.enum(['amount']).optional(),
   optional: z.boolean().optional(),

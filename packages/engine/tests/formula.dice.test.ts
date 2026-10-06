@@ -17,9 +17,9 @@ const система = {
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }, { key: 'кость', label: 'Кость урона', kind: 'dice' }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }, { key: 'кость', label: 'Кость урона', kind: 'dice' }],
       steps: [
-        { type: 'each', of: 'цели', as: 'цель' },
+        { type: 'each', of: 'цели' },
         { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
         {
           id: 'урон', type: 'roll',

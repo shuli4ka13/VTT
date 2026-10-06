@@ -32,9 +32,9 @@ const система = {
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }, { key: 'тип', label: 'Тип урона', kind: 'choice', from: 'урон' }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }, { key: 'тип', label: 'Тип урона', kind: 'choice', from: 'урон' }],
       steps: [
-        { type: 'each', of: 'цели', as: 'цель' },
+        { type: 'each', of: 'цели' },
         { id: 'сколько', type: 'roll', fixed: { expr: '5 + @тип.прибавка' } },
         { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@сколько' } },
       ],

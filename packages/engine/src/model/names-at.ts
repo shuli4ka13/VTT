@@ -1,3 +1,4 @@
+import { loopOf } from '../engine/steps/each.ts';
 import { flattenSystem } from './inherit.ts';
 import { heardNames, listenerOf, callNamesOf, CALL_TAGS, HOLDER, TARGETS_SEED } from './references.ts';
 import { calledOf } from '../engine/effects.ts';
@@ -51,12 +52,12 @@ const fromParam = (param: Param, group: NameGroup): NameAt => ({
 
 const holder = (): NameAt => ({ name: HOLDER, label: 'носитель — тот, на ком висит', kind: 'sheet', group: 'holder' });
 
-function stepsBefore(steps: readonly Step[], index: number, withLoop: boolean): NameAt[] {
+function stepsBefore(steps: readonly Step[], index: number, withLoop: boolean, params: readonly Param[] = []): NameAt[] {
   const out: NameAt[] = [];
   steps.slice(0, index).forEach(step => {
     if (step.type === 'each') {
-      const loop = step as { as?: string; of?: string };
-      if (withLoop && loop.as) out.push({ name: loop.as, label: `каждый из «${loop.of ?? ''}»`, kind: 'sheet', group: 'loop' });
+      const loop = loopOf(params, step as { of?: unknown });
+      if (withLoop && loop) out.push({ name: loop.key, label: loop.label, kind: 'sheet', group: 'loop' });
       return;
     }
     if (!step.id) return;
@@ -133,7 +134,7 @@ export function namesAt(raw: System, effectId: string, place: Place): NameAt[] {
 
   switch (place.part) {
     case 'steps':
-      return dedupe([...inputs, ...stepsBefore(effect.steps ?? [], place.index, true), ...tags, ...constants(system)]);
+      return dedupe([...inputs, ...stepsBefore(effect.steps ?? [], place.index, true, effect.params ?? []), ...tags, ...constants(system)]);
     case 'cost':
       return dedupe([...inputs, ...stepsBefore(effect.cost ?? [], place.index, false), ...tags, ...constants(system)]);
     case 'attach':

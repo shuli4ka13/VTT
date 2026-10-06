@@ -13,13 +13,13 @@ const system = {
       label: 'Выстрел', activation: 'manual',
       params: [
         { key: 'действующий', kind: 'sheet' },
-        { key: 'цели', kind: 'sheet', many: true },
+        { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } },
         { key: 'дистанция', label: 'Дистанция', kind: 'number', min: 1, max: 100, ask: { by: 'actor' } },
         { key: 'прицел', label: 'Куда целишься', kind: 'choice', from: 'места', ask: { by: 'gm' } },
         { key: 'кость', label: 'Кость урона', kind: 'dice' },
       ],
       steps: [
-        { type: 'each', of: 'цели', as: 'цель' },
+        { type: 'each', of: 'цели' },
         { id: 'урон', type: 'roll', fixed: { expr: 'кинуть(@кость)' } },
         { type: 'apply', target: { expr: '@цель.hp' }, direction: 'subtract', value: { expr: '@урон' } },
         { type: 'apply', target: { expr: '@цель.hp' }, direction: 'subtract', value: { expr: '@дистанция' } },
@@ -72,7 +72,7 @@ group('значение, которое называет человек за с�
 group('граница вопроса — формула по листу действующего', () => {
   const capped = {
     ...system,
-    effects: { ...system.effects, выстрел: { ...system.effects.выстрел, params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }, { key: 'дистанция', label: 'Дистанция', kind: 'number', min: 0, max: { expr: '@hp' }, ask: { by: 'actor' } }] } },
+    effects: { ...system.effects, выстрел: { ...system.effects.выстрел, params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }, { key: 'дистанция', label: 'Дистанция', kind: 'number', min: 0, max: { expr: '@hp' }, ask: { by: 'actor' } }] } },
   } as unknown as System;
   const asked = asksOf('ствол:0', { system: capped, compendium });
   const pass = (hp: number) => newPass(capped, { ...sheet('я'), values: { hp } }, { compendium });

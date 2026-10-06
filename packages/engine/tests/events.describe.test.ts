@@ -22,9 +22,9 @@ const system = {
   effects: {
     шаблон: {
       label: 'Заклинание: спасбросок, половина при успехе',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
       steps: [
-        { type: 'each', of: 'цели', as: 'цель' },
+        { type: 'each', of: 'цели' },
         { id: 'бросок', type: 'roll', die: { expr: '"1к20"' }, tags: ['спас'], by: { expr: '@цель' }, against: { expr: '@действующий' } },
         { id: 'п', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@цель.броня' } },
         { id: 'в', type: 'roll', fixed: { expr: "кинуть('8к6')" } },
@@ -101,8 +101,8 @@ group('журнал говорит словами стола, а не движк
 
 group('журнал называет чужие и общие поля словами', () => {
   const owned = (bonus: string, versus: string) => ({ ...withColumn(system, { key: 'эскалация', label: 'Кость эскалации', kind: 'number' }, 'desk'),
-    effects: { шаблон: { label: 'Удар', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }], steps: [
-      { type: 'each', of: 'цели', as: 'цель' },
+    effects: { шаблон: { label: 'Удар', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }], steps: [
+      { type: 'each', of: 'цели' },
       { id: 'бросок', type: 'roll', die: { expr: '"1к20"' }, tags: ['атака'], bonus: { expr: bonus }, by: { expr: '@действующий' }, against: { expr: '@цель' } },
       { id: 'п', type: 'check', value: { expr: '@бросок' }, versus: { expr: versus } },
       { id: 'в', type: 'roll', fixed: { expr: 'если(@бросок.natural >= 20, 2, 1)' } },

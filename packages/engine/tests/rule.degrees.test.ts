@@ -52,8 +52,8 @@ group('степени успеха', () => {
   };
 
   const ACTOR = { key: 'действующий', kind: 'sheet' };
-  const TARGETS = { key: 'цели', kind: 'sheet', many: true };
-  const EACH = { type: 'each', of: 'цели', as: 'цель' };
+  const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
+  const EACH = { type: 'each', of: 'цели' };
 
   const runRule = (sys: any, rule: any, sender: any, target: any, die: () => number, base: any = { records: [] }) => {
     const full: any = {

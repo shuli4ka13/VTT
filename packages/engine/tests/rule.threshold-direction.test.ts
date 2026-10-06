@@ -67,9 +67,9 @@ group('проверка: направление успеха объявляет�
       effects: {
         спас: {
           label: 'Спасбросок', activation: 'manual',
-          params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
+          params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
           steps: [
-            { type: 'each', of: 'цели', as: 'цель' },
+            { type: 'each', of: 'цели' },
             { id: 'try_бросок', type: 'roll', die: 'lead_die', bonus: { expr: '0' }, by: { expr: '@цель' }, against: { expr: '@действующий' } },
             { id: 'try', type: 'check', value: { expr: '@try_бросок' }, successWhen: 'notOver', versus: { expr: '40' } },
           ],

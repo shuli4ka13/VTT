@@ -24,7 +24,7 @@ const цель = { id: 'цель', values: { хп: 20, сила: 1 }, effects: [
 const runRule = (sys: any, rule: any, sender: any, target: any, die: () => number) => {
   const full: any = {
     ...sys, tables: { ...sys.tables, приём: { shape: 'book', use: 'action', label: 'Приём' } },
-    effects: { ...sys.effects, 'правило': { label: 'правило', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }], ...rule, steps: [{ type: 'each', of: 'цели', as: 'цель' }, ...rule.steps] } },
+    effects: { ...sys.effects, 'правило': { label: 'правило', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }], ...rule, steps: [{ type: 'each', of: 'цели' }, ...rule.steps] } },
   };
   const book: any = { records: [{ id: 'правило', table: 'приём', label: 'правило', bindings: [{ label: 'правило', effect: 'правило', args: {} }] }] };
   const from = { ...sender, id: 'действующий-теста', has: [...(sender.has ?? []), { of: 'правило' }], effects: sender.effects ?? [] };

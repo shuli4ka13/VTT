@@ -1586,7 +1586,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           },
           {
             "key": "trait",
@@ -1648,8 +1652,7 @@
           },
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "id": "бросок",
@@ -1705,7 +1708,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           },
           {
             "key": "damage_dice",
@@ -1746,8 +1753,7 @@
           },
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "id": "удар",
@@ -1822,8 +1828,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "type": "check",
@@ -1880,7 +1885,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           }
         ]
       },
@@ -1891,8 +1900,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "type": "status",
@@ -1921,7 +1929,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           }
         ]
       },
@@ -1946,8 +1958,7 @@
           },
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "type": "status",
@@ -2001,7 +2012,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           }
         ]
       },
@@ -2026,8 +2041,7 @@
           },
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "id": "бросок",
@@ -2109,7 +2123,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           }
         ]
       },
@@ -2120,8 +2138,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "type": "apply",
@@ -2152,7 +2169,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           }
         ]
       },
@@ -2163,8 +2184,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "type": "apply",
@@ -2187,7 +2207,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           }
         ]
       },
@@ -2198,8 +2222,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "type": "apply",
@@ -2222,7 +2245,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           }
         ]
       },
@@ -2233,8 +2260,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "type": "apply",
@@ -2257,7 +2283,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           },
           {
             "key": "вместе",
@@ -2278,8 +2308,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "type": "apply",
@@ -2310,7 +2339,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           }
         ]
       },
@@ -2321,8 +2354,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "type": "apply",
@@ -2345,7 +2377,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           }
         ]
       },
@@ -2356,8 +2392,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "type": "apply",
@@ -2380,7 +2415,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           }
         ]
       },
@@ -2391,8 +2430,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "type": "apply",
@@ -2415,7 +2453,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           }
         ]
       },
@@ -2426,8 +2468,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "type": "apply",
@@ -2450,7 +2491,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           },
           {
             "key": "героев",
@@ -2471,8 +2516,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "type": "apply",
@@ -2518,7 +2562,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           }
         ]
       },
@@ -2529,8 +2577,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "type": "apply",
@@ -2584,7 +2631,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           }
         ]
       },
@@ -2595,8 +2646,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "type": "status",
@@ -2640,7 +2690,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           }
         ]
       },
@@ -2651,8 +2705,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "type": "status",
@@ -2696,7 +2749,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           }
         ]
       },
@@ -2707,8 +2764,7 @@
         "steps": [
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "type": "status",
@@ -2752,7 +2808,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           }
         ]
       },

@@ -9,8 +9,8 @@ const system = {
   effects: {
     благословение: {
       label: 'Благословение', activation: 'manual', bond: { effect: 'благословение', by: 'действующий' },
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
-      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'status', mode: 'apply', effect: 'благословлён', to: { expr: '@цель' } }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
+      steps: [{ type: 'each', of: 'цели' }, { type: 'status', mode: 'apply', effect: 'благословлён', to: { expr: '@цель' } }],
     },
     благословлён: {
       label: 'Благословлён', activation: 'passive', duration: { kind: 'permanent' },

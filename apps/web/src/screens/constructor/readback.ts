@@ -1,3 +1,4 @@
+import { loopOf } from '@vtt/engine/engine/steps/each';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import type { System, Effect, Step, SystemConstant } from '@vtt/schema';
 import { labelOfTag, formulaAsLabels } from '../../ui/formula.tsx';
@@ -48,8 +49,9 @@ const SHEET_WORDS: Record<string, string> = { носитель: 'носител�
 const sheetLabel = (effect: Effect, name: string): string | null => {
   const param = effect.params?.find(p => p.key === name && p.kind === 'sheet');
   if (param) return param.label ?? param.key;
-  const loop = (effect.steps ?? []).find(step => step.type === 'each') as { as?: string } | undefined;
-  if (loop?.as === name) return name;
+  const loop = (effect.steps ?? []).find(step => step.type === 'each') as { of?: unknown } | undefined;
+  const one = loop ? loopOf(effect.params, loop) : null;
+  if (one?.key === name) return one.label.toLowerCase();
   return SHEET_WORDS[name] ?? null;
 };
 

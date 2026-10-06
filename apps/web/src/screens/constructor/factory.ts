@@ -18,8 +18,8 @@ export const newEffect = (system: System, kind: LaunchKind): Made<Effect> => ({
   value: kind === 'manual'
     ? {
       label: 'Новый эффект',
-      params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true }],
-      steps: [{ type: 'each', of: 'цели', as: 'цель' } as unknown as Step],
+      params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' } }],
+      steps: [{ type: 'each', of: 'цели' } as unknown as Step],
     }
     : {
       label: 'Новый эффект', activation: 'passive', duration: { kind: 'permanent' },
@@ -135,10 +135,9 @@ export const BRICKS: StepTemplate[] = [
   {
     key: 'each', label: '+ для каждого из списка',
     hint: 'Разделитель: шаги выше — один раз, ниже — для каждого листа из входа-списка по очереди.',
-    make: (_system, taken, effect) => {
+    make: (_system, _taken, effect) => {
       const list = (effect?.params ?? []).find(p => p.kind === 'sheet' && p.many)?.key ?? '';
-      const names = [...taken, ...(effect?.params ?? []).map(p => p.key)];
-      return [{ type: 'each', of: list, as: freeId(names, 'каждый') } as unknown as Step];
+      return [{ type: 'each', of: list } as unknown as Step];
     },
   },
   {

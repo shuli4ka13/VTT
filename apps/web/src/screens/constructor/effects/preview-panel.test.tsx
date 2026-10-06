@@ -12,10 +12,10 @@ const system = (): System => ({
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
-      params: [{ key: 'бьющий', label: 'Бьющий', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true }],
+      params: [{ key: 'бьющий', label: 'Бьющий', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' } }],
       steps: [
         { id: 'число', type: 'roll', die: 'к6' },
-        { type: 'each', of: 'цели', as: 'цель' },
+        { type: 'each', of: 'цели' },
         { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@число' } },
       ],
     },

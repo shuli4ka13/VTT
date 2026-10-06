@@ -10,9 +10,9 @@ const sys: any = {
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }, { key: 'величина', label: 'Урон', kind: 'number' }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }, { key: 'величина', label: 'Урон', kind: 'number' }],
       steps: [
-        { type: 'each', of: 'цели', as: 'цель' },
+        { type: 'each', of: 'цели' },
         { id: 'урон', type: 'roll', die: { expr: '"1d1"' }, bonus: { expr: '@величина' } },
         { id: 'рана', type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '@урон' } },
       ],

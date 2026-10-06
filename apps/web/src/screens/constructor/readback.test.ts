@@ -15,7 +15,7 @@ const system = {
 
 const effect = { params: [{ key: 'p_1', label: 'кость урона', kind: 'dice' }] } as unknown as Effect;
 
-const hero = { ...effect, params: [...(effect.params ?? []), { key: 'атакующий', label: 'Атакующий', kind: 'sheet' }], steps: [{ type: 'each', of: 'цели', as: 'цель' }] } as unknown as Effect;
+const hero = { ...effect, params: [...(effect.params ?? []), { key: 'атакующий', label: 'Атакующий', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' } }], steps: [{ type: 'each', of: 'цели' }] } as unknown as Effect;
 
 describe('checkReadback', () => {
   it('бросок с «Бросает» читается фразой с лейблами системы, без первого лица', () => {

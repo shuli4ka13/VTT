@@ -207,8 +207,8 @@ group('линт: слушатели, круги, входы', () => {
 
   test('подписка видит входы того, что слушает, и переменную его цикла; чужое имя — «чьё поле?»', () => {
     const system = withEffect('удар', {
-      params: [WHO, { key: 'цели', kind: 'sheet', many: true }] as never,
-      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { id: 'hit', type: 'check', value: { expr: '1' }, versus: { expr: '0' } }] as Step[],
+      params: [WHO, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }] as never,
+      steps: [{ type: 'each', of: 'цели' }, { id: 'hit', type: 'check', value: { expr: '1' }, versus: { expr: '0' } }] as Step[],
     });
     system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'before:удар', if: { expr: 'все(@цель == @носитель, @действующий != @носитель)' }, steps: [] }] } as Effect;
     eq(errorTexts(system).join(''), '');
@@ -245,8 +245,8 @@ group('линт: слушатели, круги, входы', () => {
   });
 
   test('«для каждого» в одной цепочке может быть только один', () => {
-    const each = { type: 'each', of: 'цели', as: 'цель' } as unknown as Step;
-    const system = withEffect('a', { params: [WHO, { key: 'цели', kind: 'sheet', many: true }] as never, steps: [each, mend('@цель.hp'), each] });
+    const each = { type: 'each', of: 'цели' } as unknown as Step;
+    const system = withEffect('a', { params: [WHO, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }] as never, steps: [each, mend('@цель.hp'), each] });
     ok(errorTexts(system).some(t => t.includes('может быть только один')), errorTexts(system).join('|'));
   });
 
@@ -266,7 +266,7 @@ group('линт: слушатели, круги, входы', () => {
   });
 
   test('кнопка заполняет входы-листы сама: первый одиночный — нажавший, список — выбранные; лишний лист — ошибка', () => {
-    const system = withEffect('strike', { params: [WHO, { key: 'цели', kind: 'sheet', many: true }], steps: [] });
+    const system = withEffect('strike', { params: [WHO, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }], steps: [] });
     system.tables = { weapon: { shape: 'book', use: 'item', label: 'Оружие', columns: [], bindings: [{ label: 'Удар', effect: 'strike', args: {} }] } } as never;
     eq(errorTexts(system).join(''), '');
     system.effects.strike = { label: 'strike', activation: 'manual', params: [WHO, { key: 'второй', label: 'Второй', kind: 'sheet' }], steps: [] } as never;
@@ -354,8 +354,8 @@ group('ссылки и слушатели', () => {
 
   test('heardNames: имена, которые слушатель получает от того, что случилось', () => {
     const system = withEffect('удар', {
-      params: [WHO, { key: 'цели', kind: 'sheet', many: true }, { key: 'бонус', kind: 'number' }] as never,
-      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { id: 'hit', type: 'check', value: { expr: '1' }, versus: { expr: '0' } }] as Step[],
+      params: [WHO, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }, { key: 'бонус', kind: 'number' }] as never,
+      steps: [{ type: 'each', of: 'цели' }, { id: 'hit', type: 'check', value: { expr: '1' }, versus: { expr: '0' } }] as Step[],
     });
     deepEq(heardNames(system, listenerOf({ on: 'seen' })).sheets, ['бросающий', 'против']);
     deepEq(heardNames(system, listenerOf({ on: 'moment:turn-start' })).sheets, ['ходит']);

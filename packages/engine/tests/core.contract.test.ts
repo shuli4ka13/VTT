@@ -17,8 +17,8 @@ const sub = (amount: string, field = '@цель.хп') => ({ type: 'apply', targ
 const add = (amount: string, field: string) => ({ type: 'apply', target: { expr: field }, direction: 'add', value: { expr: amount } });
 
 const ACTOR = { key: 'действующий', kind: 'sheet' };
-const TARGETS = { key: 'цели', kind: 'sheet', many: true };
-const EACH = { type: 'each', of: 'цели', as: 'цель' };
+const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
+const EACH = { type: 'each', of: 'цели' };
 
 const button = (steps: unknown[], extra: Record<string, unknown> = {}) =>
   ({ label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS], steps: [EACH, ...steps], ...extra });

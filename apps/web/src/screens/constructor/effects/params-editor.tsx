@@ -3,7 +3,7 @@ import { kindsFor } from '@vtt/engine/words/kinds';
 import { choiceTables } from '@vtt/engine/model/tables';
 import { ASKABLE } from '@vtt/engine/model/asks';
 import { freeId, useWorld } from '../../../store/world.ts';
-import { followKey, paramUsed } from '../keys.ts';
+import { followKey, paramUsed, keyOf, referenced } from '../keys.ts';
 import { KeyField } from '../../../ui/key-field.tsx';
 import { BoundField } from '../bound-field.tsx';
 import { Card, CardHead, Input, Select, Button } from '../../../ui/primitives.tsx';
@@ -93,7 +93,7 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
                 options={PARAM_KINDS}
                 onChange={next => change(param.key, t => {
                   t.kind = (next === SHEETS ? 'sheet' : next) as ValueKind;
-                  if (next === SHEETS) t.many = true; else delete t.many;
+                  if (next === SHEETS) { t.many = true; t.item ??= { key: freeId(keys, 'каждый'), label: 'Каждый' }; } else { delete t.many; delete t.item; }
                   if (next !== 'number') delete t.role;
                   if (next !== 'choice') delete t.from;
                   if (!(ASKABLE as readonly string[]).includes(next)) delete t.ask;
@@ -106,6 +106,20 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
                   options={[['', '— какая —'], ...tables] as never}
                   onChange={next => change(param.key, t => { if (next) t.from = next; else delete t.from; })}
                 />
+              ) : kind === 'sheet' && param.many ? (
+                <span key={`${param.key}:from`} className="inline inline--tight" title="как зовётся один лист из списка в шагах после «Для каждого из»">
+                  <span className="faint">один —</span>
+                  <Input value={param.item?.label ?? param.item?.key ?? ''} placeholder="Цель"
+                    onChange={next => change(param.key, t => {
+                      const label = next.trim();
+                      if (!label) { delete t.item; return; }
+                      const st = useWorld.getState();
+                      const before = t.item?.key ?? '';
+                      const used = Boolean(before) && referenced({ s: st.system, c: st.compendium }, before, { steps: effect.steps ?? [], cost: effect.cost ?? [] });
+                      const key = followKey({ used, key: before || keyOf(label), base: 'каждый', before: t.item?.label ?? '', after: label, taken: keys.filter(k => k !== before) });
+                      t.item = { key, label };
+                    })} />
+                </span>
               ) : <span key={`${param.key}:from`} className="faint">—</span>,
               <span key={`${param.key}:ask`} className="inline inline--tight">
                 {askable ? (

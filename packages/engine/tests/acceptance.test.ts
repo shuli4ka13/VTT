@@ -196,9 +196,9 @@ group('образец D&D: урон сперва съедает временны
         ...dnd.effects,
         проба: {
           label: 'Урон', activation: 'manual',
-          params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
+          params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
           steps: [
-            { type: 'each', of: 'цели', as: 'цель' },
+            { type: 'each', of: 'цели' },
             { type: 'emit', effect: 'damage', args: { лист: { expr: '@цель' }, источник: { expr: '@действующий' }, amount: { expr: String(amount) }, damage_type: { expr: '"рубящий"' } } },
           ],
         },

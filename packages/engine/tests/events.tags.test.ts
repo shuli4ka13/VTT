@@ -16,8 +16,8 @@ const passive = (label: string, modifiers: unknown[]) =>
 const SOURCES = ['магический'];
 
 const ACTOR = { key: 'действующий', kind: 'sheet' };
-const TARGETS = { key: 'жертвы', kind: 'sheet', many: true };
-const EACH = { type: 'each', of: 'жертвы', as: 'цель' };
+const TARGETS = { key: 'жертвы', kind: 'sheet', many: true, item: { key: 'цель' } };
+const EACH = { type: 'each', of: 'жертвы' };
 
 const damageArgs = (amount: unknown, tags: string[], who: unknown = { expr: '@цель' }, by: unknown = { expr: '@действующий' }) => ({
   лист: who, обидчик: by, сколько: amount,
@@ -276,7 +276,7 @@ group('«я совершил действие» — один раз на все 
 
   test('таблица «итоги» в «завершено» не путается со входом-списком «цели»', () => {
     const same = world({
-      удар: { ...strike('удар', 'Удар', 8, ['рубящий']), params: [ACTOR, { key: 'цели', kind: 'sheet', many: true }], steps: [{ type: 'each', of: 'цели', as: 'цель' }, ...strike('удар', 'Удар', 8, ['рубящий']).steps.slice(1)] },
+      удар: { ...strike('удар', 'Удар', 8, ['рубящий']), params: [ACTOR, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }], steps: [{ type: 'each', of: 'цели' }, ...strike('удар', 'Удар', 8, ['рубящий']).steps.slice(1)] },
       итог: tally.effects.итог,
     });
     const sheets = [{ ...hero(), effects: [{ effectId: 'итог', usesLeft: 2 }] }, foe(), { ...foe(), id: 'враг2' }];

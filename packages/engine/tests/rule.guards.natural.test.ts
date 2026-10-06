@@ -15,7 +15,7 @@ const sheet = { id: 'a', systemId: 'x', name: 'А', values: { hp: 10 }, has: [],
 const run = (steps: object[], die: number) => {
   const full = {
     ...system, tables: { ...system.tables, приём: { shape: 'book', use: 'action', label: 'Приём' } },
-    effects: { e: { label: 'e', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }], steps: [{ type: 'each', of: 'цели', as: 'цель' }, ...steps] } },
+    effects: { e: { label: 'e', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }], steps: [{ type: 'each', of: 'цели' }, ...steps] } },
   } as unknown as System;
   const book = { records: [{ id: 'e', table: 'приём', label: 'e', bindings: [{ label: 'e', effect: 'e', args: {} }] }] };
   const from = { ...sheet, id: 'from', has: [{ of: 'e' }] } as unknown as Sheet;

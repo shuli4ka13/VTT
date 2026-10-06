@@ -19,8 +19,8 @@ const system = {
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }, { key: 'урон', label: 'Урон', kind: 'number' }],
-      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@урон' } }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }, { key: 'урон', label: 'Урон', kind: 'number' }],
+      steps: [{ type: 'each', of: 'цели' }, { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@урон' } }],
     },
     зоркость: { label: 'Зоркость', activation: 'passive', modifiers: [] },
   },

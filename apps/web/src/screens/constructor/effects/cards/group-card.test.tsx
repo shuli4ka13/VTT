@@ -418,7 +418,7 @@ describe('GroupCard: изменение само заводит число', () 
 describe('GroupCard: отдельный бросок с «Бросает»', () => {
   it('формула броска раскладывается в кость, прибавку и метки, а не в расчёт; против — «первый из целей»', () => {
     const roll = { id: 'hit_бросок', type: 'roll', die: 'lead', by: { expr: '@действующий' } } as Record<string, any>;
-    const many = { ...effect, params: [...(effect.params ?? []), { key: 'цели', label: 'Цели', kind: 'sheet', many: true }] } as typeof effect;
+    const many = { ...effect, params: [...(effect.params ?? []), { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' } }] } as typeof effect;
     const group = groupSteps([roll as unknown as Step])[0]!;
     render(<GroupCard group={group} position={1} system={system} effect={many} sheets={sheets}
       earlier={[]} problem={null} edit={(_, change) => change(roll as never)} onDelete={() => {}} />);

@@ -22,9 +22,9 @@ const system = {
     },
     касание: {
       label: 'Вампирское касание', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
       steps: [
-        { type: 'each', of: 'цели', as: 'цель' },
+        { type: 'each', of: 'цели' },
         { id: 'нанесено', type: 'emit', effect: 'урон', args: { лист: { expr: '@цель' }, сколько: { expr: '10' } } },
         { type: 'emit', effect: 'лечение', args: { лист: { expr: '@действующий' }, сколько: { expr: 'округлить вниз(@нанесено.amount / 2)' } } },
       ],

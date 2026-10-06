@@ -1116,7 +1116,11 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           },
           {
             "key": "damage_type",
@@ -1208,8 +1212,7 @@
           },
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "id": "dv",
@@ -1318,14 +1321,17 @@
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
-            "many": true
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
           }
         ],
         "steps": [
           {
             "type": "each",
-            "of": "цели",
-            "as": "цель"
+            "of": "цели"
           },
           {
             "id": "что",

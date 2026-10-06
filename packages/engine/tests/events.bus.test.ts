@@ -18,7 +18,7 @@ const system = {
         { on: 'before:удар', if: { expr: '@цель == @носитель' }, confirm: true, steps: [] },
       ],
     },
-    удар: { label: 'Удар', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }], steps: [{ type: 'each', of: 'цели', as: 'цель' }] },
+    удар: { label: 'Удар', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }], steps: [{ type: 'each', of: 'цели' }] },
   },
 } as unknown as System;
 

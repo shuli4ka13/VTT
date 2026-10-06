@@ -1,5 +1,6 @@
 import { actionOf, effectLabelOf } from '../events/actions.ts';
 import { asksOf } from '../model/asks.ts';
+import { loopOf } from '../engine/steps/each.ts';
 import { requireEffect, isPipeline } from '../engine/effects.ts';
 import { releaseHolder } from '../events/bonds.ts';
 import { refusalWords } from '../events/refusal.ts';
@@ -167,7 +168,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
     sharedRolls = ran.rolls;
     const rolls: Record<string, RollResult> = ran.rolls;
     const of = String(each.of ?? '');
-    const as = String(each.as ?? '');
+    const as = loopOf(paramDefs, each as { of?: unknown })?.key ?? '';
     const list = bound[of];
     const ids = Array.isArray(list) ? list : typeof list === 'string' ? [list] : [];
     calls = ids.map((to): Delivery => ({

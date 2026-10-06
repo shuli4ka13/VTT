@@ -14,8 +14,8 @@ const queue = (...values: number[]) => {
 };
 
 const ACTOR = { key: 'действующий', kind: 'sheet' };
-const TARGETS = { key: 'цели', kind: 'sheet', many: true };
-const EACH = { type: 'each', of: 'цели', as: 'цель' };
+const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
+const EACH = { type: 'each', of: 'цели' };
 const roll = (extra: Record<string, unknown> = {}) => ({ id: 'бросок', type: 'roll', die: 'к20', tags: ['атака'], by: { expr: '@действующий' }, against: { expr: '@цель' }, ...extra });
 const mine = '@бросающий == @носитель';
 

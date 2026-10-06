@@ -10,8 +10,8 @@ const sys: any = {
   effects: {},
 };
 
-const WHO = [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }];
-const EACH = { type: 'each', of: 'цели', as: 'цель' };
+const WHO = [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }];
+const EACH = { type: 'each', of: 'цели' };
 const kill = { type: 'apply', target: { expr: '@цель.хп' }, direction: 'set', value: { expr: '0' } };
 
 const spell: any = {

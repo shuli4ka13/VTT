@@ -21,8 +21,8 @@ group('один путь вызова', () => {
     } as unknown as Effect;
     looped.effects.echo = {
       label: 'Эхо', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
-      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'emit', effect: 'damage', args: { лист: { expr: '@цель' }, amount: { expr: '3' } } }],
+      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
+      steps: [{ type: 'each', of: 'цели' }, { type: 'emit', effect: 'damage', args: { лист: { expr: '@цель' }, amount: { expr: '3' } } }],
     } as unknown as Effect;
     looped.tables = { ...(looped.tables ?? {}), shout: { shape: 'book', use: 'action', label: 'Крик', bindings: [{ label: 'Эхо', effect: 'echo', args: {} }] } } as never;
     const book = { ...compendium, records: [...(compendium.records ?? []), { id: 'shout', table: 'shout', label: 'Крик', cells: {} }] } as Compendium;

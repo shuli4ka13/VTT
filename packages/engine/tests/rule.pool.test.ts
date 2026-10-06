@@ -25,9 +25,9 @@ const sys: any = {
 };
 
 const rule: any = {
-  params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
+  params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
   steps: [
-    { type: 'each', of: 'цели', as: 'цель' },
+    { type: 'each', of: 'цели' },
     { id: 'try_бросок', type: 'roll', die: 'pool_die', bonus: { expr: '0' }, by: { expr: '@действующий' } },
     { id: 'try', type: 'check', value: { expr: '@try_бросок' }, versus: { expr: '2' } },
   ],
