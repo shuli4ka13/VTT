@@ -33,3 +33,24 @@ export function choicesOfInput(system: System, effectId: string, key: string): s
   }
   return [...out];
 }
+
+export function emittedChoices(system: System, effectId: string, raw: unknown): string[] {
+  if (typeof raw === 'string') return raw ? [raw] : [];
+  const literal = chosenEffect(raw);
+  if (literal) return [literal];
+  const lone = /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((raw as { expr?: unknown } | null)?.expr ?? ''));
+  return lone ? choicesOfInput(system, effectId, lone[1]!) : [];
+}
+
+export function kindsChoosing(system: System, effectId: string, key: string, choice: string): { kind: string; columns: string[] }[] {
+  const param = system.effects[effectId]?.params?.find(p => p.key === key);
+  const out: { kind: string; columns: string[] }[] = [];
+  for (const [kind, table] of Object.entries(system.tables ?? {})) {
+    for (const binding of table.bindings ?? []) {
+      if (binding.effect !== effectId) continue;
+      const picked = chosenEffect((binding.args as Record<string, unknown> | undefined)?.[key]) ?? (typeof param?.default === 'string' ? param.default : null);
+      if (picked === choice) out.push({ kind, columns: (table.columns ?? []).map(c => c.key) });
+    }
+  }
+  return out;
+}

@@ -1,3 +1,4 @@
+import { emittedChoices } from './payments.ts';
 import { renameLayoutRow } from './layout.ts';
 import { rowsOf } from './tables.ts';
 import { recordsOf, recordKinds, kindsOf } from './owned.ts';
@@ -55,7 +56,7 @@ function choiceArgs(system: System, table: string): { where: Where; args: Loose;
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
     for (const [at, step] of [...(effect.steps ?? []), ...(effect.cost ?? [])].entries()) {
       const s = step as unknown as Loose;
-      if (s.type === 'emit') collect({ tab: 'effects', effect: id, step: at }, s.effect, s.args);
+      if (s.type === 'emit') for (const target of emittedChoices(system, id, s.effect)) collect({ tab: 'effects', effect: id, step: at }, target, s.args);
     }
   }
   for (const [rk, kind] of recordKinds(system)) {

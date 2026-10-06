@@ -1,4 +1,5 @@
 import { actionOf, effectLabelOf } from '../events/actions.ts';
+import { asksOf } from '../model/asks.ts';
 import { requireEffect, isPipeline } from '../engine/effects.ts';
 import { releaseHolder } from '../events/bonds.ts';
 import { refusalWords } from '../events/refusal.ts';
@@ -85,6 +86,11 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
   if (!actorSheet) throw new EngineError(`в комнате нет листа «${actor}»`);
   for (const id of targets) if (!run.sheet(id)) throw new EngineError(`в комнате нет листа «${id}»`);
   const inputs = intent.inputs && Object.keys(intent.inputs).length ? intent.inputs : undefined;
+  if (inputs) {
+    const asked = new Set(asksOf(intent.actionId, { system, compendium }).map(param => param.key));
+    const stray = Object.keys(inputs).find(key => !asked.has(key));
+    if (stray) throw new EngineError(`«${action.label}»: лишнее значение «${stray}» — действие о нём не спрашивает`);
+  }
   const args = (action.binding.args || {}) as Record<string, unknown>;
   const props = propsOf(action.record, system, entryOf(actorSheet, action.record.id));
   const paramDefs = effect.params ?? [];

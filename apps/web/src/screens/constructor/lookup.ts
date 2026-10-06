@@ -1,3 +1,4 @@
+import { emittedChoices } from '@vtt/engine/model/payments';
 import { TABS } from '../../words.ts';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { splitPath } from '@vtt/engine/engine/navigate';
@@ -65,7 +66,7 @@ function callersOf(system: System, effectId: string, key: string): string[] {
   }
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
     for (const step of [...(effect.cost ?? []), ...(effect.steps ?? [])] as Loose[]) {
-      if (step.type !== 'emit' || step.effect !== effectId) continue;
+      if (step.type !== 'emit' || !emittedChoices(system, id, step.effect).includes(effectId)) continue;
       const text = argText(step.args?.[key]);
       out.push(`эффект «${effect.label ?? id}» зовёт: ${text || 'не передаёт'}`);
     }

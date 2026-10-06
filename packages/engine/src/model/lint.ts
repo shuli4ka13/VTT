@@ -1,4 +1,4 @@
-import { chosenEffect, choicesOfInput } from './payments.ts';
+import { chosenEffect, choicesOfInput, emittedChoices, kindsChoosing } from './payments.ts';
 import { SEEN_LABEL, ANY_ACTION, PHASES } from '../events/bus.ts';
 import type { System, Compendium, Effect, Step } from './types.ts';
 import { registry } from '../engine/steps/index.ts';
@@ -522,16 +522,25 @@ function paramProblems(system: System): Problem[] {
       steps.forEach((step, index) => {
         const raw = step as unknown as Record<string, unknown>;
         if (step.type !== 'emit' || !raw.effect) return;
-        const called = system.effects[String(raw.effect)];
-        if (!called) return;
         const args = (raw.args ?? {}) as Record<string, unknown>;
-        for (const param of called.params ?? []) {
-          if (args[param.key] !== undefined || param.optional || param.ask) continue;
-          out.push({
-            where: whereOf(index),
-            level: 'error',
-            text: `вызов «${called.label ?? raw.effect}» не заполняет его вход «${param.label ?? param.key}»`,
-          });
+        const dynamic = typeof raw.effect !== 'string';
+        const viaInput = dynamic ? /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((raw.effect as { expr?: unknown }).expr ?? ''))?.[1] : undefined;
+        for (const choice of emittedChoices(system, id, raw.effect)) {
+          const called = system.effects[choice];
+          if (!called) continue;
+          for (const param of called.params ?? []) {
+            if (args[param.key] !== undefined || param.optional || param.ask || param.default !== undefined) continue;
+            const users = viaInput ? kindsChoosing(system, id, viaInput, choice) : [];
+            if (users.length && users.every(user => user.columns.includes(param.key))) continue;
+            const missing = users.filter(user => !user.columns.includes(param.key)).map(user => system.tables?.[user.kind]?.label ?? user.kind);
+            out.push({
+              where: whereOf(index),
+              level: 'error',
+              text: missing.length
+                ? `плата «${called.label ?? choice}» ждёт свойство «${param.label ?? param.key}», а у ${missing.map(m => `«${m}»`).join(', ')} его нет`
+                : `вызов «${called.label ?? choice}» не заполняет его вход «${param.label ?? param.key}»`,
+            });
+          }
         }
       });
     }

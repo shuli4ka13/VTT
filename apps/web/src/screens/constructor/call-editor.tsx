@@ -29,7 +29,7 @@ function status(input: CallInput): { text: string; bad: boolean } {
   return { text: 'не заполнено', bad: true };
 }
 
-type Place = 'record' | 'asked' | 'computed' | 'missing';
+type Place = 'record' | 'asked' | 'computed' | 'missing' | 'unused';
 
 const lonely = (value: unknown): string | null => {
   const text = asText(value)?.trim() ?? '';
@@ -47,7 +47,8 @@ export function placeOf(input: CallInput, props: ReadonlySet<string>): Place {
   if (value === undefined || value === null) {
     if (input.fromProp) return 'record';
     if (param.ask) return 'asked';
-    if (param.default !== undefined || param.optional) return 'computed';
+    if (param.default !== undefined) return 'computed';
+    if (param.optional) return 'unused';
     return 'missing';
   }
   const prop = lonely(value);
@@ -196,6 +197,7 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, fromP
     const asked = by('asked');
     const computed = by('computed');
     const missing = by('missing');
+    const unused = by('unused');
     const row = (input: CallInput, body: ReactNode, tail?: ReactNode) => (
       <div className="pair" key={input.param.key}>
         <span className="call-args__name">{nameOf(input.param)}</span>
@@ -234,6 +236,14 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, fromP
             {computed.map(input => (open === input.param.key ? editing(input) : row(input,
               <span className="call-group__value">← {shownValue(input)}</span>,
               <Button size="sm" variant="ghost" onClick={() => setOpen(input.param.key)}>изменить</Button>)))}
+          </div>
+        ) : null}
+        {unused.length ? (
+          <div className="inline inline--tight call-group--unused">
+            <span className="faint">Не передаются:</span>
+            {unused.map(input => (open === input.param.key ? editing(input) : (
+              <Button key={input.param.key} size="sm" variant="ghost" title="передать значение" onClick={() => setOpen(input.param.key)}>{nameOf(input.param)}</Button>
+            )))}
           </div>
         ) : null}
       </>
