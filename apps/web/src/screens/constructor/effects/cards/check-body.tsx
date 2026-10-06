@@ -1,16 +1,15 @@
-import { SheetPick } from '../../sheet-pick.tsx';
-import { sheetChoices } from '../../slots.tsx';
+import { RollLine } from './roll-line.tsx';
 import { useMemo, useState } from 'react';
 import type { System } from '@vtt/schema';
 import { Select, Input, Fold, Field } from '../../../../ui/primitives.tsx';
 import { FieldRow } from '../../../../ui/field-row.tsx';
 import type { RowField } from '../../../../ui/field-row.tsx';
 import { FormulaField } from '../../../../ui/formula-field.tsx';
-import { namesOf, refForName, inputBadges } from '../../slots.tsx';
+import { namesOf, inputBadges } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { badFormula } from '../../roll-expr.ts';
-import { parseCheck, formatCheck, comparison } from '../../check-expr.ts';
+import { parseCheckFormula, formatCheckFormula, compare } from '../../roll-formula.ts';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { rowTables } from '@vtt/engine/model/tables';
 
@@ -28,35 +27,15 @@ export function CheckBody({ step, roll, context, edit, system, onUnpair }: {
 }) {
   const at = roll ? 1 : 0;
   const tables = rowTables(system);
-  const { singles, firsts } = sheetChoices(context);
 
   const fields: RowField[] = [
     {
       key: 'formula', label: 'Проверка', width: 420,
       hint: roll
-        ? 'кинуть(кость, метки) + прибавка, знак и порог. Метки — строки таблиц («атака», «ловкость»); по ним правки находят бросок. Поля — через лист: @цель.кд'
+        ? 'кинуть(кость[, сколько костей]) + прибавка, знак и порог. Поля — через лист: @цель.кд. Кто бросает, против кого и метки — строкой ниже'
         : 'Число, знак и порог: @носитель.ки >= 1',
       node: <CheckFormula step={step} roll={roll} context={context} edit={edit} {...(onUnpair ? { onUnpair } : {})} />,
     },
-    ...(roll ? [{
-      key: 'by', label: 'Бросает', width: 170,
-      hint: 'Чей это бросок: на него действуют правки броска и «кости выпали» этого листа.',
-      node: (
-        <SheetPick
-          value={roll.by} sheets={singles} system={system} where="проверка · бросает"
-          onChange={next => { if (next) edit(0, draft => { loose(draft).by = next; }); }}
-        />
-      ),
-    }, {
-      key: 'against', label: 'Против кого', width: 170,
-      hint: 'Для правок «по носителю»: «Ослеплён» даёт преимущество тем, кто бросает против него.',
-      node: (
-        <SheetPick
-          value={roll.against} sheets={singles} system={system} where="проверка · против кого" empty="ни против кого" extra={firsts}
-          onChange={next => edit(0, draft => { if (next) loose(draft).against = next; else delete loose(draft).against; })}
-        />
-      ),
-    }] : []),
   ];
   const more: RowField[] = [
     {
@@ -112,6 +91,7 @@ export function CheckBody({ step, roll, context, edit, system, onUnpair }: {
   return (
     <>
       <FieldRow id={roll ? 'check-roll' : 'check-plain'} fields={fields} />
+      {roll ? <RollLine roll={roll} context={context} system={system} keep onRoll={change => edit(0, draft => change(loose(draft)))} /> : null}
       <Fold title="ещё" summary={moreSummary(step, Boolean(roll || readsRoll(step, context)))}>
         <FieldRow id="check-more" fields={more} />
         {roll || readsRoll(step, context) ? (
@@ -173,7 +153,8 @@ function CheckFormula({ step, roll, context, edit, onUnpair }: { step: any; roll
 
   const drop = () => { setDraft(null); setTrouble(null); };
   const commit = (text: string) => {
-    const cmp = comparison(text.trim());
+    if (text.trim() === formatCheckFormula(roll, step)) { drop(); return; }
+    const cmp = compare(text.trim());
     const own = Boolean(roll?.id && cmp && cmp.left === `@${roll.id}`);
     const plain = Boolean(cmp && !cmp.left.startsWith('кинуть(') && !own);
     if (roll && own && cmp) {
@@ -199,7 +180,7 @@ function CheckFormula({ step, roll, context, edit, onUnpair }: { step: any; roll
       drop();
       return;
     }
-    const parsed = parseCheck(text, context.system, name => refForName(context, name));
+    const parsed = parseCheckFormula(text, context.system);
     if ('error' in parsed) { setTrouble(parsed.error); return; }
     const bad = badFormula(parsed.roll.bonus) ?? badFormula(parsed.versus);
     if (bad) { setTrouble(bad); return; }
@@ -208,7 +189,6 @@ function CheckFormula({ step, roll, context, edit, onUnpair }: { step: any; roll
       d.die = parsed.roll.die;
       if (parsed.roll.count) d.count = parsed.roll.count; else delete d.count;
       if (parsed.roll.bonus) d.bonus = parsed.roll.bonus; else delete d.bonus;
-      if (parsed.roll.tags.length) d.tags = parsed.roll.tags; else delete d.tags;
     });
     edit(1, target => {
       const d = loose(target);
@@ -221,14 +201,14 @@ function CheckFormula({ step, roll, context, edit, onUnpair }: { step: any; roll
   return (
     <>
       <FormulaField
-        value={draft ?? formatCheck(roll, step)}
+        value={draft ?? formatCheckFormula(roll, step)}
         system={context.system}
         where="проверка"
         extraNames={names}
         {...(context.sheets ? { sheets: context.sheets } : {})}
         badges={inputBadges(context)}
         invalid={Boolean(trouble)}
-        placeholder={roll ? 'кинуть(@кость, @метка) + прибавка >= @цель.кд' : '@носитель.ки >= 1'}
+        placeholder={roll ? 'кинуть(@кость) + прибавка >= @цель.кд' : '@носитель.ки >= 1'}
         onChange={next => { setTrouble(null); setDraft(next); }}
         onCommit={commit}
         onCancel={drop}

@@ -33,12 +33,12 @@ describe('groupSteps', () => {
     expect(groups.map(g => g.kind)).toEqual(['number', 'check']);
   });
 
-  it('проверка не склеивается с броском, если число броска читает кто-то ещё', () => {
+  it('проверка остаётся одним шагом с броском, даже если число броска читает кто-то ещё', () => {
     const groups = groupSteps(steps([
       ...pair('hit'),
       { type: 'apply', value: { expr: '@hit_бросок' } },
     ]));
-    expect(groups.map(g => g.kind)).toEqual(['number', 'check', 'change']);
+    expect(groups.map(g => g.kind)).toEqual(['check', 'change']);
   });
 
   it('не склеивается, если на число ссылается кто-то ещё', () => {

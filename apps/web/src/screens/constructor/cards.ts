@@ -60,8 +60,7 @@ export function groupSteps(list: Step[]): CardGroup[] {
     const next = list[i + 1];
 
     const owned = step.type === 'roll' && (step as { by?: unknown }).by !== undefined;
-    if (owned && step.id && next?.type === 'check' && takesWhole((next as { value?: unknown }).value, step.id)
-      && list.every((other, j) => j === i || j === i + 1 || !mentions(other, step.id!))) {
+    if (owned && step.id && next?.type === 'check' && takesWhole((next as { value?: unknown }).value, step.id)) {
       out.push({ kind: 'check', indices: [i, i + 1], step: next, amount: step });
       i++;
       continue;

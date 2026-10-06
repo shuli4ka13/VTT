@@ -205,7 +205,7 @@ describe('ссылка на результат шага', () => {
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     const before = useWorld.getState().system.effects.strike!.steps!.map(step => step.id);
     const check = String(before.at(-1));
-    fireEvent.click(screen.getAllByText('имя в формулах…').at(-1)!);
+    fireEvent.click(screen.getAllByText(/^имя в формулах/).at(-1)!);
     const input = [...document.querySelectorAll('input')].find(i => i.value === check)!;
     fireEvent.change(input, { target: { value: 'hit' } });
     fireEvent.blur(input);

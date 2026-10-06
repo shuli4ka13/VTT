@@ -27,12 +27,22 @@ const start = (systemId: string, without: string[]): Effect[] => {
 
 const nameStep = (card: HTMLElement, name: string): void => {
   const title = (card.querySelector('.step-fold, .card__head')?.textContent ?? '').replace(/^[▾▸]\s*/, '').split('·')[0]!.trim();
-  within(card).click('имя в формулах…');
+  within(card).click(/^имя в формулах/);
   const fresh = stepCard(new RegExp(`^${title} · `));
   within(fresh).type(fresh.querySelector<HTMLElement>('.step-name input')!, name);
 };
 
 const groupsBefore = (effect: Effect): number => groupSteps(effect.cost ?? []).length + groupSteps(effect.steps ?? []).length;
+
+const marks = (card: HTMLElement, ...tags: string[]): void => {
+  for (const tag of tags) {
+    if (tag.startsWith('=')) {
+      within(card).select('Метки', ':формула');
+      within(card).type('Метки', tag.slice(1));
+      within(card).click('добавить');
+    } else within(card).select('Метки', tag);
+  }
+};
 
 const built = (id: string): Effect | undefined => useWorld.getState().system.effects[id];
 
@@ -88,11 +98,13 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ проверка');
     let card = stepCard(/^3 · /);
-    within(card).formula('Проверка', 'кинуть(@lead_die, @атака) + @attack_with >= @цель.ac');
+    within(card).formula('Проверка', 'кинуть(@lead_die) + @attack_with >= @цель.ac');
     card = stepCard(/^3 · /);
-    within(card).select('Бросает', 'действующий');
+    within(card).formula('Бросает', '@действующий');
     card = stepCard(/^3 · /);
-    within(card).select('Против кого', 'цель');
+    within(card).formula('Против кого', '@цель');
+    card = stepCard(/^3 · /);
+    marks(card, 'атака');
     card = stepCard(/^3 · /);
     nameStep(card, 'hit');
     card = stepCard(/^3 · /);
@@ -105,21 +117,21 @@ describe('эффекты пресетов собираются в констру
     nameStep(card, 'dmg');
 
     ui.click('+ изменение');
-    card = stepCard(/^6 · /);
+    card = stepCard(/^5 · /);
     within(card).click('вызов');
-    card = stepCard(/^6 · /);
+    card = stepCard(/^5 · /);
     within(card).select('Какой эффект', 'damage');
     for (const [name, text] of [['Сколько урона', '@dmg'], ['Тип урона', '@damage_type'], ['Источник урона', '@damage_source'], ['Лист', '@цель'], ['Источник', '@действующий']] as const) {
       within(card).formula(within(card).arg(name), text);
     }
 
     ui.click('+ изменение');
-    card = stepCard(/^7 · /);
+    card = stepCard(/^6 · /);
     within(card).click('состояние');
-    card = stepCard(/^7 · /);
+    card = stepCard(/^6 · /);
     within(card).select('Какое', ':вход:status');
-    within(card).select('На кого', 'цель');
-    card = stepCard(/^7 · /);
+    within(card).formula('На кого', '@цель');
+    card = stepCard(/^6 · /);
     within(card).formula('Запомнит: Кто наложил', '@действующий');
     within(card).select('Делать', 'формулой…');
     within(card).formula('Условие', 'не(пусто(@status))');
@@ -160,9 +172,10 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ проверка');
     card = stepCard(/^3 · /);
-    within(card).formula('Проверка', 'кинуть(@lead_die, @спасбросок, @ловкость) + @источник.abilities.ловкость.save >= @носитель.spell_dc');
-    within(card).select('Бросает', 'источник');
-    within(card).select('Против кого', 'носитель');
+    within(card).formula('Проверка', 'кинуть(@lead_die) + @источник.abilities.ловкость.save >= @носитель.spell_dc');
+    within(card).formula('Бросает', '@источник');
+    within(card).formula('Против кого', '@носитель');
+    marks(card, 'спасбросок', 'ловкость');
     within(card).select('Шаги ниже идут при', 'always');
     nameStep(card, 'save');
 
@@ -244,10 +257,11 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ число');
     card = stepCard(/^5 · /);
-    within(card).select('Бросает', 'действующий');
+    within(card).formula('Бросает', '@действующий');
     card = stepCard(/^5 · /);
-    within(card).formula('Сколько', 'кинуть(@lead_die, @атака) + @прицел');
-    within(card).select('Против кого', 'первый(@цели)');
+    within(card).formula('Сколько', 'кинуть(@lead_die) + @прицел');
+    within(card).formula('Против кого', 'первый(@цели)');
+    marks(card, 'атака');
     nameStep(card, 'hit_бросок');
     within(card).click('↑');
 
@@ -304,7 +318,8 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ проверка');
     let card = stepCard(/^1 · /);
-    within(card).formula('Проверка', 'кинуть(@lead_die, @спасбросок, @телосложение) + @носитель.abilities.телосложение.save >= (большее из(10, округлить вниз(@amount / 2)))');
+    within(card).formula('Проверка', 'кинуть(@lead_die) + @носитель.abilities.телосложение.save >= (большее из(10, округлить вниз(@amount / 2)))');
+    marks(card, 'спасбросок', 'телосложение');
     within(card).select('Шаги ниже идут при', 'fail');
     nameStep(card, 'save');
 
@@ -314,7 +329,7 @@ describe('эффекты пресетов собираются в констру
     card = stepCard(/^2 · /);
     within(card).select('Что делаем', 'remove');
     within(card).select('Какое', 'concentration');
-    within(card).select('С кого', 'носитель');
+    within(card).formula('С кого', '@носитель');
 
     dump({ got: built('concentration') ?? useWorld.getState().system.effects, goal });
     expect(built('concentration')).toEqual(goal);
@@ -393,7 +408,7 @@ describe('эффекты пресетов собираются в констру
     within(held).click('состояние');
     held = stepCard(/^2 · /);
     within(held).select('Какое', ':вход:status');
-    within(held).select('На кого', 'цель');
+    within(held).formula('На кого', '@цель');
     held = stepCard(/^2 · /);
     within(held).formula('Запомнит: Кто наложил', '@действующий');
     dump({ got: built('spell_buff_held'), goal: goalHeld });
@@ -470,10 +485,11 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ число');
     let card = stepCard(/^2 · /);
-    within(card).select('Бросает', 'действующий');
+    within(card).formula('Бросает', '@действующий');
     card = stepCard(/^2 · /);
-    within(card).formula('Сколько', 'кинуть(@duality, @атака, @герой) + @trait.value + @attack_bonus');
-    within(card).select('Против кого', 'первый(@цели)');
+    within(card).formula('Сколько', 'кинуть(@duality) + @trait.value + @attack_bonus');
+    within(card).formula('Против кого', 'первый(@цели)');
+    marks(card, 'атака', 'герой');
     nameStep(card, 'бросок_бросок');
     within(stepCard(/^2 · /)).click('↑');
 
@@ -523,9 +539,10 @@ describe('эффекты пресетов собираются в констру
     const first = groupsBefore(world.system.effects.ranged_attack!) + 1;
 
     ui.click('+ число');
-    within(at(first)).select('Бросает', 'цель');
-    within(at(first)).formula('Сколько', 'кинуть(@pool * @цель.defense_pool, @защита)');
-    within(at(first)).select('Против кого', 'действующий');
+    within(at(first)).formula('Бросает', '@цель');
+    within(at(first)).formula('Сколько', 'кинуть(@pool, @цель.defense_pool)');
+    within(at(first)).formula('Против кого', '@действующий');
+    marks(at(first), 'защита');
     nameStep(at(first), 'атака_против');
 
     ui.click('+ проверка');
@@ -539,9 +556,10 @@ describe('эффекты пресетов собираются в констру
     nameStep(at(first + 2), '');
 
     ui.click('+ проверка');
-    within(at(first + 3)).formula('Проверка', 'кинуть(@pool * @цель.body, @сопротивление) >= 0');
-    within(at(first + 3)).select('Бросает', 'цель');
-    within(at(first + 3)).select('Против кого', 'действующий');
+    within(at(first + 3)).formula('Проверка', 'кинуть(@pool, @цель.body) >= 0');
+    within(at(first + 3)).formula('Бросает', '@цель');
+    within(at(first + 3)).formula('Против кого', '@действующий');
+    marks(at(first + 3), 'сопротивление');
     within(at(first + 3)).select('Шаги ниже идут при', 'always');
     nameStep(at(first + 3), 'сопротивление');
 
@@ -572,9 +590,10 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ число');
     const at = (n: number) => stepCard(new RegExp(`^${n} · `));
-    within(at(2)).select('Бросает', 'действующий');
-    within(at(2)).formula('Сколько', 'кинуть(@pool, @действие, если(@rating == 0, "нулевой", ""))');
-    within(at(2)).select('Против кого', 'первый(@цели)');
+    within(at(2)).formula('Бросает', '@действующий');
+    within(at(2)).formula('Сколько', 'кинуть(@pool)');
+    within(at(2)).formula('Против кого', 'первый(@цели)');
+    marks(at(2), 'действие', '=если(@rating == 0, "нулевой", "")');
     nameStep(at(2), 'бросок_бросок');
     within(at(2)).click('↑');
 

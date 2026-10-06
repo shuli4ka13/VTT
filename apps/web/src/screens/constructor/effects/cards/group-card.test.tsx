@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { within as cards } from '../../../../testing/cards.ts';
 import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { GroupCard } from './group-card.tsx';
@@ -28,11 +29,9 @@ describe('GroupCard', () => {
     const edits: Array<[number, (draft: Step) => void]> = [];
     render(<GroupCard group={group} position={1} system={system} effect={effect} sheets={sheets}
       earlier={[]} problem={null} edit={(at, change) => edits.push([at, change])} onDelete={() => {}} />);
-    const by = screen.getByDisplayValue('«Кто действует»') as HTMLSelectElement;
-    expect([...by.options].map(o => o.textContent)).toEqual(['— какой лист —', '«цель»', '«Кто действует»', 'формулой…']);
-    fireEvent.change(by, { target: { value: 'цель' } });
-    const against = screen.getByDisplayValue('ни против кого') as HTMLSelectElement;
-    fireEvent.change(against, { target: { value: 'цель' } });
+    expect(cards().field('Бросает').textContent).toContain('Кто действует');
+    cards().formula('Бросает', '@цель');
+    cards().formula('Против кого', '@цель');
     const draft = structuredClone(steps[0]!) as any;
     edits.forEach(([at, change]) => { expect(at).toBe(0); change(draft); });
     expect(draft.type).toBe('roll');
@@ -41,7 +40,7 @@ describe('GroupCard', () => {
     expect(draft.die).toEqual('lead');
 
     edits.length = 0;
-    fireEvent.change(by, { target: { value: '' } });
+    cards().formula('Бросает', '');
     expect(edits).toEqual([]);
   });
 
@@ -422,14 +421,13 @@ describe('GroupCard: отдельный бросок с «Бросает»', () 
     const group = groupSteps([roll as unknown as Step])[0]!;
     render(<GroupCard group={group} position={1} system={system} effect={many} sheets={sheets}
       earlier={[]} problem={null} edit={(_, change) => change(roll as never)} onDelete={() => {}} />);
-    const line = [...document.querySelectorAll('input.chips__text')].at(-1) as HTMLInputElement;
+    const line = [...cards().field('Сколько').querySelectorAll('input.chips__text')].at(-1) as HTMLInputElement;
     fireEvent.change(line, { target: { value: ') + 2' } });
     fireEvent.keyDown(line, { key: 'Enter' });
     expect(roll.die).toBe('lead');
     expect(roll.bonus).toEqual({ expr: '2' });
     expect(roll.fixed).toBeUndefined();
-    const against = screen.getByDisplayValue('ни против кого') as HTMLSelectElement;
-    fireEvent.change(against, { target: { value: 'первый(@цели)' } });
+    cards().formula('Против кого', 'первый(@цели)');
     expect(roll.against).toEqual({ expr: 'первый(@цели)' });
   });
 });

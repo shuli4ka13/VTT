@@ -179,7 +179,7 @@ function StepName({ group, effect, edit }: { group: CardGroup; effect: Effect; e
   if (!open) {
     return (
       <div className="inline inline--tight step-name">
-        <Button size="sm" variant="ghost" title="как итог шага зовётся в формулах: @имя" onClick={() => setOpen(true)}>имя в формулах…</Button>
+        <Button size="sm" variant="ghost" title="как итог шага зовётся в формулах: @имя" onClick={() => setOpen(true)}>{id ? `имя в формулах: ${id}` : 'имя в формулах…'}</Button>
       </div>
     );
   }

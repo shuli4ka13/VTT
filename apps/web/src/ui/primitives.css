@@ -697,3 +697,6 @@
 .call-group--quiet { margin-top: var(--s-2); padding-top: var(--s-3); border-top: 1px dashed var(--border); color: var(--text-muted); }
 .call-group--quiet .chips__chip { opacity: .8; }
 .call-group__value { display: inline-flex; align-items: center; gap: var(--s-2); min-width: 0; }
+.roll-line { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--s-2) var(--s-4); }
+.roll-line__part { flex: 0 1 220px; min-width: 160px; }
+.roll-line__part--wide { flex: 1 1 260px; }

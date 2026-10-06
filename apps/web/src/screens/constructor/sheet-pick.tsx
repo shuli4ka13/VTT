@@ -1,10 +1,7 @@
-import { useState } from 'react';
 import type { System } from '@vtt/schema';
-import { Select } from '../../ui/primitives.tsx';
 import { FormulaField } from '../../ui/formula-field.tsx';
 import type { SheetNames } from '../../ui/formula-chips.tsx';
-
-const BY_FORMULA = ':формула';
+import type { BarOption, BarApi } from '../../store/formula-bar.ts';
 
 export const loneSheet = (ref: unknown): string =>
   /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((ref as { expr?: unknown } | undefined)?.expr ?? ''))?.[1] ?? '';
@@ -19,38 +16,22 @@ export function SheetPick({ value, onChange, sheets, system, empty = '— как
   extra?: readonly (readonly [string, string])[];
 }) {
   const expr = String((value as { expr?: unknown } | undefined)?.expr ?? '').trim();
-  const named = loneSheet(value);
   const list = [...(sheets ?? new Map<string, string>())];
-  const presets = extra.filter(([formula]) => formula !== '');
-  const preset = presets.find(([formula]) => formula === expr);
-  const [typing, setTyping] = useState(false);
-  const custom = typing || (expr !== '' && !list.some(([name]) => name === named) && !preset);
+  const names = new Map(list);
+  const options: BarOption[] = [
+    ...list.map(([name, label]) => ({ group: 'листы', label, name, onPick: (insert: (piece: string) => string, bar: BarApi) => bar.write(insert(`@${name}`)) })),
+    ...extra.filter(([formula]) => formula !== '').map(([formula, label]) => ({ group: 'ещё', label, onPick: (_insert: (piece: string) => string, bar: BarApi) => bar.write(formula) })),
+  ];
   return (
-    <span className="inline inline--tight">
-      <Select<string>
-        value={custom ? BY_FORMULA : preset ? preset[0] : named}
-        options={[['', empty],
-          ...list.map(([name, label]) => [name, `«${label}»`] as const),
-          ...presets,
-          [BY_FORMULA, 'формулой…']]}
-        onChange={next => {
-          if (next === BY_FORMULA) { setTyping(true); return; }
-          setTyping(false);
-          if (!next) { onChange(null); return; }
-          if (presets.some(([formula]) => formula === next)) { onChange({ expr: next }); return; }
-          onChange({ expr: `@${next}` });
-        }}
-      />
-      {custom ? (
-        <FormulaField
-          value={expr}
-          system={system}
-          where={where}
-          {...(sheets ? { sheets } : {})}
-          placeholder="например: первый(@цели)"
-          onCommit={text => { setTyping(false); onChange(text.trim() ? { expr: text.trim() } : null); }}
-        />
-      ) : null}
-    </span>
+    <FormulaField
+      value={expr}
+      system={system}
+      where={where}
+      {...(sheets ? { sheets } : {})}
+      extraNames={names}
+      options={options}
+      placeholder={empty}
+      onCommit={text => onChange(text.trim() ? { expr: text.trim() } : null)}
+    />
   );
 }
