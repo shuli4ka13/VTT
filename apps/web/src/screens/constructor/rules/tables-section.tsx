@@ -63,6 +63,22 @@ const addTable = (editSystem: EditSystem) => editSystem(draft => {
   (draft.tables ??= {})[made.key] = made.value;
 });
 
+const OWNER_GROUPS: [string | undefined, string][] = [
+  ['sheet', 'Своё у каждого листа'],
+  ['group', 'Общее у группы'],
+  ['desk', 'Общее на столе'],
+  [undefined, 'Справочники'],
+];
+
+export function groupsOfTables(entries: [string, Table][]): [string, [string, Table][]][] {
+  const name = ([key, table]: [string, Table]) => table.label || key;
+  return OWNER_GROUPS
+    .map(([owner, title]) => [title, entries
+      .filter(([, table]) => (table.owner ?? undefined) === owner)
+      .sort((a, b) => name(a).localeCompare(name(b), 'ru'))] as [string, [string, Table][]])
+    .filter(([, list]) => list.length);
+}
+
 export function TablesSection({ system, editSystem, usage }: Props) {
   const entries = rowTables(system);
 
@@ -79,8 +95,13 @@ export function TablesSection({ system, editSystem, usage }: Props) {
             hint="Типы урона, бонус мастерства по уровню, способ атаки — всё это таблицы."
             action={<Button size="sm" onClick={() => addTable(editSystem)}>+ таблица</Button>}
           />
-        ) : entries.map(([key, table]) => (
-          <TableCard key={key} id={key} table={table} system={system} editSystem={editSystem} usage={usage} />
+        ) : groupsOfTables(entries).map(([title, list]) => (
+          <div key={title} className="stack stack--tight">
+            <span className="table-group__title">{title}</span>
+            {list.map(([key, table]) => (
+              <TableCard key={key} id={key} table={table} system={system} editSystem={editSystem} usage={usage} />
+            ))}
+          </div>
         ))}
       </div>
     </Card>

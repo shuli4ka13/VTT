@@ -708,3 +708,4 @@
 .drag--after { box-shadow: inset 0 -2px 0 var(--accent); }
 .drag-item.drag--before { box-shadow: inset 2px 0 0 var(--accent); }
 .drag-item.drag--after { box-shadow: inset -2px 0 0 var(--accent); }
+.table-group__title { margin-top: var(--s-3); font-size: var(--fs-1); text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
