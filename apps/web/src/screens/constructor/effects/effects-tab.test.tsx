@@ -132,7 +132,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
     expect(screen.queryByLabelText('«Новый вход» правят сопротивления'), 'редкое спрятано').toBeNull();
     fireEvent.click(screen.getByText('ещё'));
     const heads = [...document.querySelectorAll('.sheet-grid__title')].map(h => h.textContent);
-    expect(heads.slice(-4)).toEqual(['Правят сопротивления', 'Обязателен', 'Границы', 'Имя в формулах']);
+    expect(heads.slice(-3)).toEqual(['Правят сопротивления', 'Границы', 'Имя в формулах']);
     expect(screen.getByLabelText('«Новый вход» правят сопротивления')).toBeTruthy();
 
     const params = screen.getByLabelText('«Новый вход» правят сопротивления').closest('.sheet-grid')!;

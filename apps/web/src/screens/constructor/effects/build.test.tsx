@@ -72,10 +72,12 @@ describe('эффекты пресетов собираются в констру
     param(7, 'Источник урона', 'choice', 'damage_source', 'damage_source');
     param(8, 'Состояние при попадании', 'effect', 'status');
     param(9, 'Цена', 'effect', 'цена');
-    ui.type(ui.cell('Если не передали', 3), '0');
+    ui.select(ui.cell('Если не передали', 3), 'value');
+    ui.select(ui.cell('Если не передали', 5), 'value');
     ui.type(ui.cell('Если не передали', 5), '1');
-    ui.select(ui.cell('Если не передали', 9), 'cost_attack');
-    ui.check('«Состояние при попадании» обязателен', false);
+    ui.select(ui.cell('Если не передали', 9), 'value');
+    ui.select(ui.cell('Если не передали', 9).querySelectorAll('select')[1]!, 'cost_attack');
+    ui.select(ui.cell('Если не передали', 8), 'empty');
     ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_attack');
     let cost = stepCard(/^1 · /);
     within(cost).select('Какой эффект', ':вход:цена');
@@ -381,7 +383,7 @@ describe('эффекты пресетов собираются в констру
     ui.select(ui.cell('Тип', 1), 'effect');
     if (ui.has('ещё')) ui.click('ещё');
     ui.type(ui.cell('Имя в формулах', 1), 'status');
-    ui.check('«Состояние» обязателен', false);
+    ui.select(ui.cell('Если не передали', 1), 'empty');
     ui.click('+ держание');
     ui.select('Держит', 'concentration');
     ui.select('У кого', 'действующий');

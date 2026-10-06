@@ -14,25 +14,30 @@ import type { Effect, Param, System, ValueKind } from '@vtt/schema';
 const SHEETS = 'sheet+many';
 const PARAM_KINDS = [...kindsFor('param'), [SHEETS, 'список листов'] as const];
 
-const ASK_OPTIONS = [
-  ['', 'взять значение'],
-  ['actor', 'спросить игрока'],
-  ['gm', 'спросить ведущего'],
-] as const;
+type Mode = 'must' | 'empty' | 'value' | 'actor' | 'gm';
+
+const modeOf = (param: { ask?: { by?: string }; default?: unknown; optional?: boolean }): Mode =>
+  param.ask ? (param.ask.by === 'gm' ? 'gm' : 'actor') : param.default !== undefined ? 'value' : param.optional ? 'empty' : 'must';
+
+const modesFor = (kind: string, askable: boolean): (readonly [Mode, string])[] => [
+  ['must', 'ошибка — обязан передать'],
+  ['empty', 'пусто — можно не передавать'],
+  ...(kind === 'sheet' || kind === 'field' ? [] : [['value', 'значение по умолчанию'] as const]),
+  ...(askable ? [['actor', 'спросить игрока'] as const, ['gm', 'спросить ведущего'] as const] : []),
+];
 
 const COLUMNS: GridColumn[] = [
   { key: 'label', label: 'Название', width: 170 },
   { key: 'kind', label: 'Тип', width: 120 },
   { key: 'from', label: 'Из таблицы', width: 140, hint: 'для типа «из таблицы» — из какой' },
-  { key: 'ask', label: 'Если не передали', width: 200, hint: 'кнопка этот вход не передала: спросить за столом или взять значение (цена по умолчанию, одна кость); пусто — обязан передать тот, кто вызывает' },
+  { key: 'ask', label: 'Если не передали', width: 230, hint: 'как у аргумента функции: без умолчания — ошибка (проверка системы не пустит, движок остановится), с умолчанием — берётся оно, «пусто» — можно не передавать; или спросить за столом' },
   { key: 'hint', label: 'Подсказка за столом', width: 170, hint: 'что увидит спрошенный' },
   { key: 'main', label: 'Правят сопротивления', width: 180, hint: 'это число меняют сопротивления и уязвимости цели: урон, лечение. Одно на эффект' },
-  { key: 'required', label: 'Обязателен', width: 100 },
   { key: 'bounds', label: 'Границы', width: 170, hint: 'для числа: не ниже и не выше — числом или формулой, например @удача' },
   { key: 'key', label: 'Имя в формулах', width: 150, hint: 'как вход зовётся в формулах: @имя. Идёт за названием, пока на него никто не ссылается' },
 ];
 
-const RARE = ['hint', 'main', 'required', 'bounds', 'key'];
+const RARE = ['hint', 'main', 'bounds', 'key'];
 
 type Loose = Param & { role?: string; optional?: boolean };
 
@@ -67,7 +72,7 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
   });
   const rekey = (param: Loose, next: string) => change(param.key, t => { t.key = next; });
   const tables = choiceTables(system).map(([key, list]) => [key, list.label || key] as const);
-  const rare = params.some(p => p.ask?.hint || p.role === 'amount' || p.optional || p.default !== undefined || p.min !== undefined || p.max !== undefined);
+  const rare = params.some(p => p.ask?.hint || p.role === 'amount' || p.min !== undefined || p.max !== undefined);
   const [more, setMore] = useState(rare);
   const full = more || rare;
   const columns = full ? COLUMNS : COLUMNS.filter(c => !RARE.includes(c.key));
@@ -122,20 +127,21 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
                 </span>
               ) : <span key={`${param.key}:from`} className="faint">—</span>,
               <span key={`${param.key}:ask`} className="inline inline--tight">
-                {askable ? (
-                  <Select
-                    value={param.ask?.by ?? (param.ask ? 'actor' : '')}
-                    options={ASK_OPTIONS}
-                    onChange={next => change(param.key, t => {
-                      if (next) { t.ask = { ...(t.ask ?? {}), by: next }; delete t.default; }
-                      else delete t.ask;
-                    })}
-                  />
-                ) : null}
-                {param.ask ? null : (
+                <Select<string>
+                  label={`«${param.label ?? param.key}» — если не передали`}
+                  value={modeOf(param)}
+                  options={modesFor(kind, askable)}
+                  onChange={next => change(param.key, t => {
+                    delete t.ask; delete t.default; delete t.optional;
+                    if (next === 'empty') t.optional = true;
+                    if (next === 'value') t.default = (kind === 'number' ? 0 : kind === 'boolean' ? false : '') as never;
+                    if (next === 'actor' || next === 'gm') t.ask = { by: next };
+                  })}
+                />
+                {modeOf(param) === 'value' ? (
                   <DefaultCell param={param} system={system}
-                    onChange={next => change(param.key, t => { if (next === undefined) delete t.default; else t.default = next as never; })} />
-                )}
+                    onChange={next => change(param.key, t => { t.default = (next ?? '') as never; })} />
+                ) : null}
               </span>,
               param.ask ? (
                 <Input
@@ -156,12 +162,6 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
                   onChange={e => setMain(param.key, e.target.checked)}
                 />
               ) : <span key={`${param.key}:main`} className="faint">—</span>,
-              <input
-                key={`${param.key}:required`} type="checkbox" className="sheet-grid__check"
-                aria-label={`«${param.label ?? param.key}» обязателен`}
-                checked={!param.optional}
-                onChange={e => change(param.key, t => { if (e.target.checked) delete t.optional; else t.optional = true; })}
-              />,
               kind === 'number' ? (
                 <span key={`${param.key}:bounds`} className="inline inline--tight">
                   <BoundField value={param.min} placeholder="не ниже" onChange={next => change(param.key, t => { if (next === null) delete t.min; else t.min = next; })} />
