@@ -211,7 +211,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
             onClick={() => edit(draft => {
               const taken = (draft.steps ?? []).map(s => s.id).filter(Boolean) as string[];
               const held = HELD_PARTS.has(placeAt(0).part);
-              (draft.steps ??= []).push(...b.make(system, taken).map(step => (held ? byHolder(step) : step)));
+              (draft.steps ??= []).push(...b.make(system, taken, draft).map(step => (held ? byHolder(step) : step)));
             })}>
             {b.label}
           </Button>

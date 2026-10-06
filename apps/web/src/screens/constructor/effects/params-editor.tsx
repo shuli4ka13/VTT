@@ -11,7 +11,8 @@ import { SheetGrid } from '../../../ui/sheet-grid.tsx';
 import type { GridColumn } from '../../../ui/sheet-grid.tsx';
 import type { Effect, Param, System, ValueKind } from '@vtt/schema';
 
-const PARAM_KINDS = kindsFor('param');
+const SHEETS = 'sheet+many';
+const PARAM_KINDS = [...kindsFor('param'), [SHEETS, 'список листов'] as const];
 
 const ASK_OPTIONS = [
   ['', 'нет'],
@@ -27,12 +28,11 @@ const COLUMNS: GridColumn[] = [
   { key: 'hint', label: 'Подсказка за столом', width: 170, hint: 'что увидит спрошенный' },
   { key: 'main', label: 'Правят сопротивления', width: 180, hint: 'это число меняют сопротивления и уязвимости цели: урон, лечение. Одно на эффект' },
   { key: 'required', label: 'Обязателен', width: 100 },
-  { key: 'many', label: 'Список', width: 80, hint: 'для входа-листа: несколько листов сразу (цели)' },
   { key: 'bounds', label: 'Границы', width: 170, hint: 'для числа: не ниже и не выше — числом или формулой, например @удача' },
   { key: 'key', label: 'Имя в формулах', width: 150, hint: 'как вход зовётся в формулах: @имя. Идёт за названием, пока на него никто не ссылается' },
 ];
 
-const RARE = ['hint', 'main', 'required', 'many', 'bounds', 'key'];
+const RARE = ['hint', 'main', 'required', 'bounds', 'key'];
 
 type Loose = Param & { role?: string; optional?: boolean };
 
@@ -67,7 +67,7 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
   });
   const rekey = (param: Loose, next: string) => change(param.key, t => { t.key = next; });
   const tables = choiceTables(system).map(([key, list]) => [key, list.label || key] as const);
-  const rare = params.some(p => p.ask?.hint || p.role === 'amount' || p.optional || p.many || p.min !== undefined || p.max !== undefined);
+  const rare = params.some(p => p.ask?.hint || p.role === 'amount' || p.optional || p.min !== undefined || p.max !== undefined);
   const [more, setMore] = useState(rare);
   const full = more || rare;
   const columns = full ? COLUMNS : COLUMNS.filter(c => !RARE.includes(c.key));
@@ -89,10 +89,11 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
               <Input key={`${param.key}:label`} value={param.label ?? ''} onChange={next => relabel(param, next)} />,
               <Select
                 key={`${param.key}:kind`}
-                value={kind}
+                value={kind === 'sheet' && param.many ? SHEETS : kind}
                 options={PARAM_KINDS}
                 onChange={next => change(param.key, t => {
-                  t.kind = next as ValueKind;
+                  t.kind = (next === SHEETS ? 'sheet' : next) as ValueKind;
+                  if (next === SHEETS) t.many = true; else delete t.many;
                   if (next !== 'number') delete t.role;
                   if (next !== 'choice') delete t.from;
                   if (!(ASKABLE as readonly string[]).includes(next)) delete t.ask;
@@ -142,14 +143,6 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
                 checked={!param.optional}
                 onChange={e => change(param.key, t => { if (e.target.checked) delete t.optional; else t.optional = true; })}
               />,
-              kind === 'sheet' ? (
-                <input
-                  key={`${param.key}:many`} type="checkbox" className="sheet-grid__check"
-                  aria-label={`«${param.label ?? param.key}» — список листов`}
-                  checked={Boolean(param.many)}
-                  onChange={e => change(param.key, t => { if (e.target.checked) t.many = true; else delete t.many; })}
-                />
-              ) : <span key={`${param.key}:many`} className="faint">—</span>,
               kind === 'number' ? (
                 <span key={`${param.key}:bounds`} className="inline inline--tight">
                   <BoundField value={param.min} placeholder="не ниже" onChange={next => change(param.key, t => { if (next === null) delete t.min; else t.min = next; })} />

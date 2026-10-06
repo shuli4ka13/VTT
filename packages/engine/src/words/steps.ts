@@ -87,7 +87,7 @@ export const STEP_WORDS = {
     breakLines: {},
   },
   each: {
-    label: 'Для каждой цели',
+    label: 'Для каждого из списка',
     hint: 'Делит цепочку действия: шаги выше выполняются один раз, шаги ниже — для каждого листа из списка по очереди.',
     slots: [
       { key: 'of', label: 'Из какого списка', kind: 'input', main: true, required: true, allow: [] },

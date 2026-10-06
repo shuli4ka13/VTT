@@ -92,7 +92,7 @@ export interface StepTemplate {
   key: string;
   label: string;
   hint: string;
-  make(system: System, takenIds: string[]): Step[];
+  make(system: System, takenIds: string[], effect?: Effect): Step[];
 }
 
 const firstDie = (system: System): string | undefined => Object.keys(system.constants ?? {})[0];
@@ -133,9 +133,13 @@ export const BRICKS: StepTemplate[] = [
     } as unknown as Step],
   },
   {
-    key: 'each', label: '+ для каждой цели',
-    hint: 'Разделитель: шаги выше — один раз, ниже — для каждого листа из списка целей.',
-    make: () => [{ type: 'each', of: 'цели', as: 'цель' } as unknown as Step],
+    key: 'each', label: '+ для каждого из списка',
+    hint: 'Разделитель: шаги выше — один раз, ниже — для каждого листа из входа-списка по очереди.',
+    make: (_system, taken, effect) => {
+      const list = (effect?.params ?? []).find(p => p.kind === 'sheet' && p.many)?.key ?? '';
+      const names = [...taken, ...(effect?.params ?? []).map(p => p.key)];
+      return [{ type: 'each', of: list, as: freeId(names, 'каждый') } as unknown as Step];
+    },
   },
   {
     key: 'number', label: '+ число',

@@ -2,7 +2,7 @@ import type { SheetNames } from '../../../../ui/formula-chips.tsx';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import type { System, Effect, Step, ValueKind } from '@vtt/schema';
-import { Card, CardHead, Verdict, Button, Chip, DangerButton } from '../../../../ui/primitives.tsx';
+import { Card, CardHead, Verdict, Button, Chip, DangerButton, Select } from '../../../../ui/primitives.tsx';
 import { KeyField } from '../../../../ui/key-field.tsx';
 import { referenced } from '../../keys.ts';
 import { useWorld } from '../../../../store/world.ts';
@@ -88,11 +88,15 @@ export function GroupCard({
     </>
   );
 
+  const lists = (effect.params ?? []).filter(p => p.kind === 'sheet' && p.many).map(p => [p.key, p.label || p.key] as const);
   if (group.kind === 'split') {
     return (
       <div className="steps__split" title={STEP_WORDS.each.hint}>
-        <span className="steps__split-title">{position} · {STEP_WORDS.each.label}</span>
-        <span className="step-fold__summary">шаги ниже — по очереди для каждой цели, выше — один раз</span>
+        <span className="steps__split-title">{position} · Для каждого из</span>
+        <Select<string> label="из какого списка" value={String(step.of ?? '')}
+          options={[...(lists.some(([key]) => key === step.of) ? [] : [['', '— какого списка —'] as const]), ...lists]}
+          onChange={next => edit(0, draft => { (draft as { of?: string }).of = next; })} />
+        <span className="step-fold__summary">каждый в формулах — @{String(step.as ?? '?')}; шаги ниже идут для каждого по очереди, выше — один раз</span>
         <span className="spacer" />
         {actions}
       </div>

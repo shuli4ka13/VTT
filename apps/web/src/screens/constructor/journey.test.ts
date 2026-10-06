@@ -27,14 +27,14 @@ function assemble(): { system: System; compendium: Compendium; sheets: Sheet[]; 
     { key: 'действующий', label: 'Кто действует', kind: 'sheet' },
     { key: 'цели', label: 'Цели', kind: 'sheet', many: true },
   ];
-  const each = bricks('each', system)[0]!;
+  const each = BRICKS.find(b => b.key === 'each')!.make(system, [], effect.value)[0]!;
   const [roll, check] = bricks('check', system) as [Record<string, any>, Record<string, any>];
   check.versus = { expr: '5' };
   const amount = bricks('number', system, ['проверка', 'проверка_бросок'])[0] as Record<string, any>;
   amount.die = { expr: '"1d4"' };
   delete amount.fixed;
   const change = bricks('change', system)[0] as Record<string, any>;
-  change.target = { expr: `@цель.${hits.key}` };
+  change.target = { expr: `@${String((each as { as?: string }).as)}.${hits.key}` };
   change.value = { expr: `@${amount.id}` };
   effect.value.steps = [each, roll, check, amount, change] as Step[];
   system.effects[effect.key] = effect.value;

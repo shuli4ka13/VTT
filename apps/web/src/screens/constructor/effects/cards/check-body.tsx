@@ -57,8 +57,10 @@ export function CheckBody({ step, roll, context, edit, system, onUnpair }: {
         />
       ),
     }] : []),
+  ];
+  const more: RowField[] = [
     {
-      key: 'continueOn', label: 'Дальше при', width: 140,
+      key: 'continueOn', label: 'Шаги ниже идут при', width: 160,
       hint: '«всегда» — дальше решают условия на шагах',
       node: (
         <Select
@@ -110,17 +112,27 @@ export function CheckBody({ step, roll, context, edit, system, onUnpair }: {
   return (
     <>
       <FieldRow id={roll ? 'check-roll' : 'check-plain'} fields={fields} />
-      {roll || readsRoll(step, context) ? (
-        <Fold title="ещё" summary={step.succeedOn || step.failOn ? 'есть «всегда успех / провал»' : 'всегда успех или провал на кости'}>
+      <Fold title="ещё" summary={moreSummary(step, Boolean(roll || readsRoll(step, context)))}>
+        <FieldRow id="check-more" fields={more} />
+        {roll || readsRoll(step, context) ? (
           <div className="row">
             <Field label="Всегда успех, если на кости не меньше" hint="Натуральная 20: что бы ни прибавили, это успех.">{forced('succeedOn')}</Field>
             <Field label="Всегда провал, если на кости не больше" hint="Натуральная 1: что бы ни прибавили, это провал.">{forced('failOn')}</Field>
           </div>
-        </Fold>
-      ) : null}
+        ) : null}
+      </Fold>
     </>
   );
 }
+
+const CONTINUE_WORDS: Record<string, string> = { success: 'при провале шаги ниже не идут', fail: 'шаги ниже идут только при провале', always: 'шаги ниже идут всегда' };
+
+const moreSummary = (step: any, rolled: boolean): string => [
+  CONTINUE_WORDS[String(step.continueOn ?? 'success')] ?? '',
+  step.degrees?.table ? 'исход ступенями' : '',
+  step.note ? 'есть запись в журнал' : '',
+  rolled && (step.succeedOn || step.failOn) ? 'есть «всегда успех / провал»' : '',
+].filter(Boolean).join(' · ');
 
 const readsRoll = (step: any, context: SlotContext): boolean => {
   const name = /^@([\p{L}\p{N}_]+)$/u.exec(String(step.value?.expr ?? '').trim())?.[1];

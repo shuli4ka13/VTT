@@ -145,7 +145,7 @@ describe('эффекты пресетов собираются в констру
     within(card).formula('Проверка', 'кинуть(@lead_die, @спасбросок, @ловкость) + @источник.abilities.ловкость.save >= @носитель.spell_dc');
     within(card).select('Бросает', 'источник');
     within(card).select('Против кого', 'носитель');
-    within(card).select('Дальше при', 'always');
+    within(card).select('Шаги ниже идут при', 'always');
     nameStep(card, 'save');
 
     ui.click('+ число');
@@ -287,7 +287,7 @@ describe('эффекты пресетов собираются в констру
     ui.click('+ проверка');
     let card = stepCard(/^1 · /);
     within(card).formula('Проверка', 'кинуть(@lead_die, @спасбросок, @телосложение) + @носитель.abilities.телосложение.save >= (большее из(10, округлить вниз(@amount / 2)))');
-    within(card).select('Дальше при', 'fail');
+    within(card).select('Шаги ниже идут при', 'fail');
     nameStep(card, 'save');
 
     ui.click('+ изменение');
@@ -363,6 +363,7 @@ describe('эффекты пресетов собираются в констру
     ui.click('+ вход');
     ui.type(ui.cell('Название', 1), 'Состояние');
     ui.select(ui.cell('Тип', 1), 'effect');
+    if (ui.has('ещё')) ui.click('ещё');
     ui.type(ui.cell('Имя в формулах', 1), 'status');
     ui.check('«Состояние» обязателен', false);
     ui.click('+ держание');
@@ -468,7 +469,7 @@ describe('эффекты пресетов собираются в констру
     card = stepCard(/^4 · /);
     within(card).formula('Проверка', '@бросок_бросок >= @цель.difficulty');
     card = stepCard(/^4 · /);
-    within(card).select('Дальше при', 'always');
+    within(card).select('Шаги ниже идут при', 'always');
     nameStep(card, 'бросок');
 
     ui.click('+ проверка');
@@ -511,7 +512,7 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ проверка');
     within(at(first + 1)).formula('Проверка', '@атака_бросок >= @атака_против');
-    within(at(first + 1)).select('Дальше при', 'always');
+    within(at(first + 1)).select('Шаги ниже идут при', 'always');
     nameStep(at(first + 1), 'атака');
 
     ui.click('+ проверка');
@@ -523,7 +524,7 @@ describe('эффекты пресетов собираются в констру
     within(at(first + 3)).formula('Проверка', 'кинуть(@pool * @цель.body, @сопротивление) >= 0');
     within(at(first + 3)).select('Бросает', 'цель');
     within(at(first + 3)).select('Против кого', 'действующий');
-    within(at(first + 3)).select('Дальше при', 'always');
+    within(at(first + 3)).select('Шаги ниже идут при', 'always');
     nameStep(at(first + 3), 'сопротивление');
 
     const got = built('ranged_attack')!;
@@ -561,7 +562,7 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ проверка');
     within(at(3)).formula('Проверка', '@бросок_бросок >= 4');
-    within(at(3)).select('Дальше при', 'always');
+    within(at(3)).select('Шаги ниже идут при', 'always');
     within(at(3)).select('Степени успеха', 'outcome');
     nameStep(at(3), 'бросок');
 
