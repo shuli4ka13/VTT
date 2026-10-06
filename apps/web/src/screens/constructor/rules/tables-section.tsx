@@ -95,14 +95,12 @@ export function TablesSection({ system, editSystem, usage }: Props) {
             hint="Типы урона, бонус мастерства по уровню, способ атаки — всё это таблицы."
             action={<Button size="sm" onClick={() => addTable(editSystem)}>+ таблица</Button>}
           />
-        ) : groupsOfTables(entries).map(([title, list]) => (
-          <div key={title} className="stack stack--tight">
-            <span className="table-group__title">{title}</span>
-            {list.map(([key, table]) => (
-              <TableCard key={key} id={key} table={table} system={system} editSystem={editSystem} usage={usage} />
-            ))}
-          </div>
-        ))}
+        ) : groupsOfTables(entries).flatMap(([title, list]) => [
+          <span key={`группа|${title}`} className="table-group__title">{title}</span>,
+          ...list.map(([key, table]) => (
+            <TableCard key={key} id={key} table={table} system={system} editSystem={editSystem} usage={usage} />
+          )),
+        ])}
       </div>
     </Card>
   );
