@@ -1,7 +1,7 @@
 import { useWorld } from '../../store/world.ts';
 import { Columns } from '../../ui/layout.tsx';
 import { useLookupPane } from './lookup-panel.tsx';
-import { Select, Button, Empty, DangerButton, Card } from '../../ui/primitives.tsx';
+import { Button, Empty, DangerButton, Card } from '../../ui/primitives.tsx';
 import { takesBounds } from '../../sheet/views/index.tsx';
 import { DonorPalette } from './donors.tsx';
 import { newColumn } from './factory.ts';
@@ -10,7 +10,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useUsage } from './usage.ts';
 import { Segmented } from '../../ui/primitives.tsx';
-import { placeOnSheet, sheetTables, BlockViewField, holds } from './table-field.tsx';
+import { BlockViewField, holds } from './table-field.tsx';
 import { TableColumnCard } from './rules/tables-section.tsx';
 import { BlockPanel } from './block-panel.tsx';
 import { RowPanel } from './row-panel.tsx';
@@ -32,7 +32,6 @@ export function SheetTab() {
   const blockOpen = Boolean(activeBlock && system.blocks?.some(b => b.name === activeBlock));
   const columnOpen = Boolean(activeColumn && system.tables?.[activeColumn.table]?.columns?.some(c => c.key === activeColumn.column));
   const docked = Boolean(active) || blockOpen || rowOpen || columnOpen;
-  const tables = sheetTables(system);
   const right = useLookupPane({ head: 'Готовое из образцов', body: <DonorPalette kind="blocks" /> });
   const kindPicked = useWorld(s => s.activeSheetKind);
   const [view, setView] = useState<'sample' | 'kinds'>(kindPicked ? 'kinds' : 'sample');
@@ -48,18 +47,7 @@ export function SheetTab() {
     <Columns
       left={{
         head: 'Лист',
-        tools: (
-          <>
-            <Button size="sm" onClick={add}>+ колонка</Button>
-            {tables.length ? (
-              <Select value="" options={[['', '+ таблица'], ...tables] as never} onChange={id => {
-                if (!id) return;
-                editSystem(draft => placeOnSheet(draft, id));
-                pick({ activeFieldTag: null });
-              }} />
-            ) : null}
-          </>
-        ),
+        tools: <Button size="sm" onClick={add}>+ колонка</Button>,
         ...(docked ? { pinned: true } : {}),
         body: active
           ? <Docked at={active.tag}><ViewPanel field={active} system={system} /></Docked>

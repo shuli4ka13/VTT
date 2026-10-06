@@ -72,6 +72,22 @@ describe('листы: блоки и типы', () => {
     expect(field.section).toBe('мудрость');
   });
 
+  it('справочник в блок — только после согласия: станет своим у каждого листа', () => {
+    const id = 'классы';
+    useWorld.getState().editSystem(draft => { (draft.tables ??= {})[id] = { label: 'Классы', key: 'word', rows: [{ value: 'воин' }, { value: 'маг' }] } as never; });
+    render(<SheetTab />);
+    fireEvent.click(screen.getByText('+ блок'));
+    fireEvent.change(screen.getByLabelText('добавить поля из таблицы'), { target: { value: id } });
+    expect(useWorld.getState().system.tables![id]!.owner).toBeUndefined();
+    expect(blocksNow().find(b => b.name === 'Новый блок')!.parts).toEqual([]);
+    fireEvent.click(screen.getByText('Нет'));
+    expect(screen.queryByText('Да, своими у каждого листа')).toBeNull();
+    fireEvent.change(screen.getByLabelText('добавить поля из таблицы'), { target: { value: id } });
+    fireEvent.click(screen.getByText('Да, своими у каждого листа'));
+    expect(useWorld.getState().system.tables![id]!.owner).toBe('sheet');
+    expect(blocksNow().find(b => b.name === 'Новый блок')!.parts.map(p => p.table)).toEqual([id]);
+  });
+
   it('переименование блока обновляет типы листов и вложенные блоки', () => {
     useWorld.setState(state => ({
       ...state,

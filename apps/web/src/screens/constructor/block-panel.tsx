@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useWorld } from '../../store/world.ts';
 import { useDragList } from '../../ui/drag-list.ts';
-import { Card, CardHead, Field, Select, Button, DangerButton, LabelInput } from '../../ui/primitives.tsx';
+import { Card, CardHead, Field, Select, Button, DangerButton, LabelInput, Verdict } from '../../ui/primitives.tsx';
+import { readyForSheet } from './table-field.tsx';
 import { onSheet, rowKeyOf, fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { isRange } from '@vtt/engine/model/tables';
 import type { System, SheetBlock, SheetPart } from '@vtt/schema';
@@ -9,8 +11,8 @@ export const SHEET_TABLE = 'лист';
 
 export const partTables = (system: System): [string, string][] =>
   Object.entries(system.tables ?? {})
-    .filter(([, table]) => !isRange(table) && onSheet(table))
-    .map(([id, table]) => [id, table.label || id]);
+    .filter(([, table]) => !isRange(table) && table.shape !== 'book' && (onSheet(table) || (table.rows ?? []).length > 0))
+    .map(([id, table]) => [id, onSheet(table) ? table.label || id : `${table.label || id} · справочник`]);
 
 export const sheetBlockList = (system: System): SheetBlock[] => system.blocks ?? [];
 
@@ -131,6 +133,7 @@ function ColumnGroup({ title, keys, chosen, labelOf, onToggle, onMove }: {
 export function BlockPanel({ name, system }: { name: string; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
+  const [asking, setAsking] = useState<{ table: string; index?: number } | null>(null);
   const block = sheetBlockList(system).find(b => b.name === name);
   if (!block) return null;
   const tables = partTables(system);
@@ -142,6 +145,17 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
     const part = target.parts[index];
     if (part) change(part);
   });
+  const place = (table: string, index?: number) => {
+    setAsking(null);
+    editSystem(draft => readyForSheet(draft, table));
+    const part = newPart(useWorld.getState().system, table);
+    edit(target => { if (index === undefined) target.parts.push(part); else target.parts[index] = part; });
+  };
+  const choose = (table: string, index?: number) => {
+    if (onSheet(system.tables?.[table])) place(table, index);
+    else setAsking({ table, ...(index === undefined ? {} : { index }) });
+  };
+  const askedLabel = asking ? system.tables?.[asking.table]?.label || asking.table : '';
   const descendants = (of: string): string[] => sheetBlockList(system).filter(b => b.parent === of).flatMap(b => [b.name, ...descendants(b.name)]);
   const barred = new Set([name, ...descendants(name)]);
   const parents = sheetBlockList(system).map(b => b.name).filter(other => !barred.has(other));
@@ -171,10 +185,10 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
         const chosenRows = part.rows ?? rows.map(rowKeyOf);
         return (
           <div key={index} className="stack stack--tight">
-            <Field label="Поля из таблицы" hint="таблицы, чьи значения живут у листа: «Лист» — поля персонажа, «Стол», и таблицы «своё у каждого листа»">
+            <Field label="Поля из таблицы" hint="«Лист» — поля персонажа, «Стол» — общее на столе; справочник при выборе станет своим у каждого листа">
               <Select<string> label="таблица части" value={part.table}
                 options={tables.map(([id, label]) => [id, label] as const)}
-                onChange={next => edit(target => { target.parts[index] = newPart(system, next); })} />
+                onChange={next => choose(next, index)} />
             </Field>
             <Field label="Колонки">
               <div className="stack stack--tight">
@@ -220,10 +234,21 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
           </div>
         );
       })}
+      {asking ? (
+        <Verdict tone="warn">
+          <div className="stack stack--tight">
+            <span>«{askedLabel}» — справочник: значения одни на всех. Чтобы поставить на лист, они станут своими у каждого листа — у каждого персонажа свои.</span>
+            <div className="inline inline--tight">
+              <Button size="sm" variant="primary" onClick={() => place(asking.table, asking.index)}>Да, своими у каждого листа</Button>
+              <Button size="sm" variant="ghost" onClick={() => setAsking(null)}>Нет</Button>
+            </div>
+          </div>
+        </Verdict>
+      ) : null}
       <div className="inline inline--tight">
         <Select<string> label="добавить поля из таблицы" value=""
           options={[['', '+ поля из таблицы…'], ...tables.map(([id, label]) => [id, label] as const)]}
-          onChange={id => { if (id) edit(target => { target.parts.push(newPart(system, id)); }); }} />
+          onChange={id => { if (id) choose(id); }} />
         <DangerButton size="sm" onConfirm={() => { editSystem(draft => removeBlock(draft, name)); pick({ activeBlock: null }); }}>Удалить блок</DangerButton>
       </div>
     </Card>

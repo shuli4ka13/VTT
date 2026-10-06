@@ -6,26 +6,17 @@ import { VIEWS, columnFamily, viewNeeds, takesBounds, TAKES_STEP } from '../../s
 import { BoundFormula } from './bound-field.tsx';
 import { rowNames } from './row-names.ts';
 import { Field, Input, Select, Chip, Button, NumInput, Segmented, Verdict } from '../../ui/primitives.tsx';
-import { isRange } from '@vtt/engine/model/tables';
 import { ROW, cellSource, onSheet, isSingle, fieldsOf, rowKeyOf } from '@vtt/engine/model/sheet-columns';
 import type { System, Column, Control, SheetPart } from '@vtt/schema';
 
-export const sheetTables = (system: System): [string, string][] =>
-  Object.entries(system.tables ?? {})
-    .filter(([, table]) => !isRange(table) && !onSheet(table) && (table.rows ?? []).length > 0)
-    .map(([id, table]) => [id, table.label || id]);
-
-export function placeOnSheet(draft: System, tableId: string): void {
+export function readyForSheet(draft: System, tableId: string): void {
   const table = draft.tables?.[tableId];
   if (!table) return;
-  table.owner = 'sheet';
-  const name = table.label || tableId;
-  const blocks = (draft.blocks ??= []);
-  const own = blocks.find(block => block.name === name);
-  if (!own) blocks.push({ name, parts: [{ table: tableId }] });
-  else if (!own.parts.some(part => part.table === tableId)) own.parts.push({ table: tableId });
-  if ((table.columns ?? []).some(column => (table.rows ?? []).some(row => cellSource(column, row).kind === 'input'))) return;
+  const converting = !onSheet(table);
+  if (converting) table.owner = 'sheet';
   const columns = (table.columns ??= []);
+  const inputs = columns.some(column => (table.rows ?? []).some(row => cellSource(column, row).kind === 'input'));
+  if (columns.length && (inputs || !converting)) return;
   const taken = new Set(columns.map(c => c.key));
   let key = 'value';
   for (let n = 2; taken.has(key); n++) key = `value_${n}`;

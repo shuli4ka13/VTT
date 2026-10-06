@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useWorld, emptySystem } from '../../../store/world.ts';
-import { placeOnSheet } from '../table-field.tsx';
+import { readyForSheet } from '../table-field.tsx';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import type { System } from '@vtt/schema';
 
@@ -45,12 +45,12 @@ describe('таблица на листе', () => {
     expect(fieldsOf(useWorld.getState().system).map(f => f.label)).toEqual(['Сила', 'Ловкость', 'Мудрость']);
   });
 
-  it('«+ из таблицы» на вкладке «Лист»: пустая таблица получает колонку «Значение», формулы идут следом', () => {
+  it('справочник, поставленный на лист: пустая таблица получает колонку «Значение», формулы идут следом', () => {
     const { editSystem } = useWorld.getState();
     editSystem(draft => {
       delete draft.tables!.abilities!.owner;
       draft.tables!.abilities!.columns = [{ key: 'mod', label: 'Модификатор', kind: 'number', expr: { expr: 'округлить вниз((@строка.value - 10) / 2)' } }];
-      placeOnSheet(draft, 'abilities');
+      readyForSheet(draft, 'abilities');
     });
     const fields = fieldsOf(useWorld.getState().system);
     expect(fields.map(f => f.tag)).toEqual(['abilities.сила.value', 'abilities.сила.mod', 'abilities.ловкость.value', 'abilities.ловкость.mod']);
