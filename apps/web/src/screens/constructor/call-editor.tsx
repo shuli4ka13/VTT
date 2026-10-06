@@ -1,9 +1,11 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { System, Param, SlotRef } from '@vtt/schema';
-import { Field, Select } from '../../ui/primitives.tsx';
-import { ValueField, type SlotOption } from './value-field.tsx';
+import { Field, Select, Button } from '../../ui/primitives.tsx';
+import { FormulaView } from '../../ui/formula-field.tsx';
+import { ValueField, asText, type SlotOption } from './value-field.tsx';
 import type { SlotContext, SlotKind } from './slots.tsx';
 import { listOf } from '@vtt/engine/model/lists';
+import { EffectPick } from './effect-pick.tsx';
 import { paramsOf } from '@vtt/engine/model/inherit';
 
 export interface CallInput {
@@ -26,11 +28,77 @@ function status(input: CallInput): { text: string; bad: boolean } {
   return { text: 'не заполнено', bad: true };
 }
 
-export function CallEditor({ system, effect, effects, onEffect, args, fromProps, filled, onArg, context, where, allow, extraFor, headAction, children }: {
+type Place = 'record' | 'asked' | 'computed' | 'missing';
+
+const lonely = (value: unknown): string | null => {
+  const text = asText(value)?.trim() ?? '';
+  return /^@[\p{L}\p{N}_]+$/u.test(text) ? text.slice(1) : null;
+};
+
+const effectOf = (value: unknown): string | null => {
+  const text = asText(value)?.trim() ?? '';
+  const quoted = /^"([^"]*)"$/.exec(text);
+  return quoted ? quoted[1]! : null;
+};
+
+export function placeOf(input: CallInput, props: ReadonlySet<string>): Place {
+  const { value, param } = input;
+  if (value === undefined || value === null) {
+    if (input.fromProp) return 'record';
+    if (param.ask) return 'asked';
+    if (param.default !== undefined || param.optional) return 'computed';
+    return 'missing';
+  }
+  const prop = lonely(value);
+  if (prop && props.has(prop)) return 'record';
+  return 'computed';
+}
+
+function valueShown(system: System, input: CallInput, names?: Map<string, string>): ReactNode {
+  if (input.param.kind === 'effect') {
+    const id = effectOf(input.value) ?? (input.param.default !== undefined ? String(input.param.default) : null);
+    return id ? <span className="chips__chip"><span>{system.effects[id]?.label || id}</span></span> : <span className="faint">не передаётся</span>;
+  }
+  if (input.value === undefined || input.value === null) return <span className="faint">не передаётся</span>;
+  return <FormulaView value={asText(input.value) ?? ''} system={system} {...(names ? { extraNames: names } : {})} />;
+}
+
+export function CallSummary({ system, effect, args, props, names, label }: {
   system: System;
   effect: string;
+  args: Record<string, unknown> | undefined;
+  props: ReadonlySet<string>;
+  names?: Map<string, string>;
+  label: string;
+}) {
+  const called = system.effects[effect];
+  if (!called) return null;
+  const inputs = paramsOf(system, called)
+    .filter(param => param.kind !== 'sheet')
+    .map(param => ({ param, value: args?.[param.key], fromProp: props.has(param.key) }));
+  const computed = inputs.filter(input => placeOf(input, props) === 'computed');
+  const asked = inputs.filter(input => placeOf(input, props) === 'asked');
+  if (!computed.length && !asked.length) return null;
+  return (
+    <div className="call-group call-group--quiet">
+      <span className="call-group__title">«{label}» считает сам</span>
+      {computed.map(input => (
+        <div className="pair" key={input.param.key}>
+          <span className="call-args__name">{input.param.label ?? input.param.key}</span>
+          <span className="call-group__value">← {valueShown(system, input, names)}</span>
+        </div>
+      ))}
+      {asked.length ? <span className="faint">спросят за столом: {asked.map(input => input.param.label ?? input.param.key).join(', ')}</span> : null}
+    </div>
+  );
+}
+
+export function CallEditor({ system, effect: raw, effects, onEffect, args, fromProps, filled, onArg, context, where, allow, extraFor, headAction, children, grouped = false, names, inputs: callerInputs }: {
+  system: System;
+  effect: unknown;
   effects: [string, { label?: string }][];
-  onEffect: (id: string) => void;
+  onEffect: (id: string | { expr: string } | null) => void;
+  inputs?: readonly Param[];
   args: Record<string, unknown> | undefined;
   fromProps?: ReadonlySet<string>;
   filled?: Readonly<Record<string, 'actor' | 'targets'>>;
@@ -41,22 +109,129 @@ export function CallEditor({ system, effect, effects, onEffect, args, fromProps,
   extraFor?: (param: Param) => SlotOption[];
   headAction?: ReactNode;
   children?: ReactNode;
+  grouped?: boolean;
+  names?: Map<string, string>;
 }) {
+  const [open, setOpen] = useState<string | null>(null);
+  const fromInput = typeof raw === 'object' && raw ? /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((raw as { expr?: unknown }).expr ?? ''))?.[1] : undefined;
+  const via = fromInput ? callerInputs?.find(param => param.key === fromInput) : undefined;
+  const effect = typeof raw === 'string' ? raw : typeof via?.default === 'string' ? via.default : '';
   const called = system.effects[effect];
   const params = called ? paramsOf(system, called) : [];
   const inputs: CallInput[] = params.map(param => ({
     param, value: args?.[param.key], fromProp: Boolean(fromProps?.has(param.key)),
   }));
+  const nameOf = (param: Param) => param.label ?? param.key;
+  const editor = (input: CallInput) => (
+    input.param.kind === 'effect' ? (
+      <Select<string>
+        label={nameOf(input.param)}
+        value={effectOf(input.value) ?? ''}
+        options={[['', input.param.default !== undefined ? `как у эффекта: ${system.effects[String(input.param.default)]?.label ?? String(input.param.default)}` : '— не передаётся —'],
+          ...Object.entries(system.effects).filter(([id]) => id !== effect).map(([id, e]) => [id, e.label || id] as const)]}
+        onChange={next => onArg(input.param.key, next ? { expr: JSON.stringify(next) } : null)}
+      />
+    ) : (
+      <ValueField
+        where={`${where} · ${nameOf(input.param)}`}
+        value={input.value as never}
+        context={context}
+        {...(allow ? { allow } : {})}
+        extraOptions={[...(extraFor?.(input.param) ?? []), ...rowsAsOptions(system, input.param)]}
+        onChange={next => onArg(input.param.key, next)}
+      />
+    )
+  );
+
+  const flat = () => inputs.map(input => {
+    const fill = filled?.[input.param.key];
+    if (fill) {
+      return (
+        <div className="pair" key={input.param.key}>
+          <span className="call-args__name">{nameOf(input.param)}</span>
+          <span className="faint">{fill === 'actor' ? 'кто нажал кнопку' : 'цели, выбранные за столом'}</span>
+        </div>
+      );
+    }
+    const shown = status(input);
+    return (
+      <div className="pair" key={input.param.key}>
+        <span className="call-args__name">{nameOf(input.param)}</span>
+        {editor(input)}
+        <span className={shown.bad ? 'need' : 'faint'}>{shown.text}</span>
+      </div>
+    );
+  });
+
+  const shownValue = (input: CallInput): ReactNode => valueShown(system, input, names);
+
+  const groups = () => {
+    const props = fromProps ?? new Set<string>();
+    const own = inputs.filter(input => !filled?.[input.param.key]);
+    const by = (place: Place) => own.filter(input => placeOf(input, props) === place);
+    const record = by('record');
+    const asked = by('asked');
+    const computed = by('computed');
+    const missing = by('missing');
+    const row = (input: CallInput, body: ReactNode, tail?: ReactNode) => (
+      <div className="pair" key={input.param.key}>
+        <span className="call-args__name">{nameOf(input.param)}</span>
+        {body}
+        {tail ?? null}
+      </div>
+    );
+    const editing = (input: CallInput) => row(input, editor(input),
+      <Button size="sm" variant="ghost" onClick={() => setOpen(null)}>готово</Button>);
+    return (
+      <>
+        {missing.map(input => row(input, editor(input), <span className="need">не заполнено</span>))}
+        {record.length ? (
+          <div className="call-group">
+            <span className="call-group__title">Заполняют у каждой записи</span>
+            <div className="inline inline--tight">
+              {record.map(input => (open === input.param.key ? editing(input) : (
+                <button key={input.param.key} type="button" className="btn btn--sm btn--ghost" title="считать формулой вместо свойства записи"
+                  aria-label={`«${nameOf(input.param)}» заполняют у каждой записи`}
+                  onClick={() => setOpen(input.param.key)}>{nameOf(input.param)}</button>
+              )))}
+            </div>
+          </div>
+        ) : null}
+        {asked.length ? (
+          <div className="call-group">
+            <span className="call-group__title">Спросят за столом</span>
+            {asked.map(input => (open === input.param.key ? editing(input) : row(input,
+              <span className="faint">{input.param.ask?.by === 'gm' ? 'ведущего' : 'игрока'}</span>,
+              <Button size="sm" variant="ghost" onClick={() => setOpen(input.param.key)}>изменить</Button>)))}
+          </div>
+        ) : null}
+        {computed.length ? (
+          <div className="call-group call-group--quiet">
+            <span className="call-group__title">Считается само</span>
+            {computed.map(input => (open === input.param.key ? editing(input) : row(input,
+              <span className="call-group__value">← {shownValue(input)}</span>,
+              <Button size="sm" variant="ghost" onClick={() => setOpen(input.param.key)}>изменить</Button>)))}
+          </div>
+        ) : null}
+      </>
+    );
+  };
 
   return (
     <div className="stack stack--tight">
-      <Field label="Какой эффект" needed={!effect}>
-        <Select
-          value={effect}
-          options={[['', '— какой эффект —'], ...effects.map(([id, e]) => [id, e.label || id] as const)] as never}
-          onChange={onEffect}
-        />
+      <Field label="Какой эффект" needed={!effect && !fromInput}>
+        {callerInputs?.some(param => param.kind === 'effect') ? (
+          <EffectPick value={raw} system={system} inputs={callerInputs}
+            only={one => effects.some(([, e]) => e === one)} onChange={onEffect} />
+        ) : (
+          <Select
+            value={typeof raw === 'string' ? raw : ''}
+            options={[['', '— какой эффект —'], ...effects.map(([id, e]) => [id, e.label || id] as const)] as never}
+            onChange={next => onEffect(next)}
+          />
+        )}
       </Field>
+      {fromInput ? <span className="faint">{via ? `зовёт эффект, переданный во вход «${via.label ?? via.key}»` : `входа «${fromInput}» нет`}{called ? ` · аргументы — как у «${called.label || effect}»` : ''}</span> : null}
       {children}
       {effect ? (
         <div className="stack stack--tight call-args">
@@ -65,32 +240,7 @@ export function CallEditor({ system, effect, effects, onEffect, args, fromProps,
             {headAction}
           </div>
           {inputs.length ? null : <span className="faint">«{called?.label || effect}» ничего не принимает.</span>}
-          {inputs.map(input => {
-            const fill = filled?.[input.param.key];
-            if (fill) {
-              return (
-                <div className="pair" key={input.param.key}>
-                  <span className="call-args__name">{input.param.label ?? input.param.key}</span>
-                  <span className="faint">{fill === 'actor' ? 'кто нажал кнопку' : 'цели, выбранные за столом'}</span>
-                </div>
-              );
-            }
-            const shown = status(input);
-            return (
-              <div className="pair" key={input.param.key}>
-                <span className="call-args__name">{input.param.label ?? input.param.key}</span>
-                <ValueField
-                  where={`${where} · ${input.param.label ?? input.param.key}`}
-                  value={input.value as never}
-                  context={context}
-                  {...(allow ? { allow } : {})}
-                  extraOptions={[...(extraFor?.(input.param) ?? []), ...rowsAsOptions(system, input.param)]}
-                  onChange={next => onArg(input.param.key, next)}
-                />
-                <span className={shown.bad ? 'need' : 'faint'}>{shown.text}</span>
-              </div>
-            );
-          })}
+          {grouped ? groups() : flat()}
         </div>
       ) : null}
     </div>

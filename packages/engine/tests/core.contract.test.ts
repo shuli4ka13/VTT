@@ -76,7 +76,7 @@ describe('режимы операции', () => {
 });
 
 describe('проба внутри прогона', () => {
-  it('не ставит паузу: вопрос «кости выпали» в теле не опережает окно «до»', () => {
+  it('вопрос «кости выпали» в теле задаётся до окна «до»: защитник решает по итоговому броску', () => {
     const system = world({
       удар: button([
         { id: 'б_бросок', type: 'roll', die: 'к20', by: { expr: '@цель' } },
@@ -89,11 +89,12 @@ describe('проба внутри прогона', () => {
     const first = act({ system, compendium: book, clock: null, sheets, die: queue(7, 7), journal: emptyJournal() }, { actionId: 'приём:0', fromId: 'а', toIds: ['б'] });
     expect(first.kind).toBe('paused');
     if (first.kind !== 'paused') return;
-    expect(first.question.window).toBe('target');
-    const second = act({ system, compendium: book, clock: null, sheets, die: queue(), journal: { ...first.journal, answers: { ...first.journal.answers, [first.question.key]: [] } } }, { actionId: 'приём:0', fromId: 'а', toIds: ['б'] });
+    expect(first.question.window).toBe('seen');
+    const second = act({ system, compendium: book, clock: null, sheets, die: queue(), journal: { ...first.journal, answers: { ...first.journal.answers, [first.question.key]: ['удача'] } } }, { actionId: 'приём:0', fromId: 'а', toIds: ['б'] });
     expect(second.kind).toBe('paused');
     if (second.kind !== 'paused') return;
-    expect(second.question.window).toBe('seen');
+    expect(second.question.window).toBe('target');
+    expect(JSON.stringify(second.question.results)).toContain('"total":8');
   });
 });
 

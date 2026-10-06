@@ -1,3 +1,4 @@
+import { chosenEffect, choicesOfInput } from './payments.ts';
 import { SEEN_LABEL, ANY_ACTION, PHASES } from '../events/bus.ts';
 import type { System, Compendium, Effect, Step } from './types.ts';
 import { registry } from '../engine/steps/index.ts';
@@ -188,10 +189,9 @@ function cycleProblems(system: System): Problem[] {
   const effectNode = (id: string): string => { labels.set(`effect:${id}`, system.effects[id]?.label ?? id); return `effect:${id}`; };
 
 
-  const emitsOf = (steps: Step[] | undefined): string[] => emittedBy(steps);
-
   for (const [id, effect] of Object.entries(system.effects)) {
-    for (const called of chainsOfEffect(effect).flatMap(emitsOf)) link(effectNode(id), effectNode(called));
+    const emitsOf = (steps: Step[] | undefined): string[] => emittedBy(steps, inputsOf(system, id));
+    for (const called of chainsOfEffect(effect).flatMap(steps => emitsOf(steps))) link(effectNode(id), effectNode(called));
     for (const handler of effect.on ?? []) {
       for (const called of emitsOf(handler.steps)) link(effectNode(id), effectNode(called));
       if (handler.confirm || handler.if) continue;
@@ -254,18 +254,24 @@ function listenerProblems(system: System): Problem[] {
   return out;
 }
 
-function emittedBy(steps: Step[] | undefined): string[] {
+function emittedBy(steps: Step[] | undefined, choices: (name: string) => string[] = () => []): string[] {
   const out: string[] = [];
   for (const step of steps ?? []) {
     const slots = (registry.get(step.type)?.slots ?? []) as { key: string; kind?: string }[];
     for (const slot of slots) {
       if (slot.kind !== 'event') continue;
       const value = (step as Record<string, unknown>)[slot.key];
-      if (typeof value === 'string' && value) out.push(value);
+      if (typeof value === 'string' && value) { out.push(value); continue; }
+      const literal = chosenEffect(value);
+      if (literal) { out.push(literal); continue; }
+      const lone = /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((value as { expr?: unknown } | null)?.expr ?? ''));
+      if (lone) out.push(...choices(lone[1]!));
     }
   }
   return out;
 }
+
+const inputsOf = (system: System, id: string) => (name: string): string[] => choicesOfInput(system, id, name);
 
 function tableFieldProblems(system: System): Problem[] {
   return fieldProblems(system).map(problem => ({
@@ -459,10 +465,10 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
   const out: Problem[] = [];
   const emitted = new Set<string>();
   const heardEvents = new Set<string>();
-  for (const effect of Object.values(system.effects)) {
-    for (const event of chainsOfEffect(effect).flatMap(emittedBy)) emitted.add(event);
+  for (const [id, effect] of Object.entries(system.effects)) {
+    for (const event of chainsOfEffect(effect).flatMap(steps => emittedBy(steps, inputsOf(system, id)))) emitted.add(event);
     for (const handler of effect.on ?? []) {
-      for (const event of emittedBy(handler.steps)) emitted.add(event);
+      for (const event of emittedBy(handler.steps, inputsOf(system, id))) emitted.add(event);
       const heard = listenerOf(handler);
       if (heard.kind === 'call') heardEvents.add(heard.key);
     }
@@ -542,7 +548,7 @@ function paramProblems(system: System): Problem[] {
       const table = tableOf(binding, effect);
       for (const param of effect.params ?? []) {
         if (args[param.key] !== undefined || table[param.key]) continue;
-        if (param.ask || (param.kind === 'sheet' && param.optional)) continue;
+        if (param.ask || param.optional || param.default !== undefined) continue;
         out.push({
           where: { tab: 'records', kind, part: 'bindings', binding: index }, level: 'error',
           text: `кнопка «${binding.label ?? effect.label ?? binding.effect}» не заполняет вход «${param.label ?? param.key}» эффекта «${effect.label ?? binding.effect}»`,
@@ -655,10 +661,10 @@ export function describeWhere(where: Where, system: System, compendium?: Compend
 
 function shapeProblems(system: System, compendium?: Compendium): Problem[] {
   const out: Problem[] = [];
-  const called = new Set(Object.values(system.effects).flatMap(effect => [
+  const called = new Set(Object.entries(system.effects).flatMap(([key, effect]) => [
     effect.steps ?? [], effect.cost ?? [], effect.attach ?? [], effect.detach ?? [],
     ...(effect.on ?? []).map(handler => handler.cost ?? []),
-  ].flatMap(emittedBy)));
+  ].flatMap(steps => emittedBy(steps, inputsOf(system, key)))));
   const sheetsOf = (effect: Effect): Map<string, boolean> =>
     new Map((effect.params ?? []).filter(p => p.kind === 'sheet').map(p => [p.key, Boolean(p.many)]));
   for (const [id, effect] of Object.entries(system.effects)) {
@@ -752,7 +758,7 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
     if (where.tab !== 'book') continue;
     const args = argsWithProps(system, binding, props) ?? {};
     for (const param of effect.params ?? []) {
-      if (args[param.key] !== undefined || table[param.key] || param.ask || param.optional) continue;
+      if (args[param.key] !== undefined || table[param.key] || param.ask || param.optional || param.default !== undefined) continue;
       out.push({ where, level: 'error', text: `кнопка «${binding.label ?? effect.label ?? binding.effect}» не заполняет вход «${param.label ?? param.key}» эффекта «${effect.label ?? binding.effect}»` });
     }
   }

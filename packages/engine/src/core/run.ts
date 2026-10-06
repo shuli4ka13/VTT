@@ -185,6 +185,7 @@ export class Run {
   private readonly handlers: string[] = [];
   private readonly chain: string[] = [];
   private probing = 0;
+  private seenAsks = 0;
   private seeing = 0;
   private readonly insts = new WeakMap<WornEffect, string>();
   private mark: { sink: Sink; at: number; count: number } | null = null;
@@ -337,6 +338,7 @@ export class Run {
       owner: frame.owner,
       die,
       value: refValue => resolveRef(refValue, ref),
+      prop: name => (frame.props && name in frame.props ? resolveRef({ expr: `@${name}` }, { ...ref, recordScope: true }) : undefined),
       known: refValue => this.known(refValue, frame, results, rolls, stepIds),
       number: (refValue, what) => {
         try {
@@ -532,6 +534,7 @@ export class Run {
       const inner: Frame = {
         path: at, effectId: event, label: callee.label || event, owner: `вызов «${callee.label || event}»`,
         home, bound: names, args: values, paramDefs: callee.params ?? [], props: null, claims: {}, hop: frame.hop, inSub: false,
+        ...(frame.inputs ? { inputs: frame.inputs } : {}),
       };
       const before = keys.map(key => `before:${key}`);
       const peek = this.listens(before) ? this.probe(() => this.exec(inner, callee.steps ?? [], newSink(), { метки: payload.tags }, event)) : null;
@@ -556,7 +559,7 @@ export class Run {
     for (const call of calls) {
       try {
         if (call.hop > 0) this.spend();
-        let tried = this.probe(() => this.body(call, newSink()));
+        let tried = this.probeAsking(() => this.body(call, newSink()));
         let accepted = 0;
         for (const holder of this.holders()) {
           if (accepted >= this.limits.probes) {
@@ -575,7 +578,7 @@ export class Run {
           flush(entries);
           if (asked.accepted) {
             accepted++;
-            tried = this.probe(() => this.body(call, newSink()));
+            tried = this.probeAsking(() => this.body(call, newSink()));
           }
         }
         const sink = newSink();
@@ -994,8 +997,18 @@ export class Run {
     return { thrown, bonus, total: thrown.result.total + bonus, entries: sink.after };
   }
 
+  private probeAsking<T>(work: () => T): T {
+    this.seenAsks++;
+    try {
+      return this.probe(work);
+    } finally {
+      this.seenAsks--;
+    }
+  }
+
   private choose(question: Question): { chosen: string[]; skipped: boolean } {
-    const { chosen, byPerson } = this.isProbing
+    const live = question.window === 'seen' && this.seenAsks > 0 && this.probing === 1;
+    const { chosen, byPerson } = this.isProbing && !live
       ? { chosen: this.ext.peek(question.key) ?? [], byPerson: false }
       : this.ext.ask(question);
     const unique = [...new Set(chosen)];

@@ -20,13 +20,15 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
   const [peek, setPeek] = useState(false);
   const commons = callable(system, context.effect);
   const args = (step.args ?? {}) as Record<string, unknown>;
+  const id = typeof step.effect === 'string' ? step.effect : '';
   return (
     <>
       <CallEditor
         system={system}
-        effect={String(step.effect ?? '')}
+        effect={step.effect ?? ''}
         effects={commons}
-        onEffect={next => edit(at, draft => { loose(draft).effect = next; })}
+        inputs={context.effect.params ?? []}
+        onEffect={next => edit(at, draft => { if (next) loose(draft).effect = next; else delete loose(draft).effect; })}
         args={args}
         context={context}
         where="вызов"
@@ -37,7 +39,7 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
         })}
         headAction={(
           <Button size="sm" variant="ghost" onClick={() => setPeek(true)}>
-            {`что будет дальше${meddlersOf(system, String(step.effect)).length ? ' · правки могут урезать' : ''} →`}
+            {`что будет дальше${meddlersOf(system, id).length ? ' · правки могут урезать' : ''} →`}
           </Button>
         )}
       >
@@ -48,7 +50,7 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
         open={peek}
         onClose={() => setPeek(false)}
         system={system}
-        eventId={String(step.effect ?? '')}
+        eventId={id}
         onEdit={id => onOpenEffect?.(id)}
       />
     </>

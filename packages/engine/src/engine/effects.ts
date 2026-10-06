@@ -1,3 +1,4 @@
+import { chosenEffect, choicesOfInput } from '../model/payments.ts';
 import { heldBy, sheetKindOf, kindOfRecord } from '../model/owned.ts';
 import { DURATIONS, REAPPLY } from '../model/effect-kinds.ts';
 import { EngineError } from './errors.ts';
@@ -49,9 +50,14 @@ export const chainsOfEffect = (effect: Effect): Step[][] => [
 
 export const calledOf = (system: System): [string, Effect][] => {
   const called = new Set<string>();
-  for (const effect of Object.values(system.effects || {})) {
+  for (const [id, effect] of Object.entries(system.effects || {})) {
     for (const step of chainsOfEffect(effect).flat() as Record<string, unknown>[]) {
-      if (step.type === 'emit' && step.effect) called.add(String(step.effect));
+      if (step.type !== 'emit' || !step.effect) continue;
+      if (typeof step.effect === 'string') { called.add(step.effect); continue; }
+      const literal = chosenEffect(step.effect);
+      if (literal) { called.add(literal); continue; }
+      const lone = /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((step.effect as { expr?: unknown }).expr ?? ''));
+      if (lone) for (const choice of choicesOfInput(system, id, lone[1]!)) called.add(choice);
     }
   }
   const takesAmount = (effect: Effect) => (effect.params ?? []).some(p => (p as { role?: string }).role === 'amount');

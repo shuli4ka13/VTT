@@ -266,10 +266,10 @@
             "effect": "hero_attack",
             "args": {
               "attack_with": {
-                "expr": "таблица(\"wield\", @wield, \"attack\")"
+                "expr": "@wield.attack"
               },
               "damage_with": {
-                "expr": "таблица(\"wield\", @wield, \"damage\")"
+                "expr": "@wield.damage"
               }
             }
           }

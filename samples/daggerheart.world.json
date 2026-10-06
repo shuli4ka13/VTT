@@ -233,7 +233,7 @@
             "key": "evasion",
             "label": "Уклонение",
             "expr": {
-              "expr": "если(@class != \"\", таблица(\"classes\", @class, \"evasion\"), 10) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"evasion_bonus\"), 0) + @evasion_bonus"
+              "expr": "или(@class.evasion, 10) + или(@ancestry.evasion_bonus, 0) + @evasion_bonus"
             }
           },
           {
@@ -266,14 +266,14 @@
             "key": "major",
             "label": "Порог серьёзного урона",
             "expr": {
-              "expr": "если(@major_base > 0, @major_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, @level)"
+              "expr": "если(@major_base > 0, @major_base + @level + или(@ancestry.threshold_proficiency, 0) * @proficiency, @level)"
             }
           },
           {
             "key": "severe",
             "label": "Порог тяжёлого урона",
             "expr": {
-              "expr": "если(@severe_base > 0, @severe_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, 2 * @level)"
+              "expr": "если(@severe_base > 0, @severe_base + @level + или(@ancestry.threshold_proficiency, 0) * @proficiency, 2 * @level)"
             }
           },
           {
@@ -286,7 +286,7 @@
             "key": "hp_max",
             "label": "Хиты: клеток",
             "expr": {
-              "expr": "если(@class != \"\", таблица(\"classes\", @class, \"hp\"), 0) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"hp_bonus\"), 0) + @hp_extra"
+              "expr": "или(@class.hp, 0) + или(@ancestry.hp_bonus, 0) + @hp_extra"
             }
           },
           {
@@ -305,7 +305,7 @@
             "key": "stress_max",
             "label": "Стресс: клеток",
             "expr": {
-              "expr": "6 + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"stress_bonus\"), 0) + @stress_extra"
+              "expr": "6 + или(@ancestry.stress_bonus, 0) + @stress_extra"
             }
           },
           {
@@ -1516,7 +1516,7 @@
             "type": "roll",
             "die": "duality",
             "bonus": {
-              "expr": "таблица(\"traits\", @trait, \"value\") + @опыт"
+              "expr": "@trait.value + @опыт"
             },
             "tags": [
               "действие",
@@ -1626,7 +1626,7 @@
             "type": "roll",
             "die": "duality",
             "bonus": {
-              "expr": "таблица(\"traits\", @trait, \"value\") + @attack_bonus"
+              "expr": "@trait.value + @attack_bonus"
             },
             "tags": [
               "атака",

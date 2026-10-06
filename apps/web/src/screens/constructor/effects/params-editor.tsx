@@ -15,7 +15,7 @@ const SHEETS = 'sheet+many';
 const PARAM_KINDS = [...kindsFor('param'), [SHEETS, 'список листов'] as const];
 
 const ASK_OPTIONS = [
-  ['', 'нет'],
+  ['', 'взять значение'],
   ['actor', 'спросить игрока'],
   ['gm', 'спросить ведущего'],
 ] as const;
@@ -24,7 +24,7 @@ const COLUMNS: GridColumn[] = [
   { key: 'label', label: 'Название', width: 170 },
   { key: 'kind', label: 'Тип', width: 120 },
   { key: 'from', label: 'Из таблицы', width: 140, hint: 'для типа «из таблицы» — из какой' },
-  { key: 'ask', label: 'Если не передали', width: 160, hint: 'нет — обязан передать тот, кто вызывает; иначе спросят за столом' },
+  { key: 'ask', label: 'Если не передали', width: 200, hint: 'кнопка этот вход не передала: спросить за столом или взять значение (цена по умолчанию, одна кость); пусто — обязан передать тот, кто вызывает' },
   { key: 'hint', label: 'Подсказка за столом', width: 170, hint: 'что увидит спрошенный' },
   { key: 'main', label: 'Правят сопротивления', width: 180, hint: 'это число меняют сопротивления и уязвимости цели: урон, лечение. Одно на эффект' },
   { key: 'required', label: 'Обязателен', width: 100 },
@@ -67,7 +67,7 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
   });
   const rekey = (param: Loose, next: string) => change(param.key, t => { t.key = next; });
   const tables = choiceTables(system).map(([key, list]) => [key, list.label || key] as const);
-  const rare = params.some(p => p.ask?.hint || p.role === 'amount' || p.optional || p.min !== undefined || p.max !== undefined);
+  const rare = params.some(p => p.ask?.hint || p.role === 'amount' || p.optional || p.default !== undefined || p.min !== undefined || p.max !== undefined);
   const [more, setMore] = useState(rare);
   const full = more || rare;
   const columns = full ? COLUMNS : COLUMNS.filter(c => !RARE.includes(c.key));
@@ -107,17 +107,22 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
                   onChange={next => change(param.key, t => { if (next) t.from = next; else delete t.from; })}
                 />
               ) : <span key={`${param.key}:from`} className="faint">—</span>,
-              askable ? (
-                <Select
-                  key={`${param.key}:ask`}
-                  value={param.ask?.by ?? (param.ask ? 'actor' : '')}
-                  options={ASK_OPTIONS}
-                  onChange={next => change(param.key, t => {
-                    if (next) t.ask = { ...(t.ask ?? {}), by: next };
-                    else delete t.ask;
-                  })}
-                />
-              ) : <span key={`${param.key}:ask`} className="faint">—</span>,
+              <span key={`${param.key}:ask`} className="inline inline--tight">
+                {askable ? (
+                  <Select
+                    value={param.ask?.by ?? (param.ask ? 'actor' : '')}
+                    options={ASK_OPTIONS}
+                    onChange={next => change(param.key, t => {
+                      if (next) { t.ask = { ...(t.ask ?? {}), by: next }; delete t.default; }
+                      else delete t.ask;
+                    })}
+                  />
+                ) : null}
+                {param.ask ? null : (
+                  <DefaultCell param={param} system={system}
+                    onChange={next => change(param.key, t => { if (next === undefined) delete t.default; else t.default = next as never; })} />
+                )}
+              </span>,
               param.ask ? (
                 <Input
                   key={`${param.key}:hint`}
@@ -169,5 +174,34 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
         </div>
       ) : null}
     </Card>
+  );
+}
+
+function DefaultCell({ param, system, onChange }: { param: Loose; system: System; onChange: (next: string | number | boolean | undefined) => void }) {
+  const kind = String(param.kind ?? 'number');
+  const value = param.default;
+  if (kind === 'sheet' || kind === 'field') return <span className="faint">—</span>;
+  if (kind === 'effect') {
+    return (
+      <Select<string> label={`«${param.label ?? param.key}» — если не передали`} value={typeof value === 'string' ? value : ''}
+        options={[['', 'ничего'], ...Object.entries(system.effects).map(([id, effect]) => [id, effect.label || id] as const)]}
+        onChange={next => onChange(next || undefined)} />
+    );
+  }
+  if (kind === 'boolean') {
+    return (
+      <Select<string> label={`«${param.label ?? param.key}» — если не передали`} value={value === true ? 'да' : value === false ? 'нет' : ''}
+        options={[['', '—'], ['да', 'да'], ['нет', 'нет']]}
+        onChange={next => onChange(next === 'да' ? true : next === 'нет' ? false : undefined)} />
+    );
+  }
+  return (
+    <Input value={value === undefined ? '' : String(value)} placeholder="—"
+      onChange={text => {
+        const trimmed = text.trim();
+        if (!trimmed) { onChange(undefined); return; }
+        const number = Number(trimmed.replace(',', '.'));
+        onChange(kind === 'number' && Number.isFinite(number) ? number : trimmed);
+      }} />
   );
 }

@@ -21,12 +21,15 @@ export function lint(step: StepData) {
   return null;
 }
 
+const NOTHING = 'не задано — шаг пропущен';
+
 export function traceLine(t: any, h: any) {
   const name = typeof h?.eventLabel === 'function' ? h.eventLabel(t.event) : t.event;
   const tags = t.tags?.length ? ` [${t.tags.join(', ')}]` : '';
   const mods = t.incoming !== t.amount
     ? ` (отправлено ${t.incoming}, после правок ${t.amount})`
     : '';
+  if (t.event === null) return `вызов: ${NOTHING}`;
   return `зовёт «${name}»${tags}: ${t.amount}${mods}`;
 }
 
@@ -47,7 +50,9 @@ function chosenTags(params: { key: string; kind?: string; from?: string }[], arg
 const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
   mayBreak: true,
   finish(step, ctx) {
-    const id = String(step.effect ?? '');
+    const chosen = ctx.value(step.effect);
+    if (chosen === null || chosen === undefined || chosen === '') return { value: null, trace: { event: null }, break: null };
+    const id = String(chosen);
     const spec = requireCalled(ctx.system, id, who(ctx));
     const params = spec.params ?? [];
     const args: Record<string, unknown> = {};
@@ -55,6 +60,11 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
       const kind = params.find(p => p.key === key)?.kind;
       const value = kind === 'field' ? ctx.field(ref) : kind === 'sheet' ? ctx.value(ref) : ctx.value(ref);
       if (value !== null && value !== undefined) args[key] = value;
+    }
+    for (const param of params) {
+      if (param.key in args || param.kind === 'sheet' || param.kind === 'field') continue;
+      const own = ctx.prop(param.key);
+      if (own !== null && own !== undefined) args[param.key] = own;
     }
     const main = amountParamOf(spec);
     const incoming = main && args[main.key] !== undefined ? Number(args[main.key]) : 0;

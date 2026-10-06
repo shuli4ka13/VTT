@@ -8,12 +8,13 @@ const names = (list: { name: string }[]) => list.map(one => one.name);
 
 describe('namesAt: что видно в каждом месте эффекта', () => {
   it('шаги кнопки: входы, переменная цикла после «для каждого», итоги шагов выше с путями внутрь', () => {
-    const before = names(namesAt(dnd, 'strike', { part: 'steps', index: 1 }));
+    const before = names(namesAt(dnd, 'strike', { part: 'steps', index: 0 }));
     expect(before).toContain('действующий');
-    expect(before).toContain('hit_бросок');
+    expect(before).not.toContain('hit_бросок');
     expect(before).not.toContain('цель');
     const inside = namesAt(dnd, 'strike', { part: 'steps', index: 4 });
     expect(names(inside)).toContain('цель');
+    expect(names(inside)).toContain('hit_бросок');
     expect(inside.find(one => one.name === 'цели')?.many).toBe(true);
     expect(inside.find(one => one.name === 'hit')?.children?.map(c => c.path)).toContain('.success');
   });

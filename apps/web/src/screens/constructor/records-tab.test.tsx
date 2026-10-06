@@ -46,7 +46,8 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     expect(kind.columns!.some(p => p.label === 'Кость урона' && p.kind === 'dice')).toBe(true);
     expect(kind.columns![0]!.key).toBe('кость');
     expect((kind.bindings![0] as any).args?.['кость']).toBeUndefined();
-    expect(строкаВхода('Кость урона').textContent).toContain('берётся из свойства');
+    expect(screen.getByRole('button', { name: '«Кость урона» заполняют у каждой записи' })).toBeTruthy();
+    expect(screen.queryByText('не заполнено')).toBeNull();
   });
 
   it('входы-листы, которые кнопка заполняет сама, подписаны, а не горят «не заполнено»', () => {
@@ -63,9 +64,9 @@ describe('RecordsTab: тип видит входы эффекта', () => {
       },
     }));
     render(<RecordsTab />);
-    expect(строкаВхода('Кто действует').textContent).toContain('кто нажал кнопку');
-    expect(строкаВхода('Цели').textContent).toContain('цели, выбранные за столом');
-    expect(строкаВхода('Цели').textContent).not.toContain('не заполнено');
+    expect(screen.getByDisplayValue('кто нажал кнопку')).toBeTruthy();
+    expect(screen.getByDisplayValue('цели, выбранные за столом')).toBeTruthy();
+    expect(screen.queryByText('не заполнено')).toBeNull();
   });
 
   it('на экране нет слов «дырка», «параметр», «привязка»', () => {
@@ -100,7 +101,7 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     }));
 
     const { container } = render(<RecordsTab />);
-    expect(container.querySelector('.pair'), 'вход нарисован').toBeTruthy();
+    expect(container.querySelector('.call-group'), 'вход нарисован').toBeTruthy();
 
     const system = useWorld.getState().system;
     const предложат = optionsFor({

@@ -109,3 +109,7 @@ function InlineFormula({ value, system, onChange, onCommit, onCancel, names, ext
     />
   );
 }
+
+export function FormulaView({ value, system, extraNames }: { value: string; system: System; extraNames?: Map<string, string> }) {
+  return <FormulaChips value={value} system={system} {...(extraNames ? { extraNames } : {})} readOnly onChange={() => {}} />;
+}

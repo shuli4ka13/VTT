@@ -2151,10 +2151,10 @@
             "effect": "strike",
             "args": {
               "attack_with": {
-                "expr": "таблица(\"wield\", @wield, \"attack\")"
+                "expr": "@wield.attack"
               },
               "damage_with": {
-                "expr": "таблица(\"wield\", @wield, \"damage\")"
+                "expr": "@wield.damage"
               }
             }
           }
@@ -2280,7 +2280,24 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "cantrip_attack"
+            "effect": "strike",
+            "args": {
+              "attack_with": {
+                "expr": "@действующий.spell_attack"
+              },
+              "damage_dice": {
+                "expr": "@damage_die"
+              },
+              "dice": {
+                "expr": "@действующий.cantrip_dice"
+              },
+              "damage_source": {
+                "expr": "\"магический\""
+              },
+              "цена": {
+                "expr": "\"cost_action\""
+              }
+            }
           }
         ]
       },
@@ -2379,7 +2396,24 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "spell_attack"
+            "effect": "strike",
+            "args": {
+              "attack_with": {
+                "expr": "@действующий.spell_attack"
+              },
+              "damage_dice": {
+                "expr": "@damage_die"
+              },
+              "dice": {
+                "expr": "@dice_count + (@slot - @spell_level) * @dice_up"
+              },
+              "damage_source": {
+                "expr": "\"магический\""
+              },
+              "цена": {
+                "expr": "\"cost_spell\""
+              }
+            }
           }
         ]
       },
@@ -2939,12 +2973,19 @@
           {
             "key": "damage_with",
             "label": "Прибавка к урону",
-            "kind": "number"
+            "kind": "number",
+            "default": 0
           },
           {
             "key": "damage_dice",
             "label": "Кость урона",
             "kind": "dice"
+          },
+          {
+            "key": "dice",
+            "label": "Сколько костей",
+            "kind": "number",
+            "default": 1
           },
           {
             "key": "damage_type",
@@ -2957,9 +2998,26 @@
             "label": "Источник урона",
             "kind": "choice",
             "from": "damage_source"
+          },
+          {
+            "key": "status",
+            "label": "Состояние при попадании",
+            "kind": "effect",
+            "optional": true
+          },
+          {
+            "key": "цена",
+            "label": "Цена",
+            "kind": "effect",
+            "default": "cost_attack"
           }
         ],
         "steps": [
+          {
+            "type": "each",
+            "of": "цели",
+            "as": "цель"
+          },
           {
             "id": "hit_бросок",
             "type": "roll",
@@ -2974,20 +3032,8 @@
               "expr": "@действующий"
             },
             "against": {
-              "expr": "первый(@цели)"
+              "expr": "@цель"
             }
-          },
-          {
-            "type": "roll",
-            "fixed": {
-              "expr": "(кинуть(@damage_dice, (если(@hit_бросок.natural >= @действующий.crit_from, 2, 1))) + @damage_with)"
-            },
-            "id": "dmg"
-          },
-          {
-            "type": "each",
-            "of": "цели",
-            "as": "цель"
           },
           {
             "id": "hit",
@@ -3003,6 +3049,13 @@
             },
             "failOn": {
               "expr": "1"
+            }
+          },
+          {
+            "id": "dmg",
+            "type": "roll",
+            "fixed": {
+              "expr": "кинуть(@damage_dice, @dice * если(@hit_бросок.natural >= @действующий.crit_from, 2, 1)) + @damage_with"
             }
           },
           {
@@ -3025,12 +3078,32 @@
                 "expr": "@действующий"
               }
             }
+          },
+          {
+            "type": "status",
+            "mode": "apply",
+            "effect": {
+              "expr": "@status"
+            },
+            "to": {
+              "expr": "@цель"
+            },
+            "args": {
+              "наложил": {
+                "expr": "@действующий"
+              }
+            },
+            "if": {
+              "expr": "не(пусто(@status))"
+            }
           }
         ],
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_attack",
+            "effect": {
+              "expr": "@цена"
+            },
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -3270,120 +3343,6 @@
         ],
         "steps": []
       },
-      "cantrip_attack": {
-        "label": "Заговор: бросок атаки",
-        "group": "Заклинания",
-        "description": "Атака заклинанием против класса брони. Костей столько, сколько даёт уровень персонажа: одна, с 5-го две, с 11-го три, с 17-го четыре.",
-        "params": [
-          {
-            "key": "действующий",
-            "label": "Кто действует",
-            "kind": "sheet"
-          },
-          {
-            "key": "цели",
-            "label": "Цели",
-            "kind": "sheet",
-            "many": true
-          },
-          {
-            "key": "damage_die",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "choice",
-            "from": "damage_types"
-          }
-        ],
-        "steps": [
-          {
-            "id": "hit_бросок",
-            "type": "roll",
-            "die": "lead_die",
-            "bonus": {
-              "expr": "@действующий.spell_attack"
-            },
-            "tags": [
-              "атака"
-            ],
-            "by": {
-              "expr": "@действующий"
-            },
-            "against": {
-              "expr": "первый(@цели)"
-            }
-          },
-          {
-            "type": "roll",
-            "fixed": {
-              "expr": "(кинуть(@damage_die, ((@действующий.cantrip_dice) * (если(@hit_бросок.natural >= @действующий.crit_from, 2, 1)))))"
-            },
-            "id": "dmg"
-          },
-          {
-            "type": "each",
-            "of": "цели",
-            "as": "цель"
-          },
-          {
-            "id": "hit",
-            "type": "check",
-            "value": {
-              "expr": "@hit_бросок"
-            },
-            "versus": {
-              "expr": "@цель.ac"
-            },
-            "succeedOn": {
-              "expr": "20"
-            },
-            "failOn": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "emit",
-            "effect": "damage",
-            "args": {
-              "amount": {
-                "expr": "@dmg"
-              },
-              "damage_type": {
-                "expr": "@damage_type"
-              },
-              "damage_source": {
-                "expr": "\"магический\""
-              },
-              "лист": {
-                "expr": "@цель"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            }
-          }
-        ],
-        "cost": [
-          {
-            "type": "emit",
-            "effect": "cost_action",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            }
-          }
-        ],
-        "tags": [
-          "атака"
-        ]
-      },
       "cantrip_save": {
         "label": "Заговор: спасбросок",
         "group": "Заклинания",
@@ -3545,133 +3504,6 @@
               }
             }
           }
-        ]
-      },
-      "spell_attack": {
-        "label": "Заклинание: бросок атаки",
-        "group": "Заклинания",
-        "description": "Тратит ячейку. Атака заклинанием против класса брони; ячейка выше круга заклинания добавляет кости.",
-        "params": [
-          {
-            "key": "цели",
-            "label": "Цели",
-            "kind": "sheet",
-            "many": true
-          },
-          {
-            "key": "damage_die",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "dice_count",
-            "label": "Сколько костей",
-            "kind": "number"
-          },
-          {
-            "key": "dice_up",
-            "label": "Костей за каждый круг выше",
-            "kind": "number"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "choice",
-            "from": "damage_types"
-          },
-          {
-            "key": "status",
-            "label": "Состояние при попадании",
-            "kind": "effect",
-            "optional": true
-          }
-        ],
-        "steps": [
-          {
-            "id": "hit_бросок",
-            "type": "roll",
-            "die": "lead_die",
-            "bonus": {
-              "expr": "@действующий.spell_attack"
-            },
-            "tags": [
-              "атака"
-            ],
-            "by": {
-              "expr": "@действующий"
-            },
-            "against": {
-              "expr": "первый(@цели)"
-            }
-          },
-          {
-            "type": "roll",
-            "fixed": {
-              "expr": "(кинуть(@damage_die, ((@dice_count + (@slot - @spell_level) * @dice_up) * (если(@hit_бросок.natural >= @действующий.crit_from, 2, 1)))))"
-            },
-            "id": "dmg"
-          },
-          {
-            "type": "each",
-            "of": "цели",
-            "as": "цель"
-          },
-          {
-            "id": "hit",
-            "type": "check",
-            "value": {
-              "expr": "@hit_бросок"
-            },
-            "versus": {
-              "expr": "@цель.ac"
-            },
-            "succeedOn": {
-              "expr": "20"
-            },
-            "failOn": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "emit",
-            "effect": "damage",
-            "args": {
-              "amount": {
-                "expr": "@dmg"
-              },
-              "damage_type": {
-                "expr": "@damage_type"
-              },
-              "damage_source": {
-                "expr": "\"магический\""
-              },
-              "лист": {
-                "expr": "@цель"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            }
-          },
-          {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "expr": "@status"
-            },
-            "to": {
-              "expr": "@цель"
-            },
-            "args": {
-              "наложил": {
-                "expr": "@действующий"
-              }
-            }
-          }
-        ],
-        "extends": "spell",
-        "tags": [
-          "атака"
         ]
       },
       "spell_save_half": {
@@ -9536,6 +9368,80 @@
               "expr": "@level"
             },
             "stacking": "sum"
+          }
+        ]
+      },
+      "cost_spell": {
+        "label": "Стоимость: действие и ячейка",
+        "group": "Стоимость",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true
+          },
+          {
+            "key": "spell_level",
+            "label": "Круг заклинания",
+            "kind": "number"
+          },
+          {
+            "key": "slot",
+            "label": "Каким кругом",
+            "kind": "number",
+            "ask": {
+              "by": "actor",
+              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
+            },
+            "min": 1,
+            "max": 9
+          }
+        ],
+        "steps": [
+          {
+            "type": "emit",
+            "effect": "cost_action",
+            "args": {
+              "лист": {
+                "expr": "@лист"
+              },
+              "источник": {
+                "expr": "@источник"
+              }
+            }
+          },
+          {
+            "type": "check",
+            "value": {
+              "expr": "@slot"
+            },
+            "versus": {
+              "expr": "@spell_level"
+            },
+            "note": {
+              "expr": "\"круг ячейки ниже круга заклинания\""
+            }
+          },
+          {
+            "type": "emit",
+            "effect": "spell_slot",
+            "args": {
+              "circle": {
+                "expr": "@slot"
+              },
+              "лист": {
+                "expr": "@лист"
+              },
+              "источник": {
+                "expr": "@источник"
+              }
+            }
           }
         ]
       }

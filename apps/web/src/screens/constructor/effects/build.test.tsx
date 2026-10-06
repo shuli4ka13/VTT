@@ -62,40 +62,45 @@ describe('эффекты пресетов собираются в констру
       ui.type(ui.cell('Название', row), label);
       ui.select(ui.cell('Тип', row), kind);
       if (from) ui.select(ui.cell('Из таблицы', row), from);
-      ui.type(ui.cell('Имя в формулах', row), key);
+      if (ui.cell('Имя в формулах', row).tagName !== 'SPAN') ui.type(ui.cell('Имя в формулах', row), key);
     };
     param(2, 'Бонус атаки', 'number', 'attack_with');
     param(3, 'Прибавка к урону', 'number', 'damage_with');
     param(4, 'Кость урона', 'dice', 'damage_dice');
-    param(5, 'Тип урона', 'choice', 'damage_type', 'damage_types');
-    param(6, 'Источник урона', 'choice', 'damage_source', 'damage_source');
+    param(5, 'Сколько костей', 'number', 'dice');
+    param(6, 'Тип урона', 'choice', 'damage_type', 'damage_types');
+    param(7, 'Источник урона', 'choice', 'damage_source', 'damage_source');
+    param(8, 'Состояние при попадании', 'effect', 'status');
+    param(9, 'Цена', 'effect', 'цена');
+    ui.type(ui.cell('Если не передали', 3), '0');
+    ui.type(ui.cell('Если не передали', 5), '1');
+    ui.select(ui.cell('Если не передали', 9), 'cost_attack');
+    ui.check('«Состояние при попадании» обязателен', false);
     ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_attack');
-    const cost = stepCard(/^1 · /);
+    let cost = stepCard(/^1 · /);
+    within(cost).select('Какой эффект', ':вход:цена');
+    cost = stepCard(/^1 · /);
     within(cost).formula(within(cost).arg('Лист'), '@действующий');
     within(cost).formula(within(cost).arg('Источник'), '@действующий');
 
-    ui.click('+ число');
+
+    ui.click('+ проверка');
     let card = stepCard(/^3 · /);
+    within(card).formula('Проверка', 'кинуть(@lead_die, @атака) + @attack_with >= @цель.ac');
+    card = stepCard(/^3 · /);
     within(card).select('Бросает', 'действующий');
     card = stepCard(/^3 · /);
-    within(card).formula('Сколько', 'кинуть(@lead_die, @атака) + @attack_with');
-    within(card).select('Против кого', 'первый(@цели)');
-    nameStep(card, 'hit_бросок');
-    within(card).click('↑');
+    within(card).select('Против кого', 'цель');
+    card = stepCard(/^3 · /);
+    nameStep(card, 'hit');
+    card = stepCard(/^3 · /);
+    within(card).formula('Всегда успех, если на кости не меньше', '20');
+    within(card).formula('Всегда провал, если на кости не больше', '1');
 
     ui.click('+ число');
     card = stepCard(/^4 · /);
-    within(card).formula('Сколько', '(кинуть(@damage_dice, (если(@hit_бросок.natural >= @действующий.crit_from, 2, 1))) + @damage_with)');
+    within(card).formula('Сколько', 'кинуть(@damage_dice, @dice * если(@hit_бросок.natural >= @действующий.crit_from, 2, 1)) + @damage_with');
     nameStep(card, 'dmg');
-    within(card).click('↑');
-
-    ui.click('+ проверка');
-    card = stepCard(/^5 · /);
-    within(card).formula('Проверка', '@hit_бросок >= @цель.ac');
-    card = stepCard(/^5 · /);
-    nameStep(card, 'hit');
-    within(card).formula('Всегда успех, если на кости не меньше', '20');
-    within(card).formula('Всегда провал, если на кости не больше', '1');
 
     ui.click('+ изменение');
     card = stepCard(/^6 · /);
@@ -105,6 +110,17 @@ describe('эффекты пресетов собираются в констру
     for (const [name, text] of [['Сколько урона', '@dmg'], ['Тип урона', '@damage_type'], ['Источник урона', '@damage_source'], ['Лист', '@цель'], ['Источник', '@действующий']] as const) {
       within(card).formula(within(card).arg(name), text);
     }
+
+    ui.click('+ изменение');
+    card = stepCard(/^7 · /);
+    within(card).click('состояние');
+    card = stepCard(/^7 · /);
+    within(card).select('Какое', ':вход:status');
+    within(card).select('На кого', 'цель');
+    card = stepCard(/^7 · /);
+    within(card).formula('Запомнит: Кто наложил', '@действующий');
+    within(card).select('Делать', 'формулой…');
+    within(card).formula('Условие', 'не(пусто(@status))');
     dump({ got: built('strike') ?? useWorld.getState().system.effects, goal });
     expect(built('strike')).toEqual(goal);
   });
@@ -454,7 +470,7 @@ describe('эффекты пресетов собираются в констру
     let card = stepCard(/^2 · /);
     within(card).select('Бросает', 'действующий');
     card = stepCard(/^2 · /);
-    within(card).formula('Сколько', 'кинуть(@duality, @атака, @герой) + таблица("traits", @trait, "value") + @attack_bonus');
+    within(card).formula('Сколько', 'кинуть(@duality, @атака, @герой) + @trait.value + @attack_bonus');
     within(card).select('Против кого', 'первый(@цели)');
     nameStep(card, 'бросок_бросок');
     within(stepCard(/^2 · /)).click('↑');

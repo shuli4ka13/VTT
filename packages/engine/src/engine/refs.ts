@@ -242,6 +242,7 @@ function namedValue(name: string, ctx: RefContext): unknown {
   const value = ctx.params && name in ctx.params ? fromArgs(name, ctx) : undefined;
   if (Array.isArray(value)) return value;
   if (value === undefined || value === null || value === '') {
+    if (decl.default !== undefined) return decl.default;
     if (decl.optional) return null;
     throw new EngineError(`${who(ctx)}: параметр «${name}» не заполнен`);
   }

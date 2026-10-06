@@ -84,6 +84,7 @@ export function trial({ system, compendium, effectId, from, to, args, dice = 'av
   }
   const filled: Record<string, unknown> = {};
   for (const param of effect.params ?? []) {
+    if (args?.[param.key] === undefined && (param.default !== undefined || (param.optional && param.kind === 'effect'))) continue;
     filled[param.key] = args?.[param.key] !== undefined
       ? args[param.key]
       : sampleArg(param.kind, system, effect, param.key, param.from);

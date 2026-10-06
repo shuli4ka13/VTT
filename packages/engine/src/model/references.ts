@@ -1,3 +1,4 @@
+import { paymentsOf } from './payments.ts';
 import { tagWords } from '../engine/roll-tags.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import type { System, Compendium, Effect, Step, Modifier, Guard, Param } from './types.ts';
@@ -340,7 +341,10 @@ function typedRefs(spec: { kind?: string; from?: string }, from: Where, out: Ref
 function effectRefs(system: System, id: string, effect: Effect, out: Reference[]): void {
   const sheetKeys = (effect.params ?? []).filter(p => p.kind === 'sheet').map(p => p.key);
   const params = new Set((effect.params ?? []).filter(p => p.kind !== 'sheet').map(p => p.key));
-  for (const param of effect.params ?? []) typedRefs(param, { tab: 'effects', effect: id, part: 'params', key: param.key }, out);
+  for (const param of effect.params ?? []) {
+    typedRefs(param, { tab: 'effects', effect: id, part: 'params', key: param.key }, out);
+    if (param.kind === 'effect' && typeof param.default === 'string' && param.default) out.push({ kind: 'effect', key: param.default, from: { tab: 'effects', effect: id, part: 'params', key: param.key } });
+  }
   out.push(...chainRefs(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, sheetKeys, [CALL_TAGS]));
   out.push(...chainRefs(effect.cost ?? [], step => ({ tab: 'effects', effect: id, step, part: 'cost' }), params, sheetKeys, [CALL_TAGS]));
   (effect.on ?? []).forEach((handler, index) => {
@@ -433,7 +437,11 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
       const from: Where = { tab: 'records', kind, part: 'bindings', binding: index };
       if (binding.effect) out.push({ kind: 'effect', key: binding.effect, from });
       const bound = system.effects?.[binding.effect]?.params ?? [];
-      const argScope = sheetScope(new Set([...bound.filter(p => p.kind !== 'sheet').map(p => p.key), ...own]), [...bound.filter(p => p.kind === 'sheet').map(p => p.key), HOLDER]);
+      const called = system.effects?.[binding.effect];
+      const payments = called ? paymentsOf(system, called, (binding.args ?? {}) as Record<string, unknown>) : [];
+      for (const { id: paid } of payments) out.push({ kind: 'effect', key: paid, from });
+      const asked = payments.flatMap(({ payment }) => (payment.params ?? []).filter(p => p.ask).map(p => p.key));
+      const argScope = sheetScope(new Set([...bound.filter(p => p.kind !== 'sheet').map(p => p.key), ...own, ...asked]), [...bound.filter(p => p.kind === 'sheet').map(p => p.key), HOLDER]);
       const paramNames = new Set(bound.map(p => p.key));
       for (const arg of Object.values(binding.args ?? {})) {
         const expr = arg && typeof arg === 'object' && 'expr' in arg ? String((arg as { expr: unknown }).expr) : '';

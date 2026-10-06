@@ -23,6 +23,7 @@ export interface StepContext {
   die: Die;
   here: Pass;
   value(ref: unknown): unknown;
+  prop(name: string): unknown;
   known(ref: unknown): boolean;
   number(ref: unknown, what: string): number;
   optional(ref: unknown, what: string): number | null;

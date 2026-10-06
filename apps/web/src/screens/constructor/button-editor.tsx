@@ -30,13 +30,15 @@ export function ButtonEditor({ binding, system, recordKind, onEdit, onDelete, on
         system={system}
         effect={binding.effect}
         effects={buttons}
-        onEffect={next => onEdit(draft => { draft.effect = next; })}
+        onEffect={next => onEdit(draft => { if (typeof next === 'string') draft.effect = next; })}
         args={binding.args as Record<string, unknown> | undefined}
         fromProps={implicit}
         filled={effect ? tableOf(binding, { params: paramsOf(system, effect) }) : {}}
         context={{ system, effect: effect ?? ({ label: '' } as Effect), earlier: [], recordKind }}
         where={binding.label || effect?.label || binding.effect}
         allow={['prop', 'table']}
+        grouped
+        names={namesOf(recordKind, system)}
         onArg={(key, next) => onEdit(draft => {
           draft.args ??= {};
           if (next) draft.args[key] = next as never; else delete draft.args[key];
@@ -80,6 +82,17 @@ function WhoFills({ binding, params, onEdit }: { binding: Binding; params: Param
   );
 }
 
+export function namesOf(kind: RecordKind, system: System): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const prop of kind.columns ?? []) {
+    const label = prop.label ?? prop.key;
+    out.set(prop.key, label);
+    const table = prop.kind === 'choice' && prop.from ? system.tables?.[prop.from] : undefined;
+    for (const column of table?.columns ?? []) out.set(`${prop.key}.${column.key}`, `${label} · ${column.label || column.key}`);
+  }
+  return out;
+}
+
 const FITS: Record<string, string[]> = {
   number: ['number'],
   dice: ['dice'],
@@ -102,7 +115,7 @@ function sourcesFor(param: Param, kind: RecordKind, system: System): { label: st
     .flatMap(prop => (system.tables![prop.from!]!.columns ?? [])
       .filter(column => String(column.kind ?? 'number') === 'number')
       .map(column => ({
-        label: `«${prop.label ?? prop.key}» → столбец «${column.label || column.key}»`,
+        label: `${prop.label ?? prop.key} · ${column.label || column.key}`,
         formula: `@${prop.key}.${column.key}`,
       })));
   return [...own, ...viaTable];

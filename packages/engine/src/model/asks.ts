@@ -1,6 +1,7 @@
 import { actionOf } from '../events/actions.ts';
 import { listOf } from './lists.ts';
 import { compile } from '../formula/index.ts';
+import { paymentsOf } from './payments.ts';
 import type { Pass } from '../engine/calc.ts';
 import type { System, Compendium, Ask, Param } from './types.ts';
 
@@ -15,10 +16,20 @@ export function asksOf(actionId: string, { system, compendium }: { system: Syste
   const effect = system.effects[action.effect];
   if (!effect) return [];
   const bound = action.binding.args ?? {};
-  return (effect.params ?? [])
+  const own = (effect.params ?? [])
     .filter((param): param is Param & { ask: Ask } => Boolean(param.ask))
     .filter(param => bound[param.key] === undefined || bound[param.key] === null)
     .map(param => ({ ...param, effect: action.effect, effectLabel: effect.label ?? action.effect }));
+  const taken = new Set(own.map(param => param.key));
+  const paid: AskedParam[] = [];
+  for (const { id, payment } of paymentsOf(system, effect, bound as Record<string, unknown>)) {
+    for (const asked of payment.params ?? []) {
+      if (!asked.ask || taken.has(asked.key)) continue;
+      taken.add(asked.key);
+      paid.push({ ...(asked as Param & { ask: Ask }), effect: id, effectLabel: payment.label ?? id });
+    }
+  }
+  return [...own, ...paid];
 }
 
 export const ASKABLE = ['number', 'choice', 'text'] as const;

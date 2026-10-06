@@ -213,11 +213,14 @@ export function changeReadback(step: Step, amount: Step | null, system: System, 
 
 export function sendReadback(step: Step, system: System, effect: Effect, names?: Names): Segment[] {
   const s = step as Record<string, unknown>;
-  const id = String(s.effect ?? '');
+  const fromInput = typeof s.effect === 'object' && s.effect ? /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((s.effect as { expr?: unknown }).expr ?? ''))?.[1] : undefined;
+  const via = fromInput ? effect.params?.find(p => p.key === fromInput) : undefined;
+  const id = typeof s.effect === 'string' ? s.effect : '';
   const event = system.effects?.[id];
   const args = (s.args ?? {}) as Record<string, unknown>;
   const main = amountParamOf(event);
   const sent = main ? args[main.key] : undefined;
+  if (fromInput) return [seg(`Зовёт то, что передали во вход «${via?.label ?? fromInput}»${typeof via?.default === 'string' ? ` (по умолчанию «${system.effects?.[via.default]?.label ?? via.default}»)` : ''}.`)];
   const name = id ? seg(`«${event?.label || id}»${main ? ':' : ''}`) : hole('какой эффект зовём?');
   const amount = !main ? [] : [sent === undefined ? hole('сколько?') : refSegment(sent, system, effect, 'сколько?', names)];
   const word = (t: unknown): string => {

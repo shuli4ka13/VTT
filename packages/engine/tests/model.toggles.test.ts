@@ -40,7 +40,7 @@ group('тогл крита пишет данные, а не код', () => {
       const step = system.effects[effect]!.steps!.find(s => s.type === 'roll' && !(s as { by?: unknown }).by) as Record<string, unknown>;
       return String((step.fixed as { expr?: unknown } | undefined)?.expr ?? '');
     };
-    eq(lineOf('strike'), '(кинуть(@damage_dice, если(@hit_бросок.atMax >= 1, 2, 1)) + @damage_with)');
+    eq(lineOf('strike'), 'кинуть(@damage_dice, @dice * если(@hit_бросок.atMax >= 1, 2, 1)) + @damage_with');
     ok(!lineOf('spell_save_half').includes('atMax'),
       'урон Огненного шара бросается до спасбросков — удвоения нет, это не атака');
     eq(errorsOf(lintSystem(system)).length, 0);
@@ -53,15 +53,11 @@ group('тогл крита пишет данные, а не код', () => {
       return String((step.fixed as { expr?: unknown } | undefined)?.expr ?? '');
     };
     setCrit(system, 'off');
-    const голые = ['strike', 'cantrip_attack', 'spell_attack'].map(lineOf);
-    deepEq(голые, [
-      '(кинуть(@damage_dice) + @damage_with)',
-      '(кинуть(@damage_die, @действующий.cantrip_dice))',
-      '(кинуть(@damage_die, @dice_count + (@slot - @spell_level) * @dice_up))',
-    ]);
+    const голые = ['strike'].map(lineOf);
+    deepEq(голые, ['кинуть(@damage_dice, @dice) + @damage_with']);
     setCrit(system, 'double');
     setCrit(system, 'off');
-    deepEq(['strike', 'cantrip_attack', 'spell_attack'].map(lineOf), голые, 'круг туда-обратно ничего не копит');
+    deepEq(['strike'].map(lineOf), голые, 'круг туда-обратно ничего не копит');
   });
 });
 

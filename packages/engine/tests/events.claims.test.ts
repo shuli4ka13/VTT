@@ -171,7 +171,7 @@ group('правка после того, как бросок увиден: вы�
 
   test('преимущество, заявленное после броска, добавляет кость, а не перебрасывает старую', () => {
     const r = exchange({
-      system: luckWorld, compendium, die: queue(7, 3, 18), sheets: [inspired, mirra],
+      system: luckWorld, compendium, die: queue(7, 18, 3), sheets: [inspired, mirra],
       actionId: 'приём:0', fromId: 'arven', toId: 'mirra',
       answer: q => (q.window === 'seen' ? ['вдохновение'] : []),
     });

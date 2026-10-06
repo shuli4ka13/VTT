@@ -77,7 +77,7 @@ const quoted = (value: unknown): string => {
   return raw.includes('"') ? `'${raw}'` : `"${raw}"`;
 };
 
-function conditionsIn(source: string): { table: string; column: string; is: string; at: number; raw: string }[] {
+function conditionsIn(source: string, headTable: (head: string) => string | undefined = () => undefined): { table: string; column: string; is: string; at: number; raw: string }[] {
   let ast: Node;
   try { ast = compile(source).ast; } catch { return []; }
   const out: { table: string; column: string; is: string; at: number; raw: string }[] = [];
@@ -93,7 +93,17 @@ function conditionsIn(source: string): { table: string; column: string; is: stri
       }
       node.args.forEach(walk);
     } else if (node.kind === 'Unary') walk(node.operand);
-    else if (node.kind === 'Binary') { walk(node.left); walk(node.right); }
+    else if (node.kind === 'Binary') {
+      if (node.op === '==' || node.op === '!=') {
+        const [path, wanted] = node.left.kind === 'Ref' ? [node.left, node.right] : [node.right, node.left];
+        if (path.kind === 'Ref' && wanted.kind === 'Text' && wanted.at !== undefined && wanted.raw !== undefined) {
+          const parts = path.tag.split('.');
+          const table = parts.length === 2 ? headTable(parts[0]!) : undefined;
+          if (table) out.push({ table, column: parts[1]!, is: wanted.value, at: wanted.at, raw: wanted.raw });
+        }
+      }
+      walk(node.left); walk(node.right);
+    }
     else if (node.kind === 'Conditional') { walk(node.test); walk(node.then); walk(node.otherwise); }
   };
   walk(ast);
@@ -102,12 +112,16 @@ function conditionsIn(source: string): { table: string; column: string; is: stri
 
 function stepConditions(system: System): StepCondition[] {
   const out: StepCondition[] = [];
-  const visit = (steps: unknown, where: (at: number) => Where) => {
+  const visit = (steps: unknown, where: (at: number) => Where, params: { key: string; kind?: string; from?: string }[] = []) => {
     if (!Array.isArray(steps)) return;
+    const headTable = (head: string): string | undefined => {
+      const param = params.find(p => p.key === head && p.kind === 'choice');
+      return param?.from && system.tables?.[param.from] ? param.from : undefined;
+    };
     for (const [at, step] of steps.entries()) {
       const when = (step as Loose).if as { expr?: unknown } | undefined;
       if (!when || typeof when.expr !== 'string') continue;
-      for (const found of conditionsIn(when.expr)) {
+      for (const found of conditionsIn(when.expr, headTable)) {
         out.push({
           where: where(at),
           cond: { table: found.table, column: found.column, is: found.is },
@@ -120,14 +134,15 @@ function stepConditions(system: System): StepCondition[] {
     }
   };
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
-    visit(effect.steps, at => ({ tab: 'effects', effect: id, step: at }));
-    visit(effect.cost, at => ({ tab: 'effects', effect: id, step: at, part: 'cost' }));
+    const params = effect.params ?? [];
+    visit(effect.steps, at => ({ tab: 'effects', effect: id, step: at }), params);
+    visit(effect.cost, at => ({ tab: 'effects', effect: id, step: at, part: 'cost' }), params);
     (effect.on ?? []).forEach((handler, index) => {
-      visit(handler.steps, at => ({ tab: 'effects', effect: id, handler: index, step: at }));
-      visit(handler.cost, at => ({ tab: 'effects', effect: id, handler: index, step: at, part: 'cost' }));
+      visit(handler.steps, at => ({ tab: 'effects', effect: id, handler: index, step: at }), params);
+      visit(handler.cost, at => ({ tab: 'effects', effect: id, handler: index, step: at, part: 'cost' }), params);
     });
-    visit(effect.attach, at => ({ tab: 'effects', effect: id, step: at, part: 'attach' }));
-    visit(effect.detach, at => ({ tab: 'effects', effect: id, step: at, part: 'detach' }));
+    visit(effect.attach, at => ({ tab: 'effects', effect: id, step: at, part: 'attach' }), params);
+    visit(effect.detach, at => ({ tab: 'effects', effect: id, step: at, part: 'detach' }), params);
   }
   return out;
 }

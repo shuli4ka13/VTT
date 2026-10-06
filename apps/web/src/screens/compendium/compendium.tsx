@@ -3,6 +3,8 @@ import { newBinding } from '../constructor/factory.ts';
 import { bindingsOf } from '@vtt/engine/events/actions';
 import { GrantsEditor } from '../constructor/grants-editor.tsx';
 import { recordsOf, isItem, propsNeeded, recordKindOf, recordKinds } from '@vtt/engine/model/owned';
+import { CallSummary } from '../constructor/call-editor.tsx';
+import { namesOf } from '../constructor/button-editor.tsx';
 import { TABS } from '../../words.ts';
 import { useWorld, freeId, randomTag } from '../../store/world.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
@@ -187,6 +189,10 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
               </Field>
             ))}
           </div>
+          {bindings.map((binding, index) => (
+            <CallSummary key={index} system={system} effect={binding.effect} args={binding.args as Record<string, unknown> | undefined}
+              props={new Set((kind.columns ?? []).map(prop => prop.key))} names={namesOf(kind, system)} label={binding.label ?? 'Применение'} />
+          ))}
         </Card>
       ) : null}
 

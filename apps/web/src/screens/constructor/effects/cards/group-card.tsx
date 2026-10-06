@@ -96,7 +96,14 @@ export function GroupCard({
         <Select<string> label="из какого списка" value={String(step.of ?? '')}
           options={[...(lists.some(([key]) => key === step.of) ? [] : [['', '— какого списка —'] as const]), ...lists]}
           onChange={next => edit(0, draft => { (draft as { of?: string }).of = next; })} />
-        <span className="step-fold__summary">каждый в формулах — @{String(step.as ?? '?')}; шаги ниже идут для каждого по очереди, выше — один раз</span>
+        <span className="faint">каждый в формулах —</span>
+        <span className="split-name">
+          <KeyField value={String(step.as ?? '')}
+            locked={Boolean(step.as) && referenced({ s: useWorld.getState().system, c: useWorld.getState().compendium }, String(step.as), { steps: effect.steps ?? [], cost: effect.cost ?? [] })}
+            taken={[...(effect.params ?? []).map(p => p.key), ...(effect.steps ?? []).map(one => String(one.id ?? '')).filter(Boolean)]}
+            onChange={next => edit(0, draft => { (draft as { as?: string }).as = next; })} />
+        </span>
+        <span className="step-fold__summary">шаги ниже — для каждого по очереди, выше — один раз</span>
         <span className="spacer" />
         {actions}
       </div>
