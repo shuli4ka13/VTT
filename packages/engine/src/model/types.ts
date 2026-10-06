@@ -22,7 +22,7 @@ export interface CellMark { table: string; row: string; column: string }
 
 export type Holder = 'sheet' | 'group' | 'desk';
 
-export interface Placement { group: string; section?: string; sectionAt?: number; sectionBy?: string; control?: Control }
+export interface Placement { group: string; section?: string; sectionAt?: number; sectionBy?: string; control?: Control; order?: number }
 
 export interface Field {
   tag: string;
@@ -31,6 +31,7 @@ export interface Field {
   section?: string;
   sectionAt?: number;
   sectionBy?: string;
+  order?: number;
   placements?: Placement[];
   roll?: Partial<RollSpec> & { label?: string };
   value: FieldValue;

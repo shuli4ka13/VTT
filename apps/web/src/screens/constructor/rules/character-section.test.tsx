@@ -100,3 +100,20 @@ describe('листы: блоки и типы', () => {
     expect(screen.queryByLabelText('«Ничьё»: в блок')).toBeNull();
   });
 });
+
+describe('блоки листа перетаскиваются, как слои', () => {
+  afterEach(() => { cleanup(); });
+
+  it('схватил «Магию» и бросил над «Здоровьем» — на листе она выше', () => {
+    useWorld.setState(state => ({ ...state, system: { ...emptySystem(), blocks: [
+      { name: 'Здоровье', parts: [] }, { name: 'Навыки', parts: [] }, { name: 'Магия', parts: [] },
+    ] } as unknown as System, activeBlock: null }));
+    render(<CharacterSection system={useWorld.getState().system} editSystem={useWorld.getState().editSystem} />);
+    const head = (name: string) => [...document.querySelectorAll('.block-fold__head')].find(el => el.textContent?.includes(name))! as HTMLElement;
+    const dataTransfer = { setData: () => {}, effectAllowed: '' };
+    fireEvent.dragStart(head('Магия'), { dataTransfer });
+    fireEvent.dragOver(head('Здоровье'), { dataTransfer, clientY: -10 });
+    fireEvent.drop(head('Здоровье'), { dataTransfer });
+    expect(useWorld.getState().system.blocks!.map(b => b.name)).toEqual(['Магия', 'Здоровье', 'Навыки']);
+  });
+});

@@ -23,7 +23,7 @@ describe('раскладка листа следует за правками т�
     const s = system();
     expect(fieldOf(s, 'кд')!.placements!.map(p => p.group)).toEqual(['Всё', 'Защита']);
     expect(fieldOf(s, 'хиты')!.placements!.map(p => p.group)).toEqual(['Всё']);
-    expect(fieldOf(s, 'навыки.атлетика.ранг')!.placements).toEqual([{ group: 'Навыки', sectionBy: 'навыки.атлетика.база' }]);
+    expect(fieldOf(s, 'навыки.атлетика.ранг')!.placements).toEqual([{ group: 'Навыки', sectionBy: 'навыки.атлетика.база', order: 0 }]);
   });
 
   it('переименование колонки и строки правит ссылки в блоках', () => {
@@ -34,11 +34,11 @@ describe('раскладка листа следует за правками т�
     expect(s.blocks![2]!.parts[0]).toEqual({ table: 'навыки', columns: ['уровень'], rows: ['атлетизм'], by: 'основа' });
   });
 
-  it('уборка: пропавшие колонки, строки и таблицы уходят; «все» снимает ключ; пустой блок остаётся', () => {
+  it('уборка: пропавшие колонки, строки и таблицы уходят; «все в порядке таблицы» снимает ключ; пустой блок остаётся', () => {
     const s = system();
     s.blocks!.push({ name: 'Новый', parts: [] });
     s.tables!.навыки!.rows = s.tables!.навыки!.rows!.filter(r => r.value !== 'атлетика');
-    s.blocks![1]!.parts[0]!.columns = ['кд', 'хиты'];
+    s.blocks![1]!.parts[0]!.columns = ['хиты', 'кд'];
     s.blocks![0]!.parts.push({ table: 'нет_такой' });
     tidyLayout(s);
     expect(s.blocks!.map(b => [b.name, b.parts])).toEqual([
@@ -47,5 +47,15 @@ describe('раскладка листа следует за правками т�
       ['Навыки', []],
       ['Новый', []],
     ]);
+  });
+
+  it('все колонки, но в своём порядке — раскладка хранит порядок, и блок рисует поля в нём', async () => {
+    const { fieldsByBlock } = await import('../src/model/blocks.ts');
+    const s = system();
+    s.blocks![1]!.parts[0]!.columns = ['кд', 'хиты'];
+    tidyLayout(s);
+    expect(s.blocks![1]!.parts[0]!.columns).toEqual(['кд', 'хиты']);
+    const shown = fieldsByBlock(s).find(([name]) => name === 'Защита')![1].map(f => f.tag);
+    expect(shown).toEqual(['кд', 'хиты']);
   });
 });

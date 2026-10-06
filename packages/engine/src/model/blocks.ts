@@ -58,5 +58,6 @@ export function fieldsByBlock(system: System, fields: readonly Field[] = fieldsO
       put(place.group, { ...rest, ...place });
     }
   }
+  for (const list of blocks.values()) list.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   return [...blocks].filter(([, list]) => list.length > 0);
 }

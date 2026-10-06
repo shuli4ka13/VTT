@@ -7,7 +7,8 @@ import { hasDesk } from '@vtt/engine/events/desk';
 import { DESK_ID } from '@vtt/engine/engine/owners';
 import { Card, CardHead, Button, Empty, LabelInput, DangerButton, Select } from '../../../ui/primitives.tsx';
 import { newColumn } from '../factory.ts';
-import { freeBlockName, addColumnToBlock, SHEET_TABLE } from '../block-panel.tsx';
+import { freeBlockName, addColumnToBlock, moveBlockTo, SHEET_TABLE } from '../block-panel.tsx';
+import { useDragList } from '../../../ui/drag-list.ts';
 import type { UsageIndex } from '../usage.ts';
 import type { System, Column, SheetBlock, SheetPart } from '@vtt/schema';
 import type { Field as FieldModel, Holder } from '@vtt/engine/model/types';
@@ -114,6 +115,7 @@ export function CharacterSection({ system, editSystem, docked }: {
     );
   };
 
+  const drag = useDragList((from, to, after) => editSystem(draft => moveBlockTo(draft, from, to, after)));
   const fieldCount = (block: SheetBlock): number => fieldsOf(system).filter(f => (f.placements ?? []).some(place => place.group === block.name)).length;
   const sourceOf = (block: SheetBlock): string => block.parts
     .map(part => `${system.tables?.[part.table]?.label || part.table}${part.by ? ` · по «${system.tables?.[part.table]?.columns?.find(c => c.key === part.by)?.label ?? part.by}»` : ''}`)
@@ -127,8 +129,9 @@ export function CharacterSection({ system, editSystem, docked }: {
     const on = shown(block.name);
     const count = fieldCount(block);
     return (
-      <details key={block.name} className={`block-fold${depth ? ' block-fold--nested' : ''}${on ? '' : ' faint'}`} open={block.name === activeBlock || undefined}>
-        <summary className="block-fold__head">
+      <details key={block.name} className={`block-fold${depth ? ' block-fold--nested' : ''}${on ? '' : ' faint'}${drag.mark(block.name)}`} open={block.name === activeBlock || undefined}>
+        <summary className="block-fold__head" {...drag.props(block.name)} title="перетащите выше или ниже — так блок встанет на листе">
+          <span className="drag-grip" aria-hidden>⋮⋮</span>
           {kind ? (
             <input type="checkbox" checked={on} title={on ? 'есть на этом листе' : 'нет на этом листе'}
               onClick={event => event.stopPropagation()} onChange={() => toggle(block.name)} />
@@ -137,6 +140,7 @@ export function CharacterSection({ system, editSystem, docked }: {
             onClick={event => { event.preventDefault(); pickBlock(block.name); }}>{block.name}</button>
           <span className="block-fold__count">{count}</span>
           <span className="block-fold__from">{from(block)}{children.length ? ` · внутри блоков: ${children.length}` : ''}</span>
+
         </summary>
         <div className="block-fold__body">
           {block.parts.map(part => describe(part, block.name))}

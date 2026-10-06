@@ -44,15 +44,16 @@ export function tidyLayout(system: System): void {
       const keys = (table.columns ?? []).map(c => c.key);
       const rowKeys = (table.rows ?? []).map(r => rowKeyOf(r));
       const next: SheetPart = { table: part.table };
+      const same = (list: string[], all: string[]) => list.length === all.length && list.every((key, at) => key === all[at]);
       if (part.columns) {
         const columns = part.columns.filter(key => keys.includes(key));
         if (!columns.length) return [];
-        if (columns.length < keys.length) next.columns = columns;
+        if (!same(columns, keys)) next.columns = columns;
       }
       if (part.rows) {
         const rows = part.rows.filter(key => rowKeys.includes(key));
         if (!rows.length) return [];
-        if (rows.length < rowKeys.length) next.rows = rows;
+        if (!same(rows, rowKeys)) next.rows = rows;
       }
       if (part.by && keys.includes(part.by)) next.by = part.by;
       const views = Object.entries(part.views ?? {}).filter(([key]) => {

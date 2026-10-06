@@ -1,4 +1,5 @@
 import { useWorld } from '../../store/world.ts';
+import { useDragList } from '../../ui/drag-list.ts';
 import { Card, CardHead, Field, Select, Button, DangerButton, LabelInput } from '../../ui/primitives.tsx';
 import { onSheet, rowKeyOf, fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { isRange } from '@vtt/engine/model/tables';
@@ -41,6 +42,25 @@ export function removeBlock(draft: System, name: string): void {
   if (!draft.blocks.length) delete draft.blocks;
 }
 
+export function moveBlockTo(draft: System, name: string, target: string, after: boolean): void {
+  const blocks = draft.blocks ?? [];
+  const moving = blocks.find(b => b.name === name);
+  const anchor = blocks.find(b => b.name === target);
+  if (!moving || !anchor || name === target) return;
+  for (let at: string | undefined = anchor.parent; at; at = blocks.find(b => b.name === at)?.parent) if (at === name) return;
+  blocks.splice(blocks.indexOf(moving), 1);
+  if (anchor.parent) moving.parent = anchor.parent; else delete moving.parent;
+  blocks.splice(blocks.indexOf(anchor) + (after ? 1 : 0), 0, moving);
+}
+
+export function moveColumnTo(part: SheetPart, all: string[], key: string, target: string, after: boolean): void {
+  const list = (part.columns ?? all).filter(k => k !== key);
+  const at = list.indexOf(target);
+  if (at < 0) return;
+  list.splice(at + (after ? 1 : 0), 0, key);
+  part.columns = list;
+}
+
 export function addColumnToBlock(draft: System, name: string, table: string, key: string): void {
   const block = (draft.blocks ?? []).find(b => b.name === name);
   if (!block) return;
@@ -58,8 +78,9 @@ function groupsOf(system: System, table: string, keys: string[], self: string, c
   const shown = new Set(fieldsOf(system).filter(f => f.home === table).map(f => f.cell?.column ?? f.tag));
   const out = new Map<string, string[]>();
   const put = (title: string, key: string) => out.set(title, [...out.get(title) ?? [], key]);
+  for (const key of chosen.filter(k => shown.has(k) && keys.includes(k))) put('в этом блоке', key);
   for (const key of keys.filter(k => shown.has(k))) {
-    if (chosen.includes(key)) { put('в этом блоке', key); continue; }
+    if (chosen.includes(key)) continue;
     const homes = homesOf(system, table, key).filter(home => home !== self);
     put(homes.length ? `уже в «${homes[0]}»` : 'ни в одном блоке', key);
   }
@@ -74,6 +95,37 @@ export function newPart(system: System, table: string): SheetPart {
   if (free.length) return { table, columns: free };
   const first = keys.find(key => shown.has(key)) ?? keys[0];
   return { table, columns: first ? [first] : [] };
+}
+
+function ColumnGroup({ title, keys, chosen, labelOf, onToggle, onMove }: {
+  title: string;
+  keys: string[];
+  chosen: string[];
+  labelOf: (key: string) => string;
+  onToggle: (key: string, on: boolean) => void;
+  onMove: (key: string, to: string, after: boolean) => void;
+}) {
+  const ordered = title === 'в этом блоке';
+  const drag = useDragList(onMove, 'x');
+  return (
+    <div className="stack stack--tight block-pick">
+      <span className="block-pick__title">{title}{ordered && keys.length > 1 ? <span className="faint"> · перетащите, чтобы поменять порядок на листе</span> : null}</span>
+      <div className="inline inline--tight">
+        {keys.map(key => {
+          const on = chosen.includes(key);
+          return (
+            <span key={key} className={`inline inline--tight${ordered ? ` drag-item${drag.mark(key)}` : ''}`} {...(ordered ? drag.props(key) : {})}>
+              {ordered ? <span className="drag-grip" aria-hidden>⋮⋮</span> : null}
+              <label className="inline inline--tight">
+                <input type="checkbox" checked={on} onChange={() => onToggle(key, on)} />
+                {labelOf(key)}
+              </label>
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 export function BlockPanel({ name, system }: { name: string; system: System }) {
@@ -127,26 +179,14 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
             <Field label="Колонки">
               <div className="stack stack--tight">
                 {groupsOf(system, part.table, columns.map(c => c.key), name, chosen).map(([title, keys]) => (
-                  <div key={title} className="stack stack--tight block-pick">
-                    <span className="block-pick__title">{title}</span>
-                    <div className="inline inline--tight">
-                      {keys.map(key => {
-                        const column = columns.find(c => c.key === key)!;
-                        const on = chosen.includes(key);
-                        return (
-                          <label key={key} className="inline inline--tight">
-                            <input type="checkbox" checked={on}
-                              onChange={() => editPart(index, target => {
-                                const all = columns.map(c => c.key);
-                                const now = target.columns ?? all;
-                                target.columns = on ? now.filter(k => k !== key) : all.filter(k => k === key || now.includes(k));
-                              })} />
-                            {column.label || column.key}
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  <ColumnGroup key={title} title={title} keys={keys} chosen={chosen}
+                    labelOf={key => { const column = columns.find(c => c.key === key); return column?.label || key; }}
+                    onToggle={(key, on) => editPart(index, target => {
+                      const all = columns.map(c => c.key);
+                      const now = target.columns ?? all;
+                      target.columns = on ? now.filter(k => k !== key) : [...now, key];
+                    })}
+                    onMove={(key, to, after) => editPart(index, target => moveColumnTo(target, columns.map(c => c.key), key, to, after))} />
                 ))}
               </div>
             </Field>

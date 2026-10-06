@@ -383,15 +383,26 @@ export function sectionOf(system: System, part: SheetPart, field: Field): Pick<F
   return at >= 0 ? { section: String(options[at]!.label ?? options[at]!.value), sectionAt: at } : { section: String(value) };
 }
 
+function orderIn(system: System, at: number, part: SheetPart, field: Field): number {
+  const table = system.tables?.[part.table];
+  const column = field.cell?.column ?? field.tag;
+  const columns = part.columns ?? (table?.columns ?? []).map(c => c.key);
+  const rows = part.rows ?? (table?.rows ?? []).map(rowKeyOf);
+  const col = Math.max(0, columns.indexOf(column));
+  const row = field.cell ? Math.max(0, rows.indexOf(field.cell.row)) : 0;
+  return at * 1_000_000 + row * 1_000 + col;
+}
+
 function placeFields(system: System, base: Built): Built {
   const blocks = system.blocks ?? [];
   const fields = base.fields.map(field => {
     const placements: Placement[] = [];
     for (const block of blocks) {
-      const part = block.parts.find(p => partHas(p, field));
-      if (!part) continue;
+      const at = block.parts.findIndex(p => partHas(p, field));
+      if (at < 0) continue;
+      const part = block.parts[at]!;
       const control = viewIn(part, field);
-      placements.push({ group: block.name, ...sectionOf(system, part, field), ...(control ? { control } : {}) });
+      placements.push({ group: block.name, ...sectionOf(system, part, field), ...(control ? { control } : {}), order: orderIn(system, at, part, field) });
     }
     if (!placements.length) return field;
     return { ...field, ...placements[0], placements };
