@@ -17,6 +17,26 @@ const statesOf = (system: System): { tag: string; label: string }[] =>
 
 export type SheetNames = ReadonlyMap<string, string>;
 
+export function lookupNames(system: System, value: string): Map<string, string> {
+  const out = new Map<string, string>();
+  const call = /таблица\(\s*"([^"]+)"/gu;
+  for (const found of value.matchAll(call)) {
+    const table = system.tables?.[found[1]!];
+    if (!table) continue;
+    out.set(found[1]!, table.label || found[1]!);
+    for (const column of table.columns ?? []) out.set(column.key, column.label || column.key);
+  }
+  for (const found of value.matchAll(/,\s*"([^"]+)"\s*\)/gu)) {
+    if (out.has(found[1]!)) continue;
+    const column = Object.values(system.tables ?? {}).flatMap(table => table.columns ?? []).find(one => one.key === found[1]);
+    if (column) out.set(found[1]!, column.label || found[1]!);
+  }
+  return out;
+}
+
+const spoken = (text: string, names: Map<string, string>): string =>
+  names.size ? text.replace(/"([^"]+)"/gu, (whole, key: string) => (names.has(key) ? `«${names.get(key)}»` : whole)) : text;
+
 const onSheet = (tag: string, sheets?: SheetNames): { head: string; rest: string } | null => {
   const dot = tag.indexOf('.');
   if (dot <= 0) return null;
@@ -292,6 +312,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
 
   const empty = parts.length === 1 && !(parts[0] as { text: string }).text;
 
+  const lookups = lookupNames(system, value);
   if (readOnly) {
     return (
       <span className="chips chips--read" data-value={value}>
@@ -311,7 +332,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
               {sideOf(part.tag)}
             </span>
           )
-        ) : <span key={index} className="chips__word">{part.text}</span>))}
+        ) : <span key={index} className="chips__word">{spoken(part.text, lookups)}</span>))}
       </span>
     );
   }
