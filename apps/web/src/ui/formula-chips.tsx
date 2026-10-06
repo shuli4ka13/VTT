@@ -331,9 +331,9 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
               title={onChipPick ? 'откуда это и где видно' : undefined}
               onClick={onChipPick ? e => { e.stopPropagation(); onChipPick(part.tag, labelOfTag(system, part.tag, extraNames, sheets)); } : undefined}
             >
+              {sideOf(part.tag)}
               <span>{shortLabel(labelOfTag(system, part.tag, extraNames, sheets))}</span>
               {badge(part.tag)}
-              {sideOf(part.tag)}
             </span>
           )
         ) : <span key={index} className="chips__word">{spoken(part.text, lookups)}</span>))}
@@ -356,6 +356,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
             <span key={index} className="chips__group">{names[part.tag]}</span>
           ) : (
           <span key={index} className="chips__chip">
+            {sideOf(part.tag)}
             <span
               title={onChipPick ? `${labelOfTag(system, part.tag, extraNames, sheets)} — откуда это и где видно` : labelOfTag(system, part.tag, extraNames, sheets)}
               className={onChipPick ? 'chips__name--pick' : undefined}
@@ -364,7 +365,6 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
               {shortLabel(labelOfTag(system, part.tag, extraNames, sheets))}
             </span>
             {badge(part.tag)}
-            {sideOf(part.tag)}
             <button
               type="button" className="chips__x" aria-label="убрать поле"
               onMouseDown={e => { e.preventDefault(); dropChip(index); }}

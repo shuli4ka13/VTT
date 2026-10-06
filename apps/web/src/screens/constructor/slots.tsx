@@ -27,6 +27,7 @@ function outputsOf(type: string): { path: string; label: string; kind?: string }
 export function outputRefs(earlier: EarlierStep[]): { ref: string; label: string; kind?: string }[] {
   const out: { ref: string; label: string; kind?: string }[] = [];
   for (const step of earlier) {
+    if (step.type === 'each') continue;
     const outputs = outputsOf(step.type);
     const name = stepName(step);
     if (!outputs.length) {

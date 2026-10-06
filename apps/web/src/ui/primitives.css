@@ -700,3 +700,4 @@
 .roll-line { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--s-2) var(--s-4); }
 .roll-line__part { flex: 0 1 220px; min-width: 160px; }
 .roll-line__part--wide { flex: 1 1 260px; }
+.chips__side--sheet, .chips__side--desk { border-left: 0; padding-left: 0; margin-left: 0; border-right: 1px solid var(--border); padding-right: var(--s-2); margin-right: var(--s-1); }

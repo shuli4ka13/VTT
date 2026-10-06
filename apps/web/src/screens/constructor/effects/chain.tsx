@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useWorld, freeId } from '../../../store/world.ts';
 import { STEP } from '../../../words.ts';
+import { loopOf } from '@vtt/engine/engine/steps/each';
 import { titleOf } from './words.ts';
 import { Button, Select, Verdict } from '../../../ui/primitives.tsx';
 import { problemOf } from '../step-card.tsx';
@@ -56,9 +57,9 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
   const earlierOf = (index: number) =>
     steps.slice(0, index)
       .map((step, at) => ({ step, at }))
-      .filter(({ step }) => step.id && step.type !== 'each')
+      .filter(({ step }) => step.id || (step.type === 'each' && loopOf(effect.params, step as { of?: unknown })))
       .map(({ step, at }) => ({
-        id: String(step.id), type: step.type, at: startAt + cardAt(at), title: cardTitle(cards, at, system),
+        id: String(step.type === 'each' ? loopOf(effect.params, step as { of?: unknown })?.key : step.id), type: step.type, at: startAt + cardAt(at), title: cardTitle(cards, at, system),
       }));
 
   const problems = steps.map((step, index) => problemOf(step, system, effect, earlierOf(index)));

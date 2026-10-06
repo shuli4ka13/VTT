@@ -66,3 +66,15 @@ describe('стоимость эффекта — одним выбором', () =
     expect(screen.getByText(/1 · Стоимость/)).toBeTruthy();
   });
 });
+
+describe('имя одного из списка видно шагам после перебора', () => {
+  it('«Атака» D&D открывается без ошибки «цель — нет ни входа, ни шага», а в подсказках результатов перебора нет', async () => {
+    const { SAMPLE_SYSTEMS } = await import('@vtt/engine/model/systems');
+    const system = SAMPLE_SYSTEMS.find(one => one.id === 'dnd5e')! as System;
+    useWorld.setState(state => ({ ...state, system }));
+    const effect = system.effects.strike!;
+    render(<Chain id="strike" placeAt={index => ({ part: 'steps', index })} effect={effect} system={system} lane="steps" edit={() => {}} />);
+    expect(document.body.textContent).not.toContain('нет ни входа, ни шага');
+    expect(document.body.textContent).not.toContain('split');
+  });
+});
