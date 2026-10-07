@@ -212,3 +212,34 @@ describe('набор формулы не рвётся посреди имени'
     expect(value).toBe('@сила x');
   });
 });
+
+describe('«из таблицы» — кликами и фишками с названиями', () => {
+  const withLevels = {
+    tables: {
+      лист: { shape: 'single', columns: [{ key: 'уровень', label: 'Уровень', kind: 'number' }] },
+      уровни: { label: 'Уровень персонажа', key: 'number', columns: [{ key: 'колонка', label: 'Бонус мастерства', kind: 'number' }], rows: [{ value: 1, cells: { колонка: 2 } }] },
+    },
+    constants: {}, effects: {},
+  } as unknown as System;
+
+  it('таблица и колонка внутри «таблица(…)» — фишки с названиями, данные не меняются', () => {
+    const value = 'таблица("уровни", @уровень, "колонка")';
+    render(<FormulaChips value={value} system={withLevels} onChange={() => {}} />);
+    expect(screen.getByText('Уровень персонажа')).toBeTruthy();
+    expect(screen.getByText('Бонус мастерства')).toBeTruthy();
+    expect(screen.queryByDisplayValue(/уровни/)).toBeNull();
+  });
+
+  it('кнопка «из таблицы»: выбрал таблицу и колонку — вставилась формула, строку ищут по тому, что впишут', () => {
+    let value = '';
+    const { rerender } = render(<FormulaChips value={value} system={withLevels} calculator onChange={next => { value = next; }} />);
+    fireEvent.focus(screen.getByRole('textbox'));
+    fireEvent.mouseDown(screen.getByText('из таблицы'));
+    fireEvent.change(screen.getByLabelText('какую колонку'), { target: { value: 'колонка' } });
+    fireEvent.mouseDown(screen.getByText('Вставить'));
+    expect(value).toBe('таблица("уровни", , "колонка")');
+    rerender(<FormulaChips value={value} system={withLevels} calculator onChange={next => { value = next; }} />);
+    expect(screen.getByText('Уровень персонажа')).toBeTruthy();
+  });
+});
+

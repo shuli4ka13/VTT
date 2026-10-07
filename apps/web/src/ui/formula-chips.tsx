@@ -1,10 +1,11 @@
-import { useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { matchTagQuery } from './tag-suggest.tsx';
 import { fieldPaths } from './paths.ts';
 import { DESK_ID } from '@vtt/engine/engine/owners';
-import { fieldsOf, fieldOf, hasField } from '@vtt/engine/model/sheet-columns';
+import { fieldsOf, fieldOf, hasField, ROW } from '@vtt/engine/model/sheet-columns';
+import { rowTables } from '@vtt/engine/model/tables';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 
 const plainLabel = (system: System, tag: string, extra?: Map<string, string>): string =>
@@ -53,7 +54,7 @@ const labelOfTag = (system: System, tag: string, extra?: Map<string, string>, sh
 const knownSheetName = (system: System, tag: string, paths: Map<string, string>): boolean =>
   hasField(system, tag) || paths.has(tag) || Boolean(system.effects?.[tag]);
 
-export type Part = { text: string } | { tag: string };
+export type Part = { text: string } | { tag: string; lit?: boolean };
 
 const OPS: { label: string; hint: string; open: string; close?: string; word?: boolean }[] = [
   { label: '+', hint: 'сложить', open: ' + ' },
@@ -72,23 +73,69 @@ const OPS: { label: string; hint: string; open: string; close?: string; word?: b
   { label: 'есть в списке', hint: 'да, если в списке есть значение: спасброски класса — «сила»', open: 'есть(', close: ', "")', word: true },
 ];
 
-export function partsOf(value: string, known?: (tag: string) => boolean): Part[] {
+const LOOKUP = 'таблица';
+
+function lookupArgs(value: string, open: number): { start: number; text: string }[] {
+  const args: { start: number; text: string }[] = [];
+  let depth = 0;
+  let quote: string | null = null;
+  let start = open + 1;
+  for (let i = open; i < value.length; i++) {
+    const ch = value[i]!;
+    if (quote) { if (ch === quote) quote = null; continue; }
+    if (ch === '"') { quote = ch; continue; }
+    if (ch === '(') depth++;
+    if (ch === ')') { depth--; if (depth === 0) { args.push({ start, text: value.slice(start, i) }); return args; } }
+    if (ch === ',' && depth === 1) { args.push({ start, text: value.slice(start, i) }); start = i + 1; }
+  }
+  return args;
+}
+
+const quoted = (arg: { start: number; text: string } | undefined): { at: number; id: string } | null => {
+  if (!arg) return null;
+  const lead = arg.text.length - arg.text.trimStart().length;
+  const m = /^"([^"]+)"$/u.exec(arg.text.trim());
+  return m ? { at: arg.start + lead, id: m[1]! } : null;
+};
+
+export function lookupLits(system: System, value: string): Map<number, string> {
+  const out = new Map<number, string>();
+  for (const found of value.matchAll(new RegExp(`${LOOKUP}\\(`, 'gu'))) {
+    const args = lookupArgs(value, found.index! + LOOKUP.length);
+    const table = quoted(args[0]);
+    const owner = table ? system.tables?.[table.id] : undefined;
+    if (table && owner) out.set(table.at, owner.label || table.id);
+    const column = quoted(args[2]);
+    if (!column) continue;
+    const pool = owner ? [owner] : Object.values(system.tables ?? {});
+    const hit = pool.flatMap(one => one.columns ?? []).find(one => one.key === column.id);
+    if (hit) out.set(column.at, hit.label || column.id);
+  }
+  return out;
+}
+
+export function partsOf(value: string, known?: (tag: string) => boolean, lits?: Map<number, string>): Part[] {
   const out: Part[] = [];
   let text = '';
   let rest = value;
+  let offset = 0;
   for (;;) {
-    const m = rest.match(/[@#]([\p{L}\p{N}_.]+)/u);
+    const m = rest.match(/[@#]([\p{L}\p{N}_.]+)|"([^"]*)"/u);
     if (!m || m.index === undefined) break;
     const cut = m.index + m[0].length;
-    if (known && !known(m[1]!)) {
+    const lit = m[2] !== undefined;
+    const keep = lit ? Boolean(lits?.has(offset + m.index)) : !known || known(m[1]!);
+    if (!keep) {
       text += rest.slice(0, cut);
       rest = rest.slice(cut);
+      offset += cut;
       continue;
     }
     out.push({ text: text + rest.slice(0, m.index) });
-    out.push({ tag: m[1]! });
+    out.push(lit ? { tag: m[2]!, lit: true } : { tag: m[1]! });
     text = '';
     rest = rest.slice(cut);
+    offset += cut;
   }
   out.push({ text: text + rest });
   return out;
@@ -107,7 +154,7 @@ const rankOf = (f: { tag: string; label: string }, needle: string): number => {
 export const shortLabel = (label: string): string => label.split(',')[0]!.trim();
 
 export function joinParts(parts: Part[]): string {
-  return parts.map(p => ('tag' in p ? `@${p.tag}` : p.text)).join('');
+  return parts.map(p => ('tag' in p ? (p.lit ? `"${p.tag}"` : `@${p.tag}`) : p.text)).join('');
 }
 
 export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, badges, sheets, extraOptions, calculator, readOnly, autoFocus, onChipPick }: {
@@ -146,13 +193,14 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
 }) {
   const paths = useMemo(() => fieldPaths(system), [system]);
   const marks = useMemo(() => tagWords(system), [system]);
+  const lits = useMemo(() => lookupLits(system, value), [system, value]);
   const parts = useMemo(
     () => partsOf(value, tag => {
       const owned = onSheet(tag, sheets);
       if (owned) return knownSheetName(system, owned.rest, paths) || Boolean(extraNames?.has(owned.rest));
       return knownSheetName(system, tag, paths) || Boolean(names?.[tag]) || Boolean(extraNames?.has(tag)) || Boolean(sheets?.has(tag)) || marks.has(tag);
-    }),
-    [value, system, names, extraNames, paths, sheets, marks],
+    }, lits),
+    [value, system, names, extraNames, paths, sheets, marks, lits],
   );
   const host = useRef<HTMLDivElement>(null);
   const inputs = useRef(new Map<number, HTMLInputElement>());
@@ -162,6 +210,26 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   const [closed, setClosed] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const focusOnce = useRef(Boolean(autoFocus));
+  const [lookup, setLookup] = useState<{ table: string; column: string } | null>(null);
+  const pending = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    if (pending.current === null) return;
+    let left = pending.current;
+    pending.current = null;
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i]!;
+      const size = joinParts([part]).length;
+      if ('text' in part && left <= size) {
+        const el = inputs.current.get(i);
+        el?.focus();
+        el?.setSelectionRange(left, left);
+        setActive(i);
+        setCaret(left);
+        return;
+      }
+      left -= size;
+    }
+  }, [parts]);
   const sideOf = (tag: string) => {
     const owned = onSheet(tag, sheets);
     if (!owned) return null;
@@ -271,6 +339,26 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
     commitParts(next, { index, caret: at + open.length });
   };
 
+  const insertAt = (open: string, close: string) => {
+    const index = active !== null && 'text' in (parts[active] ?? {}) ? active : parts.length - 1;
+    const part = parts[index] as { text: string };
+    const at = index === active ? Math.min(caret, part.text.length) : part.text.length;
+    pending.current = joinParts(parts.slice(0, index)).length + at + open.length;
+    const text = part.text.slice(0, at) + open + close + part.text.slice(at);
+    onChange(joinParts(parts.map((p, i) => (i === index ? { text } : p))));
+  };
+  const tables = rowTables(system);
+  const columnsFor = (table: string): [string, string][] => (table
+    ? (system.tables?.[table]?.columns ?? []).map(c => [c.key, c.label || c.key])
+    : tables.flatMap(([id, t]) => (t.columns ?? []).map(c => [c.key, `${c.label || c.key} · ${t.label || id}`] as [string, string])));
+  const placeLookup = () => {
+    if (!lookup?.column) return;
+    const column = lookup.column === ROW ? `@${ROW}` : `"${lookup.column}"`;
+    if (lookup.table) insertAt(`${LOOKUP}("${lookup.table}", `, `, ${column})`);
+    else insertAt(`${LOOKUP}(`, `, , ${column})`);
+    setLookup(null);
+  };
+
   const opButton = (op: typeof OPS[number]) => (
     <button
       key={op.label} type="button"
@@ -322,7 +410,9 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
       <span className="chips chips--read" data-value={value}>
         {prefix}
         {empty ? <span className="chips__placeholder">{placeholder}</span> : parts.map((part, index) => ('tag' in part ? (
-          names?.[part.tag] !== undefined ? (
+          part.lit ? (
+            <span key={index} className="chips__chip chips__chip--lookup" title="из таблицы">{lookups.get(part.tag) ?? part.tag}</span>
+          ) : names?.[part.tag] !== undefined ? (
             <span key={index} className="chips__group">{names[part.tag]}</span>
           ) : (
             <span
@@ -351,8 +441,13 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
       }}>
         {prefix}
         {parts.map((part, index) => 'tag' in part ? (
-
-          names?.[part.tag] !== undefined ? (
+          part.lit ? (
+            <span key={index} className="chips__chip chips__chip--lookup" title="из таблицы">
+              <span>{lookups.get(part.tag) ?? part.tag}</span>
+              <button type="button" className="chips__x" aria-label="убрать"
+                onMouseDown={e => { e.preventDefault(); dropChip(index); }}>×</button>
+            </span>
+          ) : names?.[part.tag] !== undefined ? (
             <span key={index} className="chips__group">{names[part.tag]}</span>
           ) : (
           <span key={index} className="chips__chip">
@@ -441,6 +536,27 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
           {OPS.filter(op => !op.word).map(opButton)}
           <span className="chips__ops-split" aria-hidden />
           {OPS.filter(op => op.word).map(opButton)}
+          {tables.length ? (
+            <button type="button" className="chips__op chips__op--word" title="взять значение из таблицы: какая таблица, по чему искать строку, какая колонка"
+              onMouseDown={e => { e.preventDefault(); setLookup(lookup ? null : { table: tables[0]![0], column: '' }); }}>из таблицы</button>
+          ) : null}
+        </div>
+      ) : null}
+      {calculator && active !== null && lookup ? (
+        <div className="chips__lookup">
+          <span>Взять из таблицы</span>
+          <select aria-label="из какой таблицы" value={lookup.table} onChange={e => setLookup({ table: e.target.value, column: '' })}>
+            {tables.map(([id, t]) => <option key={id} value={id}>{t.label || id}</option>)}
+            <option value="">другой — по формуле (например, таблица класса)</option>
+          </select>
+          <span>колонку</span>
+          <select aria-label="какую колонку" value={lookup.column} onChange={e => setLookup({ ...lookup, column: e.target.value })}>
+            <option value="">— выберите</option>
+            {columnsFor(lookup.table).map(([key, label]) => <option key={`${key}|${label}`} value={key}>{label}</option>)}
+            <option value={ROW}>как у этой строки</option>
+          </select>
+          <button type="button" className="chips__op" disabled={!lookup.column} onMouseDown={e => { e.preventDefault(); placeLookup(); }}>Вставить</button>
+          <span className="chips__lookup-hint">{lookup.table ? 'потом впишите, по чему искать строку: например, [Уровень]' : 'потом впишите таблицу формулой и по чему искать строку'}</span>
         </div>
       ) : null}
       {shownMenu ? (
