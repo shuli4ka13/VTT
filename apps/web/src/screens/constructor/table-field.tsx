@@ -44,6 +44,13 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
               <Select<string> label="в новом листе" value={column.default === undefined ? '' : column.default ? 'да' : 'нет'}
                 options={[['', '— не задано'], ['да', 'да'], ['нет', 'нет']]}
                 onChange={next => edit(draft => { if (!next) delete draft.default; else draft.default = next === 'да'; })} />
+            ) : column.kind === 'choice' && column.from && system.tables?.[column.from] ? (
+              <Select<string> label="в новом листе" value={column.default === undefined ? '' : String(column.default)}
+                options={[['', '— не задано'], ...(system.tables[column.from]!.rows ?? []).map(row => [String(row.value), row.label ?? String(row.value)] as const)]}
+                onChange={next => edit(draft => {
+                  const row = (system.tables?.[column.from!]?.rows ?? []).find(r => String(r.value) === next);
+                  if (!next || !row) delete draft.default; else draft.default = row.value as never;
+                })} />
             ) : (
               <Input value={column.default === undefined ? '' : String(column.default)}
                 onChange={text => edit(draft => { if (!text.trim()) delete draft.default; else draft.default = column.kind === 'number' ? parseStart(text) : text; })} />
