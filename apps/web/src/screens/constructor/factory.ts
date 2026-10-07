@@ -23,7 +23,7 @@ export const newEffect = (system: System, kind: LaunchKind): Made<Effect> => ({
     }
     : {
       label: 'Новый эффект', activation: 'passive', duration: { kind: 'permanent' },
-      ...(kind === 'auto' ? { on: [newHandler()] } : { modifiers: [] }),
+      ...(kind === 'auto' ? { on: [newHandler()] } : {}),
     },
 });
 

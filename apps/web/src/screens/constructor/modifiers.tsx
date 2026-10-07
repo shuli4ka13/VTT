@@ -28,6 +28,8 @@ const STACKING = [
   ['override', 'последний перебивает'],
 ] as const;
 
+const stackDefault = (op: string | undefined): string => (op === 'set' ? 'override' : 'sum');
+
 export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editSystem }: {
   system: System;
   modifiers: Modifier[];
@@ -63,7 +65,7 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
         )}
         <span className="spacer" />
         <Button size="sm" onClick={() => onEdit(draft => {
-          draft.push({ kind: 'value', target: valueTargets[0]?.tag ?? '', op: 'add', value: { expr: '1' }, stacking: 'sum' });
+          draft.push({ kind: 'value', target: valueTargets[0]?.tag ?? '', op: 'add', value: { expr: '1' } });
         })}>
           + правит поле
         </Button>
@@ -123,11 +125,14 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
               </Field>
               <Field label="Если таких несколько">
                 <Select
-                  value={String(modifier.stacking ?? 'sum')}
+                  value={String(modifier.stacking ?? stackDefault(modifier.op))}
                   options={modifier.op === 'mul'
                     ? STACKING.map(([key, label]) => [key, key === 'sum' ? 'перемножаются' : label] as const)
                     : STACKING}
-                  onChange={stacking => onEdit(draft => { (draft[index] as { stacking?: string }).stacking = stacking; })}
+                  onChange={stacking => onEdit(draft => {
+                    const target = draft[index] as { stacking?: string; op?: string };
+                    if (stacking === stackDefault(target.op)) delete target.stacking; else target.stacking = stacking;
+                  })}
                 />
               </Field>
             </div>
@@ -179,13 +184,13 @@ function EditBody({ system, modifier, calls, edits, recipes, onChange, onPickEdi
     d.call = next;
     if (next === ROLL_CALL) { d.param = 'edits'; d.edit = edits[0]?.[0] ?? ''; return; }
     d.param = amountParamOf(system.effects[next])?.key ?? '';
-    Object.assign(d, { op: 'mul', value: { expr: '0.5' }, stacking: 'sum' });
+    Object.assign(d, { op: 'mul', value: { expr: '0.5' } });
   });
   const pickParam = (next: string) => onChange(d => {
     for (const key of ['edit', 'op', 'value', 'stacking']) delete d[key];
     d.param = next;
     if (next === 'edits') d.edit = edits[0]?.[0] ?? '';
-    else Object.assign(d, { op: 'add', value: { expr: '1' }, stacking: 'sum' });
+    else Object.assign(d, { op: 'add', value: { expr: '1' } });
   });
   const number = (
     <>
@@ -203,9 +208,9 @@ function EditBody({ system, modifier, calls, edits, recipes, onChange, onPickEdi
       </Field>
       <Field label="Если таких несколько">
         <Select
-          value={String(m.stacking ?? 'sum')}
+          value={String(m.stacking ?? stackDefault(m.op as string | undefined))}
           options={m.op === 'mul' ? STACKING.map(([key, label]) => [key, key === 'sum' ? 'перемножаются' : label] as const) : STACKING}
-          onChange={stacking => onChange(d => { d.stacking = stacking; })}
+          onChange={stacking => onChange(d => { if (stacking === stackDefault(d.op as string | undefined)) delete d.stacking; else d.stacking = stacking; })}
         />
       </Field>
     </>

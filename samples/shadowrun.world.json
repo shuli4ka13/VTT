@@ -2575,8 +2575,7 @@
             "op": "add",
             "value": {
               "expr": "-1"
-            },
-            "stacking": "sum"
+            }
           }
         ]
       },
@@ -2605,8 +2604,7 @@
             "op": "add",
             "value": {
               "expr": "-1"
-            },
-            "stacking": "sum"
+            }
           }
         ]
       },
@@ -2625,8 +2623,7 @@
             "op": "add",
             "value": {
               "expr": "-2"
-            },
-            "stacking": "sum"
+            }
           }
         ]
       },
@@ -2823,8 +2820,7 @@
             "op": "set",
             "value": {
               "expr": "8 + округлить вверх(большее из(@willpower, @body) / 2)"
-            },
-            "stacking": "override"
+            }
           },
           {
             "kind": "value",
@@ -2832,8 +2828,7 @@
             "op": "set",
             "value": {
               "expr": "@physical + @stun"
-            },
-            "stacking": "override"
+            }
           },
           {
             "kind": "value",
@@ -2841,8 +2836,7 @@
             "op": "set",
             "value": {
               "expr": "нет"
-            },
-            "stacking": "override"
+            }
           },
           {
             "kind": "value",
@@ -2850,8 +2844,7 @@
             "op": "set",
             "value": {
               "expr": "0 - округлить вниз(меньшее из(@physical + @stun, @physical_max) / 2)"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "blocks": [
@@ -3969,8 +3962,7 @@
             "op": "add",
             "value": {
               "expr": "1"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "table": "armor",
@@ -3990,8 +3982,7 @@
             "op": "add",
             "value": {
               "expr": "2"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "table": "armor",
@@ -4011,8 +4002,7 @@
             "op": "add",
             "value": {
               "expr": "2"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "table": "armor",

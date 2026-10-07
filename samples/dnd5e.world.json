@@ -5839,7 +5839,6 @@
             "value": {
               "expr": "@носитель.damage_types.рубящий.taken.mult"
             },
-            "stacking": "sum",
             "kind": "edit",
             "call": "damage",
             "param": "amount",
@@ -5855,7 +5854,6 @@
             "value": {
               "expr": "@носитель.damage_types.колющий.taken.mult"
             },
-            "stacking": "sum",
             "kind": "edit",
             "call": "damage",
             "param": "amount",
@@ -5871,7 +5869,6 @@
             "value": {
               "expr": "@носитель.damage_types.дробящий.taken.mult"
             },
-            "stacking": "sum",
             "kind": "edit",
             "call": "damage",
             "param": "amount",
@@ -5887,7 +5884,6 @@
             "value": {
               "expr": "@носитель.damage_types.огонь.taken.mult"
             },
-            "stacking": "sum",
             "kind": "edit",
             "call": "damage",
             "param": "amount",
@@ -5903,7 +5899,6 @@
             "value": {
               "expr": "@носитель.damage_types.холод.taken.mult"
             },
-            "stacking": "sum",
             "kind": "edit",
             "call": "damage",
             "param": "amount",
@@ -5919,7 +5914,6 @@
             "value": {
               "expr": "@носитель.damage_types.молния.taken.mult"
             },
-            "stacking": "sum",
             "kind": "edit",
             "call": "damage",
             "param": "amount",
@@ -5935,7 +5929,6 @@
             "value": {
               "expr": "@носитель.damage_types.гром.taken.mult"
             },
-            "stacking": "sum",
             "kind": "edit",
             "call": "damage",
             "param": "amount",
@@ -5951,7 +5944,6 @@
             "value": {
               "expr": "@носитель.damage_types.кислота.taken.mult"
             },
-            "stacking": "sum",
             "kind": "edit",
             "call": "damage",
             "param": "amount",
@@ -5967,7 +5959,6 @@
             "value": {
               "expr": "@носитель.damage_types.яд.taken.mult"
             },
-            "stacking": "sum",
             "kind": "edit",
             "call": "damage",
             "param": "amount",
@@ -5983,7 +5974,6 @@
             "value": {
               "expr": "@носитель.damage_types.некротический.taken.mult"
             },
-            "stacking": "sum",
             "kind": "edit",
             "call": "damage",
             "param": "amount",
@@ -5999,7 +5989,6 @@
             "value": {
               "expr": "@носитель.damage_types.излучение.taken.mult"
             },
-            "stacking": "sum",
             "kind": "edit",
             "call": "damage",
             "param": "amount",
@@ -6015,7 +6004,6 @@
             "value": {
               "expr": "@носитель.damage_types.психический.taken.mult"
             },
-            "stacking": "sum",
             "kind": "edit",
             "call": "damage",
             "param": "amount",
@@ -6031,7 +6019,6 @@
             "value": {
               "expr": "@носитель.damage_types.силовой.taken.mult"
             },
-            "stacking": "sum",
             "kind": "edit",
             "call": "damage",
             "param": "amount",
@@ -6051,8 +6038,7 @@
         "activation": "passive",
         "duration": {
           "kind": "turns",
-          "max": 1,
-          "ends": "turn-end"
+          "max": 1
         },
         "modifiers": [
           {
@@ -6061,8 +6047,7 @@
             "op": "mul",
             "value": {
               "expr": "2"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "reapply": "refresh"
@@ -6690,8 +6675,7 @@
             "op": "set",
             "value": {
               "expr": "0"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "reapply": "refresh"
@@ -6805,8 +6789,7 @@
             "op": "set",
             "value": {
               "expr": "0"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "grants": [
@@ -6842,8 +6825,7 @@
                 },
                 "versus": {
                   "expr": "@запомнено"
-                },
-                "continueOn": "success"
+                }
               },
               {
                 "type": "status",
@@ -6919,8 +6901,7 @@
             "op": "set",
             "value": {
               "expr": "0"
-            },
-            "stacking": "override"
+            }
           },
           {
             "op": "mul",
@@ -7028,8 +7009,7 @@
             "op": "set",
             "value": {
               "expr": "0"
-            },
-            "stacking": "override"
+            }
           },
           {
             "tags": [
@@ -7229,8 +7209,7 @@
             "op": "set",
             "value": {
               "expr": "0"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "grants": [
@@ -7263,8 +7242,7 @@
             "op": "set",
             "value": {
               "expr": "3"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "reapply": "refresh"
@@ -7284,8 +7262,7 @@
             "op": "set",
             "value": {
               "expr": "0"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "reapply": "refresh"
@@ -7383,8 +7360,7 @@
             "op": "add",
             "value": {
               "expr": "@rage_damage"
-            },
-            "stacking": "sum"
+            }
           },
           {
             "op": "mul",
@@ -7436,8 +7412,7 @@
             "op": "add",
             "value": {
               "expr": "5"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "reapply": "refresh"
@@ -7456,7 +7431,6 @@
             "value": {
               "expr": "0.5"
             },
-            "stacking": "sum",
             "kind": "edit",
             "call": "damage",
             "param": "amount",
@@ -7620,8 +7594,7 @@
             "op": "add",
             "value": {
               "expr": "2"
-            },
-            "stacking": "sum"
+            }
           },
           {
             "kind": "value",
@@ -7629,8 +7602,7 @@
             "op": "mul",
             "value": {
               "expr": "2"
-            },
-            "stacking": "sum"
+            }
           },
           {
             "tags": [
@@ -7663,8 +7635,7 @@
             "op": "add",
             "value": {
               "expr": "-2"
-            },
-            "stacking": "sum"
+            }
           },
           {
             "kind": "value",
@@ -7672,8 +7643,7 @@
             "op": "mul",
             "value": {
               "expr": "0.5"
-            },
-            "stacking": "sum"
+            }
           },
           {
             "tags": [
@@ -7830,8 +7800,7 @@
             "op": "add",
             "value": {
               "expr": "5"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "reapply": "refresh"
@@ -7939,7 +7908,6 @@
             "value": {
               "expr": "2"
             },
-            "stacking": "sum",
             "kind": "edit",
             "call": "damage",
             "param": "amount",
@@ -7967,7 +7935,6 @@
             "value": {
               "expr": "0"
             },
-            "stacking": "sum",
             "kind": "edit",
             "call": "damage",
             "param": "amount",
@@ -7996,8 +7963,7 @@
             "op": "add",
             "value": {
               "expr": "1"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "reapply": "refresh"
@@ -8017,8 +7983,7 @@
             "op": "set",
             "value": {
               "expr": "19"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "reapply": "refresh"
@@ -8038,8 +8003,7 @@
             "op": "add",
             "value": {
               "expr": "1"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "reapply": "refresh"
@@ -8059,8 +8023,7 @@
             "op": "add",
             "value": {
               "expr": "2"
-            },
-            "stacking": "sum"
+            }
           },
           {
             "kind": "value",
@@ -8068,8 +8031,7 @@
             "op": "add",
             "value": {
               "expr": "2"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "reapply": "refresh"
@@ -8089,8 +8051,7 @@
             "op": "add",
             "value": {
               "expr": "2"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "reapply": "refresh"
@@ -8246,8 +8207,7 @@
             "op": "set",
             "value": {
               "expr": "60"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "reapply": "refresh"
@@ -8323,8 +8283,7 @@
             "op": "add",
             "value": {
               "expr": "5"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "reapply": "refresh"
@@ -8344,8 +8303,7 @@
             "op": "add",
             "value": {
               "expr": "2 * @level"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "reapply": "refresh"
@@ -8365,8 +8323,7 @@
             "op": "add",
             "value": {
               "expr": "10"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "reapply": "refresh"
@@ -8386,8 +8343,7 @@
             "op": "add",
             "value": {
               "expr": "5"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "reapply": "refresh"
@@ -8432,8 +8388,7 @@
             "op": "add",
             "value": {
               "expr": "1"
-            },
-            "stacking": "sum"
+            }
           },
           {
             "tags": [
@@ -9389,7 +9344,6 @@
             "value": {
               "expr": "0.5"
             },
-            "stacking": "sum",
             "if": {
               "expr": "@exhaustion >= 2"
             }
@@ -9425,7 +9379,6 @@
             "value": {
               "expr": "0.5"
             },
-            "stacking": "sum",
             "if": {
               "expr": "@exhaustion >= 4"
             }
@@ -9437,7 +9390,6 @@
             "value": {
               "expr": "0"
             },
-            "stacking": "override",
             "if": {
               "expr": "@exhaustion >= 5"
             }
@@ -9459,8 +9411,7 @@
             "op": "add",
             "value": {
               "expr": "@level"
-            },
-            "stacking": "sum"
+            }
           }
         ]
       },
@@ -9615,8 +9566,7 @@
             "op": "set",
             "value": {
               "expr": "0"
-            },
-            "stacking": "override"
+            }
           }
         ]
       }
@@ -10436,8 +10386,7 @@
             "op": "add",
             "value": {
               "expr": "1"
-            },
-            "stacking": "sum"
+            }
           },
           {
             "kind": "value",
@@ -10445,8 +10394,7 @@
             "op": "add",
             "value": {
               "expr": "1"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "table": "weapon",
@@ -10469,8 +10417,7 @@
             "op": "set",
             "value": {
               "expr": "11"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "table": "armor",
@@ -10490,8 +10437,7 @@
             "op": "set",
             "value": {
               "expr": "11"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "table": "armor",
@@ -10511,8 +10457,7 @@
             "op": "set",
             "value": {
               "expr": "12"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "table": "armor",
@@ -10532,8 +10477,7 @@
             "op": "set",
             "value": {
               "expr": "12"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "table": "armor",
@@ -10553,8 +10497,7 @@
             "op": "set",
             "value": {
               "expr": "13"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "table": "armor",
@@ -10574,8 +10517,7 @@
             "op": "set",
             "value": {
               "expr": "14"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "table": "armor",
@@ -10595,8 +10537,7 @@
             "op": "set",
             "value": {
               "expr": "14"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "table": "armor",
@@ -10616,8 +10557,7 @@
             "op": "set",
             "value": {
               "expr": "15"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "table": "armor",
@@ -10637,8 +10577,7 @@
             "op": "set",
             "value": {
               "expr": "14"
-            },
-            "stacking": "override"
+            }
           },
           {
             "kind": "value",
@@ -10646,8 +10585,7 @@
             "op": "set",
             "value": {
               "expr": "да"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "table": "armor",
@@ -10667,8 +10605,7 @@
             "op": "set",
             "value": {
               "expr": "16"
-            },
-            "stacking": "override"
+            }
           },
           {
             "kind": "value",
@@ -10676,8 +10613,7 @@
             "op": "set",
             "value": {
               "expr": "да"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "table": "armor",
@@ -10697,8 +10633,7 @@
             "op": "set",
             "value": {
               "expr": "17"
-            },
-            "stacking": "override"
+            }
           },
           {
             "kind": "value",
@@ -10706,8 +10641,7 @@
             "op": "set",
             "value": {
               "expr": "да"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "table": "armor",
@@ -10727,8 +10661,7 @@
             "op": "set",
             "value": {
               "expr": "18"
-            },
-            "stacking": "override"
+            }
           },
           {
             "kind": "value",
@@ -10736,8 +10669,7 @@
             "op": "set",
             "value": {
               "expr": "да"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "table": "armor",
@@ -10757,8 +10689,7 @@
             "op": "add",
             "value": {
               "expr": "2"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "table": "shield",
@@ -10789,8 +10720,7 @@
             "op": "add",
             "value": {
               "expr": "1"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "table": "wondrous",
@@ -10809,8 +10739,7 @@
             "op": "set",
             "value": {
               "expr": "19"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "table": "wondrous",
@@ -10829,8 +10758,7 @@
             "op": "set",
             "value": {
               "expr": "21"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "table": "wondrous",
@@ -10849,8 +10777,7 @@
             "op": "mul",
             "value": {
               "expr": "2"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "table": "wondrous",
@@ -10901,8 +10828,7 @@
             "op": "add",
             "value": {
               "expr": "2"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "table": "wondrous",
