@@ -5,9 +5,11 @@ import { Card, CardHead, Field, Button, DangerButton, Fold, Select, LabelInput }
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import type { System, ValueKind } from '@vtt/schema';
 
+export const BY_FORMULA = '';
+
 export interface ColumnShape {
   label: string;
-  kind: ValueKind;
+  kind: ValueKind | typeof BY_FORMULA;
   from?: string;
   many?: boolean;
   expr?: string;
@@ -17,7 +19,7 @@ export interface ColumnShape {
 
 export interface ColumnPatch {
   label?: string;
-  kind?: ValueKind;
+  kind?: ValueKind | typeof BY_FORMULA;
   from?: string | null;
   many?: boolean;
   expr?: string | null;
@@ -56,7 +58,9 @@ export function ColumnCard({ column, kinds, tables, many, formulaHint, where, na
       />
       <div className="row">
         <Field label="Тип">
-          <Select value={column.kind} options={kinds as never} onChange={next => onChange({ kind: next as ValueKind })} />
+          <Select value={column.kind}
+            options={(column.expr !== undefined ? [[BY_FORMULA, 'по формуле'], ...kinds] : kinds) as never}
+            onChange={next => onChange({ kind: next as ValueKind | typeof BY_FORMULA })} />
         </Field>
         {column.kind === 'choice' ? (
           <>

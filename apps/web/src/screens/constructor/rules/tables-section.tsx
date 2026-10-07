@@ -303,7 +303,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, extr
   return (
     <ColumnCard
       table={id}
-      column={{ label: column.label ?? '', kind: column.kind ?? (single ? 'number' : 'text'), from: column.from, many: column.many, expr: column.expr?.expr, min: column.min, max: column.max }}
+      column={{ label: column.label ?? '', kind: column.kind ?? (column.expr ? '' : single ? 'number' : 'text'), from: column.from, many: column.many, expr: column.expr?.expr, min: column.min, max: column.max }}
       kinds={single ? FIELD_KINDS : book ? PROP_KINDS : COLUMN_KINDS}
       tables={others}
       many
@@ -356,7 +356,9 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, extr
 
 function applyPatch(c: TableColumn, patch: ColumnPatch): void {
   if (patch.label !== undefined) c.label = patch.label;
-  if (patch.kind !== undefined) {
+  if (patch.kind === '') {
+    delete c.kind; delete c.default; delete c.from; delete c.many;
+  } else if (patch.kind !== undefined) {
     if (patch.kind !== c.kind) delete c.default;
     c.kind = patch.kind;
     if (patch.kind !== 'choice') { delete c.from; delete c.many; }
