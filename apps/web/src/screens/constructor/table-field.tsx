@@ -151,8 +151,8 @@ export function BlockViewField({ tableId, column, system, block, row, cell = row
           family={columnFamily(column)}
           computed={!stored}
           plain={row
-            ? { label: 'Как у колонки', hint: base ? `вид колонки в этом блоке: ${VIEWS[base.kind].label}` : 'у колонки в этом блоке вида нет — обычное поле' }
-            : stored ? { label: 'Обычное поле', hint: 'окошко для числа или текста' } : { label: 'Просто число', hint: 'значение как есть' }}
+            ? { label: 'Как у колонки', hint: base ? `вид колонки в этом блоке: ${VIEWS[base.kind].label}` : 'у колонки в этом блоке вида нет — как есть' }
+            : { label: 'Как есть', hint: stored ? 'окошко: игрок вписывает число или текст' : 'значение без оформления — его считает формула, вписать нельзя' }}
           needs={next => viewNeeds(next, column)}
           onChange={next => editView(views => {
             if (!next) { delete views[key]; return; }

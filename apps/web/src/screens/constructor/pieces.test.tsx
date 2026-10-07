@@ -70,7 +70,7 @@ describe('вид поля на листе выбирается в констру
   const tile = (name: string, group = 'Вид') => within(gallery(group)).getByRole('radio', { name });
   const part = () => useWorld.getState().system.blocks![0]!.parts[0]!;
 
-  it('плитка «Полоса» ложится в блок, а не в таблицу; «Обычное поле» убирает вид', () => {
+  it('плитка «Полоса» ложится в блок, а не в таблицу; «Как есть» убирает вид', () => {
     renderOpen(<SheetTab />);
     fireEvent.click(tile('Полоса'));
     expect(fieldsOf(useWorld.getState().system)[0]!.control).toEqual({ kind: 'bar' });
@@ -78,7 +78,7 @@ describe('вид поля на листе выбирается в констру
     expect('control' in useWorld.getState().system.tables!.лист!.columns![0]!).toBe(false);
     expect(tile('Полоса').getAttribute('aria-checked')).toBe('true');
 
-    fireEvent.click(tile('Обычное поле'));
+    fireEvent.click(tile('Как есть'));
     expect(part().views).toBeUndefined();
   });
 
