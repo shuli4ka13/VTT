@@ -7,6 +7,8 @@ import { sheetKinds, shownOn } from '@vtt/engine/model/owned';
 import type { Sheet, StoredValue, System } from '@vtt/schema';
 import { fieldsOf, fieldOf, rowKeyOf } from '@vtt/engine/model/sheet-columns';
 
+const ZERO: Record<string, unknown> = { number: 0, text: '', boolean: false, choice: '' };
+
 export function setSample(draft: System, tag: string, value: StoredValue): void {
   const field = fieldOf(draft, tag);
   const table = field ? draft.tables?.[field.home] : undefined;
@@ -17,7 +19,9 @@ export function setSample(draft: System, tag: string, value: StoredValue): void 
     const row = (table.rows ?? []).find(r => rowKeyOf(r) === mark.row);
     if (!row) return;
     const { default: _old, ...rest } = row.view?.[mark.column] ?? {};
-    const next = blank ? rest : { ...rest, default: value };
+    const own = (table.columns ?? []).find(c => c.key === mark.column);
+    const base = own?.default ?? ZERO[own?.kind ?? 'number'];
+    const next = blank || value === base ? rest : { ...rest, default: value };
     const views = { ...row.view };
     if (Object.keys(next).length) views[mark.column] = next; else delete views[mark.column];
     if (Object.keys(views).length) row.view = views; else delete row.view;
@@ -25,7 +29,7 @@ export function setSample(draft: System, tag: string, value: StoredValue): void 
   }
   const column = (table.columns ?? []).find(c => c.key === tag);
   if (!column) return;
-  if (blank) delete column.default; else column.default = value;
+  if (blank || value === ZERO[column.kind ?? 'number']) delete column.default; else column.default = value;
 }
 
 export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: {
