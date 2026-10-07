@@ -66,6 +66,14 @@ group('тогл брони переписывает общий эффект ур
     deepEq(armorOf(red(), 'damage'), { choice: 'ablation', armor: 'sp_body', hp: 'hp' });
   });
 
+  test('у эффекта без входа-листа броня ничего не пишет — нет «запасного» имени', () => {
+    const system = red();
+    system.effects.damage!.params = (system.effects.damage!.params ?? []).filter(param => param.kind !== 'sheet');
+    const before = clone(system.effects.damage!.steps);
+    setArmor(system, 'threshold', { event: 'damage', armor: 'sp_body', hp: 'hp' });
+    deepEq(system.effects.damage!.steps, before);
+  });
+
   test('образец D&D читается как «урон целиком»', () => {
     eq(armorOf(dnd(), 'damage').choice, 'none');
   });
@@ -76,7 +84,7 @@ group('тогл брони переписывает общий эффект ур
     setArmor(system, 'threshold', { event: 'damage', armor: 'sp_body', hp: 'hp' });
     eq(armorOf(system, 'damage').choice, 'threshold');
     eq(errorsOf(lintSystem(system)).length, 0);
-    deepEq(armorTail('threshold', 'sp_body', 'hp').map(s => s.type), ['check', 'apply']);
+    deepEq(armorTail('threshold', 'sp_body', 'hp', 'amount', 'лист').map(s => s.type), ['check', 'apply']);
   });
 
   test('«вычитание и износ» даёт те же шаги, что собраны в образце RED руками для тела', () => {

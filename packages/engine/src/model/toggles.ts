@@ -27,7 +27,7 @@ export const ARMOR_OPTIONS: ToggleOption<ArmorChoice>[] = [
   },
   {
     key: 'ablation', label: 'вычитание и износ',
-    hint: 'Из урона вычитается броня, остаток идёт в хиты, а броня теряет единицу. Так в Cyberpunk RED.',
+    hint: 'Из урона вычитается броня, остаток идёт в хиты, а броня теряет единицу.',
   },
 ];
 
@@ -127,7 +127,7 @@ export function setCrit(draft: System, choice: CritChoice): void {
   }
 }
 
-export function armorTail(choice: ArmorChoice, armor: string, hp: string, amount = 'amount', sheet = 'лист'): Step[] {
+export function armorTail(choice: ArmorChoice, armor: string, hp: string, amount: string, sheet: string): Step[] {
   const value = { expr: `@${amount}` };
   const field = (tag: string) => ({ expr: `@${sheet}.${tag}` });
   if (choice === 'none') {
@@ -165,12 +165,15 @@ export function armorOf(system: System, event: string): ArmorReading {
   return { choice: 'none', armor, hp };
 }
 
+export const sheetInputOf = (effect: System['effects'][string] | undefined): string | null =>
+  (effect?.params ?? []).find(param => param.kind === 'sheet' && !param.many)?.key ?? null;
+
 export function setArmor(draft: System, choice: ArmorChoice, at: { event: string; armor: string; hp: string }): void {
   const called = draft.effects?.[at.event];
-  if (!called) return;
+  const sheet = sheetInputOf(called);
+  if (!called || !sheet) return;
   const params = called.params ?? [];
   const amount = params.find(param => param.role === 'amount')?.key ?? 'amount';
-  const sheet = params.find(param => param.kind === 'sheet')?.key ?? 'лист';
   const steps = (called.steps ?? []) as Record<string, unknown>[];
   const anchor = steps.find(step => fieldIn(step.versus) === at.armor || fieldIn(step.target) === at.armor)
     ?? steps.find(step => step.type === 'apply' && fieldIn(step.target) === at.hp);

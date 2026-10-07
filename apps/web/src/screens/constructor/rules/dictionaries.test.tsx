@@ -459,7 +459,16 @@ describe('Быстрые настройки: крит и броня пишутс
     expect(useWorld.getState().system.grants ?? []).not.toContain('crit_explode_rule');
   });
 
+  it('броня без входа-листа у эффекта урона ничего не пишет и говорит почему', () => {
+    renderOpen(<RulesTab />);
+    открыть('Быстрые настройки');
+    fireEvent.click(screen.getByText('порог'));
+    expect(screen.getByText(/нет входа-листа/)).toBeTruthy();
+    expect(screen.queryByText('Записать')).toBeNull();
+  });
+
   it('броня «порог» ложится в вызываемый эффект урона после подтверждения', () => {
+    useWorld.getState().editSystem(draft => { draft.effects.урон!.params = [...(draft.effects.урон!.params ?? []), { key: 'лист', kind: 'sheet' } as never]; });
     renderOpen(<RulesTab />);
     открыть('Быстрые настройки');
     const armor = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'броня'))!;

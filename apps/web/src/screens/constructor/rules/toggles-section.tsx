@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  CRIT_OPTIONS, ARMOR_OPTIONS, critOf, armorOf, setCrit, setArmor,
+  CRIT_OPTIONS, ARMOR_OPTIONS, critOf, armorOf, setCrit, setArmor, sheetInputOf,
 } from '@vtt/engine/model/toggles';
 import type { ArmorChoice } from '@vtt/engine/model/toggles';
 import { Card, CardHead, Field, Segmented, Select, Verdict, Button, DangerButton } from '../../../ui/primitives.tsx';
@@ -30,9 +30,10 @@ export function TogglesSection({ system, editSystem }: Props) {
   const wanted = choice ?? reading.choice;
   const changed = wanted !== reading.choice || (reading.armor && armorTag !== reading.armor) || (reading.hp && hpTag !== reading.hp);
   const tail = system.effects?.[event]?.steps ?? [];
+  const whom = sheetInputOf(system.effects?.[event]);
 
   const write = () => {
-    if (!event || !hpTag) return;
+    if (!event || !hpTag || !whom) return;
     editSystem(draft => { setArmor(draft, wanted, { event, armor: armorTag, hp: hpTag }); });
     setChoice(null);
   };
@@ -88,7 +89,12 @@ export function TogglesSection({ system, editSystem }: Props) {
               onChange={setChoice}
             />
           </Field>
-          {changed ? (
+          {changed && !whom ? (
+            <Verdict tone="bad">
+              У эффекта «{system.effects?.[event]?.label || event}» нет входа-листа — непонятно, чьи хиты и броню трогать. Добавьте ему вход «лист» на вкладке «Эффекты».
+            </Verdict>
+          ) : null}
+          {changed && whom ? (
             <Verdict
               tone="warn"
               action={tail.length
