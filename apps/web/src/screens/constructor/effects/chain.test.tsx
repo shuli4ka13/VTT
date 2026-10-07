@@ -33,6 +33,13 @@ describe('стоимость эффекта — одним выбором', () =
     expect(effect.steps![0]).toEqual({ id: 'стоимость', type: 'emit', effect: 'cost_action' });
   });
 
+  it('ценой может стать и другой вызываемый эффект — не только из блока «Стоимость», но не сам эффект', () => {
+    useWorld.getState().editSystem(draft => { draft.effects.spend = { label: 'Потратить', activation: 'manual', params: [], steps: [] } as never; });
+    lane();
+    const pick = screen.getByDisplayValue('+ стоимость') as HTMLSelectElement;
+    expect([...pick.options].map(o => o.textContent)).toEqual(['+ стоимость', 'Стоимость: действие', 'Потратить — другой эффект', '+ новая стоимость…']);
+  });
+
   it('«+ новая стоимость» заводит эффект в блоке «Стоимость» и сразу его зовёт', () => {
     const effect = lane();
     fireEvent.change(screen.getByDisplayValue('+ стоимость'), { target: { value: ':новая' } });

@@ -8,6 +8,7 @@ import { KeyField } from '../../../ui/key-field.tsx';
 import { BoundField } from '../bound-field.tsx';
 import { Card, CardHead, Input, Select, Button } from '../../../ui/primitives.tsx';
 import { SheetGrid } from '../../../ui/sheet-grid.tsx';
+import { useDragList } from '../../../ui/drag-list.ts';
 import type { GridColumn } from '../../../ui/sheet-grid.tsx';
 import type { Effect, Param, System, ValueKind } from '@vtt/schema';
 
@@ -64,6 +65,16 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
   });
   const used = (key: string) => { const st = useWorld.getState(); return paramUsed(st.system, st.compendium, id, key); };
   const keys = params.map(p => p.key);
+  const drag = useDragList((from, to, after) => onEdit(draft => {
+    const list = draft.params ?? [];
+    const moving = list.find(p => p.key === from);
+    if (!moving) return;
+    const rest = list.filter(p => p !== moving);
+    const at = rest.findIndex(p => p.key === to);
+    if (at < 0) return;
+    rest.splice(at + (after ? 1 : 0), 0, moving);
+    draft.params = rest;
+  }));
   const relabel = (param: Loose, next: string) => onEdit(draft => {
     const target = draft.params?.find(p => p.key === param.key) as Loose | undefined;
     if (!target) return;
@@ -91,7 +102,10 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
             const kind = String(param.kind ?? 'number');
             const askable = (ASKABLE as readonly string[]).includes(kind);
             const cells = [
-              <Input key={`${param.key}:label`} value={param.label ?? ''} onChange={next => relabel(param, next)} />,
+              <span key={`${param.key}:label`} className={`inline inline--tight drag-item${drag.mark(param.key)}`} {...(params.length > 1 ? drag.props(param.key) : {})}>
+                {params.length > 1 ? <span className="drag-grip" aria-hidden title="перетащите, чтобы поменять порядок">⋮⋮</span> : null}
+                <Input value={param.label ?? ''} onChange={next => relabel(param, next)} />
+              </span>,
               <Select
                 key={`${param.key}:kind`}
                 value={kind === 'sheet' && param.many ? SHEETS : kind}

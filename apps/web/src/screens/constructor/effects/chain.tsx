@@ -8,6 +8,7 @@ import { Button, Select, Verdict } from '../../../ui/primitives.tsx';
 import { problemOf } from '../step-card.tsx';
 import { groupSteps, moveGroup, removeSteps, BRICKS, SEEN_BRICKS } from '../cards.ts';
 import { costsOf, newCost } from '../factory.ts';
+import { COST_BLOCK } from '@vtt/engine/words/glossary';
 import { GroupCard } from './cards/group-card.tsx';
 import { sheetsAt } from './names.ts';
 import type { Place } from '@vtt/engine/model/names-at';
@@ -217,7 +218,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
             {b.label}
           </Button>
         ))}
-        {onAddCost ? <CostPick system={system} onPick={onAddCost} /> : null}
+        {onAddCost ? <CostPick system={system} except={id} onPick={onAddCost} /> : null}
       </div>}
     </>
   );
@@ -225,7 +226,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
 
 const NEW_COST = ':новая';
 
-export function CostPick({ system, onPick }: { system: System; onPick: (id: string) => void }) {
+export function CostPick({ system, except, onPick }: { system: System; except?: string; onPick: (id: string) => void }) {
   const editSystem = useWorld(s => s.editSystem);
   return (
     <span className="add-cost">
@@ -234,6 +235,9 @@ export function CostPick({ system, onPick }: { system: System; onPick: (id: stri
         title="Чего стоит эффект: эффект из блока «Стоимость» зовётся первым шагом; не хватило — эффект не состоится"
         options={[['', '+ стоимость'],
           ...costsOf(system).map(([id, cost]) => [id, cost.label || id] as const),
+          ...Object.entries(system.effects ?? {})
+            .filter(([key, other]) => key !== except && other.group !== COST_BLOCK && (other.activation ?? 'manual') !== 'passive')
+            .map(([id, other]) => [id, `${other.label || id} — другой эффект`] as const),
           [NEW_COST, '+ новая стоимость…']]}
         onChange={pick => {
           if (!pick) return;
