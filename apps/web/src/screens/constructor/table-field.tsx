@@ -40,8 +40,14 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
       <div className="row">
         {stored && !column.many ? (
           <Field label="В новом листе">
-            <Input value={column.default === undefined ? '' : String(column.default)}
-              onChange={text => edit(draft => { if (!text.trim()) delete draft.default; else draft.default = parseStart(text); })} />
+            {column.kind === 'boolean' ? (
+              <Select<string> label="в новом листе" value={column.default === undefined ? '' : column.default ? 'да' : 'нет'}
+                options={[['', '— не задано'], ['да', 'да'], ['нет', 'нет']]}
+                onChange={next => edit(draft => { if (!next) delete draft.default; else draft.default = next === 'да'; })} />
+            ) : (
+              <Input value={column.default === undefined ? '' : String(column.default)}
+                onChange={text => edit(draft => { if (!text.trim()) delete draft.default; else draft.default = column.kind === 'number' ? parseStart(text) : text; })} />
+            )}
           </Field>
         ) : null}
         {single ? null : (
@@ -87,10 +93,8 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
                   if (list.length) draft.roll.tags = list; else delete draft.roll.tags;
                 })}
               />
-              {single ? (
-                <Input value={column.roll.label ?? ''} placeholder="подпись броска"
-                  onChange={next => edit(draft => { if (!draft.roll) return; if (next.trim()) draft.roll.label = next; else delete draft.roll.label; })} />
-              ) : null}
+              <Input value={column.roll.label ?? ''} placeholder={single ? 'подпись броска' : 'подпись броска: «Проверка: {label}» — {label} станет названием строки'}
+                onChange={next => edit(draft => { if (!draft.roll) return; if (next.trim()) draft.roll.label = next; else delete draft.roll.label; })} />
             </>
           ) : null}
         </div>

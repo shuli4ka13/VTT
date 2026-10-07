@@ -58,4 +58,16 @@ describe('раскладка листа следует за правками т�
     const shown = fieldsByBlock(s).find(([name]) => name === 'Защита')![1].map(f => f.tag);
     expect(shown).toEqual(['кд', 'хиты']);
   });
+
+  it('список из всех колонок, что дают поля, — это «все»: колонка, заполненная в правилах, не мешает', () => {
+    const s = system();
+    s.tables!.навыки!.columns!.push({ key: 'природа', label: 'Природа', kind: 'text' });
+    for (const row of s.tables!.навыки!.rows!) row.cells = { природа: 'общая' };
+    s.blocks = [{ name: 'Навыки', parts: [{ table: 'навыки', columns: ['ранг', 'база'] }] }];
+    tidyLayout(s);
+    expect(s.blocks[0]!.parts[0]!.columns).toBeUndefined();
+    s.blocks = [{ name: 'Навыки', parts: [{ table: 'навыки', columns: ['база', 'ранг'] }] }];
+    tidyLayout(s);
+    expect(s.blocks[0]!.parts[0]!.columns).toEqual(['база', 'ранг']);
+  });
 });

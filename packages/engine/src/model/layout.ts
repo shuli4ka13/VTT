@@ -1,6 +1,6 @@
 import type { SheetPart } from '@vtt/schema';
 import type { System } from './types.ts';
-import { rowKeyOf } from './sheet-columns.ts';
+import { rowKeyOf, cellSource, isSingle } from './sheet-columns.ts';
 
 const parts = (system: System): SheetPart[] => (system.blocks ?? []).flatMap(block => block.parts);
 
@@ -48,7 +48,10 @@ export function tidyLayout(system: System): void {
       if (part.columns) {
         const columns = part.columns.filter(key => keys.includes(key));
         if (!columns.length) return [];
-        if (!same(columns, keys)) next.columns = columns;
+        const live = (table.columns ?? [])
+          .filter(column => isSingle(table) || (table.rows ?? []).some(row => cellSource(column, row).kind !== 'value'))
+          .map(column => column.key);
+        if (!same(columns, keys) && !same(columns.filter(key => live.includes(key)), live)) next.columns = columns;
       }
       if (part.rows) {
         const rows = part.rows.filter(key => rowKeys.includes(key));

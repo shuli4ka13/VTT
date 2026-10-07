@@ -37,9 +37,14 @@ const ROW_KEYS = [
   ['range', 'диапазон'],
 ] as const;
 
-const blankRow = (key: TableKey): TableRow =>
+const freeNumber = (rows: TableRow[]): number => {
+  const used = rows.map(row => row.value).filter((value): value is number => typeof value === 'number');
+  return used.length ? Math.max(...used) + 1 : 0;
+};
+
+const blankRow = (key: TableKey, rows: TableRow[]): TableRow =>
   (key === 'range' ? { from: 1, to: 1, cells: {} }
-    : key === 'number' ? { value: 0, cells: {} }
+    : key === 'number' ? { value: freeNumber(rows), cells: {} }
       : { value: '', cells: {} });
 
 const COLUMN_KINDS = kindsFor('table');
@@ -126,7 +131,7 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
   const applyKey = (next: TableKey) => edit(draft => {
     const was = keyOf(draft);
     draft.key = next;
-    if ((was === 'range') !== (next === 'range')) draft.rows = [blankRow(next)];
+    if ((was === 'range') !== (next === 'range')) draft.rows = [blankRow(next, [])];
     if (next === 'number') {
       for (const row of draft.rows ?? []) row.value = Number(row.value) || 0;
     }
@@ -436,7 +441,7 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
           const from = list.length ? (list[list.length - 1]!.to ?? 0) + 1 : 1;
           list.push({ from, to: from, cells: {} });
         } else {
-          list.push(blankRow(key));
+          list.push(blankRow(key, list));
         }
       })}>{byRange ? '+ ступень' : '+ строка'}</Button>
 

@@ -298,6 +298,16 @@ describe('Словари: кости, правки броска, таблицы'
     expect(guarded.disabled).toBe(true);
   });
 
+  it('таблица с ключом «число»: новая строка получает свободное число, а не 0', () => {
+    useWorld.setState(state => ({ ...state, system: { ...emptySystem(), tables: { владение: { label: 'Владение', key: 'number', rows: [{ value: 0 }] } } } as never }));
+    renderOpen(<RulesTab />);
+    открыть('Таблицы');
+    fireEvent.click(screen.getByText('Владение'));
+    fireEvent.click(screen.getByText('+ строка'));
+    fireEvent.click(screen.getByText('+ строка'));
+    expect(useWorld.getState().system.tables!.владение!.rows!.map(r => r.value)).toEqual([0, 1, 2]);
+  });
+
   it('таблица по диапазонам заводится в словарь системы', () => {
     renderOpen(<RulesTab />);
     открыть('Таблицы');
