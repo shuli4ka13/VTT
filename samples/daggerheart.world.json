@@ -22,12 +22,10 @@
         "kind": "die",
         "dice": [
           {
-            "count": 1,
             "sides": 12,
             "name": "надежда"
           },
           {
-            "count": 1,
             "sides": 12,
             "name": "страх"
           }
@@ -38,7 +36,6 @@
         "kind": "die",
         "dice": [
           {
-            "count": 1,
             "sides": 20
           }
         ]
@@ -48,7 +45,6 @@
         "kind": "die",
         "dice": [
           {
-            "count": 1,
             "sides": 12
           }
         ]
@@ -1562,7 +1558,6 @@
             "target": {
               "expr": "@действующий.hope"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },
@@ -1869,7 +1864,6 @@
             "target": {
               "expr": "@цель.hp"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             }
@@ -1912,7 +1906,6 @@
           },
           {
             "type": "status",
-            "mode": "apply",
             "effect": "dead",
             "to": {
               "expr": "@цель"
@@ -1970,7 +1963,6 @@
           },
           {
             "type": "status",
-            "mode": "apply",
             "effect": "unconscious",
             "to": {
               "expr": "@цель"
@@ -2059,7 +2051,6 @@
             "target": {
               "expr": "@цель.hp"
             },
-            "direction": "subtract",
             "value": {
               "expr": "меньшее из(@действующий.hp, @бросок.parts.надежда)"
             },
@@ -2103,7 +2094,6 @@
           },
           {
             "type": "status",
-            "mode": "apply",
             "effect": "dead",
             "to": {
               "expr": "@цель"
@@ -2145,7 +2135,6 @@
             "target": {
               "expr": "@цель.hp"
             },
-            "direction": "subtract",
             "value": {
               "expr": "меньшее из(@действующий.hp, кинуть(\"1к4\") + @действующий.tier)"
             }
@@ -2191,7 +2180,6 @@
             "target": {
               "expr": "@цель.stress"
             },
-            "direction": "subtract",
             "value": {
               "expr": "меньшее из(@действующий.stress, кинуть(\"1к4\") + @действующий.tier)"
             }
@@ -2229,7 +2217,6 @@
             "target": {
               "expr": "@цель.armor_marked"
             },
-            "direction": "subtract",
             "value": {
               "expr": "меньшее из(@действующий.armor_marked, кинуть(\"1к4\") + @действующий.tier)"
             }
@@ -2523,7 +2510,6 @@
             "target": {
               "expr": "@цель.armor_marked"
             },
-            "direction": "subtract",
             "value": {
               "expr": "меньшее из(@действующий.armor_marked, 2)"
             }
@@ -2584,7 +2570,6 @@
             "target": {
               "expr": "@цель.hp"
             },
-            "direction": "subtract",
             "value": {
               "expr": "меньшее из(@действующий.hp, 1)"
             }
@@ -2650,7 +2635,6 @@
           },
           {
             "type": "status",
-            "mode": "apply",
             "effect": "merciless",
             "to": {
               "expr": "@цель"
@@ -2709,7 +2693,6 @@
           },
           {
             "type": "status",
-            "mode": "apply",
             "effect": "dodging",
             "to": {
               "expr": "@цель"
@@ -2768,7 +2751,6 @@
           },
           {
             "type": "status",
-            "mode": "apply",
             "effect": "distracted",
             "to": {
               "expr": "@цель"
@@ -2867,7 +2849,6 @@
             "target": {
               "expr": "@what"
             },
-            "direction": "subtract",
             "value": {
               "expr": "@amount"
             }
@@ -2940,7 +2921,6 @@
                 "target": {
                   "expr": "@носитель.stress"
                 },
-                "direction": "subtract",
                 "value": {
                   "expr": "1"
                 },
@@ -3007,7 +2987,6 @@
                 "target": {
                   "expr": "@носитель.stress"
                 },
-                "direction": "subtract",
                 "value": {
                   "expr": "1"
                 },
@@ -3115,7 +3094,6 @@
             "steps": [
               {
                 "type": "status",
-                "mode": "apply",
                 "effect": "vulnerable",
                 "to": {
                   "expr": "@носитель"
@@ -3178,7 +3156,6 @@
             "steps": [
               {
                 "type": "status",
-                "mode": "apply",
                 "effect": "death_move",
                 "to": {
                   "expr": "@носитель"

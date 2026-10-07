@@ -63,7 +63,7 @@ export const newTable = (system: System): Made<Table> => ({
 });
 
 export const simpleReceive = (tag: string, direction: 'subtract' | 'add'): Step => ({
-  type: 'apply', target: { expr: `@лист.${tag}` }, direction, value: { expr: '@amount' },
+  type: 'apply', target: { expr: `@лист.${tag}` }, ...(direction === 'subtract' ? {} : { direction }), value: { expr: '@amount' },
 } as unknown as Step);
 
 export const newCost = (system: System): Made<Effect> => ({
@@ -121,7 +121,7 @@ export const BRICKS: StepTemplate[] = [
   {
     key: 'change', label: '+ изменение',
     hint: 'Изменить поле листа или повесить состояние. Единственное, что меняет мир.',
-    make: () => [{ type: 'apply', direction: 'subtract' } as unknown as Step],
+    make: () => [{ type: 'apply' } as unknown as Step],
   },
   {
     key: 'table', label: '+ таблица',

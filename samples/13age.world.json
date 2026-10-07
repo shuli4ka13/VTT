@@ -17,7 +17,6 @@
         "kind": "die",
         "dice": [
           {
-            "count": 1,
             "sides": 20
           }
         ]
@@ -345,7 +344,6 @@
             "target": {
               "expr": "@лист.hp"
             },
-            "direction": "subtract",
             "value": {
               "expr": "@amount"
             }
@@ -697,7 +695,6 @@
             "target": {
               "expr": "@лист.turn_standard"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },

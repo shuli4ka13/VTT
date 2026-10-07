@@ -314,7 +314,7 @@ describe('вызываемый эффект — обычный эффект', ()
     const made = useWorld.getState().system.effects[key]!;
     expect(made.params!.map(p => [p.key, p.kind])).toEqual([['лист', 'sheet'], ['amount', 'number']]);
     expect(made.steps).toEqual([
-      { type: 'apply', target: { expr: '@лист.hp' }, direction: 'subtract', value: { expr: '@amount' } },
+      { type: 'apply', target: { expr: '@лист.hp' }, value: { expr: '@amount' } },
     ]);
     expect(key.startsWith('event:')).toBe(false);
   });

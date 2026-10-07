@@ -227,8 +227,8 @@ group('две системы одними слотами', () => {
     });
 
     test('у 5e и киберпанка разные ведущие кости — и это только данные', () => {
-      deepEq(system.constants.lead_die.dice, [{ count: 1, sides: 20 }]);
-      deepEq(cyberpunk.constants.lead_die.dice, [{ count: 1, sides: 10 }]);
+      deepEq(system.constants.lead_die.dice.map(d => [d.count ?? 1, d.sides]), [[1, 20]]);
+      deepEq(cyberpunk.constants.lead_die.dice.map(d => [d.count ?? 1, d.sides]), [[1, 10]]);
     });
   });
 

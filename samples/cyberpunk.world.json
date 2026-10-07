@@ -16,7 +16,6 @@
         "kind": "die",
         "dice": [
           {
-            "count": 1,
             "sides": 10
           }
         ]
@@ -1297,7 +1296,6 @@
             "target": {
               "expr": "@действующий.luck_left"
             },
-            "direction": "subtract",
             "value": {
               "expr": "@spend_luck"
             }
@@ -1376,7 +1374,6 @@
             "target": {
               "expr": "@лист.hp"
             },
-            "direction": "subtract",
             "value": {
               "expr": "@сквозь_броню.margin"
             },
@@ -1389,7 +1386,6 @@
             "target": {
               "expr": "@лист.sp_body"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },
@@ -1436,7 +1432,6 @@
             "target": {
               "expr": "@лист.hp"
             },
-            "direction": "subtract",
             "value": {
               "expr": "@в_голову"
             },
@@ -1449,7 +1444,6 @@
             "target": {
               "expr": "@лист.sp_head"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },
@@ -1462,7 +1456,6 @@
             "target": {
               "expr": "@лист.hp"
             },
-            "direction": "subtract",
             "value": {
               "expr": "@amount"
             },
@@ -1542,7 +1535,6 @@
             "target": {
               "expr": "@лист.turn_action"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },

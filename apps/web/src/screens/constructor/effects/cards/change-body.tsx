@@ -261,7 +261,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
         <Select<string>
           value={direction}
           options={[['subtract', 'отнять'], ['add', 'прибавить'], ['set', 'поставить']]}
-          onChange={next => edit(applyIndex, step => { (step as Record<string, unknown>).direction = next; })}
+          onChange={next => edit(applyIndex, step => { const d = step as Record<string, unknown>; if (next === 'subtract') delete d.direction; else d.direction = next; })}
         />
       </Field>
       <Field
@@ -320,7 +320,6 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
           const d = draft as any;
           if (next === 'status') {
             retype(draft, 'status');
-            d.mode ??= 'apply';
           } else if (next === 'emit') {
             retype(draft, 'emit');
             d.effect ??= firstEvent ?? '';
@@ -328,7 +327,6 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
             if (group.amount?.id && main) d.args = { ...(d.args ?? {}), [main.key]: { expr: `@${group.amount.id}` } };
           } else {
             retype(draft, 'apply');
-            d.direction ??= 'subtract';
           }
         })}
       />
@@ -361,7 +359,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
             <Select
               value={String(step.mode ?? 'apply')}
               options={[['apply', 'вешаем'], ['remove', 'снимаем']] as const}
-              onChange={next => edit(applyIndex, draft => { (draft as any).mode = next; })}
+              onChange={next => edit(applyIndex, draft => { if (next === 'apply') delete (draft as any).mode; else (draft as any).mode = next; })}
             />
           </Field>
           <Field label="Какое">

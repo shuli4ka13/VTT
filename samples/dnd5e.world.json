@@ -56,7 +56,6 @@
         "kind": "die",
         "dice": [
           {
-            "count": 1,
             "sides": 20
           }
         ]
@@ -3117,7 +3116,6 @@
           },
           {
             "type": "status",
-            "mode": "apply",
             "effect": {
               "expr": "@status"
             },
@@ -3495,7 +3493,6 @@
           },
           {
             "type": "status",
-            "mode": "apply",
             "effect": {
               "expr": "@status"
             },
@@ -3783,7 +3780,6 @@
           },
           {
             "type": "status",
-            "mode": "apply",
             "effect": {
               "expr": "@status"
             },
@@ -3942,7 +3938,6 @@
           },
           {
             "type": "status",
-            "mode": "apply",
             "effect": {
               "expr": "@status"
             },
@@ -4027,7 +4022,6 @@
           },
           {
             "type": "status",
-            "mode": "apply",
             "effect": {
               "expr": "@status"
             },
@@ -4079,7 +4073,6 @@
           },
           {
             "type": "status",
-            "mode": "apply",
             "effect": {
               "expr": "@status"
             },
@@ -4124,7 +4117,6 @@
           },
           {
             "type": "status",
-            "mode": "apply",
             "effect": {
               "expr": "@status"
             },
@@ -4462,7 +4454,6 @@
         "steps": [
           {
             "type": "status",
-            "mode": "apply",
             "effect": "raging",
             "to": {
               "expr": "@действующий"
@@ -4519,7 +4510,6 @@
         "steps": [
           {
             "type": "status",
-            "mode": "apply",
             "effect": "reckless",
             "to": {
               "expr": "@действующий"
@@ -4555,7 +4545,6 @@
           },
           {
             "type": "status",
-            "mode": "apply",
             "effect": "bardic_ready",
             "to": {
               "expr": "@цель"
@@ -4739,7 +4728,6 @@
           },
           {
             "type": "status",
-            "mode": "apply",
             "effect": "frightened",
             "to": {
               "expr": "@цель"
@@ -4796,7 +4784,6 @@
         "steps": [
           {
             "type": "status",
-            "mode": "apply",
             "effect": "dodging",
             "to": {
               "expr": "@действующий"
@@ -4846,7 +4833,6 @@
           },
           {
             "type": "status",
-            "mode": "apply",
             "effect": "dashing",
             "to": {
               "expr": "@цель"
@@ -4953,7 +4939,6 @@
           },
           {
             "type": "status",
-            "mode": "apply",
             "effect": "hidden",
             "to": {
               "expr": "@цель"
@@ -5003,7 +4988,6 @@
           },
           {
             "type": "status",
-            "mode": "apply",
             "effect": "helped",
             "to": {
               "expr": "@цель"
@@ -5122,7 +5106,6 @@
             "target": {
               "expr": "@лист.turn.действие.left"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },
@@ -5170,7 +5153,6 @@
             "target": {
               "expr": "@лист.turn.бонусное.left"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },
@@ -5218,7 +5200,6 @@
             "target": {
               "expr": "@лист.turn.реакция.left"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },
@@ -5266,7 +5247,6 @@
             "target": {
               "expr": "@лист.turn.раз_за_ход.left"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },
@@ -5314,7 +5294,6 @@
             "target": {
               "expr": "@лист.turn.действие.left"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },
@@ -5340,7 +5319,6 @@
             "target": {
               "expr": "@лист.turn.атаки.left"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },
@@ -5405,7 +5383,6 @@
             "target": {
               "expr": "@лист.hp_temp"
             },
-            "direction": "subtract",
             "value": {
               "expr": "@amount"
             }
@@ -5416,14 +5393,12 @@
             "target": {
               "expr": "@лист.hp_current"
             },
-            "direction": "subtract",
             "value": {
               "expr": "@по_временным.overkill"
             }
           },
           {
             "type": "status",
-            "mode": "apply",
             "effect": "dead",
             "to": {
               "expr": "@лист"
@@ -5478,7 +5453,6 @@
             "target": {
               "expr": "@лист.slots.круг_1.left"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },
@@ -5507,7 +5481,6 @@
             "target": {
               "expr": "@лист.slots.круг_2.left"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },
@@ -5536,7 +5509,6 @@
             "target": {
               "expr": "@лист.slots.круг_3.left"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },
@@ -5565,7 +5537,6 @@
             "target": {
               "expr": "@лист.slots.круг_4.left"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },
@@ -5594,7 +5565,6 @@
             "target": {
               "expr": "@лист.slots.круг_5.left"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },
@@ -5623,7 +5593,6 @@
             "target": {
               "expr": "@лист.slots.круг_6.left"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },
@@ -5652,7 +5621,6 @@
             "target": {
               "expr": "@лист.slots.круг_7.left"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },
@@ -5681,7 +5649,6 @@
             "target": {
               "expr": "@лист.slots.круг_8.left"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },
@@ -5710,7 +5677,6 @@
             "target": {
               "expr": "@лист.slots.круг_9.left"
             },
-            "direction": "subtract",
             "value": {
               "expr": "1"
             },
@@ -5771,7 +5737,6 @@
             "target": {
               "expr": "@what"
             },
-            "direction": "subtract",
             "value": {
               "expr": "@amount"
             }
@@ -6172,7 +6137,6 @@
             "steps": [
               {
                 "type": "status",
-                "mode": "apply",
                 "effect": "shield_up",
                 "to": {
                   "expr": "@носитель"
@@ -6327,7 +6291,6 @@
             "steps": [
               {
                 "type": "status",
-                "mode": "apply",
                 "effect": "uncanny_up",
                 "to": {
                   "expr": "@носитель"
@@ -7218,7 +7181,6 @@
         "attach": [
           {
             "type": "status",
-            "mode": "apply",
             "effect": "prone",
             "to": {
               "expr": "@носитель"
@@ -8571,7 +8533,6 @@
             "steps": [
               {
                 "type": "status",
-                "mode": "apply",
                 "effect": "unconscious",
                 "to": {
                   "expr": "@носитель"
@@ -8579,7 +8540,6 @@
               },
               {
                 "type": "status",
-                "mode": "apply",
                 "effect": "dying",
                 "to": {
                   "expr": "@носитель"
@@ -8702,7 +8662,6 @@
               },
               {
                 "type": "status",
-                "mode": "apply",
                 "effect": "dead",
                 "to": {
                   "expr": "@носитель"
@@ -8737,7 +8696,6 @@
               },
               {
                 "type": "status",
-                "mode": "apply",
                 "effect": "stable",
                 "to": {
                   "expr": "@носитель"
@@ -8786,7 +8744,6 @@
                 "target": {
                   "expr": "@носитель.resources.relentless.left"
                 },
-                "direction": "subtract",
                 "value": {
                   "expr": "1"
                 }
@@ -9316,7 +9273,6 @@
                 "target": {
                   "expr": "@носитель.exhaustion"
                 },
-                "direction": "subtract",
                 "value": {
                   "expr": "1"
                 }
