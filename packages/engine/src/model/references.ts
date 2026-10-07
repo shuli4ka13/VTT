@@ -62,6 +62,7 @@ export interface Declared {
   roll: Set<string>;
   prop: Set<string>;
   recordKind: Set<string>;
+  column: Set<string>;
 }
 
 export function declaredOf(system: System): Declared {
@@ -75,6 +76,7 @@ export function declaredOf(system: System): Declared {
     roll: new Set(tagWords(system).keys()),
     prop: new Set(recordKinds(system).flatMap(([, k]) => (k.columns ?? []).map(p => p.key))),
     recordKind: new Set(kindsOf(system).map(([id]) => id)),
+    column: new Set(Object.entries(system.tables ?? {}).flatMap(([id, table]) => (table.columns ?? []).map(c => `${id}.${c.key}`))),
   };
 }
 
@@ -128,6 +130,23 @@ function slotRefs(value: unknown, slotKind: string | undefined, from: Where, sco
 
 const NAMED: Record<string, RefKind> = { effectRef: 'effect', constantRef: 'constant', tableRef: 'table' };
 
+export const lookupColumnsIn = (source: string): [string, string][] => {
+  let ast: Node;
+  try { ast = compile(source).ast; } catch { return []; }
+  const out: [string, string][] = [];
+  const walk = (node: Node): void => {
+    if (node.kind === 'Call') {
+      const [first, , third] = node.args;
+      if (node.name === 'таблица' && first?.kind === 'Text' && third?.kind === 'Text') out.push([first.value, third.value]);
+      node.args.forEach(walk);
+    } else if (node.kind === 'Unary') walk(node.operand);
+    else if (node.kind === 'Binary') { walk(node.left); walk(node.right); }
+    else if (node.kind === 'Conditional') { walk(node.test); walk(node.then); walk(node.otherwise); }
+  };
+  walk(ast);
+  return out;
+};
+
 export const tablesIn = (source: string): string[] => {
   let ast: Node;
   try { ast = compile(source).ast; } catch { return []; }
@@ -154,6 +173,7 @@ export function exprRefs(source: string, from: Where, scope: ChainScope, out: Re
     return;
   }
   for (const table of tablesIn(text)) out.push({ kind: 'table', key: table, from });
+  for (const [table, column] of lookupColumnsIn(text)) out.push({ kind: 'table', key: table, from, scope: 'column', path: column });
   for (const dep of deps) {
     const dotAt = dep.indexOf('.');
     const top = dotAt > 0 ? dep.slice(0, dotAt) : dep;

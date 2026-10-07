@@ -241,5 +241,16 @@ describe('«из таблицы» — кликами и фишками с наз
     rerender(<FormulaChips value={value} system={withLevels} calculator onChange={next => { value = next; }} />);
     expect(screen.getByText('Уровень персонажа')).toBeTruthy();
   });
+
+  it('колонка, на которую ссылается строка: «из таблицы» берёт её по ссылке, без совпадения имён', () => {
+    const linked = { ...withLevels, tables: { ...withLevels.tables, круги: { label: 'Ячейки по кругам', key: 'word', columns: [{ key: 'circle', label: 'Колонка ячеек', kind: 'column', from: 'уровни' }], rows: [] } } } as unknown as System;
+    let value = '';
+    render(<FormulaChips value={value} system={linked} calculator onChange={next => { value = next; }} />);
+    fireEvent.focus(screen.getByRole('textbox'));
+    fireEvent.mouseDown(screen.getByText('из таблицы'));
+    fireEvent.change(screen.getByLabelText('какую колонку'), { target: { value: 'строка.circle' } });
+    fireEvent.mouseDown(screen.getByText('Вставить'));
+    expect(value).toBe('таблица("уровни", , @строка.circle)');
+  });
 });
 

@@ -351,9 +351,12 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   const columnsFor = (table: string): [string, string][] => (table
     ? (system.tables?.[table]?.columns ?? []).map(c => [c.key, c.label || c.key])
     : tables.flatMap(([id, t]) => (t.columns ?? []).map(c => [c.key, `${c.label || c.key} · ${t.label || id}`] as [string, string])));
+  const linkColumns: [string, string][] = Object.values(system.tables ?? {})
+    .flatMap(t => (t.columns ?? []).filter(c => c.kind === 'column').map(c => [c.key, c.label || c.key] as [string, string]))
+    .filter(([key], i, all) => all.findIndex(([other]) => other === key) === i);
   const placeLookup = () => {
     if (!lookup?.column) return;
-    const column = lookup.column === ROW ? `@${ROW}` : `"${lookup.column}"`;
+    const column = lookup.column === ROW || lookup.column.startsWith(`${ROW}.`) ? `@${lookup.column}` : `"${lookup.column}"`;
     if (lookup.table) insertAt(`${LOOKUP}("${lookup.table}", `, `, ${column})`);
     else insertAt(`${LOOKUP}(`, `, , ${column})`);
     setLookup(null);
@@ -553,6 +556,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
           <select aria-label="какую колонку" value={lookup.column} onChange={e => setLookup({ ...lookup, column: e.target.value })}>
             <option value="">— выберите</option>
             {columnsFor(lookup.table).map(([key, label]) => <option key={`${key}|${label}`} value={key}>{label}</option>)}
+            {linkColumns.map(([key, label]) => <option key={`ссылка|${key}`} value={`${ROW}.${key}`}>{`на которую ссылается строка: «${label}»`}</option>)}
             <option value={ROW}>как у этой строки</option>
           </select>
           <button type="button" className="chips__op" disabled={!lookup.column} onMouseDown={e => { e.preventDefault(); placeLookup(); }}>Вставить</button>

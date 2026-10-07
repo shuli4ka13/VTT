@@ -505,11 +505,17 @@
         "key": "word",
         "columns": [
           {
+            "key": "circle",
+            "label": "Колонка в «Ячейках заклинаний»",
+            "kind": "column",
+            "from": "spell_slots"
+          },
+          {
             "key": "max",
             "label": "Всего",
             "kind": "number",
             "expr": {
-              "expr": "таблица(\"spell_slots\", @caster_level, @строка)"
+              "expr": "таблица(\"spell_slots\", @caster_level, @строка.circle)"
             },
             "title": "Всего ячеек: {label}"
           },
@@ -528,39 +534,66 @@
         "rows": [
           {
             "value": "круг_1",
-            "label": "1-й круг"
+            "label": "1-й круг",
+            "cells": {
+              "circle": "круг_1"
+            }
           },
           {
             "value": "круг_2",
-            "label": "2-й круг"
+            "label": "2-й круг",
+            "cells": {
+              "circle": "круг_2"
+            }
           },
           {
             "value": "круг_3",
-            "label": "3-й круг"
+            "label": "3-й круг",
+            "cells": {
+              "circle": "круг_3"
+            }
           },
           {
             "value": "круг_4",
-            "label": "4-й круг"
+            "label": "4-й круг",
+            "cells": {
+              "circle": "круг_4"
+            }
           },
           {
             "value": "круг_5",
-            "label": "5-й круг"
+            "label": "5-й круг",
+            "cells": {
+              "circle": "круг_5"
+            }
           },
           {
             "value": "круг_6",
-            "label": "6-й круг"
+            "label": "6-й круг",
+            "cells": {
+              "circle": "круг_6"
+            }
           },
           {
             "value": "круг_7",
-            "label": "7-й круг"
+            "label": "7-й круг",
+            "cells": {
+              "circle": "круг_7"
+            }
           },
           {
             "value": "круг_8",
-            "label": "8-й круг"
+            "label": "8-й круг",
+            "cells": {
+              "circle": "круг_8"
+            }
           },
           {
             "value": "круг_9",
-            "label": "9-й круг"
+            "label": "9-й круг",
+            "cells": {
+              "circle": "круг_9"
+            }
           }
         ],
         "owner": "sheet"

@@ -81,6 +81,14 @@ export function ColumnCard({ column, kinds, tables, many, formulaHint, where, na
               </Field>
             ) : null}
           </>
+        ) : column.kind === 'column' ? (
+          <Field label="Колонки какой таблицы">
+            <Select
+              value={column.from ?? ''}
+              options={[['', '— какой —'], ...tables] as never}
+              onChange={next => onChange({ from: next || null })}
+            />
+          </Field>
         ) : null}
       </div>
       <Field label={formulaHint}>

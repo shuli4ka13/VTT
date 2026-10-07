@@ -6,7 +6,7 @@ export const slotRef = z.union([formula, z.string()]);
 
 const bound = z.union([z.number(), z.object({ expr: z.string() }).strict()]);
 
-export const valueKind = z.enum(['number', 'text', 'boolean', 'dice', 'choice', 'effect', 'record', 'field', 'table', 'sheet']);
+export const valueKind = z.enum(['number', 'text', 'boolean', 'dice', 'choice', 'effect', 'record', 'field', 'table', 'column', 'sheet']);
 
 const typed = {
   kind: valueKind.optional(),

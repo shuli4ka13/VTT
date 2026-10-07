@@ -88,6 +88,17 @@ export function ValueEditor({ type, value, system, compendium, onlyWorn, except,
       />
     );
   }
+  if (kind === 'column') {
+    const target = type.from ? system.tables?.[type.from] : undefined;
+    return (
+      <Select
+        value={String(value ?? '')}
+        options={[['', target ? '— какая колонка —' : '— таблица не выбрана —'],
+          ...(target?.columns ?? []).map(c => [c.key, c.label || c.key] as const)] as never}
+        onChange={next => onChange(next)}
+      />
+    );
+  }
   if (kind === 'field') {
     return (
       <Select

@@ -223,6 +223,20 @@ export function danglingRows(system: System, compendium?: Compendium): Dangling[
   const tables = system.tables ?? {};
   for (const [id, table] of Object.entries(tables)) {
     for (const column of (table.columns ?? [])) {
+      if (column.kind === 'column') {
+        const where: Where = { tab: 'rules', section: 'tables', key: id };
+        const target = column.from ? tables[column.from] : undefined;
+        if (!target) {
+          out.push({ where, text: `колонка «${column.label || column.key}» ссылается на таблицу «${column.from ?? ''}», которой нет` });
+          continue;
+        }
+        for (const row of rowsOf(table)) {
+          const cell = (row.cells ?? {})[column.key];
+          if (cell === undefined || cell === '' || (target.columns ?? []).some(other => other.key === cell)) continue;
+          out.push({ where, text: `в строке «${String(row.label ?? row.value)}» колонка «${column.label || column.key}» указывает на колонку, которой в «${target.label || column.from}» нет` });
+        }
+        continue;
+      }
       if (column.kind !== 'choice') continue;
       const where: Where = { tab: 'rules', section: 'tables', key: id };
       if (!column.from || !tables[column.from]) {

@@ -437,3 +437,26 @@ group('линт: у шага только поля его типа', () => {
     ok(!errorTexts(system).some(t => t.includes('нет поля')), errorTexts(system).join('\n'));
   });
 });
+
+group('колонка из таблицы — ссылкой, а не совпадением имён', () => {
+  const lookups = (cell: string, expr: string): System => {
+    const system = bare();
+    system.tables!.ячейки = { label: 'Ячейки заклинаний', key: 'number', columns: [{ key: 'круг_1', label: '1-й круг', kind: 'number' }], rows: [{ value: 1, cells: { круг_1: 2 } }] } as never;
+    system.tables!.круги = { label: 'Ячейки по кругам', key: 'word', owner: 'sheet',
+      columns: [{ key: 'circle', label: 'Колонка', kind: 'column', from: 'ячейки' }, { key: 'max', label: 'Всего', kind: 'number', expr: { expr } }],
+      rows: [{ value: 'первый', cells: { circle: cell } }] } as never;
+    return system;
+  };
+
+  test('строка ссылается на колонку другой таблицы — ошибок нет', () => {
+    eq(errorsOf(lintSystem(lookups('круг_1', 'таблица("ячейки", 1, @строка.circle)'))).length, 0);
+  });
+
+  test('ссылка на колонку, которой нет, — ошибка словами', () => {
+    ok(errorsOf(lintSystem(lookups('круг_9', 'таблица("ячейки", 1, @строка.circle)'))).some(p => /указывает на колонку, которой/.test(p.text)));
+  });
+
+  test('«из таблицы» с несуществующей колонкой — ошибка, а не тихое «—»', () => {
+    ok(errorsOf(lintSystem(lookups('круг_1', 'таблица("ячейки", 1, "круг_7")'))).some(p => /нет колонки «круг_7»/.test(p.text)));
+  });
+});

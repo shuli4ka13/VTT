@@ -366,7 +366,8 @@ function applyPatch(c: TableColumn, patch: ColumnPatch): void {
   } else if (patch.kind !== undefined) {
     if (patch.kind !== c.kind) delete c.default;
     c.kind = patch.kind;
-    if (patch.kind !== 'choice') { delete c.from; delete c.many; }
+    if (patch.kind !== 'choice' && patch.kind !== 'column') delete c.from;
+    if (patch.kind !== 'choice') delete c.many;
     if (patch.kind !== 'number') { delete c.min; delete c.max; }
   }
   if (patch.from !== undefined) { if (patch.from) c.from = patch.from; else delete c.from; }

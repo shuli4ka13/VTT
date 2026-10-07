@@ -115,6 +115,10 @@ function danglingText(ref: Reference, declared: Declared): string | null {
   if (ref.kind === 'field' && ref.scope === 'bare' && !declared.field.has(ref.key)) {
     return `«${ref.key}» — нет ни входа, ни шага с таким именем`;
   }
+  if (ref.kind === 'table' && ref.scope === 'column') {
+    return !declared.table.has(ref.key) || declared.column.has(`${ref.key}.${ref.path}`) ? null
+      : `в таблице «${ref.key}» нет колонки «${ref.path}» — «из таблицы» вернёт пусто`;
+  }
   return declared[ref.kind].has(ref.key) ? null : NAMES[ref.kind](ref.key);
 }
 
