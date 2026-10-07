@@ -77,7 +77,7 @@ export function FormulaField(props: FormulaFieldProps) {
   );
 }
 
-function InlineFormula({ value, system, onChange, onCommit, onCancel, names, extraNames, badges, sheets, placeholder, options, prefix }: FormulaFieldProps) {
+function InlineFormula({ value, system, onChange, onCommit, onCancel, names, extraNames, badges, sheets, placeholder, options, prefix, table }: FormulaFieldProps) {
   const [text, setText] = useState<string | null>(null);
   const current = text ?? value;
   const write = (next: string) => { setText(next); onChange?.(next); };
@@ -87,6 +87,7 @@ function InlineFormula({ value, system, onChange, onCommit, onCancel, names, ext
     <FormulaChips
       value={current}
       system={system}
+      {...(table ? { table } : {})}
       {...(names ? { names } : {})}
       {...(extraNames ? { extraNames } : {})}
       {...(badges ? { badges } : {})}

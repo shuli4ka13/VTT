@@ -157,10 +157,11 @@ export function joinParts(parts: Part[]): string {
   return parts.map(p => ('tag' in p ? (p.lit ? `"${p.tag}"` : `@${p.tag}`) : p.text)).join('');
 }
 
-export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, badges, sheets, extraOptions, calculator, readOnly, autoFocus, onChipPick }: {
+export function FormulaChips({ value, onChange, system, table, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, badges, sheets, extraOptions, calculator, readOnly, autoFocus, onChipPick }: {
   value: string;
   onChange: (next: string) => void;
   system: System;
+  table?: string;
   placeholder?: string;
   onKeyDown?: (e: React.KeyboardEvent) => void;
   onBlur?: () => void;
@@ -351,9 +352,8 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   const columnsFor = (table: string): [string, string][] => (table
     ? (system.tables?.[table]?.columns ?? []).map(c => [c.key, c.label || c.key])
     : tables.flatMap(([id, t]) => (t.columns ?? []).map(c => [c.key, `${c.label || c.key} · ${t.label || id}`] as [string, string])));
-  const linkColumns: [string, string][] = Object.values(system.tables ?? {})
-    .flatMap(t => (t.columns ?? []).filter(c => c.kind === 'column').map(c => [c.key, c.label || c.key] as [string, string]))
-    .filter(([key], i, all) => all.findIndex(([other]) => other === key) === i);
+  const linkColumns: [string, string][] = (table ? system.tables?.[table]?.columns ?? [] : [])
+    .filter(c => c.kind === 'column').map(c => [c.key, c.label || c.key]);
   const placeLookup = () => {
     if (!lookup?.column) return;
     const column = lookup.column === ROW || lookup.column.startsWith(`${ROW}.`) ? `@${lookup.column}` : `"${lookup.column}"`;

@@ -8,6 +8,7 @@ import { isFormulaCell } from './sheet-columns.ts';
 import type { Node } from '../formula/index.ts';
 import { registry } from '../engine/steps/index.ts';
 import { recordsOf, recordKinds, kindsOf } from './owned.ts';
+import { VALUE_COLUMN } from './tables.ts';
 
 export { MOMENT_PREFIX, FIELD_PREFIX } from '../events/bus.ts';
 import { MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, ANY_ACTION, callHappening, SEEN } from '../events/bus.ts';
@@ -63,6 +64,7 @@ export interface Declared {
   prop: Set<string>;
   recordKind: Set<string>;
   column: Set<string>;
+  tableLabel: Map<string, string>;
 }
 
 export function declaredOf(system: System): Declared {
@@ -76,7 +78,8 @@ export function declaredOf(system: System): Declared {
     roll: new Set(tagWords(system).keys()),
     prop: new Set(recordKinds(system).flatMap(([, k]) => (k.columns ?? []).map(p => p.key))),
     recordKind: new Set(kindsOf(system).map(([id]) => id)),
-    column: new Set(Object.entries(system.tables ?? {}).flatMap(([id, table]) => (table.columns ?? []).map(c => `${id}.${c.key}`))),
+    column: new Set(Object.entries(system.tables ?? {}).flatMap(([id, table]) => [VALUE_COLUMN, ...(table.columns ?? []).map(c => c.key)].map(key => `${id}.${key}`))),
+    tableLabel: new Map(Object.entries(system.tables ?? {}).map(([id, table]) => [id, table.label || id])),
   };
 }
 
@@ -412,7 +415,7 @@ export function withAddresses(system: System, refs: Reference[]): Reference[] {
   const fields = new Set(fieldsOf(system).map(f => f.tag));
   const tables: Reference[] = [];
   for (const ref of refs) {
-    if (!ref.path) continue;
+    if (!ref.path || ref.scope === 'column') continue;
     const head = ref.path.split('.')[0]!;
     if (fields.has(head) || !system.tables?.[head]) continue;
     ref.kind = 'field';

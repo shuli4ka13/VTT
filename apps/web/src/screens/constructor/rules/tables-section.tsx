@@ -241,7 +241,7 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
 
 
 const kindLabel = (column: TableColumn): string =>
-  `${kindWord(column.kind)}${column.expr !== undefined ? ' · формула' : ''}`;
+  (column.kind === undefined && column.expr !== undefined ? 'по формуле' : `${kindWord(column.kind)}${column.expr !== undefined ? ' · формула' : ''}`);
 
 const HOLDERS = [
   ['sheet', 'своё у каждого листа'],
@@ -365,6 +365,7 @@ function applyPatch(c: TableColumn, patch: ColumnPatch): void {
     delete c.kind; delete c.default; delete c.from; delete c.many;
   } else if (patch.kind !== undefined) {
     if (patch.kind !== c.kind) delete c.default;
+    if ((patch.kind === 'column') !== (c.kind === 'column')) delete c.from;
     c.kind = patch.kind;
     if (patch.kind !== 'choice' && patch.kind !== 'column') delete c.from;
     if (patch.kind !== 'choice') delete c.many;
@@ -372,7 +373,10 @@ function applyPatch(c: TableColumn, patch: ColumnPatch): void {
   }
   if (patch.from !== undefined) { if (patch.from) c.from = patch.from; else delete c.from; }
   if (patch.many !== undefined && Boolean(patch.many) !== Boolean(c.many)) { delete c.default; if (patch.many) c.many = true; else delete c.many; }
-  if (patch.expr !== undefined) { if (patch.expr !== null) c.expr = { expr: patch.expr }; else delete c.expr; }
+  if (patch.expr !== undefined) {
+    if (patch.expr !== null) c.expr = { expr: patch.expr };
+    else { delete c.expr; if (c.kind === undefined) c.kind = 'number'; }
+  }
   if (patch.min !== undefined) { if (patch.min !== null) c.min = patch.min; else delete c.min; }
   if (patch.max !== undefined) { if (patch.max !== null) c.max = patch.max; else delete c.max; }
 }

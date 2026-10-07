@@ -117,7 +117,7 @@ function danglingText(ref: Reference, declared: Declared): string | null {
   }
   if (ref.kind === 'table' && ref.scope === 'column') {
     return !declared.table.has(ref.key) || declared.column.has(`${ref.key}.${ref.path}`) ? null
-      : `в таблице «${ref.key}» нет колонки «${ref.path}» — «из таблицы» вернёт пусто`;
+      : `в таблице «${declared.tableLabel.get(ref.key) ?? ref.key}» нет колонки «${ref.path}» — «из таблицы» вернёт пусто`;
   }
   return declared[ref.kind].has(ref.key) ? null : NAMES[ref.kind](ref.key);
 }
@@ -621,7 +621,13 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...rowNameProblems(system));
   out.push(...tableFieldProblems(system));
   out.push(...danglingRows(system, compendium).map(d => ({ where: d.where, level: 'error' as const, text: d.text })));
-  return out;
+  const seen = new Set<string>();
+  return out.filter(problem => {
+    const key = `${problem.level}|${problem.text}|${JSON.stringify(problem.where)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export function lintCompendium(system: System, compendium: Compendium): Problem[] {

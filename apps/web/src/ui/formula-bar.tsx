@@ -24,6 +24,7 @@ export function FormulaBar() {
         key={target.id}
         value={target.value}
         system={target.system}
+        {...(target.table ? { table: target.table } : {})}
         {...(target.names ? { names: target.names } : {})}
         {...(target.extraNames ? { extraNames: target.extraNames } : {})}
         {...(target.badges ? { badges: target.badges } : {})}
