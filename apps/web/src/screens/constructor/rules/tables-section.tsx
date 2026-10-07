@@ -63,10 +63,15 @@ const rangesBroken = (rows: TableRow[]): boolean => {
   return sorted.some((r, i) => i > 0 && (sorted[i - 1]!.to ?? 0) + 1 !== (r.from ?? 0));
 };
 
-const addTable = (editSystem: EditSystem) => editSystem(draft => {
-  const made = newTable(draft);
-  (draft.tables ??= {})[made.key] = made.value;
-});
+const addTable = (editSystem: EditSystem) => {
+  let key = '';
+  editSystem(draft => {
+    const made = newTable(draft);
+    key = made.key;
+    (draft.tables ??= {})[made.key] = made.value;
+  });
+  if (key) useWorld.getState().pick({ activeTableId: key });
+};
 
 const OWNER_GROUPS: [string | undefined, string][] = [
   ['sheet', 'Своё у каждого листа'],
@@ -121,7 +126,7 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!wanted) return;
-    ref.current?.scrollIntoView({ block: 'start' });
+    ref.current?.scrollIntoView?.({ block: 'start' });
     useWorld.getState().pick({ activeTableId: null });
   }, [wanted]);
   const held = users.length > 0 || inUse(usage, 'table', id);

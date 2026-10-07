@@ -314,6 +314,7 @@ describe('Словари: кости, правки броска, таблицы'
     fireEvent.click(screen.getByText('+ таблица'));
     const tables = Object.values(useWorld.getState().system.tables ?? {});
     expect(tables.length).toBe(1);
+    expect(screen.getByPlaceholderText('как зовётся таблица')).toBeTruthy();
   });
 
   it('переименование первой кости не трогает вторую и не меняет порядок', () => {
