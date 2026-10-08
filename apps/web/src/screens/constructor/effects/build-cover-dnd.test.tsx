@@ -331,4 +331,79 @@ describe('эффекты D&D собираются в конструкторе р
     dump({ got: built('spell_condition'), goal });
     expect(built('spell_condition')).toEqual(goal);
   });
+
+  it('D&D «Не замечает» (hidden): срок 1 ход, спадает в начале хода листа из входа, две правки броска по двум листам', { timeout: 60000 }, () => {
+    const [goal] = start('dnd5e', ['hidden']);
+    const ui = fresh('+ висит и правит', goal!.label!, 'hidden', 'Состояния', goal!.description!);
+    ui.click('+ вход');
+    ui.type(ui.cell('Название', 0), 'Кого не замечает');
+    ui.select(ui.cell('Тип', 0), 'sheet');
+    if (ui.has('ещё')) ui.click('ещё');
+    ui.type(ui.cell('Имя в формулах', 0), 'кого');
+    lifetime('turns', 'refresh');
+    ui.type('Сколько', '1');
+    ui.select('Спадает', 'turn-start');
+    ui.select('Чьи ходы считать', 'кого');
+
+    const rollEdit = (edit: string, when: string) => {
+      within().click('+ правка вызова');
+      const card = lastModifier;
+      within(card()).select('С метками', 'атака');
+      within(card()).select('Какая правка', edit);
+      within(card()).select('Ещё условие', 'формулой…');
+      within(card()).formula('Условие', when);
+    };
+    rollEdit('advantage', 'все(@против == @носитель, @бросающий == @кого)');
+    rollEdit('disadvantage', 'все(@бросающий == @носитель, @против == @кого)');
+    dump({ got: built('hidden'), goal });
+    expect(built('hidden')).toEqual(goal);
+  });
+
+  it('D&D «Засада» (hide): один бросок Скрытности выше «Для каждого из», проверка против пассивной внимательности каждой цели, «Не замечает» с входом', { timeout: 90000 }, () => {
+    const [goal] = start('dnd5e', ['hide']);
+    const ui = fresh('+ кнопкой', goal!.label!, 'hide', 'Действия в бою', goal!.description!);
+    ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_action');
+    let card = stepCard(/^1 · /);
+    within(card).formula(within(card).arg('Лист'), '@действующий');
+    within(card).formula(within(card).arg('Источник'), '@действующий');
+
+    ui.click('+ число');
+    card = stepCard(/^3 · /);
+    within(card).formula('Бросает', '@действующий');
+    card = stepCard(/^3 · /);
+    within(card).formula('Сколько', 'кинуть(@lead_die) + @действующий.skills.скрытность.total');
+    nameStep(stepCard(/^3 · /), 'sneak_бросок');
+    within(stepCard(/^3 · /)).click('↑');
+
+    ui.click('+ проверка');
+    card = stepCard(/^4 · /);
+    within(card).formula('Проверка', '@sneak_бросок >= @цель.passive_perception');
+    nameStep(stepCard(/^4 · /), 'sneak');
+    marks(stepCard(/^2 · /), 'проверка', 'ловкость', 'скрытность');
+
+    ui.click('+ изменение');
+    within(stepCard(/^5 · /)).click('состояние');
+    card = stepCard(/^5 · /);
+    within(card).select('Какое', 'hidden');
+    within(stepCard(/^5 · /)).formula('На кого', '@цель');
+    within(stepCard(/^5 · /)).formula('Запомнит: Кого не замечает', '@действующий');
+    dump({ got: built('hide'), goal });
+    expect(built('hide')).toEqual(goal);
+  });
+
+  it('D&D «Засада» (hide): у броска выше «Для каждого из» «Против кого» пусто — «ни против кого — бросок один на все цели»', { timeout: 30000 }, () => {
+    const world = structuredClone(worldOf('dnd5e'));
+    useWorld.setState(state => ({
+      ...state, system: world.system as System, compendium: world.compendium,
+      activeEffectId: 'hide', activeFieldTag: null, activeRecordKind: null, activeSheetKind: null,
+    }));
+    render(<EffectsTab />);
+    openAll();
+    const roll = stepCard(/^2 · Число/);
+    const field = within(roll).field('Против кого');
+    const shown = field.querySelector<HTMLElement>('[placeholder]');
+    expect(shown?.getAttribute('placeholder')).toBe('ни против кого — бросок один на все цели');
+    expect((shown as HTMLInputElement | null)?.value ?? shown?.textContent ?? '').toBe('');
+    expect(useWorld.getState().system.effects.hide!.steps![0]).not.toHaveProperty('against');
+  });
 });

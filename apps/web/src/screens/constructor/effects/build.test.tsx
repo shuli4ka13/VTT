@@ -260,7 +260,6 @@ describe('эффекты пресетов собираются в констру
     within(card).formula('Бросает', '@действующий');
     card = stepCard(/^5 · /);
     within(card).formula('Сколько', 'кинуть(@lead_die) + @прицел');
-    within(card).formula('Против кого', 'первый(@цели)');
     marks(card, 'атака');
     nameStep(card, 'hit_бросок');
     within(card).click('↑');
@@ -592,7 +591,6 @@ describe('эффекты пресетов собираются в констру
     const at = (n: number) => stepCard(new RegExp(`^${n} · `));
     within(at(2)).formula('Бросает', '@действующий');
     within(at(2)).formula('Сколько', 'кинуть(@pool)');
-    within(at(2)).formula('Против кого', 'первый(@цели)');
     marks(at(2), 'действие', '=если(@rating == 0, "нулевой", "")');
     nameStep(at(2), 'бросок_бросок');
     within(at(2)).click('↑');

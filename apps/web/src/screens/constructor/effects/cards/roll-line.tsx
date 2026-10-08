@@ -23,7 +23,8 @@ export function RollLine({ roll, context, system, onRoll, owned = true, keep = f
   owned?: boolean;
   keep?: boolean;
 }) {
-  const { singles, firsts } = sheetChoices(context);
+  const { singles, firsts, lists, shared: overAll } = sheetChoices(context);
+  const shared = overAll && !roll.against;
   return (
     <div className="roll-line">
       <Part label="Бросает" title="Кто бросает — на его бросок действуют правки (преимущество, «Благословение») и вопросы «увидев кости». Пусто — просто расчёт, кости без правок.">
@@ -32,8 +33,11 @@ export function RollLine({ roll, context, system, onRoll, owned = true, keep = f
       </Part>
       {owned && roll.by ? (
         <>
-          <Part label="Против кого" title="Для правок по тому, против кого бросают: «Ослеплён» даёт преимущество тем, кто бросает против него.">
-            <SheetPick value={roll.against} sheets={singles} system={system} where="бросок · против кого" empty="ни против кого" extra={firsts}
+          <Part label="Против кого" title={shared
+            ? 'Бросок выше «Для каждого из» — один на все цели, поэтому ни против кого: правки «против меня» («Ослеплён», «Уязвим») не действуют. Нужны правки по каждой цели — поставьте бросок ниже «Для каждого из».'
+            : 'Для правок по тому, против кого бросают: «Ослеплён» даёт преимущество тем, кто бросает против него.'}>
+            <SheetPick value={roll.against} sheets={singles} system={system} where="бросок · против кого" known={lists}
+              empty={shared ? 'ни против кого — бросок один на все цели' : 'ни против кого'} extra={firsts}
               onChange={next => onRoll(draft => { if (next) draft.against = next; else delete draft.against; })} />
           </Part>
           <Part label="Метки" wide title="По меткам бросок находят правки и подписки: «атака», «спасбросок», «ловкость»">

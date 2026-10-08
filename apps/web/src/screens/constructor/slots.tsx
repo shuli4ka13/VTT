@@ -121,11 +121,17 @@ function propsFor(ctx: SlotContext): Map<string, string> {
   return out;
 }
 
-export function sheetChoices(ctx: SlotContext): { singles: Map<string, string>; firsts: (readonly [string, string])[] } {
+export function sheetChoices(ctx: SlotContext): { singles: Map<string, string>; firsts: (readonly [string, string])[]; lists: Map<string, string>; shared: boolean } {
   const lists = (ctx.effect.params ?? []).filter(param => param.kind === 'sheet' && param.many);
   const listKeys = new Set(lists.map(param => param.key));
   const singles = new Map([...(ctx.sheets ?? new Map<string, string>())].filter(([name]) => !listKeys.has(name)));
-  return { singles, firsts: lists.map(param => [`первый(@${param.key})`, `первый из «${param.label ?? param.key}»`] as const) };
+  const shared = lists.some(param => param.item && !ctx.sheets?.has(param.item.key));
+  return {
+    singles,
+    firsts: lists.map(param => [`первый(@${param.key})`, `первый из «${param.label ?? param.key}»`] as const),
+    lists: new Map(lists.map(param => [param.key, param.label ?? param.key])),
+    shared,
+  };
 }
 
 export const callable = (system: System, except: Effect): [string, Effect][] =>

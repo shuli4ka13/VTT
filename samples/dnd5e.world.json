@@ -4884,7 +4884,7 @@
       "hide": {
         "label": "Засада",
         "group": "Действия в бою",
-        "description": "Скрытность против пассивной внимательности цели. Вышло — прячешься.",
+        "description": "Скрытность — один бросок против пассивной внимательности каждой цели. Кто не заметил — не видит тебя до начала твоего следующего хода.",
         "params": [
           {
             "key": "действующий",
@@ -4917,9 +4917,6 @@
             ],
             "by": {
               "expr": "@действующий"
-            },
-            "against": {
-              "expr": "первый(@цели)"
             }
           },
           {
@@ -4934,14 +4931,18 @@
             },
             "versus": {
               "expr": "@цель.passive_perception"
-            },
-            "continueOn": "success"
+            }
           },
           {
             "type": "status",
             "effect": "hidden",
             "to": {
               "expr": "@цель"
+            },
+            "args": {
+              "кого": {
+                "expr": "@действующий"
+              }
             }
           }
         ],
@@ -6018,15 +6019,23 @@
         "reapply": "refresh"
       },
       "hidden": {
-        "label": "Прячется",
+        "label": "Не замечает",
         "group": "Состояния",
-        "description": "Тебя не видят: атаки по цели, которая тебя не видит, идут с преимуществом.",
+        "description": "Не видит того, кто от него спрятался: атаки спрятавшегося по нему — с преимуществом, его атаки по спрятавшемуся — с помехой. До начала следующего хода спрятавшегося.",
         "activation": "passive",
         "duration": {
           "kind": "turns",
           "max": 1,
-          "ends": "turn-start"
+          "ends": "turn-start",
+          "by": "кого"
         },
+        "params": [
+          {
+            "key": "кого",
+            "label": "Кого не замечает",
+            "kind": "sheet"
+          }
+        ],
         "modifiers": [
           {
             "tags": [
@@ -6037,7 +6046,19 @@
             "param": "edits",
             "edit": "advantage",
             "if": {
-              "expr": "@бросающий == @носитель"
+              "expr": "все(@против == @носитель, @бросающий == @кого)"
+            }
+          },
+          {
+            "tags": [
+              "атака"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage",
+            "if": {
+              "expr": "все(@бросающий == @носитель, @против == @кого)"
             }
           }
         ],
@@ -10374,6 +10395,18 @@
             "value": {
               "expr": "11"
             }
+          },
+          {
+            "tags": [
+              "скрытность"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            }
           }
         ],
         "table": "armor",
@@ -10474,6 +10507,18 @@
             "value": {
               "expr": "14"
             }
+          },
+          {
+            "tags": [
+              "скрытность"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            }
           }
         ],
         "table": "armor",
@@ -10513,6 +10558,18 @@
             "op": "set",
             "value": {
               "expr": "15"
+            }
+          },
+          {
+            "tags": [
+              "скрытность"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage",
+            "if": {
+              "expr": "@бросающий == @носитель"
             }
           }
         ],
@@ -10570,6 +10627,18 @@
             "value": {
               "expr": "да"
             }
+          },
+          {
+            "tags": [
+              "скрытность"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            }
           }
         ],
         "table": "armor",
@@ -10598,6 +10667,18 @@
             "value": {
               "expr": "да"
             }
+          },
+          {
+            "tags": [
+              "скрытность"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            }
           }
         ],
         "table": "armor",
@@ -10625,6 +10706,18 @@
             "op": "set",
             "value": {
               "expr": "да"
+            }
+          },
+          {
+            "tags": [
+              "скрытность"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage",
+            "if": {
+              "expr": "@бросающий == @носитель"
             }
           }
         ],

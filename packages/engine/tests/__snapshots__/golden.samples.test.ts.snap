@@ -17323,6 +17323,9 @@ exports[`итоги действий: dnd5e > arven · +hide 1`] = `
     "arven": {
       "effects": [
         {
+          "args": {
+            "кого": "arven",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -17333,6 +17336,9 @@ exports[`итоги действий: dnd5e > arven · +hide 1`] = `
     "arven": {
       "effects": [
         {
+          "args": {
+            "кого": "arven",
+          },
           "effectId": "hidden",
         },
       ],
@@ -17346,6 +17352,9 @@ exports[`итоги действий: dnd5e > arven · +hide 1`] = `
     "doran": {
       "effects": [
         {
+          "args": {
+            "кого": "arven",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -17356,6 +17365,9 @@ exports[`итоги действий: dnd5e > arven · +hide 1`] = `
     "doran": {
       "effects": [
         {
+          "args": {
+            "кого": "arven",
+          },
           "effectId": "hidden",
         },
       ],
@@ -17369,6 +17381,9 @@ exports[`итоги действий: dnd5e > arven · +hide 1`] = `
     "goblin": {
       "effects": [
         {
+          "args": {
+            "кого": "arven",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -17379,6 +17394,9 @@ exports[`итоги действий: dnd5e > arven · +hide 1`] = `
     "goblin": {
       "effects": [
         {
+          "args": {
+            "кого": "arven",
+          },
           "effectId": "hidden",
         },
       ],
@@ -17392,6 +17410,9 @@ exports[`итоги действий: dnd5e > arven · +hide 1`] = `
     "mirra": {
       "effects": [
         {
+          "args": {
+            "кого": "arven",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -17402,6 +17423,9 @@ exports[`итоги действий: dnd5e > arven · +hide 1`] = `
     "mirra": {
       "effects": [
         {
+          "args": {
+            "кого": "arven",
+          },
           "effectId": "hidden",
         },
       ],
@@ -17415,6 +17439,9 @@ exports[`итоги действий: dnd5e > arven · +hide 1`] = `
     "ogre": {
       "effects": [
         {
+          "args": {
+            "кого": "arven",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -17425,6 +17452,9 @@ exports[`итоги действий: dnd5e > arven · +hide 1`] = `
     "ogre": {
       "effects": [
         {
+          "args": {
+            "кого": "arven",
+          },
           "effectId": "hidden",
         },
       ],
@@ -17438,6 +17468,9 @@ exports[`итоги действий: dnd5e > arven · +hide 1`] = `
     "orc": {
       "effects": [
         {
+          "args": {
+            "кого": "arven",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -17448,6 +17481,9 @@ exports[`итоги действий: dnd5e > arven · +hide 1`] = `
     "orc": {
       "effects": [
         {
+          "args": {
+            "кого": "arven",
+          },
           "effectId": "hidden",
         },
       ],
@@ -17461,6 +17497,9 @@ exports[`итоги действий: dnd5e > arven · +hide 1`] = `
     "sil": {
       "effects": [
         {
+          "args": {
+            "кого": "arven",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -17471,6 +17510,9 @@ exports[`итоги действий: dnd5e > arven · +hide 1`] = `
     "sil": {
       "effects": [
         {
+          "args": {
+            "кого": "arven",
+          },
           "effectId": "hidden",
         },
       ],
@@ -20077,6 +20119,9 @@ exports[`итоги действий: dnd5e > doran · +hide 1`] = `
     "arven": {
       "effects": [
         {
+          "args": {
+            "кого": "doran",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -20087,6 +20132,9 @@ exports[`итоги действий: dnd5e > doran · +hide 1`] = `
     "arven": {
       "effects": [
         {
+          "args": {
+            "кого": "doran",
+          },
           "effectId": "hidden",
         },
       ],
@@ -20100,6 +20148,9 @@ exports[`итоги действий: dnd5e > doran · +hide 1`] = `
     "doran": {
       "effects": [
         {
+          "args": {
+            "кого": "doran",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -20110,6 +20161,9 @@ exports[`итоги действий: dnd5e > doran · +hide 1`] = `
     "doran": {
       "effects": [
         {
+          "args": {
+            "кого": "doran",
+          },
           "effectId": "hidden",
         },
       ],
@@ -20123,6 +20177,9 @@ exports[`итоги действий: dnd5e > doran · +hide 1`] = `
     "goblin": {
       "effects": [
         {
+          "args": {
+            "кого": "doran",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -20133,6 +20190,9 @@ exports[`итоги действий: dnd5e > doran · +hide 1`] = `
     "goblin": {
       "effects": [
         {
+          "args": {
+            "кого": "doran",
+          },
           "effectId": "hidden",
         },
       ],
@@ -20146,6 +20206,9 @@ exports[`итоги действий: dnd5e > doran · +hide 1`] = `
     "mirra": {
       "effects": [
         {
+          "args": {
+            "кого": "doran",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -20156,6 +20219,9 @@ exports[`итоги действий: dnd5e > doran · +hide 1`] = `
     "mirra": {
       "effects": [
         {
+          "args": {
+            "кого": "doran",
+          },
           "effectId": "hidden",
         },
       ],
@@ -20169,6 +20235,9 @@ exports[`итоги действий: dnd5e > doran · +hide 1`] = `
     "ogre": {
       "effects": [
         {
+          "args": {
+            "кого": "doran",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -20179,6 +20248,9 @@ exports[`итоги действий: dnd5e > doran · +hide 1`] = `
     "ogre": {
       "effects": [
         {
+          "args": {
+            "кого": "doran",
+          },
           "effectId": "hidden",
         },
       ],
@@ -20192,6 +20264,9 @@ exports[`итоги действий: dnd5e > doran · +hide 1`] = `
     "orc": {
       "effects": [
         {
+          "args": {
+            "кого": "doran",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -20202,6 +20277,9 @@ exports[`итоги действий: dnd5e > doran · +hide 1`] = `
     "orc": {
       "effects": [
         {
+          "args": {
+            "кого": "doran",
+          },
           "effectId": "hidden",
         },
       ],
@@ -20215,6 +20293,9 @@ exports[`итоги действий: dnd5e > doran · +hide 1`] = `
     "sil": {
       "effects": [
         {
+          "args": {
+            "кого": "doran",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -20225,6 +20306,9 @@ exports[`итоги действий: dnd5e > doran · +hide 1`] = `
     "sil": {
       "effects": [
         {
+          "args": {
+            "кого": "doran",
+          },
           "effectId": "hidden",
         },
       ],
@@ -23052,6 +23136,9 @@ exports[`итоги действий: dnd5e > goblin · +hide 1`] = `
     "arven": {
       "effects": [
         {
+          "args": {
+            "кого": "goblin",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -23062,6 +23149,9 @@ exports[`итоги действий: dnd5e > goblin · +hide 1`] = `
     "arven": {
       "effects": [
         {
+          "args": {
+            "кого": "goblin",
+          },
           "effectId": "hidden",
         },
       ],
@@ -23075,6 +23165,9 @@ exports[`итоги действий: dnd5e > goblin · +hide 1`] = `
     "doran": {
       "effects": [
         {
+          "args": {
+            "кого": "goblin",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -23085,6 +23178,9 @@ exports[`итоги действий: dnd5e > goblin · +hide 1`] = `
     "doran": {
       "effects": [
         {
+          "args": {
+            "кого": "goblin",
+          },
           "effectId": "hidden",
         },
       ],
@@ -23098,6 +23194,9 @@ exports[`итоги действий: dnd5e > goblin · +hide 1`] = `
     "goblin": {
       "effects": [
         {
+          "args": {
+            "кого": "goblin",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -23108,6 +23207,9 @@ exports[`итоги действий: dnd5e > goblin · +hide 1`] = `
     "goblin": {
       "effects": [
         {
+          "args": {
+            "кого": "goblin",
+          },
           "effectId": "hidden",
         },
       ],
@@ -23121,6 +23223,9 @@ exports[`итоги действий: dnd5e > goblin · +hide 1`] = `
     "mirra": {
       "effects": [
         {
+          "args": {
+            "кого": "goblin",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -23131,6 +23236,9 @@ exports[`итоги действий: dnd5e > goblin · +hide 1`] = `
     "mirra": {
       "effects": [
         {
+          "args": {
+            "кого": "goblin",
+          },
           "effectId": "hidden",
         },
       ],
@@ -23144,6 +23252,9 @@ exports[`итоги действий: dnd5e > goblin · +hide 1`] = `
     "ogre": {
       "effects": [
         {
+          "args": {
+            "кого": "goblin",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -23154,6 +23265,9 @@ exports[`итоги действий: dnd5e > goblin · +hide 1`] = `
     "ogre": {
       "effects": [
         {
+          "args": {
+            "кого": "goblin",
+          },
           "effectId": "hidden",
         },
       ],
@@ -23167,6 +23281,9 @@ exports[`итоги действий: dnd5e > goblin · +hide 1`] = `
     "orc": {
       "effects": [
         {
+          "args": {
+            "кого": "goblin",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -23177,6 +23294,9 @@ exports[`итоги действий: dnd5e > goblin · +hide 1`] = `
     "orc": {
       "effects": [
         {
+          "args": {
+            "кого": "goblin",
+          },
           "effectId": "hidden",
         },
       ],
@@ -23190,6 +23310,9 @@ exports[`итоги действий: dnd5e > goblin · +hide 1`] = `
     "sil": {
       "effects": [
         {
+          "args": {
+            "кого": "goblin",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -23200,6 +23323,9 @@ exports[`итоги действий: dnd5e > goblin · +hide 1`] = `
     "sil": {
       "effects": [
         {
+          "args": {
+            "кого": "goblin",
+          },
           "effectId": "hidden",
         },
       ],
@@ -24744,6 +24870,9 @@ exports[`итоги действий: dnd5e > mirra · +hide 1`] = `
     "arven": {
       "effects": [
         {
+          "args": {
+            "кого": "mirra",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -24754,6 +24883,9 @@ exports[`итоги действий: dnd5e > mirra · +hide 1`] = `
     "arven": {
       "effects": [
         {
+          "args": {
+            "кого": "mirra",
+          },
           "effectId": "hidden",
         },
       ],
@@ -24767,6 +24899,9 @@ exports[`итоги действий: dnd5e > mirra · +hide 1`] = `
     "doran": {
       "effects": [
         {
+          "args": {
+            "кого": "mirra",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -24777,6 +24912,9 @@ exports[`итоги действий: dnd5e > mirra · +hide 1`] = `
     "doran": {
       "effects": [
         {
+          "args": {
+            "кого": "mirra",
+          },
           "effectId": "hidden",
         },
       ],
@@ -24790,6 +24928,9 @@ exports[`итоги действий: dnd5e > mirra · +hide 1`] = `
     "goblin": {
       "effects": [
         {
+          "args": {
+            "кого": "mirra",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -24800,6 +24941,9 @@ exports[`итоги действий: dnd5e > mirra · +hide 1`] = `
     "goblin": {
       "effects": [
         {
+          "args": {
+            "кого": "mirra",
+          },
           "effectId": "hidden",
         },
       ],
@@ -24813,6 +24957,9 @@ exports[`итоги действий: dnd5e > mirra · +hide 1`] = `
     "mirra": {
       "effects": [
         {
+          "args": {
+            "кого": "mirra",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -24823,6 +24970,9 @@ exports[`итоги действий: dnd5e > mirra · +hide 1`] = `
     "mirra": {
       "effects": [
         {
+          "args": {
+            "кого": "mirra",
+          },
           "effectId": "hidden",
         },
       ],
@@ -24836,6 +24986,9 @@ exports[`итоги действий: dnd5e > mirra · +hide 1`] = `
     "ogre": {
       "effects": [
         {
+          "args": {
+            "кого": "mirra",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -24846,6 +24999,9 @@ exports[`итоги действий: dnd5e > mirra · +hide 1`] = `
     "ogre": {
       "effects": [
         {
+          "args": {
+            "кого": "mirra",
+          },
           "effectId": "hidden",
         },
       ],
@@ -24859,6 +25015,9 @@ exports[`итоги действий: dnd5e > mirra · +hide 1`] = `
     "orc": {
       "effects": [
         {
+          "args": {
+            "кого": "mirra",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -24869,6 +25028,9 @@ exports[`итоги действий: dnd5e > mirra · +hide 1`] = `
     "orc": {
       "effects": [
         {
+          "args": {
+            "кого": "mirra",
+          },
           "effectId": "hidden",
         },
       ],
@@ -24882,6 +25044,9 @@ exports[`итоги действий: dnd5e > mirra · +hide 1`] = `
     "sil": {
       "effects": [
         {
+          "args": {
+            "кого": "mirra",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -24892,6 +25057,9 @@ exports[`итоги действий: dnd5e > mirra · +hide 1`] = `
     "sil": {
       "effects": [
         {
+          "args": {
+            "кого": "mirra",
+          },
           "effectId": "hidden",
         },
       ],
@@ -27034,6 +27202,9 @@ exports[`итоги действий: dnd5e > ogre · +hide 1`] = `
     "arven": {
       "effects": [
         {
+          "args": {
+            "кого": "ogre",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -27044,6 +27215,9 @@ exports[`итоги действий: dnd5e > ogre · +hide 1`] = `
     "arven": {
       "effects": [
         {
+          "args": {
+            "кого": "ogre",
+          },
           "effectId": "hidden",
         },
       ],
@@ -27057,6 +27231,9 @@ exports[`итоги действий: dnd5e > ogre · +hide 1`] = `
     "doran": {
       "effects": [
         {
+          "args": {
+            "кого": "ogre",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -27067,6 +27244,9 @@ exports[`итоги действий: dnd5e > ogre · +hide 1`] = `
     "doran": {
       "effects": [
         {
+          "args": {
+            "кого": "ogre",
+          },
           "effectId": "hidden",
         },
       ],
@@ -27080,6 +27260,9 @@ exports[`итоги действий: dnd5e > ogre · +hide 1`] = `
     "goblin": {
       "effects": [
         {
+          "args": {
+            "кого": "ogre",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -27090,6 +27273,9 @@ exports[`итоги действий: dnd5e > ogre · +hide 1`] = `
     "goblin": {
       "effects": [
         {
+          "args": {
+            "кого": "ogre",
+          },
           "effectId": "hidden",
         },
       ],
@@ -27103,6 +27289,9 @@ exports[`итоги действий: dnd5e > ogre · +hide 1`] = `
     "mirra": {
       "effects": [
         {
+          "args": {
+            "кого": "ogre",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -27113,6 +27302,9 @@ exports[`итоги действий: dnd5e > ogre · +hide 1`] = `
     "mirra": {
       "effects": [
         {
+          "args": {
+            "кого": "ogre",
+          },
           "effectId": "hidden",
         },
       ],
@@ -27126,6 +27318,9 @@ exports[`итоги действий: dnd5e > ogre · +hide 1`] = `
     "ogre": {
       "effects": [
         {
+          "args": {
+            "кого": "ogre",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -27136,6 +27331,9 @@ exports[`итоги действий: dnd5e > ogre · +hide 1`] = `
     "ogre": {
       "effects": [
         {
+          "args": {
+            "кого": "ogre",
+          },
           "effectId": "hidden",
         },
       ],
@@ -27149,6 +27347,9 @@ exports[`итоги действий: dnd5e > ogre · +hide 1`] = `
     "orc": {
       "effects": [
         {
+          "args": {
+            "кого": "ogre",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -27159,6 +27360,9 @@ exports[`итоги действий: dnd5e > ogre · +hide 1`] = `
     "orc": {
       "effects": [
         {
+          "args": {
+            "кого": "ogre",
+          },
           "effectId": "hidden",
         },
       ],
@@ -27172,6 +27376,9 @@ exports[`итоги действий: dnd5e > ogre · +hide 1`] = `
     "sil": {
       "effects": [
         {
+          "args": {
+            "кого": "ogre",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -27182,6 +27389,9 @@ exports[`итоги действий: dnd5e > ogre · +hide 1`] = `
     "sil": {
       "effects": [
         {
+          "args": {
+            "кого": "ogre",
+          },
           "effectId": "hidden",
         },
       ],
@@ -28758,6 +28968,9 @@ exports[`итоги действий: dnd5e > orc · +hide 1`] = `
     "arven": {
       "effects": [
         {
+          "args": {
+            "кого": "orc",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -28768,6 +28981,9 @@ exports[`итоги действий: dnd5e > orc · +hide 1`] = `
     "arven": {
       "effects": [
         {
+          "args": {
+            "кого": "orc",
+          },
           "effectId": "hidden",
         },
       ],
@@ -28781,6 +28997,9 @@ exports[`итоги действий: dnd5e > orc · +hide 1`] = `
     "doran": {
       "effects": [
         {
+          "args": {
+            "кого": "orc",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -28791,6 +29010,9 @@ exports[`итоги действий: dnd5e > orc · +hide 1`] = `
     "doran": {
       "effects": [
         {
+          "args": {
+            "кого": "orc",
+          },
           "effectId": "hidden",
         },
       ],
@@ -28804,6 +29026,9 @@ exports[`итоги действий: dnd5e > orc · +hide 1`] = `
     "goblin": {
       "effects": [
         {
+          "args": {
+            "кого": "orc",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -28814,6 +29039,9 @@ exports[`итоги действий: dnd5e > orc · +hide 1`] = `
     "goblin": {
       "effects": [
         {
+          "args": {
+            "кого": "orc",
+          },
           "effectId": "hidden",
         },
       ],
@@ -28827,6 +29055,9 @@ exports[`итоги действий: dnd5e > orc · +hide 1`] = `
     "mirra": {
       "effects": [
         {
+          "args": {
+            "кого": "orc",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -28837,6 +29068,9 @@ exports[`итоги действий: dnd5e > orc · +hide 1`] = `
     "mirra": {
       "effects": [
         {
+          "args": {
+            "кого": "orc",
+          },
           "effectId": "hidden",
         },
       ],
@@ -28850,6 +29084,9 @@ exports[`итоги действий: dnd5e > orc · +hide 1`] = `
     "ogre": {
       "effects": [
         {
+          "args": {
+            "кого": "orc",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -28860,6 +29097,9 @@ exports[`итоги действий: dnd5e > orc · +hide 1`] = `
     "ogre": {
       "effects": [
         {
+          "args": {
+            "кого": "orc",
+          },
           "effectId": "hidden",
         },
       ],
@@ -28873,6 +29113,9 @@ exports[`итоги действий: dnd5e > orc · +hide 1`] = `
     "orc": {
       "effects": [
         {
+          "args": {
+            "кого": "orc",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -28883,6 +29126,9 @@ exports[`итоги действий: dnd5e > orc · +hide 1`] = `
     "orc": {
       "effects": [
         {
+          "args": {
+            "кого": "orc",
+          },
           "effectId": "hidden",
         },
       ],
@@ -28896,6 +29142,9 @@ exports[`итоги действий: dnd5e > orc · +hide 1`] = `
     "sil": {
       "effects": [
         {
+          "args": {
+            "кого": "orc",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -28906,6 +29155,9 @@ exports[`итоги действий: dnd5e > orc · +hide 1`] = `
     "sil": {
       "effects": [
         {
+          "args": {
+            "кого": "orc",
+          },
           "effectId": "hidden",
         },
       ],
@@ -30450,6 +30702,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "arven": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -30460,6 +30715,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "arven": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
         },
       ],
@@ -30471,6 +30729,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "arven": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -30481,6 +30742,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "arven": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
         },
       ],
@@ -30490,6 +30754,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "doran": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -30500,6 +30767,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "doran": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
         },
       ],
@@ -30511,6 +30781,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "doran": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -30521,6 +30794,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "doran": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
         },
       ],
@@ -30530,6 +30806,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "goblin": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -30540,6 +30819,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "goblin": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
         },
       ],
@@ -30549,6 +30831,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "goblin": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -30559,6 +30844,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "goblin": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
         },
       ],
@@ -30568,6 +30856,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "goblin": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -30578,6 +30869,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "goblin": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
         },
       ],
@@ -30587,6 +30881,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "mirra": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -30597,6 +30894,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "mirra": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
         },
       ],
@@ -30606,6 +30906,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "mirra": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -30616,6 +30919,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "mirra": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
         },
       ],
@@ -30625,6 +30931,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "mirra": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -30635,6 +30944,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "mirra": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
         },
       ],
@@ -30644,6 +30956,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "ogre": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -30654,6 +30969,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "ogre": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
         },
       ],
@@ -30663,6 +30981,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "ogre": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -30673,6 +30994,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "ogre": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
         },
       ],
@@ -30682,6 +31006,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "ogre": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -30692,6 +31019,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "ogre": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
         },
       ],
@@ -30701,6 +31031,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "orc": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -30711,6 +31044,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "orc": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
         },
       ],
@@ -30720,6 +31056,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "orc": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -30730,6 +31069,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "orc": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
         },
       ],
@@ -30739,6 +31081,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "orc": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -30749,6 +31094,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "orc": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
         },
       ],
@@ -30758,6 +31106,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "sil": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -30768,6 +31119,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "sil": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
         },
       ],
@@ -30779,6 +31133,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "sil": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
           "turnsLeft": 1,
         },
@@ -30789,6 +31146,9 @@ exports[`итоги действий: dnd5e > sil · +hide 1`] = `
     "sil": {
       "effects": [
         {
+          "args": {
+            "кого": "sil",
+          },
           "effectId": "hidden",
         },
       ],
