@@ -5,7 +5,7 @@ import type { System, Compendium } from '@vtt/schema';
 const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export function referenced(world: unknown, key: string, own: unknown = world): boolean {
-  if (JSON.stringify(own).split(`"${key}"`).length - 1 > 1) return true;
+  if (JSON.stringify(own, (name, value) => (name === 'tags' ? undefined : value)).split(`"${key}"`).length - 1 > 1) return true;
   return new RegExp(`[@#]${escape(key)}(?![\\p{L}\\p{N}_])`, 'u').test(JSON.stringify(world));
 }
 
