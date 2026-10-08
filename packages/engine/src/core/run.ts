@@ -183,6 +183,7 @@ export class Run {
   readonly state: State;
   readonly limits;
   private readonly handlers: string[] = [];
+  private readonly running: Sub[] = [];
   private readonly chain: string[] = [];
   private probing = 0;
   private seenAsks = 0;
@@ -475,9 +476,11 @@ export class Run {
     const effect = requireEffect(this.system, effectId, frame.owner);
     const sheet = this.sheet(sheetId)!;
     const worn: WornEffect[] = [...(sheet.effects ?? [])];
-    const at = worn.findIndex(entry => entry.effectId === effectId);
     const declared = new Set((effect.params ?? []).map(param => param.key));
     const kept = Object.fromEntries(Object.entries(args).filter(([key, value]) => declared.has(key) && value !== null && value !== undefined));
+    const sorted = (args: Record<string, unknown>): string => JSON.stringify(Object.entries(args).sort(([a], [b]) => a.localeCompare(b)));
+    const sameArgs = (entry: WornEffect): boolean => sorted(entry.args ?? {}) === sorted(kept);
+    const at = worn.findIndex(entry => entry.effectId === effectId && (reapplyOf(effect) !== 'refresh' || sameArgs(entry)));
     const fresh: WornEffect = {
       effectId,
       ...(Object.keys(kept).length ? { args: kept } : {}),
@@ -501,7 +504,13 @@ export class Run {
   private detach(sheetId: string, effectId: string, owner: string, sink: Sink): void {
     requireEffect(this.system, effectId, owner);
     const sheet = this.sheet(sheetId)!;
-    const worn = (sheet.effects ?? []).filter(entry => entry.effectId !== effectId);
+    const own = this.running.at(-1);
+    const self = own && own.sheetId === sheetId && own.effectId === effectId ? own : null;
+    let nth = 0;
+    const worn = (sheet.effects ?? []).filter(entry => {
+      if (entry.effectId !== effectId) return true;
+      return self ? this.instOf(entry, false, nth++) !== self.inst : false;
+    });
     if (worn.length === (sheet.effects ?? []).length) return;
     this.state.put({ ...sheet, effects: worn });
     sink.removed.push(effectId);
@@ -773,6 +782,7 @@ export class Run {
     this.state.begin();
     if (!this.handlers.length) this.state.budget = this.limits.budget;
     this.handlers.push(mark);
+    this.running.push(sub);
     try {
       if (!o.builtin && sub.handler.cost?.length) {
         const paid = this.pay(sub, o.path.pay(), o.names, seed, o.hop, rolls);
@@ -800,6 +810,7 @@ export class Run {
       return { lead: [], entries: [{ text: CUT_WORDS }] };
     } finally {
       this.handlers.pop();
+      this.running.pop();
     }
   }
 
