@@ -14,9 +14,18 @@ export function within(root: ParentNode = document) {
 
   const has = (text: string | RegExp): boolean => buttons().some(b => (typeof text === 'string' ? textOf(b) === text : text.test(textOf(b))));
 
-  const click = (text: string | RegExp): void => { act(() => { fireEvent.click(button(text)); }); openAll(); };
+  const click = (text: string | RegExp): void => {
+    if (!has(text)) {
+      const more = [...root.querySelectorAll<HTMLElement>('.effect-head__toggle button')].find(b => textOf(b) === 'ещё');
+      if (more) { act(() => { fireEvent.click(more); }); openAll(); }
+    }
+    act(() => { fireEvent.click(button(text)); });
+    openAll();
+  };
 
-  const cell = (label: string, row = 0): HTMLElement => {
+  const lookup = (label: string, row: number): HTMLElement | null => {
+    const named = root.querySelector<HTMLElement>(`[data-field="${label}"]`);
+    if (named) return named;
     for (const grid of root.querySelectorAll<HTMLElement>('.sheet-grid')) {
       const children = [...grid.children] as HTMLElement[];
       const heads = children.filter(c => c.classList.contains('sheet-grid__head'));
@@ -25,7 +34,30 @@ export function within(root: ParentNode = document) {
       const found = children[heads.length * (row + 1) + at];
       if (found) return found;
     }
-    throw new Error(`нет клетки «${label}» в строке ${row}`);
+    const item = root.querySelectorAll<HTMLElement>('.param-item')[row];
+    if (item) {
+      if (!item.querySelector('.param-form')) {
+        act(() => { fireEvent.click(item.querySelector('.param-line__sum')!); });
+        openAll();
+      }
+      const find = () => [...item.querySelectorAll<HTMLElement>('.param-form .field')]
+        .find(f => textOf(f.querySelector('.field__label') ?? f) === label) ?? null;
+      let found = find();
+      const more = [...item.querySelectorAll<HTMLElement>('.param-form button')].find(b => textOf(b) === 'ещё');
+      if (!found && more) { act(() => { fireEvent.click(more); }); openAll(); found = find(); }
+      if (found) return found;
+    }
+    return null;
+  };
+
+  const cell = (label: string, row = 0): HTMLElement => {
+    let found = lookup(label, row);
+    if (!found) {
+      const more = [...root.querySelectorAll<HTMLElement>('.effect-head__toggle button')].find(b => textOf(b) === 'ещё');
+      if (more) { act(() => { fireEvent.click(more); }); openAll(); found = lookup(label, row); }
+    }
+    if (!found) throw new Error(`нет клетки «${label}» в строке ${row}`);
+    return found;
   };
 
   const field = (label: string): HTMLElement => {
@@ -82,7 +114,17 @@ export function within(root: ParentNode = document) {
   };
 
   const check = (label: string, on = true): void => {
-    const el = root.querySelector<HTMLInputElement>(`input[type="checkbox"][aria-label="${label}"]`);
+    const find = () => root.querySelector<HTMLInputElement>(`input[type="checkbox"][aria-label="${label}"]`);
+    if (!find()) {
+      for (const item of root.querySelectorAll<HTMLElement>('.param-item')) {
+        if (!item.querySelector('.param-form')) { act(() => { fireEvent.click(item.querySelector('.param-line__sum')!); }); openAll(); }
+      }
+      for (const form of root.querySelectorAll<HTMLElement>('.param-form')) {
+        const more = [...form.querySelectorAll<HTMLElement>('button')].find(b => textOf(b) === 'ещё');
+        if (more) { act(() => { fireEvent.click(more); }); openAll(); }
+      }
+    }
+    const el = find();
     if (!el) throw new Error(`нет флажка «${label}»`);
     if (el.checked !== on) act(() => { fireEvent.click(el); });
   };
@@ -172,6 +214,14 @@ export const outcomeIf = (check: number, passed: boolean, root: ParentNode = doc
   return at;
 };
 
+export const callIf = (step: number, called: string, outcome: string, root: ParentNode = document): number => {
+  within(root).click('+ если');
+  const at = blocks(root).length - 1;
+  within(headOf(block(at, root))).when(`шаг ${step} · ${called} — ${outcome}`);
+  if (!isFused(block(at, root))) throw new Error(`блок по исходу шага ${step} не склеился с вызовом`);
+  return at;
+};
+
 export const stopStrip = (n: number, root: ParentNode = document): HTMLElement => {
   const all = [...root.querySelectorAll<HTMLElement>('.flow-stop')];
   const found = all.find(el => textOf(el.querySelector('.flow-stop__word')!).startsWith(`${n} · `));
@@ -202,4 +252,17 @@ export const wrapIf = (card: () => HTMLElement, ...facts: string[]): void => {
   const flow = card().closest<HTMLElement>('.flow-block');
   if (!flow) throw new Error('шаг не попал в «Если»');
   within(headOf(flow)).when(...facts);
+};
+
+export const dragParamBefore = (from: string, to: string, root: ParentNode = document): void => {
+  const line = (name: string) => [...root.querySelectorAll<HTMLElement>('.param-line')]
+    .find(el => textOf(el.querySelector('.param-line__name') ?? el) === name);
+  const source = line(from);
+  const target = line(to);
+  if (!source || !target) throw new Error(`нет входа «${from}» или «${to}»`);
+  const dataTransfer = { setData: () => {}, effectAllowed: '' };
+  act(() => { fireEvent.dragStart(source, { dataTransfer }); });
+  act(() => { fireEvent.dragOver(target, { dataTransfer }); });
+  act(() => { fireEvent.drop(target, { dataTransfer }); });
+  openAll();
 };

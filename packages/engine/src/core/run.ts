@@ -106,6 +106,9 @@ export interface Ran {
   stopped: Stop | null;
 }
 
+const stepIdsOf = (steps: readonly Step[]): string[] =>
+  steps.map(step => step.id).filter((id): id is string => typeof id === 'string' && id !== '');
+
 export interface Delivery {
   effectId: string;
   label: string;
@@ -132,6 +135,7 @@ export interface Delivery {
 
 export interface Delivered {
   call: Delivery;
+  returns?: Record<string, unknown>;
   results: Record<string, unknown>;
   rolls: Record<string, RollResult>;
   emitted: EmittedEvent[];
@@ -555,22 +559,25 @@ export class Run {
       }], at);
       sink.after.push(...entries);
       const out = delivered[0];
-      return { results: out?.results ?? {}, stopped: out?.report.stopped ?? null };
+      return { results: out?.results ?? {}, stopped: out?.report.stopped ?? null, ...(out?.returns ? { returns: out.returns } : {}) };
     }
     if (this.handlers.length) this.spend();
     this.chain.push(event);
     try {
       const inner: Frame = {
         path: at, effectId: event, label: callee.label || event, owner: `вызов «${callee.label || event}»`,
-        home, bound: names, args: values, paramDefs: callee.params ?? [], props: null, claims: {}, hop: frame.hop, inSub: false,
+        home, bound: names, args: values, paramDefs: callee.params ?? [], props: null, claims: frame.claims, hop: frame.hop, inSub: false,
         ...(frame.inputs ? { inputs: frame.inputs } : {}),
+        ...(frame.cost ? { cost: true } : {}),
       };
       const before = keys.map(key => `before:${key}`);
       const peek = this.listens(before) ? this.probe(() => this.exec(inner, callee.steps ?? [], newSink(), { метки: payload.tags }, event)) : null;
       this.hear({ keys: before, names, seed: { ...values, ...(peek?.results ?? {}) }, rolls: peek?.rolls ?? {}, path: at.phase('before'), hop: frame.hop, owner: sub => `«${labelOf(sub)}» — до «${callee.label || event}»` }, sink);
       const ran = this.exec(inner, callee.steps ?? [], sink, { метки: payload.tags }, event);
-      this.hear({ keys: keys.map(key => `after:${key}`), names, seed: { ...values, ...ran.results }, path: at.phase('after'), hop: frame.hop, owner: sub => `«${labelOf(sub)}» — после «${callee.label || event}»` }, sink);
-      return { results: ran.results, stopped: ran.stopped };
+      const returns = this.returnsOf(callee, inner, ran);
+      if (returns) emitted.values = { ...values, ...returns };
+      this.hear({ keys: keys.map(key => `after:${key}`), names, seed: { ...values, ...ran.results, ...(returns ?? {}) }, rolls: ran.rolls, path: at.phase('after'), hop: frame.hop, owner: sub => `«${labelOf(sub)}» — после «${callee.label || event}»` }, sink);
+      return { results: ran.results, stopped: ran.stopped, ...(returns ? { returns } : {}) };
     } finally {
       this.chain.pop();
     }
@@ -684,9 +691,26 @@ export class Run {
     const seed = { ...given, ...(call.seed ?? {}) };
     this.hear({ keys: call.keys.map(key => `before:${key}`), names: call.bound, seed: { ...seed, ...(tried?.results ?? {}) }, rolls: { ...(call.rolls ?? {}), ...(tried?.rolls ?? {}) }, path: call.path.phase('before'), hop: call.hop, owner: sub => `«${labelOf(sub)}» — до «${call.label}»` }, sink);
     const ran = this.exec(frame, call.steps, sink, seed, undefined, call.rolls ?? {});
-    this.hear({ keys: call.keys.map(key => `after:${key}`), names: call.bound, seed: { ...given, ...ran.results }, rolls: ran.rolls, path: call.path.phase('after'), hop: call.hop, owner: sub => `«${labelOf(sub)}» — после «${call.label}»` }, sink);
+    const callee = this.system.effects?.[call.effectId];
+    const returns = callee ? this.returnsOf(callee, frame, ran) : null;
+    this.hear({ keys: call.keys.map(key => `after:${key}`), names: call.bound, seed: { ...given, ...ran.results, ...(returns ?? {}) }, rolls: ran.rolls, path: call.path.phase('after'), hop: call.hop, owner: sub => `«${labelOf(sub)}» — после «${call.label}»` }, sink);
     const report = reportOf('effect', call.effectId, call.home, call.label, sink, ran.stopped, call.hop > 0);
-    return { call, results: ran.results, rolls: ran.rolls, emitted: sink.emitted, report };
+    return { call, results: ran.results, rolls: ran.rolls, emitted: sink.emitted, report, ...(returns ? { returns } : {}) };
+  }
+
+  private returnsOf(callee: Effect, frame: Frame, ran: Ran): Record<string, unknown> | null {
+    const columns = callee.returns ?? [];
+    if (!columns.length) return null;
+    const out: Record<string, unknown> = Object.fromEntries(columns.map(column => [column.key, null]));
+    if (ran.stopped) return out;
+    const ids = stepIdsOf([...(callee.steps ?? []), ...(callee.cost ?? [])]);
+    const results = { ...Object.fromEntries(ids.map(id => [id, null])), ...ran.results };
+    const ctx = this.ctx(frame, results, ran.rolls, frame.path.phase('returns'), newSink(), new Set(ids));
+    for (const column of columns) {
+      const value = column.expr ? ctx.value(column.expr) : null;
+      out[column.key] = value === undefined ? null : value;
+    }
+    return out;
   }
 
   private listens(keys: readonly string[]): boolean {

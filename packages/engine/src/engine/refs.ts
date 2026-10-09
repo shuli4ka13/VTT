@@ -191,6 +191,7 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
     const dot = name.indexOf('.');
     if (dot > 0) {
       const head = name.slice(0, dot);
+      if (head in results && results[head] === null) return null;
       for (const held of [known[head], ctx.rolls?.[head]]) {
         if (!held || typeof held !== 'object') continue;
         const value = name.slice(dot + 1).split('.')

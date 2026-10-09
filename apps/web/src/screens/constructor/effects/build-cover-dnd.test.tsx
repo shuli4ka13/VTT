@@ -6,7 +6,7 @@ import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import type { System, Effect } from '@vtt/schema';
 import { useWorld } from '../../../store/world.ts';
 import { openAll } from '../../../testing/render-open.tsx';
-import { within, stepCard, block, addToArm, outcomeIf, armWord } from '../../../testing/cards.ts';
+import { within, stepCard, block, addToArm, callIf, outcomeIf, armWord, dragParamBefore } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
 
 const worldOf = (id: string) => SAMPLE_WORLDS.find(w => w.system.id === id)!;
@@ -31,6 +31,15 @@ const nameStep = (card: HTMLElement, name: string): void => {
   within(card).click(/^имя в формулах/);
   const fresh = stepCard(new RegExp(`^${title} · `), card.parentElement ?? document);
   within(fresh).type(fresh.querySelector<HTMLElement>('.step-name input')!, name);
+};
+
+const savingThrow = (root: HTMLElement, at: number, args: readonly (readonly [string, string])[], plus = '+ изменение'): void => {
+  within(root).click(plus);
+  const made = () => stepCard(new RegExp(`^${at} · `), root);
+  within(made()).click('вызов');
+  within(made()).select('Какой эффект', 'saving_throw');
+  for (const [name, text] of args) within(made()).formula(within(made()).arg(name), text);
+  nameStep(made(), 'save');
 };
 
 const marks = (card: HTMLElement, ...tags: string[]): void => {
@@ -187,7 +196,7 @@ describe('эффекты D&D собираются в конструкторе р
     rollEdit(['спасбросок', 'ловкость'], 'auto_fail', '@бросающий == @носитель');
     valueModifier('speed', 'set', '0', 'override');
 
-    ui.click('+ вход');
+    ui.click('+ ещё одно');
     ui.type(ui.cell('Название', 0), 'Запомненное число');
     if (ui.has('ещё')) ui.click('ещё');
     ui.type(ui.cell('Имя в формулах', 0), 'запомнено');
@@ -199,14 +208,9 @@ describe('эффекты D&D собираются в конструкторе р
     within(handlerHead(1)).select('Кого касается', '@ходит == @носитель');
     within(handlerHead(1)).when('=или(@запомнено, 0) > 0');
 
-    within(handlerAt(1)).click('+ проверка');
-    let card = stepCard(/^1 · /, handlerAt(1));
-    within(card).formula('Проверка', 'кинуть(@lead_die) + @носитель.abilities.мудрость.save >= @запомнено');
-    card = stepCard(/^1 · /, handlerAt(1));
-    marks(card, 'спасбросок', 'мудрость');
-    nameStep(stepCard(/^1 · /, handlerAt(1)), 'save');
-
-    const saved = outcomeIf(1, true, handlerAt(1));
+    savingThrow(handlerAt(1), 1, [['Кто спасается', '@носитель'], ['Чем спасается', '"мудрость"'], ['Сложность', '@запомнено']]);
+    let card: HTMLElement;
+    const saved = callIf(1, 'Спасбросок', 'спасся', handlerAt(1));
     expect(armWord(block(saved, handlerAt(1)))).toBe('спасся:');
     addToArm(block(saved, handlerAt(1)), 0, 'change');
     card = stepCard(/^2 · /, handlerAt(1));
@@ -268,7 +272,7 @@ describe('эффекты D&D собираются в конструкторе р
     within(handlerHead(1)).select('Что именно', 'атака');
     within(handlerHead(1)).select('Когда именно', 'before');
     within(handlerHead(1)).select('Кого касается', '@цель == @носитель');
-    within(handlerHead(1)).when('=@hit.success');
+    within(handlerHead(1)).when('=@hit.попал');
     within(handlerHead(1)).select('Решение', 'ask');
 
     ui.select(handlerAt(1).querySelector<HTMLElement>('.add-cost select')!, 'cost_reaction');
@@ -295,36 +299,43 @@ describe('эффекты D&D собираются в конструкторе р
     expect(built('shield')).toEqual(goal);
   });
 
-  it('D&D «Заклинание: спасбросок или состояние» (spell_condition): на основе, выбор из таблицы как метка, «запомнит»', { timeout: 90000 }, () => {
+  it('D&D «Заклинание: спасбросок или состояние» (spell_condition): цена-вызов, выбор из таблицы как метка, «запомнит»', { timeout: 90000 }, () => {
     const [goal] = start('dnd5e', ['spell_condition']);
     const ui = fresh('+ кнопкой', goal!.label!, 'spell_condition', 'Заклинания', goal!.description!);
-    ui.select('На основе', 'spell');
-    within(ui.cell('Название', 0).parentElement!).click('×');
-    ui.click('+ вход');
-    ui.type(ui.cell('Название', 1), 'Чем спасаются');
-    ui.select(ui.cell('Тип', 1), 'choice');
-    ui.select(ui.cell('Уточнение', 1), 'abilities');
-    if (ui.has('ещё')) ui.click('ещё');
-    ui.type(ui.cell('Имя в формулах', 1), 'save_by');
-    ui.click('+ вход');
-    ui.type(ui.cell('Название', 2), 'Состояние');
-    ui.select(ui.cell('Тип', 2), 'effect');
-    ui.type(ui.cell('Имя в формулах', 2), 'status');
+    const param = (row: number, label: string, kind: string, key: string, more: { ask?: string; hint?: string; min?: string; max?: string; from?: string } = {}) => {
+      if (row >= (built('spell_condition')!.params ?? []).length) ui.click('+ ещё одно');
+      ui.type(ui.cell('Название', row), label);
+      ui.select(ui.cell('Вид', row), kind);
+      if (more.from) ui.select(ui.cell('Таблица', row), more.from);
+      if (more.ask) ui.select(ui.cell('Если не передали', row), more.ask);
+      if (more.hint) ui.type(ui.cell('Подсказка за столом', row), more.hint);
+      if (more.min !== undefined) ui.type(ui.cell('Границы', row).querySelector<HTMLInputElement>('input[placeholder="не ниже"]')!, more.min);
+      if (more.max !== undefined) ui.type(ui.cell('Границы', row).querySelector<HTMLInputElement>('input[placeholder="не выше"]')!, more.max);
+      if (ui.cell('Имя в формулах', row).querySelector('input')) ui.type(ui.cell('Имя в формулах', row), key);
+    };
+    param(0, 'Кто действует', 'sheet', 'действующий');
+    param(2, 'Круг заклинания', 'number', 'spell_level');
+    ui.check('«Круг заклинания» правят сопротивления', false);
+    param(3, 'Каким кругом', 'number', 'slot', { ask: 'actor', hint: (goal!.params ?? [])[2]!.ask!.hint!, min: '1', max: '9' });
+    param(4, 'Чем спасаются', 'choice', 'save_by', { from: 'abilities' });
+    dragParamBefore('Цели', 'Чем спасаются');
+    param(5, 'Состояние', 'effect', 'status');
 
-    ui.click('+ проверка');
+    ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_spell');
+    let cost = stepCard(/^1 · /);
+    for (const [name, text] of [['Лист', '@действующий'], ['Источник', '@действующий'], ['Круг заклинания', '@spell_level'], ['Каким кругом', '@slot']] as const) {
+      within(cost).formula(within(cost).arg(name), text);
+    }
+
     const at = (n: number) => stepCard(new RegExp(`^${n} · `));
-    within(at(2)).formula('Проверка', 'кинуть(@lead_die) + @цель.save_by.save >= @действующий.spell_dc');
-    within(at(2)).formula('Бросает', '@цель');
-    within(at(2)).formula('Против кого', '@действующий');
-    marks(at(2), 'спасбросок', '=@save_by');
-    nameStep(at(2), 'save');
+    savingThrow(document.body, 3, [['Кто спасается', '@цель'], ['Чем спасается', '@save_by'], ['Сложность', '@действующий.spell_dc'], ['Против кого', '@действующий']]);
 
-    addToArm(block(outcomeIf(2, false)), 0, 'change');
-    within(at(3)).click('состояние');
-    within(at(3)).select('Какое', ':вход:status');
-    within(at(3)).formula('На кого', '@цель');
-    within(at(3)).formula('Запомнит: Запомненное число', '@действующий.spell_dc');
-    within(at(3)).formula('Запомнит: Кто наложил', '@действующий');
+    addToArm(block(callIf(3, 'Спасбросок', 'не спасся')), 0, 'change');
+    within(at(4)).click('состояние');
+    within(at(4)).select('Какое', ':вход:status');
+    within(at(4)).formula('На кого', '@цель');
+    within(at(4)).formula('Запомнит: Запомненное число', '@действующий.spell_dc');
+    within(at(4)).formula('Запомнит: Кто наложил', '@действующий');
     dump({ got: built('spell_condition'), goal });
     expect(built('spell_condition')).toEqual(goal);
   });
@@ -332,9 +343,9 @@ describe('эффекты D&D собираются в конструкторе р
   it('D&D «Не замечает» (hidden): срок 1 ход, спадает в начале хода листа из входа, две правки броска по двум листам', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['hidden']);
     const ui = fresh('+ висит и правит', goal!.label!, 'hidden', 'Состояния', goal!.description!);
-    ui.click('+ вход');
+    ui.click('+ ещё одно');
     ui.type(ui.cell('Название', 0), 'Кого не замечает');
-    ui.select(ui.cell('Тип', 0), 'sheet');
+    ui.select(ui.cell('Вид', 0), 'sheet');
     if (ui.has('ещё')) ui.click('ещё');
     ui.type(ui.cell('Имя в формулах', 0), 'кого');
     lifetime('turns', 'refresh');

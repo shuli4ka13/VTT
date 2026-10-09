@@ -13,7 +13,7 @@ describe('входы эффекта перетаскиваются', () => {
     ] } as unknown as Effect;
     const system = { tables: {}, effects: { spend: effect }, constants: {} } as unknown as System;
     render(<ParamsEditor id="spend" effect={effect} system={system} onEdit={change => change(effect)} />);
-    const row = (label: string) => [...document.querySelectorAll('.drag-item')].find(el => (el.querySelector('input') as HTMLInputElement).value === label)! as HTMLElement;
+    const row = (label: string) => [...document.querySelectorAll('.param-line')].find(el => el.querySelector('.param-line__name')!.textContent === label)! as HTMLElement;
     const dataTransfer = { setData: () => {}, effectAllowed: '' };
     fireEvent.dragStart(row('Источник'), { dataTransfer });
     fireEvent.dragOver(row('Сколько'), { dataTransfer, clientY: -10 });

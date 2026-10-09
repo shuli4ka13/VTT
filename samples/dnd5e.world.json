@@ -115,6 +115,7 @@
             "key": "level",
             "label": "Уровень",
             "kind": "number",
+            "from": "levels",
             "default": 1,
             "min": 1,
             "max": 20
@@ -123,7 +124,7 @@
             "key": "prof_bonus",
             "label": "Бонус мастерства",
             "expr": {
-              "expr": "таблица(\"levels\", @level, \"prof\")"
+              "expr": "@level.prof"
             }
           },
           {
@@ -357,6 +358,7 @@
             "key": "caster_level",
             "label": "Уровень заклинателя",
             "kind": "number",
+            "from": "spell_slots",
             "min": 0,
             "max": 20
           },
@@ -372,14 +374,14 @@
             "key": "cantrip_dice",
             "label": "Костей заговора",
             "expr": {
-              "expr": "таблица(\"levels\", @level, \"cantrips\")"
+              "expr": "@level.cantrips"
             }
           },
           {
             "key": "rage_damage",
             "label": "Урон ярости",
             "expr": {
-              "expr": "если(пусто(@class_name.progression), 0, таблица(@class_name.progression, @level, \"rage_damage\"))"
+              "expr": "если(@class_name.rage == да, @level.rage_damage, 0)"
             }
           },
           {
@@ -514,7 +516,7 @@
             "label": "Всего",
             "kind": "number",
             "expr": {
-              "expr": "таблица(\"spell_slots\", @caster_level, @строка.circle)"
+              "expr": "@caster_level.[@строка.circle]"
             },
             "title": "Всего ячеек: {label}"
           },
@@ -735,155 +737,7 @@
             "key": "cantrips",
             "label": "Костей заговора",
             "kind": "number"
-          }
-        ],
-        "rows": [
-          {
-            "value": 1,
-            "cells": {
-              "prof": 2,
-              "cantrips": 1
-            }
           },
-          {
-            "value": 2,
-            "cells": {
-              "prof": 2,
-              "cantrips": 1
-            }
-          },
-          {
-            "value": 3,
-            "cells": {
-              "prof": 2,
-              "cantrips": 1
-            }
-          },
-          {
-            "value": 4,
-            "cells": {
-              "prof": 2,
-              "cantrips": 1
-            }
-          },
-          {
-            "value": 5,
-            "cells": {
-              "prof": 3,
-              "cantrips": 2
-            }
-          },
-          {
-            "value": 6,
-            "cells": {
-              "prof": 3,
-              "cantrips": 2
-            }
-          },
-          {
-            "value": 7,
-            "cells": {
-              "prof": 3,
-              "cantrips": 2
-            }
-          },
-          {
-            "value": 8,
-            "cells": {
-              "prof": 3,
-              "cantrips": 2
-            }
-          },
-          {
-            "value": 9,
-            "cells": {
-              "prof": 4,
-              "cantrips": 2
-            }
-          },
-          {
-            "value": 10,
-            "cells": {
-              "prof": 4,
-              "cantrips": 2
-            }
-          },
-          {
-            "value": 11,
-            "cells": {
-              "prof": 4,
-              "cantrips": 3
-            }
-          },
-          {
-            "value": 12,
-            "cells": {
-              "prof": 4,
-              "cantrips": 3
-            }
-          },
-          {
-            "value": 13,
-            "cells": {
-              "prof": 5,
-              "cantrips": 3
-            }
-          },
-          {
-            "value": 14,
-            "cells": {
-              "prof": 5,
-              "cantrips": 3
-            }
-          },
-          {
-            "value": 15,
-            "cells": {
-              "prof": 5,
-              "cantrips": 3
-            }
-          },
-          {
-            "value": 16,
-            "cells": {
-              "prof": 5,
-              "cantrips": 3
-            }
-          },
-          {
-            "value": 17,
-            "cells": {
-              "prof": 6,
-              "cantrips": 4
-            }
-          },
-          {
-            "value": 18,
-            "cells": {
-              "prof": 6,
-              "cantrips": 4
-            }
-          },
-          {
-            "value": 19,
-            "cells": {
-              "prof": 6,
-              "cantrips": 4
-            }
-          },
-          {
-            "value": 20,
-            "cells": {
-              "prof": 6,
-              "cantrips": 4
-            }
-          }
-        ]
-      },
-      "barbarian_levels": {
-        "label": "Прогрессия варвара",
-        "key": "range",
-        "columns": [
           {
             "key": "rage_damage",
             "label": "Урон ярости",
@@ -892,23 +746,162 @@
         ],
         "rows": [
           {
-            "from": 1,
-            "to": 8,
+            "value": 1,
             "cells": {
+              "prof": 2,
+              "cantrips": 1,
               "rage_damage": 2
             }
           },
           {
-            "from": 9,
-            "to": 15,
+            "value": 2,
             "cells": {
+              "prof": 2,
+              "cantrips": 1,
+              "rage_damage": 2
+            }
+          },
+          {
+            "value": 3,
+            "cells": {
+              "prof": 2,
+              "cantrips": 1,
+              "rage_damage": 2
+            }
+          },
+          {
+            "value": 4,
+            "cells": {
+              "prof": 2,
+              "cantrips": 1,
+              "rage_damage": 2
+            }
+          },
+          {
+            "value": 5,
+            "cells": {
+              "prof": 3,
+              "cantrips": 2,
+              "rage_damage": 2
+            }
+          },
+          {
+            "value": 6,
+            "cells": {
+              "prof": 3,
+              "cantrips": 2,
+              "rage_damage": 2
+            }
+          },
+          {
+            "value": 7,
+            "cells": {
+              "prof": 3,
+              "cantrips": 2,
+              "rage_damage": 2
+            }
+          },
+          {
+            "value": 8,
+            "cells": {
+              "prof": 3,
+              "cantrips": 2,
+              "rage_damage": 2
+            }
+          },
+          {
+            "value": 9,
+            "cells": {
+              "prof": 4,
+              "cantrips": 2,
               "rage_damage": 3
             }
           },
           {
-            "from": 16,
-            "to": 20,
+            "value": 10,
             "cells": {
+              "prof": 4,
+              "cantrips": 2,
+              "rage_damage": 3
+            }
+          },
+          {
+            "value": 11,
+            "cells": {
+              "prof": 4,
+              "cantrips": 3,
+              "rage_damage": 3
+            }
+          },
+          {
+            "value": 12,
+            "cells": {
+              "prof": 4,
+              "cantrips": 3,
+              "rage_damage": 3
+            }
+          },
+          {
+            "value": 13,
+            "cells": {
+              "prof": 5,
+              "cantrips": 3,
+              "rage_damage": 3
+            }
+          },
+          {
+            "value": 14,
+            "cells": {
+              "prof": 5,
+              "cantrips": 3,
+              "rage_damage": 3
+            }
+          },
+          {
+            "value": 15,
+            "cells": {
+              "prof": 5,
+              "cantrips": 3,
+              "rage_damage": 3
+            }
+          },
+          {
+            "value": 16,
+            "cells": {
+              "prof": 5,
+              "cantrips": 3,
+              "rage_damage": 4
+            }
+          },
+          {
+            "value": 17,
+            "cells": {
+              "prof": 6,
+              "cantrips": 4,
+              "rage_damage": 4
+            }
+          },
+          {
+            "value": 18,
+            "cells": {
+              "prof": 6,
+              "cantrips": 4,
+              "rage_damage": 4
+            }
+          },
+          {
+            "value": 19,
+            "cells": {
+              "prof": 6,
+              "cantrips": 4,
+              "rage_damage": 4
+            }
+          },
+          {
+            "value": 20,
+            "cells": {
+              "prof": 6,
+              "cantrips": 4,
               "rage_damage": 4
             }
           }
@@ -1806,9 +1799,9 @@
             "from": "abilities"
           },
           {
-            "key": "progression",
-            "label": "Прогрессия",
-            "kind": "table"
+            "key": "rage",
+            "label": "Ярость",
+            "kind": "boolean"
           }
         ],
         "rows": [
@@ -1820,7 +1813,7 @@
                 "сила",
                 "телосложение"
               ],
-              "progression": "barbarian_levels"
+              "rage": true
             }
           },
           {
@@ -3054,49 +3047,32 @@
             "of": "цели"
           },
           {
-            "id": "hit_бросок",
-            "type": "roll",
-            "die": "lead_die",
-            "bonus": {
-              "expr": "@attack_with"
-            },
-            "tags": [
-              "атака"
-            ],
-            "by": {
-              "expr": "@действующий"
-            },
-            "against": {
-              "expr": "@цель"
-            }
-          },
-          {
             "id": "hit",
-            "type": "check",
-            "value": {
-              "expr": "@hit_бросок"
-            },
-            "versus": {
-              "expr": "@цель.ac"
-            },
-            "succeedOn": {
-              "expr": "20"
-            },
-            "failOn": {
-              "expr": "1"
+            "type": "emit",
+            "effect": "attack_roll",
+            "args": {
+              "кто": {
+                "expr": "@действующий"
+              },
+              "против": {
+                "expr": "@цель"
+              },
+              "бонус": {
+                "expr": "@attack_with"
+              }
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "@hit.success"
+              "expr": "@hit.попал"
             }
           },
           {
             "id": "dmg",
             "type": "roll",
             "fixed": {
-              "expr": "кинуть(@damage_dice, @dice * если(@hit_бросок.natural >= @действующий.crit_from, 2, 1)) + @damage_with"
+              "expr": "кинуть(@damage_dice, @dice * если(@hit.крит, 2, 1)) + @damage_with"
             }
           },
           {
@@ -3328,79 +3304,6 @@
           }
         ]
       },
-      "spell": {
-        "label": "Заклинание",
-        "group": "Заклинания",
-        "description": "Основа всех заклинаний: спрашивает круг ячейки и тратит её. Сама по себе не применяется.",
-        "params": [
-          {
-            "key": "действующий",
-            "label": "Кто действует",
-            "kind": "sheet"
-          },
-          {
-            "key": "spell_level",
-            "label": "Круг заклинания",
-            "kind": "number"
-          },
-          {
-            "key": "slot",
-            "label": "Каким кругом",
-            "kind": "number",
-            "ask": {
-              "by": "actor",
-              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
-            },
-            "min": 1,
-            "max": 9
-          }
-        ],
-        "cost": [
-          {
-            "type": "emit",
-            "effect": "cost_action",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@slot < @spell_level"
-            }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"круг ячейки ниже круга заклинания\""
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "emit",
-            "effect": "spell_slot",
-            "args": {
-              "circle": {
-                "expr": "@slot"
-              },
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            }
-          }
-        ],
-        "steps": []
-      },
       "cantrip_save": {
         "label": "Заговор: спасбросок",
         "group": "Заклинания",
@@ -3458,39 +3361,28 @@
             "of": "цели"
           },
           {
-            "id": "save_бросок",
-            "type": "roll",
-            "die": "lead_die",
-            "bonus": {
-              "expr": "@цель.save_by.save"
-            },
-            "tags": [
-              "спасбросок",
-              {
-                "expr": "@save_by"
-              }
-            ],
-            "by": {
-              "expr": "@цель"
-            },
-            "against": {
-              "expr": "@действующий"
-            }
-          },
-          {
             "id": "save",
-            "type": "check",
-            "value": {
-              "expr": "@save_бросок"
-            },
-            "versus": {
-              "expr": "@действующий.spell_dc"
+            "type": "emit",
+            "effect": "saving_throw",
+            "args": {
+              "кто": {
+                "expr": "@цель"
+              },
+              "характеристика": {
+                "expr": "@save_by"
+              },
+              "сложность": {
+                "expr": "@действующий.spell_dc"
+              },
+              "против": {
+                "expr": "@действующий"
+              }
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "не(@save.success)"
+              "expr": "не(@save.прошёл)"
             }
           },
           {
@@ -3580,6 +3472,27 @@
         "description": "Тратит ячейку один раз на всех. Кости бросаются один раз, спасбросок у каждой цели свой; успех — половина урона.",
         "params": [
           {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "spell_level",
+            "label": "Круг заклинания",
+            "kind": "number"
+          },
+          {
+            "key": "slot",
+            "label": "Каким кругом",
+            "kind": "number",
+            "ask": {
+              "by": "actor",
+              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
+            },
+            "min": 1,
+            "max": 9
+          },
+          {
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
@@ -3630,40 +3543,29 @@
             "of": "цели"
           },
           {
-            "id": "save_бросок",
-            "type": "roll",
-            "die": "lead_die",
-            "bonus": {
-              "expr": "@цель.save_by.save"
-            },
-            "tags": [
-              "спасбросок",
-              {
-                "expr": "@save_by"
-              }
-            ],
-            "by": {
-              "expr": "@цель"
-            },
-            "against": {
-              "expr": "@действующий"
-            }
-          },
-          {
             "id": "save",
-            "type": "check",
-            "value": {
-              "expr": "@save_бросок"
-            },
-            "versus": {
-              "expr": "@действующий.spell_dc"
+            "type": "emit",
+            "effect": "saving_throw",
+            "args": {
+              "кто": {
+                "expr": "@цель"
+              },
+              "характеристика": {
+                "expr": "@save_by"
+              },
+              "сложность": {
+                "expr": "@действующий.spell_dc"
+              },
+              "против": {
+                "expr": "@действующий"
+              }
             }
           },
           {
             "id": "dmg",
             "type": "roll",
             "fixed": {
-              "expr": "если(@save.success, округлить вниз((@dmg_всего) * (0.5)), @dmg_всего)"
+              "expr": "если(@save.прошёл, округлить вниз((@dmg_всего) * (0.5)), @dmg_всего)"
             }
           },
           {
@@ -3688,13 +3590,53 @@
             }
           }
         ],
-        "extends": "spell"
+        "cost": [
+          {
+            "type": "emit",
+            "effect": "cost_spell",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              }
+            }
+          }
+        ]
       },
       "spell_save_none": {
         "label": "Заклинание: спасбросок, при успехе ничего",
         "group": "Заклинания",
         "description": "Тратит ячейку. Провал спасброска — урон и, если задано, состояние; успех — ничего.",
         "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "spell_level",
+            "label": "Круг заклинания",
+            "kind": "number"
+          },
+          {
+            "key": "slot",
+            "label": "Каким кругом",
+            "kind": "number",
+            "ask": {
+              "by": "actor",
+              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
+            },
+            "min": 1,
+            "max": 9
+          },
           {
             "key": "цели",
             "label": "Цели",
@@ -3752,39 +3694,28 @@
             "of": "цели"
           },
           {
-            "id": "save_бросок",
-            "type": "roll",
-            "die": "lead_die",
-            "bonus": {
-              "expr": "@цель.save_by.save"
-            },
-            "tags": [
-              "спасбросок",
-              {
-                "expr": "@save_by"
-              }
-            ],
-            "by": {
-              "expr": "@цель"
-            },
-            "against": {
-              "expr": "@действующий"
-            }
-          },
-          {
             "id": "save",
-            "type": "check",
-            "value": {
-              "expr": "@save_бросок"
-            },
-            "versus": {
-              "expr": "@действующий.spell_dc"
+            "type": "emit",
+            "effect": "saving_throw",
+            "args": {
+              "кто": {
+                "expr": "@цель"
+              },
+              "характеристика": {
+                "expr": "@save_by"
+              },
+              "сложность": {
+                "expr": "@действующий.spell_dc"
+              },
+              "против": {
+                "expr": "@действующий"
+              }
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "не(@save.success)"
+              "expr": "не(@save.прошёл)"
             }
           },
           {
@@ -3826,13 +3757,53 @@
             "type": "end"
           }
         ],
-        "extends": "spell"
+        "cost": [
+          {
+            "type": "emit",
+            "effect": "cost_spell",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              }
+            }
+          }
+        ]
       },
       "spell_auto": {
         "label": "Заклинание: урон без броска",
         "group": "Заклинания",
         "description": "Тратит ячейку. Попадает всегда: волшебная стрела. К каждой кости идёт прибавка, ячейка выше круга добавляет кости.",
         "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "spell_level",
+            "label": "Круг заклинания",
+            "kind": "number"
+          },
+          {
+            "key": "slot",
+            "label": "Каким кругом",
+            "kind": "number",
+            "ask": {
+              "by": "actor",
+              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
+            },
+            "min": 1,
+            "max": 9
+          },
           {
             "key": "цели",
             "label": "Цели",
@@ -3904,13 +3875,53 @@
             }
           }
         ],
-        "extends": "spell"
+        "cost": [
+          {
+            "type": "emit",
+            "effect": "cost_spell",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              }
+            }
+          }
+        ]
       },
       "spell_condition": {
         "label": "Заклинание: спасбросок или состояние",
         "group": "Заклинания",
         "description": "Тратит ячейку. Провал спасброска вешает состояние; оно запоминает твою сложность, и повторный спасбросок в конце хода делает само. Без концентрации.",
         "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "spell_level",
+            "label": "Круг заклинания",
+            "kind": "number"
+          },
+          {
+            "key": "slot",
+            "label": "Каким кругом",
+            "kind": "number",
+            "ask": {
+              "by": "actor",
+              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
+            },
+            "min": 1,
+            "max": 9
+          },
           {
             "key": "цели",
             "label": "Цели",
@@ -3939,39 +3950,28 @@
             "of": "цели"
           },
           {
-            "id": "save_бросок",
-            "type": "roll",
-            "die": "lead_die",
-            "bonus": {
-              "expr": "@цель.save_by.save"
-            },
-            "tags": [
-              "спасбросок",
-              {
-                "expr": "@save_by"
-              }
-            ],
-            "by": {
-              "expr": "@цель"
-            },
-            "against": {
-              "expr": "@действующий"
-            }
-          },
-          {
             "id": "save",
-            "type": "check",
-            "value": {
-              "expr": "@save_бросок"
-            },
-            "versus": {
-              "expr": "@действующий.spell_dc"
+            "type": "emit",
+            "effect": "saving_throw",
+            "args": {
+              "кто": {
+                "expr": "@цель"
+              },
+              "характеристика": {
+                "expr": "@save_by"
+              },
+              "сложность": {
+                "expr": "@действующий.spell_dc"
+              },
+              "против": {
+                "expr": "@действующий"
+              }
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "не(@save.success)"
+              "expr": "не(@save.прошёл)"
             }
           },
           {
@@ -3995,13 +3995,53 @@
             "type": "end"
           }
         ],
-        "extends": "spell"
+        "cost": [
+          {
+            "type": "emit",
+            "effect": "cost_spell",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              }
+            }
+          }
+        ]
       },
       "spell_condition_held": {
         "label": "Заклинание: спасбросок или состояние, с концентрацией",
         "group": "Заклинания",
         "description": "То же, но держится твоей концентрацией: сорвалась или взялся за другое — состояние спало со всех целей.",
         "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "spell_level",
+            "label": "Круг заклинания",
+            "kind": "number"
+          },
+          {
+            "key": "slot",
+            "label": "Каким кругом",
+            "kind": "number",
+            "ask": {
+              "by": "actor",
+              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
+            },
+            "min": 1,
+            "max": 9
+          },
           {
             "key": "цели",
             "label": "Цели",
@@ -4031,39 +4071,28 @@
             "of": "цели"
           },
           {
-            "id": "save_бросок",
-            "type": "roll",
-            "die": "lead_die",
-            "bonus": {
-              "expr": "@цель.save_by.save"
-            },
-            "tags": [
-              "спасбросок",
-              {
-                "expr": "@save_by"
-              }
-            ],
-            "by": {
-              "expr": "@цель"
-            },
-            "against": {
-              "expr": "@действующий"
-            }
-          },
-          {
             "id": "save",
-            "type": "check",
-            "value": {
-              "expr": "@save_бросок"
-            },
-            "versus": {
-              "expr": "@действующий.spell_dc"
+            "type": "emit",
+            "effect": "saving_throw",
+            "args": {
+              "кто": {
+                "expr": "@цель"
+              },
+              "характеристика": {
+                "expr": "@save_by"
+              },
+              "сложность": {
+                "expr": "@действующий.spell_dc"
+              },
+              "против": {
+                "expr": "@действующий"
+              }
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "не(@save.success)"
+              "expr": "не(@save.прошёл)"
             }
           },
           {
@@ -4087,11 +4116,30 @@
             "type": "end"
           }
         ],
-        "extends": "spell",
         "bond": {
           "effect": "concentration",
           "by": "действующий"
-        }
+        },
+        "cost": [
+          {
+            "type": "emit",
+            "effect": "cost_spell",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              }
+            }
+          }
+        ]
       },
       "spell_buff": {
         "label": "Заклинание: усиление",
@@ -4099,6 +4147,27 @@
         "description": "Тратит ячейку и вешает на цели эффект. Без концентрации: висит, пока не истечёт срок самого эффекта.",
         "params": [
           {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "spell_level",
+            "label": "Круг заклинания",
+            "kind": "number"
+          },
+          {
+            "key": "slot",
+            "label": "Каким кругом",
+            "kind": "number",
+            "ask": {
+              "by": "actor",
+              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
+            },
+            "min": 1,
+            "max": 9
+          },
+          {
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
@@ -4135,7 +4204,26 @@
             }
           }
         ],
-        "extends": "spell"
+        "cost": [
+          {
+            "type": "emit",
+            "effect": "cost_spell",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              }
+            }
+          }
+        ]
       },
       "spell_buff_held": {
         "label": "Заклинание: усиление с концентрацией",
@@ -4143,6 +4231,27 @@
         "description": "Тратит ячейку и вешает на цели эффект, пока держишь концентрацию. Целей может быть несколько — ячейка одна.",
         "params": [
           {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "spell_level",
+            "label": "Круг заклинания",
+            "kind": "number"
+          },
+          {
+            "key": "slot",
+            "label": "Каким кругом",
+            "kind": "number",
+            "ask": {
+              "by": "actor",
+              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
+            },
+            "min": 1,
+            "max": 9
+          },
+          {
             "key": "цели",
             "label": "Цели",
             "kind": "sheet",
@@ -4179,17 +4288,57 @@
             }
           }
         ],
-        "extends": "spell",
         "bond": {
           "effect": "concentration",
           "by": "действующий"
-        }
+        },
+        "cost": [
+          {
+            "type": "emit",
+            "effect": "cost_spell",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              }
+            }
+          }
+        ]
       },
       "spell_heal": {
         "label": "Заклинание: лечение",
         "group": "Заклинания",
         "description": "Тратит ячейку. Кости лечения плюс заклинательный модификатор; ячейка выше круга добавляет кости. Снимает состояние, если задано.",
         "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "spell_level",
+            "label": "Круг заклинания",
+            "kind": "number"
+          },
+          {
+            "key": "slot",
+            "label": "Каким кругом",
+            "kind": "number",
+            "ask": {
+              "by": "actor",
+              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
+            },
+            "min": 1,
+            "max": 9
+          },
           {
             "key": "цели",
             "label": "Цели",
@@ -4255,13 +4404,53 @@
             }
           }
         ],
-        "extends": "spell"
+        "cost": [
+          {
+            "type": "emit",
+            "effect": "cost_spell",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              }
+            }
+          }
+        ]
       },
       "spell_cleanse": {
         "label": "Заклинание: снять состояние",
         "group": "Заклинания",
         "description": "Тратит ячейку и снимает с цели одно состояние: малое восстановление, снятие проклятия.",
         "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "spell_level",
+            "label": "Круг заклинания",
+            "kind": "number"
+          },
+          {
+            "key": "slot",
+            "label": "Каким кругом",
+            "kind": "number",
+            "ask": {
+              "by": "actor",
+              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
+            },
+            "min": 1,
+            "max": 9
+          },
           {
             "key": "цели",
             "label": "Цели",
@@ -4295,14 +4484,75 @@
             }
           }
         ],
-        "extends": "spell"
+        "cost": [
+          {
+            "type": "emit",
+            "effect": "cost_spell",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              }
+            }
+          }
+        ]
       },
       "spell_note": {
         "label": "Заклинание: без броска",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "spell_level",
+            "label": "Круг заклинания",
+            "kind": "number"
+          },
+          {
+            "key": "slot",
+            "label": "Каким кругом",
+            "kind": "number",
+            "ask": {
+              "by": "actor",
+              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
+            },
+            "min": 1,
+            "max": 9
+          }
+        ],
         "group": "Заклинания",
         "description": "Тратит ячейку и пишет строку в журнал. Для заклинаний, которые стол не считает: обнаружение магии, туманный шаг, полёт.",
         "steps": [],
-        "extends": "spell"
+        "cost": [
+          {
+            "type": "emit",
+            "effect": "cost_spell",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              }
+            }
+          }
+        ]
       },
       "potion_heal": {
         "label": "Выпить зелье лечения",
@@ -4753,37 +5003,28 @@
             "of": "цели"
           },
           {
-            "id": "save_бросок",
-            "type": "roll",
-            "die": "lead_die",
-            "bonus": {
-              "expr": "@цель.abilities.мудрость.save"
-            },
-            "tags": [
-              "спасбросок",
-              "мудрость"
-            ],
-            "by": {
-              "expr": "@цель"
-            },
-            "against": {
-              "expr": "@действующий"
-            }
-          },
-          {
             "id": "save",
-            "type": "check",
-            "value": {
-              "expr": "@save_бросок"
-            },
-            "versus": {
-              "expr": "@действующий.spell_dc"
+            "type": "emit",
+            "effect": "saving_throw",
+            "args": {
+              "кто": {
+                "expr": "@цель"
+              },
+              "характеристика": {
+                "expr": "\"мудрость\""
+              },
+              "сложность": {
+                "expr": "@действующий.spell_dc"
+              },
+              "против": {
+                "expr": "@действующий"
+              }
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "не(@save.success)"
+              "expr": "не(@save.прошёл)"
             }
           },
           {
@@ -5897,7 +6138,7 @@
           {
             "on": "after:strike",
             "if": {
-              "expr": "все(@действующий == @носитель, не(пусто(@цель)), @hit.success)"
+              "expr": "все(@действующий == @носитель, не(пусто(@цель)), @hit.попал)"
             },
             "steps": [
               {
@@ -6264,7 +6505,7 @@
           {
             "on": "before:атака",
             "if": {
-              "expr": "все(@цель == @носитель, @hit.success)"
+              "expr": "все(@цель == @носитель, @hit.попал)"
             },
             "confirm": true,
             "cost": [
@@ -6354,31 +6595,22 @@
             ],
             "steps": [
               {
-                "id": "save_бросок",
-                "type": "roll",
-                "die": "lead_die",
-                "bonus": {
-                  "expr": "@источник.abilities.ловкость.save"
-                },
-                "tags": [
-                  "спасбросок",
-                  "ловкость"
-                ],
-                "by": {
-                  "expr": "@источник"
-                },
-                "against": {
-                  "expr": "@носитель"
-                }
-              },
-              {
                 "id": "save",
-                "type": "check",
-                "value": {
-                  "expr": "@save_бросок"
-                },
-                "versus": {
-                  "expr": "@носитель.spell_dc"
+                "type": "emit",
+                "effect": "saving_throw",
+                "args": {
+                  "кто": {
+                    "expr": "@источник"
+                  },
+                  "характеристика": {
+                    "expr": "\"ловкость\""
+                  },
+                  "сложность": {
+                    "expr": "@носитель.spell_dc"
+                  },
+                  "против": {
+                    "expr": "@носитель"
+                  }
                 }
               },
               {
@@ -6392,7 +6624,7 @@
                 "id": "dmg",
                 "type": "roll",
                 "fixed": {
-                  "expr": "если(@save.success, округлить вниз((@dmg_всего) * (0.5)), @dmg_всего)"
+                  "expr": "если(@save.прошёл, округлить вниз((@dmg_всего) * (0.5)), @dmg_всего)"
                 }
               },
               {
@@ -6432,7 +6664,7 @@
           {
             "on": "before:атака",
             "if": {
-              "expr": "все(@цель == @носитель, @hit.success)"
+              "expr": "все(@цель == @носитель, @hit.попал)"
             },
             "confirm": true,
             "cost": [
@@ -6630,34 +6862,25 @@
             },
             "steps": [
               {
-                "id": "save_бросок",
-                "type": "roll",
-                "die": "lead_die",
-                "bonus": {
-                  "expr": "@носитель.abilities.телосложение.save"
-                },
-                "tags": [
-                  "спасбросок",
-                  "телосложение"
-                ],
-                "by": {
-                  "expr": "@носитель"
-                }
-              },
-              {
                 "id": "save",
-                "type": "check",
-                "value": {
-                  "expr": "@save_бросок"
-                },
-                "versus": {
-                  "expr": "@запомнено"
+                "type": "emit",
+                "effect": "saving_throw",
+                "args": {
+                  "кто": {
+                    "expr": "@носитель"
+                  },
+                  "характеристика": {
+                    "expr": "\"телосложение\""
+                  },
+                  "сложность": {
+                    "expr": "@запомнено"
+                  }
                 }
               },
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@save.success"
+                  "expr": "@save.прошёл"
                 }
               },
               {
@@ -6746,34 +6969,25 @@
             },
             "steps": [
               {
-                "id": "save_бросок",
-                "type": "roll",
-                "die": "lead_die",
-                "bonus": {
-                  "expr": "@носитель.abilities.мудрость.save"
-                },
-                "tags": [
-                  "спасбросок",
-                  "мудрость"
-                ],
-                "by": {
-                  "expr": "@носитель"
-                }
-              },
-              {
                 "id": "save",
-                "type": "check",
-                "value": {
-                  "expr": "@save_бросок"
-                },
-                "versus": {
-                  "expr": "@запомнено"
+                "type": "emit",
+                "effect": "saving_throw",
+                "args": {
+                  "кто": {
+                    "expr": "@носитель"
+                  },
+                  "характеристика": {
+                    "expr": "\"мудрость\""
+                  },
+                  "сложность": {
+                    "expr": "@запомнено"
+                  }
                 }
               },
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@save.success"
+                  "expr": "@save.прошёл"
                 }
               },
               {
@@ -6943,34 +7157,25 @@
             },
             "steps": [
               {
-                "id": "save_бросок",
-                "type": "roll",
-                "die": "lead_die",
-                "bonus": {
-                  "expr": "@носитель.abilities.мудрость.save"
-                },
-                "tags": [
-                  "спасбросок",
-                  "мудрость"
-                ],
-                "by": {
-                  "expr": "@носитель"
-                }
-              },
-              {
                 "id": "save",
-                "type": "check",
-                "value": {
-                  "expr": "@save_бросок"
-                },
-                "versus": {
-                  "expr": "@запомнено"
+                "type": "emit",
+                "effect": "saving_throw",
+                "args": {
+                  "кто": {
+                    "expr": "@носитель"
+                  },
+                  "характеристика": {
+                    "expr": "\"мудрость\""
+                  },
+                  "сложность": {
+                    "expr": "@запомнено"
+                  }
                 }
               },
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@save.success"
+                  "expr": "@save.прошёл"
                 }
               },
               {
@@ -7206,34 +7411,25 @@
             },
             "steps": [
               {
-                "id": "save_бросок",
-                "type": "roll",
-                "die": "lead_die",
-                "bonus": {
-                  "expr": "@носитель.abilities.сила.save"
-                },
-                "tags": [
-                  "спасбросок",
-                  "сила"
-                ],
-                "by": {
-                  "expr": "@носитель"
-                }
-              },
-              {
                 "id": "save",
-                "type": "check",
-                "value": {
-                  "expr": "@save_бросок"
-                },
-                "versus": {
-                  "expr": "@запомнено"
+                "type": "emit",
+                "effect": "saving_throw",
+                "args": {
+                  "кто": {
+                    "expr": "@носитель"
+                  },
+                  "характеристика": {
+                    "expr": "\"сила\""
+                  },
+                  "сложность": {
+                    "expr": "@запомнено"
+                  }
                 }
               },
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@save.success"
+                  "expr": "@save.прошёл"
                 }
               },
               {
@@ -7826,34 +8022,25 @@
             },
             "steps": [
               {
-                "id": "save_бросок",
-                "type": "roll",
-                "die": "lead_die",
-                "bonus": {
-                  "expr": "@носитель.abilities.мудрость.save"
-                },
-                "tags": [
-                  "спасбросок",
-                  "мудрость"
-                ],
-                "by": {
-                  "expr": "@носитель"
-                }
-              },
-              {
                 "id": "save",
-                "type": "check",
-                "value": {
-                  "expr": "@save_бросок"
-                },
-                "versus": {
-                  "expr": "@запомнено"
+                "type": "emit",
+                "effect": "saving_throw",
+                "args": {
+                  "кто": {
+                    "expr": "@носитель"
+                  },
+                  "характеристика": {
+                    "expr": "\"мудрость\""
+                  },
+                  "сложность": {
+                    "expr": "@запомнено"
+                  }
                 }
               },
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@save.success"
+                  "expr": "@save.прошёл"
                 }
               },
               {
@@ -8588,34 +8775,25 @@
             },
             "steps": [
               {
-                "id": "save_бросок",
-                "type": "roll",
-                "die": "lead_die",
-                "bonus": {
-                  "expr": "@носитель.abilities.телосложение.save"
-                },
-                "tags": [
-                  "спасбросок",
-                  "телосложение"
-                ],
-                "by": {
-                  "expr": "@носитель"
-                }
-              },
-              {
                 "id": "save",
-                "type": "check",
-                "value": {
-                  "expr": "@save_бросок"
-                },
-                "versus": {
-                  "expr": "(большее из(10, округлить вниз(@amount / 2)))"
+                "type": "emit",
+                "effect": "saving_throw",
+                "args": {
+                  "кто": {
+                    "expr": "@носитель"
+                  },
+                  "характеристика": {
+                    "expr": "\"телосложение\""
+                  },
+                  "сложность": {
+                    "expr": "(большее из(10, округлить вниз(@amount / 2)))"
+                  }
                 }
               },
               {
                 "type": "branch",
                 "if": {
-                  "expr": "не(@save.success)"
+                  "expr": "не(@save.прошёл)"
                 }
               },
               {
@@ -9674,6 +9852,171 @@
               "источник": {
                 "expr": "@источник"
               }
+            }
+          }
+        ]
+      },
+      "attack_roll": {
+        "label": "Бросок атаки",
+        "group": "Вызываемые",
+        "description": "Бросок к20 + бонус против класса брони цели. 20 на кости — всегда попадание, 1 — всегда промах; крит — с «Крит на костях от».",
+        "params": [
+          {
+            "key": "кто",
+            "label": "Кто бросает",
+            "kind": "sheet"
+          },
+          {
+            "key": "против",
+            "label": "Против кого",
+            "kind": "sheet"
+          },
+          {
+            "key": "бонус",
+            "label": "Бонус атаки",
+            "kind": "number",
+            "default": 0
+          }
+        ],
+        "returns": [
+          {
+            "key": "попал",
+            "label": "попадание",
+            "kind": "boolean",
+            "no": "промах",
+            "expr": {
+              "expr": "@проверка.success"
+            }
+          },
+          {
+            "key": "крит",
+            "label": "крит",
+            "kind": "boolean",
+            "expr": {
+              "expr": "@бросок.natural >= @кто.crit_from"
+            }
+          },
+          {
+            "key": "на_костях",
+            "label": "на костях",
+            "kind": "number",
+            "expr": {
+              "expr": "@бросок.natural"
+            }
+          }
+        ],
+        "steps": [
+          {
+            "id": "бросок",
+            "type": "roll",
+            "die": "lead_die",
+            "bonus": {
+              "expr": "@бонус"
+            },
+            "tags": [
+              "атака"
+            ],
+            "by": {
+              "expr": "@кто"
+            },
+            "against": {
+              "expr": "@против"
+            }
+          },
+          {
+            "id": "проверка",
+            "type": "check",
+            "value": {
+              "expr": "@бросок"
+            },
+            "versus": {
+              "expr": "@против.ac"
+            },
+            "succeedOn": {
+              "expr": "20"
+            },
+            "failOn": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "saving_throw": {
+        "label": "Спасбросок",
+        "group": "Вызываемые",
+        "description": "Бросок к20 + спасбросок характеристики того, кто спасается, против сложности.",
+        "params": [
+          {
+            "key": "кто",
+            "label": "Кто спасается",
+            "kind": "sheet"
+          },
+          {
+            "key": "характеристика",
+            "label": "Чем спасается",
+            "kind": "choice",
+            "from": "abilities"
+          },
+          {
+            "key": "сложность",
+            "label": "Сложность",
+            "kind": "number"
+          },
+          {
+            "key": "против",
+            "label": "Против кого",
+            "kind": "sheet",
+            "optional": true
+          }
+        ],
+        "returns": [
+          {
+            "key": "прошёл",
+            "label": "спасся",
+            "kind": "boolean",
+            "no": "не спасся",
+            "expr": {
+              "expr": "@проверка.success"
+            }
+          },
+          {
+            "key": "на_костях",
+            "label": "на костях",
+            "kind": "number",
+            "expr": {
+              "expr": "@бросок.natural"
+            }
+          }
+        ],
+        "steps": [
+          {
+            "id": "бросок",
+            "type": "roll",
+            "die": "lead_die",
+            "bonus": {
+              "expr": "@кто.характеристика.save"
+            },
+            "tags": [
+              "спасбросок",
+              {
+                "expr": "@характеристика"
+              }
+            ],
+            "by": {
+              "expr": "@кто"
+            },
+            "against": {
+              "expr": "@против"
+            }
+          },
+          {
+            "id": "проверка",
+            "type": "check",
+            "value": {
+              "expr": "@бросок"
+            },
+            "versus": {
+              "expr": "@сложность"
             }
           }
         ]

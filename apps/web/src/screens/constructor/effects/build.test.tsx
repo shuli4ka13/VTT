@@ -6,7 +6,7 @@ import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import type { System, Effect } from '@vtt/schema';
 import { useWorld } from '../../../store/world.ts';
 import { openAll } from '../../../testing/render-open.tsx';
-import { within, stepCard, blocks, block, headOf, armWord, addToArm, addArm, stopNote, lastNumber, outcomeIf } from '../../../testing/cards.ts';
+import { within, stepCard, callIf, dragParamBefore, blocks, block, headOf, armWord, addToArm, addArm, stopNote, lastNumber, outcomeIf } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
 
 const worldOf = (id: string) => SAMPLE_WORLDS.find(w => w.system.id === id)!;
@@ -41,6 +41,15 @@ const marks = (card: HTMLElement, ...tags: string[]): void => {
   }
 };
 
+const savingThrow = (at: number, args: readonly (readonly [string, string])[]): void => {
+  within().click('+ изменение');
+  const made = () => stepCard(new RegExp(`^${at} · `));
+  within(made()).click('вызов');
+  within(made()).select('Какой эффект', 'saving_throw');
+  for (const [name, text] of args) within(made()).formula(within(made()).arg(name), text);
+  nameStep(made(), 'save');
+};
+
 const built = (id: string): Effect | undefined => useWorld.getState().system.effects[id];
 
 const dump = (what: unknown) => {
@@ -65,11 +74,11 @@ describe('эффекты пресетов собираются в констру
     ui.type('Описание', goal!.description!);
     if (ui.has('ещё')) ui.click('ещё');
     const param = (row: number, label: string, kind: string, key: string, from?: string) => {
-      if (row >= (built('strike')!.params ?? []).length) ui.click('+ вход');
+      if (row >= (built('strike')!.params ?? []).length) ui.click('+ ещё одно');
       ui.type(ui.cell('Название', row), label);
-      ui.select(ui.cell('Тип', row), kind);
-      if (from) ui.select(ui.cell('Уточнение', row), from);
-      if (ui.cell('Имя в формулах', row).tagName !== 'SPAN') ui.type(ui.cell('Имя в формулах', row), key);
+      ui.select(ui.cell('Вид', row), kind);
+      if (from) ui.select(ui.cell('Таблица', row), from);
+      if (ui.cell('Имя в формулах', row).querySelector('input')) ui.type(ui.cell('Имя в формулах', row), key);
     };
     param(2, 'Бонус атаки', 'number', 'attack_with');
     param(3, 'Прибавка к урону', 'number', 'damage_with');
@@ -93,26 +102,21 @@ describe('эффекты пресетов собираются в констру
     within(cost).formula(within(cost).arg('Источник'), '@действующий');
 
 
-    ui.click('+ проверка');
+    ui.click('+ изменение');
     let card = stepCard(/^3 · /);
-    within(card).formula('Проверка', 'кинуть(@lead_die) + @attack_with >= @цель.ac');
+    within(card).click('вызов');
     card = stepCard(/^3 · /);
-    within(card).formula('Бросает', '@действующий');
-    card = stepCard(/^3 · /);
-    within(card).formula('Против кого', '@цель');
-    card = stepCard(/^3 · /);
-    marks(card, 'атака');
-    card = stepCard(/^3 · /);
-    nameStep(card, 'hit');
-    card = stepCard(/^3 · /);
-    within(card).formula('Успех, если на кости не меньше', '20');
-    within(card).formula('Провал, если на кости не больше', '1');
+    within(card).select('Какой эффект', 'attack_roll');
+    for (const [name, text] of [['Кто бросает', '@действующий'], ['Против кого', '@цель'], ['Бонус атаки', '@attack_with']] as const) {
+      within(card).formula(within(card).arg(name), text);
+    }
+    nameStep(stepCard(/^3 · /), 'hit');
 
-    const hit = outcomeIf(3, true);
+    const hit = callIf(3, 'Бросок атаки', 'попадание');
     expect(armWord(block(hit))).toBe('попадание:');
     addToArm(block(hit), 0, 'number');
     card = stepCard(/^4 · /);
-    within(card).formula('Сколько', 'кинуть(@damage_dice, @dice * если(@hit_бросок.natural >= @действующий.crit_from, 2, 1)) + @damage_with');
+    within(card).formula('Сколько', 'кинуть(@damage_dice, @dice * если(@hit.крит, 2, 1)) + @damage_with');
     nameStep(card, 'dmg');
 
     addToArm(block(hit), 0, 'change');
@@ -168,13 +172,7 @@ describe('эффекты пресетов собираются в констру
     }
     within(card).click('цена');
 
-    ui.click('+ проверка');
-    card = stepCard(/^3 · /);
-    within(card).formula('Проверка', 'кинуть(@lead_die) + @источник.abilities.ловкость.save >= @носитель.spell_dc');
-    within(card).formula('Бросает', '@источник');
-    within(card).formula('Против кого', '@носитель');
-    marks(card, 'спасбросок', 'ловкость');
-    nameStep(card, 'save');
+    savingThrow(3, [['Кто спасается', '@источник'], ['Чем спасается', '"ловкость"'], ['Сложность', '@носитель.spell_dc'], ['Против кого', '@носитель']]);
 
     ui.click('+ число');
     card = stepCard(/^4 · /);
@@ -183,7 +181,7 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ число');
     card = stepCard(/^5 · /);
-    within(card).formula('Сколько', 'если(@save.success, округлить вниз((@dmg_всего) * (0.5)), @dmg_всего)');
+    within(card).formula('Сколько', 'если(@save.прошёл, округлить вниз((@dmg_всего) * (0.5)), @dmg_всего)');
     nameStep(card, 'dmg');
 
     ui.click('+ изменение');
@@ -214,15 +212,15 @@ describe('эффекты пресетов собираются в констру
 
     if (ui.has('ещё')) ui.click('ещё');
     const param = (row: number, label: string, kind: string, key: string, more: { from?: string; ask?: string; hint?: string; min?: string; max?: string } = {}) => {
-      if (row >= (built('shoot')!.params ?? []).length) ui.click('+ вход');
+      if (row >= (built('shoot')!.params ?? []).length) ui.click('+ ещё одно');
       ui.type(ui.cell('Название', row), label);
-      ui.select(ui.cell('Тип', row), kind);
-      if (more.from) ui.select(ui.cell('Уточнение', row), more.from);
+      ui.select(ui.cell('Вид', row), kind);
+      if (more.from) ui.select(ui.cell('Таблица', row), more.from);
       if (more.ask) ui.select(ui.cell('Если не передали', row), more.ask);
       if (more.hint) ui.type(ui.cell('Подсказка за столом', row), more.hint);
       if (more.min !== undefined) ui.type(ui.cell('Границы', row).querySelector<HTMLInputElement>('input[placeholder="не ниже"]')!, more.min);
       if (more.max !== undefined) ui.type(ui.cell('Границы', row).querySelector<HTMLInputElement>('input[placeholder="не выше"]')!, more.max);
-      ui.type(ui.cell('Имя в формулах', row), key);
+      if (ui.cell('Имя в формулах', row).querySelector('input')) ui.type(ui.cell('Имя в формулах', row), key);
     };
     const asked = (key: string) => (goal!.params ?? []).find(p => p.key === key)!.ask!.hint!;
     param(2, 'Тип урона', 'choice', 'damage_type', { from: 'damage_types' });
@@ -313,13 +311,10 @@ describe('эффекты пресетов собираются в констру
     ui.select('Когда именно', 'after');
     ui.select('Кого касается', '@лист == @носитель');
 
-    ui.click('+ проверка');
-    let card = stepCard(/^1 · /);
-    within(card).formula('Проверка', 'кинуть(@lead_die) + @носитель.abilities.телосложение.save >= (большее из(10, округлить вниз(@amount / 2)))');
-    marks(card, 'спасбросок', 'телосложение');
-    nameStep(card, 'save');
+    savingThrow(1, [['Кто спасается', '@носитель'], ['Чем спасается', '"телосложение"'], ['Сложность', '(большее из(10, округлить вниз(@amount / 2)))']]);
+    let card: HTMLElement;
 
-    const kept = outcomeIf(1, false);
+    const kept = callIf(1, 'Спасбросок', 'не спасся');
     addToArm(block(kept), 0, 'change');
     card = stepCard(/^2 · /);
     within(card).click('состояние');
@@ -332,83 +327,53 @@ describe('эффекты пресетов собираются в констру
     expect(built('concentration')).toEqual(goal);
   });
 
-  it('D&D «Заклинание» и «усиление с концентрацией»: основа с ценой, потомок с держанием и состоянием из входа', { timeout: 90000 }, () => {
-    const [goalBase, goalHeld] = start('dnd5e', ['spell', 'spell_buff_held']);
+  it('D&D «Заклинание: усиление с концентрацией» (spell_buff_held): цена-вызов cost_spell, держание, состояние из входа', { timeout: 90000 }, () => {
+    const [goal] = start('dnd5e', ['spell_buff_held']);
     const ui = within();
-    ui.click('+ вызываемый');
-    ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Заклинание');
+    ui.click('+ кнопкой');
+    ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, goal!.label!);
     ui.click('имя в формулах…');
-    ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'spell');
+    ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'spell_buff_held');
     ui.select('Блок', 'Заклинания');
-    ui.type('Описание', goalBase!.description!);
-    within(stepCard(/^1 · /)).click('Удалить');
-    within(stepCard(/^1 · /)).click('точно убрать');
+    ui.type('Описание', goal!.description!);
 
-    if (ui.has('ещё')) ui.click('ещё');
     const param = (row: number, label: string, kind: string, key: string, more: { ask?: string; hint?: string; min?: string; max?: string } = {}) => {
-      if (row >= (built('spell')!.params ?? []).length) ui.click('+ вход');
+      if (row >= (built('spell_buff_held')!.params ?? []).length) ui.click('+ ещё одно');
       ui.type(ui.cell('Название', row), label);
-      ui.select(ui.cell('Тип', row), kind);
+      ui.select(ui.cell('Вид', row), kind);
       if (more.ask) ui.select(ui.cell('Если не передали', row), more.ask);
       if (more.hint) ui.type(ui.cell('Подсказка за столом', row), more.hint);
       if (more.min !== undefined) ui.type(ui.cell('Границы', row).querySelector<HTMLInputElement>('input[placeholder="не ниже"]')!, more.min);
       if (more.max !== undefined) ui.type(ui.cell('Границы', row).querySelector<HTMLInputElement>('input[placeholder="не выше"]')!, more.max);
-      ui.type(ui.cell('Имя в формулах', row), key);
+      if (ui.cell('Имя в формулах', row).querySelector('input')) ui.type(ui.cell('Имя в формулах', row), key);
     };
     param(0, 'Кто действует', 'sheet', 'действующий');
-    param(1, 'Круг заклинания', 'number', 'spell_level');
+    param(2, 'Круг заклинания', 'number', 'spell_level');
     ui.check('«Круг заклинания» правят сопротивления', false);
-    param(2, 'Каким кругом', 'number', 'slot', { ask: 'actor', hint: (goalBase!.params ?? [])[2]!.ask!.hint!, min: '1', max: '9' });
+    param(3, 'Каким кругом', 'number', 'slot', { ask: 'actor', hint: (goal!.params ?? [])[2]!.ask!.hint!, min: '1', max: '9' });
+    param(4, 'Состояние', 'effect', 'status');
+    dragParamBefore('Цели', 'Состояние');
+    ui.select(ui.cell('Если не передали', 4), 'empty');
 
-    ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_action');
+    ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_spell');
     let card = stepCard(/^1 · /);
-    within(card).formula(within(card).arg('Лист'), '@действующий');
-    within(card).formula(within(card).arg('Источник'), '@действующий');
-    ui.click('+ изменение');
-    card = stepCard(/^2 · /);
-    within(card).click('вызов');
-    card = stepCard(/^2 · /);
-    within(card).select('Какой эффект', 'spell_slot');
-    for (const [name, text] of [['Круг ячейки', '@slot'], ['Лист', '@действующий'], ['Источник', '@действующий']] as const) {
+    for (const [name, text] of [['Лист', '@действующий'], ['Источник', '@действующий'], ['Круг заклинания', '@spell_level'], ['Каким кругом', '@slot']] as const) {
       within(card).formula(within(card).arg(name), text);
     }
-    within(stepCard(/^2 · /)).click('цена');
-    within(stepCard(/^2 · /)).click('в «Если»');
-    addToArm(block(0), 0, 'stop');
-    within(headOf(block(0))).when('=@slot < @spell_level');
-    stopNote(3, 'круг ячейки ниже круга заклинания');
-    within(stepCard(/^2 · /)).click('↓');
-    within(stepCard(/^3 · /)).click('↓');
-    expect(built('spell')).toEqual(goalBase);
-
-    ui.click('+ кнопкой');
-    ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, goalHeld!.label!);
-    ui.click('имя в формулах…');
-    ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'spell_buff_held');
-    ui.select('Блок', 'Заклинания');
-    ui.type('Описание', goalHeld!.description!);
-    ui.select('На основе', 'spell');
-    within(ui.cell('Название', 0).parentElement!).click('×');
-    ui.click('+ вход');
-    ui.type(ui.cell('Название', 1), 'Состояние');
-    ui.select(ui.cell('Тип', 1), 'effect');
-    if (ui.has('ещё')) ui.click('ещё');
-    ui.type(ui.cell('Имя в формулах', 1), 'status');
-    ui.select(ui.cell('Если не передали', 1), 'empty');
     ui.click('+ держание');
     ui.select('Держит', 'concentration');
     ui.select('У кого', 'действующий');
 
     ui.click('+ изменение');
-    let held = stepCard(/^2 · /);
+    let held = stepCard(/^3 · /);
     within(held).click('состояние');
-    held = stepCard(/^2 · /);
+    held = stepCard(/^3 · /);
     within(held).select('Какое', ':вход:status');
     within(held).formula('На кого', '@цель');
-    held = stepCard(/^2 · /);
+    held = stepCard(/^3 · /);
     within(held).formula('Запомнит: Кто наложил', '@действующий');
-    dump({ got: built('spell_buff_held'), goal: goalHeld });
-    expect(built('spell_buff_held')).toEqual(goalHeld);
+    dump({ got: built('spell_buff_held'), goal });
+    expect(built('spell_buff_held')).toEqual(goal);
   });
 
   it('Daggerheart «Двойственность» (duality): подписки «завершено», поле стола, условие на шаге', { timeout: 90000 }, () => {
@@ -470,11 +435,11 @@ describe('эффекты пресетов собираются в констру
     ui.type('Описание', goal!.description!);
     if (ui.has('ещё')) ui.click('ещё');
     const param = (row: number, label: string, kind: string, key: string, from?: string) => {
-      if (row >= (built('hero_attack')!.params ?? []).length) ui.click('+ вход');
+      if (row >= (built('hero_attack')!.params ?? []).length) ui.click('+ ещё одно');
       ui.type(ui.cell('Название', row), label);
-      ui.select(ui.cell('Тип', row), kind);
-      if (from) ui.select(ui.cell('Уточнение', row), from);
-      ui.type(ui.cell('Имя в формулах', row), key);
+      ui.select(ui.cell('Вид', row), kind);
+      if (from) ui.select(ui.cell('Таблица', row), from);
+      if (ui.cell('Имя в формулах', row).querySelector('input')) ui.type(ui.cell('Имя в формулах', row), key);
     };
     (goal!.params ?? []).slice(2).forEach((p, index) => param(index + 2, p.label!, p.kind!, p.key, p.from));
 
@@ -586,7 +551,7 @@ describe('эффекты пресетов собираются в констру
     within(ui.cell('Блок')).click('завести');
     ui.type('Описание', goal!.description!);
     if (ui.has('ещё')) ui.click('ещё');
-    ui.click('+ вход');
+    ui.click('+ ещё одно');
     ui.type(ui.cell('Название', 2), 'Рейтинг действия');
     ui.select(ui.cell('Если не передали', 2), 'actor');
     ui.type(ui.cell('Подсказка за столом', 2), (goal!.params ?? [])[2]!.ask!.hint!);

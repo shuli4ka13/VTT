@@ -20,7 +20,7 @@ const firstBonus = (system: System): number => {
     system, compendium: dnd.compendium as Compendium, die: () => 10, sheets,
     actionId: 'longsword:0', fromId: 'arven', toId: 'goblin',
   });
-  const rolled = out.reports.flatMap(entry => entry.report.trace).find(t => (t as { step?: string }).step === 'hit_бросок') as { bonus: number };
+  const rolled = out.reports.flatMap(entry => entry.report.trace).find(t => (t as { step?: string; within?: string }).step === 'бросок' && (t as { within?: string }).within === 'attack_roll') as { bonus: number };
   return rolled.bonus;
 };
 

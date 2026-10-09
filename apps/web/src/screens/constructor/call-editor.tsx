@@ -116,7 +116,7 @@ export function CallSummary({ system, effect, args, props, names, label }: {
   );
 }
 
-export function CallEditor({ system, effect: raw, effects, onEffect, args, fromProps, filled, onArg, context, where, allow, extraFor, headAction, children, grouped = false, names, inputs: callerInputs }: {
+export function CallEditor({ system, effect: raw, effects, onEffect, args, fromProps, filled, onArg, context, where, allow, extraFor, headAction, children, grouped = false, names, inputs: callerInputs, compact = false }: {
   system: System;
   effect: unknown;
   effects: [string, { label?: string }][];
@@ -134,8 +134,10 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, fromP
   children?: ReactNode;
   grouped?: boolean;
   names?: Map<string, string>;
+  compact?: boolean;
 }) {
   const [open, setOpen] = useState<string | null>(null);
+  const [more, setMore] = useState(false);
   const fromInput = typeof raw === 'object' && raw ? /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((raw as { expr?: unknown }).expr ?? ''))?.[1] : undefined;
   const via = fromInput ? callerInputs?.find(param => param.key === fromInput) : undefined;
   const effect = typeof raw === 'string' ? raw : typeof via?.default === 'string' ? via.default : '';
@@ -249,6 +251,51 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, fromP
       </>
     );
   };
+
+  const pick = callerInputs?.some(param => param.kind === 'effect') ? (
+    <EffectPick value={raw} system={system} inputs={callerInputs}
+      only={one => effects.some(([, e]) => e === one)} onChange={onEffect} />
+  ) : (
+    <Select
+      value={typeof raw === 'string' ? raw : ''}
+      options={[['', '— что вызвать —'], ...effects.map(([id, e]) => [id, e.label || id] as const)] as never}
+      onChange={next => onEffect(next)}
+    />
+  );
+
+  if (compact) {
+    const rare = (input: CallInput) => (input.value === undefined || input.value === null)
+      && (input.param.default !== undefined || Boolean(input.param.optional) || Boolean(input.param.ask));
+    const main = inputs.filter(input => !rare(input));
+    const rest = inputs.filter(rare);
+    const arg = (input: CallInput) => {
+      const shown = status(input);
+      return (
+        <div className="pair call-row__arg" key={input.param.key}>
+          <span className="call-args__name">{nameOf(input.param)}</span>
+          {editor(input)}
+          {shown.bad ? <span className="need">не заполнено</span> : null}
+        </div>
+      );
+    };
+    return (
+      <div className="call-row">
+        <Field label="Какой эффект" needed={!effect && !fromInput}>{pick}</Field>
+        {fromInput ? <span className="faint">{via ? `из входа «${via.label ?? via.key}»` : `входа «${fromInput}» нет`}</span> : null}
+        {children}
+        {main.map(arg)}
+        {effect && (rest.length || headAction) ? (
+          <div className={`call-row__more${more ? ' is-open' : ''}`}>
+            <button type="button" className="call-row__toggle" onClick={() => setMore(!more)}>{more ? '▾ ещё' : `▸ ещё${rest.length ? ` (${rest.length})` : ''}`}</button>
+            <div className="call-row__more-body">
+              {rest.map(arg)}
+              {headAction}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div className="stack stack--tight">

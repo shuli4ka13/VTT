@@ -24,8 +24,10 @@ const rollsText = (trace: Record<string, unknown>): string => {
   return trace.kept != null && rolls.length > 1 ? `[${rolls.join(', ')}] → ${trace.kept}` : `[${rolls.join(', ')}]`;
 };
 
+const rolled = (one: Record<string, unknown>): boolean => one.type === 'check' || (one.type === 'roll' && Boolean(one.by));
+
 export function previewLines(system: System, effectId: string, trace: Record<string, unknown>[]): string[] {
-  const shown = trace.filter(one => !one.skipped && !one.within);
+  const shown = trace.filter(one => !one.skipped && (!one.within || rolled(one)));
   const lines: string[] = [];
   for (const one of shown) {
     if (one.type !== 'roll' || !one.by) continue;
@@ -64,7 +66,7 @@ export function describeEntry(
   const labelOf = (tag: string) =>
     fieldOf(system, tag)?.label ?? columnLabel(system, tag) ?? tag;
   const effect = system.effects[String(entry.report.effect)] as any;
-  const stepOf = (trace: Record<string, unknown>) => (effect?.steps ?? [])
+  const stepOf = (trace: Record<string, unknown>) => (((trace.within ? system.effects[String(trace.within)] : effect) as any)?.steps ?? [])
     .find((step: any, index: number) => String(step.id ?? index) === String(trace.step));
   const params: { key: string; label?: string; kind?: string }[] = effect?.params ?? [];
   const sheetHeads = new Set([
@@ -95,7 +97,15 @@ export function describeEntry(
     const found = outputs?.find(o => o.path === (path.length ? `.${path.join('.')}` : ''));
     return found?.label ?? name;
   };
-  const refLabel = (ref: any): string | null => {
+  const refLabel = (ref: any, within?: unknown): string | null => {
+    const own = within ? system.effects[String(within)] as any : null;
+    const local = own && ref && typeof ref === 'object' && 'expr' in ref ? /^[@#]([\p{L}\p{N}_]+)((?:\.[\p{L}\p{N}_]+)*)$/u.exec(String(ref.expr).trim()) : null;
+    if (local) {
+      const param = ((own.params ?? []) as { key: string; label?: string; kind?: string }[]).find(p => p.key === local[1]);
+      const tail = local[2] ? local[2].slice(1).split('.') : [];
+      if (param && !tail.length) return String(param.label ?? param.key);
+      if (param?.kind === 'sheet' && tail.length) return labelOf(tail[tail.length - 1]!);
+    }
     if (typeof ref === 'string') return system.constants?.[ref]?.label ?? system.effects?.[ref]?.label ?? system.tables?.[ref]?.label ?? ref;
     if (!ref || typeof ref !== 'object') return null;
     if ('expr' in ref) {
@@ -120,13 +130,13 @@ export function describeEntry(
         : trace.kept != null && trace.rolls?.length > 1 ? `[${shown}] → ${trace.kept}` : `[${shown}]`;
       const title = rollTitle(tagsOfStep(step, trace), 'Бросок');
       const edits = trace.edits?.length ? ` (${trace.edits.join(', ')})` : '';
-      const bonus = step?.bonus ? ` + ${refLabel(step.bonus) ?? 'Бонус'}: ${trace.bonus}` : trace.bonus ? ` + ${trace.bonus}` : '';
+      const bonus = step?.bonus ? ` + ${refLabel(step.bonus, trace.within) ?? 'Бонус'}: ${trace.bonus}` : trace.bonus ? ` + ${trace.bonus}` : '';
       const parts = trace.parts && Object.keys(trace.parts).length
         ? ' · ' + Object.entries(trace.parts).map(([k, v]) => `${k}: ${v}`).join(', ') : '';
       return `${title}: ${rolls}${edits}${bonus} = ${trace.total}${parts}`;
     }
     if (trace.type === 'check') {
-      const versus = typeof trace.versusTag === 'string' ? labelOf(trace.versusTag) : refLabel(step?.versus) ?? 'порог';
+      const versus = typeof trace.versusTag === 'string' ? labelOf(trace.versusTag) : refLabel(step?.versus, trace.within) ?? 'порог';
       const degree = trace.degree !== undefined && trace.degree !== null ? `, степень ${trace.degree}` : '';
       const words = outcomeWords(system, (trace.tags as string[] | undefined) ?? []);
       const forced = trace.forced != null ? ` (${forcedWords(trace.forced, Boolean(trace.success))})` : '';
@@ -142,7 +152,7 @@ export function describeEntry(
     trace.type === 'apply' && trace.from === trace.to;
   const calculation = (entry.report.trace ?? []).flatMap((trace: Record<string, unknown>) => {
     if (trace.skipped || idle(trace)) return [];
-    const named = trace.within ? null : namedTrace(trace);
+    const named = trace.within && !rolled(trace) ? null : namedTrace(trace);
     if (named) return [named];
     const line = stepRegistry.get(String(trace.type))?.traceLine;
     if (!line) return [];

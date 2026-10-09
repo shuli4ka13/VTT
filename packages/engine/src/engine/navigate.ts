@@ -1,8 +1,7 @@
 import { readCell } from './cells.ts';
 import { EngineError } from './errors.ts';
-import { tableOf, isRange } from '../model/tables.ts';
-import { rowKeyOf } from '../model/sheet-columns.ts';
-import { choiceTableOf } from '../model/lists.ts';
+import { tableOf, isRange, linkOf } from '../model/tables.ts';
+import { rowKeyOf, fieldLinkOf } from '../model/sheet-columns.ts';
 import type { System, Param } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 import { fieldOf, hasField } from '../model/sheet-columns.ts';
@@ -14,10 +13,10 @@ export function referencedTable(system: System, head: string, paramDefs?: Param[
   const param = (paramDefs ?? []).find(p => p.key === head) as Loose | undefined;
   if (param) return param.kind === 'choice' ? (param.from as string | undefined) : undefined;
   const field = fieldOf(system, head);
-  if (field) return choiceTableOf(field);
+  if (field) return fieldLinkOf(system, field);
   for (const [, kind] of recordKinds(system)) {
-    const prop = (kind.columns ?? []).find(p => p.key === head) as Loose | undefined;
-    if (prop?.kind === 'choice' && typeof prop.from === 'string') return prop.from;
+    const link = linkOf((kind.columns ?? []).find(p => p.key === head));
+    if (link) return link;
   }
   return undefined;
 }
@@ -46,11 +45,12 @@ export function walk(
     }
     const cell = readCell(system, pass, current, value, columnKey, owner);
     if (i === path.length - 1) return cell;
-    if (column.kind !== 'choice' || !column.from) {
+    const link = linkOf(column);
+    if (!link) {
       throw new EngineError(
         `${owner}: колонка «${column.label || columnKey}» не из таблицы — дальше «${path.slice(i + 1).join('.')}» идти некуда`);
     }
-    current = column.from;
+    current = link;
     value = cell;
   }
   return value;
@@ -66,8 +66,9 @@ export function resolveAddress(system: System, pass: Pass, name: string): { valu
   const cell = readCell(system, pass, tableId!, row.value, column, name);
   if (!rest.length) return { value: cell };
   const spec = (table.columns ?? []).find(c => c.key === column);
-  if (spec?.kind !== 'choice' || !spec.from) {
+  const link = linkOf(spec);
+  if (!link) {
     throw new EngineError(`«${name}»: колонка «${spec?.label || column}» не из таблицы — дальше «${rest.join('.')}» идти некуда`);
   }
-  return { value: walk(system, pass, spec.from, cell, rest, `«${name}»`) };
+  return { value: walk(system, pass, link, cell, rest, `«${name}»`) };
 }

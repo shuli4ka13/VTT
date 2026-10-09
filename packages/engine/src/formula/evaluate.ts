@@ -160,6 +160,15 @@ export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value 
 
         return resolve(node.tag) as Value;
 
+      case 'Pick': {
+        const key = visit(node.key);
+        if (key === null || key === undefined || key === '') return null as unknown as Value;
+        if (typeof key === 'boolean' || (typeof key === 'object')) {
+          throw new FormulaRuntimeError(`«@${node.tag}.[…]»: колонку называет текст или число, получено ${describe(key)}`);
+        }
+        return resolve(`${node.tag}.${String(key)}${node.rest ? `.${node.rest}` : ''}`) as Value;
+      }
+
       case 'Unary': {
         const value = number(visit(node.operand), `операнд «${node.op}»`);
         return node.op === '-' ? -value : value;

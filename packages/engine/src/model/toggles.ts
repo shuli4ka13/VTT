@@ -41,19 +41,32 @@ const owned = (step: Step): boolean => {
   return by !== undefined && by !== null;
 };
 
-const amountsAfterCheck = (steps: Step[]): { check: Step; amount: Step }[] => {
-  const out: { check: Step; amount: Step }[] = [];
+const critOfCall = (system: System | undefined, step: Step): boolean => {
+  const called = (step as { effect?: unknown }).effect;
+  return step.type === 'emit' && Boolean(step.id) && typeof called === 'string'
+    && (system?.effects?.[called]?.returns ?? []).some(column => column.key === 'крит');
+};
+
+const amountsAfterCheck = (steps: Step[], system?: System): { check: Step; amount: Step; crit: string }[] => {
+  const out: { check: Step; amount: Step; crit: string }[] = [];
   let check: Step | null = null;
+  let crit = '';
   for (const step of steps) {
+    if (critOfCall(system, step)) {
+      check = step;
+      crit = `если(@${String(step.id)}.крит, 2, 1)`;
+      continue;
+    }
     if (step.type !== 'roll') continue;
     const s = step as Record<string, unknown>;
     if (owned(step)) {
       check = step.id ? step : null;
+      crit = check ? `если(@${String(step.id)}.atMax >= 1, 2, 1)` : '';
       continue;
     }
     if (!check) continue;
     const rolls = s.die !== undefined || findRoll((s.fixed as { expr?: unknown } | undefined)?.expr) !== null;
-    if (rolls) out.push({ check, amount: step });
+    if (rolls) out.push({ check, amount: step, crit });
   }
   return out;
 };
@@ -85,8 +98,7 @@ const withoutDoubler = (step: Record<string, unknown>): void => {
   step.fixed = { ...fixed, expr: writeRoll({ ...call, times }) };
 };
 
-const withDoubler = (step: Record<string, unknown>, check: string): void => {
-  const crit = `если(@${check}.atMax >= 1, 2, 1)`;
+const withDoubler = (step: Record<string, unknown>, crit: string): void => {
   const fixed = step.fixed as { expr?: unknown } | undefined;
   const call = findRoll(fixed?.expr);
   if (!call) {
@@ -112,8 +124,8 @@ export function setCrit(draft: System, choice: CritChoice): void {
 
   if (choice === 'double') {
     for (const effect of Object.values(draft.effects)) {
-      for (const { check, amount } of amountsAfterCheck(effect.steps ?? [])) {
-        withDoubler(amount as Record<string, unknown>, String(check.id));
+      for (const { amount, crit } of amountsAfterCheck(effect.steps ?? [], draft)) {
+        withDoubler(amount as Record<string, unknown>, crit);
       }
     }
   }

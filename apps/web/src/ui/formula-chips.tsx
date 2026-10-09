@@ -1,11 +1,10 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { matchTagQuery } from './tag-suggest.tsx';
 import { fieldPaths } from './paths.ts';
 import { DESK_ID } from '@vtt/engine/engine/owners';
-import { fieldsOf, fieldOf, hasField, ROW } from '@vtt/engine/model/sheet-columns';
-import { rowTables } from '@vtt/engine/model/tables';
+import { fieldsOf, fieldOf, hasField, fieldLinkOf, ROW } from '@vtt/engine/model/sheet-columns';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 
 const plainLabel = (system: System, tag: string, extra?: Map<string, string>): string =>
@@ -54,7 +53,32 @@ const labelOfTag = (system: System, tag: string, extra?: Map<string, string>, sh
 const knownSheetName = (system: System, tag: string, paths: Map<string, string>): boolean =>
   hasField(system, tag) || paths.has(tag) || Boolean(system.effects?.[tag]);
 
-export type Part = { text: string } | { tag: string; lit?: boolean };
+export type Part = { text: string } | { tag: string; lit?: boolean; by?: string; rest?: string };
+
+const LONE_REF = /^\s*[@#]([\p{L}\p{N}_.]+)\s*$/u;
+
+export function pickWords(system: System, part: { tag: string; by?: string; rest?: string }, table?: string, extra?: Map<string, string>, sheets?: SheetNames): string {
+  const lone = LONE_REF.exec(part.by ?? '');
+  const inner = lone?.[1];
+  const own = inner?.startsWith(`${ROW}.`) && table
+    ? (system.tables?.[table]?.columns ?? []).find(c => c.key === inner.slice(ROW.length + 1))
+    : undefined;
+  const by = own ? own.label || own.key : inner ? shortLabel(labelOfTag(system, inner, extra, sheets)) : (part.by ?? '').trim();
+  const link = fieldLinkOf(system, fieldOf(system, part.tag));
+  const tail = part.rest ? (system.tables?.[link ?? '']?.columns ?? []).find(c => c.key === part.rest) : undefined;
+  return `${shortLabel(labelOfTag(system, part.tag, extra, sheets))} · колонка по [${by}]${part.rest ? ` · ${tail?.label || part.rest}` : ''}`;
+}
+
+export function pickOptions(system: System, table: string | undefined): { tag: string; label: string; group: string }[] {
+  const own = table ? system.tables?.[table]?.columns ?? [] : [];
+  return own.filter(c => c.kind === 'column' && c.from).flatMap(column => fieldsOf(system)
+    .filter(field => fieldLinkOf(system, field) === column.from)
+    .map(field => ({
+      tag: `${field.tag}.[@${ROW}.${column.key}]`,
+      label: `${field.label ?? field.tag} · колонка по [${column.label || column.key}]`,
+      group: 'колонка по значению',
+    })));
+}
 
 const OPS: { label: string; hint: string; open: string; close?: string; word?: boolean }[] = [
   { label: '+', hint: 'сложить', open: ' + ' },
@@ -74,6 +98,10 @@ const OPS: { label: string; hint: string; open: string; close?: string; word?: b
 ];
 
 const LOOKUP = 'таблица';
+
+const PICK = '[@#]([\\p{L}\\p{N}_]+(?:\\.[\\p{L}\\p{N}_]+)*)\\.\\[([^\\[\\]]*)\\]((?:\\.[\\p{L}\\p{N}_]+)*)';
+
+const PART = new RegExp(`${PICK}|[@#]([\\p{L}\\p{N}_.]+)|"([^"]*)"`, 'u');
 
 function lookupArgs(value: string, open: number): { start: number; text: string }[] {
   const args: { start: number; text: string }[] = [];
@@ -120,11 +148,12 @@ export function partsOf(value: string, known?: (tag: string) => boolean, lits?: 
   let rest = value;
   let offset = 0;
   for (;;) {
-    const m = rest.match(/[@#]([\p{L}\p{N}_.]+)|"([^"]*)"/u);
+    const m = rest.match(PART);
     if (!m || m.index === undefined) break;
     const cut = m.index + m[0].length;
-    const lit = m[2] !== undefined;
-    const keep = lit ? Boolean(lits?.has(offset + m.index)) : !known || known(m[1]!);
+    const lit = m[5] !== undefined;
+    const picked = m[1] !== undefined;
+    const keep = lit ? Boolean(lits?.has(offset + m.index)) : !known || known(picked ? m[1]! : m[4]!);
     if (!keep) {
       text += rest.slice(0, cut);
       rest = rest.slice(cut);
@@ -132,7 +161,9 @@ export function partsOf(value: string, known?: (tag: string) => boolean, lits?: 
       continue;
     }
     out.push({ text: text + rest.slice(0, m.index) });
-    out.push(lit ? { tag: m[2]!, lit: true } : { tag: m[1]! });
+    out.push(lit ? { tag: m[5]!, lit: true }
+      : picked ? { tag: m[1]!, by: m[2]!, ...(m[3] ? { rest: m[3].slice(1) } : {}) }
+        : { tag: m[4]! });
     text = '';
     rest = rest.slice(cut);
     offset += cut;
@@ -154,7 +185,9 @@ const rankOf = (f: { tag: string; label: string }, needle: string): number => {
 export const shortLabel = (label: string): string => label.split(',')[0]!.trim();
 
 export function joinParts(parts: Part[]): string {
-  return parts.map(p => ('tag' in p ? (p.lit ? `"${p.tag}"` : `@${p.tag}`) : p.text)).join('');
+  return parts.map(p => ('tag' in p
+    ? (p.lit ? `"${p.tag}"` : p.by !== undefined ? `@${p.tag}.[${p.by}]${p.rest ? `.${p.rest}` : ''}` : `@${p.tag}`)
+    : p.text)).join('');
 }
 
 export function FormulaChips({ value, onChange, system, table, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, badges, sheets, extraOptions, calculator, readOnly, autoFocus, onChipPick }: {
@@ -211,26 +244,6 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
   const [closed, setClosed] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const focusOnce = useRef(Boolean(autoFocus));
-  const [lookup, setLookup] = useState<{ table: string; column: string } | null>(null);
-  const pending = useRef<number | null>(null);
-  useLayoutEffect(() => {
-    if (pending.current === null) return;
-    let left = pending.current;
-    pending.current = null;
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i]!;
-      const size = joinParts([part]).length;
-      if ('text' in part && left <= size) {
-        const el = inputs.current.get(i);
-        el?.focus();
-        el?.setSelectionRange(left, left);
-        setActive(i);
-        setCaret(left);
-        return;
-      }
-      left -= size;
-    }
-  }, [parts]);
   const sideOf = (tag: string) => {
     const owned = onSheet(tag, sheets);
     if (!owned) return null;
@@ -257,7 +270,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     const states = statesOf(system);
     if (!sheets?.size) {
       return [
-        ...local, ...sheet.map(f => ({ tag: f.tag, label: f.label, group: f.via ? 'по ссылке' : 'поле' })),
+        ...local, ...pickOptions(system, table), ...sheet.map(f => ({ tag: f.tag, label: f.label, group: f.via ? 'по ссылке' : 'поле' })),
         ...states.map(s => ({ ...s, group: 'висит на листе' })), ...desk,
       ];
     }
@@ -269,7 +282,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
       ...named.flatMap(([name, label]) => states.map(s => ({ tag: `${name}.${s.tag}`, label: s.label, group: `висит: ${label}` }))),
       ...desk,
     ];
-  }, [system, extraNames, extraOptions, paths, sheets]);
+  }, [system, extraNames, extraOptions, paths, sheets, table]);
 
   const commitParts = (next: Part[], focusAt?: { index: number; caret: number }) => {
     onChange(joinParts(next));
@@ -340,27 +353,6 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     commitParts(next, { index, caret: at + open.length });
   };
 
-  const insertAt = (open: string, close: string) => {
-    const index = active !== null && 'text' in (parts[active] ?? {}) ? active : parts.length - 1;
-    const part = parts[index] as { text: string };
-    const at = index === active ? Math.min(caret, part.text.length) : part.text.length;
-    pending.current = joinParts(parts.slice(0, index)).length + at + open.length;
-    const text = part.text.slice(0, at) + open + close + part.text.slice(at);
-    onChange(joinParts(parts.map((p, i) => (i === index ? { text } : p))));
-  };
-  const tables = rowTables(system);
-  const columnsFor = (table: string): [string, string][] => (table
-    ? (system.tables?.[table]?.columns ?? []).map(c => [c.key, c.label || c.key])
-    : tables.flatMap(([id, t]) => (t.columns ?? []).map(c => [c.key, `${c.label || c.key} · ${t.label || id}`] as [string, string])));
-  const linkColumns: [string, string][] = (table ? system.tables?.[table]?.columns ?? [] : [])
-    .filter(c => c.kind === 'column').map(c => [c.key, c.label || c.key]);
-  const placeLookup = () => {
-    if (!lookup?.column) return;
-    const column = lookup.column === ROW || lookup.column.startsWith(`${ROW}.`) ? `@${lookup.column}` : `"${lookup.column}"`;
-    if (lookup.table) insertAt(`${LOOKUP}("${lookup.table}", `, `, ${column})`);
-    else insertAt(`${LOOKUP}(`, `, , ${column})`);
-    setLookup(null);
-  };
 
   const opButton = (op: typeof OPS[number]) => (
     <button
@@ -405,6 +397,10 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     }, 120);
   };
 
+  const chipText = (part: { tag: string; by?: string; rest?: string }): string => (part.by !== undefined
+    ? pickWords(system, part, table, extraNames, sheets)
+    : shortLabel(labelOfTag(system, part.tag, extraNames, sheets)));
+
   const empty = parts.length === 1 && !(parts[0] as { text: string }).text;
 
   const lookups = lookupNames(system, value);
@@ -425,7 +421,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
               onClick={onChipPick ? e => { e.stopPropagation(); onChipPick(part.tag, labelOfTag(system, part.tag, extraNames, sheets)); } : undefined}
             >
               {sideOf(part.tag)}
-              <span>{shortLabel(labelOfTag(system, part.tag, extraNames, sheets))}</span>
+              <span>{chipText(part)}</span>
               {badge(part.tag)}
             </span>
           )
@@ -460,7 +456,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
               className={onChipPick ? 'chips__name--pick' : undefined}
               onMouseDown={onChipPick ? e => { e.preventDefault(); onChipPick(part.tag, labelOfTag(system, part.tag, extraNames, sheets)); } : undefined}
             >
-              {shortLabel(labelOfTag(system, part.tag, extraNames, sheets))}
+              {chipText(part)}
             </span>
             {badge(part.tag)}
             <button
@@ -539,28 +535,6 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
           {OPS.filter(op => !op.word).map(opButton)}
           <span className="chips__ops-split" aria-hidden />
           {OPS.filter(op => op.word).map(opButton)}
-          {tables.length ? (
-            <button type="button" className="chips__op chips__op--word" title="взять значение из таблицы: какая таблица, по чему искать строку, какая колонка"
-              onMouseDown={e => { e.preventDefault(); setLookup(lookup ? null : { table: tables[0]![0], column: '' }); }}>из таблицы</button>
-          ) : null}
-        </div>
-      ) : null}
-      {calculator && active !== null && lookup ? (
-        <div className="chips__lookup">
-          <span>Взять из таблицы</span>
-          <select aria-label="из какой таблицы" value={lookup.table} onChange={e => setLookup({ table: e.target.value, column: '' })}>
-            {tables.map(([id, t]) => <option key={id} value={id}>{t.label || id}</option>)}
-            <option value="">другой — по формуле (например, таблица класса)</option>
-          </select>
-          <span>колонку</span>
-          <select aria-label="какую колонку" value={lookup.column} onChange={e => setLookup({ ...lookup, column: e.target.value })}>
-            <option value="">— выберите</option>
-            {columnsFor(lookup.table).map(([key, label]) => <option key={`${key}|${label}`} value={key}>{label}</option>)}
-            {linkColumns.map(([key, label]) => <option key={`ссылка|${key}`} value={`${ROW}.${key}`}>{`на которую ссылается строка: «${label}»`}</option>)}
-            <option value={ROW}>как у этой строки</option>
-          </select>
-          <button type="button" className="chips__op" disabled={!lookup.column} onMouseDown={e => { e.preventDefault(); placeLookup(); }}>Вставить</button>
-          <span className="chips__lookup-hint">{lookup.table ? 'потом впишите, по чему искать строку: например, [Уровень]' : 'потом впишите таблицу формулой и по чему искать строку'}</span>
         </div>
       ) : null}
       {shownMenu ? (

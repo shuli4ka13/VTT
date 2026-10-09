@@ -54,7 +54,7 @@ describe('бросок и проверка одной грамматикой к�
         seen++;
       });
     }
-    expect(seen).toBeGreaterThan(10);
+    expect(seen).toBeGreaterThanOrEqual(8);
   });
 
   const system = {

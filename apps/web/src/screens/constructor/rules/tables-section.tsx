@@ -19,7 +19,7 @@ import { inUse, usersOf, useUsage } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
 import { freeId, slugOf, useBook } from '../../../store/world.ts';
 import { listUsers } from '@vtt/engine/model/lists';
-import { isRange, keyOf, choiceTables, rowTables } from '@vtt/engine/model/tables';
+import { isRange, keyOf, choiceTables, rowTables, numberTables } from '@vtt/engine/model/tables';
 import { rowUsers, renameRow, renameRowInBook } from '@vtt/engine/model/integrity';
 import { useWorld } from '../../../store/world.ts';
 import { useState, useRef, useEffect } from 'react';
@@ -311,6 +311,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, extr
       column={{ label: column.label ?? '', kind: column.kind ?? (column.expr ? '' : single ? 'number' : 'text'), from: column.from, many: column.many, expr: column.expr?.expr, min: column.min, max: column.max }}
       kinds={single ? FIELD_KINDS : book ? PROP_KINDS : COLUMN_KINDS}
       tables={others}
+      rowsOf={numberTables(system).filter(([key]) => key !== id).map(([key, t]) => [key, t.label || key] as [string, string])}
       many
       formulaHint={single ? 'Формула для всех листов' : book ? 'Формула для всех записей' : 'Формула для всех строк'}
       where={`${table.label || id} · ${name}`}
@@ -364,10 +365,8 @@ function applyPatch(c: TableColumn, patch: ColumnPatch): void {
   if (patch.kind === '') {
     delete c.kind; delete c.default; delete c.from; delete c.many;
   } else if (patch.kind !== undefined) {
-    if (patch.kind !== c.kind) delete c.default;
-    if ((patch.kind === 'column') !== (c.kind === 'column')) delete c.from;
+    if (patch.kind !== c.kind) { delete c.default; delete c.from; }
     c.kind = patch.kind;
-    if (patch.kind !== 'choice' && patch.kind !== 'column') delete c.from;
     if (patch.kind !== 'choice') delete c.many;
     if (patch.kind !== 'number') { delete c.min; delete c.max; }
   }

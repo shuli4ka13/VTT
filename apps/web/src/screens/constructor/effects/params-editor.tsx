@@ -1,15 +1,13 @@
 import { useState } from 'react';
-import { kindsFor } from '@vtt/engine/words/kinds';
+import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
 import { choiceTables } from '@vtt/engine/model/tables';
 import { ASKABLE } from '@vtt/engine/model/asks';
 import { freeId, useWorld } from '../../../store/world.ts';
 import { followKey, paramUsed, keyOf, referenced } from '../keys.ts';
 import { KeyField } from '../../../ui/key-field.tsx';
 import { BoundField } from '../bound-field.tsx';
-import { Card, CardHead, Input, Select, Button } from '../../../ui/primitives.tsx';
-import { SheetGrid } from '../../../ui/sheet-grid.tsx';
+import { Card, CardHead, Field, Input, Select, Button } from '../../../ui/primitives.tsx';
 import { useDragList } from '../../../ui/drag-list.ts';
-import type { GridColumn } from '../../../ui/sheet-grid.tsx';
 import type { Effect, Param, System, ValueKind } from '@vtt/schema';
 
 const SHEETS = 'sheet+many';
@@ -27,20 +25,34 @@ const modesFor = (kind: string, askable: boolean): (readonly [Mode, string])[] =
   ...(askable ? [['actor', 'спросить игрока'] as const, ['gm', 'спросить ведущего'] as const] : []),
 ];
 
-const COLUMNS: GridColumn[] = [
-  { key: 'label', label: 'Название', width: 170 },
-  { key: 'kind', label: 'Тип', width: 140 },
-  { key: 'from', label: 'Уточнение', width: 170, hint: 'у «из таблицы» — какая таблица; у списка листов — как зовётся каждый лист в шагах после «Для каждого из»' },
-  { key: 'ask', label: 'Если не передали', width: 260, hint: 'как у аргумента функции: «обязательно» — без него проверка системы не пустит, движок остановится; «по умолчанию» — берётся заданное значение; «можно пусто» — вход необязателен; или спросить за столом' },
-  { key: 'hint', label: 'Подсказка за столом', width: 170, hint: 'что увидит спрошенный' },
-  { key: 'main', label: 'Правят сопротивления', width: 180, hint: 'это число меняют сопротивления и уязвимости цели: урон, лечение. Одно на эффект' },
-  { key: 'bounds', label: 'Границы', width: 170, hint: 'для числа: не ниже и не выше — числом или формулой, например @удача' },
-  { key: 'key', label: 'Имя в формулах', width: 150, hint: 'как вход зовётся в формулах: @имя. Идёт за названием, пока на него никто не ссылается' },
-];
-
-const RARE = ['hint', 'main', 'bounds', 'key'];
-
 type Loose = Param & { role?: string; optional?: boolean };
+
+const kindWords = (param: Loose, system: System): string => {
+  const kind = String(param.kind ?? 'number');
+  if (kind === 'sheet') return param.many ? `несколько листов, каждый — «${param.item?.label ?? param.item?.key ?? 'Каждый'}»` : 'лист';
+  if (kind === 'choice') {
+    const table = param.from ? system.tables?.[param.from] : undefined;
+    return table || param.from ? `из «${table?.label || param.from}»` : 'из таблицы';
+  }
+  return kindWord(kind);
+};
+
+const defaultWords = (param: Loose, system: System): string => {
+  const value = param.default;
+  if (value === true) return 'да';
+  if (value === false) return 'нет';
+  if (typeof value === 'string' && String(param.kind) === 'effect') return system.effects?.[value]?.label || value || 'ничего';
+  return value === undefined || value === '' ? '—' : String(value);
+};
+
+const askWords = (param: Loose, system: System): string => {
+  const mode = modeOf(param);
+  if (mode === 'empty') return ', можно не указывать';
+  if (mode === 'value') return `, если не сказано — ${defaultWords(param, system)}`;
+  if (mode === 'actor') return ', если не сказано — спросить игрока';
+  if (mode === 'gm') return ', если не сказано — спросить ведущего';
+  return '';
+};
 
 export function ParamsEditor({ id, effect, system, onEdit }: {
   id: string;
@@ -49,14 +61,19 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
   onEdit: (change: (draft: Effect) => void) => void;
 }) {
   const params = (effect.params ?? []) as Loose[];
+  const [opened, setOpened] = useState<string[]>([]);
   const change = (key: string, fn: (target: Loose) => void) => onEdit(draft => {
     const target = draft.params?.find(p => p.key === key) as Loose | undefined;
     if (target) fn(target);
   });
-  const addParam = () => onEdit(draft => {
-    draft.params ??= [];
-    draft.params.push({ key: freeId(draft.params.map(p => p.key), 'вход'), label: 'Новый вход', kind: 'number' });
-  });
+  const addParam = () => {
+    const key = freeId(params.map(p => p.key), 'вход');
+    setOpened(now => [...now, key]);
+    onEdit(draft => {
+      draft.params ??= [];
+      draft.params.push({ key, label: 'Новый вход', kind: 'number' });
+    });
+  };
   const setMain = (key: string, on: boolean) => onEdit(draft => {
     for (const p of (draft.params ?? []) as Loose[]) {
       if (p.key === key && on) p.role = 'amount';
@@ -75,133 +92,182 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
     rest.splice(at + (after ? 1 : 0), 0, moving);
     draft.params = rest;
   }));
-  const relabel = (param: Loose, next: string) => onEdit(draft => {
-    const target = draft.params?.find(p => p.key === param.key) as Loose | undefined;
-    if (!target) return;
-    target.key = followKey({ used: used(target.key), key: target.key, base: 'вход', before: target.label ?? '', after: next, taken: keys });
-    target.label = next;
+  const moveOpen = (from: string, to: string) => setOpened(now => now.map(k => (k === from ? to : k)));
+  const relabel = (param: Loose, next: string) => {
+    const key = followKey({ used: used(param.key), key: param.key, base: 'вход', before: param.label ?? '', after: next, taken: keys });
+    if (key !== param.key) moveOpen(param.key, key);
+    onEdit(draft => {
+      const target = draft.params?.find(p => p.key === param.key) as Loose | undefined;
+      if (!target) return;
+      target.key = key;
+      target.label = next;
+    });
+  };
+  const rekey = (param: Loose, next: string) => {
+    moveOpen(param.key, next);
+    change(param.key, t => { t.key = next; });
+  };
+  const toggle = (key: string) => setOpened(now => (now.includes(key) ? now.filter(k => k !== key) : [...now, key]));
+  const drop = (key: string) => onEdit(draft => {
+    draft.params = (draft.params ?? []).filter(p => p.key !== key);
+    if (!draft.params.length) delete draft.params;
   });
-  const rekey = (param: Loose, next: string) => change(param.key, t => { t.key = next; });
-  const tables = choiceTables(system).map(([key, list]) => [key, list.label || key] as const);
-  const rare = params.some(p => p.ask?.hint || p.role === 'amount' || p.min !== undefined || p.max !== undefined);
-  const [more, setMore] = useState(rare);
-  const full = more || rare;
-  const columns = full ? COLUMNS : COLUMNS.filter(c => !RARE.includes(c.key));
 
   return (
     <Card>
-      <CardHead title="Что приходит" {...(params.length ? { sub: 'То, что у каждого вызова своё. Поля листов сюда не нужны — они пишутся прямо в шагах.' } : {})} />
+      <CardHead title="Что приходит" />
       {params.length === 0 ? (
         <div className="inline inline--tight">
           <span className="faint">Ничего — эффект берёт всё с листов.</span>
-          <Button size="sm" onClick={addParam}>+ вход</Button>
+          <Button size="sm" onClick={addParam}>+ ещё одно</Button>
         </div>
       ) : (
-        <SheetGrid id={full ? 'params' : 'params-short'} columns={columns}>
+        <div className="param-list">
           {params.map(param => {
-            const kind = String(param.kind ?? 'number');
-            const askable = (ASKABLE as readonly string[]).includes(kind);
-            const cells = [
-              <span key={`${param.key}:label`} className={`sheet-grid__line drag-item${drag.mark(param.key)}`} {...(params.length > 1 ? drag.props(param.key) : {})}>
-                {params.length > 1 ? <span className="drag-grip" aria-hidden title="перетащите, чтобы поменять порядок">⋮⋮</span> : null}
-                <Input value={param.label ?? ''} onChange={next => relabel(param, next)} />
-              </span>,
-              <Select
-                key={`${param.key}:kind`}
-                value={kind === 'sheet' && param.many ? SHEETS : kind}
-                options={PARAM_KINDS}
-                onChange={next => change(param.key, t => {
-                  t.kind = (next === SHEETS ? 'sheet' : next) as ValueKind;
-                  if (next === SHEETS) { t.many = true; t.item ??= { key: freeId(keys, 'каждый'), label: 'Каждый' }; } else { delete t.many; delete t.item; }
-                  if (next !== 'number') delete t.role;
-                  if (next !== 'choice') delete t.from;
-                  if (!(ASKABLE as readonly string[]).includes(next)) delete t.ask;
-                })}
-              />,
-              kind === 'choice' ? (
-                <Select
-                  key={`${param.key}:from`}
-                  value={String(param.from ?? '')}
-                  options={[['', '— какая —'], ...tables] as never}
-                  onChange={next => change(param.key, t => { if (next) t.from = next; else delete t.from; })}
-                />
-              ) : kind === 'sheet' && param.many ? (
-                <span key={`${param.key}:from`} className="sheet-grid__line" title="как зовётся один лист из списка в шагах после «Для каждого из»">
-                  <span className="faint">каждый:</span>
-                  <Input value={param.item?.label ?? param.item?.key ?? ''} placeholder="Цель"
-                    onChange={next => change(param.key, t => {
-                      const label = next.trim();
-                      if (!label) { delete t.item; return; }
-                      const st = useWorld.getState();
-                      const before = t.item?.key ?? '';
-                      const used = Boolean(before) && referenced({ s: st.system, c: st.compendium }, before, { steps: effect.steps ?? [], cost: effect.cost ?? [] });
-                      const key = followKey({ used, key: before || keyOf(label), base: 'каждый', before: t.item?.label ?? '', after: label, taken: keys.filter(k => k !== before) });
-                      t.item = { key, label };
-                    })} />
-                </span>
-              ) : <span key={`${param.key}:from`} className="faint">—</span>,
-              <span key={`${param.key}:ask`} className="sheet-grid__line">
-                <Select<string>
-                  label={`«${param.label ?? param.key}» — если не передали`}
-                  value={modeOf(param)}
-                  options={modesFor(kind, askable)}
-                  onChange={next => change(param.key, t => {
-                    delete t.ask; delete t.default; delete t.optional;
-                    if (next === 'empty') t.optional = true;
-                    if (next === 'value') t.default = (kind === 'number' ? 0 : kind === 'boolean' ? false : '') as never;
-                    if (next === 'actor' || next === 'gm') t.ask = { by: next };
-                  })}
-                />
-                {modeOf(param) === 'value' ? (
-                  <DefaultCell param={param} system={system}
-                    onChange={next => change(param.key, t => { t.default = (next ?? '') as never; })} />
+            const open = opened.includes(param.key);
+            return (
+              <div key={param.key} className="param-item">
+                <div className={`param-line${drag.mark(param.key)}`} {...(params.length > 1 ? drag.props(param.key) : {})}>
+                  {params.length > 1 ? <span className="drag-grip" aria-hidden title="перетащите, чтобы поменять порядок">⋮⋮</span> : null}
+                  <button type="button" className="param-line__sum" aria-expanded={open} onClick={() => toggle(param.key)}>
+                    <span className="param-line__name">{param.label || param.key}</span>
+                    <span className="faint">{kindWords(param, system)}{askWords(param, system)}</span>
+                  </button>
+                  <Button size="sm" variant="ghost" title="убрать вход" onClick={() => drop(param.key)}>×</Button>
+                </div>
+                {open ? (
+                  <ParamForm param={param} keys={keys} system={system} effect={effect}
+                    locked={used(param.key)} change={fn => change(param.key, fn)}
+                    onLabel={next => relabel(param, next)} onKey={next => rekey(param, next)} onMain={on => setMain(param.key, on)} />
                 ) : null}
-              </span>,
-              param.ask ? (
-                <Input
-                  key={`${param.key}:hint`}
-                  value={param.ask.hint ?? ''}
-                  placeholder="что подсказать"
-                  onChange={next => change(param.key, t => {
-                    if (!t.ask) return;
-                    if (next) t.ask.hint = next; else delete t.ask.hint;
-                  })}
-                />
-              ) : <span key={`${param.key}:hint`} className="faint">—</span>,
-              kind === 'number' ? (
-                <input
-                  key={`${param.key}:main`} type="checkbox" className="sheet-grid__check"
-                  aria-label={`«${param.label ?? param.key}» правят сопротивления`}
-                  checked={param.role === 'amount'}
-                  onChange={e => setMain(param.key, e.target.checked)}
-                />
-              ) : <span key={`${param.key}:main`} className="faint">—</span>,
-              kind === 'number' ? (
-                <span key={`${param.key}:bounds`} className="sheet-grid__line">
-                  <BoundField value={param.min} placeholder="не ниже" onChange={next => change(param.key, t => { if (next === null) delete t.min; else t.min = next; })} />
-                  <BoundField value={param.max} placeholder="не выше" onChange={next => change(param.key, t => { if (next === null) delete t.max; else t.max = next; })} />
-                </span>
-              ) : <span key={`${param.key}:bounds`} className="faint">—</span>,
-              <KeyField key={`${param.key}:key`} value={param.key} locked={used(param.key)} taken={keys} onChange={next => rekey(param, next)} />,
-              <Button key={`${param.key}:drop`} size="sm" variant="ghost" title="убрать вход" onClick={() => onEdit(draft => {
-                draft.params = (draft.params ?? []).filter(p => p.key !== param.key);
-                if (!draft.params.length) delete draft.params;
-              })}>×</Button>,
-            ];
-            return full ? cells : cells.filter((_, at) => at >= COLUMNS.length || !RARE.includes(COLUMNS[at]!.key));
+              </div>
+            );
           })}
-        </SheetGrid>
+        </div>
       )}
-
       {params.length ? (
         <div className="inline inline--tight">
-          <Button size="sm" onClick={addParam}>+ вход</Button>
-          {full && !more ? null : (
-            <Button size="sm" variant="ghost" onClick={() => setMore(!more)}>{more ? 'меньше' : 'ещё'}</Button>
-          )}
+          <Button size="sm" onClick={addParam}>+ ещё одно</Button>
         </div>
       ) : null}
     </Card>
+  );
+}
+
+function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey, onMain }: {
+  param: Loose; keys: string[]; system: System; effect: Effect; locked: boolean;
+  change: (fn: (target: Loose) => void) => void;
+  onLabel: (next: string) => void; onKey: (next: string) => void; onMain: (on: boolean) => void;
+}) {
+  const kind = String(param.kind ?? 'number');
+  const askable = (ASKABLE as readonly string[]).includes(kind);
+  const tables = choiceTables(system).map(([key, list]) => [key, list.label || key] as const);
+  const rare = Boolean(param.ask?.hint) || param.role === 'amount' || param.min !== undefined || param.max !== undefined;
+  const [more, setMore] = useState(rare);
+  const full = more || rare;
+  return (
+    <div className="param-form">
+      <div className="param-form__row">
+        <Field label="Название"><Input value={param.label ?? ''} onChange={onLabel} /></Field>
+        <Field label="Вид">
+          <Select
+            value={kind === 'sheet' && param.many ? SHEETS : kind}
+            options={PARAM_KINDS}
+            onChange={next => change(t => {
+              t.kind = (next === SHEETS ? 'sheet' : next) as ValueKind;
+              if (next === SHEETS) { t.many = true; t.item ??= { key: freeId(keys, 'каждый'), label: 'Каждый' }; } else { delete t.many; delete t.item; }
+              if (next !== 'number') delete t.role;
+              if (next !== 'choice') delete t.from;
+              if (!(ASKABLE as readonly string[]).includes(next)) delete t.ask;
+            })}
+          />
+        </Field>
+        {kind === 'choice' ? (
+          <Field label="Таблица">
+            <Select
+              value={String(param.from ?? '')}
+              options={[['', '— какая —'], ...tables] as never}
+              onChange={next => change(t => { if (next) t.from = next; else delete t.from; })}
+            />
+          </Field>
+        ) : null}
+        {kind === 'sheet' && param.many ? (
+          <Field label="Каждый" hint="как зовётся один лист из списка в шагах после «Для каждого из»">
+            <Input value={param.item?.label ?? param.item?.key ?? ''} placeholder="Цель"
+              onChange={next => change(t => {
+                const label = next.trim();
+                if (!label) { delete t.item; return; }
+                const st = useWorld.getState();
+                const before = t.item?.key ?? '';
+                const inUse = Boolean(before) && referenced({ s: st.system, c: st.compendium }, before, { steps: effect.steps ?? [], cost: effect.cost ?? [] });
+                const key = followKey({ used: inUse, key: before || keyOf(label), base: 'каждый', before: t.item?.label ?? '', after: label, taken: keys.filter(k => k !== before) });
+                t.item = { key, label };
+              })} />
+          </Field>
+        ) : null}
+        <Field label="Если не передали">
+          <span className="param-form__pair" title="«обязательно» — без него проверка системы не пустит; «по умолчанию» — берётся заданное значение; «можно пусто» — вход необязателен; или спросить за столом">
+            <Select<string>
+              label={`«${param.label ?? param.key}» — если не передали`}
+              value={modeOf(param)}
+              options={modesFor(kind, askable)}
+              onChange={next => change(t => {
+                delete t.ask; delete t.default; delete t.optional;
+                if (next === 'empty') t.optional = true;
+                if (next === 'value') t.default = (kind === 'number' ? 0 : kind === 'boolean' ? false : '') as never;
+                if (next === 'actor' || next === 'gm') t.ask = { by: next };
+              })}
+            />
+            {modeOf(param) === 'value' ? (
+              <DefaultCell param={param} system={system}
+                onChange={next => change(t => { t.default = (next ?? '') as never; })} />
+            ) : null}
+          </span>
+        </Field>
+      </div>
+      {full ? (
+        <div className="param-form__row">
+          {param.ask ? (
+            <Field label="Подсказка за столом" hint="что увидит спрошенный">
+              <Input
+                value={param.ask.hint ?? ''}
+                placeholder="что подсказать"
+                onChange={next => change(t => {
+                  if (!t.ask) return;
+                  if (next) t.ask.hint = next; else delete t.ask.hint;
+                })}
+              />
+            </Field>
+          ) : null}
+          {kind === 'number' ? (
+            <>
+              <Field label="Правят сопротивления" hint="это число меняют сопротивления и уязвимости цели: урон, лечение. Одно на эффект">
+                <input
+                  type="checkbox" className="sheet-grid__check"
+                  aria-label={`«${param.label ?? param.key}» правят сопротивления`}
+                  checked={param.role === 'amount'}
+                  onChange={e => onMain(e.target.checked)}
+                />
+              </Field>
+              <Field label="Границы" hint="не ниже и не выше — числом или формулой, например @удача">
+                <span className="param-form__pair">
+                  <BoundField value={param.min} placeholder="не ниже" onChange={next => change(t => { if (next === null) delete t.min; else t.min = next; })} />
+                  <BoundField value={param.max} placeholder="не выше" onChange={next => change(t => { if (next === null) delete t.max; else t.max = next; })} />
+                </span>
+              </Field>
+            </>
+          ) : null}
+          <Field label="Имя в формулах" hint="как вход зовётся в формулах: @имя. Идёт за названием, пока на него никто не ссылается">
+            <KeyField value={param.key} locked={locked} taken={keys} onChange={onKey} />
+          </Field>
+        </div>
+      ) : null}
+      {full && !more ? null : (
+        <div className="inline inline--tight">
+          <Button size="sm" variant="ghost" onClick={() => setMore(!more)}>{more ? 'меньше' : 'ещё'}</Button>
+        </div>
+      )}
+    </div>
   );
 }
 

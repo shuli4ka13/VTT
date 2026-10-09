@@ -28,11 +28,12 @@ export interface ColumnPatch {
 }
 
 
-export function ColumnCard({ column, kinds, tables, many, formulaHint, where, names, system, onChange, onDelete, onClose, lead, extra, preview, bounds = true, table }: {
+export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, where, names, system, onChange, onDelete, onClose, lead, extra, preview, bounds = true, table }: {
   table?: string;
   column: ColumnShape;
   kinds: readonly (readonly [string, string])[];
   tables: [string, string][];
+  rowsOf?: [string, string][];
   many?: boolean;
   formulaHint: string;
   where: string;
@@ -81,6 +82,14 @@ export function ColumnCard({ column, kinds, tables, many, formulaHint, where, na
               </Field>
             ) : null}
           </>
+        ) : column.kind === 'number' && rowsOf?.length ? (
+          <Field label="Строка таблицы">
+            <Select
+              value={column.from ?? ''}
+              options={[['', 'нет — просто число'], ...rowsOf] as never}
+              onChange={next => onChange({ from: next || null })}
+            />
+          </Field>
         ) : column.kind === 'column' ? (
           <Field label="Колонки какой таблицы">
             <Select

@@ -184,14 +184,14 @@ describe('эффекты пресетов собираются руками: Sha
   });
 
   const param = (ui: ReturnType<typeof within>, id: string, row: number, label: string, kind: string, key: string, more: { from?: string; ask?: string; main?: boolean } = {}) => {
-    if (row >= (built(id)!.params ?? []).length) ui.click('+ вход');
+    if (row >= (built(id)!.params ?? []).length) ui.click('+ ещё одно');
     if (ui.has('ещё')) ui.click('ещё');
     ui.type(ui.cell('Название', row), label);
-    ui.select(ui.cell('Тип', row), kind);
-    if (more.from) ui.select(ui.cell('Уточнение', row), more.from);
+    ui.select(ui.cell('Вид', row), kind);
+    if (more.from) ui.select(ui.cell('Таблица', row), more.from);
     if (more.ask) ui.select(ui.cell('Если не передали', row), more.ask);
     if (more.main) ui.check(`«${label}» правят сопротивления`, true);
-    if (ui.cell('Имя в формулах', row).tagName !== 'SPAN') ui.type(ui.cell('Имя в формулах', row), key);
+    if (ui.cell('Имя в формулах', row).querySelector('input')) ui.type(ui.cell('Имя в формулах', row), key);
   };
 
   const dropParam = (ui: ReturnType<typeof within>, row: number) => {

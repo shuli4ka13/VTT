@@ -69,10 +69,6 @@ export function EffectsTab() {
                     isActive={([id]) => id === activeId}
                     isFresh={([id]) => freshEffects.has(id)}
                     addTo={addTo}
-                    lineage={{
-                      keyOf: ([id]) => id,
-                      baseOf: ([, effect]) => effect.extends,
-                    }}
                     render={([id, effect]) => (
                       <ListItem
                         key={id}

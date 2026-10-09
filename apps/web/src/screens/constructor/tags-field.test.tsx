@@ -31,4 +31,17 @@ describe('одно поле меток', () => {
     render(<TagsField system={system} value={[]} onChange={() => {}} />);
     expect([...document.querySelectorAll('option')].some(o => o.value === ':формула')).toBe(false);
   });
+
+  it('метка не из словаря помечена; своя метка — только пунктом «новая метка…»', () => {
+    let got: TagValue[] = [];
+    render(<TagsField system={system} value={['атака', 'выдумана']} onChange={next => { got = next; }} />);
+    expect(screen.getAllByText(/нет в словаре/)).toHaveLength(1);
+    expect(document.querySelector('.tag-unknown')!.closest('.chip')!.textContent).toContain('выдумана');
+    const options = [...document.querySelectorAll('option')].map(o => o.textContent);
+    expect(options).toContain('новая метка…');
+    fireEvent.change(document.querySelector('select')!, { target: { value: ':своя' } });
+    fireEvent.change(screen.getByPlaceholderText('как назвать метку'), { target: { value: 'новая' } });
+    fireEvent.click(screen.getByText('добавить'));
+    expect(got).toEqual(['атака', 'выдумана', 'новая']);
+  });
 });

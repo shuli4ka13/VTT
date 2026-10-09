@@ -1,4 +1,4 @@
-import { group, test, eq, deepEq, ok, throws } from './harness.ts';
+import { group, test, eq, deepEq, ok } from './harness.ts';
 import { flattenSystem, hasBases } from '../src/model/inherit.ts';
 import { lintSystem } from '../src/model/lint.ts';
 import type { System } from '../src/model/types.ts';
@@ -7,71 +7,19 @@ const sys = (effects: Record<string, unknown>, records: Record<string, unknown> 
   id: 'о', name: 'о', tables: records, effects,
 } as unknown as System);
 
-group('основа: эффект берёт у основы и дописывает своё', () => {
-  test('дорожка «со мной» написана один раз, а достаётся всем наследникам', () => {
-    const flat = flattenSystem(sys({
-      заклинание: {
-        label: 'Заклинание',
-        params: [{ key: 'круг', label: 'Каким кругом', kind: 'number' }],
-        cost: [{ type: 'emit', effect: 'ячейка', args: { круг: { expr: '@круг' } } }],
-      },
-      огненный_шар: {
-        extends: 'заклинание', label: 'Огненный шар', activation: 'manual',
-        steps: [{ type: 'emit', effect: 'урон', args: { сколько: { expr: '28' } } }],
-      },
-    }));
-
-    const шар = flat.effects.огненный_шар!;
-    eq(шар.label, 'Огненный шар', 'своё имя побеждает');
-    eq(шар.cost?.length, 1, 'дорожка досталась от основы');
-    eq(шар.params?.[0]?.key, 'круг', 'и вход тоже');
-    eq(шар.steps?.length, 1, 'свои шаги на месте');
-    eq((шар as Record<string, unknown>).extends, 'заклинание', 'откуда взялось — видно и после разворачивания');
+group('у эффекта основы нет: общее вызывается шагом', () => {
+  const system = () => sys({
+    заклинание: { label: 'Заклинание', params: [{ key: 'круг', label: 'Круг', kind: 'number' }], steps: [] },
+    огненный_шар: { extends: 'заклинание', label: 'Огненный шар', steps: [] },
   });
 
-  test('шаги основы идут первыми, свои — следом', () => {
-    const flat = flattenSystem(sys({
-      основа: { label: 'Основа', steps: [{ id: 'а', type: 'amount' }] },
-      своё: { extends: 'основа', steps: [{ id: 'б', type: 'amount' }] },
-    }));
-    deepEq(flat.effects.своё!.steps?.map(s => (s as { id: string }).id), ['а', 'б']);
+  test('развёртка эффекты не склеивает', () => {
+    eq(flattenSystem(system()).effects.огненный_шар!.params, undefined);
   });
 
-  test('вход с тем же именем переопределяется, остальные копятся', () => {
-    const flat = flattenSystem(sys({
-      основа: {
-        label: 'Основа',
-        params: [{ key: 'к', label: 'Кость', kind: 'dice' }, { key: 'т', label: 'Тип', kind: 'text' }],
-      },
-      своё: { extends: 'основа', params: [{ key: 'к', label: 'Кость урона' }, { key: 'н', label: 'Новое' }] },
-    }));
-    deepEq(flat.effects.своё!.params, [
-      { key: 'к', label: 'Кость урона', kind: 'dice' },
-      { key: 'т', label: 'Тип', kind: 'text' },
-      { key: 'н', label: 'Новое' },
-    ]);
-  });
-
-  test('основа основы тоже считается', () => {
-    const flat = flattenSystem(sys({
-      а: { label: 'А', steps: [{ id: '1', type: 'amount' }] },
-      б: { extends: 'а', steps: [{ id: '2', type: 'amount' }] },
-      в: { extends: 'б', steps: [{ id: '3', type: 'amount' }] },
-    }));
-    deepEq(flat.effects.в!.steps?.map(s => (s as { id: string }).id), ['1', '2', '3']);
-  });
-
-  test('круг основ — внятная ошибка, а не зависание', () => {
-    const беда = throws(() => flattenSystem(sys({
-      а: { extends: 'б', label: 'А' },
-      б: { extends: 'а', label: 'Б' },
-    })));
-    ok(String(беда.message).includes('по кругу'), String(беда.message));
-  });
-
-  test('основы нет — ошибка называет обе стороны', () => {
-    const беда = throws(() => flattenSystem(sys({ а: { extends: 'нету', label: 'А' } })));
-    ok(String(беда.message).includes('«а»') && String(беда.message).includes('«нету»'), String(беда.message));
+  test('линт называет «на основе» у эффекта ошибкой', () => {
+    const texts = lintSystem(system()).filter(p => p.level === 'error').map(p => p.text);
+    ok(texts.some(t => t.includes('«на основе» у эффекта больше нет')), texts.join(' | '));
   });
 });
 
@@ -103,29 +51,5 @@ group('основ нет — система не трогается', () => {
     const плоская = sys({ а: { label: 'А' } });
     eq(hasBases(плоская), false);
     eq(flattenSystem(плоская), плоская);
-  });
-});
-
-group('конструктор: основа пропала — экран не падает, проблема видна', () => {
-  const broken = () => sys({
-    огненный_шар: { extends: 'заклинание', label: 'Огненный шар', params: [{ key: 'круг', label: 'Круг', kind: 'number' }], steps: [] },
-    петля_а: { extends: 'петля_б', label: 'А', steps: [] },
-    петля_б: { extends: 'петля_а', label: 'Б', steps: [] },
-  });
-
-  test('мягкий режим не бросает и оставляет своё', () => {
-    const flat = flattenSystem(broken(), true);
-    deepEq(flat.effects.огненный_шар!.params!.map(p => p.key), ['круг']);
-    ok(flat.effects.петля_а);
-  });
-
-  test('строгий режим бросает, как раньше', () => {
-    throws(() => flattenSystem(broken()));
-  });
-
-  test('линт называет недостающую основу и круг', () => {
-    const texts = lintSystem(flattenSystem(broken(), true)).filter(p => p.level === 'error').map(p => p.text);
-    ok(texts.some(t => t.includes('основы «заклинание» в системе нет')), texts.join(' | '));
-    ok(texts.some(t => t.includes('по кругу')), texts.join(' | '));
   });
 });

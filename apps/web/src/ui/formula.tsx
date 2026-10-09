@@ -54,7 +54,10 @@ export function formulaAsLabels(
       const col = column ? found.columns?.find(c => c.key === column) : undefined;
       return `«${found.label || table}»${col ? ` → ${col.label || col.key}` : ''} по ${arg.trim()}`;
     });
-  return lookups.replace(/[@#]([\p{L}\p{N}_.]+)/gu, (_, name: string) => {
+  const picks = lookups.replace(/[@#]([\p{L}\p{N}_]+(?:\.[\p{L}\p{N}_]+)*)\.\[([^[\]]*)\]((?:\.[\p{L}\p{N}_]+)*)/gu,
+    (_, tag: string, by: string, rest: string) =>
+      `${labelOfTag(system, tag)} · колонка по [${formulaAsLabels(system, by, names)}]${rest ? ` · ${rest.slice(1)}` : ''}`);
+  return picks.replace(/[@#]([\p{L}\p{N}_.]+)/gu, (_, name: string) => {
     if (onSheet(system, name)) return labelOfTag(system, name);
     const field = fieldOf(system, name);
     if (field) return field.label ?? name;

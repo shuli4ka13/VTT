@@ -21,7 +21,7 @@ const удар = (оружие: string, ярость: boolean, правка?: (s
     sheets: [бьющий, цель], actionId: `${оружие}:0`, fromId: бьющий.id, toId: цель.id, inputs: {},
   });
   const шаги = out.reports.flatMap(r => (r as { report?: { trace?: Record<string, unknown>[] } }).report?.trace ?? []);
-  return шаги.filter(t => t.type === 'emit').map(t => Number(t.amount));
+  return шаги.filter(t => t.type === 'emit' && t.event === 'damage').map(t => Number(t.amount));
 };
 
 group('правка по свойству метки — один факт вместо перечня', () => {

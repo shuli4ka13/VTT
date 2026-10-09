@@ -39,7 +39,7 @@ describe('стоимость эффекта — одним выбором', () =
     useWorld.getState().editSystem(draft => { draft.effects.spend = { label: 'Потратить', activation: 'manual', params: [], steps: [] } as never; });
     lane();
     const pick = screen.getByDisplayValue('+ стоимость') as HTMLSelectElement;
-    expect([...pick.options].map(o => o.textContent)).toEqual(['+ стоимость', 'Стоимость: действие', 'Потратить — другой эффект', '+ новая стоимость…']);
+    expect([...pick.options].map(o => o.textContent)).toEqual(['+ стоимость', 'Стоимость: действие', 'Потратить', '+ новая стоимость…']);
   });
 
   it('«+ новая стоимость» заводит эффект в блоке «Стоимость» и сразу его зовёт', () => {

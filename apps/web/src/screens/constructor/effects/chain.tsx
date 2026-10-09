@@ -11,7 +11,6 @@ import { armsOf, sees, endOf, inBlock } from '@vtt/engine/model/flow';
 import { FlowHead, FlowActions } from './cards/flow-parts.tsx';
 import { outcomeWords } from '@vtt/engine/engine/roll-tags';
 import { costsOf, newCost } from '../factory.ts';
-import { COST_BLOCK } from '@vtt/engine/words/glossary';
 import { GroupCard } from './cards/group-card.tsx';
 import { sheetsAt } from './names.ts';
 import type { Place } from '@vtt/engine/model/names-at';
@@ -69,6 +68,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
       .filter(({ step }) => step.id || (step.type === 'each' && loopOf(effect.params, step as { of?: unknown })))
       .map(({ step, at }) => ({
         id: String(step.type === 'each' ? loopOf(effect.params, step as { of?: unknown })?.key : step.id), type: step.type, at: startAt + cardAt(at), title: cardTitle(cards, at, system),
+        ...(returnsOf(system, step).length ? { outputs: returnsOf(system, step) } : {}),
       }));
 
   const problems = steps.map((step, index) => problemOf(step, system, effect, earlierOf(index)));
@@ -179,6 +179,26 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     );
   };
 
+  const outcomeOf = (group: (typeof cards)[number], head: Step): { yes: string; no: string; negated: boolean } | null => {
+    const cond = String((head as { if?: { expr?: unknown } }).if?.expr ?? '').replace(/\s+/g, '');
+    const negated = cond.startsWith('не(') && cond.endsWith(')');
+    const ref = negated ? cond.slice(3, -1) : cond;
+    const id = String(group.step.id);
+    if (group.kind === 'check' && ref === `@${id}.success`) {
+      const roll = group.amount ?? steps.find(one => one.id && `@${one.id}` === String((group.step as { value?: { expr?: unknown } }).value?.expr ?? '').trim());
+      const tags = (((roll as { tags?: unknown[] } | undefined)?.tags) ?? []).filter((tag): tag is string => typeof tag === 'string');
+      const words = outcomeWords(system, tags);
+      return { yes: words.success, no: words.fail, negated };
+    }
+    const called = (group.step as { effect?: unknown }).effect;
+    if (group.step.type === 'emit' && typeof called === 'string' && ref.startsWith(`@${id}.`)) {
+      const key = ref.slice(id.length + 2);
+      const column = (system.effects?.[called]?.returns ?? []).find(one => one.key === key && one.kind === 'boolean') as { label?: string; no?: string } | undefined;
+      if (column) return { yes: column.label ?? key, no: column.no ?? `не ${column.label ?? key}`, negated };
+    }
+    return null;
+  };
+
   const groupAt = (index: number) => cards.findIndex(card => card.indices[0] === index);
 
   const contextAt = (index: number) => ({
@@ -274,18 +294,12 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         continue;
       }
       const next = cards[g + 1];
-      if (group.kind === 'check' && group.step.id && next?.kind === 'flow' && next.step.type === 'branch') {
-        const cond = String((next.step as { if?: { expr?: unknown } }).if?.expr ?? '').replace(/\s+/g, '');
-        const own = `@${String(group.step.id)}.success`;
-        if (cond === own || cond === `не(${own})`) {
-          const roll = group.amount ?? steps.find(one => one.id && `@${one.id}` === String((group.step as { value?: { expr?: unknown } }).value?.expr ?? '').trim());
-          const tags = (((roll as { tags?: unknown[] } | undefined)?.tags) ?? []).filter((tag): tag is string => typeof tag === 'string');
-          const words = outcomeWords(system, tags);
-          const made = block(next.indices[0]!, { group, g, yes: words.success, no: words.fail, negated: cond !== own });
-          out.push(made.node);
-          g = made.next > g ? made.next : g + 2;
-          continue;
-        }
+      const verdict = group.step.id && next?.kind === 'flow' && next.step.type === 'branch' ? outcomeOf(group, next.step) : null;
+      if (verdict) {
+        const made = block(next!.indices[0]!, { group, g, ...verdict });
+        out.push(made.node);
+        g = made.next > g ? made.next : g + 2;
+        continue;
       }
       if (group.kind === 'flow') { g++; continue; }
       if (group.kind === 'split') {
@@ -361,12 +375,12 @@ export function CostPick({ system, except, onPick }: { system: System; except?: 
     <span className="add-cost">
       <Select<string>
         value=""
-        title="Чего стоит эффект: эффект из блока «Стоимость» зовётся первым шагом; не хватило — эффект не состоится"
+        title="Чего стоит эффект: выбранный эффект зовётся первым шагом; не хватило — эффект не состоится"
         options={[['', '+ стоимость'],
-          ...costsOf(system).map(([id, cost]) => [id, cost.label || id] as const),
+          ...costsOf(system).filter(([id]) => id !== except).map(([id, cost]) => [id, cost.label || id] as const),
           ...Object.entries(system.effects ?? {})
-            .filter(([key, other]) => key !== except && other.group !== COST_BLOCK && (other.activation ?? 'manual') !== 'passive')
-            .map(([id, other]) => [id, `${other.label || id} — другой эффект`] as const),
+            .filter(([key, other]) => key !== except && !costsOf(system).some(([id]) => id === key) && (other.activation ?? 'manual') !== 'passive')
+            .map(([id, other]) => [id, other.label || id] as const),
           [NEW_COST, '+ новая стоимость…']]}
         onChange={pick => {
           if (!pick) return;
@@ -392,6 +406,12 @@ const cardTitle = (cards: ReturnType<typeof groupSteps>, index: number, system: 
 };
 
 const span = (from: number, to: number): number[] => Array.from({ length: to - from + 1 }, (_, k) => from + k);
+
+const returnsOf = (system: System, step: Step): { path: string; label: string; kind?: string }[] => {
+  const called = (step as { effect?: unknown }).effect;
+  if (step.type !== 'emit' || typeof called !== 'string') return [];
+  return (system.effects?.[called]?.returns ?? []).map(column => ({ path: `.${column.key}`, label: column.label ?? column.key, ...(column.kind ? { kind: String(column.kind) } : {}) }));
+};
 
 const HELD_PARTS = new Set(['handler', 'handler-cost', 'attach', 'detach']);
 

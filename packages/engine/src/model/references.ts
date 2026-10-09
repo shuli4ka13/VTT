@@ -14,7 +14,7 @@ import { VALUE_COLUMN } from './tables.ts';
 export { MOMENT_PREFIX, FIELD_PREFIX } from '../events/bus.ts';
 import { MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, ANY_ACTION, callHappening, SEEN } from '../events/bus.ts';
 import type { Phase } from '../events/bus.ts';
-import { fieldsOf } from './sheet-columns.ts';
+import { fieldsOf, fieldLinkOf } from './sheet-columns.ts';
 
 export const CALL_TAGS = 'метки';
 
@@ -363,7 +363,7 @@ export function contractsOf(system: System, tag: string): NonNullable<System['ta
 
 function typedRefs(spec: { kind?: string; from?: string }, from: Where, out: Reference[]): void {
   if (!spec.from) return;
-  if (spec.kind === 'choice') out.push({ kind: 'table', key: spec.from, from });
+  if (spec.kind === 'choice' || spec.kind === 'number') out.push({ kind: 'table', key: spec.from, from });
   if (spec.kind === 'record') out.push({ kind: 'recordKind', key: spec.from, from });
 }
 
@@ -411,6 +411,11 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
   for (const turn of ['attach', 'detach'] as const) {
     out.push(...chainRefs(effect[turn] ?? [], step => ({ tab: 'effects', effect: id, step, part: turn }), params, [...sheetKeys, HOLDER]));
   }
+  const stepIds = [...(effect.steps ?? []), ...(effect.cost ?? [])].map(step => step.id).filter((one): one is string => Boolean(one));
+  for (const column of effect.returns ?? []) {
+    const expr = (column.expr as { expr?: unknown } | undefined)?.expr;
+    if (typeof expr === 'string') exprRefs(expr, { tab: 'effects', effect: id, part: 'returns', key: column.key }, sheetScope(params, sheetKeys, stepIds), out);
+  }
   modifierRefs(system, effect.modifiers, { tab: 'effects', effect: id, part: 'modifiers' }, out, undefined, effect.params ?? []);
   for (const key of effect.grants ?? []) out.push({ kind: 'effect', key, from: { tab: 'effects', effect: id, part: 'grants' } });
 }
@@ -440,6 +445,10 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
     if (field.roll?.die) out.push({ kind: 'constant', key: field.roll.die, from });
     if (field.value.kind === 'formula') exprRefs(field.value.expr, from, noScope, out);
     if (field.value.kind === 'stored' && field.value.type === 'choice') out.push({ kind: 'table', key: field.value.from ?? '', from });
+    else {
+      const link = fieldLinkOf(system, field);
+      if (link) out.push({ kind: 'table', key: link, from });
+    }
     if (field.lives === 'desk') {
       for (const ref of out) if (ref.from === from && ref.scope === 'plain') delete ref.scope;
     }

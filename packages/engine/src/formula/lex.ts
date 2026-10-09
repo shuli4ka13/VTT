@@ -3,6 +3,7 @@ import { FormulaSyntaxError } from './errors.ts';
 export type TokenType =
   | 'number' | 'text' | 'ref' | 'ident' | 'op'
   | 'lparen' | 'rparen' | 'comma'
+  | 'lbracket' | 'rbracket' | 'tail'
   | 'eof';
 
 export interface Token {
@@ -76,7 +77,27 @@ export function lex(source: unknown): Token[] {
       const nameStart = i;
       while (i < src.length && isNamePart(src[i]!)) i++;
       if (i === nameStart) throw new FormulaSyntaxError('после «@» ожидается имя', start);
-      tokens.push({ type: 'ref', value: src.slice(nameStart, i), text: src.slice(start, i), pos: start });
+      const name = src.slice(nameStart, i);
+      if (!name.endsWith('.')) {
+        tokens.push({ type: 'ref', value: name, text: src.slice(start, i), pos: start });
+        continue;
+      }
+      if (src[i] !== '[') throw new FormulaSyntaxError('после точки ожидается имя колонки или «[» — колонка по значению', i - 1);
+      tokens.push({ type: 'ref', value: name.slice(0, -1), text: src.slice(start, i - 1), pos: start });
+      tokens.push({ type: 'lbracket', value: '[', text: '[', pos: i });
+      i++;
+      continue;
+    }
+
+    if (ch === ']') {
+      tokens.push({ type: 'rbracket', value: ']', text: ']', pos: i });
+      i++;
+      if (src[i] === '.' && isNameStart(src[i + 1] ?? '')) {
+        const start = i;
+        i++;
+        while (i < src.length && isNamePart(src[i]!)) i++;
+        tokens.push({ type: 'tail', value: src.slice(start + 1, i), text: src.slice(start, i), pos: start });
+      }
       continue;
     }
 

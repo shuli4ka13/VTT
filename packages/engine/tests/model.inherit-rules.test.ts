@@ -2,7 +2,7 @@ import { group, test, deepEq } from './harness.ts';
 import { flattenSystem } from '../src/model/inherit.ts';
 import type { System } from '../src/model/types.ts';
 
-group('наследование: списки складываются, своя кнопка на том же месте правит кнопку основы', () => {
+group('наследование типов: списки складываются, своя кнопка на том же месте правит кнопку основы', () => {
   const system = flattenSystem({
     id: 's', name: 's', sheets: { gear: { label: 'Снаряжение', grants: ['a'], blocks: ['Бой'] }, ring: { label: 'Кольцо', extends: 'gear', grants: ['b'] } },
     effects: {
@@ -12,11 +12,6 @@ group('наследование: списки складываются, своя
     },
     
   } as unknown as System);
-
-  test('эффект на основе получает и выдачу, и подписки основы', () => {
-    deepEq(system.effects.own!.grants, ['a', 'b']);
-    deepEq((system.effects.own!.on ?? []).map(h => h.of), ['x', 'y']);
-  });
 
   test('тип на основе получает выдачу и блоки основы', () => {
     deepEq(system.sheets!.ring!.grants, ['a', 'b']);

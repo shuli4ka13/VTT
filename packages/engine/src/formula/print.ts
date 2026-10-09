@@ -17,6 +17,7 @@ export function printFormula(node: Node): string {
     case 'Text': return quote(node.value);
     case 'Bool': return node.value ? 'да' : 'нет';
     case 'Ref': return `@${node.tag}`;
+    case 'Pick': return `@${node.tag}.[${printFormula(node.key)}]${node.rest ? `.${node.rest}` : ''}`;
     case 'Unary': {
       const inner = printFormula(node.operand);
       return `${node.op}${rankOf(node.operand) < 4 ? `(${inner})` : inner}`;

@@ -1,6 +1,6 @@
-import { choiceTableOf } from '@vtt/engine/model/lists';
 import type { System } from '@vtt/schema';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { fieldsOf, fieldLinkOf } from '@vtt/engine/model/sheet-columns';
+import { linkOf } from '@vtt/engine/model/tables';
 
 const DEEPEST = 3;
 
@@ -14,7 +14,7 @@ export function columnPaths(
       const path = `${key}.${column.key}`;
       const words = `${label} → ${column.label || column.key}`;
       out.set(path, words);
-      if (column.kind === 'choice' && column.from && !column.many && depth < DEEPEST) walk(path, words, column.from, depth + 1);
+      if (linkOf(column) && !column.many && depth < DEEPEST) walk(path, words, linkOf(column), depth + 1);
     }
   };
   for (const head of heads) walk(head.key, head.label, head.from, 1);
@@ -23,5 +23,5 @@ export function columnPaths(
 
 export const fieldPaths = (system: System): Map<string, string> =>
   columnPaths(system, fieldsOf(system)
-    .filter(f => choiceTableOf(f))
-    .map(f => ({ key: f.tag, label: f.label ?? f.tag, from: choiceTableOf(f) })));
+    .filter(f => fieldLinkOf(system, f))
+    .map(f => ({ key: f.tag, label: f.label ?? f.tag, from: fieldLinkOf(system, f) })));

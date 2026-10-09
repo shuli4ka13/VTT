@@ -38,6 +38,7 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
       `метки бросков · ${table}`, rows.filter(([, t]) => t === table).map(([word]) => [word, word] as const),
     ] as [string, (readonly [string, string])[]]),
   ];
+  const dictionary = new Set(groups.flatMap(([, list]) => list.map(([word]) => word)));
   const free = groups
     .map(([title, list]) => [title, list.filter(([word]) => !taken.has(word))] as const)
     .filter(([, list]) => list.length);
@@ -55,6 +56,7 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
         <Chip key={keyOf(tag)} active={typeof tag === 'string'} onRemove={() => drop(tag)}
           {...(typeof tag === 'string' ? {} : { title: 'метка вычисляется формулой при броске' })}>
           {typeof tag === 'string' ? (templates.find(t => t.value === tag)?.label ?? tag) : `= ${tag.expr}`}
+          {typeof tag === 'string' && !dictionary.has(tag) ? <span className="faint tag-unknown" title="такой метки нет в словаре меток бросков"> · нет в словаре</span> : null}
         </Chip>
       ))}
       {typing ? (
@@ -82,7 +84,7 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
               {list.map(([word, label]) => <option key={word} value={word}>{label}</option>)}
             </optgroup>
           ))}
-          <option value={OWN}>своя, новая…</option>
+          <option value={OWN}>новая метка…</option>
           {computed ? <option value={COMPUTED}>вычисляемая формулой…</option> : null}
         </select>
       )}

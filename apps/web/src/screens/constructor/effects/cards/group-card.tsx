@@ -160,7 +160,7 @@ export function GroupCard({
           ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam} />
           : null}
         {group.kind === 'table' ? <TableBody step={step} context={context} edit={edit} system={system} /> : null}
-        <StepName group={group} effect={effect} edit={edit} />
+        <StepName group={group} effect={effect} system={system} edit={edit} />
       </Card>
     </>
   );
@@ -177,10 +177,12 @@ function summaryOf(group: CardGroup, system: System, effect: Effect, names: Map<
   return segments.map(part => ('text' in part ? part.text : part.hole)).join(' ').replace(/\s+([.,])/g, '$1');
 }
 
-function StepName({ group, effect, edit }: { group: CardGroup; effect: Effect; edit: (k: number, change: (draft: Step) => void) => void }) {
+function StepName({ group, effect, system, edit }: { group: CardGroup; effect: Effect; system: System; edit: (k: number, change: (draft: Step) => void) => void }) {
   const [open, setOpen] = useState(false);
   const id = group.step.id ? String(group.step.id) : '';
-  if (!id && group.step.type !== 'apply') return null;
+  const calledId = group.step.type === 'emit' ? (group.step as { effect?: unknown }).effect : undefined;
+  const gives = typeof calledId === 'string' && (system.effects[calledId]?.returns ?? []).length > 0;
+  if (!id && group.step.type !== 'apply' && !gives) return null;
   if (!open) {
     return (
       <div className="inline inline--tight step-name">

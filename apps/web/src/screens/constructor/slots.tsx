@@ -9,7 +9,7 @@ import { STEP } from '../../words.ts';
 import { hasField } from '@vtt/engine/model/sheet-columns';
 import { recordKinds } from '@vtt/engine/model/owned';
 
-export interface EarlierStep { id: string; type: string; at?: number; title?: string }
+export interface EarlierStep { id: string; type: string; at?: number; title?: string; outputs?: { path: string; label: string; kind?: string }[] }
 
 export const stepName = (step: EarlierStep): string =>
   (step.at
@@ -28,7 +28,7 @@ export function outputRefs(earlier: EarlierStep[]): { ref: string; label: string
   const out: { ref: string; label: string; kind?: string }[] = [];
   for (const step of earlier) {
     if (step.type === 'each') continue;
-    const outputs = outputsOf(step.type);
+    const outputs = [...(step.outputs ?? []), ...outputsOf(step.type)];
     const name = stepName(step);
     if (!outputs.length) {
       out.push({ ref: step.id, label: `${name} — результат` });

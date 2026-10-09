@@ -32,15 +32,19 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
         args={args}
         context={context}
         where="вызов"
+        compact
         onArg={(key, next) => edit(at, draft => {
           const all = { ...((loose(draft).args ?? {}) as Record<string, unknown>) };
           if (next === undefined || next === null) delete all[key]; else all[key] = next;
           if (Object.keys(all).length) loose(draft).args = all; else delete loose(draft).args;
         })}
         headAction={(
+          <>
+          {id && onOpenEffect ? <Button size="sm" variant="ghost" onClick={() => onOpenEffect(id)}>как устроено →</Button> : null}
           <Button size="sm" variant="ghost" onClick={() => setPeek(true)}>
-            {`что будет дальше${meddlersOf(system, id).length ? ' · правки могут урезать' : ''} →`}
+            {`что будет дальше${meddlersOf(system, id).length ? ' · кто может изменить' : ''} →`}
           </Button>
+          </>
         )}
       >
         {null}

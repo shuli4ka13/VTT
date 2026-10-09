@@ -1,6 +1,5 @@
 import { referencesOf, formulaDeps, LISTEN } from './references.ts';
 import type { Reference, Where } from './references.ts';
-import { basedOn } from './inherit.ts';
 import { isFormulaCell, fieldsOf, fieldOf, hasField, rowKeyOf } from './sheet-columns.ts';
 import type { System, Table } from './types.ts';
 import { isBook, kindOf, blockLine } from './owned.ts';
@@ -108,10 +107,6 @@ export function dependencies(donor: System): (part: Part) => Part[] {
     if (part.kind === 'rollEdit') {
       const cancel = donor.roll_edits?.[part.key]?.canceledBy;
       if (cancel) out.push({ kind: 'rollEdit', key: cancel });
-    }
-    if (part.kind === 'effect') {
-      const base = basedOn(donor.effects?.[part.key]);
-      if (base) out.push({ kind: 'effect', key: base });
     }
     if (part.kind === 'recordKind') {
       const base = (kindOf(donor, part.key) as Loose | undefined)?.extends;

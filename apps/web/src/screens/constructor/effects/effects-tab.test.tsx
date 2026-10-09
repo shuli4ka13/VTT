@@ -21,8 +21,9 @@ describe('EffectsTab: палитра трёх понятий', () => {
 
   it('свойства эффекта — одной строкой; у активируемого нет «сколько висит»', () => {
     renderOpen(<EffectsTab />);
-    const heads = [...document.querySelectorAll('.sheet-grid__title')].map(h => h.textContent);
-    expect(heads).toEqual(expect.arrayContaining(['Как запускается', 'Блок', 'На основе', 'Описание']));
+    const heads = [...document.querySelectorAll('[data-field]')].map(h => h.getAttribute('data-field'));
+    expect(heads).toEqual(expect.arrayContaining(['Как запускается', 'Блок', 'Описание']));
+    expect(heads).not.toContain('На основе');
     expect(screen.queryByText('+ сколько висит')).toBeNull();
   });
 
@@ -49,7 +50,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
       .map(b => b.textContent!.trim())
       .filter(t => !CREATE_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`)
         && t !== '+ вызываемый' && t !== '+ новый' && t !== '+ блок'
-        && t !== '+ вход' && t !== '+ держание' && !t.startsWith('+ в «')
+        && t !== '+ ещё одно' && t !== '+ держание' && !t.startsWith('+ в «')
         && !['+ блок', '+ метки', '+ описание для игрока', '+ занимает', '+ какие метки бывают', '+ сколько висит', '+ на основе'].includes(t));
     expect(palette).toEqual(['+ проверка', '+ изменение', '+ таблица', '+ для каждого из списка', '+ если', '+ стоп', '+ число']);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
@@ -119,29 +120,29 @@ describe('EffectsTab: палитра трёх понятий', () => {
   it('«Что приходит» — видимая секция с кнопкой', () => {
     renderOpen(<EffectsTab />);
     expect(screen.getByText('Что приходит')).toBeTruthy();
-    fireEvent.click(screen.getByText('+ вход'));
+    fireEvent.click(screen.getByText('+ ещё одно'));
     const effect = useWorld.getState().system.effects.strike!;
     expect(effect.params!.length).toBe(1);
   });
 
-  it('входы — таблицей: редкое под «ещё», флажки в конце, «правят сопротивления» только у числа', () => {
+  it('входы — списком словами: форма по клику, редкое под «ещё», «правят сопротивления» только у числа', () => {
     renderOpen(<EffectsTab />);
-    fireEvent.click(screen.getByText('+ вход'));
-    expect(screen.queryByText('Чей лист')).toBeNull();
-    expect(screen.queryByText(/можно числом или формулой/)).toBeNull();
+    fireEvent.click(screen.getByText('+ ещё одно'));
+    expect(screen.getByText('Новый вход')).toBeTruthy();
+    const form = () => document.querySelector('.param-form') as HTMLElement;
     expect(screen.queryByLabelText('«Новый вход» правят сопротивления'), 'редкое спрятано').toBeNull();
-    fireEvent.click(screen.getByText('ещё'));
-    const heads = [...document.querySelectorAll('.sheet-grid__title')].map(h => h.textContent);
+    fireEvent.click(within(form()).getByText('ещё'));
+    const heads = [...form().querySelectorAll('.field__label')].map(h => h.textContent);
     expect(heads.slice(-3)).toEqual(['Правят сопротивления', 'Границы', 'Имя в формулах']);
     expect(screen.getByLabelText('«Новый вход» правят сопротивления')).toBeTruthy();
 
-    const params = screen.getByLabelText('«Новый вход» правят сопротивления').closest('.sheet-grid')!;
-    const ask = [...params.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'gm'))!;
+    const ask = [...form().querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'gm'))!;
     fireEvent.change(ask, { target: { value: 'gm' } });
     const effect = Object.values(useWorld.getState().system.effects).find(e => e.params?.length)!;
     expect(effect.params![0]!.ask).toEqual({ by: 'gm' });
+    expect(document.querySelector('.param-line__sum')!.textContent).toContain('число, если не сказано — спросить ведущего');
 
-    fireEvent.change(params.querySelectorAll('select')[0]!, { target: { value: 'dice' } });
+    fireEvent.change(form().querySelectorAll('select')[0]!, { target: { value: 'dice' } });
     expect(screen.queryByLabelText('«Новый вход» правят сопротивления')).toBeNull();
   });
 
@@ -330,7 +331,7 @@ describe('вызываемый эффект — обычный эффект', ()
     const key = useWorld.getState().activeEffectId!;
     expect(useWorld.getState().system.effects[key]!.steps).toHaveLength(3);
 
-    fireEvent.click(screen.getByText('+ вход'));
+    fireEvent.click(screen.getByText('+ ещё одно'));
     const params = useWorld.getState().system.effects[key]!.params ?? [];
     expect(params.map(p => [p.kind, (p as { role?: string }).role ?? null])).toEqual([['sheet', null], ['number', 'amount'], ['number', null]]);
   });
@@ -474,30 +475,5 @@ describe('шаг цены — один раз, до остальных', () => {
     const back = useWorld.getState().system.effects.снаряд!;
     expect(back.cost).toBeUndefined();
     expect(back.steps).toHaveLength(1);
-  });
-});
-
-describe('EffectsTab: унаследованное видно', () => {
-  beforeEach(() => {
-    useWorld.setState(state => ({
-      ...state,
-      system: {
-        ...state.system,
-        effects: {
-          spell: { label: 'Заклинание', activation: 'manual', params: [{ key: 'slot', label: 'Круг ячейки', kind: 'number' }], cost: [{ type: 'emit', effect: 'cost' }], steps: [] },
-          bless: { label: 'Благословение', activation: 'manual', extends: 'spell', steps: [] },
-        },
-      },
-      activeEffectId: 'bless',
-    }));
-  });
-  afterEach(() => { cleanup(); });
-
-  it('у потомка свёрнуто «От основы» с её входами и ценой, и ссылка в основу', () => {
-    renderOpen(<EffectsTab />);
-    expect(screen.getByText('От основы «Заклинание»')).toBeTruthy();
-    expect(screen.getAllByText('Круг ячейки').length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByText('править в основе →'));
-    expect(useWorld.getState().activeEffectId).toBe('spell');
   });
 });

@@ -1,5 +1,5 @@
 import { EngineError } from '../engine/errors.ts';
-import type { System, Effect, Table, SheetKind, Param, Step, Binding, Modifier } from './types.ts';
+import type { System, Effect, Table, SheetKind, Param, Binding, Modifier } from './types.ts';
 import { recordKinds, kindsOf } from './owned.ts';
 
 type AnyKind = Table & SheetKind;
@@ -60,22 +60,6 @@ function dropEmpty(holder: Loose, keys: string[]): void {
   }
 }
 
-function mergeEffect(base: Effect, own: Effect): Effect {
-  const o = own as Loose;
-  const merged: Loose = { ...base, ...own };
-  merged.params = byKey((base.params ?? []) as Param[], (own.params ?? []) as Param[]);
-  merged.modifiers = [...(base.modifiers ?? []), ...(own.modifiers ?? [])] as Modifier[];
-  merged.cost = o.cost === undefined ? base.cost : ([...(base.cost ?? []), ...(own.cost ?? [])] as Step[]);
-  merged.steps = [...(base.steps ?? []), ...(own.steps ?? [])] as Step[];
-  merged.on = [...(base.on ?? []), ...(own.on ?? [])];
-  merged.attach = [...(base.attach ?? []), ...(own.attach ?? [])] as Step[];
-  merged.detach = [...(base.detach ?? []), ...(own.detach ?? [])] as Step[];
-  merged.grants = union(base.grants, own.grants);
-
-  dropEmpty(merged, ['params', 'modifiers', 'cost', 'steps', 'on', 'attach', 'detach', 'grants']);
-  return merged as Effect;
-}
-
 function mergeKind<K extends Table | SheetKind>(base: K, own: K): K {
   const b = base as AnyKind;
   const o = own as AnyKind;
@@ -95,20 +79,11 @@ export const basedOn = (thing: unknown): string | undefined => {
   return typeof at === 'string' && at ? at : undefined;
 };
 
-export function paramsOf(system: System, effect: Effect): Param[] {
-  const line: Effect[] = [];
-  let at: Effect | undefined = effect;
-  while (at && line.length <= MAX_CHAIN) {
-    line.unshift(at);
-    const base = basedOn(at);
-    at = base ? system.effects?.[base] : undefined;
-    if (at && line.includes(at)) break;
-  }
-  return line.reduce<Param[]>((done, one) => byKey(done, (one.params ?? []) as Param[]), []);
+export function paramsOf(_system: System, effect: Effect): Param[] {
+  return (effect.params ?? []) as Param[];
 }
 
 export function hasBases(system: System): boolean {
-  for (const effect of Object.values(system.effects ?? {})) if (basedOn(effect)) return true;
   for (const [, kind] of kindsOf(system)) if (basedOn(kind)) return true;
   return false;
 }
@@ -122,15 +97,6 @@ export function flattenSystem(system: System, lenient = false): System {
   const known = memo.get(system);
   if (known) return known;
 
-  const effects: Record<string, Effect> = {};
-  for (const id of Object.keys(system.effects ?? {})) {
-    const line = lineOf(id, key => basedOn(system.effects?.[key]), key => Boolean(system.effects?.[key]), 'эффект', lenient);
-    effects[id] = line.reduce<Effect>(
-      (done, key) => (done ? mergeEffect(done, system.effects[key]!) : system.effects[key]!),
-      undefined as unknown as Effect,
-    );
-  }
-
   const flat = <K extends Table | SheetKind>(all: Record<string, K>, mine: (key: string) => boolean): Record<string, K> => {
     const out: Record<string, K> = { ...all };
     for (const id of Object.keys(all).filter(mine)) {
@@ -143,7 +109,6 @@ export function flattenSystem(system: System, lenient = false): System {
 
   const out: System = {
     ...system,
-    effects,
     ...(system.tables && [...books].some(id => basedOn(system.tables![id])) ? { tables: flat(system.tables, id => books.has(id)) } : {}),
     ...(system.sheets ? { sheets: flat(system.sheets, () => true) } : {}),
   };

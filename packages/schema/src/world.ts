@@ -210,7 +210,6 @@ export const tagContract = z.object({
 }).strict();
 
 export const effect = z.object({
-  extends: z.string().min(1).optional(),
   group: z.string().optional(),
   tags: z.array(z.string().min(1)).optional(),
   bond: z.object({ effect: z.string().min(1), by: z.string().min(1) }).strict().optional(),
@@ -226,6 +225,7 @@ export const effect = z.object({
   }).strict().optional(),
   reapply: reapply.optional(),
   params: z.array(param).optional(),
+  returns: z.array(column.extend({ no: z.string().optional() }).strict()).optional(),
   steps: z.array(step).optional(),
 
   cost: z.array(step).optional(),

@@ -404,13 +404,6 @@ group('линт: вопрос «до» у вложенного вызова', ()
 });
 
 group('линт: стоимость не списывается дважды', () => {
-  test('потомок повторил трату основы — предупреждение', () => {
-    const system = withEffect('трата', { params: [WHO] as never, steps: [] });
-    system.effects.основа = { label: 'Основа', activation: 'manual', params: [WHO] as never, cost: [{ type: 'emit', effect: 'трата', args: { действующий: { expr: '@действующий' } } }] } as never;
-    system.effects.потомок = { label: 'Потомок', extends: 'основа', cost: [{ type: 'emit', effect: 'трата', args: { действующий: { expr: '@действующий' } } }] } as never;
-    ok(texts(flattenSystem(system)).some(t => t.includes('стоимость зовёт «трата» дважды')), texts(flattenSystem(system)).join('\n'));
-  });
-
   test('в образцах трата в стоимости не повторяется', () => {
     for (const system of SAMPLE_SYSTEMS) {
       eq(lintSystem(flattenSystem(system as System)).filter(p => p.text.includes('дважды')).map(p => p.text).join('\n'), '', system.name);

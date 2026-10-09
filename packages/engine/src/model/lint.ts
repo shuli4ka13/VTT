@@ -8,7 +8,7 @@ import { STEP_WORDS } from '../words/steps.ts';
 import { ROLL_CALL, CALL_WORDS } from '../words/calls.ts';
 import { modifierLists } from './integrity.ts';
 import { calledOf, chainsOfEffect } from '../engine/effects.ts';
-import { basedOn, paramsOf, lineTrouble } from './inherit.ts';
+import { basedOn, paramsOf } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
 import { recordsOf, argsWithProps, propKeysOf, recordKinds, kindsOf, kindOf, isBook } from './owned.ts';
 import { sheetBlockNames } from './blocks.ts';
@@ -590,6 +590,23 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
       for (const index of splits) {
         if (inBlock(arms, index)) out.push({ where: chain.where(index), level: 'error', text: `«${STEP_WORDS.each.label}» не ставится внутрь «Если» — цикл по целям только верхним уровнем` });
       }
+      const outputsOfCall = new Map<string, { label: string; keys: Set<string> }>();
+      chain.steps.forEach((step, index) => {
+        const called = (step as { effect?: unknown }).effect;
+        const returns = step.type === 'emit' && step.id && typeof called === 'string' ? system.effects[called]?.returns : undefined;
+        if (step.id && !returns?.length) outputsOfCall.delete(String(step.id));
+        if (returns?.length) {
+          outputsOfCall.set(String(step.id), { label: system.effects[String(called)]?.label ?? String(called), keys: new Set([...returns.map(column => column.key), 'amount', 'incoming', 'event', 'tags']) });
+          return;
+        }
+        if (!outputsOfCall.size) return;
+        const text = JSON.stringify(step);
+        for (const [id, known] of outputsOfCall) {
+          for (const found of text.matchAll(new RegExp(`@${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.([\\p{L}\\p{N}_]+)`, 'gu'))) {
+            if (!known.keys.has(found[1]!)) out.push({ where: chain.where(index), level: 'error', text: `у «${known.label}» нет итога «${found[1]}»` });
+          }
+        }
+      });
       chain.steps.forEach((step, index) => {
         if (step.if !== undefined && !isFlow(step)) out.push({ where: chain.where(index), level: 'error', text: 'у шага своё условие — условие теперь ставится блоком «Если»' });
         const cond = (step.if as { expr?: unknown } | undefined)?.expr;
@@ -610,6 +627,28 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
         }
       });
     }
+  }
+
+  for (const [id, effect] of Object.entries(system.effects)) {
+    (effect.on ?? []).forEach((handler, index) => {
+      const heard = listenerOf(handler);
+      if (heard.kind !== 'call') return;
+      const sources = system.effects[heard.key] ? [system.effects[heard.key]!] : Object.values(system.effects).filter(one => (one.tags ?? []).includes(heard.key));
+      const calls = new Map<string, { label: string; keys: Set<string> }>();
+      for (const source of sources) {
+        for (const step of source.steps ?? []) {
+          const called = (step as { effect?: unknown }).effect;
+          const returns = step.type === 'emit' && step.id && typeof called === 'string' ? system.effects[called]?.returns : undefined;
+          if (returns?.length) calls.set(String(step.id), { label: system.effects[String(called)]?.label ?? String(called), keys: new Set([...returns.map(column => column.key), 'amount', 'incoming', 'event', 'tags']) });
+        }
+      }
+      const text = JSON.stringify({ if: handler.if, steps: handler.steps, cost: handler.cost });
+      for (const [step, known] of calls) {
+        for (const found of text.matchAll(new RegExp(`@${step.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.([\\p{L}\\p{N}_]+)`, 'gu'))) {
+          if (!known.keys.has(found[1]!)) out.push({ where: { tab: 'effects', effect: id, part: 'on', handler: index }, level: 'error', text: `у «${known.label}» нет итога «${found[1]}»` });
+        }
+      }
+    });
   }
 
   const chainOf = (where: Where): Step[] | undefined => stepsAt(system, where);
@@ -706,12 +745,11 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
     new Map((effect.params ?? []).filter(p => p.kind === 'sheet').map(p => [p.key, Boolean(p.many)]));
   for (const [id, effect] of Object.entries(system.effects)) {
     const where: Where = { tab: 'effects', effect: id };
-    const bases = lineTrouble(id, key => basedOn(system.effects[key]), key => Boolean(system.effects[key]));
-    if (bases) out.push({ where, level: 'error', text: bases });
+    if ((effect as { extends?: unknown }).extends !== undefined) out.push({ where, level: 'error', text: '«на основе» у эффекта больше нет — общее вызывается шагом «вызов» (например, в цене)' });
     const sheets = sheetsOf(effect);
     const paid = emittedBy(effect.cost);
     for (const twice of new Set(paid.filter((key, index) => paid.indexOf(key) !== index))) {
-      out.push({ where: { ...where, part: 'cost' }, level: 'warn', text: `стоимость зовёт «${system.effects[twice]?.label ?? twice}» дважды${effect.extends ? ' — возможно, она уже есть у основы' : ''}: спишется два раза` });
+      out.push({ where: { ...where, part: 'cost' }, level: 'warn', text: `стоимость зовёт «${system.effects[twice]?.label ?? twice}» дважды: спишется два раза` });
     }
     (effect.steps ?? []).forEach((step, index) => {
       if (step.type !== 'each') return;

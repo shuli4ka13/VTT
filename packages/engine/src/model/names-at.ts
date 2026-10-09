@@ -53,7 +53,13 @@ const fromParam = (param: Param, group: NameGroup): NameAt => ({
 
 const holder = (): NameAt => ({ name: HOLDER, label: 'носитель — тот, на ком висит', kind: 'sheet', group: 'holder' });
 
-function stepsBefore(steps: readonly Step[], index: number, withLoop: boolean, params: readonly Param[] = []): NameAt[] {
+const returnsOf = (system: System | undefined, step: Step): NameChild[] => {
+  const called = (step as { effect?: unknown }).effect;
+  if (step.type !== 'emit' || typeof called !== 'string') return [];
+  return (system?.effects?.[called]?.returns ?? []).map(column => ({ path: `.${column.key}`, label: column.label ?? column.key, kind: column.kind ?? 'number' }));
+};
+
+function stepsBefore(steps: readonly Step[], index: number, withLoop: boolean, params: readonly Param[] = [], system?: System): NameAt[] {
   const out: NameAt[] = [];
   const arms = armsOf(steps);
   steps.slice(0, index).forEach((step, at) => {
@@ -64,10 +70,11 @@ function stepsBefore(steps: readonly Step[], index: number, withLoop: boolean, p
       return;
     }
     if (!step.id) return;
-    const children = outputsOf(step.type);
+    const children = [...returnsOf(system, step), ...outputsOf(step.type)];
+    const called = step.type === 'emit' && typeof (step as { effect?: unknown }).effect === 'string' ? system?.effects?.[String((step as { effect?: unknown }).effect)]?.label : undefined;
     out.push({
       name: String(step.id),
-      label: (STEP_WORDS as Record<string, StepWords>)[step.type]?.label ?? String(step.id),
+      label: called ?? (STEP_WORDS as Record<string, StepWords>)[step.type]?.label ?? String(step.id),
       kind: 'result',
       group: 'step',
       ...(children.length ? { children } : {}),
@@ -82,13 +89,13 @@ function constants(system: System): NameAt[] {
   }));
 }
 
-function targetsChildren(listened: Effect | null): NameChild[] {
+function targetsChildren(listened: Effect | null, system?: System): NameChild[] {
   if (!listened) return [];
   const steps = listened.steps ?? [];
   const at = steps.findIndex(step => step.type === 'each');
   if (at < 0) return [];
   return steps.slice(at + 1).filter(step => step.id).flatMap(step => {
-    const outputs = outputsOf(step.type);
+    const outputs = [...returnsOf(system, step), ...outputsOf(step.type)];
     const own = { path: `.${String(step.id)}`, label: `шаг «${String(step.id)}» у каждой цели`, kind: 'result' };
     return [own, ...outputs.map(output => ({ path: `.${String(step.id)}${output.path}`, label: output.label, kind: output.kind }))];
   });
@@ -114,7 +121,7 @@ function heard(system: System, handler: NonNullable<Effect['on']>[number]): Name
       continue;
     }
     if (name === TARGETS_SEED) {
-      out.push({ name, label: HEARD_LABELS[name]!, kind: 'rows', group: 'heard', children: targetsChildren(listened) });
+      out.push({ name, label: HEARD_LABELS[name]!, kind: 'rows', group: 'heard', children: targetsChildren(listened, system) });
       continue;
     }
     out.push({ name, label: HEARD_LABELS[name] ?? name, kind: name === CALL_TAGS ? 'tags' : 'result', group: 'heard' });
@@ -137,19 +144,19 @@ export function namesAt(raw: System, effectId: string, place: Place): NameAt[] {
 
   switch (place.part) {
     case 'steps':
-      return dedupe([...inputs, ...stepsBefore(effect.steps ?? [], place.index, true, effect.params ?? []), ...tags, ...constants(system)]);
+      return dedupe([...inputs, ...stepsBefore(effect.steps ?? [], place.index, true, effect.params ?? [], system), ...tags, ...constants(system)]);
     case 'cost':
-      return dedupe([...inputs, ...stepsBefore(effect.cost ?? [], place.index, false), ...tags, ...constants(system)]);
+      return dedupe([...inputs, ...stepsBefore(effect.cost ?? [], place.index, false, [], system), ...tags, ...constants(system)]);
     case 'attach':
     case 'detach':
-      return dedupe([holder(), ...inputs, ...stepsBefore(effect[place.part] ?? [], place.index, false), ...constants(system)]);
+      return dedupe([holder(), ...inputs, ...stepsBefore(effect[place.part] ?? [], place.index, false, [], system), ...constants(system)]);
     case 'handler-if':
     case 'handler':
     case 'handler-cost': {
       const handler = effect.on?.[place.handler];
       if (!handler) return [];
-      const own = place.part === 'handler' ? stepsBefore(handler.steps ?? [], place.index, false)
-        : place.part === 'handler-cost' ? stepsBefore(handler.cost ?? [], place.index, false) : [];
+      const own = place.part === 'handler' ? stepsBefore(handler.steps ?? [], place.index, false, [], system)
+        : place.part === 'handler-cost' ? stepsBefore(handler.cost ?? [], place.index, false, [], system) : [];
       return dedupe([holder(), ...heard(system, handler), ...inputs, ...own, ...constants(system)]);
     }
     case 'modifier': {

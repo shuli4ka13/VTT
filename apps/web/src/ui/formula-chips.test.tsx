@@ -230,27 +230,52 @@ describe('«из таблицы» — кликами и фишками с наз
     expect(screen.queryByDisplayValue(/уровни/)).toBeNull();
   });
 
-  it('кнопка «из таблицы»: выбрал таблицу и колонку — вставилась формула, строку ищут по тому, что впишут', () => {
-    let value = '';
-    const { rerender } = render(<FormulaChips value={value} system={withLevels} calculator onChange={next => { value = next; }} />);
+  it('кнопки «из таблицы» больше нет — строку берут ссылкой', () => {
+    render(<FormulaChips value="" system={withLevels} calculator onChange={() => {}} />);
     fireEvent.focus(screen.getByRole('textbox'));
-    fireEvent.mouseDown(screen.getByText('из таблицы'));
-    fireEvent.change(screen.getByLabelText('какую колонку'), { target: { value: 'колонка' } });
-    fireEvent.mouseDown(screen.getByText('Вставить'));
-    expect(value).toBe('таблица("уровни", , "колонка")');
-    rerender(<FormulaChips value={value} system={withLevels} calculator onChange={next => { value = next; }} />);
-    expect(screen.getByText('Уровень персонажа')).toBeTruthy();
-  });
-
-  it('колонка, на которую ссылается строка: «из таблицы» берёт её по ссылке, без совпадения имён', () => {
-    const linked = { ...withLevels, tables: { ...withLevels.tables, круги: { label: 'Ячейки по кругам', key: 'word', columns: [{ key: 'circle', label: 'Колонка ячеек', kind: 'column', from: 'уровни' }], rows: [] } } } as unknown as System;
-    let value = '';
-    render(<FormulaChips value={value} system={linked} table="круги" calculator onChange={next => { value = next; }} />);
-    fireEvent.focus(screen.getByRole('textbox'));
-    fireEvent.mouseDown(screen.getByText('из таблицы'));
-    fireEvent.change(screen.getByLabelText('какую колонку'), { target: { value: 'строка.circle' } });
-    fireEvent.mouseDown(screen.getByText('Вставить'));
-    expect(value).toBe('таблица("уровни", , @строка.circle)');
+    expect(screen.queryByText('из таблицы')).toBeNull();
   });
 });
 
+
+describe('ссылка числом и колонка по значению', () => {
+  const linked = {
+    tables: {
+      лист: { shape: 'single', columns: [
+        { key: 'уровень', label: 'Уровень', kind: 'number', from: 'уровни' },
+        { key: 'заклинатель', label: 'Уровень заклинателя', kind: 'number', from: 'ячейки' },
+      ] },
+      уровни: { label: 'Уровень персонажа', key: 'number', columns: [{ key: 'prof', label: 'Бонус мастерства', kind: 'number' }], rows: [{ value: 1, cells: { prof: 2 } }] },
+      ячейки: { label: 'Ячейки заклинаний', key: 'number', columns: [{ key: 'круг_1', label: '1-й круг', kind: 'number' }], rows: [{ value: 1, cells: { круг_1: 2 } }] },
+      круги: { label: 'Ячейки по кругам', key: 'word', owner: 'sheet', columns: [{ key: 'circle', label: 'Колонка ячеек', kind: 'column', from: 'ячейки' }], rows: [] },
+    },
+    constants: {}, effects: {},
+  } as unknown as System;
+
+  it('колонка по значению — одна часть, собирается обратно без потерь', () => {
+    const value = '@заклинатель.[@строка.circle] + 1';
+    const parts = partsOf(value);
+    expect(parts).toEqual([{ text: '' }, { tag: 'заклинатель', by: '@строка.circle' }, { text: ' + 1' }]);
+    expect(joinParts(parts)).toBe(value);
+    expect(joinParts(partsOf('@a.["x"].b'))).toBe('@a.["x"].b');
+  });
+
+  it('ссылка числом — фишка «Уровень → Бонус мастерства»', () => {
+    render(<FormulaChips value="@уровень.prof" system={linked} onChange={() => {}} />);
+    expect(screen.getByText('Уровень → Бонус мастерства')).toBeTruthy();
+  });
+
+  it('колонка по значению — фишка «[Уровень заклинателя · колонка по [Колонка ячеек]]»', () => {
+    render(<FormulaChips value="@заклинатель.[@строка.circle]" system={linked} table="круги" onChange={() => {}} />);
+    expect(screen.getByText('Уровень заклинателя · колонка по [Колонка ячеек]')).toBeTruthy();
+  });
+
+  it('в таблице с колонкой-ссылкой на колонки меню @ предлагает колонку по значению', () => {
+    let value = '@колон';
+    render(<FormulaChips value={value} system={linked} table="круги" onChange={next => { value = next; }} />);
+    const input = screen.getByDisplayValue('@колон') as HTMLInputElement;
+    fireEvent.focus(input);
+    fireEvent.mouseDown(screen.getByText('Уровень заклинателя · колонка по [Колонка ячеек]'));
+    expect(value).toBe('@заклинатель.[@строка.circle]');
+  });
+});

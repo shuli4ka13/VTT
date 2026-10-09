@@ -4,11 +4,10 @@ import { EffectPick } from '../effect-pick.tsx';
 import { TagsField } from '../tags-field.tsx';
 import { useWorld } from '../../../store/world.ts';
 import { newHandler, payStep } from '../factory.ts';
-import { Card, CardHead, Field, Input, Select, DangerButton, LabelInput, Button, Empty, Chip, Fold } from '../../../ui/primitives.tsx';
-import { FieldRow } from '../../../ui/field-row.tsx';
+import { Card, Field, Input, Select, DangerButton, LabelInput, Button, Empty } from '../../../ui/primitives.tsx';
 import { useOpened } from '../../../store/opened.ts';
 import { ModifiersEditor } from '../modifiers.tsx';
-import { LAUNCH_KINDS, launchHint, titleOf } from './words.ts';
+import { LAUNCH_KINDS, launchHint } from './words.ts';
 import { HandlerCard } from './handler-card.tsx';
 import type { Place } from '@vtt/engine/model/names-at';
 import { followKey, effectUsed } from '../keys.ts';
@@ -33,17 +32,6 @@ const ENDS = [
 
 const REAPPLY_OPTIONS = (Object.keys(REAPPLY) as (keyof typeof REAPPLY)[]).map(key => [key, REAPPLY[key].label] as const);
 
-const fromBase = (base: Effect): string => {
-  const parts: string[] = [];
-  if (base.params?.length) parts.push(`входов: ${base.params.length}`);
-  if (base.cost?.length) parts.push(`стоимость: ${base.cost.length}`);
-  if (base.steps?.length) parts.push(`шагов впереди: ${base.steps.length}`);
-  if (base.modifiers?.length) parts.push(`правок: ${base.modifiers.length}`);
-  return parts.length
-    ? `От основы «${base.label ?? ''}» достаётся — ${parts.join(', ')}.`
-    : `Основа «${base.label ?? ''}» пока ничего не даёт.`;
-};
-
 export function EffectEditor({ id, effect, system }: { id: string; effect: Effect; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
   const editEffect = useWorld(s => s.editEffect);
@@ -52,6 +40,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
   const edit = (change: (draft: Effect) => void) => editEffect(id, change);
 
   const launch = launchOf(effect);
+  const [more, setMore] = useState(Boolean(effect.tags?.length || effect.icon || effect.bond));
   const pipeline = launch.kind === 'manual';
 
   const moveLane = (indices: number[], to: Lane) => {
@@ -79,121 +68,99 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
 
   return (
     <>
-      <Card>
-        <CardHead
-          title={<LabelInput value={effect.label ?? ''} placeholder="как зовётся эффект" onCommit={label => relabel(label)} />}
-          actions={
-            <DangerButton size="sm" onConfirm={() => {
-              editSystem(draft => {
-                delete draft.effects[id];
-                draft.grants = (draft.grants ?? []).filter(x => x !== id);
-              });
-              pick({ activeEffectId: null });
-            }}>
-              Удалить
-            </DangerButton>
-          }
-        />
+      <Card className="effect-head">
+        <div className="effect-head__sentence">
+          <span className="effect-head__name">
+            <LabelInput value={effect.label ?? ''} placeholder="как зовётся эффект" onCommit={label => relabel(label)} />
+          </span>
+          <span>—</span>
+          <span data-field="Как запускается" title={launchHint(launch.kind)}>
+            <Select
+              value={pipeline ? 'manual' : 'passive'}
+              options={LAUNCH_KINDS.map(k => [k.key, k.label] as const)}
+              onChange={next => edit(draft => {
+                const activation = activationFor({ ...launchOf(draft), kind: next });
+                if (activation === 'manual') delete draft.activation; else draft.activation = activation;
+                if (next === 'manual') draft.steps ??= [];
+              })}
+            />
+          </span>
+          <span data-field="У кого есть">
+            <Select
+              value={(system.grants ?? []).includes(id) ? 'all' : 'given'}
+              options={[['given', pipeline ? 'даёт запись или тип' : 'на кого повесили'], ['all', 'у всех листов']] as const}
+              onChange={next => editSystem(draft => {
+                const rest = (draft.grants ?? []).filter(x => x !== id);
+                draft.grants = next === 'all' ? [...rest, id] : rest;
+              })}
+            />
+          </span>
+          <span>, в блоке</span>
+          <span data-field="Блок">
+            <BlockPick
+              of="effects"
+              system={system} value={effect.group}
+              onChange={next => edit(draft => { if (next) draft.group = next; else delete draft.group; })}
+            />
+          </span>
+          <span className="spacer" />
+          <DangerButton size="sm" onConfirm={() => {
+            editSystem(draft => {
+              delete draft.effects[id];
+              draft.grants = (draft.grants ?? []).filter(x => x !== id);
+            });
+            pick({ activeEffectId: null });
+          }}>
+            Удалить
+          </DangerButton>
+        </div>
+
+        <div data-field="Описание" title="Текст на листе. На расчёт не влияет">
+          <Input
+            value={effect.description ?? ''}
+            placeholder="описание: например, бьёшь оружием ближнего боя"
+            onChange={next => edit(draft => { draft.description = next || undefined; })}
+          />
+        </div>
 
         <EffectName id={id} locked={effectUsed(system, useWorld.getState().compendium, id)} taken={Object.keys(system.effects)} onChange={rekey} />
-        <FieldRow
-          id="effect-head"
-          fields={[
-            {
-              key: 'launch', label: 'Как запускается', width: 190, hint: launchHint(launch.kind),
-              node: (
-                <Select
-                  value={pipeline ? 'manual' : 'passive'}
-                  options={LAUNCH_KINDS.map(k => [k.key, k.label] as const)}
-                  onChange={next => edit(draft => {
-                    const activation = activationFor({ ...launchOf(draft), kind: next });
-                    if (activation === 'manual') delete draft.activation; else draft.activation = activation;
-                    if (next === 'manual') draft.steps ??= [];
-                  })}
-                />
-              ),
-            },
-            {
-              key: 'everyone', label: 'У кого есть', width: 190,
-              node: (
-                <Select
-                  value={(system.grants ?? []).includes(id) ? 'all' : 'given'}
-                  options={[['given', pipeline ? 'даёт запись или тип' : 'на кого повесили'], ['all', 'у всех листов']] as const}
-                  onChange={next => editSystem(draft => {
-                    const rest = (draft.grants ?? []).filter(x => x !== id);
-                    draft.grants = next === 'all' ? [...rest, id] : rest;
-                  })}
-                />
-              ),
-            },
-            {
-              key: 'group', label: 'Блок', width: 170,
-              node: (
-                <BlockPick
-                  of="effects"
-                  system={system} value={effect.group}
-                  onChange={next => edit(draft => { if (next) draft.group = next; else delete draft.group; })}
-                />
-              ),
-            },
-            {
-              key: 'extends', label: 'На основе', width: 170,
-              hint: effect.extends && system.effects[effect.extends]
-                ? fromBase(system.effects[effect.extends]!)
-                : 'Возьмёт у основы её входы, стоимость и шаги — они пойдут первыми',
-              node: (
-                <Select
-                  value={effect.extends ?? ''}
-                  options={[['', '— сам по себе —'],
-                    ...Object.entries(system.effects)
-                      .filter(([key]) => key !== id)
-                      .map(([key, other]) => [key, other.label ?? key] as const)] as never}
-                  onChange={next => edit(draft => { if (next) draft.extends = next; else delete draft.extends; })}
-                />
-              ),
-            },
-            {
-              key: 'tags', label: 'Метки', width: 220, hint: 'Метки действия: подписки «всё с меткой», правки по метке и договор метки (какие входы обязаны быть)',
-              node: (
+
+        <div className="inline inline--tight effect-head__toggle">
+          <Button size="sm" variant="ghost" onClick={() => setMore(!more)}>{more ? 'меньше' : 'ещё'}</Button>
+        </div>
+        {more ? (
+          <div className="stack stack--tight effect-head__more">
+            <div className="effect-head__row">
+              <span data-field="Метки" title="Метки действия: подписки «всё с меткой», правки по метке и договор метки (какие входы обязаны быть)">
                 <TagsField
                   system={system}
                   value={effect.tags}
                   empty="+ метка…"
                   onChange={next => edit(draft => { const list = next.filter((t): t is string => typeof t === 'string'); if (list.length) draft.tags = list; else delete draft.tags; })}
                 />
-              ),
-            },
-            {
-              key: 'icon', label: 'Значок', width: 80, hint: 'Один символ на кнопке и в списке',
-              node: <Input value={effect.icon ?? ''} placeholder="⚔" onChange={next => edit(draft => { if (next.trim()) draft.icon = next.trim(); else delete draft.icon; })} />,
-            },
-            {
-              key: 'description', label: 'Описание', width: 320, hint: 'Текст на листе. На расчёт не влияет',
-              node: (
-                <Input
-                  value={effect.description ?? ''}
-                  placeholder="например: бьёшь оружием ближнего боя"
-                  onChange={next => edit(draft => { draft.description = next || undefined; })}
-                />
-              ),
-            },
-          ]}
-        />
+              </span>
+              <span data-field="Значок" title="Один символ на кнопке и в списке">
+                <Input value={effect.icon ?? ''} placeholder="⚔" onChange={next => edit(draft => { if (next.trim()) draft.icon = next.trim(); else delete draft.icon; })} />
+              </span>
+            </div>
+            {launch.kind === 'manual' ? (
+              <Extras
+                items={[{
+                  key: 'bond', label: 'держание', on: !!effect.bond,
+                  add: () => edit(draft => {
+                    const holder = Object.entries(system.effects).find(([key, other]) => key !== id && (other.activation ?? 'manual') === 'passive')?.[0];
+                    const by = paramsOf(system, draft).find(p => p.kind === 'sheet' && !p.many)?.key;
+                    if (holder && by) draft.bond = { effect: holder, by };
+                  }),
+                  drop: () => edit(draft => { delete draft.bond; }),
+                  node: <Bond effect={effect} system={system} id={id} edit={edit} />,
+                }]}
+              />
+            ) : null}
+          </div>
+        ) : null}
 
-        {launch.kind === 'manual' ? (
-          <Extras
-            items={[{
-              key: 'bond', label: 'держание', on: !!effect.bond,
-              add: () => edit(draft => {
-                const holder = Object.entries(system.effects).find(([key, other]) => key !== id && (other.activation ?? 'manual') === 'passive')?.[0];
-                const by = paramsOf(system, draft).find(p => p.kind === 'sheet' && !p.many)?.key;
-                if (holder && by) draft.bond = { effect: holder, by };
-              }),
-              drop: () => edit(draft => { delete draft.bond; }),
-              node: <Bond effect={effect} system={system} id={id} edit={edit} />,
-            }]}
-          />
-        ) : (
+        {launch.kind === 'manual' ? null : (
           <Extras
             items={[{
               key: 'duration', label: 'сколько висит', on: !!effect.duration,
@@ -214,10 +181,6 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           />
         )}
       </Card>
-
-      {effect.extends && system.effects[effect.extends] ? (
-        <Inherited base={effect.extends} system={system} onOpen={() => pick({ activeEffectId: effect.extends! })} />
-      ) : null}
 
       <ParamsEditor id={id} effect={effect} system={system} onEdit={edit} />
 
@@ -501,36 +464,4 @@ function Bond({ effect, system, id, edit }: {
   );
 }
 
-function Inherited({ base, system, onOpen }: { base: string; system: System; onOpen: () => void }) {
-  const effect = system.effects[base]!;
-  const titles = (steps: Step[] | undefined) => groupSteps(steps ?? []).map(card => titleOf(card.kind, card.step, system));
-  const parts: [string, string[]][] = [
-    ['входы', (effect.params ?? []).map(p => p.label ?? p.key)],
-    ['цена', titles(effect.cost)],
-    ['шаги', titles(effect.steps)],
-    ['подписки', (effect.on ?? []).map(h => h.on)],
-    ['при наложении', titles(effect.attach)],
-    ['при спадании', titles(effect.detach)],
-    ['правки', (effect.modifiers ?? []).map(m => (m.kind === 'edit' ? `правка «${m.call}»` : `правка «${m.target}»`))],
-  ];
-  const shown = parts.filter(([, list]) => list.length);
-  return (
-    <Card>
-      <Fold title={`От основы «${effect.label ?? base}»`} summary={shown.map(([name, list]) => `${name}: ${list.length}`).join(' · ') || 'основа пустая'}>
-        <div className="stack stack--tight inherited">
-          {shown.map(([name, list]) => (
-            <div key={name} className="inline inline--tight">
-              <span className="faint">{name}:</span>
-              {list.map((item, at) => <Chip key={at}>{item}</Chip>)}
-            </div>
-          ))}
-          <div className="inline">
-            <span className="faint">Это идёт первым и правится в основе.</span>
-            <Button size="sm" variant="ghost" onClick={onOpen}>править в основе →</Button>
-          </div>
-        </div>
-      </Fold>
-    </Card>
-  );
-}
 

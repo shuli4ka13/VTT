@@ -1,6 +1,7 @@
 import { EngineError } from '../engine/errors.ts';
 import type { System, Table, TableRow, TableColumn, CellView, Field, FieldValue, CellMark, Holder, Placement } from './types.ts';
 import type { SheetPart, Control } from '@vtt/schema';
+import { linkOf, rowByKey } from './tables.ts';
 
 export type { CellMark };
 
@@ -63,8 +64,9 @@ function token(system: System, table: Table, row: TableRow, name: string): strin
     throw new EngineError(`таблица «${table.label ?? ''}»: в шаблоне «{${name}}» — у строки «${row.label ?? row.value}» нет такой ячейки`);
   }
   if (!tail) return typeof cell === 'boolean' ? (cell ? 'да' : 'нет') : String(cell);
-  const other = column.from ? system.tables?.[column.from] : undefined;
-  const target = (other?.rows ?? []).find(r => String(r.value) === String(cell));
+  const link = linkOf(column);
+  const other = link ? system.tables?.[link] : undefined;
+  const target = rowByKey(other, cell);
   if (!target || !other) throw new EngineError(`таблица «${table.label ?? ''}»: «{${name}}» — «${String(cell)}» нет в таблице «${column.from}»`);
   return token(system, other, target, tail);
 }
@@ -131,10 +133,11 @@ function rowPath(system: System, tableId: string, row: TableRow, path: string[])
     return `(${withRow(system, tableId, row, source.expr)})`;
   }
   const cell = source.kind === 'value' ? source.value : undefined;
-  if (column.kind === 'choice' && rest.length) {
-    const target = (system.tables?.[column.from ?? '']?.rows ?? []).find(r => String(r.value) === String(cell));
-    if (!target) throw new EngineError(`${where}: «${String(cell)}» нет в таблице «${column.from}»`);
-    return rowPath(system, column.from!, target, rest);
+  const link = linkOf(column);
+  if (link && rest.length) {
+    const target = rowByKey(system.tables?.[link], cell);
+    if (!target) throw new EngineError(`${where}: «${String(cell)}» нет в таблице «${link}»`);
+    return rowPath(system, link, target, rest);
   }
   if (column.kind === 'field') return `@${String(cell)}${rest.length ? `.${rest.join('.')}` : ''}`;
   if (rest.length) throw new EngineError(`${where}: «${column.label || head}» — не ссылка, дальше идти некуда`);
@@ -152,11 +155,9 @@ export function rowSteps(system: System, tableId: string, path: string[], row?: 
     const column = (table?.columns ?? []).find(c => c.key === key);
     if (!table || !column) return [];
     const last = index === path.length - 1;
-    const link = !last && column.kind === 'choice' && column.from ? column.from : undefined;
+    const link = !last ? linkOf(column) : undefined;
     const cell = at ? cellSource(column, at) : undefined;
-    const target = link && cell?.kind === 'value'
-      ? (system.tables?.[link]?.rows ?? []).find(r => String(r.value) === String(cell.value))
-      : undefined;
+    const target = link && cell?.kind === 'value' ? rowByKey(system.tables?.[link], cell.value) : undefined;
     out.push({
       column: column.label || column.key,
       table: table.label || tableKey,
@@ -173,13 +174,30 @@ export function rowSteps(system: System, tableId: string, path: string[], row?: 
 
 export type RowPiece = { text: string } | { chip: string };
 
+function pickedColumn(system: System, tableId: string, row: TableRow, head: string, tail: string): string | undefined {
+  const link = fieldLinkOf(system, fieldOf(system, head));
+  const path = tail ? tail.slice(1).split('.') : [];
+  const column = path.length === 1 ? (system.tables?.[tableId]?.columns ?? []).find(c => c.key === path[0]) : undefined;
+  const source = column ? cellSource(column, row) : undefined;
+  if (!link || source?.kind !== 'value') return undefined;
+  const target = (system.tables?.[link]?.columns ?? []).find(c => c.key === String(source.value));
+  return target ? target.label || target.key : undefined;
+}
+
 export function rowPieces(system: System, tableId: string, row: TableRow, expr: string): RowPiece[] {
   const out: RowPiece[] = [];
-  const pattern = new RegExp(`@${ROW}((?:\\.[\\p{L}\\p{N}_]+)*)|@([\\p{L}\\p{N}_.]+)`, 'gu');
+  const pattern = new RegExp(`@([\\p{L}\\p{N}_]+)\\.\\[\\s*@${ROW}((?:\\.[\\p{L}\\p{N}_]+)*)\\s*\\]|@${ROW}((?:\\.[\\p{L}\\p{N}_]+)*)|@([\\p{L}\\p{N}_.]+)`, 'gu');
   let at = 0;
-  for (const match of expr.matchAll(pattern)) {
-    if (match.index! > at) out.push({ text: expr.slice(at, match.index).replace(/\*/g, '×') });
-    at = match.index! + match[0].length;
+  for (const found of expr.matchAll(pattern)) {
+    if (found.index! > at) out.push({ text: expr.slice(at, found.index).replace(/\*/g, '×') });
+    at = found.index! + found[0].length;
+    if (found[1] !== undefined) {
+      const label = fieldOf(system, found[1])?.label ?? found[1];
+      const picked = pickedColumn(system, tableId, row, found[1], found[2] ?? '');
+      out.push({ chip: picked ? `${label} · ${picked}` : `${label} · колонка по значению` });
+      continue;
+    }
+    const match = [found[0], found[3], found[4]] as const;
     if (match[2] !== undefined) {
       const label = fieldOf(system, match[2])?.label;
       out.push(label ? { chip: label } : { text: match[0] });
@@ -222,10 +240,11 @@ function recordPath(system: System, tableId: string, cells: Record<string, unkno
   if (Array.isArray(cell)) throw new EngineError(`${where}: «${spec.label || head}» — список, одним числом его не взять`);
   let expr = literal(cell ?? '');
   for (const step of rest) {
-    if (spec.kind !== 'choice' || !spec.from) throw new EngineError(`${where}: «${spec.label || spec.key}» — не ссылка, дальше «${step}» идти некуда`);
-    expr = `таблица(${JSON.stringify(spec.from)}, ${expr}, ${JSON.stringify(step)})`;
-    const next: TableColumn | undefined = (system.tables?.[spec.from]?.columns ?? []).find(c => c.key === step);
-    if (!next) throw new EngineError(`${where}: у таблицы «${spec.from}» нет колонки «${step}»`);
+    const link = linkOf(spec);
+    if (!link) throw new EngineError(`${where}: «${spec.label || spec.key}» — не ссылка, дальше «${step}» идти некуда`);
+    expr = `таблица(${JSON.stringify(link)}, ${expr}, ${JSON.stringify(step)})`;
+    const next: TableColumn | undefined = (system.tables?.[link]?.columns ?? []).find(c => c.key === step);
+    if (!next) throw new EngineError(`${where}: у таблицы «${link}» нет колонки «${step}»`);
     spec = next;
   }
   return `(${expr})`;
@@ -424,6 +443,16 @@ export const fieldProblems = (system: System): FieldProblem[] => builtOf(system)
 
 export const singleTables = (system: System): [string, Table][] =>
   Object.entries(system.tables ?? {}).filter(([, table]) => isSingle(table));
+
+export function columnOfField(system: System, field: Field): TableColumn | undefined {
+  const table = system.tables?.[field.cell?.table ?? field.home];
+  return (table?.columns ?? []).find(c => c.key === (field.cell?.column ?? field.tag));
+}
+
+export const fieldLinkOf = (system: System, field: Field | undefined): string | undefined =>
+  (!field ? undefined
+    : field.value.kind === 'stored' && field.value.type === 'choice' ? field.value.from
+      : linkOf(columnOfField(system, field)));
 
 export function columnOf(system: System, tag: string): { table: string; column: TableColumn } | undefined {
   for (const [id, table] of singleTables(system)) {

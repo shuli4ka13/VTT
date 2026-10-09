@@ -14,6 +14,10 @@ export function dependencies(ast: Node): string[] {
       case 'Ref':
         if (!found.includes(node.tag)) found.push(node.tag);
         return;
+      case 'Pick':
+        if (!found.includes(node.tag)) found.push(node.tag);
+        walk(node.key);
+        return;
       case 'Unary':
         walk(node.operand);
         return;

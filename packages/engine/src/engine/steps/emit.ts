@@ -30,6 +30,7 @@ export function traceLine(t: any, h: any) {
     ? ` (отправлено ${t.incoming}, после правок ${t.amount})`
     : '';
   if (t.event === null) return `вызов: ${NOTHING}`;
+  if (t.bare) return `зовёт «${name}»${tags}`;
   return `зовёт «${name}»${tags}: ${t.amount}${mods}`;
 }
 
@@ -77,8 +78,8 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
     const received = out.stopped ? String(out.stopped.reason ?? 'оборвано') : null;
     const note = out.stopped?.note ?? null;
     return {
-      value: payload,
-      trace: { event: id, incoming, amount: payload.amount, tags, ...(received ? { received } : {}) },
+      value: { ...payload, ...(out.returns ?? {}) },
+      trace: { event: id, incoming, amount: payload.amount, tags, ...(main ? {} : { bare: true }), ...(received ? { received } : {}) },
       break: ctx.inCost && received ? { reason: 'emit-stopped', ...(note ? { note } : {}) } : null,
     };
   },

@@ -73,7 +73,14 @@ export function parse(source: unknown): Node {
 
     if (t.type === 'ref') {
       advance();
-      return { kind: 'Ref', tag: String(t.value) };
+      if (!at('lbracket')) return { kind: 'Ref', tag: String(t.value) };
+      const open = advance();
+      if (at('rbracket')) throw new FormulaSyntaxError('в «[ ]» впишите, по какому значению взять колонку', open.pos);
+      const key = parseComparison();
+      if (!at('rbracket')) throw new FormulaSyntaxError('не закрыта «[»', peek().pos);
+      advance();
+      if (!at('tail')) return { kind: 'Pick', tag: String(t.value), key };
+      return { kind: 'Pick', tag: String(t.value), key, rest: String(advance().value) };
     }
 
     if (t.type === 'ident') {

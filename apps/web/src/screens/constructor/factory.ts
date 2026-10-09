@@ -71,8 +71,11 @@ export const newCost = (system: System): Made<Effect> => ({
   value: { label: `${COST_BLOCK}: новая`, group: COST_BLOCK, steps: [] },
 });
 
-export const costsOf = (system: System): [string, Effect][] =>
-  Object.entries(system.effects ?? {}).filter(([, effect]) => effect.group === COST_BLOCK);
+export const costsOf = (system: System): [string, Effect][] => {
+  const paid = new Set(Object.values(system.effects ?? {}).flatMap(effect => [...(effect.cost ?? []), ...(effect.on ?? []).flatMap(handler => handler.cost ?? [])])
+    .flatMap(step => { const called = (step as { effect?: unknown }).effect; return step.type === 'emit' && typeof called === 'string' ? [called] : []; }));
+  return Object.entries(system.effects ?? {}).filter(([id]) => paid.has(id));
+};
 
 export const payStep = (id: string): Step => ({ type: 'emit', effect: id } as unknown as Step);
 

@@ -4,9 +4,25 @@ import type { System, Compendium } from '@vtt/schema';
 
 const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+function withoutShadowing(world: unknown, key: string, own: unknown): unknown {
+  const holder = world as { s?: { effects?: Record<string, unknown> }; effects?: Record<string, unknown> };
+  const effects = holder.effects ?? holder.s?.effects;
+  if (!effects) return world;
+  const lists = [(own as { steps?: unknown })?.steps, (own as { cost?: unknown })?.cost]
+    .filter((list): list is unknown[] => Array.isArray(list) && list.length > 0)
+    .map(list => JSON.stringify(list));
+  const declares = `"id":${JSON.stringify(key)}`;
+  const kept = Object.fromEntries(Object.entries(effects).filter(([, effect]) => {
+    const text = JSON.stringify(effect);
+    return !text.includes(declares) || lists.some(list => text.includes(list));
+  }));
+  return holder.effects ? { ...holder, effects: kept } : { ...holder, s: { ...holder.s, effects: kept } };
+}
+
 export function referenced(world: unknown, key: string, own: unknown = world): boolean {
   if (JSON.stringify(own, (name, value) => (name === 'tags' ? undefined : value)).split(`"${key}"`).length - 1 > 1) return true;
-  return new RegExp(`[@#]${escape(key)}(?![\\p{L}\\p{N}_])`, 'u').test(JSON.stringify(world));
+  const seen = own === world ? world : withoutShadowing(world, key, own);
+  return new RegExp(`[@#]${escape(key)}(?![\\p{L}\\p{N}_])`, 'u').test(JSON.stringify(seen));
 }
 
 export function effectUsed(system: System, compendium: Compendium | undefined, id: string): boolean {
@@ -30,16 +46,8 @@ function loopsOver(node: unknown, key: string): boolean {
   return Object.values(o).some(value => loopsOver(value, key));
 }
 
-function lineage(system: System, effectId: string): string[] {
-  const out = [effectId];
-  let grew = true;
-  while (grew) {
-    grew = false;
-    for (const [id, effect] of Object.entries(system.effects)) {
-      if (!out.includes(id) && effect.extends && out.includes(effect.extends)) { out.push(id); grew = true; }
-    }
-  }
-  return out;
+function lineage(_system: System, effectId: string): string[] {
+  return [effectId];
 }
 
 export function paramUsed(system: System, compendium: Compendium | undefined, effectId: string, key: string): boolean {
