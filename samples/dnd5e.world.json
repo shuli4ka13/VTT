@@ -3089,17 +3089,8 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не(@hit.success)"
+              "expr": "@hit.success"
             }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"не вышло\""
-            }
-          },
-          {
-            "type": "end"
           },
           {
             "id": "dmg",
@@ -3148,6 +3139,9 @@
                 "expr": "@действующий"
               }
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "end"
@@ -3496,17 +3490,8 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@save.success"
+              "expr": "не(@save.success)"
             }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"устоял\""
-            }
-          },
-          {
-            "type": "end"
           },
           {
             "type": "emit",
@@ -3542,6 +3527,9 @@
                 "expr": "@действующий"
               }
             }
+          },
+          {
+            "type": "end"
           }
         ],
         "cost": [
@@ -3796,17 +3784,8 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@save.success"
+              "expr": "не(@save.success)"
             }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"устоял\""
-            }
-          },
-          {
-            "type": "end"
           },
           {
             "type": "emit",
@@ -3842,6 +3821,9 @@
                 "expr": "@действующий"
               }
             }
+          },
+          {
+            "type": "end"
           }
         ],
         "extends": "spell"
@@ -3989,17 +3971,8 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@save.success"
+              "expr": "не(@save.success)"
             }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"устоял\""
-            }
-          },
-          {
-            "type": "end"
           },
           {
             "type": "status",
@@ -4017,6 +3990,9 @@
                 "expr": "@действующий"
               }
             }
+          },
+          {
+            "type": "end"
           }
         ],
         "extends": "spell"
@@ -4087,17 +4063,8 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@save.success"
+              "expr": "не(@save.success)"
             }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"устоял\""
-            }
-          },
-          {
-            "type": "end"
           },
           {
             "type": "status",
@@ -4115,6 +4082,9 @@
                 "expr": "@действующий"
               }
             }
+          },
+          {
+            "type": "end"
           }
         ],
         "extends": "spell",
@@ -4813,17 +4783,8 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@save.success"
+              "expr": "не(@save.success)"
             }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"устоял\""
-            }
-          },
-          {
-            "type": "end"
           },
           {
             "type": "status",
@@ -4831,6 +4792,9 @@
             "to": {
               "expr": "@цель"
             }
+          },
+          {
+            "type": "end"
           }
         ],
         "cost": [
@@ -5035,17 +4999,8 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не(@sneak.success)"
+              "expr": "@sneak.success"
             }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"не вышло\""
-            }
-          },
-          {
-            "type": "end"
           },
           {
             "type": "status",
@@ -5058,6 +5013,9 @@
                 "expr": "@действующий"
               }
             }
+          },
+          {
+            "type": "end"
           }
         ],
         "cost": [
@@ -6699,17 +6657,8 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "не(@save.success)"
+                  "expr": "@save.success"
                 }
-              },
-              {
-                "type": "stop",
-                "note": {
-                  "expr": "\"не вышло\""
-                }
-              },
-              {
-                "type": "end"
               },
               {
                 "type": "status",
@@ -6718,6 +6667,9 @@
                 "to": {
                   "expr": "@носитель"
                 }
+              },
+              {
+                "type": "end"
               }
             ]
           }
@@ -6821,17 +6773,8 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "не(@save.success)"
+                  "expr": "@save.success"
                 }
-              },
-              {
-                "type": "stop",
-                "note": {
-                  "expr": "\"не вышло\""
-                }
-              },
-              {
-                "type": "end"
               },
               {
                 "type": "status",
@@ -6840,6 +6783,9 @@
                 "to": {
                   "expr": "@носитель"
                 }
+              },
+              {
+                "type": "end"
               }
             ]
           }
@@ -7024,17 +6970,8 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "не(@save.success)"
+                  "expr": "@save.success"
                 }
-              },
-              {
-                "type": "stop",
-                "note": {
-                  "expr": "\"не вышло\""
-                }
-              },
-              {
-                "type": "end"
               },
               {
                 "type": "status",
@@ -7043,6 +6980,9 @@
                 "to": {
                   "expr": "@носитель"
                 }
+              },
+              {
+                "type": "end"
               }
             ]
           }
@@ -7293,17 +7233,8 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "не(@save.success)"
+                  "expr": "@save.success"
                 }
-              },
-              {
-                "type": "stop",
-                "note": {
-                  "expr": "\"не вышло\""
-                }
-              },
-              {
-                "type": "end"
               },
               {
                 "type": "status",
@@ -7312,6 +7243,9 @@
                 "to": {
                   "expr": "@носитель"
                 }
+              },
+              {
+                "type": "end"
               }
             ]
           }
@@ -7919,17 +7853,8 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "не(@save.success)"
+                  "expr": "@save.success"
                 }
-              },
-              {
-                "type": "stop",
-                "note": {
-                  "expr": "\"не вышло\""
-                }
-              },
-              {
-                "type": "end"
               },
               {
                 "type": "status",
@@ -7938,6 +7863,9 @@
                 "to": {
                   "expr": "@носитель"
                 }
+              },
+              {
+                "type": "end"
               }
             ]
           }
@@ -8687,17 +8615,8 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@save.success"
+                  "expr": "не(@save.success)"
                 }
-              },
-              {
-                "type": "stop",
-                "note": {
-                  "expr": "\"устоял\""
-                }
-              },
-              {
-                "type": "end"
               },
               {
                 "type": "status",
@@ -8706,6 +8625,9 @@
                 "to": {
                   "expr": "@носитель"
                 }
+              },
+              {
+                "type": "end"
               }
             ]
           }

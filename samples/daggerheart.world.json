@@ -1773,17 +1773,8 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не(@удар.success)"
+              "expr": "@удар.success"
             }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"не вышло\""
-            }
-          },
-          {
-            "type": "end"
           },
           {
             "type": "emit",
@@ -1799,6 +1790,9 @@
                 "expr": "@действующий"
               }
             }
+          },
+          {
+            "type": "end"
           }
         ]
       },

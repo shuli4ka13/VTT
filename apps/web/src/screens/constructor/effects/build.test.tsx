@@ -6,7 +6,7 @@ import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import type { System, Effect } from '@vtt/schema';
 import { useWorld } from '../../../store/world.ts';
 import { openAll } from '../../../testing/render-open.tsx';
-import { within, stepCard, blocks, block, headOf, armWord, addToArm, addArm, stopNote, lastNumber } from '../../../testing/cards.ts';
+import { within, stepCard, blocks, block, headOf, armWord, addToArm, addArm, stopNote, lastNumber, outcomeIf } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
 
 const worldOf = (id: string) => SAMPLE_WORLDS.find(w => w.system.id === id)!;
@@ -108,34 +108,31 @@ describe('эффекты пресетов собираются в констру
     within(card).formula('Успех, если на кости не меньше', '20');
     within(card).formula('Провал, если на кости не больше', '1');
 
-    ui.click('+ если');
-    addToArm(block(0), 0, 'stop');
-    within(headOf(block(0))).when('шаг 3 · Проверка — не пройдена');
-    stopNote(4, 'не вышло');
-
-    ui.click('+ число');
-    card = stepCard(/^5 · /);
+    const hit = outcomeIf(3, true);
+    expect(armWord(block(hit))).toBe('попадание:');
+    addToArm(block(hit), 0, 'number');
+    card = stepCard(/^4 · /);
     within(card).formula('Сколько', 'кинуть(@damage_dice, @dice * если(@hit_бросок.natural >= @действующий.crit_from, 2, 1)) + @damage_with');
     nameStep(card, 'dmg');
 
-    ui.click('+ изменение');
-    card = stepCard(/^6 · /);
+    addToArm(block(hit), 0, 'change');
+    card = stepCard(/^5 · /);
     within(card).click('вызов');
-    card = stepCard(/^6 · /);
+    card = stepCard(/^5 · /);
     within(card).select('Какой эффект', 'damage');
     for (const [name, text] of [['Сколько урона', '@dmg'], ['Тип урона', '@damage_type'], ['Источник урона', '@damage_source'], ['Лист', '@цель'], ['Источник', '@действующий']] as const) {
       within(card).formula(within(card).arg(name), text);
     }
 
-    ui.click('+ изменение');
-    card = stepCard(/^7 · /);
+    addToArm(block(hit), 0, 'change');
+    card = stepCard(/^6 · /);
     within(card).click('состояние');
-    card = stepCard(/^7 · /);
+    card = stepCard(/^6 · /);
     within(card).select('Какое', ':вход:status');
     within(card).formula('На кого', '@цель');
-    card = stepCard(/^7 · /);
+    card = stepCard(/^6 · /);
     within(card).formula('Запомнит: Кто наложил', '@действующий');
-    within(stepCard(/^7 · /)).click('в «Если»');
+    within(stepCard(/^6 · /)).click('в «Если»');
     within(headOf(block(1))).when('=не(пусто(@status))');
     dump({ got: built('strike') ?? useWorld.getState().system.effects, goal });
     expect(built('strike')).toEqual(goal);
@@ -284,8 +281,9 @@ describe('эффекты пресетов собираются в констру
     within(card).formula('Проверка', '@hit_бросок >= @dv');
     nameStep(stepCard(/^9 · /), 'hit');
 
+    const hit = outcomeIf(9, true);
     const send = (at: number, args: [string, string][], when?: string) => {
-      ui.click('+ изменение');
+      addToArm(block(hit), 0, 'change');
       within(stepCard(new RegExp(`^${at} · `))).click('вызов');
       const made = () => stepCard(new RegExp(`^${at} · `));
       within(made()).select('Какой эффект', 'damage');
@@ -295,12 +293,8 @@ describe('эффекты пресетов собираются в констру
         within(headOf(block(2))).when(`=${when}`);
       }
     };
-    ui.click('+ если');
-    addToArm(block(1), 0, 'stop');
-    within(headOf(block(1))).when('шаг 9 · Проверка — не пройдена');
-    stopNote(10, 'не вышло');
-    send(11, [['Сколько урона', '@dmg'], ['Тип урона', '@damage_type'], ['Куда попали', '@aim'], ['Лист', '@цель'], ['Источник', '@действующий']]);
-    send(12, [['Сколько урона', '@boom'], ['Тип урона', '"критический"'], ['Куда попали', '@aim'], ['Лист', '@цель'], ['Источник', '@действующий']], '@dmg.atMax >= 2');
+    send(10, [['Сколько урона', '@dmg'], ['Тип урона', '@damage_type'], ['Куда попали', '@aim'], ['Лист', '@цель'], ['Источник', '@действующий']]);
+    send(11, [['Сколько урона', '@boom'], ['Тип урона', '"критический"'], ['Куда попали', '@aim'], ['Лист', '@цель'], ['Источник', '@действующий']], '@dmg.atMax >= 2');
 
     dump({ got: built('shoot') ?? useWorld.getState().system.effects, goal });
     expect(built('shoot')).toEqual(goal);
@@ -325,15 +319,11 @@ describe('эффекты пресетов собираются в констру
     marks(card, 'спасбросок', 'телосложение');
     nameStep(card, 'save');
 
-    ui.click('+ если');
-    addToArm(block(0), 0, 'stop');
-    within(headOf(block(0))).when('шаг 1 · Проверка — пройдена');
-    stopNote(2, 'устоял');
-
-    ui.click('+ изменение');
-    card = stepCard(/^3 · /);
+    const kept = outcomeIf(1, false);
+    addToArm(block(kept), 0, 'change');
+    card = stepCard(/^2 · /);
     within(card).click('состояние');
-    card = stepCard(/^3 · /);
+    card = stepCard(/^2 · /);
     within(card).select('Что делаем', 'remove');
     within(card).select('Какое', 'concentration');
     within(card).formula('С кого', '@носитель');

@@ -1237,17 +1237,8 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не(@hit.success)"
+              "expr": "@hit.success"
             }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"не вышло\""
-            }
-          },
-          {
-            "type": "end"
           },
           {
             "type": "emit",
@@ -1296,6 +1287,9 @@
                 "expr": "@действующий"
               }
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "end"

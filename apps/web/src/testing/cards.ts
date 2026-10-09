@@ -158,8 +158,18 @@ export const addToArm = (flow: HTMLElement, at: number, brick: string): void => 
   within(el.parentElement!).select(el, brick);
 };
 
-export const addArm = (flow: HTMLElement, label: '+ иначе, если' | '+ иначе'): void => {
+export const addArm = (flow: HTMLElement, label: string): void => {
   within(flow.querySelector<HTMLElement>(':scope > .flow-block__foot')!).click(label);
+};
+
+export const isFused = (flow: HTMLElement): boolean => flow.classList.contains('flow-block--check');
+
+export const outcomeIf = (check: number, passed: boolean, root: ParentNode = document): number => {
+  within(root).click('+ если');
+  const at = blocks(root).length - 1;
+  within(headOf(block(at, root))).when(`шаг ${check} · Проверка — ${passed ? 'пройдена' : 'не пройдена'}`);
+  if (!isFused(block(at, root))) throw new Error(`блок по исходу шага ${check} не склеился с проверкой`);
+  return at;
 };
 
 export const stopStrip = (n: number, root: ParentNode = document): HTMLElement => {

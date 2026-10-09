@@ -5,7 +5,7 @@ import { Chain } from './chain.tsx';
 import { EffectEditor } from './effect-editor.tsx';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import type { Effect, System, Step } from '@vtt/schema';
-import { within, stepCard, block, headOf, armOf, armWord, addToArm, addArm, stopNote, stopStrip } from '../../../testing/cards.ts';
+import { within, stepCard, block, headOf, armOf, armWord, addToArm, addArm, stopNote, stopStrip, isFused } from '../../../testing/cards.ts';
 import { openAll } from '../../../testing/render-open.tsx';
 
 const withCost = (): System => ({
@@ -89,11 +89,12 @@ describe('имя одного из списка видно шагам после
 });
 
 describe('блок «Если»: условие строкой, руки, «Стоп»', () => {
-  const start = (steps: unknown[]) => {
+  const start = (steps: unknown[], extra: Record<string, unknown> = {}) => {
     useWorld.setState(state => ({
       ...state,
       system: {
         ...emptySystem(),
+        ...extra,
         constants: { d20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
         effects: { удар: { label: 'Удар', activation: 'manual', params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }], steps } },
       } as unknown as System,
@@ -113,19 +114,59 @@ describe('блок «Если»: условие строкой, руки, «Ст
 
   beforeEach(() => { cleanup(); try { localStorage.clear(); } catch { return; } });
 
-  it('«+ если» кладёт блок с обязательным условием; исход проверки выше — двумя пунктами «пройдена / не пройдена»', () => {
+  it('«+ если» кладёт блок с обязательным условием; исход проверки выше — двумя пунктами «пройдена / не пройдена», выбранный склеивает блок с проверкой', () => {
     start(checked);
     within().click('+ если');
     expect(steps().slice(2)).toEqual([{ type: 'branch' }, { type: 'end' }]);
     expect(armWord(block(0))).toBe('Если');
+    expect(isFused(block(0))).toBe(false);
     const head = within(headOf(block(0)));
     expect(head.whenOptions()).toContain('шаг 1 · Проверка — пройдена');
     expect(head.whenOptions()).toContain('шаг 1 · Проверка — не пройдена');
     expect(head.has('×')).toBe(false);
     head.when('шаг 1 · Проверка — не пройдена');
     expect(steps()[2]).toEqual({ type: 'branch', if: { expr: 'не(@hit.success)' } });
+    expect(isFused(block(0))).toBe(true);
+    expect(armWord(block(0))).toBe('провал:');
+    expect(within(block(0).querySelector<HTMLElement>(':scope > .flow-block__foot')!).has('+ успех')).toBe(true);
+  });
+
+  it('проверка и «Если» по её исходу — одна рамка: рука подписана словом исхода, «+ провал» — рука без условия, «Удалить» на проверке сносит и блок', () => {
+    start(checked);
+    within().click('+ если');
     within(headOf(block(0))).when('шаг 1 · Проверка — пройдена');
-    expect(steps()[2]).toEqual({ type: 'branch', if: { expr: '@hit.success' } });
+    expect(steps().slice(2)).toEqual([{ type: 'branch', if: { expr: '@hit.success' } }, { type: 'end' }]);
+    expect(document.querySelectorAll('.flow-block')).toHaveLength(1);
+    const frame = block(0);
+    expect(isFused(frame)).toBe(true);
+    expect(frame.querySelector(':scope > .card')?.textContent).toMatch(/1 · Проверка/);
+    expect(headOf(frame).classList.contains('flow-head--outcome')).toBe(true);
+    expect(armWord(frame)).toBe('успех:');
+    expect(headOf(frame).querySelector('.cond')).toBeNull();
+    expect(within(frame.querySelector<HTMLElement>(':scope > .flow-block__foot')!).has('+ иначе')).toBe(false);
+
+    addToArm(block(0), 0, 'change');
+    expect(steps().map(step => step.type)).toEqual(['roll', 'check', 'branch', 'apply', 'end']);
+    addArm(block(0), '+ провал');
+    expect(steps().map(step => step.type)).toEqual(['roll', 'check', 'branch', 'apply', 'orElse', 'end']);
+    expect(steps()[4]).toEqual({ type: 'orElse' });
+    expect([0, 1].map(k => armWord(block(0), k))).toEqual(['успех:', 'провал:']);
+    expect(headOf(block(0), 1).classList.contains('flow-head--outcome')).toBe(true);
+    expect(within(block(0).querySelector<HTMLElement>(':scope > .flow-block__foot')!).has('+ провал')).toBe(false);
+
+    const check = stepCard(/^1 · Проверка/);
+    within(check).click('Удалить');
+    within(stepCard(/^1 · Проверка/)).click('точно убрать');
+    expect(steps()).toEqual([]);
+    expect(document.querySelectorAll('.flow-block')).toHaveLength(0);
+  });
+
+  it('слово исхода берётся из метки броска: «атака» — «попадание: / промах:»', () => {
+    const tables = { метки: { label: 'Метки', columns: [{ key: 'успех', label: 'успех' }, { key: 'провал', label: 'провал' }], rows: [{ value: 'атака', cells: { успех: 'попадание', провал: 'промах' } }] } };
+    start([{ ...checked[0], tags: ['атака'] }, checked[1], { type: 'branch', if: { expr: 'не(@hit.success)' } }, { type: 'end' }], { tables });
+    expect(isFused(block(0))).toBe(true);
+    expect(armWord(block(0))).toBe('промах:');
+    expect(within(block(0).querySelector<HTMLElement>(':scope > .flow-block__foot')!).has('+ попадание')).toBe(true);
   });
 
   it('без проверок выше условие задаётся формулой; «+ и» склеивает строки в «все(…)», «×» убирает строку', () => {

@@ -6,7 +6,7 @@ import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import type { System, Effect } from '@vtt/schema';
 import { useWorld } from '../../../store/world.ts';
 import { openAll } from '../../../testing/render-open.tsx';
-import { within, stepCard, block, headOf, addToArm, stopNote } from '../../../testing/cards.ts';
+import { within, stepCard, block, addToArm, outcomeIf, armWord } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
 
 const worldOf = (id: string) => SAMPLE_WORLDS.find(w => w.system.id === id)!;
@@ -206,15 +206,12 @@ describe('эффекты D&D собираются в конструкторе р
     marks(card, 'спасбросок', 'мудрость');
     nameStep(stepCard(/^1 · /, handlerAt(1)), 'save');
 
-    within(handlerAt(1)).click('+ если');
-    addToArm(block(0, handlerAt(1)), 0, 'stop');
-    within(headOf(block(0, handlerAt(1)))).when('шаг 1 · Проверка — не пройдена');
-    stopNote(2, 'не вышло', handlerAt(1));
-
-    within(handlerAt(1)).click('+ изменение');
-    card = stepCard(/^3 · /, handlerAt(1));
+    const saved = outcomeIf(1, true, handlerAt(1));
+    expect(armWord(block(saved, handlerAt(1)))).toBe('спасся:');
+    addToArm(block(saved, handlerAt(1)), 0, 'change');
+    card = stepCard(/^2 · /, handlerAt(1));
     within(card).click('состояние');
-    card = stepCard(/^3 · /, handlerAt(1));
+    card = stepCard(/^2 · /, handlerAt(1));
     within(card).select('Что делаем', 'remove');
     within(card).select('Какое', 'paralyzed');
     within(card).formula('С кого', '@носитель');
@@ -322,17 +319,12 @@ describe('эффекты D&D собираются в конструкторе р
     marks(at(2), 'спасбросок', '=@save_by');
     nameStep(at(2), 'save');
 
-    ui.click('+ если');
-    addToArm(block(0), 0, 'stop');
-    within(headOf(block(0))).when('шаг 2 · Проверка — пройдена');
-    stopNote(3, 'устоял');
-
-    ui.click('+ изменение');
-    within(at(4)).click('состояние');
-    within(at(4)).select('Какое', ':вход:status');
-    within(at(4)).formula('На кого', '@цель');
-    within(at(4)).formula('Запомнит: Запомненное число', '@действующий.spell_dc');
-    within(at(4)).formula('Запомнит: Кто наложил', '@действующий');
+    addToArm(block(outcomeIf(2, false)), 0, 'change');
+    within(at(3)).click('состояние');
+    within(at(3)).select('Какое', ':вход:status');
+    within(at(3)).formula('На кого', '@цель');
+    within(at(3)).formula('Запомнит: Запомненное число', '@действующий.spell_dc');
+    within(at(3)).formula('Запомнит: Кто наложил', '@действующий');
     dump({ got: built('spell_condition'), goal });
     expect(built('spell_condition')).toEqual(goal);
   });
@@ -385,17 +377,12 @@ describe('эффекты D&D собираются в конструкторе р
     nameStep(stepCard(/^4 · /), 'sneak');
     marks(stepCard(/^2 · /), 'проверка', 'ловкость', 'скрытность');
 
-    ui.click('+ если');
-    addToArm(block(0), 0, 'stop');
-    within(headOf(block(0))).when('шаг 4 · Проверка — не пройдена');
-    stopNote(5, 'не вышло');
-
-    ui.click('+ изменение');
-    within(stepCard(/^6 · /)).click('состояние');
-    card = stepCard(/^6 · /);
+    addToArm(block(outcomeIf(4, true)), 0, 'change');
+    within(stepCard(/^5 · /)).click('состояние');
+    card = stepCard(/^5 · /);
     within(card).select('Какое', 'hidden');
-    within(stepCard(/^6 · /)).formula('На кого', '@цель');
-    within(stepCard(/^6 · /)).formula('Запомнит: Кого не замечает', '@действующий');
+    within(stepCard(/^5 · /)).formula('На кого', '@цель');
+    within(stepCard(/^5 · /)).formula('Запомнит: Кого не замечает', '@действующий');
     dump({ got: built('hide'), goal });
     expect(built('hide')).toEqual(goal);
   });

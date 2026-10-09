@@ -9,6 +9,7 @@ import { problemOf } from '../step-card.tsx';
 import { groupSteps, moveGroup, moveSpan, blockSpan, removeSteps, armEnd, wrapInBranch, addArm, unwrapBlock, BRICKS, SEEN_BRICKS } from '../cards.ts';
 import { armsOf, sees, endOf, inBlock } from '@vtt/engine/model/flow';
 import { FlowHead, FlowActions } from './cards/flow-parts.tsx';
+import { outcomeWords } from '@vtt/engine/engine/roll-tags';
 import { costsOf, newCost } from '../factory.ts';
 import { COST_BLOCK } from '@vtt/engine/words/glossary';
 import { GroupCard } from './cards/group-card.tsx';
@@ -93,8 +94,9 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     if (fresh.length) setOpen(fresh, true);
   }, [name, signature, setOpen]);
 
-  const cardOf = (group: (typeof cards)[number], g: number) => {
+  const cardOf = (group: (typeof cards)[number], g: number, whole?: [number, number]) => {
     const at = numberOf(g) - 1;
+    const range = whole ? span(whole[0], whole[1]) : group.indices;
     const problem = group.indices.map(i => problems[i]).find(Boolean) ?? null;
 
     const donorFix = problem?.missingField ? findDonorBlock(problem.missingField) : null;
@@ -117,7 +119,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         lane={lane}
         folded={!opened[foldKey(group)]}
         onFold={() => toggleFold(foldKey(group))}
-        onMoveLane={onMoveLane && !inBlock(arms, group.indices[0]!) ? to => onMoveLane(group.indices, to) : undefined}
+        onMoveLane={onMoveLane && !whole && !inBlock(arms, group.indices[0]!) ? to => onMoveLane(group.indices, to) : undefined}
         {...(group.kind === 'check' && group.amount ? { onUnpair: () => edit(draft => { draft.steps = (draft.steps ?? []).filter((_, i) => i !== group.indices[0]); }) } : {})}
         problemAction={donorFix ? (
           <Button size="sm" onClick={() => copyDonorBlock(donorFix.donor, donorFix.group)}>
@@ -147,7 +149,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         })}
         onDelete={() => {
           const before = structuredClone(steps);
-          const removal = removeSteps(steps, group.indices);
+          const removal = removeSteps(steps, range);
           edit(draft => { draft.steps = removal.steps; });
           const where = (c: { step: number; slot: string }) => `${STEP.one} ${c.step + 1} · ${c.slot.replace(/ \(формула\)$/, '')}`;
           const cleared = removal.cleared.filter(c => !c.slot.endsWith('(формула)'));
@@ -164,13 +166,13 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
           });
         }}
         onMoveUp={g === 0 ? undefined : () => edit(draft => {
-          draft.steps = moveGroup(draft.steps ?? [], g, -1);
+          draft.steps = whole ? moveSpan(draft.steps ?? [], whole, -1, true) : moveGroup(draft.steps ?? [], g, -1);
         })}
         onMoveDown={g === cards.length - 1 ? undefined : () => edit(draft => {
-          draft.steps = moveGroup(draft.steps ?? [], g, 1);
+          draft.steps = whole ? moveSpan(draft.steps ?? [], whole, 1, true) : moveGroup(draft.steps ?? [], g, 1);
         })}
         {...(group.kind !== 'split' && group.kind !== 'stop' ? { onWrap: () => edit(draft => {
-          draft.steps = wrapInBranch(draft.steps ?? [], group.indices[0]!, group.indices[group.indices.length - 1]!);
+          draft.steps = wrapInBranch(draft.steps ?? [], range[0]!, range[range.length - 1]!);
         }) } : {})}
       />
     );
@@ -201,24 +203,33 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     />
   );
 
-  const block = (open: number): { node: ReactNode; next: number } => {
+  const block = (open: number, fused?: { group: (typeof cards)[number]; g: number; yes: string; no: string; negated: boolean }): { node: ReactNode; next: number } => {
     const end = endOf(steps, open);
     const heads = [open, ...steps.flatMap((step, index) => (index > open && index < end && step.type === 'orElse' && arms[index]?.length === (arms[open]?.length ?? 0) + 1 && arms[index]?.[arms[index]!.length - 1]?.open === open ? [index] : []))];
     const bareElse = heads.slice(1).some(head => (steps[head] as { if?: unknown }).if === undefined);
     const problem = (index: number) => problems[index]?.text ?? null;
     const inside = cards.filter(card => card.indices[0]! > open && card.indices[0]! < end);
-    const guard = heads.length === 1 && inside.length === 1 && inside[0]!.kind === 'stop';
+    const guard = !fused && heads.length === 1 && inside.length === 1 && inside[0]!.kind === 'stop';
+    const firstWord = fused ? (fused.negated ? fused.no : fused.yes) : 'Если';
+    const otherWord = fused ? (fused.negated ? fused.yes : fused.no) : 'Иначе';
     const node = (
-      <div className={`flow-block${guard ? ' flow-block--guard' : ''}`} key={`block:${open}`}>
+      <div className={`flow-block${guard ? ' flow-block--guard' : ''}${fused ? ' flow-block--check' : ''}`} key={`block:${open}`}>
+        {fused ? cardOf(fused.group, fused.g, [fused.group.indices[0]!, end]) : null}
         {heads.map((head, k) => {
           const stop = k + 1 < heads.length ? heads[k + 1]! : end;
           const first = groupAt(head + 1);
           const last = groupAt(stop);
           const conditioned = k === 0 || (steps[head] as { if?: unknown }).if !== undefined;
-          const word = k === 0 ? 'Если' : conditioned ? 'Иначе, если' : 'Иначе';
+          const word = k === 0 ? firstWord : conditioned ? 'Иначе, если' : otherWord;
           return (
             <div className="flow-block__part" key={head}>
-              <FlowHead
+              {fused && (k === 0 || !conditioned) ? (
+                <div className="flow-head flow-head--outcome">
+                  <span className="flow-head__word">{word}:</span>
+                  <span className="spacer" />
+                  {k === 0 ? null : <FlowActions onDelete={() => edit(draft => { const list = draft.steps ?? []; draft.steps = removeSteps(list, span(head, armEnd(list, head) - 1)).steps; })} deleteLabel="убрать ветку" />}
+                </div>
+              ) : <FlowHead
                 word={word} step={steps[head]!} context={contextAt(head)} earlier={earlierOf(head)}
                 required={conditioned} problem={problem(head)}
                 edit={change => edit(draft => { change(draft.steps![head]!); })}
@@ -234,7 +245,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
                 ) : (
                   <FlowActions onDelete={() => edit(draft => { const list = draft.steps ?? []; draft.steps = removeSteps(list, span(head, armEnd(list, head) - 1)).steps; })} deleteLabel="убрать ветку" />
                 )}
-              />
+              />}
               <div className="flow-block__arm">
                 {first >= 0 && last > first ? render(first, last) : <span className="faint">пусто — добавьте шаг</span>}
                 <div className="flow-block__add">{armAdd(head)}</div>
@@ -244,7 +255,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         })}
         <div className="flow-block__foot">
           <Button size="sm" variant="ghost" onClick={() => edit(draft => { draft.steps = addArm(draft.steps ?? [], open, true); })}>+ иначе, если</Button>
-          {bareElse ? null : <Button size="sm" variant="ghost" onClick={() => edit(draft => { draft.steps = addArm(draft.steps ?? [], open, false); })}>+ иначе</Button>}
+          {bareElse ? null : <Button size="sm" variant="ghost" onClick={() => edit(draft => { draft.steps = addArm(draft.steps ?? [], open, false); })}>{fused ? `+ ${otherWord}` : '+ иначе'}</Button>}
         </div>
       </div>
     );
@@ -260,6 +271,20 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         out.push(made.node);
         g = made.next > g ? made.next : g + 1;
         continue;
+      }
+      const next = cards[g + 1];
+      if (group.kind === 'check' && group.step.id && next?.kind === 'flow' && next.step.type === 'branch') {
+        const cond = String((next.step as { if?: { expr?: unknown } }).if?.expr ?? '').replace(/\s+/g, '');
+        const own = `@${String(group.step.id)}.success`;
+        if (cond === own || cond === `не(${own})`) {
+          const roll = group.amount ?? steps.find(one => one.id && `@${one.id}` === String((group.step as { value?: { expr?: unknown } }).value?.expr ?? '').trim());
+          const tags = (((roll as { tags?: unknown[] } | undefined)?.tags) ?? []).filter((tag): tag is string => typeof tag === 'string');
+          const words = outcomeWords(system, tags);
+          const made = block(next.indices[0]!, { group, g, yes: words.success, no: words.fail, negated: cond !== own });
+          out.push(made.node);
+          g = made.next > g ? made.next : g + 2;
+          continue;
+        }
       }
       if (group.kind === 'flow') { g++; continue; }
       if (group.kind === 'split') {
