@@ -318,10 +318,15 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
         ]}
         onChange={next => edit(applyIndex, draft => {
           const d = draft as any;
+          const kept = system.effects[effectNameOf(d.effect)];
+          const fits = (activation: 'manual' | 'passive') =>
+            !kept ? typeof d.effect === 'object' && d.effect !== null : (kept.activation ?? 'manual') === activation;
           if (next === 'status') {
             retype(draft, 'status');
+            if (!fits('passive')) { delete d.effect; delete d.args; }
           } else if (next === 'emit') {
             retype(draft, 'emit');
+            if (!fits('manual')) { delete d.effect; delete d.args; }
             d.effect ??= firstEvent ?? '';
             const main = amountParamOf(system.effects[String(d.effect)]);
             if (group.amount?.id && main) d.args = { ...(d.args ?? {}), [main.key]: { expr: `@${group.amount.id}` } };
@@ -399,6 +404,7 @@ function StatusArgs({ step, context, onChange }: {
   if (String(step.mode ?? 'apply') === 'remove') return null;
   const id = effectNameOf(step.effect);
   const known = context.system.effects[id];
+  if (known && known.activation !== 'passive') return null;
   const params = known ? known.params ?? [] : typeof step.effect !== 'object' || !step.effect ? [] : [...new Map(Object.values(context.system.effects)
     .filter(effect => effect.activation === 'passive')
     .flatMap(effect => effect.params ?? [])

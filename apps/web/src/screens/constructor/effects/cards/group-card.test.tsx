@@ -175,6 +175,36 @@ describe('GroupCard: изменение как вызов', () => {
     expect(screen.queryByText('метки')).toBeNull();
   });
 
+  it('вызов → состояние: вызванный эффект-кнопка не остаётся «состоянием» и не тащит свои входы, и наоборот', () => {
+    const both = {
+      ...eventful,
+      effects: { ...eventful.effects, prone: { label: 'Лежит', activation: 'passive', params: [{ key: 'by', label: 'Кто сбил', kind: 'sheet' }], steps: [] } },
+    } as unknown as System;
+    const emit = { type: 'emit', effect: 'damage', args: { amount: { expr: '5' } } } as any;
+    const first = render(<GroupCard group={groupSteps([emit])[0]!} position={1} system={both} effect={effect} sheets={sheets}
+      earlier={[]} problem={null} edit={(_, change) => change(emit)} onDelete={() => {}} />);
+    fireEvent.click(screen.getByText('состояние'));
+    expect(emit.type).toBe('status');
+    expect(emit.effect).toBeUndefined();
+    expect(emit.args).toBeUndefined();
+    first.unmount();
+
+    const status = { type: 'status', effect: 'prone', to: { expr: '@цель' }, args: { by: { expr: '@действующий' } } } as any;
+    render(<GroupCard group={groupSteps([status])[0]!} position={1} system={both} effect={effect} sheets={sheets}
+      earlier={[]} problem={null} edit={(_, change) => change(status)} onDelete={() => {}} />);
+    fireEvent.click(screen.getByText('вызов'));
+    expect(status.type).toBe('emit');
+    expect(status.effect).toBe('damage');
+    expect(status.args).toBeUndefined();
+  });
+
+  it('у состояния с эффектом-кнопкой нет полей «Запомнит» — это входы кнопки, а не состояния', () => {
+    const step = { type: 'status', effect: 'damage', to: { expr: '@цель' } } as unknown as Step;
+    render(<GroupCard group={groupSteps([step])[0]!} position={1} system={eventful} effect={effect} sheets={sheets}
+      earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
+    expect(screen.queryByText(/Запомнит/)).toBeNull();
+  });
+
   it('без вызываемых эффектов режима «вызов» нет', () => {
     const group = groupSteps(attackSteps())[1]!;
     render(<GroupCard group={group} position={2} system={system} effect={effect}
