@@ -636,6 +636,9 @@
 .field-preview { display: grid; gap: var(--s-1); margin-top: var(--s-2); padding: var(--s-2) var(--s-3); border: 1px dashed var(--border); border-radius: var(--r-1); }
 .field-preview__note { font-size: var(--fs-2); }
 .sheet-grid__check { justify-self: center; width: 18px; height: 18px; }
+.sheet-grid__line { display: flex; align-items: center; flex-wrap: nowrap; gap: var(--s-2); min-width: 0; }
+.sheet-grid__line > .input, .sheet-grid__line > .select { flex: 1 1 0; width: auto; min-width: 0; }
+.sheet-grid__line > .faint, .sheet-grid__line > .drag-grip { flex: none; white-space: nowrap; }
 
 .field-row__cell { min-width: 0; display: flex; flex-direction: column; gap: var(--s-1); }
 .field-row__cell > * { min-width: 0; }

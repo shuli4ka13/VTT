@@ -71,7 +71,7 @@ describe('эффекты пресетов собираются в констру
       if (row >= (built('strike')!.params ?? []).length) ui.click('+ вход');
       ui.type(ui.cell('Название', row), label);
       ui.select(ui.cell('Тип', row), kind);
-      if (from) ui.select(ui.cell('Из таблицы', row), from);
+      if (from) ui.select(ui.cell('Уточнение', row), from);
       if (ui.cell('Имя в формулах', row).tagName !== 'SPAN') ui.type(ui.cell('Имя в формулах', row), key);
     };
     param(2, 'Бонус атаки', 'number', 'attack_with');
@@ -220,7 +220,7 @@ describe('эффекты пресетов собираются в констру
       if (row >= (built('shoot')!.params ?? []).length) ui.click('+ вход');
       ui.type(ui.cell('Название', row), label);
       ui.select(ui.cell('Тип', row), kind);
-      if (more.from) ui.select(ui.cell('Из таблицы', row), more.from);
+      if (more.from) ui.select(ui.cell('Уточнение', row), more.from);
       if (more.ask) ui.select(ui.cell('Если не передали', row), more.ask);
       if (more.hint) ui.type(ui.cell('Подсказка за столом', row), more.hint);
       if (more.min !== undefined) ui.type(ui.cell('Границы', row).querySelector<HTMLInputElement>('input[placeholder="не ниже"]')!, more.min);
@@ -477,7 +477,7 @@ describe('эффекты пресетов собираются в констру
       if (row >= (built('hero_attack')!.params ?? []).length) ui.click('+ вход');
       ui.type(ui.cell('Название', row), label);
       ui.select(ui.cell('Тип', row), kind);
-      if (from) ui.select(ui.cell('Из таблицы', row), from);
+      if (from) ui.select(ui.cell('Уточнение', row), from);
       ui.type(ui.cell('Имя в формулах', row), key);
     };
     (goal!.params ?? []).slice(2).forEach((p, index) => param(index + 2, p.label!, p.kind!, p.key, p.from));

@@ -21,17 +21,17 @@ const modeOf = (param: { ask?: { by?: string }; default?: unknown; optional?: bo
   param.ask ? (param.ask.by === 'gm' ? 'gm' : 'actor') : param.default !== undefined ? 'value' : param.optional ? 'empty' : 'must';
 
 const modesFor = (kind: string, askable: boolean): (readonly [Mode, string])[] => [
-  ['must', 'ошибка — обязан передать'],
-  ['empty', 'пусто — можно не передавать'],
-  ...(kind === 'sheet' || kind === 'field' ? [] : [['value', 'значение по умолчанию'] as const]),
+  ['must', 'обязательно'],
+  ['empty', 'можно пусто'],
+  ...(kind === 'sheet' || kind === 'field' ? [] : [['value', 'по умолчанию'] as const]),
   ...(askable ? [['actor', 'спросить игрока'] as const, ['gm', 'спросить ведущего'] as const] : []),
 ];
 
 const COLUMNS: GridColumn[] = [
   { key: 'label', label: 'Название', width: 170 },
-  { key: 'kind', label: 'Тип', width: 120 },
-  { key: 'from', label: 'Из таблицы', width: 140, hint: 'для типа «из таблицы» — из какой' },
-  { key: 'ask', label: 'Если не передали', width: 230, hint: 'как у аргумента функции: без умолчания — ошибка (проверка системы не пустит, движок остановится), с умолчанием — берётся оно, «пусто» — можно не передавать; или спросить за столом' },
+  { key: 'kind', label: 'Тип', width: 140 },
+  { key: 'from', label: 'Уточнение', width: 170, hint: 'у «из таблицы» — какая таблица; у списка листов — как зовётся каждый лист в шагах после «Для каждого из»' },
+  { key: 'ask', label: 'Если не передали', width: 260, hint: 'как у аргумента функции: «обязательно» — без него проверка системы не пустит, движок остановится; «по умолчанию» — берётся заданное значение; «можно пусто» — вход необязателен; или спросить за столом' },
   { key: 'hint', label: 'Подсказка за столом', width: 170, hint: 'что увидит спрошенный' },
   { key: 'main', label: 'Правят сопротивления', width: 180, hint: 'это число меняют сопротивления и уязвимости цели: урон, лечение. Одно на эффект' },
   { key: 'bounds', label: 'Границы', width: 170, hint: 'для числа: не ниже и не выше — числом или формулой, например @удача' },
@@ -102,7 +102,7 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
             const kind = String(param.kind ?? 'number');
             const askable = (ASKABLE as readonly string[]).includes(kind);
             const cells = [
-              <span key={`${param.key}:label`} className={`inline inline--tight drag-item${drag.mark(param.key)}`} {...(params.length > 1 ? drag.props(param.key) : {})}>
+              <span key={`${param.key}:label`} className={`sheet-grid__line drag-item${drag.mark(param.key)}`} {...(params.length > 1 ? drag.props(param.key) : {})}>
                 {params.length > 1 ? <span className="drag-grip" aria-hidden title="перетащите, чтобы поменять порядок">⋮⋮</span> : null}
                 <Input value={param.label ?? ''} onChange={next => relabel(param, next)} />
               </span>,
@@ -126,8 +126,8 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
                   onChange={next => change(param.key, t => { if (next) t.from = next; else delete t.from; })}
                 />
               ) : kind === 'sheet' && param.many ? (
-                <span key={`${param.key}:from`} className="inline inline--tight" title="как зовётся один лист из списка в шагах после «Для каждого из»">
-                  <span className="faint">один —</span>
+                <span key={`${param.key}:from`} className="sheet-grid__line" title="как зовётся один лист из списка в шагах после «Для каждого из»">
+                  <span className="faint">каждый:</span>
                   <Input value={param.item?.label ?? param.item?.key ?? ''} placeholder="Цель"
                     onChange={next => change(param.key, t => {
                       const label = next.trim();
@@ -140,7 +140,7 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
                     })} />
                 </span>
               ) : <span key={`${param.key}:from`} className="faint">—</span>,
-              <span key={`${param.key}:ask`} className="inline inline--tight">
+              <span key={`${param.key}:ask`} className="sheet-grid__line">
                 <Select<string>
                   label={`«${param.label ?? param.key}» — если не передали`}
                   value={modeOf(param)}
@@ -177,7 +177,7 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
                 />
               ) : <span key={`${param.key}:main`} className="faint">—</span>,
               kind === 'number' ? (
-                <span key={`${param.key}:bounds`} className="inline inline--tight">
+                <span key={`${param.key}:bounds`} className="sheet-grid__line">
                   <BoundField value={param.min} placeholder="не ниже" onChange={next => change(param.key, t => { if (next === null) delete t.min; else t.min = next; })} />
                   <BoundField value={param.max} placeholder="не выше" onChange={next => change(param.key, t => { if (next === null) delete t.max; else t.max = next; })} />
                 </span>

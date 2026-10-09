@@ -305,7 +305,7 @@ describe('эффекты D&D собираются в конструкторе р
     ui.click('+ вход');
     ui.type(ui.cell('Название', 1), 'Чем спасаются');
     ui.select(ui.cell('Тип', 1), 'choice');
-    ui.select(ui.cell('Из таблицы', 1), 'abilities');
+    ui.select(ui.cell('Уточнение', 1), 'abilities');
     if (ui.has('ещё')) ui.click('ещё');
     ui.type(ui.cell('Имя в формулах', 1), 'save_by');
     ui.click('+ вход');

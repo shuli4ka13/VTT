@@ -195,7 +195,7 @@ describe('эффекты пресетов собираются руками: Sha
     if (ui.has('ещё')) ui.click('ещё');
     ui.type(ui.cell('Название', row), label);
     ui.select(ui.cell('Тип', row), kind);
-    if (more.from) ui.select(ui.cell('Из таблицы', row), more.from);
+    if (more.from) ui.select(ui.cell('Уточнение', row), more.from);
     if (more.ask) ui.select(ui.cell('Если не передали', row), more.ask);
     if (more.main) ui.check(`«${label}» правят сопротивления`, true);
     if (ui.cell('Имя в формулах', row).tagName !== 'SPAN') ui.type(ui.cell('Имя в формулах', row), key);
