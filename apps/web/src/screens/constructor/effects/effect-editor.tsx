@@ -18,6 +18,7 @@ import { BlockPick } from '../block-pick.tsx';
 import { GrantsEditor } from '../grants-editor.tsx';
 import { Extras } from './cards/extras.tsx';
 import { ParamsEditor } from './params-editor.tsx';
+import { ReturnsEditor } from './returns-editor.tsx';
 import { launchOf, activationFor, DURATIONS, REAPPLY } from '@vtt/engine/model/effect-kinds';
 import type { System, Effect, Step } from '@vtt/schema';
 
@@ -183,6 +184,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
       </Card>
 
       <ParamsEditor id={id} effect={effect} system={system} onEdit={edit} />
+      <ReturnsEditor id={id} effect={effect} system={system} onEdit={edit} />
 
       {pipeline ? (
         <>

@@ -1,0 +1,149 @@
+// @vitest-environment jsdom
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { render, cleanup, act, fireEvent } from '@testing-library/react';
+import { writeFileSync } from 'node:fs';
+import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
+import type { System, Effect } from '@vtt/schema';
+import { useWorld } from '../../../store/world.ts';
+import { openAll } from '../../../testing/render-open.tsx';
+import { within, stepCard } from '../../../testing/cards.ts';
+import { EffectsTab } from './effects-tab.tsx';
+
+const worldOf = (id: string) => SAMPLE_WORLDS.find(w => w.system.id === id)!;
+
+const start = (systemId: string, without: string[]): Effect[] => {
+  const world = structuredClone(worldOf(systemId));
+  const goal = without.map(id => world.system.effects[id]!);
+  for (const id of without) delete world.system.effects[id];
+  useWorld.setState(state => ({
+    ...state, system: world.system as System, compendium: world.compendium,
+    activeEffectId: null, activeFieldTag: null, activeRecordKind: null, activeSheetKind: null,
+  }));
+  render(<EffectsTab />);
+  openAll();
+  return goal;
+};
+
+const built = (id: string): Effect | undefined => useWorld.getState().system.effects[id];
+
+const dump = (what: unknown) => {
+  if (process.env.BUILD_DUMP) writeFileSync(process.env.BUILD_DUMP, JSON.stringify(what, null, 1));
+};
+
+const textOf = (el: Element): string => (el.textContent ?? '').replace(/\s+/g, ' ').trim();
+
+const nameStep = (card: HTMLElement, name: string): void => {
+  const title = (card.querySelector('.step-fold, .card__head')?.textContent ?? '').replace(/^[▾▸]\s*/, '').split('·')[0]!.trim();
+  within(card).click(/^имя в формулах/);
+  const fresh = stepCard(new RegExp(`^${title} · `));
+  within(fresh).type(fresh.querySelector<HTMLElement>('.step-name input')!, name);
+};
+
+const calledHead = (ui: ReturnType<typeof within>, id: string, goal: Effect) => {
+  ui.click('+ вызываемый');
+  ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, goal.label!);
+  ui.click('имя в формулах…');
+  ui.type(document.querySelector<HTMLElement>('.step-name input')!, id);
+  ui.select('Блок', goal.group!);
+  ui.type('Описание', goal.description!);
+  within(stepCard(/^1 · /)).click('Удалить');
+  within(stepCard(/^1 · /)).click('точно убрать');
+};
+
+const param = (ui: ReturnType<typeof within>, id: string, row: number, label: string, kind: string, key: string, more: { from?: string; optional?: boolean; value?: string } = {}) => {
+  if (row >= (built(id)!.params ?? []).length) ui.click('+ ещё одно');
+  if (ui.has('ещё')) ui.click('ещё');
+  ui.type(ui.cell('Название', row), label);
+  ui.select(ui.cell('Вид', row), kind);
+  if (more.from) ui.select(ui.cell('Таблица', row), more.from);
+  if (more.optional) ui.select(ui.cell('Если не передали', row), 'empty');
+  if (more.value !== undefined) { ui.select(ui.cell('Если не передали', row), 'value'); ui.type(ui.cell('Если не передали', row), more.value); }
+  if (ui.cell('Имя в формулах', row).querySelector('input')) ui.type(ui.cell('Имя в формулах', row), key);
+};
+
+const dropParam = (row: number) => {
+  const drops = [...document.querySelectorAll<HTMLElement>('button[title="убрать вход"]')];
+  act(() => { fireEvent.click(drops[row]!); });
+  openAll();
+};
+
+const returns = (rows: readonly (readonly [string, string, string, string, string?])[]) => {
+  const card = () => [...document.querySelectorAll<HTMLElement>('.card')].find(c => /^Что получит тот, кто вызвал/.test(textOf(c)))!;
+  rows.forEach(([label, kind, key, from, no], row) => {
+    within(card()).click('+ итог');
+    const box = within(card());
+    box.type(box.cell('Название', row), label);
+    box.select(box.cell('Вид', row), kind);
+    if (from.startsWith('=')) {
+      box.select(box.cell('Откуда', row), ':формула');
+      within(card()).formula(within(card()).cell('Откуда', row), from.slice(1));
+    } else box.select(box.cell('Откуда', row), from);
+    if (no) within(card()).type(within(card()).cell('Как назвать «нет»', row), no);
+    const named = within(card()).cell('Имя в формулах', row);
+    if (named.querySelector('input')) within(card()).type(named, key);
+  });
+};
+
+describe('вызываемые блоки D&D собираются руками', () => {
+  beforeEach(() => { try { localStorage.clear(); } catch { return; } });
+  afterEach(() => { cleanup(); });
+
+  it('D&D «Бросок атаки» (attack_roll)', { timeout: 120000 }, () => {
+    const [goal] = start('dnd5e', ['attack_roll']);
+    const ui = within();
+    calledHead(ui, 'attack_roll', goal!);
+    dropParam(1);
+    param(ui, 'attack_roll', 0, 'Кто бросает', 'sheet', 'кто');
+    param(ui, 'attack_roll', 1, 'Против кого', 'sheet', 'против');
+    param(ui, 'attack_roll', 2, 'Бонус атаки', 'number', 'бонус', { value: '0' });
+    const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
+    ui.click('+ число');
+    within(at(1)()).formula('Бросает', '@кто');
+    within(at(1)()).formula('Против кого', '@против');
+    within(at(1)()).formula('Сколько', 'кинуть(@lead_die) + @бонус');
+    within(at(1)()).select('Метки', 'атака');
+    nameStep(at(1)(), 'бросок');
+    ui.click('+ проверка');
+    within(at(2)()).formula('Проверка', '@бросок >= @против.ac');
+    within(at(1)()).formula('Успех, если на кости не меньше', '20');
+    within(at(1)()).formula('Провал, если на кости не больше', '1');
+    nameStep(at(1)(), 'проверка');
+    returns([
+      ['попадание', 'boolean', 'попал', 'Проверка — пройдена', 'промах'],
+      ['крит', 'boolean', 'крит', '=@бросок.natural >= @кто.crit_from'],
+      ['на костях', 'number', 'на_костях', 'Бросок — что выпало на костях, без прибавок'],
+    ]);
+    dump({ got: built('attack_roll'), goal });
+    expect(built('attack_roll')).toEqual(goal);
+  });
+
+  it('D&D «Спасбросок» (saving_throw)', { timeout: 120000 }, () => {
+    const [goal] = start('dnd5e', ['saving_throw']);
+    const ui = within();
+    calledHead(ui, 'saving_throw', goal!);
+    dropParam(1);
+    param(ui, 'saving_throw', 0, 'Кто спасается', 'sheet', 'кто');
+    param(ui, 'saving_throw', 1, 'Чем спасается', 'choice', 'характеристика', { from: 'abilities' });
+    param(ui, 'saving_throw', 2, 'Сложность', 'number', 'сложность');
+    param(ui, 'saving_throw', 3, 'Против кого', 'sheet', 'против', { optional: true });
+    const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
+    ui.click('+ число');
+    within(at(1)()).formula('Бросает', '@кто');
+    within(at(1)()).formula('Против кого', '@против');
+    within(at(1)()).formula('Сколько', 'кинуть(@lead_die) + @кто.характеристика.save');
+    within(at(1)()).select('Метки', 'спасбросок');
+    within(at(1)()).select('Метки', ':формула');
+    within(at(1)()).type('Метки', '@характеристика');
+    within(at(1)()).click('добавить');
+    nameStep(at(1)(), 'бросок');
+    ui.click('+ проверка');
+    within(at(2)()).formula('Проверка', '@бросок >= @сложность');
+    nameStep(at(1)(), 'проверка');
+    returns([
+      ['спасся', 'boolean', 'прошёл', 'Проверка — пройдена', 'не спасся'],
+      ['на костях', 'number', 'на_костях', 'Бросок — что выпало на костях, без прибавок'],
+    ]);
+    dump({ got: built('saving_throw'), goal });
+    expect(built('saving_throw')).toEqual(goal);
+  });
+});

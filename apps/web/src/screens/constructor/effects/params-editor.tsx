@@ -7,7 +7,7 @@ import { followKey, paramUsed, keyOf, referenced } from '../keys.ts';
 import { KeyField } from '../../../ui/key-field.tsx';
 import { BoundField } from '../bound-field.tsx';
 import { Card, CardHead, Field, Input, Select, Button } from '../../../ui/primitives.tsx';
-import { useDragList } from '../../../ui/drag-list.ts';
+import { ColumnList } from './column-list.tsx';
 import type { Effect, Param, System, ValueKind } from '@vtt/schema';
 
 const SHEETS = 'sheet+many';
@@ -82,7 +82,7 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
   });
   const used = (key: string) => { const st = useWorld.getState(); return paramUsed(st.system, st.compendium, id, key); };
   const keys = params.map(p => p.key);
-  const drag = useDragList((from, to, after) => onEdit(draft => {
+  const move = (from: string, to: string, after: boolean) => onEdit(draft => {
     const list = draft.params ?? [];
     const moving = list.find(p => p.key === from);
     if (!moving) return;
@@ -91,7 +91,7 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
     if (at < 0) return;
     rest.splice(at + (after ? 1 : 0), 0, moving);
     draft.params = rest;
-  }));
+  });
   const moveOpen = (from: string, to: string) => setOpened(now => now.map(k => (k === from ? to : k)));
   const relabel = (param: Loose, next: string) => {
     const key = followKey({ used: used(param.key), key: param.key, base: 'вход', before: param.label ?? '', after: next, taken: keys });
@@ -122,28 +122,20 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
           <Button size="sm" onClick={addParam}>+ ещё одно</Button>
         </div>
       ) : (
-        <div className="param-list">
-          {params.map(param => {
-            const open = opened.includes(param.key);
-            return (
-              <div key={param.key} className="param-item">
-                <div className={`param-line${drag.mark(param.key)}`} {...(params.length > 1 ? drag.props(param.key) : {})}>
-                  {params.length > 1 ? <span className="drag-grip" aria-hidden title="перетащите, чтобы поменять порядок">⋮⋮</span> : null}
-                  <button type="button" className="param-line__sum" aria-expanded={open} onClick={() => toggle(param.key)}>
-                    <span className="param-line__name">{param.label || param.key}</span>
-                    <span className="faint">{kindWords(param, system)}{askWords(param, system)}</span>
-                  </button>
-                  <Button size="sm" variant="ghost" title="убрать вход" onClick={() => drop(param.key)}>×</Button>
-                </div>
-                {open ? (
-                  <ParamForm param={param} keys={keys} system={system} effect={effect}
-                    locked={used(param.key)} change={fn => change(param.key, fn)}
-                    onLabel={next => relabel(param, next)} onKey={next => rekey(param, next)} onMain={on => setMain(param.key, on)} />
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
+        <ColumnList
+          items={params}
+          isOpen={key => opened.includes(key)}
+          onToggle={toggle}
+          onDrop={drop}
+          onMove={move}
+          dropTitle="убрать вход"
+          summary={param => <>{kindWords(param, system)}{askWords(param, system)}</>}
+          form={param => (
+            <ParamForm param={param} keys={keys} system={system} effect={effect}
+              locked={used(param.key)} change={fn => change(param.key, fn)}
+              onLabel={next => relabel(param, next)} onKey={next => rekey(param, next)} onMain={on => setMain(param.key, on)} />
+          )}
+        />
       )}
       {params.length ? (
         <div className="inline inline--tight">
