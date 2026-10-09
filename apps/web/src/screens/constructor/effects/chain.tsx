@@ -206,8 +206,10 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     const heads = [open, ...steps.flatMap((step, index) => (index > open && index < end && step.type === 'orElse' && arms[index]?.length === (arms[open]?.length ?? 0) + 1 && arms[index]?.[arms[index]!.length - 1]?.open === open ? [index] : []))];
     const bareElse = heads.slice(1).some(head => (steps[head] as { if?: unknown }).if === undefined);
     const problem = (index: number) => problems[index]?.text ?? null;
+    const inside = cards.filter(card => card.indices[0]! > open && card.indices[0]! < end);
+    const guard = heads.length === 1 && inside.length === 1 && inside[0]!.kind === 'stop';
     const node = (
-      <div className="flow-block" key={`block:${open}`}>
+      <div className={`flow-block${guard ? ' flow-block--guard' : ''}`} key={`block:${open}`}>
         {heads.map((head, k) => {
           const stop = k + 1 < heads.length ? heads[k + 1]! : end;
           const first = groupAt(head + 1);

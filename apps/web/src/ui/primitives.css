@@ -716,6 +716,15 @@
 .contest__mark { color: var(--cyan); }
 .contest__side { color: var(--text); }
 .contest__vs { font-weight: 700; color: var(--cyan); }
+.flow-block--guard { border-left-color: var(--danger); background: color-mix(in srgb, var(--danger) 4%, transparent); }
+.flow-block--guard .flow-head { padding-bottom: 0; }
+.flow-block--guard .flow-head__word { min-width: 0; }
+.flow-block--guard .flow-block__arm { flex-direction: row; flex-wrap: wrap; align-items: center; gap: var(--s-2); margin: 0 var(--s-3) var(--s-2) var(--s-5); padding: var(--s-1) 0 var(--s-1) var(--s-4); border-left-color: color-mix(in srgb, var(--danger) 35%, var(--border)); }
+.flow-block--guard .flow-stop { flex: 1 1 320px; border: 0; background: transparent; padding: 0; }
+.flow-block--guard .flow-stop > .button, .flow-block--guard .flow-stop > button, .flow-block--guard .flow-stop > .spacer { display: none; }
+.flow-block--guard .flow-block__add, .flow-block--guard > .flow-block__foot { opacity: 0; }
+.flow-block--guard > .flow-block__foot { padding-top: 0; padding-bottom: var(--s-1); }
+.flow-block--guard:hover .flow-block__add, .flow-block--guard:hover > .flow-block__foot, .flow-block--guard:focus-within .flow-block__add, .flow-block--guard:focus-within > .flow-block__foot { opacity: 1; }
 .cond { display: flex; flex-direction: column; gap: var(--s-2); min-width: 0; }
 .cond--bare { flex-direction: row; flex-wrap: wrap; align-items: center; }
 .cond__title { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
