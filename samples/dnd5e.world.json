@@ -2442,107 +2442,6 @@
           }
         ]
       },
-      "spell_save_half": {
-        "label": "Заклинание: спасбросок, половина при успехе",
-        "icon": "💥",
-        "hint": "Огненный шар, молния: кости бросаются один раз на всех, спасбросок у каждого свой.",
-        "shape": "book",
-        "use": "action",
-        "block": "Заклинания",
-        "columns": [
-          {
-            "key": "spell_level",
-            "label": "Круг",
-            "kind": "number"
-          },
-          {
-            "key": "save_by",
-            "label": "Чем спасаются",
-            "kind": "choice",
-            "from": "abilities"
-          },
-          {
-            "key": "damage_die",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "dice_count",
-            "label": "Сколько костей",
-            "kind": "number"
-          },
-          {
-            "key": "dice_up",
-            "label": "Костей за круг выше",
-            "kind": "number"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "choice",
-            "from": "damage_types"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "spell_save_half"
-          }
-        ]
-      },
-      "spell_save_none": {
-        "label": "Заклинание: спасбросок, при успехе ничего",
-        "icon": "☄",
-        "hint": "Град, ядовитое облако: провал — урон и состояние, успех — ничего.",
-        "shape": "book",
-        "use": "action",
-        "block": "Заклинания",
-        "columns": [
-          {
-            "key": "spell_level",
-            "label": "Круг",
-            "kind": "number"
-          },
-          {
-            "key": "save_by",
-            "label": "Чем спасаются",
-            "kind": "choice",
-            "from": "abilities"
-          },
-          {
-            "key": "damage_die",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "dice_count",
-            "label": "Сколько костей",
-            "kind": "number"
-          },
-          {
-            "key": "dice_up",
-            "label": "Костей за круг выше",
-            "kind": "number"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "choice",
-            "from": "damage_types"
-          },
-          {
-            "key": "status",
-            "label": "Состояние",
-            "kind": "effect"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "spell_save_none"
-          }
-        ]
-      },
       "spell_auto": {
         "label": "Заклинание без броска",
         "icon": "🎯",
@@ -2590,44 +2489,6 @@
           }
         ]
       },
-      "spell_condition": {
-        "label": "Заклинание: состояние",
-        "icon": "🌀",
-        "hint": "Удержание личности, страх: провал спасброска вешает состояние. Держится концентрацией, если выбрано.",
-        "shape": "book",
-        "use": "action",
-        "block": "Заклинания",
-        "columns": [
-          {
-            "key": "spell_level",
-            "label": "Круг",
-            "kind": "number"
-          },
-          {
-            "key": "save_by",
-            "label": "Чем спасаются",
-            "kind": "choice",
-            "from": "abilities"
-          },
-          {
-            "key": "status",
-            "label": "Состояние",
-            "kind": "effect"
-          },
-          {
-            "key": "holds",
-            "label": "Держится концентрацией",
-            "kind": "text",
-            "onSheet": false
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "spell_condition_held"
-          }
-        ]
-      },
       "spell_buff": {
         "label": "Заклинание: усиление",
         "icon": "🕊",
@@ -2649,34 +2510,9 @@
           {
             "key": "holds",
             "label": "Держится концентрацией",
-            "kind": "text",
-            "onSheet": false
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "spell_buff_held"
-          }
-        ]
-      },
-      "spell_buff_free": {
-        "label": "Заклинание: усиление без концентрации",
-        "icon": "🕊",
-        "hint": "Доспех мага, ложная жизнь: висит само, концентрация не нужна.",
-        "shape": "book",
-        "use": "action",
-        "block": "Заклинания",
-        "columns": [
-          {
-            "key": "spell_level",
-            "label": "Круг",
-            "kind": "number"
-          },
-          {
-            "key": "status",
-            "label": "Состояние",
-            "kind": "effect"
+            "kind": "boolean",
+            "onSheet": false,
+            "default": false
           }
         ],
         "bindings": [
@@ -2857,6 +2693,72 @@
                 "expr": "\"немагический\""
               }
             }
+          }
+        ]
+      },
+      "spell_save": {
+        "label": "Заклинание со спасброском",
+        "icon": "🌀",
+        "hint": "Удержание личности, страх: провал спасброска вешает состояние. Держится концентрацией, если выбрано.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [
+          {
+            "key": "spell_level",
+            "label": "Круг",
+            "kind": "number"
+          },
+          {
+            "key": "save_by",
+            "label": "Чем спасаются",
+            "kind": "choice",
+            "from": "abilities"
+          },
+          {
+            "key": "damage_die",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "dice_count",
+            "label": "Сколько костей",
+            "kind": "number"
+          },
+          {
+            "key": "dice_up",
+            "label": "Костей за круг выше",
+            "kind": "number"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types"
+          },
+          {
+            "key": "half",
+            "label": "Половина при успехе",
+            "kind": "boolean",
+            "default": false
+          },
+          {
+            "key": "status",
+            "label": "Состояние",
+            "kind": "effect"
+          },
+          {
+            "key": "holds",
+            "label": "Держится концентрацией",
+            "kind": "boolean",
+            "onSheet": false,
+            "default": false
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "spell_save"
           }
         ]
       }
@@ -3466,318 +3368,6 @@
           }
         ]
       },
-      "spell_save_half": {
-        "label": "Заклинание: спасбросок, при успехе половина",
-        "group": "Заклинания",
-        "description": "Тратит ячейку один раз на всех. Кости бросаются один раз, спасбросок у каждой цели свой; успех — половина урона.",
-        "params": [
-          {
-            "key": "действующий",
-            "label": "Кто действует",
-            "kind": "sheet"
-          },
-          {
-            "key": "spell_level",
-            "label": "Круг заклинания",
-            "kind": "number"
-          },
-          {
-            "key": "slot",
-            "label": "Каким кругом",
-            "kind": "number",
-            "ask": {
-              "by": "actor",
-              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
-            },
-            "min": 1,
-            "max": 9
-          },
-          {
-            "key": "цели",
-            "label": "Цели",
-            "kind": "sheet",
-            "many": true,
-            "item": {
-              "key": "цель",
-              "label": "Цель"
-            }
-          },
-          {
-            "key": "save_by",
-            "label": "Чем спасаются",
-            "kind": "choice",
-            "from": "abilities"
-          },
-          {
-            "key": "damage_die",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "dice_count",
-            "label": "Сколько костей",
-            "kind": "number"
-          },
-          {
-            "key": "dice_up",
-            "label": "Костей за каждый круг выше",
-            "kind": "number"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "choice",
-            "from": "damage_types"
-          }
-        ],
-        "steps": [
-          {
-            "type": "roll",
-            "fixed": {
-              "expr": "(кинуть(@damage_die, (@dice_count + (@slot - @spell_level) * @dice_up)))"
-            },
-            "id": "dmg_всего"
-          },
-          {
-            "type": "each",
-            "of": "цели"
-          },
-          {
-            "id": "save",
-            "type": "emit",
-            "effect": "saving_throw",
-            "args": {
-              "кто": {
-                "expr": "@цель"
-              },
-              "характеристика": {
-                "expr": "@save_by"
-              },
-              "сложность": {
-                "expr": "@действующий.spell_dc"
-              },
-              "против": {
-                "expr": "@действующий"
-              }
-            }
-          },
-          {
-            "id": "dmg",
-            "type": "roll",
-            "fixed": {
-              "expr": "если(@save.прошёл, округлить вниз((@dmg_всего) * (0.5)), @dmg_всего)"
-            }
-          },
-          {
-            "type": "emit",
-            "effect": "damage",
-            "args": {
-              "amount": {
-                "expr": "@dmg"
-              },
-              "damage_type": {
-                "expr": "@damage_type"
-              },
-              "damage_source": {
-                "expr": "\"магический\""
-              },
-              "лист": {
-                "expr": "@цель"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            }
-          }
-        ],
-        "cost": [
-          {
-            "type": "emit",
-            "effect": "cost_spell",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              },
-              "spell_level": {
-                "expr": "@spell_level"
-              },
-              "slot": {
-                "expr": "@slot"
-              }
-            }
-          }
-        ]
-      },
-      "spell_save_none": {
-        "label": "Заклинание: спасбросок, при успехе ничего",
-        "group": "Заклинания",
-        "description": "Тратит ячейку. Провал спасброска — урон и, если задано, состояние; успех — ничего.",
-        "params": [
-          {
-            "key": "действующий",
-            "label": "Кто действует",
-            "kind": "sheet"
-          },
-          {
-            "key": "spell_level",
-            "label": "Круг заклинания",
-            "kind": "number"
-          },
-          {
-            "key": "slot",
-            "label": "Каким кругом",
-            "kind": "number",
-            "ask": {
-              "by": "actor",
-              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
-            },
-            "min": 1,
-            "max": 9
-          },
-          {
-            "key": "цели",
-            "label": "Цели",
-            "kind": "sheet",
-            "many": true,
-            "item": {
-              "key": "цель",
-              "label": "Цель"
-            }
-          },
-          {
-            "key": "save_by",
-            "label": "Чем спасаются",
-            "kind": "choice",
-            "from": "abilities"
-          },
-          {
-            "key": "damage_die",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "dice_count",
-            "label": "Сколько костей",
-            "kind": "number"
-          },
-          {
-            "key": "dice_up",
-            "label": "Костей за каждый круг выше",
-            "kind": "number"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "choice",
-            "from": "damage_types"
-          },
-          {
-            "key": "status",
-            "label": "Состояние при провале",
-            "kind": "effect",
-            "optional": true
-          }
-        ],
-        "steps": [
-          {
-            "type": "roll",
-            "fixed": {
-              "expr": "(кинуть(@damage_die, (@dice_count + (@slot - @spell_level) * @dice_up)))"
-            },
-            "id": "dmg"
-          },
-          {
-            "type": "each",
-            "of": "цели"
-          },
-          {
-            "id": "save",
-            "type": "emit",
-            "effect": "saving_throw",
-            "args": {
-              "кто": {
-                "expr": "@цель"
-              },
-              "характеристика": {
-                "expr": "@save_by"
-              },
-              "сложность": {
-                "expr": "@действующий.spell_dc"
-              },
-              "против": {
-                "expr": "@действующий"
-              }
-            }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "не(@save.прошёл)"
-            }
-          },
-          {
-            "type": "emit",
-            "effect": "damage",
-            "args": {
-              "amount": {
-                "expr": "@dmg"
-              },
-              "damage_type": {
-                "expr": "@damage_type"
-              },
-              "damage_source": {
-                "expr": "\"магический\""
-              },
-              "лист": {
-                "expr": "@цель"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            }
-          },
-          {
-            "type": "status",
-            "effect": {
-              "expr": "@status"
-            },
-            "to": {
-              "expr": "@цель"
-            },
-            "args": {
-              "наложил": {
-                "expr": "@действующий"
-              }
-            }
-          },
-          {
-            "type": "end"
-          }
-        ],
-        "cost": [
-          {
-            "type": "emit",
-            "effect": "cost_spell",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              },
-              "spell_level": {
-                "expr": "@spell_level"
-              },
-              "slot": {
-                "expr": "@slot"
-              }
-            }
-          }
-        ]
-      },
       "spell_auto": {
         "label": "Заклинание: урон без броска",
         "group": "Заклинания",
@@ -3896,251 +3486,6 @@
           }
         ]
       },
-      "spell_condition": {
-        "label": "Заклинание: спасбросок или состояние",
-        "group": "Заклинания",
-        "description": "Тратит ячейку. Провал спасброска вешает состояние; оно запоминает твою сложность, и повторный спасбросок в конце хода делает само. Без концентрации.",
-        "params": [
-          {
-            "key": "действующий",
-            "label": "Кто действует",
-            "kind": "sheet"
-          },
-          {
-            "key": "spell_level",
-            "label": "Круг заклинания",
-            "kind": "number"
-          },
-          {
-            "key": "slot",
-            "label": "Каким кругом",
-            "kind": "number",
-            "ask": {
-              "by": "actor",
-              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
-            },
-            "min": 1,
-            "max": 9
-          },
-          {
-            "key": "цели",
-            "label": "Цели",
-            "kind": "sheet",
-            "many": true,
-            "item": {
-              "key": "цель",
-              "label": "Цель"
-            }
-          },
-          {
-            "key": "save_by",
-            "label": "Чем спасаются",
-            "kind": "choice",
-            "from": "abilities"
-          },
-          {
-            "key": "status",
-            "label": "Состояние",
-            "kind": "effect"
-          }
-        ],
-        "steps": [
-          {
-            "type": "each",
-            "of": "цели"
-          },
-          {
-            "id": "save",
-            "type": "emit",
-            "effect": "saving_throw",
-            "args": {
-              "кто": {
-                "expr": "@цель"
-              },
-              "характеристика": {
-                "expr": "@save_by"
-              },
-              "сложность": {
-                "expr": "@действующий.spell_dc"
-              },
-              "против": {
-                "expr": "@действующий"
-              }
-            }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "не(@save.прошёл)"
-            }
-          },
-          {
-            "type": "status",
-            "effect": {
-              "expr": "@status"
-            },
-            "to": {
-              "expr": "@цель"
-            },
-            "args": {
-              "запомнено": {
-                "expr": "@действующий.spell_dc"
-              },
-              "наложил": {
-                "expr": "@действующий"
-              }
-            }
-          },
-          {
-            "type": "end"
-          }
-        ],
-        "cost": [
-          {
-            "type": "emit",
-            "effect": "cost_spell",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              },
-              "spell_level": {
-                "expr": "@spell_level"
-              },
-              "slot": {
-                "expr": "@slot"
-              }
-            }
-          }
-        ]
-      },
-      "spell_condition_held": {
-        "label": "Заклинание: спасбросок или состояние, с концентрацией",
-        "group": "Заклинания",
-        "description": "То же, но держится твоей концентрацией: сорвалась или взялся за другое — состояние спало со всех целей.",
-        "params": [
-          {
-            "key": "действующий",
-            "label": "Кто действует",
-            "kind": "sheet"
-          },
-          {
-            "key": "spell_level",
-            "label": "Круг заклинания",
-            "kind": "number"
-          },
-          {
-            "key": "slot",
-            "label": "Каким кругом",
-            "kind": "number",
-            "ask": {
-              "by": "actor",
-              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
-            },
-            "min": 1,
-            "max": 9
-          },
-          {
-            "key": "цели",
-            "label": "Цели",
-            "kind": "sheet",
-            "many": true,
-            "item": {
-              "key": "цель",
-              "label": "Цель"
-            }
-          },
-          {
-            "key": "save_by",
-            "label": "Чем спасаются",
-            "kind": "choice",
-            "from": "abilities"
-          },
-          {
-            "key": "status",
-            "label": "Состояние",
-            "kind": "effect",
-            "optional": true
-          }
-        ],
-        "steps": [
-          {
-            "type": "each",
-            "of": "цели"
-          },
-          {
-            "id": "save",
-            "type": "emit",
-            "effect": "saving_throw",
-            "args": {
-              "кто": {
-                "expr": "@цель"
-              },
-              "характеристика": {
-                "expr": "@save_by"
-              },
-              "сложность": {
-                "expr": "@действующий.spell_dc"
-              },
-              "против": {
-                "expr": "@действующий"
-              }
-            }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "не(@save.прошёл)"
-            }
-          },
-          {
-            "type": "status",
-            "effect": {
-              "expr": "@status"
-            },
-            "to": {
-              "expr": "@цель"
-            },
-            "args": {
-              "запомнено": {
-                "expr": "@действующий.spell_dc"
-              },
-              "наложил": {
-                "expr": "@действующий"
-              }
-            }
-          },
-          {
-            "type": "end"
-          }
-        ],
-        "bond": {
-          "effect": "concentration",
-          "by": "действующий"
-        },
-        "cost": [
-          {
-            "type": "emit",
-            "effect": "cost_spell",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              },
-              "spell_level": {
-                "expr": "@spell_level"
-              },
-              "slot": {
-                "expr": "@slot"
-              }
-            }
-          }
-        ]
-      },
       "spell_buff": {
         "label": "Заклинание: усиление",
         "group": "Заклинания",
@@ -4182,6 +3527,12 @@
             "label": "Состояние",
             "kind": "effect",
             "optional": true
+          },
+          {
+            "key": "holds",
+            "label": "Держится концентрацией",
+            "kind": "boolean",
+            "default": false
           }
         ],
         "steps": [
@@ -4220,98 +3571,17 @@
               },
               "slot": {
                 "expr": "@slot"
-              }
-            }
-          }
-        ]
-      },
-      "spell_buff_held": {
-        "label": "Заклинание: усиление с концентрацией",
-        "group": "Заклинания",
-        "description": "Тратит ячейку и вешает на цели эффект, пока держишь концентрацию. Целей может быть несколько — ячейка одна.",
-        "params": [
-          {
-            "key": "действующий",
-            "label": "Кто действует",
-            "kind": "sheet"
-          },
-          {
-            "key": "spell_level",
-            "label": "Круг заклинания",
-            "kind": "number"
-          },
-          {
-            "key": "slot",
-            "label": "Каким кругом",
-            "kind": "number",
-            "ask": {
-              "by": "actor",
-              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
-            },
-            "min": 1,
-            "max": 9
-          },
-          {
-            "key": "цели",
-            "label": "Цели",
-            "kind": "sheet",
-            "many": true,
-            "item": {
-              "key": "цель",
-              "label": "Цель"
-            }
-          },
-          {
-            "key": "status",
-            "label": "Состояние",
-            "kind": "effect",
-            "optional": true
-          }
-        ],
-        "steps": [
-          {
-            "type": "each",
-            "of": "цели"
-          },
-          {
-            "type": "status",
-            "effect": {
-              "expr": "@status"
-            },
-            "to": {
-              "expr": "@цель"
-            },
-            "args": {
-              "наложил": {
-                "expr": "@действующий"
               }
             }
           }
         ],
         "bond": {
           "effect": "concentration",
-          "by": "действующий"
-        },
-        "cost": [
-          {
-            "type": "emit",
-            "effect": "cost_spell",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              },
-              "spell_level": {
-                "expr": "@spell_level"
-              },
-              "slot": {
-                "expr": "@slot"
-              }
-            }
+          "by": "действующий",
+          "if": {
+            "expr": "@holds"
           }
-        ]
+        }
       },
       "spell_heal": {
         "label": "Заклинание: лечение",
@@ -10020,6 +9290,253 @@
             }
           }
         ]
+      },
+      "spell_save": {
+        "label": "Заклинание со спасброском",
+        "group": "Заклинания",
+        "description": "Каждая цель спасается; провал — урон и/или состояние, успех — половина урона, если отмечено «половина при успехе». Держится концентрацией — если отмечено.",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "spell_level",
+            "label": "Круг заклинания",
+            "kind": "number"
+          },
+          {
+            "key": "slot",
+            "label": "Каким кругом",
+            "kind": "number",
+            "ask": {
+              "by": "actor",
+              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
+            },
+            "min": 1,
+            "max": 9
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
+          },
+          {
+            "key": "save_by",
+            "label": "Чем спасаются",
+            "kind": "choice",
+            "from": "abilities"
+          },
+          {
+            "key": "damage_die",
+            "label": "Кость урона",
+            "kind": "dice",
+            "optional": true
+          },
+          {
+            "key": "dice_count",
+            "label": "Сколько костей",
+            "kind": "number",
+            "default": 1
+          },
+          {
+            "key": "dice_up",
+            "label": "Костей за каждый круг выше",
+            "kind": "number",
+            "default": 0
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types",
+            "optional": true
+          },
+          {
+            "key": "status",
+            "label": "Состояние",
+            "kind": "effect",
+            "optional": true
+          },
+          {
+            "key": "half",
+            "label": "Половина при успехе",
+            "kind": "boolean",
+            "default": false
+          },
+          {
+            "key": "holds",
+            "label": "Держится концентрацией",
+            "kind": "boolean",
+            "default": false
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "effect": "cost_spell",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              }
+            }
+          }
+        ],
+        "bond": {
+          "effect": "concentration",
+          "by": "действующий",
+          "if": {
+            "expr": "@holds"
+          }
+        },
+        "steps": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "не(пусто(@damage_die))"
+            }
+          },
+          {
+            "id": "dmg_всего",
+            "type": "roll",
+            "fixed": {
+              "expr": "кинуть(@damage_die, @dice_count + (@slot - @spell_level) * @dice_up)"
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "each",
+            "of": "цели"
+          },
+          {
+            "id": "save",
+            "type": "emit",
+            "effect": "saving_throw",
+            "args": {
+              "кто": {
+                "expr": "@цель"
+              },
+              "характеристика": {
+                "expr": "@save_by"
+              },
+              "сложность": {
+                "expr": "@действующий.spell_dc"
+              },
+              "против": {
+                "expr": "@действующий"
+              }
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "не(@save.прошёл)"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "не(пусто(@damage_die))"
+            }
+          },
+          {
+            "type": "emit",
+            "effect": "damage",
+            "args": {
+              "amount": {
+                "expr": "@dmg_всего"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
+              },
+              "damage_source": {
+                "expr": "\"магический\""
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "не(пусто(@status))"
+            }
+          },
+          {
+            "type": "status",
+            "effect": {
+              "expr": "@status"
+            },
+            "to": {
+              "expr": "@цель"
+            },
+            "args": {
+              "запомнено": {
+                "expr": "@действующий.spell_dc"
+              },
+              "наложил": {
+                "expr": "@действующий"
+              }
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "orElse",
+            "if": {
+              "expr": "все(@half, не(пусто(@damage_die)))"
+            }
+          },
+          {
+            "type": "emit",
+            "effect": "damage",
+            "args": {
+              "amount": {
+                "expr": "округлить вниз(@dmg_всего * 0.5)"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
+              },
+              "damage_source": {
+                "expr": "\"магический\""
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
+          },
+          {
+            "type": "end"
+          }
+        ]
       }
     },
     "grants": [
@@ -11658,10 +11175,11 @@
         "id": "guidance_cantrip",
         "label": "Указание",
         "description": "Заговор. Цель прибавляет 1к4 к одной проверке характеристики.",
-        "table": "spell_buff_free",
+        "table": "spell_buff",
         "cells": {
           "spell_level": 0,
-          "status": "guided"
+          "status": "guided",
+          "holds": false
         }
       },
       {
@@ -11682,28 +11200,32 @@
         "id": "burning_hands",
         "label": "Огненные ладони",
         "description": "Конус огня: спасбросок Ловкости, 3к6, при успехе половина. Круг выше — ещё 1к6.",
-        "table": "spell_save_half",
+        "table": "spell_save",
         "cells": {
           "spell_level": 1,
           "save_by": "ловкость",
           "damage_die": "1d6",
           "dice_count": 3,
           "dice_up": 1,
-          "damage_type": "огонь"
+          "damage_type": "огонь",
+          "half": true,
+          "holds": false
         }
       },
       {
         "id": "thunderwave",
         "label": "Волна грома",
         "description": "Волна вокруг себя: спасбросок Телосложения, 2к8 громом, при успехе половина.",
-        "table": "spell_save_half",
+        "table": "spell_save",
         "cells": {
           "spell_level": 1,
           "save_by": "телосложение",
           "damage_die": "1d8",
           "dice_count": 2,
           "dice_up": 1,
-          "damage_type": "гром"
+          "damage_type": "гром",
+          "half": true,
+          "holds": false
         }
       },
       {
@@ -11763,116 +11285,129 @@
         "id": "fireball",
         "label": "Огненный шар",
         "description": "Шар в 20 футов: спасбросок Ловкости, 8к6 огнём, при успехе половина. Круг выше — ещё 1к6.",
-        "table": "spell_save_half",
+        "table": "spell_save",
         "cells": {
           "spell_level": 3,
           "save_by": "ловкость",
           "damage_die": "1d6",
           "dice_count": 8,
           "dice_up": 1,
-          "damage_type": "огонь"
+          "damage_type": "огонь",
+          "half": true,
+          "holds": false
         }
       },
       {
         "id": "lightning_bolt",
         "label": "Молния",
         "description": "Линия в 100 футов: спасбросок Ловкости, 8к6 молнией, при успехе половина.",
-        "table": "spell_save_half",
+        "table": "spell_save",
         "cells": {
           "spell_level": 3,
           "save_by": "ловкость",
           "damage_die": "1d6",
           "dice_count": 8,
           "dice_up": 1,
-          "damage_type": "молния"
+          "damage_type": "молния",
+          "half": true,
+          "holds": false
         }
       },
       {
         "id": "cone_cold",
         "label": "Конус холода",
         "description": "Конус в 60 футов: спасбросок Телосложения, 8к8 холодом, при успехе половина.",
-        "table": "spell_save_half",
+        "table": "spell_save",
         "cells": {
           "spell_level": 5,
           "save_by": "телосложение",
           "damage_die": "1d8",
           "dice_count": 8,
           "dice_up": 1,
-          "damage_type": "холод"
+          "damage_type": "холод",
+          "half": true,
+          "holds": false
         }
       },
       {
         "id": "disintegrate",
         "label": "Распад",
         "description": "Спасбросок Ловкости: провал — 10к6+40 силовым уроном, успех — ничего.",
-        "table": "spell_save_none",
+        "table": "spell_save",
         "cells": {
           "spell_level": 6,
           "save_by": "ловкость",
           "damage_die": "1d6",
           "dice_count": 10,
           "dice_up": 3,
-          "damage_type": "силовой"
+          "damage_type": "силовой",
+          "holds": false,
+          "half": false
         }
       },
       {
         "id": "hold_person",
         "label": "Удержание личности",
         "description": "Спасбросок Мудрости: провал — паралич. В конце своего хода цель пробует снова.",
-        "table": "spell_condition",
+        "table": "spell_save",
         "cells": {
           "spell_level": 2,
           "save_by": "мудрость",
           "status": "paralyzed",
-          "holds": "да"
+          "holds": true,
+          "half": false
         }
       },
       {
         "id": "fear_spell",
         "label": "Страх",
         "description": "Спасбросок Мудрости: провал — испуг и бегство. В конце хода цель пробует снова.",
-        "table": "spell_condition",
+        "table": "spell_save",
         "cells": {
           "spell_level": 3,
           "save_by": "мудрость",
           "status": "frightened",
-          "holds": "да"
+          "holds": true,
+          "half": false
         }
       },
       {
         "id": "slow_spell",
         "label": "Замедление",
         "description": "Спасбросок Мудрости: провал — замедление. В конце хода цель пробует снова.",
-        "table": "spell_condition",
+        "table": "spell_save",
         "cells": {
           "spell_level": 3,
           "save_by": "мудрость",
           "status": "slowed",
-          "holds": "да"
+          "holds": true,
+          "half": false
         }
       },
       {
         "id": "blindness",
         "label": "Слепота",
         "description": "Спасбросок Телосложения: провал — слепота на минуту.",
-        "table": "spell_condition",
+        "table": "spell_save",
         "cells": {
           "spell_level": 2,
           "save_by": "телосложение",
           "status": "blinded",
-          "holds": "нет"
+          "holds": false,
+          "half": false
         }
       },
       {
         "id": "entangle",
         "label": "Опутывание",
         "description": "Спасбросок Силы: провал — цель опутана.",
-        "table": "spell_condition",
+        "table": "spell_save",
         "cells": {
           "spell_level": 1,
           "save_by": "сила",
           "status": "restrained",
-          "holds": "да"
+          "holds": true,
+          "half": false
         }
       },
       {
@@ -11883,7 +11418,7 @@
         "cells": {
           "spell_level": 1,
           "status": "blessed",
-          "holds": "да"
+          "holds": true
         }
       },
       {
@@ -11894,7 +11429,7 @@
         "cells": {
           "spell_level": 1,
           "status": "baned",
-          "holds": "да"
+          "holds": true
         }
       },
       {
@@ -11905,7 +11440,7 @@
         "cells": {
           "spell_level": 3,
           "status": "hasted",
-          "holds": "да"
+          "holds": true
         }
       },
       {
@@ -11916,7 +11451,7 @@
         "cells": {
           "spell_level": 2,
           "status": "blurred",
-          "holds": "да"
+          "holds": true
         }
       },
       {
@@ -11927,47 +11462,51 @@
         "cells": {
           "spell_level": 4,
           "status": "stoneskin",
-          "holds": "да"
+          "holds": true
         }
       },
       {
         "id": "protection_poison",
         "label": "Защита от яда",
         "description": "Сопротивление урону ядом на час. Концентрация не нужна.",
-        "table": "spell_buff_free",
+        "table": "spell_buff",
         "cells": {
           "spell_level": 2,
-          "status": "poison_resistance"
+          "status": "poison_resistance",
+          "holds": false
         }
       },
       {
         "id": "mage_armor",
         "label": "Доспех мага",
         "description": "База класса брони 13, пока не носишь доспехов. Восемь часов.",
-        "table": "spell_buff_free",
+        "table": "spell_buff",
         "cells": {
           "spell_level": 1,
-          "status": "mage_armored"
+          "status": "mage_armored",
+          "holds": false
         }
       },
       {
         "id": "aid",
         "label": "Подмога",
         "description": "Максимум хитов трёх целей выше на 5 на восемь часов.",
-        "table": "spell_buff_free",
+        "table": "spell_buff",
         "cells": {
           "spell_level": 2,
-          "status": "aided"
+          "status": "aided",
+          "holds": false
         }
       },
       {
         "id": "resistance_spell",
         "label": "Сопротивление",
         "description": "Цель прибавляет 1к4 к одному спасброску.",
-        "table": "spell_buff_free",
+        "table": "spell_buff",
         "cells": {
           "spell_level": 0,
-          "status": "resisted"
+          "status": "resisted",
+          "holds": false
         }
       },
       {

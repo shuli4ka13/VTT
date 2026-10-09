@@ -56,7 +56,7 @@ describe('стоимость эффекта — одним выбором', () =
     expect(screen.queryByDisplayValue('+ стоимость')).toBeNull();
   });
 
-  it('«+ стоимость» стоит рядом с остальными шагами и ставит плату первым шагом с меткой «цена»', () => {
+  it('«+ стоимость» стоит рядом с остальными шагами и ставит плату первым шагом над чертой', () => {
     const view = () => {
       const system = useWorld.getState().system;
       return <EffectEditor id="удар" effect={system.effects.удар!} system={system} />;
@@ -66,7 +66,7 @@ describe('стоимость эффекта — одним выбором', () =
     expect(useWorld.getState().system.effects.удар!.cost).toEqual([{ type: 'emit', effect: 'cost_action' }]);
     rerender(view());
     expect(screen.getByText(/1 · Стоимость/)).toBeTruthy();
-    expect(document.querySelector('.chip--on')?.textContent).toBe('цена');
+    expect(document.querySelector('.pay-divider')?.textContent).toContain('Плата');
   });
 
   it('шаг, зовущий эффект из блока «Стоимость», так и подписан', () => {

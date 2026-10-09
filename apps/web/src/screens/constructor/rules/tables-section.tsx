@@ -9,6 +9,7 @@ import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Ve
 import { LiveValue } from '../live-value.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { ColumnCard } from './column-card.tsx';
+import { UsageRow } from '../effects/call-map.tsx';
 import type { ColumnPatch } from './column-card.tsx';
 import { SheetGrid } from '../../../ui/sheet-grid.tsx';
 import { FieldRow } from '../../../ui/field-row.tsx';
@@ -216,6 +217,8 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
           </DangerButton>
         )}
       />
+
+      <UsageRow title="Где используется:" items={users.map(text => ({ key: text, text }))} />
 
       {rekey ? (
         <Verdict tone="warn" action={(

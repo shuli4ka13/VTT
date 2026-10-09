@@ -2,7 +2,7 @@ import type { SheetNames } from '../../../../ui/formula-chips.tsx';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import type { System, Effect, Step, ValueKind } from '@vtt/schema';
-import { Card, CardHead, Verdict, Button, Chip, DangerButton, Select } from '../../../../ui/primitives.tsx';
+import { Card, CardHead, Verdict, Button, DangerButton, Select } from '../../../../ui/primitives.tsx';
 import { KeyField } from '../../../../ui/key-field.tsx';
 import { referenced } from '../../keys.ts';
 import { useWorld } from '../../../../store/world.ts';
@@ -42,7 +42,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, onMoveLane, folded = false, onFold, sheets, onUnpair, onWrap, asIf = false,
+  edit, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, onUnpair, onWrap, asIf = false,
 }: {
   group: CardGroup;
   position: number;
@@ -63,7 +63,8 @@ export function GroupCard({
   onAddParam?: (label: string, kind: ValueKind, want?: string) => string;
   onOpenEffect?: (id: string) => void;
   lane?: 'steps' | 'cost';
-  onMoveLane?: (to: 'steps' | 'cost') => void;
+  upTitle?: string;
+  downTitle?: string;
   folded?: boolean;
   onFold?: () => void;
   sheets?: SheetNames;
@@ -76,18 +77,9 @@ export function GroupCard({
 
   const actions = (
     <>
-      {onMoveLane && (lane === 'cost' || !folded) ? (
-        <Chip
-          active={lane === 'cost'}
-          title={lane === 'cost'
-            ? 'Шаг цены: идёт раньше всех шагов, один раз за действие; не хватило — действие не состоялось. Нажмите — вернуть в шаги.'
-            : 'Обычный шаг. Нажмите — сделать шагом цены: ячейка, заряд, удача.'}
-          onClick={() => onMoveLane(lane === 'cost' ? 'steps' : 'cost')}
-        >цена</Chip>
-      ) : null}
       {onWrap && !folded ? <Button size="sm" variant="ghost" title="Поставить этот шаг внутрь «Если»: выполняется только при условии" onClick={onWrap}>в «Если»</Button> : null}
-      <Button size="sm" variant="ghost" title="выше" disabled={!onMoveUp} onClick={onMoveUp}>↑</Button>
-      <Button size="sm" variant="ghost" title="ниже" disabled={!onMoveDown} onClick={onMoveDown}>↓</Button>
+      <Button size="sm" variant="ghost" title={upTitle ?? 'выше'} disabled={!onMoveUp} onClick={onMoveUp}>↑</Button>
+      <Button size="sm" variant="ghost" title={downTitle ?? 'ниже'} disabled={!onMoveDown} onClick={onMoveDown}>↓</Button>
       <DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>
     </>
   );

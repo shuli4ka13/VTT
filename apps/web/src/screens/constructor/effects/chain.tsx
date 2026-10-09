@@ -7,7 +7,7 @@ import { titleOf } from './words.ts';
 import { Button, Select, Verdict } from '../../../ui/primitives.tsx';
 import { problemOf } from '../step-card.tsx';
 import { groupSteps, moveGroup, moveSpan, blockSpan, removeSteps, armEnd, wrapInBranch, addArm, unwrapBlock, BRICKS, SEEN_BRICKS } from '../cards.ts';
-import { armsOf, sees, endOf, inBlock } from '@vtt/engine/model/flow';
+import { armsOf, sees, endOf } from '@vtt/engine/model/flow';
 import { FlowHead, FlowActions } from './cards/flow-parts.tsx';
 import { outcomeWords } from '@vtt/engine/engine/roll-tags';
 import { costsOf, newCost } from '../factory.ts';
@@ -20,7 +20,7 @@ import type { System, Effect, Step, ValueKind } from '@vtt/schema';
 
 export type Lane = 'steps' | 'cost';
 
-export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', empty = 'шагов ещё нет — эффект ничего не делает', lane = 'steps', onMoveLane, bare = false, startAt = 0, lead, onAddCost, onRoll = false }: {
+export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', empty = 'шагов ещё нет — эффект ничего не делает', lane = 'steps', onEdgeUp, onEdgeDown, bare = false, startAt = 0, lead, onAddCost, onRoll = false }: {
   id: string;
   placeAt: (index: number) => Place;
   effect: Effect;
@@ -29,7 +29,8 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
   title?: string;
   empty?: string;
   lane?: Lane;
-  onMoveLane?: (indices: number[], to: Lane) => void;
+  onEdgeUp?: (indices: number[]) => void;
+  onEdgeDown?: (indices: number[]) => void;
   bare?: boolean;
   startAt?: number;
   lead?: ReactNode;
@@ -120,7 +121,6 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         lane={lane}
         folded={!opened[foldKey(group)]}
         onFold={() => toggleFold(foldKey(group))}
-        onMoveLane={onMoveLane && !whole && !inBlock(arms, group.indices[0]!) ? to => onMoveLane(group.indices, to) : undefined}
         {...(group.kind === 'check' && group.amount ? { onUnpair: () => edit(draft => { draft.steps = (draft.steps ?? []).filter((_, i) => i !== group.indices[0]); }) } : {})}
         problemAction={donorFix ? (
           <Button size="sm" onClick={() => copyDonorBlock(donorFix.donor, donorFix.group)}>
@@ -166,12 +166,18 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
             ].filter(Boolean).join('; '),
           });
         }}
-        onMoveUp={g === 0 ? undefined : () => edit(draft => {
-          draft.steps = whole ? moveSpan(draft.steps ?? [], whole, -1, true) : moveGroup(draft.steps ?? [], g, -1);
-        })}
-        onMoveDown={g === cards.length - 1 ? undefined : () => edit(draft => {
-          draft.steps = whole ? moveSpan(draft.steps ?? [], whole, 1, true) : moveGroup(draft.steps ?? [], g, 1);
-        })}
+        onMoveUp={g === 0
+          ? (onEdgeUp && group.kind !== 'split' ? () => onEdgeUp(range) : undefined)
+          : () => edit(draft => {
+            draft.steps = whole ? moveSpan(draft.steps ?? [], whole, -1, true) : moveGroup(draft.steps ?? [], g, -1);
+          })}
+        onMoveDown={(whole ? whole[1] : group.indices[group.indices.length - 1]!) === steps.length - 1
+          ? (onEdgeDown ? () => onEdgeDown(range) : undefined)
+          : () => edit(draft => {
+            draft.steps = whole ? moveSpan(draft.steps ?? [], whole, 1, true) : moveGroup(draft.steps ?? [], g, 1);
+          })}
+        upTitle={g === 0 && onEdgeUp ? 'над чертой «Плата»: выполняется сначала и один раз' : undefined}
+        downTitle={onEdgeDown && (whole ? whole[1] : group.indices[group.indices.length - 1]!) === steps.length - 1 ? 'под черту «Плата»: в шаги' : undefined}
         {...(group.kind !== 'split' && group.kind !== 'stop' && !asIf ? { onWrap: () => edit(draft => {
           draft.steps = wrapInBranch(draft.steps ?? [], range[0]!, range[range.length - 1]!);
         }) } : {})}
@@ -256,8 +262,12 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
                 edit={change => edit(draft => { change(draft.steps![head]!); })}
                 actions={k === 0 ? (
                   <FlowActions
-                    onUp={() => edit(draft => { draft.steps = moveSpan(draft.steps ?? [], blockSpan(draft.steps ?? [], open), -1, true); })}
-                    onDown={() => edit(draft => { draft.steps = moveSpan(draft.steps ?? [], blockSpan(draft.steps ?? [], open), 1, true); })}
+                    onUp={open === 0
+                      ? (onEdgeUp ? () => onEdgeUp(span(open, end)) : undefined)
+                      : () => edit(draft => { draft.steps = moveSpan(draft.steps ?? [], blockSpan(draft.steps ?? [], open), -1, true); })}
+                    onDown={end === steps.length - 1
+                      ? (onEdgeDown ? () => onEdgeDown(span(open, end)) : undefined)
+                      : () => edit(draft => { draft.steps = moveSpan(draft.steps ?? [], blockSpan(draft.steps ?? [], open), 1, true); })}
                     extra={heads.length === 1 ? (
                       <Button size="sm" variant="ghost" title="Убрать «Если», шаги остаются" onClick={() => edit(draft => { draft.steps = unwrapBlock(draft.steps ?? [], open); })}>снять «Если»</Button>
                     ) : null}
@@ -364,6 +374,16 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         {onAddCost ? <CostPick system={system} except={id} onPick={onAddCost} /> : null}
       </div>}
     </>
+  );
+}
+
+export function PayDivider({ system, except, onAdd }: { system: System; except?: string; onAdd?: (id: string) => void }) {
+  return (
+    <div className="pay-divider" title="Плата: шаги выше выполняются сначала, один раз за действие, даже если целей несколько. Не хватило — действие не состоялось, ничего не изменилось.">
+      <span className="pay-divider__word">Плата</span>
+      <span className="pay-divider__hint">выше — сначала и один раз</span>
+      {onAdd ? <CostPick system={system} except={except} onPick={onAdd} /> : null}
+    </div>
   );
 }
 

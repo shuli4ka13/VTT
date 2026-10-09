@@ -1,0 +1,49 @@
+import { chainsOfEffect } from '@vtt/engine/engine/effects';
+import { emittedChoices } from '@vtt/engine/model/payments';
+import { listenerOf } from '@vtt/engine/model/references';
+import type { System, Effect } from '@vtt/schema';
+
+export interface CallMap {
+  calls: string[];
+  usedBy: { id: string; book: boolean }[];
+  heardBy: string[];
+}
+
+export function callsOf(system: System, id: string): string[] {
+  const effect = system.effects?.[id];
+  if (!effect) return [];
+  const out = new Set<string>();
+  for (const step of chainsOfEffect(effect).flat() as Record<string, unknown>[]) {
+    if (step.type !== 'emit' || !step.effect) continue;
+    for (const called of emittedChoices(system, id, step.effect)) {
+      if (called !== id && system.effects?.[called]) out.add(called);
+    }
+  }
+  return [...out];
+}
+
+const listens = (effect: Effect, keys: string[]): boolean =>
+  (effect.on ?? []).some(handler => {
+    const heard = listenerOf(handler);
+    return heard.kind === 'call' && keys.includes(heard.key);
+  });
+
+export function callMap(system: System, id: string): CallMap {
+  const usedBy: CallMap['usedBy'] = [];
+  const heardBy: string[] = [];
+  const keys = [id, ...(system.effects?.[id]?.tags ?? [])];
+  for (const [other, effect] of Object.entries(system.effects ?? {})) {
+    if (other === id) continue;
+    if (callsOf(system, other).includes(id)) usedBy.push({ id: other, book: false });
+    if (listens(effect, keys)) heardBy.push(other);
+  }
+  return { calls: callsOf(system, id), usedBy, heardBy };
+}
+
+export function bookEntriesOf(system: System, id: string): string[] {
+  const out: string[] = [];
+  for (const [key, table] of Object.entries(system.tables ?? {})) {
+    if ((table.bindings ?? []).some(binding => binding.effect === id)) out.push(table.label || key);
+  }
+  return out;
+}

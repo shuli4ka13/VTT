@@ -28,7 +28,7 @@ describe('namesAt: что видно в каждом месте эффекта',
   });
 
   it('заклинание видит свои входы круга и ячейки', () => {
-    const list = names(namesAt(dnd, 'spell_buff_held', { part: 'steps', index: 0 }));
+    const list = names(namesAt(dnd, 'spell_buff', { part: 'steps', index: 0 }));
     expect(list).toContain('slot');
   });
 

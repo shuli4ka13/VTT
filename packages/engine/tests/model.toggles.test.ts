@@ -42,7 +42,7 @@ group('тогл крита пишет данные, а не код', () => {
       return String((step.fixed as { expr?: unknown } | undefined)?.expr ?? '');
     };
     eq(lineOf('strike'), 'кинуть(@damage_dice, @dice * если(@hit.крит, 2, 1)) + @damage_with');
-    ok(!lineOf('spell_save_half').includes('atMax'),
+    ok(!lineOf('spell_save').includes('atMax'),
       'урон Огненного шара бросается до спасбросков — удвоения нет, это не атака');
     eq(errorsOf(lintSystem(system)).length, 0);
   });

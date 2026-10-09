@@ -170,7 +170,7 @@ describe('эффекты пресетов собираются в констру
     for (const name of within(card).args()) {
       within(card).formula(within(card).arg(name), name === 'Лист' || name === 'Источник' ? '@носитель' : '1');
     }
-    within(card).click('цена');
+    within(card).click('↑');
 
     savingThrow(3, [['Кто спасается', '@источник'], ['Чем спасается', '"ловкость"'], ['Сложность', '@носитель.spell_dc'], ['Против кого', '@носитель']]);
 
@@ -237,7 +237,8 @@ describe('эффекты пресетов собираются в констру
     card = stepCard(/^3 · /);
     within(card).select('Какое поле', 'luck_left');
     within(card).formula('Сколько', '@spend_luck');
-    within(card).click('цена');
+    within(card).click('↑');
+    within(stepCard(/^2 · /)).click('↑');
 
     const number = (at: number, formula: string, name: string) => {
       ui.click('+ число');
@@ -327,18 +328,18 @@ describe('эффекты пресетов собираются в констру
     expect(built('concentration')).toEqual(goal);
   });
 
-  it('D&D «Заклинание: усиление с концентрацией» (spell_buff_held): цена-вызов cost_spell, держание, состояние из входа', { timeout: 90000 }, () => {
-    const [goal] = start('dnd5e', ['spell_buff_held']);
+  it('D&D «Заклинание: усиление» (spell_buff): цена-вызов cost_spell, условное держание, состояние из входа', { timeout: 90000 }, () => {
+    const [goal] = start('dnd5e', ['spell_buff']);
     const ui = within();
     ui.click('+ кнопкой');
     ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, goal!.label!);
     ui.click('имя в формулах…');
-    ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'spell_buff_held');
+    ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'spell_buff');
     ui.select('Блок', 'Заклинания');
     ui.type('Описание', goal!.description!);
 
     const param = (row: number, label: string, kind: string, key: string, more: { ask?: string; hint?: string; min?: string; max?: string } = {}) => {
-      if (row >= (built('spell_buff_held')!.params ?? []).length) ui.click('+ ещё одно');
+      if (row >= (built('spell_buff')!.params ?? []).length) ui.click('+ ещё одно');
       ui.type(ui.cell('Название', row), label);
       ui.select(ui.cell('Вид', row), kind);
       if (more.ask) ui.select(ui.cell('Если не передали', row), more.ask);
@@ -354,6 +355,8 @@ describe('эффекты пресетов собираются в констру
     param(4, 'Состояние', 'effect', 'status');
     dragParamBefore('Цели', 'Состояние');
     ui.select(ui.cell('Если не передали', 4), 'empty');
+    param(5, 'Держится концентрацией', 'boolean', 'holds');
+    ui.select(ui.cell('Если не передали', 5), 'value');
 
     ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_spell');
     let card = stepCard(/^1 · /);
@@ -363,6 +366,8 @@ describe('эффекты пресетов собираются в констру
     ui.click('+ держание');
     ui.select('Держит', 'concentration');
     ui.select('У кого', 'действующий');
+    ui.click('+ условие');
+    ui.select(document.querySelector<HTMLElement>('.cond__fact')!, 'holds');
 
     ui.click('+ изменение');
     let held = stepCard(/^3 · /);
@@ -372,8 +377,8 @@ describe('эффекты пресетов собираются в констру
     within(held).formula('На кого', '@цель');
     held = stepCard(/^3 · /);
     within(held).formula('Запомнит: Кто наложил', '@действующий');
-    dump({ got: built('spell_buff_held'), goal });
-    expect(built('spell_buff_held')).toEqual(goal);
+    dump({ got: built('spell_buff'), goal });
+    expect(built('spell_buff')).toEqual(goal);
   });
 
   it('Daggerheart «Двойственность» (duality): подписки «завершено», поле стола, условие на шаге', { timeout: 90000 }, () => {

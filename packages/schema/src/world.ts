@@ -212,7 +212,7 @@ export const tagContract = z.object({
 export const effect = z.object({
   group: z.string().optional(),
   tags: z.array(z.string().min(1)).optional(),
-  bond: z.object({ effect: z.string().min(1), by: z.string().min(1) }).strict().optional(),
+  bond: z.object({ effect: z.string().min(1), by: z.string().min(1), if: formula.optional() }).strict().optional(),
   label: z.string().optional(),
   icon: z.string().optional(),
   description: z.string().optional(),

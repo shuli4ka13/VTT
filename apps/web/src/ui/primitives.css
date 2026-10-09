@@ -787,3 +787,11 @@
 .call-row__toggle { align-self: flex-start; background: none; border: 0; padding: 0; color: var(--text-muted); cursor: pointer; font: inherit; }
 .effect-head__sentence .spacer { flex: 1 1 0; }
 .effect-head__sentence .select { width: auto; max-width: 240px; }
+.pay-divider { display: flex; align-items: center; gap: var(--s-3); color: var(--text-muted); font-size: var(--fs-2, 0.85em); }
+.pay-divider::before, .pay-divider::after { content: ''; flex: 1 1 0; border-top: 1px solid var(--border-strong); }
+.pay-divider::before { flex: 0 0 var(--s-5); }
+.pay-divider__word { font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.pay-divider__hint { white-space: nowrap; }
+.pay-divider .add-cost { order: 1; }
+.pay-divider .add-cost { flex: 0 0 auto; }
+.pay-divider .add-cost .select, .pay-divider .add-cost select { width: auto; max-width: 220px; }

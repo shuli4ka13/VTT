@@ -84,3 +84,25 @@ group('эффект, который держится другим эффекто
     eq(worn.bond, undefined);
   });
 });
+
+group('держание с условием: концентрация — галочкой заклинания', () => {
+  const held = (holds: string): System => {
+    const copy = JSON.parse(JSON.stringify(system)) as System & { effects: Record<string, any>; tables: Record<string, any> };
+    copy.effects.благословение.bond = { effect: 'благословение', by: 'действующий', if: { expr: '@держит' } };
+    copy.effects.благословение.params.push({ key: 'держит', kind: 'boolean', default: false });
+    copy.tables.молитва.bindings = [{ label: 'Благословение', effect: 'благословение', args: { держит: { expr: holds } } }];
+    return copy;
+  };
+  const cast = (s: System) => exchange({ system: s, compendium, die: () => 1, sheets: [sheet('жрец'), sheet('воин')], actionId: 'молитва:0', fromId: 'жрец', toId: 'воин' });
+
+  test('держится — наложенное связано с заклинателем', () => {
+    const out = cast(held('да'));
+    deepEq(out.sheets.find(s => s.id === 'воин')!.effects![0]!.bond, { sheet: 'жрец', effect: 'благословение' });
+  });
+
+  test('не держится — наложено без связи, заклинателю пометки нет', () => {
+    const out = cast(held('нет'));
+    eq(out.sheets.find(s => s.id === 'воин')!.effects![0]!.bond, undefined);
+    eq((out.sheets.find(s => s.id === 'жрец')!.effects ?? []).length, 0);
+  });
+});

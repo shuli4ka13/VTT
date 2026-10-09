@@ -392,42 +392,31 @@
             "of": "цели"
           },
           {
-            "id": "hit_бросок",
-            "type": "roll",
-            "die": "lead_die",
-            "bonus": {
-              "expr": "@attack_with + @действующий.level + @стол.escalation"
-            },
-            "tags": [
-              "атака"
-            ],
-            "by": {
-              "expr": "@действующий"
-            },
-            "against": {
-              "expr": "@цель"
-            }
-          },
-          {
             "id": "hit",
-            "type": "check",
-            "value": {
-              "expr": "@hit_бросок"
-            },
-            "versus": {
-              "expr": "@цель.ac"
+            "type": "emit",
+            "effect": "attack_roll",
+            "args": {
+              "кто": {
+                "expr": "@действующий"
+              },
+              "против": {
+                "expr": "@цель"
+              },
+              "бонус": {
+                "expr": "@attack_with + @действующий.level + @стол.escalation"
+              }
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "@hit.success"
+              "expr": "@hit.попал"
             }
           },
           {
             "type": "roll",
             "fixed": {
-              "expr": "(кинуть(@weapon_die, @действующий.level * если(@hit.natural >= 20, 2, 1)) + @damage_with)"
+              "expr": "(кинуть(@weapon_die, @действующий.level * если(@hit.крит, 2, 1)) + @damage_with)"
             },
             "id": "dmg"
           },
@@ -523,36 +512,25 @@
             "of": "цели"
           },
           {
-            "id": "hit_бросок",
-            "type": "roll",
-            "die": "lead_die",
-            "bonus": {
-              "expr": "@to_hit"
-            },
-            "tags": [
-              "атака"
-            ],
-            "by": {
-              "expr": "@действующий"
-            },
-            "against": {
-              "expr": "@цель"
-            }
-          },
-          {
             "id": "hit",
-            "type": "check",
-            "value": {
-              "expr": "@hit_бросок"
-            },
-            "versus": {
-              "expr": "@цель.ac"
+            "type": "emit",
+            "effect": "attack_roll",
+            "args": {
+              "кто": {
+                "expr": "@действующий"
+              },
+              "против": {
+                "expr": "@цель"
+              },
+              "бонус": {
+                "expr": "@to_hit"
+              }
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "@hit.success"
+              "expr": "@hit.попал"
             }
           },
           {
@@ -875,6 +853,85 @@
                 }
               }
             ]
+          }
+        ]
+      },
+      "attack_roll": {
+        "label": "Бросок атаки",
+        "group": "Вызываемые",
+        "description": "Бросок к20 + бонус против защиты (КД) цели; 20 на кости — крит.",
+        "params": [
+          {
+            "key": "кто",
+            "label": "Кто бросает",
+            "kind": "sheet"
+          },
+          {
+            "key": "против",
+            "label": "Против кого",
+            "kind": "sheet"
+          },
+          {
+            "key": "бонус",
+            "label": "Бонус атаки",
+            "kind": "number",
+            "default": 0
+          }
+        ],
+        "returns": [
+          {
+            "key": "попал",
+            "label": "попадание",
+            "kind": "boolean",
+            "no": "промах",
+            "expr": {
+              "expr": "@проверка.success"
+            }
+          },
+          {
+            "key": "крит",
+            "label": "крит",
+            "kind": "boolean",
+            "expr": {
+              "expr": "@бросок.natural >= 20"
+            }
+          },
+          {
+            "key": "на_костях",
+            "label": "на костях",
+            "kind": "number",
+            "expr": {
+              "expr": "@бросок.natural"
+            }
+          }
+        ],
+        "steps": [
+          {
+            "id": "бросок",
+            "type": "roll",
+            "die": "lead_die",
+            "bonus": {
+              "expr": "@бонус"
+            },
+            "tags": [
+              "атака"
+            ],
+            "by": {
+              "expr": "@кто"
+            },
+            "against": {
+              "expr": "@против"
+            }
+          },
+          {
+            "id": "проверка",
+            "type": "check",
+            "value": {
+              "expr": "@бросок"
+            },
+            "versus": {
+              "expr": "@против.ac"
+            }
           }
         ]
       }

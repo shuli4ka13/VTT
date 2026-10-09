@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { paramsOf } from '@vtt/engine/model/inherit';
 import { EffectPick } from '../effect-pick.tsx';
+import { ConditionField } from '../condition-field.tsx';
 import { TagsField } from '../tags-field.tsx';
 import { useWorld } from '../../../store/world.ts';
 import { newHandler, payStep } from '../factory.ts';
@@ -12,13 +13,14 @@ import { HandlerCard } from './handler-card.tsx';
 import type { Place } from '@vtt/engine/model/names-at';
 import { followKey, effectUsed } from '../keys.ts';
 import { KeyField } from '../../../ui/key-field.tsx';
-import { Chain, type Lane } from './chain.tsx';
+import { Chain, PayDivider, type Lane } from './chain.tsx';
 import { groupSteps } from '../cards.ts';
 import { BlockPick } from '../block-pick.tsx';
 import { GrantsEditor } from '../grants-editor.tsx';
 import { Extras } from './cards/extras.tsx';
 import { ParamsEditor } from './params-editor.tsx';
 import { ReturnsEditor } from './returns-editor.tsx';
+import { CallMapRow } from './call-map.tsx';
 import { launchOf, activationFor, DURATIONS, REAPPLY } from '@vtt/engine/model/effect-kinds';
 import type { System, Effect, Step } from '@vtt/schema';
 
@@ -185,6 +187,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
 
       <ParamsEditor id={id} effect={effect} system={system} onEdit={edit} />
       <ReturnsEditor id={id} effect={effect} system={system} onEdit={edit} />
+      <CallMapRow id={id} effect={effect} system={system} />
 
       {pipeline ? (
         <>
@@ -192,10 +195,10 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
             id={id} placeAt={index => ({ part: 'steps', index })}
             effect={effect} system={system} edit={edit}
             empty={idleWords(effect)}
-            onMoveLane={moveLane}
+            onEdgeUp={indices => moveLane(indices, 'cost')}
             startAt={groupSteps(effect.cost ?? []).filter(card => card.kind !== 'flow').length}
-            lead={<SelfTrack id={id} at={index => ({ part: 'cost', index })} effect={effect} system={system} edit={edit} onMoveLane={moveLane} />}
-            onAddCost={id => edit(draft => { (draft.cost ??= []).unshift(payStep(id)); })}
+            lead={<SelfTrack id={id} at={index => ({ part: 'cost', index })} effect={effect} system={system} edit={edit} onMoveLane={moveLane} onAddCost={cost => edit(draft => { (draft.cost ??= []).push(payStep(cost)); })} />}
+            {...(effect.cost?.length ? {} : { onAddCost: (cost: string) => edit(draft => { (draft.cost ??= []).push(payStep(cost)); }) })}
           />
         </>
       ) : (
@@ -316,11 +319,11 @@ function Handlers({ id, effect, system, edit }: {
               effect={carrier} system={system} edit={editCarrier}
               title={`Что делает — когда №${index + 1}`}
               empty="шагов нет — отзывается, но ничего не делает"
-              onMoveLane={moveLane}
+              onEdgeUp={indices => moveLane(indices, 'cost')}
               onRoll={handler.on === 'seen'}
               startAt={groupSteps(carrier.cost ?? []).filter(card => card.kind !== 'flow').length}
-              lead={<SelfTrack id={id} at={step => ({ part: 'handler-cost', handler: index, index: step })} effect={carrier} system={system} edit={editCarrier} onMoveLane={moveLane} />}
-              {...(handler.confirm ? { onAddCost: (cost: string) => editCarrier(draft => { (draft.cost ??= []).unshift(payStep(cost)); }) } : {})}
+              lead={<SelfTrack id={id} at={step => ({ part: 'handler-cost', handler: index, index: step })} effect={carrier} system={system} edit={editCarrier} onMoveLane={moveLane} {...(handler.confirm ? { onAddCost: (cost: string) => editCarrier(draft => { (draft.cost ??= []).push(payStep(cost)); }) } : {})} />}
+              {...(handler.confirm && !handler.cost?.length ? { onAddCost: (cost: string) => editCarrier(draft => { (draft.cost ??= []).push(payStep(cost)); }) } : {})}
             />
           </div>
         );
@@ -404,13 +407,14 @@ function Lifetime({ effect, system, edit }: {
   );
 }
 
-function SelfTrack({ id, at, effect, system, edit, onMoveLane }: {
+function SelfTrack({ id, at, effect, system, edit, onMoveLane, onAddCost }: {
   id: string;
   at: (index: number) => Place;
   effect: Effect;
   system: System;
   edit: (change: (draft: Effect) => void) => void;
   onMoveLane: (indices: number[], to: Lane) => void;
+  onAddCost?: (id: string) => void;
 }) {
   const track = effect.cost ?? [];
   if (!track.length) return null;
@@ -423,7 +427,12 @@ function SelfTrack({ id, at, effect, system, edit, onMoveLane }: {
     if (steps.length) draft.cost = steps; else delete draft.cost;
   });
 
-  return <Chain id={id} placeAt={at} effect={carrier} system={system} edit={editTrack} lane="cost" onMoveLane={onMoveLane} bare />;
+  return (
+    <>
+      <Chain id={id} placeAt={at} effect={carrier} system={system} edit={editTrack} lane="cost" onEdgeDown={indices => onMoveLane(indices, 'steps')} bare />
+      <PayDivider system={system} except={id} {...(onAddCost ? { onAdd: onAddCost } : {})} />
+    </>
+  );
 }
 
 function EffectName({ id, locked, taken, onChange }: { id: string; locked: boolean; taken: string[]; onChange: (next: string) => void }) {
@@ -462,6 +471,18 @@ function Bond({ effect, system, id, edit }: {
           onChange={next => edit(draft => { if (draft.bond && next) draft.bond.by = next; })}
         />
       </Field>
+      <ConditionField
+        value={(effect.bond as { if?: { expr?: string } } | undefined)?.if?.expr}
+        onChange={expr => edit(draft => {
+          const bond = draft.bond as ({ if?: { expr: string } } & NonNullable<Effect['bond']>) | undefined;
+          if (!bond) return;
+          if (expr) bond.if = { expr }; else delete bond.if;
+        })}
+        system={system}
+        quick={paramsOf(system, effect).filter(param => param.kind === 'boolean').map(param => ({ ref: param.key, label: param.label ?? param.key, kind: 'boolean' as const }))}
+        where="держание · только если"
+        placeholder="например: @holds"
+      />
     </div>
   );
 }

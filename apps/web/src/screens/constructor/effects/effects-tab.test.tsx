@@ -460,20 +460,21 @@ describe('шаг цены — один раз, до остальных', () => {
   });
   afterEach(() => { cleanup(); });
 
-  it('«цена» в шапке шага переносит его в начало цепочки и обратно', () => {
+  it('↑ у первого шага переносит его в плату, ↓ у последнего шага платы — обратно под черту', () => {
     renderOpen(<EffectsTab />);
     fireEvent.click(screen.getAllByText('+ изменение')[0]!);
     expect(useWorld.getState().system.effects.снаряд!.steps).toHaveLength(1);
 
-    fireEvent.click(screen.getByText('цена'));
+    fireEvent.click(screen.getByText('↑'));
     const moved = useWorld.getState().system.effects.снаряд!;
     expect(moved.cost).toHaveLength(1);
     expect(moved.steps ?? []).toHaveLength(0);
-    expect(document.querySelector('.chip--on')?.textContent).toBe('цена');
+    expect(document.querySelector('.pay-divider')?.textContent).toContain('Плата');
 
-    fireEvent.click(screen.getByText('цена'));
+    fireEvent.click(screen.getByText('↓'));
     const back = useWorld.getState().system.effects.снаряд!;
     expect(back.cost).toBeUndefined();
     expect(back.steps).toHaveLength(1);
+    expect(document.querySelector('.pay-divider')).toBeNull();
   });
 });

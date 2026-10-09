@@ -412,6 +412,8 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
     out.push(...chainRefs(effect[turn] ?? [], step => ({ tab: 'effects', effect: id, step, part: turn }), params, [...sheetKeys, HOLDER]));
   }
   const stepIds = [...(effect.steps ?? []), ...(effect.cost ?? [])].map(step => step.id).filter((one): one is string => Boolean(one));
+  const bondIf = (effect.bond as { if?: { expr?: unknown } } | undefined)?.if?.expr;
+  if (typeof bondIf === 'string') exprRefs(bondIf, { tab: 'effects', effect: id, part: 'bond' }, sheetScope(params, sheetKeys, []), out);
   for (const column of effect.returns ?? []) {
     const expr = (column.expr as { expr?: unknown } | undefined)?.expr;
     if (typeof expr === 'string') exprRefs(expr, { tab: 'effects', effect: id, part: 'returns', key: column.key }, sheetScope(params, sheetKeys, stepIds), out);

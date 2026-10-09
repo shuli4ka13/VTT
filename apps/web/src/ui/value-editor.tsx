@@ -38,7 +38,7 @@ export function ValueEditor({ type, value, system, compendium, onlyWorn, except,
         placeholder="число или формула"
         onCommit={text => {
           const clean = text.trim();
-          if (!clean) { onChange(0); return; }
+          if (!clean) { onChange(undefined); return; }
           onChange(/^-?\d+(\.\d+)?$/.test(clean) ? Number(clean) : { expr: clean });
         }}
       />

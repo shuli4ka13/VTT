@@ -105,12 +105,14 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
     bound[param.key] = table[param.key] === 'actor' ? actor : table[param.key] === 'targets' ? (param.many ? targets : targets[0] ?? null) : null;
   }
   const bondSheet = effect.bond ? bound[effect.bond.by] : null;
-  const bond = effect.bond && typeof bondSheet === 'string' ? { sheet: bondSheet, effect: effect.bond.effect } : undefined;
+  let bond = effect.bond && typeof bondSheet === 'string' ? { sheet: bondSheet, effect: effect.bond.effect } : undefined;
 
   const top = (path: Path, owner: string, extra: Partial<Frame> = {}): Frame => ({
     path, effectId: action.effect, label: action.label, owner, home: actor, bound,
     args, paramDefs, props, ...(inputs ? { inputs } : {}), claims, hop: 0, inSub: false, ...(bond ? { bond } : {}), ...extra,
   });
+
+  if (bond && effect.bond?.if && !run.holdsAt(top(root.phase('bond'), `держание «${action.label}»`), effect.bond.if)) bond = undefined;
 
   if (effect.cost?.length) {
     const sink = newSink();

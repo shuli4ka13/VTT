@@ -698,6 +698,10 @@ export class Run {
     return { call, results: ran.results, rolls: ran.rolls, emitted: sink.emitted, report, ...(returns ? { returns } : {}) };
   }
 
+  holdsAt(frame: Frame, guard: unknown): boolean {
+    return this.ctx(frame, {}, {}, frame.path.phase('bond'), newSink(), new Set()).holds(guard);
+  }
+
   private returnsOf(callee: Effect, frame: Frame, ran: Ran): Record<string, unknown> | null {
     const columns = callee.returns ?? [];
     if (!columns.length) return null;

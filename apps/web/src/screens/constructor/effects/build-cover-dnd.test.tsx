@@ -6,7 +6,7 @@ import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import type { System, Effect } from '@vtt/schema';
 import { useWorld } from '../../../store/world.ts';
 import { openAll } from '../../../testing/render-open.tsx';
-import { within, stepCard, block, addToArm, callIf, outcomeIf, armWord, dragParamBefore } from '../../../testing/cards.ts';
+import { within, stepCard, block, blocks, headOf, addArm, addToArm, callIf, outcomeIf, armWord, dragParamBefore } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
 
 const worldOf = (id: string) => SAMPLE_WORLDS.find(w => w.system.id === id)!;
@@ -257,7 +257,7 @@ describe('эффекты D&D собираются в конструкторе р
       card = stepCard(/^1 · /, handlerAt(1));
       within(card).formula(within(card).arg(label[key]!), value.expr);
     }
-    within(stepCard(/^1 · /, handlerAt(1))).click('цена');
+    within(stepCard(/^1 · /, handlerAt(1))).click('↑');
 
     within(handlerAt(1)).click('+ докинуть');
     card = stepCard(/^2 · /, handlerAt(1));
@@ -287,7 +287,7 @@ describe('эффекты D&D собираются в конструкторе р
     for (const name of within(card).args()) {
       within(card).formula(within(card).arg(name), name === 'Лист' || name === 'Источник' ? '@носитель' : '1');
     }
-    within(stepCard(/^2 · /, handlerAt(1))).click('цена');
+    within(stepCard(/^2 · /, handlerAt(1))).click('↑');
 
     within(handlerAt(1)).click('+ изменение');
     card = stepCard(/^3 · /, handlerAt(1));
@@ -299,15 +299,17 @@ describe('эффекты D&D собираются в конструкторе р
     expect(built('shield')).toEqual(goal);
   });
 
-  it('D&D «Заклинание: спасбросок или состояние» (spell_condition): цена-вызов, выбор из таблицы как метка, «запомнит»', { timeout: 90000 }, () => {
-    const [goal] = start('dnd5e', ['spell_condition']);
-    const ui = fresh('+ кнопкой', goal!.label!, 'spell_condition', 'Заклинания', goal!.description!);
-    const param = (row: number, label: string, kind: string, key: string, more: { ask?: string; hint?: string; min?: string; max?: string; from?: string } = {}) => {
-      if (row >= (built('spell_condition')!.params ?? []).length) ui.click('+ ещё одно');
+  it('D&D «Заклинание со спасброском» (spell_save): урон до цикла, спасбросок, провал — урон и состояние, успех — половина, условное держание', { timeout: 120000 }, () => {
+    const [goal] = start('dnd5e', ['spell_save']);
+    const ui = fresh('+ кнопкой', goal!.label!, 'spell_save', 'Заклинания', goal!.description!);
+    const param = (row: number, label: string, kind: string, key: string, more: { ask?: string; hint?: string; min?: string; max?: string; from?: string; mode?: string; value?: string } = {}) => {
+      if (row >= (built('spell_save')!.params ?? []).length) ui.click('+ ещё одно');
       ui.type(ui.cell('Название', row), label);
       ui.select(ui.cell('Вид', row), kind);
       if (more.from) ui.select(ui.cell('Таблица', row), more.from);
       if (more.ask) ui.select(ui.cell('Если не передали', row), more.ask);
+      if (more.mode) ui.select(ui.cell('Если не передали', row), more.mode);
+      if (more.value !== undefined) ui.type(ui.cell('Если не передали', row), more.value);
       if (more.hint) ui.type(ui.cell('Подсказка за столом', row), more.hint);
       if (more.min !== undefined) ui.type(ui.cell('Границы', row).querySelector<HTMLInputElement>('input[placeholder="не ниже"]')!, more.min);
       if (more.max !== undefined) ui.type(ui.cell('Границы', row).querySelector<HTMLInputElement>('input[placeholder="не выше"]')!, more.max);
@@ -319,25 +321,62 @@ describe('эффекты D&D собираются в конструкторе р
     param(3, 'Каким кругом', 'number', 'slot', { ask: 'actor', hint: (goal!.params ?? [])[2]!.ask!.hint!, min: '1', max: '9' });
     param(4, 'Чем спасаются', 'choice', 'save_by', { from: 'abilities' });
     dragParamBefore('Цели', 'Чем спасаются');
-    param(5, 'Состояние', 'effect', 'status');
+    param(5, 'Кость урона', 'dice', 'damage_die', { mode: 'empty' });
+    param(6, 'Сколько костей', 'number', 'dice_count', { mode: 'value', value: '1' });
+    param(7, 'Костей за каждый круг выше', 'number', 'dice_up', { mode: 'value' });
+    param(8, 'Тип урона', 'choice', 'damage_type', { from: 'damage_types', mode: 'empty' });
+    param(9, 'Состояние', 'effect', 'status', { mode: 'empty' });
+    param(10, 'Половина при успехе', 'boolean', 'half', { mode: 'value' });
+    param(11, 'Держится концентрацией', 'boolean', 'holds', { mode: 'value' });
 
     ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_spell');
-    let cost = stepCard(/^1 · /);
+    const cost = stepCard(/^1 · /);
     for (const [name, text] of [['Лист', '@действующий'], ['Источник', '@действующий'], ['Круг заклинания', '@spell_level'], ['Каким кругом', '@slot']] as const) {
       within(cost).formula(within(cost).arg(name), text);
     }
-
+    ui.click('+ держание');
+    ui.select('Держит', 'concentration');
+    ui.select('У кого', 'действующий');
+    ui.click('+ условие');
+    ui.select(document.querySelector<HTMLElement>('.cond__fact')!, 'holds');
     const at = (n: number) => stepCard(new RegExp(`^${n} · `));
-    savingThrow(document.body, 3, [['Кто спасается', '@цель'], ['Чем спасается', '@save_by'], ['Сложность', '@действующий.spell_dc'], ['Против кого', '@действующий']]);
+    const hit = (n: number, amount: string) => {
+      within(at(n)).click('вызов');
+      within(at(n)).select('Какой эффект', 'damage');
+      for (const [name, text] of [['Сколько урона', amount], ['Тип урона', '@damage_type'], ['Источник урона', '"магический"'], ['Лист', '@цель'], ['Источник', '@действующий']] as const) {
+        within(at(n)).formula(within(at(n)).arg(name), text);
+      }
+    };
+    ui.click('+ если');
+    within(headOf(block(0))).when('=не(пусто(@damage_die))');
+    addToArm(block(0), 0, 'number');
+    within(headOf(block(0))).click('↑');
+    within(at(2)).formula('Сколько', 'кинуть(@damage_die, @dice_count + (@slot - @spell_level) * @dice_up)');
+    nameStep(at(2), 'dmg_всего');
 
-    addToArm(block(callIf(3, 'Спасбросок', 'не спасся')), 0, 'change');
-    within(at(4)).click('состояние');
-    within(at(4)).select('Какое', ':вход:status');
-    within(at(4)).formula('На кого', '@цель');
-    within(at(4)).formula('Запомнит: Запомненное число', '@действующий.spell_dc');
-    within(at(4)).formula('Запомнит: Кто наложил', '@действующий');
-    dump({ got: built('spell_condition'), goal });
-    expect(built('spell_condition')).toEqual(goal);
+    savingThrow(document.body, 4, [['Кто спасается', '@цель'], ['Чем спасается', '@save_by'], ['Сложность', '@действующий.spell_dc'], ['Против кого', '@действующий']]);
+
+    const fail = callIf(4, 'Спасбросок', 'не спасся');
+    addToArm(block(fail), 0, 'branch');
+    const inner = blocks().length - 1;
+    within(headOf(block(inner))).when('=не(пусто(@damage_die))');
+    addToArm(block(inner), 0, 'change');
+    hit(5, '@dmg_всего');
+    addToArm(block(fail), 0, 'branch');
+    const second = blocks().length - 1;
+    within(headOf(block(second))).when('=не(пусто(@status))');
+    addToArm(block(second), 0, 'change');
+    within(at(6)).click('состояние');
+    within(at(6)).select('Какое', ':вход:status');
+    within(at(6)).formula('На кого', '@цель');
+    within(at(6)).formula('Запомнит: Запомненное число', '@действующий.spell_dc');
+    within(at(6)).formula('Запомнит: Кто наложил', '@действующий');
+    addArm(block(fail), '+ иначе, если');
+    within(headOf(block(fail), 1)).when('=все(@half, не(пусто(@damage_die)))');
+    addToArm(block(fail), 1, 'change');
+    hit(7, 'округлить вниз(@dmg_всего * 0.5)');
+    dump({ got: built('spell_save'), goal });
+    expect(built('spell_save')).toEqual(goal);
   });
 
   it('D&D «Не замечает» (hidden): срок 1 ход, спадает в начале хода листа из входа, две правки броска по двум листам', { timeout: 60000 }, () => {

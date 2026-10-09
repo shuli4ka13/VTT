@@ -99,7 +99,7 @@ describe('эффекты пресетов собираются руками: Sha
     for (const [name, text] of [['Что тратим', '@носитель.edge_left'], ['Сколько', '4'], ['Если не хватает', '"нужно 4 очк. Преимущества"'], ['Лист', '@носитель'], ['Источник', '@носитель']] as const) {
       within(card()).formula(within(card()).arg(name), text);
     }
-    within(card()).click('цена');
+    within(card()).click('↑');
   };
 
   const seenHead = (ui: ReturnType<typeof within>) => {
