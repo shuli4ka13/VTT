@@ -1,10 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { Chain } from './chain.tsx';
 import { EffectEditor } from './effect-editor.tsx';
 import { useWorld, emptySystem } from '../../../store/world.ts';
-import type { Effect, System } from '@vtt/schema';
+import type { Effect, System, Step } from '@vtt/schema';
+import { within, stepCard, block, headOf, armOf, armWord, addToArm, addArm, stopNote, stopStrip } from '../../../testing/cards.ts';
+import { openAll } from '../../../testing/render-open.tsx';
 
 const withCost = (): System => ({
   ...emptySystem(),
@@ -83,5 +85,107 @@ describe('имя одного из списка видно шагам после
     render(<Chain id="strike" placeAt={index => ({ part: 'steps', index })} effect={effect} system={system} lane="steps" edit={() => {}} />);
     expect(document.body.textContent).not.toContain('нет ни входа, ни шага');
     expect(document.body.textContent).not.toContain('split');
+  });
+});
+
+describe('блок «Если»: условие строкой, руки, «Стоп»', () => {
+  const start = (steps: unknown[]) => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        constants: { d20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
+        effects: { удар: { label: 'Удар', activation: 'manual', params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }], steps } },
+      } as unknown as System,
+    }));
+    function Live() {
+      const system = useWorld(st => st.system);
+      return <EffectEditor id="удар" effect={system.effects.удар!} system={system} />;
+    }
+    render(<Live />);
+    openAll();
+  };
+  const steps = (): Step[] => useWorld.getState().system.effects.удар!.steps ?? [];
+  const checked = [
+    { id: 'hit_бросок', type: 'roll', die: 'd20', by: { expr: '@действующий' } },
+    { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '10' } },
+  ];
+
+  beforeEach(() => { cleanup(); try { localStorage.clear(); } catch { return; } });
+
+  it('«+ если» кладёт блок с обязательным условием; исход проверки выше — двумя пунктами «пройдена / не пройдена»', () => {
+    start(checked);
+    within().click('+ если');
+    expect(steps().slice(2)).toEqual([{ type: 'branch' }, { type: 'end' }]);
+    expect(armWord(block(0))).toBe('Если');
+    const head = within(headOf(block(0)));
+    expect(head.whenOptions()).toContain('шаг 1 · Проверка — пройдена');
+    expect(head.whenOptions()).toContain('шаг 1 · Проверка — не пройдена');
+    expect(head.has('×')).toBe(false);
+    head.when('шаг 1 · Проверка — не пройдена');
+    expect(steps()[2]).toEqual({ type: 'branch', if: { expr: 'не(@hit.success)' } });
+    within(headOf(block(0))).when('шаг 1 · Проверка — пройдена');
+    expect(steps()[2]).toEqual({ type: 'branch', if: { expr: '@hit.success' } });
+  });
+
+  it('без проверок выше условие задаётся формулой; «+ и» склеивает строки в «все(…)», «×» убирает строку', () => {
+    start([]);
+    within().click('+ если');
+    expect(within(headOf(block(0))).whenOptions()).toEqual(['— что проверяем —', 'формулой…']);
+    within(headOf(block(0))).when('=1 > 0', '=2 > 1');
+    expect(steps()[0]).toEqual({ type: 'branch', if: { expr: 'все(1 > 0, 2 > 1)' } });
+    expect(within(headOf(block(0))).condRows()).toHaveLength(2);
+    within(headOf(block(0))).unwhen(1);
+    expect(steps()[0]).toEqual({ type: 'branch', if: { expr: '1 > 0' } });
+  });
+
+  it('«+ шаг» в руке встаёт перед концом руки; «+ иначе, если» — до «иначе»; «убрать ветку» и «снять «Если»»', () => {
+    start([]);
+    within().click('+ если');
+    within(headOf(block(0))).when('=1 > 0');
+    addToArm(block(0), 0, 'change');
+    addArm(block(0), '+ иначе');
+    addToArm(block(0), 1, 'stop');
+    expect(steps().map(step => step.type)).toEqual(['branch', 'apply', 'orElse', 'stop', 'end']);
+    expect(within(block(0).querySelector<HTMLElement>(':scope > .flow-block__foot')!).has('+ иначе')).toBe(false);
+    addArm(block(0), '+ иначе, если');
+    expect(steps().map(step => step.type)).toEqual(['branch', 'apply', 'orElse', 'orElse', 'stop', 'end']);
+    expect([0, 1, 2].map(k => armWord(block(0), k))).toEqual(['Если', 'Иначе, если', 'Иначе']);
+    within(headOf(block(0), 1)).when('=2 > 1');
+    addToArm(block(0), 1, 'number');
+    expect(steps()[2]).toEqual({ type: 'orElse', if: { expr: '2 > 1' } });
+    expect(steps().map(step => step.type)).toEqual(['branch', 'apply', 'orElse', 'roll', 'orElse', 'stop', 'end']);
+    expect(armOf(block(0), 1).textContent).toContain('2 · Число');
+
+    within(headOf(block(0), 2)).click('убрать ветку');
+    within(headOf(block(0), 2)).click('точно убрать');
+    expect(steps().map(step => step.type)).toEqual(['branch', 'apply', 'orElse', 'roll', 'end']);
+    within(headOf(block(0), 1)).click('убрать ветку');
+    within(headOf(block(0), 1)).click('точно убрать');
+    within(headOf(block(0))).click('снять «Если»');
+    expect(steps().map(step => step.type)).toEqual(['apply']);
+  });
+
+  it('«в «Если»» оборачивает шаг: условие ставится уже в заголовке блока', () => {
+    start([{ type: 'apply', target: { expr: '@действующий.x' }, value: { expr: '1' } }]);
+    within(stepCard(/^1 · /)).click('в «Если»');
+    expect(steps().map(step => step.type)).toEqual(['branch', 'apply', 'end']);
+    within(headOf(block(0))).when('=1 > 0');
+    expect(steps()[0]).toEqual({ type: 'branch', if: { expr: '1 > 0' } });
+    expect(armOf(block(0)).textContent).toContain('1 · Изменение');
+  });
+
+  it('«Стоп»: текст в журнал пишется словами, а хранится формулой-литералом; с @ — формула; пусто — без текста', () => {
+    start([]);
+    within().click('+ стоп');
+    expect(steps()).toEqual([{ type: 'stop' }]);
+    expect(stopStrip(1).textContent).toContain('в журнал:');
+    stopNote(1, 'не хватает ячейки');
+    expect(steps()[0]).toEqual({ type: 'stop', note: { expr: '"не хватает ячейки"' } });
+    expect(stopStrip(1).querySelector<HTMLInputElement>('input')!.value).toBe('не хватает ячейки');
+    stopNote(1, '@note');
+    expect(steps()[0]).toEqual({ type: 'stop', note: { expr: '@note' } });
+    stopNote(1, '');
+    expect(steps()[0]).toEqual({ type: 'stop' });
   });
 });

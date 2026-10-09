@@ -3,6 +3,7 @@ import { critOf, setCrit, armorOf, setArmor, armorTail, CRIT_RULE, CRIT_EDIT } f
 import { lintSystem, errorsOf } from '../src/model/lint.ts';
 import { PLAYABLE_WORLDS as SAMPLE_WORLDS } from '../src/model/systems.ts';
 import { exchange } from './play.ts';
+import { endOf } from '../src/model/flow.ts';
 import { compile } from '../src/formula/index.ts';
 import type { System, Compendium, Sheet } from '../src/model/types.ts';
 
@@ -84,7 +85,7 @@ group('тогл брони переписывает общий эффект ур
     setArmor(system, 'threshold', { event: 'damage', armor: 'sp_body', hp: 'hp' });
     eq(armorOf(system, 'damage').choice, 'threshold');
     eq(errorsOf(lintSystem(system)).length, 0);
-    deepEq(armorTail('threshold', 'sp_body', 'hp', 'amount', 'лист').map(s => s.type), ['check', 'apply']);
+    deepEq(armorTail('threshold', 'sp_body', 'hp', 'amount', 'лист').map(s => s.type), ['check', 'branch', 'stop', 'end', 'apply']);
   });
 
   test('«вычитание и износ» даёт те же шаги, что собраны в образце RED руками для тела', () => {
@@ -99,8 +100,8 @@ group('тогл брони переписывает общий эффект ур
     const before = clone(system.effects.damage!.steps!);
     setArmor(system, 'threshold', { event: 'damage', armor: 'sp_body', hp: 'hp' });
     const after = system.effects.damage!.steps!;
-    deepEq(after.slice(2), before.slice(3));
-    deepEq(after.slice(0, 2).map(step => (step as { when?: unknown }).when), [before[0]!.when, before[0]!.when]);
+    deepEq(after.slice(endOf(after, 0) + 1), before.slice(endOf(before, 0) + 1));
+    deepEq(after[0], before[0], 'условие ветки сохранено');
   });
 
   test('переписанный хвост работает за столом: урон 7 сквозь броню 11 по порогу не проходит', () => {

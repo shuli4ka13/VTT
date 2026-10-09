@@ -96,8 +96,88 @@ export function within(root: ParentNode = document) {
 
   const args = (): string[] => [...root.querySelectorAll<HTMLElement>('.pair .call-args__name')].map(textOf);
 
-  return { arg, args, button, has, click, cell, field, select, type, formula, check };
+  const condBox = (): HTMLElement => {
+    const all = [...root.querySelectorAll<HTMLElement>('.cond')];
+    const own = all.find(c => !c.closest('.flow-head') || c.closest('.flow-head') === root);
+    if (!own) throw new Error('нет условия');
+    return own;
+  };
+
+  const condRows = (): HTMLElement[] => [...condBox().querySelectorAll<HTMLElement>(':scope > .cond__row')];
+
+  const when = (...facts: string[]): void => {
+    facts.forEach((fact, at) => {
+      if (at === 0 && !condRows().length) within(condBox()).click('+ условие');
+      if (at > 0) within(condRows()[at - 1]!).click('+ и');
+      const row = condRows()[at];
+      if (!row) throw new Error(`нет строки условия №${at + 1}`);
+      const box = row.querySelector<HTMLElement>('.cond__fact')!;
+      if (fact.startsWith('=')) {
+        if (!box.querySelector('.cond__formula')) within(box).select(box.querySelector('select')!, ':формула');
+        within(box).formula(condRows()[at]!.querySelector<HTMLElement>('.cond__formula')!, fact.slice(1));
+      } else within(box).select(box.querySelector('select')!, fact);
+    });
+  };
+
+  const unwhen = (at = 0): void => {
+    const row = condRows()[at];
+    if (!row) throw new Error(`нет строки условия №${at + 1}`);
+    within(row).click('×');
+  };
+
+  const whenOptions = (at = 0): string[] => {
+    const row = condRows()[at];
+    const el = row?.querySelector<HTMLSelectElement>('.cond__fact select');
+    return el ? [...el.options].map(textOf) : [];
+  };
+
+  return { arg, args, button, has, click, cell, field, select, type, formula, check, when, unwhen, whenOptions, condRows };
 }
+
+export const blocks = (root: ParentNode = document): HTMLElement[] => [...root.querySelectorAll<HTMLElement>('.flow-block')];
+
+export const block = (at: number, root: ParentNode = document): HTMLElement => {
+  const found = blocks(root)[at];
+  if (!found) throw new Error(`нет блока «Если» №${at + 1}; всего ${blocks(root).length}`);
+  return found;
+};
+
+export const armOf = (flow: HTMLElement, at = 0): HTMLElement => {
+  const found = [...flow.querySelectorAll<HTMLElement>(':scope > .flow-block__part')][at];
+  if (!found) throw new Error(`в блоке нет ветки №${at + 1}`);
+  return found;
+};
+
+export const headOf = (flow: HTMLElement, at = 0): HTMLElement => armOf(flow, at).querySelector<HTMLElement>(':scope > .flow-head')!;
+
+export const armWord = (flow: HTMLElement, at = 0): string => textOf(headOf(flow, at).querySelector('.flow-head__word')!);
+
+export const addToArm = (flow: HTMLElement, at: number, brick: string): void => {
+  const el = armOf(flow, at).querySelector<HTMLSelectElement>(':scope > .flow-block__arm > .flow-block__add select');
+  if (!el) throw new Error('в ветке нет «+ шаг»');
+  within(el.parentElement!).select(el, brick);
+};
+
+export const addArm = (flow: HTMLElement, label: '+ иначе, если' | '+ иначе'): void => {
+  within(flow.querySelector<HTMLElement>(':scope > .flow-block__foot')!).click(label);
+};
+
+export const stopStrip = (n: number, root: ParentNode = document): HTMLElement => {
+  const all = [...root.querySelectorAll<HTMLElement>('.flow-stop')];
+  const found = all.find(el => textOf(el.querySelector('.flow-stop__word')!).startsWith(`${n} · `));
+  if (!found) throw new Error(`нет стопа ${n}; есть: ${all.map(el => textOf(el.querySelector('.flow-stop__word')!)).join(' | ')}`);
+  return found;
+};
+
+export const stopNote = (n: number, text: string, root: ParentNode = document): void => {
+  const strip = stopStrip(n, root);
+  within(strip).type(strip.querySelector<HTMLElement>('.flow-stop__note input')!, text);
+};
+
+export const lastNumber = (root: ParentNode = document): number => {
+  const heads = [...root.querySelectorAll<HTMLElement>('.card .step-fold, .card .card__head, .flow-stop__word, .steps__split-title')].map(textOf);
+  return Math.max(0, ...heads.map(t => Number(/^[▾▸]?\s*(\d+) · /.exec(t)?.[1] ?? 0)));
+};
 
 export const stepCard = (title: RegExp, root: ParentNode = document): HTMLElement => {
   const heads = [...root.querySelectorAll<HTMLElement>('.card')];
@@ -105,4 +185,11 @@ export const stepCard = (title: RegExp, root: ParentNode = document): HTMLElemen
   const found = heads.find(card => title.test(head(card)));
   if (!found) throw new Error(`нет шага ${String(title)}; есть: ${heads.map(c => textOf(c.querySelector('.card__head, .step-fold__row') ?? c).slice(0, 40)).join(' | ')}`);
   return found;
+};
+
+export const wrapIf = (card: () => HTMLElement, ...facts: string[]): void => {
+  within(card()).click('в «Если»');
+  const flow = card().closest<HTMLElement>('.flow-block');
+  if (!flow) throw new Error('шаг не попал в «Если»');
+  within(headOf(flow)).when(...facts);
 };

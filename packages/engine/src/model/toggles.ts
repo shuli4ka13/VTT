@@ -1,3 +1,4 @@
+import { endOf, isFlow } from './flow.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import { findRoll, writeRoll, factorsOf, bare, tight } from './amounts.ts';
 import type { System, Step } from './types.ts';
@@ -134,11 +135,17 @@ export function armorTail(choice: ArmorChoice, armor: string, hp: string, amount
     return [{ type: 'apply', target: field(hp), value } as Step];
   }
   const through = { type: 'check', value, versus: field(armor), successWhen: 'over', id: ARMOR_STEP } as Step;
+  const held = [
+    { type: 'branch', if: { expr: `не(@${ARMOR_STEP}.success)` } } as Step,
+    { type: 'stop', note: { expr: '"броня выдержала"' } } as Step,
+    { type: 'end' } as Step,
+  ];
   if (choice === 'threshold') {
-    return [through, { type: 'apply', target: field(hp), value } as Step];
+    return [through, ...held, { type: 'apply', target: field(hp), value } as Step];
   }
   return [
     through,
+    ...held,
     { type: 'apply', target: field(hp), value: { expr: `@${ARMOR_STEP}.margin` } } as Step,
     { type: 'apply', target: field(armor), value: { expr: '1' } } as Step,
   ];
@@ -153,7 +160,7 @@ const fieldIn = (ref: unknown): string | null => {
 
 export function armorOf(system: System, event: string): ArmorReading {
   const steps = (system.effects?.[event]?.steps ?? []) as Record<string, unknown>[];
-  const first = steps[0];
+  const first = steps.find(step => !isFlow(step as { type?: unknown }));
   const armorTag = fieldIn(first?.versus);
   if (!first || first.type !== 'check' || !armorTag) return { choice: 'none', armor: null, hp: null };
   const armor = armorTag;
@@ -177,10 +184,19 @@ export function setArmor(draft: System, choice: ArmorChoice, at: { event: string
   const steps = (called.steps ?? []) as Record<string, unknown>[];
   const anchor = steps.find(step => fieldIn(step.versus) === at.armor || fieldIn(step.target) === at.armor)
     ?? steps.find(step => step.type === 'apply' && fieldIn(step.target) === at.hp);
-  const when = anchor?.if;
-  const same = (step: Record<string, unknown>): boolean => JSON.stringify(step.if) === JSON.stringify(when);
-  const tail = armorTail(choice, at.armor, at.hp, amount, sheet).map(step => (when ? { ...step, if: when } : step) as Step);
+  const tail = armorTail(choice, at.armor, at.hp, amount, sheet) as Step[];
   if (!anchor) { called.steps = tail; return; }
-  const from = steps.findIndex(same);
-  called.steps = [...steps.slice(0, from).filter(step => !same(step)), ...tail, ...steps.slice(from).filter(step => !same(step))] as Step[];
+  const here = steps.indexOf(anchor);
+  const tailAt = (index: number): number | null => {
+    const step = steps[index];
+    if (!step) return null;
+    if (fieldIn(step.versus) === at.armor || [at.armor, at.hp].includes(fieldIn(step.target) ?? '')) return index;
+    const cond = (step.if as { expr?: unknown } | undefined)?.expr;
+    if (step.type === 'branch' && typeof cond === 'string' && cond.includes(`@${ARMOR_STEP}`)) return endOf(steps as Step[], index);
+    return null;
+  };
+  const from = here;
+  let to = tailAt(here) ?? here;
+  for (let next = tailAt(to + 1); next !== null; next = tailAt(to + 1)) to = next;
+  called.steps = [...steps.slice(0, from), ...tail, ...steps.slice(to + 1)] as Step[];
 }

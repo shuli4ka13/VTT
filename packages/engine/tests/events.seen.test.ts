@@ -34,6 +34,7 @@ const world = (effects: Record<string, unknown>): System => ({
         EACH,
         roll(),
         { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
+        { type: 'branch', if: { expr: 'не(@попал.success)' } }, { type: 'stop' }, { type: 'end' },
         { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '5' } },
       ],
     },
@@ -108,6 +109,7 @@ group('увидев кости: поздние броски видят, что �
         steps: [
           EACH, roll(),
           { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
+          { type: 'branch', if: { expr: 'не(@попал.success)' } }, { type: 'stop' }, { type: 'end' },
           { id: 'урон', type: 'roll', fixed: { expr: '5 + @действующий.удача * 10' } },
           { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '@урон' } },
         ],
@@ -209,12 +211,13 @@ group('ядро: по ревью', () => {
     ok(out.log.includes(CUT_WORDS), 'обработчик упёрся в глубину — отказ обработчика, строка в журнале');
   });
 
-  test('ложное «когда» у броска действующего — кость не брошена, реакции на неё не будят', () => {
+  test('ложное «Если» над броском действующего — кость не брошена, реакции на неё не будят', () => {
     const system = world({
       удар: {
         label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS],
         steps: [
-          EACH, roll({ if: { expr: 'нет' } }),
+          EACH,
+          { type: 'branch', if: { expr: 'нет' } }, roll(), { type: 'end' },
           { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '1' } },
         ],
       },
@@ -228,7 +231,10 @@ group('ядро: по ревью', () => {
   test('две выбранные реакции на один ресурс: вторая пропускается с причиной, действие не падает', () => {
     const shield = (label: string) => ({
       label, activation: 'passive',
-      on: [{ on: 'before:удар', confirm: true, if: { expr: '@цель == @носитель' }, cost: [{ type: 'check', value: { expr: '@носитель.удача' }, versus: { expr: '1' }, note: { expr: '"нет удачи"' } }, { type: 'apply', target: { expr: '@носитель.удача' }, direction: 'subtract', value: { expr: '1' } }], steps: [] }],
+      on: [{ on: 'before:удар', confirm: true, if: { expr: '@цель == @носитель' }, cost: [
+        { id: 'есть', type: 'check', value: { expr: '@носитель.удача' }, versus: { expr: '1' } },
+        { type: 'branch', if: { expr: 'не(@есть.success)' } }, { type: 'stop', note: { expr: '"нет удачи"' } }, { type: 'end' },
+        { type: 'apply', target: { expr: '@носитель.удача' }, direction: 'subtract', value: { expr: '1' } }], steps: [] }],
     });
     const system = world({ р1: shield('Р1'), р2: shield('Р2') });
     const sheets = [sheet('а'), { ...sheet('б', ['р1', 'р2']), values: { удача: 1 } } as Sheet];
@@ -248,6 +254,7 @@ group('ядро: по ревью Fable', () => {
       steps: [
         EACH, roll(),
         { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '15' } },
+        { type: 'branch', if: { expr: 'не(@попал.success)' } }, { type: 'stop' }, { type: 'end' },
         { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '5' } },
       ],
     },

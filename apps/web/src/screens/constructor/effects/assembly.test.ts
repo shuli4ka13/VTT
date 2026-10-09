@@ -73,7 +73,7 @@ describe('собранное шагами конструктора работа�
     expect(target.values.хиты).toBe(17);
   });
 
-  it('крит по «выпало 20 на костях»: условие — сравнение числа формулой', () => {
+  it('крит по «выпало 20 на костях»: условие блока «Если» — сравнение числа формулой', () => {
     const id = newManual();
     const [roll, check] = addSteps(id, 'check') as [Step, Step];
     fill(id, 1, step => {
@@ -82,18 +82,25 @@ describe('собранное шагами конструктора работа�
     fill(id, 2, step => {
       step.versus = { expr: '@цель.броня' };
     });
-    addStep(id, 'change');
+    addSteps(id, 'branch');
     fill(id, 3, step => {
+      step.if = { expr: `@${check.id}.natural >= 20` };
+    });
+    useWorld.getState().editEffect(id, draft => {
+      const steps = draft.steps!;
+      steps.splice(4, 0, BRICKS.find(b => b.key === 'change')!.make(useWorld.getState().system, [])[0]!);
+    });
+    fill(id, 4, step => {
       step.target = { expr: '@цель.хиты' };
       step.direction = 'subtract';
       step.value = { expr: '6' };
-      step.if = { expr: `@${check.id}.natural >= 20` };
     });
 
     const system = useWorld.getState().system;
     expect(roll.type).toBe('roll');
     expect(errorsOf(lintSystem(system))).toEqual([]);
-    expect(system.effects[id]!.steps![3]!.if).toEqual({ expr: `@${check.id}.natural >= 20` });
+    expect(system.effects[id]!.steps!.map(step => step.type)).toEqual(['each', 'roll', 'check', 'branch', 'apply', 'end']);
+    expect(system.effects[id]!.steps![3]!).toEqual({ type: 'branch', if: { expr: `@${check.id}.natural >= 20` } });
 
     expect(played(system, id, { хиты: 20, броня: 10 }, 'max').sheets.find(s => s.id === 'б')!.values.хиты).toBe(14);
     expect(played(system, id, { хиты: 20, броня: 1 }, 'min').sheets.find(s => s.id === 'б')!.values.хиты).toBe(20);

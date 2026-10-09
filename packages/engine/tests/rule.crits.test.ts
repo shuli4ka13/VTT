@@ -24,6 +24,7 @@ const rule: any = {
   steps: [
     { id: 'roll', type: 'roll', die: 'пул', bonus: { expr: '0' }, tags: ['проверка'], by: { expr: '@действующий' } },
     { id: 'крит', type: 'check', value: { expr: '@roll.atMax' }, versus: { expr: '2' } },
+    { type: 'branch', if: { expr: 'не(@крит.success)' } }, { type: 'stop' }, { type: 'end' },
   ],
 };
 
@@ -77,7 +78,7 @@ group('криты и глитчи собираются автором', () => {
     eq(r.stopped, null, 'сравнение пропустило: на максимуме две');
   });
 
-  test('одна шестёрка — цепочка обрывается: крита нет', () => {
+  test('одна шестёрка — стоп в блоке «Если» обрывает цепочку: крита нет', () => {
     const r = run(6, 2, 3);
     eq(r.results.roll.atMax, 1);
     eq(Boolean(r.stopped), true, 'до крита не дошло');

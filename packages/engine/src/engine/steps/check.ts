@@ -8,17 +8,9 @@ export const type = 'check';
 const words: StepWords = STEP_WORDS.check;
 export const { label, hint, slots, outputs } = words;
 
-export const mayBreak = true;
+export const mayBreak = false;
 
 export const icon = '⌖';
-
-export function breakLine(step: StepData) {
-  return words.breakLines[String(step.continueOn || 'success')] ?? null;
-}
-
-export function reasonWord(reason: string): string | null {
-  return words.reasons[reason] ?? null;
-}
 
 const OUTCOMES: Record<string, (total: number, versus: number) => { success: boolean; margin: number }> = {
   atLeast: (total, versus) => ({ success: total >= versus, margin: total - versus }),
@@ -74,9 +66,6 @@ export function finish(step: StepData, ctx: StepContext) {
   const degree = scale
     ? lookupDegree(ctx.system, scale.table, scale.of === 'margin' ? judged.margin : total, Number(roll?.degreeShift ?? 0), ctx.owner)
     : null;
-  const noteRaw = step.note ? ctx.value(step.note) : null;
-  const note = typeof noteRaw === 'string' && noteRaw.trim() ? noteRaw.trim() : null;
-  const goOn = step.continueOn === 'always' ? true : step.continueOn === 'fail' ? !success : success;
   const of = fieldOfRef(step.value, ctx);
   const against = fieldOfRef(step.versus, ctx);
   return {
@@ -86,12 +75,12 @@ export function finish(step: StepData, ctx: StepContext) {
       ...(scale ? { degree } : {}),
     },
     trace: {
-      total, versus, margin: judged.margin, success, passed: goOn, value: total, ...(of ? { of } : {}), ...(against ? { versusTag: against } : {}),
+      total, versus, margin: judged.margin, success, value: total, ...(of ? { of } : {}), ...(against ? { versusTag: against } : {}),
       ...(roll && Array.isArray(roll.tags) && roll.tags.length ? { tags: roll.tags } : {}),
       ...(forced !== null ? { forced: natural } : {}),
       ...(scale ? { degree } : {}),
     },
-    break: goOn ? null : { reason: step.continueOn === 'fail' ? 'check-held' : 'check-miss', ...(note ? { note } : {}) },
+    break: null,
   };
 }
 

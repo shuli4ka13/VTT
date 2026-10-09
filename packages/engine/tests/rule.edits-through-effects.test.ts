@@ -34,6 +34,7 @@ const rule = {
   steps: [
     { id: 'try_бросок', type: 'roll', die: 'кость', bonus: { expr: '0' }, tags: ['проверка'], by: { expr: '@действующий' } },
     { id: 'try', type: 'check', value: { expr: '@try_бросок' }, versus: { expr: '8' } },
+    { type: 'branch', if: { expr: 'не(@try.success)' } }, { type: 'stop' }, { type: 'end' },
   ],
 };
 
@@ -141,6 +142,7 @@ group('любой бросок ловит правку, ничего для эт
   const attackSteps = [
     { id: 'hit_бросок', type: 'roll', die: 'к20', bonus: { expr: '0' }, tags: ['атака'], by: { expr: '@действующий' }, against: { expr: '@цель' } },
     { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '1' } },
+    { type: 'branch', if: { expr: 'не(@hit.success)' } }, { type: 'stop' }, { type: 'end' },
   ];
   const attack = (sys: any, sh: any, ...dice: number[]) => play(sys, sh, attackSteps, queue(...dice)).trace[0] as any;
 
@@ -175,6 +177,7 @@ group('любой бросок ловит правку, ничего для эт
     const save = [
       { id: 'спас_бросок', type: 'roll', die: 'к20', bonus: { expr: '0' }, tags: ['спас'], by: { expr: '@цель' }, against: { expr: '@действующий' } },
       { id: 'спас', type: 'check', value: { expr: '@спас_бросок' }, versus: { expr: '1' } },
+      { type: 'branch', if: { expr: 'не(@спас.success)' } }, { type: 'stop' }, { type: 'end' },
     ];
     const t = play(sys, sheet([]), save, queue(19, 2), [target]).trace[0] as any;
     deepEq(t.rolls, [19, 2], 'проклятие висит на ЦЕЛИ, и бросает его она');
@@ -194,6 +197,7 @@ group('переворот к100 доезжает через эффект — п�
     steps: [
       { id: 'try_бросок', type: 'roll', die: 'сотня', bonus: { expr: '0' }, tags: ['проверка'], by: { expr: '@действующий' } },
       { id: 'try', type: 'check', value: { expr: '@try_бросок' }, versus: { expr: '45' }, successWhen: 'notOver' },
+      { type: 'branch', if: { expr: 'не(@try.success)' } }, { type: 'stop' }, { type: 'end' },
     ],
   };
   const underRun = (s: any, sh: any, ...dice: number[]) => {
@@ -220,7 +224,9 @@ group('исход шага помнит, была ли правка', () => {
   });
   const steps = [
     ...rule.steps,
-    { type: 'apply', target: { expr: '@цель.флаг' }, direction: 'add', if: { expr: '@try.edited' }, value: { expr: '1' } },
+    { type: 'branch', if: { expr: '@try.edited' } },
+    { type: 'apply', target: { expr: '@цель.флаг' }, direction: 'add', value: { expr: '1' } },
+    { type: 'end' },
   ];
   const flag = (sys: any, sh: any, ...dice: number[]) =>
     Number(play(flagged(sys), sh, steps, queue(...dice)).out.sheets.find(s => s.id === 'цель')!.values.флаг ?? 0);

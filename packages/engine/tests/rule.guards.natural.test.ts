@@ -26,34 +26,37 @@ const run = (steps: object[], die: number) => {
 group('условие шага по числу и степени', () => {
   const roll = { id: 'hit_бросок', type: 'roll', die: 'd20', bonus: { expr: '5' }, by: { expr: '@действующий' } };
   const hit = { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '1' } };
+  const guard = [{ type: 'branch', if: { expr: 'не(@hit.success)' } }, { type: 'stop' }, { type: 'end' }];
+  const when = (expr: string, step: object) => [{ type: 'branch', if: { expr } }, step, { type: 'end' }];
+  const sub = (amount: string) => ({ type: 'apply', target: { expr: '@цель.hp' }, direction: 'subtract', value: { expr: amount } });
 
   test('«выпало на костях» — без прибавок: крит при natural ≥ 20', () => {
-    const crit = { type: 'apply', target: { expr: '@цель.hp' }, direction: 'subtract', value: { expr: '7' }, if: { expr: '@hit.natural >= 20' } };
-    eq(run([roll, hit, crit], 20).sheet.values.hp, 3);
-    eq(run([roll, hit, crit], 15).sheet.values.hp, 10, 'итог 15+5=20, но на костях 15 — не крит');
+    const crit = when('@hit.natural >= 20', sub('7'));
+    eq(run([roll, hit, ...guard, ...crit], 20).sheet.values.hp, 3);
+    eq(run([roll, hit, ...guard, ...crit], 15).sheet.values.hp, 10, 'итог 15+5=20, но на костях 15 — не крит');
   });
 
   test('atMost и оба края', () => {
-    const low = { type: 'apply', target: { expr: '@цель.hp' }, direction: 'subtract', value: { expr: '1' }, if: { expr: '@hit.natural <= 1' } };
-    eq(run([roll, hit, low], 1).sheet.values.hp, 9);
-    eq(run([roll, hit, low], 2).sheet.values.hp, 10);
-    const mid = { type: 'apply', target: { expr: '@цель.hp' }, direction: 'subtract', value: { expr: '1' }, if: { expr: 'все(@hit.natural >= 5, @hit.natural <= 10)' } };
-    eq(run([roll, hit, mid], 7).sheet.values.hp, 9);
-    eq(run([roll, hit, mid], 11).sheet.values.hp, 10);
+    const low = when('@hit.natural <= 1', sub('1'));
+    eq(run([roll, hit, ...guard, ...low], 1).sheet.values.hp, 9);
+    eq(run([roll, hit, ...guard, ...low], 2).sheet.values.hp, 10);
+    const mid = when('все(@hit.natural >= 5, @hit.natural <= 10)', sub('1'));
+    eq(run([roll, hit, ...guard, ...mid], 7).sheet.values.hp, 9);
+    eq(run([roll, hit, ...guard, ...mid], 11).sheet.values.hp, 10);
   });
 
   test('«has» сравнивает степень по имени, «not» переворачивает', () => {
     const scaled = { ...hit, degrees: { table: 'levels', of: 'total' } };
-    const onWin = { type: 'apply', target: { expr: '@цель.hp' }, direction: 'subtract', value: { expr: '2' }, if: { expr: 'есть(@hit.degree, "успех")' } };
-    eq(run([roll, scaled, onWin], 10).sheet.values.hp, 8);
-    eq(run([roll, scaled, onWin], 2).sheet.values.hp, 10);
-    const unlessWin = { ...onWin, if: { expr: 'не(есть(@hit.degree, "успех"))' } };
-    eq(run([roll, scaled, unlessWin], 2).sheet.values.hp, 8);
+    const onWin = when('есть(@hit.degree, "успех")', sub('2'));
+    eq(run([roll, scaled, ...guard, ...onWin], 10).sheet.values.hp, 8);
+    eq(run([roll, scaled, ...guard, ...onWin], 2).sheet.values.hp, 10);
+    const unlessWin = when('не(есть(@hit.degree, "успех"))', sub('2'));
+    eq(run([roll, scaled, ...guard, ...unlessWin], 2).sheet.values.hp, 8);
   });
 
   test('число против не-числа — внятная ошибка', () => {
-    const bad = { type: 'apply', target: { expr: '@цель.hp' }, direction: 'subtract', value: { expr: '1' }, if: { expr: '@hit.success >= 1' } };
-    throws(() => run([roll, hit, bad], 10), 'должен быть числом');
+    const bad = when('@hit.success >= 1', sub('1'));
+    throws(() => run([roll, hit, ...guard, ...bad], 10), 'должен быть числом');
   });
 });
 

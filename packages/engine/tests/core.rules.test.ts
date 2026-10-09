@@ -58,7 +58,11 @@ describe('новое ядро: сознательные изменения', () 
       удар: button([hit('1')]),
       стойка: {
         label: 'Стойка', activation: 'passive',
-        on: [{ ...mine, cost: [{ type: 'check', value: { expr: '@носитель.ки' }, versus: { expr: '1' } }, hit('1', '@носитель.ки')], steps: [heal('5')] }],
+        on: [{ ...mine, cost: [
+          { id: 'запас', type: 'check', value: { expr: '@носитель.ки' }, versus: { expr: '1' } },
+          { type: 'branch', if: { expr: 'не(@запас.success)' } }, { type: 'stop' }, { type: 'end' },
+          hit('1', '@носитель.ки'),
+        ], steps: [heal('5')] }],
       },
     });
     const paid = play(system, [sheet('а'), sheet('б', { ки: 1 }, [{ effectId: 'стойка' }])], 'б', []);
@@ -94,6 +98,7 @@ describe('новое ядро: сознательные изменения', () 
         { id: 'атака', type: 'roll', die: 'к20', by: { expr: '@действующий' }, against: { expr: '@цель' } },
         { id: 'защита', type: 'roll', die: 'к20', by: { expr: '@цель' }, against: { expr: '@действующий' } },
         { id: 'спор', type: 'check', value: { expr: '@атака' }, versus: { expr: '@защита' } },
+        { type: 'branch', if: { expr: 'не(@спор.success)' } }, { type: 'stop' }, { type: 'end' },
         hit('3'),
       ]),
       неуловим: { label: 'Неуловим', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', if: { expr: '@против == @носитель' }, op: 'add', value: { expr: '-@носитель.уклон' } }] },
@@ -110,7 +115,9 @@ describe('новое ядро: сознательные изменения', () 
     const system = world({
       удар: button([
         { id: 'сила', type: 'roll', fixed: { expr: '2' } },
-        { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' }, if: { expr: '@сила > 3' } },
+        { type: 'branch', if: { expr: '@сила > 3' } },
+        { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
+        { type: 'end' },
         hit('1'),
       ]),
       удача: { label: 'Удача', activation: 'passive', on: [{ on: 'seen', if: { expr: '@бросающий == @носитель' }, steps: [hit('1', '@носитель.ки'), { type: 'roll-plus', value: { expr: '0' } }] }] },
@@ -139,7 +146,7 @@ describe('новое ядро: сознательные изменения', () 
     const system = world({
       удар: button([
         { id: 'бр', type: 'roll', die: 'к20', bonus: { expr: "кинуть('1к4')" }, by: { expr: '@действующий' } },
-        { id: 'б', type: 'check', value: { expr: '@бр' }, versus: { expr: '100' }, continueOn: 'always' },
+        { id: 'б', type: 'check', value: { expr: '@бр' }, versus: { expr: '100' } },
       ]),
     });
     const out = play(system, [sheet('а'), sheet('б')], 'б', [15, 3]);

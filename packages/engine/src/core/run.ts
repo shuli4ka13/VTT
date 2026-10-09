@@ -266,12 +266,32 @@ export class Run {
       ...steps.map(step => step.id).filter((id): id is string => typeof id === 'string' && id !== ''),
       ...(frame.lazy?.stepIds ?? []),
     ]);
+    const blocks: { outer: boolean; taken: boolean; active: boolean }[] = [];
     for (const [index, raw] of steps.entries()) {
       const step = raw as StepData;
       const name = step.id ?? (frame.offset ?? 0) + index;
       const ctx = this.ctx(frame, results, known, frame.path.step(name), sink, stepIds);
       const mark = within ? { within } : {};
-      if (!ctx.holds(step.if)) {
+      const flow = runnerOf(step.type).flow;
+      const live = blocks.every(block => block.active);
+      if (flow === 'open') {
+        const hit = live && ctx.holds(step.if);
+        blocks.push({ outer: live, taken: hit, active: hit });
+        continue;
+      }
+      if (flow === 'alt') {
+        const block = blocks[blocks.length - 1];
+        if (!block) continue;
+        const hit = block.outer && !block.taken && (step.if === undefined || ctx.holds(step.if));
+        block.active = hit;
+        block.taken ||= hit;
+        continue;
+      }
+      if (flow === 'close') {
+        blocks.pop();
+        continue;
+      }
+      if (!live || !ctx.holds(step.if)) {
         sink.trace.push({ step: name, type: step.type, skipped: true, ...mark });
         continue;
       }

@@ -1,3 +1,4 @@
+import { armsOf, balance, flowOf, inBlock, isFlow } from './flow.ts';
 import { loopOf } from '../engine/steps/each.ts';
 import { chosenEffect, choicesOfInput, emittedChoices, kindsChoosing } from './payments.ts';
 import { SEEN_LABEL, ANY_ACTION, PHASES } from '../events/bus.ts';
@@ -383,7 +384,7 @@ function costProblems(system: System): Problem[] {
   const out: Problem[] = [];
   const pays = (step: Step): boolean => {
     const s = step as { type?: string; direction?: string };
-    return s.type === 'emit' || s.type === 'check' || (s.type === 'apply' && s.direction === 'subtract');
+    return s.type === 'emit' || s.type === 'check' || s.type === 'stop' || isFlow(step) || (s.type === 'apply' && (s.direction ?? 'subtract') === 'subtract');
   };
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
     const chains: [Step[] | undefined, (step: number) => Where][] = [
@@ -584,6 +585,18 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
       for (const index of splits.slice(1)) {
         out.push({ where: chain.where(index), level: 'error', text: `«${STEP_WORDS.each.label}» в цепочке может быть только один` });
       }
+      const arms = armsOf(chain.steps);
+      for (const found of balance(chain.steps)) out.push({ where: chain.where(found.index), level: 'error', text: found.problem });
+      for (const index of splits) {
+        if (inBlock(arms, index)) out.push({ where: chain.where(index), level: 'error', text: `«${STEP_WORDS.each.label}» не ставится внутрь «Если» — цикл по целям только верхним уровнем` });
+      }
+      chain.steps.forEach((step, index) => {
+        if (step.if !== undefined && !isFlow(step)) out.push({ where: chain.where(index), level: 'error', text: 'у шага своё условие — условие теперь ставится блоком «Если»' });
+        if (flowOf(step.type) === 'alt' || flowOf(step.type) === 'open') {
+          const next = chain.steps[index + 1];
+          if (!next || flowOf(next.type) === 'alt' || flowOf(next.type) === 'close') out.push({ where: chain.where(index), level: 'warn', text: 'пустая ветка — в ней нет шагов' });
+        }
+      });
       chain.steps.forEach((step, index) => {
         if (step.id && declared.field.has(String(step.id))) {
           out.push({

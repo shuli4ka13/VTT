@@ -68,6 +68,7 @@ const attack = (rollOver = {}, checkOver = {}) => [
     ...rollOver,
   },
   { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '@цель.ac' }, ...checkOver },
+  { type: 'branch', if: { expr: 'не(@hit.success)' } }, { type: 'stop' }, { type: 'end' },
 ];
 
 group('шаги «бросок» и «проверка»', () => {
@@ -83,14 +84,15 @@ group('шаги «бросок» и «проверка»', () => {
     eq(checked.versus, 14);
   });
 
-  test('провал обрывает цепочку, запись в журнале — «проверка не пройдена»', () => {
+  test('провал — стоп в блоке «Если» обрывает цепочку, в журнале видно и проверку, и стоп', () => {
     const out = run([...attack(), { id: 'после', type: 'roll', fixed: { expr: "кинуть('1d8')" } }],
       { die: queue(2, 5) });
-    eq(out.stopped.reason, 'check-miss');
-    eq(out.stopped.step, 'hit');
-    eq(out.trace.length, 2, 'до шага «после» дело не дошло');
+    eq(out.stopped.reason, 'stop');
+    eq(out.stopped.step, 4, 'оборвал шаг «Стоп» — пятый в цепочке после «Для каждой цели»');
+    eq(out.trace.length, 3, 'до шага «после» дело не дошло');
     eq(out.trace[1].success, false);
     eq(out.trace[1].margin, -6);
+    eq(out.trace[2].type, 'stop');
   });
 
   test('модификаторы броска действующего отыгрываются на его броске', () => {
@@ -105,7 +107,8 @@ group('шаги «бросок» и «проверка»', () => {
         id: 'save_бросок', type: 'roll', die: 'lead_die', bonus: HERE('dex_save'), tags: ['спасбросок'],
         by: { expr: '@цель' }, against: { expr: '@действующий' },
       },
-      { id: 'save', type: 'check', value: { expr: '@save_бросок' }, versus: { expr: '@действующий.spell_dc' }, continueOn: 'fail' },
+      { id: 'save', type: 'check', value: { expr: '@save_бросок' }, versus: { expr: '@действующий.spell_dc' } },
+      { type: 'branch', if: { expr: '@save.success' } }, { type: 'stop' }, { type: 'end' },
     ];
 
     const failed = run(save, { sender: mirra, targetSheet: arven, die: queue(5) });
@@ -114,7 +117,8 @@ group('шаги «бросок» и «проверка»', () => {
     eq(failed.results.save.margin, -7, 'спасбросок 6 против сложности 13');
 
     const held = run(save, { sender: mirra, targetSheet: arven, die: queue(19) });
-    eq(held.stopped.reason, 'check-held', 'цель спаслась — обрыв, и он различим в журнале');
+    eq(held.stopped.reason, 'stop', 'цель спаслась — стоп в блоке «Если»');
+    eq(held.results.save.success, true, 'и в журнале видно, что спас удался');
   });
 
   test('составная ведущая кость: total сравнивается, части доступны дальше', () => {
@@ -164,7 +168,7 @@ group('шаг «бросок» без «бросает»: расчёт', () => {
       { id: 'dmg', type: 'roll', fixed: { expr: '3 + @hit.margin' } },
     ], { die: queue(10) });
     eq(out.results.dmg.total, 5, 'нож 3 плюс превышение 2');
-    eq(out.trace[2].fixed, 5, 'сумма видна в трассе');
+    eq(out.trace[3].fixed, 5, 'сумма видна в трассе — после проверки и пропущенного стопа');
   });
 
   test('фикс предмета: костей не бросали вовсе', () => {
@@ -188,32 +192,35 @@ group('шаг «бросок» без «бросает»: расчёт', () => {
 group('шаг «проверка»', () => {
   const dmg = { id: 'dmg', type: 'roll', fixed: { expr: '@damage_flat' } };
   const pen = (over = {}) => ({ id: 'pen', type: 'check', value: { expr: '@dmg' }, versus: { expr: '5' }, ...over });
+  const stopUnlessPen = [{ type: 'branch', if: { expr: 'не(@pen.success)' } }, { type: 'stop' }, { type: 'end' }];
 
   test('выше порога: разница доступна дальше по имени', () => {
-    const out = run([dmg, pen()], { props: { damage_flat: 8 }, ...viaInput('damage_flat') });
+    const out = run([dmg, pen(), ...stopUnlessPen], { props: { damage_flat: 8 }, ...viaInput('damage_flat') });
     eq(out.stopped, null);
     eq(out.results.pen.margin, 3);
   });
 
-  test('ниже порога: обрыв, и у оборвавшего шага есть трасса', () => {
-    const out = run([dmg, pen()], { props: { damage_flat: 3 }, ...viaInput('damage_flat') });
-    eq(out.stopped.reason, 'check-miss');
+  test('ниже порога: стоп в блоке «Если» обрывает, у проверки есть трасса', () => {
+    const out = run([dmg, pen(), ...stopUnlessPen], { props: { damage_flat: 3 }, ...viaInput('damage_flat') });
+    eq(out.stopped.reason, 'stop');
+    eq(out.trace[1].success, false);
     eq(out.trace[1].margin, -2);
   });
 
   test('равенство при «не меньше» проходит', () => {
-    const out = run([dmg, pen()], { props: { damage_flat: 5 }, ...viaInput('damage_flat') });
+    const out = run([dmg, pen(), ...stopUnlessPen], { props: { damage_flat: 5 }, ...viaInput('damage_flat') });
     eq(out.stopped, null);
     eq(out.results.pen.margin, 0);
   });
 
-  test('равенство при «строго больше» обрывает', () => {
-    const out = run([dmg, pen({ successWhen: 'over' })], { props: { damage_flat: 5 }, ...viaInput('damage_flat') });
-    eq(out.stopped.reason, 'check-miss');
+  test('равенство при «строго больше» — провал, стоп в блоке «Если» обрывает', () => {
+    const out = run([dmg, pen({ successWhen: 'over' }), ...stopUnlessPen], { props: { damage_flat: 5 }, ...viaInput('damage_flat') });
+    eq(out.results.pen.success, false);
+    eq(out.stopped.reason, 'stop');
   });
 
-  test('«стоп при провале» не обрывает, когда цепочка идёт всегда', () => {
-    const out = run([dmg, pen({ continueOn: 'always' }), { id: 'после', type: 'roll', fixed: { expr: '1' } }], { props: { damage_flat: 3 }, ...viaInput('damage_flat') });
+  test('проверка сама не обрывает: без «Стоп» цепочка идёт дальше и после провала', () => {
+    const out = run([dmg, pen(), { id: 'после', type: 'roll', fixed: { expr: '1' } }], { props: { damage_flat: 3 }, ...viaInput('damage_flat') });
     eq(out.stopped, null);
     eq(out.results.pen.success, false);
     eq(out.results.после.total, 1);

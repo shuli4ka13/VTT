@@ -129,6 +129,7 @@ group('новое ядро: урон бросается, только когда
     EACH,
     { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
     { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@цель.хп - 10' } },
+    { type: 'branch', if: { expr: 'не(@попал.success)' } }, { type: 'stop' }, { type: 'end' },
     hit('@урон'),
   ];
   const system = world({ удар: button(steps) }, D20);
@@ -157,6 +158,7 @@ group('новое ядро: броски действующего не деля�
       { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d6')" } },
       { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
       { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
+      { type: 'branch', if: { expr: 'не(@попал.success)' } }, { type: 'stop' }, { type: 'end' },
       EACH,
       hit('@урон'),
     ];
@@ -166,11 +168,14 @@ group('новое ядро: броски действующего не деля�
     ok(out.kind === 'done' && out.fresh.length === 2, 'две свежие кости');
   });
 
-  test('ложное «когда» у броска после проверки — кость не брошена', () => {
+  test('ложное «Если» над броском после проверки — кость не брошена', () => {
     const steps = [
       { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
       { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
-      { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d6')" }, if: { expr: '@бросок.natural >= 20' } },
+      { type: 'branch', if: { expr: 'не(@попал.success)' } }, { type: 'stop' }, { type: 'end' },
+      { type: 'branch', if: { expr: '@бросок.natural >= 20' } },
+      { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d6')" } },
+      { type: 'end' },
       EACH,
       hit('1'),
     ];

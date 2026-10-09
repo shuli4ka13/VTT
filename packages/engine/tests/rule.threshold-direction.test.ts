@@ -22,6 +22,7 @@ const run = (successWhen, rolled, versus, extra = {}) => {
         versus: { expr: `${JSON.stringify(versus)}` },
         ...extra,
       },
+      { type: 'branch', if: { expr: 'не(@try.success)' } }, { type: 'stop' }, { type: 'end' },
     ],
   };
   const ran = runSteps(sys as never, [sheet as never], sheet.id, rule.steps as never, queue(rolled));
@@ -51,7 +52,7 @@ group('проверка: направление успеха объявляет�
     ok(run('under', 39, 40).results.try.success);
   });
 
-  test('обрыв цепочки следует направлению: не взял «вниз» — стоп', () => {
+  test('стоп в блоке «Если» следует направлению: не взял «вниз» — стоп', () => {
     ok(run('notOver', 90, 40).stopped, 'провал броска вниз обрывает цепочку');
     ok(!run('notOver', 10, 40).stopped, 'успех — цепочка живёт');
   });
@@ -72,6 +73,7 @@ group('проверка: направление успеха объявляет�
             { type: 'each', of: 'цели' },
             { id: 'try_бросок', type: 'roll', die: 'lead_die', bonus: { expr: '0' }, by: { expr: '@цель' }, against: { expr: '@действующий' } },
             { id: 'try', type: 'check', value: { expr: '@try_бросок' }, successWhen: 'notOver', versus: { expr: '40' } },
+            { type: 'branch', if: { expr: 'не(@try.success)' } }, { type: 'stop' }, { type: 'end' },
           ],
         },
       },

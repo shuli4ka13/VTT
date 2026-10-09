@@ -1119,6 +1119,21 @@
             }
           },
           {
+            "type": "branch",
+            "if": {
+              "expr": "не(@hit.success)"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"не вышло\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
             "type": "emit",
             "effect": "damage",
             "args": {
@@ -1141,19 +1156,35 @@
         "group": "Атака",
         "cost": [
           {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "id": "check",
             "type": "check",
             "value": {
               "expr": "@действующий.turn_action"
             },
             "versus": {
               "expr": "1"
-            },
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "не(@check.success)"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"действие на этом ходу уже потрачено\""
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -1163,10 +1194,10 @@
             "direction": "subtract",
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           }
         ],
         "tags": [
@@ -1251,8 +1282,22 @@
             },
             "versus": {
               "expr": "@действующий.spell_dc"
-            },
-            "continueOn": "fail"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@save.success"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"устоял\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "emit",
@@ -1291,19 +1336,35 @@
         "group": "Атака",
         "cost": [
           {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "id": "check",
             "type": "check",
             "value": {
               "expr": "@действующий.turn_action"
             },
             "versus": {
               "expr": "1"
-            },
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "не(@check.success)"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"действие на этом ходу уже потрачено\""
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -1313,10 +1374,10 @@
             "direction": "subtract",
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           }
         ]
       },
@@ -1391,19 +1452,35 @@
         "group": "Лечение",
         "cost": [
           {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "id": "check",
             "type": "check",
             "value": {
               "expr": "@действующий.turn_action"
             },
             "versus": {
               "expr": "1"
-            },
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "не(@check.success)"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"действие на этом ходу уже потрачено\""
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -1413,10 +1490,10 @@
             "direction": "subtract",
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -1491,6 +1568,21 @@
             }
           },
           {
+            "type": "branch",
+            "if": {
+              "expr": "не(@hit.success)"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"не вышло\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
             "type": "emit",
             "effect": "damage",
             "args": {
@@ -1515,19 +1607,35 @@
         "group": "Атака",
         "cost": [
           {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "id": "check",
             "type": "check",
             "value": {
               "expr": "@действующий.turn_action"
             },
             "versus": {
               "expr": "1"
-            },
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "не(@check.success)"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"действие на этом ходу уже потрачено\""
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -1537,10 +1645,10 @@
             "direction": "subtract",
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           }
         ],
         "tags": [
@@ -1590,19 +1698,35 @@
         "group": "Поддержка",
         "cost": [
           {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "id": "check",
             "type": "check",
             "value": {
               "expr": "@действующий.turn_action"
             },
             "versus": {
               "expr": "1"
-            },
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "не(@check.success)"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"действие на этом ходу уже потрачено\""
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -1612,10 +1736,10 @@
             "direction": "subtract",
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -1704,8 +1828,7 @@
             "versus": {
               "expr": "@действующий.spell_dc"
             },
-            "successWhen": "atLeast",
-            "continueOn": "always"
+            "successWhen": "atLeast"
           },
           {
             "id": "dmg",
@@ -1739,19 +1862,35 @@
         "group": "Атака",
         "cost": [
           {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "id": "check",
             "type": "check",
             "value": {
               "expr": "@действующий.turn_action"
             },
             "versus": {
               "expr": "1"
-            },
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "не(@check.success)"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"действие на этом ходу уже потрачено\""
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -1761,10 +1900,10 @@
             "direction": "subtract",
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -1961,19 +2100,35 @@
             "confirm": true,
             "cost": [
               {
+                "type": "branch",
+                "if": {
+                  "expr": "@стол.battle"
+                }
+              },
+              {
+                "id": "check",
                 "type": "check",
                 "value": {
                   "expr": "@носитель.turn_reaction"
                 },
                 "versus": {
                   "expr": "1"
-                },
+                }
+              },
+              {
+                "type": "branch",
+                "if": {
+                  "expr": "не(@check.success)"
+                }
+              },
+              {
+                "type": "stop",
                 "note": {
                   "expr": "\"реакция уже потрачена\""
-                },
-                "if": {
-                  "expr": "@стол.battle"
                 }
+              },
+              {
+                "type": "end"
               },
               {
                 "type": "apply",
@@ -1983,10 +2138,10 @@
                 "direction": "subtract",
                 "value": {
                   "expr": "1"
-                },
-                "if": {
-                  "expr": "@стол.battle"
                 }
+              },
+              {
+                "type": "end"
               }
             ],
             "steps": [
@@ -2236,8 +2391,13 @@
                 "versus": {
                   "expr": "10"
                 },
-                "successWhen": "atLeast",
-                "continueOn": "always"
+                "successWhen": "atLeast"
+              },
+              {
+                "type": "branch",
+                "if": {
+                  "expr": "@спас.success"
+                }
               },
               {
                 "type": "apply",
@@ -2247,20 +2407,13 @@
                 "direction": "add",
                 "value": {
                   "expr": "1"
-                },
-                "if": {
-                  "expr": "@спас.success"
                 }
               },
               {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.death_fail"
-                },
-                "direction": "add",
-                "value": {
-                  "expr": "1"
-                },
+                "type": "end"
+              },
+              {
+                "type": "branch",
                 "if": {
                   "expr": "не(@спас.success)"
                 }
@@ -2273,10 +2426,29 @@
                 "direction": "add",
                 "value": {
                   "expr": "1"
-                },
+                }
+              },
+              {
+                "type": "end"
+              },
+              {
+                "type": "branch",
                 "if": {
                   "expr": "@спас.natural <= 1"
                 }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.death_fail"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "1"
+                }
+              },
+              {
+                "type": "end"
               }
             ]
           }
@@ -2406,19 +2578,35 @@
             "confirm": true,
             "cost": [
               {
+                "type": "branch",
+                "if": {
+                  "expr": "@стол.battle"
+                }
+              },
+              {
+                "id": "check",
                 "type": "check",
                 "value": {
                   "expr": "@носитель.turn_reaction"
                 },
                 "versus": {
                   "expr": "1"
-                },
+                }
+              },
+              {
+                "type": "branch",
+                "if": {
+                  "expr": "не(@check.success)"
+                }
+              },
+              {
+                "type": "stop",
                 "note": {
                   "expr": "\"реакция уже потрачена\""
-                },
-                "if": {
-                  "expr": "@стол.battle"
                 }
+              },
+              {
+                "type": "end"
               },
               {
                 "type": "apply",
@@ -2428,10 +2616,10 @@
                 "direction": "subtract",
                 "value": {
                   "expr": "1"
-                },
-                "if": {
-                  "expr": "@стол.battle"
                 }
+              },
+              {
+                "type": "end"
               }
             ],
             "steps": [
@@ -2461,8 +2649,7 @@
                 "versus": {
                   "expr": "@носитель.spell_dc"
                 },
-                "successWhen": "atLeast",
-                "continueOn": "always"
+                "successWhen": "atLeast"
               },
               {
                 "type": "roll",

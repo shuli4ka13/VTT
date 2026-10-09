@@ -38,21 +38,22 @@ const play = (steps: any[], ...dice: number[]) => {
 };
 
 const save = { id: 'спас_бросок', type: 'roll', die: 'к20', bonus: { expr: '0' }, tags: ['спас'], by: { expr: '@цель' }, against: { expr: '@действующий' } };
-const saveCheck = { id: 'спас', type: 'check', value: { expr: '@спас_бросок' }, versus: { expr: '12' }, continueOn: 'always' };
+const saveCheck = { id: 'спас', type: 'check', value: { expr: '@спас_бросок' }, versus: { expr: '12' } };
 
-group('ветвление по исходу: стражи на шагах', () => {
+group('ветвление по исходу: блоки «Если» / «Иначе»', () => {
   const halfOnSave = [
     save, saveCheck,
-    { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '8' },
-      if: { expr: 'не(@спас.success)' } },
-    { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '4' },
-      if: { expr: '@спас.success' } },
+    { type: 'branch', if: { expr: 'не(@спас.success)' } },
+    { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '8' } },
+    { type: 'orElse' },
+    { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '4' } },
+    { type: 'end' },
   ];
 
   test('провалил спасбросок — полный урон, шаг «половина» пропущен', () => {
     const r = play(halfOnSave, 5);
     eq(r.sheet.values.хп, 12);
-    eq(r.stopped, null, '«дальше всегда» не обрывает цепочку');
+    eq(r.stopped, null, 'проверка без «Стоп» не обрывает цепочку');
     deepEq(r.trace.map(t => Boolean(t.skipped)), [false, false, false, true]);
   });
 
@@ -66,10 +67,11 @@ group('ветвление по исходу: стражи на шагах', () =
     const graded = [
       save,
       { ...saveCheck, degrees: { table: 'исход', of: 'total' } },
-      { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '10' },
-        if: { expr: '@спас.degree == "полный"' } },
-      { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '3' },
-        if: { expr: '@спас.degree == "частичный"' } },
+      { type: 'branch', if: { expr: '@спас.degree == "полный"' } },
+      { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '10' } },
+      { type: 'orElse', if: { expr: '@спас.degree == "частичный"' } },
+      { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '3' } },
+      { type: 'end' },
     ];
     eq(play(graded, 17).sheet.values.хп, 10, 'полный успех');
     eq(play(graded, 11).sheet.values.хп, 17, 'частичный');
@@ -78,16 +80,18 @@ group('ветвление по исходу: стражи на шагах', () =
 
   test('страж-формула действующего считается его листом (шестой уровень), а не цели (третий)', () => {
     const steps = [
-      { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '5' },
-        if: { expr: '@действующий.уровень >= 5' } },
+      { type: 'branch', if: { expr: '@действующий.уровень >= 5' } },
+      { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '5' } },
+      { type: 'end' },
     ];
     eq(play(steps).sheet.values.хп, 15);
   });
 
   test('страж-формула цели считается её листом', () => {
     const steps = [
-      { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '5' },
-        if: { expr: '@цель.уровень >= 5' } },
+      { type: 'branch', if: { expr: '@цель.уровень >= 5' } },
+      { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '5' } },
+      { type: 'end' },
     ];
     eq(play(steps).sheet.values.хп, 20, 'у цели третий уровень — шаг пропущен');
   });
@@ -95,7 +99,9 @@ group('ветвление по исходу: стражи на шагах', () =
   test('страж, дающий не да/нет, — внятная ошибка', () => {
     const steps = [
       { id: 'n', type: 'roll', fixed: { expr: '3' } },
-      { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '5' }, if: { expr: '@n' } },
+      { type: 'branch', if: { expr: '@n' } },
+      { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '5' } },
+      { type: 'end' },
     ];
     throws(() => play(steps), 'да/нет');
   });

@@ -36,7 +36,10 @@ function assemble(): { system: System; compendium: Compendium; sheets: Sheet[]; 
   const change = bricks('change', system)[0] as Record<string, any>;
   change.target = { expr: `@цель.${hits.key}` };
   change.value = { expr: `@${amount.id}` };
-  effect.value.steps = [each, roll, check, amount, change] as Step[];
+  const [open, close] = bricks('branch', system) as [Record<string, any>, Record<string, any>];
+  open.if = { expr: `не(@${String(check.id)}.success)` };
+  const stop = bricks('stop', system)[0]!;
+  effect.value.steps = [each, roll, check, open, stop, close, amount, change] as Step[];
   system.effects[effect.key] = effect.value;
 
   const kind = newRecordKind(system);

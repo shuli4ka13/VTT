@@ -17,7 +17,7 @@ import { ChangeBody } from './change-body.tsx';
 import { NumberBody } from './number-body.tsx';
 import { SeenBody } from './seen-body.tsx';
 import { TableBody } from './table-body.tsx';
-import { ConditionFold, breakLine } from './condition-fold.tsx';
+import { StopStrip } from './flow-parts.tsx';
 import { titleOf } from '../words.ts';
 import { STEP_WORDS } from '@vtt/engine/words/steps';
 import { loopOf } from '@vtt/engine/engine/steps/each';
@@ -42,7 +42,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, onMoveLane, folded = false, onFold, sheets, onUnpair,
+  edit, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, onMoveLane, folded = false, onFold, sheets, onUnpair, onWrap,
 }: {
   group: CardGroup;
   position: number;
@@ -68,6 +68,7 @@ export function GroupCard({
   onFold?: () => void;
   sheets?: SheetNames;
   onUnpair?: () => void;
+  onWrap?: () => void;
 }) {
   const context: SlotContext = { system, effect, earlier, ...(sheets ? { sheets } : {}) };
   const step = group.step as any;
@@ -83,6 +84,7 @@ export function GroupCard({
           onClick={() => onMoveLane(lane === 'cost' ? 'steps' : 'cost')}
         >цена</Chip>
       ) : null}
+      {onWrap && !folded ? <Button size="sm" variant="ghost" title="Поставить этот шаг внутрь «Если»: выполняется только при условии" onClick={onWrap}>в «Если»</Button> : null}
       <Button size="sm" variant="ghost" title="выше" disabled={!onMoveUp} onClick={onMoveUp}>↑</Button>
       <Button size="sm" variant="ghost" title="ниже" disabled={!onMoveDown} onClick={onMoveDown}>↓</Button>
       <DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>
@@ -97,7 +99,7 @@ export function GroupCard({
         <Select<string> label="из какого списка" value={String(step.of ?? '')}
           options={[...(lists.some(([key]) => key === step.of) ? [] : [['', '— какого списка —'] as const]), ...lists]}
           onChange={next => edit(0, draft => { (draft as { of?: string }).of = next; })} />
-        <span className="faint">один —</span>
+        <span className="faint">каждый:</span>
         <span className="chips__chip"><span>{loopOf(effect.params, step)?.label ?? '?'}</span></span>
         <span className="step-fold__summary">шаги ниже — для каждого по очереди, выше — один раз</span>
         <span className="spacer" />
@@ -106,7 +108,11 @@ export function GroupCard({
     );
   }
 
-  if (group.kind === 'unknown') {
+  if (group.kind === 'stop') {
+    return <StopStrip step={group.step} position={position} problem={problem?.text ?? null} edit={change => edit(0, change)} actions={actions} />;
+  }
+
+  if (group.kind === 'unknown' || group.kind === 'flow') {
     return (
       <Card tone="bad">
         <CardHead title={`${position} · движок не знает типа «${group.step.type}»`}
@@ -153,8 +159,6 @@ export function GroupCard({
           ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam} />
           : null}
         {group.kind === 'table' ? <TableBody step={step} context={context} edit={edit} system={system} /> : null}
-        <ConditionFold group={group} earlier={earlier} edit={edit} context={context} />
-        {breakLine(group)}
         <StepName group={group} effect={effect} edit={edit} />
       </Card>
     </>

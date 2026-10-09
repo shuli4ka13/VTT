@@ -17,7 +17,7 @@ const sheets = new Map([['цель', 'цель'], ['действующий', 'К
 
 const attackSteps = () => [
   { id: 'hit_бросок', type: 'roll', die: 'lead', by: { expr: '@действующий' } },
-  { id: 'hit', type: 'check', successWhen: 'atLeast', continueOn: 'success', value: { expr: '@hit_бросок' }, versus: { expr: '10' } },
+  { id: 'hit', type: 'check', successWhen: 'atLeast', value: { expr: '@hit_бросок' }, versus: { expr: '10' } },
   { id: 'n', type: 'roll' },
   { type: 'apply', target: { expr: '@цель.armor' }, direction: 'subtract', value: { expr: '@n' } },
 ] as unknown as Step[];
@@ -112,28 +112,29 @@ describe('GroupCard', () => {
 
 });
 
-describe('GroupCard: условие выполнения шага', () => {
+describe('GroupCard: условие и ход — не у шага', () => {
   const earlier = [{ id: 'hit', type: 'check', at: 1, title: 'Проверка' }];
 
-  it('когда выше есть проверка с исходом да/нет, «Только если» предлагает её исход', () => {
+  it('у изменения нет «Только если»: условие ставит блок «Если», шаг лишь оборачивает себя в него', () => {
     const steps = [{ type: 'apply', direction: 'subtract', value: { expr: '4' } }] as unknown as Step[];
     const group = groupSteps(steps)[0]!;
-    const apply = steps[0] as any;
+    let wrapped = 0;
     render(<GroupCard group={group} position={2} system={system} effect={effect}
-      earlier={earlier} problem={null} edit={(_, change) => change(apply as never)} onDelete={() => {}} />);
-    expect(screen.getByText('Только если')).toBeTruthy();
-    const selects = [...document.querySelectorAll('select')] as HTMLSelectElement[];
-    const picker = selects.find(el => [...el.options].some(o => o.value === 'hit.success'))!;
-    fireEvent.change(picker, { target: { value: 'hit.success' } });
-    expect(apply.if).toEqual({ expr: '@hit.success' });
+      earlier={earlier} problem={null} edit={() => {}} onDelete={() => {}} onWrap={() => { wrapped++; }} />);
+    expect(screen.queryByText('Только если')).toBeNull();
+    expect([...document.querySelectorAll('select')].some(el => [...el.options].some(o => o.value === 'hit.success'))).toBe(false);
+    cards().click('в «Если»');
+    expect(wrapped).toBe(1);
   });
 
-  it('без проверок выше условие всё равно задаётся — формулой', () => {
+  it('у проверки нет «Шаги ниже идут при» и «Что сказать при остановке»; границы на кости — новыми словами', () => {
     const group = groupSteps(attackSteps())[0]!;
     render(<GroupCard group={group} position={1} system={system} effect={effect}
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
-    const picker = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.textContent === 'формулой…'));
-    expect(picker).toBeTruthy();
+    const text = document.body.textContent ?? '';
+    for (const gone of ['Шаги ниже идут при', 'Что сказать при остановке', 'Только если', 'Всегда успех', 'Всегда провал', 'Степени успеха']) expect(text).not.toContain(gone);
+    expect(screen.queryByPlaceholderText('например: не хватает ячейки')).toBeNull();
+    for (const label of ['Проверка', 'Успех, если на кости не меньше', 'Провал, если на кости не больше']) expect(cards().field(label)).toBeTruthy();
   });
 });
 
@@ -252,15 +253,12 @@ describe('GroupCard: величина из записи', () => {
   });
 });
 
-const checkCell = (): HTMLElement => {
-  const heads = [...document.querySelectorAll('.sheet-grid__title')].map(h => h.textContent);
-  return document.querySelectorAll('.field-row__cell')[heads.indexOf('Проверка')] as HTMLElement;
-};
+const checkCell = (): HTMLElement => cards().field('Проверка');
 
 describe('GroupCard: проверка одной формулой', () => {
   const checkSteps = () => [
     { id: 'c_бросок', type: 'roll', die: 'lead', by: { expr: '@действующий' } },
-    { id: 'c', type: 'check', successWhen: 'atLeast', continueOn: 'success', value: { expr: '@c_бросок' }, versus: { expr: '10' } },
+    { id: 'c', type: 'check', successWhen: 'atLeast', value: { expr: '@c_бросок' }, versus: { expr: '10' } },
   ] as unknown as Step[];
 
   const typed = (tail: string) => {
@@ -276,22 +274,6 @@ describe('GroupCard: проверка одной формулой', () => {
     fireEvent.keyDown(last, { key: 'Enter' });
     return { roll, check, line };
   };
-
-  it('подпись при остановке пишется текстом, а хранится формулой-литералом; с @ — формула', () => {
-    const steps = checkSteps();
-    const roll = steps[0] as Record<string, any>;
-    const check = steps[1] as Record<string, any>;
-    const group = groupSteps(steps)[0]!;
-    render(<GroupCard group={group} position={1} system={system} effect={effect} sheets={sheets}
-      earlier={[]} problem={null} edit={(at, change) => change((at === 0 ? roll : check) as never)} onDelete={() => {}} />);
-    const note = screen.getByPlaceholderText('например: не хватает ячейки') as HTMLInputElement;
-    fireEvent.change(note, { target: { value: 'не хватает ячейки' } });
-    fireEvent.blur(note);
-    expect(check.note).toEqual({ expr: '"не хватает ячейки"' });
-    fireEvent.change(note, { target: { value: '@note' } });
-    fireEvent.blur(note);
-    expect(check.note).toEqual({ expr: '@note' });
-  });
 
   it('кость — фишкой, сравнение — текстом в той же строке', () => {
     const group = groupSteps(checkSteps())[0]!;

@@ -1,3 +1,4 @@
+import { groupSteps } from '../cards.ts';
 import { Card, CardHead, Field, Select, DangerButton } from '../../../ui/primitives.tsx';
 import { registry } from '@vtt/engine/engine/steps/index';
 import { MOMENTS as TIMES } from '@vtt/engine/events/moments';
@@ -22,7 +23,7 @@ const KINDS: readonly (readonly [Kind, string])[] = [
   ['lost', 'эффект ушёл с листа'],
 ];
 
-const PHASE_OPTIONS = (Object.keys(PHASES) as Phase[]).map(key => [key, `${PHASES[key].label} — ${PHASES[key].note}`] as const);
+const PHASE_OPTIONS = (Object.keys(PHASES) as Phase[]).map(key => [key, PHASES[key].label] as const);
 
 const kindOf = (on: string): Kind => {
   if (on === SEEN) return 'seen';
@@ -50,14 +51,16 @@ function outcomesOf(system: System, listened: string, phase: Phase): (readonly [
   const steps = source.steps ?? [];
   const split = steps.findIndex(step => step.type === 'each');
   const out: (readonly [string, string])[] = [];
+  const cards = groupSteps(steps);
+  const numberOf = (index: number) => cards.filter(card => card.kind !== 'flow').findIndex(card => card.indices.includes(index)) + 1;
   steps.forEach((step, index) => {
     if (!step.id) return;
     const perTarget = phase === 'done' && split >= 0 && index > split;
     for (const output of (registry.get(step.type)?.outputs ?? []) as { path: string; label: string; kind?: string }[]) {
       if (output.kind !== 'boolean') continue;
       out.push(perTarget
-        ? [`сколько(@${TARGETS_SEED}.${step.id}${output.path}, да) >= 1`, `хоть по одной цели: шаг ${index + 1} · ${output.label}`] as const
-        : [`@${step.id}${output.path}`, `шаг ${index + 1} · ${output.label}`] as const);
+        ? [`сколько(@${TARGETS_SEED}.${step.id}${output.path}, да) >= 1`, `хоть по одной цели: шаг ${numberOf(index)} · ${output.label}`] as const
+        : [`@${step.id}${output.path}`, `шаг ${numberOf(index)} · ${output.label}`] as const);
     }
   });
   return out;

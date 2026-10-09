@@ -1,3 +1,4 @@
+import { armsOf, sees } from './flow.ts';
 import { paymentsOf } from './payments.ts';
 import { loopOf } from '../engine/steps/each.ts';
 import { tagWords } from '../engine/roll-tags.ts';
@@ -217,12 +218,15 @@ export function chainRefs(
   const earlier = new Set<string>(seeds);
   const named = new Set(sheets);
   const ids = steps.map(step => step.id).filter((id): id is string => Boolean(id));
+  const arms = armsOf(steps);
   steps.forEach((step, index) => {
     const from = whereOf(index);
-    const later = new Set(ids.filter(id => !earlier.has(id)));
-    const scope: ChainScope = { params, earlier: new Set(earlier), sheets: new Set(named), bare: true, later };
+    const visible = new Set([...seeds, ...steps.slice(0, index).flatMap((other, at) => (other.id && sees(arms, at, index) ? [String(other.id)] : []))]);
+    const later = new Set(ids.filter(id => !visible.has(id)));
+    const scope: ChainScope = { params, earlier: visible, sheets: new Set(named), bare: true, later };
     const mod = registry.get(step.type);
     for (const slot of (mod?.slots ?? []) as { key: string; kind?: string; refersTo?: string }[]) {
+      if (slot.key === 'if') continue;
       const kind = slot.refersTo ? `${slot.refersTo}Ref` : slot.kind;
       slotRefs(readPath(step, slot.key), kind, from, scope, out);
     }

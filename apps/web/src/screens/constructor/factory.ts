@@ -115,7 +115,7 @@ export const SEEN_BRICKS: StepTemplate[] = (['roll-add', 'roll-reroll', 'roll-pl
 export const BRICKS: StepTemplate[] = [
   {
     key: 'check', label: '+ проверка',
-    hint: 'Бросок и сравнение с порогом. Может остановить эффект.',
+    hint: 'Бросок и сравнение с порогом. Итог — да или нет: его читают «Если» ниже.',
     make: (system, taken) => blankCheck(system, taken),
   },
   {
@@ -139,6 +139,16 @@ export const BRICKS: StepTemplate[] = [
       const list = (effect?.params ?? []).find(p => p.kind === 'sheet' && p.many)?.key ?? '';
       return [{ type: 'each', of: list } as unknown as Step];
     },
+  },
+  {
+    key: 'branch', label: '+ если',
+    hint: 'Ветвление: шаги внутри — только если условие верно; можно добавить «иначе, если» и «иначе».',
+    make: () => [{ type: 'branch' } as unknown as Step, { type: 'end' } as unknown as Step],
+  },
+  {
+    key: 'stop', label: '+ стоп',
+    hint: 'Дальше не идём. До «Для каждого из» и в цене — действие не состоялось; в теле — стоп для этой цели.',
+    make: () => [{ type: 'stop' } as unknown as Step],
   },
   {
     key: 'number', label: '+ число',

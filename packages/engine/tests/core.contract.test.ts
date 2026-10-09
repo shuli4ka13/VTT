@@ -80,7 +80,7 @@ describe('проба внутри прогона', () => {
     const system = world({
       удар: button([
         { id: 'б_бросок', type: 'roll', die: 'к20', by: { expr: '@цель' } },
-        { id: 'б', type: 'check', value: { expr: '@б_бросок' }, versus: { expr: '10' }, continueOn: 'always' },
+        { id: 'б', type: 'check', value: { expr: '@б_бросок' }, versus: { expr: '10' } },
       ]),
       щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @носитель' }, confirm: true, steps: [] }] },
       удача: { label: 'Удача', activation: 'passive', on: [{ on: 'seen', if: { expr: '@бросающий == @носитель' }, confirm: true, steps: [{ type: 'roll-plus', value: { expr: '1' } }] }] },
@@ -189,7 +189,11 @@ describe('формы эффекта', () => {
       удар: {
         label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS],
         cost: [sub('1', '@действующий.ки')],
-        steps: [{ type: 'check', value: { expr: '@действующий.хп' }, versus: { expr: '100' } }, EACH, sub('5')],
+        steps: [
+          { id: 'порог', type: 'check', value: { expr: '@действующий.хп' }, versus: { expr: '100' } },
+          { type: 'branch', if: { expr: 'не(@порог.success)' } }, { type: 'stop' }, { type: 'end' },
+          EACH, sub('5'),
+        ],
       },
     });
     expect(() => strike(system, [sheet('а', { ки: 3 }), sheet('б')], 'б', [])).toThrow(/не состоялось/);
@@ -197,7 +201,12 @@ describe('формы эффекта', () => {
 
   it('стоп в теле на цели — мягкий конец: сделанное остаётся, «после» срабатывает', () => {
     const system = world({
-      удар: button([sub('2'), { type: 'check', value: { expr: '0' }, versus: { expr: '1' } }, sub('10')]),
+      удар: button([
+        sub('2'),
+        { id: 'порог', type: 'check', value: { expr: '0' }, versus: { expr: '1' } },
+        { type: 'branch', if: { expr: 'не(@порог.success)' } }, { type: 'stop' }, { type: 'end' },
+        sub('10'),
+      ]),
       отметка: { label: 'Отметка', activation: 'passive', on: [{ on: 'after:удар', if: { expr: '@цель == @носитель' }, steps: [add('1', '@носитель.ки')] }] },
     });
     const out = strike(system, [sheet('а'), sheet('б', {}, ['отметка'])], 'б', []);

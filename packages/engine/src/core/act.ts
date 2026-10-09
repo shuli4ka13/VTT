@@ -1,3 +1,4 @@
+import { lazyPlan } from '../model/flow.ts';
 import { actionOf, effectLabelOf } from '../events/actions.ts';
 import { asksOf } from '../model/asks.ts';
 import { loopOf } from '../engine/steps/each.ts';
@@ -146,16 +147,19 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
   if (split >= 0) {
     const each = steps[split] as StepData;
     const pre = steps.slice(0, split);
-    const isLazy = (step: StepData): boolean => runnerOf(step.type).lazy?.(step) === true;
+    const plan = lazyPlan(pre, index => runnerOf(pre[index]!.type).lazy?.(pre[index] as StepData) === true);
     const preFrame = top(root, label);
     lazy = {
       frame: preFrame,
-      steps: new Map(pre.flatMap((step, index) => (isLazy(step as StepData) ? [[String(step.id), { step: step as StepData, index }] as const] : []))),
+      steps: new Map([...plan.guards].map(([index, guard]) => {
+        const step = pre[index] as StepData;
+        return [String(step.id), { step: guard ? { ...step, if: { expr: guard } } : step, index }] as const;
+      })),
       stepIds: new Set(pre.map(step => step.id).filter((id): id is string => typeof id === 'string' && id !== '')),
     };
     preFrame.lazy = lazy;
     const sink = newSink();
-    const ran = run.exec(preFrame, pre.filter(step => !isLazy(step as StepData)), sink);
+    const ran = run.exec(preFrame, pre.filter((_, index) => !plan.guards.has(index) && !plan.hidden.has(index)), sink);
     if (ran.stopped) {
       const why = refusalWords(reportOf('effect', action.effect, actor, action.label, sink, ran.stopped, false), system);
       throw new EngineError(`«${action.label}» не состоялось: ${why ?? 'цепочка оборвана'}`);

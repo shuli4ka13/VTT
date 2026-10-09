@@ -118,7 +118,7 @@ export function WhatNext({ open, onClose, system, eventId, onEdit }: {
                       ? `· по меткам: ${m.tags.slice(0, 6).join(', ')} и ещё ${m.tags.length - 6}`
                       : `· по меткам: ${m.tags.join(', ')}`}
                   </span>
-                ) : m.where ? null : <span className="faint">· всегда</span>}
+                ) : null}
               </div>
             )) : (
               <span className="faint">

@@ -100,7 +100,8 @@ group('вызов действия', () => {
 
     test('промах не меняет ничего', () => {
       const { sheetOf, reportOf } = hit('longsword-item:0', mirra, arven, queue(2, 5));
-      eq(reportOf(arven).stopped.reason, 'check-miss');
+      eq(reportOf(arven).stopped.reason, 'stop');
+      eq(reportOf(arven).trace.find(entry => entry.type === 'check').success, false, 'стоп сработал, потому что проверка не прошла');
       eq(sheetOf(arven).values.hp_current, 44);
     });
 
@@ -133,9 +134,10 @@ group('вызов действия', () => {
       deepEq(sheetOf(arven).effects, [...arven.effects, { effectId: 'poisoned' }]);
     });
 
-    test('успех не делает ничего — и в журнале это обрыв порога, не промах', () => {
+    test('успех не делает ничего — стоп в блоке «Если» после удавшегося спаса', () => {
       const { sheetOf, reportOf } = poison(arven, queue(19));
-      eq(reportOf(arven).stopped.reason, 'check-held');
+      eq(reportOf(arven).stopped.reason, 'stop');
+      eq(reportOf(arven).trace.find(entry => entry.type === 'check').success, true, 'стоп сработал, потому что спас удался');
       eq(sheetOf(arven).values.hp_current, 44);
       deepEq(sheetOf(arven).effects, arven.effects);
     });
@@ -194,6 +196,7 @@ const PARAMETRIC = {
     { id: 'hit_бросок', type: 'roll', die: 'lead_die', bonus: { expr: '@bonus' }, tags: ['атака'],
       by: { expr: '@действующий' }, against: { expr: '@цель' } },
     { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: 'или(@versus, @цель.ac)' } },
+    { type: 'branch', if: { expr: 'не(@hit.success)' } }, { type: 'stop' }, { type: 'end' },
     { id: 'dmg', type: 'roll', fixed: { expr: 'кинуть(@damage_dice)' }, bonus: { expr: '@damage_bonus' } },
     { type: 'apply', target: { expr: '@цель.hp_current' }, direction: 'subtract',
       value: { expr: '@dmg' } },

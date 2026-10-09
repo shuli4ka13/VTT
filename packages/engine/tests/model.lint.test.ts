@@ -87,10 +87,10 @@ group('линт: висячие ссылки называются словами
     ok(errorTexts(badSystem).some(t => t.includes('«бросок» выше по цепочке нет')), errorTexts(badSystem).join('|'));
   });
 
-  test('условие «только если» ссылается на шаг выше', () => {
+  test('условие блока «Если» ссылается на шаг выше', () => {
     const system = withEffect('e', {
       params: [WHO] as never,
-      steps: [{ ...mend('@действующий.hp'), if: { expr: '@нет.success' } }] as Step[],
+      steps: [{ type: 'branch', if: { expr: '@нет.success' } }, mend('@действующий.hp'), { type: 'end' }] as Step[],
     });
     ok(errorTexts(system).some(t => t.includes('«нет» выше по цепочке нет')), errorTexts(system).join('|'));
   });
@@ -116,6 +116,7 @@ group('линт: висячие ссылки называются словами
       steps: [
         { id: 'бросок', type: 'roll', die: 'd20' },
         { id: 'hit', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
+        { type: 'branch', if: { expr: 'не(@hit.success)' } }, { type: 'stop' }, { type: 'end' },
       ] as Step[],
     });
     system.effects.thorns = { label: 'Шипы', activation: 'passive', on: [{ on: 'after:strike', if: { expr: '@hit.success' }, steps: [] }] } as never;
@@ -208,7 +209,7 @@ group('линт: слушатели, круги, входы', () => {
   test('подписка видит входы того, что слушает, и переменную его цикла; чужое имя — «чьё поле?»', () => {
     const system = withEffect('удар', {
       params: [WHO, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }] as never,
-      steps: [{ type: 'each', of: 'цели' }, { id: 'hit', type: 'check', value: { expr: '1' }, versus: { expr: '0' } }] as Step[],
+      steps: [{ type: 'each', of: 'цели' }, { id: 'hit', type: 'check', value: { expr: '1' }, versus: { expr: '0' } }, { type: 'branch', if: { expr: 'не(@hit.success)' } }, { type: 'stop' }, { type: 'end' }] as Step[],
     });
     system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'before:удар', if: { expr: 'все(@цель == @носитель, @действующий != @носитель)' }, steps: [] }] } as Effect;
     eq(errorTexts(system).join(''), '');
@@ -355,7 +356,7 @@ group('ссылки и слушатели', () => {
   test('heardNames: имена, которые слушатель получает от того, что случилось', () => {
     const system = withEffect('удар', {
       params: [WHO, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }, { key: 'бонус', kind: 'number' }] as never,
-      steps: [{ type: 'each', of: 'цели' }, { id: 'hit', type: 'check', value: { expr: '1' }, versus: { expr: '0' } }] as Step[],
+      steps: [{ type: 'each', of: 'цели' }, { id: 'hit', type: 'check', value: { expr: '1' }, versus: { expr: '0' } }, { type: 'branch', if: { expr: 'не(@hit.success)' } }, { type: 'stop' }, { type: 'end' }] as Step[],
     });
     deepEq(heardNames(system, listenerOf({ on: 'seen' })).sheets, ['бросающий', 'против']);
     deepEq(heardNames(system, listenerOf({ on: 'moment:turn-start' })).sheets, ['ходит']);
@@ -435,6 +436,15 @@ group('линт: у шага только поля его типа', () => {
   test('общие поля id, type, when допустимы у любого шага', () => {
     const system = withEffect('hit', { params: [WHO] as never, steps: [{ id: 'a', type: 'apply', if: { expr: 'да' }, target: { expr: '@действующий.hp' }, direction: 'add', value: { expr: '1' } } as unknown as Step] });
     ok(!errorTexts(system).some(t => t.includes('нет поля')), errorTexts(system).join('\n'));
+  });
+
+  test('своё условие у шага — ошибка: условие ставится блоком «Если»', () => {
+    const own = withEffect('hit', { params: [WHO] as never, steps: [{ ...mend('@действующий.hp'), if: { expr: 'да' } }] as Step[] });
+    ok(errorTexts(own).some(t => t.includes('условие теперь ставится блоком «Если»')), errorTexts(own).join('\n'));
+    const block = withEffect('hit', { params: [WHO] as never, steps: [{ type: 'branch', if: { expr: 'да' } }, mend('@действующий.hp'), { type: 'end' }] as Step[] });
+    eq(errorTexts(block).join('\n'), '');
+    const open = withEffect('hit', { params: [WHO] as never, steps: [{ type: 'branch', if: { expr: 'да' } }, mend('@действующий.hp')] as Step[] });
+    ok(errorTexts(open).some(t => t.includes('«Если» не закрыт')), errorTexts(open).join('\n'));
   });
 });
 

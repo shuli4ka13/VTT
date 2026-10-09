@@ -62,7 +62,7 @@ const onSheet = (effect: Effect, name: string): { sheet: string; rest: string } 
   return sheet ? { sheet, rest: name.slice(dot + 1) } : null;
 };
 
-const whoOf = (effect: Effect, ref: unknown): string => {
+export const whoOf = (effect: Effect, ref: unknown): string => {
   const name = /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((ref as { expr?: unknown } | undefined)?.expr ?? ''))?.[1];
   return name ? `«${sheetLabel(effect, name) ?? name}»` : '⟨кто?⟩';
 };
@@ -103,19 +103,10 @@ export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs
   return hole(emptyAs);
 }
 
-const SUCCESS_WORDS: Record<string, [string, string]> = {
-  atLeast: ['Не добросил', 'Добросил'],
-  over: ['Не перебросил', 'Перебросил'],
-  notOver: ['Перебросил', 'Уложился'],
-  under: ['Не уложился', 'Уложился'],
-  equals: ['Не попал точно', 'Попал точно'],
-};
 
 export function checkReadback(step: Step, roll: Step | null, system: System, effect: Effect, names?: Names): Segment[] {
   const s = step as any;
-  const words = SUCCESS_WORDS[s.successWhen ?? 'atLeast'] ?? SUCCESS_WORDS.atLeast!;
-  const go = s.continueOn ?? 'success';
-  const tail = go === 'always' ? '— дальше решают условия шагов.' : `. ${go === 'success' ? words[0] : words[1]} — эффект кончается.`;
+  const tail = '.';
   if (!roll) {
     return [refSegment(s.value, system, effect, 'что проверяем?', names), seg('с'), refSegment(s.versus, system, effect, 'с чем?', names), seg(tail)];
   }

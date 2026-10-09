@@ -27,6 +27,7 @@ const system = {
         EACH,
         { id: 'рывок', type: 'roll', die: 'пул_защиты', by: { expr: '@цель' }, against: { expr: '@действующий' } },
         { id: 'вырвался', type: 'check', value: { expr: '@рывок' }, versus: { expr: '@хватка' }, successWhen: 'atLeast' },
+        { type: 'branch', if: { expr: 'не(@вырвался.success)' } }, { type: 'stop' }, { type: 'end' },
       ],
     },
     выстрел: {
@@ -36,6 +37,7 @@ const system = {
         EACH,
         { id: 'защита', type: 'roll', die: 'пул_защиты', tags: ['защита'], by: { expr: '@цель' }, against: { expr: '@действующий' } },
         { id: 'попал', type: 'check', value: { expr: '@прицел' }, versus: { expr: '@защита' }, successWhen: 'over' },
+        { type: 'branch', if: { expr: 'не(@попал.success)' } }, { type: 'stop' }, { type: 'end' },
         { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '2 + @попал.margin' } },
       ],
     },

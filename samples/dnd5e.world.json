@@ -3087,6 +3087,21 @@
             }
           },
           {
+            "type": "branch",
+            "if": {
+              "expr": "не(@hit.success)"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"не вышло\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
             "id": "dmg",
             "type": "roll",
             "fixed": {
@@ -3115,6 +3130,12 @@
             }
           },
           {
+            "type": "branch",
+            "if": {
+              "expr": "не(пусто(@status))"
+            }
+          },
+          {
             "type": "status",
             "effect": {
               "expr": "@status"
@@ -3126,10 +3147,10 @@
               "наложил": {
                 "expr": "@действующий"
               }
-            },
-            "if": {
-              "expr": "не(пусто(@status))"
             }
+          },
+          {
+            "type": "end"
           }
         ],
         "cost": [
@@ -3354,16 +3375,19 @@
             }
           },
           {
-            "type": "check",
-            "value": {
-              "expr": "@slot"
-            },
-            "versus": {
-              "expr": "@spell_level"
-            },
+            "type": "branch",
+            "if": {
+              "expr": "@slot < @spell_level"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"круг ячейки ниже круга заклинания\""
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "emit",
@@ -3467,8 +3491,22 @@
             },
             "versus": {
               "expr": "@действующий.spell_dc"
-            },
-            "continueOn": "fail"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@save.success"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"устоял\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "emit",
@@ -3631,8 +3669,7 @@
             },
             "versus": {
               "expr": "@действующий.spell_dc"
-            },
-            "continueOn": "always"
+            }
           },
           {
             "id": "dmg",
@@ -3754,8 +3791,22 @@
             },
             "versus": {
               "expr": "@действующий.spell_dc"
-            },
-            "continueOn": "fail"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@save.success"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"устоял\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "emit",
@@ -3933,8 +3984,22 @@
             },
             "versus": {
               "expr": "@действующий.spell_dc"
-            },
-            "continueOn": "fail"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@save.success"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"устоял\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "status",
@@ -4017,8 +4082,22 @@
             },
             "versus": {
               "expr": "@действующий.spell_dc"
-            },
-            "continueOn": "fail"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@save.success"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"устоял\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "status",
@@ -4403,6 +4482,12 @@
         ],
         "steps": [
           {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
             "type": "apply",
             "target": {
               "expr": "@действующий.turn.действие.left"
@@ -4410,10 +4495,10 @@
             "direction": "add",
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           }
         ],
         "cost": [
@@ -4723,8 +4808,22 @@
             },
             "versus": {
               "expr": "@действующий.spell_dc"
-            },
-            "continueOn": "fail"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@save.success"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"устоял\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "status",
@@ -4934,6 +5033,21 @@
             }
           },
           {
+            "type": "branch",
+            "if": {
+              "expr": "не(@sneak.success)"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"не вышло\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
             "type": "status",
             "effect": "hidden",
             "to": {
@@ -5088,19 +5202,25 @@
         ],
         "steps": [
           {
-            "type": "check",
-            "value": {
-              "expr": "@лист.turn.действие.left"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "note": {
-              "expr": "\"действие на этом ходу уже потрачено\""
-            },
+            "type": "branch",
             "if": {
               "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.turn.действие.left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"действие на этом ходу уже потрачено\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -5109,10 +5229,10 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           }
         ]
       },
@@ -5135,19 +5255,25 @@
         ],
         "steps": [
           {
-            "type": "check",
-            "value": {
-              "expr": "@лист.turn.бонусное.left"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "note": {
-              "expr": "\"бонусное действие на этом ходу уже потрачено\""
-            },
+            "type": "branch",
             "if": {
               "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.turn.бонусное.left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"бонусное действие на этом ходу уже потрачено\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -5156,10 +5282,10 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           }
         ]
       },
@@ -5182,19 +5308,25 @@
         ],
         "steps": [
           {
-            "type": "check",
-            "value": {
-              "expr": "@лист.turn.реакция.left"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "note": {
-              "expr": "\"реакция уже потрачена\""
-            },
+            "type": "branch",
             "if": {
               "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.turn.реакция.left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"реакция уже потрачена\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -5203,10 +5335,10 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           }
         ]
       },
@@ -5229,19 +5361,25 @@
         ],
         "steps": [
           {
-            "type": "check",
-            "value": {
-              "expr": "@лист.turn.раз_за_ход.left"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "note": {
-              "expr": "\"это бывает раз за ход\""
-            },
+            "type": "branch",
             "if": {
               "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.turn.раз_за_ход.left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"это бывает раз за ход\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -5250,10 +5388,10 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           }
         ]
       },
@@ -5276,19 +5414,25 @@
         ],
         "steps": [
           {
-            "type": "check",
-            "value": {
-              "expr": "@лист.turn.действие.left"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "note": {
-              "expr": "\"действие на этом ходу уже потрачено\""
-            },
+            "type": "branch",
             "if": {
               "expr": "все(@стол.battle, @лист.turn.атаки.left < 1)"
             }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.turn.действие.left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"действие на этом ходу уже потрачено\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -5297,9 +5441,6 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "все(@стол.battle, @лист.turn.атаки.left < 1)"
             }
           },
           {
@@ -5310,9 +5451,15 @@
             "direction": "set",
             "value": {
               "expr": "@лист.attacks_per_action"
-            },
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
             "if": {
-              "expr": "все(@стол.battle, @лист.turn.атаки.left < 1)"
+              "expr": "@стол.battle"
             }
           },
           {
@@ -5322,10 +5469,10 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           }
         ]
       },
@@ -5366,6 +5513,12 @@
         ],
         "steps": [
           {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.hp_current <= 0"
+            }
+          },
+          {
             "type": "apply",
             "target": {
               "expr": "@лист.death_fail"
@@ -5373,10 +5526,10 @@
             "direction": "add",
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@лист.hp_current <= 0"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -5399,14 +5552,20 @@
             }
           },
           {
+            "type": "branch",
+            "if": {
+              "expr": "@по_хитам.overkill >= @лист.hp_max"
+            }
+          },
+          {
             "type": "status",
             "effect": "dead",
             "to": {
               "expr": "@лист"
-            },
-            "if": {
-              "expr": "@по_хитам.overkill >= @лист.hp_max"
             }
+          },
+          {
+            "type": "end"
           }
         ]
       },
@@ -5434,20 +5593,25 @@
         ],
         "steps": [
           {
-            "type": "check",
-            "value": {
-              "expr": "@лист.slots.круг_1.left"
-            },
-            "versus": {
-              "expr": "1"
-            },
+            "type": "branch",
+            "if": {
+              "expr": "@circle == 1"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.slots.круг_1.left < 1"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"нет ячейки 1-го круга\""
-            },
-            "id": "есть_1",
-            "if": {
-              "expr": "@circle == 1"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -5456,26 +5620,28 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@circle == 1"
             }
           },
           {
-            "type": "check",
-            "value": {
-              "expr": "@лист.slots.круг_2.left"
-            },
-            "versus": {
-              "expr": "1"
-            },
+            "type": "orElse",
+            "if": {
+              "expr": "@circle == 2"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.slots.круг_2.left < 1"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"нет ячейки 2-го круга\""
-            },
-            "id": "есть_2",
-            "if": {
-              "expr": "@circle == 2"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -5484,26 +5650,28 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@circle == 2"
             }
           },
           {
-            "type": "check",
-            "value": {
-              "expr": "@лист.slots.круг_3.left"
-            },
-            "versus": {
-              "expr": "1"
-            },
+            "type": "orElse",
+            "if": {
+              "expr": "@circle == 3"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.slots.круг_3.left < 1"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"нет ячейки 3-го круга\""
-            },
-            "id": "есть_3",
-            "if": {
-              "expr": "@circle == 3"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -5512,26 +5680,28 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@circle == 3"
             }
           },
           {
-            "type": "check",
-            "value": {
-              "expr": "@лист.slots.круг_4.left"
-            },
-            "versus": {
-              "expr": "1"
-            },
+            "type": "orElse",
+            "if": {
+              "expr": "@circle == 4"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.slots.круг_4.left < 1"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"нет ячейки 4-го круга\""
-            },
-            "id": "есть_4",
-            "if": {
-              "expr": "@circle == 4"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -5540,26 +5710,28 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@circle == 4"
             }
           },
           {
-            "type": "check",
-            "value": {
-              "expr": "@лист.slots.круг_5.left"
-            },
-            "versus": {
-              "expr": "1"
-            },
+            "type": "orElse",
+            "if": {
+              "expr": "@circle == 5"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.slots.круг_5.left < 1"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"нет ячейки 5-го круга\""
-            },
-            "id": "есть_5",
-            "if": {
-              "expr": "@circle == 5"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -5568,26 +5740,28 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@circle == 5"
             }
           },
           {
-            "type": "check",
-            "value": {
-              "expr": "@лист.slots.круг_6.left"
-            },
-            "versus": {
-              "expr": "1"
-            },
+            "type": "orElse",
+            "if": {
+              "expr": "@circle == 6"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.slots.круг_6.left < 1"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"нет ячейки 6-го круга\""
-            },
-            "id": "есть_6",
-            "if": {
-              "expr": "@circle == 6"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -5596,26 +5770,28 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@circle == 6"
             }
           },
           {
-            "type": "check",
-            "value": {
-              "expr": "@лист.slots.круг_7.left"
-            },
-            "versus": {
-              "expr": "1"
-            },
+            "type": "orElse",
+            "if": {
+              "expr": "@circle == 7"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.slots.круг_7.left < 1"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"нет ячейки 7-го круга\""
-            },
-            "id": "есть_7",
-            "if": {
-              "expr": "@circle == 7"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -5624,26 +5800,28 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@circle == 7"
             }
           },
           {
-            "type": "check",
-            "value": {
-              "expr": "@лист.slots.круг_8.left"
-            },
-            "versus": {
-              "expr": "1"
-            },
+            "type": "orElse",
+            "if": {
+              "expr": "@circle == 8"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.slots.круг_8.left < 1"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"нет ячейки 8-го круга\""
-            },
-            "id": "есть_8",
-            "if": {
-              "expr": "@circle == 8"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -5652,26 +5830,28 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@circle == 8"
             }
           },
           {
-            "type": "check",
-            "value": {
-              "expr": "@лист.slots.круг_9.left"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "note": {
-              "expr": "\"нет ячейки 9-го круга\""
-            },
-            "id": "есть_9",
+            "type": "orElse",
             "if": {
               "expr": "@circle == 9"
             }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.slots.круг_9.left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"нет ячейки 9-го круга\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -5680,10 +5860,10 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@circle == 9"
             }
+          },
+          {
+            "type": "end"
           }
         ]
       },
@@ -5722,16 +5902,19 @@
         ],
         "steps": [
           {
-            "type": "check",
-            "value": {
-              "expr": "@what"
-            },
-            "versus": {
-              "expr": "@amount"
-            },
+            "type": "branch",
+            "if": {
+              "expr": "@what < @amount"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "@note"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -6238,8 +6421,7 @@
                 },
                 "versus": {
                   "expr": "@носитель.spell_dc"
-                },
-                "continueOn": "always"
+                }
               },
               {
                 "type": "roll",
@@ -6512,8 +6694,22 @@
                 },
                 "versus": {
                   "expr": "@запомнено"
-                },
-                "continueOn": "success"
+                }
+              },
+              {
+                "type": "branch",
+                "if": {
+                  "expr": "не(@save.success)"
+                }
+              },
+              {
+                "type": "stop",
+                "note": {
+                  "expr": "\"не вышло\""
+                }
+              },
+              {
+                "type": "end"
               },
               {
                 "type": "status",
@@ -6620,8 +6816,22 @@
                 },
                 "versus": {
                   "expr": "@запомнено"
-                },
-                "continueOn": "success"
+                }
+              },
+              {
+                "type": "branch",
+                "if": {
+                  "expr": "не(@save.success)"
+                }
+              },
+              {
+                "type": "stop",
+                "note": {
+                  "expr": "\"не вышло\""
+                }
+              },
+              {
+                "type": "end"
               },
               {
                 "type": "status",
@@ -6810,6 +7020,21 @@
                 "versus": {
                   "expr": "@запомнено"
                 }
+              },
+              {
+                "type": "branch",
+                "if": {
+                  "expr": "не(@save.success)"
+                }
+              },
+              {
+                "type": "stop",
+                "note": {
+                  "expr": "\"не вышло\""
+                }
+              },
+              {
+                "type": "end"
               },
               {
                 "type": "status",
@@ -7063,8 +7288,22 @@
                 },
                 "versus": {
                   "expr": "@запомнено"
-                },
-                "continueOn": "success"
+                }
+              },
+              {
+                "type": "branch",
+                "if": {
+                  "expr": "не(@save.success)"
+                }
+              },
+              {
+                "type": "stop",
+                "note": {
+                  "expr": "\"не вышло\""
+                }
+              },
+              {
+                "type": "end"
               },
               {
                 "type": "status",
@@ -7675,8 +7914,22 @@
                 },
                 "versus": {
                   "expr": "@запомнено"
-                },
-                "continueOn": "success"
+                }
+              },
+              {
+                "type": "branch",
+                "if": {
+                  "expr": "не(@save.success)"
+                }
+              },
+              {
+                "type": "stop",
+                "note": {
+                  "expr": "\"не вышло\""
+                }
+              },
+              {
+                "type": "end"
               },
               {
                 "type": "status",
@@ -8429,8 +8682,22 @@
                 },
                 "versus": {
                   "expr": "(большее из(10, округлить вниз(@amount / 2)))"
-                },
-                "continueOn": "fail"
+                }
+              },
+              {
+                "type": "branch",
+                "if": {
+                  "expr": "@save.success"
+                }
+              },
+              {
+                "type": "stop",
+                "note": {
+                  "expr": "\"устоял\""
+                }
+              },
+              {
+                "type": "end"
               },
               {
                 "type": "status",
@@ -8478,8 +8745,13 @@
                 },
                 "versus": {
                   "expr": "10"
-                },
-                "continueOn": "always"
+                }
+              },
+              {
+                "type": "branch",
+                "if": {
+                  "expr": "@спас.success"
+                }
               },
               {
                 "type": "apply",
@@ -8489,10 +8761,10 @@
                 "direction": "add",
                 "value": {
                   "expr": "1"
-                },
-                "if": {
-                  "expr": "@спас.success"
                 }
+              },
+              {
+                "type": "orElse"
               },
               {
                 "type": "apply",
@@ -8502,22 +8774,34 @@
                 "direction": "add",
                 "value": {
                   "expr": "1"
-                },
-                "if": {
-                  "expr": "не(@спас.success)"
                 }
               },
               {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.death_fail"
-                },
-                "direction": "add",
-                "value": {
-                  "expr": "1"
-                },
+                "type": "end"
+              },
+              {
+                "type": "branch",
                 "if": {
                   "expr": "@спас.natural <= 1"
+                }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.death_fail"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "1"
+                }
+              },
+              {
+                "type": "end"
+              },
+              {
+                "type": "branch",
+                "if": {
+                  "expr": "@спас.natural >= 20"
                 }
               },
               {
@@ -8528,10 +8812,10 @@
                 "direction": "set",
                 "value": {
                   "expr": "1"
-                },
-                "if": {
-                  "expr": "@спас.natural >= 20"
                 }
+              },
+              {
+                "type": "end"
               }
             ]
           }
@@ -8742,13 +9026,16 @@
             },
             "steps": [
               {
-                "type": "check",
-                "value": {
-                  "expr": "@носитель.resources.relentless.left"
-                },
-                "versus": {
-                  "expr": "1"
+                "type": "branch",
+                "if": {
+                  "expr": "@носитель.resources.relentless.left < 1"
                 }
+              },
+              {
+                "type": "stop"
+              },
+              {
+                "type": "end"
               },
               {
                 "type": "apply",
@@ -9438,16 +9725,19 @@
             }
           },
           {
-            "type": "check",
-            "value": {
-              "expr": "@slot"
-            },
-            "versus": {
-              "expr": "@spell_level"
-            },
+            "type": "branch",
+            "if": {
+              "expr": "@slot < @spell_level"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"круг ячейки ниже круга заклинания\""
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "emit",

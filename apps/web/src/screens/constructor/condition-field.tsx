@@ -2,12 +2,13 @@ import type { System } from '@vtt/schema';
 import { HOLDER } from '@vtt/engine/model/references';
 import { listOf } from '@vtt/engine/model/lists';
 import { rowTables } from '@vtt/engine/model/tables';
-import { Field, Fold, Select, Input } from '../../ui/primitives.tsx';
+import { useState } from 'react';
+import { compile } from '@vtt/engine/formula';
+import { Button, Field, Select, Input } from '../../ui/primitives.tsx';
 import { FormulaField } from '../../ui/formula-field.tsx';
-import { formulaAsLabels } from '../../ui/formula.tsx';
 import type { SheetNames } from '../../ui/formula-chips.tsx';
 import { readGuard, writeGuard, splitHolder, joinHolder } from './guard-expr.ts';
-import type { When, RowIs } from './guard-expr.ts';
+import type { When } from './guard-expr.ts';
 
 export type QuickKind = 'boolean' | 'number' | 'text' | 'tags';
 
@@ -18,40 +19,12 @@ export interface Phrase { expr: string; label: string }
 export const holderPhrase = (name: string): string => `@${name} == @${HOLDER}`;
 
 const BY_FORMULA = ':формула';
-
-const numberWords = (when: When): string => {
-  const low = when.atLeast?.trim();
-  const high = when.atMost?.trim();
-  if (low && high) return `от ${low} до ${high}`;
-  if (low) return `не меньше ${low}`;
-  if (high) return `не больше ${high}`;
-  return 'любое число';
+const NOT = ':не:';
+const yesNo = (label: string): [string, string] => {
+  const [head, tail = ''] = label.split(' — ');
+  const short = tail.replace(/^да или нет: /, '');
+  return short ? [`${head} — ${short}`, `${head} — не ${short}`] : [`${label} — да`, `${label} — нет`];
 };
-
-const rowIsWords = (where: RowIs, system?: System): string => {
-  const column = system?.tables?.[where.table]?.columns?.find(c => c.key === where.column);
-  return `у метки «${column?.label || where.column}» = «${String(where.is)}»`;
-};
-
-export function whenWords(when: When | null | undefined, labelOf: (ref: string) => string, system?: System): string | null {
-  if (!when?.ref) return null;
-  const label = labelOf(when.ref);
-  if (when.where) {
-    const parts = [when.has !== undefined ? `есть «${when.has}»` : '', rowIsWords(when.where, system)].filter(Boolean).join(' и ');
-    return `${when.not ? 'не так, что ' : ''}${label}: ${parts}`;
-  }
-  if (when.has !== undefined) return `${label} ${when.not ? 'не' : ''} «${when.has}»`.replace('  ', ' ');
-  if (when.atLeast !== undefined || when.atMost !== undefined) return `${label} ${numberWords(when)}`;
-  return when.not ? label.replace(' — ', ' — не ') : label;
-}
-
-export function conditionWords(expr: string | undefined, system: System, quick: readonly QuickRef[] = [], phrases: readonly Phrase[] = []): string | null {
-  if (!expr?.trim()) return null;
-  const phrase = phrases.find(one => one.expr === expr.trim());
-  if (phrase) return phrase.label;
-  const labelOf = (ref: string) => quick.find(one => one.ref === ref)?.label ?? ref;
-  return whenWords(readGuard(expr), labelOf, system) ?? formulaAsLabels(system, expr);
-}
 
 const tablesOfTags = (system: System, tags: string[]) =>
   rowTables(system)
@@ -60,7 +33,7 @@ const tablesOfTags = (system: System, tags: string[]) =>
 
 export function ConditionField({
   value, onChange, system, holders = [], quick = [], phrases = [], names, sheets, where, placeholder,
-  title = 'Только если', holderLabel = 'Кого касается', holderHint, ruleHint,
+  title = 'Только если', holderLabel = 'Кого касается', holderHint, ruleHint, required = false, bare = false,
 }: {
   value: string | undefined;
   onChange: (expr: string | null) => void;
@@ -76,29 +49,22 @@ export function ConditionField({
   holderLabel?: string;
   holderHint?: string;
   ruleHint?: string;
+  required?: boolean;
+  bare?: boolean;
 }) {
   const options = holders.map(([name, label]) => [holderPhrase(name), label] as const);
   const { holder, rest } = splitHolder(value, options.map(([expr]) => expr));
   const write = (nextHolder: string, nextRest: string) => onChange(joinHolder(nextHolder, nextRest));
-
-  const phrase = phrases.find(one => one.expr === rest.trim()) ?? null;
-  const when = phrase ? null : readGuard(rest);
-  const known = when ? quick.find(one => one.ref === when.ref) ?? null : null;
-  const custom = rest.trim() !== '' && !phrase && !known;
-  const picked = custom ? BY_FORMULA : phrase ? phrase.expr : known ? known.ref : '';
-
-  const put = (next: When | null) => write(holder, next ? writeGuard(next) : '');
-  const keep = (next: Partial<When>) => {
-    if (!when) return;
-    const made: When = { ref: when.ref, ...next };
-    for (const key of ['atLeast', 'atMost', 'has', 'not', 'where'] as const) if (made[key] === undefined) delete made[key];
-    put(made);
+  const facts = factsOf(rest);
+  const [adding, setAdding] = useState(false);
+  const rows = adding || (required && !facts.length) ? [...facts, ''] : facts;
+  const setRow = (at: number, expr: string | null) => {
+    const next = [...rows];
+    if (expr) next[at] = expr; else next.splice(at, 1);
+    setAdding(false);
+    write(holder, joinFacts(next.filter(Boolean)));
   };
-
-  const words = conditionWords(rest, system, quick, phrases);
-  const whereTable = when?.where ? system.tables?.[when.where.table] : undefined;
-  const whereColumn = whereTable?.columns?.find(c => c.key === when?.where?.column);
-  const whereValues = whereColumn?.kind === 'choice' ? (listOf(system, whereColumn.from) ?? []) : [];
+  const open = rows.length > 0 && rows[rows.length - 1] !== '';
 
   return (
     <>
@@ -111,46 +77,130 @@ export function ConditionField({
           />
         </Field>
       ) : null}
-      <Fold title={title} summary={words ? `если ${words}` : options.length ? 'больше условий нет' : 'всегда'}>
-        <div className="row">
-          <Field label={options.length ? 'Ещё условие' : 'Делать'} hint={ruleHint}>
-            <Select<string>
-              value={picked}
-              options={[['', options.length ? 'нет' : 'всегда'],
-                ...phrases.map(one => [one.expr, one.label] as const),
-                ...quick.map(one => [one.ref, `если ${one.label}`] as const),
-                [BY_FORMULA, 'формулой…']]}
-              onChange={next => {
-                if (!next) { write(holder, ''); return; }
-                if (next === BY_FORMULA) { write(holder, rest.trim() || 'да'); return; }
-                if (phrases.some(one => one.expr === next)) { write(holder, next); return; }
-                put({ ref: next });
-              }}
+      <div className={`cond${bare ? ' cond--bare' : ''}`}>
+        {!bare && rows.length ? <span className="cond__title">{title}</span> : null}
+        {rows.map((fact, at) => (
+          <div className="cond__row" key={`${at}:${fact}`}>
+            {at > 0 ? <span className="cond__and">и</span> : null}
+            <FactRow
+              value={fact} system={system} quick={quick} phrases={phrases} where={where}
+              {...(names ? { names } : {})} {...(sheets ? { sheets } : {})} {...(placeholder ? { placeholder } : {})}
+              onChange={next => setRow(at, next)}
             />
-          </Field>
+            {required && rows.length === 1 ? null : (
+              <button type="button" className="extra__x" title="убрать условие" aria-label="убрать условие" onClick={() => setRow(at, null)}>×</button>
+            )}
+            {open && at === rows.length - 1 ? (
+              <Button size="sm" variant="ghost" title="ещё одно условие — должны сойтись все" onClick={() => setAdding(true)}>+ и</Button>
+            ) : null}
+          </div>
+        ))}
+        {!rows.length ? <Button size="sm" variant="ghost" onClick={() => setAdding(true)}>+ условие</Button> : null}
+      </div>
+      {ruleHint && rows.length ? <span className="faint">{ruleHint}</span> : null}
+    </>
+  );
+}
 
-          {custom ? (
-            <Field label="Условие" hint="Верно — делается, нет — пропускается.">
+function topArgs(text: string): string[] | null {
+  const head = /^все\s*\(/u.exec(text);
+  if (!head || !text.endsWith(')')) return null;
+  const inner = text.slice(head[0].length, -1);
+  const out: string[] = [];
+  let depth = 0;
+  let quote = '';
+  let start = 0;
+  for (let at = 0; at < inner.length; at++) {
+    const ch = inner[at]!;
+    if (quote) { if (ch === quote) quote = ''; continue; }
+    if (ch === '"' || ch === "'") { quote = ch; continue; }
+    if (ch === '(') depth++;
+    else if (ch === ')') { depth--; if (depth < 0) return null; }
+    else if (ch === ',' && depth === 0) { out.push(inner.slice(start, at).trim()); start = at + 1; }
+  }
+  if (depth !== 0 || quote) return null;
+  out.push(inner.slice(start).trim());
+  return out.every(Boolean) ? out : null;
+}
+
+function factsOf(expr: string): string[] {
+  const text = expr.trim();
+  if (!text) return [];
+  try { compile(text); } catch { return [text]; }
+  const parts = topArgs(text);
+  if (!parts) return [text];
+  const out: string[] = [];
+  for (let at = 0; at < parts.length; at++) {
+    const pair = at + 1 < parts.length ? `все(${parts[at]}, ${parts[at + 1]})` : null;
+    const both = pair ? readGuard(pair) : null;
+    if (pair && both && both.atLeast !== undefined && both.atMost !== undefined) { out.push(pair); at++; continue; }
+    out.push(parts[at]!);
+  }
+  return out;
+}
+
+const joinFacts = (facts: string[]): string => (facts.length > 1 ? `все(${facts.join(', ')})` : facts[0] ?? '');
+
+function FactRow({ value, onChange, system, quick, phrases, names, sheets, where, placeholder }: {
+  value: string;
+  onChange: (expr: string | null) => void;
+  system: System;
+  quick: readonly QuickRef[];
+  phrases: readonly Phrase[];
+  names?: Map<string, string>;
+  sheets?: SheetNames;
+  where: string;
+  placeholder?: string;
+}) {
+  const phrase = phrases.find(one => one.expr === value.trim()) ?? null;
+  const when = phrase ? null : readGuard(value);
+  const known = when ? quick.find(one => one.ref === when.ref) ?? null : null;
+  const custom = value.trim() !== '' && !phrase && !known;
+  const [formula, setFormula] = useState(false);
+  const picked = custom || formula ? BY_FORMULA : phrase ? phrase.expr : known ? `${known.kind === 'boolean' && when?.not ? NOT : ''}${known.ref}` : '';
+  const put = (next: When | null) => onChange(next ? writeGuard(next) : null);
+  const keep = (next: Partial<When>) => {
+    if (!when) return;
+    const made: When = { ref: when.ref, ...next };
+    for (const key of ['atLeast', 'atMost', 'has', 'not', 'where'] as const) if (made[key] === undefined) delete made[key];
+    put(made);
+  };
+  const whereTable = when?.where ? system.tables?.[when.where.table] : undefined;
+  const whereColumn = whereTable?.columns?.find(c => c.key === when?.where?.column);
+  const whereValues = whereColumn?.kind === 'choice' ? (listOf(system, whereColumn.from) ?? []) : [];
+  const showFormula = custom || formula;
+
+  return (
+    <div className="cond__fact">
+      {showFormula ? null : <Select<string>
+        value={picked}
+        options={[['', '— что проверяем —'],
+          ...phrases.map(one => [one.expr, one.label] as const),
+          ...quick.flatMap(one => (one.kind === 'boolean'
+            ? [[one.ref, yesNo(one.label)[0]] as const, [`${NOT}${one.ref}`, yesNo(one.label)[1]] as const]
+            : [[one.ref, one.label] as const])),
+          [BY_FORMULA, 'формулой…']]}
+        onChange={next => {
+          if (!next) { setFormula(false); onChange(null); return; }
+          if (next === BY_FORMULA) { setFormula(true); return; }
+          setFormula(false);
+          if (phrases.some(one => one.expr === next)) { onChange(next); return; }
+          if (next.startsWith(NOT)) { put({ ref: next.slice(NOT.length), not: true }); return; }
+          put({ ref: next });
+        }}
+      />}
+          {showFormula ? (
+            <span className="cond__formula">
               <FormulaField
-                value={rest}
+                value={value}
                 system={system}
                 where={where}
                 {...(names ? { extraNames: names } : {})}
                 {...(sheets ? { sheets } : {})}
                 {...(placeholder ? { placeholder } : {})}
-                onCommit={next => write(holder, next)}
+                onCommit={next => { setFormula(false); onChange(next.trim() || null); }}
               />
-            </Field>
-          ) : null}
-
-          {when && known?.kind === 'boolean' ? (
-            <Field label="Исход">
-              <Select
-                value={when.not ? 'no' : 'yes'}
-                options={[['yes', 'да'], ['no', 'нет']] as const}
-                onChange={next => keep(next === 'no' ? { not: true } : {})}
-              />
-            </Field>
+            </span>
           ) : null}
 
           {when && known?.kind === 'tags' ? (
@@ -205,7 +255,7 @@ export function ConditionField({
 
           {when && known?.kind === 'number' ? (
             <>
-              <Field label="Не меньше" hint="Пусто — нижней границы нет.">
+              <Field label="не меньше">
                 <FormulaField
                   value={when.atLeast ?? ''}
                   system={system}
@@ -215,7 +265,7 @@ export function ConditionField({
                   onCommit={next => keep({ atLeast: next.trim() || undefined, atMost: when.atMost })}
                 />
               </Field>
-              <Field label="Не больше" hint="Пусто — верхней границы нет.">
+              <Field label="не больше">
                 <FormulaField
                   value={when.atMost ?? ''}
                   system={system}
@@ -242,8 +292,6 @@ export function ConditionField({
               </Field>
             </>
           ) : null}
-        </div>
-      </Fold>
-    </>
+    </div>
   );
 }

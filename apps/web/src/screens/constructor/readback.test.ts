@@ -18,27 +18,27 @@ const effect = { params: [{ key: 'p_1', label: 'кость урона', kind: 'd
 const hero = { ...effect, params: [...(effect.params ?? []), { key: 'атакующий', label: 'Атакующий', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' } }], steps: [{ type: 'each', of: 'цели' }] } as unknown as Effect;
 
 describe('checkReadback', () => {
-  it('бросок с «Бросает» читается фразой с лейблами системы, без первого лица', () => {
+  it('бросок с «Бросает» читается фразой с лейблами системы, без первого лица; о ходе шагов проверка не говорит', () => {
     const roll = { id: 'hit_бросок', type: 'roll', die: 'lead', bonus: { expr: '#power_mod' }, by: { expr: '@атакующий' }, against: { expr: '@цель' } } as unknown as Step;
     const step = {
-      id: 'hit', type: 'check', successWhen: 'atLeast', continueOn: 'success',
+      id: 'hit', type: 'check', successWhen: 'atLeast',
       value: { expr: '@hit_бросок' }, versus: { expr: '@цель.armor' },
     } as unknown as Step;
     expect(joinReadback(checkReadback(step, roll, system, hero)))
-      .toBe('«Атакующий» бросает 1к20 + Мод Силы против «цель» — с «Класс брони» (цель). Не добросил — эффект кончается.');
+      .toBe('«Атакующий» бросает 1к20 + Мод Силы против «цель» — с «Класс брони» (цель).');
   });
 
   it('пустой бросок — оранжевые пропуски: кто бросает и с чем сравнить', () => {
     const roll = { type: 'roll', die: 'lead' } as unknown as Step;
     const step = { type: 'check', value: { expr: '@x' } } as unknown as Step;
     expect(joinReadback(checkReadback(step, roll, system, effect)))
-      .toBe('⟨кто?⟩ бросает 1к20 — с ⟨с чем сравнить?⟩. Не добросил — эффект кончается.');
+      .toBe('⟨кто?⟩ бросает 1к20 — с ⟨с чем сравнить?⟩.');
   });
 
   it('сравнение без броска', () => {
-    const step = { type: 'check', value: { expr: '@dmg' }, versus: { expr: '@цель.armor' }, continueOn: 'fail', successWhen: 'over' } as unknown as Step;
+    const step = { type: 'check', value: { expr: '@dmg' }, versus: { expr: '@цель.armor' }, successWhen: 'over' } as unknown as Step;
     expect(joinReadback(checkReadback(step, null, system, hero)))
-      .toBe('результат «dmg» с «Класс брони» (цель). Перебросил — эффект кончается.');
+      .toBe('результат «dmg» с «Класс брони» (цель).');
   });
 });
 

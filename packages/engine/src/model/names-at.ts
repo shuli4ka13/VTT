@@ -1,3 +1,4 @@
+import { armsOf, sees } from './flow.ts';
 import { loopOf } from '../engine/steps/each.ts';
 import { flattenSystem } from './inherit.ts';
 import { heardNames, listenerOf, callNamesOf, CALL_TAGS, HOLDER, TARGETS_SEED } from './references.ts';
@@ -54,7 +55,9 @@ const holder = (): NameAt => ({ name: HOLDER, label: 'носитель — то�
 
 function stepsBefore(steps: readonly Step[], index: number, withLoop: boolean, params: readonly Param[] = []): NameAt[] {
   const out: NameAt[] = [];
-  steps.slice(0, index).forEach(step => {
+  const arms = armsOf(steps);
+  steps.slice(0, index).forEach((step, at) => {
+    if (!sees(arms, at, index)) return;
     if (step.type === 'each') {
       const loop = loopOf(params, step as { of?: unknown });
       if (withLoop && loop) out.push({ name: loop.key, label: loop.label, kind: 'sheet', group: 'loop' });

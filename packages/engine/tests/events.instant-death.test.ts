@@ -20,7 +20,8 @@ const sys: any = {
     мгновенная_смерть: {
       label: 'Мгновенная смерть', activation: 'passive',
       on: [{ on: 'after:удар', if: { expr: '@цель == @носитель' }, steps: [
-        { type: 'check', value: { expr: '@рана.overkill' }, versus: { expr: '@носитель.хп_макс' }, successWhen: 'atLeast', continueOn: 'success' },
+        { id: 'перебор', type: 'check', value: { expr: '@рана.overkill' }, versus: { expr: '@носитель.хп_макс' }, successWhen: 'atLeast' },
+        { type: 'branch', if: { expr: 'не(@перебор.success)' } }, { type: 'stop' }, { type: 'end' },
         { type: 'status', mode: 'apply', effect: 'мёртв', to: { expr: '@носитель' } },
       ] }],
     },
@@ -71,12 +72,12 @@ group('мгновенная смерть — реакция на себя', () =
     eq(out.reports.length, 1, 'реакция на себя новых отчётов-ответок не рождает');
   });
 
-  test('без перебора реакция обрывается на сравнении — и это видно', () => {
+  test('без перебора реакция обрывается стопом после сравнения — и это видно', () => {
     const out = hit(2, 6, 12);
     eq(out.sheet.values.хп, 3, '6 − (1+2)');
     eq(dead(out), false);
 
-    eq((out.report.reactions ?? [])[0]?.stopped?.reason, 'check-miss');
+    eq((out.report.reactions ?? [])[0]?.stopped?.reason, 'stop');
   });
 
 });

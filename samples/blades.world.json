@@ -363,9 +363,14 @@
             "versus": {
               "expr": "4"
             },
-            "continueOn": "always",
             "degrees": {
               "table": "outcome"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "все(@rating > 0, сколько(@бросок.dice.rolls, 6) >= 2)"
             }
           },
           {
@@ -373,20 +378,13 @@
             "table": "crit",
             "value": {
               "expr": "сколько(@бросок.dice.rolls, 6)"
-            },
-            "if": {
-              "expr": "все(@rating > 0, сколько(@бросок.dice.rolls, 6) >= 2)"
             }
           },
           {
-            "type": "apply",
-            "target": {
-              "expr": "@стол.alarm"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "меньшее из(8, @стол.alarm + 1)"
-            },
+            "type": "end"
+          },
+          {
+            "type": "branch",
             "if": {
               "expr": "есть(@бросок.degree, \"успех с последствием\")"
             }
@@ -398,11 +396,27 @@
             },
             "direction": "set",
             "value": {
-              "expr": "меньшее из(8, @стол.alarm + 2)"
-            },
+              "expr": "меньшее из(8, @стол.alarm + 1)"
+            }
+          },
+          {
+            "type": "orElse",
             "if": {
               "expr": "есть(@бросок.degree, \"провал\")"
             }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@стол.alarm"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "меньшее из(8, @стол.alarm + 2)"
+            }
+          },
+          {
+            "type": "end"
           }
         ]
       },
@@ -437,18 +451,23 @@
             },
             "versus": {
               "expr": "4"
-            },
-            "continueOn": "always"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "все(@действующий.resolve > 0, сколько(@бросок.dice.rolls, 6) >= 2)"
+            }
           },
           {
             "type": "table",
             "table": "crit",
             "value": {
               "expr": "сколько(@бросок.dice.rolls, 6)"
-            },
-            "if": {
-              "expr": "все(@действующий.resolve > 0, сколько(@бросок.dice.rolls, 6) >= 2)"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -511,7 +530,6 @@
             "versus": {
               "expr": "4"
             },
-            "continueOn": "always",
             "degrees": {
               "table": "outcome"
             }

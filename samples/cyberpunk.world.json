@@ -1197,14 +1197,20 @@
             "id": "dmg"
           },
           {
+            "type": "branch",
+            "if": {
+              "expr": "@dmg.atMax >= 2"
+            }
+          },
+          {
             "type": "roll",
             "fixed": {
               "expr": "5"
             },
-            "if": {
-              "expr": "@dmg.atMax >= 2"
-            },
             "id": "boom"
+          },
+          {
+            "type": "end"
           },
           {
             "type": "each",
@@ -1229,6 +1235,21 @@
             }
           },
           {
+            "type": "branch",
+            "if": {
+              "expr": "не(@hit.success)"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"не вышло\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
             "type": "emit",
             "effect": "damage",
             "args": {
@@ -1250,6 +1271,12 @@
             }
           },
           {
+            "type": "branch",
+            "if": {
+              "expr": "@dmg.atMax >= 2"
+            }
+          },
+          {
             "type": "emit",
             "effect": "damage",
             "args": {
@@ -1268,10 +1295,10 @@
               "источник": {
                 "expr": "@действующий"
               }
-            },
-            "if": {
-              "expr": "@dmg.atMax >= 2"
             }
+          },
+          {
+            "type": "end"
           }
         ],
         "group": "Атака",
@@ -1353,6 +1380,12 @@
         "label": "Урон",
         "steps": [
           {
+            "type": "branch",
+            "if": {
+              "expr": "все(@aim == \"по телу\", @damage_type.armor == \"через броню\")"
+            }
+          },
+          {
             "type": "check",
             "value": {
               "expr": "@amount"
@@ -1361,10 +1394,22 @@
               "expr": "@лист.sp_body"
             },
             "successWhen": "over",
-            "id": "сквозь_броню",
+            "id": "сквозь_броню"
+          },
+          {
+            "type": "branch",
             "if": {
-              "expr": "все(@aim == \"по телу\", @damage_type.armor == \"через броню\")"
+              "expr": "не(@сквозь_броню.success)"
             }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"броня выдержала\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -1373,9 +1418,6 @@
             },
             "value": {
               "expr": "@сквозь_броню.margin"
-            },
-            "if": {
-              "expr": "все(@aim == \"по телу\", @damage_type.armor == \"через броню\")"
             }
           },
           {
@@ -1385,9 +1427,15 @@
             },
             "value": {
               "expr": "1"
-            },
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
             "if": {
-              "expr": "все(@aim == \"по телу\", @damage_type.armor == \"через броню\")"
+              "expr": "все(@aim == \"по голове\", @damage_type.armor == \"через броню\")"
             }
           },
           {
@@ -1399,18 +1447,27 @@
               "expr": "@лист.sp_head"
             },
             "successWhen": "over",
-            "id": "сквозь_шлем",
+            "id": "сквозь_шлем"
+          },
+          {
+            "type": "branch",
             "if": {
-              "expr": "все(@aim == \"по голове\", @damage_type.armor == \"через броню\")"
+              "expr": "не(@сквозь_шлем.success)"
             }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"броня выдержала\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "roll",
             "fixed": {
               "expr": "@сквозь_шлем.margin"
-            },
-            "if": {
-              "expr": "все(@aim == \"по голове\", @damage_type.armor == \"через броню\")"
             },
             "id": "в_голову_всего"
           },
@@ -1419,9 +1476,6 @@
             "type": "roll",
             "fixed": {
               "expr": "если(да, округлить вниз((@в_голову_всего) * 2), @в_голову_всего)"
-            },
-            "if": {
-              "expr": "все(@aim == \"по голове\", @damage_type.armor == \"через броню\")"
             }
           },
           {
@@ -1431,9 +1485,6 @@
             },
             "value": {
               "expr": "@в_голову"
-            },
-            "if": {
-              "expr": "все(@aim == \"по голове\", @damage_type.armor == \"через броню\")"
             }
           },
           {
@@ -1443,9 +1494,15 @@
             },
             "value": {
               "expr": "1"
-            },
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
             "if": {
-              "expr": "все(@aim == \"по голове\", @damage_type.armor == \"через броню\")"
+              "expr": "@damage_type.armor == \"мимо брони\""
             }
           },
           {
@@ -1455,10 +1512,10 @@
             },
             "value": {
               "expr": "@amount"
-            },
-            "if": {
-              "expr": "@damage_type.armor == \"мимо брони\""
             }
+          },
+          {
+            "type": "end"
           }
         ],
         "params": [
@@ -1513,19 +1570,25 @@
         ],
         "steps": [
           {
-            "type": "check",
-            "value": {
-              "expr": "@лист.turn_action"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "note": {
-              "expr": "\"действие на этом ходу уже потрачено\""
-            },
+            "type": "branch",
             "if": {
               "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.turn_action < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"действие на этом ходу уже потрачено\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -1534,10 +1597,10 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           }
         ]
       },
@@ -1744,8 +1807,7 @@
                 "versus": {
                   "expr": "@носитель.body"
                 },
-                "successWhen": "under",
-                "continueOn": "always"
+                "successWhen": "under"
               },
               {
                 "type": "apply",
@@ -1758,6 +1820,12 @@
                 }
               },
               {
+                "type": "branch",
+                "if": {
+                  "expr": "не(@спас.success)"
+                }
+              },
+              {
                 "type": "apply",
                 "target": {
                   "expr": "@носитель.dead"
@@ -1765,10 +1833,10 @@
                 "direction": "set",
                 "value": {
                   "expr": "да"
-                },
-                "if": {
-                  "expr": "не(@спас.success)"
                 }
+              },
+              {
+                "type": "end"
               }
             ]
           },

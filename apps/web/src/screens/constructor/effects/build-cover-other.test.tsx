@@ -6,7 +6,7 @@ import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import type { System, Effect } from '@vtt/schema';
 import { useWorld } from '../../../store/world.ts';
 import { openAll } from '../../../testing/render-open.tsx';
-import { within, stepCard } from '../../../testing/cards.ts';
+import { within, stepCard, block, headOf, addToArm, addArm, stopNote, wrapIf } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
 
 const worldOf = (id: string) => SAMPLE_WORLDS.find(w => w.system.id === id)!;
@@ -72,8 +72,7 @@ describe('эффекты пресетов собираются руками: Sha
       within(card()).select('С метками', tag);
       within(card()).formula('На сколько', '-2');
       within(card()).select('Кого касается', '@бросающий == @носитель');
-      within(card()).select('Ещё условие', 'формулой…');
-      within(card()).formula('Условие', '@носитель.seriously');
+      within(card()).when('=@носитель.seriously');
     }
     dump({ got: built('serious_wound_rule'), goal });
     expect(built('serious_wound_rule')).toEqual(goal);
@@ -86,8 +85,7 @@ describe('эффекты пресетов собираются руками: Sha
     ui.select('Что именно', 'ranged_attack');
     ui.select('Когда именно', 'done');
     ui.select('Кого касается', '@действующий == @носитель');
-    ui.select('Ещё условие', 'формулой…');
-    ui.formula('Условие', 'все(@атака_бросок.atMin * 2 > @атака_бросок.rolled, @атака_бросок.natural >= 1)');
+    ui.when('=все(@атака_бросок.atMin * 2 > @атака_бросок.rolled, @атака_бросок.natural >= 1)');
     dump({ got: built('glitch'), goal });
     expect(built('glitch')).toEqual(goal);
   });
@@ -143,10 +141,7 @@ describe('эффекты пресетов собираются руками: Sha
     within(root()).select('Какое поле', field);
     within(root()).select('Как', how);
     within(root()).formula('Сколько', value);
-    if (when) {
-      within(root()).select('Делать', 'формулой…');
-      within(root()).formula('Условие', when);
-    }
+    if (when) wrapIf(root, when.startsWith('шаг ') ? when : `=${when}`);
   };
 
   const nameStep = (card: () => HTMLElement, name: string): void => {
@@ -163,20 +158,18 @@ describe('эффекты пресетов собираются руками: Sha
     ui.select('Что случилось', 'moment');
     within(h()).select('Когда', 'turn-start');
     within(h()).select('Кого касается', '@ходит == @носитель');
-    within(h()).select('Ещё условие', 'формулой…');
-    within(h()).formula('Условие', '@носитель.mortal');
+    within(h()).when('=@носитель.mortal');
 
     within(handlerAt(1)).click('+ проверка');
     const at = (n: number, k: number) => () => stepCard(new RegExp(`^${k} · `), handlerAt(n));
     within(at(1, 1)()).formula('Проверка', 'кинуть(@lead_die) + @носитель.death_penalty < @носитель.body');
     within(at(1, 1)()).select('Метки', 'спасбросок');
-    within(at(1, 1)()).select('Шаги ниже идут при', 'always');
     nameStep(at(1, 1), 'спас');
 
     within(handlerAt(1)).click('+ изменение');
     change(at(1, 2), 'носитель', 'death_penalty', 'add', '1');
     within(handlerAt(1)).click('+ изменение');
-    change(at(1, 3), 'носитель', 'dead', 'set', 'да', 'не(@спас.success)');
+    change(at(1, 3), 'носитель', 'dead', 'set', 'да', 'шаг 1 · Проверка — не пройдена');
 
     ui.click('+ когда');
     h = () => stepCard(/^Подписка №2/);
@@ -225,11 +218,11 @@ describe('эффекты пресетов собираются руками: Sha
     param(ui, 'spend', 3, 'Сколько', 'number', 'amount');
     param(ui, 'spend', 4, 'Если не хватает', 'text', 'note', { ask: 'empty' });
 
-    ui.click('+ проверка');
+    ui.click('+ если');
+    addToArm(block(0), 0, 'stop');
+    within(headOf(block(0))).when('=@what < @amount');
+    stopNote(1, '@note');
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
-    within(at(1)()).formula('Проверка', '@what >= @amount');
-    within(at(1)()).type('Что сказать при остановке', '@note');
-    nameStep(at(1), '');
 
     ui.click('+ изменение');
     within(at(2)()).select('У кого', ':what');
@@ -253,37 +246,41 @@ describe('эффекты пресетов собираются руками: Sha
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
     const body = 'все(@aim == "по телу", @damage_type.armor == "через броню")';
     const headshot = 'все(@aim == "по голове", @damage_type.armor == "через броню")';
-    const when = (card: () => HTMLElement, expr: string) => {
-      within(card()).select('Делать', 'формулой…');
-      within(card()).formula('Условие', expr);
+    const guarded = (flow: number, expr: string) => {
+      ui.click('+ если');
+      within(headOf(block(flow))).when(`=${expr}`);
     };
-    const check = (k: number, formula: string, name: string, expr: string) => {
-      ui.click('+ проверка');
+    const check = (flow: number, k: number, formula: string, name: string) => {
+      addToArm(block(flow), 0, 'check');
       within(at(k)()).formula('Проверка', formula);
       nameStep(at(k), name);
-      when(at(k), expr);
+      addToArm(block(flow), 0, 'branch');
+      within(headOf(block(flow + 1))).when(`шаг ${k} · Проверка — не пройдена`);
+      addToArm(block(flow + 1), 0, 'stop');
+      stopNote(k + 1, 'броня выдержала');
     };
-    const number = (k: number, formula: string, name: string, expr: string) => {
-      ui.click('+ число');
+    const number = (flow: number, k: number, formula: string, name: string) => {
+      addToArm(block(flow), 0, 'number');
       within(at(k)()).formula('Сколько', formula);
       nameStep(at(k), name);
-      when(at(k), expr);
     };
-    const apply = (k: number, field: string, value: string, expr: string, glued = k) => {
-      ui.click('+ изменение');
+    const apply = (flow: number, k: number, field: string, value: string) => {
+      addToArm(block(flow), 0, 'change');
       change(at(k), 'лист', field, 'subtract', value);
-      when(at(glued), expr);
     };
 
-    check(1, '@amount > @лист.sp_body', 'сквозь_броню', body);
-    apply(2, 'hp', '@сквозь_броню.margin', body);
-    apply(3, 'sp_body', '1', body);
-    check(4, '@amount > @лист.sp_head', 'сквозь_шлем', headshot);
-    number(5, '@сквозь_шлем.margin', 'в_голову_всего', headshot);
-    number(6, 'если(да, округлить вниз((@в_голову_всего) * 2), @в_голову_всего)', 'в_голову', headshot);
-    apply(7, 'hp', '@в_голову', headshot, 6);
-    apply(7, 'sp_head', '1', headshot);
-    apply(8, 'hp', '@amount', '@damage_type.armor == "мимо брони"');
+    guarded(0, body);
+    check(0, 1, '@amount > @лист.sp_body', 'сквозь_броню');
+    apply(0, 3, 'hp', '@сквозь_броню.margin');
+    apply(0, 4, 'sp_body', '1');
+    guarded(2, headshot);
+    check(2, 5, '@amount > @лист.sp_head', 'сквозь_шлем');
+    number(2, 7, '@сквозь_шлем.margin', 'в_голову_всего');
+    number(2, 8, 'если(да, округлить вниз((@в_голову_всего) * 2), @в_голову_всего)', 'в_голову');
+    apply(2, 9, 'hp', '@в_голову');
+    apply(2, 9, 'sp_head', '1');
+    guarded(4, '@damage_type.armor == "мимо брони"');
+    apply(4, 10, 'hp', '@amount');
 
     dump({ got: built('damage'), goal });
     expect(built('damage')).toEqual(goal);
@@ -325,8 +322,7 @@ describe('эффекты пресетов собираются руками: Sha
 
     ui.click('+ проверка');
     within(at(3)()).formula('Проверка', '@бросок_бросок >= 4');
-    within(at(3)()).select('Шаги ниже идут при', 'always');
-    within(at(3)()).select('Степени успеха', 'outcome');
+    within(at(3)()).select('Исход ступенями', 'outcome');
     nameStep(at(3), 'бросок');
 
     ui.click('+ таблица');
@@ -334,13 +330,17 @@ describe('эффекты пресетов собираются руками: Sha
     within(at(4)()).select('По чему ищем строку', 'value');
     within(at(4)()).formula('Число', 'сколько(@бросок.dice.rolls, 6)');
     nameStep(at(4), '');
-    within(at(4)()).select('Делать', 'формулой…');
-    within(at(4)()).formula('Условие', 'все(@rating > 0, сколько(@бросок.dice.rolls, 6) >= 2)');
+    wrapIf(at(4), '=все(@rating > 0, сколько(@бросок.dice.rolls, 6) >= 2)');
 
-    ui.click('+ изменение');
-    change(at(5), 'стол', 'alarm', 'set', 'меньшее из(8, @стол.alarm + 1)', 'есть(@бросок.degree, "успех с последствием")');
-    ui.click('+ изменение');
-    change(at(6), 'стол', 'alarm', 'set', 'меньшее из(8, @стол.alarm + 2)', 'есть(@бросок.degree, "провал")');
+    ui.click('+ если');
+    within(headOf(block(1))).when('шаг 3 · Проверка — какая ступень успеха');
+    within(headOf(block(1))).type('Ступень', 'успех с последствием');
+    addToArm(block(1), 0, 'change');
+    change(at(5), 'стол', 'alarm', 'set', 'меньшее из(8, @стол.alarm + 1)');
+    addArm(block(1), '+ иначе, если');
+    within(headOf(block(1), 1)).when('=есть(@бросок.degree, "провал")');
+    addToArm(block(1), 1, 'change');
+    change(at(6), 'стол', 'alarm', 'set', 'меньшее из(8, @стол.alarm + 2)');
 
     dump({ got: built('risky_action'), goal });
     expect(built('risky_action')).toEqual(goal);

@@ -71,7 +71,7 @@ describe('описание слотов живёт в движке, а не в �
     expect(registry.size).toBeGreaterThan(0);
     for (const [type, mod] of registry) {
       const slots = slotsOf(type) ?? [];
-      if (mod.splits) {
+      if (mod.splits || type === 'end') {
         expect(mod.label, type).toMatch(/[а-яё]/i);
         continue;
       }

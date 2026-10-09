@@ -228,7 +228,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
             effect={effect} system={system} edit={edit}
             empty={idleWords(effect)}
             onMoveLane={moveLane}
-            startAt={groupSteps(effect.cost ?? []).length}
+            startAt={groupSteps(effect.cost ?? []).filter(card => card.kind !== 'flow').length}
             lead={<SelfTrack id={id} at={index => ({ part: 'cost', index })} effect={effect} system={system} edit={edit} onMoveLane={moveLane} />}
             onAddCost={id => edit(draft => { (draft.cost ??= []).unshift(payStep(id)); })}
           />
@@ -353,7 +353,7 @@ function Handlers({ id, effect, system, edit }: {
               empty="шагов нет — отзывается, но ничего не делает"
               onMoveLane={moveLane}
               onRoll={handler.on === 'seen'}
-              startAt={groupSteps(carrier.cost ?? []).length}
+              startAt={groupSteps(carrier.cost ?? []).filter(card => card.kind !== 'flow').length}
               lead={<SelfTrack id={id} at={step => ({ part: 'handler-cost', handler: index, index: step })} effect={carrier} system={system} edit={editCarrier} onMoveLane={moveLane} />}
               {...(handler.confirm ? { onAddCost: (cost: string) => editCarrier(draft => { (draft.cost ??= []).unshift(payStep(cost)); }) } : {})}
             />

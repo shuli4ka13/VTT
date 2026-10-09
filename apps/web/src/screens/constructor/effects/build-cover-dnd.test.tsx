@@ -6,7 +6,7 @@ import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import type { System, Effect } from '@vtt/schema';
 import { useWorld } from '../../../store/world.ts';
 import { openAll } from '../../../testing/render-open.tsx';
-import { within, stepCard } from '../../../testing/cards.ts';
+import { within, stepCard, block, headOf, addToArm, stopNote } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
 
 const worldOf = (id: string) => SAMPLE_WORLDS.find(w => w.system.id === id)!;
@@ -168,7 +168,7 @@ describe('эффекты D&D собираются в конструкторе р
     expect(built('incapacitated')).toEqual(goal);
   });
 
-  it('D&D «Парализован» (paralyzed): правки броска, поле, выдача, вход-память, подписка на конец хода; умолч: on[0].steps[1].continueOn = "success"', { timeout: 90000 }, () => {
+  it('D&D «Парализован» (paralyzed): правки броска, поле, выдача, вход-память, подписка на конец хода, не спасся — стоп', { timeout: 90000 }, () => {
     const [goal] = start('dnd5e', ['paralyzed']);
     const ui = fresh('+ висит и правит', goal!.label!, 'paralyzed', 'Состояния', goal!.description!);
     lifetime('permanent', 'refresh');
@@ -197,28 +197,30 @@ describe('эффекты D&D собираются в конструкторе р
     within(handlerHead(1)).select('Что случилось', 'moment');
     within(handlerHead(1)).select('Когда', 'turn-end');
     within(handlerHead(1)).select('Кого касается', '@ходит == @носитель');
-    within(handlerHead(1)).select('Ещё условие', 'формулой…');
-    within(handlerHead(1)).formula('Условие', 'или(@запомнено, 0) > 0');
+    within(handlerHead(1)).when('=или(@запомнено, 0) > 0');
 
     within(handlerAt(1)).click('+ проверка');
     let card = stepCard(/^1 · /, handlerAt(1));
     within(card).formula('Проверка', 'кинуть(@lead_die) + @носитель.abilities.мудрость.save >= @запомнено');
     card = stepCard(/^1 · /, handlerAt(1));
     marks(card, 'спасбросок', 'мудрость');
-    card = stepCard(/^1 · /, handlerAt(1));
-    within(card).select('Шаги ниже идут при', 'success');
     nameStep(stepCard(/^1 · /, handlerAt(1)), 'save');
 
+    within(handlerAt(1)).click('+ если');
+    addToArm(block(0, handlerAt(1)), 0, 'stop');
+    within(headOf(block(0, handlerAt(1)))).when('шаг 1 · Проверка — не пройдена');
+    stopNote(2, 'не вышло', handlerAt(1));
+
     within(handlerAt(1)).click('+ изменение');
-    card = stepCard(/^2 · /, handlerAt(1));
+    card = stepCard(/^3 · /, handlerAt(1));
     within(card).click('состояние');
-    card = stepCard(/^2 · /, handlerAt(1));
+    card = stepCard(/^3 · /, handlerAt(1));
     within(card).select('Что делаем', 'remove');
     within(card).select('Какое', 'paralyzed');
     within(card).formula('С кого', '@носитель');
 
     dump({ got: built('paralyzed'), goal });
-    expect(built('paralyzed')).toEqual(presetDefault(goal!, ['on', '0', 'steps', '1', 'continueOn']));
+    expect(built('paralyzed')).toEqual(goal);
   });
 
   it('D&D «Кость вдохновения наготове» (bardic_ready): на 1 срабатывание, «увидев кости» — прибавить кость', { timeout: 60000 }, () => {
@@ -269,8 +271,7 @@ describe('эффекты D&D собираются в конструкторе р
     within(handlerHead(1)).select('Что именно', 'атака');
     within(handlerHead(1)).select('Когда именно', 'before');
     within(handlerHead(1)).select('Кого касается', '@цель == @носитель');
-    within(handlerHead(1)).select('Ещё условие', 'формулой…');
-    within(handlerHead(1)).formula('Условие', '@hit.success');
+    within(handlerHead(1)).when('=@hit.success');
     within(handlerHead(1)).select('Решение', 'ask');
 
     ui.select(handlerAt(1).querySelector<HTMLElement>('.add-cost select')!, 'cost_reaction');
@@ -319,15 +320,19 @@ describe('эффекты D&D собираются в конструкторе р
     within(at(2)).formula('Бросает', '@цель');
     within(at(2)).formula('Против кого', '@действующий');
     marks(at(2), 'спасбросок', '=@save_by');
-    within(at(2)).select('Шаги ниже идут при', 'fail');
     nameStep(at(2), 'save');
 
+    ui.click('+ если');
+    addToArm(block(0), 0, 'stop');
+    within(headOf(block(0))).when('шаг 2 · Проверка — пройдена');
+    stopNote(3, 'устоял');
+
     ui.click('+ изменение');
-    within(at(3)).click('состояние');
-    within(at(3)).select('Какое', ':вход:status');
-    within(at(3)).formula('На кого', '@цель');
-    within(at(3)).formula('Запомнит: Запомненное число', '@действующий.spell_dc');
-    within(at(3)).formula('Запомнит: Кто наложил', '@действующий');
+    within(at(4)).click('состояние');
+    within(at(4)).select('Какое', ':вход:status');
+    within(at(4)).formula('На кого', '@цель');
+    within(at(4)).formula('Запомнит: Запомненное число', '@действующий.spell_dc');
+    within(at(4)).formula('Запомнит: Кто наложил', '@действующий');
     dump({ got: built('spell_condition'), goal });
     expect(built('spell_condition')).toEqual(goal);
   });
@@ -350,8 +355,7 @@ describe('эффекты D&D собираются в конструкторе р
       const card = lastModifier;
       within(card()).select('С метками', 'атака');
       within(card()).select('Какая правка', edit);
-      within(card()).select('Ещё условие', 'формулой…');
-      within(card()).formula('Условие', when);
+      within(card()).when(`=${when}`);
     };
     rollEdit('advantage', 'все(@против == @носитель, @бросающий == @кого)');
     rollEdit('disadvantage', 'все(@бросающий == @носитель, @против == @кого)');
@@ -381,12 +385,17 @@ describe('эффекты D&D собираются в конструкторе р
     nameStep(stepCard(/^4 · /), 'sneak');
     marks(stepCard(/^2 · /), 'проверка', 'ловкость', 'скрытность');
 
+    ui.click('+ если');
+    addToArm(block(0), 0, 'stop');
+    within(headOf(block(0))).when('шаг 4 · Проверка — не пройдена');
+    stopNote(5, 'не вышло');
+
     ui.click('+ изменение');
-    within(stepCard(/^5 · /)).click('состояние');
-    card = stepCard(/^5 · /);
+    within(stepCard(/^6 · /)).click('состояние');
+    card = stepCard(/^6 · /);
     within(card).select('Какое', 'hidden');
-    within(stepCard(/^5 · /)).formula('На кого', '@цель');
-    within(stepCard(/^5 · /)).formula('Запомнит: Кого не замечает', '@действующий');
+    within(stepCard(/^6 · /)).formula('На кого', '@цель');
+    within(stepCard(/^6 · /)).formula('Запомнит: Кого не замечает', '@действующий');
     dump({ got: built('hide'), goal });
     expect(built('hide')).toEqual(goal);
   });

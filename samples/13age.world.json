@@ -416,16 +416,18 @@
             },
             "versus": {
               "expr": "@цель.ac"
-            },
-            "continueOn": "always"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@hit.success"
+            }
           },
           {
             "type": "roll",
             "fixed": {
               "expr": "(кинуть(@weapon_die, @действующий.level * если(@hit.natural >= 20, 2, 1)) + @damage_with)"
-            },
-            "if": {
-              "expr": "@hit.success"
             },
             "id": "dmg"
           },
@@ -442,10 +444,10 @@
               "источник": {
                 "expr": "@действующий"
               }
-            },
-            "if": {
-              "expr": "@hit.success"
             }
+          },
+          {
+            "type": "orElse"
           },
           {
             "type": "emit",
@@ -460,10 +462,10 @@
               "источник": {
                 "expr": "@действующий"
               }
-            },
-            "if": {
-              "expr": "не(@hit.success)"
             }
+          },
+          {
+            "type": "end"
           }
         ],
         "cost": [
@@ -546,6 +548,21 @@
             "versus": {
               "expr": "@цель.ac"
             }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "не(@hit.success)"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"не вышло\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "emit",
@@ -676,19 +693,25 @@
         ],
         "steps": [
           {
-            "type": "check",
-            "value": {
-              "expr": "@лист.turn_standard"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "note": {
-              "expr": "\"стандартное действие на этом ходу уже потрачено\""
-            },
+            "type": "branch",
             "if": {
               "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.turn_standard < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"стандартное действие на этом ходу уже потрачено\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -697,10 +720,10 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           }
         ]
       },

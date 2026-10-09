@@ -1498,15 +1498,34 @@
             "of": "цели"
           },
           {
+            "id": "проверка",
             "type": "check",
             "value": {
               "expr": "@атк"
             },
             "versus": {
               "expr": "1"
-            },
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "не(@проверка.success)"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"на этой дистанции оружие не бьёт\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "все(@атк - @цель.defense_rating <= -4, все(@цель.edge_left < 7, @цель.edge_gained < 2))"
             }
           },
           {
@@ -1517,9 +1536,6 @@
             "direction": "add",
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "все(@атк - @цель.defense_rating <= -4, все(@цель.edge_left < 7, @цель.edge_gained < 2))"
             }
           },
           {
@@ -1530,10 +1546,10 @@
             "direction": "add",
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "все(@атк - @цель.defense_rating <= -4, все(@цель.edge_left < 7, @цель.edge_gained < 2))"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "id": "атака_против",
@@ -1560,20 +1576,22 @@
             },
             "versus": {
               "expr": "@атака_против"
-            },
-            "continueOn": "always"
+            }
           },
           {
-            "type": "check",
-            "value": {
-              "expr": "@атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural"
-            },
-            "versus": {
-              "expr": "0"
-            },
+            "type": "branch",
+            "if": {
+              "expr": "(@атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural) < 0"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"промах: успехов атаки меньше, чем у защиты\""
             }
+          },
+          {
+            "type": "end"
           },
           {
             "id": "сопротивление_бросок",
@@ -1600,8 +1618,13 @@
             },
             "versus": {
               "expr": "0"
-            },
-            "continueOn": "always"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@physical_hit >= 1"
+            }
           },
           {
             "type": "apply",
@@ -1611,10 +1634,10 @@
             "direction": "add",
             "value": {
               "expr": "большее из(0, @dv + или(@режим.dv, 0) + или(@приём.dv, 0) + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural - @сопротивление.natural)"
-            },
-            "if": {
-              "expr": "@physical_hit >= 1"
             }
+          },
+          {
+            "type": "orElse"
           },
           {
             "type": "apply",
@@ -1624,9 +1647,15 @@
             "direction": "add",
             "value": {
               "expr": "большее из(0, @dv + или(@режим.dv, 0) + или(@приём.dv, 0) + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural - @сопротивление.natural)"
-            },
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
             "if": {
-              "expr": "@physical_hit < 1"
+              "expr": "все(@electric >= 1, большее из(0, @dv + или(@режим.dv, 0) + или(@приём.dv, 0) + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural - @сопротивление.natural) >= 1)"
             }
           },
           {
@@ -1634,9 +1663,15 @@
             "effect": "shocked",
             "to": {
               "expr": "@цель"
-            },
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
             "if": {
-              "expr": "все(@electric >= 1, большее из(0, @dv + или(@режим.dv, 0) + или(@приём.dv, 0) + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural - @сопротивление.natural) >= 1)"
+              "expr": "большее из(0, @dv + или(@режим.dv, 0) + или(@приём.dv, 0) + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural - @сопротивление.natural) > @цель.body"
             }
           },
           {
@@ -1644,9 +1679,15 @@
             "effect": "prone",
             "to": {
               "expr": "@цель"
-            },
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
             "if": {
-              "expr": "большее из(0, @dv + или(@режим.dv, 0) + или(@приём.dv, 0) + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural - @сопротивление.natural) > @цель.body"
+              "expr": "все(или(@приём.knockout, 0) >= 1, большее из(0, @dv + или(@режим.dv, 0) + или(@приём.dv, 0) + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural - @сопротивление.natural) > @цель.willpower)"
             }
           },
           {
@@ -1657,27 +1698,33 @@
             "direction": "set",
             "value": {
               "expr": "@цель.stun_max"
-            },
-            "if": {
-              "expr": "все(или(@приём.knockout, 0) >= 1, большее из(0, @dv + или(@режим.dv, 0) + или(@приём.dv, 0) + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural - @сопротивление.natural) > @цель.willpower)"
             }
+          },
+          {
+            "type": "end"
           }
         ],
         "cost": [
           {
-            "type": "check",
-            "value": {
-              "expr": "@действующий.edge_left"
-            },
-            "versus": {
-              "expr": "3"
-            },
-            "note": {
-              "expr": "\"нужно 3 очка Преимущества\""
-            },
+            "type": "branch",
             "if": {
               "expr": "(если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) >= 1"
             }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.edge_left < 3"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"нужно 3 очка Преимущества\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -1686,10 +1733,10 @@
             },
             "value": {
               "expr": "3"
-            },
-            "if": {
-              "expr": "(если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) >= 1"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "emit",
@@ -1713,19 +1760,25 @@
             }
           },
           {
-            "type": "check",
-            "value": {
-              "expr": "@действующий.complex_left"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "note": {
-              "expr": "\"сложное действие на этом ходу уже потрачено\""
-            },
+            "type": "branch",
             "if": {
               "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.complex_left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"сложное действие на этом ходу уже потрачено\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -1734,10 +1787,10 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           }
         ]
       },
@@ -1952,8 +2005,13 @@
             },
             "versus": {
               "expr": "(большее из(0, округлить вниз(5 - @цель.essence)))"
-            },
-            "continueOn": "always"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@помощь.success"
+            }
           },
           {
             "type": "apply",
@@ -1962,9 +2020,6 @@
             },
             "value": {
               "expr": "меньшее из(@цель.stun, большее из(0, @помощь.margin))"
-            },
-            "if": {
-              "expr": "@помощь.success"
             }
           },
           {
@@ -1974,10 +2029,10 @@
             },
             "value": {
               "expr": "меньшее из(@цель.physical, округлить вниз(большее из(0, @помощь.margin - @цель.stun) / 2))"
-            },
-            "if": {
-              "expr": "@помощь.success"
             }
+          },
+          {
+            "type": "end"
           }
         ]
       },
@@ -2012,8 +2067,7 @@
             },
             "versus": {
               "expr": "0"
-            },
-            "continueOn": "always"
+            }
           },
           {
             "type": "apply",
@@ -2074,8 +2128,7 @@
             },
             "versus": {
               "expr": "0"
-            },
-            "continueOn": "always"
+            }
           },
           {
             "type": "apply",
@@ -2125,19 +2178,25 @@
         ],
         "cost": [
           {
-            "type": "check",
-            "value": {
-              "expr": "@действующий.simple_left"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "note": {
-              "expr": "\"простых действий не осталось\""
-            },
+            "type": "branch",
             "if": {
               "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.simple_left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"простых действий не осталось\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -2146,10 +2205,10 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@стол.battle"
             }
+          },
+          {
+            "type": "end"
           }
         ],
         "params": [
@@ -2205,16 +2264,19 @@
         ],
         "steps": [
           {
-            "type": "check",
-            "value": {
-              "expr": "@what"
-            },
-            "versus": {
-              "expr": "@amount"
-            },
+            "type": "branch",
+            "if": {
+              "expr": "@what < @amount"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "@note"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -2243,6 +2305,12 @@
             },
             "steps": [
               {
+                "type": "branch",
+                "if": {
+                  "expr": "все(@действующий.edge_left < 7, @действующий.edge_gained < 2)"
+                }
+              },
+              {
                 "type": "apply",
                 "target": {
                   "expr": "@действующий.edge_left"
@@ -2250,9 +2318,6 @@
                 "direction": "add",
                 "value": {
                   "expr": "1"
-                },
-                "if": {
-                  "expr": "все(@действующий.edge_left < 7, @действующий.edge_gained < 2)"
                 }
               },
               {
@@ -2263,10 +2328,10 @@
                 "direction": "add",
                 "value": {
                   "expr": "1"
-                },
-                "if": {
-                  "expr": "все(@действующий.edge_left < 7, @действующий.edge_gained < 2)"
                 }
+              },
+              {
+                "type": "end"
               }
             ]
           }

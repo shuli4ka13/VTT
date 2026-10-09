@@ -73,22 +73,27 @@ describe('BRICKS', () => {
     for (const brick of BRICKS) {
       const made = brick.make(system, []);
       for (const step of made) {
-        expect(['roll', 'check', 'apply', 'status', 'table', 'each']).toContain(step.type);
+        expect(['roll', 'check', 'apply', 'status', 'table', 'each', 'branch', 'end', 'stop']).toContain(step.type);
       }
       expect(JSON.stringify(made)).not.toMatch(/"tag"/);
     }
   });
 
-  it('шаг палитры с итогом получает имя сам, и оно не сталкивается с занятыми; изменение — без имени', () => {
+  it('шаг палитры с итогом получает имя сам, и оно не сталкивается с занятыми; изменение и ход — без имени', () => {
     for (const brick of BRICKS) {
       const made = brick.make(system, []);
       if (made[0]!.type === 'each') continue;
-      if (made[0]!.type === 'apply') { expect(made[0]!.id).toBeUndefined(); continue; }
+      if (['apply', 'branch', 'stop'].includes(made[0]!.type)) { for (const step of made) expect(step.id, brick.key).toBeUndefined(); continue; }
       for (const step of made) expect(step.id, brick.key).toBeTruthy();
       const used = made.map(step => String(step.id));
       const again = brick.make(system, used);
       for (const step of again) expect(used, brick.key).not.toContain(step.id);
     }
+  });
+
+  it('«+ если» кладёт пустой блок: метка «Если» без условия и метка конца; «+ стоп» — стоп без текста', () => {
+    expect(BRICKS.find(b => b.key === 'branch')!.make(system, [])).toEqual([{ type: 'branch' }, { type: 'end' }]);
+    expect(BRICKS.find(b => b.key === 'stop')!.make(system, [])).toEqual([{ type: 'stop' }]);
   });
 
   it('«+ проверка» отдаёт пару: бросок с «Бросает» и проверку, читающую его', () => {

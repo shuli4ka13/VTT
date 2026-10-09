@@ -2,6 +2,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, fireEvent, cleanup } from '@testing-library/react';
 import { HandlerCard } from './handler-card.tsx';
+import { within } from '../../../testing/cards.ts';
 import type { System, Handler } from '@vtt/schema';
 
 const system = {
@@ -23,8 +24,11 @@ const card = (handler: Handler) => {
   return { view, get: () => current };
 };
 
-const conditionSelect = () => [...document.querySelectorAll('select')]
-  .find(el => [...el.options].some(o => o.textContent === 'формулой…'))!;
+const conditionSelect = (): HTMLSelectElement => {
+  const find = () => [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.textContent === 'формулой…'));
+  if (!find()) fireEvent.click([...document.querySelectorAll('button')].find(b => b.textContent === '+ условие')!);
+  return find()!;
+};
 
 describe('«когда»: исходы под момент', () => {
   afterEach(cleanup);
@@ -37,11 +41,14 @@ describe('«когда»: исходы под момент', () => {
   it('«завершено» не предлагает итог одной цели: условие — формулой, и она знает таблицу итогов по целям', () => {
     const { get } = card({ on: 'done:удар', steps: [] });
     fireEvent.change(conditionSelect(), { target: { value: ':формула' } });
-    expect(get().if?.expr).toBe('да');
+    expect(document.querySelector('.cond__formula')).toBeTruthy();
+    expect(get().if).toBeUndefined();
+    within(document.body).formula(document.querySelector<HTMLElement>('.cond__formula')!, 'сколько(@итоги.hit.success, да) >= 2');
+    expect(get().if?.expr).toBe('сколько(@итоги.hit.success, да) >= 2');
     cleanup();
-    const { view } = card({ on: 'done:удар', if: { expr: 'сколько(@итоги.hit.success, да) >= 1' }, steps: [] });
-    expect((conditionSelect() as HTMLSelectElement).value).toBe(':формула');
-    expect(view.container.textContent).toContain('если сколько(итоги.hit.success, да) >= 1');
+    const { view } = card({ on: 'done:удар', if: { expr: 'сколько(@итоги.hit.success, да) >= 2' }, steps: [] });
+    expect(view.container.querySelector('.cond__formula')).toBeTruthy();
+    expect([...view.container.querySelectorAll<HTMLInputElement>('.cond__formula input')].map(i => i.value)).toEqual(['сколько(@итоги.hit.success, да) >= 2']);
   });
 
   it('у «завершено» нет выбора «Кому», зато есть «Кого касается»', () => {
@@ -52,7 +59,7 @@ describe('«когда»: исходы под момент', () => {
 
   it('«Когда именно» пишет фазу в «что случилось»', () => {
     const { view, get } = card({ on: 'before:удар', steps: [] });
-    const phase = view.getByDisplayValue(/^до — /) as HTMLSelectElement;
+    const phase = view.getByDisplayValue('до') as HTMLSelectElement;
     fireEvent.change(phase, { target: { value: 'after' } });
     expect(get().on).toBe('after:удар');
   });

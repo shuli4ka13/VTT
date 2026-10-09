@@ -18,7 +18,8 @@ const spell: any = {
   params: [...WHO, { key: 'порог', label: 'Порог', kind: 'number' }],
   steps: [
     EACH,
-    { type: 'check', value: { expr: '@порог' }, versus: { expr: '@цель.хп' } },
+    { id: 'порог_взят', type: 'check', value: { expr: '@порог' }, versus: { expr: '@цель.хп' } },
+    { type: 'branch', if: { expr: 'не(@порог_взят.success)' } }, { type: 'stop' }, { type: 'end' },
     kill,
   ],
 };
@@ -27,7 +28,8 @@ const despair: any = {
   params: WHO,
   steps: [
     EACH,
-    { type: 'check', value: { expr: '@цель.хп_макс / 2' }, versus: { expr: '@цель.хп' } },
+    { id: 'порог_взят', type: 'check', value: { expr: '@цель.хп_макс / 2' }, versus: { expr: '@цель.хп' } },
+    { type: 'branch', if: { expr: 'не(@порог_взят.success)' } }, { type: 'stop' }, { type: 'end' },
     kill,
   ],
 };
@@ -42,7 +44,7 @@ const cast = (порог: string | null, хп: number, хп_макс: number) =>
   const wordRecord = { ...book.records[0], bindings: [{ label: 'Слово', effect: 'слово', args: { порог: порог ?? '0' } }] };
   const withArg = { records: [wordRecord, despairRecord] };
   const out = exchange({ system: full, compendium: withArg as any, die: () => 1, sheets: [маг, жертва] as any, actionId: `${порог === null ? 'отчаяние' : 'слово'}:0`, fromId: 'маг', toId: 'жертва' });
-  return { sheet: out.sheets.find(s => s.id === 'жертва')!, stopped: out.reports[0]!.report.stopped as any };
+  return { sheet: out.sheets.find(s => s.id === 'жертва')!, stopped: out.reports[0]!.report.stopped as any, trace: out.reports[0]!.report.trace as any[] };
 };
 
 group('формула из записи листом цели', () => {
@@ -53,7 +55,8 @@ group('формула из записи листом цели', () => {
   test('120 хитов — слишком здорова, слово молчит', () => {
     const out = cast('100', 120, 300);
     eq(out.sheet.values.хп, 120, 'хиты не тронуты');
-    eq(out.stopped.reason, 'check-miss', 'в журнале видно, ПОЧЕМУ не сработало');
+    eq(out.stopped.reason, 'stop', 'цепочка оборвана стопом');
+    eq(out.trace.find(entry => entry.type === 'check')?.success, false, 'в журнале видно, ПОЧЕМУ не сработало: проверка порога не прошла');
   });
 
   test('«Слово отчаяния»: порог — половина максимума САМОЙ жертвы', () => {

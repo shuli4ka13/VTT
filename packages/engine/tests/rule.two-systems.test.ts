@@ -28,29 +28,33 @@ group('две системы одними слотами', () => {
       const sheet = sheetOf(out, mirra.id);
 
       eq(report.stopped, null);
-      eq(report.trace.length, 5, 'проверка, ленивый расчёт урона, вызов урона и два применения в общем эффекте «Урон»');
+      eq(report.trace.length, 6, 'проверка, пропущенный стоп, ленивый расчёт урона, вызов урона и два применения в общем эффекте «Урон»')
+      eq(report.trace[1].type, 'stop');
+      eq(report.trace[1].skipped, true, 'попал — стоп в блоке «Если» не сработал');
       eq(sharedReport(out).trace[0].total, 16, 'бросок 10 плюс бонус атаки 6 — один раз, до целей');
       eq(report.trace[0].versus, 14, 'КД посчитан целью');
       eq(report.trace[0].total, 16);
       eq(report.trace[0].margin, 2);
-      eq(report.trace[1].total, 8, 'урон считается при первом обращении: кость меча 5 плюс Сила 3');
-      eq(report.trace[2].event, 'damage', 'удар не трогает хиты сам — отправляет посчитанное');
-      deepEq(report.trace[2].tags, ['рубящий'], 'тип урона приехал из записи оружия');
-      eq(report.trace[2].amount, 8);
-      eq(report.trace[4].within, 'damage', 'хиты снимает общий эффект');
-      eq(report.trace[4].from, 21);
-      eq(report.trace[4].to, 13);
+      eq(report.trace[2].total, 8, 'урон считается при первом обращении: кость меча 5 плюс Сила 3');
+      eq(report.trace[3].event, 'damage', 'удар не трогает хиты сам — отправляет посчитанное');
+      deepEq(report.trace[3].tags, ['рубящий'], 'тип урона приехал из записи оружия');
+      eq(report.trace[3].amount, 8);
+      eq(report.trace[5].within, 'damage', 'хиты снимает общий эффект');
+      eq(report.trace[5].from, 21);
+      eq(report.trace[5].to, 13);
       deepEq(report.changes, [{ tag: 'hp_current', from: 21, to: 13, sheetId: mirra.id }],
         'временные хиты были нулём и нулём остались — в изменениях их нет');
       eq(sheet.values.hp_current, 13);
     });
 
-    test('промах: обрыв на проверке, в журнале check-miss, цель не тронута', () => {
+    test('промах: стоп в блоке «Если» после проверки обрывает, цель не тронута', () => {
       const out = play5('longsword-item:0', arven, mirra, [2, 5]);
       const report = effectReport(out);
       const sheet = sheetOf(out, mirra.id);
-      eq(report.stopped.reason, 'check-miss');
-      eq(report.trace.length, 1, 'после обрыва шаги не исполнялись');
+      eq(report.stopped.reason, 'stop');
+      eq(report.trace[0].success, false);
+      eq(report.trace[1].type, 'stop');
+      eq(report.trace.length, 2, 'после обрыва шаги не исполнялись');
       eq(sheet.values.hp_current, 21);
       deepEq(report.changes, []);
     });
@@ -60,8 +64,8 @@ group('две системы одними слотами', () => {
       const out = play5('longsword-item:0', arven, stony, [10, 5]);
       const report = effectReport(out);
       const sheet = sheetOf(out, stony.id);
-      eq(report.trace[2].incoming, 8, 'пришло восемь…');
-      eq(report.trace[2].amount, 4, '…каменная кожа оставила четыре');
+      eq(report.trace[3].incoming, 8, 'пришло восемь…');
+      eq(report.trace[3].amount, 4, '…каменная кожа оставила четыре');
       eq(sheet.values.hp_current, 17);
     });
 
@@ -72,7 +76,7 @@ group('две системы одними слотами', () => {
       deepEq(sheetOf(failed, arven.id).effects, [...arven.effects, { effectId: 'poisoned' }]);
 
       const held = play5('poison-spray:0', mirra, arven, [19, 4, 5]);
-      eq(effectReport(held).stopped.reason, 'check-held', 'спасся — обрыв, и он различим в журнале');
+      eq(effectReport(held).stopped.reason, 'stop', 'спасся — стоп в блоке «Если», и он различим в журнале');
       eq(sheetOf(held, arven.id).values.hp_current, 44);
       deepEq(sheetOf(held, arven.id).effects, arven.effects);
     });
@@ -202,10 +206,10 @@ group('две системы одними слотами', () => {
       const swordNow = strike(margined, compendium, 'longsword-item:0', [10, 5]);
       const axeNow = strike(margined, book, 'axe-item:0', [10, 7]);
 
-      eq(swordWas.trace[2].amount, 8, 'было: кость 5 плюс Сила 3');
-      eq(axeWas.trace[2].amount, 10, 'было: кость 7 плюс та же Сила 3');
-      eq(swordNow.trace[2].amount, 10, 'стало: плюс два в формуле урона — записи не правили');
-      eq(axeNow.trace[2].amount, 12, 'стало: и у второй записи тоже');
+      eq(swordWas.trace[3].amount, 8, 'было: кость 5 плюс Сила 3');
+      eq(axeWas.trace[3].amount, 10, 'было: кость 7 плюс та же Сила 3');
+      eq(swordNow.trace[3].amount, 10, 'стало: плюс два в формуле урона — записи не правили');
+      eq(axeNow.trace[3].amount, 12, 'стало: и у второй записи тоже');
     });
   });
 

@@ -395,7 +395,8 @@ describe('вопросы к человеку не теряют названно�
       effects: {
         удар: button('Удар', [
           { id: 'бросок_к', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
-          { id: 'бросок', type: 'check', value: { expr: '@бросок_к' }, versus: { expr: '0' }, continueOn: 'success' },
+          { id: 'бросок', type: 'check', value: { expr: '@бросок_к' }, versus: { expr: '0' } },
+          { type: 'branch', if: { expr: 'не(@бросок.success)' } }, { type: 'stop' }, { type: 'end' },
           sub('@цель.хиты', '@сила'),
         ], {
           params: [{ key: 'сила', label: 'Сила', kind: 'number', min: 1, max: 10, ask: { by: 'actor' } }],
@@ -451,7 +452,8 @@ describe('цель правит свой бросок, увидев его', () 
       effects: {
         залп: button('Залп', [
           { id: 'спас_к', type: 'roll', die: 'к20', by: { expr: '@цель' } },
-          { id: 'спас', type: 'check', value: { expr: '@спас_к' }, versus: { expr: '11' }, continueOn: 'fail' },
+          { id: 'спас', type: 'check', value: { expr: '@спас_к' }, versus: { expr: '11' } },
+          { type: 'branch', if: { expr: '@спас.success' } }, { type: 'stop' }, { type: 'end' },
           sub('@цель.хиты', '6'),
         ]),
         везение: {
@@ -782,7 +784,8 @@ describe('реакция после разрешения', () => {
         },
         удар: button('Удар', [
           { id: 'бросок_к', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
-          { id: 'бросок', type: 'check', value: { expr: '@бросок_к' }, versus: { expr: '0' }, continueOn: 'success' },
+          { id: 'бросок', type: 'check', value: { expr: '@бросок_к' }, versus: { expr: '0' } },
+          { type: 'branch', if: { expr: 'не(@бросок.success)' } }, { type: 'stop' }, { type: 'end' },
           sub('@цель.хиты', '5'),
         ]),
         возмездие: {
@@ -850,7 +853,9 @@ describe('отдых и плата ячейкой', () => {
         ячейка: {
           label: 'Ячейка', params: [{ key: 'лист', kind: 'sheet' }],
           steps: [
-            { id: 'есть', type: 'check', value: { expr: '@лист.ячейки' }, versus: { expr: '1' }, note: { expr: '"не хватает «Ячейки»"' } },
+            { type: 'branch', if: { expr: '@лист.ячейки < 1' } },
+            { type: 'stop', note: { expr: '"не хватает «Ячейки»"' } },
+            { type: 'end' },
             sub('@лист.ячейки', '1'),
           ],
         },

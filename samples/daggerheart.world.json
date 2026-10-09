@@ -1533,25 +1533,30 @@
             },
             "versus": {
               "expr": "@сложность"
-            },
-            "continueOn": "always"
+            }
           }
         ],
         "cost": [
           {
-            "type": "check",
-            "value": {
-              "expr": "@действующий.hope"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "note": {
-              "expr": "\"на опыт нужна Надежда\""
-            },
+            "type": "branch",
             "if": {
               "expr": "@опыт > 0"
             }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.hope < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"на опыт нужна Надежда\""
+            }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -1560,10 +1565,10 @@
             },
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@опыт > 0"
             }
+          },
+          {
+            "type": "end"
           }
         ]
       },
@@ -1657,20 +1662,22 @@
             },
             "versus": {
               "expr": "@цель.difficulty"
-            },
-            "continueOn": "always"
+            }
           },
           {
-            "type": "check",
-            "value": {
-              "expr": "если(любое(@бросок.success, @бросок.parts.надежда == @бросок.parts.страх), 1, 0)"
-            },
-            "versus": {
-              "expr": "1"
-            },
+            "type": "branch",
+            "if": {
+              "expr": "(если(любое(@бросок.success, @бросок.parts.надежда == @бросок.parts.страх), 1, 0)) < 1"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"промах\""
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "emit",
@@ -1764,6 +1771,21 @@
             }
           },
           {
+            "type": "branch",
+            "if": {
+              "expr": "не(@удар.success)"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"не вышло\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
             "type": "emit",
             "effect": "damage",
             "args": {
@@ -1826,28 +1848,34 @@
             "of": "цели"
           },
           {
-            "type": "check",
-            "value": {
-              "expr": "@действующий.armor_score - @действующий.armor_marked"
-            },
-            "versus": {
-              "expr": "1"
-            },
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.armor_score - @действующий.armor_marked < 1"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"свободных бронеслотов нет\""
             }
           },
           {
-            "type": "check",
-            "value": {
-              "expr": "@действующий.hp"
-            },
-            "versus": {
-              "expr": "1"
-            },
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.hp < 1"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "\"снимать нечего\""
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -1974,8 +2002,13 @@
             "versus": {
               "expr": "@действующий.level"
             },
-            "successWhen": "notOver",
-            "continueOn": "always"
+            "successWhen": "notOver"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@шрам.success"
+            }
           },
           {
             "type": "apply",
@@ -1985,10 +2018,10 @@
             "direction": "add",
             "value": {
               "expr": "1"
-            },
-            "if": {
-              "expr": "@шрам.success"
             }
+          },
+          {
+            "type": "end"
           }
         ],
         "params": [
@@ -2037,8 +2070,13 @@
             },
             "versus": {
               "expr": "0"
-            },
-            "continueOn": "always"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@бросок.parts.надежда > @бросок.parts.страх"
+            }
           },
           {
             "type": "apply",
@@ -2047,9 +2085,15 @@
             },
             "value": {
               "expr": "меньшее из(@действующий.hp, @бросок.parts.надежда)"
-            },
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
             "if": {
-              "expr": "@бросок.parts.надежда > @бросок.parts.страх"
+              "expr": "@бросок.parts.надежда == @бросок.parts.страх"
             }
           },
           {
@@ -2060,9 +2104,6 @@
             "direction": "set",
             "value": {
               "expr": "0"
-            },
-            "if": {
-              "expr": "@бросок.parts.надежда == @бросок.parts.страх"
             }
           },
           {
@@ -2073,10 +2114,10 @@
             "direction": "set",
             "value": {
               "expr": "0"
-            },
-            "if": {
-              "expr": "@бросок.parts.надежда == @бросок.parts.страх"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "status",
@@ -2087,14 +2128,20 @@
             }
           },
           {
+            "type": "branch",
+            "if": {
+              "expr": "@бросок.parts.страх > @бросок.parts.надежда"
+            }
+          },
+          {
             "type": "status",
             "effect": "dead",
             "to": {
               "expr": "@цель"
-            },
-            "if": {
-              "expr": "@бросок.parts.страх > @бросок.parts.надежда"
             }
+          },
+          {
+            "type": "end"
           }
         ],
         "params": [
@@ -2827,16 +2874,19 @@
         ],
         "steps": [
           {
-            "type": "check",
-            "value": {
-              "expr": "@what"
-            },
-            "versus": {
-              "expr": "@amount"
-            },
+            "type": "branch",
+            "if": {
+              "expr": "@what < @amount"
+            }
+          },
+          {
+            "type": "stop",
             "note": {
               "expr": "@note"
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "apply",
@@ -2911,16 +2961,22 @@
                 }
               },
               {
+                "type": "branch",
+                "if": {
+                  "expr": "@носитель.stress >= 1"
+                }
+              },
+              {
                 "type": "apply",
                 "target": {
                   "expr": "@носитель.stress"
                 },
                 "value": {
                   "expr": "1"
-                },
-                "if": {
-                  "expr": "@носитель.stress >= 1"
                 }
+              },
+              {
+                "type": "end"
               }
             ]
           },
@@ -2977,16 +3033,22 @@
                 }
               },
               {
+                "type": "branch",
+                "if": {
+                  "expr": "@носитель.stress >= 1"
+                }
+              },
+              {
                 "type": "apply",
                 "target": {
                   "expr": "@носитель.stress"
                 },
                 "value": {
                   "expr": "1"
-                },
-                "if": {
-                  "expr": "@носитель.stress >= 1"
                 }
+              },
+              {
+                "type": "end"
               }
             ]
           }

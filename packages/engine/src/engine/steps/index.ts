@@ -9,6 +9,7 @@ import * as each from './each.ts';
 import * as rollAdd from './roll-add.ts';
 import * as rollReroll from './roll-reroll.ts';
 import * as rollPlus from './roll-plus.ts';
+import { branch, orElse, end, stop } from './flow.ts';
 import type { Step, System, Die, StoredValue } from '../../model/types.ts';
 import type { EmittedEvent, NestedRun } from '../rule.ts';
 import type { Pass } from '../calc.ts';
@@ -76,6 +77,8 @@ export interface StepModule {
 
   splits?: boolean;
 
+  flow?: 'open' | 'alt' | 'close';
+
   seen?: boolean;
   [k: string]: unknown;
 }
@@ -101,6 +104,7 @@ export function registerStepType(mod: StepModule): StepModule {
 for (const mod of [roll, check, apply, status, emit, table, each, rollAdd, rollReroll, rollPlus]) {
   registerStepType(mod as unknown as StepModule);
 }
+for (const mod of [branch, orElse, end, stop]) registerStepType(mod);
 
 export function stepModule(type: string): StepModule {
   const mod = registry.get(type);

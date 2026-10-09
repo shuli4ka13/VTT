@@ -51,7 +51,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
         && t !== '+ вызываемый' && t !== '+ новый' && t !== '+ блок'
         && t !== '+ вход' && t !== '+ держание' && !t.startsWith('+ в «')
         && !['+ блок', '+ метки', '+ описание для игрока', '+ занимает', '+ какие метки бывают', '+ сколько висит', '+ на основе'].includes(t));
-    expect(palette).toEqual(['+ проверка', '+ изменение', '+ таблица', '+ для каждого из списка', '+ число']);
+    expect(palette).toEqual(['+ проверка', '+ изменение', '+ таблица', '+ для каждого из списка', '+ если', '+ стоп', '+ число']);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     const card = screen.getByText('1 · Проверка').closest('.step-fold, .card') as HTMLElement;
     expect(card).toBeTruthy();
@@ -221,10 +221,11 @@ describe('ссылка на результат шага', () => {
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: '@', selectionStart: 1 } });
 
-    const options = [...document.querySelectorAll('.slot__option')].map(o => o.textContent?.trim());
-    expect(options).toContain('здесь жешаг 1 · Проверка — на сколько перебил порог');
-    expect(options).toContain('здесь жешаг 1 · Проверка — сколько костей легло максимумом');
-    expect(options).toContain('здесь жешаг 1 · Проверка — сколько костей легло единицей');
+    const options = () => [...document.querySelectorAll('.slot__option')].map(o => o.textContent?.trim());
+    expect(options()).toContain('здесь жешаг 1 · Проверка — на сколько перебил порог');
+    fireEvent.change(input, { target: { value: '@легло', selectionStart: 6 } });
+    expect(options()).toContain('здесь жешаг 1 · Проверка — сколько костей легло максимумом');
+    expect(options()).toContain('здесь жешаг 1 · Проверка — сколько костей легло единицей');
   });
 });
 
@@ -282,7 +283,7 @@ describe('три вида создания, два вида запуска', () 
     expect(last().on![0]!.on).toBe('before:*');
     expect(last().on![0]!.confirm).toBe(true);
 
-    const phase = screen.getByDisplayValue(/^до — /) as HTMLSelectElement;
+    const phase = screen.getByDisplayValue('до') as HTMLSelectElement;
     expect([...phase.options].map(o => o.value)).toEqual(['before', 'after', 'done']);
     fireEvent.change(phase, { target: { value: 'done' } });
     expect(last().on![0]!.on).toBe('done:*');
@@ -365,6 +366,7 @@ describe('эффект слушает время', () => {
     const effect = Object.values(useWorld.getState().system.effects).at(-1)!;
     expect(effect.on?.[0]?.on).toBe('moment:turn-start');
 
+    fireEvent.click(screen.getByText('+ условие'));
     const condition = [...document.querySelectorAll('select')]
       .find(el => [...el.options].some(o => o.textContent === 'формулой…'))! as HTMLSelectElement;
     expect([...condition.options].map(o => o.value), 'у времени нет исходов шага, только формула').toEqual(['', ':формула']);

@@ -23,10 +23,16 @@ const system = {
       label: 'Ячейка заклинания',
       params: [{ key: 'лист', label: 'Чья ячейка', kind: 'sheet' }, { key: 'круг', label: 'Круг', kind: 'number', role: 'amount' }],
       steps: [
-        { id: 'есть_1', type: 'check', value: { expr: '@лист.ячейки_1' }, versus: { expr: '1' }, note: { expr: '"не хватает ячейки 1-го круга"' }, if: { expr: '@круг == 1' } },
-        { type: 'apply', target: { expr: '@лист.ячейки_1' }, direction: 'subtract', value: { expr: '1' }, if: { expr: '@круг == 1' } },
-        { id: 'есть_2', type: 'check', value: { expr: '@лист.ячейки_2' }, versus: { expr: '1' }, note: { expr: '"не хватает ячейки 2-го круга"' }, if: { expr: '@круг == 2' } },
-        { type: 'apply', target: { expr: '@лист.ячейки_2' }, direction: 'subtract', value: { expr: '1' }, if: { expr: '@круг == 2' } },
+        { type: 'branch', if: { expr: '@круг == 1' } },
+        { id: 'есть_1', type: 'check', value: { expr: '@лист.ячейки_1' }, versus: { expr: '1' } },
+        { type: 'branch', if: { expr: 'не(@есть_1.success)' } }, { type: 'stop', note: { expr: '"не хватает ячейки 1-го круга"' } }, { type: 'end' },
+        { type: 'apply', target: { expr: '@лист.ячейки_1' }, direction: 'subtract', value: { expr: '1' } },
+        { type: 'end' },
+        { type: 'branch', if: { expr: '@круг == 2' } },
+        { id: 'есть_2', type: 'check', value: { expr: '@лист.ячейки_2' }, versus: { expr: '1' } },
+        { type: 'branch', if: { expr: 'не(@есть_2.success)' } }, { type: 'stop', note: { expr: '"не хватает ячейки 2-го круга"' } }, { type: 'end' },
+        { type: 'apply', target: { expr: '@лист.ячейки_2' }, direction: 'subtract', value: { expr: '1' } },
+        { type: 'end' },
       ],
     },
     стрела: {
@@ -145,7 +151,7 @@ group('бросок несёт несколько меток, одна прих�
         steps: [
           EACH,
           { id: 'спас_бросок', type: 'roll', die: 'к20', bonus: { expr: '@цель.чем.спас' }, tags: ['спас', { expr: '@чем' }], by: { expr: '@цель' }, against: { expr: '@действующий' } },
-          { id: 'спас', type: 'check', value: { expr: '@спас_бросок' }, versus: { expr: '12' }, continueOn: 'always' },
+          { id: 'спас', type: 'check', value: { expr: '@спас_бросок' }, versus: { expr: '12' } },
         ],
       },
     },
@@ -248,6 +254,7 @@ group('наложенное помнит число, штрафная кость
           EACH,
           { id: 'hit_бросок', type: 'roll', die: 'к20', tags: ['атака'], by: { expr: '@действующий' }, against: { expr: '@цель' } },
           { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '@цель.кд' } },
+          { type: 'branch', if: { expr: 'не(@hit.success)' } }, { type: 'stop' }, { type: 'end' },
           { id: 'dmg', type: 'roll', fixed: { expr: "кинуть('1d6', если(@hit.natural >= @действующий.крит_от, 2, 1))" } },
           { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@dmg' } },
         ],
@@ -255,7 +262,8 @@ group('наложенное помнит число, штрафная кость
       парирование: {
         label: 'Парирование', activation: 'passive',
         on: [{ on: 'before:удар', if: { expr: '@цель == @носитель' }, confirm: true, cost: [
-          { type: 'check', value: { expr: '@носитель.заряды' }, versus: { expr: '1' } },
+          { id: 'есть_заряд', type: 'check', value: { expr: '@носитель.заряды' }, versus: { expr: '1' } },
+          { type: 'branch', if: { expr: 'не(@есть_заряд.success)' } }, { type: 'stop' }, { type: 'end' },
           { type: 'apply', target: { expr: '@носитель.заряды' }, direction: 'subtract', value: { expr: '1' } },
         ], steps: [] }],
       },
@@ -285,10 +293,10 @@ group('наложенное помнит число, штрафная кость
   test('порог крита берётся с листа бьющего: девятнадцать уже удваивает кости', () => {
     const at19 = [19, 2, 2];
     const crit = exchange({ system: sys, compendium: acts, die: () => at19.shift() ?? 1, sheets: [who('воин'), who('цель')], actionId: 'б:0', fromId: 'воин', toId: 'цель' });
-    eq((crit.reports[0]!.report.trace[2] as { rolls: number[] }).rolls.length, 2);
+    eq((crit.reports[0]!.report.trace.find(entry => entry.step === 'dmg') as { rolls: number[] }).rolls.length, 2);
     const at18 = [18, 2];
     const plain = exchange({ system: sys, compendium: acts, die: () => at18.shift() ?? 1, sheets: [who('воин'), who('цель')], actionId: 'б:0', fromId: 'воин', toId: 'цель' });
-    eq((plain.reports[0]!.report.trace[2] as { rolls: number[] }).rolls.length, 1);
+    eq((plain.reports[0]!.report.trace.find(entry => entry.step === 'dmg') as { rolls: number[] }).rolls.length, 1);
   });
 
   test('реакция платит своей дорожкой: нет заряда — не предложена, есть — предложена и списан', () => {

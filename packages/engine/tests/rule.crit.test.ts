@@ -44,6 +44,7 @@ const damageDice = (trace: Record<string, unknown>[]) => (trace.find(line => lin
 const attack = (bonus?: string) => [
   { id: 'удар_бросок', type: 'roll', die: 'к20', ...(bonus ? { bonus: { expr: bonus } } : {}), by: { expr: '@действующий' }, against: { expr: '@цель' } },
   { id: 'удар', type: 'check', value: { expr: '@удар_бросок' }, versus: { expr: '@цель.броня' } },
+  { type: 'branch', if: { expr: 'не(@удар.success)' } }, { type: 'stop' }, { type: 'end' },
 ];
 const hurt = { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@урон' } };
 const damage = { id: 'урон', type: 'roll', fixed: { expr: "кинуть('2d6', если(@удар.natural >= 20, 2, 1))" } };
@@ -89,7 +90,7 @@ group('крит: кости удваиваются до броска', () => {
 group('доля величины: половина при удачном спасброске', () => {
   const chain = (times: number) => [
     { id: 'спас_бросок', type: 'roll', die: 'к20', by: { expr: '@цель' }, against: { expr: '@действующий' } },
-    { id: 'спас', type: 'check', value: { expr: '@спас_бросок' }, versus: { expr: '10' }, continueOn: 'always' },
+    { id: 'спас', type: 'check', value: { expr: '@спас_бросок' }, versus: { expr: '10' } },
     { id: 'всего', type: 'roll', fixed: { expr: "кинуть('2d6')" } },
     { id: 'урон', type: 'roll', fixed: { expr: `если(@спас.success, округлить вниз(@всего * ${times}), @всего)` } },
     hurt,

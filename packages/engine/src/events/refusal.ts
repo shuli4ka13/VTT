@@ -10,8 +10,10 @@ export function refusalWords(
   const stopped = report?.stopped as Stopped | null | undefined;
   if (!stopped) return null;
   if (stopped.note) return stopped.note;
-  const short = [...(report?.trace ?? [])].reverse()
-    .find(entry => entry.passed === false && typeof entry.of === 'string') as { of: string; value?: number } | undefined;
+  const shown = (report?.trace ?? []).filter(entry => !entry.skipped);
+  const before = shown[shown.length - 2] as Record<string, unknown> | undefined;
+  const short = before && before.type === 'check' && before.success === false && typeof before.of === 'string'
+    ? before as { of: string; value?: number } : undefined;
   if (short) {
     const label = fieldOf(system, short.of)?.label ?? short.of;
     return `не хватает «${label}» (сейчас ${short.value})`;

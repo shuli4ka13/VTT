@@ -6,9 +6,8 @@ import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import type { System, Effect } from '@vtt/schema';
 import { useWorld } from '../../../store/world.ts';
 import { openAll } from '../../../testing/render-open.tsx';
-import { within, stepCard } from '../../../testing/cards.ts';
+import { within, stepCard, blocks, block, headOf, armWord, addToArm, addArm, stopNote, lastNumber } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
-import { groupSteps } from '../cards.ts';
 
 const worldOf = (id: string) => SAMPLE_WORLDS.find(w => w.system.id === id)!;
 
@@ -31,8 +30,6 @@ const nameStep = (card: HTMLElement, name: string): void => {
   const fresh = stepCard(new RegExp(`^${title} · `));
   within(fresh).type(fresh.querySelector<HTMLElement>('.step-name input')!, name);
 };
-
-const groupsBefore = (effect: Effect): number => groupSteps(effect.cost ?? []).length + groupSteps(effect.steps ?? []).length;
 
 const marks = (card: HTMLElement, ...tags: string[]): void => {
   for (const tag of tags) {
@@ -108,33 +105,38 @@ describe('эффекты пресетов собираются в констру
     card = stepCard(/^3 · /);
     nameStep(card, 'hit');
     card = stepCard(/^3 · /);
-    within(card).formula('Всегда успех, если на кости не меньше', '20');
-    within(card).formula('Всегда провал, если на кости не больше', '1');
+    within(card).formula('Успех, если на кости не меньше', '20');
+    within(card).formula('Провал, если на кости не больше', '1');
+
+    ui.click('+ если');
+    addToArm(block(0), 0, 'stop');
+    within(headOf(block(0))).when('шаг 3 · Проверка — не пройдена');
+    stopNote(4, 'не вышло');
 
     ui.click('+ число');
-    card = stepCard(/^4 · /);
+    card = stepCard(/^5 · /);
     within(card).formula('Сколько', 'кинуть(@damage_dice, @dice * если(@hit_бросок.natural >= @действующий.crit_from, 2, 1)) + @damage_with');
     nameStep(card, 'dmg');
 
     ui.click('+ изменение');
-    card = stepCard(/^5 · /);
+    card = stepCard(/^6 · /);
     within(card).click('вызов');
-    card = stepCard(/^5 · /);
+    card = stepCard(/^6 · /);
     within(card).select('Какой эффект', 'damage');
     for (const [name, text] of [['Сколько урона', '@dmg'], ['Тип урона', '@damage_type'], ['Источник урона', '@damage_source'], ['Лист', '@цель'], ['Источник', '@действующий']] as const) {
       within(card).formula(within(card).arg(name), text);
     }
 
     ui.click('+ изменение');
-    card = stepCard(/^6 · /);
+    card = stepCard(/^7 · /);
     within(card).click('состояние');
-    card = stepCard(/^6 · /);
+    card = stepCard(/^7 · /);
     within(card).select('Какое', ':вход:status');
     within(card).formula('На кого', '@цель');
-    card = stepCard(/^6 · /);
+    card = stepCard(/^7 · /);
     within(card).formula('Запомнит: Кто наложил', '@действующий');
-    within(card).select('Делать', 'формулой…');
-    within(card).formula('Условие', 'не(пусто(@status))');
+    within(stepCard(/^7 · /)).click('в «Если»');
+    within(headOf(block(1))).when('=не(пусто(@status))');
     dump({ got: built('strike') ?? useWorld.getState().system.effects, goal });
     expect(built('strike')).toEqual(goal);
   });
@@ -152,8 +154,7 @@ describe('эффекты пресетов собираются в констру
     ui.select('Что именно', 'damage');
     ui.select('Когда именно', 'after');
     ui.select('Кого касается', '@лист == @носитель');
-    ui.select('Ещё условие', 'формулой…');
-    ui.formula('Условие', 'все(не(пусто(@источник)), @источник != @носитель)');
+    ui.when('=все(не(пусто(@источник)), @источник != @носитель)');
     ui.select('Решение', 'ask');
 
     ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_reaction');
@@ -176,7 +177,6 @@ describe('эффекты пресетов собираются в констру
     within(card).formula('Бросает', '@источник');
     within(card).formula('Против кого', '@носитель');
     marks(card, 'спасбросок', 'ловкость');
-    within(card).select('Шаги ниже идут при', 'always');
     nameStep(card, 'save');
 
     ui.click('+ число');
@@ -267,9 +267,9 @@ describe('эффекты пресетов собираются в констру
     const dmg = number(6, '(кинуть(@damage_dice))', 'dmg');
     up(dmg);
     const boom = number(7, '5', 'boom');
-    within(boom()).select('Делать', 'формулой…');
-    within(boom()).formula('Условие', '@dmg.atMax >= 2');
-    up(boom);
+    within(boom()).click('в «Если»');
+    within(headOf(block(0))).when('=@dmg.atMax >= 2');
+    within(headOf(block(0))).click('↑');
 
     ui.click('+ таблица');
     card = stepCard(/^8 · /);
@@ -291,12 +291,16 @@ describe('эффекты пресетов собираются в констру
       within(made()).select('Какой эффект', 'damage');
       for (const [name, text] of args) within(made()).formula(within(made()).arg(name), text);
       if (when) {
-        within(made()).select('Делать', 'формулой…');
-        within(made()).formula('Условие', when);
+        within(made()).click('в «Если»');
+        within(headOf(block(2))).when(`=${when}`);
       }
     };
-    send(10, [['Сколько урона', '@dmg'], ['Тип урона', '@damage_type'], ['Куда попали', '@aim'], ['Лист', '@цель'], ['Источник', '@действующий']]);
-    send(11, [['Сколько урона', '@boom'], ['Тип урона', '"критический"'], ['Куда попали', '@aim'], ['Лист', '@цель'], ['Источник', '@действующий']], '@dmg.atMax >= 2');
+    ui.click('+ если');
+    addToArm(block(1), 0, 'stop');
+    within(headOf(block(1))).when('шаг 9 · Проверка — не пройдена');
+    stopNote(10, 'не вышло');
+    send(11, [['Сколько урона', '@dmg'], ['Тип урона', '@damage_type'], ['Куда попали', '@aim'], ['Лист', '@цель'], ['Источник', '@действующий']]);
+    send(12, [['Сколько урона', '@boom'], ['Тип урона', '"критический"'], ['Куда попали', '@aim'], ['Лист', '@цель'], ['Источник', '@действующий']], '@dmg.atMax >= 2');
 
     dump({ got: built('shoot') ?? useWorld.getState().system.effects, goal });
     expect(built('shoot')).toEqual(goal);
@@ -319,13 +323,17 @@ describe('эффекты пресетов собираются в констру
     let card = stepCard(/^1 · /);
     within(card).formula('Проверка', 'кинуть(@lead_die) + @носитель.abilities.телосложение.save >= (большее из(10, округлить вниз(@amount / 2)))');
     marks(card, 'спасбросок', 'телосложение');
-    within(card).select('Шаги ниже идут при', 'fail');
     nameStep(card, 'save');
 
+    ui.click('+ если');
+    addToArm(block(0), 0, 'stop');
+    within(headOf(block(0))).when('шаг 1 · Проверка — пройдена');
+    stopNote(2, 'устоял');
+
     ui.click('+ изменение');
-    card = stepCard(/^2 · /);
+    card = stepCard(/^3 · /);
     within(card).click('состояние');
-    card = stepCard(/^2 · /);
+    card = stepCard(/^3 · /);
     within(card).select('Что делаем', 'remove');
     within(card).select('Какое', 'concentration');
     within(card).formula('С кого', '@носитель');
@@ -366,22 +374,21 @@ describe('эффекты пресетов собираются в констру
     let card = stepCard(/^1 · /);
     within(card).formula(within(card).arg('Лист'), '@действующий');
     within(card).formula(within(card).arg('Источник'), '@действующий');
-    ui.click('+ проверка');
-    card = stepCard(/^2 · /);
-    within(card).formula('Проверка', '@slot >= @spell_level');
-    card = stepCard(/^2 · /);
-    within(card).type('Что сказать при остановке', 'круг ячейки ниже круга заклинания');
-    nameStep(card, '');
-    within(stepCard(/^2 · /)).click('цена');
     ui.click('+ изменение');
-    card = stepCard(/^3 · /);
+    card = stepCard(/^2 · /);
     within(card).click('вызов');
-    card = stepCard(/^3 · /);
+    card = stepCard(/^2 · /);
     within(card).select('Какой эффект', 'spell_slot');
     for (const [name, text] of [['Круг ячейки', '@slot'], ['Лист', '@действующий'], ['Источник', '@действующий']] as const) {
       within(card).formula(within(card).arg(name), text);
     }
-    within(stepCard(/^3 · /)).click('цена');
+    within(stepCard(/^2 · /)).click('цена');
+    within(stepCard(/^2 · /)).click('в «Если»');
+    addToArm(block(0), 0, 'stop');
+    within(headOf(block(0))).when('=@slot < @spell_level');
+    stopNote(3, 'круг ячейки ниже круга заклинания');
+    within(stepCard(/^2 · /)).click('↓');
+    within(stepCard(/^3 · /)).click('↓');
     expect(built('spell')).toEqual(goalBase);
 
     ui.click('+ кнопкой');
@@ -433,8 +440,8 @@ describe('эффекты пресетов собираются в констру
       within(card()).select('Как', how);
       within(card()).formula('Сколько', value);
       if (when) {
-        within(card()).select('Делать', 'формулой…');
-        within(card()).formula('Условие', when);
+        within(card()).click('в «Если»');
+        within(headOf(block(0, handlerAt(n)))).when(`=${when}`);
       }
     };
     const cases: [string, string, string][] = [
@@ -452,8 +459,7 @@ describe('эффекты пресетов собираются в констру
       within(head()).select('Что именно', listened);
       within(head()).select('Когда именно', 'done');
       within(head()).select('Кого касается', '@действующий == @носитель');
-      within(head()).select('Ещё условие', 'формулой…');
-      within(head()).formula('Условие', rule);
+      within(head()).when(`=${rule}`);
       if (gain === 'fear') change(n, 1, 'стол', 'fear', 'add', '1');
       else change(n, 1, 'носитель', 'hope', 'add', '1');
       if (gain === 'crit') change(n, 2, 'носитель', 'stress', 'subtract', '1', '@носитель.stress >= 1');
@@ -502,15 +508,12 @@ describe('эффекты пресетов собираются в констру
     card = stepCard(/^4 · /);
     within(card).formula('Проверка', '@бросок_бросок >= @цель.difficulty');
     card = stepCard(/^4 · /);
-    within(card).select('Шаги ниже идут при', 'always');
     nameStep(card, 'бросок');
 
-    ui.click('+ проверка');
-    card = stepCard(/^5 · /);
-    within(card).formula('Проверка', 'если(любое(@бросок.success, @бросок.parts.надежда == @бросок.parts.страх), 1, 0) >= 1');
-    card = stepCard(/^5 · /);
-    within(card).type('Что сказать при остановке', 'промах');
-    nameStep(card, '');
+    ui.click('+ если');
+    addToArm(block(0), 0, 'stop');
+    within(headOf(block(0))).when('=(если(любое(@бросок.success, @бросок.parts.надежда == @бросок.parts.страх), 1, 0)) < 1');
+    stopNote(5, 'промах');
 
     ui.click('+ изменение');
     within(stepCard(/^6 · /)).click('вызов');
@@ -523,10 +526,10 @@ describe('эффекты пресетов собираются в констру
     expect(built('hero_attack')).toEqual(goal);
   });
 
-  it('Shadowrun «Атаковать» (ranged_attack) по формам: защита и сопротивление в цикле, счёт успехов', { timeout: 90000 }, () => {
+  it('Shadowrun «Атаковать» (ranged_attack) по формам: защита и сопротивление в цикле, счёт успехов, «Если … Иначе»', { timeout: 90000 }, () => {
     const world = structuredClone(worldOf('shadowrun6'));
     const goal = structuredClone(world.system.effects.ranged_attack!);
-    world.system.effects.ranged_attack!.steps = goal.steps!.slice(0, 6);
+    world.system.effects.ranged_attack!.steps = goal.steps!.slice(0, 11);
     useWorld.setState(state => ({
       ...state, system: world.system as System, compendium: world.compendium,
       activeEffectId: 'ranged_attack', activeFieldTag: null, activeRecordKind: null, activeSheetKind: null,
@@ -535,7 +538,8 @@ describe('эффекты пресетов собираются в констру
     openAll();
     const ui = within();
     const at = (n: number) => stepCard(new RegExp(`^${n} · `));
-    const first = groupsBefore(world.system.effects.ranged_attack!) + 1;
+    const first = lastNumber() + 1;
+    const shown = blocks().length;
 
     ui.click('+ число');
     within(at(first)).formula('Бросает', '@цель');
@@ -546,25 +550,38 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ проверка');
     within(at(first + 1)).formula('Проверка', '@атака_бросок >= @атака_против');
-    within(at(first + 1)).select('Шаги ниже идут при', 'always');
     nameStep(at(first + 1), 'атака');
 
-    ui.click('+ проверка');
-    within(at(first + 2)).formula('Проверка', '@атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural >= 0');
-    within(at(first + 2)).type('Что сказать при остановке', 'промах: успехов атаки меньше, чем у защиты');
-    nameStep(at(first + 2), '');
+    ui.click('+ если');
+    addToArm(block(shown), 0, 'stop');
+    within(headOf(block(shown))).when('=(@атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural) < 0');
+    stopNote(first + 2, 'промах: успехов атаки меньше, чем у защиты');
 
     ui.click('+ проверка');
     within(at(first + 3)).formula('Проверка', 'кинуть(@pool, @цель.body) >= 0');
     within(at(first + 3)).formula('Бросает', '@цель');
     within(at(first + 3)).formula('Против кого', '@действующий');
     marks(at(first + 3), 'сопротивление');
-    within(at(first + 3)).select('Шаги ниже идут при', 'always');
     nameStep(at(first + 3), 'сопротивление');
 
+    const hurt = (n: number, field: string) => {
+      within(at(n)).select('У кого', 'цель');
+      within(at(n)).select('Какое поле', field);
+      within(at(n)).select('Как', 'add');
+      within(at(n)).formula('Сколько', 'большее из(0, @dv + или(@режим.dv, 0) + или(@приём.dv, 0) + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural - @сопротивление.natural)');
+    };
+    ui.click('+ если');
+    within(headOf(block(shown + 1))).when('=@physical_hit >= 1');
+    addToArm(block(shown + 1), 0, 'change');
+    hurt(first + 4, 'physical');
+    addArm(block(shown + 1), '+ иначе');
+    expect(armWord(block(shown + 1), 1)).toBe('Иначе');
+    addToArm(block(shown + 1), 1, 'change');
+    hurt(first + 5, 'stun');
+
     const got = built('ranged_attack')!;
-    dump({ got: { ...got, steps: got.steps }, goal: { ...goal, steps: goal.steps!.slice(0, 11) } });
-    expect(got.steps).toEqual(goal.steps!.slice(0, 11));
+    dump({ got: { ...got, steps: got.steps }, goal: { ...goal, steps: goal.steps!.slice(0, 23) } });
+    expect(got.steps).toEqual(goal.steps!.slice(0, 23));
   });
 
   it('Blades «Залечь на дно» (lay_low): условная метка броска, степени успеха, «стало» формулой', { timeout: 90000 }, () => {
@@ -597,8 +614,7 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ проверка');
     within(at(3)).formula('Проверка', '@бросок_бросок >= 4');
-    within(at(3)).select('Шаги ниже идут при', 'always');
-    within(at(3)).select('Степени успеха', 'outcome');
+    within(at(3)).select('Исход ступенями', 'outcome');
     nameStep(at(3), 'бросок');
 
     ui.click('+ изменение');
