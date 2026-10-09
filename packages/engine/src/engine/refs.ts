@@ -254,7 +254,7 @@ function namedValue(name: string, ctx: RefContext): unknown {
   if (typeof value === 'object') return undefined;
   if (!isFormula(decl, value)) return value;
   const out = evaluate(value, inRecord(ctx));
-  return (out === null || out === undefined) && decl.default !== undefined ? decl.default : out;
+  return (out === null || out === undefined || out === '') && decl.default !== undefined ? decl.default : out;
 }
 
 function recordNamesInline(expr: string, ctx: RefContext): string {

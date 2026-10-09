@@ -42,5 +42,8 @@ group('вход с именем свойства записи берёт его 
     const [action] = availableActions(sheet('a', ['club']), { system, compendium });
     const out = exchange({ system, compendium, die: () => 1, sheets: [sheet('a', ['club']), sheet('b')], actionId: action!.id, fromId: 'a', toId: 'b' });
     eq(out.sheets.find(s => s.id === 'b')!.values.hp, 7);
+    const blank = { records: [{ id: 'club', table: 'weapon', label: 'Дубина', cells: { урон: 3, раз: '' } }] } as Compendium;
+    const again = exchange({ system, compendium: blank, die: () => 1, sheets: [sheet('a', ['club']), sheet('b')], actionId: action!.id, fromId: 'a', toId: 'b' });
+    eq(again.sheets.find(s => s.id === 'b')!.values.hp, 7);
   });
 });
