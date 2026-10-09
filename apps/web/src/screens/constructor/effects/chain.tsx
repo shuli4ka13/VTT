@@ -94,7 +94,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     if (fresh.length) setOpen(fresh, true);
   }, [name, signature, setOpen]);
 
-  const cardOf = (group: (typeof cards)[number], g: number, whole?: [number, number]) => {
+  const cardOf = (group: (typeof cards)[number], g: number, whole?: [number, number], asIf = false) => {
     const at = numberOf(g) - 1;
     const range = whole ? span(whole[0], whole[1]) : group.indices;
     const problem = group.indices.map(i => problems[i]).find(Boolean) ?? null;
@@ -105,6 +105,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
       <GroupCard
         key={group.indices[0]}
         group={group}
+        asIf={asIf}
         position={startAt + at + 1}
         system={system}
         effect={effect}
@@ -171,7 +172,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         onMoveDown={g === cards.length - 1 ? undefined : () => edit(draft => {
           draft.steps = whole ? moveSpan(draft.steps ?? [], whole, 1, true) : moveGroup(draft.steps ?? [], g, 1);
         })}
-        {...(group.kind !== 'split' && group.kind !== 'stop' ? { onWrap: () => edit(draft => {
+        {...(group.kind !== 'split' && group.kind !== 'stop' && !asIf ? { onWrap: () => edit(draft => {
           draft.steps = wrapInBranch(draft.steps ?? [], range[0]!, range[range.length - 1]!);
         }) } : {})}
       />
@@ -214,7 +215,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     const otherWord = fused ? (fused.negated ? fused.yes : fused.no) : 'Иначе';
     const node = (
       <div className={`flow-block${guard ? ' flow-block--guard' : ''}${fused ? ' flow-block--check' : ''}`} key={`block:${open}`}>
-        {fused ? cardOf(fused.group, fused.g, [fused.group.indices[0]!, end]) : null}
+        {fused ? cardOf(fused.group, fused.g, [fused.group.indices[0]!, end], true) : null}
         {heads.map((head, k) => {
           const stop = k + 1 < heads.length ? heads[k + 1]! : end;
           const first = groupAt(head + 1);

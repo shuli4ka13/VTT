@@ -18,13 +18,14 @@ const loose = (draft: unknown): Record<string, any> => draft as Record<string, a
 
 const SUCCESS = [['atLeast', 'не меньше порога'], ['over', 'строго больше'], ['notOver', 'не больше порога'], ['under', 'строго меньше'], ['equals', 'ровно порог']] as const;
 
-export function CheckBody({ step, roll, context, edit, system, onUnpair }: {
+export function CheckBody({ step, roll, context, edit, system, onUnpair, asIf = false }: {
   step: any;
   roll: any | null;
   context: SlotContext;
   edit: EditFn;
   system: System;
   onUnpair?: () => void;
+  asIf?: boolean;
 }) {
   const at = roll ? 1 : 0;
   const tables = rowTables(system);
@@ -68,7 +69,7 @@ export function CheckBody({ step, roll, context, edit, system, onUnpair }: {
   const summary = moreSummary(step, rolled);
   return (
     <>
-      <Field label="Проверка" hint={roll
+      <Field label={asIf ? "Условие" : "Проверка"} hint={roll
         ? 'кинуть(кость) + прибавка, знак и порог. Поля — через лист: @цель.кд'
         : rolled ? 'Бросок, знак и порог: число, поле через лист или бросок соперника' : 'Число, знак и порог: @носитель.ки >= 1'}>
         <CheckFormula step={step} roll={roll} context={context} edit={edit} {...(onUnpair ? { onUnpair } : {})} />

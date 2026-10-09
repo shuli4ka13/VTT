@@ -139,7 +139,7 @@ describe('блок «Если»: условие строкой, руки, «Ст
     expect(document.querySelectorAll('.flow-block')).toHaveLength(1);
     const frame = block(0);
     expect(isFused(frame)).toBe(true);
-    expect(frame.querySelector(':scope > .card')?.textContent).toMatch(/1 · Проверка/);
+    expect(frame.querySelector(':scope > .card')?.textContent).toMatch(/1 · Если/);
     expect(headOf(frame).classList.contains('flow-head--outcome')).toBe(true);
     expect(armWord(frame)).toBe('успех:');
     expect(headOf(frame).querySelector('.cond')).toBeNull();
@@ -154,9 +154,9 @@ describe('блок «Если»: условие строкой, руки, «Ст
     expect(headOf(block(0), 1).classList.contains('flow-head--outcome')).toBe(true);
     expect(within(block(0).querySelector<HTMLElement>(':scope > .flow-block__foot')!).has('+ провал')).toBe(false);
 
-    const check = stepCard(/^1 · Проверка/);
+    const check = stepCard(/^1 · Если/);
     within(check).click('Удалить');
-    within(stepCard(/^1 · Проверка/)).click('точно убрать');
+    within(stepCard(/^1 · Если/)).click('точно убрать');
     expect(steps()).toEqual([]);
     expect(document.querySelectorAll('.flow-block')).toHaveLength(0);
   });

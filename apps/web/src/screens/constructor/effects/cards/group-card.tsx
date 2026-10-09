@@ -42,7 +42,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, onMoveLane, folded = false, onFold, sheets, onUnpair, onWrap,
+  edit, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, onMoveLane, folded = false, onFold, sheets, onUnpair, onWrap, asIf = false,
 }: {
   group: CardGroup;
   position: number;
@@ -69,6 +69,7 @@ export function GroupCard({
   sheets?: SheetNames;
   onUnpair?: () => void;
   onWrap?: () => void;
+  asIf?: boolean;
 }) {
   const context: SlotContext = { system, effect, earlier, ...(sheets ? { sheets } : {}) };
   const step = group.step as any;
@@ -121,7 +122,7 @@ export function GroupCard({
     );
   }
 
-  const title = `${position} · ${titleOf(group.kind, group.step, system)}`;
+  const title = `${position} · ${asIf ? 'Если' : titleOf(group.kind, group.step, system)}`;
   const head = onFold ? (
     <button type="button" className="step-fold" aria-expanded={!folded} onClick={onFold}
       title={folded ? 'развернуть шаг' : 'свернуть шаг'}>
@@ -152,7 +153,7 @@ export function GroupCard({
           actions={actions}
         />
         {problem ? <Verdict tone="bad" action={problemAction}>{problem.text}</Verdict> : null}
-        {group.kind === 'check' ? <CheckBody step={step} roll={group.amount} context={context} edit={edit} system={system} {...(onUnpair ? { onUnpair } : {})} /> : null}
+        {group.kind === 'check' ? <CheckBody step={step} roll={group.amount} context={context} edit={edit} system={system} asIf={asIf} {...(onUnpair ? { onUnpair } : {})} /> : null}
         {group.kind === 'seen' ? <SeenBody step={step} context={context} edit={edit} /> : null}
         {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} withNumber={withNumber} system={system} onAddParam={onAddParam} onOpenEffect={onOpenEffect} lane={lane} /> : null}
         {group.kind === 'number'

@@ -726,6 +726,7 @@
 .flow-block--guard > .flow-block__foot { padding-top: 0; padding-bottom: var(--s-1); }
 .flow-block--guard:hover .flow-block__add, .flow-block--guard:hover > .flow-block__foot, .flow-block--guard:focus-within .flow-block__add, .flow-block--guard:focus-within > .flow-block__foot { opacity: 1; }
 .flow-block--check { border-left-color: var(--kind-check); background: color-mix(in srgb, var(--kind-check) 4%, transparent); }
+.flow-block--check > .card .card__title, .flow-block--check > .card .step-fold { color: var(--cyan); }
 .flow-block--check > .card { border: 0; border-radius: 10px 10px 0 0; background: transparent; box-shadow: none; }
 .flow-block--check > .card + .flow-block__part { border-top: 1px dashed var(--border-strong); }
 .flow-block--check .flow-head--outcome .flow-head__word { color: var(--kind-check); min-width: 0; }
