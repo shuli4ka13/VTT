@@ -252,7 +252,9 @@ function namedValue(name: string, ctx: RefContext): unknown {
     return (ctx.sheets ? ctx.sheets.view(field.sheet) : ctx.pass).resolve(field.tag);
   }
   if (typeof value === 'object') return undefined;
-  return isFormula(decl, value) ? evaluate(value, inRecord(ctx)) : value;
+  if (!isFormula(decl, value)) return value;
+  const out = evaluate(value, inRecord(ctx));
+  return (out === null || out === undefined) && decl.default !== undefined ? decl.default : out;
 }
 
 function recordNamesInline(expr: string, ctx: RefContext): string {
