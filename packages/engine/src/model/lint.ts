@@ -592,6 +592,10 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
       }
       chain.steps.forEach((step, index) => {
         if (step.if !== undefined && !isFlow(step)) out.push({ where: chain.where(index), level: 'error', text: 'у шага своё условие — условие теперь ставится блоком «Если»' });
+        const cond = (step.if as { expr?: unknown } | undefined)?.expr;
+        if (isFlow(step) && step.if !== undefined && (typeof cond !== 'string' || !cond.trim())) {
+          out.push({ where: chain.where(index), level: 'error', text: 'не заполнено: условие' });
+        }
         if (flowOf(step.type) === 'alt' || flowOf(step.type) === 'open') {
           const next = chain.steps[index + 1];
           if (!next || flowOf(next.type) === 'alt' || flowOf(next.type) === 'close') out.push({ where: chain.where(index), level: 'warn', text: 'пустая ветка — в ней нет шагов' });

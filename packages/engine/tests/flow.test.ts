@@ -143,6 +143,16 @@ describe('устройство блоков', () => {
     expect(balance([IF('да'), ELSE, ELSE, END]).map(p => p.problem)).toEqual(['«Иначе» после «Иначе» без условия — сюда не дойдёт']);
   });
 
+  it('линт: «Если» и «Иначе, если» с пустым условием — ошибка, а не «всегда»', () => {
+    for (const steps of [
+      [EACH, { type: 'branch' }, sub('1'), END],
+      [EACH, { type: 'branch', if: { expr: '' } }, sub('1'), END],
+      [EACH, IF('да'), sub('1'), { type: 'orElse', if: { expr: '  ' } }, sub('2'), END],
+    ]) {
+      expect(errorsOf(lintSystem(world(steps), book)).map(p => p.text)).toContain('не заполнено: условие');
+    }
+  });
+
   it('линт: условие на обычном шаге и «Для каждого из» внутри блока — ошибки', () => {
     const own = world([EACH, { ...sub('1'), if: { expr: 'да' } }]);
     expect(errorsOf(lintSystem(own, book)).map(p => p.text)).toContain('у шага своё условие — условие теперь ставится блоком «Если»');
