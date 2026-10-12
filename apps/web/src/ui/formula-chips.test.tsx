@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
+import { useState } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { FormulaChips, partsOf, joinParts } from './formula-chips.tsx';
 import type { System } from '@vtt/schema';
@@ -277,5 +278,57 @@ describe('ссылка числом и колонка по значению', ()
     fireEvent.focus(input);
     fireEvent.mouseDown(screen.getByText('Уровень заклинателя · колонка по [Колонка ячеек]'));
     expect(value).toBe('@заклинатель.[@строка.circle]');
+  });
+});
+
+describe('точка после фишки', () => {
+  const options = [
+    { group: 'Свойства записи', label: 'Способ атаки', name: 'способ', onPick: () => {} },
+    { group: 'По таблице', label: 'Способ атаки · Бонус атаки', name: 'способ.бонус', onPick: () => {} },
+    { group: 'По таблице', label: 'Способ атаки · Прибавка к урону', name: 'способ.урон', onPick: () => {} },
+  ];
+  const names = new Map(options.map(option => [option.name, option.label]));
+
+  it('«.» сразу после фишки — её колонки; выбор заменяет фишку на путь', () => {
+    let value = '@способ';
+    render(<FormulaChips value={value} system={system} extraNames={names} extraOptions={options} onChange={next => { value = next; }} />);
+    const input = document.querySelectorAll('input.chips__text')[1] as HTMLInputElement;
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: '.', selectionStart: 1 } });
+    const shown = [...document.querySelectorAll('.slot__option')].map(o => o.textContent ?? '');
+    expect(shown.some(t => t.includes('Бонус атаки')), shown.join(' | ')).toBe(true);
+    expect(shown.some(t => t.endsWith('Способ атаки'))).toBe(false);
+    fireEvent.mouseDown([...document.querySelectorAll('.slot__option')].find(o => o.textContent?.includes('Бонус атаки'))!);
+    expect(value).toBe('@способ.бонус');
+  });
+
+  it('после точки набираешь — колонки отбираются по своему названию', () => {
+    render(<FormulaChips value="@способ" system={system} extraNames={names} extraOptions={options} onChange={() => {}} />);
+    const input = document.querySelectorAll('input.chips__text')[1] as HTMLInputElement;
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: '.при', selectionStart: 4 } });
+    const shown = [...document.querySelectorAll('.slot__option')].map(o => o.textContent ?? '');
+    expect(shown.some(t => t.includes('Прибавка к урону')), shown.join(' | ')).toBe(true);
+    expect(shown.some(t => t.includes('Бонус атаки'))).toBe(false);
+  });
+});
+
+describe('курсор после подсказки', () => {
+  it('выбрал подсказку — курсор после вставленной фишки, а не перед ней', () => {
+    const names = new Map([['способ', 'Способ атаки']]);
+    function Host() {
+      const [value, setValue] = useState('');
+      const options = [{ group: 'Свойства записи', label: 'Способ атаки', name: 'способ', onPick: (insert: (piece: string) => string) => setValue(insert('@способ')) }];
+      return <FormulaChips value={value} system={system} extraNames={names} extraOptions={options} onChange={setValue} />;
+    }
+    render(<Host />);
+    const input = document.querySelector('input.chips__text') as HTMLInputElement;
+    input.focus();
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: '@спос', selectionStart: 5 } });
+    fireEvent.mouseDown([...document.querySelectorAll('.slot__option')].find(o => o.textContent?.includes('Способ атаки'))!);
+    const inputs = [...document.querySelectorAll('input.chips__text')];
+    expect(inputs.length).toBe(2);
+    expect(document.activeElement).toBe(inputs[1]);
   });
 });

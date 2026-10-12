@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { matchTagQuery } from './tag-suggest.tsx';
@@ -242,6 +242,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
   const [caret, setCaret] = useState(0);
   const [highlight, setHighlight] = useState(0);
   const [closed, setClosed] = useState(false);
+  const [dot, setDot] = useState<{ index: number; text: string } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const focusOnce = useRef(Boolean(autoFocus));
   const sideOf = (tag: string) => {
@@ -284,36 +285,95 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     ];
   }, [system, extraNames, extraOptions, paths, sheets, table]);
 
-  const commitParts = (next: Part[], focusAt?: { index: number; caret: number }) => {
-    onChange(joinParts(next));
-    if (focusAt) {
-      queueMicrotask(() => {
-        const el = inputs.current.get(focusAt.index);
-        el?.focus();
-        el?.setSelectionRange(focusAt.caret, focusAt.caret);
-      });
+  const pendingFocus = useRef<{ index: number; caret: number; value: string } | { offset: number; skip: string[] } | null>(null);
+  useLayoutEffect(() => {
+    const want = pendingFocus.current;
+    if (!want) return;
+    let index = -1;
+    let at = 0;
+    if ('offset' in want) {
+      if (want.skip.includes(value)) return;
+      let start = 0;
+      for (const [i, part] of parts.entries()) {
+        const length = 'tag' in part ? joinParts([part]).length : part.text.length;
+        if (!('tag' in part) && want.offset <= start + length) { index = i; at = Math.max(0, want.offset - start); break; }
+        start += length;
+      }
+    } else {
+      if (want.value !== value) return;
+      index = want.index;
+      at = want.caret;
     }
+    const el = inputs.current.get(index);
+    if (!el) return;
+    pendingFocus.current = null;
+    el.focus();
+    el.setSelectionRange(at, at);
+  });
+
+  const commitParts = (next: Part[], focusAt?: { index: number; caret: number }) => {
+    const joined = joinParts(next);
+    if (focusAt) pendingFocus.current = { ...focusAt, value: joined };
+    onChange(joined);
   };
 
-  const query = active !== null && 'text' in (parts[active] ?? {})
-    ? matchTagQuery((parts[active] as { text: string }).text, caret)
-    : null;
-  const matches = query
-    ? fields.filter(f => !query.needle || rankOf(f, query.needle) < 3)
-      .sort((a, b) => rankOf(a, query.needle) - rankOf(b, query.needle))
+  const chipBefore = (index: number): string | null => {
+    const before = parts[index - 1];
+    return index > 0 && before && 'tag' in before && !before.lit && before.by === undefined ? before.tag : null;
+  };
+  const deeper = (base: string) => {
+    const prefix = `${base}.`;
+    return {
+      fields: fields.filter(f => f.tag.startsWith(prefix)),
+      extras: (extraOptions ?? []).filter(o => o.name?.startsWith(prefix)),
+    };
+  };
+  const tail = (label: string): string => label.split(' · ').pop() ?? label;
+  const dotted = dot && active === dot.index ? chipBefore(dot.index) : null;
+
+  const query = dotted
+    ? { at: 0, needle: dot!.text.slice(1, caret).trim().toLowerCase() }
+    : active !== null && 'text' in (parts[active] ?? {})
+      ? matchTagQuery((parts[active] as { text: string }).text, caret)
+      : null;
+  const matches = dotted
+    ? deeper(dotted).fields
+      .filter(f => !query!.needle || rankOf({ tag: '', label: tail(f.label) }, query!.needle) < 3)
+      .sort((a, b) => rankOf({ tag: '', label: tail(a.label) }, query!.needle) - rankOf({ tag: '', label: tail(b.label) }, query!.needle))
       .slice(0, 12)
-    : [];
-  const extras = query
-    ? (extraOptions ?? [])
-      .filter(o => !query.needle || rankOf({ tag: '', label: o.label }, query.needle) < 3)
-      .sort((a, b) => rankOf({ tag: '', label: a.label }, query.needle) - rankOf({ tag: '', label: b.label }, query.needle))
-    : [];
+    : query
+      ? fields.filter(f => !query.needle || rankOf(f, query.needle) < 3)
+        .sort((a, b) => rankOf(a, query.needle) - rankOf(b, query.needle))
+        .slice(0, 12)
+      : [];
+  const extras = dotted
+    ? deeper(dotted).extras
+      .filter(o => !query!.needle || rankOf({ tag: '', label: tail(o.label) }, query!.needle) < 3)
+      .sort((a, b) => rankOf({ tag: '', label: tail(a.label) }, query!.needle) - rankOf({ tag: '', label: tail(b.label) }, query!.needle))
+    : query
+      ? (extraOptions ?? [])
+        .filter(o => !query.needle || rankOf({ tag: '', label: o.label }, query.needle) < 3)
+        .sort((a, b) => rankOf({ tag: '', label: a.label }, query.needle) - rankOf({ tag: '', label: b.label }, query.needle))
+      : [];
   const shownMenu = !closed && (matches.length > 0 || extras.length > 0);
   const total = extras.length + matches.length;
   const lit = total ? Math.min(highlight, total - 1) : 0;
+  const pickDotted = (tag: string) => {
+    if (!dot) return;
+    const rest = dot.text.slice(caret);
+    const next = parts.map((p, i) => (i === dot.index - 1 ? { tag } : i === dot.index ? { text: rest } : p));
+    setDot(null);
+    commitParts(next, { index: dot.index, caret: 0 });
+  };
+  const chooseExtra = (option: (typeof extras)[number]) => {
+    if (dotted && option.name) pickDotted(option.name); else pickExtra(option.onPick);
+  };
+  const chooseField = (tag: string) => {
+    if (dotted) pickDotted(tag); else pick(tag);
+  };
   const pickAt = (index: number) => {
-    if (index < extras.length) pickExtra(extras[index]!.onPick);
-    else pick(matches[index - extras.length]!.tag);
+    if (index < extras.length) chooseExtra(extras[index]!);
+    else chooseField(matches[index - extras.length]!.tag);
   };
 
   const pickExtra = (onPick: (insert: (piece: string) => string) => void) => {
@@ -321,10 +381,15 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     const part = parts[active] as { text: string };
     const before = part.text.slice(0, query.at);
     const after = part.text.slice(caret);
-    const insert = (piece: string) => joinParts(parts.map((p, i) => (i === active
-      ? { text: before + piece + after }
-      : p)));
-    onChange(insert(''));
+    const start = joinParts(parts.slice(0, active)).length + before.length;
+    const emptied = joinParts(parts.map((p, i) => (i === active ? { text: before + after } : p)));
+    const insert = (piece: string) => {
+      pendingFocus.current = { offset: start + piece.length, skip: [value, emptied] };
+      return joinParts(parts.map((p, i) => (i === active
+        ? { text: before + piece + after }
+        : p)));
+    };
+    onChange(emptied);
     setClosed(true);
     onPick(insert);
   };
@@ -364,6 +429,18 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
   );
 
   const editText = (index: number, typed: string, typedAt: number) => {
+    const base = chipBefore(index);
+    if (base && typed.startsWith('.') && (dot?.index === index || !(parts[index] as { text: string }).text.startsWith('.'))) {
+      const below = deeper(base);
+      if (below.fields.length || below.extras.length) {
+        setDot({ index, text: typed });
+        setCaret(typedAt);
+        setHighlight(0);
+        setClosed(false);
+        return;
+      }
+    }
+    if (dot?.index === index) setDot(null);
     const glued = index > 0 && 'tag' in (parts[index - 1] ?? {}) && /^[\p{L}\p{N}_.]/u.test(typed);
     const text = glued ? ` ${typed}` : typed;
     const at = glued ? typedAt + 1 : typedAt;
@@ -388,6 +465,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
   };
 
   const leave = () => {
+    setDot(null);
 
     setTimeout(() => {
       if (host.current && !host.current.contains(document.activeElement)) {
@@ -479,9 +557,9 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
             }}
 
             className={`chips__text ${!part.text && index !== parts.length - 1 ? 'chips__text--ghost' : ''}`}
-            value={part.text}
+            value={dot?.index === index ? dot.text : part.text}
             placeholder={empty ? placeholder : undefined}
-            size={Math.max(1, part.text.length || (empty ? (placeholder?.length ?? 8) : 1))}
+            size={Math.max(1, (dot?.index === index ? dot.text : part.text).length || (empty ? (placeholder?.length ?? 8) : 1))}
             spellCheck={false}
             onFocus={e => { setActive(index); setCaret(e.currentTarget.selectionStart ?? 0); onFocus?.(); }}
             onBlur={leave}
@@ -544,7 +622,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
               key={`extra-${i}`} type="button" role="option" aria-selected={i === lit}
               className={`slot__option${i === lit ? ' slot__option--lit' : ''}`}
               onMouseEnter={() => setHighlight(i)}
-              onMouseDown={e => { e.preventDefault(); pickExtra(option.onPick); }}
+              onMouseDown={e => { e.preventDefault(); chooseExtra(option); }}
             >
               <span className="slot__group slot__group--record">{option.group}</span>
               {option.label}
@@ -555,7 +633,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
               key={f.tag} type="button" role="option" aria-selected={extras.length + j === lit}
               className={`slot__option${extras.length + j === lit ? ' slot__option--lit' : ''}`}
               onMouseEnter={() => setHighlight(extras.length + j)}
-              onMouseDown={e => { e.preventDefault(); pick(f.tag); }}
+              onMouseDown={e => { e.preventDefault(); chooseField(f.tag); }}
             >
               <span className="slot__group">{f.group}</span>
               {f.label}
