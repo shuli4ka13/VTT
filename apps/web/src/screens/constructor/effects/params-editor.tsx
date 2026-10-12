@@ -328,7 +328,17 @@ function Origins({ effectId, param, system }: { effectId: string; param: Param; 
   const compendium = useWorld(s => s.compendium);
   const pick = useWorld(s => s.pick);
   const list = cachedOrigins(system, compendium, effectId, param).filter(origin => origin.kind !== 'default');
-  if (!list.length) return <span className="sources" />;
+  if (!list.length) {
+    const quiet = param.optional || param.default !== undefined;
+    return (
+      <span className="sources">
+        <span className={`source ${quiet ? 'source--self' : 'source--none'}`}
+          title={quiet ? 'Никто не передаёт — берётся умолчание входа' : 'Никто не передаёт этот вход: добавьте поле с таким же названием в тип вещи или передайте его из вызывающего эффекта'}>
+          {quiet ? 'по умолчанию' : 'никто не передаёт'}
+        </span>
+      </span>
+    );
+  }
   const kinds = [...new Set(list.map(origin => origin.kind))];
   const go = (many: readonly Origin[]) => {
     const kind = many.find(origin => origin.table)?.table;

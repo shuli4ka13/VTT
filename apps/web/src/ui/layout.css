@@ -574,3 +574,4 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .source--link { font-family: inherit; cursor: pointer; }
 .source--link:hover { border-color: currentColor; }
 .flow-block__then { color: var(--text-faint); font-size: var(--fs-2); margin-bottom: calc(-1 * var(--s-1)); }
+.source--none { border-color: var(--warn); color: var(--warn); }
