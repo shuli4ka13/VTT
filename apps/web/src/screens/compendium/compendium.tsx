@@ -201,7 +201,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
           <CardHead
             title="Свои кнопки"
             sub="Кнопки только этой записи — поверх общих кнопок типа."
-            actions={<Button size="sm" onClick={() => edit(draft => { (draft.bindings ??= []).push(newBinding(system)); })}>+ кнопка</Button>}
+            actions={<Button size="sm" onClick={() => edit(draft => { (draft.bindings ??= []).push(newBinding()); })}>+ кнопка</Button>}
           />
           {(record.bindings ?? []).length ? (record.bindings ?? []).map((binding, index) => (
             <ButtonEditor
@@ -209,6 +209,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
               binding={binding}
               system={system}
               recordKind={kind}
+              {...(record.table ? { kindId: record.table } : {})}
               onEdit={change => edit(draft => { const own = draft.bindings?.[index]; if (own) change(own); })}
               onDelete={() => edit(draft => {
                 draft.bindings = (draft.bindings ?? []).filter((_, at) => at !== index);

@@ -143,7 +143,7 @@ export function RecordsTab() {
                   <ListItem
                     key={key}
                     name={kind.label ?? key}
-                    meta={key === DESK_ID ? 'тип стола' : system.sheets?.[key] ? 'тип листа' : `свойств: ${kind.columns?.length ?? 0} · действий: ${kind.bindings?.length ?? 0}`}
+                    meta={key === DESK_ID ? 'тип стола' : system.sheets?.[key] ? 'тип листа' : `свойств: ${kind.columns?.length ?? 0} · кнопок: ${kind.bindings?.length ?? 0}`}
                     active={key === activeKind}
                     onClick={() => pick({ activeRecordKind: key })}
                   />
@@ -276,63 +276,8 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
 
       <Card>
         <CardHead
-          title="Что запись даёт владельцу"
-          actions={
-            <Button
-              size="sm"
-              disabled={Object.keys(system.effects).length === 0}
-              onClick={() => edit(draft => {
-                (draft.bindings ??= []).push(newBinding(system));
-              })}
-            >+ подключить эффект</Button>
-          }
-        />
-        {Object.keys(system.effects).length === 0 ? (
-          <Verdict tone="warn">
-            В системе ещё нет эффектов — подключать нечего. Заведите их на вкладке «Эффекты».
-          </Verdict>
-        ) : null}
-
-        {bindings.length === 0
-          ? <span className="faint">Ничего не подключено: тип ничего не автоматизирует.</span>
-          : bindings.map((binding, index) => (
-            <ButtonEditor
-              key={index}
-              binding={binding}
-              system={system}
-              recordKind={kind}
-              onEdit={change => edit(draft => { change(draft.bindings![index]!); })}
-              onDelete={() => edit(draft => { draft.bindings!.splice(index, 1); })}
-              onFillWithProp={param => edit(draft => {
-                draft.columns ??= [];
-                const label = param.label ?? param.key;
-                const taken = draft.columns.map(p => p.key);
-                const newKey = taken.includes(param.key) ? freeId(taken, label) : param.key;
-                draft.columns.push({
-                  key: newKey, label, kind: param.kind ?? 'number',
-                  ...(param.from ? { from: param.from } : {}),
-                });
-                const target = draft.bindings![index]!;
-                if (newKey !== param.key) {
-                  target.args ??= {};
-                  target.args[param.key] = { expr: `@${newKey}` };
-                } else if (target.args) {
-                  delete target.args[param.key];
-                  if (!Object.keys(target.args).length) delete target.args;
-                }
-              })}
-            />
-          ))}
-        <Field label="И как есть — висит или кнопкой под своим именем">
-          <GrantsEditor system={system} value={kind.grants}
-            onChange={next => edit(draft => { if (next) draft.grants = next; else delete draft.grants; })} />
-        </Field>
-      </Card>
-
-      <Card>
-        <CardHead
-          title="Что спросить у человека"
-          sub="Форма записи: что заполняют у каждой вещи в книге. Свойство для входа эффекта заводится пунктом «+ новое свойство» в его списке; руками сюда добавляют справочное: вес, цену."
+          title="Свойства"
+          sub="Что заполняют у каждой записи этого типа в книге."
           actions={
             <Button size="sm" onClick={() => {
               const made = newProp(kind);
@@ -342,7 +287,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
           }
         />
         {props.length === 0
-          ? <span className="faint">Свойств нет: записи этого типа — чистые данные без автоматизации.</span>
+          ? <span className="faint">Свойств нет.</span>
           : (
             <div className="inline inline--tight">
               {props.map(prop => (
@@ -372,6 +317,66 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
             </>} />
         ) : null}
       </Card>
+
+
+      <Card>
+        <CardHead
+          title="Кнопки на листе"
+          actions={
+            <Button
+              size="sm"
+              disabled={Object.keys(system.effects).length === 0}
+              onClick={() => edit(draft => {
+                (draft.bindings ??= []).push(newBinding());
+              })}
+            >+ кнопка</Button>
+          }
+        />
+        {Object.keys(system.effects).length === 0 ? (
+          <Verdict tone="warn">
+            В системе ещё нет эффектов — подключать нечего. Заведите их на вкладке «Эффекты».
+          </Verdict>
+        ) : null}
+
+        {bindings.length === 0
+          ? <span className="faint">Кнопок нет.</span>
+          : bindings.map((binding, index) => (
+            <ButtonEditor
+              key={index}
+              binding={binding}
+              system={system}
+              recordKind={kind}
+              kindId={id}
+              onEdit={change => edit(draft => { change(draft.bindings![index]!); })}
+              onDelete={() => edit(draft => { draft.bindings!.splice(index, 1); })}
+              onFillWithProp={param => edit(draft => {
+                draft.columns ??= [];
+                const label = param.label ?? param.key;
+                const taken = draft.columns.map(p => p.key);
+                const newKey = taken.includes(param.key) ? freeId(taken, label) : param.key;
+                draft.columns.push({
+                  key: newKey, label, kind: param.kind ?? 'number',
+                  ...(param.from ? { from: param.from } : {}),
+                });
+                const target = draft.bindings![index]!;
+                if (newKey !== param.key) {
+                  target.args ??= {};
+                  target.args[param.key] = { expr: `@${newKey}` };
+                } else if (target.args) {
+                  delete target.args[param.key];
+                  if (!Object.keys(target.args).length) delete target.args;
+                }
+              })}
+            />
+          ))}
+      </Card>
+
+      <Card>
+        <CardHead title="Висит на владельце" sub="Пока запись у листа." />
+        <GrantsEditor system={system} value={kind.grants} hanging
+          onChange={next => edit(draft => { if (next) draft.grants = next; else delete draft.grants; })} />
+      </Card>
+
 
       {kind.use === 'item' ? (
         <Card>

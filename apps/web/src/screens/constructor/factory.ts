@@ -37,9 +37,7 @@ export const newRecordKind = (system: System): Made<RecordKind> => ({
   value: { shape: 'book', use: 'item', label: 'Новый тип', block: 'Снаряжение' },
 });
 
-export const newBinding = (system: System): Binding => ({
-  label: 'Применение', effect: Object.keys(system.effects)[0] ?? '', args: {},
-});
+export const newBinding = (): Binding => ({ effect: '' });
 
 export const newProp = (kind: RecordKind): Column => ({
   key: freeId((kind.columns ?? []).map(p => p.key), 'prop'),

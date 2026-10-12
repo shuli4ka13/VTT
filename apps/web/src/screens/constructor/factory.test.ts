@@ -68,7 +68,7 @@ for (const [name, base] of BASES) {
       const effect = newEffect(system, 'manual');
       system.effects[effect.key] = effect.value;
       const made = newRecordKind(system);
-      made.value.bindings = [newBinding(system)];
+      made.value.bindings = [newBinding()];
       (system.tables ??= {})[made.key] = made.value;
       expect(issuesOf(system)).toEqual([]);
     });

@@ -524,6 +524,9 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .param-list--table .param-line > .sources { grid-column: 4; }
 .param-list--table .param-line > :last-child { grid-column: 5; justify-self: end; margin-left: 0; }
 .param-list--table .param-item > :not(.param-line) { grid-column: 1 / -1; }
+.button-head { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(220px, 2fr) auto; gap: var(--s-4); align-items: end; }
+.button-head__actions { display: flex; align-items: center; gap: var(--s-2); height: var(--control-h); }
+.args-row__eg { font-size: var(--fs-1); color: var(--text-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .args-table { display: grid; grid-template-columns: minmax(140px, 220px) minmax(120px, 1fr) minmax(240px, 1.5fr); column-gap: var(--s-4); margin-top: var(--s-2); }
 .args-table__head { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; padding: 0 0 var(--s-2); border-bottom: 1px solid var(--border-strong); font-size: var(--fs-1); text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
 .args-row { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; min-height: 48px; padding: var(--s-2) 0; border-bottom: 1px solid var(--border); }

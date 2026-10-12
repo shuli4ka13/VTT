@@ -76,6 +76,18 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     expect(строкаВхода('Сколько костей').className).not.toContain('args-row--need');
   });
 
+  it('новая кнопка: выбрал эффект — имя кнопки берётся от эффекта, входы встают строками', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: { ...state.system, tables: { ...state.system.tables, weapon: { ...state.system.tables!.weapon!, bindings: [{ effect: '' }] } } },
+    }));
+    render(<RecordsTab />);
+    expect(document.querySelector('.args-row')).toBeNull();
+    fireEvent.change(screen.getByDisplayValue('— какой эффект —'), { target: { value: 'hit' } });
+    expect(useWorld.getState().system.tables!.weapon!.bindings![0]!.label).toBe('Удар');
+    expect(строкаВхода('Кость урона').className).toContain('args-row--need');
+  });
+
   it('входы-листы, которые кнопка заполняет сама, подписаны, а не горят «не заполнено»', () => {
     useWorld.setState(state => ({
       ...state,

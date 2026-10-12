@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { useWorld } from '../../store/world.ts';
+import { useWorld, useBook } from '../../store/world.ts';
 import type { System, Effect, Param, Binding, SlotRef } from '@vtt/schema';
 import type { RecordKind } from '@vtt/engine/model/owned';
 import { tableOf } from '@vtt/engine/model/buttons';
 import { paramsOf } from '@vtt/engine/model/inherit';
 import { listOf } from '@vtt/engine/model/lists';
-import { Card, CardHead, Field, Select, LabelInput, Button, DangerButton } from '../../ui/primitives.tsx';
+import { Card, Field, Select, LabelInput, Button, DangerButton } from '../../ui/primitives.tsx';
+import { asDice } from '@vtt/engine/words/glossary';
 import { ValueField, asText } from './value-field.tsx';
 import { grouped as byRole } from './effects/roles.ts';
 import { kindWords } from './effects/params-editor.tsx';
@@ -18,11 +19,12 @@ const SAME = 'Одно на всех';
 
 type Fill = 'actor' | 'targets';
 
-export function ButtonEditor({ binding, system, recordKind, onEdit, onDelete, onFillWithProp }: {
+export function ButtonEditor({ binding, system, recordKind, kindId, onEdit, onDelete, onFillWithProp }: {
   binding: Binding;
   system: System;
 
   recordKind: RecordKind;
+  kindId?: string;
   onEdit: (change: (draft: Binding) => void) => void;
   onDelete: () => void;
 
@@ -50,28 +52,33 @@ export function ButtonEditor({ binding, system, recordKind, onEdit, onDelete, on
 
   return (
     <Card tone="flat">
-      <CardHead
-        title={<LabelInput value={binding.label ?? ''} placeholder="как назвать кнопку" onCommit={label => onEdit(draft => { draft.label = label; })} />}
-        actions={<>
+      <div className="button-head">
+        <Field label="Кнопка на листе">
+          <LabelInput value={binding.label ?? ''} placeholder="как назвать кнопку" onCommit={label => onEdit(draft => { draft.label = label; })} />
+        </Field>
+        <Field label="Вызывает эффект" needed={!effect}>
+          <Select
+            value={binding.effect ?? ''}
+            options={[['', '— какой эффект —'], ...byRole(system, buttons).map(([id, e, group]) => [id, e.label || id, group] as const)] as never}
+            onChange={next => onEdit(draft => {
+              draft.effect = next;
+              if (!draft.label?.trim() && system.effects[next]) draft.label = system.effects[next]!.label || next;
+            })}
+          />
+        </Field>
+        <div className="button-head__actions">
           {effect ? (
-            <Button size="sm" variant="ghost" title="открыть эффект, который жмёт эта кнопка"
+            <Button size="sm" variant="ghost" title="открыть эффект"
               onClick={() => useWorld.getState().pick({ activeTab: 'effects', activeEffectId: binding.effect, activeStepIndex: null })}>
-              как устроено «{effect.label || binding.effect}» →
+              как устроен →
             </Button>
           ) : null}
           <DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>
-        </>}
-      />
-      <Field label="Какой эффект" needed={!effect}>
-        <Select
-          value={binding.effect ?? ''}
-          options={[['', '— какой эффект —'], ...byRole(system, buttons).map(([id, e, group]) => [id, e.label || id, group] as const)] as never}
-          onChange={next => onEdit(draft => { draft.effect = next; })}
-        />
-      </Field>
+        </div>
+      </div>
       {effect ? (params.length ? (
         <div className="args-table">
-          <div className="args-table__head" aria-hidden><span>Вход</span><span>Что это</span><span>Чем заполняет тип</span></div>
+          <div className="args-table__head" aria-hidden><span>Вход</span><span>Что это</span><span>Чем заполнить</span></div>
           {params.map(param => (
             <ArgRow
               key={param.key}
@@ -81,6 +88,7 @@ export function ButtonEditor({ binding, system, recordKind, onEdit, onDelete, on
               system={system}
               recordKind={recordKind}
               effectId={binding.effect}
+              {...(kindId ? { kindId } : {})}
               effect={effect}
               where={where}
               onArg={next => onArg(param.key, next)}
@@ -140,8 +148,9 @@ function emptyWords(param: Param, system: System): string {
 
 const loose = (param: Param) => param as Param & { optional?: boolean };
 
-function ArgRow({ param, binding, params, system, recordKind, effectId, effect, where, onArg, onSheet, onNew }: {
+function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, effect, where, onArg, onSheet, onNew }: {
   param: Param;
+  kindId?: string;
   binding: Binding;
   params: Param[];
   system: System;
@@ -209,6 +218,7 @@ function ArgRow({ param, binding, params, system, recordKind, effectId, effect, 
       <span className="args-row__kind">{kindWords(param, system)}</span>
       <div className="args-row__fill">
         <Select<string> label={`«${name}» — чем заполняет тип`} value={value} options={options} onChange={pick} />
+        {value.startsWith('@') && kindId ? <Examples system={system} kind={recordKind} kindId={kindId} prop={value.slice(1).split('.')[0]!} /> : null}
         {value === FORMULA ? (
           <ValueField
             where={`${where} · ${name}`}
@@ -223,6 +233,28 @@ function ArgRow({ param, binding, params, system, recordKind, effectId, effect, 
       </div>
     </div>
   );
+}
+
+const SHOWN = 3;
+
+function cellWords(system: System, column: { kind?: string; from?: string }, value: unknown): string {
+  if (value === undefined || value === null || value === '') return '—';
+  if (Array.isArray(value)) return value.map(one => cellWords(system, column, one)).join(', ');
+  if (typeof value === 'object') return String((value as { expr?: unknown }).expr ?? '');
+  if (column.kind === 'dice') return asDice(String(value));
+  if (column.kind === 'choice' && column.from) return listOf(system, column.from)?.find(row => row.value === value)?.label ?? String(value);
+  return String(value);
+}
+
+function Examples({ system, kind, kindId, prop }: { system: System; kind: RecordKind; kindId: string; prop: string }) {
+  const book = useBook();
+  const column = (kind.columns ?? []).find(one => one.key === prop);
+  if (!column) return null;
+  const records = (book.records ?? []).filter(record => record.table === kindId);
+  if (!records.length) return null;
+  const shown = records.slice(0, SHOWN).map(record => `${record.label || record.id} ${cellWords(system, column, record.cells?.[prop])}`);
+  const rest = records.length - SHOWN;
+  return <span className="args-row__eg">в книге: {shown.join(' · ')}{rest > 0 ? ` · ещё ${rest}` : ''}</span>;
 }
 
 export function namesOf(kind: RecordKind, system: System): Map<string, string> {
