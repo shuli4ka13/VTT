@@ -16,6 +16,7 @@ const FORMULA = '=';
 const NEW = '+';
 const OWN = 'Своё у каждой записи';
 const SAME = 'Одно на всех';
+const ROWS = 'Одно на всех — строка';
 
 type Fill = 'actor' | 'targets';
 
@@ -125,7 +126,7 @@ function sourcesOf(param: Param, kind: RecordKind, system: System, effectId: str
       .filter(column => String(column.kind ?? 'number') === 'number')
       .map(column => ({ key: `@${prop.key}.${column.key}`, label: `${prop.label ?? prop.key} · ${column.label || column.key}`, group: OWN })));
   const rows = want === 'choice' && param.from
-    ? (listOf(system, param.from) ?? []).map(row => ({ key: JSON.stringify(row.value), label: row.label, group: SAME }))
+    ? (listOf(system, param.from) ?? []).map(row => ({ key: JSON.stringify(row.value), label: row.label, group: `${ROWS} «${system.tables?.[param.from!]?.label || param.from}»` }))
     : [];
   const effects = want === 'effect'
     ? byRole(system, Object.entries(system.effects).filter(([id]) => id !== effectId))
@@ -172,7 +173,7 @@ function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, 
     return (
       <div className={`args-row${!fill && !loose(param).optional ? ' args-row--need' : ''}`}>
         <span className="args-row__name">{name}</span>
-        <span className="args-row__kind">{kindWords(param, system)}</span>
+        <KindCell param={param} system={system} />
         <div className="args-row__fill">
           <Select<string>
             label={`«${name}» — чем заполняет тип`}
@@ -199,9 +200,9 @@ function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, 
     ...(byName ? [] : [[EMPTY, emptyWords(param, system)] as const]),
     ...sources.filter(source => source.group === OWN).map(source => [source.key, source.label, source.group] as const),
     ...(onNew && !byName ? [[NEW, `+ новое свойство «${name}»`, OWN] as const] : []),
-    ...sources.filter(source => source.group === SAME).map(source => [source.key, source.label, source.group] as const),
+    ...sources.filter(source => source.group.startsWith(ROWS)).map(source => [source.key, source.label, source.group] as const),
     [FORMULA, 'формула…', SAME] as const,
-    ...sources.filter(source => source.group !== OWN && source.group !== SAME).map(source => [source.key, source.label, source.group] as const),
+    ...sources.filter(source => source.group !== OWN && !source.group.startsWith(ROWS)).map(source => [source.key, source.label, source.group] as const),
   ];
 
   const pick = (next: string) => {
@@ -215,7 +216,7 @@ function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, 
   return (
     <div className={`args-row${need ? ' args-row--need' : ''}`}>
       <span className="args-row__name">{name}</span>
-      <span className="args-row__kind">{kindWords(param, system)}</span>
+      <KindCell param={param} system={system} />
       <div className="args-row__fill">
         <Select<string> label={`«${name}» — чем заполняет тип`} value={value} options={options} onChange={pick} />
         {value.startsWith('@') && kindId ? <Examples system={system} kind={recordKind} kindId={kindId} prop={value.slice(1).split('.')[0]!} /> : null}
@@ -232,6 +233,20 @@ function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, 
         ) : null}
       </div>
     </div>
+  );
+}
+
+function KindCell({ param, system }: { param: Param; system: System }) {
+  const table = param.kind === 'choice' && param.from ? param.from : null;
+  if (!table) return <span className="args-row__kind">{kindWords(param, system)}</span>;
+  return (
+    <span className="args-row__kind">
+      {param.many ? 'строки таблицы' : 'строка таблицы'}{' '}
+      <button type="button" className="link-button" title="открыть таблицу"
+        onClick={() => useWorld.getState().pick({ activeTab: 'dictionaries', activeTableId: table })}>
+        «{system.tables?.[table]?.label || table}»
+      </button>
+    </span>
   );
 }
 

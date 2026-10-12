@@ -34,7 +34,8 @@ export const kindWords = (param: Loose, system: System): string => {
   if (kind === 'sheet') return param.many ? `несколько листов, каждый — «${param.item?.label ?? param.item?.key ?? 'Каждый'}»` : 'лист';
   if (kind === 'choice') {
     const table = param.from ? system.tables?.[param.from] : undefined;
-    return table || param.from ? `из «${table?.label || param.from}»` : 'из таблицы';
+    const row = param.many ? 'строки таблицы' : 'строка таблицы';
+    return table || param.from ? `${row} «${table?.label || param.from}»` : row;
   }
   return kindWord(kind);
 };

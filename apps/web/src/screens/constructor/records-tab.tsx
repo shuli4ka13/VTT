@@ -15,6 +15,7 @@ import { BlockPick } from './block-pick.tsx';
 import { GrantsEditor } from './grants-editor.tsx';
 import { argsWithProps, propKeysOf, recordKinds, sheetKinds, recordsOf } from '@vtt/engine/model/owned';
 import { DESK_ID } from '@vtt/engine/engine/owners';
+import { kindWord } from '@vtt/engine/words/kinds';
 import type { AnyKind } from '@vtt/engine/model/owned';
 import { blockOf } from '@vtt/engine/model/blocks';
 import { blockTree, BlockBranches } from './block-tree.tsx';
@@ -294,7 +295,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
                 <Button key={prop.key} size="sm" variant={prop.key === picked ? 'primary' : 'ghost'}
                   title={[propDestiny(system, kind, prop.key), prop.expr !== undefined ? 'считается формулой' : ''].filter(Boolean).join(' · ')}
                   onClick={() => setPicked(prop.key === picked ? null : prop.key)}>
-                  {prop.label || prop.key}
+                  {prop.label || prop.key}<span className="prop-chip__kind" aria-hidden>{propKind(system, prop)}</span>
                 </Button>
               ))}
             </div>
@@ -400,6 +401,11 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
 
     </>
   );
+}
+
+function propKind(system: System, prop: { kind?: string; from?: string }): string {
+  if (prop.kind === 'choice') return `«${(prop.from && system.tables?.[prop.from]?.label) || prop.from || 'таблица'}»`;
+  return kindWord(prop.kind);
 }
 
 function propDestiny(system: System, kind: RecordKind, propKey: string): string {
