@@ -17,7 +17,7 @@ import { ChangeBody } from './change-body.tsx';
 import { NumberBody } from './number-body.tsx';
 import { SeenBody } from './seen-body.tsx';
 import { TableBody } from './table-body.tsx';
-import { StopStrip } from './flow-parts.tsx';
+import { StopStrip, StepHead, FlowActions, UnwrapButton } from './flow-parts.tsx';
 import { titleOf } from '../words.ts';
 import { STEP_WORDS } from '@vtt/engine/words/steps';
 import { loopOf } from '@vtt/engine/engine/steps/each';
@@ -43,7 +43,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, onUnpair, onWrap, asIf = false,
+  edit, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, onUnpair, onWrap, onUnwrap, asIf = false, outcome = '',
 }: {
   group: CardGroup;
   position: number;
@@ -71,7 +71,9 @@ export function GroupCard({
   sheets?: SheetNames;
   onUnpair?: () => void;
   onWrap?: () => void;
+  onUnwrap?: () => void;
   asIf?: boolean;
+  outcome?: string;
 }) {
   const context: SlotContext = { system, effect, earlier, ...(sheets ? { sheets } : {}) };
   const step = group.step as any;
@@ -102,7 +104,35 @@ export function GroupCard({
     );
   }
 
-  const title = `${position} · ${asIf ? `Если: ${titleOf(group.kind, group.step, system, effect)}` : titleOf(group.kind, group.step, system, effect)}`;
+  const called = titleOf(group.kind, group.step, system, effect);
+  const title = `${position} · ${called}`;
+
+  const body = (
+    <>
+      {problem ? <Verdict tone="bad" action={problemAction}>{problem.text}</Verdict> : null}
+      {group.kind === 'check' ? <CheckBody step={step} roll={group.amount} context={context} edit={edit} system={system} asIf={asIf} {...(onUnpair ? { onUnpair } : {})} /> : null}
+      {group.kind === 'seen' ? <SeenBody step={step} context={context} edit={edit} /> : null}
+      {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} withNumber={withNumber} system={system} onAddParam={onAddParam} onOpenEffect={onOpenEffect} lane={lane} /> : null}
+      {group.kind === 'number'
+        ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam} />
+        : null}
+      {group.kind === 'table' ? <TableBody step={step} context={context} edit={edit} system={system} /> : null}
+      <StepName group={group} effect={effect} system={system} edit={edit} />
+    </>
+  );
+
+  if (asIf) {
+    return (
+      <>
+        <StepHead
+          position={position} words={`${called.includes('«') ? called : `«${called}»`} — ${outcome}`} open={!folded} onToggle={onFold} problem={problem?.text ?? null}
+          actions={<FlowActions onUp={onMoveUp} onDown={onMoveDown} upTitle={upTitle} downTitle={downTitle} extra={onUnwrap ? <UnwrapButton onClick={onUnwrap} /> : null} onDelete={onDelete} />}
+        />
+        {folded ? null : <div className={`step-card flow-block__source flow-block__source--${group.kind}`}>{body}</div>}
+      </>
+    );
+  }
+
   const head = onFold ? (
     <button type="button" className="step-fold" aria-expanded={!folded} onClick={onFold}
       title={folded ? 'развернуть шаг' : 'свернуть шаг'}>
@@ -132,15 +162,7 @@ export function GroupCard({
           title={head}
           actions={actions}
         />
-        {problem ? <Verdict tone="bad" action={problemAction}>{problem.text}</Verdict> : null}
-        {group.kind === 'check' ? <CheckBody step={step} roll={group.amount} context={context} edit={edit} system={system} asIf={asIf} {...(onUnpair ? { onUnpair } : {})} /> : null}
-        {group.kind === 'seen' ? <SeenBody step={step} context={context} edit={edit} /> : null}
-        {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} withNumber={withNumber} system={system} onAddParam={onAddParam} onOpenEffect={onOpenEffect} lane={lane} /> : null}
-        {group.kind === 'number'
-          ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam} />
-          : null}
-        {group.kind === 'table' ? <TableBody step={step} context={context} edit={edit} system={system} /> : null}
-        <StepName group={group} effect={effect} system={system} edit={edit} />
+        {body}
       </Card>
     </>
   );

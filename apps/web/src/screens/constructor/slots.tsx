@@ -10,38 +10,61 @@ import { STEP } from '../../words.ts';
 import { hasField } from '@vtt/engine/model/sheet-columns';
 import { recordKinds } from '@vtt/engine/model/owned';
 
-export interface EarlierStep { id: string; type: string; at?: number; title?: string; table?: string; outputs?: { path: string; label: string; kind?: string }[] }
+export interface StepOutput { path: string; label: string; kind?: string; no?: string }
 
-export const stepName = (step: EarlierStep): string =>
-  (step.at
-    ? `${STEP.one} ${step.at}${step.title ? ` · ${step.title}` : ''}`
-    : step.title || `${STEP.one} «${step.id}»`);
+export interface EarlierStep { id: string; type: string; title?: string; table?: string; outputs?: StepOutput[] }
 
-function outputsOf(type: string): { path: string; label: string; kind?: string }[] {
+function outputsOf(type: string): StepOutput[] {
   try {
-    return (stepModule(type).outputs ?? []) as { path: string; label: string; kind?: string }[];
+    return (stepModule(type).outputs ?? []) as StepOutput[];
   } catch {
     return [];
   }
 }
 
-export const formulaName = (step: EarlierStep): string => (step.type === 'each' || !step.id ? stepName(step) : step.id.replace(/_/g, ' '));
+const outputsAt = (step: EarlierStep): StepOutput[] => [...(step.outputs ?? []), ...outputsOf(step.type)];
 
-export function outputRefs(earlier: EarlierStep[], nameOf: (step: EarlierStep) => string = stepName): { ref: string; label: string; kind?: string }[] {
+export const formulaName = (step: EarlierStep): string => (step.type === 'each' ? step.title || step.id : step.id ? step.id.replace(/_/g, ' ') : step.title || STEP.one);
+
+const said = (name: string, label: string): string => (name.toLowerCase() === label.toLowerCase() ? name : `${name} — ${label}`);
+
+export function outputRefs(earlier: EarlierStep[], nameOf: (step: EarlierStep) => string = formulaName): { ref: string; label: string; kind?: string }[] {
   const out: { ref: string; label: string; kind?: string }[] = [];
   for (const step of earlier) {
     if (step.type === 'each') continue;
-    const outputs = [...(step.outputs ?? []), ...outputsOf(step.type)];
+    const outputs = outputsAt(step);
     const name = nameOf(step);
     if (!outputs.length) {
       out.push({ ref: step.id, label: `${name} — результат` });
       continue;
     }
     for (const o of outputs) {
-      out.push({ ref: `${step.id}${o.path}`, label: `${name} — ${o.label}`, ...(o.kind ? { kind: o.kind } : {}) });
+      out.push({ ref: `${step.id}${o.path}`, label: said(name, o.label), ...(o.kind ? { kind: o.kind } : {}) });
     }
   }
   return out;
+}
+
+export interface OutcomeRef { ref: string; label: string; kind?: string; no?: string }
+
+const outcomeWord = (output: StepOutput): string => output.label.replace(/^да или нет: /, '');
+
+export function outcomeRefs(earlier: EarlierStep[]): OutcomeRef[] {
+  const rows = earlier
+    .filter(step => step.type !== 'each')
+    .flatMap(step => outputsAt(step).map(output => ({ step, output })));
+  const plain = rows.map(({ step, output }) => `${step.title || formulaName(step)} — ${outcomeWord(output)}`);
+  return rows.map(({ step, output }, at) => {
+    const title = step.title || formulaName(step);
+    const head = plain.indexOf(plain[at]!) === plain.lastIndexOf(plain[at]!) ? title : `${title} «${formulaName(step)}»`;
+    const yes = outcomeWord(output);
+    return {
+      ref: `${step.id}${output.path}`,
+      label: `${head} — ${yes}`,
+      ...(output.kind ? { kind: output.kind } : {}),
+      ...(output.kind === 'boolean' ? { no: `${head} — ${output.no ?? `не ${yes}`}` } : {}),
+    };
+  });
 }
 
 export function outputLabel(ref: string, earlier: EarlierStep[]): string {
@@ -49,7 +72,7 @@ export function outputLabel(ref: string, earlier: EarlierStep[]): string {
   if (found) return found.label;
   const [head, ...path] = ref.split('.');
   const step = earlier.find(s => s.id === head);
-  const name = step ? stepName(step) : `${STEP.one} «${head}»`;
+  const name = step ? formulaName(step) : `${STEP.one} «${head}»`;
   return path.length ? `${name} — ${path.join('.')}` : name;
 }
 

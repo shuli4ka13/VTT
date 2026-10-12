@@ -113,7 +113,7 @@ describe('GroupCard', () => {
 });
 
 describe('GroupCard: условие и ход — не у шага', () => {
-  const earlier = [{ id: 'hit', type: 'check', at: 1, title: 'Проверка' }];
+  const earlier = [{ id: 'hit', type: 'check', title: 'Проверка' }];
 
   it('у изменения нет «Только если»: условие ставит блок «Если», шаг лишь оборачивает себя в него', () => {
     const steps = [{ type: 'apply', direction: 'subtract', value: { expr: '4' } }] as unknown as Step[];

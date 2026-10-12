@@ -141,7 +141,7 @@ describe('эффекты пресетов собираются руками: Sha
     within(root()).select('Какое поле', field);
     within(root()).select('Как', how);
     within(root()).formula('Сколько', value);
-    if (when) wrapIf(root, when.startsWith('шаг ') ? when : `=${when}`);
+    if (when) wrapIf(root, when.includes(' — ') ? when : `=${when}`);
   };
 
   const nameStep = (card: () => HTMLElement, name: string): void => {
@@ -169,7 +169,7 @@ describe('эффекты пресетов собираются руками: Sha
     within(handlerAt(1)).click('+ изменение');
     change(at(1, 2), 'носитель', 'death_penalty', 'add', '1');
     within(handlerAt(1)).click('+ изменение');
-    change(at(1, 3), 'носитель', 'dead', 'set', 'да', 'шаг 1 · Проверка — не пройдена');
+    change(at(1, 3), 'носитель', 'dead', 'set', 'да', 'Проверка — не пройдена');
 
     ui.click('+ когда');
     h = () => stepCard(/^Когда №2/);
@@ -259,7 +259,8 @@ describe('эффекты пресетов собираются руками: Sha
       within(at(k)()).formula('Проверка', formula);
       nameStep(at(k), name);
       addToArm(block(flow), 0, 'branch');
-      within(headOf(block(flow + 1))).when(`шаг ${k} · Проверка — не пройдена`);
+      const failed = `Проверка «${name.replace(/_/g, ' ')}» — не пройдена`;
+      within(headOf(block(flow + 1))).when(within(headOf(block(flow + 1))).whenOptions().includes(failed) ? failed : 'Проверка — не пройдена');
       addToArm(block(flow + 1), 0, 'stop');
       stopNote(k + 1, 'броня выдержала');
     };
@@ -337,7 +338,7 @@ describe('эффекты пресетов собираются руками: Sha
     wrapIf(at(4), '=все(@rating > 0, сколько(@бросок.dice.rolls, 6) >= 2)');
 
     ui.click('+ если');
-    within(headOf(block(1))).when('шаг 3 · Проверка — какая ступень успеха');
+    within(headOf(block(1))).when('Проверка — какая ступень успеха');
     within(headOf(block(1))).type('Ступень', 'успех с последствием');
     addToArm(block(1), 0, 'change');
     change(at(5), 'стол', 'alarm', 'set', 'меньшее из(8, @стол.alarm + 1)');

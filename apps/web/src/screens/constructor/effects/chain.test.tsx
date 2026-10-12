@@ -5,7 +5,7 @@ import { Chain } from './chain.tsx';
 import { EffectEditor } from './effect-editor.tsx';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import type { Effect, System, Step } from '@vtt/schema';
-import { within, stepCard, block, headOf, armOf, armWord, addToArm, addArm, stopNote, stopStrip, isFused } from '../../../testing/cards.ts';
+import { within, stepCard, block, headOf, armOf, armWord, armLabel, addToArm, addArm, stopNote, stopStrip, isFused } from '../../../testing/cards.ts';
 import { openAll } from '../../../testing/render-open.tsx';
 
 const withCost = (): System => ({
@@ -121,27 +121,30 @@ describe('блок «Если»: условие строкой, руки, «Ст
     expect(armWord(block(0))).toBe('Если');
     expect(isFused(block(0))).toBe(false);
     const head = within(headOf(block(0)));
-    expect(head.whenOptions()).toContain('шаг 1 · Проверка — пройдена');
-    expect(head.whenOptions()).toContain('шаг 1 · Проверка — не пройдена');
+    expect(head.whenOptions()).toContain('Проверка — пройдена');
+    expect(head.whenOptions()).toContain('Проверка — не пройдена');
     expect(head.has('×')).toBe(false);
-    head.when('шаг 1 · Проверка — не пройдена');
+    head.when('Проверка — не пройдена');
     expect(steps()[2]).toEqual({ type: 'branch', if: { expr: 'не(@hit.success)' } });
     expect(isFused(block(0))).toBe(true);
-    expect(armWord(block(0))).toBe('провал:');
+    expect(armWord(block(0))).toBe('1 · Если');
+    expect(headOf(block(0)).querySelector('.flow-head__words')!.textContent).toBe('«Проверка» — провал');
+    expect(armLabel(block(0))).toBe('провал:');
     expect(within(block(0).querySelector<HTMLElement>(':scope > .flow-block__foot')!).has('+ успех')).toBe(true);
   });
 
   it('проверка и «Если» по её исходу — одна рамка: рука подписана словом исхода, «+ провал» — рука без условия, «Удалить» на проверке сносит и блок', () => {
     start(checked);
     within().click('+ если');
-    within(headOf(block(0))).when('шаг 1 · Проверка — пройдена');
+    within(headOf(block(0))).when('Проверка — пройдена');
     expect(steps().slice(2)).toEqual([{ type: 'branch', if: { expr: '@hit.success' } }, { type: 'end' }]);
     expect(document.querySelectorAll('.flow-block')).toHaveLength(1);
     const frame = block(0);
     expect(isFused(frame)).toBe(true);
-    expect(frame.querySelector(':scope > .card')?.textContent).toMatch(/1 · Если/);
-    expect(headOf(frame).classList.contains('flow-head--outcome')).toBe(true);
-    expect(armWord(frame)).toBe('успех:');
+    expect(frame.querySelector(':scope > .card')).toBeNull();
+    expect(armWord(frame)).toBe('1 · Если');
+    expect(headOf(frame).classList.contains('flow-head--label')).toBe(false);
+    expect(armLabel(frame)).toBe('успех:');
     expect(headOf(frame).querySelector('.cond')).toBeNull();
     expect(within(frame.querySelector<HTMLElement>(':scope > .flow-block__foot')!).has('+ иначе')).toBe(false);
 
@@ -150,22 +153,85 @@ describe('блок «Если»: условие строкой, руки, «Ст
     addArm(block(0), '+ провал');
     expect(steps().map(step => step.type)).toEqual(['roll', 'check', 'branch', 'apply', 'orElse', 'end']);
     expect(steps()[4]).toEqual({ type: 'orElse' });
-    expect([0, 1].map(k => armWord(block(0), k))).toEqual(['успех:', 'провал:']);
-    expect(headOf(block(0), 1).classList.contains('flow-head--outcome')).toBe(true);
+    expect([0, 1].map(k => armLabel(block(0), k))).toEqual(['успех:', 'провал:']);
+    expect(headOf(block(0), 1).classList.contains('flow-head--label')).toBe(true);
     expect(within(block(0).querySelector<HTMLElement>(':scope > .flow-block__foot')!).has('+ провал')).toBe(false);
 
-    const check = stepCard(/^1 · Если/);
-    within(check).click('Удалить');
-    within(stepCard(/^1 · Если/)).click('точно убрать');
+    within(headOf(block(0))).click('Удалить');
+    within(headOf(block(0))).click('точно убрать');
     expect(steps()).toEqual([]);
     expect(document.querySelectorAll('.flow-block')).toHaveLength(0);
+  });
+
+  it('слитый «Если» — та же шапка, что у простого: «N · Если», слова «название — исход», те же действия; поля шага раскрывает нажатие на слова', () => {
+    start([...checked, { type: 'branch', if: { expr: '@hit.success' } }, { type: 'stop' }, { type: 'end' }]);
+    const frame = block(0);
+    const head = headOf(frame);
+    expect(head.classList.contains('flow-head')).toBe(true);
+    expect(frame.querySelector(':scope > .card')).toBeNull();
+    expect(armWord(frame)).toBe('1 · Если');
+    const words = head.querySelector<HTMLButtonElement>('.flow-head__words')!;
+    expect(words.textContent).toBe('«Проверка» — успех');
+    expect(words.getAttribute('aria-expanded')).toBe('true');
+    expect([...head.querySelectorAll('.flow-head__actions button')].map(el => el.textContent)).toEqual(['снять «Если»', '↑', '↓', 'Удалить']);
+    expect(frame.querySelector(':scope > .flow-block__part > .flow-block__source')?.textContent).toContain('Условие');
+
+    fireEvent.click(words);
+    expect(words.getAttribute('aria-expanded')).toBe('false');
+    expect(frame.querySelector('.flow-block__source')).toBeNull();
+    fireEvent.click(words);
+    expect(frame.querySelector('.flow-block__source')?.textContent).toContain('Условие');
+  });
+
+  it('у простого «Если» номера нет, у слитого он стоит перед словом; подписи веток — бледные, строчные, с двоеточием', () => {
+    start([...checked, { type: 'branch', if: { expr: '@hit.success' } }, { type: 'end' }, { type: 'branch', if: { expr: '1 > 0' } }, { type: 'end' }]);
+    expect([0, 1].map(k => armWord(block(k)))).toEqual(['1 · Если', 'Если']);
+    addArm(block(0), '+ провал');
+    addArm(block(1), '+ иначе');
+    expect([0, 1].map(k => armLabel(block(0), k))).toEqual(['успех:', 'провал:']);
+    expect([0, 1].map(k => armLabel(block(1), k))).toEqual(['тогда:', 'иначе:']);
+    expect(document.querySelectorAll('.flow-head--outcome')).toHaveLength(0);
+    for (const label of document.querySelectorAll('.flow-block__then, .flow-head--label .flow-head__word')) expect(label.textContent).toMatch(/^[а-яё ]+:$/);
+  });
+
+  it('«снять «Если»» у слитого убирает блок, проверка и шаги ветки остаются; при второй ветке кнопки нет', () => {
+    start([...checked, { type: 'branch', if: { expr: '@hit.success' } }, { type: 'stop' }, { type: 'end' }]);
+    expect(within(headOf(block(0))).has('снять «Если»')).toBe(true);
+    addArm(block(0), '+ провал');
+    expect(within(headOf(block(0))).has('снять «Если»')).toBe(false);
+    within(headOf(block(0), 1)).click('убрать ветку');
+    within(headOf(block(0), 1)).click('точно убрать');
+    within(headOf(block(0))).click('снять «Если»');
+    expect(steps().map(step => step.type)).toEqual(['roll', 'check', 'stop']);
+    expect(document.querySelectorAll('.flow-block')).toHaveLength(0);
+  });
+
+  it('«Удалить» в шапке слитого «Если» сносит проверку и блок вместе, плашка называет шаг, а не номер', () => {
+    start([...checked, { type: 'branch', if: { expr: '@hit.success' } }, { type: 'end' }]);
+    within(headOf(block(0))).click('Удалить');
+    within(headOf(block(0))).click('точно убрать');
+    expect(steps()).toEqual([]);
+    expect([...document.querySelectorAll('.verdict')].map(el => el.textContent).join('|')).toMatch(/Убран шаг: Проверка/);
+    expect(document.body.textContent).not.toMatch(/шаг \d+ ·/);
+  });
+
+  it('ошибка слитого шага видна в шапке, пока поля свёрнуты, и в самих полях, когда раскрыты', () => {
+    start([{ id: 'hit', type: 'check', value: { expr: '@нет_такого' }, versus: { expr: '10' } }, { type: 'branch', if: { expr: '@hit.success' } }, { type: 'end' }]);
+    const words = () => headOf(block(0)).querySelector<HTMLElement>('.flow-head__words')!;
+    expect(headOf(block(0)).classList.contains('flow-head--bad')).toBe(true);
+    expect(headOf(block(0)).querySelector('.field__error')).toBeNull();
+    expect(block(0).querySelector('.flow-block__source .verdict')?.textContent).toContain('нет_такого');
+    fireEvent.click(words());
+    expect(block(0).querySelector('.flow-block__source')).toBeNull();
+    expect(headOf(block(0)).querySelector('.field__error')?.textContent).toContain('нет_такого');
   });
 
   it('слово исхода берётся из метки броска: «атака» — «попадание: / промах:»', () => {
     const tables = { метки: { label: 'Метки', columns: [{ key: 'успех', label: 'успех' }, { key: 'провал', label: 'провал' }], rows: [{ value: 'атака', cells: { успех: 'попадание', провал: 'промах' } }] } };
     start([{ ...checked[0], tags: ['атака'] }, checked[1], { type: 'branch', if: { expr: 'не(@hit.success)' } }, { type: 'end' }], { tables });
     expect(isFused(block(0))).toBe(true);
-    expect(armWord(block(0))).toBe('промах:');
+    expect(armLabel(block(0))).toBe('промах:');
+    expect(headOf(block(0)).querySelector('.flow-head__words')!.textContent).toBe('«Проверка» — промах');
     expect(within(block(0).querySelector<HTMLElement>(':scope > .flow-block__foot')!).has('+ попадание')).toBe(true);
   });
 
@@ -191,7 +257,7 @@ describe('блок «Если»: условие строкой, руки, «Ст
     expect(within(block(0).querySelector<HTMLElement>(':scope > .flow-block__foot')!).has('+ иначе')).toBe(false);
     addArm(block(0), '+ иначе, если');
     expect(steps().map(step => step.type)).toEqual(['branch', 'apply', 'orElse', 'orElse', 'stop', 'end']);
-    expect([0, 1, 2].map(k => armWord(block(0), k))).toEqual(['Если', 'Иначе, если', 'Иначе']);
+    expect([0, 1, 2].map(k => armWord(block(0), k))).toEqual(['Если', 'Иначе, если', 'иначе:']);
     within(headOf(block(0), 1)).when('=2 > 1');
     addToArm(block(0), 1, 'number');
     expect(steps()[2]).toEqual({ type: 'orElse', if: { expr: '2 > 1' } });
@@ -334,6 +400,16 @@ describe('условие блока «Если» в покое — словам�
     within(headOf(block(0))).formula(headOf(block(0)).querySelector<HTMLElement>('.cond__formula')!, '3 > 2');
     expect(condition()).toBe('3 > 2');
     expect(face()!.textContent).toBe('3 > 2');
+  });
+
+  it('«Если» со «Стоп» внутри читается в той же шапке: слова условия и «— стоп»', () => {
+    show({ expr: 'пусто(@status)' }, { type: 'stop' } as unknown as Step);
+    expect(face()!.textContent).toBe('не задано «Состояние при попадании» — стоп');
+    expect(face()!.title).toBe('пусто(@status)');
+    expect(block(0).classList.contains('flow-block--guard')).toBe(true);
+    cleanup();
+    show({ expr: 'пусто(@status)' }, { type: 'stop' } as unknown as Step, { type: 'orElse' } as unknown as Step, { type: 'stop' } as unknown as Step);
+    expect(face()!.textContent).toBe('не задано «Состояние при попадании»');
   });
 
   it('«Иначе, если» и «Если» вокруг шагов — те же слова; «Иначе» без условия слов не имеет', () => {

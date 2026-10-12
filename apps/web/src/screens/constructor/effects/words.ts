@@ -3,6 +3,7 @@ import { LAUNCHES } from '@vtt/engine/model/effect-kinds';
 import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
 import type { Step, System, Effect } from '@vtt/schema';
 import { labelOfTag } from '../../../ui/formula.tsx';
+import type { CardGroup } from '../cards.ts';
 
 export const LAUNCH_KINDS = (['manual', 'passive'] as const)
   .map(key => ({ key: key as LaunchKind, label: key === 'passive' ? 'Висит' : LAUNCHES[key].label, title: LAUNCHES[key].hint }));
@@ -57,3 +58,14 @@ export function titleOf(kind: string, step: Step | undefined, system: System, ef
   if (kind === "seen" && typeof s?.type === "string" && s.type in STEP_WORDS) return STEP_WORDS[s.type as keyof typeof STEP_WORDS].label;
   return CARD_TITLES[kind] ?? kind;
 }
+
+export const cardTitle = (cards: CardGroup[], index: number, system: System, effect?: Effect): string | undefined => {
+  const card = cards.find(c => c.indices.includes(index));
+  if (!card) return undefined;
+  const own = card.indices.length > 1 && card.amount && card.indices[0] === index ? card.amount : card.step;
+  if (own.type === 'roll' && (own as { by?: unknown }).by !== undefined) {
+    const tags = (((own as { tags?: unknown[] }).tags) ?? []).filter((tag): tag is string => typeof tag === 'string');
+    return tags.length ? `Бросок «${tags.join(', ')}»` : 'Бросок';
+  }
+  return titleOf(card.kind, card.step, system, effect);
+};

@@ -196,6 +196,12 @@ export const headOf = (flow: HTMLElement, at = 0): HTMLElement => armOf(flow, at
 
 export const armWord = (flow: HTMLElement, at = 0): string => textOf(headOf(flow, at).querySelector('.flow-head__word')!);
 
+export const armLabel = (flow: HTMLElement, at = 0): string => {
+  const arm = armOf(flow, at);
+  const own = arm.querySelector<HTMLElement>(':scope > .flow-block__arm > .flow-block__then');
+  return textOf(own ?? headOf(flow, at).querySelector('.flow-head__word')!);
+};
+
 export const addToArm = (flow: HTMLElement, at: number, brick: string): void => {
   const el = armOf(flow, at).querySelector<HTMLSelectElement>(':scope > .flow-block__arm > .flow-block__add select');
   if (!el) throw new Error('в ветке нет «+ шаг»');
@@ -211,7 +217,7 @@ export const isFused = (flow: HTMLElement): boolean => flow.classList.contains('
 export const outcomeIf = (check: number, passed: boolean, root: ParentNode = document): number => {
   within(root).click('+ если');
   const at = blocks(root).length - 1;
-  within(headOf(block(at, root))).when(`шаг ${check} · Проверка — ${passed ? 'пройдена' : 'не пройдена'}`);
+  within(headOf(block(at, root))).when(`Проверка — ${passed ? 'пройдена' : 'не пройдена'}`);
   if (!isFused(block(at, root))) throw new Error(`блок по исходу шага ${check} не склеился с проверкой`);
   return at;
 };
@@ -219,7 +225,7 @@ export const outcomeIf = (check: number, passed: boolean, root: ParentNode = doc
 export const callIf = (step: number, called: string, outcome: string, root: ParentNode = document): number => {
   within(root).click('+ если');
   const at = blocks(root).length - 1;
-  within(headOf(block(at, root))).when(`шаг ${step} · ${called} — ${outcome}`);
+  within(headOf(block(at, root))).when(`${called} — ${outcome}`);
   if (!isFused(block(at, root))) throw new Error(`блок по исходу шага ${step} не склеился с вызовом`);
   return at;
 };
@@ -237,7 +243,7 @@ export const stopNote = (n: number, text: string, root: ParentNode = document): 
 };
 
 export const lastNumber = (root: ParentNode = document): number => {
-  const heads = [...root.querySelectorAll<HTMLElement>('.card .step-fold, .card .card__head, .flow-stop__word, .steps__split-title')].map(textOf);
+  const heads = [...root.querySelectorAll<HTMLElement>('.card .step-fold, .card .card__head, .flow-stop__word, .steps__split-title, .flow-head__word')].map(textOf);
   return Math.max(0, ...heads.map(t => Number(/^[▾▸]?\s*(\d+) · /.exec(t)?.[1] ?? 0)));
 };
 

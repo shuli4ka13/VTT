@@ -38,7 +38,7 @@ type Loose = Record<string, any>;
 function stepsOf(effect: Effect | undefined): EarlierStep[] {
   const out: EarlierStep[] = [];
   const all = [...(effect?.cost ?? []), ...(effect?.steps ?? [])] as Loose[];
-  all.forEach((step, index) => { if (step.id) out.push({ id: String(step.id), type: String(step.type), at: index + 1 }); });
+  all.forEach(step => { if (step.id) out.push({ id: String(step.id), type: String(step.type) }); });
   return out;
 }
 

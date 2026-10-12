@@ -17,9 +17,17 @@ const system = {
   },
 } as unknown as System;
 
-const card = (handler: Handler) => {
+const eachEffect = {
+  label: 'Каждому', activation: 'manual', params: [{ key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' } }], steps: [
+    { type: 'each', of: 'цели' },
+    { id: 'спас_бросок', type: 'roll', die: 'd20', by: { expr: '@цель' } },
+    { id: 'спас', type: 'check', value: { expr: '@спас_бросок' }, versus: { expr: '10' } },
+  ],
+};
+
+const card = (handler: Handler, more: Record<string, unknown> = {}) => {
   let current = structuredClone(handler);
-  const withHandler = { ...system, effects: { ...system.effects, r: { ...system.effects.r, on: [current] } } } as System;
+  const withHandler = { ...system, effects: { ...system.effects, ...more, r: { ...system.effects.r, on: [current] } } } as System;
   const view = render(<HandlerCard id="r" index={0} handler={current} system={withHandler} onRemove={() => {}}
     edit={change => { change(current); current = structuredClone(current); }} />);
   openAll();
@@ -38,6 +46,20 @@ describe('«когда»: исходы под момент', () => {
   it('«после» действия предлагает итог шага цели как есть', () => {
     card({ on: 'after:удар', steps: [] });
     expect([...conditionSelect().options].map(o => o.value)).toContain('@hit.success');
+  });
+
+  it('исходы названы шагом и исходом, без номера шага', () => {
+    card({ on: 'after:удар', steps: [] });
+    const labels = [...conditionSelect().options].map(o => o.textContent ?? '');
+    expect(labels).toContain('Проверка — пройдена');
+    expect(labels.filter(one => /шаг \d/.test(one))).toEqual([]);
+  });
+
+  it('после «Для каждого из» исход — «хоть по одной цели»: в условие ложится счёт по итогам целей', () => {
+    card({ on: 'done:каждому', steps: [] }, { каждому: eachEffect });
+    const options = [...conditionSelect().options];
+    const found = options.find(o => o.textContent === 'хоть по одной цели: Проверка — пройдена');
+    expect(found?.value).toBe('сколько(@итоги.спас.success, да) >= 1');
   });
 
   it('«завершено» не предлагает итог одной цели: условие — формулой, и она знает таблицу итогов по целям', () => {

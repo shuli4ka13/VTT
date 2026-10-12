@@ -566,11 +566,13 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .flow-head__cond { grid-column: 2; display: flex; flex-direction: column; gap: var(--s-1); min-width: 0; }
 .flow-head__actions { grid-column: 3; display: flex; align-items: center; gap: var(--s-1); min-height: 32px; }
 .cond__words { flex: 1 0 100%; color: var(--text-muted); font-size: var(--fs-2); }
-.formula-words { display: block; width: 100%; min-height: 32px; padding: var(--s-1) var(--s-3); text-align: left; font: inherit; font-size: var(--fs-3); line-height: 22px; color: var(--text); background: var(--bg-sunken); border: 1px solid var(--border); border-radius: var(--r-1); cursor: pointer; white-space: normal; overflow-wrap: anywhere; }
-.formula-words:hover { border-color: var(--border-strong); }
-.formula-words:focus-visible { outline: none; box-shadow: var(--focus); }
-.flow-head--outcome { display: flex; align-items: center; padding: var(--s-2) var(--s-4); }
-.flow-head--outcome .flow-head__word { font-size: var(--fs-3); line-height: 24px; }
+.formula-words, .step-fold.flow-head__words { display: block; width: 100%; min-height: 32px; padding: var(--s-1) var(--s-3); text-align: left; font: inherit; font-size: var(--fs-3); font-weight: 400; line-height: 22px; color: var(--text); background: var(--bg-sunken); border: 1px solid var(--border); border-radius: var(--r-1); cursor: pointer; white-space: normal; overflow-wrap: anywhere; }
+.formula-words:hover, .step-fold.flow-head__words:hover { border-color: var(--border-strong); }
+.formula-words:focus-visible, .step-fold.flow-head__words:focus-visible { outline: none; box-shadow: var(--focus); }
+.flow-head--label { display: flex; align-items: center; padding: var(--s-2) var(--s-4); }
+.flow-head--label .flow-head__word { color: var(--text-faint); font-size: var(--fs-2); font-weight: 400; line-height: 24px; min-width: 0; }
+.flow-block__source { --dot: var(--kind-change); flex: none; display: flex; flex-direction: column; gap: 10px; margin: 0 var(--s-3) var(--s-3) var(--s-5); padding: 0 0 0 var(--s-4); border: 0; border-left: 2px solid color-mix(in srgb, var(--dot) 55%, var(--border)); border-radius: 0; background: transparent; }
+.flow-block__source--check { --dot: var(--kind-check); }
 
 .step-card > .step-retype { order: 50; }
 .step-card > .step-name { order: 51; }
@@ -598,7 +600,7 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .step-card .roll-line__part { flex: none; width: 100%; max-width: none; }
 .step-card .roll-line__part > .formula-field, .step-card .roll-line__part > .select { width: 100%; max-width: var(--value-w); }
 .step-card .slot { grid-template-columns: minmax(0, 1fr); justify-content: stretch; }
-.flow-head__cond .cond, .flow-head__cond .cond__fact, .flow-head__cond .cond__formula { width: 100%; max-width: 520px; }
+.flow-head__cond .cond, .flow-head__cond .cond__fact, .flow-head__cond .cond__formula, .flow-head__cond .flow-head__words { width: 100%; max-width: 520px; }
 .flow-head__cond .formula-field { width: 100%; }
 .chips__chip .chips__side { margin-left: var(--s-1); padding-left: var(--s-2); }
 .source--link { font-family: inherit; cursor: pointer; }

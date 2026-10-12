@@ -2,7 +2,6 @@ import { groupSteps } from '../cards.ts';
 import { useState } from 'react';
 import { Card, CardHead, Field, Select, DangerButton, Button } from '../../../ui/primitives.tsx';
 import { formulaWords } from '../../../ui/formula-words.ts';
-import { registry } from '@vtt/engine/engine/steps/index';
 import { MOMENTS as TIMES } from '@vtt/engine/events/moments';
 import { MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, PHASES, SEEN, SEEN_LABEL, ANY_ACTION, callHappening, happeningOf } from '@vtt/engine/events/bus';
 import type { Phase } from '@vtt/engine/events/bus';
@@ -13,6 +12,8 @@ import { sheetsAt } from './names.ts';
 import { namesAt } from '@vtt/engine/model/names-at';
 import { ConditionField } from '../condition-field.tsx';
 import { WhileWhenRow } from './while-when.tsx';
+import { cardTitle } from './words.ts';
+import { outcomeRefs } from '../slots.tsx';
 import type { System, Handler } from '@vtt/schema';
 
 type Kind = 'call' | 'seen' | 'moment' | 'field' | 'gained' | 'lost';
@@ -61,20 +62,18 @@ function outcomesOf(system: System, listened: string, phase: Phase): (readonly [
   if (!source) return [];
   const steps = source.steps ?? [];
   const split = steps.findIndex(step => step.type === 'each');
-  const out: (readonly [string, string])[] = [];
   const cards = groupSteps(steps);
-  const numberOf = (index: number) => cards.filter(card => card.kind !== 'flow').findIndex(card => card.indices.includes(index)) + 1;
-  steps.forEach((step, index) => {
-    if (!step.id) return;
-    const perTarget = phase === 'done' && split >= 0 && index > split;
-    for (const output of (registry.get(step.type)?.outputs ?? []) as { path: string; label: string; kind?: string }[]) {
-      if (output.kind !== 'boolean') continue;
-      out.push(perTarget
-        ? [`сколько(@${TARGETS_SEED}.${step.id}${output.path}, да) >= 1`, `хоть по одной цели: шаг ${numberOf(index)} · ${output.label}`] as const
-        : [`@${step.id}${output.path}`, `шаг ${numberOf(index)} · ${output.label}`] as const);
-    }
+  const earlier = steps.flatMap((step, index) => {
+    const title = cardTitle(cards, index, system, source);
+    return step.id ? [{ id: String(step.id), type: step.type, ...(title ? { title } : {}) }] : [];
   });
-  return out;
+  return outcomeRefs(earlier).filter(output => output.kind === 'boolean').map(output => {
+    const index = steps.findIndex(step => step.id && output.ref.startsWith(`${step.id}.`));
+    const path = output.ref.slice(String(steps[index]!.id).length);
+    return phase === 'done' && split >= 0 && index > split
+      ? [`сколько(@${TARGETS_SEED}.${steps[index]!.id}${path}, да) >= 1`, `хоть по одной цели: ${output.label}`] as const
+      : [`@${output.ref}`, output.label] as const;
+  });
 }
 
 export function HandlerCard({ id, index, handler, system, edit, onRemove, startOpen = false }: {

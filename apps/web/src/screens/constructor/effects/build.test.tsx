@@ -6,7 +6,7 @@ import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import type { System, Effect } from '@vtt/schema';
 import { useWorld } from '../../../store/world.ts';
 import { openAll } from '../../../testing/render-open.tsx';
-import { within, stepCard, callIf, dragParamBefore, blocks, block, headOf, armWord, addToArm, addArm, stopNote, lastNumber, outcomeIf } from '../../../testing/cards.ts';
+import { within, stepCard, callIf, dragParamBefore, blocks, block, headOf, armLabel, addToArm, addArm, stopNote, lastNumber, outcomeIf } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
 
 const worldOf = (id: string) => SAMPLE_WORLDS.find(w => w.system.id === id)!;
@@ -112,7 +112,7 @@ describe('эффекты пресетов собираются в констру
     nameStep(stepCard(/^3 · /), 'попадание');
 
     const hit = callIf(3, 'Бросок атаки', 'попадание');
-    expect(armWord(block(hit))).toBe('попадание:');
+    expect(armLabel(block(hit))).toBe('попадание:');
     addToArm(block(hit), 0, 'number');
     card = stepCard(/^4 · /);
     within(card).formula('Сколько', 'кинуть(@damage_dice, @dice * если(@попадание.крит, 2, 1)) + @damage_with');
@@ -532,7 +532,7 @@ describe('эффекты пресетов собираются в констру
     addToArm(block(shown + 1), 0, 'change');
     hurt(first + 4, 'physical');
     addArm(block(shown + 1), '+ иначе');
-    expect(armWord(block(shown + 1), 1)).toBe('Иначе');
+    expect(armLabel(block(shown + 1), 1)).toBe('иначе:');
     addToArm(block(shown + 1), 1, 'change');
     hurt(first + 5, 'stun');
 

@@ -13,7 +13,7 @@ import type { When } from './guard-expr.ts';
 
 export type QuickKind = 'boolean' | 'number' | 'text' | 'tags';
 
-export interface QuickRef { ref: string; label: string; kind: QuickKind; tags?: string[] }
+export interface QuickRef { ref: string; label: string; kind: QuickKind; tags?: string[]; no?: string }
 
 export interface Phrase { expr: string; label: string }
 
@@ -21,11 +21,7 @@ export const holderPhrase = (name: string): string => `@${name} == @${HOLDER}`;
 
 const BY_FORMULA = ':формула';
 const NOT = ':не:';
-const yesNo = (label: string): [string, string] => {
-  const [head, tail = ''] = label.split(' — ');
-  const short = tail.replace(/^да или нет: /, '');
-  return short ? [`${head} — ${short}`, `${head} — не ${short}`] : [`${label} — да`, `${label} — нет`];
-};
+const yesNo = (one: QuickRef): [string, string] => (one.no !== undefined ? [one.label, one.no] : [`${one.label} — да`, `${one.label} — нет`]);
 
 const tablesOfTags = (system: System, tags: string[]) =>
   rowTables(system)
@@ -34,7 +30,7 @@ const tablesOfTags = (system: System, tags: string[]) =>
 
 export function ConditionField({
   value, onChange, system, holders = [], quick = [], phrases = [], names, sheets, where, placeholder,
-  title = 'Только если', holderLabel = 'Кого касается', holderHint, ruleHint, required = false, bare = false, spoken = false,
+  title = 'Только если', holderLabel = 'Кого касается', holderHint, ruleHint, required = false, bare = false, spoken = false, tail,
 }: {
   value: string | undefined;
   onChange: (expr: string | null) => void;
@@ -53,6 +49,7 @@ export function ConditionField({
   required?: boolean;
   bare?: boolean;
   spoken?: boolean;
+  tail?: string;
 }) {
   const options = holders.map(([name, label]) => [holderPhrase(name), label] as const);
   const { holder, rest } = splitHolder(value, options.map(([expr]) => expr));
@@ -85,7 +82,7 @@ export function ConditionField({
           <div className="cond__row" key={`${at}:${fact}`}>
             {at > 0 ? <span className="cond__and">и</span> : null}
             <FactRow
-              value={fact} system={system} quick={quick} phrases={phrases} where={where} spoken={spoken}
+              value={fact} system={system} quick={quick} phrases={phrases} where={where} spoken={spoken} {...(tail ? { tail } : {})}
               {...(names ? { names } : {})} {...(sheets ? { sheets } : {})} {...(placeholder ? { placeholder } : {})}
               onChange={next => setRow(at, next)}
             />
@@ -147,7 +144,7 @@ const compiles = (text: string): boolean => {
 
 const joinFacts = (facts: string[]): string => (facts.length > 1 ? `все(${facts.join(', ')})` : facts[0] ?? '');
 
-function FactRow({ value, onChange, system, quick, phrases, names, sheets, where, placeholder, spoken }: {
+function FactRow({ value, onChange, system, quick, phrases, names, sheets, where, placeholder, spoken, tail }: {
   value: string;
   onChange: (expr: string | null) => void;
   system: System;
@@ -158,6 +155,7 @@ function FactRow({ value, onChange, system, quick, phrases, names, sheets, where
   where: string;
   placeholder?: string;
   spoken: boolean;
+  tail?: string;
 }) {
   const phrase = phrases.find(one => one.expr === value.trim()) ?? null;
   const when = phrase ? null : readGuard(value);
@@ -176,7 +174,7 @@ function FactRow({ value, onChange, system, quick, phrases, names, sheets, where
   const whereColumn = whereTable?.columns?.find(c => c.key === when?.where?.column);
   const whereValues = whereColumn?.kind === 'choice' ? (listOf(system, whereColumn.from) ?? []) : [];
   const showFormula = custom || formula;
-  const said = spoken && value.trim() && compiles(value) ? formulaWords(system, value, names) : '';
+  const said = spoken && value.trim() && compiles(value) ? `${formulaWords(system, value, names)}${tail ? ` — ${tail}` : ''}` : '';
 
   return (
     <div className="cond__fact">
@@ -185,7 +183,7 @@ function FactRow({ value, onChange, system, quick, phrases, names, sheets, where
         options={[['', '— что проверяем —'],
           ...phrases.map(one => [one.expr, one.label] as const),
           ...quick.flatMap(one => (one.kind === 'boolean'
-            ? [[one.ref, yesNo(one.label)[0]] as const, [`${NOT}${one.ref}`, yesNo(one.label)[1]] as const]
+            ? [[one.ref, yesNo(one)[0]] as const, [`${NOT}${one.ref}`, yesNo(one)[1]] as const]
             : [[one.ref, one.label] as const])),
           [BY_FORMULA, 'формулой…']]}
         onChange={next => {

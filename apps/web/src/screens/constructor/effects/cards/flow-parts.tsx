@@ -56,7 +56,22 @@ export function StopStrip({ step, position, problem, edit, actions }: {
   );
 }
 
-export function FlowHead({ word, step, context, earlier, required, edit, actions, problem }: {
+export function HeadFrame({ word, bad = false, actions, children }: {
+  word: string;
+  bad?: boolean;
+  actions: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <div className={`flow-head${bad ? ' flow-head--bad' : ''}`}>
+      <span className="flow-head__word">{word}</span>
+      <div className="flow-head__cond">{children}</div>
+      <div className="flow-head__actions">{actions}</div>
+    </div>
+  );
+}
+
+export function FlowHead({ word, step, context, earlier, required, edit, actions, problem, tail }: {
   word: string;
   step: Step;
   context: SlotContext;
@@ -65,13 +80,12 @@ export function FlowHead({ word, step, context, earlier, required, edit, actions
   edit: (change: (draft: Step) => void) => void;
   actions: ReactNode;
   problem: string | null;
+  tail?: string;
 }) {
   const written = (step as { if?: { expr?: string } }).if?.expr;
   const bare = !required && written === undefined;
   return (
-    <div className={`flow-head${problem ? ' flow-head--bad' : ''}`}>
-      <span className="flow-head__word">{word}</span>
-      <div className="flow-head__cond">
+    <HeadFrame word={word} bad={Boolean(problem)} actions={actions}>
       {bare ? null : (
         <ConditionField
           bare required spoken={!problem}
@@ -84,31 +98,64 @@ export function FlowHead({ word, step, context, earlier, required, edit, actions
           quick={quickOf(context, earlier)}
           names={namesOf(context)}
           {...(context.sheets ? { sheets: context.sheets } : {})}
+          {...(tail ? { tail } : {})}
           where={`${word.toLowerCase()} · условие`}
           placeholder="например: @шаг.natural >= 19"
         />
       )}
       {problem ? <span className="field__error">{problem}</span> : null}
-      </div>
-      <div className="flow-head__actions">{actions}</div>
+    </HeadFrame>
+  );
+}
+
+export function StepHead({ position, words, open, onToggle, problem, actions }: {
+  position: number;
+  words: string;
+  open: boolean;
+  onToggle?: (() => void) | undefined;
+  problem: string | null;
+  actions: ReactNode;
+}) {
+  return (
+    <HeadFrame word={`${position} · Если`} bad={Boolean(problem)} actions={actions}>
+      <button type="button" className="step-fold flow-head__words" aria-expanded={open} title={open ? 'свернуть поля шага' : 'показать поля шага'} onClick={onToggle}>
+        {words}
+      </button>
+      {problem && !open ? <span className="field__error">{problem}</span> : null}
+    </HeadFrame>
+  );
+}
+
+export function ArmLabel({ word, actions }: { word: string; actions: ReactNode }) {
+  return (
+    <div className="flow-head flow-head--label">
+      <span className="flow-head__word">{word}</span>
+      <span className="spacer" />
+      {actions}
     </div>
   );
 }
 
-export function FlowActions({ onUp, onDown, onDelete, extra, deleteLabel = 'Удалить' }: {
-  onUp?: () => void;
-  onDown?: () => void;
-  onDelete?: () => void;
+export function UnwrapButton({ onClick }: { onClick: () => void }) {
+  return <Button size="sm" variant="ghost" title="Убрать «Если», шаги остаются" onClick={onClick}>снять «Если»</Button>;
+}
+
+export function FlowActions({ onUp, onDown, onDelete, extra, deleteLabel = 'Удалить', upTitle = 'выше', downTitle = 'ниже' }: {
+  onUp?: (() => void) | undefined;
+  onDown?: (() => void) | undefined;
+  onDelete?: (() => void) | undefined;
   extra?: ReactNode;
   deleteLabel?: string;
+  upTitle?: string | undefined;
+  downTitle?: string | undefined;
 }) {
   return (
     <>
       {extra}
       {onUp || onDown ? (
         <>
-          <Button size="sm" variant="ghost" title="выше" disabled={!onUp} onClick={onUp}>↑</Button>
-          <Button size="sm" variant="ghost" title="ниже" disabled={!onDown} onClick={onDown}>↓</Button>
+          <Button size="sm" variant="ghost" title={upTitle} disabled={!onUp} onClick={onUp}>↑</Button>
+          <Button size="sm" variant="ghost" title={downTitle} disabled={!onDown} onClick={onDown}>↓</Button>
         </>
       ) : null}
       {onDelete ? <DangerButton size="sm" onConfirm={onDelete}>{deleteLabel}</DangerButton> : null}
