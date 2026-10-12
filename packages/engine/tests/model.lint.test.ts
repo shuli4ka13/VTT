@@ -469,3 +469,18 @@ group('колонка из таблицы — ссылкой, а не совпа
   });
 });
 
+
+group('метки правки вызова', () => {
+  const resist = (tag: string): System => {
+    const system = withEffect('урон', { params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }] as never });
+    system.tables.типы = { shape: 'rows', rows: [{ value: 'огонь' }] } as never;
+    system.effects.стойкость = { label: 'Стойкость', activation: 'passive', modifiers: [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, anyTags: [tag] }] } as never;
+    return system;
+  };
+  test('метка из таблицы — не ошибка', () => {
+    eq(errorTexts(resist('огонь')).filter(t => /метки/.test(t)).length, 0);
+  });
+  test('опечатка в метке — ошибка словами', () => {
+    ok(errorTexts(resist('огон')).some(t => t.includes('метки «огон» нет ни в одной таблице')));
+  });
+});

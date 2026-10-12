@@ -1,4 +1,7 @@
-import type { System, Modifier } from '@vtt/schema';
+import type { System, Modifier, Stage } from '@vtt/schema';
+import { paramStages, targetStages } from '@vtt/engine/engine/stages';
+import { modifierSentence } from './modifier-words.ts';
+import { useState } from 'react';
 import { Card, CardHead, Field, Input, Select, Button, Empty, DangerButton } from '../../ui/primitives.tsx';
 import { FormulaInput } from '../../ui/formula.tsx';
 import { targets } from '@vtt/engine/engine/targets';
@@ -22,13 +25,22 @@ const RECIPE = 'recipe:';
 
 type Loose = Record<string, unknown>;
 
-const STACKING = [
-  ['sum', 'складываются'],
-  ['max', 'берётся наибольший'],
-  ['override', 'последний перебивает'],
-] as const;
-
-const stackDefault = (op: string | undefined): string => (op === 'set' ? 'override' : 'sum');
+function StagePick({ stages, value, onChange }: {
+  stages: readonly Stage[];
+  value: string | undefined;
+  onChange: (stage: string | undefined) => void;
+}) {
+  if (stages.length < 2 && value === undefined) return null;
+  return (
+    <Field label="Этап" needed={stages.length > 1 && !value}>
+      <Select
+        value={value ?? ''}
+        options={[['', '— выберите этап —'], ...stages.map(stage => [stage.key, stage.label || stage.key] as const)] as never}
+        onChange={stage => onChange(stage || undefined)}
+      />
+    </Field>
+  );
+}
 
 export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editSystem }: {
   system: System;
@@ -56,6 +68,11 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
     onEdit(draft => { (draft[index] as { edit: string }).edit = value; });
   };
 
+  const [opened, setOpened] = useState<number[]>([]);
+  const isOpen = (index: number) => opened.includes(index);
+  const openAt = (index: number) => setOpened(now => (now.includes(index) ? now : [...now, index]));
+  const closeAt = (index: number) => setOpened(now => now.filter(at => at !== index));
+
   return (
     <>
       <div className="inline">
@@ -64,17 +81,17 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
           <span className="screen-title" style={{ fontSize: 'var(--fs-5)' }}>{title ?? 'Что правит'}</span>
         )}
         <span className="spacer" />
-        <Button size="sm" onClick={() => onEdit(draft => {
+        <Button size="sm" onClick={() => { openAt(modifiers.length); onEdit(draft => {
           draft.push({ kind: 'value', target: valueTargets[0]?.tag ?? '', op: 'add', value: { expr: '1' } });
-        })}>
+        }); }}>
           + правит поле
         </Button>
         <Button
           size="sm"
           title="Правит вызов: бросок (преимущество, прибавка) или вход эффекта (урон вдвое по огню)"
-          onClick={() => onEdit(draft => {
+          onClick={() => { openAt(modifiers.length); onEdit(draft => {
             draft.push({ kind: 'edit', call: ROLL_CALL, param: 'edits', edit: edits[0]?.[0] ?? '' });
-          })}
+          }); }}
         >
           + правка вызова
         </Button>
@@ -87,13 +104,14 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
         />
       ) : null}
 
-      {modifiers.map((modifier, index) => (
+      {modifiers.map((modifier, index) => (isOpen(index) ? (
         <Card key={index}>
           <CardHead
             title={modifier.kind === 'value' ? 'Правит поле' : 'Правка вызова'}
-            actions={
-              <DangerButton size="sm" onConfirm={() => onEdit(draft => { draft.splice(index, 1); })}>Удалить</DangerButton>
-            }
+            actions={<>
+              <Button size="sm" variant="ghost" ariaLabel={`свернуть «${modifierSentence(system, modifier)}»`} onClick={() => closeAt(index)}>свернуть</Button>
+              <DangerButton size="sm" onConfirm={() => { closeAt(index); onEdit(draft => { draft.splice(index, 1); }); }}>Удалить</DangerButton>
+            </>}
           />
 
           {modifier.kind === 'value' ? (
@@ -103,7 +121,7 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
                   value={modifier.target}
                   options={[['', '— выберите, что правим —'],
                     ...valueTargets.map(t => [t.tag, t.label] as const)] as never}
-                  onChange={target => onEdit(draft => { (draft[index] as { target: string }).target = target; })}
+                  onChange={target => onEdit(draft => { const d = draft[index] as { target: string; stage?: string }; d.target = target; delete d.stage; })}
                 />
               </Field>
               <Field label="Как">
@@ -123,18 +141,14 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
                   })}
                 />
               </Field>
-              <Field label="Если таких несколько">
-                <Select
-                  value={String(modifier.stacking ?? stackDefault(modifier.op))}
-                  options={modifier.op === 'mul'
-                    ? STACKING.map(([key, label]) => [key, key === 'sum' ? 'перемножаются' : label] as const)
-                    : STACKING}
-                  onChange={stacking => onEdit(draft => {
-                    const target = draft[index] as { stacking?: string; op?: string };
-                    if (stacking === stackDefault(target.op)) delete target.stacking; else target.stacking = stacking;
-                  })}
-                />
-              </Field>
+<StagePick
+                stages={targetStages(system, String(modifier.target ?? ''))}
+                value={(modifier as { stage?: string }).stage}
+                onChange={stage => onEdit(draft => {
+                  const target = draft[index] as { stage?: string };
+                  if (stage === undefined) delete target.stage; else target.stage = stage;
+                })}
+              />
             </div>
           ) : modifier.kind === 'edit' ? (
             <EditBody
@@ -160,7 +174,15 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
             <Concern system={system} modifier={modifier as Loose} onChange={change => onEdit(draft => { change(draft[index] as Loose); })} />
           )}
         </Card>
-      ))}
+      ) : (
+        <div key={index} className={`mod-row mod-row--${modifier.kind}`}>
+          <button type="button" className="mod-row__text" aria-label={`развернуть «${modifierSentence(system, modifier)}»`} onClick={() => openAt(index)}>
+            <span className="mod-row__kind">{modifier.kind === 'value' ? 'поле' : 'вызов'}</span>
+            {modifierSentence(system, modifier)}
+          </button>
+          <DangerButton size="sm" onConfirm={() => onEdit(draft => { draft.splice(index, 1); })}>×</DangerButton>
+        </div>
+      )))}
     </>
   );
 }
@@ -180,14 +202,14 @@ function EditBody({ system, modifier, calls, edits, recipes, onChange, onPickEdi
   const effect = isRoll ? undefined : system.effects[call];
   const amount = amountParamOf(effect);
   const pickCall = (next: string) => onChange(d => {
-    for (const key of ['edit', 'op', 'value', 'stacking', 'as', 'tags', 'anyTags', 'notTags', 'where']) delete d[key];
+    for (const key of ['edit', 'op', 'value', 'stage', 'as', 'tags', 'anyTags', 'notTags', 'where']) delete d[key];
     d.call = next;
     if (next === ROLL_CALL) { d.param = 'edits'; d.edit = edits[0]?.[0] ?? ''; return; }
     d.param = amountParamOf(system.effects[next])?.key ?? '';
     Object.assign(d, { op: 'mul', value: { expr: '0.5' } });
   });
   const pickParam = (next: string) => onChange(d => {
-    for (const key of ['edit', 'op', 'value', 'stacking']) delete d[key];
+    for (const key of ['edit', 'op', 'value', 'stage']) delete d[key];
     d.param = next;
     if (next === 'edits') d.edit = edits[0]?.[0] ?? '';
     else Object.assign(d, { op: 'add', value: { expr: '1' } });
@@ -206,13 +228,11 @@ function EditBody({ system, modifier, calls, edits, recipes, onChange, onPickEdi
           onChange={expr => onChange(d => { d.value = { expr }; })}
         />
       </Field>
-      <Field label="Если таких несколько">
-        <Select
-          value={String(m.stacking ?? stackDefault(m.op as string | undefined))}
-          options={m.op === 'mul' ? STACKING.map(([key, label]) => [key, key === 'sum' ? 'перемножаются' : label] as const) : STACKING}
-          onChange={stacking => onChange(d => { if (stacking === stackDefault(d.op as string | undefined)) delete d.stacking; else d.stacking = stacking; })}
-        />
-      </Field>
+<StagePick
+        stages={isRoll ? [] : paramStages(effect?.params, String(m.param ?? ''))}
+        value={m.stage as string | undefined}
+        onChange={stage => onChange(d => { if (stage === undefined) delete d.stage; else d.stage = stage; })}
+      />
     </>
   );
 

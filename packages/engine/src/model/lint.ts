@@ -1,8 +1,10 @@
+import { paramStages, targetStages } from '../engine/stages.ts';
+import { implicitOf } from './implicit.ts';
 import { armsOf, balance, flowOf, inBlock, isFlow } from './flow.ts';
 import { loopOf } from '../engine/steps/each.ts';
 import { chosenEffect, choicesOfInput, emittedChoices, kindsChoosing } from './payments.ts';
 import { SEEN_LABEL, ANY_ACTION, PHASES } from '../events/bus.ts';
-import type { System, Compendium, Effect, Step } from './types.ts';
+import type { System, Compendium, Effect, Step, Stage } from './types.ts';
 import { registry } from '../engine/steps/index.ts';
 import { STEP_WORDS } from '../words/steps.ts';
 import { ROLL_CALL, CALL_WORDS } from '../words/calls.ts';
@@ -44,6 +46,7 @@ const NAMES: Record<Exclude<RefKind, 'param' | 'step' | 'syntax'>, (key: string)
   rollEdit: key => `правки броска «${key}» в системе нет`,
   event: key => `общего эффекта «${key}» в системе нет`,
   roll: key => `метки броска «${key}» нет ни в одной таблице — заведите строку «${key}», например в таблице «Броски»`,
+  tag: key => `метки «${key}» нет ни в одной таблице и ни у одного эффекта — правка по ней не сработает никогда`,
   prop: key => `свойство «${key}» не объявлено ни одним типом записей — заведите его на вкладке «${TABS.records}»`,
   recordKind: key => `типа записи «${key}» в системе нет`,
 };
@@ -412,10 +415,16 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
   ];
   for (const { where, modifiers } of lists) {
     for (const mod of modifiers) {
+      if (mod.kind === 'value') {
+        const at = { ...where, part: 'modifiers' };
+        out.push(...stageProblems(targetStages(system, String(mod.target)), mod.stage as string | undefined, String(mod.target), at));
+        continue;
+      }
       if (mod.kind !== 'edit') continue;
       const call = String(mod.call);
       const at = { ...where, part: 'modifiers' };
       if (call === ROLL_CALL) {
+        if (mod.stage !== undefined) out.push(...stageProblems([], mod.stage as string, CALL_WORDS.roll.label, at));
         if (!(String(mod.param) in CALL_WORDS.roll.params)) out.push({ where: at, level: 'error', text: `у броска нет параметра «${String(mod.param)}»` });
         else if (mod.param === 'edits' && !mod.edit) out.push({ where: at, level: 'error', text: 'правка броска не выбрана' });
         else if (mod.param === 'bonus' && !(mod.value as { expr?: string } | undefined)?.expr?.trim()) out.push({ where: at, level: 'error', text: 'у прибавки к броску не задано, на сколько' });
@@ -429,7 +438,44 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
       const param = (effect.params ?? []).find(p => p.key === mod.param);
       if (!param) out.push({ where: { ...where, part: 'modifiers' }, level: 'error', text: `у «${effect.label || call}» нет входа «${String(mod.param)}» — править нечего` });
       else if (param.role !== 'amount') out.push({ where: { ...where, part: 'modifiers' }, level: 'error', text: `правка «${effect.label || call}» правит пока только величину, а «${param.label || param.key}» — не она` });
+      else out.push(...stageProblems(paramStages(effect.params, param.key), mod.stage as string | undefined, `${effect.label || call} · ${param.label || param.key}`, at));
     }
+  }
+  return out;
+}
+
+function stageProblems(stages: readonly Stage[], stage: string | undefined, owner: string, at: Where): Problem[] {
+  if (stage !== undefined && !stages.some(s => s.key === stage)) {
+    return [{ where: at, level: 'error', text: stages.length
+      ? `у величины «${owner}» нет этапа «${stage}» — есть: ${stages.map(s => s.label || s.key).join(', ')}`
+      : `у величины «${owner}» этапов нет — правке этап не нужен` }];
+  }
+  if (stage === undefined && stages.length > 1) {
+    return [{ where: at, level: 'error', text: `у величины «${owner}» несколько этапов — выберите, на каком правка действует` }];
+  }
+  return [];
+}
+
+function declaredStageProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  const check = (stages: readonly Stage[] | undefined, owner: string, where: Where) => {
+    const seen = new Set<string>();
+    for (const stage of stages ?? []) {
+      if (seen.has(stage.key)) out.push({ where, level: 'error', text: `у «${owner}» два этапа «${stage.label || stage.key}»` });
+      seen.add(stage.key);
+    }
+  };
+  for (const [id, effect] of Object.entries(system.effects ?? {})) {
+    for (const param of effect.params ?? []) {
+      const stages = (param as { stages?: Stage[] }).stages;
+      if (stages?.length && (param as { role?: string }).role !== 'amount') {
+        out.push({ where: { tab: 'effects', effect: id }, level: 'error', text: `этапы бывают только у величины, а «${param.label || param.key}» — не она` });
+      }
+      check(stages, `${effect.label || id} · ${param.label || param.key}`, { tab: 'effects', effect: id });
+    }
+  }
+  for (const [id, table] of Object.entries(system.tables ?? {})) {
+    for (const column of table.columns ?? []) check(column.stages, `${table.label || id} · ${column.label || column.key}`, { tab: 'rules', field: column.key });
   }
   return out;
 }
@@ -536,6 +582,9 @@ function paramProblems(system: System): Problem[] {
           if (!called) continue;
           for (const param of called.params ?? []) {
             if (args[param.key] !== undefined || param.optional || param.ask || param.default !== undefined) continue;
+            const how = implicitOf(param, effect);
+            const loopAt = (effect.steps ?? []).findIndex(s => s.type === 'each');
+            if (how && (how.by !== 'target' || (steps === effect.steps && loopAt >= 0 && index > loopAt))) continue;
             const users = viaInput ? kindsChoosing(system, id, viaInput, choice) : [];
             if (users.length && users.every(user => user.columns.includes(param.key))) continue;
             const missing = users.filter(user => !user.columns.includes(param.key)).map(user => system.tables?.[user.kind]?.label ?? user.kind);
@@ -670,6 +719,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...orphanProblems(system, compendium));
   out.push(...sheetKindProblems(system), ...layoutProblems(system));
   out.push(...editProblems(system, compendium));
+  out.push(...declaredStageProblems(system));
   out.push(...costProblems(system));
   out.push(...seenProblems(system));
   out.push(...fieldRollProblems(system), ...viewProblems(system));

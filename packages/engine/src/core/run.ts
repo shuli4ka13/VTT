@@ -1,3 +1,5 @@
+import { paramStages } from '../engine/stages.ts';
+import { implicitOf } from '../model/implicit.ts';
 import { compile } from '../formula/index.ts';
 import { EngineError, isRuleError } from '../engine/errors.ts';
 import { resolveRef, resolveNumber, resolveOptionalNumber, holdsNow, sheetHead } from '../engine/refs.ts';
@@ -176,6 +178,14 @@ export function namesOf(params: readonly Param[] | undefined, args: Record<strin
   }
   return names;
 }
+
+function rollsOf(params: readonly Param[] | undefined, args: Record<string, unknown>): Record<string, RollResult> {
+  return Object.fromEntries((params ?? []).filter(p => p.kind === 'roll' && args[p.key] && typeof args[p.key] === 'object')
+    .map(p => [p.key, args[p.key] as RollResult]));
+}
+
+const totalsOf = (rolls: Record<string, RollResult>): Record<string, number> =>
+  Object.fromEntries(Object.entries(rolls).map(([key, roll]) => [key, Number((roll as unknown as { total: number }).total)]));
 
 function valuesOf(params: readonly Param[] | undefined, args: Record<string, unknown>): Record<string, unknown> {
   const sheets = sheetParams(params);
@@ -364,6 +374,26 @@ export class Run {
       die,
       value: refValue => resolveRef(refValue, ref),
       prop: name => (frame.props && name in frame.props ? resolveRef({ expr: `@${name}` }, { ...ref, recordScope: true }) : undefined),
+      implicit: param => {
+        const caller = this.system.effects[frame.effectId];
+        const how = caller ? implicitOf(param, { params: frame.paramDefs ?? caller.params, steps: caller.steps, activation: caller.activation }) : null;
+        if (!how) return undefined;
+        if (param.kind === 'roll') return (rolls[how.from] as unknown) ?? undefined;
+        if (param.kind === 'sheet') {
+          const id = frame.bound?.[how.from];
+          if (param.many) return Array.isArray(id) ? id : undefined;
+          return typeof id === 'string' ? id : undefined;
+        }
+        const own = (frame.paramDefs ?? caller?.params ?? []).find(p => p.key === how.from);
+        if (own?.ask) return resolveRef({ expr: `@${how.from}` }, ref);
+        try {
+          const value = resolveRef({ expr: `@${how.from}` }, ref);
+          return value === null || value === '' ? undefined : value;
+        } catch (err) {
+          if (isRuleError(err)) return undefined;
+          throw err;
+        }
+      },
       known: refValue => this.known(refValue, frame, results, rolls, stepIds),
       number: (refValue, what) => {
         try {
@@ -468,9 +498,9 @@ export class Run {
   private edited(call: string, param: string, base: number, tags: string[], args: Record<string, unknown>): number {
     const callee = this.system.effects[call];
     const names = namesOf(callee?.params, args);
-    const values = valuesOf(callee?.params, args);
+    const values = { ...valuesOf(callee?.params, args), ...totalsOf(rollsOf(callee?.params, args)) };
     const held = gather(this.holderViews(), { call, param, tags, names, values, view: id => this.view(id) });
-    return stack(held, base, `${call}.${param}`);
+    return stack(held, base, `${call}.${param}`, paramStages(callee?.params, param));
   }
 
   private holder(sheetId: string, tag: string): string {
@@ -546,7 +576,8 @@ export class Run {
       throw new EngineError(`${frame.owner || 'правило'}: вызовы вложены глубже ${this.limits.callDepth} — похоже, идут по кругу: ${[...this.chain, event].join(' → ')}`);
     }
     const names = namesOf(callee.params, args);
-    const values = { ...valuesOf(callee.params, args), метки: payload.tags };
+    const passed = rollsOf(callee.params, args);
+    const values = { ...valuesOf(callee.params, args), ...totalsOf(passed), метки: payload.tags };
     const home = Object.values(names).find((id): id is string => typeof id === 'string') ?? frame.home;
     const at = path.call(event);
     const keys = keysOf(this.system, event, false);
@@ -555,7 +586,7 @@ export class Run {
     if (frame.inSub) {
       const { entries, delivered } = this.group([{
         effectId: event, label: callee.label || event, steps: callee.steps ?? [], path: at, hop: frame.hop + 1, top: false,
-        home: frame.home, subject: home, bound: names, keys, args: values, paramDefs: callee.params ?? [], seed: { метки: payload.tags },
+        home: frame.home, subject: home, bound: names, keys, args: values, paramDefs: callee.params ?? [], seed: { метки: payload.tags }, rolls: passed,
       }], at);
       sink.after.push(...entries);
       const out = delivered[0];
@@ -571,9 +602,9 @@ export class Run {
         ...(frame.cost ? { cost: true } : {}),
       };
       const before = keys.map(key => `before:${key}`);
-      const peek = this.listens(before) ? this.probe(() => this.exec(inner, callee.steps ?? [], newSink(), { метки: payload.tags }, event)) : null;
+      const peek = this.listens(before) ? this.probe(() => this.exec(inner, callee.steps ?? [], newSink(), { метки: payload.tags }, event, passed)) : null;
       this.hear({ keys: before, names, seed: { ...values, ...(peek?.results ?? {}) }, rolls: peek?.rolls ?? {}, path: at.phase('before'), hop: frame.hop, owner: sub => `«${labelOf(sub)}» — до «${callee.label || event}»` }, sink);
-      const ran = this.exec(inner, callee.steps ?? [], sink, { метки: payload.tags }, event);
+      const ran = this.exec(inner, callee.steps ?? [], sink, { метки: payload.tags }, event, passed);
       const returns = this.returnsOf(callee, inner, ran);
       if (returns) emitted.values = { ...values, ...returns };
       this.hear({ keys: keys.map(key => `after:${key}`), names, seed: { ...values, ...ran.results, ...(returns ?? {}) }, rolls: ran.rolls, path: at.phase('after'), hop: frame.hop, owner: sub => `«${labelOf(sub)}» — после «${callee.label || event}»` }, sink);

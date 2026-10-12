@@ -116,7 +116,7 @@ export function CallSummary({ system, effect, args, props, names, label }: {
   );
 }
 
-export function CallEditor({ system, effect: raw, effects, onEffect, args, fromProps, filled, onArg, context, where, allow, extraFor, headAction, children, grouped = false, names, inputs: callerInputs, compact = false }: {
+export function CallEditor({ system, effect: raw, effects, onEffect, args, fromProps, filled, onArg, context, where, allow, extraFor, headAction, children, grouped = false, names, inputs: callerInputs, compact = false, implicit }: {
   system: System;
   effect: unknown;
   effects: [string, { label?: string }][];
@@ -135,6 +135,7 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, fromP
   grouped?: boolean;
   names?: Map<string, string>;
   compact?: boolean;
+  implicit?: (param: Param) => string | null;
 }) {
   const [open, setOpen] = useState<string | null>(null);
   const [more, setMore] = useState(false);
@@ -264,8 +265,10 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, fromP
   );
 
   if (compact) {
-    const rare = (input: CallInput) => (input.value === undefined || input.value === null)
-      && (input.param.default !== undefined || Boolean(input.param.optional) || Boolean(input.param.ask));
+    const empty = (input: CallInput) => input.value === undefined || input.value === null;
+    const self = (input: CallInput) => (empty(input) ? implicit?.(input.param) ?? null : null);
+    const rare = (input: CallInput) => empty(input)
+      && (input.param.default !== undefined || Boolean(input.param.optional) || Boolean(input.param.ask) || self(input) !== null);
     const main = inputs.filter(input => !rare(input));
     const rest = inputs.filter(rare);
     const arg = (input: CallInput) => {
@@ -274,7 +277,7 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, fromP
         <div className="pair call-row__arg" key={input.param.key}>
           <span className="call-args__name">{nameOf(input.param)}</span>
           {editor(input)}
-          {shown.bad ? <span className="need">не заполнено</span> : null}
+          {self(input) ? <span className="faint">{self(input)}</span> : shown.bad ? <span className="need">не заполнено</span> : null}
         </div>
       );
     };

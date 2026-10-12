@@ -130,11 +130,11 @@ describe('EffectsTab: палитра трёх понятий', () => {
     fireEvent.click(screen.getByText('+ ещё одно'));
     expect(screen.getByText('Новый вход')).toBeTruthy();
     const form = () => document.querySelector('.param-form') as HTMLElement;
-    expect(screen.queryByLabelText('«Новый вход» правят сопротивления'), 'редкое спрятано').toBeNull();
+    expect(screen.queryByLabelText('«Новый вход» — величина'), 'редкое спрятано').toBeNull();
     fireEvent.click(within(form()).getByText('ещё'));
     const heads = [...form().querySelectorAll('.field__label')].map(h => h.textContent);
-    expect(heads.slice(-3)).toEqual(['Правят сопротивления', 'Границы', 'Имя в формулах']);
-    expect(screen.getByLabelText('«Новый вход» правят сопротивления')).toBeTruthy();
+    expect(heads.slice(-3)).toEqual(['Величина', 'Границы', 'Имя в формулах']);
+    expect(screen.getByLabelText('«Новый вход» — величина')).toBeTruthy();
 
     const ask = [...form().querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'gm'))!;
     fireEvent.change(ask, { target: { value: 'gm' } });
@@ -143,7 +143,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
     expect(document.querySelector('.param-line__sum')!.textContent).toContain('число, если не сказано — спросить ведущего');
 
     fireEvent.change(form().querySelectorAll('select')[0]!, { target: { value: 'dice' } });
-    expect(screen.queryByLabelText('«Новый вход» правят сопротивления')).toBeNull();
+    expect(screen.queryByLabelText('«Новый вход» — величина')).toBeNull();
   });
 
   it('ошибка про недостающее поле предлагает взять блок донора', () => {

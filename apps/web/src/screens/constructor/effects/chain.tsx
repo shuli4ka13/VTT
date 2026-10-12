@@ -11,6 +11,7 @@ import { armsOf, sees, endOf } from '@vtt/engine/model/flow';
 import { FlowHead, FlowActions } from './cards/flow-parts.tsx';
 import { outcomeWords } from '@vtt/engine/engine/roll-tags';
 import { costsOf, newCost } from '../factory.ts';
+import { calledOf } from '@vtt/engine/engine/effects';
 import { GroupCard } from './cards/group-card.tsx';
 import { sheetsAt } from './names.ts';
 import type { Place } from '@vtt/engine/model/names-at';
@@ -19,6 +20,28 @@ import { findDonorBlock, copyDonorBlock } from '../donors.tsx';
 import type { System, Effect, Step, ValueKind } from '@vtt/schema';
 
 export type Lane = 'steps' | 'cost';
+
+const CALL_PREFIX = 'call:';
+
+const payLike = (system: System): Set<string> => {
+  const out = new Set(costsOf(system).map(([key]) => key));
+  for (const effect of Object.values(system.effects ?? {})) {
+    for (const step of [...(effect.cost ?? []), ...(effect.on ?? []).flatMap(handler => handler.cost ?? [])] as Record<string, unknown>[]) {
+      if (step.type === 'emit' && typeof step.effect === 'string') out.add(step.effect);
+    }
+    for (const param of effect.params ?? []) {
+      if (param.kind === 'effect' && typeof param.default === 'string') out.add(param.default);
+    }
+  }
+  return out;
+};
+
+export const bricksOf = (system: System, except: string): [string, Effect][] => {
+  const costs = payLike(system);
+  return calledOf(system).filter(([key, effect]) => key !== except && !costs.has(key) && (effect.activation ?? 'manual') === 'manual');
+};
+
+const callStep = (key: string): Step => ({ type: 'emit', effect: key } as unknown as Step);
 
 export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', empty = 'шагов ещё нет — эффект ничего не делает', lane = 'steps', onEdgeUp, onEdgeDown, bare = false, startAt = 0, lead, onAddCost, onRoll = false }: {
   id: string;
@@ -216,15 +239,19 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     <Select<string>
       value=""
       title="Добавить шаг в эту ветку"
-      options={[['', '+ шаг'], ...[...BRICKS, ...(onRoll ? SEEN_BRICKS : [])].filter(b => b.key !== 'each').map(b => [b.key, b.label.replace(/^\+ /, '')] as const)]}
+      options={[['', '+ шаг'],
+        ...bricksOf(system, id).map(([key, one]) => [`${CALL_PREFIX}${key}`, one.label || key] as const),
+        ...[...BRICKS, ...(onRoll ? SEEN_BRICKS : [])].filter(b => b.key !== 'each').map(b => [b.key, b.label.replace(/^\+ /, '')] as const)]}
       onChange={key => {
+        const called = key.startsWith(CALL_PREFIX) ? key.slice(CALL_PREFIX.length) : null;
         const brick = [...BRICKS, ...SEEN_BRICKS].find(b => b.key === key);
-        if (!brick) return;
+        if (!brick && !called) return;
         edit(draft => {
           const list = draft.steps ?? (draft.steps = []);
           const taken = list.map(s => s.id).filter(Boolean) as string[];
           const held = HELD_PARTS.has(placeAt(0).part);
-          list.splice(armEnd(list, head), 0, ...brick.make(system, taken, draft).map(step => (held ? byHolder(step) : step)));
+          const made = called ? [callStep(called)] : brick!.make(system, taken, draft);
+          list.splice(armEnd(list, head), 0, ...made.map(step => (held ? byHolder(step) : step)));
         });
       }}
     />
@@ -360,7 +387,23 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
 
       {bare ? list : <div className="steps">{lead}{list}</div>}
 
-      {bare ? null : <div className="inline inline--tight">
+      {bare ? null : <div className="palette">
+        {bricksOf(system, id).length ? (
+          <div className="palette__row">
+            <span className="palette__title">Готовое</span>
+            {bricksOf(system, id).map(([key, one]) => (
+              <Button key={key} size="sm" title={one.description || `вызвать «${one.label || key}»`}
+                onClick={() => edit(draft => {
+                  const held = HELD_PARTS.has(placeAt(0).part);
+                  (draft.steps ??= []).push(held ? byHolder(callStep(key)) : callStep(key));
+                })}>
+                {one.label || key}
+              </Button>
+            ))}
+          </div>
+        ) : null}
+        <div className="palette__row palette__row--plain">
+        <span className="palette__title">Шаг</span>
         {[...BRICKS, ...(onRoll ? SEEN_BRICKS : [])].map(b => (
           <Button key={b.key} size="sm" title={b.hint}
             onClick={() => edit(draft => {
@@ -372,6 +415,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
           </Button>
         ))}
         {onAddCost ? <CostPick system={system} except={id} onPick={onAddCost} /> : null}
+        </div>
       </div>}
     </>
   );

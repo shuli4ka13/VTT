@@ -236,7 +236,7 @@ export function explainName(
       title: rest,
       facts: [['таблица', table], ...cells],
       from: ['строка таблицы — бросок с этой меткой находят правки «на бросок с меткой»'],
-      shown: [], users: usersBy(usage, 'roll', rest, system),
+      shown: [], users: [...new Set([...usersBy(usage, 'roll', rest, system), ...usersBy(usage, 'tag', rest, system)])],
       go: { label: `открыть таблицу «${table}»`, pick: { activeTab: 'dictionaries', activeTableId: tableKey } },
     };
   }

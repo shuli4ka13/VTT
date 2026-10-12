@@ -25,7 +25,7 @@ describe('checkReadback', () => {
       value: { expr: '@hit_бросок' }, versus: { expr: '@цель.armor' },
     } as unknown as Step;
     expect(joinReadback(checkReadback(step, roll, system, hero)))
-      .toBe('«Атакующий» бросает 1к20 + Мод Силы против «цель» — с «Класс брони» (цель).');
+      .toBe('«Атакующий» бросает 1к20 + «Мод Силы» против «цель» — с «Класс брони» (цель).');
   });
 
   it('пустой бросок — оранжевые пропуски: кто бросает и с чем сравнить', () => {
@@ -47,7 +47,7 @@ describe('changeReadback', () => {
     const amount = { id: 'dmg', type: 'roll', die: { expr: '@p_1' }, bonus: { expr: '#power_mod' } } as unknown as Step;
     const apply = { type: 'apply', target: { expr: '@цель.wounds' }, direction: 'subtract', value: { expr: '@dmg' } } as unknown as Step;
     expect(joinReadback(changeReadback(apply, amount, system, hero)))
-      .toBe('«Текущие хиты» (цель) уменьшается на ⟨вход «кость урона»⟩ + Мод Силы.');
+      .toBe('«Текущие хиты» (цель) уменьшается на ⟨вход «кость урона»⟩ + «Мод Силы».');
   });
 
   it('состояние по id читается лейблом, на кого вешается — по листу', () => {

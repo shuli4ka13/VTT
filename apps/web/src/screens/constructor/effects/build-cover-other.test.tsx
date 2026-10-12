@@ -33,9 +33,10 @@ const dump = (what: unknown) => {
 const head = (ui: ReturnType<typeof within>, create: string, label: string, key: string, goal: Effect) => {
   ui.click(create);
   ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, label);
+  if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
   ui.click('имя в формулах…');
   ui.type(document.querySelector<HTMLElement>('.step-name input')!, key);
-  if (goal.group) ui.select('Блок', goal.group);
+  if (goal.group) ui.select('Папка', goal.group);
   if (goal.icon) ui.type('Значок', goal.icon);
   if (goal.description) ui.type('Описание', goal.description);
 };
@@ -54,7 +55,6 @@ describe('эффекты пресетов собираются руками: Sha
     ui.select('Что правим', 'condition_mod');
     ui.select('Как', 'add');
     ui.formula('На сколько', '-1');
-    ui.select('Если таких несколько', 'sum');
     dump({ got: built('shocked'), goal });
     expect(built('shocked')).toEqual(goal);
   });
@@ -134,7 +134,7 @@ describe('эффекты пресетов собираются руками: Sha
     dump({ got: built('push_edge'), goal });
     expect(built('push_edge')).toEqual(goal);
   });
-  const handlerAt = (n: number): HTMLElement => stepCard(new RegExp(`^Подписка №${n}`)).parentElement!;
+  const handlerAt = (n: number): HTMLElement => stepCard(new RegExp(`^Когда №${n}`)).parentElement!;
 
   const change = (root: () => HTMLElement, owner: string, field: string, how: string, value: string, when?: string) => {
     within(root()).select('У кого', owner);
@@ -154,7 +154,7 @@ describe('эффекты пресетов собираются руками: Sha
     const ui = within();
     head(ui, '+ срабатывает сам', goal!.label!, 'death_save', goal!);
 
-    let h = () => stepCard(/^Подписка №1/);
+    let h = () => stepCard(/^Когда №1/);
     ui.select('Что случилось', 'moment');
     within(h()).select('Когда', 'turn-start');
     within(h()).select('Кого касается', '@ходит == @носитель');
@@ -172,7 +172,7 @@ describe('эффекты пресетов собираются руками: Sha
     change(at(1, 3), 'носитель', 'dead', 'set', 'да', 'шаг 1 · Проверка — не пройдена');
 
     ui.click('+ когда');
-    h = () => stepCard(/^Подписка №2/);
+    h = () => stepCard(/^Когда №2/);
     within(h()).select('Что случилось', 'field');
     within(h()).select('Какое', 'mortal');
     within(h()).select('Кого касается', '@лист == @носитель');
@@ -183,14 +183,15 @@ describe('эффекты пресетов собираются руками: Sha
     expect(built('death_save')).toEqual(goal);
   });
 
-  const param = (ui: ReturnType<typeof within>, id: string, row: number, label: string, kind: string, key: string, more: { from?: string; ask?: string; main?: boolean } = {}) => {
+  const param = (ui: ReturnType<typeof within>, id: string, row: number, label: string, kind: string, key: string, more: { from?: string; ask?: string; main?: boolean; role?: string } = {}) => {
     if (row >= (built(id)!.params ?? []).length) ui.click('+ ещё одно');
     if (ui.has('ещё')) ui.click('ещё');
     ui.type(ui.cell('Название', row), label);
     ui.select(ui.cell('Вид', row), kind);
     if (more.from) ui.select(ui.cell('Таблица', row), more.from);
     if (more.ask) ui.select(ui.cell('Если не передали', row), more.ask);
-    if (more.main) ui.check(`«${label}» правят сопротивления`, true);
+    if (more.main) ui.check(`«${label}» — величина`, true);
+    if (more.role) ui.select(ui.cell('Приходит сам', row), more.role);
     if (ui.cell('Имя в формулах', row).querySelector('input')) ui.type(ui.cell('Имя в формулах', row), key);
   };
 
@@ -211,9 +212,10 @@ describe('эффекты пресетов собираются руками: Sha
     const ui = within();
     calledHead(ui, 'spend', goal!);
     if (ui.has('ещё')) ui.click('ещё');
-    ui.check('«Сколько» правят сопротивления', false);
+    ui.check('«Сколько» — величина', false);
+    ui.select(ui.cell('Приходит сам', 0), 'actor');
     dropParam(ui, 1);
-    param(ui, 'spend', 1, 'Источник', 'sheet', 'источник', { ask: 'empty' });
+    param(ui, 'spend', 1, 'Источник', 'sheet', 'источник', { ask: 'empty', role: 'actor' });
     param(ui, 'spend', 2, 'Что тратим', 'field', 'what');
     param(ui, 'spend', 3, 'Сколько', 'number', 'amount');
     param(ui, 'spend', 4, 'Если не хватает', 'text', 'note', { ask: 'empty' });
@@ -237,8 +239,10 @@ describe('эффекты пресетов собираются руками: Sha
     const [goal] = start('cp-slice', ['damage']);
     const ui = within();
     calledHead(ui, 'damage', goal!);
+    if (ui.has('ещё')) ui.click('ещё');
+    ui.select(ui.cell('Приходит сам', 0), 'target');
     dropParam(ui, 1);
-    param(ui, 'damage', 1, 'Источник', 'sheet', 'источник', { ask: 'empty' });
+    param(ui, 'damage', 1, 'Источник', 'sheet', 'источник', { ask: 'empty', role: 'actor' });
     param(ui, 'damage', 2, 'Сколько урона', 'number', 'amount', { main: true });
     param(ui, 'damage', 3, 'Тип урона', 'choice', 'damage_type', { from: 'damage_types' });
     param(ui, 'damage', 4, 'Куда попали', 'choice', 'aim', { from: 'aim_places', ask: 'empty' });

@@ -41,9 +41,15 @@ export function callMap(system: System, id: string): CallMap {
 }
 
 export function bookEntriesOf(system: System, id: string): string[] {
-  const out: string[] = [];
+  return bookButtonsOf(system, id).map(one => one.table);
+}
+
+export function bookButtonsOf(system: System, id: string): { key: string; table: string; button: string }[] {
+  const out: { key: string; table: string; button: string }[] = [];
   for (const [key, table] of Object.entries(system.tables ?? {})) {
-    if ((table.bindings ?? []).some(binding => binding.effect === id)) out.push(table.label || key);
+    for (const binding of table.bindings ?? []) {
+      if (binding.effect === id) out.push({ key, table: table.label || key, button: binding.label || '' });
+    }
   }
   return out;
 }

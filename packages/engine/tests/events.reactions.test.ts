@@ -22,7 +22,7 @@ const shieldWorld: any = {
     },
     shield_up: {
       label: 'Под щитом', activation: 'passive', duration: { kind: 'turns', max: 1 },
-      modifiers: [{ kind: 'value', target: 'ac', op: 'add', value: { expr: '5' }, stacking: 'sum' }],
+      modifiers: [{ kind: 'value', target: 'ac', op: 'add', value: { expr: '5' } }],
     },
   },
 };
@@ -238,7 +238,7 @@ group('триггер до разрешения: срабатывает молч
       },
       wall: {
         label: 'Стена', activation: 'passive', duration: { kind: 'turns', max: 1 },
-        modifiers: [{ kind: 'value', target: 'ac', op: 'add', value: { expr: '20' }, stacking: 'sum' }],
+        modifiers: [{ kind: 'value', target: 'ac', op: 'add', value: { expr: '20' } }],
       },
     },
   };

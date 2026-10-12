@@ -42,15 +42,16 @@ const nameStep = (card: HTMLElement, name: string): void => {
 const calledHead = (ui: ReturnType<typeof within>, id: string, goal: Effect) => {
   ui.click('+ вызываемый');
   ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, goal.label!);
+  if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
   ui.click('имя в формулах…');
   ui.type(document.querySelector<HTMLElement>('.step-name input')!, id);
-  ui.select('Блок', goal.group!);
+  ui.select('Папка', goal.group!);
   ui.type('Описание', goal.description!);
   within(stepCard(/^1 · /)).click('Удалить');
   within(stepCard(/^1 · /)).click('точно убрать');
 };
 
-const param = (ui: ReturnType<typeof within>, id: string, row: number, label: string, kind: string, key: string, more: { from?: string; optional?: boolean; value?: string } = {}) => {
+const param = (ui: ReturnType<typeof within>, id: string, row: number, label: string, kind: string, key: string, more: { from?: string; optional?: boolean; value?: string; role?: string } = {}) => {
   if (row >= (built(id)!.params ?? []).length) ui.click('+ ещё одно');
   if (ui.has('ещё')) ui.click('ещё');
   ui.type(ui.cell('Название', row), label);
@@ -58,6 +59,7 @@ const param = (ui: ReturnType<typeof within>, id: string, row: number, label: st
   if (more.from) ui.select(ui.cell('Таблица', row), more.from);
   if (more.optional) ui.select(ui.cell('Если не передали', row), 'empty');
   if (more.value !== undefined) { ui.select(ui.cell('Если не передали', row), 'value'); ui.type(ui.cell('Если не передали', row), more.value); }
+  if (more.role) ui.select(ui.cell('Приходит сам', row), more.role);
   if (ui.cell('Имя в формулах', row).querySelector('input')) ui.type(ui.cell('Имя в формулах', row), key);
 };
 
@@ -93,8 +95,8 @@ describe('вызываемые блоки D&D собираются руками'
     const ui = within();
     calledHead(ui, 'attack_roll', goal!);
     dropParam(1);
-    param(ui, 'attack_roll', 0, 'Кто бросает', 'sheet', 'кто');
-    param(ui, 'attack_roll', 1, 'Против кого', 'sheet', 'против');
+    param(ui, 'attack_roll', 0, 'Кто бросает', 'sheet', 'кто', { role: 'actor' });
+    param(ui, 'attack_roll', 1, 'Против кого', 'sheet', 'против', { role: 'target' });
     param(ui, 'attack_roll', 2, 'Бонус атаки', 'number', 'бонус', { value: '0' });
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
     ui.click('+ число');
@@ -122,10 +124,10 @@ describe('вызываемые блоки D&D собираются руками'
     const ui = within();
     calledHead(ui, 'saving_throw', goal!);
     dropParam(1);
-    param(ui, 'saving_throw', 0, 'Кто спасается', 'sheet', 'кто');
+    param(ui, 'saving_throw', 0, 'Кто спасается', 'sheet', 'кто', { role: 'target' });
     param(ui, 'saving_throw', 1, 'Чем спасается', 'choice', 'характеристика', { from: 'abilities' });
     param(ui, 'saving_throw', 2, 'Сложность', 'number', 'сложность');
-    param(ui, 'saving_throw', 3, 'Против кого', 'sheet', 'против', { optional: true });
+    param(ui, 'saving_throw', 3, 'Против кого', 'sheet', 'против', { optional: true, role: 'actor' });
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
     ui.click('+ число');
     within(at(1)()).formula('Бросает', '@кто');

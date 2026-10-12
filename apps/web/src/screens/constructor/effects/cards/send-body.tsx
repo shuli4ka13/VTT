@@ -5,6 +5,19 @@ import { CallEditor } from '../../call-editor.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { callable } from '../../slots.tsx';
+import { implicitOf } from '@vtt/engine/model/implicit';
+import type { Param, Effect } from '@vtt/schema';
+
+function implicitWords(param: Param, caller: Effect, inLoop: boolean): string | null {
+  const how = implicitOf(param, caller);
+  if (!how || (how.by === 'target' && !inLoop)) return null;
+  const own = (caller.params ?? []).find(p => p.key === how.from);
+  if (how.by === 'target') {
+    const list = (caller.params ?? []).find(p => p.item?.key === how.from);
+    return `сам: ${String(list?.item?.label ?? how.from).toLowerCase()}`;
+  }
+  return `сам: «${String(own?.label ?? how.from)}»`;
+}
 import { WhatNext, meddlersOf } from '../what-next.tsx';
 
 const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
@@ -33,6 +46,7 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
         context={context}
         where="вызов"
         compact
+        implicit={param => implicitWords(param, context.effect, context.earlier.some(s => s.type === 'each'))}
         onArg={(key, next) => edit(at, draft => {
           const all = { ...((loose(draft).args ?? {}) as Record<string, unknown>) };
           if (next === undefined || next === null) delete all[key]; else all[key] = next;

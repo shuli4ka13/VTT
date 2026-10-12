@@ -234,7 +234,7 @@ function signatures(): string[] {
   const count = new Map<string, number>();
   return fields().map(el => {
     const head = squash(el.closest('.card')?.querySelector('.card__head, .step-fold, .step-fold__row')?.textContent).replace(/^[▾▸]\s*/, '');
-    const card = /^(\d+) · /.exec(head)?.[1] ?? /^Подписка №\d+/.exec(head)?.[0] ?? head.slice(0, 12);
+    const card = /^(\d+) · /.exec(head)?.[1] ?? /^Когда №\d+/.exec(head)?.[0] ?? head.slice(0, 12);
     const base = `${card}|${labelOf(el)}|${el.tagName}`;
     const n = (count.get(base) ?? 0) + 1;
     count.set(base, n);

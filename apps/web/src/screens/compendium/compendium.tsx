@@ -71,7 +71,7 @@ export function CompendiumScreen() {
           ? <RecordEditor record={active.record} system={system} compendium={compendium} />
           : <Empty
               title="Выберите запись слева"
-              hint="Запись — это циферки по форме её типа: у меча спросят кость урона, у заклинания — чем спасаются."
+              hint="Запись — это циферки по форме её типа: что тип спрашивает, то и заполняете."
             />,
       }}
       right={{
@@ -200,7 +200,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
         <Card>
           <CardHead
             title="Свои кнопки"
-            sub="Кнопки только этой записи — поверх общих кнопок типа. Например, у заклинания «Огненный шар» своя кнопка с кругом ячейки."
+            sub="Кнопки только этой записи — поверх общих кнопок типа."
             actions={<Button size="sm" onClick={() => edit(draft => { (draft.bindings ??= []).push(newBinding(system)); })}>+ кнопка</Button>}
           />
           {(record.bindings ?? []).length ? (record.bindings ?? []).map((binding, index) => (

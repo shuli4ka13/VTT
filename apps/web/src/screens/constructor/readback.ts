@@ -2,6 +2,7 @@ import { loopOf } from '@vtt/engine/engine/steps/each';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import type { System, Effect, Step, SystemConstant } from '@vtt/schema';
 import { labelOfTag, formulaAsLabels } from '../../ui/formula.tsx';
+import { formulaWords } from '../../ui/formula-words.ts';
 import { dice as diceText, asDice, DIE_LETTER } from '../../words.ts';
 import { fieldOf, hasField } from '@vtt/engine/model/sheet-columns';
 
@@ -98,7 +99,7 @@ export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs
         return seg(named ? `«${named}»` : `результат «${head}»`);
       }
     }
-    return seg(formulaAsLabels(system, text, names));
+    return seg(formulaWords(system, text, names));
   }
   return hole(emptyAs);
 }
@@ -227,6 +228,14 @@ export function sendReadback(step: Step, system: System, effect: Effect, names?:
   };
   const chosen = (event?.params ?? []).filter(p => p.kind === 'choice' && args[p.key] !== undefined).map(p => word(args[p.key]));
   const tags = chosen.filter(Boolean);
+  if (event) {
+    const given = (event.params ?? []).filter(p => args[p.key] !== undefined);
+    if (!given.length) return [seg('всё передаётся само.')];
+    return given.flatMap((p, i) => [
+      seg(`${i ? '; ' : ''}${p.label ?? p.key}:`),
+      p.kind === 'sheet' ? seg(whoOf(effect, args[p.key])) : refSegment(args[p.key], system, effect, '…', names),
+    ]).concat(seg('.'));
+  }
   return [
     seg('Зовёт'), name, ...amount,
     ...(tags.length ? [seg(`[${tags.join(', ')}]`)] : []),

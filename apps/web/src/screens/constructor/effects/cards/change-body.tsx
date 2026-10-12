@@ -2,7 +2,7 @@ import { SheetPick } from '../../sheet-pick.tsx';
 import { sheetChoices, callable } from '../../slots.tsx';
 import { useMemo, useState, type ReactNode } from 'react';
 import type { System, Step, SlotRef, ValueKind } from '@vtt/schema';
-import { Field, Segmented, Select } from '../../../../ui/primitives.tsx';
+import { Field, Segmented, Select, Button } from '../../../../ui/primitives.tsx';
 import type { CardGroup } from '../../cards.ts';
 import { retype } from '../../cards.ts';
 import { parseRollExpr, badFormula, exprText } from '../../roll-expr.ts';
@@ -267,7 +267,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
       <Field
         label="Сколько"
         error={trouble}
-        hint="Обычная математика. Поля пишутся через лист: @цель.хиты, @носитель.ки."
+        hint="Обычная математика. Поля пишутся через лист: @цель.поле, @носитель.поле."
       >
         <FormulaField
           value={shown}
@@ -278,7 +278,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
           {...(context.sheets ? { sheets: context.sheets } : {})}
           badges={inputBadges(context)}
           invalid={Boolean(trouble)}
-          placeholder={direction === 'set' ? 'например: @цель.хп_макс' : 'например: @урон'}
+          placeholder={direction === 'set' ? 'например: @цель.поле' : 'например: @шаг'}
           options={needs}
           onChange={next => { setTrouble(null); setDraft(next); }}
           onCommit={commit}
@@ -303,14 +303,15 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
   const mode = step.type === 'status' ? 'status' : step.type === 'emit' ? 'emit' : 'apply';
   const applyIndex = group.amount ? 1 : 0;
   const firstEvent = callable(system, context.effect)[0]?.[0];
+  const [retyping, setRetyping] = useState(false);
+  const blank = (mode === 'apply' ? !step.target : !step.effect) || retyping;
 
   const fromRecord = (label: string, kind: ValueKind) =>
     onAddParam ? (): SlotRef => ({ expr: `@${onAddParam(label, kind)}` }) : undefined;
 
   return (
     <>
-      {}
-      <Segmented
+      {blank ? <Segmented
         value={mode}
         options={[
           { key: 'apply', label: 'поле' }, { key: 'status', label: 'состояние' },
@@ -334,7 +335,11 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
             retype(draft, 'apply');
           }
         })}
-      />
+      /> : (
+        <div className="inline inline--tight">
+          <Button size="sm" variant="ghost" title="поменять, что делает шаг: изменить поле, наложить состояние или вызвать эффект" onClick={() => setRetyping(true)}>сменить вид шага</Button>
+        </div>
+      )}
 
 
       {mode === 'emit' ? (

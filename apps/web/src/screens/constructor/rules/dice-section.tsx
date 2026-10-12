@@ -34,7 +34,7 @@ export function DiceSection({ system, editSystem, usage }: Props) {
     <Card>
       <CardHead
         title="Кости"
-        sub="Чем бросают проверки в этом мире. Обычно тут одна запись. Кость урона сюда не нужна — она живёт на самом мече."
+        sub="Чем бросают проверки в этом мире. Обычно тут одна запись; кости вещей живут в самих записях."
         actions={<Button size="sm" onClick={() => addDie(editSystem)}>+ кость</Button>}
       />
       {entries.length === 0 ? (

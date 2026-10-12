@@ -65,6 +65,7 @@ describe('эффекты пресетов собираются в констру
     const ui = within();
     ui.click('+ кнопкой');
     ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Атака');
+    if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');
     ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'strike');
     within(ui.cell('Блок')).click('+ новый');
@@ -107,9 +108,7 @@ describe('эффекты пресетов собираются в констру
     within(card).click('вызов');
     card = stepCard(/^3 · /);
     within(card).select('Какой эффект', 'attack_roll');
-    for (const [name, text] of [['Кто бросает', '@действующий'], ['Против кого', '@цель'], ['Бонус атаки', '@attack_with']] as const) {
-      within(card).formula(within(card).arg(name), text);
-    }
+    within(card).formula(within(card).arg('Бонус атаки'), '@attack_with');
     nameStep(stepCard(/^3 · /), 'hit');
 
     const hit = callIf(3, 'Бросок атаки', 'попадание');
@@ -124,9 +123,7 @@ describe('эффекты пресетов собираются в констру
     within(card).click('вызов');
     card = stepCard(/^5 · /);
     within(card).select('Какой эффект', 'damage');
-    for (const [name, text] of [['Сколько урона', '@dmg'], ['Тип урона', '@damage_type'], ['Источник урона', '@damage_source'], ['Лист', '@цель'], ['Источник', '@действующий']] as const) {
-      within(card).formula(within(card).arg(name), text);
-    }
+    within(card).formula(within(card).arg('Сколько урона'), '@dmg');
 
     addToArm(block(hit), 0, 'change');
     card = stepCard(/^6 · /);
@@ -147,9 +144,10 @@ describe('эффекты пресетов собираются в констру
     const ui = within();
     ui.click('+ срабатывает сам');
     ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Адское возмездие');
+    if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');
     ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'hellish_rebuke');
-    ui.select('Блок', 'Реакции');
+    ui.select('Папка', 'Реакции');
     ui.type('Описание', goal!.description!);
 
     ui.select('Что именно', 'damage');
@@ -201,6 +199,7 @@ describe('эффекты пресетов собираются в констру
     const ui = within();
     ui.click('+ кнопкой');
     ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Выстрел');
+    if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');
     ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'shoot');
     within(ui.cell('Блок')).click('+ новый');
@@ -230,11 +229,8 @@ describe('эффекты пресетов собираются в констру
     param(6, 'Куда целишь', 'choice', 'aim', { from: 'aim_places', ask: 'actor', hint: asked('aim') });
 
     ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_action');
-    let card = stepCard(/^1 · /);
-    within(card).formula(within(card).arg('Лист'), '@действующий');
-    within(card).formula(within(card).arg('Источник'), '@действующий');
     ui.click('+ изменение');
-    card = stepCard(/^3 · /);
+    let card = stepCard(/^3 · /);
     within(card).select('Какое поле', 'luck_left');
     within(card).formula('Сколько', '@spend_luck');
     within(card).click('↑');
@@ -292,8 +288,8 @@ describe('эффекты пресетов собираются в констру
         within(headOf(block(2))).when(`=${when}`);
       }
     };
-    send(10, [['Сколько урона', '@dmg'], ['Тип урона', '@damage_type'], ['Куда попали', '@aim'], ['Лист', '@цель'], ['Источник', '@действующий']]);
-    send(11, [['Сколько урона', '@boom'], ['Тип урона', '"критический"'], ['Куда попали', '@aim'], ['Лист', '@цель'], ['Источник', '@действующий']], '@dmg.atMax >= 2');
+    send(10, [['Сколько урона', '@dmg']]);
+    send(11, [['Сколько урона', '@boom'], ['Тип урона', '"критический"']], '@dmg.atMax >= 2');
 
     dump({ got: built('shoot') ?? useWorld.getState().system.effects, goal });
     expect(built('shoot')).toEqual(goal);
@@ -304,9 +300,10 @@ describe('эффекты пресетов собираются в констру
     const ui = within();
     ui.click('+ срабатывает сам');
     ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Концентрация');
+    if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');
     ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'concentration');
-    ui.select('Блок', 'Заклинания');
+    ui.select('Папка', 'Заклинания');
     ui.type('Описание', goal!.description!);
     ui.select('Что именно', 'damage');
     ui.select('Когда именно', 'after');
@@ -333,9 +330,10 @@ describe('эффекты пресетов собираются в констру
     const ui = within();
     ui.click('+ кнопкой');
     ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, goal!.label!);
+    if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');
     ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'spell_buff');
-    ui.select('Блок', 'Заклинания');
+    ui.select('Папка', 'Заклинания');
     ui.type('Описание', goal!.description!);
 
     const param = (row: number, label: string, kind: string, key: string, more: { ask?: string; hint?: string; min?: string; max?: string } = {}) => {
@@ -350,7 +348,7 @@ describe('эффекты пресетов собираются в констру
     };
     param(0, 'Кто действует', 'sheet', 'действующий');
     param(2, 'Круг заклинания', 'number', 'spell_level');
-    ui.check('«Круг заклинания» правят сопротивления', false);
+    ui.check('«Круг заклинания» — величина', false);
     param(3, 'Каким кругом', 'number', 'slot', { ask: 'actor', hint: (goal!.params ?? [])[2]!.ask!.hint!, min: '1', max: '9' });
     param(4, 'Состояние', 'effect', 'status');
     dragParamBefore('Цели', 'Состояние');
@@ -360,9 +358,6 @@ describe('эффекты пресетов собираются в констру
 
     ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_spell');
     let card = stepCard(/^1 · /);
-    for (const [name, text] of [['Лист', '@действующий'], ['Источник', '@действующий'], ['Круг заклинания', '@spell_level'], ['Каким кругом', '@slot']] as const) {
-      within(card).formula(within(card).arg(name), text);
-    }
     ui.click('+ держание');
     ui.select('Держит', 'concentration');
     ui.select('У кого', 'действующий');
@@ -386,12 +381,13 @@ describe('эффекты пресетов собираются в констру
     const ui = within();
     ui.click('+ срабатывает сам');
     ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Двойственность');
+    if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');
     ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'duality');
-    ui.select('Блок', 'Правила');
+    ui.select('Папка', 'Правила');
     ui.type('Описание', goal!.description!);
 
-    const handlerAt = (n: number): HTMLElement => stepCard(new RegExp(`^Подписка №${n}`)).parentElement!;
+    const handlerAt = (n: number): HTMLElement => stepCard(new RegExp(`^Когда №${n}`)).parentElement!;
     const change = (n: number, at: number, owner: string, field: string, how: string, value: string, when?: string) => {
       within(handlerAt(n)).click('+ изменение');
       const card = () => stepCard(new RegExp(`^${at} · `), handlerAt(n));
@@ -415,7 +411,7 @@ describe('эффекты пресетов собираются в констру
     cases.forEach(([listened, rule, gain], index) => {
       const n = index + 1;
       if (n > 1) ui.click('+ когда');
-      const head = () => stepCard(new RegExp(`^Подписка №${n}`));
+      const head = () => stepCard(new RegExp(`^Когда №${n}`));
       within(head()).select('Что именно', listened);
       within(head()).select('Когда именно', 'done');
       within(head()).select('Кого касается', '@действующий == @носитель');
@@ -434,9 +430,10 @@ describe('эффекты пресетов собираются в констру
     const ui = within();
     ui.click('+ кнопкой');
     ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Атака героя');
+    if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');
     ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'hero_attack');
-    ui.select('Блок', 'Атака');
+    ui.select('Папка', 'Атака');
     ui.type('Описание', goal!.description!);
     if (ui.has('ещё')) ui.click('ещё');
     const param = (row: number, label: string, kind: string, key: string, from?: string) => {
@@ -479,7 +476,7 @@ describe('эффекты пресетов собираются в констру
     within(stepCard(/^6 · /)).click('вызов');
     card = stepCard(/^6 · /);
     within(card).select('Какой эффект', 'damage');
-    for (const [name, text] of [['Сколько урона', '@урон'], ['Лист', '@цель'], ['Источник', '@действующий']] as const) {
+    for (const [name, text] of [['Сколько урона', '@урон']] as const) {
       within(stepCard(/^6 · /)).formula(within(stepCard(/^6 · /)).arg(name), text);
     }
     dump({ got: built('hero_attack'), goal });
@@ -549,6 +546,7 @@ describe('эффекты пресетов собираются в констру
     const ui = within();
     ui.click('+ кнопкой');
     ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Залечь на дно');
+    if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');
     ui.type(document.querySelector<HTMLElement>('.step-name input')!, 'lay_low');
     within(ui.cell('Блок')).click('+ новый');

@@ -14,7 +14,7 @@ const sys: any = {
       modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['скрытность'], edit: 'помеха' }],
     }, лёгкий: { shape: 'book', use: 'item', label: 'Лёгкий доспех', columns: [], bindings: [] }, кольцо: {
       shape: 'book', use: 'item', label: 'Кольцо', columns: [], bindings: [],
-      modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: { expr: '1' }, stacking: 'sum' }],
+      modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: { expr: '1' } }],
     } },
   roll_edits: { помеха: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }] } },
   
@@ -64,7 +64,7 @@ group('модификаторы рода', () => {
     const book = {
       ...compendium,
       records: [...(compendium.records.map((i: any) => i.id === 'кольчуга'
-        ? { ...i, modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: { expr: '6' }, stacking: 'sum' }] }
+        ? { ...i, modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: { expr: '6' } }] }
         : i))],
     };
     const sheet = hero(['кольчуга']);

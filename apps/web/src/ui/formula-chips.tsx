@@ -94,7 +94,7 @@ const OPS: { label: string; hint: string; open: string; close?: string; word?: b
   { label: 'меньшее из', hint: 'самое маленькое из перечисленного через запятую', open: 'меньшее из(', close: ', )', word: true },
   { label: 'если', hint: 'если условие верно — первое, иначе второе', open: 'если(', close: ', , )', word: true },
   { label: 'или', hint: 'первое заданное: если класс не выбран — берётся второе', open: 'или(', close: ', )', word: true },
-  { label: 'есть в списке', hint: 'да, если в списке есть значение: спасброски класса — «сила»', open: 'есть(', close: ', "")', word: true },
+  { label: 'есть в списке', hint: 'да, если в списке есть значение', open: 'есть(', close: ', "")', word: true },
 ];
 
 const LOOKUP = 'таблица';

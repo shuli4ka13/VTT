@@ -41,7 +41,7 @@ export function RollLine({ roll, context, system, onRoll, owned = true, keep = f
               empty={shared ? 'ни против кого — бросок один на все цели' : 'ни против кого'} extra={shared ? [] : firsts}
               onChange={next => onRoll(draft => { if (next) draft.against = next; else delete draft.against; })} />
           </Part>
-          <Part label="Метки" wide title="По меткам бросок находят правки и подписки: «атака», «спасбросок», «ловкость»">
+          <Part label="Метки" wide title="По меткам бросок находят правки и подписки; метка — строка любой таблицы системы">
             <TagsField system={system} value={(roll.tags ?? []) as TagValue[]} computed empty="+ метка"
               onChange={next => onRoll(draft => { if (next.length) draft.tags = next; else delete draft.tags; })} />
             <Listeners names={rollListeners(system, ((roll.tags ?? []) as unknown[]).filter((tag): tag is string => typeof tag === 'string'))} />

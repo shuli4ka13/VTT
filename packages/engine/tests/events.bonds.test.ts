@@ -14,7 +14,7 @@ const system = {
     },
     благословлён: {
       label: 'Благословлён', activation: 'passive', duration: { kind: 'permanent' },
-      modifiers: [{ kind: 'value', target: 'бонус', op: 'add', value: { expr: '2' }, stacking: 'sum' }],
+      modifiers: [{ kind: 'value', target: 'бонус', op: 'add', value: { expr: '2' } }],
     },
   },
   

@@ -6,7 +6,7 @@ export const slotRef = z.union([formula, z.string()]);
 
 const bound = z.union([z.number(), z.object({ expr: z.string() }).strict()]);
 
-export const valueKind = z.enum(['number', 'text', 'boolean', 'dice', 'choice', 'effect', 'record', 'field', 'table', 'column', 'sheet']);
+export const valueKind = z.enum(['number', 'text', 'boolean', 'dice', 'choice', 'effect', 'record', 'field', 'table', 'column', 'sheet', 'roll']);
 
 const typed = {
   kind: valueKind.optional(),
@@ -82,6 +82,20 @@ export const cellView = z.object({
   default: startValue.optional(),
 });
 
+export const stageCombine = z.object({
+  set: z.enum(['last', 'min', 'max']).optional(),
+  add: z.enum(['sum', 'min', 'max']).optional(),
+  mul: z.enum(['product', 'min', 'max']).optional(),
+}).strict();
+
+export const stage = z.object({
+  key: z.string().min(1),
+  label: z.string().optional(),
+  combine: stageCombine.optional(),
+  round: z.enum(['down', 'up', 'near']).optional(),
+  atLeast: z.number().optional(),
+}).strict();
+
 export const columnValue = z.object({
   ...typed,
   expr: formula.optional(),
@@ -97,6 +111,7 @@ export const column = columnValue.extend({
   title: z.string().optional(),
   onSheet: z.boolean().optional(),
   optional: z.boolean().optional(),
+  stages: z.array(stage).optional(),
 }).strict();
 
 export const sheetPart = z.object({
@@ -143,7 +158,7 @@ export const valueModifier = z.object({
   target: z.string().refine(target => !/^(event:|roll:|incoming:)/.test(target), 'вызов, бросок и входящее число правит правка вызова (kind: edit), а не поле'),
   op: z.string(),
   value: formula,
-  stacking: z.string().optional(),
+  stage: z.string().optional(),
   if: formula.optional(),
 }).strict();
 
@@ -155,7 +170,7 @@ export const editModifier = z.object({
   edit: z.string().optional(),
   op: z.string().optional(),
   value: formula.optional(),
-  stacking: z.string().optional(),
+  stage: z.string().optional(),
   if: formula.optional(),
   tags: z.array(z.string().min(1)).optional(),
   anyTags: z.array(z.string().min(1)).optional(),
@@ -182,7 +197,7 @@ export const param = column.extend({
   ask: ask.optional(),
   item: z.object({ key: tag, label: z.string().optional() }).strict().optional(),
 
-  role: z.enum(['amount']).optional(),
+  role: z.enum(['amount', 'target', 'actor']).optional(),
   optional: z.boolean().optional(),
 }).strict();
 
@@ -385,6 +400,7 @@ export type DurationKind = z.infer<typeof durationKind>;
 export type Reapply = z.infer<typeof reapply>;
 export type StoredValue = z.infer<typeof storedValue>;
 export type Column = z.infer<typeof column>;
+export type Stage = z.infer<typeof stage>;
 export type ColumnValue = z.infer<typeof columnValue>;
 export type CellView = z.infer<typeof cellView>;
 export type TableShape = z.infer<typeof tableShape>;

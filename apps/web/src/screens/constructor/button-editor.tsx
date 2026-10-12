@@ -1,8 +1,9 @@
+import { useWorld } from '../../store/world.ts';
 import type { System, Effect, Param, Binding } from '@vtt/schema';
 import type { RecordKind } from '@vtt/engine/model/owned';
 import { tableOf } from '@vtt/engine/model/buttons';
 import { paramsOf } from '@vtt/engine/model/inherit';
-import { Card, CardHead, Field, Fold, Select, LabelInput, DangerButton } from '../../ui/primitives.tsx';
+import { Card, CardHead, Field, Fold, Select, LabelInput, Button, DangerButton } from '../../ui/primitives.tsx';
 import { CallEditor } from './call-editor.tsx';
 
 export function ButtonEditor({ binding, system, recordKind, onEdit, onDelete, onFillWithProp }: {
@@ -24,7 +25,15 @@ export function ButtonEditor({ binding, system, recordKind, onEdit, onDelete, on
     <Card tone="flat">
       <CardHead
         title={<LabelInput value={binding.label ?? ''} placeholder="как назвать кнопку" onCommit={label => onEdit(draft => { draft.label = label; })} />}
-        actions={<DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>}
+        actions={<>
+          {effect ? (
+            <Button size="sm" variant="ghost" title="открыть эффект, который жмёт эта кнопка"
+              onClick={() => useWorld.getState().pick({ activeTab: 'effects', activeEffectId: binding.effect, activeStepIndex: null })}>
+              как устроено «{effect.label || binding.effect}» →
+            </Button>
+          ) : null}
+          <DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>
+        </>}
       />
       <CallEditor
         system={system}

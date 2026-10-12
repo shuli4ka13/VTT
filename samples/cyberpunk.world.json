@@ -1246,18 +1246,6 @@
             "args": {
               "amount": {
                 "expr": "@dmg"
-              },
-              "damage_type": {
-                "expr": "@damage_type"
-              },
-              "aim": {
-                "expr": "@aim"
-              },
-              "лист": {
-                "expr": "@цель"
-              },
-              "источник": {
-                "expr": "@действующий"
               }
             }
           },
@@ -1276,15 +1264,6 @@
               },
               "damage_type": {
                 "expr": "\"критический\""
-              },
-              "aim": {
-                "expr": "@aim"
-              },
-              "лист": {
-                "expr": "@цель"
-              },
-              "источник": {
-                "expr": "@действующий"
               }
             }
           },
@@ -1299,15 +1278,7 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_action",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            }
+            "effect": "cost_action"
           },
           {
             "type": "apply",
@@ -1516,13 +1487,15 @@
           {
             "key": "лист",
             "label": "Лист",
-            "kind": "sheet"
+            "kind": "sheet",
+            "role": "target"
           },
           {
             "key": "источник",
             "label": "Источник",
             "kind": "sheet",
-            "optional": true
+            "optional": true,
+            "role": "actor"
           },
           {
             "key": "amount",
@@ -1553,13 +1526,15 @@
           {
             "key": "лист",
             "label": "Лист",
-            "kind": "sheet"
+            "kind": "sheet",
+            "role": "actor"
           },
           {
             "key": "источник",
             "label": "Источник",
             "kind": "sheet",
-            "optional": true
+            "optional": true,
+            "role": "actor"
           }
         ],
         "steps": [

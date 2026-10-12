@@ -185,3 +185,76 @@ describe('ревью: линт и журнал готовых блоков', () 
     expect(text).toMatch(/зовёт «Бросок атаки»(?!:)/u);
   });
 });
+
+describe('бросок передаётся в вызов целиком (вход вида «бросок»)', () => {
+  const compare = {
+    label: 'Сверить с целью',
+    params: [{ key: 'бросок', kind: 'roll' }, { key: 'против', kind: 'sheet' }],
+    returns: [
+      { key: 'попал', label: 'попал', kind: 'boolean', no: 'промах', expr: { expr: '@проверка.success' } },
+      { key: 'выпало', label: 'на костях', kind: 'number', expr: { expr: '@бросок.natural' } },
+    ],
+    steps: [{ id: 'проверка', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@против.кд' }, succeedOn: { expr: '20' } }],
+  };
+  const volley = {
+    label: 'Очередь', activation: 'manual', params: [ACTOR, TARGETS],
+    steps: [
+      { id: 'выстрел', type: 'roll', die: 'к20', bonus: { expr: '2' }, by: { expr: '@действующий' }, tags: ['атака'] },
+      EACH,
+      { id: 'сверка', type: 'emit', effect: 'сверить', args: { бросок: { expr: '@выстрел' }, против: { expr: '@цель' } } },
+      { type: 'branch', if: { expr: '@сверка.попал' } }, hit('@сверка.выпало'), { type: 'end' },
+    ],
+  };
+  const system = world({ сверить: compare, удар: volley });
+  const two = (dice: number[]) => act({ system, compendium: book, clock: null,
+    sheets: [sheet('а'), sheet('б', { кд: 12 }), sheet('в', { кд: 18 })], die: queue(...dice), journal: emptyJournal() },
+  { actionId: 'приём:0', fromId: 'а', toIds: ['б', 'в'] }) as { kind: string; sheets: Sheet[] };
+
+  it('один бросок на всех: 13+2 бьёт КБ 12 и не бьёт КБ 18; кость кидается один раз, натуральная видна в функции', () => {
+    const out = two([13]);
+    expect(hp(out, 'б')).toBe(20 - 13);
+    expect(hp(out, 'в')).toBe(20);
+  });
+
+  it('натуральные 20 из переданного броска — успех и против КБ 18 (succeedOn видит кость)', () => {
+    const out = two([20]);
+    expect(hp(out, 'в')).toBe(0);
+  });
+});
+
+describe('линт входа-броска', () => {
+  it('система с входом «бросок» и чтением @бросок.natural чиста', async () => {
+    const { lintSystem, errorsOf } = await import('../src/model/lint.ts');
+    const compare = {
+      label: 'Сверить с целью', params: [{ key: 'бросок', label: 'Бросок', kind: 'roll' }, { key: 'против', label: 'Против', kind: 'sheet' }],
+      returns: [{ key: 'выпало', label: 'на костях', kind: 'number', expr: { expr: '@бросок.natural' } }],
+      steps: [{ id: 'проверка', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@против.кд' } }],
+    };
+    const volley = {
+      label: 'Очередь', activation: 'manual', params: [{ ...ACTOR, label: 'Кто' }, { ...TARGETS, label: 'Цели' }],
+      steps: [
+        { id: 'выстрел', type: 'roll', die: 'к20', by: { expr: '@действующий' } }, EACH,
+        { id: 'сверка', type: 'emit', effect: 'сверить', args: { бросок: { expr: '@выстрел' }, против: { expr: '@цель' } } },
+      ],
+    };
+    expect(errorsOf(lintSystem(world({ сверить: compare, удар: volley }))).map(p => p.text).filter(t => !t.includes('«атака»'))).toEqual([]);
+  });
+});
+
+describe('аргументы «сами» — правила по ревью', () => {
+  it('у висящего эффекта «кто действует» — носитель, а не первый лист-вход', async () => {
+    const { implicitOf } = await import('../src/model/implicit.ts');
+    const hanging = { activation: 'passive', params: [{ key: 'помеченный', kind: 'sheet' }] } as never;
+    expect(implicitOf({ key: 'источник', kind: 'sheet', role: 'actor' } as never, hanging)).toEqual({ by: 'actor', from: 'носитель' });
+  });
+  it('одноимённый вход не перебивает умолчание вызываемого', async () => {
+    const { implicitOf } = await import('../src/model/implicit.ts');
+    const caller = { params: [{ key: 'бонус', kind: 'number' }] } as never;
+    expect(implicitOf({ key: 'бонус', kind: 'number', default: 0 } as never, caller)).toBeNull();
+    expect(implicitOf({ key: 'бонус', kind: 'number' } as never, caller)).toEqual({ by: 'name', from: 'бонус' });
+  });
+  it('вход-поле «сам» не приходит', async () => {
+    const { implicitOf } = await import('../src/model/implicit.ts');
+    expect(implicitOf({ key: 'что', kind: 'field' } as never, { params: [{ key: 'что', kind: 'field' }] } as never)).toBeNull();
+  });
+});

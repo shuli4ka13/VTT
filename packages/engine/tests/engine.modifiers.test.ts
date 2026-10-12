@@ -18,10 +18,19 @@ const withRoomRule = (id, label, modifier) => ({
 });
 const ac = (sheet, book) => calc(system, sheet, 'ac', withGear(sheet, book));
 
-const plus = (id, label, target, value, stacking = 'sum') => ({
+const plus = (id, label, target, value, stage = undefined) => ({
   id, label, slot: 'ring',
-  modifiers: [{ kind: 'value', target, op: 'add', value: { expr: String(value) }, stacking }],
+  modifiers: [{ kind: 'value', target, op: 'add', value: { expr: String(value) }, ...(stage ? { stage } : {}) }],
 });
+
+const staged = stages => ({
+  ...system,
+  tables: Object.fromEntries(Object.entries(system.tables).map(([id, table]) => [id, {
+    ...table,
+    columns: (table.columns ?? []).map(column => (column.key === 'ac' ? { ...column, stages } : column)),
+  }])),
+});
+const acIn = (sys, sheet, book) => calc(sys, sheet, 'ac', newPass(sys, sheet, { compendium: book }));
 
 const book = extraItems => ({
   records: [...compendium.records, ...extraItems],
@@ -29,9 +38,9 @@ const book = extraItems => ({
 
 group('модификаторы', () => {
   group('правящие значение', () => {
-    const times = (id, value, stacking = 'sum') => ({
+    const times = (id, value, stage = undefined) => ({
       id, label: id, slot: 'ring',
-      modifiers: [{ kind: 'value', target: 'ac', op: 'mul', value: { expr: String(value) }, stacking }],
+      modifiers: [{ kind: 'value', target: 'ac', op: 'mul', value: { expr: String(value) }, ...(stage ? { stage } : {}) }],
     });
     const bare = { ...arven, has: [] };
 
@@ -48,9 +57,18 @@ group('модификаторы', () => {
       eq(ac({ ...bare, has: [{ of: 'half-a' }, { of: 'half-b' }, { of: 'half-c' }] }, book(items)), 1.375);
     });
 
-    test('накопление «наибольшее» у множителей по-прежнему берёт один — так выражается «сопротивления не складываются»', () => {
-      const items = [times('half-a', 0.5, 'max'), times('half-b', 0.5, 'max')];
-      eq(ac({ ...bare, has: [{ of: 'half-a' }, { of: 'half-b' }] }, book(items)), 5.5);
+    test('этап «наименьший множитель» берёт одно сопротивление из двух, а иммунитет ×0 побеждает ×0.5', () => {
+      const sys = staged([{ key: 'сопротивление', combine: { mul: 'min' } }]);
+      eq(acIn(sys, { ...bare, has: [{ of: 'half-a' }, { of: 'half-b' }] }, book([times('half-a', 0.5), times('half-b', 0.5)])), 5.5);
+      eq(acIn(sys, { ...bare, has: [{ of: 'half-a' }, { of: 'zero' }] }, book([times('half-a', 0.5), times('zero', 0)])), 0);
+    });
+
+    test('округление после этапа: 11 → сопротивление вниз 5 → уязвимость 10, а не 11', () => {
+      const sys = staged([
+        { key: 'сопротивление', combine: { mul: 'min' }, round: 'down' },
+        { key: 'уязвимость', combine: { mul: 'max' }, round: 'down' },
+      ]);
+      eq(acIn(sys, { ...bare, has: [{ of: 'half' }, { of: 'double' }] }, book([times('half', 0.5, 'сопротивление'), times('double', 2, 'уязвимость')])), 10);
     });
 
     test('без снаряжения класс брони считается по голым характеристикам', () => {
@@ -69,7 +87,7 @@ group('модификаторы', () => {
     test('модификатор может ссылаться на формулу, а не только на число', () => {
       const belt = {
         id: 'belt', label: 'Пояс', slot: 'waist',
-        modifiers: [{ kind: 'value', target: 'ac', op: 'add', value: { expr: '#prof_bonus' }, stacking: 'sum' }],
+        modifiers: [{ kind: 'value', target: 'ac', op: 'add', value: { expr: '#prof_bonus' } }],
       };
       eq(ac({ ...arven, has: [{ of: 'belt' }] }, book([belt])), 11 + 3);
     });
@@ -78,7 +96,7 @@ group('модификаторы', () => {
   group('пол и потолок значения', () => {
     const bound = (id, op, value) => ({
       id, label: id, slot: 'ring',
-      modifiers: [{ kind: 'value', target: 'ac', op, value: { expr: String(value) }, stacking: 'sum' }],
+      modifiers: [{ kind: 'value', target: 'ac', op, value: { expr: String(value) } }],
     });
     const bare = { ...arven, has: [] };
 
@@ -97,7 +115,7 @@ group('модификаторы', () => {
     });
   });
 
-  group('правила стакинга', () => {
+  group('этапы величины', () => {
     const two = [plus('a', 'A', 'ac', 1), plus('b', 'B', 'ac', 2)];
     const sheet = () => ({
       ...arven,
@@ -108,29 +126,34 @@ group('модификаторы', () => {
       eq(ac(sheet(), book(two)), 11 + 3);
     });
 
-    test('max берёт только наибольший', () => {
-      const maxTwo = [plus('a', 'A', 'ac', 1, 'max'), plus('b', 'B', 'ac', 2, 'max')];
-      eq(ac(sheet(), book(maxTwo)), 11 + 2);
+    test('этап «наибольшая прибавка» берёт только наибольшую', () => {
+      const sys = staged([{ key: 'основа', combine: { add: 'max' } }]);
+      eq(acIn(sys, sheet(), book([plus('a', 'A', 'ac', 1), plus('b', 'B', 'ac', 2)])), 11 + 2);
     });
 
     test('override оставляет последний применившийся', () => {
       const setTwo = [
-        { id: 'a', label: 'A', modifiers: [{ kind: 'value', target: 'ac', op: 'set', value: { expr: '20' }, stacking: 'override' }] },
-        { id: 'b', label: 'B', modifiers: [{ kind: 'value', target: 'ac', op: 'set', value: { expr: '5' }, stacking: 'override' }] },
+        { id: 'a', label: 'A', modifiers: [{ kind: 'value', target: 'ac', op: 'set', value: { expr: '20' } }] },
+        { id: 'b', label: 'B', modifiers: [{ kind: 'value', target: 'ac', op: 'set', value: { expr: '5' } }] },
       ];
       eq(ac(sheet(), book(setTwo)), 5);
     });
 
-    test('разные правила стакинга на одной мишени не мешают друг другу', () => {
-      const mixed = [plus('a', 'A', 'ac', 1, 'sum'), plus('b', 'B', 'ac', 5, 'max'), plus('c', 'C', 'ac', 3, 'max')];
-      eq(ac({ ...arven, has: [{ of: 'a' }, { of: 'b' }, { of: 'c' }] }, book(mixed)), 11 + 1 + 5);
+    test('два этапа на одной величине не мешают друг другу', () => {
+      const sys = staged([{ key: 'бонусы' }, { key: 'лучшее', combine: { add: 'max' } }]);
+      const mixed = [plus('a', 'A', 'ac', 1, 'бонусы'), plus('b', 'B', 'ac', 5, 'лучшее'), plus('c', 'C', 'ac', 3, 'лучшее')];
+      eq(acIn(sys, { ...arven, has: [{ of: 'a' }, { of: 'b' }, { of: 'c' }] }, book(mixed)), 11 + 1 + 5);
+    });
+
+    test('правка с этапом, которого у величины нет, — ошибка словами', () => {
+      throws(() => acIn(staged([{ key: 'основа' }]), { ...arven, has: [{ of: 'a' }] }, book([plus('a', 'A', 'ac', 1, 'нет')])), 'ссылается на этап «нет»');
     });
   });
 
   group('условия', () => {
     const conditional = cond => ({
       id: 'cond', label: 'Условный', slot: 'ring',
-      modifiers: [{ kind: 'value', target: 'ac', op: 'add', value: { expr: '10' }, stacking: 'sum', if: { expr: cond } }],
+      modifiers: [{ kind: 'value', target: 'ac', op: 'add', value: { expr: '10' }, if: { expr: cond } }],
     });
 
     test('модификатор с истинным условием применяется', () => {
@@ -258,7 +281,7 @@ group('модификаторы', () => {
     test('правило системы может править и значение, а не только бросок', () => {
       const sys = withRule({
         kind: 'value', label: 'Домашнее правило: +1 ко всем КД', target: 'ac',
-        op: 'add', value: { expr: '1' }, stacking: 'sum',
+        op: 'add', value: { expr: '1' },
       });
       eq(calc(sys, mirra, 'ac', newPass(sys, mirra, { compendium })), 15);
     });
@@ -278,7 +301,7 @@ group('модификаторы', () => {
 
     const bonus = (value, condition = null) => withEffects({
       guidance: passive('Наставление',
-        [{ kind: 'edit', call: 'roll', param: 'bonus', tags: ['проверка'], op: 'add', value: typeof value === 'object' ? value : { expr: String(value) }, stacking: 'sum', ...(condition ? { if: { expr: condition } } : {}) }]),
+        [{ kind: 'edit', call: 'roll', param: 'bonus', tags: ['проверка'], op: 'add', value: typeof value === 'object' ? value : { expr: String(value) }, ...(condition ? { if: { expr: condition } } : {}) }]),
     });
     const hung = { ...arven, effects: [{ effectId: 'guidance' }] };
     const roll = sys => resolveRoll(sys, hung, ['проверка'], newPass(sys, hung, { compendium }));
@@ -298,7 +321,7 @@ group('модификаторы', () => {
     test('прибавка не отменяет и не заменяет преимущество', () => {
       const both = withEffects({
         guidance: passive('Наставление', [
-          { kind: 'edit', call: 'roll', param: 'bonus', tags: ['проверка'], op: 'add', value: { expr: '2' }, stacking: 'sum' },
+          { kind: 'edit', call: 'roll', param: 'bonus', tags: ['проверка'], op: 'add', value: { expr: '2' } },
           { kind: 'edit', call: 'roll', param: 'edits', tags: ['проверка'], edit: 'advantage' },
         ]),
       });
@@ -312,7 +335,7 @@ group('модификаторы', () => {
     test('прибавка остаётся, даже когда преимущество погашено помехой', () => {
       const both = withEffects({
         guidance: passive('Наставление', [
-          { kind: 'edit', call: 'roll', param: 'bonus', tags: ['проверка'], op: 'add', value: { expr: '2' }, stacking: 'sum' },
+          { kind: 'edit', call: 'roll', param: 'bonus', tags: ['проверка'], op: 'add', value: { expr: '2' } },
           { kind: 'edit', call: 'roll', param: 'edits', tags: ['проверка'], edit: 'advantage' },
         ]),
       });
@@ -329,7 +352,7 @@ group('модификаторы', () => {
     test('эффект может править и значение поля, не только бросок', () => {
       const wise = withEffects({
         guidance: passive('Мудрость свыше',
-          [{ kind: 'value', target: 'wis', op: 'add', value: { expr: '5' }, stacking: 'sum' }]),
+          [{ kind: 'value', target: 'wis', op: 'add', value: { expr: '5' } }]),
       });
       eq(calc(wise, hung, 'wis', newPass(wise, hung, { compendium })), 17);
       eq(calc(wise, hung, 'wis_mod', newPass(wise, hung, { compendium })), 3,
@@ -370,7 +393,7 @@ group('модификаторы', () => {
 group('бросок находят по меткам', () => {
   const owl = (tags) => ({ ...system, effects: { ...system.effects,
     owl: passive('Сова-помощница',
-      [{ kind: 'edit', call: 'roll', param: 'bonus', tags, op: 'add', value: { expr: '5' }, stacking: 'sum' }]) } });
+      [{ kind: 'edit', call: 'roll', param: 'bonus', tags, op: 'add', value: { expr: '5' } }]) } });
   const sheet = { ...arven, effects: [{ effectId: 'owl' }] };
   const bonus = (sys, tags) => resolveRoll(sys, sheet, tags, newPass(sys, sheet, { compendium })).bonus;
 

@@ -154,6 +154,7 @@ describe('GroupCard: изменение как вызов', () => {
     render(<GroupCard group={group} position={1} system={eventful} effect={effect} sheets={sheets}
       earlier={[]} problem={null} edit={(at, change) => change((at === 1 ? apply : steps[0]) as never)}
       onDelete={() => {}} />);
+    fireEvent.click(screen.getByText('сменить вид шага'));
     fireEvent.click(screen.getByText('вызов'));
     expect(apply.type).toBe('emit');
     expect(apply.effect).toBe('damage');
@@ -183,6 +184,7 @@ describe('GroupCard: изменение как вызов', () => {
     const emit = { type: 'emit', effect: 'damage', args: { amount: { expr: '5' } } } as any;
     const first = render(<GroupCard group={groupSteps([emit])[0]!} position={1} system={both} effect={effect} sheets={sheets}
       earlier={[]} problem={null} edit={(_, change) => change(emit)} onDelete={() => {}} />);
+    fireEvent.click(screen.getByText('сменить вид шага'));
     fireEvent.click(screen.getByText('состояние'));
     expect(emit.type).toBe('status');
     expect(emit.effect).toBeUndefined();
@@ -192,6 +194,7 @@ describe('GroupCard: изменение как вызов', () => {
     const status = { type: 'status', effect: 'prone', to: { expr: '@цель' }, args: { by: { expr: '@действующий' } } } as any;
     render(<GroupCard group={groupSteps([status])[0]!} position={1} system={both} effect={effect} sheets={sheets}
       earlier={[]} problem={null} edit={(_, change) => change(status)} onDelete={() => {}} />);
+    fireEvent.click(screen.getByText('сменить вид шага'));
     fireEvent.click(screen.getByText('вызов'));
     expect(status.type).toBe('emit');
     expect(status.effect).toBe('damage');

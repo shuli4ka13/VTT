@@ -215,7 +215,7 @@ group('запись выдаёт эффект владельцу', () => {
   const sys = {
     id: 'g', name: 'g',
     tables: { лист: { shape: 'single', columns: [{ key: 'кд', label: 'Класс брони', kind: 'number', default: 10 }] } , черта: { shape: 'book', use: 'action', label: 'Черта', columns: [], bindings: [] } },
-    effects: { стойка: { label: 'Оборонительная стойка', activation: 'passive', modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: { expr: '1' }, stacking: 'sum' }] } },
+    effects: { стойка: { label: 'Оборонительная стойка', activation: 'passive', modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: { expr: '1' } }] } },
     
   } as unknown as System;
   const feats = { records: [{ id: 'оборона', table: 'черта', label: 'Боевой стиль: оборона', cells: {}, grants: ['стойка'] }] } as unknown as Compendium;

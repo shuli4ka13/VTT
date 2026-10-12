@@ -626,7 +626,16 @@
             "key": "ac_base",
             "label": "База доспеха",
             "kind": "number",
-            "default": 10
+            "default": 10,
+            "stages": [
+              {
+                "key": "основа",
+                "label": "основа",
+                "combine": {
+                  "set": "max"
+                }
+              }
+            ]
           },
           {
             "key": "armor_heavy",
@@ -1958,7 +1967,35 @@
             "key": "amount",
             "label": "Сколько урона",
             "kind": "number",
-            "role": "amount"
+            "role": "amount",
+            "stages": [
+              {
+                "key": "прибавки",
+                "label": "прибавки",
+                "atLeast": 0
+              },
+              {
+                "key": "половина",
+                "label": "половина",
+                "round": "down"
+              },
+              {
+                "key": "сопротивление",
+                "label": "сопротивление",
+                "combine": {
+                  "mul": "min"
+                },
+                "round": "down"
+              },
+              {
+                "key": "уязвимость",
+                "label": "уязвимость",
+                "combine": {
+                  "mul": "max"
+                },
+                "round": "down"
+              }
+            ]
           },
           {
             "key": "damage_type",
@@ -2016,7 +2053,6 @@
             "value": {
               "expr": "0.5"
             },
-            "stacking": "max",
             "notTags": [
               "магический"
             ],
@@ -2025,7 +2061,8 @@
             "param": "amount",
             "if": {
               "expr": "@лист == @носитель"
-            }
+            },
+            "stage": "сопротивление"
           }
         ],
         "steps": [],
@@ -2045,7 +2082,6 @@
             "value": {
               "expr": "0.5"
             },
-            "stacking": "max",
             "kind": "edit",
             "call": "damage",
             "param": "amount",
@@ -2054,7 +2090,8 @@
             ],
             "if": {
               "expr": "@лист == @носитель"
-            }
+            },
+            "stage": "сопротивление"
           }
         ],
         "steps": [],
@@ -2174,8 +2211,7 @@
             "op": "add",
             "value": {
               "expr": "5"
-            },
-            "stacking": "sum"
+            }
           }
         ],
         "steps": [],
@@ -3219,8 +3255,7 @@
             "op": "set",
             "value": {
               "expr": "16"
-            },
-            "stacking": "override"
+            }
           },
           {
             "kind": "value",
@@ -3228,8 +3263,7 @@
             "op": "set",
             "value": {
               "expr": "да"
-            },
-            "stacking": "override"
+            }
           }
         ],
         "table": "gear"

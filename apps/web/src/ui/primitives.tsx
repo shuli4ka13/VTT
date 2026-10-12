@@ -147,8 +147,9 @@ export function Select<T extends string>({ value, options, onChange, disabled, t
   );
 }
 
-export function Button({ children, onClick, onMouseEnter, variant, size, wide, disabled, title }: {
+export function Button({ children, onClick, onMouseEnter, variant, size, wide, disabled, title, ariaLabel }: {
   children: ReactNode;
+  ariaLabel?: string;
   onClick?: () => void;
   onMouseEnter?: () => void;
   variant?: 'primary' | 'ghost' | 'danger';
@@ -162,7 +163,7 @@ export function Button({ children, onClick, onMouseEnter, variant, size, wide, d
   if (size) classes.push(`btn--${size}`);
   if (wide) classes.push('btn--wide');
   return (
-    <button type="button" className={classes.join(' ')} onClick={onClick} onMouseEnter={onMouseEnter} disabled={disabled} title={title}>
+    <button type="button" className={classes.join(' ')} onClick={onClick} onMouseEnter={onMouseEnter} disabled={disabled} title={title} aria-label={ariaLabel}>
       {children}
     </button>
   );

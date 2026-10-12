@@ -26,6 +26,7 @@ import { useWorld } from '../../../store/world.ts';
 import { useState, useRef, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { System, Table, TableRow, TableKey } from '@vtt/schema';
+import { StagesEditor } from '../stages-editor.tsx';
 import type { TableColumn, Holder } from '@vtt/engine/model/types';
 import type { WorldState } from '../../../store/world.ts';
 
@@ -103,7 +104,7 @@ export function TablesSection({ system, editSystem, usage }: Props) {
         {entries.length === 0 ? (
           <Empty
             title="Таблиц ещё нет"
-            hint="Типы урона, бонус мастерства по уровню, способ атаки — всё это таблицы."
+            hint="Справочники, прогрессия по уровню, списки выбора — всё это таблицы."
             action={<Button size="sm" onClick={() => addTable(editSystem)}>+ таблица</Button>}
           />
         ) : groupsOfTables(entries).flatMap(([title, list]) => [
@@ -335,6 +336,9 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, extr
       bounds={bounds}
       extra={<>
         {single || onSheet(table) ? <ColumnSheetFields tableId={id} column={column} system={system} /> : null}
+        {(column.kind ?? 'number') === 'number' && (single || column.stages) ? (
+          <StagesEditor stages={column.stages} onChange={next => set(c => { if (next) c.stages = next; else delete c.stages; })} />
+        ) : null}
         {book ? (
           <Field label="Обязательна">
             <Select

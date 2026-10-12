@@ -323,13 +323,15 @@
           {
             "key": "лист",
             "label": "Лист",
-            "kind": "sheet"
+            "kind": "sheet",
+            "role": "target"
           },
           {
             "key": "источник",
             "label": "Источник",
             "kind": "sheet",
-            "optional": true
+            "optional": true,
+            "role": "actor"
           },
           {
             "key": "amount",
@@ -396,12 +398,6 @@
             "type": "emit",
             "effect": "attack_roll",
             "args": {
-              "кто": {
-                "expr": "@действующий"
-              },
-              "против": {
-                "expr": "@цель"
-              },
               "бонус": {
                 "expr": "@attack_with + @действующий.level + @стол.escalation"
               }
@@ -426,12 +422,6 @@
             "args": {
               "amount": {
                 "expr": "@dmg"
-              },
-              "лист": {
-                "expr": "@цель"
-              },
-              "источник": {
-                "expr": "@действующий"
               }
             }
           },
@@ -444,12 +434,6 @@
             "args": {
               "amount": {
                 "expr": "@действующий.level"
-              },
-              "лист": {
-                "expr": "@цель"
-              },
-              "источник": {
-                "expr": "@действующий"
               }
             }
           },
@@ -460,15 +444,7 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_standard",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            }
+            "effect": "cost_standard"
           }
         ],
         "tags": [
@@ -516,12 +492,6 @@
             "type": "emit",
             "effect": "attack_roll",
             "args": {
-              "кто": {
-                "expr": "@действующий"
-              },
-              "против": {
-                "expr": "@цель"
-              },
               "бонус": {
                 "expr": "@to_hit"
               }
@@ -539,12 +509,6 @@
             "args": {
               "amount": {
                 "expr": "@hit_damage"
-              },
-              "лист": {
-                "expr": "@цель"
-              },
-              "источник": {
-                "expr": "@действующий"
               }
             }
           },
@@ -555,15 +519,7 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_standard",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            }
+            "effect": "cost_standard"
           }
         ],
         "tags": [
@@ -654,13 +610,15 @@
           {
             "key": "лист",
             "label": "Лист",
-            "kind": "sheet"
+            "kind": "sheet",
+            "role": "actor"
           },
           {
             "key": "источник",
             "label": "Источник",
             "kind": "sheet",
-            "optional": true
+            "optional": true,
+            "role": "actor"
           }
         ],
         "steps": [
@@ -864,12 +822,14 @@
           {
             "key": "кто",
             "label": "Кто бросает",
-            "kind": "sheet"
+            "kind": "sheet",
+            "role": "actor"
           },
           {
             "key": "против",
             "label": "Против кого",
-            "kind": "sheet"
+            "kind": "sheet",
+            "role": "target"
           },
           {
             "key": "бонус",

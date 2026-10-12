@@ -53,7 +53,7 @@ group('вызов действия', () => {
       const blessedSys = { ...system, effects: { ...system.effects,
         blessed: {
           label: 'Благословение', activation: 'passive', duration: { kind: 'permanent' },
-          modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', tags: ['атака'], op: 'add', value: { expr: '4' }, stacking: 'sum', if: { expr: '@бросающий == @носитель' } }],
+          modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', tags: ['атака'], op: 'add', value: { expr: '4' }, if: { expr: '@бросающий == @носитель' } }],
         } } };
       const sheet = { ...arven, effects: [{ effectId: 'blessed' }] };
 

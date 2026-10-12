@@ -1,5 +1,7 @@
 import { groupSteps } from '../cards.ts';
-import { Card, CardHead, Field, Select, DangerButton } from '../../../ui/primitives.tsx';
+import { useState } from 'react';
+import { Card, CardHead, Field, Select, DangerButton, Button } from '../../../ui/primitives.tsx';
+import { formulaWords } from '../../../ui/formula-words.ts';
 import { registry } from '@vtt/engine/engine/steps/index';
 import { MOMENTS as TIMES } from '@vtt/engine/events/moments';
 import { MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, PHASES, SEEN, SEEN_LABEL, ANY_ACTION, callHappening, happeningOf } from '@vtt/engine/events/bus';
@@ -66,7 +68,8 @@ function outcomesOf(system: System, listened: string, phase: Phase): (readonly [
   return out;
 }
 
-export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
+export function HandlerCard({ id, index, handler, system, edit, onRemove, startOpen = false }: {
+  startOpen?: boolean;
   id: string;
   index: number;
   handler: Handler;
@@ -74,6 +77,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
   edit: (change: (draft: Handler) => void) => void;
   onRemove: () => void;
 }) {
+  const [open, setOpen] = useState(!handler.on || startOpen);
   const kind = kindOf(handler.on ?? '');
   const subject = subjectOf(handler.on ?? '');
   const phase = callHappening(handler.on)?.phase ?? 'before';
@@ -103,12 +107,44 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
   });
   const visible = new Map(namesAt(system, id, { part: 'handler-if', handler: index }).map(one => [one.name, one.label]));
 
+  const subjectWord = subjects.find(([key]) => key === subject)?.[1] ?? subject;
+  const happened = kind === 'seen' ? SEEN_LABEL
+    : kind === 'call' ? `${PHASES[phase].label} ${subjectWord}`
+      : kind === 'moment' ? subjectWord
+        : kind === 'field' ? `${subjectWord} стало верным`
+          : kind === 'gained' ? `появился ${subjectWord}` : `ушёл ${subjectWord}`;
+  const condition = (() => {
+    const text = handler.if?.expr?.trim();
+    if (!text) return '';
+    const parts = text.replace(/^все\((.*)\)$/su, '$1').split(/,\s*(?![^()]*\))/u);
+    return parts.map(part => {
+      const holder = /^@([\p{L}\p{N}_]+)\s*==\s*@носитель$/u.exec(part.trim())?.[1];
+      const label = holder ? names.find(([name]) => name === holder)?.[1] : undefined;
+      return label ? `«${label}» — носитель` : formulaWords(system, part.trim(), visible);
+    }).join(' и ');
+  })();
+  const sentence = `${happened || 'что случилось?'}${condition ? `, если ${condition}` : ''}${handler.confirm ? ' — решает игрок носителя' : ''}`;
+
+  if (!open) {
+    return (
+      <div className="mod-row mod-row--when">
+        <button type="button" className="mod-row__text" aria-label={`развернуть «когда: ${sentence}»`} onClick={() => setOpen(true)}>
+          <span className="mod-row__kind">когда</span>
+          {sentence}
+        </button>
+        <DangerButton size="sm" onConfirm={onRemove}>×</DangerButton>
+      </div>
+    );
+  }
+
   return (
     <Card>
       <CardHead
-        title={`Подписка №${index + 1}`}
-        sub="На что откликается эффект, кого это касается и что он делает в ответ."
-        actions={<DangerButton size="sm" onConfirm={onRemove}>Удалить</DangerButton>}
+        title={`Когда №${index + 1}: ${sentence}`}
+        actions={<>
+          <Button size="sm" variant="ghost" ariaLabel={`свернуть «когда: ${sentence}»`} onClick={() => setOpen(false)}>свернуть</Button>
+          <DangerButton size="sm" onConfirm={onRemove}>Удалить</DangerButton>
+        </>}
       />
 
       <div className="row">
@@ -145,7 +181,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
           names={visible}
           sheets={sheets}
           where={`подписка №${index + 1} · только если`}
-          placeholder={phase === 'done' ? 'например: сколько(@итоги.hit.success, да) >= 1' : 'например: @носитель.хиты <= 0'}
+          placeholder={phase === 'done' ? 'например: сколько(@итоги.шаг.success, да) >= 1' : 'например: @носитель.поле <= 0'}
           holderHint="Носитель — лист, на котором висит эта подписка."
         />
         <Field label="Решение">

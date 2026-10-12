@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, fireEvent, cleanup } from '@testing-library/react';
+import { openAll } from '../../../testing/render-open.tsx';
 import { HandlerCard } from './handler-card.tsx';
 import { within } from '../../../testing/cards.ts';
 import type { System, Handler } from '@vtt/schema';
@@ -21,6 +22,7 @@ const card = (handler: Handler) => {
   const withHandler = { ...system, effects: { ...system.effects, r: { ...system.effects.r, on: [current] } } } as System;
   const view = render(<HandlerCard id="r" index={0} handler={current} system={withHandler} onRemove={() => {}}
     edit={change => { change(current); current = structuredClone(current); }} />);
+  openAll();
   return { view, get: () => current };
 };
 

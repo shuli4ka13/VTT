@@ -48,6 +48,15 @@ function chosenTags(params: { key: string; kind?: string; from?: string }[], arg
   return out;
 }
 
+function rollArg(ref: unknown, key: string, ctx: StepContext): Record<string, unknown> | null {
+  const expr = ref && typeof ref === 'object' && 'expr' in ref ? String((ref as { expr: unknown }).expr) : '';
+  if (!expr.trim()) return null;
+  const name = /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(expr)?.[1];
+  const roll = name ? ctx.rolled(name) : null;
+  if (!roll) throw new EngineError(`${who(ctx)}: во вход «${key}» передают бросок — имя шага броска или входа-броска (@бросок), а не «${expr}»`);
+  return roll;
+}
+
 const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
   mayBreak: true,
   finish(step, ctx) {
@@ -59,13 +68,18 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
     const args: Record<string, unknown> = {};
     for (const [key, ref] of Object.entries((step.args ?? {}) as Record<string, unknown>)) {
       const kind = params.find(p => p.key === key)?.kind;
-      const value = kind === 'field' ? ctx.field(ref) : kind === 'sheet' ? ctx.value(ref) : ctx.value(ref);
+      const value = kind === 'roll' ? rollArg(ref, key, ctx) : kind === 'field' ? ctx.field(ref) : ctx.value(ref);
       if (value !== null && value !== undefined) args[key] = value;
     }
     for (const param of params) {
       if (param.key in args || param.kind === 'sheet' || param.kind === 'field') continue;
       const own = ctx.prop(param.key);
       if (own !== null && own !== undefined) args[param.key] = own;
+    }
+    for (const param of params) {
+      if (param.key in args || param.kind === 'field') continue;
+      const passed = ctx.implicit(param);
+      if (passed !== null && passed !== undefined) args[param.key] = passed;
     }
     const main = amountParamOf(spec);
     const incoming = main && args[main.key] !== undefined ? Number(args[main.key]) : 0;

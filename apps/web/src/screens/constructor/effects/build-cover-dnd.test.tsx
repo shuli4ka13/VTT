@@ -62,9 +62,10 @@ const fresh = (button: string, label: string, key: string, block: string, descri
   const ui = within();
   ui.click(button);
   ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, label);
+  if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
   ui.click('имя в формулах…');
   ui.type(document.querySelector<HTMLElement>('.step-name input')!, key);
-  ui.select('Блок', block);
+  ui.select('Папка', block);
   ui.type('Описание', description);
   return ui;
 };
@@ -73,16 +74,15 @@ const modifierCards = (): HTMLElement[] => [...document.querySelectorAll<HTMLEle
   .filter(card => /^(Правит поле|Правка вызова)/.test(textOf(card.querySelector('.card__head') ?? card)));
 const lastModifier = (): HTMLElement => modifierCards().at(-1)!;
 
-const handlerAt = (n: number): HTMLElement => stepCard(new RegExp(`^Подписка №${n}`)).parentElement!;
-const handlerHead = (n: number): HTMLElement => stepCard(new RegExp(`^Подписка №${n}`));
+const handlerAt = (n: number): HTMLElement => stepCard(new RegExp(`^Когда №${n}`)).parentElement!;
+const handlerHead = (n: number): HTMLElement => stepCard(new RegExp(`^Когда №${n}`));
 
-const valueModifier = (target: string, op: string, value: string, stacking: string) => {
+const valueModifier = (target: string, op: string, value: string) => {
   within().click('+ правит поле');
   const card = lastModifier;
   within(card()).select('Что правим', target);
   within(card()).select('Как', op);
   within(card()).formula('На сколько', value);
-  within(card()).select('Если таких несколько', stacking);
 };
 
 const presetDefault = (goal: Effect, ...paths: string[][]): Effect => {
@@ -109,7 +109,7 @@ describe('эффекты D&D собираются в конструкторе р
     const [goal] = start('dnd5e', ['mage_armored']);
     fresh('+ висит и правит', goal!.label!, 'mage_armored', 'Состояния', goal!.description!);
     lifetime('scene', 'refresh');
-    valueModifier('ac_base', 'set', '13', 'max');
+    valueModifier('ac_base', 'set', '13');
     dump({ got: built('mage_armored'), goal });
     expect(built('mage_armored')).toEqual(goal);
   });
@@ -120,7 +120,7 @@ describe('эффекты D&D собираются в конструкторе р
     lifetime('turns', 'refresh');
     ui.type('Сколько', '1');
     ui.select('Спадает', 'turn-end');
-    valueModifier('speed', 'mul', '2', 'sum');
+    valueModifier('speed', 'mul', '2');
     dump({ got: built('dashing'), goal });
     expect(built('dashing')).toEqual(presetDefault(goal!, ['duration', 'ends']));
   });
@@ -133,7 +133,7 @@ describe('эффекты D&D собираются в конструкторе р
     const card = lastModifier;
     within(card()).select('Чей вызов', 'damage');
     within(card()).formula('На сколько', '0.5');
-    within(card()).select('Если таких несколько', 'max');
+    within(card()).select('Этап', 'сопротивление');
     within(card()).select('Кроме меток', 'магический');
     within(card()).select('Где у метки', 'damage_types\u0000nature');
     within(within(card()).field('Где у метки')).select(within(card()).field('Где у метки').querySelectorAll('select')[1] as HTMLElement, 'физический');
@@ -142,15 +142,16 @@ describe('эффекты D&D собираются в конструкторе р
     expect(built('stoneskin')).toEqual(goal);
   });
 
-  it('D&D «Что доходит до меня» (taken_rule): 13 правок вызова урона по меткам', { timeout: 120000 }, () => {
+  it('D&D «Что доходит до меня» (taken_rule): 26 правок вызова урона по меткам — сопротивление и уязвимость по этапам', { timeout: 240000 }, () => {
     const [goal] = start('dnd5e', ['taken_rule']);
     fresh('+ висит и правит', goal!.label!, 'taken_rule', 'Общие правила', goal!.description!);
     for (const m of goal!.modifiers ?? []) {
-      const one = m as { anyTags: string[]; value: { expr: string } };
+      const one = m as { anyTags: string[]; value: { expr: string }; stage: string };
       within().click('+ правка вызова');
       const card = lastModifier;
       within(card()).select('Чей вызов', 'damage');
       within(card()).formula('На сколько', one.value.expr);
+      within(card()).select('Этап', one.stage);
       within(card()).select('По меткам', one.anyTags[0]!);
       within(card()).select('Кого касается', '@лист == @носитель');
     }
@@ -194,7 +195,7 @@ describe('эффекты D&D собираются в конструкторе р
     rollEdit(['атака'], 'advantage', '@против == @носитель');
     rollEdit(['спасбросок', 'сила'], 'auto_fail', '@бросающий == @носитель');
     rollEdit(['спасбросок', 'ловкость'], 'auto_fail', '@бросающий == @носитель');
-    valueModifier('speed', 'set', '0', 'override');
+    valueModifier('speed', 'set', '0');
 
     ui.click('+ ещё одно');
     ui.type(ui.cell('Название', 0), 'Запомненное число');
@@ -317,7 +318,7 @@ describe('эффекты D&D собираются в конструкторе р
     };
     param(0, 'Кто действует', 'sheet', 'действующий');
     param(2, 'Круг заклинания', 'number', 'spell_level');
-    ui.check('«Круг заклинания» правят сопротивления', false);
+    ui.check('«Круг заклинания» — величина', false);
     param(3, 'Каким кругом', 'number', 'slot', { ask: 'actor', hint: (goal!.params ?? [])[2]!.ask!.hint!, min: '1', max: '9' });
     param(4, 'Чем спасаются', 'choice', 'save_by', { from: 'abilities' });
     dragParamBefore('Цели', 'Чем спасаются');
@@ -330,10 +331,6 @@ describe('эффекты D&D собираются в конструкторе р
     param(11, 'Держится концентрацией', 'boolean', 'holds', { mode: 'value' });
 
     ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_spell');
-    const cost = stepCard(/^1 · /);
-    for (const [name, text] of [['Лист', '@действующий'], ['Источник', '@действующий'], ['Круг заклинания', '@spell_level'], ['Каким кругом', '@slot']] as const) {
-      within(cost).formula(within(cost).arg(name), text);
-    }
     ui.click('+ держание');
     ui.select('Держит', 'concentration');
     ui.select('У кого', 'действующий');
@@ -343,7 +340,7 @@ describe('эффекты D&D собираются в конструкторе р
     const hit = (n: number, amount: string) => {
       within(at(n)).click('вызов');
       within(at(n)).select('Какой эффект', 'damage');
-      for (const [name, text] of [['Сколько урона', amount], ['Тип урона', '@damage_type'], ['Источник урона', '"магический"'], ['Лист', '@цель'], ['Источник', '@действующий']] as const) {
+      for (const [name, text] of [['Сколько урона', amount], ['Источник урона', '"магический"']] as const) {
         within(at(n)).formula(within(at(n)).arg(name), text);
       }
     };
@@ -354,7 +351,7 @@ describe('эффекты D&D собираются в конструкторе р
     within(at(2)).formula('Сколько', 'кинуть(@damage_die, @dice_count + (@slot - @spell_level) * @dice_up)');
     nameStep(at(2), 'dmg_всего');
 
-    savingThrow(document.body, 4, [['Кто спасается', '@цель'], ['Чем спасается', '@save_by'], ['Сложность', '@действующий.spell_dc'], ['Против кого', '@действующий']]);
+    savingThrow(document.body, 4, [['Чем спасается', '@save_by'], ['Сложность', '@действующий.spell_dc']]);
 
     const fail = callIf(4, 'Спасбросок', 'не спасся');
     addToArm(block(fail), 0, 'branch');
@@ -410,8 +407,6 @@ describe('эффекты D&D собираются в конструкторе р
     const ui = fresh('+ кнопкой', goal!.label!, 'hide', 'Действия в бою', goal!.description!);
     ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_action');
     let card = stepCard(/^1 · /);
-    within(card).formula(within(card).arg('Лист'), '@действующий');
-    within(card).formula(within(card).arg('Источник'), '@действующий');
 
     ui.click('+ число');
     card = stepCard(/^3 · /);
@@ -445,7 +440,7 @@ describe('эффекты D&D собираются в конструкторе р
     }));
     render(<EffectsTab />);
     openAll();
-    const roll = stepCard(/^2 · Число/);
+    const roll = stepCard(/^2 · Бросок/);
     const field = within(roll).field('Против кого');
     const shown = field.querySelector<HTMLElement>('[placeholder]');
     expect(shown?.getAttribute('placeholder')).toBe('ни против кого — бросок один на все цели');

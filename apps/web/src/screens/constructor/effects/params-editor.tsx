@@ -8,7 +8,9 @@ import { KeyField } from '../../../ui/key-field.tsx';
 import { BoundField } from '../bound-field.tsx';
 import { Card, CardHead, Field, Input, Select, Button } from '../../../ui/primitives.tsx';
 import { ColumnList } from './column-list.tsx';
-import type { Effect, Param, System, ValueKind } from '@vtt/schema';
+import type { Effect, Param, System, ValueKind, Stage } from '@vtt/schema';
+import { originsOf, type Origin } from '@vtt/engine/model/origins';
+import { StagesEditor } from '../stages-editor.tsx';
 
 const SHEETS = 'sheet+many';
 const PARAM_KINDS = [...kindsFor('param'), [SHEETS, 'список листов'] as const];
@@ -77,7 +79,7 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
   const setMain = (key: string, on: boolean) => onEdit(draft => {
     for (const p of (draft.params ?? []) as Loose[]) {
       if (p.key === key && on) p.role = 'amount';
-      else if (p.key === key || on) delete p.role;
+      else if (p.role === 'amount' && (p.key === key || on)) { delete p.role; delete (p as { stages?: unknown }).stages; }
     }
   });
   const used = (key: string) => { const st = useWorld.getState(); return paramUsed(st.system, st.compendium, id, key); };
@@ -129,7 +131,7 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
           onDrop={drop}
           onMove={move}
           dropTitle="убрать вход"
-          summary={param => <>{kindWords(param, system)}{askWords(param, system)}</>}
+          summary={param => <>{kindWords(param, system)}{askWords(param, system)}<Origins effectId={id} param={param} system={system} /></>}
           form={param => (
             <ParamForm param={param} keys={keys} system={system} effect={effect}
               locked={used(param.key)} change={fn => change(param.key, fn)}
@@ -154,7 +156,7 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
   const kind = String(param.kind ?? 'number');
   const askable = (ASKABLE as readonly string[]).includes(kind);
   const tables = choiceTables(system).map(([key, list]) => [key, list.label || key] as const);
-  const rare = Boolean(param.ask?.hint) || param.role === 'amount' || param.min !== undefined || param.max !== undefined;
+  const rare = Boolean(param.ask?.hint) || Boolean(param.role) || param.min !== undefined || param.max !== undefined;
   const [more, setMore] = useState(rare);
   const full = more || rare;
   return (
@@ -168,7 +170,8 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
             onChange={next => change(t => {
               t.kind = (next === SHEETS ? 'sheet' : next) as ValueKind;
               if (next === SHEETS) { t.many = true; t.item ??= { key: freeId(keys, 'каждый'), label: 'Каждый' }; } else { delete t.many; delete t.item; }
-              if (next !== 'number') delete t.role;
+              if (next !== 'number') { if (t.role === 'amount') delete t.role; delete (t as { stages?: unknown }).stages; }
+              if (next !== 'sheet' && (t.role === 'target' || t.role === 'actor')) delete t.role;
               if (next !== 'choice') delete t.from;
               if (!(ASKABLE as readonly string[]).includes(next)) delete t.ask;
             })}
@@ -231,16 +234,31 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
               />
             </Field>
           ) : null}
+          {kind === 'sheet' && !param.many ? (
+            <Field label="Приходит сам" hint="если вызов не передал лист явно: текущая цель вызывающего или тот, кто действует">
+              <Select
+                value={param.role === 'target' || param.role === 'actor' ? param.role : ''}
+                options={[['', 'нет — передают явно'], ['target', 'текущая цель'], ['actor', 'кто действует']] as const}
+                onChange={next => change(t => { if (next) t.role = next as 'target' | 'actor'; else delete t.role; })}
+              />
+            </Field>
+          ) : null}
           {kind === 'number' ? (
             <>
-              <Field label="Правят сопротивления" hint="это число меняют сопротивления и уязвимости цели: урон, лечение. Одно на эффект">
+              <Field label="Величина" hint="это число могут править висящие эффекты — по этапам, которые вы объявите. Одна на эффект">
                 <input
                   type="checkbox" className="sheet-grid__check"
-                  aria-label={`«${param.label ?? param.key}» правят сопротивления`}
+                  aria-label={`«${param.label ?? param.key}» — величина`}
                   checked={param.role === 'amount'}
                   onChange={e => onMain(e.target.checked)}
                 />
               </Field>
+              {param.role === 'amount' ? (
+                <StagesEditor
+                  stages={(param as { stages?: Stage[] }).stages}
+                  onChange={next => change(t => { const x = t as { stages?: Stage[] }; if (next) x.stages = next; else delete x.stages; })}
+                />
+              ) : null}
               <Field label="Границы" hint="не ниже и не выше — числом или формулой, например @удача">
                 <span className="param-form__pair">
                   <BoundField value={param.min} placeholder="не ниже" onChange={next => change(t => { if (next === null) delete t.min; else t.min = next; })} />
@@ -290,4 +308,56 @@ function DefaultCell({ param, system, onChange }: { param: Loose; system: System
         onChange(kind === 'number' && Number.isFinite(number) ? number : trimmed);
       }} />
   );
+}
+
+const ORIGIN_WORDS: Record<string, string> = {
+  actor: 'кнопка: кто нажал', targets: 'кнопка: цели со стола', cell: 'клетка записи',
+  formula: 'считает кнопка', call: 'передаёт эффект', self: 'сам',
+};
+
+function Origins({ effectId, param, system }: { effectId: string; param: Param; system: System }) {
+  const compendium = useWorld(s => s.compendium);
+  const pick = useWorld(s => s.pick);
+  const [open, setOpen] = useState(false);
+  const list = cachedOrigins(system, compendium, effectId, param).filter(origin => origin.kind !== 'ask' && origin.kind !== 'default');
+  if (!list.length) return null;
+  const kinds = [...new Set(list.map(origin => origin.kind))];
+  const go = (origin: Origin) => (origin.table
+    ? () => pick({ activeTab: 'records', activeRecordKind: origin.table! })
+    : origin.effect ? () => pick({ activeTab: 'effects', activeEffectId: origin.effect!, activeStepIndex: null }) : undefined);
+  return (
+    <span className="origins" onClick={e => e.stopPropagation()}>
+      <span className="origins__lead">←</span>
+      {kinds.map(kind => {
+        const many = list.filter(origin => origin.kind === kind);
+        return (
+          <button key={kind} type="button" className={`origin origin--${kind}`}
+            title={many.map(origin => origin.text).join('\n')} onClick={() => setOpen(!open)}>
+            {ORIGIN_WORDS[kind] ?? kind}{many.length > 1 ? ` · ${many.length}` : ''}
+          </button>
+        );
+      })}
+      {open ? (
+        <span className="origins__list">
+          {list.map(origin => {
+            const onClick = go(origin);
+            return onClick
+              ? <button key={origin.text} type="button" className="origin origin--link" onClick={onClick}>{origin.text}</button>
+              : <span key={origin.text} className="origin">{origin.text}</span>;
+          })}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+const ORIGINS = new WeakMap<System, { compendium: unknown; at: Map<string, Origin[]> }>();
+
+function cachedOrigins(system: System, compendium: Parameters<typeof originsOf>[1], effectId: string, param: Param): Origin[] {
+  let hit = ORIGINS.get(system);
+  if (!hit || hit.compendium !== compendium) { hit = { compendium, at: new Map() }; ORIGINS.set(system, hit); }
+  const key = `${effectId}|${param.key}|${param.role ?? ''}|${String(param.default ?? '')}`;
+  let out = hit.at.get(key);
+  if (!out) { out = originsOf(system, compendium, effectId, param); hit.at.set(key, out); }
+  return out;
 }

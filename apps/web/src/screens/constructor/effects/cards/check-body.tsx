@@ -81,7 +81,7 @@ export function CheckBody({ step, roll, context, edit, system, onUnpair, asIf = 
           {more.length ? <FieldRow id="check-more" fields={more} /> : null}
           {rolled ? (
             <div className="row">
-              <Field label="Успех, если на кости не меньше" hint="Натуральная 20 в D&D: что бы ни прибавили — успех.">{forced('succeedOn')}</Field>
+              <Field label="Успех, если на кости не меньше" hint="Если на кости выпало столько или больше — успех, что бы ни прибавили.">{forced('succeedOn')}</Field>
               <Field label="Провал, если на кости не больше" hint="Натуральная 1: что бы ни прибавили — провал.">{forced('failOn')}</Field>
             </div>
           ) : null}

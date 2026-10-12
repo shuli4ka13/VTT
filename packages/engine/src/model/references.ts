@@ -43,7 +43,7 @@ export interface Where {
 }
 
 export type RefKind =
-  | 'field' | 'effect' | 'constant' | 'table' | 'rollEdit' | 'event' | 'roll'
+  | 'field' | 'effect' | 'constant' | 'table' | 'rollEdit' | 'event' | 'roll' | 'tag'
   | 'param' | 'step' | 'prop' | 'recordKind' | 'syntax';
 
 export interface Reference {
@@ -62,6 +62,7 @@ export interface Declared {
   rollEdit: Set<string>;
   event: Set<string>;
   roll: Set<string>;
+  tag: Set<string>;
   prop: Set<string>;
   recordKind: Set<string>;
   column: Set<string>;
@@ -77,6 +78,12 @@ export function declaredOf(system: System): Declared {
     rollEdit: new Set(Object.keys(system.roll_edits ?? {})),
     event: new Set(Object.keys(system.effects ?? {})),
     roll: new Set(tagWords(system).keys()),
+    tag: new Set([
+      ...tagWords(system).keys(),
+      ...Object.values(system.tables ?? {}).flatMap(table => (table.rows ?? []).map(row => String(row.value))),
+      ...Object.keys(system.tags ?? {}),
+      ...Object.values(system.effects ?? {}).flatMap(effect => effect.tags ?? []),
+    ]),
     prop: new Set(recordKinds(system).flatMap(([, k]) => (k.columns ?? []).map(p => p.key))),
     recordKind: new Set(kindsOf(system).map(([id]) => id)),
     column: new Set(Object.entries(system.tables ?? {}).flatMap(([id, table]) => [VALUE_COLUMN, ...(table.columns ?? []).map(c => c.key)].map(key => `${id}.${key}`))),
@@ -271,6 +278,7 @@ function modifierRefs(system: System, list: Modifier[] | undefined, from: Where,
         if (mod.edit) out.push({ kind: 'rollEdit', key: String(mod.edit), from });
       } else {
         out.push({ kind: 'effect', key: mod.call, from });
+        for (const tag of [...mod.tags ?? [], ...mod.anyTags ?? [], ...mod.notTags ?? []]) out.push({ kind: 'tag', key: tag, from });
       }
       const names = callNamesOf(system, mod.call);
       const scope = sheetScope(

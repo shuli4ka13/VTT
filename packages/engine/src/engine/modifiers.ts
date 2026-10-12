@@ -4,6 +4,7 @@ import { ROLL_CALL } from '../words/calls.ts';
 import { amountParamOf } from '../model/lists.ts';
 import { wornEffects, activationOf } from './effects.ts';
 import { EngineError } from './errors.ts';
+import { stackStages, targetStages, VALUE_OPS } from './stages.ts';
 import { anyRowSays } from './tables.ts';
 import { findRecord, kindOfRecord, sheetKindOf, propsOf } from '../model/owned.ts';
 import { tagsHold } from './roll-tags.ts';
@@ -54,11 +55,6 @@ export interface RollResolution {
   sources: unknown[];
 }
 
-const STACKING: Record<string, (values: unknown[]) => unknown> = {
-  sum: values => values.reduce((a, b) => (a as number) + (b as number), 0),
-  max: values => values.reduce((a, b) => ((b as number) > (a as number) ? b : a)),
-  override: values => values[values.length - 1],
-};
 
 export function collectModifiers(
   system: System, sheet: Sheet, compendium: Compendium,
@@ -125,50 +121,20 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
 export function applyValueModifiers(
   base: unknown, tag: string, pass: Pass,
 ): unknown {
-  if (!pass.modifiers) return base;
-  const mods = pass.modifiers.value.get(tag);
-  if (!mods || mods.length === 0) return base;
-
+  const staged = targetStages(pass.system, tag).length > 0;
+  if (!pass.modifiers) return staged ? stackNumber([], base, tag, pass) : base;
+  const mods = pass.modifiers.value.get(tag) ?? [];
   const active = mods.filter(m => conditionHolds(m, pass));
-  if (active.length === 0) return base;
+  if (active.length === 0 && !staged) return base;
 
   return stackNumber(active, base, tag, pass);
 }
 
 function stackNumber(active: SourcedModifier[], base: unknown, tag: string, pass: Pass): unknown {
-  return stackWith(active, base, tag, mod => valueOf(mod, pass));
+  return stackStages(active, base, tag, mod => valueOf(mod, pass), targetStages(pass.system, tag));
 }
 
-export function stackWith<M extends SourcedModifier>(
-  active: M[], base: unknown, tag: string, value: (mod: M) => unknown,
-): unknown {
-  let result = base;
-
-  const sets = active.filter(m => m.op === 'set');
-  if (sets.length) {
-    const rule = String(sets[sets.length - 1]!.stacking || 'override');
-    result = reduce(rule, sets.map(value), tag);
-  }
-
-  const adds = active.filter(m => m.op === 'add');
-  if (adds.length) result = (result as number) + totalOf(adds, value, tag);
-
-  const muls = active.filter(m => m.op === 'mul');
-  if (muls.length) result = (result as number) * totalOf(muls, value, tag, 1);
-
-  const floors = active.filter(m => m.op === 'floor').map(m => Number(value(m)));
-  if (floors.length) result = Math.max(result as number, ...floors);
-
-  const caps = active.filter(m => m.op === 'cap').map(m => Number(value(m)));
-  if (caps.length) result = Math.min(result as number, ...caps);
-
-  const unknown = active.find(m => !VALUE_OPS.includes(String(m.op)));
-  if (unknown) throw new EngineError(`неизвестная операция модификатора «${unknown.op}» на мишени «${tag}»`);
-
-  return result;
-}
-
-export const VALUE_OPS = ['set', 'add', 'mul', 'floor', 'cap'];
+export { VALUE_OPS };
 
 export const editsOf = (pass: Pass, call: string, param: string): SourcedModifier[] =>
   (pass?.modifiers ? pass.modifiers.edits.get(editKey(call, param)) || [] : []);
@@ -242,30 +208,3 @@ function valueOf(mod: SourcedModifier, pass: Pass): unknown {
   return compile(raw.expr).evaluate(pass.resolve, toolsOf(pass.system, pass, 'модификатор'));
 }
 
-function totalOf<M extends SourcedModifier>(mods: M[], value: (mod: M) => unknown, tag: string, seed = 0): number {
-  const byRule = new Map<string, unknown[]>();
-  for (const mod of mods) {
-    const rule = String(mod.stacking || 'sum');
-    let list = byRule.get(rule);
-    if (!list) { list = []; byRule.set(rule, list); }
-    list.push(value(mod));
-  }
-  const multiplying = seed !== 0;
-  let total = seed;
-  for (const [rule, values] of byRule) {
-    const part = multiplying && rule === 'sum'
-      ? (values as number[]).reduce((a, b) => a * b, 1)
-      : reduce(rule, values, tag) as number;
-    total = multiplying ? total * part : total + part;
-  }
-  return total;
-}
-
-function reduce(rule: string, values: unknown[], tag: string): unknown {
-  const fn = STACKING[rule];
-  if (!fn) {
-    throw new EngineError(
-      `неизвестное правило стакинга «${rule}» на мишени «${tag}»; доступны: ${Object.keys(STACKING).join(', ')}`);
-  }
-  return fn(values);
-}

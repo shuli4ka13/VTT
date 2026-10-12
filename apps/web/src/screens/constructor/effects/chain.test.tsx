@@ -213,7 +213,7 @@ describe('блок «Если»: условие строкой, руки, «Ст
     expect(steps().map(step => step.type)).toEqual(['branch', 'apply', 'end']);
     within(headOf(block(0))).when('=1 > 0');
     expect(steps()[0]).toEqual({ type: 'branch', if: { expr: '1 > 0' } });
-    expect(armOf(block(0)).textContent).toContain('1 · Изменение');
+    expect(armOf(block(0)).textContent).toContain('1 · Изменить «x»');
   });
 
   it('«Стоп»: текст в журнал пишется словами, а хранится формулой-литералом; с @ — формула; пусто — без текста', () => {

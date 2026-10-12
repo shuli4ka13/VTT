@@ -16,15 +16,16 @@ export const KIND_LABEL: Record<Kind, string> = {
   table: 'таблица',
   column: 'колонка таблицы',
   sheet: 'лист',
+  roll: 'бросок',
 };
 
-const ORDER: Kind[] = ['number', 'text', 'boolean', 'dice', 'choice', 'effect', 'record', 'field', 'table', 'column', 'sheet'];
+const ORDER: Kind[] = ['number', 'text', 'boolean', 'dice', 'roll', 'choice', 'effect', 'record', 'field', 'table', 'column', 'sheet'];
 
 const ALLOWED: Record<KindPlace, Kind[]> = {
   field: ['number', 'text', 'boolean', 'choice'],
   table: ['number', 'text', 'boolean', 'dice', 'choice', 'effect', 'field', 'table', 'column'],
   prop: ['number', 'text', 'boolean', 'dice', 'choice', 'effect', 'record'],
-  param: ['number', 'text', 'boolean', 'dice', 'choice', 'effect', 'field', 'sheet'],
+  param: ['number', 'text', 'boolean', 'dice', 'roll', 'choice', 'effect', 'field', 'sheet'],
 };
 
 export const kindsFor = (place: KindPlace): readonly (readonly [Kind, string])[] =>

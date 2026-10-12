@@ -1,3 +1,4 @@
+import { useOpened } from '../../../store/opened.ts';
 import { useWorld } from '../../../store/world.ts';
 import { blockTree, BlockBranches } from '../block-tree.tsx';
 import { blockOf } from '@vtt/engine/model/blocks';
@@ -29,18 +30,21 @@ export function EffectsTab() {
   const addCalled = () => {
     const made = newCalled(system);
     editSystem(draft => { draft.effects[made.key] = made.value; });
+    useOpened.getState().setOpen([`effect-props|${made.key}`], true);
     pick({ activeEffectId: made.key });
   };
 
   const addTo = (block: string) => {
     const made = newEffect(system, 'manual');
     editSystem(draft => { draft.effects[made.key] = { ...made.value, group: block }; });
+    useOpened.getState().setOpen([`effect-props|${made.key}`], true);
     pick({ activeEffectId: made.key });
   };
 
   const add = (kind: LaunchKind) => {
     const made = newEffect(system, kind);
     editSystem(draft => { draft.effects[made.key] = made.value; });
+    useOpened.getState().setOpen([`effect-props|${made.key}`], true);
     pick({ activeEffectId: made.key });
   };
 
@@ -90,7 +94,7 @@ export function EffectsTab() {
                   + {kind.label.toLowerCase()}
                 </Button>
               ))}
-              <Button size="sm" wide onClick={addCalled} title="Его никто не нажимает: его зовут другие эффекты и передают число — урон, лечение, трата ячейки">
+              <Button size="sm" wide onClick={addCalled} title="Его никто не нажимает: его зовут другие эффекты и передают ему входы">
                 + вызываемый
               </Button>
             </div>

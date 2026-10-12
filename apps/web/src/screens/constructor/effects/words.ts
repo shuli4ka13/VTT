@@ -1,7 +1,8 @@
 import { STEP_WORDS } from '@vtt/engine/words/steps';
 import { LAUNCHES } from '@vtt/engine/model/effect-kinds';
 import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
-import type { Step, System } from '@vtt/schema';
+import type { Step, System, Effect } from '@vtt/schema';
+import { labelOfTag } from '../../../ui/formula.tsx';
 
 export const LAUNCH_KINDS = (['manual', 'passive'] as const)
   .map(key => ({ key: key as LaunchKind, label: key === 'passive' ? 'Висит' : LAUNCHES[key].label, title: LAUNCHES[key].hint }));
@@ -16,9 +17,37 @@ export type WithNumber = (change: (amount: Step, apply: Step, id: string) => voi
 
 export const CARD_TITLES: Record<string, string> = { check: 'Проверка', change: 'Изменение', number: 'Число', table: 'Взять из таблицы', stop: 'Стоп' };
 
-export function titleOf(kind: string, step: Step | undefined, system: System): string {
-  const s = step as { type?: string; effect?: string } | undefined;
-  if (s?.type === 'emit' && typeof s.effect === 'string' && system.effects?.[s.effect]?.label) return system.effects[s.effect]!.label!;
-  if (kind === 'seen' && s?.type && s.type in STEP_WORDS) return STEP_WORDS[s.type as keyof typeof STEP_WORDS].label;
+export const STEP_TITLES = { call: 'Вызов', callFrom: 'Вызов из входа', put: 'Наложить', take: 'Снять', set: 'Изменить', roll: 'Бросок', number: 'Число' };
+
+const inputOf = (ref: unknown): string | undefined =>
+  /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((ref as { expr?: unknown } | undefined)?.expr ?? ''))?.[1];
+
+const fieldOfTarget = (ref: unknown): string | undefined => {
+  const text = String((ref as { expr?: unknown } | undefined)?.expr ?? '').trim();
+  const found = /^@[\p{L}\p{N}_]+\.([\p{L}\p{N}_.]+)$/u.exec(text);
+  return found?.[1];
+};
+
+export function titleOf(kind: string, step: Step | undefined, system: System, effect?: Effect): string {
+  const s = step as Record<string, unknown> | undefined;
+  const param = (ref: unknown) => { const key = inputOf(ref); return key ? effect?.params?.find(p => p.key === key) : undefined; };
+  if (s?.type === 'emit') {
+    if (typeof s.effect === 'string') return system.effects?.[s.effect]?.label || (s.effect ? s.effect : STEP_TITLES.call);
+    const via = param(s.effect);
+    return via ? `${STEP_TITLES.callFrom} «${via.label ?? via.key}»` : STEP_TITLES.call;
+  }
+  if (s?.type === 'status') {
+    const verb = s.mode === 'remove' ? STEP_TITLES.take : STEP_TITLES.put;
+    const id = typeof s.effect === 'string' ? s.effect : undefined;
+    const via = id ? undefined : param(s.effect);
+    const what = id ? system.effects?.[id]?.label ?? id : via ? via.label ?? via.key : '';
+    return what ? `${verb} «${what}»` : verb;
+  }
+  if (s?.type === 'apply') {
+    const tag = fieldOfTarget(s.target);
+    return tag ? `${STEP_TITLES.set} «${labelOfTag(system, tag)}»` : STEP_TITLES.set;
+  }
+  if (kind === 'number') return s?.by ? STEP_TITLES.roll : STEP_TITLES.number;
+  if (kind === "seen" && typeof s?.type === "string" && s.type in STEP_WORDS) return STEP_WORDS[s.type as keyof typeof STEP_WORDS].label;
   return CARD_TITLES[kind] ?? kind;
 }

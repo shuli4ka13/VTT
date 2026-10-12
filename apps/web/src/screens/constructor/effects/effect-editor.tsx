@@ -21,6 +21,7 @@ import { Extras } from './cards/extras.tsx';
 import { ParamsEditor } from './params-editor.tsx';
 import { ReturnsEditor } from './returns-editor.tsx';
 import { CallMapRow } from './call-map.tsx';
+import { callMap } from './call-map.ts';
 import { launchOf, activationFor, DURATIONS, REAPPLY } from '@vtt/engine/model/effect-kinds';
 import type { System, Effect, Step } from '@vtt/schema';
 
@@ -43,7 +44,9 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
   const edit = (change: (draft: Effect) => void) => editEffect(id, change);
 
   const launch = launchOf(effect);
-  const [more, setMore] = useState(Boolean(effect.tags?.length || effect.icon || effect.bond));
+  const props = `effect-props|${id}`;
+  const more = useOpened(s => Boolean(s.opened[props]));
+  const setMore = (open: boolean) => useOpened.getState().setOpen([props], open);
   const pipeline = launch.kind === 'manual';
 
   const moveLane = (indices: number[], to: Lane) => {
@@ -58,6 +61,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
 
   const rekey = (next: string) => {
     if (next === id || system.effects[next]) return;
+    if (more) useOpened.getState().setOpen([`effect-props|${next}`], true);
     editSystem(draft => {
       draft.effects = Object.fromEntries(Object.entries(draft.effects).map(([key, value]) => [key === id ? next : key, value]));
     });
@@ -72,41 +76,13 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
   return (
     <>
       <Card className="effect-head">
-        <div className="effect-head__sentence">
+        <div className="effect-head__top">
           <span className="effect-head__name">
             <LabelInput value={effect.label ?? ''} placeholder="как зовётся эффект" onCommit={label => relabel(label)} />
           </span>
-          <span>—</span>
-          <span data-field="Как запускается" title={launchHint(launch.kind)}>
-            <Select
-              value={pipeline ? 'manual' : 'passive'}
-              options={LAUNCH_KINDS.map(k => [k.key, k.label] as const)}
-              onChange={next => edit(draft => {
-                const activation = activationFor({ ...launchOf(draft), kind: next });
-                if (activation === 'manual') delete draft.activation; else draft.activation = activation;
-                if (next === 'manual') draft.steps ??= [];
-              })}
-            />
-          </span>
-          <span data-field="У кого есть">
-            <Select
-              value={(system.grants ?? []).includes(id) ? 'all' : 'given'}
-              options={[['given', pipeline ? 'даёт запись или тип' : 'на кого повесили'], ['all', 'у всех листов']] as const}
-              onChange={next => editSystem(draft => {
-                const rest = (draft.grants ?? []).filter(x => x !== id);
-                draft.grants = next === 'all' ? [...rest, id] : rest;
-              })}
-            />
-          </span>
-          <span>, в блоке</span>
-          <span data-field="Блок">
-            <BlockPick
-              of="effects"
-              system={system} value={effect.group}
-              onChange={next => edit(draft => { if (next) draft.group = next; else delete draft.group; })}
-            />
-          </span>
+          <span className={`effect-head__kind effect-head__kind--${launch.kind}`} title={launchHint(launch.kind)}>{kindWord(launch.kind, callMapUsed(system, id))}</span>
           <span className="spacer" />
+          <Button size="sm" variant="ghost" title="как запускается, у кого есть, папка, метки, значок, имя в формулах" ariaLabel={more ? "свернуть «свойства»" : "развернуть «свойства»"} onClick={() => setMore(!more)}>{more ? 'свернуть свойства' : 'свойства'}</Button>
           <DangerButton size="sm" onConfirm={() => {
             editSystem(draft => {
               delete draft.effects[id];
@@ -121,18 +97,49 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
         <div data-field="Описание" title="Текст на листе. На расчёт не влияет">
           <Input
             value={effect.description ?? ''}
-            placeholder="описание: например, бьёшь оружием ближнего боя"
+            placeholder="что делает — словами книги правил"
             onChange={next => edit(draft => { draft.description = next || undefined; })}
           />
         </div>
 
-        <EffectName id={id} locked={effectUsed(system, useWorld.getState().compendium, id)} taken={Object.keys(system.effects)} onChange={rekey} />
-
-        <div className="inline inline--tight effect-head__toggle">
-          <Button size="sm" variant="ghost" onClick={() => setMore(!more)}>{more ? 'меньше' : 'ещё'}</Button>
-        </div>
         {more ? (
           <div className="stack stack--tight effect-head__more">
+            <div className="effect-head__row">
+              <Field label="Как запускается">
+                <span data-field="Как запускается" title={launchHint(launch.kind)}>
+                  <Select
+                    value={pipeline ? 'manual' : 'passive'}
+                    options={LAUNCH_KINDS.map(k => [k.key, k.label] as const)}
+                    onChange={next => edit(draft => {
+                      const activation = activationFor({ ...launchOf(draft), kind: next });
+                      if (activation === 'manual') delete draft.activation; else draft.activation = activation;
+                      if (next === 'manual') draft.steps ??= [];
+                    })}
+                  />
+                </span>
+              </Field>
+              <Field label="У кого есть">
+                <span data-field="У кого есть">
+                  <Select
+                    value={(system.grants ?? []).includes(id) ? 'all' : 'given'}
+                    options={[['given', pipeline ? 'даёт запись или тип' : 'на кого повесили'], ['all', 'у всех листов']] as const}
+                    onChange={next => editSystem(draft => {
+                      const rest = (draft.grants ?? []).filter(x => x !== id);
+                      draft.grants = next === 'all' ? [...rest, id] : rest;
+                    })}
+                  />
+                </span>
+              </Field>
+              <Field label="Папка">
+                <span data-field="Блок">
+                  <BlockPick
+                    of="effects"
+                    system={system} value={effect.group}
+                    onChange={next => edit(draft => { if (next) draft.group = next; else delete draft.group; })}
+                  />
+                </span>
+              </Field>
+            </div>
             <div className="effect-head__row">
               <span data-field="Метки" title="Метки действия: подписки «всё с меткой», правки по метке и договор метки (какие входы обязаны быть)">
                 <TagsField
@@ -143,9 +150,10 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
                 />
               </span>
               <span data-field="Значок" title="Один символ на кнопке и в списке">
-                <Input value={effect.icon ?? ''} placeholder="⚔" onChange={next => edit(draft => { if (next.trim()) draft.icon = next.trim(); else delete draft.icon; })} />
+                <Input value={effect.icon ?? ''} placeholder="значок ⚔" onChange={next => edit(draft => { if (next.trim()) draft.icon = next.trim(); else delete draft.icon; })} />
               </span>
             </div>
+            <EffectName id={id} locked={effectUsed(system, useWorld.getState().compendium, id)} taken={Object.keys(system.effects)} onChange={rekey} />
             {launch.kind === 'manual' ? (
               <Extras
                 items={[{
@@ -175,7 +183,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
               add: () => edit(draft => { draft.grants = []; }),
               drop: () => edit(draft => { delete draft.grants; }),
               node: (
-                <Field label="Что даёт" hint="Есть, пока висит этот эффект: «без сознания» включает «недееспособен».">
+                <Field label="Что даёт" hint="Пока висит этот эффект, висят и эти.">
                   <GrantsEditor system={system} value={effect.grants} except={id}
                     onChange={next => edit(draft => { draft.grants = next ?? []; })} />
                 </Field>
@@ -185,9 +193,9 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
         )}
       </Card>
 
-      <ParamsEditor id={id} effect={effect} system={system} onEdit={edit} />
-      <ReturnsEditor id={id} effect={effect} system={system} onEdit={edit} />
       <CallMapRow id={id} effect={effect} system={system} />
+      <ParamsEditor id={id} effect={effect} system={system} onEdit={edit} />
+      {effect.returns?.length || callMapUsed(system, id) ? <ReturnsEditor id={id} effect={effect} system={system} onEdit={edit} /> : null}
 
       {pipeline ? (
         <>
@@ -288,7 +296,7 @@ function Handlers({ id, effect, system, edit }: {
         <Button size="sm" onClick={() => edit(draft => { (draft.on ??= []).push(newHandler()); })}>+ когда</Button>
       </div>
       {list.length === 0 ? (
-        <Empty title="Ни на что не отзывается" hint="Подписка — что случилось (начался ход, пришёл урон, выпали кости) и что эффект делает в ответ." />
+        <Empty title="Ни на что не отзывается" hint="Что случилось (начался ход, позвали эффект, выпали кости) и что эффект делает в ответ." />
       ) : null}
       {list.map((handler, index) => {
         const carrier = { ...effect, label: `${effect.label ?? ''} · когда ${index + 1}`, steps: handler.steps ?? [], cost: handler.cost } as Effect;
@@ -305,9 +313,10 @@ function Handlers({ id, effect, system, edit }: {
           if (own) shiftBetween(own, indices, to);
         });
         return (
-          <div key={index} className="stack">
+          <div key={index} className="stack when-block">
             <HandlerCard
               id={id} index={index} handler={handler} system={system}
+              startOpen={useOpened.getState().opened[`effect-props|${id}`] === true}
               edit={change => edit(draft => { const own = draft.on?.[index]; if (own) change(own); })}
               onRemove={() => edit(draft => {
                 draft.on = (draft.on ?? []).filter((_, at) => at !== index);
@@ -317,7 +326,7 @@ function Handlers({ id, effect, system, edit }: {
             <Chain
               id={id} placeAt={step => ({ part: 'handler', handler: index, index: step })}
               effect={carrier} system={system} edit={editCarrier}
-              title={`Что делает — когда №${index + 1}`}
+              title="→ делает"
               empty="шагов нет — отзывается, но ничего не делает"
               onEdgeUp={indices => moveLane(indices, 'cost')}
               onRoll={handler.on === 'seen'}
@@ -331,6 +340,11 @@ function Handlers({ id, effect, system, edit }: {
     </>
   );
 }
+
+const callMapUsed = (system: System, id: string): boolean => callMap(system, id).usedBy.length > 0;
+
+const kindWord = (kind: string, called: boolean): string =>
+  (kind === 'manual' ? (called ? 'вызываемый · кнопкой' : 'кнопкой') : kind === 'passive' ? 'висит' : 'срабатывает сам');
 
 const idleWords = (effect: Effect): string => {
   const also: string[] = [];
@@ -348,7 +362,7 @@ function Lifetime({ effect, system, edit }: {
   const sheets = paramsOf(system, effect).filter(param => param.kind === 'sheet' && !param.many);
 
   return (
-    <div className="stack stack--tight">
+    <div className="row">
       <Field label="Сколько висит">
         <Select
           value={kind}

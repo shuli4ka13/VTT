@@ -2,7 +2,9 @@ import { EngineError, isRuleError } from '../engine/errors.ts';
 import { resolveRef } from '../engine/refs.ts';
 import type { RefContext, Bound } from '../engine/refs.ts';
 import { ROLL_CALL } from '../words/calls.ts';
-import { editsOf, editMatches, stackWith, withValues, claimedModifiers } from '../engine/modifiers.ts';
+import { editsOf, editMatches, withValues, claimedModifiers } from '../engine/modifiers.ts';
+import { stackStages } from '../engine/stages.ts';
+import type { Stage } from '../model/types.ts';
 import type { SourcedModifier } from '../engine/modifiers.ts';
 import type { Pass } from '../engine/calc.ts';
 import type { RollEdit } from '../model/types.ts';
@@ -77,10 +79,10 @@ export function amountOf(held: Held): number {
   return value;
 }
 
-export function stack(held: Held[], base: number, label: string): number {
+export function stack(held: Held[], base: number, label: string, stages: readonly Stage[] = []): number {
   const numbers = held.filter(mod => mod.op);
-  if (!numbers.length) return base;
-  return Number(stackWith(numbers, base, label, mod => amountOf(mod)));
+  if (!numbers.length && !stages.length) return base;
+  return Number(stackStages(numbers, base, label, mod => amountOf(mod), stages));
 }
 
 export interface RollEdits {

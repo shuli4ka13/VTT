@@ -114,7 +114,7 @@ export function GroupCard({
     );
   }
 
-  const title = `${position} · ${asIf ? 'Если' : titleOf(group.kind, group.step, system)}`;
+  const title = `${position} · ${asIf ? `Если: ${titleOf(group.kind, group.step, system, effect)}` : titleOf(group.kind, group.step, system, effect)}`;
   const head = onFold ? (
     <button type="button" className="step-fold" aria-expanded={!folded} onClick={onFold}
       title={folded ? 'развернуть шаг' : 'свернуть шаг'}>
