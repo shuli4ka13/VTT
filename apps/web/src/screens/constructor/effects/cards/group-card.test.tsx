@@ -208,6 +208,83 @@ describe('GroupCard: изменение как вызов', () => {
     expect(screen.queryByText(/Запомнит/)).toBeNull();
   });
 
+  describe('«Наложить» со своим эффектом: входы как у «Вызвать»', () => {
+    const withStates = {
+      ...eventful,
+      effects: {
+        ...eventful.effects,
+        blinded: {
+          label: 'Ослеплён', activation: 'passive',
+          params: [
+            { key: 'запомнено', label: 'Запомненное число', kind: 'number' },
+            { key: 'кто', label: 'Кто наложил', kind: 'sheet', role: 'actor' },
+            { key: 'на_ком', label: 'На ком', kind: 'sheet', role: 'target' },
+            { key: 'срок', label: 'Срок', kind: 'number', default: 1 },
+          ],
+          steps: [],
+        },
+        calm: { label: 'Спокоен', activation: 'passive', steps: [] },
+      },
+    } as unknown as System;
+    const caller = { params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }] } as unknown as Effect;
+    const shown = (step: Record<string, unknown>) => {
+      render(<GroupCard group={groupSteps([step as unknown as Step])[0]!} position={1} system={withStates} effect={caller} sheets={sheets}
+        earlier={[]} problem={null} edit={(_, change) => change(step as never)} onDelete={() => {}} />);
+    };
+
+    it('у «Наложить «Ослеплён»» видна таблица входов, а «сам: …» подписан под «ещё»', () => {
+      shown({ type: 'status', effect: 'blinded', to: { expr: '@цель' } });
+      expect(cards().args()).toEqual(['Запомненное число', 'Кто наложил', 'На ком', 'Срок']);
+      expect(cards().arg('Кто наложил').textContent).toContain('сам: «Кто действует»');
+      expect(cards().arg('На ком').textContent).toContain('сам: «На кого»');
+      expect(cards().arg('Запомненное число').textContent).toContain('не заполнено');
+      expect(screen.getByText('▸ ещё (3)')).toBeTruthy();
+    });
+
+    const valueOf = (name: string) => cards().arg(name).querySelector<HTMLElement>('.chips')?.getAttribute('data-value');
+
+    it('правка в таблице пишет step.args', () => {
+      const step = { type: 'status', effect: 'blinded', to: { expr: '@цель' } } as any;
+      shown(step);
+      cards().formula(cards().arg('Запомненное число'), '@действующий.spell_dc');
+      expect(step.args).toEqual({ запомнено: { expr: '@действующий.spell_dc' } });
+      cards().formula(cards().arg('Кто наложил'), '@действующий');
+      expect(step.args).toEqual({ запомнено: { expr: '@действующий.spell_dc' }, кто: { expr: '@действующий' } });
+    });
+
+    it('пустая правка снимает ключ, а последний снятый ключ убирает и сам args', () => {
+      const step = { type: 'status', effect: 'blinded', to: { expr: '@цель' }, args: { запомнено: { expr: '5' }, кто: { expr: '@действующий' } } } as any;
+      shown(step);
+      cards().formula(cards().arg('Запомненное число'), '');
+      expect(step.args).toEqual({ кто: { expr: '@действующий' } });
+      cards().formula(cards().arg('Кто наложил'), '');
+      expect(step.args).toBeUndefined();
+    });
+
+    it('значения из step.args стоят в таблице; выбора эффекта в таблице нет — он выше, в «Какое»', () => {
+      shown({ type: 'status', effect: 'blinded', to: { expr: '@цель' }, args: { запомнено: { expr: '@действующий.spell_dc' } } });
+      expect(valueOf('Запомненное число')).toBe('@действующий.spell_dc');
+      expect(cards().arg('Запомненное число').textContent).not.toContain('не заполнено');
+      expect(screen.queryByText('Какой эффект')).toBeNull();
+      expect(cards().field('Какое')).toBeTruthy();
+    });
+
+    it('эффект из входа или клетки записи — таблицы нет: входы заранее неизвестны, остаются поля «Запомнит»', () => {
+      shown({ type: 'status', effect: { expr: '@status' }, to: { expr: '@цель' } });
+      expect(cards().args()).toEqual([]);
+      expect(screen.getByText('Запомнит: Запомненное число')).toBeTruthy();
+    });
+
+    it('«Снять» входов не показывает, эффект без входов — тоже', () => {
+      shown({ type: 'status', mode: 'remove', effect: 'blinded', to: { expr: '@цель' } });
+      expect(cards().args()).toEqual([]);
+      document.body.innerHTML = '';
+      shown({ type: 'status', effect: 'calm', to: { expr: '@цель' } });
+      expect(cards().args()).toEqual([]);
+      expect(document.querySelector('.call-row')).toBeNull();
+    });
+  });
+
   it('без вызываемых эффектов режима «вызов» нет', () => {
     const group = groupSteps(attackSteps())[1]!;
     render(<GroupCard group={group} position={2} system={system} effect={effect}

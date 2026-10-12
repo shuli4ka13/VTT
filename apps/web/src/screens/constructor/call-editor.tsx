@@ -120,8 +120,8 @@ export function CallSummary({ system, effect, args, props, names, label }: {
 export function CallEditor({ system, effect: raw, effects, onEffect, args, onArg, context, where, headAction, children, inputs: callerInputs, implicit }: {
   system: System;
   effect: unknown;
-  effects: [string, { label?: string }][];
-  onEffect: (id: string | { expr: string } | null) => void;
+  effects?: [string, { label?: string }][];
+  onEffect?: (id: string | { expr: string } | null) => void;
   inputs?: readonly Param[];
   args: Record<string, unknown> | undefined;
   onArg: (key: string, next: SlotRef | null) => void;
@@ -159,13 +159,13 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, onArg
     )
   );
 
-  const pick = callerInputs?.some(param => param.kind === 'effect') ? (
+  const pick = !onEffect ? null : callerInputs?.some(param => param.kind === 'effect') ? (
     <EffectPick value={raw} system={system} inputs={callerInputs}
-      only={one => effects.some(([, e]) => e === one)} onChange={onEffect} />
+      only={one => (effects ?? []).some(([, e]) => e === one)} onChange={onEffect} />
   ) : (
     <Select
       value={typeof raw === 'string' ? raw : ''}
-      options={[['', '— что вызвать —'], ...byRole(system, effects).map(([id, e, group]) => [id, e.label || id, group] as const)] as never}
+      options={[['', '— что вызвать —'], ...byRole(system, effects ?? []).map(([id, e, group]) => [id, e.label || id, group] as const)] as never}
       onChange={next => onEffect(next)}
     />
   );
@@ -188,8 +188,8 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, onArg
   };
   return (
     <div className="call-row">
-      <Field label="Какой эффект" needed={!effect && !fromInput}>{pick}</Field>
-      {fromInput ? <span className="faint">{via ? `из входа «${via.label ?? via.key}»` : `входа «${fromInput}» нет`}</span> : null}
+      {pick ? <Field label="Какой эффект" needed={!effect && !fromInput}>{pick}</Field> : null}
+      {pick && fromInput ? <span className="faint">{via ? `из входа «${via.label ?? via.key}»` : `входа «${fromInput}» нет`}</span> : null}
       {children}
       {main.map(arg)}
       {effect && (rest.length || headAction) ? (

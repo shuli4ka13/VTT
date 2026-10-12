@@ -5,12 +5,13 @@ import { CallEditor } from '../../call-editor.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { callable } from '../../slots.tsx';
-import { implicitOf } from '@vtt/engine/model/implicit';
+import { implicitOf, appliedOf } from '@vtt/engine/model/implicit';
 import type { Param, Effect } from '@vtt/schema';
 
-function implicitWords(param: Param, caller: Effect, inLoop: boolean): string | null {
-  const how = implicitOf(param, caller);
+export function implicitWords(param: Param, caller: Effect, inLoop: boolean, applied = false): string | null {
+  const how = applied ? appliedOf(param, caller) : implicitOf(param, caller);
   if (!how || (how.by === 'target' && !inLoop)) return null;
+  if (how.by === 'to') return 'сам: «На кого»';
   const own = (caller.params ?? []).find(p => p.key === how.from);
   if (how.by === 'target') {
     const list = (caller.params ?? []).find(p => p.item?.key === how.from);

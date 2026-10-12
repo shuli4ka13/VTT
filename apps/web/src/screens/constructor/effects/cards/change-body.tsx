@@ -16,7 +16,8 @@ import { asDice } from '../../../../words.ts';
 import { outputRefs, stepNames, inputBadges } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn, WithNumber } from '../words.ts';
-import { SendBody } from './send-body.tsx';
+import { SendBody, implicitWords } from './send-body.tsx';
+import { CallEditor } from '../../call-editor.tsx';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import { fieldsOf, cellSource } from '@vtt/engine/model/sheet-columns';
 import { DESK_ID } from '@vtt/engine/engine/owners';
@@ -403,10 +404,10 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
               onChange={next => edit(applyIndex, draft => { if (next) (draft as any).to = next; else delete (draft as any).to; })}
             />
           </Field>
-          <StatusArgs step={step} context={context} onChange={(key, expr) => edit(applyIndex, draft => {
+          <StatusArgs step={step} context={context} onArg={(key, next) => edit(applyIndex, draft => {
             const d = draft as any;
             const args = { ...(d.args ?? {}) };
-            if (expr.trim()) args[key] = { expr }; else delete args[key];
+            if (next === undefined || next === null) delete args[key]; else args[key] = next;
             if (Object.keys(args).length) d.args = args; else delete d.args;
           })} />
         </>
@@ -415,16 +416,30 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
   );
 }
 
-function StatusArgs({ step, context, onChange }: {
+function StatusArgs({ step, context, onArg }: {
   step: any;
   context: SlotContext;
-  onChange: (key: string, expr: string) => void;
+  onArg: (key: string, next: SlotRef | null) => void;
 }) {
   if (String(step.mode ?? 'apply') === 'remove') return null;
   const id = effectNameOf(step.effect);
   const known = context.system.effects[id];
   if (known && known.activation !== 'passive') return null;
-  const params = known ? known.params ?? [] : typeof step.effect !== 'object' || !step.effect ? [] : [...new Map(Object.values(context.system.effects)
+  if (known) {
+    if (!(known.params ?? []).length) return null;
+    return (
+      <CallEditor
+        system={context.system}
+        effect={id}
+        args={step.args as Record<string, unknown> | undefined}
+        onArg={onArg}
+        context={context}
+        where="наложить"
+        implicit={param => implicitWords(param, context.effect, context.earlier.some(one => one.type === 'each'), true)}
+      />
+    );
+  }
+  const params = typeof step.effect !== 'object' || !step.effect ? [] : [...new Map(Object.values(context.system.effects)
     .filter(effect => effect.activation === 'passive')
     .flatMap(effect => effect.params ?? [])
     .map(param => [param.key, param] as const)).values()];
@@ -439,7 +454,7 @@ function StatusArgs({ step, context, onChange }: {
             where={`наложить · ${param.label ?? param.key}`}
             {...(context.sheets ? { sheets: context.sheets } : {})}
             placeholder={param.kind === 'sheet' ? 'например: @действующий' : 'например: @действующий.поле'}
-            onCommit={next => onChange(param.key, next)}
+            onCommit={next => onArg(param.key, next.trim() ? { expr: next } : null)}
           />
         </Field>
       ))}

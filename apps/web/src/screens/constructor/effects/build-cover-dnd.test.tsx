@@ -439,7 +439,7 @@ describe('эффекты D&D собираются в конструкторе р
     card = stepCard(/^5 · /);
     within(card).select('Какое', 'hidden');
     within(stepCard(/^5 · /)).formula('На кого', '@цель');
-    within(stepCard(/^5 · /)).formula('Запомнит: Кого не замечает', '@действующий');
+    within(stepCard(/^5 · /)).formula(within(stepCard(/^5 · /)).arg('Кого не замечает'), '@действующий');
     dump({ got: built('hide'), goal });
     expect(built('hide')).toEqual(goal);
   });
