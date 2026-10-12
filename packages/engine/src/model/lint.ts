@@ -4,7 +4,7 @@ import { armsOf, balance, flowOf, inBlock, isFlow } from './flow.ts';
 import { loopOf, loopParam } from '../engine/steps/each.ts';
 import { chosenEffect, choicesOfInput, emittedChoices, kindsChoosing } from './payments.ts';
 import { SEEN_LABEL, ANY_ACTION, PHASES } from '../events/bus.ts';
-import type { System, Compendium, Effect, Step, Stage } from './types.ts';
+import type { System, Compendium, Effect, Step, Stage, Guard } from './types.ts';
 import { registry } from '../engine/steps/index.ts';
 import { STEP_WORDS } from '../words/steps.ts';
 import { ROLL_CALL, CALL_WORDS } from '../words/calls.ts';
@@ -23,7 +23,7 @@ import { TABS, STEP } from '../words/glossary.ts';
 import {
   referencesOf, declaredOf, chainRefs, listenerOf, withAddresses,
   type Where, type Reference, type RefKind, type Declared,
-  LISTEN, contractsOf, HOLDER, DESK_NAME,
+  LISTEN, contractsOf, HOLDER, DESK_NAME, holderNameOf, tiedToHolder,
 } from './references.ts';
 import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, rowKeyOf, hasField } from './sheet-columns.ts';
 import { isRange } from './tables.ts';
@@ -436,6 +436,8 @@ const NO_DICE_IN_IF = 'в условии правки кости не броса
 
 const NO_DICE_HERE = 'кости бросает только шаг эффекта и прибавка к броску — здесь «кинуть» уберите';
 
+const ANYONE_ROLLS = 'правка действует на броски всех листов в комнате — в условии нет носителя; обычно «бросает носитель» или «бросают против носителя»';
+
 function handlerDiceProblems(system: System): Problem[] {
   const out: Problem[] = [];
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
@@ -490,6 +492,7 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
         else if (mod.param === 'bonus' && !(mod.value as { expr?: string } | undefined)?.expr?.trim()) out.push({ where: at, level: 'error', text: 'у прибавки к броску не задано, на сколько' });
         else if (mod.param === 'bonus' && mod.op !== 'add') out.push({ where: at, level: 'error', text: `прибавка к броску только прибавляет, а здесь «${String(mod.op ?? 'не задано')}»` });
         if (rollsDice(mod.if)) out.push({ where: at, level: 'error', text: NO_DICE_IN_IF });
+        if (!tiedToHolder(mod.if as Guard | undefined)) out.push({ where: at, level: 'warn', text: ANYONE_ROLLS });
         continue;
       }
       const effect = system.effects?.[call];
@@ -501,6 +504,10 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
       if (!param) out.push({ where: { ...where, part: 'modifiers' }, level: 'error', text: `у «${effect.label || call}» нет входа «${String(mod.param)}» — править нечего` });
       else if (param.role !== 'amount') out.push({ where: { ...where, part: 'modifiers' }, level: 'error', text: `правка «${effect.label || call}» правит пока только величину, а «${param.label || param.key}» — не она` });
       else out.push(...stageProblems(paramStages(effect.params, param.key), mod.stage as string | undefined, `${effect.label || call} · ${param.label || param.key}`, at));
+      if (!tiedToHolder(mod.if as Guard | undefined)) {
+        const holder = (effect.params ?? []).find(p => p.key === holderNameOf(system, call));
+        out.push({ where: at, level: 'warn', text: `правка действует на все вызовы «${effect.label || call}» в комнате — в условии нет носителя${holder ? `; обычно «${holder.label || holder.key} — носитель»` : ''}` });
+      }
     }
   }
   return out;

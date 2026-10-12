@@ -1,6 +1,6 @@
 import { group, test, eq, ok, deepEq } from './harness.ts';
 import { lintSystem, lintStep, errorsOf } from '../src/model/lint.ts';
-import { referencesOf, listenerOf, heardNames } from '../src/model/references.ts';
+import { referencesOf, listenerOf, heardNames, holderNameOf } from '../src/model/references.ts';
 import { PLAYABLE_SYSTEMS as SAMPLE_SYSTEMS, PLAYABLE_WORLDS as SAMPLE_WORLDS } from '../src/model/systems.ts';
 import type { System, Effect, Step } from '../src/model/types.ts';
 import { withColumn } from '../src/model/sheet-columns.ts';
@@ -482,5 +482,64 @@ group('метки правки вызова', () => {
   });
   test('опечатка в метке — ошибка словами', () => {
     ok(errorTexts(resist('огон')).some(t => t.includes('метки «огон» нет ни в одной таблице')));
+  });
+});
+
+group('линт: правка, не привязанная к носителю', () => {
+  const holding = (modifiers: unknown[]): System => {
+    const system = withEffect('урон', {
+      params: [{ key: 'лист', label: 'Лист', kind: 'sheet', role: 'target' }, { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }] as never,
+      steps: [mend('@лист.hp', '-@сколько')],
+    });
+    system.effects.щит = { label: 'Щит', activation: 'passive', modifiers } as Effect;
+    return system;
+  };
+  const warned = (system: System) => texts(system).filter(t => t.startsWith('warn') && t.includes('в условии нет носителя'));
+
+  test('правка броска без условия действует на всех — предупреждение, публикации не мешает', () => {
+    const system = holding([{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' } }]);
+    eq(warned(system).length, 1, texts(system).join('|'));
+    ok(warned(system)[0]!.includes('«бросает носитель»'), warned(system)[0]);
+    ok(!errorTexts(system).some(t => t.includes('носител')), errorTexts(system).join('|'));
+  });
+
+  test('условие про носителя — тихо, в том числе внутри «все(…)» и через поле носителя', () => {
+    const system = holding([
+      { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: '@бросающий == @носитель' } },
+      { kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, if: { expr: 'все(@лист == @носитель, @носитель.hp > 0)' } },
+    ]);
+    eq(warned(system).join('|'), '');
+  });
+
+  test('поле носителя без «… == носитель» — не привязка: «пока носитель истощён» бьёт по броскам всех', () => {
+    const system = holding([{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '-1' }, if: { expr: '@носитель.hp >= 1' } }]);
+    eq(warned(system).length, 1, texts(system).join('|'));
+    const apart = holding([{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: '@бросающий != @носитель' } }]);
+    eq(warned(apart).join('|'), '', '«все, кроме носителя» — сравнение с носителем, это осознанно');
+  });
+
+  test('где искать носителя у вызова: вход-цель, иначе первый одиночный лист; без листов — некого', () => {
+    const system = bare();
+    system.effects.без_листов = { label: 'Без листов', params: [{ key: 'сколько', kind: 'number', role: 'amount' }], steps: [] } as unknown as Effect;
+    system.effects.список = { label: 'Список', params: [{ key: 'цели', kind: 'sheet', many: true }, { key: 'сколько', kind: 'number', role: 'amount' }], steps: [] } as unknown as Effect;
+    system.effects.кто = { label: 'Кто', params: [{ key: 'кто', kind: 'sheet', role: 'actor' }, { key: 'сколько', kind: 'number', role: 'amount' }], steps: [] } as unknown as Effect;
+    eq(holderNameOf(system, 'без_листов'), null);
+    eq(holderNameOf(system, 'список'), null);
+    eq(holderNameOf(system, 'кто'), 'кто');
+    eq(holderNameOf(system, 'roll'), 'бросающий');
+  });
+
+  test('правка вызова с условием не про носителя — предупреждение с подсказкой входа-цели', () => {
+    const system = holding([{ kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, if: { expr: '@стол.страх > 0' } }]);
+    eq(warned(system).length, 1, texts(system).join('|'));
+    ok(warned(system)[0]!.includes('«урон»') && warned(system)[0]!.includes('«Лист — носитель»'), warned(system)[0]);
+  });
+
+  test('образцы: все правки привязаны к носителю', () => {
+    for (const system of SAMPLE_SYSTEMS) {
+      const world = SAMPLE_WORLDS.find(w => w.system === system);
+      const loose = lintSystem(system as System, world?.compendium).filter(p => p.text.includes('в условии нет носителя'));
+      eq(loose.map(p => p.text).join('|'), '', system.name);
+    }
   });
 });

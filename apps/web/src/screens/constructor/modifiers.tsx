@@ -10,7 +10,7 @@ import { tagsOf, tagTablesOf, listOf as rowsFrom, amountParamOf } from '@vtt/eng
 import { calledOf } from '@vtt/engine/engine/effects';
 import { ROLL_CALL, CALL_WORDS } from '@vtt/engine/words/calls';
 import { TagsField } from './tags-field.tsx';
-import { callNamesOf } from '@vtt/engine/model/references';
+import { callNamesOf, holderConditionOf } from '@vtt/engine/model/references';
 import { ConditionField } from './condition-field.tsx';
 import { DICE_HINT, DICE_BAR_OPTION } from './value-field.tsx';
 import { shapeProblem } from './formula-shape.ts';
@@ -92,7 +92,8 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
           size="sm"
           title="Правит вызов: бросок (преимущество, прибавка) или вход эффекта (урон вдвое по огню)"
           onClick={() => { openAt(modifiers.length); onEdit(draft => {
-            draft.push({ kind: 'edit', call: ROLL_CALL, param: 'edits', edit: edits[0]?.[0] ?? '' });
+            const holder = holderConditionOf(system, ROLL_CALL);
+            draft.push({ kind: 'edit', call: ROLL_CALL, param: 'edits', edit: edits[0]?.[0] ?? '', ...(holder ? { if: { expr: holder } } : {}) });
           }); }}
         >
           + правка вызова
@@ -204,8 +205,11 @@ function EditBody({ system, modifier, calls, edits, recipes, onChange, onPickEdi
   const effect = isRoll ? undefined : system.effects[call];
   const amount = amountParamOf(effect);
   const pickCall = (next: string) => onChange(d => {
+    if (next === d.call) return;
     for (const key of ['edit', 'op', 'value', 'stage', 'as', 'tags', 'anyTags', 'notTags', 'where']) delete d[key];
     d.call = next;
+    const holder = holderConditionOf(system, next);
+    if (holder) d.if = { expr: holder }; else delete d.if;
     if (next === ROLL_CALL) { d.param = 'edits'; d.edit = edits[0]?.[0] ?? ''; return; }
     d.param = amountParamOf(system.effects[next])?.key ?? '';
     Object.assign(d, { op: 'mul', value: { expr: '0.5' } });

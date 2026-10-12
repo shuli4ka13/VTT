@@ -114,3 +114,11 @@ export function joinHolder(holder: string, rest: string): string | null {
   const parts = ast && ast.kind === 'Call' && ast.name === 'все' ? ast.args.map(arg => printFormula(arg)) : [tail];
   return `все(${[holder, ...parts].join(', ')})`;
 }
+
+export function holderIn(expr: string, holders: readonly string[]): boolean {
+  let ast: Node;
+  try { ast = compile(expr).ast; } catch { return false; }
+  const named = new Set(holders.map(tidy));
+  const parts = ast.kind === 'Call' && ast.name === 'все' ? ast.args.map(arg => printFormula(arg)) : [printFormula(ast)];
+  return parts.some(part => named.has(tidy(part)));
+}

@@ -29,8 +29,8 @@ describe('слова формул: кости', () => {
 
   it('прибавка к броску со знаком минус читается вычитанием', () => {
     const slowed = { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '-2' } } as unknown as Modifier;
-    expect(modifierSentence(system, slowed)).toBe('Бросок: − 2');
+    expect(modifierSentence(system, slowed)).toBe('Бросок, бросает кто угодно: − 2');
     const bane = { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '-кинуть(к4)' } } as unknown as Modifier;
-    expect(modifierSentence(system, bane)).toBe('Бросок: − к4');
+    expect(modifierSentence(system, bane)).toBe('Бросок, бросает кто угодно: − к4');
   });
 });

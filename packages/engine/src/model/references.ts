@@ -335,6 +335,38 @@ export function callNamesOf(system: System, key: string): CallNames {
   };
 }
 
+export function holderNameOf(system: System, call: string): string | null {
+  if (call === ROLL_CALL) return callNamesOf(system, call).sheets[0] ?? null;
+  const sheets = (system.effects?.[call]?.params ?? []).filter(p => p.kind === 'sheet' && !p.many);
+  return (sheets.find(p => p.role === 'target') ?? sheets[0])?.key ?? null;
+}
+
+export function holderConditionOf(system: System, call: string): string | null {
+  const name = holderNameOf(system, call);
+  return name ? `@${name} == @${HOLDER}` : null;
+}
+
+export function tiedToHolder(condition: Guard | undefined): boolean {
+  const text = String(condition?.expr ?? '').trim();
+  if (!text) return false;
+  let ast: Node;
+  try {
+    ast = compile(text).ast;
+  } catch {
+    return true;
+  }
+  const isHolder = (node: Node): boolean => node.kind === 'Ref' && node.tag === HOLDER;
+  const visit = (node: Node): boolean => {
+    if (node.kind === 'Binary') return ((node.op === '==' || node.op === '!=') && (isHolder(node.left) || isHolder(node.right))) || visit(node.left) || visit(node.right);
+    if (node.kind === 'Unary') return visit(node.operand);
+    if (node.kind === 'Call') return node.args.some(visit);
+    if (node.kind === 'Conditional') return visit(node.test) || visit(node.then) || visit(node.otherwise);
+    if (node.kind === 'Pick') return visit(node.key);
+    return false;
+  };
+  return visit(ast);
+}
+
 function modifierRefs(system: System, list: Modifier[] | undefined, from: Where, out: Reference[], own?: Set<string>, inputs: Param[] = []): void {
   for (const mod of list ?? []) {
     const target = String((mod as { target?: string }).target ?? '');

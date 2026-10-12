@@ -3,6 +3,7 @@ import { renderOpen } from '../../testing/render-open.tsx';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ModifiersEditor } from './modifiers.tsx';
+import { modifierSentence } from './modifier-words.ts';
 import type { System, Modifier } from '@vtt/schema';
 
 const system = {
@@ -115,5 +116,43 @@ describe('один редактор — шесть механизмов', () => 
     renderOpen(<ModifiersEditor system={system} modifiers={valueMod} onEdit={vi.fn()} />);
     const how = screen.getByDisplayValue('прибавить') as HTMLSelectElement;
     expect(optionsOf(how)).toEqual(['прибавить', 'умножить', 'задать', 'не меньше', 'не больше']);
+  });
+});
+
+describe('правка по умолчанию касается носителя, а без условия это видно', () => {
+  const withDamage = {
+    ...system,
+    effects: { урон: { label: 'Урон', activation: 'manual', params: [
+      { key: 'кто', label: 'Кто', kind: 'sheet', role: 'actor' },
+      { key: 'лист', label: 'Лист', kind: 'sheet', role: 'target' },
+      { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' },
+    ], steps: [] } },
+  } as unknown as System;
+
+  it('«+ правка вызова» сразу ставит «бросает носитель»', () => {
+    const mods: Modifier[] = [];
+    const onEdit = vi.fn((change: (d: Modifier[]) => void) => change(mods));
+    renderOpen(<ModifiersEditor system={system} modifiers={mods} onEdit={onEdit} />);
+    fireEvent.click(screen.getByText('+ правка вызова'));
+    expect((mods[0] as { if?: unknown }).if).toEqual({ expr: '@бросающий == @носитель' });
+  });
+
+  it('смена вызова ставит условие про носителя этого вызова — вход-цель, а не первый лист', () => {
+    const mods = [{ kind: 'edit', call: 'roll', param: 'edits', edit: 'фора', if: { expr: '@бросающий == @носитель' } }] as unknown as Modifier[];
+    const onEdit = vi.fn((change: (d: Modifier[]) => void) => change(mods));
+    renderOpen(<ModifiersEditor system={withDamage} modifiers={mods} onEdit={onEdit} />);
+    fireEvent.change(screen.getByDisplayValue('Бросок'), { target: { value: 'урон' } });
+    expect(mods[0]).toMatchObject({ call: 'урон', param: 'сколько', if: { expr: '@лист == @носитель' } });
+  });
+
+  it('строка без условия — «бросает кто угодно» и «на всех листах»; условие не про носителя — тоже', () => {
+    expect(modifierSentence(system, rollMod[0]!)).toBe('Бросок с метками «атака», бросает кто угодно: Фора');
+    expect(modifierSentence(system, { ...rollMod[0]!, if: { expr: '@бросающий == @носитель' } } as Modifier)).toBe('Бросок с метками «атака», бросает носитель: Фора');
+    expect(modifierSentence(system, { ...rollMod[0]!, if: { expr: '@носитель.ac > 1' } } as Modifier)).toContain('бросает кто угодно, если');
+    expect(modifierSentence(system, { ...rollMod[0]!, if: { expr: 'все(@бросающий == @носитель, @носитель.ac > 1)' } } as Modifier)).not.toContain('кто угодно');
+    expect(modifierSentence(system, { ...rollMod[0]!, if: { expr: '1 > 0' } } as Modifier)).toContain('бросает кто угодно, если');
+    const damage = { kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' } } as unknown as Modifier;
+    expect(modifierSentence(withDamage, damage)).toContain('«Урон» · Сколько, на всех листах:');
+    expect(modifierSentence(withDamage, { ...damage, if: { expr: '@лист == @носитель' } } as Modifier)).toContain('«Урон» · Сколько, «Лист» — носитель:');
   });
 });

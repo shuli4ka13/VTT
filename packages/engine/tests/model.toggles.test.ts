@@ -25,6 +25,7 @@ group('тогл крита пишет данные, а не код', () => {
     ok((system.grants ?? []).includes(CRIT_RULE));
     ok(!Object.values(system.effects).some(e => (e.steps ?? []).some(s => (s as Record<string, unknown>).double)), 'удвоение снято');
     eq(errorsOf(lintSystem(system)).length, 0);
+    eq(lintSystem(system).filter(p => p.text.includes('в условии нет носителя')).map(p => p.text).join('|'), '', 'правило комнаты привязано к бросающему — предупреждения нет');
 
     setCrit(system, 'off');
     eq(critOf(system), 'off');

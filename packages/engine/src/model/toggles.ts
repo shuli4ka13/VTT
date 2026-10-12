@@ -1,5 +1,6 @@
 import { endOf, isFlow } from './flow.ts';
 import { ROLL_CALL } from '../words/calls.ts';
+import { holderConditionOf } from './references.ts';
 import { findRoll, writeRoll, factorsOf, bare, tight } from './amounts.ts';
 import type { System, Step } from './types.ts';
 
@@ -134,7 +135,7 @@ export function setCrit(draft: System, choice: CritChoice): void {
     draft.effects[CRIT_RULE] = {
       label: 'Взрывная кость', activation: 'passive', duration: { kind: 'permanent' },
       description: 'Кость проверки на максимуме кидается ещё раз, результат прибавляется.',
-      modifiers: [{ kind: 'edit', call: ROLL_CALL, param: 'edits', edit: CRIT_EDIT }],
+      modifiers: [{ kind: 'edit', call: ROLL_CALL, param: 'edits', edit: CRIT_EDIT, if: { expr: holderConditionOf(draft, ROLL_CALL)! } }],
     };
     draft.grants = [...(draft.grants ?? []), CRIT_RULE];
   }

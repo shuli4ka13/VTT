@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { splitHolder, joinHolder } from './guard-expr.ts';
+import { splitHolder, joinHolder, holderIn } from './guard-expr.ts';
 
 describe('«Касается» отделяется по дереву формулы', () => {
   const holders = ['@лист == @носитель', '@источник == @носитель'];
@@ -21,5 +21,17 @@ describe('«Касается» отделяется по дереву форму
     expect(joinHolder('', '@a')).toBe('@a');
     expect(joinHolder('@лист == @носитель', '')).toBe('@лист == @носитель');
     expect(joinHolder('', '')).toBeNull();
+  });
+
+  it('склейка ничего не теряет: сохранённое «лист и источник — носитель» переживает правку соседнего условия', () => {
+    expect(joinHolder('@лист == @носитель', 'все(@источник == @носитель, @x)')).toBe('все(@лист == @носитель, @источник == @носитель, @x)');
+  });
+
+  it('своё «… == носитель» во вписанном условии узнаётся — тогда поле не приклеивает выбранное', () => {
+    expect(holderIn('все(@источник == @носитель, @a)', holders)).toBe(true);
+    expect(holderIn('@лист==@носитель', holders)).toBe(true);
+    expect(holderIn('@a', holders)).toBe(false);
+    expect(holderIn('@носитель.hp > 0', holders)).toBe(false);
+    expect(holderIn('кинуть(', holders)).toBe(false);
   });
 });

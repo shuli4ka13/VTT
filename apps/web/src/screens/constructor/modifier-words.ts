@@ -1,6 +1,7 @@
 import type { System, Modifier } from '@vtt/schema';
 import { ROLL_CALL, CALL_WORDS } from '@vtt/engine/words/calls';
 import { targetStages, paramStages } from '@vtt/engine/engine/stages';
+import { tiedToHolder } from '@vtt/engine/model/references';
 import { labelOfTag } from '../../ui/formula.tsx';
 import { formulaWords } from '../../ui/formula-words.ts';
 
@@ -29,12 +30,13 @@ const stageWords = (stages: readonly { key: string; label?: string }[], stage: u
   return `, этап «${found?.label ?? stage}»`;
 };
 
-function whoseWords(system: System, mod: Loose, sheetLabels: Record<string, string>): string {
+function whoseWords(system: System, mod: Loose, sheetLabels: Record<string, string>, anyone: string): string {
   const text = exprOf(mod.if);
-  if (!text) return '';
+  if (!text) return anyone;
   const found = /^@([\p{L}\p{N}_]+)\s*==\s*@носитель$/u.exec(text);
   if (found && sheetLabels[found[1]!]) return sheetLabels[found[1]!]!;
-  return `если ${formulaWords(system, text)}`;
+  const words = `если ${formulaWords(system, text)}`;
+  return tiedToHolder({ expr: text }) ? words : `${anyone}, ${words}`;
 }
 
 export function modifierSentence(system: System, modifier: Modifier): string {
@@ -49,7 +51,7 @@ export function modifierSentence(system: System, modifier: Modifier): string {
   const call = String(mod.call ?? '');
   if (call === ROLL_CALL) {
     const tags = tagList(mod.tags) || tagList(mod.anyTags);
-    const who = whoseWords(system, mod, { бросающий: 'бросает носитель', против: 'бросают против носителя' });
+    const who = whoseWords(system, mod, { бросающий: 'бросает носитель', против: 'бросают против носителя' }, 'бросает кто угодно');
     const what = mod.param === 'bonus'
       ? OP_WORDS.add!(valueWords(system, mod.value))
       : system.roll_edits?.[String(mod.edit ?? '')]?.label ?? String(mod.edit ?? 'какая правка?');
@@ -65,7 +67,7 @@ export function modifierSentence(system: System, modifier: Modifier): string {
     tagList(mod.notTags) ? `кроме ${tagList(mod.notTags)}` : '',
     mod.where ? `где «${(mod.where as Loose).column}» — «${(mod.where as Loose).is}»` : '',
   ].filter(Boolean).join(', ');
-  const who = whoseWords(system, mod, sheets);
+  const who = whoseWords(system, mod, sheets, 'на всех листах');
   const op = OP_WORDS[String(mod.op ?? 'mul')] ?? (value => value);
   const name = `«${effect?.label ?? (call || 'какой вызов?')}»${param ? ` · ${param.label ?? param.key}` : ''}`;
   return `${name}${filters ? ` ${filters}` : ''}${who ? `, ${who}` : ''}: ${op(valueWords(system, mod.value))}${stageWords(paramStages(effect?.params, String(mod.param ?? '')), mod.stage)}`;

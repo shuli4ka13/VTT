@@ -7,7 +7,7 @@ import { compile } from '@vtt/engine/formula';
 import { Button, Field, Select, Input } from '../../ui/primitives.tsx';
 import { FormulaField } from '../../ui/formula-field.tsx';
 import type { SheetNames } from '../../ui/formula-chips.tsx';
-import { readGuard, writeGuard, splitHolder, joinHolder } from './guard-expr.ts';
+import { readGuard, writeGuard, splitHolder, joinHolder, holderIn } from './guard-expr.ts';
 import type { When } from './guard-expr.ts';
 
 export type QuickKind = 'boolean' | 'number' | 'text' | 'tags';
@@ -62,7 +62,7 @@ export function ConditionField({
     const next = [...rows];
     if (expr) next[at] = expr; else next.splice(at, 1);
     setAdding(false);
-    write(holder, joinFacts(next.filter(Boolean)));
+    write(expr && holderIn(expr, options.map(([phrase]) => phrase)) ? '' : holder, joinFacts(next.filter(Boolean)));
   };
   const open = rows.length > 0 && rows[rows.length - 1] !== '';
 
