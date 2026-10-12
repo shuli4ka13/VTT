@@ -424,7 +424,7 @@ function StatusArgs({ step, context, onChange }: {
             system={context.system}
             where={`наложить · ${param.label ?? param.key}`}
             {...(context.sheets ? { sheets: context.sheets } : {})}
-            placeholder={param.kind === 'sheet' ? 'например: @действующий' : 'например: @действующий.spell_dc'}
+            placeholder={param.kind === 'sheet' ? 'например: @действующий' : 'например: @действующий.поле'}
             onCommit={next => onChange(param.key, next)}
           />
         </Field>
