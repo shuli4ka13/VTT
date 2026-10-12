@@ -512,7 +512,6 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .step-card .call-row__toggle, .step-card .step-retype, .step-card .step-name { padding-left: calc(var(--label-w) + var(--s-4)); }
 .step-card .step-retype .btn, .step-card .step-name .btn { padding-left: 0; }
 
-.step-card .chips__chip { line-height: 20px; }
 
 .param-list--table { display: grid; grid-template-columns: 14px minmax(140px, 220px) minmax(140px, 1fr) minmax(0, 1.4fr) 28px; column-gap: var(--s-3); row-gap: 0; gap: 0 var(--s-3); }
 .param-list--table .param-head { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; padding: 0 0 var(--s-2); border-bottom: 1px solid var(--border-strong); font-size: var(--fs-1); text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
@@ -558,8 +557,7 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .step-card .field > :not(.field__label):not(.field__hint):not(.field__error),
 .step-card .call-row__arg > :not(.call-args__name):not(.faint):not(.need) { width: 100%; max-width: var(--value-w); }
 .step-card .select, .step-card select { width: 100%; max-width: var(--value-w); min-height: 32px; }
-.step-card .formula-field { width: 100%; max-width: var(--value-w); height: 32px; min-height: 32px; flex-wrap: nowrap; overflow: hidden; white-space: nowrap; padding: 0 var(--s-3); mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); }
-.step-card .field .formula-field:focus-within, .step-card .formula-field:focus-visible { mask-image: none; }
+.step-card .formula-field { width: 100%; max-width: var(--value-w); height: 32px; min-height: 32px; flex-wrap: nowrap; overflow: hidden; white-space: nowrap; padding: 0 var(--s-3); }
 .step-card .formula-field .chips__chip { flex: none; }
 .step-card .field__hint { display: none; }
 .step-card .field:focus-within .field__hint { display: block; }
@@ -572,3 +570,4 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .step-card .slot { grid-template-columns: minmax(0, 1fr); justify-content: stretch; }
 .flow-head__cond .cond, .flow-head__cond .cond__fact, .flow-head__cond .cond__formula { width: 100%; max-width: 520px; }
 .flow-head__cond .formula-field { width: 100%; }
+.chips__chip .chips__side { margin-left: var(--s-1); padding-left: var(--s-2); }

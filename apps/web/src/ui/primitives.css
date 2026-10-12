@@ -347,7 +347,7 @@
 .chips__text--ghost { min-width: 0; width: 2px; padding-left: 0; padding-right: 0; }
 .chips__chip {
   display: inline-flex; align-items: center; gap: var(--s-1);
-  padding: 0 var(--s-1) 0 var(--s-3); border-radius: var(--r-1);
+  padding: 0 var(--s-2); border-radius: var(--r-1); line-height: 20px;
   font-size: var(--fs-2); white-space: nowrap;
   background: var(--accent-soft); border: 1px solid var(--accent);
 }
