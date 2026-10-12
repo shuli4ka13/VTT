@@ -53,29 +53,29 @@ export function formulaWords(system: System, source: string, names?: Map<string,
 
   const call = (name: string, args: Node[]): string => {
     const all = (join: string) => args.map(arg => words(arg, true)).join(join);
+    const arg = (at: number): string => (args[at] ? words(args[at]!, true) : '…');
     switch (name) {
       case 'кинуть': {
         const only = args.length === 1 ? args[0]! : null;
         if (only?.kind === 'Text' && only.dice) return words(only, true);
-        const die = words(args[0]!, true);
         const times = args[1] ? words(args[1]) : '';
         const keep = args[2] ? `, оставить ${words(args[2])}` : '';
-        return `кинуть ${times && times !== '1' ? `${times} × ` : ''}${die}${keep}`;
+        return `кинуть ${times && times !== '1' ? `${times} × ` : ''}${arg(0)}${keep}`;
       }
       case 'не': {
         const inner = args[0];
-        if (inner?.kind === 'Call' && inner.name === 'пусто') return `задано ${words(inner.args[0]!, true)}`;
-        return `не ${words(inner!, true)}`;
+        if (inner?.kind === 'Call' && inner.name === 'пусто') return `задано ${inner.args[0] ? words(inner.args[0], true) : '…'}`;
+        return `не ${arg(0)}`;
       }
-      case 'пусто': return `не задано ${words(args[0]!, true)}`;
+      case 'пусто': return `не задано ${arg(0)}`;
       case 'все': return all(' и ');
       case 'любое': return all(' или ');
-      case 'или': return `${words(args[0]!, true)} (если нет — ${words(args[1]!, true)})`;
+      case 'или': return `${arg(0)} (если нет — ${arg(1)})`;
       case 'меньшее из': return `меньшее из ${all(' и ')}`;
       case 'большее из': return `большее из ${all(' и ')}`;
-      case 'сколько': return args.length > 1 ? `сколько ${words(args[1]!, true)} среди ${words(args[0]!, true)}` : `сколько ${words(args[0]!, true)}`;
-      case 'есть': return `${words(args[0]!, true)} содержит ${words(args[1]!, true)}`;
-      case 'первый': return `первый из ${words(args[0]!, true)}`;
+      case 'сколько': return args.length > 1 ? `сколько ${arg(1)} среди ${arg(0)}` : `сколько ${arg(0)}`;
+      case 'есть': return `${arg(0)} содержит ${arg(1)}`;
+      case 'первый': return `первый из ${arg(0)}`;
       default: return `${name} ${all(', ')}`;
     }
   };

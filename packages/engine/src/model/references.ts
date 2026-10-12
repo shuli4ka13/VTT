@@ -193,6 +193,23 @@ function picksIn(source: string): { tag: string; rest?: string }[] {
   return out;
 }
 
+const ARITHMETIC = new Set(['+', '-', '*', '/', '<', '<=', '>', '>=']);
+
+export const diceAsNumber = (source: string): boolean => {
+  let ast: Node;
+  try { ast = compile(source).ast; } catch { return false; }
+  const dice = (node: Node): boolean => node.kind === 'Text' && node.dice === true;
+  const walk = (node: Node): boolean => {
+    if (node.kind === 'Unary') return dice(node.operand) || walk(node.operand);
+    if (node.kind === 'Binary') return (ARITHMETIC.has(node.op) && (dice(node.left) || dice(node.right))) || walk(node.left) || walk(node.right);
+    if (node.kind === 'Call') return node.args.some(walk);
+    if (node.kind === 'Conditional') return walk(node.test) || walk(node.then) || walk(node.otherwise);
+    if (node.kind === 'Pick') return walk(node.key);
+    return false;
+  };
+  return walk(ast);
+};
+
 export function exprRefs(source: string, from: Where, scope: ChainScope, out: Reference[]): void {
   const text = source.trim();
   if (!text) return;
@@ -201,6 +218,7 @@ export function exprRefs(source: string, from: Where, scope: ChainScope, out: Re
     out.push({ kind: 'syntax', key: text, from });
     return;
   }
+  if (diceAsNumber(text)) out.push({ kind: 'syntax', key: text, from, path: 'dice' });
   for (const table of tablesIn(text)) out.push({ kind: 'table', key: table, from });
   for (const [table, column] of lookupColumnsIn(text)) out.push({ kind: 'table', key: table, from, scope: 'column', path: column });
   const picked = new Set<string>();

@@ -376,7 +376,7 @@ export function editNotation(edit: { ops?: Record<string, unknown>[] }, system: 
   const dice = count !== base.count || sides !== base.sides || more.length || tail.length
     ? `${written(base.count, base.sides)} → ${written(count, sides)}${more.join('')}${tail.length ? `, ${tail.join(', ')}` : ''}`
     : '';
-  return [dice, ...words].filter(Boolean).join('; ');
+  return [dice, ...words].filter(Boolean).join('; ') || null;
 }
 
 export function editReadback(

@@ -16,6 +16,13 @@ describe('слова формул: кости', () => {
     expect(formulaWords(system, 'сколько(@цели) != 1')).toBe('сколько «цели» ≠ 1');
   });
 
+  it('недописанная формула не роняет пересказ', () => {
+    for (const text of ['кинуть()', 'не()', 'сколько()', 'есть(@x)', 'первый()', 'или()']) {
+      expect(() => formulaWords(system, text)).not.toThrow();
+    }
+    expect(formulaWords(system, 'кинуть()')).toBe('кинуть …');
+  });
+
   it('метки броска в подписке «увидев кости»', () => {
     expect(formulaWords(system, 'есть(@roll.tags, "атака")')).toBe('«Бросок»: метки броска содержит «атака»');
   });

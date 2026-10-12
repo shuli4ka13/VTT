@@ -7,6 +7,7 @@ import { editNotation, editReadback, joinReadback } from '../readback.ts';
 import { Card, CardHead, Input, Button, Select } from '../../../ui/primitives.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { DICE_BAR_OPTION, DICE_HINT } from '../value-field.tsx';
+import { shapeProblem } from '../formula-shape.ts';
 import { newRollEdit } from '../factory.ts';
 import { inUse as isUsed } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
@@ -99,6 +100,7 @@ function OpChip({ op, system, parts, onNumber, onCount, onPart, onFormula, onRem
   onRemove: () => void;
 }) {
   if (op.op === PLUS) {
+    const problem = shapeProblem(exprOf(op.value), 'number', () => 'any');
     return (
       <span className="chip chip--formula">
         прибавить
@@ -112,6 +114,7 @@ function OpChip({ op, system, parts, onNumber, onCount, onPart, onFormula, onRem
             onCommit={text => onFormula(text.trim())}
           />
         </span>
+        {problem ? <span className="chip__bad">{problem}</span> : null}
         <button className="chip__x" type="button" title="убрать" onClick={onRemove}>×</button>
       </span>
     );
@@ -233,26 +236,29 @@ function WordRow({ wordKey, edit, system, editSystem, parts, used }: {
 
 function Pairs({ entries, editSystem }: { entries: [string, RollEdit][]; editSystem: EditSystem }) {
   const name = (key: string): string => entries.find(([k]) => k === key)?.[1].label || key;
+  const known = (key: string): boolean => entries.some(([k]) => k === key);
   const pairs = new Map<string, [string, string]>();
+  const dangling: [string, string][] = [];
   for (const [key, edit] of entries) {
-    if (!edit.canceledBy || !entries.some(([k]) => k === edit.canceledBy)) continue;
+    if (!edit.canceledBy) continue;
+    if (!known(edit.canceledBy)) { dangling.push([key, edit.canceledBy]); continue; }
     const pair = [key, edit.canceledBy].sort() as [string, string];
     pairs.set(pair.join('\u0000'), pair);
   }
-  const free = entries.filter(([key, edit]) => !edit.canceledBy && ![...pairs.values()].some(pair => pair.includes(key))).map(([key]) => key);
+  const paired = new Set([...pairs.values()].flat());
+  const free = entries.filter(([key, edit]) => !edit.canceledBy && !paired.has(key)).map(([key]) => key);
   const offers = free.flatMap((a, i) => free.slice(i + 1).map(b => [`${a}\u0000${b}`, `«${name(a)}» ⟷ «${name(b)}»`] as const));
-  if (!pairs.size && !offers.length) return null;
-  const link = (a: string, b: string | null) => editSystem(draft => {
+  if (!pairs.size && !dangling.length && !offers.length) return null;
+  const unlink = (a: string, b: string) => editSystem(draft => {
     const dict = draft.roll_edits;
-    if (!dict?.[a]) return;
-    const was = dict[a]!.canceledBy;
-    if (was && dict[was]?.canceledBy === a) delete dict[was]!.canceledBy;
-    if (b && dict[b]) {
-      dict[a]!.canceledBy = b;
-      dict[b]!.canceledBy = a;
-    } else {
-      delete dict[a]!.canceledBy;
-    }
+    if (dict?.[a]?.canceledBy === b) delete dict[a]!.canceledBy;
+    if (dict?.[b]?.canceledBy === a) delete dict[b]!.canceledBy;
+  });
+  const link = (a: string, b: string) => editSystem(draft => {
+    const dict = draft.roll_edits;
+    if (!dict?.[a] || !dict[b]) return;
+    dict[a]!.canceledBy = b;
+    dict[b]!.canceledBy = a;
   });
   return (
     <div className="dict-row dict-row--wrap roll-pairs">
@@ -260,7 +266,13 @@ function Pairs({ entries, editSystem }: { entries: [string, RollEdit][]; editSys
       {[...pairs.values()].map(([a, b]) => (
         <span key={`${a}\u0000${b}`} className="chip">
           «{name(a)}» ⟷ «{name(b)}»
-          <button className="chip__x" type="button" title="больше не гасят друг друга" onClick={() => link(a, null)}>×</button>
+          <button className="chip__x" type="button" title="больше не гасят друг друга" onClick={() => unlink(a, b)}>×</button>
+        </span>
+      ))}
+      {dangling.map(([a, b]) => (
+        <span key={`${a}\u0000${b}`} className="chip chip--bad">
+          «{name(a)}» ⟷ «{b}» — такого слова нет
+          <button className="chip__x" type="button" title="убрать ссылку" onClick={() => unlink(a, b)}>×</button>
         </span>
       ))}
       {offers.length ? (

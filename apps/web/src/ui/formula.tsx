@@ -66,7 +66,7 @@ export function formulaAsLabels(
   });
 }
 
-export function FormulaInput({ system, value, onChange, placeholder, where = 'формула', extraNames, options }: {
+export function FormulaInput({ system, value, onChange, placeholder, where = 'формула', extraNames, options, problem }: {
   system: System;
   extraNames?: Map<string, string>;
   value: string;
@@ -74,6 +74,7 @@ export function FormulaInput({ system, value, onChange, placeholder, where = 'ф
   placeholder?: string;
   where?: string;
   options?: BarOption[];
+  problem?: string | null;
 }) {
   const parsed = useMemo(() => parseFormula(value), [value]);
 
@@ -90,7 +91,9 @@ export function FormulaInput({ system, value, onChange, placeholder, where = 'ф
       />
 
       {value.trim() ? (
-        parsed.ok
+        parsed.ok && problem
+          ? <Verdict tone="bad">{problem}</Verdict>
+          : parsed.ok
           ? <Verdict tone="ok">правило верное · зависит от {parsed.deps.length}</Verdict>
           : <Verdict tone="bad">
               {parsed.error}

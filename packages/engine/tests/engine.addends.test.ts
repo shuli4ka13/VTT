@@ -95,4 +95,24 @@ describe('слово словаря прибавляет', () => {
     expect(texts).toContain('прибавка к броску только прибавляет, а здесь «mul»');
     expect(texts).toContain('в условии правки кости не бросают — «кинуть» уберите');
   });
+
+  it('линт: кость как число, «кинуть» вне броска, «гасится» в пустоту', () => {
+    const broken = {
+      ...system,
+      roll_edits: { a: { label: 'А', ops: [{ op: 'plus', value: { expr: 'к4 + 1' } }], canceledBy: 'нет_такого' } },
+      effects: {
+        урон: { label: 'Урон', activation: 'manual', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [] },
+        x: {
+          label: 'Икс', activation: 'passive',
+          modifiers: [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'add', value: { expr: 'кинуть(к6)' } }],
+          on: [{ on: 'seen', if: { expr: 'кинуть(к20) > 10' }, steps: [] }],
+        },
+      },
+    } as unknown as System;
+    const texts = lintSystem(broken).map(p => p.text);
+    expect(texts).toContain('в формуле «к4 + 1» кость стоит как число — кость кидают так: кинуть(к4)');
+    expect(texts).toContain('кости бросает только шаг эффекта и прибавка к броску — здесь «кинуть» уберите');
+    expect(texts).toContain('в условии подписки кости не бросают — «кинуть» уберите');
+    expect(texts).toContain('правка броска «А» гасится словом «нет_такого», которого нет в словаре');
+  });
 });

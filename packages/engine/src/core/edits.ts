@@ -102,7 +102,13 @@ function wordAddend(label: string, op: RollEditOp, view: Pass): PendingAddend {
   return {
     label,
     value: die => {
-      const value = compile(expr).evaluate(view.resolve, toolsOf(view.system, view, `правка броска «${label}»`, die));
+      let value: unknown;
+      try {
+        value = compile(expr).evaluate(view.resolve, toolsOf(view.system, view, `правка броска «${label}»`, die));
+      } catch (err) {
+        if (isRuleError(err)) throw new EngineError(`правка броска «${label}»: ${(err as Error).message}`);
+        throw err;
+      }
       if (typeof value !== 'number' || !Number.isFinite(value)) throw new EngineError(`правка броска «${label}»: «${expr}» дала не число`);
       return value;
     },
@@ -112,7 +118,17 @@ function wordAddend(label: string, op: RollEditOp, view: Pass): PendingAddend {
 function bonusAddend(held: Held): PendingAddend {
   const op = (held as { op?: unknown }).op;
   if (op !== 'add') throw new EngineError(`правка «${who(held)}»: прибавка к броску только прибавляет, а здесь «${String(op ?? 'не задано')}»`);
-  return { label: who(held), value: die => amountOf({ ...held, ref: { ...held.ref, die } }) };
+  return {
+    label: who(held),
+    value: die => {
+      try {
+        return amountOf({ ...held, ref: { ...held.ref, die } });
+      } catch (err) {
+        if (isRuleError(err) && !(err instanceof EngineError)) throw new EngineError(`правка «${who(held)}»: ${(err as Error).message}`);
+        throw err;
+      }
+    },
+  };
 }
 
 export function rollEdits(held: Held[], claims: readonly string[], roller: Pass): RollEdits {

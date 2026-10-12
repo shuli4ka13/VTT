@@ -955,7 +955,7 @@ export class Run {
       const report = reportOf(o.kind ?? 'effect', sub.effectId, sub.sheetId, label, own, ran.stopped, false);
       entries.push(...own.after);
       const spent = !o.builtin && burnsUse(sub.effect);
-      if (spent) this.burn(sub);
+      if (spent) entries.push(...this.burn(sub));
       this.state.commit();
       return { lead, report, entries, ...(spent ? { spent: sub.effectId } : {}) };
     } catch (err) {
@@ -972,9 +972,9 @@ export class Run {
     }
   }
 
-  private burn(sub: Sub): void {
+  private burn(sub: Sub): Entry[] {
     const sheet = this.sheet(sub.sheetId);
-    if (!sheet) return;
+    if (!sheet) return [];
     const counts = new Map<string, number>();
     const effects: WornEffect[] = [];
     let spent: WornEffect['bond'];
@@ -989,16 +989,16 @@ export class Run {
       effects.push(next);
     }
     this.state.put({ ...sheet, effects });
-    if (spent) this.letGo(spent);
+    return spent ? this.letGo(spent) : [];
   }
 
-  private letGo(bond: NonNullable<WornEffect['bond']>): void {
+  private letGo(bond: NonNullable<WornEffect['bond']>): Entry[] {
     const holder = this.sheet(bond.sheet);
-    if (!holder || !(holder.effects ?? []).some(entry => entry.effectId === bond.effect)) return;
+    if (!holder || !(holder.effects ?? []).some(entry => entry.effectId === bond.effect)) return [];
     const held = this.state.sheets.some(sheet => (sheet.effects ?? []).some(entry => entry.bond?.sheet === bond.sheet && entry.bond.effect === bond.effect));
-    if (held) return;
+    if (held) return [];
     this.state.put({ ...holder, effects: (holder.effects ?? []).filter(entry => entry.effectId !== bond.effect) });
-    this.state.write({ text: `«${effectLabelOf(this.system, bond.effect)}» спало с ${holder.name}: держать больше нечего` });
+    return [{ text: `«${effectLabelOf(this.system, bond.effect)}» спало с ${holder.name}: держать больше нечего` }];
   }
 
   moment(moment: MomentKey, subjects: readonly string[], path: Path): { sheetId: string; effectId: string }[] {

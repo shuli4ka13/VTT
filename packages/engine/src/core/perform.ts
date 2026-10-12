@@ -134,7 +134,7 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
       ? `[${rolled.dice.rolls.join(', ')}] → ${rolled.dice.kept}` : `[${rolled.dice.rolls.join(', ')}]`;
     run.state.write({
       text: thrown.roll.claim.read.kind === 'count'
-        ? `${sheet.name} бросает «${check.label}»: ${shown}${named} — успехов: ${total}`
+        ? `${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} — успехов: ${total}`
         : `${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} + ${bonus} = ${total}`,
     }, ...entries);
     return true;

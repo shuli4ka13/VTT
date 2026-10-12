@@ -824,3 +824,5 @@
 .chip__count { flex: 0 0 auto; }
 .chip__count > .input { width: 6ch; min-width: 0; }
 .roll-pairs .dict-row__label { flex: 0 0 auto; white-space: nowrap; }
+.chip--bad { border-color: var(--danger); color: var(--danger); }
+.chip__bad { color: var(--danger); font-size: var(--fs-1); }

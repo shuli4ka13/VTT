@@ -13,6 +13,7 @@ import { TagsField } from './tags-field.tsx';
 import { callNamesOf } from '@vtt/engine/model/references';
 import { ConditionField } from './condition-field.tsx';
 import { DICE_HINT, DICE_BAR_OPTION } from './value-field.tsx';
+import { shapeProblem } from './formula-shape.ts';
 
 const OPS = [
   ['add', 'прибавить'],
@@ -225,7 +226,7 @@ function EditBody({ system, modifier, calls, edits, recipes, onChange, onPickEdi
       <Field label="На сколько">
         <FormulaInput
           where="правка вызова · на сколько" system={system}
-          {...(isRoll ? { placeholder: DICE_HINT, options: [DICE_BAR_OPTION] } : {})}
+          {...(isRoll ? { placeholder: DICE_HINT, options: [DICE_BAR_OPTION], problem: shapeProblem((m.value as { expr?: string } | undefined)?.expr ?? '', 'number', () => 'any') } : {})}
           value={(m.value as { expr?: string } | undefined)?.expr ?? ''}
           onChange={expr => onChange(d => { d.value = { expr }; })}
         />

@@ -264,6 +264,24 @@ describe('Словари: кости, правки броска, таблицы'
     expect(edits.down!.canceledBy).toBe('up');
   });
 
+  it('пару «гасят друг друга» снимают с обеих сторон, даже если ссылка была односторонней', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        roll_edits: {
+          a: { label: 'Фора', ops: [{ op: 'addDie' }] },
+          z: { label: 'Подножка', ops: [{ op: 'addDie' }], canceledBy: 'a' },
+        },
+      },
+      activeEffectId: null,
+    }));
+    renderOpen(<RulesTab />);
+    открыть('Правки броска');
+    fireEvent.click(screen.getByTitle('больше не гасят друг друга'));
+    expect('canceledBy' in useWorld.getState().system.roll_edits!.z!).toBe(false);
+  });
+
   it('удалённая правка забирает за собой встречную ссылку', () => {
     useWorld.setState(state => ({
       ...state,

@@ -98,6 +98,7 @@ function ownerText(ref: Reference, system: System): string | null {
 
 function danglingText(ref: Reference, declared: Declared): string | null {
   if (ref.scope === LISTEN) return null;
+  if (ref.kind === 'syntax' && ref.path === 'dice') return `в формуле «${ref.key}» кость стоит как число — кость кидают так: кинуть(к4)`;
   if (ref.kind === 'syntax') return `формула «${ref.key}» не разбирается — проверьте скобки и знаки; «и» / «или» пишутся как все(…) / любое(…)`;
   if (ref.kind === 'field' && ref.scope === 'bare' && !declared.field.has(ref.key) && declared.effect.has(ref.key)) {
     return `«${ref.key}» — сколько раз висит эффект на листе: пишите через лист, например @носитель.${ref.key}`;
@@ -431,12 +432,27 @@ function rollsDice(expr: unknown): boolean {
   return visit(ast);
 }
 
+const NO_DICE_IN_IF = 'в условии правки кости не бросают — «кинуть» уберите';
+
+const NO_DICE_HERE = 'кости бросает только шаг эффекта и прибавка к броску — здесь «кинуть» уберите';
+
+function handlerDiceProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  for (const [id, effect] of Object.entries(system.effects ?? {})) {
+    (effect.on ?? []).forEach((handler, index) => {
+      if (rollsDice(handler.if)) out.push({ where: { tab: 'effects', effect: id, part: 'on', handler: index }, level: 'error', text: 'в условии подписки кости не бросают — «кинуть» уберите' });
+    });
+  }
+  return out;
+}
+
 function rollEditProblems(system: System): Problem[] {
   const known = new Set(editStages().map(one => one.op));
   const out: Problem[] = [];
   for (const [key, edit] of Object.entries(system.roll_edits ?? {})) {
     const where = { tab: 'rules' as const, section: 'roll_edits', key };
     const name = edit.label || key;
+    if (edit.canceledBy && !system.roll_edits?.[edit.canceledBy]) out.push({ where, level: 'error', text: `правка броска «${name}» гасится словом «${edit.canceledBy}», которого нет в словаре` });
     for (const op of edit.ops ?? []) {
       const value = (op as { value?: { expr?: unknown } }).value;
       if (!known.has(String(op.op))) out.push({ where, level: 'error', text: `у правки броска «${name}» неизвестное действие «${String(op.op)}»` });
@@ -460,18 +476,20 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
       if (mod.kind === 'value') {
         const at = { ...where, part: 'modifiers' };
         out.push(...stageProblems(targetStages(system, String(mod.target)), mod.stage as string | undefined, String(mod.target), at));
+        if (rollsDice(mod.value) || rollsDice(mod.if)) out.push({ where: at, level: 'error', text: NO_DICE_HERE });
         continue;
       }
       if (mod.kind !== 'edit') continue;
       const call = String(mod.call);
       const at = { ...where, part: 'modifiers' };
+      if (call !== ROLL_CALL && (rollsDice(mod.value) || rollsDice(mod.if))) out.push({ where: at, level: 'error', text: NO_DICE_HERE });
       if (call === ROLL_CALL) {
         if (mod.stage !== undefined) out.push(...stageProblems([], mod.stage as string, CALL_WORDS.roll.label, at));
         if (!(String(mod.param) in CALL_WORDS.roll.params)) out.push({ where: at, level: 'error', text: `у броска нет параметра «${String(mod.param)}»` });
         else if (mod.param === 'edits' && !mod.edit) out.push({ where: at, level: 'error', text: 'правка броска не выбрана' });
         else if (mod.param === 'bonus' && !(mod.value as { expr?: string } | undefined)?.expr?.trim()) out.push({ where: at, level: 'error', text: 'у прибавки к броску не задано, на сколько' });
         else if (mod.param === 'bonus' && mod.op !== 'add') out.push({ where: at, level: 'error', text: `прибавка к броску только прибавляет, а здесь «${String(mod.op ?? 'не задано')}»` });
-        if (rollsDice(mod.if)) out.push({ where: at, level: 'error', text: 'в условии правки кости не бросают — «кинуть» уберите' });
+        if (rollsDice(mod.if)) out.push({ where: at, level: 'error', text: NO_DICE_IN_IF });
         continue;
       }
       const effect = system.effects?.[call];
@@ -778,6 +796,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...sheetKindProblems(system), ...layoutProblems(system));
   out.push(...editProblems(system, compendium));
   out.push(...rollEditProblems(system));
+  out.push(...handlerDiceProblems(system));
   out.push(...declaredStageProblems(system));
   out.push(...costProblems(system));
   out.push(...seenProblems(system));
