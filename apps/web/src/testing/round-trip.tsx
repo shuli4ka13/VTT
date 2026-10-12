@@ -1,4 +1,3 @@
-// @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, cleanup, fireEvent, act } from '@testing-library/react';
 import type { ReactElement } from 'react';
@@ -6,13 +5,13 @@ import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import type { SampleWorld } from '@vtt/engine/model/systems';
 import { recordKinds, sheetKinds } from '@vtt/engine/model/owned';
 import type { System, Compendium } from '@vtt/schema';
-import { useWorld } from '../../store/world.ts';
-import { openAll } from '../../testing/render-open.tsx';
-import { SheetTab } from './sheet-tab.tsx';
-import { RulesTab } from './rules/rules-tab.tsx';
-import { EffectsTab } from './effects/effects-tab.tsx';
-import { RecordsTab } from './records-tab.tsx';
-import { CompendiumScreen } from '../compendium/compendium.tsx';
+import { useWorld } from '../store/world.ts';
+import { openAll } from './render-open.tsx';
+import { SheetTab } from '../screens/constructor/sheet-tab.tsx';
+import { RulesTab } from '../screens/constructor/rules/rules-tab.tsx';
+import { EffectsTab } from '../screens/constructor/effects/effects-tab.tsx';
+import { RecordsTab } from '../screens/constructor/records-tab.tsx';
+import { CompendiumScreen } from '../screens/compendium/compendium.tsx';
 
 type View = { name: string; ui: () => ReactElement; pick: Record<string, unknown> };
 
@@ -100,18 +99,22 @@ const same = (a: unknown, b: unknown): boolean => {
   try { expect(b).toEqual(a); return true; } catch { return false; }
 };
 
-describe('пресет не портится редактором: холостой коммит в каждом поле', () => {
-  beforeEach(() => { try { localStorage.clear(); } catch { return; } });
-  afterEach(() => { cleanup(); });
+const QUICK = ['13th Age', 'Blades in the Dark'];
 
-  const quick = ['13th Age', 'Blades in the Dark'];
-  const chosen = process.env.ROUND_TRIP === 'full' ? SAMPLE_WORLDS : SAMPLE_WORLDS.filter(world => quick.includes(String(world.system.name)));
+export function roundTrip(name: string, part = 0, parts = 1): void {
+  const world = SAMPLE_WORLDS.find(one => one.system.name === name);
+  const mode = (globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env.ROUND_TRIP;
+  const wanted = mode === 'full' || mode === name || QUICK.includes(name);
 
-  for (const world of chosen) {
-    describe(`${world.system.name ?? world.system.id}`, () => {
-      for (const view of viewsOf(world.system, world.compendium)) {
+  describe('пресет не портится редактором: холостой коммит в каждом поле', () => {
+    beforeEach(() => { try { localStorage.clear(); } catch { return; } });
+    afterEach(() => { cleanup(); });
+
+    describe.skipIf(!wanted || !world)(name, () => {
+      const views = world ? viewsOf(world.system, world.compendium).filter((_, index) => index % parts === part) : [];
+      for (const view of views) {
         it(view.name, () => {
-          const base = structuredClone(world);
+          const base = structuredClone(world!);
           const found: string[] = [];
           load(base, view.pick);
           render(view.ui());
@@ -137,5 +140,5 @@ describe('пресет не портится редактором: холост�
         }, 600000);
       }
     });
-  }
-});
+  });
+}
