@@ -484,7 +484,6 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 
 .when-block { border-left: 2px solid var(--kind-check); padding-left: var(--s-4); }
 .mod-row--when .mod-row__kind { color: var(--warn); }
-.flow-head__words { color: var(--text-muted); font-size: var(--fs-3); font-style: italic; }
 
 .step-card { --label-w: 148px; padding: 10px 16px 14px; gap: 10px; border-top-width: 1px; border-left: 3px solid var(--dot); border-radius: var(--r-2); }
 .step-card.card--bad { border-left-color: var(--danger); }
@@ -557,7 +556,10 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .flow-head__word { font-family: var(--font); font-size: var(--fs-4); font-weight: 600; line-height: 32px; min-width: 0; }
 .flow-head__cond { grid-column: 2; display: flex; flex-direction: column; gap: var(--s-1); min-width: 0; }
 .flow-head__actions { grid-column: 3; display: flex; align-items: center; gap: var(--s-1); min-height: 32px; }
-.flow-head__words { font-style: normal; font-size: var(--fs-2); }
+.cond__words { flex: 1 0 100%; color: var(--text-muted); font-size: var(--fs-2); }
+.formula-words { display: block; width: 100%; min-height: 32px; padding: var(--s-1) var(--s-3); text-align: left; font: inherit; font-size: var(--fs-3); line-height: 22px; color: var(--text); background: var(--bg-sunken); border: 1px solid var(--border); border-radius: var(--r-1); cursor: pointer; white-space: normal; overflow-wrap: anywhere; }
+.formula-words:hover { border-color: var(--border-strong); }
+.formula-words:focus-visible { outline: none; box-shadow: var(--focus); }
 .flow-head--outcome { display: flex; align-items: center; padding: var(--s-2) var(--s-4); }
 .flow-head--outcome .flow-head__word { font-size: var(--fs-3); line-height: 24px; }
 
@@ -569,7 +571,7 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .step-card .btn--danger:not(:has(+ .btn)), .flow-block .btn--danger:not(:has(+ .btn)) { color: var(--text-faint); border-color: transparent; background: transparent; }
 .step-card .btn--danger:not(:has(+ .btn)):hover, .flow-block .btn--danger:not(:has(+ .btn)):hover { color: var(--danger); background: var(--danger-soft); border-color: var(--danger); }
 .flow-head__cond .cond { flex: none; }
-.flow-head__cond .cond--bare { flex-wrap: nowrap; }
+.flow-head__cond .cond--bare { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
 .flow-head__cond .cond__formula { flex: 1 1 auto; }
 
 .step-card { --value-w: 520px; }

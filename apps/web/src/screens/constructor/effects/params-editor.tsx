@@ -10,6 +10,7 @@ import { Card, CardHead, Field, Input, Select, Button, LabelInput } from '../../
 import { ColumnList } from './column-list.tsx';
 import type { Effect, Param, System, ValueKind, Stage } from '@vtt/schema';
 import { callersOf, type Caller } from './callers.ts';
+import { roleOf } from './roles.ts';
 import { StagesEditor } from '../stages-editor.tsx';
 
 const SHEETS = 'sheet+many';
@@ -321,8 +322,11 @@ function useCallers(system: System, effectId: string): Caller[] {
 
 function Callers({ effectId, system }: { effectId: string; system: System }) {
   const pick = useWorld(s => s.pick);
+  const compendium = useWorld(s => s.compendium);
   const callers = useCallers(system, effectId);
   const names = new Map((system.effects[effectId]?.params ?? []).map(param => [param.key, param.label ?? param.key]));
+  const role = roleOf(system, compendium, effectId);
+  if (!callers.length && (role === 'passive' || role === 'auto')) return null;
   return (
     <div className="callers">
       <span className="callers__title">Вызывают</span>

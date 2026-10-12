@@ -34,3 +34,46 @@ describe('слова формул: кости', () => {
     expect(modifierSentence(system, bane)).toBe('Бросок, бросает кто угодно: − к4');
   });
 });
+
+describe('слова формул: итог вызова', () => {
+  const withCall = {
+    id: 'с', name: 'с', tables: {},
+    effects: {
+      бросок_атаки: {
+        label: 'Бросок атаки',
+        returns: [
+          { key: 'попал', label: 'попадание', kind: 'boolean', no: 'промах' },
+          { key: 'крит', label: 'крит', kind: 'boolean' },
+          { key: 'на_костях', label: 'на костях', kind: 'number' },
+        ],
+        steps: [],
+      },
+      удар: {
+        label: 'Удар',
+        steps: [
+          { id: 'попадание', type: 'emit', effect: 'бросок_атаки' },
+          { id: 'второй_удар', type: 'emit', effect: 'бросок_атаки' },
+        ],
+      },
+    },
+  } as unknown as System;
+
+  it('итог вызова называется шагом и подписью итога, как у фишек; одинаковая подпись не двоится', () => {
+    expect(formulaWords(withCall, '@попадание.попал')).toBe('«попадание»');
+    expect(formulaWords(withCall, '@попадание.крит')).toBe('«попадание — крит»');
+    expect(formulaWords(withCall, '@второй_удар.на_костях')).toBe('«второй удар — на костях»');
+    expect(formulaWords(withCall, 'не(@попадание.попал)')).toBe('не «попадание»');
+    expect(formulaWords(withCall, 'все(@цель == @носитель, @попадание.попал)')).toBe('«цель» = «носитель» и «попадание»');
+  });
+
+  it('нет такого шага или такого итога — путь остаётся как есть', () => {
+    expect(formulaWords(withCall, '@нет.крит')).toBe('«нет.крит»');
+    expect(formulaWords(withCall, '@попадание.нет')).toBe('«попадание.нет»');
+  });
+
+  it('имя, которое экран уже знает целиком, сильнее; поля броска читаются по-прежнему', () => {
+    const names = new Map([['попадание.крит', 'Бросок — критический']]);
+    expect(formulaWords(withCall, '@попадание.крит', names)).toBe('«Бросок — критический»');
+    expect(formulaWords(withCall, '@попадание.natural')).toBe('«попадание»: на кости');
+  });
+});

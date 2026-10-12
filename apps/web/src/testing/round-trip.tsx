@@ -44,9 +44,13 @@ const openReturns = (): void => {
   }
 };
 
+const openSpoken = (): void => {
+  document.querySelectorAll<HTMLElement>('.formula-words').forEach(face => fireEvent.click(face));
+};
+
 const reveal = (): void => {
   openAll();
-  act(() => { openReturns(); });
+  act(() => { openReturns(); openSpoken(); });
   document.querySelectorAll('details').forEach(d => { d.open = true; });
 };
 
@@ -125,6 +129,7 @@ export function roundTrip(name: string, part = 0, parts = 1): void {
             if (!el || (el as HTMLInputElement).disabled) continue;
             const label = labelOf(el);
             act(() => { idle(el); });
+            act(() => { openSpoken(); });
             const { system, compendium } = useWorld.getState();
             const now = { system, compendium };
             const was = { system: base.system, compendium: base.compendium };

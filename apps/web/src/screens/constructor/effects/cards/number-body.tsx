@@ -5,7 +5,6 @@ import { useMemo, useState } from 'react';
 import type { Step, ValueKind } from '@vtt/schema';
 import { Field, Button } from '../../../../ui/primitives.tsx';
 import { FormulaField } from '../../../../ui/formula-field.tsx';
-import { formulaAsLabels } from '../../../../ui/formula.tsx';
 import { asOneFormula } from '@vtt/engine/model/amounts';
 import { namesOf } from '../../slots.tsx';
 import { inputBadges } from '../../slots.tsx';
@@ -36,7 +35,6 @@ export function NumberBody({ step, context, edit, onAddParam }: {
   const line = draft ?? (owned ? formatRollFormula(read) : textOf(read) ?? '');
   const shown = line || (draft === null && !owned ? asOneFormula(step) ?? '' : '');
   const names = useMemo(() => namesOf(context), [context]);
-  const words = shown ? formulaAsLabels(context.system, shown, names) : '';
 
   const unknown = [...new Set([...shown.matchAll(/@([\p{L}\p{N}_.]+)/gu)].map(m => m[1]!))]
     .filter(name => !name.includes('.'))
@@ -90,8 +88,6 @@ export function NumberBody({ step, context, edit, onAddParam }: {
         />
         {trouble ? <span className="field__error">{trouble}</span> : null}
       </Field>
-
-      {words && words !== shown ? <span className="faint">{words}</span> : null}
 
       {onAddParam ? unknown.map(name => (
         <Button

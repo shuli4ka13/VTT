@@ -24,6 +24,11 @@ export interface FormulaFieldProps {
   invalid?: boolean;
   barValue?: string;
   table?: string;
+  spoken?: string;
+}
+
+function SpokenFormula({ words, formula, onOpen }: { words: string; formula: string; onOpen: () => void }) {
+  return <button type="button" className="formula-words" title={formula} onClick={onOpen}>{words}</button>;
 }
 
 export function FormulaField(props: FormulaFieldProps) {
@@ -31,7 +36,7 @@ export function FormulaField(props: FormulaFieldProps) {
   const hosted = useFormulaBar(s => s.hosts > 0);
   const spot = useFormulaBar(s => (s.target?.id === id ? s.target : null));
   const open = useFormulaBar(s => s.open);
-  const { value, system, names, extraNames, badges, sheets, placeholder, prefix, invalid } = props;
+  const { value, system, names, extraNames, badges, sheets, placeholder, prefix, invalid, spoken } = props;
 
   if (!hosted) return <InlineFormula {...props} />;
 
@@ -49,6 +54,7 @@ export function FormulaField(props: FormulaFieldProps) {
         ...(props.onCommit ? { onCommit: props.onCommit } : {}),
         ...(props.onCancel ? { onCancel: props.onCancel } : {}),
       });
+  if (spoken && !spot) return <SpokenFormula words={spoken} formula={value} onOpen={start} />;
   return (
     <div
       role="button"
@@ -77,12 +83,15 @@ export function FormulaField(props: FormulaFieldProps) {
   );
 }
 
-function InlineFormula({ value, system, onChange, onCommit, onCancel, names, extraNames, badges, sheets, placeholder, options, prefix, table }: FormulaFieldProps) {
+function InlineFormula({ value, system, onChange, onCommit, onCancel, names, extraNames, badges, sheets, placeholder, options, prefix, table, spoken }: FormulaFieldProps) {
   const [text, setText] = useState<string | null>(null);
+  const [asked, setAsked] = useState(false);
   const current = text ?? value;
   const write = (next: string) => { setText(next); onChange?.(next); };
-  const commit = () => { if (text !== null) onCommit?.(text); setText(null); };
+  const close = () => { setText(null); setAsked(false); };
+  const commit = () => { if (text !== null) onCommit?.(text); close(); };
   const api = { write, dismiss: () => setText(null) };
+  if (spoken && !asked) return <SpokenFormula words={spoken} formula={value} onOpen={() => setAsked(true)} />;
   return (
     <FormulaChips
       value={current}
@@ -95,6 +104,7 @@ function InlineFormula({ value, system, onChange, onCommit, onCancel, names, ext
       {...(placeholder ? { placeholder } : {})}
       {...(prefix ? { prefix } : {})}
       calculator
+      {...(asked ? { autoFocus: true } : {})}
       extraOptions={(options ?? []).map(option => ({
         group: option.group,
         label: option.label,
@@ -105,7 +115,7 @@ function InlineFormula({ value, system, onChange, onCommit, onCancel, names, ext
       onBlur={commit}
       onKeyDown={e => {
         if (e.key === 'Enter') commit();
-        if (e.key === 'Escape') { setText(null); onCancel?.(); }
+        if (e.key === 'Escape') { close(); onCancel?.(); }
       }}
     />
   );

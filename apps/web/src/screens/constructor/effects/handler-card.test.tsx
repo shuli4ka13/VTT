@@ -87,3 +87,25 @@ describe('«увидев кости»', () => {
     expect(get().on).toBe('before:*');
   });
 });
+
+describe('«когда»: фраза называет итог вызова словами', () => {
+  afterEach(cleanup);
+
+  it('«попадание.попал» читается как «попадание», а не путём', () => {
+    const called = {
+      ...system,
+      effects: {
+        ...system.effects,
+        бросок: { label: 'Бросок атаки', returns: [{ key: 'попал', label: 'попадание', kind: 'boolean', no: 'промах' }], steps: [] },
+        удар: { ...system.effects.удар, steps: [...(system.effects.удар as { steps: unknown[] }).steps, { id: 'попадание', type: 'emit', effect: 'бросок' }] },
+      },
+    } as unknown as System;
+    const handler = { on: 'before:удар', if: { expr: '@попадание.попал' }, confirm: true, steps: [] } as Handler;
+    const withHandler = { ...called, effects: { ...called.effects, r: { ...called.effects.r, on: [handler] } } } as System;
+    render(<HandlerCard id="r" index={0} handler={handler} system={withHandler} onRemove={() => {}} edit={() => {}} />);
+    openAll();
+    const title = document.body.textContent!;
+    expect(title).toContain('если «попадание» — решает игрок носителя');
+    expect(title).not.toContain('попадание.попал');
+  });
+});

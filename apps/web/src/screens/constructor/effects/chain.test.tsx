@@ -230,3 +230,115 @@ describe('блок «Если»: условие строкой, руки, «Ст
     expect(steps()[0]).toEqual({ type: 'stop' });
   });
 });
+
+describe('условие блока «Если» в покое — словами, формула открывается нажатием', () => {
+  const show = (condition: unknown, ...more: Step[]) => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        effects: {
+          удар: {
+            label: 'Удар', activation: 'manual',
+            params: [
+              { key: 'действующий', label: 'Кто действует', kind: 'sheet' },
+              { key: 'status', label: 'Состояние при попадании', kind: 'effect', optional: true },
+            ],
+            steps: [{ type: 'branch', ...(condition === undefined ? {} : { if: condition }) }, ...more, { type: 'end' }],
+          },
+        },
+      } as unknown as System,
+    }));
+    function Live() {
+      const system = useWorld(st => st.system);
+      return <EffectEditor id="удар" effect={system.effects.удар!} system={system} />;
+    }
+    render(<Live />);
+    openAll();
+  };
+  const condition = () => (useWorld.getState().system.effects.удар!.steps![0] as { if?: { expr: string } }).if?.expr;
+  const face = () => headOf(block(0)).querySelector<HTMLElement>('.formula-words');
+  const chipsInHead = () => headOf(block(0)).querySelector<HTMLElement>('.chips');
+  const typing = () => [...headOf(block(0)).querySelectorAll<HTMLInputElement>('input.chips__text')].at(-1)!;
+
+  beforeEach(() => { cleanup(); try { localStorage.clear(); } catch { return; } });
+
+  it('в покое — слова, без фишек и без второй строки; нажатие на слова открывает поле, Enter возвращает слова', () => {
+    show({ expr: 'не(пусто(@status))' });
+    expect(face()!.textContent).toBe('задано «Состояние при попадании»');
+    expect(face()!.title).toBe('не(пусто(@status))');
+    expect(chipsInHead()).toBeNull();
+    expect(headOf(block(0)).querySelector('.cond__words')).toBeNull();
+    expect(headOf(block(0)).textContent!.split('Состояние при попадании')).toHaveLength(2);
+
+    within(headOf(block(0))).click('задано «Состояние при попадании»');
+    expect(face()).toBeNull();
+    expect(chipsInHead()!.getAttribute('data-value')).toBe('не(пусто(@status))');
+    fireEvent.keyDown(chipsInHead()!, { key: 'Enter' });
+    expect(face()!.textContent).toBe('задано «Состояние при попадании»');
+    expect(condition()).toBe('не(пусто(@status))');
+  });
+
+  it('правка с Enter меняет условие и слова; Esc отменяет правку — условие прежнее', () => {
+    show({ expr: '1 > 0' });
+    fireEvent.click(face()!);
+    fireEvent.change(typing(), { target: { value: '2 > 1' } });
+    fireEvent.keyDown(chipsInHead()!, { key: 'Escape' });
+    expect(condition()).toBe('1 > 0');
+    expect(face()!.textContent).toBe('1 > 0');
+
+    fireEvent.click(face()!);
+    fireEvent.change(typing(), { target: { value: '2 > 1' } });
+    fireEvent.keyDown(chipsInHead()!, { key: 'Enter' });
+    expect(condition()).toBe('2 > 1');
+    expect(face()!.textContent).toBe('2 > 1');
+  });
+
+  it('пустое условие — сразу открыто, слов нет; условие с ошибкой — поле открыто и ошибка видна', () => {
+    show(undefined);
+    expect(face()).toBeNull();
+    expect(headOf(block(0)).querySelector('select')).not.toBeNull();
+    cleanup();
+
+    show({ expr: '@нет_такого > 1' });
+    expect(face()).toBeNull();
+    expect(chipsInHead()).not.toBeNull();
+    expect(headOf(block(0)).querySelector('.field__error')!.textContent).toContain('нет_такого');
+    cleanup();
+
+    show({ expr: '1 >' });
+    expect(face()).toBeNull();
+    expect(chipsInHead()).not.toBeNull();
+    expect(headOf(block(0)).querySelector('.field__error')).not.toBeNull();
+  });
+
+  it('после правки с ошибкой поле остаётся открытым, после исправления — снова слова', () => {
+    show({ expr: '1 > 0' });
+    fireEvent.click(face()!);
+    fireEvent.change(typing(), { target: { value: '1 >' } });
+    fireEvent.keyDown(chipsInHead()!, { key: 'Enter' });
+    expect(condition()).toBe('1 >');
+    expect(face()).toBeNull();
+    expect(headOf(block(0)).querySelector('.field__error')).not.toBeNull();
+
+    fireEvent.change(typing(), { target: { value: '1 > 3' } });
+    fireEvent.keyDown(chipsInHead()!, { key: 'Enter' });
+    expect(condition()).toBe('1 > 3');
+    expect(headOf(block(0)).querySelector('.field__error')).toBeNull();
+    expect(face()!.textContent).toBe('1 > 3');
+  });
+
+  it('помощник тестов нажимает на слова, как человек: готовое условие правится через него', () => {
+    show({ expr: '1 > 0' });
+    expect(face()).not.toBeNull();
+    within(headOf(block(0))).formula(headOf(block(0)).querySelector<HTMLElement>('.cond__formula')!, '3 > 2');
+    expect(condition()).toBe('3 > 2');
+    expect(face()!.textContent).toBe('3 > 2');
+  });
+
+  it('«Иначе, если» и «Если» вокруг шагов — те же слова; «Иначе» без условия слов не имеет', () => {
+    show({ expr: '1 > 0' }, { type: 'orElse', if: { expr: '2 > 1' } } as unknown as Step, { type: 'orElse' } as unknown as Step);
+    expect([0, 1, 2].map(k => headOf(block(0), k).querySelector('.formula-words')?.textContent ?? null)).toEqual(['1 > 0', '2 > 1', null]);
+    expect(headOf(block(0), 2).querySelector('.cond')).toBeNull();
+  });
+});

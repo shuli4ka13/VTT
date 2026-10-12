@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { compile } from '@vtt/engine/formula';
 import { Button, Field, Select, Input } from '../../ui/primitives.tsx';
 import { FormulaField } from '../../ui/formula-field.tsx';
+import { formulaWords } from '../../ui/formula-words.ts';
 import type { SheetNames } from '../../ui/formula-chips.tsx';
 import { readGuard, writeGuard, splitHolder, joinHolder, holderIn } from './guard-expr.ts';
 import type { When } from './guard-expr.ts';
@@ -33,7 +34,7 @@ const tablesOfTags = (system: System, tags: string[]) =>
 
 export function ConditionField({
   value, onChange, system, holders = [], quick = [], phrases = [], names, sheets, where, placeholder,
-  title = 'Только если', holderLabel = 'Кого касается', holderHint, ruleHint, required = false, bare = false,
+  title = 'Только если', holderLabel = 'Кого касается', holderHint, ruleHint, required = false, bare = false, spoken = false,
 }: {
   value: string | undefined;
   onChange: (expr: string | null) => void;
@@ -51,6 +52,7 @@ export function ConditionField({
   ruleHint?: string;
   required?: boolean;
   bare?: boolean;
+  spoken?: boolean;
 }) {
   const options = holders.map(([name, label]) => [holderPhrase(name), label] as const);
   const { holder, rest } = splitHolder(value, options.map(([expr]) => expr));
@@ -83,7 +85,7 @@ export function ConditionField({
           <div className="cond__row" key={`${at}:${fact}`}>
             {at > 0 ? <span className="cond__and">и</span> : null}
             <FactRow
-              value={fact} system={system} quick={quick} phrases={phrases} where={where}
+              value={fact} system={system} quick={quick} phrases={phrases} where={where} spoken={spoken}
               {...(names ? { names } : {})} {...(sheets ? { sheets } : {})} {...(placeholder ? { placeholder } : {})}
               onChange={next => setRow(at, next)}
             />
@@ -139,9 +141,13 @@ function factsOf(expr: string): string[] {
   return out;
 }
 
+const compiles = (text: string): boolean => {
+  try { compile(text); return true; } catch { return false; }
+};
+
 const joinFacts = (facts: string[]): string => (facts.length > 1 ? `все(${facts.join(', ')})` : facts[0] ?? '');
 
-function FactRow({ value, onChange, system, quick, phrases, names, sheets, where, placeholder }: {
+function FactRow({ value, onChange, system, quick, phrases, names, sheets, where, placeholder, spoken }: {
   value: string;
   onChange: (expr: string | null) => void;
   system: System;
@@ -151,6 +157,7 @@ function FactRow({ value, onChange, system, quick, phrases, names, sheets, where
   sheets?: SheetNames;
   where: string;
   placeholder?: string;
+  spoken: boolean;
 }) {
   const phrase = phrases.find(one => one.expr === value.trim()) ?? null;
   const when = phrase ? null : readGuard(value);
@@ -169,6 +176,7 @@ function FactRow({ value, onChange, system, quick, phrases, names, sheets, where
   const whereColumn = whereTable?.columns?.find(c => c.key === when?.where?.column);
   const whereValues = whereColumn?.kind === 'choice' ? (listOf(system, whereColumn.from) ?? []) : [];
   const showFormula = custom || formula;
+  const said = spoken && value.trim() && compiles(value) ? formulaWords(system, value, names) : '';
 
   return (
     <div className="cond__fact">
@@ -198,6 +206,7 @@ function FactRow({ value, onChange, system, quick, phrases, names, sheets, where
                 {...(names ? { extraNames: names } : {})}
                 {...(sheets ? { sheets } : {})}
                 {...(placeholder ? { placeholder } : {})}
+                {...(said && custom && !formula ? { spoken: said } : {})}
                 onCommit={next => { setFormula(false); onChange(next.trim() || null); }}
               />
             </span>
@@ -292,6 +301,8 @@ function FactRow({ value, onChange, system, quick, phrases, names, sheets, where
               </Field>
             </>
           ) : null}
+
+          {said && !showFormula ? <span className="cond__words" title="условие словами">{said}</span> : null}
     </div>
   );
 }

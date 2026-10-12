@@ -96,6 +96,8 @@ export function within(root: ParentNode = document) {
 
   const formula = (label: string | HTMLElement, text: string): void => {
     const box = typeof label === 'string' ? field(label) : label;
+    const spoken = box.classList.contains('formula-words') ? box : box.querySelector<HTMLElement>('.formula-words');
+    if (spoken) { act(() => { fireEvent.click(spoken); }); }
     const chips = box.classList.contains('chips') ? box : box.querySelector('.chips');
     if (!chips) throw new Error(`в «${String(label)}» нет поля формулы`);
     const inputs = [...chips.querySelectorAll<HTMLInputElement>('input.chips__text')];

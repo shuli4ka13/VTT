@@ -2,7 +2,6 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Step } from '@vtt/schema';
 import { Button, DangerButton, Input } from '../../../../ui/primitives.tsx';
-import { formulaWords } from '../../../../ui/formula-words.ts';
 import { ConditionField } from '../../condition-field.tsx';
 import { namesOf } from '../../slots.tsx';
 import type { SlotContext, EarlierStep } from '../../slots.tsx';
@@ -75,7 +74,7 @@ export function FlowHead({ word, step, context, earlier, required, edit, actions
       <div className="flow-head__cond">
       {bare ? null : (
         <ConditionField
-          bare required
+          bare required spoken={!problem}
           value={written || undefined}
           onChange={expr => edit(draft => {
             const d = draft as { if?: { expr: string } };
@@ -89,7 +88,6 @@ export function FlowHead({ word, step, context, earlier, required, edit, actions
           placeholder="например: @шаг.natural >= 19"
         />
       )}
-      {written?.trim() && !problem ? <span className="flow-head__words" title="условие словами">{formulaWords(context.system, written, namesOf(context))}</span> : null}
       {problem ? <span className="field__error">{problem}</span> : null}
       </div>
       <div className="flow-head__actions">{actions}</div>

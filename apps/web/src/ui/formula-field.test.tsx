@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect, afterEach, beforeEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
+import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import { FormulaField } from './formula-field.tsx';
 import { FormulaBar } from './formula-bar.tsx';
 import { useFormulaBar } from '../store/formula-bar.ts';
@@ -102,5 +102,98 @@ describe('одно поле формулы на всё', () => {
     expect(useLookup.getState().at?.name).toBe('сила');
     expect(document.querySelector('.formula-bar')).not.toBeNull();
     useLookup.getState().close();
+  });
+});
+
+describe('поле формулы со словами в покое', () => {
+  beforeEach(() => { useFormulaBar.getState().dismiss(); });
+  afterEach(() => { cleanup(); vi.useRealTimers(); });
+
+  const words = () => document.querySelector<HTMLElement>('.formula-words');
+  const inline = () => [...document.querySelectorAll<HTMLInputElement>('input.chips__text')].at(-1)!;
+
+  it('на месте: в покое слова без ввода, нажатие открывает фишки с курсором, Enter сохраняет и возвращает слова', () => {
+    const commits: string[] = [];
+    render(<FormulaField value="@сила + 2" spoken="«Сила» + 2" system={system} where="А" onCommit={text => commits.push(text)} />);
+    expect(words()!.textContent).toBe('«Сила» + 2');
+    expect(words()!.title).toBe('@сила + 2');
+    expect(document.querySelector('.chips')).toBeNull();
+
+    fireEvent.click(words()!);
+    expect(words()).toBeNull();
+    expect(document.activeElement).toBe(inline());
+    fireEvent.change(inline(), { target: { value: ' + 3' } });
+    fireEvent.keyDown(inline(), { key: 'Enter' });
+    expect(commits).toEqual(['@сила + 3']);
+    expect(words()).not.toBeNull();
+    expect(document.querySelector('.chips')).toBeNull();
+  });
+
+  it('на месте: Enter без правки ничего не сохраняет, Esc после правки отменяет — слова на месте', () => {
+    const commits: string[] = [];
+    let cancelled = 0;
+    render(<FormulaField value="@сила" spoken="«Сила»" system={system} where="А" onCommit={text => commits.push(text)} onCancel={() => { cancelled += 1; }} />);
+    fireEvent.click(words()!);
+    fireEvent.keyDown(inline(), { key: 'Enter' });
+    expect(commits).toEqual([]);
+    expect(words()).not.toBeNull();
+
+    fireEvent.click(words()!);
+    fireEvent.change(inline(), { target: { value: ' + 1' } });
+    fireEvent.keyDown(inline(), { key: 'Escape' });
+    expect(commits).toEqual([]);
+    expect(cancelled).toBe(1);
+    expect(words()).not.toBeNull();
+    fireEvent.click(words()!);
+    expect(document.querySelector('.chips')!.getAttribute('data-value')).toBe('@сила');
+  });
+
+  it('на месте: уход из поля сохраняет правку и возвращает слова', () => {
+    vi.useFakeTimers();
+    const commits: string[] = [];
+    render(<FormulaField value="@сила" spoken="«Сила»" system={system} where="А" onCommit={text => commits.push(text)} />);
+    fireEvent.click(words()!);
+    fireEvent.change(inline(), { target: { value: ' * 2' } });
+    act(() => { inline().blur(); });
+    act(() => { vi.advanceTimersByTime(300); });
+    expect(commits).toEqual(['@сила * 2']);
+    expect(words()).not.toBeNull();
+  });
+
+  it('со строкой формул: нажатие по словам открывает строку, Enter или «готово» возвращают слова, Esc отменяет', () => {
+    const commits: string[] = [];
+    let cancelled = 0;
+    render(<><FormulaBar /><FormulaField value="@сила + 2" spoken="«Сила» + 2" system={system} where="Бонус атаки"
+      onCommit={text => commits.push(text)} onCancel={() => { cancelled += 1; }} /></>);
+    expect(words()).not.toBeNull();
+    expect(document.querySelector('.formula-bar')).toBeNull();
+
+    fireEvent.click(words()!);
+    expect(document.querySelector('.formula-bar')!.textContent).toContain('Бонус атаки');
+    expect(words()).toBeNull();
+    expect(document.querySelector('.formula-field--spot')).not.toBeNull();
+    fireEvent.change(barInput(), { target: { value: ' + 3' } });
+    fireEvent.keyDown(barInput(), { key: 'Enter' });
+    expect(commits).toEqual(['@сила + 3']);
+    expect(document.querySelector('.formula-bar')).toBeNull();
+    expect(words()).not.toBeNull();
+
+    fireEvent.click(words()!);
+    fireEvent.click(screen.getByText('готово'));
+    expect(commits).toHaveLength(1);
+    expect(words()).not.toBeNull();
+
+    fireEvent.click(words()!);
+    fireEvent.change(barInput(), { target: { value: ' + 1' } });
+    fireEvent.keyDown(barInput(), { key: 'Escape' });
+    expect(commits).toHaveLength(1);
+    expect(cancelled).toBe(1);
+    expect(words()).not.toBeNull();
+  });
+
+  it('без слов поле такое же, как было: фишки сразу', () => {
+    render(<FormulaField value="@сила" system={system} where="А" />);
+    expect(words()).toBeNull();
+    expect(document.querySelector('.chips')).not.toBeNull();
   });
 });
