@@ -6,6 +6,8 @@ export type Implicit =
   | { by: 'target'; from: string }
   | { by: 'actor'; from: string };
 
+export type Applied = Implicit | { by: 'to' };
+
 const sameKind = (a: Param, b: Param): boolean => (a.kind ?? 'number') === (b.kind ?? 'number') && Boolean(a.many) === Boolean(b.many)
   && (a.kind !== 'choice' || !a.from || !b.from || a.from === b.from);
 
@@ -38,4 +40,35 @@ export function implicitOf(param: Param, caller: Pick<Effect, 'params' | 'steps'
   const own = (caller.params ?? []).find(p => p.key === param.key);
   if (own && sameKind(own, param)) return { by: 'name', from: own.key };
   return null;
+}
+
+export const storable = (param: Param): boolean => param.kind !== 'roll' && param.kind !== 'field' && !param.many;
+
+export function appliedOf(param: Param, caller: Pick<Effect, 'params' | 'steps' | 'activation'>): Applied | null {
+  if (!storable(param)) return null;
+  if (param.kind === 'sheet' && param.role === 'target') return { by: 'to' };
+  return implicitOf(param, caller);
+}
+
+export interface InputSource {
+  prop(name: string): unknown;
+  implicit(param: Param): unknown;
+}
+
+const keeps = (value: unknown): boolean => typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean';
+
+export function fillMissing(params: readonly Param[], given: Record<string, unknown>, from: InputSource, stored = false): Record<string, unknown> {
+  const args = { ...given };
+  const open = (param: Param): boolean => !(param.key in args) && (!stored || storable(param));
+  const take = (param: Param, value: unknown): void => {
+    if (value === null || value === undefined || (stored && (!keeps(value) || value === ''))) return;
+    args[param.key] = value;
+  };
+  for (const param of params) {
+    if (open(param) && param.kind !== 'sheet' && param.kind !== 'field') take(param, from.prop(param.key));
+  }
+  for (const param of params) {
+    if (open(param) && param.kind !== 'field') take(param, from.implicit(param));
+  }
+  return args;
 }

@@ -26,7 +26,7 @@ export interface StepContext {
   here: Pass;
   value(ref: unknown): unknown;
   prop(name: string): unknown;
-  implicit(param: Param): unknown;
+  implicit(param: Param, onto?: string): unknown;
   known(ref: unknown): boolean;
   number(ref: unknown, what: string): number;
   optional(ref: unknown, what: string): number | null;

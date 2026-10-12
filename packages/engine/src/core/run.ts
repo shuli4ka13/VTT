@@ -1,5 +1,5 @@
 import { paramStages } from '../engine/stages.ts';
-import { implicitOf } from '../model/implicit.ts';
+import { implicitOf, appliedOf } from '../model/implicit.ts';
 import { compile, printFormula } from '../formula/index.ts';
 import type { Node } from '../formula/index.ts';
 import { EngineError, isRuleError } from '../engine/errors.ts';
@@ -399,10 +399,12 @@ export class Run {
       die,
       value: refValue => resolveRef(refValue, ref),
       prop: name => (frame.props && name in frame.props ? resolveRef({ expr: `@${name}` }, { ...ref, recordScope: true }) : undefined),
-      implicit: param => {
+      implicit: (param, onto) => {
         const caller = this.system.effects[frame.effectId];
-        const how = caller ? implicitOf(param, { params: frame.paramDefs ?? caller.params, steps: caller.steps, activation: caller.activation }) : null;
+        const shape = { params: frame.paramDefs ?? caller?.params, steps: caller?.steps, activation: caller?.activation };
+        const how = onto !== undefined ? appliedOf(param, shape) : caller ? implicitOf(param, shape) : null;
         if (!how) return undefined;
+        if (how.by === 'to') return onto;
         if (param.kind === 'roll') return (rolls[how.from] as unknown) ?? undefined;
         if (param.kind === 'sheet') {
           const id = frame.bound?.[how.from];
@@ -742,7 +744,7 @@ export class Run {
       const qpath = path.ask('after', holder.id);
       for (const out of done) {
         const tag = done.length > 1 && out.call.subject ? out.call.subject : null;
-        const found = this.offers(holder.id, out.call.keys.map(key => `after:${key}`), out.call.bound, { ...(out.call.seed ?? {}), ...out.results }, out.emitted, qpath, out.rolls);
+        const found = this.offers(holder.id, out.call.keys.map(key => `after:${key}`), out.call.bound, { ...(out.call.seed ?? {}), ...out.results, ...(out.returns ?? {}) }, out.emitted, qpath, out.rolls);
         for (const one of found) {
           const id = tag ? `${one.offer.id}|${tag}` : one.offer.id;
           const label = tag ? `${one.offer.label} — ${this.sheet(tag)?.name ?? tag}` : one.offer.label;

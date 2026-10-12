@@ -1,4 +1,4 @@
-import type { System, Effect, Param } from './types.ts';
+import type { System, Effect, Param, Compendium } from './types.ts';
 
 export function chosenEffect(value: unknown): string | null {
   if (typeof value === 'string') return value || null;
@@ -18,7 +18,18 @@ export function paymentsOf(system: System, effect: Effect, args: Record<string, 
   return out;
 }
 
-export function choicesOfInput(system: System, effectId: string, key: string): string[] {
+function chosenByCells(system: System, compendium: Compendium | undefined, effectId: string, key: string): { kind: string; id: string }[] {
+  const out: { kind: string; id: string }[] = [];
+  for (const record of [...(system.library ?? []), ...(compendium?.records ?? [])]) {
+    if (!record.table) continue;
+    const bound = [...(system.tables?.[record.table]?.bindings ?? []), ...(record.bindings ?? [])].some(binding => binding.effect === effectId);
+    const id = bound ? chosenEffect(record.cells?.[key]) : null;
+    if (id) out.push({ kind: record.table, id });
+  }
+  return out;
+}
+
+export function choicesOfInput(system: System, effectId: string, key: string, compendium?: Compendium): string[] {
   const effect = system.effects[effectId];
   const param = effect?.params?.find(p => p.key === key);
   if (!param || param.kind !== 'effect') return [];
@@ -31,25 +42,32 @@ export function choicesOfInput(system: System, effectId: string, key: string): s
       if (id) out.add(id);
     }
   }
+  if (compendium) for (const cell of chosenByCells(system, compendium, effectId, key)) out.add(cell.id);
   return [...out];
 }
 
-export function emittedChoices(system: System, effectId: string, raw: unknown): string[] {
+export function emittedChoices(system: System, effectId: string, raw: unknown, compendium?: Compendium): string[] {
   if (typeof raw === 'string') return raw ? [raw] : [];
   const literal = chosenEffect(raw);
   if (literal) return [literal];
   const lone = /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((raw as { expr?: unknown } | null)?.expr ?? ''));
-  return lone ? choicesOfInput(system, effectId, lone[1]!) : [];
+  return lone ? choicesOfInput(system, effectId, lone[1]!, compendium) : [];
 }
 
-export function kindsChoosing(system: System, effectId: string, key: string, choice: string): { kind: string; columns: string[] }[] {
+export function kindsChoosing(system: System, effectId: string, key: string, choice: string, compendium?: Compendium): { kind: string; columns: string[] }[] {
   const param = system.effects[effectId]?.params?.find(p => p.key === key);
   const out: { kind: string; columns: string[] }[] = [];
+  const columnsOf = (kind: string): string[] => (system.tables?.[kind]?.columns ?? []).map(c => c.key);
   for (const [kind, table] of Object.entries(system.tables ?? {})) {
     for (const binding of table.bindings ?? []) {
       if (binding.effect !== effectId) continue;
       const picked = chosenEffect((binding.args as Record<string, unknown> | undefined)?.[key]) ?? (typeof param?.default === 'string' ? param.default : null);
-      if (picked === choice) out.push({ kind, columns: (table.columns ?? []).map(c => c.key) });
+      if (picked === choice) out.push({ kind, columns: columnsOf(kind) });
+    }
+  }
+  if (compendium) {
+    for (const cell of chosenByCells(system, compendium, effectId, key)) {
+      if (cell.id === choice && !out.some(one => one.kind === cell.kind)) out.push({ kind: cell.kind, columns: columnsOf(cell.kind) });
     }
   }
   return out;

@@ -1,6 +1,7 @@
 import { EngineError } from '../errors.ts';
 import type { StepContext, StepModule } from './index.ts';
 import type { StoredValue } from '../../model/types.ts';
+import { fillMissing } from '../../model/implicit.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 
 export const type = 'status';
@@ -38,15 +39,17 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
       ctx.detach(to, id);
       return { value: id, trace: { mode, effect: id, sheet: to }, break: null };
     }
-    const args: Record<string, StoredValue> = {};
+    const given: Record<string, StoredValue> = {};
     for (const [key, ref] of Object.entries((step.args ?? {}) as Record<string, unknown>)) {
       const value = ctx.value(ref);
-      if (value === null || value === undefined || value === '') continue;
+      if (value === null || value === undefined) continue;
       if (typeof value !== 'number' && typeof value !== 'string' && typeof value !== 'boolean') {
         throw new EngineError(`${who(ctx)}: наложенное запоминает число, строку или лист, а «${key}» дал ${JSON.stringify(value)}`);
       }
-      args[key] = value;
+      given[key] = value;
     }
+    const filled = fillMissing(ctx.system.effects?.[id]?.params ?? [], given, { prop: name => ctx.prop(name), implicit: param => ctx.implicit(param, to) }, true);
+    const args = Object.fromEntries(Object.entries(filled).filter(([, value]) => value !== '')) as Record<string, StoredValue>;
     ctx.attach(to, id, args);
     return { value: id, trace: { mode, effect: id, sheet: to, ...(Object.keys(args).length ? { args } : {}) }, break: null };
   },

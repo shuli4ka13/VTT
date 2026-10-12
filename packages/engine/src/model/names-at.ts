@@ -1,7 +1,7 @@
 import { armsOf, sees } from './flow.ts';
 import { loopOf, loopParam } from '../engine/steps/each.ts';
 import { flattenSystem } from './inherit.ts';
-import { heardNames, listenerOf, callNamesOf, CALL_TAGS, HOLDER, TARGETS_SEED } from './references.ts';
+import { heardNames, listenerOf, callNamesOf, sourcesOf, CALL_TAGS, HOLDER, TARGETS_SEED } from './references.ts';
 import { calledOf } from '../engine/effects.ts';
 import { STEP_WORDS } from '../words/steps.ts';
 import type { StepWords } from '../words/steps.ts';
@@ -109,21 +109,26 @@ function targetsChildren(listened: Effect | null, system?: System): NameChild[] 
 }
 
 function heard(system: System, handler: NonNullable<Effect['on']>[number]): NameAt[] {
-  const names = heardNames(system, listenerOf(handler));
+  const listener = listenerOf(handler);
+  const names = heardNames(system, listener);
   const listened = names.listened;
   const params = new Map((listened?.params ?? []).map(param => [param.key, param]));
-  const steps = new Map((listened?.steps ?? []).filter(step => step.id).map(step => [String(step.id), step]));
+  const returned = new Map((listener.kind === 'call' && listener.phase === 'after' ? listened?.returns ?? [] : []).map(column => [column.key, column]));
+  const steps = new Map((listener.kind === 'call' ? sourcesOf(system, listener.key) : [])
+    .flatMap(source => (source.steps ?? []).filter(step => step.id).map(step => [String(step.id), step] as const)));
   const out: NameAt[] = [];
   for (const name of names.sheets) {
     const param = params.get(name);
     out.push(param ? fromParam(param, 'heard') : { name, label: HEARD_LABELS[name] ?? name, kind: 'sheet', group: 'heard' });
   }
   for (const name of names.seeds) {
+    const column = returned.get(name);
+    if (column) { out.push({ name, label: column.label ?? column.key, kind: column.kind ?? 'number', group: 'heard' }); continue; }
     const param = params.get(name);
     if (param) { out.push(fromParam(param, 'heard')); continue; }
     const step = steps.get(name);
     if (step) {
-      const children = outputsOf(step.type);
+      const children = [...returnsOf(system, step), ...outputsOf(step.type)];
       out.push({ name, label: (STEP_WORDS as Record<string, StepWords>)[step.type]?.label ?? name, kind: 'result', group: 'heard', ...(children.length ? { children } : {}) });
       continue;
     }

@@ -417,6 +417,11 @@ export function listenerOf({ on }: { on?: string }): Listener {
 
 export interface HeardNames { sheets: string[]; seeds: string[]; listened: Effect | null }
 
+export function sourcesOf(system: System, key: string): Effect[] {
+  const direct = system.effects?.[key];
+  return direct ? [direct] : Object.values(system.effects ?? {}).filter(effect => (effect.tags ?? []).includes(key));
+}
+
 export function heardNames(system: System, listener: Listener): HeardNames {
   if (listener.kind === 'seen') return { sheets: ['бросающий', 'против'], seeds: ['roll'], listened: null };
   if (listener.kind === 'moment') return { sheets: TURN_MOMENTS.has(listener.key) ? ['ходит'] : [], seeds: ['moment'], listened: null };
@@ -447,6 +452,7 @@ export function heardNames(system: System, listener: Listener): HeardNames {
     seeds: [
       ...params.filter(p => p.kind !== 'sheet').map(p => p.key),
       ...visible.map(step => step.id).filter((id): id is string => Boolean(id)),
+      ...(listener.phase === 'after' ? (effect?.returns ?? []).map(column => column.key) : []),
       CALL_TAGS,
       ...(listener.phase === 'done' ? [TARGETS_SEED] : []),
     ],

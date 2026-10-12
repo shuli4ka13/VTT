@@ -1,5 +1,5 @@
 import { paramStages, targetStages } from '../engine/stages.ts';
-import { implicitOf } from './implicit.ts';
+import { implicitOf, appliedOf } from './implicit.ts';
 import { armsOf, balance, flowOf, inBlock, isFlow } from './flow.ts';
 import { loopOf, loopParam } from '../engine/steps/each.ts';
 import { chosenEffect, choicesOfInput, emittedChoices, kindsChoosing } from './payments.ts';
@@ -22,7 +22,7 @@ import { tableOf } from './buttons.ts';
 import { MOMENTS } from '../events/moments.ts';
 import { TABS, STEP, SHEET } from '../words/glossary.ts';
 import {
-  referencesOf, declaredOf, chainRefs, listenerOf, withAddresses, heardNames, callNamesOf, formulaDeps,
+  referencesOf, declaredOf, chainRefs, listenerOf, withAddresses, heardNames, callNamesOf, formulaDeps, sourcesOf,
   type Where, type Reference, type RefKind, type Declared, type Listener,
   LISTEN, contractsOf, HOLDER, DESK_NAME, holderNameOf, tiedToHolder,
 } from './references.ts';
@@ -640,15 +640,22 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
   return out;
 }
 
-function paramProblems(system: System): Problem[] {
+const ENGINE_WORDS = new Map([
+  [ROW, `так пишется клетка своей строки (@${ROW}.колонка)`],
+  [HOLDER, `так пишется лист, на котором висит эффект (@${HOLDER})`],
+  [DESK_NAME, `так пишется стол (@${DESK_NAME}.поле)`],
+]);
+
+function paramProblems(system: System, compendium?: Compendium): Problem[] {
   const out: Problem[] = [];
   const fields = new Set(fieldsOf(system).map(f => f.tag));
   for (const [id, effect] of Object.entries(system.effects)) {
     for (const param of effect.params ?? []) {
-      if (param.key === ROW) {
+      const word = ENGINE_WORDS.get(param.key);
+      if (word) {
         out.push({
           where: { tab: 'effects', effect: id, part: 'params', key: param.key }, level: 'error',
-          text: `вход «${param.label ?? param.key}» назван «${ROW}» — это слово движка: так пишется клетка своей строки (@${ROW}.колонка); переименуйте вход`,
+          text: `вход «${param.label ?? param.key}» назван «${param.key}» — это слово движка: ${word}; переименуйте вход`,
         });
       }
       if (!fields.has(param.key)) continue;
@@ -662,15 +669,16 @@ function paramProblems(system: System): Problem[] {
     for (const { steps, where: whereOf } of chainsOf(id, effect)) {
       steps.forEach((step, index) => {
         const raw = step as unknown as Record<string, unknown>;
-        if (step.type !== 'emit' || !raw.effect) return;
+        const applying = step.type === 'status' && raw.mode !== 'remove';
+        if ((step.type !== 'emit' && !applying) || !raw.effect) return;
         const args = (raw.args ?? {}) as Record<string, unknown>;
         const dynamic = typeof raw.effect !== 'string';
         const viaInput = dynamic ? /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((raw.effect as { expr?: unknown }).expr ?? ''))?.[1] : undefined;
-        for (const choice of emittedChoices(system, id, raw.effect)) {
+        for (const choice of emittedChoices(system, id, raw.effect, applying ? compendium : undefined)) {
           const called = system.effects[choice];
           if (!called) continue;
           for (const param of called.params ?? []) {
-            if (param.kind === 'roll' && args[param.key] !== undefined) {
+            if (!applying && param.kind === 'roll' && args[param.key] !== undefined) {
               const text = String((args[param.key] as { expr?: unknown } | null)?.expr ?? '');
               const lone = /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(text)?.[1];
               const step = lone ? steps.slice(0, index).find(one => one.id === lone) : undefined;
@@ -685,18 +693,21 @@ function paramProblems(system: System): Problem[] {
             }
             if (args[param.key] !== undefined || param.optional || param.ask || param.default !== undefined) continue;
             const loops = steps.slice(0, index).map(one => loopParam(one as never)).filter((one): one is NonNullable<typeof one> => Boolean(one));
-            const how = implicitOf(param, loops.length ? { ...effect, params: [...(effect.params ?? []), ...loops] } : effect);
+            const caller = loops.length ? { ...effect, params: [...(effect.params ?? []), ...loops] } : effect;
+            const how = applying ? appliedOf(param, caller) : implicitOf(param, caller);
             const loopAt = (effect.steps ?? []).findIndex(s => s.type === 'each');
             if (how && (how.by !== 'target' || (steps === effect.steps && loopAt >= 0 && index > loopAt))) continue;
-            const users = viaInput ? kindsChoosing(system, id, viaInput, choice) : [];
+            const users = viaInput ? kindsChoosing(system, id, viaInput, choice, applying ? compendium : undefined) : [];
             if (users.length && users.every(user => user.columns.includes(param.key))) continue;
             const missing = users.filter(user => !user.columns.includes(param.key)).map(user => system.tables?.[user.kind]?.label ?? user.kind);
+            const effectName = `«${called.label ?? choice}»`;
+            const inputName = `«${param.label ?? param.key}»`;
             out.push({
               where: whereOf(index),
               level: 'error',
               text: missing.length
-                ? `плата «${called.label ?? choice}» ждёт свойство «${param.label ?? param.key}», а у ${missing.map(m => `«${m}»`).join(', ')} его нет`
-                : `вызов «${called.label ?? choice}» не заполняет его вход «${param.label ?? param.key}»`,
+                ? `${applying ? 'наложение' : 'плата'} ${effectName} ждёт свойство ${inputName}, а у ${missing.map(m => `«${m}»`).join(', ')} его нет`
+                : `${applying ? 'наложение' : 'вызов'} ${effectName} не заполняет его вход ${inputName}`,
             });
           }
         }
@@ -768,9 +779,8 @@ function nameClashProblems(system: System): Problem[] {
     (effect.on ?? []).forEach((handler, index) => {
       const heard = listenerOf(handler);
       const names = heardNames(system, heard);
-      const returned = heard.kind === 'call' && heard.phase === 'after' ? (system.effects?.[heard.key]?.returns ?? []).map(column => column.key) : [];
       const used = namesUsedIn(handler.if, handler.steps, handler.cost);
-      for (const param of shadowedInputs(params, new Set(names.sheets), new Set([...names.seeds, ...returned]), used)) {
+      for (const param of shadowedInputs(params, new Set(names.sheets), new Set(names.seeds), used)) {
         report({ tab: 'effects', effect: id, part: 'on', handler: index }, param, heardLabel(system, heard));
       }
     });
@@ -870,10 +880,11 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
               : `${STEP.one} «${step.id}» назван как вход «${input.label || input.key}» — до ${STEP.gen} @${step.id} читает вход, после — результат ${STEP.gen}; лучше переименовать ${STEP.one}`,
           });
         }
-        if (step.id === ROW) {
+        const word = step.id ? ENGINE_WORDS.get(step.id) : undefined;
+        if (word) {
           out.push({
             where: chain.where(index), level: 'error',
-            text: `${STEP.one} не может зваться «${ROW}» — это слово движка: так пишется клетка своей строки (@${ROW}.колонка)`,
+            text: `${STEP.one} не может зваться «${step.id}» — это слово движка: ${word}`,
           });
         }
       });
@@ -884,9 +895,8 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
     (effect.on ?? []).forEach((handler, index) => {
       const heard = listenerOf(handler);
       if (heard.kind !== 'call') return;
-      const sources = system.effects[heard.key] ? [system.effects[heard.key]!] : Object.values(system.effects).filter(one => (one.tags ?? []).includes(heard.key));
       const calls = new Map<string, { label: string; keys: Set<string> }>();
-      for (const source of sources) {
+      for (const source of sourcesOf(system, heard.key)) {
         for (const step of source.steps ?? []) {
           const called = (step as { effect?: unknown }).effect;
           const returns = step.type === 'emit' && step.id && typeof called === 'string' ? system.effects[called]?.returns : undefined;
@@ -917,7 +927,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...listenerProblems(system));
   out.push(...shapeProblems(system, compendium));
   out.push(...cycleProblems(system));
-  out.push(...paramProblems(system));
+  out.push(...paramProblems(system, compendium));
   out.push(...nameClashProblems(system));
   out.push(...recordCellProblems(system, compendium));
   out.push(...orphanProblems(system, compendium));

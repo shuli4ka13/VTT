@@ -42,4 +42,33 @@ describe('namesAt: что видно в каждом месте эффекта',
     const rows = namesAt(system, 'x', { part: 'handler', handler: 0, index: 0 }).find(one => one.name === 'итоги');
     expect(rows?.children?.map(c => c.path)).toContain('.попадание.попал');
   });
+
+  it('услышанный шаг-вызов даёт итоги вызываемого эффекта: у «Щита» @попадание.попал — фишка, а не сырой текст', () => {
+    const inIf = namesAt(dnd, 'shield', { part: 'handler-if', handler: 0 });
+    const hit = inIf.find(one => one.name === 'попадание');
+    expect(hit?.group).toBe('heard');
+    expect(hit?.children?.map(c => c.path)).toEqual(expect.arrayContaining(['.попал', '.крит', '.на_костях']));
+    expect(hit?.children?.find(c => c.path === '.попал')).toMatchObject({ label: 'попадание', kind: 'boolean' });
+  });
+
+  it('то же при подписке прямо на эффект, а не на метку', () => {
+    const system = { ...dnd, effects: { ...dnd.effects, x: { label: 'x', activation: 'passive', on: [{ on: 'after:strike', steps: [] }] } } } as System;
+    const hit = namesAt(system, 'x', { part: 'handler', handler: 0, index: 0 }).find(one => one.name === 'попадание');
+    expect(hit?.children?.map(c => c.path)).toContain('.попал');
+  });
+
+  it('итоги вызова видны подписке «после» отдельными именами с подписью и видом, в «до» их нет', () => {
+    const system = {
+      ...dnd,
+      effects: {
+        ...dnd.effects,
+        удар: { label: 'Удар', params: [], returns: [{ key: 'урон', label: 'Урон', kind: 'number', expr: { expr: '3' } }], steps: [] },
+        после: { label: 'После', activation: 'passive', on: [{ on: 'after:удар', steps: [] }] },
+        до: { label: 'До', activation: 'passive', on: [{ on: 'before:удар', steps: [] }] },
+      },
+    } as unknown as System;
+    const after = namesAt(system, 'после', { part: 'handler-if', handler: 0 }).find(one => one.name === 'урон');
+    expect(after).toMatchObject({ name: 'урон', label: 'Урон', kind: 'number', group: 'heard' });
+    expect(names(namesAt(system, 'до', { part: 'handler-if', handler: 0 }))).not.toContain('урон');
+  });
 });

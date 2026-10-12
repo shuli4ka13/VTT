@@ -840,7 +840,7 @@ group('линт: клетка записи в правке типа и поле 
 });
 
 group('линт: проверки имён молчат на образцах', () => {
-  const words = ['совпадает с', 'назван как вход', 'слово движка', 'клетку записи пишут'];
+  const words = ['совпадает с', 'назван как вход', 'слово движка', 'клетку записи пишут', 'наложение «', 'нет ни входа, ни шага'];
   for (const system of SAMPLE_SYSTEMS) {
     test(`${system.name}: ни входов с чужими именами, ни занятого «строка», ни путаницы с клеткой записи`, () => {
       const world = SAMPLE_WORLDS.find(w => w.system === system);
@@ -848,4 +848,206 @@ group('линт: проверки имён молчат на образцах', 
       eq(found.map(p => `${p.level}: ${p.text}`).join('\n'), '', system.name);
     });
   }
+});
+
+group('линт: наложение не заполняет вход наложенного эффекта', () => {
+  const NUM = { key: 'сила', label: 'Сила', kind: 'number' };
+  const applied = (mark: Partial<Effect>, step: Record<string, unknown> = {}, caller: Partial<Effect> = {}): System => {
+    const system = withEffect('вешает', {
+      params: [WHO] as never,
+      steps: [{ type: 'status', effect: 'метка', to: { expr: '@действующий' }, ...step } as unknown as Step],
+      ...caller,
+    });
+    system.effects.метка = { label: 'Метка', activation: 'passive', ...mark } as Effect;
+    return system;
+  };
+  const unfilled = (system: System) => errorTexts(system).filter(t => t.includes('не заполняет его вход') || t.includes('ждёт свойство'));
+
+  test('обязательный вход без аргумента — ошибка словами с адресом шага', () => {
+    const system = applied({ params: [NUM] as never });
+    eq(unfilled(system).join('|'), 'наложение «Метка» не заполняет его вход «Сила»');
+    const [problem] = lintSystem(system).filter(p => p.text.includes('не заполняет его вход'));
+    eq(problem?.level, 'error');
+    eq(problem?.where.effect, 'вешает');
+    eq(problem?.where.step, 0);
+  });
+
+  test('явный аргумент, необязательный вход, умолчание и вопрос за столом наложение закрывать не заставляют', () => {
+    eq(unfilled(applied({ params: [NUM] as never }, { args: { сила: { expr: '3' } } })).length, 0, 'явный');
+    eq(unfilled(applied({ params: [{ ...NUM, optional: true }] as never })).length, 0, 'необязательный');
+    eq(unfilled(applied({ params: [{ ...NUM, default: 1 }] as never })).length, 0, 'умолчание');
+    eq(unfilled(applied({ params: [{ ...NUM, ask: { by: 'actor' } }] as never })).length, 0, 'спросят за столом');
+  });
+
+  test('лист с ролью target берётся из «На кого», actor — кто действует, одноимённый вход вызывающего — своё имя', () => {
+    const roles = [{ key: 'на_ком', label: 'На ком', kind: 'sheet', role: 'target' }, { key: 'кто', label: 'Кто', kind: 'sheet', role: 'actor' }];
+    eq(unfilled(applied({ params: roles as never })).length, 0, 'роли');
+    eq(unfilled(applied({ params: [NUM] as never }, {}, { params: [WHO, NUM] as never })).length, 0, 'одноимённый вход');
+    eq(unfilled(applied({ params: [{ ...NUM, kind: 'text' }] as never }, {}, { params: [WHO, NUM] as never })).length, 1, 'другой вид — не подходит');
+  });
+
+  test('роль target закрывается и вне «Для каждого» — наложение на себя', () => {
+    const system = applied({ params: [{ key: 'на_ком', label: 'На ком', kind: 'sheet', role: 'target' }] as never });
+    eq(unfilled(system).length, 0);
+    const plain = applied({ params: [{ key: 'на_ком', label: 'На ком', kind: 'sheet', role: 'target' }] as never }, { type: 'emit', to: undefined, effect: 'метка' });
+    eq(unfilled(plain).length, 1, 'у вызова текущей цели вне «Для каждого» нет');
+  });
+
+  test('список листов, бросок и поле «сами» не приходят — обязательный такой вход остаётся ошибкой', () => {
+    const params = [{ key: 'все', label: 'Все', kind: 'sheet', many: true }, { key: 'бросок', label: 'Бросок', kind: 'roll' }, { key: 'поле', label: 'Поле', kind: 'field' }];
+    const same = [WHO, ...params];
+    eq(unfilled(applied({ params: params as never }, {}, { params: same as never })).length, 3);
+  });
+
+  test('«Снять» входов не заполняет и не проверяется', () => {
+    eq(unfilled(applied({ params: [NUM] as never }, { mode: 'remove' })).length, 0);
+  });
+
+  test('наложение в подписке висящего эффекта: actor — носитель, ошибка называет подписку', () => {
+    const system = applied({ params: [{ key: 'кто', label: 'Кто', kind: 'sheet', role: 'actor' }, NUM] as never }, {}, { steps: [] });
+    system.effects.заслон = {
+      label: 'Заслон', activation: 'passive',
+      on: [{ on: 'after:вешает', steps: [{ type: 'status', effect: 'метка', to: { expr: '@носитель' } }] }],
+    } as unknown as Effect;
+    const [problem] = lintSystem(system).filter(p => p.text.includes('не заполняет его вход'));
+    eq(problem?.text, 'наложение «Метка» не заполняет его вход «Сила»');
+    eq(problem?.where.effect, 'заслон');
+    eq(problem?.where.handler, 0);
+    eq(unfilled(system).length, 1, 'роль actor закрыта носителем, открыта только «Сила»');
+  });
+
+  const chosen = (columns: string[], records: unknown[], extra: Record<string, unknown> = {}) => {
+    const system = applied({ params: [NUM] as never }, { effect: { expr: '@состояние' } }, {
+      params: [WHO, { key: 'состояние', label: 'Состояние', kind: 'effect', optional: true, ...extra }] as never,
+    });
+    system.tables!.оружие = {
+      shape: 'book', use: 'item', label: 'Оружие',
+      columns: [{ key: 'состояние', label: 'Состояние', kind: 'effect' }, ...columns.map(key => ({ key, label: key, kind: 'number' }))],
+      bindings: [{ label: 'Метить', effect: 'вешает' }],
+    } as never;
+    const book = { records } as never;
+    return { system, book };
+  };
+  const poisoned = { id: 'яд', table: 'оружие', label: 'Яд', cells: { состояние: 'метка' } };
+  const unfilledWith = (made: { system: System; book: never }) =>
+    errorsOf(lintSystem(made.system, made.book)).map(p => p.text).filter(t => t.includes('не заполняет его вход') || t.includes('ждёт свойство'));
+
+  test('состояние выбрано клеткой записи: у типа нет такого свойства — «ждёт свойство»', () => {
+    eq(unfilledWith(chosen([], [poisoned])).join('|'), 'наложение «Метка» ждёт свойство «Сила», а у «Оружие» его нет');
+  });
+
+  test('у типа есть колонка с именем входа — клетка заполнит, тишина', () => {
+    eq(unfilledWith(chosen(['сила'], [poisoned])).length, 0);
+  });
+
+  test('записи нет — выбирать из клеток нечего, не проверяется', () => {
+    eq(unfilledWith(chosen([], [])).length, 0);
+    eq(errorsOf(lintSystem(chosen([], [poisoned]).system)).filter(p => p.text.includes('ждёт свойство')).length, 0, 'без книги клетки не видны');
+  });
+
+  test('состояние выбрано умолчанием входа вызывающего — как у вызова', () => {
+    const made = chosen([], [], { default: 'метка' });
+    eq(unfilledWith(made).join('|'), 'наложение «Метка» ждёт свойство «Сила», а у «Оружие» его нет', 'тип привязан к кнопке с этим умолчанием');
+    delete made.system.tables!.оружие;
+    eq(unfilledWith(made).join('|'), 'наложение «Метка» не заполняет его вход «Сила»', 'привязок нет — заполнять нечем');
+  });
+
+  test('запись, чей тип не привязан к этому эффекту, состояние не выбирает', () => {
+    const other = chosen([], [{ ...poisoned, table: 'другое' }]);
+    other.system.tables!.другое = { shape: 'book', use: 'item', label: 'Другое', columns: [{ key: 'состояние', kind: 'effect' }] } as never;
+    eq(unfilledWith(other).length, 0);
+  });
+
+  test('образцы чисты: ни одного нового сообщения', () => {
+    for (const system of SAMPLE_SYSTEMS) {
+      const world = SAMPLE_WORLDS.find(w => w.system === system);
+      const found = errorsOf(lintSystem(system as System, world?.compendium)).filter(p => p.text.includes('наложение «'));
+      eq(found.map(p => p.text).join('\n'), '', system.name);
+    }
+  });
+});
+
+group('линт: слова движка у входов и шагов — «носитель» и «стол»', () => {
+  const found = (system: System) => errorTexts(system).filter(t => t.includes('слово движка'));
+  const input = (key: string) => ({ key, label: 'Кто', kind: 'sheet' });
+  const named = (id: string) => ({ id, type: 'roll', fixed: { expr: '1' } }) as unknown as Step;
+
+  test('вход «носитель» — ошибка со своим пояснением; «строка» сказано, как раньше', () => {
+    eq(found(withEffect('e', { params: [WHO, input('носитель')] as never })).join('|'),
+      'вход «Кто» назван «носитель» — это слово движка: так пишется лист, на котором висит эффект (@носитель); переименуйте вход');
+    eq(found(withEffect('e', { params: [WHO, input('строка')] as never })).join('|'),
+      'вход «Кто» назван «строка» — это слово движка: так пишется клетка своей строки (@строка.колонка); переименуйте вход');
+  });
+
+  test('вход «стол» — ошибка со своим пояснением и адресом входа', () => {
+    const system = withEffect('e', { params: [WHO, input('стол')] as never });
+    eq(found(system).join('|'), 'вход «Кто» назван «стол» — это слово движка: так пишется стол (@стол.поле); переименуйте вход');
+    const [problem] = lintSystem(system).filter(p => p.text.includes('слово движка'));
+    eq(problem?.level, 'error');
+    eq(problem?.where.part, 'params');
+    eq(problem?.where.key, 'стол');
+  });
+
+  test('шаг с именем «носитель» или «стол» — ошибка', () => {
+    eq(found(withEffect('e', { params: [WHO] as never, steps: [named('носитель')] })).join('|'),
+      'шаг не может зваться «носитель» — это слово движка: так пишется лист, на котором висит эффект (@носитель)');
+    eq(found(withEffect('e', { params: [WHO] as never, steps: [named('стол')] })).join('|'),
+      'шаг не может зваться «стол» — это слово движка: так пишется стол (@стол.поле)');
+  });
+
+  test('похожие слова и служебные имена объекта — можно', () => {
+    const system = withEffect('e', { params: [WHO, input('носители'), input('столб'), input('constructor')] as never, steps: [named('столбец'), named('toString')] });
+    eq(found(system).length, 0);
+  });
+
+  test('висящий эффект: вход «носитель» недостижим в подписке, потому ошибка и там, где он объявлен', () => {
+    const system = withEffect('щит', { activation: 'passive', params: [input('носитель')] as never, on: [{ on: 'moment:turn-start', if: { expr: '@носитель == @носитель' }, steps: [] }] as never });
+    eq(found(system).length, 1);
+  });
+});
+
+group('линт: подписка «после» видит итоги вызова, «до» и «завершено» — нет', () => {
+  const called = (): System => {
+    const system = withEffect('удар', {
+      params: [WHO] as never,
+      returns: [{ key: 'попал', label: 'Попал', kind: 'boolean', expr: { expr: 'да' } }, { key: 'урон', label: 'Урон', kind: 'number', expr: { expr: '3' } }] as never,
+      steps: [{ id: 'бросок', type: 'roll', fixed: { expr: '1' } }] as Step[],
+    });
+    return system;
+  };
+  const listening = (on: string, expr = '@попал', system = called()): System => {
+    system.effects.заслон = { label: 'Заслон', activation: 'passive', on: [{ on, if: { expr }, steps: [] }] } as unknown as Effect;
+    return system;
+  };
+  const dangling = (system: System) => errorTexts(system).filter(t => t.includes('нет ни входа, ни шага'));
+
+  test('heardNames: итоги вызываемого — в именах фазы «после» и только в ней', () => {
+    const system = called();
+    deepEq(heardNames(system, listenerOf({ on: 'after:удар' })).seeds, ['бросок', 'попал', 'урон', 'метки']);
+    deepEq(heardNames(system, listenerOf({ on: 'before:удар' })).seeds, ['бросок', 'метки']);
+    ok(!heardNames(system, listenerOf({ on: 'done:удар' })).seeds.includes('попал'));
+    deepEq(heardNames(system, listenerOf({ on: 'after:*' })).seeds, []);
+  });
+
+  test('голое имя итога в «после» — не «нет ни входа, ни шага»; в «до» — ошибка', () => {
+    eq(dangling(listening('after:удар')).length, 0, errorTexts(listening('after:удар')).join('|'));
+    eq(dangling(listening('before:удар')).join('|'), '«попал» — нет ни входа, ни шага с таким именем');
+    eq(dangling(listening('done:удар')).length, 1);
+  });
+
+  test('и в шагах подписки, и в цене', () => {
+    const system = called();
+    system.effects.заслон = {
+      label: 'Заслон', activation: 'passive',
+      on: [{ on: 'after:удар', cost: [mend('@носитель.hp', '@урон')], steps: [mend('@носитель.hp', '@урон')] }],
+    } as unknown as Effect;
+    eq(dangling(system).length, 0, errorTexts(system).join('|'));
+  });
+
+  test('чужое имя по-прежнему ошибка, а совпадение собственного входа с итогом — по-прежнему «совпадает с»', () => {
+    eq(dangling(listening('after:удар', '@нету')).length, 1);
+    const system = listening('after:удар', '@попал');
+    system.effects.заслон!.params = [{ key: 'попал', label: 'Попал', kind: 'boolean' }] as never;
+    eq(errorTexts(system).filter(t => t.includes('совпадает с')).length, 1);
+  });
 });
