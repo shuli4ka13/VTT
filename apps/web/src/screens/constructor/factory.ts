@@ -47,7 +47,7 @@ export const newProp = (kind: RecordKind): Column => ({
 
 export const newDie = (system: System): Made<SystemConstant> => ({
   key: freeId(Object.keys(system.constants ?? {}), 'кость'),
-  value: { label: '', kind: 'die', dice: [{ count: 1, sides: 20 }] },
+  value: { label: '', kind: 'die', dice: [{ sides: 20 }] },
 });
 
 export const newRollEdit = (system: System): Made<RollEdit> => ({

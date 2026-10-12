@@ -68,7 +68,29 @@ describe('Словари: кости, правки броска, таблицы'
     const [first] = screen.getAllByPlaceholderText('как зовётся эта часть');
     fireEvent.change(first!, { target: { value: 'Надежда' } });
     expect(Object.values(useWorld.getState().system.constants ?? {})[0]?.dice?.[0])
-      .toEqual({ count: 1, sides: 20, name: 'надежда', label: 'Надежда' });
+      .toEqual({ sides: 20, name: 'надежда', label: 'Надежда' });
+  });
+
+  it('поле «сколько»: единица и пустое поле снимают ключ — умолчание в данные не пишется', () => {
+    renderOpen(<RulesTab />);
+    открыть('Кости');
+    fireEvent.click(screen.getByText('+ кость'));
+    const dice = () => Object.values(useWorld.getState().system.constants ?? {})[0]!.dice!;
+    expect(dice()).toEqual([{ sides: 20 }]);
+
+    fireEvent.click(screen.getByText('+ ещё часть'));
+    expect(dice()[1]).toEqual({ sides: 20 });
+
+    const [count] = screen.getAllByPlaceholderText('сколько');
+    fireEvent.change(count!, { target: { value: '3' } });
+    expect(dice()[0]!.count).toBe(3);
+    fireEvent.change(count!, { target: { value: '1' } });
+    expect('count' in dice()[0]!).toBe(false);
+
+    fireEvent.change(count!, { target: { value: '2' } });
+    expect(dice()[0]!.count).toBe(2);
+    fireEvent.change(count!, { target: { value: '' } });
+    expect('count' in dice()[0]!).toBe(false);
   });
 
   it('счёт костей — число или формула в одном поле: @пул берёт число из листа', () => {

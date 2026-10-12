@@ -134,6 +134,11 @@ describe('dieReadback — кость словами', () => {
     expect(joinReadback(dieReadback(die, system))).toBe('Кинуть 1к20.');
   });
 
+  it('кость без счёта — тоже одна: складывать нечего', () => {
+    const die = { kind: 'die', dice: [{ sides: 20 }] };
+    expect(joinReadback(dieReadback(die, system))).toBe('Кинуть 1к20.');
+  });
+
   it('несколько костей — сумма названа: их и правда складывают', () => {
     const die = { kind: 'die', dice: [{ count: 2, sides: 6 }] };
     expect(joinReadback(dieReadback(die, system))).toBe('Кинуть 2к6 и сложить.');

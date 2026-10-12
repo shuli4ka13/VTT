@@ -415,8 +415,7 @@ export function dieReadback(constant: SystemConstant, system: System): Segment[]
   const atLeast = typeof read === 'object' ? read.atLeast : undefined;
 
   const single = (constant.dice ?? []).length === 1
-    && typeof (constant.dice ?? [])[0]?.count === 'number'
-    && ((constant.dice ?? [])[0]!.count as number) === 1;
+    && ((constant.dice ?? [])[0]!.count ?? 1) === 1;
   if (single && kind === 'sum') return [seg(`Кинуть ${dice}.`)];
 
   const tail = kind === 'best' ? 'взять лучшую'

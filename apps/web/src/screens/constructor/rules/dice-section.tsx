@@ -143,7 +143,7 @@ function DiceComposer({ dice, onEdit }: {
           <div key={i} className="dice-term">
             <span className="dice-term__num dice-term__num--wide">
               <BoundField value={term.count ?? 1} placeholder="сколько"
-                onChange={next => onEdit(list => { if (next === null) delete list[i]!.count; else list[i]!.count = next; })} />
+                onChange={next => onEdit(list => { if (next === null || next === 1) delete list[i]!.count; else list[i]!.count = next; })} />
             </span>
 
             <span className="dice-term__d">к</span>
@@ -206,7 +206,7 @@ function DiceComposer({ dice, onEdit }: {
             list[0]!.label ??= 'Первая';
             list[0]!.name ??= 'первая';
           }
-          list.push({ count: 1, sides: list[0]?.sides ?? 12 });
+          list.push({ sides: list[0]?.sides ?? 12 });
         })}
       >
         + ещё часть
