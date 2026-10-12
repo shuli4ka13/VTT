@@ -1,6 +1,6 @@
-import { group, test, eq, deepSame } from './harness.ts';
+import { group, test, eq, deepSame, throws } from './harness.ts';
 import { exchange } from './play.ts';
-import { appliedOf, fillMissing, implicitOf, storable } from '../src/model/implicit.ts';
+import { appliedOf, implicitOf, storable } from '../src/model/implicit.ts';
 import type { System, Sheet, Compendium, Effect, Param, WornEffect } from '../src/model/types.ts';
 
 const ACTOR = { key: 'действующий', kind: 'sheet' };
@@ -41,27 +41,39 @@ const argsOf = (played: { sheets: Sheet[] }, id: string): Record<string, unknown
 const WHO = { key: 'кто', label: 'Кто', kind: 'sheet', role: 'actor' };
 const ON = { key: 'на_ком', label: 'На ком', kind: 'sheet', role: 'target' };
 
-group('«Наложить» заполняет входы наложенного так же, как «Вызвать»', () => {
-  test('target — лист из «На кого», actor — кто действует: в «Для каждого» это цель и нажавший', () => {
-    const played = press(world({ params: [WHO, ON] as Param[] }, {}));
+group('«Наложить» кладёт наложенному только явные аргументы', () => {
+  const both = { кто: { expr: '@действующий' }, на_ком: { expr: '@цель' } };
+
+  test('в «Для каждого» явные аргументы: target — цель, actor — нажавший', () => {
+    const played = press(world({ params: [WHO, ON] as Param[] }, { steps: [EACH, apply('@цель', { args: both })] }));
     deepSame(argsOf(played, 'б'), { кто: 'а', на_ком: 'б' });
   });
 
-  test('наложение на себя вне «Для каждого»: цели нет, target — тот, на ком висит', () => {
-    const played = press(world({ params: [WHO, ON] as Param[] }, { steps: [apply('@действующий')] }));
+  test('без аргументов роли сами не приходят и одноимённый вход тоже', () => {
+    eq(argsOf(press(world({ params: [WHO, ON] as Param[] }, {})), 'б'), undefined);
+    const ask = { key: 'сила', label: 'Сила', kind: 'number', ask: { by: 'actor' } };
+    const played = press(world({ params: [{ key: 'сила', kind: 'number' }] as Param[] }, { params: [ACTOR, TARGETS, ask] as Param[] }), { inputs: { сила: 7 } });
+    eq(argsOf(played, 'б'), undefined);
+  });
+
+  test('наложение на себя вне «Для каждого»: аргументы называют того, на ком висит', () => {
+    const args = { кто: { expr: '@действующий' }, на_ком: { expr: '@действующий' } };
+    const played = press(world({ params: [WHO, ON] as Param[] }, { steps: [apply('@действующий', { args })] }));
     deepSame(argsOf(played, 'а'), { кто: 'а', на_ком: 'а' });
     eq(worn(played, 'б').length, 0);
   });
 
-  test('внутри «Для каждого» на себя: target — «На кого», а не текущая цель', () => {
-    const played = press(world({ params: [WHO, ON] as Param[] }, { steps: [EACH, apply('@действующий')] }));
+  test('внутри «Для каждого» на себя: «На кого» остаётся тем, что передали', () => {
+    const args = { кто: { expr: '@действующий' }, на_ком: { expr: '@действующий' } };
+    const played = press(world({ params: [WHO, ON] as Param[] }, { steps: [EACH, apply('@действующий', { args })] }));
     deepSame(argsOf(played, 'а'), { кто: 'а', на_ком: 'а' });
   });
 
-  test('у висящего эффекта actor — носитель: наложение из подписки', () => {
+  test('у висящего эффекта наложение из подписки передаёт носителя явно', () => {
+    const args = { кто: { expr: '@носитель' }, на_ком: { expr: '@носитель' } };
     const watch: Partial<Effect> = {
       label: 'Заслон', activation: 'passive',
-      on: [{ on: 'after:метить', steps: [apply('@носитель')] }] as never,
+      on: [{ on: 'after:метить', steps: [apply('@носитель', { args })] }] as never,
     };
     const played = press(
       world({ params: [WHO, ON] as Param[] }, { steps: [] }, { заслон: watch }),
@@ -71,40 +83,48 @@ group('«Наложить» заполняет входы наложенного
     deepSame(mark?.args, { кто: 'б', на_ком: 'б' });
   });
 
-  test('одноимённый вход вызывающего заполняет число, строка не нужна', () => {
+  test('одноимённый вход вызывающего передают аргументом «@сила»', () => {
     const ask = { key: 'сила', label: 'Сила', kind: 'number', ask: { by: 'actor' } };
-    const played = press(world({ params: [{ key: 'сила', kind: 'number' }] as Param[] }, { params: [ACTOR, TARGETS, ask] as Param[] }), { inputs: { сила: 7 } });
+    const steps = [EACH, apply('@цель', { args: { сила: { expr: '@сила' } } })];
+    const played = press(world({ params: [{ key: 'сила', kind: 'number' }] as Param[] }, { params: [ACTOR, TARGETS, ask] as Param[], steps }), { inputs: { сила: 7 } });
     deepSame(argsOf(played, 'б'), { сила: 7 });
   });
 
-  test('умолчание наложенного одноимённый вход не перебивает', () => {
+  test('аргумент «@сила» с умолчанием наложенного: передан — перебивает, не передан — умолчание', () => {
     const ask = { key: 'сила', label: 'Сила', kind: 'number', ask: { by: 'actor' } };
-    const played = press(world({ params: [{ key: 'сила', kind: 'number', default: 1 }] as Param[] }, { params: [ACTOR, TARGETS, ask] as Param[] }), { inputs: { сила: 7 } });
-    eq(argsOf(played, 'б'), undefined);
+    const mark = { params: [{ key: 'сила', kind: 'number', default: 1 }] as Param[] };
+    const withArg = world(mark, { params: [ACTOR, TARGETS, ask] as Param[], steps: [EACH, apply('@цель', { args: { сила: { expr: '@сила' } } })] });
+    deepSame(argsOf(press(withArg, { inputs: { сила: 7 } }), 'б'), { сила: 7 });
+    const bare = world(mark, { params: [ACTOR, TARGETS, ask] as Param[] });
+    eq(argsOf(press(bare, { inputs: { сила: 7 } }), 'б'), undefined);
   });
 
-  test('клетка записи кнопки заполняет вход с её именем', () => {
-    const played = press(world({ params: [{ key: 'клеймо', kind: 'number' }] as Param[] }, {}));
-    deepSame(argsOf(played, 'б'), { клеймо: 4 });
+  test('клетка записи сама во вход не уходит, с аргументом кнопки — уходит', () => {
+    const mark = { params: [{ key: 'клеймо', kind: 'number' }] as Param[] };
+    eq(argsOf(press(world(mark, {})), 'б'), undefined);
+    const caller = { params: [ACTOR, TARGETS, { key: 'клеймо', label: 'Клеймо', kind: 'number', optional: true }] as Param[], steps: [EACH, apply('@цель', { args: { клеймо: { expr: '@клеймо' } } })] };
+    const system = world(mark, caller);
+    system.tables!.оружие!.bindings = [{ label: 'Метить', effect: 'метить', args: { клеймо: { expr: '@клеймо' } } }];
+    deepSame(argsOf(press(system), 'б'), { клеймо: 4 });
   });
 
-  test('явный аргумент сильнее и клетки, и одноимённого входа', () => {
+  test('явный аргумент кладётся как есть', () => {
     const played = press(world({ params: [{ key: 'клеймо', kind: 'number' }, WHO] as Param[] }, { steps: [EACH, apply('@цель', { args: { клеймо: { expr: '9' }, кто: { expr: '@цель' } } })] }));
     deepSame(argsOf(played, 'б'), { клеймо: 9, кто: 'б' });
   });
 
-  test('явная пустая строка тоже закрывает неявное заполнение и не запоминается', () => {
+  test('явная пустая строка не запоминается', () => {
     const ask = { key: 'вид', label: 'Вид', kind: 'text', ask: { by: 'actor' } };
     const mark = { params: [{ key: 'вид', kind: 'text' }] as Param[] };
     const caller = { params: [ACTOR, TARGETS, ask] as Param[] };
-    deepSame(argsOf(press(world(mark, caller), { inputs: { вид: 'яд' } }), 'б'), { вид: 'яд' });
+    const named = press(world(mark, { ...caller, steps: [EACH, apply('@цель', { args: { вид: { expr: '@вид' } } })] }), { inputs: { вид: 'яд' } });
+    deepSame(argsOf(named, 'б'), { вид: 'яд' });
     const played = press(world(mark, { ...caller, steps: [EACH, apply('@цель', { args: { вид: { expr: '""' } } })] }), { inputs: { вид: 'яд' } });
     eq(argsOf(played, 'б'), undefined);
   });
 
-  test('списки листов «сами» не приходят', () => {
-    const played = press(world({ params: [{ key: 'цели', kind: 'sheet', many: true }, WHO] as Param[] }, {}));
-    deepSame(argsOf(played, 'б'), { кто: 'а' });
+  test('список листов в аргумент наложения не запомнить — ошибка', () => {
+    throws(() => press(world({ params: [{ key: 'цели', kind: 'sheet', many: true }] as Param[] }, { steps: [EACH, apply('@цель', { args: { цели: { expr: '@цели' } } })] })));
   });
 
   test('снятие входов не берёт и не требует', () => {
@@ -115,7 +135,7 @@ group('«Наложить» заполняет входы наложенного
 });
 
 group('«Наложить» и «refresh»: записи различаются по аргументам', () => {
-  const refresh = world({ params: [WHO] as Param[] }, {});
+  const refresh = world({ params: [WHO] as Param[] }, { steps: [EACH, apply('@цель', { args: { кто: { expr: '@действующий' } } })] });
   const marks = (played: { sheets: Sheet[] }, id: string) => worn(played, id).filter(entry => entry.effectId === 'метка');
 
   test('один и тот же наложивший — одна запись, обновлённая', () => {
@@ -125,7 +145,7 @@ group('«Наложить» и «refresh»: записи различаются 
     deepSame(marks(again, 'б')[0]!.args, { кто: 'а' });
   });
 
-  test('другой наложивший — вторая запись: неявное «кто» теперь различает записи', () => {
+  test('другой наложивший — вторая запись: «кто» различает записи', () => {
     const first = press(refresh);
     const second = press(refresh, { from: 'в', sheets: first.sheets });
     deepSame(marks(second, 'б').map(entry => entry.args), [{ кто: 'а' }, { кто: 'в' }]);
@@ -136,44 +156,6 @@ group('«Наложить» и «refresh»: записи различаются 
     const first = press(bare);
     const second = press(bare, { from: 'в', sheets: first.sheets });
     eq(marks(second, 'б').length, 1);
-  });
-});
-
-group('общий порядок заполнения: явное, клетки записи, роли и имена', () => {
-  const params = [
-    { key: 'a', kind: 'number' }, { key: 'b', kind: 'number' }, { key: 'c', kind: 'number' }, { key: 'лист', kind: 'sheet' }, { key: 'поле', kind: 'field' },
-  ] as Param[];
-  const from = {
-    prop: (name: string) => ({ a: 'клетка-a', b: 'клетка-b', лист: 'клетка-лист', поле: 'клетка-поле' })[name],
-    implicit: (param: Param) => ({ b: 'сам-b', c: 'сам-c', лист: 'сам-лист', поле: 'сам-поле' })[param.key],
-  };
-
-  test('явное, затем клетка записи, затем «сам»; лист и поле клетками не заполняются, поле «сам» не приходит', () => {
-    const args = fillMissing(params, { a: 'явное-a' }, from);
-    deepSame(args, { a: 'явное-a', b: 'клетка-b', c: 'сам-c', лист: 'сам-лист' });
-  });
-
-  test('исходные явные значения не меняются', () => {
-    const given = { a: 1 };
-    fillMissing(params, given, from);
-    deepSame(given, { a: 1 });
-  });
-
-  test('«null» и «нет значения» не закрывают вход, пустая строка — закрывает', () => {
-    const args = fillMissing(params, { a: '' }, { prop: () => null, implicit: param => (param.key === 'b' ? undefined : 'сам') });
-    eq(args.a, '');
-    eq('b' in args, false);
-    eq(args.c, 'сам');
-  });
-
-  test('для запоминаемого берутся только хранимые входы и значения: число, строка, да/нет', () => {
-    const wide = [...params, { key: 'список', kind: 'sheet', many: true }, { key: 'бросок', kind: 'roll' }, { key: 'объект', kind: 'number' }, { key: 'пусто', kind: 'text' }, { key: 'жив', kind: 'boolean' }] as Param[];
-    const source = {
-      prop: (name: string) => (name === 'пусто' ? '' : undefined),
-      implicit: (param: Param) => (param.key === 'объект' ? { x: 1 } : param.key === 'пусто' ? '' : param.key === 'жив' ? false : `сам-${param.key}`),
-    };
-    const args = fillMissing(wide, {}, source, true);
-    deepSame(args, { a: 'сам-a', b: 'сам-b', c: 'сам-c', лист: 'сам-лист', жив: false });
   });
 });
 

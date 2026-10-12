@@ -2365,6 +2365,15 @@
               },
               "damage_with": {
                 "expr": "@wield.damage"
+              },
+              "damage_dice": {
+                "expr": "@damage_dice"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
+              },
+              "damage_source": {
+                "expr": "@damage_source"
               }
             }
           }
@@ -2509,7 +2518,15 @@
         "bindings": [
           {
             "label": "Выпить",
-            "effect": "potion_heal"
+            "effect": "potion_heal",
+            "args": {
+              "heal_die": {
+                "expr": "@heal_die"
+              },
+              "heal_bonus": {
+                "expr": "@heal_bonus"
+              }
+            }
           }
         ]
       },
@@ -2574,6 +2591,9 @@
               },
               "цена": {
                 "expr": "\"cost_action\""
+              },
+              "damage_type": {
+                "expr": "@damage_type"
               }
             }
           }
@@ -2613,7 +2633,21 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "cantrip_save"
+            "effect": "cantrip_save",
+            "args": {
+              "save_by": {
+                "expr": "@save_by"
+              },
+              "damage_die": {
+                "expr": "@damage_die"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
+              },
+              "status": {
+                "expr": "@status"
+              }
+            }
           }
         ]
       },
@@ -2655,7 +2689,15 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "cantrip_buff"
+            "effect": "cantrip_buff",
+            "args": {
+              "status": {
+                "expr": "@status"
+              },
+              "holds": {
+                "expr": "@holds"
+              }
+            }
           }
         ]
       },
@@ -2718,6 +2760,15 @@
               },
               "цена": {
                 "expr": "\"cost_spell\""
+              },
+              "damage_type": {
+                "expr": "@damage_type"
+              },
+              "status": {
+                "expr": "@status"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
               }
             }
           }
@@ -2766,7 +2817,27 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "spell_auto"
+            "effect": "spell_auto",
+            "args": {
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "damage_die": {
+                "expr": "@damage_die"
+              },
+              "dice_count": {
+                "expr": "@dice_count"
+              },
+              "dice_up": {
+                "expr": "@dice_up"
+              },
+              "per_die": {
+                "expr": "@per_die"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
+              }
+            }
           }
         ]
       },
@@ -2799,7 +2870,18 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "spell_buff"
+            "effect": "spell_buff",
+            "args": {
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "status": {
+                "expr": "@status"
+              },
+              "holds": {
+                "expr": "@holds"
+              }
+            }
           }
         ]
       },
@@ -2840,7 +2922,24 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "spell_heal"
+            "effect": "spell_heal",
+            "args": {
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "heal_die": {
+                "expr": "@heal_die"
+              },
+              "dice_count": {
+                "expr": "@dice_count"
+              },
+              "dice_up": {
+                "expr": "@dice_up"
+              },
+              "cure": {
+                "expr": "@cure"
+              }
+            }
           }
         ]
       },
@@ -2866,7 +2965,15 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "spell_cleanse"
+            "effect": "spell_cleanse",
+            "args": {
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "cure": {
+                "expr": "@cure"
+              }
+            }
           }
         ]
       },
@@ -2887,7 +2994,12 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "spell_note"
+            "effect": "spell_note",
+            "args": {
+              "spell_level": {
+                "expr": "@spell_level"
+              }
+            }
           }
         ]
       },
@@ -2972,6 +3084,12 @@
               },
               "damage_source": {
                 "expr": "\"немагический\""
+              },
+              "damage_dice": {
+                "expr": "@damage_dice"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
               }
             }
           }
@@ -3039,7 +3157,36 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "spell_save"
+            "effect": "spell_save",
+            "args": {
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "save_by": {
+                "expr": "@save_by"
+              },
+              "damage_die": {
+                "expr": "@damage_die"
+              },
+              "dice_count": {
+                "expr": "@dice_count"
+              },
+              "dice_up": {
+                "expr": "@dice_up"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
+              },
+              "status": {
+                "expr": "@status"
+              },
+              "half": {
+                "expr": "@half"
+              },
+              "holds": {
+                "expr": "@holds"
+              }
+            }
           }
         ]
       }
@@ -3176,6 +3323,12 @@
             "label": "Плата",
             "kind": "effect",
             "default": "cost_attack"
+          },
+          {
+            "key": "spell_level",
+            "label": "Круг заклинания",
+            "kind": "number",
+            "optional": true
           }
         ],
         "steps": [
@@ -3190,6 +3343,12 @@
             "args": {
               "бонус": {
                 "expr": "@attack_with"
+              },
+              "кто": {
+                "expr": "@действующий"
+              },
+              "против": {
+                "expr": "@цель"
               }
             }
           },
@@ -3212,6 +3371,18 @@
             "args": {
               "amount": {
                 "expr": "@урон"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
+              },
+              "damage_source": {
+                "expr": "@damage_source"
               }
             }
           },
@@ -3254,6 +3425,9 @@
               },
               "источник": {
                 "expr": "@действующий"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
               }
             }
           }
@@ -3311,6 +3485,15 @@
             "args": {
               "amount": {
                 "expr": "@урон"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
               }
             }
           }
@@ -3318,7 +3501,15 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_once"
+            "effect": "cost_once",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
           }
         ]
       },
@@ -3378,6 +3569,12 @@
               },
               "damage_source": {
                 "expr": "\"магический\""
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           }
@@ -3389,6 +3586,12 @@
             "args": {
               "circle": {
                 "expr": "@slot"
+              },
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           }
@@ -3460,6 +3663,12 @@
               },
               "сложность": {
                 "expr": "@действующий.spell_dc"
+              },
+              "кто": {
+                "expr": "@цель"
+              },
+              "против": {
+                "expr": "@действующий"
               }
             }
           },
@@ -3478,6 +3687,15 @@
               },
               "damage_source": {
                 "expr": "\"магический\""
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
               }
             }
           },
@@ -3502,7 +3720,15 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_action"
+            "effect": "cost_action",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
           }
         ]
       },
@@ -3521,7 +3747,15 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_action"
+            "effect": "cost_action",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
           }
         ]
       },
@@ -3581,7 +3815,15 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_action"
+            "effect": "cost_action",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
           }
         ],
         "bond": {
@@ -3676,6 +3918,15 @@
               },
               "damage_source": {
                 "expr": "\"магический\""
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
               }
             }
           }
@@ -3683,7 +3934,21 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_spell"
+            "effect": "cost_spell",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              }
+            }
           }
         ]
       },
@@ -3759,7 +4024,21 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_spell"
+            "effect": "cost_spell",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              }
+            }
           }
         ],
         "bond": {
@@ -3846,6 +4125,15 @@
             "args": {
               "amount": {
                 "expr": "@сколько"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "slot": {
+                "expr": "@slot"
               }
             }
           },
@@ -3863,7 +4151,21 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_spell"
+            "effect": "cost_spell",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              }
+            }
           }
         ]
       },
@@ -3929,7 +4231,21 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_spell"
+            "effect": "cost_spell",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              }
+            }
           }
         ]
       },
@@ -3964,7 +4280,21 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_spell"
+            "effect": "cost_spell",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              }
+            }
           }
         ]
       },
@@ -4017,6 +4347,12 @@
             "args": {
               "amount": {
                 "expr": "@сколько"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           }
@@ -4024,7 +4360,15 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_action"
+            "effect": "cost_action",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
           }
         ]
       },
@@ -4056,6 +4400,9 @@
               },
               "amount": {
                 "expr": "@сколько"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           }
@@ -4063,7 +4410,15 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_bonus"
+            "effect": "cost_bonus",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
           },
           {
             "type": "emit",
@@ -4077,6 +4432,12 @@
               },
               "note": {
                 "expr": "\"второе дыхание уже потрачено\""
+              },
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           }
@@ -4127,6 +4488,12 @@
               },
               "note": {
                 "expr": "\"всплеск действий уже потрачен\""
+              },
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           }
@@ -4155,7 +4522,15 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_bonus"
+            "effect": "cost_bonus",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
           },
           {
             "type": "emit",
@@ -4169,6 +4544,12 @@
               },
               "note": {
                 "expr": "\"ярости на сегодня кончились\""
+              },
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           }
@@ -4267,7 +4648,15 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_bonus"
+            "effect": "cost_bonus",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
           },
           {
             "type": "emit",
@@ -4281,6 +4670,12 @@
               },
               "note": {
                 "expr": "\"вдохновение на сегодня кончилось\""
+              },
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           }
@@ -4325,13 +4720,32 @@
           },
           {
             "type": "emit",
-            "effect": "heal"
+            "effect": "heal",
+            "args": {
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "amount": {
+                "expr": "@amount"
+              }
+            }
           }
         ],
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_bonus"
+            "effect": "cost_bonus",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
           },
           {
             "type": "emit",
@@ -4342,6 +4756,15 @@
               },
               "note": {
                 "expr": "\"в запасе наложения рук столько нет\""
+              },
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "amount": {
+                "expr": "@amount"
               }
             }
           }
@@ -4383,6 +4806,12 @@
               },
               "сложность": {
                 "expr": "@действующий.spell_dc"
+              },
+              "кто": {
+                "expr": "@цель"
+              },
+              "против": {
+                "expr": "@действующий"
               }
             }
           },
@@ -4406,7 +4835,15 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_action"
+            "effect": "cost_action",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
           },
           {
             "type": "emit",
@@ -4420,6 +4857,12 @@
               },
               "note": {
                 "expr": "\"божественный канал уже потрачен\""
+              },
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           }
@@ -4448,7 +4891,15 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_action"
+            "effect": "cost_action",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
           }
         ]
       },
@@ -4489,7 +4940,15 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_action"
+            "effect": "cost_action",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
           }
         ]
       },
@@ -4508,7 +4967,15 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_action"
+            "effect": "cost_action",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
           }
         ]
       },
@@ -4589,7 +5056,15 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_action"
+            "effect": "cost_action",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
           }
         ]
       },
@@ -4635,7 +5110,15 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_action"
+            "effect": "cost_action",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
           }
         ]
       },
@@ -4667,6 +5150,9 @@
               },
               "amount": {
                 "expr": "@сколько"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           }
@@ -4684,6 +5170,12 @@
               },
               "note": {
                 "expr": "\"костей хитов не осталось\""
+              },
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           }
@@ -4715,6 +5207,12 @@
             "args": {
               "что": {
                 "expr": "\"действие\""
+              },
+              "лист": {
+                "expr": "@лист"
+              },
+              "источник": {
+                "expr": "@лист"
               }
             }
           }
@@ -4746,6 +5244,12 @@
             "args": {
               "что": {
                 "expr": "\"бонусное\""
+              },
+              "лист": {
+                "expr": "@лист"
+              },
+              "источник": {
+                "expr": "@лист"
               }
             }
           }
@@ -4777,6 +5281,12 @@
             "args": {
               "что": {
                 "expr": "\"реакция\""
+              },
+              "лист": {
+                "expr": "@лист"
+              },
+              "источник": {
+                "expr": "@лист"
               }
             }
           }
@@ -4808,6 +5318,12 @@
             "args": {
               "что": {
                 "expr": "\"раз_за_ход\""
+              },
+              "лист": {
+                "expr": "@лист"
+              },
+              "источник": {
+                "expr": "@лист"
               }
             }
           }
@@ -4841,7 +5357,15 @@
           },
           {
             "type": "emit",
-            "effect": "cost_action"
+            "effect": "cost_action",
+            "args": {
+              "лист": {
+                "expr": "@лист"
+              },
+              "источник": {
+                "expr": "@лист"
+              }
+            }
           },
           {
             "type": "apply",
@@ -5081,6 +5605,12 @@
               },
               "note": {
                 "expr": "@лист.slots.[@circle].none"
+              },
+              "лист": {
+                "expr": "@лист"
+              },
+              "источник": {
+                "expr": "@лист"
               }
             }
           }
@@ -5192,6 +5722,12 @@
               },
               "note": {
                 "expr": "@лист.что.none"
+              },
+              "лист": {
+                "expr": "@лист"
+              },
+              "источник": {
+                "expr": "@лист"
               }
             }
           },
@@ -7540,6 +8076,9 @@
                   },
                   "сложность": {
                     "expr": "(большее из(10, округлить вниз(@amount / 2)))"
+                  },
+                  "против": {
+                    "expr": "@носитель"
                   }
                 }
               },
@@ -8074,7 +8613,12 @@
               },
               {
                 "type": "emit",
-                "effect": "turn_reset"
+                "effect": "turn_reset",
+                "args": {
+                  "лист": {
+                    "expr": "@носитель"
+                  }
+                }
               },
               {
                 "type": "apply",
@@ -8133,7 +8677,12 @@
             "steps": [
               {
                 "type": "emit",
-                "effect": "turn_reset"
+                "effect": "turn_reset",
+                "args": {
+                  "лист": {
+                    "expr": "@носитель"
+                  }
+                }
               },
               {
                 "type": "apply",
@@ -8331,7 +8880,15 @@
         "steps": [
           {
             "type": "emit",
-            "effect": "cost_action"
+            "effect": "cost_action",
+            "args": {
+              "лист": {
+                "expr": "@лист"
+              },
+              "источник": {
+                "expr": "@лист"
+              }
+            }
           },
           {
             "type": "branch",
@@ -8354,6 +8911,12 @@
             "args": {
               "circle": {
                 "expr": "@slot"
+              },
+              "лист": {
+                "expr": "@лист"
+              },
+              "источник": {
+                "expr": "@лист"
               }
             }
           }
@@ -8564,6 +9127,15 @@
             "args": {
               "кто": {
                 "expr": "@кто"
+              },
+              "характеристика": {
+                "expr": "@характеристика"
+              },
+              "сложность": {
+                "expr": "@сложность"
+              },
+              "против": {
+                "expr": "@кто"
               }
             }
           },
@@ -8677,7 +9249,21 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_spell"
+            "effect": "cost_spell",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              }
+            }
           }
         ],
         "bond": {
@@ -8718,6 +9304,12 @@
               },
               "сложность": {
                 "expr": "@действующий.spell_dc"
+              },
+              "кто": {
+                "expr": "@цель"
+              },
+              "против": {
+                "expr": "@действующий"
               }
             }
           },
@@ -8742,6 +9334,15 @@
               },
               "damage_source": {
                 "expr": "\"магический\""
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
               }
             }
           },
@@ -8789,6 +9390,15 @@
               },
               "damage_source": {
                 "expr": "\"магический\""
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
               }
             }
           },

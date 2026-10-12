@@ -1064,7 +1064,15 @@
         "bindings": [
           {
             "label": "Выстрелить",
-            "effect": "shoot"
+            "effect": "shoot",
+            "args": {
+              "damage_type": {
+                "expr": "@damage_type"
+              },
+              "damage_dice": {
+                "expr": "@damage_dice"
+              }
+            }
           }
         ]
       },
@@ -1247,6 +1255,18 @@
             "args": {
               "amount": {
                 "expr": "@урон"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
+              },
+              "aim": {
+                "expr": "@aim"
               }
             }
           },
@@ -1265,6 +1285,15 @@
               },
               "damage_type": {
                 "expr": "\"критический\""
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "aim": {
+                "expr": "@aim"
               }
             }
           },
@@ -1279,7 +1308,15 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_action"
+            "effect": "cost_action",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
           },
           {
             "type": "apply",

@@ -896,7 +896,15 @@
         "bindings": [
           {
             "label": "Атака",
-            "effect": "strike"
+            "effect": "strike",
+            "args": {
+              "damage_dice": {
+                "expr": "@damage_dice"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
+              }
+            }
           }
         ]
       },
@@ -954,6 +962,15 @@
             "args": {
               "save": {
                 "expr": "@save_by"
+              },
+              "damage_dice": {
+                "expr": "@damage_dice"
+              },
+              "status": {
+                "expr": "@status"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
               }
             }
           }
@@ -981,7 +998,15 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "heal"
+            "effect": "heal",
+            "args": {
+              "heal_dice": {
+                "expr": "@heal_dice"
+              },
+              "cure": {
+                "expr": "@cure"
+              }
+            }
           }
         ]
       },
@@ -1036,7 +1061,18 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "fireball"
+            "effect": "fireball",
+            "args": {
+              "save_by": {
+                "expr": "@save_by"
+              },
+              "damage_dice": {
+                "expr": "@damage_dice"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
+              }
+            }
           }
         ]
       }

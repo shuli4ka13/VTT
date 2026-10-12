@@ -1,7 +1,6 @@
 import { EngineError } from '../errors.ts';
 import { requireCalled } from '../effects.ts';
 import { amountParamOf } from '../../model/lists.ts';
-import { fillMissing } from '../../model/implicit.ts';
 import type { EmittedEvent } from '../rule.ts';
 import type { StepData, StepContext, StepModule } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
@@ -72,7 +71,7 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
       const value = kind === 'roll' ? rollArg(ref, key, ctx) : kind === 'field' ? ctx.field(ref) : ctx.value(ref);
       if (value !== null && value !== undefined) given[key] = value;
     }
-    const args = fillMissing(params, given, ctx);
+    const args = given;
     const main = amountParamOf(spec);
     const incoming = main && args[main.key] !== undefined ? Number(args[main.key]) : 0;
     if (!Number.isFinite(incoming)) throw new EngineError(`«${main!.label ?? main!.key}» вызова «${spec.label ?? id}»: ждали число, пришло «${String(args[main!.key])}»`);

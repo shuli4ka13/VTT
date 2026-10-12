@@ -270,7 +270,7 @@ describe('правка вызова видит переданный бросок
     steps: [
       { id: 'выстрел', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
       EACH,
-      { type: 'emit', effect: 'урон', args: { бросок: { expr: '@выстрел' }, сколько: { expr: '5' } } },
+      { type: 'emit', effect: 'урон', args: { лист: { expr: '@цель' }, бросок: { expr: '@выстрел' }, сколько: { expr: '5' } } },
     ],
   };
   const sharp = {

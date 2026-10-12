@@ -1,5 +1,4 @@
 import { paramStages } from '../engine/stages.ts';
-import { implicitOf, appliedOf } from '../model/implicit.ts';
 import { compile, printFormula } from '../formula/index.ts';
 import type { Node } from '../formula/index.ts';
 import { EngineError, isRuleError } from '../engine/errors.ts';
@@ -403,29 +402,6 @@ export class Run {
       label: frame.label,
       die,
       value: refValue => resolveRef(refValue, ref),
-      prop: name => (frame.props && name in frame.props ? resolveRef({ expr: `@${name}` }, { ...ref, recordScope: true }) : undefined),
-      implicit: (param, onto) => {
-        const caller = this.system.effects[frame.effectId];
-        const shape = { params: frame.paramDefs ?? caller?.params, steps: caller?.steps, activation: caller?.activation };
-        const how = onto !== undefined ? appliedOf(param, shape) : caller ? implicitOf(param, shape) : null;
-        if (!how) return undefined;
-        if (how.by === 'to') return onto;
-        if (param.kind === 'roll') return (rolls[how.from] as unknown) ?? undefined;
-        if (param.kind === 'sheet') {
-          const id = frame.bound?.[how.from];
-          if (param.many) return Array.isArray(id) ? id : undefined;
-          return typeof id === 'string' ? id : undefined;
-        }
-        const own = (frame.paramDefs ?? caller?.params ?? []).find(p => p.key === how.from);
-        if (own?.ask) return resolveRef({ expr: `@${how.from}` }, ref);
-        try {
-          const value = resolveRef({ expr: `@${how.from}` }, ref);
-          return value === null || value === '' ? undefined : value;
-        } catch (err) {
-          if (isRuleError(err)) return undefined;
-          throw err;
-        }
-      },
       known: refValue => this.known(refValue, frame, results, rolls, stepIds),
       number: (refValue, what) => {
         try {

@@ -53,22 +53,3 @@ export function emittedChoices(system: System, effectId: string, raw: unknown, c
   const lone = /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((raw as { expr?: unknown } | null)?.expr ?? ''));
   return lone ? choicesOfInput(system, effectId, lone[1]!, compendium) : [];
 }
-
-export function kindsChoosing(system: System, effectId: string, key: string, choice: string, compendium?: Compendium): { kind: string; columns: string[] }[] {
-  const param = system.effects[effectId]?.params?.find(p => p.key === key);
-  const out: { kind: string; columns: string[] }[] = [];
-  const columnsOf = (kind: string): string[] => (system.tables?.[kind]?.columns ?? []).map(c => c.key);
-  for (const [kind, table] of Object.entries(system.tables ?? {})) {
-    for (const binding of table.bindings ?? []) {
-      if (binding.effect !== effectId) continue;
-      const picked = chosenEffect((binding.args as Record<string, unknown> | undefined)?.[key]) ?? (typeof param?.default === 'string' ? param.default : null);
-      if (picked === choice) out.push({ kind, columns: columnsOf(kind) });
-    }
-  }
-  if (compendium) {
-    for (const cell of chosenByCells(system, compendium, effectId, key)) {
-      if (cell.id === choice && !out.some(one => one.kind === cell.kind)) out.push({ kind: cell.kind, columns: columnsOf(cell.kind) });
-    }
-  }
-  return out;
-}

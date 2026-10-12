@@ -10,7 +10,7 @@ import * as rollAdd from './roll-add.ts';
 import * as rollReroll from './roll-reroll.ts';
 import * as rollPlus from './roll-plus.ts';
 import { branch, orElse, end, stop } from './flow.ts';
-import type { Step, System, Die, StoredValue, Param } from '../../model/types.ts';
+import type { Step, System, Die, StoredValue } from '../../model/types.ts';
 import type { EmittedEvent, NestedRun } from '../rule.ts';
 import type { Pass } from '../calc.ts';
 import type { Roll, RollResult, Spec } from '../../core/dice.ts';
@@ -25,8 +25,6 @@ export interface StepContext {
   die: Die;
   here: Pass;
   value(ref: unknown): unknown;
-  prop(name: string): unknown;
-  implicit(param: Param, onto?: string): unknown;
   known(ref: unknown): boolean;
   number(ref: unknown, what: string): number;
   optional(ref: unknown, what: string): number | null;

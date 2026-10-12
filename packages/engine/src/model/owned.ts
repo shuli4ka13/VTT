@@ -142,15 +142,7 @@ export function blockShown(system: System, sheet: Sheet | null | undefined): (bl
 
 export const propKeysOf = (kind: RecordKind | undefined): Set<string> => new Set((kind?.columns ?? []).map(prop => prop.key));
 
-export function argsWithProps(system: System, binding: Binding, props: ReadonlySet<string>): Binding['args'] {
-  const effect = system.effects[binding.effect];
-  const params = effect ? paramsOf(system, effect) : [];
-  const out = { ...binding.args };
-  for (const param of params) {
-    if (out[param.key] === undefined && props.has(param.key)) out[param.key] = { expr: `@${param.key}` };
-  }
-  return Object.keys(out).length ? out : undefined;
-}
+export const argsWithProps = (_system: System, binding: Binding, _props: ReadonlySet<string>): Binding['args'] => binding.args;
 
 export function propsNeeded(system: System, kind: RecordKind | undefined, bindings: readonly Binding[]): Set<string> {
   const props = propKeysOf(kind);

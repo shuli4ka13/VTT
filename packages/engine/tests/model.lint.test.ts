@@ -879,18 +879,18 @@ group('линт: наложение не заполняет вход налож�
     eq(unfilled(applied({ params: [{ ...NUM, ask: { by: 'actor' } }] as never })).length, 0, 'спросят за столом');
   });
 
-  test('лист с ролью target берётся из «На кого», actor — кто действует, одноимённый вход вызывающего — своё имя', () => {
+  test('роли и одноимённый вход вызывающего сами не заполняют — нужен явный аргумент', () => {
     const roles = [{ key: 'на_ком', label: 'На ком', kind: 'sheet', role: 'target' }, { key: 'кто', label: 'Кто', kind: 'sheet', role: 'actor' }];
-    eq(unfilled(applied({ params: roles as never })).length, 0, 'роли');
-    eq(unfilled(applied({ params: [NUM] as never }, {}, { params: [WHO, NUM] as never })).length, 0, 'одноимённый вход');
-    eq(unfilled(applied({ params: [{ ...NUM, kind: 'text' }] as never }, {}, { params: [WHO, NUM] as never })).length, 1, 'другой вид — не подходит');
+    eq(unfilled(applied({ params: roles as never })).length, 2, 'роли без аргументов');
+    eq(unfilled(applied({ params: roles as never }, { args: { на_ком: { expr: '@действующий' }, кто: { expr: '@действующий' } } })).length, 0, 'роли с аргументами');
+    eq(unfilled(applied({ params: [NUM] as never }, {}, { params: [WHO, NUM] as never })).length, 1, 'одноимённый вход без аргумента');
+    eq(unfilled(applied({ params: [NUM] as never }, { args: { сила: { expr: '@сила' } } }, { params: [WHO, NUM] as never })).length, 0, 'одноимённый вход с аргументом');
   });
 
-  test('роль target закрывается и вне «Для каждого» — наложение на себя', () => {
-    const system = applied({ params: [{ key: 'на_ком', label: 'На ком', kind: 'sheet', role: 'target' }] as never });
-    eq(unfilled(system).length, 0);
-    const plain = applied({ params: [{ key: 'на_ком', label: 'На ком', kind: 'sheet', role: 'target' }] as never }, { type: 'emit', to: undefined, effect: 'метка' });
-    eq(unfilled(plain).length, 1, 'у вызова текущей цели вне «Для каждого» нет');
+  test('наложение на себя вне «Для каждого»: лист с ролью target тоже передают явно', () => {
+    const target = [{ key: 'на_ком', label: 'На ком', kind: 'sheet', role: 'target' }];
+    eq(unfilled(applied({ params: target as never })).length, 1);
+    eq(unfilled(applied({ params: target as never }, { args: { на_ком: { expr: '@действующий' } } })).length, 0);
   });
 
   test('список листов, бросок и поле «сами» не приходят — обязательный такой вход остаётся ошибкой', () => {
@@ -907,13 +907,13 @@ group('линт: наложение не заполняет вход налож�
     const system = applied({ params: [{ key: 'кто', label: 'Кто', kind: 'sheet', role: 'actor' }, NUM] as never }, {}, { steps: [] });
     system.effects.заслон = {
       label: 'Заслон', activation: 'passive',
-      on: [{ on: 'after:вешает', steps: [{ type: 'status', effect: 'метка', to: { expr: '@носитель' } }] }],
+      on: [{ on: 'after:вешает', steps: [{ type: 'status', effect: 'метка', to: { expr: '@носитель' }, args: { кто: { expr: '@носитель' } } }] }],
     } as unknown as Effect;
     const [problem] = lintSystem(system).filter(p => p.text.includes('не заполняет его вход'));
     eq(problem?.text, 'наложение «Метка» не заполняет его вход «Сила»');
     eq(problem?.where.effect, 'заслон');
     eq(problem?.where.handler, 0);
-    eq(unfilled(system).length, 1, 'роль actor закрыта носителем, открыта только «Сила»');
+    eq(unfilled(system).length, 1, 'роль actor передана явно, открыта только «Сила»');
   });
 
   const chosen = (columns: string[], records: unknown[], extra: Record<string, unknown> = {}) => {
@@ -932,12 +932,12 @@ group('линт: наложение не заполняет вход налож�
   const unfilledWith = (made: { system: System; book: never }) =>
     errorsOf(lintSystem(made.system, made.book)).map(p => p.text).filter(t => t.includes('не заполняет его вход') || t.includes('ждёт свойство'));
 
-  test('состояние выбрано клеткой записи: у типа нет такого свойства — «ждёт свойство»', () => {
-    eq(unfilledWith(chosen([], [poisoned])).join('|'), 'наложение «Метка» ждёт свойство «Сила», а у «Оружие» его нет');
+  test('состояние выбрано клеткой записи: без явного аргумента вход не заполнен', () => {
+    eq(unfilledWith(chosen([], [poisoned])).join('|'), 'наложение «Метка» не заполняет его вход «Сила»');
   });
 
-  test('у типа есть колонка с именем входа — клетка заполнит, тишина', () => {
-    eq(unfilledWith(chosen(['сила'], [poisoned])).length, 0);
+  test('у типа есть колонка с именем входа — сама она вход не заполняет', () => {
+    eq(unfilledWith(chosen(['сила'], [poisoned])).join('|'), 'наложение «Метка» не заполняет его вход «Сила»');
   });
 
   test('записи нет — выбирать из клеток нечего, не проверяется', () => {
@@ -947,7 +947,7 @@ group('линт: наложение не заполняет вход налож�
 
   test('состояние выбрано умолчанием входа вызывающего — как у вызова', () => {
     const made = chosen([], [], { default: 'метка' });
-    eq(unfilledWith(made).join('|'), 'наложение «Метка» ждёт свойство «Сила», а у «Оружие» его нет', 'тип привязан к кнопке с этим умолчанием');
+    eq(unfilledWith(made).join('|'), 'наложение «Метка» не заполняет его вход «Сила»', 'тип привязан к кнопке с этим умолчанием');
     delete made.system.tables!.оружие;
     eq(unfilledWith(made).join('|'), 'наложение «Метка» не заполняет его вход «Сила»', 'привязок нет — заполнять нечем');
   });

@@ -27,12 +27,12 @@ group('ответы со стола — только на заданные во�
 });
 
 group('плата из входа проверяется до игры', () => {
-  test('плата «действие и ячейка» ждёт «Круг» у записи — без свойства ошибка словами', async () => {
+  test('плата «действие и ячейка» ждёт «Круг» явным аргументом — без него ошибка словами', async () => {
     const { lintSystem, errorsOf } = await import('../src/model/lint.ts');
     const system = structuredClone(world.system);
-    eq(errorsOf(lintSystem(system, world.compendium)).some((p: any) => p.text.includes('ждёт свойство')), false);
-    system.tables.spell_attack.columns = system.tables.spell_attack.columns.filter((c: any) => c.key !== 'spell_level');
+    eq(errorsOf(lintSystem(system, world.compendium)).some((p: any) => p.text.includes('не заполняет его вход')), false);
+    delete system.effects.strike.cost[0].args.spell_level;
     const texts = errorsOf(lintSystem(system, world.compendium)).map((p: any) => p.text);
-    eq(texts.some((t: string) => t.includes('плата «Стоимость: действие и ячейка» ждёт свойство «Круг заклинания»')), true);
+    eq(texts.some((t: string) => t.includes('вызов «Стоимость: действие и ячейка» не заполняет его вход «Круг заклинания»')), true);
   });
 });

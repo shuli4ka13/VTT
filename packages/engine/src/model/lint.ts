@@ -1,8 +1,7 @@
 import { paramStages, targetStages } from '../engine/stages.ts';
-import { implicitOf, appliedOf } from './implicit.ts';
 import { armsOf, balance, flowOf, inBlock, isFlow } from './flow.ts';
 import { loopOf, loopParam } from '../engine/steps/each.ts';
-import { chosenEffect, choicesOfInput, emittedChoices, kindsChoosing } from './payments.ts';
+import { chosenEffect, choicesOfInput, emittedChoices } from './payments.ts';
 import { SEEN_LABEL, ANY_ACTION, PHASES } from '../events/bus.ts';
 import { HEARD_WORDS } from '../events/lifecycle.ts';
 import type { System, Compendium, Effect, Step, Stage, Guard, Param, Table, Modifier } from './types.ts';
@@ -675,8 +674,6 @@ function paramProblems(system: System, compendium?: Compendium): Problem[] {
         const applying = step.type === 'status' && raw.mode !== 'remove';
         if ((step.type !== 'emit' && !applying) || !raw.effect) return;
         const args = (raw.args ?? {}) as Record<string, unknown>;
-        const dynamic = typeof raw.effect !== 'string';
-        const viaInput = dynamic ? /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((raw.effect as { expr?: unknown }).expr ?? ''))?.[1] : undefined;
         for (const choice of emittedChoices(system, id, raw.effect, applying ? compendium : undefined)) {
           const called = system.effects[choice];
           if (!called) continue;
@@ -695,22 +692,12 @@ function paramProblems(system: System, compendium?: Compendium): Problem[] {
               }
             }
             if (args[param.key] !== undefined || param.optional || param.ask || param.default !== undefined) continue;
-            const loops = steps.slice(0, index).map(one => loopParam(one as never)).filter((one): one is NonNullable<typeof one> => Boolean(one));
-            const caller = loops.length ? { ...effect, params: [...(effect.params ?? []), ...loops] } : effect;
-            const how = applying ? appliedOf(param, caller) : implicitOf(param, caller);
-            const loopAt = (effect.steps ?? []).findIndex(s => s.type === 'each');
-            if (how && (how.by !== 'target' || (steps === effect.steps && loopAt >= 0 && index > loopAt))) continue;
-            const users = viaInput ? kindsChoosing(system, id, viaInput, choice, applying ? compendium : undefined) : [];
-            if (users.length && users.every(user => user.columns.includes(param.key))) continue;
-            const missing = users.filter(user => !user.columns.includes(param.key)).map(user => system.tables?.[user.kind]?.label ?? user.kind);
             const effectName = `«${called.label ?? choice}»`;
             const inputName = `«${param.label ?? param.key}»`;
             out.push({
               where: whereOf(index),
               level: 'error',
-              text: missing.length
-                ? `${applying ? 'наложение' : 'плата'} ${effectName} ждёт свойство ${inputName}, а у ${missing.map(m => `«${m}»`).join(', ')} его нет`
-                : `${applying ? 'наложение' : 'вызов'} ${effectName} не заполняет его вход ${inputName}`,
+              text: `${applying ? 'наложение' : 'вызов'} ${effectName} не заполняет его вход ${inputName}`,
             });
           }
         }

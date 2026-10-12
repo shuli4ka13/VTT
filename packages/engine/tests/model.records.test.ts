@@ -58,8 +58,9 @@ group('роды записей объявляет система', () => {
     const spell = system.tables['attack-spell'];
     const effect = system.effects[spell.bindings[0].effect];
     const props = new Set((spell.columns ?? []).map(p => p.key));
-    ok((effect.params ?? []).some(p => props.has(p.key) && !(spell.bindings[0].args ?? {})[p.key]),
-      'вход с тем же именем, что свойство записи, берёт его сам — аргумент не нужен');
+    const named = (effect.params ?? []).filter(p => props.has(p.key));
+    ok(named.length > 0 && named.every(p => (spell.bindings[0].args ?? {})[p.key]),
+      'вход с тем же именем, что свойство записи, кнопка передаёт явным аргументом');
   });
 
   test('свойства оружия по-прежнему при роде', () => {

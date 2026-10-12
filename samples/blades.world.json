@@ -275,7 +275,12 @@
         "bindings": [
           {
             "label": "Бросить",
-            "effect": "risky_action"
+            "effect": "risky_action",
+            "args": {
+              "rating": {
+                "expr": "@rating"
+              }
+            }
           }
         ]
       },

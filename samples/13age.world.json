@@ -270,6 +270,9 @@
               },
               "damage_with": {
                 "expr": "@wield.damage"
+              },
+              "weapon_die": {
+                "expr": "@weapon_die"
               }
             }
           }
@@ -297,7 +300,15 @@
         "bindings": [
           {
             "label": "Атаковать",
-            "effect": "monster_attack"
+            "effect": "monster_attack",
+            "args": {
+              "to_hit": {
+                "expr": "@to_hit"
+              },
+              "hit_damage": {
+                "expr": "@hit_damage"
+              }
+            }
           }
         ]
       },
@@ -401,6 +412,12 @@
             "args": {
               "бонус": {
                 "expr": "@attack_with + @действующий.level + @стол.escalation"
+              },
+              "кто": {
+                "expr": "@действующий"
+              },
+              "против": {
+                "expr": "@цель"
               }
             }
           },
@@ -423,6 +440,12 @@
             "args": {
               "amount": {
                 "expr": "@урон"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           },
@@ -435,6 +458,12 @@
             "args": {
               "amount": {
                 "expr": "@действующий.level"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           },
@@ -445,7 +474,15 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_standard"
+            "effect": "cost_standard",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
           }
         ],
         "tags": [
@@ -495,6 +532,12 @@
             "args": {
               "бонус": {
                 "expr": "@to_hit"
+              },
+              "кто": {
+                "expr": "@действующий"
+              },
+              "против": {
+                "expr": "@цель"
               }
             }
           },
@@ -510,6 +553,12 @@
             "args": {
               "amount": {
                 "expr": "@hit_damage"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
               }
             }
           },
@@ -520,7 +569,15 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "cost_standard"
+            "effect": "cost_standard",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
           }
         ],
         "tags": [

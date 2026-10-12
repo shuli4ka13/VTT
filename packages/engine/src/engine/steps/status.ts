@@ -1,7 +1,6 @@
 import { EngineError } from '../errors.ts';
 import type { StepContext, StepModule } from './index.ts';
 import type { StoredValue } from '../../model/types.ts';
-import { fillMissing } from '../../model/implicit.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 
 export const type = 'status';
@@ -48,8 +47,7 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
       }
       given[key] = value;
     }
-    const filled = fillMissing(ctx.system.effects?.[id]?.params ?? [], given, { prop: name => ctx.prop(name), implicit: param => ctx.implicit(param, to) }, true);
-    const args = Object.fromEntries(Object.entries(filled).filter(([, value]) => value !== '')) as Record<string, StoredValue>;
+    const args = Object.fromEntries(Object.entries(given).filter(([, value]) => value !== '')) as Record<string, StoredValue>;
     ctx.attach(to, id, args);
     return { value: id, trace: { mode, effect: id, sheet: to, ...(Object.keys(args).length ? { args } : {}) }, break: null };
   },

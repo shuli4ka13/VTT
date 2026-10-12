@@ -179,19 +179,19 @@ describe('«Для каждой строки таблицы»', () => {
           { type: 'apply', target: { expr: '@лист.запас.осталось' }, direction: 'set', value: { expr: '@лист.запас.всего' } },
         ],
       },
-      отдых: { label: 'Отдых', activation: 'passive', duration: { kind: 'permanent' }, on: [{ on: 'moment:long-rest', steps: [{ type: 'emit', effect: 'заново' }] }] },
+      отдых: { label: 'Отдых', activation: 'passive', duration: { kind: 'permanent' }, on: [{ on: 'moment:long-rest', steps: [{ type: 'emit', effect: 'заново', args: { лист: { expr: '@носитель' } } }] }] },
     }, []);
     const out = fireMoments([{ moment: 'long-rest', sheetId: 'а' }], [sheet('а', full, ['отдых'])], { system, compendium: book, die: () => 1 } as never);
     expect(out.sheets[0]!.values['запасы.ки.осталось']).toBe(3);
     expect(out.sheets[0]!.values['запасы.ярость.осталось']).toBe(2);
   });
 
-  it('строка цикла — вход «строка таблицы»: одноимённый вход вызова получает её сам', () => {
+  it('строка цикла — вход «строка таблицы»: строка передаётся явным аргументом', () => {
     const system = world({
       трата: { label: 'Трата', params: [{ key: 'лист', kind: 'sheet', role: 'actor' }, { ...WHAT, key: 'запас' }], steps: [spend('@лист.запас.осталось')] },
       всё: {
         label: 'Всё', activation: 'manual', params: [ACTOR],
-        steps: [{ type: 'each', rows: 'запасы', as: 'запас' }, { type: 'emit', effect: 'трата' }],
+        steps: [{ type: 'each', rows: 'запасы', as: 'запас' }, { type: 'emit', effect: 'трата', args: { лист: { expr: '@действующий' }, запас: { expr: '@запас' } } }],
       },
     }, [{ label: 'Всё', effect: 'всё', args: {} }]);
     const out = play(system, [sheet('а', { 'запасы.ки.осталось': 3, 'запасы.ярость.осталось': 3 })]);
@@ -273,11 +273,11 @@ describe('плата подписки, вложенная в несколько 
     },
     реакция: {
       label: 'Реакция', params: [{ key: 'лист', kind: 'sheet', role: 'actor' }],
-      steps: [{ type: 'emit', effect: 'потратить', args: { what: { expr: '@лист.запасы.ки.осталось' } } }],
+      steps: [{ type: 'emit', effect: 'потратить', args: { лист: { expr: '@лист' }, what: { expr: '@лист.запасы.ки.осталось' } } }],
     },
     плата: {
       label: 'Плата', params: [{ key: 'лист', kind: 'sheet', role: 'actor' }],
-      steps: [{ type: 'emit', effect: 'реакция' }],
+      steps: [{ type: 'emit', effect: 'реакция', args: { лист: { expr: '@лист' } } }],
     },
     удар: { label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS], steps: [{ type: 'each', of: 'цели' }, spend('@цель.хп')] },
     щит: {
