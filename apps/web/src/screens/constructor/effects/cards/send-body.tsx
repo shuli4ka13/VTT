@@ -45,7 +45,6 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
         args={args}
         context={context}
         where="вызов"
-        compact
         implicit={param => implicitWords(param, context.effect, context.earlier.some(s => s.type === 'each'))}
         onArg={(key, next) => edit(at, draft => {
           const all = { ...((loose(draft).args ?? {}) as Record<string, unknown>) };

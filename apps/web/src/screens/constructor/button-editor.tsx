@@ -1,10 +1,22 @@
+import { useState } from 'react';
 import { useWorld } from '../../store/world.ts';
-import type { System, Effect, Param, Binding } from '@vtt/schema';
+import type { System, Effect, Param, Binding, SlotRef } from '@vtt/schema';
 import type { RecordKind } from '@vtt/engine/model/owned';
 import { tableOf } from '@vtt/engine/model/buttons';
 import { paramsOf } from '@vtt/engine/model/inherit';
-import { Card, CardHead, Field, Fold, Select, LabelInput, Button, DangerButton } from '../../ui/primitives.tsx';
-import { CallEditor } from './call-editor.tsx';
+import { listOf } from '@vtt/engine/model/lists';
+import { Card, CardHead, Field, Select, LabelInput, Button, DangerButton } from '../../ui/primitives.tsx';
+import { ValueField, asText } from './value-field.tsx';
+import { grouped as byRole } from './effects/roles.ts';
+import { kindWords } from './effects/params-editor.tsx';
+
+const EMPTY = '';
+const FORMULA = '=';
+const NEW = '+';
+const OWN = 'Своё у каждой записи';
+const SAME = 'Одно на всех';
+
+type Fill = 'actor' | 'targets';
 
 export function ButtonEditor({ binding, system, recordKind, onEdit, onDelete, onFillWithProp }: {
   binding: Binding;
@@ -17,9 +29,24 @@ export function ButtonEditor({ binding, system, recordKind, onEdit, onDelete, on
   onFillWithProp?: (param: Param) => void;
 }) {
   const effect = system.effects[binding.effect];
-  const implicit = new Set((recordKind.columns ?? []).map(prop => prop.key));
-  const closed = (key: string) => binding.args?.[key] !== undefined || implicit.has(key);
+  const params = effect ? paramsOf(system, effect) : [];
   const buttons = Object.entries(system.effects).filter(([, e]) => (e.activation ?? 'manual') !== 'passive');
+  const where = binding.label || effect?.label || binding.effect;
+
+  const onArg = (key: string, next: SlotRef | null) => onEdit(draft => {
+    draft.args ??= {};
+    if (next) draft.args[key] = next as never; else delete draft.args[key];
+    if (!Object.keys(draft.args).length) delete draft.args;
+  });
+
+  const onSheet = (key: string, fill: Fill | '') => onEdit(draft => {
+    const table: Record<string, Fill> = { ...tableOf(draft, { params }) };
+    if (fill) table[key] = fill; else delete table[key];
+    const guessed = tableOf({}, { params });
+    const same = Object.keys(table).length === Object.keys(guessed).length
+      && Object.entries(table).every(([at, value]) => guessed[at] === value);
+    if (same) delete draft.table; else draft.table = table;
+  });
 
   return (
     <Card tone="flat">
@@ -35,59 +62,166 @@ export function ButtonEditor({ binding, system, recordKind, onEdit, onDelete, on
           <DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>
         </>}
       />
-      <CallEditor
-        system={system}
-        effect={binding.effect}
-        effects={buttons}
-        onEffect={next => onEdit(draft => { if (typeof next === 'string') draft.effect = next; })}
-        args={binding.args as Record<string, unknown> | undefined}
-        fromProps={implicit}
-        filled={effect ? tableOf(binding, { params: paramsOf(system, effect) }) : {}}
-        context={{ system, effect: effect ?? ({ label: '' } as Effect), earlier: [], recordKind }}
-        where={binding.label || effect?.label || binding.effect}
-        allow={['prop', 'table']}
-        grouped
-        names={namesOf(recordKind, system)}
-        onArg={(key, next) => onEdit(draft => {
-          draft.args ??= {};
-          if (next) draft.args[key] = next as never; else delete draft.args[key];
-          if (!Object.keys(draft.args).length) delete draft.args;
-        })}
-        extraFor={param => [
-          ...(closed(param.key) || !onFillWithProp ? [] : [{
-            group: 'Завести', label: `новое свойство «${param.label ?? param.key}»`,
-            onPick: () => onFillWithProp(param),
-          }]),
-          ...sourcesFor(param, recordKind, system).map(source => ({ group: 'Свойства записи', label: source.label, formula: source.formula })),
-        ]}
-      />
-      {effect ? <WhoFills binding={binding} params={paramsOf(system, effect)} onEdit={onEdit} /> : null}
+      <Field label="Какой эффект" needed={!effect}>
+        <Select
+          value={binding.effect ?? ''}
+          options={[['', '— какой эффект —'], ...byRole(system, buttons).map(([id, e, group]) => [id, e.label || id, group] as const)] as never}
+          onChange={next => onEdit(draft => { draft.effect = next; })}
+        />
+      </Field>
+      {effect ? (params.length ? (
+        <div className="args-table">
+          <div className="args-table__head" aria-hidden><span>Вход</span><span>Что это</span><span>Чем заполняет тип</span></div>
+          {params.map(param => (
+            <ArgRow
+              key={param.key}
+              param={param}
+              binding={binding}
+              params={params}
+              system={system}
+              recordKind={recordKind}
+              effectId={binding.effect}
+              effect={effect}
+              where={where}
+              onArg={next => onArg(param.key, next)}
+              onSheet={fill => onSheet(param.key, fill)}
+              {...(onFillWithProp ? { onNew: () => onFillWithProp(param) } : {})}
+            />
+          ))}
+        </div>
+      ) : <span className="faint">«{effect.label || binding.effect}» ничего не принимает.</span>) : null}
     </Card>
   );
 }
 
-function WhoFills({ binding, params, onEdit }: { binding: Binding; params: Param[]; onEdit: (change: (draft: Binding) => void) => void }) {
-  const sheets = params.filter(param => param.kind === 'sheet');
-  if (!sheets.length) return null;
-  const current = tableOf(binding, { params });
-  return (
-    <Fold title="ещё" summary={binding.table ? 'кто действует и цели заданы явно' : 'кто действует и цели — по входам'}>
-      <div className="row">
-        {sheets.map(param => (
-          <Field key={param.key} label={param.label ?? param.key}>
-            <Select<string>
-              value={current[param.key] ?? ''}
-              options={[['', 'не заполняет'], ['actor', 'кто нажал кнопку'], ['targets', 'цели, выбранные за столом']]}
-              onChange={next => onEdit(draft => {
-                const table = { ...tableOf(draft, { params }) };
-                if (next) table[param.key] = next as 'actor' | 'targets'; else delete table[param.key];
-                draft.table = table;
-              })}
-            />
-          </Field>
-        ))}
+interface Source { key: string; label: string; group: string }
+
+const FITS: Record<string, string[]> = {
+  number: ['number'],
+  dice: ['dice'],
+  text: ['text'],
+  effect: ['effect'],
+  record: ['record'],
+};
+
+function sourcesOf(param: Param, kind: RecordKind, system: System, effectId: string): Source[] {
+  const props = kind.columns ?? [];
+  const want = String(param.kind ?? 'number');
+  const fits = (prop: (typeof props)[number]) => prop.key === param.key || (want === 'choice'
+    ? prop.kind === 'choice' && prop.from === param.from
+    : (FITS[want] ?? []).includes(String(prop.kind ?? 'number')));
+  const own = props.filter(fits).map(prop => ({ key: `@${prop.key}`, label: `свойство «${prop.label ?? prop.key}»`, group: OWN }));
+  const via = want !== 'number' ? [] : props
+    .filter(prop => prop.kind === 'choice' && prop.from && system.tables?.[prop.from]?.columns?.length)
+    .flatMap(prop => (system.tables![prop.from!]!.columns ?? [])
+      .filter(column => String(column.kind ?? 'number') === 'number')
+      .map(column => ({ key: `@${prop.key}.${column.key}`, label: `${prop.label ?? prop.key} · ${column.label || column.key}`, group: OWN })));
+  const rows = want === 'choice' && param.from
+    ? (listOf(system, param.from) ?? []).map(row => ({ key: JSON.stringify(row.value), label: row.label, group: SAME }))
+    : [];
+  const effects = want === 'effect'
+    ? byRole(system, Object.entries(system.effects).filter(([id]) => id !== effectId))
+      .map(([id, e, group]) => ({ key: JSON.stringify(id), label: e.label || id, group }))
+    : [];
+  return [...own, ...via, ...rows, ...effects];
+}
+
+function emptyWords(param: Param, system: System): string {
+  if (param.default !== undefined) {
+    const value = param.default;
+    const shown = value === true ? 'да' : value === false ? 'нет'
+      : typeof value === 'string' && system.effects[value] ? system.effects[value]!.label || value : String(value);
+    return `как у эффекта: ${shown}`;
+  }
+  if (param.ask) return param.ask.by === 'gm' ? 'спросят ведущего' : 'спросят игрока';
+  if (param.optional) return 'не передаётся';
+  return '— не заполнено —';
+}
+
+const loose = (param: Param) => param as Param & { optional?: boolean };
+
+function ArgRow({ param, binding, params, system, recordKind, effectId, effect, where, onArg, onSheet, onNew }: {
+  param: Param;
+  binding: Binding;
+  params: Param[];
+  system: System;
+  recordKind: RecordKind;
+  effectId: string;
+  effect: Effect;
+  where: string;
+  onArg: (next: SlotRef | null) => void;
+  onSheet: (fill: Fill | '') => void;
+  onNew?: () => void;
+}) {
+  const [typing, setTyping] = useState(false);
+  const name = param.label ?? param.key;
+  const kind = String(param.kind ?? 'number');
+  const free = Boolean(loose(param).optional) || param.default !== undefined || Boolean(param.ask);
+
+  if (kind === 'sheet') {
+    const fill = tableOf(binding, { params })[param.key] ?? '';
+    return (
+      <div className={`args-row${!fill && !loose(param).optional ? ' args-row--need' : ''}`}>
+        <span className="args-row__name">{name}</span>
+        <span className="args-row__kind">{kindWords(param, system)}</span>
+        <div className="args-row__fill">
+          <Select<string>
+            label={`«${name}» — чем заполняет тип`}
+            value={fill}
+            options={[['actor', 'кто нажал кнопку'], ['targets', 'цели, выбранные за столом'], ['', loose(param).optional ? 'не передаётся' : '— не заполнено —']]}
+            onChange={next => onSheet(next as Fill | '')}
+          />
+        </div>
       </div>
-    </Fold>
+    );
+  }
+
+  const sources = sourcesOf(param, recordKind, system, effectId);
+  const byName = (recordKind.columns ?? []).some(prop => prop.key === param.key);
+  const arg = binding.args?.[param.key] as unknown;
+  const text = asText(arg)?.trim() ?? '';
+  const matched = arg === undefined || arg === null
+    ? (byName ? `@${param.key}` : EMPTY)
+    : sources.some(source => source.key === text) ? text : FORMULA;
+  const value = typing ? FORMULA : matched;
+  const need = value === EMPTY && !free;
+
+  const options: (readonly [string, string] | readonly [string, string, string])[] = [
+    ...(byName ? [] : [[EMPTY, emptyWords(param, system)] as const]),
+    ...sources.filter(source => source.group === OWN).map(source => [source.key, source.label, source.group] as const),
+    ...(onNew && !byName ? [[NEW, `+ новое свойство «${name}»`, OWN] as const] : []),
+    ...sources.filter(source => source.group === SAME).map(source => [source.key, source.label, source.group] as const),
+    [FORMULA, 'формула…', SAME] as const,
+    ...sources.filter(source => source.group !== OWN && source.group !== SAME).map(source => [source.key, source.label, source.group] as const),
+  ];
+
+  const pick = (next: string) => {
+    if (next === FORMULA) { setTyping(true); return; }
+    setTyping(false);
+    if (next === NEW) { onNew?.(); return; }
+    if (next === EMPTY || (byName && next === `@${param.key}`)) { onArg(null); return; }
+    onArg({ expr: next });
+  };
+
+  return (
+    <div className={`args-row${need ? ' args-row--need' : ''}`}>
+      <span className="args-row__name">{name}</span>
+      <span className="args-row__kind">{kindWords(param, system)}</span>
+      <div className="args-row__fill">
+        <Select<string> label={`«${name}» — чем заполняет тип`} value={value} options={options} onChange={pick} />
+        {value === FORMULA ? (
+          <ValueField
+            where={`${where} · ${name}`}
+            value={arg as never}
+            context={{ system, effect, earlier: [], recordKind }}
+            allow={['prop', 'table']}
+            dice={kind === 'dice'}
+            placeholder={byName ? `пусто — свойство «${name}»` : 'число или формула — @ подскажет'}
+            onChange={next => { onArg(next); if (!next) setTyping(false); }}
+          />
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -101,32 +235,3 @@ export function namesOf(kind: RecordKind, system: System): Map<string, string> {
   }
   return out;
 }
-
-const FITS: Record<string, string[]> = {
-  number: ['number'],
-  dice: ['dice'],
-  text: ['text'],
-  effect: ['effect'],
-  record: ['record'],
-};
-
-function sourcesFor(param: Param, kind: RecordKind, system: System): { label: string; formula: string }[] {
-  const props = kind.columns ?? [];
-  const want = String(param.kind ?? 'number');
-  const own = props
-    .filter(prop => (want === 'choice'
-      ? prop.kind === 'choice' && prop.from === param.from
-      : (FITS[want] ?? []).includes(String(prop.kind ?? 'number'))))
-    .map(prop => ({ label: `свойство «${prop.label ?? prop.key}»`, formula: `@${prop.key}` }));
-  if (want !== 'number') return own;
-  const viaTable = props
-    .filter(prop => prop.kind === 'choice' && prop.from && system.tables?.[prop.from]?.columns?.length)
-    .flatMap(prop => (system.tables![prop.from!]!.columns ?? [])
-      .filter(column => String(column.kind ?? 'number') === 'number')
-      .map(column => ({
-        label: `${prop.label ?? prop.key} · ${column.label || column.key}`,
-        formula: `@${prop.key}.${column.key}`,
-      })));
-  return [...own, ...viaTable];
-}
-

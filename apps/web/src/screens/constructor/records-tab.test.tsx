@@ -5,9 +5,14 @@ import { RecordsTab } from './records-tab.tsx';
 import { useWorld } from '../../store/world.ts';
 import { optionsFor } from './value-field.tsx';
 
-const строкаВхода = (подпись: string) => [...document.querySelectorAll('.pair')].find(el => el.textContent?.includes(подпись))!;
+const строкаВхода = (подпись: string) => [...document.querySelectorAll('.args-row')].find(el => el.querySelector('.args-row__name')?.textContent === подпись)!;
+
+const список = (подпись: string) => screen.getByLabelText(`«${подпись}» — чем заполняет тип`) as HTMLSelectElement;
+
+const варианты = (подпись: string) => [...список(подпись).options].map(o => o.textContent ?? '');
 
 const набрать = (подпись: string, текст: string) => {
+  if (список(подпись).value !== '=') fireEvent.change(список(подпись), { target: { value: '=' } });
   const поле = [...строкаВхода(подпись).querySelectorAll('input.chips__text')].at(-1) as HTMLInputElement;
   fireEvent.focus(поле);
   fireEvent.change(поле, { target: { value: `@${текст}`, selectionStart: текст.length + 1 } });
@@ -35,19 +40,40 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     }));
   });
 
-  it('незаполненный вход заводит свойство из подсказки и берёт его сам', () => {
+  it('незаполненный вход заводит свойство из списка и берёт его сам', () => {
     render(<RecordsTab />);
-    expect(строкаВхода('Кость урона').textContent).toContain('не заполнено');
+    expect(список('Кость урона').value).toBe('');
+    expect(строкаВхода('Кость урона').className).toContain('args-row--need');
 
-    набрать('Кость урона', '');
-    fireEvent.mouseDown([...document.querySelectorAll('.slot__option')].find(o => o.textContent?.includes('новое свойство'))!);
+    fireEvent.change(список('Кость урона'), { target: { value: '+' } });
 
     const kind = useWorld.getState().system.tables!.weapon!;
     expect(kind.columns!.some(p => p.label === 'Кость урона' && p.kind === 'dice')).toBe(true);
     expect(kind.columns![0]!.key).toBe('кость');
     expect((kind.bindings![0] as any).args?.['кость']).toBeUndefined();
-    expect(screen.getByRole('button', { name: '«Кость урона» заполняют у каждой записи' })).toBeTruthy();
-    expect(screen.queryByText('не заполнено')).toBeNull();
+    expect(список('Кость урона').value).toBe('@кость');
+    expect(строкаВхода('Кость урона').className).not.toContain('args-row--need');
+  });
+
+  it('каждый вход эффекта — строка у типа, даже новый', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...state.system,
+        effects: {
+          hit: { label: 'Удар', activation: 'manual', steps: [], params: [
+            { key: 'кость', label: 'Кость урона', kind: 'dice' },
+            { key: 'новый', label: 'Новый вход', kind: 'number' },
+            { key: 'сколько', label: 'Сколько костей', kind: 'number', default: 1 },
+          ] },
+        },
+      },
+    }));
+    render(<RecordsTab />);
+    expect([...document.querySelectorAll('.args-row__name')].map(el => el.textContent)).toEqual(['Кость урона', 'Новый вход', 'Сколько костей']);
+    expect(строкаВхода('Новый вход').className).toContain('args-row--need');
+    expect(список('Сколько костей').selectedOptions[0]!.textContent).toBe('как у эффекта: 1');
+    expect(строкаВхода('Сколько костей').className).not.toContain('args-row--need');
   });
 
   it('входы-листы, которые кнопка заполняет сама, подписаны, а не горят «не заполнено»', () => {
@@ -100,8 +126,9 @@ describe('RecordsTab: тип видит входы эффекта', () => {
       activeRecordKind: 'weapon',
     }));
 
-    const { container } = render(<RecordsTab />);
-    expect(container.querySelector('.call-group'), 'вход нарисован').toBeTruthy();
+    render(<RecordsTab />);
+    expect(варианты('Кость урона')).toContain('свойство «Кость урона»');
+    expect(варианты('Кость урона').some(v => v.includes('Класс защиты'))).toBe(false);
 
     const system = useWorld.getState().system;
     const предложат = optionsFor({
@@ -264,21 +291,19 @@ describe('слот привязки подсказывает то, чем его
 
   it('совпавшее с начала стоит выше спрятанного в середине слова', () => {
     render(<RecordsTab />);
-    const видно = набрать('Тип урона', 'Ти');
-    expect(видно[0], видно.join(' | ')).toContain('Тип урона');
-    const свой = видно.findIndex(t => t.includes('Тип урона'));
-    const чужой = видно.findIndex(t => t.includes('Атлетика'));
-    expect(свой).toBeLessThan(чужой === -1 ? Number.MAX_SAFE_INTEGER : чужой);
+    const видно = набрать('Бонус атаки', 'Чем');
+    const начало = видно.findIndex(t => t.includes('Чем бьют'));
+    const середина = видно.findIndex(t => t.includes('по тому, чем бьют'));
+    expect(начало, видно.join(' | ')).toBeGreaterThanOrEqual(0);
+    expect(начало).toBeLessThan(середина === -1 ? Number.MAX_SAFE_INTEGER : середина);
   });
 
-  it('пустой вход первым делом предлагает завести свойство — с видом и словарём', () => {
+  it('пустой вход предлагает завести свойство — с видом и словарём', () => {
     render(<RecordsTab />);
-    const видно = набрать('Тип урона', '');
-    expect(видно.some(t => t.includes('новое свойство «Тип урона»')), видно.join(' | ')).toBe(true);
+    expect(варианты('Тип урона')).toContain('+ новое свойство «Тип урона»');
+    expect(варианты('Тип урона')).toContain('рубящий');
 
-    const кнопка = [...document.querySelectorAll('.slot__option')]
-      .find(o => o.textContent?.includes('новое свойство'))!;
-    fireEvent.mouseDown(кнопка);
+    fireEvent.change(список('Тип урона'), { target: { value: '+' } });
 
     const kind = useWorld.getState().system.tables!.weapon!;
     const свойство = kind.columns!.find(p => p.label === 'Тип урона')!;

@@ -312,10 +312,13 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
                   key: newKey, label, kind: param.kind ?? 'number',
                   ...(param.from ? { from: param.from } : {}),
                 });
+                const target = draft.bindings![index]!;
                 if (newKey !== param.key) {
-                  const target = draft.bindings![index]!;
                   target.args ??= {};
                   target.args[param.key] = { expr: `@${newKey}` };
+                } else if (target.args) {
+                  delete target.args[param.key];
+                  if (!Object.keys(target.args).length) delete target.args;
                 }
               })}
             />
@@ -329,7 +332,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
       <Card>
         <CardHead
           title="Что спросить у человека"
-          sub="Форма записи. Обычно собирается сама — кнопкой «завести свойство» при подключении эффекта; руками сюда добавляют справочное: вес, цену."
+          sub="Форма записи: что заполняют у каждой вещи в книге. Свойство для входа эффекта заводится пунктом «+ новое свойство» в его списке; руками сюда добавляют справочное: вес, цену."
           actions={
             <Button size="sm" onClick={() => {
               const made = newProp(kind);

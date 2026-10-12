@@ -2,10 +2,10 @@ import { grouped as byRole } from './effects/roles.ts';
 import { useState, type ReactNode } from 'react';
 import type { System, Param, SlotRef, Effect } from '@vtt/schema';
 import { paymentsOf } from '@vtt/engine/model/payments';
-import { Field, Select, Button } from '../../ui/primitives.tsx';
+import { Field, Select } from '../../ui/primitives.tsx';
 import { FormulaView } from '../../ui/formula-field.tsx';
 import { ValueField, asText, type SlotOption } from './value-field.tsx';
-import type { SlotContext, SlotKind } from './slots.tsx';
+import type { SlotContext } from './slots.tsx';
 import { listOf } from '@vtt/engine/model/lists';
 import { EffectPick } from './effect-pick.tsx';
 import { paramsOf } from '@vtt/engine/model/inherit';
@@ -117,37 +117,27 @@ export function CallSummary({ system, effect, args, props, names, label }: {
   );
 }
 
-export function CallEditor({ system, effect: raw, effects, onEffect, args, fromProps, filled, onArg, context, where, allow, extraFor, headAction, children, grouped = false, names, inputs: callerInputs, compact = false, implicit }: {
+export function CallEditor({ system, effect: raw, effects, onEffect, args, onArg, context, where, headAction, children, inputs: callerInputs, implicit }: {
   system: System;
   effect: unknown;
   effects: [string, { label?: string }][];
   onEffect: (id: string | { expr: string } | null) => void;
   inputs?: readonly Param[];
   args: Record<string, unknown> | undefined;
-  fromProps?: ReadonlySet<string>;
-  filled?: Readonly<Record<string, 'actor' | 'targets'>>;
   onArg: (key: string, next: SlotRef | null) => void;
   context: SlotContext;
   where: string;
-  allow?: SlotKind[];
-  extraFor?: (param: Param) => SlotOption[];
   headAction?: ReactNode;
   children?: ReactNode;
-  grouped?: boolean;
-  names?: Map<string, string>;
-  compact?: boolean;
   implicit?: (param: Param) => string | null;
 }) {
-  const [open, setOpen] = useState<string | null>(null);
   const [more, setMore] = useState(false);
   const fromInput = typeof raw === 'object' && raw ? /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((raw as { expr?: unknown }).expr ?? ''))?.[1] : undefined;
   const via = fromInput ? callerInputs?.find(param => param.key === fromInput) : undefined;
   const effect = typeof raw === 'string' ? raw : typeof via?.default === 'string' ? via.default : '';
   const called = system.effects[effect];
   const params = called ? paramsOf(system, called) : [];
-  const inputs: CallInput[] = params.map(param => ({
-    param, value: args?.[param.key], fromProp: Boolean(fromProps?.has(param.key)),
-  }));
+  const inputs: CallInput[] = params.map(param => ({ param, value: args?.[param.key], fromProp: false }));
   const nameOf = (param: Param) => param.label ?? param.key;
   const editor = (input: CallInput) => (
     input.param.kind === 'effect' ? (
@@ -163,96 +153,11 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, fromP
         where={`${where} · ${nameOf(input.param)}`}
         value={input.value as never}
         context={context}
-        {...(allow ? { allow } : {})}
-        extraOptions={[...(extraFor?.(input.param) ?? []), ...rowsAsOptions(system, input.param)]}
+        extraOptions={rowsAsOptions(system, input.param)}
         onChange={next => onArg(input.param.key, next)}
       />
     )
   );
-
-  const flat = () => inputs.map(input => {
-    const fill = filled?.[input.param.key];
-    if (fill) {
-      return (
-        <div className="pair" key={input.param.key}>
-          <span className="call-args__name">{nameOf(input.param)}</span>
-          <span className="faint">{fill === 'actor' ? 'кто нажал кнопку' : 'цели, выбранные за столом'}</span>
-        </div>
-      );
-    }
-    const shown = status(input);
-    return (
-      <div className="pair" key={input.param.key}>
-        <span className="call-args__name">{nameOf(input.param)}</span>
-        {editor(input)}
-        <span className={shown.bad ? 'need' : 'faint'}>{shown.text}</span>
-      </div>
-    );
-  });
-
-  const shownNames = namesFor(system, called, args, names);
-  const shownValue = (input: CallInput): ReactNode => valueShown(system, input, shownNames.extra, shownNames.sheets);
-
-  const groups = () => {
-    const props = fromProps ?? new Set<string>();
-    const own = inputs.filter(input => !filled?.[input.param.key]);
-    const by = (place: Place) => own.filter(input => placeOf(input, props) === place);
-    const record = by('record');
-    const asked = by('asked');
-    const computed = by('computed');
-    const missing = by('missing');
-    const unused = by('unused');
-    const row = (input: CallInput, body: ReactNode, tail?: ReactNode) => (
-      <div className="pair" key={input.param.key}>
-        <span className="call-args__name">{nameOf(input.param)}</span>
-        {body}
-        {tail ?? null}
-      </div>
-    );
-    const editing = (input: CallInput) => row(input, editor(input),
-      <Button size="sm" variant="ghost" onClick={() => setOpen(null)}>готово</Button>);
-    return (
-      <>
-        {missing.map(input => row(input, editor(input), <span className="need">не заполнено</span>))}
-        {record.length ? (
-          <div className="call-group">
-            <span className="call-group__title">Заполняют у каждой записи</span>
-            <div className="inline inline--tight">
-              {record.map(input => (open === input.param.key ? editing(input) : (
-                <button key={input.param.key} type="button" className="btn btn--sm btn--ghost" title="считать формулой вместо свойства записи"
-                  aria-label={`«${nameOf(input.param)}» заполняют у каждой записи`}
-                  onClick={() => setOpen(input.param.key)}>{nameOf(input.param)}</button>
-              )))}
-            </div>
-          </div>
-        ) : null}
-        {asked.length ? (
-          <div className="call-group">
-            <span className="call-group__title">Спросят за столом</span>
-            {asked.map(input => (open === input.param.key ? editing(input) : row(input,
-              <span className="faint">{input.param.ask?.by === 'gm' ? 'ведущего' : 'игрока'}</span>,
-              <Button size="sm" variant="ghost" onClick={() => setOpen(input.param.key)}>изменить</Button>)))}
-          </div>
-        ) : null}
-        {computed.length ? (
-          <div className="call-group call-group--quiet">
-            <span className="call-group__title">Считается у типа — одинаково для всех записей</span>
-            {computed.map(input => (open === input.param.key ? editing(input) : row(input,
-              <span className="call-group__value">← {shownValue(input)}</span>,
-              <Button size="sm" variant="ghost" onClick={() => setOpen(input.param.key)}>изменить</Button>)))}
-          </div>
-        ) : null}
-        {unused.length ? (
-          <div className="inline inline--tight call-group--unused">
-            <span className="faint">Не передаются:</span>
-            {unused.map(input => (open === input.param.key ? editing(input) : (
-              <Button key={input.param.key} size="sm" variant="ghost" title="передать значение" onClick={() => setOpen(input.param.key)}>{nameOf(input.param)}</Button>
-            )))}
-          </div>
-        ) : null}
-      </>
-    );
-  };
 
   const pick = callerInputs?.some(param => param.kind === 'effect') ? (
     <EffectPick value={raw} system={system} inputs={callerInputs}
@@ -265,66 +170,35 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, fromP
     />
   );
 
-  if (compact) {
-    const empty = (input: CallInput) => input.value === undefined || input.value === null;
-    const self = (input: CallInput) => (empty(input) ? implicit?.(input.param) ?? null : null);
-    const rare = (input: CallInput) => empty(input)
-      && (input.param.default !== undefined || Boolean(input.param.optional) || Boolean(input.param.ask) || self(input) !== null);
-    const main = inputs.filter(input => !rare(input));
-    const rest = inputs.filter(rare);
-    const arg = (input: CallInput) => {
-      const shown = status(input);
-      return (
-        <div className="pair call-row__arg" key={input.param.key}>
-          <span className="call-args__name">{nameOf(input.param)}</span>
-          {editor(input)}
-          {self(input) ? <span className="faint">{self(input)}</span> : shown.bad ? <span className="need">не заполнено</span> : null}
-        </div>
-      );
-    };
+  const empty = (input: CallInput) => input.value === undefined || input.value === null;
+  const self = (input: CallInput) => (empty(input) ? implicit?.(input.param) ?? null : null);
+  const rare = (input: CallInput) => empty(input)
+    && (input.param.default !== undefined || Boolean(input.param.optional) || Boolean(input.param.ask) || self(input) !== null);
+  const main = inputs.filter(input => !rare(input));
+  const rest = inputs.filter(rare);
+  const arg = (input: CallInput) => {
+    const shown = status(input);
     return (
-      <div className="call-row">
-        <Field label="Какой эффект" needed={!effect && !fromInput}>{pick}</Field>
-        {fromInput ? <span className="faint">{via ? `из входа «${via.label ?? via.key}»` : `входа «${fromInput}» нет`}</span> : null}
-        {children}
-        {main.map(arg)}
-        {effect && (rest.length || headAction) ? (
-          <div className={`call-row__more${more ? ' is-open' : ''}`}>
-            <button type="button" className="call-row__toggle" onClick={() => setMore(!more)}>{more ? '▾ ещё' : `▸ ещё${rest.length ? ` (${rest.length})` : ''}`}</button>
-            <div className="call-row__more-body">
-              {rest.map(arg)}
-              {headAction}
-            </div>
-          </div>
-        ) : null}
+      <div className="pair call-row__arg" key={input.param.key}>
+        <span className="call-args__name">{nameOf(input.param)}</span>
+        {editor(input)}
+        {self(input) ? <span className="faint">{self(input)}</span> : shown.bad ? <span className="need">не заполнено</span> : null}
       </div>
     );
-  }
-
+  };
   return (
-    <div className="stack stack--tight">
-      <Field label="Какой эффект" needed={!effect && !fromInput}>
-        {callerInputs?.some(param => param.kind === 'effect') ? (
-          <EffectPick value={raw} system={system} inputs={callerInputs}
-            only={one => effects.some(([, e]) => e === one)} onChange={onEffect} />
-        ) : (
-          <Select
-            value={typeof raw === 'string' ? raw : ''}
-            options={[['', '— какой эффект —'], ...effects.map(([id, e]) => [id, e.label || id] as const)] as never}
-            onChange={next => onEffect(next)}
-          />
-        )}
-      </Field>
-      {fromInput ? <span className="faint">{via ? `зовёт эффект, переданный во вход «${via.label ?? via.key}»` : `входа «${fromInput}» нет`}{called ? ` · аргументы — как у «${called.label || effect}»` : ''}</span> : null}
+    <div className="call-row">
+      <Field label="Какой эффект" needed={!effect && !fromInput}>{pick}</Field>
+      {fromInput ? <span className="faint">{via ? `из входа «${via.label ?? via.key}»` : `входа «${fromInput}» нет`}</span> : null}
       {children}
-      {effect ? (
-        <div className="stack stack--tight call-args">
-          <div className="call-args__head">
-            <span className="field__label">Что передаётся</span>
+      {main.map(arg)}
+      {effect && (rest.length || headAction) ? (
+        <div className={`call-row__more${more ? ' is-open' : ''}`}>
+          <button type="button" className="call-row__toggle" onClick={() => setMore(!more)}>{more ? '▾ ещё' : `▸ ещё${rest.length ? ` (${rest.length})` : ''}`}</button>
+          <div className="call-row__more-body">
+            {rest.map(arg)}
             {headAction}
           </div>
-          {inputs.length ? null : <span className="faint">«{called?.label || effect}» ничего не принимает.</span>}
-          {grouped ? groups() : flat()}
         </div>
       ) : null}
     </div>

@@ -1,4 +1,3 @@
-import { formulaWords } from '../../../ui/formula-words.ts';
 import { useState } from 'react';
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
 import { choiceTables } from '@vtt/engine/model/tables';
@@ -10,7 +9,7 @@ import { BoundField } from '../bound-field.tsx';
 import { Card, CardHead, Field, Input, Select, Button, LabelInput } from '../../../ui/primitives.tsx';
 import { ColumnList } from './column-list.tsx';
 import type { Effect, Param, System, ValueKind, Stage } from '@vtt/schema';
-import { originsOf, type Origin } from '@vtt/engine/model/origins';
+import { callersOf, type Caller } from './callers.ts';
 import { StagesEditor } from '../stages-editor.tsx';
 
 const SHEETS = 'sheet+many';
@@ -30,7 +29,7 @@ const modesFor = (kind: string, askable: boolean): (readonly [Mode, string])[] =
 
 type Loose = Param & { role?: string; optional?: boolean };
 
-const kindWords = (param: Loose, system: System): string => {
+export const kindWords = (param: Loose, system: System): string => {
   const kind = String(param.kind ?? 'number');
   if (kind === 'sheet') return param.many ? `несколько листов, каждый — «${param.item?.label ?? param.item?.key ?? 'Каждый'}»` : 'лист';
   if (kind === 'choice') {
@@ -119,6 +118,7 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
   return (
     <Card>
       <CardHead title="Что приходит" />
+      <Callers effectId={id} system={system} />
       {params.length === 0 ? (
         <div className="inline inline--tight">
           <span className="faint">Ничего — эффект берёт всё с листов.</span>
@@ -133,8 +133,8 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
           onMove={move}
           dropTitle="убрать вход"
           summary={param => <>{kindWords(param, system)}{askWords(param, system)}</>}
-          after={param => <Origins effectId={id} param={param} system={system} />}
-          head={['Вход', 'Что это', 'Откуда берётся']}
+          after={param => <Unpassed effectId={id} param={param} system={system} />}
+          head={['Вход', 'Что это']}
           form={param => (
             <ParamForm param={param} keys={keys} system={system} effect={effect}
               locked={used(param.key)} change={fn => change(param.key, fn)}
@@ -313,60 +313,50 @@ function DefaultCell({ param, system, onChange }: { param: Loose; system: System
   );
 }
 
-const SOURCE_WORDS: Record<string, string> = {
-  actor: 'кто нажал', targets: 'выбранные цели', cell: 'заполняют в книге', formula: 'считается у типа',
-  call: 'от эффекта', self: 'приходит само', ask: 'спросить за столом',
-};
-
-function sourceDetail(system: System, kind: string, many: readonly Origin[]): string {
-  if (kind === 'cell') return many.map(origin => `${origin.place}: поле «${origin.field}»`).join('\n');
-  if (kind === 'formula') return many.map(origin => `${origin.place}${origin.button ? ` («${origin.button}»)` : ''}: ${origin.formula ? formulaWords(system, origin.formula) : '…'}`).join('\n');
-  return many.map(origin => origin.text).join('\n');
+function useCallers(system: System, effectId: string): Caller[] {
+  const compendium = useWorld(s => s.compendium);
+  return cachedCallers(system, compendium, effectId);
 }
 
-function Origins({ effectId, param, system }: { effectId: string; param: Param; system: System }) {
-  const compendium = useWorld(s => s.compendium);
+function Callers({ effectId, system }: { effectId: string; system: System }) {
   const pick = useWorld(s => s.pick);
-  const list = cachedOrigins(system, compendium, effectId, param).filter(origin => origin.kind !== 'default');
-  if (!list.length) {
-    const quiet = param.optional || param.default !== undefined;
-    return (
-      <span className="sources">
-        <span className={`source ${quiet ? 'source--self' : 'source--none'}`}
-          title={quiet ? 'Никто не передаёт — берётся умолчание входа' : 'Никто не передаёт этот вход: добавьте поле с таким же названием в тип вещи или передайте его из вызывающего эффекта'}>
-          {quiet ? 'по умолчанию' : 'никто не передаёт'}
-        </span>
-      </span>
-    );
-  }
-  const kinds = [...new Set(list.map(origin => origin.kind))];
-  const go = (many: readonly Origin[]) => {
-    const kind = many.find(origin => origin.table)?.table;
-    if (kind) return () => pick({ activeTab: 'records', activeRecordKind: kind });
-    const effect = many.find(origin => origin.effect)?.effect;
-    return effect ? () => pick({ activeTab: 'effects', activeEffectId: effect, activeStepIndex: null }) : undefined;
-  };
+  const callers = useCallers(system, effectId);
+  const names = new Map((system.effects[effectId]?.params ?? []).map(param => [param.key, param.label ?? param.key]));
+  return (
+    <div className="callers">
+      <span className="callers__title">Вызывают</span>
+      {callers.length ? callers.map(caller => (
+        <button key={caller.key} type="button"
+          className={`source source--link ${caller.missing.length ? 'source--none' : 'source--call'}`}
+          title={caller.missing.length ? `не передаёт: ${caller.missing.map(key => names.get(key) ?? key).join(', ')}` : 'открыть'}
+          onClick={() => (caller.table
+            ? pick({ activeTab: 'records', activeRecordKind: caller.table })
+            : pick({ activeTab: 'effects', activeEffectId: caller.effect ?? null, activeStepIndex: null }))}>
+          {caller.text}
+        </button>
+      )) : <span className="faint">никто</span>}
+    </div>
+  );
+}
+
+function Unpassed({ effectId, param, system }: { effectId: string; param: Param; system: System }) {
+  const callers = useCallers(system, effectId).filter(caller => caller.missing.includes(param.key));
+  if (!callers.length) return <span className="sources" />;
   return (
     <span className="sources">
-      {kinds.map(kind => {
-        const many = list.filter(origin => origin.kind === kind);
-        const open = kind === 'cell' || kind === 'formula' || kind === 'call' ? go(many) : undefined;
-        const title = `${sourceDetail(system, kind, many)}${open ? '\nщелчок — открыть' : ''}`;
-        return open
-          ? <button key={kind} type="button" className={`source source--${kind} source--link`} title={title} onClick={open}>{SOURCE_WORDS[kind] ?? kind}</button>
-          : <span key={kind} className={`source source--${kind}`} title={title}>{SOURCE_WORDS[kind] ?? kind}</span>;
-      })}
+      <span className="source source--none" title={callers.map(caller => caller.text).join('\n')}>
+        {callers.length === 1 ? `не передаёт ${callers[0]!.text}` : `не передают: ${callers.length}`}
+      </span>
     </span>
   );
 }
 
-const ORIGINS = new WeakMap<System, { compendium: unknown; at: Map<string, Origin[]> }>();
+const CALLERS = new WeakMap<System, { compendium: unknown; at: Map<string, Caller[]> }>();
 
-function cachedOrigins(system: System, compendium: Parameters<typeof originsOf>[1], effectId: string, param: Param): Origin[] {
-  let hit = ORIGINS.get(system);
-  if (!hit || hit.compendium !== compendium) { hit = { compendium, at: new Map() }; ORIGINS.set(system, hit); }
-  const key = `${effectId}|${param.key}|${param.role ?? ''}|${String(param.default ?? '')}`;
-  let out = hit.at.get(key);
-  if (!out) { out = originsOf(system, compendium, effectId, param); hit.at.set(key, out); }
+function cachedCallers(system: System, compendium: Parameters<typeof callersOf>[1], effectId: string): Caller[] {
+  let hit = CALLERS.get(system);
+  if (!hit || hit.compendium !== compendium) { hit = { compendium, at: new Map() }; CALLERS.set(system, hit); }
+  let out = hit.at.get(effectId);
+  if (!out) { out = callersOf(system, compendium, effectId); hit.at.set(effectId, out); }
   return out;
 }
