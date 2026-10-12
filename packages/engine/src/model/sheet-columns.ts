@@ -11,6 +11,20 @@ export const slugOf = (value: unknown): string => String(value ?? '').replace(/[
 
 export const rowKeyOf = (row: TableRow): string => slugOf(row.value);
 
+export const TARGET_SLOT = /\{@строка\.([\p{L}\p{N}_]+)\}/gu;
+
+export const hasTargetSlot = (target: string): boolean => target.includes('{@строка.');
+
+export function itemTarget(target: string, cells: Record<string, unknown>): string | null {
+  let missing = false;
+  const out = target.replace(TARGET_SLOT, (_, column: string) => {
+    const value = cells[column];
+    if (value === undefined || value === null || value === '' || typeof value === 'object') { missing = true; return ''; }
+    return slugOf(value);
+  });
+  return missing ? null : out;
+}
+
 export const addressOf = (table: string, row: TableRow | string, column: string): string =>
   `${table}.${typeof row === 'string' ? row : rowKeyOf(row)}.${column}`;
 

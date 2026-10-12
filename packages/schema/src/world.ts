@@ -94,6 +94,8 @@ export const stage = z.object({
   combine: stageCombine.optional(),
   round: z.enum(['down', 'up', 'near']).optional(),
   atLeast: z.number().optional(),
+  upTo: z.number().optional(),
+  upToTimes: z.number().optional(),
 }).strict();
 
 export const columnValue = z.object({
@@ -235,7 +237,7 @@ export const effect = z.object({
   activation: activation.optional(),
   duration: z.object({
     kind: durationKind,
-    max: z.number().int().positive().optional(),
+    max: z.union([z.number().int().positive(), formula]).optional(),
     ends: z.enum(['turn-end', 'turn-start']).optional(),
     by: z.string().min(1).optional(),
   }).strict().optional(),

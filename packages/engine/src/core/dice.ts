@@ -24,6 +24,7 @@ export interface Rolled {
   value: number;
   from?: number;
   out?: boolean;
+  wild?: boolean;
 }
 
 export interface Addend {
@@ -140,6 +141,7 @@ const CLAIM: Record<string, ClaimOp> = {
     if (at < 0) return { ...claim, terms: [...claim.terms, { count, sides }] };
     return { ...claim, terms: claim.terms.map((t, i) => (i === at ? { ...t, count: t.count + count } : t)) };
   },
+  wild: claim => ({ ...claim, read: { ...claim.read, wild: true } }),
   keepBest: (claim, op) => ({ ...claim, keeps: [...claim.keeps, { n: num(op.n, 1), from: 'best', scope: partOf(op) ? { part: partOf(op)! } : 'main' }] }),
   keepWorst: (claim, op) => ({ ...claim, keeps: [...claim.keeps, { n: num(op.n, 1), from: 'worst', scope: partOf(op) ? { part: partOf(op)! } : 'main' }] }),
   dieStep(claim, op) {
@@ -275,6 +277,7 @@ export function start(spec: Spec, edits: (RollEdit & { label?: string })[], die:
         ...(term.part ? { part: term.part } : {}),
         ...(term.extra ? { extra: true } : {}),
         ...(term.minus ? { minus: true } : {}),
+        ...((claim.read as { wild?: boolean }).wild && dice.length === 0 && !term.extra && !term.part ? { wild: true } : {}),
       });
     }
   }
@@ -360,7 +363,12 @@ function read(dice: Rolled[], spec: ReadSpec): { total: number; single: number |
     const direction = Object.keys(PER_DIE).find(key => spec[key] !== undefined);
     if (!direction) throw new EngineError(`чтению «счёт успехов» нужен порог на кость — одно из: ${Object.keys(PER_DIE).join(', ')}`);
     const versus = Number(spec[direction]);
-    return { total: dice.filter(d => PER_DIE[direction]!(d.value, versus)).length, single: null };
+    const hit = (d: Rolled) => PER_DIE[direction]!(d.value, versus);
+    const wild = (spec as { wild?: boolean }).wild ? dice.find(d => d.wild) : undefined;
+    if (!wild) return { total: dice.filter(hit).length, single: null };
+    const glitched = wild.face === 1;
+    const counted = dice.filter(d => hit(d) && !(glitched && d.value === versus));
+    return { total: counted.length + (hit(wild) ? 2 : 0), single: null };
   }
   throw new EngineError(`неизвестное чтение костей «${spec.kind}»; есть: sum, best, worst, count`);
 }

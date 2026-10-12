@@ -43,6 +43,7 @@ import type { Roll, RollResult, Spec } from './dice.ts';
 import type { Thrown } from './roll.ts';
 import type { Sub } from './subs.ts';
 import type { Ctx, StepData, FieldRef } from './steps.ts';
+import { tagWords } from '../engine/roll-tags.ts';
 import { ITEM_NAME, itemColumn, itemStored, itemTag, parseItemTag, withItemValue } from '../model/item-ref.ts';
 import type { ItemRef } from '../model/item-ref.ts';
 
@@ -550,8 +551,17 @@ export class Run {
       return { roll, result: result(roll) };
     }
     const opponent = against && against !== by && this.sheet(against) ? against : null;
+    const words = this.system.roll_edits ?? {};
+    const claimed = frame.claims[by] ?? [];
+    const marks = claimed.filter(claim => !words[claim] && !tags.includes(claim));
+    if (marks.length) {
+      const known = tagWords(this.system);
+      const stray = marks.find(claim => !known.has(claim));
+      if (stray) throw new EngineError(`заявка «${stray}» — нет ни правки броска с таким именем, ни метки; правки: ${Object.keys(words).join(', ') || '(словарь пуст)'}`);
+      tags = [...tags, ...marks];
+    }
     return throwDice({
-      spec, tags, claims: frame.claims[by] ?? [],
+      spec, tags, claims: claimed.filter(claim => words[claim]),
       held: rollHeld(this.holderViews(), by, opponent, tags),
       roller: this.view(by),
       die,
@@ -574,6 +584,17 @@ export class Run {
     if (this.sheet(holder)) return holder;
     if (findField(this.system, tag)?.lives === 'group') return sheetId;
     throw new EngineError(`поле «${tag}» лежит на «${holder}», а такого листа здесь нет`);
+  }
+
+  durationOf(effect: Effect, sheetId: string, args: Record<string, unknown>, path: Path, owner: string): number | undefined {
+    const raw = effect.duration?.max;
+    if (!raw || typeof raw !== 'object') return undefined;
+    const value = resolveRef(raw, {
+      pass: this.view(sheetId), die: this.ext.dice(path.phase('duration')), owner: `${owner}: срок «${effect.label ?? ''}»`,
+      params: args, paramDefs: effect.params ?? [],
+    });
+    if (typeof value !== 'number' || !Number.isFinite(value)) throw new EngineError(`${owner}: срок «${effect.label ?? ''}» — формула дала не число`);
+    return value;
   }
 
   private itemRead(item: ItemRef, column: string): unknown {
@@ -614,14 +635,15 @@ export class Run {
     const sorted = (args: Record<string, unknown>): string => JSON.stringify(Object.entries(args).sort(([a], [b]) => a.localeCompare(b)));
     const sameArgs = (entry: WornEffect): boolean => sorted(entry.args ?? {}) === sorted(kept);
     const at = worn.findIndex(entry => entry.effectId === effectId && (reapplyOf(effect) !== 'refresh' || sameArgs(entry)));
+    const counted = this.durationOf(effect, sheetId, kept, path, frame.owner);
     const fresh: WornEffect = {
       effectId,
       ...(Object.keys(kept).length ? { args: kept } : {}),
-      ...expiryOf(effect, this.clock),
+      ...expiryOf(effect, this.clock, counted),
       ...(frame.bond ? { bond: frame.bond } : {}),
       ...(reapplyOf(effect) === 'stack' ? { inst: this.ext.id(path.phase('inst').phase(effectId)) } : {}),
     };
-    const max = usesMax(effect);
+    const max = usesMax(effect, counted);
     if (max !== null) fresh.usesLeft = max;
     if (at < 0) worn.push(fresh);
     else if (reapplyOf(effect) === 'refresh') {
@@ -1166,10 +1188,10 @@ export class Run {
     }
   }
 
-  check(sheetId: string, check: Check, path: Path, owner: string): { thrown: Thrown; bonus: number; total: number; entries: Entry[] } {
+  check(sheetId: string, check: Check, path: Path, owner: string, claims: readonly string[] = []): { thrown: Thrown; bonus: number; total: number; entries: Entry[] } {
     const frame: Frame = {
       path, effectId: '', label: owner, owner, home: sheetId, bound: null,
-      args: {}, paramDefs: [], props: null, claims: {}, hop: 0, inSub: false,
+      args: {}, paramDefs: [], props: null, claims: claims.length ? { [sheetId]: [...claims] } : {}, hop: 0, inSub: false,
     };
     const sink = newSink();
     const ctx = this.ctx(frame, {}, {}, path, sink, new Set());

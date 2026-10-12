@@ -13,11 +13,11 @@ export const idleClock = (): Clock => ({ round: 0, order: [], active: null });
 export const inCombat = (clock: Clock | null | undefined): clock is Clock =>
   Boolean(clock && clock.round > 0 && clock.active !== null && clock.order.length > 0);
 
-export function expiryOf(effect: Effect, clock: Clock | null | undefined): Partial<WornEffect> {
+export function expiryOf(effect: Effect, clock: Clock | null | undefined, counted?: number): Partial<WornEffect> {
   const kind = durationOf(effect);
   if (kind === 'scene') return { scene: true };
   if (!inCombat(clock)) return {};
-  const max = Math.max(1, Math.floor(Number(effect.duration?.max ?? 1)) || 1);
+  const max = Math.max(1, Math.floor(Number(counted ?? effect.duration?.max ?? 1)) || 1);
   if (kind === 'rounds') return { until: clock.round + max };
   if (kind === 'turns') return { turnsLeft: max };
   if (kind === 'combat') return { combat: true };

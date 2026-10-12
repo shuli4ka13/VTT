@@ -40,6 +40,7 @@ export function stackStages<M extends Staged>(
   const plan = stages.length ? stages : [IMPLICIT];
   let result = base;
   for (const stage of plan) {
+    const entry = result;
     const mine = mods.filter(m => stageOf(m, stages, label) === stage.key);
     const of = (op: string) => mine.filter(m => m.op === op).map(value);
     const rule = (op: 'set' | 'add' | 'mul'): Combine => (stage.combine?.[op] ?? COMBINE_DEFAULT[op]) as Combine;
@@ -53,6 +54,10 @@ export function stackStages<M extends Staged>(
     if (floors.length) result = Math.max(result as number, ...floors);
     const caps = of('cap') as number[];
     if (caps.length) result = Math.min(result as number, ...caps);
+    if (typeof result === 'number' && typeof entry === 'number') {
+      if (stage.upTo !== undefined) result = Math.min(result as number, entry + stage.upTo);
+      if (stage.upToTimes !== undefined) result = Math.min(result as number, entry * stage.upToTimes);
+    }
     if (typeof result === 'number') {
       const lifted: number = stage.atLeast !== undefined ? Math.max(result, stage.atLeast) : result;
       result = rounded(lifted, stage.round);

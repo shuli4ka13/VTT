@@ -1,7 +1,7 @@
 import { OUTCOME_COLUMNS } from '../words/glossary.ts';
 import type { System } from '../model/types.ts';
 
-const WORD = /^[\p{L}_][\p{L}\p{N}_]*$/u;
+const WORD = /^[\p{L}_](?:[\p{L}\p{N}_ ]*[\p{L}\p{N}_])?$/u;
 
 export const isTagWord = (value: unknown): value is string => typeof value === 'string' && WORD.test(value);
 

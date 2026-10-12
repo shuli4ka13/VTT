@@ -12,6 +12,8 @@ import type { SourcedModifier } from '../engine/modifiers.ts';
 import type { Pass } from '../engine/calc.ts';
 import type { RollEdit, RollEditOp } from '../model/types.ts';
 
+export const COUNT_PARAM = 'count';
+
 export type EditMod = Extract<SourcedModifier, { kind: 'edit' }>;
 
 export type Held = EditMod & { view: Pass; ref: RefContext };
@@ -153,11 +155,17 @@ export function rollEdits(held: Held[], claims: readonly string[], roller: Pass)
     const view = first.get(key)!.view;
     return { view, edit: withValues({ ...dictionary[key]!, label: dictionary[key]!.label || key }, view) };
   });
+  const dice = held.filter(mod => !mod.edit && (mod as { param?: string }).param === COUNT_PARAM).map(mod => {
+    const op = (mod as { op?: unknown }).op;
+    if (op !== 'add') throw new EngineError(`правка «${who(mod)}»: кубики к броску только прибавляются, а здесь «${String(op ?? 'не задано')}»`);
+    const count = Math.trunc(amountOf(mod));
+    return { label: who(mod), ops: [{ op: 'addDie', count }] } as RollEdit & { label: string };
+  }).filter(edit => Number((edit.ops![0] as unknown as { count: number }).count) !== 0);
   return {
-    edits: words.map(word => word.edit),
+    edits: [...dice, ...words.map(word => word.edit)],
     addends: [
       ...words.flatMap(({ edit, view }) => (edit.ops ?? []).filter(op => op.op === PLUS_OP).map(op => wordAddend(edit.label, op, view))),
-      ...held.filter(mod => !mod.edit).map(bonusAddend),
+      ...held.filter(mod => !mod.edit && (mod as { param?: string }).param !== COUNT_PARAM).map(bonusAddend),
     ],
   };
 }
@@ -170,5 +178,5 @@ export function rollHeld(holders: readonly Holder[], rollerId: string, againstId
   };
   const names: Record<string, Bound> = { бросающий: rollerId, против: againstId };
   const spec = (param: string): Gather => ({ call: ROLL_CALL, param, tags, names, values: {}, view });
-  return [...gather(holders, spec('edits')), ...gather(holders, spec('bonus'))];
+  return [...gather(holders, spec('edits')), ...gather(holders, spec('bonus')), ...gather(holders, spec(COUNT_PARAM))];
 }

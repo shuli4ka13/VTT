@@ -274,6 +274,8 @@ function opPhrase(op: Record<string, unknown>, system: System): string {
     case 'addDie':
       return (n === 1 ? 'кинуть на кость больше'
         : `кинуть на ${n} ${plural(n, 'кость', 'кости', 'костей')} больше`) + only;
+    case 'wild':
+      return 'один кубик — дикий: 5–6 дают три успеха, 1 гасит пятёрки';
     case 'keepBest':
       return (n === 1 ? 'оставить лучшую' : `оставить ${n} лучших`) + only;
     case 'keepWorst':
@@ -352,6 +354,7 @@ export function editNotation(edit: { ops?: Record<string, unknown>[] }, system: 
         else count += k;
         break;
       }
+      case 'wild': tail.push('дикий кубик'); break;
       case 'keepBest': tail.push(n === 1 ? 'лучшая' : `${n} лучших`); break;
       case 'keepWorst': tail.push(n === 1 ? 'худшая' : `${n} худших`); break;
       case 'dieStep': {

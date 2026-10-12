@@ -145,8 +145,9 @@ export class RoomsService {
     return this.world(roomId, userId, 'set', { sheetId, tag, value }, { op: 'set', sheetId, tag, value }, false);
   }
 
-  rollField(userId: string, roomId: string, sheetId: string, tag: string, hidden = false): Promise<RoomDelta> {
-    return this.world(roomId, userId, 'roll', { sheetId, tag, ...(hidden ? { hidden } : {}) }, { op: 'roll', sheetId, tag }, hidden);
+  rollField(userId: string, roomId: string, sheetId: string, tag: string, hidden = false, claims: string[] = []): Promise<RoomDelta> {
+    const claimed = claims.length ? { claims } : {};
+    return this.world(roomId, userId, 'roll', { sheetId, tag, ...(hidden ? { hidden } : {}), ...claimed }, { op: 'roll', sheetId, tag, ...claimed }, hidden);
   }
 
   createSheet(userId: string, roomId: string, name: string, of?: string): Promise<RoomDelta> {

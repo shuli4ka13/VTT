@@ -21,6 +21,7 @@ import { BlockPick } from '../block-pick.tsx';
 import { GrantsEditor } from '../grants-editor.tsx';
 import { Extras } from './cards/extras.tsx';
 import { ParamsEditor } from './params-editor.tsx';
+import { BoundFormula } from '../bound-field.tsx';
 import { ReturnsEditor } from './returns-editor.tsx';
 import { launchOf, activationFor, DURATIONS, REAPPLY } from '@vtt/engine/model/effect-kinds';
 import type { System, Effect, Step } from '@vtt/schema';
@@ -377,11 +378,12 @@ function Lifetime({ effect, system, edit }: {
       </Field>
 
       {COUNTED.has(kind) ? (
-        <Field label="Сколько">
-          <Input
-            type="number" value={effect.duration?.max ?? 1}
+        <Field label="Сколько" hint="число или формула от входов эффекта: «@rating * кинуть(1к6)»">
+          <BoundFormula
+            value={effect.duration?.max ?? 1} system={system} where="срок висящего эффекта"
             onChange={next => edit(draft => {
-              if (draft.duration && COUNTED.has(draft.duration.kind)) draft.duration.max = Math.max(1, Number(next) || 1);
+              if (!draft.duration || !COUNTED.has(draft.duration.kind)) return;
+              draft.duration.max = next === null ? 1 : typeof next === 'number' ? Math.max(1, Math.floor(next) || 1) : next;
             })}
           />
         </Field>

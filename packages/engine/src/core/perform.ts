@@ -25,7 +25,7 @@ import type { System, Sheet, Compendium, Die, StoredValue, WornEffect, Owned } f
 
 export type Op =
   | { op: 'act'; intent: ActIntent }
-  | { op: 'roll'; sheetId: string; tag: string }
+  | { op: 'roll'; sheetId: string; tag: string; claims?: string[] }
   | { op: 'set'; sheetId: string; tag: string; value: StoredValue }
   | { op: 'belonging'; sheetId: string; list: 'has' | 'effects'; id: string; on: boolean; off?: boolean; inst?: string; add?: boolean; in?: string | null }
   | { op: 'kind'; sheetId: string; of: string | null }
@@ -124,10 +124,10 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     return true;
   },
 
-  roll(run, { sheetId, tag }, root) {
+  roll(run, { sheetId, tag, claims }, root) {
     const sheet = sheetOf(run, sheetId);
     const check = fieldCheck(run.system, tag);
-    const { thrown, bonus, total, entries } = run.check(sheetId, check, root.step('roll'), check.label);
+    const { thrown, bonus, total, entries } = run.check(sheetId, check, root.step('roll'), check.label, claims ?? []);
     const rolled = thrown.result;
     const named = thrown.roll.edits.length ? ` (${thrown.roll.edits.join(', ')})` : '';
     const shown = rolled.dice.kept != null && rolled.dice.rolls.length > 1
@@ -207,9 +207,10 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
       if (!on) {
         next = { ...sheet, effects: worn.filter(entry => entry.effectId !== id) };
       } else {
-        const max = usesMax(effect);
+        const counted = run.durationOf(effect, sheet.id, {}, root.phase('belonging'), `«${effect.label ?? id}»`);
+        const max = usesMax(effect, counted);
         const fresh: WornEffect = {
-          effectId: id, ...expiryOf(effect, run.clock), ...(max === null ? {} : { usesLeft: max }),
+          effectId: id, ...expiryOf(effect, run.clock, counted), ...(max === null ? {} : { usesLeft: max }),
           ...(reapplyOf(effect) === 'stack' ? { inst: run.ext.id(root.phase('inst')) } : {}),
         };
         const at = worn.findIndex(entry => entry.effectId === id);

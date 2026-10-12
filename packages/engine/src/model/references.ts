@@ -394,7 +394,9 @@ function modifierRefs(system: System, list: Modifier[] | undefined, from: Where,
       if (mod.if?.expr.trim()) exprRefs(rowFree(mod.if.expr, from, own, out), from, scope, out);
       if (mod.value?.expr.trim()) exprRefs(rowFree(mod.value.expr, from, own, out), from, scope, out);
     } else {
-      if (target && !target.includes(':') && target !== '*') out.push({ kind: 'field', key: target, from });
+      if (target.includes('{@строка.')) {
+        for (const slot of target.matchAll(/\{@строка\.([\p{L}\p{N}_]+)\}/gu)) if (own && !own.has(slot[1]!)) out.push({ kind: 'prop', key: slot[1]!, from, scope: 'foreign' });
+      } else if (target && !target.includes(':') && target !== '*') out.push({ kind: 'field', key: target, from });
       const condition = (mod as { if?: { expr: string } }).if;
       if (condition?.expr.trim()) exprRefs(rowFree(condition.expr, from, own, out), from, plainScope(), out);
       if (mod.value?.expr.trim()) exprRefs(rowFree(mod.value.expr, from, own, out), from, plainScope(), out);

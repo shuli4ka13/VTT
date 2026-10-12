@@ -74,9 +74,9 @@ export function requireCalled(system: System, id: string, who: string): Effect {
   return effect;
 }
 
-export function usesMax(effect: Effect): number | null {
+export function usesMax(effect: Effect, counted?: number): number | null {
   if (durationOf(effect) !== 'uses') return null;
-  const max = Number(effect.duration!.max);
+  const max = Number(counted ?? effect.duration!.max);
   return Number.isFinite(max) && max > 0 ? Math.floor(max) : 1;
 }
 

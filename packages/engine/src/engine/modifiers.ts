@@ -10,7 +10,7 @@ import { findRecord, kindOfRecord, sheetKindOf, propsOf, working, keyOf } from '
 import { tagsHold } from './roll-tags.ts';
 import type { System, Sheet, Compendium, Modifier, RollEdit, RollEditOp, Param } from '../model/types.ts';
 import type { Pass } from './calc.ts';
-import { withRecord } from '../model/sheet-columns.ts';
+import { withRecord, hasTargetSlot, itemTarget } from '../model/sheet-columns.ts';
 import { toolsOf } from './refs.ts';
 import { rollHeld, rollEdits } from '../core/edits.ts';
 import { PLUS_OP } from '../core/dice.ts';
@@ -38,8 +38,8 @@ export const editKey = (call: string, param: string): string => `${call}.${param
 
 const assertCall = (system: System, mod: EditModifier, owner?: string): void => {
   if (mod.call === ROLL_CALL) {
-    if (mod.param === 'edits' || mod.param === 'bonus') return;
-    throw new EngineError(`${owner ? `«${owner}»: ` : ''}у броска нет параметра «${mod.param}» — есть «edits» и «bonus»`);
+    if (mod.param === 'edits' || mod.param === 'bonus' || mod.param === 'count') return;
+    throw new EngineError(`${owner ? `«${owner}»: ` : ''}у броска нет параметра «${mod.param}» — есть «edits», «bonus» и «count»`);
   }
   const who = owner ? `«${owner}»: ` : '';
   const effect = system.effects?.[mod.call];
@@ -98,7 +98,12 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
 
     const kind = kindOfRecord(system, item);
     const cells = propsOf(item, system, entry) ?? {};
-    const mine = <T,>(list: T): T => (item.table ? withRecord(system, item.table, cells, list, keyOf(entry)) : list);
+    const aimed = (list: Modifier[]): Modifier[] => list.flatMap(mod => {
+      if (mod.kind !== 'value' || !hasTargetSlot(mod.target)) return [mod];
+      const target = itemTarget(mod.target, cells);
+      return target ? [{ ...mod, target }] : [];
+    });
+    const mine = (list: Modifier[]): Modifier[] => (item.table ? withRecord(system, item.table, cells, aimed(list), keyOf(entry)) : aimed(list));
     if (kind?.modifiers?.length) {
       sources.push({
         type: 'kind', id: String(item.table), label: kind.label || String(item.table),
