@@ -85,6 +85,29 @@ describe('заглушка говорит словами владельца', ()
     renderOpen(<ModifiersEditor system={system} modifiers={[]} onEdit={() => {}} />);
     expect(screen.getByText('Эффект пока ничего не делает')).toBeTruthy();
   });
+
+  it('пусто — одна бледная строка, а не коробка; пояснение прячется в подсказку', () => {
+    render(<ModifiersEditor
+      system={system} modifiers={[]} onEdit={() => {}}
+      empty={{ title: 'Род пока ничего не правит', hint: 'проверочная' }}
+    />);
+    const line = screen.getByText('Род пока ничего не правит');
+    expect(line.className).toBe('faint');
+    expect(line.getAttribute('title')).toBe('проверочная');
+    expect(screen.queryByText('проверочная')).toBeNull();
+    expect(document.querySelector('.empty')).toBeNull();
+  });
+});
+
+describe('строка правки — «пока»', () => {
+  it('первый столбец — «пока», вид правки — отдельная мелкая метка', () => {
+    const mods = [...rollMod, { kind: 'value', target: 'ac', op: 'add', value: { expr: '1' } }] as Modifier[];
+    render(<ModifiersEditor system={system} modifiers={mods} onEdit={vi.fn()} />);
+    const rows = [...document.querySelectorAll('.mod-row')];
+    expect(rows.map(row => row.querySelector('.mod-row__kind')!.textContent)).toEqual(['пока', 'пока']);
+    expect(rows.map(row => row.querySelector('.mod-row__tag')!.textContent)).toEqual(['вызов', 'поле']);
+    expect(rows.every(row => row.classList.contains('mod-row--while'))).toBe(true);
+  });
 });
 
 describe('один редактор — шесть механизмов', () => {

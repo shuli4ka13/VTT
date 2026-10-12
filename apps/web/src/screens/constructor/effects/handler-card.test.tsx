@@ -109,3 +109,36 @@ describe('«когда»: фраза называет итог вызова сл
     expect(title).not.toContain('попадание.попал');
   });
 });
+
+describe('«когда»: фраза по-русски', () => {
+  afterEach(cleanup);
+
+  const tagged = { ...system, tags: { атака: { label: 'Атака' } } } as unknown as System;
+
+  const phrase = (on: string): string => {
+    const handler = { on, steps: [] } as Handler;
+    const withHandler = { ...tagged, effects: { ...tagged.effects, r: { ...tagged.effects.r, on: [handler] } } } as System;
+    const view = render(<HandlerCard id="r" index={0} handler={handler} system={withHandler} onRemove={() => {}} edit={() => {}} />);
+    const text = view.container.querySelector('.mod-row__text')!.textContent!.replace(/^когда/, '');
+    view.unmount();
+    return text;
+  };
+
+  it('«до» и «после» — родительный падеж: «до всего с меткой», «после любого действия»', () => {
+    expect(phrase('before:атака')).toBe('до всего с меткой «Атака»');
+    expect(phrase('after:атака')).toBe('после всего с меткой «Атака»');
+    expect(phrase('before:*')).toBe('до любого действия кнопкой');
+    expect(phrase('after:удар')).toBe('после «Удар»');
+  });
+
+  it('«завершено» и пункты списка остаются в именительном', () => {
+    expect(phrase('done:атака')).toBe('завершено всё с меткой «Атака»');
+    expect(phrase('done:*')).toBe('завершено любое действие кнопкой');
+    const handler = { on: 'before:*', steps: [] } as Handler;
+    const withHandler = { ...tagged, effects: { ...tagged.effects, r: { ...tagged.effects.r, on: [handler] } } } as System;
+    render(<HandlerCard id="r" index={0} handler={handler} system={withHandler} onRemove={() => {}} edit={() => {}} />);
+    openAll();
+    const subjects = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === '*'))!;
+    expect([...subjects.options].map(o => o.textContent)).toEqual(['любое действие кнопкой', 'всё с меткой «Атака»', '«Удар»']);
+  });
+});

@@ -480,6 +480,67 @@ describe('шаг цены — один раз, до остальных', () => {
   });
 });
 
+describe('«пока» и «когда» — одна таблица', () => {
+  afterEach(cleanup);
+
+  const open = (effect: Record<string, unknown>) => {
+    useWorld.setState(state => ({
+      ...state,
+      system: { ...state.system, effects: { aura: { label: 'Аура', activation: 'passive', ...effect } } },
+      activeEffectId: 'aura',
+    }));
+    render(<EffectsTab />);
+  };
+
+  const adders = () => [...screen.getByText('+ когда').parentElement!.querySelectorAll('button')].map(button => button.textContent!.trim());
+
+  it('ничего нет — одна бледная строка и один ряд кнопок, старых разделов и коробок нет', () => {
+    open({});
+    expect(screen.getByText('Что делает, пока висит')).toBeTruthy();
+    const empty = screen.getByText('Пока ничего не делает.');
+    expect(empty.className).toBe('faint');
+    expect(screen.queryByText('Пока висит — правит')).toBeNull();
+    expect(screen.queryByText('Когда')).toBeNull();
+    expect(screen.queryByText('Ничего не правит')).toBeNull();
+    expect(screen.queryByText('Ни на что не отзывается')).toBeNull();
+    expect(empty.parentElement!.querySelector('.empty')).toBeNull();
+    expect(adders()).toEqual(['+ правит поле', '+ правка вызова', '+ когда', '+ при наложении', '+ при спадании']);
+  });
+
+  it('правка, подписка, наложение и спадание — строки одного списка: «пока», потом «когда»', () => {
+    open({
+      modifiers: [{ kind: 'value', target: 'ac', op: 'add', value: { expr: '1' } }],
+      on: [{ on: 'moment:turn-start', steps: [] }],
+      attach: [],
+      detach: [],
+    });
+    expect(screen.queryByText('Пока ничего не делает.')).toBeNull();
+    const rows = [...document.querySelectorAll('.mod-row')];
+    expect(rows.map(row => row.querySelector('.mod-row__kind')!.textContent)).toEqual(['пока', 'когда', 'когда', 'когда']);
+    expect(rows.map(row => row.classList.contains('mod-row--when'))).toEqual([false, true, true, true]);
+    expect(screen.getByText('повесили')).toBeTruthy();
+    expect(screen.getByText('спало')).toBeTruthy();
+    expect(document.querySelectorAll('.when-body')).toHaveLength(3);
+    expect(adders()).toEqual(['+ правит поле', '+ правка вызова', '+ когда']);
+  });
+
+  it('«+ при наложении» ставит пустое наложение, крестик у его строки убирает наложение после подтверждения', () => {
+    open({ modifiers: [{ kind: 'value', target: 'ac', op: 'add', value: { expr: '1' } }] });
+    fireEvent.click(screen.getByText('+ при наложении'));
+    expect(useWorld.getState().system.effects.aura!.attach).toEqual([]);
+    expect(screen.queryByText('+ при наложении')).toBeNull();
+    expect(screen.getByText('+ при спадании')).toBeTruthy();
+
+    const hook = screen.getByText('повесили').closest('.mod-row') as HTMLElement;
+    expect(hook.querySelector('button.mod-row__text')).toBeNull();
+    fireEvent.click(within(hook).getByText('×'));
+    expect(useWorld.getState().system.effects.aura!.attach).toEqual([]);
+    fireEvent.click(within(hook).getByText('точно убрать'));
+    expect(useWorld.getState().system.effects.aura!.attach).toBeUndefined();
+    expect(screen.getByText('+ при наложении')).toBeTruthy();
+  });
+});
+
 describe('подписка видит имена вызова', () => {
   afterEach(cleanup);
 

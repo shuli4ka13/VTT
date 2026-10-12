@@ -12,6 +12,7 @@ import { TARGETS_SEED } from '@vtt/engine/model/references';
 import { sheetsAt } from './names.ts';
 import { namesAt } from '@vtt/engine/model/names-at';
 import { ConditionField } from '../condition-field.tsx';
+import { WhileWhenRow } from './while-when.tsx';
 import type { System, Handler } from '@vtt/schema';
 
 type Kind = 'call' | 'seen' | 'moment' | 'field' | 'gained' | 'lost';
@@ -46,6 +47,14 @@ const subjectOf = (on: string): string => {
 const PREFIX: Record<Exclude<Kind, 'call' | 'seen'>, string> = {
   moment: MOMENT_PREFIX, field: FIELD_PREFIX, gained: GAINED_PREFIX, lost: LOST_PREFIX,
 };
+
+type Named = readonly (readonly [string, { label?: string | undefined }])[];
+
+const callSubjects = (tags: Named, actions: Named, genitive: boolean): (readonly [string, string])[] => [
+  [ANY_ACTION, genitive ? 'любого действия кнопкой' : 'любое действие кнопкой'],
+  ...tags.map(([key, tag]) => [key, `${genitive ? 'всего' : 'всё'} с меткой «${tag.label ?? key}»`] as const),
+  ...actions.map(([key, e]) => [key, `«${e.label ?? key}»`] as const),
+];
 
 function outcomesOf(system: System, listened: string, phase: Phase): (readonly [string, string])[] {
   const source = system.effects[listened];
@@ -90,7 +99,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
   const tags = Object.entries(system.tags ?? {});
 
   const subjects: (readonly [string, string])[] = kind === 'call'
-    ? [[ANY_ACTION, 'любое действие кнопкой'], ...tags.map(([key, tag]) => [key, `всё с меткой «${tag.label ?? key}»`] as const), ...actions.map(([key, e]) => [key, `«${e.label ?? key}»`] as const)]
+    ? callSubjects(tags, actions, false)
     : kind === 'moment' ? (Object.keys(TIMES) as MomentKey[]).map(key => [key, TIMES[key]] as const)
       : kind === 'field' ? watchable.map(f => [f.tag, `«${f.label}»`] as const)
         : kind === 'gained' || kind === 'lost' ? hanging.map(([key, e]) => [key, `«${e.label ?? key}»`] as const)
@@ -107,7 +116,8 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
   });
   const visible = new Map(namesAt(system, id, { part: 'handler-if', handler: index }).map(one => [one.name, one.label]));
 
-  const subjectWord = subjects.find(([key]) => key === subject)?.[1] ?? subject;
+  const spoken = kind === 'call' && phase !== 'done' ? callSubjects(tags, actions, true) : subjects;
+  const subjectWord = spoken.find(([key]) => key === subject)?.[1] ?? subject;
   const happened = kind === 'seen' ? SEEN_LABEL
     : kind === 'call' ? `${PHASES[phase].label} ${subjectWord}`
       : kind === 'moment' ? subjectWord
@@ -127,13 +137,9 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
 
   if (!open) {
     return (
-      <div className="mod-row mod-row--when">
-        <button type="button" className="mod-row__text" aria-label={`развернуть «когда: ${sentence}»`} onClick={() => setOpen(true)}>
-          <span className="mod-row__kind">когда</span>
-          {sentence}
-        </button>
-        <DangerButton size="sm" onConfirm={onRemove}>×</DangerButton>
-      </div>
+      <WhileWhenRow when label={`развернуть «когда: ${sentence}»`} onOpen={() => setOpen(true)} onRemove={onRemove}>
+        {sentence}
+      </WhileWhenRow>
     );
   }
 

@@ -478,12 +478,15 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
   padding: var(--s-3) var(--s-4); color: var(--text); font: inherit; font-size: var(--fs-4); cursor: pointer;
 }
 .mod-row__text:hover { border-color: var(--accent); }
-.mod-row__kind { font-size: var(--fs-1); text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); min-width: 48px; }
-.mod-row--edit .mod-row__kind { color: var(--kind-check); }
-.mod-row--value .mod-row__kind { color: var(--kind-change); }
-
-.when-block { border-left: 2px solid var(--kind-check); padding-left: var(--s-4); }
+.mod-row__text--still { cursor: default; }
+.mod-row__text--still:hover { border-color: var(--border); }
+.mod-row__kind { flex: none; width: 52px; font-size: var(--fs-1); text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
+.mod-row__tag { flex: none; width: 44px; font-size: var(--fs-1); text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
+.mod-row--while .mod-row__kind { color: var(--kind-change); }
 .mod-row--when .mod-row__kind { color: var(--warn); }
+.mod-add { margin-top: var(--s-3); }
+
+.when-body { border-left: 2px solid var(--kind-check); padding-left: var(--s-4); }
 
 .step-card { --label-w: 148px; padding: 10px 16px 14px; gap: 10px; border-top-width: 1px; border-left: 3px solid var(--dot); border-radius: var(--r-2); }
 .step-card.card--bad { border-left-color: var(--danger); }
