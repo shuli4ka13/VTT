@@ -389,10 +389,10 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
 
       {bare ? list : <div className="steps">{lead}{list}</div>}
 
-      {bare ? null : <div className="palette">
+      {bare ? null : <div className="bricks">
         {bricksOf(system, id).length ? (
-          <div className="palette__row">
-            <span className="palette__title">Эффекты системы</span>
+          <div className="bricks__row">
+            <span className="bricks__title">Эффекты системы</span>
             {bricksOf(system, id).map(([key, one]) => (
               <Button key={key} size="sm" title={one.description || `вызвать «${one.label || key}»`}
                 onClick={() => edit(draft => {
@@ -404,8 +404,8 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
             ))}
           </div>
         ) : null}
-        <div className="palette__row palette__row--plain">
-        <span className="palette__title">Шаг</span>
+        <div className="bricks__row bricks__row--plain">
+        <span className="bricks__title">Шаг</span>
         {[...BRICKS, ...(onRoll ? SEEN_BRICKS : [])].map(b => (
           <Button key={b.key} size="sm" title={b.hint}
             onClick={() => edit(draft => {

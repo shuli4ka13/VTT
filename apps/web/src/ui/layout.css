@@ -466,10 +466,10 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .effect-head__kind--passive { color: var(--kind-change); border-color: var(--ok-soft); background: var(--ok-soft); }
 .effect-head__more { border-top: 1px dashed var(--border); padding-top: var(--s-3); }
 
-.palette { display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-4); border: 1px dashed var(--border); border-radius: var(--r-2); }
-.palette__row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
-.palette__title { font-size: var(--fs-1); text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); min-width: 72px; }
-.palette__row--plain .btn { opacity: .85; }
+.bricks { display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-4); border: 1px dashed var(--border); border-radius: var(--r-2); }
+.bricks__row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
+.bricks__title { font-size: var(--fs-1); text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); min-width: 72px; }
+.bricks__row--plain .btn { opacity: .85; }
 
 .mod-row { display: flex; align-items: center; gap: var(--s-2); }
 .mod-row__text {
