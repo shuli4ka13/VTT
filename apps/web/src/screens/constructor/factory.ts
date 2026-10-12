@@ -140,7 +140,7 @@ export const BRICKS: StepTemplate[] = [
   },
   {
     key: 'each', label: '+ для каждого из списка',
-    hint: 'Разделитель: шаги выше — один раз, ниже — для каждого листа из входа-списка по очереди.',
+    hint: 'Разделитель: шаги выше — один раз, ниже — по очереди для каждой цели из входа-списка (только у действия кнопкой) или для каждой строки таблицы.',
     make: (_system, _taken, effect) => {
       const list = (effect?.params ?? []).find(p => p.kind === 'sheet' && p.many)?.key ?? '';
       return [{ type: 'each', of: list } as unknown as Step];
