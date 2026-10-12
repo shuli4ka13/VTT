@@ -1,5 +1,6 @@
 import { group, test, eq, ok, throws } from './harness.ts';
 import { exchange } from './play.ts';
+import { lintSystem, errorsOf } from '../src/model/lint.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const system = {
@@ -81,5 +82,60 @@ group('вызов передаёт вызванному его входы', () =
     } as unknown as System;
     const беда = throws(() => hit('шар:0', 5, дырявый));
     ok(String(беда.message).includes('«кость»'), String(беда.message));
+  });
+});
+
+group('вызов до «Для каждого», в плате и в теле берёт значение кнопки, а не клетку записи', () => {
+  type Place = 'до цикла' | 'в плате' | 'в теле';
+  const call = { type: 'emit', effect: 'метка', args: { лист: { expr: '@действующий' } } };
+  const loop = [{ type: 'each', of: 'цели' }, { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '1' } }];
+
+  const built = (place: Place) => ({
+    id: 'метки', name: 'метки',
+    tables: {
+      лист: { shape: 'single', owner: 'sheet', columns: [{ key: 'хп', kind: 'number', default: 40 }, { key: 'отметка', kind: 'text' }] },
+      оружие: {
+        shape: 'book', use: 'item', label: 'Оружие', columns: [{ key: 'вид', kind: 'text' }],
+        bindings: [{ label: 'Удар', effect: 'удар' }, { label: 'Удар огнём', effect: 'удар', args: { вид: { expr: '"огонь"' } } }],
+      },
+    },
+    effects: {
+      метка: {
+        label: 'Метка',
+        params: [{ key: 'лист', kind: 'sheet' }, { key: 'вид', kind: 'text' }],
+        steps: [{ type: 'apply', target: { expr: '@лист.отметка' }, direction: 'set', value: { expr: '@вид' } }],
+      },
+      удар: {
+        label: 'Удар',
+        params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }, { key: 'вид', kind: 'text' }],
+        steps: place === 'до цикла' ? [call, ...loop] : place === 'в теле' ? [loop[0], call, loop[1]] : loop,
+        ...(place === 'в плате' ? { cost: [call] } : {}),
+      },
+    },
+  }) as unknown as System;
+
+  const book = { records: [{ id: 'меч', table: 'оружие', label: 'Меч', cells: { вид: 'рубящий' } }] } as unknown as Compendium;
+  const holder = (id: string): Sheet => ({ id, systemId: 'метки', name: id, values: {}, has: id === 'бьёт' ? [{ of: 'меч' }] : [], effects: [] }) as unknown as Sheet;
+
+  const marked = (place: Place, actionId: string): unknown => {
+    const out = exchange({ system: built(place), compendium: book, die: () => 3, sheets: [holder('бьёт'), holder('получает')], actionId, fromId: 'бьёт', toId: 'получает' });
+    return out.sheets.find(one => one.id === 'бьёт')!.values.отметка;
+  };
+
+  test('образец собран без ошибок линта', () => {
+    for (const place of ['до цикла', 'в плате', 'в теле'] as const) {
+      eq(errorsOf(lintSystem(built(place), book)).length, 0, place);
+    }
+  });
+
+  for (const place of ['до цикла', 'в плате', 'в теле'] as const) {
+    test(`«Удар огнём», вызов ${place}: вложенный вызов получает «огонь», а не клетку меча`, () => {
+      eq(marked(place, 'меч:1'), 'огонь');
+    });
+  }
+
+  test('кнопка без своего значения: вызов до цикла и в плате берёт клетку записи', () => {
+    eq(marked('до цикла', 'меч:0'), 'рубящий');
+    eq(marked('в плате', 'меч:0'), 'рубящий');
   });
 });

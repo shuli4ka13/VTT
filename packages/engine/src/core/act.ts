@@ -116,7 +116,8 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
 
   if (effect.cost?.length) {
     const sink = newSink();
-    const ran = run.exec(top(root.phase('cost'), `стоимость действия «${action.label}»`, { alone: true, cost: true }), effect.cost, sink);
+    const costFrame = top(root.phase('cost'), `стоимость действия «${action.label}»`, { alone: true, cost: true });
+    const ran = run.exec(costFrame, effect.cost, sink, run.argValues(costFrame));
     const report = reportOf('cost', action.effect, actor, action.label, sink, ran.stopped, false);
     const why = refusalWords(report, system);
     if (why) throw new EngineError(`«${action.label}» не состоялось: ${why}`);
@@ -151,6 +152,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
     const pre = steps.slice(0, split);
     const plan = lazyPlan(pre, index => runnerOf(pre[index]!.type).lazy?.(pre[index] as StepData) === true);
     const preFrame = top(root, label);
+    const seeded = run.argValues(preFrame);
     lazy = {
       frame: preFrame,
       steps: new Map([...plan.guards].map(([index, guard]) => {
@@ -161,7 +163,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
     };
     preFrame.lazy = lazy;
     const sink = newSink();
-    const ran = run.exec(preFrame, pre.filter((_, index) => !plan.guards.has(index) && !plan.hidden.has(index)), sink);
+    const ran = run.exec(preFrame, pre.filter((_, index) => !plan.guards.has(index) && !plan.hidden.has(index)), sink, seeded);
     if (ran.stopped) {
       const why = refusalWords(reportOf('effect', action.effect, actor, action.label, sink, ran.stopped, false), system);
       throw new EngineError(`«${action.label}» не состоялось: ${why ?? 'цепочка оборвана'}`);
@@ -170,7 +172,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
       state.write({ fromId: actor, toId: actor, report: reportOf('effect', action.effect, actor, action.label, sink, null, false) });
     }
     state.write(...sink.after);
-    shared = ran.results;
+    shared = Object.fromEntries(Object.entries(ran.results).filter(([key]) => lazy!.stepIds.has(key)));
     sharedRolls = ran.rolls;
     const rolls: Record<string, RollResult> = ran.rolls;
     const of = String(each.of ?? '');
@@ -179,7 +181,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
     const ids = Array.isArray(list) ? list : typeof list === 'string' ? [list] : [];
     calls = ids.map((to): Delivery => ({
       ...base, steps: steps.slice(split + 1), path: root.at(to), subject: to, bound: { ...bound, [as]: to },
-      seed: ran.results, ...(Object.keys(rolls).length ? { rolls } : {}), lazy: lazy!, offset: split + 1, lead: sink.trace,
+      seed: shared, ...(Object.keys(rolls).length ? { rolls } : {}), lazy: lazy!, offset: split + 1, lead: sink.trace,
     }));
   } else {
     calls = [{ ...base, steps, path: root, subject: null, bound }];

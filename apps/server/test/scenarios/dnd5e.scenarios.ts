@@ -283,4 +283,26 @@ export const scenarios: Scenario[] = [
     ],
     expect: { values: { orc: { hp_current: 22 } } },
   },
+  {
+    name: 'Наложение рук: сколько назовёшь из запаса, действие за ход одно',
+    rule: 'PHB 2014 / SRD 5.1, «Наложение рук» паладина: запас хитов — пять на уровень паладина, до долгого отдыха; действием касаешься существа и восстанавливаешь из запаса столько хитов, сколько назовёшь. Арвен — паладин 5 уровня: запас 25 (в образце запас — две хранимые клетки «Всего» и «Осталось», формулы по уровню нет). В бою он лечит Дорана (30 хитов) на 5: хиты 35, запас 25 → 20, а действие тратится одно (1 → 0), сколько бы хитов ни назвали. Второе наложение в тот же ход — отказ: действия нет, запас остаётся 20.',
+    world: 'dnd5e',
+    sheets: {
+      arven: {
+        values: { class_name: 'паладин', 'resources.lay_on_hands.max': 25, 'resources.lay_on_hands.left': 25 },
+        has: [{ of: 'feature_lay_hands' }],
+      },
+      doran: { values: { hp_current: 30 } },
+    },
+    dice: [],
+    steps: [
+      { turn: 'start', order: ['arven', 'doran'] },
+      { act: 'feature_lay_hands:0', from: 'arven', to: 'doran', inputs: { amount: 5 } },
+      { act: 'feature_lay_hands:0', from: 'arven', to: 'doran', inputs: { amount: 5 }, refused: 'действие на этом ходу уже потрачено' },
+    ],
+    expect: {
+      values: { doran: { hp_current: 35 }, arven: { 'resources.lay_on_hands.left': 20, 'turn.действие.left': 0 } },
+      log: ['зовёт «Лечение»: 5', 'Хиты 30 → 35 (+5)'],
+    },
+  },
 ];

@@ -83,12 +83,12 @@ const inRecord = (ctx: RefContext): RefContext => (ctx.props ? { ...ctx, recordS
 const isFormula = (decl: Param | undefined, value: unknown): value is string =>
   decl?.kind === 'number' && typeof value === 'string';
 
+const isGiven = (arg: unknown): boolean => arg !== null && arg !== undefined && arg !== '';
+
 const nameRegex = (name: string): RegExp =>
   new RegExp(`[@#]${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}_.])`, 'gu');
 
 function fromArgs(key: string, ctx: RefContext): unknown {
-  const asked = (ctx.inputs || {})[key];
-  if (asked !== undefined) return asked;
   const arg = (ctx.params || {})[key];
   if (arg === null || typeof arg !== 'object') return arg;
   if ('sheet' in arg && 'tag' in arg) return arg;
@@ -236,9 +236,9 @@ export function lonelyField(ref: unknown, system?: System): string | null {
 }
 
 function namedValue(name: string, ctx: RefContext): unknown {
-  if (ctx.inputs && name in ctx.inputs) return ctx.inputs[name];
-
   const decl = (ctx.paramDefs || []).find(p => p.key === name);
+  const passed = Boolean(decl) && isGiven((ctx.params || {})[name]);
+  if (!passed && ctx.inputs && name in ctx.inputs) return ctx.inputs[name];
   if (!decl) return undefined;
   const value = ctx.params && name in ctx.params ? fromArgs(name, ctx) : undefined;
   if (Array.isArray(value)) return value;

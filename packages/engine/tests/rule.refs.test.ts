@@ -1,5 +1,6 @@
 import { group, test, eq, throws } from './harness.ts';
 import { resolveRef, resolveNumber } from '../src/engine/refs.ts';
+import type { RefContext } from '../src/engine/refs.ts';
 import { newPass } from '../src/engine/calc.ts';
 import { system, arven, compendium } from './fixtures.ts';
 
@@ -52,6 +53,32 @@ group('структурные ссылки', () => {
     test('resolveNumber сторожит нечисло', () => {
       eq(resolveNumber({ expr: '7' }, target(), 'урон'), 7);
       throws(() => resolveNumber({ expr: '@цель.race' }, target(), 'урон'), 'race');
+    });
+  });
+
+  group('ответ игрока и явный аргумент: resolveRef', () => {
+    const asked = (params: Record<string, unknown>): RefContext => ({
+      pass: newPass(system, arven, { compendium }),
+      params,
+      paramDefs: [{ key: 'сколько', label: 'Сколько', kind: 'number' }],
+      inputs: { сколько: 5, круг: 3 },
+      owner: 'вызов «Потратить»',
+    });
+
+    test('явный аргумент вложенного вызова сильнее ответа игрока с тем же именем', () => {
+      eq(resolveRef({ expr: '@сколько' }, asked({ сколько: 1 })), 1);
+      eq(resolveRef({ expr: '@сколько' }, asked({ сколько: { expr: '2' } })), 2);
+    });
+
+    test('объявленный вход, которому ничего не передали, берёт ответ игрока', () => {
+      eq(resolveRef({ expr: '@сколько' }, asked({})), 5);
+      eq(resolveRef({ expr: '@сколько' }, asked({ сколько: null })), 5);
+      eq(resolveRef({ expr: '@сколько' }, asked({ сколько: '' })), 5);
+    });
+
+    test('необъявленное имя берёт ответ игрока', () => {
+      eq(resolveRef({ expr: '@круг' }, asked({})), 3);
+      eq(resolveRef({ expr: '@круг + 1' }, asked({})), 4);
     });
   });
 });
