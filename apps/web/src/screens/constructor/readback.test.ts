@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { checkReadback, changeReadback, numberReadback, joinReadback, editReadback, dieReadback } from './readback.ts';
+import { checkReadback, changeReadback, numberReadback, joinReadback, editReadback, dieReadback, editNotation } from './readback.ts';
 import type { System, Effect, Step } from '@vtt/schema';
 import { withColumn } from '@vtt/engine/model/sheet-columns';
 
@@ -157,5 +157,23 @@ describe('крит в пересказе', () => {
   it('без удвоения фраза прежняя', () => {
     const step = { id: 'dmg', type: 'roll', die: { expr: '"2d6"' } } as unknown as Step;
     expect(joinReadback(numberReadback(step, system, effect))).toBe('Считается число: 2к6.');
+  });
+});
+
+describe('правка броска записью костей', () => {
+  const lead = { constants: { lead: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } } } as unknown as System;
+
+  it('одна простая кость — «было → стало»', () => {
+    expect(editNotation({ ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }] }, lead)).toBe('к20 → 2к20, лучшая');
+    expect(editNotation({ ops: [{ op: 'plus', value: { expr: '-кинуть(к6)' } }] }, lead)).toBe('к20 → к20 − к6');
+    expect(editNotation({ ops: [{ op: 'floorDie', least: 10 }] }, lead)).toBe('к20 → к20, не меньше 10');
+    expect(editNotation({ ops: [{ op: 'shiftVersus', by: 99 }] }, lead)).toBe('порог труднее на 99');
+  });
+
+  it('составная кость или несколько костей — словами', () => {
+    const duality = { constants: { d: { kind: 'die', dice: [{ count: 1, sides: 12, name: 'hope' }, { count: 1, sides: 12, name: 'fear' }] } } } as unknown as System;
+    expect(editNotation({ ops: [{ op: 'plus', value: { expr: 'кинуть(к6)' } }] }, duality)).toBeNull();
+    expect(joinReadback(editReadback({ ops: [{ op: 'plus', value: { expr: 'кинуть(к6)' } }] }, duality))).toBe('Прибавить к6.');
+    expect(joinReadback(editReadback({ ops: [{ op: 'floorDie', least: 10 }] }, duality))).toBe('Считать кость не меньше 10.');
   });
 });

@@ -1443,7 +1443,7 @@
         "canceledBy": "advantage"
       },
       "gm_advantage": {
-        "label": "Преимущество противника: вторая к20, лучшая",
+        "label": "Преимущество противника",
         "ops": [
           {
             "op": "addDie"
@@ -1456,7 +1456,7 @@
         "canceledBy": "gm_disadvantage"
       },
       "gm_disadvantage": {
-        "label": "Помеха противника: вторая к20, худшая",
+        "label": "Помеха противника",
         "ops": [
           {
             "op": "addDie"

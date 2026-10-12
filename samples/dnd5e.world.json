@@ -2954,7 +2954,7 @@
         "canceledBy": "advantage"
       },
       "lucky": {
-        "label": "Везучий: перебросить единицу",
+        "label": "Везучий",
         "ops": [
           {
             "op": "reroll",
@@ -2963,7 +2963,7 @@
         ]
       },
       "reliable": {
-        "label": "Надёжный талант: не меньше 10",
+        "label": "Надёжный талант",
         "ops": [
           {
             "op": "floorDie",

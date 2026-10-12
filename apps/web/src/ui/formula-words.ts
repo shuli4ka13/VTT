@@ -73,7 +73,7 @@ export function formulaWords(system: System, source: string, names?: Map<string,
       case 'или': return `${words(args[0]!, true)} (если нет — ${words(args[1]!, true)})`;
       case 'меньшее из': return `меньшее из ${all(' и ')}`;
       case 'большее из': return `большее из ${all(' и ')}`;
-      case 'сколько': return `сколько ${words(args[1]!, true)} среди ${words(args[0]!, true)}`;
+      case 'сколько': return args.length > 1 ? `сколько ${words(args[1]!, true)} среди ${words(args[0]!, true)}` : `сколько ${words(args[0]!, true)}`;
       case 'есть': return `${words(args[0]!, true)} содержит ${words(args[1]!, true)}`;
       case 'первый': return `первый из ${words(args[0]!, true)}`;
       default: return `${name} ${all(', ')}`;

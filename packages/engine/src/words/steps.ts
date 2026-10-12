@@ -164,7 +164,7 @@ export const STEP_WORDS = {
     label: 'Прибавить',
     hint: 'Увидев кости: прибавить к итогу число или кость — кинуть(к6), кинуть(@кость). Натуральная кость не меняется, кость видна в журнале.',
     slots: [
-      { key: 'value', label: 'Сколько', kind: 'ref', main: true, required: true, allow: ['expr'] },
+      { key: 'value', label: 'Сколько', kind: 'ref', main: true, required: true, allow: ['expr'], placeholder: 'число или кость: кинуть(к6), кинуть(@кость)', dice: true },
     ],
     outputs: [],
     reasons: {},

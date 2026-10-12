@@ -3,6 +3,7 @@ import type { System } from '@vtt/schema';
 import { compile } from '@vtt/engine/formula';
 import { Verdict } from './primitives.tsx';
 import { FormulaField } from './formula-field.tsx';
+import type { BarOption } from '../store/formula-bar.ts';
 import { fieldPaths } from './paths.ts';
 import { fieldOf } from '@vtt/engine/model/sheet-columns';
 
@@ -65,13 +66,14 @@ export function formulaAsLabels(
   });
 }
 
-export function FormulaInput({ system, value, onChange, placeholder, where = 'формула', extraNames }: {
+export function FormulaInput({ system, value, onChange, placeholder, where = 'формула', extraNames, options }: {
   system: System;
   extraNames?: Map<string, string>;
   value: string;
   onChange: (next: string) => void;
   placeholder?: string;
   where?: string;
+  options?: BarOption[];
 }) {
   const parsed = useMemo(() => parseFormula(value), [value]);
 
@@ -82,6 +84,7 @@ export function FormulaInput({ system, value, onChange, placeholder, where = 'ф
         system={system}
         where={where}
         {...(extraNames ? { extraNames } : {})}
+        {...(options ? { options } : {})}
         placeholder={placeholder ?? 'наберите @ и выберите поле'}
         onChange={onChange}
       />

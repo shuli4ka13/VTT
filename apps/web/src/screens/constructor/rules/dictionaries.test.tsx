@@ -28,7 +28,7 @@ describe('Словари: кости, правки броска, таблицы'
     expect(edits.disadvantage?.canceledBy).toBe('advantage');
     expect(edits.advantage?.ops).toEqual([{ op: 'addDie' }, { op: 'keepBest', n: 1 }]);
     expect(screen.getByText('Кинуть на кость больше, оставить лучшую.')).toBeTruthy();
-    expect(screen.getByText(/Гасится: Помеха\./)).toBeTruthy();
+    expect(screen.getByText(/«Преимущество» ⟷ «Помеха»/)).toBeTruthy();
   });
 
   it('справочник не затирает запись, которую автор уже завёл под тем же ключом', () => {
@@ -171,6 +171,18 @@ describe('Словари: кости, правки броска, таблицы'
     expect(useWorld.getState().system.constants![key!]!.dice![0]!.sides).toBe(100);
   });
 
+  it('«прибавить к итогу» — формула с костью: слово кладёт прибавку, а не кость в набор', () => {
+    renderOpen(<RulesTab />);
+    открыть('Правки броска');
+    fireEvent.click(screen.getByText('+ правка'));
+    fireEvent.change(screen.getAllByDisplayValue('+ добавить…')[0]!, { target: { value: 'plus' } });
+
+    const edits = useWorld.getState().system.roll_edits!;
+    const [key] = Object.keys(edits);
+    expect(edits[key!]!.ops).toEqual([{ op: 'plus', value: { expr: 'кинуть(к6)' } }]);
+    expect(screen.getByText('Прибавить к6.')).toBeTruthy();
+  });
+
   it('палитра правок — готовые фразы, включая оба направления взрыва', () => {
     renderOpen(<RulesTab />);
     открыть('Правки броска');
@@ -226,7 +238,7 @@ describe('Словари: кости, правки броска, таблицы'
     fireEvent.change(part, { target: { value: 'hope' } });
     expect(useWorld.getState().system.roll_edits!.вдох!.ops[0]).toEqual({ op: 'addDie', part: 'hope' });
 
-    const phrase = part.closest('.dict-block')!.querySelector('.readback')!.textContent;
+    const phrase = part.closest('.dict-block')!.querySelector('.roll-word__said')!.textContent;
     expect(phrase).toBe('Кинуть на кость больше (Надежда).');
   });
 
@@ -245,8 +257,7 @@ describe('Словари: кости, правки броска, таблицы'
     renderOpen(<RulesTab />);
     открыть('Правки броска');
 
-    const [cancel] = screen.getAllByDisplayValue('— ничем, складывается —') as HTMLSelectElement[];
-    fireEvent.change(cancel!, { target: { value: 'down' } });
+    fireEvent.change(screen.getByDisplayValue('+ пара…'), { target: { value: 'up\u0000down' } });
 
     const edits = useWorld.getState().system.roll_edits!;
     expect(edits.up!.canceledBy).toBe('down');

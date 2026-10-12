@@ -812,3 +812,15 @@
 }
 .formula-field, .chips__row { min-height: var(--control-h); }
 .add-cost .select { height: 26px; min-height: 26px; line-height: 24px; }
+
+.roll-word__name { flex: 0 1 260px; min-width: 140px; }
+.roll-word__name > .input { width: 100%; }
+.roll-word__said { flex: 1 1 auto; color: var(--text-muted); font-size: var(--fs-2); }
+.roll-word__ops { padding-top: 0; }
+.roll-word__said--hole { color: var(--danger); }
+.chip--formula { padding-right: var(--s-2); }
+.chip__formula { min-width: 120px; }
+.roll-pairs { border-top: 1px solid var(--border); padding-top: var(--s-3); }
+.chip__count { flex: 0 0 auto; }
+.chip__count > .input { width: 6ch; min-width: 0; }
+.roll-pairs .dict-row__label { flex: 0 0 auto; white-space: nowrap; }

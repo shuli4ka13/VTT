@@ -213,17 +213,23 @@ describe('эффекты D&D собираются в конструкторе р
     expect(built('paralyzed')).toEqual(goal);
   });
 
-  it('D&D «Кость вдохновения наготове» (bardic_ready): на 1 срабатывание, «увидев кости» — прибавить кость', { timeout: 60000 }, () => {
+  it('D&D «Кость вдохновения наготове» (bardic_ready): вход-кость с умолчанием, на 1 срабатывание, «увидев кости» — прибавить кость из входа', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['bardic_ready']);
     const ui = fresh('+ срабатывает сам', goal!.label!, 'bardic_ready', 'Реакции', goal!.description!);
+    ui.click('+ ещё одно');
+    ui.type(ui.cell('Название', 0), 'Кость вдохновения');
+    ui.select(ui.cell('Вид', 0), 'dice');
+    ui.select(ui.cell('Если не передали', 0), 'value');
+    ui.type(ui.cell('Если не передали', 0), '1к6');
+    if (ui.has('ещё')) ui.click('ещё');
+    ui.type(ui.cell('Имя в формулах', 0), 'кость');
     lifetime('uses');
     within(handlerHead(1)).select('Что случилось', 'seen');
     within(handlerHead(1)).select('Кого касается', '@бросающий == @носитель');
     within(handlerHead(1)).select('Решение', 'ask');
     within(handlerAt(1)).click('+ прибавить');
     const card = stepCard(/^1 · /, handlerAt(1));
-    within(card).formula('Сколько', "кинуть('1к6')");
-    void ui;
+    within(card).formula('Сколько', 'кинуть(@кость)');
     dump({ got: built('bardic_ready'), goal });
     expect(built('bardic_ready')).toEqual(goal);
   });

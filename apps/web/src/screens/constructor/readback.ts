@@ -301,9 +301,82 @@ function opPhrase(op: Record<string, unknown>, system: System): string {
       return String(op.prefer ?? 'low') === 'high'
         ? `перевернуть цифры, если так больше${only}`
         : `перевернуть цифры, если так меньше${only}`;
+    case 'floorDie':
+      return `считать кость не меньше ${Number(op.least ?? 10)}${only}`;
+    case 'plus': {
+      const said = plusWords(op, system);
+      return said.startsWith('−') ? `вычесть ${said.slice(1)}` : `прибавить ${said}`;
+    }
     default:
       return String(op.op);
   }
+}
+
+function plusWords(op: Record<string, unknown>, system: System): string {
+  const expr = String((op.value as { expr?: unknown } | undefined)?.expr ?? '').trim();
+  return expr ? formulaWords(system, expr) : '…';
+}
+
+const LADDER = [4, 6, 8, 10, 12, 20];
+
+const written = (count: number, sides: number): string => `${count > 1 ? count : ''}${DIE_LETTER}${sides}`;
+
+function simpleDie(system: System): { count: number; sides: number } | null {
+  const dice = Object.values(system.constants ?? {}).filter(c => c.kind === 'die');
+  if (dice.length !== 1) return null;
+  const terms = dice[0]!.dice ?? [];
+  const read = dice[0]!.read;
+  const kind = typeof read === 'string' ? read : read?.kind ?? 'sum';
+  const term = terms[0];
+  if (terms.length !== 1 || !term || kind !== 'sum' || term.name || term.bonus || term.minus) return null;
+  if (term.count !== undefined && typeof term.count !== 'number') return null;
+  return { count: term.count ?? 1, sides: term.sides };
+}
+
+export function editNotation(edit: { ops?: Record<string, unknown>[] }, system: System): string | null {
+  const base = simpleDie(system);
+  const ops = edit.ops ?? [];
+  if (!base || !ops.length) return null;
+  let { count, sides } = base;
+  const more: string[] = [];
+  const tail: string[] = [];
+  const words: string[] = [];
+  for (const op of ops) {
+    const n = Number(op.n ?? 1);
+    const by = Number(op.by ?? 0);
+    switch (op.op) {
+      case 'addDie': {
+        if (op.count !== undefined && typeof op.count !== 'number') return null;
+        const k = Number(op.count ?? 1);
+        if (op.sides !== undefined && Number(op.sides) !== sides) more.push(` + ${written(k, Number(op.sides))}`);
+        else count += k;
+        break;
+      }
+      case 'keepBest': tail.push(n === 1 ? 'лучшая' : `${n} лучших`); break;
+      case 'keepWorst': tail.push(n === 1 ? 'худшая' : `${n} худших`); break;
+      case 'dieStep': {
+        const at = LADDER.indexOf(sides);
+        if (at >= 0) sides = LADDER[Math.min(LADDER.length - 1, Math.max(0, at + by))]!;
+        break;
+      }
+      case 'floorDie': tail.push(`не меньше ${Number(op.least ?? 10)}`); break;
+      case 'reroll': tail.push(n === 1 ? 'единицы перебросить' : `не выше ${n} перебросить`); break;
+      case 'explode': tail.push(op.apart ? 'подрыв на максимуме' : String(op.at ?? 'max') === 'min' ? 'взрыв на единице' : 'взрыв на максимуме'); break;
+      case 'flip': tail.push(String(op.prefer ?? 'low') === 'high' ? 'переворот в большую' : 'переворот в меньшую'); break;
+      case 'plus': {
+        const said = plusWords(op, system);
+        more.push(said.startsWith('−') ? ` − ${said.slice(1)}` : ` + ${said}`);
+        break;
+      }
+      case 'shiftVersus': words.push(by <= 0 ? `порог легче на ${-by}` : `порог труднее на ${by}`); break;
+      case 'shiftDegree': words.push(by >= 0 ? `степень успеха на ${by} выше` : `степень успеха на ${-by} ниже`); break;
+      default: return null;
+    }
+  }
+  const dice = count !== base.count || sides !== base.sides || more.length || tail.length
+    ? `${written(base.count, base.sides)} → ${written(count, sides)}${more.join('')}${tail.length ? `, ${tail.join(', ')}` : ''}`
+    : '';
+  return [dice, ...words].filter(Boolean).join('; ');
 }
 
 export function editReadback(

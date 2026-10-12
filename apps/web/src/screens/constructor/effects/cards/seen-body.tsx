@@ -1,12 +1,12 @@
 import type { Step } from '@vtt/schema';
 import { STEP_WORDS } from '@vtt/engine/words/steps';
 import { Field, Select } from '../../../../ui/primitives.tsx';
-import { ValueField } from '../../value-field.tsx';
+import { ValueField, DICE_OPTION } from '../../value-field.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 
 type Loose = Record<string, unknown>;
-type Slot = { key: string; label: string; kind: string; allow?: string[]; choice?: [string, string][]; fallback?: string };
+type Slot = { key: string; label: string; kind: string; allow?: string[]; choice?: [string, string][]; fallback?: string; placeholder?: string; dice?: boolean };
 
 export function SeenBody({ step, context, edit }: { step: Step; context: SlotContext; edit: EditFn }) {
   const words = STEP_WORDS[step.type as keyof typeof STEP_WORDS];
@@ -35,6 +35,8 @@ export function SeenBody({ step, context, edit }: { step: Step; context: SlotCon
             <ValueField
               where={`${words?.label ?? step.type} · ${slot.label.toLowerCase()}`}
               value={read[slot.key] as never} context={context}
+              {...(slot.placeholder ? { placeholder: slot.placeholder } : {})}
+              {...(slot.dice ? { extraOptions: [DICE_OPTION] } : {})}
               onChange={next => edit(0, draft => {
                 const it = draft as unknown as Loose;
                 if (next === null || next === undefined) delete it[slot.key]; else it[slot.key] = next;

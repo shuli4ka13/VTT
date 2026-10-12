@@ -12,6 +12,7 @@ import { ROLL_CALL, CALL_WORDS } from '@vtt/engine/words/calls';
 import { TagsField } from './tags-field.tsx';
 import { callNamesOf } from '@vtt/engine/model/references';
 import { ConditionField } from './condition-field.tsx';
+import { DICE_HINT, DICE_BAR_OPTION } from './value-field.tsx';
 
 const OPS = [
   ['add', 'прибавить'],
@@ -224,6 +225,7 @@ function EditBody({ system, modifier, calls, edits, recipes, onChange, onPickEdi
       <Field label="На сколько">
         <FormulaInput
           where="правка вызова · на сколько" system={system}
+          {...(isRoll ? { placeholder: DICE_HINT, options: [DICE_BAR_OPTION] } : {})}
           value={(m.value as { expr?: string } | undefined)?.expr ?? ''}
           onChange={expr => onChange(d => { d.value = { expr }; })}
         />

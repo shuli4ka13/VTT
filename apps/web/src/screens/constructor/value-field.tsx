@@ -38,6 +38,14 @@ export interface SlotOption {
   onPick?: () => void;
 }
 
+export const DICE_HINT = 'число или кость: кинуть(к6)';
+
+const DICE_LABEL = 'бросить кость — кинуть(к6)';
+
+export const DICE_OPTION: SlotOption = { group: 'Кости', label: DICE_LABEL, formula: 'кинуть(к6)' };
+
+export const DICE_BAR_OPTION: BarOption = { group: 'Кости', label: DICE_LABEL, onPick: (insert, bar) => bar.write(insert('кинуть(к6)')) };
+
 const tableOption = (ctx: SlotContext, table: string, column: string): (Pick<SlotOption, 'name' | 'formula'> & { label?: string }) | null => {
   const props = ctx.recordKind?.columns ?? [];
   const chosen = props.find(p => (p as { kind?: string }).kind === 'choice' && (p as { from?: string }).from === table);

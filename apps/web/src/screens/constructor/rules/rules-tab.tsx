@@ -26,7 +26,7 @@ interface Section {
 
 const SECTIONS: Section[] = [
   { key: 'dice', label: 'Кости', count: system => dieEntries(system).length },
-  { key: 'edits', label: 'Правки броска', count: system => Object.keys(system.roll_edits ?? {}).length },
+  { key: 'edits', label: 'Правки броска', lint: 'roll_edits', count: system => Object.keys(system.roll_edits ?? {}).length },
   { key: 'tables', label: 'Таблицы', count: system => rowTables(system).length },
   { key: 'tags', label: 'Метки', count: system => Object.keys(system.tags ?? {}).length },
   { key: 'combat', label: 'Бой', count: system => (system.initiative ? 1 : 0) },
