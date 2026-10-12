@@ -16,7 +16,7 @@ const OWN = 'Своё у каждой записи';
 
 type Fill = 'actor' | 'targets';
 
-export function ButtonEditor({ binding, system, recordKind, kindId, onEdit, onDelete, onFillWithProp }: {
+export function ButtonEditor({ binding, system, recordKind, kindId, onEdit, onDelete, onFillWithProps }: {
   binding: Binding;
   system: System;
 
@@ -25,7 +25,7 @@ export function ButtonEditor({ binding, system, recordKind, kindId, onEdit, onDe
   onEdit: (change: (draft: Binding) => void) => void;
   onDelete: () => void;
 
-  onFillWithProp?: (param: Param) => void;
+  onFillWithProps?: (params: Param[]) => void;
 }) {
   const effect = system.effects[binding.effect];
   const params = effect ? paramsOf(system, effect) : [];
@@ -57,10 +57,17 @@ export function ButtonEditor({ binding, system, recordKind, kindId, onEdit, onDe
           <Select
             value={binding.effect ?? ''}
             options={[['', '— какой эффект —'], ...byRole(system, buttons).map(([id, e, group]) => [id, e.label || id, group] as const)] as never}
-            onChange={next => onEdit(draft => {
-              draft.effect = next;
-              if (!draft.label?.trim() && system.effects[next]) draft.label = system.effects[next]!.label || next;
-            })}
+            onChange={next => {
+              onEdit(draft => {
+                draft.effect = next;
+                if (!draft.label?.trim() && system.effects[next]) draft.label = system.effects[next]!.label || next;
+              });
+              const chosen = system.effects[next];
+              const columns = new Set((recordKind.columns ?? []).map(prop => prop.key));
+              const missing = chosen ? paramsOf(system, chosen)
+                .filter(param => param.kind !== 'sheet' && !freeParam(param) && !columns.has(param.key) && binding.args?.[param.key] === undefined) : [];
+              if (missing.length) onFillWithProps?.(missing);
+            }}
           />
         </Field>
         <div className="button-head__actions">
@@ -90,7 +97,7 @@ export function ButtonEditor({ binding, system, recordKind, kindId, onEdit, onDe
               where={where}
               onArg={next => onArg(param.key, next)}
               onSheet={fill => onSheet(param.key, fill)}
-              {...(onFillWithProp ? { onNew: () => onFillWithProp(param) } : {})}
+              {...(onFillWithProps ? { onNew: () => onFillWithProps([param]) } : {})}
             />
           ))}
         </div>
@@ -135,6 +142,8 @@ function emptyWords(param: Param, system: System): string {
 
 const loose = (param: Param) => param as Param & { optional?: boolean };
 
+const freeParam = (param: Param): boolean => Boolean(loose(param).optional) || param.default !== undefined || Boolean(param.ask);
+
 const LONE = /^@([\p{L}\p{N}_]+)(?:\.[\p{L}\p{N}_]+)?$/u;
 
 function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, effect, where, onArg, onSheet, onNew }: {
@@ -153,7 +162,7 @@ function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, 
 }) {
   const name = param.label ?? param.key;
   const kind = String(param.kind ?? 'number');
-  const free = Boolean(loose(param).optional) || param.default !== undefined || Boolean(param.ask);
+  const free = freeParam(param);
 
   if (kind === 'sheet') {
     const fill = tableOf(binding, { params })[param.key] ?? '';
@@ -203,6 +212,7 @@ function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, 
       <span className="args-row__name">{name}</span>
       <KindCell param={param} system={system} />
       <div className="args-row__fill">
+        <div className="args-row__line">
         <ValueField
           where={`${where} · ${name}`}
           value={(text ? { expr: text } : undefined) as never}
@@ -216,6 +226,10 @@ function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, 
             onArg(!next || !typed || (byName && typed === `@${param.key}`) ? null : next);
           }}
         />
+        {!text && onNew ? (
+          <Button size="sm" title={`завести у типа свойство «${name}»: у каждой записи своё значение, его заполняют в книге`} onClick={onNew}>+ свойство</Button>
+        ) : null}
+        </div>
         {lone && kindId && (recordKind.columns ?? []).some(prop => prop.key === lone)
           ? <Examples system={system} kind={recordKind} kindId={kindId} prop={lone} /> : null}
       </div>

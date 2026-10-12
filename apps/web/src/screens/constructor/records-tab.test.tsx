@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { RecordsTab } from './records-tab.tsx';
 import { useWorld } from '../../store/world.ts';
 import { optionsFor } from './value-field.tsx';
@@ -69,6 +69,9 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     render(<RecordsTab />);
     expect([...document.querySelectorAll('.args-row__name')].map(el => el.textContent)).toEqual(['Кость урона', 'Новый вход', 'Сколько костей']);
     expect(строкаВхода('Новый вход').className).toContain('args-row--need');
+    fireEvent.click(within(строкаВхода('Новый вход') as HTMLElement).getByRole('button', { name: '+ свойство' }));
+    expect(useWorld.getState().system.tables!.weapon!.columns!.some(p => p.key === 'новый' && p.label === 'Новый вход')).toBe(true);
+    expect(строкаВхода('Новый вход').className).not.toContain('args-row--need');
     expect((строкаВхода('Сколько костей').querySelector('input.chips__text') as HTMLInputElement).placeholder).toBe('как у эффекта: 1');
     expect(строкаВхода('Сколько костей').className).not.toContain('args-row--need');
   });
@@ -81,8 +84,11 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     render(<RecordsTab />);
     expect(document.querySelector('.args-row')).toBeNull();
     fireEvent.change(screen.getByDisplayValue('— какой эффект —'), { target: { value: 'hit' } });
-    expect(useWorld.getState().system.tables!.weapon!.bindings![0]!.label).toBe('Удар');
-    expect(строкаВхода('Кость урона').className).toContain('args-row--need');
+    const kind = useWorld.getState().system.tables!.weapon!;
+    expect(kind.bindings![0]!.label).toBe('Удар');
+    expect(kind.columns!.map(p => [p.key, p.kind])).toEqual([['кость', 'dice']]);
+    expect(kind.bindings![0]!.args).toBeUndefined();
+    expect(строкаВхода('Кость урона').className).not.toContain('args-row--need');
   });
 
   it('входы-листы, которые кнопка заполняет сама, подписаны, а не горят «не заполнено»', () => {

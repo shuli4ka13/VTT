@@ -350,23 +350,25 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
               kindId={id}
               onEdit={change => edit(draft => { change(draft.bindings![index]!); })}
               onDelete={() => edit(draft => { draft.bindings!.splice(index, 1); })}
-              onFillWithProp={param => edit(draft => {
+              onFillWithProps={list => edit(draft => {
                 draft.columns ??= [];
-                const label = param.label ?? param.key;
-                const taken = draft.columns.map(p => p.key);
-                const newKey = taken.includes(param.key) ? freeId(taken, label) : param.key;
-                draft.columns.push({
-                  key: newKey, label, kind: param.kind ?? 'number',
-                  ...(param.from ? { from: param.from } : {}),
-                });
                 const target = draft.bindings![index]!;
-                if (newKey !== param.key) {
-                  target.args ??= {};
-                  target.args[param.key] = { expr: `@${newKey}` };
-                } else if (target.args) {
-                  delete target.args[param.key];
-                  if (!Object.keys(target.args).length) delete target.args;
+                for (const param of list) {
+                  const label = param.label ?? param.key;
+                  const taken = draft.columns.map(p => p.key);
+                  const newKey = taken.includes(param.key) ? freeId(taken, label) : param.key;
+                  draft.columns.push({
+                    key: newKey, label, kind: param.kind ?? 'number',
+                    ...(param.from ? { from: param.from } : {}),
+                  });
+                  if (newKey !== param.key) {
+                    target.args ??= {};
+                    target.args[param.key] = { expr: `@${newKey}` };
+                  } else if (target.args) {
+                    delete target.args[param.key];
+                  }
                 }
+                if (target.args && !Object.keys(target.args).length) delete target.args;
               })}
             />
           ))}

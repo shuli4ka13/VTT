@@ -38,7 +38,7 @@ export interface SlotOption {
   onPick?: () => void;
 }
 
-const tableOption = (ctx: SlotContext, table: string, column: string): Pick<SlotOption, 'name' | 'formula' | 'label'> | null => {
+const tableOption = (ctx: SlotContext, table: string, column: string): (Pick<SlotOption, 'name' | 'formula'> & { label?: string }) | null => {
   const props = ctx.recordKind?.columns ?? [];
   const chosen = props.find(p => (p as { kind?: string }).kind === 'choice' && (p as { from?: string }).from === table);
   if (chosen) {
@@ -64,7 +64,7 @@ export function optionsFor(ctx: SlotContext, allow: SlotKind[] | undefined): Slo
       const name = table.label || key;
       for (const column of table.columns ?? []) {
         const found = tableOption(ctx, key, column.key);
-        if (found) out.push({ group: 'По таблице', label: `«${name}» → ${column.label || column.key}`, ...found });
+        if (found) out.push({ group: 'По таблице', ...found, label: found.label ?? `«${name}» → ${column.label || column.key}` });
       }
     }
   }
