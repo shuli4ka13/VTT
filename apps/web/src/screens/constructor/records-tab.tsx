@@ -361,14 +361,9 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
                     key: newKey, label, kind: param.kind ?? 'number',
                     ...(param.from ? { from: param.from } : {}),
                   });
-                  if (newKey !== param.key) {
-                    target.args ??= {};
-                    target.args[param.key] = { expr: `@${newKey}` };
-                  } else if (target.args) {
-                    delete target.args[param.key];
-                  }
+                  target.args ??= {};
+                  target.args[param.key] = { expr: `@${newKey}` };
                 }
-                if (target.args && !Object.keys(target.args).length) delete target.args;
               })}
             />
           ))}

@@ -232,13 +232,29 @@ describe('GroupCard: изменение как вызов', () => {
         earlier={[]} problem={null} edit={(_, change) => change(step as never)} onDelete={() => {}} />);
     };
 
-    it('у «Наложить «Ослеплён»» видна таблица входов, а «сам: …» подписан под «ещё»', () => {
+    it('у «Наложить «Ослеплён»» видна таблица входов, а подписей «сам: …» нет', () => {
       shown({ type: 'status', effect: 'blinded', to: { expr: '@цель' } });
       expect(cards().args()).toEqual(['Запомненное число', 'Кто наложил', 'На ком', 'Срок']);
-      expect(cards().arg('Кто наложил').textContent).toContain('сам: «Кто действует»');
-      expect(cards().arg('На ком').textContent).toContain('сам: «На кого»');
-      expect(cards().arg('Запомненное число').textContent).toContain('не заполнено');
-      expect(screen.getByText('▸ ещё (3)')).toBeTruthy();
+      expect(cards().arg('Кто наложил').textContent).not.toContain('сам:');
+      expect(cards().arg('На ком').textContent).not.toContain('сам:');
+      expect(cards().arg('Запомненное число').textContent).toContain('не передано');
+      expect(cards().arg('Срок').textContent).toContain('как у эффекта: 1');
+      expect(screen.getByText('▸ ещё (1)')).toBeTruthy();
+    });
+
+    it('выбор состояния сразу пишет в args явные формулы, ничего не подставляется молча', () => {
+      const step = { type: 'status', to: { expr: '@цель' } } as any;
+      shown(step);
+      fireEvent.change(screen.getByDisplayValue('— какое состояние —'), { target: { value: 'blinded' } });
+      expect(step.effect).toBe('blinded');
+      expect(step.args).toEqual({ кто: { expr: '@действующий' }, на_ком: { expr: '@цель' } });
+    });
+
+    it('смена состояния оставляет вписанное руками, если такой вход есть и у нового', () => {
+      const step = { type: 'status', effect: 'calm', to: { expr: '@цель' }, args: { запомнено: { expr: '7' }, лишнее: { expr: '1' } } } as any;
+      shown(step);
+      fireEvent.change(screen.getByDisplayValue('«Спокоен»'), { target: { value: 'blinded' } });
+      expect(step.args).toEqual({ запомнено: { expr: '7' }, кто: { expr: '@действующий' }, на_ком: { expr: '@цель' } });
     });
 
     const valueOf = (name: string) => cards().arg(name).querySelector<HTMLElement>('.chips')?.getAttribute('data-value');

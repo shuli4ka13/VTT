@@ -5,6 +5,7 @@ import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
 import { COST_BLOCK } from '@vtt/engine/words/glossary';
 import type { System, Effect, Handler, Binding, Step, SystemConstant, RollEdit, Table, Column } from '@vtt/schema';
 import type { RecordKind } from '@vtt/engine/model/owned';
+import { filledStep } from './effects/call-args.ts';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { rowTables } from '@vtt/engine/model/tables';
 
@@ -75,7 +76,8 @@ export const costsOf = (system: System): [string, Effect][] => {
   return Object.entries(system.effects ?? {}).filter(([id]) => paid.has(id));
 };
 
-export const payStep = (id: string): Step => ({ type: 'emit', effect: id } as unknown as Step);
+export const payStep = (system: System, caller: Effect, id: string): Step =>
+  filledStep(system, caller, { type: 'emit', effect: id }, []) as unknown as Step;
 
 export const newCalled = (system: System): Made<Effect> => {
   const field = fieldsOf(system).find(f => f.value.kind === 'stored' && f.value.type === 'number');

@@ -5,20 +5,7 @@ import { CallEditor } from '../../call-editor.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { callable } from '../../slots.tsx';
-import { implicitOf, appliedOf } from '@vtt/engine/model/implicit';
-import type { Param, Effect } from '@vtt/schema';
-
-export function implicitWords(param: Param, caller: Effect, inLoop: boolean, applied = false): string | null {
-  const how = applied ? appliedOf(param, caller) : implicitOf(param, caller);
-  if (!how || (how.by === 'target' && !inLoop)) return null;
-  if (how.by === 'to') return 'сам: «На кого»';
-  const own = (caller.params ?? []).find(p => p.key === how.from);
-  if (how.by === 'target') {
-    const list = (caller.params ?? []).find(p => p.item?.key === how.from);
-    return `сам: ${String(list?.item?.label ?? how.from).toLowerCase()}`;
-  }
-  return `сам: «${String(own?.label ?? how.from)}»`;
-}
+import { callArgs } from '../call-args.ts';
 import { WhatNext, meddlersOf } from '../what-next.tsx';
 
 const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
@@ -42,11 +29,17 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
         effect={step.effect ?? ''}
         effects={commons}
         inputs={context.effect.params ?? []}
-        onEffect={next => edit(at, draft => { if (next) loose(draft).effect = next; else delete loose(draft).effect; })}
+        onEffect={next => edit(at, draft => {
+          const d = loose(draft);
+          if (!next) { delete d.effect; return; }
+          d.effect = next;
+          if (typeof next !== 'string') return;
+          const args = callArgs(system, context.effect, next, d.args as Record<string, unknown> | undefined, { inLoop: context.earlier.some(s => s.type === 'each') });
+          if (Object.keys(args).length) d.args = args; else delete d.args;
+        })}
         args={args}
         context={context}
         where="вызов"
-        implicit={param => implicitWords(param, context.effect, context.earlier.some(s => s.type === 'each'))}
         onArg={(key, next) => edit(at, draft => {
           const all = { ...((loose(draft).args ?? {}) as Record<string, unknown>) };
           if (next === undefined || next === null) delete all[key]; else all[key] = next;

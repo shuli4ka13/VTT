@@ -89,9 +89,11 @@ describe('эффекты пресетов собираются в констру
     param(7, 'Источник урона', 'choice', 'damage_source', 'damage_source');
     param(8, 'Состояние при попадании', 'effect', 'status');
     param(9, 'Плата', 'effect', 'цена');
+    param(10, 'Круг заклинания', 'number', 'spell_level');
     ui.select(ui.cell('Если не передали', 3), 'value');
     ui.select(ui.cell('Если не передали', 5), 'value');
     ui.type(ui.cell('Если не передали', 5), '1');
+    ui.select(ui.cell('Если не передали', 10), 'empty');
     ui.select(ui.cell('Если не передали', 9), 'value');
     ui.select(ui.cell('Если не передали', 9).querySelectorAll('select')[1]!, 'cost_attack');
     ui.select(ui.cell('Если не передали', 8), 'empty');
@@ -101,6 +103,12 @@ describe('эффекты пресетов собираются в констру
     cost = stepCard(/^1 · /);
     within(cost).formula(within(cost).arg('Лист'), '@действующий');
     within(cost).formula(within(cost).arg('Источник'), '@действующий');
+    useWorld.setState(state => {
+      const effect = state.system.effects.strike!;
+      const step = effect.cost![0] as unknown as { args: Record<string, unknown> };
+      step.args = { ...step.args, spell_level: { expr: '@spell_level' } };
+      return { ...state, system: { ...state.system, effects: { ...state.system.effects, strike: { ...effect } } } };
+    });
 
 
     ui.click('+ изменение');

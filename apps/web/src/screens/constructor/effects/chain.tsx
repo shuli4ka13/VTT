@@ -15,6 +15,7 @@ import { outcomeWords } from '@vtt/engine/engine/roll-tags';
 import { newCost } from '../factory.ts';
 import { GroupCard } from './cards/group-card.tsx';
 import { sheetsAt } from './names.ts';
+import { filledStep } from './call-args.ts';
 import { namesAt } from '@vtt/engine/model/names-at';
 import type { Place } from '@vtt/engine/model/names-at';
 import { useOpened } from '../../../store/opened.ts';
@@ -31,7 +32,8 @@ const BELOW_PAY = 'под черту «Плата»: в шаги';
 export const bricksOf = (system: System, except: string, compendium: Compendium | null = null): [string, Effect][] =>
   withRole(system, compendium, 'step', except);
 
-const callStep = (key: string): Step => ({ type: 'emit', effect: key } as unknown as Step);
+const callStep = (system: System, caller: Effect, key: string, earlier: readonly Step[]): Step =>
+  filledStep(system, caller, { type: 'emit', effect: key }, earlier) as unknown as Step;
 
 export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', empty = 'шагов ещё нет — эффект ничего не делает', lane = 'steps', onEdgeUp, onEdgeDown, bare = false, lined = false, startAt = 0, lead, onAddCost, onRoll = false }: {
   id: string;
@@ -253,8 +255,9 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
           const list = draft.steps ?? (draft.steps = []);
           const taken = list.map(s => s.id).filter(Boolean) as string[];
           const held = HELD_PARTS.has(placeAt(0).part);
-          const made = called ? [callStep(called)] : brick!.make(system, taken, draft);
-          list.splice(armEnd(list, head), 0, ...made.map(step => (held ? byHolder(step) : step)));
+          const at = armEnd(list, head);
+          const made = called ? [callStep(system, draft, called, list.slice(0, at))] : brick!.make(system, taken, draft);
+          list.splice(at, 0, ...made.map(step => (held ? byHolder(step) : step)));
         });
       }}
     />
@@ -404,7 +407,8 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
               <Button key={key} size="sm" title={one.description || `вызвать «${one.label || key}»`}
                 onClick={() => edit(draft => {
                   const held = HELD_PARTS.has(placeAt(0).part);
-                  (draft.steps ??= []).push(held ? byHolder(callStep(key)) : callStep(key));
+                  const made = callStep(system, draft, key, draft.steps ?? []);
+                  (draft.steps ??= []).push(held ? byHolder(made) : made);
                 })}>
                 {one.label || key}
               </Button>

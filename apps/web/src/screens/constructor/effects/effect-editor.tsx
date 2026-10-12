@@ -204,8 +204,8 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
             empty={idleWords(effect)}
             onEdgeUp={indices => moveLane(indices, 'cost')}
             startAt={groupSteps(effect.cost ?? []).filter(card => card.kind !== 'flow').length}
-            lead={<SelfTrack id={id} at={index => ({ part: 'cost', index })} effect={effect} system={system} edit={edit} onMoveLane={moveLane} onAddCost={cost => edit(draft => { (draft.cost ??= []).push(payStep(cost)); })} />}
-            {...(effect.cost?.length ? {} : { onAddCost: (cost: string) => edit(draft => { (draft.cost ??= []).push(payStep(cost)); }) })}
+            lead={<SelfTrack id={id} at={index => ({ part: 'cost', index })} effect={effect} system={system} edit={edit} onMoveLane={moveLane} onAddCost={cost => edit(draft => { (draft.cost ??= []).push(payStep(system, draft, cost)); })} />}
+            {...(effect.cost?.length ? {} : { onAddCost: (cost: string) => edit(draft => { (draft.cost ??= []).push(payStep(system, draft, cost)); }) })}
           />
         </>
       ) : (
@@ -336,8 +336,8 @@ function Handlers({ id, effect, system, edit }: {
                 onEdgeUp={indices => moveLane(indices, 'cost')}
                 onRoll={handler.on === 'seen'}
                 startAt={groupSteps(carrier.cost ?? []).filter(card => card.kind !== 'flow').length}
-                lead={<SelfTrack id={id} at={step => ({ part: 'handler-cost', handler: index, index: step })} effect={carrier} system={system} edit={editCarrier} onMoveLane={moveLane} {...(handler.confirm ? { onAddCost: (cost: string) => editCarrier(draft => { (draft.cost ??= []).push(payStep(cost)); }) } : {})} />}
-                {...(handler.confirm && !handler.cost?.length ? { onAddCost: (cost: string) => editCarrier(draft => { (draft.cost ??= []).push(payStep(cost)); }) } : {})}
+                lead={<SelfTrack id={id} at={step => ({ part: 'handler-cost', handler: index, index: step })} effect={carrier} system={system} edit={editCarrier} onMoveLane={moveLane} {...(handler.confirm ? { onAddCost: (cost: string) => editCarrier(draft => { (draft.cost ??= []).push(payStep(system, draft, cost)); }) } : {})} />}
+                {...(handler.confirm && !handler.cost?.length ? { onAddCost: (cost: string) => editCarrier(draft => { (draft.cost ??= []).push(payStep(system, draft, cost)); }) } : {})}
               />
             </div>
           </div>

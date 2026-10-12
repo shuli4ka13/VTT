@@ -27,7 +27,7 @@ function status(input: CallInput): { text: string; bad: boolean } {
   if (input.fromProp) return { text: `берётся из свойства «${input.param.label ?? input.param.key}»`, bad: false };
   if (input.param.ask) return { text: input.param.ask.by === 'gm' ? 'спросят ведущего' : 'спросят игрока', bad: false };
   if (input.param.optional) return { text: 'можно не заполнять', bad: false };
-  return { text: 'не заполнено', bad: true };
+  return { text: 'не передано', bad: true };
 }
 
 type Place = 'record' | 'asked' | 'computed' | 'missing' | 'unused';
@@ -117,7 +117,7 @@ export function CallSummary({ system, effect, args, props, names, label }: {
   );
 }
 
-export function CallEditor({ system, effect: raw, effects, onEffect, args, onArg, context, where, headAction, children, inputs: callerInputs, implicit }: {
+export function CallEditor({ system, effect: raw, effects, onEffect, args, onArg, context, where, headAction, children, inputs: callerInputs }: {
   system: System;
   effect: unknown;
   effects?: [string, { label?: string }][];
@@ -129,7 +129,6 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, onArg
   where: string;
   headAction?: ReactNode;
   children?: ReactNode;
-  implicit?: (param: Param) => string | null;
 }) {
   const [more, setMore] = useState(false);
   const fromInput = typeof raw === 'object' && raw ? /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((raw as { expr?: unknown }).expr ?? ''))?.[1] : undefined;
@@ -171,9 +170,13 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, onArg
   );
 
   const empty = (input: CallInput) => input.value === undefined || input.value === null;
-  const self = (input: CallInput) => (empty(input) ? implicit?.(input.param) ?? null : null);
   const rare = (input: CallInput) => empty(input)
-    && (input.param.default !== undefined || Boolean(input.param.optional) || Boolean(input.param.ask) || self(input) !== null);
+    && (input.param.default !== undefined || Boolean(input.param.optional) || Boolean(input.param.ask));
+  const byDefault = (input: CallInput) => {
+    if (!empty(input) || input.param.kind === 'effect' || input.param.default === undefined) return null;
+    const value = input.param.default;
+    return `как у эффекта: ${value === true ? 'да' : value === false ? 'нет' : String(value)}`;
+  };
   const main = inputs.filter(input => !rare(input));
   const rest = inputs.filter(rare);
   const arg = (input: CallInput) => {
@@ -182,7 +185,7 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, onArg
       <div className="pair call-row__arg" key={input.param.key}>
         <span className="call-args__name">{nameOf(input.param)}</span>
         {editor(input)}
-        {self(input) ? <span className="faint">{self(input)}</span> : shown.bad ? <span className="need">не заполнено</span> : null}
+        {byDefault(input) ? <span className="faint">{byDefault(input)}</span> : shown.bad ? <span className="need">не передано</span> : null}
       </div>
     );
   };

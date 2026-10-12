@@ -230,7 +230,7 @@ export function sendReadback(step: Step, system: System, effect: Effect, names?:
   const tags = chosen.filter(Boolean);
   if (event) {
     const given = (event.params ?? []).filter(p => args[p.key] !== undefined);
-    if (!given.length) return [seg('всё передаётся само.')];
+    if (!given.length) return [seg('ничего не передаётся.')];
     return given.flatMap((p, i) => [
       seg(`${i ? '; ' : ''}${p.label ?? p.key}:`),
       p.kind === 'sheet' ? seg(whoOf(effect, args[p.key])) : refSegment(args[p.key], system, effect, '…', names),

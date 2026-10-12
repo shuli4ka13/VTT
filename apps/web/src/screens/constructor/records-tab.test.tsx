@@ -37,7 +37,7 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     }));
   });
 
-  it('незаполненный вход заводит свойство из подсказки и берёт его сам', () => {
+  it('незаполненный вход заводит свойство из подсказки и пишет его в вход явно', () => {
     render(<RecordsTab />);
     expect(строкаВхода('Кость урона').className).toContain('args-row--need');
 
@@ -47,7 +47,7 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     const kind = useWorld.getState().system.tables!.weapon!;
     expect(kind.columns!.some(p => p.label === 'Кость урона' && p.kind === 'dice')).toBe(true);
     expect(kind.columns![0]!.key).toBe('кость');
-    expect((kind.bindings![0] as any).args?.['кость']).toBeUndefined();
+    expect((kind.bindings![0] as any).args?.['кость']).toEqual({ expr: '@кость' });
     expect(строкаВхода('Кость урона').className).not.toContain('args-row--need');
     expect(строкаВхода('Кость урона').querySelector('.chips__chip')?.textContent).toContain('Кость урона');
   });
@@ -87,7 +87,7 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     const kind = useWorld.getState().system.tables!.weapon!;
     expect(kind.bindings![0]!.label).toBe('Удар');
     expect(kind.columns!.map(p => [p.key, p.kind])).toEqual([['кость', 'dice']]);
-    expect(kind.bindings![0]!.args).toBeUndefined();
+    expect(kind.bindings![0]!.args).toEqual({ кость: { expr: '@кость' } });
     expect(строкаВхода('Кость урона').className).not.toContain('args-row--need');
   });
 

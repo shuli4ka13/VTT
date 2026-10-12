@@ -16,7 +16,8 @@ import { asDice } from '../../../../words.ts';
 import { outputRefs, stepNames, inputBadges } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn, WithNumber } from '../words.ts';
-import { SendBody, implicitWords } from './send-body.tsx';
+import { SendBody } from './send-body.tsx';
+import { callArgs, retarget } from '../call-args.ts';
 import { CallEditor } from '../../call-editor.tsx';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import { fieldsOf, cellSource } from '@vtt/engine/model/sheet-columns';
@@ -346,6 +347,8 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
             d.effect ??= firstEvent ?? '';
             const main = amountParamOf(system.effects[String(d.effect)]);
             if (group.amount?.id && main) d.args = { ...(d.args ?? {}), [main.key]: { expr: `@${group.amount.id}` } };
+            const filled = callArgs(system, context.effect, String(d.effect), d.args, { inLoop: context.earlier.some(one => one.type === 'each') });
+            if (Object.keys(filled).length) d.args = filled;
           } else {
             retype(draft, 'apply');
           }
@@ -395,13 +398,28 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
               inputs={context.effect.params ?? []}
               {...(onAddParam ? { onCreateParam: () => onAddParam('какое', 'effect') } : {})}
               empty="— какое состояние —"
-              onChange={next => edit(applyIndex, draft => { if (next) (draft as any).effect = next; else delete (draft as any).effect; })}
+              onChange={next => edit(applyIndex, draft => {
+                const d = draft as any;
+                if (!next) { delete d.effect; return; }
+                d.effect = next;
+                if (typeof next !== 'string') return;
+                const args = callArgs(system, context.effect, next, d.args, { inLoop: context.earlier.some(one => one.type === 'each'), to: d.to, applied: true });
+                if (Object.keys(args).length) d.args = args; else delete d.args;
+              })}
             />
           </Field>
           <Field label={String(step.mode ?? 'apply') === 'remove' ? 'С кого' : 'На кого'} needed={!step.to}>
             <SheetPick
               value={step.to} sheets={sheetChoices(context).singles} system={system} where="состояние · на кого"
-              onChange={next => edit(applyIndex, draft => { if (next) (draft as any).to = next; else delete (draft as any).to; })}
+              onChange={next => edit(applyIndex, draft => {
+                const d = draft as any;
+                const before = d.to;
+                if (next) d.to = next; else delete d.to;
+                const id = effectNameOf(d.effect);
+                if (!id) return;
+                const args = retarget(system, context.effect, id, d.args, before, next);
+                if (Object.keys(args).length) d.args = args; else delete d.args;
+              })}
             />
           </Field>
           <StatusArgs step={step} context={context} onArg={(key, next) => edit(applyIndex, draft => {
@@ -435,7 +453,6 @@ function StatusArgs({ step, context, onArg }: {
         onArg={onArg}
         context={context}
         where="наложить"
-        implicit={param => implicitWords(param, context.effect, context.earlier.some(one => one.type === 'each'), true)}
       />
     );
   }

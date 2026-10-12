@@ -60,12 +60,21 @@ export function ButtonEditor({ binding, system, recordKind, kindId, onEdit, onDe
             value={binding.effect ?? ''}
             options={[['', '— какой эффект —'], ...byRole(system, buttons).map(([id, e, group]) => [id, e.label || id, group] as const)] as never}
             onChange={next => {
+              const chosen = system.effects[next];
+              const columns = new Set((recordKind.columns ?? []).map(prop => prop.key));
               onEdit(draft => {
                 draft.effect = next;
                 if (!draft.label?.trim() && system.effects[next]) draft.label = system.effects[next]!.label || next;
+                if (!chosen) return;
+                const kept: Record<string, unknown> = {};
+                for (const param of paramsOf(system, chosen)) {
+                  if (param.kind === 'sheet') continue;
+                  const given = draft.args?.[param.key];
+                  if (given !== undefined) kept[param.key] = given;
+                  else if (columns.has(param.key)) kept[param.key] = { expr: `@${param.key}` };
+                }
+                if (Object.keys(kept).length) draft.args = kept as never; else delete draft.args;
               });
-              const chosen = system.effects[next];
-              const columns = new Set((recordKind.columns ?? []).map(prop => prop.key));
               const missing = chosen ? paramsOf(system, chosen)
                 .filter(param => param.kind !== 'sheet' && !freeParam(param) && !columns.has(param.key) && binding.args?.[param.key] === undefined) : [];
               if (missing.length) onFillWithProps?.(missing);
@@ -190,7 +199,7 @@ function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, 
   const byName = (recordKind.columns ?? []).some(prop => prop.key === param.key);
   const arg = binding.args?.[param.key] as unknown;
   const empty = arg === undefined || arg === null;
-  const text = empty ? (byName ? `@${param.key}` : '') : asText(arg)?.trim() ?? '';
+  const text = empty ? '' : asText(arg)?.trim() ?? '';
   const need = !text && !free;
 
   if (kind === 'effect' || kind === 'choice') {
@@ -205,7 +214,7 @@ function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, 
             label={`«${name}» — чем заполняет тип`}
             value={text}
             options={[
-              ...(byName ? [] : [[EMPTY, emptyWords(param, system)] as const]),
+              [EMPTY, emptyWords(param, system)] as const,
               ...(known ? [] : [[text, `формула: ${text}`] as const]),
               ...sources.filter(source => source.group === OWN).map(source => [source.key, source.label, source.group] as const),
               ...(onNew && !byName ? [[NEW, `+ свойство «${name}»`, OWN] as const] : []),
@@ -213,7 +222,7 @@ function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, 
             ]}
             onChange={next => {
               if (next === NEW) { onNew?.(); return; }
-              onArg(next === EMPTY || (byName && next === `@${param.key}`) ? null : { expr: next });
+              onArg(next === EMPTY ? null : { expr: next });
             }}
           />
           {kindId && text.startsWith('@') && (recordKind.columns ?? []).some(prop => `@${prop.key}` === text)
@@ -241,7 +250,7 @@ function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, 
           dice={kind === 'dice'}
           onChange={next => {
             const typed = asText(next)?.trim() ?? '';
-            onArg(!next || !typed || (byName && typed === `@${param.key}`) ? null : next);
+            onArg(!next || !typed ? null : next);
           }}
         />
         {!text && onNew ? (

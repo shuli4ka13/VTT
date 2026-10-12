@@ -25,7 +25,10 @@ describe('новый тип с нуля: «+ кнопка» → «Атака» �
     expect((kind.columns ?? []).map(column => column.key)).toEqual(['attack_with', 'damage_dice', 'damage_type', 'damage_source']);
 
     fireEvent.change(screen.getByLabelText('«Источник урона» — чем заполняет тип'), { target: { value: '"магический"' } });
-    expect(useWorld.getState().system.tables!.mag!.bindings![0]!.args).toEqual({ damage_source: { expr: '"магический"' } });
+    expect(useWorld.getState().system.tables!.mag!.bindings![0]!.args).toEqual({
+      attack_with: { expr: '@attack_with' }, damage_dice: { expr: '@damage_dice' }, damage_type: { expr: '@damage_type' },
+      damage_source: { expr: '"магический"' },
+    });
 
     const built = useWorld.getState().system;
     const compendium = { ...dnd.compendium, records: [...dnd.compendium.records, { id: 'жезл', table: 'mag', label: 'Огненный жезл', cells: { attack_with: 5, damage_dice: '1d8', damage_type: 'огонь' } }] } as Compendium;
