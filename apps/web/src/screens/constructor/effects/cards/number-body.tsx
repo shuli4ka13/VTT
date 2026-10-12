@@ -73,7 +73,6 @@ export function NumberBody({ step, context, edit, onAddParam }: {
     <>
       <Field
         label="Сколько"
-        hint="Обычная математика. Наберите @ и часть названия — подскажет. Кость кидается так: кинуть(название кости), вторым числом — сколько костей."
         needed={!shown}
       >
         <FormulaField

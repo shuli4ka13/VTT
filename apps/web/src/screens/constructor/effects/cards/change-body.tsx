@@ -267,7 +267,6 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
       <Field
         label="Сколько"
         error={trouble}
-        hint="Обычная математика. Поля пишутся через лист: @цель.поле, @носитель.поле."
       >
         <FormulaField
           value={shown}
