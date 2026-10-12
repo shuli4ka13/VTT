@@ -8,12 +8,13 @@ const who = (ctx: StepContext): string => ctx.owner || 'правило';
 export function operate(ctx: StepContext, label: string, op: SeenOp): StepResult {
   const cell = ctx.seenRoll;
   if (!cell) throw new EngineError(`${who(ctx)}: «${label}» работает только в подписке «увидев кости»`);
-  const before = result(cell.value).total;
+  const before = result(cell.value).total + (cell.bonus ?? 0);
   cell.value = see(cell.value, op, ctx.die);
   const after = result(cell.value);
+  const total = after.total + (cell.bonus ?? 0);
   return {
-    value: { total: after.total, rolls: after.dice.rolls },
-    trace: { op: op.kind, before, after: after.total, rolls: after.dice.rolls, ...(op.kind === 'plus' ? { addend: op.addend } : {}) },
+    value: { total, rolls: after.dice.rolls },
+    trace: { op: op.kind, before, after: total, rolls: after.dice.rolls, ...(op.kind === 'plus' ? { addend: op.addend } : {}) },
     break: null,
   };
 }

@@ -96,7 +96,7 @@ export interface Frame {
   hop: number;
   inSub: boolean;
   bond?: { sheet: string; effect: string };
-  seenRoll?: { value: Roll };
+  seenRoll?: { value: Roll; bonus?: number };
   lazy?: Lazy;
   alone?: boolean;
   cost?: boolean;
@@ -154,7 +154,7 @@ export interface Hearing {
   path: Path;
   hop: number;
   owner: (sub: Sub) => string;
-  roll?: { value: Roll };
+  roll?: { value: Roll; bonus?: number };
   kind?: Report['kind'];
 }
 
@@ -193,6 +193,8 @@ function valuesOf(params: readonly Param[] | undefined, args: Record<string, unk
   const sheets = sheetParams(params);
   return Object.fromEntries(Object.entries(args).filter(([key]) => !sheets.has(key)));
 }
+
+interface ShownBonus { label: string | null; value: number }
 
 export class Run {
   readonly views: Views;
@@ -448,7 +450,8 @@ export class Run {
         if (lazy && !(name in results)) this.lazyValue(lazy, name, results, rolls, sink);
         return (rolls[name] as unknown as Record<string, unknown> | undefined) ?? null;
       },
-      roll: (spec, tags, by, against) => this.roll(frame, spec, tags, by, against, path.phase('roll').nth(rollsMade++), sink),
+      roll: (spec, tags, by, against, bonus) => this.roll(frame, spec, tags, by, against, path.phase('roll').nth(rollsMade++), sink,
+        bonus ? { label: this.bonusLabel(frame, bonus.ref), value: bonus.value } : undefined),
       read: (sheetId, tag) => this.read(sheetId, tag),
       write: (sheetId, tag, value) => this.write(sheetId, tag, value, sink),
       attach: (sheetId, effectId, args) => this.attach(frame, sheetId, effectId, args, sink, path),
@@ -543,7 +546,16 @@ export class Run {
     return true;
   }
 
-  private roll(frame: Frame, spec: Spec, tags: string[], by: string | null, against: string | null, path: Path, sink: Sink): Thrown {
+  private bonusLabel(frame: Frame, ref: unknown): string | null {
+    const expr = ref && typeof ref === 'object' && 'expr' in ref ? String((ref as { expr: unknown }).expr).trim() : '';
+    const lone = /^[@#]([\p{L}\p{N}_]+)$/u.exec(expr);
+    const param = lone ? frame.paramDefs.find(one => one.key === lone[1]) : undefined;
+    if (param) return param.label || param.key;
+    const onSheet = /^[@#][\p{L}\p{N}_]+\.([\p{L}\p{N}_.]+)$/u.exec(expr);
+    return onSheet ? findField(this.system, onSheet[1]!)?.label ?? null : null;
+  }
+
+  private roll(frame: Frame, spec: Spec, tags: string[], by: string | null, against: string | null, path: Path, sink: Sink, shown?: ShownBonus): Thrown {
     const die = this.ext.dice(path);
     if (!by) {
       const roll = start(spec, [], die, tags);
@@ -555,7 +567,7 @@ export class Run {
       held: rollHeld(this.holderViews(), by, opponent, tags),
       roller: this.view(by),
       die,
-      seen: roll => this.seen(by, opponent, roll, tags, path, frame.hop, sink),
+      seen: roll => this.seen(by, opponent, roll, tags, path, frame.hop, sink, shown),
     });
   }
 
@@ -875,7 +887,7 @@ export class Run {
     }
   }
 
-  private subFrame(sub: Sub, path: Path, hop: number, owner: string, names: Record<string, Bound>, roll?: { value: Roll }): Frame {
+  private subFrame(sub: Sub, path: Path, hop: number, owner: string, names: Record<string, Bound>, roll?: { value: Roll; bonus?: number }): Frame {
     const hanging = this.hanging(sub);
     return {
       path, effectId: sub.effectId, label: labelOf(sub), owner, home: sub.sheetId,
@@ -900,7 +912,7 @@ export class Run {
   react(found: Sub, o: {
     path: Path; names: Record<string, Bound>; seed: Record<string, unknown> | (() => Record<string, unknown>); hop: number;
     rolls?: Record<string, RollResult>;
-    chosen: boolean; owner: string; roll?: { value: Roll }; builtin?: boolean; kind?: Report['kind']; label?: string;
+    chosen: boolean; owner: string; roll?: { value: Roll; bonus?: number }; builtin?: boolean; kind?: Report['kind']; label?: string;
   }): { lead: Entry[]; report?: Report; entries: Entry[]; spent?: string } {
     const entries: Entry[] = [];
     const lead: Entry[] = [];
@@ -1160,8 +1172,8 @@ export class Run {
     const ctx = this.ctx(frame, {}, {}, path, sink, new Set());
     const spec = parse(dieConstant(this.system, check.die), (ref, what) => ctx.number(ref, what));
     const sized = check.count === undefined || check.count === null ? spec : withCount(spec, ctx.number(check.count, `${owner} · сколько костей`), owner);
-    const thrown = ctx.roll(sized, [...(check.tags ?? [])], sheetId, null);
     const bonus = check.bonus ? ctx.optional(check.bonus, `${owner} · прибавка`) ?? 0 : 0;
+    const thrown = ctx.roll(sized, [...(check.tags ?? [])], sheetId, null, check.bonus ? { ref: check.bonus, value: bonus } : undefined);
     return { thrown, bonus, total: thrown.result.total + bonus, entries: sink.after };
   }
 
@@ -1257,15 +1269,15 @@ export class Run {
     return entries;
   }
 
-  seen(rollerId: string, againstId: string | null, roll: Roll, tags: readonly string[], path: Path, hop: number, sink: Sink): Roll {
+  seen(rollerId: string, againstId: string | null, roll: Roll, tags: readonly string[], path: Path, hop: number, sink: Sink, shown?: ShownBonus): Roll {
     if (this.seeing) return roll;
-    const cell = { value: roll };
+    const cell = { value: roll, bonus: shown?.value ?? 0 };
     const names: Record<string, Bound> = { бросающий: rollerId, против: againstId };
     const seed = (): Record<string, unknown> => {
       const now = result(cell.value);
       return {
         roll: {
-          total: now.total, natural: now.natural, rolls: now.dice.rolls, kept: now.dice.kept, parts: now.parts,
+          total: now.total + cell.bonus, natural: now.natural, rolls: now.dice.rolls, kept: now.dice.kept, parts: now.parts,
           rolled: now.rolled, atMax: now.atMax, atMin: now.atMin, edited: now.edited, tags: [...tags],
         },
       };
@@ -1301,7 +1313,7 @@ export class Run {
         const now = result(cell.value);
         const question: Question = {
           key: qpath.key, sheetId, window: 'seen', label: '', offers: [...byKey.values()].map(one => one.offer), results: seed(),
-          preview: [`${tags.length ? `Бросок (${rollName([...tags])})` : 'Бросок'}: [${now.dice.rolls.join(', ')}]${addendsText(cell.value.addends)} → ${now.total}`],
+          preview: [`${tags.length ? `Бросок (${rollName([...tags])})` : 'Бросок'}: [${now.dice.rolls.join(', ')}]${addendsText(cell.value.addends)}${shown ? ` + ${shown.label ? `${shown.label}: ` : ''}${shown.value}` : ''} → ${now.total + cell.bonus}`],
         };
         const { chosen, skipped } = this.choose(question);
         for (const id of chosen) {

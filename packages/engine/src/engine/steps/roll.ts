@@ -58,10 +58,11 @@ export function finish(step: StepData, ctx: StepContext) {
   const by = ctx.sheet(step.by, 'кто бросает');
   const against = ctx.sheet(step.against, 'против кого');
   if (step.die === undefined && step.fixed === undefined) throw new EngineError(`${who(ctx)}: броску нужна кость или формула`);
-  const thrown = step.die !== undefined && step.die !== null ? ctx.roll(specOf(ctx, step.die, step.count, by), tags, by, against) : null;
+  const bonus = ctx.optional(step.bonus, 'прибавка броска') ?? 0;
+  const shown = step.bonus !== undefined && step.bonus !== null ? { ref: step.bonus, value: bonus } : undefined;
+  const thrown = step.die !== undefined && step.die !== null ? ctx.roll(specOf(ctx, step.die, step.count, by), tags, by, against, shown) : null;
   const formula: { sides: number; value: number }[] = [];
   const fixed = step.fixed !== undefined && step.fixed !== null ? ctx.using(watched(ctx, formula)).optional(step.fixed, 'формула броска') ?? 0 : 0;
-  const bonus = ctx.optional(step.bonus, 'прибавка броска') ?? 0;
   const base: RollResult = thrown ? thrown.result : {
     total: 0, natural: formula.reduce((sum, one) => sum + one.value, 0), rolled: formula.length,
     atMax: formula.filter(one => one.value === one.sides).length, atMin: formula.filter(one => one.value === 1).length,

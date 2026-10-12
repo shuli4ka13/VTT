@@ -82,6 +82,26 @@ group('увидев кости', () => {
     eq(second.sheets.find(s => s.id === 'а')!.values.удача, 0, 'удача потрачена');
   });
 
+  test('окно видит итог с прибавкой шага: превью, @roll.total и трасса «Прибавить» сходятся', () => {
+    const system = world({
+      точная: {
+        label: 'Точная', activation: 'passive',
+        on: [{ on: 'seen', confirm: true, if: { expr: `все(${mine}, @roll.total < 13)` }, steps: [{ type: 'roll-plus', value: { expr: 'кинуть(к6)' } }] }],
+      },
+    });
+    (system.effects.удар!.steps as unknown[])[1] = roll({ bonus: { expr: '8' } });
+    const sheets = [sheet('а', ['точная']), sheet('б')];
+    const first = play(system, sheets, [4]);
+    eq(first.kind, 'paused', '4 + 8 = 12 < 13 — реакция предложена');
+    if (first.kind !== 'paused') return;
+    ok(first.question.preview[0]!.includes('[4] + 8 → 12'), first.question.preview.join(' | '));
+    const journal = { ...first.journal, answers: { ...first.journal.answers, [first.question.key]: [first.question.offers[0]!.id] } };
+    const second = play(system, sheets, [3], journal);
+    eq(second.kind, 'done');
+    if (second.kind !== 'done') return;
+    ok(JSON.stringify(second).includes('итог 12 → 15') || JSON.stringify(second).includes('"before":12,"after":15'), 'трасса «Прибавить» в тех же числах, что окно');
+  });
+
   test('бросок по мне: цель видит кости нападающего и отнимает от итога', () => {
     const system = world({ насмешка: { label: 'Насмешка', activation: 'passive', on: [{ on: 'seen', if: { expr: '@против == @носитель' }, steps: [{ type: 'roll-plus', value: { expr: '-5' } }] }] } });
     const out = play(system, [sheet('а'), sheet('б', ['насмешка'])], [12]);

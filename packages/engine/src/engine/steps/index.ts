@@ -36,14 +36,14 @@ export interface StepContext {
   field(ref: unknown): FieldRef;
   view(sheetId: string): Pass;
   rolled(name: string): Record<string, unknown> | null;
-  roll(spec: Spec, tags: string[], by: string | null, against: string | null): Thrown;
+  roll(spec: Spec, tags: string[], by: string | null, against: string | null, bonus?: { ref: unknown; value: number }): Thrown;
   read(sheetId: string, tag: string): unknown;
   write(sheetId: string, tag: string, value: StoredValue): void;
   attach(sheetId: string, effectId: string, args: Record<string, StoredValue>): void;
   detach(sheetId: string, effectId: string): void;
   edited(call: string, param: string, base: number, tags: string[], args: Record<string, unknown>): number;
   call(event: string, args: Record<string, unknown>, payload: EmittedEvent): NestedRun;
-  seenRoll?: { value: Roll };
+  seenRoll?: { value: Roll; bonus?: number };
   inCost?: boolean;
   using(die: Die): StepContext;
 }
