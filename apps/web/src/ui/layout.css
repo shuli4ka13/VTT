@@ -498,7 +498,6 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .step-card .field { display: grid; grid-template-columns: var(--label-w) minmax(0, 1fr); column-gap: var(--s-4); row-gap: var(--s-1); align-items: center; }
 .step-card .field__label { font-size: var(--fs-3); font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--text-muted); }
 .step-card .field > :not(.field__label) { grid-column: 2; min-width: 0; }
-.step-card .field .select, .step-card .call-row__arg .select { max-width: 440px; }
 .step-card .formula-field { min-height: 32px; }
 
 .step-card .row { display: flex; flex-direction: column; gap: 10px; }
@@ -549,10 +548,27 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .step-card > .faint { padding-left: calc(var(--label-w) + var(--s-4)); }
 .step-card .call-row__more { flex: none; display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
 .step-card .call-row__toggle { align-self: flex-start; }
-.step-card .formula-field { flex-wrap: wrap; overflow: visible; }
-.step-card select.select, .step-card .select { min-width: 220px; }
 .step-card .btn--danger:not(:has(+ .btn)), .flow-block .btn--danger:not(:has(+ .btn)) { color: var(--text-faint); border-color: transparent; background: transparent; }
 .step-card .btn--danger:not(:has(+ .btn)):hover, .flow-block .btn--danger:not(:has(+ .btn)):hover { color: var(--danger); background: var(--danger-soft); border-color: var(--danger); }
 .flow-head__cond .cond { flex: none; }
 .flow-head__cond .cond--bare { flex-wrap: nowrap; }
 .flow-head__cond .cond__formula { flex: 1 1 auto; }
+
+.step-card { --value-w: 520px; }
+.step-card .field > :not(.field__label):not(.field__hint):not(.field__error),
+.step-card .call-row__arg > :not(.call-args__name):not(.faint):not(.need) { width: 100%; max-width: var(--value-w); }
+.step-card .select, .step-card select { width: 100%; max-width: var(--value-w); min-height: 32px; }
+.step-card .formula-field { width: 100%; max-width: var(--value-w); height: 32px; min-height: 32px; flex-wrap: nowrap; overflow: hidden; white-space: nowrap; padding: 0 var(--s-3); mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); }
+.step-card .field .formula-field:focus-within, .step-card .formula-field:focus-visible { mask-image: none; }
+.step-card .formula-field .chips__chip { flex: none; }
+.step-card .field__hint { display: none; }
+.step-card .field:focus-within .field__hint { display: block; }
+.flow-head__cond .formula-field { max-width: 520px; height: 32px; overflow: hidden; white-space: nowrap; }
+.step-card .slot { justify-items: stretch; width: 100%; max-width: var(--value-w); }
+.step-card .slot > .formula-field { justify-self: stretch; }
+.step-card .roll-line { display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
+.step-card .roll-line__part { flex: none; width: 100%; max-width: none; }
+.step-card .roll-line__part > .formula-field, .step-card .roll-line__part > .select { width: 100%; max-width: var(--value-w); }
+.step-card .slot { grid-template-columns: minmax(0, 1fr); justify-content: stretch; }
+.flow-head__cond .cond, .flow-head__cond .cond__fact, .flow-head__cond .cond__formula { width: 100%; max-width: 520px; }
+.flow-head__cond .formula-field { width: 100%; }
