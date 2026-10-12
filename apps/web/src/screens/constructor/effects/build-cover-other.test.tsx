@@ -202,7 +202,7 @@ describe('эффекты пресетов собираются руками: Sha
   };
 
   const calledHead = (ui: ReturnType<typeof within>, id: string, goal: Effect) => {
-    head(ui, '+ вызываемый', goal.label!, id, goal);
+    head(ui, '+ шаг для других', goal.label!, id, goal);
     within(stepCard(/^1 · /)).click('Удалить');
     within(stepCard(/^1 · /)).click('точно убрать');
   };

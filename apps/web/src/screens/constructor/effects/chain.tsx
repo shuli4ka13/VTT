@@ -1,3 +1,4 @@
+import { withRole } from './roles.ts';
 import type { ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useWorld, freeId } from '../../../store/world.ts';
@@ -10,37 +11,21 @@ import { groupSteps, moveGroup, moveSpan, blockSpan, removeSteps, armEnd, wrapIn
 import { armsOf, sees, endOf } from '@vtt/engine/model/flow';
 import { FlowHead, FlowActions } from './cards/flow-parts.tsx';
 import { outcomeWords } from '@vtt/engine/engine/roll-tags';
-import { costsOf, newCost } from '../factory.ts';
-import { calledOf } from '@vtt/engine/engine/effects';
+import { newCost } from '../factory.ts';
 import { GroupCard } from './cards/group-card.tsx';
 import { sheetsAt } from './names.ts';
 import { namesAt } from '@vtt/engine/model/names-at';
 import type { Place } from '@vtt/engine/model/names-at';
 import { useOpened } from '../../../store/opened.ts';
 import { findDonorBlock, copyDonorBlock } from '../donors.tsx';
-import type { System, Effect, Step, ValueKind } from '@vtt/schema';
+import type { System, Effect, Step, ValueKind, Compendium } from '@vtt/schema';
 
 export type Lane = 'steps' | 'cost';
 
 const CALL_PREFIX = 'call:';
 
-const payLike = (system: System): Set<string> => {
-  const out = new Set(costsOf(system).map(([key]) => key));
-  for (const effect of Object.values(system.effects ?? {})) {
-    for (const step of [...(effect.cost ?? []), ...(effect.on ?? []).flatMap(handler => handler.cost ?? [])] as Record<string, unknown>[]) {
-      if (step.type === 'emit' && typeof step.effect === 'string') out.add(step.effect);
-    }
-    for (const param of effect.params ?? []) {
-      if (param.kind === 'effect' && typeof param.default === 'string') out.add(param.default);
-    }
-  }
-  return out;
-};
-
-export const bricksOf = (system: System, except: string): [string, Effect][] => {
-  const costs = payLike(system);
-  return calledOf(system).filter(([key, effect]) => key !== except && !costs.has(key) && (effect.activation ?? 'manual') === 'manual');
-};
+export const bricksOf = (system: System, except: string, compendium: Compendium | null = null): [string, Effect][] =>
+  withRole(system, compendium, 'step', except);
 
 const callStep = (key: string): Step => ({ type: 'emit', effect: key } as unknown as Step);
 
@@ -62,6 +47,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
   onRoll?: boolean;
 }) {
   const pick = useWorld(s => s.pick);
+  const compendium = useWorld(s => s.compendium);
   const onOpenEffect = (id: string) => pick({ activeEffectId: id });
   const [removed, setRemoved] = useState<{ text: string; before: Step[]; after: string } | null>(null);
 
@@ -242,7 +228,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
       value=""
       title="Добавить шаг в эту ветку"
       options={[['', '+ шаг'],
-        ...bricksOf(system, id).map(([key, one]) => [`${CALL_PREFIX}${key}`, one.label || key] as const),
+        ...bricksOf(system, id, compendium).map(([key, one]) => [`${CALL_PREFIX}${key}`, one.label || key] as const),
         ...[...BRICKS, ...(onRoll ? SEEN_BRICKS : [])].filter(b => b.key !== 'each').map(b => [b.key, b.label.replace(/^\+ /, '')] as const)]}
       onChange={key => {
         const called = key.startsWith(CALL_PREFIX) ? key.slice(CALL_PREFIX.length) : null;
@@ -390,10 +376,10 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
       {bare ? list : <div className="steps">{lead}{list}</div>}
 
       {bare ? null : <div className="bricks">
-        {bricksOf(system, id).length ? (
+        {bricksOf(system, id, compendium).length ? (
           <div className="bricks__row">
-            <span className="bricks__title">Эффекты системы</span>
-            {bricksOf(system, id).map(([key, one]) => (
+            <span className="bricks__title">Шаги для других</span>
+            {bricksOf(system, id, compendium).map(([key, one]) => (
               <Button key={key} size="sm" title={one.description || `вызвать «${one.label || key}»`}
                 onClick={() => edit(draft => {
                   const held = HELD_PARTS.has(placeAt(0).part);
@@ -437,17 +423,17 @@ const NEW_COST = ':новая';
 
 export function CostPick({ system, except, onPick }: { system: System; except?: string; onPick: (id: string) => void }) {
   const editSystem = useWorld(s => s.editSystem);
+  const compendium = useWorld(s => s.compendium);
   return (
     <span className="add-cost">
       <Select<string>
         value=""
         title="Чего стоит эффект: выбранный эффект зовётся первым шагом; не хватило — эффект не состоится"
-        options={[['', '+ стоимость'],
-          ...costsOf(system).filter(([id]) => id !== except).map(([id, cost]) => [id, cost.label || id] as const),
-          ...Object.entries(system.effects ?? {})
-            .filter(([key, other]) => key !== except && !costsOf(system).some(([id]) => id === key) && (other.activation ?? 'manual') !== 'passive')
-            .map(([id, other]) => [id, other.label || id] as const),
-          [NEW_COST, '+ новая стоимость…']]}
+        options={[['', '+ плата'],
+          ...withRole(system, compendium, 'pay', except).map(([id, cost]) => [id, cost.label || id] as const),
+          ...withRole(system, compendium, 'step', except).map(([id, other]) => [id, other.label || id] as const),
+          ...withRole(system, compendium, 'button', except).map(([id, other]) => [id, other.label || id] as const),
+          [NEW_COST, '+ новая плата…']]}
         onChange={pick => {
           if (!pick) return;
           if (pick !== NEW_COST) { onPick(pick); return; }

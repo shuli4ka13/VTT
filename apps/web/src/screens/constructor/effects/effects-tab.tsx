@@ -1,3 +1,4 @@
+import { rolesOf, ROLE_WORDS, type Role } from './roles.ts';
 import { useOpened } from '../../../store/opened.ts';
 import { useWorld } from '../../../store/world.ts';
 import { blockTree, BlockBranches } from '../block-tree.tsx';
@@ -11,9 +12,7 @@ import { PreviewPanel } from './preview-panel.tsx';
 import { CREATE_KINDS } from './words.ts';
 import { EffectEditor } from './effect-editor.tsx';
 import { newCalled } from '../factory.ts';
-import { launchOf, LAUNCHES } from '@vtt/engine/model/effect-kinds';
 import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
-import { calledOf } from '@vtt/engine/engine/effects';
 import type { Effect } from '@vtt/schema';
 import { freeGroupName } from '../groups.ts';
 
@@ -25,7 +24,8 @@ export function EffectsTab() {
 
   const tree = blockTree<[string, Effect]>(system, Object.entries(system.effects), ([, effect]) => blockOf(system, effect));
   const active = activeId ? system.effects[activeId] : undefined;
-  const called = new Set(calledOf(system).map(([key]) => key));
+  const compendium = useWorld(s => s.compendium);
+  const roles = rolesOf(system, compendium);
 
   const addCalled = () => {
     const made = newCalled(system);
@@ -77,7 +77,7 @@ export function EffectsTab() {
                       <ListItem
                         key={id}
                         name={effect.label ?? id}
-                        meta={metaOf(effect, called.has(id), everyone.has(id))}
+                        meta={metaOf(effect, roles.get(id) ?? 'step', everyone.has(id))}
                         active={id === activeId}
                         fresh={freshEffects.has(id)}
                         onClick={() => pick({ activeEffectId: id })}
@@ -95,7 +95,7 @@ export function EffectsTab() {
                 </Button>
               ))}
               <Button size="sm" wide onClick={addCalled} title="Его никто не нажимает: его зовут другие эффекты и передают ему входы">
-                + вызываемый
+                + шаг для других
               </Button>
             </div>
           </>
@@ -114,8 +114,8 @@ export function EffectsTab() {
   );
 }
 
-const metaOf = (effect: Effect, called: boolean, everyone: boolean) => {
-  const kind = `${called ? 'вызывают другие' : LAUNCHES[launchOf(effect).kind].label}${everyone ? ' · у всех' : ''}`;
+const metaOf = (effect: Effect, role: Role, everyone: boolean) => {
+  const kind = `${ROLE_WORDS[role]}${everyone ? ' · у всех' : ''}`;
   const idle = !effect.steps?.length && !effect.cost?.length && !effect.modifiers?.length
     && !(effect.on ?? []).some(handler => handler.steps?.length || handler.cost?.length);
   return idle ? `${kind.toLowerCase()} · ничего не делает` : kind.toLowerCase();

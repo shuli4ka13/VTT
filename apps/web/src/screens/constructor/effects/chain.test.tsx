@@ -11,7 +11,7 @@ import { openAll } from '../../../testing/render-open.tsx';
 const withCost = (): System => ({
   ...emptySystem(),
   effects: {
-    cost_action: { label: 'Стоимость: действие', group: 'Стоимость', activation: 'manual', params: [], steps: [] },
+    cost_action: { label: 'Стоимость: действие', group: 'Плата', activation: 'manual', params: [], steps: [] },
     удар: { label: 'Удар', activation: 'manual', params: [], steps: [] },
   },
 } as unknown as System);
@@ -27,10 +27,10 @@ describe('стоимость эффекта — одним выбором', () =
     return effect;
   };
 
-  it('выбор «+ стоимость» предлагает эффекты блока «Стоимость», выбранная встаёт первым шагом', () => {
+  it('выбор «+ плата» предлагает эффекты блока «Стоимость», выбранная встаёт первым шагом', () => {
     const effect = lane([{ type: 'apply', target: { tag: 'x' } }]);
-    const pick = screen.getByDisplayValue('+ стоимость') as HTMLSelectElement;
-    expect([...pick.options].map(o => o.textContent)).toEqual(['+ стоимость', 'Стоимость: действие', '+ новая стоимость…']);
+    const pick = screen.getByDisplayValue('+ плата') as HTMLSelectElement;
+    expect([...pick.options].map(o => o.textContent)).toEqual(['+ плата', 'Стоимость: действие', '+ новая плата…']);
     fireEvent.change(pick, { target: { value: 'cost_action' } });
     expect(effect.steps![0]).toEqual({ id: 'стоимость', type: 'emit', effect: 'cost_action' });
   });
@@ -38,31 +38,31 @@ describe('стоимость эффекта — одним выбором', () =
   it('ценой может стать и другой вызываемый эффект — не только из блока «Стоимость», но не сам эффект', () => {
     useWorld.getState().editSystem(draft => { draft.effects.spend = { label: 'Потратить', activation: 'manual', params: [], steps: [] } as never; });
     lane();
-    const pick = screen.getByDisplayValue('+ стоимость') as HTMLSelectElement;
-    expect([...pick.options].map(o => o.textContent)).toEqual(['+ стоимость', 'Стоимость: действие', 'Потратить', '+ новая стоимость…']);
+    const pick = screen.getByDisplayValue('+ плата') as HTMLSelectElement;
+    expect([...pick.options].map(o => o.textContent)).toEqual(['+ плата', 'Стоимость: действие', 'Потратить', '+ новая плата…']);
   });
 
-  it('«+ новая стоимость» заводит эффект в блоке «Стоимость» и сразу его зовёт', () => {
+  it('«+ новая плата» заводит эффект в блоке «Плата» и сразу его зовёт', () => {
     const effect = lane();
-    fireEvent.change(screen.getByDisplayValue('+ стоимость'), { target: { value: ':новая' } });
+    fireEvent.change(screen.getByDisplayValue('+ плата'), { target: { value: ':новая' } });
     const made = Object.entries(useWorld.getState().system.effects).find(([id]) => id.startsWith('стоимость'))!;
-    expect(made[1]).toMatchObject({ group: 'Стоимость' });
+    expect(made[1]).toMatchObject({ group: 'Плата' });
     expect(effect.steps![0]).toMatchObject({ type: 'emit', effect: made[0] });
   });
 
   it('без «onAddCost» (цепочка хука или подписки без решения) выбора стоимости нет', () => {
     const effect = { label: 'Удар', steps: [] } as unknown as Effect;
     render(<Chain id="удар" placeAt={index => ({ part: 'steps', index })} effect={effect} system={withCost()} edit={() => {}} />);
-    expect(screen.queryByDisplayValue('+ стоимость')).toBeNull();
+    expect(screen.queryByDisplayValue('+ плата')).toBeNull();
   });
 
-  it('«+ стоимость» стоит рядом с остальными шагами и ставит плату первым шагом над чертой', () => {
+  it('«+ плата» стоит рядом с остальными шагами и ставит плату первым шагом над чертой', () => {
     const view = () => {
       const system = useWorld.getState().system;
       return <EffectEditor id="удар" effect={system.effects.удар!} system={system} />;
     };
     const { rerender } = render(view());
-    fireEvent.change(screen.getByDisplayValue('+ стоимость'), { target: { value: 'cost_action' } });
+    fireEvent.change(screen.getByDisplayValue('+ плата'), { target: { value: 'cost_action' } });
     expect(useWorld.getState().system.effects.удар!.cost).toEqual([{ type: 'emit', effect: 'cost_action' }]);
     rerender(view());
     expect(screen.getByText(/1 · Стоимость/)).toBeTruthy();

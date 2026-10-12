@@ -50,7 +50,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
       .filter(b => (b.textContent ?? '').trimStart().startsWith('+ '))
       .map(b => b.textContent!.trim())
       .filter(t => !CREATE_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`)
-        && t !== '+ вызываемый' && t !== '+ новый' && t !== '+ блок'
+        && t !== '+ шаг для других' && t !== '+ новый' && t !== '+ блок'
         && t !== '+ ещё одно' && t !== '+ итог' && t !== '+ держание' && !t.startsWith('+ в «')
         && !['+ блок', '+ метки', '+ описание для игрока', '+ занимает', '+ какие метки бывают', '+ сколько висит', '+ на основе'].includes(t));
     expect(palette).toEqual(['+ проверка', '+ изменение', '+ таблица', '+ для каждого из списка', '+ если', '+ стоп', '+ число']);
@@ -310,9 +310,9 @@ describe('вызываемый эффект — обычный эффект', ()
   });
   afterEach(() => { cleanup(); });
 
-  it('«+ вызываемый» заводит обычный эффект с шагом в первое числовое поле', () => {
+  it('«+ шаг для других» заводит обычный эффект с шагом в первое числовое поле', () => {
     renderOpen(<EffectsTab />);
-    fireEvent.click(screen.getByText('+ вызываемый'));
+    fireEvent.click(screen.getByText('+ шаг для других'));
     const key = useWorld.getState().activeEffectId!;
     const made = useWorld.getState().system.effects[key]!;
     expect(made.params!.map(p => [p.key, p.kind])).toEqual([['лист', 'sheet'], ['amount', 'number']]);
@@ -324,7 +324,7 @@ describe('вызываемый эффект — обычный эффект', ()
 
   it('правится тем же редактором: те же шаги, а входы заводит автор', () => {
     renderOpen(<EffectsTab />);
-    fireEvent.click(screen.getByText('+ вызываемый'));
+    fireEvent.click(screen.getByText('+ шаг для других'));
     expect(screen.getByText('Шаги')).toBeTruthy();
     expect(screen.getByText('Что приходит')).toBeTruthy();
 
@@ -497,4 +497,21 @@ describe('подписка видит имена вызова', () => {
     }
     expect(broken).toEqual([]);
   }, 300000);
+});
+
+describe('одно правило «шаг для других»', () => {
+  afterEach(cleanup);
+
+  it('подпись в библиотеке совпадает с палитрой шагов: D&D — «Урон», «Бросок атаки», «Спасбросок»', () => {
+    const world = SAMPLE_WORLDS.find(one => one.system.name === 'D&D 5e')!;
+    const strike = Object.entries(world.system.effects).find(([, effect]) => effect.label === 'Атака')![0];
+    useWorld.setState(state => ({ ...state, system: world.system, compendium: world.compendium, activeEffectId: strike }));
+    renderOpen(<EffectsTab />);
+    const listed = [...document.querySelectorAll('.list__item')]
+      .filter(item => item.textContent?.includes('шаг для других'))
+      .map(item => item.querySelector('.list__name')?.textContent).sort();
+    const palette = [...document.querySelectorAll('.bricks__row:not(.bricks__row--plain) button')].map(button => button.textContent).sort();
+    expect(palette).toEqual(['Бросок атаки', 'Спасбросок', 'Урон']);
+    expect(listed).toEqual(palette);
+  });
 });

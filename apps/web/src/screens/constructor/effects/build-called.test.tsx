@@ -40,7 +40,7 @@ const nameStep = (card: HTMLElement, name: string): void => {
 };
 
 const calledHead = (ui: ReturnType<typeof within>, id: string, goal: Effect) => {
-  ui.click('+ вызываемый');
+  ui.click('+ шаг для других');
   ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, goal.label!);
   if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
   ui.click('имя в формулах…');

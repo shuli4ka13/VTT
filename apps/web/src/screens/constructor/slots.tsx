@@ -1,3 +1,4 @@
+import { rolesOf } from './effects/roles.ts';
 import type { SheetNames } from '../../ui/formula-chips.tsx';
 import type { System, Effect, SlotRef } from '@vtt/schema';
 import type { RecordKind } from '@vtt/engine/model/owned';
@@ -136,6 +137,11 @@ export function sheetChoices(ctx: SlotContext): { singles: Map<string, string>; 
   };
 }
 
-export const callable = (system: System, except: Effect): [string, Effect][] =>
-  Object.entries(system.effects ?? {}).filter(([, effect]) => effect !== except && (effect.activation ?? 'manual') === 'manual');
+export const callable = (system: System, except: Effect): [string, Effect][] => {
+  const roles = rolesOf(system, null);
+  const rank = (id: string) => ['step', 'pay', 'button'].indexOf(roles.get(id) ?? 'step');
+  return Object.entries(system.effects ?? {})
+    .filter(([, effect]) => effect !== except && (effect.activation ?? 'manual') === 'manual')
+    .sort(([a], [b]) => rank(a) - rank(b));
+};
 

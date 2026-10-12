@@ -88,7 +88,7 @@ describe('эффекты пресетов собираются в констру
     param(6, 'Тип урона', 'choice', 'damage_type', 'damage_types');
     param(7, 'Источник урона', 'choice', 'damage_source', 'damage_source');
     param(8, 'Состояние при попадании', 'effect', 'status');
-    param(9, 'Цена', 'effect', 'цена');
+    param(9, 'Плата', 'effect', 'цена');
     ui.select(ui.cell('Если не передали', 3), 'value');
     ui.select(ui.cell('Если не передали', 5), 'value');
     ui.type(ui.cell('Если не передали', 5), '1');

@@ -1,3 +1,4 @@
+import { roleOf, ROLE_WORDS } from './roles.ts';
 import { useState } from 'react';
 import { paramsOf } from '@vtt/engine/model/inherit';
 import { EffectPick } from '../effect-pick.tsx';
@@ -20,7 +21,6 @@ import { GrantsEditor } from '../grants-editor.tsx';
 import { Extras } from './cards/extras.tsx';
 import { ParamsEditor } from './params-editor.tsx';
 import { ReturnsEditor } from './returns-editor.tsx';
-import { callMap } from './call-map.ts';
 import { launchOf, activationFor, DURATIONS, REAPPLY } from '@vtt/engine/model/effect-kinds';
 import type { System, Effect, Step } from '@vtt/schema';
 
@@ -79,7 +79,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           <span className="effect-head__name">
             <LabelInput value={effect.label ?? ''} placeholder="как зовётся эффект" onCommit={label => relabel(label)} />
           </span>
-          <span className={`effect-head__kind effect-head__kind--${launch.kind}`} title={launchHint(launch.kind)}>{kindWord(launch.kind, callMapUsed(system, id))}</span>
+          <span className={`effect-head__kind effect-head__kind--${launch.kind}`} title={launchHint(launch.kind)}>{ROLE_WORDS[roleOf(system, useWorld.getState().compendium, id)]}</span>
           <span className="spacer" />
           <Button size="sm" variant="ghost" title="как запускается, у кого есть, папка, метки, значок, имя в формулах" ariaLabel={more ? "свернуть «свойства»" : "развернуть «свойства»"} onClick={() => setMore(!more)}>{more ? 'свернуть свойства' : 'свойства'}</Button>
           <DangerButton size="sm" onConfirm={() => {
@@ -193,7 +193,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
       </Card>
 
       <ParamsEditor id={id} effect={effect} system={system} onEdit={edit} />
-      {effect.returns?.length || callMapUsed(system, id) ? <ReturnsEditor id={id} effect={effect} system={system} onEdit={edit} /> : null}
+      {effect.returns?.length || roleOf(system, useWorld.getState().compendium, id) === 'step' ? <ReturnsEditor id={id} effect={effect} system={system} onEdit={edit} /> : null}
 
       {pipeline ? (
         <>
@@ -339,10 +339,7 @@ function Handlers({ id, effect, system, edit }: {
   );
 }
 
-const callMapUsed = (system: System, id: string): boolean => callMap(system, id).usedBy.length > 0;
 
-const kindWord = (kind: string, called: boolean): string =>
-  (kind === 'manual' ? (called ? 'вызываемый · кнопкой' : 'кнопкой') : kind === 'passive' ? 'висит' : 'срабатывает сам');
 
 const idleWords = (effect: Effect): string => {
   const also: string[] = [];

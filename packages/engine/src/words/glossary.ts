@@ -29,4 +29,4 @@ export const FORBIDDEN_STEMS = ['карточк', 'карточе', 'кирпи�
 
 export const OUTCOME_COLUMNS = { success: 'успех', fail: 'провал' } as const;
 
-export const COST_BLOCK = 'Стоимость';
+export const COST_BLOCK = 'Плата';
