@@ -24,12 +24,14 @@ function outputsOf(type: string): { path: string; label: string; kind?: string }
   }
 }
 
-export function outputRefs(earlier: EarlierStep[]): { ref: string; label: string; kind?: string }[] {
+export const formulaName = (step: EarlierStep): string => (step.type === 'each' || !step.id ? stepName(step) : step.id.replace(/_/g, ' '));
+
+export function outputRefs(earlier: EarlierStep[], nameOf: (step: EarlierStep) => string = stepName): { ref: string; label: string; kind?: string }[] {
   const out: { ref: string; label: string; kind?: string }[] = [];
   for (const step of earlier) {
     if (step.type === 'each') continue;
     const outputs = [...(step.outputs ?? []), ...outputsOf(step.type)];
-    const name = stepName(step);
+    const name = nameOf(step);
     if (!outputs.length) {
       out.push({ ref: step.id, label: `${name} — результат` });
       continue;
@@ -85,8 +87,8 @@ export function stepNames(ctx: SlotContext): Map<string, string> {
   for (const [key, constant] of Object.entries(ctx.system.constants ?? {})) {
     out.set(key, (constant as { label?: string }).label ?? key);
   }
-  for (const step of ctx.earlier) out.set(step.id, stepName(step));
-  for (const output of outputRefs(ctx.earlier)) out.set(output.ref, output.label);
+  for (const step of ctx.earlier) out.set(step.id, formulaName(step));
+  for (const output of outputRefs(ctx.earlier, formulaName)) out.set(output.ref, output.label);
   return out;
 }
 

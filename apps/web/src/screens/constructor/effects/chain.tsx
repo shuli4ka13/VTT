@@ -166,7 +166,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
           if (amountAt < 0) {
             const taken = steps.map(step => step.id).filter(Boolean) as string[];
             steps.splice(applyAt, 0, {
-              id: freeId(taken, 'n'), type: 'roll',
+              id: freeId(taken, 'число'), type: 'roll',
             } as never);
             amountAt = applyAt;
           }

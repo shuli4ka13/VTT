@@ -28,6 +28,11 @@ const fieldOfTarget = (ref: unknown): string | undefined => {
   return found?.[1];
 };
 
+const named = (title: string, id: unknown): string => {
+  const name = typeof id === 'string' ? id.replace(/_/g, ' ') : '';
+  return name && name.replace(/ \d+$/, '') !== title.toLowerCase() ? `${title} «${name}»` : title;
+};
+
 export function titleOf(kind: string, step: Step | undefined, system: System, effect?: Effect): string {
   const s = step as Record<string, unknown> | undefined;
   const param = (ref: unknown) => { const key = inputOf(ref); return key ? effect?.params?.find(p => p.key === key) : undefined; };
@@ -47,7 +52,8 @@ export function titleOf(kind: string, step: Step | undefined, system: System, ef
     const tag = fieldOfTarget(s.target);
     return tag ? `${STEP_TITLES.set} «${labelOfTag(system, tag)}»` : STEP_TITLES.set;
   }
-  if (kind === 'number') return s?.by ? STEP_TITLES.roll : STEP_TITLES.number;
+  if (kind === 'number') return named(s?.by ? STEP_TITLES.roll : STEP_TITLES.number, s?.id);
+  if (kind === 'table') return named(CARD_TITLES[kind] ?? kind, s?.id);
   if (kind === "seen" && typeof s?.type === "string" && s.type in STEP_WORDS) return STEP_WORDS[s.type as keyof typeof STEP_WORDS].label;
   return CARD_TITLES[kind] ?? kind;
 }
