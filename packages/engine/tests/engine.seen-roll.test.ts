@@ -27,7 +27,7 @@ group('увидев кости: выпавшее остаётся', () => {
 
   test('прибавить число — итог растёт, натуральная кость нет', () => {
     const die = queue(12);
-    const seen = seeRoll(rollLead(d20, die), { kind: 'plus', value: 4 }, die);
+    const seen = seeRoll(rollLead(d20, die), { kind: 'plus', addend: { label: 'Вдохновение', value: 4, dice: [] } }, die);
     eq(seen.total, 16);
     deepEq(seen.raw, [12]);
   });
@@ -39,7 +39,7 @@ group('увидев кости: по ревью', () => {
 
   test('прибавка не делает натуральную кость натуральной двадцаткой', () => {
     const die = queue(17);
-    const seen = seeRoll(rollLead(d20, die), { kind: 'plus', value: 3 }, die);
+    const seen = seeRoll(rollLead(d20, die), { kind: 'plus', addend: { label: 'Вдохновение', value: 3, dice: [] } }, die);
     eq(seen.total, 20);
     eq(seen.natural, 17);
   });
@@ -87,23 +87,5 @@ group('увидев кости: докинуть и оставить — сре�
     const two = { label: '2к6', kind: 'die', dice: [{ count: 2, sides: 6 }] } as DieConstant;
     const seen = seeRoll(rollLead(two, die), { kind: 'add', count: 1, keep: 'best' }, die);
     eq(seen.total, 11);
-  });
-});
-
-group('бросок: по ревью', () => {
-  const bless = { label: 'Благословение', ops: [{ op: 'bonusDie', sides: 4 }] } as never;
-  const bane = { label: 'Порча', ops: [{ op: 'bonusDie', sides: 4, minus: true }] } as never;
-  const reliable = { label: 'Надёжный талант', ops: [{ op: 'floorDie', least: 10 }] } as never;
-
-  test('«не меньше 10» не трогает кость сверх', () => {
-    const r = rollLead(d20, queue(4, 3), [reliable, bless]);
-    deepEq(r.rolls, [10, 3]);
-    eq(r.total, 13);
-  });
-
-  test('переброс единиц не трогает штрафную кость', () => {
-    const lucky = { label: 'Везучий', ops: [{ op: 'reroll', n: 1 }] } as never;
-    const r = rollLead(d20, queue(15, 3), [lucky, bane]);
-    eq(r.total, 12);
   });
 });

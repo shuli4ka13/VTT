@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { SAMPLE_WORLDS } from '../src/model/systems.ts';
 import { flattenSystem } from '../src/model/inherit.ts';
-import { parse, start, result, see, keep, times } from '../src/core/dice.ts';
+import { parse, start, result, see, keep, times, addTo } from '../src/core/dice.ts';
 import type { SeenOp } from '../src/core/dice.ts';
 import type { DieConstant, RollEdit } from '../src/model/types.ts';
 
@@ -47,7 +47,7 @@ describe('набор костей: свойства на костях и пра�
         const note = `${system}/${key} зерно ${seed} правки ${edits.map(e => e.label).join(',')}`;
         expect(result(again), note).toEqual(result(first));
         const now = result(first);
-        if (!first.dice.some(d => d.minus) && first.plus === 0) expect(now.natural, note).toBeLessThanOrEqual(now.total);
+        if (!first.dice.some(d => d.minus) && !first.addends.length) expect(now.natural, note).toBeLessThanOrEqual(now.total);
         const op: SeenOp = random() < 0.5 ? { kind: 'reroll', upTo: 2 } : { kind: 'add', count: 1, keep: 'best' };
         const more = tape(random);
         expect(result(see(first, op, replay(more.values.length ? more.values : [1, 1, 1]))), note).toBeDefined();
@@ -59,7 +59,6 @@ describe('набор костей: свойства на костях и пра�
 describe('счёт максимумов и единиц — по оставленным главным костям', () => {
   const d20: DieConstant = { kind: 'die', label: 'к20', dice: [{ count: 1, sides: 20 }] };
   const worst: RollEdit = { label: 'помеха', ops: [{ op: 'addDie', count: 1 }, { op: 'keepWorst', n: 1 }] };
-  const bless: RollEdit = { label: 'благословение', ops: [{ op: 'bonusDie', sides: 4 }] };
 
   it('помеха: выпало 20 и 3, оставлена 3 — максимума нет', () => {
     const roll = result(start(parse(d20), [worst], replay([20, 3])));
@@ -67,8 +66,9 @@ describe('счёт максимумов и единиц — по оставле�
     expect(roll.atMax).toBe(0);
   });
 
-  it('кость сверх на максимуме — не максимум ведущей кости', () => {
-    const roll = result(start(parse(d20), [bless], replay([7, 4])));
+  it('кость прибавки на максимуме — не максимум ведущей кости', () => {
+    const die = replay([7, 4]);
+    const roll = result(addTo(start(parse(d20), [], die), [{ label: 'благословение', value: one => one(4) }], die));
     expect(roll.total).toBe(11);
     expect(roll.natural).toBe(7);
     expect(roll.atMax).toBe(0);

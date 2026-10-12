@@ -12,6 +12,7 @@ import { fieldOf, misfit } from '../model/sheet-columns.ts';
 import { DESK_ID, isDesk } from '../engine/owners.ts';
 import { External, Pause, emptyJournal } from './external.ts';
 import { Path } from './path.ts';
+import { addendsText } from './dice.ts';
 import { Run } from './run.ts';
 import { runAct } from './act.ts';
 import { render } from './render.ts';
@@ -134,7 +135,7 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     run.state.write({
       text: thrown.roll.claim.read.kind === 'count'
         ? `${sheet.name} бросает «${check.label}»: ${shown}${named} — успехов: ${total}`
-        : `${sheet.name} бросает «${check.label}»: ${shown}${named} + ${bonus} = ${total}`,
+        : `${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} + ${bonus} = ${total}`,
     }, ...entries);
     return true;
   },

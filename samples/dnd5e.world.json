@@ -408,8 +408,9 @@
           {
             "key": "superiority_die",
             "label": "Кость превосходства",
-            "kind": "text",
-            "default": "1к8"
+            "expr": {
+              "expr": "@level.superiority_die"
+            }
           },
           {
             "key": "gp",
@@ -817,6 +818,16 @@
             "key": "rage_damage",
             "label": "Урон ярости",
             "kind": "number"
+          },
+          {
+            "key": "bardic_die",
+            "label": "Кость вдохновения",
+            "kind": "dice"
+          },
+          {
+            "key": "superiority_die",
+            "label": "Кость превосходства",
+            "kind": "dice"
           }
         ],
         "rows": [
@@ -825,7 +836,9 @@
             "cells": {
               "prof": 2,
               "cantrips": 1,
-              "rage_damage": 2
+              "rage_damage": 2,
+              "bardic_die": "1к6",
+              "superiority_die": "1к8"
             }
           },
           {
@@ -833,7 +846,9 @@
             "cells": {
               "prof": 2,
               "cantrips": 1,
-              "rage_damage": 2
+              "rage_damage": 2,
+              "bardic_die": "1к6",
+              "superiority_die": "1к8"
             }
           },
           {
@@ -841,7 +856,9 @@
             "cells": {
               "prof": 2,
               "cantrips": 1,
-              "rage_damage": 2
+              "rage_damage": 2,
+              "bardic_die": "1к6",
+              "superiority_die": "1к8"
             }
           },
           {
@@ -849,7 +866,9 @@
             "cells": {
               "prof": 2,
               "cantrips": 1,
-              "rage_damage": 2
+              "rage_damage": 2,
+              "bardic_die": "1к6",
+              "superiority_die": "1к8"
             }
           },
           {
@@ -857,7 +876,9 @@
             "cells": {
               "prof": 3,
               "cantrips": 2,
-              "rage_damage": 2
+              "rage_damage": 2,
+              "bardic_die": "1к8",
+              "superiority_die": "1к8"
             }
           },
           {
@@ -865,7 +886,9 @@
             "cells": {
               "prof": 3,
               "cantrips": 2,
-              "rage_damage": 2
+              "rage_damage": 2,
+              "bardic_die": "1к8",
+              "superiority_die": "1к8"
             }
           },
           {
@@ -873,7 +896,9 @@
             "cells": {
               "prof": 3,
               "cantrips": 2,
-              "rage_damage": 2
+              "rage_damage": 2,
+              "bardic_die": "1к8",
+              "superiority_die": "1к8"
             }
           },
           {
@@ -881,7 +906,9 @@
             "cells": {
               "prof": 3,
               "cantrips": 2,
-              "rage_damage": 2
+              "rage_damage": 2,
+              "bardic_die": "1к8",
+              "superiority_die": "1к8"
             }
           },
           {
@@ -889,7 +916,9 @@
             "cells": {
               "prof": 4,
               "cantrips": 2,
-              "rage_damage": 3
+              "rage_damage": 3,
+              "bardic_die": "1к8",
+              "superiority_die": "1к8"
             }
           },
           {
@@ -897,7 +926,9 @@
             "cells": {
               "prof": 4,
               "cantrips": 2,
-              "rage_damage": 3
+              "rage_damage": 3,
+              "bardic_die": "1к10",
+              "superiority_die": "1к10"
             }
           },
           {
@@ -905,7 +936,9 @@
             "cells": {
               "prof": 4,
               "cantrips": 3,
-              "rage_damage": 3
+              "rage_damage": 3,
+              "bardic_die": "1к10",
+              "superiority_die": "1к10"
             }
           },
           {
@@ -913,7 +946,9 @@
             "cells": {
               "prof": 4,
               "cantrips": 3,
-              "rage_damage": 3
+              "rage_damage": 3,
+              "bardic_die": "1к10",
+              "superiority_die": "1к10"
             }
           },
           {
@@ -921,7 +956,9 @@
             "cells": {
               "prof": 5,
               "cantrips": 3,
-              "rage_damage": 3
+              "rage_damage": 3,
+              "bardic_die": "1к10",
+              "superiority_die": "1к10"
             }
           },
           {
@@ -929,7 +966,9 @@
             "cells": {
               "prof": 5,
               "cantrips": 3,
-              "rage_damage": 3
+              "rage_damage": 3,
+              "bardic_die": "1к10",
+              "superiority_die": "1к10"
             }
           },
           {
@@ -937,7 +976,9 @@
             "cells": {
               "prof": 5,
               "cantrips": 3,
-              "rage_damage": 3
+              "rage_damage": 3,
+              "bardic_die": "1к12",
+              "superiority_die": "1к10"
             }
           },
           {
@@ -945,7 +986,9 @@
             "cells": {
               "prof": 5,
               "cantrips": 3,
-              "rage_damage": 4
+              "rage_damage": 4,
+              "bardic_die": "1к12",
+              "superiority_die": "1к10"
             }
           },
           {
@@ -953,7 +996,9 @@
             "cells": {
               "prof": 6,
               "cantrips": 4,
-              "rage_damage": 4
+              "rage_damage": 4,
+              "bardic_die": "1к12",
+              "superiority_die": "1к10"
             }
           },
           {
@@ -961,7 +1006,9 @@
             "cells": {
               "prof": 6,
               "cantrips": 4,
-              "rage_damage": 4
+              "rage_damage": 4,
+              "bardic_die": "1к12",
+              "superiority_die": "1к12"
             }
           },
           {
@@ -969,7 +1016,9 @@
             "cells": {
               "prof": 6,
               "cantrips": 4,
-              "rage_damage": 4
+              "rage_damage": 4,
+              "bardic_die": "1к12",
+              "superiority_die": "1к12"
             }
           },
           {
@@ -977,7 +1026,9 @@
             "cells": {
               "prof": 6,
               "cantrips": 4,
-              "rage_damage": 4
+              "rage_damage": 4,
+              "bardic_die": "1к12",
+              "superiority_die": "1к12"
             }
           }
         ]
@@ -2462,6 +2513,34 @@
           }
         ]
       },
+      "cantrip_buff": {
+        "label": "Заговор: усиление",
+        "icon": "✨",
+        "hint": "Указание, сопротивление: вешает эффект на цель, ячейка не тратится.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [
+          {
+            "key": "status",
+            "label": "Состояние",
+            "kind": "effect"
+          },
+          {
+            "key": "holds",
+            "label": "Держится концентрацией",
+            "kind": "boolean",
+            "onSheet": false,
+            "default": false
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "cantrip_buff"
+          }
+        ]
+      },
       "spell_attack": {
         "label": "Заклинание с броском атаки",
         "icon": "🔮",
@@ -2873,52 +2952,6 @@
           }
         ],
         "canceledBy": "advantage"
-      },
-      "bless": {
-        "label": "Благословение: +1к4",
-        "ops": [
-          {
-            "op": "bonusDie",
-            "sides": 4
-          }
-        ]
-      },
-      "bane": {
-        "label": "Порча: −1к4",
-        "ops": [
-          {
-            "op": "bonusDie",
-            "sides": 4,
-            "minus": true
-          }
-        ]
-      },
-      "guidance": {
-        "label": "Указание: +1к4",
-        "ops": [
-          {
-            "op": "bonusDie",
-            "sides": 4
-          }
-        ]
-      },
-      "bardic": {
-        "label": "Бардовское вдохновение: +1к6",
-        "ops": [
-          {
-            "op": "bonusDie",
-            "sides": 6
-          }
-        ]
-      },
-      "precision": {
-        "label": "Точная атака: +1к8",
-        "ops": [
-          {
-            "op": "bonusDie",
-            "sides": 8
-          }
-        ]
       },
       "lucky": {
         "label": "Везучий: перебросить единицу",
@@ -3373,6 +3406,73 @@
             "effect": "cost_action"
           }
         ]
+      },
+      "cantrip_buff": {
+        "label": "Заговор: усиление",
+        "group": "Заклинания",
+        "description": "Действием вешает на цели эффект, ячейка не тратится. Держится концентрацией — если отмечено.",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
+          },
+          {
+            "key": "status",
+            "label": "Состояние",
+            "kind": "effect",
+            "optional": true
+          },
+          {
+            "key": "holds",
+            "label": "Держится концентрацией",
+            "kind": "boolean",
+            "default": false
+          }
+        ],
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели"
+          },
+          {
+            "type": "status",
+            "effect": {
+              "expr": "@status"
+            },
+            "to": {
+              "expr": "@цель"
+            },
+            "args": {
+              "наложил": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "effect": "cost_action"
+          }
+        ],
+        "bond": {
+          "effect": "concentration",
+          "by": "действующий",
+          "if": {
+            "expr": "@holds"
+          }
+        }
       },
       "spell_auto": {
         "label": "Заклинание: урон без броска",
@@ -3980,7 +4080,7 @@
       "bardic_inspiration": {
         "label": "Бардовское вдохновение",
         "group": "Умения класса",
-        "description": "Бонусным действием даёшь союзнику кость: увидев свой бросок, он может прибавить её один раз.",
+        "description": "Бонусным действием даёшь одному союзнику, не себе, кость вдохновения: увидев свой бросок, он может прибавить её один раз. Кость растёт с уровнем барда; «Источник вдохновения» (возврат на коротком отдыхе с 5-го уровня) образец не ведёт.",
         "params": [
           {
             "key": "действующий",
@@ -4000,6 +4100,21 @@
         ],
         "steps": [
           {
+            "type": "branch",
+            "if": {
+              "expr": "любое(сколько(@цели) != 1, есть(@цели, @действующий))"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"вдохновение даётся одному союзнику, не себе\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
             "type": "each",
             "of": "цели"
           },
@@ -4008,6 +4123,11 @@
             "effect": "bardic_ready",
             "to": {
               "expr": "@цель"
+            },
+            "args": {
+              "кость": {
+                "expr": "@действующий.level.bardic_die"
+              }
             }
           }
         ],
@@ -5448,12 +5568,20 @@
       "bardic_ready": {
         "label": "Кость вдохновения наготове",
         "group": "Реакции",
-        "description": "Увидел свой бросок — прибавляешь кость вдохновения к6 (рост кости с уровнем барда образец не ведёт). Один раз.",
+        "description": "Один раз: увидев свой бросок, прибавляешь кость вдохновения — к6, с 5-го уровня барда к8, с 10-го к10, с 15-го к12. Срок 10 минут образец не ведёт.",
         "activation": "passive",
         "duration": {
           "kind": "uses",
           "max": 1
         },
+        "params": [
+          {
+            "key": "кость",
+            "label": "Кость вдохновения",
+            "kind": "dice",
+            "default": "1к6"
+          }
+        ],
         "on": [
           {
             "on": "seen",
@@ -5465,7 +5593,56 @@
               {
                 "type": "roll-plus",
                 "value": {
-                  "expr": "кинуть('1к6')"
+                  "expr": "кинуть(@кость)"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "precision_attack": {
+        "label": "Точная атака",
+        "group": "Реакции",
+        "description": "Приём мастера боевых искусств (Книга игрока, не SRD): увидев свой бросок атаки, тратишь кость превосходства и прибавляешь её к броску. Образец не отличает атаку оружием от атаки заклинанием и не ведёт число костей по уровню.",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "on": [
+          {
+            "on": "seen",
+            "if": {
+              "expr": "все(@бросающий == @носитель, есть(@roll.tags, \"атака\"))"
+            },
+            "confirm": true,
+            "cost": [
+              {
+                "type": "emit",
+                "effect": "spend",
+                "args": {
+                  "what": {
+                    "expr": "@носитель.resources.superiority.left"
+                  },
+                  "amount": {
+                    "expr": "1"
+                  },
+                  "note": {
+                    "expr": "\"кости превосходства кончились\""
+                  },
+                  "лист": {
+                    "expr": "@носитель"
+                  },
+                  "источник": {
+                    "expr": "@носитель"
+                  }
+                }
+              }
+            ],
+            "steps": [
+              {
+                "type": "roll-plus",
+                "value": {
+                  "expr": "кинуть(@носитель.superiority_die)"
                 }
               }
             ]
@@ -6286,7 +6463,7 @@
       "blessed": {
         "label": "Благословлён",
         "group": "Состояния",
-        "description": "+1к4 к броскам атаки и спасброскам. Кость сверх: преимущество её не отбрасывает.",
+        "description": "+к4 к броскам атаки и спасброскам: кость прибавляется к итогу, преимущество её не отбрасывает.",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -6298,8 +6475,11 @@
             ],
             "kind": "edit",
             "call": "roll",
-            "param": "edits",
-            "edit": "bless",
+            "param": "bonus",
+            "op": "add",
+            "value": {
+              "expr": "кинуть(к4)"
+            },
             "if": {
               "expr": "@бросающий == @носитель"
             }
@@ -6310,8 +6490,11 @@
             ],
             "kind": "edit",
             "call": "roll",
-            "param": "edits",
-            "edit": "bless",
+            "param": "bonus",
+            "op": "add",
+            "value": {
+              "expr": "кинуть(к4)"
+            },
             "if": {
               "expr": "@бросающий == @носитель"
             }
@@ -6322,7 +6505,7 @@
       "baned": {
         "label": "Под порчей",
         "group": "Состояния",
-        "description": "−1к4 к броскам атаки и спасброскам.",
+        "description": "−к4 к броскам атаки и спасброскам: кость вычитается из итога.",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -6334,8 +6517,11 @@
             ],
             "kind": "edit",
             "call": "roll",
-            "param": "edits",
-            "edit": "bane",
+            "param": "bonus",
+            "op": "add",
+            "value": {
+              "expr": "-кинуть(к4)"
+            },
             "if": {
               "expr": "@бросающий == @носитель"
             }
@@ -6346,8 +6532,11 @@
             ],
             "kind": "edit",
             "call": "roll",
-            "param": "edits",
-            "edit": "bane",
+            "param": "bonus",
+            "op": "add",
+            "value": {
+              "expr": "-кинуть(к4)"
+            },
             "if": {
               "expr": "@бросающий == @носитель"
             }
@@ -6358,23 +6547,27 @@
       "guided": {
         "label": "Указание",
         "group": "Состояния",
-        "description": "+1к4 к одной проверке характеристики.",
+        "description": "Один раз: увидев свою проверку характеристики, прибавляешь к4. Заговор на этом оканчивается — концентрация заклинателя спадает.",
         "activation": "passive",
         "duration": {
-          "kind": "permanent"
+          "kind": "uses",
+          "max": 1
         },
-        "modifiers": [
+        "on": [
           {
-            "tags": [
-              "проверка"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "guidance",
+            "on": "seen",
             "if": {
-              "expr": "@бросающий == @носитель"
-            }
+              "expr": "все(@бросающий == @носитель, есть(@roll.tags, \"проверка\"))"
+            },
+            "confirm": true,
+            "steps": [
+              {
+                "type": "roll-plus",
+                "value": {
+                  "expr": "кинуть(к4)"
+                }
+              }
+            ]
           }
         ],
         "reapply": "refresh"
@@ -6382,23 +6575,27 @@
       "resisted": {
         "label": "Сопротивление",
         "group": "Состояния",
-        "description": "+1к4 к одному спасброску.",
+        "description": "Один раз: увидев свой спасбросок, прибавляешь к4. Заговор на этом оканчивается — концентрация заклинателя спадает.",
         "activation": "passive",
         "duration": {
-          "kind": "permanent"
+          "kind": "uses",
+          "max": 1
         },
-        "modifiers": [
+        "on": [
           {
-            "tags": [
-              "спасбросок"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "guidance",
+            "on": "seen",
             "if": {
-              "expr": "@бросающий == @носитель"
-            }
+              "expr": "все(@бросающий == @носитель, есть(@roll.tags, \"спасбросок\"))"
+            },
+            "confirm": true,
+            "steps": [
+              {
+                "type": "roll-plus",
+                "value": {
+                  "expr": "кинуть(к4)"
+                }
+              }
+            ]
           }
         ],
         "reapply": "refresh"
@@ -8874,12 +9071,7 @@
             "columns": [
               "rage_damage",
               "superiority_die"
-            ],
-            "views": {
-              "superiority_die": {
-                "kind": "die"
-              }
-            }
+            ]
           },
           {
             "table": "resources",
@@ -10105,12 +10297,11 @@
       {
         "id": "guidance_cantrip",
         "label": "Указание",
-        "description": "Заговор. Цель прибавляет 1к4 к одной проверке характеристики.",
-        "table": "spell_buff",
+        "description": "Заговор, концентрация. Цель один раз прибавляет к4 к проверке характеристики — увидев бросок.",
+        "table": "cantrip_buff",
         "cells": {
-          "spell_level": 0,
           "status": "guided",
-          "holds": false
+          "holds": true
         }
       },
       {
@@ -10355,12 +10546,14 @@
       {
         "id": "bane_spell",
         "label": "Порча",
-        "description": "До трёх целей вычитают 1к4 из атак и спасбросков, пока держишь концентрацию.",
-        "table": "spell_buff",
+        "description": "До трёх целей спасаются Харизмой; провалившие вычитают к4 из атак и спасбросков, пока держишь концентрацию.",
+        "table": "spell_save",
         "cells": {
           "spell_level": 1,
+          "save_by": "харизма",
           "status": "baned",
-          "holds": true
+          "holds": true,
+          "half": false
         }
       },
       {
@@ -10432,12 +10625,11 @@
       {
         "id": "resistance_spell",
         "label": "Сопротивление",
-        "description": "Цель прибавляет 1к4 к одному спасброску.",
-        "table": "spell_buff",
+        "description": "Заговор, концентрация. Цель один раз прибавляет к4 к спасброску — увидев бросок.",
+        "table": "cantrip_buff",
         "cells": {
-          "spell_level": 0,
           "status": "resisted",
-          "holds": false
+          "holds": true
         }
       },
       {
@@ -10956,6 +11148,18 @@
         "table": "trait",
         "cells": {
           "source": "Черта"
+        }
+      },
+      {
+        "id": "trait_precision",
+        "label": "Приём: точная атака",
+        "description": "Мастер боевых искусств: увидев свой бросок атаки, тратишь кость превосходства и прибавляешь её к броску.",
+        "grants": [
+          "precision_attack"
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Воин, мастер боевых искусств, 3 уровень (Книга игрока)"
         }
       },
       {

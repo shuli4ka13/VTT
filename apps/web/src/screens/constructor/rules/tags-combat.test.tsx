@@ -40,9 +40,9 @@ describe('правила: метки и бой', () => {
 describe('правки броска: числа операций — поля', () => {
   afterEach(cleanup);
 
-  it('у «кости сверх» правятся грани, у «не меньше» — порог', async () => {
+  it('у ступени кости правится шаг, у «не меньше» — порог', async () => {
     const { numberKeyOf } = await import('./roll-edits-section.tsx');
-    expect(numberKeyOf({ op: 'bonusDie', sides: 4 })).toBe('sides');
+    expect(numberKeyOf({ op: 'dieStep', by: 1 })).toBe('by');
     expect(numberKeyOf({ op: 'floorDie', least: 10 })).toBe('least');
     expect(numberKeyOf({ op: 'keepBest', n: 1 })).toBe('n');
   });

@@ -1,10 +1,11 @@
 import { EngineError } from '../errors.ts';
 import { dieConstant } from '../lead-die.ts';
-import { parse, withCount } from '../../core/dice.ts';
+import { parse, withCount, addendsText } from '../../core/dice.ts';
 import type { RollResult, Spec } from '../../core/dice.ts';
 import type { Die } from '../../model/types.ts';
 import type { StepData, StepContext } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
+import { DICE_TEXT } from '../../words/glossary.ts';
 
 export const type = 'roll';
 const words: StepWords = STEP_WORDS.roll;
@@ -18,15 +19,13 @@ export const icon = '⚄';
 
 const who = (ctx: StepContext): string => ctx.owner || 'правило';
 
-const LITERAL = /^(\d+)?\s*[dдк]\s*(\d+)$/iu;
-
 export function specOf(ctx: StepContext, die: unknown, count: unknown, roller: string | null = null): Spec {
   let spec: Spec;
   if (typeof die === 'string' && die) {
     spec = parse(dieConstant(ctx.system, die), (ref, what) => (roller ? ctx.numberOn(roller, ref, what) : ctx.number(ref, what)));
   } else if (die && typeof die === 'object' && 'expr' in (die as object)) {
     const text = String(ctx.value(die) ?? '');
-    if (!LITERAL.test(text.trim())) throw new EngineError(`«${text}» — не запись кости; жду вроде «1к20» или «2к6»`);
+    if (!DICE_TEXT.test(text.trim())) throw new EngineError(`«${text}» — не запись кости; жду вроде «1к20» или «2к6»`);
     spec = parse(text);
   } else {
     throw new EngineError(`${who(ctx)}: броску нужна кость — константа системы или запись вроде «1к20»`);
@@ -62,7 +61,7 @@ export function finish(step: StepData, ctx: StepContext) {
   const thrown = step.die !== undefined && step.die !== null ? ctx.roll(specOf(ctx, step.die, step.count, by), tags, by, against) : null;
   const formula: { sides: number; value: number }[] = [];
   const fixed = step.fixed !== undefined && step.fixed !== null ? ctx.using(watched(ctx, formula)).optional(step.fixed, 'формула броска') ?? 0 : 0;
-  const bonus = (ctx.optional(step.bonus, 'прибавка броска') ?? 0) + (thrown?.bonus ?? 0);
+  const bonus = ctx.optional(step.bonus, 'прибавка броска') ?? 0;
   const base: RollResult = thrown ? thrown.result : {
     total: 0, natural: formula.reduce((sum, one) => sum + one.value, 0), rolled: formula.length,
     atMax: formula.filter(one => one.value === one.sides).length, atMin: formula.filter(one => one.value === 1).length,
@@ -83,6 +82,7 @@ export function finish(step: StepData, ctx: StepContext) {
       ...(tags.length ? { tags } : {}),
       ...(thrown && thrown.roll.claim.read.kind !== 'sum' ? { read: thrown.roll.claim.read.kind } : {}),
       ...(thrown?.roll.edits.length ? { edits: thrown.roll.edits } : {}),
+      ...(thrown?.roll.addends.length ? { adds: thrown.roll.addends } : {}),
       ...(Object.keys(roll.parts).length ? { parts: roll.parts } : {}),
     },
     break: null,
@@ -96,7 +96,9 @@ export function lint(step: StepData) {
 
 export function traceLine(t: any) {
   const name = t.tags?.length ? ` «${t.tags.join(', ')}»` : '';
-  const dice = t.read === 'count' ? `[${t.rolls.join(', ')}] → успехов ${t.total - t.bonus}`
+  const adds: { label: string; value: number }[] = t.adds ?? [];
+  const added = adds.reduce((sum, one) => sum + one.value, 0);
+  const dice = t.read === 'count' ? `[${t.rolls.join(', ')}] → успехов ${t.total - t.bonus - added}`
     : t.kept != null && t.rolls.length > 1 ? `[${t.rolls.join(', ')}] → ${t.kept}`
       : t.rolls.length ? `[${t.rolls.join(', ')}]` : '';
   const parts = t.parts && Object.keys(t.parts).length ? ' · ' + Object.entries(t.parts).map(([k, v]) => `${k}: ${v}`).join(', ') : '';
@@ -104,7 +106,7 @@ export function traceLine(t: any) {
   const plain = Array.isArray(t.rolls) && t.rolls.reduce((sum: number, v: number) => sum + v, 0) === t.fixed;
   const fixed = t.fixed !== undefined && t.fixed !== 0 && !plain ? String(t.fixed) : '';
   const sum = [fixed && dice ? `${dice} → ${fixed}` : dice || fixed, t.bonus ? String(t.bonus) : ''].filter(Boolean).join(' + ').replace(/\+ -/g, '− ') || '0';
-  return `${t.by ? 'бросок' : 'расчёт'}${name}: ${sum}${edits} = ${t.total}${parts}`;
+  return `${t.by ? 'бросок' : 'расчёт'}${name}: ${sum}${edits}${addendsText(adds)} = ${t.total}${parts}`;
 }
 
 

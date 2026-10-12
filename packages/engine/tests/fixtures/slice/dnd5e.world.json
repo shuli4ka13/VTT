@@ -2109,8 +2109,11 @@
           {
             "kind": "edit",
             "call": "roll",
-            "param": "edits",
-            "edit": "bless",
+            "param": "bonus",
+            "op": "add",
+            "value": {
+              "expr": "кинуть(к4)"
+            },
             "if": {
               "expr": "@бросающий == @носитель"
             }
@@ -2904,15 +2907,6 @@
           }
         ],
         "canceledBy": "disadvantage"
-      },
-      "bless": {
-        "label": "Благословение",
-        "ops": [
-          {
-            "op": "bonusDie",
-            "sides": 4
-          }
-        ]
       }
     },
     "initiative": {

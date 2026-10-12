@@ -93,3 +93,27 @@ group('лексер', () => {
     throws(() => lex('!1'), FormulaSyntaxError);
   });
 });
+
+group('лексер: запись кости без кавычек', () => {
+  test('кость — текст с признаком кости, счёт по умолчанию 1', () => {
+    deepEq(shape('к4'), ['text:1к4']);
+    deepEq(shape('1к4'), ['text:1к4']);
+    deepEq(shape('2к6'), ['text:2к6']);
+    deepEq(shape('д6'), ['text:1к6']);
+    eq(lex('2к6')[0].dice, true);
+    eq(lex('2к6')[0].text, '2к6');
+  });
+
+  test('кость внутри «кинуть»', () => {
+    deepEq(shape('кинуть(к4) + 1'), ['ident:кинуть', 'lparen:(', 'text:1к4', 'rparen:)', 'op:+', 'number:1']);
+  });
+
+  test('не кость: буква или точка после цифр, дробный счёт, ссылка, кавычки, «да»', () => {
+    deepEq(shape('к6к'), ['ident:к6к']);
+    deepEq(shape('к4.5'), ['ident:к4.5']);
+    deepEq(shape('1.5'), ['number:1.5']);
+    deepEq(shape('@к4'), ['ref:к4']);
+    eq(lex('"1к4"')[0].dice, undefined);
+    deepEq(shape('да'), ['ident:да']);
+  });
+});

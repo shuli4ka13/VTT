@@ -14,7 +14,7 @@ const quote = (value: string): string => (value.includes('"') ? `'${value}'` : `
 export function printFormula(node: Node): string {
   switch (node.kind) {
     case 'Number': return String(node.value);
-    case 'Text': return quote(node.value);
+    case 'Text': return node.dice ? node.raw ?? node.value : quote(node.value);
     case 'Bool': return node.value ? 'да' : 'нет';
     case 'Ref': return `@${node.tag}`;
     case 'Pick': return `@${node.tag}.[${printFormula(node.key)}]${node.rest ? `.${node.rest}` : ''}`;

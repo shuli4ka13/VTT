@@ -1,6 +1,6 @@
 import { rollEdits } from './edits.ts';
 import type { Held } from './edits.ts';
-import { parse, times, start, keep, result } from './dice.ts';
+import { parse, times, start, keep, result, addTo } from './dice.ts';
 import type { Roll, RollResult, Spec } from './dice.ts';
 import type { Pass } from '../engine/calc.ts';
 import type { Tools } from '../formula/index.ts';
@@ -19,14 +19,13 @@ export interface Throw {
 export interface Thrown {
   roll: Roll;
   result: RollResult;
-  bonus: number;
 }
 
 export function throwDice(t: Throw): Thrown {
-  const { edits, bonus } = rollEdits(t.held, t.claims, t.roller, t.tags);
-  const thrown = start(t.spec, edits, t.die, t.tags);
+  const { edits, addends } = rollEdits(t.held, t.claims, t.roller);
+  const thrown = addTo(start(t.spec, edits, t.die, t.tags), addends, t.die);
   const roll = t.seen ? t.seen(thrown) : thrown;
-  return { roll, result: result(roll), bonus };
+  return { roll, result: result(roll) };
 }
 
 export function diceTools(die?: Die): Pick<Tools, 'roll' | 'peak'> {

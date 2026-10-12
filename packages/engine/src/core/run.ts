@@ -26,7 +26,7 @@ import { limitsOf, CUT_WORDS, PROBES_WORDS } from './limits.ts';
 import { gather, stack, rollHeld } from './edits.ts';
 import type { Holder } from './edits.ts';
 import { throwDice } from './roll.ts';
-import { result, parse, withCount, start } from './dice.ts';
+import { result, parse, withCount, start, addendsText } from './dice.ts';
 import { dieConstant } from '../engine/lead-die.ts';
 import type { Check } from '../engine/check.ts';
 import { subsOf, same, instOf, keysOf } from './subs.ts';
@@ -393,6 +393,7 @@ export class Run {
     const ctx = {
       system: this.system,
       owner: frame.owner,
+      label: frame.label,
       die,
       value: refValue => resolveRef(refValue, ref),
       prop: name => (frame.props && name in frame.props ? resolveRef({ expr: `@${name}` }, { ...ref, recordScope: true }) : undefined),
@@ -546,7 +547,7 @@ export class Run {
     const die = this.ext.dice(path);
     if (!by) {
       const roll = start(spec, [], die, tags);
-      return { roll, result: result(roll), bonus: 0 };
+      return { roll, result: result(roll) };
     }
     const opponent = against && against !== by && this.sheet(against) ? against : null;
     return throwDice({
@@ -964,17 +965,28 @@ export class Run {
     if (!sheet) return;
     const counts = new Map<string, number>();
     const effects: WornEffect[] = [];
+    let spent: WornEffect['bond'];
     for (const entry of sheet.effects ?? []) {
       const nth = counts.get(entry.effectId) ?? 0;
       counts.set(entry.effectId, nth + 1);
       if (entry.effectId !== sub.effectId || this.instOf(entry, false, nth) !== sub.inst) { effects.push(entry); continue; }
       const left = Number(entry.usesLeft ?? 1) - 1;
-      if (left <= 0) continue;
+      if (left <= 0) { spent = entry.bond; continue; }
       const next = { ...entry, usesLeft: left };
       this.insts.set(next, sub.inst);
       effects.push(next);
     }
     this.state.put({ ...sheet, effects });
+    if (spent) this.letGo(spent);
+  }
+
+  private letGo(bond: NonNullable<WornEffect['bond']>): void {
+    const holder = this.sheet(bond.sheet);
+    if (!holder || !(holder.effects ?? []).some(entry => entry.effectId === bond.effect)) return;
+    const held = this.state.sheets.some(sheet => (sheet.effects ?? []).some(entry => entry.bond?.sheet === bond.sheet && entry.bond.effect === bond.effect));
+    if (held) return;
+    this.state.put({ ...holder, effects: (holder.effects ?? []).filter(entry => entry.effectId !== bond.effect) });
+    this.state.write({ text: `«${effectLabelOf(this.system, bond.effect)}» спало с ${holder.name}: держать больше нечего` });
   }
 
   moment(moment: MomentKey, subjects: readonly string[], path: Path): { sheetId: string; effectId: string }[] {
@@ -1149,7 +1161,7 @@ export class Run {
     const spec = parse(dieConstant(this.system, check.die), (ref, what) => ctx.number(ref, what));
     const sized = check.count === undefined || check.count === null ? spec : withCount(spec, ctx.number(check.count, `${owner} · сколько костей`), owner);
     const thrown = ctx.roll(sized, [...(check.tags ?? [])], sheetId, null);
-    const bonus = (check.bonus ? ctx.optional(check.bonus, `${owner} · прибавка`) ?? 0 : 0) + thrown.bonus;
+    const bonus = check.bonus ? ctx.optional(check.bonus, `${owner} · прибавка`) ?? 0 : 0;
     return { thrown, bonus, total: thrown.result.total + bonus, entries: sink.after };
   }
 
@@ -1253,7 +1265,7 @@ export class Run {
       const now = result(cell.value);
       return {
         roll: {
-          total: now.total, natural: now.natural, plus: cell.value.plus, rolls: now.dice.rolls, kept: now.dice.kept, parts: now.parts,
+          total: now.total, natural: now.natural, rolls: now.dice.rolls, kept: now.dice.kept, parts: now.parts,
           rolled: now.rolled, atMax: now.atMax, atMin: now.atMin, edited: now.edited, tags: [...tags],
         },
       };
@@ -1289,7 +1301,7 @@ export class Run {
         const now = result(cell.value);
         const question: Question = {
           key: qpath.key, sheetId, window: 'seen', label: '', offers: [...byKey.values()].map(one => one.offer), results: seed(),
-          preview: [`${tags.length ? `Бросок (${rollName([...tags])})` : 'Бросок'}: [${now.dice.rolls.join(', ')}] → ${now.total}`],
+          preview: [`${tags.length ? `Бросок (${rollName([...tags])})` : 'Бросок'}: [${now.dice.rolls.join(', ')}]${addendsText(cell.value.addends)} → ${now.total}`],
         };
         const { chosen, skipped } = this.choose(question);
         for (const id of chosen) {

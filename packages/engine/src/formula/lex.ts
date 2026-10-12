@@ -1,4 +1,5 @@
 import { FormulaSyntaxError } from './errors.ts';
+import { bareDiceAt, dice } from '../words/glossary.ts';
 
 export type TokenType =
   | 'number' | 'text' | 'ref' | 'ident' | 'op'
@@ -12,6 +13,7 @@ export interface Token {
 
   text: string;
   pos: number;
+  dice?: true;
 }
 
 const OPS_2 = ['==', '!=', '<=', '>='];
@@ -33,6 +35,8 @@ function phraseAt(src: string, at: number): string | null {
 }
 
 const isDigit = (ch: string) => ch >= '0' && ch <= '9';
+
+const isDieLetter = (ch: string) => /[dдк]/iu.test(ch);
 
 const isNameStart = (ch: string) => /[\p{L}_]/u.test(ch);
 const isNamePart = (ch: string) => /[\p{L}\p{N}_.]/u.test(ch);
@@ -56,6 +60,13 @@ export function lex(source: unknown): Token[] {
       const text = src.slice(from, i);
       i++;
       tokens.push({ type: 'text', value: text, text: src.slice(start, i), pos: start });
+      continue;
+    }
+
+    const die = isDigit(ch) || isDieLetter(ch) ? bareDiceAt(src, i) : null;
+    if (die) {
+      tokens.push({ type: 'text', value: dice(die.count, die.sides), text: src.slice(i, die.end), pos: i, dice: true });
+      i = die.end;
       continue;
     }
 

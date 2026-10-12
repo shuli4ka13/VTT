@@ -68,7 +68,7 @@ export function parse(source: unknown): Node {
 
     if (t.type === 'text') {
       advance();
-      return { kind: 'Text', value: String(t.value), at: t.pos, raw: t.text };
+      return { kind: 'Text', value: String(t.value), at: t.pos, raw: t.text, ...(t.dice ? { dice: true as const } : {}) };
     }
 
     if (t.type === 'ref') {

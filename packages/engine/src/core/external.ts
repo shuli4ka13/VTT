@@ -29,7 +29,7 @@ export class Pause {
   constructor(readonly question: Question) {}
 }
 
-const average = (sides: number): number => Math.ceil((sides + 1) / 2);
+export const average = (sides: number): number => Math.ceil((sides + 1) / 2);
 
 export interface Source {
   die: Die;

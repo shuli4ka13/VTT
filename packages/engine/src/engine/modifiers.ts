@@ -8,11 +8,13 @@ import { stackStages, targetStages, VALUE_OPS } from './stages.ts';
 import { anyRowSays } from './tables.ts';
 import { findRecord, kindOfRecord, sheetKindOf, propsOf } from '../model/owned.ts';
 import { tagsHold } from './roll-tags.ts';
-import type { System, Sheet, Compendium, Modifier, RollEdit, Param } from '../model/types.ts';
+import type { System, Sheet, Compendium, Modifier, RollEdit, RollEditOp, Param } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 import { withRecord } from '../model/sheet-columns.ts';
 import { toolsOf } from './refs.ts';
 import { rollHeld, rollEdits } from '../core/edits.ts';
+import { PLUS_OP } from '../core/dice.ts';
+import { average } from '../core/external.ts';
 
 export interface ModifierSource {
   type: 'item' | 'kind' | 'effect' | 'claim';
@@ -144,7 +146,8 @@ export function resolveRoll(
 ): RollResolution {
   const tags = [...new Set(rollTags.filter((t): t is string => Boolean(t)))];
   const held = rollHeld([{ id: pass.sheet.id, view: pass }], pass.sheet.id, null, tags);
-  const { edits, bonus } = rollEdits(held, [], pass, tags);
+  const { edits, addends } = rollEdits(held, [], pass);
+  const bonus = addends.reduce((sum, one) => sum + one.value(average), 0);
   return { tags, edits, bonus, sources: held.map(m => ({ ...m.source, edit: m.edit })) };
 }
 
@@ -152,13 +155,14 @@ const isFormula = (value: unknown): value is { expr: string } =>
   Boolean(value && typeof value === 'object' && 'expr' in (value as object));
 
 export function withValues(edit: RollEdit & { label: string }, pass: Pass): RollEdit & { label: string } {
-  if (!(edit.ops ?? []).some(op => Object.values(op).some(isFormula))) return edit;
-  const ops = edit.ops.map(op => Object.fromEntries(Object.entries(op).map(([key, value]) => {
+  const counted = (op: RollEditOp): boolean => op.op !== PLUS_OP;
+  if (!(edit.ops ?? []).some(op => counted(op) && Object.values(op).some(isFormula))) return edit;
+  const ops = edit.ops.map(op => (!counted(op) ? op : Object.fromEntries(Object.entries(op).map(([key, value]) => {
     if (!isFormula(value)) return [key, value];
     const number = Number(compile(value.expr).evaluate(pass.resolve, toolsOf(pass.system, pass, 'правка броска')));
     if (!Number.isFinite(number)) throw new EngineError(`правка броска «${edit.label}»: «${key}» — формула «${value.expr}» дала не число`);
     return [key, number];
-  })) as typeof op);
+  })) as typeof op));
   return { ...edit, ops };
 }
 

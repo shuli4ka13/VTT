@@ -1,5 +1,8 @@
 import { EngineError, isRuleError } from '../engine/errors.ts';
-import { resolveRef } from '../engine/refs.ts';
+import { resolveRef, toolsOf } from '../engine/refs.ts';
+import { compile } from '../formula/index.ts';
+import { PLUS_OP } from './dice.ts';
+import type { PendingAddend } from './dice.ts';
 import type { RefContext, Bound } from '../engine/refs.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import { editsOf, editMatches, withValues, claimedModifiers } from '../engine/modifiers.ts';
@@ -7,7 +10,7 @@ import { stackStages } from '../engine/stages.ts';
 import type { Stage } from '../model/types.ts';
 import type { SourcedModifier } from '../engine/modifiers.ts';
 import type { Pass } from '../engine/calc.ts';
-import type { RollEdit } from '../model/types.ts';
+import type { RollEdit, RollEditOp } from '../model/types.ts';
 
 export type EditMod = Extract<SourcedModifier, { kind: 'edit' }>;
 
@@ -89,10 +92,30 @@ export function stack(held: Held[], base: number, label: string, stages: readonl
 
 export interface RollEdits {
   edits: (RollEdit & { label: string })[];
-  bonus: number;
+  addends: PendingAddend[];
 }
 
-export function rollEdits(held: Held[], claims: readonly string[], roller: Pass, tags: readonly string[]): RollEdits {
+function wordAddend(label: string, op: RollEditOp, view: Pass): PendingAddend {
+  const raw = (op as { value?: unknown }).value;
+  const expr = raw && typeof raw === 'object' && 'expr' in raw ? String((raw as { expr: unknown }).expr) : '';
+  if (!expr.trim()) throw new EngineError(`правка броска «${label}»: «прибавить» без формулы`);
+  return {
+    label,
+    value: die => {
+      const value = compile(expr).evaluate(view.resolve, toolsOf(view.system, view, `правка броска «${label}»`, die));
+      if (typeof value !== 'number' || !Number.isFinite(value)) throw new EngineError(`правка броска «${label}»: «${expr}» дала не число`);
+      return value;
+    },
+  };
+}
+
+function bonusAddend(held: Held): PendingAddend {
+  const op = (held as { op?: unknown }).op;
+  if (op !== 'add') throw new EngineError(`правка «${who(held)}»: прибавка к броску только прибавляет, а здесь «${String(op ?? 'не задано')}»`);
+  return { label: who(held), value: die => amountOf({ ...held, ref: { ...held.ref, die } }) };
+}
+
+export function rollEdits(held: Held[], claims: readonly string[], roller: Pass): RollEdits {
   const system = roller.system;
   const named = [
     ...held.filter(mod => mod.edit),
@@ -110,9 +133,16 @@ export function rollEdits(held: Held[], claims: readonly string[], roller: Pass,
     const canceledBy = dictionary[key]!.canceledBy;
     return !canceledBy || !keys.includes(canceledBy);
   });
+  const words = surviving.map(key => {
+    const view = first.get(key)!.view;
+    return { view, edit: withValues({ ...dictionary[key]!, label: dictionary[key]!.label || key }, view) };
+  });
   return {
-    edits: surviving.map(key => withValues({ ...dictionary[key]!, label: dictionary[key]!.label || key }, first.get(key)!.view)),
-    bonus: stack(held.filter(mod => !mod.edit), 0, tags.join(', ') || ROLL_CALL),
+    edits: words.map(word => word.edit),
+    addends: [
+      ...words.flatMap(({ edit, view }) => (edit.ops ?? []).filter(op => op.op === PLUS_OP).map(op => wordAddend(edit.label, op, view))),
+      ...held.filter(mod => !mod.edit).map(bonusAddend),
+    ],
   };
 }
 

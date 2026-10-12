@@ -5,6 +5,12 @@ import { outcomeWords, rollName } from '../engine/roll-tags.ts';
 import type { System, Sheet } from '../model/types.ts';
 import { fieldOf, hasField, valueWord } from '../model/sheet-columns.ts';
 import { forcedWords } from '../words/steps.ts';
+import { addendsText } from '../core/dice.ts';
+import type { Addend } from '../core/dice.ts';
+
+const addsOf = (trace: Record<string, unknown>): Addend[] => (Array.isArray(trace.adds) ? trace.adds as Addend[] : []);
+
+const addedOf = (trace: Record<string, unknown>): number => addsOf(trace).reduce((sum, one) => sum + one.value, 0);
 
 const tagsOfStep = (step: Record<string, any> | undefined, trace?: Record<string, any>): string[] =>
   (trace?.tags ?? step?.tags ?? (step?.roll?.tags ?? []).filter((t: unknown) => typeof t === 'string')) as string[];
@@ -33,7 +39,7 @@ export function previewLines(system: System, effectId: string, trace: Record<str
     if (one.type !== 'roll' || !one.by) continue;
     const tags = (one.tags as string[] | undefined) ?? [];
     const title = tags.length ? `Бросок (${rollName(tags)})` : 'Бросок';
-    lines.push(`${title}: ${rollsText(one)}${one.bonus ? ` + ${one.bonus}` : ''} = ${one.total}`);
+    lines.push(`${title}: ${rollsText(one)}${addendsText(addsOf(one))}${one.bonus ? ` + ${one.bonus}` : ''} = ${one.total}`);
   }
   for (const one of shown) {
     if (one.type !== 'check') continue;
@@ -126,14 +132,14 @@ export function describeEntry(
       const shown = ((trace.rolls ?? []) as number[])
         .map((v, i) => (raw.length === trace.rolls.length && raw[i] !== v ? `${raw[i]}→${v}` : String(v)))
         .join(', ');
-      const rolls = trace.read === 'count' ? `[${shown}] → успехов ${trace.total - trace.bonus}`
+      const rolls = trace.read === 'count' ? `[${shown}] → успехов ${trace.total - trace.bonus - addedOf(trace)}`
         : trace.kept != null && trace.rolls?.length > 1 ? `[${shown}] → ${trace.kept}` : `[${shown}]`;
       const title = rollTitle(tagsOfStep(step, trace), 'Бросок');
       const edits = trace.edits?.length ? ` (${trace.edits.join(', ')})` : '';
       const bonus = step?.bonus ? ` + ${refLabel(step.bonus, trace.within) ?? 'Бонус'}: ${trace.bonus}` : trace.bonus ? ` + ${trace.bonus}` : '';
       const parts = trace.parts && Object.keys(trace.parts).length
         ? ' · ' + Object.entries(trace.parts).map(([k, v]) => `${k}: ${v}`).join(', ') : '';
-      return `${title}: ${rolls}${edits}${bonus} = ${trace.total}${parts}`;
+      return `${title}: ${rolls}${edits}${addendsText(addsOf(trace))}${bonus} = ${trace.total}${parts}`;
     }
     if (trace.type === 'check') {
       const versus = typeof trace.versusTag === 'string' ? labelOf(trace.versusTag) : refLabel(step?.versus, trace.within) ?? 'порог';

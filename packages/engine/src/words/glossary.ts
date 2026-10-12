@@ -18,7 +18,18 @@ export const dice = (count: number | string | null | undefined, sides: number | 
 
 export const diceExample = dice(1, 20);
 
-const DICE_TEXT = /^(\d+)?\s*[dдк]\s*(\d+)$/iu;
+export const DICE_TEXT = /^(\d+)?\s*[dдк]\s*(\d+)$/iu;
+
+const DICE_BARE = /(\d*)[dдк](\d+)/iuy;
+
+export function bareDiceAt(src: string, at: number): { end: number; count: number; sides: number } | null {
+  DICE_BARE.lastIndex = at;
+  const m = DICE_BARE.exec(src);
+  if (!m) return null;
+  const end = at + m[0].length;
+  if (end < src.length && /[\p{L}\p{N}_.]/u.test(src[end]!)) return null;
+  return { end, count: m[1] ? Number(m[1]) : 1, sides: Number(m[2]) };
+}
 
 export const asDice = (text: string): string => {
   const m = DICE_TEXT.exec(text.trim());

@@ -21250,48 +21250,864 @@ exports[`итоги действий: dnd5e > doran · feature_turn_undead:0 1`]
 
 exports[`итоги действий: dnd5e > doran · guidance_cantrip:0 1`] = `
 {
-  "→ arven · high · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ arven · high · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ arven · low · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ arven · low · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ arven · walk · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ arven · walk · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ doran · high · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ doran · high · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ doran · low · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ doran · low · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ doran · walk · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ doran · walk · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ goblin · high · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ goblin · high · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ goblin · low · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ goblin · low · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ goblin · walk · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ goblin · walk · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ mirra · high · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ mirra · high · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ mirra · low · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ mirra · low · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ mirra · walk · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ mirra · walk · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ ogre · high · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ ogre · high · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ ogre · low · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ ogre · low · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ ogre · walk · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ ogre · walk · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ orc · high · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ orc · high · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ orc · low · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ orc · low · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ orc · walk · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ orc · walk · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ sil · high · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ sil · high · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ sil · low · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ sil · low · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ sil · walk · бой": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
-  "→ sil · walk · вне боя": "EngineError: стоимость действия «Указание»: параметр «slot» не заполнен",
+  "→ arven · high · бой": {
+    "arven": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+  },
+  "→ arven · high · вне боя": {
+    "arven": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+  },
+  "→ arven · low · бой": {
+    "arven": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+  },
+  "→ arven · low · вне боя": {
+    "arven": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+  },
+  "→ arven · walk · бой": {
+    "arven": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+  },
+  "→ arven · walk · вне боя": {
+    "arven": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+  },
+  "→ doran · high · бой": {
+    "doran": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+  },
+  "→ doran · high · вне боя": {
+    "doran": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+  },
+  "→ doran · low · бой": {
+    "doran": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+  },
+  "→ doran · low · вне боя": {
+    "doran": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+  },
+  "→ doran · walk · бой": {
+    "doran": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+  },
+  "→ doran · walk · вне боя": {
+    "doran": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+  },
+  "→ goblin · high · бой": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "goblin": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ goblin · high · вне боя": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "goblin": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ goblin · low · бой": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "goblin": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ goblin · low · вне боя": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "goblin": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ goblin · walk · бой": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "goblin": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ goblin · walk · вне боя": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "goblin": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ mirra · high · бой": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "mirra": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ mirra · high · вне боя": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "mirra": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ mirra · low · бой": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "mirra": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ mirra · low · вне боя": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "mirra": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ mirra · walk · бой": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "mirra": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ mirra · walk · вне боя": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "mirra": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ ogre · high · бой": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "ogre": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ ogre · high · вне боя": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "ogre": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ ogre · low · бой": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "ogre": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ ogre · low · вне боя": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "ogre": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ ogre · walk · бой": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "ogre": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ ogre · walk · вне боя": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "ogre": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ orc · high · бой": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "orc": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ orc · high · вне боя": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "orc": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ orc · low · бой": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "orc": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ orc · low · вне боя": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "orc": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ orc · walk · бой": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "orc": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ orc · walk · вне боя": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "orc": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ sil · high · бой": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "sil": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ sil · high · вне боя": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "sil": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ sil · low · бой": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "sil": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ sil · low · вне боя": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "sil": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ sil · walk · бой": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "sil": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
+  "→ sil · walk · вне боя": {
+    "doran": {
+      "effects": [
+        {
+          "effectId": "concentration",
+        },
+      ],
+    },
+    "sil": {
+      "effects": [
+        {
+          "bond": {
+            "effect": "concentration",
+            "sheet": "doran",
+          },
+          "effectId": "guided",
+          "usesLeft": 1,
+        },
+      ],
+    },
+  },
 }
 `;
 

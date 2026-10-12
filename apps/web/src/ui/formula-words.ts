@@ -9,7 +9,12 @@ const ARITH: Record<string, string> = { '+': '+', '-': '−', '*': '×', '/': '�
 const ROLL_FIELDS: Record<string, string> = {
   'dice.rolls': 'выпавшие кости', natural: 'на кости', total: 'итог', success: 'успех', margin: 'запас',
   atMax: 'кости на максимуме', atMin: 'кости на минимуме', degree: 'ступень', parts: 'части', versus: 'порог',
+  tags: 'метки броска',
 };
+
+const SEEN_ROLL = 'roll';
+
+const diceWords = (value: string): string => value.replace(/^1(?=к)/u, '');
 
 const pathWords = (ref: (text: string) => string, tag: string): string => {
   const dot = tag.indexOf('.');
@@ -17,7 +22,7 @@ const pathWords = (ref: (text: string) => string, tag: string): string => {
   const head = tag.slice(0, dot);
   const rest = tag.slice(dot + 1);
   const known = ROLL_FIELDS[rest] ?? (rest.startsWith('parts.') ? `часть «${rest.slice(6)}»` : undefined);
-  if (known) return `«${ref(`@${head}`)}»: ${known}`;
+  if (known) return `«${head === SEEN_ROLL ? 'Бросок' : ref(`@${head}`)}»: ${known}`;
   return `«${ref(`@${tag}`)}»`;
 };
 
@@ -29,7 +34,7 @@ export function formulaWords(system: System, source: string, names?: Map<string,
   const words = (node: Node, top = false): string => {
     switch (node.kind) {
       case 'Number': return String(node.value);
-      case 'Text': return `«${node.value}»`;
+      case 'Text': return node.dice ? diceWords(node.value) : `«${node.value}»`;
       case 'Bool': return node.value ? 'да' : 'нет';
       case 'Ref': return pathWords(ref, node.tag);
       case 'Pick': return `«${ref(`@${node.tag}`)}» по ${words(node.key, true)}${node.rest ? ` · ${node.rest}` : ''}`;
@@ -50,6 +55,8 @@ export function formulaWords(system: System, source: string, names?: Map<string,
     const all = (join: string) => args.map(arg => words(arg, true)).join(join);
     switch (name) {
       case 'кинуть': {
+        const only = args.length === 1 ? args[0]! : null;
+        if (only?.kind === 'Text' && only.dice) return words(only, true);
         const die = words(args[0]!, true);
         const times = args[1] ? words(args[1]) : '';
         const keep = args[2] ? `, оставить ${words(args[2])}` : '';

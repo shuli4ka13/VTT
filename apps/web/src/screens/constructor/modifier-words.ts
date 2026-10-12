@@ -8,7 +8,7 @@ type Loose = Record<string, unknown>;
 
 const OP_WORDS: Record<string, (value: string) => string> = {
   set: value => `= ${value}`,
-  add: value => (value.startsWith('-') ? `− ${value.slice(1)}` : `+ ${value}`),
+  add: value => (/^[-−]/u.test(value) ? `− ${value.slice(1)}` : `+ ${value}`),
   mul: value => `× ${value}`,
   floor: value => `не меньше ${value}`,
   cap: value => `не больше ${value}`,

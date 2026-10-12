@@ -16,6 +16,8 @@ function withEffect(system: System, id: string, modifiers: unknown[]): System {
 
 const wearing = (sheet: Sheet, effectId: string): Sheet => ({ ...sheet, effects: [...(sheet.effects ?? []), { effectId }] });
 
+const added = (out: ReturnType<typeof rollEdits>): number => out.addends.reduce((sum, one) => sum + one.value(() => 1), 0);
+
 describe('правки на листе-держателе', () => {
   const base = flattenSystem(world.system);
   const system = withEffect(base, 'уклон', [
@@ -31,7 +33,7 @@ describe('правки на листе-держателе', () => {
     const roller = views.of(sheets, attacker.id);
     const against = views.of(sheets, target.id);
     const held = rollHeld(holders, attacker.id, target.id, ['атака']);
-    const { bonus } = rollEdits(held, [], roller, ['атака']);
+    const bonus = added(rollEdits(held, [], roller));
     const targetAc = Number(calc(system, target, 'ac', against));
     const attackerAc = Number(calc(system, attacker, 'ac', roller));
     expect(targetAc).not.toBe(attackerAc);
@@ -40,14 +42,14 @@ describe('правки на листе-держателе', () => {
 
   it('без противника правок «по мне» нет', () => {
     const roller = views.of(sheets, attacker.id);
-    expect(rollEdits(rollHeld(holders, attacker.id, null, ['атака']), [], roller, ['атака']).bonus).toBe(0);
+    expect(added(rollEdits(rollHeld(holders, attacker.id, null, ['атака']), [], roller))).toBe(0);
   });
 
   it('заявленная правка броска собирается словарём; неизвестная — ошибка словами', () => {
     const roller = views.of(sheets, attacker.id);
     const key = Object.keys(system.roll_edits ?? {})[0]!;
-    expect(rollEdits([], [key], roller, []).edits.map(e => e.label)).toHaveLength(1);
-    expect(() => rollEdits([], ['нет-такой'], roller, [])).toThrow(/нет в словаре/);
+    expect(rollEdits([], [key], roller).edits.map(e => e.label)).toHaveLength(1);
+    expect(() => rollEdits([], ['нет-такой'], roller)).toThrow(/нет в словаре/);
   });
 });
 

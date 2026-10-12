@@ -1419,22 +1419,25 @@
     },
     "roll_edits": {
       "advantage": {
-        "label": "Преимущество: +к6",
+        "label": "Преимущество",
         "ops": [
           {
-            "op": "bonusDie",
-            "sides": 6
+            "op": "plus",
+            "value": {
+              "expr": "кинуть(к6)"
+            }
           }
         ],
         "canceledBy": "disadvantage"
       },
       "disadvantage": {
-        "label": "Помеха: −к6",
+        "label": "Помеха",
         "ops": [
           {
-            "op": "bonusDie",
-            "sides": 6,
-            "minus": true
+            "op": "plus",
+            "value": {
+              "expr": "-кинуть(к6)"
+            }
           }
         ],
         "canceledBy": "advantage"

@@ -20,4 +20,9 @@ describe('вид формулы у входа', () => {
     expect(shapeProblem('@x', 'number', named({}))).toBeNull();
     expect(shapeProblem('если(@x > 1, 2, 3)', 'number', named({}))).toBeNull();
   });
+  it('кость в арифметике — подсказка про «кинуть»', () => {
+    expect(shapeProblem('к4 + 1', 'number', named({}))).toBe('кость прибавляют через «кинуть»: кинуть(к4)');
+    expect(shapeProblem('-к4', 'number', named({}))).toBe('кость вычитают через «кинуть»: -кинуть(к4)');
+    expect(shapeProblem('кинуть(к4) + 1', 'number', named({}))).toBeNull();
+  });
 });

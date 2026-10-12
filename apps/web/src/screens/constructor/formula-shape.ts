@@ -8,6 +8,8 @@ const BOOLS = new Set(['есть', 'не', 'пусто', 'все', 'любое']
 const MATH = new Set(['+', '-', '*', '/']);
 const COMPARE = new Set(['==', '!=', '<', '<=', '>', '>=']);
 
+const isDice = (node: Node): boolean => node.kind === 'Text' && node.dice === true;
+
 class Clash {
   constructor(readonly text: string) {}
 }
@@ -20,6 +22,7 @@ function shapeOf(node: Node, named: (tag: string) => Shape): Shape {
     case 'Ref': return named(node.tag);
     case 'Pick': return 'any';
     case 'Unary': {
+      if (isDice(node.operand)) throw new Clash('кость вычитают через «кинуть»: -кинуть(к4)');
       const inner = shapeOf(node.operand, named);
       if (node.op === '-' && inner === 'text') throw new Clash('минус перед словом');
       return node.op === '-' ? 'number' : inner;
@@ -29,6 +32,7 @@ function shapeOf(node: Node, named: (tag: string) => Shape): Shape {
       const right = shapeOf(node.right, named);
       if (COMPARE.has(node.op)) return 'bool';
       if (!MATH.has(node.op)) return 'any';
+      if (isDice(node.left) || isDice(node.right)) throw new Clash('кость прибавляют через «кинуть»: кинуть(к4)');
       if (left === 'text' || right === 'text') throw new Clash('слово нельзя складывать и умножать с числом');
       return 'number';
     }

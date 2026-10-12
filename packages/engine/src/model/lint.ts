@@ -27,6 +27,9 @@ import {
 } from './references.ts';
 import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, rowKeyOf, hasField } from './sheet-columns.ts';
 import { isRange } from './tables.ts';
+import { editStages, PLUS_OP } from '../core/dice.ts';
+import { compile } from '../formula/index.ts';
+import type { Node } from '../formula/index.ts';
 
 export type Level = 'error' | 'warn';
 
@@ -410,6 +413,39 @@ function costProblems(system: System): Problem[] {
   return out;
 }
 
+function rollsDice(expr: unknown): boolean {
+  const text = expr && typeof expr === 'object' && 'expr' in expr ? String((expr as { expr: unknown }).expr) : '';
+  if (!text.trim()) return false;
+  let ast: Node;
+  try { ast = compile(text).ast; } catch { return false; }
+  const visit = (node: Node): boolean => {
+    switch (node.kind) {
+      case 'Call': return node.name === 'кинуть' || node.args.some(visit);
+      case 'Unary': return visit(node.operand);
+      case 'Binary': return visit(node.left) || visit(node.right);
+      case 'Conditional': return visit(node.test) || visit(node.then) || visit(node.otherwise);
+      case 'Pick': return visit(node.key);
+      default: return false;
+    }
+  };
+  return visit(ast);
+}
+
+function rollEditProblems(system: System): Problem[] {
+  const known = new Set(editStages().map(one => one.op));
+  const out: Problem[] = [];
+  for (const [key, edit] of Object.entries(system.roll_edits ?? {})) {
+    const where = { tab: 'rules' as const, section: 'roll_edits', key };
+    const name = edit.label || key;
+    for (const op of edit.ops ?? []) {
+      const value = (op as { value?: { expr?: unknown } }).value;
+      if (!known.has(String(op.op))) out.push({ where, level: 'error', text: `у правки броска «${name}» неизвестное действие «${String(op.op)}»` });
+      else if (op.op === PLUS_OP && !String(value?.expr ?? '').trim()) out.push({ where, level: 'error', text: `у правки броска «${name}» «прибавить» без формулы` });
+    }
+  }
+  return out;
+}
+
 function editProblems(system: System, compendium?: Compendium): Problem[] {
   const out: Problem[] = [];
   if (system.effects?.[ROLL_CALL]) {
@@ -434,6 +470,8 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
         if (!(String(mod.param) in CALL_WORDS.roll.params)) out.push({ where: at, level: 'error', text: `у броска нет параметра «${String(mod.param)}»` });
         else if (mod.param === 'edits' && !mod.edit) out.push({ where: at, level: 'error', text: 'правка броска не выбрана' });
         else if (mod.param === 'bonus' && !(mod.value as { expr?: string } | undefined)?.expr?.trim()) out.push({ where: at, level: 'error', text: 'у прибавки к броску не задано, на сколько' });
+        else if (mod.param === 'bonus' && mod.op !== 'add') out.push({ where: at, level: 'error', text: `прибавка к броску только прибавляет, а здесь «${String(mod.op ?? 'не задано')}»` });
+        if (rollsDice(mod.if)) out.push({ where: at, level: 'error', text: 'в условии правки кости не бросают — «кинуть» уберите' });
         continue;
       }
       const effect = system.effects?.[call];
@@ -739,6 +777,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...orphanProblems(system, compendium));
   out.push(...sheetKindProblems(system), ...layoutProblems(system));
   out.push(...editProblems(system, compendium));
+  out.push(...rollEditProblems(system));
   out.push(...declaredStageProblems(system));
   out.push(...costProblems(system));
   out.push(...seenProblems(system));

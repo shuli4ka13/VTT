@@ -240,7 +240,7 @@ group('наложенное помнит число, штрафная кость
       { key: 'крит_от', label: 'Крит от', kind: 'number', default: 19 },
       { key: 'заряды', label: 'Заряды', kind: 'number', default: 1, min: 0 },
     ] }, rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }] } , а: { shape: 'book', use: 'action', label: 'А', columns: [], bindings: [{ label: 'Поджечь', effect: 'поджечь', args: {} }] }, б: { shape: 'book', use: 'action', label: 'Б', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
-    roll_edits: { порча: { label: 'Порча', ops: [{ op: 'bonusDie', sides: 4, minus: true }] } },
+    roll_edits: { порча: { label: 'Порча', ops: [{ op: 'plus', value: { expr: '-кинуть(к4)' } }] } },
     effects: {
       горит: {
         label: 'Горит', activation: 'passive', params: [{ key: 'сила', label: 'Сила', kind: 'number', optional: true }],
@@ -282,11 +282,12 @@ group('наложенное помнит число, штрафная кость
     eq(burnt.sheets.find(s => s.id === 'цель')!.values.хиты, 26);
   });
 
-  test('штрафная кость вычитается из броска', () => {
+  test('штрафная кость вычитается из броска и видна прибавкой', () => {
     const rolls = [12, 3, 1];
     const out = exchange({ system: sys, compendium: acts, die: () => rolls.shift() ?? 1, sheets: [who('порченый', ['порченый']), who('цель')], actionId: 'б:0', fromId: 'порченый', toId: 'цель' });
-    const hit = out.reports[0]!.report.trace[0] as { rolls: number[]; total: number };
-    deepEq(hit.rolls, [12, -3]);
+    const hit = out.reports[0]!.report.trace[0] as { rolls: number[]; total: number; adds: unknown };
+    deepEq(hit.rolls, [12]);
+    deepEq(hit.adds, [{ label: 'Порча', value: -3, dice: [{ sides: 4, value: 3 }] }]);
     eq(hit.total, 9);
   });
 

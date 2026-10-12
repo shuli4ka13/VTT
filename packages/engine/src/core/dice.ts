@@ -1,5 +1,6 @@
 import { EngineError } from '../engine/errors.ts';
 import { readingOf } from '../engine/readings.ts';
+import { DICE_TEXT, DIE_LETTER } from '../words/glossary.ts';
 import type { ReadSpec } from '../engine/readings.ts';
 import type { DieConstant, Die, RollEdit, RollEditOp } from '../model/types.ts';
 
@@ -25,12 +26,25 @@ export interface Rolled {
   out?: boolean;
 }
 
+export interface Addend {
+  label: string;
+  value: number;
+  dice: { sides: number; value: number }[];
+}
+
+export interface PendingAddend {
+  label: string;
+  value: (die: Die) => number;
+}
+
+export const PLUS_OP = 'plus';
+
 export interface Roll {
   claim: Claim;
   dice: Rolled[];
   results: RollEdit[];
   edits: string[];
-  plus: number;
+  addends: Addend[];
   tags: string[];
   exploded: boolean;
 }
@@ -47,13 +61,12 @@ export interface RollResult {
   tags: string[];
 }
 
-const NOTATION = /^(\d+)?\s*[dдк]\s*(\d+)$/iu;
 
 export type CountOf = (ref: unknown, what: string) => number;
 
 export function parse(input: string | DieConstant, countOf?: CountOf): Spec {
   if (typeof input === 'string') {
-    const match = NOTATION.exec(input.trim());
+    const match = DICE_TEXT.exec(input.trim());
     if (!match) throw new EngineError(`не понимаю запись кубиков «${input}»; ожидается вид «2к6»`);
     return { label: input.trim(), terms: [{ count: Number(match[1] ?? 1), sides: Number(match[2]) }], read: { kind: 'sum' } };
   }
@@ -126,11 +139,6 @@ const CLAIM: Record<string, ClaimOp> = {
     const at = claim.terms.findIndex(t => t.sides === sides && !t.part && !t.extra);
     if (at < 0) return { ...claim, terms: [...claim.terms, { count, sides }] };
     return { ...claim, terms: claim.terms.map((t, i) => (i === at ? { ...t, count: t.count + count } : t)) };
-  },
-  bonusDie(claim, op) {
-    const first = claim.terms[0];
-    if (!first) throw new EngineError('«добавить кость сверх» нечего добавлять: в броске нет костей');
-    return { ...claim, terms: [...claim.terms, { count: num(op.count, 1), sides: num(op.sides, first.sides), extra: true, ...(op.minus ? { minus: true } : {}) }] };
   },
   keepBest: (claim, op) => ({ ...claim, keeps: [...claim.keeps, { n: num(op.n, 1), from: 'best', scope: partOf(op) ? { part: partOf(op)! } : 'main' }] }),
   keepWorst: (claim, op) => ({ ...claim, keeps: [...claim.keeps, { n: num(op.n, 1), from: 'worst', scope: partOf(op) ? { part: partOf(op)! } : 'main' }] }),
@@ -217,15 +225,24 @@ const RESULT: Record<string, ResultOp> = {
   },
 };
 
-const stageOf = (op: RollEditOp): 'claim' | 'result' => {
+const stageOf = (op: RollEditOp): 'claim' | 'result' | 'plus' => {
   const name = String(op.op);
+  if (name === PLUS_OP) return 'plus';
   if (name in CLAIM) return 'claim';
   if (name in RESULT) return 'result';
-  throw new EngineError(`неизвестная правка броска «${op.op}»; есть: ${[...Object.keys(CLAIM), ...Object.keys(RESULT)].join(', ')}`);
+  throw new EngineError(`неизвестная правка броска «${op.op}»; есть: ${[...Object.keys(CLAIM), ...Object.keys(RESULT), PLUS_OP].join(', ')}`);
 };
 
-export const editStages = (): { op: string; stage: 'claim' | 'result' }[] =>
-  [...Object.keys(CLAIM).map(op => ({ op, stage: 'claim' as const })), ...Object.keys(RESULT).map(op => ({ op, stage: 'result' as const }))];
+export const editStages = (): { op: string; stage: 'claim' | 'result' | 'plus' }[] => [
+  ...Object.keys(CLAIM).map(op => ({ op, stage: 'claim' as const })),
+  ...Object.keys(RESULT).map(op => ({ op, stage: 'result' as const })),
+  { op: PLUS_OP, stage: 'plus' as const },
+];
+
+const onlyPlus = (edit: RollEdit): boolean => {
+  const ops = edit.ops ?? [];
+  return ops.length > 0 && ops.every(op => stageOf(op) === 'plus');
+};
 
 function applyResults(dice: Rolled[], edits: RollEdit[], roll: (sides: number) => number, fresh: () => number): Rolled[] {
   let next = dice;
@@ -270,12 +287,44 @@ export function start(spec: Spec, edits: (RollEdit & { label?: string })[], die:
     if (JSON.stringify(next) !== JSON.stringify(rolled)) fired.add(edit);
     rolled = next;
   }
-  const shown = edits.filter(edit => !results.includes(edit) || fired.has(edit) || (edit.ops ?? []).some(op => stageOf(op) === 'claim'));
+  const shown = edits.filter(edit => !onlyPlus(edit) && (!results.includes(edit) || fired.has(edit) || (edit.ops ?? []).some(op => stageOf(op) === 'claim')));
   return {
     claim, dice: rolled, results,
-    edits: shown.map(edit => edit.label || '').filter(Boolean), plus: 0, tags: [...tags],
+    edits: shown.map(edit => edit.label || '').filter(Boolean), addends: [], tags: [...tags],
     exploded: results.some(edit => (edit.ops ?? []).some(op => op.op === 'explode')),
   };
+}
+
+const withAddends = (roll: Roll, more: readonly Addend[]): Roll =>
+  (more.length ? { ...roll, addends: [...roll.addends, ...more] } : roll);
+
+export function addTo(roll: Roll, pending: readonly PendingAddend[], die: Die): Roll {
+  return withAddends(roll, pending.map((one): Addend => {
+    const dice: Addend['dice'] = [];
+    const value = one.value(sides => {
+      const face = die(sides);
+      dice.push({ sides, value: face });
+      return face;
+    });
+    if (!Number.isFinite(value)) throw new EngineError(`прибавка «${one.label}» дала не число`);
+    return { label: one.label, value, dice };
+  }));
+}
+
+export function addendsText(addends: readonly { label: string; value: number; dice?: readonly { sides: number; value: number }[] }[]): string {
+  return addends.map(one => {
+    const size = Math.abs(one.value);
+    const sign = one.value < 0 ? ' − ' : ' + ';
+    const dice = one.dice ?? [];
+    if (!dice.length) return `${sign}${one.label}: ${size}`;
+    const sides = [...new Set(dice.map(d => d.sides))];
+    const what = sides.length === 1
+      ? `${dice.length > 1 ? dice.length : ''}${DIE_LETTER}${sides[0]}`
+      : dice.map(d => `${DIE_LETTER}${d.sides}`).join(' + ');
+    const sum = dice.reduce((acc, d) => acc + d.value, 0);
+    const faces = dice.length > 1 || sum !== size ? ` [${dice.map(d => d.value).join(', ')}]` : '';
+    return `${sign}${one.label} ${what}${faces}: ${size}`;
+  }).join('');
 }
 
 export function keep(dice: readonly Rolled[], n: number, from: 'best' | 'worst', scope: Scope): Rolled[] {
@@ -324,12 +373,12 @@ export function result(roll: Roll): RollResult {
   const parts: Record<string, number> = {};
   for (const d of taken) if (d.part) parts[d.part] = (parts[d.part] ?? 0) + d.value;
   return {
-    total: total + roll.plus,
+    total: total + roll.addends.reduce((sum, one) => sum + one.value, 0),
     natural: read(taken.filter(d => !d.extra), roll.claim.read).total,
     rolled: roll.dice.filter(physical).length,
     atMax: counted.filter(d => d.face === d.sides).length,
     atMin: counted.filter(d => d.face === 1).length,
-    edited: roll.edits.length > 0,
+    edited: roll.edits.length > 0 || roll.addends.length > 0,
     dice: { rolls: roll.dice.map(d => d.value), kept: single },
     parts,
     tags: [...roll.tags],
@@ -341,12 +390,12 @@ export const faces = (roll: Roll): number[] => roll.dice.map(d => (d.minus ? -d.
 export type SeenOp =
   | { kind: 'add'; count: number; sides?: number; keep?: 'best' | 'worst'; explode?: boolean }
   | { kind: 'reroll'; upTo: number }
-  | { kind: 'plus'; value: number };
+  | { kind: 'plus'; addend: Addend };
 
 const EXPLODE: RollEdit = { label: '', ops: [{ op: 'explode', apart: true }] };
 
 export function see(roll: Roll, op: SeenOp, die: Die): Roll {
-  if (op.kind === 'plus') return { ...roll, plus: roll.plus + op.value };
+  if (op.kind === 'plus') return withAddends(roll, [op.addend]);
   const fresh = nextId(roll.dice);
   const taken = new Set(kept(roll));
   if (op.kind === 'reroll') {

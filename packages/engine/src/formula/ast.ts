@@ -1,6 +1,6 @@
 export interface NumberNode { kind: 'Number'; value: number }
 
-export interface TextNode { kind: 'Text'; value: string; at?: number; raw?: string }
+export interface TextNode { kind: 'Text'; value: string; at?: number; raw?: string; dice?: true }
 export interface BoolNode { kind: 'Bool'; value: boolean }
 export interface RefNode { kind: 'Ref'; tag: string }
 export interface PickNode { kind: 'Pick'; tag: string; key: Node; rest?: string }

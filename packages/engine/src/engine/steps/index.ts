@@ -21,6 +21,7 @@ export type StepData = Step & Record<string, any>; // eslint-disable-line @types
 export interface StepContext {
   system: System;
   owner: string;
+  label: string;
   die: Die;
   here: Pass;
   value(ref: unknown): unknown;

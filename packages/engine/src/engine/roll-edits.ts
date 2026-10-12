@@ -3,7 +3,7 @@ import type { RollEditOp } from '../model/types.ts';
 
 const LABELS: Record<string, string> = {
   addDie: 'добавить кость',
-  bonusDie: 'добавить кость сверх',
+  plus: 'прибавить к итогу',
   floorDie: 'считать не меньше',
   keepBest: 'оставить лучшую',
   keepWorst: 'оставить худшую',
@@ -16,9 +16,8 @@ const LABELS: Record<string, string> = {
 };
 
 export const editPalette = (): { key: string; label: string; op: RollEditOp }[] => [
-  { key: 'addDie', label: 'добавить кость', op: { op: 'addDie' } },
-  { key: 'bonusDie', label: 'добавить кость сверх — её не отбрасывают', op: { op: 'bonusDie', sides: 4 } },
-  { key: 'penaltyDie', label: 'вычесть кость сверх', op: { op: 'bonusDie', sides: 4, minus: true } },
+  { key: 'addDie', label: 'добавить кость в набор', op: { op: 'addDie' } },
+  { key: 'plus', label: 'прибавить к итогу…', op: { op: 'plus', value: { expr: 'кинуть(к6)' } } },
   { key: 'floorDie', label: 'считать не меньше…', op: { op: 'floorDie', least: 10 } },
   { key: 'keepBest', label: 'оставить лучшую', op: { op: 'keepBest', n: 1 } },
   { key: 'keepWorst', label: 'оставить худшую', op: { op: 'keepWorst', n: 1 } },
@@ -34,8 +33,7 @@ export const editPalette = (): { key: string; label: string; op: RollEditOp }[] 
 ];
 
 export const paletteKeyOf = (op: RollEditOp): string =>
-  op.op === 'bonusDie' && op.minus ? 'penaltyDie'
-    : op.op === 'explode' ? (op.apart ? 'explodeApart' : String(op.at ?? 'max') === 'min' ? 'explodeDown' : 'explodeUp')
+  op.op === 'explode' ? (op.apart ? 'explodeApart' : String(op.at ?? 'max') === 'min' ? 'explodeDown' : 'explodeUp')
     : op.op === 'flip' ? (String(op.prefer ?? 'low') === 'high' ? 'flipHigh' : 'flipLow')
       : op.op === 'reroll' ? 'rerollLow'
         : String(op.op);
