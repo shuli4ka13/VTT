@@ -498,8 +498,9 @@ export class Run {
   private edited(call: string, param: string, base: number, tags: string[], args: Record<string, unknown>): number {
     const callee = this.system.effects[call];
     const names = namesOf(callee?.params, args);
-    const values = { ...valuesOf(callee?.params, args), ...totalsOf(rollsOf(callee?.params, args)) };
-    const held = gather(this.holderViews(), { call, param, tags, names, values, view: id => this.view(id) });
+    const rolls = rollsOf(callee?.params, args);
+    const values = { ...valuesOf(callee?.params, args), ...totalsOf(rolls) };
+    const held = gather(this.holderViews(), { call, param, tags, names, values, rolls, view: id => this.view(id) });
     return stack(held, base, `${call}.${param}`, paramStages(callee?.params, param));
   }
 

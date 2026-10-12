@@ -5,11 +5,6 @@ import { fieldOf, columnOfField } from '../model/sheet-columns.ts';
 export type Combine = 'last' | 'min' | 'max' | 'sum' | 'product';
 
 export const COMBINE_DEFAULT = { set: 'last', add: 'sum', mul: 'product' } as const;
-export const COMBINE_ALLOWED: Record<'set' | 'add' | 'mul', readonly Combine[]> = {
-  set: ['last', 'min', 'max'],
-  add: ['sum', 'min', 'max'],
-  mul: ['product', 'min', 'max'],
-};
 export const VALUE_OPS = ['set', 'add', 'mul', 'floor', 'cap'];
 
 const IMPLICIT: Stage = { key: '' };
@@ -72,7 +67,8 @@ export const paramStages = (params: readonly Param[] | undefined, key: string): 
 export function targetStages(system: System, tag: string): Stage[] {
   const field = fieldOf(system, tag);
   if (field) return (columnOfField(system, field) as { stages?: Stage[] } | undefined)?.stages ?? [];
-  const [tableKey, , columnKey] = tag.replace(/^cell:/, '').split('.');
-  const column = (system.tables?.[tableKey ?? '']?.columns ?? []).find(c => c.key === columnKey);
+  const parts = tag.replace(/^cell:/, '').split('.');
+  if (parts.length < 3) return [];
+  const column = (system.tables?.[parts[0]!]?.columns ?? []).find(c => c.key === parts[parts.length - 1]);
   return (column as { stages?: Stage[] } | undefined)?.stages ?? [];
 }

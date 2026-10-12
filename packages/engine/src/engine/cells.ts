@@ -44,6 +44,5 @@ export function readCell(
   if (source.kind === 'input') return undefined;
 
   const base = compile(withRow(system, tableId, row, source.expr)).evaluate(pass.resolve);
-  const own = applyValueModifiers(base, cellTagOf(tableId, rowKeyOf(table, input), column), pass);
-  return applyValueModifiers(own, columnTagOf(tableId, column), pass);
+  return applyValueModifiers(base, cellTagOf(tableId, rowKeyOf(table, input), column), pass, [columnTagOf(tableId, column)]);
 }

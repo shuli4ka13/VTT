@@ -24,6 +24,7 @@ export interface Gather {
   tags: readonly string[];
   names: Record<string, Bound>;
   values: Record<string, unknown>;
+  rolls?: Record<string, unknown>;
   view: (id: string) => Pass;
 }
 
@@ -44,6 +45,7 @@ function refOf(mod: SourcedModifier, holder: Holder, spec: Gather, owner: string
   const own = inputsOf(mod);
   return {
     pass: holder.view, owner, results: { ...own.values, ...spec.values, метки: [...spec.tags] },
+    ...(spec.rolls ? { rolls: spec.rolls } : {}),
     sheets: { bound: { ...own.sheets, ...spec.names, носитель: holder.id }, view: spec.view },
   };
 }

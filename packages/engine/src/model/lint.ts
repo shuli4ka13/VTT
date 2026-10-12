@@ -581,6 +581,19 @@ function paramProblems(system: System): Problem[] {
           const called = system.effects[choice];
           if (!called) continue;
           for (const param of called.params ?? []) {
+            if (param.kind === 'roll' && args[param.key] !== undefined) {
+              const text = String((args[param.key] as { expr?: unknown } | null)?.expr ?? '');
+              const lone = /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(text)?.[1];
+              const step = lone ? steps.slice(0, index).find(one => one.id === lone) : undefined;
+              const own = lone ? (effect.params ?? []).find(one => one.key === lone) : undefined;
+              const fits = lone !== undefined && (step ? step.type === 'roll' : own ? own.kind === 'roll' : true);
+              if (!fits) {
+                out.push({
+                  where: whereOf(index), level: 'error',
+                  text: `во вход-бросок «${param.label ?? param.key}» вызова «${called.label ?? choice}» передан не бросок: нужно одно имя шага-броска или входа-броска`,
+                });
+              }
+            }
             if (args[param.key] !== undefined || param.optional || param.ask || param.default !== undefined) continue;
             const how = implicitOf(param, effect);
             const loopAt = (effect.steps ?? []).findIndex(s => s.type === 'each');

@@ -119,11 +119,11 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
 
 
 export function applyValueModifiers(
-  base: unknown, tag: string, pass: Pass,
+  base: unknown, tag: string, pass: Pass, also: readonly string[] = [],
 ): unknown {
   const staged = targetStages(pass.system, tag).length > 0;
   if (!pass.modifiers) return staged ? stackNumber([], base, tag, pass) : base;
-  const mods = pass.modifiers.value.get(tag) ?? [];
+  const mods = [tag, ...also].flatMap(one => pass.modifiers!.value.get(one) ?? []);
   const active = mods.filter(m => conditionHolds(m, pass));
   if (active.length === 0 && !staged) return base;
 

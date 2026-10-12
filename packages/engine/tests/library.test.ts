@@ -258,3 +258,56 @@ describe('аргументы «сами» — правила по ревью', (
     expect(implicitOf({ key: 'что', kind: 'field' } as never, { params: [{ key: 'что', kind: 'field' }] } as never)).toBeNull();
   });
 });
+
+describe('правка вызова видит переданный бросок целиком', () => {
+  const damage = {
+    label: 'Урон',
+    params: [{ key: 'лист', kind: 'sheet', role: 'target' }, { key: 'бросок', kind: 'roll' }, { key: 'сколько', kind: 'number', role: 'amount' }],
+    steps: [hit('@сколько', '@лист.хп')],
+  };
+  const volley = {
+    label: 'Очередь', activation: 'manual', params: [ACTOR, TARGETS],
+    steps: [
+      { id: 'выстрел', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
+      EACH,
+      { type: 'emit', effect: 'урон', args: { бросок: { expr: '@выстрел' }, сколько: { expr: '5' } } },
+    ],
+  };
+  const sharp = {
+    label: 'Меткость', activation: 'passive',
+    modifiers: [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '2' }, if: { expr: '@бросок.natural == 20' } }],
+  };
+  const system = world({ урон: damage, удар: volley, меткость: sharp });
+
+  it('«на костях 20» в условии правки: 20 — урон вдвое, 13 — как есть', () => {
+    expect(hp(play(system, [sheet('а', {}, ['меткость']), sheet('б')], [20]), 'б')).toBe(10);
+    expect(hp(play(system, [sheet('а', {}, ['меткость']), sheet('б')], [13]), 'б')).toBe(15);
+  });
+});
+
+describe('линт: во вход-бросок передан не бросок', () => {
+  const compare = {
+    label: 'Сверить', params: [{ key: 'бросок', label: 'Бросок', kind: 'roll' }],
+    steps: [{ id: 'проверка', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } }],
+  };
+  const caller = (arg: string) => ({
+    label: 'Очередь', activation: 'manual', params: [{ ...ACTOR, label: 'Кто' }, { ...TARGETS, label: 'Цели' }, { key: 'запас', label: 'Запас', kind: 'number' }],
+    steps: [
+      { id: 'выстрел', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
+      { id: 'число', type: 'roll', fixed: { expr: '3' } },
+      { type: 'emit', effect: 'сверить', args: { бросок: { expr: arg } } },
+    ],
+  });
+  const problems = async (arg: string) => {
+    const { lintSystem, errorsOf } = await import('../src/model/lint.ts');
+    return errorsOf(lintSystem(world({ сверить: compare, удар: caller(arg) }))).map(p => p.text).filter(t => t.includes('вход-бросок'));
+  };
+
+  it('шаг-бросок одним именем — без ошибки', async () => {
+    expect(await problems('@выстрел')).toEqual([]);
+  });
+  it('формула, вход-число — ошибка', async () => {
+    expect(await problems('@выстрел + 1')).toHaveLength(1);
+    expect(await problems('@запас')).toHaveLength(1);
+  });
+});

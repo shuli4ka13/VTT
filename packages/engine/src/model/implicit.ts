@@ -1,3 +1,4 @@
+import { loopOf } from '../engine/steps/each.ts';
 import type { Effect, Param, Step } from './types.ts';
 
 export type Implicit =
@@ -8,11 +9,8 @@ export type Implicit =
 const sameKind = (a: Param, b: Param): boolean => (a.kind ?? 'number') === (b.kind ?? 'number') && Boolean(a.many) === Boolean(b.many);
 
 export function loopItemOf(caller: Pick<Effect, 'params' | 'steps'>): string | null {
-  const each = (caller.steps ?? []).find((step: Step) => step.type === 'each') as { of?: unknown; as?: unknown } | undefined;
-  if (!each) return null;
-  if (typeof each.as === 'string' && each.as) return each.as;
-  const list = (caller.params ?? []).find(p => p.key === each.of);
-  return list?.item?.key ?? null;
+  const each = (caller.steps ?? []).find((step: Step) => step.type === 'each') as { of?: unknown } | undefined;
+  return each ? loopOf(caller.params, each)?.key ?? null : null;
 }
 
 export const HOLDER = 'носитель';
