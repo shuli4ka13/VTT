@@ -537,6 +537,8 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .args-row__kind { color: var(--text-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .args-row__fill { display: flex; flex-direction: column; gap: var(--s-2); min-width: 0; }
 .args-row__fill > .select, .args-row__fill > .slot { width: 100%; }
+.args-row__err { font-size: var(--fs-1); color: var(--danger); }
+.args-row--bad .formula-field { border-color: var(--danger); }
 .args-row__line { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
 .args-row__line > .slot { flex: 1; min-width: 0; }
 .args-row__line > .btn { flex: none; }

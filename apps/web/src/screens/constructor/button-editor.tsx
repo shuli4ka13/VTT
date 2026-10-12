@@ -10,6 +10,7 @@ import { ValueField, asText, type SlotOption } from './value-field.tsx';
 import { paymentsOf } from '@vtt/engine/model/payments';
 import { grouped as byRole } from './effects/roles.ts';
 import { kindWords } from './effects/params-editor.tsx';
+import { shapeProblem, shapeOfKind, type Shape } from './formula-shape.ts';
 
 const EMPTY = '';
 const OWN = 'Своё у каждой записи';
@@ -207,8 +208,9 @@ function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, 
   }
 
   const lone = LONE.exec(text)?.[1];
+  const problem = text ? shapeProblem(text, kind, tag => shapeIn(tag, recordKind, system, effect, binding.args as Record<string, unknown> | undefined)) : null;
   return (
-    <div className={`args-row${need ? ' args-row--need' : ''}`}>
+    <div className={`args-row${need ? ' args-row--need' : ''}${problem ? ' args-row--bad' : ''}`}>
       <span className="args-row__name">{name}</span>
       <KindCell param={param} system={system} />
       <div className="args-row__fill">
@@ -230,11 +232,26 @@ function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, 
           <Button size="sm" title={`завести у типа свойство «${name}»: у каждой записи своё значение, его заполняют в книге`} onClick={onNew}>+ свойство</Button>
         ) : null}
         </div>
+        {problem ? <span className="args-row__err">{problem}</span> : null}
         {lone && kindId && (recordKind.columns ?? []).some(prop => prop.key === lone)
           ? <Examples system={system} kind={recordKind} kindId={kindId} prop={lone} /> : null}
       </div>
     </div>
   );
+}
+
+function shapeIn(tag: string, kind: RecordKind, system: System, effect: Effect, args: Record<string, unknown> | undefined): Shape {
+  const [head, column] = tag.split('.');
+  const prop = (kind.columns ?? []).find(one => one.key === head);
+  if (prop && !column) return shapeOfKind(prop.kind);
+  if (prop && column) {
+    const from = prop.kind === 'choice' && prop.from ? system.tables?.[prop.from] : undefined;
+    const found = from?.columns?.find(one => one.key === column);
+    return found ? shapeOfKind(found.kind) : 'any';
+  }
+  const asked = paymentsOf(system, effect, args ?? {})
+    .flatMap(({ payment }) => payment.params ?? []).find(one => one.key === tag && one.ask);
+  return asked ? shapeOfKind(asked.kind) : 'any';
 }
 
 function KindCell({ param, system }: { param: Param; system: System }) {
