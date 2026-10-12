@@ -1,5 +1,6 @@
 import type { System, Effect, Param } from '@vtt/schema';
 import { Select } from '../../ui/primitives.tsx';
+import { grouped } from './effects/roles.ts';
 
 const FROM_INPUT = ':вход:';
 const NEW_INPUT = ':новый';
@@ -29,9 +30,9 @@ export function EffectPick({ value, onChange, system, only, inputs = [], onCreat
       value={input ? `${FROM_INPUT}${input}` : named}
       options={[
         ['', empty],
-        ...effects.map(([id, effect]) => [id, `«${effect.label ?? id}»`] as const),
-        ...fromInputs.map(param => [`${FROM_INPUT}${param.key}`, `из входа «${param.label ?? param.key}»`] as const),
-        ...(onCreateParam ? [[NEW_INPUT, 'из нового входа…'] as const] : []),
+        ...grouped(system, effects).map(([id, effect, group]) => [id, `«${effect.label ?? id}»`, group] as const),
+        ...fromInputs.map(param => [`${FROM_INPUT}${param.key}`, `«${param.label ?? param.key}»`, 'Что передали во вход'] as const),
+        ...(onCreateParam ? [[NEW_INPUT, 'новый вход…', 'Что передали во вход'] as const] : []),
       ]}
       onChange={next => {
         if (!next) { onChange(null); return; }

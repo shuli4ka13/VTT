@@ -5,6 +5,18 @@ import { COST_BLOCK } from '@vtt/engine/words/glossary';
 
 export type Role = 'button' | 'auto' | 'passive' | 'pay' | 'step';
 
+export const ROLE_GROUPS: Record<Role, string> = {
+  step: 'Шаги для других', pay: 'Плата', button: 'Кнопкой', auto: 'Срабатывают сами', passive: 'Висят и правят',
+};
+
+const ROLE_ORDER: Role[] = ['step', 'pay', 'button', 'auto', 'passive'];
+
+export function grouped<E>(system: System, list: readonly [string, E][]): [string, E, string][] {
+  const roles = rolesOf(system, null);
+  const rank = (id: string) => ROLE_ORDER.indexOf(roles.get(id) ?? 'step');
+  return [...list].sort(([a], [b]) => rank(a) - rank(b)).map(([id, effect]) => [id, effect, ROLE_GROUPS[roles.get(id) ?? 'step']]);
+}
+
 export const ROLE_WORDS: Record<Role, string> = {
   button: 'кнопкой', auto: 'срабатывает сам', passive: 'висит и правит', pay: 'плата', step: 'шаг для других',
 };

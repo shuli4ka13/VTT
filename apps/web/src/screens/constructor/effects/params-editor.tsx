@@ -1,3 +1,4 @@
+import { formulaWords } from '../../../ui/formula-words.ts';
 import { useState } from 'react';
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
 import { choiceTables } from '@vtt/engine/model/tables';
@@ -313,28 +314,38 @@ function DefaultCell({ param, system, onChange }: { param: Loose; system: System
 }
 
 const SOURCE_WORDS: Record<string, string> = {
-  actor: 'кто нажал', targets: 'выбранные цели', cell: 'из книги', formula: 'формула кнопки',
+  actor: 'кто нажал', targets: 'выбранные цели', cell: 'заполняют в книге', formula: 'считается у типа',
   call: 'от эффекта', self: 'приходит само', ask: 'спросить за столом',
 };
 
-function sourceDetail(kind: string, many: readonly Origin[]): string {
+function sourceDetail(system: System, kind: string, many: readonly Origin[]): string {
   if (kind === 'cell') return many.map(origin => `${origin.place}: поле «${origin.field}»`).join('\n');
-  if (kind === 'formula') return many.map(origin => `${origin.button ? `«${origin.button}» у ` : ''}${origin.place}`).join('\n');
+  if (kind === 'formula') return many.map(origin => `${origin.place}${origin.button ? ` («${origin.button}»)` : ''}: ${origin.formula ? formulaWords(system, origin.formula) : '…'}`).join('\n');
   return many.map(origin => origin.text).join('\n');
 }
 
 function Origins({ effectId, param, system }: { effectId: string; param: Param; system: System }) {
   const compendium = useWorld(s => s.compendium);
+  const pick = useWorld(s => s.pick);
   const list = cachedOrigins(system, compendium, effectId, param).filter(origin => origin.kind !== 'default');
   if (!list.length) return <span className="sources" />;
   const kinds = [...new Set(list.map(origin => origin.kind))];
+  const go = (many: readonly Origin[]) => {
+    const kind = many.find(origin => origin.table)?.table;
+    if (kind) return () => pick({ activeTab: 'records', activeRecordKind: kind });
+    const effect = many.find(origin => origin.effect)?.effect;
+    return effect ? () => pick({ activeTab: 'effects', activeEffectId: effect, activeStepIndex: null }) : undefined;
+  };
   return (
     <span className="sources">
-      {kinds.map(kind => (
-        <span key={kind} className={`source source--${kind}`} title={sourceDetail(kind, list.filter(origin => origin.kind === kind))}>
-          {SOURCE_WORDS[kind] ?? kind}
-        </span>
-      ))}
+      {kinds.map(kind => {
+        const many = list.filter(origin => origin.kind === kind);
+        const open = kind === 'cell' || kind === 'formula' || kind === 'call' ? go(many) : undefined;
+        const title = `${sourceDetail(system, kind, many)}${open ? '\nщелчок — открыть' : ''}`;
+        return open
+          ? <button key={kind} type="button" className={`source source--${kind} source--link`} title={title} onClick={open}>{SOURCE_WORDS[kind] ?? kind}</button>
+          : <span key={kind} className={`source source--${kind}`} title={title}>{SOURCE_WORDS[kind] ?? kind}</span>;
+      })}
     </span>
   );
 }

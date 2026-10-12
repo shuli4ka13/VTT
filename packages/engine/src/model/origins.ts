@@ -14,6 +14,7 @@ export interface Origin {
   place?: string;
   button?: string;
   field?: string;
+  formula?: string;
 }
 
 const quoted = (text: string | undefined, fallback: string): string => `«${text || fallback}»`;
@@ -24,7 +25,8 @@ function fromBinding(binding: Binding, effect: Effect, param: Param, owner: stri
   const fill = tableOf(binding, effect)[param.key];
   if (fill === 'actor') return { kind: 'actor', text: `${where}: кто нажал`, ...at };
   if (fill === 'targets') return { kind: 'targets', text: `${where}: цели со стола`, ...at };
-  if (binding.args?.[param.key] !== undefined) return { kind: 'formula', text: `${where}: считается само`, ...at };
+  const arg = binding.args?.[param.key] as unknown;
+  if (arg !== undefined) return { kind: 'formula', text: `${where}: считается само`, ...at, formula: typeof arg === 'object' && arg !== null ? String((arg as { expr?: unknown }).expr ?? '') : String(arg) };
   const column = columns.find(c => c.key === param.key);
   if (column) return { kind: 'cell', text: `клетка ${owner.replace(/»$/, '')} · ${column.label || column.key}»`, ...at, field: column.label || column.key };
   return null;

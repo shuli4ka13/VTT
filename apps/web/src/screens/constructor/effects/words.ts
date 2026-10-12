@@ -17,7 +17,7 @@ export type WithNumber = (change: (amount: Step, apply: Step, id: string) => voi
 
 export const CARD_TITLES: Record<string, string> = { check: 'Проверка', change: 'Изменение', number: 'Число', table: 'Взять из таблицы', stop: 'Стоп' };
 
-export const STEP_TITLES = { call: 'Вызов', callFrom: 'Вызов из входа', put: 'Наложить', take: 'Снять', set: 'Изменить', roll: 'Бросок', number: 'Число' };
+export const STEP_TITLES = { call: 'Вызов', callFrom: 'Вызвать переданное в', put: 'Наложить', take: 'Снять', set: 'Изменить', roll: 'Бросок', number: 'Число' };
 
 const inputOf = (ref: unknown): string | undefined =>
   /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((ref as { expr?: unknown } | undefined)?.expr ?? ''))?.[1];

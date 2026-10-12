@@ -293,6 +293,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
                 )}
               />}
               <div className="flow-block__arm">
+                {!fused && conditioned ? <span className="flow-block__then">тогда:</span> : null}
                 {first >= 0 && last > first ? render(first, last) : <span className="faint">пусто — добавьте шаг</span>}
                 <div className="flow-block__add">{armAdd(head)}</div>
               </div>

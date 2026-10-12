@@ -1,3 +1,4 @@
+import { grouped as byRole } from './effects/roles.ts';
 import { useState, type ReactNode } from 'react';
 import type { System, Param, SlotRef, Effect } from '@vtt/schema';
 import { paymentsOf } from '@vtt/engine/model/payments';
@@ -235,7 +236,7 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, fromP
         ) : null}
         {computed.length ? (
           <div className="call-group call-group--quiet">
-            <span className="call-group__title">Считается само</span>
+            <span className="call-group__title">Считается у типа — одинаково для всех записей</span>
             {computed.map(input => (open === input.param.key ? editing(input) : row(input,
               <span className="call-group__value">← {shownValue(input)}</span>,
               <Button size="sm" variant="ghost" onClick={() => setOpen(input.param.key)}>изменить</Button>)))}
@@ -259,7 +260,7 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, fromP
   ) : (
     <Select
       value={typeof raw === 'string' ? raw : ''}
-      options={[['', '— что вызвать —'], ...effects.map(([id, e]) => [id, e.label || id] as const)] as never}
+      options={[['', '— что вызвать —'], ...byRole(system, effects).map(([id, e, group]) => [id, e.label || id, group] as const)] as never}
       onChange={next => onEffect(next)}
     />
   );

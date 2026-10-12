@@ -131,7 +131,7 @@ export function NumInput({ value, onCommit, int, least, mono, placeholder }: {
 export function Select<T extends string>({ value, options, onChange, disabled, title, label }: {
   value: T;
   label?: string;
-  options: readonly (readonly [T, string])[];
+  options: readonly (readonly [T, string] | readonly [T, string, string])[];
   onChange: (value: T) => void;
   disabled?: boolean;
   title?: string;
@@ -140,9 +140,16 @@ export function Select<T extends string>({ value, options, onChange, disabled, t
   const all = options.some(([key]) => key === value)
     ? options
     : [[value, value ? `${value} — такого в списке нет` : '— не выбрано —'] as const, ...options];
+  const parts: { group?: string; items: (readonly [T, string] | readonly [T, string, string])[] }[] = [];
+  for (const option of all) {
+    const group = option[2];
+    const last = parts[parts.length - 1];
+    if (last && last.group === group) last.items.push(option); else parts.push({ ...(group ? { group } : {}), items: [option] });
+  }
+  const render = (option: readonly [T, string] | readonly [T, string, string]) => <option key={option[0]} value={option[0]}>{option[1]}</option>;
   return (
     <select className="select" value={value} disabled={disabled} title={title} aria-label={label} onChange={e => { if (e.target.value !== value) onChange(e.target.value as T); }}>
-      {all.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+      {parts.map((part, at) => (part.group ? <optgroup key={`${part.group}:${at}`} label={part.group}>{part.items.map(render)}</optgroup> : part.items.map(render)))}
     </select>
   );
 }
