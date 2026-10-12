@@ -142,18 +142,18 @@ describe('эффекты D&D собираются в конструкторе р
     expect(built('stoneskin')).toEqual(goal);
   });
 
-  it('D&D «Что доходит до меня» (taken_rule): 26 правок вызова урона по меткам — сопротивление и уязвимость по этапам', { timeout: 240000 }, () => {
+  it('D&D «Что доходит до меня» (taken_rule): две правки вызова урона — строка типа урона по значению, сопротивление и уязвимость по этапам', { timeout: 120000 }, () => {
     const [goal] = start('dnd5e', ['taken_rule']);
     fresh('+ висит и правит', goal!.label!, 'taken_rule', 'Общие правила', goal!.description!);
     for (const m of goal!.modifiers ?? []) {
-      const one = m as { anyTags: string[]; value: { expr: string }; stage: string };
+      const one = m as { value: { expr: string }; stage: string };
       within().click('+ правка вызова');
       const card = lastModifier;
       within(card()).select('Чей вызов', 'damage');
       within(card()).formula('На сколько', one.value.expr);
       within(card()).select('Этап', one.stage);
-      within(card()).select('По меткам', one.anyTags[0]!);
       within(card()).select('Кого касается', '@лист == @носитель');
+      within(card()).when('=не(пусто(@носитель.damage_types.[@damage_type].taken))');
     }
     dump({ got: built('taken_rule'), goal });
     expect(built('taken_rule')).toEqual(goal);
@@ -178,24 +178,15 @@ describe('эффекты D&D собираются в конструкторе р
     expect(built('incapacitated')).toEqual(goal);
   });
 
-  it('D&D «Парализован» (paralyzed): правки броска, поле, выдача, вход-память, подписка на конец хода, не спасся — стоп', { timeout: 90000 }, () => {
+  it('D&D «Парализован» (paralyzed): выдаёт «Беспомощен», вход-память, подписка на конец хода зовёт «Повторный спасбросок»', { timeout: 90000 }, () => {
     const [goal] = start('dnd5e', ['paralyzed']);
     const ui = fresh('+ висит и правит', goal!.label!, 'paralyzed', 'Состояния', goal!.description!);
     lifetime('permanent', 'refresh');
+    ui.click('+ правит поле');
+    within(lastModifier()).click('Удалить');
+    within(lastModifier()).click('точно убрать');
     ui.click('+ что даёт');
-    within(ui.field('Что даёт')).select(ui.field('Что даёт').querySelector('select') as HTMLElement, 'incapacitated');
-
-    const rollEdit = (tags: string[], edit: string, holder: string) => {
-      within().click('+ правка вызова');
-      const card = lastModifier;
-      for (const tag of tags) within(card()).select('С метками', tag);
-      within(card()).select('Какая правка', edit);
-      within(card()).select('Кого касается', holder);
-    };
-    rollEdit(['атака'], 'advantage', '@против == @носитель');
-    rollEdit(['спасбросок', 'сила'], 'auto_fail', '@бросающий == @носитель');
-    rollEdit(['спасбросок', 'ловкость'], 'auto_fail', '@бросающий == @носитель');
-    valueModifier('speed', 'set', '0');
+    within(ui.field('Что даёт')).select(ui.field('Что даёт').querySelector('select') as HTMLElement, 'helpless');
 
     ui.click('+ ещё одно');
     ui.type(ui.cell('Название', 0), 'Запомненное число');
@@ -209,17 +200,14 @@ describe('эффекты D&D собираются в конструкторе р
     within(handlerHead(1)).select('Кого касается', '@ходит == @носитель');
     within(handlerHead(1)).when('=или(@запомнено, 0) > 0');
 
-    savingThrow(handlerAt(1), 1, [['Кто спасается', '@носитель'], ['Чем спасается', '"мудрость"'], ['Сложность', '@запомнено']]);
-    let card: HTMLElement;
-    const saved = callIf(1, 'Спасбросок', 'спасся', handlerAt(1));
-    expect(armWord(block(saved, handlerAt(1)))).toBe('спасся:');
-    addToArm(block(saved, handlerAt(1)), 0, 'change');
-    card = stepCard(/^2 · /, handlerAt(1));
-    within(card).click('состояние');
-    card = stepCard(/^2 · /, handlerAt(1));
-    within(card).select('Что делаем', 'remove');
-    within(card).select('Какое', 'paralyzed');
-    within(card).formula('С кого', '@носитель');
+    within(handlerAt(1)).click('+ изменение');
+    const made = () => stepCard(/^1 · /, handlerAt(1));
+    within(made()).click('вызов');
+    within(made()).select('Какой эффект', 'repeat_save');
+    within(made()).formula(within(made()).arg('Кто спасается'), '@носитель');
+    within(made()).formula(within(made()).arg('Чем спасается'), '"мудрость"');
+    within(made()).formula(within(made()).arg('Сложность'), '@запомнено');
+    within(made()).select(within(made()).arg('Что снимается').querySelector('select')!, 'paralyzed');
 
     dump({ got: built('paralyzed'), goal });
     expect(built('paralyzed')).toEqual(goal);

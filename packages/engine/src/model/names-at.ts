@@ -1,5 +1,5 @@
 import { armsOf, sees } from './flow.ts';
-import { loopOf } from '../engine/steps/each.ts';
+import { loopOf, loopParam } from '../engine/steps/each.ts';
 import { flattenSystem } from './inherit.ts';
 import { heardNames, listenerOf, callNamesOf, CALL_TAGS, HOLDER, TARGETS_SEED } from './references.ts';
 import { calledOf } from '../engine/effects.ts';
@@ -25,6 +25,7 @@ export interface NameAt {
   group: NameGroup;
   many?: boolean;
   optional?: boolean;
+  from?: string;
   children?: NameChild[];
 }
 
@@ -49,6 +50,7 @@ const fromParam = (param: Param, group: NameGroup): NameAt => ({
   group,
   ...(param.many ? { many: true } : {}),
   ...(param.optional ? { optional: true } : {}),
+  ...(param.kind === 'choice' && param.from ? { from: param.from } : {}),
 });
 
 const holder = (): NameAt => ({ name: HOLDER, label: 'носитель — тот, на ком висит', kind: 'sheet', group: 'holder' });
@@ -65,6 +67,11 @@ function stepsBefore(steps: readonly Step[], index: number, withLoop: boolean, p
   steps.slice(0, index).forEach((step, at) => {
     if (!sees(arms, at, index)) return;
     if (step.type === 'each') {
+      const row = loopParam(step as never);
+      if (row) {
+        out.push({ name: row.key, label: row.label ?? row.key, kind: 'choice', group: 'loop', ...(row.from ? { from: row.from } : {}) });
+        return;
+      }
       const loop = loopOf(params, step as { of?: unknown });
       if (withLoop && loop) out.push({ name: loop.key, label: loop.label, kind: 'sheet', group: 'loop' });
       return;

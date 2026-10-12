@@ -1,6 +1,6 @@
 import { armsOf, sees } from './flow.ts';
 import { paymentsOf } from './payments.ts';
-import { loopOf } from '../engine/steps/each.ts';
+import { loopOf, loopParam, splits as splitsTargets } from '../engine/steps/each.ts';
 import { tagWords } from '../engine/roll-tags.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import type { System, Compendium, Effect, Step, Modifier, Guard, Param } from './types.ts';
@@ -105,6 +105,7 @@ export interface ChainScope {
   sheets: Set<string>;
   bare: boolean;
   later?: Set<string>;
+  rows?: ReadonlyMap<string, string>;
 }
 
 export const sheetScope = (params: Set<string>, sheets: Iterable<string>, earlier: Iterable<string> = []): ChainScope =>
@@ -175,6 +176,23 @@ export const tablesIn = (source: string): string[] => {
   return out;
 };
 
+function picksIn(source: string): { tag: string; rest?: string }[] {
+  let ast: Node;
+  try { ast = compile(source).ast; } catch { return []; }
+  const out: { tag: string; rest?: string }[] = [];
+  const walk = (node: Node): void => {
+    if (node.kind === 'Pick') {
+      out.push({ tag: node.tag, ...(node.rest ? { rest: node.rest } : {}) });
+      walk(node.key);
+    } else if (node.kind === 'Call') node.args.forEach(walk);
+    else if (node.kind === 'Unary') walk(node.operand);
+    else if (node.kind === 'Binary') { walk(node.left); walk(node.right); }
+    else if (node.kind === 'Conditional') { walk(node.test); walk(node.then); walk(node.otherwise); }
+  };
+  walk(ast);
+  return out;
+}
+
 export function exprRefs(source: string, from: Where, scope: ChainScope, out: Reference[]): void {
   const text = source.trim();
   if (!text) return;
@@ -185,14 +203,33 @@ export function exprRefs(source: string, from: Where, scope: ChainScope, out: Re
   }
   for (const table of tablesIn(text)) out.push({ kind: 'table', key: table, from });
   for (const [table, column] of lookupColumnsIn(text)) out.push({ kind: 'table', key: table, from, scope: 'column', path: column });
+  const picked = new Set<string>();
+  for (const pick of picksIn(text)) {
+    const dot = pick.tag.indexOf('.');
+    const top = dot > 0 ? pick.tag.slice(0, dot) : pick.tag;
+    const rest = dot > 0 ? pick.tag.slice(dot + 1) : '';
+    if (!rest || rest.includes('.') || !(scope.sheets.has(top) || top === DESK_NAME)) continue;
+    picked.add(pick.tag);
+    out.push({ kind: 'table', key: rest, from });
+    const column = pick.rest?.split('.')[0];
+    if (column) out.push({ kind: 'table', key: rest, from, scope: 'cell', path: column });
+  }
+  const cell = (row: string, column: string | undefined): void => {
+    const table = scope.rows?.get(row);
+    if (table && column) out.push({ kind: 'table', key: table, from, scope: 'cell', path: column });
+  };
   for (const dep of deps) {
+    if (picked.has(dep)) continue;
     const dotAt = dep.indexOf('.');
     const top = dotAt > 0 ? dep.slice(0, dotAt) : dep;
     const rest = dotAt > 0 ? dep.slice(dotAt + 1) : '';
     if (scope.sheets.has(top) || top === DESK_NAME) {
       if (!rest) continue;
       const parts = rest.split('.');
-      if (scope.params.has(parts[0]!)) continue;
+      if (scope.params.has(parts[0]!)) {
+        cell(parts[0]!, parts[1]);
+        continue;
+      }
       out.push({ kind: 'field', key: parts[0]!, from, scope: top === DESK_NAME ? 'desk' : 'sheet', ...(parts.length > 1 ? { path: rest } : {}) });
       continue;
     }
@@ -205,7 +242,11 @@ export function exprRefs(source: string, from: Where, scope: ChainScope, out: Re
     const dot = dep.indexOf('.');
     if (dot > 0) {
       const head = dep.slice(0, dot);
-      if (scope.earlier.has(head) || scope.params.has(head)) continue;
+      if (scope.params.has(head)) {
+        cell(head, dep.slice(dot + 1).split('.')[0]);
+        continue;
+      }
+      if (scope.earlier.has(head)) continue;
       out.push({ kind: 'step', key: head, from, scope: 'dotted', path: dep });
       continue;
     }
@@ -224,13 +265,15 @@ export function chainRefs(
   const out: Reference[] = [];
   const earlier = new Set<string>(seeds);
   const named = new Set(sheets);
+  const rows = new Set<string>();
+  const tables = new Map((defs ?? []).filter(param => param.kind === 'choice' && typeof param.from === 'string' && !param.many).map(param => [param.key, String(param.from)] as const));
   const ids = steps.map(step => step.id).filter((id): id is string => Boolean(id));
   const arms = armsOf(steps);
   steps.forEach((step, index) => {
     const from = whereOf(index);
     const visible = new Set([...seeds, ...steps.slice(0, index).flatMap((other, at) => (other.id && sees(arms, at, index) ? [String(other.id)] : []))]);
     const later = new Set(ids.filter(id => !visible.has(id)));
-    const scope: ChainScope = { params, earlier: visible, sheets: new Set(named), bare: true, later };
+    const scope: ChainScope = { params: rows.size ? new Set([...params, ...rows]) : params, earlier: visible, sheets: new Set(named), bare: true, later, rows: tables };
     const mod = registry.get(step.type);
     for (const slot of (mod?.slots ?? []) as { key: string; kind?: string; refersTo?: string }[]) {
       if (slot.key === 'if') continue;
@@ -241,6 +284,11 @@ export function chainRefs(
     if (step.id) earlier.add(String(step.id));
     const loop = step.type === 'each' ? loopOf(defs, step as { of?: unknown })?.key : undefined;
     if (loop) named.add(loop);
+    const row = loopParam(step as never);
+    if (row) {
+      rows.add(row.key);
+      if (row.from) tables.set(row.key, row.from);
+    }
   });
   for (const ref of out) if (ref.kind === 'param' && !params.has(ref.key)) ref.scope = 'missing';
   return out;
@@ -339,9 +387,11 @@ export function heardNames(system: System, listener: Listener): HeardNames {
   const effect = system.effects?.[listener.key] ?? null;
   const params = effect?.params ?? [];
   const steps = effect?.steps ?? [];
-  const split = steps.findIndex(step => step.type === 'each');
+  const split = steps.findIndex(step => step.type === 'each' && splitsTargets(step as never));
   const loop = split >= 0 ? loopOf(params, steps[split] as { of?: unknown })?.key : undefined;
-  const visible = listener.phase === 'done' && split >= 0 ? steps.slice(0, split) : steps;
+  const rowAt = steps.findIndex(step => loopParam(step as never));
+  const cuts = [listener.phase === 'done' ? split : -1, rowAt].filter(at => at >= 0);
+  const visible = cuts.length ? steps.slice(0, Math.min(...cuts)) : steps;
   return {
     sheets: [...params.filter(p => p.kind === 'sheet').map(p => p.key), ...(loop && listener.phase !== 'done' ? [loop] : [])],
     seeds: [
@@ -434,7 +484,7 @@ export function withAddresses(system: System, refs: Reference[]): Reference[] {
   const fields = new Set(fieldsOf(system).map(f => f.tag));
   const tables: Reference[] = [];
   for (const ref of refs) {
-    if (!ref.path || ref.scope === 'column') continue;
+    if (!ref.path || ref.scope === 'column' || ref.scope === 'cell') continue;
     const head = ref.path.split('.')[0]!;
     if (fields.has(head) || !system.tables?.[head]) continue;
     ref.kind = 'field';

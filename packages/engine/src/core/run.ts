@@ -1,10 +1,11 @@
 import { paramStages } from '../engine/stages.ts';
 import { implicitOf } from '../model/implicit.ts';
-import { compile } from '../formula/index.ts';
+import { compile, printFormula } from '../formula/index.ts';
+import type { Node } from '../formula/index.ts';
 import { EngineError, isRuleError } from '../engine/errors.ts';
 import { resolveRef, resolveNumber, resolveOptionalNumber, holdsNow, sheetHead } from '../engine/refs.ts';
 import type { RefContext, Bound } from '../engine/refs.ts';
-import { splitPath } from '../engine/navigate.ts';
+import { splitPath, referencedTable, reach } from '../engine/navigate.ts';
 import { findField, calc } from '../engine/calc.ts';
 import { lapse } from '../events/durations.ts';
 import { sweepBonds } from '../events/bonds.ts';
@@ -29,7 +30,7 @@ import { result, parse, withCount, start } from './dice.ts';
 import { dieConstant } from '../engine/lead-die.ts';
 import type { Check } from '../engine/check.ts';
 import { subsOf, same, instOf, keysOf } from './subs.ts';
-import { same as sameValue } from '../model/sheet-columns.ts';
+import { same as sameValue, hasField, rowKeyOf } from '../model/sheet-columns.ts';
 import { runnerOf } from './steps.ts';
 import type { Clock } from '../engine/clock.ts';
 import type { Pass } from '../engine/calc.ts';
@@ -133,6 +134,7 @@ export interface Delivery {
   bond?: { sheet: string; effect: string };
   offset?: number;
   lead?: Record<string, unknown>[];
+  cost?: boolean;
 }
 
 export interface Delivered {
@@ -309,6 +311,26 @@ export class Run {
         sink.trace.push({ step: name, type: step.type, skipped: true, ...mark });
         continue;
       }
+      const rows = runnerOf(step.type).rows?.(step);
+      if (rows) {
+        if (blocks.length) throw new EngineError(`${frame.owner || 'правило'}: «для каждой строки» не ставится внутрь «Если»`);
+        sink.trace.push({ step: name, type: step.type, table: rows.table, ...mark });
+        for (const row of this.rowsOf(frame, rows)) {
+          const inner: Frame = {
+            ...frame,
+            path: frame.path.step(name).item(row.key),
+            offset: (frame.offset ?? 0) + index + 1,
+            paramDefs: [...frame.paramDefs.filter(param => param.key !== rows.as), row.param],
+            args: { ...frame.args, [rows.as]: row.value },
+          };
+          const at = sink.trace.length;
+          const ran = this.exec(inner, steps.slice(index + 1), sink, { ...results }, within, { ...known });
+          for (const entry of sink.trace.slice(at)) entry.item = row.key;
+          if (ran.stopped && frame.cost) return { results, rolls: known, stopped: ran.stopped };
+          if (ran.stopped?.note) sink.after.push({ text: `${frame.label || frame.owner}: ${ran.stopped.note}` });
+        }
+        return { results, rolls: known, stopped: null };
+      }
       const outer = this.mark;
       const here = { sink, at: sink.trace.length, count: 0 };
       this.mark = here;
@@ -441,23 +463,64 @@ export class Run {
 
   private fieldOf(frame: Frame, refValue: unknown, ref: RefContext): FieldRef {
     const expr = refValue && typeof refValue === 'object' && 'expr' in refValue ? String((refValue as { expr: unknown }).expr) : null;
-    const lone = expr ? /^\s*[@#]([\p{L}\p{N}_.-]+)\s*$/u.exec(expr) : null;
-    if (lone) {
-      const param = frame.paramDefs.find(one => one.key === lone[1] && one.kind === 'field');
+    const name = expr ? this.addressName(frame, expr, ref) : null;
+    if (name) {
+      const param = frame.paramDefs.find(one => one.key === name && one.kind === 'field');
       const passed = param ? frame.args[param.key] : undefined;
       if (passed && typeof passed === 'object' && 'sheet' in passed && 'tag' in passed) return passed as FieldRef;
-      const name = lone[1]!;
-      if (name.startsWith(`${DESK_ID}.`)) return { sheet: DESK_ID, tag: name.slice(DESK_ID.length + 1) };
+      if (name.startsWith(`${DESK_ID}.`)) return { sheet: DESK_ID, tag: this.cellOf(frame, DESK_ID, name.slice(DESK_ID.length + 1), ref) };
       const onSheet = sheetHead(name, ref.sheets);
       if (onSheet?.rest) {
         const id = frame.bound?.[onSheet.head];
         if (typeof id !== 'string') throw new EngineError(`${frame.owner || 'правило'}: «${onSheet.head}» не задан — поле «${onSheet.rest}» менять не у кого`);
-        return { sheet: id, tag: onSheet.rest };
+        return { sheet: id, tag: this.cellOf(frame, id, onSheet.rest, ref) };
       }
     }
     const value = resolveRef(refValue, ref);
     if (value && typeof value === 'object' && 'sheet' in value && 'tag' in value) return value as FieldRef;
     throw new EngineError(`${frame.owner || 'правило'}: ${expr ?? JSON.stringify(refValue)} — не поле листа; пишите @лист.поле`);
+  }
+
+  private addressName(frame: Frame, expr: string, ref: RefContext): string | null {
+    let node: Node;
+    try {
+      node = compile(expr).ast;
+    } catch {
+      return null;
+    }
+    if (node.kind === 'Ref') return node.tag;
+    if (node.kind !== 'Pick') return null;
+    const key = resolveRef({ expr: printFormula(node.key) }, ref);
+    if (key === null || key === undefined || key === '') {
+      throw new EngineError(`${frame.owner || 'правило'}: в «${expr}» строка не задана — какую клетку менять?`);
+    }
+    return `${node.tag}.${String(key)}${node.rest ? `.${node.rest}` : ''}`;
+  }
+
+  private cellOf(frame: Frame, sheetId: string, rest: string, ref: RefContext): string {
+    if (hasField(this.system, rest)) return rest;
+    const split = splitPath(rest);
+    const owner = frame.owner || 'правило';
+    const own = split && split.path.length > 1 && !frame.paramDefs.some(param => param.key === split.head) ? this.system.tables?.[split.head] : undefined;
+    if (split && own) return reach(this.system, this.view(sheetId), split.head, split.path[0], split.path.slice(1), owner);
+    const table = split ? referencedTable(this.system, split.head, frame.paramDefs) : undefined;
+    if (!split || !table) return rest;
+    const key = frame.paramDefs.some(param => param.key === split.head)
+      ? resolveRef({ expr: `@${split.head}` }, ref)
+      : this.view(sheetId).resolve(split.head);
+    if (key === null || key === undefined || key === '') {
+      throw new EngineError(`${owner}: «${split.head}» не задан — какую строку «${this.system.tables?.[table]?.label || table}» менять?`);
+    }
+    return reach(this.system, this.view(sheetId), table, key, split.path, owner);
+  }
+
+  private rowsOf(frame: Frame, loop: { table: string; as: string }): { key: string; value: unknown; param: Param }[] {
+    const owner = frame.owner || 'правило';
+    const table = this.system.tables?.[loop.table];
+    if (!table) throw new EngineError(`${owner}: «для каждой строки» — таблицы «${loop.table}» нет`);
+    if (!loop.as) throw new EngineError(`${owner}: «для каждой строки «${table.label || loop.table}»» — не сказано, как зовётся строка`);
+    const param = { key: loop.as, label: loop.as, kind: 'choice', from: loop.table } as Param;
+    return (table.rows ?? []).map(row => ({ key: rowKeyOf(row), value: row.value, param }));
   }
 
   private known(refValue: unknown, frame: Frame, results: Record<string, unknown>, rolls: Record<string, RollResult>, stepIds: ReadonlySet<string>): boolean {
@@ -588,6 +651,7 @@ export class Run {
       const { entries, delivered } = this.group([{
         effectId: event, label: callee.label || event, steps: callee.steps ?? [], path: at, hop: frame.hop + 1, top: false,
         home: frame.home, subject: home, bound: names, keys, args: values, paramDefs: callee.params ?? [], seed: { метки: payload.tags }, rolls: passed,
+        ...(frame.cost ? { cost: true } : {}),
       }], at);
       sink.after.push(...entries);
       const out = delivered[0];
@@ -716,6 +780,7 @@ export class Run {
       ...(call.bond ? { bond: call.bond } : {}),
       ...(call.lazy ? { lazy: call.lazy } : {}),
       ...(call.offset ? { offset: call.offset } : {}),
+      ...(call.cost ? { cost: true } : {}),
     };
     const given = call.top
       ? this.argValues(frame)

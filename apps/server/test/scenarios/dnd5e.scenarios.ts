@@ -56,13 +56,13 @@ export const scenarios: Scenario[] = [
     name: 'Огненный шар по трём целям: кости один раз, спасбросок у каждого, ячейка одна, нечем платить — отказ',
     rule: `PHB/SRD, «Огненный шар»: 8к6 огнём, спасбросок Ловкости; успех — половина. Кости урона бросаются один раз на всех. Сложность Мирры 8 + 3 + 4 = 15, успех при равенстве. Кости 4+5+6+3+2+6+1+6 = 33. Гоблин (Лов +2): 12 → 14 — провал, 33. Орк (Лов +1): 14 → 15 — успех, 33 / 2 = 16 (с округлением вниз). Огр (Лов −1): 3 → 2 — провал, 33. Ячейка одна: 3 круга 1 → 0. Второе сотворение без ячейки — отказ. ${PAD}`,
     world: 'dnd5e',
-    sheets: { mirra: { values: { 'slots.круг_3.left': 1 } }, goblin: fat(40), orc: fat(40), ogre: fat(100) },
+    sheets: { mirra: { values: { 'slots.3.left': 1 } }, goblin: fat(40), orc: fat(40), ogre: fat(100) },
     dice: [12, 4, 5, 6, 3, 2, 6, 1, 6, 14, 3],
     steps: [
       { act: 'fireball:0', from: 'mirra', to: ['goblin', 'orc', 'ogre'], inputs: { slot: 3 } },
       { act: 'fireball:0', from: 'mirra', to: ['goblin'], inputs: { slot: 3 }, refused: 'нет ячейки' },
     ],
-    expect: { values: { goblin: { hp_current: 7 }, orc: { hp_current: 24 }, ogre: { hp_current: 67 }, mirra: { 'slots.круг_3.left': 0 } } },
+    expect: { values: { goblin: { hp_current: 7 }, orc: { hp_current: 24 }, ogre: { hp_current: 67 }, mirra: { 'slots.3.left': 0 } } },
   },
   {
     name: 'Щит: реакция с вопросом, +5 КБ до начала следующего хода владельца',
@@ -77,7 +77,7 @@ export const scenarios: Scenario[] = [
       { act: 'goblin_scimitar:0', from: 'goblin', to: 'mirra' },
       { turn: 'next' },
     ],
-    expect: { values: { mirra: { hp_current: 33, 'slots.круг_1.left': 3 } }, effects: { mirra: { not: ['shield_up'] } }, notLog: ['попадание'] },
+    expect: { values: { mirra: { hp_current: 33, 'slots.1.left': 3 } }, effects: { mirra: { not: ['shield_up'] } }, notLog: ['попадание'] },
   },
   {
     name: 'Адское возмездие: реакция после урона, спасбросок обидчика, половина урона',
@@ -89,7 +89,7 @@ export const scenarios: Scenario[] = [
       { turn: 'start', order: ['orc', 'mirra'] },
       { act: 'orc_greataxe:0', from: 'orc', to: 'mirra', answers: [[], ['hellish_rebuke']] },
     ],
-    expect: { values: { mirra: { hp_current: 22, 'slots.круг_1.left': 3 }, orc: { hp_current: 35 } } },
+    expect: { values: { mirra: { hp_current: 22, 'slots.1.left': 3 }, orc: { hp_current: 35 } } },
   },
   {
     name: 'Концентрация: удар срывает спасбросок Телосложения, срывается и держимое заклинание',
@@ -101,14 +101,14 @@ export const scenarios: Scenario[] = [
       { act: 'hold_person:0', from: 'mirra', to: 'ogre', inputs: { slot: 2 } },
       { act: 'orc_greataxe:0', from: 'orc', to: 'mirra', answers: [[], []] },
     ],
-    expect: { values: { mirra: { hp_current: 22, 'slots.круг_2.left': 2 } }, effects: { ogre: { not: ['paralyzed'] }, mirra: { not: ['concentration'] } } },
+    expect: { values: { mirra: { hp_current: 22, 'slots.2.left': 2 } }, effects: { ogre: { not: ['paralyzed'] }, mirra: { not: ['concentration'] } } },
   },
   {
     name: 'Сопротивление, уязвимость и спасбросок вместе: половина, потом сопротивление',
     rule: 'PHB, «Сопротивление и уязвимость»: сопротивление вдвое уменьшает урон, уязвимость вдвое увеличивает; округление вниз; применяются после прочих правок, в том числе после «половина при успехе». Огненный шар 8к6 = 35. Гоблин с сопротивлением огню спасся (14 + 2 = 16 ≥ 15): 35 / 2 = 17, затем 17 / 2 = 8, хиты 40 → 32. Орк без свойств не спасся (3 + 1 = 4): 35, хиты 5. Огр с уязвимостью не спасся (3 − 1 = 2): 70, хиты 100 → 30.',
     world: 'dnd5e',
     sheets: {
-      mirra: { values: { 'slots.круг_3.left': 1 } },
+      mirra: { values: { 'slots.3.left': 1 } },
       goblin: { ...fat(40), effects: ['fire_resistance'] },
       orc: fat(40),
       ogre: { ...fat(100), effects: ['fire_vulnerable'] },
@@ -181,7 +181,7 @@ export const scenarios: Scenario[] = [
       { act: 'longsword:0', from: 'arven', to: 'orc' },
     ],
     expect: {
-      values: { orc: { hp_current: 30 }, doran: { 'slots.круг_1.left': 3 } },
+      values: { orc: { hp_current: 30 }, doran: { 'slots.1.left': 3 } },
       effects: { arven: { has: ['blessed'] }, mirra: { has: ['blessed'] }, doran: { has: ['concentration'] } },
     },
   },

@@ -20,6 +20,8 @@ export class Path {
 
   at(sheetId: string): Path { return this.add('at', sheetId); }
 
+  item(key: string | number): Path { return this.add('i', key); }
+
   call(fn: string): Path { return this.add('call', fn); }
 
   phase(name: string): Path { return this.add(name); }

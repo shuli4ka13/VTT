@@ -6,7 +6,8 @@ export type Implicit =
   | { by: 'target'; from: string }
   | { by: 'actor'; from: string };
 
-const sameKind = (a: Param, b: Param): boolean => (a.kind ?? 'number') === (b.kind ?? 'number') && Boolean(a.many) === Boolean(b.many);
+const sameKind = (a: Param, b: Param): boolean => (a.kind ?? 'number') === (b.kind ?? 'number') && Boolean(a.many) === Boolean(b.many)
+  && (a.kind !== 'choice' || !a.from || !b.from || a.from === b.from);
 
 export function loopItemOf(caller: Pick<Effect, 'params' | 'steps'>): string | null {
   const each = (caller.steps ?? []).find((step: Step) => step.type === 'each') as { of?: unknown } | undefined;

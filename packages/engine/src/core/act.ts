@@ -133,7 +133,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
   }
 
   const steps = effect.steps ?? [];
-  const split = steps.findIndex(step => runnerOf(step.type).splits === true);
+  const split = steps.findIndex(step => runnerOf(step.type).splits?.(step as StepData) === true);
   const label = `эффект «${effect.label || action.effect}»`;
   const keys = keysOf(system, action.effect, true);
   let calls: Delivery[];

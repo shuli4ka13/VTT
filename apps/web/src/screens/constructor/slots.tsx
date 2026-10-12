@@ -10,7 +10,7 @@ import { STEP } from '../../words.ts';
 import { hasField } from '@vtt/engine/model/sheet-columns';
 import { recordKinds } from '@vtt/engine/model/owned';
 
-export interface EarlierStep { id: string; type: string; at?: number; title?: string; outputs?: { path: string; label: string; kind?: string }[] }
+export interface EarlierStep { id: string; type: string; at?: number; title?: string; table?: string; outputs?: { path: string; label: string; kind?: string }[] }
 
 export const stepName = (step: EarlierStep): string =>
   (step.at

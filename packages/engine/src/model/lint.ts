@@ -1,7 +1,7 @@
 import { paramStages, targetStages } from '../engine/stages.ts';
 import { implicitOf } from './implicit.ts';
 import { armsOf, balance, flowOf, inBlock, isFlow } from './flow.ts';
-import { loopOf } from '../engine/steps/each.ts';
+import { loopOf, loopParam } from '../engine/steps/each.ts';
 import { chosenEffect, choicesOfInput, emittedChoices, kindsChoosing } from './payments.ts';
 import { SEEN_LABEL, ANY_ACTION, PHASES } from '../events/bus.ts';
 import type { System, Compendium, Effect, Step, Stage } from './types.ts';
@@ -23,9 +23,10 @@ import { TABS, STEP } from '../words/glossary.ts';
 import {
   referencesOf, declaredOf, chainRefs, listenerOf, withAddresses,
   type Where, type Reference, type RefKind, type Declared,
-  LISTEN, contractsOf,
+  LISTEN, contractsOf, HOLDER, DESK_NAME,
 } from './references.ts';
-import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, rowKeyOf } from './sheet-columns.ts';
+import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, rowKeyOf, hasField } from './sheet-columns.ts';
+import { isRange } from './tables.ts';
 
 export type Level = 'error' | 'warn';
 
@@ -119,6 +120,10 @@ function danglingText(ref: Reference, declared: Declared): string | null {
   if (ref.kind === 'field' && ref.scope === 'bare' && !declared.field.has(ref.key)) {
     return `«${ref.key}» — нет ни входа, ни шага с таким именем`;
   }
+  if (ref.kind === 'table' && ref.scope === 'cell') {
+    return !declared.table.has(ref.key) || declared.column.has(`${ref.key}.${ref.path}`) ? null
+      : `в таблице «${declared.tableLabel.get(ref.key) ?? ref.key}» нет колонки «${ref.path}»`;
+  }
   if (ref.kind === 'table' && ref.scope === 'column') {
     return !declared.table.has(ref.key) || declared.column.has(`${ref.key}.${ref.path}`) ? null
       : `в таблице «${declared.tableLabel.get(ref.key) ?? ref.key}» нет колонки «${ref.path}» — «из таблицы» вернёт пусто`;
@@ -173,7 +178,7 @@ function refProblems(refs: Reference[], declared: Declared, earlierByWhere: (ref
 const earlierIds = (steps: Step[], index: number): Set<string> =>
   new Set(steps.slice(0, index).map(s => s.id).filter((id): id is string => Boolean(id)));
 
-export interface EarlierStep { id: string; type: string }
+export interface EarlierStep { id: string; type: string; table?: string }
 
 export function lintStep(step: Step, system: System, effect: Effect, earlier: EarlierStep[], visible: readonly { name: string; kind: string }[] = []): Problem | null {
   const where: Where = { tab: 'effects', effect: effect.label ?? '', step: 0 };
@@ -181,8 +186,9 @@ export function lintStep(step: Step, system: System, effect: Effect, earlier: Ea
   if (structural) return structural;
   const declared = declaredOf(system);
   const all = paramsOf(system, effect);
-  const params = new Set([...all.filter(p => p.kind !== 'sheet').map(p => p.key), ...visible.filter(one => one.kind !== 'sheet').map(one => one.name)]);
-  const sheets = [...all.filter(p => p.kind === 'sheet').map(p => p.key), 'носитель', ...earlier.filter(e => e.type === 'each').map(e => e.id), ...visible.filter(one => one.kind === 'sheet').map(one => one.name)];
+  const rows = earlier.filter(e => e.type === 'each' && e.table).map(e => e.id);
+  const params = new Set([...all.filter(p => p.kind !== 'sheet').map(p => p.key), ...rows, ...visible.filter(one => one.kind !== 'sheet').map(one => one.name)]);
+  const sheets = [...all.filter(p => p.kind === 'sheet').map(p => p.key), 'носитель', ...earlier.filter(e => e.type === 'each' && !e.table).map(e => e.id), ...visible.filter(one => one.kind === 'sheet').map(one => one.name)];
   const known = new Set([...earlier.map(e => e.id), ...visible.filter(one => one.kind !== 'sheet').map(one => one.name)]);
   const refs = withAddresses(system, chainRefs([step], () => where, params, sheets))
     .filter(ref => !(ref.kind === 'step' && known.has(ref.key)))
@@ -595,7 +601,8 @@ function paramProblems(system: System): Problem[] {
               }
             }
             if (args[param.key] !== undefined || param.optional || param.ask || param.default !== undefined) continue;
-            const how = implicitOf(param, effect);
+            const loops = steps.slice(0, index).map(one => loopParam(one as never)).filter((one): one is NonNullable<typeof one> => Boolean(one));
+            const how = implicitOf(param, loops.length ? { ...effect, params: [...(effect.params ?? []), ...loops] } : effect);
             const loopAt = (effect.steps ?? []).findIndex(s => s.type === 'each');
             if (how && (how.by !== 'target' || (steps === effect.steps && loopAt >= 0 && index > loopAt))) continue;
             const users = viaInput ? kindsChoosing(system, id, viaInput, choice) : [];
@@ -643,14 +650,14 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   for (const [id, effect] of Object.entries(system.effects)) {
     for (const chain of chainsOf(id, effect)) {
       out.push(...stepProblems(chain.steps, chain.where));
-      const splits = chain.steps.flatMap((step, index) => (registry.get(step.type)?.splits ? [index] : []));
-      for (const index of splits.slice(1)) {
+      const loops = chain.steps.flatMap((step, index) => (registry.get(step.type)?.loops ? [index] : []));
+      for (const index of loops.slice(1)) {
         out.push({ where: chain.where(index), level: 'error', text: `«${STEP_WORDS.each.label}» в цепочке может быть только один` });
       }
       const arms = armsOf(chain.steps);
       for (const found of balance(chain.steps)) out.push({ where: chain.where(found.index), level: 'error', text: found.problem });
-      for (const index of splits) {
-        if (inBlock(arms, index)) out.push({ where: chain.where(index), level: 'error', text: `«${STEP_WORDS.each.label}» не ставится внутрь «Если» — цикл по целям только верхним уровнем` });
+      for (const index of loops) {
+        if (inBlock(arms, index)) out.push({ where: chain.where(index), level: 'error', text: `«${STEP_WORDS.each.label}» не ставится внутрь «Если» — цикл только верхним уровнем` });
       }
       const outputsOfCall = new Map<string, { label: string; keys: Set<string> }>();
       chain.steps.forEach((step, index) => {
@@ -798,6 +805,33 @@ export function describeWhere(where: Where, system: System, compendium?: Compend
   return parts.join(' · ');
 }
 
+function rowLoopProblems(system: System, effect: Effect, steps: Step[], index: number, at: Where): Problem[] {
+  const out: Problem[] = [];
+  const raw = steps[index] as { rows?: unknown; as?: unknown };
+  const id = String(raw.rows ?? '');
+  const table = system.tables?.[id];
+  if (!table) return [{ where: at, level: 'error', text: `«для каждой строки»: таблицы «${id}» нет` }];
+  const label = table.label || id;
+  if (isRange(table)) out.push({ where: at, level: 'error', text: `у таблицы «${label}» строки — промежутки, у них нет значения: перебирать нечего` });
+  else if (!(table.rows ?? []).length) out.push({ where: at, level: 'error', text: `у таблицы «${label}» строк нет — перебирать нечего` });
+  const as = typeof raw.as === 'string' ? raw.as.trim() : '';
+  if (!as) {
+    out.push({ where: at, level: 'error', text: `«для каждой строки «${label}»»: не сказано, как зовётся строка` });
+    return out;
+  }
+  const taken: [boolean, string][] = [
+    [(effect.params ?? []).some(param => param.key === as), 'вход эффекта'],
+    [steps.some(step => step.id === as), STEP.one],
+    [as === HOLDER || as === DESK_NAME, 'слово движка'],
+    [hasField(system, as), 'поле листа'],
+    [Boolean(system.tables?.[as]), 'таблица'],
+    [recordKinds(system).some(([, kind]) => (kind.columns ?? []).some(prop => prop.key === as)), 'свойство записи'],
+  ];
+  const clash = taken.find(([hit]) => hit);
+  if (clash) out.push({ where: at, level: 'error', text: `имя строки «${as}» уже занято: так зовётся ${clash[1]}` });
+  return out;
+}
+
 function shapeProblems(system: System, compendium?: Compendium): Problem[] {
   const out: Problem[] = [];
   const called = new Set(Object.entries(system.effects).flatMap(([key, effect]) => [
@@ -814,16 +848,48 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
     for (const twice of new Set(paid.filter((key, index) => paid.indexOf(key) !== index))) {
       out.push({ where: { ...where, part: 'cost' }, level: 'warn', text: `стоимость зовёт «${system.effects[twice]?.label ?? twice}» дважды: спишется два раза` });
     }
-    (effect.steps ?? []).forEach((step, index) => {
-      if (step.type !== 'each') return;
-      const of = String((step as { of?: unknown }).of ?? '');
-      if (!sheets.get(of)) out.push({ where: { ...where, step: index }, level: 'error', text: `«для каждого» перебирает «${of || '?'}», а такого входа-списка листов у эффекта нет` });
-      else if (!loopOf(effect.params, step as { of?: unknown })) {
-        const list = effect.params?.find(p => p.key === of);
-        out.push({ where: { ...where, part: 'params', key: of }, level: 'error', text: `у входа «${list?.label ?? of}» не сказано, как зовётся один из списка` });
+    for (const chain of chainsOf(id, effect)) {
+      chain.steps.forEach((step, index) => {
+        if (step.type !== 'each') return;
+        const raw = step as { of?: unknown; rows?: unknown; as?: unknown };
+        const at = chain.where(index);
+        const listed = raw.of !== undefined && raw.of !== '';
+        const tabled = raw.rows !== undefined && raw.rows !== '';
+        if (listed && tabled) {
+          out.push({ where: at, level: 'error', text: '«для каждого» перебирает или вход-список, или строки таблицы — не оба сразу' });
+          return;
+        }
+        if (!listed && !tabled) {
+          out.push({ where: at, level: 'error', text: 'не заполнено: из какого списка' });
+          return;
+        }
+        if (tabled) {
+          out.push(...rowLoopProblems(system, effect, chain.steps, index, at));
+          return;
+        }
+        if (raw.as !== undefined) out.push({ where: at, level: 'error', text: 'имя строки бывает только у цикла по таблице — у входа-списка имя одного задаёт сам вход' });
+        if (chain.steps !== effect.steps) {
+          out.push({ where: at, level: 'error', text: 'цикл по целям — только у действия кнопкой; в подписке, цене и при наложении перебирают строки таблицы' });
+          return;
+        }
+        const of = typeof raw.of === 'string' ? raw.of : '';
+        if (!sheets.get(of)) out.push({ where: at, level: 'error', text: `«для каждого» перебирает «${of || '?'}», а такого входа-списка листов у эффекта нет` });
+        else if (!loopOf(effect.params, raw)) {
+          const list = effect.params?.find(p => p.key === of);
+          out.push({ where: { ...where, part: 'params', key: of }, level: 'error', text: `у входа «${list?.label ?? of}» не сказано, как зовётся один из списка` });
+        }
+        if (called.has(id)) out.push({ where: at, level: 'error', text: 'вызываемый эффект не перебирает цели — «для каждого» по листам работает только у действия кнопкой; строки таблицы перебирать можно' });
+      });
+    }
+    const looped = (effect.steps ?? []).findIndex(step => loopParam(step as never));
+    if (looped >= 0) {
+      const inside = (effect.steps ?? []).slice(looped + 1).map(step => step.id).filter((one): one is string => Boolean(one));
+      for (const column of effect.returns ?? []) {
+        const expr = String((column.expr as { expr?: unknown } | undefined)?.expr ?? '');
+        const seen = inside.find(one => new RegExp(`[@#]${one.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}_])`, 'u').test(expr));
+        if (seen) out.push({ where: { ...where, part: 'returns', key: column.key }, level: 'error', text: `итог «${column.label ?? column.key}» смотрит на ${STEP.one} «${seen}» внутри цикла — после цикла его нет` });
       }
-      if (called.has(id)) out.push({ where: { ...where, step: index }, level: 'error', text: 'вызываемый эффект не перебирает цели — «для каждого» работает только у действия кнопкой' });
-    });
+    }
     if (effect.bond) {
       if (!sheets.has(effect.bond.by)) out.push({ where, level: 'error', text: `держатель выдаётся листу «${effect.bond.by}», а такого входа-листа у эффекта нет` });
       const holder = system.effects[effect.bond.effect];

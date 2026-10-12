@@ -76,7 +76,11 @@ export interface StepModule {
 
   lazy?: (step: StepData) => boolean;
 
-  splits?: boolean;
+  loops?: boolean;
+
+  splits?: (step: StepData) => boolean;
+
+  rows?: (step: StepData) => { table: string; as: string } | null;
 
   flow?: 'open' | 'alt' | 'close';
 

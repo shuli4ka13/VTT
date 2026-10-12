@@ -462,6 +462,16 @@
               "expr": "@строка.max"
             },
             "title": "{label}"
+          },
+          {
+            "key": "start",
+            "label": "В начале хода",
+            "kind": "number"
+          },
+          {
+            "key": "none",
+            "label": "Если не осталось",
+            "kind": "text"
           }
         ],
         "rows": [
@@ -469,7 +479,9 @@
             "value": "действие",
             "label": "Действие",
             "cells": {
-              "max": 2
+              "max": 2,
+              "start": 1,
+              "none": "действие на этом ходу уже потрачено"
             },
             "view": {
               "left": {
@@ -481,7 +493,9 @@
             "value": "бонусное",
             "label": "Бонусное действие",
             "cells": {
-              "max": 1
+              "max": 1,
+              "start": 1,
+              "none": "бонусное действие на этом ходу уже потрачено"
             },
             "view": {
               "left": {
@@ -493,7 +507,9 @@
             "value": "реакция",
             "label": "Реакция",
             "cells": {
-              "max": 1
+              "max": 1,
+              "start": 1,
+              "none": "реакция уже потрачена"
             },
             "view": {
               "left": {
@@ -505,7 +521,9 @@
             "value": "раз_за_ход",
             "label": "Раз за ход",
             "cells": {
-              "max": 1
+              "max": 1,
+              "start": 1,
+              "none": "это бывает раз за ход"
             },
             "view": {
               "left": {
@@ -517,14 +535,16 @@
             "value": "атаки",
             "label": "Атак осталось",
             "cells": {
-              "max": 4
+              "max": 4,
+              "start": 0,
+              "none": "атак на этом ходу не осталось"
             }
           }
         ]
       },
       "slots": {
         "label": "Ячейки по кругам",
-        "key": "word",
+        "key": "number",
         "columns": [
           {
             "key": "circle",
@@ -551,70 +571,84 @@
             },
             "title": "Ячейки: {label}",
             "default": 0
+          },
+          {
+            "key": "none",
+            "label": "Если не осталось",
+            "kind": "text"
           }
         ],
         "rows": [
           {
-            "value": "круг_1",
+            "value": 1,
             "label": "1-й круг",
             "cells": {
-              "circle": "круг_1"
+              "circle": "круг_1",
+              "none": "нет ячейки 1-го круга"
             }
           },
           {
-            "value": "круг_2",
+            "value": 2,
             "label": "2-й круг",
             "cells": {
-              "circle": "круг_2"
+              "circle": "круг_2",
+              "none": "нет ячейки 2-го круга"
             }
           },
           {
-            "value": "круг_3",
+            "value": 3,
             "label": "3-й круг",
             "cells": {
-              "circle": "круг_3"
+              "circle": "круг_3",
+              "none": "нет ячейки 3-го круга"
             }
           },
           {
-            "value": "круг_4",
+            "value": 4,
             "label": "4-й круг",
             "cells": {
-              "circle": "круг_4"
+              "circle": "круг_4",
+              "none": "нет ячейки 4-го круга"
             }
           },
           {
-            "value": "круг_5",
+            "value": 5,
             "label": "5-й круг",
             "cells": {
-              "circle": "круг_5"
+              "circle": "круг_5",
+              "none": "нет ячейки 5-го круга"
             }
           },
           {
-            "value": "круг_6",
+            "value": 6,
             "label": "6-й круг",
             "cells": {
-              "circle": "круг_6"
+              "circle": "круг_6",
+              "none": "нет ячейки 6-го круга"
             }
           },
           {
-            "value": "круг_7",
+            "value": 7,
             "label": "7-й круг",
             "cells": {
-              "circle": "круг_7"
+              "circle": "круг_7",
+              "none": "нет ячейки 7-го круга"
             }
           },
           {
-            "value": "круг_8",
+            "value": 8,
             "label": "8-й круг",
             "cells": {
-              "circle": "круг_8"
+              "circle": "круг_8",
+              "none": "нет ячейки 8-го круга"
             }
           },
           {
-            "value": "круг_9",
+            "value": 9,
             "label": "9-й круг",
             "cells": {
-              "circle": "круг_9"
+              "circle": "круг_9",
+              "none": "нет ячейки 9-го круга"
             }
           }
         ],
@@ -649,6 +683,11 @@
             },
             "title": "{label}: осталось",
             "default": 0
+          },
+          {
+            "key": "short",
+            "label": "Восполняется коротким отдыхом",
+            "kind": "boolean"
           }
         ],
         "rows": [
@@ -658,7 +697,8 @@
             "cells": {
               "class": [
                 "варвар"
-              ]
+              ],
+              "short": false
             }
           },
           {
@@ -667,7 +707,8 @@
             "cells": {
               "class": [
                 "монах"
-              ]
+              ],
+              "short": true
             }
           },
           {
@@ -676,7 +717,8 @@
             "cells": {
               "class": [
                 "бард"
-              ]
+              ],
+              "short": false
             }
           },
           {
@@ -686,7 +728,8 @@
               "class": [
                 "жрец",
                 "паладин"
-              ]
+              ],
+              "short": true
             }
           },
           {
@@ -695,7 +738,8 @@
             "cells": {
               "class": [
                 "воин"
-              ]
+              ],
+              "short": true
             }
           },
           {
@@ -704,7 +748,8 @@
             "cells": {
               "class": [
                 "воин"
-              ]
+              ],
+              "short": true
             }
           },
           {
@@ -713,7 +758,8 @@
             "cells": {
               "class": [
                 "паладин"
-              ]
+              ],
+              "short": false
             }
           },
           {
@@ -722,7 +768,8 @@
             "cells": {
               "class": [
                 "чародей"
-              ]
+              ],
+              "short": false
             }
           },
           {
@@ -731,16 +778,23 @@
             "cells": {
               "class": [
                 "воин"
-              ]
+              ],
+              "short": true
             }
           },
           {
             "value": "luck",
-            "label": "Очки удачи"
+            "label": "Очки удачи",
+            "cells": {
+              "short": false
+            }
           },
           {
             "value": "relentless",
-            "label": "Непоколебимая стойкость"
+            "label": "Непоколебимая стойкость",
+            "cells": {
+              "short": false
+            }
           }
         ],
         "owner": "sheet"
@@ -3569,13 +3623,12 @@
             "of": "цели"
           },
           {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.hp_current"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "@сколько"
+            "type": "emit",
+            "effect": "heal",
+            "args": {
+              "amount": {
+                "expr": "@сколько"
+              }
             }
           },
           {
@@ -3741,13 +3794,12 @@
             "of": "цели"
           },
           {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.hp_current"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "@сколько"
+            "type": "emit",
+            "effect": "heal",
+            "args": {
+              "amount": {
+                "expr": "@сколько"
+              }
             }
           }
         ],
@@ -3778,13 +3830,15 @@
             "id": "сколько"
           },
           {
-            "type": "apply",
-            "target": {
-              "expr": "@действующий.hp_current"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "@сколько"
+            "type": "emit",
+            "effect": "heal",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "amount": {
+                "expr": "@сколько"
+              }
             }
           }
         ],
@@ -4017,14 +4071,8 @@
             "of": "цели"
           },
           {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.hp_current"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "@amount"
-            }
+            "type": "emit",
+            "effect": "heal"
           }
         ],
         "cost": [
@@ -4358,13 +4406,15 @@
             "id": "сколько"
           },
           {
-            "type": "apply",
-            "target": {
-              "expr": "@действующий.hp_current"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "@сколько"
+            "type": "emit",
+            "effect": "heal",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "amount": {
+                "expr": "@сколько"
+              }
             }
           }
         ],
@@ -4407,37 +4457,13 @@
         ],
         "steps": [
           {
-            "type": "branch",
-            "if": {
-              "expr": "@стол.battle"
+            "type": "emit",
+            "effect": "turn_spend",
+            "args": {
+              "что": {
+                "expr": "\"действие\""
+              }
             }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@лист.turn.действие.left < 1"
-            }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"действие на этом ходу уже потрачено\""
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@лист.turn.действие.left"
-            },
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "end"
           }
         ]
       },
@@ -4462,37 +4488,13 @@
         ],
         "steps": [
           {
-            "type": "branch",
-            "if": {
-              "expr": "@стол.battle"
+            "type": "emit",
+            "effect": "turn_spend",
+            "args": {
+              "что": {
+                "expr": "\"бонусное\""
+              }
             }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@лист.turn.бонусное.left < 1"
-            }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"бонусное действие на этом ходу уже потрачено\""
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@лист.turn.бонусное.left"
-            },
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "end"
           }
         ]
       },
@@ -4517,37 +4519,13 @@
         ],
         "steps": [
           {
-            "type": "branch",
-            "if": {
-              "expr": "@стол.battle"
+            "type": "emit",
+            "effect": "turn_spend",
+            "args": {
+              "что": {
+                "expr": "\"реакция\""
+              }
             }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@лист.turn.реакция.left < 1"
-            }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"реакция уже потрачена\""
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@лист.turn.реакция.left"
-            },
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "end"
           }
         ]
       },
@@ -4572,37 +4550,13 @@
         ],
         "steps": [
           {
-            "type": "branch",
-            "if": {
-              "expr": "@стол.battle"
+            "type": "emit",
+            "effect": "turn_spend",
+            "args": {
+              "что": {
+                "expr": "\"раз_за_ход\""
+              }
             }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@лист.turn.раз_за_ход.left < 1"
-            }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"это бывает раз за ход\""
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@лист.turn.раз_за_ход.left"
-            },
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "end"
           }
         ]
       },
@@ -4633,28 +4587,8 @@
             }
           },
           {
-            "type": "branch",
-            "if": {
-              "expr": "@лист.turn.действие.left < 1"
-            }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"действие на этом ходу уже потрачено\""
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@лист.turn.действие.left"
-            },
-            "value": {
-              "expr": "1"
-            }
+            "type": "emit",
+            "effect": "cost_action"
           },
           {
             "type": "apply",
@@ -4680,6 +4614,7 @@
             "target": {
               "expr": "@лист.turn.атаки.left"
             },
+            "direction": "subtract",
             "value": {
               "expr": "1"
             }
@@ -4812,6 +4747,50 @@
           }
         ]
       },
+      "heal": {
+        "label": "Лечение",
+        "group": "Шаги для других",
+        "description": "Прибавляет хиты листу. Через него лечит всё, что лечит: правка лечения правит его величину, а «Каким кругом» отличает лечение заклинанием от зелья и умений.",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet",
+            "role": "target"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true,
+            "role": "actor"
+          },
+          {
+            "key": "amount",
+            "label": "Сколько хитов",
+            "kind": "number",
+            "role": "amount"
+          },
+          {
+            "key": "slot",
+            "label": "Каким кругом, если лечит заклинание",
+            "kind": "number",
+            "optional": true
+          }
+        ],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@лист.hp_current"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "@amount"
+            }
+          }
+        ]
+      },
       "spell_slot": {
         "label": "Ячейка заклинания",
         "group": "Плата",
@@ -4838,277 +4817,19 @@
         ],
         "steps": [
           {
-            "type": "branch",
-            "if": {
-              "expr": "@circle == 1"
+            "type": "emit",
+            "effect": "spend",
+            "args": {
+              "what": {
+                "expr": "@лист.slots.[@circle].left"
+              },
+              "amount": {
+                "expr": "1"
+              },
+              "note": {
+                "expr": "@лист.slots.[@circle].none"
+              }
             }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@лист.slots.круг_1.left < 1"
-            }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"нет ячейки 1-го круга\""
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@лист.slots.круг_1.left"
-            },
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "orElse",
-            "if": {
-              "expr": "@circle == 2"
-            }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@лист.slots.круг_2.left < 1"
-            }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"нет ячейки 2-го круга\""
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@лист.slots.круг_2.left"
-            },
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "orElse",
-            "if": {
-              "expr": "@circle == 3"
-            }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@лист.slots.круг_3.left < 1"
-            }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"нет ячейки 3-го круга\""
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@лист.slots.круг_3.left"
-            },
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "orElse",
-            "if": {
-              "expr": "@circle == 4"
-            }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@лист.slots.круг_4.left < 1"
-            }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"нет ячейки 4-го круга\""
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@лист.slots.круг_4.left"
-            },
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "orElse",
-            "if": {
-              "expr": "@circle == 5"
-            }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@лист.slots.круг_5.left < 1"
-            }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"нет ячейки 5-го круга\""
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@лист.slots.круг_5.left"
-            },
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "orElse",
-            "if": {
-              "expr": "@circle == 6"
-            }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@лист.slots.круг_6.left < 1"
-            }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"нет ячейки 6-го круга\""
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@лист.slots.круг_6.left"
-            },
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "orElse",
-            "if": {
-              "expr": "@circle == 7"
-            }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@лист.slots.круг_7.left < 1"
-            }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"нет ячейки 7-го круга\""
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@лист.slots.круг_7.left"
-            },
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "orElse",
-            "if": {
-              "expr": "@circle == 8"
-            }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@лист.slots.круг_8.left < 1"
-            }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"нет ячейки 8-го круга\""
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@лист.slots.круг_8.left"
-            },
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "orElse",
-            "if": {
-              "expr": "@circle == 9"
-            }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@лист.slots.круг_9.left < 1"
-            }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"нет ячейки 9-го круга\""
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@лист.slots.круг_9.left"
-            },
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "end"
           }
         ]
       },
@@ -5174,6 +4895,58 @@
           }
         ]
       },
+      "turn_spend": {
+        "label": "Потратить за ход",
+        "group": "Плата",
+        "description": "В бою списывает одну строку «За ход» — действие, бонусное, реакцию. Не осталось — действие не состоялось. Вне боя ничего не тратит.",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet",
+            "role": "actor"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true,
+            "role": "actor"
+          },
+          {
+            "key": "что",
+            "label": "Что тратим",
+            "kind": "choice",
+            "from": "turn"
+          }
+        ],
+        "steps": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "type": "emit",
+            "effect": "spend",
+            "args": {
+              "what": {
+                "expr": "@лист.что.left"
+              },
+              "amount": {
+                "expr": "1"
+              },
+              "note": {
+                "expr": "@лист.что.none"
+              }
+            }
+          },
+          {
+            "type": "end"
+          }
+        ]
+      },
       "flame_blade": {
         "label": "Пламя клинка",
         "group": "Умения класса",
@@ -5233,416 +5006,26 @@
           {
             "op": "mul",
             "value": {
-              "expr": "@носитель.damage_types.рубящий.taken.resist"
+              "expr": "@носитель.damage_types.[@damage_type].taken.resist"
             },
             "kind": "edit",
             "call": "damage",
             "param": "amount",
-            "anyTags": [
-              "рубящий"
-            ],
             "if": {
-              "expr": "@лист == @носитель"
+              "expr": "все(@лист == @носитель, не(пусто(@носитель.damage_types.[@damage_type].taken)))"
             },
             "stage": "сопротивление"
           },
           {
             "op": "mul",
             "value": {
-              "expr": "@носитель.damage_types.рубящий.taken.vuln"
+              "expr": "@носитель.damage_types.[@damage_type].taken.vuln"
             },
             "kind": "edit",
             "call": "damage",
             "param": "amount",
-            "anyTags": [
-              "рубящий"
-            ],
             "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "уязвимость"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.колющий.taken.resist"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "колющий"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "сопротивление"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.колющий.taken.vuln"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "колющий"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "уязвимость"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.дробящий.taken.resist"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "дробящий"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "сопротивление"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.дробящий.taken.vuln"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "дробящий"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "уязвимость"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.огонь.taken.resist"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "огонь"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "сопротивление"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.огонь.taken.vuln"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "огонь"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "уязвимость"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.холод.taken.resist"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "холод"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "сопротивление"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.холод.taken.vuln"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "холод"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "уязвимость"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.молния.taken.resist"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "молния"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "сопротивление"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.молния.taken.vuln"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "молния"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "уязвимость"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.гром.taken.resist"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "гром"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "сопротивление"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.гром.taken.vuln"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "гром"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "уязвимость"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.кислота.taken.resist"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "кислота"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "сопротивление"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.кислота.taken.vuln"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "кислота"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "уязвимость"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.яд.taken.resist"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "яд"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "сопротивление"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.яд.taken.vuln"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "яд"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "уязвимость"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.некротический.taken.resist"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "некротический"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "сопротивление"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.некротический.taken.vuln"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "некротический"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "уязвимость"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.излучение.taken.resist"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "излучение"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "сопротивление"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.излучение.taken.vuln"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "излучение"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "уязвимость"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.психический.taken.resist"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "психический"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "сопротивление"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.психический.taken.vuln"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "психический"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "уязвимость"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.силовой.taken.resist"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "силовой"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "сопротивление"
-          },
-          {
-            "op": "mul",
-            "value": {
-              "expr": "@носитель.damage_types.силовой.taken.vuln"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "силовой"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
+              "expr": "все(@лист == @носитель, не(пусто(@носитель.damage_types.[@damage_type].taken)))"
             },
             "stage": "уязвимость"
           }
@@ -6131,9 +5514,8 @@
             },
             "steps": [
               {
-                "id": "спас",
                 "type": "emit",
-                "effect": "saving_throw",
+                "effect": "repeat_save",
                 "args": {
                   "кто": {
                     "expr": "@носитель"
@@ -6143,25 +5525,11 @@
                   },
                   "сложность": {
                     "expr": "@запомнено"
+                  },
+                  "состояние": {
+                    "expr": "\"blinded\""
                   }
                 }
-              },
-              {
-                "type": "branch",
-                "if": {
-                  "expr": "@спас.прошёл"
-                }
-              },
-              {
-                "type": "status",
-                "mode": "remove",
-                "effect": "blinded",
-                "to": {
-                  "expr": "@носитель"
-                }
-              },
-              {
-                "type": "end"
               }
             ]
           }
@@ -6238,9 +5606,8 @@
             },
             "steps": [
               {
-                "id": "спас",
                 "type": "emit",
-                "effect": "saving_throw",
+                "effect": "repeat_save",
                 "args": {
                   "кто": {
                     "expr": "@носитель"
@@ -6250,25 +5617,11 @@
                   },
                   "сложность": {
                     "expr": "@запомнено"
+                  },
+                  "состояние": {
+                    "expr": "\"frightened\""
                   }
                 }
-              },
-              {
-                "type": "branch",
-                "if": {
-                  "expr": "@спас.прошёл"
-                }
-              },
-              {
-                "type": "status",
-                "mode": "remove",
-                "effect": "frightened",
-                "to": {
-                  "expr": "@носитель"
-                }
-              },
-              {
-                "type": "end"
               }
             ]
           }
@@ -6323,6 +5676,67 @@
         ],
         "reapply": "refresh"
       },
+      "helpless": {
+        "label": "Беспомощен",
+        "group": "Состояния",
+        "description": "Общая часть состояний «Парализован», «Окаменел», «Ошеломлён» и «Без сознания» (SRD 5.1): недееспособен, не двигается, спасброски Силы и Ловкости проваливает, атаки по нему — с преимуществом. Отдельным состоянием в правилах не числится — его выдают эти четыре.",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "modifiers": [
+          {
+            "tags": [
+              "атака"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "advantage",
+            "if": {
+              "expr": "@против == @носитель"
+            }
+          },
+          {
+            "tags": [
+              "спасбросок",
+              "сила"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "auto_fail",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            }
+          },
+          {
+            "tags": [
+              "спасбросок",
+              "ловкость"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "auto_fail",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "speed",
+            "op": "set",
+            "value": {
+              "expr": "0"
+            }
+          }
+        ],
+        "grants": [
+          "incapacitated"
+        ],
+        "reapply": "refresh"
+      },
       "invisible": {
         "label": "Невидим",
         "group": "Состояния",
@@ -6367,56 +5781,8 @@
         "duration": {
           "kind": "permanent"
         },
-        "modifiers": [
-          {
-            "tags": [
-              "атака"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "advantage",
-            "if": {
-              "expr": "@против == @носитель"
-            }
-          },
-          {
-            "tags": [
-              "спасбросок",
-              "сила"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "auto_fail",
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          },
-          {
-            "tags": [
-              "спасбросок",
-              "ловкость"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "auto_fail",
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          },
-          {
-            "kind": "value",
-            "target": "speed",
-            "op": "set",
-            "value": {
-              "expr": "0"
-            }
-          }
-        ],
         "grants": [
-          "incapacitated"
+          "helpless"
         ],
         "on": [
           {
@@ -6426,9 +5792,8 @@
             },
             "steps": [
               {
-                "id": "спас",
                 "type": "emit",
-                "effect": "saving_throw",
+                "effect": "repeat_save",
                 "args": {
                   "кто": {
                     "expr": "@носитель"
@@ -6438,25 +5803,11 @@
                   },
                   "сложность": {
                     "expr": "@запомнено"
+                  },
+                  "состояние": {
+                    "expr": "\"paralyzed\""
                   }
                 }
-              },
-              {
-                "type": "branch",
-                "if": {
-                  "expr": "@спас.прошёл"
-                }
-              },
-              {
-                "type": "status",
-                "mode": "remove",
-                "effect": "paralyzed",
-                "to": {
-                  "expr": "@носитель"
-                }
-              },
-              {
-                "type": "end"
               }
             ]
           }
@@ -6481,52 +5832,6 @@
         },
         "modifiers": [
           {
-            "tags": [
-              "атака"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "advantage",
-            "if": {
-              "expr": "@против == @носитель"
-            }
-          },
-          {
-            "tags": [
-              "спасбросок",
-              "сила"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "auto_fail",
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          },
-          {
-            "tags": [
-              "спасбросок",
-              "ловкость"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "auto_fail",
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          },
-          {
-            "kind": "value",
-            "target": "speed",
-            "op": "set",
-            "value": {
-              "expr": "0"
-            }
-          },
-          {
             "op": "mul",
             "value": {
               "expr": "0.5"
@@ -6541,7 +5846,7 @@
           }
         ],
         "grants": [
-          "incapacitated"
+          "helpless"
         ],
         "reapply": "refresh"
       },
@@ -6680,9 +5985,8 @@
             },
             "steps": [
               {
-                "id": "спас",
                 "type": "emit",
-                "effect": "saving_throw",
+                "effect": "repeat_save",
                 "args": {
                   "кто": {
                     "expr": "@носитель"
@@ -6692,25 +5996,11 @@
                   },
                   "сложность": {
                     "expr": "@запомнено"
+                  },
+                  "состояние": {
+                    "expr": "\"restrained\""
                   }
                 }
-              },
-              {
-                "type": "branch",
-                "if": {
-                  "expr": "@спас.прошёл"
-                }
-              },
-              {
-                "type": "status",
-                "mode": "remove",
-                "effect": "restrained",
-                "to": {
-                  "expr": "@носитель"
-                }
-              },
-              {
-                "type": "end"
               }
             ]
           }
@@ -6733,48 +6023,8 @@
         "duration": {
           "kind": "permanent"
         },
-        "modifiers": [
-          {
-            "tags": [
-              "атака"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "advantage",
-            "if": {
-              "expr": "@против == @носитель"
-            }
-          },
-          {
-            "tags": [
-              "спасбросок",
-              "сила"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "auto_fail",
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          },
-          {
-            "tags": [
-              "спасбросок",
-              "ловкость"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "auto_fail",
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          }
-        ],
         "grants": [
-          "incapacitated"
+          "helpless"
         ],
         "reapply": "refresh"
       },
@@ -6786,56 +6036,8 @@
         "duration": {
           "kind": "permanent"
         },
-        "modifiers": [
-          {
-            "tags": [
-              "атака"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "advantage",
-            "if": {
-              "expr": "@против == @носитель"
-            }
-          },
-          {
-            "tags": [
-              "спасбросок",
-              "сила"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "auto_fail",
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          },
-          {
-            "tags": [
-              "спасбросок",
-              "ловкость"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "auto_fail",
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          },
-          {
-            "kind": "value",
-            "target": "speed",
-            "op": "set",
-            "value": {
-              "expr": "0"
-            }
-          }
-        ],
         "grants": [
-          "incapacitated"
+          "helpless"
         ],
         "attach": [
           {
@@ -7292,9 +6494,8 @@
             },
             "steps": [
               {
-                "id": "спас",
                 "type": "emit",
-                "effect": "saving_throw",
+                "effect": "repeat_save",
                 "args": {
                   "кто": {
                     "expr": "@носитель"
@@ -7304,25 +6505,11 @@
                   },
                   "сложность": {
                     "expr": "@запомнено"
+                  },
+                  "состояние": {
+                    "expr": "\"slowed\""
                   }
                 }
-              },
-              {
-                "type": "branch",
-                "if": {
-                  "expr": "@спас.прошёл"
-                }
-              },
-              {
-                "type": "status",
-                "mode": "remove",
-                "effect": "slowed",
-                "to": {
-                  "expr": "@носитель"
-                }
-              },
-              {
-                "type": "end"
               }
             ]
           }
@@ -7840,25 +7027,10 @@
         "duration": {
           "kind": "permanent"
         },
-        "modifiers": [
-          {
-            "op": "mul",
-            "value": {
-              "expr": "0.5"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "яд"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "сопротивление"
-          }
-        ],
-        "reapply": "refresh"
+        "reapply": "refresh",
+        "grants": [
+          "poison_resistance"
+        ]
       },
       "infernal_legacy": {
         "label": "Дьявольское наследие",
@@ -7868,25 +7040,10 @@
         "duration": {
           "kind": "permanent"
         },
-        "modifiers": [
-          {
-            "op": "mul",
-            "value": {
-              "expr": "0.5"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "огонь"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "сопротивление"
-          }
-        ],
-        "reapply": "refresh"
+        "reapply": "refresh",
+        "grants": [
+          "fire_resistance"
+        ]
       },
       "feat_alert": {
         "label": "Черта: бдительный",
@@ -8488,93 +7645,18 @@
             "on": "moment:long-rest",
             "steps": [
               {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.slots.круг_1.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.slots.круг_1.max"
-                }
+                "type": "each",
+                "rows": "slots",
+                "as": "круг"
               },
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.slots.круг_2.left"
+                  "expr": "@носитель.круг.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@носитель.slots.круг_2.max"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.slots.круг_3.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.slots.круг_3.max"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.slots.круг_4.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.slots.круг_4.max"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.slots.круг_5.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.slots.круг_5.max"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.slots.круг_6.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.slots.круг_6.max"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.slots.круг_7.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.slots.круг_7.max"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.slots.круг_8.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.slots.круг_8.max"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.slots.круг_9.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.slots.круг_9.max"
+                  "expr": "@носитель.круг.max"
                 }
               }
             ]
@@ -8594,54 +7676,28 @@
             "on": "moment:short-rest",
             "steps": [
               {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.resources.ki.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.resources.ki.max"
+                "type": "each",
+                "rows": "resources",
+                "as": "ресурс"
+              },
+              {
+                "type": "branch",
+                "if": {
+                  "expr": "@носитель.ресурс.short"
                 }
               },
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.resources.channel.left"
+                  "expr": "@носитель.ресурс.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@носитель.resources.channel.max"
+                  "expr": "@носитель.ресурс.max"
                 }
               },
               {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.resources.second_wind.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.resources.second_wind.max"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.resources.action_surge.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.resources.action_surge.max"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.resources.superiority.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.resources.superiority.max"
-                }
+                "type": "end"
               }
             ]
           },
@@ -8649,113 +7705,18 @@
             "on": "moment:long-rest",
             "steps": [
               {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.resources.ki.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.resources.ki.max"
-                }
+                "type": "each",
+                "rows": "resources",
+                "as": "ресурс"
               },
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@носитель.resources.channel.left"
+                  "expr": "@носитель.ресурс.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@носитель.resources.channel.max"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.resources.second_wind.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.resources.second_wind.max"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.resources.action_surge.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.resources.action_surge.max"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.resources.superiority.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.resources.superiority.max"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.resources.rages.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.resources.rages.max"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.resources.bardic.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.resources.bardic.max"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.resources.lay_on_hands.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.resources.lay_on_hands.max"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.resources.sorcery.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.resources.sorcery.max"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.resources.luck.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.resources.luck.max"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.resources.relentless.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@носитель.resources.relentless.max"
+                  "expr": "@носитель.ресурс.max"
                 }
               }
             ]
@@ -8785,53 +7746,17 @@
                 }
               },
               {
+                "type": "emit",
+                "effect": "turn_reset"
+              },
+              {
                 "type": "apply",
                 "target": {
                   "expr": "@носитель.turn.действие.left"
                 },
-                "direction": "set",
+                "direction": "add",
                 "value": {
-                  "expr": "1 + меньшее из(1, @носитель.hasted)"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.turn.бонусное.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "1"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.turn.реакция.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "1"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.turn.раз_за_ход.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "1"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.turn.атаки.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "0"
+                  "expr": "меньшее из(1, @носитель.hasted)"
                 }
               }
             ]
@@ -8880,56 +7805,50 @@
             },
             "steps": [
               {
+                "type": "emit",
+                "effect": "turn_reset"
+              },
+              {
                 "type": "apply",
                 "target": {
                   "expr": "@носитель.turn.действие.left"
                 },
-                "direction": "set",
+                "direction": "add",
                 "value": {
-                  "expr": "1 + меньшее из(1, @носитель.hasted)"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.turn.бонусное.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "1"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.turn.реакция.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "1"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.turn.раз_за_ход.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "1"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@носитель.turn.атаки.left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "0"
+                  "expr": "меньшее из(1, @носитель.hasted)"
                 }
               }
             ]
+          }
+        ]
+      },
+      "turn_reset": {
+        "label": "Новый ход",
+        "group": "Шаги для других",
+        "description": "Счётчики «За ход» — к началу хода: у каждой строки «Осталось» становится «В начале хода». Лишнее действие от «Ускорен» прибавляют «Начало хода» и «Начало боя» после вызова.",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet",
+            "role": "actor"
+          }
+        ],
+        "steps": [
+          {
+            "type": "each",
+            "rows": "turn",
+            "as": "счётчик"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@лист.счётчик.left"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "@лист.счётчик.start"
+            }
           }
         ]
       },
@@ -9279,6 +8198,66 @@
             "versus": {
               "expr": "@сложность"
             }
+          }
+        ]
+      },
+      "repeat_save": {
+        "label": "Повторный спасбросок",
+        "group": "Шаги для других",
+        "description": "Спасбросок против состояния: прошёл — состояние снято. Зовут состояния, которые дают повторный спасбросок в конце хода.",
+        "params": [
+          {
+            "key": "кто",
+            "label": "Кто спасается",
+            "kind": "sheet",
+            "role": "target"
+          },
+          {
+            "key": "характеристика",
+            "label": "Чем спасается",
+            "kind": "choice",
+            "from": "abilities"
+          },
+          {
+            "key": "сложность",
+            "label": "Сложность",
+            "kind": "number"
+          },
+          {
+            "key": "состояние",
+            "label": "Что снимается",
+            "kind": "effect"
+          }
+        ],
+        "steps": [
+          {
+            "id": "спас",
+            "type": "emit",
+            "effect": "saving_throw",
+            "args": {
+              "кто": {
+                "expr": "@кто"
+              }
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@спас.прошёл"
+            }
+          },
+          {
+            "type": "status",
+            "mode": "remove",
+            "effect": {
+              "expr": "@состояние"
+            },
+            "to": {
+              "expr": "@кто"
+            }
+          },
+          {
+            "type": "end"
           }
         ]
       },
@@ -12214,9 +11193,9 @@
         "languages": "Общий, Инфернальный",
         "hp_current": 32,
         "hit_dice_left": 5,
-        "slots.круг_1.left": 4,
-        "slots.круг_2.left": 3,
-        "slots.круг_3.left": 2,
+        "slots.1.left": 4,
+        "slots.2.left": 3,
+        "slots.3.left": 2,
         "resources.sorcery.max": 5,
         "resources.sorcery.left": 5,
         "gp": 95
@@ -12304,9 +11283,9 @@
         "languages": "Общий, Дварфский",
         "hp_current": 48,
         "hit_dice_left": 5,
-        "slots.круг_1.left": 4,
-        "slots.круг_2.left": 3,
-        "slots.круг_3.left": 2,
+        "slots.1.left": 4,
+        "slots.2.left": 3,
+        "slots.3.left": 2,
         "resources.channel.max": 1,
         "resources.channel.left": 1,
         "gp": 60
