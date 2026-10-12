@@ -4,6 +4,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ModifiersEditor } from './modifiers.tsx';
 import { modifierSentence } from './modifier-words.ts';
+import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import type { System, Modifier } from '@vtt/schema';
 
 const system = {
@@ -100,13 +101,37 @@ describe('заглушка говорит словами владельца', ()
 });
 
 describe('строка правки — «пока»', () => {
-  it('первый столбец — «пока», вид правки — отдельная мелкая метка', () => {
-    const mods = [...rollMod, { kind: 'value', target: 'ac', op: 'add', value: { expr: '1' } }] as Modifier[];
+  const mods = [...rollMod, { kind: 'value', target: 'ac', op: 'add', value: { expr: '1' } }] as Modifier[];
+
+  it('у типа и записи строка начинается с фразы: ни слова «пока», ни метки «вызов» / «поле»', () => {
     render(<ModifiersEditor system={system} modifiers={mods} onEdit={vi.fn()} />);
     const rows = [...document.querySelectorAll('.mod-row')];
-    expect(rows.map(row => row.querySelector('.mod-row__kind')!.textContent)).toEqual(['пока', 'пока']);
-    expect(rows.map(row => row.querySelector('.mod-row__tag')!.textContent)).toEqual(['вызов', 'поле']);
+    expect(rows).toHaveLength(2);
     expect(rows.every(row => row.classList.contains('mod-row--while'))).toBe(true);
+    expect(document.querySelector('.mod-row__kind')).toBeNull();
+    expect(document.querySelector('.mod-row__tag')).toBeNull();
+    expect(rows.map(row => row.querySelector('.mod-row__phrase')!.textContent)).toEqual([
+      'Бросок с метками «атака», бросает кто угодно: Фора',
+      '«Класс брони» + 1',
+    ]);
+  });
+
+  it('строки — одна таблица: на каждую правку своя строка с линией, без коробок', () => {
+    const { container } = render(<ModifiersEditor system={system} modifiers={mods} onEdit={vi.fn()} />);
+    expect(container.querySelectorAll('.mod-table')).toHaveLength(1);
+    expect(container.querySelectorAll('.mod-table > .mod-item')).toHaveLength(2);
+    expect(container.querySelector('.mod-table .card')).toBeNull();
+  });
+
+  it('крестик внутри строки, подтверждение сохранено', () => {
+    const onEdit = vi.fn();
+    render(<ModifiersEditor system={system} modifiers={mods} onEdit={onEdit} />);
+    const row = document.querySelector('.mod-row') as HTMLElement;
+    expect(row.lastElementChild!.textContent).toBe('×');
+    fireEvent.click(screen.getAllByText('×')[0]!);
+    expect(onEdit).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByText('точно убрать'));
+    expect(onEdit).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -177,5 +202,69 @@ describe('правка по умолчанию касается носителя
     const damage = { kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' } } as unknown as Modifier;
     expect(modifierSentence(withDamage, damage)).toContain('«Урон» · Сколько, на всех листах:');
     expect(modifierSentence(withDamage, { ...damage, if: { expr: '@лист == @носитель' } } as Modifier)).toContain('«Урон» · Сколько, «Лист» — носитель:');
+  });
+});
+
+describe('правка типа говорит подписями колонок, а не ключами', () => {
+  const gear = {
+    ...system,
+    tables: {
+      ...system.tables,
+      лист: { shape: 'single', columns: [{ key: 'ac', label: 'Класс брони', kind: 'number', default: 10 }, { key: 'ac_base', label: 'База доспеха', kind: 'number', default: 0 }] },
+      gear: { shape: 'book', use: 'item', label: 'Снаряжение', columns: [{ key: 'heaviness', label: 'Тяжесть', kind: 'text' }] },
+      armor: {
+        shape: 'book', use: 'item', label: 'Доспех', extends: 'gear',
+        columns: [{ key: 'ac', label: 'База класса брони', kind: 'number' }, { key: 'stealth', label: 'Помеха на Скрытность', kind: 'boolean' }],
+      },
+    },
+  } as unknown as System;
+  const set = (expr: string) => ({ kind: 'value', target: 'ac_base', op: 'set', value: { expr } }) as Modifier;
+
+  it('колонка с тем же ключом, что у поля листа, зовётся своей подписью, а не «Класс брони (строка)»', () => {
+    expect(modifierSentence(gear, set('@строка.ac'), 'armor')).toBe('«База доспеха» = «База класса брони»');
+    expect(modifierSentence(gear, set('@строка.ac'))).not.toContain('(строка)');
+  });
+
+  it('колонка основы называется по подписи основы', () => {
+    expect(modifierSentence(gear, set('@строка.heaviness'), 'armor')).toBe('«База доспеха» = «Тяжесть»');
+  });
+
+  it('условие правки поля и условие правки вызова читаются так же', () => {
+    const guarded = { ...set('1'), if: { expr: '@строка.stealth == да' } } as Modifier;
+    expect(modifierSentence(gear, guarded, 'armor')).toBe('«База доспеха» = 1 — если «Помеха на Скрытность» = да');
+    const roll = { kind: 'edit', call: 'roll', param: 'edits', tags: ['скрытность'], edit: 'фора', if: { expr: 'все(@бросающий == @носитель, @строка.stealth == да)' } } as unknown as Modifier;
+    expect(modifierSentence(gear, roll, 'armor')).toContain('если «бросающий» = «носитель» и «Помеха на Скрытность» = да');
+  });
+
+  it('образцы всех систем: в словах правок типов и листов нет ни «строка.», ни «(строка)»', () => {
+    const found: string[] = [];
+    let total = 0;
+    for (const { system: sample } of SAMPLE_WORLDS) {
+      const sentences = [
+        ...Object.entries(sample.tables ?? {}).flatMap(([id, table]) => ((table as { modifiers?: Modifier[] }).modifiers ?? []).map(modifier => modifierSentence(sample, modifier, id))),
+        ...Object.values(sample.sheets ?? {}).flatMap(kind => (kind.modifiers ?? []).map(modifier => modifierSentence(sample, modifier))),
+      ];
+      total += sentences.length;
+      for (const sentence of sentences) if (/строка|undefined/.test(sentence)) found.push(`${sample.name}: ${sentence}`);
+    }
+    expect(total).toBeGreaterThan(8);
+    expect(found).toEqual([]);
+  });
+
+  it('D&D «Доспех»: четыре правки читаются подписями колонок', () => {
+    const dnd = SAMPLE_WORLDS.find(one => one.system.name === 'D&D 5e')!.system;
+    const armor = (dnd.tables!.armor as { modifiers: Modifier[] }).modifiers;
+    expect(armor.map(modifier => modifierSentence(dnd, modifier, 'armor'))).toEqual([
+      '«База доспеха» = «База класса брони»',
+      '«Тяжесть доспеха» = «Тяжесть»',
+      '«Скорость, футов» − 10 — если «Сила» < «Нужна Сила» (если нет — 0) и «Раса → Тяжёлый доспех не замедляет» ≠ да',
+      'Бросок с метками «скрытность», если «бросающий» = «носитель» и «Помеха на Скрытность» = да: Помеха',
+    ]);
+  });
+
+  it('раскрытая правка типа показывает те же подписи', () => {
+    renderOpen(<ModifiersEditor system={gear} table="armor" modifiers={[set('@строка.ac')]} onEdit={vi.fn()} />);
+    expect(document.body.textContent).toContain('База класса брони');
+    expect(document.body.textContent).not.toContain('строка.ac');
   });
 });

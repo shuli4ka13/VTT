@@ -211,7 +211,7 @@ describe('эффекты пресетов собираются в констру
 
     if (ui.has('ещё')) ui.click('ещё');
     const param = (row: number, label: string, kind: string, key: string, more: { from?: string; ask?: string; hint?: string; min?: string; max?: string } = {}) => {
-      if (row >= (built('shoot')!.params ?? []).length) ui.click('+ ещё одно');
+      if (row >= (built('shoot')!.params ?? []).length) ui.click((built('shoot')!.params ?? []).length ? '+ ещё одно' : '+ вход');
       ui.type(ui.cell('Название', row), label);
       ui.select(ui.cell('Вид', row), kind);
       if (more.from) ui.select(ui.cell('Таблица', row), more.from);
@@ -337,7 +337,7 @@ describe('эффекты пресетов собираются в констру
     ui.type('Описание', goal!.description!);
 
     const param = (row: number, label: string, kind: string, key: string, more: { ask?: string; hint?: string; min?: string; max?: string } = {}) => {
-      if (row >= (built('spell_buff')!.params ?? []).length) ui.click('+ ещё одно');
+      if (row >= (built('spell_buff')!.params ?? []).length) ui.click((built('spell_buff')!.params ?? []).length ? '+ ещё одно' : '+ вход');
       ui.type(ui.cell('Название', row), label);
       ui.select(ui.cell('Вид', row), kind);
       if (more.ask) ui.select(ui.cell('Если не передали', row), more.ask);
@@ -437,7 +437,7 @@ describe('эффекты пресетов собираются в констру
     ui.type('Описание', goal!.description!);
     if (ui.has('ещё')) ui.click('ещё');
     const param = (row: number, label: string, kind: string, key: string, from?: string) => {
-      if (row >= (built('hero_attack')!.params ?? []).length) ui.click('+ ещё одно');
+      if (row >= (built('hero_attack')!.params ?? []).length) ui.click((built('hero_attack')!.params ?? []).length ? '+ ещё одно' : '+ вход');
       ui.type(ui.cell('Название', row), label);
       ui.select(ui.cell('Вид', row), kind);
       if (from) ui.select(ui.cell('Таблица', row), from);

@@ -244,6 +244,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
       {kind ? (
         <ModifiersEditor
           system={system}
+          table={record.table}
           title={kind.use === 'item' ? 'Что правит эта вещь' : 'Что правит эта запись'}
           empty={{
             title: 'Своих правок у вещи нет',

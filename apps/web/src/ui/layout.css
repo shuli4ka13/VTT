@@ -471,22 +471,28 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .bricks__title { font-size: var(--fs-1); text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); min-width: 72px; }
 .bricks__row--plain .btn { opacity: .85; }
 
-.mod-row { display: flex; align-items: center; gap: var(--s-2); }
+.mod-table { --mod-word-w: 3.5em; --mod-gap: var(--s-4); display: flex; flex-direction: column; }
+.mod-item { border-bottom: 1px solid var(--border); }
+.mod-item > .card { margin: var(--s-3) 0; }
+.mod-row { display: flex; align-items: center; gap: var(--s-3); min-height: 38px; }
 .mod-row__text {
-  flex: 1; text-align: left; display: flex; align-items: center; gap: var(--s-3);
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-2);
-  padding: var(--s-3) var(--s-4); color: var(--text); font: inherit; font-size: var(--fs-4); cursor: pointer;
+  flex: 1; min-width: 0; display: flex; align-items: baseline; gap: var(--mod-gap, var(--s-4)); text-align: left;
+  background: none; border: 0; border-radius: var(--r-1); padding: var(--s-3) 0;
+  color: var(--text); font: inherit; cursor: pointer;
 }
-.mod-row__text:hover { border-color: var(--accent); }
+.mod-row__text:hover { background: var(--surface-2); }
 .mod-row__text--still { cursor: default; }
-.mod-row__text--still:hover { border-color: var(--border); }
-.mod-row__kind { flex: none; width: 52px; font-size: var(--fs-1); text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
-.mod-row__tag { flex: none; width: 44px; font-size: var(--fs-1); text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
+.mod-row__text--still:hover { background: none; }
+.mod-row__kind { flex: none; width: var(--mod-word-w, 3.5em); font-weight: 600; }
+.mod-row__phrase { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .mod-row--while .mod-row__kind { color: var(--kind-change); }
-.mod-row--when .mod-row__kind { color: var(--warn); }
+.mod-row--when .mod-row__kind { color: var(--pink); }
+.mod-row > .btn { flex: none; }
 .mod-add { margin-top: var(--s-3); }
 
-.when-body { border-left: 2px solid var(--kind-check); padding-left: var(--s-4); }
+.when-body { margin-left: calc(var(--mod-word-w) + var(--mod-gap)); padding-bottom: var(--s-4); }
+.chain-run { display: flex; flex-direction: column; gap: var(--s-3); padding-left: var(--s-4); border-left: 2px solid color-mix(in srgb, var(--pink) 35%, var(--border)); }
+.chain-run__label { color: var(--text-faint); font-size: var(--fs-2); }
 
 .step-card { --label-w: 148px; padding: 10px 16px 14px; gap: 10px; border-top-width: 1px; border-left: 3px solid var(--dot); border-radius: var(--r-2); }
 .step-card.card--bad { border-left-color: var(--danger); }
@@ -571,8 +577,8 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .step-card > .faint { padding-left: calc(var(--label-w) + var(--s-4)); }
 .step-card .call-row__more { flex: none; display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
 .step-card .call-row__toggle { align-self: flex-start; }
-.step-card .btn--danger:not(:has(+ .btn)), .flow-block .btn--danger:not(:has(+ .btn)) { color: var(--text-faint); border-color: transparent; background: transparent; }
-.step-card .btn--danger:not(:has(+ .btn)):hover, .flow-block .btn--danger:not(:has(+ .btn)):hover { color: var(--danger); background: var(--danger-soft); border-color: var(--danger); }
+.step-card .btn--danger:not(:has(+ .btn)), .flow-block .btn--danger:not(:has(+ .btn)), .steps__split .btn--danger:not(:has(+ .btn)), .flow-stop .btn--danger:not(:has(+ .btn)), .mod-row .btn--danger:not(:has(+ .btn)), .mod-card .btn--danger:not(:has(+ .btn)) { color: var(--text-faint); border-color: transparent; background: transparent; }
+.step-card .btn--danger:not(:has(+ .btn)):hover, .flow-block .btn--danger:not(:has(+ .btn)):hover, .steps__split .btn--danger:not(:has(+ .btn)):hover, .flow-stop .btn--danger:not(:has(+ .btn)):hover, .mod-row .btn--danger:not(:has(+ .btn)):hover, .mod-card .btn--danger:not(:has(+ .btn)):hover { color: var(--danger); background: var(--danger-soft); border-color: var(--danger); }
 .flow-head__cond .cond { flex: none; }
 .flow-head__cond .cond--bare { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
 .flow-head__cond .cond__formula { flex: 1 1 auto; }

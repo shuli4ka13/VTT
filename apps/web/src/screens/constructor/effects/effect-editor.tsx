@@ -6,7 +6,7 @@ import { ConditionField } from '../condition-field.tsx';
 import { TagsField } from '../tags-field.tsx';
 import { useWorld } from '../../../store/world.ts';
 import { newHandler, payStep } from '../factory.ts';
-import { Card, Field, Input, Select, DangerButton, LabelInput, Button } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Field, Input, Select, DangerButton, LabelInput, Button } from '../../../ui/primitives.tsx';
 import { useOpened } from '../../../store/opened.ts';
 import { useModifierRows, AddModifiers } from '../modifiers.tsx';
 import { LAUNCH_KINDS, launchHint } from './words.ts';
@@ -226,16 +226,16 @@ function WhileWhen({ id, effect, system, edit }: {
   const editSystem = useWorld(s => s.editSystem);
   const modifiers = effect.modifiers ?? [];
   const list = useModifierRows({
-    system, editSystem, modifiers,
+    system, editSystem, modifiers, named: true,
     onEdit: change => edit(draft => { change(draft.modifiers ??= []); if (!draft.modifiers.length) delete draft.modifiers; }),
   });
   const absent = HOOKS.filter(({ turn }) => effect[turn] === undefined);
   const idle = !modifiers.length && !effect.on?.length && absent.length === HOOKS.length;
   return (
     <div className="stack">
-      <span className="screen-title" style={{ fontSize: 'var(--fs-5)' }}>Что делает, пока висит</span>
+      <CardHead title="Что делает, пока висит" />
       {idle ? <WhileWhenEmpty>Пока ничего не делает.</WhileWhenEmpty> : (
-        <div className="stack">
+        <div className="mod-table">
           {list.rows}
           <Handlers id={id} effect={effect} system={system} edit={edit} />
           <Hooks id={id} effect={effect} system={system} edit={edit} />
@@ -267,12 +267,12 @@ function Hooks({ id, effect, system, edit }: {
           draft[turn] = view.steps ?? [];
         });
         return (
-          <div key={turn} className="stack">
+          <div key={turn} className="mod-item">
             <WhileWhenRow when title={hint} removeTitle={`убрать «${title.toLowerCase()}»`} onRemove={() => edit(draft => { delete draft[turn]; })}>
               {word}
             </WhileWhenRow>
             <div className="stack when-body">
-              <Chain id={id} placeAt={index => ({ part: turn, index })} effect={carrier} system={system} edit={editCarrier} title="→ делает" empty="шагов нет — ничего не делает" />
+              <Chain id={id} placeAt={index => ({ part: turn, index })} effect={carrier} system={system} edit={editCarrier} title="делает:" lined empty="шагов нет — ничего не делает" />
             </div>
           </div>
         );
@@ -316,7 +316,7 @@ function Handlers({ id, effect, system, edit }: {
           if (own) shiftBetween(own, indices, to);
         });
         return (
-          <div key={index} className="stack">
+          <div key={index} className="mod-item">
             <HandlerCard
               id={id} index={index} handler={handler} system={system}
               startOpen={useOpened.getState().opened[`effect-props|${id}`] === true}
@@ -330,7 +330,8 @@ function Handlers({ id, effect, system, edit }: {
               <Chain
                 id={id} placeAt={step => ({ part: 'handler', handler: index, index: step })}
                 effect={carrier} system={system} edit={editCarrier}
-                title="→ делает"
+                title="делает:"
+                lined
                 empty="шагов нет — отзывается, но ничего не делает"
                 onEdgeUp={indices => moveLane(indices, 'cost')}
                 onRoll={handler.on === 'seen'}

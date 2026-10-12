@@ -52,7 +52,7 @@ const calledHead = (ui: ReturnType<typeof within>, id: string, goal: Effect) => 
 };
 
 const param = (ui: ReturnType<typeof within>, id: string, row: number, label: string, kind: string, key: string, more: { from?: string; optional?: boolean; value?: string; role?: string } = {}) => {
-  if (row >= (built(id)!.params ?? []).length) ui.click('+ ещё одно');
+  if (row >= (built(id)!.params ?? []).length) ui.click((built(id)!.params ?? []).length ? '+ ещё одно' : '+ вход');
   if (ui.has('ещё')) ui.click('ещё');
   ui.type(ui.cell('Название', row), label);
   ui.select(ui.cell('Вид', row), kind);

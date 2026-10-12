@@ -2,6 +2,7 @@ import type { System } from '@vtt/schema';
 import { compile } from '@vtt/engine/formula';
 import type { Node } from '@vtt/engine/formula';
 import { chainsOfEffect } from '@vtt/engine/engine/effects';
+import { ROW } from '@vtt/engine/model/sheet-columns';
 import { formulaAsLabels } from './formula.tsx';
 
 const COMPARE: Record<string, string> = { '==': '=', '!=': '≠', '>=': '≥', '<=': '≤', '>': '>', '<': '<' };
@@ -52,7 +53,7 @@ export function formulaWords(system: System, source: string, names?: Map<string,
       case 'Number': return String(node.value);
       case 'Text': return node.dice ? diceWords(node.value) : `«${node.value}»`;
       case 'Bool': return node.value ? 'да' : 'нет';
-      case 'Ref': return pathWords(system, ref, node.tag);
+      case 'Ref': return node.tag.startsWith(`${ROW}.`) ? `«${ref(`@${node.tag}`)}»` : pathWords(system, ref, node.tag);
       case 'Pick': return `«${ref(`@${node.tag}`)}» по ${words(node.key, true)}${node.rest ? ` · ${node.rest}` : ''}`;
       case 'Unary': return node.op === '-' ? `−${words(node.operand)}` : `${node.op}${words(node.operand)}`;
       case 'Binary': {

@@ -188,7 +188,7 @@ describe('эффекты D&D собираются в конструкторе р
     ui.click('+ что даёт');
     within(ui.field('Что даёт')).select(ui.field('Что даёт').querySelector('select') as HTMLElement, 'helpless');
 
-    ui.click('+ ещё одно');
+    ui.click('+ вход');
     ui.type(ui.cell('Название', 0), 'Запомненное число');
     if (ui.has('ещё')) ui.click('ещё');
     ui.type(ui.cell('Имя в формулах', 0), 'запомнено');
@@ -216,7 +216,7 @@ describe('эффекты D&D собираются в конструкторе р
   it('D&D «Кость вдохновения наготове» (bardic_ready): вход-кость с умолчанием, на 1 срабатывание, «увидев кости» — прибавить кость из входа', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['bardic_ready']);
     const ui = fresh('+ срабатывает сам', goal!.label!, 'bardic_ready', 'Реакции', goal!.description!);
-    ui.click('+ ещё одно');
+    ui.click('+ вход');
     ui.type(ui.cell('Название', 0), 'Кость вдохновения');
     ui.select(ui.cell('Вид', 0), 'dice');
     ui.select(ui.cell('Если не передали', 0), 'value');
@@ -316,7 +316,7 @@ describe('эффекты D&D собираются в конструкторе р
     const [goal] = start('dnd5e', ['spell_save']);
     const ui = fresh('+ кнопкой', goal!.label!, 'spell_save', 'Заклинания', goal!.description!);
     const param = (row: number, label: string, kind: string, key: string, more: { ask?: string; hint?: string; min?: string; max?: string; from?: string; mode?: string; value?: string } = {}) => {
-      if (row >= (built('spell_save')!.params ?? []).length) ui.click('+ ещё одно');
+      if (row >= (built('spell_save')!.params ?? []).length) ui.click((built('spell_save')!.params ?? []).length ? '+ ещё одно' : '+ вход');
       ui.type(ui.cell('Название', row), label);
       ui.select(ui.cell('Вид', row), kind);
       if (more.from) ui.select(ui.cell('Таблица', row), more.from);
@@ -391,7 +391,7 @@ describe('эффекты D&D собираются в конструкторе р
   it('D&D «Не замечает» (hidden): срок 1 ход, спадает в начале хода листа из входа, две правки броска по двум листам', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['hidden']);
     const ui = fresh('+ висит и правит', goal!.label!, 'hidden', 'Состояния', goal!.description!);
-    ui.click('+ ещё одно');
+    ui.click('+ вход');
     ui.type(ui.cell('Название', 0), 'Кого не замечает');
     ui.select(ui.cell('Вид', 0), 'sheet');
     if (ui.has('ещё')) ui.click('ещё');
@@ -473,7 +473,7 @@ describe('общие эффекты D&D собираются руками: ци�
   };
 
   const param = (ui: ReturnType<typeof within>, id: string, row: number, label: string, kind: string, key: string, more: { ask?: string; main?: boolean; role?: string } = {}) => {
-    if (row >= (built(id)!.params ?? []).length) ui.click('+ ещё одно');
+    if (row >= (built(id)!.params ?? []).length) ui.click((built(id)!.params ?? []).length ? '+ ещё одно' : '+ вход');
     if (ui.has('ещё')) ui.click('ещё');
     ui.type(ui.cell('Название', row), label);
     ui.select(ui.cell('Вид', row), kind);

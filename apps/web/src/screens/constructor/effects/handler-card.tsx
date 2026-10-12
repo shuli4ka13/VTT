@@ -144,7 +144,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
   }
 
   return (
-    <Card>
+    <Card className="mod-card">
       <CardHead
         title={`Когда №${index + 1}: ${sentence}`}
         actions={<>

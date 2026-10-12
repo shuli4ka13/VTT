@@ -5,7 +5,7 @@ import { Verdict } from './primitives.tsx';
 import { FormulaField } from './formula-field.tsx';
 import type { BarOption } from '../store/formula-bar.ts';
 import { fieldPaths } from './paths.ts';
-import { fieldOf } from '@vtt/engine/model/sheet-columns';
+import { fieldOf, ROW } from '@vtt/engine/model/sheet-columns';
 
 export { columnPaths, fieldPaths } from './paths.ts';
 
@@ -30,7 +30,7 @@ export function parseFormula(source: string): Parsed {
 
 const onSheet = (system: System, tag: string): { head: string; rest: string } | null => {
   const dot = tag.indexOf('.');
-  if (dot <= 0 || fieldOf(system, tag) || fieldPaths(system).has(tag)) return null;
+  if (dot <= 0 || tag.startsWith(`${ROW}.`) || fieldOf(system, tag) || fieldPaths(system).has(tag)) return null;
   const rest = tag.slice(dot + 1);
   return fieldOf(system, rest) || fieldPaths(system).has(rest) || system.effects?.[rest] ? { head: tag.slice(0, dot), rest } : null;
 };

@@ -394,6 +394,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
             }}
             system={system}
             editSystem={editSystem}
+            table={id}
             title=""
             modifiers={kind.modifiers ?? []}
             onEdit={change => edit(draft => { change(draft.modifiers ??= []); if (!draft.modifiers.length) delete draft.modifiers; })}

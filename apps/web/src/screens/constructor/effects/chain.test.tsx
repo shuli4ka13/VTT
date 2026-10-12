@@ -342,3 +342,32 @@ describe('условие блока «Если» в покое — словам�
     expect(headOf(block(0), 2).querySelector('.cond')).toBeNull();
   });
 });
+
+describe('цепочка: заголовок раздела и розовая черта под «когда»', () => {
+  const effect = { label: 'Удар', steps: [] } as unknown as Effect;
+  const view = (extra: { title?: string; lined?: boolean } = {}) => render(
+    <Chain id="удар" placeAt={index => ({ part: 'steps', index })} effect={effect} system={withCost()} edit={() => {}} {...extra} />,
+  );
+
+  beforeEach(() => { cleanup(); });
+
+  it('«Шаги» набраны заголовком раздела — как «Что приходит»; вердикт остаётся справа в той же шапке', () => {
+    view();
+    const title = screen.getByText('Шаги');
+    expect(title.tagName).toBe('H3');
+    expect(title.classList.contains('card__title')).toBe(true);
+    expect(title.closest('.card__head')!.querySelector('.verdict')).toBeTruthy();
+    expect(document.querySelector('.chain-run')).toBeNull();
+  });
+
+  it('под «когда»: подпись «делает:», черта вокруг подписи и шагов, палитра шагов — вне черты', () => {
+    view({ title: 'делает:', lined: true });
+    const run = document.querySelector('.chain-run')!;
+    expect(run.querySelector('.chain-run__label')!.textContent).toBe('делает:');
+    expect(run.querySelector('.verdict')).toBeTruthy();
+    expect(run.querySelector('.steps')).toBeTruthy();
+    expect(run.querySelector('.bricks')).toBeNull();
+    expect(document.querySelector('.bricks')).toBeTruthy();
+    expect(screen.queryByText('Шаги')).toBeNull();
+  });
+});

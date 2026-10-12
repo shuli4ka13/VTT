@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
 import { DangerButton } from '../../../ui/primitives.tsx';
 
-export function WhileWhenRow({ when, tag, label, title, removeTitle, onOpen, onRemove, children }: {
+export function WhileWhenRow({ when, named = false, label, title, removeTitle, onOpen, onRemove, children }: {
   when: boolean;
-  tag?: string;
+  named?: boolean;
   label?: string;
   title?: string;
   removeTitle?: string;
@@ -13,9 +13,8 @@ export function WhileWhenRow({ when, tag, label, title, removeTitle, onOpen, onR
 }) {
   const inside = (
     <>
-      <span className="mod-row__kind">{when ? 'когда' : 'пока'}</span>
-      {tag ? <span className="mod-row__tag">{tag}</span> : null}
-      {children}
+      {when || named ? <span className="mod-row__kind">{when ? 'когда' : 'пока'}</span> : null}
+      <span className="mod-row__phrase">{children}</span>
     </>
   );
   return (

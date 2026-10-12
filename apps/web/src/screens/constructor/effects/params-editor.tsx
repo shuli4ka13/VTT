@@ -123,8 +123,8 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
       <Callers effectId={id} system={system} />
       {params.length === 0 ? (
         <div className="inline inline--tight">
-          <span className="faint">Ничего — эффект берёт всё с листов.</span>
-          <Button size="sm" onClick={addParam}>+ ещё одно</Button>
+          <span className="faint">Входов нет — эффект берёт всё с листов.</span>
+          <Button size="sm" onClick={addParam}>+ вход</Button>
         </div>
       ) : (
         <ColumnList

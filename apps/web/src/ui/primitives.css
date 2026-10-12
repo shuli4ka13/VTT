@@ -54,7 +54,7 @@
   width: 9px;
   height: 9px;
   border-radius: 3px;
-  background: var(--dot);
+  background: var(--dot, var(--accent));
 }
 
 .field {

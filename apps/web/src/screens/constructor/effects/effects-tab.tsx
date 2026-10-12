@@ -117,6 +117,7 @@ export function EffectsTab() {
 const metaOf = (effect: Effect, role: Role, everyone: boolean) => {
   const kind = `${ROLE_WORDS[role]}${everyone ? ' · у всех' : ''}`;
   const idle = !effect.steps?.length && !effect.cost?.length && !effect.modifiers?.length
+    && !effect.attach?.length && !effect.detach?.length && !effect.grants?.length
     && !(effect.on ?? []).some(handler => handler.steps?.length || handler.cost?.length);
   return idle ? `${kind.toLowerCase()} · ничего не делает` : kind.toLowerCase();
 };

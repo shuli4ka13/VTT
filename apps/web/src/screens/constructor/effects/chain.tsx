@@ -5,7 +5,7 @@ import { useWorld, freeId } from '../../../store/world.ts';
 import { STEP } from '../../../words.ts';
 import { loopOf, loopParam } from '@vtt/engine/engine/steps/each';
 import { titleOf } from './words.ts';
-import { Button, Select, Verdict } from '../../../ui/primitives.tsx';
+import { Button, CardHead, Select, Verdict } from '../../../ui/primitives.tsx';
 import { problemOf } from '../step-card.tsx';
 import { groupSteps, moveGroup, moveSpan, blockSpan, removeSteps, armEnd, wrapInBranch, addArm, unwrapBlock, BRICKS, SEEN_BRICKS } from '../cards.ts';
 import { armsOf, sees, endOf } from '@vtt/engine/model/flow';
@@ -29,7 +29,7 @@ export const bricksOf = (system: System, except: string, compendium: Compendium 
 
 const callStep = (key: string): Step => ({ type: 'emit', effect: key } as unknown as Step);
 
-export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', empty = 'шагов ещё нет — эффект ничего не делает', lane = 'steps', onEdgeUp, onEdgeDown, bare = false, startAt = 0, lead, onAddCost, onRoll = false }: {
+export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', empty = 'шагов ещё нет — эффект ничего не делает', lane = 'steps', onEdgeUp, onEdgeDown, bare = false, lined = false, startAt = 0, lead, onAddCost, onRoll = false }: {
   id: string;
   placeAt: (index: number) => Place;
   effect: Effect;
@@ -41,6 +41,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
   onEdgeUp?: (indices: number[]) => void;
   onEdgeDown?: (indices: number[]) => void;
   bare?: boolean;
+  lined?: boolean;
   startAt?: number;
   lead?: ReactNode;
   onAddCost?: (id: string) => void;
@@ -345,23 +346,27 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
 
   const list = <>{render(0, cards.length)}</>;
 
-  return (
+  const summary = (
     <>
-      {bare ? null : <div className="inline">
-        <span className="screen-title" style={{ fontSize: 'var(--fs-5)' }}>{title}</span>
-        <span className="spacer" />
-        {real > 1 ? (
-          <>
-            <Button size="sm" variant="ghost" onClick={() => setOpen(keys, false)}>свернуть все</Button>
-            <Button size="sm" variant="ghost" onClick={() => setOpen(keys, true)}>развернуть все</Button>
-          </>
-        ) : null}
-        {broken
-          ? <Verdict tone="bad">{STEP.manyGen} со сломанными ссылками: {broken}</Verdict>
-          : steps.length || startAt
-            ? <Verdict tone="ok">эффект верный · {STEP.manyGen} {real + startAt}</Verdict>
-            : <Verdict tone="warn">{empty}</Verdict>}
-      </div>}
+      {real > 1 ? (
+        <>
+          <Button size="sm" variant="ghost" onClick={() => setOpen(keys, false)}>свернуть все</Button>
+          <Button size="sm" variant="ghost" onClick={() => setOpen(keys, true)}>развернуть все</Button>
+        </>
+      ) : null}
+      {broken
+        ? <Verdict tone="bad">{STEP.manyGen} со сломанными ссылками: {broken}</Verdict>
+        : steps.length || startAt
+          ? <Verdict tone="ok">эффект верный · {STEP.manyGen} {real + startAt}</Verdict>
+          : <Verdict tone="warn">{empty}</Verdict>}
+    </>
+  );
+
+  const run = (
+    <>
+      {bare ? null : lined
+        ? <div className="inline"><span className="chain-run__label">{title}</span><span className="spacer" />{summary}</div>
+        : <CardHead title={title} actions={summary} />}
       {removed && removed.after === JSON.stringify(steps) ? (
         <Verdict
           tone="warn"
@@ -379,6 +384,12 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
       ) : null}
 
       {bare ? list : <div className="steps">{lead}{list}</div>}
+    </>
+  );
+
+  return (
+    <>
+      {lined && !bare ? <div className="chain-run">{run}</div> : run}
 
       {bare ? null : <div className="bricks">
         {bricksOf(system, id, compendium).length ? (

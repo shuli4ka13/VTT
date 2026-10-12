@@ -7,6 +7,7 @@ import { useWorld, emptySystem } from '../../../store/world.ts';
 import { CREATE_KINDS } from './words.ts';
 import { fieldsOf, hasField } from '@vtt/engine/model/sheet-columns';
 import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
+import type { Effect } from '@vtt/schema';
 
 describe('EffectsTab: палитра трёх понятий', () => {
   beforeEach(() => {
@@ -51,7 +52,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
       .map(b => b.textContent!.trim())
       .filter(t => !CREATE_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`)
         && t !== '+ шаг для других' && t !== '+ новый' && t !== '+ блок'
-        && t !== '+ ещё одно' && t !== '+ итог' && t !== '+ держание' && !t.startsWith('+ в «')
+        && t !== '+ ещё одно' && t !== '+ вход' && t !== '+ итог' && t !== '+ держание' && !t.startsWith('+ в «')
         && !['+ блок', '+ метки', '+ описание для игрока', '+ занимает', '+ какие метки бывают', '+ сколько висит', '+ на основе'].includes(t));
     expect(palette).toEqual(['+ проверка', '+ изменение', '+ вызов', '+ таблица', '+ для каждого из списка', '+ если', '+ стоп', '+ число']);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
@@ -118,17 +119,22 @@ describe('EffectsTab: палитра трёх понятий', () => {
     expect(screen.getByText('Что приходит')).toBeTruthy();
   });
 
-  it('«Что приходит» — видимая секция с кнопкой', () => {
+  it('«Что приходит» — видимая секция с кнопкой: без входов «+ вход», с входами «+ ещё одно»', () => {
     renderOpen(<EffectsTab />);
     expect(screen.getByText('Что приходит')).toBeTruthy();
-    fireEvent.click(screen.getByText('+ ещё одно'));
+    expect(screen.getByText('Входов нет — эффект берёт всё с листов.')).toBeTruthy();
+    expect(screen.queryByText('+ ещё одно')).toBeNull();
+    fireEvent.click(screen.getByText('+ вход'));
     const effect = useWorld.getState().system.effects.strike!;
     expect(effect.params!.length).toBe(1);
+    expect(screen.getByText('+ ещё одно')).toBeTruthy();
+    expect(screen.queryByText('+ вход')).toBeNull();
+    expect(screen.queryByText('Входов нет — эффект берёт всё с листов.')).toBeNull();
   });
 
   it('входы — списком словами: форма по клику, редкое под «ещё», «правят сопротивления» только у числа', () => {
     renderOpen(<EffectsTab />);
-    fireEvent.click(screen.getByText('+ ещё одно'));
+    fireEvent.click(screen.getByText('+ вход'));
     expect(screen.getByText('Новый вход')).toBeTruthy();
     const form = () => document.querySelector('.param-form') as HTMLElement;
     expect(screen.queryByLabelText('«Новый вход» — величина'), 'редкое спрятано').toBeNull();
@@ -518,9 +524,18 @@ describe('«пока» и «когда» — одна таблица', () => {
     const rows = [...document.querySelectorAll('.mod-row')];
     expect(rows.map(row => row.querySelector('.mod-row__kind')!.textContent)).toEqual(['пока', 'когда', 'когда', 'когда']);
     expect(rows.map(row => row.classList.contains('mod-row--when'))).toEqual([false, true, true, true]);
+    expect(document.querySelector('.mod-row__tag')).toBeNull();
+    expect(document.querySelectorAll('.mod-table > .mod-item')).toHaveLength(4);
     expect(screen.getByText('повесили')).toBeTruthy();
     expect(screen.getByText('спало')).toBeTruthy();
     expect(document.querySelectorAll('.when-body')).toHaveLength(3);
+    expect([...document.querySelectorAll('.when-body .chain-run__label')].map(label => label.textContent)).toEqual(['делает:', 'делает:', 'делает:']);
+    expect(screen.queryByText('→ делает')).toBeNull();
+    for (const body of document.querySelectorAll('.when-body')) {
+      expect(body.querySelector('.chain-run')).toBeTruthy();
+      expect(body.querySelector('.bricks')).toBeTruthy();
+      expect(body.querySelector('.chain-run .bricks'), 'палитра шагов — вне розовой черты').toBeNull();
+    }
     expect(adders()).toEqual(['+ правит поле', '+ правка вызова', '+ когда']);
   });
 
@@ -558,6 +573,30 @@ describe('подписка видит имена вызова', () => {
     }
     expect(broken).toEqual([]);
   }, 300000);
+});
+
+describe('список слева: «ничего не делает» знает про наложение и спадание', () => {
+  afterEach(cleanup);
+
+  const metaOf = (name: string): string => {
+    const item = [...document.querySelectorAll('.list__item')].find(one => one.querySelector('.list__name')?.textContent === name);
+    return item!.querySelector('.list__meta')!.textContent!;
+  };
+
+  it('«Без сознания» при наложении кладёт «Лежит», у «Недееспособен» наложение снимает концентрацию — оба при деле; пустые наложение и спадание — нет', () => {
+    const world = structuredClone(SAMPLE_WORLDS.find(one => one.system.name === 'D&D 5e')!);
+    const effects = world.system.effects as Record<string, Effect>;
+    effects.leaving = { label: 'Только спадание', activation: 'passive', detach: effects.unconscious!.attach } as Effect;
+    effects.hollow = { label: 'Пустое наложение', activation: 'passive', attach: [], detach: [] } as Effect;
+    useWorld.setState(state => ({ ...state, system: world.system, compendium: world.compendium, activeEffectId: 'charmed' }));
+    renderOpen(<EffectsTab />);
+    expect(metaOf('Без сознания')).not.toContain('ничего не делает');
+    expect(metaOf('Недееспособен')).not.toContain('ничего не делает');
+    expect(metaOf('Только спадание')).not.toContain('ничего не делает');
+    expect(metaOf('Ошеломлён')).not.toContain('ничего не делает');
+    expect(metaOf('Очарован')).toContain('ничего не делает');
+    expect(metaOf('Пустое наложение')).toContain('ничего не делает');
+  });
 });
 
 describe('одно правило «шаг для других»', () => {

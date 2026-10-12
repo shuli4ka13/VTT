@@ -77,3 +77,26 @@ describe('слова формул: итог вызова', () => {
     expect(formulaWords(withCall, '@попадание.natural')).toBe('«попадание»: на кости');
   });
 });
+
+describe('слова формул: клетка своей строки', () => {
+  const withRow = {
+    id: 'с', name: 'с',
+    tables: {
+      лист: { shape: 'single', columns: [{ key: 'ac', label: 'Класс брони', kind: 'number', default: 10 }] },
+      armor: { shape: 'book', use: 'item', label: 'Доспех', columns: [{ key: 'ac', label: 'База класса брони', kind: 'number' }, { key: 'total', label: 'Итого', kind: 'number' }] },
+    },
+    effects: {},
+  } as unknown as System;
+  const names = new Map([['строка', 'эта строка'], ['строка.ac', 'База класса брони'], ['строка.total', 'Итого']]);
+
+  it('«строка» — не лист: колонка зовётся подписью из карты, а не «Класс брони (строка)»', () => {
+    expect(formulaWords(withRow, '@строка.ac', names)).toBe('«База класса брони»');
+    expect(formulaWords(withRow, '@строка.ac')).toBe('«строка.ac»');
+    expect(formulaWords(withRow, '@носитель.ac')).toBe('«Класс брони (носитель)»');
+  });
+
+  it('колонка с именем поля броска остаётся колонкой', () => {
+    expect(formulaWords(withRow, '@строка.total', names)).toBe('«Итого»');
+    expect(formulaWords(withRow, '@строка.total + 1', names)).toBe('«Итого» + 1');
+  });
+});
