@@ -73,17 +73,17 @@ describe('BRICKS', () => {
     for (const brick of BRICKS) {
       const made = brick.make(system, []);
       for (const step of made) {
-        expect(['roll', 'check', 'apply', 'status', 'table', 'each', 'branch', 'end', 'stop']).toContain(step.type);
+        expect(['roll', 'check', 'apply', 'status', 'emit', 'table', 'each', 'branch', 'end', 'stop']).toContain(step.type);
       }
       expect(JSON.stringify(made)).not.toMatch(/"tag"/);
     }
   });
 
-  it('шаг палитры с итогом получает имя сам, и оно не сталкивается с занятыми; изменение и ход — без имени', () => {
+  it('шаг палитры с итогом получает имя сам, и оно не сталкивается с занятыми; изменение, вызов и ход — без имени', () => {
     for (const brick of BRICKS) {
       const made = brick.make(system, []);
       if (made[0]!.type === 'each') continue;
-      if (['apply', 'branch', 'stop'].includes(made[0]!.type)) { for (const step of made) expect(step.id, brick.key).toBeUndefined(); continue; }
+      if (['apply', 'emit', 'branch', 'stop'].includes(made[0]!.type)) { for (const step of made) expect(step.id, brick.key).toBeUndefined(); continue; }
       for (const step of made) expect(step.id, brick.key).toBeTruthy();
       const used = made.map(step => String(step.id));
       const again = brick.make(system, used);
