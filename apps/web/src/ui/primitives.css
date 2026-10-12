@@ -796,3 +796,19 @@
 .pay-divider .add-cost { order: 1; }
 .pay-divider .add-cost { flex: 0 0 auto; }
 .pay-divider .add-cost .select, .pay-divider .add-cost select { width: auto; max-width: 220px; }
+
+:root { --control-h: 32px; }
+.input, .select {
+  height: var(--control-h); min-height: var(--control-h);
+  padding-top: 0; padding-bottom: 0; line-height: calc(var(--control-h) - 2px);
+  font-size: var(--fs-3); font-family: inherit;
+}
+.select {
+  -webkit-appearance: none; appearance: none;
+  padding-left: var(--s-3); padding-right: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238b90a0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; background-size: 10px 6px;
+  text-overflow: ellipsis; white-space: nowrap; cursor: pointer;
+}
+.formula-field, .chips__row { min-height: var(--control-h); }
+.add-cost .select { height: 26px; min-height: 26px; line-height: 24px; }
