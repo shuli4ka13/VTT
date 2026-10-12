@@ -82,6 +82,39 @@ group('увидев кости', () => {
     eq(second.sheets.find(s => s.id === 'а')!.values.удача, 0, 'удача потрачена');
   });
 
+  test('Героическое вдохновение: перебросить меньшую — с вопросом, трасса «переброшено 4 → 17», повтор по журналу берёт те же кости', () => {
+    const system = world({
+      вдохновение: {
+        label: 'Героическое вдохновение', activation: 'passive',
+        on: [{
+          on: 'seen', confirm: true, if: { expr: mine },
+          cost: [{ type: 'apply', target: { expr: '@носитель.удача' }, direction: 'subtract', value: { expr: '1' } }],
+          steps: [{ type: 'roll-reroll', which: 'lowest' }],
+        }],
+      },
+    });
+    const sheets = [sheet('а', ['вдохновение']), sheet('б')];
+    const first = play(system, sheets, [4]);
+    eq(first.kind, 'paused');
+    if (first.kind !== 'paused') return;
+    const journal = { ...first.journal, answers: { ...first.journal.answers, [first.question.key]: [first.question.offers[0]!.id] } };
+    const second = play(system, sheets, [17], journal);
+    eq(second.kind, 'done');
+    eq(hp(second, 'б'), 15, '4 переброшена на 17 — попадание');
+    ok(second.log.join(' ').includes('переброшено 4 → 17 — итог 4 → 17'), second.log.join(' | '));
+    eq(second.sheets.find(s => s.id === 'а')!.values.удача, 0, 'удача потрачена');
+    const again = play(system, sheets, [], second.journal);
+    eq(again.kind, 'done');
+    eq(hp(again, 'б'), 15, 'повтор по журналу — те же кости');
+  });
+
+  test('«Перебросить» с неизвестным режимом — ошибка, а не тихий порог', () => {
+    const system = world({ кривой: { label: 'Кривой', activation: 'passive', on: [{ on: 'seen', if: { expr: mine }, steps: [{ type: 'roll-reroll', which: 'всё' }] }] } });
+    let error = '';
+    try { play(system, [sheet('а', ['кривой']), sheet('б')], [4, 4]); } catch (err) { error = String((err as Error).message); }
+    ok(error.includes('не знает режима «всё»'), error);
+  });
+
   test('окно видит итог с прибавкой шага: превью, @roll.total и трасса «Прибавить» сходятся', () => {
     const system = world({
       точная: {

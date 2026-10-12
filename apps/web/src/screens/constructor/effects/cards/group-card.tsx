@@ -8,7 +8,7 @@ import { referenced } from '../../keys.ts';
 import { useWorld } from '../../../../store/world.ts';
 import type { CardGroup } from '../../cards.ts';
 import type { Segment } from '../../readback.ts';
-import { checkReadback, changeReadback, sendReadback, numberReadback } from '../../readback.ts';
+import { checkReadback, changeReadback, sendReadback, numberReadback, seenReadback } from '../../readback.ts';
 import { namesOf } from '../../slots.tsx';
 import type { SlotContext, EarlierStep } from '../../slots.tsx';
 import type { Problem } from '../../step-card.tsx';
@@ -151,6 +151,7 @@ function summaryOf(group: CardGroup, system: System, effect: Effect, names: Map<
   const segments = group.kind === 'check' ? checkReadback(step, group.amount, system, effect, names)
     : group.kind === 'number' ? numberReadback(step, system, effect, names)
     : group.kind === 'table' ? tableReadback(step as Record<string, unknown>, system)
+    : group.kind === 'seen' ? seenReadback(step, system)
       : group.kind === 'change'
         ? (step.type === 'emit' ? sendReadback(step, system, effect, names) : changeReadback(step, group.amount, system, effect, names))
         : [];

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { SAMPLE_WORLDS } from '../src/model/systems.ts';
 import { flattenSystem } from '../src/model/inherit.ts';
-import { parse, start, result, see, keep, times, addTo } from '../src/core/dice.ts';
+import { parse, start, result, see, keep, times, addTo, LOWEST } from '../src/core/dice.ts';
 import type { SeenOp } from '../src/core/dice.ts';
 import type { DieConstant, RollEdit } from '../src/model/types.ts';
 
@@ -48,9 +48,15 @@ describe('набор костей: свойства на костях и пра�
         expect(result(again), note).toEqual(result(first));
         const now = result(first);
         if (!first.dice.some(d => d.minus) && !first.addends.length) expect(now.natural, note).toBeLessThanOrEqual(now.total);
-        const op: SeenOp = random() < 0.5 ? { kind: 'reroll', upTo: 2 } : { kind: 'add', count: 1, keep: 'best' };
+        const pick = random();
+        const op: SeenOp = pick < 0.34 ? { kind: 'reroll', upTo: 2 } : pick < 0.67 ? { kind: 'add', count: 1, keep: 'best' } : { kind: 'reroll', which: LOWEST };
         const more = tape(random);
-        expect(result(see(first, op, replay(more.values.length ? more.values : [1, 1, 1]))), note).toBeDefined();
+        const after = see(first, op, replay(more.values.length ? more.values : [1, 1, 1]));
+        expect(result(after), note).toBeDefined();
+        if ('which' in op) {
+          expect(first.dice.every(d => after.dice.some(x => x.id === d.id)), `${note}: кости на месте`).toBe(true);
+          expect(first.dice.filter(d => after.dice.find(x => x.id === d.id)!.face !== d.face).length, `${note}: заменена не больше одной`).toBeLessThanOrEqual(1);
+        }
       }
     });
   }
@@ -64,6 +70,14 @@ describe('счёт максимумов и единиц — по оставле�
     const roll = result(start(parse(d20), [worst], replay([20, 3])));
     expect(roll.natural).toBe(3);
     expect(roll.atMax).toBe(0);
+  });
+
+  it('перебросить меньшую: прибавки вне набора не трогаются', () => {
+    const die = replay([7, 4, 15]);
+    const thrown = addTo(start(parse(d20), [], die), [{ label: 'благословение', value: one => one(4) }], die);
+    const after = result(see(thrown, { kind: 'reroll', which: LOWEST }, die));
+    expect(after.total).toBe(19);
+    expect(after.natural).toBe(15);
   });
 
   it('кость прибавки на максимуме — не максимум ведущей кости', () => {

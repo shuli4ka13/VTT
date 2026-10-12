@@ -387,10 +387,22 @@ export function result(roll: Roll): RollResult {
 
 export const faces = (roll: Roll): number[] => roll.dice.map(d => (d.minus ? -d.face : d.face));
 
+export const LOWEST = 'lowest';
+
 export type SeenOp =
   | { kind: 'add'; count: number; sides?: number; keep?: 'best' | 'worst'; explode?: boolean }
   | { kind: 'reroll'; upTo: number }
+  | { kind: 'reroll'; which: typeof LOWEST }
   | { kind: 'plus'; addend: Addend };
+
+export function lowestOf(roll: Roll): Rolled | null {
+  let found: Rolled | null = null;
+  for (const d of roll.dice) {
+    if (d.out || d.extra || d.part || d.minus || d.from !== undefined) continue;
+    if (!found || d.value < found.value) found = d;
+  }
+  return found;
+}
 
 const EXPLODE: RollEdit = { label: '', ops: [{ op: 'explode', apart: true }] };
 
@@ -400,7 +412,10 @@ export function see(roll: Roll, op: SeenOp, die: Die): Roll {
   const taken = new Set(kept(roll));
   if (op.kind === 'reroll') {
     let dice = [...roll.dice];
-    const targets = roll.dice.filter(d => taken.has(d) && !d.extra && d.from === undefined && d.value > 0 && d.value <= op.upTo);
+    const lowest = 'which' in op ? lowestOf(roll) : null;
+    const targets = 'which' in op
+      ? (lowest ? [lowest] : [])
+      : roll.dice.filter(d => taken.has(d) && !d.extra && d.from === undefined && d.value > 0 && d.value <= op.upTo);
     for (const target of targets) {
       const face = die(target.sides);
       const again = applyResults([{ ...target, face, value: target.minus ? -face : face }], roll.results, die, fresh);

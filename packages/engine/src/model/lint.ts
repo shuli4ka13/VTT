@@ -6,7 +6,7 @@ import { chosenEffect, choicesOfInput, emittedChoices, kindsChoosing } from './p
 import { SEEN_LABEL, ANY_ACTION, PHASES } from '../events/bus.ts';
 import type { System, Compendium, Effect, Step, Stage, Guard } from './types.ts';
 import { registry } from '../engine/steps/index.ts';
-import { STEP_WORDS } from '../words/steps.ts';
+import { STEP_WORDS, slotShown, type SlotGate } from '../words/steps.ts';
 import { ROLL_CALL, CALL_WORDS } from '../words/calls.ts';
 import { modifierLists } from './integrity.ts';
 import { calledOf, chainsOfEffect } from '../engine/effects.ts';
@@ -145,9 +145,22 @@ function stepProblems(steps: Step[], whereOf: (index: number) => Where): Problem
       out.push({ where, level: 'error', text: `движок не знает типа ${STEP.gen} «${step.type}»` });
       return;
     }
-    for (const slot of (mod.slots ?? []) as { key: string; label: string; kind?: string; required?: boolean; refersTo?: string }[]) {
-      const value = slot.key.split('.').reduce<unknown>((node, key) =>
-        (node == null || typeof node !== 'object' ? undefined : (node as Record<string, unknown>)[key]), step);
+    const slots = (mod.slots ?? []) as { key: string; label: string; kind?: string; required?: boolean; refersTo?: string; options?: readonly unknown[]; onlyIf?: SlotGate }[];
+    const valueOf = (key: string): unknown => key.split('.').reduce<unknown>((node, part) =>
+      (node == null || typeof node !== 'object' ? undefined : (node as Record<string, unknown>)[part]), step);
+    const unknownChoice = new Set(slots
+      .filter(slot => slot.kind === 'choice' && slot.options && valueOf(slot.key) !== null && valueOf(slot.key) !== undefined && !slot.options.includes(valueOf(slot.key)))
+      .map(slot => slot.key));
+    for (const slot of slots) {
+      const value = valueOf(slot.key);
+      if (slot.onlyIf && unknownChoice.has(slot.onlyIf.key)) continue;
+      if (!slotShown(slot, step as unknown as Record<string, unknown>, slots as unknown as Record<string, unknown>[])) {
+        if (value !== null && value !== undefined) out.push({ where, level: 'error', text: `«${slot.label}» здесь не действует — уберите` });
+        continue;
+      }
+      if (unknownChoice.has(slot.key)) {
+        out.push({ where, level: 'error', text: `${slot.label.toLowerCase()}: нет варианта «${String(value)}»` });
+      }
       if (slot.required && (value === null || value === undefined)) {
         out.push({ where, level: 'error', text: `не заполнено: ${slot.label.toLowerCase()}` });
         break;

@@ -234,7 +234,7 @@ describe('эффекты D&D собираются в конструкторе р
     expect(built('bardic_ready')).toEqual(goal);
   });
 
-  it('D&D «Вдохновение» (inspire): «увидев кости», цена подписки — трата поля, докинуть и оставить лучшую', { timeout: 60000 }, () => {
+  it('D&D «Героическое вдохновение» (inspire): «увидев кости», цена подписки — трата поля, перебросить одну меньшую кость; смена режима снимает порог', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['inspire']);
     fresh('+ срабатывает сам', goal!.label!, 'inspire', 'Реакции', goal!.description!);
     within(handlerHead(1)).select('Что случилось', 'seen');
@@ -254,11 +254,29 @@ describe('эффекты D&D собираются в конструкторе р
     }
     within(stepCard(/^1 · /, handlerAt(1))).click('↑');
 
-    within(handlerAt(1)).click('+ докинуть');
+    within(handlerAt(1)).click('+ перебросить');
     card = stepCard(/^2 · /, handlerAt(1));
-    within(card).select('Оставить', 'best');
+    expect(within(card).field('Перебросить, где выпало не больше')).toBeTruthy();
+    within(card).select('Что перебросить', 'lowest');
+    card = stepCard(/^2 · /, handlerAt(1));
+    expect(card.textContent).not.toContain('Перебросить, где выпало не больше');
     dump({ got: built('inspire'), goal });
     expect(built('inspire')).toEqual(goal);
+  });
+
+  it('«Перебросить»: назад к порогу — порог снова 1, режим в данных не пишется', { timeout: 60000 }, () => {
+    const [goal] = start('dnd5e', ['inspire']);
+    fresh('+ срабатывает сам', 'Проба режима', 'reroll_probe', 'Реакции', goal!.description!);
+    within(handlerHead(1)).select('Что случилось', 'seen');
+    within(handlerAt(1)).click('+ перебросить');
+    let card = stepCard(/^1 · /, handlerAt(1));
+    within(card).select('Что перебросить', 'lowest');
+    expect((built('reroll_probe').on![0]!.steps![0] as Record<string, unknown>).upTo).toBeUndefined();
+    card = stepCard(/^1 · /, handlerAt(1));
+    within(card).select('Что перебросить', '');
+    const step = built('reroll_probe').on![0]!.steps![0] as Record<string, unknown>;
+    expect(step.which).toBeUndefined();
+    expect(step.upTo).toEqual({ expr: '1' });
   });
 
   it('D&D «Щит» (shield): «до» всего с меткой «атака», цена реакцией и ячейкой, вешает состояние на себя', { timeout: 60000 }, () => {

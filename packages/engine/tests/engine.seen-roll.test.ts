@@ -1,5 +1,6 @@
 import { group, test, eq, deepEq } from './harness.ts';
 import { rollLead, seeRoll } from './kit.ts';
+import { traceLine } from '../src/engine/steps/roll-reroll.ts';
 import type { DieConstant } from '../src/model/types.ts';
 
 const queue = (...values: number[]) => () => values.shift() ?? 1;
@@ -87,5 +88,86 @@ group('увидев кости: докинуть и оставить — сре�
     const two = { label: '2к6', kind: 'die', dice: [{ count: 2, sides: 6 }] } as DieConstant;
     const seen = seeRoll(rollLead(two, die), { kind: 'add', count: 1, keep: 'best' }, die);
     eq(seen.total, 11);
+  });
+});
+
+group('увидев кости: перебросить одну меньшую — Героическое вдохновение 2024', () => {
+  const adv = { label: 'Преимущество', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }] } as never;
+  const dis = { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }] } as never;
+  const lowest = { kind: 'reroll', which: 'lowest' } as const;
+
+  test('одна к20: перебрасывается она, засчитывается новая', () => {
+    const die = queue(4, 17);
+    const seen = seeRoll(rollLead(d20, die), lowest, die);
+    deepEq(seen.rolls, [17]);
+    eq(seen.total, 17);
+    eq(seen.natural, 17);
+  });
+
+  test('с преимуществом перебрасывается меньшая, не взятая в расчёт: итог не падает', () => {
+    const die = queue(3, 15, 9);
+    const seen = seeRoll(rollLead(d20, die, [adv]), lowest, die);
+    deepEq(seen.rolls, [9, 15]);
+    eq(seen.total, 15, 'выпало 9 — бо́льшая 15 осталась');
+    const up = queue(3, 15, 18);
+    eq(seeRoll(rollLead(d20, up, [adv]), lowest, up).total, 18);
+  });
+
+  test('с помехой перебрасывается взятая меньшая: итог — меньшая из новой и другой', () => {
+    const die = queue(3, 15, 9);
+    const seen = seeRoll(rollLead(d20, die, [dis]), lowest, die);
+    deepEq(seen.rolls, [9, 15]);
+    eq(seen.total, 9);
+  });
+
+  test('при равенстве перебрасывается первая', () => {
+    const die = queue(5, 5, 12);
+    deepEq(seeRoll(rollLead(d20, die, [adv]), lowest, die).rolls, [12, 5]);
+  });
+
+  test('правки результата действуют и на новую грань: Везучий перебрасывает новую единицу, Надёжный талант поднимает до 10', () => {
+    const lucky = { label: 'Везучий', ops: [{ op: 'reroll', n: 1 }] } as never;
+    const die = queue(2, 1, 14);
+    deepEq(seeRoll(rollLead(d20, die, [lucky]), lowest, die).rolls, [14]);
+    const reliable = { label: 'Надёжный талант', ops: [{ op: 'floorDie', least: 10 }] } as never;
+    const low = queue(12, 4);
+    eq(seeRoll(rollLead(d20, low, [reliable]), lowest, low).total, 10);
+  });
+
+  test('именованные части не кандидаты — перебрасывать нечего, бросок не меняется', () => {
+    const duality = { label: 'двойственность', kind: 'die', dice: [{ count: 1, sides: 12, name: 'hope' }, { count: 1, sides: 12, name: 'fear' }] } as unknown as DieConstant;
+    const die = queue(3, 9);
+    const first = rollLead(duality, die);
+    const seen = seeRoll(first, lowest, die);
+    deepEq(seen.rolls, first.rolls);
+    eq(seen.total, first.total);
+  });
+});
+
+group('перебросить одну меньшую: кого не трогает', () => {
+  const lowest = { kind: 'reroll', which: 'lowest' } as const;
+
+  test('кость-вычитаемое и «кость сверх» не кандидаты — перебрасывается главная', () => {
+    const mixed = { label: 'смесь', kind: 'die', dice: [{ count: 1, sides: 20 }, { count: 1, sides: 6, minus: true }, { count: 1, sides: 4, bonus: true }] } as unknown as DieConstant;
+    const die = queue(12, 5, 1, 19);
+    const first = rollLead(mixed, die);
+    const seen = seeRoll(first, lowest, die);
+    eq(seen.raw[0], 19, 'переброшена к20, хотя вычитаемое и «сверх» меньше');
+    deepEq(seen.raw.slice(1), first.raw.slice(1));
+  });
+
+  test('кость, выкинутая вторым «докинуть и взять», не кандидат', () => {
+    const die = queue(3, 15, 9, 20);
+    const once = seeRoll(rollLead(d20, die), { kind: 'add', count: 1, keep: 'best' }, die);
+    const twice = seeRoll(once, { kind: 'add', count: 1, keep: 'best' }, die);
+    const seen = seeRoll(twice, lowest, die);
+    deepEq(seen.rolls, [3, 15, 20], 'тройка выкинута — переброшена девятка');
+    eq(seen.total, 20);
+  });
+
+  test('трасса: без кандидатов — «перебрасывать нечего», порог — по-старому', () => {
+    eq(traceLine({ which: 'lowest', before: 7, after: 7, rolls: [3, 4] }), 'перебрасывать нечего — итог 7');
+    eq(traceLine({ which: 'lowest', before: 12, after: 25, rolls: [18, 5], from: 3, to: 18 }), 'переброшено 3 → 18 — итог 12 → 25');
+    eq(traceLine({ before: 1, after: 2, rolls: [5, 6, 3] }), 'переброшено: [5, 6, 3] — итог 1 → 2');
   });
 });

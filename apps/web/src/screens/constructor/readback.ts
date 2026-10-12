@@ -432,3 +432,20 @@ export const joinReadback = (segments: Segment[]): string =>
     .join(' ')
     .replace(/\s+([.,])/g, '$1')
     .replace(/\.\s*\./g, '.');
+
+export function seenReadback(step: Step, system: System): Segment[] {
+  const read = step as unknown as Record<string, unknown>;
+  const words = (ref: unknown): string => {
+    const expr = String((ref as { expr?: unknown } | undefined)?.expr ?? '').trim();
+    return expr ? formulaWords(system, expr) : '…';
+  };
+  if (step.type === 'roll-reroll') {
+    return [{ text: read.which === 'lowest' ? 'одну меньшую кость' : `кости не выше ${words(read.upTo)}` }];
+  }
+  if (step.type === 'roll-add') {
+    const keep = read.keep === 'best' ? ', оставить лучшую' : read.keep === 'worst' ? ', оставить худшую' : '';
+    return [{ text: `${words(read.count)}${read.sides ? ` ${DIE_LETTER}${words(read.sides)}` : ''}${keep}` }];
+  }
+  if (step.type === 'roll-plus') return [{ text: `+ ${words(read.value)}` }];
+  return [];
+}

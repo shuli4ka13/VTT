@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { checkReadback, changeReadback, numberReadback, joinReadback, editReadback, dieReadback, editNotation } from './readback.ts';
+import { checkReadback, changeReadback, numberReadback, joinReadback, editReadback, dieReadback, editNotation, seenReadback } from './readback.ts';
 import type { System, Effect, Step } from '@vtt/schema';
 import { withColumn } from '@vtt/engine/model/sheet-columns';
 
@@ -175,5 +175,19 @@ describe('правка броска записью костей', () => {
     expect(editNotation({ ops: [{ op: 'plus', value: { expr: 'кинуть(к6)' } }] }, duality)).toBeNull();
     expect(joinReadback(editReadback({ ops: [{ op: 'plus', value: { expr: 'кинуть(к6)' } }] }, duality))).toBe('Прибавить к6.');
     expect(joinReadback(editReadback({ ops: [{ op: 'floorDie', least: 10 }] }, duality))).toBe('Считать кость не меньше 10.');
+  });
+});
+
+describe('сводка свёрнутого шага «увидев кости»', () => {
+  const words = (step: Record<string, unknown>) => seenReadback(step as never, {} as never).map(part => ('text' in part ? part.text : part.hole)).join(' ');
+
+  it('«Перебросить»: два режима читаются по-разному', () => {
+    expect(words({ type: 'roll-reroll', which: 'lowest' })).toBe('одну меньшую кость');
+    expect(words({ type: 'roll-reroll', upTo: { expr: '1' } })).toBe('кости не выше 1');
+  });
+
+  it('«Докинуть» и «Прибавить»', () => {
+    expect(words({ type: 'roll-add', count: { expr: '1' }, keep: 'best' })).toBe('1, оставить лучшую');
+    expect(words({ type: 'roll-plus', value: { expr: '2' } })).toBe('+ 2');
   });
 });

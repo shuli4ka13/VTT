@@ -543,3 +543,33 @@ group('линт: правка, не привязанная к носителю',
     }
   });
 });
+
+group('линт: значение выбора — из его вариантов, для любого шага', () => {
+  test('«Докинуть» с «Оставить: лучшая» вместо best — ошибка словами', () => {
+    const system = bare();
+    system.effects.удача = { label: 'Удача', activation: 'passive', on: [{ on: 'seen', confirm: true, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'лучшая' }] }] } as unknown as Effect;
+    ok(errorTexts(system).some(t => t.includes('оставить: нет варианта «лучшая»')), errorTexts(system).join('|'));
+  });
+});
+
+group('линт: «Перебросить» — два режима', () => {
+  const reacting = (step: Record<string, unknown>): System => {
+    const system = bare();
+    system.effects.удача = { label: 'Удача', activation: 'passive', on: [{ on: 'seen', confirm: true, steps: [{ type: 'roll-reroll', ...step }] }] } as unknown as Effect;
+    return system;
+  };
+
+  test('«одну меньшую» не требует порога', () => {
+    eq(errorTexts(reacting({ which: 'lowest' })).join('|'), '');
+  });
+
+  test('порог при «одной меньшей» — лишний, его просят убрать', () => {
+    ok(errorTexts(reacting({ which: 'lowest', upTo: { expr: '1' } })).some(t => t.includes('«Перебросить, где выпало не больше» здесь не действует')), errorTexts(reacting({ which: 'lowest', upTo: { expr: '1' } })).join('|'));
+  });
+
+  test('режим не из списка — одна ошибка про режим; порог без режима, как раньше, требует числа', () => {
+    ok(errorTexts(reacting({ which: 'всё', upTo: { expr: '1' } })).some(t => t.includes('что перебросить: нет варианта «всё»')));
+    ok(!errorTexts(reacting({ which: 'всё', upTo: { expr: '1' } })).some(t => t.includes('здесь не действует')), 'второй, неверной ошибки про порог нет');
+    ok(errorTexts(reacting({})).some(t => t.includes('не заполнено: перебросить, где выпало не больше')));
+  });
+});

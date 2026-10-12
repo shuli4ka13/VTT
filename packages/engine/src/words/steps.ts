@@ -9,6 +9,16 @@ export interface StepWords {
   breakLines: Readonly<Record<string, string>>;
 }
 
+export interface SlotGate { key: string; is: string }
+
+export function slotShown(slot: { onlyIf?: SlotGate }, step: Readonly<Record<string, unknown>>, slots: readonly Record<string, unknown>[]): boolean {
+  const gate = slot.onlyIf;
+  if (!gate) return true;
+  const ruler = slots.find(one => one.key === gate.key) as { fallback?: unknown } | undefined;
+  const value = step[gate.key] ?? ruler?.fallback ?? '';
+  return String(value) === gate.is;
+}
+
 export const STEP_WORDS = {
   roll: {
     label: 'Бросок',
@@ -152,9 +162,13 @@ export const STEP_WORDS = {
   },
   'roll-reroll': {
     label: 'Перебросить',
-    hint: 'Увидев кости: перебросить кости, на которых выпало не больше числа. Остальные остаются.',
+    hint: 'Увидев кости: перебросить кости, на которых выпало не больше числа, — или одну меньшую кость (с преимуществом это та, что не взята в расчёт). Засчитывается новая грань, остальные кости остаются.',
     slots: [
-      { key: 'upTo', label: 'Перебросить, где выпало не больше', kind: 'ref', main: true, required: true, allow: ['expr'] },
+      {
+        key: 'which', label: 'Что перебросить', kind: 'choice', options: ['', 'lowest'], fallback: '',
+        choice: [['', 'кости не выше числа'], ['lowest', 'одну меньшую кость']],
+      },
+      { key: 'upTo', label: 'Перебросить, где выпало не больше', kind: 'ref', main: true, required: true, allow: ['expr'], onlyIf: { key: 'which', is: '' }, seed: { expr: '1' } },
     ],
     outputs: [],
     reasons: {},
