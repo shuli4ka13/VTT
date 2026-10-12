@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useWorld, useBook } from '../../store/world.ts';
 import type { System, Effect, Param, Binding, SlotRef } from '@vtt/schema';
 import type { RecordKind } from '@vtt/engine/model/owned';
@@ -7,16 +6,13 @@ import { paramsOf } from '@vtt/engine/model/inherit';
 import { listOf } from '@vtt/engine/model/lists';
 import { Card, Field, Select, LabelInput, Button, DangerButton } from '../../ui/primitives.tsx';
 import { asDice } from '@vtt/engine/words/glossary';
-import { ValueField, asText } from './value-field.tsx';
+import { ValueField, asText, type SlotOption } from './value-field.tsx';
+import { paymentsOf } from '@vtt/engine/model/payments';
 import { grouped as byRole } from './effects/roles.ts';
 import { kindWords } from './effects/params-editor.tsx';
 
 const EMPTY = '';
-const FORMULA = '=';
-const NEW = '+';
 const OWN = 'Своё у каждой записи';
-const SAME = 'Одно на всех';
-const ROWS = 'Одно на всех — строка';
 
 type Fill = 'actor' | 'targets';
 
@@ -105,34 +101,24 @@ export function ButtonEditor({ binding, system, recordKind, kindId, onEdit, onDe
 
 interface Source { key: string; label: string; group: string }
 
-const FITS: Record<string, string[]> = {
-  number: ['number'],
-  dice: ['dice'],
-  text: ['text'],
-  effect: ['effect'],
-  record: ['record'],
-};
+function effectSources(param: Param, kind: RecordKind, system: System, effectId: string): Source[] {
+  const own = (kind.columns ?? [])
+    .filter(prop => prop.key === param.key || prop.kind === 'effect')
+    .map(prop => ({ key: `@${prop.key}`, label: `свойство «${prop.label ?? prop.key}»`, group: OWN }));
+  const effects = byRole(system, Object.entries(system.effects).filter(([id]) => id !== effectId))
+    .map(([id, e, group]) => ({ key: JSON.stringify(id), label: e.label || id, group }));
+  return [...own, ...effects];
+}
 
-function sourcesOf(param: Param, kind: RecordKind, system: System, effectId: string): Source[] {
-  const props = kind.columns ?? [];
-  const want = String(param.kind ?? 'number');
-  const fits = (prop: (typeof props)[number]) => prop.key === param.key || (want === 'choice'
-    ? prop.kind === 'choice' && prop.from === param.from
-    : (FITS[want] ?? []).includes(String(prop.kind ?? 'number')));
-  const own = props.filter(fits).map(prop => ({ key: `@${prop.key}`, label: `свойство «${prop.label ?? prop.key}»`, group: OWN }));
-  const via = want !== 'number' ? [] : props
-    .filter(prop => prop.kind === 'choice' && prop.from && system.tables?.[prop.from]?.columns?.length)
-    .flatMap(prop => (system.tables![prop.from!]!.columns ?? [])
-      .filter(column => String(column.kind ?? 'number') === 'number')
-      .map(column => ({ key: `@${prop.key}.${column.key}`, label: `${prop.label ?? prop.key} · ${column.label || column.key}`, group: OWN })));
-  const rows = want === 'choice' && param.from
-    ? (listOf(system, param.from) ?? []).map(row => ({ key: JSON.stringify(row.value), label: row.label, group: `${ROWS} «${system.tables?.[param.from!]?.label || param.from}»` }))
+function hintsOf(param: Param, system: System, effect: Effect, args: Record<string, unknown> | undefined, onNew: (() => void) | undefined): SlotOption[] {
+  const fresh = onNew ? [{ group: 'Завести', label: `+ новое свойство «${param.label ?? param.key}»`, onPick: onNew }] : [];
+  const rows = param.kind === 'choice' && param.from
+    ? (listOf(system, param.from) ?? []).map(row => ({ group: `Строки «${system.tables?.[param.from!]?.label || param.from}»`, label: row.label, formula: JSON.stringify(row.value) }))
     : [];
-  const effects = want === 'effect'
-    ? byRole(system, Object.entries(system.effects).filter(([id]) => id !== effectId))
-      .map(([id, e, group]) => ({ key: JSON.stringify(id), label: e.label || id, group }))
-    : [];
-  return [...own, ...via, ...rows, ...effects];
+  const asks = paymentsOf(system, effect, args ?? {})
+    .flatMap(({ payment }) => (payment.params ?? []).filter(one => one.ask))
+    .map(one => ({ group: 'Спросят при оплате', label: one.label ?? one.key, name: one.key }));
+  return [...fresh, ...rows, ...asks];
 }
 
 function emptyWords(param: Param, system: System): string {
@@ -149,6 +135,8 @@ function emptyWords(param: Param, system: System): string {
 
 const loose = (param: Param) => param as Param & { optional?: boolean };
 
+const LONE = /^@([\p{L}\p{N}_]+)(?:\.[\p{L}\p{N}_]+)?$/u;
+
 function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, effect, where, onArg, onSheet, onNew }: {
   param: Param;
   kindId?: string;
@@ -163,7 +151,6 @@ function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, 
   onSheet: (fill: Fill | '') => void;
   onNew?: () => void;
 }) {
-  const [typing, setTyping] = useState(false);
   const name = param.label ?? param.key;
   const kind = String(param.kind ?? 'number');
   const free = Boolean(loose(param).optional) || param.default !== undefined || Boolean(param.ask);
@@ -186,51 +173,51 @@ function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, 
     );
   }
 
-  const sources = sourcesOf(param, recordKind, system, effectId);
   const byName = (recordKind.columns ?? []).some(prop => prop.key === param.key);
   const arg = binding.args?.[param.key] as unknown;
-  const text = asText(arg)?.trim() ?? '';
-  const matched = arg === undefined || arg === null
-    ? (byName ? `@${param.key}` : EMPTY)
-    : sources.some(source => source.key === text) ? text : FORMULA;
-  const value = typing ? FORMULA : matched;
-  const need = value === EMPTY && !free;
+  const empty = arg === undefined || arg === null;
+  const text = empty ? (byName ? `@${param.key}` : '') : asText(arg)?.trim() ?? '';
+  const need = !text && !free;
 
-  const options: (readonly [string, string] | readonly [string, string, string])[] = [
-    ...(byName ? [] : [[EMPTY, emptyWords(param, system)] as const]),
-    ...sources.filter(source => source.group === OWN).map(source => [source.key, source.label, source.group] as const),
-    ...(onNew && !byName ? [[NEW, `+ новое свойство «${name}»`, OWN] as const] : []),
-    ...sources.filter(source => source.group.startsWith(ROWS)).map(source => [source.key, source.label, source.group] as const),
-    [FORMULA, 'формула…', SAME] as const,
-    ...sources.filter(source => source.group !== OWN && !source.group.startsWith(ROWS)).map(source => [source.key, source.label, source.group] as const),
-  ];
+  if (kind === 'effect') {
+    const sources = effectSources(param, recordKind, system, effectId);
+    return (
+      <div className={`args-row${need ? ' args-row--need' : ''}`}>
+        <span className="args-row__name">{name}</span>
+        <KindCell param={param} system={system} />
+        <div className="args-row__fill">
+          <Select<string>
+            label={`«${name}» — чем заполняет тип`}
+            value={text}
+            options={[...(byName ? [] : [[EMPTY, emptyWords(param, system)] as const]), ...sources.map(source => [source.key, source.label, source.group] as const)]}
+            onChange={next => onArg(next === EMPTY || (byName && next === `@${param.key}`) ? null : { expr: next })}
+          />
+        </div>
+      </div>
+    );
+  }
 
-  const pick = (next: string) => {
-    if (next === FORMULA) { setTyping(true); return; }
-    setTyping(false);
-    if (next === NEW) { onNew?.(); return; }
-    if (next === EMPTY || (byName && next === `@${param.key}`)) { onArg(null); return; }
-    onArg({ expr: next });
-  };
-
+  const lone = LONE.exec(text)?.[1];
   return (
     <div className={`args-row${need ? ' args-row--need' : ''}`}>
       <span className="args-row__name">{name}</span>
       <KindCell param={param} system={system} />
       <div className="args-row__fill">
-        <Select<string> label={`«${name}» — чем заполняет тип`} value={value} options={options} onChange={pick} />
-        {value.startsWith('@') && kindId ? <Examples system={system} kind={recordKind} kindId={kindId} prop={value.slice(1).split('.')[0]!} /> : null}
-        {value === FORMULA ? (
-          <ValueField
-            where={`${where} · ${name}`}
-            value={arg as never}
-            context={{ system, effect, earlier: [], recordKind }}
-            allow={['prop', 'table']}
-            dice={kind === 'dice'}
-            placeholder={byName ? `пусто — свойство «${name}»` : 'число или формула — @ подскажет'}
-            onChange={next => { onArg(next); if (!next) setTyping(false); }}
-          />
-        ) : null}
+        <ValueField
+          where={`${where} · ${name}`}
+          value={(text ? { expr: text } : undefined) as never}
+          context={{ system, effect: { ...effect, params: [] }, earlier: [], recordKind, sheets: new Map(params.filter(one => one.kind === 'sheet' && !one.many).map(one => [one.key, one.label ?? one.key] as const)) }}
+          allow={['prop', 'table', 'tag']}
+          extraOptions={hintsOf(param, system, effect, binding.args as Record<string, unknown> | undefined, onNew && !byName ? onNew : undefined)}
+          placeholder={emptyWords(param, system)}
+          dice={kind === 'dice'}
+          onChange={next => {
+            const typed = asText(next)?.trim() ?? '';
+            onArg(!next || !typed || (byName && typed === `@${param.key}`) ? null : next);
+          }}
+        />
+        {lone && kindId && (recordKind.columns ?? []).some(prop => prop.key === lone)
+          ? <Examples system={system} kind={recordKind} kindId={kindId} prop={lone} /> : null}
       </div>
     </div>
   );

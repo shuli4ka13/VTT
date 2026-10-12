@@ -38,10 +38,13 @@ export interface SlotOption {
   onPick?: () => void;
 }
 
-const tableOption = (ctx: SlotContext, table: string, column: string): Pick<SlotOption, 'name' | 'formula'> | null => {
+const tableOption = (ctx: SlotContext, table: string, column: string): Pick<SlotOption, 'name' | 'formula' | 'label'> | null => {
   const props = ctx.recordKind?.columns ?? [];
   const chosen = props.find(p => (p as { kind?: string }).kind === 'choice' && (p as { from?: string }).from === table);
-  if (chosen) return { name: `${chosen.key}.${column}` };
+  if (chosen) {
+    const label = ctx.system.tables?.[table]?.columns?.find(one => one.key === column)?.label || column;
+    return { name: `${chosen.key}.${column}`, label: `${chosen.label ?? chosen.key} · ${label}` };
+  }
   const by = props[0];
   if (!by) return null;
   return { formula: writeTableCall({ table, arg: `@${by.key}`, column }) };

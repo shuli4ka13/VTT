@@ -537,8 +537,10 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .args-row__kind { color: var(--text-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .args-row__fill { display: flex; flex-direction: column; gap: var(--s-2); min-width: 0; }
 .args-row__fill > .select, .args-row__fill > .slot { width: 100%; }
-.args-row--need .args-row__name, .args-row--need .args-row__fill > .select { color: var(--danger); }
-.args-row--need .args-row__fill > .select { border-color: var(--danger); }
+.args-row__fill .formula-field { width: 100%; height: var(--control-h); min-height: var(--control-h); flex-wrap: nowrap; white-space: nowrap; padding: 0 var(--s-3); }
+.args-row__fill .formula-field .chips__chip { flex: none; }
+.args-row--need .args-row__name, .args-row--need .args-row__fill > .select, .args-row--need .chips__placeholder { color: var(--danger); }
+.args-row--need .args-row__fill > .select, .args-row--need .formula-field { border-color: var(--danger); }
 .callers { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); margin-bottom: var(--s-2); }
 .callers__title { color: var(--text-muted); margin-right: var(--s-1); }
 .sources { display: flex; flex-wrap: wrap; gap: var(--s-1); min-width: 0; }
