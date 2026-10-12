@@ -18,13 +18,25 @@ import type { SlotContext } from '../../slots.tsx';
 import type { EditFn, WithNumber } from '../words.ts';
 import { SendBody } from './send-body.tsx';
 import { amountParamOf } from '@vtt/engine/model/lists';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { fieldsOf, cellSource } from '@vtt/engine/model/sheet-columns';
 import { DESK_ID } from '@vtt/engine/engine/owners';
 
 const fieldTarget = (target: unknown): { sheet: string; tag: string } | null => {
   const expr = target && typeof target === 'object' && 'expr' in target ? String((target as { expr: unknown }).expr) : '';
   const found = /^\s*@([\p{L}\p{N}_]+)\.([\p{L}\p{N}_.]+)\s*$/u.exec(expr);
   return found ? { sheet: found[1]!, tag: found[2]! } : null;
+};
+
+const rowNamesOf = (context: SlotContext): { name: string; label: string; table: string }[] => [
+  ...(context.effect.params ?? [])
+    .filter(param => param.kind === 'choice' && typeof param.from === 'string' && !param.many)
+    .map(param => ({ name: param.key, label: param.label ?? param.key, table: String(param.from) })),
+  ...context.earlier.filter(step => step.type === 'each' && step.table).map(step => ({ name: step.id, label: step.id, table: step.table! })),
+];
+
+const storedColumns = (system: System, table: string) => {
+  const spec = system.tables?.[table];
+  return (spec?.columns ?? []).filter(column => (spec?.rows ?? []).some(row => cellSource(column, row).kind === 'input'));
 };
 
 function TargetPick({ target, context, onChange }: {
@@ -46,6 +58,9 @@ function TargetPick({ target, context, onChange }: {
     ...fieldParams.map(p => [`:${p.key}`, `поле из входа «${p.label ?? p.key}»`] as const),
   ];
   const fields = fieldsOf(system).filter(f => f.value.kind === 'stored' && (owner === DESK_ID ? f.lives === 'desk' : f.lives !== 'desk'));
+  const cells = rowNamesOf(context)
+    .filter(row => (owner === DESK_ID ? system.tables?.[row.table]?.owner === 'desk' : system.tables?.[row.table]?.owner && system.tables?.[row.table]?.owner !== 'desk'))
+    .flatMap(row => storedColumns(system, row.table).map(column => [`${row.name}.${column.key}`, `${row.label} · ${column.label ?? column.key}`] as const));
   return (
     <div className="row">
       <Field label="У кого" needed={!owner}>
@@ -63,7 +78,7 @@ function TargetPick({ target, context, onChange }: {
         <Field label="Какое поле" needed={!picked}>
           <Select<string>
             value={picked?.tag ?? ''}
-            options={[['', '— какое поле —'], ...fields.map(f => [f.tag, f.label ?? f.tag] as const)]}
+            options={[['', '— какое поле —'], ...fields.map(f => [f.tag, f.label ?? f.tag] as const), ...cells]}
             onChange={next => onChange(next ? { expr: `@${owner}.${next}` } : null)}
           />
         </Field>

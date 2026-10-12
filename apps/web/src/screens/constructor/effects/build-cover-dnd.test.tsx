@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, cleanup } from '@testing-library/react';
+import { render, cleanup, act, fireEvent } from '@testing-library/react';
 import { writeFileSync } from 'node:fs';
 import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import type { System, Effect } from '@vtt/schema';
@@ -434,5 +434,105 @@ describe('эффекты D&D собираются в конструкторе р
     expect(shown?.getAttribute('placeholder')).toBe('ни против кого — бросок один на все цели');
     expect((shown as HTMLInputElement | null)?.value ?? shown?.textContent ?? '').toBe('');
     expect(useWorld.getState().system.effects.hide!.steps![0]).not.toHaveProperty('against');
+  });
+});
+
+describe('общие эффекты D&D собираются руками: цикл по строкам, адрес через строку', () => {
+  beforeEach(() => { try { localStorage.clear(); } catch { return; } });
+  afterEach(() => { cleanup(); });
+
+  const calledHead = (goal: Effect, key: string) => {
+    const ui = fresh('+ шаг для других', goal.label!, key, goal.group!, goal.description!);
+    within(stepCard(/^1 · /)).click('Удалить');
+    within(stepCard(/^1 · /)).click('точно убрать');
+    return ui;
+  };
+
+  const param = (ui: ReturnType<typeof within>, id: string, row: number, label: string, kind: string, key: string, more: { ask?: string; main?: boolean; role?: string } = {}) => {
+    if (row >= (built(id)!.params ?? []).length) ui.click('+ ещё одно');
+    if (ui.has('ещё')) ui.click('ещё');
+    ui.type(ui.cell('Название', row), label);
+    ui.select(ui.cell('Вид', row), kind);
+    if (more.ask) ui.select(ui.cell('Если не передали', row), more.ask);
+    if (more.main) ui.check(`«${label}» — величина`, true);
+    if (more.role) ui.select(ui.cell('Приходит сам', row), more.role);
+    if (ui.cell('Имя в формулах', row).querySelector('input')) ui.type(ui.cell('Имя в формулах', row), key);
+  };
+
+  const dropParam = (row: number) => {
+    const drops = [...document.querySelectorAll<HTMLElement>('button[title="убрать вход"]')];
+    act(() => { fireEvent.click(drops[row]!); });
+    openAll();
+  };
+
+  const change = (card: () => HTMLElement, owner: string, field: string, how: string, value: string) => {
+    within(card()).select('У кого', owner);
+    within(card()).select('Какое поле', field);
+    within(card()).select('Как', how);
+    within(card()).formula('Сколько', value);
+  };
+
+  const rows = (root: ParentNode, table: string, name: string) => {
+    const strip = () => root.querySelector<HTMLElement>('.steps__split')!;
+    within(strip()).select(strip().querySelector<HTMLElement>('select')!, `строки:${table}`);
+    within(strip()).type(strip().querySelector<HTMLElement>('input')!, name);
+  };
+
+  it('D&D «Новый ход» (turn_reset): для каждой строки «За ход» — «Осталось» строки цикла задать «В начале хода»', { timeout: 90000 }, () => {
+    const [goal] = start('dnd5e', ['turn_reset']);
+    const ui = calledHead(goal!, 'turn_reset');
+    if (ui.has('ещё')) ui.click('ещё');
+    ui.select(ui.cell('Приходит сам', 0), 'actor');
+    dropParam(1);
+    ui.click('+ для каждого из списка');
+    rows(document, 'turn', 'счётчик');
+    ui.click('+ изменение');
+    change(() => stepCard(/^2 · /), 'лист', 'счётчик.left', 'set', '@лист.счётчик.start');
+    dump({ got: built('turn_reset'), goal });
+    expect(built('turn_reset')).toEqual(goal);
+  });
+
+  it('D&D «Ячейка заклинания» (spell_slot): «Потратить» клетку строки по значению — @лист.slots.[@circle]', { timeout: 90000 }, () => {
+    const [goal] = start('dnd5e', ['spell_slot']);
+    const ui = calledHead(goal!, 'spell_slot');
+    if (ui.has('ещё')) ui.click('ещё');
+    ui.select(ui.cell('Приходит сам', 0), 'actor');
+    dropParam(1);
+    param(ui, 'spell_slot', 1, 'Источник', 'sheet', 'источник', { ask: 'empty', role: 'actor' });
+    param(ui, 'spell_slot', 2, 'Круг ячейки', 'number', 'circle', { main: true });
+    ui.click('+ изменение');
+    const made = () => stepCard(/^1 · /);
+    within(made()).click('вызов');
+    within(made()).select('Какой эффект', 'spend');
+    within(made()).formula(within(made()).arg('Что тратим'), '@лист.slots.[@circle].left');
+    within(made()).formula(within(made()).arg('Сколько'), '1');
+    within(made()).formula(within(made()).arg('Если не хватает'), '@лист.slots.[@circle].none');
+    dump({ got: built('spell_slot'), goal });
+    expect(built('spell_slot')).toEqual(goal);
+  });
+
+  it('D&D «Ресурсы классов после отдыха» (resources_rest): две подписки, цикл по строкам ресурсов, «Если» по колонке строки', { timeout: 120000 }, () => {
+    const [goal] = start('dnd5e', ['resources_rest']);
+    const ui = fresh('+ срабатывает сам', goal!.label!, 'resources_rest', goal!.group!, goal!.description!);
+    lifetime('permanent');
+    within(handlerHead(1)).select('Что случилось', 'moment');
+    within(handlerHead(1)).select('Когда', 'short-rest');
+    within(handlerAt(1)).click('+ для каждого из списка');
+    rows(handlerAt(1), 'resources', 'ресурс');
+    within(handlerAt(1)).click('+ если');
+    within(headOf(block(0, handlerAt(1)))).when('=@носитель.ресурс.short');
+    addToArm(block(0, handlerAt(1)), 0, 'change');
+    change(() => stepCard(/^2 · /, handlerAt(1)), 'носитель', 'ресурс.left', 'set', '@носитель.ресурс.max');
+
+    ui.click('+ когда');
+    within(handlerHead(2)).select('Что случилось', 'moment');
+    within(handlerHead(2)).select('Когда', 'long-rest');
+    within(handlerAt(2)).click('+ для каждого из списка');
+    rows(handlerAt(2), 'resources', 'ресурс');
+    within(handlerAt(2)).click('+ изменение');
+    change(() => stepCard(/^2 · /, handlerAt(2)), 'носитель', 'ресурс.left', 'set', '@носитель.ресурс.max');
+
+    dump({ got: built('resources_rest'), goal });
+    expect(built('resources_rest')).toEqual(goal);
   });
 });

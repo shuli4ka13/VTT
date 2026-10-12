@@ -21,6 +21,7 @@ import { StopStrip } from './flow-parts.tsx';
 import { titleOf } from '../words.ts';
 import { STEP_WORDS } from '@vtt/engine/words/steps';
 import { loopOf } from '@vtt/engine/engine/steps/each';
+import { rowTables, isRange } from '@vtt/engine/model/tables';
 
 
 export function Readback({ segments }: { segments: Segment[] }) {
@@ -84,21 +85,8 @@ export function GroupCard({
     </>
   );
 
-  const lists = (effect.params ?? []).filter(p => p.kind === 'sheet' && p.many).map(p => [p.key, p.label || p.key] as const);
   if (group.kind === 'split') {
-    return (
-      <div className="steps__split" title={STEP_WORDS.each.hint}>
-        <span className="steps__split-title">{position} · Для каждого из</span>
-        <Select<string> label="из какого списка" value={String(step.of ?? '')}
-          options={[...(lists.some(([key]) => key === step.of) ? [] : [['', '— какого списка —'] as const]), ...lists]}
-          onChange={next => edit(0, draft => { (draft as { of?: string }).of = next; })} />
-        <span className="faint">каждый:</span>
-        <span className="chips__chip"><span>{loopOf(effect.params, step)?.label ?? '?'}</span></span>
-        <span className="step-fold__summary">шаги ниже — для каждого по очереди, выше — один раз</span>
-        <span className="spacer" />
-        {actions}
-      </div>
-    );
+    return <SplitStrip step={step} position={position} system={system} effect={effect} earlier={earlier} edit={edit} actions={actions} />;
   }
 
   if (group.kind === 'stop') {
@@ -167,6 +155,64 @@ function summaryOf(group: CardGroup, system: System, effect: Effect, names: Map<
         ? (step.type === 'emit' ? sendReadback(step, system, effect, names) : changeReadback(step, group.amount, system, effect, names))
         : [];
   return segments.map(part => ('text' in part ? part.text : part.hole)).join(' ').replace(/\s+([.,])/g, '$1');
+}
+
+const TABLE_ROWS = 'строки:';
+
+function SplitStrip({ step, position, system, effect, earlier, edit, actions }: {
+  step: { of?: unknown; rows?: unknown; as?: unknown };
+  position: number;
+  system: System;
+  effect: Effect;
+  earlier: EarlierStep[];
+  edit: (slotIndexInGroup: number, change: (draft: Step) => void) => void;
+  actions: ReactNode;
+}) {
+  const lists = (effect.params ?? []).filter(p => p.kind === 'sheet' && p.many).map(p => [p.key, p.label || p.key] as const);
+  const tables = rowTables(system).filter(([, table]) => !isRange(table) && (table.rows ?? []).length).map(([id, table]) => [`${TABLE_ROWS}${id}`, `строки «${table.label || id}»`] as const);
+  const rows = typeof step.rows === 'string' ? step.rows : '';
+  const value = rows ? `${TABLE_ROWS}${rows}` : String(step.of ?? '');
+  const known = [...lists, ...tables].some(([key]) => key === value);
+  const name = typeof step.as === 'string' ? step.as : '';
+  const taken = [
+    ...(effect.params ?? []).map(p => p.key),
+    ...earlier.map(one => one.id),
+  ].filter(one => one !== name);
+  return (
+    <div className="steps__split" title={STEP_WORDS.each.hint}>
+      <span className="steps__split-title">{position} · Для каждого из</span>
+      <Select<string> label="из какого списка" value={value}
+        options={[...(known ? [] : [['', '— какого списка —'] as const]), ...lists, ...tables]}
+        onChange={next => edit(0, draft => {
+          const loop = draft as { of?: string; rows?: string; as?: string };
+          if (next.startsWith(TABLE_ROWS)) {
+            delete loop.of;
+            loop.rows = next.slice(TABLE_ROWS.length);
+          } else {
+            delete loop.rows;
+            delete loop.as;
+            loop.of = next;
+          }
+        })} />
+      {rows ? (
+        <>
+          <span className="faint">строка зовётся:</span>
+          <KeyField value={name} taken={taken}
+            locked={Boolean(name) && referenced(effect, name)}
+            onChange={next => edit(0, draft => { (draft as { as?: string }).as = next; })} />
+          <span className="step-fold__summary">шаги ниже — для каждой строки по очереди, выше — один раз</span>
+        </>
+      ) : (
+        <>
+          <span className="faint">каждый:</span>
+          <span className="chips__chip"><span>{loopOf(effect.params, step)?.label ?? '?'}</span></span>
+          <span className="step-fold__summary">шаги ниже — для каждого по очереди, выше — один раз</span>
+        </>
+      )}
+      <span className="spacer" />
+      {actions}
+    </div>
+  );
 }
 
 function StepName({ group, effect, system, edit }: { group: CardGroup; effect: Effect; system: System; edit: (k: number, change: (draft: Step) => void) => void }) {
