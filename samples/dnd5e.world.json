@@ -174,7 +174,14 @@
             "label": "Скорость, футов",
             "expr": {
               "expr": "или(@race.speed, 30)"
-            }
+            },
+            "stages": [
+              {
+                "key": "итог",
+                "label": "итог",
+                "atLeast": 0
+              }
+            ]
           },
           {
             "key": "darkvision",
@@ -214,22 +221,23 @@
             ]
           },
           {
-            "key": "armor_heavy",
-            "label": "Доспех тяжёлый",
-            "kind": "boolean"
+            "key": "armor_heaviness",
+            "label": "Тяжесть доспеха",
+            "kind": "choice",
+            "from": "heaviness"
           },
           {
             "key": "ac_dex",
             "label": "Ловкость в классе брони",
             "expr": {
-              "expr": "@abilities.ловкость.mod"
+              "expr": "если(пусто(@armor_heaviness), @abilities.ловкость.mod, @armor_heaviness.dex_ac)"
             }
           },
           {
             "key": "ac",
             "label": "Класс брони",
             "expr": {
-              "expr": "@ac_base + если(@armor_heavy, 0, @ac_dex)"
+              "expr": "@ac_base + @ac_dex"
             }
           },
           {
@@ -1592,6 +1600,41 @@
           }
         ]
       },
+      "heaviness": {
+        "label": "Тяжесть доспехов",
+        "key": "word",
+        "columns": [
+          {
+            "key": "dex_ac",
+            "label": "Ловкость в классе брони",
+            "kind": "number"
+          }
+        ],
+        "rows": [
+          {
+            "value": "лёгкий",
+            "cells": {
+              "dex_ac": {
+                "expr": "@abilities.ловкость.mod"
+              }
+            }
+          },
+          {
+            "value": "средний",
+            "cells": {
+              "dex_ac": {
+                "expr": "меньшее из(@abilities.ловкость.mod, 2)"
+              }
+            }
+          },
+          {
+            "value": "тяжёлый",
+            "cells": {
+              "dex_ac": 0
+            }
+          }
+        ]
+      },
       "rolls": {
         "label": "Броски",
         "key": "word",
@@ -2125,6 +2168,11 @@
             "key": "speed",
             "label": "Скорость, футов",
             "kind": "number"
+          },
+          {
+            "key": "heavy_armor_ok",
+            "label": "Тяжёлый доспех не замедляет",
+            "kind": "boolean"
           }
         ],
         "rows": [
@@ -2132,7 +2180,8 @@
             "value": "дварф",
             "cells": {
               "size": "средний",
-              "speed": 25
+              "speed": 25,
+              "heavy_armor_ok": true
             }
           },
           {
@@ -2267,6 +2316,7 @@
         "shape": "book",
         "use": "item",
         "block": "Снаряжение",
+        "extends": "gear",
         "columns": [
           {
             "key": "damage_dice",
@@ -2323,10 +2373,11 @@
       "armor": {
         "label": "Доспех",
         "icon": "🛡",
-        "hint": "Задаёт базу класса брони. У тяжёлого Ловкость не прибавляется.",
+        "hint": "Задаёт базу класса брони. От тяжести зависит, сколько Ловкости прибавится; тяжёлый без нужной Силы замедляет.",
         "shape": "book",
         "use": "item",
         "block": "Снаряжение",
+        "extends": "gear",
         "columns": [
           {
             "key": "ac",
@@ -2334,10 +2385,62 @@
             "kind": "number"
           },
           {
-            "key": "heavy",
-            "label": "Тяжёлый",
-            "kind": "text",
-            "onSheet": false
+            "key": "heaviness",
+            "label": "Тяжесть",
+            "kind": "choice",
+            "from": "heaviness"
+          },
+          {
+            "key": "str_req",
+            "label": "Нужна Сила",
+            "kind": "number",
+            "optional": true
+          },
+          {
+            "key": "stealth",
+            "label": "Помеха на Скрытность",
+            "kind": "boolean"
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "ac_base",
+            "op": "set",
+            "value": {
+              "expr": "@строка.ac"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "armor_heaviness",
+            "op": "set",
+            "value": {
+              "expr": "@строка.heaviness"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "speed",
+            "op": "add",
+            "value": {
+              "expr": "-10"
+            },
+            "if": {
+              "expr": "все(@abilities.сила.score < или(@строка.str_req, 0), @race.heavy_armor_ok != да)"
+            }
+          },
+          {
+            "tags": [
+              "скрытность"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage",
+            "if": {
+              "expr": "все(@бросающий == @носитель, @строка.stealth == да)"
+            }
           }
         ]
       },
@@ -2348,11 +2451,22 @@
         "shape": "book",
         "use": "item",
         "block": "Снаряжение",
+        "extends": "gear",
         "columns": [
           {
             "key": "bonus",
             "label": "Прибавка к классу брони",
             "kind": "number"
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "ac",
+            "op": "add",
+            "value": {
+              "expr": "@строка.bonus"
+            }
           }
         ]
       },
@@ -2363,6 +2477,7 @@
         "shape": "book",
         "use": "item",
         "block": "Снаряжение",
+        "extends": "gear",
         "columns": [
           {
             "key": "attunement",
@@ -2378,6 +2493,7 @@
         "shape": "book",
         "use": "item",
         "block": "Расходники",
+        "extends": "gear",
         "columns": [
           {
             "key": "heal_die",
@@ -2408,12 +2524,14 @@
           {
             "key": "weight",
             "label": "Вес, фунтов",
-            "kind": "number"
+            "kind": "number",
+            "optional": true
           },
           {
             "key": "cost",
             "label": "Цена, зм",
-            "kind": "number"
+            "kind": "number",
+            "optional": true
           }
         ]
       },
@@ -8917,14 +9035,11 @@
             "table": "лист",
             "columns": [
               "ac_base",
-              "armor_heavy",
+              "armor_heaviness",
               "ac_dex",
               "ac"
             ],
             "views": {
-              "armor_heavy": {
-                "kind": "toggle"
-              },
               "ac": {
                 "kind": "big"
               }
@@ -9144,7 +9259,9 @@
           "wield": "ближний бой — Сила",
           "properties": [
             "лёгкое"
-          ]
+          ],
+          "weight": 2,
+          "cost": 0.1
         }
       },
       {
@@ -9159,7 +9276,9 @@
           "wield": "ближний бой — Сила",
           "properties": [
             "двуручное"
-          ]
+          ],
+          "weight": 10,
+          "cost": 0.2
         }
       },
       {
@@ -9175,7 +9294,9 @@
           "properties": [
             "лёгкое",
             "метательное"
-          ]
+          ],
+          "weight": 2,
+          "cost": 5
         }
       },
       {
@@ -9190,7 +9311,9 @@
           "wield": "ближний бой — Сила",
           "properties": [
             "универсальное"
-          ]
+          ],
+          "weight": 3,
+          "cost": 1
         }
       },
       {
@@ -9203,7 +9326,9 @@
           "damage_type": "дробящий",
           "damage_source": "немагический",
           "wield": "ближний бой — Сила",
-          "properties": []
+          "properties": [],
+          "weight": 4,
+          "cost": 5
         }
       },
       {
@@ -9218,7 +9343,9 @@
           "wield": "ближний бой — Сила",
           "properties": [
             "универсальное"
-          ]
+          ],
+          "weight": 4,
+          "cost": 0.2
         }
       },
       {
@@ -9233,7 +9360,9 @@
           "wield": "ближний бой — Сила",
           "properties": [
             "универсальное"
-          ]
+          ],
+          "weight": 3,
+          "cost": 15
         }
       },
       {
@@ -9248,7 +9377,9 @@
           "wield": "ближний бой — Сила",
           "properties": [
             "универсальное"
-          ]
+          ],
+          "weight": 4,
+          "cost": 10
         }
       },
       {
@@ -9263,7 +9394,9 @@
           "wield": "ближний бой — Сила",
           "properties": [
             "универсальное"
-          ]
+          ],
+          "weight": 2,
+          "cost": 15
         }
       },
       {
@@ -9279,7 +9412,9 @@
           "properties": [
             "двуручное",
             "тяжёлое"
-          ]
+          ],
+          "weight": 6,
+          "cost": 50
         }
       },
       {
@@ -9295,7 +9430,9 @@
           "properties": [
             "двуручное",
             "тяжёлое"
-          ]
+          ],
+          "weight": 7,
+          "cost": 30
         }
       },
       {
@@ -9311,7 +9448,9 @@
           "properties": [
             "двуручное",
             "тяжёлое"
-          ]
+          ],
+          "weight": 10,
+          "cost": 10
         }
       },
       {
@@ -9327,7 +9466,9 @@
           "properties": [
             "тяжёлое",
             "досягаемость"
-          ]
+          ],
+          "weight": 6,
+          "cost": 20
         }
       },
       {
@@ -9343,7 +9484,9 @@
           "properties": [
             "тяжёлое",
             "досягаемость"
-          ]
+          ],
+          "weight": 6,
+          "cost": 20
         }
       },
       {
@@ -9360,7 +9503,9 @@
             "лёгкое",
             "фехтовальное",
             "метательное"
-          ]
+          ],
+          "weight": 1,
+          "cost": 2
         }
       },
       {
@@ -9376,7 +9521,9 @@
           "properties": [
             "лёгкое",
             "фехтовальное"
-          ]
+          ],
+          "weight": 2,
+          "cost": 10
         }
       },
       {
@@ -9391,7 +9538,9 @@
           "wield": "фехтовальное — Сила или Ловкость",
           "properties": [
             "фехтовальное"
-          ]
+          ],
+          "weight": 2,
+          "cost": 25
         }
       },
       {
@@ -9407,7 +9556,9 @@
           "properties": [
             "лёгкое",
             "фехтовальное"
-          ]
+          ],
+          "weight": 3,
+          "cost": 25
         }
       },
       {
@@ -9423,7 +9574,9 @@
           "properties": [
             "фехтовальное",
             "досягаемость"
-          ]
+          ],
+          "weight": 3,
+          "cost": 2
         }
       },
       {
@@ -9440,7 +9593,9 @@
           "properties": [
             "двуручное",
             "боеприпасы"
-          ]
+          ],
+          "weight": 2,
+          "cost": 25
         }
       },
       {
@@ -9458,7 +9613,9 @@
             "двуручное",
             "тяжёлое",
             "боеприпасы"
-          ]
+          ],
+          "weight": 2,
+          "cost": 50
         }
       },
       {
@@ -9475,7 +9632,9 @@
           "properties": [
             "перезарядка",
             "боеприпасы"
-          ]
+          ],
+          "weight": 5,
+          "cost": 25
         }
       },
       {
@@ -9493,7 +9652,9 @@
             "тяжёлое",
             "перезарядка",
             "боеприпасы"
-          ]
+          ],
+          "weight": 18,
+          "cost": 50
         }
       },
       {
@@ -9511,7 +9672,9 @@
             "лёгкое",
             "перезарядка",
             "боеприпасы"
-          ]
+          ],
+          "weight": 3,
+          "cost": 75
         }
       },
       {
@@ -9527,7 +9690,9 @@
           "range": "30/120",
           "properties": [
             "боеприпасы"
-          ]
+          ],
+          "weight": 0,
+          "cost": 0.1
         }
       },
       {
@@ -9544,7 +9709,9 @@
           "properties": [
             "фехтовальное",
             "метательное"
-          ]
+          ],
+          "weight": 0.25,
+          "cost": 0.05
         }
       },
       {
@@ -9560,7 +9727,8 @@
           "damage_type": "рубящий",
           "damage_source": "магический",
           "wield": "ближний бой — Сила",
-          "properties": []
+          "properties": [],
+          "weight": 3
         }
       },
       {
@@ -9591,370 +9759,178 @@
           "damage_type": "рубящий",
           "damage_source": "магический",
           "wield": "ближний бой — Сила",
-          "properties": []
+          "properties": [],
+          "weight": 3
         }
       },
       {
         "id": "padded",
         "label": "Стёганый доспех",
         "description": "Лёгкий доспех. Помеха на Скрытность.",
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "ac_base",
-            "op": "set",
-            "value": {
-              "expr": "11"
-            }
-          },
-          {
-            "tags": [
-              "скрытность"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "disadvantage",
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          }
-        ],
         "table": "armor",
         "cells": {
           "ac": 11,
-          "heavy": "нет"
+          "heaviness": "лёгкий",
+          "stealth": true,
+          "weight": 8,
+          "cost": 5
         }
       },
       {
         "id": "leather",
         "label": "Кожаный доспех",
         "description": "Лёгкий доспех.",
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "ac_base",
-            "op": "set",
-            "value": {
-              "expr": "11"
-            }
-          }
-        ],
         "table": "armor",
         "cells": {
           "ac": 11,
-          "heavy": "нет"
+          "heaviness": "лёгкий",
+          "stealth": false,
+          "weight": 10,
+          "cost": 10
         }
       },
       {
         "id": "studded_leather",
         "label": "Проклёпанная кожа",
         "description": "Лёгкий доспех.",
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "ac_base",
-            "op": "set",
-            "value": {
-              "expr": "12"
-            }
-          }
-        ],
         "table": "armor",
         "cells": {
           "ac": 12,
-          "heavy": "нет"
+          "heaviness": "лёгкий",
+          "stealth": false,
+          "weight": 13,
+          "cost": 45
         }
       },
       {
         "id": "hide",
         "label": "Шкурный доспех",
         "description": "Средний доспех.",
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "ac_base",
-            "op": "set",
-            "value": {
-              "expr": "12"
-            }
-          }
-        ],
         "table": "armor",
         "cells": {
           "ac": 12,
-          "heavy": "нет"
+          "heaviness": "средний",
+          "stealth": false,
+          "weight": 12,
+          "cost": 10
         }
       },
       {
         "id": "chain_shirt",
         "label": "Кольчужная рубаха",
         "description": "Средний доспех.",
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "ac_base",
-            "op": "set",
-            "value": {
-              "expr": "13"
-            }
-          }
-        ],
         "table": "armor",
         "cells": {
           "ac": 13,
-          "heavy": "нет"
+          "heaviness": "средний",
+          "stealth": false,
+          "weight": 20,
+          "cost": 50
         }
       },
       {
         "id": "scale_mail",
         "label": "Чешуйчатый доспех",
         "description": "Средний доспех. Помеха на Скрытность.",
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "ac_base",
-            "op": "set",
-            "value": {
-              "expr": "14"
-            }
-          },
-          {
-            "tags": [
-              "скрытность"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "disadvantage",
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          }
-        ],
         "table": "armor",
         "cells": {
           "ac": 14,
-          "heavy": "нет"
+          "heaviness": "средний",
+          "stealth": true,
+          "weight": 45,
+          "cost": 50
         }
       },
       {
         "id": "breastplate",
         "label": "Кираса",
         "description": "Средний доспех.",
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "ac_base",
-            "op": "set",
-            "value": {
-              "expr": "14"
-            }
-          }
-        ],
         "table": "armor",
         "cells": {
           "ac": 14,
-          "heavy": "нет"
+          "heaviness": "средний",
+          "stealth": false,
+          "weight": 20,
+          "cost": 400
         }
       },
       {
         "id": "half_plate",
         "label": "Полулаты",
         "description": "Средний доспех. Помеха на Скрытность.",
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "ac_base",
-            "op": "set",
-            "value": {
-              "expr": "15"
-            }
-          },
-          {
-            "tags": [
-              "скрытность"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "disadvantage",
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          }
-        ],
         "table": "armor",
         "cells": {
           "ac": 15,
-          "heavy": "нет"
+          "heaviness": "средний",
+          "stealth": true,
+          "weight": 40,
+          "cost": 750
         }
       },
       {
         "id": "ring_mail",
         "label": "Колечный доспех",
-        "description": "Тяжёлый доспех. Ловкость не прибавляется.",
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "ac_base",
-            "op": "set",
-            "value": {
-              "expr": "14"
-            }
-          },
-          {
-            "kind": "value",
-            "target": "armor_heavy",
-            "op": "set",
-            "value": {
-              "expr": "да"
-            }
-          }
-        ],
+        "description": "Тяжёлый доспех. Помеха на Скрытность.",
         "table": "armor",
         "cells": {
           "ac": 14,
-          "heavy": "да"
+          "heaviness": "тяжёлый",
+          "stealth": true,
+          "weight": 40,
+          "cost": 30
         }
       },
       {
         "id": "chain_mail",
         "label": "Кольчуга",
         "description": "Тяжёлый доспех. Нужна Сила 13, помеха на Скрытность.",
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "ac_base",
-            "op": "set",
-            "value": {
-              "expr": "16"
-            }
-          },
-          {
-            "kind": "value",
-            "target": "armor_heavy",
-            "op": "set",
-            "value": {
-              "expr": "да"
-            }
-          },
-          {
-            "tags": [
-              "скрытность"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "disadvantage",
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          }
-        ],
         "table": "armor",
         "cells": {
           "ac": 16,
-          "heavy": "да"
+          "heaviness": "тяжёлый",
+          "str_req": 13,
+          "stealth": true,
+          "weight": 55,
+          "cost": 75
         }
       },
       {
         "id": "splint",
         "label": "Наборный доспех",
         "description": "Тяжёлый доспех. Нужна Сила 15, помеха на Скрытность.",
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "ac_base",
-            "op": "set",
-            "value": {
-              "expr": "17"
-            }
-          },
-          {
-            "kind": "value",
-            "target": "armor_heavy",
-            "op": "set",
-            "value": {
-              "expr": "да"
-            }
-          },
-          {
-            "tags": [
-              "скрытность"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "disadvantage",
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          }
-        ],
         "table": "armor",
         "cells": {
           "ac": 17,
-          "heavy": "да"
+          "heaviness": "тяжёлый",
+          "str_req": 15,
+          "stealth": true,
+          "weight": 60,
+          "cost": 200
         }
       },
       {
         "id": "plate",
         "label": "Латы",
         "description": "Тяжёлый доспех. Нужна Сила 15, помеха на Скрытность.",
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "ac_base",
-            "op": "set",
-            "value": {
-              "expr": "18"
-            }
-          },
-          {
-            "kind": "value",
-            "target": "armor_heavy",
-            "op": "set",
-            "value": {
-              "expr": "да"
-            }
-          },
-          {
-            "tags": [
-              "скрытность"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "disadvantage",
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          }
-        ],
         "table": "armor",
         "cells": {
           "ac": 18,
-          "heavy": "да"
+          "heaviness": "тяжёлый",
+          "str_req": 15,
+          "stealth": true,
+          "weight": 65,
+          "cost": 1500
         }
       },
       {
         "id": "shield_item",
         "label": "Щит",
         "description": "Надет в одной руке: +2 к классу брони.",
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "ac",
-            "op": "add",
-            "value": {
-              "expr": "2"
-            }
-          }
-        ],
         "table": "shield",
         "cells": {
-          "bonus": 2
+          "bonus": 2,
+          "weight": 6,
+          "cost": 10
         }
       },
       {
@@ -10102,7 +10078,9 @@
         "table": "potion",
         "cells": {
           "heal_die": "2d4",
-          "heal_bonus": 2
+          "heal_bonus": 2,
+          "weight": 0.5,
+          "cost": 50
         }
       },
       {
@@ -10112,7 +10090,8 @@
         "table": "potion",
         "cells": {
           "heal_die": "4d4",
-          "heal_bonus": 4
+          "heal_bonus": 4,
+          "weight": 0.5
         }
       },
       {
@@ -10122,7 +10101,8 @@
         "table": "potion",
         "cells": {
           "heal_die": "8d4",
-          "heal_bonus": 8
+          "heal_bonus": 8,
+          "weight": 0.5
         }
       },
       {
@@ -10132,7 +10112,8 @@
         "table": "potion",
         "cells": {
           "heal_die": "10d4",
-          "heal_bonus": 20
+          "heal_bonus": 20,
+          "weight": 0.5
         }
       },
       {
@@ -10152,7 +10133,7 @@
         "table": "gear",
         "cells": {
           "weight": 1,
-          "cost": 0
+          "cost": 0.01
         }
       },
       {
@@ -10162,7 +10143,7 @@
         "table": "gear",
         "cells": {
           "weight": 2,
-          "cost": 1
+          "cost": 0.5
         }
       },
       {

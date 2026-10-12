@@ -286,3 +286,32 @@ describe('свойство «несколько значений» — фишк�
     expect(useWorld.getState().compendium.records[0]!.cells!.properties).toEqual(['лёгкое', 'тяжёлое']);
   });
 });
+
+describe('свойство основы — у записи-наследника', () => {
+  beforeEach(() => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...state.system,
+        tables: {
+          gear: { shape: 'book', use: 'item', label: 'Снаряжение', columns: [{ key: 'weight', label: 'Вес, фунтов', kind: 'number' }] },
+          weapon: {
+            shape: 'book', use: 'item', label: 'Оружие', extends: 'gear',
+            columns: [{ key: 'damage_dice', label: 'Кость урона', kind: 'dice' }],
+          },
+        },
+        effects: {},
+      },
+      compendium: { records: [{ id: 'sword', table: 'weapon', label: 'Меч', cells: { damage_dice: '1d8', weight: 3 } }] },
+      activeRecordId: 'sword',
+    }));
+  });
+
+  it('вес из «Снаряжения» виден и правится у меча, а тип «Оружие» не меняется', () => {
+    renderOpen(<CompendiumScreen />);
+    const поле = [...document.querySelectorAll('label')].find(l => l.textContent?.includes('Вес, фунтов'))!;
+    expect(поле, 'колонка основы стоит среди циферок записи').toBeTruthy();
+    expect(document.querySelector('.record-view')!.textContent).toContain('Вес, фунтов');
+    expect(useWorld.getState().system.tables!.weapon!.columns!.map(c => c.key)).toEqual(['damage_dice']);
+  });
+});

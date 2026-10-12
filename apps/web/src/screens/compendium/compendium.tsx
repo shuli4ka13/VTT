@@ -1,8 +1,10 @@
+import { useMemo } from 'react';
 import { ButtonEditor } from '../constructor/button-editor.tsx';
 import { newBinding } from '../constructor/factory.ts';
 import { bindingsOf } from '@vtt/engine/events/actions';
 import { GrantsEditor } from '../constructor/grants-editor.tsx';
 import { recordsOf, isItem, propsNeeded, recordKindOf, recordKinds } from '@vtt/engine/model/owned';
+import { flattenSystem } from '@vtt/engine/model/inherit';
 import { CallSummary } from '../constructor/call-editor.tsx';
 import { namesOf } from '../constructor/button-editor.tsx';
 import { TABS } from '../../words.ts';
@@ -19,7 +21,8 @@ import type { CompendiumRecord, System, Compendium } from '@vtt/schema';
 import type { RecordKind } from '@vtt/engine/model/owned';
 
 export function CompendiumScreen() {
-  const system = useWorld(s => s.system);
+  const authored = useWorld(s => s.system);
+  const system = useMemo(() => flattenSystem(authored, true), [authored]);
   const origin = useWorld(s => s.origin);
   const compendium = useWorld(s => s.compendium);
   const activeId = useWorld(s => s.activeRecordId);
