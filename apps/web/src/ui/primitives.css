@@ -767,9 +767,10 @@
 .effect-head__row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); }
 .param-list { display: flex; flex-direction: column; gap: var(--s-1); }
 .param-line { display: flex; align-items: center; gap: var(--s-2); border-radius: var(--r-1); }
-.param-line__sum { flex: 1 1 auto; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-2); background: none; border: 0; padding: var(--s-1) var(--s-2); text-align: left; color: inherit; cursor: pointer; border-radius: var(--r-1); }
+.param-line__sum { flex: 0 1 auto; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-2); background: none; border: 0; padding: var(--s-1) var(--s-2); text-align: left; color: inherit; cursor: pointer; border-radius: var(--r-1); }
 .param-line__sum:hover { background: var(--surface-2, rgba(255,255,255,0.05)); }
 .param-line__name { font-weight: 600; }
+.param-line > :last-child { margin-left: auto; }
 .param-line.drag--before { box-shadow: inset 0 2px 0 var(--accent); }
 .param-line.drag--after { box-shadow: inset 0 -2px 0 var(--accent); }
 .param-form { display: flex; flex-direction: column; gap: var(--s-2); margin: var(--s-1) 0 var(--s-2) var(--s-4); padding: var(--s-3); border-left: 2px solid var(--border); }

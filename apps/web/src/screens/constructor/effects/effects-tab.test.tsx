@@ -491,6 +491,7 @@ describe('подписка видит имена вызова', () => {
         useWorld.setState(state => ({ ...state, system: world.system, compendium: world.compendium, activeEffectId: id }));
         renderOpen(<EffectsTab />);
         if (/со сломанными ссылками/.test(document.body.textContent ?? '')) broken.push(`${world.system.name} · ${effect.label ?? id}`);
+        if (document.querySelector('button button')) broken.push(`${world.system.name} · ${effect.label ?? id}: кнопка внутри кнопки`);
         cleanup();
       }
     }

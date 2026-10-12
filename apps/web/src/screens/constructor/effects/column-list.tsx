@@ -2,11 +2,12 @@ import type { ReactNode } from 'react';
 import { Button } from '../../../ui/primitives.tsx';
 import { useDragList } from '../../../ui/drag-list.ts';
 
-export function ColumnList<T extends { key: string; label?: string }>({ items, isOpen, onToggle, summary, form, onDrop, onMove, dropTitle }: {
+export function ColumnList<T extends { key: string; label?: string }>({ items, isOpen, onToggle, summary, after, form, onDrop, onMove, dropTitle }: {
   items: T[];
   isOpen: (key: string) => boolean;
   onToggle: (key: string) => void;
   summary: (item: T) => ReactNode;
+  after?: (item: T) => ReactNode;
   form: (item: T) => ReactNode;
   onDrop: (key: string) => void;
   onMove: (from: string, to: string, after: boolean) => void;
@@ -25,6 +26,7 @@ export function ColumnList<T extends { key: string; label?: string }>({ items, i
                 <span className="param-line__name">{item.label || item.key}</span>
                 <span className="faint">{summary(item)}</span>
               </button>
+              {after ? after(item) : null}
               <Button size="sm" variant="ghost" title={dropTitle} onClick={() => onDrop(item.key)}>×</Button>
             </div>
             {open ? form(item) : null}

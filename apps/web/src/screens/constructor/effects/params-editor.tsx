@@ -131,7 +131,8 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
           onDrop={drop}
           onMove={move}
           dropTitle="убрать вход"
-          summary={param => <>{kindWords(param, system)}{askWords(param, system)}<Origins effectId={id} param={param} system={system} /></>}
+          summary={param => <>{kindWords(param, system)}{askWords(param, system)}</>}
+          after={param => <Origins effectId={id} param={param} system={system} />}
           form={param => (
             <ParamForm param={param} keys={keys} system={system} effect={effect}
               locked={used(param.key)} change={fn => change(param.key, fn)}
