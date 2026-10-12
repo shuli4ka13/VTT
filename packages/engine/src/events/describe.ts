@@ -1,3 +1,5 @@
+import { parseItemTag } from '../model/item-ref.ts';
+import { recordKinds } from '../model/owned.ts';
 import { loopOf } from '../engine/steps/each.ts';
 import { effectLabelOf } from './actions.ts';
 import { breakReasonWord, registry as stepRegistry } from '../engine/steps/index.ts';
@@ -65,12 +67,15 @@ export function describeEntry(
       : `${nameOf(entry.fromId)} применяет «${label}» по ${nameOf(entry.toId)}`;
 
   const changes = (entry.report.changes ?? []) as { tag: string; from: unknown; to: unknown }[];
-  const shown = changes.map(c => {
-    const field = fieldOf(system, c.tag);
-    return `${field?.label ?? c.tag}: ${valueWord(c.from)} → ${valueWord(c.to)}`;
-  });
-  const labelOf = (tag: string) =>
-    fieldOf(system, tag)?.label ?? columnLabel(system, tag) ?? tag;
+  const shown = changes.map(c => `${labelOf(c.tag)}: ${valueWord(c.from)} → ${valueWord(c.to)}`);
+  function labelOf(tag: string): string {
+    const item = parseItemTag(tag);
+    if (item) {
+      const column = recordKinds(system).flatMap(([, kind]) => kind.columns ?? []).find(one => one.key === item.column);
+      return `${column?.label ?? item.column} (вещь ${item.key})`;
+    }
+    return fieldOf(system, tag)?.label ?? columnLabel(system, tag) ?? tag;
+  }
   const effect = system.effects[String(entry.report.effect)] as any;
   const stepOf = (trace: Record<string, unknown>) => (((trace.within ? system.effects[String(trace.within)] : effect) as any)?.steps ?? [])
     .find((step: any, index: number) => String(step.id ?? index) === String(trace.step));

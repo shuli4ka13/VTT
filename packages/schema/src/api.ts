@@ -216,6 +216,9 @@ export const clientMessage = z.discriminatedUnion('type', [
     id: z.string().min(1),
     on: z.boolean(),
     off: z.boolean().optional(),
+    inst: z.string().min(1).optional(),
+    add: z.boolean().optional(),
+    in: z.string().min(1).nullable().optional(),
   }),
 ]);
 

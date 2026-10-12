@@ -1,6 +1,6 @@
 import { compile } from '../formula/index.ts';
 import { DESK_ID, isDesk } from '../engine/owners.ts';
-import { paramsOf } from './inherit.ts';
+import { paramsOf, basedOn } from './inherit.ts';
 import type { Binding, Compendium, CompendiumRecord, Owned, Sheet, SheetKind, System, Table } from './types.ts';
 
 export type RecordKind = Table;
@@ -34,20 +34,49 @@ export const kindOfRecord = (system: System, record: CompendiumRecord | undefine
 export const isItem = (system: System, record: CompendiumRecord | undefined): boolean =>
   kindOfRecord(system, record)?.use === 'item';
 
-export const entryOf = (sheet: Sheet, id: string): Owned | undefined => (sheet.has ?? []).find(entry => entry.of === id);
+export const keyOf = (entry: Owned): string => entry.id ?? entry.of;
+
+export const entryOf = (sheet: Sheet, id: string, key?: string): Owned | undefined =>
+  (sheet.has ?? []).find(entry => (key ? keyOf(entry) === key : entry.of === id));
 
 export const owns = (sheet: Sheet, id: string): boolean => Boolean(entryOf(sheet, id));
 
-export interface Held { record: CompendiumRecord; entry: Owned }
+export interface Held { record: CompendiumRecord; entry: Owned; key: string }
+
+export function working(sheet: Sheet, entry: Owned): boolean {
+  const byKey = new Map((sheet.has ?? []).map(one => [keyOf(one), one] as const));
+  const seen = new Set<string>();
+  let at: Owned | undefined = entry;
+  while (at) {
+    if (at.off) return false;
+    if (!at.in) return true;
+    if (seen.has(keyOf(at))) return false;
+    seen.add(keyOf(at));
+    at = byKey.get(at.in);
+    if (!at) return false;
+  }
+  return false;
+}
 
 export function heldBy(sheet: Sheet, compendium: Compendium | null | undefined, { all = false } = {}): Held[] {
   const out: Held[] = [];
   for (const entry of sheet.has ?? []) {
-    if (entry.off && !all) continue;
+    if (!all && !working(sheet, entry)) continue;
     const record = findRecord(compendium, entry.of);
-    if (record) out.push({ record, entry });
+    if (record) out.push({ record, entry, key: keyOf(entry) });
   }
   return out;
+}
+
+export function isUnder(system: System, table: string | undefined, base: string): boolean {
+  const seen = new Set<string>();
+  let at = table;
+  while (at && !seen.has(at)) {
+    if (at === base) return true;
+    seen.add(at);
+    at = basedOn(system.tables?.[at]);
+  }
+  return false;
 }
 
 export function propsOf(record: CompendiumRecord, system: System, entry?: Owned): Record<string, unknown> | null {
@@ -58,6 +87,7 @@ export function propsOf(record: CompendiumRecord, system: System, entry?: Owned)
     const own = entry?.values?.[p.key];
     if (own !== undefined) props[p.key] = own;
     else if (record.cells && record.cells[p.key] !== undefined) props[p.key] = record.cells[p.key];
+    else if (p.expr) props[p.key] = p.expr;
   }
   return props;
 }

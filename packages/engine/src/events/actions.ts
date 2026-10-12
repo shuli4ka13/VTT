@@ -11,6 +11,7 @@ export interface Action {
   record: CompendiumRecord;
   binding: Binding;
   effect: string;
+  inst?: string;
 }
 
 export function bindingsOf(record: CompendiumRecord, system: System): Binding[] {
@@ -35,7 +36,7 @@ function grantedAction(id: string, system: System): Action | null {
 export function availableActions(
   sheet: Sheet, { system, compendium }: { system: System; compendium: Compendium },
 ): Action[] {
-  const own = heldBy(sheet, compendium).flatMap(({ record }) => actionsOfRecord(record, system, isItem(system, record)));
+  const own = heldBy(sheet, compendium).flatMap(({ record, entry }) => actionsOfRecord(record, system, isItem(system, record), entry.id));
   if (isDesk(sheet)) return own;
   const granted = grantedTo(system, sheet, compendium)
     .map(id => grantedAction(id, system))
@@ -53,13 +54,16 @@ export function actionOf(
     return action;
   }
   const at = String(actionId).lastIndexOf(':');
-  const recordId = at > 0 ? String(actionId).slice(0, at) : String(actionId);
+  const head = at > 0 ? String(actionId).slice(0, at) : String(actionId);
   const index = at > 0 ? Number(String(actionId).slice(at + 1)) : 0;
+  const mark = head.indexOf(INSTANCE);
+  const recordId = mark > 0 ? head.slice(0, mark) : head;
+  const inst = mark > 0 ? head.slice(mark + 1) : undefined;
 
   const record = findRecord(compendium, recordId);
   if (!record) throw new EngineError(`в компендиуме нет записи «${recordId}»`);
 
-  const action = actionsOfRecord(record, system, isItem(system, record))[index];
+  const action = actionsOfRecord(record, system, isItem(system, record), inst)[index];
   if (!action) {
     throw new EngineError(
       `запись «${record.label}» (${recordId}) не даёт действия №${index}: ` +
@@ -68,13 +72,16 @@ export function actionOf(
   return action;
 }
 
-function actionsOfRecord(record: CompendiumRecord, system: System, fromItem: boolean): Action[] {
+export const INSTANCE = '@';
+
+function actionsOfRecord(record: CompendiumRecord, system: System, fromItem: boolean, inst?: string): Action[] {
   const bindings = bindingsOf(record, system);
   const props = propKeysOf(kindOfRecord(system, record));
   return bindings.map((binding, index): Action => {
     const args = argsWithProps(system, binding, props);
     return {
-      id: `${record.id}:${index}`,
+      id: `${record.id}${inst ? `${INSTANCE}${inst}` : ''}:${index}`,
+      ...(inst ? { inst } : {}),
       label: fromItem || bindings.length > 1
         ? `${record.label} · ${binding.label || 'Применение'}`
         : String(record.label),

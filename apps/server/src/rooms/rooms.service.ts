@@ -153,9 +153,17 @@ export class RoomsService {
     return this.world(roomId, userId, 'sheet', { name, of }, { op: 'sheet', name, ...(of ? { of } : {}) }, false);
   }
 
-  setBelonging(userId: string, roomId: string, sheetId: string, list: 'has' | 'effects', id: string, on: boolean, off?: boolean): Promise<RoomDelta> {
-    return this.world(roomId, userId, 'belonging', { sheetId, list, id, on, off },
-      { op: 'belonging', sheetId, list, id, on, ...(off !== undefined ? { off } : {}) }, false);
+  setBelonging(
+    userId: string, roomId: string, sheetId: string, list: 'has' | 'effects', id: string, on: boolean, off?: boolean,
+    item: { inst?: string; add?: boolean; in?: string | null } = {},
+  ): Promise<RoomDelta> {
+    const extra = {
+      ...(item.inst !== undefined ? { inst: item.inst } : {}),
+      ...(item.add ? { add: true } : {}),
+      ...(item.in !== undefined ? { in: item.in } : {}),
+    };
+    return this.world(roomId, userId, 'belonging', { sheetId, list, id, on, off, ...extra },
+      { op: 'belonging', sheetId, list, id, on, ...(off !== undefined ? { off } : {}), ...extra }, false);
   }
 
   setSheetKind(userId: string, roomId: string, sheetId: string, of: string | null): Promise<RoomDelta> {

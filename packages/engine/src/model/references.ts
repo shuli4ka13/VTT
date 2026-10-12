@@ -22,6 +22,9 @@ const TURN_MOMENTS = new Set(['turn-start', 'turn-end']);
 
 export const HOLDER = 'носитель';
 
+export { ITEM_NAME } from './item-ref.ts';
+import { ITEM_NAME } from './item-ref.ts';
+
 export const DESK_NAME = 'стол';
 
 export const LISTEN = 'listen';
@@ -241,6 +244,10 @@ export function exprRefs(source: string, from: Where, scope: ChainScope, out: Re
     const dotAt = dep.indexOf('.');
     const top = dotAt > 0 ? dep.slice(0, dotAt) : dep;
     const rest = dotAt > 0 ? dep.slice(dotAt + 1) : '';
+    if (top === ITEM_NAME) {
+      if (rest) out.push({ kind: 'prop', key: rest.split('.')[0]!, from, scope: 'item' });
+      continue;
+    }
     if (scope.sheets.has(top) || top === DESK_NAME) {
       if (!rest) continue;
       const parts = rest.split('.');

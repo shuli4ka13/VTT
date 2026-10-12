@@ -5,7 +5,8 @@ import { loopOf } from '../engine/steps/each.ts';
 import { requireEffect, isPipeline } from '../engine/effects.ts';
 import { releaseHolder } from '../events/bonds.ts';
 import { refusalWords } from '../events/refusal.ts';
-import { propsOf, entryOf } from '../model/owned.ts';
+import { propsOf, keyOf } from '../model/owned.ts';
+import { entryByKey } from '../model/item-ref.ts';
 import { EngineError } from '../engine/errors.ts';
 import { render } from './render.ts';
 import { External, Pause, emptyJournal } from './external.ts';
@@ -94,7 +95,9 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
     if (stray) throw new EngineError(`«${action.label}»: лишнее значение «${stray}» — действие о нём не спрашивает`);
   }
   const args = (action.binding.args || {}) as Record<string, unknown>;
-  const props = propsOf(action.record, system, entryOf(actorSheet, action.record.id));
+  const entry = entryByKey(actorSheet, action.record.id, action.inst);
+  const props = propsOf(action.record, system, entry);
+  const item = entry ? { sheet: actor, key: keyOf(entry), record: action.record.id } : undefined;
   const paramDefs = effect.params ?? [];
   const claims: Claims = intent.claims ?? {};
   const table = tableOf(action.binding, effect);
@@ -109,7 +112,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
 
   const top = (path: Path, owner: string, extra: Partial<Frame> = {}): Frame => ({
     path, effectId: action.effect, label: action.label, owner, home: actor, bound,
-    args, paramDefs, props, ...(inputs ? { inputs } : {}), claims, hop: 0, inSub: false, ...(bond ? { bond } : {}), ...extra,
+    args, paramDefs, props, ...(item ? { item } : {}), ...(inputs ? { inputs } : {}), claims, hop: 0, inSub: false, ...(bond ? { bond } : {}), ...extra,
   });
 
   if (bond && effect.bond?.if && !run.holdsAt(top(root.phase('bond'), `держание «${action.label}»`), effect.bond.if)) bond = undefined;
@@ -144,7 +147,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
 
   const base = {
     effectId: action.effect, label: action.label, hop: 0, top: true, home: actor, keys,
-    args, paramDefs, props, ...(inputs ? { inputs } : {}), claims, ...(bond ? { bond } : {}),
+    args, paramDefs, props, ...(item ? { item } : {}), ...(inputs ? { inputs } : {}), claims, ...(bond ? { bond } : {}),
   };
 
   if (split >= 0) {

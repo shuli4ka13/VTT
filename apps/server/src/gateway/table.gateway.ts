@@ -234,9 +234,9 @@ export class TableGateway {
       return this.fail(socket, 'правка принадлежностей не проходит схему');
     }
 
-    const { roomId, sheetId, list, id, on, off } = parsed.data;
+    const { roomId, sheetId, list, id, on, off, inst, add, in: host } = parsed.data;
     try {
-      await this.roomsService.setBelonging(guest.userId, roomId, sheetId, list, id, on, off);
+      await this.roomsService.setBelonging(guest.userId, roomId, sheetId, list, id, on, off, { inst, add, in: host });
     } catch (err) {
       this.fail(socket, (err as Error).message);
     }

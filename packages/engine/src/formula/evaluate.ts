@@ -8,7 +8,7 @@ export interface Tools {
   roll?: (notation: string, times: number, keep?: number) => number;
   peak?: (notation: string, times: number) => number;
   table?: (name: string, key: Value | Value[], column: string | null) => Value;
-  rows?: (table: string, column: string) => Value[];
+  rows?: (table: string, column: string, host?: string) => Value[];
 }
 
 interface Fn {
@@ -44,11 +44,12 @@ const FUNCTIONS: Record<string, Fn> = {
     },
   },
   строки: {
-    arity: 2,
+    arity: '1+',
     apply: () => 0,
     raw: (args, tools) => {
+      if (args.length < 2 || args.length > 3) throw new FormulaRuntimeError('«строки» ждёт таблицу, колонку и, если нужно, вещь-хозяина');
       if (!tools.rows) throw new FormulaRuntimeError('«строки» здесь нельзя: таблиц системы тут не видно');
-      return tools.rows(String(args[0]), String(args[1])) as unknown as Value;
+      return tools.rows(String(args[0]), String(args[1]), args.length === 3 ? String(args[2] ?? '') : undefined) as unknown as Value;
     },
   },
   есть: {

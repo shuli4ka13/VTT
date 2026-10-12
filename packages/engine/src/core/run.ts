@@ -44,6 +44,8 @@ import type { Roll, RollResult, Spec } from './dice.ts';
 import type { Thrown } from './roll.ts';
 import type { Sub } from './subs.ts';
 import type { Ctx, StepData, FieldRef } from './steps.ts';
+import { ITEM_NAME, itemColumn, itemStored, parseItemTag, withItemValue } from '../model/item-ref.ts';
+import type { ItemRef } from '../model/item-ref.ts';
 
 export interface World {
   system: System;
@@ -91,6 +93,7 @@ export interface Frame {
   args: Record<string, unknown>;
   paramDefs: Param[];
   props: Record<string, unknown> | null;
+  item?: ItemRef;
   inputs?: Record<string, number | string>;
   claims: Claims;
   hop: number;
@@ -128,6 +131,7 @@ export interface Delivery {
   args?: Record<string, unknown>;
   paramDefs?: Param[];
   props?: Record<string, unknown> | null;
+  item?: ItemRef;
   inputs?: Record<string, number | string>;
   claims?: Claims;
   lazy?: Lazy;
@@ -378,6 +382,7 @@ export class Run {
     const lazy = frame.lazy;
     const ref: RefContext = {
       pass: this.view(frame.home), die, owner: frame.owner, props: frame.props, paramDefs: frame.paramDefs, params: frame.args,
+      ...(frame.item ? { item: frame.item } : {}),
       ...(frame.inputs ? { inputs: frame.inputs } : {}),
       results, rolls, stepIds,
       ...(frame.alone ? { alone: true } : {}),
@@ -470,6 +475,11 @@ export class Run {
   private fieldOf(frame: Frame, refValue: unknown, ref: RefContext): FieldRef {
     const expr = refValue && typeof refValue === 'object' && 'expr' in refValue ? String((refValue as { expr: unknown }).expr) : null;
     const name = expr ? this.addressName(frame, expr, ref) : null;
+    if (name && frame.item && name.startsWith(`${ITEM_NAME}.`)) {
+      const sheet = this.sheet(frame.item.sheet);
+      if (!sheet) throw new EngineError(`${frame.owner || 'правило'}: листа с вещью «${frame.item.key}» нет`);
+      return { sheet: sheet.id, tag: itemColumn(this.system, this.world.compendium, sheet, frame.item.key, name.slice(ITEM_NAME.length + 1)) };
+    }
     if (name) {
       const param = frame.paramDefs.find(one => one.key === name && one.kind === 'field');
       const passed = param ? frame.args[param.key] : undefined;
@@ -583,6 +593,7 @@ export class Run {
   }
 
   private holder(sheetId: string, tag: string): string {
+    if (parseItemTag(tag)) return sheetId;
     const holder = this.views.holderOf(this.state.sheets, sheetId, tag);
     if (this.sheet(holder)) return holder;
     if (findField(this.system, tag)?.lives === 'group') return sheetId;
@@ -590,6 +601,8 @@ export class Run {
   }
 
   private read(sheetId: string, tag: string): unknown {
+    const item = parseItemTag(tag);
+    if (item) return itemStored(this.world.compendium, this.sheet(sheetId)!, item.key, item.column) ?? null;
     const sheet = this.sheet(this.holder(sheetId, tag))!;
     if (Object.prototype.hasOwnProperty.call(sheet.values, tag)) return sheet.values[tag];
     const field = findField(this.system, tag);
@@ -602,7 +615,8 @@ export class Run {
     if (sameValue(from, value)) return;
     const holder = this.sheet(this.holder(sheetId, tag))!;
     sink.changes.push({ tag, from, to: value, sheetId: holder.id });
-    this.state.put({ ...holder, values: { ...holder.values, [tag]: value } });
+    const item = parseItemTag(tag);
+    this.state.put(item ? withItemValue(holder, item.key, item.column, value) : { ...holder, values: { ...holder.values, [tag]: value } });
   }
 
   private attach(frame: Frame, sheetId: string, effectId: string, args: Record<string, StoredValue>, sink: Sink, path: Path): void {
@@ -790,6 +804,7 @@ export class Run {
       path: call.path, effectId: call.effectId, label: call.label, owner: `эффект «${call.label}»`,
       home: call.home, bound: call.bound,
       args: call.args ?? {}, paramDefs: call.paramDefs ?? [], props: call.props ?? null,
+      ...(call.item ? { item: call.item } : {}),
       ...(call.inputs ? { inputs: call.inputs } : {}),
       claims: call.claims ?? {}, hop: call.hop, inSub: false,
       ...(call.bond ? { bond: call.bond } : {}),

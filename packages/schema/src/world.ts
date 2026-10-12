@@ -341,6 +341,8 @@ export const wornEffect = z.object({
 
 export const owned = z.object({
   of: z.string().min(1),
+  id: z.string().min(1).optional(),
+  in: z.string().min(1).optional(),
   off: z.boolean().optional(),
   values: z.record(z.string(), storedValue).optional(),
 }).strict();

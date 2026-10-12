@@ -228,7 +228,29 @@ function rowRefs(system: System, tableId: string, row: TableRow, value: unknown)
   return value;
 }
 
-function recordPath(system: System, tableId: string, cells: Record<string, unknown>, path: string[]): string {
+const NAME_REF = /[@#]([\p{L}\p{N}_]+)((?:\.[\p{L}\p{N}_]+)*)/gu;
+
+function cellExpr(system: System, tableId: string, cells: Record<string, unknown>, head: string, seen: readonly string[]): string {
+  const cell = cells[head];
+  if (!isFormulaCell(cell)) return literal(cell ?? '');
+  const table = system.tables?.[tableId];
+  if (seen.includes(head)) {
+    throw new EngineError(`тип «${table?.label || tableId}»: клетки считаются друг из друга по кругу: ${[...seen, head].join(' → ')}`);
+  }
+  const keys = new Set((table?.columns ?? []).map(c => c.key));
+  const inner = cell.expr.replace(NAME_REF, (whole: string, name: string, tail: string) => {
+    const path = tail ? tail.slice(1).split('.') : [];
+    if (name === ROW) return recordPath(system, tableId, cells, path, [...seen, head]);
+    return keys.has(name) ? recordPath(system, tableId, cells, [name, ...path], [...seen, head]) : whole;
+  });
+  return `(${inner})`;
+}
+
+export function itemExpr(system: System, tableId: string, cells: Record<string, unknown>, column: string): string {
+  return cellExpr(system, tableId, cells, column, []);
+}
+
+function recordPath(system: System, tableId: string, cells: Record<string, unknown>, path: string[], seen: readonly string[] = []): string {
   const table = system.tables?.[tableId];
   const where = `тип «${table?.label || tableId}»`;
   const [head, ...rest] = path;
@@ -238,7 +260,7 @@ function recordPath(system: System, tableId: string, cells: Record<string, unkno
   let spec: TableColumn = found;
   const cell = cells[head];
   if (Array.isArray(cell)) throw new EngineError(`${where}: «${spec.label || head}» — список, одним числом его не взять`);
-  let expr = literal(cell ?? '');
+  let expr = cellExpr(system, tableId, cells, head, seen);
   for (const step of rest) {
     const link = linkOf(spec);
     if (!link) throw new EngineError(`${where}: «${spec.label || spec.key}» — не ссылка, дальше «${step}» идти некуда`);

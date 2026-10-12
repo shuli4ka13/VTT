@@ -2,7 +2,7 @@ import { compile } from '../formula/index.ts';
 import { EngineError } from '../engine/errors.ts';
 import { availableActions, actionOf } from '../events/actions.ts';
 import { asksOf, checkInputs, normalizeInputs } from '../model/asks.ts';
-import { findRecord, sheetKindOf } from '../model/owned.ts';
+import { findRecord, sheetKindOf, keyOf } from '../model/owned.ts';
 import { findEffect, usesMax, reapplyOf } from '../engine/effects.ts';
 import { expiryOf, inCombat, startCombat, nextTurn, stopCombat } from '../engine/clock.ts';
 import { momentsOfTurn } from '../events/moments.ts';
@@ -21,13 +21,13 @@ import type { Journal, Mode, Question } from './external.ts';
 import type { Entry } from './log.ts';
 import type { Clock } from '../engine/clock.ts';
 import type { TurnOp } from '../events/moments.ts';
-import type { System, Sheet, Compendium, Die, StoredValue, WornEffect } from '../model/types.ts';
+import type { System, Sheet, Compendium, Die, StoredValue, WornEffect, Owned } from '../model/types.ts';
 
 export type Op =
   | { op: 'act'; intent: ActIntent }
   | { op: 'roll'; sheetId: string; tag: string }
   | { op: 'set'; sheetId: string; tag: string; value: StoredValue }
-  | { op: 'belonging'; sheetId: string; list: 'has' | 'effects'; id: string; on: boolean; off?: boolean }
+  | { op: 'belonging'; sheetId: string; list: 'has' | 'effects'; id: string; on: boolean; off?: boolean; inst?: string; add?: boolean; in?: string | null }
   | { op: 'kind'; sheetId: string; of: string | null }
   | { op: 'group'; sheetId: string; group: string | null }
   | { op: 'turn'; turn: TurnOp; order?: string[] }
@@ -159,17 +159,36 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     return true;
   },
 
-  belonging(run, { sheetId, list, id, on, off }, root) {
+  belonging(run, { sheetId, list, id, on, off, inst, add, in: host }, root) {
     const sheet = sheetOf(run, sheetId);
     const { system, compendium } = run.world;
     let next: Sheet;
     if (list === 'has') {
       if (!findRecord(compendium, id)) throw new EngineError(`в компендиуме нет записи «${id}»`);
       const owned = sheet.has ?? [];
-      const was = owned.find(entry => entry.of === id);
-      const entry = { ...(was ?? { of: id }) };
-      if (off) entry.off = true; else delete entry.off;
-      next = { ...sheet, has: !on ? owned.filter(other => other.of !== id) : was ? owned.map(other => (other.of === id ? entry : other)) : [...owned, entry] };
+      const keys = new Set(owned.map(keyOf));
+      if (host && !keys.has(host)) throw new EngineError(`у листа нет вещи «${host}» — ставить некуда`);
+      if (inst && !keys.has(inst)) throw new EngineError(`у листа нет вещи «${inst}»`);
+      const mine = (entry: Owned): boolean => (inst ? keyOf(entry) === inst : entry.of === id);
+      if (!on) {
+        const gone = new Set(owned.filter(mine).map(keyOf));
+        for (let grew = true; grew;) {
+          grew = false;
+          for (const entry of owned) if (entry.in && gone.has(entry.in) && !gone.has(keyOf(entry))) { gone.add(keyOf(entry)); grew = true; }
+        }
+        next = { ...sheet, has: owned.filter(entry => !gone.has(keyOf(entry))) };
+      } else {
+        const was = add ? undefined : owned.find(mine);
+        const fresh: Owned = was ? { ...was } : { of: id };
+        if (!was && (add || owned.some(entry => entry.of === id))) fresh.id = run.ext.id(root.phase('item').phase(id));
+        if (off) fresh.off = true; else delete fresh.off;
+        if (host !== undefined) {
+          if (host === null) delete fresh.in;
+          else if (host === keyOf(fresh)) throw new EngineError('вещь не ставится сама в себя');
+          else fresh.in = host;
+        }
+        next = { ...sheet, has: was ? owned.map(entry => (entry === was ? fresh : entry)) : [...owned, fresh] };
+      }
     } else {
       const effect = findEffect(system, id);
       if (!effect) throw new EngineError(`система не объявляет эффекта «${id}»`);

@@ -114,6 +114,9 @@ function danglingText(ref: Reference, declared: Declared): string | null {
     if (ref.scope === 'dotted' && (declared.field.has(ref.key) || declared.prop.has(ref.key))) return null;
     return `${STEP.gen} «${ref.key}» выше по цепочке нет — на его результат не сослаться`;
   }
+  if (ref.kind === 'prop' && ref.scope === 'item') {
+    return declared.prop.has(ref.key) ? null : `у вещей нет свойства «${ref.key}» — @вещь.${ref.key} прочитать неоткуда`;
+  }
   if (ref.kind === 'prop' && ref.scope === 'foreign') {
     return `свойство «${ref.key}» не объявлено у этого типа записи — привязка возьмёт его не оттуда`;
   }

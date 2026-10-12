@@ -6,7 +6,7 @@ import { wornEffects, activationOf } from './effects.ts';
 import { EngineError } from './errors.ts';
 import { stackStages, targetStages, VALUE_OPS } from './stages.ts';
 import { anyRowSays } from './tables.ts';
-import { findRecord, kindOfRecord, sheetKindOf, propsOf } from '../model/owned.ts';
+import { findRecord, kindOfRecord, sheetKindOf, propsOf, working } from '../model/owned.ts';
 import { tagsHold } from './roll-tags.ts';
 import type { System, Sheet, Compendium, Modifier, RollEdit, RollEditOp, Param } from '../model/types.ts';
 import type { Pass } from './calc.ts';
@@ -92,7 +92,7 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
   }
 
   for (const entry of sheet.has || []) {
-    if (entry.off) continue;
+    if (!working(sheet, entry)) continue;
     const item = findRecord(compendium, entry.of);
     if (!item) throw new EngineError(`у листа «${sheet.id}» есть «${entry.of}», которого нет в компендиуме`);
 

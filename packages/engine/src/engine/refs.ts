@@ -1,4 +1,6 @@
-import { isFormulaCell } from '../model/sheet-columns.ts';
+import { isFormulaCell, itemExpr } from '../model/sheet-columns.ts';
+import { ITEM_NAME } from '../model/item-ref.ts';
+import type { ItemRef } from '../model/item-ref.ts';
 import { compile } from '../formula/index.ts';
 import type { Tools, Value } from '../formula/index.ts';
 import { EngineError } from './errors.ts';
@@ -11,7 +13,7 @@ import type { Param, Die, System } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 import { hasField } from '../model/sheet-columns.ts';
 import { recordKinds } from '../model/owned.ts';
-import { heldBy, propsOf, withLibrary, isBook } from '../model/owned.ts';
+import { heldBy, propsOf, withLibrary, isBook, isUnder } from '../model/owned.ts';
 import { isSingle } from '../model/sheet-columns.ts';
 
 export interface RefContext {
@@ -22,6 +24,8 @@ export interface RefContext {
   owner?: string;
 
   props?: Record<string, unknown> | null;
+
+  item?: ItemRef;
 
   paramDefs?: Param[];
 
@@ -139,7 +143,7 @@ export function resolveOptionalNumber(ref: unknown, ctx: RefContext, what: strin
 
 const isField = (system: System, name: string): boolean => hasField(system, name);
 
-function rowsOfTable(system: System, pass: Pass, name: string, column: string, owner: string): Value[] {
+function rowsOfTable(system: System, pass: Pass, name: string, column: string, owner: string, host?: string): Value[] {
   const table = system.tables?.[name];
   if (!table) throw new EngineError(`«строки»: таблицы «${name}» нет`);
   if (!(table.columns ?? []).some(c => c.key === column)) {
@@ -148,8 +152,13 @@ function rowsOfTable(system: System, pass: Pass, name: string, column: string, o
   if (isBook(table)) {
     if (!pass.compendium) throw new EngineError(`«строки»: записей «${table.label || name}» здесь не видно — книги нет`);
     return heldBy(pass.sheet, withLibrary(system, pass.compendium))
-      .filter(held => held.record.table === name)
-      .map(held => (propsOf(held.record, system, held.entry)?.[column] ?? '') as Value);
+      .filter(held => isUnder(system, held.record.table, name) && (host === undefined || held.entry.in === host))
+      .map(held => {
+        const cells = propsOf(held.record, system, held.entry) ?? {};
+        const value = cells[column];
+        if (!isFormulaCell(value)) return (value ?? '') as Value;
+        return evaluate(itemExpr(system, held.record.table!, cells, column), { pass, owner: `${owner}: «${held.record.label}»` }) as Value;
+      });
   }
   if (isSingle(table)) return [pass.resolve(column) as Value];
   return (table.rows ?? []).map(row => readCell(system, pass, name, row.value, column, owner) as Value);
@@ -163,7 +172,7 @@ export function toolsOf(system: System, pass: Pass, owner: string, die?: Die): T
       if (!Array.isArray(key)) return read(key) as Value;
       return key.filter(one => rowOf(system, name, one)).map(read) as unknown as Value;
     },
-    rows: (name, column) => rowsOfTable(system, pass, name, column, owner),
+    rows: (name, column, host) => rowsOfTable(system, pass, name, column, owner, host),
   };
 }
 
@@ -173,6 +182,12 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
   const system = ctx.pass.system;
   const resolve = (name: string): unknown => {
     if (ctx.lazy) ctx.lazy(name.split('.')[0]!);
+    if (ctx.item && name === ITEM_NAME) return ctx.item.key;
+    if (ctx.item && name.startsWith(`${ITEM_NAME}.`)) {
+      const column = name.slice(ITEM_NAME.length + 1);
+      if (!ctx.props || !(column in ctx.props)) return null;
+      return recordValue(column, { ...ctx, recordScope: true });
+    }
     const onSheet = sheetHead(name, ctx.sheets);
     if (onSheet) {
       const bound = ctx.sheets!.bound[onSheet.head] ?? null;

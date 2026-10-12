@@ -1,6 +1,7 @@
 import { compile } from '../../formula/index.ts';
 import { findField } from '../calc.ts';
 import { misfit } from '../../model/sheet-columns.ts';
+import { parseItemTag } from '../../model/item-ref.ts';
 import { EngineError } from '../errors.ts';
 import type { Pass } from '../calc.ts';
 import type { StoredValue } from '../../model/types.ts';
@@ -50,13 +51,14 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
     if (!DIRECTIONS[direction]) throw new EngineError(`${who(ctx)}: неизвестное направление «${direction}» — умею: ${Object.keys(DIRECTIONS).join(', ')}`);
     const { sheet, tag } = ctx.field(step.target);
     const here = ctx.view(sheet);
-    const field = findField(ctx.system, tag);
-    if (!field) throw new EngineError(`система не объявляет поля «${tag}» — применять некуда`);
-    if (field.value.kind !== 'stored') throw new EngineError(`в поле «${tag}» нельзя писать: его считает движок по формуле, а не эффект`);
+    const item = parseItemTag(tag);
+    const field = item ? null : findField(ctx.system, tag);
+    if (!item && !field) throw new EngineError(`система не объявляет поля «${tag}» — применять некуда`);
+    if (field && field.value.kind !== 'stored') throw new EngineError(`в поле «${tag}» нельзя писать: его считает движок по формуле, а не эффект`);
     const from = ctx.read(sheet, tag);
     const raw = ctx.value(step.value);
     if (direction === 'set' && (typeof from !== 'number' || typeof raw !== 'number')) {
-      const wrong = misfit(field, raw);
+      const wrong = field ? misfit(field, raw) : null;
       if (wrong) throw new EngineError(`${who(ctx)}: ${wrong}`);
       ctx.write(sheet, tag, raw as StoredValue);
       return { value: { amount: raw, from, to: raw, overkill: 0 }, trace: { sheet, target: tag, direction, incoming: raw, amount: raw, from, to: raw }, break: null };
@@ -67,8 +69,8 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
     const incoming = direction === 'set' ? Math.abs(value - from) : value;
     const amountNow = incoming;
     const next = direction === 'set' ? from + Math.sign(value - from) * amountNow : DIRECTIONS[direction]!(from, amountNow);
-    const low = boundOf(field.value.min, here, 'нижняя граница поля');
-    const high = boundOf(field.value.max, here, 'верхняя граница поля');
+    const low = field ? boundOf(field.value.min, here, 'нижняя граница поля') : null;
+    const high = field ? boundOf(field.value.max, here, 'верхняя граница поля') : null;
     const to = low !== null && next < low ? low : high !== null && next > high ? high : next;
     const overkill = low !== null && next < low ? low - next : 0;
     ctx.write(sheet, tag, to);
