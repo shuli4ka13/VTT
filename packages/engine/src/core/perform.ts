@@ -117,7 +117,7 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
       throw new EngineError(`у «${actor.name}» нет действия «${action.label}» — запись не на листе или выключена`);
     }
     const asked = asksOf(intent.actionId, { system, compendium });
-    const trouble = checkInputs(asked, intent.inputs, system, run.view(actor.id));
+    const trouble = checkInputs(asked, intent.inputs, system, run.view(actor.id), intent.toIds);
     if (trouble) throw new EngineError(trouble);
     const inputs = normalizeInputs(asked, intent.inputs);
     runAct(run, { ...intent, ...(Object.keys(inputs).length ? { inputs } : {}) }, root);

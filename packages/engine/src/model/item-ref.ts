@@ -1,5 +1,6 @@
 import { EngineError } from '../engine/errors.ts';
-import { entryOf, findRecord, kindOfRecord, keyOf } from './owned.ts';
+import { entryOf, findRecord, kindOfRecord, keyOf, propsOf } from './owned.ts';
+import { isFormulaCell, itemExpr } from './sheet-columns.ts';
 import type { Compendium, Owned, Sheet, System } from './types.ts';
 
 export const ITEM_NAME = 'вещь';
@@ -34,10 +35,15 @@ export function itemColumn(system: System, compendium: Compendium | null | undef
   return itemTag(key, column);
 }
 
-export function itemStored(compendium: Compendium | null | undefined, sheet: Sheet, key: string, column: string): unknown {
+export function itemStored(
+  system: System, compendium: Compendium | null | undefined, sheet: Sheet, key: string, column: string, count: (expr: string) => unknown,
+): unknown {
   const entry = itemEntry(sheet, key);
-  if (entry.values && column in entry.values) return entry.values[column];
-  return findRecord(compendium, entry.of)?.cells?.[column];
+  const record = findRecord(compendium, entry.of);
+  if (!record?.table) return entry.values?.[column];
+  const cells = propsOf(record, system, entry) ?? {};
+  const value = cells[column];
+  return isFormulaCell(value) ? count(itemExpr(system, record.table, cells, column)) : value;
 }
 
 export function withItemValue(sheet: Sheet, key: string, column: string, value: unknown): Sheet {

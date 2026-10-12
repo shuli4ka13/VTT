@@ -65,8 +65,9 @@ group('Shadowrun 6: атака', () => {
     const razor = sheetOf('razor', { edge_left: 0 });
     const out = shoot(razor, sheetOf('humanis'), 'predator_vi:0', dice([11, 1], [4, 1]));
     eq(after(out, 'razor').values.edge_left, 1, 'АТК 10 против ЗЩТ 2');
-    const far = shoot(sheetOf('razor'), sheetOf('humanis'), 'predator_vi:0', dice(), 'дальняя');
-    eq(after(far, 'humanis').values.physical ?? 0, 0);
+    let refused = '';
+    try { shoot(sheetOf('razor'), sheetOf('humanis'), 'predator_vi:0', dice(), 'дальняя'); } catch (err) { refused = (err as Error).message; }
+    ok(refused.includes('на этой дистанции оружие не бьёт'), 'действие не состоялось, ничего не потрачено');
   });
 
 });
@@ -124,5 +125,75 @@ group('Shadowrun 6: пешка — тип листа переопределяе�
     eq(computed(grunt, 'wound_mod'), -2);
     eq(computed(grunt, 'knocked_out'), false);
     eq(computed(sheetOf('razor', { stun: 3, physical: 2 }), 'wound_mod'), -1, 'у раннера — по-старому');
+  });
+});
+
+group('Shadowrun 6: оружие, патроны, модификации, взрывы (компендиум, этап 2)', () => {
+  const step = (out: ReturnType<typeof exchange>, id: string) =>
+    out.reports.flatMap(entry => (entry.report.trace ?? []) as { step: unknown; total?: number }[]).find(one => one.step === id)?.total;
+  const item = (sheet: Sheet, of: string) => sheet.has.find(entry => entry.of === of);
+  const equip = (id: string, values: Record<string, unknown>, ...extra: Sheet['has']): Sheet => {
+    const sheet = sheetOf(id, values);
+    return { ...sheet, has: [...sheet.has, ...extra] } as Sheet;
+  };
+  const kit: Record<string, () => Sheet> = {
+    silk: () => equip('silk', {}, { of: 'laser_sight', in: 'colt_l36' }),
+    razor: () => equip('razor', { smartlink: 1 }, { of: 'ammo_apds', in: 'predator_vi' }),
+  };
+  const fire = (from: string, to: string, action: string, inputs: Record<string, unknown>, die = () => 1) => exchange({
+    system, compendium, die, sheets: [kit[from]?.() ?? sheetOf(from), sheetOf(to)], actionId: action, fromId: from, toId: to, inputs: inputs as never,
+  });
+  const refusal = (run: () => unknown) => { try { run(); return ''; } catch (err) { return (err as Error).message; } };
+
+  test('короткая очередь тратит 2 патрона и даёт СУ +1; газоотвод гасит штраф −2', () => {
+    const out = fire('hammer', 'humanis', 'ak_97:0', { дистанция: 'близкая', режим: 'короткая очередь' });
+    eq(item(after(out, 'hammer'), 'ak_97')?.values?.ammo, 36, 'боезапас 38 − 2');
+    eq(step(out, 'атк'), 11, 'АК-97 на близкой 11, штраф КО погашен газоотводом');
+    eq(step(out, 'ур'), 6, 'СУ 5 + 1 за очередь');
+  });
+
+  test('режим — только из разрешённых; с короткой очередью можно одиночный', () => {
+    ok(refusal(() => fire('silk', 'humanis', 'colt_l36:0', { дистанция: 'близкая', режим: 'длинная очередь' })).includes('нет такого режима'));
+    const single = fire('silk', 'humanis', 'colt_l36:0', { дистанция: 'близкая', режим: 'одиночный выстрел' });
+    eq(item(after(single, 'silk'), 'colt_l36')?.values?.ammo, 10, 'боезапас 11 − 1');
+  });
+
+  test('лазерный прицел +1; ПБОП: ЗА +2, СУ −1; смартган со смартлинком +2, с лазером не складывается', () => {
+    eq(step(fire('silk', 'humanis', 'colt_l36:0', { дистанция: 'близкая', режим: 'одиночный выстрел' }), 'атк'), 9, 'Кольт 8 + лазер 1');
+    const razor = fire('razor', 'humanis', 'predator_vi:0', { дистанция: 'близкая', режим: 'короткая очередь' });
+    eq(step(razor, 'атк'), 10 - 2 + 2 + 2, 'Предатор 10, КО −2, встроенный смартган +2, ПБОП +2');
+    eq(step(razor, 'ур'), 3 + 1 - 1);
+  });
+
+  test('патронов нет — действие не состоялось; «Перезарядить» — до боезапаса', () => {
+    const empty = kit.silk!();
+    item(empty, 'colt_l36')!.values = { ammo: 0 };
+    ok(refusal(() => exchange({ system, compendium, die: () => 1, sheets: [empty, sheetOf('humanis')], actionId: 'colt_l36:0', fromId: 'silk', toId: 'humanis', inputs: { дистанция: 'близкая', режим: 'одиночный выстрел' } as never })).includes('патронов нет'));
+    const reloaded = exchange({ system, compendium, die: () => 1, sheets: [empty], actionId: 'colt_l36:1', fromId: 'silk', toIds: [] });
+    eq(item(after(reloaded, 'silk'), 'colt_l36')?.values?.ammo, 11);
+  });
+
+  test('граната: у каждой цели своё кольцо, урон по кольцу, сопротивление Телом; гранат на одну меньше', () => {
+    const out = exchange({
+      system, compendium, die: () => 1, sheets: [sheetOf('razor'), sheetOf('humanis'), sheetOf('mafia')],
+      actionId: 'grenade_frag:0', fromId: 'razor', toIds: ['humanis', 'mafia'],
+      inputs: { дистанция: 'близкая', кольцо: { humanis: 'эпицентр', mafia: 'близко' } } as never,
+    });
+    const frag = compendium.records.find(r => r.id === 'grenade_frag')!.cells as Record<string, number>;
+    eq(after(out, 'humanis').values.physical, frag.dv_e);
+    eq(after(out, 'mafia').values.physical, frag.dv_n);
+    eq(item(after(out, 'razor'), 'grenade_frag')?.values?.count, 1);
+  });
+
+  test('взрывпакет: эпицентр — рейтинг, вплотную — рейтинг/2, близко — рейтинг/4', () => {
+    const sapper = { ...sheetOf('razor'), has: [{ of: 'explosive_pack', values: { rating: 9, count: 1 } }] } as Sheet;
+    const out = exchange({
+      system, compendium, die: () => 1, sheets: [sapper, sheetOf('humanis'), sheetOf('mafia'), sheetOf('silk')],
+      actionId: 'explosive_pack:0', fromId: 'razor', toIds: ['humanis', 'mafia', 'silk'],
+      inputs: { кольцо: { humanis: 'эпицентр', mafia: 'вплотную', silk: 'близко' } } as never,
+    });
+    eq(after(out, 'humanis').values.physical, 9);
+    eq(after(out, 'mafia').values.physical, 4);
+    eq(after(out, 'silk').values.physical, 2);
   });
 });

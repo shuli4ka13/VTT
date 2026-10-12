@@ -602,7 +602,11 @@ export class Run {
 
   private read(sheetId: string, tag: string): unknown {
     const item = parseItemTag(tag);
-    if (item) return itemStored(this.world.compendium, this.sheet(sheetId)!, item.key, item.column) ?? null;
+    if (item) {
+      const owner = `вещь «${item.key}»`;
+      return itemStored(this.system, this.world.compendium, this.sheet(sheetId)!, item.key, item.column,
+        expr => resolveRef({ expr }, { pass: this.view(sheetId), owner })) ?? null;
+    }
     const sheet = this.sheet(this.holder(sheetId, tag))!;
     if (Object.prototype.hasOwnProperty.call(sheet.values, tag)) return sheet.values[tag];
     const field = findField(this.system, tag);

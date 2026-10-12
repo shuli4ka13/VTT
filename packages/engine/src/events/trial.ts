@@ -1,3 +1,4 @@
+import type { Inputs } from '../model/asks.ts';
 import { deskOf, hasDesk, blankDesk } from './desk.ts';
 import { act } from '../core/act.ts';
 import { emptyJournal } from '../core/external.ts';
@@ -114,7 +115,7 @@ export interface Expected { lines: string[]; trouble: string | null }
 export function expectAction(
   world: { system: System; compendium: Compendium; clock: Clock | null },
   sheets: Sheet[],
-  intent: { actionId: string; fromId: string; toIds: string[]; inputs?: Record<string, number | string>; claims?: Record<string, string[]> },
+  intent: { actionId: string; fromId: string; toIds: string[]; inputs?: Inputs; claims?: Record<string, string[]> },
 ): Expected {
   try {
     const out = act({ ...world, sheets, die: dieOf('avg'), journal: emptyJournal(), mode: 'preview' }, intent);

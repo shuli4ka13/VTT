@@ -149,7 +149,7 @@ export const actIntent = z.object({
 
   claims: z.record(z.string().min(1), z.array(z.string().min(1))).optional(),
 
-  inputs: z.record(z.string().min(1), z.union([z.number(), z.string()])).optional(),
+  inputs: z.record(z.string().min(1), z.union([z.number(), z.string(), z.record(z.string().min(1), z.union([z.number(), z.string()]))])).optional(),
 
   hidden: z.boolean().optional(),
 });

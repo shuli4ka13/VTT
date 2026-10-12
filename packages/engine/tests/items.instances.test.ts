@@ -32,7 +32,7 @@ const raw = {
     кожа: { shape: 'book', use: 'item', label: 'Кожа', extends: 'имплант', columns: [],
       modifiers: [{ kind: 'value', target: 'защита', op: 'add', value: { expr: '@строка.rating' } }] },
     оружие: { shape: 'book', use: 'item', label: 'Оружие', extends: 'снаряжение',
-      columns: [{ key: 'ar', label: 'ЗА', kind: 'number' }, { key: 'ammo', label: 'Патроны', kind: 'number' }],
+      columns: [{ key: 'ar', label: 'ЗА', kind: 'number' }, { key: 'ammo_max', label: 'Боезапас', kind: 'number' }, { key: 'ammo', label: 'Патроны', kind: 'number', expr: { expr: '@ammo_max' } }],
       bindings: [{ label: 'Выстрел', effect: 'выстрел' }] },
     мод: { shape: 'book', use: 'item', label: 'Модификация', extends: 'снаряжение', columns: [{ key: 'ar_mod', label: 'К ЗА', kind: 'number' }] },
   },
@@ -51,6 +51,7 @@ const book = { records: [
   { id: 'мышцы', table: 'имплант', label: 'Замена мускулов', cells: { per: 0.7, grade: 'стандарт', rating: 1, essence: { expr: '@rating * @per * @grade.ess' } } },
   { id: 'пластины', table: 'кожа', label: 'Кожные пластины', cells: { per: 0.3, grade: 'стандарт', rating: 1, essence: { expr: '@rating * @per * @grade.ess' } } },
   { id: 'предатор', table: 'оружие', label: 'Предатор', cells: { ar: 10, ammo: 15, cost: 750 } },
+  { id: 'кольт', table: 'оружие', label: 'Кольт', cells: { ar: 8, ammo_max: 11 } },
   { id: 'лазер', table: 'мод', label: 'Лазерный прицел', cells: { ar_mod: 1, cost: 125 } },
 ] } as unknown as Compendium;
 
@@ -129,6 +130,12 @@ describe('Д1: шаг «Изменение» пишет в свою вещь', (
     const out = op([sheet], { op: 'act', intent: { actionId: 'предатор@п2:0', fromId: 'г', toIds: [] } });
     if (out.kind !== 'done') throw new Error(out.kind);
     expect(out.sheets[0]!.has).toEqual([{ of: 'предатор', id: 'п1' }, { of: 'предатор', id: 'п2', values: { ammo: 2 } }]);
+  });
+
+  it('патроны по умолчанию — формула колонки (= боезапас): выстрел пишет 10', () => {
+    const out = op([hero([{ of: 'кольт' }])], { op: 'act', intent: { actionId: 'кольт:0', fromId: 'г', toIds: [] } });
+    if (out.kind !== 'done') throw new Error(out.kind);
+    expect(out.sheets[0]!.has).toEqual([{ of: 'кольт', values: { ammo: 10 } }]);
   });
 
   it('проверка мира не ругается на @вещь в эффекте кнопки вещи', () => {

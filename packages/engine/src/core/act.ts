@@ -7,6 +7,7 @@ import { releaseHolder } from '../events/bonds.ts';
 import { refusalWords } from '../events/refusal.ts';
 import { propsOf, keyOf } from '../model/owned.ts';
 import { entryByKey } from '../model/item-ref.ts';
+import type { Inputs } from '../model/asks.ts';
 import { EngineError } from '../engine/errors.ts';
 import { render } from './render.ts';
 import { External, Pause, emptyJournal } from './external.ts';
@@ -32,7 +33,7 @@ export interface ActIntent {
   actionId: string;
   fromId: string;
   toIds: string[];
-  inputs?: Record<string, number | string>;
+  inputs?: Inputs;
   claims?: Record<string, string[]>;
 }
 
@@ -88,10 +89,19 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
   const actorSheet = run.sheet(actor);
   if (!actorSheet) throw new EngineError(`в комнате нет листа «${actor}»`);
   for (const id of targets) if (!run.sheet(id)) throw new EngineError(`в комнате нет листа «${id}»`);
-  const inputs = intent.inputs && Object.keys(intent.inputs).length ? intent.inputs : undefined;
-  if (inputs) {
+  const given = intent.inputs && Object.keys(intent.inputs).length ? intent.inputs : undefined;
+  const flat = given ? Object.fromEntries(Object.entries(given).filter(([, value]) => value === null || typeof value !== 'object')) as Record<string, number | string> : {};
+  const inputs = Object.keys(flat).length ? flat : undefined;
+  const perTarget = (to: string): Record<string, number | string> | undefined => {
+    const own = Object.fromEntries(Object.entries(given ?? {})
+      .filter(([, value]) => value !== null && typeof value === 'object')
+      .map(([key, value]) => [key, (value as Record<string, number | string>)[to]])
+      .filter(([, value]) => value !== undefined)) as Record<string, number | string>;
+    return inputs || Object.keys(own).length ? { ...inputs, ...own } : undefined;
+  };
+  if (given) {
     const asked = new Set(asksOf(intent.actionId, { system, compendium }).map(param => param.key));
-    const stray = Object.keys(inputs).find(key => !asked.has(key));
+    const stray = Object.keys(given).find(key => !asked.has(key));
     if (stray) throw new EngineError(`«${action.label}»: лишнее значение «${stray}» — действие о нём не спрашивает`);
   }
   const args = (action.binding.args || {}) as Record<string, unknown>;
@@ -183,7 +193,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
     const list = bound[of];
     const ids = Array.isArray(list) ? list : typeof list === 'string' ? [list] : [];
     calls = ids.map((to): Delivery => ({
-      ...base, steps: steps.slice(split + 1), path: root.at(to), subject: to, bound: { ...bound, [as]: to },
+      ...base, ...(perTarget(to) ? { inputs: perTarget(to) } : {}), steps: steps.slice(split + 1), path: root.at(to), subject: to, bound: { ...bound, [as]: to },
       seed: shared, ...(Object.keys(rolls).length ? { rolls } : {}), lazy: lazy!, offset: split + 1, lead: sink.trace,
     }));
   } else {

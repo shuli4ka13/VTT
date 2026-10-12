@@ -51,8 +51,34 @@ const boundOf = (bound: unknown, actor: Pass | undefined): number | null => {
   return typeof value === 'number' ? value : null;
 };
 
+export type InputValue = number | string;
+
+export type Inputs = Record<string, InputValue | Record<string, InputValue>>;
+
+export const isPerTarget = (param: Param): boolean => Boolean((param as { perTarget?: boolean }).perTarget);
+
+function valueProblem(param: AskedParam, value: unknown, name: string, system: System, actor: Pass | undefined): string | null {
+  if (value === undefined || value === '') return `не заполнено: ${name}`;
+  const kind = askKindOf(param);
+  if (kind === 'number') {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return `${name}: нужно число, а пришло «${String(value)}»`;
+    const low = boundOf(param.min, actor);
+    const high = boundOf(param.max, actor);
+    if (low !== null && number < low) return `${name}: не меньше ${low}`;
+    if (high !== null && number > high) return `${name}: не больше ${high}`;
+  }
+  if (kind === 'choice') {
+    const options = choicesOf(system, param);
+    if (!options.includes(String(value))) {
+      return `${name}: можно только ${options.map((option: string) => `«${option}»`).join(', ') || '(список пуст)'}`;
+    }
+  }
+  return null;
+}
+
 export function checkInputs(
-  asked: AskedParam[], inputs: Record<string, number | string> | undefined, system: System, actor?: Pass,
+  asked: AskedParam[], inputs: Inputs | undefined, system: System, actor?: Pass, targets?: readonly string[],
 ): string | null {
   const given = inputs ?? {};
   for (const key of Object.keys(given)) {
@@ -61,34 +87,32 @@ export function checkInputs(
   for (const param of asked) {
     const value = given[param.key];
     const name = param.label ?? param.key;
-    if (value === undefined || value === '') return `не заполнено: ${name}`;
-    const kind = askKindOf(param);
-    if (kind === 'number') {
-      const number = Number(value);
-      if (!Number.isFinite(number)) return `${name}: нужно число, а пришло «${value}»`;
-      const low = boundOf(param.min, actor);
-      const high = boundOf(param.max, actor);
-      if (low !== null && number < low) return `${name}: не меньше ${low}`;
-      if (high !== null && number > high) return `${name}: не больше ${high}`;
+    if (!isPerTarget(param)) {
+      if (value !== null && typeof value === 'object') return `${name}: одно значение на всё действие, а пришло по целям`;
+      const problem = valueProblem(param, value, name, system, actor);
+      if (problem) return problem;
+      continue;
     }
-    if (kind === 'choice') {
-      const options = choicesOf(system, param);
-      if (!options.includes(String(value))) {
-        return `${name}: можно только ${options.map((option: string) => `«${option}»`).join(', ') || '(список пуст)'}`;
-      }
+    if (value === undefined || value === null || typeof value !== 'object') return `не заполнено: ${name} — для каждой цели`;
+    const map = value as Record<string, InputValue>;
+    for (const id of Object.keys(map)) if (targets && !targets.includes(id)) return `${name}: «${id}» — не цель этого действия`;
+    for (const id of targets ?? Object.keys(map)) {
+      const problem = valueProblem(param, map[id], `${name} (${id})`, system, actor);
+      if (problem) return problem;
     }
   }
   return null;
 }
 
-export const normalizeInputs = (
-  asked: AskedParam[], inputs: Record<string, number | string> | undefined,
-): Record<string, number | string> => {
-  const out: Record<string, number | string> = {};
+export const normalizeInputs = (asked: AskedParam[], inputs: Inputs | undefined): Inputs => {
+  const out: Inputs = {};
+  const one = (param: AskedParam, value: unknown): InputValue => (askKindOf(param) === 'number' ? Number(value) : String(value));
   for (const param of asked) {
     const value = (inputs ?? {})[param.key];
     if (value === undefined) continue;
-    out[param.key] = askKindOf(param) === 'number' ? Number(value) : String(value);
+    out[param.key] = value !== null && typeof value === 'object'
+      ? Object.fromEntries(Object.entries(value).map(([id, each]) => [id, one(param, each)]))
+      : one(param, value);
   }
   return out;
 };

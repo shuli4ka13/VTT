@@ -6,7 +6,7 @@ import type { System, Compendium } from '@vtt/schema';
 
 const system = {
   id: 'x', name: 'x',
-  tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, места: { label: 'Места', key: 'word', rows: [{ value: 'тело', label: 'тело' }, { value: 'голова', label: 'голова' }] } , ствол: { shape: 'book', use: 'action', label: 'Ствол', columns: [], bindings: [{ label: 'Выстрел', effect: 'выстрел', args: {} }] }, меч: { shape: 'book', use: 'action', label: 'Меч', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
+  tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, места: { label: 'Места', key: 'word', rows: [{ value: 'тело', label: 'тело' }, { value: 'голова', label: 'голова' }] } , ствол: { shape: 'book', use: 'action', label: 'Ствол', columns: [], bindings: [{ label: 'Выстрел', effect: 'выстрел', args: {} }] }, меч: { shape: 'book', use: 'action', label: 'Меч', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] }, граната: { shape: 'book', use: 'action', label: 'Граната', columns: [], bindings: [{ label: 'Бросить', effect: 'граната', args: {} }] } },
   effects: {
     выстрел: {
       label: 'Выстрел', activation: 'manual',
@@ -17,12 +17,17 @@ const system = {
       steps: [],
     },
     удар: { label: 'Удар', activation: 'manual', params: [], steps: [] },
+    граната: {
+      label: 'Граната', activation: 'manual',
+      params: [{ key: 'место', label: 'Где цель', kind: 'choice', from: 'места', perTarget: true, ask: { by: 'actor' } }],
+      steps: [],
+    },
   },
   
 } as unknown as System;
 
 const compendium = {
-  records: [{ id: 'ствол', table: 'ствол', label: 'Ствол', cells: {} }, { id: 'меч', table: 'меч', label: 'Меч', cells: {} }],
+  records: [{ id: 'ствол', table: 'ствол', label: 'Ствол', cells: {} }, { id: 'меч', table: 'меч', label: 'Меч', cells: {} }, { id: 'граната', table: 'граната', label: 'Граната', cells: {} }],
 } as unknown as Compendium;
 
 describe('форма действия спрашивает то, что объявлено', () => {
@@ -75,5 +80,29 @@ describe('ожидание на кнопке', () => {
     expect(asked).toBe(1);
     expect(button.title).toContain('по среднему');
     expect(button.title).toContain('попадание');
+  });
+});
+
+describe('вход «для каждой цели»', () => {
+  afterEach(() => { cleanup(); });
+
+  it('без целей — подсказка выбрать цели; с двумя целями — два поля, ответ уходит по листам', () => {
+    const sent: unknown[] = [];
+    const { rerender } = render(<ActionForm system={system} compendium={compendium} actionId="граната:0" label="Бросить" onAct={r => sent.push(r)} />);
+    fireEvent.click(screen.getByText('Бросить…'));
+    expect(screen.getByText(/сначала выберите цели/)).toBeTruthy();
+
+    rerender(<ActionForm system={system} compendium={compendium} actionId="граната:0" label="Бросить" onAct={r => sent.push(r)}
+      targets={[{ id: 'а', name: 'Анна' }, { id: 'б', name: 'Борис' }]} />);
+    expect(screen.getByText('Где цель · Анна')).toBeTruthy();
+    const [first, second] = [...document.querySelectorAll('select')] as HTMLSelectElement[];
+    fireEvent.change(first!, { target: { value: 'тело' } });
+    fireEvent.click(screen.getByText('Бросить'));
+    expect(sent).toEqual([]);
+    expect(screen.getByRole('alert').textContent).toContain('(б)');
+
+    fireEvent.change(second!, { target: { value: 'голова' } });
+    fireEvent.click(screen.getByText('Бросить'));
+    expect(sent).toEqual([{ actionId: 'граната:0', inputs: { место: { а: 'тело', б: 'голова' } } }]);
   });
 });

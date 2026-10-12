@@ -82,6 +82,8 @@ function inputsOf(world: World, from: Sheet, actionId: string): Record<string, n
     return !('error' in outcome);
   };
   if (!params.length || works(out)) return out;
+  const bare = Object.fromEntries(Object.entries(out).filter(([key]) => !params.some(param => param.key === key && param.optional)));
+  if (works(bare)) return bare;
   for (const param of params) {
     for (const value of candidates(param)) {
       const next = { ...out, [param.key]: value };

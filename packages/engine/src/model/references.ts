@@ -1,9 +1,10 @@
+import { flattenSystem } from './inherit.ts';
 import { armsOf, sees } from './flow.ts';
 import { paymentsOf } from './payments.ts';
 import { loopOf, loopParam, splits as splitsTargets } from '../engine/steps/each.ts';
 import { tagWords } from '../engine/roll-tags.ts';
 import { ROLL_CALL } from '../words/calls.ts';
-import type { System, Compendium, Effect, Step, Modifier, Guard, Param } from './types.ts';
+import type { System, Compendium, Effect, Step, Modifier, Guard, Param, Table } from './types.ts';
 import { compile } from '../formula/index.ts';
 import { isFormulaCell } from './sheet-columns.ts';
 import type { Node } from '../formula/index.ts';
@@ -591,8 +592,11 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
   for (const [id, effect] of Object.entries(system.effects ?? {})) effectRefs(system, id, effect, out);
 
   const allProps = new Set(kindsOf(system).flatMap(([, spec]) => (spec.columns ?? []).map(p => p.key)));
+  const flat = flattenSystem(system, true);
+  const columnsOf = (kind: string | undefined): readonly { key: string }[] =>
+    (kind ? (flat.tables?.[kind]?.columns ?? system.tables?.[kind]?.columns) : undefined) ?? [];
   for (const [kind, spec] of kindsOf(system)) {
-    const own = new Set((spec.columns ?? []).map(p => p.key));
+    const own = new Set([...(spec.columns ?? []), ...columnsOf(kind)].map(p => p.key));
     for (const prop of spec.columns ?? []) typedRefs(prop, { tab: 'records', kind, part: 'props', key: prop.key }, out);
     (spec.bindings ?? []).forEach((binding, index) => {
       const from: Where = { tab: 'records', kind, part: 'bindings', binding: index };
@@ -643,14 +647,14 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
       if (record.table) out.push({ kind: 'recordKind', key: String(record.table), from });
       for (const id of record.grants ?? []) out.push({ kind: 'effect', key: id, from });
       for (const binding of record.bindings ?? []) if (binding.effect) out.push({ kind: 'effect', key: binding.effect, from });
-      const columns = record.table ? system.tables?.[record.table]?.columns ?? [] : [];
+      const columns = columnsOf(record.table) as NonNullable<Table['columns']>;
       const props = new Set(columns.map(c => c.key));
       for (const column of columns) {
         const cell = (record.cells ?? {})[column.key];
         if (!isFormulaCell(cell)) continue;
         exprRefs(cell.expr, { ...from, key: column.key }, sheetScope(props, [HOLDER]), out);
       }
-      modifierRefs(system, record.modifiers, from, out, record.table ? new Set((system.tables?.[record.table]?.columns ?? []).map(c => c.key)) : undefined);
+      modifierRefs(system, record.modifiers, from, out, record.table ? new Set(columnsOf(record.table).map(c => c.key)) : undefined);
     }
   }
 
