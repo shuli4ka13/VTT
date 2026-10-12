@@ -573,3 +573,279 @@ group('линт: «Перебросить» — два режима', () => {
     ok(errorTexts(reacting({})).some(t => t.includes('не заполнено: перебросить, где выпало не больше')));
   });
 });
+
+group('линт: вход висящего эффекта и имена, которые видны от вызова', () => {
+  const NUM = (key: string, label = key) => ({ key, label, kind: 'number' });
+  const LIST = (key: string) => ({ key, label: key, kind: 'sheet' });
+  const pay = { type: 'apply', target: { expr: '@носитель.hp' }, direction: 'subtract', value: { expr: '@бонус' } } as unknown as Step;
+
+  const struck = (): System => withEffect('удар', {
+    label: 'Удар',
+    params: [WHO, NUM('бонус', 'Бонус')] as never,
+    steps: [{ id: 'бросок', type: 'roll', fixed: { expr: '1' } }] as Step[],
+  });
+  const hung = (params: unknown[], handler: Record<string, unknown>, system = struck()): System => {
+    system.effects.заслон = { label: 'Заслон', activation: 'passive', params, on: [{ steps: [], ...handler }] } as unknown as Effect;
+    return system;
+  };
+  const clashes = (system: System) => errorTexts(system).filter(t => t.includes('совпадает с'));
+
+  test('значение вызова и свой вход с одним именем: @имя в условии читает вызов — ошибка словами', () => {
+    const system = hung([NUM('бонус', 'Запас')], { on: 'after:удар', if: { expr: '@бонус > 1' } });
+    eq(clashes(system).join('|'), 'вход «Запас» у «Заслон» совпадает с «бонус» у «Удар»: здесь @бонус — значение «Удар». Переименуйте свой вход');
+    const [problem] = lintSystem(system).filter(p => p.text.includes('совпадает с'));
+    eq(problem?.level, 'error');
+    eq(problem?.where.effect, 'заслон');
+    eq(problem?.where.part, 'on');
+    eq(problem?.where.handler, 0);
+  });
+
+  test('совпадение, которым не пользуются, безвредно: ни в условии, ни в шагах, ни в цене имени нет', () => {
+    const system = hung([NUM('бонус')], { on: 'after:удар', if: { expr: 'да' }, steps: [mend('@носитель.hp', '1')], cost: [{ ...pay, value: { expr: '1' } } as Step] });
+    eq(clashes(system).length, 0, errorTexts(system).join('|'));
+  });
+
+  test('имя читается в шагах подписки, в её цене и через точку — везде ошибка', () => {
+    eq(clashes(hung([NUM('бонус')], { on: 'after:удар', steps: [pay] })).length, 1);
+    eq(clashes(hung([NUM('бонус')], { on: 'after:удар', cost: [pay] })).length, 1);
+    eq(clashes(hung([LIST('действующий')], { on: 'after:удар', steps: [mend('@действующий.hp')] })).length, 1);
+  });
+
+  test('имя шага вызываемого эффекта видно в «до», в «после» и в «завершено»', () => {
+    for (const phase of ['before', 'after', 'done']) {
+      const system = hung([NUM('бросок')], { on: `${phase}:удар`, if: { expr: '@бросок > 1' } });
+      eq(clashes(system).length, 1, phase);
+    }
+  });
+
+  test('побеждает вызов: его лист закрывает и лист, и число; свой лист закрывает только значение вызова', () => {
+    const asSheet = { on: 'after:удар', if: { expr: '@действующий == @носитель' } };
+    eq(clashes(hung([LIST('действующий')], asSheet)).length, 1, 'лист против листа');
+    eq(clashes(hung([NUM('действующий')], asSheet)).length, 1, 'число против листа');
+    eq(clashes(hung([LIST('бонус')], { on: 'after:удар', if: { expr: '@бонус == @носитель' } })).length, 0, 'лист против числа: читается свой лист');
+  });
+
+  test('итоги вызова видны подписке «после», в «до» их ещё нет', () => {
+    const system = struck();
+    system.effects.удар!.returns = [{ key: 'попал', label: 'Попал', kind: 'boolean', expr: { expr: 'да' } }] as never;
+    eq(clashes(hung([{ key: 'попал', label: 'Попал', kind: 'boolean' }], { on: 'after:удар', if: { expr: '@попал' } }, system)).length, 1);
+    eq(clashes(hung([{ key: 'попал', label: 'Попал', kind: 'boolean' }], { on: 'before:удар', if: { expr: '@попал' } }, struck())).length, 0);
+  });
+
+  test('«любое действие» имён не даёт — совпадать нечему', () => {
+    const both = { if: { expr: '@бонус > @метки' } };
+    eq(clashes(hung([NUM('бонус'), NUM('метки')], { on: 'before:удар', ...both })).length, 2, 'у конкретного вызова оба имени заняты');
+    eq(clashes(hung([NUM('бонус'), NUM('метки')], { on: 'before:*', ...both })).length, 0);
+  });
+
+  test('метка с договором: вызов зовётся меткой, имена — входы её договора', () => {
+    const system = struck();
+    system.tags = { атака: { label: 'Любая атака', inputs: [{ key: 'цель', kind: 'sheet' }] } } as never;
+    const found = clashes(hung([LIST('цель')], { on: 'before:атака', if: { expr: '@цель == @носитель' } }, system));
+    eq(found.join('|'), 'вход «цель» у «Заслон» совпадает с «цель» у «Любая атака»: здесь @цель — значение «Любая атака». Переименуйте свой вход');
+  });
+
+  test('кости, моменты, появление и поле: вызов называется тем, что случилось', () => {
+    const system = struck();
+    system.effects.яд = { label: 'Яд', activation: 'passive' } as Effect;
+    const cases: [string, string, string][] = [
+      ['seen', 'бросающий', 'кости выпали'],
+      ['moment:turn-end', 'ходит', 'в конце своего хода'],
+      ['gained:яд', 'лист', 'Яд появилось'],
+      ['lost:яд', 'лист', 'Яд ушло'],
+      ['field:hp', 'лист', 'Хиты стало верным'],
+    ];
+    for (const [on, name, source] of cases) {
+      const found = clashes(hung([LIST(name)], { on, if: { expr: `@${name} == @носитель` } }, system));
+      eq(found.join('|'), `вход «${name}» у «Заслон» совпадает с «${name}» у «${source}»: здесь @${name} — значение «${source}». Переименуйте свой вход`, on);
+      eq(clashes(hung([LIST(name)], { on, if: { expr: 'да' } }, system)).length, 0, `${on}: не используется`);
+    }
+  });
+
+  const edited = (params: unknown[], mod: Record<string, unknown>): System => {
+    const system = withEffect('урон', {
+      label: 'Урон',
+      params: [{ key: 'лист', label: 'Лист', kind: 'sheet', role: 'target' }, { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }] as never,
+    });
+    system.effects.щит = {
+      label: 'Щит', activation: 'passive', params,
+      modifiers: [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, if: { expr: '@лист == @носитель' }, ...mod }],
+    } as unknown as Effect;
+    return system;
+  };
+
+  test('правка вызова: своё число с именем входа вызова, прочитанное в «сколько», — ошибка', () => {
+    const system = edited([NUM('сколько', 'Запас')], { value: { expr: '@сколько / 2' } });
+    eq(clashes(system).join('|'), 'вход «Запас» у «Щит» совпадает с «сколько» у «Урон»: здесь @сколько — значение «Урон». Переименуйте свой вход');
+    eq(lintSystem(system).find(p => p.text.includes('совпадает с'))?.where.part, 'modifiers');
+  });
+
+  test('правка вызова: лист вызова в условии против своего входа-листа', () => {
+    eq(clashes(edited([LIST('лист')], {})).length, 1);
+  });
+
+  test('правка вызова: совпадение без чтения и правка поля — тишина', () => {
+    eq(clashes(edited([NUM('сколько')], {})).length, 0);
+    const field = withEffect('щит', {
+      activation: 'passive', params: [NUM('сколько')] as never,
+      modifiers: [{ kind: 'value', target: 'hp', op: 'add', value: { expr: '@сколько' } }] as never,
+    });
+    eq(clashes(field).length, 0);
+  });
+
+  test('правка броска: «бросающий» и «против» — имена броска, он назван «Бросок»', () => {
+    const system = withEffect('щит', {
+      label: 'Щит', activation: 'passive', params: [LIST('против'), NUM('метки')] as never,
+      modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: '@бросающий == @носитель' } }] as never,
+    });
+    eq(clashes(system).length, 0, 'не читают — тишина');
+    system.effects.щит!.modifiers = [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: 'все(@против != @носитель, @бросающий == @носитель)' } }] as never;
+    eq(clashes(system).join('|'), 'вход «против» у «Щит» совпадает с «против» у «Бросок»: здесь @против — значение «Бросок». Переименуйте свой вход');
+  });
+});
+
+group('линт: имя шага не совпадает с ключом входа', () => {
+  const rolled = (id: string) => ({ id, type: 'roll', fixed: { expr: '1' } }) as unknown as Step;
+  const withInput = (rest: Partial<Effect>): System => withEffect('e', { params: [WHO, { key: 'сколько', label: 'Сколько', kind: 'number' }] as never, ...rest });
+  const named = (system: System) => lintSystem(system).filter(p => p.level === 'warn' && p.text.includes('назван как вход')).map(p => p.text);
+
+  test('в шагах — предупреждение словами, не ошибка', () => {
+    const system = withInput({ steps: [rolled('сколько')] });
+    eq(named(system).join('|'), 'шаг «сколько» назван как вход «Сколько» — до шага @сколько читает вход, после — результат шага; лучше переименовать шаг');
+    eq(errorTexts(system).filter(t => t.includes('назван как вход')).length, 0);
+  });
+
+  test('в цене, при наложении, при спадании, в шагах и в цене подписки', () => {
+    const lanes: Partial<Effect>[] = [
+      { cost: [rolled('сколько')] },
+      { attach: [rolled('сколько')] },
+      { detach: [rolled('сколько')] },
+      { on: [{ on: 'moment:turn-start', steps: [rolled('сколько')] }] },
+      { on: [{ on: 'moment:turn-start', cost: [rolled('сколько')] }] },
+    ];
+    for (const lane of lanes) eq(named(withInput(lane)).length, 1, Object.keys(lane).join());
+  });
+
+  test('шаг в подписке с чужим именем и шаги с другими именами — тишина', () => {
+    eq(named(withInput({ steps: [rolled('итого')], on: [{ on: 'moment:turn-start', steps: [rolled('итого')] }] })).length, 0);
+  });
+
+  test('вход-лист и шаг с одним именем — предупреждение, что результат шага не прочесть', () => {
+    const system = withEffect('e', { params: [WHO] as never, steps: [rolled('действующий')] });
+    eq(named(system).length, 1);
+    eq(named(system)[0]!.includes('всегда читает лист'), true);
+  });
+});
+
+group('линт: слово «строка» занято', () => {
+  const looping = (as: string): System => {
+    const system = bare();
+    system.tables!.запасы = { shape: 'rows', owner: 'sheet', key: 'word', label: 'Запасы', columns: [{ key: 'осталось', label: 'Осталось', kind: 'number', default: 0 }], rows: [{ value: 'ки', label: 'Ки' }] } as never;
+    system.effects.привал = { label: 'Привал', activation: 'manual', params: [WHO], steps: [{ type: 'each', rows: 'запасы', as }, mend('@действующий.hp')] } as unknown as Effect;
+    return system;
+  };
+
+  test('вход с ключом «строка» — ошибка с адресом входа', () => {
+    const system = withEffect('e', { params: [WHO, { key: 'строка', label: 'Ряд', kind: 'number' }] as never });
+    const found = lintSystem(system).filter(p => p.text.includes('слово движка'));
+    eq(found.length, 1);
+    eq(found[0]!.level, 'error');
+    eq(found[0]!.where.part, 'params');
+    eq(found[0]!.where.key, 'строка');
+    eq(found[0]!.text, 'вход «Ряд» назван «строка» — это слово движка: так пишется клетка своей строки (@строка.колонка); переименуйте вход');
+  });
+
+  test('шаг с именем «строка» — ошибка', () => {
+    const system = withEffect('e', { params: [WHO] as never, steps: [{ id: 'строка', type: 'roll', fixed: { expr: '1' } }] as Step[] });
+    eq(errorTexts(system).filter(t => t.includes('слово движка')).join('|'), 'шаг не может зваться «строка» — это слово движка: так пишется клетка своей строки (@строка.колонка)');
+  });
+
+  test('«для каждой строки» не может звать строку словом «строка»', () => {
+    ok(errorTexts(looping('строка')).some(t => t.includes('имя строки «строка» уже занято: так зовётся слово движка')), errorTexts(looping('строка')).join('|'));
+    eq(errorTexts(looping('запас')).join(''), '');
+  });
+
+  test('похожие слова разрешены', () => {
+    const system = withEffect('e', { params: [WHO, { key: 'строки', kind: 'number' }, { key: 'ряд', kind: 'number' }] as never, steps: [{ id: 'строчка', type: 'roll', fixed: { expr: '1' } }] as Step[] });
+    eq(errorTexts(system).filter(t => t.includes('слово движка')).length, 0);
+  });
+});
+
+group('линт: клетка записи в правке типа и поле листа с одним именем', () => {
+  const typed = (modifiers: unknown[], extra: Record<string, unknown> = {}): System => {
+    const system = bare();
+    system.tables!.оружие = {
+      shape: 'book', use: 'item', label: 'Оружие',
+      columns: [{ key: 'hp', label: 'Прочность', kind: 'number' }, { key: 'вес', label: 'Вес', kind: 'number' }],
+      modifiers, ...extra,
+    } as never;
+    return system;
+  };
+  const bump = (value: string, rest: Record<string, unknown> = {}) => ({ kind: 'value', target: 'hp', op: 'add', value: { expr: value }, ...rest });
+  const cellWarns = (system: System, book?: unknown) =>
+    lintSystem(system, book as never).filter(p => p.text.includes('клетку записи пишут'));
+
+  test('голое имя колонки, совпавшее с полем листа, — предупреждение со словами', () => {
+    const found = cellWarns(typed([bump('@hp')]));
+    eq(found.length, 1);
+    eq(found[0]!.level, 'warn');
+    eq(found[0]!.text, '«hp» — поле листа; клетку записи пишут @строка.hp');
+    eq(found[0]!.where.tab, 'records');
+    eq(found[0]!.where.kind, 'оружие');
+    eq(found[0]!.where.part, 'modifiers');
+  });
+
+  test('читается и в условии, и через точку; публикации предупреждение не мешает', () => {
+    eq(cellWarns(typed([bump('1', { if: { expr: '@hp > 0' } })])).length, 1);
+    eq(cellWarns(typed([bump('@hp.нет')])).length, 1);
+    eq(errorsOf(lintSystem(typed([bump('@hp')]))).filter(p => p.text.includes('клетку записи')).length, 0);
+  });
+
+  test('записанная как @строка.колонка, чужая колонка и колонка без поля — тишина', () => {
+    eq(cellWarns(typed([bump('@строка.hp')])).length, 0);
+    eq(cellWarns(typed([bump('@вес')])).length, 0, 'вес — не поле листа');
+    const other = typed([bump('@hp')], { columns: [{ key: 'вес', label: 'Вес', kind: 'number' }] });
+    eq(cellWarns(other).length, 0, 'у типа нет колонки hp');
+  });
+
+  test('правка вызова с голым полем и так ошибка «чьё поле?» — второго сообщения нет', () => {
+    const system = typed([{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '@hp' }, if: { expr: '@бросающий == @носитель' } }]);
+    eq(cellWarns(system).length, 0);
+    ok(errorTexts(system).some(t => t.includes('«hp» — чьё поле?')), errorTexts(system).join('|'));
+  });
+
+  test('колонка, унаследованная от основы, считается колонкой типа', () => {
+    const system = typed([], { columns: [{ key: 'вес', label: 'Вес', kind: 'number' }] });
+    system.tables!.снаряжение = { shape: 'book', use: 'item', label: 'Снаряжение', columns: [{ key: 'hp', label: 'Прочность', kind: 'number' }] } as never;
+    (system.tables!.оружие as { extends?: string }).extends = 'снаряжение';
+    (system.tables!.оружие as { modifiers?: unknown[] }).modifiers = [bump('@hp')];
+    const found = cellWarns(system);
+    eq(found.length, 1);
+    eq(found[0]!.where.kind, 'оружие');
+  });
+
+  test('правка записи книги проверяется по колонкам её типа', () => {
+    const system = typed([]);
+    const book = { records: [
+      { id: 'меч', table: 'оружие', label: 'Меч', modifiers: [bump('@hp')] },
+      { id: 'лук', table: 'оружие', label: 'Лук', modifiers: [bump('@строка.hp')] },
+      { id: 'свиток', label: 'Свиток', modifiers: [bump('@hp')] },
+    ] };
+    const found = cellWarns(system, book);
+    eq(found.length, 1);
+    eq(found[0]!.where.tab, 'book');
+    eq(found[0]!.where.record, 'меч');
+    eq(found[0]!.where.part, 'modifiers');
+  });
+});
+
+group('линт: проверки имён молчат на образцах', () => {
+  const words = ['совпадает с', 'назван как вход', 'слово движка', 'клетку записи пишут'];
+  for (const system of SAMPLE_SYSTEMS) {
+    test(`${system.name}: ни входов с чужими именами, ни занятого «строка», ни путаницы с клеткой записи`, () => {
+      const world = SAMPLE_WORLDS.find(w => w.system === system);
+      const found = lintSystem(system as System, world?.compendium).filter(p => words.some(word => p.text.includes(word)));
+      eq(found.map(p => `${p.level}: ${p.text}`).join('\n'), '', system.name);
+    });
+  }
+});

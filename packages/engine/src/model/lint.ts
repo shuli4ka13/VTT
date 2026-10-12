@@ -4,13 +4,14 @@ import { armsOf, balance, flowOf, inBlock, isFlow } from './flow.ts';
 import { loopOf, loopParam } from '../engine/steps/each.ts';
 import { chosenEffect, choicesOfInput, emittedChoices, kindsChoosing } from './payments.ts';
 import { SEEN_LABEL, ANY_ACTION, PHASES } from '../events/bus.ts';
-import type { System, Compendium, Effect, Step, Stage, Guard } from './types.ts';
+import { HEARD_WORDS } from '../events/lifecycle.ts';
+import type { System, Compendium, Effect, Step, Stage, Guard, Param, Table, Modifier } from './types.ts';
 import { registry } from '../engine/steps/index.ts';
 import { STEP_WORDS, slotShown, type SlotGate } from '../words/steps.ts';
 import { ROLL_CALL, CALL_WORDS } from '../words/calls.ts';
 import { modifierLists } from './integrity.ts';
 import { calledOf, chainsOfEffect } from '../engine/effects.ts';
-import { basedOn, paramsOf } from './inherit.ts';
+import { basedOn, paramsOf, flattenSystem } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
 import { recordsOf, argsWithProps, propKeysOf, recordKinds, kindsOf, kindOf, isBook } from './owned.ts';
 import { sheetBlockNames } from './blocks.ts';
@@ -19,13 +20,13 @@ import { bindingsOf } from '../events/actions.ts';
 import { kindOfRecord } from './owned.ts';
 import { tableOf } from './buttons.ts';
 import { MOMENTS } from '../events/moments.ts';
-import { TABS, STEP } from '../words/glossary.ts';
+import { TABS, STEP, SHEET } from '../words/glossary.ts';
 import {
-  referencesOf, declaredOf, chainRefs, listenerOf, withAddresses,
-  type Where, type Reference, type RefKind, type Declared,
+  referencesOf, declaredOf, chainRefs, listenerOf, withAddresses, heardNames, callNamesOf, formulaDeps,
+  type Where, type Reference, type RefKind, type Declared, type Listener,
   LISTEN, contractsOf, HOLDER, DESK_NAME, holderNameOf, tiedToHolder,
 } from './references.ts';
-import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, rowKeyOf, hasField } from './sheet-columns.ts';
+import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, rowKeyOf, hasField, ROW } from './sheet-columns.ts';
 import { isRange } from './tables.ts';
 import { editStages, PLUS_OP } from '../core/dice.ts';
 import { compile } from '../formula/index.ts';
@@ -644,6 +645,12 @@ function paramProblems(system: System): Problem[] {
   const fields = new Set(fieldsOf(system).map(f => f.tag));
   for (const [id, effect] of Object.entries(system.effects)) {
     for (const param of effect.params ?? []) {
+      if (param.key === ROW) {
+        out.push({
+          where: { tab: 'effects', effect: id, part: 'params', key: param.key }, level: 'error',
+          text: `вход «${param.label ?? param.key}» назван «${ROW}» — это слово движка: так пишется клетка своей строки (@${ROW}.колонка); переименуйте вход`,
+        });
+      }
       if (!fields.has(param.key)) continue;
       out.push({
         where: { tab: 'effects', effect: id }, level: 'error',
@@ -719,6 +726,90 @@ function paramProblems(system: System): Problem[] {
   return out;
 }
 
+function exprsIn(value: unknown, out: string[] = []): string[] {
+  if (Array.isArray(value)) {
+    for (const item of value) exprsIn(item, out);
+  } else if (value && typeof value === 'object') {
+    for (const [key, item] of Object.entries(value)) {
+      if (key === 'expr' && typeof item === 'string') out.push(item);
+      else exprsIn(item, out);
+    }
+  }
+  return out;
+}
+
+const namesUsedIn = (...parts: unknown[]): Set<string> =>
+  new Set(parts.flatMap(part => exprsIn(part)).flatMap(expr => formulaDeps(expr) ?? []).map(dep => dep.split('.')[0]!));
+
+function heardLabel(system: System, heard: Listener): string {
+  switch (heard.kind) {
+    case 'seen': return SEEN_LABEL;
+    case 'call': return system.effects?.[heard.key]?.label || system.tags?.[heard.key]?.label || heard.key;
+    case 'moment': return MOMENTS[heard.key as keyof typeof MOMENTS] ?? heard.key;
+    case 'field': return `${fieldOf(system, heard.key)?.label ?? heard.key} стало верным`;
+    case 'gained': return `${system.effects?.[heard.key]?.label || heard.key} ${HEARD_WORDS.attach}`;
+    case 'lost': return `${system.effects?.[heard.key]?.label || heard.key} ${HEARD_WORDS.detach}`;
+    default: return '';
+  }
+}
+
+const shadowedInputs = (params: readonly Param[], sheets: ReadonlySet<string>, values: ReadonlySet<string>, used: ReadonlySet<string>): Param[] =>
+  params.filter(param => used.has(param.key) && (sheets.has(param.key) || (param.kind !== 'sheet' && values.has(param.key))));
+
+function nameClashProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  for (const [id, effect] of Object.entries(system.effects ?? {})) {
+    const params = effect.params ?? [];
+    if (!params.length) continue;
+    const report = (where: Where, param: Param, source: string) => out.push({
+      where, level: 'error',
+      text: `вход «${param.label || param.key}» у «${effect.label || id}» совпадает с «${param.key}» у «${source}»: здесь @${param.key} — значение «${source}». Переименуйте свой вход`,
+    });
+    (effect.on ?? []).forEach((handler, index) => {
+      const heard = listenerOf(handler);
+      const names = heardNames(system, heard);
+      const returned = heard.kind === 'call' && heard.phase === 'after' ? (system.effects?.[heard.key]?.returns ?? []).map(column => column.key) : [];
+      const used = namesUsedIn(handler.if, handler.steps, handler.cost);
+      for (const param of shadowedInputs(params, new Set(names.sheets), new Set([...names.seeds, ...returned]), used)) {
+        report({ tab: 'effects', effect: id, part: 'on', handler: index }, param, heardLabel(system, heard));
+      }
+    });
+    for (const mod of effect.modifiers ?? []) {
+      if (mod.kind !== 'edit' || mod.call === ANY_ACTION) continue;
+      const names = callNamesOf(system, mod.call);
+      const used = namesUsedIn(mod.if, mod.value);
+      const source = mod.call === ROLL_CALL ? CALL_WORDS.roll.label : system.effects?.[mod.call]?.label || mod.call;
+      for (const param of shadowedInputs(params, new Set(names.sheets), new Set(names.values), used)) {
+        report({ tab: 'effects', effect: id, part: 'modifiers' }, param, source);
+      }
+    }
+  }
+  return out;
+}
+
+function recordCellProblems(system: System, compendium?: Compendium): Problem[] {
+  const flat = flattenSystem(system, true);
+  const fields = new Set(fieldsOf(flat).map(field => field.tag));
+  const out: Problem[] = [];
+  const check = (where: Where, table: Table | undefined, modifiers: readonly Modifier[] | undefined) => {
+    const shared = (table?.columns ?? []).map(column => column.key).filter(key => fields.has(key));
+    if (!shared.length) return;
+    for (const mod of modifiers ?? []) {
+      if (mod.kind !== 'value') continue;
+      const used = namesUsedIn(mod.if, mod.value);
+      for (const key of shared) {
+        if (used.has(key)) out.push({ where, level: 'warn', text: `«${key}» — поле листа; клетку записи пишут @${ROW}.${key}` });
+      }
+    }
+  };
+  for (const [id, table] of recordKinds(flat)) check({ tab: 'records', kind: id, part: 'modifiers' }, table, table.modifiers);
+  const records = new Map([...(flat.library ?? []), ...recordsOf(compendium)].map(record => [record.id, record]));
+  for (const record of records.values()) {
+    check({ tab: 'book', record: record.id, part: 'modifiers' }, record.table ? flat.tables?.[record.table] : undefined, record.modifiers);
+  }
+  return out;
+}
+
 export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   const declared = declaredOf(system);
   const out: Problem[] = [];
@@ -770,6 +861,21 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
             text: `${STEP.one} «${step.id}» назван как поле листа — в формулах @${step.id} прочтёт поле, а не результат ${STEP.gen}`,
           });
         }
+        const input = step.id ? (effect.params ?? []).find(param => param.key === step.id) : undefined;
+        if (input) {
+          out.push({
+            where: chain.where(index), level: 'warn',
+            text: input.kind === 'sheet'
+              ? `${STEP.one} «${step.id}» назван как вход «${input.label || input.key}» — @${step.id} всегда читает ${SHEET.one}, результат ${STEP.gen} так не прочесть; лучше переименовать ${STEP.one}`
+              : `${STEP.one} «${step.id}» назван как вход «${input.label || input.key}» — до ${STEP.gen} @${step.id} читает вход, после — результат ${STEP.gen}; лучше переименовать ${STEP.one}`,
+          });
+        }
+        if (step.id === ROW) {
+          out.push({
+            where: chain.where(index), level: 'error',
+            text: `${STEP.one} не может зваться «${ROW}» — это слово движка: так пишется клетка своей строки (@${ROW}.колонка)`,
+          });
+        }
       });
     }
   }
@@ -812,6 +918,8 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...shapeProblems(system, compendium));
   out.push(...cycleProblems(system));
   out.push(...paramProblems(system));
+  out.push(...nameClashProblems(system));
+  out.push(...recordCellProblems(system, compendium));
   out.push(...orphanProblems(system, compendium));
   out.push(...sheetKindProblems(system), ...layoutProblems(system));
   out.push(...editProblems(system, compendium));
@@ -900,7 +1008,7 @@ function rowLoopProblems(system: System, effect: Effect, steps: Step[], index: n
   const taken: [boolean, string][] = [
     [(effect.params ?? []).some(param => param.key === as), 'вход эффекта'],
     [steps.some(step => step.id === as), STEP.one],
-    [as === HOLDER || as === DESK_NAME, 'слово движка'],
+    [as === HOLDER || as === DESK_NAME || as === ROW, 'слово движка'],
     [hasField(system, as), 'поле листа'],
     [Boolean(system.tables?.[as]), 'таблица'],
     [recordKinds(system).some(([, kind]) => (kind.columns ?? []).some(prop => prop.key === as)), 'свойство записи'],
