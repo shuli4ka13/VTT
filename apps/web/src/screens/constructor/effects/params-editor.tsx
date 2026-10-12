@@ -9,8 +9,6 @@ import { BoundField } from '../bound-field.tsx';
 import { Card, CardHead, Field, Input, Select, Button, LabelInput } from '../../../ui/primitives.tsx';
 import { ColumnList } from './column-list.tsx';
 import type { Effect, Param, System, ValueKind, Stage } from '@vtt/schema';
-import { callersOf, type Caller } from './callers.ts';
-import { roleOf } from './roles.ts';
 import { StagesEditor } from '../stages-editor.tsx';
 
 const SHEETS = 'sheet+many';
@@ -120,7 +118,6 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
   return (
     <Card>
       <CardHead title="Что приходит" />
-      <Callers effectId={id} system={system} />
       {params.length === 0 ? (
         <div className="inline inline--tight">
           <span className="faint">Входов нет — эффект берёт всё с листов.</span>
@@ -135,7 +132,6 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
           onMove={move}
           dropTitle="убрать вход"
           summary={param => <>{kindWords(param, system)}{askWords(param, system)}</>}
-          after={param => <Unpassed effectId={id} param={param} system={system} />}
           head={['Вход', 'Что это']}
           form={param => (
             <ParamForm param={param} keys={keys} system={system} effect={effect}
@@ -313,55 +309,4 @@ function DefaultCell({ param, system, onChange }: { param: Loose; system: System
         onChange(kind === 'number' && Number.isFinite(number) ? number : trimmed);
       }} />
   );
-}
-
-function useCallers(system: System, effectId: string): Caller[] {
-  const compendium = useWorld(s => s.compendium);
-  return cachedCallers(system, compendium, effectId);
-}
-
-function Callers({ effectId, system }: { effectId: string; system: System }) {
-  const pick = useWorld(s => s.pick);
-  const compendium = useWorld(s => s.compendium);
-  const callers = useCallers(system, effectId);
-  const names = new Map((system.effects[effectId]?.params ?? []).map(param => [param.key, param.label ?? param.key]));
-  const role = roleOf(system, compendium, effectId);
-  if (!callers.length && (role === 'passive' || role === 'auto')) return null;
-  return (
-    <div className="callers">
-      <span className="callers__title">Вызывают</span>
-      {callers.length ? callers.map(caller => (
-        <button key={caller.key} type="button"
-          className={`source source--link ${caller.missing.length ? 'source--none' : 'source--call'}`}
-          title={caller.missing.length ? `не передаёт: ${caller.missing.map(key => names.get(key) ?? key).join(', ')}` : 'открыть'}
-          onClick={() => (caller.table
-            ? pick({ activeTab: 'records', activeRecordKind: caller.table })
-            : pick({ activeTab: 'effects', activeEffectId: caller.effect ?? null, activeStepIndex: null }))}>
-          {caller.text}
-        </button>
-      )) : <span className="faint">никто</span>}
-    </div>
-  );
-}
-
-function Unpassed({ effectId, param, system }: { effectId: string; param: Param; system: System }) {
-  const callers = useCallers(system, effectId).filter(caller => caller.missing.includes(param.key));
-  if (!callers.length) return <span className="sources" />;
-  return (
-    <span className="sources">
-      <span className="source source--none" title={callers.map(caller => caller.text).join('\n')}>
-        {callers.length === 1 ? `не передаёт ${callers[0]!.text}` : `не передают: ${callers.length}`}
-      </span>
-    </span>
-  );
-}
-
-const CALLERS = new WeakMap<System, { compendium: unknown; at: Map<string, Caller[]> }>();
-
-function cachedCallers(system: System, compendium: Parameters<typeof callersOf>[1], effectId: string): Caller[] {
-  let hit = CALLERS.get(system);
-  if (!hit || hit.compendium !== compendium) { hit = { compendium, at: new Map() }; CALLERS.set(system, hit); }
-  let out = hit.at.get(effectId);
-  if (!out) { out = callersOf(system, compendium, effectId); hit.at.set(effectId, out); }
-  return out;
 }
