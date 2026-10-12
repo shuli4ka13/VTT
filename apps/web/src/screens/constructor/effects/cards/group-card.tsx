@@ -125,7 +125,7 @@ export function GroupCard({
   if (folded) {
     return (
       <>
-        <Card tone={problem ? 'bad' : (group.kind as 'check' | 'change' | 'number' | 'table')}>
+        <Card tone={problem ? 'bad' : (group.kind as 'check' | 'change' | 'number' | 'table')} className="step-card">
           <div className="step-fold__row">
             {head}
             <span className="step-fold__summary">{summaryOf(group, system, effect, namesOf(context))}</span>
@@ -139,7 +139,7 @@ export function GroupCard({
 
   return (
     <>
-      <Card tone={problem ? 'bad' : (group.kind as 'check' | 'change' | 'number' | 'table')}>
+      <Card tone={problem ? 'bad' : (group.kind as 'check' | 'change' | 'number' | 'table')} className="step-card">
         <CardHead
           title={head}
           actions={actions}

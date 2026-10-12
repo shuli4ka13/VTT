@@ -336,7 +336,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
           }
         })}
       /> : (
-        <div className="inline inline--tight">
+        <div className="inline inline--tight step-retype">
           <Button size="sm" variant="ghost" title="поменять, что делает шаг: изменить поле, наложить состояние или вызвать эффект" onClick={() => setRetyping(true)}>сменить вид шага</Button>
         </div>
       )}

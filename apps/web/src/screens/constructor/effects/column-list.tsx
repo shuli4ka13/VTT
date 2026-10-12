@@ -2,12 +2,13 @@ import type { ReactNode } from 'react';
 import { Button } from '../../../ui/primitives.tsx';
 import { useDragList } from '../../../ui/drag-list.ts';
 
-export function ColumnList<T extends { key: string; label?: string }>({ items, isOpen, onToggle, summary, after, form, onDrop, onMove, dropTitle }: {
+export function ColumnList<T extends { key: string; label?: string }>({ items, isOpen, onToggle, summary, after, head, form, onDrop, onMove, dropTitle }: {
   items: T[];
   isOpen: (key: string) => boolean;
   onToggle: (key: string) => void;
   summary: (item: T) => ReactNode;
   after?: (item: T) => ReactNode;
+  head?: readonly string[];
   form: (item: T) => ReactNode;
   onDrop: (key: string) => void;
   onMove: (from: string, to: string, after: boolean) => void;
@@ -15,7 +16,12 @@ export function ColumnList<T extends { key: string; label?: string }>({ items, i
 }) {
   const drag = useDragList(onMove);
   return (
-    <div className="param-list">
+    <div className={`param-list${head ? ' param-list--table' : ''}`}>
+      {head ? (
+        <div className="param-head" aria-hidden>
+          {head.map(word => <span key={word}>{word}</span>)}
+        </div>
+      ) : null}
       {items.map(item => {
         const open = isOpen(item.key);
         return (

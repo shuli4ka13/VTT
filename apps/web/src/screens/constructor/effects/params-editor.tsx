@@ -6,7 +6,7 @@ import { freeId, useWorld } from '../../../store/world.ts';
 import { followKey, paramUsed, keyOf, referenced } from '../keys.ts';
 import { KeyField } from '../../../ui/key-field.tsx';
 import { BoundField } from '../bound-field.tsx';
-import { Card, CardHead, Field, Input, Select, Button } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Field, Input, Select, Button, LabelInput } from '../../../ui/primitives.tsx';
 import { ColumnList } from './column-list.tsx';
 import type { Effect, Param, System, ValueKind, Stage } from '@vtt/schema';
 import { originsOf, type Origin } from '@vtt/engine/model/origins';
@@ -133,6 +133,7 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
           dropTitle="убрать вход"
           summary={param => <>{kindWords(param, system)}{askWords(param, system)}</>}
           after={param => <Origins effectId={id} param={param} system={system} />}
+          head={['Вход', 'Что это', 'Откуда берётся']}
           form={param => (
             <ParamForm param={param} keys={keys} system={system} effect={effect}
               locked={used(param.key)} change={fn => change(param.key, fn)}
@@ -163,7 +164,7 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
   return (
     <div className="param-form">
       <div className="param-form__row">
-        <Field label="Название"><Input value={param.label ?? ''} onChange={onLabel} /></Field>
+        <Field label="Название"><LabelInput value={param.label ?? ''} onCommit={onLabel} /></Field>
         <Field label="Вид">
           <Select
             value={kind === 'sheet' && param.many ? SHEETS : kind}
@@ -311,43 +312,29 @@ function DefaultCell({ param, system, onChange }: { param: Loose; system: System
   );
 }
 
-const ORIGIN_WORDS: Record<string, string> = {
-  actor: 'кнопка: кто нажал', targets: 'кнопка: цели со стола', cell: 'клетка записи',
-  formula: 'считает кнопка', call: 'передаёт эффект', self: 'сам',
+const SOURCE_WORDS: Record<string, string> = {
+  actor: 'кто нажал', targets: 'выбранные цели', cell: 'из книги', formula: 'формула кнопки',
+  call: 'от эффекта', self: 'приходит само', ask: 'спросить за столом',
 };
+
+function sourceDetail(kind: string, many: readonly Origin[]): string {
+  if (kind === 'cell') return many.map(origin => `${origin.place}: поле «${origin.field}»`).join('\n');
+  if (kind === 'formula') return many.map(origin => `${origin.button ? `«${origin.button}» у ` : ''}${origin.place}`).join('\n');
+  return many.map(origin => origin.text).join('\n');
+}
 
 function Origins({ effectId, param, system }: { effectId: string; param: Param; system: System }) {
   const compendium = useWorld(s => s.compendium);
-  const pick = useWorld(s => s.pick);
-  const [open, setOpen] = useState(false);
-  const list = cachedOrigins(system, compendium, effectId, param).filter(origin => origin.kind !== 'ask' && origin.kind !== 'default');
-  if (!list.length) return null;
+  const list = cachedOrigins(system, compendium, effectId, param).filter(origin => origin.kind !== 'default');
+  if (!list.length) return <span className="sources" />;
   const kinds = [...new Set(list.map(origin => origin.kind))];
-  const go = (origin: Origin) => (origin.table
-    ? () => pick({ activeTab: 'records', activeRecordKind: origin.table! })
-    : origin.effect ? () => pick({ activeTab: 'effects', activeEffectId: origin.effect!, activeStepIndex: null }) : undefined);
   return (
-    <span className="origins" onClick={e => e.stopPropagation()}>
-      <span className="origins__lead">←</span>
-      {kinds.map(kind => {
-        const many = list.filter(origin => origin.kind === kind);
-        return (
-          <button key={kind} type="button" className={`origin origin--${kind}`}
-            title={many.map(origin => origin.text).join('\n')} onClick={() => setOpen(!open)}>
-            {ORIGIN_WORDS[kind] ?? kind}{many.length > 1 ? ` · ${many.length}` : ''}
-          </button>
-        );
-      })}
-      {open ? (
-        <span className="origins__list">
-          {list.map(origin => {
-            const onClick = go(origin);
-            return onClick
-              ? <button key={origin.text} type="button" className="origin origin--link" onClick={onClick}>{origin.text}</button>
-              : <span key={origin.text} className="origin">{origin.text}</span>;
-          })}
+    <span className="sources">
+      {kinds.map(kind => (
+        <span key={kind} className={`source source--${kind}`} title={sourceDetail(kind, list.filter(origin => origin.kind === kind))}>
+          {SOURCE_WORDS[kind] ?? kind}
         </span>
-      ) : null}
+      ))}
     </span>
   );
 }

@@ -20,7 +20,6 @@ import { GrantsEditor } from '../grants-editor.tsx';
 import { Extras } from './cards/extras.tsx';
 import { ParamsEditor } from './params-editor.tsx';
 import { ReturnsEditor } from './returns-editor.tsx';
-import { CallMapRow } from './call-map.tsx';
 import { callMap } from './call-map.ts';
 import { launchOf, activationFor, DURATIONS, REAPPLY } from '@vtt/engine/model/effect-kinds';
 import type { System, Effect, Step } from '@vtt/schema';
@@ -193,7 +192,6 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
         )}
       </Card>
 
-      <CallMapRow id={id} effect={effect} system={system} />
       <ParamsEditor id={id} effect={effect} system={system} onEdit={edit} />
       {effect.returns?.length || callMapUsed(system, id) ? <ReturnsEditor id={id} effect={effect} system={system} onEdit={edit} /> : null}
 

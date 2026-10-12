@@ -72,6 +72,7 @@ export function FlowHead({ word, step, context, earlier, required, edit, actions
   return (
     <div className={`flow-head${problem ? ' flow-head--bad' : ''}`}>
       <span className="flow-head__word">{word}</span>
+      <div className="flow-head__cond">
       {bare ? null : (
         <ConditionField
           bare required
@@ -90,8 +91,8 @@ export function FlowHead({ word, step, context, earlier, required, edit, actions
       )}
       {written?.trim() && !problem ? <span className="flow-head__words" title="условие словами">{formulaWords(context.system, written, namesOf(context))}</span> : null}
       {problem ? <span className="field__error">{problem}</span> : null}
-      <span className="spacer" />
-      {actions}
+      </div>
+      <div className="flow-head__actions">{actions}</div>
     </div>
   );
 }

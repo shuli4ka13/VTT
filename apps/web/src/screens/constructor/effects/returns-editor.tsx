@@ -4,7 +4,7 @@ import type { StepWords } from '@vtt/engine/words/steps';
 import { kindWord } from '@vtt/engine/words/kinds';
 import { freeId, useWorld } from '../../../store/world.ts';
 import { followKey } from '../keys.ts';
-import { Card, CardHead, Field, Input, Select, Button } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Field, Input, Select, Button, LabelInput } from '../../../ui/primitives.tsx';
 import { KeyField } from '../../../ui/key-field.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { formulaAsLabels } from '../../../ui/formula.tsx';
@@ -138,7 +138,7 @@ function ReturnForm({ column, sources, system, where, keys, locked, onKey, onLab
   return (
     <div className="param-form">
       <div className="param-form__row">
-        <Field label="Название"><Input value={column.label ?? ''} onChange={onLabel} /></Field>
+        <Field label="Название"><LabelInput value={column.label ?? ''} onCommit={onLabel} /></Field>
         <Field label="Вид">
           <Select<string>
             value={kind}

@@ -11,18 +11,22 @@ export interface Origin {
   text: string;
   table?: string;
   effect?: string;
+  place?: string;
+  button?: string;
+  field?: string;
 }
 
 const quoted = (text: string | undefined, fallback: string): string => `«${text || fallback}»`;
 
 function fromBinding(binding: Binding, effect: Effect, param: Param, owner: string, columns: readonly { key: string; label?: string }[], table?: string): Origin | null {
   const where = `${quoted(binding.label, 'кнопка')} у ${owner}`;
+  const at = { place: owner.replace(/^«|»$/g, ''), ...(binding.label ? { button: binding.label } : {}), ...(table ? { table } : {}) };
   const fill = tableOf(binding, effect)[param.key];
-  if (fill === 'actor') return { kind: 'actor', text: `${where}: кто нажал`, ...(table ? { table } : {}) };
-  if (fill === 'targets') return { kind: 'targets', text: `${where}: цели со стола`, ...(table ? { table } : {}) };
-  if (binding.args?.[param.key] !== undefined) return { kind: 'formula', text: `${where}: считается само`, ...(table ? { table } : {}) };
+  if (fill === 'actor') return { kind: 'actor', text: `${where}: кто нажал`, ...at };
+  if (fill === 'targets') return { kind: 'targets', text: `${where}: цели со стола`, ...at };
+  if (binding.args?.[param.key] !== undefined) return { kind: 'formula', text: `${where}: считается само`, ...at };
   const column = columns.find(c => c.key === param.key);
-  if (column) return { kind: 'cell', text: `клетка ${owner.replace(/»$/, '')} · ${column.label || column.key}»`, ...(table ? { table } : {}) };
+  if (column) return { kind: 'cell', text: `клетка ${owner.replace(/»$/, '')} · ${column.label || column.key}»`, ...at, field: column.label || column.key };
   return null;
 }
 
@@ -52,9 +56,9 @@ export function originsOf(system: System, compendium: Compendium | null | undefi
       .filter(step => step.type === 'emit' && step.effect === effectId);
     if (!calls.length) continue;
     if (calls.some(step => (step.args as Record<string, unknown> | undefined)?.[param.key] !== undefined)) {
-      out.push({ kind: 'call', text: `из ${quoted(caller.label, other)}`, effect: other });
+      out.push({ kind: 'call', text: `из ${quoted(caller.label, other)}`, effect: other, place: caller.label || other });
     } else if (implicitOf(param, caller)?.by === 'name') {
-      out.push({ kind: 'self', text: `сам из ${quoted(caller.label, other)}`, effect: other });
+      out.push({ kind: 'self', text: `сам из ${quoted(caller.label, other)}`, effect: other, place: caller.label || other });
     }
   }
   if (param.role === 'target') out.push({ kind: 'self', text: 'сам: текущая цель' });

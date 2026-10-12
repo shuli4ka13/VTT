@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
 import type { System } from '@vtt/schema';
 import { callMap, bookEntriesOf } from './call-map.ts';
-import { CallMapRow, UsageRow } from './call-map.tsx';
+import { UsageRow } from './call-map.tsx';
 import { useWorld } from '../../../store/world.ts';
 
 const dnd = SAMPLE_SYSTEMS[0] as System;
@@ -44,20 +44,6 @@ describe('видимая иерархия вызовов', () => {
 
 describe('рендер строки', () => {
   beforeEach(() => { useWorld.getState().pick({ activeEffectId: null }); });
-
-  it('ссылка открывает эффект', () => {
-    const strike = idByLabel('Атака');
-    render(<CallMapRow id={strike} effect={dnd.effects[strike]!} system={dnd} />);
-    expect(screen.getByText('Вызывает:')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: '«Бросок атаки»' }));
-    expect(useWorld.getState().activeEffectId).toBe(idByLabel('Бросок атаки'));
-  });
-
-  it('пусто — ничего', () => {
-    const system = { ...dnd, effects: { a: { label: 'A', activation: 'manual', steps: [] } } } as unknown as System;
-    const { container } = render(<CallMapRow id="a" effect={system.effects.a!} system={system} />);
-    expect(container.innerHTML).toBe('');
-  });
 
   it('длинный список — первые три и раскрытие', () => {
     const items = ['a', 'b', 'c', 'd', 'e'].map(key => ({ key, text: key }));
