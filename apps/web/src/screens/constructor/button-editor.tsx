@@ -13,6 +13,7 @@ import { kindWords } from './effects/params-editor.tsx';
 import { shapeProblem, shapeOfKind, type Shape } from './formula-shape.ts';
 
 const EMPTY = '';
+const NEW = '+';
 const OWN = 'Своё у каждой записи';
 
 type Fill = 'actor' | 'targets';
@@ -109,10 +110,16 @@ export function ButtonEditor({ binding, system, recordKind, kindId, onEdit, onDe
 
 interface Source { key: string; label: string; group: string }
 
-function effectSources(param: Param, kind: RecordKind, system: System, effectId: string): Source[] {
+function pickSources(param: Param, kind: RecordKind, system: System, effectId: string): Source[] {
+  const choice = param.kind === 'choice';
   const own = (kind.columns ?? [])
-    .filter(prop => prop.key === param.key || prop.kind === 'effect')
+    .filter(prop => prop.key === param.key || (choice ? prop.kind === 'choice' && prop.from === param.from : prop.kind === 'effect'))
     .map(prop => ({ key: `@${prop.key}`, label: `свойство «${prop.label ?? prop.key}»`, group: OWN }));
+  if (choice) {
+    const table = param.from ? system.tables?.[param.from] : undefined;
+    const rows = param.from ? (listOf(system, param.from) ?? []) : [];
+    return [...own, ...rows.map(row => ({ key: JSON.stringify(row.value), label: row.label, group: `Один на всех — строка «${table?.label || param.from}»` }))];
+  }
   const effects = byRole(system, Object.entries(system.effects).filter(([id]) => id !== effectId))
     .map(([id, e, group]) => ({ key: JSON.stringify(id), label: e.label || id, group }));
   return [...own, ...effects];
@@ -120,13 +127,10 @@ function effectSources(param: Param, kind: RecordKind, system: System, effectId:
 
 function hintsOf(param: Param, system: System, effect: Effect, args: Record<string, unknown> | undefined, onNew: (() => void) | undefined): SlotOption[] {
   const fresh = onNew ? [{ group: 'Завести', label: `+ новое свойство «${param.label ?? param.key}»`, onPick: onNew }] : [];
-  const rows = param.kind === 'choice' && param.from
-    ? (listOf(system, param.from) ?? []).map(row => ({ group: `Строки «${system.tables?.[param.from!]?.label || param.from}»`, label: row.label, formula: JSON.stringify(row.value) }))
-    : [];
   const asks = paymentsOf(system, effect, args ?? {})
     .flatMap(({ payment }) => (payment.params ?? []).filter(one => one.ask))
     .map(one => ({ group: 'Спросят при оплате', label: one.label ?? one.key, name: one.key }));
-  return [...fresh, ...rows, ...asks];
+  return [...fresh, ...asks];
 }
 
 function emptyWords(param: Param, system: System): string {
@@ -189,8 +193,9 @@ function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, 
   const text = empty ? (byName ? `@${param.key}` : '') : asText(arg)?.trim() ?? '';
   const need = !text && !free;
 
-  if (kind === 'effect') {
-    const sources = effectSources(param, recordKind, system, effectId);
+  if (kind === 'effect' || kind === 'choice') {
+    const sources = pickSources(param, recordKind, system, effectId);
+    const known = !text || sources.some(source => source.key === text);
     return (
       <div className={`args-row${need ? ' args-row--need' : ''}`}>
         <span className="args-row__name">{name}</span>
@@ -199,9 +204,20 @@ function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, 
           <Select<string>
             label={`«${name}» — чем заполняет тип`}
             value={text}
-            options={[...(byName ? [] : [[EMPTY, emptyWords(param, system)] as const]), ...sources.map(source => [source.key, source.label, source.group] as const)]}
-            onChange={next => onArg(next === EMPTY || (byName && next === `@${param.key}`) ? null : { expr: next })}
+            options={[
+              ...(byName ? [] : [[EMPTY, emptyWords(param, system)] as const]),
+              ...(known ? [] : [[text, `формула: ${text}`] as const]),
+              ...sources.filter(source => source.group === OWN).map(source => [source.key, source.label, source.group] as const),
+              ...(onNew && !byName ? [[NEW, `+ свойство «${name}»`, OWN] as const] : []),
+              ...sources.filter(source => source.group !== OWN).map(source => [source.key, source.label, source.group] as const),
+            ]}
+            onChange={next => {
+              if (next === NEW) { onNew?.(); return; }
+              onArg(next === EMPTY || (byName && next === `@${param.key}`) ? null : { expr: next });
+            }}
           />
+          {kindId && text.startsWith('@') && (recordKind.columns ?? []).some(prop => `@${prop.key}` === text)
+            ? <Examples system={system} kind={recordKind} kindId={kindId} prop={text.slice(1)} /> : null}
         </div>
       </div>
     );

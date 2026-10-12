@@ -314,20 +314,22 @@ describe('слот привязки подсказывает то, чем его
     expect(начало).toBeLessThan(середина === -1 ? Number.MAX_SAFE_INTEGER : середина);
   });
 
-  it('пустой вход предлагает завести свойство и строки таблицы', () => {
+  it('вход «строка таблицы» — список: свойство, «+ свойство», строки таблицы', () => {
     render(<RecordsTab />);
-    const видно = набрать('Тип урона', '');
-    expect(видно.some(t => t.includes('новое свойство «Тип урона»')), видно.join(' | ')).toBe(true);
-    expect(видно.some(t => t.includes('рубящий'))).toBe(true);
+    const список = screen.getByLabelText('«Тип урона» — чем заполняет тип') as HTMLSelectElement;
+    const варианты = [...список.options].map(o => o.textContent);
+    expect(варианты).toContain('+ свойство «Тип урона»');
+    expect(варианты).toContain('рубящий');
 
-    завести();
+    fireEvent.change(список, { target: { value: '"рубящий"' } });
+    expect((useWorld.getState().system.tables!.weapon!.bindings![0] as any).args?.damage_type).toEqual({ expr: '"рубящий"' });
 
+    fireEvent.change(список, { target: { value: '+' } });
     const kind = useWorld.getState().system.tables!.weapon!;
     const свойство = kind.columns!.find(p => p.label === 'Тип урона')!;
     expect(свойство.kind).toBe('choice');
     expect(свойство.from).toBe('damage_types');
     expect(свойство.key).toBe('damage_type');
-    expect((kind.bindings![0] as any).args?.damage_type).toBeUndefined();
   });
 
   it('формула: «Способ · колонка» + 1 пишется как есть', () => {
