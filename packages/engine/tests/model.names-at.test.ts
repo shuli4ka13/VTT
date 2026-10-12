@@ -10,19 +10,19 @@ describe('namesAt: что видно в каждом месте эффекта',
   it('шаги кнопки: входы, переменная цикла после «для каждого», итоги шагов выше с путями внутрь', () => {
     const before = names(namesAt(dnd, 'strike', { part: 'steps', index: 0 }));
     expect(before).toContain('действующий');
-    expect(before).not.toContain('hit');
+    expect(before).not.toContain('попадание');
     expect(before).not.toContain('цель');
     const inside = namesAt(dnd, 'strike', { part: 'steps', index: 4 });
     expect(names(inside)).toContain('цель');
-    expect(names(inside)).toContain('hit');
+    expect(names(inside)).toContain('попадание');
     expect(inside.find(one => one.name === 'цели')?.many).toBe(true);
-    expect(inside.find(one => one.name === 'hit')?.children?.map(c => c.path)).toContain('.попал');
-    expect(inside.find(one => one.name === 'hit')?.label).toBe('Бросок атаки');
+    expect(inside.find(one => one.name === 'попадание')?.children?.map(c => c.path)).toContain('.попал');
+    expect(inside.find(one => one.name === 'попадание')?.label).toBe('Бросок атаки');
   });
 
   it('шаги подписки: носитель и слышимые входы вызова с подписями', () => {
     const list = namesAt(dnd, 'hellish_rebuke', { part: 'handler', handler: 0, index: 2 });
-    expect(names(list)).toEqual(expect.arrayContaining(['носитель', 'лист', 'источник', 'amount', 'save']));
+    expect(names(list)).toEqual(expect.arrayContaining(['носитель', 'лист', 'источник', 'amount', 'спас']));
     expect(list.find(one => one.name === 'источник')?.group).toBe('heard');
     expect(names(sheetNamesAt(dnd, 'concentration', { part: 'handler', handler: 0, index: 0 }))).toEqual(expect.arrayContaining(['носитель', 'лист']));
   });
@@ -40,6 +40,6 @@ describe('namesAt: что видно в каждом месте эффекта',
   it('«завершено» видит таблицу итогов с колонками шагов внутри цикла', () => {
     const system = { ...dnd, effects: { ...dnd.effects, x: { label: 'x', activation: 'passive', on: [{ on: 'done:strike', steps: [] }] } } } as System;
     const rows = namesAt(system, 'x', { part: 'handler', handler: 0, index: 0 }).find(one => one.name === 'итоги');
-    expect(rows?.children?.map(c => c.path)).toContain('.hit.попал');
+    expect(rows?.children?.map(c => c.path)).toContain('.попадание.попал');
   });
 });

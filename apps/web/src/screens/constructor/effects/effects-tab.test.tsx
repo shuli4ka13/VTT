@@ -6,6 +6,7 @@ import { EffectsTab } from './effects-tab.tsx';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import { CREATE_KINDS } from './words.ts';
 import { fieldsOf, hasField } from '@vtt/engine/model/sheet-columns';
+import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 
 describe('EffectsTab: палитра трёх понятий', () => {
   beforeEach(() => {
@@ -477,4 +478,22 @@ describe('шаг цены — один раз, до остальных', () => {
     expect(back.steps).toHaveLength(1);
     expect(document.querySelector('.pay-divider')).toBeNull();
   });
+});
+
+describe('подписка видит имена вызова', () => {
+  afterEach(cleanup);
+
+  it('шаги подписок образцов не помечены сломанными ссылками', () => {
+    const broken: string[] = [];
+    for (const world of SAMPLE_WORLDS) {
+      for (const [id, effect] of Object.entries(world.system.effects ?? {})) {
+        if (!(effect.on ?? []).length) continue;
+        useWorld.setState(state => ({ ...state, system: world.system, compendium: world.compendium, activeEffectId: id }));
+        renderOpen(<EffectsTab />);
+        if (/со сломанными ссылками/.test(document.body.textContent ?? '')) broken.push(`${world.system.name} · ${effect.label ?? id}`);
+        cleanup();
+      }
+    }
+    expect(broken).toEqual([]);
+  }, 300000);
 });

@@ -47,7 +47,7 @@ const savingThrow = (at: number, args: readonly (readonly [string, string])[]): 
   within(made()).click('вызов');
   within(made()).select('Какой эффект', 'saving_throw');
   for (const [name, text] of args) within(made()).formula(within(made()).arg(name), text);
-  nameStep(made(), 'save');
+  nameStep(made(), 'спас');
 };
 
 const built = (id: string): Effect | undefined => useWorld.getState().system.effects[id];
@@ -109,21 +109,21 @@ describe('эффекты пресетов собираются в констру
     card = stepCard(/^3 · /);
     within(card).select('Какой эффект', 'attack_roll');
     within(card).formula(within(card).arg('Бонус атаки'), '@attack_with');
-    nameStep(stepCard(/^3 · /), 'hit');
+    nameStep(stepCard(/^3 · /), 'попадание');
 
     const hit = callIf(3, 'Бросок атаки', 'попадание');
     expect(armWord(block(hit))).toBe('попадание:');
     addToArm(block(hit), 0, 'number');
     card = stepCard(/^4 · /);
-    within(card).formula('Сколько', 'кинуть(@damage_dice, @dice * если(@hit.крит, 2, 1)) + @damage_with');
-    nameStep(card, 'dmg');
+    within(card).formula('Сколько', 'кинуть(@damage_dice, @dice * если(@попадание.крит, 2, 1)) + @damage_with');
+    nameStep(card, 'урон');
 
     addToArm(block(hit), 0, 'change');
     card = stepCard(/^5 · /);
     within(card).click('вызов');
     card = stepCard(/^5 · /);
     within(card).select('Какой эффект', 'damage');
-    within(card).formula(within(card).arg('Сколько урона'), '@dmg');
+    within(card).formula(within(card).arg('Сколько урона'), '@урон');
 
     addToArm(block(hit), 0, 'change');
     card = stepCard(/^6 · /);
@@ -175,19 +175,19 @@ describe('эффекты пресетов собираются в констру
     ui.click('+ число');
     card = stepCard(/^4 · /);
     within(card).formula('Сколько', "(кинуть('2d10'))");
-    nameStep(card, 'dmg_всего');
+    nameStep(card, 'урон_всего');
 
     ui.click('+ число');
     card = stepCard(/^5 · /);
-    within(card).formula('Сколько', 'если(@save.прошёл, округлить вниз((@dmg_всего) * (0.5)), @dmg_всего)');
-    nameStep(card, 'dmg');
+    within(card).formula('Сколько', 'если(@спас.прошёл, округлить вниз((@урон_всего) * (0.5)), @урон_всего)');
+    nameStep(card, 'урон');
 
     ui.click('+ изменение');
     card = stepCard(/^6 · /);
     within(card).click('вызов');
     card = stepCard(/^6 · /);
     within(card).select('Какой эффект', 'damage');
-    for (const [name, text] of [['Сколько урона', '@dmg'], ['Тип урона', '"огонь"'], ['Источник урона', '"магический"'], ['Лист', '@источник'], ['Источник', '@носитель']] as const) {
+    for (const [name, text] of [['Сколько урона', '@урон'], ['Тип урона', '"огонь"'], ['Источник урона', '"магический"'], ['Лист', '@источник'], ['Источник', '@носитель']] as const) {
       within(card).formula(within(card).arg(name), text);
     }
     dump({ got: built('hellish_rebuke') ?? useWorld.getState().system.effects, goal });
@@ -253,14 +253,14 @@ describe('эффекты пресетов собираются в констру
     card = stepCard(/^5 · /);
     within(card).formula('Сколько', 'кинуть(@lead_die) + @прицел');
     marks(card, 'атака');
-    nameStep(card, 'hit_бросок');
+    nameStep(card, 'попадание_бросок');
     within(card).click('↑');
 
-    const dmg = number(6, '(кинуть(@damage_dice))', 'dmg');
+    const dmg = number(6, '(кинуть(@damage_dice))', 'урон');
     up(dmg);
-    const boom = number(7, '5', 'boom');
+    const boom = number(7, '5', 'взрыв');
     within(boom()).click('в «Если»');
-    within(headOf(block(0))).when('=@dmg.atMax >= 2');
+    within(headOf(block(0))).when('=@урон.atMax >= 2');
     within(headOf(block(0))).click('↑');
 
     ui.click('+ таблица');
@@ -269,12 +269,12 @@ describe('эффекты пресетов собираются в констру
     within(card).select('По чему ищем строку', 'value');
     card = stepCard(/^8 · /);
     within(card).formula('Число', '@distance');
-    nameStep(card, 'dv');
+    nameStep(card, 'сложность');
 
     ui.click('+ проверка');
     card = stepCard(/^9 · /);
-    within(card).formula('Проверка', '@hit_бросок >= @dv');
-    nameStep(stepCard(/^9 · /), 'hit');
+    within(card).formula('Проверка', '@попадание_бросок >= @сложность');
+    nameStep(stepCard(/^9 · /), 'попадание');
 
     const hit = outcomeIf(9, true);
     const send = (at: number, args: [string, string][], when?: string) => {
@@ -288,8 +288,8 @@ describe('эффекты пресетов собираются в констру
         within(headOf(block(2))).when(`=${when}`);
       }
     };
-    send(10, [['Сколько урона', '@dmg']]);
-    send(11, [['Сколько урона', '@boom'], ['Тип урона', '"критический"']], '@dmg.atMax >= 2');
+    send(10, [['Сколько урона', '@урон']]);
+    send(11, [['Сколько урона', '@взрыв'], ['Тип урона', '"критический"']], '@урон.atMax >= 2');
 
     dump({ got: built('shoot') ?? useWorld.getState().system.effects, goal });
     expect(built('shoot')).toEqual(goal);

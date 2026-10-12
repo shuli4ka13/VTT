@@ -57,7 +57,9 @@ export function SheetTab() {
               ? <Docked at={`${activeColumn!.table}.${activeColumn!.column}`}><ColumnPanel table={activeColumn!.table} column={activeColumn!.column} system={system} /></Docked>
               : blockOpen
                 ? <Docked at={`блок|${activeBlock}`}><BlockPanel name={activeBlock!} system={system} /></Docked>
-                : <Empty title="Щёлкните поле на листе" />,
+                : (system.blocks ?? []).length
+                  ? <Empty title="Щёлкните поле на листе" hint="Его колонка, вид и формула откроются здесь." />
+                  : <Empty title="Лист пока пуст" hint="Возьмите готовые куски справа — «Готовое из образцов» — или заведите свою колонку кнопкой «+ колонка»." />,
       }}
       main={{
         body: (

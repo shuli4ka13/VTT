@@ -39,7 +39,7 @@ const savingThrow = (root: HTMLElement, at: number, args: readonly (readonly [st
   within(made()).click('вызов');
   within(made()).select('Какой эффект', 'saving_throw');
   for (const [name, text] of args) within(made()).formula(within(made()).arg(name), text);
-  nameStep(made(), 'save');
+  nameStep(made(), 'спас');
 };
 
 const marks = (card: HTMLElement, ...tags: string[]): void => {
@@ -273,7 +273,7 @@ describe('эффекты D&D собираются в конструкторе р
     within(handlerHead(1)).select('Что именно', 'атака');
     within(handlerHead(1)).select('Когда именно', 'before');
     within(handlerHead(1)).select('Кого касается', '@цель == @носитель');
-    within(handlerHead(1)).when('=@hit.попал');
+    within(handlerHead(1)).when('=@попадание.попал');
     within(handlerHead(1)).select('Решение', 'ask');
 
     ui.select(handlerAt(1).querySelector<HTMLElement>('.add-cost select')!, 'cost_reaction');
@@ -349,7 +349,7 @@ describe('эффекты D&D собираются в конструкторе р
     addToArm(block(0), 0, 'number');
     within(headOf(block(0))).click('↑');
     within(at(2)).formula('Сколько', 'кинуть(@damage_die, @dice_count + (@slot - @spell_level) * @dice_up)');
-    nameStep(at(2), 'dmg_всего');
+    nameStep(at(2), 'урон_всего');
 
     savingThrow(document.body, 4, [['Чем спасается', '@save_by'], ['Сложность', '@действующий.spell_dc']]);
 
@@ -358,7 +358,7 @@ describe('эффекты D&D собираются в конструкторе р
     const inner = blocks().length - 1;
     within(headOf(block(inner))).when('=не(пусто(@damage_die))');
     addToArm(block(inner), 0, 'change');
-    hit(5, '@dmg_всего');
+    hit(5, '@урон_всего');
     addToArm(block(fail), 0, 'branch');
     const second = blocks().length - 1;
     within(headOf(block(second))).when('=не(пусто(@status))');
@@ -371,7 +371,7 @@ describe('эффекты D&D собираются в конструкторе р
     addArm(block(fail), '+ иначе, если');
     within(headOf(block(fail), 1)).when('=все(@half, не(пусто(@damage_die)))');
     addToArm(block(fail), 1, 'change');
-    hit(7, 'округлить вниз(@dmg_всего * 0.5)');
+    hit(7, 'округлить вниз(@урон_всего * 0.5)');
     dump({ got: built('spell_save'), goal });
     expect(built('spell_save')).toEqual(goal);
   });
@@ -413,13 +413,13 @@ describe('эффекты D&D собираются в конструкторе р
     within(card).formula('Бросает', '@действующий');
     card = stepCard(/^3 · /);
     within(card).formula('Сколько', 'кинуть(@lead_die) + @действующий.skills.скрытность.total');
-    nameStep(stepCard(/^3 · /), 'sneak_бросок');
+    nameStep(stepCard(/^3 · /), 'скрытая_бросок');
     within(stepCard(/^3 · /)).click('↑');
 
     ui.click('+ проверка');
     card = stepCard(/^4 · /);
-    within(card).formula('Проверка', '@sneak_бросок >= @цель.passive_perception');
-    nameStep(stepCard(/^4 · /), 'sneak');
+    within(card).formula('Проверка', '@скрытая_бросок >= @цель.passive_perception');
+    nameStep(stepCard(/^4 · /), 'скрытая');
     marks(stepCard(/^2 · /), 'проверка', 'ловкость', 'скрытность');
 
     addToArm(block(outcomeIf(4, true)), 0, 'change');

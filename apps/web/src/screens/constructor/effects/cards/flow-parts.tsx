@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Step } from '@vtt/schema';
 import { Button, DangerButton, Input } from '../../../../ui/primitives.tsx';
+import { formulaWords } from '../../../../ui/formula-words.ts';
 import { ConditionField } from '../../condition-field.tsx';
 import { namesOf } from '../../slots.tsx';
 import type { SlotContext, EarlierStep } from '../../slots.tsx';
@@ -84,9 +85,10 @@ export function FlowHead({ word, step, context, earlier, required, edit, actions
           names={namesOf(context)}
           {...(context.sheets ? { sheets: context.sheets } : {})}
           where={`${word.toLowerCase()} · условие`}
-          placeholder="например: @попадание.natural >= 19"
+          placeholder="например: @шаг.natural >= 19"
         />
       )}
+      {written?.trim() && !problem ? <span className="flow-head__words" title="условие словами">{formulaWords(context.system, written, namesOf(context))}</span> : null}
       {problem ? <span className="field__error">{problem}</span> : null}
       <span className="spacer" />
       {actions}

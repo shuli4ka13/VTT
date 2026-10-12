@@ -394,7 +394,7 @@
             "of": "цели"
           },
           {
-            "id": "hit",
+            "id": "попадание",
             "type": "emit",
             "effect": "attack_roll",
             "args": {
@@ -406,22 +406,22 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@hit.попал"
+              "expr": "@попадание.попал"
             }
           },
           {
             "type": "roll",
             "fixed": {
-              "expr": "(кинуть(@weapon_die, @действующий.level * если(@hit.крит, 2, 1)) + @damage_with)"
+              "expr": "(кинуть(@weapon_die, @действующий.level * если(@попадание.крит, 2, 1)) + @damage_with)"
             },
-            "id": "dmg"
+            "id": "урон"
           },
           {
             "type": "emit",
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@dmg"
+                "expr": "@урон"
               }
             }
           },
@@ -488,7 +488,7 @@
             "of": "цели"
           },
           {
-            "id": "hit",
+            "id": "попадание",
             "type": "emit",
             "effect": "attack_roll",
             "args": {
@@ -500,7 +500,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@hit.попал"
+              "expr": "@попадание.попал"
             }
           },
           {
@@ -937,7 +937,7 @@
         ],
         "each": "цель",
         "outputs": [
-          "hit"
+          "попадание"
         ]
       }
     },

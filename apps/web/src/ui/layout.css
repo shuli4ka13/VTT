@@ -484,3 +484,4 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 
 .when-block { border-left: 2px solid var(--kind-check); padding-left: var(--s-4); }
 .mod-row--when .mod-row__kind { color: var(--warn); }
+.flow-head__words { color: var(--text-muted); font-size: var(--fs-3); font-style: italic; }

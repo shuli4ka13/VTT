@@ -6,6 +6,21 @@ import { formulaAsLabels } from './formula.tsx';
 const COMPARE: Record<string, string> = { '==': '=', '!=': '≠', '>=': '≥', '<=': '≤', '>': '>', '<': '<' };
 const ARITH: Record<string, string> = { '+': '+', '-': '−', '*': '×', '/': '÷' };
 
+const ROLL_FIELDS: Record<string, string> = {
+  'dice.rolls': 'выпавшие кости', natural: 'на кости', total: 'итог', success: 'успех', margin: 'запас',
+  atMax: 'кости на максимуме', atMin: 'кости на минимуме', degree: 'ступень', parts: 'части', versus: 'порог',
+};
+
+const pathWords = (ref: (text: string) => string, tag: string): string => {
+  const dot = tag.indexOf('.');
+  if (dot < 0) return `«${ref(`@${tag}`)}»`;
+  const head = tag.slice(0, dot);
+  const rest = tag.slice(dot + 1);
+  const known = ROLL_FIELDS[rest] ?? (rest.startsWith('parts.') ? `часть «${rest.slice(6)}»` : undefined);
+  if (known) return `«${ref(`@${head}`)}»: ${known}`;
+  return `«${ref(`@${tag}`)}»`;
+};
+
 export function formulaWords(system: System, source: string, names?: Map<string, string>): string {
   let ast: Node;
   try { ast = compile(source).ast; } catch { return formulaAsLabels(system, source, names); }
@@ -16,7 +31,7 @@ export function formulaWords(system: System, source: string, names?: Map<string,
       case 'Number': return String(node.value);
       case 'Text': return `«${node.value}»`;
       case 'Bool': return node.value ? 'да' : 'нет';
-      case 'Ref': return `«${ref(`@${node.tag}`)}»`;
+      case 'Ref': return pathWords(ref, node.tag);
       case 'Pick': return `«${ref(`@${node.tag}`)}» по ${words(node.key, true)}${node.rest ? ` · ${node.rest}` : ''}`;
       case 'Unary': return node.op === '-' ? `−${words(node.operand)}` : `${node.op}${words(node.operand)}`;
       case 'Binary': {

@@ -37,8 +37,17 @@ const load = (world: SampleWorld, pick: Record<string, unknown>): void => {
   }));
 };
 
+const openReturns = (): void => {
+  const cards = [...document.querySelectorAll<HTMLElement>('.card')].filter(card => /^Что получит тот, кто вызвал/.test(card.textContent ?? ''));
+  for (const card of cards) {
+    card.querySelectorAll<HTMLElement>('.param-line__sum[aria-expanded="false"]').forEach(sum => fireEvent.click(sum));
+    card.querySelectorAll<HTMLElement>('.param-form button').forEach(button => { if (button.textContent === 'ещё') fireEvent.click(button); });
+  }
+};
+
 const reveal = (): void => {
   openAll();
+  act(() => { openReturns(); });
   document.querySelectorAll('details').forEach(d => { d.open = true; });
 };
 
@@ -99,33 +108,34 @@ describe('пресет не портится редактором: холост�
   const chosen = process.env.ROUND_TRIP === 'full' ? SAMPLE_WORLDS : SAMPLE_WORLDS.filter(world => quick.includes(String(world.system.name)));
 
   for (const world of chosen) {
-    it(`${world.system.name ?? world.system.id}`, () => {
-      const base = structuredClone(world);
-      const found: string[] = [];
-      for (const view of viewsOf(base.system, base.compendium)) {
-        load(base, view.pick);
-        render(view.ui());
-        reveal();
-        const count = document.querySelectorAll(IDLE).length;
-        for (let index = 0; index < count; index++) {
-          const el = document.querySelectorAll(IDLE)[index];
-          if (!el || (el as HTMLInputElement).disabled) continue;
-          const label = labelOf(el);
-          act(() => { idle(el); });
-          const { system, compendium } = useWorld.getState();
-          const now = { system, compendium };
-          const was = { system: base.system, compendium: base.compendium };
-          if (!same(was, now)) {
-            found.push(`${view.name} · ${label}: ${diff(was, now)}`);
-            cleanup();
-            load(base, view.pick);
-            render(view.ui());
-            reveal();
+    describe(`${world.system.name ?? world.system.id}`, () => {
+      for (const view of viewsOf(world.system, world.compendium)) {
+        it(view.name, () => {
+          const base = structuredClone(world);
+          const found: string[] = [];
+          load(base, view.pick);
+          render(view.ui());
+          reveal();
+          const count = document.querySelectorAll(IDLE).length;
+          for (let index = 0; index < count; index++) {
+            const el = document.querySelectorAll(IDLE)[index];
+            if (!el || (el as HTMLInputElement).disabled) continue;
+            const label = labelOf(el);
+            act(() => { idle(el); });
+            const { system, compendium } = useWorld.getState();
+            const now = { system, compendium };
+            const was = { system: base.system, compendium: base.compendium };
+            if (!same(was, now)) {
+              found.push(`${label}: ${diff(was, now)}`);
+              cleanup();
+              load(base, view.pick);
+              render(view.ui());
+              reveal();
+            }
           }
-        }
-        cleanup();
+          expect(found).toEqual([]);
+        }, 600000);
       }
-      expect(found).toEqual([]);
-    }, 600000);
+    });
   }
 });

@@ -2976,7 +2976,7 @@
             "of": "цели"
           },
           {
-            "id": "hit",
+            "id": "попадание",
             "type": "emit",
             "effect": "attack_roll",
             "args": {
@@ -2988,14 +2988,14 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@hit.попал"
+              "expr": "@попадание.попал"
             }
           },
           {
-            "id": "dmg",
+            "id": "урон",
             "type": "roll",
             "fixed": {
-              "expr": "кинуть(@damage_dice, @dice * если(@hit.крит, 2, 1)) + @damage_with"
+              "expr": "кинуть(@damage_dice, @dice * если(@попадание.крит, 2, 1)) + @damage_with"
             }
           },
           {
@@ -3003,7 +3003,7 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@dmg"
+                "expr": "@урон"
               }
             }
           },
@@ -3091,7 +3091,7 @@
             "fixed": {
               "expr": "(кинуть('1d6', @действующий.sneak_dice))"
             },
-            "id": "dmg"
+            "id": "урон"
           },
           {
             "type": "each",
@@ -3102,7 +3102,7 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@dmg"
+                "expr": "@урон"
               }
             }
           }
@@ -3152,7 +3152,7 @@
             "fixed": {
               "expr": "(кинуть('1d8', (меньшее из(5, 1 + @slot))))"
             },
-            "id": "dmg"
+            "id": "урон"
           },
           {
             "type": "each",
@@ -3163,7 +3163,7 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@dmg"
+                "expr": "@урон"
               },
               "damage_type": {
                 "expr": "\"излучение\""
@@ -3236,14 +3236,14 @@
             "fixed": {
               "expr": "(кинуть(@damage_die, @действующий.cantrip_dice))"
             },
-            "id": "dmg"
+            "id": "урон"
           },
           {
             "type": "each",
             "of": "цели"
           },
           {
-            "id": "save",
+            "id": "спас",
             "type": "emit",
             "effect": "saving_throw",
             "args": {
@@ -3258,7 +3258,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не(@save.прошёл)"
+              "expr": "не(@спас.прошёл)"
             }
           },
           {
@@ -3266,7 +3266,7 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@dmg"
+                "expr": "@урон"
               },
               "damage_source": {
                 "expr": "\"магический\""
@@ -3386,7 +3386,7 @@
             "fixed": {
               "expr": "(кинуть(@damage_die, (@dice_count + (@slot - @spell_level) * @dice_up)) + ((@dice_count + (@slot - @spell_level) * @dice_up) * @per_die))"
             },
-            "id": "dmg"
+            "id": "урон"
           },
           {
             "type": "each",
@@ -3397,7 +3397,7 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@dmg"
+                "expr": "@урон"
               },
               "damage_source": {
                 "expr": "\"магический\""
@@ -3559,7 +3559,7 @@
             "fixed": {
               "expr": "(кинуть(@heal_die, (@dice_count + (@slot - @spell_level) * @dice_up)) + @действующий.spell_mod)"
             },
-            "id": "amt"
+            "id": "сколько"
           },
           {
             "type": "each",
@@ -3572,7 +3572,7 @@
             },
             "direction": "add",
             "value": {
-              "expr": "@amt"
+              "expr": "@сколько"
             }
           },
           {
@@ -3731,7 +3731,7 @@
             "fixed": {
               "expr": "(кинуть(@heal_die) + @heal_bonus)"
             },
-            "id": "amt"
+            "id": "сколько"
           },
           {
             "type": "each",
@@ -3744,7 +3744,7 @@
             },
             "direction": "add",
             "value": {
-              "expr": "@amt"
+              "expr": "@сколько"
             }
           }
         ],
@@ -3772,7 +3772,7 @@
             "fixed": {
               "expr": "(кинуть('1d10') + @действующий.level)"
             },
-            "id": "amt"
+            "id": "сколько"
           },
           {
             "type": "apply",
@@ -3781,7 +3781,7 @@
             },
             "direction": "add",
             "value": {
-              "expr": "@amt"
+              "expr": "@сколько"
             }
           }
         ],
@@ -4070,7 +4070,7 @@
             "of": "цели"
           },
           {
-            "id": "save",
+            "id": "спас",
             "type": "emit",
             "effect": "saving_throw",
             "args": {
@@ -4085,7 +4085,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не(@save.прошёл)"
+              "expr": "не(@спас.прошёл)"
             }
           },
           {
@@ -4231,7 +4231,7 @@
         ],
         "steps": [
           {
-            "id": "sneak_бросок",
+            "id": "скрытая_бросок",
             "type": "roll",
             "die": "lead_die",
             "bonus": {
@@ -4251,10 +4251,10 @@
             "of": "цели"
           },
           {
-            "id": "sneak",
+            "id": "скрытая",
             "type": "check",
             "value": {
-              "expr": "@sneak_бросок"
+              "expr": "@скрытая_бросок"
             },
             "versus": {
               "expr": "@цель.passive_perception"
@@ -4263,7 +4263,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@sneak.success"
+              "expr": "@скрытая.success"
             }
           },
           {
@@ -4352,7 +4352,7 @@
             "fixed": {
               "expr": "(кинуть(@действующий.hit_die) + @действующий.abilities.телосложение.mod)"
             },
-            "id": "amt"
+            "id": "сколько"
           },
           {
             "type": "apply",
@@ -4361,7 +4361,7 @@
             },
             "direction": "add",
             "value": {
-              "expr": "@amt"
+              "expr": "@сколько"
             }
           }
         ],
@@ -5183,7 +5183,7 @@
           {
             "on": "after:strike",
             "if": {
-              "expr": "все(@действующий == @носитель, не(пусто(@цель)), @hit.попал)"
+              "expr": "все(@действующий == @носитель, не(пусто(@цель)), @попадание.попал)"
             },
             "steps": [
               {
@@ -5771,7 +5771,7 @@
           {
             "on": "before:атака",
             "if": {
-              "expr": "все(@цель == @носитель, @hit.попал)"
+              "expr": "все(@цель == @носитель, @попадание.попал)"
             },
             "confirm": true,
             "cost": [
@@ -5861,7 +5861,7 @@
             ],
             "steps": [
               {
-                "id": "save",
+                "id": "спас",
                 "type": "emit",
                 "effect": "saving_throw",
                 "args": {
@@ -5884,13 +5884,13 @@
                 "fixed": {
                   "expr": "(кинуть('2d10'))"
                 },
-                "id": "dmg_всего"
+                "id": "урон_всего"
               },
               {
-                "id": "dmg",
+                "id": "урон",
                 "type": "roll",
                 "fixed": {
-                  "expr": "если(@save.прошёл, округлить вниз((@dmg_всего) * (0.5)), @dmg_всего)"
+                  "expr": "если(@спас.прошёл, округлить вниз((@урон_всего) * (0.5)), @урон_всего)"
                 }
               },
               {
@@ -5898,7 +5898,7 @@
                 "effect": "damage",
                 "args": {
                   "amount": {
-                    "expr": "@dmg"
+                    "expr": "@урон"
                   },
                   "damage_type": {
                     "expr": "\"огонь\""
@@ -5930,7 +5930,7 @@
           {
             "on": "before:атака",
             "if": {
-              "expr": "все(@цель == @носитель, @hit.попал)"
+              "expr": "все(@цель == @носитель, @попадание.попал)"
             },
             "confirm": true,
             "cost": [
@@ -6128,7 +6128,7 @@
             },
             "steps": [
               {
-                "id": "save",
+                "id": "спас",
                 "type": "emit",
                 "effect": "saving_throw",
                 "args": {
@@ -6146,7 +6146,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@save.прошёл"
+                  "expr": "@спас.прошёл"
                 }
               },
               {
@@ -6235,7 +6235,7 @@
             },
             "steps": [
               {
-                "id": "save",
+                "id": "спас",
                 "type": "emit",
                 "effect": "saving_throw",
                 "args": {
@@ -6253,7 +6253,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@save.прошёл"
+                  "expr": "@спас.прошёл"
                 }
               },
               {
@@ -6423,7 +6423,7 @@
             },
             "steps": [
               {
-                "id": "save",
+                "id": "спас",
                 "type": "emit",
                 "effect": "saving_throw",
                 "args": {
@@ -6441,7 +6441,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@save.прошёл"
+                  "expr": "@спас.прошёл"
                 }
               },
               {
@@ -6677,7 +6677,7 @@
             },
             "steps": [
               {
-                "id": "save",
+                "id": "спас",
                 "type": "emit",
                 "effect": "saving_throw",
                 "args": {
@@ -6695,7 +6695,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@save.прошёл"
+                  "expr": "@спас.прошёл"
                 }
               },
               {
@@ -7289,7 +7289,7 @@
             },
             "steps": [
               {
-                "id": "save",
+                "id": "спас",
                 "type": "emit",
                 "effect": "saving_throw",
                 "args": {
@@ -7307,7 +7307,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "@save.прошёл"
+                  "expr": "@спас.прошёл"
                 }
               },
               {
@@ -8041,7 +8041,7 @@
             },
             "steps": [
               {
-                "id": "save",
+                "id": "спас",
                 "type": "emit",
                 "effect": "saving_throw",
                 "args": {
@@ -8059,7 +8059,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "не(@save.прошёл)"
+                  "expr": "не(@спас.прошёл)"
                 }
               },
               {
@@ -9386,7 +9386,7 @@
             }
           },
           {
-            "id": "dmg_всего",
+            "id": "урон_всего",
             "type": "roll",
             "fixed": {
               "expr": "кинуть(@damage_die, @dice_count + (@slot - @spell_level) * @dice_up)"
@@ -9400,7 +9400,7 @@
             "of": "цели"
           },
           {
-            "id": "save",
+            "id": "спас",
             "type": "emit",
             "effect": "saving_throw",
             "args": {
@@ -9415,7 +9415,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не(@save.прошёл)"
+              "expr": "не(@спас.прошёл)"
             }
           },
           {
@@ -9429,7 +9429,7 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@dmg_всего"
+                "expr": "@урон_всего"
               },
               "damage_source": {
                 "expr": "\"магический\""
@@ -9476,7 +9476,7 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "округлить вниз(@dmg_всего * 0.5)"
+                "expr": "округлить вниз(@урон_всего * 0.5)"
               },
               "damage_source": {
                 "expr": "\"магический\""
@@ -9586,7 +9586,7 @@
         ],
         "each": "цель",
         "outputs": [
-          "hit"
+          "попадание"
         ]
       }
     },

@@ -175,15 +175,15 @@ const earlierIds = (steps: Step[], index: number): Set<string> =>
 
 export interface EarlierStep { id: string; type: string }
 
-export function lintStep(step: Step, system: System, effect: Effect, earlier: EarlierStep[]): Problem | null {
+export function lintStep(step: Step, system: System, effect: Effect, earlier: EarlierStep[], visible: readonly { name: string; kind: string }[] = []): Problem | null {
   const where: Where = { tab: 'effects', effect: effect.label ?? '', step: 0 };
   const [structural] = stepProblems([step], () => where);
   if (structural) return structural;
   const declared = declaredOf(system);
   const all = paramsOf(system, effect);
-  const params = new Set(all.filter(p => p.kind !== 'sheet').map(p => p.key));
-  const sheets = [...all.filter(p => p.kind === 'sheet').map(p => p.key), 'носитель', ...earlier.filter(e => e.type === 'each').map(e => e.id)];
-  const known = new Set(earlier.map(e => e.id));
+  const params = new Set([...all.filter(p => p.kind !== 'sheet').map(p => p.key), ...visible.filter(one => one.kind !== 'sheet').map(one => one.name)]);
+  const sheets = [...all.filter(p => p.kind === 'sheet').map(p => p.key), 'носитель', ...earlier.filter(e => e.type === 'each').map(e => e.id), ...visible.filter(one => one.kind === 'sheet').map(one => one.name)];
+  const known = new Set([...earlier.map(e => e.id), ...visible.filter(one => one.kind !== 'sheet').map(one => one.name)]);
   const refs = withAddresses(system, chainRefs([step], () => where, params, sheets))
     .filter(ref => !(ref.kind === 'step' && known.has(ref.key)))
     .filter(ref => !(ref.kind === 'field' && known.has(ref.key)));

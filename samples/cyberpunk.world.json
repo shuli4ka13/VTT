@@ -1176,7 +1176,7 @@
             "id": "прицел"
           },
           {
-            "id": "hit_бросок",
+            "id": "попадание_бросок",
             "type": "roll",
             "die": "lead_die",
             "bonus": {
@@ -1194,12 +1194,12 @@
             "fixed": {
               "expr": "(кинуть(@damage_dice))"
             },
-            "id": "dmg"
+            "id": "урон"
           },
           {
             "type": "branch",
             "if": {
-              "expr": "@dmg.atMax >= 2"
+              "expr": "@урон.atMax >= 2"
             }
           },
           {
@@ -1207,7 +1207,7 @@
             "fixed": {
               "expr": "5"
             },
-            "id": "boom"
+            "id": "взрыв"
           },
           {
             "type": "end"
@@ -1217,7 +1217,7 @@
             "of": "цели"
           },
           {
-            "id": "dv",
+            "id": "сложность",
             "type": "table",
             "table": "dv_range",
             "value": {
@@ -1225,19 +1225,19 @@
             }
           },
           {
-            "id": "hit",
+            "id": "попадание",
             "type": "check",
             "value": {
-              "expr": "@hit_бросок"
+              "expr": "@попадание_бросок"
             },
             "versus": {
-              "expr": "@dv"
+              "expr": "@сложность"
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "@hit.success"
+              "expr": "@попадание.success"
             }
           },
           {
@@ -1245,14 +1245,14 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@dmg"
+                "expr": "@урон"
               }
             }
           },
           {
             "type": "branch",
             "if": {
-              "expr": "@dmg.atMax >= 2"
+              "expr": "@урон.atMax >= 2"
             }
           },
           {
@@ -1260,7 +1260,7 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@boom"
+                "expr": "@взрыв"
               },
               "damage_type": {
                 "expr": "\"критический\""
@@ -1965,7 +1965,7 @@
         ],
         "each": "цель",
         "outputs": [
-          "hit"
+          "попадание"
         ]
       }
     },

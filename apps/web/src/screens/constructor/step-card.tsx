@@ -20,8 +20,8 @@ export const slotsOf = (type: string): SlotSpec[] | null => {
 
 export interface Problem { text: string; missingField?: string }
 
-export function problemOf(step: Step, system: System, effect: Effect, earlier: EarlierStep[]): Problem | null {
-  const problem = lintStep(step, system, effect, earlier);
+export function problemOf(step: Step, system: System, effect: Effect, earlier: EarlierStep[], visible: readonly { name: string; kind: string }[] = []): Problem | null {
+  const problem = lintStep(step, system, effect, earlier, visible);
   if (!problem) return null;
   return { text: problem.text, ...(problem.fix?.kind === 'field' ? { missingField: problem.fix.tag } : {}) };
 }

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useWorld, freeId } from '../../../store/world.ts';
 import { STEP } from '../../../words.ts';
 import { loopOf } from '@vtt/engine/engine/steps/each';
@@ -14,6 +14,7 @@ import { costsOf, newCost } from '../factory.ts';
 import { calledOf } from '@vtt/engine/engine/effects';
 import { GroupCard } from './cards/group-card.tsx';
 import { sheetsAt } from './names.ts';
+import { namesAt } from '@vtt/engine/model/names-at';
 import type { Place } from '@vtt/engine/model/names-at';
 import { useOpened } from '../../../store/opened.ts';
 import { findDonorBlock, copyDonorBlock } from '../donors.tsx';
@@ -95,7 +96,8 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         ...(returnsOf(system, step).length ? { outputs: returnsOf(system, step) } : {}),
       }));
 
-  const problems = steps.map((step, index) => problemOf(step, system, effect, earlierOf(index)));
+  const visible = useMemo(() => namesAt(system, id, placeAt(0)).filter(one => one.group !== 'step' && one.group !== 'loop'), [system, id, JSON.stringify(placeAt(0))]);
+  const problems = steps.map((step, index) => problemOf(step, system, effect, earlierOf(index), visible));
 
   const broken = cards.filter(card => card.indices.some(i => problems[i])).length;
   const real = numbers.size;
@@ -390,7 +392,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
       {bare ? null : <div className="palette">
         {bricksOf(system, id).length ? (
           <div className="palette__row">
-            <span className="palette__title">Готовое</span>
+            <span className="palette__title">Эффекты системы</span>
             {bricksOf(system, id).map(([key, one]) => (
               <Button key={key} size="sm" title={one.description || `вызвать «${one.label || key}»`}
                 onClick={() => edit(draft => {
