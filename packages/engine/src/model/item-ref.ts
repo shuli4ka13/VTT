@@ -1,9 +1,9 @@
 import { EngineError } from '../engine/errors.ts';
 import { entryOf, findRecord, kindOfRecord, keyOf, propsOf } from './owned.ts';
-import { isFormulaCell, itemExpr } from './sheet-columns.ts';
+import { isFormulaCell, itemExpr, ITEM_NAME } from './sheet-columns.ts';
 import type { Compendium, Owned, Sheet, System } from './types.ts';
 
-export const ITEM_NAME = 'вещь';
+export { ITEM_NAME };
 
 const ITEM_TAG = `${ITEM_NAME}:`;
 
@@ -43,7 +43,7 @@ export function itemStored(
   if (!record?.table) return entry.values?.[column];
   const cells = propsOf(record, system, entry) ?? {};
   const value = cells[column];
-  return isFormulaCell(value) ? count(itemExpr(system, record.table, cells, column)) : value;
+  return isFormulaCell(value) ? count(itemExpr(system, record.table, cells, column, key)) : value;
 }
 
 export function withItemValue(sheet: Sheet, key: string, column: string, value: unknown): Sheet {

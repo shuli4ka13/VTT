@@ -43,8 +43,20 @@ export const owns = (sheet: Sheet, id: string): boolean => Boolean(entryOf(sheet
 
 export interface Held { record: CompendiumRecord; entry: Owned; key: string }
 
+const keyMaps = new WeakMap<readonly Owned[], Map<string, Owned>>();
+
+function byKeyOf(sheet: Sheet): Map<string, Owned> {
+  const has = sheet.has ?? [];
+  let map = keyMaps.get(has);
+  if (!map) {
+    map = new Map(has.map(one => [keyOf(one), one] as const));
+    keyMaps.set(has, map);
+  }
+  return map;
+}
+
 export function working(sheet: Sheet, entry: Owned): boolean {
-  const byKey = new Map((sheet.has ?? []).map(one => [keyOf(one), one] as const));
+  const byKey = byKeyOf(sheet);
   const seen = new Set<string>();
   let at: Owned | undefined = entry;
   while (at) {

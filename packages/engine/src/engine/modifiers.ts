@@ -6,7 +6,7 @@ import { wornEffects, activationOf } from './effects.ts';
 import { EngineError } from './errors.ts';
 import { stackStages, targetStages, VALUE_OPS } from './stages.ts';
 import { anyRowSays } from './tables.ts';
-import { findRecord, kindOfRecord, sheetKindOf, propsOf, working } from '../model/owned.ts';
+import { findRecord, kindOfRecord, sheetKindOf, propsOf, working, keyOf } from '../model/owned.ts';
 import { tagsHold } from './roll-tags.ts';
 import type { System, Sheet, Compendium, Modifier, RollEdit, RollEditOp, Param } from '../model/types.ts';
 import type { Pass } from './calc.ts';
@@ -98,7 +98,7 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
 
     const kind = kindOfRecord(system, item);
     const cells = propsOf(item, system, entry) ?? {};
-    const mine = <T,>(list: T): T => (item.table ? withRecord(system, item.table, cells, list) : list);
+    const mine = <T,>(list: T): T => (item.table ? withRecord(system, item.table, cells, list, keyOf(entry)) : list);
     if (kind?.modifiers?.length) {
       sources.push({
         type: 'kind', id: String(item.table), label: kind.label || String(item.table),

@@ -230,7 +230,9 @@ function rowRefs(system: System, tableId: string, row: TableRow, value: unknown)
 
 const NAME_REF = /[@#]([\p{L}\p{N}_]+)((?:\.[\p{L}\p{N}_]+)*)/gu;
 
-function cellExpr(system: System, tableId: string, cells: Record<string, unknown>, head: string, seen: readonly string[]): string {
+export const ITEM_NAME = 'вещь';
+
+function cellExpr(system: System, tableId: string, cells: Record<string, unknown>, head: string, seen: readonly string[], key?: string): string {
   const cell = cells[head];
   if (!isFormulaCell(cell)) return literal(cell ?? '');
   const table = system.tables?.[tableId];
@@ -240,17 +242,18 @@ function cellExpr(system: System, tableId: string, cells: Record<string, unknown
   const keys = new Set((table?.columns ?? []).map(c => c.key));
   const inner = cell.expr.replace(NAME_REF, (whole: string, name: string, tail: string) => {
     const path = tail ? tail.slice(1).split('.') : [];
-    if (name === ROW) return recordPath(system, tableId, cells, path, [...seen, head]);
-    return keys.has(name) ? recordPath(system, tableId, cells, [name, ...path], [...seen, head]) : whole;
+    if (name === ROW) return recordPath(system, tableId, cells, path, [...seen, head], key);
+    if (name === ITEM_NAME) return path.length ? recordPath(system, tableId, cells, path, [...seen, head], key) : literal(key ?? '');
+    return keys.has(name) ? recordPath(system, tableId, cells, [name, ...path], [...seen, head], key) : whole;
   });
   return `(${inner})`;
 }
 
-export function itemExpr(system: System, tableId: string, cells: Record<string, unknown>, column: string): string {
-  return cellExpr(system, tableId, cells, column, []);
+export function itemExpr(system: System, tableId: string, cells: Record<string, unknown>, column: string, key?: string): string {
+  return cellExpr(system, tableId, cells, column, [], key);
 }
 
-function recordPath(system: System, tableId: string, cells: Record<string, unknown>, path: string[], seen: readonly string[] = []): string {
+function recordPath(system: System, tableId: string, cells: Record<string, unknown>, path: string[], seen: readonly string[] = [], key?: string): string {
   const table = system.tables?.[tableId];
   const where = `тип «${table?.label || tableId}»`;
   const [head, ...rest] = path;
@@ -260,7 +263,7 @@ function recordPath(system: System, tableId: string, cells: Record<string, unkno
   let spec: TableColumn = found;
   const cell = cells[head];
   if (Array.isArray(cell)) throw new EngineError(`${where}: «${spec.label || head}» — список, одним числом его не взять`);
-  let expr = cellExpr(system, tableId, cells, head, seen);
+  let expr = cellExpr(system, tableId, cells, head, seen, key);
   for (const step of rest) {
     const link = linkOf(spec);
     if (!link) throw new EngineError(`${where}: «${spec.label || spec.key}» — не ссылка, дальше «${step}» идти некуда`);
@@ -272,15 +275,15 @@ function recordPath(system: System, tableId: string, cells: Record<string, unkno
   return `(${expr})`;
 }
 
-export function withRecord<T>(system: System, tableId: string, cells: Record<string, unknown>, value: T): T {
+export function withRecord<T>(system: System, tableId: string, cells: Record<string, unknown>, value: T, key?: string): T {
   if (typeof value === 'string') {
     return (value.includes(`@${ROW}`)
-      ? value.replace(ROW_REF, (_, tail: string) => recordPath(system, tableId, cells, tail ? tail.slice(1).split('.') : []))
+      ? value.replace(ROW_REF, (_, tail: string) => recordPath(system, tableId, cells, tail ? tail.slice(1).split('.') : [], [], key))
       : value) as T;
   }
-  if (Array.isArray(value)) return value.map(item => withRecord(system, tableId, cells, item)) as T;
+  if (Array.isArray(value)) return value.map(item => withRecord(system, tableId, cells, item, key)) as T;
   if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.entries(value as Loose).map(([k, v]) => [k, withRecord(system, tableId, cells, v)])) as T;
+    return Object.fromEntries(Object.entries(value as Loose).map(([k, v]) => [k, withRecord(system, tableId, cells, v, key)])) as T;
   }
   return value;
 }

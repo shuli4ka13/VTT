@@ -27,6 +27,8 @@ export interface RefContext {
 
   item?: ItemRef;
 
+  itemRead?: (column: string) => unknown;
+
   paramDefs?: Param[];
 
   params?: Record<string, unknown>;
@@ -157,7 +159,7 @@ function rowsOfTable(system: System, pass: Pass, name: string, column: string, o
         const cells = propsOf(held.record, system, held.entry) ?? {};
         const value = cells[column];
         if (!isFormulaCell(value)) return (value ?? '') as Value;
-        return evaluate(itemExpr(system, held.record.table!, cells, column), { pass, owner: `${owner}: «${held.record.label}»` }) as Value;
+        return evaluate(itemExpr(system, held.record.table!, cells, column, held.key), { pass, owner: `${owner}: «${held.record.label}»` }) as Value;
       });
   }
   if (isSingle(table)) return [pass.resolve(column) as Value];
@@ -186,6 +188,7 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
     if (ctx.item && name.startsWith(`${ITEM_NAME}.`)) {
       const column = name.slice(ITEM_NAME.length + 1);
       if (!ctx.props || !(column in ctx.props)) return null;
+      if (ctx.itemRead) return ctx.itemRead(column) ?? null;
       return recordValue(column, { ...ctx, recordScope: true });
     }
     const onSheet = sheetHead(name, ctx.sheets);

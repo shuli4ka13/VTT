@@ -87,6 +87,9 @@ export function checkInputs(
   for (const param of asked) {
     const value = given[param.key];
     const name = param.label ?? param.key;
+    const empty = value === undefined || value === null || value === '';
+    if (empty && param.optional && !isPerTarget(param)) continue;
+    if (isPerTarget(param) && targets && !targets.length) return `${name}: спрашивается для каждой цели — сначала выберите цели`;
     if (!isPerTarget(param)) {
       if (value !== null && typeof value === 'object') return `${name}: одно значение на всё действие, а пришло по целям`;
       const problem = valueProblem(param, value, name, system, actor);

@@ -175,13 +175,31 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const available = actionsOf(sheet, room);
 
   const system = room.system as System;
+  const records = recordsOf(room.compendium);
   const owned = (id: string) => (sheet.has ?? []).find(entry => entry.of === id);
+  const copies = (id: string) => (sheet.has ?? []).filter(entry => entry.of === id);
+  const keyOf = (entry: { of: string; id?: string }) => entry.id ?? entry.of;
+  const labelOf = (key: string) => {
+    const entry = (sheet.has ?? []).find(one => keyOf(one) === key);
+    const record = entry ? records.find(one => one.id === entry.of) : undefined;
+    const same = entry ? copies(entry.of) : [];
+    return `${record?.label ?? key}${same.length > 1 ? ` №${same.indexOf(entry!) + 1}` : ''}`;
+  };
+  const inside = (key: string): Set<string> => {
+    const out = new Set([key]);
+    for (let grew = true; grew;) {
+      grew = false;
+      for (const one of sheet.has ?? []) if (one.in && out.has(one.in) && !out.has(keyOf(one))) { out.add(keyOf(one)); grew = true; }
+    }
+    return out;
+  };
+  const belong = (id: string, entry: { of: string; id?: string }, change: { on: boolean; off?: boolean; in?: string | null }) =>
+    tableSocket.setBelonging(room.id, sheet.id, 'has', id, change.on, change.off, { inst: keyOf(entry), ...(change.in !== undefined ? { in: change.in } : {}) });
   const wornOf = (id: string) => (sheet.effects ?? []).find(e => e.effectId === id);
 
   const toggle = (list: 'has' | 'effects', id: string, on: boolean, off?: boolean) =>
     tableSocket.setBelonging(room.id, sheet.id, list, id, on, off);
 
-  const records = recordsOf(room.compendium);
   const items = records.filter(record => isItem(system, record));
   const actions = records.filter(record => !isItem(system, record));
   const carried = items.filter(item => owned(item.id)).length;
@@ -218,20 +236,32 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
             <div className="stack stack--tight">
               {items.map(item => {
                 const details = itemDetails(item);
-                const entry = owned(item.id);
+                const mine = copies(item.id);
                 return (
                   <div key={item.id}>
-                    <Chip
-                      active={Boolean(entry) && !entry?.off}
-                      onClick={() => toggle('has', item.id, !entry)}
+                    <Chip active={mine.some(entry => !entry.off)} onClick={() => (mine.length
+                      ? tableSocket.setBelonging(room.id, sheet.id, 'has', item.id, true, false, { add: true })
+                      : toggle('has', item.id, true))}
                     >
-                      {item.label ?? item.id}
+                      {item.label ?? item.id}{mine.length ? ' · + ещё один' : ''}
                     </Chip>
-                    {entry ? (
-                      <Chip onClick={() => toggle('has', item.id, true, !entry.off)}>
-                        {entry.off ? 'в сумке' : 'надето'}
-                      </Chip>
-                    ) : null}
+                    {mine.map(entry => {
+                      const hosts = (sheet.has ?? []).filter(one => !inside(keyOf(entry)).has(keyOf(one)));
+                      return (
+                        <div key={keyOf(entry)} className="inline inline--tight">
+                          <span className="faint">{labelOf(keyOf(entry))}</span>
+                          <Chip onClick={() => belong(item.id, entry, { on: true, off: !entry.off })}>{entry.off ? 'в сумке' : 'надето'}</Chip>
+                          <Chip onClick={() => belong(item.id, entry, { on: false })}>✕ убрать</Chip>
+                          {hosts.length ? (
+                            <Select
+                              value={entry.in ?? ''}
+                              options={[['', 'стоит отдельно'], ...hosts.map(one => [keyOf(one), `в: ${labelOf(keyOf(one))}`] as const)] as never}
+                              onChange={next => belong(item.id, entry, { on: true, off: Boolean(entry.off), in: next || null })}
+                            />
+                          ) : null}
+                        </div>
+                      );
+                    })}
                     {details.length ? <div className="faint">{details.join(' · ')}</div> : null}
                   </div>
                 );

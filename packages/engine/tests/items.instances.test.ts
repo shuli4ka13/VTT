@@ -142,3 +142,45 @@ describe('Д1: шаг «Изменение» пишет в свою вещь', (
     expect(errorsOf(lintSystem(system, book)).map(p => p.text)).toEqual([]);
   });
 });
+
+describe('по ревью: экземпляры, круги, @вещь в клетке, живое чтение', () => {
+  it('убрать без указания экземпляра, когда их несколько, — отказ, а не «всё сразу»', () => {
+    const sheet = hero([{ of: 'предатор' }, { of: 'предатор', id: 'п2' }, { of: 'лазер', in: 'п2' }]);
+    expect(() => op([sheet], { op: 'belonging', sheetId: 'г', list: 'has', id: 'предатор', on: false })).toThrow(/укажите, какой экземпляр/);
+  });
+
+  it('поставить хозяина в его же содержимое — отказ', () => {
+    const sheet = hero([{ of: 'предатор', id: 'п1' }, { of: 'предатор', id: 'п2', in: 'п1' }]);
+    expect(() => op([sheet], { op: 'belonging', sheetId: 'г', list: 'has', id: 'предатор', on: true, inst: 'п1', in: 'п2' })).toThrow(/сама в себя/);
+  });
+
+  it('клетка-формула видит @вещь: занятая ёмкость — сумма того, что стоит в этой вещи', () => {
+    const roomy = flattenSystem({
+      ...raw,
+      tables: { ...raw.tables, оружие: { ...raw.tables!['оружие']!, columns: [...raw.tables!['оружие']!.columns!, { key: 'занято', label: 'Занято', kind: 'number', expr: { expr: 'сумма(строки("мод", "cost", @вещь))' } }] } },
+      effects: { ...raw.effects, выстрел: { ...raw.effects['выстрел']!, steps: [{ type: 'apply', target: { expr: '@действующий.защита' }, direction: 'set', value: { expr: '@вещь.занято' } }] } },
+    } as unknown as System);
+    const sheet = hero([{ of: 'предатор', id: 'п1' }, { of: 'лазер', in: 'п1' }, { of: 'лазер', id: 'л2', in: 'п1' }, { of: 'предатор', id: 'п2' }]);
+    const shot = (inst: string) => perform({ system: roomy, compendium: book, clock: null, sheets: [sheet], die: () => 1, newId: ids() },
+      { op: 'act', intent: { actionId: `предатор@${inst}:0`, fromId: 'г', toIds: [] } } as never);
+    const first = shot('п1');
+    const second = shot('п2');
+    if (first.kind !== 'done' || second.kind !== 'done') throw new Error('не сыграно');
+    expect(first.sheets[0]!.values['защита']).toBe(250);
+    expect(second.sheets[0]!.values['защита'] ?? 0).toBe(0);
+  });
+
+  it('@вещь.x после записи в вещь видит новое значение, а не снимок начала действия', () => {
+    const live = flattenSystem({
+      ...raw,
+      effects: { ...raw.effects, выстрел: { ...raw.effects['выстрел']!, steps: [
+        { type: 'apply', target: { expr: '@вещь.ammo' }, direction: 'subtract', value: { expr: '2' } },
+        { type: 'apply', target: { expr: '@действующий.защита' }, direction: 'set', value: { expr: '@вещь.ammo' } },
+      ] } },
+    } as unknown as System);
+    const out = perform({ system: live, compendium: book, clock: null, sheets: [hero([{ of: 'кольт' }])], die: () => 1, newId: ids() },
+      { op: 'act', intent: { actionId: 'кольт:0', fromId: 'г', toIds: [] } } as never);
+    if (out.kind !== 'done') throw new Error(out.kind);
+    expect(out.sheets[0]!.values['защита']).toBe(9);
+  });
+});

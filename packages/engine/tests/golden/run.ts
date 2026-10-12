@@ -4,7 +4,8 @@ import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { PLAYABLE_WORLDS } from '../../src/model/systems.ts';
 import { availableActions } from '../../src/events/actions.ts';
-import { asksOf, askKindOf, choicesOf } from '../../src/model/asks.ts';
+import { asksOf, askKindOf, choicesOf, isPerTarget } from '../../src/model/asks.ts';
+import type { Inputs } from '../../src/model/asks.ts';
 import { perform } from '../../src/core/perform.ts';
 import { emptyJournal } from '../../src/core/external.ts';
 import { Views } from '../../src/core/view.ts';
@@ -66,8 +67,19 @@ function digest(world: World, outcome: Outcome): { result: unknown; log: unknown
 
 const hash = (value: unknown): string => createHash('sha256').update(JSON.stringify(value ?? null)).digest('hex').slice(0, 16);
 
-function inputsOf(world: World, from: Sheet, actionId: string): Record<string, number | string> {
+const perTargetKeys = (world: World, actionId: string): string[] =>
+  asksOf(actionId, world).filter(param => isPerTarget(param)).map(param => param.key);
+
+function spread(inputs: Record<string, number | string>, keys: readonly string[], toIds: readonly string[]): Inputs {
+  if (!keys.length) return inputs;
+  return Object.fromEntries(Object.entries(inputs).map(([key, value]) =>
+    [key, keys.includes(key) ? Object.fromEntries(toIds.map(id => [id, value])) : value]));
+}
+
+function inputsOf(world: World, from: Sheet, actionId: string, probe: readonly string[]): Record<string, number | string> {
   const params = asksOf(actionId, world);
+  const each = perTargetKeys(world, actionId);
+  const toIds = each.length ? [...probe] : [];
   const candidates = (param: (typeof params)[number]): (number | string)[] => {
     const kind = askKindOf(param);
     if (kind === 'choice') return choicesOf(world.system, param);
@@ -78,7 +90,7 @@ function inputsOf(world: World, from: Sheet, actionId: string): Record<string, n
   const out: Record<string, number | string> = {};
   for (const param of params) out[param.key] = candidates(param)[0] ?? 0;
   const works = (inputs: Record<string, number | string>): boolean => {
-    const outcome = play(world, world.sheets, null, { op: 'act', intent: { actionId, fromId: from.id, toIds: [], inputs } }, DICE.низ!(), 'нет');
+    const outcome = play(world, world.sheets, null, { op: 'act', intent: { actionId, fromId: from.id, toIds, inputs: spread(inputs, each, toIds) } }, DICE.низ!(), 'нет');
     return !('error' in outcome);
   };
   if (!params.length || works(out)) return out;
@@ -115,11 +127,12 @@ function cases(world: World, fast: boolean): Case[] {
       const targetSets: string[][] = fast
         ? [others[0] ? [others[0].id] : []]
         : [[], ...others.map(sheet => [sheet.id]), ...(others.length > 1 ? [[others[0]!.id, others[1]!.id]] : [])];
-      const inputs = inputsOf(world, from, action.id);
+      const inputs = inputsOf(world, from, action.id, others[0] ? [others[0].id] : []);
+      const each = perTargetKeys(world, action.id);
       for (const toIds of targetSets) {
         for (const dice of diceNames) {
           for (const answer of answers) {
-            const intent = { actionId: action.id, fromId: from.id, toIds, ...(Object.keys(inputs).length ? { inputs } : {}) };
+            const intent = { actionId: action.id, fromId: from.id, toIds, ...(Object.keys(inputs).length ? { inputs: spread(inputs, each, toIds) } : {}) };
             const base = `${from.id}|${action.id}|${toIds.join('+') || '—'}|${dice}|${answer}`;
             out.push({ id: `вне боя|${base}`, run: () => play(world, world.sheets, null, { op: 'act', intent }, DICE[dice]!(), answer) });
             if (battle && (fast || toIds.length === Math.min(1, others.length))) {

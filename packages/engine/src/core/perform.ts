@@ -170,6 +170,9 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
       if (host && !keys.has(host)) throw new EngineError(`у листа нет вещи «${host}» — ставить некуда`);
       if (inst && !keys.has(inst)) throw new EngineError(`у листа нет вещи «${inst}»`);
       const mine = (entry: Owned): boolean => (inst ? keyOf(entry) === inst : entry.of === id);
+      if (!inst && owned.filter(entry => entry.of === id).length > 1 && !(on && add)) {
+        throw new EngineError(`у листа несколько «${findRecord(compendium, id)!.label}» — укажите, какой экземпляр`);
+      }
       if (!on) {
         const gone = new Set(owned.filter(mine).map(keyOf));
         for (let grew = true; grew;) {
@@ -184,8 +187,15 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
         if (off) fresh.off = true; else delete fresh.off;
         if (host !== undefined) {
           if (host === null) delete fresh.in;
-          else if (host === keyOf(fresh)) throw new EngineError('вещь не ставится сама в себя');
-          else fresh.in = host;
+          else {
+            const byKey = new Map(owned.map(entry => [keyOf(entry), entry] as const));
+            const seen = new Set<string>();
+            for (let at: string | undefined = host; at && !seen.has(at); at = byKey.get(at)?.in) {
+              if (at === keyOf(fresh)) throw new EngineError('вещь не ставится сама в себя — ни прямо, ни через другую вещь');
+              seen.add(at);
+            }
+            fresh.in = host;
+          }
         }
         next = { ...sheet, has: was ? owned.map(entry => (entry === was ? fresh : entry)) : [...owned, fresh] };
       }

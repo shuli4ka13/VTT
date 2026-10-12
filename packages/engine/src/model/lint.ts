@@ -823,9 +823,48 @@ function recordCellProblems(system: System, compendium?: Compendium): Problem[] 
   return out;
 }
 
+function perTargetProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  const readsOf = (step: unknown, keys: Set<string>): string[] => {
+    const found = new Set<string>();
+    const walk = (value: unknown): void => {
+      if (Array.isArray(value)) { value.forEach(walk); return; }
+      if (!value || typeof value !== 'object') return;
+      const expr = (value as { expr?: unknown }).expr;
+      if (typeof expr === 'string') {
+        let deps: readonly string[] = [];
+        try { deps = compile(expr).deps; } catch { deps = []; }
+        for (const dep of deps) { const head = dep.split('.')[0]!; if (keys.has(head)) found.add(head); }
+      }
+      Object.values(value).forEach(walk);
+    };
+    walk(step);
+    return [...found];
+  };
+  for (const [id, effect] of Object.entries(system.effects)) {
+    const each = (effect.params ?? []).filter(param => (param as { perTarget?: boolean }).perTarget);
+    if (!each.length) continue;
+    const keys = new Set(each.map(param => param.key));
+    const steps = effect.steps ?? [];
+    const loop = steps.findIndex(step => registry.get(step.type)?.loops && (step as { of?: unknown }).of);
+    for (const param of each) {
+      const name = param.label ?? param.key;
+      if (!param.ask) out.push({ where: { tab: 'effects', effect: id, key: param.key, part: 'params' }, level: 'error', text: `вход «${name}» спрашивается для каждой цели — ему нужен вопрос игроку («Спросить»)` });
+      if (loop < 0) out.push({ where: { tab: 'effects', effect: id, key: param.key, part: 'params' }, level: 'error', text: `вход «${name}» — для каждой цели, а «${STEP_WORDS.each.label}» по целям у эффекта нет` });
+    }
+    (effect.cost ?? []).forEach((step, index) => {
+      for (const key of readsOf(step, keys)) out.push({ where: { tab: 'effects', effect: id, step: index, part: 'cost' }, level: 'error', text: `«${key}» — своё у каждой цели, в «Плате» его не прочесть` });
+    });
+    steps.slice(0, Math.max(loop, 0)).forEach((step, index) => {
+      for (const key of readsOf(step, keys)) out.push({ where: { tab: 'effects', effect: id, step: index }, level: 'error', text: `«${key}» — своё у каждой цели, до «${STEP_WORDS.each.label}» его не прочесть` });
+    });
+  }
+  return out;
+}
+
 export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   const declared = declaredOf(system);
-  const out: Problem[] = [];
+  const out: Problem[] = [...perTargetProblems(system)];
 
   for (const [id, effect] of Object.entries(system.effects)) {
     for (const chain of chainsOf(id, effect)) {

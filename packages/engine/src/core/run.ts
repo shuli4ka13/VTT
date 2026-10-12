@@ -44,7 +44,7 @@ import type { Roll, RollResult, Spec } from './dice.ts';
 import type { Thrown } from './roll.ts';
 import type { Sub } from './subs.ts';
 import type { Ctx, StepData, FieldRef } from './steps.ts';
-import { ITEM_NAME, itemColumn, itemStored, parseItemTag, withItemValue } from '../model/item-ref.ts';
+import { ITEM_NAME, itemColumn, itemStored, itemTag, parseItemTag, withItemValue } from '../model/item-ref.ts';
 import type { ItemRef } from '../model/item-ref.ts';
 
 export interface World {
@@ -382,7 +382,7 @@ export class Run {
     const lazy = frame.lazy;
     const ref: RefContext = {
       pass: this.view(frame.home), die, owner: frame.owner, props: frame.props, paramDefs: frame.paramDefs, params: frame.args,
-      ...(frame.item ? { item: frame.item } : {}),
+      ...(frame.item ? { item: frame.item, itemRead: (column: string) => this.itemRead(frame.item!, column) } : {}),
       ...(frame.inputs ? { inputs: frame.inputs } : {}),
       results, rolls, stepIds,
       ...(frame.alone ? { alone: true } : {}),
@@ -598,6 +598,12 @@ export class Run {
     if (this.sheet(holder)) return holder;
     if (findField(this.system, tag)?.lives === 'group') return sheetId;
     throw new EngineError(`поле «${tag}» лежит на «${holder}», а такого листа здесь нет`);
+  }
+
+  private itemRead(item: ItemRef, column: string): unknown {
+    const sheet = this.sheet(item.sheet);
+    if (!sheet || !(sheet.has ?? []).some(entry => (entry.id ?? entry.of) === item.key)) return null;
+    return this.read(item.sheet, itemTag(item.key, column));
   }
 
   private read(sheetId: string, tag: string): unknown {
