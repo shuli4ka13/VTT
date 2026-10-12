@@ -486,7 +486,12 @@ describe('эффекты пресетов собираются в констру
   it('Shadowrun «Атаковать» (ranged_attack) по формам: защита и сопротивление в цикле, счёт успехов, «Если … Иначе»', { timeout: 90000 }, () => {
     const world = structuredClone(worldOf('shadowrun6'));
     const goal = structuredClone(world.system.effects.ranged_attack!);
-    world.system.effects.ranged_attack!.steps = goal.steps!.slice(0, 11);
+    const steps = goal.steps! as { id?: string; type: string; if?: { expr: string }; value?: { expr: string } }[];
+    const from = steps.findIndex(step => step.id === 'атака_против');
+    const otherwise = steps.findIndex((step, index) => index > from && step.type === 'orElse');
+    const upTo = otherwise + 3;
+    const damage = steps[otherwise + 1]!.value!.expr;
+    world.system.effects.ranged_attack!.steps = goal.steps!.slice(0, from);
     useWorld.setState(state => ({
       ...state, system: world.system as System, compendium: world.compendium,
       activeEffectId: 'ranged_attack', activeFieldTag: null, activeRecordKind: null, activeSheetKind: null,
@@ -525,10 +530,10 @@ describe('эффекты пресетов собираются в констру
       within(at(n)).select('У кого', 'цель');
       within(at(n)).select('Какое поле', field);
       within(at(n)).select('Как', 'add');
-      within(at(n)).formula('Сколько', 'большее из(0, @dv + или(@режим.dv, 0) + или(@приём.dv, 0) + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural - @сопротивление.natural)');
+      within(at(n)).formula('Сколько', damage);
     };
     ui.click('+ если');
-    within(headOf(block(shown + 1))).when('=@physical_hit >= 1');
+    within(headOf(block(shown + 1))).when(`=${steps[otherwise - 2]!.if!.expr}`);
     addToArm(block(shown + 1), 0, 'change');
     hurt(first + 4, 'physical');
     addArm(block(shown + 1), '+ иначе');
@@ -537,8 +542,8 @@ describe('эффекты пресетов собираются в констру
     hurt(first + 5, 'stun');
 
     const got = built('ranged_attack')!;
-    dump({ got: { ...got, steps: got.steps }, goal: { ...goal, steps: goal.steps!.slice(0, 23) } });
-    expect(got.steps).toEqual(goal.steps!.slice(0, 23));
+    dump({ got: { ...got, steps: got.steps }, goal: { ...goal, steps: goal.steps!.slice(0, upTo) } });
+    expect(got.steps).toEqual(goal.steps!.slice(0, upTo));
   });
 
   it('Blades «Залечь на дно» (lay_low): условная метка броска, степени успеха, «стало» формулой', { timeout: 90000 }, () => {
