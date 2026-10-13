@@ -17,11 +17,12 @@ export const MOMENTS = {
   'scene-end': 'когда закрыли сцену',
   'short-rest': 'на коротком отдыхе',
   'long-rest': 'на долгом отдыхе',
+  time: 'когда прошло время',
 } as const;
 
 export type MomentKey = keyof typeof MOMENTS;
 
-const TABLE_MOMENTS: ReadonlySet<MomentKey> = new Set<MomentKey>(['combat-start', 'round-start', 'combat-end', 'scene-end', 'short-rest', 'long-rest']);
+const TABLE_MOMENTS: ReadonlySet<MomentKey> = new Set<MomentKey>(['combat-start', 'round-start', 'combat-end', 'scene-end', 'short-rest', 'long-rest', 'time']);
 
 export const heardMoments = (system: System): Set<MomentKey> =>
   new Set(Object.values(system.effects ?? {}).flatMap(effect => (effect.on ?? []).map(handler => momentOf(handler.on)))
@@ -41,7 +42,7 @@ export interface MomentEvent {
   sheetId: string;
 }
 
-export type TurnOp = 'start' | 'next' | 'stop' | 'scene' | 'short-rest' | 'long-rest';
+export type TurnOp = 'start' | 'next' | 'stop' | 'scene' | 'short-rest' | 'long-rest' | 'time';
 
 export function momentsOfTurn(op: TurnOp, before: Clock, after: Clock, sheets: Sheet[]): MomentEvent[] {
   const desk = sheets.find(isDesk);
@@ -65,6 +66,7 @@ export function momentsOfTurn(op: TurnOp, before: Clock, after: Clock, sheets: S
   if (op === 'stop') return everyone('combat-end');
   if (op === 'short-rest') return everyone('short-rest');
   if (op === 'long-rest') return [...everyone('short-rest'), ...everyone('long-rest')];
+  if (op === 'time') return everyone('time');
   return everyone('scene-end');
 }
 

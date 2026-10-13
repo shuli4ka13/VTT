@@ -138,7 +138,7 @@ export class RoomsService {
   }
 
   turn(userId: string, intent: TurnIntent): Promise<RoomDelta> {
-    return this.world(intent.roomId, userId, 'turn', intent, { op: 'turn', turn: intent.op, ...(intent.order ? { order: intent.order } : {}) }, false);
+    return this.world(intent.roomId, userId, 'turn', intent, { op: 'turn', turn: intent.op, ...(intent.order ? { order: intent.order } : {}), ...(intent.seconds ? { seconds: intent.seconds } : {}) }, false);
   }
 
   setValue(userId: string, roomId: string, sheetId: string, tag: string, value: StoredValue): Promise<RoomDelta> {

@@ -28,7 +28,7 @@ import type { System, Effect, Step } from '@vtt/schema';
 
 const DURATION_OPTIONS = Object.entries(DURATIONS).map(([key, word]) => [key, word.label] as const);
 
-const COUNTED = new Set(['uses', 'rounds', 'turns']);
+const COUNTED = new Set(['uses', 'rounds', 'turns', 'minutes', 'hours', 'days']);
 
 const ENDS = [
   ['turn-end', 'в конце хода'],

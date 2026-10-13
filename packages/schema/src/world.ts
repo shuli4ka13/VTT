@@ -187,7 +187,7 @@ export const editModifier = z.object({
 export const modifier = z.discriminatedUnion('kind', [valueModifier, editModifier]);
 
 export const activation = z.enum(['manual', 'passive']);
-export const durationKind = z.enum(['permanent', 'uses', 'rounds', 'turns', 'combat', 'scene']);
+export const durationKind = z.enum(['permanent', 'uses', 'rounds', 'turns', 'combat', 'scene', 'minutes', 'hours', 'days']);
 export const reapply = z.enum(['ignore', 'refresh', 'stack']);
 
 export const ask = z.object({
@@ -336,6 +336,7 @@ export const wornEffect = z.object({
   usesLeft: z.number().int().optional(),
   turnsLeft: z.number().int().optional(),
   until: z.number().int().optional(),
+  atSec: z.number().optional(),
   combat: z.boolean().optional(),
   scene: z.boolean().optional(),
   args: z.record(z.string(), storedValue).optional(),

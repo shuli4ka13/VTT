@@ -4,7 +4,7 @@ import { availableActions, actionOf } from '../events/actions.ts';
 import { asksOf, checkInputs, normalizeInputs } from '../model/asks.ts';
 import { findRecord, sheetKindOf, keyOf } from '../model/owned.ts';
 import { findEffect, usesMax, reapplyOf } from '../engine/effects.ts';
-import { expiryOf, inCombat, startCombat, nextTurn, stopCombat } from '../engine/clock.ts';
+import { expiryOf, inCombat, startCombat, nextTurn, stopCombat, passTime, spanText } from '../engine/clock.ts';
 import { momentsOfTurn } from '../events/moments.ts';
 import { fieldCheck } from '../engine/check.ts';
 import { newBreaches } from '../engine/limits.ts';
@@ -30,7 +30,7 @@ export type Op =
   | { op: 'belonging'; sheetId: string; list: 'has' | 'effects'; id: string; on: boolean; off?: boolean; inst?: string; add?: boolean; in?: string | null }
   | { op: 'kind'; sheetId: string; of: string | null }
   | { op: 'group'; sheetId: string; group: string | null }
-  | { op: 'turn'; turn: TurnOp; order?: string[] }
+  | { op: 'turn'; turn: TurnOp; order?: string[]; seconds?: number }
   | { op: 'sheet'; name: string; of?: string };
 
 export interface PerformWorld {
@@ -256,7 +256,7 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     return true;
   },
 
-  turn(run, { turn, order }, root) {
+  turn(run, { turn, order, seconds }, root) {
     const before = run.clock ?? { round: 0, order: [], active: null };
     const nameOf = (id: string) => run.sheet(id)?.name ?? id;
     let next: Clock = before;
@@ -278,8 +278,13 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
       next = nextTurn(before);
       run.state.write({ text: next.round !== before.round ? `Раунд ${next.round}. Ход: ${nameOf(String(next.active))}` : `Ход: ${nameOf(String(next.active))}` });
     } else if (turn === 'stop') {
-      next = stopCombat();
+      next = stopCombat(before);
       run.state.write({ text: 'Бой окончен' });
+    } else if (turn === 'time') {
+      const span = Math.max(0, Number(seconds ?? 0));
+      if (!span) throw new EngineError('сколько времени прошло — не указано');
+      next = passTime(before, span);
+      run.state.write({ text: `Прошло ${spanText(span)}` });
     } else if (turn === 'short-rest' || turn === 'long-rest') {
       if (inCombat(before)) throw new EngineError('в бою не отдыхают — сначала закончите бой');
       run.state.write({ text: turn === 'long-rest' ? 'Долгий отдых' : 'Короткий отдых' });

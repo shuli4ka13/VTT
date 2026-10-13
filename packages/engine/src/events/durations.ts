@@ -40,6 +40,7 @@ function tickTurn(system: System, owner: string, entry: WornEffect, event: Lapse
 }
 
 function verdictOf(system: System, owner: string, entry: WornEffect, event: Lapse, clock: Clock | null | undefined): Verdict {
+  if ((event.moment === 'time' || event.moment === 'round-start') && owner === event.sheetId && typeof entry.atSec === 'number' && entry.atSec <= Number(clock?.sec ?? 0)) return null;
   switch (event.moment) {
     case 'turn-start':
     case 'turn-end':

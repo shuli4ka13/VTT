@@ -113,6 +113,7 @@ export const clockState = z.object({
   round: z.number().int().nonnegative(),
   order: z.array(z.string()),
   active: z.string().nullable(),
+  sec: z.number().nonnegative().optional(),
 });
 
 export const logEntry = z.object({
@@ -137,8 +138,9 @@ export const roomState = z.object({
 
 export const turnIntent = z.object({
   roomId: z.string(),
-  op: z.enum(['start', 'next', 'stop', 'scene', 'short-rest', 'long-rest']),
+  op: z.enum(['start', 'next', 'stop', 'scene', 'short-rest', 'long-rest', 'time']),
   order: z.array(z.string().min(1)).optional(),
+  seconds: z.number().positive().optional(),
 });
 
 export const actIntent = z.object({

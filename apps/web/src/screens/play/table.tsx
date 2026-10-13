@@ -170,16 +170,18 @@ function Combat({ room, onError }: { room: RoomState; onError: (message: string 
   const userId = useSession(s => s.userId);
   const clock = room.clock;
   const nameOf = (id: string) => room.sheets.find(s => s.id === id)?.name ?? id;
-  const send = (op: 'start' | 'next' | 'stop' | 'scene' | 'short-rest' | 'long-rest') => {
+  const heard = heardMoments(room.system);
+  const send = (op: 'start' | 'next' | 'stop' | 'scene' | 'short-rest' | 'long-rest' | 'time', seconds?: number) => {
     onError(null);
-    tableSocket.turn({ roomId: room.id, op });
+    tableSocket.turn({ roomId: room.id, op, ...(seconds ? { seconds } : {}) });
   };
+  const [span, setSpan] = useState(600);
+  const timed = heard.has('time') || Object.values(room.system.effects ?? {}).some(e => ['minutes', 'hours', 'days'].includes(String(e.duration?.kind)));
   const fighting = Boolean(clock && clock.round > 0 && clock.active);
   const waiting = Boolean(room.pending);
   const why = waiting ? 'стол ждёт ответа на вопрос ниже' : undefined;
-  const heard = heardMoments(room.system);
   const rest = heard.has('long-rest') || heard.has('short-rest');
-  const may = (turn: 'start' | 'stop' | 'scene' | 'short-rest' | 'long-rest') => mayTurn(room, userId, turn);
+  const may = (turn: 'start' | 'stop' | 'scene' | 'short-rest' | 'long-rest' | 'time') => mayTurn(room, userId, turn);
 
   return (
     <Card>
@@ -203,6 +205,16 @@ function Combat({ room, onError }: { room: RoomState; onError: (message: string 
                 {may('long-rest') ? <Button size="sm" variant="ghost" disabled={waiting} title={why} onClick={() => send('long-rest')}>Долгий отдых</Button> : null}
               </>
             )}
+            {timed && may('time') ? (
+              <>
+                <select className="select" style={{ width: 110 }} value={span} onChange={e => setSpan(Number(e.target.value))}>
+                  {[[60, '1 минута'], [600, '10 минут'], [3600, '1 час'], [28800, '8 часов'], [86400, '1 день'], [604800, '1 неделя']].map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+                <Button size="sm" variant="ghost" disabled={waiting} title={why} onClick={() => send('time', span)}>Прошло время</Button>
+              </>
+            ) : null}
             {may('scene') ? <Button size="sm" variant="ghost" disabled={waiting} title={why} onClick={() => send('scene')}>Закрыть сцену</Button> : null}
           </>
         }
