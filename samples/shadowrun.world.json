@@ -2224,6 +2224,9 @@
           },
           {
             "value": "таран"
+          },
+          {
+            "value": "наркотик"
           }
         ]
       },
@@ -8970,6 +8973,88 @@
             }
           }
         ]
+      },
+      "toxin": {
+        "label": "Токсин",
+        "icon": "☠",
+        "hint": "Путь введения, скорость, длительность, сила, эффект (стр. 121–123).",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "extends": "gear",
+        "columns": [
+          {
+            "key": "vector",
+            "label": "Путь введения",
+            "kind": "text"
+          },
+          {
+            "key": "speed",
+            "label": "Скорость",
+            "kind": "text"
+          },
+          {
+            "key": "duration",
+            "label": "Длительность",
+            "kind": "text"
+          },
+          {
+            "key": "effect",
+            "label": "Эффект",
+            "kind": "text"
+          },
+          {
+            "key": "power",
+            "label": "Сила",
+            "kind": "number"
+          },
+          {
+            "key": "damage",
+            "label": "Урон",
+            "kind": "text"
+          }
+        ]
+      },
+      "drug": {
+        "label": "Наркотик",
+        "icon": "💊",
+        "hint": "Срок — игровое время; по окончании — отходняк (стр. 124–125).",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "extends": "gear",
+        "columns": [
+          {
+            "key": "vector",
+            "label": "Путь введения",
+            "kind": "text"
+          },
+          {
+            "key": "speed",
+            "label": "Скорость",
+            "kind": "text"
+          },
+          {
+            "key": "duration",
+            "label": "Длительность",
+            "kind": "text"
+          },
+          {
+            "key": "effect",
+            "label": "Эффект",
+            "kind": "text"
+          },
+          {
+            "key": "crash",
+            "label": "Отходняк",
+            "kind": "text"
+          },
+          {
+            "key": "power",
+            "label": "Сила",
+            "kind": "number"
+          }
+        ]
       }
     },
     "roll_edits": {
@@ -9821,22 +9906,22 @@
         "description": "Тело + Воля: каждый успех — 1 оглушающий.",
         "steps": [
           {
+            "type": "each",
+            "of": "цели"
+          },
+          {
             "id": "заживление_бросок",
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "@действующий.body + @действующий.willpower"
+              "expr": "@цель.body + @цель.willpower"
             },
             "tags": [
               "лечение"
             ],
             "by": {
-              "expr": "@действующий"
+              "expr": "@цель"
             }
-          },
-          {
-            "type": "each",
-            "of": "цели"
           },
           {
             "type": "apply",
@@ -9864,7 +9949,7 @@
               "expr": "@цель.stun"
             },
             "value": {
-              "expr": "меньшее из(@действующий.stun, @заживление.natural)"
+              "expr": "меньшее из(@цель.stun, @заживление.natural)"
             }
           }
         ],
@@ -9892,22 +9977,22 @@
         "description": "Тело + Тело: каждый успех — 1 физический.",
         "steps": [
           {
+            "type": "each",
+            "of": "цели"
+          },
+          {
             "id": "заживление_бросок",
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "@действующий.body * 2"
+              "expr": "@цель.body * 2"
             },
             "tags": [
               "лечение"
             ],
             "by": {
-              "expr": "@действующий"
+              "expr": "@цель"
             }
-          },
-          {
-            "type": "each",
-            "of": "цели"
           },
           {
             "type": "apply",
@@ -9935,7 +10020,7 @@
               "expr": "@цель.physical"
             },
             "value": {
-              "expr": "меньшее из(@действующий.physical, @заживление.natural)"
+              "expr": "меньшее из(@цель.physical, @заживление.natural)"
             }
           }
         ],
@@ -24472,6 +24557,1166 @@
             }
           }
         ]
+      },
+      "intoxicate": {
+        "label": "Токсин",
+        "group": "Химия",
+        "description": "Сопротивление Тело + Воля против силы токсина; остаток силы — урон по виду токсина и его состояния. Скорость действия, повтор и антидот — справка: эффект наступает сразу (стр. 121–123).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто применяет",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
+          },
+          {
+            "key": "power",
+            "label": "Сила",
+            "kind": "number"
+          },
+          {
+            "key": "dmg",
+            "label": "Урон",
+            "kind": "text",
+            "default": "нет"
+          },
+          {
+            "key": "s1",
+            "label": "Состояние 1",
+            "kind": "text",
+            "default": ""
+          },
+          {
+            "key": "s2",
+            "label": "Состояние 2",
+            "kind": "text",
+            "default": ""
+          },
+          {
+            "key": "s3",
+            "label": "Состояние 3",
+            "kind": "text",
+            "default": ""
+          },
+          {
+            "key": "doses",
+            "label": "Доз сверх первой",
+            "kind": "number",
+            "default": 0,
+            "min": 0,
+            "ask": {
+              "by": "actor"
+            }
+          }
+        ],
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели"
+          },
+          {
+            "id": "стойкость",
+            "type": "roll",
+            "die": "pool",
+            "count": {
+              "expr": "@цель.body + @цель.willpower"
+            },
+            "tags": [
+              "сопротивление",
+              "токсин"
+            ],
+            "by": {
+              "expr": "@цель"
+            }
+          },
+          {
+            "id": "итог",
+            "type": "check",
+            "value": {
+              "expr": "@power + @doses"
+            },
+            "versus": {
+              "expr": "@стойкость"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@итог.success"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@dmg != \"нет\""
+            }
+          },
+          {
+            "type": "emit",
+            "effect": "take_damage",
+            "args": {
+              "лист": {
+                "expr": "@цель"
+              },
+              "amount": {
+                "expr": "@итог.margin"
+              },
+              "physical_hit": {
+                "expr": "если(@dmg == \"физический\", 1, 0)"
+              }
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@s1 != \"\""
+            }
+          },
+          {
+            "type": "status",
+            "effect": {
+              "expr": "@s1"
+            },
+            "to": {
+              "expr": "@цель"
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@s2 != \"\""
+            }
+          },
+          {
+            "type": "status",
+            "effect": {
+              "expr": "@s2"
+            },
+            "to": {
+              "expr": "@цель"
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@s3 != \"\""
+            }
+          },
+          {
+            "type": "status",
+            "effect": {
+              "expr": "@s3"
+            },
+            "to": {
+              "expr": "@цель"
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "end"
+          }
+        ]
+      },
+      "drug_crashes": {
+        "label": "Отходняк",
+        "group": "Химия",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Когда наркотик спадает — его отходняк (стр. 124–125).",
+        "on": [
+          {
+            "on": "lost:dg_jazz",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
+            "steps": [
+              {
+                "type": "status",
+                "effect": "dazed",
+                "to": {
+                  "expr": "@лист"
+                }
+              }
+            ]
+          },
+          {
+            "on": "lost:dg_long_way",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
+            "steps": [
+              {
+                "type": "emit",
+                "effect": "take_damage",
+                "args": {
+                  "лист": {
+                    "expr": "@лист"
+                  },
+                  "amount": {
+                    "expr": "12"
+                  },
+                  "physical_hit": {
+                    "expr": "0"
+                  }
+                }
+              },
+              {
+                "type": "status",
+                "effect": "fatigued",
+                "to": {
+                  "expr": "@лист"
+                }
+              }
+            ]
+          },
+          {
+            "on": "lost:dg_zubrila",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
+            "steps": [
+              {
+                "type": "emit",
+                "effect": "take_damage",
+                "args": {
+                  "лист": {
+                    "expr": "@лист"
+                  },
+                  "amount": {
+                    "expr": "6"
+                  },
+                  "physical_hit": {
+                    "expr": "0"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "on": "lost:dg_kamikaze",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
+            "steps": [
+              {
+                "type": "emit",
+                "effect": "take_damage",
+                "args": {
+                  "лист": {
+                    "expr": "@лист"
+                  },
+                  "amount": {
+                    "expr": "6"
+                  },
+                  "physical_hit": {
+                    "expr": "0"
+                  }
+                }
+              },
+              {
+                "type": "status",
+                "effect": "fatigued",
+                "to": {
+                  "expr": "@лист"
+                }
+              }
+            ]
+          },
+          {
+            "on": "lost:dg_nitro",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
+            "steps": [
+              {
+                "type": "emit",
+                "effect": "take_damage",
+                "args": {
+                  "лист": {
+                    "expr": "@лист"
+                  },
+                  "amount": {
+                    "expr": "9"
+                  },
+                  "physical_hit": {
+                    "expr": "0"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "dg_alcohol": {
+        "label": "Алкоголь",
+        "group": "Химия",
+        "activation": "passive",
+        "reapply": "refresh",
+        "description": "Синтетический алкоголь, от пива до самогона. Сила 6; через минуту после приёма принявший получает Реакцию −1, Логику −1 и Устойчивость к боли (штраф за раны меньше на 1). Время действия (8 − Тело) часов, не меньше часа. Доступности нет, цена от 5 до 500 ¥ (в клетке 5) (стр. 124)",
+        "duration": {
+          "kind": "minutes",
+          "max": {
+            "expr": "или(@dur, 60)"
+          }
+        },
+        "params": [
+          {
+            "key": "dur",
+            "label": "Минут",
+            "kind": "number",
+            "default": 60
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "reaction",
+            "op": "add",
+            "stage": "аугментация",
+            "value": {
+              "expr": "-1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "logic",
+            "op": "add",
+            "value": {
+              "expr": "-1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "pain_relief",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "dg_alcohol_take": {
+        "label": "Принять: Алкоголь",
+        "group": "Химия",
+        "description": "Срок: (8 − Тело) часов, минимум 1 час (стр. 124).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто",
+            "kind": "sheet"
+          }
+        ],
+        "steps": [
+          {
+            "id": "срок",
+            "type": "roll",
+            "fixed": {
+              "expr": "большее из(60, (8 - @действующий.body) * 60)"
+            }
+          },
+          {
+            "type": "status",
+            "effect": "dg_alcohol",
+            "to": {
+              "expr": "@действующий"
+            },
+            "args": {
+              "dur": {
+                "expr": "большее из(1, @срок)"
+              }
+            }
+          }
+        ]
+      },
+      "dg_bliss": {
+        "label": "«Блаженство»",
+        "group": "Химия",
+        "activation": "passive",
+        "reapply": "refresh",
+        "description": "Опиатный транквилизатор из мака. Сила 8; Реакция −1, Воля −1, Устойчивость к боли (штраф за раны меньше на 1). Время действия (6 − Тело) часов, не меньше часа. Отыгрыш зависимости — ставка на эскапизм. Доступность 2 (Н), цена 15 ¥ (стр. 124)",
+        "duration": {
+          "kind": "minutes",
+          "max": {
+            "expr": "или(@dur, 60)"
+          }
+        },
+        "params": [
+          {
+            "key": "dur",
+            "label": "Минут",
+            "kind": "number",
+            "default": 60
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "reaction",
+            "op": "add",
+            "stage": "аугментация",
+            "value": {
+              "expr": "-1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "willpower",
+            "op": "add",
+            "value": {
+              "expr": "-1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "pain_relief",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "dg_bliss_take": {
+        "label": "Принять: «Блаженство»",
+        "group": "Химия",
+        "description": "Срок: (6 − Тело) часов, минимум 1 час (стр. 124).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто",
+            "kind": "sheet"
+          }
+        ],
+        "steps": [
+          {
+            "id": "срок",
+            "type": "roll",
+            "fixed": {
+              "expr": "большее из(60, (6 - @действующий.body) * 60)"
+            }
+          },
+          {
+            "type": "status",
+            "effect": "dg_bliss",
+            "to": {
+              "expr": "@действующий"
+            },
+            "args": {
+              "dur": {
+                "expr": "большее из(1, @срок)"
+              }
+            }
+          }
+        ]
+      },
+      "dg_deep_weed": {
+        "label": "«Глубинная трава»",
+        "group": "Химия",
+        "activation": "passive",
+        "reapply": "refresh",
+        "description": "Наркотик карибских унганов из Пробуждённых водорослей. Сила 7; Воля +1; любой активный пользователь магии вынужден смотреть Вниманием в астрале, даже если не умеет. После окончания штраф −1 ко всем наборам на ту же длительность. Астральное зрение привлекает лишнее внимание. Время действия (6 − Тело) часов, не меньше часа. Доступность 4 (Н), цена 400 ¥ (стр. 124)",
+        "duration": {
+          "kind": "minutes",
+          "max": {
+            "expr": "или(@dur, 60)"
+          }
+        },
+        "params": [
+          {
+            "key": "dur",
+            "label": "Минут",
+            "kind": "number",
+            "default": 60
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "willpower",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "dg_deep_weed_take": {
+        "label": "Принять: «Глубинная трава»",
+        "group": "Химия",
+        "description": "Срок: (6 − Тело) часов, минимум 1 час (стр. 124).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто",
+            "kind": "sheet"
+          }
+        ],
+        "steps": [
+          {
+            "id": "срок",
+            "type": "roll",
+            "fixed": {
+              "expr": "большее из(60, (6 - @действующий.body) * 60)"
+            }
+          },
+          {
+            "type": "status",
+            "effect": "dg_deep_weed",
+            "to": {
+              "expr": "@действующий"
+            },
+            "args": {
+              "dur": {
+                "expr": "большее из(1, @срок)"
+              }
+            }
+          }
+        ]
+      },
+      "dg_jazz": {
+        "label": "«Джаз»",
+        "group": "Химия",
+        "activation": "passive",
+        "reapply": "refresh",
+        "description": "Стимулятор для дежурных офицеров, обычно в одноразовых ингаляторах. Сила 9; Реакция +1, к инициативе +2 кубика (в книге «+2D6 куб. ин.»). Длительность 10 × 1к6 минут. После окончания — ломка: Ошеломление на столько же, сколько длился эффект. Доступность 2 (Л), цена 75 ¥ (стр. 124)",
+        "duration": {
+          "kind": "minutes",
+          "max": {
+            "expr": "или(@dur, 60)"
+          }
+        },
+        "params": [
+          {
+            "key": "dur",
+            "label": "Минут",
+            "kind": "number",
+            "default": 60
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "reaction",
+            "op": "add",
+            "stage": "аугментация",
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "init_dice",
+            "op": "add",
+            "value": {
+              "expr": "2"
+            }
+          }
+        ]
+      },
+      "dg_jazz_take": {
+        "label": "Принять: «Джаз»",
+        "group": "Химия",
+        "description": "Срок: 10 × 1к6 минут (стр. 124).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто",
+            "kind": "sheet"
+          }
+        ],
+        "steps": [
+          {
+            "id": "срок",
+            "type": "roll",
+            "fixed": {
+              "expr": "10 * кинуть(к6)"
+            }
+          },
+          {
+            "type": "status",
+            "effect": "dg_jazz",
+            "to": {
+              "expr": "@действующий"
+            },
+            "args": {
+              "dur": {
+                "expr": "большее из(1, @срок)"
+              }
+            }
+          }
+        ]
+      },
+      "dg_dzen": {
+        "label": "«Дзэн»",
+        "group": "Химия",
+        "activation": "passive",
+        "reapply": "refresh",
+        "description": "Психоделический галлюциноген для ухода в транс. Сила 7; через 5 минут после приёма Реакция −2, Воля +1 и −1 кубик к действиям, завязанным на физические характеристики. Длительность 10 × 1к6 минут. Доступность 3 (Л), цена 5 ¥ (название по картинке и OCR: «Дэн»/«Дзэн») (стр. 124)",
+        "duration": {
+          "kind": "minutes",
+          "max": {
+            "expr": "или(@dur, 60)"
+          }
+        },
+        "params": [
+          {
+            "key": "dur",
+            "label": "Минут",
+            "kind": "number",
+            "default": 60
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "reaction",
+            "op": "add",
+            "stage": "аугментация",
+            "value": {
+              "expr": "-2"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "willpower",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "dg_dzen_take": {
+        "label": "Принять: «Дзэн»",
+        "group": "Химия",
+        "description": "Срок: 10 × 1к6 минут (стр. 124).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто",
+            "kind": "sheet"
+          }
+        ],
+        "steps": [
+          {
+            "id": "срок",
+            "type": "roll",
+            "fixed": {
+              "expr": "10 * кинуть(к6)"
+            }
+          },
+          {
+            "type": "status",
+            "effect": "dg_dzen",
+            "to": {
+              "expr": "@действующий"
+            },
+            "args": {
+              "dur": {
+                "expr": "большее из(1, @срок)"
+              }
+            }
+          }
+        ]
+      },
+      "dg_long_way": {
+        "label": "«Долгий путь»",
+        "group": "Химия",
+        "activation": "passive",
+        "reapply": "refresh",
+        "description": "Синтетические гормоны и регуляторы мозга. Сила 11; принявший не спит 4 дня без штрафов за усталость. Затем падает без сознания и спит 8к6 часов; если не спит — Утомление I, галлюцинации, не может сосредоточиться. Вторая доза после окончания первой: ещё (1к6 / 2) дней без сна и Утомление I; третья — ещё 1 день и Утомление II; четвёртая — ещё 1 день и Утомление III; следующие дозы не действуют, дают 12 оглушающего урона без сопротивления и ломку, а сон дальше не блокируется. Если стимулирующим пластырем держать в сознании, Утомление III держится, пока не отоспит 8к6 часов. Доступности нет, цена 50 ¥ (стр. 124–125)",
+        "duration": {
+          "kind": "minutes",
+          "max": {
+            "expr": "или(@dur, 60)"
+          }
+        },
+        "params": [
+          {
+            "key": "dur",
+            "label": "Минут",
+            "kind": "number",
+            "default": 60
+          }
+        ],
+        "modifiers": []
+      },
+      "dg_long_way_take": {
+        "label": "Принять: «Долгий путь»",
+        "group": "Химия",
+        "description": "Срок: 4 дня (стр. 124).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто",
+            "kind": "sheet"
+          }
+        ],
+        "steps": [
+          {
+            "id": "срок",
+            "type": "roll",
+            "fixed": {
+              "expr": "5760"
+            }
+          },
+          {
+            "type": "status",
+            "effect": "dg_long_way",
+            "to": {
+              "expr": "@действующий"
+            },
+            "args": {
+              "dur": {
+                "expr": "большее из(1, @срок)"
+              }
+            }
+          }
+        ]
+      },
+      "dg_zubrila": {
+        "label": "«Зубрила»",
+        "group": "Химия",
+        "activation": "passive",
+        "reapply": "refresh",
+        "description": "Популярный стимулятор. Сила 8; через 10 минут Реакция +1 и +1 кубик инициативы (книга «+1D6 куб. ин.»). Время действия (12 − Тело) часов, не меньше часа. Состояние гипербдительности, вплоть до паранойи, дрожь и нервозность. После окончания — 6 оглушающего урона без сопротивления. Доступность 2 (Л), цена 10 ¥ (стр. 125)",
+        "duration": {
+          "kind": "minutes",
+          "max": {
+            "expr": "или(@dur, 60)"
+          }
+        },
+        "params": [
+          {
+            "key": "dur",
+            "label": "Минут",
+            "kind": "number",
+            "default": 60
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "reaction",
+            "op": "add",
+            "stage": "аугментация",
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "init_dice",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "dg_zubrila_take": {
+        "label": "Принять: «Зубрила»",
+        "group": "Химия",
+        "description": "Срок: (12 − Тело) часов, минимум 1 час (стр. 125).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто",
+            "kind": "sheet"
+          }
+        ],
+        "steps": [
+          {
+            "id": "срок",
+            "type": "roll",
+            "fixed": {
+              "expr": "большее из(60, (12 - @действующий.body) * 60)"
+            }
+          },
+          {
+            "type": "status",
+            "effect": "dg_zubrila",
+            "to": {
+              "expr": "@действующий"
+            },
+            "args": {
+              "dur": {
+                "expr": "большее из(1, @срок)"
+              }
+            }
+          }
+        ]
+      },
+      "dg_kamikaze": {
+        "label": "«Камикадзе»",
+        "group": "Химия",
+        "activation": "passive",
+        "reapply": "refresh",
+        "description": "Боевой стимулятор. Сила 10; Тело +1, Проворство +1, Сила +2, Воля +1, +2 кубика инициативы (книга «+2D6 куб. ин.»), Устойчивость к боли. Длительность 10 × 1к6 минут. После — Реакция −1, Воля −1 и Утомление II на время, вдвое большее длительности эффекта, и 6 оглушающего урона без сопротивления. Долгое употребление разрушает метаболизм, крупные дозы дают тревогу и галлюцинации, высокие — смерть. Доступность 3 (Л), цена 100 ¥ (стр. 125)",
+        "duration": {
+          "kind": "minutes",
+          "max": {
+            "expr": "или(@dur, 60)"
+          }
+        },
+        "params": [
+          {
+            "key": "dur",
+            "label": "Минут",
+            "kind": "number",
+            "default": 60
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "body",
+            "op": "add",
+            "stage": "аугментация",
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "agility",
+            "op": "add",
+            "stage": "аугментация",
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "strength",
+            "op": "add",
+            "stage": "аугментация",
+            "value": {
+              "expr": "2"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "willpower",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "init_dice",
+            "op": "add",
+            "value": {
+              "expr": "2"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "pain_relief",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "dg_kamikaze_take": {
+        "label": "Принять: «Камикадзе»",
+        "group": "Химия",
+        "description": "Срок: 10 × 1к6 минут (стр. 125).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто",
+            "kind": "sheet"
+          }
+        ],
+        "steps": [
+          {
+            "id": "срок",
+            "type": "roll",
+            "fixed": {
+              "expr": "10 * кинуть(к6)"
+            }
+          },
+          {
+            "type": "status",
+            "effect": "dg_kamikaze",
+            "to": {
+              "expr": "@действующий"
+            },
+            "args": {
+              "dur": {
+                "expr": "большее из(1, @срок)"
+              }
+            }
+          }
+        ]
+      },
+      "dg_nitro": {
+        "label": "Нитро",
+        "group": "Химия",
+        "activation": "passive",
+        "reapply": "refresh",
+        "description": "Мощный стимулятор, любимый троллями банд. Сила 12; Сила +2, Воля +2, Внимание +2, +1 кубик инициативы (книга «+1D6 куб. ин.»), Устойчивость к боли. Длительность 10 × 1к6 минут. После — 9 оглушающего урона без сопротивления и штраф −2 ко всем проверкам, включая сопротивление урону, на столько же времени. Доступность 2 (Л), цена 50 ¥ (стр. 125)",
+        "duration": {
+          "kind": "minutes",
+          "max": {
+            "expr": "или(@dur, 60)"
+          }
+        },
+        "params": [
+          {
+            "key": "dur",
+            "label": "Минут",
+            "kind": "number",
+            "default": 60
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "strength",
+            "op": "add",
+            "stage": "аугментация",
+            "value": {
+              "expr": "2"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "willpower",
+            "op": "add",
+            "value": {
+              "expr": "2"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "init_dice",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "pain_relief",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "dg_nitro_take": {
+        "label": "Принять: Нитро",
+        "group": "Химия",
+        "description": "Срок: 10 × 1к6 минут (стр. 125).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто",
+            "kind": "sheet"
+          }
+        ],
+        "steps": [
+          {
+            "id": "срок",
+            "type": "roll",
+            "fixed": {
+              "expr": "10 * кинуть(к6)"
+            }
+          },
+          {
+            "type": "status",
+            "effect": "dg_nitro",
+            "to": {
+              "expr": "@действующий"
+            },
+            "args": {
+              "dur": {
+                "expr": "большее из(1, @срок)"
+              }
+            }
+          }
+        ]
+      },
+      "dg_novacox": {
+        "label": "Новакокс",
+        "group": "Химия",
+        "activation": "passive",
+        "reapply": "refresh",
+        "description": "Стимулятор из листьев коки, для общения, вызывает привыкание. Сила 12; Реакция +1, Харизма +1, Внимание +1, Устойчивость к боли. Время действия (10 − Тело) часов, не меньше часа. После — Харизма и Воля 0 на столько же времени. Доступность 2 (Л), цена 10 ¥ (стр. 125)",
+        "duration": {
+          "kind": "minutes",
+          "max": {
+            "expr": "или(@dur, 60)"
+          }
+        },
+        "params": [
+          {
+            "key": "dur",
+            "label": "Минут",
+            "kind": "number",
+            "default": 60
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "reaction",
+            "op": "add",
+            "stage": "аугментация",
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "charisma",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "pain_relief",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "dg_novacox_take": {
+        "label": "Принять: Новакокс",
+        "group": "Химия",
+        "description": "Срок: (10 − Тело) часов, минимум 1 час (стр. 125).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто",
+            "kind": "sheet"
+          }
+        ],
+        "steps": [
+          {
+            "id": "срок",
+            "type": "roll",
+            "fixed": {
+              "expr": "большее из(60, (10 - @действующий.body) * 60)"
+            }
+          },
+          {
+            "type": "status",
+            "effect": "dg_novacox",
+            "to": {
+              "expr": "@действующий"
+            },
+            "args": {
+              "dur": {
+                "expr": "большее из(1, @срок)"
+              }
+            }
+          }
+        ]
+      },
+      "dg_psyche": {
+        "label": "«Психея»",
+        "group": "Химия",
+        "activation": "passive",
+        "reapply": "refresh",
+        "description": "Дизайнерский стимулятор магов и техномантов. Сила 8 (в выписке была ошибка; сверено со стр. 125); Логика +1, Интуиция +1. Пробуждённые и Проявившиеся получают штраф −1 за каждое длительное заклинание или сложную форму вместо стандартных −2. Принявший одновременно сверхвнимателен и отстранён, зациклен на деталях. Время действия (12 − Тело) часов, не меньше часа. Доступности нет, цена 200 ¥ (стр. 125)",
+        "duration": {
+          "kind": "minutes",
+          "max": {
+            "expr": "или(@dur, 60)"
+          }
+        },
+        "params": [
+          {
+            "key": "dur",
+            "label": "Минут",
+            "kind": "number",
+            "default": 60
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "logic",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "intuition",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "dg_psyche_take": {
+        "label": "Принять: «Психея»",
+        "group": "Химия",
+        "description": "Срок: (12 − Тело) часов, минимум 1 час (стр. 125).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто",
+            "kind": "sheet"
+          }
+        ],
+        "steps": [
+          {
+            "id": "срок",
+            "type": "roll",
+            "fixed": {
+              "expr": "большее из(60, (12 - @действующий.body) * 60)"
+            }
+          },
+          {
+            "type": "status",
+            "effect": "dg_psyche",
+            "to": {
+              "expr": "@действующий"
+            },
+            "args": {
+              "dur": {
+                "expr": "большее из(1, @срок)"
+              }
+            }
+          }
+        ]
       }
     },
     "grants": [
@@ -24491,7 +25736,8 @@
       "edge_reroll_one",
       "edge_plus_hit",
       "convergence",
-      "device_bricked"
+      "device_bricked",
+      "drug_crashes"
     ],
     "sheets": {
       "runner": {
@@ -43796,6 +45042,926 @@
           },
           "legal": "свободно"
         }
+      },
+      {
+        "id": "tox_gamma_scopolamine",
+        "table": "toxin",
+        "label": "Гамма-скополамин",
+        "description": "Нейромышечный блокатор из паслёна: цель мгновенно слабеет, теряет речь и подвижность, впадает в ошеломление. Сила 12; время в крови (6 − Тело) × 30 минут, не меньше 30. Полный эффект длится час, затем ещё час остаток действует как «сыворотка правды»: Воля цели −3 (не ниже 1) на оставшееся время. Доступность 7 (Н), цена 200 ¥ (стр. 122)",
+        "cells": {
+          "vector": "инъекционный",
+          "speed": "немедленно",
+          "speed_rounds": 0,
+          "duration": "(6 − Тело) × 30 минут, минимум 30 минут",
+          "power": 12,
+          "effect": "Неподвижность, Ошеломление, сыворотка правды",
+          "damage": "нет",
+          "statuses": [
+            "immobilized",
+            "dazed"
+          ],
+          "cost": 200,
+          "avail": 7,
+          "legal": "запрещено",
+          "page": 122
+        },
+        "bindings": [
+          {
+            "label": "Ввести",
+            "effect": "intoxicate",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "power": {
+                "expr": "12"
+              },
+              "dmg": {
+                "expr": "\"нет\""
+              },
+              "s1": {
+                "expr": "\"immobilized\""
+              },
+              "s2": {
+                "expr": "\"dazed\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "tox_narcoject",
+        "table": "toxin",
+        "label": "Наркоджект",
+        "description": "Обычный транквилизатор, чаще всего в дротиках. Наносит оглушающий урон, сила 15, побочных эффектов нет; время в крови (6 − Тело) часов, не меньше часа. Доступность 4 (Л), цена 50 ¥ (стр. 122)",
+        "cells": {
+          "vector": "инъекционный",
+          "speed": "немедленно",
+          "speed_rounds": 0,
+          "duration": "(6 − Тело) часов, минимум 1 час",
+          "power": 15,
+          "effect": "оглушающий урон",
+          "damage": "оглушающий",
+          "statuses": [],
+          "cost": 50,
+          "avail": 4,
+          "legal": "лицензия",
+          "page": 122
+        },
+        "bindings": [
+          {
+            "label": "Ввести",
+            "effect": "intoxicate",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "power": {
+                "expr": "15"
+              },
+              "dmg": {
+                "expr": "\"оглушающий\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "tox_neuroinhibitor_8",
+        "table": "toxin",
+        "label": "«Нейроподавитель VIII»",
+        "description": "Бесцветный газ без запаха для экстренного сдерживания: оглушающий урон силой 9 и Ошеломление, эффект в конце следующего боевого раунда. Время в крови (6 − Тело) × 10 минут, не меньше 10. Становится инертным через 10 минут на воздухе. Доступность 5 (Л), цена 60 ¥ (стр. 122)",
+        "cells": {
+          "vector": "вдыхаемый, контактный",
+          "speed": "1 боевой раунд",
+          "speed_rounds": 1,
+          "duration": "(6 − Тело) × 10 минут, минимум 10 минут",
+          "power": 9,
+          "effect": "оглушающий урон, Ошеломление",
+          "damage": "оглушающий",
+          "statuses": [
+            "dazed"
+          ],
+          "cost": 60,
+          "avail": 5,
+          "legal": "лицензия",
+          "page": 122
+        },
+        "bindings": [
+          {
+            "label": "Ввести",
+            "effect": "intoxicate",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "power": {
+                "expr": "9"
+              },
+              "dmg": {
+                "expr": "\"оглушающий\""
+              },
+              "s1": {
+                "expr": "\"dazed\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "tox_neuroinhibitor_9",
+        "table": "toxin",
+        "label": "«Нейроподавитель IX»",
+        "description": "Более концентрированный «Нейроподавитель»: оглушающий урон силой 12 и Ошеломление, эффект в конце следующего боевого раунда. Время в крови (6 − Тело) × 10 минут, не меньше 10. Инертен через 1 минуту на воздухе. Доступность 6 (Л), цена 60 ¥ (стр. 122)",
+        "cells": {
+          "vector": "вдыхаемый, контактный",
+          "speed": "1 боевой раунд",
+          "speed_rounds": 1,
+          "duration": "(6 − Тело) × 10 минут, минимум 10 минут",
+          "power": 12,
+          "effect": "оглушающий урон, Ошеломление",
+          "damage": "оглушающий",
+          "statuses": [
+            "dazed"
+          ],
+          "cost": 60,
+          "avail": 6,
+          "legal": "лицензия",
+          "page": 122
+        },
+        "bindings": [
+          {
+            "label": "Ввести",
+            "effect": "intoxicate",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "power": {
+                "expr": "12"
+              },
+              "dmg": {
+                "expr": "\"оглушающий\""
+              },
+              "s1": {
+                "expr": "\"dazed\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "tox_neuroinhibitor_10",
+        "table": "toxin",
+        "label": "«Нейроподавитель X»",
+        "description": "Самая крепкая концентрация «Нейроподавителя»: оглушающий урон силой 15 и Ошеломление, эффект в конце следующего боевого раунда. Время в крови (6 − Тело) × 10 минут, не меньше 10. Инертен через 1 минуту на воздухе. Доступность 7 (Л), цена 100 ¥ (стр. 122)",
+        "cells": {
+          "vector": "вдыхаемый, контактный",
+          "speed": "1 боевой раунд",
+          "speed_rounds": 1,
+          "duration": "(6 − Тело) × 10 минут, минимум 10 минут",
+          "power": 15,
+          "effect": "оглушающий урон, Ошеломление",
+          "damage": "оглушающий",
+          "statuses": [
+            "dazed"
+          ],
+          "cost": 100,
+          "avail": 7,
+          "legal": "лицензия",
+          "page": 122
+        },
+        "bindings": [
+          {
+            "label": "Ввести",
+            "effect": "intoxicate",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "power": {
+                "expr": "15"
+              },
+              "dmg": {
+                "expr": "\"оглушающий\""
+              },
+              "s1": {
+                "expr": "\"dazed\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "tox_pepper_punch",
+        "table": "toxin",
+        "label": "«Перечный удар»",
+        "description": "Перцовый спрей с Си-Эс и капсаицином для самообороны, часто с RFID-метками или краской для опознания. Оглушающий урон силой 11, Ослепление I, Ошеломление и Тошнота (Тошнота по тексту стр. 123; в таблице-выписке её не было). Сильнее, если попало в глаза, нос или рот. Время в крови (8 − Тело) × 20 минут, не меньше 20. Без доступности (—), цена 5 ¥ (стр. 122–123)",
+        "cells": {
+          "vector": "вдыхаемый, контактный",
+          "speed": "1 боевой раунд",
+          "speed_rounds": 1,
+          "duration": "(8 − Тело) × 20 минут, минимум 20 минут",
+          "power": 11,
+          "effect": "оглушающий урон, Ослепление I, Ошеломление, Тошнота",
+          "damage": "оглушающий",
+          "statuses": [
+            "blinded",
+            "dazed",
+            "nauseated"
+          ],
+          "cost": 5,
+          "avail": 0,
+          "legal": "свободно",
+          "page": 122
+        },
+        "bindings": [
+          {
+            "label": "Ввести",
+            "effect": "intoxicate",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "power": {
+                "expr": "11"
+              },
+              "dmg": {
+                "expr": "\"оглушающий\""
+              },
+              "s1": {
+                "expr": "\"blinded\""
+              },
+              "s2": {
+                "expr": "\"dazed\""
+              },
+              "s3": {
+                "expr": "\"nauseated\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "tox_vomit_gas",
+        "table": "toxin",
+        "label": "Рвотный газ",
+        "description": "Для разгона толпы: урона нет, сила 9 нужна для сопротивления; цель получает Ошеломление и Тошноту (сильная тошнота, позывы рвоты), эффект через 3 боевых раунда. Время в крови (6 − Тело) минут, не меньше минуты. Инертен через 2 минуты на воздухе. Доступность 3 (Л), цена 25 ¥ (стр. 123)",
+        "cells": {
+          "vector": "вдыхаемый",
+          "speed": "3 боевых раунда",
+          "speed_rounds": 3,
+          "duration": "(6 − Тело) минут, минимум 1 минута",
+          "power": 9,
+          "effect": "Ошеломление, Тошнота",
+          "damage": "нет",
+          "statuses": [
+            "dazed",
+            "nauseated"
+          ],
+          "cost": 25,
+          "avail": 3,
+          "legal": "лицензия",
+          "page": 123
+        },
+        "bindings": [
+          {
+            "label": "Ввести",
+            "effect": "intoxicate",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "power": {
+                "expr": "9"
+              },
+              "dmg": {
+                "expr": "\"нет\""
+              },
+              "s1": {
+                "expr": "\"dazed\""
+              },
+              "s2": {
+                "expr": "\"nauseated\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "tox_seven_7",
+        "table": "toxin",
+        "label": "«Семь-7»",
+        "description": "Газ без цвета и запаха, рассчитанный на обход химзащиты: физический урон силой 12, Ослепление I, Ошеломление, Тошнота (спазмы, двоение в глазах). Эффект в конце следующего боевого раунда. Время в крови (6 − Тело) × 10 минут, не меньше 10. Окисляется и становится инертным через 10 минут. Доступность 10 (Н), цена 1 000 ¥ (стр. 123)",
+        "cells": {
+          "vector": "вдыхаемый, контактный",
+          "speed": "1 боевой раунд",
+          "speed_rounds": 1,
+          "duration": "(6 − Тело) × 10 минут, минимум 10 минут",
+          "power": 12,
+          "effect": "Ослепление I, Ошеломление, Тошнота, физический урон",
+          "damage": "физический",
+          "statuses": [
+            "blinded",
+            "dazed",
+            "nauseated"
+          ],
+          "cost": 1000,
+          "avail": 10,
+          "legal": "запрещено",
+          "page": 123
+        },
+        "bindings": [
+          {
+            "label": "Ввести",
+            "effect": "intoxicate",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "power": {
+                "expr": "12"
+              },
+              "dmg": {
+                "expr": "\"физический\""
+              },
+              "s1": {
+                "expr": "\"blinded\""
+              },
+              "s2": {
+                "expr": "\"dazed\""
+              },
+              "s3": {
+                "expr": "\"nauseated\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "tox_cs_gas",
+        "table": "toxin",
+        "label": "Си-Эс / слезоточивый газ",
+        "description": "Раздражитель глаз, носа, рта и лёгких, вызывает паническую реакцию. Оглушающий урон силой 8, Ошеломление и Тошнота, эффект в конце следующего боевого раунда. Путь введения «вдыхаемый, контактный» по тексту стр. 123 (в выписке был только вдыхаемый). Время в крови (6 − Тело) × 5 минут, не меньше 5. Инертен через 2 минуты. Доступность 2 (Л), цена 20 ¥ (стр. 123)",
+        "cells": {
+          "vector": "вдыхаемый, контактный",
+          "speed": "1 боевой раунд",
+          "speed_rounds": 1,
+          "duration": "(6 − Тело) × 5 минут, минимум 5 минут",
+          "power": 8,
+          "effect": "оглушающий урон, Ошеломление, Тошнота",
+          "damage": "оглушающий",
+          "statuses": [
+            "dazed",
+            "nauseated"
+          ],
+          "cost": 20,
+          "avail": 2,
+          "legal": "лицензия",
+          "page": 123
+        },
+        "bindings": [
+          {
+            "label": "Ввести",
+            "effect": "intoxicate",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "power": {
+                "expr": "8"
+              },
+              "dmg": {
+                "expr": "\"оглушающий\""
+              },
+              "s1": {
+                "expr": "\"dazed\""
+              },
+              "s2": {
+                "expr": "\"nauseated\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "drug_alcohol",
+        "table": "drug",
+        "label": "Алкоголь",
+        "description": "Синтетический алкоголь, от пива до самогона. Сила 6; через минуту после приёма принявший получает Реакцию −1, Логику −1 и Устойчивость к боли (штраф за раны меньше на 1). Время действия (8 − Тело) часов, не меньше часа. Доступности нет, цена от 5 до 500 ¥ (в клетке 5) (стр. 124)",
+        "cells": {
+          "vector": "поглощаемый",
+          "speed": "1 минута",
+          "speed_rounds": 20,
+          "duration": "(8 − Тело) часов, минимум 1 час",
+          "power": 6,
+          "effect": "−1 к Реакции, −1 к Логике, Устойчивость к боли",
+          "damage": "нет",
+          "statuses": [],
+          "dur_expr": {
+            "expr": "большее из(60, (8 - @носитель.body) * 60)"
+          },
+          "boosts": [
+            {
+              "field": "reaction",
+              "add": -1
+            },
+            {
+              "field": "logic",
+              "add": -1
+            },
+            {
+              "field": "pain_relief",
+              "add": 1
+            }
+          ],
+          "crash": "",
+          "cost": 5,
+          "avail": 0,
+          "legal": "свободно",
+          "page": 124
+        },
+        "bindings": [
+          {
+            "label": "Принять",
+            "effect": "dg_alcohol_take",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "drug_bliss",
+        "table": "drug",
+        "label": "«Блаженство»",
+        "description": "Опиатный транквилизатор из мака. Сила 8; Реакция −1, Воля −1, Устойчивость к боли (штраф за раны меньше на 1). Время действия (6 − Тело) часов, не меньше часа. Отыгрыш зависимости — ставка на эскапизм. Доступность 2 (Н), цена 15 ¥ (стр. 124)",
+        "cells": {
+          "vector": "вдыхаемый, инъекционный",
+          "speed": "1 боевой раунд",
+          "speed_rounds": 1,
+          "duration": "(6 − Тело) часов, минимум 1 час",
+          "power": 8,
+          "effect": "−1 к Реакции, −1 к Воле, Устойчивость к боли",
+          "damage": "нет",
+          "statuses": [],
+          "dur_expr": {
+            "expr": "большее из(60, (6 - @носитель.body) * 60)"
+          },
+          "boosts": [
+            {
+              "field": "reaction",
+              "add": -1
+            },
+            {
+              "field": "willpower",
+              "add": -1
+            },
+            {
+              "field": "pain_relief",
+              "add": 1
+            }
+          ],
+          "crash": "",
+          "cost": 15,
+          "avail": 2,
+          "legal": "запрещено",
+          "page": 124
+        },
+        "bindings": [
+          {
+            "label": "Принять",
+            "effect": "dg_bliss_take",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "drug_deep_weed",
+        "table": "drug",
+        "label": "«Глубинная трава»",
+        "description": "Наркотик карибских унганов из Пробуждённых водорослей. Сила 7; Воля +1; любой активный пользователь магии вынужден смотреть Вниманием в астрале, даже если не умеет. После окончания штраф −1 ко всем наборам на ту же длительность. Астральное зрение привлекает лишнее внимание. Время действия (6 − Тело) часов, не меньше часа. Доступность 4 (Н), цена 400 ¥ (стр. 124)",
+        "cells": {
+          "vector": "вдыхаемый, поглощаемый",
+          "speed": "немедленно",
+          "speed_rounds": 0,
+          "duration": "(6 − Тело) часов, минимум 1 час",
+          "power": 7,
+          "effect": "+1 к Воле, Пробуждённые видят в астрале",
+          "damage": "нет",
+          "statuses": [],
+          "dur_expr": {
+            "expr": "большее из(60, (6 - @носитель.body) * 60)"
+          },
+          "boosts": [
+            {
+              "field": "willpower",
+              "add": 1
+            }
+          ],
+          "crash": "после окончания −1 ко всем наборам кубиков на столько же времени, сколько действовал наркотик",
+          "cost": 400,
+          "avail": 4,
+          "legal": "запрещено",
+          "page": 124,
+          "crash_minutes_mul": 1
+        },
+        "bindings": [
+          {
+            "label": "Принять",
+            "effect": "dg_deep_weed_take",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "drug_jazz",
+        "table": "drug",
+        "label": "«Джаз»",
+        "description": "Стимулятор для дежурных офицеров, обычно в одноразовых ингаляторах. Сила 9; Реакция +1, к инициативе +2 кубика (в книге «+2D6 куб. ин.»). Длительность 10 × 1к6 минут. После окончания — ломка: Ошеломление на столько же, сколько длился эффект. Доступность 2 (Л), цена 75 ¥ (стр. 124)",
+        "cells": {
+          "vector": "вдыхаемый",
+          "speed": "немедленно",
+          "speed_rounds": 0,
+          "duration": "10 × 1к6 минут",
+          "power": 9,
+          "effect": "+1 к Реакции, +2к6 кубиков инициативы",
+          "damage": "нет",
+          "statuses": [],
+          "dur_expr": "",
+          "boosts": [
+            {
+              "field": "reaction",
+              "add": 1
+            },
+            {
+              "field": "init_dice",
+              "add": 2
+            }
+          ],
+          "crash": "мощная ломка: Ошеломление на время, равное длительности основного эффекта",
+          "cost": 75,
+          "avail": 2,
+          "legal": "лицензия",
+          "page": 124,
+          "dur_dice": "10 × 1к6",
+          "crash_minutes_mul": 1
+        },
+        "bindings": [
+          {
+            "label": "Принять",
+            "effect": "dg_jazz_take",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "drug_dzen",
+        "table": "drug",
+        "label": "«Дзэн»",
+        "description": "Психоделический галлюциноген для ухода в транс. Сила 7; через 5 минут после приёма Реакция −2, Воля +1 и −1 кубик к действиям, завязанным на физические характеристики. Длительность 10 × 1к6 минут. Доступность 3 (Л), цена 5 ¥ (название по картинке и OCR: «Дэн»/«Дзэн») (стр. 124)",
+        "cells": {
+          "vector": "вдыхаемый",
+          "speed": "5 минут",
+          "speed_rounds": 100,
+          "duration": "10 × 1к6 минут",
+          "power": 7,
+          "effect": "−2 к Реакции, +1 к Воле, −1 кубик на действия с физическими характеристиками",
+          "damage": "нет",
+          "statuses": [],
+          "dur_expr": "",
+          "boosts": [
+            {
+              "field": "reaction",
+              "add": -2
+            },
+            {
+              "field": "willpower",
+              "add": 1
+            }
+          ],
+          "crash": "",
+          "cost": 5,
+          "avail": 3,
+          "legal": "лицензия",
+          "page": 124,
+          "dur_dice": "10 × 1к6"
+        },
+        "bindings": [
+          {
+            "label": "Принять",
+            "effect": "dg_dzen_take",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "drug_long_way",
+        "table": "drug",
+        "label": "«Долгий путь»",
+        "description": "Синтетические гормоны и регуляторы мозга. Сила 11; принявший не спит 4 дня без штрафов за усталость. Затем падает без сознания и спит 8к6 часов; если не спит — Утомление I, галлюцинации, не может сосредоточиться. Вторая доза после окончания первой: ещё (1к6 / 2) дней без сна и Утомление I; третья — ещё 1 день и Утомление II; четвёртая — ещё 1 день и Утомление III; следующие дозы не действуют, дают 12 оглушающего урона без сопротивления и ломку, а сон дальше не блокируется. Если стимулирующим пластырем держать в сознании, Утомление III держится, пока не отоспит 8к6 часов. Доступности нет, цена 50 ¥ (стр. 124–125)",
+        "cells": {
+          "vector": "инъекционный",
+          "speed": "10 минут",
+          "speed_rounds": 200,
+          "duration": "4 дня",
+          "power": 11,
+          "effect": "блокирует необходимость спать",
+          "damage": "нет",
+          "statuses": [],
+          "dur_expr": {
+            "expr": "5760"
+          },
+          "boosts": [],
+          "crash": "по окончании мгновенно теряет сознание и спит 8к6 часов; вторая доза даёт ещё (1к6 / 2) дней без сна при Утомлении I, третья — ещё день при Утомлении II, четвёртая — ещё день при Утомлении III; дальше дозы не действуют и дают 12 оглушающего урона без сопротивления и ту же ломку, препарат больше не блокирует сон",
+          "cost": 50,
+          "avail": 0,
+          "legal": "свободно",
+          "page": 124
+        },
+        "bindings": [
+          {
+            "label": "Принять",
+            "effect": "dg_long_way_take",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "drug_zubrila",
+        "table": "drug",
+        "label": "«Зубрила»",
+        "description": "Популярный стимулятор. Сила 8; через 10 минут Реакция +1 и +1 кубик инициативы (книга «+1D6 куб. ин.»). Время действия (12 − Тело) часов, не меньше часа. Состояние гипербдительности, вплоть до паранойи, дрожь и нервозность. После окончания — 6 оглушающего урона без сопротивления. Доступность 2 (Л), цена 10 ¥ (стр. 125)",
+        "cells": {
+          "vector": "вдыхаемый, поглощаемый",
+          "speed": "10 минут",
+          "speed_rounds": 200,
+          "duration": "(12 − Тело) часов, минимум 1 час",
+          "power": 8,
+          "effect": "+1 к Реакции, +1к6 кубиков инициативы",
+          "damage": "нет",
+          "statuses": [],
+          "dur_expr": {
+            "expr": "большее из(60, (12 - @носитель.body) * 60)"
+          },
+          "boosts": [
+            {
+              "field": "reaction",
+              "add": 1
+            },
+            {
+              "field": "init_dice",
+              "add": 1
+            }
+          ],
+          "crash": "приступ ломки: 6 оглушающего урона без сопротивления",
+          "cost": 10,
+          "avail": 2,
+          "legal": "лицензия",
+          "page": 125
+        },
+        "bindings": [
+          {
+            "label": "Принять",
+            "effect": "dg_zubrila_take",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "drug_kamikaze",
+        "table": "drug",
+        "label": "«Камикадзе»",
+        "description": "Боевой стимулятор. Сила 10; Тело +1, Проворство +1, Сила +2, Воля +1, +2 кубика инициативы (книга «+2D6 куб. ин.»), Устойчивость к боли. Длительность 10 × 1к6 минут. После — Реакция −1, Воля −1 и Утомление II на время, вдвое большее длительности эффекта, и 6 оглушающего урона без сопротивления. Долгое употребление разрушает метаболизм, крупные дозы дают тревогу и галлюцинации, высокие — смерть. Доступность 3 (Л), цена 100 ¥ (стр. 125)",
+        "cells": {
+          "vector": "вдыхаемый",
+          "speed": "немедленно",
+          "speed_rounds": 0,
+          "duration": "10 × 1к6 минут",
+          "power": 10,
+          "effect": "+1 к Телу, +1 к Проворству, +2 к Силе, +1 к Воле, +2к6 кубиков инициативы, Устойчивость к боли",
+          "damage": "нет",
+          "statuses": [],
+          "dur_expr": "",
+          "boosts": [
+            {
+              "field": "body",
+              "add": 1
+            },
+            {
+              "field": "agility",
+              "add": 1
+            },
+            {
+              "field": "strength",
+              "add": 2
+            },
+            {
+              "field": "willpower",
+              "add": 1
+            },
+            {
+              "field": "init_dice",
+              "add": 2
+            },
+            {
+              "field": "pain_relief",
+              "add": 1
+            }
+          ],
+          "crash": "ломка: Реакция −1, Воля −1 и Утомление II на двойное время действия, плюс 6 оглушающего урона без сопротивления",
+          "cost": 100,
+          "avail": 3,
+          "legal": "лицензия",
+          "page": 125,
+          "dur_dice": "10 × 1к6",
+          "crash_minutes_mul": 2
+        },
+        "bindings": [
+          {
+            "label": "Принять",
+            "effect": "dg_kamikaze_take",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "drug_nitro",
+        "table": "drug",
+        "label": "Нитро",
+        "description": "Мощный стимулятор, любимый троллями банд. Сила 12; Сила +2, Воля +2, Внимание +2, +1 кубик инициативы (книга «+1D6 куб. ин.»), Устойчивость к боли. Длительность 10 × 1к6 минут. После — 9 оглушающего урона без сопротивления и штраф −2 ко всем проверкам, включая сопротивление урону, на столько же времени. Доступность 2 (Л), цена 50 ¥ (стр. 125)",
+        "cells": {
+          "vector": "вдыхаемый",
+          "speed": "1 боевой раунд",
+          "speed_rounds": 1,
+          "duration": "10 × 1к6 минут",
+          "power": 12,
+          "effect": "+2 к Силе, +2 к Воле, +2 к Вниманию, +1к6 кубиков инициативы, Устойчивость к боли",
+          "damage": "нет",
+          "statuses": [],
+          "dur_expr": "",
+          "boosts": [
+            {
+              "field": "strength",
+              "add": 2
+            },
+            {
+              "field": "willpower",
+              "add": 2
+            },
+            {
+              "field": "init_dice",
+              "add": 1
+            },
+            {
+              "field": "pain_relief",
+              "add": 1
+            }
+          ],
+          "crash": "9 оглушающего урона без сопротивления и −2 ко всем проверкам (включая сопротивление урону) на время действия основного эффекта",
+          "cost": 50,
+          "avail": 2,
+          "legal": "лицензия",
+          "page": 125,
+          "dur_dice": "10 × 1к6",
+          "crash_minutes_mul": 1
+        },
+        "bindings": [
+          {
+            "label": "Принять",
+            "effect": "dg_nitro_take",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "drug_novacox",
+        "table": "drug",
+        "label": "Новакокс",
+        "description": "Стимулятор из листьев коки, для общения, вызывает привыкание. Сила 12; Реакция +1, Харизма +1, Внимание +1, Устойчивость к боли. Время действия (10 − Тело) часов, не меньше часа. После — Харизма и Воля 0 на столько же времени. Доступность 2 (Л), цена 10 ¥ (стр. 125)",
+        "cells": {
+          "vector": "вдыхаемый, инъекционный",
+          "speed": "1 боевой раунд",
+          "speed_rounds": 1,
+          "duration": "(10 − Тело) часов, минимум 1 час",
+          "power": 12,
+          "effect": "+1 к Реакции, +1 к Харизме, +1 к Вниманию, Устойчивость к боли",
+          "damage": "нет",
+          "statuses": [],
+          "dur_expr": {
+            "expr": "большее из(60, (10 - @носитель.body) * 60)"
+          },
+          "boosts": [
+            {
+              "field": "reaction",
+              "add": 1
+            },
+            {
+              "field": "charisma",
+              "add": 1
+            },
+            {
+              "field": "pain_relief",
+              "add": 1
+            }
+          ],
+          "crash": "Харизма и Воля падают до 0 на время действия основного эффекта",
+          "cost": 10,
+          "avail": 2,
+          "legal": "лицензия",
+          "page": 125,
+          "crash_minutes_mul": 1
+        },
+        "bindings": [
+          {
+            "label": "Принять",
+            "effect": "dg_novacox_take",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "drug_psyche",
+        "table": "drug",
+        "label": "«Психея»",
+        "description": "Дизайнерский стимулятор магов и техномантов. Сила 8 (в выписке была ошибка; сверено со стр. 125); Логика +1, Интуиция +1. Пробуждённые и Проявившиеся получают штраф −1 за каждое длительное заклинание или сложную форму вместо стандартных −2. Принявший одновременно сверхвнимателен и отстранён, зациклен на деталях. Время действия (12 − Тело) часов, не меньше часа. Доступности нет, цена 200 ¥ (стр. 125)",
+        "cells": {
+          "vector": "поглощаемый",
+          "speed": "10 минут",
+          "speed_rounds": 200,
+          "duration": "(12 − Тело) часов, минимум 1 час",
+          "power": 8,
+          "effect": "+1 к Логике, +1 к Интуиции",
+          "damage": "нет",
+          "statuses": [],
+          "dur_expr": {
+            "expr": "большее из(60, (12 - @носитель.body) * 60)"
+          },
+          "boosts": [
+            {
+              "field": "logic",
+              "add": 1
+            },
+            {
+              "field": "intuition",
+              "add": 1
+            }
+          ],
+          "crash": "",
+          "cost": 200,
+          "avail": 0,
+          "legal": "свободно",
+          "page": 125
+        },
+        "bindings": [
+          {
+            "label": "Принять",
+            "effect": "dg_psyche_take",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
       }
     ]
   },
