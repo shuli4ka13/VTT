@@ -55,7 +55,7 @@ for (const world of SAMPLE_WORLDS) {
             }
           }
           expect(cases).toMatchSnapshot();
-        });
+        }, 30_000);
       }
     }
   });

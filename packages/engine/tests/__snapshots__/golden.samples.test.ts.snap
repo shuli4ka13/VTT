@@ -32874,6 +32874,84 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · ic_strike
       },
     },
   },
+  "→ drone_doberman · high · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "drone_doberman": {
+      "values": {
+        "matrix_damage": 9,
+      },
+    },
+  },
+  "→ drone_doberman · high · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "drone_doberman": {
+      "values": {
+        "matrix_damage": 9,
+      },
+    },
+  },
+  "→ drone_doberman · low · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "drone_doberman": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ drone_doberman · low · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "drone_doberman": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ drone_doberman · walk · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "drone_doberman": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ drone_doberman · walk · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "drone_doberman": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
   "→ fiveeyes · high · бой": {
     "baraholka_killer": {
       "values": {
@@ -33735,6 +33813,798 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · ic_strike
 }
 `;
 
+exports[`итоги действий: shadowrun6 > drone_doberman · veh_drive:0 1`] = `
+{
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
+  "→ fiveeyes · high · бой": {},
+  "→ fiveeyes · high · вне боя": {},
+  "→ fiveeyes · low · бой": {},
+  "→ fiveeyes · low · вне боя": {},
+  "→ fiveeyes · walk · бой": {},
+  "→ fiveeyes · walk · вне боя": {},
+  "→ fiveeyes_2 · high · бой": {},
+  "→ fiveeyes_2 · high · вне боя": {},
+  "→ fiveeyes_2 · low · бой": {},
+  "→ fiveeyes_2 · low · вне боя": {},
+  "→ fiveeyes_2 · walk · бой": {},
+  "→ fiveeyes_2 · walk · вне боя": {},
+  "→ fiveeyes_squad · high · бой": {},
+  "→ fiveeyes_squad · high · вне боя": {},
+  "→ fiveeyes_squad · low · бой": {},
+  "→ fiveeyes_squad · low · вне боя": {},
+  "→ fiveeyes_squad · walk · бой": {},
+  "→ fiveeyes_squad · walk · вне боя": {},
+  "→ hammer · high · бой": {},
+  "→ hammer · high · вне боя": {},
+  "→ hammer · low · бой": {},
+  "→ hammer · low · вне боя": {},
+  "→ hammer · walk · бой": {},
+  "→ hammer · walk · вне боя": {},
+  "→ humanis · high · бой": {},
+  "→ humanis · high · вне боя": {},
+  "→ humanis · low · бой": {},
+  "→ humanis · low · вне боя": {},
+  "→ humanis · walk · бой": {},
+  "→ humanis · walk · вне боя": {},
+  "→ lone_star · high · бой": {},
+  "→ lone_star · high · вне боя": {},
+  "→ lone_star · low · бой": {},
+  "→ lone_star · low · вне боя": {},
+  "→ lone_star · walk · бой": {},
+  "→ lone_star · walk · вне боя": {},
+  "→ mafia · high · бой": {},
+  "→ mafia · high · вне боя": {},
+  "→ mafia · low · бой": {},
+  "→ mafia · low · вне боя": {},
+  "→ mafia · walk · бой": {},
+  "→ mafia · walk · вне боя": {},
+  "→ razor · high · бой": {},
+  "→ razor · high · вне боя": {},
+  "→ razor · low · бой": {},
+  "→ razor · low · вне боя": {},
+  "→ razor · walk · бой": {},
+  "→ razor · walk · вне боя": {},
+  "→ sauron · high · бой": {},
+  "→ sauron · high · вне боя": {},
+  "→ sauron · low · бой": {},
+  "→ sauron · low · вне боя": {},
+  "→ sauron · walk · бой": {},
+  "→ sauron · walk · вне боя": {},
+  "→ silk · high · бой": {},
+  "→ silk · high · вне боя": {},
+  "→ silk · low · бой": {},
+  "→ silk · low · вне боя": {},
+  "→ silk · walk · бой": {},
+  "→ silk · walk · вне боя": {},
+  "→ swat · high · бой": {},
+  "→ swat · high · вне боя": {},
+  "→ swat · low · бой": {},
+  "→ swat · low · вне боя": {},
+  "→ swat · walk · бой": {},
+  "→ swat · walk · вне боя": {},
+}
+`;
+
+exports[`итоги действий: shadowrun6 > drone_doberman · veh_ram:0 1`] = `
+{
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {
+    "baraholka": {
+      "values": {
+        "physical": 2,
+      },
+    },
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ baraholka · low · вне боя": {
+    "baraholka": {
+      "values": {
+        "physical": 2,
+      },
+    },
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ baraholka · walk · бой": {
+    "baraholka": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ baraholka · walk · вне боя": {
+    "baraholka": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {
+    "baraholka_killer": {
+      "values": {
+        "physical": 2,
+      },
+    },
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ baraholka_killer · low · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "physical": 2,
+      },
+    },
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · бой": {
+    "baraholka_killer": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ drone_doberman · low · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ drone_doberman · walk · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ drone_doberman · walk · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ fiveeyes · high · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ fiveeyes · high · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ fiveeyes · low · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ fiveeyes · low · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ fiveeyes · walk · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ fiveeyes · walk · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ fiveeyes_2 · high · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ fiveeyes_2 · high · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ fiveeyes_2 · low · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ fiveeyes_2 · low · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ fiveeyes_2 · walk · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ fiveeyes_2 · walk · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ fiveeyes_squad · high · бой": {},
+  "→ fiveeyes_squad · high · вне боя": {},
+  "→ fiveeyes_squad · low · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ fiveeyes_squad · low · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ fiveeyes_squad · walk · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ fiveeyes_squad · walk · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ hammer · high · бой": {},
+  "→ hammer · high · вне боя": {},
+  "→ hammer · low · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 2,
+      },
+    },
+    "hammer": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ hammer · low · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 2,
+      },
+    },
+    "hammer": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ hammer · walk · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ hammer · walk · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ humanis · high · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ humanis · high · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ humanis · low · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "humanis": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ humanis · low · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "humanis": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ humanis · walk · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "humanis": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ humanis · walk · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "humanis": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ lone_star · high · бой": {},
+  "→ lone_star · high · вне боя": {},
+  "→ lone_star · low · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ lone_star · low · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ lone_star · walk · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ lone_star · walk · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ mafia · high · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ mafia · high · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ mafia · low · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "mafia": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ mafia · low · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "mafia": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ mafia · walk · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "mafia": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ mafia · walk · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "mafia": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ razor · high · бой": {},
+  "→ razor · high · вне боя": {},
+  "→ razor · low · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 2,
+      },
+    },
+    "razor": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ razor · low · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 2,
+      },
+    },
+    "razor": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ razor · walk · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ razor · walk · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ sauron · high · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ sauron · high · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ sauron · low · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "sauron": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ sauron · low · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "sauron": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ sauron · walk · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "sauron": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ sauron · walk · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "sauron": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ silk · high · бой": {},
+  "→ silk · high · вне боя": {},
+  "→ silk · low · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "silk": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ silk · low · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "silk": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ silk · walk · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "silk": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ silk · walk · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "silk": {
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ swat · high · бой": {},
+  "→ swat · high · вне боя": {},
+  "→ swat · low · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "swat": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ swat · low · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 1,
+      },
+    },
+    "swat": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ swat · walk · бой": {},
+  "→ swat · walk · вне боя": {},
+}
+`;
+
 exports[`итоги действий: shadowrun6 > fiveeyes · bike_chain:0 1`] = `
 {
   "→ baraholka · high · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
@@ -33749,6 +34619,12 @@ exports[`итоги действий: shadowrun6 > fiveeyes · bike_chain:0 1`] 
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
@@ -33832,6 +34708,12 @@ exports[`итоги действий: shadowrun6 > fiveeyes · bike_chain:1 1`] 
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -33915,6 +34797,12 @@ exports[`итоги действий: shadowrun6 > fiveeyes · streetline:0 1`] 
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
@@ -33998,6 +34886,12 @@ exports[`итоги действий: shadowrun6 > fiveeyes · streetline:1 1`] 
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -34081,6 +34975,12 @@ exports[`итоги действий: shadowrun6 > fiveeyes_2 · bike_chain:0 1`
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
@@ -34164,6 +35064,12 @@ exports[`итоги действий: shadowrun6 > fiveeyes_2 · bike_chain:1 1`
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -34247,6 +35153,12 @@ exports[`итоги действий: shadowrun6 > fiveeyes_2 · streetline:0 1`
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
@@ -34330,6 +35242,12 @@ exports[`итоги действий: shadowrun6 > fiveeyes_2 · streetline:1 1`
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -34413,6 +35331,12 @@ exports[`итоги действий: shadowrun6 > hammer · act_first_aid:0 1`]
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -34496,6 +35420,12 @@ exports[`итоги действий: shadowrun6 > hammer · act_rest_day:0 1`] 
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -34579,6 +35509,12 @@ exports[`итоги действий: shadowrun6 > hammer · act_rest_hour:0 1`]
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -34662,6 +35598,12 @@ exports[`итоги действий: shadowrun6 > hammer · act_scene:0 1`] = `
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {
     "fiveeyes_squad": {
       "values": {
@@ -34925,6 +35867,12 @@ exports[`итоги действий: shadowrun6 > hammer · act_second_wind:0 1
   "→ baraholka_killer · low · вне боя": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
   "→ baraholka_killer · walk · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
   "→ baraholka_killer · walk · вне боя": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ drone_doberman · high · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ drone_doberman · high · вне боя": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ drone_doberman · low · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ drone_doberman · low · вне боя": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ drone_doberman · walk · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ drone_doberman · walk · вне боя": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
   "→ fiveeyes · high · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
   "→ fiveeyes · high · вне боя": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
   "→ fiveeyes · low · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
@@ -35008,6 +35956,12 @@ exports[`итоги действий: shadowrun6 > hammer · act_shrug:0 1`] = `
   "→ baraholka_killer · low · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ baraholka_killer · walk · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ baraholka_killer · walk · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ drone_doberman · high · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ drone_doberman · high · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ drone_doberman · low · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ drone_doberman · low · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ drone_doberman · walk · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ drone_doberman · walk · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ fiveeyes · high · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ fiveeyes · high · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ fiveeyes · low · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
@@ -35091,6 +36045,12 @@ exports[`итоги действий: shadowrun6 > hammer · act_stand:0 1`] = `
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -35174,6 +36134,12 @@ exports[`итоги действий: shadowrun6 > hammer · ak_97:0 1`] = `
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
@@ -35257,6 +36223,12 @@ exports[`итоги действий: shadowrun6 > hammer · ak_97:1 1`] = `
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -35340,6 +36312,12 @@ exports[`итоги действий: shadowrun6 > hammer · staff:0 1`] = `
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
@@ -35423,6 +36401,12 @@ exports[`итоги действий: shadowrun6 > hammer · staff:1 1`] = `
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -35506,6 +36490,12 @@ exports[`итоги действий: shadowrun6 > humanis · club:0 1`] = `
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
@@ -35589,6 +36579,12 @@ exports[`итоги действий: shadowrun6 > humanis · club:1 1`] = `
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -35672,6 +36668,12 @@ exports[`итоги действий: shadowrun6 > lone_star · colt_l36:0 1`] =
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
@@ -35755,6 +36757,12 @@ exports[`итоги действий: shadowrun6 > lone_star · colt_l36:1 1`] =
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -35838,6 +36846,12 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
@@ -35921,6 +36935,12 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:1 1`]
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -36004,6 +37024,12 @@ exports[`итоги действий: shadowrun6 > mafia · beretta_101t:0 1`] =
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
@@ -36087,6 +37113,12 @@ exports[`итоги действий: shadowrun6 > mafia · beretta_101t:1 1`] =
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -36170,6 +37202,12 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
@@ -36253,6 +37291,12 @@ exports[`итоги действий: shadowrun6 > mafia · sap:1 1`] = `
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -36336,6 +37380,12 @@ exports[`итоги действий: shadowrun6 > razor · act_first_aid:0 1`] 
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -36419,6 +37469,12 @@ exports[`итоги действий: shadowrun6 > razor · act_rest_day:0 1`] =
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -36502,6 +37558,12 @@ exports[`итоги действий: shadowrun6 > razor · act_rest_hour:0 1`] 
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -36652,6 +37714,48 @@ exports[`итоги действий: shadowrun6 > razor · act_scene:0 1`] = `
   },
   "→ baraholka_killer · walk · вне боя": {
     "baraholka_killer": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ drone_doberman · high · бой": {
+    "drone_doberman": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ drone_doberman · high · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ drone_doberman · low · бой": {
+    "drone_doberman": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ drone_doberman · low · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ drone_doberman · walk · бой": {
+    "drone_doberman": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ drone_doberman · walk · вне боя": {
+    "drone_doberman": {
       "values": {
         "edge_left": 3,
       },
@@ -37172,6 +38276,48 @@ exports[`итоги действий: shadowrun6 > razor · act_second_wind:0 1`
       },
     },
   },
+  "→ drone_doberman · high · бой": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ drone_doberman · high · вне боя": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ drone_doberman · low · бой": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ drone_doberman · low · вне боя": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ drone_doberman · walk · бой": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ drone_doberman · walk · вне боя": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
   "→ fiveeyes · high · бой": {
     "razor": {
       "values": {
@@ -37651,6 +38797,12 @@ exports[`итоги действий: shadowrun6 > razor · act_shrug:0 1`] = `
   "→ baraholka_killer · low · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ baraholka_killer · walk · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ baraholka_killer · walk · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ drone_doberman · high · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ drone_doberman · high · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ drone_doberman · low · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ drone_doberman · low · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ drone_doberman · walk · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ drone_doberman · walk · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ fiveeyes · high · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ fiveeyes · high · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ fiveeyes · low · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
@@ -37734,6 +38886,12 @@ exports[`итоги действий: shadowrun6 > razor · act_stand:0 1`] = `
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -37817,6 +38975,12 @@ exports[`итоги действий: shadowrun6 > razor · grenade_frag:0 1`] =
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
@@ -37900,6 +39064,12 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
@@ -37983,6 +39153,12 @@ exports[`итоги действий: shadowrun6 > razor · katana:1 1`] = `
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -38066,6 +39242,12 @@ exports[`итоги действий: shadowrun6 > razor · predator_vi:0 1`] = 
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
@@ -38149,6 +39331,12 @@ exports[`итоги действий: shadowrun6 > razor · predator_vi:1 1`] = 
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -38232,6 +39420,12 @@ exports[`итоги действий: shadowrun6 > sauron · beretta_101t:0 1`] 
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
@@ -38315,6 +39509,12 @@ exports[`итоги действий: shadowrun6 > sauron · beretta_101t:1 1`] 
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -38398,6 +39598,12 @@ exports[`итоги действий: shadowrun6 > sauron · knucks:0 1`] = `
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
@@ -38481,6 +39687,12 @@ exports[`итоги действий: shadowrun6 > sauron · knucks:1 1`] = `
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -38564,6 +39776,12 @@ exports[`итоги действий: shadowrun6 > silk · act_first_aid:0 1`] =
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -38647,6 +39865,12 @@ exports[`итоги действий: shadowrun6 > silk · act_rest_day:0 1`] = 
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -38730,6 +39954,12 @@ exports[`итоги действий: shadowrun6 > silk · act_rest_hour:0 1`] =
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -38880,6 +40110,48 @@ exports[`итоги действий: shadowrun6 > silk · act_scene:0 1`] = `
   },
   "→ baraholka_killer · walk · вне боя": {
     "baraholka_killer": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ drone_doberman · high · бой": {
+    "drone_doberman": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ drone_doberman · high · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ drone_doberman · low · бой": {
+    "drone_doberman": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ drone_doberman · low · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ drone_doberman · walk · бой": {
+    "drone_doberman": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ drone_doberman · walk · вне боя": {
+    "drone_doberman": {
       "values": {
         "edge_left": 4,
       },
@@ -39394,6 +40666,48 @@ exports[`итоги действий: shadowrun6 > silk · act_second_wind:0 1`]
     },
   },
   "→ baraholka_killer · walk · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ drone_doberman · high · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ drone_doberman · high · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ drone_doberman · low · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ drone_doberman · low · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ drone_doberman · walk · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ drone_doberman · walk · вне боя": {
     "silk": {
       "values": {
         "edge_left": 1,
@@ -39951,6 +41265,48 @@ exports[`итоги действий: shadowrun6 > silk · act_shrug:0 1`] = `
       },
     },
   },
+  "→ drone_doberman · high · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ drone_doberman · high · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ drone_doberman · low · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ drone_doberman · low · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ drone_doberman · walk · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ drone_doberman · walk · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
   "→ fiveeyes · high · бой": {
     "silk": {
       "values": {
@@ -40430,6 +41786,12 @@ exports[`итоги действий: shadowrun6 > silk · act_stand:0 1`] = `
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -40513,6 +41875,12 @@ exports[`итоги действий: shadowrun6 > silk · colt_l36:0 1`] = `
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
@@ -40596,6 +41964,12 @@ exports[`итоги действий: shadowrun6 > silk · colt_l36:1 1`] = `
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -40679,6 +42053,12 @@ exports[`итоги действий: shadowrun6 > swat · colt_m23:0 1`] = `
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
@@ -40762,6 +42142,12 @@ exports[`итоги действий: shadowrun6 > swat · colt_m23:1 1`] = `
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -40845,6 +42231,12 @@ exports[`итоги действий: shadowrun6 > swat · manhunter:0 1`] = `
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
@@ -40928,6 +42320,12 @@ exports[`итоги действий: shadowrun6 > swat · manhunter:1 1`] = `
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -41011,6 +42409,12 @@ exports[`итоги действий: shadowrun6 > swat · stun_baton:0 1`] = `
   "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
@@ -41094,6 +42498,12 @@ exports[`итоги действий: shadowrun6 > swat · stun_baton:1 1`] = `
   "→ baraholka_killer · low · вне боя": {},
   "→ baraholka_killer · walk · бой": {},
   "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},

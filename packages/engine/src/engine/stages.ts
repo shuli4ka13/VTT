@@ -56,7 +56,7 @@ export function stackStages<M extends Staged>(
     if (caps.length) result = Math.min(result as number, ...caps);
     if (typeof result === 'number' && typeof entry === 'number') {
       if (stage.upTo !== undefined) result = Math.min(result as number, entry + stage.upTo);
-      if (stage.upToTimes !== undefined) result = Math.min(result as number, entry * stage.upToTimes);
+      if (stage.upToTimes !== undefined) result = Math.min(result as number, Math.ceil(entry * stage.upToTimes));
     }
     if (typeof result === 'number') {
       const lifted: number = stage.atLeast !== undefined ? Math.max(result, stage.atLeast) : result;
