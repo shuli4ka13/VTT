@@ -99,10 +99,20 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const hasGroups = fieldsOf(system).some(field => livesOn(field) === 'group');
   const only = kind?.blocks?.length ? fields.filter(shownOn(system, sheet)).map(f => f.tag) : undefined;
   const editable = maySheet(room, me, sheet.id);
+  const [claims, setClaims] = useState<string[]>([]);
+  const claimable = useMemo(() => claimWords(system), [system]);
 
   return (
     <>
       {isDesk ? <span className="faint">общий стол комнаты — видят все, правит ведущий</span> : <ClaimRow room={room} sheet={sheet} />}
+      {!isDesk && editable && claimable.length ? (
+        <div className="inline inline--tight">
+          <span className="faint">заявить к броску с листа:</span>
+          {claimable.map(([key, label]) => (
+            <Chip key={key} active={claims.includes(key)} onClick={() => setClaims(claims.includes(key) ? claims.filter(one => one !== key) : [...claims, key])}>{label}</Chip>
+          ))}
+        </div>
+      ) : null}
       {!isDesk && !asGroup && hasGroups && editable ? (
         <Field label="Группа">
           <Select
@@ -131,7 +141,10 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
         only={only}
         badge={isDesk ? 'стол' : kind?.label ?? 'лист'}
         onChange={editable ? (tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value) : undefined}
-        onRoll={tag => tableSocket.rollField(room.id, sheet.id, tag, useRoom.getState().secret && room.members.some(m => m.userId === useSession.getState().userId && m.role === 'gm'))}
+        onRoll={tag => {
+          tableSocket.rollField(room.id, sheet.id, tag, useRoom.getState().secret && room.members.some(m => m.userId === useSession.getState().userId && m.role === 'gm'), claims);
+          setClaims([]);
+        }}
       />
     </>
   );
@@ -331,4 +344,15 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
 
     </>
   );
+}
+
+export function claimWords(system: System): [string, string][] {
+  const words = Object.entries(system.roll_edits ?? {}).map(([key, edit]) => [key, edit.label || key] as [string, string]);
+  const marks: [string, string][] = [];
+  for (const table of Object.values(system.tables ?? {})) {
+    for (const row of table.rows ?? []) {
+      if ((row.cells as Record<string, unknown> | undefined)?.claim === true) marks.push([String(row.value), String(row.label ?? row.value)]);
+    }
+  }
+  return [...words, ...marks];
 }

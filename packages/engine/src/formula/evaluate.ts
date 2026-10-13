@@ -52,6 +52,15 @@ const FUNCTIONS: Record<string, Fn> = {
       return tools.rows(String(args[0]), String(args[1]), args.length === 3 ? String(args[2] ?? '') : undefined) as unknown as Value;
     },
   },
+  пересекаются: {
+    arity: 2,
+    apply: () => 0,
+    raw: args => {
+      const list = (value: unknown): string[] => (Array.isArray(value) ? value : value === null || value === undefined || value === '' ? [] : [value]).map(item => String(item));
+      const right = new Set(list(args[1]));
+      return list(args[0]).some(item => right.has(item));
+    },
+  },
   есть: {
     arity: 2,
     apply: () => 0,
