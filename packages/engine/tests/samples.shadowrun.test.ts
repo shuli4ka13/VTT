@@ -197,3 +197,17 @@ group('Shadowrun 6: оружие, патроны, модификации, взр
     eq(after(out, 'silk').values.physical, 2);
   });
 });
+
+group('Shadowrun 6: общие функции этапа 3 — Урон и Преимущество', () => {
+  test('запрет тратить Преимущество (Ошеломление и т. п.) — трата отказывает, даже когда очков хватает', () => {
+    const silk = sheetOf('silk', { edge_left: 5, edge_no_spend: 1 });
+    let refused = '';
+    try { exchange({ system, compendium, die: () => 1, sheets: [silk], actionId: 'act_second_wind:0', fromId: 'silk', toId: 'silk' }); } catch (err) { refused = (err as Error).message; }
+    ok(refused.includes('тратить Преимущество сейчас нельзя'), refused);
+  });
+
+  test('урон идёт через функцию «Урон» и отдаёт итог: «Распластан» по полученному', () => {
+    const out = shoot(sheetOf('silk'), sheetOf('humanis'), 'colt_l36:0', dice([6, 6], [4, 1], [2, 1], [2, 1]));
+    ok(out.log.some(line => line.includes('зовёт «Урон»')));
+  });
+});

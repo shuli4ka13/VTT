@@ -491,14 +491,12 @@ describe('эффекты пресетов собираются в констру
     expect(built('hero_attack')).toEqual(goal);
   });
 
-  it('Shadowrun «Атаковать» (ranged_attack) по формам: защита и сопротивление в цикле, счёт успехов, «Если … Иначе»', { timeout: 90000 }, () => {
+  it('Shadowrun «Атаковать» (ranged_attack) по формам: защита и сопротивление в цикле, счёт успехов, «Если»', { timeout: 90000 }, () => {
     const world = structuredClone(worldOf('shadowrun6'));
     const goal = structuredClone(world.system.effects.ranged_attack!);
     const steps = goal.steps! as { id?: string; type: string; if?: { expr: string }; value?: { expr: string } }[];
     const from = steps.findIndex(step => step.id === 'атака_против');
-    const otherwise = steps.findIndex((step, index) => index > from && step.type === 'orElse');
-    const upTo = otherwise + 3;
-    const damage = steps[otherwise + 1]!.value!.expr;
+    const upTo = steps.findIndex(step => step.id === 'вред');
     world.system.effects.ranged_attack!.steps = goal.steps!.slice(0, from);
     useWorld.setState(state => ({
       ...state, system: world.system as System, compendium: world.compendium,
@@ -524,7 +522,7 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ если');
     addToArm(block(shown), 0, 'stop');
-    within(headOf(block(shown))).when('=(@атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural) < 0');
+    within(headOf(block(shown))).when(`=${steps[from + 2]!.if!.expr}`);
     stopNote(first + 2, 'промах: успехов атаки меньше, чем у защиты');
 
     ui.click('+ проверка');
@@ -533,21 +531,6 @@ describe('эффекты пресетов собираются в констру
     within(at(first + 3)).formula('Против кого', '@действующий');
     marks(at(first + 3), 'сопротивление');
     nameStep(at(first + 3), 'сопротивление');
-
-    const hurt = (n: number, field: string) => {
-      within(at(n)).select('У кого', 'цель');
-      within(at(n)).select('Какое поле', field);
-      within(at(n)).select('Как', 'add');
-      within(at(n)).formula('Сколько', damage);
-    };
-    ui.click('+ если');
-    within(headOf(block(shown + 1))).when(`=${steps[otherwise - 2]!.if!.expr}`);
-    addToArm(block(shown + 1), 0, 'change');
-    hurt(first + 4, 'physical');
-    addArm(block(shown + 1), '+ иначе');
-    expect(armLabel(block(shown + 1), 1)).toBe('иначе:');
-    addToArm(block(shown + 1), 1, 'change');
-    hurt(first + 5, 'stun');
 
     const got = built('ranged_attack')!;
     dump({ got: { ...got, steps: got.steps }, goal: { ...goal, steps: goal.steps!.slice(0, upTo) } });

@@ -211,6 +211,39 @@
             }
           },
           {
+            "key": "edge_no_gain",
+            "label": "Преимущество не получать (запретов)",
+            "kind": "number",
+            "default": 0,
+            "min": 0
+          },
+          {
+            "key": "edge_no_spend",
+            "label": "Преимущество не тратить (запретов)",
+            "kind": "number",
+            "default": 0,
+            "min": 0
+          },
+          {
+            "key": "action_lock",
+            "label": "Нельзя действовать (запретов)",
+            "kind": "number",
+            "default": 0,
+            "min": 0
+          },
+          {
+            "key": "init_mod",
+            "label": "Поправка инициативы",
+            "kind": "number",
+            "default": 0
+          },
+          {
+            "key": "ar_mod",
+            "label": "Поправка значения атаки",
+            "kind": "number",
+            "default": 0
+          },
+          {
             "key": "smartlink",
             "label": "Смартлинк (1 — есть)",
             "kind": "number",
@@ -362,7 +395,7 @@
             "key": "initiative",
             "label": "Уровень инициативы",
             "expr": {
-              "expr": "@reaction + @intuition + @wound_mod + @condition_mod"
+              "expr": "@reaction + @intuition + @wound_mod + @condition_mod + @init_mod"
             }
           },
           {
@@ -2404,7 +2437,7 @@
             "id": "атк",
             "type": "roll",
             "fixed": {
-              "expr": "@база + меньшее из(0, если(@нехватка >= 1, 0 - @выстрелов, если(сколько(@вещь.modes) >= 1, или(@режим.ar, 0), 0)) + @гашение) + @прицел + @опора + сумма(строки(\"ammo_kind\", \"ar_mod\", @вещь))"
+              "expr": "@база + меньшее из(0, если(@нехватка >= 1, 0 - @выстрелов, если(сколько(@вещь.modes) >= 1, или(@режим.ar, 0), 0)) + @гашение) + @прицел + @опора + сумма(строки(\"ammo_kind\", \"ar_mod\", @вещь)) + @действующий.ar_mod"
             }
           },
           {
@@ -2449,27 +2482,16 @@
           {
             "type": "branch",
             "if": {
-              "expr": "все(@атк - @цель.defense_rating <= -4, все(@цель.edge_left < 7, @цель.edge_gained < 2))"
+              "expr": "@атк - @цель.defense_rating <= -4"
             }
           },
           {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.edge_left"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.edge_gained"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "1"
+            "type": "emit",
+            "effect": "gain_edge",
+            "args": {
+              "лист": {
+                "expr": "@цель"
+              }
             }
           },
           {
@@ -2545,41 +2567,28 @@
             }
           },
           {
-            "type": "branch",
-            "if": {
-              "expr": "@физ >= 1"
+            "type": "emit",
+            "id": "вред",
+            "effect": "take_damage",
+            "args": {
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "amount": {
+                "expr": "большее из(0, @ур + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural - @сопротивление.natural)"
+              },
+              "physical_hit": {
+                "expr": "@физ"
+              }
             }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.physical"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "большее из(0, @ур + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural - @сопротивление.natural)"
-            }
-          },
-          {
-            "type": "orElse"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.stun"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "большее из(0, @ур + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural - @сопротивление.natural)"
-            }
-          },
-          {
-            "type": "end"
           },
           {
             "type": "branch",
             "if": {
-              "expr": "все(@эл >= 1, большее из(0, @ур + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural - @сопротивление.natural) >= 1)"
+              "expr": "все(@эл >= 1, @вред.урон >= 1)"
             }
           },
           {
@@ -2595,7 +2604,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "большее из(0, @ур + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural - @сопротивление.natural) > @цель.body"
+              "expr": "@вред.урон > @цель.body"
             }
           },
           {
@@ -2611,7 +2620,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "все(или(@приём.knockout, 0) >= 1, большее из(0, @ур + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural - @сопротивление.natural) > @цель.willpower)"
+              "expr": "все(или(@приём.knockout, 0) >= 1, @вред.урон > @цель.willpower)"
             }
           },
           {
@@ -2692,56 +2701,26 @@
           {
             "type": "branch",
             "if": {
-              "expr": "(если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) >= 1"
+              "expr": "если(или(@успех_за_преимущество, 0) >= 1, 3, 0) + или(@приём.cost, 0) >= 1"
             }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@действующий.edge_left < 3"
-            }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "\"нужно 3 очка Преимущества\""
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@действующий.edge_left"
-            },
-            "value": {
-              "expr": "3"
-            }
-          },
-          {
-            "type": "end"
           },
           {
             "type": "emit",
-            "effect": "spend",
+            "effect": "spend_edge",
             "args": {
-              "what": {
-                "expr": "@действующий.edge_left"
-              },
-              "amount": {
-                "expr": "или(@приём.cost, 0)"
-              },
-              "note": {
-                "expr": "\"на приём не хватает Преимущества\""
-              },
               "лист": {
                 "expr": "@действующий"
               },
-              "источник": {
-                "expr": "@действующий"
+              "amount": {
+                "expr": "если(или(@успех_за_преимущество, 0) >= 1, 3, 0) + или(@приём.cost, 0)"
+              },
+              "note": {
+                "expr": "\"не хватает Преимущества на «+1 успех» и приём\""
               }
             }
+          },
+          {
+            "type": "end"
           },
           {
             "type": "branch",
@@ -2800,22 +2779,16 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "spend",
+            "effect": "spend_edge",
             "args": {
-              "what": {
-                "expr": "@действующий.edge_left"
+              "лист": {
+                "expr": "@действующий"
               },
               "amount": {
                 "expr": "3"
               },
               "note": {
                 "expr": "\"нужно 3 очк. Преимущества\""
-              },
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
               }
             }
           }
@@ -2860,22 +2833,16 @@
         "cost": [
           {
             "type": "emit",
-            "effect": "spend",
+            "effect": "spend_edge",
             "args": {
-              "what": {
-                "expr": "@действующий.edge_left"
+              "лист": {
+                "expr": "@действующий"
               },
               "amount": {
                 "expr": "4"
               },
               "note": {
                 "expr": "\"нужно 4 очк. Преимущества\""
-              },
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
               }
             }
           }
@@ -3213,68 +3180,6 @@
           }
         ]
       },
-      "spend": {
-        "label": "Потратить",
-        "group": "Плата",
-        "description": "Проверить, что запаса хватает, и отнять. Не хватает — действие обрывается.",
-        "params": [
-          {
-            "key": "лист",
-            "label": "Лист",
-            "kind": "sheet",
-            "role": "actor"
-          },
-          {
-            "key": "источник",
-            "label": "Источник",
-            "kind": "sheet",
-            "optional": true,
-            "role": "actor"
-          },
-          {
-            "key": "what",
-            "label": "Что тратим",
-            "kind": "field"
-          },
-          {
-            "key": "amount",
-            "label": "Сколько",
-            "kind": "number"
-          },
-          {
-            "key": "note",
-            "label": "Если не хватает",
-            "kind": "text",
-            "optional": true
-          }
-        ],
-        "steps": [
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@what < @amount"
-            }
-          },
-          {
-            "type": "stop",
-            "note": {
-              "expr": "@note"
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@what"
-            },
-            "value": {
-              "expr": "@amount"
-            }
-          }
-        ]
-      },
       "edge_gain": {
         "label": "Преимущество за значение атаки",
         "group": "Общие правила",
@@ -3291,33 +3196,13 @@
             },
             "steps": [
               {
-                "type": "branch",
-                "if": {
-                  "expr": "все(@действующий.edge_left < 7, @действующий.edge_gained < 2)"
+                "type": "emit",
+                "effect": "gain_edge",
+                "args": {
+                  "лист": {
+                    "expr": "@действующий"
+                  }
                 }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@действующий.edge_left"
-                },
-                "direction": "add",
-                "value": {
-                  "expr": "1"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@действующий.edge_gained"
-                },
-                "direction": "add",
-                "value": {
-                  "expr": "1"
-                }
-              },
-              {
-                "type": "end"
               }
             ]
           }
@@ -3341,22 +3226,16 @@
             "cost": [
               {
                 "type": "emit",
-                "effect": "spend",
+                "effect": "spend_edge",
                 "args": {
-                  "what": {
-                    "expr": "@носитель.edge_left"
+                  "лист": {
+                    "expr": "@носитель"
                   },
                   "amount": {
                     "expr": "4"
                   },
                   "note": {
                     "expr": "\"нужно 4 очк. Преимущества\""
-                  },
-                  "лист": {
-                    "expr": "@носитель"
-                  },
-                  "источник": {
-                    "expr": "@носитель"
                   }
                 }
               }
@@ -3390,22 +3269,16 @@
             "cost": [
               {
                 "type": "emit",
-                "effect": "spend",
+                "effect": "spend_edge",
                 "args": {
-                  "what": {
-                    "expr": "@носитель.edge_left"
+                  "лист": {
+                    "expr": "@носитель"
                   },
                   "amount": {
                     "expr": "4"
                   },
                   "note": {
                     "expr": "\"нужно 4 очк. Преимущества\""
-                  },
-                  "лист": {
-                    "expr": "@носитель"
-                  },
-                  "источник": {
-                    "expr": "@носитель"
                   }
                 }
               }
@@ -3482,6 +3355,35 @@
                 "value": {
                   "expr": "1"
                 }
+              },
+              {
+                "type": "branch",
+                "if": {
+                  "expr": "@носитель.action_lock >= 1"
+                }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.simple_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "0"
+                }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.complex_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "0"
+                }
+              },
+              {
+                "type": "end"
               }
             ]
           }
@@ -3969,41 +3871,28 @@
             }
           },
           {
-            "type": "branch",
-            "if": {
-              "expr": "@physical_hit >= 1"
+            "type": "emit",
+            "id": "вред",
+            "effect": "take_damage",
+            "args": {
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@цель"
+              },
+              "amount": {
+                "expr": "@урон"
+              },
+              "physical_hit": {
+                "expr": "@physical_hit"
+              }
             }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.physical"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "@урон"
-            }
-          },
-          {
-            "type": "orElse"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.stun"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "@урон"
-            }
-          },
-          {
-            "type": "end"
           },
           {
             "type": "branch",
             "if": {
-              "expr": "все(@electric >= 1, @урон >= 1)"
+              "expr": "все(@electric >= 1, @вред.урон >= 1)"
             }
           },
           {
@@ -4019,7 +3908,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@урон > @цель.body"
+              "expr": "@вред.урон > @цель.body"
             }
           },
           {
@@ -4547,6 +4436,205 @@
               "цель": {
                 "expr": "@цель"
               }
+            }
+          }
+        ]
+      },
+      "gain_edge": {
+        "label": "Получить очко Преимущества",
+        "group": "Преимущество",
+        "description": "Очко в запас: не больше 7 накопленных и не больше 2 бонусных за боевой раунд, от любого источника — снаряжения, заклинаний, качеств (стр. 46). Запрет получать (Ошеломление и др.) — не получает.",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Кто получает",
+            "kind": "sheet",
+            "role": "target"
+          }
+        ],
+        "steps": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "любое(@лист.edge_no_gain >= 1, @лист.edge_left >= 7, @лист.edge_gained >= 2)"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"очко Преимущества не получено: запрет или предел\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@лист.edge_left"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@лист.edge_gained"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "spend_edge": {
+        "label": "Потратить Преимущество",
+        "group": "Плата",
+        "description": "Одно место траты очков Преимущества: запрет тратить (Ошеломление и др.) — отказ; не хватает — отказ.",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Кто тратит",
+            "kind": "sheet",
+            "role": "actor"
+          },
+          {
+            "key": "amount",
+            "label": "Сколько очков",
+            "kind": "number"
+          },
+          {
+            "key": "note",
+            "label": "Если не хватает",
+            "kind": "text",
+            "default": "не хватает очков Преимущества"
+          }
+        ],
+        "steps": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.edge_no_spend >= 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"тратить Преимущество сейчас нельзя\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.edge_left < @amount"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "@note"
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@лист.edge_left"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "@amount"
+            }
+          }
+        ]
+      },
+      "take_damage": {
+        "label": "Урон",
+        "group": "Бой",
+        "description": "Записать урон после сопротивления: физический — в счётчик здоровья, оглушающий — в счётчик оглушения. Снижения урона (импланты, способности) — правками этого вызова по этапам. Итог — сколько получено.",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Кто получает",
+            "kind": "sheet",
+            "role": "target"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true,
+            "role": "actor"
+          },
+          {
+            "key": "amount",
+            "label": "Сколько урона",
+            "kind": "number",
+            "role": "amount",
+            "stages": [
+              {
+                "key": "снижение",
+                "label": "снижение",
+                "atLeast": 0
+              }
+            ]
+          },
+          {
+            "key": "physical_hit",
+            "label": "Физический (1 — да)",
+            "kind": "number",
+            "default": 1
+          }
+        ],
+        "steps": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@physical_hit >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@лист.physical"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "@amount"
+            }
+          },
+          {
+            "type": "orElse"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@лист.stun"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "@amount"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "returns": [
+          {
+            "key": "урон",
+            "label": "Получено урона",
+            "kind": "number",
+            "expr": {
+              "expr": "@amount"
             }
           }
         ]
