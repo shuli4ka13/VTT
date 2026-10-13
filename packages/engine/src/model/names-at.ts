@@ -5,6 +5,7 @@ import { heardNames, listenerOf, callNamesOf, sourcesOf, CALL_TAGS, HOLDER, TARG
 import { calledOf } from '../engine/effects.ts';
 import { STEP_WORDS } from '../words/steps.ts';
 import type { StepWords } from '../words/steps.ts';
+import { columnChoices } from './paths.ts';
 import type { System, Effect, Step, Param } from './types.ts';
 
 export type Place =
@@ -43,7 +44,15 @@ const outputsOf = (type: string): NameChild[] =>
     .filter(output => output.path)
     .map(output => ({ path: output.path, label: output.label, kind: output.kind ?? 'number' }));
 
-const fromParam = (param: Param, group: NameGroup): NameAt => ({
+const rowChildren = (system: System | undefined, from: string | undefined): NameChild[] =>
+  (system && from ? columnChoices(system, from) : []);
+
+const withRows = (one: NameAt, system: System | undefined): NameAt => {
+  const children = one.many ? [] : rowChildren(system, one.from);
+  return children.length ? { ...one, children } : one;
+};
+
+const fromParam = (param: Param, group: NameGroup, system?: System): NameAt => withRows({
   name: param.key,
   label: param.label ?? param.key,
   kind: param.kind ?? 'number',
@@ -51,7 +60,7 @@ const fromParam = (param: Param, group: NameGroup): NameAt => ({
   ...(param.many ? { many: true } : {}),
   ...(param.optional ? { optional: true } : {}),
   ...(param.kind === 'choice' && param.from ? { from: param.from } : {}),
-});
+}, system);
 
 const holder = (): NameAt => ({ name: HOLDER, label: 'носитель — тот, на ком висит', kind: 'sheet', group: 'holder' });
 
@@ -61,6 +70,12 @@ const returnsOf = (system: System | undefined, step: Step): NameChild[] => {
   return (system?.effects?.[called]?.returns ?? []).map(column => ({ path: `.${column.key}`, label: column.label ?? column.key, kind: column.kind ?? 'number' }));
 };
 
+function stepLabel(system: System | undefined, step: Step, fallback: string): string {
+  const called = (step as { effect?: unknown }).effect;
+  const label = step.type === 'emit' && typeof called === 'string' ? system?.effects?.[called]?.label : undefined;
+  return label ?? (STEP_WORDS as Record<string, StepWords>)[step.type]?.label ?? fallback;
+}
+
 function stepsBefore(steps: readonly Step[], index: number, withLoop: boolean, params: readonly Param[] = [], system?: System): NameAt[] {
   const out: NameAt[] = [];
   const arms = armsOf(steps);
@@ -69,7 +84,7 @@ function stepsBefore(steps: readonly Step[], index: number, withLoop: boolean, p
     if (step.type === 'each') {
       const row = loopParam(step as never);
       if (row) {
-        out.push({ name: row.key, label: row.label ?? row.key, kind: 'choice', group: 'loop', ...(row.from ? { from: row.from } : {}) });
+        out.push(withRows({ name: row.key, label: row.label ?? row.key, kind: 'choice', group: 'loop', ...(row.from ? { from: row.from } : {}) }, system));
         return;
       }
       const loop = loopOf(params, step as { of?: unknown });
@@ -78,10 +93,9 @@ function stepsBefore(steps: readonly Step[], index: number, withLoop: boolean, p
     }
     if (!step.id) return;
     const children = [...returnsOf(system, step), ...outputsOf(step.type)];
-    const called = step.type === 'emit' && typeof (step as { effect?: unknown }).effect === 'string' ? system?.effects?.[String((step as { effect?: unknown }).effect)]?.label : undefined;
     out.push({
       name: String(step.id),
-      label: called ?? (STEP_WORDS as Record<string, StepWords>)[step.type]?.label ?? String(step.id),
+      label: stepLabel(system, step, String(step.id)),
       kind: 'result',
       group: 'step',
       ...(children.length ? { children } : {}),
@@ -119,17 +133,17 @@ function heard(system: System, handler: NonNullable<Effect['on']>[number]): Name
   const out: NameAt[] = [];
   for (const name of names.sheets) {
     const param = params.get(name);
-    out.push(param ? fromParam(param, 'heard') : { name, label: HEARD_LABELS[name] ?? name, kind: 'sheet', group: 'heard' });
+    out.push(param ? fromParam(param, 'heard', system) : { name, label: HEARD_LABELS[name] ?? name, kind: 'sheet', group: 'heard' });
   }
   for (const name of names.seeds) {
     const column = returned.get(name);
     if (column) { out.push({ name, label: column.label ?? column.key, kind: column.kind ?? 'number', group: 'heard' }); continue; }
     const param = params.get(name);
-    if (param) { out.push(fromParam(param, 'heard')); continue; }
+    if (param) { out.push(fromParam(param, 'heard', system)); continue; }
     const step = steps.get(name);
     if (step) {
       const children = [...returnsOf(system, step), ...outputsOf(step.type)];
-      out.push({ name, label: (STEP_WORDS as Record<string, StepWords>)[step.type]?.label ?? name, kind: 'result', group: 'heard', ...(children.length ? { children } : {}) });
+      out.push({ name, label: stepLabel(system, step, name), kind: 'result', group: 'heard', ...(children.length ? { children } : {}) });
       continue;
     }
     if (name === TARGETS_SEED) {
@@ -150,7 +164,7 @@ export function namesAt(raw: System, effectId: string, place: Place): NameAt[] {
   const system = flattenSystem(raw, true);
   const effect = system.effects?.[effectId];
   if (!effect) return [];
-  const inputs = (effect.params ?? []).map(param => fromParam(param, 'input'));
+  const inputs = (effect.params ?? []).map(param => fromParam(param, 'input', system));
   const called = calledOf(system).some(([key]) => key === effectId);
   const tags: NameAt[] = called ? [{ name: CALL_TAGS, label: HEARD_LABELS[CALL_TAGS]!, kind: 'tags', group: 'call' }] : [];
 
@@ -178,8 +192,8 @@ export function namesAt(raw: System, effectId: string, place: Place): NameAt[] {
       const call = callNamesOf(system, mod.call);
       const params = new Map((system.effects?.[mod.call]?.params ?? []).map(param => [param.key, param]));
       const callNames: NameAt[] = [
-        ...call.sheets.map(name => (params.get(name) ? fromParam(params.get(name)!, 'heard') : { name, label: HEARD_LABELS[name] ?? name, kind: 'sheet', group: 'heard' as const })),
-        ...call.values.map(name => (params.get(name) ? fromParam(params.get(name)!, 'heard') : { name, label: HEARD_LABELS[name] ?? name, kind: name === CALL_TAGS ? 'tags' : 'number', group: 'heard' as const })),
+        ...call.sheets.map(name => (params.get(name) ? fromParam(params.get(name)!, 'heard', system) : { name, label: HEARD_LABELS[name] ?? name, kind: 'sheet', group: 'heard' as const })),
+        ...call.values.map(name => (params.get(name) ? fromParam(params.get(name)!, 'heard', system) : { name, label: HEARD_LABELS[name] ?? name, kind: name === CALL_TAGS ? 'tags' : 'number', group: 'heard' as const })),
       ];
       return dedupe([holder(), ...callNames, ...inputs, ...constants(system)]);
     }

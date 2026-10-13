@@ -26,7 +26,8 @@ import {
   LISTEN, contractsOf, HOLDER, DESK_NAME, holderNameOf, tiedToHolder,
 } from './references.ts';
 import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, rowKeyOf, hasField, ROW } from './sheet-columns.ts';
-import { isRange } from './tables.ts';
+import { isRange, rowByKey } from './tables.ts';
+import { walkSheet } from './paths.ts';
 import { editStages, PLUS_OP } from '../core/dice.ts';
 import { compile } from '../formula/index.ts';
 import type { Node } from '../formula/index.ts';
@@ -185,16 +186,41 @@ function stepProblems(steps: Step[], whereOf: (index: number) => Where): Problem
   return out;
 }
 
+function strayRow(system: System, param: Param, arg: unknown): { value: string; table: string } | null {
+  if (param.kind !== 'choice' || !param.from || !arg || typeof arg !== 'object' || !('expr' in arg)) return null;
+  const table = system.tables?.[param.from];
+  if (!table || isRange(table) || table.otherwise !== undefined || table.shape === 'single' || table.shape === 'book' || !(table.rows ?? []).length) return null;
+  let node: Node;
+  try { node = compile(String((arg as { expr: unknown }).expr ?? '')).ast; } catch { return null; }
+  if (node.kind !== 'Text' || node.dice || rowByKey(table, node.value)) return null;
+  return { value: node.value, table: table.label || param.from };
+}
+
+function pathText(ref: Reference, declared: Declared, system: System): string | null {
+  if (ref.scope === LISTEN || !ref.path) return null;
+  const path = ref.kind === 'field' ? ref.path
+    : ref.kind === 'step' && ref.scope === 'dotted' && declared.field.has(ref.key) ? ref.path
+      : null;
+  const walked = path ? walkSheet(system, path) : null;
+  return walked && !walked.ok ? walked.text : null;
+}
+
+function rowsText(ref: Reference, declared: Declared): string | null {
+  if (ref.kind !== 'field' || !ref.near?.length || declared.field.has(ref.key) || declared.table.has(ref.key) || declared.effect.has(ref.key)) return null;
+  return `у листа нет поля «${ref.key}»; здесь есть ${ref.near.map(name => `«${name}»`).join(', ')} — строка таблицы, её колонки пишутся через точку`;
+}
+
 function refProblems(refs: Reference[], declared: Declared, earlierByWhere: (ref: Reference) => boolean, system?: System): Problem[] {
   const out: Problem[] = [];
   for (const ref of refs) {
     if (ref.kind === 'step' && earlierByWhere(ref)) continue;
-    const text = danglingText(ref, declared) ?? (system ? ownerText(ref, system) : null);
+    const walked = rowsText(ref, declared) ?? (system ? pathText(ref, declared, system) : null);
+    const text = walked ?? danglingText(ref, declared) ?? (system ? ownerText(ref, system) : null);
     if (!text) continue;
     if (out.some(p => sameWhere(p.where, ref.from) && p.text === text)) continue;
     out.push({
       where: ref.from, level: 'error', text,
-      ...(ref.kind === 'field' ? { fix: { kind: 'field', tag: ref.key } } : {}),
+      ...(ref.kind === 'field' && !walked ? { fix: { kind: 'field', tag: ref.key } } : {}),
     });
   }
   return out;
@@ -776,6 +802,11 @@ function paramProblems(system: System, compendium?: Compendium): Problem[] {
                   text: `во вход-бросок «${param.label ?? param.key}» вызова «${called.label ?? choice}» передан не бросок: нужно одно имя шага-броска или входа-броска`,
                 });
               }
+            }
+            const stray = strayRow(system, param, args[param.key]);
+            if (stray) {
+              const text = `во вход «${param.label ?? param.key}» ${applying ? 'наложения' : 'вызова'} «${called.label ?? choice}» передано «${stray.value}» — в таблице «${stray.table}» такой строки нет`;
+              if (!out.some(p => sameWhere(p.where, whereOf(index)) && p.text === text)) out.push({ where: whereOf(index), level: 'error', text });
             }
             if (args[param.key] !== undefined || param.optional || param.ask || param.default !== undefined) continue;
             const effectName = `«${called.label ?? choice}»`;

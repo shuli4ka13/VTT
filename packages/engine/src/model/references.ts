@@ -56,6 +56,7 @@ export interface Reference {
   from: Where;
   scope?: string;
   path?: string;
+  near?: string[];
 }
 
 export interface Declared {
@@ -256,7 +257,8 @@ export function exprRefs(source: string, from: Where, scope: ChainScope, out: Re
         cell(parts[0]!, parts[1]);
         continue;
       }
-      out.push({ kind: 'field', key: parts[0]!, from, scope: top === DESK_NAME ? 'desk' : 'sheet', ...(parts.length > 1 ? { path: rest } : {}) });
+      const near = parts.length > 1 && scope.rows?.size ? [...scope.rows.keys()] : [];
+      out.push({ kind: 'field', key: parts[0]!, from, scope: top === DESK_NAME ? 'desk' : 'sheet', ...(parts.length > 1 ? { path: rest } : {}), ...(near.length ? { near } : {}) });
       continue;
     }
     if (scope.earlier.has(dep) || scope.params.has(dep)) continue;

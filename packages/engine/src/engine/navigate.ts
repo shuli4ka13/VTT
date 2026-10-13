@@ -7,6 +7,7 @@ import type { System, Param, TableColumn } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 import { fieldOf, hasField } from '../model/sheet-columns.ts';
 import { recordKinds } from '../model/owned.ts';
+import { walkColumns } from '../model/paths.ts';
 
 type Loose = Record<string, unknown>;
 
@@ -97,6 +98,8 @@ export function resolveAddress(system: System, pass: Pass, name: string): { valu
   const row = (table.rows ?? []).find(r => rowKeyOf(r) === rowKey);
   if (!row) throw new EngineError(`«${name}»: в таблице «${table.label || tableId}» нет строки «${rowKey}»`);
   if (!column) return { value: row.value };
+  const checked = walkColumns(system, tableId!, [column, ...rest]);
+  if (!checked.ok) throw new EngineError(`«${name}»: ${checked.text}`);
   const cell = readCell(system, pass, tableId!, row.value, column, name);
   if (!rest.length) return { value: cell };
   const spec = (table.columns ?? []).find(c => c.key === column);
