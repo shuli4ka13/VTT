@@ -13,6 +13,7 @@ import type { Pass } from '../engine/calc.ts';
 import type { RollEdit, RollEditOp } from '../model/types.ts';
 
 export const COUNT_PARAM = 'count';
+export const THRESHOLD_PARAM = 'threshold';
 
 export type EditMod = Extract<SourcedModifier, { kind: 'edit' }>;
 

@@ -448,5 +448,6 @@ export function seenReadback(step: Step, system: System): Segment[] {
     return [{ text: `${words(read.count)}${read.sides ? ` ${DIE_LETTER}${words(read.sides)}` : ''}${keep}` }];
   }
   if (step.type === 'roll-plus') return [{ text: `+ ${words(read.value)}` }];
+  if (step.type === 'roll-bump') return [{ text: `кость +${words(read.value)}` }];
   return [];
 }

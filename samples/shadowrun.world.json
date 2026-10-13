@@ -1731,6 +1731,49 @@
             "min": 0
           },
           {
+            "key": "jump_need",
+            "label": "Прыжок: порог (по дистанции, ведущий)",
+            "kind": "number",
+            "default": 2,
+            "min": 0
+          },
+          {
+            "key": "jump",
+            "label": "Прыжок",
+            "expr": {
+              "expr": "@skills.атлетика.pool"
+            },
+            "roll": {
+              "label": "Прыжок",
+              "die": "pool",
+              "count": {
+                "expr": "@jump"
+              },
+              "tags": [
+                "проверка",
+                "атлетика",
+                "прыжок"
+              ],
+              "threshold": {
+                "expr": "@jump_need"
+              }
+            }
+          },
+          {
+            "key": "tox_cut",
+            "label": "Сила токсинов ниже на",
+            "kind": "number",
+            "default": 0,
+            "min": 0
+          },
+          {
+            "key": "tox_cut_inhaled",
+            "label": "Сила вдыхаемых токсинов ниже на",
+            "kind": "number",
+            "default": 0,
+            "min": 0
+          },
+          {
             "key": "smartlink",
             "label": "Смартлинк (1 — есть)",
             "kind": "number",
@@ -2240,6 +2283,9 @@
           },
           {
             "value": "наркотик"
+          },
+          {
+            "value": "прыжок"
           }
         ]
       },
@@ -28364,6 +28410,12 @@
             "ask": {
               "by": "actor"
             }
+          },
+          {
+            "key": "inhaled",
+            "label": "Вдыхаемый (1 — да)",
+            "kind": "number",
+            "default": 0
           }
         ],
         "steps": [
@@ -28390,7 +28442,7 @@
             "id": "итог",
             "type": "check",
             "value": {
-              "expr": "@power + @doses"
+              "expr": "большее из(0, @power + @doses - @цель.tox_cut - если(@inhaled >= 1, @цель.tox_cut_inhaled, 0))"
             },
             "versus": {
               "expr": "@стойкость"
@@ -36278,7 +36330,24 @@
             "expr": "@rating"
           },
           "rating": 1
-        }
+        },
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "threshold",
+            "op": "add",
+            "value": {
+              "expr": "0 - @строка.rating"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
+            "tags": [
+              "прыжок"
+            ]
+          }
+        ]
       },
       {
         "id": "gyromount",
@@ -36854,7 +36923,17 @@
           "avail_base": 4,
           "rating": 1,
           "rating_max": 6
-        }
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "tox_cut",
+            "op": "add",
+            "value": {
+              "expr": "@строка.rating"
+            }
+          }
+        ]
       },
       {
         "id": "skin_pocket",
@@ -37112,7 +37191,17 @@
           "avail_base": 4,
           "rating": 1,
           "rating_max": 6
-        }
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "tox_cut_inhaled",
+            "op": "add",
+            "value": {
+              "expr": "@строка.rating"
+            }
+          }
+        ]
       },
       {
         "id": "muscle_toner",
@@ -49644,6 +49733,9 @@
               },
               "s2": {
                 "expr": "\"dazed\""
+              },
+              "inhaled": {
+                "expr": "0"
               }
             }
           }
@@ -49681,6 +49773,9 @@
               },
               "dmg": {
                 "expr": "\"оглушающий\""
+              },
+              "inhaled": {
+                "expr": "0"
               }
             }
           }
@@ -49723,6 +49818,9 @@
               },
               "s1": {
                 "expr": "\"dazed\""
+              },
+              "inhaled": {
+                "expr": "1"
               }
             }
           }
@@ -49765,6 +49863,9 @@
               },
               "s1": {
                 "expr": "\"dazed\""
+              },
+              "inhaled": {
+                "expr": "1"
               }
             }
           }
@@ -49807,6 +49908,9 @@
               },
               "s1": {
                 "expr": "\"dazed\""
+              },
+              "inhaled": {
+                "expr": "1"
               }
             }
           }
@@ -49857,6 +49961,9 @@
               },
               "s3": {
                 "expr": "\"nauseated\""
+              },
+              "inhaled": {
+                "expr": "1"
               }
             }
           }
@@ -49903,6 +50010,9 @@
               },
               "s2": {
                 "expr": "\"nauseated\""
+              },
+              "inhaled": {
+                "expr": "1"
               }
             }
           }
@@ -49953,6 +50063,9 @@
               },
               "s3": {
                 "expr": "\"nauseated\""
+              },
+              "inhaled": {
+                "expr": "1"
               }
             }
           }
@@ -49999,6 +50112,9 @@
               },
               "s2": {
                 "expr": "\"nauseated\""
+              },
+              "inhaled": {
+                "expr": "1"
               }
             }
           }

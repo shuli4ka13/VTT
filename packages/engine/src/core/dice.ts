@@ -408,7 +408,8 @@ export type SeenOp =
   | { kind: 'add'; count: number; sides?: number; keep?: 'best' | 'worst'; explode?: boolean }
   | { kind: 'reroll'; upTo: number }
   | { kind: 'reroll'; which: typeof LOWEST }
-  | { kind: 'plus'; addend: Addend };
+  | { kind: 'plus'; addend: Addend }
+  | { kind: 'bump'; by: number };
 
 export function lowestOf(roll: Roll): Rolled | null {
   let found: Rolled | null = null;
@@ -421,8 +422,27 @@ export function lowestOf(roll: Roll): Rolled | null {
 
 const EXPLODE: RollEdit = { label: '', ops: [{ op: 'explode', apart: true }] };
 
+export function bumpTarget(roll: Roll): Rolled | null {
+  const taken = new Set(kept(roll));
+  const read = roll.claim.read as { kind: string; atLeast?: number };
+  const pool = roll.dice.filter(d => taken.has(d) && !d.extra && !d.minus && d.from === undefined && d.face < d.sides);
+  if (!pool.length) return null;
+  const below = typeof read.atLeast === 'number' ? pool.filter(d => d.face < read.atLeast!) : [];
+  if (below.length) return below.reduce((best, d) => (d.face > best.face ? d : best));
+  return pool.reduce((low, d) => (d.face < low.face ? d : low));
+}
+
 export function see(roll: Roll, op: SeenOp, die: Die): Roll {
   if (op.kind === 'plus') return withAddends(roll, [op.addend]);
+  if (op.kind === 'bump') {
+    const target = bumpTarget(roll);
+    if (!target) return roll;
+    const face = Math.min(target.sides, target.face + Math.max(0, Math.trunc(op.by)));
+    const fresh = nextId(roll.dice);
+    const again = applyResults([{ ...target, face, value: face }], roll.results, die, fresh);
+    const at = roll.dice.findIndex(d => d.id === target.id);
+    return { ...roll, dice: [...roll.dice.slice(0, at).filter(d => d.from !== target.id), ...again, ...roll.dice.slice(at + 1).filter(d => d.from !== target.id)] };
+  }
   const fresh = nextId(roll.dice);
   const taken = new Set(kept(roll));
   if (op.kind === 'reroll') {

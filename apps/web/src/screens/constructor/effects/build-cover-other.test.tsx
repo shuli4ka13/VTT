@@ -49,8 +49,12 @@ describe('эффекты пресетов собираются руками: Sha
     const [goal] = start('shadowrun6', ['shocked']);
     const ui = within();
     head(ui, '+ висит и правит', 'Электрошок', 'shocked', goal!);
+    param(ui, 'shocked', 0, 'Раундов', 'number', 'rounds');
+    ui.select(ui.cell('Если не передали', 0), 'value');
+    ui.type(ui.cell('Если не передали', 0), '2');
+    ui.type(ui.cell('Границы', 0).querySelector<HTMLInputElement>('input[placeholder="не ниже"]')!, '1');
     ui.select('Сколько висит', 'rounds');
-    ui.type('Сколько', '2');
+    ui.formula('Сколько', 'или(@rounds, 2)');
     for (const [target, value] of [['condition_mod', '-1'], ['init_mod', '-2']] as const) {
       ui.click('+ правит поле');
       const card = () => [...document.querySelectorAll<HTMLElement>('.card')].filter(c => (c.querySelector('.card__head')?.textContent ?? '').startsWith('Правит поле')).at(-1)!;
@@ -116,6 +120,7 @@ describe('эффекты пресетов собираются руками: Sha
     const ui = within();
     head(ui, '+ срабатывает сам', goal!.label!, 'reroll_failures', goal!);
     seenHead(ui);
+    ui.when('=не(любое(все(@носитель.edge_ban_charisma >= 1, любое(есть(@roll.tags, "обман"), есть(@roll.tags, "убеждение"), есть(@roll.tags, "социальная"))), все(@носитель.edge_ban_logic >= 1, любое(есть(@roll.tags, "биотехнологии"), есть(@roll.tags, "взлом"), есть(@roll.tags, "инженерное дело"), есть(@roll.tags, "электроника"))), все(@носитель.edge_ban_hands >= 1, любое(есть(@roll.tags, "атака"), есть(@roll.tags, "стрельба"), есть(@roll.tags, "ближний бой"), есть(@roll.tags, "экзотическое оружие"), есть(@roll.tags, "взлом замков"))), все(@носитель.edge_ban_social >= 1, любое(есть(@roll.tags, "обман"), есть(@roll.tags, "убеждение"), есть(@roll.tags, "социальная")))))');
     spendFromHolder();
     ui.click('+ перебросить');
     const card = stepCard(/^2 · /);
@@ -129,6 +134,7 @@ describe('эффекты пресетов собираются руками: Sha
     const ui = within();
     head(ui, '+ срабатывает сам', goal!.label!, 'push_edge', goal!);
     seenHead(ui);
+    ui.when('=не(любое(все(@носитель.edge_ban_charisma >= 1, любое(есть(@roll.tags, "обман"), есть(@roll.tags, "убеждение"), есть(@roll.tags, "социальная"))), все(@носитель.edge_ban_logic >= 1, любое(есть(@roll.tags, "биотехнологии"), есть(@roll.tags, "взлом"), есть(@roll.tags, "инженерное дело"), есть(@roll.tags, "электроника"))), все(@носитель.edge_ban_hands >= 1, любое(есть(@roll.tags, "атака"), есть(@roll.tags, "стрельба"), есть(@roll.tags, "ближний бой"), есть(@roll.tags, "экзотическое оружие"), есть(@roll.tags, "взлом замков"))), все(@носитель.edge_ban_social >= 1, любое(есть(@roll.tags, "обман"), есть(@roll.tags, "убеждение"), есть(@roll.tags, "социальная")))))');
     spendFromHolder();
     ui.click('+ докинуть');
     const card = () => stepCard(/^2 · /);

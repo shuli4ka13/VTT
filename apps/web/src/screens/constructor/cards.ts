@@ -18,7 +18,7 @@ export interface CardGroup {
 const KIND_OF: Record<string, CardKind> = {
   check: 'check', apply: 'change', status: 'change', emit: 'change',
   roll: 'number', table: 'table', each: 'split',
-  'roll-add': 'seen', 'roll-reroll': 'seen', 'roll-plus': 'seen',
+  'roll-add': 'seen', 'roll-reroll': 'seen', 'roll-plus': 'seen', 'roll-bump': 'seen',
   branch: 'flow', orElse: 'flow', end: 'flow', stop: 'stop',
 };
 

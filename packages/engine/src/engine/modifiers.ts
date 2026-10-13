@@ -38,8 +38,8 @@ export const editKey = (call: string, param: string): string => `${call}.${param
 
 const assertCall = (system: System, mod: EditModifier, owner?: string): void => {
   if (mod.call === ROLL_CALL) {
-    if (mod.param === 'edits' || mod.param === 'bonus' || mod.param === 'count') return;
-    throw new EngineError(`${owner ? `«${owner}»: ` : ''}у броска нет параметра «${mod.param}» — есть «edits», «bonus» и «count»`);
+    if (mod.param === 'edits' || mod.param === 'bonus' || mod.param === 'count' || mod.param === 'threshold') return;
+    throw new EngineError(`${owner ? `«${owner}»: ` : ''}у броска нет параметра «${mod.param}» — есть «edits», «bonus», «count» и «threshold»`);
   }
   const who = owner ? `«${owner}»: ` : '';
   const effect = system.effects?.[mod.call];

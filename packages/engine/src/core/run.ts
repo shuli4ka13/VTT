@@ -22,7 +22,8 @@ import { isDesk, DESK_ID } from '../engine/owners.ts';
 import { Views } from './view.ts';
 import { State } from './state.ts';
 import { limitsOf, CUT_WORDS, PROBES_WORDS } from './limits.ts';
-import { gather, stack, rollHeld } from './edits.ts';
+import { gather, stack, rollHeld, amountOf, THRESHOLD_PARAM } from './edits.ts';
+import { ROLL_CALL } from '../words/calls.ts';
 import { recordOf, retarget, opponentIn, mentions } from './against.ts';
 import type { Faced, Names } from './against.ts';
 import type { Holder } from './edits.ts';
@@ -1256,7 +1257,7 @@ export class Run {
     }
   }
 
-  check(sheetId: string, check: Check, path: Path, owner: string, claims: readonly string[] = []): { thrown: Thrown; bonus: number; total: number; entries: Entry[] } {
+  check(sheetId: string, check: Check, path: Path, owner: string, claims: readonly string[] = []): { thrown: Thrown; bonus: number; total: number; entries: Entry[]; threshold: number | null } {
     const frame: Frame = {
       path, effectId: '', label: owner, owner, home: sheetId, bound: null,
       args: {}, paramDefs: [], props: null, claims: claims.length ? { [sheetId]: [...claims] } : {}, hop: 0, inSub: false,
@@ -1267,7 +1268,15 @@ export class Run {
     const sized = check.count === undefined || check.count === null ? spec : withCount(spec, ctx.number(check.count, `${owner} · сколько костей`), owner);
     const bonus = check.bonus ? ctx.optional(check.bonus, `${owner} · прибавка`) ?? 0 : 0;
     const thrown = ctx.roll(sized, [...(check.tags ?? [])], sheetId, null, check.bonus ? { ref: check.bonus, value: bonus } : undefined);
-    return { thrown, bonus, total: thrown.result.total + bonus, entries: sink.after };
+    let threshold: number | null = null;
+    if (check.threshold !== undefined && check.threshold !== null) {
+      const holders = this.holderViews();
+      const view = (id: string) => holders.find(holder => holder.id === id)!.view;
+      const shift = gather(holders, { call: ROLL_CALL, param: THRESHOLD_PARAM, tags: thrown.thrower?.tags ?? check.tags ?? [], names: { бросающий: sheetId, против: null }, values: {}, view })
+        .reduce((sum, held) => sum + amountOf(held), 0);
+      threshold = Math.max(0, ctx.number(check.threshold, `${owner} · порог`) + shift);
+    }
+    return { thrown, bonus, total: thrown.result.total + bonus, entries: sink.after, threshold };
   }
 
   private probeAsking<T>(work: () => T): T {

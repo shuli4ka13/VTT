@@ -7,6 +7,7 @@ export interface Check {
   count?: SlotRef;
   bonus?: SlotRef;
   tags?: string[];
+  threshold?: SlotRef;
 }
 
 export function fieldCheck(system: System, tag: string): Check & { label: string } {
@@ -16,11 +17,13 @@ export function fieldCheck(system: System, tag: string): Check & { label: string
   const constant = (field.roll as { die?: string }).die;
   if (!constant) throw new EngineError(`по полю «${field.label}» бросают, но кость не выбрана`);
   const { label, count, bonus, tags } = field.roll;
+  const threshold = (field.roll as { threshold?: SlotRef }).threshold;
   return {
     label: label ?? field.label,
     die: constant,
     ...(count ? { count } : {}),
     ...(bonus ? { bonus } : {}),
     ...(tags?.length ? { tags } : {}),
+    ...(threshold ? { threshold } : {}),
   };
 }

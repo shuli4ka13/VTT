@@ -9,6 +9,7 @@ import * as each from './each.ts';
 import * as rollAdd from './roll-add.ts';
 import * as rollReroll from './roll-reroll.ts';
 import * as rollPlus from './roll-plus.ts';
+import * as rollBump from './roll-bump.ts';
 import { branch, orElse, end, stop } from './flow.ts';
 import type { Step, System, Die, StoredValue } from '../../model/types.ts';
 import type { EmittedEvent, NestedRun } from '../rule.ts';
@@ -112,7 +113,7 @@ export function registerStepType(mod: StepModule): StepModule {
   return mod;
 }
 
-for (const mod of [roll, check, apply, status, emit, table, each, rollAdd, rollReroll, rollPlus]) {
+for (const mod of [roll, check, apply, status, emit, table, each, rollAdd, rollReroll, rollPlus, rollBump]) {
   registerStepType(mod as unknown as StepModule);
 }
 for (const mod of [branch, orElse, end, stop]) registerStepType(mod);

@@ -12,11 +12,13 @@ const system = flattenSystem({
   roll_edits: { wild: { label: 'Дикий кубик', ops: [{ op: 'wild' }] } },
   tags: {},
   tables: {
-    rolls: { label: 'Броски', key: 'word', columns: [], rows: [{ value: 'проверка' }, { value: 'зрение' }, { value: 'ближний бой' }] },
+    rolls: { label: 'Броски', key: 'word', columns: [], rows: [{ value: 'проверка' }, { value: 'зрение' }, { value: 'ближний бой' }, { value: 'прыжок' }] },
     лист: { shape: 'single', owner: 'sheet', columns: [
       { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 3,
         stages: [{ key: 'аугментация', upTo: 4 }],
         roll: { label: 'Ловкость', die: 'pool', count: { expr: '@ловкость' }, tags: ['проверка'] } },
+      { key: 'прыжок', label: 'Прыжок', kind: 'number', default: 3,
+        roll: { label: 'Прыжок', die: 'pool', count: { expr: '@прыжок' }, tags: ['проверка', 'прыжок'], threshold: { expr: '3' } } },
     ] },
     навыки: { label: 'Навыки', key: 'word', owner: 'sheet', columns: [
       { key: 'rank', label: 'Уровень', kind: 'number', default: 0 },
@@ -29,10 +31,14 @@ const system = flattenSystem({
     ], modifiers: [{ kind: 'value', target: 'навыки.{@строка.skill}.rank', op: 'add', value: { expr: '@строка.rating' } }] },
     оптика: { shape: 'book', use: 'item', label: 'Оптика', columns: [{ key: 'rating', label: 'Рейтинг', kind: 'number' }],
       modifiers: [{ kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '@строка.rating' }, tags: ['зрение'] }] },
+    домкраты: { shape: 'book', use: 'item', label: 'Домкраты', columns: [{ key: 'rating', label: 'Рейтинг', kind: 'number' }],
+      modifiers: [{ kind: 'edit', call: 'roll', param: 'threshold', op: 'add', value: { expr: '0 - @строка.rating' }, tags: ['прыжок'] }] },
     мускулы: { shape: 'book', use: 'item', label: 'Мускулы', columns: [{ key: 'rating', label: 'Рейтинг', kind: 'number' }],
       modifiers: [{ kind: 'value', target: 'ловкость', op: 'add', value: { expr: '@строка.rating' } }] },
   },
   effects: {
+    подтянуть: { label: 'Подтянуть кость', activation: 'passive', duration: { kind: 'permanent' },
+      on: [{ on: 'seen', if: { expr: '@бросающий == @носитель' }, steps: [{ type: 'roll-bump', value: { expr: '1' } }] }] },
     помпа: { label: 'Помпа', activation: 'passive', duration: { kind: 'rounds', max: { expr: '@r * 2' } },
       params: [{ key: 'r', label: 'Рейтинг', kind: 'number', default: 2 }] },
   },
@@ -42,6 +48,7 @@ const book = { records: [
   { id: 'датчик', table: 'имплант', label: 'Датчик рефлексов', cells: { rating: 2 } },
   { id: 'глаз', table: 'оптика', label: 'Глаз', cells: { rating: 2 } },
   { id: 'мышцы', table: 'мускулы', label: 'Мышцы', cells: { rating: 6 } },
+  { id: 'гидравлика', table: 'домкраты', label: 'Гидравлика', cells: { rating: 2 } },
 ] } as unknown as Compendium;
 
 const hero = (has: Sheet['has'] = [], values: Record<string, unknown> = {}): Sheet =>
@@ -105,5 +112,19 @@ describe('дикий кубик', () => {
 
   it('дикая единица гасит пятёрки, шестёрки остаются', () => {
     expect(roll(hero(), 'ловкость', [1, 5, 6], ['wild'])).toMatch(/успехов: 1/);
+  });
+});
+
+describe('порог у проверки по полю', () => {
+  it('порог из поля; вещь снижает его правкой «Бросок → порог»', () => {
+    expect(roll(hero(), 'прыжок', [5, 5, 1])).toMatch(/порог 3: провал/);
+    expect(roll(hero([{ of: 'гидравлика' }]), 'прыжок', [5, 5, 1])).toMatch(/порог 1: успех/);
+  });
+});
+
+describe('шаг «Поднять кость»', () => {
+  it('поднимает лучшую кость, не дотянувшую до успеха: 4 → 5', () => {
+    const sheet = { ...hero(), effects: [{ effectId: 'подтянуть' }] } as Sheet;
+    expect(roll(sheet, 'ловкость', [4, 2, 1])).toMatch(/успехов: 1/);
   });
 });
