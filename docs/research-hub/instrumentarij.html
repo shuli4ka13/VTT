@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Инструментарий конструктора — чем собрать систему самому</title>
+<style>
+:root{
+  --bg:#0f1117; --card:#1a1d2e; --card2:#1e2336; --line:#2a3050; --line2:#363b5e;
+  --txt:#e4e9f5; --mut:#8a96b4;
+  --ind:#818cf8; --teal:#34d399; --purp:#c084fc; --orng:#fb923c; --blue:#60a5fa; --yel:#fbbf24; --red:#f87171; --green:#4ade80; --cp:#22d3ee; --mag:#f472b6;
+  --hf:'Georgia','Times New Roman',serif; --bf:'Segoe UI',system-ui,sans-serif; --mono:'Consolas',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:var(--bf);padding:22px 22px 60px;font-size:13px}
+.wrap{max-width:1300px;margin:0 auto}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--ind);margin-bottom:7px}
+h1{font-family:var(--hf);font-size:29px;font-weight:700;letter-spacing:-.4px}
+.sub{font-size:13.5px;color:var(--mut);margin-top:7px;line-height:1.55;max-width:98ch}
+.sub b{color:var(--txt)}
+
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:18px 0 6px;font-size:12.5px}
+.flow .step{background:var(--card);border:1px solid var(--line2);border-radius:9px;padding:7px 13px;font-weight:600}
+.flow .step small{color:var(--mut);font-weight:400;display:block;font-size:10.5px}
+.flow .ar{color:var(--mut);font-size:16px}
+.flow .step.g1{border-color:var(--teal)}.flow .step.g2{border-color:var(--purp)}.flow .step.g3{border-color:var(--ind)}.flow .step.g4{border-color:var(--cp)}
+
+.grp{margin-top:26px}
+.gh{display:flex;align-items:baseline;gap:11px;margin-bottom:4px;padding-bottom:8px;border-bottom:1px solid var(--line2)}
+.gh .gi{font-size:19px}
+.gh h2{font-family:var(--hf);font-size:20px;font-weight:700}
+.gh .gt{font-size:11.5px;color:var(--mut)}
+.gh .gc{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--mut)}
+.gh.g1{border-color:var(--teal)}.gh.g2{border-color:var(--purp)}.gh.g3{border-color:var(--ind)}.gh.g4{border-color:var(--cp)}.gh.g5{border-color:var(--orng)}
+.g1 h2{color:var(--teal)}.g2 h2{color:var(--purp)}.g3 h2{color:var(--ind)}.g4 h2{color:var(--cp)}.g5 h2{color:var(--orng)}
+
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-top:14px}
+@media(max-width:980px){.cards{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.cards{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line2);border-radius:12px;padding:14px 15px;border-top:3px solid var(--ac);display:flex;flex-direction:column;gap:8px}
+.card .tt{display:flex;align-items:center;gap:9px}
+.card .ico{font-size:17px}
+.card .nm{font-weight:700;font-size:14px}
+.card .star{margin-left:auto;font-size:10px;color:var(--yel)}
+.card .does{font-size:12px;color:var(--txt);line-height:1.45}
+.card .lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin-top:2px}
+.card .builds{font-size:11.5px;color:var(--mut);line-height:1.45}
+.card .builds code{font-family:var(--mono);font-size:10.5px;color:var(--ac);background:var(--card2);padding:1px 5px;border-radius:4px}
+.card .ui{font-size:11px;color:var(--mut);font-style:italic}
+.card .cov{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto;padding-top:8px;border-top:1px solid var(--line)}
+.card .chip{font-size:9.5px;background:var(--card2);border:1px solid var(--line2);border-radius:99px;padding:2px 8px;color:var(--mut)}
+
+.note{font-size:12.5px;color:var(--mut);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:14px 17px;margin-top:26px;line-height:1.6}
+.note b{color:var(--ind);font-weight:600}
+.note .big{color:var(--txt);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Конструктор систем · палитра авторских инструментов</div>
+  <h1>Инструментарий: чем мастер собирает систему сам</h1>
+  <div class="sub">Колонка «что нужно» из матрицы — это <b>узлы движка</b>. Здесь — обратная сторона: какие <b>редакторы</b> должен дать конструктор, чтобы мастер собрал эти узлы <b>мышкой, без кода</b>. Сгруппировано по Большой тройке (вид → данные → поведение) плюс боевой экран. Сердце — блок «Автоматизация»: там ~10 редакторов покрывают почти все механики обеих систем.</div>
+
+  <div class="flow">
+    <span class="step g1">1 · Чарник<small>как выглядит лист</small></span><span class="ar">→</span>
+    <span class="step g2">2 · Компендиум<small>какие данные вводим</small></span><span class="ar">→</span>
+    <span class="step g3">3 · Автоматизация<small>как оно считается</small></span><span class="ar">→</span>
+    <span class="step g4">4 · Боевой экран<small>где это играется</small></span>
+  </div>
+
+  <div id="groups"></div>
+
+  <div class="note"><span class="big">Ключевая мысль.</span> Инструментарий небольшой — около <b>25 редакторов</b>, и из них <b>сердцевина в «Автоматизации»</b>: редактор формул, конструктор броска, узел «Модификатор», редактор эффектов с цепочкой, шина триггер-событий и конвейер урона. Эти шесть закрывают <b>29 общих механик</b> обеих систем; остальные редакторы — надстройки для специфики (состояния-тоглы, взрывной кубик, броня-вычитание, Гуманность). Всё остальное — вид (чарник), данные (компендиум) и сцена (бой). Собрал редакторы — и мастер <b>щёлкает любую систему</b> сам: D&amp;D, Cyberpunk и всё между ними.</div>
+</div>
+
+<script>
+const GROUPS=[
+ {g:'g1',ac:'--teal',ic:'🎨',name:'Конструктор чарника',tag:'ВИД — как выглядит лист',tools:[
+   {ico:'🧩',nm:'Редактор раскладки',does:'Тянешь блоки на лист, компонуешь колонки/секции/вкладки.',builds:'сам лист персонажа из блоков',ui:'drag-and-drop холст',cov:['раскладка','вкладки']},
+   {ico:'📦',nm:'Библиотека блоков',does:'Готовые блоки: поле-число, текст, группа статов, таблица, заметки.',builds:'элементы листа',ui:'палитра компонентов',cov:['блоки листа','стат-грид']},
+   {ico:'📊',nm:'Блок ресурс-бар / трекер',does:'Бар с макс/текущим, кнопки ±, цвет по порогу.',builds:'<code>HP</code>, ПЗ, любой ресурс на виду',ui:'настройка бара',cov:['Ресурс-бар','Порог половины']},
+   {ico:'🔗',nm:'Привязка к данным',does:'Связываешь блок с полем компендиума или формулой — значение считается само.',builds:'живые поля листа',ui:'bind-пикер',cov:['производные','автоподстановка']},
+ ]},
+ {g:'g2',ac:'--purp',ic:'🗂️',name:'Конструктор компендиума',tag:'ДАННЫЕ — что вводим',tools:[
+   {ico:'🧬',nm:'Редактор типов сущностей',does:'Создаёшь тип (Оружие, Заклинание, Имплант) и его поля.',builds:'схема данных системы',ui:'конструктор полей',cov:['Оружие/предметы','статблок']},
+   {ico:'🏷️',nm:'Палитра полей',does:'Поля: число, текст, формула, enum/dropdown, кубик, диапазон, тег, ссылка.',builds:'структуру любой сущности',ui:'типы полей',cov:['поля предмета','боеприпасы/режимы']},
+   {ico:'⭐',nm:'Особенности с рангами',does:'Фича с уровнями/рангами и растущим эффектом.',builds:'классовые фичи, кибер-уровни',ui:'редактор рангов',cov:['ранги','прогрессия фич']},
+   {ico:'🕸️',nm:'Связи сущностей',does:'Ссылки между записями: оружие→навык, заклинание→эффект.',builds:'граф компендиума',ui:'выбор ссылки',cov:['ссылки','навык оружия']},
+ ]},
+ {g:'g3',ac:'--ind',ic:'⚙️',name:'Конструктор автоматизации',tag:'ПОВЕДЕНИЕ — как считается · СЕРДЦЕ',tools:[
+   {ico:'🧮',nm:'Редактор формул',does:'Визуальный узел: зависимости от статов, ⌊⌋/⌈⌉, min/max, lookup по таблице.',builds:'<code>мод</code>, <code>БМ</code>, <code>maxHP</code>, любой производный',ui:'узлы + зависимости',cov:['Модификатор от стата','Хиты','Инициатива','Связанный ресурс'],star:1},
+   {ico:'🎲',nm:'Конструктор броска',does:'Собираешь бросок: кубики + модификаторы + порог; опции преим/помеха, взрывной, переброс, крит.',builds:'<code>1d20+…</code>, <code>СТАТ+навык+1d10</code>',ui:'сборка броска',cov:['Основной бросок','Взрывной кубик','Качель шанса'],star:1},
+   {ico:'➕',nm:'Узел «Модификатор»',does:'Один узел на все «крутилки»: тип SET/FLAT/DIE+/REROLL/CLAMP/MULT + условие + триггер до/после.',builds:'преим, укрытие, Bless, снайпер, сопр/уязв',ui:'карточка модификатора',cov:['Ситуативный ±','Укрытие','Прицельный','Сопр/уязв'],star:1},
+   {ico:'⚡',nm:'Редактор эффектов',does:'Эффект = {триггер, длительность, стоимость, цепочка операций}. Собираешь цепочку из блоков.',builds:'состояния, заклинания, крит-травмы',ui:'конструктор цепочки',cov:['Протяжка из компендиума','Таблица травм'],star:1},
+   {ico:'🔔',nm:'Шина триггер-событий',does:'События: попадание, начало хода, получение урона, HP≤½, выход из зоны — вешаешь на них реакции.',builds:'реакции, провок.атака, авто-эффекты',ui:'on-событие → действие',cov:['Реакции','Опасности среды','Провоцированная атака'],star:1},
+   {ico:'🩹',nm:'Конвейер урона',does:'Пайплайн: бросок → сопр/уязв → броня (порог ИЛИ вычитание+абляция) → буфер → HP → состояние.',builds:'вся модель урона обеих систем',ui:'редактор пайплайна',cov:['Броня как вычитание','Буфер','Раны шкалой'],star:1},
+   {ico:'🔋',nm:'Редактор ресурсов',does:'Тип ресурса (бар/счётчик/пул/связанный) + правило восстановления (отдых/сессия/день).',builds:'ячейки, Удача, кости хитов, Гуманность',ui:'настройка ресурса',cov:['Счётчик/заряды','Пул','Восстановление']},
+   {ico:'🌀',nm:'Библиотека состояний',does:'Состояние-тогл с набором эффектов; или шкала статусов по порогу ресурса.',builds:'15 состояний D&D, раны Cyberpunk',ui:'редактор статуса',cov:['Библиотека статусов','Накопительный статус']},
+   {ico:'🪄',nm:'Протяжка эффектов',does:'Предмет несёт эффект → он применяется на актёра при экипировке/использовании.',builds:'кинжал→атака, имплант→бонус (идея Влада)',ui:'bind предмет→эффект',cov:['Протяжка из компендиума']},
+   {ico:'🎯',nm:'Мини-механизмы',does:'Готовые узлы под частные правила: спасбросок от смерти, стабилизация.',builds:'счётчики успех/провал/штраф',ui:'шаблон механизма',cov:['Спасбросок от смерти','Стабилизация']},
+ ]},
+ {g:'g4',ac:'--cp',ic:'🗺️',name:'Боевой экран / VTT',tag:'СЦЕНА — где играется',tools:[
+   {ico:'🔄',nm:'Трекер хода',does:'Очередь инициативы + экономика действий (слоты действие/бонус/реакция/движение).',builds:'порядок и лимиты хода',ui:'трекер очереди',cov:['Структура хода','Список действий']},
+   {ico:'🗺️',nm:'Карта и токены',does:'Сцена, токены, масштаб клетки, счётчик перемещения.',builds:'поле боя',ui:'редактор сцены',cov:['Перемещение','масштаб клетки']},
+   {ico:'📐',nm:'Инструмент шаблонов',does:'Формы области (круг/конус/линия/куб) + захват целей.',builds:'зоны заклинаний/взрывов',ui:'шаблоны на карте',cov:['Шаблоны области']},
+   {ico:'🎛️',nm:'Панель действий',does:'Кнопки, привязанные к эффектам/броскам — клик и всё считается.',builds:'быстрый доступ к автоматизации',ui:'бар кнопок',cov:['Список действий','режимы оружия']},
+ ]},
+ {g:'g5',ac:'--orng',ic:'🧰',name:'Сквозные инструменты',tag:'НАД ВСЕМ',tools:[
+   {ico:'🧪',nm:'Тест-режим / симулятор',does:'Прогнать бросок/атаку/эффект и увидеть результат до игры.',builds:'проверку правил',ui:'песочница',cov:['отладка правил']},
+   {ico:'🔁',nm:'Импорт / экспорт / библиотеки',does:'Сохранить систему, поделиться, переиспользовать чужие блоки.',builds:'обмен системами',ui:'экспорт JSON',cov:['шаринг','пресеты']},
+   {ico:'🔒',nm:'Режим «только мастер»',does:'Конструкторы доступны только ГМ; игрок видит готовый лист.',builds:'разграничение прав',ui:'роли доступа',cov:['доступ ГМ']},
+   {ico:'📚',nm:'Редактор таблиц',does:'Lookup/случайные таблицы: 2d6→травма, дальность→DV, уровень→БМ.',builds:'все справочники и рандом-таблицы',ui:'редактор таблицы',cov:['Дальность→порог','Прогрессия','Таблица травм']},
+ ]},
+];
+let h='';
+GROUPS.forEach(G=>{
+  h+=`<div class="grp"><div class="gh ${G.g}"><span class="gi">${G.ic}</span><h2>${G.name}</h2><span class="gt">${G.tag}</span><span class="gc">${G.tools.length} инстр.</span></div><div class="cards">`;
+  G.tools.forEach(t=>{
+    h+=`<div class="card" style="--ac:var(${G.ac})">
+      <div class="tt"><span class="ico">${t.ico}</span><span class="nm">${t.nm}</span>${t.star?'<span class="star">★ ядро</span>':''}</div>
+      <div class="does">${t.does}</div>
+      <div><div class="lbl">Что собираешь</div><div class="builds">${t.builds}</div></div>
+      <div class="ui">◦ ${t.ui}</div>
+      <div class="cov">${t.cov.map(c=>`<span class="chip">${c}</span>`).join('')}</div>
+    </div>`;
+  });
+  h+='</div></div>';
+});
+document.getElementById('groups').innerHTML=h;
+</script>
+</body>
+</html>

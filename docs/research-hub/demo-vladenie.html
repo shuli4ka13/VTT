@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кружок владения — как это собирается в конструкторе</title>
+<style>
+:root{
+  --bg:#0f1117; --card:#1a1d2e; --card2:#1e2336; --line:#2a3050; --line2:#363b5e;
+  --txt:#e4e9f5; --mut:#8a96b4;
+  --ind:#818cf8; --teal:#34d399; --purp:#c084fc; --orng:#fb923c; --blue:#60a5fa; --yel:#fbbf24; --red:#f87171; --green:#4ade80; --cp:#22d3ee; --mag:#f472b6;
+  --hf:'Georgia','Times New Roman',serif; --bf:'Segoe UI',system-ui,sans-serif; --mono:'Consolas',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:var(--bf);padding:22px 22px 60px;font-size:13px}
+.wrap{max-width:1080px;margin:0 auto}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--ind);margin-bottom:7px}
+h1{font-family:var(--hf);font-size:27px;font-weight:700;letter-spacing:-.4px}
+.sub{font-size:13.5px;color:var(--mut);margin-top:7px;line-height:1.5;max-width:92ch}
+.sub b{color:var(--txt)}
+
+.layout{display:grid;grid-template-columns:1fr 400px;gap:22px;align-items:start;margin-top:18px}
+@media(max-width:880px){.layout{grid-template-columns:1fr}}
+
+.sheet{background:var(--card);border:1px solid var(--line2);border-radius:14px;overflow:hidden}
+.sh-top{display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:14px 17px;background:var(--card2);border-bottom:1px solid var(--line2)}
+.ctl{display:flex;align-items:center;gap:8px;font-size:12.5px}
+.ctl label{color:var(--mut)}
+.ctl input[type=number]{width:52px;background:var(--bg);border:1px solid var(--line2);color:var(--txt);border-radius:6px;padding:4px 6px;font-family:var(--mono);text-align:center;font-size:13px}
+.pb{margin-left:auto;font-size:12.5px;color:var(--mut)}
+.pb b{font-family:var(--mono);color:var(--yel);font-size:15px}
+
+.skhead,.skrow{display:grid;grid-template-columns:34px 1fr 46px 62px;align-items:center;gap:10px;padding:8px 17px}
+.skhead{font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--mut);border-bottom:1px solid var(--line)}
+.skrow{border-bottom:1px solid var(--line)}
+.skrow:last-child{border-bottom:none}
+.skrow:hover{background:var(--card2)}
+.dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--mut);cursor:pointer;position:relative;transition:.15s;justify-self:center}
+.dot:hover{border-color:var(--txt)}
+.dot.p1{border-color:var(--teal);background:var(--teal)}
+.dot.p2{border-color:var(--yel);background:radial-gradient(circle,var(--yel) 45%,transparent 48%),var(--card);box-shadow:0 0 0 2px var(--yel) inset}
+.dot.p2::after{content:'';position:absolute;inset:3px;border-radius:50%;background:var(--yel)}
+.dot.ph{border-color:var(--blue);background:linear-gradient(90deg,var(--blue) 50%,transparent 50%)}
+.skname{font-weight:600;font-size:13px}
+.skname .abil{color:var(--mut);font-weight:400;font-size:11px;margin-left:5px}
+.skmods{font-family:var(--mono);font-size:11px;color:var(--mut);text-align:right}
+.sktot{font-family:var(--mono);font-size:16px;font-weight:800;text-align:center;color:var(--teal)}
+.pstate{grid-column:2/5;font-size:10.5px;color:var(--mut);margin-top:-4px;padding-left:0}
+
+.legend{display:flex;flex-wrap:wrap;gap:14px;padding:11px 17px;border-top:1px solid var(--line2);font-size:11px;color:var(--mut)}
+.legend span{display:flex;align-items:center;gap:6px}
+.ld{width:14px;height:14px;border-radius:50%;border:2px solid var(--mut)}
+.ld.p1{border-color:var(--teal);background:var(--teal)}
+.ld.p2{border-color:var(--yel);background:var(--yel)}
+.ld.ph{border-color:var(--blue);background:linear-gradient(90deg,var(--blue) 50%,transparent 50%)}
+
+.side{border:1px solid var(--line2);border-radius:14px;background:var(--card);overflow:hidden;position:sticky;top:16px}
+.si-h{padding:13px 16px;background:var(--card2);border-bottom:1px solid var(--line2);font-family:var(--hf);font-size:16px;font-weight:700}
+.si-b{padding:14px 16px}
+.step{display:flex;gap:11px;padding:9px 0;border-bottom:1px solid var(--line)}
+.step:last-child{border-bottom:none}
+.sn{width:22px;height:22px;border-radius:6px;background:var(--card2);border:1px solid var(--line2);color:var(--ind);font-family:var(--mono);font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.st-t{font-weight:600;font-size:12.5px}
+.st-d{font-size:11.5px;color:var(--mut);line-height:1.45;margin-top:2px}
+.st-d code{font-family:var(--mono);font-size:10.5px;color:var(--teal);background:var(--card2);padding:1px 5px;border-radius:4px}
+.formula{margin-top:12px;background:var(--bg);border:1px solid var(--line2);border-radius:9px;padding:11px 13px;font-family:var(--mono);font-size:12px;line-height:1.7}
+.formula .k{color:var(--yel)}.formula .v{color:var(--teal)}.formula .m{color:var(--mut)}
+.tie{font-size:11.5px;color:var(--mut);padding:12px 16px;border-top:1px solid var(--line2);line-height:1.5}
+.tie b{color:var(--ind)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Пример: бонус мастерства в D&amp;D · как в Foundry</div>
+  <h1>Кружок владения — и из чего он собран</h1>
+  <div class="sub">Тот самый <b>кружочек</b> у навыка. Клик циклит состояние — <b>нет → владение → компетентность → половина</b> — и к навыку сразу прибавляется бонус мастерства с нужным множителем. Слева живой лист (кликай кружки, меняй уровень и характеристики), справа — из каких узлов конструктора это собирается.</div>
+
+  <div class="layout">
+    <div class="sheet">
+      <div class="sh-top">
+        <div class="ctl"><label>Уровень</label><input type="number" id="lvl" min="1" max="20" value="5" oninput="calc()"></div>
+        <div class="ctl"><label>Сила</label><input type="number" id="str" value="16" oninput="calc()"></div>
+        <div class="ctl"><label>Ловкость</label><input type="number" id="dex" value="14" oninput="calc()"></div>
+        <div class="ctl"><label>Харизма</label><input type="number" id="cha" value="10" oninput="calc()"></div>
+        <div class="pb">Бонус мастерства <b id="pbval">+3</b></div>
+      </div>
+      <div class="skhead"><span>◯</span><span>Навык</span><span style="text-align:right">Расчёт</span><span style="text-align:center">Итог</span></div>
+      <div id="skills"></div>
+      <div class="legend">
+        <span><i class="ld"></i> нет владения ×0</span>
+        <span><i class="ld p1"></i> владение ×1</span>
+        <span><i class="ld p2"></i> компетентность ×2</span>
+        <span><i class="ld ph"></i> половина ×0.5</span>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="si-h">Из чего это собрано</div>
+      <div class="si-b">
+        <div class="step"><span class="sn">1</span><div><div class="st-t">🎛️ Стейтовый контрол (кружок)</div><div class="st-d">Циклическая кнопка на 4 состояния. Её значение — <b>множитель</b> <code>0 / 1 / 2 / 0.5</code>. Это тот же «управляющий элемент», что Radio/множитель из списка контролов VTT.</div></div></div>
+        <div class="step"><span class="sn">2</span><div><div class="st-t">🧮 Узел формулы «Бонус мастерства»</div><div class="st-d"><code>БМ = 2 + ⌊(ур−1)/4⌋</code> — производное от уровня, считается само.</div></div></div>
+        <div class="step"><span class="sn">3</span><div><div class="st-t">➕ Узел «Модификатор»</div><div class="st-d">Тип <code>MULT→FLAT</code>: берёт БМ, умножает на значение кружка, прибавляет к броску навыка. Условие-гейт: «если есть владение».</div></div></div>
+        <div class="step"><span class="sn">4</span><div><div class="st-t">🔗 Привязка к листу</div><div class="st-d">Строка навыка на чарнике связана с формулой <code>мод.хар + множитель×БМ</code> → итог обновляется при клике.</div></div></div>
+        <div class="formula" id="fx"></div>
+      </div>
+      <div class="tie">В нашей модели это <b>«Бонус за умение»</b> из матрицы: контрол + формула БМ + узел «Модификатор». Один раз собрал — работает для всех навыков, обеих систем (в Cyberpunk кружок был бы «есть навык», а множитель — сам уровень навыка).</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// proficiency cycle: 0(none) -> 1(prof) -> 2(expertise) -> 0.5(half) -> 0
+const CYCLE=[0,1,2,0.5];
+const CLS={0:'',1:'p1',2:'p2',0.5:'ph'};
+const NAME={0:'нет владения',1:'владение',2:'компетентность',0.5:'половина'};
+const SKILLS=[
+  {n:'Атлетика',a:'str'},
+  {n:'Акробатика',a:'dex'},
+  {n:'Скрытность',a:'dex'},
+  {n:'Запугивание',a:'cha'},
+  {n:'Убеждение',a:'cha'},
+  {n:'Обман',a:'cha'},
+];
+const ABIL={str:'Сил',dex:'Лов',cha:'Хар'};
+let prof=SKILLS.map((_,i)=>i%2?0:1); // some proficient by default
+const mod=s=>Math.floor((+document.getElementById(s).value-10)/2);
+const PB=()=>2+Math.floor(((+document.getElementById('lvl').value)-1)/4);
+const sign=n=>(n>=0?'+':'')+n;
+function cycle(i){const cur=prof[i];const idx=CYCLE.indexOf(cur);prof[i]=CYCLE[(idx+1)%CYCLE.length];calc();}
+function calc(){
+  const pb=PB();
+  document.getElementById('pbval').textContent=sign(pb);
+  let h='';
+  SKILLS.forEach((s,i)=>{
+    const m=mod(s.a);const mult=prof[i];const add=Math.floor(mult*pb);const tot=m+add;
+    const calcStr = mult? `${sign(m)} <span style="color:var(--mut)">мод</span> ${sign(add)} <span style="color:var(--mut)">${mult}×БМ</span>` : `${sign(m)} <span style="color:var(--mut)">мод</span>`;
+    h+=`<div class="skrow">
+      <div class="dot ${CLS[mult]}" title="${NAME[mult]} (×${mult})" onclick="cycle(${i})"></div>
+      <div class="skname">${s.n}<span class="abil">${ABIL[s.a]}</span></div>
+      <div class="skmods">${calcStr}</div>
+      <div class="sktot">${sign(tot)}</div></div>`;
+  });
+  document.getElementById('skills').innerHTML=h;
+  // formula panel — show first proficient skill as example
+  const ei=prof.findIndex(p=>p>0);const i=ei<0?0:ei;const s=SKILLS[i];const m=mod(s.a);const mult=prof[i];const add=Math.floor(mult*pb);
+  document.getElementById('fx').innerHTML=
+    `<span class="m">// ${s.n}</span><br>`+
+    `<span class="k">итог</span> = мод.${ABIL[s.a]} <span class="m">(${sign(m)})</span> + <span class="k">множитель</span> <span class="m">(${mult})</span> × <span class="k">БМ</span> <span class="m">(${pb})</span><br>`+
+    `<span class="k">итог</span> = <span class="v">${sign(m+add)}</span>`;
+}
+calc();
+</script>
+</body>
+</html>

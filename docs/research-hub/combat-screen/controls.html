@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Боевой экран — управление</title>
+<style>
+  @page { margin: 2cm 2.5cm; }
+  body {
+    font-family: 'Segoe UI', Calibri, Arial, sans-serif;
+    font-size: 11pt;
+    color: #1a1a2e;
+    max-width: 750px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    line-height: 1.55;
+  }
+
+  /* Header */
+  .doc-header {
+    border-bottom: 3px solid #818cf8;
+    padding-bottom: 16px;
+    margin-bottom: 28px;
+  }
+  .doc-title {
+    font-size: 22pt;
+    font-weight: 800;
+    color: #141828;
+    letter-spacing: -0.5px;
+    margin: 0 0 4px;
+  }
+  .doc-subtitle {
+    font-size: 10.5pt;
+    color: #5a6a8a;
+    margin: 0;
+  }
+
+  /* Section */
+  .section {
+    margin-bottom: 24px;
+    break-inside: avoid;
+  }
+  .section-title {
+    font-size: 12.5pt;
+    font-weight: 800;
+    color: #818cf8;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 0 0 10px;
+    padding-bottom: 5px;
+    border-bottom: 1.5px solid #e0e3f0;
+  }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10.5pt;
+  }
+  th {
+    text-align: left;
+    font-size: 9pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #5a6a8a;
+    padding: 5px 10px 5px 0;
+    border-bottom: 1px solid #d0d5e8;
+  }
+  td {
+    padding: 7px 10px 7px 0;
+    vertical-align: top;
+    border-bottom: 1px solid #f0f2f8;
+  }
+  td:first-child {
+    width: 38%;
+    font-weight: 600;
+    color: #1a1a2e;
+    white-space: nowrap;
+  }
+  td:last-child {
+    color: #3a4060;
+  }
+  tr:last-child td { border-bottom: none; }
+
+  /* Gesture badge */
+  .g {
+    display: inline-block;
+    font-size: 9pt;
+    background: #f0f1fa;
+    border: 1px solid #d0d4f0;
+    border-radius: 5px;
+    padding: 1px 7px;
+    font-weight: 700;
+    color: #4a4e80;
+    white-space: nowrap;
+    margin-right: 4px;
+  }
+  .g.hp { background: #fff0f0; border-color: #f8c0c0; color: #c03040; }
+  .g.heal { background: #f0fff4; border-color: #a0e0b0; color: #208040; }
+  .g.map { background: #f0f8ff; border-color: #b0d0f0; color: #2060a0; }
+  .g.abi { background: #fef0ff; border-color: #e0b0f8; color: #7030a0; }
+  .g.tok { background: #fffbf0; border-color: #f0d890; color: #805010; }
+
+  /* Notes */
+  .note {
+    font-size: 9.5pt;
+    color: #6a7a9a;
+    background: #f8f9fd;
+    border-left: 3px solid #818cf8;
+    padding: 8px 12px;
+    border-radius: 0 6px 6px 0;
+    margin-top: 8px;
+  }
+
+  /* Status effects grid */
+  .eff-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px 20px;
+    margin-top: 4px;
+  }
+  .eff-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10pt;
+  }
+  .eff-icon { font-size: 13pt; line-height: 1; }
+
+  /* Footer */
+  .doc-footer {
+    margin-top: 36px;
+    padding-top: 12px;
+    border-top: 1px solid #d0d5e8;
+    font-size: 9pt;
+    color: #8a9ab8;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  @media print {
+    body { padding: 0; }
+    .section { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="doc-title">Боевой экран · Управление</div>
+  <div class="doc-subtitle">Справочник жестов и кнопок для мобильного клиента</div>
+</div>
+
+<!-- КАРТА -->
+<div class="section">
+  <div class="section-title">🗺 Карта</div>
+  <table>
+    <tr>
+      <th>Жест / кнопка</th>
+      <th>Действие</th>
+    </tr>
+    <tr>
+      <td><span class="g map">1 палец · свайп по карте</span></td>
+      <td>Панорамирование — сдвигает камеру в любую сторону</td>
+    </tr>
+    <tr>
+      <td><span class="g map">2 пальца · пинч</span></td>
+      <td>Зум карты от 30% до 400%. Масштабирует сетку и токены вместе. Зум происходит вокруг точки между пальцами</td>
+    </tr>
+    <tr>
+      <td><span class="g tok">Тап на токен</span></td>
+      <td>Выбрать токен (выделяется жёлтой рамкой). Становится активным для д-пада</td>
+    </tr>
+    <tr>
+      <td><span class="g tok">Двойной тап на токен</span></td>
+      <td>Открыть чарник персонажа как нижний оверлей</td>
+    </tr>
+    <tr>
+      <td><span class="g tok">Удержание токена 0,5 с</span></td>
+      <td>Открыть мини-меню: HP, эффекты статуса (см. раздел ниже)</td>
+    </tr>
+  </table>
+</div>
+
+<!-- Д-ПАД -->
+<div class="section">
+  <div class="section-title">🕹 Д-пад (нижний левый угол)</div>
+  <table>
+    <tr>
+      <th>Кнопка</th>
+      <th>Действие</th>
+    </tr>
+    <tr>
+      <td><span class="g">↑ ↓ ← →</span></td>
+      <td>Передвинуть выбранный токен на одну клетку сетки (52 px). Удержание — непрерывное движение</td>
+    </tr>
+    <tr>
+      <td><span class="g">⊕ (центр)</span></td>
+      <td>Центрировать камеру на выбранном токене — «вернуть» камеру если потерял героя</td>
+    </tr>
+  </table>
+</div>
+
+<!-- КРУЖКИ АБИЛОК -->
+<div class="section">
+  <div class="section-title">🔮 Кружки абилок (правая часть экрана)</div>
+  <table>
+    <tr>
+      <th>Жест</th>
+      <th>Действие</th>
+    </tr>
+    <tr>
+      <td><span class="g abi">Тап</span></td>
+      <td>Бросить кубик по формуле абилки. Результат появляется в центре экрана и записывается в лог</td>
+    </tr>
+    <tr>
+      <td><span class="g abi">Перетащить кружок на пустое место</span></td>
+      <td>Переместить кружок в любую точку экрана — свободное позиционирование</td>
+    </tr>
+    <tr>
+      <td><span class="g abi">Перетащить кружок на другой кружок</span></td>
+      <td>Поменять иконки/абилки местами. Размер и позиция каждого кружка остаются своими</td>
+    </tr>
+    <tr>
+      <td><span class="g abi">Удержание кружка 0,5 с</span></td>
+      <td>Открыть попап: название, формула, тип действия. Кнопки: <b>Изменить</b> и <b>Удалить</b></td>
+    </tr>
+    <tr>
+      <td><span class="g abi">Кнопка + (нижний правый)</span></td>
+      <td>Выбор размера (Малый / Средний / Большой) → создать новый пустой слот</td>
+    </tr>
+  </table>
+  <div class="note">
+    Использованные абилки затемняются. Сбрасываются в начале каждого хода.
+    После нажатия <b>Конец хода →</b> все кружки становятся активными снова.
+  </div>
+</div>
+
+<!-- РЕДАКТИРОВАНИЕ АБИЛКИ -->
+<div class="section">
+  <div class="section-title">✏️ Редактирование абилки</div>
+  <table>
+    <tr>
+      <th>Поле</th>
+      <th>Описание</th>
+    </tr>
+    <tr>
+      <td><span class="g">Иконка</span></td>
+      <td>Один эмодзи или символ. Отображается в центре кружка</td>
+    </tr>
+    <tr>
+      <td><span class="g">Название</span></td>
+      <td>Короткое имя, показывается под иконкой (обрезается если не помещается)</td>
+    </tr>
+    <tr>
+      <td><span class="g">Формула броска</span></td>
+      <td>Стандартная нотация: <code>1d8+5</code>, <code>2d6</code>, <code>8d6</code>, <code>1d20+3</code></td>
+    </tr>
+    <tr>
+      <td><span class="g">Тип действия</span></td>
+      <td><b>Действие</b> (фиолетовая метка) · <b>Бонус</b> (жёлтая) · <b>Реакция</b> (синяя)</td>
+    </tr>
+  </table>
+</div>
+
+<!-- ЧАРНИК -->
+<div class="section">
+  <div class="section-title">📋 Чарник (оверлей)</div>
+  <table>
+    <tr>
+      <th>Действие</th>
+      <th>Результат</th>
+    </tr>
+    <tr>
+      <td><span class="g">Двойной тап на токен</span></td>
+      <td>Открыть чарник выбранного токена снизу</td>
+    </tr>
+    <tr>
+      <td><span class="g">Тап на затемнённую область</span></td>
+      <td>Закрыть чарник</td>
+    </tr>
+    <tr>
+      <td><span class="g">Удержание карточки абилки</span> → <span class="g">перетащить на кружок</span></td>
+      <td>Назначить способность из чарника на слот. Чарник уменьшается во время перетаскивания</td>
+    </tr>
+  </table>
+</div>
+
+<!-- МИНИ-МЕНЮ ТОКЕНА -->
+<div class="section">
+  <div class="section-title">⚡ Мини-меню токена</div>
+  <p style="margin:0 0 10px;font-size:10.5pt;">Открывается удержанием токена 0,5 секунды. Закрывается тапом снаружи или кнопкой ×.</p>
+  <table>
+    <tr>
+      <th>Элемент</th>
+      <th>Действие</th>
+    </tr>
+    <tr>
+      <td><span class="g hp">−5 · −1</span></td>
+      <td>Нанести урон токену. HP не может уйти ниже 0. Число урона появляется красным флоатом над токеном</td>
+    </tr>
+    <tr>
+      <td><span class="g heal">+1 · +5</span></td>
+      <td>Лечить токен. HP не может превысить максимум. Зелёный флоат над токеном</td>
+    </tr>
+    <tr>
+      <td><span class="g">Кнопки эффектов</span></td>
+      <td>Тоггл статус-эффекта. Активные подсвечиваются жёлтым. На токене появляется иконка-бейдж</td>
+    </tr>
+  </table>
+
+  <p style="margin:14px 0 8px;font-size:10pt;font-weight:700;color:#3a4060;">Доступные статус-эффекты:</p>
+  <div class="eff-grid">
+    <div class="eff-item"><span class="eff-icon">☠</span> Отравлен</div>
+    <div class="eff-item"><span class="eff-icon">💫</span> Оглушён</div>
+    <div class="eff-item"><span class="eff-icon">🐢</span> Замедлен</div>
+    <div class="eff-item"><span class="eff-icon">👁</span> Невидим</div>
+    <div class="eff-item"><span class="eff-icon">✨</span> Благословлён</div>
+    <div class="eff-item"><span class="eff-icon">😱</span> Испуган</div>
+  </div>
+</div>
+
+<!-- HUD -->
+<div class="section">
+  <div class="section-title">🎯 Верхний HUD</div>
+  <table>
+    <tr>
+      <th>Элемент</th>
+      <th>Действие</th>
+    </tr>
+    <tr>
+      <td><span class="g hp">Полоска ХП</span></td>
+      <td>Тап → шит изменения ХП активного персонажа (+ лечение / − урон)</td>
+    </tr>
+    <tr>
+      <td><span class="g hp">Полоска Маны</span></td>
+      <td>Тап → шит изменения маны</td>
+    </tr>
+    <tr>
+      <td><span class="g">📜 Лог</span></td>
+      <td>Открыть журнал боевых событий. Можно добавлять свои записи</td>
+    </tr>
+    <tr>
+      <td><span class="g">⚄ Кубик</span></td>
+      <td>Открыть шит ручного броска: d4 / d6 / d8 / d10 / d12 / d20 и комбинации</td>
+    </tr>
+    <tr>
+      <td><span class="g">Ход → </span></td>
+      <td>Завершить ход, передать ход следующему по инициативе. Абилки сбрасываются</td>
+    </tr>
+  </table>
+</div>
+
+<!-- КЛАВИАТУРА (десктоп) -->
+<div class="section">
+  <div class="section-title">⌨️ Клавиатура (только десктоп / браузер)</div>
+  <table>
+    <tr>
+      <th>Клавиша</th>
+      <th>Действие</th>
+    </tr>
+    <tr>
+      <td><span class="g">Стрелки</span></td>
+      <td>Движение выбранного токена</td>
+    </tr>
+    <tr>
+      <td><span class="g">Пробел</span></td>
+      <td>Бросить d20</td>
+    </tr>
+    <tr>
+      <td><span class="g">Tab</span></td>
+      <td>Конец хода</td>
+    </tr>
+    <tr>
+      <td><span class="g">1 · 2 · 3 · 4 · 5</span></td>
+      <td>Активировать абилку 1–5</td>
+    </tr>
+    <tr>
+      <td><span class="g">Esc</span></td>
+      <td>Закрыть открытый оверлей / шит</td>
+    </tr>
+  </table>
+</div>
+
+<div class="doc-footer">
+  <span>Боевой экран · TTRPG Toolset</span>
+  <span>H:\Cloude\combat-screen\index.html</span>
+</div>
+
+</body>
+</html>

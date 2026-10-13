@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Конструктор · как это выглядит</title>
+<style>
+:root{
+  --bg:#0f1117; --card:#1a1d2e; --card2:#1e2336; --line:#2a3050; --line2:#363b5e;
+  --txt:#e4e9f5; --mut:#8a96b4;
+  --ind:#818cf8; --teal:#34d399; --purp:#c084fc; --orng:#fb923c;
+  --yel:#fbbf24; --red:#f87171; --blue:#60a5fa;
+  --hf:'Georgia','Times New Roman',serif; --bf:'Segoe UI',system-ui,sans-serif; --mono:'Consolas',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:var(--bf)}
+.deck{position:fixed;inset:0}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;padding:min(5.5vh,48px) min(5.5vw,72px);opacity:0;transition:opacity .32s ease}
+.slide.on{display:flex;opacity:1}
+.slide.center{align-items:center;text-align:center}
+.eyebrow{font-size:clamp(11px,1.4vw,14px);font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--ind);margin-bottom:10px}
+h1{font-family:var(--hf);font-weight:700;font-size:clamp(26px,4.4vw,48px);line-height:1.05;letter-spacing:-.5px}
+.lead{font-size:clamp(13px,1.7vw,17px);color:var(--mut);line-height:1.5;max-width:70ch;margin-top:10px}
+.foot{font-size:clamp(11px,1.4vw,14px);color:var(--mut);font-style:italic;margin-top:16px}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:11px 17px;font-size:clamp(12px,1.5vw,15px);font-weight:600}
+.dot{width:.7em;height:.7em;border-radius:50%;flex-shrink:0}
+.pillars{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:28px}
+
+/* overview cards */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px}
+.ocard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+.ocard .num{font-family:var(--hf);font-weight:700;font-size:clamp(22px,3vw,30px)}
+.ocard .sq{width:30px;height:30px;border-radius:8px;margin:12px 0 10px}
+.ocard h3{font-family:var(--hf);font-size:clamp(17px,2.2vw,22px);margin-bottom:4px}
+.ocard .tag{font-size:clamp(10px,1.3vw,12px);font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.ocard p{font-size:clamp(12px,1.5vw,14px);color:var(--mut);line-height:1.4;margin-top:11px}
+
+/* ── APP WINDOW MOCKUP ── */
+.stage{margin-top:16px;display:flex;flex-direction:column;flex:1;min-height:0}
+.win{background:#12friends;background:#141828;border:1px solid var(--line2);border-radius:13px;overflow:hidden;box-shadow:0 14px 44px rgba(0,0,0,.55);display:flex;flex-direction:column;flex:1;min-height:0}
+.wbar{display:flex;align-items:center;gap:9px;padding:8px 13px;background:#10131f;border-bottom:1px solid var(--line);flex-shrink:0}
+.wlogo{font-size:12px;font-weight:700;white-space:nowrap}
+.wlogo span{color:var(--ind)}
+.wtabs{display:flex;gap:3px;margin-left:6px;flex-wrap:wrap}
+.wtab{font-size:11px;padding:3px 10px;border-radius:6px;color:var(--mut);white-space:nowrap}
+.wtab.on{background:#1e2336;color:var(--ind);font-weight:600}
+.wbody{display:grid;flex:1;min-height:0}
+.wcol{padding:11px;overflow:hidden;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.wcol:last-child{border-right:none}
+.wcol.dk{background:#12friends;background:#171a2b}
+.wch{font-size:9px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--mut)}
+/* mock widgets */
+.mblock{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+.mblock.sel{border-color:var(--ind)}
+.mbt{font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--mut);margin-bottom:5px}
+.mbn{font-size:13px;font-weight:600}
+.mbar{height:8px;border-radius:99px;background:var(--card2);overflow:hidden;margin-top:6px}
+.mbar > i{display:block;height:100%;border-radius:99px}
+.mstats{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:6px}
+.mstat{background:var(--card2);border:1px solid var(--line);border-radius:6px;padding:5px 2px;text-align:center}
+.mstat b{font-size:14px;display:block}
+.mstat span{font-size:8px;color:var(--mut)}
+.mrow{display:flex;align-items:center;gap:6px;font-size:11px}
+.mpal{display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--line);border-radius:7px;padding:7px 9px}
+.mpal .mi{width:18px;text-align:center;color:var(--mut);flex-shrink:0}
+.mpal .mt{font-size:11px;font-weight:600}
+.mpal .ms{font-size:8.5px;color:var(--mut)}
+.mchips{display:flex;flex-wrap:wrap;gap:4px}
+.mc{font-size:9px;padding:2px 8px;border-radius:99px;border:1px solid var(--line);background:var(--card2);color:var(--mut)}
+.mc.on{background:rgba(129,140,248,.16);border-color:var(--ind);color:var(--ind);font-weight:600}
+.mfld{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+.mfld .mk{font-size:8px;font-weight:700;text-transform:uppercase;color:var(--mut);background:var(--card2);border:1px solid var(--line);border-radius:4px;padding:1px 5px;flex-shrink:0}
+.mfld .ml{font-size:12px;font-weight:600;border-bottom:1px dashed var(--line2);flex:1}
+.mfld .mv{font-size:11px;color:var(--mut)}
+.mtype{font-size:10px;padding:3px 9px;border-radius:99px;border:1px solid var(--line);background:var(--card2);color:var(--mut)}
+.mtype.on{background:rgba(129,140,248,.16);border-color:var(--ind);color:var(--ind);font-weight:600}
+.callout{background:var(--card2);border:1px solid var(--line);border-left:none;border-radius:11px;padding:11px 15px;margin-top:12px;font-size:clamp(12px,1.5vw,14px);color:var(--txt);display:flex;gap:11px;align-items:center;flex-shrink:0}
+.callout b{color:var(--ind);font-weight:600}
+
+/* VTT map mockup */
+.vmap{position:relative;flex:1;min-height:0;background:#0a0d16;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:34px 34px;border-radius:9px;border:1px solid var(--line);overflow:hidden}
+.vtok{position:absolute;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid}
+.vtok.pc{background:#0d2a52;color:var(--blue);border-color:#3a7ac0}
+.vtok.en{background:#3d0d0d;color:var(--red);border-color:#c04040}
+.vtpl{position:absolute;border-radius:50%;border:2px solid var(--orng);background:rgba(251,146,60,.12)}
+.vrail{position:absolute;left:9px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:5px}
+.vrb{width:30px;height:30px;border-radius:8px;background:rgba(30,35,54,.85);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--mut)}
+.vrb.on{background:rgba(129,140,248,.3);border-color:var(--ind);color:var(--txt)}
+.vfan{position:absolute;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1px;width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(129,140,248,.25),#0e1224);border:1.5px solid var(--line2);font-size:14px}
+.vbadge{position:absolute;font-size:9px;padding:3px 8px;border-radius:6px;background:rgba(20,24,40,.9);border:1px solid var(--line2);color:var(--mut)}
+
+/* calendar / counters mockup */
+.mgrid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;flex:1;min-height:0}
+.mpanel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px;display:flex;flex-direction:column}
+.mclock{font-family:var(--mono);font-size:clamp(24px,3.4vw,34px);font-weight:700;text-align:center}
+.mdate{font-size:12px;text-align:center;color:var(--txt);margin-top:4px}
+.msun{font-size:10px;text-align:center;color:var(--mut);margin-top:3px}
+.mqrow{display:flex;gap:5px;margin-top:12px;flex-wrap:wrap}
+.mq{flex:1;min-width:40px;font-size:11px;padding:6px 2px;border:1px solid var(--line);border-radius:7px;background:var(--card2);color:var(--mut);text-align:center}
+.mpies{display:flex;gap:14px;justify-content:center;align-items:center;margin-top:auto;padding-top:10px;flex-wrap:wrap}
+.mpie{text-align:center}
+.mpie svg{display:block;margin:0 auto}
+.mpie span{font-size:9px;color:var(--mut);display:block;margin-top:3px}
+
+/* recap chips grid */
+.recap{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;max-width:100%}
+.rc{display:inline-flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:8px 13px;font-size:clamp(11px,1.4vw,13px)}
+
+/* flow */
+.flow{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:stretch;margin-top:20px}
+.fcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.fcard .fh{display:flex;align-items:center;gap:11px;margin-bottom:13px}
+.fcard .fh .sq2{width:28px;height:28px;border-radius:8px}
+.fcard .fh h3{font-family:var(--hf);font-size:clamp(15px,2vw,19px)}
+.fcard .fi{display:flex;align-items:center;gap:9px;font-size:clamp(12px,1.5vw,14px);color:var(--mut);margin-bottom:9px}
+.farr{font-family:var(--hf);font-size:clamp(22px,3vw,32px);color:var(--mut);align-self:center}
+.savebar{margin-top:16px;background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:12px 16px;text-align:center;font-size:clamp(12px,1.5vw,14px);color:var(--mut);flex-shrink:0}
+.savebar b{color:var(--teal)}
+
+/* nav */
+.nav{position:fixed;left:0;right:0;bottom:15px;display:flex;justify-content:center;z-index:10}
+.dots{display:flex;gap:7px}
+.nd{width:8px;height:8px;border-radius:50%;background:var(--line2);cursor:pointer;border:none;padding:0;transition:.15s}
+.nd.on{background:var(--ind);transform:scale(1.3)}
+.nd:hover{background:var(--mut)}
+.counter{position:fixed;right:20px;bottom:13px;font-size:12px;color:var(--mut);font-family:var(--mono);z-index:10}
+.hint{position:fixed;left:20px;bottom:13px;font-size:11px;color:var(--mut);opacity:.7;z-index:10}
+.navbtn{position:fixed;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;background:rgba(30,35,54,.6);border:1px solid var(--line2);color:var(--mut);font-size:20px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.navbtn:hover{color:var(--txt);border-color:var(--ind)}
+.navbtn.prev{left:12px}.navbtn.next{right:12px}
+
+@media(max-width:860px){
+  .cards,.flow,.mgrid2{grid-template-columns:1fr}
+  .flow .farr{transform:rotate(90deg)}
+  .wtabs{display:none}
+  .navbtn{display:none}
+  .slide{justify-content:flex-start;overflow-y:auto;padding:40px 18px 64px}
+  .win{min-height:420px}
+}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- 1 TITLE -->
+<section class="slide center on">
+  <div class="eyebrow">TTRPG Toolset · Конструктор</div>
+  <h1 style="font-size:clamp(34px,6.4vw,66px)">Собери свою систему</h1>
+  <p class="lead" style="text-align:center;margin:16px auto 0">Как выглядит конструктор, где каждый создаёт чарник, компендиум и автоматизацию</p>
+  <div class="pillars">
+    <span class="chip"><span class="dot" style="background:var(--purp)"></span>Чарник</span>
+    <span class="chip"><span class="dot" style="background:var(--teal)"></span>Компендиум</span>
+    <span class="chip"><span class="dot" style="background:var(--orng)"></span>Автоматизация</span>
+  </div>
+  <div class="foot" style="margin-top:22px">Три конструктора · один инструмент</div>
+</section>
+
+<!-- 2 OVERVIEW -->
+<section class="slide">
+  <div class="eyebrow">Три конструктора</div>
+  <h1>Что собирает каждый</h1>
+  <div class="cards">
+    <div class="ocard"><div class="num" style="color:var(--purp)">01</div><div class="sq" style="background:var(--purp)"></div><h3>Чарник</h3><div class="tag" style="color:var(--purp)">Лист персонажа</div><p>Блоки, формулы, ресурсы, способности. То, что игрок видит и трогает первым.</p></div>
+    <div class="ocard"><div class="num" style="color:var(--teal)">02</div><div class="sq" style="background:var(--teal)"></div><h3>Компендиум</h3><div class="tag" style="color:var(--teal)">Библиотека сущностей</div><p>Предметы, особенности, эффекты — собраны из полей с редактируемыми лейблами.</p></div>
+    <div class="ocard"><div class="num" style="color:var(--orng)">03</div><div class="sq" style="background:var(--orng)"></div><h3>Автоматизация</h3><div class="tag" style="color:var(--orng)">Правила поверх</div><p>Прем/помехи, прокачка, условия. По желанию — система работает и без неё.</p></div>
+  </div>
+  <div class="foot" style="text-align:center">Чарник показывает · Компендиум питает · Автоматизация ускоряет</div>
+</section>
+
+<!-- 3 CHARSHEET CONSTRUCTOR -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--purp)">Конструктор · 01 Чарник</div>
+  <h1>Лист собирается из блоков</h1>
+  <div class="stage">
+    <div class="win">
+      <div class="wbar"><div class="wlogo">⚙ <span>Конструктор</span></div>
+        <div class="wtabs"><span class="wtab on">Чарники</span><span class="wtab">Предметы</span><span class="wtab">Эффекты</span><span class="wtab">Компендиум</span><span class="wtab">Система</span><span class="wtab">VTT</span></div></div>
+      <div class="wbody" style="grid-template-columns:1fr 1.5fr 1fr">
+        <div class="wcol dk">
+          <div class="wch">Персонажи · формулы</div>
+          <div class="mrow"><span class="dot" style="background:var(--blue)"></span>Арвен · ИГ</div>
+          <div class="mrow" style="color:var(--mut)"><span class="dot" style="background:var(--red)"></span>Зссилакс · НПС</div>
+          <div class="mfld" style="margin-top:6px"><span class="mk">⨍</span><span class="ml" style="font-family:var(--mono);color:var(--blue)">Тело×2+10</span></div>
+          <div class="mfld"><span class="mk">⨍</span><span class="ml" style="font-family:var(--mono);color:var(--blue)">Ловк+Маст</span></div>
+        </div>
+        <div class="wcol">
+          <div class="wch">Канвас</div>
+          <div class="mblock"><div class="mbt">Ресурс-бар</div><div class="mbn">ХП · 38 / 52</div><div class="mbar"><i style="width:73%;background:var(--teal)"></i></div></div>
+          <div class="mblock"><div class="mbt">Характеристики</div><div class="mstats"><div class="mstat"><b>12</b><span>Тело</span></div><div class="mstat"><b>16</b><span>Ловк</span></div><div class="mstat"><b>20</b><span>Разум</span></div></div></div>
+          <div class="mblock sel"><div class="mbt">Способность</div><div class="mbn">Огненный шар</div><div class="mchips" style="margin-top:6px"><span class="mc on">🏹 Дальний</span><span class="mc">Д</span></div></div>
+        </div>
+        <div class="wcol dk">
+          <div class="wch">Палитра блоков</div>
+          <div class="mpal"><span class="mi">♥</span><div><div class="mt">Ресурс-бар</div><div class="ms">ХП, мана, броня</div></div></div>
+          <div class="mpal"><span class="mi">#</span><div><div class="mt">Характеристики</div><div class="ms">числа + формулы</div></div></div>
+          <div class="mpal"><span class="mi">⚄</span><div><div class="mt">Проверка</div><div class="ms">куб + формула</div></div></div>
+          <div class="mpal"><span class="mi">✦</span><div><div class="mt">Способность</div><div class="ms">черта / умение</div></div></div>
+          <div class="mpal"><span class="mi">★</span><div><div class="mt">Навыки</div><div class="ms">уровни владения</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="callout"><span class="dot" style="background:var(--purp);width:16px;height:16px;flex-shrink:0"></span><div>Слева — <b>формулы</b> (считаются вживую), центр — <b>канвас блоков</b>, справа — <b>палитра</b>. Тащишь блок — он на листе.</div></div>
+</section>
+
+<!-- 4 CHARSHEET DETAIL: range presets -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--purp)">Конструктор · 01 Чарник</div>
+  <h1>Готовые кирпичи под рукой</h1>
+  <p class="lead">У способности — пресеты дальности из общего словаря. Ресурс рисуется баром или точками. Всё редактируется инлайн.</p>
+  <div class="stage" style="margin-top:14px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex:1;min-height:0">
+      <div class="win" style="box-shadow:none">
+        <div class="wbar"><div class="wlogo">Способность · <span>дальность</span></div></div>
+        <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+          <div class="mbn" style="font-size:15px">Огненный шар</div>
+          <div class="wch">⟿ Дальность</div>
+          <div class="mchips"><span class="mc">🧍 Себя</span><span class="mc">✋ Касание</span><span class="mc">⚔ Ближний</span><span class="mc">⬡ Зона</span><span class="mc on">🏹 Дальний</span><span class="mc">👁 Видимость</span></div>
+          <div class="wch" style="margin-top:6px">Формула броска</div>
+          <div class="mfld"><span class="ml" style="font-family:var(--mono);color:var(--blue)">8к6</span></div>
+        </div>
+      </div>
+      <div class="win" style="box-shadow:none">
+        <div class="wbar"><div class="wlogo">Ресурс-бар · <span>стиль</span></div></div>
+        <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+          <div class="mbn" style="font-size:15px">Здоровье</div>
+          <div class="mchips"><span class="mc on">▬ Бар</span><span class="mc">● Точки</span></div>
+          <div class="mbar" style="height:12px"><i style="width:73%;background:var(--teal)"></i></div>
+          <div style="display:flex;gap:5px">
+            <span class="dot" style="width:16px;height:16px;border-radius:50%;background:var(--red)"></span>
+            <span class="dot" style="width:16px;height:16px;border-radius:50%;background:var(--yel)"></span>
+            <span class="dot" style="width:16px;height:16px;border-radius:50%;background:var(--teal)"></span>
+            <span class="dot" style="width:16px;height:16px;border-radius:50%;background:var(--blue)"></span>
+          </div>
+          <div class="ms" style="font-size:11px;color:var(--mut)">Цвет, максимум, стиль — на месте.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 COMPENDIUM CONSTRUCTOR -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--teal)">Конструктор · 02 Компендиум</div>
+  <h1>Сущность собирается из полей</h1>
+  <div class="stage">
+    <div class="win">
+      <div class="wbar"><div class="wlogo">⚙ <span>Конструктор</span></div>
+        <div class="wtabs"><span class="wtab">Чарники</span><span class="wtab">Предметы</span><span class="wtab">Эффекты</span><span class="wtab on">Компендиум</span><span class="wtab">Система</span><span class="wtab">VTT</span></div></div>
+      <div class="wbody" style="grid-template-columns:1fr 1.6fr 1fr">
+        <div class="wcol dk">
+          <div class="wch">Типы</div>
+          <div class="mchips"><span class="mtype on">🎒 Предмет</span><span class="mtype">✦ Особенность</span><span class="mtype">✨ Эффект</span><span class="mtype">⚡ Действие</span></div>
+          <div class="wch" style="margin-top:8px">Сущности</div>
+          <div class="mrow" style="background:var(--card);border:1px solid var(--ind);border-radius:6px;padding:5px 7px">🔥 Посох Пепла</div>
+          <div class="mrow" style="color:var(--mut);padding:5px 7px">🗡 Кинжал теней</div>
+        </div>
+        <div class="wcol">
+          <div class="wch">Наполнение · Посох Пепла</div>
+          <div class="mfld"><span class="mk">урон</span><span class="ml" style="color:var(--orng)">Броня</span><span class="mv">8к6 · огонь</span></div>
+          <div class="mfld"><span class="mk">дальность</span><span class="ml">Дальность</span><span class="mv">Дальний</span></div>
+          <div class="mfld"><span class="mk">требов.</span><span class="ml">Требования</span><span class="mv">Разум 15</span></div>
+          <div class="mfld"><span class="mk">цена</span><span class="ml">Стоимость</span><span class="mv">400 · золото</span></div>
+        </div>
+        <div class="wcol dk">
+          <div class="wch">Поля</div>
+          <div class="mpal"><span class="mi">⚔</span><div><div class="mt">Урон</div><div class="ms">кубы + тип</div></div></div>
+          <div class="mpal"><span class="mi">⟿</span><div><div class="mt">Дальность</div><div class="ms">себя · дальний</div></div></div>
+          <div class="mpal"><span class="mi">⚑</span><div><div class="mt">Требования</div><div class="ms">условия</div></div></div>
+          <div class="mpal"><span class="mi">⬆</span><div><div class="mt">Ранги</div><div class="ms">ступени силы</div></div></div>
+          <div class="mpal"><span class="mi">◈</span><div><div class="mt">Стоимость</div><div class="ms">число + ед.</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="callout"><span class="dot" style="background:var(--teal);width:16px;height:16px;flex-shrink:0"></span><div>Лейбл поля <b>«Урон» переименован в «Броня»</b> — названия под свою систему. Поля тащишь из палитры справа.</div></div>
+</section>
+
+<!-- 6 COMPENDIUM DETAIL: ranks -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--teal)">Конструктор · 02 Компендиум</div>
+  <h1>Особенность растёт рангами</h1>
+  <p class="lead">Тип «Особенность» — не предмет и не эффект. У неё ступени: каждый ранг сильнее. Так задаётся «как крепнет».</p>
+  <div class="stage" style="margin-top:14px">
+    <div class="win" style="max-width:760px;margin:0 auto;box-shadow:none">
+      <div class="wbar"><div class="wlogo">✦ Особенность · <span>Ярость</span></div></div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:9px">
+        <div class="mrow" style="color:var(--mut);font-size:11px">Текущий ранг: <b style="color:var(--purp)">2</b> из 3</div>
+        <div class="mfld"><span class="mk" style="color:var(--purp)">ранг 1</span><span class="mv" style="color:var(--txt)">+1 к урону</span></div>
+        <div class="mfld" style="border-color:var(--purp)"><span class="mk" style="color:var(--purp)">ранг 2 ●</span><span class="mv" style="color:var(--txt)">+2 и пробитие брони</span></div>
+        <div class="mfld"><span class="mk" style="color:var(--purp)">ранг 3</span><span class="mv" style="color:var(--txt)">+3 и удар по площади</span></div>
+        <div class="mrow" style="color:var(--mut);font-size:11px;margin-top:4px">+ добавить ранг</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 AUTOMATION CONSTRUCTOR -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--orng)">Конструктор · 03 Автоматизация</div>
+  <h1>Правила лепит мастер</h1>
+  <div class="stage">
+    <div class="win">
+      <div class="wbar"><div class="wlogo">⚙ <span>Конструктор</span></div>
+        <div class="wtabs"><span class="wtab">Чарники</span><span class="wtab">Компендиум</span><span class="wtab on">Система</span><span class="wtab">VTT</span></div></div>
+      <div class="wbody" style="grid-template-columns:1fr 1fr">
+        <div class="wcol">
+          <div class="wch">Преимущества / помехи</div>
+          <div class="mblock"><div class="mrow"><span class="mc on" style="border-radius:5px">✓</span> Переброс — лучший бросок <span style="margin-left:auto;color:var(--ind)">ⓘ</span></div></div>
+          <div class="mblock"><div class="mrow"><span class="mc" style="border-radius:5px">&nbsp;</span> Добавление кости <span style="margin-left:auto;color:var(--ind)">ⓘ</span></div></div>
+          <div class="wch" style="margin-top:6px">Авто-правило</div>
+          <div class="mfld"><span class="ml" style="font-size:11px">Атака не той рукой</span></div>
+          <div class="mrow" style="gap:6px"><span class="mfld" style="flex:1;padding:5px 8px"><span class="mv" style="font-family:var(--mono);color:var(--blue);font-size:10px">#Off_Hand - On</span></span><span class="farr" style="font-size:16px">→</span><span class="mc on">помеха</span></div>
+        </div>
+        <div class="wcol dk">
+          <div class="wch">Прокачка · один метод</div>
+          <div class="mrow"><span class="dot" style="background:var(--ind)"></span>За опыт → уровень</div>
+          <div class="mrow" style="color:var(--mut)"><span class="dot" style="background:var(--line2)"></span>За мейлстоун → уровень</div>
+          <div class="mrow" style="color:var(--mut)"><span class="dot" style="background:var(--line2)"></span>За опыт → атрибут</div>
+          <div class="mrow" style="color:var(--mut)"><span class="dot" style="background:var(--line2)"></span>За мейлстоун → атрибут</div>
+          <div class="wch" style="margin-top:8px">Развитие · роуд-мап</div>
+          <div class="mrow" style="gap:6px"><span class="mc">Старт</span><span class="farr" style="font-size:14px">→</span><span class="mc" style="border-color:var(--orng);color:var(--orng)">Бой</span><span class="mc" style="border-color:var(--purp);color:var(--purp)">Магия</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="callout"><span class="dot" style="background:var(--orng);width:16px;height:16px;flex-shrink:0"></span><div>Механики прем/помех с <b>подсказками по системам</b>, авто-правила «условие → эффект», выбор метода прокачки и роуд-мап развития.</div></div>
+</section>
+
+<!-- 8 VTT -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--blue)">Общий стол · VTT</div>
+  <h1>Где всё встречается</h1>
+  <div class="stage">
+    <div class="win">
+      <div class="wbar"><div class="wlogo">🗺 <span>Боевой экран</span></div><div class="wtabs"><span class="wtab on">Карта</span><span class="wtab">Чат</span><span class="wtab">Время</span><span class="wtab">Иниц.</span></div></div>
+      <div style="flex:1;min-height:0;padding:10px;display:flex">
+        <div class="vmap">
+          <div class="vbadge" style="left:10px;top:8px;color:var(--yel)">Ход: Арвен · раунд 3</div>
+          <div class="vbadge" style="left:10px;top:34px">⊞ 1 клетка = 1,5 м</div>
+          <div class="vrail"><span class="vrb">✋</span><span class="vrb on">◎</span><span class="vrb">✏️</span><span class="vrb">📍</span></div>
+          <div class="vtpl" style="left:44%;top:30%;width:120px;height:120px"></div>
+          <div class="vtok pc" style="left:30%;top:44%">АТ</div>
+          <div class="vtok pc" style="left:24%;top:62%">ДН</div>
+          <div class="vtok en" style="left:54%;top:34%">ЗС</div>
+          <div class="vtok en" style="left:64%;top:56%">СК</div>
+          <div class="vfan" style="right:14%;bottom:10%"><span>🔥</span></div>
+          <div class="vfan" style="right:24%;bottom:16%;width:38px;height:38px;font-size:12px"><span>🛡</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="callout"><span class="dot" style="background:var(--blue);width:16px;height:16px;flex-shrink:0"></span><div>Карта с пан/зумом, токены, <b>веер абилок</b>, тул-рейл (шаблоны · рисование · пинги), <b>пресеты заклинаний</b>, масштаб сцены.</div></div>
+</section>
+
+<!-- 9 TIME / COUNTERS / SCENES -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--blue)">Общий стол · Время и трекеры</div>
+  <h1>Живое время и счётчики</h1>
+  <div class="mgrid2">
+    <div class="mpanel">
+      <div class="wch" style="text-align:center;margin-bottom:8px">Календарь · настраивается</div>
+      <div class="mclock">13:00</div>
+      <div class="mdate">Жардень, 15 Пепелень 1247</div>
+      <div class="msun">🌅 4:47 · 🌕 · 🌇 19:13</div>
+      <div class="mqrow"><span class="mq">▶ Play</span><span class="mq">+1ч</span><span class="mq">+4ч</span><span class="mq">🌅</span></div>
+      <div style="margin-top:10px;font-size:10px;color:var(--mut);border-top:1px solid var(--line);padding-top:8px">⏱ 6:00 — стража меняется · <span style="color:var(--ind)">12:00 — полдень</span></div>
+    </div>
+    <div class="mpanel">
+      <div class="wch" style="text-align:center;margin-bottom:8px">Счётчики-пиццы</div>
+      <div class="mpies">
+        <div class="mpie">
+          <svg width="58" height="58" viewBox="0 0 58 58"><circle cx="29" cy="29" r="27" fill="#232740" stroke="#0f1117"/><path d="M29,29 L29,2 A27,27 0 0,1 52.4,42.5 Z" fill="#fb923c"/></svg>
+          <span>Осада 3/8</span>
+        </div>
+        <div class="mpie">
+          <svg width="58" height="58" viewBox="0 0 58 58"><circle cx="29" cy="29" r="27" fill="#232740" stroke="#0f1117"/><path d="M29,29 L29,2 A27,27 0 0,1 55.4,33.7 Z M29,29 L55.4,33.7 A27,27 0 0,1 40,52.4 Z" fill="#c084fc"/></svg>
+          <span>Ритуал 4/6</span>
+        </div>
+        <div class="mpie">
+          <svg width="58" height="58" viewBox="0 0 58 58"><circle cx="29" cy="29" r="27" fill="#232740" stroke="#0f1117"/><path d="M29,29 L29,2 A27,27 0 0,1 51,45 Z M29,29 L51,45 A27,27 0 0,1 7,45 Z" fill="#f87171"/></svg>
+          <span>Тревога 2/4</span>
+        </div>
+      </div>
+      <div style="margin-top:auto;padding-top:10px;font-size:10px;color:var(--mut);text-align:center">Клик = +1 · тянешь на карту — виджет для игроков</div>
+    </div>
+  </div>
+  <div class="foot" style="text-align:center">Календарь, тайминги дня, счётчики и масштаб сцены — общие для всей комнаты</div>
+</section>
+
+<!-- 10 RECAP: наработки -->
+<section class="slide">
+  <div class="eyebrow">Что уже готово</div>
+  <h1>Наработки в деле</h1>
+  <p class="lead">Всё это уже собрано и работает — из этих кирпичей и складывается конструктор.</p>
+  <div class="recap">
+    <span class="rc"><span class="dot" style="background:var(--purp)"></span>Блоки чарника</span>
+    <span class="rc"><span class="dot" style="background:var(--purp)"></span>Формулы вживую</span>
+    <span class="rc"><span class="dot" style="background:var(--purp)"></span>Теги дальности</span>
+    <span class="rc"><span class="dot" style="background:var(--teal)"></span>Сущности + лейблы</span>
+    <span class="rc"><span class="dot" style="background:var(--teal)"></span>Ранги особенностей</span>
+    <span class="rc"><span class="dot" style="background:var(--teal)"></span>Палитра полей</span>
+    <span class="rc"><span class="dot" style="background:var(--orng)"></span>Прем/помехи + инфо</span>
+    <span class="rc"><span class="dot" style="background:var(--orng)"></span>Ведущая кость</span>
+    <span class="rc"><span class="dot" style="background:var(--orng)"></span>4 метода прокачки</span>
+    <span class="rc"><span class="dot" style="background:var(--blue)"></span>Календарь-конструктор</span>
+    <span class="rc"><span class="dot" style="background:var(--blue)"></span>Часы + тайминги</span>
+    <span class="rc"><span class="dot" style="background:var(--blue)"></span>Счётчики-пиццы</span>
+    <span class="rc"><span class="dot" style="background:var(--blue)"></span>Сцены + масштаб</span>
+    <span class="rc"><span class="dot" style="background:var(--yel)"></span>Карта + токены</span>
+    <span class="rc"><span class="dot" style="background:var(--yel)"></span>Веер абилок</span>
+    <span class="rc"><span class="dot" style="background:var(--yel)"></span>Шаблоны + пресеты</span>
+    <span class="rc"><span class="dot" style="background:var(--yel)"></span>Рисование + пинги</span>
+    <span class="rc"><span class="dot" style="background:var(--ind)"></span>Зона бросков · прем/помеха</span>
+    <span class="rc"><span class="dot" style="background:var(--ind)"></span>Типсы по интерфейсу</span>
+  </div>
+</section>
+
+<!-- 11 FLOW / shared save -->
+<section class="slide">
+  <div class="eyebrow">Всё в одном</div>
+  <h1>Один инструмент, общие данные</h1>
+  <div class="flow">
+    <div class="fcard"><div class="fh"><span class="sq2" style="background:var(--purp)"></span><h3>Чарник</h3></div>
+      <div class="fi"><span class="dot" style="background:var(--purp)"></span>Тянет сущности</div>
+      <div class="fi"><span class="dot" style="background:var(--purp)"></span>Формулы и блоки</div>
+      <div class="fi"><span class="dot" style="background:var(--purp)"></span>Развитие персонажа</div></div>
+    <div class="farr">←</div>
+    <div class="fcard"><div class="fh"><span class="sq2" style="background:var(--teal)"></span><h3>Компендиум</h3></div>
+      <div class="fi"><span class="dot" style="background:var(--teal)"></span>Сущности из полей</div>
+      <div class="fi"><span class="dot" style="background:var(--teal)"></span>Ранги, дальность, урон</div>
+      <div class="fi"><span class="dot" style="background:var(--teal)"></span>Библиотеки</div></div>
+  </div>
+  <div class="savebar">Всё живёт в <b>одном сохранении</b> — чарник, компендиум, система, VTT и время синхронны. Автоматизация действует поверх, когда включена.</div>
+</section>
+
+<!-- 12 CLOSE -->
+<section class="slide center">
+  <div class="eyebrow">Итог</div>
+  <h1 style="font-size:clamp(30px,5.6vw,52px)">Каждый собирает свою систему</h1>
+  <p class="lead" style="text-align:center;margin:15px auto 0">Три конструктора · общие данные · редактируемые лейблы</p>
+  <div class="pillars" style="margin-top:26px">
+    <span class="chip" style="padding:9px 15px"><span class="dot" style="background:var(--purp)"></span>Чарник</span>
+    <span class="chip" style="padding:9px 15px"><span class="dot" style="background:var(--teal)"></span>Компендиум</span>
+    <span class="chip" style="padding:9px 15px"><span class="dot" style="background:var(--orng)"></span>Автоматизация</span>
+  </div>
+</section>
+
+</div>
+
+<button class="navbtn prev" onclick="go(-1)" aria-label="Назад">‹</button>
+<button class="navbtn next" onclick="go(1)" aria-label="Вперёд">›</button>
+<div class="nav"><div class="dots" id="dots"></div></div>
+<div class="counter" id="counter">1 / 12</div>
+<div class="hint">← → · пробел · свайп</div>
+
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+const dotsEl=document.getElementById('dots'), counter=document.getElementById('counter');
+slides.forEach((_,i)=>{const b=document.createElement('button');b.className='nd'+(i===0?' on':'');b.onclick=()=>show(i);dotsEl.appendChild(b);});
+function show(i){
+  if(i<0||i>=slides.length) return;
+  slides[cur].classList.remove('on');dotsEl.children[cur].classList.remove('on');
+  cur=i;
+  slides[cur].classList.add('on');dotsEl.children[cur].classList.add('on');
+  counter.textContent=(cur+1)+' / '+slides.length;
+}
+function go(d){show(cur+d);}
+(function(){const h=parseInt(location.hash.replace('#',''));if(h>=1&&h<=slides.length)show(h-1);})();
+window.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(1);}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(-1);}
+  else if(e.key==='Home'){show(0);} else if(e.key==='End'){show(slides.length-1);}
+});
+document.getElementById('deck').addEventListener('click',e=>{
+  if(e.target.closest('button,a')) return;
+  go(e.clientX > window.innerWidth/2 ? 1 : -1);
+});
+let tx=0,ty=0;
+addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy))go(dx<0?1:-1);},{passive:true});
+</script>
+</body>
+</html>

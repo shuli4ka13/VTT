@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Механики D&D и Cyberpunk — что нужно конструктору</title>
+<style>
+:root{
+  --bg:#0f1117; --card:#1a1d2e; --card2:#1e2336; --line:#2a3050; --line2:#363b5e;
+  --txt:#e4e9f5; --mut:#8a96b4;
+  --ind:#818cf8; --teal:#34d399; --purp:#c084fc; --orng:#fb923c; --blue:#60a5fa; --yel:#fbbf24; --red:#f87171; --green:#4ade80; --cp:#22d3ee;
+  --hf:'Georgia','Times New Roman',serif; --bf:'Segoe UI',system-ui,sans-serif; --mono:'Consolas',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:var(--bf);padding:22px 22px 60px;font-size:13px}
+.wrap{max-width:1240px;margin:0 auto}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--ind);margin-bottom:7px}
+h1{font-family:var(--hf);font-size:28px;font-weight:700;letter-spacing:-.4px}
+.sub{font-size:13.5px;color:var(--mut);margin-top:7px;line-height:1.5;max-width:92ch}
+.sub b{color:var(--txt)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0}
+.stat-pill{font-size:12px;padding:6px 13px;border-radius:99px;background:var(--card2);border:1px solid var(--line2)}
+.stat-pill b{font-family:var(--mono)}
+.sp{flex:1}
+.fbtn{font-size:12px;padding:6px 12px;border-radius:8px;border:1px solid var(--line2);background:var(--card2);color:var(--mut);cursor:pointer;font-family:inherit}
+.fbtn.on{border-color:var(--ind);color:var(--ind);background:rgba(129,140,248,.12)}
+.tbl-wrap{border:1px solid var(--line2);border-radius:12px;overflow:hidden;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:900px}
+th{text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--mut);padding:9px 11px;background:var(--card2);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2}
+td{padding:8px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+tr.sec td{background:#151a2c;font-weight:700;color:var(--txt);font-family:var(--hf);font-size:14px;border-bottom:1px solid var(--line2)}
+tr.sec .code{color:var(--ind);font-family:var(--mono);font-size:11px;margin-right:8px}
+tr.item:hover td{background:var(--card)}
+.mn{font-weight:600;color:var(--txt);width:210px}
+.cell{font-family:var(--mono);font-size:11.5px;line-height:1.4}
+.cell.dnd{color:#f6d67a}.cell.cp{color:#8be6f2}
+.cell.no{color:var(--line2);font-family:var(--bf)}
+.blk{font-size:11.5px;color:var(--blue)}
+.cov{font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap;display:inline-block}
+.cov.both{background:rgba(74,222,128,.16);color:var(--green)}
+.cov.dnd{background:rgba(251,191,36,.16);color:var(--yel)}
+.cov.cp{background:rgba(34,211,238,.14);color:var(--cp)}
+.note{font-size:12.5px;color:var(--mut);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px 15px;margin-top:20px;line-height:1.55}
+.note b{color:var(--ind);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Покрытие механик · D&amp;D × Cyberpunk</div>
+  <h1>Какие механики нужны конструктору</h1>
+  <div class="sub">Разбор: каждая механика — строка. Что нужно в <b>D&amp;D 5e</b>, что в <b>Cyberpunk RED</b>, каким <b>блоком/контролом</b> это реализуется, и <b>покрытие</b>: <span style="color:var(--green)">общий</span> (нужен обеим — ядро движка), <span style="color:var(--yel)">только D&amp;D</span> или <span style="color:var(--cp)">только Cyberpunk</span> (включается тоглом/опцией). Клик по фильтрам ниже.</div>
+
+  <div class="bar">
+    <span class="stat-pill">Общих <b id="c-both" style="color:var(--green)">0</b></span>
+    <span class="stat-pill">Только D&amp;D <b id="c-dnd" style="color:var(--yel)">0</b></span>
+    <span class="stat-pill">Только Cyberpunk <b id="c-cp" style="color:var(--cp)">0</b></span>
+    <span class="sp"></span>
+    <button class="fbtn on" data-f="all" onclick="setF('all')">Все</button>
+    <button class="fbtn" data-f="both" onclick="setF('both')">Общие</button>
+    <button class="fbtn" data-f="dnd" onclick="setF('dnd')">D&amp;D</button>
+    <button class="fbtn" data-f="cp" onclick="setF('cp')">Cyberpunk</button>
+  </div>
+
+  <div class="tbl-wrap"><table id="mtx"></table></div>
+
+  <div class="note"><b>Что показывает.</b> «Общие» строки — это <b style="color:var(--txt)">минимальный движок</b>: бросок, сумма модификаторов, сравнение с порогом, ресурс-бар, состояния, шаблоны, базовые контролы. Их хватает на костяк любой системы. «Только D&amp;D» и «только Cyberpunk» — это <b style="color:var(--txt)">опции-переключатели</b> поверх ядра: модель брони (порог vs вычитание), крит-режим (удвоение vs взрывной кубик), преимущество vs модификаторы кости, уровни vs покупка за очки, пул Удачи и Гуманность. То есть конструктор = общее ядро + набор тоглов, которыми система «настраивается» в ту или другую сторону.</div>
+</div>
+
+<script>
+// dnd / cp: строка использования или '—' ; blk: чем реализуется
+const D=[
+{sec:1,code:'F',name:'Формулы (движок вычислений)'},
+{name:'Модификатор от характеристики',dnd:'⌊(стат−10)/2⌋',cp:'— (стат напрямую)',blk:'Формула / производное'},
+{name:'Бонус мастерства',dnd:'2+⌊(ур−1)/4⌋',cp:'— (навык = число)',blk:'Формула по уровню'},
+{name:'Хиты (макс)',dnd:'кость + Тело',cp:'10+5⌈(BODY+WILL)/2⌉',blk:'Производное'},
+{name:'Сумма модификаторов',dnd:'d20 + мод + PB',cp:'1d10 + стат + навык',blk:'Операция «сумма»'},
+{name:'Умножение',dnd:'Сила × 15 (груз)',cp:'MOVE × 2 (движ.)',blk:'Операция «×»'},
+{name:'Округление вниз ⌊ ⌋',dnd:'мод, средняя броня',cp:'⌊HUM/10⌋ (эмпатия)',blk:'Операция округления'},
+{name:'Min / Max (порог)',dnd:'min(Ловк,2); DC=max(10,½урон)',cp:'—',blk:'Операция min/max'},
+
+{sec:1,code:'B',name:'Броски и проверки'},
+{name:'Базовый бросок vs порог',dnd:'d20 ≥ DC',cp:'1d10+стат+навык ≥ DV',blk:'Бросок + сравнение'},
+{name:'Крит-механика',dnd:'нат.20 → удвоение костей',cp:'взрывной d10 (10↑ / 1↓)',blk:'Тогл «крит-режим»'},
+{name:'Преимущество / помеха',dnd:'2d20 лучший / худший',cp:'— (модификаторы кости)',blk:'Тогл преим/помеха'},
+{name:'Состязание бросков',dnd:'редко (захват)',cp:'часто (ближний бой)',blk:'Сравнение бросков'},
+{name:'Спас от смерти',dnd:'d20 ≥ 10, ×3',cp:'1d10 ≤ BODY − раны',blk:'Бросок vs порог'},
+{name:'Пассивная проверка',dnd:'10 + моды',cp:'—',blk:'Формула'},
+
+{sec:1,code:'A',name:'Броня'},
+{name:'Модель брони',dnd:'порог попадания (КЗ)',cp:'вычитание из урона (SP)',blk:'Тогл «модель брони»'},
+{name:'Абляция брони',dnd:'—',cp:'SP − 1 за пробитие',blk:'Триггер-эффект'},
+{name:'Укрытие',dnd:'+2 / +5 к КЗ',cp:'рост DV атаки',blk:'Модификатор'},
+
+{sec:1,code:'R',name:'Ресурсы'},
+{name:'Хиты',dnd:'трекер + состояния',cp:'трекер + раны',blk:'Ресурс-бар'},
+{name:'Ячейки заклинаний',dnd:'по уровням, таблица',cp:'—',blk:'Счётчик / пипсы'},
+{name:'Пул Удачи',dnd:'—',cp:'LUCK, тратится за сессию',blk:'Пул-ресурс'},
+{name:'Гуманность / Эмпатия',dnd:'—',cp:'HUM=EMP×10, кибера жрёт',blk:'Связанный ресурс'},
+{name:'Боеприпасы',dnd:'редко',cp:'патроны, перезарядка',blk:'Счётчик'},
+
+{sec:1,code:'E',name:'Эффекты и состояния'},
+{name:'Состояния',dnd:'отравлен, оглушён, испуган…',cp:'травмы, серьёзная рана…',blk:'Тогл-состояние'},
+{name:'Триггеры событий',dnd:'реакции, начало хода',cp:'пробитие, крит-6, нач. хода',blk:'Trigger Event'},
+{name:'Длительность',dnd:'раунд / сцена / концентрация',cp:'раунды / пока не вылечен',blk:'Поле длительности'},
+{name:'Крит. травмы (таблица)',dnd:'— (крит = ×урон)',cp:'две 6 → таблица травм',blk:'Таблица бросков'},
+{name:'Сопротивление / уязвимость',dnd:'× ½ / × 2',cp:'редко',blk:'Операция умножения'},
+
+{sec:1,code:'P',name:'Прогрессия'},
+{name:'Уровни',dnd:'1–20, таблица',cp:'— (нет уровней)',blk:'Таблица уровня'},
+{name:'Опыт',dnd:'XP пороги (таблица)',cp:'IP (покупка)',blk:'Счётчик + метод'},
+{name:'Метод прокачки',dnd:'за опыт → уровень',cp:'за опыт → атрибут',blk:'Radio (4 метода)'},
+{name:'Прибавка статов',dnd:'ASI на 4/8/12…',cp:'покупка за IP',blk:'Формула / шаг'},
+
+{sec:1,code:'M',name:'Карта и шаблоны'},
+{name:'Область эффекта',dnd:'сфера / конус / куб / линия',cp:'реже (blast / cone)',blk:'Шаблоны заклинаний'},
+{name:'Дальность',dnd:'футы / касание / зона',cp:'DV по дистанции',blk:'Пресеты дальности'},
+{name:'Масштаб клетки',dnd:'5 футов',cp:'метры',blk:'Масштаб сцены'},
+{name:'Инициатива',dnd:'d20 + Ловк',cp:'1d10 + REF',blk:'Бросок + сортировка'},
+
+{sec:1,code:'C',name:'Управляющие элементы (контролы)'},
+{name:'Radio — множитель / режим',dnd:'тип урона, режим атаки',cp:'множитель БУ ×1 / ×0.5 / ×2',blk:'Radio button'},
+{name:'Checkbox / тумблер',dnd:'владение навыком',cp:'владение навыком',blk:'Checkbox / Toggle'},
+{name:'Stepper — число с шагом',dnd:'статы, ХП',cp:'статы, патроны',blk:'Stepper'},
+{name:'Dice picker',dnd:'d4 … d20',cp:'d6 / d10',blk:'Dice picker'},
+{name:'Slider — диапазон',dnd:'редко',cp:'редко',blk:'Slider'},
+{name:'Dropdown / Select',dnd:'школа / тип',cp:'роль / тип',blk:'Select'},
+];
+function cov(r){const d=r.dnd&&!r.dnd.startsWith('—'),c=r.cp&&!r.cp.startsWith('—');return d&&c?'both':d?'dnd':'cp';}
+const COVL={both:'общий',dnd:'только D&D',cp:'только CP'};
+let filter='all';
+function render(){
+  let h='<thead><tr><th>Механика</th><th>D&amp;D 5e</th><th>Cyberpunk RED</th><th>Реализует блок</th><th>Покрытие</th></tr></thead><tbody>';
+  D.forEach(r=>{
+    if(r.sec){h+=`<tr class="sec"><td colspan="5"><span class="code">${r.code}</span>${r.name}</td></tr>`;return;}
+    const cv=cov(r);const hide=filter!=='all'&&cv!==filter;
+    const dc=r.dnd.startsWith('—')?'no':'dnd', cc=r.cp.startsWith('—')?'no':'cp';
+    h+=`<tr class="item" style="${hide?'display:none':''}">
+      <td class="mn">${r.name}</td>
+      <td class="cell ${dc}">${r.dnd}</td>
+      <td class="cell ${cc}">${r.cp}</td>
+      <td class="blk">${r.blk}</td>
+      <td><span class="cov ${cv}">${COVL[cv]}</span></td></tr>`;
+  });
+  h+='</tbody>';document.getElementById('mtx').innerHTML=h;
+  let b=0,d=0,c=0;D.forEach(r=>{if(r.sec)return;const v=cov(r);if(v==='both')b++;else if(v==='dnd')d++;else c++;});
+  document.getElementById('c-both').textContent=b;document.getElementById('c-dnd').textContent=d;document.getElementById('c-cp').textContent=c;
+}
+function setF(f){filter=f;document.querySelectorAll('.fbtn[data-f]').forEach(x=>x.classList.toggle('on',x.dataset.f===f));render();}
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Дорожная карта конструктора — что кодить и в каком порядке</title>
+<style>
+:root{
+  --bg:#0f1117; --card:#1a1d2e; --card2:#1e2336; --line:#2a3050; --line2:#363b5e;
+  --txt:#e4e9f5; --mut:#8a96b4;
+  --ind:#818cf8; --teal:#34d399; --purp:#c084fc; --orng:#fb923c; --blue:#60a5fa; --yel:#fbbf24; --red:#f87171; --green:#4ade80; --cp:#22d3ee; --mag:#f472b6;
+  --hf:'Georgia','Times New Roman',serif; --bf:'Segoe UI',system-ui,sans-serif; --mono:'Consolas',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:var(--bf);padding:22px 22px 60px;font-size:13px}
+.wrap{max-width:1180px;margin:0 auto}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--ind);margin-bottom:7px}
+h1{font-family:var(--hf);font-size:28px;font-weight:700;letter-spacing:-.4px}
+.sub{font-size:13.5px;color:var(--mut);margin-top:7px;line-height:1.5;max-width:96ch}
+.sub b{color:var(--txt)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0}
+.big-prog{flex:1;min-width:240px;height:10px;border-radius:99px;background:var(--card2);overflow:hidden;border:1px solid var(--line2)}
+.big-prog>i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--ind));border-radius:99px;transition:.3s}
+.pct{font-family:var(--mono);font-weight:700;color:var(--teal)}
+.fbtn{font-size:12px;padding:6px 12px;border-radius:8px;border:1px solid var(--line2);background:var(--card2);color:var(--mut);cursor:pointer;font-family:inherit}
+.fbtn.save{background:var(--ind);color:#0f1117;border:none;font-weight:700}
+
+.phase{margin-top:20px;border:1px solid var(--line2);border-radius:14px;overflow:hidden;background:var(--card)}
+.ph-head{display:flex;align-items:center;gap:12px;padding:13px 17px;background:var(--card2);border-bottom:1px solid var(--line2)}
+.ph-num{font-family:var(--mono);font-size:12px;font-weight:800;color:#0f1117;background:var(--ac);border-radius:7px;padding:3px 9px}
+.ph-title{font-family:var(--hf);font-size:18px;font-weight:700}
+.ph-goal{font-size:12px;color:var(--mut)}
+.ph-prog{margin-left:auto;display:flex;align-items:center;gap:9px;min-width:150px}
+.ph-prog .pb{flex:1;height:7px;border-radius:99px;background:var(--bg);overflow:hidden}
+.ph-prog .pb>i{display:block;height:100%;background:var(--ac);border-radius:99px;transition:.25s}
+.ph-prog .pn{font-family:var(--mono);font-size:11px;color:var(--mut)}
+.tool{display:flex;align-items:center;gap:11px;padding:9px 17px;border-bottom:1px solid var(--line)}
+.tool:last-child{border-bottom:none}
+.tool:hover{background:var(--card2)}
+.badge{cursor:pointer;user-select:none;font-size:10px;font-weight:700;padding:4px 10px;border-radius:99px;min-width:78px;text-align:center;flex-shrink:0}
+.badge.todo{background:rgba(138,150,180,.14);color:var(--mut)}
+.badge.wip{background:rgba(251,191,36,.16);color:var(--yel)}
+.badge.done{background:rgba(74,222,128,.16);color:var(--green)}
+.badge:hover{filter:brightness(1.2)}
+.tn{font-weight:600;font-size:13px;flex-shrink:0}
+.tn .star{color:var(--yel);font-size:10px;margin-left:4px}
+.tmeta{margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.dep{font-size:10.5px;color:var(--mut);font-style:italic}
+.eff{font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px}
+.eff.S{background:rgba(74,222,128,.13);color:var(--green)}
+.eff.M{background:rgba(251,191,36,.13);color:var(--yel)}
+.eff.L{background:rgba(248,113,113,.13);color:var(--red)}
+.tdesc{font-size:11.5px;color:var(--mut);flex:1;min-width:0}
+.milestone{display:flex;align-items:center;gap:10px;padding:11px 17px;background:linear-gradient(90deg,rgba(129,140,248,.10),transparent);border-top:1px dashed var(--line2);font-size:12.5px}
+.milestone .flag{font-size:15px}
+.milestone b{color:var(--txt)}
+.play{font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;border:1px solid}
+.play.dnd{color:var(--yel);border-color:var(--yel)}
+.play.cp{color:var(--cp);border-color:var(--cp)}
+.play.core{color:var(--teal);border-color:var(--teal)}
+.note{font-size:12.5px;color:var(--mut);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:13px 16px;margin-top:22px;line-height:1.55}
+.note b{color:var(--ind);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Конструктор систем · план разработки</div>
+  <h1>Дорожная карта: что кодить и в каком порядке</h1>
+  <div class="sub">~25 редакторов из инструментария разложены по <b>5 фазам</b> так, чтобы каждая фаза что-то <b>разблокировала</b> и опиралась только на прошлые. <span style="color:var(--yel)">★</span> — ядро. Кликай статус (в план → в работе → готово) — прогресс и вехи считаются сами. Вехи показывают, <b>что становится играбельным</b> после фазы.</div>
+
+  <div class="bar">
+    <span>Общий прогресс:</span><div class="big-prog"><i id="bigbar" style="width:0"></i></div><span class="pct" id="bigpct">0%</span>
+    <button class="fbtn save" onclick="save(this)">💾 Сохранить</button>
+    <button class="fbtn" onclick="reset()">↺ Сброс</button>
+  </div>
+
+  <div id="phases"></div>
+
+  <div class="note"><b>Логика порядка.</b> Фаза 0 — это по сути ваш текущий конструктор (лист + данные + бросок). Фаза 1 включает <b>автоматизацию</b> (эффекты, триггеры, состояния) — тут система оживает. Фаза 2 даёт <b>бой</b> → D&amp;D играбелен целиком. Фаза 3 — системная специфика, которая в основном <b>опции внутри уже построенных редакторов</b> (взрывной кубик — галка в конструкторе броска; броня-вычитание — режим конвейера урона; Гуманность — связанный ресурс), плюс мелкие механизмы → Cyberpunk играбелен. Фаза 4 — удобство и переработка. Так на каждом шаге есть работающий результат, а не «стройка до финала».</div>
+</div>
+
+<script>
+const LS='roadmap-v1';
+const PH=[
+ {ac:'--teal',num:'Ф0',title:'Фундамент',goal:'лист + данные + бросок (это уже почти есть)',
+  tools:[
+   {id:'layout',nm:'Редактор раскладки чарника',eff:'M',dep:'—',d:'Холст, блоки, секции/вкладки'},
+   {id:'blocks',nm:'Библиотека блоков + привязка',eff:'M',dep:'раскладка',d:'Поля, стат-грид, bind к данным/формуле'},
+   {id:'types',nm:'Редактор типов + палитра полей',eff:'M',dep:'—',d:'Компендиум: сущность + поля (число/формула/enum/кубик/ссылка)'},
+   {id:'formula',nm:'Редактор формул',eff:'M',dep:'поля',star:1,d:'Производные: мод, БМ, maxHP; ⌊⌋, min/max, lookup'},
+   {id:'roll',nm:'Конструктор броска',eff:'M',dep:'формулы',star:1,d:'Кубики + модификаторы + порог'},
+   {id:'mod',nm:'Узел «Модификатор»',eff:'M',dep:'бросок',star:1,d:'SET/FLAT/DIE+/REROLL/CLAMP/MULT + условие + триггер'},
+   {id:'res',nm:'Редактор ресурсов / бар',eff:'S',dep:'формулы',d:'Бар/счётчик/пул + восстановление'},
+   {id:'gm',nm:'Режим «только мастер» + сохранение',eff:'S',dep:'—',d:'Права доступа, localStorage/экспорт'},
+  ],
+  ms:{flag:'🧱',txt:'Собирается статичный чарник и работают проверки-броски.',play:['core']}},
+ {ac:'--purp',num:'Ф1',title:'Ядро автоматизации',goal:'эффекты, триггеры, состояния — система оживает',
+  tools:[
+   {id:'effect',nm:'Редактор эффектов (цепочка)',eff:'L',dep:'модификатор',star:1,d:'{триггер, длительность, стоимость, операции}'},
+   {id:'trig',nm:'Шина триггер-событий',eff:'L',dep:'эффекты',star:1,d:'on-hit / on-turn / on-damage / HP≤½ → реакция'},
+   {id:'pull',nm:'Протяжка эффектов из компендиума',eff:'M',dep:'эффекты, типы',d:'Предмет несёт эффект → на актёра (кинжал→атака)'},
+   {id:'tables',nm:'Редактор таблиц (lookup/random)',eff:'S',dep:'формулы',d:'2d6→травма, дальность→DV, уровень→БМ'},
+   {id:'states',nm:'Библиотека состояний',eff:'M',dep:'эффекты, триггеры',d:'Тоглы с эффектами; шкала по ресурсу'},
+  ],
+  ms:{flag:'⚡',txt:'Эффекты и состояния работают. Автоматизация вне боя.',play:['dnd']}},
+ {ac:'--cp',num:'Ф2',title:'Боевой экран',goal:'ход, карта, урон — полноценный бой',
+  tools:[
+   {id:'turn',nm:'Трекер хода + инициатива',eff:'M',dep:'формулы',d:'Очередь + экономика действий (слоты)'},
+   {id:'map',nm:'Карта, токены, масштаб',eff:'L',dep:'—',d:'Сцена, перемещение по клеткам'},
+   {id:'dmg',nm:'Конвейер урона',eff:'L',dep:'модификатор, состояния',star:1,d:'бросок→сопр/уязв→броня→буфер→HP→состояние'},
+   {id:'actbar',nm:'Панель действий',eff:'S',dep:'эффекты, трекер хода',d:'Кнопки, привязанные к броскам/эффектам'},
+   {id:'tmpl',nm:'Инструмент шаблонов области',eff:'M',dep:'карта',d:'Круг/конус/линия/куб + захват целей'},
+  ],
+  ms:{flag:'⚔️',txt:'Полноценный бой на карте.',play:['dnd']}},
+ {ac:'--orng',num:'Ф3',title:'Системная специфика',goal:'опции под системы + мелкие механизмы',
+  tools:[
+   {id:'opt-expl',nm:'Опции броска: взрывной, крит',eff:'S',dep:'бросок',d:'Галки в конструкторе броска (10↑/1↓)'},
+   {id:'opt-armor',nm:'Режим брони: вычитание+абляция',eff:'S',dep:'конвейер урона',d:'Переключатель модели защиты в конвейере'},
+   {id:'opt-link',nm:'Связанный ресурс (Гуманность)',eff:'S',dep:'ресурсы',d:'Формула-связка стат↔ресурс, стоимость имплантов'},
+   {id:'mini',nm:'Мини-механизмы (спасбросок/стабилизация)',eff:'M',dep:'бросок, состояния',d:'Счётчики успех/провал/штраф'},
+   {id:'ranks',nm:'Особенности с рангами + связи',eff:'M',dep:'типы',d:'Фичи по уровням; граф компендиума'},
+   {id:'vision',nm:'Слой видимости (опц.)',eff:'M',dep:'карта',d:'Тёмное/слепое зрение, освещение'},
+  ],
+  ms:{flag:'🤖',txt:'Обе системы полны. Cyberpunk играбелен целиком.',play:['dnd','cp']}},
+ {ac:'--ind',num:'Ф4',title:'Мощь и переработка',goal:'удобство собирать и переделывать',
+  tools:[
+   {id:'sim',nm:'Тест-режим / симулятор',eff:'M',dep:'бросок, эффекты',d:'Прогнать бросок/атаку до игры'},
+   {id:'share',nm:'Библиотеки, импорт/экспорт, шаринг',eff:'M',dep:'—',d:'Переиспользование блоков и целых систем'},
+   {id:'prog',nm:'Модели прогрессии (уровни / очки)',eff:'M',dep:'таблицы, формулы',d:'Тогл: уровни+XP ИЛИ покупка за очки (IP)'},
+  ],
+  ms:{flag:'🚀',txt:'Систему легко собирать, шарить и переделывать.',play:['core']}},
+];
+const CYCLE={todo:'wip',wip:'done',done:'todo'};
+const SL={todo:'в план',wip:'в работе',done:'готово'};
+const PLAY={core:['core','ядро/лист'],dnd:['dnd','D&D играбелен'],cp:['cp','Cyberpunk играбелен']};
+let ST={};
+function load(){try{const s=JSON.parse(localStorage.getItem(LS));if(s)ST=s;}catch(_){}}
+function stOf(id){return ST[id]||'todo';}
+function render(){
+  let h='';
+  PH.forEach((p,pi)=>{
+    const done=p.tools.filter(t=>stOf(t.id)==='done').length;
+    const pct=Math.round(done/p.tools.length*100);
+    h+=`<div class="phase" style="--ac:var(${p.ac})"><div class="ph-head">
+      <span class="ph-num">${p.num}</span><span class="ph-title">${p.title}</span><span class="ph-goal">— ${p.goal}</span>
+      <span class="ph-prog"><span class="pb"><i style="width:${pct}%"></i></span><span class="pn">${done}/${p.tools.length}</span></span></div>`;
+    p.tools.forEach(t=>{
+      const s=stOf(t.id);
+      h+=`<div class="tool">
+        <span class="badge ${s}" data-id="${t.id}">${SL[s]}</span>
+        <span class="tn">${t.nm}${t.star?'<span class="star">★</span>':''}</span>
+        <span class="tdesc">${t.d}</span>
+        <span class="tmeta"><span class="dep">зависит: ${t.dep}</span><span class="eff ${t.eff}">${t.eff}</span></span></div>`;
+    });
+    const doneAll=done===p.tools.length;
+    h+=`<div class="milestone"><span class="flag">${p.ms.flag}</span><span>Веха: <b>${p.ms.txt}</b></span>${p.ms.play.map(k=>`<span class="play ${PLAY[k][0]}">${doneAll?'✓ ':''}${PLAY[k][1]}</span>`).join('')}</div>`;
+    h+='</div>';
+  });
+  document.getElementById('phases').innerHTML=h;
+  document.querySelectorAll('.badge[data-id]').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.id;ST[id]=CYCLE[stOf(id)];render();}));
+  const total=PH.reduce((a,p)=>a+p.tools.length,0);
+  const dtot=PH.reduce((a,p)=>a+p.tools.filter(t=>stOf(t.id)==='done').length,0);
+  const bp=Math.round(dtot/total*100);
+  document.getElementById('bigbar').style.width=bp+'%';
+  document.getElementById('bigpct').textContent=bp+'%';
+}
+function save(btn){try{localStorage.setItem(LS,JSON.stringify(ST));const o=btn.textContent;btn.textContent='✓ Сохранено';setTimeout(()=>btn.textContent=o,1200);}catch(_){}}
+function reset(){if(confirm('Сбросить все статусы?')){ST={};try{localStorage.removeItem(LS);}catch(_){}render();}}
+load();render();
+</script>
+</body>
+</html>

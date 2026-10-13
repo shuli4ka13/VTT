@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D&D × Cyberpunk — сравнение механик и что нужно для VTT</title>
+<style>
+:root{
+  --bg:#0f1117; --card:#1a1d2e; --card2:#1e2336; --line:#2a3050; --line2:#363b5e;
+  --txt:#e4e9f5; --mut:#8a96b4;
+  --ind:#818cf8; --teal:#34d399; --purp:#c084fc; --orng:#fb923c; --blue:#60a5fa; --yel:#fbbf24; --red:#f87171; --green:#4ade80; --cp:#22d3ee; --mag:#f472b6;
+  --hf:'Georgia','Times New Roman',serif; --bf:'Segoe UI',system-ui,sans-serif; --mono:'Consolas',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:var(--bf);padding:22px 22px 60px;font-size:13px}
+.wrap{max-width:1460px;margin:0 auto}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:7px}
+.eyebrow .d{color:var(--yel)}.eyebrow .c{color:var(--cp)}.eyebrow .v{color:var(--ind)}
+h1{font-family:var(--hf);font-size:28px;font-weight:700;letter-spacing:-.4px}
+.sub{font-size:13.5px;color:var(--mut);margin-top:7px;line-height:1.5;max-width:100ch}
+.sub b{color:var(--txt)}
+
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0}
+.pill{font-size:12px;padding:6px 13px;border-radius:99px;background:var(--card2);border:1px solid var(--line2)}
+.pill b{font-family:var(--mono)}
+.pill.both b{color:var(--green)}.pill.dnd b{color:var(--yel)}.pill.cp b{color:var(--cp)}
+.sp{flex:1}
+.fbtn{font-size:12px;padding:6px 12px;border-radius:8px;border:1px solid var(--line2);background:var(--card2);color:var(--mut);cursor:pointer;font-family:inherit}
+.fbtn.on{border-color:var(--ind);color:var(--ind);background:rgba(129,140,248,.12)}
+.fbtn.save{background:var(--ind);color:#0f1117;border:none;font-weight:700}
+.fbtn.edit.on{background:var(--teal);color:#0f1117;border:none}
+.hint{font-size:11.5px;color:var(--mut);margin:-4px 0 10px}
+.hint code{font-family:var(--mono);background:var(--card2);padding:1px 5px;border-radius:4px;color:var(--txt)}
+
+.tbl-wrap{border:1px solid var(--line2);border-radius:12px;overflow:hidden;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:1160px}
+th{text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--mut);padding:9px 11px;background:var(--card2);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2}
+th.dcol{color:var(--yel)}th.ccol{color:var(--cp)}th.ncol{color:var(--ind)}
+th.c{text-align:center;width:86px}
+td{padding:8px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+td.c{text-align:center}
+td.need{border-left:2px solid rgba(129,140,248,.35);background:rgba(129,140,248,.05)}
+tr.item:hover td.need{background:rgba(129,140,248,.09)}
+tr.sec td{background:#151a2c;font-weight:700;color:var(--txt);font-family:var(--hf);font-size:13.5px;border-bottom:1px solid var(--line2)}
+tr.sec .tg{font-family:var(--mono);font-size:10px;border:1px solid;border-radius:5px;padding:1px 7px;margin-right:9px}
+tr.item:hover td{background:var(--card)}
+.rn{font-weight:600;color:var(--txt)}
+.cell{font-size:11.6px;line-height:1.4}
+.cell code{font-family:var(--mono);font-size:11px;padding:1px 4px;border-radius:4px;background:var(--card2)}
+.cell.d code{color:var(--yel)}.cell.c code{color:var(--cp)}
+.cell.n{color:#c7cdf0}.cell.n code{color:var(--ind)}
+.dash{color:var(--line2);font-size:15px}
+.cov{font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap;border:1px solid;display:inline-block}
+.cov.both{background:rgba(74,222,128,.14);color:var(--green);border-color:transparent}
+.cov.dnd{background:rgba(251,191,36,.13);color:var(--yel);border-color:transparent}
+.cov.cp{background:rgba(34,211,238,.13);color:var(--cp);border-color:transparent}
+.row.hide{display:none}.sec.hide{display:none}
+.note{font-size:12.5px;color:var(--mut);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:13px 16px;margin-top:22px;line-height:1.55}
+.note b{color:var(--ind);font-weight:600}
+
+body.editing [contenteditable]{outline:1px dashed var(--line2);border-radius:5px;padding:3px 5px;min-height:20px;min-width:40px;transition:.12s}
+body.editing [contenteditable]:hover{outline-color:var(--mut)}
+body.editing [contenteditable]:focus{outline:1px solid var(--teal);background:rgba(52,211,153,.06)}
+.del{display:none;cursor:pointer;color:var(--mut);font-weight:700;border:1px solid var(--line2);border-radius:5px;padding:1px 7px;font-size:12px;background:var(--card2)}
+.del:hover{color:var(--red);border-color:var(--red)}
+body.editing .del{display:inline-block}
+.addrow{display:none}
+body.editing .addrow{display:table-row}
+.addrow td{padding:6px 11px;border-bottom:1px solid var(--line)}
+.addbtn{cursor:pointer;color:var(--teal);font-size:11.5px;font-weight:600;background:none;border:none;font-family:inherit}
+.addbtn:hover{text-decoration:underline}
+.roleflex{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow"><span class="d">D&amp;D 2024</span> × <span class="c">Cyberpunk RED</span> → <span class="v">автоматизация VTT</span></div>
+  <h1>Механики двух систем и что нужно для VTT</h1>
+  <div class="sub">Строка — механическая <b>роль</b> по движковому блоку. Колонки <b>D&amp;D</b> / <b>Cyberpunk</b> — как её решает каждая система. Новая колонка <b style="color:var(--ind)">🛠 Что нужно</b> — конкретный узел / контрол / хук, который надо построить в VTT, чтобы это <b>автоматизировать</b>. <b>Покрытие</b> считается по системам. Всё редактируется.</div>
+
+  <div class="bar">
+    <span class="pill both">Общих <b id="c-both">0</b></span>
+    <span class="pill dnd">D&amp;D <b id="c-dnd">0</b></span>
+    <span class="pill cp">Cyberpunk <b id="c-cp">0</b></span>
+    <span class="sp"></span>
+    <button class="fbtn on" data-f="all" onclick="setF('all')">Все</button>
+    <button class="fbtn" data-f="both" onclick="setF('both')">Общие</button>
+    <button class="fbtn" data-f="dnd" onclick="setF('dnd')">D&amp;D</button>
+    <button class="fbtn" data-f="cp" onclick="setF('cp')">CP</button>
+    <button class="fbtn edit" id="editBtn" onclick="toggleEdit()">✏️ Редактировать</button>
+    <button class="fbtn save" onclick="saveAll(this)">💾 Сохранить</button>
+    <button class="fbtn" onclick="expJSON()">⬇ JSON</button>
+    <button class="fbtn" onclick="resetAll()">↺ Сброс</button>
+  </div>
+  <div class="hint">Правка: кликай в ячейку и меняй. Пустая ячейка D&amp;D/CP или <code>—</code> = «нет в системе». Формулы — в <code>&lt;code&gt;…&lt;/code&gt;</code>. Есть добавление/удаление строк. «Сохранить» — в этот браузер; «JSON» — выгрузить.</div>
+
+  <div class="tbl-wrap"><table id="tbl"></table></div>
+
+  <div class="note"><b>Как это использовать для VTT.</b> Колонка «Что нужно» — это дорожная карта движка автоматизации: собери <b>уникальные</b> узлы из неё (движок бросков, стек модификаторов, конвейер урона, библиотека состояний, триггер-события, ресурсы, шаблоны карты) — и обе системы автоматизируются одними и теми же кубиками. «Общие» строки строишь один раз (ядро), «только D&amp;D» и «только CP» — тоглы поверх. Это прямой вход в <b>матрицу реализации</b>.</div>
+</div>
+
+<script>
+const LS='mtx-sravn-v3';
+const BLK={
+  FORMULA:{c:'--teal',t:'Формула',ic:'🎲'},
+  MOD:{c:'--blue',t:'Модификатор броска',ic:'➕'},
+  RES:{c:'--green',t:'Ресурсы',ic:'🔋'},
+  STATE:{c:'--orng',t:'Состояния и раны',ic:'🩸'},
+  EFFECT:{c:'--purp',t:'Эффекты и реакции',ic:'⚡'},
+  ACT:{c:'--yel',t:'Экономика действий',ic:'⚙️'},
+  AREA:{c:'--mag',t:'Область и карта',ic:'📐'},
+  TABLE:{c:'--ind',t:'Таблицы и компендиум',ic:'📚'},
+};
+const DEFAULT=[
+{sec:'FORMULA'},
+{role:'Основной бросок',dnd:'<code>1d20 + мод.хар + БМ</code> vs Сл/КД',cp:'<code>СТАТ + навык + 1d10</code> vs DV/встречный',need:'Движок бросков: парсер <code>NdX</code>, стек модификаторов, компаратор с порогом'},
+{role:'Порог задачи',dnd:'Сложность (Сл) <code>5–30</code>',cp:'Сложность (DV) <code>9–29</code>',need:'Поле «целевое число» + справочник-пресеты (dropdown Сл/DV)'},
+{role:'Модификатор от стата',dnd:'<code>⌊(показатель−10)/2⌋</code>',cp:'стат целиком (обычно <code>2–8</code>) в броске',need:'Узел формулы с зависимостью от стата (тогл ⌊⌋-мод / сам стат)'},
+{role:'Хиты',dnd:'кости класса + Тел за уровень',cp:'<code>10 + 5×⌈(ТЕЛ+ВОЛ)/2⌉</code>',need:'Производный ресурс-бар: формула maxHP от статов + трекер текущего'},
+{role:'Инициатива',dnd:'<code>10 + мод.Лов</code> (пассив, без броска)',cp:'<code>РЕА + 1d10</code>',need:'Формула инициативы + автосортировка очереди хода'},
+{role:'Модель защиты',dnd:'КД = <code>10+Лов+доспех</code> — порог попадания',cp:'',need:'Тогл модели защиты «КД-порог» + автоподстановка в сравнение атаки'},
+{role:'Бонус от прогрессии',dnd:'<code>БМ = 2+⌊(ур−1)/4⌋</code> от уровня',cp:'',need:'Таблица уровень→БМ + автоподстановка в броски'},
+{role:'Пассивный порог',dnd:'пассивная внимательность <code>10+бонус</code>',cp:'',need:'Автовычисляемое поле <code>10+бонус</code>, без броска'},
+{role:'Связанный ресурс-стат',dnd:'',cp:'<code>Гуманность = ЭМП×10</code>',need:'Связка «стат↔ресурс» с автопересчётом в обе стороны'},
+{sec:'MOD'},
+{role:'Ситуативный ±',dnd:'бонусы/штрафы от эффектов',cp:'условия <code>−1…−4</code>, складываются',need:'Стек модификаторов: временные ± с источником и длительностью'},
+{role:'Бонус за умение',dnd:'<code>+БМ</code> при владении',cp:'<code>+навык</code>',need:'Флаг владения → автодобавление бонуса в бросок'},
+{role:'Качель шанса',dnd:'преимущество/помеха <code>2d20 kh/kl</code>',cp:'',need:'Тогл преим/помеха: 2 куба, выбор kh/kl, авто-гашение'},
+{role:'Взрывной кубик',dnd:'',cp:'<code>10→+1d10</code>, <code>1→−1d10</code>',need:'Опция рекурсивного броска (крит-успех/провал) в движке бросков'},
+{role:'Критический удар',dnd:'кости урона <code>×2</code>',cp:'прицел в голову <code>×2</code> сквозь броню; крит-травма',need:'Хук крита: удвоение костей урона / спец-эффект по системе'},
+{role:'Прицельный/штраф-бонус',dnd:'снайпер/GWM <code>−5/+10</code>',cp:'прицел <code>−8</code> в область',need:'Тогл «прицел»: штраф + выбор зоны + эффект по зоне'},
+{role:'Укрытие',dnd:'<code>+2/+5</code> к КД',cp:'<code>+1</code> ступень DV / щит',need:'Кнопки укрытия (½/¾/полное) → модификатор в защиту'},
+{role:'Сопротивление/уязвимость',dnd:'урон <code>×½ / ×2</code> по типу',cp:'',need:'Хук в конвейере урона: <code>×½ / ×2</code> по типу урона'},
+{role:'Броня как вычитание',dnd:'',cp:'урон <code>− ОС</code>, затем абляция <code>ОС−1</code>',need:'Конвейер урона: вычитание ОС по слоту + счётчик абляции'},
+{sec:'RES'},
+{role:'Ресурс-бар',dnd:'хиты',cp:'пункты здоровья (ПЗ)',need:'Виджет бара: макс/текущий, кнопки ±, привязка к урону'},
+{role:'Счётчик/заряды',dnd:'ячейки заклинаний, «в день»',cp:'магазин/боеприпасы, заряды',need:'Счётчик/степпер с правилом восстановления (отдых/сессия)'},
+{role:'Пул',dnd:'кости хитов (лечение)',cp:'Удача (УДЧ) <code>+1</code>/очко',need:'Пул-ресурс: трата очков → бонус/эффект, пополнение'},
+{role:'Буфер',dnd:'временные хиты',cp:'',need:'Отдельный слой поверх HP в конвейере урона (снимается первым)'},
+{role:'Восстановление',dnd:'короткий/долгий отдых',cp:'стабилизация + <code>ТЕЛ</code> ПЗ/день',need:'Триггер отдыха/времени → пересчёт ресурсов по правилам'},
+{role:'Связанный ресурс',dnd:'',cp:'Гуманность↔кибер (<code>−2/−4</code> за имплант)',need:'Формула-связка: сумма стоимости имплантов → максимум ресурса'},
+{sec:'STATE'},
+{role:'Порог половины',dnd:'флаг «окровавлен» ≤½',cp:'порог ½ ПЗ → Тяжёлое ранение',need:'Авто-флаг при HP≤½ как триггер-событие для эффектов'},
+{role:'Спасбросок от смерти',dnd:'<code>1d20 ≥10</code>, 3 успеха/3 провала',cp:'<code>1d10 ≤ ТЕЛ</code>, штраф +1, 10=провал',need:'Мини-механизм: серия бросков + счётчик успех/провал/штраф'},
+{role:'Стабилизация',dnd:'состояние «стабилизирован»',cp:'<code>ТЕХ + помощь + 1d10</code> vs DV',need:'Действие-проверка vs DV → снимает счётчик смерти'},
+{role:'Библиотека статусов-тоглов',dnd:'15 состояний (ослепл., парализ., ошелом.…)',cp:'',need:'Библиотека состояний-тоглов с эффект-хуками на броски/ход'},
+{role:'Раны шкалой по HP',dnd:'',cp:'Лёгкое → Тяжёлое(−2) → Смертельное(−4/−6)',need:'Шкала по HP: авто-статус + модификаторы по достигнутому порогу'},
+{role:'Накопительный статус',dnd:'истощение (6 степеней)',cp:'',need:'Счётчик степеней с формулой эффекта (<code>−2×N</code>)'},
+{sec:'EFFECT'},
+{role:'Реакции',dnd:'реакция, провок.атака, подготовка',cp:'нет реакций — защита = встречный бросок',need:'Система триггер-событий + окно реакции в очереди хода'},
+{role:'Протяжка из компендиума',dnd:'фичи классов, предметы',cp:'импланты, кибероборудование',need:'Авто-привязка эффектов предмета к чарнику (кинжал→атака)'},
+{role:'Режимы оружия',dnd:'',cp:'автоочередь, огонь на подавление',need:'Переключатель режима огня с разным расчётом урона/зоны'},
+{role:'Таблица травм при уроне',dnd:'',cp:'крит-травмы <code>2d6</code> при смертельном ранении',need:'Бросок по таблице → применение эффекта-модификатора'},
+{role:'Опасности среды',dnd:'горение/падение/удушье/истощение',cp:'',need:'Периодический триггер урона (начало хода) + условие снятия'},
+{sec:'ACT'},
+{role:'Структура хода',dnd:'действие + бонусное + реакция + перемещение',cp:'1 перемещение + 1 действие',need:'Трекер экономики действий (слоты: действие/бонус/реакция/движение)'},
+{role:'Список действий',dnd:'атака, рывок, уклонение, помощь…',cp:'атака, удушение, захват, перезарядка…',need:'Библиотека действий-кнопок с привязанными эффектами'},
+{role:'Перемещение',dnd:'скорость в футах, дробится',cp:'<code>СКО×2</code> клетки',need:'Счётчик перемещения на карте (клетки/футы) + масштаб клетки'},
+{role:'Провоцированная атака',dnd:'реакция при выходе из радиуса',cp:'',need:'Триггер выхода из зоны досягаемости → окно реакции'},
+{sec:'AREA'},
+{role:'Шаблоны области',dnd:'6 форм (сфера/конус/куб/линия…)',cp:'радиус гранат/взрывов (редко)',need:'Инструмент шаблонов на карте (формы + размер + захват целей)'},
+{role:'Чувства/видимость',dnd:'тёмное/слепое/истинное зрение, свет',cp:'',need:'Слой видимости/освещения на карте (опционально)'},
+{sec:'TABLE'},
+{role:'Порог задачи (таблица)',dnd:'Сл 5–30',cp:'DV 9–29',need:'Справочник порогов (dropdown значений) для быстрой подстановки'},
+{role:'Навыки',dnd:'18 навыков → характеристика',cp:'навыки по категориям, метка (×2)',need:'Реестр навыков со связкой характеристики и владения'},
+{role:'Типы урона',dnd:'13 типов (для сопр/уязв)',cp:'в основном физический',need:'Справочник типов урона + связь с сопр/уязв в конвейере'},
+{role:'Прогрессия',dnd:'уровни + опыт (XP)',cp:'покупка за очки (IP), без уровней',need:'Тогл модели прогрессии: таблица уровней/XP ИЛИ покупка за очки'},
+{role:'Дальность → порог',dnd:'',cp:'таблица дальности → DV',need:'Таблица дальность→DV, автоподстановка по дистанции на карте'},
+{role:'Оружие/предметы',dnd:'поля: урон, свойства, владение',cp:'поля: урон 2d6–8d6, магазин, СКА, режимы',need:'Конструктор типа компендиума: настраиваемые поля предмета'},
+{role:'Экономика/цена',dnd:'монеты (мм/см/зм)',cp:'евробаксы (eb) + категории Ночных рынков',need:'Поле цены + валюта/категории (справочник экономики)'},
+];
+let D=[];
+function load(){
+  try{const s=localStorage.getItem(LS);if(s){D=JSON.parse(s);return;}}catch(_){}
+  D=JSON.parse(JSON.stringify(DEFAULT));
+}
+let filter='all', editing=false;
+const has=v=>{const t=(v||'').replace(/<[^>]*>/g,'').replace(/[—\s]/g,'');return t.length>0;};
+function cov(r){const d=has(r.dnd),c=has(r.cp);return d&&c?'both':d?'dnd':'cp';}
+const COVL={both:'общая',dnd:'D&D',cp:'CP'};
+function render(){
+  let h='<thead><tr><th style="width:14%">Механическая роль</th><th class="dcol" style="width:20%">D&amp;D 2024</th><th class="ccol" style="width:20%">Cyberpunk RED</th><th class="ncol" style="width:29%">🛠 Что нужно для автоматизации (VTT)</th><th class="c">Покрытие</th></tr></thead><tbody>';
+  D.forEach((r,i)=>{
+    if(r.sec){const b=BLK[r.sec];
+      h+=`<tr class="sec" data-i="${i}"><td colspan="5"><span class="tg" style="color:var(${b.c});border-color:var(${b.c})">${r.sec}</span>${b.ic} ${b.t}</td></tr>`;
+      return;
+    }
+    const cv=cov(r);
+    const hide=filter!=='all'&&filter!==cv;
+    h+=`<tr class="item ${hide?'hide':''}" data-cov="${cv}" data-i="${i}">
+      <td><div class="roleflex"><span class="rn" contenteditable data-i="${i}" data-f="role">${r.role||''}</span><span class="del" onclick="delRow(${i})">✕</span></div></td>
+      <td class="cell d" contenteditable data-i="${i}" data-f="dnd">${r.dnd||'<span class=dash>—</span>'}</td>
+      <td class="cell c" contenteditable data-i="${i}" data-f="cp">${r.cp||'<span class=dash>—</span>'}</td>
+      <td class="cell n need" contenteditable data-i="${i}" data-f="need">${r.need||''}</td>
+      <td class="c"><span class="cov ${cv}">${COVL[cv]}</span></td></tr>`;
+    const next=D[i+1];
+    if(!next||next.sec){
+      const blk=curBlk(i);
+      h+=`<tr class="addrow"><td colspan="5"><button class="addbtn" onclick="addRow(${i},'${blk}')">+ строка в «${BLK[blk].t}»</button></td></tr>`;
+    }
+  });
+  h+='</tbody>';
+  const t=document.getElementById('tbl');t.innerHTML=h;
+  t.querySelectorAll('[contenteditable]').forEach(el=>{
+    el.addEventListener('blur',()=>{
+      const i=+el.dataset.i,f=el.dataset.f;
+      let v=el.innerHTML.trim();
+      if((f==='dnd'||f==='cp')&&(v===''||v==='<span class="dash">—</span>'||el.textContent.trim()===''||el.textContent.trim()==='—'))v='';
+      D[i][f]=v;
+      const tr=el.closest('tr');if(tr){const cv=cov(D[i]);tr.dataset.cov=cv;const b=tr.querySelector('.cov');if(b){b.className='cov '+cv;b.textContent=COVL[cv];}}
+      stats();
+    });
+  });
+  document.querySelectorAll('#tbl tr.sec').forEach(sec=>{
+    let n=sec.nextElementSibling,any=false;
+    while(n&&!n.classList.contains('sec')){if(n.classList.contains('item')&&!n.classList.contains('hide'))any=true;n=n.nextElementSibling;}
+    sec.classList.toggle('hide',!any&&filter!=='all');
+  });
+  stats();
+}
+function curBlk(i){for(let j=i;j>=0;j--)if(D[j].sec)return D[j].sec;return 'FORMULA';}
+function addRow(afterIdx,blk){D.splice(afterIdx+1,0,{role:'Новая роль',dnd:'',cp:'',need:''});render();}
+function delRow(i){D.splice(i,1);render();}
+function stats(){
+  let b=0,d=0,c=0;D.forEach(r=>{if(r.sec)return;const cv=cov(r);if(cv==='both')b++;else if(cv==='dnd')d++;else c++;});
+  document.getElementById('c-both').textContent=b;
+  document.getElementById('c-dnd').textContent=d;
+  document.getElementById('c-cp').textContent=c;
+}
+function setF(f){filter=f;document.querySelectorAll('.fbtn[data-f]').forEach(x=>x.classList.toggle('on',x.dataset.f===f));render();}
+function toggleEdit(){editing=!editing;document.body.classList.toggle('editing',editing);document.getElementById('editBtn').classList.toggle('on',editing);document.getElementById('editBtn').textContent=editing?'✓ Готово':'✏️ Редактировать';}
+function saveAll(btn){try{localStorage.setItem(LS,JSON.stringify(D));const o=btn.textContent;btn.textContent='✓ Сохранено';setTimeout(()=>btn.textContent=o,1200);}catch(_){alert('Не удалось сохранить в этом браузере');}}
+function resetAll(){if(confirm('Сбросить к исходной матрице? Правки в этом браузере будут потеряны.')){D=JSON.parse(JSON.stringify(DEFAULT));try{localStorage.removeItem(LS);}catch(_){}render();}}
+function expJSON(){const blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mehaniki-sravnenie.json';a.click();}
+load();render();
+</script>
+</body>
+</html>

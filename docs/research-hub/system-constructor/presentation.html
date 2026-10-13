@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Конструктор систем — Презентация</title>
+<style>
+:root{
+  --bg:#0c0e1a; --s1:#141728; --s2:#1e2240; --s3:#272c52;
+  --text:#e2e8f8; --muted:#6b7aaa; --accent:#818cf8;
+  --green:#4ade80; --red:#f87171; --yellow:#fbbf24;
+  --purple:#c084fc; --blue:#60a5fa; --orange:#fb923c;
+  --border:#252a4a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:'Segoe UI',system-ui,sans-serif;color:var(--text)}
+
+/* ── SHELL ── */
+.shell{display:flex;flex-direction:column;height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:48px;border-bottom:1px solid var(--border);background:var(--s1);flex-shrink:0}
+.logo{font-size:14px;font-weight:700;letter-spacing:-.2px}
+.logo span{color:var(--accent)}
+.slide-counter{font-size:12px;color:var(--muted)}
+.nav-btns{display:flex;gap:8px}
+.nav-btn{padding:5px 16px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--muted);cursor:pointer;font:inherit;font-size:12px;transition:.12s}
+.nav-btn:hover{border-color:var(--accent);color:var(--text)}
+.nav-btn.pr{background:var(--accent);color:#0c0e1a;border-color:var(--accent);font-weight:600}
+.nav-btn.pr:hover{filter:brightness(1.1)}
+.nav-btn:disabled{opacity:.3;cursor:default}
+
+/* ── PROGRESS ── */
+.progress{height:2px;background:var(--border);flex-shrink:0;position:relative}
+.progress-fill{height:100%;background:var(--accent);transition:.4s cubic-bezier(.4,0,.2,1)}
+
+/* ── SLIDES ── */
+.slides{flex:1;overflow:hidden;position:relative;min-height:0}
+.slide{position:absolute;inset:0;padding:36px 48px;display:flex;flex-direction:column;opacity:0;transform:translateX(40px);transition:.35s cubic-bezier(.4,0,.2,1);pointer-events:none}
+.slide.active{opacity:1;transform:none;pointer-events:all}
+.slide.exit{opacity:0;transform:translateX(-40px)}
+
+/* ── SLIDE PARTS ── */
+.slide-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:10px}
+.slide-title{font-size:32px;font-weight:700;line-height:1.15;letter-spacing:-.5px;margin-bottom:6px}
+.slide-sub{font-size:15px;color:var(--muted);margin-bottom:28px;line-height:1.5}
+.slide-body{flex:1;display:flex;gap:24px;min-height:0}
+.slide-col{flex:1;display:flex;flex-direction:column;gap:14px;min-width:0}
+
+/* ── CARDS ── */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.card-sm{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.card.accent{border-color:var(--accent)}
+.card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px}
+.card-big{font-size:28px;font-weight:700;letter-spacing:-.5px}
+
+/* ── TAGS ── */
+.tag{display:inline-block;font-size:11px;padding:3px 9px;border-radius:99px;font-weight:500}
+.tag-blue{background:rgba(96,165,250,.15);color:var(--blue);border:1px solid rgba(96,165,250,.3)}
+.tag-green{background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.25)}
+.tag-purple{background:rgba(192,132,252,.12);color:var(--purple);border:1px solid rgba(192,132,252,.25)}
+.tag-yellow{background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.25)}
+.tag-red{background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25)}
+.tag-orange{background:rgba(251,146,60,.12);color:var(--orange);border:1px solid rgba(251,146,60,.25)}
+.tag-muted{background:var(--s2);color:var(--muted);border:1px solid var(--border)}
+
+/* ── BLOCK TYPES GRID ── */
+.block-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.bk{border:1px solid var(--border);border-radius:8px;padding:10px 11px;background:var(--s2)}
+.bk-icon{font-size:18px;margin-bottom:5px}
+.bk-name{font-size:12px;font-weight:600;color:var(--text)}
+.bk-desc{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.4}
+
+/* ── FORMULA DEMO ── */
+.formula-chain{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fnode{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;text-align:center}
+.fnode-val{font-size:20px;font-weight:700}
+.fnode-name{font-size:10px;color:var(--muted);margin-top:1px}
+.farrow{color:var(--muted);font-size:14px;flex-shrink:0}
+.fexpr{font-family:monospace;font-size:11px;color:var(--blue);background:rgba(96,165,250,.1);padding:2px 6px;border-radius:4px}
+
+/* ── 3-COL DIAGRAM ── */
+.three-diag{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;height:100%}
+.diag-col{border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.diag-hdr{padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border);background:var(--s2)}
+.diag-body{flex:1;padding:8px;display:flex;flex-direction:column;gap:5px;overflow:hidden}
+.diag-item{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:6px 9px;font-size:11px}
+.diag-item .di-name{font-weight:500;color:var(--text)}
+.diag-item .di-sub{font-size:10px;color:var(--muted);margin-top:1px}
+
+/* ── PROP GRID ── */
+.prop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pg-item{border:1px solid var(--border);border-radius:8px;padding:9px 11px;background:var(--s2);display:flex;align-items:flex-start;gap:8px}
+.pg-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.pg-name{font-size:12px;font-weight:600;color:var(--text)}
+.pg-desc{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.4}
+
+/* ── VTT MOCK ── */
+.vtt-mock{display:grid;grid-template-columns:1fr 210px;border:1px solid var(--border);border-radius:10px;overflow:hidden;flex:1}
+.mock-map{background:#060810;position:relative;overflow:hidden}
+.mock-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:44px 44px}
+.mtok{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:2px solid transparent}
+.mtok.pc{background:#0d2a52;color:var(--blue);border-color:#3a7ac0;width:40px;height:40px}
+.mtok.en{background:#3d0d0d;color:var(--red);border-color:#c04040;width:40px;height:40px}
+.mtok.sel{box-shadow:0 0 0 3px var(--yellow)}
+.mfog{position:absolute;background:rgba(0,0,0,.8)}
+.mock-side{background:var(--s1);border-left:1px solid var(--border);display:flex;flex-direction:column}
+.mock-tabs{display:flex;border-bottom:1px solid var(--border)}
+.mt{flex:1;padding:6px 3px;text-align:center;font-size:10px;color:var(--muted);border-bottom:2px solid transparent}
+.mt.on{color:var(--blue);border-bottom-color:var(--blue)}
+.mock-chat{flex:1;padding:8px;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.mc-msg{font-size:10px;line-height:1.4}
+.mc-who{font-weight:700;color:var(--text)}
+.mc-txt{color:var(--muted)}
+.mc-roll{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;margin-top:2px}
+.mc-num{font-size:20px;font-weight:700;text-align:center}
+.mc-det{font-size:9px;color:var(--muted);text-align:center;font-family:monospace}
+
+/* ── STAT BLOCKS ── */
+.stat-row{display:flex;gap:10px}
+.stat-box{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center;flex:1}
+.stat-big{font-size:26px;font-weight:700}
+.stat-lbl{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* ── SLIDE DOT NAV ── */
+.dot-nav{display:flex;justify-content:center;gap:5px;padding:10px 0 8px;flex-shrink:0}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--border);cursor:pointer;transition:.2s}
+.dot.on{background:var(--accent);transform:scale(1.2)}
+
+/* ── TITLE SLIDE ── */
+.title-center{flex:1;display:flex;flex-direction:column;justify-content:center;max-width:700px}
+.title-big{font-size:52px;font-weight:700;letter-spacing:-1.5px;line-height:1.05}
+.title-big span{color:var(--accent)}
+.title-desc{font-size:17px;color:var(--muted);line-height:1.6;margin:16px 0 28px}
+.pill-row{display:flex;gap:10px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border:1px solid var(--border);border-radius:99px;font-size:13px;font-weight:500;background:var(--s1)}
+
+/* ── ROADMAP ── */
+.roadmap{display:flex;flex-direction:column;gap:8px}
+.rm-item{display:flex;align-items:flex-start;gap:12px;padding:11px 14px;border-radius:9px;background:var(--s1);border:1px solid var(--border)}
+.rm-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.rm-done{background:var(--green)}
+.rm-soon{background:var(--yellow)}
+.rm-later{background:var(--border)}
+.rm-title{font-size:13px;font-weight:600}
+.rm-desc{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.5}
+.rm-tags{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+
+/* ── PROPERTY TABLE ── */
+.prop-table{display:flex;flex-direction:column;gap:4px}
+.pt-group{margin-bottom:8px}
+.pt-group-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:5px}
+.pt-tags{display:flex;flex-wrap:wrap;gap:4px}
+.pt-tag{font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:var(--s2);color:var(--text)}
+.pt-tag.key{background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.3);color:var(--blue)}
+.pt-tag.der{background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.25);color:var(--green)}
+.pt-tag.cmb{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.25);color:var(--red)}
+.pt-tag.soc{background:rgba(192,132,252,.08);border-color:rgba(192,132,252,.25);color:var(--purple)}
+
+/* ── QUOTE ── */
+.quote-block{border-left:3px solid var(--accent);padding:12px 16px;background:rgba(129,140,248,.06);border-radius:0 8px 8px 0}
+.quote-text{font-size:15px;line-height:1.6;color:var(--text);font-style:italic}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="logo">⚙ <span>Конструктор</span> систем</div>
+    <div class="slide-counter" id="ctr">1 / 9</div>
+    <div class="nav-btns">
+      <button class="nav-btn" id="btn-prev" onclick="go(-1)" disabled>← Назад</button>
+      <button class="nav-btn pr" id="btn-next" onclick="go(1)">Далее →</button>
+    </div>
+  </div>
+  <div class="progress"><div class="progress-fill" id="prog"></div></div>
+
+  <div class="slides" id="slides-wrap">
+
+    <!-- ══ 1: TITLE ══ -->
+    <div class="slide active" id="s0">
+      <div class="title-center">
+        <div class="slide-tag">Хроники Пепельного Мира · 2026</div>
+        <div class="title-big">Конструктор<br><span>систем</span></div>
+        <div class="title-desc">Инструмент для создания кастомных TTRPG-систем с нуля —<br>чарники, предметы и VTT в одном месте</div>
+        <div class="pill-row">
+          <div class="pill">📋 Конструктор чарников</div>
+          <div class="pill">⚔ Конструктор предметов</div>
+          <div class="pill">🎲 VTT — режим сессии</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 2: ПРОБЛЕМА ══ -->
+    <div class="slide" id="s1">
+      <div class="slide-tag">Контекст</div>
+      <div class="slide-title">Зачем новый инструмент?</div>
+      <div class="slide-sub">Существующие VTT привязаны к готовым системам. Мы строим свою.</div>
+      <div class="slide-body">
+        <div class="slide-col">
+          <div class="card">
+            <div class="card-title">Проблема</div>
+            <div style="display:flex;flex-direction:column;gap:9px;margin-top:4px">
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                <span class="tag tag-red">✕</span>
+                <div><div style="font-size:13px;font-weight:500">Foundry / Roll20</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Нужен модуль под конкретную систему. Нет — не играешь.</div></div>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                <span class="tag tag-red">✕</span>
+                <div><div style="font-size:13px;font-weight:500">Google Таблицы</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Можно, но формулы вручную, нет интерфейса, нет кубов.</div></div>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                <span class="tag tag-red">✕</span>
+                <div><div style="font-size:13px;font-weight:500">PDF-чарники</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Статичные, не считают, не кидают кубы, не общаются.</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="quote-block">
+            <div class="quote-text">«Нам нужно строить систему, а не подстраиваться под чужую»</div>
+          </div>
+        </div>
+        <div class="slide-col">
+          <div class="card accent">
+            <div class="card-title">Наше решение</div>
+            <div style="display:flex;flex-direction:column;gap:9px;margin-top:4px">
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                <span class="tag tag-green">✓</span>
+                <div><div style="font-size:13px;font-weight:500">Чарник с нуля</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Добавляешь нужные блоки, называешь как хочешь, пишешь формулы.</div></div>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                <span class="tag tag-green">✓</span>
+                <div><div style="font-size:13px;font-weight:500">Конструктор предметов</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Любое свойство — урон, заряды, слоты, эффекты, теги.</div></div>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                <span class="tag tag-green">✓</span>
+                <div><div style="font-size:13px;font-weight:500">VTT встроен</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Карта, токены, инициатива, чат с бросками — всё в одном файле.</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Технически</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.7">Один standalone HTML-файл. Без сервера, без установки, без аккаунта. Открыл — работает. Сохранение в localStorage, экспорт JSON.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 3: АРХИТЕКТУРА ══ -->
+    <div class="slide" id="s2">
+      <div class="slide-tag">Конструктор чарников</div>
+      <div class="slide-title">Три колонки — одна система</div>
+      <div class="slide-sub">Левая считает, центральная показывает, правая добавляет.</div>
+      <div class="slide-body">
+        <div class="three-diag" style="flex:1">
+          <div class="diag-col">
+            <div class="diag-hdr" style="color:var(--purple)">⨍ Формулы</div>
+            <div class="diag-body">
+              <div class="diag-item"><div class="di-name">ХП</div><div class="di-sub" style="color:var(--blue);font-family:monospace">Тело * 2 + 20 = 44</div></div>
+              <div class="diag-item"><div class="di-name">Мана</div><div class="di-sub" style="color:var(--blue);font-family:monospace">Разум * 3 = 60</div></div>
+              <div class="diag-item"><div class="di-name">Уклонение</div><div class="di-sub" style="color:var(--blue);font-family:monospace">Ловкость + 5 = 21</div></div>
+              <div style="margin-top:4px;padding:8px;background:rgba(129,140,248,.08);border-radius:6px;border:1px solid rgba(129,140,248,.2)">
+                <div style="font-size:10px;color:var(--accent);margin-bottom:4px">Зависит от:</div>
+                <div style="display:flex;flex-wrap:wrap;gap:3px">
+                  <span style="font-size:10px;padding:1px 6px;border-radius:99px;background:rgba(192,132,252,.15);color:var(--purple);border:1px solid rgba(192,132,252,.3)">Тело</span>
+                  <span style="font-size:10px;padding:1px 6px;border-radius:99px;background:rgba(192,132,252,.15);color:var(--purple);border:1px solid rgba(192,132,252,.3)">Разум</span>
+                  <span style="font-size:10px;padding:1px 6px;border-radius:99px;background:rgba(192,132,252,.15);color:var(--purple);border:1px solid rgba(192,132,252,.3)">Ловкость</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="diag-col" style="border-color:var(--accent)">
+            <div class="diag-hdr" style="color:var(--accent)">◈ Чарник</div>
+            <div class="diag-body">
+              <div class="diag-item" style="border-color:rgba(74,222,128,.3)">
+                <div class="di-name">Ресурс-бар: ХП</div>
+                <div style="height:5px;background:var(--s3);border-radius:99px;margin-top:5px;overflow:hidden"><div style="width:73%;height:100%;background:var(--green);border-radius:99px"></div></div>
+                <div class="di-sub">38 / 52</div>
+              </div>
+              <div class="diag-item">
+                <div class="di-name" style="margin-bottom:5px">Характеристики</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
+                  <div style="background:var(--s3);border-radius:4px;padding:3px;text-align:center"><div style="font-size:14px;font-weight:700">12</div><div style="font-size:9px;color:var(--muted)">Тело</div></div>
+                  <div style="background:var(--s3);border-radius:4px;padding:3px;text-align:center"><div style="font-size:14px;font-weight:700">16</div><div style="font-size:9px;color:var(--muted)">Ловк.</div></div>
+                  <div style="background:var(--s3);border-radius:4px;padding:3px;text-align:center"><div style="font-size:14px;font-weight:700">20</div><div style="font-size:9px;color:var(--muted)">Разум</div></div>
+                </div>
+              </div>
+              <div class="diag-item">
+                <div class="di-name">Навыки</div>
+                <div style="font-size:10px;color:var(--muted);margin-top:3px">● Тайные знания +12<br>◉ Скрытность +6<br>○ Убеждение −1</div>
+              </div>
+            </div>
+          </div>
+          <div class="diag-col">
+            <div class="diag-hdr" style="color:var(--muted)">⊞ Палитра блоков</div>
+            <div class="diag-body">
+              <div class="diag-item"><div class="di-name">♥ Ресурс-бар</div><div class="di-sub">ХП, Мана, Броня…</div></div>
+              <div class="diag-item"><div class="di-name"># Характеристики</div><div class="di-sub">Числа + формулы</div></div>
+              <div class="diag-item"><div class="di-name">⚄ Проверка</div><div class="di-sub">Куб + формула броска</div></div>
+              <div class="diag-item"><div class="di-name">✦ Способность</div><div class="di-sub">Черты и умения</div></div>
+              <div class="diag-item"><div class="di-name">★ Навыки</div><div class="di-sub">Уровни владения</div></div>
+              <div class="diag-item"><div class="di-name">≡ Список</div><div class="di-sub">Инвентарь, заклинания</div></div>
+              <div class="diag-item"><div class="di-name">Ⅲ Поля текста</div><div class="di-sub">Имя, раса, класс…</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 4: ФОРМУЛЫ ══ -->
+    <div class="slide" id="s3">
+      <div class="slide-tag">Конструктор чарников</div>
+      <div class="slide-title">Система формул</div>
+      <div class="slide-sub">Поля автоматически пересчитываются при изменении зависимостей.</div>
+      <div class="slide-body">
+        <div class="slide-col">
+          <div class="card">
+            <div class="card-title">Как работает</div>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+              <div>
+                <div style="font-size:12px;color:var(--muted);margin-bottom:5px">Пример зависимостей:</div>
+                <div class="formula-chain" style="margin-bottom:8px">
+                  <div class="fnode"><div class="fnode-val" style="color:var(--orange)">12</div><div class="fnode-name">Тело</div></div>
+                  <div class="farrow">→</div>
+                  <div class="fnode" style="border-color:var(--green)"><div class="fnode-val" style="color:var(--green)">44</div><div class="fnode-name">ХП</div></div>
+                </div>
+                <div style="font-size:11px;color:var(--muted)">Формула: <span class="fexpr">Тело * 2 + 20</span></div>
+              </div>
+              <div style="height:1px;background:var(--border)"></div>
+              <div>
+                <div class="formula-chain" style="margin-bottom:8px">
+                  <div class="fnode"><div class="fnode-val" style="color:var(--purple)">20</div><div class="fnode-name">Разум</div></div>
+                  <div class="farrow">→</div>
+                  <div class="fnode" style="border-color:var(--blue)"><div class="fnode-val" style="color:var(--blue)">60</div><div class="fnode-name">Мана</div></div>
+                </div>
+                <div style="font-size:11px;color:var(--muted)">Формула: <span class="fexpr">Разум * 3</span></div>
+              </div>
+              <div style="height:1px;background:var(--border)"></div>
+              <div>
+                <div class="formula-chain" style="margin-bottom:8px">
+                  <div class="fnode"><div class="fnode-val" style="color:var(--yellow)">16</div><div class="fnode-name">Ловкость</div></div>
+                  <div class="farrow">→</div>
+                  <div class="fnode"><div class="fnode-val">21</div><div class="fnode-name">Уклонение</div></div>
+                </div>
+                <div style="font-size:11px;color:var(--muted)">Формула: <span class="fexpr">Ловкость + 5</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-col">
+          <div class="card">
+            <div class="card-title">Режимы проверок</div>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+              <div style="padding:10px;background:var(--s2);border-radius:8px">
+                <div style="font-size:12px;font-weight:600;margin-bottom:4px">Куб + значение</div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Как в D&D: бросок кубика плюс характеристика</div>
+                <div class="fexpr">d20 + Ловкость = d20(14) + 16 = 30</div>
+              </div>
+              <div style="padding:10px;background:var(--s2);border-radius:8px">
+                <div style="font-size:12px;font-weight:600;margin-bottom:4px">Пул кубов</div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Как в Мире Тьмы: бросаешь столько кубов, каково значение</div>
+                <div class="fexpr">12× d6 → успехи (≥ 5): 4</div>
+              </div>
+              <div style="padding:10px;background:var(--s2);border-radius:8px">
+                <div style="font-size:12px;font-weight:600;margin-bottom:4px">Произвольное выражение</div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Любая математика над полями чарника</div>
+                <div class="fexpr">(Тело + Ловкость) / 2 + 3</div>
+              </div>
+            </div>
+          </div>
+          <div class="card-sm">
+            <div style="font-size:11px;color:var(--muted);line-height:1.6">Менять характеристику — и все зависимые поля пересчитаются сразу. Выражения пишутся текстом, зависимости добавляются кнопками-тегами.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 5: ВСЕ СВОЙСТВА ══ -->
+    <div class="slide" id="s4">
+      <div class="slide-tag">Конструктор чарников</div>
+      <div class="slide-title">Все свойства чарника</div>
+      <div class="slide-sub">Полная таксономия — универсальная для любой системы.</div>
+      <div class="slide-body">
+        <div class="slide-col">
+          <div class="card">
+            <div class="prop-table">
+              <div class="pt-group">
+                <div class="pt-group-title">Базовые характеристики</div>
+                <div class="pt-tags">
+                  <span class="pt-tag key">Тело</span><span class="pt-tag key">Ловкость</span><span class="pt-tag key">Разум</span>
+                  <span class="pt-tag key">Воля</span><span class="pt-tag key">Харизма</span><span class="pt-tag key">Восприятие</span>
+                  <span class="pt-tag" style="color:var(--muted)">+ любые свои</span>
+                </div>
+              </div>
+              <div class="pt-group">
+                <div class="pt-group-title">Производные (формулы)</div>
+                <div class="pt-tags">
+                  <span class="pt-tag der">ХП = Тело × 2 + база</span>
+                  <span class="pt-tag der">Мана = Разум × 3</span>
+                  <span class="pt-tag der">КЗ = Ловкость + броня</span>
+                  <span class="pt-tag der">Уклонение</span>
+                  <span class="pt-tag der">Инициатива</span>
+                  <span class="pt-tag der">Скорость</span>
+                  <span class="pt-tag der">Мастерство = Ур / 4 + 1</span>
+                </div>
+              </div>
+              <div class="pt-group">
+                <div class="pt-group-title">Ресурсы (текущее / макс)</div>
+                <div class="pt-tags">
+                  <span class="pt-tag" style="background:rgba(74,222,128,.08);color:var(--green);border-color:rgba(74,222,128,.25)">ХП</span>
+                  <span class="pt-tag" style="background:rgba(96,165,250,.08);color:var(--blue);border-color:rgba(96,165,250,.25)">Мана</span>
+                  <span class="pt-tag" style="background:rgba(251,191,36,.08);color:var(--yellow);border-color:rgba(251,191,36,.25)">Броня</span>
+                  <span class="pt-tag">Ячейки заклинаний</span>
+                  <span class="pt-tag">Легендарные действия</span>
+                  <span class="pt-tag">Легендарное сопр.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-col">
+          <div class="card">
+            <div class="prop-table">
+              <div class="pt-group">
+                <div class="pt-group-title">Боевые</div>
+                <div class="pt-tags">
+                  <span class="pt-tag cmb">КЗ</span><span class="pt-tag cmb">Бонус атаки</span>
+                  <span class="pt-tag cmb">Урон (кубы + тип)</span>
+                  <span class="pt-tag cmb">Иммунитеты к урону</span>
+                  <span class="pt-tag cmb">Сопротивления</span>
+                  <span class="pt-tag cmb">СС заклинаний</span>
+                  <span class="pt-tag cmb">Бонус атаки заклин.</span>
+                  <span class="pt-tag cmb">Иммун. к состояниям</span>
+                </div>
+              </div>
+              <div class="pt-group">
+                <div class="pt-group-title">Навыки</div>
+                <div class="pt-tags">
+                  <span class="pt-tag soc">Тайные знания</span><span class="pt-tag soc">Магия</span>
+                  <span class="pt-tag soc">Природа</span><span class="pt-tag soc">История</span>
+                  <span class="pt-tag soc">Скрытность</span><span class="pt-tag soc">Атлетика</span>
+                  <span class="pt-tag soc">Убеждение</span><span class="pt-tag soc">Медицина</span>
+                  <span class="pt-tag" style="color:var(--muted)">0 / ½ / 1 / 2 владение</span>
+                </div>
+              </div>
+              <div class="pt-group">
+                <div class="pt-group-title">Нарратив</div>
+                <div class="pt-tags">
+                  <span class="pt-tag">Имя / Раса / Класс</span>
+                  <span class="pt-tag">Уровень / XP</span>
+                  <span class="pt-tag">Идеал / Связь</span>
+                  <span class="pt-tag">Слабость</span>
+                  <span class="pt-tag">Портрет / Токен</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 6: ПРЕДМЕТЫ ══ -->
+    <div class="slide" id="s5">
+      <div class="slide-tag">Конструктор предметов</div>
+      <div class="slide-title">Предмет = набор свойств</div>
+      <div class="slide-sub">Собираешь из блоков: урон, защита, заряды, слоты, эффекты, теги, требования.</div>
+      <div class="slide-body">
+        <div class="slide-col" style="flex:1.1">
+          <div class="card">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+              <div style="width:44px;height:44px;background:var(--s2);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:22px;border:1px solid var(--border)">⚔</div>
+              <div>
+                <div style="font-size:16px;font-weight:700">Посох Пепла</div>
+                <div style="display:flex;gap:5px;margin-top:3px">
+                  <span class="tag tag-purple">Артефакт</span>
+                  <span class="tag tag-yellow">Легендарный</span>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px">
+              <div class="card-sm" style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:13px">⚔</span>
+                <div><div style="font-size:11px;font-weight:600">Урон</div><div style="font-size:11px;color:var(--muted)">1d8 + 5 · магический</div></div>
+              </div>
+              <div class="card-sm" style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:13px">↑</span>
+                <div><div style="font-size:11px;font-weight:600">Бонус к стату</div><div style="font-size:11px;color:var(--muted)">Разум +3</div></div>
+              </div>
+              <div class="card-sm" style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:13px">✦</span>
+                <div><div style="font-size:11px;font-weight:600">Пепельный взрыв</div><div style="font-size:11px;color:var(--muted)">Действие · 6d8 урон в радиусе 9м</div></div>
+              </div>
+              <div class="card-sm" style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:13px">↻</span>
+                <div><div style="font-size:11px;font-weight:600">Использования</div><div style="font-size:11px;color:var(--muted)">3 / 3 за длинный отдых</div></div>
+              </div>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap">
+              <span class="tag tag-purple">Магический</span>
+              <span class="tag tag-muted">Двуручный</span>
+              <span class="tag tag-muted">Требует: Разум ≥ 16</span>
+            </div>
+          </div>
+        </div>
+        <div class="slide-col">
+          <div class="card">
+            <div class="card-title">9 типов свойств</div>
+            <div class="prop-grid" style="margin-top:6px">
+              <div class="pg-item"><span class="pg-icon">⚔</span><div><div class="pg-name">Урон</div><div class="pg-desc">Кубы, бонус, тип урона</div></div></div>
+              <div class="pg-item"><span class="pg-icon">🛡</span><div><div class="pg-name">Защита</div><div class="pg-desc">КЗ, сопротивления</div></div></div>
+              <div class="pg-item"><span class="pg-icon">↑</span><div><div class="pg-name">Бонус</div><div class="pg-desc">+N к любому стату</div></div></div>
+              <div class="pg-item"><span class="pg-icon">✦</span><div><div class="pg-name">Эффект</div><div class="pg-desc">Активная способность</div></div></div>
+              <div class="pg-item"><span class="pg-icon">↻</span><div><div class="pg-name">Заряды</div><div class="pg-desc">Макс., восстановление</div></div></div>
+              <div class="pg-item"><span class="pg-icon">◫</span><div><div class="pg-name">Слот</div><div class="pg-desc">Голова, тело, кольцо…</div></div></div>
+              <div class="pg-item"><span class="pg-icon">◇</span><div><div class="pg-name">Теги</div><div class="pg-desc">Магический, проклятый</div></div></div>
+              <div class="pg-item"><span class="pg-icon">≣</span><div><div class="pg-name">Описание</div><div class="pg-desc">Лор и заметки</div></div></div>
+              <div class="pg-item"><span class="pg-icon">⚿</span><div><div class="pg-name">Требования</div><div class="pg-desc">Стат, класс, уровень</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 7: VTT ══ -->
+    <div class="slide" id="s6">
+      <div class="slide-tag">VTT — режим сессии</div>
+      <div class="slide-title">Карта, токены, чат</div>
+      <div class="slide-sub">Боевая карта с туманом, инициатива, броски прямо в чате.</div>
+      <div class="slide-body">
+        <div class="vtt-mock" style="flex:1">
+          <div class="mock-map">
+            <div class="mock-grid"></div>
+            <div class="mfog" style="right:0;top:0;width:150px;height:90px"></div>
+            <div class="mfog" style="left:0;bottom:0;width:80px;height:60px"></div>
+            <div class="mtok pc sel" style="left:80px;top:130px">АТ
+              <div style="position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:32px;height:3px;background:#1a1d2e;border-radius:99px;overflow:hidden"><div style="width:73%;height:100%;background:var(--green)"></div></div>
+              <div style="position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);font-size:8px;white-space:nowrap;color:rgba(255,255,255,.4)">Арвен</div>
+            </div>
+            <div class="mtok pc" style="left:136px;top:182px">ДН
+              <div style="position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:32px;height:3px;background:#1a1d2e;border-radius:99px;overflow:hidden"><div style="width:90%;height:100%;background:var(--green)"></div></div>
+              <div style="position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);font-size:8px;white-space:nowrap;color:rgba(255,255,255,.4)">Дункан</div>
+            </div>
+            <div class="mtok pc" style="left:54px;top:202px">МР
+              <div style="position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:32px;height:3px;background:#1a1d2e;border-radius:99px;overflow:hidden"><div style="width:44%;height:100%;background:var(--orange)"></div></div>
+              <div style="position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);font-size:8px;white-space:nowrap;color:rgba(255,255,255,.4)">Мирра</div>
+            </div>
+            <div class="mtok en" style="left:256px;top:94px">ЗС
+              <div style="position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:32px;height:3px;background:#1a1d2e;border-radius:99px;overflow:hidden"><div style="width:60%;height:100%;background:var(--red)"></div></div>
+              <div style="position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);font-size:8px;white-space:nowrap;color:rgba(255,255,255,.4)">Зссилакс</div>
+            </div>
+            <div class="mtok en" style="left:310px;top:164px;width:32px;height:32px;font-size:9px">СК
+              <div style="position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:26px;height:3px;background:#1a1d2e;border-radius:99px;overflow:hidden"><div style="width:100%;height:100%;background:var(--red)"></div></div>
+            </div>
+            <div class="mtok en" style="left:344px;top:116px;width:32px;height:32px;font-size:9px">СК
+              <div style="position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:26px;height:3px;background:#1a1d2e;border-radius:99px;overflow:hidden"><div style="width:28%;height:100%;background:var(--red)"></div></div>
+            </div>
+            <div style="position:absolute;top:8px;left:8px;font-size:10px;padding:3px 8px;border-radius:5px;background:var(--s1);border:1px solid var(--border);color:var(--yellow)">Ход: Арвен · Раунд 3</div>
+          </div>
+          <div class="mock-side">
+            <div class="mock-tabs">
+              <div class="mt on">Чат</div>
+              <div class="mt">Чарник</div>
+              <div class="mt">Токен</div>
+              <div class="mt">Иниц.</div>
+            </div>
+            <div class="mock-chat">
+              <div class="mc-msg"><span class="mc-who">Мастер: </span><span class="mc-txt">Зссилакс — Аура Мора. Спасбросок Тело СС 16!</span></div>
+              <div class="mc-msg"><span class="mc-who">Арвен</span> → Спасбросок
+                <div class="mc-roll"><div class="mc-num" style="color:var(--red)">7</div><div class="mc-det">d20(3)+1 = 4 · провал</div></div>
+              </div>
+              <div style="font-size:10px;color:var(--muted);font-style:italic">⚑ Арвен заражена болезнью</div>
+              <div class="mc-msg"><span class="mc-who">Арвен</span> → Огненный шар
+                <div class="mc-roll"><div class="mc-num" style="color:var(--green)">31</div><div class="mc-det">8d6[5,2,6,4,3,6,1,4] · Σ31</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;width:160px">
+          <div class="card-sm"><div style="font-size:11px;font-weight:600;margin-bottom:4px">Чат</div><div style="font-size:10px;color:var(--muted)">Лог бросков /roll XdY+N, системные сообщения, реплики</div></div>
+          <div class="card-sm"><div style="font-size:11px;font-weight:600;margin-bottom:4px">Чарник</div><div style="font-size:10px;color:var(--muted)">Мини-лист + кнопки быстрых действий</div></div>
+          <div class="card-sm"><div style="font-size:11px;font-weight:600;margin-bottom:4px">Токен</div><div style="font-size:10px;color:var(--muted)">Инфо по выбранному токену, активные эффекты</div></div>
+          <div class="card-sm"><div style="font-size:11px;font-weight:600;margin-bottom:4px">Инициатива</div><div style="font-size:10px;color:var(--muted)">Порядок ходов, кнопка перебросить</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 8: ТЕХНИКА ══ -->
+    <div class="slide" id="s7">
+      <div class="slide-tag">Технические детали</div>
+      <div class="slide-title">Один файл — всё внутри</div>
+      <div class="slide-sub">Никакого сервера, установки и аккаунта. Открыл в браузере — работает.</div>
+      <div class="slide-body">
+        <div class="slide-col">
+          <div class="card">
+            <div class="card-title">Стек</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+                <span style="font-size:13px">HTML + CSS + JS</span><span class="tag tag-green">без зависимостей</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+                <span style="font-size:13px">localStorage</span><span class="tag tag-blue">авто-сохранение</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+                <span style="font-size:13px">Экспорт JSON</span><span class="tag tag-purple">портируемость</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0">
+                <span style="font-size:13px">Один .html файл</span><span class="tag tag-yellow">≈ 600 строк</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Файловая структура</div>
+            <div style="font-family:monospace;font-size:11px;line-height:2;color:var(--muted);margin-top:4px">
+              <div><span style="color:var(--accent)">H:\Cloude\</span></div>
+              <div style="padding-left:16px"><span style="color:var(--text)">system-constructor\</span></div>
+              <div style="padding-left:32px"><span style="color:var(--green)">index.html</span> ← главный файл</div>
+              <div style="padding-left:32px"><span style="color:var(--blue)">presentation.html</span> ← эта презентация</div>
+              <div style="padding-left:16px"><span style="color:var(--text)">chargen\</span></div>
+              <div style="padding-left:32px"><span style="color:var(--muted)">index.html</span> ← прототип v1</div>
+              <div style="padding-left:16px"><span style="color:var(--text)">dnd-universe\</span></div>
+              <div style="padding-left:32px"><span style="color:var(--muted)">index.html</span> ← лор мира</div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-col">
+          <div class="card">
+            <div class="card-title">Что уже работает</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                <span class="tag tag-green" style="flex-shrink:0">✓</span>
+                <div style="font-size:12px">Все 7 типов блоков чарника — редактируются инлайн</div>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                <span class="tag tag-green" style="flex-shrink:0">✓</span>
+                <div style="font-size:12px">Формулы: вычисление в реальном времени, зависимости</div>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                <span class="tag tag-green" style="flex-shrink:0">✓</span>
+                <div style="font-size:12px">Конструктор предметов: 9 типов свойств, редкость, иконки</div>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                <span class="tag tag-green" style="flex-shrink:0">✓</span>
+                <div style="font-size:12px">VTT: карта, токены, инициатива, чат, мини-чарник</div>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                <span class="tag tag-green" style="flex-shrink:0">✓</span>
+                <div style="font-size:12px">Броски /roll через чат + быстрые кнопки действий</div>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                <span class="tag tag-green" style="flex-shrink:0">✓</span>
+                <div style="font-size:12px">Сохранение в localStorage + экспорт JSON</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 9: РОАДМАП ══ -->
+    <div class="slide" id="s8">
+      <div class="slide-tag">Что дальше</div>
+      <div class="slide-title">Roadmap</div>
+      <div class="slide-sub">Ближайшие шаги и долгосрочные планы.</div>
+      <div class="slide-body">
+        <div class="slide-col">
+          <div class="roadmap">
+            <div class="rm-item">
+              <div class="rm-dot rm-done"></div>
+              <div>
+                <div class="rm-title">Конструктор чарников v1 ✓</div>
+                <div class="rm-desc">7 блоков, формулы с зависимостями, проверки с кубами</div>
+                <div class="rm-tags"><span class="tag tag-green" style="font-size:10px">Готово</span></div>
+              </div>
+            </div>
+            <div class="rm-item">
+              <div class="rm-dot rm-done"></div>
+              <div>
+                <div class="rm-title">Конструктор предметов v1 ✓</div>
+                <div class="rm-desc">9 свойств, редкость, заряды, слоты, теги, иконки</div>
+                <div class="rm-tags"><span class="tag tag-green" style="font-size:10px">Готово</span></div>
+              </div>
+            </div>
+            <div class="rm-item">
+              <div class="rm-dot rm-done"></div>
+              <div>
+                <div class="rm-title">VTT базовый v1 ✓</div>
+                <div class="rm-desc">Карта, токены, инициатива, чат с бросками</div>
+                <div class="rm-tags"><span class="tag tag-green" style="font-size:10px">Готово</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-col">
+          <div class="roadmap">
+            <div class="rm-item">
+              <div class="rm-dot rm-soon"></div>
+              <div>
+                <div class="rm-title">Drag & drop токенов на карте</div>
+                <div class="rm-desc">Перетаскивать токены мышью, ставить из библиотеки</div>
+                <div class="rm-tags"><span class="tag tag-yellow" style="font-size:10px">Следующий мит</span></div>
+              </div>
+            </div>
+            <div class="rm-item">
+              <div class="rm-dot rm-soon"></div>
+              <div>
+                <div class="rm-title">Привязка предметов к чарнику</div>
+                <div class="rm-desc">Экипируешь — бонусы автоматически добавляются в формулы</div>
+                <div class="rm-tags"><span class="tag tag-yellow" style="font-size:10px">Следующий мит</span></div>
+              </div>
+            </div>
+            <div class="rm-item">
+              <div class="rm-dot rm-later"></div>
+              <div>
+                <div class="rm-title">Несколько чарников / персонажей</div>
+                <div class="rm-desc">Список персонажей, переключение, экспорт отдельно</div>
+                <div class="rm-tags"><span class="tag tag-muted" style="font-size:10px">Позже</span></div>
+              </div>
+            </div>
+            <div class="rm-item">
+              <div class="rm-dot rm-later"></div>
+              <div>
+                <div class="rm-title">Экспорт PDF чарника</div>
+                <div class="rm-desc">Печатный лист персонажа по построенному шаблону</div>
+                <div class="rm-tags"><span class="tag tag-muted" style="font-size:10px">Позже</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /slides -->
+
+  <div class="dot-nav" id="dot-nav"></div>
+</div>
+
+<script>
+const TOTAL=9;
+let cur=0;
+const slides=document.querySelectorAll('.slide');
+
+function renderDots(){
+  const dn=document.getElementById('dot-nav');
+  dn.innerHTML=Array.from({length:TOTAL},(_,i)=>`<div class="dot${i===cur?' on':''}" onclick="goTo(${i})"></div>`).join('');
+}
+function updateUI(){
+  document.getElementById('ctr').textContent=`${cur+1} / ${TOTAL}`;
+  document.getElementById('btn-prev').disabled=cur===0;
+  document.getElementById('btn-next').textContent=cur===TOTAL-1?'● Начало →':'Далее →';
+  document.getElementById('prog').style.width=((cur+1)/TOTAL*100)+'%';
+  renderDots();
+}
+function goTo(n){
+  if(n===cur) return;
+  slides[cur].classList.remove('active');
+  slides[cur].classList.add('exit');
+  setTimeout(()=>slides[cur-0].classList.remove('exit'),360);
+  cur=((n%TOTAL)+TOTAL)%TOTAL;
+  slides[cur].classList.add('active');
+  updateUI();
+}
+function go(d){
+  if(d===1&&cur===TOTAL-1){goTo(0);return;}
+  goTo(cur+d);
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown') go(1);
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp') go(-1);
+});
+updateUI();
+</script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Матрица требований — реализация D&D и Cyberpunk</title>
+<style>
+:root{
+  --bg:#0f1117; --card:#1a1d2e; --card2:#1e2336; --line:#2a3050; --line2:#363b5e;
+  --txt:#e4e9f5; --mut:#8a96b4;
+  --ind:#818cf8; --teal:#34d399; --purp:#c084fc; --orng:#fb923c; --blue:#60a5fa; --yel:#fbbf24; --red:#f87171; --green:#4ade80; --cp:#22d3ee;
+  --hf:'Georgia','Times New Roman',serif; --bf:'Segoe UI',system-ui,sans-serif; --mono:'Consolas',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:var(--bf);padding:22px 22px 60px;font-size:13px}
+.wrap{max-width:1220px;margin:0 auto}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--ind);margin-bottom:7px}
+h1{font-family:var(--hf);font-size:28px;font-weight:700;letter-spacing:-.4px}
+.sub{font-size:13.5px;color:var(--mut);margin-top:7px;line-height:1.5;max-width:92ch}
+.sub b{color:var(--txt)}
+.ready{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.rc{background:var(--card);border:1px solid var(--line2);border-radius:12px;padding:13px 16px}
+.rc .rt{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.rc .rt .dot{width:10px;height:10px;border-radius:50%}
+.rc .rp{font-family:var(--mono);font-size:24px;font-weight:800;margin-left:auto}
+.rc .rbar{height:8px;border-radius:99px;background:var(--card2);overflow:hidden;margin-top:9px}
+.rc .rbar>i{display:block;height:100%;border-radius:99px;transition:.25s}
+.rc .rd{font-size:11px;color:var(--mut);margin-top:6px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.stat-pill{font-size:12px;padding:6px 13px;border-radius:99px;background:var(--card2);border:1px solid var(--line2)}
+.stat-pill b{font-family:var(--mono)}
+.sp{flex:1}
+.fbtn{font-size:12px;padding:6px 12px;border-radius:8px;border:1px solid var(--line2);background:var(--card2);color:var(--mut);cursor:pointer;font-family:inherit}
+.fbtn.on{border-color:var(--ind);color:var(--ind);background:rgba(129,140,248,.12)}
+.fbtn.save{background:var(--ind);color:#0f1117;border:none;font-weight:700}
+.tbl-wrap{border:1px solid var(--line2);border-radius:12px;overflow:hidden;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:840px}
+th{text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--mut);padding:9px 11px;background:var(--card2);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2}
+th.c{text-align:center;width:110px}
+td{padding:8px 11px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.c{text-align:center}
+tr.sec td{background:#151a2c;font-weight:700;color:var(--txt);font-family:var(--hf);font-size:14px;border-bottom:1px solid var(--line2)}
+tr.sec .code{color:var(--ind);font-family:var(--mono);font-size:11px;margin-right:8px}
+tr.item:hover td{background:var(--card)}
+.rn{font-weight:600;color:var(--txt)}
+.need{font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;display:inline-block;min-width:58px}
+.need.req{background:rgba(74,222,128,.14);color:var(--green)}
+.need.opt{background:rgba(138,150,180,.13);color:var(--mut)}
+.need.no{color:var(--line2)}
+.pr{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;font-family:var(--mono)}
+.pr.p0{background:rgba(248,113,113,.16);color:var(--red)}
+.pr.p1{background:rgba(251,191,36,.16);color:var(--yel)}
+.pr.p2{background:rgba(138,150,180,.13);color:var(--mut)}
+.badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;cursor:pointer;user-select:none;display:inline-block;min-width:66px;text-align:center}
+.badge:hover{filter:brightness(1.2)}
+.badge.done{background:rgba(74,222,128,.16);color:var(--green)}
+.badge.wip{background:rgba(251,191,36,.16);color:var(--yel)}
+.badge.back{background:rgba(138,150,180,.14);color:var(--mut)}
+.note{font-size:12.5px;color:var(--mut);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px 15px;margin-top:20px;line-height:1.55}
+.note b{color:var(--ind);font-weight:600}
+@media(max-width:760px){.ready{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Требования на реализацию · D&amp;D × Cyberpunk</div>
+  <h1>Матрица требований</h1>
+  <div class="sub">Что нужно построить, чтобы движок выдал обе системы. Строка — требование. <b>D&amp;D</b> / <b>Cyberpunk</b> — нужно системе (<span style="color:var(--green)">нужно</span> / <span style="color:var(--mut)">опция</span> / —). <b>Приоритет</b>: P0 (нужно обеим — ядро), P1 (нужно одной), P2 (по желанию). <b>Статус</b> — клик меняет. Готовность каждой системы считается сама.</div>
+
+  <div class="ready">
+    <div class="rc"><div class="rt"><span class="dot" style="background:var(--yel)"></span>Готовность D&amp;D 5e<span class="rp" id="rp-dnd" style="color:var(--yel)">0%</span></div><div class="rbar"><i id="rb-dnd" style="background:var(--yel);width:0"></i></div><div class="rd" id="rd-dnd"></div></div>
+    <div class="rc"><div class="rt"><span class="dot" style="background:var(--cp)"></span>Готовность Cyberpunk RED<span class="rp" id="rp-cp" style="color:var(--cp)">0%</span></div><div class="rbar"><i id="rb-cp" style="background:var(--cp);width:0"></i></div><div class="rd" id="rd-cp"></div></div>
+  </div>
+
+  <div class="bar">
+    <span class="stat-pill">P0 <b id="c-p0" style="color:var(--red)">0</b></span>
+    <span class="stat-pill">P1 <b id="c-p1" style="color:var(--yel)">0</b></span>
+    <span class="stat-pill">P2 <b id="c-p2" style="color:var(--mut)">0</b></span>
+    <span class="sp"></span>
+    <button class="fbtn on" data-f="all" onclick="setF('all')">Все</button>
+    <button class="fbtn" data-f="back" onclick="setF('back')">Осталось</button>
+    <button class="fbtn" data-f="p0" onclick="setF('p0')">Ядро P0</button>
+    <button class="fbtn save" onclick="saveAll()">💾 Сохранить</button>
+  </div>
+
+  <div class="tbl-wrap"><table id="mtx"></table></div>
+
+  <div class="note"><b>Как пользоваться.</b> Это дорожная карта движка: сортируй по «Осталось» — видно, что доделать; по «Ядро P0» — что нужно обеим системам в первую очередь. Полоски сверху показывают, насколько близко каждая система к «играбельна на движке» (доля её нужных требований со статусом Готово). D&amp;D-специфика (уровни, преим/помеха, ячейки) и Cyberpunk-специфика (взрывной кубик, абляция, Удача, Гуманность, крит-травмы) — это P1, включаются под систему; P0 — общий фундамент.</div>
+</div>
+
+<script>
+const LS='mtx-real-v1';
+// d/cp: req|opt|no ; status: done|wip|back
+const D=[
+{sec:1,code:'R',name:'Движок бросков'},
+{name:'Парсер кубов NdX(+M)',d:'req',cp:'req',status:'done'},
+{name:'Сравнение с порогом (≥ DC / DV)',d:'req',cp:'req',status:'done'},
+{name:'Сумма модификаторов',d:'req',cp:'req',status:'done'},
+{name:'Преимущество / помеха (2d20 kh/kl)',d:'req',cp:'no',status:'done'},
+{name:'Взрывной бросок (10↑ / 1↓)',d:'no',cp:'req',status:'back'},
+{name:'Состязание бросков',d:'opt',cp:'req',status:'wip'},
+{name:'Округление ⌊ ⌋ · min/max',d:'req',cp:'req',status:'done'},
+
+{sec:1,code:'A',name:'Броня'},
+{name:'Модель «порог попадания» (КЗ)',d:'req',cp:'no',status:'wip'},
+{name:'Модель «вычитание + абляция» (SP)',d:'no',cp:'req',status:'wip'},
+{name:'Укрытие / модификаторы защиты',d:'req',cp:'req',status:'back'},
+
+{sec:1,code:'S',name:'Ресурсы'},
+{name:'Ресурс-бар + трекер состояния',d:'req',cp:'req',status:'done'},
+{name:'Производное «ресурс от статов» (HP)',d:'req',cp:'req',status:'done'},
+{name:'Счётчик (ячейки / патроны)',d:'req',cp:'req',status:'done'},
+{name:'Пул-ресурс (Удача)',d:'no',cp:'req',status:'wip'},
+{name:'Связанный ресурс (Гуманность↔кибера)',d:'no',cp:'req',status:'wip'},
+
+{sec:1,code:'F',name:'Формулы и таблицы'},
+{name:'Модификатор от стата ⌊(x−10)/2⌋',d:'req',cp:'no',status:'done'},
+{name:'Формула по уровню (PB)',d:'req',cp:'no',status:'done'},
+{name:'Произвольная формула (зависимости)',d:'req',cp:'req',status:'done'},
+{name:'Таблица уровней / XP',d:'req',cp:'no',status:'back'},
+{name:'Таблица крит-травм',d:'no',cp:'req',status:'back'},
+{name:'Таблица дальности → DV',d:'no',cp:'req',status:'back'},
+
+{sec:1,code:'E',name:'Эффекты'},
+{name:'Библиотека состояний (тоглы)',d:'req',cp:'req',status:'done'},
+{name:'Движок триггер-событий',d:'req',cp:'req',status:'back'},
+{name:'Поле длительности эффекта',d:'req',cp:'req',status:'wip'},
+{name:'Крит-режим тогл (удвоение / взрывной)',d:'req',cp:'req',status:'back'},
+{name:'Сопротивление / уязвимость ×½ ×2',d:'req',cp:'opt',status:'back'},
+{name:'Авто-протяжка эффектов из компендиума',d:'req',cp:'req',status:'back'},
+
+{sec:1,code:'M',name:'Карта и шаблоны'},
+{name:'Шаблоны области (круг/конус/линия/куб)',d:'req',cp:'opt',status:'done'},
+{name:'Пресеты дальности',d:'req',cp:'req',status:'done'},
+{name:'Масштаб клетки / единицы сцены',d:'req',cp:'req',status:'done'},
+{name:'Инициатива + сортировка',d:'req',cp:'req',status:'done'},
+
+{sec:1,code:'P',name:'Прогрессия'},
+{name:'Метод прокачки (radio 4)',d:'req',cp:'req',status:'done'},
+{name:'Уровни (пласт прогрессии)',d:'req',cp:'no',status:'back'},
+{name:'Покупка атрибутов за очки (IP)',d:'opt',cp:'req',status:'back'},
+
+{sec:1,code:'K',name:'Компендиум'},
+{name:'Типы + поля + редактируемые лейблы',d:'req',cp:'req',status:'done'},
+{name:'Ранги особенностей',d:'req',cp:'opt',status:'done'},
+{name:'Ссылки между сущностями',d:'req',cp:'req',status:'back'},
+{name:'Тип как шаблон (схема)',d:'req',cp:'req',status:'wip'},
+{name:'Библиотеки / импорт',d:'opt',cp:'opt',status:'back'},
+
+{sec:1,code:'C',name:'Управляющие элементы'},
+{name:'Radio (множитель / режим)',d:'opt',cp:'req',status:'back'},
+{name:'Checkbox / тумблер',d:'req',cp:'req',status:'done'},
+{name:'Stepper (число с шагом)',d:'req',cp:'req',status:'done'},
+{name:'Dice picker',d:'req',cp:'req',status:'done'},
+{name:'Dropdown / Select',d:'req',cp:'req',status:'done'},
+{name:'Slider (диапазон)',d:'opt',cp:'opt',status:'back'},
+
+{sec:1,code:'D',name:'Чарник и инфраструктура'},
+{name:'Блоки листа',d:'req',cp:'req',status:'done'},
+{name:'Раскладка / вид (конструктор вида)',d:'req',cp:'req',status:'wip'},
+{name:'Процедурная сборка статов',d:'req',cp:'req',status:'wip'},
+{name:'Доступ «только мастер»',d:'req',cp:'req',status:'wip'},
+{name:'Сохранение + экспорт',d:'req',cp:'req',status:'done'},
+];
+const NEEDL={req:'нужно',opt:'опция',no:'—'};
+const STL={done:'Готово',wip:'В работе',back:'Бэклог'};
+const CYCLE={done:'wip',wip:'back',back:'done'};
+function prio(r){const dr=r.d==='req',cr=r.cp==='req';return dr&&cr?'p0':(dr||cr)?'p1':'p2';}
+const PRL={p0:'P0',p1:'P1',p2:'P2'};
+let filter='all';
+function load(){try{const s=JSON.parse(localStorage.getItem(LS));if(s)D.forEach((r,i)=>{if(!r.sec&&s[i])r.status=s[i];});}catch(_){}}
+function render(){
+  let h='<thead><tr><th>Требование</th><th class="c">D&amp;D</th><th class="c">Cyberpunk</th><th class="c">Приоритет</th><th class="c">Статус</th></tr></thead><tbody>';
+  D.forEach((r,i)=>{
+    if(r.sec){h+=`<tr class="sec"><td colspan="5"><span class="code">${r.code}</span>${r.name}</td></tr>`;return;}
+    const pr=prio(r);
+    let hide=false;
+    if(filter==='back') hide=r.status!=='back';
+    else if(filter==='p0') hide=pr!=='p0';
+    h+=`<tr class="item" style="${hide?'display:none':''}">
+      <td class="rn">${r.name}</td>
+      <td class="c"><span class="need ${r.d}">${NEEDL[r.d]}</span></td>
+      <td class="c"><span class="need ${r.cp}">${NEEDL[r.cp]}</span></td>
+      <td class="c"><span class="pr ${pr}">${PRL[pr]}</span></td>
+      <td class="c"><span class="badge ${r.status}" data-i="${i}">${STL[r.status]}</span></td></tr>`;
+  });
+  h+='</tbody>';document.getElementById('mtx').innerHTML=h;
+  document.querySelectorAll('.badge[data-i]').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.i;D[i].status=CYCLE[D[i].status];render();}));
+  stats();
+}
+function stats(){
+  let p0=0,p1=0,p2=0;D.forEach(r=>{if(r.sec)return;const p=prio(r);if(p==='p0')p0++;else if(p==='p1')p1++;else p2++;});
+  c('c-p0',p0);c('c-p1',p1);c('c-p2',p2);
+  ['d','cp'].forEach(sys=>{
+    const req=D.filter(r=>!r.sec&&r[sys]==='req');
+    const done=req.filter(r=>r.status==='done').length;
+    const pct=req.length?Math.round(done/req.length*100):0;
+    const key=sys==='d'?'dnd':'cp';
+    document.getElementById('rp-'+key).textContent=pct+'%';
+    document.getElementById('rb-'+key).style.width=pct+'%';
+    document.getElementById('rd-'+key).textContent=`${done} из ${req.length} нужных требований готовы`;
+  });
+}
+function c(id,v){document.getElementById(id).textContent=v;}
+function setF(f){filter=f;document.querySelectorAll('.fbtn[data-f]').forEach(x=>x.classList.toggle('on',x.dataset.f===f));render();}
+function saveAll(){const s=D.map(r=>r.sec?null:r.status);localStorage.setItem(LS,JSON.stringify(s));const b=event.target;const o=b.textContent;b.textContent='✓ Сохранено';setTimeout(()=>b.textContent=o,1200);}
+load();render();
+</script>
+</body>
+</html>

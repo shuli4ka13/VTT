@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Компендиум · 6 видов одних данных</title>
+<style>
+:root{
+  --bg:#0f1117; --card:#1a1d2e; --card2:#1e2336; --line:#2a3050; --line2:#363b5e;
+  --txt:#e4e9f5; --mut:#8a96b4;
+  --ind:#818cf8; --teal:#34d399; --purp:#c084fc; --orng:#fb923c; --blue:#60a5fa; --yel:#fbbf24; --red:#f87171;
+  --hf:'Georgia','Times New Roman',serif; --bf:'Segoe UI',system-ui,sans-serif; --mono:'Consolas',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:var(--bf);padding:24px 28px 48px;min-height:100vh}
+.wrap{max-width:1200px;margin:0 auto}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--ind);margin-bottom:7px}
+h1{font-family:var(--hf);font-size:32px;font-weight:700;letter-spacing:-.4px}
+.sub{font-size:14px;color:var(--mut);margin-top:7px;line-height:1.5;max-width:82ch}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:20px 0 16px}
+.tab{display:flex;align-items:center;gap:7px;font-size:13px;padding:8px 15px;border-radius:10px;border:1px solid var(--line2);background:var(--card2);color:var(--mut);cursor:pointer;font-family:inherit;transition:.12s}
+.tab:hover{border-color:var(--ind);color:var(--txt)}
+.tab.on{background:rgba(129,140,248,.16);border-color:var(--ind);color:var(--ind);font-weight:600}
+.tab .ti{font-size:15px}
+.stage{background:var(--card);border:1px solid var(--line2);border-radius:14px;padding:20px;min-height:460px;box-shadow:0 14px 44px rgba(0,0,0,.5)}
+.view-lead{font-size:13px;color:var(--mut);margin-bottom:16px;font-style:italic}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px;font-size:12px;color:var(--mut)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.ld{width:9px;height:9px;border-radius:3px}
+
+/* TABLE */
+.tbl-sec{margin-bottom:18px}
+.tbl-h{font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px;margin-bottom:7px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);padding:6px 10px;border-bottom:1px solid var(--line)}
+td{padding:8px 10px;border-bottom:1px solid var(--line);color:var(--txt)}
+tr:hover td{background:var(--card2)}
+.ref-pill{font-size:11px;color:var(--blue)}
+
+/* GALLERY */
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:13px}
+.gcard{background:var(--card2);border:1px solid var(--line2);border-radius:12px;padding:14px;border-top:3px solid var(--tc)}
+.gcard .gic{width:34px;height:34px;border-radius:9px;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:9px}
+.gcard .gnm{font-size:15px;font-weight:600}
+.gcard .gty{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--tc);margin-top:2px}
+.gcard .grow{font-size:11.5px;color:var(--mut);margin-top:8px;display:flex;justify-content:space-between;gap:8px}
+.gcard .grow b{color:var(--txt);font-weight:500}
+.gbar{height:5px;border-radius:9px;background:var(--card);overflow:hidden;margin-top:9px}
+.gbar>i{display:block;height:100%;border-radius:9px;background:var(--purp)}
+
+/* TREE */
+.tree{font-family:var(--mono);font-size:13px;line-height:2;color:var(--txt)}
+.tree .lib{font-weight:700}
+.tree .tt{cursor:pointer}
+.tree .ind1{padding-left:16px}.tree .ind2{padding-left:34px}.tree .ind3{padding-left:56px;color:var(--mut);font-size:12px;line-height:1.7}
+.tree .cnt{color:var(--mut);font-size:11px}
+.tdot{width:9px;height:9px;border-radius:3px;display:inline-block;margin-right:6px;vertical-align:middle}
+
+/* KANBAN */
+.kb{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kcol{background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:11px;display:flex;flex-direction:column;gap:8px}
+.kh{font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px}
+.kh .cnt{margin-left:auto;font-size:11px;color:var(--mut)}
+.kcard{background:var(--card);border:1px solid var(--line2);border-radius:8px;padding:9px 11px;border-left:3px solid var(--tc);cursor:grab}
+.kcard .kn{font-size:13px;font-weight:600}
+.kcard .ks{font-size:10.5px;color:var(--mut);margin-top:2px}
+
+/* SVG views */
+.svgwrap{width:100%;overflow-x:auto}
+svg{display:block;max-width:100%;height:auto}
+.hint{font-size:12px;color:var(--mut);text-align:center;margin-top:14px;font-style:italic}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Концепт · Компендиум</div>
+  <h1>Одни данные — шесть видов</h1>
+  <div class="sub">Как в Notion: библиотека сущностей одна, но смотришь её по-разному. Редактируешь в галерее, балансируешь в таблице, проверяешь связи в графе. Переключай виды кнопками ниже.</div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab on" data-v="table"><span class="ti">▦</span>Таблица</button>
+    <button class="tab" data-v="gallery"><span class="ti">▢</span>Галерея</button>
+    <button class="tab" data-v="graph"><span class="ti">◈</span>Граф связей</button>
+    <button class="tab" data-v="tree"><span class="ti">≡</span>Дерево</button>
+    <button class="tab" data-v="kanban"><span class="ti">▤</span>Канбан</button>
+    <button class="tab" data-v="radial"><span class="ti">◉</span>Радиал</button>
+  </div>
+
+  <div class="stage" id="stage"></div>
+
+  <div class="legend">
+    <span><span class="ld" style="background:var(--teal)"></span>Предмет</span>
+    <span><span class="ld" style="background:var(--purp)"></span>Особенность</span>
+    <span><span class="ld" style="background:var(--blue)"></span>Эффект</span>
+    <span><span class="ld" style="background:var(--orng)"></span>Действие</span>
+    <span style="color:var(--blue)">↗ ссылка на сущность</span>
+  </div>
+  <div class="hint">Один и тот же компендиум — 6 способов смотреть. Связи (↗) сохраняются во всех видах.</div>
+</div>
+
+<script>
+const COL={item:'#34d399',feature:'#c084fc',effect:'#60a5fa',action:'#fb923c'};
+const TYPE={item:'Предмет',feature:'Особенность',effect:'Эффект',action:'Действие'};
+const ICON={item:'🎒',feature:'✦',effect:'✨',action:'⚡'};
+// сущности с полями и ссылками (ref -> id другой сущности)
+const E=[
+  {id:'posoh', type:'item', name:'Посох Пепла', f:{Броня:'8к6 огонь', Дальность:'Дальний', Цена:'400'}, ref:'gorit'},
+  {id:'kinjal',type:'item', name:'Кинжал теней',f:{Броня:'2к4', Дальность:'Ближний', Цена:'120'}, ref:'otrav'},
+  {id:'yarost',type:'feature', name:'Ярость', f:{Ранг:'2 / 3', Требования:'Тело 13'}, rank:0.66, ref:'udar'},
+  {id:'vtoroe',type:'feature', name:'Второе дыхание', f:{Ранг:'1 / 2'}, rank:0.5, ref:'blago'},
+  {id:'gorit', type:'effect', name:'Горит', f:{Длительность:'3 раунда', Урон:'1к4/ход'}},
+  {id:'otrav', type:'effect', name:'Отравлен', f:{Длительность:'Сцена'}},
+  {id:'blago', type:'effect', name:'Благословлён', f:{Длительность:'Сцена'}},
+  {id:'udar',  type:'action', name:'Удар', f:{Урон:'3к6', Дальность:'Ближний'}},
+  {id:'fireball',type:'action', name:'Огненный шар', f:{Урон:'8к6', Дальность:'Дальний'}, ref:'gorit'},
+];
+const byId=id=>E.find(e=>e.id===id);
+const stage=document.getElementById('stage');
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+const VIEWS={
+/* ── TABLE ── */
+table(){
+  const lead='<div class="view-lead">Тип = секция, сущность = строка, поле = колонка. Удобно балансировать числа и сравнивать.</div>';
+  let h='';
+  ['item','feature','effect','action'].forEach(t=>{
+    const rows=E.filter(e=>e.type===t);
+    const keys=[...new Set(rows.flatMap(e=>Object.keys(e.f)))];
+    h+=`<div class="tbl-sec"><div class="tbl-h"><span class="tdot" style="background:${COL[t]}"></span>${ICON[t]} ${TYPE[t]} · ${rows.length}</div>
+      <table><thead><tr><th>Название</th>${keys.map(k=>`<th>${k}</th>`).join('')}<th>↗ Ссылка</th></tr></thead><tbody>
+      ${rows.map(e=>`<tr><td style="font-weight:600">${esc(e.name)}</td>${keys.map(k=>`<td>${esc(e.f[k]||'—')}</td>`).join('')}<td>${e.ref?`<span class="ref-pill">↗ ${esc(byId(e.ref).name)}</span>`:'—'}</td></tr>`).join('')}
+      </tbody></table></div>`;
+  });
+  return lead+h;
+},
+/* ── GALLERY ── */
+gallery(){
+  const lead='<div class="view-lead">Каждая сущность — карта с иконкой и полями. Тактильно, хорошо показывать игрокам.</div>';
+  return lead+'<div class="gal">'+E.map(e=>{
+    const rows=Object.entries(e.f).slice(0,3).map(([k,v])=>`<div class="grow"><span>${k}</span><b>${esc(v)}</b></div>`).join('');
+    return `<div class="gcard" style="--tc:${COL[e.type]}">
+      <div class="gic">${ICON[e.type]}</div>
+      <div class="gnm">${esc(e.name)}</div><div class="gty">${TYPE[e.type]}</div>
+      ${rows}${e.rank!=null?`<div class="gbar"><i style="width:${e.rank*100}%;background:${COL[e.type]}"></i></div>`:''}
+      ${e.ref?`<div class="grow" style="color:var(--blue);margin-top:8px">↗ ${esc(byId(e.ref).name)}</div>`:''}
+    </div>`;
+  }).join('')+'</div>';
+},
+/* ── TREE ── */
+tree(){
+  const lead='<div class="view-lead">Библиотека → тип → сущность → поля. Плотно, как файловая система.</div>';
+  let h='<div class="tree"><div class="lib">📚 Пепельный мир</div>';
+  ['item','feature','effect','action'].forEach(t=>{
+    const rows=E.filter(e=>e.type===t);
+    h+=`<div class="ind1"><span class="tdot" style="background:${COL[t]}"></span>${TYPE[t]} <span class="cnt">${rows.length}</span></div>`;
+    rows.forEach((e,i)=>{
+      const last=i===rows.length-1;
+      h+=`<div class="ind2">${last?'└':'├'} ${e.name}</div>`;
+      const fs=Object.entries(e.f);
+      fs.forEach(([k,v],j)=>h+=`<div class="ind3">${j===fs.length-1&&!e.ref?'└':'├'} ${k}: ${esc(v)}</div>`);
+      if(e.ref) h+=`<div class="ind3" style="color:var(--blue)">└ ↗ Ссылка: ${esc(byId(e.ref).name)}</div>`;
+    });
+  });
+  return lead+h+'</div>';
+},
+/* ── KANBAN ── */
+kanban(){
+  const lead='<div class="view-lead">Колонка на тип. Тащишь сущности между досками и библиотеками.</div>';
+  return lead+'<div class="kb">'+['item','feature','effect','action'].map(t=>{
+    const rows=E.filter(e=>e.type===t);
+    return `<div class="kcol"><div class="kh"><span class="tdot" style="background:${COL[t]}"></span>${ICON[t]} ${TYPE[t]}<span class="cnt">${rows.length}</span></div>
+      ${rows.map(e=>{const first=Object.entries(e.f)[0];return `<div class="kcard" style="--tc:${COL[t]}"><div class="kn">${esc(e.name)}</div><div class="ks">${first?first[0]+': '+esc(first[1]):''}${e.ref?' · ↗ '+esc(byId(e.ref).name):''}</div></div>`;}).join('')}
+    </div>`;
+  }).join('')+'</div>';
+},
+/* ── GRAPH ── */
+graph(){
+  const lead='<div class="view-lead">Сущности — узлы, ссылки (↗) — рёбра. Видно всю паутину зависимостей.</div>';
+  const cols=['feature','action','item','effect'];
+  const W=1080,H=440,pad=60;
+  const pos={};
+  cols.forEach((t,ci)=>{
+    const rows=E.filter(e=>e.type===t);
+    const x=pad+ci*((W-2*pad)/(cols.length-1));
+    rows.forEach((e,ri)=>{ pos[e.id]={x, y: pad+ (ri+0.5)*((H-2*pad)/rows.length)}; });
+  });
+  let edges='';
+  E.forEach(e=>{ if(e.ref&&pos[e.ref]){const a=pos[e.id],b=pos[e.ref];
+    edges+=`<line x1="${a.x+52}" y1="${a.y}" x2="${b.x-52}" y2="${b.y}" stroke="#3a4270" stroke-width="1.6" marker-end="url(#arw)"/>`;}});
+  let nodes='';
+  E.forEach(e=>{const p=pos[e.id];nodes+=`<g>
+    <rect x="${p.x-52}" y="${p.y-19}" width="104" height="38" rx="9" fill="#1a1d2e" stroke="${COL[e.type]}" stroke-width="1.6"/>
+    <text x="${p.x}" y="${p.y+4}" fill="#e4e9f5" font-size="12" text-anchor="middle" font-family="sans-serif">${esc(e.name)}</text></g>`;});
+  let heads='';
+  cols.forEach((t,ci)=>{const x=pad+ci*((W-2*pad)/(cols.length-1));heads+=`<text x="${x}" y="26" fill="${COL[t]}" font-size="12" font-weight="bold" text-anchor="middle" font-family="sans-serif">${TYPE[t]}</text>`;});
+  return lead+`<div class="svgwrap"><svg viewBox="0 0 ${W} ${H}" width="${W}">
+    <defs><marker id="arw" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#60a5fa"/></marker></defs>
+    ${heads}${edges}${nodes}</svg></div>`;
+},
+/* ── RADIAL ── */
+radial(){
+  const lead='<div class="view-lead">Система в центре, типы вокруг, сущности листьями. Обзор всей комнаты.</div>';
+  const W=1120,H=560,cx=W/2,cy=H/2;
+  const types=['item','feature','effect','action'];   // верх, право, низ, лево
+  const hubDeg={item:-90,feature:0,effect:90,action:180};
+  const hubR=150, leafR=82;
+  let h='';
+  types.forEach(t=>{
+    const ha=hubDeg[t]*Math.PI/180;
+    const tx=cx+Math.cos(ha)*hubR, ty=cy+Math.sin(ha)*hubR;
+    h+=`<line x1="${cx+Math.cos(ha)*40}" y1="${cy+Math.sin(ha)*40}" x2="${tx}" y2="${ty}" stroke="#3a4270" stroke-width="1.6"/>`;
+    const rows=E.filter(e=>e.type===t);
+    const step=(t==='item'||t==='effect')?44:26;   // шире для вертикальных вееров
+    rows.forEach((e,ri)=>{
+      const la=ha+((ri-(rows.length-1)/2)*step)*Math.PI/180;
+      const lx=tx+Math.cos(la)*leafR, ly=ty+Math.sin(la)*leafR;
+      const c=Math.cos(la), s=Math.sin(la);
+      const tlx=lx+c*13, tly=ly+s*13+(Math.abs(c)<0.22?(s<0?-4:9):3);
+      const anch=c<-0.22?'end':c>0.22?'start':'middle';
+      h+=`<line x1="${tx}" y1="${ty}" x2="${lx}" y2="${ly}" stroke="#2a3050" stroke-width="1.2"/>
+        <circle cx="${lx}" cy="${ly}" r="7" fill="#1a1d2e" stroke="${COL[t]}" stroke-width="1.5"/>
+        <text x="${tlx}" y="${tly}" fill="#c9d2ea" font-size="11" text-anchor="${anch}" font-family="sans-serif">${esc(e.name)}</text>`;
+    });
+    h+=`<circle cx="${tx}" cy="${ty}" r="25" fill="#171a2b" stroke="${COL[t]}" stroke-width="2"/>
+      <text x="${tx}" y="${ty+5}" fill="${COL[t]}" font-size="14" font-weight="bold" text-anchor="middle" font-family="sans-serif">${ICON[t]}</text>
+      <text x="${tx}" y="${ty+ (t==='effect'?46:-34)}" fill="${COL[t]}" font-size="11" font-weight="bold" text-anchor="middle" font-family="sans-serif">${TYPE[t]}</text>`;
+  });
+  h+=`<circle cx="${cx}" cy="${cy}" r="40" fill="#1a1d2e" stroke="#818cf8" stroke-width="2.5"/>
+    <text x="${cx}" y="${cy+5}" fill="#e4e9f5" font-size="14" font-weight="bold" text-anchor="middle" font-family="sans-serif">Система</text>`;
+  return lead+`<div class="svgwrap"><svg viewBox="0 0 ${W} ${H}" width="${W}">${h}</svg></div>`;
+},
+};
+
+let curV='table';
+function show(v){
+  curV=v;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===v));
+  stage.innerHTML=VIEWS[v]();
+}
+document.getElementById('tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(b)show(b.dataset.v);});
+const _h=location.hash.replace('#','');
+show(VIEWS[_h]?_h:'table');
+</script>
+</body>
+</html>

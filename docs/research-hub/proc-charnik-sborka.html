@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Сборка чарника — шаг за шагом</title>
+<style>
+:root{
+  --bg:#0f1117; --card:#1a1d2e; --card2:#1e2336; --line:#2a3050; --line2:#363b5e;
+  --txt:#e4e9f5; --mut:#8a96b4;
+  --ind:#818cf8; --teal:#34d399; --purp:#c084fc; --orng:#fb923c; --blue:#60a5fa; --yel:#fbbf24; --red:#f87171; --green:#4ade80;
+  --hf:'Georgia','Times New Roman',serif; --bf:'Segoe UI',system-ui,sans-serif; --mono:'Consolas',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:var(--bf);padding:24px 26px 50px}
+.wrap{max-width:1120px;margin:0 auto}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--purp);margin-bottom:8px}
+h1{font-family:var(--hf);font-size:31px;font-weight:700;letter-spacing:-.4px}
+.sub{font-size:14px;color:var(--mut);margin-top:8px;line-height:1.5;max-width:88ch}
+.sub b{color:var(--txt);font-weight:600}
+
+.palette{display:flex;flex-wrap:wrap;gap:7px;margin-top:20px;align-items:center}
+.pbtn{font-size:13px;padding:8px 14px;border-radius:10px;border:1px solid var(--line2);background:var(--card2);color:var(--txt);cursor:pointer;font-family:inherit;transition:.12s}
+.pbtn:hover{border-color:var(--purp);background:var(--card)}
+.pbtn.p1{border-color:rgba(192,132,252,.4)} .pbtn.p2{border-color:rgba(96,165,250,.4)} .pbtn.p3{border-color:rgba(74,222,128,.4)}
+.pbtn .k{font-family:var(--mono);opacity:.7;font-size:11px}
+.pbtn.demo{background:var(--purp);color:#12friends;color:#0f1117;border:none;font-weight:700;margin-left:auto}
+.pbtn.reset{color:var(--mut)}
+
+/* derived form */
+.dform{display:none;margin-top:12px;background:var(--card);border:1px solid var(--green);border-radius:12px;padding:14px 16px}
+.dform.open{display:block}
+.dform-row{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-bottom:9px}
+.dform label{font-size:11px;color:var(--mut);min-width:64px}
+.dform input,.dform select{background:var(--card2);border:1px solid var(--line2);border-radius:7px;padding:6px 9px;font:inherit;font-size:12.5px;color:var(--txt);outline:none}
+.dform input:focus,.dform select:focus{border-color:var(--green)}
+.dform .add{background:var(--green);color:#0f1117;border:none;font-weight:700;cursor:pointer;padding:7px 16px;border-radius:8px}
+.opnd-c{width:64px;text-align:center}
+
+/* sheet */
+.sheet{display:grid;grid-template-columns:1fr 1.1fr 1.35fr;gap:0;margin-top:22px;background:var(--card);border:1px solid var(--line2);border-radius:16px;overflow:hidden;min-height:280px;box-shadow:0 14px 44px rgba(0,0,0,.5)}
+.col{padding:15px 15px;border-right:1px solid var(--line)}
+.col:last-child{border-right:none}
+.col-h{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+.col-h .d{width:10px;height:10px;border-radius:3px}
+.col-h .t{font-size:13px;font-weight:700}
+.col-h .s{font-size:10px;color:var(--mut);margin-left:auto}
+.empty{font-size:11px;color:var(--mut);font-style:italic;padding:16px 4px;line-height:1.5}
+.blk{background:var(--card2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-bottom:7px;position:relative;animation:pop .2s ease-out}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.blk.p1{border-left:3px solid var(--purp)} .blk.p2{border-left:3px solid var(--blue)} .blk.p3{border-left:3px solid var(--green)}
+.blk-top{display:flex;align-items:center;gap:8px}
+.blk-name{font-size:12.5px;font-weight:600;flex:1;background:transparent;border:none;color:var(--txt);font-family:inherit;outline:none;min-width:0}
+.blk-name:focus{background:var(--card);border-radius:4px;padding:1px 4px}
+.blk-val{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--green)}
+.blk.p1 .blk-val{color:var(--purp)}.blk.p2 .blk-val{color:var(--blue)}
+.blk-val.flash{color:var(--yel)!important}
+.blk-x{background:none;border:none;color:var(--mut);cursor:pointer;font-size:12px;padding:0 2px}
+.blk-x:hover{color:var(--red)}
+.blk-in{width:50px;text-align:center;background:var(--card);border:1px solid var(--line2);border-radius:6px;padding:3px;font:inherit;font-size:13px;font-weight:700;color:var(--txt);outline:none}
+.blk-sel{background:var(--card);border:1px solid var(--line2);border-radius:6px;padding:3px 6px;font:inherit;font-size:11px;color:var(--txt);outline:none;max-width:120px}
+.blk-f{font-size:10px;color:var(--mut);font-family:var(--mono);margin-top:4px;line-height:1.3}
+.blk-tog{font-size:10px;padding:2px 9px;border-radius:99px;border:1px solid var(--line2);background:var(--card);color:var(--mut);cursor:pointer}
+.blk-tog.on{background:rgba(52,211,153,.15);border-color:var(--teal);color:var(--teal);font-weight:600}
+.note{font-size:12.5px;color:var(--mut);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px 15px;margin-top:18px;line-height:1.55}
+.note b{color:var(--txt);font-weight:600}
+@media(max-width:840px){.sheet{grid-template-columns:1fr}.col{border-right:none;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Концепт · Чарник</div>
+  <h1>Собираем чарник шаг за шагом</h1>
+  <div class="sub">Лист не нарисован заранее — ты <b>добавляешь блоки</b> по одному: первичный стат, его мод, бонус мастерства, владение, производное (сумма / умножение / комбинация). Каждый новый блок встаёт на свой уровень и сразу считается. Жми <b>▶ Собрать пример</b> — увидишь, как лист рождается по кирпичику.</div>
+
+  <div class="palette">
+    <button class="pbtn p1" onclick="addStat()"><span class="k">+</span> Стат</button>
+    <button class="pbtn p2" onclick="addMod()"><span class="k">+</span> Мод от стата</button>
+    <button class="pbtn p2" onclick="addPB()"><span class="k">+</span> Бонус мастерства</button>
+    <button class="pbtn p2" onclick="addProf()"><span class="k">+</span> Владение</button>
+    <button class="pbtn p3" onclick="toggleForm()"><span class="k">+</span> Производное</button>
+    <button class="pbtn demo" id="demoBtn" onclick="runDemo()">▶ Собрать пример</button>
+    <button class="pbtn reset" onclick="resetAll()">Сброс</button>
+  </div>
+
+  <div class="dform" id="dform">
+    <div class="dform-row"><label>Название</label><input id="df-name" placeholder="напр. КБ" style="flex:1;min-width:120px"></div>
+    <div class="dform-row"><label>Операция</label>
+      <select id="df-op" onchange="onOpChange()">
+        <option value="plus">сумма  (A + B)</option>
+        <option value="minus">вычесть  (A − B)</option>
+        <option value="mult">умножение  (A × B)</option>
+        <option value="mod">модификатор  (⌊(A−10)/2⌋)</option>
+        <option value="max">max (A, B)</option>
+        <option value="min">min (A, B)</option>
+      </select>
+    </div>
+    <div class="dform-row"><label>Вход A</label><span id="df-a"></span></div>
+    <div class="dform-row" id="df-brow"><label>Вход B</label><span id="df-b"></span></div>
+    <div class="dform-row"><button class="add" onclick="addDerived()">Добавить в лист</button></div>
+  </div>
+
+  <div class="sheet">
+    <div class="col">
+      <div class="col-h"><span class="d" style="background:var(--purp)"></span><span class="t">Первичные</span><span class="s">статы</span></div>
+      <div id="c1"></div>
+    </div>
+    <div class="col">
+      <div class="col-h"><span class="d" style="background:var(--blue)"></span><span class="t">Вторичные</span><span class="s">тренировка</span></div>
+      <div id="c2"></div>
+    </div>
+    <div class="col">
+      <div class="col-h"><span class="d" style="background:var(--green)"></span><span class="t">Третичные</span><span class="s">производные</span></div>
+      <div id="c3"></div>
+    </div>
+  </div>
+
+  <div class="note"><b>Это процедурная сборка.</b> Три сущности-кирпича — <b>Стат</b> (первичный), <b>Тренировка</b> (мод / БМ / владение) и <b>Производное</b> (сумма · умножение · модификатор · min/max) — ссылаются друг на друга. Добавляешь блок → он встаёт на уровень и считается от тех, на кого ссылается. Меняешь любой вход → всё выше по цепочке пересчитывается. Так из горстки кирпичей собирается лист под любую систему.</div>
+</div>
+
+<script>
+let blocks=[], uid=0;
+const nid=()=>++uid;
+const byId=id=>blocks.find(b=>b.id===id);
+const floor=Math.floor, sg=n=>(n>=0?'+':'')+n;
+
+function pbValue(){const p=blocks.find(b=>b.kind==='pb');return p?val(p):0;}
+function val(b){
+  switch(b.kind){
+    case 'stat': return +b.value||0;
+    case 'pb':   return 2+floor(((+b.level||1)-1)/4);
+    case 'mod':  {const s=byId(b.src);return s?floor((val(s)-10)/2):0;}
+    case 'prof': return b.on?pbValue():0;
+    case 'derived': return applyOp(b.op, opVal(b.a), b.b?opVal(b.b):0);
+  }
+  return 0;
+}
+function opVal(o){if(!o)return 0;return o.t==='const'?(+o.v||0):val(byId(o.id))||0;}
+function applyOp(op,a,b){
+  if(op==='plus')return a+b; if(op==='minus')return a-b; if(op==='mult')return a*b;
+  if(op==='mod')return floor((a-10)/2); if(op==='max')return Math.max(a,b); if(op==='min')return Math.min(a,b);
+  return a;
+}
+const OPSY={plus:'+',minus:'−',mult:'×',mod:'мод',max:'max',min:'min'};
+function opName(o){if(!o)return '';return o.t==='const'?o.v:(byId(o.id)?byId(o.id).name:'?');}
+function derFormula(b){
+  if(b.op==='mod')return `⌊(${opName(b.a)} − 10) / 2⌋`;
+  if(b.op==='max'||b.op==='min')return `${b.op}(${opName(b.a)}, ${opName(b.b)})`;
+  return `${opName(b.a)} ${OPSY[b.op]} ${opName(b.b)}`;
+}
+
+/* ── добавление блоков ── */
+function addStat(){blocks.push({id:nid(),kind:'stat',tier:1,name:'Стат '+(blocks.filter(b=>b.kind==='stat').length+1),value:10});render();}
+function addMod(){
+  const stats=blocks.filter(b=>b.kind==='stat');
+  if(!stats.length){addStat();}
+  const s=blocks.filter(b=>b.kind==='stat').slice(-1)[0];
+  blocks.push({id:nid(),kind:'mod',tier:2,name:'Мод '+s.name,src:s.id});render();
+}
+function addPB(){if(blocks.some(b=>b.kind==='pb'))return;blocks.push({id:nid(),kind:'pb',tier:2,name:'Бонус мастерства',level:5});render();}
+function addProf(){blocks.push({id:nid(),kind:'prof',tier:2,name:'Владение',on:true});render();}
+function delBlock(id){blocks=blocks.filter(b=>b.id!==id && !(b.kind==='derived'&&refsTo(b,id)));render();}
+function refsTo(b,id){return (b.a&&b.a.t==='ref'&&b.a.id===id)||(b.b&&b.b.t==='ref'&&b.b.id===id);}
+
+/* ── производное: форма ── */
+function toggleForm(){const f=document.getElementById('dform');f.classList.toggle('open');if(f.classList.contains('open'))fillForm();}
+function selectable(){return blocks.filter(b=>['stat','mod','pb','prof','derived'].includes(b.kind));}
+function operandPicker(which){
+  const opts=selectable().map(b=>`<option value="${b.id}">${b.name} (${sg(val(b)).replace('+','')|0?val(b):val(b)})</option>`).join('');
+  return `<select class="blk-sel" id="df-${which}-sel" onchange="onOperandChange('${which}')" style="max-width:150px">
+      <option value="__c">число…</option>${selectable().map(b=>`<option value="${b.id}">${b.name} = ${val(b)}</option>`).join('')}
+    </select><input class="opnd-c" id="df-${which}-const" type="number" value="10">`;
+}
+function fillForm(){
+  document.getElementById('df-a').innerHTML=operandPicker('a');
+  document.getElementById('df-b').innerHTML=operandPicker('b');
+  onOpChange(); onOperandChange('a'); onOperandChange('b');
+}
+function onOpChange(){document.getElementById('df-brow').style.display=(document.getElementById('df-op').value==='mod')?'none':'flex';}
+function onOperandChange(which){
+  const sel=document.getElementById('df-'+which+'-sel'), c=document.getElementById('df-'+which+'-const');
+  if(sel&&c)c.style.display=sel.value==='__c'?'inline-block':'none';
+}
+function readOperand(which){
+  const sel=document.getElementById('df-'+which+'-sel');
+  if(!sel)return {t:'const',v:0};
+  if(sel.value==='__c')return {t:'const',v:+document.getElementById('df-'+which+'-const').value||0};
+  return {t:'ref',id:+sel.value};
+}
+function addDerived(){
+  const name=document.getElementById('df-name').value.trim()||'Производное';
+  const op=document.getElementById('df-op').value;
+  const a=readOperand('a'); const b=op==='mod'?null:readOperand('b');
+  blocks.push({id:nid(),kind:'derived',tier:3,name,op,a,b});
+  document.getElementById('df-name').value='';
+  document.getElementById('dform').classList.remove('open');
+  render();
+}
+
+/* ── рендер ── */
+function blockHTML(b){
+  const cls='blk p'+b.tier;
+  let ctrl='', f='';
+  if(b.kind==='stat') ctrl=`<input class="blk-in" type="number" value="${b.value}" oninput="byId(${b.id}).value=+this.value;render(true)">`;
+  else if(b.kind==='pb'){ctrl=`<span style="font-size:11px;color:var(--mut)">ур.</span><input class="blk-in" style="width:42px" type="number" value="${b.level}" oninput="byId(${b.id}).level=+this.value;render(true)"><span class="blk-val">${sg(val(b))}</span>`;}
+  else if(b.kind==='mod'){const s=byId(b.src);ctrl=`<span class="blk-val">${sg(val(b))}</span>`;f=`⌊(${s?s.name:'?'} − 10) / 2⌋`;}
+  else if(b.kind==='prof'){ctrl=`<span class="blk-tog ${b.on?'on':''}" onclick="byId(${b.id}).on=!byId(${b.id}).on;render()">${b.on?'✓ есть':'нет'}</span><span class="blk-val">${sg(val(b))}</span>`;f='есть? +БМ';}
+  else if(b.kind==='derived'){ctrl=`<span class="blk-val" data-n="${b.id}">${val(b)}</span>`;f='= '+derFormula(b);}
+  const nameEl=`<input class="blk-name" value="${b.name}" oninput="byId(${b.id}).name=this.value;render()">`;
+  return `<div class="${cls}"><div class="blk-top">${nameEl}${ctrl}<button class="blk-x" onclick="delBlock(${b.id})">✕</button></div>${f?`<div class="blk-f">${f}</div>`:''}</div>`;
+}
+function render(soft){
+  const prev={};document.querySelectorAll('.blk-val[data-n]').forEach(e=>prev[e.dataset.n]=e.textContent);
+  [1,2,3].forEach(t=>{
+    const el=document.getElementById('c'+t);
+    const items=blocks.filter(b=>b.tier===t);
+    el.innerHTML=items.length?items.map(blockHTML).join(''):`<div class="empty">${t===1?'Добавь стат →':t===2?'Мод, БМ, владение…':'Собери производное из блоков'}</div>`;
+  });
+  // подсветка
+  document.querySelectorAll('.blk-val[data-n]').forEach(e=>{
+    if(prev[e.dataset.n]!==undefined && prev[e.dataset.n]!==e.textContent){e.classList.add('flash');setTimeout(()=>e.classList.remove('flash'),450);}
+  });
+}
+function resetAll(){blocks=[];uid=0;render();}
+
+/* ── демо: сборка шаг за шагом ── */
+function runDemo(){
+  resetAll();
+  const btn=document.getElementById('demoBtn'); btn.disabled=true;
+  const steps=[
+    ()=>{blocks.push({id:nid(),kind:'stat',tier:1,name:'Тело',value:14});},
+    ()=>{blocks.push({id:nid(),kind:'stat',tier:1,name:'Ловкость',value:16});},
+    ()=>{blocks.push({id:nid(),kind:'pb',tier:2,name:'Бонус мастерства',level:5});},
+    ()=>{const s=blocks.find(b=>b.name==='Ловкость');blocks.push({id:nid(),kind:'mod',tier:2,name:'Мод Ловкости',src:s.id});},
+    ()=>{const s=blocks.find(b=>b.name==='Тело');blocks.push({id:nid(),kind:'mod',tier:2,name:'Мод Тела',src:s.id});},
+    ()=>{blocks.push({id:nid(),kind:'prof',tier:2,name:'Владение: Спас Тела',on:true});},
+    ()=>{const m=blocks.find(b=>b.name==='Мод Ловкости');blocks.push({id:nid(),kind:'derived',tier:3,name:'КБ',op:'plus',a:{t:'const',v:10},b:{t:'ref',id:m.id}});},
+    ()=>{const m=blocks.find(b=>b.name==='Мод Тела'),p=blocks.find(b=>b.kind==='pb');blocks.push({id:nid(),kind:'derived',tier:3,name:'Атака мечом',op:'plus',a:{t:'ref',id:m.id},b:{t:'ref',id:p.id}});},
+    ()=>{const m=blocks.find(b=>b.name==='Мод Тела'),pr=blocks.find(b=>b.kind==='prof');blocks.push({id:nid(),kind:'derived',tier:3,name:'Спас Тела',op:'plus',a:{t:'ref',id:m.id},b:{t:'ref',id:pr.id}});},
+    ()=>{const s=blocks.find(b=>b.name==='Тело');blocks.push({id:nid(),kind:'derived',tier:3,name:'Грузоподъёмность',op:'mult',a:{t:'ref',id:s.id},b:{t:'const',v:15}});},
+  ];
+  let i=0;
+  (function next(){
+    if(i>=steps.length){btn.disabled=false;return;}
+    steps[i]();render();i++;setTimeout(next,650);
+  })();
+}
+render();
+if(location.hash==='#built'){
+  const st=[
+    {id:nid(),kind:'stat',tier:1,name:'Тело',value:14},{id:nid(),kind:'stat',tier:1,name:'Ловкость',value:16},
+    {id:nid(),kind:'pb',tier:2,name:'Бонус мастерства',level:5}];
+  blocks.push(...st);
+  const lov=blocks.find(b=>b.name==='Ловкость'),tel=blocks.find(b=>b.name==='Тело'),pb=blocks.find(b=>b.kind==='pb');
+  blocks.push({id:nid(),kind:'mod',tier:2,name:'Мод Ловкости',src:lov.id});
+  blocks.push({id:nid(),kind:'mod',tier:2,name:'Мод Тела',src:tel.id});
+  blocks.push({id:nid(),kind:'prof',tier:2,name:'Владение: Спас Тела',on:true});
+  const mL=blocks.find(b=>b.name==='Мод Ловкости'),mT=blocks.find(b=>b.name==='Мод Тела'),pr=blocks.find(b=>b.kind==='prof');
+  blocks.push({id:nid(),kind:'derived',tier:3,name:'КБ',op:'plus',a:{t:'const',v:10},b:{t:'ref',id:mL.id}});
+  blocks.push({id:nid(),kind:'derived',tier:3,name:'Атака мечом',op:'plus',a:{t:'ref',id:mT.id},b:{t:'ref',id:pb.id}});
+  blocks.push({id:nid(),kind:'derived',tier:3,name:'Спас Тела',op:'plus',a:{t:'ref',id:mT.id},b:{t:'ref',id:pr.id}});
+  blocks.push({id:nid(),kind:'derived',tier:3,name:'Грузоподъёмность',op:'mult',a:{t:'ref',id:tel.id},b:{t:'const',v:15}});
+  render();
+}
+</script>
+</body>
+</html>

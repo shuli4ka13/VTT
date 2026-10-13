@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Чарник · Cyberpunk RED</title>
+<style>
+:root{
+  --bg:#0d0f16; --card:#161a28; --card2:#1c2133; --line:#272d44; --line2:#37405f;
+  --txt:#e6ebf7; --mut:#8590ad;
+  --cp:#22d3ee; --mag:#f472b6; --yel:#fbbf24; --green:#4ade80; --red:#f87171; --orng:#fb923c; --purp:#c084fc; --blue:#60a5fa; --teal:#34d399;
+  --hf:'Georgia','Times New Roman',serif; --bf:'Segoe UI',system-ui,sans-serif; --mono:'Consolas',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:var(--bf);padding:20px 22px 60px;font-size:13px}
+.wrap{max-width:1280px;margin:0 auto}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.title{font-family:var(--hf);font-size:26px;font-weight:700}
+.title b{color:var(--cp)}
+.top .sp{flex:1}
+.tbtn{font-size:12px;padding:7px 13px;border-radius:8px;border:1px solid var(--line2);background:var(--card2);color:var(--txt);cursor:pointer;font-family:inherit}
+.tbtn:hover{border-color:var(--cp)}
+.tbtn.pr{background:var(--cp);color:#0d0f16;border:none;font-weight:700}
+
+/* identity */
+.ident{display:grid;grid-template-columns:1.6fr 1fr .8fr .8fr .8fr;gap:9px;margin-bottom:14px}
+.fld{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:7px 11px}
+.fld label{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--mut);display:block;margin-bottom:2px}
+.fld input,.fld select{width:100%;background:transparent;border:none;color:var(--txt);font:inherit;font-size:14px;font-weight:600;outline:none}
+.fld input:focus{color:var(--cp)}
+.fld select option{background:var(--card2)}
+
+.grid2{display:grid;grid-template-columns:1.15fr 1fr;gap:14px;align-items:start}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px 15px;margin-bottom:14px}
+.ph{font-family:var(--hf);font-size:16px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.ph .d{width:9px;height:9px;border-radius:3px}
+.ph .add{margin-left:auto;font-size:11px;padding:3px 10px;border-radius:99px;border:1px dashed var(--line2);background:none;color:var(--mut);cursor:pointer;font-family:inherit}
+.ph .add:hover{color:var(--cp);border-color:var(--cp)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.stat{background:var(--card2);border:1px solid var(--line2);border-radius:9px;padding:7px 4px;text-align:center}
+.stat .k{font-size:9px;font-weight:700;color:var(--mut);letter-spacing:.5px}
+.stat input{width:100%;background:transparent;border:none;text-align:center;font:inherit;font-size:22px;font-weight:800;color:var(--txt);outline:none}
+.stat input:focus{color:var(--cp)}
+.stat .n{font-size:8.5px;color:var(--mut);margin-top:1px}
+
+/* derived */
+.der{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dcell{background:var(--card2);border:1px solid var(--line2);border-radius:9px;padding:8px 11px;display:flex;align-items:center;gap:10px}
+.dcell .dl{font-size:11px;color:var(--mut);flex:1}
+.dcell .dv{font-family:var(--mono);font-size:19px;font-weight:800;color:var(--cp)}
+.dcell.wide{grid-column:1/3}
+/* hp tracker */
+.hp{grid-column:1/3;background:var(--card2);border:1px solid var(--line2);border-radius:10px;padding:10px 12px}
+.hp-top{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.hp-top .l{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--mut);letter-spacing:.5px}
+.hp-cur{width:64px;text-align:center;background:var(--card);border:1px solid var(--line2);border-radius:7px;padding:4px;font:inherit;font-size:20px;font-weight:800;color:var(--txt);outline:none}
+.hp-max{font-family:var(--mono);font-size:15px;color:var(--mut)}
+.hp-state{margin-left:auto;font-size:11px;font-weight:700;padding:3px 12px;border-radius:99px}
+.hp-state.ok{background:rgba(74,222,128,.15);color:var(--green)}
+.hp-state.sw{background:rgba(251,191,36,.15);color:var(--yel)}
+.hp-state.mw{background:rgba(248,113,113,.18);color:var(--red)}
+.hp-bar{height:9px;border-radius:99px;background:var(--card);overflow:hidden}
+.hp-bar>i{display:block;height:100%;border-radius:99px;transition:.2s}
+.hp-btns{display:flex;gap:5px;margin-top:8px}
+.hp-btns button{flex:1;font-size:11px;padding:5px;border-radius:6px;border:1px solid var(--line2);background:var(--card);color:var(--mut);cursor:pointer;font-family:inherit}
+.hp-btns button:hover{color:var(--txt)}
+
+/* skills */
+.skcats{columns:2;column-gap:14px}
+@media(max-width:820px){.skcats{columns:1}.grid2{grid-template-columns:1fr}.ident{grid-template-columns:1fr 1fr}.stats{grid-template-columns:repeat(5,1fr)}}
+.skcat{break-inside:avoid;margin-bottom:12px}
+.skcat-h{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--cp);padding:4px 0;border-bottom:1px solid var(--line);margin-bottom:4px}
+.skrow{display:grid;grid-template-columns:1fr 34px 40px 34px;gap:5px;align-items:center;padding:3px 4px;border-radius:6px}
+.skrow:hover{background:var(--card2)}
+.skrow .sn{font-size:11.5px;cursor:pointer}
+.skrow:hover .sn{color:var(--cp)}
+.skrow .sstat{font-size:8.5px;font-weight:700;color:var(--mut);text-align:center;font-family:var(--mono)}
+.skrow .slvl{width:100%;text-align:center;background:var(--card2);border:1px solid var(--line2);border-radius:5px;padding:2px;font:inherit;font-size:12px;color:var(--txt);outline:none}
+.skrow .slvl:focus{border-color:var(--cp)}
+.skrow .sbase{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--cp);text-align:center}
+
+/* generic editable table */
+.etbl{width:100%;border-collapse:collapse;font-size:12px}
+.etbl th{text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--mut);padding:4px 6px;border-bottom:1px solid var(--line)}
+.etbl td{padding:2px 4px;border-bottom:1px solid var(--line)}
+.etbl input,.etbl select{width:100%;background:transparent;border:none;color:var(--txt);font:inherit;font-size:12px;outline:none;padding:4px 4px}
+.etbl input:focus{background:var(--card2);border-radius:4px}
+.etbl .xb{background:none;border:none;color:var(--mut);cursor:pointer;font-size:11px}
+.etbl .xb:hover{color:var(--red)}
+.etbl .num{text-align:center}
+.arm{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:8px}
+.armc{background:var(--card2);border:1px solid var(--line2);border-radius:9px;padding:8px 11px}
+.armc .l{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px}
+.armc-row{display:flex;align-items:center;gap:6px;margin-top:4px}
+.armc input{width:42px;text-align:center;background:var(--card);border:1px solid var(--line2);border-radius:6px;padding:4px;font:inherit;font-size:16px;font-weight:700;color:var(--cp);outline:none}
+.armc .abl{font-size:10px;color:var(--mut);margin-left:auto;cursor:pointer;border:1px solid var(--line2);border-radius:99px;padding:2px 8px}
+.armc .abl:hover{color:var(--orng);border-color:var(--orng)}
+.notes-ta{width:100%;min-height:70px;background:var(--card2);border:1px solid var(--line2);border-radius:9px;padding:9px 11px;color:var(--txt);font:inherit;font-size:12.5px;outline:none;resize:vertical;line-height:1.5}
+
+/* roll toast */
+#toast{position:fixed;bottom:20px;right:20px;background:var(--card2);border:1px solid var(--cp);border-radius:12px;padding:12px 16px;box-shadow:0 10px 30px rgba(0,0,0,.6);z-index:50;display:none;min-width:200px}
+#toast.show{display:block;animation:tin .2s ease-out}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+#toast .tt{font-size:11px;color:var(--mut)}
+#toast .tv{font-size:30px;font-weight:800;font-family:var(--mono);line-height:1.1}
+#toast .td{font-size:10.5px;color:var(--mut);font-family:var(--mono);margin-top:2px}
+.crit{color:var(--green)!important}.fumb{color:var(--red)!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="title">Чарник · <b>Cyberpunk RED</b></div>
+    <div class="sp"></div>
+    <button class="tbtn" onclick="rollLuck()">🎲 Проверка</button>
+    <button class="tbtn pr" onclick="saveAll()">💾 Сохранить</button>
+    <button class="tbtn" onclick="exportJSON()">⬇ JSON</button>
+    <button class="tbtn" onclick="resetAll()">Сброс</button>
+  </div>
+
+  <div class="ident">
+    <div class="fld"><label>Хэндл</label><input id="i-handle" placeholder="Имя на улице"></div>
+    <div class="fld"><label>Роль</label><select id="i-role">
+      <option>Solo</option><option>Netrunner</option><option>Tech</option><option>Medtech</option><option>Media</option><option>Exec</option><option>Lawman</option><option>Fixer</option><option>Nomad</option><option>Rockerboy</option></select></div>
+    <div class="fld"><label>Ранг роли</label><input id="i-rank" type="number" value="4" min="0" max="10"></div>
+    <div class="fld"><label>Евробаксы (€$)</label><input id="i-eddies" type="number" value="0"></div>
+    <div class="fld"><label>IP (опыт)</label><input id="i-ip" type="number" value="0"></div>
+  </div>
+
+  <div class="grid2">
+    <!-- LEFT -->
+    <div>
+      <div class="panel">
+        <div class="ph"><span class="d" style="background:var(--purp)"></span>Характеристики</div>
+        <div class="stats" id="stats"></div>
+      </div>
+
+      <div class="panel">
+        <div class="ph"><span class="d" style="background:var(--green)"></span>Производные</div>
+        <div class="der" id="derived"></div>
+      </div>
+
+      <div class="panel">
+        <div class="ph"><span class="d" style="background:var(--teal)"></span>Броня <span style="font-size:11px;color:var(--mut);font-weight:400;margin-left:6px">SP · стачивается</span></div>
+        <div class="arm">
+          <div class="armc"><div class="l">Голова</div><div class="armc-row"><input id="a-head" type="number" value="11"><span style="color:var(--mut);font-size:11px">SP</span><span class="abl" onclick="ablate('head')">−1 абляция</span></div></div>
+          <div class="armc"><div class="l">Тело</div><div class="armc-row"><input id="a-body" type="number" value="11"><span style="color:var(--mut);font-size:11px">SP</span><span class="abl" onclick="ablate('body')">−1 абляция</span></div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ph"><span class="d" style="background:var(--orng)"></span>Оружие<button class="add" onclick="addWeapon()">+ оружие</button></div>
+        <table class="etbl" id="weapons"></table>
+      </div>
+
+      <div class="panel">
+        <div class="ph"><span class="d" style="background:var(--mag)"></span>Кибера<button class="add" onclick="addCyber()">+ имплант</button></div>
+        <div class="hint" style="font-size:11px;color:var(--mut);margin-bottom:6px">Сумма потери Гуманности вычитается из макс. Гуманности автоматически.</div>
+        <table class="etbl" id="cyber"></table>
+      </div>
+
+      <div class="panel">
+        <div class="ph"><span class="d" style="background:var(--blue)"></span>Снаряжение<button class="add" onclick="addGear()">+ предмет</button></div>
+        <table class="etbl" id="gear"></table>
+      </div>
+
+      <div class="panel">
+        <div class="ph"><span class="d" style="background:var(--mut)"></span>Заметки · лайфпас</div>
+        <textarea class="notes-ta" id="notes" placeholder="Биография, связи, цели…"></textarea>
+      </div>
+    </div>
+
+    <!-- RIGHT: SKILLS -->
+    <div class="panel">
+      <div class="ph"><span class="d" style="background:var(--cp)"></span>Навыки <span style="font-size:11px;color:var(--mut);font-weight:400;margin-left:6px">клик по названию — бросок</span></div>
+      <div class="skcats" id="skills"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const LS='cp-red-charnik';
+const STATS=[['INT','Интеллект'],['REF','Рефлексы'],['DEX','Ловкость'],['TECH','Техника'],['COOL','Хладнокровие'],['WILL','Воля'],['LUCK','Удача'],['MOVE','Движение'],['BODY','Тело'],['EMP','Эмпатия']];
+// [название, стат, категория]
+const SKILLS=[
+['Концентрация','INT','Внимание'],['Сокрытие/поиск','INT','Внимание'],['Чтение по губам','INT','Внимание'],['Восприятие','INT','Внимание'],['Выслеживание','INT','Внимание'],
+['Атлетика','DEX','Тело'],['Контортинизм','DEX','Тело'],['Выносливость','WILL','Тело'],['Стойкость к боли','WILL','Тело'],['Скрытность','DEX','Тело'],
+['Вождение','REF','Управление'],['Пилот (воздух)','REF','Управление'],['Пилот (вода)','REF','Управление'],['Верховая езда','REF','Управление'],
+['Бухгалтерия','INT','Образование'],['Обращение с животными','INT','Образование'],['Бюрократия','INT','Образование'],['Бизнес','INT','Образование'],['Криминология','INT','Образование'],['Криптография','INT','Образование'],['Дедукция','INT','Образование'],['Образование','INT','Образование'],['Азартные игры','INT','Образование'],['Язык','INT','Образование'],['Поиск в библиотеке','INT','Образование'],['Местный эксперт','INT','Образование'],['Наука','INT','Образование'],['Тактика','INT','Образование'],['Выживание','INT','Образование'],
+['Рукопашный бой','DEX','Бой'],['Уклонение','DEX','Бой'],['Боевые искусства','DEX','Бой'],['Холодное оружие','DEX','Бой'],
+['Актёрство','COOL','Выступление'],['Игра на инструменте','TECH','Выступление'],
+['Лук','REF','Стрельба'],['Автоочередь','REF','Стрельба'],['Пистолеты','REF','Стрельба'],['Тяжёлое оружие','REF','Стрельба'],['Длинноствол','REF','Стрельба'],
+['Взятка','COOL','Общение'],['Разговор','EMP','Общение'],['Чтение людей','EMP','Общение'],['Допрос','COOL','Общение'],['Убеждение','COOL','Общение'],['Уход за собой','COOL','Общение'],['Уличные знания','COOL','Общение'],['Торговля','COOL','Общение'],['Стиль','COOL','Общение'],
+['Базовая техника','TECH','Техника'],['Кибертех','TECH','Техника'],['Взрывчатка','TECH','Техника'],['Электроника/безопасн.','TECH','Техника'],['Первая помощь','TECH','Техника'],['Подделка','TECH','Техника'],['Автотехник','TECH','Техника'],['Парамедик','TECH','Техника'],['Взлом замков','TECH','Техника'],['Карманник','TECH','Техника'],['Оружейник','TECH','Техника'],
+];
+
+let S={};
+function fresh(){
+  return {handle:'',role:'Solo',rank:4,eddies:0,ip:0,
+    stats:{INT:6,REF:6,DEX:6,TECH:6,COOL:6,WILL:6,LUCK:6,MOVE:6,BODY:6,EMP:6},
+    lvl:{}, hp:null, headSP:11,bodySP:11,
+    weapons:[{name:'Тяж. пистолет',dmg:'3d6',rof:'2',mag:'8',ammo:'8',note:'Handgun'}],
+    cyber:[{name:'Нейропорт',hl:'2'}], gear:[{name:'Агент (телефон)',qty:'1'}], notes:''};
+}
+const st=k=>+S.stats[k]||0;
+function hpMax(){return 10+5*Math.ceil((st('BODY')+st('WILL'))/2);}
+function humanityMax(){return st('EMP')*10 - S.cyber.reduce((a,c)=>a+(+c.hl||0),0);}
+function empCur(){return Math.floor(Math.max(0,humanityMax())/10);}
+
+/* ── render ── */
+function renderStats(){
+  document.getElementById('stats').innerHTML=STATS.map(([k,n])=>
+    `<div class="stat"><div class="k">${k}</div><input type="number" min="0" max="12" value="${S.stats[k]}" data-s="${k}"><div class="n">${n}</div></div>`).join('');
+  document.querySelectorAll('#stats input').forEach(i=>i.addEventListener('input',()=>{S.stats[i.dataset.s]=+i.value||0;renderDerived();renderSkills();}));
+}
+function renderDerived(){
+  const hm=hpMax(); if(S.hp===null||S.hp>hm) S.hp=hm;
+  const sw=Math.ceil(hm/2);
+  const hpState=S.hp<=0?['mw','Смертельно ранен']:S.hp<=sw?['sw','Серьёзно ранен']:['ok','В норме'];
+  document.getElementById('derived').innerHTML=`
+    <div class="hp">
+      <div class="hp-top"><span class="l">Хиты</span>
+        <input class="hp-cur" id="hpcur" type="number" value="${S.hp}"><span class="hp-max">/ ${hm}</span>
+        <span class="hp-state ${hpState[0]}">${hpState[1]}</span></div>
+      <div class="hp-bar"><i style="width:${Math.max(0,Math.min(100,S.hp/hm*100))}%;background:${hpState[0]==='mw'?'var(--red)':hpState[0]==='sw'?'var(--yel)':'var(--green)'}"></i></div>
+      <div class="hp-btns"><button onclick="dHP(-5)">−5</button><button onclick="dHP(-1)">−1</button><button onclick="dHP(1)">+1</button><button onclick="dHP(5)">+5</button><button onclick="S.hp=${hm};renderDerived()">полн.</button></div>
+    </div>
+    <div class="dcell"><span class="dl">Серьёзная рана ≤</span><span class="dv" style="color:var(--yel)">${sw}</span></div>
+    <div class="dcell"><span class="dl">Спас смерти</span><span class="dv" style="color:var(--red)">${st('BODY')}</span></div>
+    <div class="dcell"><span class="dl">Гуманность</span><span class="dv" style="color:var(--mag)">${humanityMax()}</span></div>
+    <div class="dcell"><span class="dl">Эмпатия (тек.)</span><span class="dv" style="color:var(--mag)">${empCur()}</span></div>
+    <div class="dcell"><span class="dl">Пул Удачи</span><span class="dv" style="color:var(--yel)">${st('LUCK')}</span></div>
+    <div class="dcell"><span class="dl">Инициатива</span><span class="dv">1d10+${st('REF')}</span></div>
+    <div class="dcell wide"><span class="dl">Перемещение</span><span class="dv">${st('MOVE')*2} м <span style="font-size:11px;color:var(--mut)">(MOVE×2)</span></span></div>`;
+  const hc=document.getElementById('hpcur'); if(hc) hc.addEventListener('input',()=>{S.hp=+hc.value||0;renderDerived();});
+}
+function dHP(n){S.hp=Math.min(hpMax(),(S.hp||0)+n);renderDerived();}
+function ablate(w){const id=w==='head'?'a-head':'a-body';const el=document.getElementById(id);el.value=Math.max(0,(+el.value||0)-1);S[w+'SP']=+el.value;}
+
+function renderSkills(){
+  const cats=[...new Set(SKILLS.map(s=>s[2]))];
+  document.getElementById('skills').innerHTML=cats.map(cat=>{
+    const rows=SKILLS.filter(s=>s[2]===cat).map(([n,stat])=>{
+      const lvl=+S.lvl[n]||0; const base=st(stat)+lvl;
+      return `<div class="skrow"><span class="sn" onclick="rollSkill('${n.replace(/'/g,'')}','${stat}')">${n}</span><span class="sstat">${stat}</span><input class="slvl" type="number" min="0" max="10" value="${lvl}" data-sk="${n}"><span class="sbase">${base}</span></div>`;
+    }).join('');
+    return `<div class="skcat"><div class="skcat-h">${cat}</div>${rows}</div>`;
+  }).join('');
+  document.querySelectorAll('.slvl').forEach(i=>i.addEventListener('input',()=>{S.lvl[i.dataset.sk]=+i.value||0;
+    const row=i.closest('.skrow');const stat=row.querySelector('.sstat').textContent;row.querySelector('.sbase').textContent=st(stat)+(+i.value||0);}));
+}
+
+/* editable tables */
+function etbl(id,cols,rows,arr){
+  const el=document.getElementById(id);
+  el.innerHTML=`<thead><tr>${cols.map(c=>`<th${c.num?' class="num"':''}>${c.h}</th>`).join('')}<th></th></tr></thead><tbody>`+
+    rows.map((r,ri)=>`<tr>${cols.map(c=>`<td${c.num?' class="num"':''}><input value="${(r[c.k]||'').toString().replace(/"/g,'&quot;')}" data-a="${id}" data-i="${ri}" data-k="${c.k}"${c.num?' style="text-align:center"':''}></td>`).join('')}<td><button class="xb" onclick="delRow('${id}',${ri})">✕</button></td></tr>`).join('')+'</tbody>';
+  el.querySelectorAll('input[data-a]').forEach(inp=>inp.addEventListener('input',()=>{arr[+inp.dataset.i][inp.dataset.k]=inp.value; if(id==='cyber')renderDerived();}));
+}
+function renderTables(){
+  etbl('weapons',[{h:'Оружие',k:'name'},{h:'Урон',k:'dmg',num:1},{h:'ROF',k:'rof',num:1},{h:'Маг.',k:'mag',num:1},{h:'Патр.',k:'ammo',num:1},{h:'Прим.',k:'note'}],S.weapons,S.weapons);
+  etbl('cyber',[{h:'Имплант',k:'name'},{h:'−Гуман.',k:'hl',num:1}],S.cyber,S.cyber);
+  etbl('gear',[{h:'Предмет',k:'name'},{h:'Кол-во',k:'qty',num:1}],S.gear,S.gear);
+}
+function addWeapon(){S.weapons.push({name:'',dmg:'',rof:'',mag:'',ammo:'',note:''});renderTables();}
+function addCyber(){S.cyber.push({name:'',hl:''});renderTables();renderDerived();}
+function addGear(){S.gear.push({name:'',qty:''});renderTables();}
+function delRow(id,i){S[id].splice(i,1);renderTables();if(id==='cyber')renderDerived();}
+
+/* ── rolls (взрывной d10) ── */
+function d10(){return 1+Math.floor(Math.random()*10);}
+function rollExpl(){
+  let r=d10(),det=''+r,total=r;
+  if(r===10){const e=d10();total+=e;det=`10+${e}`;}
+  else if(r===1){const e=d10();total-=e;det=`1−${e}`;}
+  return {total,det,crit:r===10,fumb:r===1};
+}
+function toast(title,val,detail,cls){
+  const t=document.getElementById('toast');
+  t.innerHTML=`<div class="tt">${title}</div><div class="tv ${cls||''}">${val}</div><div class="td">${detail}</div>`;
+  t.classList.add('show'); clearTimeout(window._tt); window._tt=setTimeout(()=>t.classList.remove('show'),3500);
+}
+function rollSkill(name,stat){
+  const lvl=+S.lvl[name]||0, base=st(stat)+lvl, roll=rollExpl();
+  const total=roll.total+base;
+  toast(`${name} (${stat}+${lvl})`, total, `1d10[${roll.det}] + ${base}`, roll.crit?'crit':roll.fumb?'fumb':'');
+}
+function rollLuck(){const roll=rollExpl();toast('Быстрый бросок 1d10',roll.total,`взрыв: ${roll.det}`,roll.crit?'crit':roll.fumb?'fumb':'');}
+
+/* ── persist ── */
+function collect(){
+  S.handle=document.getElementById('i-handle').value; S.role=document.getElementById('i-role').value;
+  S.rank=+document.getElementById('i-rank').value; S.eddies=+document.getElementById('i-eddies').value;
+  S.ip=+document.getElementById('i-ip').value; S.headSP=+document.getElementById('a-head').value;
+  S.bodySP=+document.getElementById('a-body').value; S.notes=document.getElementById('notes').value;
+}
+function fillIdent(){
+  document.getElementById('i-handle').value=S.handle||''; document.getElementById('i-role').value=S.role||'Solo';
+  document.getElementById('i-rank').value=S.rank||0; document.getElementById('i-eddies').value=S.eddies||0;
+  document.getElementById('i-ip').value=S.ip||0; document.getElementById('a-head').value=S.headSP;
+  document.getElementById('a-body').value=S.bodySP; document.getElementById('notes').value=S.notes||'';
+}
+function saveAll(){collect();localStorage.setItem(LS,JSON.stringify(S));const b=event?.target;if(b){const o=b.textContent;b.textContent='✓ Сохранено';setTimeout(()=>b.textContent=o,1200);}}
+function exportJSON(){collect();const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(S.handle||'charnik')+'-cp-red.json';a.click();}
+function resetAll(){if(!confirm('Сбросить весь чарник?'))return;S=fresh();boot();}
+function boot(){fillIdent();renderStats();renderDerived();renderSkills();renderTables();
+  ['i-handle','i-role','i-rank','i-eddies','i-ip','notes'].forEach(id=>document.getElementById(id).addEventListener('input',collect));
+  document.getElementById('a-head').addEventListener('input',()=>S.headSP=+document.getElementById('a-head').value);
+  document.getElementById('a-body').addEventListener('input',()=>S.bodySP=+document.getElementById('a-body').value);
+}
+try{const d=JSON.parse(localStorage.getItem(LS));S=d&&d.stats?d:fresh();}catch(_){S=fresh();}
+if(!S.lvl)S.lvl={};
+boot();
+</script>
+</body>
+</html>

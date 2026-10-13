@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D&D 5e — механики в формулах</title>
+<style>
+:root{
+  --bg:#0f1117; --card:#1a1d2e; --card2:#1e2336; --line:#2a3050; --line2:#363b5e;
+  --txt:#e4e9f5; --mut:#8a96b4;
+  --ind:#818cf8; --teal:#34d399; --purp:#c084fc; --orng:#fb923c; --blue:#60a5fa; --yel:#fbbf24; --red:#f87171; --green:#4ade80;
+  --hf:'Georgia','Times New Roman',serif; --bf:'Segoe UI',system-ui,sans-serif; --mono:'Consolas','Courier New',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:var(--bf);padding:26px 26px 60px}
+.wrap{max-width:1240px;margin:0 auto}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--yel);margin-bottom:8px}
+h1{font-family:var(--hf);font-size:34px;font-weight:700;letter-spacing:-.4px}
+.sub{font-size:14.5px;color:var(--mut);margin-top:8px;line-height:1.55;max-width:92ch}
+.sub b{color:var(--txt);font-weight:600}
+.grid{columns:2;column-gap:18px;margin-top:22px}
+@media(max-width:900px){.grid{columns:1}}
+.sec{break-inside:avoid;background:var(--card);border:1px solid var(--line2);border-radius:14px;padding:15px 17px;margin-bottom:18px;display:inline-block;width:100%}
+.sec-h{display:flex;align-items:center;gap:9px;margin-bottom:11px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+.sec-dot{width:11px;height:11px;border-radius:4px;flex-shrink:0}
+.sec-h h2{font-family:var(--hf);font-size:18px;font-weight:700}
+.row{padding:8px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:none}
+.rn{font-size:13.5px;font-weight:600;color:var(--txt)}
+.rf{font-family:var(--mono);font-size:13px;color:var(--blue);background:var(--card2);border:1px solid var(--line);border-radius:7px;padding:5px 9px;margin-top:5px;line-height:1.5;display:block;overflow-x:auto;white-space:nowrap}
+.rf b{color:var(--yel);font-weight:400}
+.rf .op{color:var(--mut)}
+.re{font-size:11.5px;color:var(--mut);margin-top:5px;line-height:1.4}
+.re b{color:var(--teal);font-weight:600;font-family:var(--mono)}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+.tbl td{padding:3px 6px;border-bottom:1px solid var(--line);font-family:var(--mono)}
+.tbl td:first-child{color:var(--mut)}
+.note{font-size:12.5px;color:var(--mut);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin-top:20px;line-height:1.55}
+.note b{color:var(--ind);font-weight:600}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin-top:14px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.ld{width:9px;height:9px;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Справочник · D&amp;D 5e</div>
+  <h1>Все механики — в формулах</h1>
+  <div class="sub">Разбор ядра правил D&amp;D 5e как формул: что именно должен уметь считать <b>конструктор автоматизации</b>, чтобы собрать эту систему. Обозначения: <b style="color:var(--txt)">мод</b> — модификатор характеристики, <b style="color:var(--txt)">PB</b> — бонус мастерства, <b style="color:var(--txt)">КБ</b> — класс брони, <b style="color:var(--txt)">⌊x⌋</b> — округление вниз.</div>
+
+  <div class="grid">
+
+    <!-- 1 ОСНОВА -->
+    <div class="sec">
+      <div class="sec-h"><span class="sec-dot" style="background:var(--ind)"></span><h2>Основа</h2></div>
+      <div class="row"><div class="rn">Модификатор характеристики</div>
+        <span class="rf">мод <span class="op">=</span> ⌊(характеристика − 10) <span class="op">/</span> 2⌋</span>
+        <div class="re">16 → <b>+3</b> · 8 → <b>−1</b> · 20 → <b>+5</b> · 10 → <b>0</b></div></div>
+      <div class="row"><div class="rn">Бонус мастерства (PB)</div>
+        <span class="rf">PB <span class="op">=</span> 2 + ⌊(уровень − 1) <span class="op">/</span> 4⌋</span>
+        <div class="re">ур. 1–4 → <b>+2</b>, 5–8 → <b>+3</b>, 9–12 → <b>+4</b>, 13–16 → <b>+5</b>, 17–20 → <b>+6</b></div></div>
+    </div>
+
+    <!-- 2 ПРОВЕРКИ -->
+    <div class="sec">
+      <div class="sec-h"><span class="sec-dot" style="background:var(--blue)"></span><h2>Проверки d20</h2></div>
+      <div class="row"><div class="rn">Проверка характеристики</div>
+        <span class="rf">d20 + мод <span class="op">vs</span> Сложность (DC)</span>
+        <div class="re">Успех, если результат <b>≥ DC</b></div></div>
+      <div class="row"><div class="rn">Проверка навыка</div>
+        <span class="rf">d20 + мод + (PB если владение)</span>
+        <div class="re">Экспертиза → <b>PB × 2</b></div></div>
+      <div class="row"><div class="rn">Спасбросок</div>
+        <span class="rf">d20 + мод + (PB если владение спасом)</span></div>
+      <div class="row"><div class="rn">Пассивная проверка</div>
+        <span class="rf">10 + все модификаторы</span>
+        <div class="re">преимущество <b>+5</b> · помеха <b>−5</b>. Пасс. Внимательность = <b>10+Wis+PB</b></div></div>
+      <div class="row"><div class="rn">Преимущество / Помеха</div>
+        <span class="rf">бросить 2d20 → взять больший / меньший</span>
+        <div class="re">не суммируются: несколько преимуществ = одно</div></div>
+    </div>
+
+    <!-- 3 АТАКА -->
+    <div class="sec">
+      <div class="sec-h"><span class="sec-dot" style="background:var(--orng)"></span><h2>Атака</h2></div>
+      <div class="row"><div class="rn">Бросок атаки оружием</div>
+        <span class="rf">d20 + мод + (PB если владение) <span class="op">vs</span> КБ</span>
+        <div class="re">мод = Сила (ближний) или Ловкость (фехт./дальний). Попал, если <b>≥ КБ</b></div></div>
+      <div class="row"><div class="rn">Критическое попадание</div>
+        <span class="rf">натуральная 20 → попадание + удвоение костей урона</span>
+        <div class="re">натуральная 1 → автопромах</div></div>
+      <div class="row"><div class="rn">Атака заклинанием</div>
+        <span class="rf">d20 + мод заклинателя + PB <span class="op">vs</span> КБ</span></div>
+      <div class="row"><div class="rn">Сложность спасброска заклинания</div>
+        <span class="rf">DC <span class="op">=</span> 8 + мод заклинателя + PB</span></div>
+      <div class="row"><div class="rn">Модификатор заклинательной атаки</div>
+        <span class="rf">= мод заклинателя + PB</span></div>
+    </div>
+
+    <!-- 4 УРОН -->
+    <div class="sec">
+      <div class="sec-h"><span class="sec-dot" style="background:var(--red)"></span><h2>Урон</h2></div>
+      <div class="row"><div class="rn">Урон оружием</div>
+        <span class="rf">кость оружия + мод (+ бонусы)</span>
+        <div class="re">длинный меч: <b>1d8+3</b>. Мод обычно тот же, что в атаке</div></div>
+      <div class="row"><div class="rn">Критический урон</div>
+        <span class="rf">2× кости + мод</span>
+        <div class="re">удваиваются только <b>кости</b>, модификатор — нет. Крит 1d8+3 → <b>2d8+3</b></div></div>
+      <div class="row"><div class="rn">Сопротивление / Уязвимость</div>
+        <span class="rf">урон × ½  /  урон × 2</span>
+        <div class="re">сопротивление считается <b>после</b> всех модификаторов, округл. вниз</div></div>
+      <div class="row"><div class="rn">Внезапная атака (плут)</div>
+        <span class="rf">+ ⌈уровень / 2⌉ d6</span>
+        <div class="re">ур.1 → <b>1d6</b>, ур.5 → <b>3d6</b>, ур.20 → <b>10d6</b></div></div>
+      <div class="row"><div class="rn">Урон падения</div>
+        <span class="rf">1d6 за каждые 3 м (макс 20d6)</span></div>
+    </div>
+
+    <!-- 5 ЗАЩИТА -->
+    <div class="sec">
+      <div class="sec-h"><span class="sec-dot" style="background:var(--teal)"></span><h2>Защита (КБ)</h2></div>
+      <div class="row"><div class="rn">Без брони</div>
+        <span class="rf">КБ <span class="op">=</span> 10 + мод Ловкости</span></div>
+      <div class="row"><div class="rn">Лёгкая броня</div>
+        <span class="rf">КБ <span class="op">=</span> база + мод Ловкости</span>
+        <div class="re">кожа = <b>11 + Ловк</b></div></div>
+      <div class="row"><div class="rn">Средняя броня</div>
+        <span class="rf">КБ <span class="op">=</span> база + min(мод Ловкости, +2)</span>
+        <div class="re">кольчужная рубаха = <b>13 + min(Ловк,2)</b></div></div>
+      <div class="row"><div class="rn">Тяжёлая броня</div>
+        <span class="rf">КБ <span class="op">=</span> фиксированное (Ловкость не учитывается)</span>
+        <div class="re">латы = <b>18</b></div></div>
+      <div class="row"><div class="rn">Щит</div>
+        <span class="rf">+2 к КБ</span></div>
+      <div class="row"><div class="rn">Укрытие</div>
+        <span class="rf">+2 (½) / +5 (¾) к КБ и спасам Ловкости</span></div>
+      <div class="row"><div class="rn">Без доспехов (монах/варвар)</div>
+        <span class="rf">10 + Ловк + Мудр  /  10 + Ловк + Тело</span></div>
+    </div>
+
+    <!-- 6 ЗДОРОВЬЕ -->
+    <div class="sec">
+      <div class="sec-h"><span class="sec-dot" style="background:var(--green)"></span><h2>Здоровье</h2></div>
+      <div class="row"><div class="rn">Макс. хиты на 1 уровне</div>
+        <span class="rf">макс. кость хитов + мод Тела</span>
+        <div class="re">воин (d10), Тело +2 → <b>12</b></div></div>
+      <div class="row"><div class="rn">Хиты за уровень</div>
+        <span class="rf">бросок кости хитов (или среднее) + мод Тела</span>
+        <div class="re">среднее кости = <b>⌊грань/2⌋ + 1</b>: d8→5, d10→6, d12→7</div></div>
+      <div class="row"><div class="rn">Спасброски от смерти</div>
+        <span class="rf">d20: ≥10 успех, &lt;10 провал</span>
+        <div class="re">3 успеха = стабилизация · 3 провала = смерть · нат.20 = <b>+1 ХП</b> · нат.1 = 2 провала</div></div>
+      <div class="row"><div class="rn">Спасбросок концентрации</div>
+        <span class="rf">спас Тела, DC <span class="op">=</span> max(10, ⌊урон / 2⌋)</span></div>
+      <div class="row"><div class="rn">Временные хиты</div>
+        <span class="rf">не суммируются → берётся большее</span></div>
+      <div class="row"><div class="rn">Лечение</div>
+        <span class="rf">+хиты, но не выше максимума</span></div>
+    </div>
+
+    <!-- 7 ДВИЖЕНИЕ И ФИЗИКА -->
+    <div class="sec">
+      <div class="sec-h"><span class="sec-dot" style="background:var(--purp)"></span><h2>Движение и физика</h2></div>
+      <div class="row"><div class="rn">Инициатива</div>
+        <span class="rf">d20 + мод Ловкости</span></div>
+      <div class="row"><div class="rn">Прыжок в длину (с разбега)</div>
+        <span class="rf">= значение Силы (в футах)</span>
+        <div class="re">без разбега → половина</div></div>
+      <div class="row"><div class="rn">Прыжок в высоту</div>
+        <span class="rf">= 3 + мод Силы (в футах)</span></div>
+      <div class="row"><div class="rn">Грузоподъёмность</div>
+        <span class="rf">= Сила × 15 (фунтов)</span>
+        <div class="re">толкать/тащить/поднимать → <b>Сила × 30</b></div></div>
+      <div class="row"><div class="rn">Захват / Толчок</div>
+        <span class="rf">состязание: Атлетика(Сила) vs Атлетика/Акробатика</span></div>
+    </div>
+
+    <!-- 8 ОТДЫХ И СОСТОЯНИЯ -->
+    <div class="sec">
+      <div class="sec-h"><span class="sec-dot" style="background:var(--yel)"></span><h2>Отдых и состояния</h2></div>
+      <div class="row"><div class="rn">Короткий отдых</div>
+        <span class="rf">трата костей хитов: бросок + мод Тела за штуку</span></div>
+      <div class="row"><div class="rn">Долгий отдых</div>
+        <span class="rf">полные ХП + восстанов. ⌊кости хитов / 2⌋ (мин 1)</span></div>
+      <div class="row"><div class="rn">Истощение</div>
+        <span class="rf">6 уровней, эффекты кумулятивны</span>
+        <div class="re">1: помеха на проверки · 2: ½ скорости · 3: помеха атак и спасов · 4: ½ макс. ХП · 5: скорость 0 · 6: <b>смерть</b></div></div>
+    </div>
+
+    <!-- 9 ПРОГРЕССИЯ -->
+    <div class="sec">
+      <div class="sec-h"><span class="sec-dot" style="background:var(--ind)"></span><h2>Прогрессия</h2></div>
+      <div class="row"><div class="rn">Опыт до уровня (пороги)</div>
+        <table class="tbl">
+          <tr><td>ур. 2</td><td>300</td><td>ур. 5</td><td>6 500</td></tr>
+          <tr><td>ур. 3</td><td>900</td><td>ур. 10</td><td>64 000</td></tr>
+          <tr><td>ур. 4</td><td>2 700</td><td>ур. 20</td><td>355 000</td></tr>
+        </table>
+        <div class="re">нелинейно — таблица, не формула</div></div>
+      <div class="row"><div class="rn">Ячейки заклинаний</div>
+        <span class="rf">по таблице класса и уровня</span>
+        <div class="re">кантрип-урон растёт на ур. 5 / 11 / 17</div></div>
+      <div class="row"><div class="rn">Прибавка характеристик</div>
+        <span class="rf">на ур. 4, 8, 12, 16, 19 → +2 к одной / +1 к двум (макс 20)</span></div>
+    </div>
+
+  </div>
+
+  <div class="legend">
+    <span><span class="ld" style="background:var(--ind)"></span>основа / прогрессия</span>
+    <span><span class="ld" style="background:var(--blue)"></span>проверки</span>
+    <span><span class="ld" style="background:var(--orng)"></span>атака</span>
+    <span><span class="ld" style="background:var(--red)"></span>урон</span>
+    <span><span class="ld" style="background:var(--teal)"></span>защита</span>
+    <span><span class="ld" style="background:var(--green)"></span>здоровье</span>
+    <span><span class="ld" style="background:var(--purp)"></span>движение</span>
+  </div>
+
+  <div class="note"><b>Что это даёт конструктору.</b> Почти всё D&amp;D сводится к паре примитивов: <b style="color:var(--txt)">d20 + модификаторы vs порог</b> (проверки, атаки, спасы) и <b style="color:var(--txt)">кости урона + модификатор → в ХП</b>. Остальное — это округления (⌊ ⌋), пороги (min/max, укрытие, средняя броня), таблицы (PB, опыт, ячейки) и ветвления (крит, сопротивление, концентрация). Если движок автоматизации умеет <b>бросок · модификатор · сравнение · min/max/округление · таблицу · ветвление</b> — он собирает всю D&amp;D.</div>
+</div>
+</body>
+</html>
