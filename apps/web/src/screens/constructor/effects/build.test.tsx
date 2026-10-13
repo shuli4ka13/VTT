@@ -26,6 +26,8 @@ const start = (systemId: string, without: string[]): Effect[] => {
 
 const nameStep = (card: HTMLElement, name: string): void => {
   const title = (card.querySelector('.step-fold, .card__head')?.textContent ?? '').replace(/^[▾▸]\s*/, '').split('·')[0]!.trim();
+  const own = card.querySelector<HTMLElement>('.number-line input.input');
+  if (own) { within(card).type(own, name); return; }
   within(card).click(/^имя в формулах/);
   const fresh = stepCard(new RegExp(`^${title} · `));
   within(fresh).type(fresh.querySelector<HTMLElement>('.step-name input')!, name);
@@ -123,7 +125,7 @@ describe('эффекты пресетов собираются в констру
     expect(armLabel(block(hit))).toBe('попадание:');
     addToArm(block(hit), 0, 'number');
     card = stepCard(/^4 · /);
-    within(card).formula('Сколько', 'кинуть(@damage_dice, @dice * если(@попадание.крит, 2, 1)) + @damage_with');
+    within(card).formula('Формула', 'кинуть(@damage_dice, @dice * если(@попадание.крит, 2, 1)) + @damage_with');
     nameStep(card, 'урон');
 
     addToArm(block(hit), 0, 'change');
@@ -182,12 +184,12 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ число');
     card = stepCard(/^4 · /);
-    within(card).formula('Сколько', "(кинуть('2d10'))");
+    within(card).formula('Формула', "(кинуть('2d10'))");
     nameStep(card, 'урон_всего');
 
     ui.click('+ число');
     card = stepCard(/^5 · /);
-    within(card).formula('Сколько', 'если(@спас.прошёл, округлить вниз((@урон_всего) * (0.5)), @урон_всего)');
+    within(card).formula('Формула', 'если(@спас.прошёл, округлить вниз((@урон_всего) * (0.5)), @урон_всего)');
     nameStep(card, 'урон');
 
     ui.click('+ изменение');
@@ -247,7 +249,7 @@ describe('эффекты пресетов собираются в констру
     const number = (at: number, formula: string, name: string) => {
       ui.click('+ число');
       const made = stepCard(new RegExp(`^${at} · `));
-      within(made).formula('Сколько', formula);
+      within(made).formula('Формула', formula);
       nameStep(made, name);
       return () => stepCard(new RegExp(`^${at} · `));
     };
@@ -257,9 +259,9 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ число');
     card = stepCard(/^5 · /);
-    within(card).formula('Бросает', '@действующий');
+    within(card).formula('Формула', 'кинуть(@lead_die) + @прицел');
+    within(card).formula('кости бросает', '@действующий');
     card = stepCard(/^5 · /);
-    within(card).formula('Сколько', 'кинуть(@lead_die) + @прицел');
     marks(card, 'атака');
     nameStep(card, 'попадание_бросок');
     within(card).click('↑');
@@ -455,9 +457,9 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ число');
     let card = stepCard(/^2 · /);
-    within(card).formula('Бросает', '@действующий');
+    within(card).formula('Формула', 'кинуть(@duality) + @trait.value + @attack_bonus');
+    within(card).formula('кости бросает', '@действующий');
     card = stepCard(/^2 · /);
-    within(card).formula('Сколько', 'кинуть(@duality) + @trait.value + @attack_bonus');
     within(card).formula('Против кого', 'первый(@цели)');
     marks(card, 'атака', 'герой');
     nameStep(card, 'бросок_бросок');
@@ -465,7 +467,7 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ число');
     card = stepCard(/^3 · /);
-    within(card).formula('Сколько', String((goal!.steps![1] as { fixed: { expr: string } }).fixed.expr));
+    within(card).formula('Формула', String((goal!.steps![1] as { fixed: { expr: string } }).fixed.expr));
     nameStep(card, 'урон');
     within(stepCard(/^3 · /)).click('↑');
 
@@ -510,8 +512,8 @@ describe('эффекты пресетов собираются в констру
     const shown = blocks().length;
 
     ui.click('+ число');
-    within(at(first)).formula('Бросает', '@цель');
-    within(at(first)).formula('Сколько', `кинуть(@pool, ${(steps[from] as unknown as { count: { expr: string } }).count.expr})`);
+    within(at(first)).formula('Формула', `кинуть(@pool, ${(steps[from] as unknown as { count: { expr: string } }).count.expr})`);
+    within(at(first)).formula('кости бросает', '@цель');
     within(at(first)).formula('Против кого', '@действующий');
     marks(at(first), 'защита');
     nameStep(at(first), 'атака_против');
@@ -560,8 +562,8 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ число');
     const at = (n: number) => stepCard(new RegExp(`^${n} · `));
-    within(at(2)).formula('Бросает', '@действующий');
-    within(at(2)).formula('Сколько', 'кинуть(@pool)');
+    within(at(2)).formula('Формула', 'кинуть(@pool)');
+    within(at(2)).formula('кости бросает', '@действующий');
     marks(at(2), 'действие', '=если(@rating == 0, "нулевой", "")');
     nameStep(at(2), 'бросок_бросок');
     within(at(2)).click('↑');

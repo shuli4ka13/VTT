@@ -43,7 +43,34 @@ describe('шаг «Число»: под полем нет второй копи�
   it('ошибка разбора бросающего шага остаётся под полем', () => {
     const view = body({ id: 'бросок', type: 'roll', die: 'lead', by: { expr: '@действующий' } });
     expect(view.container.querySelector('.field__error')).toBeNull();
-    within(view.container).formula('Сколько', 'кинуть(@нет)');
+    within(view.container).formula('Формула', 'кинуть(@нет)');
     expect(view.container.querySelector('.field__error')).not.toBeNull();
+  });
+
+  it('имя правится в поле: ссылки переименовываются, пустое и занятое не принимаются с причиной', () => {
+    const renames: Array<[string, string]> = [];
+    const view = render(<NumberBody step={{ id: 'урон', type: 'roll', fixed: { expr: '1' } } as unknown as Step} context={{ ...context, earlier: [{ id: 'удар', type: 'roll' }] }}
+      edit={() => {}} onRename={(from, to) => renames.push([from, to])} />);
+    const name = view.container.querySelector('input.input') as HTMLInputElement;
+    expect(name.value).toBe('урон');
+    fireEvent.change(name, { target: { value: '' } });
+    fireEvent.blur(name);
+    expect(view.container.querySelector('.field__error')!.textContent).toContain('пустым');
+    fireEvent.change(name, { target: { value: 'удар' } });
+    fireEvent.blur(name);
+    expect(view.container.querySelector('.field__error')!.textContent).toContain('занято');
+    expect(renames).toEqual([]);
+    fireEvent.change(name, { target: { value: 'ущерб' } });
+    fireEvent.blur(name);
+    expect(renames).toEqual([['урон', 'ущерб']]);
+  });
+
+  it('«кости бросает» видно только у формулы с кинуть(', () => {
+    const plain = body({ id: 'а', type: 'roll', fixed: { expr: '1 + 2' } });
+    expect(plain.container.textContent).not.toContain('кости бросает');
+    cleanup();
+    const dice = body({ id: 'а', type: 'roll', fixed: { expr: 'кинуть(2к6)' } });
+    expect(dice.container.textContent).toContain('кости бросает');
+    expect(dice.container.innerHTML).toContain('никто — просто кости, без правок броска');
   });
 });

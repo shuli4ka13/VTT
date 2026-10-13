@@ -16,20 +16,21 @@ function Part({ label, title, wide = false, children }: { label: string; title: 
   );
 }
 
-export function RollLine({ roll, context, system, onRoll, owned = true, keep = false }: {
+export function RollLine({ roll, context, system, onRoll, owned = true, keep = false, who = {} }: {
   roll: Record<string, unknown>;
   context: SlotContext;
   system: System;
   onRoll: (change: (draft: Record<string, unknown>) => void) => void;
   owned?: boolean;
   keep?: boolean;
+  who?: { label?: string; title?: string; empty?: string };
 }) {
   const { singles, firsts, lists, shared: overAll } = sheetChoices(context);
   const shared = overAll && !roll.against;
   return (
     <div className="roll-line">
-      <Part label="Бросает" title="Кто бросает — на его бросок действуют правки (преимущество, «Благословение») и вопросы «увидев кости». Пусто — просто расчёт, кости без правок.">
-        <SheetPick value={roll.by} sheets={singles} system={system} where="бросок · бросает" empty="— расчёт —"
+      <Part label={who.label ?? 'Бросает'} title={who.title ?? 'Кто бросает — на его бросок действуют правки (преимущество, «Благословение») и вопросы «увидев кости». Пусто — просто расчёт, кости без правок.'}>
+        <SheetPick value={roll.by} sheets={singles} system={system} where="бросок · бросает" empty={who.empty ?? '— расчёт —'}
           onChange={next => { if (!next && keep) return; onRoll(draft => { if (next) draft.by = next; else { delete draft.by; delete draft.against; } }); }} />
       </Part>
       {owned && roll.by ? (

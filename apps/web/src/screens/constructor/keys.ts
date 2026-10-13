@@ -75,3 +75,44 @@ export function followKey({ used, key, base, before, after, taken }: {
 }
 
 export const keyOf = (text: string): string => slugOf(text);
+
+export function renameStep(node: unknown, from: string, to: string): void {
+  const pattern = new RegExp(`@${escape(from)}(?![\\p{L}\\p{N}_])`, 'gu');
+  const walk = (value: unknown): void => {
+    if (Array.isArray(value)) { value.forEach(walk); return; }
+    if (!value || typeof value !== 'object') return;
+    const holder = value as Record<string, unknown>;
+    if (typeof holder.type === 'string' && holder.id === from) holder.id = to;
+    for (const [name, inner] of Object.entries(holder)) {
+      if (typeof inner === 'string') {
+        if (pattern.test(inner)) holder[name] = inner.replace(pattern, `@${to}`);
+        pattern.lastIndex = 0;
+      } else walk(inner);
+    }
+  };
+  walk(node);
+}
+
+export const RESERVED_NAMES: readonly string[] = ['строка', 'носитель', 'стол'];
+
+export function stepNameTrouble(typed: string, current: string, taken: readonly string[]): string | null {
+  const next = keyOf(typed);
+  if (!next) return 'имя не может быть пустым';
+  if (next === current) return null;
+  if (RESERVED_NAMES.includes(next)) return `имя «${next}» занято системой`;
+  if (taken.includes(next)) return `имя «${next}» уже занято`;
+  return null;
+}
+
+export function stepIdsOf(node: unknown): string[] {
+  const out: string[] = [];
+  const walk = (value: unknown): void => {
+    if (Array.isArray(value)) { value.forEach(walk); return; }
+    if (!value || typeof value !== 'object') return;
+    const holder = value as Record<string, unknown>;
+    if (typeof holder.type === 'string' && typeof holder.id === 'string' && holder.id) out.push(holder.id);
+    Object.values(holder).forEach(walk);
+  };
+  walk(node);
+  return out;
+}

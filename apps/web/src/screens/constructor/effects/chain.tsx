@@ -2,6 +2,7 @@ import { withRole } from './roles.ts';
 import type { ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useWorld, freeId } from '../../../store/world.ts';
+import { renameStep, stepIdsOf } from '../keys.ts';
 import { STEP } from '../../../words.ts';
 import { loopOf, loopParam } from '@vtt/engine/engine/steps/each';
 import { cardTitle, titleOf } from './words.ts';
@@ -70,6 +71,10 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
   };
 
   const steps = effect.steps ?? [];
+  const takenStepNames = (): string[] => {
+    const whole = useWorld.getState().system.effects[id] ?? effect;
+    return [...stepIdsOf(whole), ...(whole.params ?? []).map(p => p.key)];
+  };
 
   const cards = groupSteps(steps);
 
@@ -155,6 +160,8 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
           </Button>
         ) : undefined}
         onAddParam={addParam}
+        takenNames={takenStepNames()}
+        onRename={(from, to) => useWorld.getState().editEffect(id, draft => renameStep(draft, from, to))}
         onOpenEffect={onOpenEffect}
         edit={(k, change) => edit(draft => {
           const index = group.indices[k] ?? group.indices[0]!;

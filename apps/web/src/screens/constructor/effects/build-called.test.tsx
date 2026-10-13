@@ -34,6 +34,8 @@ const textOf = (el: Element): string => (el.textContent ?? '').replace(/\s+/g, '
 
 const nameStep = (card: HTMLElement, name: string): void => {
   const title = (card.querySelector('.step-fold, .card__head')?.textContent ?? '').replace(/^[▾▸]\s*/, '').split('·')[0]!.trim();
+  const own = card.querySelector<HTMLElement>('.number-line input.input');
+  if (own) { within(card).type(own, name); return; }
   within(card).click(/^имя в формулах/);
   const fresh = stepCard(new RegExp(`^${title} · `));
   within(fresh).type(fresh.querySelector<HTMLElement>('.step-name input')!, name);
@@ -100,9 +102,9 @@ describe('вызываемые блоки D&D собираются руками'
     param(ui, 'attack_roll', 2, 'Бонус атаки', 'number', 'бонус', { value: '0' });
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
     ui.click('+ число');
-    within(at(1)()).formula('Бросает', '@кто');
+    within(at(1)()).formula('Формула', 'кинуть(@lead_die) + @бонус');
+    within(at(1)()).formula('кости бросает', '@кто');
     within(at(1)()).formula('Против кого', '@против');
-    within(at(1)()).formula('Сколько', 'кинуть(@lead_die) + @бонус');
     within(at(1)()).select('Метки', 'атака');
     nameStep(at(1)(), 'бросок');
     ui.click('+ проверка');
@@ -130,9 +132,9 @@ describe('вызываемые блоки D&D собираются руками'
     param(ui, 'saving_throw', 3, 'Против кого', 'sheet', 'против', { optional: true, role: 'actor' });
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
     ui.click('+ число');
-    within(at(1)()).formula('Бросает', '@кто');
+    within(at(1)()).formula('Формула', 'кинуть(@lead_die) + @кто.характеристика.save');
+    within(at(1)()).formula('кости бросает', '@кто');
     within(at(1)()).formula('Против кого', '@против');
-    within(at(1)()).formula('Сколько', 'кинуть(@lead_die) + @кто.характеристика.save');
     within(at(1)()).select('Метки', 'спасбросок');
     within(at(1)()).select('Метки', ':формула');
     within(at(1)()).type('Метки', '@характеристика');

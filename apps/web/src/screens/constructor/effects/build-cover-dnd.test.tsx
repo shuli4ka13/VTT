@@ -28,6 +28,8 @@ const textOf = (el: Element): string => (el.textContent ?? '').replace(/\s+/g, '
 
 const nameStep = (card: HTMLElement, name: string): void => {
   const title = (card.querySelector('.step-fold, .card__head')?.textContent ?? '').replace(/^[▾▸]\s*/, '').split('·')[0]!.trim();
+  const own = card.querySelector<HTMLElement>('.number-line input.input');
+  if (own) { within(card).type(own, name); return; }
   within(card).click(/^имя в формулах/);
   const fresh = stepCard(new RegExp(`^${title} · `), card.parentElement ?? document);
   within(fresh).type(fresh.querySelector<HTMLElement>('.step-name input')!, name);
@@ -360,7 +362,7 @@ describe('эффекты D&D собираются в конструкторе р
     within(headOf(block(0))).when('=не(пусто(@damage_die))');
     addToArm(block(0), 0, 'number');
     within(headOf(block(0))).click('↑');
-    within(at(2)).formula('Сколько', 'кинуть(@damage_die, @dice_count + (@slot - @spell_level) * @dice_up)');
+    within(at(2)).formula('Формула', 'кинуть(@damage_die, @dice_count + (@slot - @spell_level) * @dice_up)');
     nameStep(at(2), 'урон_всего');
 
     savingThrow(document.body, 4, [['Чем спасается', '@save_by'], ['Сложность', '@действующий.spell_dc']]);
@@ -422,9 +424,9 @@ describe('эффекты D&D собираются в конструкторе р
 
     ui.click('+ число');
     card = stepCard(/^3 · /);
-    within(card).formula('Бросает', '@действующий');
+    within(card).formula('Формула', 'кинуть(@lead_die) + @действующий.skills.скрытность.total');
+    within(card).formula('кости бросает', '@действующий');
     card = stepCard(/^3 · /);
-    within(card).formula('Сколько', 'кинуть(@lead_die) + @действующий.skills.скрытность.total');
     nameStep(stepCard(/^3 · /), 'скрытая_бросок');
     within(stepCard(/^3 · /)).click('↑');
 

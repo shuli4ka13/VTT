@@ -3,7 +3,8 @@ import { parseRollFormula, formatRollFormula } from '../../roll-formula.ts';
 import { RollLine } from './roll-line.tsx';
 import { useMemo, useState } from 'react';
 import type { Step, ValueKind } from '@vtt/schema';
-import { Field, Button } from '../../../../ui/primitives.tsx';
+import { Button, Input } from '../../../../ui/primitives.tsx';
+import { stepNameTrouble, keyOf } from '../../keys.ts';
 import { FormulaField } from '../../../../ui/formula-field.tsx';
 import { asOneFormula } from '@vtt/engine/model/amounts';
 import { namesOf } from '../../slots.tsx';
@@ -22,12 +23,17 @@ const textOf = (step: Loose): string =>
     .filter((part): part is string => typeof part === 'string' && part.trim() !== '')
     .join(' + ');
 
-export function NumberBody({ step, context, edit, onAddParam }: {
+export function NumberBody({ step, context, edit, onAddParam, takenNames, onRename }: {
   step: Step;
   context: SlotContext;
   edit: EditFn;
   onAddParam?: (label: string, kind: ValueKind, want?: string) => string;
+  takenNames?: readonly string[];
+  onRename?: (from: string, to: string) => void;
 }) {
+  const [nameDraft, setNameDraft] = useState<string | null>(null);
+  const [nameTrouble, setNameTrouble] = useState<string | null>(null);
+  const current = typeof (step as { id?: unknown }).id === 'string' ? (step as { id: string }).id : '';
   const [draft, setDraft] = useState<string | null>(null);
   const read = loose(step);
   const owned = Boolean(read.by);
@@ -67,12 +73,43 @@ export function NumberBody({ step, context, edit, onAddParam }: {
     setDraft(null);
   };
 
+  const taken = takenNames ?? [
+    ...context.earlier.map(one => one.id),
+    ...(context.effect.params ?? []).map(p => p.key),
+  ];
+
+  const commitName = () => {
+    if (nameDraft === null) return;
+    const typed = nameDraft;
+    const trouble = stepNameTrouble(typed, current, taken.filter(one => one !== current));
+    if (trouble) { setNameTrouble(trouble); return; }
+    const next = keyOf(typed);
+    setNameDraft(null);
+    setNameTrouble(null);
+    if (next === current) return;
+    if (onRename) onRename(current, next);
+    else edit(0, target => { target.id = next; });
+  };
+
+  const rolls = shown.includes('кинуть(') || owned || Boolean(read.by);
+
   return (
     <>
-      <Field
-        label="Сколько"
-        needed={!shown}
-      >
+      <div className="inline inline--tight number-line">
+        <Input
+          mono
+          value={nameDraft ?? current}
+          placeholder="имя"
+          invalid={Boolean(nameTrouble)}
+          onChange={next => { setNameTrouble(null); setNameDraft(next); }}
+          onBlur={commitName}
+          onKeyDown={event => {
+            if (event.key === 'Enter') commitName();
+            if (event.key === 'Escape') { setNameDraft(null); setNameTrouble(null); }
+          }}
+        />
+        <span className="number-line__eq">=</span>
+        <div data-field="Формула" className="number-line__formula">
         <FormulaField
           value={shown}
           system={context.system}
@@ -86,8 +123,10 @@ export function NumberBody({ step, context, edit, onAddParam }: {
           onCommit={commit}
           onCancel={() => { setTrouble(null); setDraft(null); }}
         />
-        {trouble ? <span className="field__error">{trouble}</span> : null}
-      </Field>
+        </div>
+      </div>
+      {nameTrouble ? <span className="field__error">{nameTrouble}</span> : null}
+      {trouble ? <span className="field__error">{trouble}</span> : null}
 
       {onAddParam ? unknown.map(name => (
         <Button
@@ -96,8 +135,21 @@ export function NumberBody({ step, context, edit, onAddParam }: {
         >{`взять «${name}» из записи`}</Button>
       )) : null}
 
-      <RollLine roll={read} context={context} system={context.system} owned={owned}
-        onRoll={change => edit(0, draft => change(loose(draft)))} />
+      {rolls ? <RollLine roll={read} context={context} system={context.system} owned={owned}
+        who={{ label: 'кости бросает', empty: 'никто — просто кости, без правок броска', title: 'на бросок действуют правки этого листа: преимущество, «Благословение» и подобные' }}
+        onRoll={change => edit(0, draft => {
+          const it = loose(draft);
+          const wasOwned = Boolean(it.by);
+          change(it);
+          const expr = (it.fixed as { expr?: unknown } | undefined)?.expr;
+          if (wasOwned || !it.by || typeof expr !== 'string' || !expr.includes('кинуть(')) return;
+          const parsed = parseRollFormula(expr, context.system);
+          if ('error' in parsed) return;
+          delete it.fixed;
+          it.die = parsed.die;
+          if (parsed.count) it.count = parsed.count; else delete it.count;
+          if (parsed.bonus) it.bonus = parsed.bonus; else delete it.bonus;
+        })} /> : null}
     </>
   );
 }

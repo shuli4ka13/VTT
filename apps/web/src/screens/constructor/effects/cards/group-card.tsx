@@ -8,7 +8,7 @@ import { referenced } from '../../keys.ts';
 import { useWorld } from '../../../../store/world.ts';
 import type { CardGroup } from '../../cards.ts';
 import type { Segment } from '../../readback.ts';
-import { checkReadback, changeReadback, sendReadback, numberReadback, seenReadback } from '../../readback.ts';
+import { checkReadback, changeReadback, sendReadback, numberReadback, seenReadback, amountValueSegments } from '../../readback.ts';
 import { namesOf } from '../../slots.tsx';
 import type { SlotContext, EarlierStep } from '../../slots.tsx';
 import type { Problem } from '../../step-card.tsx';
@@ -43,7 +43,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, onUnpair, onWrap, onUnwrap, asIf = false, outcome = '',
+  edit, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, takenNames, onRename, onUnpair, onWrap, onUnwrap, asIf = false, outcome = '',
 }: {
   group: CardGroup;
   position: number;
@@ -74,6 +74,8 @@ export function GroupCard({
   onUnwrap?: () => void;
   asIf?: boolean;
   outcome?: string;
+  takenNames?: readonly string[];
+  onRename?: (from: string, to: string) => void;
 }) {
   const context: SlotContext = { system, effect, earlier, ...(sheets ? { sheets } : {}) };
   const step = group.step as any;
@@ -114,10 +116,11 @@ export function GroupCard({
       {group.kind === 'seen' ? <SeenBody step={step} context={context} edit={edit} /> : null}
       {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} withNumber={withNumber} system={system} onAddParam={onAddParam} onOpenEffect={onOpenEffect} lane={lane} /> : null}
       {group.kind === 'number'
-        ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam} />
+        ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam}
+          {...(takenNames ? { takenNames } : {})} {...(onRename ? { onRename } : {})} />
         : null}
       {group.kind === 'table' ? <TableBody step={step} context={context} edit={edit} system={system} /> : null}
-      <StepName group={group} effect={effect} system={system} edit={edit} />
+      {group.kind === 'number' ? null : <StepName group={group} effect={effect} system={system} edit={edit} />}
     </>
   );
 
@@ -171,7 +174,7 @@ export function GroupCard({
 function summaryOf(group: CardGroup, system: System, effect: Effect, names: Map<string, string>): string {
   const step = group.step;
   const segments = group.kind === 'check' ? checkReadback(step, group.amount, system, effect, names)
-    : group.kind === 'number' ? numberReadback(step, system, effect, names)
+    : group.kind === 'number' ? (step.id ? [{ text: `${String(step.id)} =` }, ...amountValueSegments(step, system, effect, names)] : numberReadback(step, system, effect, names))
     : group.kind === 'table' ? tableReadback(step as Record<string, unknown>, system)
     : group.kind === 'seen' ? seenReadback(step, system)
       : group.kind === 'change'

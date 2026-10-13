@@ -528,7 +528,7 @@ describe('GroupCard: отдельный бросок с «Бросает»', () 
     const group = groupSteps([roll as unknown as Step])[0]!;
     render(<GroupCard group={group} position={1} system={system} effect={many} sheets={sheets}
       earlier={[]} problem={null} edit={(_, change) => change(roll as never)} onDelete={() => {}} />);
-    const line = [...cards().field('Сколько').querySelectorAll('input.chips__text')].at(-1) as HTMLInputElement;
+    const line = [...cards().field('Формула').querySelectorAll('input.chips__text')].at(-1) as HTMLInputElement;
     fireEvent.change(line, { target: { value: ') + 2' } });
     fireEvent.keyDown(line, { key: 'Enter' });
     expect(roll.die).toBe('lead');
