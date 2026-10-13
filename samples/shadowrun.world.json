@@ -1774,6 +1774,70 @@
             "min": 0
           },
           {
+            "key": "aided_fa",
+            "label": "Первая помощь этой травме оказана",
+            "kind": "number",
+            "default": 0,
+            "min": 0,
+            "max": 1
+          },
+          {
+            "key": "aided_kit",
+            "label": "Аптечка этой травме применена",
+            "kind": "number",
+            "default": 0,
+            "min": 0,
+            "max": 1
+          },
+          {
+            "key": "has_fa_kit",
+            "label": "Набор первой помощи есть",
+            "kind": "number",
+            "default": 0,
+            "min": 0,
+            "max": 1
+          },
+          {
+            "key": "has_medkit",
+            "label": "Аптечка есть",
+            "kind": "number",
+            "default": 0,
+            "min": 0,
+            "max": 1
+          },
+          {
+            "key": "init_half",
+            "label": "Инициатива пополам (Боевой паралич)",
+            "kind": "number",
+            "default": 0,
+            "min": 0,
+            "max": 1
+          },
+          {
+            "key": "mystic_pp",
+            "label": "Мистический адепт: Магии отдано способностям",
+            "kind": "number",
+            "default": 0,
+            "min": 0
+          },
+          {
+            "key": "pp_spent",
+            "label": "Очков способностей потрачено",
+            "expr": {
+              "expr": "сумма(строки(\"adept_power\", \"pp\"))"
+            },
+            "max": {
+              "expr": "если(@awakened == \"адепт\", @magic, если(@awakened == \"мистический адепт\", @mystic_pp, 0))"
+            }
+          },
+          {
+            "key": "aspect",
+            "label": "Аспектный маг: навык",
+            "kind": "choice",
+            "from": "magic_skills",
+            "optional": true
+          },
+          {
             "key": "smartlink",
             "label": "Смартлинк (1 — есть)",
             "kind": "number",
@@ -1925,7 +1989,7 @@
             "key": "initiative",
             "label": "Уровень инициативы",
             "expr": {
-              "expr": "если(любое(@matrix_mode == \"холодная ВР\", @matrix_mode == \"горячая ВР\"), если(@awakened == \"техномант\", @logic + @intuition, @intuition + @m_dp), @reaction + @intuition) + @wound_mod + @condition_mod + @init_mod"
+              "expr": "округлить вниз((если(любое(@matrix_mode == \"холодная ВР\", @matrix_mode == \"горячая ВР\"), если(@awakened == \"техномант\", @logic + @intuition, @intuition + @m_dp), @reaction + @intuition) + @wound_mod + @condition_mod + @init_mod) / если(@init_half >= 1, 2, 1))"
             }
           },
           {
@@ -12849,6 +12913,66 @@
         "use": "item",
         "block": "Мир",
         "columns": []
+      },
+      "magic_skills": {
+        "label": "Магический навык",
+        "key": "word",
+        "columns": [],
+        "rows": [
+          {
+            "value": "колдовство"
+          },
+          {
+            "value": "воплощение"
+          },
+          {
+            "value": "зачарование"
+          }
+        ]
+      },
+      "activators": {
+        "label": "Активатор субстанции",
+        "key": "word",
+        "columns": [
+          {
+            "key": "si",
+            "label": "К истощению",
+            "kind": "number"
+          }
+        ],
+        "rows": [
+          {
+            "value": "время",
+            "cells": {
+              "si": 2
+            }
+          },
+          {
+            "value": "контакт",
+            "cells": {
+              "si": 1
+            }
+          },
+          {
+            "value": "приказ",
+            "cells": {
+              "si": 2
+            }
+          }
+        ]
+      },
+      "damage_choice": {
+        "label": "Вид урона",
+        "key": "word",
+        "columns": [],
+        "rows": [
+          {
+            "value": "физический"
+          },
+          {
+            "value": "оглушающий"
+          }
+        ]
       }
     },
     "roll_edits": {
@@ -13613,11 +13737,11 @@
       "first_aid": {
         "label": "Первая помощь",
         "group": "Лечение",
-        "description": "Биотехнологии + Логика, порог 5 − Сущность цели, в течение минуты после боя. Чистый успех — 1 оглушающий, два — 1 физический.",
+        "description": "Биотехнологии + Логика (без набора −2), порог 5 − Сущность цели (вниз), раз на травму, в течение минуты после боя; сверх порога — 1 оглушающий за успех, физический — за 2 (стр. 119).",
         "params": [
           {
             "key": "действующий",
-            "label": "Кто действует",
+            "label": "Кто лечит",
             "kind": "sheet"
           },
           {
@@ -13642,7 +13766,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "@healer_pool"
+              "expr": "@healer_pool - если(@действующий.has_fa_kit >= 1, 0, 2)"
             },
             "tags": [
               "лечение"
@@ -13656,13 +13780,38 @@
             "of": "цели"
           },
           {
+            "type": "branch",
+            "if": {
+              "expr": "@цель.aided_fa >= 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"этой травме уже помогали так — раз на травму\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
             "id": "помощь",
             "type": "check",
             "value": {
               "expr": "@помощь_бросок"
             },
             "versus": {
-              "expr": "(большее из(0, округлить вниз(5 - @цель.essence)))"
+              "expr": "большее из(0, округлить вниз(5 - @цель.essence))"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.aided_fa"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "1"
             }
           },
           {
@@ -13672,12 +13821,19 @@
             }
           },
           {
+            "id": "было",
+            "type": "roll",
+            "fixed": {
+              "expr": "@цель.stun"
+            }
+          },
+          {
             "type": "apply",
             "target": {
               "expr": "@цель.stun"
             },
             "value": {
-              "expr": "меньшее из(@цель.stun, большее из(0, @помощь.margin))"
+              "expr": "меньшее из(@цель.stun, большее из(0, @помощь.margin + 0))"
             }
           },
           {
@@ -13686,7 +13842,7 @@
               "expr": "@цель.physical"
             },
             "value": {
-              "expr": "меньшее из(@цель.physical, округлить вниз(большее из(0, @помощь.margin - @цель.stun) / 2))"
+              "expr": "меньшее из(@цель.physical, округлить вниз(большее из(0, @помощь.margin + 0 - @было) / 2))"
             }
           },
           {
@@ -13708,7 +13864,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "@цель.body + @цель.willpower"
+              "expr": "@цель.body + @цель.willpower + 2 * @medic"
             },
             "tags": [
               "лечение"
@@ -13762,6 +13918,17 @@
               "key": "цель",
               "label": "Цель"
             }
+          },
+          {
+            "key": "medic",
+            "label": "Присмотр медика (Биотехнологии): +2",
+            "kind": "number",
+            "default": 0,
+            "min": 0,
+            "max": 1,
+            "ask": {
+              "by": "actor"
+            }
           }
         ]
       },
@@ -13779,7 +13946,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "@цель.body * 2"
+              "expr": "@цель.body * 2 + 2 * @medic + если(@цель.critical >= 1, @цель.wound_mod, 0)"
             },
             "tags": [
               "лечение"
@@ -13832,6 +13999,17 @@
             "item": {
               "key": "цель",
               "label": "Цель"
+            }
+          },
+          {
+            "key": "medic",
+            "label": "Присмотр медика (Биотехнологии): +2",
+            "kind": "number",
+            "default": 0,
+            "min": 0,
+            "max": 1,
+            "ask": {
+              "by": "actor"
             }
           }
         ]
@@ -15568,6 +15746,35 @@
             "direction": "add",
             "value": {
               "expr": "@amount"
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@amount >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@лист.aided_fa"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "0"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@лист.aided_kit"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "0"
             }
           },
           {
@@ -21523,6 +21730,21 @@
           {
             "type": "branch",
             "if": {
+              "expr": "все(@действующий.awakened == \"аспектный маг\", @действующий.aspect != \"колдовство\")"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"аспектный маг владеет только навыком «своим»\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
               "expr": "@действующий.magic < 1"
             }
           },
@@ -22005,6 +22227,21 @@
           {
             "type": "branch",
             "if": {
+              "expr": "все(@действующий.awakened == \"аспектный маг\", @действующий.aspect != \"колдовство\")"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"аспектный маг владеет только навыком «своим»\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
               "expr": "@действующий.magic < 1"
             }
           },
@@ -22368,6 +22605,21 @@
           }
         ],
         "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "все(@действующий.awakened == \"аспектный маг\", @действующий.aspect != \"колдовство\")"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"аспектный маг владеет только навыком «своим»\""
+            }
+          },
+          {
+            "type": "end"
+          },
           {
             "type": "branch",
             "if": {
@@ -23097,6 +23349,21 @@
           }
         ],
         "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "все(@действующий.awakened == \"аспектный маг\", @действующий.aspect != \"воплощение\")"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"аспектный маг владеет только навыком «своим»\""
+            }
+          },
+          {
+            "type": "end"
+          },
           {
             "type": "branch",
             "if": {
@@ -24075,6 +24342,21 @@
           {
             "type": "branch",
             "if": {
+              "expr": "все(@действующий.awakened == \"аспектный маг\", @действующий.aspect != \"воплощение\")"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"аспектный маг владеет только навыком «своим»\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
               "expr": "@действующий.magic < 1"
             }
           },
@@ -24336,6 +24618,21 @@
           {
             "type": "branch",
             "if": {
+              "expr": "все(@действующий.awakened == \"аспектный маг\", @действующий.aspect != \"колдовство\")"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"аспектный маг владеет только навыком «своим»\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
               "expr": "@действующий.magic < 1"
             }
           },
@@ -24450,6 +24747,21 @@
           }
         ],
         "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "все(@действующий.awakened == \"аспектный маг\", @действующий.aspect != \"колдовство\")"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"аспектный маг владеет только навыком «своим»\""
+            }
+          },
+          {
+            "type": "end"
+          },
           {
             "type": "branch",
             "if": {
@@ -24589,6 +24901,21 @@
           }
         ],
         "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "все(@действующий.awakened == \"аспектный маг\", @действующий.aspect != \"колдовство\")"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"аспектный маг владеет только навыком «своим»\""
+            }
+          },
+          {
+            "type": "end"
+          },
           {
             "type": "branch",
             "if": {
@@ -30258,6 +30585,788 @@
             }
           }
         ]
+      },
+      "medkit_heal": {
+        "label": "Аптечка",
+        "group": "Лечение",
+        "description": "Биотехнологии + Логика, порог 5 − Сущность цели (вниз), +1 успех цели с полной Сущностью, раз на травму, в течение часа после боя; деление как у первой помощи; расходует набор припасов (стр. 120).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто лечит",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
+          },
+          {
+            "key": "healer_pool",
+            "label": "Набор",
+            "kind": "number"
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.has_medkit < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"нет аптечки\""
+            }
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "steps": [
+          {
+            "id": "помощь_бросок",
+            "type": "roll",
+            "die": "pool",
+            "count": {
+              "expr": "@healer_pool"
+            },
+            "tags": [
+              "лечение"
+            ],
+            "by": {
+              "expr": "@действующий"
+            }
+          },
+          {
+            "type": "each",
+            "of": "цели"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@цель.aided_kit >= 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"этой травме уже помогали так — раз на травму\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "id": "помощь",
+            "type": "check",
+            "value": {
+              "expr": "@помощь_бросок"
+            },
+            "versus": {
+              "expr": "большее из(0, округлить вниз(5 - @цель.essence))"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.aided_kit"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@помощь.success"
+            }
+          },
+          {
+            "id": "было",
+            "type": "roll",
+            "fixed": {
+              "expr": "@цель.stun"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.stun"
+            },
+            "value": {
+              "expr": "меньшее из(@цель.stun, большее из(0, @помощь.margin + если(@цель.essence >= 6, 1, 0)))"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.physical"
+            },
+            "value": {
+              "expr": "меньшее из(@цель.physical, округлить вниз(большее из(0, @помощь.margin + если(@цель.essence >= 6, 1, 0) - @было) / 2))"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ]
+      },
+      "insecurity_shaken": {
+        "label": "Неуверенность: сорвалось",
+        "group": "Качества",
+        "activation": "passive",
+        "duration": {
+          "kind": "combat"
+        },
+        "description": "Провал проверки — до конца столкновения Преимущество не получать и не тратить (стр. 77).",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "edge_no_gain",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "edge_no_spend",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "insecurity_check": {
+        "label": "Неуверенность",
+        "group": "Качества",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "В начале столкновения проверка (Воля, порог 2) (стр. 77).",
+        "on": [
+          {
+            "on": "moment:combat-start",
+            "steps": [
+              {
+                "id": "выдержка",
+                "type": "roll",
+                "die": "pool",
+                "count": {
+                  "expr": "@носитель.willpower"
+                },
+                "tags": [
+                  "проверка"
+                ],
+                "by": {
+                  "expr": "@носитель"
+                }
+              },
+              {
+                "id": "итог",
+                "type": "check",
+                "value": {
+                  "expr": "@выдержка"
+                },
+                "versus": {
+                  "expr": "2"
+                }
+              },
+              {
+                "type": "branch",
+                "if": {
+                  "expr": "не(@итог.success)"
+                }
+              },
+              {
+                "type": "status",
+                "effect": "insecurity_shaken",
+                "to": {
+                  "expr": "@носитель"
+                }
+              },
+              {
+                "type": "end"
+              }
+            ]
+          }
+        ]
+      },
+      "stress_shaken": {
+        "label": "Стрессовое расстройство: сорвалось",
+        "group": "Качества",
+        "activation": "passive",
+        "duration": {
+          "kind": "combat"
+        },
+        "description": "Провал проверки — до конца столкновения Преимущество не получать и не тратить (стр. 78).",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "edge_no_gain",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "edge_no_spend",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "stress_check": {
+        "label": "Стрессовое расстройство",
+        "group": "Качества",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "В начале столкновения проверка (Харизма, порог 2) (стр. 78).",
+        "on": [
+          {
+            "on": "moment:combat-start",
+            "steps": [
+              {
+                "id": "выдержка",
+                "type": "roll",
+                "die": "pool",
+                "count": {
+                  "expr": "@носитель.charisma"
+                },
+                "tags": [
+                  "проверка"
+                ],
+                "by": {
+                  "expr": "@носитель"
+                }
+              },
+              {
+                "id": "итог",
+                "type": "check",
+                "value": {
+                  "expr": "@выдержка"
+                },
+                "versus": {
+                  "expr": "2"
+                }
+              },
+              {
+                "type": "branch",
+                "if": {
+                  "expr": "не(@итог.success)"
+                }
+              },
+              {
+                "type": "status",
+                "effect": "stress_shaken",
+                "to": {
+                  "expr": "@носитель"
+                }
+              },
+              {
+                "type": "end"
+              }
+            ]
+          }
+        ]
+      },
+      "create_substance": {
+        "label": "Создать субстанцию",
+        "group": "Магия",
+        "description": "СИ субстанции = СИ заклинания (с усилениями) + активатор (время +2, контакт +1, приказ +2) − драхмы реагентов (не больше 2); часов = СИ; Зачарование + Магия против СИ; чистые успехи — эффективность; истощение — эта СИ (стр. 149–151).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто",
+            "kind": "sheet"
+          },
+          {
+            "key": "si",
+            "label": "СИ заклинания с усилениями",
+            "kind": "number",
+            "min": 1,
+            "ask": {
+              "by": "actor"
+            }
+          },
+          {
+            "key": "act",
+            "label": "Активатор",
+            "kind": "choice",
+            "from": "activators",
+            "ask": {
+              "by": "actor"
+            }
+          },
+          {
+            "key": "reagents",
+            "label": "Драхм реагентов (0–2)",
+            "kind": "number",
+            "default": 0,
+            "min": 0,
+            "max": 2,
+            "ask": {
+              "by": "actor"
+            }
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.magic < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"нет Магии\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "все(@действующий.awakened == \"аспектный маг\", @действующий.aspect != \"зачарование\")"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"аспектный маг владеет только навыком «своим»\""
+            }
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "steps": [
+          {
+            "id": "сила",
+            "type": "roll",
+            "fixed": {
+              "expr": "большее из(1, @si + или(@act.si, 0) - меньшее из(2, @reagents))"
+            }
+          },
+          {
+            "id": "зелье",
+            "type": "roll",
+            "die": "pool",
+            "count": {
+              "expr": "большее из(0, @действующий.skills.зачарование.pool + большее из(@действующий.focus_power, @действующий.focus_alchemy))"
+            },
+            "tags": [
+              "проверка",
+              "магия",
+              "зачарование"
+            ],
+            "by": {
+              "expr": "@действующий"
+            }
+          },
+          {
+            "id": "против",
+            "type": "roll",
+            "die": "pool",
+            "count": {
+              "expr": "@сила"
+            },
+            "tags": [
+              "защита"
+            ],
+            "by": {
+              "expr": "@действующий"
+            }
+          },
+          {
+            "id": "итог",
+            "type": "check",
+            "value": {
+              "expr": "@зелье"
+            },
+            "versus": {
+              "expr": "@против"
+            }
+          },
+          {
+            "type": "emit",
+            "effect": "spell_drain",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "si": {
+                "expr": "@сила"
+              }
+            }
+          }
+        ],
+        "returns": [
+          {
+            "key": "эффективность",
+            "label": "Эффективность",
+            "kind": "number",
+            "expr": {
+              "expr": "большее из(0, @итог.margin)"
+            }
+          }
+        ]
+      },
+      "disenchant": {
+        "label": "Снять зачарование",
+        "group": "Магия",
+        "description": "Зачарование + Магия против Мощь + Магия владельца; при перевесе источник или субстанция гаснет до повторной активации; истощение 1 оглушающий за каждый успех защиты, физический — если Мощь выше Магии; при Мощи вдвое выше Магии — нельзя (стр. 153).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто",
+            "kind": "sheet"
+          },
+          {
+            "key": "force",
+            "label": "Мощь цели",
+            "kind": "number",
+            "min": 1,
+            "ask": {
+              "by": "gm"
+            }
+          },
+          {
+            "key": "owner_magic",
+            "label": "Магия владельца",
+            "kind": "number",
+            "default": 0,
+            "ask": {
+              "by": "gm"
+            }
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.magic < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"нет Магии\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "все(@действующий.awakened == \"аспектный маг\", @действующий.aspect != \"зачарование\")"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"аспектный маг владеет только навыком «своим»\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@force > 2 * @действующий.magic"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"Мощь вдвое выше Магии — снять нельзя\""
+            }
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "steps": [
+          {
+            "id": "снятие",
+            "type": "roll",
+            "die": "pool",
+            "count": {
+              "expr": "большее из(0, @действующий.skills.зачарование.pool + большее из(@действующий.focus_power, @действующий.focus_disenchant))"
+            },
+            "tags": [
+              "проверка",
+              "магия",
+              "зачарование"
+            ],
+            "by": {
+              "expr": "@действующий"
+            }
+          },
+          {
+            "id": "против",
+            "type": "roll",
+            "die": "pool",
+            "count": {
+              "expr": "@force + @owner_magic"
+            },
+            "tags": [
+              "защита"
+            ],
+            "by": {
+              "expr": "@действующий"
+            }
+          },
+          {
+            "id": "итог",
+            "type": "check",
+            "value": {
+              "expr": "@снятие"
+            },
+            "versus": {
+              "expr": "@против"
+            }
+          },
+          {
+            "type": "emit",
+            "effect": "take_damage",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "amount": {
+                "expr": "@против.natural"
+              },
+              "physical_hit": {
+                "expr": "если(@force > @действующий.magic, 1, 0)"
+              },
+              "drain": {
+                "expr": "1"
+              }
+            }
+          }
+        ]
+      },
+      "astral_strike": {
+        "label": "Астральная атака",
+        "group": "Магия",
+        "description": "Без оружия: Астрал + Воля против Интуиция + Логика; ЗА = Магия + хар. традиции против ЗЩ в астрале (Интуиция + врождённая броня); урон ⌈хар. традиции / 2⌉ + чистые, сопротивление Волей; вид урона — на выбор (стр. 161).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
+          },
+          {
+            "key": "kind",
+            "label": "Урон",
+            "kind": "choice",
+            "from": "damage_choice",
+            "default": "физический",
+            "ask": {
+              "by": "actor"
+            }
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.astral_mode == \"нет\""
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"нужно астральное восприятие или проекция\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.complex_left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"сложное действие на этом ходу уже потрачено\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.complex_left"
+            },
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "steps": [
+          {
+            "id": "удар",
+            "type": "roll",
+            "die": "pool",
+            "count": {
+              "expr": "большее из(0, @действующий.skills.астрал.rank + @действующий.willpower + @действующий.wound_mod)"
+            },
+            "tags": [
+              "атака",
+              "астрал"
+            ],
+            "by": {
+              "expr": "@действующий"
+            }
+          },
+          {
+            "type": "each",
+            "of": "цели"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.spell_ar - @цель.astral_dr >= 4"
+            }
+          },
+          {
+            "type": "emit",
+            "effect": "gain_edge",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              }
+            }
+          },
+          {
+            "type": "orElse",
+            "if": {
+              "expr": "@цель.astral_dr - @действующий.spell_ar >= 4"
+            }
+          },
+          {
+            "type": "emit",
+            "effect": "gain_edge",
+            "args": {
+              "лист": {
+                "expr": "@цель"
+              }
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "id": "отпор",
+            "type": "roll",
+            "die": "pool",
+            "count": {
+              "expr": "@цель.intuition + @цель.logic"
+            },
+            "tags": [
+              "защита",
+              "астрал"
+            ],
+            "by": {
+              "expr": "@цель"
+            }
+          },
+          {
+            "id": "итог",
+            "type": "check",
+            "value": {
+              "expr": "@удар"
+            },
+            "versus": {
+              "expr": "@отпор"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@итог.success"
+            }
+          },
+          {
+            "id": "воля",
+            "type": "roll",
+            "die": "pool",
+            "count": {
+              "expr": "@цель.willpower"
+            },
+            "tags": [
+              "сопротивление"
+            ],
+            "by": {
+              "expr": "@цель"
+            }
+          },
+          {
+            "type": "emit",
+            "effect": "take_damage",
+            "args": {
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "amount": {
+                "expr": "большее из(0, округлить вверх(@действующий.trad_attr / 2) + @итог.margin - @воля.natural)"
+              },
+              "physical_hit": {
+                "expr": "если(@kind == \"физический\", 1, 0)"
+              }
+            }
+          },
+          {
+            "type": "end"
+          }
+        ]
       }
     },
     "grants": [
@@ -34719,6 +35828,14 @@
             "if": {
               "expr": "все(@бросающий == @носитель, @строка.wireless == да)"
             }
+          },
+          {
+            "kind": "value",
+            "target": "has_medkit",
+            "op": "set",
+            "value": {
+              "expr": "1"
+            }
           }
         ]
       },
@@ -34750,7 +35867,17 @@
         "cells": {
           "cost": 50,
           "avail": 1
-        }
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "has_fa_kit",
+            "op": "set",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
       },
       {
         "id": "disposable_syringe",
@@ -38104,7 +39231,17 @@
         "cells": {
           "kind": "отрицательное",
           "karma": 8
-        }
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "init_half",
+            "op": "set",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
       },
       {
         "id": "burned_out",
@@ -38353,7 +39490,10 @@
         "cells": {
           "kind": "отрицательное",
           "karma": 6
-        }
+        },
+        "grants": [
+          "insecurity_check"
+        ]
       },
       {
         "id": "bad_luck",
@@ -38511,7 +39651,10 @@
           "kind": "отрицательное",
           "karma": 8,
           "choice_note": "стрессовая ситуация"
-        }
+        },
+        "grants": [
+          "stress_check"
+        ]
       },
       {
         "id": "sensitive_system",
@@ -51283,6 +52426,70 @@
         "label": "Слабость",
         "description": "Вещество (дерево, золото, феррокрит) наносит существу дополнительный урон: Сила урона всех атак этим веществом +уровень Магии существа или +3 (наивысшее). Оружие из такого материала преодолевает Невосприимчивость. Урон нельзя исцелить Регенерацией или исцеляющей магией, только естественным заживлением. Некоторые слабости — состояния (василиск уязвим к собственному Окаменению): к проверке сопротивления существа применяется модификатор к набору кубиков, равный уровню Магии существа или -3 (наивысшее). (стр. 229)",
         "cells": {}
+      },
+      {
+        "id": "act_medkit",
+        "table": "action",
+        "label": "Аптечка",
+        "bindings": [
+          {
+            "label": "Аптечка",
+            "effect": "medkit_heal",
+            "args": {
+              "healer_pool": {
+                "expr": "@носитель.skills.биотехнологии.pool"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "mg_substance",
+        "table": "magic_action",
+        "label": "Создать субстанцию",
+        "bindings": [
+          {
+            "label": "Создать субстанцию",
+            "effect": "create_substance",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "mg_disenchant",
+        "table": "magic_action",
+        "label": "Снять зачарование",
+        "bindings": [
+          {
+            "label": "Снять зачарование",
+            "effect": "disenchant",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "mg_astral_strike",
+        "table": "magic_action",
+        "label": "Астральная атака",
+        "bindings": [
+          {
+            "label": "Астральная атака",
+            "effect": "astral_strike",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
       }
     ]
   },
