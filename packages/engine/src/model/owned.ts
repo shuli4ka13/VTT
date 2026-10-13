@@ -100,6 +100,7 @@ export function propsOf(record: CompendiumRecord, system: System, entry?: Owned)
     if (own !== undefined) props[p.key] = own;
     else if (record.cells && record.cells[p.key] !== undefined) props[p.key] = record.cells[p.key];
     else if (p.expr) props[p.key] = p.expr;
+    else if (p.default !== undefined && p.default !== null && p.default !== '') props[p.key] = p.default;
   }
   return props;
 }
