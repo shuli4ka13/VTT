@@ -32768,8 +32768,987 @@ exports[`итоги действий: dnd5e > sil · shortbow:0 1`] = `
 }
 `;
 
+exports[`итоги действий: shadowrun6 > baraholka_killer · ic_strike:0 1`] = `
+{
+  "→ baraholka · high · бой": {
+    "baraholka": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ baraholka · high · вне боя": {
+    "baraholka": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ baraholka · low · бой": {
+    "baraholka": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ baraholka · low · вне боя": {
+    "baraholka": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ baraholka · walk · бой": {
+    "baraholka": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+        "matrix_damage": 2,
+      },
+    },
+  },
+  "→ baraholka · walk · вне боя": {
+    "baraholka": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+        "matrix_damage": 2,
+      },
+    },
+  },
+  "→ baraholka_killer · high · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ baraholka_killer · high · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ baraholka_killer · low · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ baraholka_killer · low · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+        "matrix_damage": 2,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+        "matrix_damage": 2,
+      },
+    },
+  },
+  "→ fiveeyes · high · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "fiveeyes": {
+      "values": {
+        "matrix_damage": 10,
+      },
+    },
+  },
+  "→ fiveeyes · high · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "fiveeyes": {
+      "values": {
+        "matrix_damage": 10,
+      },
+    },
+  },
+  "→ fiveeyes · low · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "fiveeyes": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ fiveeyes · low · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "fiveeyes": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ fiveeyes · walk · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "fiveeyes": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ fiveeyes · walk · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "fiveeyes": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ fiveeyes_2 · high · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "fiveeyes_2": {
+      "values": {
+        "matrix_damage": 10,
+      },
+    },
+  },
+  "→ fiveeyes_2 · high · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "fiveeyes_2": {
+      "values": {
+        "matrix_damage": 10,
+      },
+    },
+  },
+  "→ fiveeyes_2 · low · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "fiveeyes_2": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ fiveeyes_2 · low · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "fiveeyes_2": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ fiveeyes_2 · walk · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "fiveeyes_2": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ fiveeyes_2 · walk · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "fiveeyes_2": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ fiveeyes_squad · high · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "matrix_damage": 9,
+      },
+    },
+  },
+  "→ fiveeyes_squad · high · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "matrix_damage": 9,
+      },
+    },
+  },
+  "→ fiveeyes_squad · low · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ fiveeyes_squad · low · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ fiveeyes_squad · walk · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ fiveeyes_squad · walk · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ hammer · high · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "hammer": {
+      "values": {
+        "matrix_damage": 9,
+      },
+    },
+  },
+  "→ hammer · high · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "hammer": {
+      "values": {
+        "matrix_damage": 9,
+      },
+    },
+  },
+  "→ hammer · low · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "hammer": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ hammer · low · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "hammer": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ hammer · walk · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "hammer": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ hammer · walk · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "hammer": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ humanis · high · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "humanis": {
+      "values": {
+        "matrix_damage": 10,
+      },
+    },
+  },
+  "→ humanis · high · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "humanis": {
+      "values": {
+        "matrix_damage": 10,
+      },
+    },
+  },
+  "→ humanis · low · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "humanis": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ humanis · low · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "humanis": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ humanis · walk · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "humanis": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ humanis · walk · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "humanis": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ lone_star · high · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "matrix_damage": 9,
+      },
+    },
+  },
+  "→ lone_star · high · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "matrix_damage": 9,
+      },
+    },
+  },
+  "→ lone_star · low · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ lone_star · low · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ lone_star · walk · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ lone_star · walk · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ mafia · high · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "mafia": {
+      "values": {
+        "matrix_damage": 10,
+      },
+    },
+  },
+  "→ mafia · high · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "mafia": {
+      "values": {
+        "matrix_damage": 10,
+      },
+    },
+  },
+  "→ mafia · low · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "mafia": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ mafia · low · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "mafia": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ mafia · walk · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "mafia": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ mafia · walk · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "mafia": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ razor · high · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "razor": {
+      "values": {
+        "matrix_damage": 8,
+      },
+    },
+  },
+  "→ razor · high · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "razor": {
+      "values": {
+        "matrix_damage": 8,
+      },
+    },
+  },
+  "→ razor · low · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "razor": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ razor · low · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "razor": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ razor · walk · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "razor": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ razor · walk · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "razor": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ sauron · high · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "sauron": {
+      "values": {
+        "matrix_damage": 10,
+      },
+    },
+  },
+  "→ sauron · high · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "sauron": {
+      "values": {
+        "matrix_damage": 10,
+      },
+    },
+  },
+  "→ sauron · low · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "sauron": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ sauron · low · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "sauron": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ sauron · walk · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "sauron": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ sauron · walk · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "sauron": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ silk · high · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "silk": {
+      "values": {
+        "matrix_damage": 8,
+      },
+    },
+  },
+  "→ silk · high · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "silk": {
+      "values": {
+        "matrix_damage": 8,
+      },
+    },
+  },
+  "→ silk · low · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "silk": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ silk · low · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "silk": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ silk · walk · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "silk": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ silk · walk · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "silk": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ swat · high · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "swat": {
+      "values": {
+        "matrix_damage": 8,
+      },
+    },
+  },
+  "→ swat · high · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "swat": {
+      "values": {
+        "matrix_damage": 8,
+      },
+    },
+  },
+  "→ swat · low · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "swat": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ swat · low · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "swat": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ swat · walk · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "swat": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ swat · walk · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "swat": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+}
+`;
+
 exports[`итоги действий: shadowrun6 > fiveeyes · bike_chain:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
@@ -32841,6 +33820,18 @@ exports[`итоги действий: shadowrun6 > fiveeyes · bike_chain:0 1`] 
 
 exports[`итоги действий: shadowrun6 > fiveeyes · bike_chain:1 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -32912,6 +33903,18 @@ exports[`итоги действий: shadowrun6 > fiveeyes · bike_chain:1 1`] 
 
 exports[`итоги действий: shadowrun6 > fiveeyes · streetline:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
@@ -32983,6 +33986,18 @@ exports[`итоги действий: shadowrun6 > fiveeyes · streetline:0 1`] 
 
 exports[`итоги действий: shadowrun6 > fiveeyes · streetline:1 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -33054,6 +34069,18 @@ exports[`итоги действий: shadowrun6 > fiveeyes · streetline:1 1`] 
 
 exports[`итоги действий: shadowrun6 > fiveeyes_2 · bike_chain:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Мотоциклетная цепь · Атаковать»: параметр «дистанция» не заполнен",
@@ -33125,6 +34152,18 @@ exports[`итоги действий: shadowrun6 > fiveeyes_2 · bike_chain:0 1`
 
 exports[`итоги действий: shadowrun6 > fiveeyes_2 · bike_chain:1 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -33196,6 +34235,18 @@ exports[`итоги действий: shadowrun6 > fiveeyes_2 · bike_chain:1 1`
 
 exports[`итоги действий: shadowrun6 > fiveeyes_2 · streetline:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия ««Стритлайн Спешл» · Атаковать»: параметр «дистанция» не заполнен",
@@ -33267,6 +34318,18 @@ exports[`итоги действий: shadowrun6 > fiveeyes_2 · streetline:0 1`
 
 exports[`итоги действий: shadowrun6 > fiveeyes_2 · streetline:1 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -33338,6 +34401,18 @@ exports[`итоги действий: shadowrun6 > fiveeyes_2 · streetline:1 1`
 
 exports[`итоги действий: shadowrun6 > hammer · act_first_aid:0 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -33409,6 +34484,18 @@ exports[`итоги действий: shadowrun6 > hammer · act_first_aid:0 1`]
 
 exports[`итоги действий: shadowrun6 > hammer · act_rest_day:0 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -33480,6 +34567,18 @@ exports[`итоги действий: shadowrun6 > hammer · act_rest_day:0 1`] 
 
 exports[`итоги действий: shadowrun6 > hammer · act_rest_hour:0 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -33551,6 +34650,18 @@ exports[`итоги действий: shadowrun6 > hammer · act_rest_hour:0 1`]
 
 exports[`итоги действий: shadowrun6 > hammer · act_scene:0 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {
     "fiveeyes_squad": {
       "values": {
@@ -33802,6 +34913,18 @@ exports[`итоги действий: shadowrun6 > hammer · act_scene:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > hammer · act_second_wind:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ baraholka · high · вне боя": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ baraholka · low · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ baraholka · low · вне боя": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ baraholka · walk · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ baraholka · walk · вне боя": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ baraholka_killer · high · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ baraholka_killer · high · вне боя": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ baraholka_killer · low · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ baraholka_killer · low · вне боя": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ baraholka_killer · walk · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ baraholka_killer · walk · вне боя": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
   "→ fiveeyes · high · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
   "→ fiveeyes · high · вне боя": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
   "→ fiveeyes · low · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
@@ -33873,6 +34996,18 @@ exports[`итоги действий: shadowrun6 > hammer · act_second_wind:0 1
 
 exports[`итоги действий: shadowrun6 > hammer · act_shrug:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka · high · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka · low · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka · low · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka · walk · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka · walk · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka_killer · high · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka_killer · high · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka_killer · low · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka_killer · low · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka_killer · walk · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka_killer · walk · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ fiveeyes · high · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ fiveeyes · high · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ fiveeyes · low · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
@@ -33944,6 +35079,18 @@ exports[`итоги действий: shadowrun6 > hammer · act_shrug:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > hammer · act_stand:0 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -34015,6 +35162,18 @@ exports[`итоги действий: shadowrun6 > hammer · act_stand:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > hammer · ak_97:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
@@ -34086,6 +35245,18 @@ exports[`итоги действий: shadowrun6 > hammer · ak_97:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > hammer · ak_97:1 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -34157,6 +35328,18 @@ exports[`итоги действий: shadowrun6 > hammer · ak_97:1 1`] = `
 
 exports[`итоги действий: shadowrun6 > hammer · staff:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Посох · Атаковать»: параметр «дистанция» не заполнен",
@@ -34228,6 +35411,18 @@ exports[`итоги действий: shadowrun6 > hammer · staff:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > hammer · staff:1 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -34299,6 +35494,18 @@ exports[`итоги действий: shadowrun6 > hammer · staff:1 1`] = `
 
 exports[`итоги действий: shadowrun6 > humanis · club:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Дубинка · Атаковать»: параметр «дистанция» не заполнен",
@@ -34370,6 +35577,18 @@ exports[`итоги действий: shadowrun6 > humanis · club:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > humanis · club:1 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -34441,6 +35660,18 @@ exports[`итоги действий: shadowrun6 > humanis · club:1 1`] = `
 
 exports[`итоги действий: shadowrun6 > lone_star · colt_l36:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
@@ -34512,6 +35743,18 @@ exports[`итоги действий: shadowrun6 > lone_star · colt_l36:0 1`] =
 
 exports[`итоги действий: shadowrun6 > lone_star · colt_l36:1 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -34583,6 +35826,18 @@ exports[`итоги действий: shadowrun6 > lone_star · colt_l36:1 1`] =
 
 exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
@@ -34654,6 +35909,18 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
 
 exports[`итоги действий: shadowrun6 > lone_star · stun_baton:1 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -34725,6 +35992,18 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:1 1`]
 
 exports[`итоги действий: shadowrun6 > mafia · beretta_101t:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
@@ -34796,6 +36075,18 @@ exports[`итоги действий: shadowrun6 > mafia · beretta_101t:0 1`] =
 
 exports[`итоги действий: shadowrun6 > mafia · beretta_101t:1 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -34867,6 +36158,18 @@ exports[`итоги действий: shadowrun6 > mafia · beretta_101t:1 1`] =
 
 exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
@@ -34938,6 +36241,18 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > mafia · sap:1 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -35009,6 +36324,18 @@ exports[`итоги действий: shadowrun6 > mafia · sap:1 1`] = `
 
 exports[`итоги действий: shadowrun6 > razor · act_first_aid:0 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -35080,6 +36407,18 @@ exports[`итоги действий: shadowrun6 > razor · act_first_aid:0 1`] 
 
 exports[`итоги действий: shadowrun6 > razor · act_rest_day:0 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -35151,6 +36490,18 @@ exports[`итоги действий: shadowrun6 > razor · act_rest_day:0 1`] =
 
 exports[`итоги действий: shadowrun6 > razor · act_rest_hour:0 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -35222,6 +36573,90 @@ exports[`итоги действий: shadowrun6 > razor · act_rest_hour:0 1`] 
 
 exports[`итоги действий: shadowrun6 > razor · act_scene:0 1`] = `
 {
+  "→ baraholka · high · бой": {
+    "baraholka": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ baraholka · high · вне боя": {
+    "baraholka": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ baraholka · low · бой": {
+    "baraholka": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ baraholka · low · вне боя": {
+    "baraholka": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ baraholka · walk · бой": {
+    "baraholka": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ baraholka · walk · вне боя": {
+    "baraholka": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ baraholka_killer · high · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ baraholka_killer · high · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ baraholka_killer · low · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ baraholka_killer · low · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
   "→ fiveeyes · high · бой": {
     "fiveeyes_squad": {
       "values": {
@@ -35653,6 +37088,90 @@ exports[`итоги действий: shadowrun6 > razor · act_scene:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > razor · act_second_wind:0 1`] = `
 {
+  "→ baraholka · high · бой": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka · high · вне боя": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka · low · бой": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka · low · вне боя": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka · walk · бой": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka · walk · вне боя": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka_killer · high · бой": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka_killer · high · вне боя": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka_killer · low · бой": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka_killer · low · вне боя": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · бой": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · вне боя": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
   "→ fiveeyes · high · бой": {
     "razor": {
       "values": {
@@ -36120,6 +37639,18 @@ exports[`итоги действий: shadowrun6 > razor · act_second_wind:0 1`
 
 exports[`итоги действий: shadowrun6 > razor · act_shrug:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka · high · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka · low · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka · low · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka · walk · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka · walk · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka_killer · high · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka_killer · high · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka_killer · low · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka_killer · low · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka_killer · walk · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ baraholka_killer · walk · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ fiveeyes · high · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ fiveeyes · high · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ fiveeyes · low · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
@@ -36191,6 +37722,18 @@ exports[`итоги действий: shadowrun6 > razor · act_shrug:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > razor · act_stand:0 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -36262,6 +37805,18 @@ exports[`итоги действий: shadowrun6 > razor · act_stand:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > razor · grenade_frag:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
@@ -36333,6 +37888,18 @@ exports[`итоги действий: shadowrun6 > razor · grenade_frag:0 1`] =
 
 exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
@@ -36404,6 +37971,18 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > razor · katana:1 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -36475,6 +38054,18 @@ exports[`итоги действий: shadowrun6 > razor · katana:1 1`] = `
 
 exports[`итоги действий: shadowrun6 > razor · predator_vi:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
@@ -36546,6 +38137,18 @@ exports[`итоги действий: shadowrun6 > razor · predator_vi:0 1`] = 
 
 exports[`итоги действий: shadowrun6 > razor · predator_vi:1 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -36617,6 +38220,18 @@ exports[`итоги действий: shadowrun6 > razor · predator_vi:1 1`] = 
 
 exports[`итоги действий: shadowrun6 > sauron · beretta_101t:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия ««Беретта 101Т» · Атаковать»: параметр «дистанция» не заполнен",
@@ -36688,6 +38303,18 @@ exports[`итоги действий: shadowrun6 > sauron · beretta_101t:0 1`] 
 
 exports[`итоги действий: shadowrun6 > sauron · beretta_101t:1 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -36759,6 +38386,18 @@ exports[`итоги действий: shadowrun6 > sauron · beretta_101t:1 1`] 
 
 exports[`итоги действий: shadowrun6 > sauron · knucks:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Кастет · Атаковать»: параметр «дистанция» не заполнен",
@@ -36830,6 +38469,18 @@ exports[`итоги действий: shadowrun6 > sauron · knucks:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > sauron · knucks:1 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -36901,6 +38552,18 @@ exports[`итоги действий: shadowrun6 > sauron · knucks:1 1`] = `
 
 exports[`итоги действий: shadowrun6 > silk · act_first_aid:0 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -36972,6 +38635,18 @@ exports[`итоги действий: shadowrun6 > silk · act_first_aid:0 1`] =
 
 exports[`итоги действий: shadowrun6 > silk · act_rest_day:0 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -37043,6 +38718,18 @@ exports[`итоги действий: shadowrun6 > silk · act_rest_day:0 1`] = 
 
 exports[`итоги действий: shadowrun6 > silk · act_rest_hour:0 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -37114,6 +38801,90 @@ exports[`итоги действий: shadowrun6 > silk · act_rest_hour:0 1`] =
 
 exports[`итоги действий: shadowrun6 > silk · act_scene:0 1`] = `
 {
+  "→ baraholka · high · бой": {
+    "baraholka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka · high · вне боя": {
+    "baraholka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka · low · бой": {
+    "baraholka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka · low · вне боя": {
+    "baraholka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka · walk · бой": {
+    "baraholka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka · walk · вне боя": {
+    "baraholka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka_killer · high · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka_killer · high · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka_killer · low · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka_killer · low · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
   "→ fiveeyes · high · бой": {
     "fiveeyes_squad": {
       "values": {
@@ -37545,6 +39316,90 @@ exports[`итоги действий: shadowrun6 > silk · act_scene:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > silk · act_second_wind:0 1`] = `
 {
+  "→ baraholka · high · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ baraholka · high · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ baraholka · low · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ baraholka · low · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ baraholka · walk · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ baraholka · walk · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ baraholka_killer · high · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ baraholka_killer · high · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ baraholka_killer · low · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ baraholka_killer · low · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
   "→ fiveeyes · high · бой": {
     "silk": {
       "values": {
@@ -38012,6 +39867,90 @@ exports[`итоги действий: shadowrun6 > silk · act_second_wind:0 1`]
 
 exports[`итоги действий: shadowrun6 > silk · act_shrug:0 1`] = `
 {
+  "→ baraholka · high · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka · high · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka · low · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka · low · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka · walk · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka · walk · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka_killer · high · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka_killer · high · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka_killer · low · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka_killer · low · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
   "→ fiveeyes · high · бой": {
     "silk": {
       "values": {
@@ -38479,6 +40418,18 @@ exports[`итоги действий: shadowrun6 > silk · act_shrug:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > silk · act_stand:0 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -38550,6 +40501,18 @@ exports[`итоги действий: shadowrun6 > silk · act_stand:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > silk · colt_l36:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
@@ -38621,6 +40584,18 @@ exports[`итоги действий: shadowrun6 > silk · colt_l36:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > silk · colt_l36:1 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -38692,6 +40667,18 @@ exports[`итоги действий: shadowrun6 > silk · colt_l36:1 1`] = `
 
 exports[`итоги действий: shadowrun6 > swat · colt_m23:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия ««Кольт M23» · Атаковать»: параметр «дистанция» не заполнен",
@@ -38763,6 +40750,18 @@ exports[`итоги действий: shadowrun6 > swat · colt_m23:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > swat · colt_m23:1 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -38834,6 +40833,18 @@ exports[`итоги действий: shadowrun6 > swat · colt_m23:1 1`] = `
 
 exports[`итоги действий: shadowrun6 > swat · manhunter:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия ««Кольт Мэнхантер» · Атаковать»: параметр «дистанция» не заполнен",
@@ -38905,6 +40916,18 @@ exports[`итоги действий: shadowrun6 > swat · manhunter:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > swat · manhunter:1 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
@@ -38976,6 +40999,18 @@ exports[`итоги действий: shadowrun6 > swat · manhunter:1 1`] = `
 
 exports[`итоги действий: shadowrun6 > swat · stun_baton:0 1`] = `
 {
+  "→ baraholka · high · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ fiveeyes · low · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
@@ -39047,6 +41082,18 @@ exports[`итоги действий: shadowrun6 > swat · stun_baton:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > swat · stun_baton:1 1`] = `
 {
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
   "→ fiveeyes · high · бой": {},
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {},
