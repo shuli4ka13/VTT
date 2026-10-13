@@ -55,64 +55,136 @@
             "label": "Тело",
             "kind": "number",
             "default": 3,
-            "min": 0,
-            "max": 13
+            "min": 1,
+            "max": {
+              "expr": "или(@metatype.body_max, 6) + @attr_limits.body.bonus"
+            },
+            "stages": [
+              {
+                "key": "аугментация",
+                "label": "аугментация (не больше +4)",
+                "upTo": 4
+              }
+            ]
           },
           {
             "key": "agility",
             "label": "Проворство",
             "kind": "number",
             "default": 3,
-            "min": 0,
-            "max": 13
+            "min": 1,
+            "max": {
+              "expr": "или(@metatype.agility_max, 6) + @attr_limits.agility.bonus"
+            },
+            "stages": [
+              {
+                "key": "аугментация",
+                "label": "аугментация (не больше +4)",
+                "upTo": 4
+              }
+            ]
           },
           {
             "key": "reaction",
             "label": "Реакция",
             "kind": "number",
             "default": 3,
-            "min": 0,
-            "max": 13
+            "min": 1,
+            "max": {
+              "expr": "или(@metatype.reaction_max, 6) + @attr_limits.reaction.bonus"
+            },
+            "stages": [
+              {
+                "key": "аугментация",
+                "label": "аугментация (не больше +4)",
+                "upTo": 4
+              }
+            ]
           },
           {
             "key": "strength",
             "label": "Сила",
             "kind": "number",
             "default": 3,
-            "min": 0,
-            "max": 13
+            "min": 1,
+            "max": {
+              "expr": "или(@metatype.strength_max, 6) + @attr_limits.strength.bonus"
+            },
+            "stages": [
+              {
+                "key": "аугментация",
+                "label": "аугментация (не больше +4)",
+                "upTo": 4
+              }
+            ]
           },
           {
             "key": "willpower",
             "label": "Воля",
             "kind": "number",
             "default": 3,
-            "min": 0,
-            "max": 13
+            "min": 1,
+            "max": {
+              "expr": "или(@metatype.willpower_max, 6) + @attr_limits.willpower.bonus"
+            },
+            "stages": [
+              {
+                "key": "аугментация",
+                "label": "аугментация (не больше +4)",
+                "upTo": 4
+              }
+            ]
           },
           {
             "key": "logic",
             "label": "Логика",
             "kind": "number",
             "default": 3,
-            "min": 0,
-            "max": 13
+            "min": 1,
+            "max": {
+              "expr": "или(@metatype.logic_max, 6) + @attr_limits.logic.bonus"
+            },
+            "stages": [
+              {
+                "key": "аугментация",
+                "label": "аугментация (не больше +4)",
+                "upTo": 4
+              }
+            ]
           },
           {
             "key": "intuition",
             "label": "Интуиция",
             "kind": "number",
             "default": 3,
-            "min": 0,
-            "max": 13
+            "min": 1,
+            "max": {
+              "expr": "или(@metatype.intuition_max, 6) + @attr_limits.intuition.bonus"
+            },
+            "stages": [
+              {
+                "key": "аугментация",
+                "label": "аугментация (не больше +4)",
+                "upTo": 4
+              }
+            ]
           },
           {
             "key": "charisma",
             "label": "Харизма",
             "kind": "number",
             "default": 3,
-            "min": 0,
-            "max": 13
+            "min": 1,
+            "max": {
+              "expr": "или(@metatype.charisma_max, 6) + @attr_limits.charisma.bonus"
+            },
+            "stages": [
+              {
+                "key": "аугментация",
+                "label": "аугментация (не больше +4)",
+                "upTo": 4
+              }
+            ]
           },
           {
             "key": "edge",
@@ -120,27 +192,56 @@
             "kind": "number",
             "default": 2,
             "min": 1,
-            "max": 7
+            "max": {
+              "expr": "или(@metatype.edge_max, 6) + @attr_limits.edge.bonus"
+            },
+            "stages": [
+              {
+                "key": "аугментация",
+                "label": "аугментация (не больше +4)",
+                "upTo": 4
+              }
+            ]
           },
           {
             "key": "essence",
             "label": "Сущность",
-            "kind": "number",
-            "default": 6,
-            "min": 0,
-            "max": 6
+            "expr": {
+              "expr": "6 - сумма(строки(\"implant\", \"essence\")) - сумма(строки(\"implant_weapon\", \"essence\"))"
+            }
+          },
+          {
+            "key": "essence_loss",
+            "label": "Потеря Магии/Резонанса от Сущности",
+            "expr": {
+              "expr": "большее из(0, округлить вверх(6 - @essence))"
+            }
           },
           {
             "key": "magic",
             "label": "Магия",
             "kind": "number",
-            "min": 0
+            "min": 0,
+            "stages": [
+              {
+                "key": "основа",
+                "label": "основа",
+                "atLeast": 0
+              }
+            ]
           },
           {
             "key": "resonance",
             "label": "Резонанс",
             "kind": "number",
-            "min": 0
+            "min": 0,
+            "stages": [
+              {
+                "key": "основа",
+                "label": "основа",
+                "atLeast": 0
+              }
+            ]
           },
           {
             "key": "composure",
@@ -291,6 +392,13 @@
             "max": 2
           },
           {
+            "key": "aim_bonus",
+            "label": "Прицелился: кубиков к атаке",
+            "kind": "number",
+            "default": 0,
+            "min": 0
+          },
+          {
             "key": "smartlink",
             "label": "Смартлинк (1 — есть)",
             "kind": "number",
@@ -428,7 +536,7 @@
             "key": "is_dead",
             "label": "Критический урон достиг Тело × 2",
             "expr": {
-              "expr": "@critical >= @body * 2"
+              "expr": "любое(@critical >= @body * 2, @essence <= 0)"
             }
           },
           {
@@ -597,6 +705,51 @@
             "key": "traits",
             "label": "Расовые качества",
             "kind": "text"
+          },
+          {
+            "key": "body_max",
+            "label": "Предел: Тело",
+            "kind": "number"
+          },
+          {
+            "key": "agility_max",
+            "label": "Предел: Проворство",
+            "kind": "number"
+          },
+          {
+            "key": "reaction_max",
+            "label": "Предел: Реакция",
+            "kind": "number"
+          },
+          {
+            "key": "strength_max",
+            "label": "Предел: Сила",
+            "kind": "number"
+          },
+          {
+            "key": "willpower_max",
+            "label": "Предел: Воля",
+            "kind": "number"
+          },
+          {
+            "key": "logic_max",
+            "label": "Предел: Логика",
+            "kind": "number"
+          },
+          {
+            "key": "intuition_max",
+            "label": "Предел: Интуиция",
+            "kind": "number"
+          },
+          {
+            "key": "charisma_max",
+            "label": "Предел: Харизма",
+            "kind": "number"
+          },
+          {
+            "key": "edge_max",
+            "label": "Предел: Преимущество",
+            "kind": "number"
           }
         ],
         "rows": [
@@ -605,7 +758,16 @@
             "cells": {
               "ranges": "Преимущество 1–7, остальное 1–6",
               "toughness": 0,
-              "dermal": 0
+              "dermal": 0,
+              "body_max": 6,
+              "agility_max": 6,
+              "reaction_max": 6,
+              "strength_max": 6,
+              "willpower_max": 6,
+              "logic_max": 6,
+              "intuition_max": 6,
+              "charisma_max": 6,
+              "edge_max": 7
             }
           },
           {
@@ -614,7 +776,16 @@
               "ranges": "Тело 1–7, Реакция 1–5, Сила 1–8, Воля 1–7",
               "toughness": 0,
               "dermal": 0,
-              "traits": "Инфразрение; Устойчивость к токсинам"
+              "traits": "Инфразрение; Устойчивость к токсинам",
+              "body_max": 7,
+              "agility_max": 6,
+              "reaction_max": 5,
+              "strength_max": 8,
+              "willpower_max": 7,
+              "logic_max": 6,
+              "intuition_max": 6,
+              "charisma_max": 6,
+              "edge_max": 6
             }
           },
           {
@@ -623,7 +794,16 @@
               "ranges": "Проворство 1–7, Харизма 1–8",
               "toughness": 0,
               "dermal": 0,
-              "traits": "Сумеречное зрение"
+              "traits": "Сумеречное зрение",
+              "body_max": 6,
+              "agility_max": 7,
+              "reaction_max": 6,
+              "strength_max": 6,
+              "willpower_max": 6,
+              "logic_max": 6,
+              "intuition_max": 6,
+              "charisma_max": 8,
+              "edge_max": 6
             }
           },
           {
@@ -632,7 +812,16 @@
               "ranges": "Тело 1–8, Сила 1–8, Харизма 1–5",
               "toughness": 1,
               "dermal": 0,
-              "traits": "Живучесть 1; Сумеречное зрение"
+              "traits": "Живучесть 1; Сумеречное зрение",
+              "body_max": 8,
+              "agility_max": 6,
+              "reaction_max": 6,
+              "strength_max": 8,
+              "willpower_max": 6,
+              "logic_max": 6,
+              "intuition_max": 6,
+              "charisma_max": 5,
+              "edge_max": 6
             }
           },
           {
@@ -641,7 +830,16 @@
               "ranges": "Тело 1–9, Проворство 1–5, Сила 1–9, Харизма 1–5",
               "toughness": 2,
               "dermal": 1,
-              "traits": "Живучесть 2; Инфразрение; Подкожные наросты (+1 к защите, безоружный урон физический)"
+              "traits": "Живучесть 2; Инфразрение; Подкожные наросты (+1 к защите, безоружный урон физический)",
+              "body_max": 9,
+              "agility_max": 5,
+              "reaction_max": 6,
+              "strength_max": 9,
+              "willpower_max": 6,
+              "logic_max": 6,
+              "intuition_max": 6,
+              "charisma_max": 5,
+              "edge_max": 6
             }
           }
         ]
@@ -790,6 +988,21 @@
             "key": "text",
             "label": "По книге",
             "kind": "text"
+          },
+          {
+            "key": "simple",
+            "label": "Простое действие (1 — да)",
+            "kind": "number"
+          },
+          {
+            "key": "no_damage",
+            "label": "Без урона (1 — да)",
+            "kind": "number"
+          },
+          {
+            "key": "cover_free",
+            "label": "Из укрытия без простого действия (1 — да)",
+            "kind": "number"
           }
         ],
         "rows": [
@@ -809,7 +1022,8 @@
               "dv": 2,
               "pool": -4,
               "knockout": 0,
-              "text": "Простое действие: +2 к урону за −4 к набору."
+              "text": "Простое действие вместе с атакой: +2 к урону за −4 к набору (стр. 42).",
+              "simple": 1
             }
           },
           {
@@ -819,7 +1033,8 @@
               "dv": 2,
               "pool": -2,
               "knockout": 0,
-              "text": "Штраф «Метко попасть» снижается до −2."
+              "text": "1 очко: клинком — штраф «Метко попасть» снижается до −2 (стр. 48).",
+              "simple": 1
             }
           },
           {
@@ -840,6 +1055,38 @@
               "pool": 0,
               "knockout": 0,
               "text": "+3 к урону."
+            }
+          },
+          {
+            "value": "Обрушить",
+            "cells": {
+              "cost": 1,
+              "dv": 0,
+              "pool": 0,
+              "knockout": 0,
+              "text": "1 очко, ближний бой: урон больше Тела — цель повалена, Распластан (стр. 48)."
+            }
+          },
+          {
+            "value": "Метко попасть и разоружить",
+            "cells": {
+              "cost": 5,
+              "dv": 0,
+              "pool": 0,
+              "knockout": 0,
+              "no_damage": 1,
+              "text": "5 очков: попадание не наносит урона, а выбивает оружие из рук (стр. 49)."
+            }
+          },
+          {
+            "value": "Стрелять из укрытия",
+            "cells": {
+              "cost": 2,
+              "dv": 0,
+              "pool": 0,
+              "knockout": 0,
+              "cover_free": 1,
+              "text": "2 очка, из Укрытия IV: атака без простого действия, чтобы высунуться (стр. 49)."
             }
           }
         ]
@@ -2275,6 +2522,542 @@
             }
           }
         ]
+      },
+      "attributes": {
+        "label": "Характеристики",
+        "key": "word",
+        "columns": [],
+        "rows": [
+          {
+            "value": "body",
+            "label": "Тело"
+          },
+          {
+            "value": "agility",
+            "label": "Проворство"
+          },
+          {
+            "value": "reaction",
+            "label": "Реакция"
+          },
+          {
+            "value": "strength",
+            "label": "Сила"
+          },
+          {
+            "value": "willpower",
+            "label": "Воля"
+          },
+          {
+            "value": "logic",
+            "label": "Логика"
+          },
+          {
+            "value": "intuition",
+            "label": "Интуиция"
+          },
+          {
+            "value": "charisma",
+            "label": "Харизма"
+          },
+          {
+            "value": "edge",
+            "label": "Преимущество"
+          },
+          {
+            "value": "magic",
+            "label": "Магия"
+          },
+          {
+            "value": "resonance",
+            "label": "Резонанс"
+          }
+        ]
+      },
+      "attr_limits": {
+        "label": "Пределы характеристик: прибавки",
+        "key": "word",
+        "owner": "sheet",
+        "columns": [
+          {
+            "key": "bonus",
+            "label": "К пределу",
+            "kind": "number",
+            "default": 0
+          }
+        ],
+        "rows": [
+          {
+            "value": "body",
+            "label": "Тело"
+          },
+          {
+            "value": "agility",
+            "label": "Проворство"
+          },
+          {
+            "value": "reaction",
+            "label": "Реакция"
+          },
+          {
+            "value": "strength",
+            "label": "Сила"
+          },
+          {
+            "value": "willpower",
+            "label": "Воля"
+          },
+          {
+            "value": "logic",
+            "label": "Логика"
+          },
+          {
+            "value": "intuition",
+            "label": "Интуиция"
+          },
+          {
+            "value": "charisma",
+            "label": "Харизма"
+          },
+          {
+            "value": "edge",
+            "label": "Преимущество"
+          }
+        ]
+      },
+      "grades": {
+        "label": "Сорта имплантов",
+        "key": "word",
+        "columns": [
+          {
+            "key": "ess",
+            "label": "Множитель Сущности",
+            "kind": "number"
+          },
+          {
+            "key": "cost",
+            "label": "Множитель цены",
+            "kind": "number"
+          },
+          {
+            "key": "avail",
+            "label": "Сдвиг доступности",
+            "kind": "number"
+          }
+        ],
+        "rows": [
+          {
+            "value": "стандарт",
+            "cells": {
+              "ess": 1,
+              "cost": 1,
+              "avail": 0
+            }
+          },
+          {
+            "value": "б/у",
+            "cells": {
+              "ess": 1.1,
+              "cost": 0.5,
+              "avail": -1
+            }
+          },
+          {
+            "value": "альфа",
+            "cells": {
+              "ess": 0.8,
+              "cost": 1.2,
+              "avail": 1
+            }
+          },
+          {
+            "value": "бета",
+            "cells": {
+              "ess": 0.7,
+              "cost": 1.5,
+              "avail": 2
+            }
+          },
+          {
+            "value": "дельта",
+            "cells": {
+              "ess": 0.5,
+              "cost": 2.5,
+              "avail": 3
+            }
+          }
+        ]
+      },
+      "implant_slots": {
+        "label": "Где имплант",
+        "key": "word",
+        "columns": [],
+        "rows": [
+          {
+            "value": "церебральный"
+          },
+          {
+            "value": "глаз"
+          },
+          {
+            "value": "ухо"
+          },
+          {
+            "value": "тело"
+          },
+          {
+            "value": "конечность"
+          },
+          {
+            "value": "аксессуар конечности"
+          },
+          {
+            "value": "биоимплант"
+          },
+          {
+            "value": "культивированный"
+          }
+        ]
+      },
+      "quality_kinds": {
+        "label": "Вид качества",
+        "key": "word",
+        "columns": [],
+        "rows": [
+          {
+            "value": "положительное"
+          },
+          {
+            "value": "отрицательное"
+          }
+        ]
+      },
+      "implant": {
+        "label": "Имплант",
+        "icon": "🦾",
+        "hint": "Кибер- и биоимпланты: Сущность, сорт (б/у, альфа, бета, дельта), правки характеристик, наборов, защиты.",
+        "shape": "book",
+        "use": "item",
+        "block": "Импланты",
+        "extends": "gear",
+        "columns": [
+          {
+            "key": "slot",
+            "label": "Где стоит",
+            "kind": "choice",
+            "from": "implant_slots"
+          },
+          {
+            "key": "grade",
+            "label": "Сорт",
+            "kind": "choice",
+            "from": "grades",
+            "default": "стандарт"
+          },
+          {
+            "key": "ess_base",
+            "label": "Сущность (стандарт)",
+            "kind": "number"
+          },
+          {
+            "key": "cost_base",
+            "label": "Цена (стандарт), ¥",
+            "kind": "number"
+          },
+          {
+            "key": "avail_base",
+            "label": "Доступность (стандарт)",
+            "kind": "number"
+          },
+          {
+            "key": "essence",
+            "label": "Сущность",
+            "kind": "number",
+            "expr": {
+              "expr": "@ess_base * или(@grade.ess, 1)"
+            }
+          },
+          {
+            "key": "cost",
+            "label": "Цена, ¥",
+            "kind": "number",
+            "expr": {
+              "expr": "@cost_base * или(@grade.cost, 1)"
+            }
+          },
+          {
+            "key": "avail",
+            "label": "Доступность",
+            "kind": "number",
+            "expr": {
+              "expr": "@avail_base + или(@grade.avail, 0)"
+            }
+          },
+          {
+            "key": "excl",
+            "label": "Несовместимо с (группа)",
+            "kind": "text"
+          }
+        ]
+      },
+      "bioware": {
+        "label": "Биоимплант",
+        "icon": "🧬",
+        "hint": "Органические импланты: Сущность меньше, цена выше; культивированные — отдельным видом.",
+        "shape": "book",
+        "use": "item",
+        "block": "Импланты",
+        "extends": "implant",
+        "columns": [
+          {
+            "key": "cultured",
+            "label": "Культивированный",
+            "kind": "boolean"
+          }
+        ]
+      },
+      "cyberlimb": {
+        "label": "Киберконечность",
+        "icon": "🦿",
+        "hint": "Замена конечности: своя Сила и Проворство (база 2), ёмкость под аксессуары, +1 ячейка здоровья.",
+        "shape": "book",
+        "use": "item",
+        "block": "Импланты",
+        "extends": "implant",
+        "columns": [
+          {
+            "key": "limb_strength",
+            "label": "Сила конечности",
+            "kind": "number",
+            "default": 2
+          },
+          {
+            "key": "limb_agility",
+            "label": "Проворство конечности",
+            "kind": "number",
+            "default": 2
+          },
+          {
+            "key": "obvious",
+            "label": "Очевидная (не синтетическая)",
+            "kind": "boolean"
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "physical_max",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "limb_accessory": {
+        "label": "Аксессуар конечности",
+        "icon": "🔩",
+        "hint": "Ставится в киберконечность, занимает её ёмкость.",
+        "shape": "book",
+        "use": "item",
+        "block": "Импланты",
+        "extends": "implant",
+        "columns": []
+      },
+      "implant_weapon": {
+        "label": "Имплантированное оружие",
+        "icon": "🗡",
+        "hint": "Оружие в теле: атакует как оружие, стоит Сущность.",
+        "shape": "book",
+        "use": "item",
+        "block": "Импланты",
+        "extends": "weapon",
+        "columns": [
+          {
+            "key": "slot",
+            "label": "Где стоит",
+            "kind": "choice",
+            "from": "implant_slots"
+          },
+          {
+            "key": "grade",
+            "label": "Сорт",
+            "kind": "choice",
+            "from": "grades",
+            "default": "стандарт"
+          },
+          {
+            "key": "ess_base",
+            "label": "Сущность (стандарт)",
+            "kind": "number"
+          },
+          {
+            "key": "cost_base",
+            "label": "Цена (стандарт), ¥",
+            "kind": "number"
+          },
+          {
+            "key": "avail_base",
+            "label": "Доступность (стандарт)",
+            "kind": "number"
+          },
+          {
+            "key": "essence",
+            "label": "Сущность",
+            "kind": "number",
+            "expr": {
+              "expr": "@ess_base * или(@grade.ess, 1)"
+            }
+          },
+          {
+            "key": "excl",
+            "label": "Несовместимо с (группа)",
+            "kind": "text"
+          },
+          {
+            "key": "cost",
+            "label": "Цена, ¥",
+            "kind": "number",
+            "expr": {
+              "expr": "@cost_base * или(@grade.cost, 1)"
+            }
+          },
+          {
+            "key": "avail",
+            "label": "Доступность",
+            "kind": "number",
+            "expr": {
+              "expr": "@avail_base + или(@grade.avail, 0)"
+            }
+          }
+        ]
+      },
+      "quality": {
+        "label": "Качество",
+        "icon": "✦",
+        "hint": "Положительное стоит карму, отрицательное даёт; уровни и выбор (навык, характеристика) — у экземпляра.",
+        "shape": "book",
+        "use": "item",
+        "block": "Качества",
+        "columns": [
+          {
+            "key": "kind",
+            "label": "Вид",
+            "kind": "choice",
+            "from": "quality_kinds"
+          },
+          {
+            "key": "karma",
+            "label": "Карма",
+            "kind": "number"
+          },
+          {
+            "key": "level",
+            "label": "Уровень",
+            "kind": "number",
+            "default": 1,
+            "min": 1
+          },
+          {
+            "key": "level_max",
+            "label": "Уровней всего",
+            "kind": "number"
+          },
+          {
+            "key": "skill",
+            "label": "Навык",
+            "kind": "choice",
+            "from": "skills"
+          },
+          {
+            "key": "attribute",
+            "label": "Характеристика",
+            "kind": "choice",
+            "from": "attributes"
+          },
+          {
+            "key": "choice_note",
+            "label": "Выбор (что именно)",
+            "kind": "text"
+          },
+          {
+            "key": "excl",
+            "label": "Несовместимо с (группа)",
+            "kind": "text"
+          }
+        ]
+      },
+      "adept_power": {
+        "label": "Способность адепта",
+        "icon": "☯",
+        "hint": "Стоит очки способностей (ОС), уровни — у экземпляра.",
+        "shape": "book",
+        "use": "item",
+        "block": "Способности адепта",
+        "columns": [
+          {
+            "key": "pp",
+            "label": "Очки способностей",
+            "kind": "number"
+          },
+          {
+            "key": "level",
+            "label": "Уровень",
+            "kind": "number",
+            "default": 1,
+            "min": 1
+          },
+          {
+            "key": "level_max",
+            "label": "Уровней всего",
+            "kind": "number"
+          },
+          {
+            "key": "activation",
+            "label": "Активация",
+            "kind": "text"
+          },
+          {
+            "key": "skill",
+            "label": "Навык",
+            "kind": "choice",
+            "from": "skills"
+          },
+          {
+            "key": "attribute",
+            "label": "Характеристика",
+            "kind": "choice",
+            "from": "attributes"
+          },
+          {
+            "key": "choice_note",
+            "label": "Выбор (что именно)",
+            "kind": "text"
+          }
+        ]
+      },
+      "lifestyle": {
+        "label": "Уровень жизни",
+        "icon": "🏠",
+        "hint": "Цена в месяц.",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "extends": "gear",
+        "columns": []
+      },
+      "action_kinds": {
+        "label": "Вид действия",
+        "key": "word",
+        "columns": [],
+        "rows": [
+          {
+            "value": "простое"
+          },
+          {
+            "value": "сложное"
+          }
+        ]
       }
     },
     "roll_edits": {
@@ -2529,13 +3312,23 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, @attack_pool + или(@приём.pool, 0) - если(все(@действующий.prone >= 1, любое(@attack_skill == \"ближний бой\", @вещь.class == \"лук\")), 4, 0))"
+              "expr": "большее из(0, @attack_pool + или(@приём.pool, 0) - если(все(@действующий.prone >= 1, любое(@attack_skill == \"ближний бой\", @вещь.class == \"лук\")), 4, 0) + @действующий.aim_bonus)"
             },
             "tags": [
               "атака"
             ],
             "by": {
               "expr": "@действующий"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.aim_bonus"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "0"
             }
           },
           {
@@ -2641,7 +3434,7 @@
                 "expr": "@действующий"
               },
               "amount": {
-                "expr": "большее из(0, @ур + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural - @сопротивление.natural)"
+                "expr": "если(или(@приём.no_damage, 0) >= 1, 0, большее из(0, @ур + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака_против.natural - @сопротивление.natural))"
               },
               "physical_hit": {
                 "expr": "@физ"
@@ -2788,7 +3581,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "все(@стол.battle, @действующий.cover >= 1)"
+              "expr": "все(@стол.battle, @действующий.cover >= 1, или(@приём.cover_free, 0) < 1)"
             }
           },
           {
@@ -2801,6 +3594,39 @@
             "type": "stop",
             "note": {
               "expr": "\"из укрытия нужно ещё простое действие, чтобы высунуться\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.simple_left"
+            },
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "все(@стол.battle, или(@приём.simple, 0) >= 1)"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.simple_left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"прицельная атака — ещё простое действие\""
             }
           },
           {
@@ -5777,6 +6603,1131 @@
             "type": "end"
           }
         ]
+      },
+      "take_action": {
+        "label": "Действие",
+        "group": "Действия",
+        "description": "Действие из книги, которое не меняет чисел на листе: в бою тратит простое или сложное действие, остальное — в журнале и у ведущего.",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "kind",
+            "label": "Простое или сложное",
+            "kind": "choice",
+            "from": "action_kinds"
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "все(@стол.battle, @kind == \"сложное\")"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.complex_left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"сложное действие на этом ходу уже потрачено\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.complex_left"
+            },
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "orElse",
+            "if": {
+              "expr": "все(@стол.battle, @kind == \"простое\")"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.simple_left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"простых действий не осталось\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.simple_left"
+            },
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "steps": []
+      },
+      "blocking": {
+        "label": "Блокирует",
+        "group": "Действия",
+        "activation": "passive",
+        "duration": {
+          "kind": "turns",
+          "max": 1
+        },
+        "description": "К одной проверке защиты в рукопашной — уровень Ближнего боя (стр. 42).",
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "@носитель.skills.ближний_бой.rank"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
+            "tags": [
+              "защита"
+            ]
+          }
+        ]
+      },
+      "dodging": {
+        "label": "Уклоняется",
+        "group": "Действия",
+        "activation": "passive",
+        "duration": {
+          "kind": "turns",
+          "max": 1
+        },
+        "description": "К одной проверке защиты — уровень Атлетики (стр. 43).",
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "@носитель.skills.атлетика.rank"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
+            "tags": [
+              "защита"
+            ]
+          }
+        ]
+      },
+      "full_defense": {
+        "label": "Глухая оборона",
+        "group": "Действия",
+        "activation": "passive",
+        "duration": {
+          "kind": "turns",
+          "max": 1
+        },
+        "description": "Воля — ко всем проверкам защиты до своего следующего хода (стр. 43).",
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "@носитель.willpower"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
+            "tags": [
+              "защита"
+            ]
+          }
+        ]
+      },
+      "dropped": {
+        "label": "Упал на землю",
+        "group": "Действия",
+        "activation": "passive",
+        "duration": {
+          "kind": "turns",
+          "max": 2
+        },
+        "description": "+2 к защите от этой атаки; −2 к проверкам активных навыков до конца следующего хода (стр. 43).",
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "2"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
+            "tags": [
+              "защита"
+            ]
+          },
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "-2"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
+            "tags": [
+              "проверка"
+            ]
+          }
+        ]
+      },
+      "act_block": {
+        "label": "Блокировать",
+        "group": "Действия",
+        "description": "Простое, в любое время: уровень Ближнего боя к одной проверке защиты в рукопашной (стр. 42).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.simple_left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"простых действий не осталось\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.simple_left"
+            },
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "steps": [
+          {
+            "type": "status",
+            "effect": "blocking",
+            "to": {
+              "expr": "@действующий"
+            }
+          }
+        ]
+      },
+      "act_dodge": {
+        "label": "Уклониться",
+        "group": "Действия",
+        "description": "Простое, в любое время: уровень Атлетики к одной проверке защиты (стр. 43).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.simple_left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"простых действий не осталось\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.simple_left"
+            },
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "steps": [
+          {
+            "type": "status",
+            "effect": "dodging",
+            "to": {
+              "expr": "@действующий"
+            }
+          }
+        ]
+      },
+      "act_full_defense": {
+        "label": "Глухая оборона",
+        "group": "Действия",
+        "description": "Сложное, в любое время: Воля ко всем проверкам защиты до своего следующего хода (стр. 43).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.complex_left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"сложное действие на этом ходу уже потрачено\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.complex_left"
+            },
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "steps": [
+          {
+            "type": "status",
+            "effect": "full_defense",
+            "to": {
+              "expr": "@действующий"
+            }
+          }
+        ]
+      },
+      "act_drop": {
+        "label": "Упасть на землю",
+        "group": "Действия",
+        "description": "Простое, в любое время: +2 к защите, Распластан, −2 к активным навыкам до конца следующего хода (стр. 43).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.simple_left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"простых действий не осталось\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.simple_left"
+            },
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "steps": [
+          {
+            "type": "status",
+            "effect": "dropped",
+            "to": {
+              "expr": "@действующий"
+            }
+          },
+          {
+            "type": "status",
+            "effect": "prone",
+            "to": {
+              "expr": "@действующий"
+            }
+          }
+        ]
+      },
+      "act_go_prone": {
+        "label": "Распластаться",
+        "group": "Действия",
+        "description": "Простое: Распластан, пока не встанет (стр. 42).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.simple_left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"простых действий не осталось\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.simple_left"
+            },
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "steps": [
+          {
+            "type": "status",
+            "effect": "prone",
+            "to": {
+              "expr": "@действующий"
+            }
+          }
+        ]
+      },
+      "act_take_cover": {
+        "label": "Найти укрытие",
+        "group": "Действия",
+        "description": "Простое: Укрытие I–IV — сколько тела прикрыто, решает обстановка (стр. 42, 54).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "level",
+            "label": "Укрытие (1–4)",
+            "kind": "number",
+            "min": 1,
+            "max": 4,
+            "ask": {
+              "by": "actor"
+            }
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.simple_left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"простых действий не осталось\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.simple_left"
+            },
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "steps": [
+          {
+            "type": "status",
+            "mode": "remove",
+            "effect": "cover",
+            "to": {
+              "expr": "@действующий"
+            }
+          },
+          {
+            "type": "status",
+            "effect": "cover",
+            "to": {
+              "expr": "@действующий"
+            },
+            "args": {
+              "level": {
+                "expr": "@level"
+              }
+            }
+          }
+        ]
+      },
+      "act_aim": {
+        "label": "Прицелиться",
+        "group": "Действия",
+        "description": "Простое, раз за раунд: +1 к набору следующей атаки, копится до Воли (стр. 42).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.simple_left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"простых действий не осталось\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.simple_left"
+            },
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "steps": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.aim_bonus >= @действующий.willpower"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"прицеливание уже не больше Воли\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.aim_bonus"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "act_sprint": {
+        "label": "Рывок",
+        "group": "Действия",
+        "description": "Сложное: 15 м + 1 м за успех Атлетики + Проворства; раз за ход (стр. 43).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.complex_left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"сложное действие на этом ходу уже потрачено\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.complex_left"
+            },
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "steps": [
+          {
+            "id": "рывок",
+            "type": "roll",
+            "die": "pool",
+            "count": {
+              "expr": "@действующий.skills.атлетика.pool"
+            },
+            "tags": [
+              "проверка",
+              "атлетика"
+            ],
+            "by": {
+              "expr": "@действующий"
+            }
+          }
+        ]
+      },
+      "edge_reroll_one": {
+        "label": "Преимущество: перебросить 1 кубик",
+        "group": "Преимущество",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "1 очко: перебросить один кубик (меньший) после броска (стр. 47).",
+        "on": [
+          {
+            "on": "seen",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
+            "confirm": true,
+            "cost": [
+              {
+                "type": "emit",
+                "effect": "spend_edge",
+                "args": {
+                  "лист": {
+                    "expr": "@носитель"
+                  },
+                  "amount": {
+                    "expr": "1"
+                  },
+                  "note": {
+                    "expr": "\"нужно 1 очк. Преимущества\""
+                  }
+                }
+              }
+            ],
+            "steps": [
+              {
+                "type": "roll-reroll",
+                "which": "lowest"
+              }
+            ]
+          }
+        ]
+      },
+      "edge_plus_hit": {
+        "label": "Преимущество: +1 успех",
+        "group": "Преимущество",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "3 очка: +1 успех к итогу (проверку не делает успешной автоматически) (стр. 48).",
+        "on": [
+          {
+            "on": "seen",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
+            "confirm": true,
+            "cost": [
+              {
+                "type": "emit",
+                "effect": "spend_edge",
+                "args": {
+                  "лист": {
+                    "expr": "@носитель"
+                  },
+                  "amount": {
+                    "expr": "3"
+                  },
+                  "note": {
+                    "expr": "\"нужно 3 очк. Преимущества\""
+                  }
+                }
+              }
+            ],
+            "steps": [
+              {
+                "type": "roll-plus",
+                "value": {
+                  "expr": "1"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "edge_burn_beatdown": {
+        "label": "Сжечь Преимущество: Взбучка",
+        "group": "Преимущество",
+        "description": "Перед проверкой сжечь очко характеристики Преимущество: проверка успешна, +4 чистых успеха (стр. 49).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.edge < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"характеристики Преимущество не осталось\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.edge"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ],
+        "steps": [
+          {
+            "type": "status",
+            "effect": "beatdown",
+            "to": {
+              "expr": "@действующий"
+            }
+          }
+        ]
+      },
+      "beatdown": {
+        "label": "Взбучка",
+        "group": "Преимущество",
+        "activation": "passive",
+        "duration": {
+          "kind": "turns",
+          "max": 1
+        },
+        "description": "+4 успеха к своей проверке (сожжено Преимущество).",
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "bonus",
+            "op": "add",
+            "value": {
+              "expr": "4"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
+            "tags": [
+              "проверка"
+            ]
+          }
+        ]
+      },
+      "edge_init": {
+        "label": "Преимущество: +3 к инициативе",
+        "group": "Преимущество",
+        "description": "1 очко: +3 к показателю инициативы до следующего цикла (стр. 47).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "effect": "spend_edge",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "amount": {
+                "expr": "1"
+              },
+              "note": {
+                "expr": "\"нужно 1 очко Преимущества\""
+              }
+            }
+          }
+        ],
+        "steps": [
+          {
+            "type": "status",
+            "effect": "edge_init_bonus",
+            "to": {
+              "expr": "@действующий"
+            }
+          }
+        ]
+      },
+      "edge_init_bonus": {
+        "label": "+3 к инициативе (Преимущество)",
+        "group": "Преимущество",
+        "activation": "passive",
+        "duration": {
+          "kind": "rounds",
+          "max": 1
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "init_mod",
+            "op": "add",
+            "value": {
+              "expr": "3"
+            }
+          }
+        ]
+      },
+      "edge_give": {
+        "label": "Преимущество: дать очко союзнику",
+        "group": "Преимущество",
+        "description": "2 очка: союзник получает 1 очко (стр. 47).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "effect": "spend_edge",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "amount": {
+                "expr": "2"
+              },
+              "note": {
+                "expr": "\"нужно 2 очк. Преимущества\""
+              }
+            }
+          }
+        ],
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели"
+          },
+          {
+            "type": "emit",
+            "effect": "gain_edge",
+            "args": {
+              "лист": {
+                "expr": "@цель"
+              }
+            }
+          }
+        ]
+      },
+      "edge_take": {
+        "label": "Преимущество: отнять очко у противника",
+        "group": "Преимущество",
+        "description": "2 очка: противник теряет 1 очко (стр. 47).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "effect": "spend_edge",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "amount": {
+                "expr": "2"
+              },
+              "note": {
+                "expr": "\"нужно 2 очк. Преимущества\""
+              }
+            }
+          }
+        ],
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@цель.edge_left"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "меньшее из(1, @цель.edge_left)"
+            }
+          }
+        ]
+      },
+      "edge_twist": {
+        "label": "Преимущество: свой поворот событий",
+        "group": "Преимущество",
+        "description": "5 очков: придумать неожиданное развитие сюжета с реальной выгодой; что произойдёт — решает ведущий (стр. 48).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "effect": "spend_edge",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "amount": {
+                "expr": "5"
+              },
+              "note": {
+                "expr": "\"нужно 5 очк. Преимущества\""
+              }
+            }
+          }
+        ],
+        "steps": []
+      },
+      "edge_burn_alive": {
+        "label": "Сжечь Преимущество: Ещё живой",
+        "group": "Преимущество",
+        "description": "Сжечь очко характеристики Преимущество: персонаж на пороге смерти выживает (стр. 49).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.edge < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"характеристики Преимущество не осталось\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.edge"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ],
+        "steps": [
+          {
+            "type": "status",
+            "mode": "remove",
+            "effect": "dead",
+            "to": {
+              "expr": "@действующий"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.physical"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "@действующий.physical_max + @действующий.body * 2 - 1"
+            }
+          }
+        ]
       }
     },
     "grants": [
@@ -5792,13 +7743,33 @@
       "battle_start",
       "battle_end",
       "glitch",
-      "critical_glitch"
+      "critical_glitch",
+      "edge_reroll_one",
+      "edge_plus_hit"
     ],
     "sheets": {
       "runner": {
         "label": "Раннер",
         "icon": "🕶",
-        "hint": "Лист игрока: все блоки."
+        "hint": "Лист игрока: все блоки.",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "magic",
+            "op": "add",
+            "value": {
+              "expr": "0 - @essence_loss"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "resonance",
+            "op": "add",
+            "value": {
+              "expr": "0 - @essence_loss"
+            }
+          }
+        ]
       },
       "grunt": {
         "label": "Пешка",
@@ -5858,7 +7829,8 @@
           "Защита",
           "Счётчики",
           "Инициатива"
-        ]
+        ],
+        "modifiers": []
       }
     },
     "blocks": [
@@ -9099,6 +11071,510 @@
           }
         ],
         "table": "action"
+      },
+      {
+        "id": "act_block",
+        "table": "action",
+        "label": "Блокировать",
+        "description": "Простое, в любое время (стр. 42).",
+        "bindings": [
+          {
+            "label": "Блокировать",
+            "effect": "act_block",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_draw",
+        "table": "action",
+        "label": "Выхватить",
+        "description": "Выхватить пистолет или малое оружие и сразу атаковать (стр. 42).",
+        "bindings": [
+          {
+            "label": "Выхватить",
+            "effect": "take_action",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "kind": {
+                "expr": "\"простое\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_move",
+        "table": "action",
+        "label": "Переместиться",
+        "description": "10 метров; раз за ход (стр. 42).",
+        "bindings": [
+          {
+            "label": "Переместиться",
+            "effect": "take_action",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "kind": {
+                "expr": "\"простое\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_intercept",
+        "table": "action",
+        "label": "Перехватить",
+        "description": "Вне очереди атаковать противника, вышедшего вплотную, если остались простое и сложное действия (стр. 42).",
+        "bindings": [
+          {
+            "label": "Перехватить",
+            "effect": "take_action",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "kind": {
+                "expr": "\"простое\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_multi",
+        "table": "action",
+        "label": "Множественная атака",
+        "description": "Вместе с атакой: набор делится поровну между целями (стр. 42).",
+        "bindings": [
+          {
+            "label": "Множественная атака",
+            "effect": "take_action",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "kind": {
+                "expr": "\"простое\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_trip",
+        "table": "action",
+        "label": "Сбить с ног",
+        "description": "Вместе с атакой ближнего боя: СУ −2, при попадании — проверка цели (стр. 42).",
+        "bindings": [
+          {
+            "label": "Сбить с ног",
+            "effect": "take_action",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "kind": {
+                "expr": "\"простое\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_device_mode",
+        "table": "action",
+        "label": "Сменить режим устройства",
+        "description": "Включить, выключить, переключить устройство по прямому нейроинтерфейсу (стр. 42).",
+        "bindings": [
+          {
+            "label": "Сменить режим устройства",
+            "effect": "take_action",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "kind": {
+                "expr": "\"простое\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_drop_item",
+        "table": "action",
+        "label": "Уронить предмет",
+        "description": "Уронить то, что в руке (стр. 43).",
+        "bindings": [
+          {
+            "label": "Уронить предмет",
+            "effect": "take_action",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "kind": {
+                "expr": "\"простое\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_ready",
+        "table": "action",
+        "label": "Подготовить оружие",
+        "description": "Взять из кобуры, ножен, подготовить гранату (стр. 44).",
+        "bindings": [
+          {
+            "label": "Подготовить оружие",
+            "effect": "take_action",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "kind": {
+                "expr": "\"сложное\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_pick",
+        "table": "action",
+        "label": "Поднять/положить предмет",
+        "description": "Поднять предмет в досягаемости или аккуратно положить (стр. 44).",
+        "bindings": [
+          {
+            "label": "Поднять/положить предмет",
+            "effect": "take_action",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "kind": {
+                "expr": "\"сложное\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_use_skill",
+        "table": "action",
+        "label": "Использовать навык",
+        "description": "Проверка подходящего навыка (стр. 44).",
+        "bindings": [
+          {
+            "label": "Использовать навык",
+            "effect": "take_action",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "kind": {
+                "expr": "\"сложное\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_use_device",
+        "table": "action",
+        "label": "Использовать простое устройство",
+        "description": "Нажать кнопку и т. п. (стр. 44).",
+        "bindings": [
+          {
+            "label": "Использовать простое устройство",
+            "effect": "take_action",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "kind": {
+                "expr": "\"сложное\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_help",
+        "table": "action",
+        "label": "Помочь",
+        "description": "Помочь в командной проверке (стр. 37, 44).",
+        "bindings": [
+          {
+            "label": "Помочь",
+            "effect": "take_action",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "kind": {
+                "expr": "\"сложное\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_observe",
+        "table": "action",
+        "label": "Рассмотреть поближе",
+        "description": "Проверка Внимания или чтения ауры (стр. 44).",
+        "bindings": [
+          {
+            "label": "Рассмотреть поближе",
+            "effect": "take_action",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "kind": {
+                "expr": "\"сложное\""
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_dodge",
+        "table": "action",
+        "label": "Уклониться",
+        "description": "Простое, в любое время: уровень Атлетики к одной проверке защиты (стр. 43).",
+        "bindings": [
+          {
+            "label": "Уклониться",
+            "effect": "act_dodge",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_full_defense",
+        "table": "action",
+        "label": "Глухая оборона",
+        "description": "Сложное, в любое время: Воля ко всем проверкам защиты до своего следующего хода (стр. 43).",
+        "bindings": [
+          {
+            "label": "Глухая оборона",
+            "effect": "act_full_defense",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_drop",
+        "table": "action",
+        "label": "Упасть на землю",
+        "description": "Простое, в любое время: +2 к защите, Распластан, −2 к активным навыкам до конца следующего хода (стр. 43).",
+        "bindings": [
+          {
+            "label": "Упасть на землю",
+            "effect": "act_drop",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_go_prone",
+        "table": "action",
+        "label": "Распластаться",
+        "description": "Простое: Распластан, пока не встанет (стр. 42).",
+        "bindings": [
+          {
+            "label": "Распластаться",
+            "effect": "act_go_prone",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_take_cover",
+        "table": "action",
+        "label": "Найти укрытие",
+        "description": "Простое: Укрытие I–IV — сколько тела прикрыто, решает обстановка (стр. 42, 54).",
+        "bindings": [
+          {
+            "label": "Найти укрытие",
+            "effect": "act_take_cover",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_aim",
+        "table": "action",
+        "label": "Прицелиться",
+        "description": "Простое, раз за раунд: +1 к набору следующей атаки, копится до Воли (стр. 42).",
+        "bindings": [
+          {
+            "label": "Прицелиться",
+            "effect": "act_aim",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_sprint",
+        "table": "action",
+        "label": "Рывок",
+        "description": "Сложное: 15 м + 1 м за успех Атлетики + Проворства; раз за ход (стр. 43).",
+        "bindings": [
+          {
+            "label": "Рывок",
+            "effect": "act_sprint",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_edge_init",
+        "table": "action",
+        "label": "Преимущество: +3 к инициативе",
+        "description": "1 очко: +3 к показателю инициативы до следующего цикла (стр. 47).",
+        "bindings": [
+          {
+            "label": "Преимущество: +3 к инициативе",
+            "effect": "edge_init",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_edge_burn_beatdown",
+        "table": "action",
+        "label": "Сжечь Преимущество: Взбучка",
+        "description": "Перед проверкой сжечь очко характеристики Преимущество: проверка успешна, +4 чистых успеха (стр. 49).",
+        "bindings": [
+          {
+            "label": "Сжечь Преимущество: Взбучка",
+            "effect": "edge_burn_beatdown",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_edge_give",
+        "table": "action",
+        "label": "Преимущество: дать очко союзнику",
+        "description": "2 очка: союзник получает 1 очко (стр. 47).",
+        "bindings": [
+          {
+            "label": "Преимущество: дать очко союзнику",
+            "effect": "edge_give",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "цели": {
+                "expr": "@цели"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_edge_take",
+        "table": "action",
+        "label": "Преимущество: отнять очко у противника",
+        "description": "2 очка: противник теряет 1 очко (стр. 47).",
+        "bindings": [
+          {
+            "label": "Преимущество: отнять очко у противника",
+            "effect": "edge_take",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              },
+              "цели": {
+                "expr": "@цели"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_edge_twist",
+        "table": "action",
+        "label": "Преимущество: свой поворот событий",
+        "description": "5 очков: придумать неожиданное развитие сюжета с реальной выгодой; что произойдёт — решает ведущий (стр. 48).",
+        "bindings": [
+          {
+            "label": "Преимущество: свой поворот событий",
+            "effect": "edge_twist",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_edge_burn_alive",
+        "table": "action",
+        "label": "Сжечь Преимущество: Ещё живой",
+        "description": "Сжечь очко характеристики Преимущество: персонаж на пороге смерти выживает (стр. 49).",
+        "bindings": [
+          {
+            "label": "Сжечь Преимущество: Ещё живой",
+            "effect": "edge_burn_alive",
+            "args": {
+              "действующий": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
       }
     ]
   },

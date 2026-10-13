@@ -27,6 +27,7 @@ export interface Scenario {
   name: string;
   rule: string;
   world: string;
+  declineRest?: boolean;
   sheets?: Record<string, { values?: Record<string, unknown>; effects?: string[]; has?: { of: string; off?: boolean }[] }>;
   dice: number[];
   steps: Step[];
@@ -120,8 +121,8 @@ export async function playScenario(scenario: Scenario): Promise<Played> {
       log.push(...delta.log.map(entry => entry.text));
       const left = [...answers];
       while (delta.pending) {
-        if (!left.length) throw new Error(`сценарий: неожиданный вопрос — ${delta.pending.question} (${delta.pending.options.map(o => o.id).join(', ')})`);
-        const chosen = left.shift()!;
+        if (!left.length && !scenario.declineRest) throw new Error(`сценарий: неожиданный вопрос — ${delta.pending.question} (${delta.pending.options.map(o => o.id).join(', ')})`);
+        const chosen = left.length ? left.shift()! : [];
         delta = await rooms.answer(userId, { roomId, pendingId: delta.pending.id, chosen });
         log.push(...delta.log.map(entry => entry.text));
       }

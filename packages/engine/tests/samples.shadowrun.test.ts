@@ -215,7 +215,7 @@ group('Shadowrun 6: общие функции этапа 3 — Урон и Пр�
 
 group('Shadowrun 6: состояния (стр. 52–54)', () => {
   const wearing = (id: string, ...effects: { effectId: string; args?: Record<string, unknown> }[]) => {
-    const sheet = sheetOf(id);
+    const sheet = sheetOf(id, { edge_left: 0 });
     return { ...sheet, effects: [...sheet.effects, ...effects] } as Sheet;
   };
   const roll = (sheet: Sheet, tag: string, claims?: string[]) => {
@@ -227,7 +227,7 @@ group('Shadowrun 6: состояния (стр. 52–54)', () => {
 
   test('Ослепление II: −6 кубиков к проверкам зрением по заявке, без заявки — как было', () => {
     const blind = wearing('razor', { effectId: 'blinded', args: { level: 2 } });
-    const base = dicePool(roll(sheetOf('razor'), 'skills.внимание.pool', ['зрение']));
+    const base = dicePool(roll(sheetOf('razor', { edge_left: 0 }), 'skills.внимание.pool', ['зрение']));
     eq(dicePool(roll(blind, 'skills.внимание.pool', ['зрение'])), base - 6);
     eq(dicePool(roll(blind, 'skills.внимание.pool')), base);
   });
