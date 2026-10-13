@@ -46,12 +46,43 @@ describe('сумка: экземпляры вещей', () => {
     fireEvent.click(screen.getByText(/Предатор · \+ ещё один/));
     expect(calls.at(-1)).toEqual(['к', 'а', 'has', 'предатор', true, false, { add: true }]);
 
-    const laser = screen.getByText('Лазер').closest('div')!.parentElement!;
+    const laser = screen.getAllByText('Лазер')[0]!.closest('div')!.parentElement!;
     const select = [...document.querySelectorAll('select')].find(node => (node as HTMLSelectElement).value === 'п2') as HTMLSelectElement;
     expect(select).toBeTruthy();
     expect(laser).toBeTruthy();
     fireEvent.change(select, { target: { value: 'предатор' } });
     expect(calls.at(-1)).toEqual(['к', 'а', 'has', 'лазер', true, false, { inst: 'лазер', in: 'предатор' }]);
+  });
+});
+
+describe('сумка: добавить вещь', () => {
+  beforeEach(() => {
+    const state = room();
+    state.system.tables = {
+      ...state.system.tables,
+      оружие: { ...state.system.tables!['оружие']!, block: 'Снаряжение' },
+      мод: { ...state.system.tables!['мод']!, block: 'Снаряжение' },
+      имплант: { shape: 'book', use: 'item', label: 'Имплант', block: 'Импланты', columns: [] },
+    } as never;
+    state.compendium.records.push({ id: 'глаза', table: 'имплант', label: 'Киберглаза', cells: {} } as never);
+    useRoom.setState(s => ({ ...s, room: state, mySheetId: 'а', log: [], error: null }));
+  });
+  afterEach(cleanup);
+
+  it('по блокам типа записи, поиск по названию оставляет только найденное', () => {
+    renderOpen(<SheetScreen />);
+    const titles = () => [...document.querySelectorAll('.fold__title')].map(node => node.textContent);
+    expect(titles()).toEqual(expect.arrayContaining(['Снаряжение', 'Импланты']));
+    expect(screen.getByText('Киберглаза')).toBeTruthy();
+
+    fireEvent.change(screen.getByPlaceholderText('найти по названию'), { target: { value: 'глаз' } });
+    expect(screen.getByText('Киберглаза')).toBeTruthy();
+    expect([...document.querySelectorAll('.chip')].map(node => node.textContent)).not.toContain('Лазер');
+    expect(titles().filter(one => one === 'Импланты')).toHaveLength(1);
+    expect((screen.getByText('Импланты').closest('details') as HTMLDetailsElement).open).toBe(true);
+
+    fireEvent.change(screen.getByPlaceholderText('найти по названию'), { target: { value: 'ничего такого' } });
+    expect(screen.getByText('Ничего не нашлось.')).toBeTruthy();
   });
 });
 

@@ -9,9 +9,10 @@ import { SheetView } from '../../sheet/sheet-view.tsx';
 import { recordDetails } from '../../sheet/record-view.tsx';
 import { useSession } from '../../store/session.ts';
 import { Lobby } from './lobby.tsx';
-import type { Sheet, System, RoomState, Owned } from '@vtt/schema';
+import type { Sheet, System, RoomState, Owned, CompendiumRecord } from '@vtt/schema';
+import { blockNames, blockOf, NO_BLOCK } from '@vtt/engine/model/blocks';
 import { availableActions } from '@vtt/engine/events/actions';
-import { recordsOf, isItem, sheetKinds, sheetKindOf, shownOn } from '@vtt/engine/model/owned';
+import { recordsOf, isItem, sheetKinds, sheetKindOf, shownOn, recordKindOf } from '@vtt/engine/model/owned';
 import { fieldsFor, livesOn } from '@vtt/engine/engine/calc';
 import { isGroup, sharedOf } from '@vtt/engine/events/desk';
 import { isDesk as atDesk } from '@vtt/engine/engine/owners';
@@ -184,7 +185,21 @@ function actionsOf(sheet: Sheet, room: RoomState): { id: string; label: string }
   }
 }
 
+function shelvesOf<T extends CompendiumRecord>(system: System, items: readonly T[], query: string): [string, T[]][] {
+  const needle = query.trim().toLocaleLowerCase('ru');
+  const order = blockNames(system);
+  const shelves = new Map<string, T[]>();
+  for (const item of items) {
+    if (needle && !(item.label ?? item.id).toLocaleLowerCase('ru').includes(needle)) continue;
+    const block = blockOf(system, recordKindOf(system, item.table)) ?? NO_BLOCK;
+    shelves.set(block, [...(shelves.get(block) ?? []), item]);
+  }
+  const at = (block: string) => (block === NO_BLOCK ? Infinity : order.indexOf(block) < 0 ? order.length : order.indexOf(block));
+  return [...shelves].sort(([a], [b]) => at(a) - at(b));
+}
+
 function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
+  const [query, setQuery] = useState('');
   const available = actionsOf(sheet, room);
 
   const system = room.system as System;
@@ -219,9 +234,17 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const known = actions.filter(action => owned(action.id)).length;
   const shared = useMemo(() => sharedOf(system, room.sheets), [system, room.sheets]);
   const reader = useReader(system, sheet, room.compendium, isGroup(sheet, room.sheets) ? null : shared);
-  const itemDetails = (item: (typeof items)[number], entry?: Owned): string =>
-    recordDetails(item, system, room.compendium, entry ? { entry, ...(reader.measure ? { count: reader.measure } : {}) } : undefined)
+  const itemDetails = (item: (typeof items)[number], entry: Owned): string =>
+    recordDetails(item, system, room.compendium, { entry, ...(reader.measure ? { count: reader.measure } : {}) })
       .map(line => `${line.label}: ${line.value}`).join(' · ');
+
+  const add = (id: string) => (copies(id).length
+    ? tableSocket.setBelonging(room.id, sheet.id, 'has', id, true, false, { add: true })
+    : toggle('has', id, true));
+  const hints = useMemo(() => new Map(records.filter(record => isItem(system, record))
+    .map(item => [item.id, recordDetails(item, system, room.compendium).map(line => `${line.label}: ${line.value}`).join(' · ')])), [records, system, room.compendium]);
+  const found = query.trim() !== '';
+  const shelves = shelvesOf(system, items, query);
 
   const hangable = Object.entries(room.system.effects)
     .filter(([, effect]) => (effect.activation ?? 'manual') !== 'manual');
@@ -250,16 +273,12 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
           ? <span className="faint">В компендиуме мира нет предметов.</span>
           : (
             <div className="stack stack--tight">
-              {items.map(item => {
+              {items.filter(item => copies(item.id).length).map(item => {
                 const mine = copies(item.id);
-                const details = mine.length ? '' : itemDetails(item);
                 return (
                   <div key={item.id}>
-                    <Chip active={mine.some(entry => !entry.off)} onClick={() => (mine.length
-                      ? tableSocket.setBelonging(room.id, sheet.id, 'has', item.id, true, false, { add: true })
-                      : toggle('has', item.id, true))}
-                    >
-                      {item.label ?? item.id}{mine.length ? ' · + ещё один' : ''}
+                    <Chip active={mine.some(entry => !entry.off)} onClick={() => add(item.id)}>
+                      {item.label ?? item.id} · + ещё один
                     </Chip>
                     {mine.map(entry => {
                       const hosts = (sheet.has ?? []).filter(one => !inside(keyOf(entry)).has(keyOf(one)));
@@ -282,10 +301,24 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
                         </div>
                       );
                     })}
-                    {details ? <div className="faint">{details}</div> : null}
                   </div>
                 );
               })}
+              <span className="field__label">Добавить вещь</span>
+              <Input value={query} onChange={setQuery} placeholder="найти по названию" />
+              {shelves.length === 0
+                ? <span className="faint">Ничего не нашлось.</span>
+                : shelves.map(([block, list]) => (
+                  <Fold key={`${block}${found ? ' ·' : ''}`} title={block} count={list.length} open={found}>
+                    <div className="inline inline--tight">
+                      {list.map(item => (
+                        <Chip key={item.id} active={copies(item.id).length > 0} title={hints.get(item.id) || undefined} onClick={() => add(item.id)}>
+                          {item.label ?? item.id}
+                        </Chip>
+                      ))}
+                    </div>
+                  </Fold>
+                ))}
             </div>
           )}
       </Fold>
