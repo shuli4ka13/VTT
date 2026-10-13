@@ -4,6 +4,7 @@ import { exchange } from './play.ts';
 import { fieldCheck } from '../src/engine/check.ts';
 import { rollCheck } from './kit.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
+import { perform } from '../src/core/perform.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const sr = PLAYABLE_WORLDS.find(w => (w.system as System).id === 'shadowrun6')!;
@@ -209,5 +210,66 @@ group('Shadowrun 6: общие функции этапа 3 — Урон и Пр�
   test('урон идёт через функцию «Урон» и отдаёт итог: «Распластан» по полученному', () => {
     const out = shoot(sheetOf('silk'), sheetOf('humanis'), 'colt_l36:0', dice([6, 6], [4, 1], [2, 1], [2, 1]));
     ok(out.log.some(line => line.includes('зовёт «Урон»')));
+  });
+});
+
+group('Shadowrun 6: состояния (стр. 52–54)', () => {
+  const wearing = (id: string, ...effects: { effectId: string; args?: Record<string, unknown> }[]) => {
+    const sheet = sheetOf(id);
+    return { ...sheet, effects: [...sheet.effects, ...effects] } as Sheet;
+  };
+  const roll = (sheet: Sheet, tag: string, claims?: string[]) => {
+    const out = perform({ system, compendium, clock: null, sheets: [sheet], die: () => 6 }, { op: 'roll', sheetId: sheet.id, tag, ...(claims ? { claims } : {}) } as never);
+    if (out.kind !== 'done') throw new Error(out.kind);
+    return out.log.join('\n');
+  };
+  const dicePool = (text: string) => (/\[([^\]]*)\]/.exec(text)?.[1] ?? '').split(',').filter(Boolean).length;
+
+  test('Ослепление II: −6 кубиков к проверкам зрением по заявке, без заявки — как было', () => {
+    const blind = wearing('razor', { effectId: 'blinded', args: { level: 2 } });
+    const base = dicePool(roll(sheetOf('razor'), 'skills.внимание.pool', ['зрение']));
+    eq(dicePool(roll(blind, 'skills.внимание.pool', ['зрение'])), base - 6);
+    eq(dicePool(roll(blind, 'skills.внимание.pool')), base);
+  });
+
+  test('Утомление II: −4 ко всем наборам; Электрошок: инициатива −2', () => {
+    eq(computed(wearing('razor', { effectId: 'fatigued', args: { level: 2 } }), 'condition_mod'), -4);
+    eq(computed(wearing('razor', { effectId: 'shocked' }), 'initiative'), computed(sheetOf('razor'), 'initiative') - 2 - 1);
+  });
+
+  test('Отравление 3: в начале раунда — урон после сопротивления, потом 2', () => {
+    const sick = wearing('humanis', { effectId: 'poisoned', args: { level: 3, physical_hit: 1 } });
+    const out = perform({ system, compendium, clock: null, sheets: [sick], die: () => 1 }, { op: 'turn', turn: 'start', order: ['humanis'] } as never);
+    if (out.kind !== 'done') throw new Error(out.kind);
+    const after = out.sheets.find(one => one.id === 'humanis')!;
+    eq(after.values.physical, 3);
+    eq(after.effects.find(one => one.effectId === 'poisoned')?.args?.level, 2);
+  });
+
+  test('Горение и Заморозка отменяют друг друга', () => {
+    const burning = wearing('humanis', { effectId: 'burning', args: { level: 2 } });
+    const out = perform({ system, compendium, clock: null, sheets: [burning], die: () => 1 }, { op: 'belonging', sheetId: 'humanis', list: 'effects', id: 'chilled', on: true } as never);
+    if (out.kind !== 'done') throw new Error(out.kind);
+    const effects = out.sheets[0]!.effects.map(one => one.effectId);
+    ok(effects.includes('chilled') && !effects.includes('burning'), effects.join(','));
+  });
+
+  test('Распластанный защитник: +2 к защите со средней дистанции, −2 вплотную', () => {
+    const lying = wearing('humanis', { effectId: 'prone' });
+    const defense = (range: string) => {
+      const out = shoot(sheetOf('razor'), lying, 'predator_vi:0', () => 1, range);
+      return out.reports.flatMap(r => r.report.trace as { step: unknown; rolls?: number[] }[]).find(one => one.step === 'атака_против')?.rolls?.length;
+    };
+    const base = computed(lying, 'defense_pool');
+    eq(defense('средняя'), base + 2);
+    eq(defense('вплотную'), base - 2);
+  });
+
+  test('Укрытие IV: −2 кубика к атаке; в бою атака из укрытия просит ещё простое действие', () => {
+    const hidden = wearing('razor', { effectId: 'cover', args: { level: 4 } });
+    const out = shoot(hidden, sheetOf('humanis'), 'predator_vi:0', () => 1);
+    const pool = out.reports.flatMap(r => r.report.trace as { step: unknown; rolls?: number[] }[]).find(one => one.step === 'атака_бросок')?.rolls?.length;
+    eq(pool, computed(sheetOf('razor'), 'skills.стрельба.pool') - 2);
+    eq(computed(hidden, 'defense_rating'), computed(sheetOf('razor'), 'defense_rating') + 4);
   });
 });

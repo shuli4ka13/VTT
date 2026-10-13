@@ -511,7 +511,7 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ число');
     within(at(first)).formula('Бросает', '@цель');
-    within(at(first)).formula('Сколько', 'кинуть(@pool, @цель.defense_pool)');
+    within(at(first)).formula('Сколько', `кинуть(@pool, ${(steps[from] as unknown as { count: { expr: string } }).count.expr})`);
     within(at(first)).formula('Против кого', '@действующий');
     marks(at(first), 'защита');
     nameStep(at(first), 'атака_против');

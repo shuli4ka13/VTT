@@ -200,10 +200,23 @@ export function editMatches(mod: SourcedModifier, tags: readonly string[], syste
 }
 
 
+function resolverOf(mod: SourcedModifier, pass: Pass): (name: string) => unknown {
+  const params = mod.source.params;
+  if (!params?.length) return pass.resolve;
+  const args = mod.source.args ?? {};
+  return name => {
+    const param = params.find(one => one.key === name);
+    if (!param) return pass.resolve(name);
+    const given = args[name];
+    if (given !== undefined && given !== null && given !== '') return given;
+    return param.default ?? null;
+  };
+}
+
 function conditionHolds(mod: SourcedModifier, pass: Pass): boolean {
   const condition = (mod as { if?: { expr: string } }).if;
   if (!condition) return true;
-  const result = compile(condition.expr).evaluate(pass.resolve, toolsOf(pass.system, pass, 'условие модификатора'));
+  const result = compile(condition.expr).evaluate(resolverOf(mod, pass), toolsOf(pass.system, pass, 'условие модификатора'));
   if (typeof result !== 'boolean') {
     throw new EngineError(
       `условие «${condition.expr}» источника «${mod.source.label}» должно давать да или нет`);
@@ -214,6 +227,6 @@ function conditionHolds(mod: SourcedModifier, pass: Pass): boolean {
 function valueOf(mod: SourcedModifier, pass: Pass): unknown {
   const raw = (mod as { value?: { expr: string } }).value;
   if (!raw?.expr?.trim()) throw new EngineError(`правка «${mod.source.label}»: не задано, на сколько`);
-  return compile(raw.expr).evaluate(pass.resolve, toolsOf(pass.system, pass, 'модификатор'));
+  return compile(raw.expr).evaluate(resolverOf(mod, pass), toolsOf(pass.system, pass, 'модификатор'));
 }
 

@@ -244,6 +244,53 @@
             "default": 0
           },
           {
+            "key": "notice_threshold",
+            "label": "Порог Внимания, чтобы заметить",
+            "kind": "number",
+            "default": 0,
+            "min": 0,
+            "stages": [
+              {
+                "key": "основа",
+                "label": "основа",
+                "combine": {
+                  "set": "max"
+                }
+              }
+            ]
+          },
+          {
+            "key": "hear_threshold",
+            "label": "Порог Внимания, чтобы услышать",
+            "kind": "number",
+            "default": 0,
+            "min": 0,
+            "stages": [
+              {
+                "key": "основа",
+                "label": "основа",
+                "combine": {
+                  "set": "max"
+                }
+              }
+            ]
+          },
+          {
+            "key": "astral_veil",
+            "label": "Пелена: связь с астралом нарушена",
+            "kind": "number",
+            "default": 0,
+            "min": 0
+          },
+          {
+            "key": "nausea_lost",
+            "label": "Тошнота: потеряно действий в раунде",
+            "kind": "number",
+            "default": 0,
+            "min": 0,
+            "max": 2
+          },
+          {
             "key": "smartlink",
             "label": "Смартлинк (1 — есть)",
             "kind": "number",
@@ -518,6 +565,12 @@
           },
           {
             "value": "лечение"
+          },
+          {
+            "value": "зрение"
+          },
+          {
+            "value": "слух"
           }
         ]
       },
@@ -1457,6 +1510,9 @@
               },
               "electric": {
                 "expr": "@electric"
+              },
+              "attack_skill": {
+                "expr": "@skill"
               }
             }
           },
@@ -2283,6 +2339,13 @@
             "kind": "number"
           },
           {
+            "key": "attack_skill",
+            "label": "Навык атаки",
+            "kind": "choice",
+            "from": "skills",
+            "optional": true
+          },
+          {
             "key": "ar1",
             "label": "Значение атаки: вплотную",
             "kind": "number",
@@ -2437,7 +2500,7 @@
             "id": "атк",
             "type": "roll",
             "fixed": {
-              "expr": "@база + меньшее из(0, если(@нехватка >= 1, 0 - @выстрелов, если(сколько(@вещь.modes) >= 1, или(@режим.ar, 0), 0)) + @гашение) + @прицел + @опора + сумма(строки(\"ammo_kind\", \"ar_mod\", @вещь)) + @действующий.ar_mod"
+              "expr": "@база + меньшее из(0, если(@нехватка >= 1, 0 - @выстрелов, если(сколько(@вещь.modes) >= 1, или(@режим.ar, 0), 0)) + @гашение) + @прицел + @опора + сумма(строки(\"ammo_kind\", \"ar_mod\", @вещь)) + @действующий.ar_mod + если(все(@действующий.prone >= 1, не(любое(@attack_skill == \"ближний бой\", @вещь.class == \"лук\"))), 2, 0)"
             }
           },
           {
@@ -2466,7 +2529,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, @attack_pool + или(@приём.pool, 0))"
+              "expr": "большее из(0, @attack_pool + или(@приём.pool, 0) - если(все(@действующий.prone >= 1, любое(@attack_skill == \"ближний бой\", @вещь.class == \"лук\")), 4, 0))"
             },
             "tags": [
               "атака"
@@ -2502,7 +2565,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "@цель.defense_pool"
+              "expr": "большее из(0, @цель.defense_pool + если(@цель.prone >= 1, если(любое(@дистанция == \"вплотную\", @дистанция == \"близкая\"), -2, 2), 0))"
             },
             "tags": [
               "защита"
@@ -2717,6 +2780,39 @@
               "note": {
                 "expr": "\"не хватает Преимущества на «+1 успех» и приём\""
               }
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "все(@стол.battle, @действующий.cover >= 1)"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.simple_left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"из укрытия нужно ещё простое действие, чтобы высунуться\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.simple_left"
+            },
+            "value": {
+              "expr": "1"
             }
           },
           {
@@ -3192,7 +3288,7 @@
           {
             "on": "after:ranged_attack",
             "if": {
-              "expr": "все(@цель == @носитель, @атк - @носитель.defense_rating >= 4, не(пусто(@действующий)))"
+              "expr": "все(@цель == @носитель, @атк - @носитель.defense_rating >= 4, не(пусто(@действующий)), @действующий.cover < 1)"
             },
             "steps": [
               {
@@ -3384,6 +3480,51 @@
               },
               {
                 "type": "end"
+              },
+              {
+                "type": "branch",
+                "if": {
+                  "expr": "@носитель.nausea_lost >= 2"
+                }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.simple_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "0"
+                }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.complex_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "0"
+                }
+              },
+              {
+                "type": "orElse",
+                "if": {
+                  "expr": "@носитель.nausea_lost >= 1"
+                }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.simple_left"
+                },
+                "direction": "subtract",
+                "value": {
+                  "expr": "1"
+                }
+              },
+              {
+                "type": "end"
               }
             ]
           }
@@ -3484,7 +3625,7 @@
         "duration": {
           "kind": "permanent"
         },
-        "description": "Перемещение 2 м; +2 к защите от дальних атак со средней дистанции, −2 против вплотную и близкой; −4 к ближнему бою. Снимается действием «Встать»."
+        "description": "Перемещение 2 м, без Рывка. Защита +2 против дальних атак со средней дистанции и дальше, −2 вплотную и на близкой; −4 к ближнему бою и стрельбе из лука; значение атаки огнестрела и метательного (кроме луков) +2 (стр. 53)."
       },
       "shocked": {
         "label": "Электрошок",
@@ -3494,7 +3635,7 @@
           "kind": "rounds",
           "max": 2
         },
-        "description": "−2 к инициативе, нельзя делать Рывок, −1 ко всем наборам; 2 раунда.",
+        "description": "Инициатива −2, без Рывка, −1 ко всем наборам (стр. 54).",
         "modifiers": [
           {
             "kind": "value",
@@ -3502,6 +3643,14 @@
             "op": "add",
             "value": {
               "expr": "-1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "init_mod",
+            "op": "add",
+            "value": {
+              "expr": "-2"
             }
           }
         ]
@@ -3513,7 +3662,33 @@
         "duration": {
           "kind": "permanent"
         },
-        "description": "Показатель инициативы −4, нельзя получать и тратить Преимущество."
+        "description": "Инициатива −4; нельзя получать и тратить Преимущество (сжигать можно) (стр. 53).",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "init_mod",
+            "op": "add",
+            "value": {
+              "expr": "-4"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "edge_no_gain",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "edge_no_spend",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
       },
       "chilled": {
         "label": "Заморозка",
@@ -3523,7 +3698,7 @@
           "kind": "rounds",
           "max": 3
         },
-        "description": "−4 к инициативе, −1 ко всем наборам, кроме сопротивления урону.",
+        "description": "Штраф −4 к инициативе и −1 ко всем наборам кубиков, кроме сопротивления урону. Отменяется Горением и отменяет его (стр. 52).",
         "modifiers": [
           {
             "kind": "value",
@@ -3532,25 +3707,77 @@
             "value": {
               "expr": "-1"
             }
+          },
+          {
+            "kind": "value",
+            "target": "init_mod",
+            "op": "add",
+            "value": {
+              "expr": "-4"
+            }
+          }
+        ],
+        "on": [
+          {
+            "on": "gained:chilled",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": "burning",
+                "to": {
+                  "expr": "@носитель"
+                }
+              }
+            ]
+          },
+          {
+            "on": "gained:burning",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": "chilled",
+                "to": {
+                  "expr": "@носитель"
+                }
+              }
+            ]
           }
         ]
       },
       "fatigued": {
-        "label": "Утомление I",
+        "label": "Утомление",
         "group": "Состояния",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "description": "−2 ко всем наборам, кроме сопротивления урону.",
+        "description": "I–III: −2 за уровень ко всем наборам, кроме сопротивления урону; ходьба 5 м вместо 10, рывок 10 м вместо 15 (стр. 54).",
         "modifiers": [
           {
             "kind": "value",
             "target": "condition_mod",
             "op": "add",
             "value": {
-              "expr": "-2"
+              "expr": "-2 * @level"
             }
+          }
+        ],
+        "params": [
+          {
+            "key": "level",
+            "label": "Уровень",
+            "kind": "number",
+            "default": 1,
+            "min": 1,
+            "max": 3
           }
         ]
       },
@@ -3561,7 +3788,29 @@
         "duration": {
           "kind": "permanent"
         },
-        "description": "−4 к проверкам против источника или для защиты от него."
+        "description": "Штраф −4 к проверкам против источника страха и к защите от него (стр. 52).",
+        "params": [
+          {
+            "key": "источник",
+            "label": "Кого боится",
+            "kind": "sheet",
+            "optional": true
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "-4"
+            },
+            "if": {
+              "expr": "все(@бросающий == @носитель, не(пусто(@источник)), @против == @источник)"
+            }
+          }
+        ]
       },
       "unconscious": {
         "label": "Без сознания",
@@ -4636,6 +4885,896 @@
             "expr": {
               "expr": "@amount"
             }
+          }
+        ]
+      },
+      "confused": {
+        "label": "В замешательстве",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Число после названия — штраф ко всем наборам кубиков (стр. 52).",
+        "params": [
+          {
+            "key": "level",
+            "label": "Штраф",
+            "kind": "number",
+            "default": 1,
+            "min": 1
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "condition_mod",
+            "op": "add",
+            "value": {
+              "expr": "0 - @level"
+            }
+          }
+        ]
+      },
+      "deafened": {
+        "label": "Глухота",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "I–II: −3 за уровень к проверкам, связанным со слухом (заявка «слух»); III — такие проверки проваливаются (стр. 52).",
+        "params": [
+          {
+            "key": "level",
+            "label": "Уровень",
+            "kind": "number",
+            "default": 1,
+            "min": 1,
+            "max": 3
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "если(@level >= 3, -99, -3 * @level)"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
+            "tags": [
+              "слух"
+            ]
+          }
+        ]
+      },
+      "burning": {
+        "label": "Горение",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Каждый раунд — сопротивление Телом физическому урону, равному числу. Снять — сложное действие «Сбить пламя» (Проворство + Реакция (2)) или прыжок в воду. Сырость и Заморозка его отменяют, и оно отменяет их (стр. 52).",
+        "params": [
+          {
+            "key": "level",
+            "label": "Урон в раунд",
+            "kind": "number",
+            "default": 1,
+            "min": 1
+          }
+        ],
+        "on": [
+          {
+            "on": "moment:round-start",
+            "steps": [
+              {
+                "id": "стойкость",
+                "type": "roll",
+                "die": "pool",
+                "count": {
+                  "expr": "@носитель.body"
+                },
+                "tags": [
+                  "сопротивление"
+                ],
+                "by": {
+                  "expr": "@носитель"
+                }
+              },
+              {
+                "type": "emit",
+                "id": "вред",
+                "effect": "take_damage",
+                "args": {
+                  "лист": {
+                    "expr": "@носитель"
+                  },
+                  "amount": {
+                    "expr": "большее из(0, @level - @стойкость.natural)"
+                  },
+                  "physical_hit": {
+                    "expr": "1"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "on": "gained:burning",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": "wet",
+                "to": {
+                  "expr": "@носитель"
+                }
+              },
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": "chilled",
+                "to": {
+                  "expr": "@носитель"
+                }
+              }
+            ]
+          },
+          {
+            "on": "gained:wet",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": "burning",
+                "to": {
+                  "expr": "@носитель"
+                }
+              }
+            ]
+          },
+          {
+            "on": "gained:chilled",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": "burning",
+                "to": {
+                  "expr": "@носитель"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "invisible": {
+        "label": "Невидимость",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Число — порог Внимания, чтобы заметить; камеры и другие неживые средства видят как обычно (стр. 52).",
+        "params": [
+          {
+            "key": "level",
+            "label": "Порог",
+            "kind": "number",
+            "default": 1,
+            "min": 1
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "notice_threshold",
+            "op": "set",
+            "value": {
+              "expr": "@level"
+            }
+          }
+        ]
+      },
+      "invisible_improved": {
+        "label": "Невидимость (улучшенная)",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Как Невидимость, но и для камер и технических средств (стр. 52).",
+        "params": [
+          {
+            "key": "level",
+            "label": "Порог",
+            "kind": "number",
+            "default": 1,
+            "min": 1
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "notice_threshold",
+            "op": "set",
+            "value": {
+              "expr": "@level"
+            }
+          }
+        ]
+      },
+      "silent": {
+        "label": "Немота",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Число — порог Внимания, чтобы услышать; микрофоны слышат как обычно (стр. 52).",
+        "params": [
+          {
+            "key": "level",
+            "label": "Порог",
+            "kind": "number",
+            "default": 1,
+            "min": 1
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "hear_threshold",
+            "op": "set",
+            "value": {
+              "expr": "@level"
+            }
+          }
+        ]
+      },
+      "silent_improved": {
+        "label": "Немота (улучшенная)",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Как Немота, но и для микрофонов (стр. 52).",
+        "params": [
+          {
+            "key": "level",
+            "label": "Порог",
+            "kind": "number",
+            "default": 1,
+            "min": 1
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "hear_threshold",
+            "op": "set",
+            "value": {
+              "expr": "@level"
+            }
+          }
+        ]
+      },
+      "immobilized": {
+        "label": "Неподвижность",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Нельзя перемещаться; значение атаки −3 и −3 к наборам атаки; Реакция не идёт в защиту (стр. 53).",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "ar_mod",
+            "op": "add",
+            "value": {
+              "expr": "-3"
+            }
+          },
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "-3"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
+            "tags": [
+              "атака"
+            ]
+          },
+          {
+            "kind": "value",
+            "target": "defense_pool",
+            "op": "add",
+            "value": {
+              "expr": "0 - @reaction"
+            }
+          }
+        ]
+      },
+      "petrified": {
+        "label": "Окаменение",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Нельзя действовать; +10 к броне; снимает все наносящие урон состояния (стр. 53).",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "armor_extra",
+            "op": "add",
+            "value": {
+              "expr": "10"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "action_lock",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ],
+        "on": [
+          {
+            "on": "gained:petrified",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": "burning",
+                "to": {
+                  "expr": "@носитель"
+                }
+              },
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": "corroded",
+                "to": {
+                  "expr": "@носитель"
+                }
+              },
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": "poisoned",
+                "to": {
+                  "expr": "@носитель"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "blinded": {
+        "label": "Ослепление",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "I–II: −3 за уровень к проверкам, связанным со зрением (заявка «зрение»); III — такие проверки проваливаются (стр. 53).",
+        "params": [
+          {
+            "key": "level",
+            "label": "Уровень",
+            "kind": "number",
+            "default": 1,
+            "min": 1,
+            "max": 3
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "если(@level >= 3, -99, -3 * @level)"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
+            "tags": [
+              "зрение"
+            ]
+          }
+        ]
+      },
+      "poisoned": {
+        "label": "Отравление",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Каждый раунд — сопротивление Телом урону, равному числу (физическому или оглушающему); число снижается на 1 каждый раунд, на нуле состояние снимается (стр. 53).",
+        "params": [
+          {
+            "key": "level",
+            "label": "Урон в раунд",
+            "kind": "number",
+            "default": 1,
+            "min": 1
+          },
+          {
+            "key": "physical_hit",
+            "label": "Физический (1 — да)",
+            "kind": "number",
+            "default": 0
+          }
+        ],
+        "on": [
+          {
+            "on": "moment:round-start",
+            "steps": [
+              {
+                "id": "стойкость",
+                "type": "roll",
+                "die": "pool",
+                "count": {
+                  "expr": "@носитель.body"
+                },
+                "tags": [
+                  "сопротивление"
+                ],
+                "by": {
+                  "expr": "@носитель"
+                }
+              },
+              {
+                "type": "emit",
+                "id": "вред",
+                "effect": "take_damage",
+                "args": {
+                  "лист": {
+                    "expr": "@носитель"
+                  },
+                  "amount": {
+                    "expr": "большее из(0, @level - @стойкость.natural)"
+                  },
+                  "physical_hit": {
+                    "expr": "@physical_hit"
+                  }
+                }
+              },
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": "poisoned",
+                "to": {
+                  "expr": "@носитель"
+                }
+              },
+              {
+                "type": "branch",
+                "if": {
+                  "expr": "@level > 1"
+                }
+              },
+              {
+                "type": "status",
+                "effect": "poisoned",
+                "to": {
+                  "expr": "@носитель"
+                },
+                "args": {
+                  "level": {
+                    "expr": "@level - 1"
+                  },
+                  "physical_hit": {
+                    "expr": "@physical_hit"
+                  }
+                }
+              },
+              {
+                "type": "end"
+              }
+            ]
+          }
+        ]
+      },
+      "panicked": {
+        "label": "Паника",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Нельзя действовать, кроме как избегать источника паники (стр. 53).",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "action_lock",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "veiled": {
+        "label": "Пелена",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Нарушена связь с астралом: нельзя переходить в астрал, проецироваться и воплощаться; Внимание в астрале остаётся (стр. 53).",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "astral_veil",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
+      },
+      "corroded": {
+        "label": "Разъедание",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Каждый раунд — сопротивление Телом физическому урону, равному числу; снимается снаряжением (стр. 53).",
+        "params": [
+          {
+            "key": "level",
+            "label": "Урон в раунд",
+            "kind": "number",
+            "default": 1,
+            "min": 1
+          }
+        ],
+        "on": [
+          {
+            "on": "moment:round-start",
+            "steps": [
+              {
+                "id": "стойкость",
+                "type": "roll",
+                "die": "pool",
+                "count": {
+                  "expr": "@носитель.body"
+                },
+                "tags": [
+                  "сопротивление"
+                ],
+                "by": {
+                  "expr": "@носитель"
+                }
+              },
+              {
+                "type": "emit",
+                "id": "вред",
+                "effect": "take_damage",
+                "args": {
+                  "лист": {
+                    "expr": "@носитель"
+                  },
+                  "amount": {
+                    "expr": "большее из(0, @level - @стойкость.natural)"
+                  },
+                  "physical_hit": {
+                    "expr": "1"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "wet": {
+        "label": "Сырость",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Штраф −6 к сопротивлению урону от холода и электричества. Отменяет Горение и отменяется им (стр. 54).",
+        "on": [
+          {
+            "on": "gained:wet",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": "burning",
+                "to": {
+                  "expr": "@носитель"
+                }
+              }
+            ]
+          },
+          {
+            "on": "gained:burning",
+            "if": {
+              "expr": "@лист == @носитель"
+            },
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": "wet",
+                "to": {
+                  "expr": "@носитель"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "nauseated": {
+        "label": "Тошнота",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "В начале раунда — Тело + Воля (2): провал — нельзя действовать в раунд, успех — минус простое действие (стр. 54).",
+        "on": [
+          {
+            "on": "moment:round-start",
+            "steps": [
+              {
+                "id": "тошнота",
+                "type": "roll",
+                "die": "pool",
+                "count": {
+                  "expr": "@носитель.body + @носитель.willpower"
+                },
+                "tags": [
+                  "проверка"
+                ],
+                "by": {
+                  "expr": "@носитель"
+                }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.nausea_lost"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "если(@тошнота.natural >= 2, 1, 2)"
+                }
+              }
+            ]
+          }
+        ],
+        "detach": [
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@носитель.nausea_lost"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "0"
+            }
+          }
+        ]
+      },
+      "cover": {
+        "label": "Укрытие",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "I–IV: +уровень к значению защиты и к защите; атака из укрытия — лишнее простое действие, Преимущество при атаке не копится; из Укрытия IV −2 к атаке (стр. 54).",
+        "params": [
+          {
+            "key": "level",
+            "label": "Уровень",
+            "kind": "number",
+            "default": 1,
+            "min": 1,
+            "max": 4
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "cover",
+            "op": "set",
+            "value": {
+              "expr": "@level"
+            }
+          },
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "если(@level >= 4, -2, 0)"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
+            "tags": [
+              "атака"
+            ]
+          }
+        ]
+      },
+      "restrained": {
+        "label": "Усмирение",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Нельзя двигаться и действовать (кроме Внимания и мысленной речи); защита −10, проверок защиты нет; продолжительный урон приостановлен (стр. 54).",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "action_lock",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "defense_rating",
+            "op": "add",
+            "value": {
+              "expr": "-10"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "defense_pool",
+            "op": "set",
+            "value": {
+              "expr": "0"
+            }
+          }
+        ]
+      },
+      "hobbled": {
+        "label": "Хромота",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Перемещение пешком — вдвое меньше, с округлением вверх (стр. 54). Движение на карте — справка."
+      },
+      "extinguish": {
+        "label": "Сбить пламя",
+        "group": "Действия",
+        "description": "Сложное действие: Проворство + Реакция (2); успех — Горение снято (стр. 52).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.complex_left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"сложное действие на этом ходу уже потрачено\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.complex_left"
+            },
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "steps": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.burning < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"не горит\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "id": "сбить",
+            "type": "roll",
+            "die": "pool",
+            "count": {
+              "expr": "@действующий.agility + @действующий.reaction"
+            },
+            "tags": [
+              "проверка"
+            ],
+            "by": {
+              "expr": "@действующий"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@сбить.natural >= 2"
+            }
+          },
+          {
+            "type": "status",
+            "mode": "remove",
+            "effect": "burning",
+            "to": {
+              "expr": "@действующий"
+            }
+          },
+          {
+            "type": "end"
           }
         ]
       }
