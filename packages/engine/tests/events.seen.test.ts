@@ -16,13 +16,13 @@ const queue = (...values: number[]) => {
 const ACTOR = { key: 'действующий', kind: 'sheet' };
 const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
 const EACH = { type: 'each', of: 'цели' };
-const roll = (extra: Record<string, unknown> = {}) => ({ id: 'бросок', type: 'roll', die: 'к20', tags: ['атака'], by: { expr: '@действующий' }, against: { expr: '@цель' }, ...extra });
+const roll = (extra: Record<string, unknown> = {}) => ({ id: 'бросок', type: 'roll', die: 'к20', tags: ['атака'], by: { expr: '@действующий' }, ...extra });
 const mine = '@бросающий == @носитель';
 
 const world = (effects: Record<string, unknown>): System => ({
   id: 'к', name: 'к',
   tables: {
-    лист: { shape: 'single', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 20 }, { key: 'удача', label: 'Удача', kind: 'number', default: 1, min: 0 }] },
+    лист: { shape: 'single', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 20 }, { key: 'удача', label: 'Удача', kind: 'number', default: 1, min: 0 }, { key: 'кд', label: 'КД', kind: 'number', default: 10 }] },
     приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] },
     rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }] },
   },
@@ -33,7 +33,7 @@ const world = (effects: Record<string, unknown>): System => ({
       steps: [
         EACH,
         roll(),
-        { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
+        { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@цель.кд' } },
         { type: 'branch', if: { expr: 'не(@попал.success)' } }, { type: 'stop' }, { type: 'end' },
         { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '5' } },
       ],
@@ -161,7 +161,7 @@ group('увидев кости: поздние броски видят, что �
         label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS],
         steps: [
           EACH, roll(),
-          { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
+          { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@цель.кд' } },
           { type: 'branch', if: { expr: 'не(@попал.success)' } }, { type: 'stop' }, { type: 'end' },
           { id: 'урон', type: 'roll', fixed: { expr: '5 + @действующий.удача * 10' } },
           { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '@урон' } },
@@ -306,7 +306,7 @@ group('ядро: по ревью Fable', () => {
       label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS],
       steps: [
         EACH, roll(),
-        { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '15' } },
+        { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@цель.кд + 5' } },
         { type: 'branch', if: { expr: 'не(@попал.success)' } }, { type: 'stop' }, { type: 'end' },
         { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '5' } },
       ],

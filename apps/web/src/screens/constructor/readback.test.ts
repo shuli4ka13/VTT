@@ -18,14 +18,14 @@ const effect = { params: [{ key: 'p_1', label: 'кость урона', kind: 'd
 const hero = { ...effect, params: [...(effect.params ?? []), { key: 'атакующий', label: 'Атакующий', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' } }], steps: [{ type: 'each', of: 'цели' }] } as unknown as Effect;
 
 describe('checkReadback', () => {
-  it('бросок с «Бросает» читается фразой с лейблами системы, без первого лица; о ходе шагов проверка не говорит', () => {
-    const roll = { id: 'hit_бросок', type: 'roll', die: 'lead', bonus: { expr: '#power_mod' }, by: { expr: '@атакующий' }, against: { expr: '@цель' } } as unknown as Step;
+  it('бросок с бросающим читается фразой с лейблами системы, без первого лица; «против кого» — лист справа в сравнении; о ходе шагов проверка не говорит', () => {
+    const roll = { id: 'hit_бросок', type: 'roll', die: 'lead', bonus: { expr: '#power_mod' }, by: { expr: '@атакующий' } } as unknown as Step;
     const step = {
       id: 'hit', type: 'check', successWhen: 'atLeast',
       value: { expr: '@hit_бросок' }, versus: { expr: '@цель.armor' },
     } as unknown as Step;
     expect(joinReadback(checkReadback(step, roll, system, hero)))
-      .toBe('«Атакующий» бросает 1к20 + «Мод Силы» против «цель» — с «Класс брони» (цель).');
+      .toBe('«Атакующий» бросает 1к20 + «Мод Силы» — с «Класс брони» (цель).');
   });
 
   it('пустой бросок — оранжевые пропуски: кто бросает и с чем сравнить', () => {
@@ -69,7 +69,7 @@ describe('numberReadback', () => {
     expect(joinReadback(numberReadback(step, system, effect))).toBe('Считается число: 2к6.');
   });
 
-  it('число с «Бросает» — чей-то бросок, назван листом', () => {
+  it('число с бросающим — чей-то бросок, назван листом', () => {
     const step = { id: 'dmg', type: 'roll', die: { expr: '"2d6"' }, by: { expr: '@атакующий' } } as unknown as Step;
     expect(joinReadback(numberReadback(step, system, hero))).toBe('«Атакующий» бросает: 2к6.');
   });

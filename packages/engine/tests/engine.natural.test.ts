@@ -17,7 +17,7 @@ const world = (versus: string, extra: Record<string, unknown>): System => ({
       params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
       steps: [
         { type: 'each', of: 'цели' },
-        { id: 'бросок', type: 'roll', die: 'к20', bonus: { expr: '5' }, by: { expr: '@действующий' }, against: { expr: '@цель' } },
+        { id: 'бросок', type: 'roll', die: 'к20', bonus: { expr: '5' }, by: { expr: '@действующий' } },
         { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: versus }, ...extra },
         { type: 'branch', if: { expr: 'не(@попал.success)' } }, { type: 'stop' }, { type: 'end' },
         { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '1' } },

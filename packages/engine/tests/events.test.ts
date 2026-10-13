@@ -194,7 +194,7 @@ const PARAMETRIC = {
   steps: [
     { type: 'each', of: 'цели' },
     { id: 'hit_бросок', type: 'roll', die: 'lead_die', bonus: { expr: '@bonus' }, tags: ['атака'],
-      by: { expr: '@действующий' }, against: { expr: '@цель' } },
+      by: { expr: '@действующий' } },
     { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: 'или(@versus, @цель.ac)' } },
     { type: 'branch', if: { expr: 'не(@hit.success)' } }, { type: 'stop' }, { type: 'end' },
     { id: 'dmg', type: 'roll', fixed: { expr: 'кинуть(@damage_dice)' }, bonus: { expr: '@damage_bonus' } },

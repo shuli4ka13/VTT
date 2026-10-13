@@ -150,7 +150,7 @@ group('бросок несёт несколько меток, одна прих�
         params: [ACTOR, TARGETS, { key: 'чем', label: 'Чем спасаются', kind: 'choice', from: 'черты' }],
         steps: [
           EACH,
-          { id: 'спас_бросок', type: 'roll', die: 'к20', bonus: { expr: '@цель.чем.спас' }, tags: ['спас', { expr: '@чем' }], by: { expr: '@цель' }, against: { expr: '@действующий' } },
+          { id: 'спас_бросок', type: 'roll', die: 'к20', bonus: { expr: '@цель.чем.спас' }, tags: ['спас', { expr: '@чем' }], by: { expr: '@цель' } },
           { id: 'спас', type: 'check', value: { expr: '@спас_бросок' }, versus: { expr: '12' } },
         ],
       },
@@ -252,7 +252,7 @@ group('наложенное помнит число, штрафная кость
         label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS],
         steps: [
           EACH,
-          { id: 'hit_бросок', type: 'roll', die: 'к20', tags: ['атака'], by: { expr: '@действующий' }, against: { expr: '@цель' } },
+          { id: 'hit_бросок', type: 'roll', die: 'к20', tags: ['атака'], by: { expr: '@действующий' } },
           { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '@цель.кд' } },
           { type: 'branch', if: { expr: 'не(@hit.success)' } }, { type: 'stop' }, { type: 'end' },
           { id: 'dmg', type: 'roll', fixed: { expr: "кинуть('1d6', если(@hit.natural >= @действующий.крит_от, 2, 1))" } },

@@ -124,7 +124,6 @@ export function checkReadback(step: Step, roll: Step | null, system: System, eff
     const bonus = refSegment(r.bonus, system, effect, 'прибавка?', names);
     if (!('text' in bonus) || (bonus.text !== '0' && bonus.text !== '')) out.push(seg('+'), bonus);
   }
-  if (r.against) out.push(seg(`против ${whoOf(effect, r.against)}`));
   out.push(seg('— с'), refSegment(s.versus, system, effect, 'с чем сравнить?', names), seg(tail));
   return out;
 }

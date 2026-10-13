@@ -261,10 +261,9 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         edit(draft => {
           const list = draft.steps ?? (draft.steps = []);
           const taken = list.map(s => s.id).filter(Boolean) as string[];
-          const held = HELD_PARTS.has(placeAt(0).part);
           const at = armEnd(list, head);
-          const made = called ? [callStep(system, draft, called, list.slice(0, at))] : brick!.make(system, taken, draft);
-          list.splice(at, 0, ...made.map(step => (held ? byHolder(step) : step)));
+          const made = called ? [callStep(system, draft, called, list.slice(0, at))] : brick!.make(system, taken, draft, sheetsAt(system, id, placeAt(at)));
+          list.splice(at, 0, ...made);
         });
       }}
     />
@@ -413,9 +412,8 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
             {bricksOf(system, id, compendium).map(([key, one]) => (
               <Button key={key} size="sm" title={one.description || `вызвать «${one.label || key}»`}
                 onClick={() => edit(draft => {
-                  const held = HELD_PARTS.has(placeAt(0).part);
                   const made = callStep(system, draft, key, draft.steps ?? []);
-                  (draft.steps ??= []).push(held ? byHolder(made) : made);
+                  (draft.steps ??= []).push(made);
                 })}>
                 {one.label || key}
               </Button>
@@ -428,8 +426,8 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
           <Button key={b.key} size="sm" title={b.hint}
             onClick={() => edit(draft => {
               const taken = (draft.steps ?? []).map(s => s.id).filter(Boolean) as string[];
-              const held = HELD_PARTS.has(placeAt(0).part);
-              (draft.steps ??= []).push(...b.make(system, taken, draft).map(step => (held ? byHolder(step) : step)));
+              const at = (draft.steps ?? []).length;
+              (draft.steps ??= []).push(...b.make(system, taken, draft, sheetsAt(system, id, placeAt(at))));
             })}>
             {b.label}
           </Button>
@@ -488,12 +486,5 @@ const returnsOf = (system: System, step: Step): StepOutput[] => {
     ...(column.kind ? { kind: String(column.kind) } : {}),
     ...(column.no ? { no: column.no } : {}),
   }));
-};
-
-const HELD_PARTS = new Set(['handler', 'handler-cost', 'attach', 'detach']);
-
-const byHolder = (step: Step): Step => {
-  const by = (step as { by?: { expr?: string } }).by;
-  return by?.expr === '@действующий' ? { ...step, by: { expr: '@носитель' } } as Step : step;
 };
 

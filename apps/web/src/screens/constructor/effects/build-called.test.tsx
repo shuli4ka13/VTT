@@ -103,8 +103,7 @@ describe('вызываемые блоки D&D собираются руками'
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
     ui.click('+ число');
     within(at(1)()).formula('Формула', 'кинуть(@lead_die) + @бонус');
-    within(at(1)()).formula('кости бросает', '@кто');
-    within(at(1)()).formula('Против кого', '@против');
+    within(at(1)()).select('Кто бросает', '@кто');
     within(at(1)()).select('Метки', 'атака');
     nameStep(at(1)(), 'бросок');
     ui.click('+ проверка');
@@ -129,12 +128,10 @@ describe('вызываемые блоки D&D собираются руками'
     param(ui, 'saving_throw', 0, 'Кто спасается', 'sheet', 'кто', { role: 'target' });
     param(ui, 'saving_throw', 1, 'Чем спасается', 'choice', 'характеристика', { from: 'abilities' });
     param(ui, 'saving_throw', 2, 'Сложность', 'number', 'сложность');
-    param(ui, 'saving_throw', 3, 'Против кого', 'sheet', 'против', { optional: true, role: 'actor' });
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
     ui.click('+ число');
     within(at(1)()).formula('Формула', 'кинуть(@lead_die) + @кто.характеристика.save');
-    within(at(1)()).formula('кости бросает', '@кто');
-    within(at(1)()).formula('Против кого', '@против');
+    within(at(1)()).select('Кто бросает', '@кто');
     within(at(1)()).select('Метки', 'спасбросок');
     within(at(1)()).select('Метки', ':формула');
     within(at(1)()).type('Метки', '@характеристика');

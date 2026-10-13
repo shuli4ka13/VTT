@@ -22,14 +22,13 @@ export function slotShown(slot: { onlyIf?: SlotGate }, step: Readonly<Record<str
 export const STEP_WORDS = {
   roll: {
     label: 'Бросок',
-    hint: `Бросить кости или посчитать число. Если указано, кто бросает, — это чей-то бросок: на него действуют правки и «увидев кости». Без этого — просто расчёт. Кость пишется как ${diceExample}.`,
+    hint: `Бросить кости или посчитать число. Если указано, кто бросает, — это чей-то бросок: на него действуют правки и «увидев кости»; против кого — решает сравнение, лист на другой его стороне. Без бросающего — просто расчёт. Кость пишется как ${diceExample}.`,
     slots: [
       { key: 'die', label: 'Кость', kind: 'ref', main: true, allow: ['name', 'expr', 'empty'], refersTo: 'constant' },
       { key: 'count', label: 'Сколько костей', kind: 'ref', allow: ['expr', 'empty'] },
       { key: 'fixed', label: 'Формула', kind: 'ref', main: true, allow: ['expr', 'empty'] },
       { key: 'bonus', label: 'Прибавка', kind: 'ref', main: true, allow: ['expr', 'empty'] },
       { key: 'by', label: 'Кто бросает', kind: 'sheet', allow: ['expr', 'empty'] },
-      { key: 'against', label: 'Против кого', kind: 'sheet', allow: ['expr', 'empty'] },
       { key: 'tags', label: 'Метки броска', kind: 'roll', allow: [] },
     ],
     outputs: [

@@ -95,8 +95,8 @@ describe('новое ядро: сознательные изменения', () 
   it('встречный бросок цели получает правки «бросок по мне» нападающего и заявки цели', () => {
     const system = world({
       удар: button([
-        { id: 'атака', type: 'roll', die: 'к20', by: { expr: '@действующий' }, against: { expr: '@цель' } },
-        { id: 'защита', type: 'roll', die: 'к20', by: { expr: '@цель' }, against: { expr: '@действующий' } },
+        { id: 'атака', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
+        { id: 'защита', type: 'roll', die: 'к20', by: { expr: '@цель' } },
         { id: 'спор', type: 'check', value: { expr: '@атака' }, versus: { expr: '@защита' } },
         { type: 'branch', if: { expr: 'не(@спор.success)' } }, { type: 'stop' }, { type: 'end' },
         hit('3'),

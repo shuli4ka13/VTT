@@ -591,9 +591,8 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .flow-head__cond .formula-field { max-width: 520px; height: 32px; overflow: hidden; white-space: nowrap; }
 .step-card .slot { justify-items: stretch; width: 100%; max-width: var(--value-w); }
 .step-card .slot > .formula-field { justify-self: stretch; }
-.step-card .roll-line { display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
-.step-card .roll-line__part { flex: none; width: 100%; max-width: none; }
-.step-card .roll-line__part > .formula-field, .step-card .roll-line__part > .select { width: 100%; max-width: var(--value-w); }
+.step-card .roll-by { width: auto; min-height: 0; max-width: 220px; }
+.step-card .roll-formula > .formula-field { width: auto; }
 .step-card .slot { grid-template-columns: minmax(0, 1fr); justify-content: stretch; }
 .flow-head__cond .cond, .flow-head__cond .cond__fact, .flow-head__cond .cond__formula, .flow-head__cond .flow-head__words { width: 100%; max-width: 520px; }
 .flow-head__cond .formula-field { width: 100%; }

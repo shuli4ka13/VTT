@@ -43,7 +43,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, takenNames, onRename, onUnpair, onWrap, onUnwrap, asIf = false, outcome = '',
+  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, takenNames, onRename, onUnpair, onWrap, onUnwrap, asIf = false, outcome = '',
 }: {
   group: CardGroup;
   position: number;
@@ -79,6 +79,10 @@ export function GroupCard({
 }) {
   const context: SlotContext = { system, effect, earlier, ...(sheets ? { sheets } : {}) };
   const step = group.step as any;
+  const edit: typeof editStep = (at, change) => editStep(at, draft => {
+    change(draft);
+    if (draft.type === 'roll') delete (draft as Record<string, unknown>).against;
+  });
 
   const actions = (
     <>

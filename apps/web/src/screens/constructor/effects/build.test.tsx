@@ -180,7 +180,7 @@ describe('эффекты пресетов собираются в констру
     }
     within(card).click('↑');
 
-    savingThrow(3, [['Кто спасается', '@источник'], ['Чем спасается', '"ловкость"'], ['Сложность', '@носитель.spell_dc'], ['Против кого', '@носитель']]);
+    savingThrow(3, [['Кто спасается', '@источник'], ['Чем спасается', '"ловкость"'], ['Сложность', '@носитель.spell_dc']]);
 
     ui.click('+ число');
     card = stepCard(/^4 · /);
@@ -260,7 +260,7 @@ describe('эффекты пресетов собираются в констру
     ui.click('+ число');
     card = stepCard(/^5 · /);
     within(card).formula('Формула', 'кинуть(@lead_die) + @прицел');
-    within(card).formula('кости бросает', '@действующий');
+    within(card).select('Кто бросает', '@действующий');
     card = stepCard(/^5 · /);
     marks(card, 'атака');
     nameStep(card, 'попадание_бросок');
@@ -458,9 +458,8 @@ describe('эффекты пресетов собираются в констру
     ui.click('+ число');
     let card = stepCard(/^2 · /);
     within(card).formula('Формула', 'кинуть(@duality) + @trait.value + @attack_bonus');
-    within(card).formula('кости бросает', '@действующий');
+    within(card).select('Кто бросает', '@действующий');
     card = stepCard(/^2 · /);
-    within(card).formula('Против кого', 'первый(@цели)');
     marks(card, 'атака', 'герой');
     nameStep(card, 'бросок_бросок');
     within(stepCard(/^2 · /)).click('↑');
@@ -513,8 +512,7 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ число');
     within(at(first)).formula('Формула', `кинуть(@pool, ${(steps[from] as unknown as { count: { expr: string } }).count.expr})`);
-    within(at(first)).formula('кости бросает', '@цель');
-    within(at(first)).formula('Против кого', '@действующий');
+    within(at(first)).select('Кто бросает', '@цель');
     marks(at(first), 'защита');
     nameStep(at(first), 'атака_против');
 
@@ -529,8 +527,7 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ проверка');
     within(at(first + 3)).formula('Проверка', 'кинуть(@pool, @цель.body) >= 0');
-    within(at(first + 3)).formula('Бросает', '@цель');
-    within(at(first + 3)).formula('Против кого', '@действующий');
+    within(at(first + 3)).select('Кто бросает', '@цель');
     marks(at(first + 3), 'сопротивление');
     nameStep(at(first + 3), 'сопротивление');
 
@@ -563,7 +560,7 @@ describe('эффекты пресетов собираются в констру
     ui.click('+ число');
     const at = (n: number) => stepCard(new RegExp(`^${n} · `));
     within(at(2)).formula('Формула', 'кинуть(@pool)');
-    within(at(2)).formula('кости бросает', '@действующий');
+    within(at(2)).select('Кто бросает', '@действующий');
     marks(at(2), 'действие', '=если(@rating == 0, "нулевой", "")');
     nameStep(at(2), 'бросок_бросок');
     within(at(2)).click('↑');

@@ -7,7 +7,7 @@ const attackRoll = {
   params: [{ key: 'кто', kind: 'sheet' }, { key: 'против', kind: 'sheet' }, { key: 'бонус', kind: 'number', default: 0 }],
   returns: [{ key: 'попал', label: 'попал', kind: 'boolean', expr: { expr: '@проверка.success' } }],
   steps: [
-    { id: 'бросок', type: 'roll', die: 'к20', bonus: { expr: '@бонус' }, by: { expr: '@кто' }, against: { expr: '@против' } },
+    { id: 'бросок', type: 'roll', die: 'к20', bonus: { expr: '@бонус' }, by: { expr: '@кто' } },
     { id: 'проверка', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@против.кд' } },
   ],
 };

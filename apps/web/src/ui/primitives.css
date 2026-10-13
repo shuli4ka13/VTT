@@ -739,9 +739,18 @@
 .call-group--quiet { margin-top: var(--s-2); padding-top: var(--s-3); border-top: 1px dashed var(--border); color: var(--text-muted); }
 .call-group--quiet .chips__chip { opacity: .8; }
 .call-group__value { display: inline-flex; align-items: center; gap: var(--s-2); min-width: 0; }
-.roll-line { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--s-2) var(--s-4); }
-.roll-line__part { flex: 0 1 220px; min-width: 160px; }
-.roll-line__part--wide { flex: 1 1 260px; }
+.roll-formula { --value-w: none; display: flex; align-items: center; gap: var(--s-3); min-width: 0; }
+.roll-formula > .formula-field { flex: 1 1 auto; min-width: 0; }
+.roll-by {
+  -webkit-appearance: none; appearance: none; field-sizing: content;
+  flex: none; height: 22px; max-width: 220px; margin: 0; padding: 0 18px 0 var(--s-3);
+  font-size: var(--fs-2); line-height: 20px; white-space: nowrap; text-overflow: ellipsis; cursor: pointer;
+  background-color: var(--accent-soft); border: 1px solid var(--accent); border-radius: var(--r-1);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238b90a0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 6px center; background-size: 8px 5px;
+}
+.roll-by:hover { border-color: var(--accent-hover); }
+.roll-by--none { background-color: var(--bg-sunken); border-color: var(--border-strong); border-style: dashed; color: var(--text-muted); }
 .chips__side--sheet, .chips__side--desk { border-left: 0; padding-left: 0; margin-left: 0; border-right: 1px solid var(--border); padding-right: var(--s-2); margin-right: var(--s-1); }
 .drag-grip { color: var(--text-faint); cursor: grab; user-select: none; letter-spacing: -2px; padding-right: var(--s-1); }
 .drag-item { padding: 0 var(--s-1); border-radius: var(--r-1); }

@@ -5,6 +5,7 @@ import type { Roll, RollResult, Spec } from './dice.ts';
 import type { Pass } from '../engine/calc.ts';
 import type { Tools } from '../formula/index.ts';
 import type { Die } from '../model/types.ts';
+import type { Thrower } from './against.ts';
 
 export interface Throw {
   spec: Spec;
@@ -19,6 +20,7 @@ export interface Throw {
 export interface Thrown {
   roll: Roll;
   result: RollResult;
+  thrower?: Thrower;
 }
 
 export function throwDice(t: Throw): Thrown {

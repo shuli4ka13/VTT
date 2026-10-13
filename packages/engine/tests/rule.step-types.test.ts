@@ -64,7 +64,7 @@ const viaInput = (key, kind = 'number') => ({ paramDefs: [{ key, kind }], params
 const attack = (rollOver = {}, checkOver = {}) => [
   {
     id: 'hit_бросок', type: 'roll', die: 'lead_die', bonus: { expr: '@действующий.attack_bonus' }, tags: ['атака'],
-    by: { expr: '@действующий' }, against: { expr: '@цель' },
+    by: { expr: '@действующий' },
     ...rollOver,
   },
   { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '@цель.ac' }, ...checkOver },
@@ -105,7 +105,7 @@ group('шаги «бросок» и «проверка»', () => {
     const save = [
       {
         id: 'save_бросок', type: 'roll', die: 'lead_die', bonus: HERE('dex_save'), tags: ['спасбросок'],
-        by: { expr: '@цель' }, against: { expr: '@действующий' },
+        by: { expr: '@цель' },
       },
       { id: 'save', type: 'check', value: { expr: '@save_бросок' }, versus: { expr: '@действующий.spell_dc' } },
       { type: 'branch', if: { expr: '@save.success' } }, { type: 'stop' }, { type: 'end' },

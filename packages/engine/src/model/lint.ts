@@ -175,6 +175,11 @@ function stepProblems(steps: Step[], whereOf: (index: number) => Where): Problem
         out.push({ where, level: 'error', text: `${slot.label.toLowerCase()}: ссылка старой формы ${JSON.stringify(value)} — нужно имя или формула` });
       }
     }
+    const thrower = mod.thrownBy?.(step as never);
+    const formula = (step as { fixed?: unknown }).fixed;
+    if (thrower !== undefined && thrower !== null && formula !== undefined && formula !== null && ((step as { die?: unknown }).die === undefined || (step as { die?: unknown }).die === null)) {
+      out.push({ where, level: 'error', text: 'у сложной формулы кости ничьи — оставьте кинуть(кость, сколько) + прибавка или уберите бросающего' });
+    }
     if (step.id) earlier.add(String(step.id));
   });
   return out;
@@ -454,11 +459,84 @@ const NO_DICE_HERE = 'кости бросает только шаг эффект
 
 const ANYONE_ROLLS = 'правка действует на броски всех листов в комнате — в условии нет носителя; обычно «бросает носитель» или «бросают против носителя»';
 
+const AGAINST_NAME = /@против(?![\p{L}\p{N}_])/u;
+
+const readsAgainst = (guard: unknown): boolean => AGAINST_NAME.test(String((guard as { expr?: unknown } | undefined)?.expr ?? ''));
+
+const FACED_OPS = new Set(['addDie', 'keepBest', 'keepWorst', 'shiftVersus', 'shiftDegree', PLUS_OP]);
+
+const SEEN_AGAINST = '«увидев кости» с «@против» в условии срабатывает, только когда бросок сравнивают с одним противником в той же части эффекта; у общего броска на несколько целей противника ещё нет';
+
 function handlerDiceProblems(system: System): Problem[] {
   const out: Problem[] = [];
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
     (effect.on ?? []).forEach((handler, index) => {
-      if (rollsDice(handler.if)) out.push({ where: { tab: 'effects', effect: id, part: 'on', handler: index }, level: 'error', text: 'в условии подписки кости не бросают — «кинуть» уберите' });
+      const where = { tab: 'effects' as const, effect: id, part: 'on', handler: index };
+      if (rollsDice(handler.if)) out.push({ where, level: 'error', text: 'в условии подписки кости не бросают — «кинуть» уберите' });
+      if (handler.on === 'seen' && readsAgainst(handler.if)) out.push({ where, level: 'warn', text: SEEN_AGAINST });
+    });
+  }
+  return out;
+}
+
+const loneRoll = (ref: unknown): string | null =>
+  /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((ref as { expr?: unknown } | undefined)?.expr ?? ''))?.[1] ?? null;
+
+const SHARED_READ = (name: string): RegExp => new RegExp(`@${name}(?:\\.natural)?(?![\\p{L}\\p{N}_.])`, 'u');
+
+const MENTION = (name: string): RegExp => new RegExp(`@${name}(?![\\p{L}\\p{N}_])`, 'u');
+
+function sharedRollProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  for (const [id, effect] of Object.entries(system.effects ?? {})) {
+    const steps = (effect.steps ?? []) as (Step & Record<string, unknown>)[];
+    const split = steps.findIndex(step => registry.get(step.type)?.splits?.(step as never) === true);
+    if (split < 0) continue;
+    const shared = new Set(steps.slice(0, split)
+      .filter(step => typeof step.id === 'string' && registry.get(step.type)?.thrownBy?.(step as never))
+      .map(step => step.id as string));
+    if (!shared.size) continue;
+    const faced = new Map<string, string>();
+    steps.slice(split + 1).forEach((step, at) => {
+      const sides = registry.get(step.type)?.compares?.(step as never);
+      if (!sides) return;
+      for (const ref of [sides.value, sides.versus]) {
+        const name = loneRoll(ref);
+        if (name && shared.has(name)) {
+          if (!faced.has(name)) faced.set(name, typeof step.id === 'string' ? step.id : '');
+          continue;
+        }
+        const text = JSON.stringify(ref ?? '');
+        for (const roll of shared) {
+          if (!MENTION(roll).test(text)) continue;
+          out.push({
+            where: { tab: 'effects', effect: id, step: split + 1 + at },
+            level: 'warn',
+            text: `«${roll}» сравнивается внутри формулы — правки цели (преимущество против неё и подобные) так не учтутся; поставьте бросок на сторону целиком: @${roll} >= …, прибавку — в сам бросок`,
+          });
+        }
+      }
+    });
+    if (!faced.size) continue;
+    steps.forEach((step, at) => {
+      if (at === split || faced.has(String(step.id ?? ''))) return;
+      const sides = registry.get(step.type)?.compares?.(step as never);
+      const args = step.args && typeof step.args === 'object'
+        ? Object.fromEntries(Object.entries(step.args as Record<string, unknown>).filter(([, ref]) => !loneRoll(ref) || !faced.has(loneRoll(ref)!)))
+        : step.args;
+      const rest = sides
+        ? { ...step, args, value: loneRoll(sides.value) ? undefined : step.value, versus: loneRoll(sides.versus) ? undefined : step.versus }
+        : { ...step, args };
+      const text = JSON.stringify(rest);
+      for (const [name, check] of faced) {
+        if (!SHARED_READ(name).test(text)) continue;
+        const via = check ? `@${check}` : 'сравнения';
+        out.push({
+          where: { tab: 'effects', effect: id, step: at },
+          level: 'warn',
+          text: `«${name}» здесь — общий бросок без правок цели (преимущество против неё и подобных); что выпало против цели — у сравнения: ${via}.natural, ${via}.success`,
+        });
+      }
     });
   }
   return out;
@@ -474,6 +552,7 @@ function rollEditProblems(system: System): Problem[] {
     for (const op of edit.ops ?? []) {
       const value = (op as { value?: { expr?: unknown } }).value;
       if (!known.has(String(op.op))) out.push({ where, level: 'error', text: `у правки броска «${name}» неизвестное действие «${String(op.op)}»` });
+      if (AGAINST_NAME.test(JSON.stringify(op))) out.push({ where, level: 'error', text: `в словаре правок броска «@против» не пишут — у «${name}» он есть; противника проверяет условие правки на листе` });
       else if (op.op === PLUS_OP && !String(value?.expr ?? '').trim()) out.push({ where, level: 'error', text: `у правки броска «${name}» «прибавить» без формулы` });
     }
   }
@@ -511,6 +590,11 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
         else if (mod.param === 'bonus' && mod.op !== 'add') out.push({ where: at, level: 'error', text: `прибавка к броску только прибавляет, а здесь «${String(mod.op ?? 'не задано')}»` });
         if (rollsDice(mod.if)) out.push({ where: at, level: 'error', text: NO_DICE_IN_IF });
         if (!tiedToHolder(mod.if as Guard | undefined)) out.push({ where: at, level: 'warn', text: ANYONE_ROLLS });
+        if (readsAgainst(mod.if) && mod.param === 'edits' && mod.edit) {
+          const word = system.roll_edits?.[String(mod.edit)];
+          const bad = [...new Set((word?.ops ?? []).map(op => String(op.op)).filter(op => !FACED_OPS.has(op)))];
+          if (bad.length) out.push({ where: at, level: 'error', text: `правка с «@против» в условии действует в каждом сравнении отдельно и может только добавлять и убирать кости, брать лучшую или худшую, прибавлять и сдвигать порог; у «${word?.label || String(mod.edit)}» есть ${bad.map(op => `«${op}»`).join(', ')}` });
+        }
         continue;
       }
       const effect = system.effects?.[call];
@@ -966,6 +1050,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...editProblems(system, compendium));
   out.push(...rollEditProblems(system));
   out.push(...handlerDiceProblems(system));
+  out.push(...sharedRollProblems(system));
   out.push(...declaredStageProblems(system));
   out.push(...costProblems(system));
   out.push(...seenProblems(system));

@@ -4,11 +4,11 @@ import { act } from '@vtt/engine/core/act';
 import { emptyJournal } from '@vtt/engine/core/external';
 import { emptySystem } from '../../store/world.ts';
 import { newColumn, newDie, newEffect, newRecordKind, newBinding, BRICKS } from './factory.ts';
-import type { System, Compendium, Sheet, Step } from '@vtt/schema';
+import type { System, Compendium, Sheet, Step, Effect } from '@vtt/schema';
 import { withColumn } from '@vtt/engine/model/sheet-columns';
 
-const bricks = (key: string, system: System, taken: string[] = []): Step[] =>
-  BRICKS.find(b => b.key === key)!.make(system, taken);
+const bricks = (key: string, system: System, taken: string[] = [], effect?: Effect): Step[] =>
+  BRICKS.find(b => b.key === key)!.make(system, taken, effect);
 
 function assemble(): { system: System; compendium: Compendium; sheets: Sheet[]; hits: string; action: string } {
   const system = emptySystem();
@@ -28,7 +28,7 @@ function assemble(): { system: System; compendium: Compendium; sheets: Sheet[]; 
     { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' } },
   ];
   const each = BRICKS.find(b => b.key === 'each')!.make(system, [], effect.value)[0]!;
-  const [roll, check] = bricks('check', system) as [Record<string, any>, Record<string, any>];
+  const [roll, check] = bricks('check', system, [], effect.value) as [Record<string, any>, Record<string, any>];
   check.versus = { expr: '5' };
   const amount = bricks('number', system, ['проверка', 'проверка_бросок'])[0] as Record<string, any>;
   amount.die = { expr: '"1d4"' };

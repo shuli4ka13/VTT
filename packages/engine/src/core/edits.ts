@@ -69,9 +69,15 @@ function holds(mod: EditMod, ref: RefContext): boolean {
   return value;
 }
 
+const AGAINST_NAME = /@против(?![\p{L}\p{N}_])/u;
+
+const unbound = (mod: SourcedModifier, spec: Gather): boolean =>
+  Object.hasOwn(spec.names, 'против') && spec.names.против === null
+  && AGAINST_NAME.test(JSON.stringify((mod as { value?: unknown }).value ?? ''));
+
 export function gather(holders: readonly Holder[], spec: Gather): Held[] {
   return holders.flatMap(holder => (editsOf(holder.view, spec.call, spec.param) as EditMod[])
-    .filter(mod => editMatches(mod, spec.tags, holder.view.system))
+    .filter(mod => editMatches(mod, spec.tags, holder.view.system) && !unbound(mod, spec))
     .map(mod => ({ ...mod, view: holder.view, ref: refOf(mod, holder, spec, `правка «${who(mod)}»`) }))
     .filter(mod => holds(mod, mod.ref)));
 }
@@ -95,7 +101,12 @@ export function stack(held: Held[], base: number, label: string, stages: readonl
 export interface RollEdits {
   edits: (RollEdit & { label: string })[];
   addends: PendingAddend[];
+  words: string[];
+  canceled: string[];
+  counts: (RollEdit & { label: string })[];
+  bonuses: string[];
 }
+
 
 function wordAddend(label: string, op: RollEditOp, view: Pass): PendingAddend {
   const raw = (op as { value?: unknown }).value;
@@ -161,12 +172,17 @@ export function rollEdits(held: Held[], claims: readonly string[], roller: Pass)
     const count = Math.trunc(amountOf(mod));
     return { label: who(mod), ops: [{ op: 'addDie', count }] } as RollEdit & { label: string };
   }).filter(edit => Number((edit.ops![0] as unknown as { count: number }).count) !== 0);
+  const bonuses = held.filter(mod => !mod.edit && (mod as { param?: string }).param !== COUNT_PARAM);
   return {
     edits: [...dice, ...words.map(word => word.edit)],
     addends: [
       ...words.flatMap(({ edit, view }) => (edit.ops ?? []).filter(op => op.op === PLUS_OP).map(op => wordAddend(edit.label, op, view))),
-      ...held.filter(mod => !mod.edit && (mod as { param?: string }).param !== COUNT_PARAM).map(bonusAddend),
+      ...bonuses.map(bonusAddend),
     ],
+    words: surviving,
+    canceled: keys.filter(key => !surviving.includes(key)),
+    counts: dice,
+    bonuses: bonuses.map(who),
   };
 }
 

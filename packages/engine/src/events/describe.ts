@@ -9,6 +9,8 @@ import { fieldOf, hasField, valueWord } from '../model/sheet-columns.ts';
 import { forcedWords } from '../words/steps.ts';
 import { addendsText } from '../core/dice.ts';
 import type { Addend } from '../core/dice.ts';
+import { facedText } from '../core/against.ts';
+import type { FacedTrace } from '../core/against.ts';
 
 const addsOf = (trace: Record<string, unknown>): Addend[] => (Array.isArray(trace.adds) ? trace.adds as Addend[] : []);
 
@@ -154,7 +156,8 @@ export function describeEntry(
       const verdict = (trace.success ? words.success : words.fail) + forced + degree;
       const tags = (trace.tags as string[] | undefined) ?? [];
       const title = tags.length ? rollTitle(tags, 'Проверка') : refLabel(step?.value) ?? 'Проверка';
-      return `${title}: ${trace.total} против ${versus}: ${trace.versus} — ${verdict}`;
+      const faced = Array.isArray(trace.faced) ? (trace.faced as FacedTrace[]).map(facedText) : [];
+      return [...faced, `${title}: ${trace.total} против ${versus}: ${trace.versus} — ${verdict}`].join(' · ');
     }
     return null;
   };

@@ -51,10 +51,13 @@ describe('эффекты пресетов собираются руками: Sha
     head(ui, '+ висит и правит', 'Электрошок', 'shocked', goal!);
     ui.select('Сколько висит', 'rounds');
     ui.type('Сколько', '2');
-    ui.click('+ правит поле');
-    ui.select('Что правим', 'condition_mod');
-    ui.select('Как', 'add');
-    ui.formula('На сколько', '-1');
+    for (const [target, value] of [['condition_mod', '-1'], ['init_mod', '-2']] as const) {
+      ui.click('+ правит поле');
+      const card = () => [...document.querySelectorAll<HTMLElement>('.card')].filter(c => (c.querySelector('.card__head')?.textContent ?? '').startsWith('Правит поле')).at(-1)!;
+      within(card()).select('Что правим', target);
+      within(card()).select('Как', 'add');
+      within(card()).formula('На сколько', value);
+    }
     dump({ got: built('shocked'), goal });
     expect(built('shocked')).toEqual(goal);
   });
@@ -95,8 +98,8 @@ describe('эффекты пресетов собираются руками: Sha
     ui.click('+ изменение');
     within(stepCard(/^1 · /)).click('вызов');
     const card = () => stepCard(/^1 · /);
-    within(card()).select('Какой эффект', 'spend');
-    for (const [name, text] of [['Что тратим', '@носитель.edge_left'], ['Сколько', '4'], ['Если не хватает', '"нужно 4 очк. Преимущества"'], ['Лист', '@носитель'], ['Источник', '@носитель']] as const) {
+    within(card()).select('Какой эффект', 'spend_edge');
+    for (const [name, text] of [['Кто тратит', '@носитель'], ['Сколько очков', '4'], ['Если не хватает', '"нужно 4 очк. Преимущества"']] as const) {
       within(card()).formula(within(card()).arg(name), text);
     }
     within(card()).click('↑');
@@ -145,6 +148,8 @@ describe('эффекты пресетов собираются руками: Sha
   };
 
   const nameStep = (card: () => HTMLElement, name: string): void => {
+    const own = card().querySelector<HTMLElement>('.number-line input.input');
+    if (own) { within(card()).type(own, name); return; }
     within(card()).click(/^имя в формулах/);
     within(card()).type(card().querySelector<HTMLElement>('.step-name input')!, name);
   };
@@ -266,7 +271,7 @@ describe('эффекты пресетов собираются руками: Sha
     };
     const number = (flow: number, k: number, formula: string, name: string) => {
       addToArm(block(flow), 0, 'number');
-      within(at(k)()).formula('Сколько', formula);
+      within(at(k)()).formula('Формула', formula);
       nameStep(at(k), name);
     };
     const apply = (flow: number, k: number, field: string, value: string) => {
@@ -316,8 +321,8 @@ describe('эффекты пресетов собираются руками: Sha
 
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
     ui.click('+ число');
-    within(at(2)()).formula('Бросает', '@действующий');
-    within(at(2)()).formula('Сколько', 'кинуть(@pool)');
+    within(at(2)()).formula('Формула', 'кинуть(@pool)');
+    within(at(2)()).select('Кто бросает', '@действующий');
     within(at(2)()).select('Метки', 'действие');
     within(at(2)()).select('Метки', ':формула');
     within(at(2)()).type('Метки', 'если(@rating == 0, "нулевой", "")');

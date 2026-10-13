@@ -37,7 +37,7 @@ const play = (steps: any[], ...dice: number[]) => {
   return { sheet: out.sheets.find(s => s.id === 'цель')!, stopped: report.stopped, trace: report.trace as any[] };
 };
 
-const save = { id: 'спас_бросок', type: 'roll', die: 'к20', bonus: { expr: '0' }, tags: ['спас'], by: { expr: '@цель' }, against: { expr: '@действующий' } };
+const save = { id: 'спас_бросок', type: 'roll', die: 'к20', bonus: { expr: '0' }, tags: ['спас'], by: { expr: '@цель' } };
 const saveCheck = { id: 'спас', type: 'check', value: { expr: '@спас_бросок' }, versus: { expr: '12' } };
 
 group('ветвление по исходу: блоки «Если» / «Иначе»', () => {

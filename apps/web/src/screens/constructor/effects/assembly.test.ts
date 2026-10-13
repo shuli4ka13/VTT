@@ -21,7 +21,7 @@ const addSteps = (effectId: string, brick: string): Step[] => {
   let made: Step[] = [];
   useWorld.getState().editEffect(effectId, draft => {
     const taken = (draft.steps ?? []).map(s => s.id).filter(Boolean) as string[];
-    made = template.make(useWorld.getState().system, taken);
+    made = template.make(useWorld.getState().system, taken, draft);
     (draft.steps ??= []).push(...made);
   });
   return made;

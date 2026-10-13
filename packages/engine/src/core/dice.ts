@@ -241,12 +241,14 @@ export const editStages = (): { op: string; stage: 'claim' | 'result' | 'plus' }
   { op: PLUS_OP, stage: 'plus' as const },
 ];
 
-const onlyPlus = (edit: RollEdit): boolean => {
+export const onlyPlus = (edit: RollEdit): boolean => {
   const ops = edit.ops ?? [];
   return ops.length > 0 && ops.every(op => stageOf(op) === 'plus');
 };
 
-function applyResults(dice: Rolled[], edits: RollEdit[], roll: (sides: number) => number, fresh: () => number): Rolled[] {
+export const changesFaces = (edit: RollEdit): boolean => (edit.ops ?? []).some(op => stageOf(op) === 'result');
+
+export function applyResults(dice: Rolled[], edits: RollEdit[], roll: (sides: number) => number, fresh: () => number): Rolled[] {
   let next = dice;
   for (const edit of edits) {
     for (const op of edit.ops ?? []) {
@@ -256,18 +258,23 @@ function applyResults(dice: Rolled[], edits: RollEdit[], roll: (sides: number) =
   return next;
 }
 
-const nextId = (dice: readonly Rolled[]): (() => number) => {
+export const nextId = (dice: readonly Rolled[]): (() => number) => {
   let next = dice.reduce((max, d) => Math.max(max, d.id), -1) + 1;
   return () => next++;
 };
 
-export function start(spec: Spec, edits: (RollEdit & { label?: string })[], die: Die, tags: readonly string[] = []): Roll {
+export function claimOf(spec: Spec, edits: readonly RollEdit[]): Claim {
   let claim: Claim = { terms: spec.terms, read: spec.read, keeps: [], versusShift: 0, degreeShift: 0 };
   for (const edit of edits) {
     for (const op of edit.ops ?? []) {
       if (stageOf(op) === 'claim') claim = CLAIM[String(op.op)]!(claim, op);
     }
   }
+  return claim;
+}
+
+export function start(spec: Spec, edits: (RollEdit & { label?: string })[], die: Die, tags: readonly string[] = []): Roll {
+  const claim = claimOf(spec, edits);
   const dice: Rolled[] = [];
   for (const term of claim.terms) {
     for (let i = 0; i < term.count; i++) {

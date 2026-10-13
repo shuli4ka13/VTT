@@ -447,3 +447,49 @@ describe('цепочка: заголовок раздела и розовая ч
     expect(screen.queryByText('Шаги')).toBeNull();
   });
 });
+
+describe('«+ проверка»: бросающий по умолчанию берётся из места шага', () => {
+  const sheet = (key: string, many = false) => ({ key, label: key, kind: 'sheet', ...(many ? { many: true, item: { key: 'цель', label: 'Цель' } } : {}) });
+
+  const system = (effects: Record<string, object>): System => ({
+    ...emptySystem(),
+    constants: { к20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
+    effects,
+  } as unknown as System);
+
+  const added = (id: string, real: object, place: (index: number) => { part: string; handler?: number; index: number }, shown: Effect, button: string) => {
+    cleanup();
+    render(<Chain id={id} placeAt={place as never} effect={shown} system={system({ [id]: real })} edit={change => change(shown)} />);
+    fireEvent.click(screen.getAllByText(button)[0]!);
+    return shown.steps![0] as unknown as Record<string, unknown>;
+  };
+
+  it('кнопкой: первый одиночный вход-лист, пусть он зовётся не «действующий»', () => {
+    const effect = { label: 'Удар', activation: 'manual', params: [sheet('цели', true), sheet('атакующий')], steps: [] } as unknown as Effect;
+    const roll = added('удар', effect, index => ({ part: 'steps', index }), effect, '+ проверка');
+    expect(roll).toMatchObject({ type: 'roll', by: { expr: '@атакующий' } });
+  });
+
+  it('входов-листов нет — бросок без бросающего', () => {
+    const effect = { label: 'Счёт', activation: 'manual', params: [{ key: 'сколько', label: 'Сколько', kind: 'number' }], steps: [] } as unknown as Effect;
+    const roll = added('счёт', effect, index => ({ part: 'steps', index }), effect, '+ проверка');
+    expect(roll.type).toBe('roll');
+    expect(roll).not.toHaveProperty('by');
+  });
+
+  it('в подписке бросающий — носитель', () => {
+    const real = { label: 'Тик', activation: 'passive', duration: { kind: 'permanent' }, on: [{ on: 'moment:turn-start', steps: [] }] };
+    const handler = { ...real, steps: [] } as unknown as Effect;
+    const roll = added('тик', real, index => ({ part: 'handler', handler: 0, index }), handler, '+ проверка');
+    expect(roll).toMatchObject({ type: 'roll', by: { expr: '@носитель' } });
+  });
+
+  it('в ветке «Если» после «Для каждого из» бросающий всё тот же вход, а не лист цикла', () => {
+    const effect = { label: 'Удар', activation: 'manual', params: [sheet('кто'), sheet('цели', true)], steps: [{ type: 'each', of: 'цели' }, { type: 'branch' }, { type: 'end' }] } as unknown as Effect;
+    cleanup();
+    render(<Chain id="удар" placeAt={index => ({ part: 'steps', index })} effect={effect} system={system({ удар: effect })} edit={change => change(effect)} />);
+    fireEvent.change(screen.getAllByDisplayValue('+ шаг')[0]!, { target: { value: 'check' } });
+    const roll = effect.steps!.find(step => step.type === 'roll') as unknown as Record<string, unknown>;
+    expect(roll).toMatchObject({ by: { expr: '@кто' } });
+  });
+});

@@ -425,7 +425,7 @@ describe('эффекты D&D собираются в конструкторе р
     ui.click('+ число');
     card = stepCard(/^3 · /);
     within(card).formula('Формула', 'кинуть(@lead_die) + @действующий.skills.скрытность.total');
-    within(card).formula('кости бросает', '@действующий');
+    within(stepCard(/^3 · /)).select('Кто бросает', '@действующий');
     card = stepCard(/^3 · /);
     nameStep(stepCard(/^3 · /), 'скрытая_бросок');
     within(stepCard(/^3 · /)).click('↑');
@@ -446,7 +446,7 @@ describe('эффекты D&D собираются в конструкторе р
     expect(built('hide')).toEqual(goal);
   });
 
-  it('D&D «Засада» (hide): у броска выше «Для каждого из» «Против кого» пусто — «ни против кого — бросок один на все цели»', { timeout: 30000 }, () => {
+  it('D&D «Засада» (hide): бросок выше «Для каждого из» — один; бросающий чипом в начале строки формулы, «Против кого» нет, метки под строкой', { timeout: 30000 }, () => {
     const world = structuredClone(worldOf('dnd5e'));
     useWorld.setState(state => ({
       ...state, system: world.system as System, compendium: world.compendium,
@@ -455,10 +455,11 @@ describe('эффекты D&D собираются в конструкторе р
     render(<EffectsTab />);
     openAll();
     const roll = stepCard(/^2 · Бросок/);
-    const field = within(roll).field('Против кого');
-    const shown = field.querySelector<HTMLElement>('[placeholder]');
-    expect(shown?.getAttribute('placeholder')).toBe('ни против кого — бросок один на все цели');
-    expect((shown as HTMLInputElement | null)?.value ?? shown?.textContent ?? '').toBe('');
+    const chip = within(roll).field('Кто бросает') as HTMLSelectElement;
+    expect(chip.selectedOptions[0]!.textContent).toBe('Кто действует');
+    expect(roll.querySelector('.number-line__formula')!.firstElementChild).toBe(chip);
+    expect(roll.textContent).not.toContain('Против кого');
+    expect(within(roll).field('Метки')).toBeTruthy();
     expect(useWorld.getState().system.effects.hide!.steps![0]).not.toHaveProperty('against');
   });
 });

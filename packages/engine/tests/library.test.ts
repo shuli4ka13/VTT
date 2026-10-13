@@ -25,7 +25,7 @@ const attackRoll = {
     { key: 'выпало', label: 'на костях', kind: 'number', expr: { expr: '@бросок.natural' } },
   ],
   steps: [
-    { id: 'бросок', type: 'roll', die: 'к20', bonus: { expr: '@бросок_бонус' }, by: { expr: '@кто' }, against: { expr: '@против' }, tags: ['атака'] },
+    { id: 'бросок', type: 'roll', die: 'к20', bonus: { expr: '@бросок_бонус' }, by: { expr: '@кто' }, tags: ['атака'] },
     { id: 'проверка', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@против.кд' } },
   ],
 };

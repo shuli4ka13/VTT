@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { groupSteps, BRICKS, moveGroup, removeSteps } from './cards.ts';
 import { world as W } from '@vtt/schema';
-import type { System, Step } from '@vtt/schema';
+import type { System, Effect, Step } from '@vtt/schema';
 
 const steps = (list: object[]) => list as unknown as Step[];
 const system = { tables: {}, constants: { lead: { label: 'Ведущая кость', kind: 'die', dice: [{ sides: 20 }] } }, effects: {} } as unknown as System;
@@ -12,7 +12,7 @@ const pair = (id: string) => [
 ];
 
 describe('groupSteps', () => {
-  it('бросок с «Бросает» и проверка склеиваются в одну проверку, расчёт и изменение — в одно изменение', () => {
+  it('бросок с бросающим и проверка склеиваются в одну проверку, расчёт и изменение — в одно изменение', () => {
     const groups = groupSteps(steps([
       ...pair('hit'),
       { id: 'dmg', type: 'roll', fixed: { expr: '1' } },
@@ -25,7 +25,7 @@ describe('groupSteps', () => {
     expect(groups[1]!.amount?.id).toBe('dmg');
   });
 
-  it('бросок без «Бросает» с проверкой не склеивается: это расчёт', () => {
+  it('бросок без бросающего с проверкой не склеивается: это расчёт', () => {
     const groups = groupSteps(steps([
       { id: 'n', type: 'roll', fixed: { expr: '1' } },
       { id: 'c', type: 'check', value: { expr: '@n' }, versus: { expr: '10' } },
@@ -96,11 +96,38 @@ describe('BRICKS', () => {
     expect(BRICKS.find(b => b.key === 'stop')!.make(system, [])).toEqual([{ type: 'stop' }]);
   });
 
-  it('«+ проверка» отдаёт пару: бросок с «Бросает» и проверку, читающую его', () => {
-    const [roll, check] = BRICKS.find(b => b.key === 'check')!.make(system, []) as unknown as Record<string, any>[];
+  const check = (effect?: object, sheets?: Map<string, string>) =>
+    BRICKS.find(b => b.key === 'check')!.make(system, [], effect as Effect | undefined, sheets) as unknown as Record<string, any>[];
+
+  const inputs = (...list: [string, boolean?][]) => ({
+    params: list.map(([key, many]) => ({ key, label: key, kind: 'sheet', ...(many ? { many: true } : {}) })),
+  });
+
+  it('«+ проверка» отдаёт пару: бросок с бросающим и проверку, читающую его', () => {
+    const [roll, verdict] = check(inputs(['действующий'], ['цели', true]));
     expect(roll).toMatchObject({ type: 'roll', by: { expr: '@действующий' } });
-    expect(check).toMatchObject({ type: 'check', value: { expr: `@${roll!.id}` } });
-    expect(groupSteps([roll, check] as unknown as Step[]).map(g => g.kind)).toEqual(['check']);
+    expect(verdict).toMatchObject({ type: 'check', value: { expr: `@${roll!.id}` } });
+    expect(groupSteps([roll, verdict] as unknown as Step[]).map(g => g.kind)).toEqual(['check']);
+  });
+
+  it('бросающий по умолчанию — первый одиночный вход-лист эффекта, а не имя «действующий»; список целей пропускается', () => {
+    expect(check(inputs(['цели', true], ['атакующий'], ['защитник']))[0]).toMatchObject({ by: { expr: '@атакующий' } });
+    expect(check(inputs(['кто']))[0]).toMatchObject({ by: { expr: '@кто' } });
+  });
+
+  it('входов-листов нет — бросающего нет: бросок остаётся расчётом, пары с проверкой не выходит', () => {
+    for (const effect of [{ params: [{ key: 'сколько', label: 'Сколько', kind: 'number' }] }, inputs(['цели', true]), undefined]) {
+      const [roll, verdict] = check(effect);
+      expect(roll).not.toHaveProperty('by');
+      expect(groupSteps([roll, verdict] as unknown as Step[]).map(g => g.kind)).toEqual(['number', 'check']);
+    }
+  });
+
+  it('в месте шага бросающий — первый одиночный лист этого места: в подписке и наложении это носитель', () => {
+    const sheets = new Map([['носитель', 'носитель — тот, на ком висит'], ['лист', 'лист, с которым это случилось'], ['цели', 'Цели']]);
+    expect(check({ params: [] }, sheets)[0]).toMatchObject({ by: { expr: '@носитель' } });
+    expect(check(inputs(['цели', true]), new Map([['цели', 'Цели'], ['цель', 'Цель']]))[0]).toMatchObject({ by: { expr: '@цель' } });
+    expect(check({ params: [] }, new Map())[0]).not.toHaveProperty('by');
   });
 });
 

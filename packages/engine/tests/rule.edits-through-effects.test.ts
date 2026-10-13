@@ -140,7 +140,7 @@ group('любой бросок ловит правку, ничего для эт
   const cursed = (ids: string[]) => ({ ...sheet([]), effects: ids.map(effectId => ({ effectId })) });
 
   const attackSteps = [
-    { id: 'hit_бросок', type: 'roll', die: 'к20', bonus: { expr: '0' }, tags: ['атака'], by: { expr: '@действующий' }, against: { expr: '@цель' } },
+    { id: 'hit_бросок', type: 'roll', die: 'к20', bonus: { expr: '0' }, tags: ['атака'], by: { expr: '@действующий' } },
     { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '1' } },
     { type: 'branch', if: { expr: 'не(@hit.success)' } }, { type: 'stop' }, { type: 'end' },
   ];
@@ -175,7 +175,7 @@ group('любой бросок ловит правку, ничего для эт
     const sys = withRule('disadvantage');
     const target = { ...cursed(['всякий']), id: 'цель' };
     const save = [
-      { id: 'спас_бросок', type: 'roll', die: 'к20', bonus: { expr: '0' }, tags: ['спас'], by: { expr: '@цель' }, against: { expr: '@действующий' } },
+      { id: 'спас_бросок', type: 'roll', die: 'к20', bonus: { expr: '0' }, tags: ['спас'], by: { expr: '@цель' } },
       { id: 'спас', type: 'check', value: { expr: '@спас_бросок' }, versus: { expr: '1' } },
       { type: 'branch', if: { expr: 'не(@спас.success)' } }, { type: 'stop' }, { type: 'end' },
     ];

@@ -23,25 +23,52 @@ const attackSteps = () => [
 ] as unknown as Step[];
 
 describe('GroupCard', () => {
-  it('«Бросает» и «Против кого» пишутся в бросок, а не в проверку; «Бросает» в паре не снимается — иначе пара распадётся', () => {
+  it('бросающий пишется в бросок, а не в проверку; в паре его не снять — иначе пара распадётся', () => {
     const steps = attackSteps();
     const group = groupSteps(steps)[0]!;
     const edits: Array<[number, (draft: Step) => void]> = [];
     render(<GroupCard group={group} position={1} system={system} effect={effect} sheets={sheets}
       earlier={[]} problem={null} edit={(at, change) => edits.push([at, change])} onDelete={() => {}} />);
-    expect(cards().field('Бросает').textContent).toContain('Кто действует');
-    cards().formula('Бросает', '@цель');
-    cards().formula('Против кого', '@цель');
+    const chip = cards().field('Кто бросает') as HTMLSelectElement;
+    expect(chip.selectedOptions[0]!.textContent).toBe('Кто действует');
+    expect([...chip.options].map(o => o.value)).toEqual(['@цель', '@действующий']);
+    cards().select('Кто бросает', '@цель');
     const draft = structuredClone(steps[0]!) as any;
     edits.forEach(([at, change]) => { expect(at).toBe(0); change(draft); });
     expect(draft.type).toBe('roll');
     expect(draft.by).toEqual({ expr: '@цель' });
-    expect(draft.against).toEqual({ expr: '@цель' });
     expect(draft.die).toEqual('lead');
 
     edits.length = 0;
-    cards().formula('Бросает', '');
+    fireEvent.change(chip, { target: { value: '' } });
     expect(edits).toEqual([]);
+  });
+
+  it('шаг «Проверка»: чип бросающего стоит в начале строки формулы рядом с ней, ниже — «Метки», подсказка называет лист справа', () => {
+    const steps = attackSteps();
+    const group = groupSteps(steps)[0]!;
+    render(<GroupCard group={group} position={1} system={system} effect={effect} sheets={sheets}
+      earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
+    const row = cards().field('Проверка');
+    const line = row.querySelector('.roll-formula')!;
+    expect(line.children[0]!.classList.contains('roll-by')).toBe(true);
+    expect(line.querySelector('.roll-by')!.closest('.chips, .formula-field')).toBeNull();
+    expect(line.querySelector('.chips')).toBeTruthy();
+    expect(row.querySelector('.field__hint')!.textContent).toBe('кость, прибавка, знак и порог; против кого — лист справа: >= цель.Класс брони');
+    expect(cards().field('Метки')).toBeTruthy();
+    expect(document.body.textContent).not.toContain('Против кого');
+  });
+
+  it('правка бросающего убирает старое «против кого» у броска', () => {
+    const steps = attackSteps();
+    (steps[0] as any).against = { expr: '@цель' };
+    const group = groupSteps(steps)[0]!;
+    const draft = structuredClone(steps[0]!) as any;
+    render(<GroupCard group={group} position={1} system={system} effect={effect} sheets={sheets}
+      earlier={[]} problem={null} edit={(_, change) => change(draft)} onDelete={() => {}} />);
+    cards().select('Кто бросает', '@цель');
+    expect(draft.by).toEqual({ expr: '@цель' });
+    expect(draft).not.toHaveProperty('against');
   });
 
   it('выражение ложится в «применить», а кость — в величину под своим именем', () => {
@@ -521,9 +548,9 @@ describe('GroupCard: изменение само заводит число', () 
   });
 });
 
-describe('GroupCard: отдельный бросок с «Бросает»', () => {
-  it('формула броска раскладывается в кость, прибавку и метки, а не в расчёт; против — «первый из целей»', () => {
-    const roll = { id: 'hit_бросок', type: 'roll', die: 'lead', by: { expr: '@действующий' } } as Record<string, any>;
+describe('GroupCard: отдельный бросок с бросающим', () => {
+  it('формула броска раскладывается в кость, прибавку и метки, а не в расчёт; старое «против кого» с правкой уходит', () => {
+    const roll = { id: 'hit_бросок', type: 'roll', die: 'lead', by: { expr: '@действующий' }, against: { expr: 'первый(@цели)' } } as Record<string, any>;
     const many = { ...effect, params: [...(effect.params ?? []), { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' } }] } as typeof effect;
     const group = groupSteps([roll as unknown as Step])[0]!;
     render(<GroupCard group={group} position={1} system={system} effect={many} sheets={sheets}
@@ -534,8 +561,8 @@ describe('GroupCard: отдельный бросок с «Бросает»', () 
     expect(roll.die).toBe('lead');
     expect(roll.bonus).toEqual({ expr: '2' });
     expect(roll.fixed).toBeUndefined();
-    cards().formula('Против кого', 'первый(@цели)');
-    expect(roll.against).toEqual({ expr: 'первый(@цели)' });
+    expect(roll).not.toHaveProperty('against');
+    expect(roll.by).toEqual({ expr: '@действующий' });
   });
 });
 

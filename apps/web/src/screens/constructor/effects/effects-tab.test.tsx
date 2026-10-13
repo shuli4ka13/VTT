@@ -10,6 +10,8 @@ import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import type { Effect } from '@vtt/schema';
 
 describe('EffectsTab: палитра трёх понятий', () => {
+  const ACTOR = { key: 'действующий', label: 'Кто действует', kind: 'sheet' };
+
   beforeEach(() => {
     useWorld.setState(state => ({
       ...state,
@@ -20,6 +22,8 @@ describe('EffectsTab: палитра трёх понятий', () => {
       activeEffectId: 'strike',
     }));
   });
+
+  const withActor = () => useWorld.getState().editEffect('strike', draft => { draft.params = [ACTOR] as never; });
 
   it('свойства эффекта — одной строкой; у активируемого нет «сколько висит»', () => {
     renderOpen(<EffectsTab />);
@@ -45,6 +49,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
   });
 
   it('палитра шагов — только виды движка, клик кладёт шаг', () => {
+    withActor();
     renderOpen(<EffectsTab />);
     const palette = screen.getAllByRole('button')
       .filter(b => !b.closest('details'))
@@ -65,6 +70,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
 
   it('шаги сворачиваются: одной строкой с пересказом, по одному и все сразу', () => {
     try { localStorage.clear(); } catch { return; }
+    withActor();
     renderOpen(<EffectsTab />);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
@@ -80,7 +86,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
   it('изначально шаги свёрнуты, а только что добавленный — открыт', () => {
     useWorld.setState(state => ({
       ...state,
-      system: { ...state.system, effects: { fresh: { label: 'Свежий эффект', activation: 'manual', params: [], steps: [
+      system: { ...state.system, effects: { fresh: { label: 'Свежий эффект', activation: 'manual', params: [ACTOR], steps: [
         { id: 'был_бросок', type: 'roll', by: { expr: '@действующий' } },
         { id: 'был', type: 'check', value: { expr: '@был_бросок' }, versus: { expr: '10' } },
       ] } } },
@@ -94,6 +100,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
   });
 
   it('убранный шаг можно вернуть', () => {
+    withActor();
     renderOpen(<EffectsTab />);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     fireEvent.click(screen.getAllByText('Удалить').at(-1)!);
@@ -197,9 +204,9 @@ describe('ссылка на результат шага', () => {
     }));
   });
 
-  it('машинного имени шага на экране нет, а сослаться на шаг всё равно можно', () => {
+  it('машинного имени проверки на экране нет (своё имя видно только у «Числа»), а сослаться на шаг всё равно можно', () => {
     renderOpen(<EffectsTab />);
-    expect(screen.queryAllByPlaceholderText('имя')).toHaveLength(0);
+    expect(screen.queryAllByPlaceholderText('имя').map(input => (input as HTMLInputElement).value)).toEqual(['сколько']);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     const steps = useWorld.getState().system.effects.strike!.steps!;
     const id = String(steps.at(-1)!.id);
@@ -222,10 +229,9 @@ describe('ссылка на результат шага', () => {
     expect(ids).toContain('hit_бросок');
   });
 
-  it('формула «Сколько» предлагает выходы проверки поимённо', () => {
+  it('формула числа предлагает выходы проверки поимённо', () => {
     renderOpen(<EffectsTab />);
-    const label = screen.getByText('Сколько');
-    const input = label.parentElement!.querySelector('.chips__text') as HTMLInputElement;
+    const input = document.querySelector('.number-line__formula .chips__text') as HTMLInputElement;
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: '@', selectionStart: 1 } });
 
@@ -421,7 +427,7 @@ describe('крит — обычная формула, а не особый сл�
     expect(screen.queryByText('сколько раз кинуть')).toBeNull();
     expect(screen.queryByText('прибавка')).toBeNull();
 
-    expect(screen.getByText('Сколько')).toBeTruthy();
+    expect(document.querySelector('.number-line [data-field="Формула"]')).toBeTruthy();
     expect(строка()).toBeTruthy();
   });
 

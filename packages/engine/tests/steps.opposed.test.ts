@@ -23,9 +23,9 @@ const system = {
     вырваться: {
       label: 'Вырваться', activation: 'manual', params: [ACTOR, TARGETS],
       steps: [
-        { id: 'хватка', type: 'roll', die: 'пул_атаки', by: { expr: '@действующий' }, against: { expr: 'первый(@цели)' } },
+        { id: 'хватка', type: 'roll', die: 'пул_атаки', by: { expr: '@действующий' } },
         EACH,
-        { id: 'рывок', type: 'roll', die: 'пул_защиты', by: { expr: '@цель' }, against: { expr: '@действующий' } },
+        { id: 'рывок', type: 'roll', die: 'пул_защиты', by: { expr: '@цель' } },
         { id: 'вырвался', type: 'check', value: { expr: '@рывок' }, versus: { expr: '@хватка' }, successWhen: 'atLeast' },
         { type: 'branch', if: { expr: 'не(@вырвался.success)' } }, { type: 'stop' }, { type: 'end' },
       ],
@@ -33,9 +33,9 @@ const system = {
     выстрел: {
       label: 'Выстрел', activation: 'manual', params: [ACTOR, TARGETS],
       steps: [
-        { id: 'прицел', type: 'roll', die: 'пул_атаки', tags: ['атака'], by: { expr: '@действующий' }, against: { expr: 'первый(@цели)' } },
+        { id: 'прицел', type: 'roll', die: 'пул_атаки', tags: ['атака'], by: { expr: '@действующий' } },
         EACH,
-        { id: 'защита', type: 'roll', die: 'пул_защиты', tags: ['защита'], by: { expr: '@цель' }, against: { expr: '@действующий' } },
+        { id: 'защита', type: 'roll', die: 'пул_защиты', tags: ['защита'], by: { expr: '@цель' } },
         { id: 'попал', type: 'check', value: { expr: '@прицел' }, versus: { expr: '@защита' }, successWhen: 'over' },
         { type: 'branch', if: { expr: 'не(@попал.success)' } }, { type: 'stop' }, { type: 'end' },
         { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '2 + @попал.margin' } },

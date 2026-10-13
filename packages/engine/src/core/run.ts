@@ -23,6 +23,8 @@ import { Views } from './view.ts';
 import { State } from './state.ts';
 import { limitsOf, CUT_WORDS, PROBES_WORDS } from './limits.ts';
 import { gather, stack, rollHeld } from './edits.ts';
+import { recordOf, retarget, opponentIn, mentions } from './against.ts';
+import type { Faced, Names } from './against.ts';
 import type { Holder } from './edits.ts';
 import { throwDice } from './roll.ts';
 import { result, parse, withCount, start, addendsText } from './dice.ts';
@@ -292,7 +294,7 @@ export class Run {
     for (const [index, raw] of steps.entries()) {
       const step = raw as StepData;
       const name = step.id ?? (frame.offset ?? 0) + index;
-      const ctx = this.ctx(frame, results, known, frame.path.step(name), sink, stepIds);
+      const ctx = this.ctx(frame, results, known, frame.path.step(name), sink, stepIds, undefined, { steps, index });
       const mark = within ? { within } : {};
       const flow = runnerOf(step.type).flow;
       const live = blocks.every(block => block.active);
@@ -377,7 +379,7 @@ export class Run {
     if (made.roll) rolls[name] = made.roll;
   }
 
-  private ctx(frame: Frame, results: Record<string, unknown>, rolls: Record<string, RollResult>, path: Path, sink: Sink, stepIds: ReadonlySet<string>, given?: Die): Ctx {
+  private ctx(frame: Frame, results: Record<string, unknown>, rolls: Record<string, RollResult>, path: Path, sink: Sink, stepIds: ReadonlySet<string>, given?: Die, at?: { steps: readonly Step[]; index: number }): Ctx {
     const die = given ?? this.ext.dice(path);
     const lazy = frame.lazy;
     const ref: RefContext = {
@@ -436,6 +438,8 @@ export class Run {
       },
       roll: (spec, tags, by, against, bonus) => this.roll(frame, spec, tags, by, against, path.phase('roll').nth(rollsMade++), sink,
         bonus ? { label: this.bonusLabel(frame, bonus.ref), value: bonus.value } : undefined),
+      ahead: () => (at ? this.ahead(frame, at.steps, at.index, rolls) : null),
+      faced: (name, other) => this.faced(frame, name, other, rolls),
       read: (sheetId, tag) => this.read(sheetId, tag),
       write: (sheetId, tag, value) => this.write(sheetId, tag, value, sink),
       attach: (sheetId, effectId, args) => this.attach(frame, sheetId, effectId, args, sink, path),
@@ -560,13 +564,77 @@ export class Run {
       if (stray) throw new EngineError(`заявка «${stray}» — нет ни правки броска с таким именем, ни метки; правки: ${Object.keys(words).join(', ') || '(словарь пуст)'}`);
       tags = [...tags, ...marks];
     }
-    return throwDice({
-      spec, tags, claims: claimed.filter(claim => words[claim]),
-      held: rollHeld(this.holderViews(), by, opponent, tags),
-      roller: this.view(by),
-      die,
+    const claims = claimed.filter(claim => words[claim]);
+    const holders = this.holderViews();
+    const roller = this.view(by);
+    const thrown = throwDice({
+      spec, tags, claims, held: rollHeld(holders, by, opponent, tags), roller, die,
       seen: roll => this.seen(by, opponent, roll, tags, path, frame.hop, sink, shown),
     });
+    return { ...thrown, thrower: { path, by, against: opponent, spec, tags, claims, roller, holders, roll: thrown.roll } };
+  }
+
+  private loneSheet(frame: Frame, ref: unknown): string | null {
+    const text = ref && typeof ref === 'object' && 'expr' in ref ? String((ref as { expr: unknown }).expr) : null;
+    const name = text ? /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(text)?.[1] : undefined;
+    const id = name && frame.bound ? frame.bound[name] : null;
+    return typeof id === 'string' ? id : null;
+  }
+
+  private namesAt(frame: Frame, steps: readonly Step[], rolls: Record<string, RollResult>): Names {
+    return {
+      sheet: name => {
+        if (!frame.bound || !Object.hasOwn(frame.bound, name)) return undefined;
+        const id = frame.bound[name];
+        return typeof id === 'string' ? id : null;
+      },
+      roller: name => {
+        const record = recordOf(rolls[name]);
+        if (record) return record.by;
+        const step = steps.find(one => one.id === name) as StepData | undefined;
+        const by = step ? runnerOf(step.type).thrownBy?.(step) : undefined;
+        if (by === undefined || by === null) return undefined;
+        return this.loneSheet(frame, by);
+      },
+    };
+  }
+
+  private ahead(frame: Frame, steps: readonly Step[], index: number, rolls: Record<string, RollResult>): string | null {
+    const own = steps[index] as StepData | undefined;
+    const id = typeof own?.id === 'string' ? own.id : null;
+    const roller = own ? this.loneSheet(frame, runnerOf(own.type).thrownBy?.(own)) : null;
+    if (!id || !roller) return null;
+    const names = this.namesAt(frame, steps, rolls);
+    const found = new Set<string>();
+    let depth = 0;
+    let other = false;
+    for (const raw of steps.slice(index + 1)) {
+      const next = raw as StepData;
+      const runner = runnerOf(next.type);
+      if (runner.loops || runner.rows?.(next) || runner.splits?.(next)) break;
+      if (runner.flow === 'open') { depth += 1; continue; }
+      if (runner.flow === 'alt') { if (depth === 0) other = true; continue; }
+      if (runner.flow === 'close') { if (depth > 0) depth -= 1; else other = false; continue; }
+      if (depth > 0 || other || (next.if !== undefined && next.if !== null)) continue;
+      const sides = runner.compares?.(next);
+      if (!sides) continue;
+      const far = mentions(sides.value, id) ? sides.versus : mentions(sides.versus, id) ? sides.value : undefined;
+      if (far === undefined) continue;
+      const met = opponentIn(far, roller, names);
+      if (!met.known) return null;
+      if (met.id) found.add(met.id);
+    }
+    return found.size === 1 ? [...found][0]! : null;
+  }
+
+  private faced(frame: Frame, name: string, other: unknown, rolls: Record<string, RollResult>): Faced | null {
+    const record = recordOf(rolls[name]);
+    if (!record) return null;
+    const met = opponentIn(other, record.by, this.namesAt(frame, [], rolls));
+    const opponent = met.known ? met.id : null;
+    if (!opponent || opponent === record.against || !record.holders.some(holder => holder.id === opponent)) return null;
+    const dice = (key: string): Die => this.ext.dice(record.path.phase('против').item(key));
+    return retarget(record, opponent, this.sheet(opponent)?.name ?? opponent, dice, this.system);
   }
 
   private edited(call: string, param: string, base: number, tags: string[], args: Record<string, unknown>): number {

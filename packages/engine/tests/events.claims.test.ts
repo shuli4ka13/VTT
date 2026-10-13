@@ -31,6 +31,7 @@ const base = {
       { key: 'хп', label: 'Хиты', kind: 'number', default: 20 },
       { key: 'уровень', label: 'Уровень', kind: 'number', default: 3 },
       { key: 'вдохновение', label: 'Вдохновение', kind: 'number', default: 0, min: 0 },
+      { key: 'кд', label: 'КД', kind: 'number', default: 1 },
     ] },
     приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }, { label: 'Яд', effect: 'яд', args: {} }] },
   },
@@ -39,8 +40,8 @@ const base = {
       label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS],
       steps: [
         EACH,
-        { id: 'бросок', type: 'roll', die: 'к20', tags: ['атака'], by: { expr: '@действующий' }, against: { expr: '@цель' } },
-        { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '1' } },
+        { id: 'бросок', type: 'roll', die: 'к20', tags: ['атака'], by: { expr: '@действующий' } },
+        { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@цель.кд' } },
         { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1к6')" } },
         { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '@урон' } },
       ],
@@ -49,7 +50,7 @@ const base = {
       label: 'Ядовитый плевок', activation: 'manual', params: [ACTOR, TARGETS],
       steps: [
         EACH,
-        { id: 'спас', type: 'roll', die: 'к20', tags: ['спасбросок'], by: { expr: '@цель' }, against: { expr: '@действующий' } },
+        { id: 'спас', type: 'roll', die: 'к20', tags: ['спасбросок'], by: { expr: '@цель' } },
         { type: 'check', value: { expr: '@спас' }, versus: { expr: '10' } },
       ],
     },

@@ -4,6 +4,7 @@ import { dice } from '../../words.ts';
 import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
 import { COST_BLOCK } from '@vtt/engine/words/glossary';
 import type { System, Effect, Handler, Binding, Step, SystemConstant, RollEdit, Table, Column } from '@vtt/schema';
+import type { SheetNames } from '../../ui/formula-chips.tsx';
 import type { RecordKind } from '@vtt/engine/model/owned';
 import { filledStep } from './effects/call-args.ts';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
@@ -95,17 +96,25 @@ export interface StepTemplate {
   key: string;
   label: string;
   hint: string;
-  make(system: System, takenIds: string[], effect?: Effect): Step[];
+  make(system: System, takenIds: string[], effect?: Effect, sheets?: SheetNames): Step[];
 }
 
 const firstDie = (system: System): string | undefined => Object.keys(system.constants ?? {})[0];
 
-const blankCheck = (system: System, taken: string[]): Step[] => {
+const rollerOf = (effect: Effect | undefined, sheets: SheetNames | undefined): string | undefined => {
+  const params = effect?.params ?? [];
+  const lists = new Set(params.filter(p => p.kind === 'sheet' && p.many).map(p => p.key));
+  const names = sheets ? [...sheets.keys()] : params.filter(p => p.kind === 'sheet').map(p => p.key);
+  return names.find(name => !lists.has(name));
+};
+
+const blankCheck = (system: System, taken: string[], effect?: Effect, sheets?: SheetNames): Step[] => {
   const die = firstDie(system);
   const id = freeId(taken, 'проверка');
   const roll = freeId([...taken, id], `${id}_бросок`);
+  const by = rollerOf(effect, sheets);
   return [
-    { id: roll, type: 'roll', ...(die ? { die } : {}), by: { expr: '@действующий' } } as unknown as Step,
+    { id: roll, type: 'roll', ...(die ? { die } : {}), ...(by ? { by: { expr: `@${by}` } } : {}) } as unknown as Step,
     { id, type: 'check', value: { expr: `@${roll}` }, versus: { expr: '10' } } as unknown as Step,
   ];
 };
@@ -119,7 +128,7 @@ export const BRICKS: StepTemplate[] = [
   {
     key: 'check', label: '+ проверка',
     hint: 'Бросок и сравнение с порогом. Итог — да или нет: его читают «Если» ниже.',
-    make: (system, taken) => blankCheck(system, taken),
+    make: (system, taken, effect, sheets) => blankCheck(system, taken, effect, sheets),
   },
   {
     key: 'change', label: '+ изменение',

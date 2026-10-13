@@ -6,6 +6,7 @@ import type { Die } from '../../model/types.ts';
 import type { StepData, StepContext } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 import { DICE_TEXT } from '../../words/glossary.ts';
+import { keepRecord } from '../../core/against.ts';
 
 export const type = 'roll';
 const words: StepWords = STEP_WORDS.roll;
@@ -14,6 +15,8 @@ export const { label, hint, slots, outputs } = words;
 export const mayBreak = false;
 
 export const lazy = (step: StepData): boolean => (step.by === undefined || step.by === null) && typeof step.id === 'string';
+
+export const thrownBy = (step: StepData): unknown => step.by;
 
 export const icon = '⚄';
 
@@ -56,7 +59,7 @@ export interface Rolled extends RollResult {
 export function finish(step: StepData, ctx: StepContext) {
   const tags = tagsOf(step.tags, ctx);
   const by = ctx.sheet(step.by, 'кто бросает');
-  const against = ctx.sheet(step.against, 'против кого');
+  const against = by ? ctx.ahead?.() ?? null : null;
   if (step.die === undefined && step.fixed === undefined) throw new EngineError(`${who(ctx)}: броску нужна кость или формула`);
   const bonus = ctx.optional(step.bonus, 'прибавка броска') ?? 0;
   const shown = step.bonus !== undefined && step.bonus !== null ? { ref: step.bonus, value: bonus } : undefined;
@@ -74,6 +77,7 @@ export function finish(step: StepData, ctx: StepContext) {
     versusShift: thrown?.roll.claim.versusShift ?? 0,
     degreeShift: thrown?.roll.claim.degreeShift ?? 0,
   };
+  if (thrown?.thrower) keepRecord(roll, thrown.thrower, fixed + bonus);
   return {
     value: total,
     roll,

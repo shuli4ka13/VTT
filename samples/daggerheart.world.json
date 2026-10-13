@@ -1670,9 +1670,6 @@
             ],
             "by": {
               "expr": "@действующий"
-            },
-            "against": {
-              "expr": "первый(@цели)"
             }
           },
           {
@@ -1773,15 +1770,12 @@
             ],
             "by": {
               "expr": "@действующий"
-            },
-            "against": {
-              "expr": "первый(@цели)"
             }
           },
           {
             "type": "roll",
             "fixed": {
-              "expr": "(кинуть(@damage_dice) + @damage_bonus + если(@удар_бросок.natural >= 20, максимум костей(@damage_dice), 0))"
+              "expr": "кинуть(@damage_dice) + @damage_bonus"
             },
             "id": "урон"
           },
@@ -1813,7 +1807,7 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@урон"
+                "expr": "@урон + если(@удар.natural >= 20, максимум костей(@damage_dice), 0)"
               },
               "лист": {
                 "expr": "@цель"

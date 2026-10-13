@@ -3,6 +3,8 @@ import { EngineError } from '../errors.ts';
 import { lookupDegree } from '../tables.ts';
 import type { StepData, StepContext } from './index.ts';
 import { STEP_WORDS, forcedWords, type StepWords } from '../../words/steps.ts';
+import { facedText } from '../../core/against.ts';
+import type { FacedTrace } from '../../core/against.ts';
 
 export const type = 'check';
 const words: StepWords = STEP_WORDS.check;
@@ -11,6 +13,8 @@ export const { label, hint, slots, outputs } = words;
 export const mayBreak = false;
 
 export const icon = '⌖';
+
+export const compares = (step: StepData): { value: unknown; versus: unknown } => ({ value: step.value, versus: step.versus });
 
 const OUTCOMES: Record<string, (total: number, versus: number) => { success: boolean; margin: number }> = {
   atLeast: (total, versus) => ({ success: total >= versus, margin: total - versus }),
@@ -44,14 +48,21 @@ function fieldOfRef(ref: unknown, ctx: StepContext): string | null {
   }
 }
 
+function facedOf(ref: unknown, other: unknown, ctx: StepContext) {
+  const name = loneName(ref);
+  return name ? ctx.faced?.(name, other) ?? null : null;
+}
+
 export function finish(step: StepData, ctx: StepContext) {
-  const total = ctx.number(step.value, 'что проверяем');
-  const roll = rollOf(step.value, ctx);
+  const mine = facedOf(step.value, step.versus, ctx);
+  const theirs = facedOf(step.versus, step.value, ctx);
+  const total = mine ? mine.total : ctx.number(step.value, 'что проверяем');
+  const roll = mine ? (mine.made as unknown as Record<string, any>) : rollOf(step.value, ctx);
   const successWhen = step.successWhen === undefined ? 'atLeast' : String(step.successWhen);
   if (!OUTCOMES[successWhen]) throw new EngineError(`${who(ctx)}: неизвестный вид сравнения «${successWhen}» — умею: ${Object.keys(OUTCOMES).join(', ')}`);
   const shift = Number(roll?.versusShift ?? 0);
   const eased = successWhen === 'notOver' || successWhen === 'under' ? -shift : shift;
-  const raw = ctx.number(step.versus, 'проверке не с чем сравнить');
+  const raw = theirs ? theirs.total : ctx.number(step.versus, 'проверке не с чем сравнить');
   const versus = raw + eased;
   const judged = OUTCOMES[successWhen]!(total, versus);
   const succeedOn = ctx.optional(step.succeedOn, 'кость верного успеха');
@@ -79,6 +90,7 @@ export function finish(step: StepData, ctx: StepContext) {
       ...(roll && Array.isArray(roll.tags) && roll.tags.length ? { tags: roll.tags } : {}),
       ...(forced !== null ? { forced: natural } : {}),
       ...(scale ? { degree } : {}),
+      ...(mine || theirs ? { faced: [mine?.trace, theirs?.trace].filter(Boolean) } : {}),
     },
     break: null,
   };
@@ -94,5 +106,10 @@ export function traceLine(t: any) {
   const taken = t.forced != null ? `${t.success ? 'вышло' : 'не вышло'} (${forcedWords(t.forced, t.success)})`
     : t.success ? `вышло (запас ${t.margin})` : `не вышло (недобор ${-t.margin})`;
   const verdict = t.degree !== undefined && t.degree !== null ? `${taken}, степень ${t.degree}` : taken;
-  return `проверка: ${t.total} с ${t.versus} — ${verdict}`;
+  return `${facedWords(t.faced)}проверка: ${t.total} с ${t.versus} — ${verdict}`;
+}
+
+function facedWords(list: unknown): string {
+  if (!Array.isArray(list) || !list.length) return '';
+  return (list as FacedTrace[]).map(one => `${facedText(one)}; `).join('');
 }

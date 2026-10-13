@@ -1,5 +1,6 @@
-import { RollLine } from './roll-line.tsx';
+import { RollerPick, RollTags, setRoller } from './roll-line.tsx';
 import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { Select, Fold, Field } from '../../../../ui/primitives.tsx';
 import { FieldRow } from '../../../../ui/field-row.tsx';
@@ -69,12 +70,16 @@ export function CheckBody({ step, roll, context, edit, system, onUnpair, asIf = 
   const summary = moreSummary(step, rolled);
   return (
     <>
-      <Field label={asIf ? "Условие" : "Проверка"} hint={roll
-        ? 'кинуть(кость) + прибавка, знак и порог. Поля — через лист: @цель.кд'
-        : rolled ? 'Бросок, знак и порог: число, поле через лист или бросок соперника' : 'Число, знак и порог: @носитель.ки >= 1'}>
-        <CheckFormula step={step} roll={roll} context={context} edit={edit} {...(onUnpair ? { onUnpair } : {})} />
-      </Field>
-      {roll ? <RollLine roll={roll} context={context} system={system} keep onRoll={change => edit(0, draft => change(loose(draft)))} /> : null}
+      <div className="field">
+        <span className="field__label">{asIf ? "Условие" : "Проверка"}</span>
+        <CheckFormula step={step} roll={roll} context={context} edit={edit}
+          lead={roll ? <RollerPick by={roll.by} context={context} keep onPick={next => edit(0, draft => setRoller(loose(draft), next))} /> : null}
+          {...(onUnpair ? { onUnpair } : {})} />
+        <span className="field__hint">{roll
+          ? 'кость, прибавка, знак и порог; против кого — лист справа: >= цель.Класс брони'
+          : rolled ? 'Бросок, знак и порог: число, поле через лист или бросок соперника' : 'Число, знак и порог: @носитель.ки >= 1'}</span>
+      </div>
+      {roll ? <RollTags roll={roll} system={system} onRoll={change => edit(0, draft => change(loose(draft)))} /> : null}
       <ContestLine step={step} roll={roll} context={context} />
       {rolled || more.length ? (
         <Fold title="ещё" summary={summary}>
@@ -106,7 +111,7 @@ const setSuccessWhen = (d: Record<string, unknown>, op: string): void => {
   if (op === 'atLeast') delete d.successWhen; else d.successWhen = op;
 };
 
-function CheckFormula({ step, roll, context, edit, onUnpair }: { step: any; roll: any | null; context: SlotContext; edit: EditFn; onUnpair?: () => void }) {
+function CheckFormula({ step, roll, context, edit, onUnpair, lead = null }: { step: any; roll: any | null; context: SlotContext; edit: EditFn; onUnpair?: () => void; lead?: ReactNode }) {
   const [draft, setDraft] = useState<string | null>(null);
   const [trouble, setTrouble] = useState<string | null>(null);
   const names = useMemo(() => {
@@ -162,21 +167,25 @@ function CheckFormula({ step, roll, context, edit, onUnpair }: { step: any; roll
     drop();
   };
 
+  const formula = (
+    <FormulaField
+      value={draft ?? formatCheckFormula(roll, step)}
+      system={context.system}
+      where="проверка"
+      extraNames={names}
+      {...(context.sheets ? { sheets: context.sheets } : {})}
+      badges={inputBadges(context)}
+      invalid={Boolean(trouble)}
+      placeholder={roll ? 'кинуть(@кость) + прибавка >= @цель.кд' : '@носитель.ки >= 1'}
+      onChange={next => { setTrouble(null); setDraft(next); }}
+      onCommit={commit}
+      onCancel={drop}
+    />
+  );
+
   return (
     <>
-      <FormulaField
-        value={draft ?? formatCheckFormula(roll, step)}
-        system={context.system}
-        where="проверка"
-        extraNames={names}
-        {...(context.sheets ? { sheets: context.sheets } : {})}
-        badges={inputBadges(context)}
-        invalid={Boolean(trouble)}
-        placeholder={roll ? 'кинуть(@кость) + прибавка >= @цель.кд' : '@носитель.ки >= 1'}
-        onChange={next => { setTrouble(null); setDraft(next); }}
-        onCommit={commit}
-        onCancel={drop}
-      />
+      {lead ? <div className="roll-formula">{lead}{formula}</div> : formula}
       {trouble ? <span className="field__error">{trouble}</span> : null}
     </>
   );
