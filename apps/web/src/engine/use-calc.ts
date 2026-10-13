@@ -4,6 +4,8 @@ import { compile } from '@vtt/engine/formula';
 import { newPass, calc, findField, livesOn } from '@vtt/engine/engine/calc';
 import { hasDesk, blankDesk } from '@vtt/engine/events/desk';
 import { resolveRoll } from '@vtt/engine/engine/modifiers';
+import { toolsOf } from '@vtt/engine/engine/refs';
+import { HOLDER } from '@vtt/engine/model/references';
 import type { Pass, Scope } from '@vtt/engine/engine/calc';
 import type { RollResolution } from '@vtt/engine/engine/modifiers';
 
@@ -66,7 +68,8 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
         return value !== undefined ? value : field?.value.kind === 'stored' ? field.value.default : undefined;
       },
       measure: expr => {
-        try { return { ok: true, value: compile(expr).evaluate(pass.resolve) }; }
+        const resolve = (name: string) => pass.resolve(name.startsWith(`${HOLDER}.`) ? name.slice(HOLDER.length + 1) : name);
+        try { return { ok: true, value: compile(expr).evaluate(resolve, toolsOf(system, pass, 'формула')) }; }
         catch (err) { return { ok: false, error: (err as Error).message }; }
       },
     };

@@ -3,7 +3,7 @@ import { compile } from '@vtt/engine/formula';
 import type { Node } from '@vtt/engine/formula';
 import { chainsOfEffect } from '@vtt/engine/engine/effects';
 import { ROW } from '@vtt/engine/model/sheet-columns';
-import { formulaAsLabels } from './formula.tsx';
+import { formulaAsLabels } from './formula-labels.ts';
 
 const COMPARE: Record<string, string> = { '==': '=', '!=': '≠', '>=': '≥', '<=': '≤', '>': '>', '<': '<' };
 const ARITH: Record<string, string> = { '+': '+', '-': '−', '*': '×', '/': '÷' };

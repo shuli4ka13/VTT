@@ -9,7 +9,7 @@ import { SheetView } from '../../sheet/sheet-view.tsx';
 import { recordDetails } from '../../sheet/record-view.tsx';
 import { useSession } from '../../store/session.ts';
 import { Lobby } from './lobby.tsx';
-import type { Sheet, System, RoomState } from '@vtt/schema';
+import type { Sheet, System, RoomState, Owned } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/actions';
 import { recordsOf, isItem, sheetKinds, sheetKindOf, shownOn } from '@vtt/engine/model/owned';
 import { fieldsFor, livesOn } from '@vtt/engine/engine/calc';
@@ -217,8 +217,11 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const actions = records.filter(record => !isItem(system, record));
   const carried = items.filter(item => owned(item.id)).length;
   const known = actions.filter(action => owned(action.id)).length;
-  const itemDetails = (item: (typeof items)[number]): string[] =>
-    recordDetails(item, room.system as System, room.compendium).map(line => `${line.label}: ${line.value}`);
+  const shared = useMemo(() => sharedOf(system, room.sheets), [system, room.sheets]);
+  const reader = useReader(system, sheet, room.compendium, isGroup(sheet, room.sheets) ? null : shared);
+  const itemDetails = (item: (typeof items)[number], entry?: Owned): string =>
+    recordDetails(item, system, room.compendium, entry ? { entry, ...(reader.measure ? { count: reader.measure } : {}) } : undefined)
+      .map(line => `${line.label}: ${line.value}`).join(' · ');
 
   const hangable = Object.entries(room.system.effects)
     .filter(([, effect]) => (effect.activation ?? 'manual') !== 'manual');
@@ -248,8 +251,8 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
           : (
             <div className="stack stack--tight">
               {items.map(item => {
-                const details = itemDetails(item);
                 const mine = copies(item.id);
+                const details = mine.length ? '' : itemDetails(item);
                 return (
                   <div key={item.id}>
                     <Chip active={mine.some(entry => !entry.off)} onClick={() => (mine.length
@@ -260,22 +263,26 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
                     </Chip>
                     {mine.map(entry => {
                       const hosts = (sheet.has ?? []).filter(one => !inside(keyOf(entry)).has(keyOf(one)));
+                      const details = itemDetails(item, entry);
                       return (
-                        <div key={keyOf(entry)} className="inline inline--tight">
-                          <span className="faint">{labelOf(keyOf(entry))}</span>
-                          <Chip onClick={() => belong(item.id, entry, { on: true, off: !entry.off })}>{entry.off ? 'в сумке' : 'надето'}</Chip>
-                          <Chip onClick={() => belong(item.id, entry, { on: false })}>✕ убрать</Chip>
-                          {hosts.length ? (
-                            <Select
-                              value={entry.in ?? ''}
-                              options={[['', 'стоит отдельно'], ...hosts.map(one => [keyOf(one), `в: ${labelOf(keyOf(one))}`] as const)] as never}
-                              onChange={next => belong(item.id, entry, { on: true, off: Boolean(entry.off), in: next || null })}
-                            />
-                          ) : null}
+                        <div key={keyOf(entry)}>
+                          <div className="inline inline--tight">
+                            <span className="faint">{labelOf(keyOf(entry))}</span>
+                            <Chip onClick={() => belong(item.id, entry, { on: true, off: !entry.off })}>{entry.off ? 'в сумке' : 'надето'}</Chip>
+                            <Chip onClick={() => belong(item.id, entry, { on: false })}>✕ убрать</Chip>
+                            {hosts.length ? (
+                              <Select
+                                value={entry.in ?? ''}
+                                options={[['', 'стоит отдельно'], ...hosts.map(one => [keyOf(one), `в: ${labelOf(keyOf(one))}`] as const)] as never}
+                                onChange={next => belong(item.id, entry, { on: true, off: Boolean(entry.off), in: next || null })}
+                              />
+                            ) : null}
+                          </div>
+                          {details ? <div className="faint">{details}</div> : null}
                         </div>
                       );
                     })}
-                    {details.length ? <div className="faint">{details.join(' · ')}</div> : null}
+                    {details ? <div className="faint">{details}</div> : null}
                   </div>
                 );
               })}
