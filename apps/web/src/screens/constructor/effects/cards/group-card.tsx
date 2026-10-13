@@ -43,7 +43,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, takenNames, onRename, onUnpair, onWrap, onUnwrap, asIf = false, outcome = '',
+  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, takenNames, onRename, onUnpair, onWrap, onIfByOutcome, onUnwrap, asIf = false, outcome = '', headCond,
 }: {
   group: CardGroup;
   position: number;
@@ -71,6 +71,8 @@ export function GroupCard({
   sheets?: SheetNames;
   onUnpair?: () => void;
   onWrap?: () => void;
+  onIfByOutcome?: () => void;
+  headCond?: ReactNode;
   onUnwrap?: () => void;
   asIf?: boolean;
   outcome?: string;
@@ -86,7 +88,8 @@ export function GroupCard({
 
   const actions = (
     <>
-      {onWrap && !folded ? <Button size="sm" variant="ghost" title="Поставить этот шаг внутрь «Если»: выполняется только при условии" onClick={onWrap}>в «Если»</Button> : null}
+      {onIfByOutcome && !folded ? <Button size="sm" variant="ghost" title="Поставить сразу после вызова «Если» по его итогу" onClick={onIfByOutcome}>+ если по итогу</Button> : null}
+      {onWrap && !onIfByOutcome && !folded ? <Button size="sm" variant="ghost" title="Поставить этот шаг внутрь «Если»: выполняется только при условии" onClick={onWrap}>в «Если»</Button> : null}
       <Button size="sm" variant="ghost" title={upTitle ?? 'выше'} disabled={!onMoveUp} onClick={onMoveUp}>↑</Button>
       <Button size="sm" variant="ghost" title={downTitle ?? 'ниже'} disabled={!onMoveDown} onClick={onMoveDown}>↓</Button>
       <DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>
@@ -132,7 +135,7 @@ export function GroupCard({
     return (
       <>
         <StepHead
-          position={position} words={`${called.includes('«') ? called : `«${called}»`} — ${outcome}`} open={!folded} onToggle={onFold} problem={problem?.text ?? null}
+          position={position} words={`${called.includes('«') ? called : `«${called}»`} — ${outcome}`} open={!folded} onToggle={onFold} problem={problem?.text ?? null} {...(headCond ? { cond: headCond } : {})}
           actions={<FlowActions onUp={onMoveUp} onDown={onMoveDown} upTitle={upTitle} downTitle={downTitle} extra={onUnwrap ? <UnwrapButton onClick={onUnwrap} /> : null} onDelete={onDelete} />}
         />
         {folded ? null : <div className={`step-card flow-block__source flow-block__source--${group.kind}`}>{body}</div>}

@@ -6,6 +6,10 @@ import { ConditionField } from '../../condition-field.tsx';
 import { namesOf } from '../../slots.tsx';
 import type { SlotContext, EarlierStep } from '../../slots.tsx';
 import { quickOf } from './condition-fold.tsx';
+import { Select } from '../../../../ui/primitives.tsx';
+import { readGuard, writeGuard } from '../../guard-expr.ts';
+import { yesNo } from '../../condition-field.tsx';
+import type { QuickRef } from '../../condition-field.tsx';
 
 const quoted = (text: string): string => (text.includes('"') ? `'${text}'` : `"${text}"`);
 
@@ -108,9 +112,34 @@ export function FlowHead({ word, step, context, earlier, required, edit, actions
   );
 }
 
-export function StepHead({ position, words, open, onToggle, problem, actions }: {
+const BY_FORMULA = ':формула';
+
+export function OutcomePick({ quick, value, onPick, onFormula }: {
+  quick: readonly QuickRef[];
+  value: string;
+  onPick: (expr: string) => void;
+  onFormula: () => void;
+}) {
+  const when = readGuard(value);
+  const current = when ? writeGuard({ ref: when.ref, ...(when.not ? { not: true } : {}) }) : '';
+  return (
+    <Select<string>
+      value={current}
+      options={[['', '— что проверяем —'],
+        ...quick.flatMap(one => [
+          [writeGuard({ ref: one.ref }), yesNo(one)[0]] as const,
+          [writeGuard({ ref: one.ref, not: true }), yesNo(one)[1]] as const,
+        ]),
+        [BY_FORMULA, 'формулой…']]}
+      onChange={next => { if (next === BY_FORMULA) onFormula(); else if (next) onPick(next); }}
+    />
+  );
+}
+
+export function StepHead({ position, words, open, onToggle, problem, actions, cond }: {
   position: number;
   words: string;
+  cond?: ReactNode;
   open: boolean;
   onToggle?: (() => void) | undefined;
   problem: string | null;
@@ -118,9 +147,16 @@ export function StepHead({ position, words, open, onToggle, problem, actions }: 
 }) {
   return (
     <HeadFrame word={`${position} · Если`} bad={Boolean(problem)} actions={actions}>
-      <button type="button" className="step-fold flow-head__words" aria-expanded={open} title={open ? 'свернуть поля шага' : 'показать поля шага'} onClick={onToggle}>
+      {cond ? (
+        <>
+          {cond}
+          <button type="button" className="step-fold" aria-expanded={open} title={open ? 'свернуть поля шага' : 'показать поля шага'} onClick={onToggle}>
+            {open ? '▾' : '▸'} шаг
+          </button>
+        </>
+      ) : <button type="button" className="step-fold flow-head__words" aria-expanded={open} title={open ? 'свернуть поля шага' : 'показать поля шага'} onClick={onToggle}>
         {words}
-      </button>
+      </button>}
       {problem && !open ? <span className="field__error">{problem}</span> : null}
     </HeadFrame>
   );

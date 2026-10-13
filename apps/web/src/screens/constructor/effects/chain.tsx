@@ -9,9 +9,10 @@ import { cardTitle, titleOf } from './words.ts';
 import { Button, CardHead, Select, Verdict } from '../../../ui/primitives.tsx';
 import { problemOf } from '../step-card.tsx';
 import type { StepOutput } from '../slots.tsx';
+import { outcomeRefs } from '../slots.tsx';
 import { groupSteps, moveGroup, moveSpan, blockSpan, removeSteps, armEnd, wrapInBranch, addArm, unwrapBlock, BRICKS, SEEN_BRICKS } from '../cards.ts';
 import { armsOf, sees, endOf } from '@vtt/engine/model/flow';
-import { FlowHead, FlowActions, ArmLabel, UnwrapButton } from './cards/flow-parts.tsx';
+import { FlowHead, FlowActions, ArmLabel, UnwrapButton, OutcomePick } from './cards/flow-parts.tsx';
 import { outcomeWords } from '@vtt/engine/engine/roll-tags';
 import { newCost } from '../factory.ts';
 import { GroupCard } from './cards/group-card.tsx';
@@ -124,13 +125,23 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     if (fresh.length) setOpen(fresh, true);
   }, [name, signature, setOpen]);
 
-  const cardOf = (group: (typeof cards)[number], g: number, whole?: [number, number], fused?: { outcome: string; unwrap?: () => void }) => {
+  const cardOf = (group: (typeof cards)[number], g: number, whole?: [number, number], fused?: { outcome: string; unwrap?: () => void; cond?: ReactNode }) => {
     const asIf = Boolean(fused);
     const at = numberOf(g) - 1;
     const range = whole ? span(whole[0], whole[1]) : group.indices;
     const problem = group.indices.map(i => problems[i]).find(Boolean) ?? null;
 
     const donorFix = problem?.missingField ? findDonorBlock(problem.missingField) : null;
+
+    const calledKey = group.step.type === 'emit' ? (group.step as { effect?: unknown }).effect : undefined;
+    const flag = typeof calledKey === 'string' ? (system.effects?.[calledKey]?.returns ?? []).find(one => one.kind === 'boolean') : undefined;
+    const ifByOutcome = flag && !asIf && typeof calledKey === 'string' ? () => edit(draft => {
+      const list = draft.steps ?? [];
+      const step = list[group.indices[0]!] as Step & { id?: string };
+      if (!step.id) step.id = freeId([...stepIdsOf(draft), ...(draft.params ?? []).map(p => p.key)], calledKey);
+      const at = group.indices[group.indices.length - 1]! + 1;
+      list.splice(at, 0, { type: 'branch', if: { expr: `@${step.id}.${flag.key}` } } as unknown as Step, { type: 'end' } as unknown as Step);
+    }) : undefined;
 
     return (
       <GroupCard
@@ -139,6 +150,8 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         asIf={asIf}
         {...(fused ? { outcome: fused.outcome } : {})}
         {...(fused?.unwrap ? { onUnwrap: fused.unwrap } : {})}
+        {...(fused?.cond ? { headCond: fused.cond } : {})}
+        {...(ifByOutcome ? { onIfByOutcome: ifByOutcome } : {})}
         position={startAt + at + 1}
         system={system}
         effect={effect}
@@ -278,6 +291,27 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     const guard = !fused && heads.length === 1 && inside.length === 1 && inside[0]!.kind === 'stop';
     const outcomes = fused ? { first: fused.negated ? fused.no : fused.yes, other: fused.negated ? fused.yes : fused.no } : null;
     const dropArm = (head: number) => () => edit(draft => { const list = draft.steps ?? []; draft.steps = removeSteps(list, span(head, armEnd(list, head) - 1)).steps; });
+    const callPick = fused && fused.group.step.type === 'emit' ? (() => {
+      const called = String((fused.group.step as { effect?: unknown }).effect ?? '');
+      const callee = system.effects?.[called];
+      const quick = outcomeRefs([{ id: String(fused.group.step.id), type: 'emit', ...(callee?.label ? { title: callee.label } : {}), outputs: returnsOf(system, fused.group.step) }])
+        .filter(one => one.kind === 'boolean')
+        .map(one => ({ ref: one.ref, label: one.label, kind: 'boolean' as const, ...(one.no ? { no: one.no } : {}) }));
+      const written = String((steps[open] as { if?: { expr?: unknown } }).if?.expr ?? '');
+      const refId = `@${fused.group.step.id}.`;
+      return (
+        <OutcomePick
+          quick={quick} value={written}
+          onPick={expr => edit(draft => { (draft.steps![open] as { if?: { expr: string } }).if = { expr }; })}
+          onFormula={() => edit(draft => {
+            const head = draft.steps![open] as { if?: { expr: string } };
+            const text = String(head.if?.expr ?? '').trim();
+            const bare = text.startsWith('не(') && text.endsWith(')') ? text.slice(3, -1) : text;
+            head.if = { expr: `${bare.startsWith(refId) ? bare : text} == ${text.startsWith('не(') ? 'нет' : 'да'}` };
+          })}
+        />
+      );
+    })() : undefined;
     const unwrap = heads.length === 1 ? () => edit(draft => { draft.steps = unwrapBlock(draft.steps ?? [], open); }) : undefined;
     const node = (
       <div className={`flow-block${guard ? ' flow-block--guard' : ''}${fused ? ' flow-block--check' : ''}`} key={`block:${open}`}>
@@ -291,7 +325,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
           return (
             <div className="flow-block__part" key={head}>
               {k === 0 && fused && outcomes
-                ? cardOf(fused.group, fused.g, [fused.group.indices[0]!, end], { outcome: outcomes.first, ...(unwrap ? { unwrap } : {}) })
+                ? cardOf(fused.group, fused.g, [fused.group.indices[0]!, end], { outcome: outcomes.first, ...(unwrap ? { unwrap } : {}), ...(callPick ? { cond: callPick } : {}) })
                 : conditioned ? <FlowHead
                   word={k === 0 ? 'Если' : 'Иначе, если'} step={steps[head]!} context={contextAt(head)} earlier={earlierOf(head)}
                   required problem={problem(head)} {...(guard && k === 0 ? { tail: 'стоп' } : {})}

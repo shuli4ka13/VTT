@@ -21,7 +21,7 @@ export const holderPhrase = (name: string): string => `@${name} == @${HOLDER}`;
 
 const BY_FORMULA = ':формула';
 const NOT = ':не:';
-const yesNo = (one: QuickRef): [string, string] => (one.no !== undefined ? [one.label, one.no] : [`${one.label} — да`, `${one.label} — нет`]);
+export const yesNo = (one: QuickRef): [string, string] => (one.no !== undefined ? [one.label, one.no] : [`${one.label} — да`, `${one.label} — нет`]);
 
 const tablesOfTags = (system: System, tags: string[]) =>
   rowTables(system)

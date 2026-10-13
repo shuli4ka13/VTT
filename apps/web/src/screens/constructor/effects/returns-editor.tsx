@@ -9,6 +9,9 @@ import { KeyField } from '../../../ui/key-field.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { formulaAsLabels } from '../../../ui/formula.tsx';
 import { ColumnList } from './column-list.tsx';
+import { namesOf, inputBadges } from '../slots.tsx';
+import type { SlotContext, EarlierStep } from '../slots.tsx';
+import { sheetsAt } from './names.ts';
 import type { Effect, Step, System, ValueKind } from '@vtt/schema';
 
 type Return = NonNullable<Effect['returns']>[number];
@@ -32,6 +35,24 @@ function sourcesOf(system: System, effect: Effect): Source[] {
   return out;
 }
 
+function contextOf(system: System, effect: Effect): SlotContext {
+  const earlier: EarlierStep[] = [];
+  for (const step of [...(effect.cost ?? []), ...(effect.steps ?? [])] as Step[]) {
+    if (!step.id) continue;
+    const called = (step as { effect?: unknown }).effect;
+    const callee = step.type === 'emit' && typeof called === 'string' ? system.effects?.[called] : undefined;
+    const words = (STEP_WORDS as Record<string, StepWords>)[step.type];
+    const outputs = (callee?.returns ?? []).map(column => ({
+      path: `.${column.key}`, label: column.label ?? column.key,
+      ...(column.kind ? { kind: String(column.kind) } : {}),
+      ...(column.no ? { no: column.no } : {}),
+    }));
+    const title = callee?.label ?? words?.label;
+    earlier.push({ id: String(step.id), type: step.type, ...(title ? { title } : {}), ...(outputs.length ? { outputs } : {}) });
+  }
+  return { system, effect, earlier };
+}
+
 const exprOf = (column: Return): string => String((column.expr as { expr?: unknown } | undefined)?.expr ?? '');
 
 export function ReturnsEditor({ id, effect, system, onEdit }: {
@@ -43,6 +64,9 @@ export function ReturnsEditor({ id, effect, system, onEdit }: {
   const columns = (effect.returns ?? []) as Return[];
   const [opened, setOpened] = useState<string[]>([]);
   const sources = sourcesOf(system, effect);
+  const context = contextOf(system, effect);
+  const names = namesOf(context);
+  const sheets = sheetsAt(system, id, { part: 'steps', index: (effect.steps ?? []).length });
   const keys = columns.map(column => column.key);
   const change = (key: string, fn: (target: Return) => void) => onEdit(draft => {
     const target = draft.returns?.find(column => column.key === key);
@@ -80,7 +104,7 @@ export function ReturnsEditor({ id, effect, system, onEdit }: {
   };
   const summary = (column: Return) => {
     const source = sources.find(one => one.expr === exprOf(column));
-    const from = source ? source.label : exprOf(column) ? formulaAsLabels(system, exprOf(column)) : 'не сказано, откуда';
+    const from = source ? source.label : exprOf(column) ? formulaAsLabels(system, exprOf(column), names) : 'не сказано, откуда';
     const kind = column.kind === 'boolean' ? (column.no ? `да / «${column.no}»` : 'да или нет') : kindWord(String(column.kind ?? 'number'));
     return `${kind} ← ${from}`;
   };
@@ -104,7 +128,7 @@ export function ReturnsEditor({ id, effect, system, onEdit }: {
             dropTitle="убрать итог"
             summary={summary}
             form={column => (
-              <ReturnForm column={column} sources={sources} system={system} where={`${id} · что отдаёт`}
+              <ReturnForm column={column} sources={sources} system={system} context={context} names={names} sheets={sheets} where={`${id} · что отдаёт`}
                 keys={keys} locked={isUsed(column)} onKey={next => rekey(column, next)}
                 onLabel={next => relabel(column, next)} change={fn => change(column.key, fn)} />
             )}
@@ -118,13 +142,16 @@ export function ReturnsEditor({ id, effect, system, onEdit }: {
   );
 }
 
-function ReturnForm({ column, sources, system, where, keys, locked, onKey, onLabel, change }: {
+function ReturnForm({ column, sources, system, context, names, sheets, where, keys, locked, onKey, onLabel, change }: {
   column: Return;
   keys: string[];
   locked: boolean;
   onKey: (next: string) => void;
   sources: Source[];
   system: System;
+  context: SlotContext;
+  names: Map<string, string>;
+  sheets: ReturnType<typeof sheetsAt>;
   where: string;
   onLabel: (next: string) => void;
   change: (fn: (target: Return) => void) => void;
@@ -148,7 +175,7 @@ function ReturnForm({ column, sources, system, where, keys, locked, onKey, onLab
         </Field>
         <Field label="Откуда">
           {formula ? (
-            <FormulaField value={expr} system={system} where={where}
+            <FormulaField value={expr} system={system} where={where} extraNames={names} sheets={sheets} badges={inputBadges(context)}
               onCommit={next => change(target => { if (next.trim()) target.expr = { expr: next.trim() }; else delete target.expr; })} />
           ) : (
             <Select<string>

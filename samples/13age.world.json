@@ -911,7 +911,7 @@
             "label": "крит",
             "kind": "boolean",
             "expr": {
-              "expr": "@бросок.natural >= 20"
+              "expr": "@проверка.natural >= 20"
             }
           },
           {
@@ -919,7 +919,7 @@
             "label": "на костях",
             "kind": "number",
             "expr": {
-              "expr": "@бросок.natural"
+              "expr": "@проверка.natural"
             }
           }
         ],
