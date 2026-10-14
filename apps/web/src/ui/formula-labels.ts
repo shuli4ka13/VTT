@@ -1,26 +1,29 @@
 import type { System } from '@vtt/schema';
-import { fieldPaths } from './paths.ts';
+import { sheetPathLabel } from './paths.ts';
 import { fieldOf, ROW } from '@vtt/engine/model/sheet-columns';
 
-const onSheet = (system: System, tag: string): { head: string; rest: string } | null => {
+const known = (system: System, tag: string, names?: ReadonlyMap<string, string>): boolean =>
+  Boolean(fieldOf(system, tag)) || sheetPathLabel(system, tag) !== null || Boolean(names?.has(tag));
+
+const onSheet = (system: System, tag: string, names?: ReadonlyMap<string, string>): { head: string; rest: string } | null => {
   const dot = tag.indexOf('.');
-  if (dot <= 0 || tag.startsWith(`${ROW}.`) || fieldOf(system, tag) || fieldPaths(system).has(tag)) return null;
+  if (dot <= 0 || tag.startsWith(`${ROW}.`) || known(system, tag, names)) return null;
   const rest = tag.slice(dot + 1);
-  return fieldOf(system, rest) || fieldPaths(system).has(rest) || system.effects?.[rest] ? { head: tag.slice(0, dot), rest } : null;
+  return known(system, rest, names) || system.effects?.[rest] ? { head: tag.slice(0, dot), rest } : null;
 };
 
-export function labelOfTag(system: System, tag: string): string {
-  const owned = onSheet(system, tag);
-  if (owned) return `${labelOfTag(system, owned.rest)} (${owned.head})`;
+export function labelOfTag(system: System, tag: string, names?: ReadonlyMap<string, string>): string {
+  const owned = onSheet(system, tag, names);
+  if (owned) return `${labelOfTag(system, owned.rest, names)} (${owned.head})`;
   const field = fieldOf(system, tag);
   if (field) return field.label ?? tag;
-  return fieldPaths(system).get(tag) ?? system.effects?.[tag]?.label ?? tag;
+  return names?.get(tag) ?? sheetPathLabel(system, tag) ?? system.effects?.[tag]?.label ?? tag;
 }
 
 export function formulaAsLabels(
   system: System,
   source: string,
-  names?: Map<string, string>,
+  names?: ReadonlyMap<string, string>,
 ): string {
   const lookups = source.replace(/таблица\(\s*(["'])([^"']*)\1\s*,([^,()]*(?:\([^()]*\)[^,()]*)*)(?:,\s*(["'])([^"']*)\4)?\s*\)/gu,
     (whole, _q, table: string, arg: string, _q2, column?: string) => {
@@ -31,11 +34,6 @@ export function formulaAsLabels(
     });
   const picks = lookups.replace(/[@#]([\p{L}\p{N}_]+(?:\.[\p{L}\p{N}_]+)*)\.\[([^[\]]*)\]((?:\.[\p{L}\p{N}_]+)*)/gu,
     (_, tag: string, by: string, rest: string) =>
-      `${labelOfTag(system, tag)} · колонка по [${formulaAsLabels(system, by, names)}]${rest ? ` · ${rest.slice(1)}` : ''}`);
-  return picks.replace(/[@#]([\p{L}\p{N}_.]+)/gu, (_, name: string) => {
-    if (onSheet(system, name)) return labelOfTag(system, name);
-    const field = fieldOf(system, name);
-    if (field) return field.label ?? name;
-    return names?.get(name) ?? fieldPaths(system).get(name) ?? system.effects?.[name]?.label ?? name;
-  });
+      `${labelOfTag(system, tag, names)} · колонка по [${formulaAsLabels(system, by, names)}]${rest ? ` · ${rest.slice(1)}` : ''}`);
+  return picks.replace(/[@#]([\p{L}\p{N}_.]+)/gu, (_, name: string) => labelOfTag(system, name, names));
 }

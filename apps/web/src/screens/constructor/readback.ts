@@ -1,4 +1,5 @@
 import { loopOf } from '@vtt/engine/engine/steps/each';
+import { pickedRow } from './choice-rows.ts';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import type { System, Effect, Step, SystemConstant } from '@vtt/schema';
 import { labelOfTag, formulaAsLabels } from '../../ui/formula.tsx';
@@ -232,7 +233,9 @@ export function sendReadback(step: Step, system: System, effect: Effect, names?:
     if (!given.length) return [seg('ничего не передаётся.')];
     return given.flatMap((p, i) => [
       seg(`${i ? '; ' : ''}${p.label ?? p.key}:`),
-      p.kind === 'sheet' ? seg(whoOf(effect, args[p.key])) : refSegment(args[p.key], system, effect, '…', names),
+      p.kind === 'sheet' ? seg(whoOf(effect, args[p.key]))
+        : pickedRow(system, p, args[p.key]) ? seg(`«${pickedRow(system, p, args[p.key])!.label}»`)
+          : refSegment(args[p.key], system, effect, '…', names),
     ]).concat(seg('.'));
   }
   return [

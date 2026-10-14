@@ -8,7 +8,7 @@ import type { Phase } from '@vtt/engine/events/bus';
 import type { MomentKey } from '@vtt/engine/events/moments';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { TARGETS_SEED } from '@vtt/engine/model/references';
-import { sheetsAt } from './names.ts';
+import { sheetsAt, placeNamesAt } from './names.ts';
 import { namesAt } from '@vtt/engine/model/names-at';
 import { ConditionField } from '../condition-field.tsx';
 import { WhileWhenRow } from './while-when.tsx';
@@ -76,6 +76,20 @@ function outcomesOf(system: System, listened: string, phase: Phase): (readonly [
   });
 }
 
+function heardOutcomes(system: System, id: string, index: number): (readonly [string, string])[] {
+  const out: (readonly [string, string])[] = [];
+  for (const one of namesAt(system, id, { part: 'handler-if', handler: index })) {
+    if (one.group !== 'heard') continue;
+    for (const child of one.children ?? []) {
+      if (child.kind !== 'boolean') continue;
+      out.push(one.name === TARGETS_SEED
+        ? [`сколько(@${one.name}${child.path}, да) >= 1`, `хоть по одной цели: ${child.label}`] as const
+        : [`@${one.name}${child.path}`, `${one.label} — ${child.label}`] as const);
+    }
+  }
+  return out;
+}
+
 export function HandlerCard({ id, index, handler, system, edit, onRemove, startOpen = false }: {
   startOpen?: boolean;
   id: string;
@@ -91,7 +105,8 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
   const phase = callHappening(handler.on)?.phase ?? 'before';
   const sheets = sheetsAt(system, id, { part: 'handler-if', handler: index });
   const names = [...sheets].filter(([name]) => name !== 'носитель');
-  const outcomes = kind === 'call' && subject ? outcomesOf(system, subject, phase) : [];
+  const own = kind === 'call' && subject ? outcomesOf(system, subject, phase) : [];
+  const outcomes = own.length || kind !== 'call' ? own : heardOutcomes(system, id, index);
   const watchable = fieldsOf(system).filter(f => f.value.kind !== 'stored' || f.value.type === 'boolean');
   const hanging = Object.entries(system.effects).filter(([key, e]) => key !== id && (e.activation ?? 'manual') === 'passive');
   const actions = Object.entries(system.effects).filter(([key, e]) => key !== id && (e.activation ?? 'manual') === 'manual');
@@ -113,7 +128,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
   const setIf = (expr: string | null) => edit(draft => {
     if (expr) draft.if = { expr }; else delete draft.if;
   });
-  const visible = new Map(namesAt(system, id, { part: 'handler-if', handler: index }).map(one => [one.name, one.label]));
+  const visible = placeNamesAt(system, id, { part: 'handler-if', handler: index });
 
   const spoken = kind === 'call' && phase !== 'done' ? callSubjects(tags, actions, true) : subjects;
   const subjectWord = spoken.find(([key]) => key === subject)?.[1] ?? subject;

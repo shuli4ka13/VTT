@@ -109,8 +109,9 @@ export function ValueField({ value, onChange, context, allow, placeholder, extra
   const names = useMemo(() => {
     const out = new Map<string, string>();
     for (const option of options) if (option.name && !out.has(option.name)) out.set(option.name, option.label);
+    for (const [key, label] of context.names ?? []) if (!out.has(key)) out.set(key, label);
     return out;
-  }, [options]);
+  }, [options, context.names]);
 
   const menu = useMemo((): BarOption[] => options.map(option => ({
     group: option.group,

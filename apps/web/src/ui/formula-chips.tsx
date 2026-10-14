@@ -2,13 +2,13 @@ import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { matchTagQuery } from './tag-suggest.tsx';
-import { fieldPaths } from './paths.ts';
+import { fieldPaths, sheetPathLabel } from './paths.ts';
 import { DESK_ID } from '@vtt/engine/engine/owners';
 import { fieldsOf, fieldOf, hasField, fieldLinkOf, ROW } from '@vtt/engine/model/sheet-columns';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 
 const plainLabel = (system: System, tag: string, extra?: Map<string, string>): string =>
-  fieldOf(system, tag)?.label ?? extra?.get(tag) ?? fieldPaths(system).get(tag)
+  fieldOf(system, tag)?.label ?? extra?.get(tag) ?? sheetPathLabel(system, tag)
   ?? system.effects?.[tag]?.label ?? tag;
 
 const statesOf = (system: System): { tag: string; label: string }[] =>
@@ -50,8 +50,8 @@ const labelOfTag = (system: System, tag: string, extra?: Map<string, string>, sh
   return owned ? plainLabel(system, owned.rest, extra) : plainLabel(system, tag, extra);
 };
 
-const knownSheetName = (system: System, tag: string, paths: Map<string, string>): boolean =>
-  hasField(system, tag) || paths.has(tag) || Boolean(system.effects?.[tag]);
+const knownSheetName = (system: System, tag: string): boolean =>
+  hasField(system, tag) || sheetPathLabel(system, tag) !== null || Boolean(system.effects?.[tag]);
 
 export type Part = { text: string } | { tag: string; lit?: boolean; by?: string; rest?: string };
 
@@ -231,8 +231,8 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
   const parts = useMemo(
     () => partsOf(value, tag => {
       const owned = onSheet(tag, sheets);
-      if (owned) return knownSheetName(system, owned.rest, paths) || Boolean(extraNames?.has(owned.rest));
-      return knownSheetName(system, tag, paths) || Boolean(names?.[tag]) || Boolean(extraNames?.has(tag)) || Boolean(sheets?.has(tag)) || marks.has(tag);
+      if (owned) return knownSheetName(system, owned.rest) || Boolean(extraNames?.has(owned.rest));
+      return knownSheetName(system, tag) || Boolean(names?.[tag]) || Boolean(extraNames?.has(tag)) || Boolean(sheets?.has(tag)) || marks.has(tag);
     }, lits),
     [value, system, names, extraNames, paths, sheets, marks, lits],
   );

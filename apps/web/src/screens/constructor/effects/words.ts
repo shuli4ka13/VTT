@@ -34,7 +34,7 @@ const named = (title: string, id: unknown): string => {
   return name && name.replace(/ \d+$/, '') !== title.toLowerCase() ? `${title} «${name}»` : title;
 };
 
-export function titleOf(kind: string, step: Step | undefined, system: System, effect?: Effect): string {
+export function titleOf(kind: string, step: Step | undefined, system: System, effect?: Effect, names?: ReadonlyMap<string, string>): string {
   const s = step as Record<string, unknown> | undefined;
   const param = (ref: unknown) => { const key = inputOf(ref); return key ? effect?.params?.find(p => p.key === key) : undefined; };
   if (s?.type === 'emit') {
@@ -51,7 +51,7 @@ export function titleOf(kind: string, step: Step | undefined, system: System, ef
   }
   if (s?.type === 'apply') {
     const tag = fieldOfTarget(s.target);
-    return tag ? `${STEP_TITLES.set} «${labelOfTag(system, tag)}»` : STEP_TITLES.set;
+    return tag ? `${STEP_TITLES.set} «${labelOfTag(system, tag, names)}»` : STEP_TITLES.set;
   }
   if (kind === 'number') return named(s?.by ? STEP_TITLES.roll : STEP_TITLES.number, s?.id);
   if (kind === 'table') return named(CARD_TITLES[kind] ?? kind, s?.id);

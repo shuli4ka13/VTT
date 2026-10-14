@@ -98,6 +98,8 @@ export function within(root: ParentNode = document) {
     const box = typeof label === 'string' ? field(label) : label;
     const spoken = box.classList.contains('formula-words') ? box : box.querySelector<HTMLElement>('.formula-words');
     if (spoken) { act(() => { fireEvent.click(spoken); }); }
+    const byList = [...box.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === ':формула'));
+    if (byList && !box.querySelector('.chips')) { act(() => { fireEvent.change(byList, { target: { value: ':формула' } }); }); openAll(); }
     const chips = box.classList.contains('chips') ? box : box.querySelector('.chips');
     if (!chips) throw new Error(`в «${String(label)}» нет поля формулы`);
     const inputs = [...chips.querySelectorAll<HTMLInputElement>('input.chips__text')];

@@ -87,6 +87,8 @@ export interface SlotContext {
   recordKind?: RecordKind;
 
   sheets?: SheetNames;
+
+  names?: ReadonlyMap<string, string>;
 }
 
 export function declaredProps(system: System): Map<string, string> {
@@ -128,6 +130,7 @@ export function namesOf(ctx: SlotContext): Map<string, string> {
     .map(p => ({ key: p.key, label: p.label ?? p.key, from: p.from }));
   for (const [key, label] of columnPaths(ctx.system, heads)) out.set(key, label);
   for (const [key, label] of stepNames(ctx)) out.set(key, label);
+  for (const [key, label] of ctx.names ?? []) if (!out.has(key)) out.set(key, label);
   return out;
 }
 

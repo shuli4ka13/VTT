@@ -9,6 +9,7 @@ import type { SlotContext } from './slots.tsx';
 import { listOf } from '@vtt/engine/model/lists';
 import { EffectPick } from './effect-pick.tsx';
 import { paramsOf } from '@vtt/engine/model/inherit';
+import { choiceRows, pickedRow } from './choice-rows.ts';
 
 export interface CallInput {
   param: Param;
@@ -36,6 +37,36 @@ const lonely = (value: unknown): string | null => {
   const text = asText(value)?.trim() ?? '';
   return /^@[\p{L}\p{N}_]+$/u.test(text) ? text.slice(1) : null;
 };
+
+const BY_FORMULA = ':формула';
+
+function ChoiceArg({ system, param, value, onArg, children }: {
+  system: System;
+  param: Param;
+  value: unknown;
+  onArg: (key: string, next: SlotRef | null) => void;
+  children: ReactNode;
+}) {
+  const rows = choiceRows(system, param);
+  const text = asText(value)?.trim() ?? '';
+  const picked = pickedRow(system, param, value);
+  const [formula, setFormula] = useState(false);
+  const byFormula = formula || (text !== '' && !picked);
+  return (
+    <div className="stack stack--tight">
+      <Select<string>
+        value={byFormula ? BY_FORMULA : picked ? JSON.stringify(picked.value) : ''}
+        options={[['', '— выберите —'], ...rows.map(row => [JSON.stringify(row.value), row.label] as const), [BY_FORMULA, 'формулой…']]}
+        onChange={next => {
+          if (next === BY_FORMULA) { setFormula(true); return; }
+          setFormula(false);
+          onArg(param.key, next ? { expr: next } : null);
+        }}
+      />
+      {byFormula ? children : null}
+    </div>
+  );
+}
 
 const effectOf = (value: unknown): string | null => {
   const text = asText(value)?.trim() ?? '';
@@ -81,6 +112,8 @@ function valueShown(system: System, input: CallInput, names?: Map<string, string
     if (input.param.default !== undefined) return <span>{String(input.param.default)} <span className="faint">— как у эффекта</span></span>;
     return <span className="faint">{input.param.optional ? 'нет' : 'не передаётся'}</span>;
   }
+  const row = pickedRow(system, input.param, input.value);
+  if (row) return <span>«{row.label}»</span>;
   const literal = effectOf(input.value);
   if (literal !== null) return <span>«{literal}»</span>;
   return <FormulaView value={asText(input.value) ?? ''} system={system} {...(names ? { extraNames: names } : {})} {...(sheets ? { sheets } : {})} />;
@@ -138,6 +171,15 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, onArg
   const params = called ? paramsOf(system, called) : [];
   const inputs: CallInput[] = params.map(param => ({ param, value: args?.[param.key], fromProp: false }));
   const nameOf = (param: Param) => param.label ?? param.key;
+  const valueField = (input: CallInput) => (
+    <ValueField
+      where={`${where} · ${nameOf(input.param)}`}
+      value={input.value as never}
+      context={context}
+      extraOptions={rowsAsOptions(system, input.param)}
+      onChange={next => onArg(input.param.key, next)}
+    />
+  );
   const editor = (input: CallInput) => (
     input.param.kind === 'effect' ? (
       <Select<string>
@@ -147,15 +189,9 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, onArg
           ...Object.entries(system.effects).filter(([id]) => id !== effect).map(([id, e]) => [id, e.label || id] as const)]}
         onChange={next => onArg(input.param.key, next ? { expr: JSON.stringify(next) } : null)}
       />
-    ) : (
-      <ValueField
-        where={`${where} · ${nameOf(input.param)}`}
-        value={input.value as never}
-        context={context}
-        extraOptions={rowsAsOptions(system, input.param)}
-        onChange={next => onArg(input.param.key, next)}
-      />
-    )
+    ) : choiceRows(system, input.param).length
+      ? <ChoiceArg system={system} param={input.param} value={input.value} onArg={onArg}>{valueField(input)}</ChoiceArg>
+      : valueField(input)
   );
 
   const pick = !onEffect ? null : callerInputs?.some(param => param.kind === 'effect') ? (

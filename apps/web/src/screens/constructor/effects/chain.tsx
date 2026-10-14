@@ -16,7 +16,7 @@ import { FlowHead, FlowActions, ArmLabel, UnwrapButton, OutcomePick } from './ca
 import { outcomeWords } from '@vtt/engine/engine/roll-tags';
 import { newCost } from '../factory.ts';
 import { GroupCard } from './cards/group-card.tsx';
-import { sheetsAt } from './names.ts';
+import { sheetsAt, placeNamesAt } from './names.ts';
 import { filledStep } from './call-args.ts';
 import { namesAt } from '@vtt/engine/model/names-at';
 import type { Place } from '@vtt/engine/model/names-at';
@@ -163,6 +163,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         ]}
         problem={problem}
         sheets={sheetsAt(system, id, placeAt(group.indices[0]!))}
+        names={placeNamesAt(system, id, placeAt(group.indices[0]!))}
         lane={lane}
         folded={!opened[foldKey(group)]}
         onFold={() => toggleFold(foldKey(group))}
@@ -258,6 +259,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
   const contextAt = (index: number) => ({
     system, effect, earlier: earlierOf(index),
     ...(sheetsAt(system, id, placeAt(index)) ? { sheets: sheetsAt(system, id, placeAt(index)) } : {}),
+    names: placeNamesAt(system, id, placeAt(index)),
   });
 
   const armAdd = (head: number) => (
