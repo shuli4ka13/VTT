@@ -115,6 +115,7 @@ export function stepNames(ctx: SlotContext): Map<string, string> {
   }
   for (const step of ctx.earlier) out.set(step.id, formulaName(step));
   for (const output of outputRefs(ctx.earlier, formulaName)) out.set(output.ref, output.label);
+  for (const [key, label] of ctx.names ?? []) if (!out.has(key)) out.set(key, label);
   return out;
 }
 
@@ -129,8 +130,8 @@ export function namesOf(ctx: SlotContext): Map<string, string> {
     .filter(p => p.kind === 'choice' && p.from)
     .map(p => ({ key: p.key, label: p.label ?? p.key, from: p.from }));
   for (const [key, label] of columnPaths(ctx.system, heads)) out.set(key, label);
-  for (const [key, label] of stepNames(ctx)) out.set(key, label);
-  for (const [key, label] of ctx.names ?? []) if (!out.has(key)) out.set(key, label);
+  const engine = new Set(ctx.names?.keys() ?? []);
+  for (const [key, label] of stepNames(ctx)) if (!out.has(key) || !engine.has(key)) out.set(key, label);
   return out;
 }
 

@@ -267,7 +267,8 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
       ...[...paths].map(([tag, label]) => ({ tag, label, via: true })),
     ];
     const offered = new Set((extraOptions ?? []).map(o => o.name).filter(Boolean));
-    const local = [...(extraNames ?? [])].filter(([tag]) => !offered.has(tag)).map(([tag, label]) => ({ tag, label, group: 'здесь же' }));
+    const viaSheet = (tag: string) => [...(sheets?.keys() ?? [])].some(name => extraNames?.has(`${name}.${tag}`));
+    const local = [...(extraNames ?? [])].filter(([tag]) => !offered.has(tag) && !viaSheet(tag)).map(([tag, label]) => ({ tag, label, group: 'здесь же' }));
     const states = statesOf(system);
     if (!sheets?.size) {
       return [
