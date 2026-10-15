@@ -1,7 +1,6 @@
 import type { System } from '@vtt/schema';
 import { compile } from '@vtt/engine/formula';
 import type { Node } from '@vtt/engine/formula';
-import { chainsOfEffect } from '@vtt/engine/engine/effects';
 import { ROW } from '@vtt/engine/model/sheet-columns';
 import { formulaAsLabels } from './formula-labels.ts';
 
@@ -18,29 +17,14 @@ const SEEN_ROLL = 'roll';
 
 const diceWords = (value: string): string => value.replace(/^1(?=к)/u, '');
 
-const callResult = (system: System, head: string, rest: string): string | null => {
-  for (const effect of Object.values(system.effects ?? {})) {
-    for (const step of chainsOfEffect(effect).flat() as Record<string, unknown>[]) {
-      if (step.id !== head || step.type !== 'emit' || typeof step.effect !== 'string') continue;
-      const column = system.effects?.[step.effect]?.returns?.find(one => one.key === rest);
-      if (column) return column.label ?? column.key;
-    }
-  }
-  return null;
-};
-
-const pathWords = (system: System, ref: (text: string) => string, tag: string): string => {
+const pathWords = (ref: (text: string) => string, tag: string): string => {
   const dot = tag.indexOf('.');
   if (dot < 0) return `«${ref(`@${tag}`)}»`;
   const head = tag.slice(0, dot);
   const rest = tag.slice(dot + 1);
   const known = ROLL_FIELDS[rest] ?? (rest.startsWith('parts.') ? `часть «${rest.slice(6)}»` : undefined);
   if (known) return `«${head === SEEN_ROLL ? 'Бросок' : ref(`@${head}`)}»: ${known}`;
-  const whole = ref(`@${tag}`);
-  const result = whole === tag ? callResult(system, head, rest) : null;
-  if (result === null) return `«${whole}»`;
-  const name = head.replace(/_/g, ' ');
-  return name.toLowerCase() === result.toLowerCase() ? `«${name}»` : `«${name} — ${result}»`;
+  return `«${ref(`@${tag}`)}»`;
 };
 
 export function formulaWords(system: System, source: string, names?: Map<string, string>): string {
@@ -53,7 +37,7 @@ export function formulaWords(system: System, source: string, names?: Map<string,
       case 'Number': return String(node.value);
       case 'Text': return node.dice ? diceWords(node.value) : `«${node.value}»`;
       case 'Bool': return node.value ? 'да' : 'нет';
-      case 'Ref': return node.tag.startsWith(`${ROW}.`) ? `«${ref(`@${node.tag}`)}»` : pathWords(system, ref, node.tag);
+      case 'Ref': return node.tag.startsWith(`${ROW}.`) ? `«${ref(`@${node.tag}`)}»` : pathWords(ref, node.tag);
       case 'Pick': return `«${ref(`@${node.tag}`)}» по ${words(node.key, true)}${node.rest ? ` · ${node.rest}` : ''}`;
       case 'Unary': return node.op === '-' ? `−${words(node.operand)}` : `${node.op}${words(node.operand)}`;
       case 'Binary': {
