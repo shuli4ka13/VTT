@@ -44,7 +44,7 @@ const damageDice = (trace: Record<string, unknown>[]) => (trace.find(line => lin
 const attack = (bonus?: string) => [
   { id: 'удар_бросок', type: 'roll', die: 'к20', ...(bonus ? { bonus: { expr: bonus } } : {}), by: { expr: '@действующий' } },
   { id: 'удар', type: 'check', value: { expr: '@удар_бросок' }, versus: { expr: '@цель.броня' } },
-  { type: 'branch', if: { expr: 'не(@удар.success)' } }, { type: 'stop' }, { type: 'end' },
+  { type: 'branch', if: { expr: 'не @удар.success' } }, { type: 'stop' }, { type: 'end' },
 ];
 const hurt = { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@урон' } };
 const damage = { id: 'урон', type: 'roll', fixed: { expr: "кинуть('2d6', если(@удар.natural >= 20, 2, 1))" } };

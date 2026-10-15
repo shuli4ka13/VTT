@@ -144,7 +144,7 @@ group('реакции слушают слово, а не имя эффекта',
   const spiky = world({
     шипы: {
       label: 'Шипы', activation: 'passive', duration: { kind: 'permanent' },
-      on: [{ on: 'after:урон', if: { expr: 'все(@лист == @носитель, не(пусто(@обидчик)), @обидчик != @носитель)' }, steps: [{ type: 'emit', effect: 'урон', args: damageArgs({ expr: '@сколько' }, ['колющий'], { expr: '@обидчик' }, { expr: '@носитель' }) }] }],
+      on: [{ on: 'after:урон', if: { expr: '@лист == @носитель и не пусто(@обидчик) и @обидчик != @носитель' }, steps: [{ type: 'emit', effect: 'урон', args: damageArgs({ expr: '@сколько' }, ['колющий'], { expr: '@обидчик' }, { expr: '@носитель' }) }] }],
     },
     сторож: {
       label: 'Сторож', activation: 'passive', duration: { kind: 'permanent' },
@@ -194,7 +194,7 @@ group('реакции слушают слово, а не имя эффекта',
     ...spiky.effects,
     шипы: {
       label: 'Шипы', activation: 'passive', duration: { kind: 'permanent' },
-      on: [{ on: 'after:урон', if: { expr: 'все(@лист == @носитель, не(пусто(@обидчик)), @обидчик != @носитель)' }, steps: [{ type: 'emit', effect: 'урон', args: damageArgs({ expr: '8' }, ['колющий'], { expr: '@обидчик' }, { expr: '@носитель' }) }] }],
+      on: [{ on: 'after:урон', if: { expr: '@лист == @носитель и не пусто(@обидчик) и @обидчик != @носитель' }, steps: [{ type: 'emit', effect: 'урон', args: damageArgs({ expr: '8' }, ['колющий'], { expr: '@обидчик' }, { expr: '@носитель' }) }] }],
     },
   });
   const spikesAgainstSpikes = (sys: any) => exchange({
@@ -225,7 +225,7 @@ group('реакции слушают слово, а не имя эффекта',
       ...spiky.effects,
       шипы: {
         label: 'Вампирские шипы', activation: 'passive', duration: { kind: 'permanent' },
-        on: [{ on: 'after:урон', if: { expr: 'все(@лист == @носитель, не(пусто(@обидчик)), @обидчик != @носитель)' }, steps: [
+        on: [{ on: 'after:урон', if: { expr: '@лист == @носитель и не пусто(@обидчик) и @обидчик != @носитель' }, steps: [
           { type: 'emit', effect: 'урон', args: damageArgs({ expr: '4' }, ['колющий'], { expr: '@обидчик' }, { expr: '@носитель' }) },
           { type: 'emit', effect: 'лечение', args: { лист: { expr: '@носитель' }, сколько: { expr: '4' } } },
         ] }],

@@ -129,7 +129,7 @@ group('новое ядро: урон бросается, только когда
     EACH,
     { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
     { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@цель.хп - 10' } },
-    { type: 'branch', if: { expr: 'не(@попал.success)' } }, { type: 'stop' }, { type: 'end' },
+    { type: 'branch', if: { expr: 'не @попал.success' } }, { type: 'stop' }, { type: 'end' },
     hit('@урон'),
   ];
   const system = world({ удар: button(steps) }, D20);
@@ -158,7 +158,7 @@ group('новое ядро: броски действующего не деля�
       { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d6')" } },
       { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
       { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
-      { type: 'branch', if: { expr: 'не(@попал.success)' } }, { type: 'stop' }, { type: 'end' },
+      { type: 'branch', if: { expr: 'не @попал.success' } }, { type: 'stop' }, { type: 'end' },
       EACH,
       hit('@урон'),
     ];
@@ -172,7 +172,7 @@ group('новое ядро: броски действующего не деля�
     const steps = [
       { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
       { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
-      { type: 'branch', if: { expr: 'не(@попал.success)' } }, { type: 'stop' }, { type: 'end' },
+      { type: 'branch', if: { expr: 'не @попал.success' } }, { type: 'stop' }, { type: 'end' },
       { type: 'branch', if: { expr: '@бросок.natural >= 20' } },
       { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d6')" } },
       { type: 'end' },

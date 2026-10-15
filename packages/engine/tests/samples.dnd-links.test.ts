@@ -53,8 +53,8 @@ group('D&D: класс и раса — ссылки, остальное из н�
 group('функция «или»', () => {
   const run = (src: string, names: Record<string, unknown> = {}) => compile(src).evaluate(name => names[name] as never);
   test('берёт первое заданное', () => {
-    eq(run('или(@a, 7)', { a: null }), 7);
-    eq(run('или(@a, 7)', { a: 3 }), 3);
-    eq(run('или(@a, @b, "1к8")', { a: '', b: null }), '1к8');
+    eq(run('@a или 7', { a: null }), 7);
+    eq(run('@a или 7', { a: 3 }), 3);
+    eq(run('@a или @b или "1к8"', { a: '', b: null }), '1к8');
   });
 });

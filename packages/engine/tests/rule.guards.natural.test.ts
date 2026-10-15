@@ -26,7 +26,7 @@ const run = (steps: object[], die: number) => {
 group('условие шага по числу и степени', () => {
   const roll = { id: 'hit_бросок', type: 'roll', die: 'd20', bonus: { expr: '5' }, by: { expr: '@действующий' } };
   const hit = { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '1' } };
-  const guard = [{ type: 'branch', if: { expr: 'не(@hit.success)' } }, { type: 'stop' }, { type: 'end' }];
+  const guard = [{ type: 'branch', if: { expr: 'не @hit.success' } }, { type: 'stop' }, { type: 'end' }];
   const when = (expr: string, step: object) => [{ type: 'branch', if: { expr } }, step, { type: 'end' }];
   const sub = (amount: string) => ({ type: 'apply', target: { expr: '@цель.hp' }, direction: 'subtract', value: { expr: amount } });
 
@@ -40,7 +40,7 @@ group('условие шага по числу и степени', () => {
     const low = when('@hit.natural <= 1', sub('1'));
     eq(run([roll, hit, ...guard, ...low], 1).sheet.values.hp, 9);
     eq(run([roll, hit, ...guard, ...low], 2).sheet.values.hp, 10);
-    const mid = when('все(@hit.natural >= 5, @hit.natural <= 10)', sub('1'));
+    const mid = when('@hit.natural >= 5 и @hit.natural <= 10', sub('1'));
     eq(run([roll, hit, ...guard, ...mid], 7).sheet.values.hp, 9);
     eq(run([roll, hit, ...guard, ...mid], 11).sheet.values.hp, 10);
   });
@@ -50,7 +50,7 @@ group('условие шага по числу и степени', () => {
     const onWin = when('есть(@hit.degree, "успех")', sub('2'));
     eq(run([roll, scaled, ...guard, ...onWin], 10).sheet.values.hp, 8);
     eq(run([roll, scaled, ...guard, ...onWin], 2).sheet.values.hp, 10);
-    const unlessWin = when('не(есть(@hit.degree, "успех"))', sub('2'));
+    const unlessWin = when('не есть(@hit.degree, "успех")', sub('2'));
     eq(run([roll, scaled, ...guard, ...unlessWin], 2).sheet.values.hp, 8);
   });
 

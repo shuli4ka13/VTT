@@ -34,7 +34,7 @@ const world = (effects: Record<string, unknown>): System => ({
         EACH,
         roll(),
         { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@цель.кд' } },
-        { type: 'branch', if: { expr: 'не(@попал.success)' } }, { type: 'stop' }, { type: 'end' },
+        { type: 'branch', if: { expr: 'не @попал.success' } }, { type: 'stop' }, { type: 'end' },
         { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '5' } },
       ],
     },
@@ -52,7 +52,7 @@ const play = (system: System, sheets: Sheet[], dice: number[], journal: Journal 
 
 group('увидев кости', () => {
   test('без вопроса: перебросить единицу — и удар попал', () => {
-    const system = world({ везунчик: { label: 'Везунчик', activation: 'passive', on: [{ on: 'seen', if: { expr: 'все(' + mine + ', есть(@roll.tags, "атака"))' }, steps: [{ type: 'roll-reroll', upTo: { expr: '1' } }] }] } });
+    const system = world({ везунчик: { label: 'Везунчик', activation: 'passive', on: [{ on: 'seen', if: { expr: mine + ' и есть(@roll.tags, "атака")' }, steps: [{ type: 'roll-reroll', upTo: { expr: '1' } }] }] } });
     const out = play(system, [sheet('а', ['везунчик']), sheet('б')], [1, 15]);
     eq(out.kind, 'done');
     eq(hp(out, 'б'), 15);
@@ -119,7 +119,7 @@ group('увидев кости', () => {
     const system = world({
       точная: {
         label: 'Точная', activation: 'passive',
-        on: [{ on: 'seen', confirm: true, if: { expr: `все(${mine}, @roll.total < 13)` }, steps: [{ type: 'roll-plus', value: { expr: 'кинуть(к6)' } }] }],
+        on: [{ on: 'seen', confirm: true, if: { expr: `${mine} и @roll.total < 13` }, steps: [{ type: 'roll-plus', value: { expr: 'кинуть(к6)' } }] }],
       },
     });
     (system.effects.удар!.steps as unknown[])[1] = roll({ bonus: { expr: '8' } });
@@ -162,7 +162,7 @@ group('увидев кости: поздние броски видят, что �
         steps: [
           EACH, roll(),
           { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@цель.кд' } },
-          { type: 'branch', if: { expr: 'не(@попал.success)' } }, { type: 'stop' }, { type: 'end' },
+          { type: 'branch', if: { expr: 'не @попал.success' } }, { type: 'stop' }, { type: 'end' },
           { id: 'урон', type: 'roll', fixed: { expr: '5 + @действующий.удача * 10' } },
           { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '@урон' } },
         ],
@@ -286,7 +286,7 @@ group('ядро: по ревью', () => {
       label, activation: 'passive',
       on: [{ on: 'before:удар', confirm: true, if: { expr: '@цель == @носитель' }, cost: [
         { id: 'есть', type: 'check', value: { expr: '@носитель.удача' }, versus: { expr: '1' } },
-        { type: 'branch', if: { expr: 'не(@есть.success)' } }, { type: 'stop', note: { expr: '"нет удачи"' } }, { type: 'end' },
+        { type: 'branch', if: { expr: 'не @есть.success' } }, { type: 'stop', note: { expr: '"нет удачи"' } }, { type: 'end' },
         { type: 'apply', target: { expr: '@носитель.удача' }, direction: 'subtract', value: { expr: '1' } }], steps: [] }],
     });
     const system = world({ р1: shield('Р1'), р2: shield('Р2') });
@@ -307,7 +307,7 @@ group('ядро: по ревью Fable', () => {
       steps: [
         EACH, roll(),
         { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@цель.кд + 5' } },
-        { type: 'branch', if: { expr: 'не(@попал.success)' } }, { type: 'stop' }, { type: 'end' },
+        { type: 'branch', if: { expr: 'не @попал.success' } }, { type: 'stop' }, { type: 'end' },
         { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '5' } },
       ],
     },

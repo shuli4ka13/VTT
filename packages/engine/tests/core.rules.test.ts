@@ -60,7 +60,7 @@ describe('новое ядро: сознательные изменения', () 
         label: 'Стойка', activation: 'passive',
         on: [{ ...mine, cost: [
           { id: 'запас', type: 'check', value: { expr: '@носитель.ки' }, versus: { expr: '1' } },
-          { type: 'branch', if: { expr: 'не(@запас.success)' } }, { type: 'stop' }, { type: 'end' },
+          { type: 'branch', if: { expr: 'не @запас.success' } }, { type: 'stop' }, { type: 'end' },
           hit('1', '@носитель.ки'),
         ], steps: [heal('5')] }],
       },
@@ -98,7 +98,7 @@ describe('новое ядро: сознательные изменения', () 
         { id: 'атака', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
         { id: 'защита', type: 'roll', die: 'к20', by: { expr: '@цель' } },
         { id: 'спор', type: 'check', value: { expr: '@атака' }, versus: { expr: '@защита' } },
-        { type: 'branch', if: { expr: 'не(@спор.success)' } }, { type: 'stop' }, { type: 'end' },
+        { type: 'branch', if: { expr: 'не @спор.success' } }, { type: 'stop' }, { type: 'end' },
         hit('3'),
       ]),
       неуловим: { label: 'Неуловим', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', if: { expr: '@против == @носитель' }, op: 'add', value: { expr: '-@носитель.уклон' } }] },

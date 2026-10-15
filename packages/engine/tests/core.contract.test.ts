@@ -191,7 +191,7 @@ describe('формы эффекта', () => {
         cost: [sub('1', '@действующий.ки')],
         steps: [
           { id: 'порог', type: 'check', value: { expr: '@действующий.хп' }, versus: { expr: '100' } },
-          { type: 'branch', if: { expr: 'не(@порог.success)' } }, { type: 'stop' }, { type: 'end' },
+          { type: 'branch', if: { expr: 'не @порог.success' } }, { type: 'stop' }, { type: 'end' },
           EACH, sub('5'),
         ],
       },
@@ -204,7 +204,7 @@ describe('формы эффекта', () => {
       удар: button([
         sub('2'),
         { id: 'порог', type: 'check', value: { expr: '0' }, versus: { expr: '1' } },
-        { type: 'branch', if: { expr: 'не(@порог.success)' } }, { type: 'stop' }, { type: 'end' },
+        { type: 'branch', if: { expr: 'не @порог.success' } }, { type: 'stop' }, { type: 'end' },
         sub('10'),
       ]),
       отметка: { label: 'Отметка', activation: 'passive', on: [{ on: 'after:удар', if: { expr: '@цель == @носитель' }, steps: [add('1', '@носитель.ки')] }] },
@@ -269,7 +269,7 @@ describe('по ревью постройки', () => {
   it('автоматическая подписка «до» видит пробу тела', () => {
     const system = world({
       удар: button([{ id: 'п', type: 'check', value: { expr: '5' }, versus: { expr: '1' } }, sub('1')]),
-      чутьё: { label: 'Чутьё', activation: 'passive', on: [{ on: 'before:удар', if: { expr: 'все(@цель == @носитель, @п.success)' }, steps: [add('1', '@носитель.ки')] }] },
+      чутьё: { label: 'Чутьё', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @носитель и @п.success' }, steps: [add('1', '@носитель.ки')] }] },
     });
     const out = strike(system, [sheet('а'), sheet('б', {}, ['чутьё'])], 'б', []);
     expect(value(out, 'б', 'ки')).toBe(1);
@@ -314,7 +314,7 @@ describe('по ревью постройки', () => {
   it('проверка конструктора ловит формулу, которая не разбирается', () => {
     const system = world({
       удар: button([]),
-      слух: { label: 'Слух', activation: 'passive', on: [{ on: 'after:удар', if: { expr: '@цель == @носитель и да' }, steps: [] }] },
+      слух: { label: 'Слух', activation: 'passive', on: [{ on: 'after:удар', if: { expr: '@цель == @носитель и' }, steps: [] }] },
     });
     expect(errorsOf(lintSystem(system)).map(p => p.text).join('\n')).toMatch(/не разбирается/);
   });
@@ -328,7 +328,7 @@ describe('правка висящего видит его входы', () => {
     метка: {
       label: 'Метка охотника', activation: 'passive',
       params: [{ key: 'охотник', kind: 'sheet' }, { key: 'прибавка', kind: 'number' }],
-      modifiers: [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'add', value: { expr: '@прибавка' }, if: { expr: 'все(@лист == @носитель, @источник == @охотник)' } }],
+      modifiers: [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'add', value: { expr: '@прибавка' }, if: { expr: '@лист == @носитель и @источник == @охотник' } }],
     },
   });
   const marked = (hunter: string) => sheet('б', {}, [], { effects: [{ effectId: 'метка', args: { охотник: hunter, прибавка: 3 } }] } as never);

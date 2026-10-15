@@ -44,7 +44,7 @@ group('проверка ловит опечатки в путях', () => {
     ok(fresh(s => { s.effects.unarmored_monk!.modifiers![0]!.value = { expr: '10 + @abilities.мудрость.modd' } as never; }).includes('у таблицы «Характеристики» нет колонки «modd»'));
     ok(fresh(s => { (s.effects.hide!.steps![0] as { bonus: unknown }).bonus = { expr: '@действующий.skills.скрытность.totall' }; }).includes('у таблицы «Навыки» нет колонки «totall»'));
     ok(fresh(s => { s.tables!['лист']!.columns![9]!.expr = { expr: '@abilities.ловкостьь.mod' } as never; }).includes('в таблице «Характеристики» нет строки «ловкостьь»'));
-    ok(fresh(s => { s.tables!['лист']!.columns![35]!.expr = { expr: 'или(@class_name.spell_ability.modd, 0)' } as never; }).includes('у таблицы «Характеристики» нет колонки «modd»'));
+    ok(fresh(s => { s.tables!['лист']!.columns![35]!.expr = { expr: '@class_name.spell_ability.modd или 0' } as never; }).includes('у таблицы «Характеристики» нет колонки «modd»'));
   });
 
   test('литерал во входе-выборе сверяется со строками таблицы', () => {
@@ -101,5 +101,12 @@ group('расчёт не молчит об опечатке в адресе', ()
         }
       }
     }
+  });
+});
+
+group('неизвестная функция — ошибка проверки, а не расчёта', () => {
+  test('«все(…)» больше нет — проверка говорит, какой функции нет', () => {
+    const found = fresh(s => { (s.effects.resources_rest!.on![0]!.steps![1] as { if: unknown }).if = { expr: 'все(@носитель.ресурс.short, да)' }; });
+    ok(found.some(text => text.includes('нет функции «все»')), found.join('\n'));
   });
 });

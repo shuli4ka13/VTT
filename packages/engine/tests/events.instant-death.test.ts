@@ -21,7 +21,7 @@ const sys: any = {
       label: 'Мгновенная смерть', activation: 'passive',
       on: [{ on: 'after:удар', if: { expr: '@цель == @носитель' }, steps: [
         { id: 'перебор', type: 'check', value: { expr: '@рана.overkill' }, versus: { expr: '@носитель.хп_макс' }, successWhen: 'atLeast' },
-        { type: 'branch', if: { expr: 'не(@перебор.success)' } }, { type: 'stop' }, { type: 'end' },
+        { type: 'branch', if: { expr: 'не @перебор.success' } }, { type: 'stop' }, { type: 'end' },
         { type: 'status', mode: 'apply', effect: 'мёртв', to: { expr: '@носитель' } },
       ] }],
     },

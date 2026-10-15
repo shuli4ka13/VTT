@@ -149,7 +149,7 @@ export function armorTail(choice: ArmorChoice, armor: string, hp: string, amount
   }
   const through = { type: 'check', value, versus: field(armor), successWhen: 'over', id: ARMOR_STEP } as Step;
   const held = [
-    { type: 'branch', if: { expr: `не(@${ARMOR_STEP}.success)` } } as Step,
+    { type: 'branch', if: { expr: `не @${ARMOR_STEP}.success` } } as Step,
     { type: 'stop', note: { expr: '"броня выдержала"' } } as Step,
     { type: 'end' } as Step,
   ];

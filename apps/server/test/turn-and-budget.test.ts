@@ -396,7 +396,7 @@ describe('вопросы к человеку не теряют названно�
         удар: button('Удар', [
           { id: 'бросок_к', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
           { id: 'бросок', type: 'check', value: { expr: '@бросок_к' }, versus: { expr: '0' } },
-          { type: 'branch', if: { expr: 'не(@бросок.success)' } }, { type: 'stop' }, { type: 'end' },
+          { type: 'branch', if: { expr: 'не @бросок.success' } }, { type: 'stop' }, { type: 'end' },
           sub('@цель.хиты', '@сила'),
         ], {
           params: [{ key: 'сила', label: 'Сила', kind: 'number', min: 1, max: 10, ask: { by: 'actor' } }],
@@ -785,7 +785,7 @@ describe('реакция после разрешения', () => {
         удар: button('Удар', [
           { id: 'бросок_к', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
           { id: 'бросок', type: 'check', value: { expr: '@бросок_к' }, versus: { expr: '0' } },
-          { type: 'branch', if: { expr: 'не(@бросок.success)' } }, { type: 'stop' }, { type: 'end' },
+          { type: 'branch', if: { expr: 'не @бросок.success' } }, { type: 'stop' }, { type: 'end' },
           sub('@цель.хиты', '5'),
         ]),
         возмездие: {

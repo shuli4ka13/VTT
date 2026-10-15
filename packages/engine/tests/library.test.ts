@@ -82,7 +82,7 @@ describe('готовый блок отдаёт итоги («Что отдаёт
   it('итог шага в невзятой ветке — пусто', () => {
     const branchy = {
       ...attackRoll,
-      returns: [{ key: 'попал', label: 'попал', kind: 'boolean', expr: { expr: 'или(@проверка.success, нет)' } }],
+      returns: [{ key: 'попал', label: 'попал', kind: 'boolean', expr: { expr: '@проверка.success или нет' } }],
       steps: [{ type: 'branch', if: { expr: 'нет' } }, ...attackRoll.steps, { type: 'end' }],
     };
     const system = world({ бросок_атаки: branchy, удар: strike() });
@@ -120,7 +120,7 @@ describe('бросок внутри готового блока остаётся
   it('подписка «до удара» видит итог готового блока из пробы тела (Щит)', () => {
     const system = world({
       удар: strike(),
-      щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', if: { expr: 'все(@цель == @носитель, @атака.попал)' }, steps: [{ type: 'apply', target: { expr: '@носитель.щит' }, direction: 'add', value: { expr: '1' } }] }] },
+      щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @носитель и @атака.попал' }, steps: [{ type: 'apply', target: { expr: '@носитель.щит' }, direction: 'add', value: { expr: '1' } }] }] },
     });
     const out = play(system, [sheet('а'), sheet('б', {}, ['щит'])], [12, 12]);
     expect(out.sheets.find(s => s.id === 'б')!.values.щит).toBe(1);

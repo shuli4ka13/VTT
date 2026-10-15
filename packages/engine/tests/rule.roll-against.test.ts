@@ -80,7 +80,7 @@ const world = (steps: unknown[]): System => ({
       params: [{ key: 'источник', kind: 'sheet' }],
       modifiers: [{
         kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-4' }, notTags: ['лечение'],
-        if: { expr: 'все(@бросающий == @носитель, @против == @источник)' },
+        if: { expr: '@бросающий == @носитель и @против == @источник' },
       }],
     },
   },

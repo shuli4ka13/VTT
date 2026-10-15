@@ -68,7 +68,7 @@ const attack = (rollOver = {}, checkOver = {}) => [
     ...rollOver,
   },
   { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '@цель.ac' }, ...checkOver },
-  { type: 'branch', if: { expr: 'не(@hit.success)' } }, { type: 'stop' }, { type: 'end' },
+  { type: 'branch', if: { expr: 'не @hit.success' } }, { type: 'stop' }, { type: 'end' },
 ];
 
 group('шаги «бросок» и «проверка»', () => {
@@ -192,7 +192,7 @@ group('шаг «бросок» без «бросает»: расчёт', () => {
 group('шаг «проверка»', () => {
   const dmg = { id: 'dmg', type: 'roll', fixed: { expr: '@damage_flat' } };
   const pen = (over = {}) => ({ id: 'pen', type: 'check', value: { expr: '@dmg' }, versus: { expr: '5' }, ...over });
-  const stopUnlessPen = [{ type: 'branch', if: { expr: 'не(@pen.success)' } }, { type: 'stop' }, { type: 'end' }];
+  const stopUnlessPen = [{ type: 'branch', if: { expr: 'не @pen.success' } }, { type: 'stop' }, { type: 'end' }];
 
   test('выше порога: разница доступна дальше по имени', () => {
     const out = run([dmg, pen(), ...stopUnlessPen], { props: { damage_flat: 8 }, ...viaInput('damage_flat') });

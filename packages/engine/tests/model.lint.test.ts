@@ -116,7 +116,7 @@ group('линт: висячие ссылки называются словами
       steps: [
         { id: 'бросок', type: 'roll', die: 'd20' },
         { id: 'hit', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
-        { type: 'branch', if: { expr: 'не(@hit.success)' } }, { type: 'stop' }, { type: 'end' },
+        { type: 'branch', if: { expr: 'не @hit.success' } }, { type: 'stop' }, { type: 'end' },
       ] as Step[],
     });
     system.effects.thorns = { label: 'Шипы', activation: 'passive', on: [{ on: 'after:strike', if: { expr: '@hit.success' }, steps: [] }] } as never;
@@ -209,16 +209,16 @@ group('линт: слушатели, круги, входы', () => {
   test('подписка видит входы того, что слушает, и переменную его цикла; чужое имя — «чьё поле?»', () => {
     const system = withEffect('удар', {
       params: [WHO, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }] as never,
-      steps: [{ type: 'each', of: 'цели' }, { id: 'hit', type: 'check', value: { expr: '1' }, versus: { expr: '0' } }, { type: 'branch', if: { expr: 'не(@hit.success)' } }, { type: 'stop' }, { type: 'end' }] as Step[],
+      steps: [{ type: 'each', of: 'цели' }, { id: 'hit', type: 'check', value: { expr: '1' }, versus: { expr: '0' } }, { type: 'branch', if: { expr: 'не @hit.success' } }, { type: 'stop' }, { type: 'end' }] as Step[],
     });
-    system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'before:удар', if: { expr: 'все(@цель == @носитель, @действующий != @носитель)' }, steps: [] }] } as Effect;
+    system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @носитель и @действующий != @носитель' }, steps: [] }] } as Effect;
     eq(errorTexts(system).join(''), '');
     system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@враг == @носитель' }, steps: [] }] } as Effect;
     ok(errorTexts(system).some(t => t.includes('«враг» — нет ни входа, ни шага')), errorTexts(system).join('|'));
   });
 
   test('у броска подписка видит бросающего и противника', () => {
-    const system = withEffect('r', { activation: 'passive', on: [{ on: 'seen', if: { expr: 'любое(@бросающий == @носитель, @против == @носитель)' }, steps: [] }] });
+    const system = withEffect('r', { activation: 'passive', on: [{ on: 'seen', if: { expr: '@бросающий == @носитель или @против == @носитель' }, steps: [] }] });
     eq(errorTexts(system).join(''), '');
   });
 
@@ -356,7 +356,7 @@ group('ссылки и слушатели', () => {
   test('heardNames: имена, которые слушатель получает от того, что случилось', () => {
     const system = withEffect('удар', {
       params: [WHO, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }, { key: 'бонус', kind: 'number' }] as never,
-      steps: [{ type: 'each', of: 'цели' }, { id: 'hit', type: 'check', value: { expr: '1' }, versus: { expr: '0' } }, { type: 'branch', if: { expr: 'не(@hit.success)' } }, { type: 'stop' }, { type: 'end' }] as Step[],
+      steps: [{ type: 'each', of: 'цели' }, { id: 'hit', type: 'check', value: { expr: '1' }, versus: { expr: '0' } }, { type: 'branch', if: { expr: 'не @hit.success' } }, { type: 'stop' }, { type: 'end' }] as Step[],
     });
     deepEq(heardNames(system, listenerOf({ on: 'seen' })).sheets, ['бросающий', 'против']);
     deepEq(heardNames(system, listenerOf({ on: 'moment:turn-start' })).sheets, ['ходит']);
@@ -506,7 +506,7 @@ group('линт: правка, не привязанная к носителю',
   test('условие про носителя — тихо, в том числе внутри «все(…)» и через поле носителя', () => {
     const system = holding([
       { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: '@бросающий == @носитель' } },
-      { kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, if: { expr: 'все(@лист == @носитель, @носитель.hp > 0)' } },
+      { kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, if: { expr: '@лист == @носитель и @носитель.hp > 0' } },
     ]);
     eq(warned(system).join('|'), '');
   });
@@ -699,7 +699,7 @@ group('линт: вход висящего эффекта и имена, кот�
       modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: '@бросающий == @носитель' } }] as never,
     });
     eq(clashes(system).length, 0, 'не читают — тишина');
-    system.effects.щит!.modifiers = [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: 'все(@против != @носитель, @бросающий == @носитель)' } }] as never;
+    system.effects.щит!.modifiers = [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: '@против != @носитель и @бросающий == @носитель' } }] as never;
     eq(clashes(system).join('|'), 'вход «против» у «Щит» совпадает с «против» у «Бросок»: здесь @против — значение «Бросок». Переименуйте свой вход');
   });
 });

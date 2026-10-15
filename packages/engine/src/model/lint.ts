@@ -102,8 +102,9 @@ const HOLDER_ONLY = `«${HOLDER}» есть только у того, что в�
 function danglingText(ref: Reference, declared: Declared): string | null {
   if (ref.scope === LISTEN) return null;
   if (ref.key === HOLDER && (ref.kind === 'step' || (ref.kind === 'field' && ref.scope === 'bare'))) return HOLDER_ONLY;
+  if (ref.kind === 'syntax' && ref.path === 'function') return `в формуле «${ref.key}» нет функции «${ref.scope}»`;
   if (ref.kind === 'syntax' && ref.path === 'dice') return `в формуле «${ref.key}» кость стоит как число — кость кидают так: кинуть(к4)`;
-  if (ref.kind === 'syntax') return `формула «${ref.key}» не разбирается — проверьте скобки и знаки; «и» / «или» пишутся как все(…) / любое(…)`;
+  if (ref.kind === 'syntax') return `формула «${ref.key}» не разбирается — проверьте скобки и знаки`;
   if (ref.kind === 'field' && ref.scope === 'bare' && !declared.field.has(ref.key) && declared.effect.has(ref.key)) {
     return `«${ref.key}» — сколько раз висит эффект на листе: пишите через лист, например @носитель.${ref.key}`;
   }

@@ -1,4 +1,5 @@
 import { FormulaRuntimeError } from './errors.ts';
+import { AND, OR, NOT } from './parse.ts';
 import type { Node, BinaryNode, CallNode } from './ast.ts';
 import type { Resolve } from '../model/types.ts';
 
@@ -15,7 +16,6 @@ interface Fn {
   arity: number | '1+';
   apply: (args: number[]) => number;
   raw?: (args: Value[], tools: Tools) => Value;
-  lazy?: (args: (() => Value)[]) => Value;
 }
 
 const FUNCTIONS: Record<string, Fn> = {
@@ -71,15 +71,6 @@ const FUNCTIONS: Record<string, Fn> = {
       return Array.isArray(list) ? list.some(item => String(item) === wanted) : String(list) === wanted;
     },
   },
-  или: {
-    arity: '1+',
-    apply: args => args[0]!,
-    raw: args => {
-      const found = args.find(value => value !== null && value !== undefined && value !== '');
-      if (found === undefined) throw new FormulaRuntimeError('«или»: ни одно значение не задано');
-      return found;
-    },
-  },
   первый: {
     arity: 1,
     apply: () => 0,
@@ -92,21 +83,6 @@ const FUNCTIONS: Record<string, Fn> = {
     arity: 1,
     apply: () => 0,
     raw: args => args[0] === null || args[0] === undefined || args[0] === '' || (Array.isArray(args[0]) && !(args[0] as unknown[]).length),
-  },
-  все: {
-    arity: '1+',
-    apply: () => 0,
-    lazy: args => args.every((value, n) => boolean(value(), `аргумент ${n + 1} функции «все»`)),
-  },
-  любое: {
-    arity: '1+',
-    apply: () => 0,
-    lazy: args => args.some((value, n) => boolean(value(), `аргумент ${n + 1} функции «любое»`)),
-  },
-  не: {
-    arity: 1,
-    apply: () => 0,
-    raw: args => !boolean(args[0], 'аргумент функции «не»'),
   },
   таблица: {
     arity: '1+',
@@ -181,6 +157,7 @@ export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value 
       }
 
       case 'Unary': {
+        if (node.op === NOT) return !given(visit(node.operand));
         const value = number(visit(node.operand), `операнд «${node.op}»`);
         return node.op === '-' ? -value : value;
       }
@@ -204,6 +181,8 @@ export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value 
 
   function binary(node: BinaryNode): Value {
     const left = visit(node.left);
+    if (node.op === AND) return given(left) ? visit(node.right) : left;
+    if (node.op === OR) return given(left) ? left : visit(node.right);
     const right = visit(node.right);
 
     if (node.op === '==') return left === right;
@@ -241,12 +220,14 @@ export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value 
       throw new FormulaRuntimeError(
         `«${node.name}» требует аргументов: ${fn.arity}, передано ${node.args.length}`);
     }
-    if (fn.lazy) return fn.lazy(node.args.map(arg => () => visit(arg)));
     if (fn.raw) return fn.raw(node.args.map(arg => visit(arg)), tools);
     const args = node.args.map((arg, n) => number(visit(arg), `аргумент ${n + 1} функции «${node.name}»`));
     return fn.apply(args);
   }
 }
+
+export const given = (value: unknown): boolean =>
+  value !== null && value !== undefined && value !== '' && value !== false && !(Array.isArray(value) && !value.length);
 
 const listOf = (value: unknown): Value[] => (Array.isArray(value) ? value as Value[] : [value as Value]);
 

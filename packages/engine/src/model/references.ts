@@ -5,7 +5,7 @@ import { loopOf, loopParam, splits as splitsTargets } from '../engine/steps/each
 import { tagWords } from '../engine/roll-tags.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import type { System, Compendium, Effect, Step, Modifier, Guard, Param, Table } from './types.ts';
-import { compile } from '../formula/index.ts';
+import { compile, FUNCTION_NAMES } from '../formula/index.ts';
 import { isFormulaCell } from './sheet-columns.ts';
 import type { Node } from '../formula/index.ts';
 import { registry } from '../engine/steps/index.ts';
@@ -215,6 +215,23 @@ export const diceAsNumber = (source: string): boolean => {
   return walk(ast);
 };
 
+const KNOWN_FUNCTIONS = new Set([...FUNCTION_NAMES, 'если']);
+
+export const unknownFunctions = (source: string): string[] => {
+  let ast: Node;
+  try { ast = compile(source).ast; } catch { return []; }
+  const out = new Set<string>();
+  const walk = (node: Node): void => {
+    if (node.kind === 'Call') { if (!KNOWN_FUNCTIONS.has(node.name)) out.add(node.name); node.args.forEach(walk); }
+    else if (node.kind === 'Unary') walk(node.operand);
+    else if (node.kind === 'Binary') { walk(node.left); walk(node.right); }
+    else if (node.kind === 'Conditional') { walk(node.test); walk(node.then); walk(node.otherwise); }
+    else if (node.kind === 'Pick') walk(node.key);
+  };
+  walk(ast);
+  return [...out];
+};
+
 export function exprRefs(source: string, from: Where, scope: ChainScope, out: Reference[]): void {
   const text = source.trim();
   if (!text) return;
@@ -224,6 +241,7 @@ export function exprRefs(source: string, from: Where, scope: ChainScope, out: Re
     return;
   }
   if (diceAsNumber(text)) out.push({ kind: 'syntax', key: text, from, path: 'dice' });
+  for (const name of unknownFunctions(text)) out.push({ kind: 'syntax', key: text, from, path: 'function', scope: name });
   for (const table of tablesIn(text)) out.push({ kind: 'table', key: table, from });
   for (const [table, column] of lookupColumnsIn(text)) out.push({ kind: 'table', key: table, from, scope: 'column', path: column });
   const picked = new Set<string>();

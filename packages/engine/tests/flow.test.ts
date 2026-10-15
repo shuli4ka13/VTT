@@ -114,8 +114,8 @@ describe('ленивые броски до «Для каждого из»', () =
   it('план: условие руки становится условием ленивого шага; метки блока прячутся', () => {
     const steps = [IF('@a'), { id: 'x' }, ELSE, { id: 'y' }, END] as { type?: string; if?: unknown }[];
     const plan = lazyPlan(steps, index => index === 1 || index === 3);
-    expect(plan.guards.get(1)).toBe('(@a)');
-    expect(plan.guards.get(3)).toBe('не(@a)');
+    expect(plan.guards.get(1)).toBe('@a');
+    expect(plan.guards.get(3)).toBe('не @a');
     expect([...plan.hidden].sort()).toEqual([0, 2, 4]);
   });
 });

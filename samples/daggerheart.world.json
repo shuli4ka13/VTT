@@ -230,7 +230,7 @@
             "key": "evasion",
             "label": "Уклонение",
             "expr": {
-              "expr": "или(@class.evasion, 10) + или(@ancestry.evasion_bonus, 0) + @evasion_bonus"
+              "expr": "(@class.evasion или 10) + (@ancestry.evasion_bonus или 0) + @evasion_bonus"
             }
           },
           {
@@ -263,14 +263,14 @@
             "key": "major",
             "label": "Порог серьёзного урона",
             "expr": {
-              "expr": "если(@major_base > 0, @major_base + @level + или(@ancestry.threshold_proficiency, 0) * @proficiency, @level)"
+              "expr": "если(@major_base > 0, @major_base + @level + (@ancestry.threshold_proficiency или 0) * @proficiency, @level)"
             }
           },
           {
             "key": "severe",
             "label": "Порог тяжёлого урона",
             "expr": {
-              "expr": "если(@severe_base > 0, @severe_base + @level + или(@ancestry.threshold_proficiency, 0) * @proficiency, 2 * @level)"
+              "expr": "если(@severe_base > 0, @severe_base + @level + (@ancestry.threshold_proficiency или 0) * @proficiency, 2 * @level)"
             }
           },
           {
@@ -283,7 +283,7 @@
             "key": "hp_max",
             "label": "Хиты: клеток",
             "expr": {
-              "expr": "или(@class.hp, 0) + или(@ancestry.hp_bonus, 0) + @hp_extra"
+              "expr": "(@class.hp или 0) + (@ancestry.hp_bonus или 0) + @hp_extra"
             }
           },
           {
@@ -302,7 +302,7 @@
             "key": "stress_max",
             "label": "Стресс: клеток",
             "expr": {
-              "expr": "6 + или(@ancestry.stress_bonus, 0) + @stress_extra"
+              "expr": "6 + (@ancestry.stress_bonus или 0) + @stress_extra"
             }
           },
           {
@@ -315,14 +315,14 @@
             "key": "down",
             "label": "Последний хит отмечен",
             "expr": {
-              "expr": "все(@hp_max > 0, @hp >= @hp_max)"
+              "expr": "@hp_max > 0 и @hp >= @hp_max"
             }
           },
           {
             "key": "stress_full",
             "label": "Весь Стресс отмечен",
             "expr": {
-              "expr": "все(@stress_max > 0, @stress >= @stress_max)"
+              "expr": "@stress_max > 0 и @stress >= @stress_max"
             }
           },
           {
@@ -1696,7 +1696,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "(если(любое(@бросок.success, @бросок.parts.надежда == @бросок.parts.страх), 1, 0)) < 1"
+              "expr": "если(@бросок.success или @бросок.parts.надежда == @бросок.parts.страх, 1, 0) < 1"
             }
           },
           {
@@ -2935,7 +2935,7 @@
           {
             "on": "done:action_roll",
             "if": {
-              "expr": "все(@действующий == @носитель, @бросок.parts.надежда > @бросок.parts.страх)"
+              "expr": "@действующий == @носитель и @бросок.parts.надежда > @бросок.parts.страх"
             },
             "steps": [
               {
@@ -2953,7 +2953,7 @@
           {
             "on": "done:action_roll",
             "if": {
-              "expr": "все(@действующий == @носитель, @бросок.parts.страх > @бросок.parts.надежда)"
+              "expr": "@действующий == @носитель и @бросок.parts.страх > @бросок.parts.надежда"
             },
             "steps": [
               {
@@ -2971,7 +2971,7 @@
           {
             "on": "done:action_roll",
             "if": {
-              "expr": "все(@действующий == @носитель, @бросок.parts.надежда == @бросок.parts.страх)"
+              "expr": "@действующий == @носитель и @бросок.parts.надежда == @бросок.parts.страх"
             },
             "steps": [
               {
@@ -3007,7 +3007,7 @@
           {
             "on": "done:hero_attack",
             "if": {
-              "expr": "все(@действующий == @носитель, @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх)"
+              "expr": "@действующий == @носитель и @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
             },
             "steps": [
               {
@@ -3025,7 +3025,7 @@
           {
             "on": "done:hero_attack",
             "if": {
-              "expr": "все(@действующий == @носитель, @бросок_бросок.parts.страх > @бросок_бросок.parts.надежда)"
+              "expr": "@действующий == @носитель и @бросок_бросок.parts.страх > @бросок_бросок.parts.надежда"
             },
             "steps": [
               {
@@ -3043,7 +3043,7 @@
           {
             "on": "done:hero_attack",
             "if": {
-              "expr": "все(@действующий == @носитель, @бросок_бросок.parts.надежда == @бросок_бросок.parts.страх)"
+              "expr": "@действующий == @носитель и @бросок_бросок.parts.надежда == @бросок_бросок.parts.страх"
             },
             "steps": [
               {

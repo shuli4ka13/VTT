@@ -128,7 +128,7 @@ group('цель видна действующему: состояния цели
   });
 
   test('условие правки цели считается по листу ЦЕЛИ', () => {
-    const sys = withEffects({ лежит: passive('Лежит', 'advantage', 'все(@против == @носитель, @носитель.уровень >= 5)') });
+    const sys = withEffects({ лежит: passive('Лежит', 'advantage', '@против == @носитель и @носитель.уровень >= 5') });
     deepEq(hitTrace(strike(sys, arven, lying, [4, 5])).rolls, [4], 'у Мирры третий уровень — условие ложно');
   });
 
@@ -160,7 +160,7 @@ group('правка после того, как бросок увиден: вы�
     вдохновение: {
       label: 'Вдохновение: перебросить', activation: 'passive',
       on: [{
-        on: 'seen', confirm: true, if: { expr: 'все(@бросающий == @носитель, @носитель.вдохновение > 0)' },
+        on: 'seen', confirm: true, if: { expr: '@бросающий == @носитель и @носитель.вдохновение > 0' },
         steps: [
           { type: 'apply', target: { expr: '@носитель.вдохновение' }, direction: 'subtract', value: { expr: '1' } },
           { type: 'roll-add', count: { expr: '1' }, keep: 'best' },

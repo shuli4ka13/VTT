@@ -48,7 +48,7 @@ group('степени успеха', () => {
     steps: [
       { id: 'move_бросок', type: 'roll', die: 'пара', bonus: { expr: '0' }, tags: ['ход'], by: { expr: '@действующий' } },
       { id: 'move', type: 'check', value: { expr: '@move_бросок' }, versus: { expr: '7' }, degrees: { table: 'исходы', of: 'total' } },
-      { type: 'branch', if: { expr: 'не(@move.success)' } }, { type: 'stop' }, { type: 'end' },
+      { type: 'branch', if: { expr: 'не @move.success' } }, { type: 'stop' }, { type: 'end' },
     ],
   };
 

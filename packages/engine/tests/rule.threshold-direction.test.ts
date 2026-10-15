@@ -22,7 +22,7 @@ const run = (successWhen, rolled, versus, extra = {}) => {
         versus: { expr: `${JSON.stringify(versus)}` },
         ...extra,
       },
-      { type: 'branch', if: { expr: 'не(@try.success)' } }, { type: 'stop' }, { type: 'end' },
+      { type: 'branch', if: { expr: 'не @try.success' } }, { type: 'stop' }, { type: 'end' },
     ],
   };
   const ran = runSteps(sys as never, [sheet as never], sheet.id, rule.steps as never, queue(rolled));
@@ -73,7 +73,7 @@ group('проверка: направление успеха объявляет�
             { type: 'each', of: 'цели' },
             { id: 'try_бросок', type: 'roll', die: 'lead_die', bonus: { expr: '0' }, by: { expr: '@цель' } },
             { id: 'try', type: 'check', value: { expr: '@try_бросок' }, successWhen: 'notOver', versus: { expr: '40' } },
-            { type: 'branch', if: { expr: 'не(@try.success)' } }, { type: 'stop' }, { type: 'end' },
+            { type: 'branch', if: { expr: 'не @try.success' } }, { type: 'stop' }, { type: 'end' },
           ],
         },
       },

@@ -7,6 +7,16 @@ export const BOOLEANS: Record<string, boolean> = { да: true, нет: false };
 
 const COMPARISON_OPS = ['==', '!=', '<', '<=', '>', '>='];
 
+export const AND = 'и';
+export const OR = 'или';
+export const NOT = 'не';
+
+const MISPLACED: Record<string, string> = {
+  [AND]: '«и» ставится между двумя условиями: а и б',
+  [OR]: '«или» ставится между двумя частями: а или б',
+  [NOT]: '«не» ставится перед условием целиком: не а',
+};
+
 export function parse(source: unknown): Node {
   const tokens = lex(source);
   let i = 0;
@@ -16,9 +26,35 @@ export function parse(source: unknown): Node {
     peek().type === type && (value === undefined || peek().value === value);
   const advance = (): Token => tokens[i++]!;
 
-  const ast = parseComparison();
+  const ast = parseOr();
   if (!at('eof')) throw new FormulaSyntaxError('лишний текст после конца выражения', peek().pos);
   return ast;
+
+  function parseOr(): Node {
+    let left = parseAnd();
+    while (at('ident', OR)) {
+      advance();
+      left = { kind: 'Binary', op: OR, left, right: parseAnd() };
+    }
+    return left;
+  }
+
+  function parseAnd(): Node {
+    let left = parseNot();
+    while (at('ident', AND)) {
+      advance();
+      left = { kind: 'Binary', op: AND, left, right: parseNot() };
+    }
+    return left;
+  }
+
+  function parseNot(): Node {
+    if (at('ident', NOT)) {
+      advance();
+      return { kind: 'Unary', op: NOT, operand: parseNot() };
+    }
+    return parseComparison();
+  }
 
   function parseComparison(): Node {
     const left = parseAdditive();
@@ -76,7 +112,7 @@ export function parse(source: unknown): Node {
       if (!at('lbracket')) return { kind: 'Ref', tag: String(t.value) };
       const open = advance();
       if (at('rbracket')) throw new FormulaSyntaxError('в «[ ]» впишите, по какому значению взять колонку', open.pos);
-      const key = parseComparison();
+      const key = parseOr();
       if (!at('rbracket')) throw new FormulaSyntaxError('не закрыта «[»', peek().pos);
       advance();
       if (!at('tail')) return { kind: 'Pick', tag: String(t.value), key };
@@ -84,16 +120,18 @@ export function parse(source: unknown): Node {
     }
 
     if (t.type === 'ident') {
+      const misplaced = MISPLACED[String(t.value)];
+      if (misplaced) throw new FormulaSyntaxError(misplaced, t.pos);
       advance();
       if (!at('lparen') && String(t.value) in BOOLEANS) return { kind: 'Bool', value: BOOLEANS[String(t.value)]! };
       if (!at('lparen')) throw new FormulaSyntaxError(`после имени «${t.value}» ожидается «(»`, t.pos);
       advance();
       const args: Node[] = [];
       if (!at('rparen')) {
-        args.push(parseComparison());
+        args.push(parseOr());
         while (at('comma')) {
           advance();
-          args.push(parseComparison());
+          args.push(parseOr());
         }
       }
       if (!at('rparen')) throw new FormulaSyntaxError('не закрыта скобка вызова функции', peek().pos);
@@ -107,7 +145,7 @@ export function parse(source: unknown): Node {
 
     if (t.type === 'lparen') {
       advance();
-      const inner = parseComparison();
+      const inner = parseOr();
       if (!at('rparen')) throw new FormulaSyntaxError('не закрыта скобка', peek().pos);
       advance();
       return inner;

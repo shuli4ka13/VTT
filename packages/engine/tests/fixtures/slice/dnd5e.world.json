@@ -1163,7 +1163,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не(@hit.success)"
+              "expr": "не @hit.success"
             }
           },
           {
@@ -1216,7 +1216,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не(@check.success)"
+              "expr": "не @check.success"
             }
           },
           {
@@ -1393,7 +1393,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не(@check.success)"
+              "expr": "не @check.success"
             }
           },
           {
@@ -1509,7 +1509,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не(@check.success)"
+              "expr": "не @check.success"
             }
           },
           {
@@ -1606,7 +1606,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не(@hit.success)"
+              "expr": "не @hit.success"
             }
           },
           {
@@ -1661,7 +1661,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не(@check.success)"
+              "expr": "не @check.success"
             }
           },
           {
@@ -1752,7 +1752,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не(@check.success)"
+              "expr": "не @check.success"
             }
           },
           {
@@ -1913,7 +1913,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не(@check.success)"
+              "expr": "не @check.success"
             }
           },
           {
@@ -2159,7 +2159,7 @@
           {
             "on": "before:атака",
             "if": {
-              "expr": "все(@цель == @носитель, @hit.success)"
+              "expr": "@цель == @носитель и @hit.success"
             },
             "confirm": true,
             "cost": [
@@ -2182,7 +2182,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "не(@check.success)"
+                  "expr": "не @check.success"
                 }
               },
               {
@@ -2257,7 +2257,7 @@
           {
             "on": "seen",
             "if": {
-              "expr": "все(@бросающий == @носитель, @носитель.inspiration > 0)"
+              "expr": "@бросающий == @носитель и @носитель.inspiration > 0"
             },
             "confirm": true,
             "steps": [
@@ -2334,7 +2334,7 @@
             "param": "edits",
             "edit": "disadvantage",
             "if": {
-              "expr": "все(@бросающий == @носитель, @носитель.armor_heavy)"
+              "expr": "@бросающий == @носитель и @носитель.armor_heavy"
             }
           }
         ],
@@ -2358,7 +2358,7 @@
             "param": "edits",
             "edit": "advantage",
             "if": {
-              "expr": "все(@бросающий == @носитель, @носитель.prof_bonus >= 4)"
+              "expr": "@бросающий == @носитель и @носитель.prof_bonus >= 4"
             }
           }
         ],
@@ -2379,7 +2379,7 @@
           {
             "on": "after:strike",
             "if": {
-              "expr": "все(@цель == @носитель, @hit.success, не(пусто(@действующий)))"
+              "expr": "@цель == @носитель и @hit.success и не пусто(@действующий)"
             },
             "steps": [
               {
@@ -2428,7 +2428,7 @@
           {
             "on": "moment:turn-start",
             "if": {
-              "expr": "все(@ходит == @носитель, @носитель.hp_current <= 0)"
+              "expr": "@ходит == @носитель и @носитель.hp_current <= 0"
             },
             "steps": [
               {
@@ -2475,7 +2475,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "не(@спас.success)"
+                  "expr": "не @спас.success"
                 }
               },
               {
@@ -2633,7 +2633,7 @@
           {
             "on": "after:damage",
             "if": {
-              "expr": "все(@лист == @носитель, не(пусто(@источник)))"
+              "expr": "@лист == @носитель и не пусто(@источник)"
             },
             "confirm": true,
             "cost": [
@@ -2656,7 +2656,7 @@
               {
                 "type": "branch",
                 "if": {
-                  "expr": "не(@check.success)"
+                  "expr": "не @check.success"
                 }
               },
               {
