@@ -15,6 +15,7 @@ interface Fn {
   arity: number | '1+';
   apply: (args: number[]) => number;
   raw?: (args: Value[], tools: Tools) => Value;
+  lazy?: (args: (() => Value)[]) => Value;
 }
 
 const FUNCTIONS: Record<string, Fn> = {
@@ -95,12 +96,12 @@ const FUNCTIONS: Record<string, Fn> = {
   все: {
     arity: '1+',
     apply: () => 0,
-    raw: args => args.every((value, n) => boolean(value, `аргумент ${n + 1} функции «все»`)),
+    lazy: args => args.every((value, n) => boolean(value(), `аргумент ${n + 1} функции «все»`)),
   },
   любое: {
     arity: '1+',
     apply: () => 0,
-    raw: args => args.some((value, n) => boolean(value, `аргумент ${n + 1} функции «любое»`)),
+    lazy: args => args.some((value, n) => boolean(value(), `аргумент ${n + 1} функции «любое»`)),
   },
   не: {
     arity: 1,
@@ -240,6 +241,7 @@ export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value 
       throw new FormulaRuntimeError(
         `«${node.name}» требует аргументов: ${fn.arity}, передано ${node.args.length}`);
     }
+    if (fn.lazy) return fn.lazy(node.args.map(arg => () => visit(arg)));
     if (fn.raw) return fn.raw(node.args.map(arg => visit(arg)), tools);
     const args = node.args.map((arg, n) => number(visit(arg), `аргумент ${n + 1} функции «${node.name}»`));
     return fn.apply(args);
