@@ -97,8 +97,11 @@ function ownerText(ref: Reference, system: System): string | null {
   return null;
 }
 
+const HOLDER_ONLY = `«${HOLDER}» есть только у того, что висит на листе: подписка, правка, наложение. В кнопке лист приходит входом — например, «Кто действует»`;
+
 function danglingText(ref: Reference, declared: Declared): string | null {
   if (ref.scope === LISTEN) return null;
+  if (ref.key === HOLDER && (ref.kind === 'step' || (ref.kind === 'field' && ref.scope === 'bare'))) return HOLDER_ONLY;
   if (ref.kind === 'syntax' && ref.path === 'dice') return `в формуле «${ref.key}» кость стоит как число — кость кидают так: кинуть(к4)`;
   if (ref.kind === 'syntax') return `формула «${ref.key}» не разбирается — проверьте скобки и знаки; «и» / «или» пишутся как все(…) / любое(…)`;
   if (ref.kind === 'field' && ref.scope === 'bare' && !declared.field.has(ref.key) && declared.effect.has(ref.key)) {
