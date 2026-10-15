@@ -20,17 +20,33 @@ const open = (systemId: string, effect: string) => {
 
 const text = (el: Element) => (el.textContent ?? '').replace(/\s+/g, ' ');
 
+const switches = (): HTMLElement[] => [...document.querySelectorAll<HTMLElement>('.flow-block')]
+  .filter(one => [...one.querySelectorAll(':scope > .flow-block__part .flow-head__word')].some(word => word.textContent === 'По'));
+
 describe('«Если» по ступеням — switch', () => {
   afterEach(cleanup);
 
   it('блок по ступеням проверки подписан ступенями; недостающая ступень — кнопкой внизу', () => {
     open('blades', 'risky_action');
-    const switchBlock = [...document.querySelectorAll('.flow-block')].find(one => text(one).includes('По ступени'))!;
-    expect(switchBlock).toBeTruthy();
+    const switchBlock = switches()[0]!;
+    expect(text(switchBlock)).toContain('ступени «бросок»');
     expect(text(switchBlock)).toContain('успех с последствием:');
     expect(text(switchBlock)).toContain('провал:');
     const foot = switchBlock.querySelector<HTMLElement>(':scope > .flow-block__foot')!;
     expect(within(foot).has('+ успех')).toBe(true);
     expect(within(foot).has('+ иначе, если')).toBe(false);
   });
+
+  it('switch по входу-выбору: «Призвать духа» — руки по видам духов', () => {
+    open('shadowrun6', 'summon_spirit');
+    const spirits = switches().map(text).join(' | ');
+    expect(spirits).toContain('воздуха:');
+    expect(spirits).toContain('предков:');
+  }, 60_000);
+
+  it('switch по полю листа: «Удар льда» — руки по типам льда', () => {
+    open('shadowrun6', 'ic_attack');
+    expect(switches().map(text).join(' | ')).toContain('чёрный:');
+  }, 60_000);
 });
+

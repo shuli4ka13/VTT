@@ -1,5 +1,7 @@
 import { compile, printFormula, operandText, NOT } from '@vtt/engine/formula';
 import { degreeWords } from '@vtt/engine/model/tables';
+import { listOf, choiceTableOf } from '@vtt/engine/model/lists';
+import { fieldOf } from '@vtt/engine/model/sheet-columns';
 import { withRole } from './roles.ts';
 import type { ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -134,37 +136,55 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     if (fresh.length) setOpen(fresh, true);
   }, [name, signature, setOpen]);
 
-  const degreeAt = (head: Step | undefined, id: string): string | null => {
+  type Option = { value: unknown; label: string };
+  type Cases = { ref: string; options: Option[]; title: string; group?: (typeof cards)[number]; g?: number };
+  const caseAt = (head: Step | undefined): { ref: string; value: unknown } | null => {
     try {
       const ast = compile(String((head as { if?: { expr?: unknown } } | undefined)?.if?.expr ?? '')).ast;
-      return ast.kind === 'Binary' && ast.op === '==' && ast.left.kind === 'Ref' && ast.left.tag === `${id}.degree` && ast.right.kind === 'Text' ? ast.right.value : null;
+      return ast.kind === 'Binary' && ast.op === '==' && ast.left.kind === 'Ref' && (ast.right.kind === 'Text' || ast.right.kind === 'Number')
+        ? { ref: ast.left.tag, value: ast.right.value } : null;
     } catch { return null; }
   };
-  const degreesOf = (group: (typeof cards)[number]): string[] =>
-    (group.kind === 'check' ? degreeWords(system, (group.step as { degrees?: { table?: string } }).degrees?.table) : []);
+  const literalOf = (value: unknown): string => (typeof value === 'number' ? String(value) : JSON.stringify(String(value)));
+  const same = (a: unknown, b: unknown): boolean => String(a) === String(b);
+  const tableOptions = (table: string | undefined): Option[] => (listOf(system, table) ?? []).map(row => ({ value: row.value, label: row.label }));
+  const sourceOf = (ref: string, open: number): { options: Option[]; title: string } | null => {
+    if (ref.endsWith('.degree')) {
+      const id = ref.slice(0, -'.degree'.length);
+      const check = steps.find(step => step.type === 'check' && step.id === id);
+      const words = check ? degreeWords(system, (check as { degrees?: { table?: string } }).degrees?.table) : [];
+      return words.length ? { options: words.map(value => ({ value, label: value })), title: `ступени «${id.replace(/_/g, ' ')}»` } : null;
+    }
+    const param = (effect.params ?? []).find(one => one.key === ref && one.kind === 'choice' && one.from && !one.many);
+    if (param) {
+      const options = tableOptions(param.from);
+      return options.length ? { options, title: `«${param.label ?? param.key}»` } : null;
+    }
+    const dot = ref.indexOf('.');
+    const sheets = sheetsAt(system, id, placeAt(open));
+    if (dot > 0 && sheets.has(ref.slice(0, dot))) {
+      const field = fieldOf(system, ref.slice(dot + 1));
+      const options = tableOptions(choiceTableOf(field));
+      return field && options.length ? { options, title: `«${field.label}» (${sheets.get(ref.slice(0, dot))})` } : null;
+    }
+    return null;
+  };
   const headsOf = (open: number): number[] => {
     const end = endOf(steps, open);
     return [open, ...steps.flatMap((step, index) => (index > open && index < end && step.type === 'orElse' && arms[index]?.length === (arms[open]?.length ?? 0) + 1 && arms[index]?.[arms[index]!.length - 1]?.open === open ? [index] : []))];
   };
-  const casesOf = (group: (typeof cards)[number], open: number): { id: string; values: string[] } | null => {
-    const id = group.step.id ? String(group.step.id) : null;
-    const values = degreesOf(group);
-    if (!id || !values.length) return null;
+  const casesAt = (open: number): Cases | null => {
     const conditioned = headsOf(open).filter(head => (steps[head] as { if?: unknown }).if !== undefined);
-    return conditioned.length && conditioned.every(head => degreeAt(steps[head], id) !== null) ? { id, values } : null;
+    const first = caseAt(steps[conditioned[0]!]);
+    if (!first || !conditioned.every(head => caseAt(steps[head])?.ref === first.ref)) return null;
+    const source = sourceOf(first.ref, open);
+    return source ? { ref: first.ref, ...source } : null;
   };
-  const degreeCase = (id: string, value: string): string => `@${id}.degree == ${JSON.stringify(value)}`;
-  const looseCasesOf = (open: number): { id: string; values: string[]; title: string } | null => {
-    let id: string | null = null;
-    try {
-      const ast = compile(String((steps[open] as { if?: { expr?: unknown } }).if?.expr ?? '')).ast;
-      if (ast.kind === 'Binary' && ast.op === '==' && ast.left.kind === 'Ref' && ast.left.tag.endsWith('.degree')) id = ast.left.tag.slice(0, -'.degree'.length);
-    } catch { return null; }
-    const check = id ? steps.slice(0, open).find(step => step.type === 'check' && step.id === id) : undefined;
-    const values = check ? degreeWords(system, (check as { degrees?: { table?: string } }).degrees?.table) : [];
-    if (!id || !values.length) return null;
-    const conditioned = headsOf(open).filter(head => (steps[head] as { if?: unknown }).if !== undefined);
-    return conditioned.every(head => degreeAt(steps[head], id!) !== null) ? { id, values, title: id.replace(/_/g, ' ') } : null;
+  const degreesOf = (group: (typeof cards)[number]): string[] =>
+    (group.kind === 'check' ? degreeWords(system, (group.step as { degrees?: { table?: string } }).degrees?.table) : []);
+  const casesOf = (group: (typeof cards)[number], open: number): Cases | null => {
+    const found = group.step.id && degreesOf(group).length ? casesAt(open) : null;
+    return found && found.ref === `${String(group.step.id)}.degree` ? found : null;
   };
 
   const cardOf = (group: (typeof cards)[number], g: number, whole?: [number, number], fused?: { outcome: string; unwrap?: () => void; cond?: ReactNode }) => {
@@ -191,7 +211,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
       const step = list[own] as Step & { id?: string };
       if (!step.id) step.id = freeId([...stepIdsOf(draft), ...(draft.params ?? []).map(p => p.key)], 'проверка');
       const id = String(step.id);
-      const arms = degrees.map((value, k) => ({ type: k ? 'orElse' : 'branch', if: { expr: degreeCase(id, value) } }) as unknown as Step);
+      const arms = degrees.map((value, k) => ({ type: k ? 'orElse' : 'branch', if: { expr: `@${id}.degree == ${literalOf(value)}` } }) as unknown as Step);
       list.splice(group.indices[group.indices.length - 1]! + 1, 0, ...arms, { type: 'end' } as unknown as Step);
     }) : undefined;
 
@@ -334,10 +354,13 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     />
   );
 
-  const block = (open: number, fused?: { group: (typeof cards)[number]; g: number; yes: string; no: string; negated: boolean }, cases?: { group?: (typeof cards)[number]; g?: number; id: string; values: string[]; title?: string }): { node: ReactNode; next: number } => {
+  const block = (open: number, fused?: { group: (typeof cards)[number]; g: number; yes: string; no: string; negated: boolean }, cases?: Cases): { node: ReactNode; next: number } => {
     const end = endOf(steps, open);
     const heads = headsOf(open);
-    const caseOf = (head: number): string => (cases ? degreeAt(steps[head], cases.id) ?? 'иначе' : 'иначе');
+    const caseOf = (head: number): string => {
+      const found = caseAt(steps[head]);
+      return cases?.options.find(option => same(option.value, found?.value))?.label ?? String(found?.value ?? 'иначе');
+    };
     const bareElse = heads.slice(1).some(head => (steps[head] as { if?: unknown }).if === undefined);
     const problem = (index: number) => problems[index]?.text ?? null;
     const inside = cards.filter(card => card.indices[0]! > open && card.indices[0]! < end);
@@ -396,7 +419,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
                 ? cardOf(fused.group, fused.g, [fused.group.indices[0]!, end], { outcome: outcomes.first, ...(unwrap ? { unwrap } : {}), ...(callPick ? { cond: callPick } : {}) })
                 : k === 0 && cases ? (cases.group && cases.g !== undefined
                   ? cardOf(cases.group, cases.g, [cases.group.indices[0]!, end], { outcome: caseOf(open) })
-                  : <HeadFrame word="По ступени" actions={headActions}><span className="flow-head__words">«{cases.title}»</span></HeadFrame>)
+                  : <HeadFrame word="По" actions={headActions}><span className="flow-head__words">{cases.title}</span></HeadFrame>)
                 : cases ? <ArmLabel word={label} actions={armActions} />
                 : conditioned ? <FlowHead
                   word={k === 0 ? 'Если' : 'Иначе, если'} step={steps[head]!} context={contextAt(head)} earlier={earlierOf(head)}
@@ -413,8 +436,8 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
           );
         })}
         <div className="flow-block__foot">
-          {cases ? cases.values.filter(value => !heads.some(head => degreeAt(steps[head], cases.id) === value)).map(value => (
-            <Button key={value} size="sm" variant="ghost" onClick={() => edit(draft => { draft.steps = addArm(draft.steps ?? [], open, true, degreeCase(cases.id, value)); })}>+ {value}</Button>
+          {cases ? cases.options.filter(option => !heads.some(head => same(caseAt(steps[head])?.value, option.value))).map(option => (
+            <Button key={String(option.value)} size="sm" variant="ghost" onClick={() => edit(draft => { draft.steps = addArm(draft.steps ?? [], open, true, `@${cases.ref} == ${literalOf(option.value)}`); })}>+ {option.label}</Button>
           )) : <Button size="sm" variant="ghost" onClick={() => edit(draft => { draft.steps = addArm(draft.steps ?? [], open, true); })}>+ иначе, если</Button>}
           {bareElse ? null : <Button size="sm" variant="ghost" onClick={() => edit(draft => { draft.steps = addArm(draft.steps ?? [], open, false); })}>{outcomes ? `+ ${outcomes.other}` : '+ иначе'}</Button>}
         </div>
@@ -428,7 +451,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     for (let g = from; g < to;) {
       const group = cards[g]!;
       if (group.kind === 'flow' && group.step.type === 'branch') {
-        const loose = looseCasesOf(group.indices[0]!);
+        const loose = casesAt(group.indices[0]!);
         const made = block(group.indices[0]!, undefined, loose ?? undefined);
         out.push(made.node);
         g = made.next > g ? made.next : g + 1;
