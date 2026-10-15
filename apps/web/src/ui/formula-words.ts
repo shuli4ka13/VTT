@@ -1,5 +1,5 @@
 import type { System } from '@vtt/schema';
-import { compile } from '@vtt/engine/formula';
+import { compile, AND, OR, NOT } from '@vtt/engine/formula';
 import type { Node } from '@vtt/engine/formula';
 import { ROW } from '@vtt/engine/model/sheet-columns';
 import { formulaAsLabels } from './formula-labels.ts';
@@ -39,8 +39,20 @@ export function formulaWords(system: System, source: string, names?: Map<string,
       case 'Bool': return node.value ? 'да' : 'нет';
       case 'Ref': return node.tag.startsWith(`${ROW}.`) ? `«${ref(`@${node.tag}`)}»` : pathWords(ref, node.tag);
       case 'Pick': return `«${ref(`@${node.tag}`)}» по ${words(node.key, true)}${node.rest ? ` · ${node.rest}` : ''}`;
-      case 'Unary': return node.op === '-' ? `−${words(node.operand)}` : `${node.op}${words(node.operand)}`;
+      case 'Unary': {
+        if (node.op === NOT) {
+          const inner = node.operand;
+          if (inner.kind === 'Call' && inner.name === 'пусто') return `задано ${inner.args[0] ? words(inner.args[0], true) : '…'}`;
+          return `не ${words(inner)}`;
+        }
+        return node.op === '-' ? `−${words(node.operand)}` : `${node.op}${words(node.operand)}`;
+      }
       case 'Binary': {
+        if (node.op === AND || node.op === OR) {
+          const side = (child: Node) => words(child, child.kind === 'Binary' && child.op === node.op);
+          const text = `${side(node.left)} ${node.op} ${side(node.right)}`;
+          return top ? text : `(${text})`;
+        }
         const op = COMPARE[node.op] ?? ARITH[node.op] ?? node.op;
         const text = `${words(node.left)} ${op} ${words(node.right)}`;
         return top || COMPARE[node.op] ? text : `(${text})`;
@@ -63,15 +75,7 @@ export function formulaWords(system: System, source: string, names?: Map<string,
         const keep = args[2] ? `, оставить ${words(args[2])}` : '';
         return `кинуть ${times && times !== '1' ? `${times} × ` : ''}${arg(0)}${keep}`;
       }
-      case 'не': {
-        const inner = args[0];
-        if (inner?.kind === 'Call' && inner.name === 'пусто') return `задано ${inner.args[0] ? words(inner.args[0], true) : '…'}`;
-        return `не ${arg(0)}`;
-      }
       case 'пусто': return `не задано ${arg(0)}`;
-      case 'все': return all(' и ');
-      case 'любое': return all(' или ');
-      case 'или': return `${arg(0)} (если нет — ${arg(1)})`;
       case 'меньшее из': return `меньшее из ${all(' и ')}`;
       case 'большее из': return `большее из ${all(' и ')}`;
       case 'сколько': return args.length > 1 ? `сколько ${arg(1)} среди ${arg(0)}` : `сколько ${arg(0)}`;

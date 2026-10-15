@@ -1,3 +1,4 @@
+import { compile, printFormula, operandText, NOT } from '@vtt/engine/formula';
 import { withRole } from './roles.ts';
 import type { ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -36,6 +37,13 @@ export const bricksOf = (system: System, except: string, compendium: Compendium 
 
 const callStep = (system: System, caller: Effect, key: string, earlier: readonly Step[]): Step =>
   filledStep(system, caller, { type: 'emit', effect: key }, earlier) as unknown as Step;
+
+function negationOf(text: string): { negated: boolean; inner: string } {
+  try {
+    const ast = compile(text).ast;
+    return ast.kind === 'Unary' && ast.op === NOT ? { negated: true, inner: printFormula(ast.operand) } : { negated: false, inner: printFormula(ast) };
+  } catch { return { negated: false, inner: text.trim() }; }
+}
 
 export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', empty = 'шагов ещё нет — эффект ничего не делает', lane = 'steps', onEdgeUp, onEdgeDown, bare = false, lined = false, startAt = 0, lead, onAddCost, onRoll = false }: {
   id: string;
@@ -235,9 +243,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
   };
 
   const outcomeOf = (group: (typeof cards)[number], head: Step): { yes: string; no: string; negated: boolean } | null => {
-    const cond = String((head as { if?: { expr?: unknown } }).if?.expr ?? '').replace(/\s+/g, '');
-    const negated = cond.startsWith('не(') && cond.endsWith(')');
-    const ref = negated ? cond.slice(3, -1) : cond;
+    const { negated, inner: ref } = negationOf(String((head as { if?: { expr?: unknown } }).if?.expr ?? ''));
     const id = String(group.step.id);
     if (group.kind === 'check' && ref === `@${id}.success`) {
       const roll = group.amount ?? steps.find(one => one.id && `@${one.id}` === String((group.step as { value?: { expr?: unknown } }).value?.expr ?? '').trim());
@@ -308,8 +314,8 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
           onFormula={() => edit(draft => {
             const head = draft.steps![open] as { if?: { expr: string } };
             const text = String(head.if?.expr ?? '').trim();
-            const bare = text.startsWith('не(') && text.endsWith(')') ? text.slice(3, -1) : text;
-            head.if = { expr: `${bare.startsWith(refId) ? bare : text} == ${text.startsWith('не(') ? 'нет' : 'да'}` };
+            const { negated, inner } = negationOf(text);
+            head.if = { expr: `${operandText(inner.startsWith(refId) ? inner : text, '==')} == ${negated ? 'нет' : 'да'}` };
           })}
         />
       );

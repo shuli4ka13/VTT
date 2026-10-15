@@ -85,7 +85,7 @@ describe('шапка склеенного «Если» по вызову', () =>
     ]);
     expect(pick().selectedOptions[0]!.textContent).toBe('Бросок атаки — попадание');
     within(headOf(block(0))).select(pick(), 'Бросок атаки — промах');
-    expect(steps()[1]).toEqual({ type: 'branch', if: { expr: 'не(@атака.попал)' } });
+    expect(steps()[1]).toEqual({ type: 'branch', if: { expr: 'не @атака.попал' } });
     expect(isFused(block(0))).toBe(true);
     within(headOf(block(0))).select(pick(), 'Бросок атаки — крит');
     expect(steps()[1]).toEqual({ type: 'branch', if: { expr: '@атака.крит' } });

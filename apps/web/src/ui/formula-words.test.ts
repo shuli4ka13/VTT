@@ -63,7 +63,7 @@ describe('слова формул: итог вызова', () => {
     expect(formulaWords(withCall, '@попадание.попал', place)).toBe('«попадание»');
     expect(formulaWords(withCall, '@попадание.крит', place)).toBe('«попадание — крит»');
     expect(formulaWords(withCall, '@второй_удар.на_костях', place)).toBe('«второй удар — на костях»');
-    expect(formulaWords(withCall, 'не(@попадание.попал)', place)).toBe('не «попадание»');
+    expect(formulaWords(withCall, 'не @попадание.попал', place)).toBe('не «попадание»');
     expect(formulaWords(withCall, '@попадание.попал')).toBe('«попадание.попал»');
   });
 

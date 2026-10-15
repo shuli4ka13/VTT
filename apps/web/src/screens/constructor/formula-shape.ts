@@ -1,10 +1,10 @@
-import { compile } from '@vtt/engine/formula';
+import { compile, AND, OR, NOT } from '@vtt/engine/formula';
 import type { Node } from '@vtt/engine/formula';
 
 export type Shape = 'number' | 'text' | 'bool' | 'any';
 
 const NUMBERS = new Set(['округлить вниз', 'округлить вверх', 'округлить', 'модуль', 'меньшее из', 'большее из', 'сумма', 'среднее', 'сколько', 'кинуть', 'максимум костей']);
-const BOOLS = new Set(['есть', 'не', 'пусто', 'все', 'любое']);
+const BOOLS = new Set(['есть', 'пусто', 'пересекаются']);
 const MATH = new Set(['+', '-', '*', '/']);
 const COMPARE = new Set(['==', '!=', '<', '<=', '>', '>=']);
 
@@ -24,6 +24,7 @@ function shapeOf(node: Node, named: (tag: string) => Shape): Shape {
     case 'Unary': {
       if (isDice(node.operand)) throw new Clash('кость вычитают через «кинуть»: -кинуть(к4)');
       const inner = shapeOf(node.operand, named);
+      if (node.op === NOT) return 'bool';
       if (node.op === '-' && inner === 'text') throw new Clash('минус перед словом');
       return node.op === '-' ? 'number' : inner;
     }
@@ -31,6 +32,8 @@ function shapeOf(node: Node, named: (tag: string) => Shape): Shape {
       const left = shapeOf(node.left, named);
       const right = shapeOf(node.right, named);
       if (COMPARE.has(node.op)) return 'bool';
+      if (node.op === AND) return left === 'bool' && right === 'bool' ? 'bool' : 'any';
+      if (node.op === OR) return left === right ? left : 'any';
       if (!MATH.has(node.op)) return 'any';
       if (isDice(node.left) || isDice(node.right)) throw new Clash('кость прибавляют через «кинуть»: кинуть(к4)');
       if (left === 'text' || right === 'text') throw new Clash('слово нельзя складывать и умножать с числом');

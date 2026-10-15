@@ -1,5 +1,5 @@
 import type { System, SlotRef } from '@vtt/schema';
-import { compile, printFormula, FormulaError } from '@vtt/engine/formula';
+import { compile, printFormula, FormulaError, operandText } from '@vtt/engine/formula';
 import type { Node } from '@vtt/engine/formula';
 import { asDice } from '../../words.ts';
 import { dieRef, unquote } from './roll-expr.ts';
@@ -150,6 +150,7 @@ export function formatRollFormula(roll: { die?: unknown; count?: unknown; bonus?
 }
 
 export function formatCheckFormula(roll: { die?: unknown; count?: unknown; bonus?: unknown } | null, check: { value?: unknown; successWhen?: unknown; versus?: unknown }): string {
-  const left = roll ? formatRollFormula(roll) : refText(check.value);
-  return `${left} ${TEXT_OF[String(check.successWhen ?? 'atLeast')] ?? '>='} ${refText(check.versus)}`.trim();
+  const op = TEXT_OF[String(check.successWhen ?? 'atLeast')] ?? '>=';
+  const left = roll ? formatRollFormula(roll) : operandText(refText(check.value), op);
+  return `${left} ${op} ${operandText(refText(check.versus), op)}`.trim();
 }

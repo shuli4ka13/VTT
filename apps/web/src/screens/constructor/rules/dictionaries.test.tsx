@@ -533,7 +533,7 @@ describe('Быстрые настройки: крит и броня пишутс
     expect(tail.map(s => s.type)).toEqual(['check', 'branch', 'stop', 'end', 'apply']);
     expect((tail[0] as { successWhen?: string }).successWhen).toBe('over');
     expect((tail[0] as { versus?: { expr?: string } }).versus?.expr).toBe('@лист.броня');
-    expect(tail[1]).toEqual({ type: 'branch', if: { expr: `не(@${String(tail[0]!.id)}.success)` } });
+    expect(tail[1]).toEqual({ type: 'branch', if: { expr: `не @${String(tail[0]!.id)}.success` } });
     expect(tail[2]).toEqual({ type: 'stop', note: { expr: '"броня выдержала"' } });
   });
 });

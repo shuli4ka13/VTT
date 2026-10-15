@@ -155,7 +155,7 @@ describe('эффекты D&D собираются в конструкторе р
       within(card()).formula('На сколько', one.value.expr);
       within(card()).select('Этап', one.stage);
       within(card()).select('Кого касается', '@лист == @носитель');
-      within(card()).when('=не(пусто(@носитель.damage_types.[@damage_type].taken))');
+      within(card()).when('=не пусто(@носитель.damage_types.[@damage_type].taken)');
     }
     dump({ got: built('taken_rule'), goal });
     expect(built('taken_rule')).toEqual(goal);
@@ -200,7 +200,7 @@ describe('эффекты D&D собираются в конструкторе р
     within(handlerHead(1)).select('Что случилось', 'moment');
     within(handlerHead(1)).select('Когда', 'turn-end');
     within(handlerHead(1)).select('Кого касается', '@ходит == @носитель');
-    within(handlerHead(1)).when('=или(@запомнено, 0) > 0');
+    within(handlerHead(1)).when('=(@запомнено или 0) > 0');
 
     within(handlerAt(1)).click('+ изменение');
     const made = () => stepCard(/^1 · /, handlerAt(1));
@@ -359,7 +359,7 @@ describe('эффекты D&D собираются в конструкторе р
       }
     };
     ui.click('+ если');
-    within(headOf(block(0))).when('=не(пусто(@damage_die))');
+    within(headOf(block(0))).when('=не пусто(@damage_die)');
     addToArm(block(0), 0, 'number');
     within(headOf(block(0))).click('↑');
     within(at(2)).formula('Формула', 'кинуть(@damage_die, @dice_count + (@slot - @spell_level) * @dice_up)');
@@ -370,12 +370,12 @@ describe('эффекты D&D собираются в конструкторе р
     const fail = callIf(4, 'Спасбросок', 'не спасся');
     addToArm(block(fail), 0, 'branch');
     const inner = blocks().length - 1;
-    within(headOf(block(inner))).when('=не(пусто(@damage_die))');
+    within(headOf(block(inner))).when('=не пусто(@damage_die)');
     addToArm(block(inner), 0, 'change');
     hit(5, '@урон_всего');
     addToArm(block(fail), 0, 'branch');
     const second = blocks().length - 1;
-    within(headOf(block(second))).when('=не(пусто(@status))');
+    within(headOf(block(second))).when('=не пусто(@status)');
     addToArm(block(second), 0, 'change');
     within(at(6)).click('состояние');
     within(at(6)).select('Какое', ':вход:status');
@@ -383,7 +383,7 @@ describe('эффекты D&D собираются в конструкторе р
     within(at(6)).formula('Запомнит: Запомненное число', '@действующий.spell_dc');
     within(at(6)).formula('Запомнит: Кто наложил', '@действующий');
     addArm(block(fail), '+ иначе, если');
-    within(headOf(block(fail), 1)).when('=все(@half, не(пусто(@damage_die)))');
+    within(headOf(block(fail), 1)).when('=@half и не пусто(@damage_die)');
     addToArm(block(fail), 1, 'change');
     hit(7, 'округлить вниз(@урон_всего * 0.5)');
     dump({ got: built('spell_save'), goal });
@@ -410,8 +410,8 @@ describe('эффекты D&D собираются в конструкторе р
       within(card()).select('Какая правка', edit);
       within(card()).when(`=${when}`);
     };
-    rollEdit('advantage', 'все(@против == @носитель, @бросающий == @кого)');
-    rollEdit('disadvantage', 'все(@бросающий == @носитель, @против == @кого)');
+    rollEdit('advantage', '@против == @носитель и @бросающий == @кого');
+    rollEdit('disadvantage', '@бросающий == @носитель и @против == @кого');
     dump({ got: built('hidden'), goal });
     expect(built('hidden')).toEqual(goal);
   });

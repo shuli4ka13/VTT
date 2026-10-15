@@ -54,7 +54,7 @@ describe('эффекты пресетов собираются руками: Sha
     ui.type(ui.cell('Если не передали', 0), '2');
     ui.type(ui.cell('Границы', 0).querySelector<HTMLInputElement>('input[placeholder="не ниже"]')!, '1');
     ui.select('Сколько висит', 'rounds');
-    ui.formula('Сколько', 'или(@rounds, 2)');
+    ui.formula('Сколько', '@rounds или 2');
     for (const [target, value] of [['condition_mod', '-1'], ['init_mod', '-2']] as const) {
       ui.click('+ правит поле');
       const card = () => [...document.querySelectorAll<HTMLElement>('.card')].filter(c => (c.querySelector('.card__head')?.textContent ?? '').startsWith('Правит поле')).at(-1)!;
@@ -92,7 +92,7 @@ describe('эффекты пресетов собираются руками: Sha
     ui.select('Что именно', 'ranged_attack');
     ui.select('Когда именно', 'done');
     ui.select('Кого касается', '@действующий == @носитель');
-    ui.when('=все(@атака_бросок.atMin * 2 > @атака_бросок.rolled, @атака_бросок.natural >= 1)');
+    ui.when('=@атака_бросок.atMin * 2 > @атака_бросок.rolled и @атака_бросок.natural >= 1');
     dump({ got: built('glitch'), goal });
     expect(built('glitch')).toEqual(goal);
   });
@@ -120,7 +120,7 @@ describe('эффекты пресетов собираются руками: Sha
     const ui = within();
     head(ui, '+ срабатывает сам', goal!.label!, 'reroll_failures', goal!);
     seenHead(ui);
-    ui.when('=не(любое(все(@носитель.edge_ban_charisma >= 1, любое(есть(@roll.tags, "обман"), есть(@roll.tags, "убеждение"), есть(@roll.tags, "социальная"))), все(@носитель.edge_ban_logic >= 1, любое(есть(@roll.tags, "биотехнологии"), есть(@roll.tags, "взлом"), есть(@roll.tags, "инженерное дело"), есть(@roll.tags, "электроника"))), все(@носитель.edge_ban_hands >= 1, любое(есть(@roll.tags, "атака"), есть(@roll.tags, "стрельба"), есть(@roll.tags, "ближний бой"), есть(@roll.tags, "экзотическое оружие"), есть(@roll.tags, "взлом замков"))), все(@носитель.edge_ban_social >= 1, любое(есть(@roll.tags, "обман"), есть(@roll.tags, "убеждение"), есть(@roll.tags, "социальная")))))');
+    ui.when('=не (@носитель.edge_ban_charisma >= 1 и (есть(@roll.tags, "обман") или есть(@roll.tags, "убеждение") или есть(@roll.tags, "социальная")) или @носитель.edge_ban_logic >= 1 и (есть(@roll.tags, "биотехнологии") или есть(@roll.tags, "взлом") или есть(@roll.tags, "инженерное дело") или есть(@roll.tags, "электроника")) или @носитель.edge_ban_hands >= 1 и (есть(@roll.tags, "атака") или есть(@roll.tags, "стрельба") или есть(@roll.tags, "ближний бой") или есть(@roll.tags, "экзотическое оружие") или есть(@roll.tags, "взлом замков")) или @носитель.edge_ban_social >= 1 и (есть(@roll.tags, "обман") или есть(@roll.tags, "убеждение") или есть(@roll.tags, "социальная")))');
     spendFromHolder();
     ui.click('+ перебросить');
     const card = stepCard(/^2 · /);
@@ -134,7 +134,7 @@ describe('эффекты пресетов собираются руками: Sha
     const ui = within();
     head(ui, '+ срабатывает сам', goal!.label!, 'push_edge', goal!);
     seenHead(ui);
-    ui.when('=не(любое(все(@носитель.edge_ban_charisma >= 1, любое(есть(@roll.tags, "обман"), есть(@roll.tags, "убеждение"), есть(@roll.tags, "социальная"))), все(@носитель.edge_ban_logic >= 1, любое(есть(@roll.tags, "биотехнологии"), есть(@roll.tags, "взлом"), есть(@roll.tags, "инженерное дело"), есть(@roll.tags, "электроника"))), все(@носитель.edge_ban_hands >= 1, любое(есть(@roll.tags, "атака"), есть(@roll.tags, "стрельба"), есть(@roll.tags, "ближний бой"), есть(@roll.tags, "экзотическое оружие"), есть(@roll.tags, "взлом замков"))), все(@носитель.edge_ban_social >= 1, любое(есть(@roll.tags, "обман"), есть(@roll.tags, "убеждение"), есть(@roll.tags, "социальная")))))');
+    ui.when('=не (@носитель.edge_ban_charisma >= 1 и (есть(@roll.tags, "обман") или есть(@roll.tags, "убеждение") или есть(@roll.tags, "социальная")) или @носитель.edge_ban_logic >= 1 и (есть(@roll.tags, "биотехнологии") или есть(@roll.tags, "взлом") или есть(@roll.tags, "инженерное дело") или есть(@roll.tags, "электроника")) или @носитель.edge_ban_hands >= 1 и (есть(@roll.tags, "атака") или есть(@roll.tags, "стрельба") или есть(@roll.tags, "ближний бой") или есть(@roll.tags, "экзотическое оружие") или есть(@roll.tags, "взлом замков")) или @носитель.edge_ban_social >= 1 и (есть(@roll.tags, "обман") или есть(@roll.tags, "убеждение") или есть(@roll.tags, "социальная")))');
     spendFromHolder();
     ui.click('+ докинуть');
     const card = () => stepCard(/^2 · /);
@@ -259,8 +259,8 @@ describe('эффекты пресетов собираются руками: Sha
     param(ui, 'damage', 4, 'Куда попали', 'choice', 'aim', { from: 'aim_places', ask: 'empty' });
 
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
-    const body = 'все(@aim == "по телу", @damage_type.armor == "через броню")';
-    const headshot = 'все(@aim == "по голове", @damage_type.armor == "через броню")';
+    const body = '@aim == "по телу" и @damage_type.armor == "через броню"';
+    const headshot = '@aim == "по голове" и @damage_type.armor == "через броню"';
     const guarded = (flow: number, expr: string) => {
       ui.click('+ если');
       within(headOf(block(flow))).when(`=${expr}`);
@@ -346,7 +346,7 @@ describe('эффекты пресетов собираются руками: Sha
     within(at(4)()).select('По чему ищем строку', 'value');
     within(at(4)()).formula('Число', 'сколько(@бросок.dice.rolls, 6)');
     nameStep(at(4), '');
-    wrapIf(at(4), '=все(@rating > 0, сколько(@бросок.dice.rolls, 6) >= 2)');
+    wrapIf(at(4), '=@rating > 0 и сколько(@бросок.dice.rolls, 6) >= 2');
 
     ui.click('+ если');
     within(headOf(block(1))).when('Проверка — какая ступень успеха');

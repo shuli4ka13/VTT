@@ -36,6 +36,6 @@ describe('условие: быстрые исходы', () => {
     render(<ConditionField value="" onChange={next => { written = next; }} system={system} required where="проба"
       quick={[{ ref: 'попадание.попал', label: 'Бросок атаки — попадание', kind: 'boolean', no: 'Бросок атаки — промах' }]} />);
     fireEvent.change(document.querySelector('select')!, { target: { value: ':не:попадание.попал' } });
-    expect(written).toBe('не(@попадание.попал)');
+    expect(written).toBe('не @попадание.попал');
   });
 });

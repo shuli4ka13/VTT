@@ -1,3 +1,4 @@
+import { operandText } from '@vtt/engine/formula';
 import { SheetPick } from '../../sheet-pick.tsx';
 import { sheetChoices, callable } from '../../slots.tsx';
 import { useMemo, useState, type ReactNode } from 'react';
@@ -167,7 +168,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
     const put = (a: Step, apply: Step, id: string) => {
       fill(a as Record<string, any>);
       const name = `@${id}`;
-      const next = (place ? place(name) : (mentions(line, id) ? line : (line ? `${line} + ${name}` : name)))
+      const next = (place ? place(name) : (mentions(line, id) ? line : (line ? `${operandText(line, '+')} + ${name}` : name)))
         .replace(/\s+/g, ' ').trim();
       const target = apply as Record<string, any>;
       target.value = { expr: next };

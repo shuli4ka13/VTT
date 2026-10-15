@@ -1,4 +1,4 @@
-import { compile, printFormula } from '@vtt/engine/formula';
+import { compile, printFormula, andParts, andText, operandText, NOT } from '@vtt/engine/formula';
 import type { Node } from '@vtt/engine/formula';
 
 export interface RowIs { table: string; column: string; is: string }
@@ -62,11 +62,11 @@ export function readGuard(expr: string | undefined | null): When | null {
   let ast: Node;
   try { ast = compile(expr).ast; } catch { return null; }
   const when: Partial<When> = {};
-  if (ast.kind === 'Call' && ast.name === 'не' && ast.args.length === 1) {
+  if (ast.kind === 'Unary' && ast.op === NOT) {
     when.not = true;
-    ast = ast.args[0]!;
+    ast = ast.operand;
   }
-  const parts = ast.kind === 'Call' && ast.name === 'все' ? ast.args : [ast];
+  const parts = andParts(ast);
   if (!parts.every(node => part(node, when)) || !when.ref) return null;
   const plain = when.atLeast === undefined && when.atMost === undefined && when.has === undefined && !when.where;
   if (!plain && parts.length === 1 && parts[0]!.kind === 'Ref') return null;
@@ -77,13 +77,13 @@ export function readGuard(expr: string | undefined | null): When | null {
 export function writeGuard(when: When): string {
   const name = `@${when.ref}`;
   const parts: string[] = [];
-  if (when.atLeast !== undefined && when.atLeast.trim()) parts.push(`${name} >= ${when.atLeast.trim()}`);
-  if (when.atMost !== undefined && when.atMost.trim()) parts.push(`${name} <= ${when.atMost.trim()}`);
+  if (when.atLeast !== undefined && when.atLeast.trim()) parts.push(`${name} >= ${operandText(when.atLeast.trim(), '>=')}`);
+  if (when.atMost !== undefined && when.atMost.trim()) parts.push(`${name} <= ${operandText(when.atMost.trim(), '<=')}`);
   if (when.has !== undefined && when.has !== '') parts.push(`есть(${name}, ${quote(when.has)})`);
   if (when.where) parts.push(`есть(таблица(${quote(when.where.table)}, ${name}, ${quote(when.where.column)}), ${quote(when.where.is)})`);
   if (!parts.length) parts.push(name);
-  const joined = parts.length > 1 ? `все(${parts.join(', ')})` : parts[0]!;
-  return when.not ? `не(${joined})` : joined;
+  const joined = andText(parts);
+  return when.not ? printFormula({ kind: 'Unary', op: NOT, operand: compile(joined).ast }) : joined;
 }
 
 const tidy = (expr: string): string => {
@@ -98,11 +98,12 @@ export function splitHolder(expr: string | undefined | null, holders: readonly s
   try { ast = compile(text).ast; } catch { return { holder: '', rest: text }; }
   const whole = wanted.get(printFormula(ast));
   if (whole) return { holder: whole, rest: '' };
-  if (ast.kind !== 'Call' || ast.name !== 'все') return { holder: '', rest: text };
-  const at = ast.args.findIndex(arg => wanted.has(printFormula(arg)));
+  const parts = andParts(ast);
+  if (parts.length < 2) return { holder: '', rest: text };
+  const at = parts.findIndex(arg => wanted.has(printFormula(arg)));
   if (at < 0) return { holder: '', rest: text };
-  const others = ast.args.filter((_, index) => index !== at).map(arg => printFormula(arg));
-  return { holder: wanted.get(printFormula(ast.args[at]!))!, rest: others.length === 1 ? others[0]! : `все(${others.join(', ')})` };
+  const others = parts.filter((_, index) => index !== at).map(arg => printFormula(arg));
+  return { holder: wanted.get(printFormula(parts[at]!))!, rest: andText(others) };
 }
 
 export function joinHolder(holder: string, rest: string): string | null {
@@ -111,14 +112,14 @@ export function joinHolder(holder: string, rest: string): string | null {
   if (!tail) return holder;
   let ast: Node | null = null;
   try { ast = compile(tail).ast; } catch { ast = null; }
-  const parts = ast && ast.kind === 'Call' && ast.name === 'все' ? ast.args.map(arg => printFormula(arg)) : [tail];
-  return `все(${[holder, ...parts].join(', ')})`;
+  const parts = ast ? andParts(ast).map(arg => printFormula(arg)) : [tail];
+  return andText([holder, ...parts]);
 }
 
 export function holderIn(expr: string, holders: readonly string[]): boolean {
   let ast: Node;
   try { ast = compile(expr).ast; } catch { return false; }
   const named = new Set(holders.map(tidy));
-  const parts = ast.kind === 'Call' && ast.name === 'все' ? ast.args.map(arg => printFormula(arg)) : [printFormula(ast)];
+  const parts = andParts(ast).map(arg => printFormula(arg));
   return parts.some(part => named.has(tidy(part)));
 }

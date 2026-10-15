@@ -3,7 +3,7 @@ import { HOLDER } from '@vtt/engine/model/references';
 import { listOf } from '@vtt/engine/model/lists';
 import { rowTables } from '@vtt/engine/model/tables';
 import { useState } from 'react';
-import { compile } from '@vtt/engine/formula';
+import { compile, andText, andPartsText } from '@vtt/engine/formula';
 import { Button, Field, Select, Input } from '../../ui/primitives.tsx';
 import { FormulaField } from '../../ui/formula-field.tsx';
 import { formulaWords } from '../../ui/formula-words.ts';
@@ -101,36 +101,15 @@ export function ConditionField({
   );
 }
 
-function topArgs(text: string): string[] | null {
-  const head = /^все\s*\(/u.exec(text);
-  if (!head || !text.endsWith(')')) return null;
-  const inner = text.slice(head[0].length, -1);
-  const out: string[] = [];
-  let depth = 0;
-  let quote = '';
-  let start = 0;
-  for (let at = 0; at < inner.length; at++) {
-    const ch = inner[at]!;
-    if (quote) { if (ch === quote) quote = ''; continue; }
-    if (ch === '"' || ch === "'") { quote = ch; continue; }
-    if (ch === '(') depth++;
-    else if (ch === ')') { depth--; if (depth < 0) return null; }
-    else if (ch === ',' && depth === 0) { out.push(inner.slice(start, at).trim()); start = at + 1; }
-  }
-  if (depth !== 0 || quote) return null;
-  out.push(inner.slice(start).trim());
-  return out.every(Boolean) ? out : null;
-}
-
 function factsOf(expr: string): string[] {
   const text = expr.trim();
   if (!text) return [];
-  try { compile(text); } catch { return [text]; }
-  const parts = topArgs(text);
-  if (!parts) return [text];
+  let parts: string[];
+  try { parts = andPartsText(text); } catch { return [text]; }
+  if (parts.length < 2) return [text];
   const out: string[] = [];
   for (let at = 0; at < parts.length; at++) {
-    const pair = at + 1 < parts.length ? `все(${parts[at]}, ${parts[at + 1]})` : null;
+    const pair = at + 1 < parts.length ? andText([parts[at]!, parts[at + 1]!]) : null;
     const both = pair ? readGuard(pair) : null;
     if (pair && both && both.atLeast !== undefined && both.atMost !== undefined) { out.push(pair); at++; continue; }
     out.push(parts[at]!);
@@ -142,7 +121,7 @@ const compiles = (text: string): boolean => {
   try { compile(text); return true; } catch { return false; }
 };
 
-const joinFacts = (facts: string[]): string => (facts.length > 1 ? `все(${facts.join(', ')})` : facts[0] ?? '');
+const joinFacts = (facts: string[]): string => andText(facts);
 
 function FactRow({ value, onChange, system, quick, phrases, names, sheets, where, placeholder, spoken, tail }: {
   value: string;

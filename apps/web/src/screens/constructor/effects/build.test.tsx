@@ -144,7 +144,7 @@ describe('эффекты пресетов собираются в констру
     card = stepCard(/^6 · /);
     within(card).formula('Запомнит: Кто наложил', '@действующий');
     within(stepCard(/^6 · /)).click('в «Если»');
-    within(headOf(block(1))).when('=не(пусто(@status))');
+    within(headOf(block(1))).when('=не пусто(@status)');
     dump({ got: built('strike') ?? useWorld.getState().system.effects, goal });
     expect(built('strike')).toEqual(goal);
   });
@@ -163,7 +163,7 @@ describe('эффекты пресетов собираются в констру
     ui.select('Что именно', 'damage');
     ui.select('Когда именно', 'after');
     ui.select('Кого касается', '@лист == @носитель');
-    ui.when('=все(не(пусто(@источник)), @источник != @носитель)');
+    ui.when('=не пусто(@источник) и @источник != @носитель');
     ui.select('Решение', 'ask');
 
     ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_reaction');
@@ -478,7 +478,7 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ если');
     addToArm(block(0), 0, 'stop');
-    within(headOf(block(0))).when('=(если(любое(@бросок.success, @бросок.parts.надежда == @бросок.parts.страх), 1, 0)) < 1');
+    within(headOf(block(0))).when('=если(@бросок.success или @бросок.parts.надежда == @бросок.parts.страх, 1, 0) < 1');
     stopNote(5, 'промах');
 
     ui.click('+ изменение');

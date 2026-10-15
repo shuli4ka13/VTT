@@ -42,7 +42,7 @@ describe('редактор модификаторов', () => {
   });
 
   it('условие поверх «Кого касается» хранится как все(…) и очищается вместе с выбором', () => {
-    const mods = [{ ...rollMod[0], if: { expr: 'все(@бросающий == @носитель, @носитель.ac > 1)' } }] as unknown as Modifier[];
+    const mods = [{ ...rollMod[0], if: { expr: '@бросающий == @носитель и @носитель.ac > 1' } }] as unknown as Modifier[];
     const onEdit = vi.fn((change: (d: Modifier[]) => void) => change(mods));
     renderOpen(<ModifiersEditor system={system} modifiers={mods} onEdit={onEdit} />);
     const whose = screen.getByDisplayValue('бросает носитель') as HTMLSelectElement;
@@ -197,7 +197,7 @@ describe('правка по умолчанию касается носителя
     expect(modifierSentence(system, rollMod[0]!)).toBe('Бросок с метками «атака», бросает кто угодно: Фора');
     expect(modifierSentence(system, { ...rollMod[0]!, if: { expr: '@бросающий == @носитель' } } as Modifier)).toBe('Бросок с метками «атака», бросает носитель: Фора');
     expect(modifierSentence(system, { ...rollMod[0]!, if: { expr: '@носитель.ac > 1' } } as Modifier)).toContain('бросает кто угодно, если');
-    expect(modifierSentence(system, { ...rollMod[0]!, if: { expr: 'все(@бросающий == @носитель, @носитель.ac > 1)' } } as Modifier)).not.toContain('кто угодно');
+    expect(modifierSentence(system, { ...rollMod[0]!, if: { expr: '@бросающий == @носитель и @носитель.ac > 1' } } as Modifier)).not.toContain('кто угодно');
     expect(modifierSentence(system, { ...rollMod[0]!, if: { expr: '1 > 0' } } as Modifier)).toContain('бросает кто угодно, если');
     const damage = { kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' } } as unknown as Modifier;
     expect(modifierSentence(withDamage, damage)).toContain('«Урон» · Сколько, на всех листах:');
@@ -232,7 +232,7 @@ describe('правка типа говорит подписями колонок
   it('условие правки поля и условие правки вызова читаются так же', () => {
     const guarded = { ...set('1'), if: { expr: '@строка.stealth == да' } } as Modifier;
     expect(modifierSentence(gear, guarded, 'armor')).toBe('«База доспеха» = 1 — если «Помеха на Скрытность» = да');
-    const roll = { kind: 'edit', call: 'roll', param: 'edits', tags: ['скрытность'], edit: 'фора', if: { expr: 'все(@бросающий == @носитель, @строка.stealth == да)' } } as unknown as Modifier;
+    const roll = { kind: 'edit', call: 'roll', param: 'edits', tags: ['скрытность'], edit: 'фора', if: { expr: '@бросающий == @носитель и @строка.stealth == да' } } as unknown as Modifier;
     expect(modifierSentence(gear, roll, 'armor')).toContain('если «бросающий» = «носитель» и «Помеха на Скрытность» = да');
   });
 
@@ -257,7 +257,7 @@ describe('правка типа говорит подписями колонок
     expect(armor.map(modifier => modifierSentence(dnd, modifier, 'armor'))).toEqual([
       '«База доспеха» = «База класса брони»',
       '«Тяжесть доспеха» = «Тяжесть»',
-      '«Скорость, футов» − 10 — если «Сила» < «Нужна Сила» (если нет — 0) и «Раса → Тяжёлый доспех не замедляет» ≠ да',
+      '«Скорость, футов» − 10 — если «Сила» < («Нужна Сила» или 0) и «Раса → Тяжёлый доспех не замедляет» ≠ да',
       'Бросок с метками «скрытность», если «бросающий» = «носитель» и «Помеха на Скрытность» = да: Помеха',
     ]);
   });
