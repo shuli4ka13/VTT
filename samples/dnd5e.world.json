@@ -8986,7 +8986,7 @@
               "expr": "@против.ac"
             },
             "succeedOn": {
-              "expr": "20"
+              "expr": "@кто.crit_from"
             },
             "failOn": {
               "expr": "1"

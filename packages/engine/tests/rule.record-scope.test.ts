@@ -51,3 +51,14 @@ group('формула входа в кнопке записи видит сво�
     throws(() => firstBonus(system));
   });
 });
+
+group('D&D: критическое попадание — всегда попадание', () => {
+  test('Улучшенный критический: 19 на кости против КБ 40 — крит и попадание, а не «крит, но промах»', () => {
+    const system = JSON.parse(JSON.stringify(dnd.system)) as System;
+    (system.effects.attack_roll!.steps![1] as { versus: unknown }).versus = { expr: '40' };
+    const sheets = (JSON.parse(JSON.stringify(dnd.sheets)) as Sheet[]).map(sheet => (sheet.id === 'arven' ? { ...sheet, values: { ...sheet.values, crit_from: 19 } } : sheet));
+    const out = exchange({ system, compendium: dnd.compendium as Compendium, die: () => 19, sheets, actionId: 'longsword:0', fromId: 'arven', toId: 'goblin' });
+    const checked = out.reports.flatMap(entry => entry.report.trace).find(t => (t as { step?: string; within?: string }).step === 'проверка' && (t as { within?: string }).within === 'attack_roll') as { success: boolean };
+    eq(checked.success, true);
+  });
+});
