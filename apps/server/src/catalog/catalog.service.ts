@@ -163,7 +163,7 @@ export class CatalogService {
   async publishCompendium(ownerId: string, id: string) {
     const row = await this.ownedCompendium(ownerId, id);
     const compendium = JSON.parse(row.data) as Compendium;
-    const system = await this.system(row.systemId);
+    const system = await this.playableSystem(row.systemId);
     this.assertRecordsFilled(system.system, compendium);
     const problems = errorsOf(lintCompendium(system.system, compendium));
     if (problems.length) {

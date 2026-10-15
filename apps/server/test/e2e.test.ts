@@ -425,6 +425,25 @@ describe('сквозной прогон стенда', () => {
     await http().post(`/compendiums/${book.body.id}/publish`)
       .set('Authorization', `Bearer ${token}`).send({}).expect(201);
   });
+
+  it('компендиум сверяется с опубликованной системой, а не с черновиком', async () => {
+    const as = (req: request.Test) => req.set('Authorization', `Bearer ${token}`);
+    const weapon = (bindings: unknown[]) => ({
+      name: 'Черновик и публикация', tables: { weapon: { shape: 'book', use: 'item', label: 'Оружие',
+        columns: [{ key: 'dmg', label: 'Кость урона', kind: 'dice' }], bindings } },
+      effects: { strike: { label: 'Удар', activation: 'manual', params: [{ key: 'damage_dice', label: 'Кость урона', kind: 'dice' }], steps: [] } },
+    });
+    const strike = [{ label: 'Удар', effect: 'strike', args: { damage_dice: { expr: '@dmg' } } }];
+    const sys = await as(http().post('/systems')).send({ title: 'Черновик и публикация', system: weapon(strike) }).expect(201);
+    await as(http().post(`/systems/${sys.body.id}/publish`)).send({}).expect(201);
+    await as(http().put(`/systems/${sys.body.id}`)).send({ title: 'Черновик и публикация', system: weapon([]) }).expect(200);
+    const book = await as(http().post('/compendiums')).send({
+      title: 'Без кости', systemId: sys.body.id,
+      compendium: { records: [{ id: 'sword', table: 'weapon', label: 'Меч', cells: {} }] },
+    }).expect(201);
+    const rejected = await as(http().post(`/compendiums/${book.body.id}/publish`)).send({}).expect(400);
+    expect(rejected.body.message).toContain('Кость урона');
+  });
 });
 
 describe('публикация компендиума проверяется линтом', () => {
