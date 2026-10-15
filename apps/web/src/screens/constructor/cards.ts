@@ -170,9 +170,9 @@ export function wrapInBranch(steps: Step[], first: number, last: number, conditi
   return [...steps.slice(0, first), head, ...steps.slice(first, last + 1), { type: 'end' } as unknown as Step, ...steps.slice(last + 1)];
 }
 
-export function addArm(steps: Step[], open: number, withCondition: boolean): Step[] {
+export function addArm(steps: Step[], open: number, withCondition: boolean, expr = ''): Step[] {
   const end = endOf(steps, open);
-  const arm = { type: 'orElse', ...(withCondition ? { if: { expr: '' } } : {}) } as unknown as Step;
+  const arm = { type: 'orElse', ...(withCondition ? { if: { expr } } : {}) } as unknown as Step;
   const lastBare = steps.slice(open, end).some((step, k) => flowOf(step.type) === 'alt' && armDepth(steps, open, open + k) && (step as { if?: unknown }).if === undefined);
   if (lastBare && withCondition) {
     const bare = steps.findIndex((step, i) => i > open && i < end && flowOf(step.type) === 'alt' && armDepth(steps, open, i) && (step as { if?: unknown }).if === undefined);

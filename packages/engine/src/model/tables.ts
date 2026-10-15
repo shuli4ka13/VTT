@@ -45,3 +45,9 @@ export const rowTables = (system: System): [string, Table][] =>
 
 export const numberTables = (system: System): [string, Table][] =>
   rowTables(system).filter(([, table]) => isNumberKeyed(table));
+
+export function degreeWords(system: System, tableId: string | undefined): string[] {
+  const table = tableId ? system.tables?.[tableId] : undefined;
+  const words = (table?.rows ?? []).map(row => cellOf(row, VALUE_COLUMN) ?? row.value);
+  return [...new Set(words.filter(word => word !== undefined && word !== null && word !== '').map(String))];
+}
