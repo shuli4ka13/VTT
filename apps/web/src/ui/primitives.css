@@ -466,6 +466,14 @@
 .chips__ops .chips__op:hover {
   color: var(--text); border-color: var(--accent); background: var(--accent-soft);
 }
+.chips__sig {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-1) var(--s-3);
+  margin-top: var(--s-2); font-size: var(--fs-2); color: var(--text-muted);
+}
+.chips__sig-call { color: var(--text-muted); }
+.chips__sig-part.is-optional { opacity: .7; }
+.chips__sig-part.is-on { color: var(--text); font-weight: 600; border-bottom: 1px solid var(--accent); }
+.chips__sig-hint { color: var(--text-muted); }
 .chips__ops-split { width: 1px; align-self: stretch; background: var(--border); margin: 0 var(--s-1); }
 
 .chip__part {

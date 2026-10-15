@@ -1,10 +1,10 @@
-import { compile, AND, OR, NOT } from '@vtt/engine/formula';
+import { compile, AND, OR, NOT, FUNCTION_SPECS } from '@vtt/engine/formula';
 import type { Node } from '@vtt/engine/formula';
 
 export type Shape = 'number' | 'text' | 'bool' | 'any';
 
-const NUMBERS = new Set(['округлить вниз', 'округлить вверх', 'округлить', 'модуль', 'меньшее из', 'большее из', 'сумма', 'среднее', 'сколько', 'кинуть', 'максимум костей']);
-const BOOLS = new Set(['есть', 'пусто', 'пересекаются']);
+const NUMBERS = new Set(FUNCTION_SPECS.filter(one => one.result === 'number').map(one => one.name));
+const BOOLS = new Set(FUNCTION_SPECS.filter(one => one.result === 'bool').map(one => one.name));
 const MATH = new Set(['+', '-', '*', '/']);
 const COMPARE = new Set(['==', '!=', '<', '<=', '>', '>=']);
 

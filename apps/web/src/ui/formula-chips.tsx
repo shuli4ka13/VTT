@@ -6,6 +6,29 @@ import { fieldPaths, sheetPathLabel } from './paths.ts';
 import { DESK_ID } from '@vtt/engine/engine/owners';
 import { fieldsOf, fieldOf, hasField, fieldLinkOf, ROW } from '@vtt/engine/model/sheet-columns';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
+import { callAt, partAt, functionSpec } from '@vtt/engine/formula';
+import type { FunctionSpec } from '@vtt/engine/formula';
+
+function Signature({ at }: { at: { spec: FunctionSpec; index: number } }) {
+  const { spec, index } = at;
+  const current = partAt(spec, index);
+  const lastMany = spec.parts[spec.parts.length - 1]?.many;
+  return (
+    <div className="chips__sig" aria-live="polite">
+      <span className="chips__sig-call">
+        {spec.name}(
+        {spec.parts.map((part, at) => (
+          <span key={at}>
+            {at ? ', ' : ''}
+            <span className={`chips__sig-part${part === current && (at === index || (part.many && index >= at)) ? ' is-on' : ''}${part.optional ? ' is-optional' : ''}`}>{part.label}</span>
+          </span>
+        ))}
+        {lastMany ? ', …' : ''})
+      </span>
+      {current ? <span className="chips__sig-hint">{current.label} — {current.hint}</span> : <span className="chips__sig-hint">{spec.hint}</span>}
+    </div>
+  );
+}
 
 const plainLabel = (system: System, tag: string, extra?: Map<string, string>): string =>
   fieldOf(system, tag)?.label ?? extra?.get(tag) ?? sheetPathLabel(system, tag)
@@ -80,23 +103,25 @@ export function pickOptions(system: System, table: string | undefined): { tag: s
     })));
 }
 
+const fn = (name: string, open: string, close: string) => ({ label: name, hint: functionSpec(name)?.hint ?? '', open, close, word: true });
+
 const OPS: { label: string; hint: string; open: string; close?: string; word?: boolean }[] = [
   { label: '+', hint: 'сложить', open: ' + ' },
   { label: '−', hint: 'вычесть', open: ' - ' },
   { label: '×', hint: 'умножить', open: ' * ' },
   { label: '÷', hint: 'поделить', open: ' / ' },
   { label: '( )', hint: 'скобки: что внутри — считается первым', open: '(', close: ')' },
-  { label: 'округлить вниз', hint: 'отбросить дробную часть: 7,9 → 7', open: 'округлить вниз(', close: ')', word: true },
-  { label: 'округлить вверх', hint: 'добить до целого: 7,1 → 8', open: 'округлить вверх(', close: ')', word: true },
-  { label: 'округлить', hint: 'по школьным правилам: 7,5 → 8, 7,4 → 7', open: 'округлить(', close: ')', word: true },
-  { label: 'модуль', hint: 'число без минуса: −3 → 3', open: 'модуль(', close: ')', word: true },
-  { label: 'большее из', hint: 'самое большое из перечисленного через запятую', open: 'большее из(', close: ', )', word: true },
-  { label: 'меньшее из', hint: 'самое маленькое из перечисленного через запятую', open: 'меньшее из(', close: ', )', word: true },
-  { label: 'если', hint: 'если условие верно — первое, иначе второе', open: 'если(', close: ', , )', word: true },
+  fn('округлить вниз', 'округлить вниз(', ')'),
+  fn('округлить вверх', 'округлить вверх(', ')'),
+  fn('округлить', 'округлить(', ')'),
+  fn('модуль', 'модуль(', ')'),
+  fn('большее из', 'большее из(', ', )'),
+  fn('меньшее из', 'меньшее из(', ', )'),
+  fn('если', 'если(', ', , )'),
   { label: 'и', hint: 'верно, только если верны обе части', open: ' и ', word: true },
   { label: 'или', hint: 'первая часть, если она задана, иначе вторая: «класс или 1к8», «бой или реакция»', open: ' или ', word: true },
   { label: 'не', hint: 'наоборот: «не пусто(…)» — задано', open: 'не ', word: true },
-  { label: 'есть в списке', hint: 'да, если в списке есть значение', open: 'есть(', close: ', "")', word: true },
+  { ...fn('есть', 'есть(', ', "")'), label: 'есть в списке' },
 ];
 
 const LOOKUP = 'таблица';
@@ -245,6 +270,11 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
   const [highlight, setHighlight] = useState(0);
   const [closed, setClosed] = useState(false);
   const [dot, setDot] = useState<{ index: number; text: string } | null>(null);
+  const signature = useMemo(() => {
+    if (active === null || !parts[active] || !('text' in parts[active]!)) return null;
+    const own = dot?.index === active ? dot.text : (parts[active] as { text: string }).text;
+    return callAt(`${joinParts(parts.slice(0, active))}${own.slice(0, caret)}`);
+  }, [active, caret, parts, dot]);
   const menuRef = useRef<HTMLDivElement>(null);
   const focusOnce = useRef(Boolean(autoFocus));
   const sideOf = (tag: string) => {
@@ -566,7 +596,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
             spellCheck={false}
             onFocus={e => { setActive(index); setCaret(e.currentTarget.selectionStart ?? 0); onFocus?.(); }}
             onBlur={leave}
-            onChange={e => editText(index, e.target.value, e.currentTarget.selectionStart ?? e.target.value.length)}
+            onChange={e => { setCaret(e.currentTarget.selectionStart ?? e.target.value.length); editText(index, e.target.value, e.currentTarget.selectionStart ?? e.target.value.length); }}
             onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)}
             onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)}
             onKeyDown={e => {
@@ -611,6 +641,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
         ))}
         {suffix}
       </div>
+      {signature ? <Signature at={signature} /> : null}
       {calculator && active !== null ? (
         <div className="chips__ops">
           {OPS.filter(op => !op.word).map(opButton)}
