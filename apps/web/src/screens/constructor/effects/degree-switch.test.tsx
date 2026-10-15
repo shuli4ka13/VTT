@@ -21,7 +21,7 @@ const open = (systemId: string, effect: string) => {
 const text = (el: Element) => (el.textContent ?? '').replace(/\s+/g, ' ');
 
 const switches = (): HTMLElement[] => [...document.querySelectorAll<HTMLElement>('.flow-block')]
-  .filter(one => [...one.querySelectorAll(':scope > .flow-block__part .flow-head__word')].some(word => word.textContent === 'По'));
+  .filter(one => [...one.querySelectorAll(':scope > .flow-block__part .flow-head__word')].some(word => /(^|· )По$/.test(word.textContent ?? '')));
 
 describe('«Если» по ступеням — switch', () => {
   afterEach(cleanup);
@@ -48,5 +48,17 @@ describe('«Если» по ступеням — switch', () => {
     open('shadowrun6', 'ic_attack');
     expect(switches().map(text).join(' | ')).toContain('чёрный:');
   }, 60_000);
-});
 
+  it('switch по итогу вызова-выбору: «+ по «исход»» у броска атаки даёт руки промах / попадание / крит', () => {
+    open('dnd5e', 'strike');
+    within(document.body).click('+ по «исход»');
+    const block = switches().find(one => text(one).includes('«исход» (попадание)'))!;
+    expect(text(block)).toContain('промах:');
+    expect(text(block)).toContain('попадание:');
+    expect(text(block)).toContain('крит:');
+    expect(text(block)).not.toContain('Если«Бросок атаки»');
+    expect(within(document.body).has('+ по «исход»')).toBe(false);
+    const steps = useWorld.getState().system.effects.strike!.steps!;
+    expect(steps.some(step => (step as { if?: { expr?: string } }).if?.expr === '@попадание.исход == "крит"')).toBe(true);
+  }, 60_000);
+});

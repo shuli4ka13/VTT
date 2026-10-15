@@ -43,7 +43,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, names, takenNames, onRename, onUnpair, onWrap, onIfByOutcome, onUnwrap, asIf = false, outcome = '', headCond,
+  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, names, takenNames, onRename, onUnpair, onWrap, onIfByOutcome, onCasesBy, onUnwrap, asIf = false, outcome = '', headCond, headBy,
 }: {
   group: CardGroup;
   position: number;
@@ -73,6 +73,8 @@ export function GroupCard({
   onUnpair?: () => void;
   onWrap?: () => void;
   onIfByOutcome?: () => void;
+  onCasesBy?: { label: string; run: () => void };
+  headBy?: string;
   headCond?: ReactNode;
   onUnwrap?: () => void;
   asIf?: boolean;
@@ -87,9 +89,13 @@ export function GroupCard({
     if (draft.type === 'roll') delete (draft as Record<string, unknown>).against;
   });
 
+  const casesButton = onCasesBy && !folded
+    ? <Button size="sm" variant="ghost" title="Поставить сразу после вызова блок с рукой на каждый вариант итога" onClick={onCasesBy.run}>{onCasesBy.label}</Button>
+    : null;
   const actions = (
     <>
       {onIfByOutcome && !folded ? <Button size="sm" variant="ghost" title="Поставить сразу после вызова «Если» по его итогу" onClick={onIfByOutcome}>+ если по итогу</Button> : null}
+      {casesButton}
       {onWrap && !onIfByOutcome && !folded ? <Button size="sm" variant="ghost" title="Поставить этот шаг внутрь «Если»: выполняется только при условии" onClick={onWrap}>в «Если»</Button> : null}
       <Button size="sm" variant="ghost" title={upTitle ?? 'выше'} disabled={!onMoveUp} onClick={onMoveUp}>↑</Button>
       <Button size="sm" variant="ghost" title={downTitle ?? 'ниже'} disabled={!onMoveDown} onClick={onMoveDown}>↓</Button>
@@ -136,8 +142,8 @@ export function GroupCard({
     return (
       <>
         <StepHead
-          position={position} words={`${called.includes('«') ? called : `«${called}»`} — ${outcome}`} open={!folded} onToggle={onFold} problem={problem?.text ?? null} {...(headCond ? { cond: headCond } : {})}
-          actions={<FlowActions onUp={onMoveUp} onDown={onMoveDown} upTitle={upTitle} downTitle={downTitle} extra={onUnwrap ? <UnwrapButton onClick={onUnwrap} /> : null} onDelete={onDelete} />}
+          position={position} words={headBy ?? `${called.includes('«') ? called : `«${called}»`} — ${outcome}`} {...(headBy ? { word: 'По' } : {})} open={!folded} onToggle={onFold} problem={problem?.text ?? null} {...(headCond ? { cond: headCond } : {})}
+          actions={<FlowActions onUp={onMoveUp} onDown={onMoveDown} upTitle={upTitle} downTitle={downTitle} extra={<>{casesButton}{onUnwrap ? <UnwrapButton onClick={onUnwrap} /> : null}</>} onDelete={onDelete} />}
         />
         {folded ? null : <div className={`step-card flow-block__source flow-block__source--${group.kind}`}>{body}</div>}
       </>

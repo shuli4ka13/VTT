@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { STEP_WORDS } from '@vtt/engine/words/steps';
 import type { StepWords } from '@vtt/engine/words/steps';
 import { kindWord } from '@vtt/engine/words/kinds';
+import { choiceTables } from '@vtt/engine/model/tables';
 import { freeId, useWorld } from '../../../store/world.ts';
 import { followKey } from '../keys.ts';
 import { Card, CardHead, Field, Input, Select, Button, LabelInput } from '../../../ui/primitives.tsx';
@@ -16,7 +17,7 @@ import type { Effect, Step, System, ValueKind } from '@vtt/schema';
 
 type Return = NonNullable<Effect['returns']>[number];
 
-const KINDS = [['boolean', 'да или нет'], ['number', 'число'], ['text', 'текст']] as const;
+const KINDS = [['boolean', 'да или нет'], ['number', 'число'], ['text', 'текст'], ['choice', 'выбор']] as const;
 const BY_FORMULA = ':формула';
 
 interface Source { expr: string; label: string; kind: string }
@@ -105,7 +106,9 @@ export function ReturnsEditor({ id, effect, system, onEdit }: {
   const summary = (column: Return) => {
     const source = sources.find(one => one.expr === exprOf(column));
     const from = source ? source.label : exprOf(column) ? formulaAsLabels(system, exprOf(column), names) : 'не сказано, откуда';
-    const kind = column.kind === 'boolean' ? (column.no ? `да / «${column.no}»` : 'да или нет') : kindWord(String(column.kind ?? 'number'));
+    const table = column.kind === 'choice' && column.from ? system.tables?.[column.from] : undefined;
+    const kind = column.kind === 'boolean' ? (column.no ? `да / «${column.no}»` : 'да или нет')
+      : table ? `выбор из «${table.label || column.from}»` : kindWord(String(column.kind ?? 'number'));
     return `${kind} ← ${from}`;
   };
 
@@ -159,6 +162,7 @@ function ReturnForm({ column, sources, system, context, names, sheets, where, ke
   const kind = String(column.kind ?? 'number');
   const expr = exprOf(column);
   const fitting = sources.filter(one => one.kind === kind || kind === 'text');
+  const tables = choiceTables(system).map(([key, list]) => [key, list.label || key] as const);
   const known = fitting.some(one => one.expr === expr);
   const [formula, setFormula] = useState(Boolean(expr) && !known);
   const [more, setMore] = useState(false);
@@ -170,7 +174,7 @@ function ReturnForm({ column, sources, system, context, names, sheets, where, ke
           <Select<string>
             value={kind}
             options={KINDS as never}
-            onChange={next => change(target => { target.kind = next as ValueKind; if (next !== 'boolean') delete (target as { no?: string }).no; })}
+            onChange={next => change(target => { target.kind = next as ValueKind; if (next !== 'boolean') delete (target as { no?: string }).no; if (next !== 'choice') delete target.from; })}
           />
         </Field>
         <Field label="Откуда">
@@ -188,6 +192,15 @@ function ReturnForm({ column, sources, system, context, names, sheets, where, ke
             />
           )}
         </Field>
+        {kind === 'choice' ? (
+          <Field label="Таблица">
+            <Select
+              value={String(column.from ?? '')}
+              options={[['', '— какая —'], ...tables] as never}
+              onChange={next => change(target => { if (next) target.from = next; else delete target.from; })}
+            />
+          </Field>
+        ) : null}
         {kind === 'boolean' ? (
           <Field label="Как назвать «нет»" hint="подпись второй ветки: «промах», «не спасся»">
             <Input value={(column as { no?: string }).no ?? ''} placeholder={`не ${column.label ?? ''}`}

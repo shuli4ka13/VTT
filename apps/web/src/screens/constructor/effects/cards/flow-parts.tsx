@@ -136,9 +136,10 @@ export function OutcomePick({ quick, value, onPick, onFormula }: {
   );
 }
 
-export function StepHead({ position, words, open, onToggle, problem, actions, cond }: {
+export function StepHead({ position, words, word = 'Если', open, onToggle, problem, actions, cond }: {
   position: number;
   words: string;
+  word?: string;
   cond?: ReactNode;
   open: boolean;
   onToggle?: (() => void) | undefined;
@@ -146,7 +147,7 @@ export function StepHead({ position, words, open, onToggle, problem, actions, co
   actions: ReactNode;
 }) {
   return (
-    <HeadFrame word={`${position} · Если`} bad={Boolean(problem)} actions={actions}>
+    <HeadFrame word={`${position} · ${word}`} bad={Boolean(problem)} actions={actions}>
       {cond ? (
         <>
           {cond}

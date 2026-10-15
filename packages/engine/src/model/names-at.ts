@@ -17,7 +17,7 @@ export type Place =
 
 export type NameGroup = 'input' | 'loop' | 'holder' | 'heard' | 'step' | 'call' | 'constant';
 
-export interface NameChild { path: string; label: string; kind: string }
+export interface NameChild { path: string; label: string; kind: string; from?: string }
 
 export interface NameAt {
   name: string;
@@ -67,7 +67,7 @@ const holder = (): NameAt => ({ name: HOLDER, label: 'носитель — то�
 const returnsOf = (system: System | undefined, step: Step): NameChild[] => {
   const called = (step as { effect?: unknown }).effect;
   if (step.type !== 'emit' || typeof called !== 'string') return [];
-  return (system?.effects?.[called]?.returns ?? []).map(column => ({ path: `.${column.key}`, label: column.label ?? column.key, kind: column.kind ?? 'number' }));
+  return (system?.effects?.[called]?.returns ?? []).map(column => ({ path: `.${column.key}`, label: column.label ?? column.key, kind: column.kind ?? 'number', ...(column.kind === 'choice' && column.from ? { from: column.from } : {}) }));
 };
 
 function stepLabel(system: System | undefined, step: Step, fallback: string): string {

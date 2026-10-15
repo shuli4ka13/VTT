@@ -61,4 +61,16 @@ group('D&D: критическое попадание — всегда попа�
     const checked = out.reports.flatMap(entry => entry.report.trace).find(t => (t as { step?: string; within?: string }).step === 'проверка' && (t as { within?: string }).within === 'attack_roll') as { success: boolean };
     eq(checked.success, true);
   });
+  test('итог «исход» — промах, попадание или крит; крит от порога персонажа', () => {
+    const outcome = (die: number): number => {
+      const system = JSON.parse(JSON.stringify(dnd.system)) as System;
+      system.effects.strike!.steps!.splice(2, 0, { id: 'исход', type: 'roll', fixed: { expr: 'если(@попадание.исход == "крит", 3, если(@попадание.исход == "попадание", 2, 1))' } } as never);
+      eq(errorsOf(lintSystem(system)).length, 0);
+      const out = exchange({ system, compendium: dnd.compendium as Compendium, die: () => die, sheets: dnd.sheets as Sheet[], actionId: 'longsword:0', fromId: 'arven', toId: 'goblin' });
+      return (out.reports.flatMap(entry => entry.report.trace).find(t => (t as { step?: string }).step === 'исход') as { total: number }).total;
+    };
+    eq(outcome(1), 1);
+    eq(outcome(12), 2);
+    eq(outcome(19), 3, 'у Арвена Улучшенный критический — крит от 19');
+  });
 });

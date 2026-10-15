@@ -71,13 +71,14 @@ const dropParam = (row: number) => {
   openAll();
 };
 
-const returns = (rows: readonly (readonly [string, string, string, string, string?])[]) => {
+const returns = (rows: readonly (readonly [string, string, string, string, string?, string?])[]) => {
   const card = () => [...document.querySelectorAll<HTMLElement>('.card')].find(c => /^Что получит тот, кто вызвал/.test(textOf(c)))!;
-  rows.forEach(([label, kind, key, from, no], row) => {
+  rows.forEach(([label, kind, key, from, no, table], row) => {
     within(card()).click('+ итог');
     const box = within(card());
     box.type(box.cell('Название', row), label);
     box.select(box.cell('Вид', row), kind);
+    if (table) within(card()).select(within(card()).cell('Таблица', row), table);
     if (from.startsWith('=')) {
       box.select(box.cell('Откуда', row), ':формула');
       within(card()).formula(within(card()).cell('Откуда', row), from.slice(1));
@@ -108,12 +109,13 @@ describe('вызываемые блоки D&D собираются руками'
     nameStep(at(1)(), 'бросок');
     ui.click('+ проверка');
     within(at(2)()).formula('Проверка', '@бросок >= @против.ac');
-    within(at(1)()).formula('Успех, если на кости не меньше', '20');
+    within(at(1)()).formula('Успех, если на кости не меньше', '@кто.crit_from');
     within(at(1)()).formula('Провал, если на кости не больше', '1');
     nameStep(at(1)(), 'проверка');
     returns([
       ['попадание', 'boolean', 'попал', 'Проверка — пройдена', 'промах'],
       ['крит', 'boolean', 'крит', '=@проверка.natural >= @кто.crit_from'],
+      ['исход', 'choice', 'исход', '=если(не @проверка.success, "промах", если(@проверка.natural >= @кто.crit_from, "крит", "попадание"))', undefined, 'attack_outcomes'],
       ['на костях', 'number', 'на_костях', 'Проверка — что выпало на костях, без прибавок'],
     ]);
     dump({ got: built('attack_roll'), goal });

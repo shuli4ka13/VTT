@@ -148,6 +148,12 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
   const literalOf = (value: unknown): string => (typeof value === 'number' ? String(value) : JSON.stringify(String(value)));
   const same = (a: unknown, b: unknown): boolean => String(a) === String(b);
   const tableOptions = (table: string | undefined): Option[] => (listOf(system, table) ?? []).map(row => ({ value: row.value, label: row.label }));
+  const choiceReturnOf = (step: Step | undefined, key?: string) => {
+    const called = step?.type === 'emit' ? (step as { effect?: unknown }).effect : undefined;
+    return typeof called === 'string'
+      ? (system.effects?.[called]?.returns ?? []).find(one => one.kind === 'choice' && one.from && !one.many && (key === undefined || one.key === key))
+      : undefined;
+  };
   const sourceOf = (ref: string, open: number): { options: Option[]; title: string } | null => {
     if (ref.endsWith('.degree')) {
       const id = ref.slice(0, -'.degree'.length);
@@ -161,6 +167,11 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
       return options.length ? { options, title: `«${param.label ?? param.key}»` } : null;
     }
     const dot = ref.indexOf('.');
+    const choice = dot > 0 ? choiceReturnOf(steps.find(step => step.type === 'emit' && step.id === ref.slice(0, dot)), ref.slice(dot + 1)) : undefined;
+    if (choice) {
+      const options = tableOptions(choice.from);
+      return options.length ? { options, title: `«${choice.label ?? choice.key}» (${ref.slice(0, dot).replace(/_/g, ' ')})` } : null;
+    }
     const sheets = sheetsAt(system, id, placeAt(open));
     if (dot > 0 && sheets.has(ref.slice(0, dot))) {
       const field = fieldOf(system, ref.slice(dot + 1));
@@ -183,11 +194,12 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
   const degreesOf = (group: (typeof cards)[number]): string[] =>
     (group.kind === 'check' ? degreeWords(system, (group.step as { degrees?: { table?: string } }).degrees?.table) : []);
   const casesOf = (group: (typeof cards)[number], open: number): Cases | null => {
-    const found = group.step.id && degreesOf(group).length ? casesAt(open) : null;
-    return found && found.ref === `${String(group.step.id)}.degree` ? found : null;
+    const found = group.step.id && (degreesOf(group).length || choiceReturnOf(group.step)) ? casesAt(open) : null;
+    const own = `${String(group.step.id)}.`;
+    return found && (found.ref === `${own}degree` || (found.ref.startsWith(own) && choiceReturnOf(group.step, found.ref.slice(own.length)))) ? found : null;
   };
 
-  const cardOf = (group: (typeof cards)[number], g: number, whole?: [number, number], fused?: { outcome: string; unwrap?: () => void; cond?: ReactNode }) => {
+  const cardOf = (group: (typeof cards)[number], g: number, whole?: [number, number], fused?: { outcome: string; unwrap?: () => void; cond?: ReactNode; by?: string }) => {
     const asIf = Boolean(fused);
     const at = numberOf(g) - 1;
     const range = whole ? span(whole[0], whole[1]) : group.indices;
@@ -204,6 +216,18 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
       const at = group.indices[group.indices.length - 1]! + 1;
       list.splice(at, 0, { type: 'branch', if: { expr: `@${step.id}.${flag.key}` } } as unknown as Step, { type: 'end' } as unknown as Step);
     }) : undefined;
+    const choice = typeof calledKey !== 'string' || fused?.by ? undefined : choiceReturnOf(group.step);
+    const choices = choice ? tableOptions(choice.from) : [];
+    const casesByChoice = choice && choices.length ? {
+      label: `+ по «${choice.label ?? choice.key}»`,
+      run: () => edit(draft => {
+        const list = draft.steps ?? [];
+        const step = list[group.indices[0]!] as Step & { id?: string };
+        if (!step.id) step.id = freeId([...stepIdsOf(draft), ...(draft.params ?? []).map(p => p.key)], String(calledKey));
+        const arms = choices.map((option, k) => ({ type: k ? 'orElse' : 'branch', if: { expr: `@${step.id}.${choice.key} == ${literalOf(option.value)}` } }) as unknown as Step);
+        list.splice(group.indices[group.indices.length - 1]! + 1, 0, ...arms, { type: 'end' } as unknown as Step);
+      }),
+    } : undefined;
     const degrees = asIf ? [] : degreesOf(group);
     const ifByDegree = degrees.length ? () => edit(draft => {
       const list = draft.steps ?? [];
@@ -223,7 +247,9 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         {...(fused ? { outcome: fused.outcome } : {})}
         {...(fused?.unwrap ? { onUnwrap: fused.unwrap } : {})}
         {...(fused?.cond ? { headCond: fused.cond } : {})}
+        {...(fused?.by ? { headBy: fused.by } : {})}
         {...(ifByOutcome ?? ifByDegree ? { onIfByOutcome: (ifByOutcome ?? ifByDegree)! } : {})}
+        {...(casesByChoice ? { onCasesBy: casesByChoice } : {})}
         position={startAt + at + 1}
         system={system}
         effect={effect}
@@ -418,7 +444,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
               {k === 0 && fused && outcomes
                 ? cardOf(fused.group, fused.g, [fused.group.indices[0]!, end], { outcome: outcomes.first, ...(unwrap ? { unwrap } : {}), ...(callPick ? { cond: callPick } : {}) })
                 : k === 0 && cases ? (cases.group && cases.g !== undefined
-                  ? cardOf(cases.group, cases.g, [cases.group.indices[0]!, end], { outcome: caseOf(open) })
+                  ? cardOf(cases.group, cases.g, [cases.group.indices[0]!, end], { outcome: caseOf(open), by: cases.title })
                   : <HeadFrame word="По" actions={headActions}><span className="flow-head__words">{cases.title}</span></HeadFrame>)
                 : cases ? <ArmLabel word={label} actions={armActions} />
                 : conditioned ? <FlowHead
@@ -458,16 +484,16 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         continue;
       }
       const next = cards[g + 1];
-      const verdict = group.step.id && next?.kind === 'flow' && next.step.type === 'branch' ? outcomeOf(group, next.step) : null;
-      if (verdict) {
-        const made = block(next!.indices[0]!, { group, g, ...verdict });
+      const cases = group.step.id && next?.kind === 'flow' && next.step.type === 'branch' ? casesOf(group, next.indices[0]!) : null;
+      if (cases) {
+        const made = block(next!.indices[0]!, undefined, { group, g, ...cases });
         out.push(made.node);
         g = made.next > g ? made.next : g + 2;
         continue;
       }
-      const cases = group.step.id && next?.kind === 'flow' && next.step.type === 'branch' ? casesOf(group, next.indices[0]!) : null;
-      if (cases) {
-        const made = block(next!.indices[0]!, undefined, { group, g, ...cases });
+      const verdict = group.step.id && next?.kind === 'flow' && next.step.type === 'branch' ? outcomeOf(group, next.step) : null;
+      if (verdict) {
+        const made = block(next!.indices[0]!, { group, g, ...verdict });
         out.push(made.node);
         g = made.next > g ? made.next : g + 2;
         continue;
