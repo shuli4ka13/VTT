@@ -13,6 +13,8 @@ export { lex } from './lex.ts';
 export { BOOLEANS, AND, OR, NOT } from './parse.ts';
 export { andParts, joinAnd, andText, andPartsText, operandText } from './logic.ts';
 export { given } from './evaluate.ts';
+export { FUNCTIONS as FUNCTION_SPECS, functionSpec, partAt, callAt } from './functions.ts';
+export type { FunctionSpec, Part as FunctionPart, Result as FunctionResult } from './functions.ts';
 export { printFormula } from './print.ts';
 export type { Token, TokenType } from './lex.ts';
 export type { Node } from './ast.ts';
