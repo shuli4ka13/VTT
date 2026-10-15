@@ -349,8 +349,7 @@ describe('эффекты пресетов собираются руками: Sha
     wrapIf(at(4), '=@rating > 0 и сколько(@бросок.dice.rolls, 6) >= 2');
 
     ui.click('+ если');
-    within(headOf(block(1))).when('Проверка — какая ступень успеха');
-    within(headOf(block(1))).type('Ступень', 'успех с последствием');
+    within(headOf(block(1))).when('=есть(@бросок.degree, "успех с последствием")');
     addToArm(block(1), 0, 'change');
     change(at(5), 'стол', 'alarm', 'set', 'меньшее из(8, @стол.alarm + 1)');
     addArm(block(1), '+ иначе, если');

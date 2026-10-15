@@ -34,45 +34,34 @@ const card = (handler: Handler, more: Record<string, unknown> = {}) => {
   return { view, get: () => current };
 };
 
-const conditionSelect = (): HTMLSelectElement => {
-  const find = () => [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.textContent === 'формулой…'));
-  if (!find()) fireEvent.click([...document.querySelectorAll('button')].find(b => b.textContent === '+ условие')!);
-  return find()!;
-};
 
 describe('«когда»: исходы под момент', () => {
   afterEach(cleanup);
 
   it('«после» действия предлагает итог шага цели как есть', () => {
-    card({ on: 'after:удар', steps: [] });
-    expect([...conditionSelect().options].map(o => o.value)).toContain('@hit.success');
+    const { get } = card({ on: 'after:удар', steps: [] });
+    within(document.body).when('Проверка — пройдена');
+    expect(get().if?.expr).toBe('@hit.success');
   });
 
   it('исходы названы шагом и исходом, без номера шага', () => {
     card({ on: 'after:удар', steps: [] });
-    const labels = [...conditionSelect().options].map(o => o.textContent ?? '');
+    const labels = within(document.body).whenOptions();
     expect(labels).toContain('Проверка — пройдена');
     expect(labels.filter(one => /шаг \d/.test(one))).toEqual([]);
   });
 
   it('после «Для каждого из» исход — «хоть по одной цели»: в условие ложится счёт по итогам целей', () => {
-    card({ on: 'done:каждому', steps: [] }, { каждому: eachEffect });
-    const options = [...conditionSelect().options];
-    const found = options.find(o => o.textContent === 'хоть по одной цели: Проверка — пройдена');
-    expect(found?.value).toBe('сколько(@итоги.спас.success, да) >= 1');
+    const { get } = card({ on: 'done:каждому', steps: [] }, { каждому: eachEffect });
+    within(document.body).when('хоть по одной цели: Проверка — пройдена');
+    expect(get().if?.expr).toBe('сколько(@итоги.спас.success, да) >= 1');
   });
 
   it('«завершено» не предлагает итог одной цели: условие — формулой, и она знает таблицу итогов по целям', () => {
     const { get } = card({ on: 'done:удар', steps: [] });
-    fireEvent.change(conditionSelect(), { target: { value: ':формула' } });
-    expect(document.querySelector('.cond__formula')).toBeTruthy();
     expect(get().if).toBeUndefined();
     within(document.body).formula(document.querySelector<HTMLElement>('.cond__formula')!, 'сколько(@итоги.hit.success, да) >= 2');
     expect(get().if?.expr).toBe('сколько(@итоги.hit.success, да) >= 2');
-    cleanup();
-    const { view } = card({ on: 'done:удар', if: { expr: 'сколько(@итоги.hit.success, да) >= 2' }, steps: [] });
-    expect(view.container.querySelector('.cond__formula')).toBeTruthy();
-    expect([...view.container.querySelectorAll<HTMLInputElement>('.cond__formula input')].map(i => i.value)).toEqual(['сколько(@итоги.hit.success, да) >= 2']);
   });
 
   it('у «завершено» нет выбора «Кому», зато есть «Кого касается»', () => {

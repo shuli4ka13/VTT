@@ -49,8 +49,7 @@ describe('имена из справочной движка', () => {
 
   it('подписка на метку предлагает итоги вызова словами', () => {
     open('shield');
-    const options = [...document.querySelectorAll('select')].flatMap(one => [...one.options].map(option => option.textContent));
-    expect(options).toContain('Бросок атаки — попадание');
+    expect(within(document).whenOptions()).toContain('Бросок атаки — попадание');
     expect(text()).not.toContain('@попадание.попал');
   });
 

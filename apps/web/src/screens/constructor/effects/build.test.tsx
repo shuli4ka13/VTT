@@ -371,8 +371,7 @@ describe('эффекты пресетов собираются в констру
     ui.click('+ держание');
     ui.select('Держит', 'concentration');
     ui.select('У кого', 'действующий');
-    ui.click('+ условие');
-    ui.select(document.querySelector<HTMLElement>('.cond__fact')!, 'holds');
+    ui.when('=@holds');
 
     ui.click('+ изменение');
     let held = stepCard(/^3 · /);

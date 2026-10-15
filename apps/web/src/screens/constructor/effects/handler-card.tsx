@@ -7,7 +7,9 @@ import { MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, PHASES, SEEN, 
 import type { Phase } from '@vtt/engine/events/bus';
 import type { MomentKey } from '@vtt/engine/events/moments';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
-import { TARGETS_SEED } from '@vtt/engine/model/references';
+import { TARGETS_SEED, HOLDER } from '@vtt/engine/model/references';
+import { compile, printFormula, andParts } from '@vtt/engine/formula';
+import type { Node } from '@vtt/engine/formula';
 import { sheetsAt, placeNamesAt } from './names.ts';
 import { namesAt } from '@vtt/engine/model/names-at';
 import { ConditionField } from '../condition-field.tsx';
@@ -140,11 +142,12 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
   const condition = (() => {
     const text = handler.if?.expr?.trim();
     if (!text) return '';
-    const parts = text.replace(/^все\((.*)\)$/su, '$1').split(/,\s*(?![^()]*\))/u);
+    let parts: Node[];
+    try { parts = andParts(compile(text).ast); } catch { return formulaWords(system, text, visible); }
     return parts.map(part => {
-      const holder = /^@([\p{L}\p{N}_]+)\s*==\s*@носитель$/u.exec(part.trim())?.[1];
+      const holder = part.kind === 'Binary' && part.op === '==' && part.left.kind === 'Ref' && part.right.kind === 'Ref' && part.right.tag === HOLDER ? part.left.tag : null;
       const label = holder ? names.find(([name]) => name === holder)?.[1] : undefined;
-      return label ? `«${label}» — носитель` : formulaWords(system, part.trim(), visible);
+      return label ? `«${label}» — носитель` : formulaWords(system, printFormula(part), visible);
     }).join(' и ');
   })();
   const sentence = `${happened || 'что случилось?'}${condition ? `, если ${condition}` : ''}${handler.confirm ? ' — решает игрок носителя' : ''}`;

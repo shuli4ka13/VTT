@@ -380,10 +380,9 @@ describe('эффект слушает время', () => {
     const effect = Object.values(useWorld.getState().system.effects).at(-1)!;
     expect(effect.on?.[0]?.on).toBe('moment:turn-start');
 
-    fireEvent.click(screen.getByText('+ условие'));
-    const condition = [...document.querySelectorAll('select')]
-      .find(el => [...el.options].some(o => o.textContent === 'формулой…'))! as HTMLSelectElement;
-    expect([...condition.options].map(o => o.value), 'у времени нет исходов шага, только формула').toEqual(['', ':формула']);
+    expect(document.querySelector('.cond__formula'), 'условие — поле формулы').not.toBeNull();
+    const ready = [...document.querySelectorAll('select')].find(el => el.options[0]?.textContent === '+ готовое');
+    expect(ready, 'у времени нет исходов шага — готового нет').toBeUndefined();
   });
 });
 

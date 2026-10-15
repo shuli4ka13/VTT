@@ -123,7 +123,6 @@ describe('блок «Если»: условие строкой, руки, «Ст
     const head = within(headOf(block(0)));
     expect(head.whenOptions()).toContain('Проверка — пройдена');
     expect(head.whenOptions()).toContain('Проверка — не пройдена');
-    expect(head.has('×')).toBe(false);
     head.when('Проверка — не пройдена');
     expect(steps()[2]).toEqual({ type: 'branch', if: { expr: 'не @hit.success' } });
     expect(isFused(block(0))).toBe(true);
@@ -235,14 +234,13 @@ describe('блок «Если»: условие строкой, руки, «Ст
     expect(within(block(0).querySelector<HTMLElement>(':scope > .flow-block__foot')!).has('+ попадание')).toBe(true);
   });
 
-  it('без проверок выше условие задаётся формулой; «+ и» склеивает строки в «все(…)», «×» убирает строку', () => {
+  it('без проверок выше условие — одно поле формулы, готового нет; «и» пишется в той же формуле', () => {
     start([]);
     within().click('+ если');
-    expect(within(headOf(block(0))).whenOptions()).toEqual(['— что проверяем —', 'формулой…']);
-    within(headOf(block(0))).when('=1 > 0', '=2 > 1');
+    expect(within(headOf(block(0))).whenOptions()).toEqual([]);
+    within(headOf(block(0))).when('=1 > 0 и 2 > 1');
     expect(steps()[0]).toEqual({ type: 'branch', if: { expr: '1 > 0 и 2 > 1' } });
-    expect(within(headOf(block(0))).condRows()).toHaveLength(2);
-    within(headOf(block(0))).unwhen(1);
+    within(headOf(block(0))).when('=1 > 0');
     expect(steps()[0]).toEqual({ type: 'branch', if: { expr: '1 > 0' } });
   });
 
@@ -363,7 +361,7 @@ describe('условие блока «Если» в покое — словам�
   it('пустое условие — сразу открыто, слов нет; условие с ошибкой — поле открыто и ошибка видна', () => {
     show(undefined);
     expect(face()).toBeNull();
-    expect(headOf(block(0)).querySelector('select')).not.toBeNull();
+    expect(chipsInHead()).not.toBeNull();
     cleanup();
 
     show({ expr: '@нет_такого > 1' });

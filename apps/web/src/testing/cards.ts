@@ -149,35 +149,52 @@ export function within(root: ParentNode = document) {
     return own;
   };
 
-  const condRows = (): HTMLElement[] => [...condBox().querySelectorAll<HTMLElement>(':scope > .cond__row')];
+  const condField = (): HTMLElement => condBox().querySelector<HTMLElement>('.cond__formula')!;
+
+  const menuFor = (query: string): HTMLElement[] => {
+    const box = condField();
+    const spoken = box.querySelector<HTMLElement>('.formula-words');
+    if (spoken) { act(() => { fireEvent.click(spoken); }); }
+    const input = [...box.querySelectorAll<HTMLInputElement>('input.chips__text')].at(-1);
+    if (!input) throw new Error('нет ввода формулы условия');
+    act(() => {
+      fireEvent.focus(input);
+      fireEvent.change(input, { target: { value: `${input.value}${query}`, selectionStart: input.value.length + query.length } });
+    });
+    return [...document.querySelectorAll<HTMLElement>('.slot__option')];
+  };
 
   const when = (...facts: string[]): void => {
+    formula(condField(), facts[0]?.startsWith('=') ? facts[0].slice(1) : '');
     facts.forEach((fact, at) => {
-      if (at === 0 && !condRows().length) within(condBox()).click('+ условие');
-      if (at > 0) within(condRows()[at - 1]!).click('+ и');
-      const row = condRows()[at];
-      if (!row) throw new Error(`нет строки условия №${at + 1}`);
-      const box = row.querySelector<HTMLElement>('.cond__fact')!;
+      if (at === 0 && fact.startsWith('=')) return;
+      const glue = at === 0 ? '' : ' и ';
       if (fact.startsWith('=')) {
-        if (!box.querySelector('.cond__formula')) within(box).select(box.querySelector('select')!, ':формула');
-        within(box).formula(condRows()[at]!.querySelector<HTMLElement>('.cond__formula')!, fact.slice(1));
-      } else within(box).select(box.querySelector('select')!, fact);
+        const input = [...condField().querySelectorAll<HTMLInputElement>('input.chips__text')].at(-1)!;
+        act(() => { fireEvent.change(input, { target: { value: `${input.value}${glue}${fact.slice(1)}` } }); });
+      } else {
+        const options = menuFor(`${glue}@${fact.split(/\s+/u)[0]}`);
+        const found = options.find(one => labelOf(one) === fact) ?? options.find(one => labelOf(one).includes(fact));
+        if (!found) throw new Error(`в подсказках условия нет «${fact}»; есть: ${options.map(textOf).slice(0, 30).join(' | ')}`);
+        act(() => { fireEvent.mouseDown(found); });
+      }
     });
+    const chips = condField().querySelector('.chips');
+    if (chips) act(() => { fireEvent.keyDown(chips, { key: 'Enter' }); });
+    openAll();
   };
 
-  const unwhen = (at = 0): void => {
-    const row = condRows()[at];
-    if (!row) throw new Error(`нет строки условия №${at + 1}`);
-    within(row).click('×');
+  const READY = 'частые условия';
+  const labelOf = (option: HTMLElement): string => textOf(option).slice(textOf(option.querySelector('.slot__group') ?? option).length).trim();
+
+  const whenOptions = (): string[] => {
+    const options = menuFor('@').filter(one => textOf(one.querySelector('.slot__group') ?? one) === READY).map(labelOf);
+    const chips = condField().querySelector('.chips');
+    if (chips) act(() => { fireEvent.keyDown(chips, { key: 'Escape' }); });
+    return options;
   };
 
-  const whenOptions = (at = 0): string[] => {
-    const row = condRows()[at];
-    const el = row?.querySelector<HTMLSelectElement>('.cond__fact select');
-    return el ? [...el.options].map(textOf) : [];
-  };
-
-  return { arg, args, button, has, click, cell, field, select, type, formula, check, when, unwhen, whenOptions, condRows };
+  return { arg, args, button, has, click, cell, field, select, type, formula, check, when, whenOptions };
 }
 
 export const blocks = (root: ParentNode = document): HTMLElement[] => [...root.querySelectorAll<HTMLElement>('.flow-block')];

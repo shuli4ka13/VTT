@@ -348,8 +348,7 @@ describe('эффекты D&D собираются в конструкторе р
     ui.click('+ держание');
     ui.select('Держит', 'concentration');
     ui.select('У кого', 'действующий');
-    ui.click('+ условие');
-    ui.select(document.querySelector<HTMLElement>('.cond__fact')!, 'holds');
+    ui.when('=@holds');
     const at = (n: number) => stepCard(new RegExp(`^${n} · `));
     const hit = (n: number, amount: string) => {
       within(at(n)).click('вызов');
