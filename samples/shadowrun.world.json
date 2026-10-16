@@ -13766,7 +13766,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "@healer_pool - если(@действующий.has_fa_kit >= 1, 0, 2)"
+              "expr": "большее из(0, @healer_pool - если(@действующий.has_fa_kit >= 1, 0, 2))"
             },
             "tags": [
               "лечение"
