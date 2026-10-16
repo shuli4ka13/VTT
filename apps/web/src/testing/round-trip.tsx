@@ -112,7 +112,7 @@ export function roundTrip(name: string, part = 0, parts = 1): void {
 
   describe('пресет не портится редактором: холостой коммит в каждом поле', () => {
     beforeEach(() => { try { localStorage.clear(); } catch { return; } });
-    afterEach(() => { cleanup(); });
+    afterEach(async () => { cleanup(); await new Promise(resolve => setTimeout(resolve, 150)); });
 
     describe.skipIf(!wanted || !world)(name, () => {
       const views = world ? viewsOf(world.system, world.compendium).filter((_, index) => index % parts === part) : [];

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { matchTagQuery } from './tag-suggest.tsx';
@@ -265,6 +265,8 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
   );
   const host = useRef<HTMLDivElement>(null);
   const inputs = useRef(new Map<number, HTMLInputElement>());
+  const leaving = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (leaving.current) clearTimeout(leaving.current); }, []);
   const [active, setActive] = useState<number | null>(null);
   const [caret, setCaret] = useState(0);
   const [highlight, setHighlight] = useState(0);
@@ -500,7 +502,9 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
   const leave = () => {
     setDot(null);
 
-    setTimeout(() => {
+    if (leaving.current) clearTimeout(leaving.current);
+    leaving.current = setTimeout(() => {
+      leaving.current = null;
       if (host.current && !host.current.contains(document.activeElement)) {
         setActive(null);
         onBlur?.();
