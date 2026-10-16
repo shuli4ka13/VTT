@@ -43,7 +43,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, names, takenNames, onRename, onUnpair, onWrap, onIfByOutcome, onCasesBy, onUnwrap, asIf = false, outcome = '', headCond, headBy,
+  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, names, takenNames, onRename, onUnpair, onWrap, ifBy, onUnwrap, asIf = false, outcome = '', headCond, headBy, headWord,
 }: {
   group: CardGroup;
   position: number;
@@ -72,9 +72,9 @@ export function GroupCard({
   names?: ReadonlyMap<string, string>;
   onUnpair?: () => void;
   onWrap?: () => void;
-  onIfByOutcome?: () => void;
-  onCasesBy?: { label: string; run: () => void };
+  ifBy?: { label: string; run: () => void }[];
   headBy?: string;
+  headWord?: string;
   headCond?: ReactNode;
   onUnwrap?: () => void;
   asIf?: boolean;
@@ -89,14 +89,16 @@ export function GroupCard({
     if (draft.type === 'roll') delete (draft as Record<string, unknown>).against;
   });
 
-  const casesButton = onCasesBy && !folded
-    ? <Button size="sm" variant="ghost" title="Поставить сразу после вызова блок с рукой на каждый вариант итога" onClick={onCasesBy.run}>{onCasesBy.label}</Button>
-    : null;
+  const IF_BY = 'Поставить сразу после шага «Если» по его итогу';
+  const ifByControl = !ifBy?.length || folded ? null
+    : ifBy.length === 1 ? <Button size="sm" variant="ghost" title={IF_BY} onClick={ifBy[0]!.run}>+ если по итогу</Button>
+      : <Select<string> value="" title={IF_BY} label="если по итогу"
+        options={[['', '+ если по итогу'], ...ifBy.map((one, k) => [String(k + 1), one.label] as const)]}
+        onChange={pick => { if (pick) ifBy[Number(pick) - 1]!.run(); }} />;
   const actions = (
     <>
-      {onIfByOutcome && !folded ? <Button size="sm" variant="ghost" title="Поставить сразу после вызова «Если» по его итогу" onClick={onIfByOutcome}>+ если по итогу</Button> : null}
-      {casesButton}
-      {onWrap && !onIfByOutcome && !folded ? <Button size="sm" variant="ghost" title="Поставить этот шаг внутрь «Если»: выполняется только при условии" onClick={onWrap}>в «Если»</Button> : null}
+      {ifByControl}
+      {onWrap && !ifBy?.length && !folded ? <Button size="sm" variant="ghost" title="Поставить этот шаг внутрь «Если»: выполняется только при условии" onClick={onWrap}>в «Если»</Button> : null}
       <Button size="sm" variant="ghost" title={upTitle ?? 'выше'} disabled={!onMoveUp} onClick={onMoveUp}>↑</Button>
       <Button size="sm" variant="ghost" title={downTitle ?? 'ниже'} disabled={!onMoveDown} onClick={onMoveDown}>↓</Button>
       <DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>
@@ -142,8 +144,8 @@ export function GroupCard({
     return (
       <>
         <StepHead
-          position={position} words={headBy ?? `${called.includes('«') ? called : `«${called}»`} — ${outcome}`} {...(headBy ? { word: 'По' } : {})} open={!folded} onToggle={onFold} problem={problem?.text ?? null} {...(headCond ? { cond: headCond } : {})}
-          actions={<FlowActions onUp={onMoveUp} onDown={onMoveDown} upTitle={upTitle} downTitle={downTitle} extra={<>{casesButton}{onUnwrap ? <UnwrapButton onClick={onUnwrap} /> : null}</>} onDelete={onDelete} />}
+          position={position} words={headBy ?? `${called.includes('«') ? called : `«${called}»`} — ${outcome}`} {...(headBy || headWord ? { word: headWord ?? 'По' } : {})} open={!folded} onToggle={onFold} problem={problem?.text ?? null} {...(headCond ? { cond: headCond } : {})}
+          actions={<FlowActions onUp={onMoveUp} onDown={onMoveDown} upTitle={upTitle} downTitle={downTitle} extra={<>{ifByControl}{onUnwrap ? <UnwrapButton onClick={onUnwrap} /> : null}</>} onDelete={onDelete} />}
         />
         {folded ? null : <div className={`step-card flow-block__source flow-block__source--${group.kind}`}>{body}</div>}
       </>

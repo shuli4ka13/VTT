@@ -49,15 +49,15 @@ describe('«Если» по ступеням — switch', () => {
     expect(switches().map(text).join(' | ')).toContain('чёрный:');
   }, 60_000);
 
-  it('switch по итогу вызова-выбору: «+ по «исход»» у броска атаки даёт руки промах / попадание / крит', () => {
+  it('switch по итогу вызова-выбору: «+ если по итогу» у склеенного броска атаки даёт руки промах / попадание / крит', () => {
     open('dnd5e', 'strike');
-    within(document.body).click('+ по «исход»');
+    within(document.body).click('+ если по итогу');
     const block = switches().find(one => text(one).includes('«исход» (попадание)'))!;
     expect(text(block)).toContain('промах:');
     expect(text(block)).toContain('попадание:');
     expect(text(block)).toContain('крит:');
     expect(text(block)).not.toContain('Если«Бросок атаки»');
-    expect(within(document.body).has('+ по «исход»')).toBe(false);
+    expect(within(document.body).has('+ если по итогу')).toBe(false);
     const steps = useWorld.getState().system.effects.strike!.steps!;
     expect(steps.some(step => (step as { if?: { expr?: string } }).if?.expr === '@попадание.исход == "крит"')).toBe(true);
   }, 60_000);

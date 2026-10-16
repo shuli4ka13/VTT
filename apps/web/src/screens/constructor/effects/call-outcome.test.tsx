@@ -37,6 +37,8 @@ const start = (steps: unknown[], plain = false) => {
 
 const steps = (): Step[] => useWorld.getState().system.effects.удар!.steps ?? [];
 
+const ifBy = (card: HTMLElement, option: string) => within(card).select(card.querySelector<HTMLElement>('select[aria-label="если по итогу"]')!, option);
+
 describe('«+ если по итогу» у вызова', () => {
   beforeEach(() => { cleanup(); try { localStorage.clear(); } catch { return; } });
   afterEach(() => { cleanup(); });
@@ -45,7 +47,7 @@ describe('«+ если по итогу» у вызова', () => {
     start([{ type: 'emit', effect: 'бросок' }]);
     const card = () => stepCard(/^1 · /);
     expect(within(card()).has('в «Если»')).toBe(false);
-    within(card()).click('+ если по итогу');
+    ifBy(card(), 'попадание / промах');
     expect(steps()).toEqual([
       { type: 'emit', effect: 'бросок', id: 'бросок' },
       { type: 'branch', if: { expr: '@бросок.попал' } },
@@ -56,10 +58,27 @@ describe('«+ если по итогу» у вызова', () => {
 
   it('имя шага, если оно уже есть, не меняется; вставка идёт после вызова, а не в конец', () => {
     start([{ id: 'атака', type: 'emit', effect: 'бросок' }, { type: 'stop' }]);
-    within(stepCard(/^1 · /)).click('+ если по итогу');
+    ifBy(stepCard(/^1 · /), 'попадание / промах');
     expect(steps().map(step => step.type)).toEqual(['emit', 'branch', 'end', 'stop']);
     expect(steps()[0]!.id).toBe('атака');
     expect(steps()[1]).toEqual({ type: 'branch', if: { expr: '@атака.попал' } });
+  });
+
+  it('итог на выбор — по любому из итогов: «крит / не крит» ставит «Если» по криту', () => {
+    start([{ id: 'атака', type: 'emit', effect: 'бросок' }]);
+    ifBy(stepCard(/^1 · /), 'крит / не крит');
+    expect(steps()[1]).toEqual({ type: 'branch', if: { expr: '@атака.крит' } });
+  });
+
+  it('у проверки без ступеней — та же кнопка: «Если» по успеху, склеено с проверкой', () => {
+    start([{ type: 'check', value: { expr: '5' }, versus: { expr: '3' } }]);
+    within(stepCard(/^1 · /)).click('+ если по итогу');
+    expect(steps()).toEqual([
+      { type: 'check', value: { expr: '5' }, versus: { expr: '3' }, id: 'проверка' },
+      { type: 'branch', if: { expr: '@проверка.success' } },
+      { type: 'end' },
+    ]);
+    expect(isFused(block(0))).toBe(true);
   });
 
   it('у вызова без итогов остаётся «в «Если»»', () => {
@@ -79,15 +98,9 @@ describe('шапка склеенного «Если» по вызову', () =>
   it('выпадающий список — итоги только этого вызова и «формулой…»; выбор переписывает условие', () => {
     start(fusedSteps());
     expect(isFused(block(0))).toBe(true);
-    expect([...pick().options].map(textOf)).toEqual([
-      '— что проверяем —', 'Бросок атаки — попадание', 'Бросок атаки — промах',
-      'Бросок атаки — крит', 'Бросок атаки — не крит', 'формулой…',
-    ]);
-    expect(pick().selectedOptions[0]!.textContent).toBe('Бросок атаки — попадание');
-    within(headOf(block(0))).select(pick(), 'Бросок атаки — промах');
-    expect(steps()[1]).toEqual({ type: 'branch', if: { expr: 'не @атака.попал' } });
-    expect(isFused(block(0))).toBe(true);
-    within(headOf(block(0))).select(pick(), 'Бросок атаки — крит');
+    expect([...pick().options].map(textOf)).toEqual(['— что проверяем —', 'попадание / промах', 'крит / не крит', 'формулой…']);
+    expect(pick().selectedOptions[0]!.textContent).toBe('попадание / промах');
+    within(headOf(block(0))).select(pick(), 'крит / не крит');
     expect(steps()[1]).toEqual({ type: 'branch', if: { expr: '@атака.крит' } });
   });
 

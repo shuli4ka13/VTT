@@ -130,14 +130,12 @@ export function OutcomePick({ quick, value, onPick, onFormula }: {
 }) {
   const when = readGuard(value);
   const current = when ? writeGuard({ ref: when.ref, ...(when.not ? { not: true } : {}) }) : '';
+  const own = (one: QuickRef) => writeGuard({ ref: one.ref, ...(when?.ref === one.ref && when.not ? { not: true } : {}) });
   return (
     <Select<string>
       value={current}
       options={[['', '— что проверяем —'],
-        ...quick.flatMap(one => [
-          [writeGuard({ ref: one.ref }), yesNo(one)[0]] as const,
-          [writeGuard({ ref: one.ref, not: true }), yesNo(one)[1]] as const,
-        ]),
+        ...quick.map(one => [own(one), yesNo(one).join(' / ')] as const),
         [BY_FORMULA, 'формулой…']]}
       onChange={next => { if (next === BY_FORMULA) onFormula(); else if (next) onPick(next); }}
     />
