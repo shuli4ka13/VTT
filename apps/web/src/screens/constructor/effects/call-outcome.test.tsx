@@ -37,9 +37,9 @@ const start = (steps: unknown[], plain = false) => {
 
 const steps = (): Step[] => useWorld.getState().system.effects.удар!.steps ?? [];
 
-const ifBy = (card: HTMLElement, option: string) => within(card).select(card.querySelector<HTMLElement>('select[aria-label="если по итогу"]')!, option);
+const ifBy = (card: HTMLElement, option: string) => within(card).select(card.querySelector<HTMLElement>('select[aria-label="по итогу"]')!, option);
 
-describe('«+ если по итогу» у вызова', () => {
+describe('«+ по итогу» у вызова', () => {
   beforeEach(() => { cleanup(); try { localStorage.clear(); } catch { return; } });
   afterEach(() => { cleanup(); });
 
@@ -72,7 +72,7 @@ describe('«+ если по итогу» у вызова', () => {
 
   it('у проверки без ступеней — та же кнопка: «Если» по успеху, склеено с проверкой', () => {
     start([{ type: 'check', value: { expr: '5' }, versus: { expr: '3' } }]);
-    within(stepCard(/^1 · /)).click('+ если по итогу');
+    within(stepCard(/^1 · /)).click('+ по итогу');
     expect(steps()).toEqual([
       { type: 'check', value: { expr: '5' }, versus: { expr: '3' }, id: 'проверка' },
       { type: 'branch', if: { expr: '@проверка.success' } },
@@ -83,7 +83,7 @@ describe('«+ если по итогу» у вызова', () => {
 
   it('у вызова без итогов остаётся «в «Если»»', () => {
     start([{ type: 'emit', effect: 'простой' }]);
-    expect(within(stepCard(/^1 · /)).has('+ если по итогу')).toBe(false);
+    expect(within(stepCard(/^1 · /)).has('+ по итогу')).toBe(false);
     expect(within(stepCard(/^1 · /)).has('в «Если»')).toBe(true);
   });
 });

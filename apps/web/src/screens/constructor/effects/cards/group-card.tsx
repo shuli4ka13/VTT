@@ -89,11 +89,11 @@ export function GroupCard({
     if (draft.type === 'roll') delete (draft as Record<string, unknown>).against;
   });
 
-  const IF_BY = 'Поставить сразу после шага «Если» по его итогу';
+  const IF_BY = 'Поставить сразу после шага развилку «По …» по его итогу';
   const ifByControl = !ifBy?.length || folded ? null
-    : ifBy.length === 1 ? <Button size="sm" variant="ghost" title={IF_BY} onClick={ifBy[0]!.run}>+ если по итогу</Button>
-      : <Select<string> value="" title={IF_BY} label="если по итогу"
-        options={[['', '+ если по итогу'], ...ifBy.map((one, k) => [String(k + 1), one.label] as const)]}
+    : ifBy.length === 1 ? <Button size="sm" variant="ghost" title={IF_BY} onClick={ifBy[0]!.run}>+ по итогу</Button>
+      : <Select<string> value="" title={IF_BY} label="по итогу"
+        options={[['', '+ по итогу'], ...ifBy.map((one, k) => [String(k + 1), one.label] as const)]}
         onChange={pick => { if (pick) ifBy[Number(pick) - 1]!.run(); }} />;
   const actions = (
     <>
