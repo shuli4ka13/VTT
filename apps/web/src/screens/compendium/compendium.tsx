@@ -184,9 +184,9 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
                   onlyWorn
                   except={record.id}
                   onChange={next => edit(draft => {
-                    const cells = (draft.cells ??= {});
-                    if (next === undefined || next === '' || (Array.isArray(next) && !next.length)) delete cells[prop.key];
-                    else cells[prop.key] = next;
+                    if (next === undefined || next === '' || (Array.isArray(next) && !next.length)) {
+                      if (draft.cells) delete draft.cells[prop.key];
+                    } else (draft.cells ??= {})[prop.key] = next;
                   })}
                 />
               </Field>

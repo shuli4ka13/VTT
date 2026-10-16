@@ -1,4 +1,4 @@
 // @vitest-environment jsdom
 import { roundTrip } from '../../testing/round-trip.tsx';
 
-roundTrip('Shadowrun: Шестой мир');
+roundTrip('Shadowrun: Шестой мир', 3, 4);

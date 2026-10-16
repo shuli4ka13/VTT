@@ -10,8 +10,15 @@ import { Select } from '../../../../ui/primitives.tsx';
 import { readGuard, writeGuard } from '../../guard-expr.ts';
 import { yesNo } from '../../condition-field.tsx';
 import type { QuickRef } from '../../condition-field.tsx';
+import { functionSpec } from '@vtt/engine/formula';
 
 const quoted = (text: string): string => (text.includes('"') ? `'${text}'` : `"${text}"`);
+
+const isFormula = (text: string): boolean => {
+  if (text.startsWith('@')) return true;
+  const call = /^([\p{L} ]+?)\s*\(/u.exec(text);
+  return Boolean(call && functionSpec(call[1]!.trim()));
+};
 
 export function NoteField({ value, onChange, placeholder = 'например: не хватает ячейки' }: {
   value: unknown;
@@ -27,7 +34,8 @@ export function NoteField({ value, onChange, placeholder = 'например: н
     const text = draft.trim();
     setDraft(null);
     if (!text) { onChange(null); return; }
-    if (text.startsWith('@') || text.includes('(')) { onChange({ expr: text }); return; }
+    if (text === shown.trim()) return;
+    if (isFormula(text)) { onChange({ expr: text }); return; }
     if (text.includes('"') && text.includes("'")) { onChange({ expr: quoted(text.replace(/"/g, '«').replace(/'/g, '»')) }); return; }
     onChange({ expr: quoted(text) });
   };
