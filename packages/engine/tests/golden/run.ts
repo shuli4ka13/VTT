@@ -190,7 +190,9 @@ export function golden(index: number, name: string): void {
       }
       if (full) writeFileSync(join(full, `${name}.json`), JSON.stringify(dump, null, 1));
       if (process.env.GOLDEN_UPDATE) {
-        writeFileSync(file, `${JSON.stringify(Object.fromEntries([...now].sort(([a], [b]) => a.localeCompare(b))), null, 0)}\n`);
+        const kept = fast && existsSync(file) ? Object.entries(JSON.parse(readFileSync(file, 'utf8')) as Record<string, [string, string]>) : [];
+        const merged = new Map([...kept, ...now]);
+        writeFileSync(file, `${JSON.stringify(Object.fromEntries([...merged].sort(([a], [b]) => a.localeCompare(b))), null, 0)}\n`);
       }
       expect(now.size).toBeGreaterThan(0);
     }, 3_600_000);
