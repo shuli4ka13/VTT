@@ -43,7 +43,7 @@ describe('«+ по итогу» у вызова', () => {
   beforeEach(() => { cleanup(); try { localStorage.clear(); } catch { return; } });
   afterEach(() => { cleanup(); });
 
-  it('вместо «в «Если»» у вызова с итогами: ставит блок сразу после вызова, даёт имя шагу, блок склеен', () => {
+  it('у вызова с итогами: ставит блок сразу после вызова, даёт имя шагу, блок склеен', () => {
     start([{ type: 'emit', effect: 'бросок' }]);
     const card = () => stepCard(/^1 · /);
     expect(within(card()).has('в «Если»')).toBe(false);
@@ -81,10 +81,10 @@ describe('«+ по итогу» у вызова', () => {
     expect(isFused(block(0))).toBe(true);
   });
 
-  it('у вызова без итогов остаётся «в «Если»»', () => {
+  it('у вызова без итогов нет ни «+ по итогу», ни «в «Если»»', () => {
     start([{ type: 'emit', effect: 'простой' }]);
     expect(within(stepCard(/^1 · /)).has('+ по итогу')).toBe(false);
-    expect(within(stepCard(/^1 · /)).has('в «Если»')).toBe(true);
+    expect(within(stepCard(/^1 · /)).has('в «Если»')).toBe(false);
   });
 });
 

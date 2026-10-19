@@ -6,7 +6,7 @@ import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import type { System, Effect } from '@vtt/schema';
 import { useWorld } from '../../../store/world.ts';
 import { openAll } from '../../../testing/render-open.tsx';
-import { within, stepCard, callIf, dragParamBefore, blocks, block, headOf, armLabel, addToArm, addArm, stopNote, lastNumber, outcomeIf } from '../../../testing/cards.ts';
+import { within, stepCard, callIf, dragParamBefore, blocks, block, headOf, armLabel, addToArm, addArm, stopNote, lastNumber, outcomeIf, wrapIf } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
 
 const worldOf = (id: string) => SAMPLE_WORLDS.find(w => w.system.id === id)!;
@@ -143,8 +143,7 @@ describe('эффекты пресетов собираются в констру
     within(card).formula('На кого', '@цель');
     card = stepCard(/^6 · /);
     within(card).formula('Запомнит: Кто наложил', '@действующий');
-    within(stepCard(/^6 · /)).click('в «Если»');
-    within(headOf(block(1))).when('=не пусто(@status)');
+    wrapIf(() => stepCard(/^6 · /), '=не пусто(@status)');
     dump({ got: built('strike') ?? useWorld.getState().system.effects, goal });
     expect(built('strike')).toEqual(goal);
   });
@@ -269,8 +268,7 @@ describe('эффекты пресетов собираются в констру
     const dmg = number(6, '(кинуть(@damage_dice))', 'урон');
     up(dmg);
     const boom = number(7, '5', 'взрыв');
-    within(boom()).click('в «Если»');
-    within(headOf(block(0))).when('=@урон.atMax >= 2');
+    wrapIf(boom, '=@урон.atMax >= 2');
     within(headOf(block(0))).click('↑');
 
     ui.click('+ таблица');
@@ -294,8 +292,7 @@ describe('эффекты пресетов собираются в констру
       within(made()).select('Какой эффект', 'damage');
       for (const [name, text] of args) within(made()).formula(within(made()).arg(name), text);
       if (when) {
-        within(made()).click('в «Если»');
-        within(headOf(block(2))).when(`=${when}`);
+        wrapIf(made, `=${when}`);
       }
     };
     send(10, [['Сколько урона', '@урон']]);
@@ -405,8 +402,7 @@ describe('эффекты пресетов собираются в констру
       within(card()).select('Как', how);
       within(card()).formula('Сколько', value);
       if (when) {
-        within(card()).click('в «Если»');
-        within(headOf(block(0, handlerAt(n)))).when(`=${when}`);
+        wrapIf(card, `=${when}`, handlerAt(n));
       }
     };
     const cases: [string, string, string][] = [

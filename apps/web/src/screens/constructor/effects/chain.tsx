@@ -14,9 +14,9 @@ import { Button, CardHead, Select, Verdict } from '../../../ui/primitives.tsx';
 import { problemOf } from '../step-card.tsx';
 import type { StepOutput } from '../slots.tsx';
 import { outcomeRefs } from '../slots.tsx';
-import { groupSteps, moveGroup, moveSpan, blockSpan, removeSteps, armEnd, wrapInBranch, addArm, unwrapBlock, BRICKS, SEEN_BRICKS } from '../cards.ts';
+import { groupSteps, moveGroup, moveSpan, blockSpan, removeSteps, armEnd, addArm, unwrapBlock, BRICKS, SEEN_BRICKS } from '../cards.ts';
 import { armsOf, sees, endOf } from '@vtt/engine/model/flow';
-import { FlowHead, FlowActions, ArmLabel, UnwrapButton, OutcomePick, HeadFrame } from './cards/flow-parts.tsx';
+import { FlowHead, FlowActions, ArmLabel, OutcomePick, HeadFrame } from './cards/flow-parts.tsx';
 import { outcomeWords } from '@vtt/engine/engine/roll-tags';
 import { newCost } from '../factory.ts';
 import { GroupCard } from './cards/group-card.tsx';
@@ -227,7 +227,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     const returns = typeof calledKey === 'string' ? system.effects?.[calledKey]?.returns ?? [] : [];
     const degrees = asIf ? [] : degreesOf(group);
     const words = group.kind === 'check' && !asIf ? checkWords(group) : null;
-    const ifBy: { label: string; run: () => void }[] = fused?.by ? [] : [
+    const ifBy: { label: string; run: () => void }[] = fused ? [] : [
       ...(asIf ? [] : returns.filter(one => one.kind === 'boolean').map(one => ({
         label: `${one.label ?? one.key} / ${one.no ?? `не ${one.label ?? one.key}`}`,
         run: after(String(calledKey), id => [branch(`@${id}.${one.key}`)]),
@@ -329,9 +329,6 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
           })}
         upTitle={g === 0 && onEdgeUp ? ABOVE_PAY : undefined}
         downTitle={onEdgeDown && (whole ? whole[1] : group.indices[group.indices.length - 1]!) === steps.length - 1 ? BELOW_PAY : undefined}
-        {...(group.kind !== 'split' && group.kind !== 'stop' && !asIf ? { onWrap: () => edit(draft => {
-          draft.steps = wrapInBranch(draft.steps ?? [], range[0]!, range[range.length - 1]!);
-        }) } : {})}
       />
     );
   };
@@ -419,7 +416,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         />
       );
     })() : undefined;
-    const unwrap = heads.length === 1 ? () => edit(draft => { draft.steps = unwrapBlock(draft.steps ?? [], open); }) : undefined;
+    const unwrap = heads.length === 1 && inside.length ? () => edit(draft => { draft.steps = unwrapBlock(draft.steps ?? [], open); }) : undefined;
     const headActions = (
       <FlowActions
         onUp={open === 0
@@ -430,7 +427,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
           : () => edit(draft => { draft.steps = moveSpan(draft.steps ?? [], blockSpan(draft.steps ?? [], open), 1, true); })}
         upTitle={open === 0 && onEdgeUp ? ABOVE_PAY : undefined}
         downTitle={end === steps.length - 1 && onEdgeDown ? BELOW_PAY : undefined}
-        extra={unwrap ? <UnwrapButton onClick={unwrap} /> : null}
+        onKeep={unwrap}
         onDelete={() => edit(draft => { const list = draft.steps ?? []; draft.steps = removeSteps(list, span(open, endOf(list, open))).steps; })}
       />
     );

@@ -142,16 +142,14 @@ describe('GroupCard', () => {
 describe('GroupCard: условие и ход — не у шага', () => {
   const earlier = [{ id: 'hit', type: 'check', title: 'Проверка' }];
 
-  it('у изменения нет «Только если»: условие ставит блок «Если», шаг лишь оборачивает себя в него', () => {
+  it('у изменения нет «Только если» и «в «Если»»: условие ставит блок «Если»', () => {
     const steps = [{ type: 'apply', direction: 'subtract', value: { expr: '4' } }] as unknown as Step[];
     const group = groupSteps(steps)[0]!;
-    let wrapped = 0;
     render(<GroupCard group={group} position={2} system={system} effect={effect}
-      earlier={earlier} problem={null} edit={() => {}} onDelete={() => {}} onWrap={() => { wrapped++; }} />);
+      earlier={earlier} problem={null} edit={() => {}} onDelete={() => {}} />);
     expect(screen.queryByText('Только если')).toBeNull();
     expect([...document.querySelectorAll('select')].some(el => [...el.options].some(o => o.value === 'hit.success'))).toBe(false);
-    cards().click('в «Если»');
-    expect(wrapped).toBe(1);
+    expect(cards().has('в «Если»')).toBe(false);
   });
 
   it('у проверки нет «Шаги ниже идут при» и «Что сказать при остановке»; границы на кости — новыми словами', () => {

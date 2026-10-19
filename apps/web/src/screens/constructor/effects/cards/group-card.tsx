@@ -17,7 +17,7 @@ import { ChangeBody } from './change-body.tsx';
 import { NumberBody } from './number-body.tsx';
 import { SeenBody } from './seen-body.tsx';
 import { TableBody } from './table-body.tsx';
-import { StopStrip, StepHead, FlowActions, UnwrapButton } from './flow-parts.tsx';
+import { StopStrip, StepHead, FlowActions } from './flow-parts.tsx';
 import { titleOf } from '../words.ts';
 import { STEP_WORDS } from '@vtt/engine/words/steps';
 import { loopOf } from '@vtt/engine/engine/steps/each';
@@ -43,7 +43,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, names, takenNames, onRename, onUnpair, onWrap, ifBy, onUnwrap, asIf = false, outcome = '', headCond, headBy, headWord,
+  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, names, takenNames, onRename, onUnpair, ifBy, onUnwrap, asIf = false, outcome = '', headCond, headBy, headWord,
 }: {
   group: CardGroup;
   position: number;
@@ -71,7 +71,6 @@ export function GroupCard({
   sheets?: SheetNames;
   names?: ReadonlyMap<string, string>;
   onUnpair?: () => void;
-  onWrap?: () => void;
   ifBy?: { label: string; run: () => void }[];
   headBy?: string;
   headWord?: string;
@@ -98,7 +97,6 @@ export function GroupCard({
   const actions = (
     <>
       {ifByControl}
-      {onWrap && !ifBy?.length && !folded ? <Button size="sm" variant="ghost" title="Поставить этот шаг внутрь «Если»: выполняется только при условии" onClick={onWrap}>в «Если»</Button> : null}
       <Button size="sm" variant="ghost" title={upTitle ?? 'выше'} disabled={!onMoveUp} onClick={onMoveUp}>↑</Button>
       <Button size="sm" variant="ghost" title={downTitle ?? 'ниже'} disabled={!onMoveDown} onClick={onMoveDown}>↓</Button>
       <DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>
@@ -145,7 +143,7 @@ export function GroupCard({
       <>
         <StepHead
           position={position} words={headBy ?? `${called.includes('«') ? called : `«${called}»`} — ${outcome}`} {...(headBy || headWord ? { word: headWord ?? 'По' } : {})} open={!folded} onToggle={onFold} problem={problem?.text ?? null} {...(headCond ? { cond: headCond } : {})}
-          actions={<FlowActions onUp={onMoveUp} onDown={onMoveDown} upTitle={upTitle} downTitle={downTitle} extra={<>{ifByControl}{onUnwrap ? <UnwrapButton onClick={onUnwrap} /> : null}</>} onDelete={onDelete} />}
+          actions={<FlowActions onUp={onMoveUp} onDown={onMoveDown} upTitle={upTitle} downTitle={downTitle} onDelete={onDelete} onKeep={onUnwrap} />}
         />
         {folded ? null : <div className={`step-card flow-block__source flow-block__source--${group.kind}`}>{body}</div>}
       </>

@@ -165,11 +165,6 @@ export function armEnd(steps: Step[], head: number): number {
   return steps.length;
 }
 
-export function wrapInBranch(steps: Step[], first: number, last: number, condition?: string): Step[] {
-  const head = { type: 'branch', ...(condition ? { if: { expr: condition } } : {}) } as unknown as Step;
-  return [...steps.slice(0, first), head, ...steps.slice(first, last + 1), { type: 'end' } as unknown as Step, ...steps.slice(last + 1)];
-}
-
 export function addArm(steps: Step[], open: number, withCondition: boolean, expr = ''): Step[] {
   const end = endOf(steps, open);
   const arm = { type: 'orElse', ...(withCondition ? { if: { expr } } : {}) } as unknown as Step;

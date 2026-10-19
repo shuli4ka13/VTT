@@ -274,12 +274,26 @@ export const stepCard = (title: RegExp, root: ParentNode = document): HTMLElemen
   return found;
 };
 
-export const wrapIf = (card: () => HTMLElement, ...facts: string[]): void => {
-  within(card()).click('в «Если»');
-  const flow = card().closest<HTMLElement>('.flow-block');
+export const wrapIf = (card: () => HTMLElement, fact: string, root: ParentNode = document): void => {
+  const headText = (el: HTMLElement) => textOf(el.querySelector('.card__head, .step-fold, .step-fold__row') ?? el).replace(/^[▾▸]?\s*\d+ · /, '');
+  const name = headText(card());
+  let chain: HTMLElement | null = card().closest<HTMLElement>('.flow-block__arm') ?? card();
+  while (chain && ![...chain.querySelectorAll('button')].some(el => textOf(el) === '+ если' && !el.closest('.flow-block'))) chain = chain.parentElement;
+  const scope: ParentNode = chain ?? root;
+  const same = () => [...scope.querySelectorAll<HTMLElement>('.card')].filter(el => headText(el) === name);
+  const nth = same().indexOf(card());
+  const mine = () => same()[nth]!;
+  const arm = card().closest<HTMLElement>('.flow-block__arm');
+  const armAdd = arm?.querySelector<HTMLSelectElement>(':scope > .flow-block__add select');
+  if (armAdd) within(armAdd.parentElement!).select(armAdd, 'branch');
+  else within(scope).click('+ если');
+  const empty = () => blocks(scope).filter(flow => !flow.querySelector('.card')).length;
+  for (let k = 0; k < 40 && empty(); k++) within(mine()).click('↓');
+  const flow = mine().closest<HTMLElement>('.flow-block');
   if (!flow) throw new Error('шаг не попал в «Если»');
-  within(headOf(flow)).when(...facts);
+  within(headOf(flow)).when(fact);
 };
+
 
 export const dragParamBefore = (from: string, to: string, root: ParentNode = document): void => {
   const line = (name: string) => [...root.querySelectorAll<HTMLElement>('.param-line')]

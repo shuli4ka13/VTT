@@ -172,7 +172,7 @@ describe('блок «Если»: условие строкой, руки, «Ст
     const words = head.querySelector<HTMLButtonElement>('.flow-head__words')!;
     expect(words.textContent).toBe('«Проверка» — успех / провал');
     expect(words.getAttribute('aria-expanded')).toBe('true');
-    expect([...head.querySelectorAll('.flow-head__actions button')].map(el => el.textContent)).toEqual(['снять «Если»', '↑', '↓', 'Удалить']);
+    expect([...head.querySelectorAll('.flow-head__actions button')].map(el => el.textContent)).toEqual(['↑', '↓', 'Удалить']);
     expect(frame.querySelector(':scope > .flow-block__part > .flow-block__source')?.textContent).toContain('Условие');
 
     fireEvent.click(words);
@@ -193,14 +193,17 @@ describe('блок «Если»: условие строкой, руки, «Ст
     for (const label of document.querySelectorAll('.flow-block__then, .flow-head--label .flow-head__word')) expect(label.textContent).toMatch(/^[а-яё ]+:$/);
   });
 
-  it('«снять «Если»» у слитого убирает блок, проверка и шаги ветки остаются; при второй ветке кнопки нет', () => {
+  it('«Удалить» у слитого спрашивает: «только развилку — шаги останутся» убирает блок, проверка и шаги ветки остаются; при второй ветке такого выбора нет', () => {
     start([...checked, { type: 'branch', if: { expr: '@hit.success' } }, { type: 'stop' }, { type: 'end' }]);
-    expect(within(headOf(block(0))).has('снять «Если»')).toBe(true);
+    expect(within(headOf(block(0))).has('в «Если»')).toBe(false);
     addArm(block(0), '+ провал');
-    expect(within(headOf(block(0))).has('снять «Если»')).toBe(false);
+    within(headOf(block(0))).click('Удалить');
+    expect(within(headOf(block(0))).has('только развилку — шаги останутся')).toBe(false);
+    within(headOf(block(0))).click('отмена');
     within(headOf(block(0), 1)).click('убрать ветку');
     within(headOf(block(0), 1)).click('точно убрать');
-    within(headOf(block(0))).click('снять «Если»');
+    within(headOf(block(0))).click('Удалить');
+    within(headOf(block(0))).click('только развилку — шаги останутся');
     expect(steps().map(step => step.type)).toEqual(['roll', 'check', 'stop']);
     expect(document.querySelectorAll('.flow-block')).toHaveLength(0);
   });
@@ -244,7 +247,7 @@ describe('блок «Если»: условие строкой, руки, «Ст
     expect(steps()[0]).toEqual({ type: 'branch', if: { expr: '1 > 0' } });
   });
 
-  it('«+ шаг» в руке встаёт перед концом руки; «+ иначе, если» — до «иначе»; «убрать ветку» и «снять «Если»»', () => {
+  it('«+ шаг» в руке встаёт перед концом руки; «+ иначе, если» — до «иначе»; «убрать ветку» и «Удалить» без шагов', () => {
     start([]);
     within().click('+ если');
     within(headOf(block(0))).when('=1 > 0');
@@ -267,17 +270,9 @@ describe('блок «Если»: условие строкой, руки, «Ст
     expect(steps().map(step => step.type)).toEqual(['branch', 'apply', 'orElse', 'roll', 'end']);
     within(headOf(block(0), 1)).click('убрать ветку');
     within(headOf(block(0), 1)).click('точно убрать');
-    within(headOf(block(0))).click('снять «Если»');
+    within(headOf(block(0))).click('Удалить');
+    within(headOf(block(0))).click('только развилку — шаги останутся');
     expect(steps().map(step => step.type)).toEqual(['apply']);
-  });
-
-  it('«в «Если»» оборачивает шаг: условие ставится уже в заголовке блока', () => {
-    start([{ type: 'apply', target: { expr: '@действующий.x' }, value: { expr: '1' } }]);
-    within(stepCard(/^1 · /)).click('в «Если»');
-    expect(steps().map(step => step.type)).toEqual(['branch', 'apply', 'end']);
-    within(headOf(block(0))).when('=1 > 0');
-    expect(steps()[0]).toEqual({ type: 'branch', if: { expr: '1 > 0' } });
-    expect(armOf(block(0)).textContent).toContain('1 · Изменить «x»');
   });
 
   it('«Стоп»: текст в журнал пишется словами, а хранится формулой-литералом; с @ — формула; пусто — без текста', () => {

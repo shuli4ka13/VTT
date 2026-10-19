@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { Step } from '@vtt/schema';
-import { moveGroup, moveSpan, blockSpan, wrapInBranch, addArm, dropArm, unwrapBlock, armEnd, validFlow, groupSteps } from './cards.ts';
+import { moveGroup, moveSpan, blockSpan, addArm, dropArm, unwrapBlock, armEnd, validFlow, groupSteps } from './cards.ts';
 
 const s = (id: string): Step => ({ id, type: 'roll', fixed: { expr: '1' } } as unknown as Step);
 const IF = (expr: string): Step => ({ type: 'branch', if: { expr } } as unknown as Step);
@@ -10,10 +10,6 @@ const EACH = { type: 'each', of: 'цели' } as unknown as Step;
 const shape = (steps: Step[]) => steps.map(step => step.id ?? step.type);
 
 describe('операции над блоками «Если»', () => {
-  it('обернуть шаг — метки по краям', () => {
-    expect(shape(wrapInBranch([s('a'), s('b'), s('c')], 1, 1, '@x'))).toEqual(['a', 'branch', 'b', 'end', 'c']);
-  });
-
   it('↑ у первого шага руки выносит его из блока, ↓ над блоком — вносит в первую руку', () => {
     const steps = [s('a'), IF('@x'), s('b'), END];
     const groups = groupSteps(steps);

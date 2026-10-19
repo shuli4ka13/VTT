@@ -179,14 +179,13 @@ export function ArmLabel({ word, actions }: { word: string; actions: ReactNode }
   );
 }
 
-export function UnwrapButton({ onClick }: { onClick: () => void }) {
-  return <Button size="sm" variant="ghost" title="Убрать «Если», шаги остаются" onClick={onClick}>снять «Если»</Button>;
-}
+export const KEEP_STEPS = 'только развилку — шаги останутся';
 
-export function FlowActions({ onUp, onDown, onDelete, extra, deleteLabel = 'Удалить', upTitle = 'выше', downTitle = 'ниже' }: {
+export function FlowActions({ onUp, onDown, onDelete, onKeep, extra, deleteLabel = 'Удалить', upTitle = 'выше', downTitle = 'ниже' }: {
   onUp?: (() => void) | undefined;
   onDown?: (() => void) | undefined;
   onDelete?: (() => void) | undefined;
+  onKeep?: (() => void) | undefined;
   extra?: ReactNode;
   deleteLabel?: string;
   upTitle?: string | undefined;
@@ -201,7 +200,7 @@ export function FlowActions({ onUp, onDown, onDelete, extra, deleteLabel = 'Уд
           <Button size="sm" variant="ghost" title={downTitle} disabled={!onDown} onClick={onDown}>↓</Button>
         </>
       ) : null}
-      {onDelete ? <DangerButton size="sm" onConfirm={onDelete}>{deleteLabel}</DangerButton> : null}
+      {onDelete ? <DangerButton size="sm" onConfirm={onDelete} keep={onKeep ? { label: KEEP_STEPS, run: onKeep } : undefined}>{deleteLabel}</DangerButton> : null}
     </>
   );
 }

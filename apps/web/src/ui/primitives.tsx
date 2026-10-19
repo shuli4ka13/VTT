@@ -176,11 +176,12 @@ export function Button({ children, onClick, onMouseEnter, variant, size, wide, d
   );
 }
 
-export function DangerButton({ children, onConfirm, size, title }: {
+export function DangerButton({ children, onConfirm, size, title, keep }: {
   children: ReactNode;
   onConfirm: () => void;
   size?: 'sm';
   title?: string;
+  keep?: { label: string; run: () => void } | undefined;
 }) {
   const [armed, setArmed] = useState(false);
   if (!armed) {
@@ -192,7 +193,8 @@ export function DangerButton({ children, onConfirm, size, title }: {
   }
   return (
     <>
-      <Button size={size} variant="danger" onClick={onConfirm}>точно убрать</Button>
+      <Button size={size} variant="danger" onClick={onConfirm}>{keep ? 'вместе с шагами' : 'точно убрать'}</Button>
+      {keep ? <Button size={size} variant="ghost" onClick={keep.run}>{keep.label}</Button> : null}
       <Button size={size} variant="ghost" onClick={() => setArmed(false)}>отмена</Button>
     </>
   );

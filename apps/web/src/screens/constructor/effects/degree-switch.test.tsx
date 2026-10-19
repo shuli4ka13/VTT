@@ -49,9 +49,14 @@ describe('«Если» по ступеням — switch', () => {
     expect(switches().map(text).join(' | ')).toContain('чёрный:');
   }, 60_000);
 
-  it('switch по итогу вызова-выбору: «+ по итогу» у склеенного броска атаки даёт руки промах / попадание / крит', () => {
+  it('switch по итогу вызова-выбору: у склеенного «да / нет» нет «+ по итогу»; сняв развилку, «+ по итогу» у броска атаки даёт руки промах / попадание / крит', () => {
     open('dnd5e', 'strike');
-    within(document.body).click('+ по итогу');
+    expect(within(document.body).has('+ по итогу')).toBe(false);
+    const fused = [...document.querySelectorAll<HTMLElement>('.flow-block')].find(one => text(one).includes('Бросок атаки'))!;
+    within(fused.querySelector<HTMLElement>(':scope > .flow-block__part > .flow-head, :scope > .flow-block__part')!).click('Удалить');
+    within(document.body).click('только развилку — шаги останутся');
+    const pick = document.querySelector<HTMLElement>('select[aria-label="по итогу"]')!;
+    within(pick.parentElement!).select(pick, 'исход: промах · попадание · крит');
     const block = switches().find(one => text(one).includes('«исход» (попадание)'))!;
     expect(text(block)).toContain('промах:');
     expect(text(block)).toContain('попадание:');
