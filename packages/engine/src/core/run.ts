@@ -33,7 +33,7 @@ import { dieConstant } from '../engine/lead-die.ts';
 import type { Check } from '../engine/check.ts';
 import { subsOf, same, instOf, keysOf } from './subs.ts';
 import { same as sameValue, hasField, rowKeyOf } from '../model/sheet-columns.ts';
-import { runnerOf } from './steps.ts';
+import { runnerOf, calledBy } from './steps.ts';
 import type { Clock } from '../engine/clock.ts';
 import type { Pass } from '../engine/calc.ts';
 import type { EmittedEvent, NestedRun } from '../engine/rule.ts';
@@ -384,8 +384,8 @@ export class Run {
     const effect = this.system.effects[effectId];
     if (!effect) return undefined;
     const chains = [effect.steps, effect.cost, effect.attach, effect.detach, ...(effect.on ?? []).flatMap(handler => [handler.steps, handler.cost])];
-    const step = chains.flatMap(steps => steps ?? []).find(one => one.type === 'emit' && one.id === id);
-    const callee = step ? this.system.effects[String((step as { effect?: unknown }).effect)] : undefined;
+    const step = chains.flatMap(steps => steps ?? []).find(one => one.id === id && calledBy(one));
+    const callee = step ? this.system.effects[calledBy(step)!] : undefined;
     const column = callee?.returns?.find(one => one.key === key && one.kind === 'choice' && !one.many);
     return column?.from;
   }

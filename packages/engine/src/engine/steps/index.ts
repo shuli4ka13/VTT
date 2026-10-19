@@ -87,6 +87,8 @@ export interface StepModule {
 
   compares?: (step: StepData) => { value: unknown; versus: unknown } | null;
 
+  calls?: (step: StepData) => string | null;
+
   thrownBy?: (step: StepData) => unknown;
 
   flow?: 'open' | 'alt' | 'close';

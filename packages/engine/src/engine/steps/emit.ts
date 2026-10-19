@@ -16,6 +16,10 @@ export function reasonWord(reason: string): string | null {
 
 export const icon = '➤';
 
+export function calls(step: StepData): string | null {
+  return typeof step.effect === 'string' ? step.effect : null;
+}
+
 export function lint(step: StepData) {
   if (!step.effect) return 'вызову нужен общий эффект — они живут среди эффектов, в группе «Общие»';
   return null;
