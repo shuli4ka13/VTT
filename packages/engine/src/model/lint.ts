@@ -28,6 +28,7 @@ import {
 import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, rowKeyOf, hasField, ROW } from './sheet-columns.ts';
 import { isRange, rowByKey } from './tables.ts';
 import { walkSheet } from './paths.ts';
+import { variantProblems } from './variants.ts';
 import { editStages, PLUS_OP } from '../core/dice.ts';
 import { compile } from '../formula/index.ts';
 import type { Node } from '../formula/index.ts';
@@ -1093,6 +1094,9 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...fieldNameProblems(system));
   out.push(...rowNameProblems(system));
   out.push(...tableFieldProblems(system));
+  for (const found of variantProblems(system)) {
+    if (!out.some(p => sameWhere(p.where, found.where) && p.text === found.text)) out.push({ where: found.where, level: 'error', text: found.text });
+  }
   out.push(...danglingRows(system, compendium).map(d => ({ where: d.where, level: 'error' as const, text: d.text })));
   const seen = new Set<string>();
   return out.filter(problem => {
