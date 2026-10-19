@@ -665,7 +665,7 @@
             ],
             "label": "Проникновение",
             "expr": {
-              "expr": "если(@cfg_attack == \"П\", @dev_attack, если(@cfg_attack == \"У\", @dev_sleaze, если(@cfg_attack == \"ВМ\", @dev_dp, @dev_firewall)))"
+              "expr": "@cfg_attack.device"
             }
           },
           {
@@ -679,7 +679,7 @@
             ],
             "label": "Ускользание",
             "expr": {
-              "expr": "если(@cfg_sleaze == \"П\", @dev_attack, если(@cfg_sleaze == \"У\", @dev_sleaze, если(@cfg_sleaze == \"ВМ\", @dev_dp, @dev_firewall)))"
+              "expr": "@cfg_sleaze.device"
             }
           },
           {
@@ -693,7 +693,7 @@
             ],
             "label": "Вычислительная мощность",
             "expr": {
-              "expr": "если(@cfg_dp == \"П\", @dev_attack, если(@cfg_dp == \"У\", @dev_sleaze, если(@cfg_dp == \"ВМ\", @dev_dp, @dev_firewall)))"
+              "expr": "@cfg_dp.device"
             }
           },
           {
@@ -707,7 +707,7 @@
             ],
             "label": "Сетевой экран",
             "expr": {
-              "expr": "если(@cfg_firewall == \"П\", @dev_attack, если(@cfg_firewall == \"У\", @dev_sleaze, если(@cfg_firewall == \"ВМ\", @dev_dp, @dev_firewall)))"
+              "expr": "@cfg_firewall.device"
             }
           },
           {
@@ -927,7 +927,7 @@
             "key": "trad_attr",
             "label": "Характеристика традиции",
             "expr": {
-              "expr": "если(@tradition == \"шаманизм\", @charisma, если(@tradition == \"герметизм\", @logic, 0))"
+              "expr": "@tradition.attr"
             }
           },
           {
@@ -1827,7 +1827,7 @@
               "expr": "сумма(строки(\"adept_power\", \"pp\"))"
             },
             "max": {
-              "expr": "если(@awakened == \"адепт\", @magic, если(@awakened == \"мистический адепт\", @mystic_pp, 0))"
+              "expr": "@awakened.pp_max"
             }
           },
           {
@@ -2529,37 +2529,107 @@
             "key": "meters",
             "label": "Метры",
             "kind": "text"
+          },
+          {
+            "key": "throw_ar",
+            "label": "ЗА метания: штраф",
+            "kind": "number"
+          },
+          {
+            "key": "throw_ricochet",
+            "label": "рикошет при метании",
+            "kind": "number"
+          },
+          {
+            "key": "launch_ricochet",
+            "label": "рикошет при запуске",
+            "kind": "number"
+          },
+          {
+            "key": "ar",
+            "label": "ЗА оружия",
+            "kind": "number"
+          },
+          {
+            "key": "item_ar",
+            "label": "ЗА вещи",
+            "kind": "number"
           }
         ],
         "rows": [
           {
             "value": "вплотную",
             "cells": {
-              "meters": "0–3"
+              "meters": "0–3",
+              "throw_ar": 0,
+              "throw_ricochet": 4,
+              "launch_ricochet": 2,
+              "ar": {
+                "expr": "@ar1 или 0"
+              },
+              "item_ar": {
+                "expr": "@вещь.ar1 или 0"
+              }
             }
           },
           {
             "value": "близкая",
             "cells": {
-              "meters": "4–50"
+              "meters": "4–50",
+              "throw_ar": 1,
+              "throw_ricochet": 2,
+              "launch_ricochet": 0,
+              "ar": {
+                "expr": "@ar2 или 0"
+              },
+              "item_ar": {
+                "expr": "@вещь.ar2 или 0"
+              }
             }
           },
           {
             "value": "средняя",
             "cells": {
-              "meters": "51–250"
+              "meters": "51–250",
+              "throw_ar": 6,
+              "throw_ricochet": 0,
+              "launch_ricochet": 2,
+              "ar": {
+                "expr": "@ar3 или 0"
+              },
+              "item_ar": {
+                "expr": "@вещь.ar3 или 0"
+              }
             }
           },
           {
             "value": "дальняя",
             "cells": {
-              "meters": "251–500"
+              "meters": "251–500",
+              "throw_ar": 0,
+              "throw_ricochet": 0,
+              "launch_ricochet": 4,
+              "ar": {
+                "expr": "@ar4 или 0"
+              },
+              "item_ar": {
+                "expr": "@вещь.ar4 или 0"
+              }
             }
           },
           {
             "value": "экстремальная",
             "cells": {
-              "meters": "501+"
+              "meters": "501+",
+              "throw_ar": 0,
+              "throw_ricochet": 0,
+              "launch_ricochet": 6,
+              "ar": {
+                "expr": "@ar5 или 0"
+              },
+              "item_ar": {
+                "expr": "@вещь.ar5 или 0"
+              }
             }
           }
         ]
@@ -4188,25 +4258,67 @@
             "key": "meters",
             "label": "Метры",
             "kind": "text"
+          },
+          {
+            "key": "grenade_dv",
+            "label": "СУ гранаты",
+            "kind": "number"
+          },
+          {
+            "key": "rocket_dv",
+            "label": "СУ ракеты",
+            "kind": "number"
+          },
+          {
+            "key": "charge_dv",
+            "label": "СУ заряда",
+            "kind": "number"
           }
         ],
         "rows": [
           {
             "value": "эпицентр",
             "cells": {
-              "meters": "до 1"
+              "meters": "до 1",
+              "grenade_dv": {
+                "expr": "@вещь.dv_e"
+              },
+              "rocket_dv": {
+                "expr": "большее из(0, строки(\"grenade\", \"dv_e\", @вещь))"
+              },
+              "charge_dv": {
+                "expr": "@вещь.rating"
+              }
             }
           },
           {
             "value": "вплотную",
             "cells": {
-              "meters": "1–3"
+              "meters": "1–3",
+              "grenade_dv": {
+                "expr": "@вещь.dv_c"
+              },
+              "rocket_dv": {
+                "expr": "большее из(0, строки(\"grenade\", \"dv_c\", @вещь))"
+              },
+              "charge_dv": {
+                "expr": "округлить вниз(@вещь.rating / 2)"
+              }
             }
           },
           {
             "value": "близко",
             "cells": {
-              "meters": "4 — радиус взрыва"
+              "meters": "4 — радиус взрыва",
+              "grenade_dv": {
+                "expr": "@вещь.dv_n"
+              },
+              "rocket_dv": {
+                "expr": "большее из(0, строки(\"grenade\", \"dv_n\", @вещь))"
+              },
+              "charge_dv": {
+                "expr": "округлить вниз(@вещь.rating / 4)"
+              }
             }
           }
         ]
@@ -4214,39 +4326,85 @@
       "attributes": {
         "label": "Характеристики",
         "key": "word",
-        "columns": [],
+        "columns": [
+          {
+            "key": "target",
+            "label": "у цели",
+            "kind": "number"
+          }
+        ],
         "rows": [
           {
             "value": "body",
-            "label": "Тело"
+            "label": "Тело",
+            "cells": {
+              "target": {
+                "expr": "@цель.body"
+              }
+            }
           },
           {
             "value": "agility",
-            "label": "Проворство"
+            "label": "Проворство",
+            "cells": {
+              "target": {
+                "expr": "@цель.agility"
+              }
+            }
           },
           {
             "value": "reaction",
-            "label": "Реакция"
+            "label": "Реакция",
+            "cells": {
+              "target": {
+                "expr": "@цель.reaction"
+              }
+            }
           },
           {
             "value": "strength",
-            "label": "Сила"
+            "label": "Сила",
+            "cells": {
+              "target": {
+                "expr": "@цель.strength"
+              }
+            }
           },
           {
             "value": "willpower",
-            "label": "Воля"
+            "label": "Воля",
+            "cells": {
+              "target": {
+                "expr": "@цель.willpower"
+              }
+            }
           },
           {
             "value": "logic",
-            "label": "Логика"
+            "label": "Логика",
+            "cells": {
+              "target": {
+                "expr": "@цель.logic"
+              }
+            }
           },
           {
             "value": "intuition",
-            "label": "Интуиция"
+            "label": "Интуиция",
+            "cells": {
+              "target": {
+                "expr": "@цель.intuition"
+              }
+            }
           },
           {
             "value": "charisma",
-            "label": "Харизма"
+            "label": "Харизма",
+            "cells": {
+              "target": {
+                "expr": "@цель.charisma"
+              }
+            }
           },
           {
             "value": "edge",
@@ -4762,38 +4920,116 @@
       "matrix_modes": {
         "label": "Режим Матрицы",
         "key": "word",
-        "columns": [],
+        "columns": [
+          {
+            "key": "init_dice",
+            "label": "кубов инициативы сверху",
+            "kind": "number"
+          }
+        ],
         "rows": [
           {
-            "value": "нет"
+            "value": "нет",
+            "cells": {
+              "init_dice": 0
+            }
           },
           {
-            "value": "ДР"
+            "value": "ДР",
+            "cells": {
+              "init_dice": 0
+            }
           },
           {
-            "value": "холодная ВР"
+            "value": "холодная ВР",
+            "cells": {
+              "init_dice": 1
+            }
           },
           {
-            "value": "горячая ВР"
+            "value": "горячая ВР",
+            "cells": {
+              "init_dice": 2
+            }
           }
         ]
       },
       "matrix_attrs": {
         "label": "Характеристики Матрицы",
         "key": "word",
-        "columns": [],
+        "columns": [
+          {
+            "key": "device",
+            "label": "значение на устройстве",
+            "kind": "number"
+          },
+          {
+            "key": "target_device",
+            "label": "у устройства цели",
+            "kind": "number"
+          },
+          {
+            "key": "target_persona",
+            "label": "у персоны цели",
+            "kind": "number"
+          }
+        ],
         "rows": [
           {
-            "value": "П"
+            "value": "П",
+            "cells": {
+              "device": {
+                "expr": "@dev_attack"
+              },
+              "target_device": {
+                "expr": "@цель.dev_attack"
+              },
+              "target_persona": {
+                "expr": "@цель.m_attack"
+              }
+            }
           },
           {
-            "value": "У"
+            "value": "У",
+            "cells": {
+              "device": {
+                "expr": "@dev_sleaze"
+              },
+              "target_device": {
+                "expr": "@цель.dev_sleaze"
+              },
+              "target_persona": {
+                "expr": "@цель.m_sleaze"
+              }
+            }
           },
           {
-            "value": "ВМ"
+            "value": "ВМ",
+            "cells": {
+              "device": {
+                "expr": "@dev_dp"
+              },
+              "target_device": {
+                "expr": "@цель.dev_dp"
+              },
+              "target_persona": {
+                "expr": "@цель.m_dp"
+              }
+            }
           },
           {
-            "value": "СЭ"
+            "value": "СЭ",
+            "cells": {
+              "device": {
+                "expr": "@dev_firewall"
+              },
+              "target_device": {
+                "expr": "@цель.dev_firewall"
+              },
+              "target_persona": {
+                "expr": "@цель.m_firewall"
+              }
+            }
           }
         ]
       },
@@ -4829,16 +5065,35 @@
       "matrix_links": {
         "label": "Связь действия",
         "key": "word",
-        "columns": [],
+        "columns": [
+          {
+            "key": "penalty",
+            "label": "поправка к пулу",
+            "kind": "number"
+          }
+        ],
         "rows": [
           {
-            "value": "Проникновение"
+            "value": "Проникновение",
+            "cells": {
+              "penalty": {
+                "expr": "меньшее из(0, @действующий.m_attack - @действующий.m_sleaze)"
+              }
+            }
           },
           {
-            "value": "Ускользание"
+            "value": "Ускользание",
+            "cells": {
+              "penalty": {
+                "expr": "меньшее из(0, @действующий.m_sleaze - @действующий.m_attack)"
+              }
+            }
           },
           {
-            "value": "нет"
+            "value": "нет",
+            "cells": {
+              "penalty": 0
+            }
           }
         ]
       },
@@ -4875,50 +5130,164 @@
             "key": "text",
             "label": "Набор (аватар / устройство)",
             "kind": "text"
+          },
+          {
+            "key": "persona",
+            "label": "у персонажа",
+            "kind": "number"
+          },
+          {
+            "key": "device",
+            "label": "у устройства",
+            "kind": "number"
           }
         ],
         "rows": [
           {
-            "value": "Логика + ВМ"
+            "value": "Логика + ВМ",
+            "cells": {
+              "persona": {
+                "expr": "@цель.logic + @цель.m_dp"
+              },
+              "device": {
+                "expr": "@цель.m_dp * 2"
+              }
+            }
           },
           {
-            "value": "Воля + СЭ"
+            "value": "Воля + СЭ",
+            "cells": {
+              "persona": {
+                "expr": "@цель.willpower + @цель.m_firewall"
+              },
+              "device": {
+                "expr": "@цель.m_firewall * 2"
+              }
+            }
           },
           {
-            "value": "Воля + У"
+            "value": "Воля + У",
+            "cells": {
+              "persona": {
+                "expr": "@цель.willpower + @цель.m_sleaze"
+              },
+              "device": {
+                "expr": "@цель.m_firewall + @цель.m_sleaze"
+              }
+            }
           },
           {
-            "value": "Логика + СЭ"
+            "value": "Логика + СЭ",
+            "cells": {
+              "persona": {
+                "expr": "@цель.logic + @цель.m_firewall"
+              },
+              "device": {
+                "expr": "@цель.m_dp + @цель.m_firewall"
+              }
+            }
           },
           {
-            "value": "Интуиция + СЭ"
+            "value": "Интуиция + СЭ",
+            "cells": {
+              "persona": {
+                "expr": "@цель.intuition + @цель.m_firewall"
+              },
+              "device": {
+                "expr": "@цель.m_firewall + @цель.m_sleaze"
+              }
+            }
           },
           {
-            "value": "ВМ + СЭ"
+            "value": "ВМ + СЭ",
+            "cells": {
+              "persona": {
+                "expr": "@цель.m_dp + @цель.m_firewall"
+              },
+              "device": {
+                "expr": "@цель.m_dp + @цель.m_firewall"
+              }
+            }
           },
           {
-            "value": "Харизма + ВМ"
+            "value": "Харизма + ВМ",
+            "cells": {
+              "persona": {
+                "expr": "@цель.charisma + @цель.m_dp"
+              },
+              "device": {
+                "expr": "@цель.m_attack + @цель.m_dp"
+              }
+            }
           },
           {
-            "value": "Интуиция + ВМ"
+            "value": "Интуиция + ВМ",
+            "cells": {
+              "persona": {
+                "expr": "@цель.intuition + @цель.m_dp"
+              },
+              "device": {
+                "expr": "@цель.m_dp + @цель.m_sleaze"
+              }
+            }
           },
           {
-            "value": "ВМ + рейтинг"
+            "value": "ВМ + рейтинг",
+            "cells": {
+              "persona": {
+                "expr": "@цель.m_dp + @цель.dev_rating"
+              },
+              "device": {
+                "expr": "@цель.m_dp + @цель.dev_rating"
+              }
+            }
           },
           {
-            "value": "Воля + П"
+            "value": "Воля + П",
+            "cells": {
+              "persona": {
+                "expr": "@цель.willpower + @цель.m_attack"
+              },
+              "device": {
+                "expr": "@цель.m_firewall + @цель.m_attack"
+              }
+            }
           },
           {
-            "value": "Воля + ВМ"
+            "value": "Воля + ВМ",
+            "cells": {
+              "persona": {
+                "expr": "@цель.willpower + @цель.m_dp"
+              },
+              "device": {
+                "expr": "@цель.m_firewall + @цель.m_dp"
+              }
+            }
           },
           {
-            "value": "порог"
+            "value": "порог",
+            "cells": {
+              "persona": 0,
+              "device": 0
+            }
           },
           {
-            "value": "нет"
+            "value": "нет",
+            "cells": {
+              "persona": 0,
+              "device": 0
+            }
           },
           {
-            "value": "Рейтинг + СЭ"
+            "value": "Рейтинг + СЭ",
+            "cells": {
+              "persona": {
+                "expr": "@цель.dev_rating + @цель.m_firewall"
+              },
+              "device": {
+                "expr": "@цель.dev_rating + @цель.m_firewall"
+              }
+            }
           }
         ]
       },
@@ -5284,23 +5653,30 @@
           {
             "key": "attr",
             "label": "Характеристика традиции",
-            "kind": "field"
+            "kind": "number"
           }
         ],
         "rows": [
           {
-            "value": "нет"
+            "value": "нет",
+            "cells": {
+              "attr": 0
+            }
           },
           {
             "value": "герметизм",
             "cells": {
-              "attr": "logic"
+              "attr": {
+                "expr": "@logic"
+              }
             }
           },
           {
             "value": "шаманизм",
             "cells": {
-              "attr": "charisma"
+              "attr": {
+                "expr": "@charisma"
+              }
             }
           }
         ]
@@ -5308,47 +5684,106 @@
       "awakened_kinds": {
         "label": "Пробуждённый",
         "key": "word",
-        "columns": [],
+        "columns": [
+          {
+            "key": "pp_max",
+            "label": "очков способностей",
+            "kind": "number"
+          }
+        ],
         "rows": [
           {
-            "value": "нет"
+            "value": "нет",
+            "cells": {
+              "pp_max": 0
+            }
           },
           {
-            "value": "маг"
+            "value": "маг",
+            "cells": {
+              "pp_max": 0
+            }
           },
           {
-            "value": "адепт"
+            "value": "адепт",
+            "cells": {
+              "pp_max": {
+                "expr": "@magic"
+              }
+            }
           },
           {
-            "value": "мистический адепт"
+            "value": "мистический адепт",
+            "cells": {
+              "pp_max": {
+                "expr": "@mystic_pp"
+              }
+            }
           },
           {
-            "value": "аспектный маг"
+            "value": "аспектный маг",
+            "cells": {
+              "pp_max": 0
+            }
           },
           {
-            "value": "техномант"
+            "value": "техномант",
+            "cells": {
+              "pp_max": 0
+            }
           }
         ]
       },
       "spell_categories": {
         "label": "Категория заклинания",
         "key": "word",
-        "columns": [],
+        "columns": [
+          {
+            "key": "focus",
+            "label": "фокус заклинаний",
+            "kind": "number"
+          }
+        ],
         "rows": [
           {
-            "value": "боевое"
+            "value": "боевое",
+            "cells": {
+              "focus": {
+                "expr": "@действующий.focus_sp_боевое"
+              }
+            }
           },
           {
-            "value": "иллюзия"
+            "value": "иллюзия",
+            "cells": {
+              "focus": {
+                "expr": "@действующий.focus_sp_иллюзия"
+              }
+            }
           },
           {
-            "value": "исцеление"
+            "value": "исцеление",
+            "cells": {
+              "focus": {
+                "expr": "@действующий.focus_sp_исцеление"
+              }
+            }
           },
           {
-            "value": "обнаружение"
+            "value": "обнаружение",
+            "cells": {
+              "focus": {
+                "expr": "@действующий.focus_sp_обнаружение"
+              }
+            }
           },
           {
-            "value": "управление"
+            "value": "управление",
+            "cells": {
+              "focus": {
+                "expr": "@действующий.focus_sp_управление"
+              }
+            }
           }
         ]
       },
@@ -5389,53 +5824,121 @@
             "key": "text",
             "label": "Набор",
             "kind": "text"
+          },
+          {
+            "key": "pool",
+            "label": "пул",
+            "kind": "number"
           }
         ],
         "rows": [
           {
-            "value": "Воля + Интуиция"
+            "value": "Воля + Интуиция",
+            "cells": {
+              "pool": {
+                "expr": "@цель.willpower + @цель.intuition"
+              }
+            }
           },
           {
-            "value": "Реакция + Воля"
+            "value": "Реакция + Воля",
+            "cells": {
+              "pool": {
+                "expr": "@цель.reaction + @цель.willpower"
+              }
+            }
           },
           {
-            "value": "Тело + Воля"
+            "value": "Тело + Воля",
+            "cells": {
+              "pool": {
+                "expr": "@цель.body + @цель.willpower"
+              }
+            }
           },
           {
-            "value": "Логика + Воля"
+            "value": "Логика + Воля",
+            "cells": {
+              "pool": {
+                "expr": "@цель.logic + @цель.willpower"
+              }
+            }
           },
           {
-            "value": "Воля"
+            "value": "Воля",
+            "cells": {
+              "pool": {
+                "expr": "@цель.willpower"
+              }
+            }
           },
           {
-            "value": "Интуиция + Логика"
+            "value": "Интуиция + Логика",
+            "cells": {
+              "pool": {
+                "expr": "@цель.intuition + @цель.logic"
+              }
+            }
           },
           {
-            "value": "Тело"
+            "value": "Тело",
+            "cells": {
+              "pool": {
+                "expr": "@цель.body"
+              }
+            }
           },
           {
-            "value": "Тело + Сила"
+            "value": "Тело + Сила",
+            "cells": {
+              "pool": {
+                "expr": "@цель.body + @цель.strength"
+              }
+            }
           },
           {
-            "value": "Воля + выбранная характеристика"
+            "value": "Воля + выбранная характеристика",
+            "cells": {
+              "pool": {
+                "expr": "@цель.willpower + (@attr.target или @цель.willpower)"
+              }
+            }
           },
           {
-            "value": "исцеление"
+            "value": "исцеление",
+            "cells": {
+              "pool": 0
+            }
           },
           {
-            "value": "критические"
+            "value": "критические",
+            "cells": {
+              "pool": 0
+            }
           },
           {
-            "value": "порог"
+            "value": "порог",
+            "cells": {
+              "pool": 0
+            }
           },
           {
-            "value": "Сопротивление материалов"
+            "value": "Сопротивление материалов",
+            "cells": {
+              "pool": 0
+            }
           },
           {
-            "value": "Мощь источника × 2"
+            "value": "Мощь источника × 2",
+            "cells": {
+              "pool": 0
+            }
           },
           {
-            "value": "нет"
+            "value": "нет",
+            "cells": {
+              "pool": 0
+            }
           }
         ]
       },
@@ -13140,7 +13643,7 @@
             "id": "база",
             "type": "roll",
             "fixed": {
-              "expr": "если(@дистанция == \"вплотную\", @ar1 или 0, если(@дистанция == \"близкая\", @ar2 или 0, если(@дистанция == \"средняя\", @ar3 или 0, если(@дистанция == \"дальняя\", @ar4 или 0, @ar5 или 0))))"
+              "expr": "@дистанция.ar"
             }
           },
           {
@@ -13424,7 +13927,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "если(@дистанция == \"вплотную\", @ar1 или 0, если(@дистанция == \"близкая\", @ar2 или 0, если(@дистанция == \"средняя\", @ar3 или 0, если(@дистанция == \"дальняя\", @ar4 или 0, @ar5 или 0)))) < 1"
+              "expr": "@дистанция.ar < 1"
             }
           },
           {
@@ -15134,7 +15637,7 @@
             "id": "атк",
             "type": "roll",
             "fixed": {
-              "expr": "@действующий.unarmed_rating - если(@дистанция == \"близкая\", 1, если(@дистанция == \"средняя\", 6, 0))"
+              "expr": "@действующий.unarmed_rating - @дистанция.throw_ar"
             }
           },
           {
@@ -15155,7 +15658,7 @@
             "id": "рикошет",
             "type": "roll",
             "fixed": {
-              "expr": "большее из(0, кинуть(2к6) - @атака_бросок.natural - если(@дистанция == \"вплотную\", 4, если(@дистанция == \"близкая\", 2, 0)))"
+              "expr": "большее из(0, кинуть(2к6) - @атака_бросок.natural - @дистанция.throw_ricochet)"
             }
           },
           {
@@ -15187,7 +15690,7 @@
             "effect": "blast_damage",
             "args": {
               "dv": {
-                "expr": "если(@кольцо == \"эпицентр\", @вещь.dv_e, если(@кольцо == \"вплотную\", @вещь.dv_c, @вещь.dv_n))"
+                "expr": "@кольцо.grenade_dv"
               },
               "physical_hit": {
                 "expr": "@вещь.damage_kind.physical или 1"
@@ -15246,7 +15749,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "если(@дистанция == \"вплотную\", @вещь.ar1 или 0, если(@дистанция == \"близкая\", @вещь.ar2 или 0, если(@дистанция == \"средняя\", @вещь.ar3 или 0, если(@дистанция == \"дальняя\", @вещь.ar4 или 0, @вещь.ar5 или 0)))) < 1"
+              "expr": "@дистанция.item_ar < 1"
             }
           },
           {
@@ -15327,7 +15830,7 @@
             "id": "атк",
             "type": "roll",
             "fixed": {
-              "expr": "если(@дистанция == \"вплотную\", @вещь.ar1 или 0, если(@дистанция == \"близкая\", @вещь.ar2 или 0, если(@дистанция == \"средняя\", @вещь.ar3 или 0, если(@дистанция == \"дальняя\", @вещь.ar4 или 0, @вещь.ar5 или 0)))) + большее из(0, строки(\"weapon_mod\", \"aim\", @вещь), если(@действующий.smartlink >= 1, большее из(0, @вещь.smart или 0, строки(\"weapon_mod\", \"aim_link\", @вещь)), 0))"
+              "expr": "@дистанция.item_ar + большее из(0, строки(\"weapon_mod\", \"aim\", @вещь), если(@действующий.smartlink >= 1, большее из(0, @вещь.smart или 0, строки(\"weapon_mod\", \"aim_link\", @вещь)), 0))"
             }
           },
           {
@@ -15348,7 +15851,7 @@
             "id": "рикошет",
             "type": "roll",
             "fixed": {
-              "expr": "большее из(0, кинуть(2к6) - @атака_бросок.natural + если(@дистанция == \"вплотную\", 2, если(@дистанция == \"средняя\", 2, если(@дистанция == \"дальняя\", 4, если(@дистанция == \"экстремальная\", 6, 0)))))"
+              "expr": "большее из(0, кинуть(2к6) - @атака_бросок.natural + @дистанция.launch_ricochet)"
             }
           },
           {
@@ -15380,7 +15883,7 @@
             "effect": "blast_damage",
             "args": {
               "dv": {
-                "expr": "если(@кольцо == \"эпицентр\", большее из(0, строки(\"grenade\", \"dv_e\", @вещь)), если(@кольцо == \"вплотную\", большее из(0, строки(\"grenade\", \"dv_c\", @вещь)), большее из(0, строки(\"grenade\", \"dv_n\", @вещь))))"
+                "expr": "@кольцо.rocket_dv"
               },
               "physical_hit": {
                 "expr": "если(сколько(строки(\"grenade\", \"damage_kind\", @вещь), \"оглушающий\") >= 1, 0, 1)"
@@ -15511,7 +16014,7 @@
             "effect": "blast_damage",
             "args": {
               "dv": {
-                "expr": "если(@кольцо == \"эпицентр\", @вещь.rating, если(@кольцо == \"вплотную\", округлить вниз(@вещь.rating / 2), округлить вниз(@вещь.rating / 4)))"
+                "expr": "@кольцо.charge_dv"
               },
               "physical_hit": {
                 "expr": "1"
@@ -19183,7 +19686,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, @pool + 0 + если(@link == \"Проникновение\", меньшее из(0, @действующий.m_attack - @действующий.m_sleaze), если(@link == \"Ускользание\", меньшее из(0, @действующий.m_sleaze - @действующий.m_attack), 0)))"
+              "expr": "большее из(0, @pool + 0 + @link.penalty)"
             },
             "tags": [
               "проверка",
@@ -19238,7 +19741,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, если(@защита == \"Логика + ВМ\", если(@цель.is_device < 1, @цель.logic + @цель.m_dp, @цель.m_dp * 2), 0) + если(@защита == \"Воля + СЭ\", если(@цель.is_device < 1, @цель.willpower + @цель.m_firewall, @цель.m_firewall * 2), если(@защита == \"Воля + У\", если(@цель.is_device < 1, @цель.willpower + @цель.m_sleaze, @цель.m_firewall + @цель.m_sleaze), если(@защита == \"Логика + СЭ\", если(@цель.is_device < 1, @цель.logic + @цель.m_firewall, @цель.m_dp + @цель.m_firewall), если(@защита == \"Интуиция + СЭ\", если(@цель.is_device < 1, @цель.intuition + @цель.m_firewall, @цель.m_firewall + @цель.m_sleaze), если(@защита == \"ВМ + СЭ\", если(@цель.is_device < 1, @цель.m_dp + @цель.m_firewall, @цель.m_dp + @цель.m_firewall), если(@защита == \"Харизма + ВМ\", если(@цель.is_device < 1, @цель.charisma + @цель.m_dp, @цель.m_attack + @цель.m_dp), если(@защита == \"Интуиция + ВМ\", если(@цель.is_device < 1, @цель.intuition + @цель.m_dp, @цель.m_dp + @цель.m_sleaze), если(@защита == \"ВМ + рейтинг\", если(@цель.is_device < 1, @цель.m_dp + @цель.dev_rating, @цель.m_dp + @цель.dev_rating), если(@защита == \"Воля + П\", если(@цель.is_device < 1, @цель.willpower + @цель.m_attack, @цель.m_firewall + @цель.m_attack), если(@защита == \"Воля + ВМ\", если(@цель.is_device < 1, @цель.willpower + @цель.m_dp, @цель.m_firewall + @цель.m_dp), 0)))))))))) + 0)"
+              "expr": "большее из(0, если(@цель.is_device < 1, @защита.persona, @защита.device) + 0)"
             },
             "tags": [
               "защита",
@@ -19523,7 +20026,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, @pool + 0 + если(@link == \"Проникновение\", меньшее из(0, @действующий.m_attack - @действующий.m_sleaze), если(@link == \"Ускользание\", меньшее из(0, @действующий.m_sleaze - @действующий.m_attack), 0)))"
+              "expr": "большее из(0, @pool + 0 + @link.penalty)"
             },
             "tags": [
               "проверка",
@@ -19578,7 +20081,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, если(@защита == \"Логика + ВМ\", если(@цель.is_device < 1, @цель.logic + @цель.m_dp, @цель.m_dp * 2), 0) + если(@защита == \"Воля + СЭ\", если(@цель.is_device < 1, @цель.willpower + @цель.m_firewall, @цель.m_firewall * 2), если(@защита == \"Воля + У\", если(@цель.is_device < 1, @цель.willpower + @цель.m_sleaze, @цель.m_firewall + @цель.m_sleaze), если(@защита == \"Логика + СЭ\", если(@цель.is_device < 1, @цель.logic + @цель.m_firewall, @цель.m_dp + @цель.m_firewall), если(@защита == \"Интуиция + СЭ\", если(@цель.is_device < 1, @цель.intuition + @цель.m_firewall, @цель.m_firewall + @цель.m_sleaze), если(@защита == \"ВМ + СЭ\", если(@цель.is_device < 1, @цель.m_dp + @цель.m_firewall, @цель.m_dp + @цель.m_firewall), если(@защита == \"Харизма + ВМ\", если(@цель.is_device < 1, @цель.charisma + @цель.m_dp, @цель.m_attack + @цель.m_dp), если(@защита == \"Интуиция + ВМ\", если(@цель.is_device < 1, @цель.intuition + @цель.m_dp, @цель.m_dp + @цель.m_sleaze), если(@защита == \"ВМ + рейтинг\", если(@цель.is_device < 1, @цель.m_dp + @цель.dev_rating, @цель.m_dp + @цель.dev_rating), если(@защита == \"Воля + П\", если(@цель.is_device < 1, @цель.willpower + @цель.m_attack, @цель.m_firewall + @цель.m_attack), если(@защита == \"Воля + ВМ\", если(@цель.is_device < 1, @цель.willpower + @цель.m_dp, @цель.m_firewall + @цель.m_dp), 0)))))))))) + 0)"
+              "expr": "большее из(0, если(@цель.is_device < 1, @защита.persona, @защита.device) + 0)"
             },
             "tags": [
               "защита",
@@ -19897,7 +20400,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, @pool + 0 + если(@link == \"Проникновение\", меньшее из(0, @действующий.m_attack - @действующий.m_sleaze), если(@link == \"Ускользание\", меньшее из(0, @действующий.m_sleaze - @действующий.m_attack), 0)))"
+              "expr": "большее из(0, @pool + 0 + @link.penalty)"
             },
             "tags": [
               "проверка",
@@ -19952,7 +20455,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, если(@защита == \"Логика + ВМ\", если(@цель.is_device < 1, @цель.logic + @цель.m_dp, @цель.m_dp * 2), 0) + если(@защита == \"Воля + СЭ\", если(@цель.is_device < 1, @цель.willpower + @цель.m_firewall, @цель.m_firewall * 2), если(@защита == \"Воля + У\", если(@цель.is_device < 1, @цель.willpower + @цель.m_sleaze, @цель.m_firewall + @цель.m_sleaze), если(@защита == \"Логика + СЭ\", если(@цель.is_device < 1, @цель.logic + @цель.m_firewall, @цель.m_dp + @цель.m_firewall), если(@защита == \"Интуиция + СЭ\", если(@цель.is_device < 1, @цель.intuition + @цель.m_firewall, @цель.m_firewall + @цель.m_sleaze), если(@защита == \"ВМ + СЭ\", если(@цель.is_device < 1, @цель.m_dp + @цель.m_firewall, @цель.m_dp + @цель.m_firewall), если(@защита == \"Харизма + ВМ\", если(@цель.is_device < 1, @цель.charisma + @цель.m_dp, @цель.m_attack + @цель.m_dp), если(@защита == \"Интуиция + ВМ\", если(@цель.is_device < 1, @цель.intuition + @цель.m_dp, @цель.m_dp + @цель.m_sleaze), если(@защита == \"ВМ + рейтинг\", если(@цель.is_device < 1, @цель.m_dp + @цель.dev_rating, @цель.m_dp + @цель.dev_rating), если(@защита == \"Воля + П\", если(@цель.is_device < 1, @цель.willpower + @цель.m_attack, @цель.m_firewall + @цель.m_attack), если(@защита == \"Воля + ВМ\", если(@цель.is_device < 1, @цель.willpower + @цель.m_dp, @цель.m_firewall + @цель.m_dp), 0)))))))))) + 0)"
+              "expr": "большее из(0, если(@цель.is_device < 1, @защита.persona, @защита.device) + 0)"
             },
             "tags": [
               "защита",
@@ -20307,7 +20810,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, @pool + @probe_hits + если(@link == \"Проникновение\", меньшее из(0, @действующий.m_attack - @действующий.m_sleaze), если(@link == \"Ускользание\", меньшее из(0, @действующий.m_sleaze - @действующий.m_attack), 0)))"
+              "expr": "большее из(0, @pool + @probe_hits + @link.penalty)"
             },
             "tags": [
               "проверка",
@@ -20362,7 +20865,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, если(@защита == \"Логика + ВМ\", если(@цель.is_device < 1, @цель.logic + @цель.m_dp, @цель.m_dp * 2), 0) + если(@защита == \"Воля + СЭ\", если(@цель.is_device < 1, @цель.willpower + @цель.m_firewall, @цель.m_firewall * 2), если(@защита == \"Воля + У\", если(@цель.is_device < 1, @цель.willpower + @цель.m_sleaze, @цель.m_firewall + @цель.m_sleaze), если(@защита == \"Логика + СЭ\", если(@цель.is_device < 1, @цель.logic + @цель.m_firewall, @цель.m_dp + @цель.m_firewall), если(@защита == \"Интуиция + СЭ\", если(@цель.is_device < 1, @цель.intuition + @цель.m_firewall, @цель.m_firewall + @цель.m_sleaze), если(@защита == \"ВМ + СЭ\", если(@цель.is_device < 1, @цель.m_dp + @цель.m_firewall, @цель.m_dp + @цель.m_firewall), если(@защита == \"Харизма + ВМ\", если(@цель.is_device < 1, @цель.charisma + @цель.m_dp, @цель.m_attack + @цель.m_dp), если(@защита == \"Интуиция + ВМ\", если(@цель.is_device < 1, @цель.intuition + @цель.m_dp, @цель.m_dp + @цель.m_sleaze), если(@защита == \"ВМ + рейтинг\", если(@цель.is_device < 1, @цель.m_dp + @цель.dev_rating, @цель.m_dp + @цель.dev_rating), если(@защита == \"Воля + П\", если(@цель.is_device < 1, @цель.willpower + @цель.m_attack, @цель.m_firewall + @цель.m_attack), если(@защита == \"Воля + ВМ\", если(@цель.is_device < 1, @цель.willpower + @цель.m_dp, @цель.m_firewall + @цель.m_dp), 0)))))))))) + если(@level == \"администратор\" и @had_user < 1, 2, 0))"
+              "expr": "большее из(0, если(@цель.is_device < 1, @защита.persona, @защита.device) + если(@level == \"администратор\" и @had_user < 1, 2, 0))"
             },
             "tags": [
               "защита",
@@ -21194,7 +21697,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, @pool + 0 + если(@link == \"Проникновение\", меньшее из(0, @действующий.m_attack - @действующий.m_sleaze), если(@link == \"Ускользание\", меньшее из(0, @действующий.m_sleaze - @действующий.m_attack), 0)))"
+              "expr": "большее из(0, @pool + 0 + @link.penalty)"
             },
             "tags": [
               "проверка",
@@ -21249,7 +21752,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, если(@защита == \"Логика + ВМ\", если(@цель.is_device < 1, @цель.logic + @цель.m_dp, @цель.m_dp * 2), 0) + если(@защита == \"Воля + СЭ\", если(@цель.is_device < 1, @цель.willpower + @цель.m_firewall, @цель.m_firewall * 2), если(@защита == \"Воля + У\", если(@цель.is_device < 1, @цель.willpower + @цель.m_sleaze, @цель.m_firewall + @цель.m_sleaze), если(@защита == \"Логика + СЭ\", если(@цель.is_device < 1, @цель.logic + @цель.m_firewall, @цель.m_dp + @цель.m_firewall), если(@защита == \"Интуиция + СЭ\", если(@цель.is_device < 1, @цель.intuition + @цель.m_firewall, @цель.m_firewall + @цель.m_sleaze), если(@защита == \"ВМ + СЭ\", если(@цель.is_device < 1, @цель.m_dp + @цель.m_firewall, @цель.m_dp + @цель.m_firewall), если(@защита == \"Харизма + ВМ\", если(@цель.is_device < 1, @цель.charisma + @цель.m_dp, @цель.m_attack + @цель.m_dp), если(@защита == \"Интуиция + ВМ\", если(@цель.is_device < 1, @цель.intuition + @цель.m_dp, @цель.m_dp + @цель.m_sleaze), если(@защита == \"ВМ + рейтинг\", если(@цель.is_device < 1, @цель.m_dp + @цель.dev_rating, @цель.m_dp + @цель.dev_rating), если(@защита == \"Воля + П\", если(@цель.is_device < 1, @цель.willpower + @цель.m_attack, @цель.m_firewall + @цель.m_attack), если(@защита == \"Воля + ВМ\", если(@цель.is_device < 1, @цель.willpower + @цель.m_dp, @цель.m_firewall + @цель.m_dp), 0)))))))))) + 0)"
+              "expr": "большее из(0, если(@цель.is_device < 1, @защита.persona, @защита.device) + 0)"
             },
             "tags": [
               "защита",
@@ -21642,8 +22145,9 @@
           {
             "key": "defense",
             "label": "Защита",
-            "kind": "text",
-            "default": "нет"
+            "kind": "choice",
+            "default": "нет",
+            "from": "spell_defenses"
           },
           {
             "key": "threshold",
@@ -21725,8 +22229,9 @@
           {
             "key": "attr",
             "label": "Характеристика",
-            "kind": "text",
-            "default": ""
+            "kind": "choice",
+            "from": "attributes",
+            "optional": true
           }
         ],
         "cost": [
@@ -21830,7 +22335,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, @действующий.skills.колдовство.pool + большее из(@действующий.focus_power, если(@category == \"боевое\", @действующий.focus_sp_боевое, если(@category == \"иллюзия\", @действующий.focus_sp_иллюзия, если(@category == \"исцеление\", @действующий.focus_sp_исцеление, если(@category == \"обнаружение\", @действующий.focus_sp_обнаружение, @действующий.focus_sp_управление))))))"
+              "expr": "большее из(0, @действующий.skills.колдовство.pool + большее из(@действующий.focus_power, @category.focus))"
             },
             "tags": [
               "проверка",
@@ -21927,7 +22432,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, если(@defense == \"Воля + Интуиция\", @цель.willpower + @цель.intuition, если(@defense == \"Реакция + Воля\", @цель.reaction + @цель.willpower, если(@defense == \"Тело + Воля\", @цель.body + @цель.willpower, если(@defense == \"Логика + Воля\", @цель.logic + @цель.willpower, если(@defense == \"Воля\", @цель.willpower, если(@defense == \"Интуиция + Логика\", @цель.intuition + @цель.logic, если(@defense == \"Тело\", @цель.body, если(@defense == \"Тело + Сила\", @цель.body + @цель.strength, если(@defense == \"Воля + выбранная характеристика\", @цель.willpower + если(@attr == \"body\", @цель.body, если(@attr == \"agility\", @цель.agility, если(@attr == \"reaction\", @цель.reaction, если(@attr == \"strength\", @цель.strength, если(@attr == \"logic\", @цель.logic, если(@attr == \"intuition\", @цель.intuition, если(@attr == \"charisma\", @цель.charisma, @цель.willpower))))))), 0))))))))))"
+              "expr": "большее из(0, @defense.pool)"
             },
             "tags": [
               "защита",
@@ -22155,8 +22660,9 @@
           {
             "key": "defense",
             "label": "Защита",
-            "kind": "text",
-            "default": "нет"
+            "kind": "choice",
+            "default": "нет",
+            "from": "spell_defenses"
           },
           {
             "key": "threshold",
@@ -22212,8 +22718,9 @@
           {
             "key": "attr",
             "label": "Характеристика",
-            "kind": "text",
-            "default": ""
+            "kind": "choice",
+            "from": "attributes",
+            "optional": true
           },
           {
             "key": "heal_kind",
@@ -22312,7 +22819,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, @действующий.skills.колдовство.pool + большее из(@действующий.focus_power, если(@category == \"боевое\", @действующий.focus_sp_боевое, если(@category == \"иллюзия\", @действующий.focus_sp_иллюзия, если(@category == \"исцеление\", @действующий.focus_sp_исцеление, если(@category == \"обнаружение\", @действующий.focus_sp_обнаружение, @действующий.focus_sp_управление))))))"
+              "expr": "большее из(0, @действующий.skills.колдовство.pool + большее из(@действующий.focus_power, @category.focus))"
             },
             "tags": [
               "проверка",
@@ -22409,7 +22916,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, если(@defense == \"Воля + Интуиция\", @цель.willpower + @цель.intuition, если(@defense == \"Реакция + Воля\", @цель.reaction + @цель.willpower, если(@defense == \"Тело + Воля\", @цель.body + @цель.willpower, если(@defense == \"Логика + Воля\", @цель.logic + @цель.willpower, если(@defense == \"Воля\", @цель.willpower, если(@defense == \"Интуиция + Логика\", @цель.intuition + @цель.logic, если(@defense == \"Тело\", @цель.body, если(@defense == \"Тело + Сила\", @цель.body + @цель.strength, если(@defense == \"Воля + выбранная характеристика\", @цель.willpower + если(@attr == \"body\", @цель.body, если(@attr == \"agility\", @цель.agility, если(@attr == \"reaction\", @цель.reaction, если(@attr == \"strength\", @цель.strength, если(@attr == \"logic\", @цель.logic, если(@attr == \"intuition\", @цель.intuition, если(@attr == \"charisma\", @цель.charisma, @цель.willpower))))))), 0))))))))))"
+              "expr": "большее из(0, @defense.pool)"
             },
             "tags": [
               "защита",
@@ -22538,8 +23045,9 @@
           {
             "key": "defense",
             "label": "Защита",
-            "kind": "text",
-            "default": "нет"
+            "kind": "choice",
+            "default": "нет",
+            "from": "spell_defenses"
           },
           {
             "key": "threshold",
@@ -22693,7 +23201,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, @действующий.skills.колдовство.pool + большее из(@действующий.focus_power, если(@category == \"боевое\", @действующий.focus_sp_боевое, если(@category == \"иллюзия\", @действующий.focus_sp_иллюзия, если(@category == \"исцеление\", @действующий.focus_sp_исцеление, если(@category == \"обнаружение\", @действующий.focus_sp_обнаружение, @действующий.focus_sp_управление))))))"
+              "expr": "большее из(0, @действующий.skills.колдовство.pool + большее из(@действующий.focus_power, @category.focus))"
             },
             "tags": [
               "проверка",
@@ -22790,7 +23298,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, если(@defense == \"Воля + Интуиция\", @цель.willpower + @цель.intuition, если(@defense == \"Реакция + Воля\", @цель.reaction + @цель.willpower, если(@defense == \"Тело + Воля\", @цель.body + @цель.willpower, если(@defense == \"Логика + Воля\", @цель.logic + @цель.willpower, если(@defense == \"Воля\", @цель.willpower, если(@defense == \"Интуиция + Логика\", @цель.intuition + @цель.logic, если(@defense == \"Тело\", @цель.body, если(@defense == \"Тело + Сила\", @цель.body + @цель.strength, если(@defense == \"Воля + выбранная характеристика\", @цель.willpower + если(@attr == \"body\", @цель.body, если(@attr == \"agility\", @цель.agility, если(@attr == \"reaction\", @цель.reaction, если(@attr == \"strength\", @цель.strength, если(@attr == \"logic\", @цель.logic, если(@attr == \"intuition\", @цель.intuition, если(@attr == \"charisma\", @цель.charisma, @цель.willpower))))))), 0))))))))))"
+              "expr": "большее из(0, @defense.pool)"
             },
             "tags": [
               "защита",
@@ -25623,8 +26131,9 @@
           {
             "key": "защита",
             "label": "Защита",
-            "kind": "text",
-            "default": "нет"
+            "kind": "choice",
+            "default": "нет",
+            "from": "matrix_defenses"
           },
           {
             "key": "threshold",
@@ -25668,8 +26177,9 @@
           {
             "key": "attr",
             "label": "Характеристика",
-            "kind": "text",
-            "default": ""
+            "kind": "choice",
+            "from": "matrix_attrs",
+            "optional": true
           }
         ],
         "cost": [
@@ -25840,7 +26350,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "если(@защита != \"порог\" и @защита != \"нет\", большее из(0, если(@защита == \"Рейтинг + СЭ\", @цель.dev_rating + @цель.m_firewall, 0) + если(@защита == \"Логика + ВМ\", если(@цель.is_device < 1, @цель.logic + @цель.m_dp, @цель.m_dp * 2), 0) + если(@защита == \"Воля + СЭ\", если(@цель.is_device < 1, @цель.willpower + @цель.m_firewall, @цель.m_firewall * 2), если(@защита == \"Воля + У\", если(@цель.is_device < 1, @цель.willpower + @цель.m_sleaze, @цель.m_firewall + @цель.m_sleaze), если(@защита == \"Логика + СЭ\", если(@цель.is_device < 1, @цель.logic + @цель.m_firewall, @цель.m_dp + @цель.m_firewall), если(@защита == \"Интуиция + СЭ\", если(@цель.is_device < 1, @цель.intuition + @цель.m_firewall, @цель.m_firewall + @цель.m_sleaze), если(@защита == \"ВМ + СЭ\", если(@цель.is_device < 1, @цель.m_dp + @цель.m_firewall, @цель.m_dp + @цель.m_firewall), если(@защита == \"Харизма + ВМ\", если(@цель.is_device < 1, @цель.charisma + @цель.m_dp, @цель.m_attack + @цель.m_dp), если(@защита == \"Интуиция + ВМ\", если(@цель.is_device < 1, @цель.intuition + @цель.m_dp, @цель.m_dp + @цель.m_sleaze), если(@защита == \"ВМ + рейтинг\", если(@цель.is_device < 1, @цель.m_dp + @цель.dev_rating, @цель.m_dp + @цель.dev_rating), если(@защита == \"Воля + П\", если(@цель.is_device < 1, @цель.willpower + @цель.m_attack, @цель.m_firewall + @цель.m_attack), если(@защита == \"Воля + ВМ\", если(@цель.is_device < 1, @цель.willpower + @цель.m_dp, @цель.m_firewall + @цель.m_dp), 0)))))))))) + 0), 0)"
+              "expr": "большее из(0, если(@цель.is_device < 1, @защита.persona, @защита.device))"
             },
             "tags": [
               "защита",
@@ -26021,7 +26531,7 @@
                 "expr": "@attr"
               },
               "amount": {
-                "expr": "меньшее из(если(@per_hit == \"чистые\", большее из(0, @итог.margin), @итог.natural), если(@attr == \"П\", @цель.dev_attack, если(@attr == \"У\", @цель.dev_sleaze, если(@attr == \"ВМ\", @цель.dev_dp, если(@attr == \"СЭ\", @цель.dev_firewall, 0)))))"
+                "expr": "меньшее из(если(@per_hit == \"чистые\", большее из(0, @итог.margin), @итог.natural), (@attr.target_device или 0))"
               }
             }
           },
@@ -26042,7 +26552,7 @@
                 "expr": "@attr"
               },
               "amount": {
-                "expr": "меньшее из(если(@per_hit == \"чистые\", большее из(0, @итог.margin), @итог.natural), большее из(0, если(@attr == \"П\", @цель.m_attack, если(@attr == \"У\", @цель.m_sleaze, если(@attr == \"ВМ\", @цель.m_dp, если(@attr == \"СЭ\", @цель.m_firewall, 0)))) - 1))"
+                "expr": "меньшее из(если(@per_hit == \"чистые\", большее из(0, @итог.margin), @итог.natural), большее из(0, (@attr.target_persona или 0) - 1))"
               }
             }
           },
@@ -26089,8 +26599,9 @@
           {
             "key": "защита",
             "label": "Защита",
-            "kind": "text",
-            "default": "нет"
+            "kind": "choice",
+            "default": "нет",
+            "from": "matrix_defenses"
           },
           {
             "key": "threshold",
@@ -26309,7 +26820,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "если(@защита != \"порог\" и @защита != \"нет\", большее из(0, если(@защита == \"Рейтинг + СЭ\", @цель.dev_rating + @цель.m_firewall, 0) + если(@защита == \"Логика + ВМ\", если(@цель.is_device < 1, @цель.logic + @цель.m_dp, @цель.m_dp * 2), 0) + если(@защита == \"Воля + СЭ\", если(@цель.is_device < 1, @цель.willpower + @цель.m_firewall, @цель.m_firewall * 2), если(@защита == \"Воля + У\", если(@цель.is_device < 1, @цель.willpower + @цель.m_sleaze, @цель.m_firewall + @цель.m_sleaze), если(@защита == \"Логика + СЭ\", если(@цель.is_device < 1, @цель.logic + @цель.m_firewall, @цель.m_dp + @цель.m_firewall), если(@защита == \"Интуиция + СЭ\", если(@цель.is_device < 1, @цель.intuition + @цель.m_firewall, @цель.m_firewall + @цель.m_sleaze), если(@защита == \"ВМ + СЭ\", если(@цель.is_device < 1, @цель.m_dp + @цель.m_firewall, @цель.m_dp + @цель.m_firewall), если(@защита == \"Харизма + ВМ\", если(@цель.is_device < 1, @цель.charisma + @цель.m_dp, @цель.m_attack + @цель.m_dp), если(@защита == \"Интуиция + ВМ\", если(@цель.is_device < 1, @цель.intuition + @цель.m_dp, @цель.m_dp + @цель.m_sleaze), если(@защита == \"ВМ + рейтинг\", если(@цель.is_device < 1, @цель.m_dp + @цель.dev_rating, @цель.m_dp + @цель.dev_rating), если(@защита == \"Воля + П\", если(@цель.is_device < 1, @цель.willpower + @цель.m_attack, @цель.m_firewall + @цель.m_attack), если(@защита == \"Воля + ВМ\", если(@цель.is_device < 1, @цель.willpower + @цель.m_dp, @цель.m_firewall + @цель.m_dp), 0)))))))))) + 0), 0)"
+              "expr": "большее из(0, если(@цель.is_device < 1, @защита.persona, @защита.device))"
             },
             "tags": [
               "защита",
@@ -26490,7 +27001,7 @@
                 "expr": "@attr"
               },
               "amount": {
-                "expr": "меньшее из(если(@per_hit == \"чистые\", большее из(0, @итог.margin), @итог.natural), если(@attr == \"П\", @цель.dev_attack, если(@attr == \"У\", @цель.dev_sleaze, если(@attr == \"ВМ\", @цель.dev_dp, если(@attr == \"СЭ\", @цель.dev_firewall, 0)))))"
+                "expr": "меньшее из(если(@per_hit == \"чистые\", большее из(0, @итог.margin), @итог.natural), (@attr.target_device или 0))"
               }
             }
           },
@@ -26511,7 +27022,7 @@
                 "expr": "@attr"
               },
               "amount": {
-                "expr": "меньшее из(если(@per_hit == \"чистые\", большее из(0, @итог.margin), @итог.natural), большее из(0, если(@attr == \"П\", @цель.m_attack, если(@attr == \"У\", @цель.m_sleaze, если(@attr == \"ВМ\", @цель.m_dp, если(@attr == \"СЭ\", @цель.m_firewall, 0)))) - 1))"
+                "expr": "меньшее из(если(@per_hit == \"чистые\", большее из(0, @итог.margin), @итог.natural), большее из(0, (@attr.target_persona или 0) - 1))"
               }
             }
           },
@@ -27485,8 +27996,9 @@
           {
             "key": "защита",
             "label": "Защита",
-            "kind": "text",
-            "default": "нет"
+            "kind": "choice",
+            "default": "нет",
+            "from": "matrix_defenses"
           },
           {
             "key": "threshold",
@@ -27611,7 +28123,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "если(@защита != \"порог\" и @защита != \"нет\", большее из(0, если(@защита == \"Рейтинг + СЭ\", @цель.dev_rating + @цель.m_firewall, 0) + если(@защита == \"Логика + ВМ\", если(@цель.is_device < 1, @цель.logic + @цель.m_dp, @цель.m_dp * 2), 0) + если(@защита == \"Воля + СЭ\", если(@цель.is_device < 1, @цель.willpower + @цель.m_firewall, @цель.m_firewall * 2), если(@защита == \"Воля + У\", если(@цель.is_device < 1, @цель.willpower + @цель.m_sleaze, @цель.m_firewall + @цель.m_sleaze), если(@защита == \"Логика + СЭ\", если(@цель.is_device < 1, @цель.logic + @цель.m_firewall, @цель.m_dp + @цель.m_firewall), если(@защита == \"Интуиция + СЭ\", если(@цель.is_device < 1, @цель.intuition + @цель.m_firewall, @цель.m_firewall + @цель.m_sleaze), если(@защита == \"ВМ + СЭ\", если(@цель.is_device < 1, @цель.m_dp + @цель.m_firewall, @цель.m_dp + @цель.m_firewall), если(@защита == \"Харизма + ВМ\", если(@цель.is_device < 1, @цель.charisma + @цель.m_dp, @цель.m_attack + @цель.m_dp), если(@защита == \"Интуиция + ВМ\", если(@цель.is_device < 1, @цель.intuition + @цель.m_dp, @цель.m_dp + @цель.m_sleaze), если(@защита == \"ВМ + рейтинг\", если(@цель.is_device < 1, @цель.m_dp + @цель.dev_rating, @цель.m_dp + @цель.dev_rating), если(@защита == \"Воля + П\", если(@цель.is_device < 1, @цель.willpower + @цель.m_attack, @цель.m_firewall + @цель.m_attack), если(@защита == \"Воля + ВМ\", если(@цель.is_device < 1, @цель.willpower + @цель.m_dp, @цель.m_firewall + @цель.m_dp), 0)))))))))) + 0), 0)"
+              "expr": "большее из(0, если(@цель.is_device < 1, @защита.persona, @защита.device))"
             },
             "tags": [
               "защита",
@@ -31427,7 +31939,7 @@
             "target": "init_dice",
             "op": "add",
             "value": {
-              "expr": "если(@matrix_mode == \"холодная ВР\", 1, если(@matrix_mode == \"горячая ВР\", 2, 0))"
+              "expr": "@matrix_mode.init_dice"
             }
           },
           {
