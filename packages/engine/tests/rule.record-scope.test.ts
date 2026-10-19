@@ -73,4 +73,16 @@ group('D&D: критическое попадание — всегда попа�
     eq(outcome(12), 2);
     eq(outcome(19), 3, 'у Арвена Улучшенный критический — крит от 19');
   });
+  test('колонка таблицы через итог-выбор: «попадание — исход — множитель костей» 0 / 1 / 2', () => {
+    const factor = (die: number): number => {
+      const system = JSON.parse(JSON.stringify(dnd.system)) as System;
+      system.effects.strike!.steps!.splice(2, 0, { id: 'множитель', type: 'roll', fixed: { expr: '@попадание.исход.dice_mul' } } as never);
+      eq(errorsOf(lintSystem(system)).length, 0);
+      const out = exchange({ system, compendium: dnd.compendium as Compendium, die: () => die, sheets: dnd.sheets as Sheet[], actionId: 'longsword:0', fromId: 'arven', toId: 'goblin' });
+      return (out.reports.flatMap(entry => entry.report.trace).find(t => (t as { step?: string }).step === 'множитель') as { total: number }).total;
+    };
+    eq(factor(1), 0);
+    eq(factor(12), 1);
+    eq(factor(19), 2);
+  });
 });

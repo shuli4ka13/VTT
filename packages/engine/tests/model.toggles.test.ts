@@ -48,6 +48,17 @@ group('тогл крита пишет данные, а не код', () => {
     eq(errorsOf(lintSystem(system)).length, 0);
   });
 
+  test('«кости вдвое» поверх множителя из таблицы исходов не удваивает ещё раз', () => {
+    const system = dnd();
+    const line = () => String(((system.effects.strike!.steps!.find(s => s.id === 'урон') as Record<string, unknown>).fixed as { expr: string }).expr);
+    const before = line();
+    ok(before.includes('@попадание.исход.dice_mul'));
+    setCrit(system, 'double');
+    eq(line(), before);
+    setCrit(system, 'explode');
+    eq(line(), 'кинуть(@damage_dice, @dice) + @damage_with');
+  });
+
   test('удвоение снимается из той же строки, не оставляя мусора', () => {
     const system = dnd();
     const lineOf = (effect: string): string => {

@@ -380,6 +380,16 @@ export class Run {
     if (made.roll) rolls[name] = made.roll;
   }
 
+  private choiceOf(effectId: string, id: string, key: string): string | undefined {
+    const effect = this.system.effects[effectId];
+    if (!effect) return undefined;
+    const chains = [effect.steps, effect.cost, effect.attach, effect.detach, ...(effect.on ?? []).flatMap(handler => [handler.steps, handler.cost])];
+    const step = chains.flatMap(steps => steps ?? []).find(one => one.type === 'emit' && one.id === id);
+    const callee = step ? this.system.effects[String((step as { effect?: unknown }).effect)] : undefined;
+    const column = callee?.returns?.find(one => one.key === key && one.kind === 'choice' && !one.many);
+    return column?.from;
+  }
+
   private ctx(frame: Frame, results: Record<string, unknown>, rolls: Record<string, RollResult>, path: Path, sink: Sink, stepIds: ReadonlySet<string>, given?: Die, at?: { steps: readonly Step[]; index: number }): Ctx {
     const die = given ?? this.ext.dice(path);
     const lazy = frame.lazy;
@@ -388,6 +398,7 @@ export class Run {
       ...(frame.item ? { item: frame.item, itemRead: (column: string) => this.itemRead(frame.item!, column) } : {}),
       ...(frame.inputs ? { inputs: frame.inputs } : {}),
       results, rolls, stepIds,
+      choiceOf: (step: string, key: string) => this.choiceOf(frame.effectId, step, key),
       ...(frame.alone ? { alone: true } : {}),
       ...(frame.bound ? { sheets: { bound: frame.bound, view: (id: string) => this.view(id) } } : {}),
       ...(lazy ? { lazy: (name: string) => this.lazyValue(lazy, name, results, rolls, sink) } : {}),

@@ -125,7 +125,7 @@ describe('эффекты пресетов собираются в констру
     expect(armLabel(block(hit))).toBe('попадание:');
     addToArm(block(hit), 0, 'number');
     card = stepCard(/^4 · /);
-    within(card).formula('Формула', 'кинуть(@damage_dice, @dice * если(@попадание.крит, 2, 1)) + @damage_with');
+    within(card).formula('Формула', 'кинуть(@damage_dice, @dice * @попадание.исход.dice_mul) + @damage_with');
     nameStep(card, 'урон');
 
     addToArm(block(hit), 0, 'change');

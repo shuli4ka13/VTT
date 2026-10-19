@@ -74,27 +74,39 @@ const amountsAfterCheck = (steps: Step[], system?: System): { check: Step; amoun
 
 const DOUBLER = /^если\(.*,\s*2\s*,\s*1\s*\)$/;
 
+const OUTCOME_COLUMN = /^@([\p{L}\p{N}_]+)\.([\p{L}\p{N}_]+)\.[\p{L}\p{N}_]+$/u;
+
+type Doubler = (part: string) => boolean;
+
+const doublerIn = (system: System, steps: readonly Step[]): Doubler => part => {
+  if (DOUBLER.test(part)) return true;
+  const found = OUTCOME_COLUMN.exec(part);
+  const step = found ? steps.find(one => one.type === 'emit' && one.id === found[1]) : undefined;
+  const called = step ? system.effects?.[String((step as { effect?: unknown }).effect)] : undefined;
+  return Boolean(called?.returns?.some(column => column.key === found![2] && column.kind === 'choice' && column.from));
+};
+
 export function critOf(system: System): CritChoice {
   if ((system.grants ?? []).includes(CRIT_RULE) && system.effects[CRIT_RULE]) return 'explode';
   const doubled = Object.values(system.effects).some(effect =>
-    (effect.steps ?? []).some(step => isDoubling(step as Record<string, unknown>)));
+    (effect.steps ?? []).some(step => isDoubling(step as Record<string, unknown>, doublerIn(system, effect.steps ?? []))));
   return doubled ? 'double' : 'off';
 }
 
-const isDoubling = (step: Record<string, unknown>): boolean => {
+const isDoubling = (step: Record<string, unknown>, doubler: Doubler): boolean => {
   if (step.type !== 'roll' || owned(step as Step)) return false;
   const count = step.count as { expr?: unknown } | undefined;
   if (typeof count?.expr === 'string' && DOUBLER.test(count.expr)) return true;
   const call = findRoll((step.fixed as { expr?: unknown } | undefined)?.expr);
   return call?.times !== null && call?.times !== undefined
-    && factorsOf(bare(call.times)).some(part => DOUBLER.test(bare(part)));
+    && factorsOf(bare(call.times)).some(part => doubler(bare(part)));
 };
 
-const withoutDoubler = (step: Record<string, unknown>): void => {
+const withoutDoubler = (step: Record<string, unknown>, doubler: Doubler): void => {
   const fixed = step.fixed as { expr?: unknown } | undefined;
   const call = findRoll(fixed?.expr);
   if (!call || !call.times) return;
-  const kept = factorsOf(bare(call.times)).filter(part => !DOUBLER.test(bare(part)));
+  const kept = factorsOf(bare(call.times)).filter(part => !doubler(bare(part)));
   const times = kept.length === 1 ? bare(kept[0]!) : kept.length ? kept.map(tight).join(' * ') : null;
   step.fixed = { ...fixed, expr: writeRoll({ ...call, times }) };
 };
@@ -111,12 +123,15 @@ const withDoubler = (step: Record<string, unknown>, crit: string): void => {
 };
 
 export function setCrit(draft: System, choice: CritChoice): void {
+  const kept = new Set<Step>();
   for (const effect of Object.values(draft.effects)) {
+    const doubler = doublerIn(draft, effect.steps ?? []);
     for (const step of effect.steps ?? []) {
       const loose = step as Record<string, unknown>;
-      if (!isDoubling(loose)) continue;
+      if (!isDoubling(loose, doubler)) continue;
+      if (choice === 'double') { kept.add(step); continue; }
       delete loose.count;
-      withoutDoubler(loose);
+      withoutDoubler(loose, doubler);
     }
   }
   delete draft.effects[CRIT_RULE];
@@ -126,7 +141,7 @@ export function setCrit(draft: System, choice: CritChoice): void {
   if (choice === 'double') {
     for (const effect of Object.values(draft.effects)) {
       for (const { amount, crit } of amountsAfterCheck(effect.steps ?? [], draft)) {
-        withDoubler(amount as Record<string, unknown>, crit);
+        if (!kept.has(amount)) withDoubler(amount as Record<string, unknown>, crit);
       }
     }
   }

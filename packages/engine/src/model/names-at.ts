@@ -67,7 +67,12 @@ const holder = (): NameAt => ({ name: HOLDER, label: 'носитель — то�
 const returnsOf = (system: System | undefined, step: Step): NameChild[] => {
   const called = (step as { effect?: unknown }).effect;
   if (step.type !== 'emit' || typeof called !== 'string') return [];
-  return (system?.effects?.[called]?.returns ?? []).map(column => ({ path: `.${column.key}`, label: column.label ?? column.key, kind: column.kind ?? 'number', ...(column.kind === 'choice' && column.from ? { from: column.from } : {}) }));
+  return (system?.effects?.[called]?.returns ?? []).flatMap(column => {
+    const label = column.label ?? column.key;
+    const own: NameChild = { path: `.${column.key}`, label, kind: column.kind ?? 'number', ...(column.kind === 'choice' && column.from ? { from: column.from } : {}) };
+    const rows = column.kind === 'choice' && column.from && !column.many ? rowChildren(system, column.from) : [];
+    return [own, ...rows.map(row => ({ path: `.${column.key}${row.path}`, label: `${label} — ${row.label}`, kind: row.kind }))];
+  });
 };
 
 function stepLabel(system: System | undefined, step: Step, fallback: string): string {

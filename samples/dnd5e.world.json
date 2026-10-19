@@ -1439,15 +1439,31 @@
       "attack_outcomes": {
         "label": "Исход атаки",
         "key": "word",
+        "columns": [
+          {
+            "key": "dice_mul",
+            "label": "множитель костей урона",
+            "kind": "number"
+          }
+        ],
         "rows": [
           {
-            "value": "промах"
+            "value": "промах",
+            "cells": {
+              "dice_mul": 0
+            }
           },
           {
-            "value": "попадание"
+            "value": "попадание",
+            "cells": {
+              "dice_mul": 1
+            }
           },
           {
-            "value": "крит"
+            "value": "крит",
+            "cells": {
+              "dice_mul": 2
+            }
           }
         ]
       },
@@ -3377,7 +3393,7 @@
             "id": "урон",
             "type": "roll",
             "fixed": {
-              "expr": "кинуть(@damage_dice, @dice * если(@попадание.крит, 2, 1)) + @damage_with"
+              "expr": "кинуть(@damage_dice, @dice * @попадание.исход.dice_mul) + @damage_with"
             }
           },
           {

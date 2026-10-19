@@ -41,6 +41,8 @@ export interface RefContext {
 
   stepIds?: ReadonlySet<string>;
 
+  choiceOf?: (step: string, key: string) => string | undefined;
+
 
   alone?: boolean;
 
@@ -212,9 +214,11 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
       if (head in results && results[head] === null) return null;
       for (const held of [known[head], ctx.rolls?.[head]]) {
         if (!held || typeof held !== 'object') continue;
-        const value = name.slice(dot + 1).split('.')
-          .reduce<unknown>(stepInto, held);
+        const keys = name.slice(dot + 1).split('.');
+        const value = keys.reduce<unknown>(stepInto, held);
         if (value !== undefined) return value;
+        const table = keys.length > 1 ? ctx.choiceOf?.(head, keys[0]!) : undefined;
+        if (table) return walk(system, ctx.pass, table, stepInto(held, keys[0]!), keys.slice(1), who(ctx));
       }
     }
     if (ctx.sheets || !isField(system, name)) {
