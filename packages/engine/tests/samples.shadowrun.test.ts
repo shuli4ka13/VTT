@@ -197,6 +197,19 @@ group('Shadowrun 6: оружие, патроны, модификации, взр
     eq(after(out, 'mafia').values.physical, 4);
     eq(after(out, 'silk').values.physical, 2);
   });
+
+  test('ракетная установка стреляет: навык «экзотическое оружие» с пробелом находится через [ ]; СУ по кольцу у каждой цели', () => {
+    const gunner = { ...sheetOf('razor'), has: [{ of: 'striker', values: { ammo: 2 } }, { of: 'rocket_frag', in: 'striker' }] } as Sheet;
+    const out = exchange({
+      system, compendium, die: () => 1, sheets: [gunner, sheetOf('humanis'), sheetOf('mafia')],
+      actionId: 'striker:0', fromId: 'razor', toIds: ['humanis', 'mafia'],
+      inputs: { дистанция: 'средняя', кольцо: { humanis: 'эпицентр', mafia: 'близко' } } as never,
+    });
+    const rocket = compendium.records.find(r => r.id === 'rocket_frag')!.cells as Record<string, number>;
+    eq(after(out, 'humanis').values.physical, rocket.dv_e);
+    eq(after(out, 'mafia').values.physical, rocket.dv_n);
+    eq(item(after(out, 'razor'), 'striker')?.values?.ammo, 1);
+  });
 });
 
 group('Shadowrun 6: общие функции этапа 3 — Урон и Преимущество', () => {

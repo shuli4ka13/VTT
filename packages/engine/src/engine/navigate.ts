@@ -2,7 +2,7 @@ import { readCell } from './cells.ts';
 import { EngineError } from './errors.ts';
 import { rowOf } from './tables.ts';
 import { tableOf, isRange, linkOf } from '../model/tables.ts';
-import { rowKeyOf, fieldLinkOf, addressOf } from '../model/sheet-columns.ts';
+import { rowKeyOf, slugOf, fieldLinkOf, addressOf } from '../model/sheet-columns.ts';
 import type { System, Param, TableColumn } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 import { fieldOf, hasField } from '../model/sheet-columns.ts';
@@ -95,7 +95,7 @@ export function resolveAddress(system: System, pass: Pass, name: string): { valu
   const [tableId, rowKey, column, ...rest] = name.split('.');
   const table = tableId ? system.tables?.[tableId] : undefined;
   if (!table || rowKey === undefined || isRange(table) || hasField(system, tableId)) return null;
-  const row = (table.rows ?? []).find(r => rowKeyOf(r) === rowKey);
+  const row = (table.rows ?? []).find(r => rowKeyOf(r) === slugOf(rowKey));
   if (!row) throw new EngineError(`«${name}»: в таблице «${table.label || tableId}» нет строки «${rowKey}»`);
   if (!column) return { value: row.value };
   const checked = walkColumns(system, tableId!, [column, ...rest]);
