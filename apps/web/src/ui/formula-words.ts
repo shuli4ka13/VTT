@@ -57,8 +57,10 @@ export function formulaWords(system: System, source: string, names?: Map<string,
         const text = `${words(node.left)} ${op} ${words(node.right)}`;
         return top || COMPARE[node.op] ? text : `(${text})`;
       }
-      case 'Conditional':
-        return `${words(node.then, true)}, если ${words(node.test, true)}, иначе ${words(node.otherwise, true)}`;
+      case 'Conditional': {
+        const text = `${words(node.then, true)}, если ${words(node.test, true)}, иначе ${words(node.otherwise, true)}`;
+        return top ? text : `(${text})`;
+      }
       case 'Call': return call(node.name, node.args);
       default: return '';
     }
