@@ -5,6 +5,7 @@ import { compile } from '../formula/index.ts';
 import type { Tools, Value } from '../formula/index.ts';
 import { EngineError } from './errors.ts';
 import { readCell } from './cells.ts';
+import type { Scope } from './cells.ts';
 import { rowOf } from './tables.ts';
 import { referencedTable, splitPath, walk } from './navigate.ts';
 import { VALUE_COLUMN } from '../model/tables.ts';
@@ -184,6 +185,7 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
   const results = ctx.results ?? {};
   const known = knownOf(ctx);
   const system = ctx.pass.system;
+  let scope: Scope | undefined;
   const resolve = (name: string): unknown => {
     if (ctx.lazy) ctx.lazy(name.split('.')[0]!);
     if (ctx.item && name === ITEM_NAME) return ctx.item.key;
@@ -218,7 +220,7 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
         const value = keys.reduce<unknown>(stepInto, held);
         if (value !== undefined) return value;
         const table = keys.length > 1 ? ctx.choiceOf?.(head, keys[0]!) : undefined;
-        if (table) return walk(system, ctx.pass, table, stepInto(held, keys[0]!), keys.slice(1), who(ctx));
+        if (table) return walk(system, ctx.pass, table, stepInto(held, keys[0]!), keys.slice(1), who(ctx), scope);
       }
     }
     if (ctx.sheets || !isField(system, name)) {
@@ -228,7 +230,7 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
       if (named !== undefined) return named;
       const split = splitPath(name);
       const table = split ? referencedTable(system, split.head, ctx.paramDefs) : undefined;
-      if (split && table) return walk(system, ctx.pass, table, resolve(split.head), split.path, who(ctx));
+      if (split && table) return walk(system, ctx.pass, table, resolve(split.head), split.path, who(ctx), scope);
       if (ctx.stepIds?.has(split?.head ?? name)) {
         throw new EngineError(`${who(ctx)}: шаг «${split?.head ?? name}» ещё не прошёл — его результата здесь нет`);
       }
@@ -239,6 +241,9 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
     return ctx.pass.resolve(name);
   };
   const tools = toolsOf(system, ctx.pass, who(ctx), ctx.die);
+  if (ctx.sheets) {
+    scope = { resolve, seen: new Set(), tools: { ...tools, roll: () => { throw new EngineError(`${who(ctx)}: «кинуть» в клетке таблицы нельзя — кости бросает шаг эффекта`); } } };
+  }
   return compile(String(expr)).evaluate(resolve, {
     ...tools,
     roll: tools.roll ?? (() => {

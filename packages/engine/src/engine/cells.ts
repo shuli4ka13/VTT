@@ -1,8 +1,10 @@
 import { compile } from '../formula/index.ts';
+import type { Tools } from '../formula/index.ts';
+import { EngineError } from './errors.ts';
 import { applyValueModifiers } from './modifiers.ts';
 import { lookupCell, rowOf } from './tables.ts';
 import { VALUE_COLUMN, isRange } from '../model/tables.ts';
-import { addressOf, cellSource, isLive, withRow } from '../model/sheet-columns.ts';
+import { addressOf, cellSource, hasField, isLive, withRow } from '../model/sheet-columns.ts';
 import type { System, Table } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 
@@ -31,8 +33,15 @@ const rowKeyOf = (table: Table, input: unknown): string => {
   return String(input);
 };
 
+export interface Scope { resolve: (name: string) => unknown; tools: Tools; seen: Set<string> }
+
+const onSheet = (system: System, name: string): boolean => {
+  const head = name.split('.')[0]!;
+  return hasField(system, name) || hasField(system, head) || Boolean(system.tables?.[head]) || Boolean(system.constants?.[head]);
+};
+
 export function readCell(
-  system: System, pass: Pass, tableId: string, input: unknown, column = VALUE_COLUMN, forTag?: string,
+  system: System, pass: Pass, tableId: string, input: unknown, column = VALUE_COLUMN, forTag?: string, scope?: Scope,
 ): unknown {
   const table = system.tables?.[tableId];
   const spec = (table?.columns ?? []).find(c => c.key === column);
@@ -43,6 +52,17 @@ export function readCell(
   if (source.kind === 'value') return source.value;
   if (source.kind === 'input') return undefined;
 
-  const base = compile(withRow(system, tableId, row, source.expr)).evaluate(pass.resolve);
-  return applyValueModifiers(base, cellTagOf(tableId, rowKeyOf(table, input), column), pass, [columnTagOf(tableId, column)]);
+  const tag = cellTagOf(tableId, rowKeyOf(table, input), column);
+  const formula = compile(withRow(system, tableId, row, source.expr));
+  if (!scope) return applyValueModifiers(formula.evaluate(pass.resolve), tag, pass, [columnTagOf(tableId, column)]);
+  if (scope.seen.has(tag)) {
+    throw new EngineError(`клетка «${table.label || tableId}» → «${rowKeyOf(table, input)}» → «${spec.label ?? column}» читает сама себя по кругу`);
+  }
+  scope.seen.add(tag);
+  try {
+    const base = formula.evaluate(name => (onSheet(system, name) ? pass.resolve(name) : scope.resolve(name)), scope.tools);
+    return applyValueModifiers(base, tag, pass, [columnTagOf(tableId, column)]);
+  } finally {
+    scope.seen.delete(tag);
+  }
 }

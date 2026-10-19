@@ -1,4 +1,4 @@
-import { readCell } from './cells.ts';
+import { readCell, type Scope } from './cells.ts';
 import { EngineError } from './errors.ts';
 import { rowOf } from './tables.ts';
 import { tableOf, isRange, linkOf } from '../model/tables.ts';
@@ -51,7 +51,7 @@ function linked(column: TableColumn, columnKey: string, rest: string[], owner: s
 }
 
 export function walk(
-  system: System, pass: Pass, tableId: string, key: unknown, path: string[], owner: string,
+  system: System, pass: Pass, tableId: string, key: unknown, path: string[], owner: string, scope?: Scope,
 ): unknown {
   let current = tableId;
   let value = key;
@@ -59,7 +59,7 @@ export function walk(
     const columnKey = path[i]!;
     if (value === null || value === undefined || value === '') return null;
     const column = columnAt(system, current, columnKey, owner);
-    const cell = readCell(system, pass, current, value, columnKey, owner);
+    const cell = readCell(system, pass, current, value, columnKey, owner, scope);
     if (i === path.length - 1) return cell;
     current = linked(column, columnKey, path.slice(i + 1), owner);
     value = cell;
