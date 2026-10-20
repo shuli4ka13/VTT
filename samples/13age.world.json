@@ -319,6 +319,37 @@
         "shape": "book",
         "use": "action",
         "block": "Приёмы"
+      },
+      "attack_outcomes": {
+        "label": "Исход атаки",
+        "key": "word",
+        "columns": [
+          {
+            "key": "dice_mul",
+            "label": "множитель костей урона",
+            "kind": "number"
+          }
+        ],
+        "rows": [
+          {
+            "value": "промах",
+            "cells": {
+              "dice_mul": 0
+            }
+          },
+          {
+            "value": "попадание",
+            "cells": {
+              "dice_mul": 1
+            }
+          },
+          {
+            "value": "крит",
+            "cells": {
+              "dice_mul": 2
+            }
+          }
+        ]
       }
     },
     "initiative": {
@@ -430,7 +461,7 @@
           {
             "type": "roll",
             "fixed": {
-              "expr": "(кинуть(@weapon_die, @действующий.level * если(@попадание.крит, 2, 1)) + @damage_with)"
+              "expr": "(кинуть(@weapon_die, @действующий.level * @попадание.исход.dice_mul) + @damage_with)"
             },
             "id": "урон"
           },
@@ -912,6 +943,15 @@
             "kind": "boolean",
             "expr": {
               "expr": "@проверка.natural >= 20"
+            }
+          },
+          {
+            "key": "исход",
+            "label": "исход",
+            "kind": "choice",
+            "from": "attack_outcomes",
+            "expr": {
+              "expr": "если(не @проверка.success, \"промах\", если(@проверка.natural >= 20, \"крит\", \"попадание\"))"
             }
           },
           {
