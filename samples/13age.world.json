@@ -328,25 +328,33 @@
             "key": "dice_mul",
             "label": "множитель костей урона",
             "kind": "number"
+          },
+          {
+            "key": "hit",
+            "label": "попал",
+            "kind": "boolean"
           }
         ],
         "rows": [
           {
             "value": "промах",
             "cells": {
-              "dice_mul": 0
+              "dice_mul": 0,
+              "hit": false
             }
           },
           {
             "value": "попадание",
             "cells": {
-              "dice_mul": 1
+              "dice_mul": 1,
+              "hit": true
             }
           },
           {
             "value": "крит",
             "cells": {
-              "dice_mul": 2
+              "dice_mul": 2,
+              "hit": true
             }
           }
         ]
@@ -455,7 +463,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@бросок.попал"
+              "expr": "@бросок.исход.hit"
             }
           },
           {
@@ -575,7 +583,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@бросок.попал"
+              "expr": "@бросок.исход.hit"
             }
           },
           {
@@ -928,23 +936,6 @@
           }
         ],
         "returns": [
-          {
-            "key": "попал",
-            "label": "попадание",
-            "kind": "boolean",
-            "no": "промах",
-            "expr": {
-              "expr": "@проверка.success"
-            }
-          },
-          {
-            "key": "крит",
-            "label": "крит",
-            "kind": "boolean",
-            "expr": {
-              "expr": "@проверка.natural >= 20"
-            }
-          },
           {
             "key": "исход",
             "label": "исход",

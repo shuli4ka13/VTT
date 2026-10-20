@@ -49,7 +49,7 @@ describe('имена из справочной движка', () => {
 
   it('подписка на метку предлагает итоги вызова словами', () => {
     open('shield');
-    expect(within(document).whenOptions()).toContain('Бросок атаки — попадание');
+    expect(within(document).whenOptions()).toContain('Бросок атаки — исход — попал');
     expect(text()).not.toContain('@попадание.попал');
   });
 

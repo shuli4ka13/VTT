@@ -287,7 +287,7 @@ describe('эффекты D&D собираются в конструкторе р
     within(handlerHead(1)).select('Что именно', 'атака');
     within(handlerHead(1)).select('Когда именно', 'before');
     within(handlerHead(1)).select('Кого касается', '@цель == @носитель');
-    within(handlerHead(1)).when('=@бросок.попал');
+    within(handlerHead(1)).when('=@бросок.исход.hit');
     within(handlerHead(1)).select('Решение', 'ask');
 
     ui.select(handlerAt(1).querySelector<HTMLElement>('.add-cost select')!, 'cost_reaction');

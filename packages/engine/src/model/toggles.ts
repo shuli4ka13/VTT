@@ -42,10 +42,17 @@ const owned = (step: Step): boolean => {
   return by !== undefined && by !== null;
 };
 
-const critOfCall = (system: System | undefined, step: Step): boolean => {
+const critOfCall = (system: System | undefined, step: Step): string | null => {
   const called = (step as { effect?: unknown }).effect;
-  return step.type === 'emit' && Boolean(step.id) && typeof called === 'string'
-    && (system?.effects?.[called]?.returns ?? []).some(column => column.key === 'крит');
+  if (step.type !== 'emit' || !step.id || typeof called !== 'string') return null;
+  const returns = system?.effects?.[called]?.returns ?? [];
+  if (returns.some(column => column.key === 'крит')) return `если(@${String(step.id)}.крит, 2, 1)`;
+  for (const column of returns) {
+    if (column.kind !== 'choice' || !column.from || column.many) continue;
+    const factor = (system?.tables?.[column.from]?.columns ?? []).find(one => (one.kind ?? 'number') === 'number');
+    if (factor) return `@${String(step.id)}.${column.key}.${factor.key}`;
+  }
+  return null;
 };
 
 const amountsAfterCheck = (steps: Step[], system?: System): { check: Step; amount: Step; crit: string }[] => {
@@ -53,9 +60,10 @@ const amountsAfterCheck = (steps: Step[], system?: System): { check: Step; amoun
   let check: Step | null = null;
   let crit = '';
   for (const step of steps) {
-    if (critOfCall(system, step)) {
+    const called = critOfCall(system, step);
+    if (called) {
       check = step;
-      crit = `если(@${String(step.id)}.крит, 2, 1)`;
+      crit = called;
       continue;
     }
     if (step.type !== 'roll') continue;

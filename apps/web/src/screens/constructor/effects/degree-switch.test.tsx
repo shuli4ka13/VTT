@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest';
-import { render, cleanup } from '@testing-library/react';
+import { render, cleanup, fireEvent } from '@testing-library/react';
 import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import type { System } from '@vtt/schema';
 import { useWorld } from '../../../store/world.ts';
@@ -50,14 +50,15 @@ describe('«Если» по ступеням — switch', () => {
     expect(switches().map(text).join(' | ')).toContain('чёрный:');
   }, 60_000);
 
-  it('switch по итогу вызова-выбору: у склеенного «да / нет» нет «+ по итогу»; сняв развилку, «+ по итогу» у броска атаки даёт руки промах / попадание / крит', () => {
+  it('switch по итогу вызова-выбору: у склеенного «да / нет» нет «+ по итогу»; сняв развилку, фишка «исход» у броска атаки даёт руки промах / попадание / крит', () => {
     open('dnd5e', 'strike');
     expect(within(document.body).has('+ по итогу')).toBe(false);
     const fused = [...document.querySelectorAll<HTMLElement>('.flow-block')].find(one => text(one).includes('Бросок атаки'))!;
     within(fused.querySelector<HTMLElement>(':scope > .flow-block__part > .flow-head, :scope > .flow-block__part')!).click('Удалить');
     within(document.body).click('только развилку — шаги останутся');
-    const pick = document.querySelector<HTMLElement>('select[aria-label="по итогу"]')!;
-    within(pick.parentElement!).select(pick, 'исход: промах · попадание · крит');
+    const chip = [...document.querySelectorAll<HTMLElement>('.result-chip')].find(one => one.querySelector('.result-chip__label')?.textContent === 'исход')!;
+    fireEvent.click(chip.querySelector<HTMLElement>('.result-chip__face')!);
+    fireEvent.click([...chip.querySelectorAll<HTMLElement>('.result-table__fork')].find(one => (one.textContent ?? '').includes('промах · попадание · крит'))!);
     const block = switches().find(one => text(one).includes('«исход» (бросок)'))!;
     expect(text(block)).toContain('промах:');
     expect(text(block)).toContain('попадание:');

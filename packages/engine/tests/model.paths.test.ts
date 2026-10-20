@@ -74,7 +74,7 @@ group('имена места знают колонки строк', () => {
     const { system } = dnd();
     const heard = namesAt(system as System, 'shield', { part: 'handler-if', handler: 0 }).find(one => one.name === 'бросок');
     eq(heard?.label, 'Бросок атаки');
-    ok(heard?.children?.some(child => child.path === '.попал' && child.kind === 'boolean'));
+    ok(heard?.children?.some(child => child.path === '.исход.hit' && child.kind === 'boolean'));
   });
 });
 

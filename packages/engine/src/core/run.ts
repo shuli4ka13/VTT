@@ -381,13 +381,14 @@ export class Run {
   }
 
   private choiceOf(effectId: string, id: string, key: string): string | undefined {
-    const effect = this.system.effects[effectId];
-    if (!effect) return undefined;
-    const chains = [effect.steps, effect.cost, effect.attach, effect.detach, ...(effect.on ?? []).flatMap(handler => [handler.steps, handler.cost])];
-    const step = chains.flatMap(steps => steps ?? []).find(one => one.id === id && calledBy(one));
-    const callee = step ? this.system.effects[calledBy(step)!] : undefined;
-    const column = callee?.returns?.find(one => one.key === key && one.kind === 'choice' && !one.many);
-    return column?.from;
+    const inEffect = (effect: Effect | undefined): string | undefined => {
+      if (!effect) return undefined;
+      const chains = [effect.steps, effect.cost, effect.attach, effect.detach, ...(effect.on ?? []).flatMap(handler => [handler.steps, handler.cost])];
+      const step = chains.flatMap(steps => steps ?? []).find(one => one.id === id && calledBy(one));
+      const callee = step ? this.system.effects[calledBy(step)!] : undefined;
+      return callee?.returns?.find(one => one.key === key && one.kind === 'choice' && !one.many)?.from;
+    };
+    return inEffect(this.system.effects[effectId]) ?? Object.values(this.system.effects).map(inEffect).find(Boolean);
   }
 
   private ctx(frame: Frame, results: Record<string, unknown>, rolls: Record<string, RollResult>, path: Path, sink: Sink, stepIds: ReadonlySet<string>, given?: Die, at?: { steps: readonly Step[]; index: number }): Ctx {
@@ -982,6 +983,7 @@ export class Run {
       const hanging = this.hanging(sub);
       return holdsNow(sub.handler.if, {
         pass: this.view(sub.sheetId), results: seed, rolls, owner: `подписка «${labelOf(sub)}»`,
+        choiceOf: (step: string, key: string) => this.choiceOf(sub.effectId, step, key),
         ...(Object.keys(hanging.inputs).length ? { inputs: hanging.inputs } : {}),
         paramDefs: sub.effect.params ?? [],
         sheets: { bound: this.boundFor(sub, names), view: id => this.view(id) },
