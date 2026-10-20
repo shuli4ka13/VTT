@@ -249,6 +249,16 @@ export const callIf = (step: number, called: string, outcome: string, root: Pare
   return at;
 };
 
+export const forkBy = (card: HTMLElement, chip: string, fork?: string): void => {
+  const found = [...card.querySelectorAll<HTMLElement>('.result-chip')].find(one => textOf(one.querySelector('.result-chip__label')!) === chip);
+  if (!found) throw new Error(`нет фишки «${chip}»`);
+  act(() => { fireEvent.click(found.querySelector<HTMLElement>('.result-chip__face')!); });
+  const forks = [...found.querySelectorAll<HTMLElement>('.result-table__fork')];
+  const pick = fork ? forks.find(one => textOf(one).includes(fork)) : forks[forks.length - 1];
+  if (!pick) throw new Error(`у «${chip}» нет развилки «${fork ?? ''}»; есть: ${forks.map(textOf).join(' | ')}`);
+  act(() => { fireEvent.click(pick); });
+};
+
 export const stopStrip = (n: number, root: ParentNode = document): HTMLElement => {
   const all = [...root.querySelectorAll<HTMLElement>('.flow-stop')];
   const found = all.find(el => textOf(el.querySelector('.flow-stop__word')!).startsWith(`${n} · `));

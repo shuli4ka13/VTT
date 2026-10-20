@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, cleanup } from '@testing-library/react';
+import { render, cleanup, fireEvent } from '@testing-library/react';
 import { EffectEditor } from './effect-editor.tsx';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import type { System, Step } from '@vtt/schema';
@@ -37,9 +37,15 @@ const start = (steps: unknown[], plain = false) => {
 
 const steps = (): Step[] => useWorld.getState().system.effects.удар!.steps ?? [];
 
-const ifBy = (card: HTMLElement, option: string) => within(card).select(card.querySelector<HTMLElement>('select[aria-label="по итогу"]')!, option);
+const ifBy = (card: HTMLElement, option: string) => {
+  const label = option.split(/ \/ |: /)[0]!;
+  const chip = [...card.querySelectorAll<HTMLElement>('.result-chip')].find(one => one.querySelector('.result-chip__label')?.textContent === label);
+  if (!chip) throw new Error(`нет фишки «${label}»`);
+  fireEvent.click(chip.querySelector<HTMLElement>('.result-chip__face')!);
+  fireEvent.click(chip.querySelector<HTMLElement>('.result-table__fork')!);
+};
 
-describe('«+ по итогу» у вызова', () => {
+describe('развилка по итогу вызова — с фишки результата', () => {
   beforeEach(() => { cleanup(); try { localStorage.clear(); } catch { return; } });
   afterEach(() => { cleanup(); });
 

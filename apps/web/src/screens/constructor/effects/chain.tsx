@@ -228,20 +228,20 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     const degrees = asIf ? [] : degreesOf(group);
     const words = group.kind === 'check' && !asIf ? checkWords(group) : null;
     const ifBy: { label: string; run: () => void }[] = fused ? [] : [
-      ...(asIf ? [] : returns.filter(one => one.kind === 'boolean').map(one => ({
-        label: `${one.label ?? one.key} / ${one.no ?? `не ${one.label ?? one.key}`}`,
-        run: after(String(calledKey), id => [branch(`@${id}.${one.key}`)]),
-      }))),
-      ...returns.filter(one => one.kind === 'choice' && one.from && !one.many).flatMap(one => {
-        const options = tableOptions(one.from);
-        return options.length ? [{
-          label: `${one.label ?? one.key}: ${options.map(option => option.label).join(' · ')}`,
-          run: after(String(calledKey), id => arms(`${id}.${one.key}`, options.map(option => option.value))),
-        }] : [];
-      }),
       ...(words ? [{ label: `${words.success} / ${words.fail}`, run: after('проверка', id => [branch(`@${id}.success`)]) }] : []),
       ...(degrees.length ? [{ label: `ступени: ${degrees.join(' · ')}`, run: after('проверка', id => arms(`${id}.degree`, degrees)) }] : []),
     ];
+    const byOutput: Record<string, () => void> = fused ? {} : Object.fromEntries(returns.flatMap((one): [string, () => void][] => {
+      if (one.kind === 'boolean') return [[one.key, after(String(calledKey), id => [branch(`@${id}.${one.key}`)])]];
+      const options = one.kind === 'choice' && one.from && !one.many ? tableOptions(one.from) : [];
+      const flags = options.length ? (system.tables?.[one.from!]?.columns ?? []).filter(column => column.kind === 'boolean') : [];
+      return [
+        ...(options.length ? [[one.key, after(String(calledKey), id => arms(`${id}.${one.key}`, options.map(option => option.value)))] as [string, () => void]] : []),
+        ...flags.map(column => [`${one.key}.${column.key}`, after(String(calledKey), id => [branch(`@${id}.${one.key}.${column.key}`)])] as [string, () => void]),
+      ];
+    }));
+    const glued = fused && group.step.id ? steps[group.indices[group.indices.length - 1]! + 1] : undefined;
+    const activeOutput = glued ? new RegExp(`@${String(group.step.id)}\\.([\\p{L}\\p{N}_]+(?:\\.[\\p{L}\\p{N}_]+)?)`, 'u').exec(String((glued as { if?: { expr?: unknown } }).if?.expr ?? ''))?.[1] : undefined;
 
     return (
       <GroupCard
@@ -253,6 +253,8 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         {...(fused?.cond ? { headCond: fused.cond } : {})}
         {...(fused?.by ? { headBy: fused.by } : {})}
         {...(ifBy.length ? { ifBy } : {})}
+        {...(Object.keys(byOutput).length ? { byOutput } : {})}
+        {...(activeOutput ? { activeOutput } : {})}
         position={startAt + at + 1}
         system={system}
         effect={effect}
@@ -344,6 +346,13 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
       const key = ref.slice(id.length + 2);
       const column = (system.effects?.[called]?.returns ?? []).find(one => one.key === key && one.kind === 'boolean') as { label?: string; no?: string } | undefined;
       if (column) return { yes: column.label ?? key, no: column.no ?? `не ${column.label ?? key}`, negated };
+      const [head, flag] = key.split('.');
+      const choice = flag ? (system.effects?.[called]?.returns ?? []).find(one => one.key === head && one.kind === 'choice' && one.from && !one.many) : undefined;
+      const table = choice?.from ? system.tables?.[choice.from] : undefined;
+      if (table && (table.columns ?? []).some(one => one.key === flag && one.kind === 'boolean')) {
+        const side = (wanted: boolean) => (table.rows ?? []).filter(row => Boolean((row.cells as Record<string, unknown> | undefined)?.[flag!]) === wanted).map(row => row.label || String(row.value)).join(' · ');
+        return { yes: side(true), no: side(false), negated };
+      }
     }
     return null;
   };
@@ -400,6 +409,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
           const bare = (text: string) => text.slice(text.indexOf(' — ') + 3);
           return { ref: one.ref, label: bare(one.label), kind: 'boolean' as const, ...(one.no ? { no: bare(one.no) } : {}) };
         });
+      if (!quick.length) return undefined;
       const written = String((steps[open] as { if?: { expr?: unknown } }).if?.expr ?? '');
       const refId = `@${fused.group.step.id}.`;
       return (

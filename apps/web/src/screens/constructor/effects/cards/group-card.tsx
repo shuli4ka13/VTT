@@ -18,6 +18,7 @@ import { NumberBody } from './number-body.tsx';
 import { SeenBody } from './seen-body.tsx';
 import { TableBody } from './table-body.tsx';
 import { StopStrip, StepHead, FlowActions } from './flow-parts.tsx';
+import { ResultChips } from './result-chips.tsx';
 import { titleOf } from '../words.ts';
 import { STEP_WORDS } from '@vtt/engine/words/steps';
 import { loopOf } from '@vtt/engine/engine/steps/each';
@@ -43,7 +44,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, names, takenNames, onRename, onUnpair, ifBy, onUnwrap, asIf = false, outcome = '', headCond, headBy,
+  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, names, takenNames, onRename, onUnpair, ifBy, byOutput, activeOutput, onUnwrap, asIf = false, outcome = '', headCond, headBy,
 }: {
   group: CardGroup;
   position: number;
@@ -72,6 +73,8 @@ export function GroupCard({
   names?: ReadonlyMap<string, string>;
   onUnpair?: () => void;
   ifBy?: { label: string; run: () => void }[];
+  byOutput?: Record<string, () => void>;
+  activeOutput?: string;
   headBy?: string;
   headCond?: ReactNode;
   onUnwrap?: () => void;
@@ -133,7 +136,7 @@ export function GroupCard({
           {...(takenNames ? { takenNames } : {})} {...(onRename ? { onRename } : {})} />
         : null}
       {group.kind === 'table' ? <TableBody step={step} context={context} edit={edit} system={system} /> : null}
-      {group.kind === 'number' ? null : <StepName group={group} effect={effect} system={system} edit={edit} />}
+      {group.kind === 'number' ? null : <StepName group={group} effect={effect} system={system} edit={edit} branches={byOutput} active={activeOutput} />}
     </>
   );
 
@@ -255,7 +258,7 @@ function SplitStrip({ step, position, system, effect, earlier, edit, actions }: 
   );
 }
 
-function StepName({ group, effect, system, edit }: { group: CardGroup; effect: Effect; system: System; edit: (k: number, change: (draft: Step) => void) => void }) {
+function StepName({ group, effect, system, edit, branches, active }: { group: CardGroup; effect: Effect; system: System; edit: (k: number, change: (draft: Step) => void) => void; branches?: Record<string, () => void> | undefined; active?: string | undefined }) {
   const [open, setOpen] = useState(false);
   const id = group.step.id ? String(group.step.id) : '';
   const calledId = group.step.type === 'emit' ? (group.step as { effect?: unknown }).effect : undefined;
@@ -264,7 +267,9 @@ function StepName({ group, effect, system, edit }: { group: CardGroup; effect: E
   if (!open) {
     return (
       <div className="inline inline--tight step-name">
-        <Button size="sm" variant="ghost" title="как итог шага зовётся в формулах: @имя" onClick={() => setOpen(true)}>{gives ? `${id ? `результат «${id}»` : 'результат…'}: ${(system.effects[String(calledId)]?.returns ?? []).map(one => one.label ?? one.key).join(' · ')}` : id ? `имя в формулах: ${id}` : 'имя в формулах…'}</Button>
+        {gives
+          ? <ResultChips name={id} outputs={system.effects[String(calledId)]?.returns ?? []} system={system} {...(branches ? { branches } : {})} active={active} onName={() => setOpen(true)} />
+          : <Button size="sm" variant="ghost" title="как итог шага зовётся в формулах: @имя" onClick={() => setOpen(true)}>{id ? `имя в формулах: ${id}` : 'имя в формулах…'}</Button>}
       </div>
     );
   }
