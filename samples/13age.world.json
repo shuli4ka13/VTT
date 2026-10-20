@@ -1209,16 +1209,6 @@
         }
       },
       {
-        "id": "orc_axe",
-        "label": "Топор орка",
-        "description": "+7 против КЗ, 8 урона.",
-        "table": "monster_move",
-        "cells": {
-          "to_hit": 7,
-          "hit_damage": 8
-        }
-      },
-      {
         "id": "new_round",
         "label": "Новый раунд",
         "bindings": [
@@ -1349,11 +1339,7 @@
         "hp_max": 30,
         "hp": 30
       },
-      "has": [
-        {
-          "of": "orc_axe"
-        }
-      ],
+      "has": [],
       "effects": []
     },
     {
@@ -1393,27 +1379,6 @@
       "systemId": "13age",
       "of": "противник",
       "name": "Гоблин из толпы №2",
-      "values": {
-        "abilities.сила.score": 10,
-        "abilities.ловкость.score": 14,
-        "level": 1,
-        "ac": 16,
-        "pd": 14,
-        "md": 10
-      },
-      "has": [
-        {
-          "of": "goblin_spear"
-        }
-      ],
-      "effects": [],
-      "group": "goblin_mob"
-    },
-    {
-      "id": "goblin_mook_3",
-      "systemId": "13age",
-      "of": "противник",
-      "name": "Гоблин из толпы №3",
       "values": {
         "abilities.сила.score": 10,
         "abilities.ловкость.score": 14,

@@ -737,17 +737,6 @@
         }
       },
       {
-        "id": "act_finesse",
-        "label": "Ловкость рук",
-        "description": "Пул к6 по рейтингу «Ловкость рук».",
-        "table": "move",
-        "cells": {
-          "rating": {
-            "expr": "@носитель.finesse"
-          }
-        }
-      },
-      {
         "id": "act_sway",
         "label": "Убеждение",
         "description": "Пул к6 по рейтингу «Убеждение».",
@@ -755,17 +744,6 @@
         "cells": {
           "rating": {
             "expr": "@носитель.sway"
-          }
-        }
-      },
-      {
-        "id": "act_study",
-        "label": "Изучение",
-        "description": "Пул к6 по рейтингу «Изучение».",
-        "table": "move",
-        "cells": {
-          "rating": {
-            "expr": "@носитель.study"
           }
         }
       },
@@ -816,13 +794,7 @@
           "of": "act_prowl"
         },
         {
-          "of": "act_finesse"
-        },
-        {
           "of": "act_sway"
-        },
-        {
-          "of": "act_study"
         },
         {
           "of": "resist"
@@ -854,13 +826,7 @@
           "of": "act_prowl"
         },
         {
-          "of": "act_finesse"
-        },
-        {
           "of": "act_sway"
-        },
-        {
-          "of": "act_study"
         },
         {
           "of": "resist"

@@ -6018,47 +6018,6 @@
           }
         ]
       },
-      "uncanny_dodge": {
-        "label": "Невероятное уклонение",
-        "group": "Реакции",
-        "description": "По тебе попали — урон этой атаки вдвое меньше.",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "on": [
-          {
-            "on": "before:атака",
-            "if": {
-              "expr": "@цель == @носитель и @бросок.исход.hit"
-            },
-            "confirm": true,
-            "cost": [
-              {
-                "type": "emit",
-                "effect": "cost_reaction",
-                "args": {
-                  "лист": {
-                    "expr": "@носитель"
-                  },
-                  "источник": {
-                    "expr": "@носитель"
-                  }
-                }
-              }
-            ],
-            "steps": [
-              {
-                "type": "status",
-                "effect": "uncanny_up",
-                "to": {
-                  "expr": "@носитель"
-                }
-              }
-            ]
-          }
-        ]
-      },
       "inspire": {
         "label": "Героическое вдохновение",
         "group": "Реакции",
@@ -6237,78 +6196,6 @@
                 }
               }
             ]
-          }
-        ]
-      },
-      "blinded": {
-        "label": "Ослеплён",
-        "group": "Состояния",
-        "description": "Твои атаки с помехой, по тебе — с преимуществом. Наложенное заклинанием: в конце хода — спасбросок Телосложения против запомненной сложности.",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "modifiers": [
-          {
-            "tags": [
-              "атака"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "disadvantage",
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          },
-          {
-            "tags": [
-              "атака"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "advantage",
-            "if": {
-              "expr": "@против == @носитель"
-            }
-          }
-        ],
-        "on": [
-          {
-            "on": "moment:turn-end",
-            "if": {
-              "expr": "@ходит == @носитель и (@запомнено или 0) > 0"
-            },
-            "steps": [
-              {
-                "type": "emit",
-                "effect": "repeat_save",
-                "args": {
-                  "кто": {
-                    "expr": "@носитель"
-                  },
-                  "характеристика": {
-                    "expr": "\"телосложение\""
-                  },
-                  "сложность": {
-                    "expr": "@запомнено"
-                  },
-                  "состояние": {
-                    "expr": "\"blinded\""
-                  }
-                }
-              }
-            ]
-          }
-        ],
-        "reapply": "refresh",
-        "params": [
-          {
-            "key": "запомнено",
-            "label": "Запомненное число",
-            "kind": "number",
-            "optional": true
           }
         ]
       },
@@ -6595,99 +6482,6 @@
           }
         ],
         "reapply": "refresh"
-      },
-      "restrained": {
-        "label": "Опутан",
-        "group": "Состояния",
-        "description": "Скорость ноль, твои атаки и спасброски Ловкости с помехой, по тебе — с преимуществом. Наложенное заклинанием: в конце хода — спасбросок Силы против запомненной сложности.",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "speed",
-            "op": "set",
-            "value": {
-              "expr": "0"
-            }
-          },
-          {
-            "tags": [
-              "атака"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "disadvantage",
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          },
-          {
-            "tags": [
-              "атака"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "advantage",
-            "if": {
-              "expr": "@против == @носитель"
-            }
-          },
-          {
-            "tags": [
-              "спасбросок",
-              "ловкость"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "disadvantage",
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          }
-        ],
-        "on": [
-          {
-            "on": "moment:turn-end",
-            "if": {
-              "expr": "@ходит == @носитель и (@запомнено или 0) > 0"
-            },
-            "steps": [
-              {
-                "type": "emit",
-                "effect": "repeat_save",
-                "args": {
-                  "кто": {
-                    "expr": "@носитель"
-                  },
-                  "характеристика": {
-                    "expr": "\"сила\""
-                  },
-                  "сложность": {
-                    "expr": "@запомнено"
-                  },
-                  "состояние": {
-                    "expr": "\"restrained\""
-                  }
-                }
-              }
-            ]
-          }
-        ],
-        "reapply": "refresh",
-        "params": [
-          {
-            "key": "запомнено",
-            "label": "Запомненное число",
-            "kind": "number",
-            "optional": true
-          }
-        ]
       },
       "stunned": {
         "label": "Ошеломлён",
@@ -7069,34 +6863,6 @@
         ],
         "reapply": "refresh"
       },
-      "resisted": {
-        "label": "Сопротивление",
-        "group": "Состояния",
-        "description": "Один раз: увидев свой спасбросок, прибавляешь к4. Заговор на этом оканчивается — концентрация заклинателя спадает.",
-        "activation": "passive",
-        "duration": {
-          "kind": "uses",
-          "max": 1
-        },
-        "on": [
-          {
-            "on": "seen",
-            "if": {
-              "expr": "@бросающий == @носитель и есть(@roll.tags, \"спасбросок\")"
-            },
-            "confirm": true,
-            "steps": [
-              {
-                "type": "roll-plus",
-                "value": {
-                  "expr": "кинуть(к4)"
-                }
-              }
-            ]
-          }
-        ],
-        "reapply": "refresh"
-      },
       "hasted": {
         "label": "Ускорен",
         "group": "Состояния",
@@ -7137,86 +6903,6 @@
           }
         ],
         "reapply": "refresh"
-      },
-      "slowed": {
-        "label": "Замедлен",
-        "group": "Состояния",
-        "description": "−2 к классу брони и спасброскам Ловкости, скорость вдвое меньше. Наложенное заклинанием: в конце хода — спасбросок Мудрости против запомненной сложности.",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "ac",
-            "op": "add",
-            "value": {
-              "expr": "-2"
-            }
-          },
-          {
-            "kind": "value",
-            "target": "speed",
-            "op": "mul",
-            "value": {
-              "expr": "0.5"
-            }
-          },
-          {
-            "tags": [
-              "спасбросок",
-              "ловкость"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "bonus",
-            "op": "add",
-            "value": {
-              "expr": "-2"
-            },
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          }
-        ],
-        "on": [
-          {
-            "on": "moment:turn-end",
-            "if": {
-              "expr": "@ходит == @носитель и (@запомнено или 0) > 0"
-            },
-            "steps": [
-              {
-                "type": "emit",
-                "effect": "repeat_save",
-                "args": {
-                  "кто": {
-                    "expr": "@носитель"
-                  },
-                  "характеристика": {
-                    "expr": "\"мудрость\""
-                  },
-                  "сложность": {
-                    "expr": "@запомнено"
-                  },
-                  "состояние": {
-                    "expr": "\"slowed\""
-                  }
-                }
-              }
-            ]
-          }
-        ],
-        "reapply": "refresh",
-        "params": [
-          {
-            "key": "запомнено",
-            "label": "Запомненное число",
-            "kind": "number",
-            "optional": true
-          }
-        ]
       },
       "lit": {
         "label": "Подсвечен",
@@ -7286,26 +6972,6 @@
         ],
         "reapply": "refresh"
       },
-      "aided": {
-        "label": "Подмога",
-        "group": "Состояния",
-        "description": "Максимум хитов выше на 5.",
-        "activation": "passive",
-        "duration": {
-          "kind": "scene"
-        },
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "hp_max",
-            "op": "add",
-            "value": {
-              "expr": "5"
-            }
-          }
-        ],
-        "reapply": "refresh"
-      },
       "fire_resistance": {
         "label": "Сопротивление огню",
         "group": "Состояния",
@@ -7325,34 +6991,6 @@
             "param": "amount",
             "anyTags": [
               "огонь"
-            ],
-            "if": {
-              "expr": "@лист == @носитель"
-            },
-            "stage": "сопротивление"
-          }
-        ],
-        "reapply": "refresh"
-      },
-      "poison_resistance": {
-        "label": "Сопротивление яду",
-        "group": "Состояния",
-        "description": "Урон ядом вдвое меньше.",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "modifiers": [
-          {
-            "op": "mul",
-            "value": {
-              "expr": "0.5"
-            },
-            "kind": "edit",
-            "call": "damage",
-            "param": "amount",
-            "anyTags": [
-              "яд"
             ],
             "if": {
               "expr": "@лист == @носитель"
@@ -7498,132 +7136,6 @@
             "op": "set",
             "value": {
               "expr": "10 + @abilities.мудрость.mod"
-            }
-          }
-        ],
-        "reapply": "refresh"
-      },
-      "reliable_talent": {
-        "label": "Надёжный талант",
-        "group": "Черты",
-        "description": "На проверках навыков кость считается не меньше десяти.",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "modifiers": [
-          {
-            "tags": [
-              "проверка"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "reliable",
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          }
-        ],
-        "reapply": "refresh"
-      },
-      "halfling_lucky": {
-        "label": "Везучий",
-        "group": "Черты",
-        "description": "Единица на к20 перебрасывается, новый результат обязателен.",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "modifiers": [
-          {
-            "kind": "edit",
-            "call": "roll",
-            "param": "edits",
-            "edit": "lucky",
-            "if": {
-              "expr": "@бросающий == @носитель"
-            }
-          }
-        ],
-        "reapply": "refresh"
-      },
-      "darkvision_60": {
-        "label": "Тёмное зрение",
-        "group": "Черты",
-        "description": "Видишь в темноте на 60 футов.",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "darkvision",
-            "op": "set",
-            "value": {
-              "expr": "60"
-            }
-          }
-        ],
-        "reapply": "refresh"
-      },
-      "dwarven_resilience": {
-        "label": "Дварфская стойкость",
-        "group": "Черты",
-        "description": "Сопротивление урону ядом.",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "reapply": "refresh",
-        "grants": [
-          "poison_resistance"
-        ]
-      },
-      "infernal_legacy": {
-        "label": "Дьявольское наследие",
-        "group": "Черты",
-        "description": "Сопротивление урону огнём.",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "reapply": "refresh",
-        "grants": [
-          "fire_resistance"
-        ]
-      },
-      "ring_protection": {
-        "label": "Кольцо защиты",
-        "group": "Черты",
-        "description": "+1 к классу брони и всем спасброскам.",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "ac",
-            "op": "add",
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "tags": [
-              "спасбросок"
-            ],
-            "kind": "edit",
-            "call": "roll",
-            "param": "bonus",
-            "op": "add",
-            "value": {
-              "expr": "1"
-            },
-            "if": {
-              "expr": "@бросающий == @носитель"
             }
           }
         ],
@@ -8398,25 +7910,6 @@
             },
             "if": {
               "expr": "@exhaustion >= 5"
-            }
-          }
-        ]
-      },
-      "dwarven_toughness": {
-        "label": "Дварфская выносливость",
-        "group": "Черты",
-        "description": "Максимум хитов выше на 1 за каждый уровень.",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "hp_max",
-            "op": "add",
-            "value": {
-              "expr": "@level"
             }
           }
         ]
@@ -9406,56 +8899,6 @@
   "compendium": {
     "records": [
       {
-        "id": "club",
-        "label": "Дубинка",
-        "description": "Простое оружие, лёгкое.",
-        "table": "weapon",
-        "cells": {
-          "damage_dice": "1d4",
-          "damage_type": "дробящий",
-          "damage_source": "немагический",
-          "wield": "ближний бой — Сила",
-          "properties": [
-            "лёгкое"
-          ],
-          "weight": 2,
-          "cost": 0.1
-        }
-      },
-      {
-        "id": "handaxe",
-        "label": "Ручной топор",
-        "description": "Простое оружие, лёгкое, метательное.",
-        "table": "weapon",
-        "cells": {
-          "damage_dice": "1d6",
-          "damage_type": "рубящий",
-          "damage_source": "немагический",
-          "wield": "ближний бой — Сила",
-          "properties": [
-            "лёгкое",
-            "метательное"
-          ],
-          "weight": 2,
-          "cost": 5
-        }
-      },
-      {
-        "id": "mace",
-        "label": "Булава",
-        "description": "Простое оружие.",
-        "table": "weapon",
-        "cells": {
-          "damage_dice": "1d6",
-          "damage_type": "дробящий",
-          "damage_source": "немагический",
-          "wield": "ближний бой — Сила",
-          "properties": [],
-          "weight": 4,
-          "cost": 5
-        }
-      },
-      {
         "id": "longsword",
         "label": "Длинный меч",
         "description": "Воинское оружие, универсальное: двумя руками 1к10.",
@@ -9470,42 +8913,6 @@
           ],
           "weight": 3,
           "cost": 15
-        }
-      },
-      {
-        "id": "greatsword",
-        "label": "Двуручный меч",
-        "description": "Воинское оружие, двуручное, тяжёлое.",
-        "table": "weapon",
-        "cells": {
-          "damage_dice": "2d6",
-          "damage_type": "рубящий",
-          "damage_source": "немагический",
-          "wield": "ближний бой — Сила",
-          "properties": [
-            "двуручное",
-            "тяжёлое"
-          ],
-          "weight": 6,
-          "cost": 50
-        }
-      },
-      {
-        "id": "greataxe",
-        "label": "Секира",
-        "description": "Воинское оружие, двуручное, тяжёлое.",
-        "table": "weapon",
-        "cells": {
-          "damage_dice": "1d12",
-          "damage_type": "рубящий",
-          "damage_source": "немагический",
-          "wield": "ближний бой — Сила",
-          "properties": [
-            "двуручное",
-            "тяжёлое"
-          ],
-          "weight": 7,
-          "cost": 30
         }
       },
       {
@@ -9561,26 +8968,6 @@
           ],
           "weight": 2,
           "cost": 25
-        }
-      },
-      {
-        "id": "longbow",
-        "label": "Длинный лук",
-        "description": "Воинское оружие, двуручное, тяжёлое.",
-        "table": "weapon",
-        "cells": {
-          "damage_dice": "1d8",
-          "damage_type": "колющий",
-          "damage_source": "немагический",
-          "wield": "дальний бой — Ловкость",
-          "range": "150/600",
-          "properties": [
-            "двуручное",
-            "тяжёлое",
-            "боеприпасы"
-          ],
-          "weight": 2,
-          "cost": 50
         }
       },
       {
@@ -9646,19 +9033,6 @@
         }
       },
       {
-        "id": "studded_leather",
-        "label": "Проклёпанная кожа",
-        "description": "Лёгкий доспех.",
-        "table": "armor",
-        "cells": {
-          "ac": 12,
-          "heaviness": "лёгкий",
-          "stealth": false,
-          "weight": 13,
-          "cost": 45
-        }
-      },
-      {
         "id": "hide",
         "label": "Шкурный доспех",
         "description": "Средний доспех.",
@@ -9669,19 +9043,6 @@
           "stealth": false,
           "weight": 12,
           "cost": 10
-        }
-      },
-      {
-        "id": "scale_mail",
-        "label": "Чешуйчатый доспех",
-        "description": "Средний доспех. Помеха на Скрытность.",
-        "table": "armor",
-        "cells": {
-          "ac": 14,
-          "heaviness": "средний",
-          "stealth": true,
-          "weight": 45,
-          "cost": 50
         }
       },
       {
@@ -9699,20 +9060,6 @@
         }
       },
       {
-        "id": "plate",
-        "label": "Латы",
-        "description": "Тяжёлый доспех. Нужна Сила 15, помеха на Скрытность.",
-        "table": "armor",
-        "cells": {
-          "ac": 18,
-          "heaviness": "тяжёлый",
-          "str_req": 15,
-          "stealth": true,
-          "weight": 65,
-          "cost": 1500
-        }
-      },
-      {
         "id": "shield_item",
         "label": "Щит",
         "description": "Надет в одной руке: +2 к классу брони.",
@@ -9721,18 +9068,6 @@
           "bonus": 2,
           "weight": 6,
           "cost": 10
-        }
-      },
-      {
-        "id": "ring_protection",
-        "label": "Кольцо защиты",
-        "description": "+1 к классу брони и всем спасброскам.",
-        "grants": [
-          "ring_protection"
-        ],
-        "table": "wondrous",
-        "cells": {
-          "attunement": true
         }
       },
       {
@@ -9805,36 +9140,6 @@
         }
       },
       {
-        "id": "torch",
-        "label": "Факел",
-        "description": "Горит час, светит на 20 футов.",
-        "table": "gear",
-        "cells": {
-          "weight": 1,
-          "cost": 0.01
-        }
-      },
-      {
-        "id": "thieves_tools",
-        "label": "Воровские инструменты",
-        "description": "Нужны для взлома замков и обезвреживания ловушек.",
-        "table": "gear",
-        "cells": {
-          "weight": 1,
-          "cost": 25
-        }
-      },
-      {
-        "id": "holy_symbol",
-        "label": "Священный символ",
-        "description": "Фокусировка для жреца и паладина.",
-        "table": "gear",
-        "cells": {
-          "weight": 1,
-          "cost": 5
-        }
-      },
-      {
         "id": "arcane_focus",
         "label": "Магическая фокусировка",
         "description": "Посох, жезл или хрустальный шар.",
@@ -9866,27 +9171,9 @@
         }
       },
       {
-        "id": "poison_spray",
-        "label": "Ядовитые брызги",
-        "description": "Заговор. Цель спасается Телосложением, провал — 1к12 ядом.",
-        "table": "cantrip_save",
-        "cells": {
-          "damage_die": "1d12",
-          "damage_type": "яд",
-          "save_by": "телосложение"
-        }
-      },
-      {
         "id": "light",
         "label": "Свет",
         "description": "Заговор. Предмет светит на 20 футов.",
-        "table": "cantrip_note",
-        "cells": {}
-      },
-      {
-        "id": "prestidigitation",
-        "label": "Фокусы",
-        "description": "Заговор. Мелкие чудеса на минуту.",
         "table": "cantrip_note",
         "cells": {}
       },
@@ -9912,22 +9199,6 @@
           "dice_up": 1,
           "per_die": 1,
           "damage_type": "силовой"
-        }
-      },
-      {
-        "id": "burning_hands",
-        "label": "Огненные ладони",
-        "description": "Конус огня: спасбросок Ловкости, 3к6, при успехе половина. Круг выше — ещё 1к6.",
-        "table": "spell_save",
-        "cells": {
-          "spell_level": 1,
-          "save_by": "ловкость",
-          "damage_die": "1d6",
-          "dice_count": 3,
-          "dice_up": 1,
-          "damage_type": "огонь",
-          "half": true,
-          "holds": false
         }
       },
       {
@@ -9969,19 +9240,6 @@
           "spell_level": 2,
           "save_by": "мудрость",
           "status": "paralyzed",
-          "holds": true,
-          "half": false
-        }
-      },
-      {
-        "id": "fear_spell",
-        "label": "Страх",
-        "description": "Спасбросок Мудрости: провал — испуг и бегство. В конце хода цель пробует снова.",
-        "table": "spell_save",
-        "cells": {
-          "spell_level": 3,
-          "save_by": "мудрость",
-          "status": "frightened",
           "holds": true,
           "half": false
         }
@@ -10055,27 +9313,6 @@
         }
       },
       {
-        "id": "aid",
-        "label": "Подмога",
-        "description": "Максимум хитов трёх целей выше на 5 на восемь часов.",
-        "table": "spell_buff",
-        "cells": {
-          "spell_level": 2,
-          "status": "aided",
-          "holds": false
-        }
-      },
-      {
-        "id": "resistance_spell",
-        "label": "Сопротивление",
-        "description": "Заговор, концентрация. Цель один раз прибавляет к4 к спасброску — увидев бросок.",
-        "table": "cantrip_buff",
-        "cells": {
-          "status": "resisted",
-          "holds": true
-        }
-      },
-      {
         "id": "cure_wounds",
         "label": "Лечение ран",
         "description": "Касание: 1к8 + заклинательный модификатор хитов. Круг выше — ещё 1к8.",
@@ -10083,18 +9320,6 @@
         "cells": {
           "spell_level": 1,
           "heal_die": "1d8",
-          "dice_count": 1,
-          "dice_up": 1
-        }
-      },
-      {
-        "id": "healing_word",
-        "label": "Слово лечения",
-        "description": "Бонусным действием: 1к4 + модификатор хитов на расстоянии.",
-        "table": "spell_heal",
-        "cells": {
-          "spell_level": 1,
-          "heal_die": "1d4",
           "dice_count": 1,
           "dice_up": 1
         }
@@ -10275,90 +9500,6 @@
         }
       },
       {
-        "id": "trait_reliable",
-        "label": "Надёжный талант",
-        "description": "На проверках навыков кость считается не меньше десяти.",
-        "grants": [
-          "reliable_talent"
-        ],
-        "table": "trait",
-        "cells": {
-          "source": "Плут, 11 уровень"
-        }
-      },
-      {
-        "id": "trait_uncanny",
-        "label": "Невероятное уклонение",
-        "description": "Реакцией уполовиниваешь урон одной атаки.",
-        "grants": [
-          "uncanny_dodge"
-        ],
-        "table": "trait",
-        "cells": {
-          "source": "Плут, 5 уровень"
-        }
-      },
-      {
-        "id": "trait_lucky_halfling",
-        "label": "Везучий",
-        "description": "Единица на к20 перебрасывается.",
-        "grants": [
-          "halfling_lucky"
-        ],
-        "table": "trait",
-        "cells": {
-          "source": "Полурослик"
-        }
-      },
-      {
-        "id": "trait_darkvision",
-        "label": "Тёмное зрение",
-        "description": "Видишь в темноте на 60 футов.",
-        "grants": [
-          "darkvision_60"
-        ],
-        "table": "trait",
-        "cells": {
-          "source": "Дварф, эльф, полуэльф, тифлинг"
-        }
-      },
-      {
-        "id": "trait_dwarf_resilience",
-        "label": "Дварфская стойкость",
-        "description": "Сопротивление урону ядом.",
-        "grants": [
-          "dwarven_resilience"
-        ],
-        "table": "trait",
-        "cells": {
-          "source": "Дварф"
-        }
-      },
-      {
-        "id": "trait_dwarf_toughness",
-        "label": "Дварфская выносливость",
-        "description": "Максимум хитов выше на 1 за каждый уровень.",
-        "grants": [
-          "dwarven_toughness"
-        ],
-        "table": "trait",
-        "cells": {
-          "source": "Дварф"
-        }
-      },
-      {
-        "id": "trait_infernal",
-        "label": "Дьявольское наследие",
-        "description": "Сопротивление урону огнём.",
-        "grants": [
-          "infernal_legacy"
-        ],
-        "table": "trait",
-        "cells": {
-          "source": "Тифлинг"
-        }
-      },
-      {
         "id": "feat_lucky",
         "label": "Черта: везунчик",
         "description": "Три очка удачи до долгого отдыха: перебрасываешь свой бросок.",
@@ -10504,9 +9645,6 @@
           "of": "longsword"
         },
         {
-          "of": "handaxe"
-        },
-        {
           "of": "trait_extra_attack"
         },
         {
@@ -10581,13 +9719,7 @@
           "of": "light"
         },
         {
-          "of": "prestidigitation"
-        },
-        {
           "of": "magic_missile"
-        },
-        {
-          "of": "burning_hands"
         },
         {
           "of": "fireball"
@@ -10609,12 +9741,6 @@
         },
         {
           "of": "trait_rebuke"
-        },
-        {
-          "of": "trait_darkvision"
-        },
-        {
-          "of": "trait_infernal"
         }
       ],
       "effects": []
@@ -10656,16 +9782,7 @@
       },
       "has": [
         {
-          "of": "scale_mail"
-        },
-        {
           "of": "shield_item"
-        },
-        {
-          "of": "mace"
-        },
-        {
-          "of": "holy_symbol"
         },
         {
           "of": "sacred_flame"
@@ -10677,31 +9794,13 @@
           "of": "cure_wounds"
         },
         {
-          "of": "healing_word"
-        },
-        {
           "of": "bless_spell"
         },
         {
           "of": "lesser_restoration"
         },
         {
-          "of": "aid"
-        },
-        {
           "of": "feature_turn_undead"
-        },
-        {
-          "of": "feature_hit_die"
-        },
-        {
-          "of": "trait_darkvision"
-        },
-        {
-          "of": "trait_dwarf_resilience"
-        },
-        {
-          "of": "trait_dwarf_toughness"
         }
       ],
       "effects": []
@@ -10739,9 +9838,6 @@
       },
       "has": [
         {
-          "of": "studded_leather"
-        },
-        {
           "of": "rapier"
         },
         {
@@ -10751,22 +9847,10 @@
           "of": "dagger"
         },
         {
-          "of": "thieves_tools"
-        },
-        {
           "of": "feature_sneak"
         },
         {
-          "of": "trait_uncanny"
-        },
-        {
-          "of": "trait_lucky_halfling"
-        },
-        {
           "of": "feat_lucky"
-        },
-        {
-          "of": "feature_hit_die"
         }
       ],
       "effects": []
