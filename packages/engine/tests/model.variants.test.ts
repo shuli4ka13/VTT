@@ -14,7 +14,7 @@ const swap = (system: System, from: string, to: string): System => JSON.parse(JS
 describe('слово не из вариантов — ошибка «Проблем»', () => {
   it('условие по итогу «исход»', () => {
     const system = copy('dnd5e');
-    system.effects.strike!.steps!.splice(2, 0, { type: 'branch', if: { expr: '@попадание.исход == "критт"' } } as never, { type: 'end' } as never);
+    system.effects.strike!.steps!.splice(2, 0, { type: 'branch', if: { expr: '@бросок.исход == "критт"' } } as never, { type: 'end' } as never);
     expect(words(system, 'dnd5e')).toEqual([expect.stringContaining('«критт» — в таблице «Исход атаки» такого варианта нет')]);
   });
 

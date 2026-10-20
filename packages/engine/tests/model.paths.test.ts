@@ -72,7 +72,7 @@ group('имена места знают колонки строк', () => {
 
   test('затравка по метке подписана вызванным эффектом', () => {
     const { system } = dnd();
-    const heard = namesAt(system as System, 'shield', { part: 'handler-if', handler: 0 }).find(one => one.name === 'попадание');
+    const heard = namesAt(system as System, 'shield', { part: 'handler-if', handler: 0 }).find(one => one.name === 'бросок');
     eq(heard?.label, 'Бросок атаки');
     ok(heard?.children?.some(child => child.path === '.попал' && child.kind === 'boolean'));
   });

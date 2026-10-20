@@ -42,7 +42,7 @@ group('тогл крита пишет данные, а не код', () => {
       const step = system.effects[effect]!.steps!.find(s => s.type === 'roll' && !(s as { by?: unknown }).by) as Record<string, unknown>;
       return String((step.fixed as { expr?: unknown } | undefined)?.expr ?? '');
     };
-    eq(lineOf('strike'), 'кинуть(@damage_dice, @dice * если(@попадание.крит, 2, 1)) + @damage_with');
+    eq(lineOf('strike'), 'кинуть(@damage_dice, @dice * если(@бросок.крит, 2, 1)) + @damage_with');
     ok(!lineOf('spell_save').includes('atMax'),
       'урон Огненного шара бросается до спасбросков — удвоения нет, это не атака');
     eq(errorsOf(lintSystem(system)).length, 0);
@@ -52,7 +52,7 @@ group('тогл крита пишет данные, а не код', () => {
     const system = dnd();
     const line = () => String(((system.effects.strike!.steps!.find(s => s.id === 'урон') as Record<string, unknown>).fixed as { expr: string }).expr);
     const before = line();
-    ok(before.includes('@попадание.исход.dice_mul'));
+    ok(before.includes('@бросок.исход.dice_mul'));
     setCrit(system, 'double');
     eq(line(), before);
     setCrit(system, 'explode');
