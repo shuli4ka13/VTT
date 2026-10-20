@@ -28,7 +28,7 @@ const nameStep = (card: HTMLElement, name: string): void => {
   const title = (card.querySelector('.step-fold, .card__head')?.textContent ?? '').replace(/^[▾▸]\s*/, '').split('·')[0]!.trim();
   const own = card.querySelector<HTMLElement>('.number-line input.input');
   if (own) { within(card).type(own, name); return; }
-  within(card).click(/^имя в формулах/);
+  within(card).click(/^(имя в формулах|результат)/);
   const fresh = stepCard(new RegExp(`^${title} · `));
   within(fresh).type(fresh.querySelector<HTMLElement>('.step-name input')!, name);
 };
@@ -119,13 +119,13 @@ describe('эффекты пресетов собираются в констру
     card = stepCard(/^3 · /);
     within(card).select('Какой эффект', 'attack_roll');
     within(card).formula(within(card).arg('Бонус атаки'), '@attack_with');
-    nameStep(stepCard(/^3 · /), 'попадание');
+    nameStep(stepCard(/^3 · /), 'бросок');
 
     const hit = callIf(3, 'Бросок атаки', 'попадание');
     expect(armLabel(block(hit))).toBe('попадание:');
     addToArm(block(hit), 0, 'number');
     card = stepCard(/^4 · /);
-    within(card).formula('Формула', 'кинуть(@damage_dice, @dice * @попадание.исход.dice_mul) + @damage_with');
+    within(card).formula('Формула', 'кинуть(@damage_dice, @dice * @бросок.исход.dice_mul) + @damage_with');
     nameStep(card, 'урон');
 
     addToArm(block(hit), 0, 'change');

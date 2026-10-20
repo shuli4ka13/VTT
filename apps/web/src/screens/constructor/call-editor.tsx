@@ -207,7 +207,7 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, onArg
 
   const empty = (input: CallInput) => input.value === undefined || input.value === null;
   const rare = (input: CallInput) => empty(input)
-    && (input.param.default !== undefined || Boolean(input.param.optional) || Boolean(input.param.ask));
+    && (Boolean(input.param.optional) || Boolean(input.param.ask));
   const byDefault = (input: CallInput) => {
     if (!empty(input) || input.param.kind === 'effect' || input.param.default === undefined) return null;
     const value = input.param.default;

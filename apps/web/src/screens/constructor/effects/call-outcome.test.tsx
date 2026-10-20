@@ -43,14 +43,14 @@ describe('«+ по итогу» у вызова', () => {
   beforeEach(() => { cleanup(); try { localStorage.clear(); } catch { return; } });
   afterEach(() => { cleanup(); });
 
-  it('у вызова с итогами: ставит блок сразу после вызова, даёт имя шагу, блок склеен', () => {
+  it('у вызова с итогами: ставит блок сразу после вызова, даёт шагу имя по названию эффекта, блок склеен', () => {
     start([{ type: 'emit', effect: 'бросок' }]);
     const card = () => stepCard(/^1 · /);
     expect(within(card()).has('в «Если»')).toBe(false);
     ifBy(card(), 'попадание / промах');
     expect(steps()).toEqual([
-      { type: 'emit', effect: 'бросок', id: 'бросок' },
-      { type: 'branch', if: { expr: '@бросок.попал' } },
+      { type: 'emit', effect: 'бросок', id: 'бросок_атаки' },
+      { type: 'branch', if: { expr: '@бросок_атаки.попал' } },
       { type: 'end' },
     ]);
     expect(isFused(block(0))).toBe(true);

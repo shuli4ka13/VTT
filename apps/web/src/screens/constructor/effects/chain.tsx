@@ -205,7 +205,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     return outcomeWords(system, tags);
   };
 
-  const cardOf = (group: (typeof cards)[number], g: number, whole?: [number, number], fused?: { outcome: string; unwrap?: () => void; cond?: ReactNode; by?: string; word?: string }) => {
+  const cardOf = (group: (typeof cards)[number], g: number, whole?: [number, number], fused?: { outcome: string; unwrap?: () => void; cond?: ReactNode; by?: string }) => {
     const asIf = Boolean(fused);
     const at = numberOf(g) - 1;
     const range = whole ? span(whole[0], whole[1]) : group.indices;
@@ -218,7 +218,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     const after = (base: string, make: (id: string) => Step[]) => () => edit(draft => {
       const list = draft.steps ?? [];
       const step = list[own] as Step & { id?: string };
-      if (!step.id) step.id = freeId([...stepIdsOf(draft), ...(draft.params ?? []).map(p => p.key)], base);
+      if (!step.id) step.id = freeId([...stepIdsOf(draft), ...(draft.params ?? []).map(p => p.key)], (system.effects?.[base]?.label ?? base).toLowerCase());
       list.splice(group.indices[group.indices.length - 1]! + 1, 0, ...make(String(step.id)), { type: 'end' } as unknown as Step);
     });
     const branch = (expr: string): Step => ({ type: 'branch', if: { expr } }) as unknown as Step;
@@ -252,7 +252,6 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         {...(fused?.unwrap ? { onUnwrap: fused.unwrap } : {})}
         {...(fused?.cond ? { headCond: fused.cond } : {})}
         {...(fused?.by ? { headBy: fused.by } : {})}
-        {...(fused?.word ? { headWord: fused.word } : {})}
         {...(ifBy.length ? { ifBy } : {})}
         position={startAt + at + 1}
         system={system}
@@ -444,7 +443,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
           return (
             <div className="flow-block__part" key={head}>
               {k === 0 && fused && outcomes
-                ? cardOf(fused.group, fused.g, [fused.group.indices[0]!, end], { outcome: `${outcomes.first} / ${outcomes.other}`, word: 'По', ...(unwrap ? { unwrap } : {}), ...(callPick ? { cond: callPick } : {}) })
+                ? cardOf(fused.group, fused.g, [fused.group.indices[0]!, end], { outcome: `${outcomes.first} / ${outcomes.other}`, ...(unwrap ? { unwrap } : {}), ...(callPick ? { cond: callPick } : {}) })
                 : k === 0 && cases ? (cases.group && cases.g !== undefined
                   ? cardOf(cases.group, cases.g, [cases.group.indices[0]!, end], { outcome: caseOf(open), by: cases.title })
                   : <HeadFrame word="По" actions={headActions}><span className="flow-head__words">{cases.title}</span></HeadFrame>)

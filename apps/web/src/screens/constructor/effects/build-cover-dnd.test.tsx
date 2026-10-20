@@ -30,7 +30,7 @@ const nameStep = (card: HTMLElement, name: string): void => {
   const title = (card.querySelector('.step-fold, .card__head')?.textContent ?? '').replace(/^[▾▸]\s*/, '').split('·')[0]!.trim();
   const own = card.querySelector<HTMLElement>('.number-line input.input');
   if (own) { within(card).type(own, name); return; }
-  within(card).click(/^имя в формулах/);
+  within(card).click(/^(имя в формулах|результат)/);
   const fresh = stepCard(new RegExp(`^${title} · `), card.parentElement ?? document);
   within(fresh).type(fresh.querySelector<HTMLElement>('.step-name input')!, name);
 };
@@ -287,7 +287,7 @@ describe('эффекты D&D собираются в конструкторе р
     within(handlerHead(1)).select('Что именно', 'атака');
     within(handlerHead(1)).select('Когда именно', 'before');
     within(handlerHead(1)).select('Кого касается', '@цель == @носитель');
-    within(handlerHead(1)).when('=@попадание.попал');
+    within(handlerHead(1)).when('=@бросок.попал');
     within(handlerHead(1)).select('Решение', 'ask');
 
     ui.select(handlerAt(1).querySelector<HTMLElement>('.add-cost select')!, 'cost_reaction');

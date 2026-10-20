@@ -43,7 +43,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, names, takenNames, onRename, onUnpair, ifBy, onUnwrap, asIf = false, outcome = '', headCond, headBy, headWord,
+  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, names, takenNames, onRename, onUnpair, ifBy, onUnwrap, asIf = false, outcome = '', headCond, headBy,
 }: {
   group: CardGroup;
   position: number;
@@ -73,7 +73,6 @@ export function GroupCard({
   onUnpair?: () => void;
   ifBy?: { label: string; run: () => void }[];
   headBy?: string;
-  headWord?: string;
   headCond?: ReactNode;
   onUnwrap?: () => void;
   asIf?: boolean;
@@ -142,7 +141,8 @@ export function GroupCard({
     return (
       <>
         <StepHead
-          position={position} words={headBy ?? `${called.includes('«') ? called : `«${called}»`} — ${outcome}`} {...(headBy || headWord ? { word: headWord ?? 'По' } : {})} open={!folded} onToggle={onFold} problem={problem?.text ?? null} {...(headCond ? { cond: headCond } : {})}
+          position={position} word={called.replace(/^.*«(.+)».*$/, '$1')} words={headBy ? `по итогу ${headBy}` : `по итогу${step.id ? ` «${String(step.id)}»` : ''}: ${outcome}`} open={!folded} onToggle={onFold} problem={problem?.text ?? null}
+          {...(headCond ? { cond: <><span className="flow-head__by">по итогу{step.id ? ` «${String(step.id)}»` : ''}:</span>{headCond}</> } : {})}
           actions={<FlowActions onUp={onMoveUp} onDown={onMoveDown} upTitle={upTitle} downTitle={downTitle} onDelete={onDelete} onKeep={onUnwrap} />}
         />
         {folded ? null : <div className={`step-card flow-block__source flow-block__source--${group.kind}`}>{body}</div>}
@@ -264,7 +264,7 @@ function StepName({ group, effect, system, edit }: { group: CardGroup; effect: E
   if (!open) {
     return (
       <div className="inline inline--tight step-name">
-        <Button size="sm" variant="ghost" title="как итог шага зовётся в формулах: @имя" onClick={() => setOpen(true)}>{id ? `имя в формулах: ${id}` : 'имя в формулах…'}</Button>
+        <Button size="sm" variant="ghost" title="как итог шага зовётся в формулах: @имя" onClick={() => setOpen(true)}>{gives ? `${id ? `результат «${id}»` : 'результат…'}: ${(system.effects[String(calledId)]?.returns ?? []).map(one => one.label ?? one.key).join(' · ')}` : id ? `имя в формулах: ${id}` : 'имя в формулах…'}</Button>
       </div>
     );
   }
@@ -281,7 +281,7 @@ function StepName({ group, effect, system, edit }: { group: CardGroup; effect: E
   };
   return (
     <div className="inline inline--tight step-name">
-      <span className="faint">имя в формулах</span>
+      <span className="faint">{gives ? 'результат называется' : 'имя в формулах'}</span>
       <KeyField optional value={id} locked={Boolean(id) && referenced({ s: st.system, c: st.compendium }, id, { steps: effect.steps ?? [], cost: effect.cost ?? [] })} taken={taken} onChange={rename} />
     </div>
   );

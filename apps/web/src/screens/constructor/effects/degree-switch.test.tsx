@@ -21,7 +21,8 @@ const open = (systemId: string, effect: string) => {
 const text = (el: Element) => (el.textContent ?? '').replace(/\s+/g, ' ');
 
 const switches = (): HTMLElement[] => [...document.querySelectorAll<HTMLElement>('.flow-block')]
-  .filter(one => [...one.querySelectorAll(':scope > .flow-block__part .flow-head__word')].some(word => /(^|· )По$/.test(word.textContent ?? '')));
+  .filter(one => [...one.querySelectorAll(':scope > .flow-block__part .flow-head__word')].some(word => /(^|· )По$/.test(word.textContent ?? ''))
+    || [...one.querySelectorAll(':scope > .flow-block__part > .flow-head .flow-head__words')].some(words => /^по итогу/.test(words.textContent ?? '')));
 
 describe('«Если» по ступеням — switch', () => {
   afterEach(cleanup);
@@ -57,13 +58,13 @@ describe('«Если» по ступеням — switch', () => {
     within(document.body).click('только развилку — шаги останутся');
     const pick = document.querySelector<HTMLElement>('select[aria-label="по итогу"]')!;
     within(pick.parentElement!).select(pick, 'исход: промах · попадание · крит');
-    const block = switches().find(one => text(one).includes('«исход» (попадание)'))!;
+    const block = switches().find(one => text(one).includes('«исход» (бросок)'))!;
     expect(text(block)).toContain('промах:');
     expect(text(block)).toContain('попадание:');
     expect(text(block)).toContain('крит:');
     expect(text(block)).not.toContain('Если«Бросок атаки»');
     expect(within(document.body).has('+ по итогу')).toBe(false);
     const steps = useWorld.getState().system.effects.strike!.steps!;
-    expect(steps.some(step => (step as { if?: { expr?: string } }).if?.expr === '@попадание.исход == "крит"')).toBe(true);
+    expect(steps.some(step => (step as { if?: { expr?: string } }).if?.expr === '@бросок.исход == "крит"')).toBe(true);
   }, 60_000);
 });

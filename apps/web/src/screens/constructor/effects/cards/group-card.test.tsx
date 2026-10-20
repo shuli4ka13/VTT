@@ -264,7 +264,7 @@ describe('GroupCard: изменение как вызов', () => {
       expect(cards().arg('На ком').textContent).not.toContain('сам:');
       expect(cards().arg('Запомненное число').textContent).toContain('не передано');
       expect(cards().arg('Срок').textContent).toContain('как у эффекта: 1');
-      expect(screen.getByText('▸ ещё (1)')).toBeTruthy();
+      expect(screen.queryByText(/ещё/)).toBeNull();
     });
 
     it('выбор состояния сразу пишет в args явные формулы, ничего не подставляется молча', () => {
