@@ -82,7 +82,6 @@ export function formulaWords(system: System, source: string, names?: Map<string,
       case 'большее из': return `большее из ${all(' и ')}`;
       case 'сколько': return args.length > 1 ? `сколько ${arg(1)} среди ${arg(0)}` : `сколько ${arg(0)}`;
       case 'есть': return `${arg(0)} содержит ${arg(1)}`;
-      case 'пересекаются': return `в ${arg(0)} есть что-то из ${arg(1)}`;
       case 'первый': return `первый из ${arg(0)}`;
       default: return `${name} ${all(', ')}`;
     }

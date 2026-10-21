@@ -21,20 +21,9 @@ interface Fn {
 const FUNCTIONS: Record<string, Fn> = {
   'округлить вниз': { arity: 1, apply: args => Math.floor(args[0]!) },
   'округлить вверх': { arity: 1, apply: args => Math.ceil(args[0]!) },
-  округлить: { arity: 1, apply: args => Math.round(args[0]!) },
-  модуль: { arity: 1, apply: args => Math.abs(args[0]!) },
   'меньшее из': { arity: '1+', apply: () => 0, raw: args => Math.min(...numbers(args, 'меньшее из')) },
   'большее из': { arity: '1+', apply: () => 0, raw: args => Math.max(...numbers(args, 'большее из')) },
   сумма: { arity: '1+', apply: () => 0, raw: args => numbers(args, 'сумма', true).reduce((sum, value) => sum + value, 0) },
-  среднее: {
-    arity: '1+',
-    apply: () => 0,
-    raw: args => {
-      const list = numbers(args, 'среднее', true);
-      if (!list.length) throw new FormulaRuntimeError('«среднее»: список пуст');
-      return list.reduce((sum, value) => sum + value, 0) / list.length;
-    },
-  },
   сколько: {
     arity: '1+',
     apply: () => 0,
@@ -51,15 +40,6 @@ const FUNCTIONS: Record<string, Fn> = {
       if (args.length < 2 || args.length > 3) throw new FormulaRuntimeError('«строки» ждёт таблицу, колонку и, если нужно, вещь-хозяина');
       if (!tools.rows) throw new FormulaRuntimeError('«строки» здесь нельзя: таблиц системы тут не видно');
       return tools.rows(String(args[0]), String(args[1]), args.length === 3 ? String(args[2] ?? '') : undefined) as unknown as Value;
-    },
-  },
-  пересекаются: {
-    arity: 2,
-    apply: () => 0,
-    raw: args => {
-      const list = (value: unknown): string[] => (Array.isArray(value) ? value : value === null || value === undefined || value === '' ? [] : [value]).map(item => String(item));
-      const right = new Set(list(args[1]));
-      return list(args[0]).some(item => right.has(item));
     },
   },
   есть: {
