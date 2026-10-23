@@ -17,6 +17,7 @@ help:
 
 install:
 	yarn install
+	git config core.hooksPath .githooks
 
 ts-build:
 	yarn build
