@@ -1,0 +1,114 @@
+{
+  "id": "учебная",
+  "name": "Учебная система",
+  "effects": {
+    "удар": {
+      "label": "Удар",
+      "params": [
+        {
+          "key": "действующий",
+          "label": "Кто действует",
+          "kind": "sheet"
+        },
+        {
+          "key": "цели",
+          "label": "Цели",
+          "kind": "sheet",
+          "many": true,
+          "item": {
+            "key": "цель",
+            "label": "Цель"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "type": "each",
+          "of": "цели"
+        },
+        {
+          "id": "проверка_бросок",
+          "type": "roll",
+          "die": "кость",
+          "by": {
+            "expr": "@действующий"
+          }
+        },
+        {
+          "id": "проверка",
+          "type": "check",
+          "value": {
+            "expr": "@проверка_бросок"
+          },
+          "versus": {
+            "expr": "@цель.класс_брони"
+          }
+        },
+        {
+          "type": "branch",
+          "if": {
+            "expr": "@проверка.success"
+          }
+        },
+        {
+          "type": "apply",
+          "target": {
+            "expr": "@цель.хиты"
+          },
+          "value": {
+            "expr": "5"
+          }
+        },
+        {
+          "type": "end"
+        }
+      ]
+    }
+  },
+  "grants": [
+    "удар"
+  ],
+  "constants": {
+    "кость": {
+      "label": "Кость проверки",
+      "kind": "die",
+      "dice": [
+        {
+          "sides": 20
+        }
+      ]
+    }
+  },
+  "tables": {
+    "лист": {
+      "label": "Лист",
+      "shape": "single",
+      "columns": [
+        {
+          "key": "хиты",
+          "label": "Хиты",
+          "kind": "number",
+          "default": 10,
+          "min": 0
+        },
+        {
+          "key": "класс_брони",
+          "label": "Класс брони",
+          "kind": "number",
+          "default": 12
+        }
+      ]
+    }
+  },
+  "rolls": [],
+  "blocks": [
+    {
+      "name": "Бой",
+      "parts": [
+        {
+          "table": "лист"
+        }
+      ]
+    }
+  ]
+}

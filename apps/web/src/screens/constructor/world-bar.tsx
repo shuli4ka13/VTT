@@ -6,6 +6,7 @@ import { useAutosave, rememberVersion, settle, saveLabel } from '../../store/aut
 import { Button, Input } from '../../ui/primitives.tsx';
 import { ApiError, publishSystem } from '../../api/client.ts';
 import { ProblemsButton } from './problems-panel.tsx';
+import { GuideButton } from '../../guide/guide-card.tsx';
 import { pathWords } from './problems.ts';
 import { Tabs } from '../../ui/layout.tsx';
 import { FormulaBar } from '../../ui/formula-bar.tsx';
@@ -67,7 +68,8 @@ export function SystemBar() {
 
       {note ? <span className={`worldbar__note ${note.bad ? 'field__error' : 'muted'}`} title={note.text}>{note.text}</span> : null}
       <span className="muted">{name}</span>
-      <ProblemsButton />
+      <GuideButton />
+      <span data-guide="problems"><ProblemsButton /></span>
       <Button size="sm" variant="primary" onClick={() => void publish()}
         disabled={!origin.systemId}>Опубликовать</Button>
     </div>

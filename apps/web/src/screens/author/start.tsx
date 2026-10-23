@@ -53,7 +53,7 @@ export function SystemStart() {
       replaceWorld({ system: named, compendium: { records: [] }, sheets: [] });
       setOrigin({
         mode: 'system', systemId: saved.id, systemTitle: name, systemMine: true,
-        compendiumId: undefined, compendiumTitle: undefined,
+        compendiumId: undefined, compendiumTitle: undefined, lesson: undefined,
       });
       navigate('/author/system');
     } catch (err) {
@@ -73,7 +73,7 @@ export function SystemStart() {
       replaceWorld({ system: saved.system, compendium: { records: [] }, sheets: [] });
       setOrigin({
         mode: 'system', systemId: saved.id, systemTitle: saved.title, systemMine: true,
-        compendiumId: undefined, compendiumTitle: undefined,
+        compendiumId: undefined, compendiumTitle: undefined, lesson: undefined,
       });
       markClean();
       navigate('/author/system');
