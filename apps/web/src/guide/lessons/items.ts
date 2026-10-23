@@ -53,6 +53,11 @@ export const items: Lesson = {
         return Boolean(param && param.kind === 'number'
           && stepsOf(strike(view)?.[1]).some(step => step.type === 'apply' && reads(step.value, `@${param.key}`)));
       },
+      traps: [{
+        when: view => !weaponParam(view)
+          && (strike(view)?.[1].params ?? []).some(param => (param.label ?? '').toLowerCase().includes('урон оружия')),
+        say: 'в названии входа осталось лишнее (например «Новый вход») — сотрите его, чтобы было ровно «Урон оружия».',
+      }],
       result: () => '«Удар» снимает столько, сколько «Урон оружия».',
     },
     {

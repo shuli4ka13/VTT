@@ -1,14 +1,29 @@
 import { TABS } from '../../words.ts';
 import { ROW } from '@vtt/engine/model/sheet-columns';
+import { compile } from '@vtt/engine/formula';
 import type { System } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
-import { tableBy, columnBy, fieldBy, columnOf, reads, same } from '../find.ts';
+import { tableBy, columnBy, fieldBy, columnOf, reads, same, exprOf } from '../find.ts';
 import { problemsClean } from './first-system.ts';
 import base from '../seeds/base.json' with { type: 'json' };
 
 const stats = (view: View) => {
   const found = tableBy(view.system, 'Характеристики');
   return found && found[1].shape !== 'book' && found[1].shape !== 'single' ? found : undefined;
+};
+
+const skills = (view: View) => {
+  const found = tableBy(view.system, 'Навыки');
+  return found && found[1].shape !== 'book' && found[1].shape !== 'single' ? found : undefined;
+};
+
+const parses = (text: string): boolean => {
+  try { compile(text); return true; } catch { return false; }
+};
+
+const brokenModifier = (view: View): boolean => {
+  const text = exprOf(columnBy(stats(view)?.[1], 'Модификатор')?.expr).trim();
+  return text !== '' && !parses(text);
 };
 
 const FORMULA_HINT = 'Ключи таблицы и колонок («таблица», «колонка_2») за названием не идут — формулы показываются подписями, а пишутся через подсказку: руками ключ не набирайте. Поле формулы открывает строку формул наверху; «готово» или Enter сохраняет.';
@@ -28,6 +43,7 @@ export const tables: Lesson = {
   chapters: [
     { title: 'Справочник', sum: 'Таблица «Характеристики»: сила и ловкость, «Значение» и «Модификатор» формулой.' },
     { title: 'На листе', sum: 'Характеристики свои у каждого листа, класс брони считается от ловкости.' },
+    { title: 'Ссылка на таблицу', sum: 'Таблица «Навыки»: у «атлетики» характеристика «сила», а «Значение» берёт её модификатор.' },
     { title: 'Сами', sum: 'Вы добавили колонку с формулой без подсказок.' },
   ],
   steps: [
@@ -77,8 +93,13 @@ export const tables: Lesson = {
       done: view => {
         const table = stats(view)?.[1];
         const value = columnBy(table, 'Значение');
-        return Boolean(value && reads(columnBy(table, 'Модификатор')?.expr, `@${ROW}.${value.key}`));
+        const formula = columnBy(table, 'Модификатор')?.expr;
+        return Boolean(value && reads(formula, `@${ROW}.${value.key}`) && parses(exprOf(formula)));
       },
+      traps: [{
+        when: brokenModifier,
+        say: 'в формуле ошибка — не закрыта скобка или лишний знак. Сверьте с образцом: «округлить вниз((@строка.Значение - 10) / 2)». Место ошибки покажут «Проблемы» в шапке.',
+      }],
       result: () => 'Модификатор считается из значения у каждой строки.',
     },
     {
@@ -128,13 +149,79 @@ export const tables: Lesson = {
       result: () => 'Проблем нет.',
     },
     {
+      id: 'skills',
+      chapter: 'Ссылка на таблицу',
+      lead: 'Навык берёт значение у характеристики: у «атлетики» это сила. Для этого колонка «Характеристика» ссылается на таблицу «Характеристики» — выбирать можно только из её строк.',
+      tab: 'dictionaries',
+      panel: 'Разделы правил',
+      say: 'В разделе «Таблицы» нажмите «+ таблица», назовите её «Навыки» и впишите в пустую строку «атлетика».',
+      at: { text: '+ таблица' },
+      via: { text: 'Таблицы', in: 'Разделы правил' },
+      done: view => (skills(view)?.[1].rows ?? []).some(row => same(row.value, 'атлетика')),
+      result: () => 'Таблица «Навыки»: строка «атлетика».',
+    },
+    {
+      id: 'link',
+      chapter: 'Ссылка на таблицу',
+      tab: 'dictionaries',
+      say: 'Нажмите «+» в шапке таблицы «Навыки» и назовите колонку «Характеристика»; в «Тип» выберите «из таблицы», а в появившемся «Из таблицы» — «Характеристики».',
+      hint: 'Если «Из таблицы» оставить пустым, выбирать будет не из чего.',
+      at: { guide: 'add-column' },
+      done: view => {
+        const column = columnBy(skills(view)?.[1], 'Характеристика');
+        const source = stats(view);
+        return Boolean(column && column.kind === 'choice' && source && column.from === source[0]);
+      },
+      traps: [{
+        when: view => {
+          const column = columnBy(skills(view)?.[1], 'Характеристика');
+          return Boolean(column && column.kind === 'choice' && !column.from);
+        },
+        say: 'выбирать не из чего: в «Из таблицы» укажите таблицу «Характеристики».',
+      }],
+      result: () => '«Характеристика» выбирается из таблицы «Характеристики».',
+    },
+    {
+      id: 'pick',
+      chapter: 'Ссылка на таблицу',
+      tab: 'dictionaries',
+      say: 'В строке «атлетика», в колонке «Характеристика» выберите «сила».',
+      done: view => {
+        const table = skills(view)?.[1];
+        const column = columnBy(table, 'Характеристика');
+        const row = (table?.rows ?? []).find(one => same(one.value, 'атлетика'));
+        return Boolean(column && same(row?.cells?.[column.key], 'сила'));
+      },
+      result: () => 'У «атлетики» характеристика «сила».',
+    },
+    {
+      id: 'through',
+      chapter: 'Ссылка на таблицу',
+      lead: 'Адрес можно вести дальше по колонке-ссылке: строка навыка → её характеристика → модификатор этой характеристики.',
+      tab: 'dictionaries',
+      say: 'Ещё колонка «Значение»: в «Формула для всех строк» наберите «@строка.» и выберите в подсказке «Характеристика · Модификатор».',
+      hint: FORMULA_HINT,
+      at: { guide: 'add-column' },
+      done: view => {
+        const table = skills(view)?.[1];
+        const link = columnBy(table, 'Характеристика');
+        const modifier = columnBy(stats(view)?.[1], 'Модификатор');
+        return Boolean(link && modifier && reads(columnBy(table, 'Значение')?.expr, `@${ROW}.${link.key}.${modifier.key}`));
+      },
+      result: () => '«Значение» навыка — модификатор его характеристики.',
+    },
+    {
       id: 'save',
       chapter: 'Сами',
       alone: true,
       tab: 'dictionaries',
-      say: 'Добавьте в «Характеристики» колонку «Спасбросок», равную модификатору характеристики.',
-      hint: '«+» в шапке таблицы, в формуле — «@строка.» и «Модификатор» из подсказки.',
+      say: 'Добавьте в таблицу «Характеристики» на вкладке «Правила» колонку «Спасбросок», равную модификатору характеристики.',
+      hint: 'Нужен «+» в шапке таблицы «Характеристики» (не «+ колонка» в блоке листа); в формуле — «@строка.» и «Модификатор» из подсказки.',
       done: view => readsModifier(view, 'Спасбросок'),
+      traps: [{
+        when: view => Boolean(fieldBy(view.system, 'Спасбросок')),
+        say: 'это поле листа; колонка нужна в таблице «Характеристики» на вкладке «Правила».',
+      }],
       result: () => '«Спасбросок» = модификатор.',
     },
   ],

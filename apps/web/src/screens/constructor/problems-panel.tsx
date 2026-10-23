@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { create } from 'zustand';
 import { useWorld } from '../../store/world.ts';
 import { Button, Verdict, Empty } from '../../ui/primitives.tsx';
@@ -13,6 +14,7 @@ export function ProblemsButton() {
   const pick = useWorld(s => s.pick);
   const open = useProblemsPanel(s => s.open);
   const setOpen = useProblemsPanel(s => s.set);
+  useEffect(() => () => setOpen(false), [setOpen]);
   const errors = problems.filter(p => p.level === 'error').length;
 
   return (

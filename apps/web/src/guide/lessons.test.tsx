@@ -14,8 +14,12 @@ import { within, stepCard, block, addToArm } from '../testing/cards.ts';
 import { TABS } from '../words.ts';
 import { GuideLayer, PAUSE_MS, useView } from './guide-card.tsx';
 import { LESSONS, lessonOf } from './lessons/index.ts';
-import { findAnchor, firstOf } from './anchor.ts';
+import { findAnchor, firstOf, openedDialog } from './anchor.ts';
 import { errorsOf } from './find.ts';
+import { bring } from '../store/fresh.ts';
+import { PIECES, bringPiece } from '@vtt/engine/model/pieces';
+import { bringIn } from '@vtt/engine/model/bring';
+import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
 import { lintSystem } from '@vtt/engine/model/lint';
 import { flattenSystem } from '@vtt/engine/model/inherit';
 import type { View } from './types.ts';
@@ -50,9 +54,20 @@ const press = (el: HTMLElement) => {
   openAll();
 };
 const problemsOf = () => lintSystem(flattenSystem(useWorld.getState().system, true)).filter(p => p.level === 'error').map(p => p.text).join(' | ');
-const openProblems = () => { act(() => { fireEvent.click(findAnchor({ guide: 'problems' })!.querySelector('button')!); }); };
+const toggleProblems = () => { act(() => { fireEvent.click(findAnchor({ guide: 'problems' })!.querySelector('button')!); }); };
+const openProblems = () => { if (!openedDialog('Проблемы системы')) toggleProblems(); };
+
+const SOLVE_READY: Record<string, () => void> = {
+  take: () => takePiece('d20-abilities'),
+  drop: () => dropField('inspiration'),
+  problems: () => openProblems(),
+  effect: () => takeEffect('disengage'),
+  'problems-effect': () => undefined,
+  other: () => { takePiece('sr-tracks'); dropField('wound_mod'); },
+};
 
 const SOLVE: Record<string, Record<string, () => void>> = {
+  ready: SOLVE_READY,
   'first-system': {
     block: () => { edit(d => { (d.blocks ??= []).push({ name: 'Бой', parts: [] }); }); pick({ activeBlock: 'Бой' }); },
     hp: () => { edit(d => addColumn(d, { key: 'хиты', label: 'Хиты', kind: 'number' }, 'sheet', 'Бой')); pick({ activeFieldTag: 'хиты', activeBlock: null }); },
@@ -92,6 +107,10 @@ const SOLVE: Record<string, Record<string, () => void>> = {
       pick({ activeFieldTag: 'класс_брони' });
     },
     problems: openProblems,
+    skills: () => { pick({ activeTableId: 'таблица_2' }); edit(d => { d.tables!.таблица_2 = { label: 'Навыки', key: 'word', rows: [{ value: 'атлетика' }] } as never; }); },
+    link: () => edit(d => { d.tables!.таблица_2!.columns = [{ key: 'колонка', label: 'Характеристика', kind: 'choice', from: 'таблица' }]; }),
+    pick: () => edit(d => { d.tables!.таблица_2!.rows = [{ value: 'атлетика', cells: { колонка: 'сила' } }]; }),
+    through: () => edit(d => { d.tables!.таблица_2!.columns!.push({ key: 'колонка_2', label: 'Значение', expr: { expr: '@строка.колонка.колонка_2' } } as never); }),
     save: () => edit(d => { d.tables!.таблица!.columns!.push({ key: 'колонка_3', label: 'Спасбросок', expr: { expr: '@строка.колонка_2' } } as never); }),
   },
   links: {
@@ -147,6 +166,19 @@ const SOLVE: Record<string, Record<string, () => void>> = {
   },
 };
 
+const takePiece = (id: string) => {
+  const piece = PIECES.find(one => one.id === id)!;
+  act(() => { bring(`«${piece.label}»`, current => bringPiece(current, piece)); });
+};
+const dropField = (tag: string) => edit(d => {
+  for (const table of Object.values(d.tables ?? {})) table.columns = (table.columns ?? []).filter(column => column.key !== tag);
+  for (const block of d.blocks ?? []) for (const part of block.parts) if (part.columns) part.columns = part.columns.filter(key => key !== tag);
+});
+const takeEffect = (key: string) => {
+  const donor = (SAMPLE_SYSTEMS as System[]).find(one => one.id === 'dnd5e')!;
+  act(() => { bring('«Отход»', current => bringIn(current, donor, [{ kind: 'effect', key }])); });
+};
+
 const start = async (id: string) => {
   await act(async () => { expect(await useGuide.getState().start(id)).toBe(true); });
 };
@@ -165,7 +197,7 @@ const reset = () => {
 
 describe('уроки конструктора', () => {
   beforeEach(reset);
-  afterEach(() => { cleanup(); vi.useRealTimers(); });
+  afterEach(() => { if (openedDialog('Проблемы системы')) toggleProblems(); cleanup(); vi.useRealTimers(); });
 
   it('сид урока проходит схему и линт без ошибок', () => {
     for (const lesson of LESSONS) {
