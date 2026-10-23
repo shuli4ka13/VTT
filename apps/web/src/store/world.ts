@@ -19,6 +19,7 @@ export interface Origin {
   systemMine?: boolean;
   compendiumId?: string;
   compendiumTitle?: string;
+  lesson?: string;
 }
 
 export type ConstructorTab = 'sheet' | 'dictionaries' | 'effects' | 'records';

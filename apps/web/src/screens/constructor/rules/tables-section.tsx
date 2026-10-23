@@ -439,7 +439,7 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
     <div className="stack stack--tight">
       <span className="field__label">Строки</span>
 
-      <SheetGrid id={`table.${id}`} columns={gridColumns} tailHead={<Button size="sm" variant="ghost" title="добавить колонку" onClick={addColumn}>+</Button>}>
+      <SheetGrid id={`table.${id}`} columns={gridColumns} tailHead={<span data-guide="add-column"><Button size="sm" variant="ghost" title="добавить колонку" onClick={addColumn}>+</Button></span>}>
           {rows.map((row, i) => (
             <RowCells
               key={i} tableId={id} row={row} at={i} rowKey={key} columns={columns} system={system} placed={placed}
