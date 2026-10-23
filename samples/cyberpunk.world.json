@@ -261,7 +261,7 @@
           },
           {
             "key": "turn_move",
-            "label": "Движение",
+            "label": "Движение: осталось за ход",
             "kind": "number",
             "default": 1,
             "min": 0,
