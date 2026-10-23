@@ -234,7 +234,7 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
       {broken ? <Verdict tone="warn">диапазоны перекрываются или дырявы</Verdict> : null}
 
       {picked && columns.some(c => c.key === picked) ? (
-        <TableColumnCard id={id} table={table} column={columns.find(c => c.key === picked)!} system={system} edit={edit} onClose={() => setPicked(null)} />
+        <TableColumnCard id={id} table={table} column={columns.find(c => c.key === picked)!} system={system} edit={edit} onClose={() => setPicked(null)} onRekey={setPicked} />
       ) : null}
 
       <Rows id={id} table={table} system={system} edit={edit} editSystem={editSystem} picked={picked} onPick={setPicked} />
@@ -270,7 +270,8 @@ export function moveColumn(draft: System, tableId: string, key: string, holder: 
   draft.tables = withColumn(draft, column, holder).tables;
 }
 
-export function TableColumnCard({ id, table, column, system, edit, onClose, extra, lead, bounds = true }: {
+export function TableColumnCard({ id, table, column, system, edit, onClose, onRekey, extra, lead, bounds = true }: {
+  onRekey?: (key: string) => void;
   extra?: ReactNode;
   lead?: ReactNode;
   bounds?: boolean;
@@ -297,16 +298,22 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, extr
   const users = single ? usersOf(usage, 'field', column.key, system) : [];
 
   const rename = (label: string) => {
-    if (!single) { set(c => { c.label = label; }); return; }
     const state = useWorld.getState();
-    const world = JSON.stringify({ s: state.system, c: state.compendium, sh: state.sheets });
-    const virgin = (/^field(_\d+)?$/.test(column.key) || column.key === slugOf(column.label ?? ''))
-      && world.split(`"${column.key}"`).length - 1 <= 1
-      && !new RegExp(`[@#]${column.key}(?![\\p{L}\\p{N}_])`, 'u').test(world);
-    const taken = [...fieldsOf(state.system).map(f => f.tag).filter(tag => tag !== column.key), ...Object.keys(state.system.tables ?? {})];
-    const fresh = virgin && slugOf(label) ? freeId(taken, label) : column.key;
-    editSystem(draft => renameColumn(draft, id, column.key, label, fresh));
-    if (fresh !== column.key) pick({ activeFieldTag: fresh });
+    const key = column.key;
+    const world = JSON.stringify({ s: { ...state.system, blocks: undefined }, c: state.compendium, sh: state.sheets });
+    const auto = /^(field|колонка)(_\d+)?$/u.test(key) || key === slugOf(column.label ?? '');
+    const named = new RegExp(`[@#.]${key}(?![\\p{L}\\p{N}_])`, 'u').test(world);
+    const filled = (table.rows ?? []).some(row => row.cells && key in row.cells);
+    const virgin = !book && auto && !named && (single ? world.split(`"${key}"`).length - 1 <= 1 : !filled);
+    const taken = single
+      ? [...fieldsOf(state.system).map(f => f.tag).filter(tag => tag !== key), ...Object.keys(state.system.tables ?? {})]
+      : (table.columns ?? []).map(c => c.key).filter(other => other !== key);
+    const fresh = virgin && slugOf(label) ? freeId(taken, label) : key;
+    editSystem(draft => renameColumn(draft, id, key, label, fresh));
+    if (fresh === key) return;
+    if (single) pick({ activeFieldTag: fresh });
+    if (state.activeColumn?.table === id && state.activeColumn.column === key) pick({ activeColumn: { table: id, column: fresh } });
+    onRekey?.(fresh);
   };
 
   return (
