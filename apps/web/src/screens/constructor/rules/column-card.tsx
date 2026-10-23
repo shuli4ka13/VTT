@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { Card, CardHead, Field, Button, DangerButton, Fold, Select, LabelInput } from '../../../ui/primitives.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import type { System, ValueKind } from '@vtt/schema';
+import { TABS } from '../../../words.ts';
 
 export const BY_FORMULA = '';
 
@@ -65,7 +66,10 @@ export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, w
         </Field>
         {column.kind === 'choice' ? (
           <>
-            <Field label="Из таблицы">
+            <Field label="Из таблицы" needed={!column.from}
+              error={column.from ? undefined : tables.length
+                ? 'выбирать не из чего, пока не указана таблица'
+                : `выбирать не из чего: сперва заведите таблицу со строками — «${TABS.rules}» → «Таблицы»`}>
               <Select
                 value={column.from ?? ''}
                 options={[['', '— какая —'], ...tables] as never}
