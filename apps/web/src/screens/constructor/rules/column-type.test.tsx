@@ -63,7 +63,7 @@ describe('числовая колонка — строка таблицы', () =
 });
 
 describe('выбор без таблицы', () => {
-  it('выбирать не из чего — карточка говорит, что сперва нужна таблица со строками', () => {
+  it('выбирать не из чего — колонка говорит, что сперва нужна таблица со строками', () => {
     const column = { key: 'характеристика', label: 'Характеристика', kind: 'choice' } as TableColumn;
     const system = { tables: { навыки: { label: 'Навыки', key: 'word', owner: 'sheet', columns: [column], rows: [{ value: 'атлетика' }] } }, constants: {}, effects: {} } as unknown as System;
     render(<TableColumnCard id="навыки" table={system.tables!.навыки!} column={column} system={system}

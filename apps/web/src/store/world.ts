@@ -12,11 +12,17 @@ const fresh = (system: System): System => { forgetFields(system); return system;
 
 export type WorkMode = 'system' | 'compendium';
 
+export type Publication = 'draft' | 'live' | 'behind';
+
+export const publicationOf = (behind?: boolean): Publication =>
+  behind === undefined ? 'draft' : behind ? 'behind' : 'live';
+
 export interface Origin {
   mode: WorkMode;
   systemId?: string;
   systemTitle?: string;
   systemMine?: boolean;
+  publication?: Publication;
   compendiumId?: string;
   compendiumTitle?: string;
   lesson?: string;
