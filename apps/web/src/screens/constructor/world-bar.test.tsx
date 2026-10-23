@@ -71,6 +71,11 @@ describe('шапка системы: опубликована ли послед�
     expect(screen.getByText('опубликована')).toBeTruthy();
     expect(screen.queryByText('опубликовано')).toBeNull();
 
+    saveSystem.mockClear();
+    await new Promise(resolve => setTimeout(resolve, 1800));
+    expect(saveSystem, 'публикация сама по себе не пересохраняет систему').not.toHaveBeenCalled();
+    expect(useWorld.getState().origin.publication).toBe('live');
+
     useWorld.getState().editSystem(draft => { draft.name = 'Правка после публикации'; });
     await waitFor(() => expect(useWorld.getState().origin.publication).toBe('behind'), { timeout: 4000 });
     expect(screen.getByText('правки не опубликованы')).toBeTruthy();

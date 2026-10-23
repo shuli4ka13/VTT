@@ -55,6 +55,7 @@ export function SystemStart() {
         mode: 'system', systemId: saved.id, systemTitle: name, systemMine: true, publication: 'draft',
         compendiumId: undefined, compendiumTitle: undefined, lesson: undefined,
       });
+      markClean();
       navigate('/author/system');
     } catch (err) {
       setTrouble((err as Error).message);

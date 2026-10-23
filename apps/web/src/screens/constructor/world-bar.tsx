@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink } from 'react-router';
 import { useWorld } from '../../store/world.ts';
 import { useSession } from '../../store/session.ts';
-import { useAutosave, rememberVersion, settle, saveLabel } from '../../store/autosave.ts';
+import { useAutosave, rememberVersion, settle, saveLabel, markClean } from '../../store/autosave.ts';
 import { Button, Input } from '../../ui/primitives.tsx';
 import { ApiError, publishSystem } from '../../api/client.ts';
 import { ProblemsButton, useProblemsPanel } from './problems-panel.tsx';
@@ -55,6 +55,7 @@ export function SystemBar() {
       const saved = await publishSystem(origin.systemId);
       rememberVersion({ system: saved.updatedAt });
       setOrigin({ publication: 'live' });
+      markClean();
       setNote(null);
     } catch (err) {
       if (err instanceof ApiError && err.message.startsWith(REFUSED)) {
