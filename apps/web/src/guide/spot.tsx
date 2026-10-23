@@ -7,11 +7,15 @@ const dropFrame = (frame: number): void => {
   if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(frame); else window.clearTimeout(frame);
 };
 
-interface Box { top: number; left: number; width: number; height: number }
+export interface Box { top: number; left: number; width: number; height: number }
 
-export function Spot({ target, place }: { target: () => HTMLElement | null; place: string }) {
+export function Spot({ target, place, onBox }: { target: () => HTMLElement | null; place: string; onBox?: (box: Box | null) => void }) {
   const [box, setBox] = useState<Box | null>(null);
-  const scrolled = useRef<string | null>(null);
+  const tell = useRef(onBox);
+  tell.current = onBox;
+
+  useEffect(() => { tell.current?.(box); }, [box]);
+  const scrolled = useRef<{ place: string; el: HTMLElement } | null>(null);
   const find = useRef(target);
   find.current = target;
 
@@ -19,8 +23,8 @@ export function Spot({ target, place }: { target: () => HTMLElement | null; plac
     let frame = 0;
     const tick = () => {
       const el = find.current();
-      if (el && scrolled.current !== place) {
-        scrolled.current = place;
+      if (el && (scrolled.current?.place !== place || scrolled.current.el !== el)) {
+        scrolled.current = { place, el };
         el.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
       }
       const rect = el?.getBoundingClientRect();

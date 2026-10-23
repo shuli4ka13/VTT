@@ -1,6 +1,6 @@
 import type { System, Param, Effect } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
-import { effectBy, fieldBy, stepsOf, reads, armOf } from '../find.ts';
+import { effectBy, fieldBy, stepsOf, reads, armOf, errorsOf } from '../find.ts';
 import { problemsClean } from './first-system.ts';
 import base from '../seeds/base.json' with { type: 'json' };
 
@@ -112,7 +112,7 @@ export const links: Lesson = {
       id: 'name',
       chapter: 'Вызов',
       tab: 'effects',
-      say: 'Под вызовом нажмите «результат…» и назовите шаг «урон» — итог читается ниже по имени.',
+      say: 'Под вызовом нажмите «результат…», назовите шаг «урон» и щёлкните мимо поля — итог читается ниже по имени.',
       at: { text: 'результат…' },
       done: view => calls(view).some(step => typeof step.id === 'string' && step.id.trim() !== ''),
       result: view => `Шаг вызова зовётся «${String(calls(view).find(step => step.id)?.id ?? '')}».`,
@@ -147,7 +147,8 @@ export const links: Lesson = {
         const arm = successArm(view);
         return Boolean(heal && sheet && hp
           && stepsOf(heal[1]).some(step => step.type === 'apply' && step.direction === 'add' && reads(step.target, `@${sheet}.${hp}`))
-          && callsOf(view, heal[0]).some(step => !arm.includes(step)));
+          && callsOf(view, heal[0]).some(step => !arm.includes(step))
+          && errorsOf(view.system) === 0);
       },
       result: () => 'При провале «Удар» зовёт «Лечение».',
     },

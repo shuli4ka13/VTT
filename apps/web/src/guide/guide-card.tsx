@@ -7,6 +7,7 @@ import { TABS } from '../words.ts';
 import { LESSONS, lessonOf } from './lessons/index.ts';
 import { findAnchor, firstOf, foldOf, openedDialog } from './anchor.ts';
 import { Spot } from './spot.tsx';
+import type { Box } from './spot.tsx';
 import type { Lesson, Step, View } from './types.ts';
 import './guide.css';
 
@@ -126,28 +127,42 @@ function LessonCard() {
   useEffect(() => { reached.current = Math.max(reached.current, index); }, [index]);
 
   useEffect(() => {
-    if (!step.done || current.already || revisit || !done || got === key) return undefined;
+    if (!step.done || current.already || revisit || !done || got === key) return;
     setGot(key);
-    if (last || place.closes) return undefined;
+  }, [done, key]);
+
+  useEffect(() => {
+    if (got !== key || last || place.closes) return undefined;
     const timer = window.setTimeout(() => { if (useGuide.getState().step === index) go(index + 1); }, PAUSE_MS);
     return () => window.clearTimeout(timer);
-  }, [done, key]);
+  }, [got, key]);
 
   const tab = useWorld(s => s.activeTab);
   const point = step.alone ? { prompt: null, target: null } : pointOf(step, tab);
-  const success = got === key && done;
+  const success = got === key;
   const already = Boolean(step.done && (current.already || revisit) && done);
-  const free = !step.done || current.already || revisit || done;
-  const trap = done ? null : trapOf(step, view);
+  const free = !step.done || current.already || revisit || done || success;
+  const trap = done || success ? null : trapOf(step, view);
   const where = `глава ${place.chapter} из ${place.chapters} · шаг ${place.step} из ${place.steps}`;
-  const sum = place.closes && (done || !step.done) ? lesson.chapters[place.chapter - 1]?.sum : undefined;
+  const sum = place.closes && (done || success || !step.done) ? lesson.chapters[place.chapter - 1]?.sum : undefined;
 
   const next = () => { if (last) void finish(); else go(index + 1); };
 
+  const host = useRef<HTMLDivElement>(null);
+  const [left, setLeft] = useState(false);
+  const aside = (box: Box | null) => {
+    const card = host.current?.getBoundingClientRect();
+    if (!box || !card) return;
+    const margin = left ? card.left : window.innerWidth - card.right;
+    const hits = (from: number) => box.left < from + card.width && box.left + box.width > from
+      && box.top < card.bottom && box.top + box.height > card.top;
+    setLeft(hits(window.innerWidth - margin - card.width) && !hits(margin));
+  };
+
   return (
     <>
-      {folded || step.alone ? null : <Spot place={`${key}|${point.prompt ?? ''}`} target={() => pointOf(step, useWorld.getState().activeTab).target} />}
-      <div className="guide" role="region" aria-label="Урок">
+      {folded || step.alone || (step.done && (done || success)) ? null : <Spot place={`${key}|${point.prompt ?? ''}`} target={() => pointOf(step, useWorld.getState().activeTab).target} onBox={aside} />}
+      <div ref={host} className={left ? 'guide guide--left' : 'guide'} role="region" aria-label="Урок">
         {folded ? (
           <button type="button" className="guide__strip" onClick={() => fold(false)}>
             Урок · {place.title} · шаг {place.step} из {place.steps}

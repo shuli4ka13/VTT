@@ -24,3 +24,4 @@
   background: var(--surface); border: 1px solid var(--accent); box-shadow: var(--shadow-2);
 }
 .guide__strip:hover { border-color: var(--accent-hover); }
+.guide--left { right: auto; left: var(--s-5); align-items: flex-start; }
