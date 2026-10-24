@@ -1072,3 +1072,13 @@ group('линт: двойники полей по подписи', () => {
     eq(lintSystem(system).filter(p => p.text.includes('два поля')).length, 0);
   });
 });
+
+group('линт: кинуть уже выпавшее число', () => {
+  test('«кинуть(@шаг-бросок)» — ошибка; «кинуть(@вход)» с костью — нет', () => {
+    const roll = { id: 'число', type: 'roll', die: 'd20' } as unknown as Step;
+    const bad = withEffect('удар', { params: [WHO as never], steps: [roll, mend('@действующий.hp', 'кинуть(@число)')] });
+    ok(errorTexts(bad).some(t => t.includes('уже выпавшее число')), errorTexts(bad).join('\n'));
+    const good = withEffect('удар', { params: [WHO as never, { key: 'кость', label: 'Кость', kind: 'text', default: '1к6' } as never], steps: [roll, mend('@действующий.hp', 'кинуть(@кость)')] });
+    ok(!errorTexts(good).some(t => t.includes('уже выпавшее число')), errorTexts(good).join('\n'));
+  });
+});
