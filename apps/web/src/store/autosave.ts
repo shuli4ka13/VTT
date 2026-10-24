@@ -98,9 +98,6 @@ function schedule(): void {
         versions.compendium = book.updatedAt;
       }
       sent = snapshot;
-      if (mode === 'system' && useWorld.getState().origin.publication === 'live') {
-        useWorld.getState().setOrigin({ publication: 'behind' });
-      }
       useAutosave.getState().set({ kind: 'saved', at: clock() });
     } catch (err) {
       useAutosave.getState().set({
@@ -112,6 +109,7 @@ function schedule(): void {
   };
 
   useAutosave.getState().set({ kind: 'dirty' });
+  if (mode === 'system' && origin.publication === 'live') useWorld.getState().setOrigin({ publication: 'behind' });
 
   if (timer) clearTimeout(timer);
   timer = setTimeout(() => { void flush(); }, PAUSE);

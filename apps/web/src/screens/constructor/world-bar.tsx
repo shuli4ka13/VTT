@@ -54,8 +54,8 @@ export function SystemBar() {
     try {
       const saved = await publishSystem(origin.systemId);
       rememberVersion({ system: saved.updatedAt });
-      setOrigin({ publication: 'live' });
       markClean();
+      setOrigin({ publication: 'live' });
       setNote(null);
     } catch (err) {
       if (err instanceof ApiError && err.message.startsWith(REFUSED)) {

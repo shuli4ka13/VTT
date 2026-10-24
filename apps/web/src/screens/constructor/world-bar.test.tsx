@@ -77,8 +77,8 @@ describe('шапка системы: опубликована ли послед�
     expect(useWorld.getState().origin.publication).toBe('live');
 
     useWorld.getState().editSystem(draft => { draft.name = 'Правка после публикации'; });
-    await waitFor(() => expect(useWorld.getState().origin.publication).toBe('behind'), { timeout: 4000 });
-    expect(screen.getByText('правки не опубликованы')).toBeTruthy();
+    expect(useWorld.getState().origin.publication, 'сразу с правкой, не дожидаясь сохранения').toBe('behind');
+    expect(await screen.findByText('правки не опубликованы')).toBeTruthy();
   });
 
   it('отказ по линту даёт короткую запись и открывает «Проблемы»', async () => {
