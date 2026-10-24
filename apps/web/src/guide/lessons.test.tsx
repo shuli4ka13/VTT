@@ -12,7 +12,7 @@ import { addColumn } from '../screens/constructor/rules/character-section.tsx';
 import { openAll } from '../testing/render-open.tsx';
 import { within, stepCard, block, addToArm } from '../testing/cards.ts';
 import { TABS } from '../words.ts';
-import { GuideLayer, PAUSE_MS, useView } from './guide-card.tsx';
+import { GuideLayer, PAUSE_MS, useView, movesOf, moveAt } from './guide-card.tsx';
 import { LESSONS, lessonOf } from './lessons/index.ts';
 import { findAnchor, firstOf, openedDialog } from './anchor.ts';
 import { errorsOf } from './find.ts';
@@ -66,7 +66,7 @@ const SOLVE_READY: Record<string, () => void> = {
   other: () => { takePiece('sr-tracks'); dropField('wound_mod'); },
 };
 
-const SOLVE: Record<string, Record<string, () => void>> = {
+const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
   ready: SOLVE_READY,
   'first-system': {
     block: () => { edit(d => { (d.blocks ??= []).push({ name: 'Бой', parts: [] }); }); pick({ activeBlock: 'Бой' }); },
@@ -94,7 +94,11 @@ const SOLVE: Record<string, Record<string, () => void>> = {
   },
   tables: {
     table: () => edit(d => { d.tables!.таблица = { label: 'Характеристики', key: 'word', rows: [{ value: '' }] } as never; }),
-    rows: () => edit(d => { d.tables!.таблица!.rows = [{ value: 'сила' }, { value: 'ловкость' }]; }),
+    rows: [
+      () => edit(d => { d.tables!.таблица!.rows = [{ value: 'сила' }]; }),
+      () => edit(d => { d.tables!.таблица!.rows = [{ value: 'сила' }, { value: '' }]; }),
+      () => edit(d => { d.tables!.таблица!.rows = [{ value: 'сила' }, { value: 'ловкость' }]; }),
+    ],
     value: () => edit(d => { d.tables!.таблица!.columns = [{ key: 'колонка', label: 'Значение', kind: 'number' }]; }),
     modifier: () => edit(d => {
       const columns = d.tables!.таблица!.columns!.filter(c => c.key !== 'колонка_2');
@@ -215,13 +219,21 @@ describe('уроки конструктора', () => {
         act(() => { useGuide.getState().go(index); });
         if (step.tab) pick({ activeTab: step.tab });
         openAll();
-        for (let k = 0; k < 4 && step.at && !findAnchor(step.at) && step.via; k++) {
-          const via = firstOf(step.via);
-          expect(via, `${lesson.id}/${step.id}: нет «${JSON.stringify(step.via)}»`).not.toBeNull();
-          press(via!);
+        const solve = SOLVE[lesson.id]?.[step.id];
+        const parts = Array.isArray(solve) ? solve : [];
+        for (const [at, move] of movesOf(step).entries()) {
+          expect(moveAt(step, view!), `${lesson.id}/${step.id}: ход ${at + 1} — рамка не на нём`).toBe(at);
+          for (let k = 0; k < 4 && !findAnchor(move.at) && step.via; k++) {
+            const via = firstOf(step.via);
+            expect(via, `${lesson.id}/${step.id}: нет «${JSON.stringify(step.via)}»`).not.toBeNull();
+            press(via!);
+          }
+          expect(findAnchor(move.at), `${lesson.id}/${step.id}: ход ${at + 1}, нет якоря ${JSON.stringify(move.at)}`).not.toBeNull();
+          parts[at]?.();
+          openAll();
+          if (move.done) expect(move.done(view!), `${lesson.id}/${step.id}: ход ${at + 1} не засчитан`).toBe(true);
         }
-        if (step.at) expect(findAnchor(step.at), `${lesson.id}/${step.id}: нет якоря ${JSON.stringify(step.at)}`).not.toBeNull();
-        SOLVE[lesson.id]?.[step.id]?.();
+        if (typeof solve === 'function') solve();
         openAll();
         if (step.done) expect(step.done(view!), `${lesson.id}/${step.id}: решение не засчитано ${problemsOf()}`).toBe(true);
       }
@@ -348,7 +360,7 @@ describe('уроки конструктора', () => {
     await start('first-system');
     expect(at()).toBe('heal');
     expect(useWorld.getState().system.effects.удар).toEqual(seed.effects.удар);
-    SOLVE['first-system']!.heal!();
+    (SOLVE['first-system']!.heal as () => void)();
     await settleCard();
     expect(cardText()).toContain('«Лечение»: +3 хита своему листу');
     await act(async () => { fireEvent.click(within(card()).button('Завершить урок')); });

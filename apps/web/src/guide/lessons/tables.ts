@@ -65,7 +65,11 @@ export const tables: Lesson = {
       chapter: 'Справочник',
       tab: 'dictionaries',
       say: 'В пустую строку впишите «сила», затем «+ строка» — «ловкость».',
-      at: { text: '+ строка' },
+      at: [
+        { at: { input: 'слово' }, done: view => (stats(view)?.[1].rows ?? []).some(row => same(row.value, 'сила')) },
+        { at: { text: '+ строка' }, done: view => (stats(view)?.[1].rows ?? []).length > 1 },
+        { at: { input: 'слово' } },
+      ],
       via: { text: 'Характеристики' },
       done: view => {
         const rows = (stats(view)?.[1].rows ?? []).map(row => row.value);

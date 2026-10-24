@@ -41,6 +41,12 @@ export function findAnchor(anchor: Anchor | undefined, root: ParentNode = docume
   if ('field' in anchor) {
     return [...root.querySelectorAll<HTMLElement>('[data-field]')].find(el => el.dataset.field === anchor.field && shown(el)) ?? null;
   }
+  if ('input' in anchor) {
+    const fields = [...root.querySelectorAll<HTMLInputElement>('input[placeholder], textarea[placeholder]')]
+      .filter(el => shown(el) && same(el.getAttribute('placeholder'), anchor.input));
+    const focused = fields.find(el => el === document.activeElement);
+    return focused ?? fields.find(el => !el.value) ?? fields[0] ?? null;
+  }
   if ('guide' in anchor) {
     return [...root.querySelectorAll<HTMLElement>('[data-guide]')].find(el => el.dataset.guide === anchor.guide && shown(el)) ?? null;
   }
