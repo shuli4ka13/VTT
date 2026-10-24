@@ -46,7 +46,11 @@ export const ready: Lesson = {
       tab: 'sheet',
       say: 'Уберите лишнее: щёлкните на листе поле «Вдохновение» и нажмите «Удалить», затем «точно убрать».',
       hint: 'Если у поля «Удалить» серая — им кто-то пользуется, его не убрать. «Вдохновение» свободно. «Харизму» убирать не стоит: на неё ссылаются классы.',
-      at: { text: 'Вдохновение' },
+      at: [
+        { at: { text: 'Вдохновение' }, done: view => { const tag = fieldBy(view.system, 'Вдохновение')?.tag; return Boolean(tag) && view.field === tag; } },
+        { at: { text: 'Удалить' } },
+      ],
+      via: { text: 'точно убрать' },
       done: view => Boolean(stats(view)) && Boolean(fieldBy(view.system, 'Класс')) && !fieldBy(view.system, 'Вдохновение'),
       traps: [{
         when: view => Boolean(stats(view)) && !hasRow(view, 'харизма') && errorsOf(view.system) > 0,

@@ -10,7 +10,8 @@ const CLICKABLE = 'button, [role="button"], [role="tab"], a, summary, select, la
 
 const textOf = (el: Element): string => {
   if (el instanceof HTMLSelectElement) return el.options[el.selectedIndex]?.text ?? '';
-  return (el.textContent ?? '').replace(/\s+/g, ' ');
+  const spoken = [...el.querySelectorAll('[aria-hidden]')].reduce((text, mark) => text.replace(mark.textContent ?? '', ''), el.textContent ?? '');
+  return spoken.replace(/\s+/g, ' ');
 };
 
 export function shown(el: Element): boolean {

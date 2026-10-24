@@ -17,6 +17,8 @@ const skills = (view: View) => {
   return found && found[1].shape !== 'book' && found[1].shape !== 'single' ? found : undefined;
 };
 
+const dicts = (view: View) => Object.values(view.system.tables ?? {}).filter(table => table.shape !== 'book' && table.shape !== 'single');
+
 const parses = (text: string): boolean => {
   try { compile(text); return true; } catch { return false; }
 };
@@ -55,7 +57,10 @@ export const tables: Lesson = {
       panel: 'Разделы правил',
       say: 'В разделе «Таблицы» нажмите «+ таблица» и назовите её «Характеристики» в шапке таблицы.',
       hint: FORMULA_HINT,
-      at: { text: '+ таблица' },
+      at: [
+        { at: { text: '+ таблица' }, done: view => dicts(view).length > 0 },
+        { at: { input: 'как зовётся таблица' } },
+      ],
       via: { text: 'Таблицы', in: 'Разделы правил' },
       done: view => Boolean(stats(view)),
       result: () => 'Таблица «Характеристики» заведена.',
@@ -82,7 +87,10 @@ export const tables: Lesson = {
       chapter: 'Справочник',
       tab: 'dictionaries',
       say: 'Нажмите «+» в шапке таблицы и назовите колонку «Значение», тип — «число».',
-      at: { guide: 'add-column' },
+      at: [
+        { at: { guide: 'add-column' }, done: view => (stats(view)?.[1].columns ?? []).length > 0 },
+        { at: { input: 'как зовётся колонка' } },
+      ],
       done: view => columnBy(stats(view)?.[1], 'Значение')?.kind === 'number',
       result: () => 'Колонка «Значение» — число.',
     },
@@ -93,7 +101,11 @@ export const tables: Lesson = {
       tab: 'dictionaries',
       say: 'Ещё колонка — «Модификатор»: (значение − 10) / 2 с округлением вниз. В «Формула для всех строк» нажмите кнопку «округлить вниз» над строкой формул, внутри её скобок наберите «(», затем «@» и выберите «Значение» в подсказке, затем « - 10) / 2».',
       hint: FORMULA_HINT,
-      at: { guide: 'add-column' },
+      at: [
+        { at: { guide: 'add-column' }, done: view => (stats(view)?.[1].columns ?? []).length > 1 },
+        { at: { input: 'как зовётся колонка' }, done: view => Boolean(columnBy(stats(view)?.[1], 'Модификатор')) },
+        { at: { text: 'Формула для всех строк' } },
+      ],
       done: view => {
         const table = stats(view)?.[1];
         const value = columnBy(table, 'Значение');
@@ -111,7 +123,11 @@ export const tables: Lesson = {
       chapter: 'На листе',
       tab: 'sheet',
       say: 'На листе в «блоки и типы листов» «+ блок» «Характеристики», слева «+ поля из таблицы…» → «Характеристики · справочник» → «Да, своими у каждого листа».',
-      at: { text: '+ блок', in: 'Листы' },
+      at: [
+        { at: { text: '+ блок', in: 'Листы' }, done: view => (view.system.blocks ?? []).length > 1 },
+        { at: { input: 'как зовётся блок' }, done: view => (view.system.blocks ?? []).some(block => same(block.name, 'Характеристики')) },
+        { at: { text: '+ поля из таблицы…' } },
+      ],
       via: { text: 'блоки и типы листов' },
       done: view => {
         const found = stats(view);
@@ -159,7 +175,11 @@ export const tables: Lesson = {
       tab: 'dictionaries',
       panel: 'Разделы правил',
       say: 'В разделе «Таблицы» нажмите «+ таблица», назовите её «Навыки» и впишите в пустую строку «атлетика».',
-      at: { text: '+ таблица' },
+      at: [
+        { at: { text: '+ таблица' }, done: view => dicts(view).length > 1 },
+        { at: { input: 'как зовётся таблица' }, done: view => Boolean(skills(view)) },
+        { at: { input: 'слово' } },
+      ],
       via: { text: 'Таблицы', in: 'Разделы правил' },
       done: view => (skills(view)?.[1].rows ?? []).some(row => same(row.value, 'атлетика')),
       result: () => 'Таблица «Навыки»: строка «атлетика».',
@@ -170,7 +190,11 @@ export const tables: Lesson = {
       tab: 'dictionaries',
       say: 'Нажмите «+» в шапке таблицы «Навыки» и назовите колонку «Характеристика»; в «Тип» выберите «из таблицы», а в появившемся «Из таблицы» — «Характеристики».',
       hint: 'Если «Из таблицы» оставить пустым, выбирать будет не из чего.',
-      at: { guide: 'add-column' },
+      at: [
+        { at: { guide: 'add-column' }, done: view => (skills(view)?.[1].columns ?? []).length > 0 },
+        { at: { input: 'как зовётся колонка' }, done: view => Boolean(columnBy(skills(view)?.[1], 'Характеристика')) },
+        { at: { text: 'Тип' } },
+      ],
       done: view => {
         const column = columnBy(skills(view)?.[1], 'Характеристика');
         const source = stats(view);
@@ -205,7 +229,11 @@ export const tables: Lesson = {
       tab: 'dictionaries',
       say: 'Ещё колонка «Значение»: в «Формула для всех строк» наберите «@» и выберите в подсказке «Характеристика · Модификатор» — модификатор характеристики, которая стоит в этой строке.',
       hint: FORMULA_HINT,
-      at: { guide: 'add-column' },
+      at: [
+        { at: { guide: 'add-column' }, done: view => (skills(view)?.[1].columns ?? []).length > 1 },
+        { at: { input: 'как зовётся колонка' }, done: view => Boolean(columnBy(skills(view)?.[1], 'Значение')) },
+        { at: { text: 'Формула для всех строк' } },
+      ],
       done: view => {
         const table = skills(view)?.[1];
         const link = columnBy(table, 'Характеристика');

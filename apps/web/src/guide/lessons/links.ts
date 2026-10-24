@@ -1,6 +1,6 @@
 import type { System, Param, Effect } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
-import { effectBy, fieldBy, stepsOf, reads, armOf, errorsOf } from '../find.ts';
+import { effectBy, fieldBy, stepsOf, reads, armOf, errorsOf, same } from '../find.ts';
 import { problemsClean } from './first-system.ts';
 import base from '../seeds/base.json' with { type: 'json' };
 
@@ -42,7 +42,14 @@ export const links: Lesson = {
       panel: 'Библиотека эффектов',
       say: 'Нажмите «+ шаг для других» и назовите эффект «Урон». Входы «Лист» и «Сколько» уже стоят.',
       hint: 'Без входа «Сколько» и без вызывающих «Урон» перестаёт быть шагом для других.',
-      at: { text: '+ шаг для других', in: 'Библиотека эффектов' },
+      at: [
+        {
+          at: { text: '+ шаг для других', in: 'Библиотека эффектов' },
+          done: view => Object.values(view.system.effects ?? {}).some(effect =>
+            !same(effect.label, 'Удар') && (effect.params ?? []).some(param => param.role === 'amount')),
+        },
+        { at: { input: 'как зовётся эффект' } },
+      ],
       done: view => Boolean(amountParam(view)),
       result: () => '«Урон» заведён; «Сколько» — величина.',
     },
@@ -77,7 +84,10 @@ export const links: Lesson = {
       chapter: 'Функция',
       tab: 'effects',
       say: 'Нажмите «+ итог»: «Осталось», число, «Откуда» → «формулой…» — «@лист.» и «Хиты» из подсказки.',
-      at: { text: '+ итог' },
+      at: [
+        { at: { text: '+ итог' }, done: view => (damage(view)?.[1].returns ?? []).length > 0 },
+        { at: { text: 'Откуда' } },
+      ],
       done: view => (damage(view)?.[1].returns ?? []).some(column => column.kind === 'number' && Boolean(column.expr)),
       result: () => 'Итог «Осталось» — хиты листа после урона.',
     },
@@ -88,7 +98,10 @@ export const links: Lesson = {
       panel: 'Библиотека эффектов',
       say: 'В «Ударе», в ветке «успех», «+ шаг» → «вызов» → «Какой эффект» → «Урон»; в красном «Сколько» впишите 5.',
       hint: '«Лист» заполнится сам — это цель. «как устроено →» в шаге вызова открывает саму функцию.',
-      at: { text: '+ шаг' },
+      at: [
+        { at: { text: '+ шаг' }, done: view => stepsOf(strike(view)?.[1]).some(step => step.type === 'emit') },
+        { at: { text: 'Какой эффект' } },
+      ],
       via: { text: 'Удар', in: 'Библиотека эффектов' },
       done: view => {
         const amount = amountParam(view)?.key;

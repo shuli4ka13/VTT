@@ -35,7 +35,10 @@ export const items: Lesson = {
       tab: 'records',
       panel: 'книги',
       say: 'Нажмите «+ тип» и назовите его «Оружие»; «Чем является» — вещь.',
-      at: { text: '+ тип' },
+      at: [
+        { at: { text: '+ тип' }, done: view => Object.values(view.system.tables ?? {}).some(table => table.shape === 'book') },
+        { at: { input: 'как зовётся тип' } },
+      ],
       done: view => Boolean(weapon(view)) && (weapon(view)?.[1].use ?? 'item') === 'item',
       result: () => 'Тип «Оружие» — вещь.',
     },
@@ -46,7 +49,11 @@ export const items: Lesson = {
       panel: 'Библиотека эффектов',
       say: 'В «Ударе» в «Что приходит» «+ ещё одно»: «Урон оружия», число; в «Сколько» у «Изменения» — «@» и «Урон оружия» из подсказки.',
       hint: '«Удара» не видно в библиотеке? Он в группе «Без блока» — раскройте её. «Изменение» свёрнуто — щёлкните его имя. «Проблемы» сейчас скажут, что вход никто не передаёт, — это до шага с кнопкой.',
-      at: { text: '+ ещё одно' },
+      at: [
+        { at: { text: '+ ещё одно' }, done: view => (strike(view)?.[1].params ?? []).length > 2 },
+        { at: { text: 'Название' }, done: view => Boolean(weaponParam(view)) },
+        { at: { text: 'Сколько' } },
+      ],
       via: { text: 'Удар', in: 'Библиотека эффектов' },
       done: view => {
         const param = weaponParam(view);
@@ -81,7 +88,10 @@ export const items: Lesson = {
       panel: 'книги',
       say: 'В «Оружии», в «Кнопки на листе», «+ кнопка» и в «Вызывает эффект» — «Удар».',
       hint: 'Висящие эффекты в «Вызывает эффект» не показаны. Свойство, названное как вход эффекта, попадает во вход само.',
-      at: { text: '+ кнопка' },
+      at: [
+        { at: { text: '+ кнопка' }, done: view => (weapon(view)?.[1].bindings ?? []).length > 0 },
+        { at: { text: 'Вызывает эффект' } },
+      ],
       via: { text: 'Оружие', in: 'книги' },
       done: view => {
         const found = strike(view);
@@ -99,7 +109,10 @@ export const items: Lesson = {
       lead: 'Под кнопкой — все входы «Удара»: «Кто действует» — кто нажал, «Цели» — выбранные за столом, «Урон оружия» — свойство записи.',
       tab: 'records',
       say: 'В «Что правит каждая вещь этого типа» нажмите «+ правит поле»: «Класс брони» +1.',
-      at: { text: '+ правит поле' },
+      at: [
+        { at: { text: '+ правит поле' }, done: view => (weapon(view)?.[1].modifiers ?? []).length > 0 },
+        { at: { text: 'Что правим' } },
+      ],
       done: view => editsArmor(view, 'Оружие'),
       result: () => 'Пока оружие у владельца — класс брони +1.',
     },

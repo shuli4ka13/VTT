@@ -1,11 +1,14 @@
 import { emptySystem } from '../../store/world.ts';
 import { TABS } from '../../words.ts';
 import type { Lesson, View } from '../types.ts';
+import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { fieldBy, inBlock, columnOf, effectBy, stepsOf, reads, armOf, numberOf, errorsOf, exprOf } from '../find.ts';
 
 const hp = (view: View) => fieldBy(view.system, 'Хиты');
 const ac = (view: View) => fieldBy(view.system, 'Класс брони');
 const strike = (view: View) => effectBy(view.system, 'Удар');
+
+const inFight = (view: View) => fieldsOf(view.system).filter(field => !field.cell && inBlock(field, 'Бой'));
 
 const checkAt = (view: View): number => stepsOf(strike(view)?.[1]).findIndex(step => step.type === 'check');
 
@@ -46,7 +49,10 @@ export const firstSystem: Lesson = {
       lead: `Система — правила вашей игры. Соберём героя с хитами и классом брони и «Удар», который при попадании снимает цели 5 хитов. Наверху вкладки: «${TABS.sheet}», «${TABS.rules}», «${TABS.effects}», «${TABS.records}». «Опубликовать» в уроке выключена: учебная копия никуда не сохраняется.`,
       tab: 'sheet',
       say: 'В виде «блоки и типы листов» нажмите «+ блок» и слева впишите имя блока: «Бой», затем Enter. Так же сохраняются и другие имена.',
-      at: { text: '+ блок', in: 'Листы' },
+      at: [
+        { at: { text: '+ блок', in: 'Листы' }, done: view => (view.system.blocks ?? []).length > 0 },
+        { at: { input: 'как зовётся блок' } },
+      ],
       via: { text: 'блоки и типы листов' },
       done: view => (view.system.blocks ?? []).some(block => block.name.trim() === 'Бой'),
       result: () => 'Блок «Бой» на листе.',
@@ -57,7 +63,10 @@ export const firstSystem: Lesson = {
       tab: 'sheet',
       say: 'В блоке «Бой» нажмите «+ колонка» и назовите поле «Хиты».',
       hint: 'Блок свернулся? Щёлкните его имя «Бой» — он раскроется. Кнопка «+ колонка» нужна та, что внутри блока.',
-      at: { text: '+ колонка', in: 'Листы' },
+      at: [
+        { at: { text: '+ колонка', in: 'Листы' }, done: view => inFight(view).length > 0 },
+        { at: { input: 'как зовётся колонка' } },
+      ],
       via: [{ text: 'Бой', in: 'Листы' }, { text: 'блоки и типы листов' }],
       done: view => inBlock(hp(view), 'Бой'),
       result: () => '«Хиты» стоят в блоке «Бой».',
@@ -90,7 +99,10 @@ export const firstSystem: Lesson = {
       tab: 'sheet',
       say: 'Ещё одно поле в блоке «Бой»: «Класс брони», в новом листе 12.',
       hint: 'После «+ колонка» блок сворачивается — щёлкните его имя, и кнопка снова видна.',
-      at: { text: '+ колонка', in: 'Листы' },
+      at: [
+        { at: { text: '+ колонка', in: 'Листы' }, done: view => inFight(view).length > 1 },
+        { at: { input: 'как зовётся колонка' } },
+      ],
       via: [{ text: 'Бой', in: 'Листы' }, { text: 'блоки и типы листов' }],
       done: view => inBlock(ac(view), 'Бой') && numberOf(columnOf(view.system, ac(view))?.default) === 12,
       result: () => 'Класс брони: в новом листе 12.',
@@ -102,7 +114,10 @@ export const firstSystem: Lesson = {
       panel: 'Разделы правил',
       say: 'В разделе «Кости» нажмите «+ кость» и назовите её «Кость проверки»; граней 20 — так и оставьте.',
       hint: 'Кость нужна до проверки: проверка при создании берёт первую кость системы.',
-      at: { text: '+ кость' },
+      at: [
+        { at: { text: '+ кость' }, done: view => Object.values(view.system.constants ?? {}).some(constant => constant.kind === 'die') },
+        { at: { input: 'название кости' } },
+      ],
       via: { text: 'Кости', in: 'Разделы правил' },
       done: view => Object.values(view.system.constants ?? {}).some(constant =>
         constant.kind === 'die' && constant.label?.trim() === 'Кость проверки' && constant.dice?.[0]?.sides === 20),
@@ -115,7 +130,10 @@ export const firstSystem: Lesson = {
       tab: 'effects',
       panel: 'Библиотека эффектов',
       say: 'Нажмите «+ кнопкой» и назовите эффект «Удар».',
-      at: { text: '+ кнопкой', in: 'Библиотека эффектов' },
+      at: [
+        { at: { text: '+ кнопкой', in: 'Библиотека эффектов' }, done: view => Object.keys(view.system.effects ?? {}).length > 0 },
+        { at: { input: 'как зовётся эффект' } },
+      ],
       done: view => Boolean(strike(view)),
       result: () => 'Эффект «Удар» заведён.',
     },
@@ -140,7 +158,10 @@ export const firstSystem: Lesson = {
       tab: 'effects',
       say: 'Поставьте проверку и в её формуле вместо 10 наберите «@цель.» и выберите «Класс брони» из подсказки.',
       hint: 'Формула открывается строкой наверху: «готово» или Enter сохраняет. Подпись поля руками не набирайте — выбирайте из подсказки.',
-      at: { text: '+ проверка' },
+      at: [
+        { at: { text: '+ проверка' }, done: view => checkAt(view) >= 0 },
+        { at: { text: 'Проверка' } },
+      ],
       done: view => {
         const key = ac(view)?.tag;
         return Boolean(key && stepsOf(strike(view)?.[1]).some(step => step.type === 'check' && reads(step.versus, `@цель.${key}`)));
@@ -164,7 +185,17 @@ export const firstSystem: Lesson = {
       tab: 'effects',
       say: 'В ветке «успех» выберите «+ шаг» → «изменение»: у кого «Цель», поле «Хиты», отнять 5.',
       hint: 'У «Изменения» первым выбран «Кто действует» — сначала поставьте «У кого → Цель».',
-      at: { text: '+ шаг' },
+      at: [
+        { at: { text: '+ шаг' }, done: view => armApplies(view).length > 0 },
+        {
+          at: { text: 'У кого' },
+          done: view => {
+            const key = hp(view)?.tag;
+            return Boolean(key && armApplies(view).some(step => reads(step.target, `@цель.${key}`)));
+          },
+        },
+        { at: { text: 'Сколько' } },
+      ],
       done: view => {
         const key = hp(view)?.tag;
         return Boolean(key && armApplies(view).some(step =>
