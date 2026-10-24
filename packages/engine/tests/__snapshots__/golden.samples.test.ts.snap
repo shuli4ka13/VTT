@@ -21926,6 +21926,84 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · ic_strike
       },
     },
   },
+  "→ koshka · high · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "matrix_damage": 9,
+      },
+    },
+  },
+  "→ koshka · high · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "matrix_damage": 9,
+      },
+    },
+  },
+  "→ koshka · low · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ koshka · low · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "matrix_damage": 4,
+      },
+    },
+  },
+  "→ koshka · walk · бой": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
+  "→ koshka · walk · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "edge_gained": 1,
+        "edge_left": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "matrix_damage": 6,
+      },
+    },
+  },
   "→ lone_star · high · бой": {
     "baraholka_killer": {
       "values": {
@@ -22369,6 +22447,12 @@ exports[`итоги действий: shadowrun6 > drone_doberman · veh_drive:0
   "→ humanis · low · вне боя": {},
   "→ humanis · walk · бой": {},
   "→ humanis · walk · вне боя": {},
+  "→ koshka · high · бой": {},
+  "→ koshka · high · вне боя": {},
+  "→ koshka · low · бой": {},
+  "→ koshka · low · вне боя": {},
+  "→ koshka · walk · бой": {},
+  "→ koshka · walk · вне боя": {},
   "→ lone_star · high · бой": {},
   "→ lone_star · high · вне боя": {},
   "→ lone_star · low · бой": {},
@@ -22452,6 +22536,12 @@ exports[`итоги действий: shadowrun6 > hammer · act_second_wind:0 1
   "→ humanis · low · вне боя": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
   "→ humanis · walk · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
   "→ humanis · walk · вне боя": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ koshka · high · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ koshka · high · вне боя": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ koshka · low · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ koshka · low · вне боя": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ koshka · walk · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
+  "→ koshka · walk · вне боя": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
   "→ lone_star · high · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
   "→ lone_star · high · вне боя": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
   "→ lone_star · low · бой": "EngineError: «Второе дыхание (3 Преимущества)» не состоялось: нужно 3 очк. Преимущества",
@@ -22535,6 +22625,12 @@ exports[`итоги действий: shadowrun6 > hammer · ak_97:0 1`] = `
   "→ humanis · low · вне боя": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
   "→ humanis · walk · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
   "→ humanis · walk · вне боя": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · high · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · high · вне боя": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · low · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · low · вне боя": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · walk · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · walk · вне боя": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · high · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · high · вне боя": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · low · бой": "EngineError: стоимость действия «АК-97 · Атаковать»: параметр «дистанция» не заполнен",
@@ -22618,6 +22714,12 @@ exports[`итоги действий: shadowrun6 > hammer · ak_97:1 1`] = `
   "→ humanis · low · вне боя": {},
   "→ humanis · walk · бой": {},
   "→ humanis · walk · вне боя": {},
+  "→ koshka · high · бой": {},
+  "→ koshka · high · вне боя": {},
+  "→ koshka · low · бой": {},
+  "→ koshka · low · вне боя": {},
+  "→ koshka · walk · бой": {},
+  "→ koshka · walk · вне боя": {},
   "→ lone_star · high · бой": {},
   "→ lone_star · high · вне боя": {},
   "→ lone_star · low · бой": {},
@@ -22648,6 +22750,3274 @@ exports[`итоги действий: shadowrun6 > hammer · ak_97:1 1`] = `
   "→ silk · low · вне боя": {},
   "→ silk · walk · бой": {},
   "→ silk · walk · вне боя": {},
+}
+`;
+
+exports[`итоги действий: shadowrun6 > koshka · act_second_wind:0 1`] = `
+{
+  "→ baraholka · high · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka · high · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka · low · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka · low · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka · walk · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka_killer · high · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka_killer · high · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka_killer · low · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka_killer · low · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ drone_doberman · high · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ drone_doberman · high · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ drone_doberman · low · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ drone_doberman · low · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ drone_doberman · walk · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ drone_doberman · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ fiveeyes · high · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ fiveeyes · high · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ fiveeyes · low · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ fiveeyes · low · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ fiveeyes · walk · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ fiveeyes · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ fiveeyes_2 · high · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ fiveeyes_2 · high · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ fiveeyes_2 · low · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ fiveeyes_2 · low · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ fiveeyes_2 · walk · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ fiveeyes_2 · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ fiveeyes_squad · high · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ fiveeyes_squad · high · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ fiveeyes_squad · low · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ fiveeyes_squad · low · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ fiveeyes_squad · walk · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ fiveeyes_squad · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ hammer · high · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ hammer · high · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ hammer · low · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ hammer · low · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ hammer · walk · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ hammer · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ humanis · high · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ humanis · high · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ humanis · low · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ humanis · low · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ humanis · walk · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ humanis · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ koshka · high · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ koshka · high · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ koshka · low · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ koshka · low · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ koshka · walk · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ koshka · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ lone_star · high · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ lone_star · high · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ lone_star · low · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ lone_star · low · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ lone_star · walk · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ lone_star · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ mafia · high · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ mafia · high · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ mafia · low · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ mafia · low · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ mafia · walk · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ mafia · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ razor · high · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ razor · high · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ razor · low · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ razor · low · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ razor · walk · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ razor · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ sauron · high · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ sauron · high · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ sauron · low · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ sauron · low · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ sauron · walk · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ sauron · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ silk · high · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ silk · high · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ silk · low · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ silk · low · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ silk · walk · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+  "→ silk · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 4,
+      },
+    },
+  },
+}
+`;
+
+exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] = `
+{
+  "→ baraholka · high · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · high · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · low · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka · walk · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · high · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · low · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ baraholka_killer · walk · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · high · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · low · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ drone_doberman · walk · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ fiveeyes · high · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ fiveeyes · high · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ fiveeyes · low · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ fiveeyes · low · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ fiveeyes · walk · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ fiveeyes · walk · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ fiveeyes_2 · high · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ fiveeyes_2 · high · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ fiveeyes_2 · low · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ fiveeyes_2 · low · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ fiveeyes_2 · walk · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ fiveeyes_2 · walk · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ fiveeyes_squad · high · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ fiveeyes_squad · high · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ fiveeyes_squad · low · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ fiveeyes_squad · low · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ fiveeyes_squad · walk · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ fiveeyes_squad · walk · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ hammer · high · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ hammer · high · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ hammer · low · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ hammer · low · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ hammer · walk · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ hammer · walk · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ humanis · high · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ humanis · high · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ humanis · low · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ humanis · low · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ humanis · walk · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ humanis · walk · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · high · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · high · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · low · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · low · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · walk · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · walk · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ lone_star · high · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ lone_star · high · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ lone_star · low · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ lone_star · low · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ lone_star · walk · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ lone_star · walk · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ mafia · high · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ mafia · high · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ mafia · low · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ mafia · low · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ mafia · walk · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ mafia · walk · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ razor · high · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ razor · high · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ razor · low · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ razor · low · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ razor · walk · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ razor · walk · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ sauron · high · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ sauron · high · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ sauron · low · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ sauron · low · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ sauron · walk · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ sauron · walk · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ silk · high · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ silk · high · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ silk · low · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ silk · low · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ silk · walk · бой": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+  "→ silk · walk · вне боя": "EngineError: стоимость действия «Боевой нож · Атаковать»: параметр «дистанция» не заполнен",
+}
+`;
+
+exports[`итоги действий: shadowrun6 > koshka · combat_knife:1 1`] = `
+{
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {},
+  "→ baraholka · low · вне боя": {},
+  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · вне боя": {},
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · вне боя": {},
+  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · вне боя": {},
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · вне боя": {},
+  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · вне боя": {},
+  "→ fiveeyes · high · бой": {},
+  "→ fiveeyes · high · вне боя": {},
+  "→ fiveeyes · low · бой": {},
+  "→ fiveeyes · low · вне боя": {},
+  "→ fiveeyes · walk · бой": {},
+  "→ fiveeyes · walk · вне боя": {},
+  "→ fiveeyes_2 · high · бой": {},
+  "→ fiveeyes_2 · high · вне боя": {},
+  "→ fiveeyes_2 · low · бой": {},
+  "→ fiveeyes_2 · low · вне боя": {},
+  "→ fiveeyes_2 · walk · бой": {},
+  "→ fiveeyes_2 · walk · вне боя": {},
+  "→ fiveeyes_squad · high · бой": {},
+  "→ fiveeyes_squad · high · вне боя": {},
+  "→ fiveeyes_squad · low · бой": {},
+  "→ fiveeyes_squad · low · вне боя": {},
+  "→ fiveeyes_squad · walk · бой": {},
+  "→ fiveeyes_squad · walk · вне боя": {},
+  "→ hammer · high · бой": {},
+  "→ hammer · high · вне боя": {},
+  "→ hammer · low · бой": {},
+  "→ hammer · low · вне боя": {},
+  "→ hammer · walk · бой": {},
+  "→ hammer · walk · вне боя": {},
+  "→ humanis · high · бой": {},
+  "→ humanis · high · вне боя": {},
+  "→ humanis · low · бой": {},
+  "→ humanis · low · вне боя": {},
+  "→ humanis · walk · бой": {},
+  "→ humanis · walk · вне боя": {},
+  "→ koshka · high · бой": {},
+  "→ koshka · high · вне боя": {},
+  "→ koshka · low · бой": {},
+  "→ koshka · low · вне боя": {},
+  "→ koshka · walk · бой": {},
+  "→ koshka · walk · вне боя": {},
+  "→ lone_star · high · бой": {},
+  "→ lone_star · high · вне боя": {},
+  "→ lone_star · low · бой": {},
+  "→ lone_star · low · вне боя": {},
+  "→ lone_star · walk · бой": {},
+  "→ lone_star · walk · вне боя": {},
+  "→ mafia · high · бой": {},
+  "→ mafia · high · вне боя": {},
+  "→ mafia · low · бой": {},
+  "→ mafia · low · вне боя": {},
+  "→ mafia · walk · бой": {},
+  "→ mafia · walk · вне боя": {},
+  "→ razor · high · бой": {},
+  "→ razor · high · вне боя": {},
+  "→ razor · low · бой": {},
+  "→ razor · low · вне боя": {},
+  "→ razor · walk · бой": {},
+  "→ razor · walk · вне боя": {},
+  "→ sauron · high · бой": {},
+  "→ sauron · high · вне боя": {},
+  "→ sauron · low · бой": {},
+  "→ sauron · low · вне боя": {},
+  "→ sauron · walk · бой": {},
+  "→ sauron · walk · вне боя": {},
+  "→ silk · high · бой": {},
+  "→ silk · high · вне боя": {},
+  "→ silk · low · бой": {},
+  "→ silk · low · вне боя": {},
+  "→ silk · walk · бой": {},
+  "→ silk · walk · вне боя": {},
+}
+`;
+
+exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`] = `
+{
+  "→ baraholka · high · бой": {
+    "baraholka": {
+      "effects": [
+        {
+          "args": {
+            "level": 6,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ baraholka · high · вне боя": {
+    "baraholka": {
+      "effects": [
+        {
+          "args": {
+            "level": 6,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ baraholka · low · бой": {
+    "baraholka": {
+      "values": {
+        "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+  },
+  "→ baraholka · low · вне боя": {
+    "baraholka": {
+      "values": {
+        "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+  },
+  "→ baraholka · walk · бой": {
+    "baraholka": {
+      "effects": [
+        {
+          "args": {
+            "level": 2,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+  },
+  "→ baraholka · walk · вне боя": {
+    "baraholka": {
+      "effects": [
+        {
+          "args": {
+            "level": 2,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+  },
+  "→ baraholka_killer · high · бой": {
+    "baraholka_killer": {
+      "effects": [
+        {
+          "args": {
+            "level": 6,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ baraholka_killer · high · вне боя": {
+    "baraholka_killer": {
+      "effects": [
+        {
+          "args": {
+            "level": 6,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ baraholka_killer · low · бой": {
+    "baraholka_killer": {
+      "values": {
+        "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+  },
+  "→ baraholka_killer · low · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · бой": {
+    "baraholka_killer": {
+      "effects": [
+        {
+          "args": {
+            "level": 2,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · вне боя": {
+    "baraholka_killer": {
+      "effects": [
+        {
+          "args": {
+            "level": 2,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+  },
+  "→ drone_doberman · high · бой": {
+    "drone_doberman": {
+      "effects": [
+        {
+          "args": {
+            "level": 6,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ drone_doberman · high · вне боя": {
+    "drone_doberman": {
+      "effects": [
+        {
+          "args": {
+            "level": 6,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ drone_doberman · low · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+  },
+  "→ drone_doberman · low · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+  },
+  "→ drone_doberman · walk · бой": {
+    "drone_doberman": {
+      "effects": [
+        {
+          "args": {
+            "level": 2,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+  },
+  "→ drone_doberman · walk · вне боя": {
+    "drone_doberman": {
+      "effects": [
+        {
+          "args": {
+            "level": 2,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+  },
+  "→ fiveeyes · high · бой": {
+    "fiveeyes": {
+      "effects": [
+        {
+          "args": {
+            "level": 8,
+          },
+          "effectId": "burning",
+        },
+        {
+          "effectId": "bleeding",
+        },
+      ],
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 9,
+      },
+    },
+  },
+  "→ fiveeyes · high · вне боя": {
+    "fiveeyes": {
+      "effects": [
+        {
+          "args": {
+            "level": 8,
+          },
+          "effectId": "burning",
+        },
+        {
+          "effectId": "bleeding",
+        },
+      ],
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 9,
+      },
+    },
+  },
+  "→ fiveeyes · low · бой": {
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+  },
+  "→ fiveeyes · low · вне боя": {
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+  },
+  "→ fiveeyes · walk · бой": {
+    "fiveeyes": {
+      "effects": [
+        {
+          "args": {
+            "level": 3,
+          },
+          "effectId": "burning",
+        },
+      ],
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 5,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+  },
+  "→ fiveeyes · walk · вне боя": {
+    "fiveeyes": {
+      "effects": [
+        {
+          "args": {
+            "level": 3,
+          },
+          "effectId": "burning",
+        },
+      ],
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 5,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+  },
+  "→ fiveeyes_2 · high · бой": {
+    "fiveeyes_2": {
+      "effects": [
+        {
+          "args": {
+            "level": 8,
+          },
+          "effectId": "burning",
+        },
+        {
+          "effectId": "bleeding",
+        },
+      ],
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 9,
+      },
+    },
+  },
+  "→ fiveeyes_2 · high · вне боя": {
+    "fiveeyes_2": {
+      "effects": [
+        {
+          "args": {
+            "level": 8,
+          },
+          "effectId": "burning",
+        },
+        {
+          "effectId": "bleeding",
+        },
+      ],
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 9,
+      },
+    },
+  },
+  "→ fiveeyes_2 · low · бой": {
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+  },
+  "→ fiveeyes_2 · low · вне боя": {
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+  },
+  "→ fiveeyes_2 · walk · бой": {
+    "fiveeyes_2": {
+      "effects": [
+        {
+          "args": {
+            "level": 3,
+          },
+          "effectId": "burning",
+        },
+      ],
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 5,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+  },
+  "→ fiveeyes_2 · walk · вне боя": {
+    "fiveeyes_2": {
+      "effects": [
+        {
+          "args": {
+            "level": 3,
+          },
+          "effectId": "burning",
+        },
+      ],
+    },
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 5,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+  },
+  "→ fiveeyes_squad · high · бой": {
+    "fiveeyes_squad": {
+      "effects": [
+        {
+          "args": {
+            "level": 6,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ fiveeyes_squad · high · вне боя": {
+    "fiveeyes_squad": {
+      "effects": [
+        {
+          "args": {
+            "level": 6,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ fiveeyes_squad · low · бой": {
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+  },
+  "→ fiveeyes_squad · low · вне боя": {
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+  },
+  "→ fiveeyes_squad · walk · бой": {
+    "fiveeyes_squad": {
+      "effects": [
+        {
+          "args": {
+            "level": 2,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+  },
+  "→ fiveeyes_squad · walk · вне боя": {
+    "fiveeyes_squad": {
+      "effects": [
+        {
+          "args": {
+            "level": 2,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+  },
+  "→ hammer · high · бой": {
+    "hammer": {
+      "effects": [
+        {
+          "args": {
+            "level": 6,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ hammer · high · вне боя": {
+    "hammer": {
+      "effects": [
+        {
+          "args": {
+            "level": 6,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 1,
+      },
+    },
+  },
+  "→ hammer · low · бой": {
+    "hammer": {
+      "values": {
+        "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+  },
+  "→ hammer · low · вне боя": {
+    "hammer": {
+      "values": {
+        "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+  },
+  "→ hammer · walk · бой": {
+    "hammer": {
+      "effects": [
+        {
+          "args": {
+            "level": 2,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+  },
+  "→ hammer · walk · вне боя": {
+    "hammer": {
+      "effects": [
+        {
+          "args": {
+            "level": 2,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+  },
+  "→ humanis · high · бой": {
+    "humanis": {
+      "effects": [
+        {
+          "args": {
+            "level": 8,
+          },
+          "effectId": "burning",
+        },
+        {
+          "effectId": "bleeding",
+        },
+      ],
+      "values": {
+        "physical": 9,
+      },
+    },
+  },
+  "→ humanis · high · вне боя": {
+    "humanis": {
+      "effects": [
+        {
+          "args": {
+            "level": 8,
+          },
+          "effectId": "burning",
+        },
+        {
+          "effectId": "bleeding",
+        },
+      ],
+      "values": {
+        "physical": 9,
+      },
+    },
+  },
+  "→ humanis · low · бой": {
+    "humanis": {
+      "values": {
+        "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+  },
+  "→ humanis · low · вне боя": {
+    "humanis": {
+      "values": {
+        "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+  },
+  "→ humanis · walk · бой": {
+    "humanis": {
+      "effects": [
+        {
+          "args": {
+            "level": 3,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+  },
+  "→ humanis · walk · вне боя": {
+    "humanis": {
+      "effects": [
+        {
+          "args": {
+            "level": 3,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+  },
+  "→ koshka · high · бой": {
+    "koshka": {
+      "effects": [
+        {
+          "args": {
+            "level": 5,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+  },
+  "→ koshka · high · вне боя": {
+    "koshka": {
+      "effects": [
+        {
+          "args": {
+            "level": 5,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+  },
+  "→ koshka · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "physical": 3,
+        "stun": 6,
+      },
+    },
+  },
+  "→ koshka · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "physical": 3,
+        "stun": 6,
+      },
+    },
+  },
+  "→ koshka · walk · бой": {
+    "koshka": {
+      "effects": [
+        {
+          "args": {
+            "level": 2,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "drain_stun": 2,
+        "physical": 4,
+        "stun": 2,
+      },
+    },
+  },
+  "→ koshka · walk · вне боя": {
+    "koshka": {
+      "effects": [
+        {
+          "args": {
+            "level": 2,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "drain_stun": 2,
+        "physical": 4,
+        "stun": 2,
+      },
+    },
+  },
+  "→ lone_star · high · бой": {
+    "lone_star": {
+      "effects": [
+        {
+          "args": {
+            "level": 6,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ lone_star · high · вне боя": {
+    "lone_star": {
+      "effects": [
+        {
+          "args": {
+            "level": 6,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ lone_star · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ lone_star · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ lone_star · walk · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+    "lone_star": {
+      "effects": [
+        {
+          "args": {
+            "level": 2,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+  },
+  "→ lone_star · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+    "lone_star": {
+      "effects": [
+        {
+          "args": {
+            "level": 2,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+  },
+  "→ mafia · high · бой": {
+    "mafia": {
+      "effects": [
+        {
+          "args": {
+            "level": 8,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 8,
+      },
+    },
+  },
+  "→ mafia · high · вне боя": {
+    "mafia": {
+      "effects": [
+        {
+          "args": {
+            "level": 8,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 8,
+      },
+    },
+  },
+  "→ mafia · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+    "mafia": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ mafia · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+    "mafia": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ mafia · walk · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+    "mafia": {
+      "effects": [
+        {
+          "args": {
+            "level": 3,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+  },
+  "→ mafia · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+    "mafia": {
+      "effects": [
+        {
+          "args": {
+            "level": 3,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+  },
+  "→ razor · high · бой": {
+    "razor": {
+      "effects": [
+        {
+          "args": {
+            "level": 5,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ razor · high · вне боя": {
+    "razor": {
+      "effects": [
+        {
+          "args": {
+            "level": 5,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ razor · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+    "razor": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ razor · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+    "razor": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ razor · walk · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+    "razor": {
+      "effects": [
+        {
+          "args": {
+            "level": 2,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ razor · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+    "razor": {
+      "effects": [
+        {
+          "args": {
+            "level": 2,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ sauron · high · бой": {
+    "sauron": {
+      "effects": [
+        {
+          "args": {
+            "level": 8,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 8,
+      },
+    },
+  },
+  "→ sauron · high · вне боя": {
+    "sauron": {
+      "effects": [
+        {
+          "args": {
+            "level": 8,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 8,
+      },
+    },
+  },
+  "→ sauron · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+    "sauron": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ sauron · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+    "sauron": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ sauron · walk · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+    "sauron": {
+      "effects": [
+        {
+          "args": {
+            "level": 3,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+  },
+  "→ sauron · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+    "sauron": {
+      "effects": [
+        {
+          "args": {
+            "level": 3,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+  },
+  "→ silk · high · бой": {
+    "silk": {
+      "effects": [
+        {
+          "args": {
+            "level": 5,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ silk · high · вне боя": {
+    "silk": {
+      "effects": [
+        {
+          "args": {
+            "level": 5,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ silk · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+    "silk": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ silk · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 6,
+        "stun": 6,
+      },
+    },
+    "silk": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ silk · walk · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+    "silk": {
+      "effects": [
+        {
+          "args": {
+            "level": 2,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+  },
+  "→ silk · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 2,
+        "stun": 2,
+      },
+    },
+    "silk": {
+      "effects": [
+        {
+          "args": {
+            "level": 2,
+          },
+          "effectId": "burning",
+        },
+      ],
+      "values": {
+        "physical": 5,
+      },
+    },
+  },
+}
+`;
+
+exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = `
+{
+  "→ baraholka · high · бой": {},
+  "→ baraholka · high · вне боя": {},
+  "→ baraholka · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ baraholka · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ baraholka · walk · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ baraholka · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · вне боя": {},
+  "→ baraholka_killer · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ baraholka_killer · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · вне боя": {},
+  "→ drone_doberman · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ drone_doberman · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ drone_doberman · walk · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ drone_doberman · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ fiveeyes · high · бой": {},
+  "→ fiveeyes · high · вне боя": {},
+  "→ fiveeyes · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ fiveeyes · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ fiveeyes · walk · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ fiveeyes · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ fiveeyes_2 · high · бой": {},
+  "→ fiveeyes_2 · high · вне боя": {},
+  "→ fiveeyes_2 · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ fiveeyes_2 · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ fiveeyes_2 · walk · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ fiveeyes_2 · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ fiveeyes_squad · high · бой": {},
+  "→ fiveeyes_squad · high · вне боя": {},
+  "→ fiveeyes_squad · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ fiveeyes_squad · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ fiveeyes_squad · walk · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ fiveeyes_squad · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ hammer · high · бой": {},
+  "→ hammer · high · вне боя": {},
+  "→ hammer · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ hammer · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ hammer · walk · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ hammer · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ humanis · high · бой": {},
+  "→ humanis · high · вне боя": {},
+  "→ humanis · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ humanis · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ humanis · walk · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ humanis · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ koshka · high · бой": {},
+  "→ koshka · high · вне боя": {},
+  "→ koshka · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ koshka · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ koshka · walk · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ koshka · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ lone_star · high · бой": {},
+  "→ lone_star · high · вне боя": {},
+  "→ lone_star · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ lone_star · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ lone_star · walk · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ lone_star · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ mafia · high · бой": {},
+  "→ mafia · high · вне боя": {},
+  "→ mafia · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ mafia · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ mafia · walk · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ mafia · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ razor · high · бой": {},
+  "→ razor · high · вне боя": {},
+  "→ razor · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ razor · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ razor · walk · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ razor · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ sauron · high · бой": {},
+  "→ sauron · high · вне боя": {},
+  "→ sauron · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ sauron · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ sauron · walk · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ sauron · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ silk · high · бой": {},
+  "→ silk · high · вне боя": {},
+  "→ silk · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ silk · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 5,
+        "stun": 5,
+      },
+    },
+  },
+  "→ silk · walk · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+  "→ silk · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 1,
+        "stun": 1,
+      },
+    },
+  },
+}
+`;
+
+exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1`] = `
+{
+  "→ baraholka · high · бой": {
+    "baraholka": {
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ baraholka · high · вне боя": {
+    "baraholka": {
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ baraholka · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ baraholka · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ baraholka · walk · бой": {
+    "baraholka": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ baraholka · walk · вне боя": {
+    "baraholka": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ baraholka_killer · high · бой": {
+    "baraholka_killer": {
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ baraholka_killer · high · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ baraholka_killer · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ baraholka_killer · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · бой": {
+    "baraholka_killer": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ baraholka_killer · walk · вне боя": {
+    "baraholka_killer": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ drone_doberman · high · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ drone_doberman · high · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ drone_doberman · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ drone_doberman · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ drone_doberman · walk · бой": {
+    "drone_doberman": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ drone_doberman · walk · вне боя": {
+    "drone_doberman": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ fiveeyes · high · бой": {
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 8,
+      },
+    },
+  },
+  "→ fiveeyes · high · вне боя": {
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 8,
+      },
+    },
+  },
+  "→ fiveeyes · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ fiveeyes · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ fiveeyes · walk · бой": {
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ fiveeyes · walk · вне боя": {
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ fiveeyes_2 · high · бой": {
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 8,
+      },
+    },
+  },
+  "→ fiveeyes_2 · high · вне боя": {
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 8,
+      },
+    },
+  },
+  "→ fiveeyes_2 · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ fiveeyes_2 · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ fiveeyes_2 · walk · бой": {
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ fiveeyes_2 · walk · вне боя": {
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ fiveeyes_squad · high · бой": {
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ fiveeyes_squad · high · вне боя": {
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ fiveeyes_squad · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ fiveeyes_squad · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ fiveeyes_squad · walk · бой": {
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ fiveeyes_squad · walk · вне боя": {
+    "fiveeyes_squad": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ hammer · high · бой": {
+    "hammer": {
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ hammer · high · вне боя": {
+    "hammer": {
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ hammer · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ hammer · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ hammer · walk · бой": {
+    "hammer": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ hammer · walk · вне боя": {
+    "hammer": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ humanis · high · бой": {
+    "humanis": {
+      "values": {
+        "physical": 8,
+      },
+    },
+  },
+  "→ humanis · high · вне боя": {
+    "humanis": {
+      "values": {
+        "physical": 8,
+      },
+    },
+  },
+  "→ humanis · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ humanis · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ humanis · walk · бой": {
+    "humanis": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ humanis · walk · вне боя": {
+    "humanis": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ koshka · high · бой": {
+    "koshka": {
+      "values": {
+        "physical": 4,
+      },
+    },
+  },
+  "→ koshka · high · вне боя": {
+    "koshka": {
+      "values": {
+        "physical": 4,
+      },
+    },
+  },
+  "→ koshka · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ koshka · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ koshka · walk · бой": {
+    "koshka": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ koshka · walk · вне боя": {
+    "koshka": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ lone_star · high · бой": {
+    "lone_star": {
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ lone_star · high · вне боя": {
+    "lone_star": {
+      "values": {
+        "physical": 6,
+      },
+    },
+  },
+  "→ lone_star · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ lone_star · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ lone_star · walk · бой": {
+    "lone_star": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ lone_star · walk · вне боя": {
+    "lone_star": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ mafia · high · бой": {
+    "mafia": {
+      "values": {
+        "physical": 8,
+      },
+    },
+  },
+  "→ mafia · high · вне боя": {
+    "mafia": {
+      "values": {
+        "physical": 8,
+      },
+    },
+  },
+  "→ mafia · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ mafia · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ mafia · walk · бой": {
+    "mafia": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ mafia · walk · вне боя": {
+    "mafia": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ razor · high · бой": {
+    "razor": {
+      "values": {
+        "physical": 5,
+      },
+    },
+  },
+  "→ razor · high · вне боя": {
+    "razor": {
+      "values": {
+        "physical": 5,
+      },
+    },
+  },
+  "→ razor · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ razor · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ razor · walk · бой": {
+    "razor": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ razor · walk · вне боя": {
+    "razor": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ sauron · high · бой": {
+    "sauron": {
+      "values": {
+        "physical": 8,
+      },
+    },
+  },
+  "→ sauron · high · вне боя": {
+    "sauron": {
+      "values": {
+        "physical": 8,
+      },
+    },
+  },
+  "→ sauron · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ sauron · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ sauron · walk · бой": {
+    "sauron": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ sauron · walk · вне боя": {
+    "sauron": {
+      "values": {
+        "physical": 3,
+      },
+    },
+  },
+  "→ silk · high · бой": {
+    "silk": {
+      "values": {
+        "physical": 4,
+      },
+    },
+  },
+  "→ silk · high · вне боя": {
+    "silk": {
+      "values": {
+        "physical": 4,
+      },
+    },
+  },
+  "→ silk · low · бой": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ silk · low · вне боя": {
+    "koshka": {
+      "values": {
+        "drain_stun": 4,
+        "stun": 4,
+      },
+    },
+  },
+  "→ silk · walk · бой": {
+    "silk": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
+  "→ silk · walk · вне боя": {
+    "silk": {
+      "values": {
+        "physical": 2,
+      },
+    },
+  },
 }
 `;
 
@@ -22701,6 +26071,12 @@ exports[`итоги действий: shadowrun6 > lone_star · colt_l36:0 1`] =
   "→ humanis · low · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ humanis · walk · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ humanis · walk · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · high · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · high · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · low · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · low · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · walk · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · walk · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · high · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · high · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · low · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
@@ -22784,6 +26160,12 @@ exports[`итоги действий: shadowrun6 > lone_star · colt_l36:1 1`] =
   "→ humanis · low · вне боя": {},
   "→ humanis · walk · бой": {},
   "→ humanis · walk · вне боя": {},
+  "→ koshka · high · бой": {},
+  "→ koshka · high · вне боя": {},
+  "→ koshka · low · бой": {},
+  "→ koshka · low · вне боя": {},
+  "→ koshka · walk · бой": {},
+  "→ koshka · walk · вне боя": {},
   "→ lone_star · high · бой": {},
   "→ lone_star · high · вне боя": {},
   "→ lone_star · low · бой": {},
@@ -22867,6 +26249,12 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
   "→ humanis · low · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ humanis · walk · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ humanis · walk · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · high · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · high · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · low · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · low · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · walk · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · walk · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · high · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · high · вне боя": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · low · бой": "EngineError: стоимость действия «Оглушающая дубинка · Атаковать»: параметр «дистанция» не заполнен",
@@ -22950,6 +26338,12 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:1 1`]
   "→ humanis · low · вне боя": {},
   "→ humanis · walk · бой": {},
   "→ humanis · walk · вне боя": {},
+  "→ koshka · high · бой": {},
+  "→ koshka · high · вне боя": {},
+  "→ koshka · low · бой": {},
+  "→ koshka · low · вне боя": {},
+  "→ koshka · walk · бой": {},
+  "→ koshka · walk · вне боя": {},
   "→ lone_star · high · бой": {},
   "→ lone_star · high · вне боя": {},
   "→ lone_star · low · бой": {},
@@ -23033,6 +26427,12 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
   "→ humanis · low · вне боя": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
   "→ humanis · walk · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
   "→ humanis · walk · вне боя": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · high · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · high · вне боя": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · low · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · low · вне боя": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · walk · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · walk · вне боя": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · high · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · high · вне боя": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · low · бой": "EngineError: стоимость действия «Слеппер · Атаковать»: параметр «дистанция» не заполнен",
@@ -23116,6 +26516,12 @@ exports[`итоги действий: shadowrun6 > mafia · sap:1 1`] = `
   "→ humanis · low · вне боя": {},
   "→ humanis · walk · бой": {},
   "→ humanis · walk · вне боя": {},
+  "→ koshka · high · бой": {},
+  "→ koshka · high · вне боя": {},
+  "→ koshka · low · бой": {},
+  "→ koshka · low · вне боя": {},
+  "→ koshka · walk · бой": {},
+  "→ koshka · walk · вне боя": {},
   "→ lone_star · high · бой": {},
   "→ lone_star · high · вне боя": {},
   "→ lone_star · low · бой": {},
@@ -23482,6 +26888,48 @@ exports[`итоги действий: shadowrun6 > razor · act_scene:0 1`] = `
   },
   "→ humanis · walk · вне боя": {
     "humanis": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ koshka · high · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ koshka · high · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ koshka · low · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ koshka · low · вне боя": {
+    "koshka": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ koshka · walk · бой": {
+    "koshka": {
+      "values": {
+        "edge_left": 3,
+      },
+    },
+  },
+  "→ koshka · walk · вне боя": {
+    "koshka": {
       "values": {
         "edge_left": 3,
       },
@@ -24002,6 +27450,48 @@ exports[`итоги действий: shadowrun6 > razor · act_second_wind:0 1`
       },
     },
   },
+  "→ koshka · high · бой": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ koshka · high · вне боя": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ koshka · low · бой": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ koshka · low · вне боя": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ koshka · walk · бой": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
+  "→ koshka · walk · вне боя": {
+    "razor": {
+      "values": {
+        "edge_left": 0,
+      },
+    },
+  },
   "→ lone_star · high · бой": {
     "razor": {
       "values": {
@@ -24265,6 +27755,12 @@ exports[`итоги действий: shadowrun6 > razor · act_shrug:0 1`] = `
   "→ humanis · low · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ humanis · walk · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ humanis · walk · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ koshka · high · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ koshka · high · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ koshka · low · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ koshka · low · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ koshka · walk · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
+  "→ koshka · walk · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ lone_star · high · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ lone_star · high · вне боя": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
   "→ lone_star · low · бой": "EngineError: «Ранен не так сильно (4 Преимущества)» не состоялось: нужно 4 очк. Преимущества",
@@ -24348,6 +27844,12 @@ exports[`итоги действий: shadowrun6 > razor · grenade_frag:0 1`] =
   "→ humanis · low · вне боя": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
   "→ humanis · walk · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
   "→ humanis · walk · вне боя": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ koshka · high · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ koshka · high · вне боя": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ koshka · low · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ koshka · low · вне боя": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ koshka · walk · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
+  "→ koshka · walk · вне боя": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
   "→ lone_star · high · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
   "→ lone_star · high · вне боя": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
   "→ lone_star · low · бой": "EngineError: стоимость действия «Осколочная граната · Бросить»: параметр «дистанция» не заполнен",
@@ -24431,6 +27933,12 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
   "→ humanis · low · вне боя": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
   "→ humanis · walk · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
   "→ humanis · walk · вне боя": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · high · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · high · вне боя": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · low · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · low · вне боя": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · walk · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · walk · вне боя": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · high · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · high · вне боя": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · low · бой": "EngineError: стоимость действия «Катана · Атаковать»: параметр «дистанция» не заполнен",
@@ -24514,6 +28022,12 @@ exports[`итоги действий: shadowrun6 > razor · katana:1 1`] = `
   "→ humanis · low · вне боя": {},
   "→ humanis · walk · бой": {},
   "→ humanis · walk · вне боя": {},
+  "→ koshka · high · бой": {},
+  "→ koshka · high · вне боя": {},
+  "→ koshka · low · бой": {},
+  "→ koshka · low · вне боя": {},
+  "→ koshka · walk · бой": {},
+  "→ koshka · walk · вне боя": {},
   "→ lone_star · high · бой": {},
   "→ lone_star · high · вне боя": {},
   "→ lone_star · low · бой": {},
@@ -24597,6 +28111,12 @@ exports[`итоги действий: shadowrun6 > razor · predator_vi:0 1`] = 
   "→ humanis · low · вне боя": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
   "→ humanis · walk · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
   "→ humanis · walk · вне боя": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · high · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · high · вне боя": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · low · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · low · вне боя": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · walk · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · walk · вне боя": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · high · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · high · вне боя": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · low · бой": "EngineError: стоимость действия ««Арес Предатор VI» · Атаковать»: параметр «дистанция» не заполнен",
@@ -24680,6 +28200,12 @@ exports[`итоги действий: shadowrun6 > razor · predator_vi:1 1`] = 
   "→ humanis · low · вне боя": {},
   "→ humanis · walk · бой": {},
   "→ humanis · walk · вне боя": {},
+  "→ koshka · high · бой": {},
+  "→ koshka · high · вне боя": {},
+  "→ koshka · low · бой": {},
+  "→ koshka · low · вне боя": {},
+  "→ koshka · walk · бой": {},
+  "→ koshka · walk · вне боя": {},
   "→ lone_star · high · бой": {},
   "→ lone_star · high · вне боя": {},
   "→ lone_star · low · бой": {},
@@ -25051,6 +28577,48 @@ exports[`итоги действий: shadowrun6 > silk · act_second_wind:0 1`]
       },
     },
   },
+  "→ koshka · high · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ koshka · high · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ koshka · low · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ koshka · low · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ koshka · walk · бой": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
+  "→ koshka · walk · вне боя": {
+    "silk": {
+      "values": {
+        "edge_left": 1,
+      },
+    },
+  },
   "→ lone_star · high · бой": {
     "silk": {
       "values": {
@@ -25314,6 +28882,12 @@ exports[`итоги действий: shadowrun6 > silk · colt_l36:0 1`] = `
   "→ humanis · low · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ humanis · walk · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ humanis · walk · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · high · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · high · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · low · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · low · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · walk · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
+  "→ koshka · walk · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · high · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · high · вне боя": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
   "→ lone_star · low · бой": "EngineError: стоимость действия ««Кольт Америка L36» · Атаковать»: параметр «дистанция» не заполнен",
@@ -25397,6 +28971,12 @@ exports[`итоги действий: shadowrun6 > silk · colt_l36:1 1`] = `
   "→ humanis · low · вне боя": {},
   "→ humanis · walk · бой": {},
   "→ humanis · walk · вне боя": {},
+  "→ koshka · high · бой": {},
+  "→ koshka · high · вне боя": {},
+  "→ koshka · low · бой": {},
+  "→ koshka · low · вне боя": {},
+  "→ koshka · walk · бой": {},
+  "→ koshka · walk · вне боя": {},
   "→ lone_star · high · бой": {},
   "→ lone_star · high · вне боя": {},
   "→ lone_star · low · бой": {},
