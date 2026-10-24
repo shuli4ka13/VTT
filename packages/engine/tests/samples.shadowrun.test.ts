@@ -251,7 +251,7 @@ group('Shadowrun 6: состояния (стр. 52–54)', () => {
   });
 
   test('Отравление 3: в начале раунда — урон после сопротивления, потом 2', () => {
-    const sick = wearing('humanis', { effectId: 'poisoned', args: { level: 3, physical_hit: 1 } });
+    const sick = wearing('humanis', { effectId: 'poisoned', args: { level: 3, physical_hit: true } });
     const out = perform({ system, compendium, clock: null, sheets: [sick], die: () => 1 }, { op: 'turn', turn: 'start', order: ['humanis'] } as never);
     if (out.kind !== 'done') throw new Error(out.kind);
     const after = out.sheets.find(one => one.id === 'humanis')!;

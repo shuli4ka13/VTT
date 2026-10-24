@@ -14,7 +14,7 @@ const like = (id: string, label: string, from: string, args: Record<string, stri
 };
 const compendium = { ...book, records: [...book.records,
   like('spell_ice_spear', 'Ледяное копьё', 'spell_fireball', { drain_base: '5', area: '0', element: '"холод"' }),
-  like('spell_stunbolt', 'Оглушающий разряд', 'spell_mana_bolt', { drain_base: '3', damage_phys: '0' }),
+  like('spell_stunbolt', 'Оглушающий разряд', 'spell_mana_bolt', { drain_base: '3', damage_phys: 'нет' }),
   like('spell_manaball', 'Шар маны', 'spell_mana_bolt', { drain_base: '5', area: '1' }),
 ] } as Compendium;
 

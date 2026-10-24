@@ -482,9 +482,9 @@
           },
           {
             "key": "unarmed_physical",
-            "label": "Безоружная атака: физический урон (1 — да)",
-            "kind": "number",
-            "default": 0,
+            "label": "Безоружная атака: физический урон",
+            "kind": "boolean",
+            "default": false,
             "min": 0,
             "max": 1,
             "stages": [
@@ -1416,9 +1416,9 @@
           },
           {
             "key": "sprite_registered",
-            "label": "Зарегистрирован (1 — да)",
-            "kind": "number",
-            "default": 0,
+            "label": "Зарегистрирован",
+            "kind": "boolean",
+            "default": false,
             "min": 0,
             "max": 1
           },
@@ -1426,7 +1426,7 @@
             "key": "sprite_lifetime",
             "label": "Живёт часов (незарегистрированный)",
             "expr": {
-              "expr": "если(@sprite_registered >= 1, 0, @sprite_level * 2)"
+              "expr": "если(@sprite_registered, 0, @sprite_level * 2)"
             }
           },
           {
@@ -1508,9 +1508,9 @@
           },
           {
             "key": "offroad",
-            "label": "Бездорожье (1 — да)",
-            "kind": "number",
-            "default": 0,
+            "label": "Бездорожье",
+            "kind": "boolean",
+            "default": false,
             "min": 0,
             "max": 1
           },
@@ -1518,7 +1518,7 @@
             "key": "veh_handling",
             "label": "Управляемость с учётом урона",
             "expr": {
-              "expr": "если(@offroad >= 1, @vehicle_model.handling_off или 0, @vehicle_model.handling_on или 0) + округлить вниз(@physical / 3)"
+              "expr": "если(@offroad, @vehicle_model.handling_off или 0, @vehicle_model.handling_on или 0) + округлить вниз(@physical / 3)"
             }
           },
           {
@@ -1646,9 +1646,9 @@
           },
           {
             "key": "jumped",
-            "label": "Управление захвачено (1 — да)",
-            "kind": "number",
-            "default": 0,
+            "label": "Управление захвачено",
+            "kind": "boolean",
+            "default": false,
             "min": 0,
             "max": 1
           },
@@ -1728,7 +1728,7 @@
             "key": "veh_ar",
             "label": "Транспорт: значение атаки",
             "expr": {
-              "expr": "если(@jumped >= 1, @rig_pilot, если(@driver_pilot >= 1, @driver_pilot, @veh_pilot)) + @veh_sensor"
+              "expr": "если(@jumped, @rig_pilot, если(@driver_pilot >= 1, @driver_pilot, @veh_pilot)) + @veh_sensor"
             }
           },
           {
@@ -2438,8 +2438,9 @@
           },
           {
             "key": "unarmed_physical",
-            "label": "Безоружный урон физический (1 — да)",
-            "kind": "number"
+            "label": "Безоружный урон физический",
+            "kind": "boolean",
+            "default": false
           }
         ],
         "rows": [
@@ -2530,7 +2531,7 @@
               "intuition_max": 6,
               "charisma_max": 5,
               "edge_max": 6,
-              "unarmed_physical": 1
+              "unarmed_physical": true
             }
           }
         ]
@@ -2750,8 +2751,9 @@
           },
           {
             "key": "knockout",
-            "label": "Вырубить (1 — да)",
-            "kind": "number"
+            "label": "Вырубить",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "text",
@@ -2760,18 +2762,21 @@
           },
           {
             "key": "simple",
-            "label": "Простое действие (1 — да)",
-            "kind": "number"
+            "label": "Простое действие",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "no_damage",
-            "label": "Без урона (1 — да)",
-            "kind": "number"
+            "label": "Без урона",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "cover_free",
-            "label": "Из укрытия без простого действия (1 — да)",
-            "kind": "number"
+            "label": "Из укрытия без простого действия",
+            "kind": "boolean",
+            "default": false
           }
         ],
         "rows": [
@@ -2781,7 +2786,7 @@
               "cost": 0,
               "dv": 0,
               "pool": 0,
-              "knockout": 0
+              "knockout": false
             }
           },
           {
@@ -2790,9 +2795,9 @@
               "cost": 0,
               "dv": 2,
               "pool": -4,
-              "knockout": 0,
+              "knockout": false,
               "text": "Простое действие вместе с атакой: +2 к урону за −4 к набору (стр. 42).",
-              "simple": 1
+              "simple": true
             }
           },
           {
@@ -2801,9 +2806,9 @@
               "cost": 1,
               "dv": 2,
               "pool": -2,
-              "knockout": 0,
+              "knockout": false,
               "text": "1 очко: клинком — штраф «Метко попасть» снижается до −2 (стр. 48).",
-              "simple": 1
+              "simple": true
             }
           },
           {
@@ -2812,7 +2817,7 @@
               "cost": 2,
               "dv": 0,
               "pool": 0,
-              "knockout": 1,
+              "knockout": true,
               "text": "Ближний бой: урон больше Воли — счётчик оглушения полон."
             }
           },
@@ -2822,7 +2827,7 @@
               "cost": 5,
               "dv": 3,
               "pool": 0,
-              "knockout": 0,
+              "knockout": false,
               "text": "+3 к урону."
             }
           },
@@ -2832,7 +2837,7 @@
               "cost": 1,
               "dv": 0,
               "pool": 0,
-              "knockout": 0,
+              "knockout": false,
               "text": "1 очко, ближний бой: урон больше Тела — цель повалена, Распластан (стр. 48)."
             }
           },
@@ -2842,8 +2847,8 @@
               "cost": 5,
               "dv": 0,
               "pool": 0,
-              "knockout": 0,
-              "no_damage": 1,
+              "knockout": false,
+              "no_damage": true,
               "text": "5 очков: попадание не наносит урона, а выбивает оружие из рук (стр. 49)."
             }
           },
@@ -2853,8 +2858,8 @@
               "cost": 2,
               "dv": 0,
               "pool": 0,
-              "knockout": 0,
-              "cover_free": 1,
+              "knockout": false,
+              "cover_free": true,
               "text": "2 очка, из Укрытия IV: атака без простого действия, чтобы высунуться (стр. 49)."
             }
           }
@@ -2867,20 +2872,21 @@
           {
             "key": "physical",
             "label": "Физический",
-            "kind": "number"
+            "kind": "boolean",
+            "default": false
           }
         ],
         "rows": [
           {
             "value": "физический",
             "cells": {
-              "physical": 1
+              "physical": true
             }
           },
           {
             "value": "оглушающий",
             "cells": {
-              "physical": 0
+              "physical": false
             }
           }
         ]
@@ -3419,8 +3425,9 @@
           },
           {
             "key": "electric",
-            "label": "Электрический (1 — да)",
-            "kind": "number"
+            "label": "Электрический",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "ar1",
@@ -3739,8 +3746,9 @@
           },
           {
             "key": "complex",
-            "label": "Сложное действие (1 — да)",
-            "kind": "number"
+            "label": "Сложное действие",
+            "kind": "boolean",
+            "default": false
           }
         ],
         "rows": [
@@ -3749,7 +3757,7 @@
             "cells": {
               "mark": "б",
               "reload": "сложное действие; со сменным барабаном — простое",
-              "complex": 1
+              "complex": true
             }
           },
           {
@@ -3757,7 +3765,7 @@
             "cells": {
               "mark": "д",
               "reload": "сложное действие на каждый заряд",
-              "complex": 1
+              "complex": true
             }
           },
           {
@@ -3765,7 +3773,7 @@
             "cells": {
               "mark": "л",
               "reload": "сложное действие",
-              "complex": 1
+              "complex": true
             }
           },
           {
@@ -3773,7 +3781,7 @@
             "cells": {
               "mark": "м",
               "reload": "сложное действие",
-              "complex": 1
+              "complex": true
             }
           },
           {
@@ -3781,7 +3789,7 @@
             "cells": {
               "mark": "о",
               "reload": "простое действие",
-              "complex": 0
+              "complex": false
             }
           },
           {
@@ -3789,7 +3797,7 @@
             "cells": {
               "mark": "р",
               "reload": "сложное действие",
-              "complex": 1
+              "complex": true
             }
           }
         ]
@@ -4238,6 +4246,14 @@
             "label": "Вид урона",
             "kind": "choice",
             "from": "damage_kinds"
+          },
+          {
+            "key": "physical_dmg",
+            "label": "Урон физический",
+            "kind": "boolean",
+            "expr": {
+              "expr": "если(пусто(@damage_kind), да, @damage_kind.physical)"
+            }
           },
           {
             "key": "electric",
@@ -13700,15 +13716,15 @@
           },
           {
             "key": "physical_hit",
-            "label": "Урон физический (1) или оглушающий (0)",
-            "kind": "number",
-            "default": 1
+            "label": "Урон физический",
+            "kind": "boolean",
+            "default": true
           },
           {
             "key": "electric",
-            "label": "Электрический урон (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Электрический урон",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "дистанция",
@@ -13851,7 +13867,7 @@
                 "expr": "да"
               },
               "простых": {
-                "expr": "если(@действующий.cover >= 1 и (@приём.cover_free или 0) < 1, 1, 0) + если((@приём.simple или 0) >= 1, 1, 0)"
+                "expr": "если(@действующий.cover >= 1 и не (@приём.cover_free или нет), 1, 0) + если((@приём.simple или нет), 1, 0)"
               }
             }
           }
@@ -13995,16 +14011,16 @@
                 "expr": "@ур + @отпор.чистые"
               },
               "физический": {
-                "expr": "если(@вещь.ammo_stun, 0, @physical_hit или 1)"
+                "expr": "не @вещь.ammo_stun и @physical_hit"
               },
               "электричество": {
-                "expr": "если((@electric или 0) >= 1 или @вещь.ammo_shock, 1, 0)"
+                "expr": "(@electric или нет) или @вещь.ammo_shock"
               },
               "вырубить": {
-                "expr": "(@приём.knockout или 0) >= 1"
+                "expr": "(@приём.knockout или нет)"
               },
               "без_урона": {
-                "expr": "(@приём.no_damage или 0) >= 1"
+                "expr": "(@приём.no_damage или нет)"
               }
             }
           }
@@ -14050,15 +14066,15 @@
           },
           {
             "key": "physical_hit",
-            "label": "Урон физический (1) или оглушающий (0)",
-            "kind": "number",
-            "default": 1
+            "label": "Урон физический",
+            "kind": "boolean",
+            "default": true
           },
           {
             "key": "electric",
-            "label": "Электрический урон (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Электрический урон",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "приём",
@@ -14107,7 +14123,7 @@
                 "expr": "да"
               },
               "простых": {
-                "expr": "если(@действующий.cover >= 1 и (@приём.cover_free или 0) < 1, 1, 0) + если((@приём.simple или 0) >= 1, 1, 0)"
+                "expr": "если(@действующий.cover >= 1 и не (@приём.cover_free или нет), 1, 0) + если((@приём.simple или нет), 1, 0)"
               }
             }
           }
@@ -14225,16 +14241,16 @@
                 "expr": "@ур + @отпор.чистые"
               },
               "физический": {
-                "expr": "@physical_hit или 1"
+                "expr": "@physical_hit"
               },
               "электричество": {
-                "expr": "если((@electric или 0) >= 1, 1, 0)"
+                "expr": "(@electric или нет)"
               },
               "вырубить": {
-                "expr": "(@приём.knockout или 0) >= 1"
+                "expr": "(@приём.knockout или нет)"
               },
               "без_урона": {
-                "expr": "(@приём.no_damage или 0) >= 1"
+                "expr": "(@приём.no_damage или нет)"
               }
             }
           }
@@ -14355,15 +14371,15 @@
           },
           {
             "key": "физический",
-            "label": "Урон физический (1) или оглушающий (0)",
-            "kind": "number",
-            "default": 1
+            "label": "Урон физический",
+            "kind": "boolean",
+            "default": true
           },
           {
             "key": "электричество",
-            "label": "Электрический урон (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Электрический урон",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "вырубить",
@@ -14429,7 +14445,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@электричество >= 1 и @вред.урон >= 1"
+              "expr": "@электричество и @вред.урон >= 1"
             }
           },
           {
@@ -15427,10 +15443,10 @@
                 "expr": "@действующий"
               },
               "сложное": {
-                "expr": "(@вещь.reload.complex или 1) >= 1"
+                "expr": "пусто(@вещь.reload) или (@вещь.reload.complex или нет)"
               },
               "простых": {
-                "expr": "если((@вещь.reload.complex или 1) >= 1, 0, 1)"
+                "expr": "если(пусто(@вещь.reload) или (@вещь.reload.complex или нет), 0, 1)"
               }
             }
           }
@@ -15714,13 +15730,13 @@
           },
           {
             "key": "physical_hit",
-            "label": "Физический (1 — да)",
-            "kind": "number"
+            "label": "Физический урон",
+            "kind": "boolean"
           },
           {
             "key": "electric",
-            "label": "Электрический (1 — да)",
-            "kind": "number"
+            "label": "Электрический",
+            "kind": "boolean"
           }
         ],
         "steps": [
@@ -15767,7 +15783,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@electric >= 1 и @вред.урон >= 1"
+              "expr": "@electric и @вред.урон >= 1"
             }
           },
           {
@@ -15979,10 +15995,10 @@
                 "expr": "@кольцо.grenade_dv"
               },
               "physical_hit": {
-                "expr": "@вещь.damage_kind.physical или 1"
+                "expr": "@вещь.physical_dmg"
               },
               "electric": {
-                "expr": "если(@вещь.electric == да, 1, 0)"
+                "expr": "@вещь.electric == да"
               },
               "цель": {
                 "expr": "@цель"
@@ -16172,10 +16188,10 @@
                 "expr": "@кольцо.rocket_dv"
               },
               "physical_hit": {
-                "expr": "если(сколько(строки(\"grenade\", \"damage_kind\", @вещь), \"оглушающий\") >= 1, 0, 1)"
+                "expr": "сколько(строки(\"grenade\", \"damage_kind\", @вещь), \"оглушающий\") < 1"
               },
               "electric": {
-                "expr": "если(сколько(строки(\"grenade\", \"electric\", @вещь), да) >= 1, 1, 0)"
+                "expr": "сколько(строки(\"grenade\", \"electric\", @вещь), да) >= 1"
               },
               "цель": {
                 "expr": "@цель"
@@ -16303,10 +16319,10 @@
                 "expr": "@кольцо.charge_dv"
               },
               "physical_hit": {
-                "expr": "1"
+                "expr": "да"
               },
               "electric": {
-                "expr": "0"
+                "expr": "нет"
               },
               "цель": {
                 "expr": "@цель"
@@ -16464,15 +16480,15 @@
           },
           {
             "key": "physical_hit",
-            "label": "Физический (1 — да)",
-            "kind": "number",
-            "default": 1
+            "label": "Физический урон",
+            "kind": "boolean",
+            "default": true
           },
           {
             "key": "drain",
-            "label": "Это истощение (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Это истощение",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "dv",
@@ -16482,16 +16498,16 @@
           },
           {
             "key": "electric",
-            "label": "Электричество (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Электричество",
+            "kind": "boolean",
+            "default": false
           }
         ],
         "steps": [
           {
             "type": "branch",
             "if": {
-              "expr": "@physical_hit >= 1"
+              "expr": "@physical_hit"
             }
           },
           {
@@ -16523,7 +16539,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@drain >= 1 и @physical_hit >= 1"
+              "expr": "@drain и @physical_hit"
             }
           },
           {
@@ -16539,7 +16555,7 @@
           {
             "type": "orElse",
             "if": {
-              "expr": "@drain >= 1"
+              "expr": "@drain"
             }
           },
           {
@@ -16643,7 +16659,7 @@
                     "expr": "большее из(0, @level - @стойкость.total)"
                   },
                   "physical_hit": {
-                    "expr": "1"
+                    "expr": "да"
                   }
                 }
               }
@@ -16864,9 +16880,9 @@
           },
           {
             "key": "physical_hit",
-            "label": "Физический (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Физический урон",
+            "kind": "boolean",
+            "default": false
           }
         ],
         "on": [
@@ -16986,7 +17002,7 @@
                     "expr": "большее из(0, @level - @стойкость.total)"
                   },
                   "physical_hit": {
-                    "expr": "1"
+                    "expr": "да"
                   }
                 }
               }
@@ -17495,9 +17511,9 @@
           },
           {
             "key": "bio_stun",
-            "label": "Биоотдача только оглушающая (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Биоотдача только оглушающая",
+            "kind": "boolean",
+            "default": false
           }
         ],
         "steps": [
@@ -17533,7 +17549,7 @@
                 "expr": "большее из(0, @amount - @экран.total)"
               },
               "physical_hit": {
-                "expr": "0"
+                "expr": "нет"
               }
             }
           },
@@ -17584,7 +17600,7 @@
                 "expr": "большее из(0, @bio - @воля.total)"
               },
               "physical_hit": {
-                "expr": "если(@bio_stun < 1 и @лист.matrix_mode == \"горячая ВР\", 1, 0)"
+                "expr": "не @bio_stun и @лист.matrix_mode == \"горячая ВР\""
               }
             }
           },
@@ -17646,7 +17662,7 @@
                 "expr": "большее из(0, 3 - @воля.total)"
               },
               "physical_hit": {
-                "expr": "если(@лист.matrix_mode == \"горячая ВР\", 1, 0)"
+                "expr": "@лист.matrix_mode == \"горячая ВР\""
               }
             }
           },
@@ -17948,9 +17964,9 @@
           },
           {
             "key": "illegal",
-            "label": "Незаконное (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Незаконное",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "kind",
@@ -18163,7 +18179,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@действующий.matrix_ar - (@цель.matrix_dr + 0 - если(@illegal >= 1, @действующий.m_def_cut, 0)) >= 4"
+              "expr": "@действующий.matrix_ar - (@цель.matrix_dr + 0 - если(@illegal, @действующий.m_def_cut, 0)) >= 4"
             }
           },
           {
@@ -18178,7 +18194,7 @@
           {
             "type": "orElse",
             "if": {
-              "expr": "@цель.matrix_dr + 0 - если(@illegal >= 1, @действующий.m_def_cut, 0) - @действующий.matrix_ar >= 4"
+              "expr": "@цель.matrix_dr + 0 - если(@illegal, @действующий.m_def_cut, 0) - @действующий.matrix_ar >= 4"
             }
           },
           {
@@ -18221,7 +18237,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@illegal >= 1 и @защита != \"порог\" и @защита != \"нет\""
+              "expr": "@illegal и @защита != \"порог\" и @защита != \"нет\""
             }
           },
           {
@@ -18288,9 +18304,9 @@
           },
           {
             "key": "illegal",
-            "label": "Незаконное (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Незаконное",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "kind",
@@ -18503,7 +18519,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@действующий.matrix_ar - (@цель.matrix_dr + 0 - если(@illegal >= 1, @действующий.m_def_cut, 0)) >= 4"
+              "expr": "@действующий.matrix_ar - (@цель.matrix_dr + 0 - если(@illegal, @действующий.m_def_cut, 0)) >= 4"
             }
           },
           {
@@ -18518,7 +18534,7 @@
           {
             "type": "orElse",
             "if": {
-              "expr": "@цель.matrix_dr + 0 - если(@illegal >= 1, @действующий.m_def_cut, 0) - @действующий.matrix_ar >= 4"
+              "expr": "@цель.matrix_dr + 0 - если(@illegal, @действующий.m_def_cut, 0) - @действующий.matrix_ar >= 4"
             }
           },
           {
@@ -18561,7 +18577,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@illegal >= 1 и @защита != \"порог\" и @защита != \"нет\""
+              "expr": "@illegal и @защита != \"порог\" и @защита != \"нет\""
             }
           },
           {
@@ -18606,7 +18622,7 @@
                 "expr": "если(@действующий.m_bio + @действующий.m_bio_stun >= 1, округлить вверх(@действующий.matrix_ar / 2) + @итог.total - если(@защита == \"порог\", @порог или 0, @отпор.total), 0)"
               },
               "bio_stun": {
-                "expr": "если(@действующий.m_bio < 1 и @действующий.m_bio_stun >= 1, 1, 0)"
+                "expr": "@действующий.m_bio < 1 и @действующий.m_bio_stun >= 1"
               }
             }
           },
@@ -18662,9 +18678,9 @@
           },
           {
             "key": "illegal",
-            "label": "Незаконное (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Незаконное",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "kind",
@@ -18877,7 +18893,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@действующий.matrix_ar - (@цель.matrix_dr + 0 - если(@illegal >= 1, @действующий.m_def_cut, 0)) >= 4"
+              "expr": "@действующий.matrix_ar - (@цель.matrix_dr + 0 - если(@illegal, @действующий.m_def_cut, 0)) >= 4"
             }
           },
           {
@@ -18892,7 +18908,7 @@
           {
             "type": "orElse",
             "if": {
-              "expr": "@цель.matrix_dr + 0 - если(@illegal >= 1, @действующий.m_def_cut, 0) - @действующий.matrix_ar >= 4"
+              "expr": "@цель.matrix_dr + 0 - если(@illegal, @действующий.m_def_cut, 0) - @действующий.matrix_ar >= 4"
             }
           },
           {
@@ -18935,7 +18951,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@illegal >= 1 и @защита != \"порог\" и @защита != \"нет\""
+              "expr": "@illegal и @защита != \"порог\" и @защита != \"нет\""
             }
           },
           {
@@ -18980,7 +18996,7 @@
                 "expr": "если(@действующий.m_bio + @действующий.m_bio_stun >= 1, 1 + @итог.total - если(@защита == \"порог\", @порог или 0, @отпор.total), 0)"
               },
               "bio_stun": {
-                "expr": "если(@действующий.m_bio < 1 и @действующий.m_bio_stun >= 1, 1, 0)"
+                "expr": "@действующий.m_bio < 1 и @действующий.m_bio_stun >= 1"
               }
             }
           },
@@ -19048,9 +19064,9 @@
           },
           {
             "key": "illegal",
-            "label": "Незаконное (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Незаконное",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "kind",
@@ -19092,9 +19108,9 @@
           },
           {
             "key": "had_user",
-            "label": "Доступ пользователя уже есть (1 — да)",
-            "kind": "number",
-            "default": 0,
+            "label": "Доступ пользователя уже есть",
+            "kind": "boolean",
+            "default": false,
             "ask": {
               "by": "actor"
             }
@@ -19287,7 +19303,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@действующий.matrix_ar - (@цель.matrix_dr + если(@level == \"администратор\" и @had_user < 1, 4, 0) - если(@illegal >= 1, @действующий.m_def_cut, 0)) >= 4"
+              "expr": "@действующий.matrix_ar - (@цель.matrix_dr + если(@level == \"администратор\" и не @had_user, 4, 0) - если(@illegal, @действующий.m_def_cut, 0)) >= 4"
             }
           },
           {
@@ -19302,7 +19318,7 @@
           {
             "type": "orElse",
             "if": {
-              "expr": "@цель.matrix_dr + если(@level == \"администратор\" и @had_user < 1, 4, 0) - если(@illegal >= 1, @действующий.m_def_cut, 0) - @действующий.matrix_ar >= 4"
+              "expr": "@цель.matrix_dr + если(@level == \"администратор\" и не @had_user, 4, 0) - если(@illegal, @действующий.m_def_cut, 0) - @действующий.matrix_ar >= 4"
             }
           },
           {
@@ -19322,7 +19338,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, если(@цель.is_device < 1, @защита.persona, @защита.device) + если(@level == \"администратор\" и @had_user < 1, 2, 0))"
+              "expr": "большее из(0, если(@цель.is_device < 1, @защита.persona, @защита.device) + если(@level == \"администратор\" и не @had_user, 2, 0))"
             },
             "tags": [
               "защита",
@@ -19345,7 +19361,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@illegal >= 1 и @защита != \"порог\" и @защита != \"нет\""
+              "expr": "@illegal и @защита != \"порог\" и @защита != \"нет\""
             }
           },
           {
@@ -19489,9 +19505,9 @@
           },
           {
             "key": "illegal",
-            "label": "Незаконное (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Незаконное",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "kind",
@@ -19689,7 +19705,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@действующий.matrix_ar - (@цель.matrix_dr + 0 - если(@illegal >= 1, @действующий.m_def_cut, 0)) >= 4"
+              "expr": "@действующий.matrix_ar - (@цель.matrix_dr + 0 - если(@illegal, @действующий.m_def_cut, 0)) >= 4"
             }
           },
           {
@@ -19704,7 +19720,7 @@
           {
             "type": "orElse",
             "if": {
-              "expr": "@цель.matrix_dr + 0 - если(@illegal >= 1, @действующий.m_def_cut, 0) - @действующий.matrix_ar >= 4"
+              "expr": "@цель.matrix_dr + 0 - если(@illegal, @действующий.m_def_cut, 0) - @действующий.matrix_ar >= 4"
             }
           },
           {
@@ -19747,7 +19763,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@illegal >= 1 и @защита != \"порог\" и @защита != \"нет\""
+              "expr": "@illegal и @защита != \"порог\" и @защита != \"нет\""
             }
           },
           {
@@ -20013,7 +20029,7 @@
                 "expr": "большее из(0, @amount - @тело.total)"
               },
               "physical_hit": {
-                "expr": "1"
+                "expr": "да"
               }
             }
           }
@@ -20064,10 +20080,10 @@
                 "expr": "большее из(0, @si - @выдержка.total)"
               },
               "physical_hit": {
-                "expr": "если(@si - @выдержка.total > @лист.magic, 1, 0)"
+                "expr": "@si - @выдержка.total > @лист.magic"
               },
               "drain": {
-                "expr": "1"
+                "expr": "да"
               }
             }
           }
@@ -20129,21 +20145,21 @@
           },
           {
             "key": "area",
-            "label": "Область (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Область",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "sustain",
-            "label": "Длительное (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Длительное",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "astral",
-            "label": "Астральное (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Астральное",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "spell_effect",
@@ -20168,9 +20184,9 @@
           },
           {
             "key": "damage_phys",
-            "label": "Физический (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Физический урон",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "element",
@@ -20240,7 +20256,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@area < 1 и сколько(@цели) > 1"
+              "expr": "не @area и сколько(@цели) > 1"
             }
           },
           {
@@ -20337,7 +20353,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@sustain >= 1"
+              "expr": "@sustain"
             }
           },
           {
@@ -20590,7 +20606,7 @@
           {
             "type": "orElse",
             "if": {
-              "expr": "@sustain >= 1 и @spell_effect != \"\""
+              "expr": "@sustain и @spell_effect != \"\""
             }
           },
           {
@@ -20664,21 +20680,21 @@
           },
           {
             "key": "area",
-            "label": "Область (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Область",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "sustain",
-            "label": "Длительное (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Длительное",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "astral",
-            "label": "Астральное (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Астральное",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "spell_effect",
@@ -20703,9 +20719,9 @@
           },
           {
             "key": "stabilize",
-            "label": "Стабилизация (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Стабилизация",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "attr",
@@ -20759,7 +20775,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@area < 1 и сколько(@цели) > 1"
+              "expr": "не @area и сколько(@цели) > 1"
             }
           },
           {
@@ -20841,7 +20857,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@sustain >= 1"
+              "expr": "@sustain"
             }
           },
           {
@@ -20940,7 +20956,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@stabilize >= 1"
+              "expr": "@stabilize"
             }
           },
           {
@@ -21052,21 +21068,21 @@
           },
           {
             "key": "area",
-            "label": "Область (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Область",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "sustain",
-            "label": "Длительное (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Длительное",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "astral",
-            "label": "Астральное (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Астральное",
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "spell_effect",
@@ -21144,7 +21160,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@area < 1 и сколько(@цели) > 1"
+              "expr": "не @area и сколько(@цели) > 1"
             }
           },
           {
@@ -21226,7 +21242,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@sustain >= 1"
+              "expr": "@sustain"
             }
           },
           {
@@ -22728,7 +22744,7 @@
                 "expr": "большее из(0, @si - @выдержка.total)"
               },
               "physical_hit": {
-                "expr": "если(@si - @выдержка.total > @лист.resonance, 1, 0)"
+                "expr": "@si - @выдержка.total > @лист.resonance"
               }
             }
           }
@@ -22940,14 +22956,14 @@
           {
             "key": "illegal",
             "label": "Незаконное",
-            "kind": "number",
-            "default": 0
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "sustain",
             "label": "Длительное",
-            "kind": "number",
-            "default": 0
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "outcome",
@@ -23079,7 +23095,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@sustain >= 1"
+              "expr": "@sustain"
             }
           },
           {
@@ -23169,7 +23185,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@illegal >= 1 и @защита != \"порог\" и @защита != \"нет\""
+              "expr": "@illegal и @защита != \"порог\" и @защита != \"нет\""
             }
           },
           {
@@ -23208,7 +23224,7 @@
                 "expr": "если(@per_hit == \"чистые\", большее из(0, @итог.margin), @итог.total)"
               },
               "physical_hit": {
-                "expr": "0"
+                "expr": "нет"
               }
             }
           },
@@ -23408,14 +23424,14 @@
           {
             "key": "illegal",
             "label": "Незаконное",
-            "kind": "number",
-            "default": 0
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "sustain",
             "label": "Длительное",
-            "kind": "number",
-            "default": 0
+            "kind": "boolean",
+            "default": false
           },
           {
             "key": "outcome",
@@ -23549,7 +23565,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@sustain >= 1"
+              "expr": "@sustain"
             }
           },
           {
@@ -23639,7 +23655,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@illegal >= 1 и @защита != \"порог\" и @защита != \"нет\""
+              "expr": "@illegal и @защита != \"порог\" и @защита != \"нет\""
             }
           },
           {
@@ -23678,7 +23694,7 @@
                 "expr": "если(@per_hit == \"чистые\", большее из(0, @итог.margin), @итог.total)"
               },
               "physical_hit": {
-                "expr": "0"
+                "expr": "нет"
               }
             }
           },
@@ -24099,7 +24115,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "0"
+              "expr": "нет"
             }
           },
           {
@@ -24519,7 +24535,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, если(@действующий == @цель, @цель.as_maneuver + @цель.veh_pilot, если(@цель.jumped >= 1, @цель.rig_pilot + @цель.rig_int + @цель.rig_vcr, @действующий.skills.пилотирование.pool)) - @цель.veh_speed_pen)"
+              "expr": "большее из(0, если(@действующий == @цель, @цель.as_maneuver + @цель.veh_pilot, если(@цель.jumped, @цель.rig_pilot + @цель.rig_int + @цель.rig_vcr, @действующий.skills.пилотирование.pool)) - @цель.veh_speed_pen)"
             },
             "tags": [
               "проверка",
@@ -24537,7 +24553,7 @@
               "expr": "@вождение"
             },
             "versus": {
-              "expr": "большее из(0, @цель.veh_handling - если(@цель.jumped >= 1, @цель.rig_vcr, 0) + @shift)"
+              "expr": "большее из(0, @цель.veh_handling - если(@цель.jumped, @цель.rig_vcr, 0) + @shift)"
             }
           },
           {
@@ -24551,7 +24567,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "большее из(0, если(@действующий == @цель, @цель.as_maneuver + @цель.veh_pilot, если(@цель.jumped >= 1, @цель.rig_pilot + @цель.rig_int + @цель.rig_vcr, @действующий.skills.пилотирование.pool)) - @цель.veh_speed_pen)"
+              "expr": "большее из(0, если(@действующий == @цель, @цель.as_maneuver + @цель.veh_pilot, если(@цель.jumped, @цель.rig_pilot + @цель.rig_int + @цель.rig_vcr, @действующий.skills.пилотирование.pool)) - @цель.veh_speed_pen)"
             },
             "tags": [
               "проверка",
@@ -24569,7 +24585,7 @@
               "expr": "@удержать"
             },
             "versus": {
-              "expr": "большее из(0, @цель.veh_handling - если(@цель.jumped >= 1, @цель.rig_vcr, 0) + @shift)"
+              "expr": "большее из(0, @цель.veh_handling - если(@цель.jumped, @цель.rig_vcr, 0) + @shift)"
             }
           },
           {
@@ -24609,7 +24625,7 @@
                 "expr": "большее из(0, округлить вниз(@цель.speed / 10) - @тело.total)"
               },
               "physical_hit": {
-                "expr": "1"
+                "expr": "да"
               }
             }
           },
@@ -24695,9 +24711,9 @@
           },
           {
             "key": "inhaled",
-            "label": "Вдыхаемый (1 — да)",
-            "kind": "number",
-            "default": 0
+            "label": "Вдыхаемый",
+            "kind": "boolean",
+            "default": false
           }
         ],
         "steps": [
@@ -24724,7 +24740,7 @@
             "id": "итог",
             "type": "check",
             "value": {
-              "expr": "большее из(0, @power + @doses - @цель.tox_cut - если(@inhaled >= 1, @цель.tox_cut_inhaled, 0))"
+              "expr": "большее из(0, @power + @doses - @цель.tox_cut - если(@inhaled, @цель.tox_cut_inhaled, 0))"
             },
             "versus": {
               "expr": "@стойкость"
@@ -24753,7 +24769,7 @@
                 "expr": "@итог.margin"
               },
               "physical_hit": {
-                "expr": "если(@dmg == \"физический\", 1, 0)"
+                "expr": "@dmg == \"физический\""
               }
             }
           },
@@ -24860,7 +24876,7 @@
                     "expr": "12"
                   },
                   "physical_hit": {
-                    "expr": "0"
+                    "expr": "нет"
                   }
                 }
               },
@@ -24890,7 +24906,7 @@
                     "expr": "6"
                   },
                   "physical_hit": {
-                    "expr": "0"
+                    "expr": "нет"
                   }
                 }
               }
@@ -24913,7 +24929,7 @@
                     "expr": "6"
                   },
                   "physical_hit": {
-                    "expr": "0"
+                    "expr": "нет"
                   }
                 }
               },
@@ -24943,7 +24959,7 @@
                     "expr": "9"
                   },
                   "physical_hit": {
-                    "expr": "0"
+                    "expr": "нет"
                   }
                 }
               }
@@ -25649,7 +25665,7 @@
             "target": "unarmed_physical",
             "op": "set",
             "value": {
-              "expr": "@metatype.unarmed_physical или 0"
+              "expr": "(@metatype.unarmed_physical или нет)"
             }
           },
           {
@@ -26144,7 +26160,7 @@
             "target": "defense_rating",
             "op": "set",
             "value": {
-              "expr": "если(@jumped >= 1, @rig_pilot, если(@driver_pilot >= 1, @driver_pilot, @as_maneuver)) + @veh_armor"
+              "expr": "если(@jumped, @rig_pilot, если(@driver_pilot >= 1, @driver_pilot, @as_maneuver)) + @veh_armor"
             }
           },
           {
@@ -26172,7 +26188,7 @@
               "expr": "0 - @amount"
             },
             "if": {
-              "expr": "@лист == @носитель и @physical_hit < 1 и @electric < 1 и (@dv или @amount) <= @носитель.veh_body"
+              "expr": "@лист == @носитель и не @physical_hit и не @electric и (@dv или @amount) <= @носитель.veh_body"
             }
           },
           {
@@ -26494,7 +26510,7 @@
           "avail": 2,
           "dv": 5,
           "damage_kind": "оглушающий",
-          "electric": 1,
+          "electric": true,
           "ar1": 6,
           "skill": "ближний бой"
         }
@@ -27021,7 +27037,7 @@
           "capacity": 2,
           "dv": 4,
           "damage_kind": "оглушающий",
-          "electric": 1,
+          "electric": true,
           "ar1": 4,
           "skill": "ближний бой"
         }
@@ -27418,7 +27434,7 @@
           "cap_use": 1,
           "dv": 4,
           "damage_kind": "оглушающий",
-          "electric": 1,
+          "electric": true,
           "ar1": 5,
           "skill": "ближний бой"
         }
@@ -27506,7 +27522,7 @@
               "expr": "-1"
             },
             "if": {
-              "expr": "@лист == @носитель и @amount >= 2 и @physical_hit >= 1"
+              "expr": "@лист == @носитель и @amount >= 2 и @physical_hit"
             }
           }
         ]
@@ -28221,7 +28237,7 @@
                 "expr": "\"Воля + СЭ\""
               },
               "illegal": {
-                "expr": "1"
+                "expr": "да"
               },
               "kind": {
                 "expr": "\"сложное\""
@@ -28256,7 +28272,7 @@
                 "expr": "\"ВМ + СЭ\""
               },
               "illegal": {
-                "expr": "1"
+                "expr": "да"
               },
               "kind": {
                 "expr": "\"сложное\""
@@ -28291,7 +28307,7 @@
                 "expr": "\"ВМ + СЭ\""
               },
               "illegal": {
-                "expr": "1"
+                "expr": "да"
               },
               "kind": {
                 "expr": "\"сложное\""
@@ -28326,7 +28342,7 @@
                 "expr": "\"Интуиция + ВМ\""
               },
               "illegal": {
-                "expr": "1"
+                "expr": "да"
               },
               "kind": {
                 "expr": "\"сложное\""
@@ -28361,7 +28377,7 @@
                 "expr": "@действующий.ic_kind.defense или \"нет\""
               },
               "illegal": {
-                "expr": "0"
+                "expr": "нет"
               },
               "kind": {
                 "expr": "\"сложное\""
@@ -28410,19 +28426,19 @@
                 "expr": "\"Реакция + Воля\""
               },
               "area": {
-                "expr": "1"
+                "expr": "да"
               },
               "sustain": {
-                "expr": "0"
+                "expr": "нет"
               },
               "astral": {
-                "expr": "0"
+                "expr": "нет"
               },
               "combat": {
                 "expr": "\"косвенное\""
               },
               "damage_phys": {
-                "expr": "1"
+                "expr": "да"
               },
               "element": {
                 "expr": "\"огонь\""
@@ -28467,19 +28483,19 @@
                 "expr": "\"Воля + Интуиция\""
               },
               "area": {
-                "expr": "0"
+                "expr": "нет"
               },
               "sustain": {
-                "expr": "0"
+                "expr": "нет"
               },
               "astral": {
-                "expr": "1"
+                "expr": "да"
               },
               "combat": {
                 "expr": "\"прямое\""
               },
               "damage_phys": {
-                "expr": "1"
+                "expr": "да"
               },
               "element": {
                 "expr": "\"нет\""
@@ -28521,19 +28537,19 @@
                 "expr": "\"исцеление\""
               },
               "area": {
-                "expr": "0"
+                "expr": "нет"
               },
               "sustain": {
-                "expr": "0"
+                "expr": "нет"
               },
               "astral": {
-                "expr": "0"
+                "expr": "нет"
               },
               "clears": {
                 "expr": "\"\""
               },
               "stabilize": {
-                "expr": "0"
+                "expr": "нет"
               }
             }
           }
@@ -28572,19 +28588,19 @@
                 "expr": "\"критические\""
               },
               "area": {
-                "expr": "0"
+                "expr": "нет"
               },
               "sustain": {
-                "expr": "0"
+                "expr": "нет"
               },
               "astral": {
-                "expr": "1"
+                "expr": "да"
               },
               "clears": {
                 "expr": "\"\""
               },
               "stabilize": {
-                "expr": "1"
+                "expr": "да"
               }
             }
           }
@@ -28623,13 +28639,13 @@
                 "expr": "\"исцеление\""
               },
               "area": {
-                "expr": "0"
+                "expr": "нет"
               },
               "sustain": {
-                "expr": "1"
+                "expr": "да"
               },
               "astral": {
-                "expr": "0"
+                "expr": "нет"
               },
               "spell_effect": {
                 "expr": "\"sp_increase_attribute\""
@@ -28687,13 +28703,13 @@
                 "expr": "\"нет\""
               },
               "area": {
-                "expr": "0"
+                "expr": "нет"
               },
               "sustain": {
-                "expr": "1"
+                "expr": "да"
               },
               "astral": {
-                "expr": "0"
+                "expr": "нет"
               },
               "spell_effect": {
                 "expr": "\"sp_armor\""
@@ -28913,10 +28929,10 @@
                 "expr": "4"
               },
               "illegal": {
-                "expr": "0"
+                "expr": "нет"
               },
               "sustain": {
-                "expr": "1"
+                "expr": "да"
               },
               "outcome": {
                 "expr": "\"характеристика +\""
@@ -28972,10 +28988,10 @@
                 "expr": "\"Воля + СЭ\""
               },
               "illegal": {
-                "expr": "1"
+                "expr": "да"
               },
               "sustain": {
-                "expr": "0"
+                "expr": "нет"
               },
               "outcome": {
                 "expr": "\"урон Матрицы\""
@@ -29276,7 +29292,7 @@
                 "expr": "\"dazed\""
               },
               "inhaled": {
-                "expr": "0"
+                "expr": "нет"
               }
             }
           }

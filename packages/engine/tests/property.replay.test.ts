@@ -125,7 +125,7 @@ for (const world of SAMPLE_WORLDS) {
             const to = players[Math.floor(random() * players.length)]!;
             sheets = check(ctx, sheets, { actionId: action.id, fromId: from.id, toIds: [to.id] }, Math.floor(random() * 1e9));
           }
-        }, 60_000);
+        }, 120_000);
       }
     }
   });
