@@ -13,7 +13,7 @@ import { recordsOf, recordKinds, kindsOf } from './owned.ts';
 import { VALUE_COLUMN } from './tables.ts';
 
 export { MOMENT_PREFIX, FIELD_PREFIX } from '../events/bus.ts';
-import { MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, ANY_ACTION, callHappening, SEEN } from '../events/bus.ts';
+import { MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, ANY_ACTION, callHappening, SEEN, ROLLED } from '../events/bus.ts';
 import type { Phase } from '../events/bus.ts';
 import { fieldsOf, fieldLinkOf } from './sheet-columns.ts';
 
@@ -431,12 +431,13 @@ export const TARGETS_SEED = 'итоги';
 
 export type Listener =
   | { kind: 'call'; phase: Phase; key: string }
-  | { kind: 'seen' | 'empty' }
+  | { kind: 'seen' | 'rolled' | 'empty' }
   | { kind: 'moment' | 'field' | 'gained' | 'lost' | 'unknown'; key: string };
 
 export function listenerOf({ on }: { on?: string }): Listener {
   if (!on) return { kind: 'empty' };
   if (on === SEEN) return { kind: 'seen' };
+  if (on === ROLLED) return { kind: 'rolled' };
   const call = callHappening(on);
   if (call) return { kind: 'call', phase: call.phase, key: call.of };
   if (on.startsWith(MOMENT_PREFIX)) return { kind: 'moment', key: on.slice(MOMENT_PREFIX.length) };
@@ -454,7 +455,7 @@ export function sourcesOf(system: System, key: string): Effect[] {
 }
 
 export function heardNames(system: System, listener: Listener): HeardNames {
-  if (listener.kind === 'seen') return { sheets: ['бросающий', 'против'], seeds: ['roll'], listened: null };
+  if (listener.kind === 'seen' || listener.kind === 'rolled') return { sheets: ['бросающий', 'против'], seeds: ['roll'], listened: null };
   if (listener.kind === 'moment') return { sheets: TURN_MOMENTS.has(listener.key) ? ['ходит'] : [], seeds: ['moment'], listened: null };
   if (listener.kind === 'gained' || listener.kind === 'lost') return { sheets: ['лист'], seeds: ['about'], listened: null };
   if (listener.kind === 'field') return { sheets: ['лист'], seeds: ['field'], listened: null };
@@ -661,6 +662,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
     if (system.initiative.die) out.push({ kind: 'constant', key: system.initiative.die, from });
     if (system.initiative.bonus) slotRefs(system.initiative.bonus, undefined, from, noScope, out);
     for (const tag of system.initiative.tags ?? []) out.push({ kind: 'roll', key: tag, from });
+    for (const tag of system.initiative.ties ?? []) out.push({ kind: 'field', key: tag, from });
   }
 
   const records = new Map([...(system.library ?? []), ...recordsOf(compendium)].map(record => [record.id, record]));

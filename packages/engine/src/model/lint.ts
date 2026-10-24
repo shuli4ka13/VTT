@@ -2,7 +2,7 @@ import { paramStages, targetStages } from '../engine/stages.ts';
 import { armsOf, balance, flowOf, inBlock, isFlow } from './flow.ts';
 import { loopOf, loopParam } from '../engine/steps/each.ts';
 import { chosenEffect, choicesOfInput, emittedChoices } from './payments.ts';
-import { SEEN_LABEL, ANY_ACTION, PHASES } from '../events/bus.ts';
+import { SEEN_LABEL, ROLLED, ROLLED_LABEL, ANY_ACTION, PHASES } from '../events/bus.ts';
 import { HEARD_WORDS } from '../events/lifecycle.ts';
 import type { System, Compendium, Effect, Step, Stage, Guard, Param, Table, Modifier } from './types.ts';
 import { registry } from '../engine/steps/index.ts';
@@ -532,7 +532,8 @@ function handlerDiceProblems(system: System): Problem[] {
     (effect.on ?? []).forEach((handler, index) => {
       const where = { tab: 'effects' as const, effect: id, part: 'on', handler: index };
       if (rollsDice(handler.if)) out.push({ where, level: 'error', text: 'в условии подписки кости не бросают — «кинуть» уберите' });
-      if (handler.on === 'seen' && readsAgainst(handler.if)) out.push({ where, level: 'warn', text: SEEN_AGAINST });
+      if ((handler.on === 'seen' || handler.on === ROLLED) && readsAgainst(handler.if)) out.push({ where, level: 'warn', text: SEEN_AGAINST });
+      if (handler.on === ROLLED && handler.confirm) out.push({ where, level: 'error', text: `«${ROLLED_LABEL}» не спрашивает игрока — снимите «спросить»` });
     });
   }
   return out;
@@ -895,6 +896,7 @@ const namesUsedIn = (...parts: unknown[]): Set<string> =>
 function heardLabel(system: System, heard: Listener): string {
   switch (heard.kind) {
     case 'seen': return SEEN_LABEL;
+    case 'rolled': return ROLLED_LABEL;
     case 'call': return system.effects?.[heard.key]?.label || system.tags?.[heard.key]?.label || heard.key;
     case 'moment': return MOMENTS[heard.key as keyof typeof MOMENTS] ?? heard.key;
     case 'field': return `${fieldOf(system, heard.key)?.label ?? heard.key} стало верным`;

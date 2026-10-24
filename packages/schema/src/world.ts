@@ -316,7 +316,7 @@ export const system = z.object({
   tags: z.record(z.string(), tagContract).optional(),
   roll_edits: z.record(z.string(), rollEdit).optional(),
 
-  initiative: z.lazy(() => rollSpec).optional(),
+  initiative: z.lazy(() => rollSpec.extend({ ties: z.array(z.string().min(1)).optional() })).optional(),
   limits: z.object({
     handlerDepth: z.number().int().positive().optional(),
     budget: z.number().int().positive().optional(),
