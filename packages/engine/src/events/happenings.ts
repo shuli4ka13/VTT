@@ -10,6 +10,10 @@ export const SEEN = 'seen';
 
 export const SEEN_LABEL = 'кости выпали';
 
+export const ROLLED = 'rolled';
+
+export const ROLLED_LABEL = 'бросок окончен';
+
 export const ANY_ACTION = '*';
 
 export const isPhase = (value: string): value is Phase => Object.prototype.hasOwnProperty.call(PHASES, value);
@@ -27,6 +31,7 @@ export const happeningOf = (phase: Phase, of: string): string => `${phase}:${of}
 
 export const BUILT_IN_NAMES = {
   seen: ['бросающий', 'против'],
+  rolled: ['бросающий', 'против'],
   moment: ['ходит'],
   lifecycle: ['лист'],
   field: ['лист'],
