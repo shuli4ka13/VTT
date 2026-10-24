@@ -27,10 +27,12 @@ export const systemSummary = z.object({
   authorName: z.string(), updatedAt: z.string(),
   status: publishState,
   mine: z.boolean().optional(),
+  behind: z.boolean().optional(),
 });
 
 export const publishedSystem = z.object({
   id: z.string(), title: z.string(), updatedAt: z.string(), system,
+  behind: z.boolean().optional(),
 });
 
 export const publishCompendiumRequest = z.object({

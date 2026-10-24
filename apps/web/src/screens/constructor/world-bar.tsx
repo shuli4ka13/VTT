@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { NavLink } from 'react-router';
 import { useWorld } from '../../store/world.ts';
 import { useSession } from '../../store/session.ts';
-import { useAutosave, rememberVersion, settle, saveLabel } from '../../store/autosave.ts';
+import { useAutosave, rememberVersion, settle, saveLabel, markClean } from '../../store/autosave.ts';
 import { Button, Input } from '../../ui/primitives.tsx';
 import { ApiError, publishSystem } from '../../api/client.ts';
-import { ProblemsButton } from './problems-panel.tsx';
+import { ProblemsButton, useProblemsPanel } from './problems-panel.tsx';
+import { GuideButton } from '../../guide/guide-card.tsx';
 import { pathWords } from './problems.ts';
 import { Tabs } from '../../ui/layout.tsx';
 import { FormulaBar } from '../../ui/formula-bar.tsx';
@@ -19,6 +20,14 @@ export const TAB_LIST = [
   { key: 'records' as const, label: TABS.records },
 ];
 
+const REFUSED = 'система не готова к публикации';
+
+const PUBLICATION = {
+  draft: 'черновик',
+  live: 'опубликована',
+  behind: 'правки не опубликованы',
+};
+
 export function SystemBar() {
   const system = useWorld(s => s.system);
   const origin = useWorld(s => s.origin);
@@ -27,6 +36,7 @@ export function SystemBar() {
   const saving = useAutosave(s => s.state);
   const tab = useWorld(s => s.activeTab);
   const pick = useWorld(s => s.pick);
+  const setOrigin = useWorld(s => s.setOrigin);
 
   const [note, setNote] = useState<{ text: string; bad: boolean } | null>(null);
 
@@ -44,8 +54,15 @@ export function SystemBar() {
     try {
       const saved = await publishSystem(origin.systemId);
       rememberVersion({ system: saved.updatedAt });
-      setNote({ text: 'опубликовано', bad: false });
-    } catch (err) { fail(err); }
+      markClean();
+      setOrigin({ publication: 'live' });
+      setNote(null);
+    } catch (err) {
+      if (err instanceof ApiError && err.message.startsWith(REFUSED)) {
+        setNote({ text: 'не опубликовано — ошибки в «Проблемах»', bad: true });
+        useProblemsPanel.getState().set(true);
+      } else fail(err);
+    }
   };
 
   const saved = saveLabel(saving, origin.systemId ? 'изменений нет' : 'система не создана');
@@ -65,9 +82,14 @@ export function SystemBar() {
 
       <span className="spacer" />
 
+      {origin.systemId && !origin.lesson ? <span
+        className={`worldbar__publication${origin.publication === 'behind' ? ' worldbar__publication--behind' : ''}`}
+        title={origin.publication === 'behind' ? 'за столом видят прежнюю версию — нажмите «Опубликовать»' : undefined}
+      >{PUBLICATION[origin.publication ?? 'draft']}</span> : null}
       {note ? <span className={`worldbar__note ${note.bad ? 'field__error' : 'muted'}`} title={note.text}>{note.text}</span> : null}
       <span className="muted">{name}</span>
-      <ProblemsButton />
+      <GuideButton />
+      <span data-guide="problems"><ProblemsButton /></span>
       <Button size="sm" variant="primary" onClick={() => void publish()}
         disabled={!origin.systemId}>Опубликовать</Button>
     </div>
