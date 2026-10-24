@@ -102,7 +102,7 @@ describe('«увидев кости»', () => {
 describe('«бросок окончен»', () => {
   afterEach(cleanup);
 
-  it('вид подписки без предмета: выбор пишет «rolled», карточка называет его словами и знает бросающего', () => {
+  it('вид подписки без предмета: выбор пишет «rolled», а список называет его словами', () => {
     const { view, get } = card({ on: 'before:*', steps: [] });
     const moment = [...view.container.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'rolled'))!;
     expect([...moment.options].find(o => o.value === 'rolled')!.textContent).toBe('бросок окончен');
