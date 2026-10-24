@@ -13799,7 +13799,10 @@
               "expr": "большее из(0, @цель.defense_pool + если(@цель.prone >= 1, если(@дистанция == \"вплотную\" или @дистанция == \"близкая\", -2, 2), 0))"
             },
             "tags": [
-              "защита"
+              "защита",
+              {
+                "expr": "@attack_skill"
+              }
             ],
             "by": {
               "expr": "@цель"
@@ -15093,6 +15096,293 @@
             "direction": "set",
             "value": {
               "expr": "@вещь.ammo_max"
+            }
+          }
+        ]
+      },
+      "dodge_ready": {
+        "label": "Уклоняется",
+        "group": "Действия",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "К следующей проверке защиты — уровень Атлетики, потом снимается (стр. 43).",
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "@носитель.skills.атлетика.rank"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
+            "tags": [
+              "защита"
+            ]
+          }
+        ],
+        "on": [
+          {
+            "on": "rolled",
+            "if": {
+              "expr": "@бросающий == @носитель и есть(@roll.tags, \"защита\")"
+            },
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": "dodge_ready",
+                "to": {
+                  "expr": "@носитель"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "block_ready": {
+        "label": "Блокирует",
+        "group": "Действия",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "К следующей проверке защиты в рукопашной — уровень Ближнего боя, потом снимается (стр. 42).",
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "@носитель.skills.ближний_бой.rank"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
+            "tags": [
+              "защита",
+              "ближний бой"
+            ]
+          }
+        ],
+        "on": [
+          {
+            "on": "rolled",
+            "if": {
+              "expr": "@бросающий == @носитель и есть(@roll.tags, \"защита\") и есть(@roll.tags, \"ближний бой\")"
+            },
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": "block_ready",
+                "to": {
+                  "expr": "@носитель"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "full_defense": {
+        "label": "Глухая оборона",
+        "group": "Действия",
+        "activation": "passive",
+        "duration": {
+          "kind": "rounds",
+          "max": 1
+        },
+        "description": "Воля — ко всем проверкам защиты до следующего боевого раунда (стр. 43).",
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "@носитель.willpower"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
+            "tags": [
+              "защита"
+            ]
+          }
+        ]
+      },
+      "act_dodge": {
+        "label": "Уклониться",
+        "group": "Действия",
+        "description": "Простое действие: уровень Атлетики — к одной проверке защиты (стр. 43).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet",
+            "role": "actor"
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.simple_left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"простое действие на этом ходу уже потрачено\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.simple_left"
+            },
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "steps": [
+          {
+            "type": "status",
+            "effect": "dodge_ready",
+            "to": {
+              "expr": "@действующий"
+            }
+          }
+        ]
+      },
+      "act_block": {
+        "label": "Блокировать",
+        "group": "Действия",
+        "description": "Простое действие: уровень Ближнего боя — к одной проверке защиты в рукопашной (стр. 42).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet",
+            "role": "actor"
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.simple_left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"простое действие на этом ходу уже потрачено\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.simple_left"
+            },
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "steps": [
+          {
+            "type": "status",
+            "effect": "block_ready",
+            "to": {
+              "expr": "@действующий"
+            }
+          }
+        ]
+      },
+      "act_full_defense": {
+        "label": "Глухая оборона",
+        "group": "Действия",
+        "description": "Сложное действие: Воля — ко всем проверкам защиты до следующего раунда (стр. 43).",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet",
+            "role": "actor"
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.battle"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.complex_left < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"сложное действие на этом ходу уже потрачено\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.complex_left"
+            },
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "steps": [
+          {
+            "type": "status",
+            "effect": "full_defense",
+            "to": {
+              "expr": "@действующий"
             }
           }
         ]
@@ -25019,7 +25309,10 @@
       "edge_plus_hit",
       "convergence",
       "device_bricked",
-      "drug_crashes"
+      "drug_crashes",
+      "act_dodge",
+      "act_block",
+      "act_full_defense"
     ],
     "sheets": {
       "runner": {
