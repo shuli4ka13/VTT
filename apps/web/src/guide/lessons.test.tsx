@@ -117,8 +117,18 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     }),
   },
   tables: {
+    block: [
+      () => { edit(d => { d.blocks!.push({ name: 'Новый блок', parts: [] }); }); pick({ activeBlock: 'Новый блок' }); },
+      () => { edit(d => { d.blocks!.find(one => one.name === 'Новый блок')!.name = 'Характеристики'; }); pick({ activeBlock: 'Характеристики' }); },
+    ],
     table: [
-      () => { pick({ activeTableId: 'таблица' }); edit(d => { d.tables!.таблица = { label: '', key: 'word', rows: [{ value: '' }] } as never; }); },
+      () => {
+        edit(d => {
+          d.tables!.таблица = { label: '', key: 'word', owner: 'sheet', rows: [{ value: '' }], columns: [{ key: 'value', label: 'Значение', kind: 'number' }] } as never;
+          d.blocks!.find(one => one.name === 'Характеристики')!.parts.push({ table: 'таблица' });
+        });
+        pick({ activeSheetTable: 'таблица', activeBlock: null });
+      },
       () => edit(d => { d.tables!.таблица!.label = 'Характеристики'; }),
     ],
     rows: [
@@ -126,51 +136,53 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => edit(d => { d.tables!.таблица!.rows = [{ value: 'сила' }, { value: '' }]; }),
       () => edit(d => { d.tables!.таблица!.rows = [{ value: 'сила' }, { value: 'ловкость' }]; }),
     ],
-    value: [
-      () => press(findAnchor({ guide: 'add-column' })!),
-      () => labelColumn('таблица', 'колонка', 'Значение'),
-    ],
     modifier: [
       () => press(findAnchor({ guide: 'add-column' })!),
-      () => labelColumn('таблица', 'колонка_2', 'Модификатор'),
+      () => labelColumn('таблица', 'колонка', 'Модификатор'),
       () => edit(d => {
-        const column = d.tables!.таблица!.columns!.find(c => c.key === 'колонка_2')!;
+        const column = d.tables!.таблица!.columns!.find(c => c.key === 'колонка')!;
         delete (column as { kind?: string }).kind;
-        (column as { expr?: unknown }).expr = { expr: 'округлить вниз((@строка.колонка - 10) / 2)' };
+        (column as { expr?: unknown }).expr = { expr: 'округлить вниз((@строка.value - 10) / 2)' };
       }),
-    ],
-    block: [
-      () => { edit(d => { d.blocks!.push({ name: 'Новый блок', parts: [] }); }); pick({ activeBlock: 'Новый блок' }); },
-      () => { edit(d => { d.blocks!.find(one => one.name === 'Новый блок')!.name = 'Характеристики'; }); pick({ activeBlock: 'Характеристики' }); },
-      () => edit(d => { d.tables!.таблица!.owner = 'sheet'; d.blocks!.find(one => one.name === 'Характеристики')!.parts.push({ table: 'таблица' }); }),
     ],
     sample: () => press(findAnchor({ text: 'образец листа' })!),
     armor: () => {
-      act(() => { useWorld.getState().editColumn('лист', 'класс_брони', c => { c.expr = { expr: '10 + @таблица.ловкость.колонка_2' } as never; }); });
+      act(() => { useWorld.getState().editColumn('лист', 'класс_брони', c => { c.expr = { expr: '10 + @таблица.ловкость.колонка' } as never; }); });
       pick({ activeFieldTag: 'класс_брони' });
     },
     problems: openProblems,
     skills: [
-      () => { pick({ activeTableId: 'таблица_2' }); edit(d => { d.tables!.таблица_2 = { label: '', key: 'word', rows: [{ value: '' }] } as never; }); },
+      () => { edit(d => { d.blocks!.push({ name: 'Новый блок', parts: [] }); }); pick({ activeBlock: 'Новый блок', activeFieldTag: null, activeSheetTable: null }); },
+      () => { edit(d => { d.blocks!.find(one => one.name === 'Новый блок')!.name = 'Навыки'; }); pick({ activeBlock: 'Навыки' }); },
+      () => {
+        edit(d => {
+          d.tables!.таблица_2 = { label: '', key: 'word', owner: 'sheet', rows: [{ value: '' }], columns: [{ key: 'value', label: 'Значение', kind: 'number' }] } as never;
+          d.blocks!.find(one => one.name === 'Навыки')!.parts.push({ table: 'таблица_2' });
+        });
+        pick({ activeSheetTable: 'таблица_2', activeBlock: null });
+      },
       () => edit(d => { d.tables!.таблица_2!.label = 'Навыки'; }),
       () => edit(d => { d.tables!.таблица_2!.rows = [{ value: 'атлетика' }]; }),
     ],
     link: [
       () => press(findAnchor({ guide: 'add-column' })!),
       () => labelColumn('таблица_2', 'колонка', 'Характеристика'),
-      () => edit(d => { d.tables!.таблица_2!.columns = [{ key: 'колонка', label: 'Характеристика', kind: 'choice', from: 'таблица' }]; }),
+      () => edit(d => {
+        const column = d.tables!.таблица_2!.columns!.find(c => c.key === 'колонка')!;
+        Object.assign(column, { kind: 'choice', from: 'таблица' });
+      }),
     ],
     pick: () => edit(d => { d.tables!.таблица_2!.rows = [{ value: 'атлетика', cells: { колонка: 'сила' } }]; }),
     through: [
       () => press(findAnchor({ guide: 'add-column' })!),
-      () => labelColumn('таблица_2', 'колонка_2', 'Значение'),
+      () => labelColumn('таблица_2', 'колонка_2', 'Итог'),
       () => edit(d => {
         const column = d.tables!.таблица_2!.columns!.find(c => c.key === 'колонка_2')!;
         delete (column as { kind?: string }).kind;
-        (column as { expr?: unknown }).expr = { expr: '@строка.колонка.колонка_2' };
+        (column as { expr?: unknown }).expr = { expr: '@строка.колонка.колонка + @строка.value' };
       }),
     ],
-    save: () => edit(d => { d.tables!.таблица!.columns!.push({ key: 'колонка_3', label: 'Спасбросок', expr: { expr: '@строка.колонка_2' } } as never); }),
+    save: () => edit(d => { d.tables!.таблица!.columns!.push({ key: 'колонка_3', label: 'Спасбросок', expr: { expr: '@строка.колонка' } } as never); }),
   },
   links: {
     called: [
@@ -464,7 +476,7 @@ describe('уроки конструктора', () => {
     mount();
     await start('tables');
     expect(useWorld.getState().system.name).toBe(seed.name);
-    expect(useWorld.getState().activeTab).toBe('dictionaries');
+    expect(useWorld.getState().activeTab).toBe('sheet');
     expect(useWorld.getState().origin).toEqual({ mode: 'system', systemTitle: 'Таблицы', lesson: 'tables' });
     await act(async () => { fireEvent.click(within(card()).button('Выйти из урока')); });
     expect(useGuide.getState().lesson).toBeNull();

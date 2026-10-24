@@ -1,4 +1,3 @@
-import { TABS } from '../../words.ts';
 import { ROW } from '@vtt/engine/model/sheet-columns';
 import { compile } from '@vtt/engine/formula';
 import type { System } from '@vtt/schema';
@@ -17,7 +16,18 @@ const skills = (view: View) => {
   return found && found[1].shape !== 'book' && found[1].shape !== 'single' ? found : undefined;
 };
 
-const dicts = (view: View) => Object.values(view.system.tables ?? {}).filter(table => table.shape !== 'book' && table.shape !== 'single');
+const blockNamed = (view: View, name: string) => (view.system.blocks ?? []).find(block => same(block.name, name));
+
+const placedIn = (view: View, name: string): boolean => {
+  const block = blockNamed(view, name);
+  return Boolean(block?.parts.some(part => {
+    const table = view.system.tables?.[part.table];
+    return table && table.shape !== 'book' && table.shape !== 'single' && table.owner === 'sheet';
+  }));
+};
+
+const onSheetIn = (view: View, found: ReturnType<typeof stats>, name: string): boolean =>
+  Boolean(found && found[1].owner === 'sheet' && blockNamed(view, name)?.parts.some(part => part.table === found[0]));
 
 const parses = (text: string): boolean => {
   try { compile(text); return true; } catch { return false; }
@@ -39,42 +49,55 @@ const readsModifier = (view: View, label: string): boolean => {
 export const tables: Lesson = {
   id: 'tables',
   title: 'Таблицы',
-  sub: 'Справочник характеристик с формулой, своими у каждого листа, и класс брони от ловкости.',
+  sub: 'Характеристики и навыки таблицами прямо на листе, формула колонки и класс брони от ловкости.',
   seed: base as unknown as System,
-  tab: 'dictionaries',
+  tab: 'sheet',
   chapters: [
-    { title: 'Справочник', sum: 'Таблица «Характеристики»: сила и ловкость, «Значение» и «Модификатор» формулой.' },
-    { title: 'На листе', sum: 'Характеристики свои у каждого листа, класс брони считается от ловкости.' },
-    { title: 'Ссылка на таблицу', sum: 'Таблица «Навыки»: у «атлетики» характеристика «сила», а «Значение» берёт её модификатор.' },
+    { title: 'Таблица на листе', sum: 'На листе таблица «Характеристики»: сила и ловкость, «Значение» вписывает игрок, «Модификатор» считается.' },
+    { title: 'Лист героя', sum: 'Характеристики видны на листе, класс брони считается от ловкости, ошибок нет.' },
+    { title: 'Навыки', sum: 'Таблица «Навыки»: у атлетики характеристика «сила», «Итог» — модификатор силы плюс «Значение».' },
     { title: 'Сами', sum: 'Вы добавили колонку с формулой без подсказок.' },
   ],
   steps: [
     {
-      id: 'table',
-      chapter: 'Справочник',
-      lead: `Таблица — как лист в Экселе: строки и колонки. Здесь заведём справочник характеристик: строки «сила» и «ловкость», колонки «Значение» и «Модификатор». Справочники лежат на вкладке «${TABS.rules}» в разделе «Таблицы».`,
-      tab: 'dictionaries',
-      panel: 'Разделы правил',
-      say: 'Заведите таблицу «Характеристики».',
+      id: 'block',
+      chapter: 'Таблица на листе',
+      lead: 'Таблица — как лист в Экселе: строки и колонки. Характеристики героя — таблица: строки «сила» и «ловкость», колонки «Значение» и «Модификатор». Заведём её прямо на листе.',
+      tab: 'sheet',
+      say: 'Заведите на листе блок «Характеристики».',
       at: [
-        { at: { text: '+ таблица' }, say: 'В разделе «Таблицы» нажмите «+ таблица».', done: view => dicts(view).length > 0 },
-        { at: { input: 'как зовётся таблица' }, say: 'В шапке таблицы впишите название «Характеристики» и нажмите Enter.' },
+        { at: { text: '+ блок', in: 'Листы' }, say: 'В виде «блоки и типы листов» нажмите «+ блок».', done: view => (view.system.blocks ?? []).length > 1 },
+        { at: { input: 'как зовётся блок' }, say: 'Впишите имя «Характеристики» и нажмите Enter.' },
       ],
-      via: { text: 'Таблицы', in: 'Разделы правил' },
-      done: view => Boolean(stats(view)),
-      result: () => 'Таблица «Характеристики» заведена.',
+      via: { text: 'блоки и типы листов' },
+      done: view => Boolean(blockNamed(view, 'Характеристики')),
+      result: () => 'Блок «Характеристики» на листе.',
+    },
+    {
+      id: 'table',
+      chapter: 'Таблица на листе',
+      tab: 'sheet',
+      say: 'Заведите в блоке таблицу «Характеристики».',
+      at: [
+        { at: { text: '+ таблица', in: 'Характеристики' }, say: 'В блоке «Характеристики» нажмите «+ таблица».', done: view => placedIn(view, 'Характеристики') },
+        { at: { input: 'как зовётся таблица' }, say: 'Над листом откроется таблица. Впишите её название «Характеристики» и нажмите Enter.' },
+      ],
+      via: [{ text: 'Характеристики', in: 'Листы' }, { text: 'блоки и типы листов' }],
+      done: view => onSheetIn(view, stats(view), 'Характеристики'),
+      result: () => 'Таблица «Характеристики» стоит в блоке. Колонка «Значение» в ней уже есть — его вписывает игрок.',
     },
     {
       id: 'rows',
-      chapter: 'Справочник',
-      tab: 'dictionaries',
+      chapter: 'Таблица на листе',
+      tab: 'sheet',
       say: 'Добавьте строки «сила» и «ловкость».',
       at: [
         { at: { input: 'слово' }, say: 'В пустой строке впишите «сила» и нажмите Enter.', done: view => (stats(view)?.[1].rows ?? []).some(row => same(row.value, 'сила')) },
         { at: { text: '+ строка' }, say: 'Нажмите «+ строка».', done: view => (stats(view)?.[1].rows ?? []).length > 1 },
         { at: { input: 'слово' }, say: 'В новой строке впишите «ловкость» и нажмите Enter.' },
       ],
-      via: { text: 'Характеристики' },
+      hint: 'Таблица закрылась? В блоке «Характеристики» щёлкните «Характеристики:» — она откроется над листом.',
+      via: [{ text: 'Характеристики:' }, { text: 'блоки и типы листов' }],
       done: view => {
         const rows = (stats(view)?.[1].rows ?? []).map(row => row.value);
         return rows.some(value => same(value, 'сила')) && rows.some(value => same(value, 'ловкость'));
@@ -82,22 +105,10 @@ export const tables: Lesson = {
       result: () => 'Строки: сила и ловкость.',
     },
     {
-      id: 'value',
-      chapter: 'Справочник',
-      tab: 'dictionaries',
-      say: 'Добавьте колонку «Значение» — число.',
-      at: [
-        { at: { guide: 'add-column' }, say: 'В шапке таблицы нажмите «+».', done: view => (stats(view)?.[1].columns ?? []).length > 0 },
-        { at: { input: 'как зовётся колонка' }, say: 'Впишите название «Значение» и нажмите Enter. Тип «число» уже стоит.' },
-      ],
-      done: view => columnBy(stats(view)?.[1], 'Значение')?.kind === 'number',
-      result: () => 'Колонка «Значение» — число.',
-    },
-    {
       id: 'modifier',
-      chapter: 'Справочник',
+      chapter: 'Таблица на листе',
       lead: 'Формула колонки считается для каждой строки отдельно: «Значение» в ней — значение той же строки, у силы — силы, у ловкости — ловкости.',
-      tab: 'dictionaries',
+      tab: 'sheet',
       say: 'Добавьте колонку «Модификатор»: (значение − 10) / 2, с округлением вниз.',
       hint: FORMULA_HINT,
       at: [
@@ -105,6 +116,7 @@ export const tables: Lesson = {
         { at: { input: 'как зовётся колонка' }, say: 'Впишите название «Модификатор» и нажмите Enter.', done: view => Boolean(columnBy(stats(view)?.[1], 'Модификатор')) },
         { at: { text: 'Формула для всех строк' }, say: 'Щёлкните «Формула для всех строк» и наберите: округлить вниз((Значение - 10) / 2). Слово «Значение» не печатайте — наберите «@» и выберите его в подсказке. Нажмите «готово».' },
       ],
+      via: [{ text: 'Характеристики:' }, { text: 'блоки и типы листов' }],
       done: view => {
         const table = stats(view)?.[1];
         const value = columnBy(table, 'Значение');
@@ -118,33 +130,15 @@ export const tables: Lesson = {
       result: () => 'Модификатор считается в каждой строке: у силы — из значения силы, у ловкости — из значения ловкости.',
     },
     {
-      id: 'block',
-      chapter: 'На листе',
-      tab: 'sheet',
-      say: 'Поставьте характеристики на лист — у каждого героя свои значения.',
-      at: [
-        { at: { text: '+ блок', in: 'Листы' }, say: 'В виде «блоки и типы листов» нажмите «+ блок».', done: view => (view.system.blocks ?? []).length > 1 },
-        { at: { input: 'как зовётся блок' }, say: 'Впишите имя блока «Характеристики» и нажмите Enter.', done: view => (view.system.blocks ?? []).some(block => same(block.name, 'Характеристики')) },
-        { at: { text: '+ поля из таблицы…' }, say: 'В списке «+ поля из таблицы…» выберите «Характеристики · справочник», затем нажмите «Да, своими у каждого листа».' },
-      ],
-      via: { text: 'блоки и типы листов' },
-      done: view => {
-        const found = stats(view);
-        return Boolean(found && found[1].owner === 'sheet'
-          && (view.system.blocks ?? []).some(block => block.parts.some(part => part.table === found[0])));
-      },
-      result: () => 'Характеристики на листе. Значения у каждого героя свои.',
-    },
-    {
       id: 'sample',
-      chapter: 'На листе',
+      chapter: 'Лист героя',
       tab: 'sheet',
-      say: 'Нажмите «образец листа». У силы и ловкости видно «Значение» и посчитанный «Модификатор».',
+      say: 'Нажмите «образец листа». У силы и ловкости — поле для «Значения» и посчитанный «Модификатор».',
       at: { text: 'образец листа' },
     },
     {
       id: 'armor',
-      chapter: 'На листе',
+      chapter: 'Лист героя',
       lead: 'Поле листа может брать число из любой клетки таблицы — например, модификатор ловкости.',
       tab: 'sheet',
       say: 'Чтобы класс брони рос с ловкостью, щёлкните поле «Класс брони», в «Формула для всех листов» наберите «10 + @» и выберите «Модификатор: ловкость». Нажмите «готово».',
@@ -161,7 +155,7 @@ export const tables: Lesson = {
     },
     {
       id: 'problems',
-      chapter: 'На листе',
+      chapter: 'Лист героя',
       say: 'Нажмите «Проблемы» в шапке. Ошибок быть не должно.',
       at: { guide: 'problems' },
       done: problemsClean,
@@ -169,30 +163,32 @@ export const tables: Lesson = {
     },
     {
       id: 'skills',
-      chapter: 'Ссылка на таблицу',
-      lead: 'Навык опирается на характеристику: атлетика — на силу. В таблице навыков будет колонка «Характеристика», где выбирают строку из «Характеристик».',
-      tab: 'dictionaries',
-      panel: 'Разделы правил',
-      say: 'Заведите таблицу «Навыки» со строкой «атлетика».',
+      chapter: 'Навыки',
+      lead: 'Навык опирается на характеристику: атлетика — на силу. Сделаем навыки тоже таблицей на листе.',
+      tab: 'sheet',
+      say: 'Заведите на листе блок «Навыки» с таблицей «Навыки» и строкой «атлетика».',
       at: [
-        { at: { text: '+ таблица' }, say: 'В разделе «Таблицы» нажмите «+ таблица».', done: view => dicts(view).length > 1 },
-        { at: { input: 'как зовётся таблица' }, say: 'Впишите название «Навыки» и нажмите Enter.', done: view => Boolean(skills(view)) },
+        { at: { text: '+ блок', in: 'Листы' }, say: 'В виде «блоки и типы листов» нажмите «+ блок».', done: view => (view.system.blocks ?? []).length > 2 },
+        { at: { input: 'как зовётся блок' }, say: 'Впишите имя «Навыки» и нажмите Enter.', done: view => Boolean(blockNamed(view, 'Навыки')) },
+        { at: { text: '+ таблица', in: 'Навыки' }, say: 'В блоке «Навыки» нажмите «+ таблица».', done: view => placedIn(view, 'Навыки') },
+        { at: { input: 'как зовётся таблица' }, say: 'Впишите название таблицы «Навыки» и нажмите Enter.', done: view => Boolean(skills(view)) },
         { at: { input: 'слово' }, say: 'В пустой строке впишите «атлетика» и нажмите Enter.' },
       ],
-      via: { text: 'Таблицы', in: 'Разделы правил' },
-      done: view => (skills(view)?.[1].rows ?? []).some(row => same(row.value, 'атлетика')),
-      result: () => 'Таблица «Навыки»: строка «атлетика».',
+      via: { text: 'блоки и типы листов' },
+      done: view => onSheetIn(view, skills(view), 'Навыки') && (skills(view)?.[1].rows ?? []).some(row => same(row.value, 'атлетика')),
+      result: () => 'Таблица «Навыки» на листе, строка «атлетика». «Значение» навыка вписывает игрок — это вложенные очки.',
     },
     {
       id: 'link',
-      chapter: 'Ссылка на таблицу',
-      tab: 'dictionaries',
+      chapter: 'Навыки',
+      tab: 'sheet',
       say: 'Добавьте в «Навыки» колонку «Характеристика», которая выбирается из таблицы «Характеристики».',
       at: [
-        { at: { guide: 'add-column' }, say: 'В шапке таблицы «Навыки» нажмите «+».', done: view => (skills(view)?.[1].columns ?? []).length > 0 },
+        { at: { guide: 'add-column' }, say: 'В шапке таблицы «Навыки» нажмите «+».', done: view => (skills(view)?.[1].columns ?? []).length > 1 },
         { at: { input: 'как зовётся колонка' }, say: 'Впишите название «Характеристика» и нажмите Enter.', done: view => Boolean(columnBy(skills(view)?.[1], 'Характеристика')) },
         { at: { text: 'Тип' }, say: 'В «Тип» выберите «из таблицы», затем в «Из таблицы» — «Характеристики».' },
       ],
+      via: [{ text: 'Навыки:' }, { text: 'блоки и типы листов' }],
       done: view => {
         const column = columnBy(skills(view)?.[1], 'Характеристика');
         const source = stats(view);
@@ -209,48 +205,53 @@ export const tables: Lesson = {
     },
     {
       id: 'pick',
-      chapter: 'Ссылка на таблицу',
-      tab: 'dictionaries',
+      chapter: 'Навыки',
+      tab: 'sheet',
       say: 'В строке «атлетика» в колонке «Характеристика» выберите «сила».',
+      hint: 'Это выбираете вы, автор правил, — у всех героев атлетика будет от силы.',
       done: view => {
         const table = skills(view)?.[1];
         const column = columnBy(table, 'Характеристика');
         const row = (table?.rows ?? []).find(one => same(one.value, 'атлетика'));
         return Boolean(column && same(row?.cells?.[column.key], 'сила'));
       },
-      result: () => 'У «атлетики» характеристика «сила».',
+      result: () => 'У атлетики характеристика «сила».',
     },
     {
       id: 'through',
-      chapter: 'Ссылка на таблицу',
+      chapter: 'Навыки',
       lead: 'Через колонку «Характеристика» формула навыка достаёт число из другой таблицы: у атлетики — модификатор силы.',
-      tab: 'dictionaries',
-      say: 'Добавьте в «Навыки» колонку «Значение», равную модификатору характеристики навыка.',
+      tab: 'sheet',
+      say: 'Добавьте в «Навыки» колонку «Итог»: модификатор характеристики плюс «Значение».',
       hint: FORMULA_HINT,
       at: [
-        { at: { guide: 'add-column' }, say: 'В шапке таблицы «Навыки» нажмите «+».', done: view => (skills(view)?.[1].columns ?? []).length > 1 },
-        { at: { input: 'как зовётся колонка' }, say: 'Впишите название «Значение» и нажмите Enter.', done: view => Boolean(columnBy(skills(view)?.[1], 'Значение')) },
-        { at: { text: 'Формула для всех строк' }, say: 'Щёлкните «Формула для всех строк», наберите «@» и выберите «Характеристика · Модификатор». Нажмите «готово».' },
+        { at: { guide: 'add-column' }, say: 'В шапке таблицы «Навыки» нажмите «+».', done: view => (skills(view)?.[1].columns ?? []).length > 2 },
+        { at: { input: 'как зовётся колонка' }, say: 'Впишите название «Итог» и нажмите Enter.', done: view => Boolean(columnBy(skills(view)?.[1], 'Итог')) },
+        { at: { text: 'Формула для всех строк' }, say: 'Щёлкните «Формула для всех строк»: «@» → «Характеристика · Модификатор», затем « + », затем «@» → «Значение». Нажмите «готово».' },
       ],
+      via: [{ text: 'Навыки:' }, { text: 'блоки и типы листов' }],
       done: view => {
         const table = skills(view)?.[1];
         const link = columnBy(table, 'Характеристика');
+        const value = columnBy(table, 'Значение');
         const modifier = columnBy(stats(view)?.[1], 'Модификатор');
-        return Boolean(link && modifier && reads(columnBy(table, 'Значение')?.expr, `@${ROW}.${link.key}.${modifier.key}`));
+        const formula = columnBy(table, 'Итог')?.expr;
+        return Boolean(link && value && modifier
+          && reads(formula, `@${ROW}.${link.key}.${modifier.key}`) && reads(formula, `@${ROW}.${value.key}`));
       },
-      result: () => 'У атлетики «Значение» — модификатор силы.',
+      result: () => 'У атлетики «Итог» — модификатор силы плюс вложенные очки.',
     },
     {
       id: 'save',
       chapter: 'Сами',
       alone: true,
-      tab: 'dictionaries',
+      tab: 'sheet',
       say: 'Добавьте в таблицу «Характеристики» колонку «Спасбросок», равную модификатору.',
-      hint: 'Вкладка «Правила», раздел «Таблицы», «+» в шапке «Характеристик». В формуле — «@» и «Модификатор».',
+      hint: 'Откройте таблицу: в блоке «Характеристики» щёлкните «Характеристики:». Затем «+» в её шапке, в формуле — «@» и «Модификатор».',
       done: view => readsModifier(view, 'Спасбросок'),
       traps: [{
         when: view => Boolean(fieldBy(view.system, 'Спасбросок')),
-        say: '«Спасбросок» попал в поле листа, а нужен колонкой в таблице «Характеристики» на вкладке «Правила».',
+        say: '«Спасбросок» попал отдельным полем листа, а нужен колонкой таблицы «Характеристики». Удалите поле и добавьте колонку «+» в шапке таблицы.',
       }],
       result: () => '«Спасбросок» = модификатор.',
     },
