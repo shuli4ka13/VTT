@@ -58,11 +58,30 @@ function choiceArgs(system: System, table: string): { where: Where; args: Loose;
       const s = step as unknown as Loose;
       if (s.type === 'emit') for (const target of emittedChoices(system, id, s.effect)) collect({ tab: 'effects', effect: id, step: at }, target, s.args);
     }
+    (effect.on ?? []).forEach((handler, index) => {
+      for (const [at, step] of [...(handler.steps ?? []), ...(handler.cost ?? [])].entries()) {
+        const s = step as unknown as Loose;
+        if (s.type === 'emit') for (const target of emittedChoices(system, id, s.effect)) collect({ tab: 'effects', effect: id, handler: index, step: at }, target, s.args);
+      }
+    });
   }
   for (const [rk, kind] of recordKinds(system)) {
     for (const binding of kind.bindings ?? []) collect({ tab: 'records', kind: rk }, binding.effect, binding.args);
   }
   return out;
+}
+
+const escapePattern = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+function repathRow(node: unknown, table: string, from: unknown, to: unknown): unknown {
+  const path = new RegExp(`(?<=^|[@.])${escapePattern(`${table}.${String(from)}`)}(?![\\p{L}\\p{N}_])`, 'gu');
+  const walk = (item: unknown): unknown => {
+    if (typeof item === 'string') return item.replace(path, `${table}.${String(to)}`);
+    if (Array.isArray(item)) { item.forEach((one, i) => { item[i] = walk(one); }); return item; }
+    if (item && typeof item === 'object') { for (const key of Object.keys(item)) (item as Loose)[key] = walk((item as Loose)[key]); return item; }
+    return item;
+  };
+  return walk(node);
 }
 
 const constOf = (arg: unknown): unknown => {
@@ -314,6 +333,9 @@ export function renameRow(system: System, table: string, from: unknown, to: unkn
     const value = constOf(args[key]);
     if (holds(value, from)) args[key] = { expr: JSON.stringify(swap(value, from, to)) };
   }
+  for (const part of ['effects', 'tables', 'sheets', 'initiative', 'blocks', 'library'] as const) {
+    if (system[part as keyof System]) repathRow(system[part as keyof System], table, from, to);
+  }
   for (const { cond, rename } of stepConditions(system).reverse()) {
     if (pointsAt(system, cond, table) && same(cond.is, from)) rename(to);
   }
@@ -332,6 +354,7 @@ export function renameRow(system: System, table: string, from: unknown, to: unkn
 
 export function renameRowInBook(system: System, book: Compendium, table: string, from: unknown, to: unknown): void {
   if (from === undefined || from === null || from === '') return;
+  repathRow(recordsOf(book), table, from, to);
   for (const [rk, kind] of recordKinds(system)) {
     const props = (kind.columns ?? []).filter(p => (p as Loose).kind === 'choice' && (p as Loose).from === table);
     if (!props.length) continue;

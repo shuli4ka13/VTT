@@ -70,4 +70,16 @@ group('ключ строке без ключа — не переименован
     renameRow(system, 'хват', undefined, 'двуручный');
     eq(system.tables!.оружие!.columns![0]!.default, undefined);
   });
+
+  test('переименовали характеристику — переименованы пути в формулах и аргументы в подписках; линт как до', () => {
+    const мир = dnd();
+    const system = мир.system as System;
+    eq(errorsOf(lintSystem(system, мир.compendium as Compendium)).length, 0);
+    renameRow(system, 'abilities', 'телосложение', 'выносливость');
+    renameRowInBook(system, мир.compendium as Compendium, 'abilities', 'телосложение', 'выносливость');
+    eq(errorsOf(lintSystem(system, мир.compendium as Compendium)).map(p => p.text).join('\n'), '');
+    ok(JSON.stringify(system.tables).includes('@abilities.выносливость.mod'));
+    ok(!JSON.stringify(system.effects).includes('"\\"телосложение\\""'));
+  });
 });
+
