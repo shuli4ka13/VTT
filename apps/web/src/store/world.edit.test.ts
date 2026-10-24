@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useWorld, emptySystem } from './world.ts';
+import { useLookup } from './lookup.ts';
 import type { System } from '@vtt/schema';
 import { fieldOf, fieldsOf } from '@vtt/engine/model/sheet-columns';
 
@@ -67,5 +68,13 @@ describe('точечные редакторы не клонируют всю с�
     useWorld.getState().editEffect('нет', draft => { draft.label = 'x'; });
     useWorld.getState().editColumn('лист', 'нет', draft => { draft.label = 'x'; });
     expect(useWorld.getState().system).toBe(before);
+  });
+});
+
+describe('справка «Откуда это» и смена системы', () => {
+  it('подмена мира целиком закрывает справку: имя из прошлой системы в новой не значит ничего', () => {
+    useLookup.getState().show({ name: 'строка.score', label: 'Значение', where: 'Характеристики · Модификатор', table: 'abilities' });
+    useWorld.getState().replaceWorld({ system: emptySystem(), compendium: { records: [] }, sheets: [] });
+    expect(useLookup.getState().at).toBeNull();
   });
 });

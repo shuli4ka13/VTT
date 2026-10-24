@@ -5,6 +5,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { world as W } from '@vtt/schema';
 import type { System, Compendium, Sheet, Effect, Column } from '@vtt/schema';
 import { lazyStorage } from './lazy-storage.ts';
+import { useLookup } from './lookup.ts';
 import { withLibrary } from '@vtt/engine/model/owned';
 import { forgetFields } from '@vtt/engine/model/sheet-columns';
 
@@ -155,20 +156,23 @@ export const useWorld = create<WorldState>()(persist(set => ({
 
   setOrigin: patch => set(state => ({ origin: { ...state.origin, ...patch } })),
 
-  replaceWorld: world => set({
-    ...world,
-    activeFieldTag: null,
-    activeColumn: null,
-    activeBlock: null,
-    activeRow: null,
-    activeIn: null,
-    activeGroupName: null,
-    activeEffectId: null,
-    activeRecordKind: null,
-  activeSheetKind: null,
-    activeRecordId: null,
-    activeSheetId: world.sheets[0]?.id ?? null,
-  }),
+  replaceWorld: world => {
+    useLookup.getState().close();
+    set({
+      ...world,
+      activeFieldTag: null,
+      activeColumn: null,
+      activeBlock: null,
+      activeRow: null,
+      activeIn: null,
+      activeGroupName: null,
+      activeEffectId: null,
+      activeRecordKind: null,
+      activeSheetKind: null,
+      activeRecordId: null,
+      activeSheetId: world.sheets[0]?.id ?? null,
+    });
+  },
 }), {
   name: 'vtt.world',
   storage: createJSONStorage(() => worldStorage),
