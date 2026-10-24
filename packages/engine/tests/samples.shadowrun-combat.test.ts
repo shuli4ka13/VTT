@@ -187,4 +187,20 @@ group('Shadowrun 6, глава «Инициатива и действия»: с�
     eq(after(turn, 'р').values.simple_left, 5);
     eq(at(after(turn, 'р'), 'complex_left'), 1);
   });
+
+  test('со стола (стр. 45, 47): на броске инициативы сбоя нет; Преимущество предлагает переброс и +3 к инициативе, но не успехи', async () => {
+    const { perform: run } = await import('../src/core/perform.ts');
+    const one = fighter('р', { reaction: 3, intuition: 3, edge_left: 2 });
+    const first = run({ system, compendium, clock: null, sheets: [one], die: tape(1) }, { op: 'turn', turn: 'start' } as never);
+    if (first.kind !== 'paused') throw new Error(first.kind);
+    const offers = first.question.offers.map(o => o.id);
+    ok(offers.includes('edge_init') && offers.includes('edge_reroll_one'), offers.join(','));
+    ok(!offers.includes('edge_plus_hit') && !offers.includes('edge_bump'), offers.join(','));
+    const second = run({ system, compendium, clock: null, sheets: [one], die: tape(1), journal: { ...first.journal, answers: { ...first.journal.answers, [first.question.key]: ['edge_init'] } } }, { op: 'turn', turn: 'start' } as never);
+    if (second.kind !== 'done') throw new Error(second.kind);
+    ok(second.log.some(l => l.includes('Инициатива: р 10')), second.log.join('\n'));
+    ok(!second.log.some(l => l.includes('«Сбой»')), second.log.join('\n'));
+    eq(after(second, 'р').values.edge_left, 1);
+  });
 });
+

@@ -118,5 +118,13 @@ group('Shadowrun 6, глава «Магия»: ситуации книжника
     eq(at(koshka, 'spell_ar'), 11);
     eq(at(koshka, 'drain_pool'), 10);
   });
+
+  test('со стола (стр. 111): косвенное заклинание — урон больше Тела сбивает с ног; ровно Тело — нет', () => {
+    const kass = caster({ tradition: 'шаманизм', magic: 6, charisma: 5, willpower: 5, 'skills.колдовство.rank': 6 });
+    const hit = (resist: number[]) => cast(kass, [sheet('о', { body: 3 })], 'spell_fireball', [...Array(6).fill(5), ...Array(6).fill(2), ...Array(10).fill(2), 2, 2, 2, 2, 2, 2, ...resist]);
+    const hard = after(hit([2, 2, 2]), 'о');
+    eq(hard.values.physical, 9);
+    ok(hard.effects.some(e => e.effectId === 'prone'));
+  });
 });
 

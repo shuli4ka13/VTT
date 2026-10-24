@@ -23530,6 +23530,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "baraholka": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 6,
           },
@@ -23544,6 +23547,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ baraholka · high · вне боя": {
     "baraholka": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 6,
@@ -23586,6 +23592,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "baraholka": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 2,
           },
@@ -23606,6 +23615,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ baraholka · walk · вне боя": {
     "baraholka": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 2,
@@ -23628,6 +23640,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "baraholka_killer": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 6,
           },
@@ -23642,6 +23657,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ baraholka_killer · high · вне боя": {
     "baraholka_killer": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 6,
@@ -23684,6 +23702,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "baraholka_killer": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 2,
           },
@@ -23704,6 +23725,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ baraholka_killer · walk · вне боя": {
     "baraholka_killer": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 2,
@@ -23726,6 +23750,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "drone_doberman": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 6,
           },
@@ -23740,6 +23767,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ drone_doberman · high · вне боя": {
     "drone_doberman": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 6,
@@ -23782,6 +23812,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "drone_doberman": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 2,
           },
@@ -23802,6 +23835,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ drone_doberman · walk · вне боя": {
     "drone_doberman": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 2,
@@ -23824,6 +23860,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "fiveeyes": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 8,
           },
@@ -23844,6 +23883,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "fiveeyes": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 8,
           },
@@ -23861,6 +23903,13 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
   },
   "→ fiveeyes · low · бой": {
+    "fiveeyes": {
+      "effects": [
+        {
+          "effectId": "prone",
+        },
+      ],
+    },
     "fiveeyes_squad": {
       "values": {
         "physical": 3,
@@ -23874,6 +23923,13 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
   },
   "→ fiveeyes · low · вне боя": {
+    "fiveeyes": {
+      "effects": [
+        {
+          "effectId": "prone",
+        },
+      ],
+    },
     "fiveeyes_squad": {
       "values": {
         "physical": 3,
@@ -23889,6 +23945,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ fiveeyes · walk · бой": {
     "fiveeyes": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 3,
@@ -23913,6 +23972,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "fiveeyes": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 3,
           },
@@ -23936,6 +23998,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "fiveeyes_2": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 8,
           },
@@ -23956,6 +24021,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "fiveeyes_2": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 8,
           },
@@ -23973,6 +24041,13 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
   },
   "→ fiveeyes_2 · low · бой": {
+    "fiveeyes_2": {
+      "effects": [
+        {
+          "effectId": "prone",
+        },
+      ],
+    },
     "fiveeyes_squad": {
       "values": {
         "physical": 3,
@@ -23986,6 +24061,13 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
   },
   "→ fiveeyes_2 · low · вне боя": {
+    "fiveeyes_2": {
+      "effects": [
+        {
+          "effectId": "prone",
+        },
+      ],
+    },
     "fiveeyes_squad": {
       "values": {
         "physical": 3,
@@ -24001,6 +24083,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ fiveeyes_2 · walk · бой": {
     "fiveeyes_2": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 3,
@@ -24025,6 +24110,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "fiveeyes_2": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 3,
           },
@@ -24048,6 +24136,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "fiveeyes_squad": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 6,
           },
@@ -24062,6 +24153,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ fiveeyes_squad · high · вне боя": {
     "fiveeyes_squad": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 6,
@@ -24104,6 +24198,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "fiveeyes_squad": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 2,
           },
@@ -24124,6 +24221,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ fiveeyes_squad · walk · вне боя": {
     "fiveeyes_squad": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 2,
@@ -24244,6 +24344,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "humanis": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 8,
           },
@@ -24262,6 +24365,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "humanis": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 8,
           },
@@ -24278,6 +24384,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   },
   "→ humanis · low · бой": {
     "humanis": {
+      "effects": [
+        {
+          "effectId": "prone",
+        },
+      ],
       "values": {
         "physical": 3,
       },
@@ -24291,6 +24402,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   },
   "→ humanis · low · вне боя": {
     "humanis": {
+      "effects": [
+        {
+          "effectId": "prone",
+        },
+      ],
       "values": {
         "physical": 3,
       },
@@ -24305,6 +24421,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ humanis · walk · бой": {
     "humanis": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 3,
@@ -24327,6 +24446,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "humanis": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 3,
           },
@@ -24348,6 +24470,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "koshka": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 5,
           },
@@ -24362,6 +24487,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ koshka · high · вне боя": {
     "koshka": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 5,
@@ -24396,6 +24524,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "koshka": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 2,
           },
@@ -24412,6 +24543,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ koshka · walk · вне боя": {
     "koshka": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 2,
@@ -24430,6 +24564,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "lone_star": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 6,
           },
@@ -24444,6 +24581,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ lone_star · high · вне боя": {
     "lone_star": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 6,
@@ -24492,6 +24632,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "lone_star": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 2,
           },
@@ -24513,6 +24656,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "lone_star": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 2,
           },
@@ -24528,6 +24674,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "mafia": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 8,
           },
@@ -24542,6 +24691,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ mafia · high · вне боя": {
     "mafia": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 8,
@@ -24590,6 +24742,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "mafia": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 3,
           },
@@ -24610,6 +24765,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
     "mafia": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 3,
@@ -24724,6 +24882,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "sauron": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 8,
           },
@@ -24738,6 +24899,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ sauron · high · вне боя": {
     "sauron": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 8,
@@ -24786,6 +24950,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "sauron": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 3,
           },
@@ -24807,6 +24974,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "sauron": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 3,
           },
@@ -24822,6 +24992,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     "silk": {
       "effects": [
         {
+          "effectId": "prone",
+        },
+        {
           "args": {
             "level": 5,
           },
@@ -24836,6 +25009,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ silk · high · вне боя": {
     "silk": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 5,
@@ -24856,6 +25032,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
       },
     },
     "silk": {
+      "effects": [
+        {
+          "effectId": "prone",
+        },
+      ],
       "values": {
         "physical": 3,
       },
@@ -24869,6 +25050,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
       },
     },
     "silk": {
+      "effects": [
+        {
+          "effectId": "prone",
+        },
+      ],
       "values": {
         "physical": 3,
       },
@@ -24883,6 +25069,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
     "silk": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 2,
@@ -24904,6 +25093,9 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
     "silk": {
       "effects": [
+        {
+          "effectId": "prone",
+        },
         {
           "args": {
             "level": 2,
