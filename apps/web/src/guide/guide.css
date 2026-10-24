@@ -1,0 +1,27 @@
+.guide {
+  position: fixed; right: var(--s-5); bottom: var(--s-5); z-index: 70;
+  display: flex; flex-direction: column; align-items: flex-end; gap: var(--s-2);
+  width: min(380px, calc(100vw - 2 * var(--s-5)));
+}
+.guide__card { width: 100%; box-shadow: var(--shadow-2); border-color: var(--accent); }
+.guide__prompt { margin: 0; color: var(--accent-hover); font-weight: 600; }
+.guide__say { margin: 0; line-height: var(--lh); }
+.guide__hint { margin: 0; color: var(--text-muted); }
+.guide__actions { display: flex; align-items: center; gap: var(--s-2); }
+.guide-spot {
+  position: fixed; z-index: 69; pointer-events: none;
+  border: 2px solid var(--accent); border-radius: var(--r-2);
+  box-shadow: 0 0 0 4px var(--accent-soft), 0 0 18px var(--accent);
+  transition: top .15s ease, left .15s ease, width .15s ease, height .15s ease;
+}
+.guide-lesson__tag { margin-left: var(--s-3); }
+.guide__lead { margin: 0; color: var(--text-muted); line-height: var(--lh); }
+.guide__sum { margin: 0; padding-top: var(--s-2); border-top: 1px solid var(--border); color: var(--text-muted); }
+.guide__actions { flex-wrap: wrap; }
+.guide__strip {
+  font: inherit; font-size: var(--fs-3); color: var(--text); cursor: pointer;
+  padding: var(--s-2) var(--s-4); border-radius: var(--r-full);
+  background: var(--surface); border: 1px solid var(--accent); box-shadow: var(--shadow-2);
+}
+.guide__strip:hover { border-color: var(--accent-hover); }
+.guide--left { right: auto; left: var(--s-5); align-items: flex-start; }

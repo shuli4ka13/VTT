@@ -422,22 +422,23 @@ export function lowestOf(roll: Roll): Rolled | null {
 
 const EXPLODE: RollEdit = { label: '', ops: [{ op: 'explode', apart: true }] };
 
-export function bumpTarget(roll: Roll): Rolled | null {
+export function bumpTarget(roll: Roll, by: number): Rolled | null {
   const taken = new Set(kept(roll));
   const read = roll.claim.read as { kind: string; atLeast?: number };
   const pool = roll.dice.filter(d => taken.has(d) && !d.extra && !d.minus && d.from === undefined && d.face < d.sides);
   if (!pool.length) return null;
-  const below = typeof read.atLeast === 'number' ? pool.filter(d => d.face < read.atLeast!) : [];
-  if (below.length) return below.reduce((best, d) => (d.face > best.face ? d : best));
+  const reach = typeof read.atLeast === 'number' ? pool.filter(d => d.face < read.atLeast! && d.face + by >= read.atLeast!) : [];
+  if (reach.length) return reach.reduce((best, d) => (d.face > best.face ? d : best));
   return pool.reduce((low, d) => (d.face < low.face ? d : low));
 }
 
 export function see(roll: Roll, op: SeenOp, die: Die): Roll {
   if (op.kind === 'plus') return withAddends(roll, [op.addend]);
   if (op.kind === 'bump') {
-    const target = bumpTarget(roll);
+    const by = Math.max(0, Math.trunc(op.by));
+    const target = bumpTarget(roll, by);
     if (!target) return roll;
-    const face = Math.min(target.sides, target.face + Math.max(0, Math.trunc(op.by)));
+    const face = Math.min(target.sides, target.face + by);
     const fresh = nextId(roll.dice);
     const again = applyResults([{ ...target, face, value: face }], roll.results, die, fresh);
     const at = roll.dice.findIndex(d => d.id === target.id);

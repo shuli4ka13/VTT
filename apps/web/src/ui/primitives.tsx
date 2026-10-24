@@ -44,8 +44,9 @@ export function Field({ label, hint, error, needed, children }: {
   );
 }
 
-export function Input({ value, onChange, placeholder, mono, invalid, type = 'text', onBlur, onKeyDown, autoFocus }: {
+export function Input({ value, onChange, placeholder, mono, invalid, type = 'text', onBlur, onFocus, onKeyDown, autoFocus }: {
   autoFocus?: boolean;
+  onFocus?: (e: FocusEvent<HTMLInputElement>) => void;
   value: string | number;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -64,6 +65,7 @@ export function Input({ value, onChange, placeholder, mono, invalid, type = 'tex
       placeholder={placeholder}
       onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
       onBlur={onBlur}
+      onFocus={onFocus}
       onKeyDown={onKeyDown}
       autoFocus={autoFocus}
     />
@@ -81,6 +83,7 @@ export function LabelInput({ value, onCommit, placeholder }: {
       value={draft ?? value}
       placeholder={placeholder}
       onChange={setDraft}
+      onFocus={e => e.currentTarget.select()}
       onBlur={() => {
         if (draft !== null && draft !== value) onCommit(draft);
         setDraft(null);

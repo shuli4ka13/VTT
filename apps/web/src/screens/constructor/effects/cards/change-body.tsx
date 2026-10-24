@@ -155,6 +155,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   } : undefined;
 
   const DICE = /(?<![\p{L}\p{N}_@.])(\d+)?\s*[dдк]\s*(\d+)/iu;
+  const THROWN = /кинуть\s*\(\s*(\d+)?\s*[dдк]\s*(\d+)\s*\)/iu;
 
   const mentions = (text: string, id: string) =>
     new RegExp(`[@#]${id}(?![\\p{L}\\p{N}_])`, 'u').test(text);
@@ -191,7 +192,8 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   const commit = (typed: string) => {
     const text = typed.trim();
 
-    const rolled = text.replace(/"[^"]*"|'[^']*'/g, m => ' '.repeat(m.length)).match(DICE);
+    const bare = text.replace(/"[^"]*"|'[^']*'/g, m => ' '.repeat(m.length));
+    const rolled = bare.match(THROWN) ?? bare.match(DICE);
     if (rolled) {
       const notation = `${rolled[1] ?? 1}d${rolled[2]}`;
       const picked = parseRollExpr(notation, context.system).die;
@@ -227,7 +229,11 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   const needs = (context.effect.params ?? []).map(p => ({
     group: 'из записи',
     label: p.label ?? p.key,
-    onPick: (insert: (piece: string) => string, bar: BarApi) => { bar.dismiss(); putIntoAmount({ expr: `@${p.key}` }, insert); },
+    onPick: (insert: (piece: string) => string, bar: BarApi) => {
+      if (p.kind !== 'dice') { bar.write(insert(`@${p.key}`)); return; }
+      bar.dismiss();
+      putIntoAmount({ expr: `@${p.key}` }, insert);
+    },
   }));
   if (onCreateFromRecord) {
     needs.push({

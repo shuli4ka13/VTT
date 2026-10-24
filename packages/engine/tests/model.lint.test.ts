@@ -1051,3 +1051,24 @@ group('линт: подписка «после» видит итоги вызо�
     eq(errorTexts(system).filter(t => t.includes('совпадает с')).length, 1);
   });
 });
+
+group('линт: двойники полей по подписи', () => {
+  test('два поля листа с одной подписью — предупреждение, не ошибка; таблицы листа — одно пространство', () => {
+    const system = bare();
+    system.tables.лист!.columns.push({ key: 'field', label: ' хиты ', kind: 'number' } as never);
+    system.tables.доп = { shape: 'single', owner: 'sheet', label: 'Доп', columns: [{ key: 'хп2', label: 'Хиты', kind: 'number' }] } as never;
+    const found = lintSystem(system).filter(p => p.text.includes('два поля'));
+    deepEq(found.map(p => `${p.level}: ${p.text}`), [
+      'warn: в таблице «лист» два поля «хиты» — на листе и в формулах их не различить; переименуйте или удалите одно',
+      'warn: в таблицах «лист» и «Доп» два поля «Хиты» — на листе и в формулах их не различить; переименуйте или удалите одно',
+    ]);
+    deepEq(found[0]!.where, { tab: 'sheet', field: 'field' });
+    eq(errorTexts(system).length, 0);
+  });
+
+  test('у стола и у листа одна подпись — не двойники', () => {
+    const system = bare();
+    system.tables.лист!.columns.push({ key: 'fear', label: 'Страх', kind: 'number' } as never);
+    eq(lintSystem(system).filter(p => p.text.includes('два поля')).length, 0);
+  });
+});

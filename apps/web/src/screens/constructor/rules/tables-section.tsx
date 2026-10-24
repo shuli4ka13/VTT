@@ -1,6 +1,6 @@
 import { ColumnSheetFields } from '../table-field.tsx';
 import { rowNames } from '../row-names.ts';
-import { renameLayoutColumn } from '@vtt/engine/model/layout';
+import { renameLayoutColumn, renameLayoutTable } from '@vtt/engine/model/layout';
 export { rowNames } from '../row-names.ts';
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
 import { isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowPieces } from '@vtt/engine/model/sheet-columns';
@@ -75,6 +75,25 @@ const addTable = (editSystem: EditSystem) => {
   if (key) useWorld.getState().pick({ activeTableId: key });
 };
 
+export function renameTable(system: System, id: string, label: string, world: { compendium?: unknown; sheets?: unknown }): string {
+  const table = system.tables?.[id];
+  if (!table) return id;
+  const auto = /^таблица(_\d+)?$/u.test(id) || id === slugOf(table.label ?? '');
+  const { [id]: _self, ...others } = system.tables ?? {};
+  const rest = JSON.stringify({ s: { ...system, blocks: undefined, tables: others }, c: world.compendium, sh: world.sheets });
+  const named = new RegExp(`(?<![\\p{L}\\p{N}_])${id}(?![\\p{L}\\p{N}_])`, 'u').test(rest);
+  return auto && !named && slugOf(label)
+    ? freeId([...Object.keys(others), ...fieldsOf(system).map(f => f.tag)], label)
+    : id;
+}
+
+export function moveTable(draft: System, from: string, to: string): void {
+  if (from === to || !draft.tables?.[from]) return;
+  draft.tables = Object.fromEntries(Object.entries(draft.tables).map(([key, table]) => [key === from ? to : key, table]));
+  renameLayoutTable(draft, from, to);
+  forgetFields(draft);
+}
+
 const OWNER_GROUPS: [string | undefined, string][] = [
   ['sheet', 'Своё у каждого листа'],
   ['group', 'Общее у группы'],
@@ -148,6 +167,16 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
     const target = draft.tables?.[id];
     if (target) change(target);
   });
+  const relabel = (next: string) => {
+    const state = useWorld.getState();
+    const fresh = renameTable(state.system, id, next, { compendium: state.compendium, sheets: state.sheets });
+    editSystem(draft => {
+      const target = draft.tables?.[id];
+      if (target) target.label = next;
+      moveTable(draft, id, fresh);
+    });
+    if (fresh !== id) state.pick({ activeTableId: fresh });
+  };
 
   const summary = users.length
     ? (users.length > 3
@@ -159,7 +188,7 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
     <div ref={ref}>
     <Fold
       title={table.label || id} count={rows.length} summary={summary} open={openAtStart || undefined}
-      rename={{ value: table.label ?? '', placeholder: 'как зовётся таблица', onCommit: next => edit(draft => { draft.label = next; }) }}
+      rename={{ value: table.label ?? '', placeholder: 'как зовётся таблица', onCommit: relabel }}
     >
       <FieldRow
         id="table-head"
@@ -234,7 +263,7 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
       {broken ? <Verdict tone="warn">диапазоны перекрываются или дырявы</Verdict> : null}
 
       {picked && columns.some(c => c.key === picked) ? (
-        <TableColumnCard id={id} table={table} column={columns.find(c => c.key === picked)!} system={system} edit={edit} onClose={() => setPicked(null)} />
+        <TableColumnCard id={id} table={table} column={columns.find(c => c.key === picked)!} system={system} edit={edit} onClose={() => setPicked(null)} onRekey={setPicked} />
       ) : null}
 
       <Rows id={id} table={table} system={system} edit={edit} editSystem={editSystem} picked={picked} onPick={setPicked} />
@@ -270,7 +299,8 @@ export function moveColumn(draft: System, tableId: string, key: string, holder: 
   draft.tables = withColumn(draft, column, holder).tables;
 }
 
-export function TableColumnCard({ id, table, column, system, edit, onClose, extra, lead, bounds = true }: {
+export function TableColumnCard({ id, table, column, system, edit, onClose, onRekey, extra, lead, bounds = true }: {
+  onRekey?: (key: string) => void;
   extra?: ReactNode;
   lead?: ReactNode;
   bounds?: boolean;
@@ -297,16 +327,22 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, extr
   const users = single ? usersOf(usage, 'field', column.key, system) : [];
 
   const rename = (label: string) => {
-    if (!single) { set(c => { c.label = label; }); return; }
     const state = useWorld.getState();
-    const world = JSON.stringify({ s: state.system, c: state.compendium, sh: state.sheets });
-    const virgin = (/^field(_\d+)?$/.test(column.key) || column.key === slugOf(column.label ?? ''))
-      && world.split(`"${column.key}"`).length - 1 <= 1
-      && !new RegExp(`[@#]${column.key}(?![\\p{L}\\p{N}_])`, 'u').test(world);
-    const taken = [...fieldsOf(state.system).map(f => f.tag).filter(tag => tag !== column.key), ...Object.keys(state.system.tables ?? {})];
-    const fresh = virgin && slugOf(label) ? freeId(taken, label) : column.key;
-    editSystem(draft => renameColumn(draft, id, column.key, label, fresh));
-    if (fresh !== column.key) pick({ activeFieldTag: fresh });
+    const key = column.key;
+    const world = JSON.stringify({ s: { ...state.system, blocks: undefined }, c: state.compendium, sh: state.sheets });
+    const auto = /^(field|колонка)(_\d+)?$/u.test(key) || key === slugOf(column.label ?? '');
+    const named = new RegExp(`[@#.]${key}(?![\\p{L}\\p{N}_])`, 'u').test(world);
+    const filled = (table.rows ?? []).some(row => row.cells && key in row.cells);
+    const virgin = !book && auto && !named && (single ? world.split(`"${key}"`).length - 1 <= 1 : !filled);
+    const taken = single
+      ? [...fieldsOf(state.system).map(f => f.tag).filter(tag => tag !== key), ...Object.keys(state.system.tables ?? {})]
+      : (table.columns ?? []).map(c => c.key).filter(other => other !== key);
+    const fresh = virgin && slugOf(label) ? freeId(taken, label) : key;
+    editSystem(draft => renameColumn(draft, id, key, label, fresh));
+    if (fresh === key) return;
+    if (single) pick({ activeFieldTag: fresh });
+    if (state.activeColumn?.table === id && state.activeColumn.column === key) pick({ activeColumn: { table: id, column: fresh } });
+    onRekey?.(fresh);
   };
 
   return (
@@ -439,7 +475,7 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
     <div className="stack stack--tight">
       <span className="field__label">Строки</span>
 
-      <SheetGrid id={`table.${id}`} columns={gridColumns} tailHead={<Button size="sm" variant="ghost" title="добавить колонку" onClick={addColumn}>+</Button>}>
+      <SheetGrid id={`table.${id}`} columns={gridColumns} tailHead={<span data-guide="add-column"><Button size="sm" variant="ghost" title="добавить колонку" onClick={addColumn}>+</Button></span>}>
           {rows.map((row, i) => (
             <RowCells
               key={i} tableId={id} row={row} at={i} rowKey={key} columns={columns} system={system} placed={placed}

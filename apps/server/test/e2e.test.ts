@@ -446,6 +446,40 @@ describe('сквозной прогон стенда', () => {
   });
 });
 
+describe('признак «опубликованное отстаёт от черновика»', () => {
+  it('сохранение после публикации включает его, новая публикация гасит; чужим он не виден', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Автор отставания' })).body.token as string;
+    const other = (await http().post('/auth/login').send({ name: 'Гость отставания' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+    const body = (name: string) => ({ title: 'Отстающая', system: { name, effects: {} } });
+    const sys = await as(http().post('/systems')).send(body('Первая')).expect(201);
+    const id = sys.body.id as string;
+    const read = async () => (await as(http().get(`/systems/${id}`)).expect(200)).body;
+    const row = async () => ((await as(http().get('/systems')).expect(200)).body as { id: string; behind?: boolean }[])
+      .find(item => item.id === id)!;
+
+    expect((await read()).behind).toBeUndefined();
+    expect((await row()).behind).toBeUndefined();
+
+    await as(http().post(`/systems/${id}/publish`)).send({}).expect(201);
+    expect((await read()).behind).toBe(false);
+    expect((await row()).behind).toBe(false);
+
+    await as(http().put(`/systems/${id}`)).send(body('Вторая')).expect(200);
+    expect((await read()).behind).toBe(true);
+    expect((await row()).behind).toBe(true);
+
+    const seen = await http().get(`/systems/${id}`).set('Authorization', `Bearer ${other}`).expect(200);
+    expect(seen.body.behind).toBeUndefined();
+    const listed = (await http().get('/systems').set('Authorization', `Bearer ${other}`).expect(200)).body as { id: string; behind?: boolean }[];
+    expect(listed.find(item => item.id === id)?.behind).toBeUndefined();
+
+    await as(http().post(`/systems/${id}/publish`)).send({}).expect(201);
+    expect((await read()).behind).toBe(false);
+    expect((await row()).behind).toBe(false);
+  });
+});
+
 describe('публикация компендиума проверяется линтом', () => {
   it('вещь с правкой броска, которой нет в словаре, не публикуется — с адресом записи', async () => {
     const token = (await http().post('/auth/login').send({ name: 'Автор книги' })).body.token as string;

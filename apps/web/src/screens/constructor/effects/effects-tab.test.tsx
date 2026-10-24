@@ -282,7 +282,7 @@ describe('три вида создания, два вида запуска', () 
     fireEvent.click(screen.getByText('+ срабатывает сам'));
     const kinds = [...document.querySelectorAll('select')]
       .find(el => [...el.options].some(o => o.value === 'seen'))! as HTMLSelectElement;
-    expect([...kinds.options].map(o => o.value)).toEqual(['call', 'seen', 'moment', 'field', 'gained', 'lost']);
+    expect([...kinds.options].map(o => o.value)).toEqual(['call', 'seen', 'rolled', 'moment', 'field', 'gained', 'lost']);
     const last = () => Object.values(useWorld.getState().system.effects).at(-1)!;
 
     fireEvent.change(kinds, { target: { value: 'seen' } });

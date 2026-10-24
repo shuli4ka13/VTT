@@ -10,6 +10,7 @@ import { lapse } from '../events/durations.ts';
 import { sweepBonds } from '../events/bonds.ts';
 import { lifecycleChanges, HOOK_WORDS, HEARD_WORDS } from '../events/lifecycle.ts';
 import { MOMENTS } from '../events/moments.ts';
+import { ROLLED, ROLLED_LABEL } from '../events/happenings.ts';
 import type { MomentKey } from '../events/moments.ts';
 import { effectLabelOf } from '../events/actions.ts';
 import { requireEffect, requireCalled, reapplyOf, usesMax } from '../engine/effects.ts';
@@ -1442,6 +1443,19 @@ export class Run {
           sink.after.push(...out.entries);
         }
         if (skipped) sink.after.push({ text: `${this.sheet(sheetId)?.name ?? sheetId} пропускает реакцию` });
+      }
+      for (const holder of this.holders()) {
+        const sheet = this.sheet(holder.id);
+        if (!sheet) continue;
+        for (const sub of this.subs(sheet).filter(one => one.handler.on === ROLLED && !one.handler.confirm)) {
+          const out = this.react(sub, {
+            path: path.phase(ROLLED).handler(holder.id, sub.key, sub.inst), names, seed, hop, chosen: false,
+            owner: `«${labelOf(sub)}» — ${ROLLED_LABEL}`, roll: cell,
+          });
+          sink.after.push(...out.lead);
+          if (out.report) sink.after.push({ fromId: holder.id, toId: holder.id, report: out.report });
+          sink.after.push(...out.entries);
+        }
       }
     } finally {
       this.seeing--;
