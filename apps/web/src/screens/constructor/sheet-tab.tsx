@@ -4,14 +4,13 @@ import { useLookupPane } from './lookup-panel.tsx';
 import { Button, Empty, DangerButton, Card } from '../../ui/primitives.tsx';
 import { takesBounds } from '../../sheet/views/index.tsx';
 import { DonorPalette } from './donors.tsx';
-import { newColumn } from './factory.ts';
-import { addColumn, CharacterSection } from './rules/character-section.tsx';
+import { CharacterSection } from './rules/character-section.tsx';
 import { useState, useRef, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useUsage } from './usage.ts';
 import { Segmented } from '../../ui/primitives.tsx';
 import { BlockViewField, holds } from './table-field.tsx';
-import { TableColumnCard } from './rules/tables-section.tsx';
+import { TableColumnCard, TableCard } from './rules/tables-section.tsx';
 import { BlockPanel } from './block-panel.tsx';
 import { RowPanel } from './row-panel.tsx';
 import { SheetSample } from './sheet-sample.tsx';
@@ -31,23 +30,18 @@ export function SheetTab() {
   const active = activeTag ? fieldOf(system, activeTag) ?? null : null;
   const blockOpen = Boolean(activeBlock && system.blocks?.some(b => b.name === activeBlock));
   const columnOpen = Boolean(activeColumn && system.tables?.[activeColumn.table]?.columns?.some(c => c.key === activeColumn.column));
+  const activeSheetTable = useWorld(s => s.activeSheetTable);
+  const tableOpen = Boolean(activeSheetTable && system.tables?.[activeSheetTable]);
   const docked = Boolean(active) || blockOpen || rowOpen || columnOpen;
   const right = useLookupPane({ head: 'Готовое из образцов', body: <DonorPalette kind="blocks" /> });
   const kindPicked = useWorld(s => s.activeSheetKind);
   const [view, setView] = useState<'sample' | 'kinds'>(kindPicked ? 'kinds' : 'sample');
   const usage = useUsage();
 
-  const add = () => {
-    const made = newColumn(system);
-    editSystem(draft => addColumn(draft, made.value, 'sheet', blockOpen ? activeBlock! : undefined));
-    pick({ activeFieldTag: made.key, activeBlock: null });
-  };
-
   return (
     <Columns
       left={{
         head: 'Лист',
-        tools: <Button size="sm" onClick={add}>+ колонка</Button>,
         ...(docked ? { pinned: true } : {}),
         body: active
           ? <Docked at={active.tag}><ViewPanel field={active} system={system} /></Docked>
@@ -59,7 +53,7 @@ export function SheetTab() {
                 ? <Docked at={`блок|${activeBlock}`}><BlockPanel name={activeBlock!} system={system} /></Docked>
                 : (system.blocks ?? []).length
                   ? <Empty title="Щёлкните поле на листе" hint="Его колонка, вид и формула откроются здесь." />
-                  : <Empty title="Лист пока пуст" hint="Возьмите готовые куски справа — «Готовое из образцов» — или заведите свою колонку кнопкой «+ колонка»." />,
+                  : <Empty title="Лист пока пуст" hint="Возьмите готовые куски из «Готового из образцов» или заведите блок: в нём «+ поле» — одно значение, «+ таблица» — строки и колонки." />,
       }}
       main={{
         body: (
@@ -69,17 +63,30 @@ export function SheetTab() {
               options={[{ key: 'sample', label: 'образец листа' }, { key: 'kinds', label: 'блоки и типы листов' }]}
               onChange={next => setView(next as 'sample' | 'kinds')}
             />
+            {tableOpen ? <Docked at={`таблица|${activeSheetTable}`}><TablePanel id={activeSheetTable!} system={system} /></Docked> : null}
             {view === 'sample'
               ? <SheetSample system={system} picked={activeTag}
-                  onPick={(tag, block) => pick({ activeFieldTag: tag, activeIn: block ?? null, activeGroupName: null, activeColumn: null, activeBlock: null, activeRow: null })}
-                  onPickBlock={name => pick({ activeBlock: name, activeFieldTag: null, activeColumn: null, activeRow: null })}
-                  onPickRow={(table, row) => pick({ activeRow: { table, row }, activeFieldTag: null, activeColumn: null, activeBlock: null })} />
+                  onPick={(tag, block) => pick({ activeFieldTag: tag, activeIn: block ?? null, activeGroupName: null, activeColumn: null, activeBlock: null, activeRow: null, activeSheetTable: null })}
+                  onPickBlock={name => pick({ activeBlock: name, activeFieldTag: null, activeColumn: null, activeRow: null, activeSheetTable: null })}
+                  onPickRow={(table, row) => pick({ activeRow: { table, row }, activeFieldTag: null, activeColumn: null, activeBlock: null, activeSheetTable: null })} />
               : <CharacterSection docked system={system} editSystem={editSystem} usage={usage} onTable={id => pick({ activeTab: 'dictionaries', activeTableId: id })} />}
           </>
         ),
       }}
       right={right}
     />
+  );
+}
+
+function TablePanel({ id, system }: { id: string; system: System }) {
+  const editSystem = useWorld(s => s.editSystem);
+  const pick = useWorld(s => s.pick);
+  const usage = useUsage();
+  const table = system.tables?.[id];
+  if (!table) return null;
+  return (
+    <TableCard id={id} table={table} system={system} editSystem={editSystem} usage={usage} opened
+      onRekey={key => pick({ activeSheetTable: key })} onClose={() => pick({ activeSheetTable: null })} />
   );
 }
 
@@ -110,8 +117,8 @@ function ViewPanel({ field, system }: { field: FieldModel; system: System }) {
       <div className="inline inline--tight">
         {field.cell ? (
           <>
-            <Button size="sm" onClick={() => pick({ activeTab: 'dictionaries', activeTableId: field.home })}>
-              Правила: таблица «{table.label || field.home}» →
+            <Button size="sm" onClick={() => pick({ activeSheetTable: field.home, activeFieldTag: null })}>
+              Открыть таблицу «{table.label || field.home}»
             </Button>
             <DangerButton size="sm" onConfirm={() => {
               editSystem(draft => { const target = draft.tables?.[field.home]; if (target) delete target.owner; });
@@ -139,6 +146,7 @@ function ColumnPanel({ table: id, column: key, system }: { table: string; column
     <>
       {placed ? <Card><BlockViewField tableId={id} column={column} system={system} block={activeIn} /></Card> : null}
       <TableColumnCard id={id} table={table} column={column} system={system}
+        onOpenTable={() => pick({ activeSheetTable: id, activeColumn: null })}
         edit={change => editSystem(draft => { const target = draft.tables?.[id]; if (target) change(target); })}
         onClose={() => pick({ activeColumn: null })} />
     </>

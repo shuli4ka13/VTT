@@ -29,7 +29,7 @@ export interface ColumnPatch {
 }
 
 
-export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, where, names, system, onChange, onDelete, onClose, lead, extra, preview, bounds = true, table }: {
+export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, where, names, system, onChange, onDelete, onClose, lead, extra, preview, bounds = true, table, sub, noun = 'колонка' }: {
   table?: string;
   column: ColumnShape;
   kinds: readonly (readonly [string, string])[];
@@ -47,11 +47,14 @@ export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, w
   bounds?: boolean;
   extra?: ReactNode;
   preview?: ReactNode;
+  sub?: ReactNode;
+  noun?: string;
 }) {
   return (
     <Card>
       <CardHead
-        title={<LabelInput value={column.label} placeholder="как зовётся колонка" onCommit={label => onChange({ label })} />}
+        title={<LabelInput value={column.label} placeholder={`как зовётся ${noun}`} onCommit={label => onChange({ label })} />}
+        sub={sub}
         actions={<>
           {onDelete ? <DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>
             : <Button size="sm" variant="danger" disabled title="колонкой пользуются">Удалить</Button>}

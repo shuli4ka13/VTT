@@ -31,6 +31,9 @@ function homes(name: string, root: ParentNode): Element[] {
   for (const head of root.querySelectorAll('.column__head > span:first-child, .column__spine')) {
     if (same(textOf(head), name)) { const column = head.closest('.column'); if (column) out.add(column); }
   }
+  for (const block of root.querySelectorAll('.block-fold__name')) {
+    if (same(textOf(block), name)) { const fold = block.closest('details'); if (fold) out.add(fold); }
+  }
   for (const title of root.querySelectorAll('.card__title')) {
     if (same(textOf(title), name)) { const card = title.closest('.card'); if (card) out.add(card); }
   }

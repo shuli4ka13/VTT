@@ -42,7 +42,7 @@ export function RowPanel({ table: id, row: key, system }: { table: string; row: 
           />
         </Field>
       ))}
-      <Button size="sm" onClick={() => pick({ activeTab: 'dictionaries', activeTableId: id })}>Правила: таблица «{table.label || id}» →</Button>
+      <Button size="sm" onClick={() => pick({ activeSheetTable: id, activeRow: null })}>Открыть таблицу «{table.label || id}»</Button>
     </Card>
   );
 }

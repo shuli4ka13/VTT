@@ -28,9 +28,13 @@ export function useUsage(): UsageIndex {
 
 export const inUse = (index: UsageIndex, kind: RefKind, key: string): boolean => index.has(usageKey(kind, key));
 
-export function usersOf(index: UsageIndex, kind: RefKind, key: string, system: System): string[] {
+export const insideTable = (table: string) => (where: Where): boolean =>
+  (where.tab === 'sheet' && Boolean(where.field?.startsWith(`${table}.`)))
+  || (where.tab === 'rules' && where.section === 'tables' && where.key === table);
+
+export function usersOf(index: UsageIndex, kind: RefKind, key: string, system: System, skip: (where: Where) => boolean = () => false): string[] {
   const out = new Set<string>();
-  for (const where of index.get(usageKey(kind, key)) ?? []) {
+  for (const where of (index.get(usageKey(kind, key)) ?? []).filter(one => !skip(one))) {
     const short: Where = where.tab === 'effects' ? { tab: 'effects', effect: where.effect }
       : where.tab === 'records' ? { tab: 'records', kind: where.kind }
         : where;

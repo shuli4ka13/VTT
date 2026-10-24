@@ -29,7 +29,7 @@ describe('колонка персонажа: человеческие теги',
 
   it('пока поле девственно, тег следует за названием', () => {
     render(<Sheets />);
-    const name = screen.getByPlaceholderText('как зовётся колонка');
+    const name = screen.getByPlaceholderText('как зовётся поле');
     fireEvent.change(name, { target: { value: 'Урон' } });
     fireEvent.blur(name);
     const field = fieldsOf(useWorld.getState().system)[0]!;
@@ -50,7 +50,7 @@ describe('колонка персонажа: человеческие теги',
       activeFieldTag: 'урон',
     }));
     render(<Sheets />);
-    const name = screen.getByPlaceholderText('как зовётся колонка');
+    const name = screen.getByPlaceholderText('как зовётся поле');
     fireEvent.change(name, { target: { value: 'Повреждения' } });
     fireEvent.blur(name);
     const field = fieldsOf(useWorld.getState().system)[0]!;
