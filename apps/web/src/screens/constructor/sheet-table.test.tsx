@@ -42,6 +42,22 @@ describe('таблица прямо на листе', () => {
     expect(screen.getByDisplayValue('Характеристики')).toBeTruthy();
   });
 
+  it('колонка, которая читает свою же таблицу, не делает таблицу «занятой»: её можно удалить', () => {
+    useWorld.getState().replaceWorld({
+      system: { ...emptySystem(), tables: { характеристики: { label: 'Характеристики', key: 'word', owner: 'sheet', rows: [{ value: 'сила' }], columns: [
+        { key: 'value', label: 'Значение', kind: 'number' },
+        { key: 'бонус', label: 'Бонус', expr: { expr: 'округлить вниз(@строка.value / 10)' } },
+      ] } } as never, blocks: [{ name: 'Характеристики', parts: [{ table: 'характеристики' }] }] },
+      compendium: { records: [] },
+      sheets: [],
+    });
+    useWorld.getState().pick({ activeSheetTable: 'характеристики' });
+    renderOpen(<SheetTab />);
+    expect(document.body.textContent).not.toContain('берут отсюда');
+    const remove = screen.getAllByRole('button', { name: 'Удалить' })[0] as HTMLButtonElement;
+    expect(remove.disabled).toBe(false);
+  });
+
   it('строки таблицы на листе становятся полями героя; подпись таблицы в блоке открывает её редактор', () => {
     renderOpen(<SheetTab />);
     press('блоки и типы листов');

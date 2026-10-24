@@ -16,7 +16,7 @@ import { FieldRow } from '../../../ui/field-row.tsx';
 import type { GridColumn } from '../../../ui/sheet-grid.tsx';
 import { ValueEditor } from '../../../ui/value-editor.tsx';
 import { newTable } from '../factory.ts';
-import { inUse, usersOf, useUsage } from '../usage.ts';
+import { usersOf, useUsage, insideTable } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
 import { freeId, slugOf, useBook } from '../../../store/world.ts';
 import { listUsers } from '@vtt/engine/model/lists';
@@ -141,7 +141,7 @@ export function TableCard({ id, table, system, editSystem, usage, opened, onReke
   const byRange = isRange(table);
   const rows = table.rows ?? [];
   const columns = table.columns ?? [];
-  const users = [...new Set([...listUsers(system, id), ...usersOf(usage, 'table', id, system)])];
+  const users = [...new Set([...listUsers(system, id), ...usersOf(usage, 'table', id, system, insideTable(id))])];
   const wanted = useWorld(s => s.activeTableId) === id;
   const [openAtStart] = useState(wanted || Boolean(opened));
   const ref = useRef<HTMLDivElement>(null);
@@ -150,7 +150,7 @@ export function TableCard({ id, table, system, editSystem, usage, opened, onReke
     ref.current?.scrollIntoView?.({ block: 'start' });
     useWorld.getState().pick({ activeTableId: null });
   }, [wanted]);
-  const held = users.length > 0 || inUse(usage, 'table', id);
+  const held = users.length > 0;
   const [picked, setPicked] = useState<string | null>(null);
   const [rekey, setRekey] = useState<TableKey | null>(null);
   const broken = byRange && rangesBroken(rows);
