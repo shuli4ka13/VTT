@@ -23760,7 +23760,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
         },
       ],
       "values": {
-        "physical": 6,
+        "physical": 5,
       },
     },
   },
@@ -23778,7 +23778,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
         },
       ],
       "values": {
-        "physical": 6,
+        "physical": 5,
       },
     },
   },
@@ -23822,7 +23822,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
         },
       ],
       "values": {
-        "physical": 5,
+        "physical": 4,
       },
     },
     "koshka": {
@@ -23846,7 +23846,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
         },
       ],
       "values": {
-        "physical": 5,
+        "physical": 4,
       },
     },
     "koshka": {

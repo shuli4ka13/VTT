@@ -1451,6 +1451,13 @@
             }
           },
           {
+            "key": "soak",
+            "label": "Тело: сопротивление урону",
+            "expr": {
+              "expr": "если(@veh_body >= 1, @veh_body, @body)"
+            }
+          },
+          {
             "key": "veh_armor",
             "label": "Транспорт: Броня",
             "expr": {
@@ -13828,7 +13835,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "@цель.body"
+              "expr": "@цель.soak"
             },
             "tags": [
               "сопротивление"
@@ -13863,6 +13870,12 @@
               },
               "physical_hit": {
                 "expr": "@физ"
+              },
+              "dv": {
+                "expr": "если((@приём.no_damage или 0) >= 1, 0, @ур + @атака.margin)"
+              },
+              "electric": {
+                "expr": "@эл"
               }
             }
           },
@@ -15117,7 +15130,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "@цель.body"
+              "expr": "@цель.soak"
             },
             "tags": [
               "сопротивление"
@@ -15861,6 +15874,18 @@
             "label": "Это истощение (1 — да)",
             "kind": "number",
             "default": 0
+          },
+          {
+            "key": "dv",
+            "label": "СУ атаки до сопротивления",
+            "kind": "number",
+            "optional": true
+          },
+          {
+            "key": "electric",
+            "label": "Электричество (1 — да)",
+            "kind": "number",
+            "default": 0
           }
         ],
         "steps": [
@@ -15998,7 +16023,7 @@
                 "type": "roll",
                 "die": "pool",
                 "count": {
-                  "expr": "@носитель.body"
+                  "expr": "@носитель.soak"
                 },
                 "tags": [
                   "сопротивление"
@@ -16254,7 +16279,7 @@
                 "type": "roll",
                 "die": "pool",
                 "count": {
-                  "expr": "@носитель.body"
+                  "expr": "@носитель.soak"
                 },
                 "tags": [
                   "сопротивление"
@@ -16341,7 +16366,7 @@
                 "type": "roll",
                 "die": "pool",
                 "count": {
-                  "expr": "@носитель.body"
+                  "expr": "@носитель.soak"
                 },
                 "tags": [
                   "сопротивление"
@@ -19844,7 +19869,7 @@
             "type": "roll",
             "die": "pool",
             "count": {
-              "expr": "@цель.body"
+              "expr": "@цель.soak"
             },
             "tags": [
               "сопротивление"
@@ -25546,7 +25571,7 @@
               "expr": "0 - @amount"
             },
             "if": {
-              "expr": "@лист == @носитель и @physical_hit < 1 и @amount <= @носитель.veh_body"
+              "expr": "@лист == @носитель и @physical_hit < 1 и @electric < 1 и (@dv или @amount) <= @носитель.veh_body"
             }
           },
           {
