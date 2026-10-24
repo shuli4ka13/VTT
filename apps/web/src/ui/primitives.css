@@ -243,6 +243,8 @@
 }
 .fold[open] > .fold__head::before { transform: rotate(90deg); }
 .fold__title { font-weight: 600; color: var(--text); }
+.fold__actions { margin-left: auto; display: inline-flex; gap: var(--s-2); }
+.fold__count + .fold__actions { margin-left: 0; }
 .fold__count {
   margin-left: auto;
   font-size: var(--fs-1);

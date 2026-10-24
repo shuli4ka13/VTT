@@ -4,8 +4,7 @@ import { useLookupPane } from './lookup-panel.tsx';
 import { Button, Empty, DangerButton, Card } from '../../ui/primitives.tsx';
 import { takesBounds } from '../../sheet/views/index.tsx';
 import { DonorPalette } from './donors.tsx';
-import { newColumn } from './factory.ts';
-import { addColumn, CharacterSection } from './rules/character-section.tsx';
+import { CharacterSection } from './rules/character-section.tsx';
 import { useState, useRef, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useUsage } from './usage.ts';
@@ -39,17 +38,10 @@ export function SheetTab() {
   const [view, setView] = useState<'sample' | 'kinds'>(kindPicked ? 'kinds' : 'sample');
   const usage = useUsage();
 
-  const add = () => {
-    const made = newColumn(system);
-    editSystem(draft => addColumn(draft, made.value, 'sheet', blockOpen ? activeBlock! : undefined));
-    pick({ activeFieldTag: made.key, activeBlock: null });
-  };
-
   return (
     <Columns
       left={{
         head: 'Лист',
-        tools: <Button size="sm" title="одно значение: хиты, уровень, имя" onClick={add}>+ поле</Button>,
         ...(docked ? { pinned: true } : {}),
         body: active
           ? <Docked at={active.tag}><ViewPanel field={active} system={system} /></Docked>
@@ -93,14 +85,8 @@ function TablePanel({ id, system }: { id: string; system: System }) {
   const table = system.tables?.[id];
   if (!table) return null;
   return (
-    <div className="stack stack--tight">
-      <div className="inline inline--tight">
-        <span className="spacer" />
-        <Button size="sm" variant="ghost" title="закрыть таблицу" onClick={() => pick({ activeSheetTable: null })}>×</Button>
-      </div>
-      <TableCard id={id} table={table} system={system} editSystem={editSystem} usage={usage} opened
-        onRekey={key => pick({ activeSheetTable: key })} />
-    </div>
+    <TableCard id={id} table={table} system={system} editSystem={editSystem} usage={usage} opened
+      onRekey={key => pick({ activeSheetTable: key })} onClose={() => pick({ activeSheetTable: null })} />
   );
 }
 

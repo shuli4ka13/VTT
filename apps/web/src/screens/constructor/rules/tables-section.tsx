@@ -137,7 +137,7 @@ export function TablesSection({ system, editSystem, usage }: Props) {
   );
 }
 
-export function TableCard({ id, table, system, editSystem, usage, opened, onRekey }: Props & { id: string; table: Table; opened?: boolean; onRekey?: (key: string) => void }) {
+export function TableCard({ id, table, system, editSystem, usage, opened, onRekey, onClose }: Props & { id: string; table: Table; opened?: boolean; onRekey?: (key: string) => void; onClose?: () => void }) {
   const byRange = isRange(table);
   const rows = table.rows ?? [];
   const columns = table.columns ?? [];
@@ -190,6 +190,7 @@ export function TableCard({ id, table, system, editSystem, usage, opened, onReke
     <Fold
       title={table.label || id} count={rows.length} open={openAtStart || undefined}
       rename={{ value: table.label ?? '', placeholder: 'как зовётся таблица', onCommit: relabel }}
+      {...(onClose ? { actions: <Button size="sm" variant="ghost" title="закрыть таблицу" onClick={onClose}>×</Button> } : {})}
     >
       <Fold title="ещё" summary={`чьи значения, ключ строки, подсказка · ${summary}`}>
       <FieldRow

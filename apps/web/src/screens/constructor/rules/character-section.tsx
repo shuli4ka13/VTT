@@ -160,7 +160,6 @@ export function CharacterSection({ system, editSystem, docked }: {
           <div className="inline inline--tight">
             <Button size="sm" variant="ghost" title="одно значение: хиты, уровень, имя" onClick={() => add(block.name)}>+ поле</Button>
             <Button size="sm" variant="ghost" title="строки и колонки: характеристики, навыки" onClick={() => addTable(block.name)}>+ таблица</Button>
-            <Button size="sm" variant="ghost" title={`блок внутри «${block.name}»`} onClick={() => addBlock(block.name)}>+ блок внутрь</Button>
           </div>
           {branch(children, depth + 1)}
         </div>
