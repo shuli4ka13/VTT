@@ -99,6 +99,25 @@ describe('«увидев кости»', () => {
   });
 });
 
+describe('«бросок окончен»', () => {
+  afterEach(cleanup);
+
+  it('вид подписки без предмета: выбор пишет «rolled», карточка называет его словами и знает бросающего', () => {
+    const { view, get } = card({ on: 'before:*', steps: [] });
+    const moment = [...view.container.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'rolled'))!;
+    expect([...moment.options].find(o => o.value === 'rolled')!.textContent).toBe('бросок окончен');
+    fireEvent.change(moment, { target: { value: 'rolled' } });
+    expect(get().on).toBe('rolled');
+  });
+
+  it('открытая подписка «rolled» не притворяется действием', () => {
+    const { view } = card({ on: 'rolled', steps: [] });
+    expect(view.getByDisplayValue('бросок окончен')).toBeTruthy();
+    expect(view.queryByDisplayValue('действие или вызов')).toBeNull();
+    expect(view.getByDisplayValue('всех — без условия')).toBeTruthy();
+  });
+});
+
 describe('«когда»: фраза называет итог вызова словами', () => {
   afterEach(cleanup);
 
