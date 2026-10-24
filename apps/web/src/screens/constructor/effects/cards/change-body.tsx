@@ -229,7 +229,11 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   const needs = (context.effect.params ?? []).map(p => ({
     group: 'из записи',
     label: p.label ?? p.key,
-    onPick: (insert: (piece: string) => string, bar: BarApi) => { bar.dismiss(); putIntoAmount({ expr: `@${p.key}` }, insert); },
+    onPick: (insert: (piece: string) => string, bar: BarApi) => {
+      if (p.kind !== 'dice') { bar.write(insert(`@${p.key}`)); return; }
+      bar.dismiss();
+      putIntoAmount({ expr: `@${p.key}` }, insert);
+    },
   }));
   if (onCreateFromRecord) {
     needs.push({
