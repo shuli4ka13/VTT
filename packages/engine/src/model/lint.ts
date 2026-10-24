@@ -512,6 +512,38 @@ function rollsDice(expr: unknown): boolean {
   return visit(ast);
 }
 
+function thrownDiceProblems(steps: Step[], where: (index: number) => Where): Problem[] {
+  const out: Problem[] = [];
+  const thrown = new Set<string>();
+  steps.forEach((step, index) => {
+    for (const text of exprsIn(step)) {
+      let ast: Node;
+      try { ast = compile(text).ast; } catch { continue; }
+      const visit = (node: Node): void => {
+        switch (node.kind) {
+          case 'Call': {
+            const first = node.args[0];
+            const head = first?.kind === 'Ref' ? first.tag.split('.')[0]! : '';
+            if (node.name === 'кинуть' && thrown.has(head)) {
+              out.push({ where: where(index), level: 'error', text: `«кинуть(@${head})»: в «${head}» уже выпавшее число, а не кость — кость задают так: кинуть(к6) или входом с костью` });
+            }
+            node.args.forEach(visit);
+            return;
+          }
+          case 'Unary': visit(node.operand); return;
+          case 'Binary': visit(node.left); visit(node.right); return;
+          case 'Conditional': visit(node.test); visit(node.then); visit(node.otherwise); return;
+          case 'Pick': visit(node.key); return;
+          default: return;
+        }
+      };
+      visit(ast);
+    }
+    if ((step.type === 'roll' || step.type === 'check') && step.id) thrown.add(String(step.id));
+  });
+  return out;
+}
+
 const NO_DICE_IN_IF = 'в условии правки кости не бросают — «кинуть» уберите';
 
 const NO_DICE_HERE = 'кости бросает только шаг эффекта и прибавка к броску — здесь «кинуть» уберите';
@@ -1008,6 +1040,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   for (const [id, effect] of Object.entries(system.effects)) {
     for (const chain of chainsOf(id, effect)) {
       out.push(...stepProblems(chain.steps, chain.where));
+      out.push(...thrownDiceProblems(chain.steps, chain.where));
       const loops = chain.steps.flatMap((step, index) => (registry.get(step.type)?.loops ? [index] : []));
       for (const index of loops.slice(1)) {
         out.push({ where: chain.where(index), level: 'error', text: `«${STEP_WORDS.each.label}» в цепочке может быть только один` });

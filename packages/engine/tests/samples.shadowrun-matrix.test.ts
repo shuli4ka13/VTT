@@ -123,3 +123,23 @@ group('Shadowrun 6: сервер и лёд', () => {
     eq(computed(after(out, 'razor'), 'm_firewall'), 0);
   });
 });
+
+group('Shadowrun 6, глава «Матрица»: ситуации книжника (стр. 170–188)', () => {
+  test('MX-4 (стр. 180, 46): брутфорс администратора без доступа — ЗЩ +4: при ЗА − ЗЩ = 4 очка уже нет', () => {
+    const user = act(decker({ edge_left: 0 }), [victim()], 'mx_brute:0', dice([30, 1]), { level: 'пользователь', had_user: 0 });
+    const admin = act(decker({ edge_left: 0 }), [victim()], 'mx_brute:0', dice([30, 1]), { level: 'администратор', had_user: 0 });
+    const gain = (out: ReturnType<typeof exchange>) => Number(after(out, 'razor').values.edge_left ?? 0);
+    eq(computed(decker(), 'matrix_ar') - computed(victim(), 'matrix_dr'), 3);
+    eq(gain(user), 0);
+    eq(gain(admin), 0);
+  });
+
+  test('MX-7 (стр. 176): демпшок — холодный сим 3о, горячий 3ф, сопротивление Волей; дезориентация', () => {
+    const hit = (mode: string) => act(sheetOf('baraholka_killer'), [decker({ matrix_damage: 2, matrix_mode: mode, willpower: 4 })], 'ic_strike:0', dice([6, 6], [2, 1], [5, 1], [1, 6], [1, 6], [1, 5], [2, 2], [20, 2]));
+    const cold = after(hit('холодная ВР'), 'razor');
+    const hot = after(hit('горячая ВР'), 'razor');
+    eq(cold.values.stun, 1);
+    eq(hot.values.physical, 1);
+    ok(wears(cold, 'dumpshocked') && wears(hot, 'dumpshocked'));
+  });
+});
