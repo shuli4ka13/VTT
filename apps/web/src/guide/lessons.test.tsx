@@ -406,12 +406,12 @@ describe('уроки конструктора', () => {
     const change = () => stepCard(/^3 · /);
     within(change()).select('Какое поле', 'хиты');
     await act(async () => { vi.advanceTimersByTime(300); });
-    expect(cardText()).toContain('похоже, у «Изменения» «У кого» — «Кто действует»');
+    expect(cardText()).toContain('В «У кого» стоит «Кто действует» — удар ранит самого героя');
     await pass('damage', () => {
       within(change()).select('У кого', 'цель');
       inBar(within(change()).field('Сколько'), '5');
     });
-    expect(cardText()).not.toContain('похоже');
+    expect(cardText()).not.toContain('удар ранит самого героя');
     await pass('problems', () => { clickAt({ guide: 'problems' }); });
     clickAt({ text: 'Проба' });
     expect(cardText()).toContain('Глава «Проверка и урон»');

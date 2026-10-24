@@ -159,6 +159,7 @@ function LessonCard() {
   const tab = useWorld(s => s.activeTab);
   const point = step.alone ? { prompt: null, target: null } : pointOf(step, tab, view);
   const move = moveAt(step, view);
+  const said = movesOf(step).map(one => one.say).filter((text): text is string => Boolean(text));
   const success = got === key;
   const already = Boolean(step.done && (current.already || revisit) && done);
   const free = !step.done || current.already || revisit || done || success;
@@ -194,8 +195,15 @@ function LessonCard() {
             {step.lead ? <p className="guide__lead">{step.lead}</p> : null}
             {point.prompt ? <p className="guide__prompt">{point.prompt}</p> : null}
             <p className="guide__say">{step.alone ? <b>Сами: </b> : null}{step.say}</p>
+            {said.length > 1 ? (
+              <ol className="guide__moves">
+                {said.map((text, at) => (
+                  <li key={at} className={at < move || done || success ? 'guide__move guide__move--done' : at === move ? 'guide__move guide__move--now' : 'guide__move'}>{text}</li>
+                ))}
+              </ol>
+            ) : null}
             {success || already ? <Verdict tone="ok">{already ? `уже сделано: ${resultOf(step, view)}` : resultOf(step, view)}</Verdict> : null}
-            {trap ? <Verdict tone="warn">похоже, {trap}</Verdict> : null}
+            {trap ? <Verdict tone="warn">{trap}</Verdict> : null}
             {sum ? <p className="guide__sum">Глава «{place.title}»: {sum}</p> : null}
             {step.hint ? <Fold title={step.alone ? 'подсказка' : 'не получается?'}><p className="guide__hint">{step.hint}</p></Fold> : null}
             {note ? <Verdict tone="bad">{note}</Verdict> : null}

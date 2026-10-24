@@ -24,6 +24,7 @@ export interface Trap {
 
 export interface Move {
   at: Anchor;
+  say?: string;
   done?: (view: View) => boolean;
 }
 

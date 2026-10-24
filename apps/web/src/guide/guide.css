@@ -25,3 +25,7 @@
 }
 .guide__strip:hover { border-color: var(--accent-hover); }
 .guide--left { right: auto; left: var(--s-5); align-items: flex-start; }
+.guide__moves { margin: 0; padding-left: var(--s-5); display: flex; flex-direction: column; gap: var(--s-1); line-height: var(--lh); }
+.guide__move { color: var(--text-muted); }
+.guide__move--now { color: var(--text); font-weight: 600; }
+.guide__move--done { color: var(--text-faint); text-decoration: line-through; }
