@@ -1,6 +1,6 @@
 import { ColumnSheetFields } from '../table-field.tsx';
 import { rowNames } from '../row-names.ts';
-import { renameLayoutColumn } from '@vtt/engine/model/layout';
+import { renameLayoutColumn, renameLayoutTable } from '@vtt/engine/model/layout';
 export { rowNames } from '../row-names.ts';
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
 import { isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowPieces } from '@vtt/engine/model/sheet-columns';
@@ -75,6 +75,25 @@ const addTable = (editSystem: EditSystem) => {
   if (key) useWorld.getState().pick({ activeTableId: key });
 };
 
+export function renameTable(system: System, id: string, label: string, world: { compendium?: unknown; sheets?: unknown }): string {
+  const table = system.tables?.[id];
+  if (!table) return id;
+  const auto = /^таблица(_\d+)?$/u.test(id) || id === slugOf(table.label ?? '');
+  const { [id]: _self, ...others } = system.tables ?? {};
+  const rest = JSON.stringify({ s: { ...system, blocks: undefined, tables: others }, c: world.compendium, sh: world.sheets });
+  const named = new RegExp(`(?<![\\p{L}\\p{N}_])${id}(?![\\p{L}\\p{N}_])`, 'u').test(rest);
+  return auto && !named && slugOf(label)
+    ? freeId([...Object.keys(others), ...fieldsOf(system).map(f => f.tag)], label)
+    : id;
+}
+
+export function moveTable(draft: System, from: string, to: string): void {
+  if (from === to || !draft.tables?.[from]) return;
+  draft.tables = Object.fromEntries(Object.entries(draft.tables).map(([key, table]) => [key === from ? to : key, table]));
+  renameLayoutTable(draft, from, to);
+  forgetFields(draft);
+}
+
 const OWNER_GROUPS: [string | undefined, string][] = [
   ['sheet', 'Своё у каждого листа'],
   ['group', 'Общее у группы'],
@@ -148,6 +167,16 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
     const target = draft.tables?.[id];
     if (target) change(target);
   });
+  const relabel = (next: string) => {
+    const state = useWorld.getState();
+    const fresh = renameTable(state.system, id, next, { compendium: state.compendium, sheets: state.sheets });
+    editSystem(draft => {
+      const target = draft.tables?.[id];
+      if (target) target.label = next;
+      moveTable(draft, id, fresh);
+    });
+    if (fresh !== id) state.pick({ activeTableId: fresh });
+  };
 
   const summary = users.length
     ? (users.length > 3
@@ -159,7 +188,7 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
     <div ref={ref}>
     <Fold
       title={table.label || id} count={rows.length} summary={summary} open={openAtStart || undefined}
-      rename={{ value: table.label ?? '', placeholder: 'как зовётся таблица', onCommit: next => edit(draft => { draft.label = next; }) }}
+      rename={{ value: table.label ?? '', placeholder: 'как зовётся таблица', onCommit: relabel }}
     >
       <FieldRow
         id="table-head"

@@ -3,7 +3,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import type { System } from '@vtt/schema';
 import { useWorld } from '../../../store/world.ts';
-import { TableColumnCard } from './tables-section.tsx';
+import { TableColumnCard, renameTable, moveTable } from './tables-section.tsx';
 
 afterEach(() => { cleanup(); });
 
@@ -66,5 +66,31 @@ describe('ключ колонки идёт за названием, пока н�
     open(base({ оружие: { label: 'Оружие', shape: 'book', use: 'item', columns: [{ key: 'урон_оружия', label: 'Урон оружия', kind: 'number' }] } }), 'оружие', 'урон_оружия');
     rename('Урон');
     expect(columns('оружие')).toEqual(['урон_оружия']);
+  });
+});
+
+describe('ключ таблицы идёт за названием, пока на неё никто не ссылается', () => {
+  const skills = { label: '', key: 'word', owner: 'sheet', rows: [{ value: 'атлетика' }], columns: [{ key: 'развитие', label: 'Развитие', kind: 'number' }] };
+
+  it('новая таблица на листе: «таблица» → по названию, и блок следует за ней', () => {
+    const system = base({ характеристики: { label: 'Характеристики', key: 'word', rows: [] }, таблица: skills },
+      [{ name: 'Навыки', parts: [{ table: 'таблица' }] }]);
+    const fresh = renameTable(system, 'таблица', 'Навыки Warhammer', {});
+    expect(fresh).toBe('навыки_warhammer');
+    moveTable(system, 'таблица', fresh);
+    expect(Object.keys(system.tables!)).toEqual(['характеристики', 'навыки_warhammer']);
+    expect(system.blocks![0]!.parts[0]!.table).toBe('навыки_warhammer');
+  });
+
+  it('таблицу читает формула или ссылается колонка — ключ держится', () => {
+    const read = base({ таблица: skills, лист: { shape: 'single', columns: [{ key: 'x', label: 'X', expr: { expr: '@таблица.атлетика.развитие' } }] } });
+    expect(renameTable(read, 'таблица', 'Навыки', {})).toBe('таблица');
+    const linked = base({ таблица: skills, другая: { label: 'Другая', key: 'word', columns: [{ key: 'навык', label: 'Навык', kind: 'choice', from: 'таблица' }] } });
+    expect(renameTable(linked, 'таблица', 'Навыки', {})).toBe('таблица');
+  });
+
+  it('значения листов по этой таблице держат ключ', () => {
+    const system = base({ таблица: skills });
+    expect(renameTable(system, 'таблица', 'Навыки', { sheets: [{ values: { 'таблица.атлетика.развитие': 2 } }] })).toBe('таблица');
   });
 });
