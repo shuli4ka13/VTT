@@ -28,13 +28,13 @@ const act = (from: Sheet, to: Sheet[], actionId: string, die: () => number, inpu
 
 group('Shadowrun 6: долг этапа 3 механикой', () => {
   test('Стойкость: сила урона 3, при Силе 7+ — 4 (стр. 290)', () => {
-    const fist = (strength: number) => act(sheetOf('razor', { strength }, [{ of: 'hardened_fist' }]), [sheetOf('humanis')], 'hardened_fist:0', () => 6, { дистанция: 'вплотную' });
+    const fist = (strength: number) => act(sheetOf('razor', { strength }, [{ of: 'hardened_fist' }]), [sheetOf('humanis')], 'hardened_fist:0', () => 6);
     ok(fist(4).log.join('\n').includes('зовёт «Урон»: 7'));
     ok(fist(7).log.join('\n').includes('зовёт «Урон»: 8'));
   });
 
   test('Критический удар: +уровень к силе урона ближнего боя (стр. 157)', () => {
-    const hit = (has: Sheet['has']) => act(sheetOf('razor', {}, has), [sheetOf('humanis')], 'katana:0', () => 6, { дистанция: 'вплотную' }).log.join('\n');
+    const hit = (has: Sheet['has']) => act(sheetOf('razor', {}, has), [sheetOf('humanis')], 'katana:0', () => 6).log.join('\n');
     ok(hit([]).includes('зовёт «Урон»: 8'));
     ok(hit([{ of: 'adept_critical_strike', values: { level: 2 } }]).includes('зовёт «Урон»: 10'));
   });
@@ -61,7 +61,7 @@ group('Shadowrun 6: долг этапа 3 механикой', () => {
 
   test('Дрожь в руках: трату Преимущества на атаку не предлагают (стр. 77)', () => {
     const offers = (has: Sheet['has']) => exchange({ system, compendium, die: () => 3, sheets: [sheetOf('razor', {}, has), sheetOf('humanis')], actionId: 'katana:0', fromId: 'razor', toIds: ['humanis'],
-      inputs: { дистанция: 'вплотную' }, answer: () => [] }).questions.length;
+      answer: () => [] }).questions.length;
     ok(offers([{ of: 'shaky_hands' }]) < offers([]));
   });
 

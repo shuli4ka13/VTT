@@ -32,10 +32,12 @@ export function asksOf(actionId: string, { system, compendium }: { system: Syste
   return [...own, ...paid];
 }
 
-export const ASKABLE = ['number', 'choice', 'text'] as const;
+export const ASKABLE = ['number', 'choice', 'text', 'boolean'] as const;
 
-export const askKindOf = (param: Param): 'number' | 'choice' | 'text' =>
-  (param.kind === 'choice' || param.kind === 'text' ? param.kind : 'number');
+export const askKindOf = (param: Param): 'number' | 'choice' | 'text' | 'boolean' =>
+  (param.kind === 'choice' || param.kind === 'text' || param.kind === 'boolean' ? param.kind : 'number');
+
+export const YES_NO = ['да', 'нет'] as const;
 
 export function choicesOf(system: System, param: Param): string[] {
   return (listOf(system, param.from) ?? []).map(option => String(option.value));
@@ -68,6 +70,7 @@ function valueProblem(param: AskedParam, value: unknown, name: string, system: S
     if (low !== null && number < low) return `${name}: не меньше ${low}`;
     if (high !== null && number > high) return `${name}: не больше ${high}`;
   }
+  if (kind === 'boolean' && !(YES_NO as readonly string[]).includes(String(value))) return `${name}: можно только «да» или «нет»`;
   if (kind === 'choice') {
     const options = choicesOf(system, param);
     if (!options.includes(String(value))) {

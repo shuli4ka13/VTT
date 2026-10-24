@@ -46,7 +46,7 @@ const sheetOf = (id: string, f: Fighter, gun?: Weapon): Sheet => ({
 }) as unknown as Sheet;
 
 const recordOf = (w: Weapon) => ({
-  id: 'испытательный_ствол', table: 'weapon', label: 'Испытательный ствол',
+  id: 'испытательный_ствол', table: 'firearm', label: 'Испытательный ствол',
   cells: {
     dv: w.dv, damage_kind: w.stun ? 'оглушающий' : 'физический', skill: 'стрельба', class: 'тяжёлый пистолет',
     modes: w.modes.map(m => MODE_NAME[m]), ammo_max: 30, reload: 'обойма',
@@ -91,7 +91,7 @@ function engine(one: Case, random: () => number): Seen | { error: string } {
     edgeTo: edgeA > 0 ? 'attacker' : edgeD > 0 ? 'defender' : null,
     ammoLeft: Number(after('стрелок').has.find(h => h.of === 'испытательный_ствол')?.values?.ammo ?? NaN),
     glitch: out.log.some(line => line.startsWith('стрелок применяет «Сбой»') || line.startsWith('стрелок применяет «Критический сбой»')),
-    dice: { attack: rolls('атака_бросок'), defense: rolls('атака_против'), resist: rolls('сопротивление_бросок') },
+    dice: { attack: rolls('атака_бросок'), defense: rolls('защита'), resist: rolls('сопротивление_бросок') },
   };
 }
 

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Button, Field, Input, Select, Verdict } from '../../ui/primitives.tsx';
-import { asksOf, askKindOf, checkInputs, choicesOf, isPerTarget, normalizeInputs } from '@vtt/engine/model/asks';
+import { asksOf, askKindOf, checkInputs, choicesOf, isPerTarget, normalizeInputs, YES_NO } from '@vtt/engine/model/asks';
 import type { AskedParam, Inputs } from '@vtt/engine/model/asks';
 import { newPass } from '@vtt/engine/engine/calc';
 import type { System, Compendium, Sheet } from '@vtt/schema';
@@ -123,14 +123,15 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
 function AskInput({ system, param, value, onChange }: {
   system: System; param: AskedParam; value: string; onChange: (next: string) => void;
 }) {
-  return askKindOf(param) === 'choice'
+  const kind = askKindOf(param);
+  return kind === 'choice' || kind === 'boolean'
     ? (
       <Select
         value={value}
         options={[['', '— какой вариант —'],
-          ...choicesOf(system, param).map((option: string) => [option, option] as const)] as never}
+          ...(kind === 'boolean' ? [...YES_NO] : choicesOf(system, param)).map((option: string) => [option, option] as const)] as never}
         onChange={onChange}
       />
     )
-    : <Input type={askKindOf(param) === 'number' ? 'number' : 'text'} value={value} onChange={onChange} />;
+    : <Input type={kind === 'number' ? 'number' : 'text'} value={value} onChange={onChange} />;
 }

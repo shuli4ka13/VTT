@@ -10,7 +10,7 @@ const sr = PLAYABLE_WORLDS.find(w => (w.system as System).id === 'shadowrun6')!;
 const system = sr.system as System;
 const book = sr.compendium as Compendium;
 
-const praetor = { id: 'praetor', table: 'weapon', label: 'ФН Р93 Претор', cells: { dv: 4, damage_kind: 'физический', skill: 'стрельба', class: 'пистолет-пулемёт', modes: ['короткая очередь', 'длинная очередь', 'непрерывный огонь'], ammo_max: 50, reload: 'обойма', ar1: 9, ar2: 12, ar3: 7 } };
+const praetor = { id: 'praetor', table: 'firearm', label: 'ФН Р93 Претор', cells: { dv: 4, damage_kind: 'физический', skill: 'стрельба', class: 'пистолет-пулемёт', modes: ['короткая очередь', 'длинная очередь', 'непрерывный огонь'], ammo_max: 50, reload: 'обойма', ar1: 9, ar2: 12, ar3: 7 } };
 const compendium = { ...book, records: [...book.records, praetor] } as Compendium;
 
 const fighter = (id: string, values: Record<string, unknown>, has: Sheet['has'] = []): Sheet => ({
@@ -77,7 +77,7 @@ group('Shadowrun 6, глава «Бой»: ситуации книжника (с
     const target = fighter('цель', { body: 6, armor_worn: 6, reaction: 4, intuition: 5, physical: 3 });
     const out = shoot(shooter, [target], [6, 5, 4, 4, 3, 3, 2, 2, 1, 1, 5, 5, 4, 3, 2, 2, 1, 1, 6, 6, 5, 5, 2, 1], { дистанция: 'средняя' });
     const trace = out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]);
-    eq(trace.find(t => t.step === 'атака_против')?.rolls?.length, 8);
+    eq(trace.find(t => t.step === 'защита')?.rolls?.length, 8);
     eq(trace.find(t => t.step === 'сопротивление_бросок')?.rolls?.length, 6);
     eq(after(out, 'цель').values.edge_left, 1);
     eq(after(out, 'цель').values.physical, 3);
@@ -211,9 +211,9 @@ group('Shadowrun 6: действия защиты (стр. 42–43)', () => {
     return after(out, who.id);
   };
   const defenseDice = (attacker: Sheet, weapon: string, target: Sheet) => {
-    const out = exchange({ system, compendium, die: tape(), sheets: [attacker, target], actionId: weapon, fromId: attacker.id, toIds: [target.id], inputs: { дистанция: 'вплотную' } });
+    const out = exchange({ system, compendium, die: tape(), sheets: [attacker, target], actionId: weapon, fromId: attacker.id, toIds: [target.id], ...(weapon.startsWith('sap') ? {} : { inputs: { дистанция: 'вплотную' } }) });
     const trace = out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]);
-    return { dice: trace.find(t => t.step === 'атака_против')?.rolls?.length, target: after(out, target.id) };
+    return { dice: trace.find(t => t.step === 'защита')?.rolls?.length, target: after(out, target.id) };
   };
   const whitney = () => fighter('Уитни', { reaction: 4, intuition: 3, 'skills.ближний_бой.rank': 5, 'skills.атлетика.rank': 2, willpower: 3 });
   const thug = fighter('бандит', { agility: 3, 'skills.ближний_бой.rank': 3, 'skills.стрельба.rank': 3 }, [{ of: 'sap' }, { of: 'colt_l36' }]);
