@@ -367,16 +367,16 @@ describe('уроки конструктора', () => {
       ui.type(screen.getByPlaceholderText('как зовётся блок'), 'Бой');
     });
     await pass('hp', () => {
-      clickAt({ text: '+ колонка', in: 'Листы' });
-      expect(pointOf(lesson.steps[1]!, 'sheet').target).toBe(screen.getByPlaceholderText('как зовётся колонка'));
-      ui.type(screen.getByPlaceholderText('как зовётся колонка'), 'Хиты');
+      clickAt({ text: '+ поле', in: 'Листы' });
+      expect(pointOf(lesson.steps[1]!, 'sheet').target).toBe(screen.getByPlaceholderText('как зовётся поле'));
+      ui.type(screen.getByPlaceholderText('как зовётся поле'), 'Хиты');
     });
     await pass('hp-start', () => { ui.type('В новом листе', '10'); });
     await pass('hp-min', () => { inBar(ui.field('Не ниже'), '0'); });
     await closing('ac', () => {
       clickAt({ text: 'Бой', in: 'Листы' });
-      clickAt({ text: '+ колонка', in: 'Листы' });
-      ui.type(screen.getByPlaceholderText('как зовётся колонка'), 'Класс брони');
+      clickAt({ text: '+ поле', in: 'Листы' });
+      ui.type(screen.getByPlaceholderText('как зовётся поле'), 'Класс брони');
       ui.type('В новом листе', '12');
     }, 'Класс брони: в новом листе 12');
     expect(cardText()).toContain(`Откройте вкладку «${TABS.rules}»`);

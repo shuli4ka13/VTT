@@ -137,13 +137,13 @@ export function TablesSection({ system, editSystem, usage }: Props) {
   );
 }
 
-function TableCard({ id, table, system, editSystem, usage }: Props & { id: string; table: Table }) {
+export function TableCard({ id, table, system, editSystem, usage, opened, onRekey }: Props & { id: string; table: Table; opened?: boolean; onRekey?: (key: string) => void }) {
   const byRange = isRange(table);
   const rows = table.rows ?? [];
   const columns = table.columns ?? [];
   const users = [...new Set([...listUsers(system, id), ...usersOf(usage, 'table', id, system)])];
   const wanted = useWorld(s => s.activeTableId) === id;
-  const [openAtStart] = useState(wanted);
+  const [openAtStart] = useState(wanted || Boolean(opened));
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!wanted) return;
@@ -175,7 +175,8 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
       if (target) target.label = next;
       moveTable(draft, id, fresh);
     });
-    if (fresh !== id) state.pick({ activeTableId: fresh });
+    if (fresh === id) return;
+    if (onRekey) onRekey(fresh); else state.pick({ activeTableId: fresh });
   };
 
   const summary = users.length
@@ -299,8 +300,19 @@ export function moveColumn(draft: System, tableId: string, key: string, holder: 
   draft.tables = withColumn(draft, column, holder).tables;
 }
 
-export function TableColumnCard({ id, table, column, system, edit, onClose, onRekey, extra, lead, bounds = true }: {
+const HOLDER_WORDS: Record<Holder, string> = { sheet: 'у каждого героя своё', group: 'общее у группы', desk: 'одно на весь стол' };
+
+export function whose(table: Table, column: TableColumn, id: string): string {
+  const holder = holderOf(table);
+  if (isSingle(table)) return column.expr !== undefined ? 'поле · считается по формуле' : `поле · ${HOLDER_WORDS[holder ?? 'sheet']}`;
+  if (table.shape === 'book') return `свойство «${table.label || id}» · у каждой записи своё`;
+  const value = column.expr !== undefined ? 'одна формула на все строки' : holder ? `в каждой строке ${HOLDER_WORDS[holder]}` : 'у каждой строки своё значение';
+  return `колонка таблицы «${table.label || id}» · ${value}`;
+}
+
+export function TableColumnCard({ id, table, column, system, edit, onClose, onRekey, onOpenTable, extra, lead, bounds = true }: {
   onRekey?: (key: string) => void;
+  onOpenTable?: () => void;
   extra?: ReactNode;
   lead?: ReactNode;
   bounds?: boolean;
@@ -355,6 +367,8 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, onRe
       many
       formulaHint={single ? 'Формула для всех листов' : book ? 'Формула для всех записей' : 'Формула для всех строк'}
       where={`${table.label || id} · ${name}`}
+      noun={single ? 'поле' : book ? 'свойство' : 'колонка'}
+      sub={<>{whose(table, column, id)}{onOpenTable && !single && !book ? <> <Button size="sm" variant="ghost" onClick={onOpenTable}>открыть таблицу</Button></> : null}</>}
       {...(single ? {} : { names: rowNames(system, id) })}
       system={system}
       onChange={patch => (patch.label !== undefined ? rename(patch.label) : set(c => applyPatch(c, patch)))}

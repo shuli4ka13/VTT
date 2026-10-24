@@ -6,7 +6,8 @@ import { sheetKinds } from '@vtt/engine/model/owned';
 import { hasDesk } from '@vtt/engine/events/desk';
 import { DESK_ID } from '@vtt/engine/engine/owners';
 import { Card, CardHead, Button, Empty, LabelInput, DangerButton, Select } from '../../../ui/primitives.tsx';
-import { newColumn } from '../factory.ts';
+import { newColumn, newTable } from '../factory.ts';
+import { readyForSheet } from '../table-field.tsx';
 import { freeBlockName, addColumnToBlock, moveBlockTo, SHEET_TABLE } from '../block-panel.tsx';
 import { useDragList } from '../../../ui/drag-list.ts';
 import type { UsageIndex } from '../usage.ts';
@@ -70,6 +71,16 @@ export function CharacterSection({ system, editSystem, docked }: {
     setCell(null);
     pick({ activeFieldTag: made.key, activeBlock: null });
   };
+  const addTable = (block: string) => {
+    const made = newTable(system);
+    editSystem(draft => {
+      (draft.tables ??= {})[made.key] = made.value;
+      readyForSheet(draft, made.key);
+      (draft.blocks ?? []).find(b => b.name === block)?.parts.push({ table: made.key });
+    });
+    pick({ activeSheetTable: made.key, activeFieldTag: null, activeColumn: null, activeBlock: null, activeRow: null });
+  };
+  const showTable = (table: string) => pick({ activeSheetTable: table, activeFieldTag: null, activeColumn: null, activeBlock: null, activeRow: null });
   const addBlock = (parent?: string) => {
     const name = freeBlockName(system, 'Новый блок');
     editSystem(draft => { (draft.blocks ??= []).push({ name, ...(parent ? { parent } : {}), parts: [] }); });
@@ -80,12 +91,12 @@ export function CharacterSection({ system, editSystem, docked }: {
     editSystem(draft => { (draft.sheets ??= {})[key] = { label: 'Новый тип листа' }; });
     setOf(key);
   };
-  const pickField = (tag: string, block?: string) => { pick({ activeColumn: null, activeBlock: null, activeRow: null, activeIn: block ?? null, activeFieldTag: tag === picked ? null : tag }); };
+  const pickField = (tag: string, block?: string) => { pick({ activeColumn: null, activeBlock: null, activeRow: null, activeSheetTable: null, activeIn: block ?? null, activeFieldTag: tag === picked ? null : tag }); };
   const pickCell = (next: Picked, block?: string) => {
-    pick({ activeFieldTag: null, activeBlock: null, activeRow: null, activeIn: block ?? null });
+    pick({ activeFieldTag: null, activeBlock: null, activeRow: null, activeSheetTable: null, activeIn: block ?? null });
     setCell(cell && next && cell.table === next.table && cell.column === next.column ? null : next);
   };
-  const pickBlock = (name: string) => pick({ activeBlock: name === activeBlock ? null : name, activeFieldTag: null, activeColumn: null, activeRow: null });
+  const pickBlock = (name: string) => pick({ activeBlock: name === activeBlock ? null : name, activeFieldTag: null, activeColumn: null, activeRow: null, activeSheetTable: null });
   const open: Picked = cell ?? (active ? { table: active.home, column: active.tag } : null);
   const openTable = open ? system.tables?.[open.table] : undefined;
   const openColumn = open ? openTable?.columns?.find(c => c.key === open.column) : undefined;
@@ -98,7 +109,9 @@ export function CharacterSection({ system, editSystem, docked }: {
     const by = part.by ? table?.columns?.find(c => c.key === part.by) : undefined;
     return (
       <div key={`${part.table}|${part.by ?? ''}|${(part.columns ?? []).join(',')}`} className="inline inline--tight">
-        <span className="faint">{table?.label || part.table}:</span>
+        {single
+          ? <span className="faint">{table?.label || part.table}:</span>
+          : <Button size="sm" variant="ghost" title="открыть таблицу" onClick={() => showTable(part.table)}>{table?.label || 'новая таблица'}:</Button>}
         {columns.map(column => {
           const on = single ? picked === column.key : cell?.table === part.table && cell.column === column.key;
           return (
@@ -145,7 +158,8 @@ export function CharacterSection({ system, editSystem, docked }: {
         <div className="block-fold__body">
           {block.parts.map(part => describe(part, block.name))}
           <div className="inline inline--tight">
-            <Button size="sm" variant="ghost" title={`новая колонка листа в блоке «${block.name}»`} onClick={() => add(block.name)}>+ колонка</Button>
+            <Button size="sm" variant="ghost" title="одно значение: хиты, уровень, имя" onClick={() => add(block.name)}>+ поле</Button>
+            <Button size="sm" variant="ghost" title="строки и колонки: характеристики, навыки" onClick={() => addTable(block.name)}>+ таблица</Button>
             <Button size="sm" variant="ghost" title={`блок внутри «${block.name}»`} onClick={() => addBlock(block.name)}>+ блок внутрь</Button>
           </div>
           {branch(children, depth + 1)}
@@ -190,6 +204,7 @@ export function CharacterSection({ system, editSystem, docked }: {
       ) : null}
       {!docked && open && openTable && openColumn ? (
         <TableColumnCard id={open.table} table={openTable} column={openColumn} system={system}
+          onOpenTable={() => showTable(open.table)}
           edit={change => editSystem(draft => { const target = draft.tables?.[open.table]; if (target) change(target); })}
           onClose={() => { setCell(null); pick({ activeFieldTag: null }); }} />
       ) : null}

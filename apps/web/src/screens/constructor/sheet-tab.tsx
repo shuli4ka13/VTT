@@ -11,7 +11,7 @@ import type { ReactNode } from 'react';
 import { useUsage } from './usage.ts';
 import { Segmented } from '../../ui/primitives.tsx';
 import { BlockViewField, holds } from './table-field.tsx';
-import { TableColumnCard } from './rules/tables-section.tsx';
+import { TableColumnCard, TableCard } from './rules/tables-section.tsx';
 import { BlockPanel } from './block-panel.tsx';
 import { RowPanel } from './row-panel.tsx';
 import { SheetSample } from './sheet-sample.tsx';
@@ -31,7 +31,9 @@ export function SheetTab() {
   const active = activeTag ? fieldOf(system, activeTag) ?? null : null;
   const blockOpen = Boolean(activeBlock && system.blocks?.some(b => b.name === activeBlock));
   const columnOpen = Boolean(activeColumn && system.tables?.[activeColumn.table]?.columns?.some(c => c.key === activeColumn.column));
-  const docked = Boolean(active) || blockOpen || rowOpen || columnOpen;
+  const activeSheetTable = useWorld(s => s.activeSheetTable);
+  const tableOpen = Boolean(activeSheetTable && system.tables?.[activeSheetTable]);
+  const docked = Boolean(active) || blockOpen || rowOpen || columnOpen || tableOpen;
   const right = useLookupPane({ head: 'Готовое из образцов', body: <DonorPalette kind="blocks" /> });
   const kindPicked = useWorld(s => s.activeSheetKind);
   const [view, setView] = useState<'sample' | 'kinds'>(kindPicked ? 'kinds' : 'sample');
@@ -47,7 +49,7 @@ export function SheetTab() {
     <Columns
       left={{
         head: 'Лист',
-        tools: <Button size="sm" onClick={add}>+ колонка</Button>,
+        tools: <Button size="sm" title="одно значение: хиты, уровень, имя" onClick={add}>+ поле</Button>,
         ...(docked ? { pinned: true } : {}),
         body: active
           ? <Docked at={active.tag}><ViewPanel field={active} system={system} /></Docked>
@@ -57,9 +59,11 @@ export function SheetTab() {
               ? <Docked at={`${activeColumn!.table}.${activeColumn!.column}`}><ColumnPanel table={activeColumn!.table} column={activeColumn!.column} system={system} /></Docked>
               : blockOpen
                 ? <Docked at={`блок|${activeBlock}`}><BlockPanel name={activeBlock!} system={system} /></Docked>
+                : tableOpen
+                  ? <Docked at={`таблица|${activeSheetTable}`}><TablePanel id={activeSheetTable!} system={system} /></Docked>
                 : (system.blocks ?? []).length
                   ? <Empty title="Щёлкните поле на листе" hint="Его колонка, вид и формула откроются здесь." />
-                  : <Empty title="Лист пока пуст" hint="Возьмите готовые куски справа — «Готовое из образцов» — или заведите свою колонку кнопкой «+ колонка»." />,
+                  : <Empty title="Лист пока пуст" hint="Возьмите готовые куски из «Готового из образцов» или заведите блок: в нём «+ поле» — одно значение, «+ таблица» — строки и колонки." />,
       }}
       main={{
         body: (
@@ -71,15 +75,33 @@ export function SheetTab() {
             />
             {view === 'sample'
               ? <SheetSample system={system} picked={activeTag}
-                  onPick={(tag, block) => pick({ activeFieldTag: tag, activeIn: block ?? null, activeGroupName: null, activeColumn: null, activeBlock: null, activeRow: null })}
-                  onPickBlock={name => pick({ activeBlock: name, activeFieldTag: null, activeColumn: null, activeRow: null })}
-                  onPickRow={(table, row) => pick({ activeRow: { table, row }, activeFieldTag: null, activeColumn: null, activeBlock: null })} />
+                  onPick={(tag, block) => pick({ activeFieldTag: tag, activeIn: block ?? null, activeGroupName: null, activeColumn: null, activeBlock: null, activeRow: null, activeSheetTable: null })}
+                  onPickBlock={name => pick({ activeBlock: name, activeFieldTag: null, activeColumn: null, activeRow: null, activeSheetTable: null })}
+                  onPickRow={(table, row) => pick({ activeRow: { table, row }, activeFieldTag: null, activeColumn: null, activeBlock: null, activeSheetTable: null })} />
               : <CharacterSection docked system={system} editSystem={editSystem} usage={usage} onTable={id => pick({ activeTab: 'dictionaries', activeTableId: id })} />}
           </>
         ),
       }}
       right={right}
     />
+  );
+}
+
+function TablePanel({ id, system }: { id: string; system: System }) {
+  const editSystem = useWorld(s => s.editSystem);
+  const pick = useWorld(s => s.pick);
+  const usage = useUsage();
+  const table = system.tables?.[id];
+  if (!table) return null;
+  return (
+    <div className="stack stack--tight">
+      <div className="inline inline--tight">
+        <span className="spacer" />
+        <Button size="sm" variant="ghost" title="закрыть таблицу" onClick={() => pick({ activeSheetTable: null })}>×</Button>
+      </div>
+      <TableCard id={id} table={table} system={system} editSystem={editSystem} usage={usage} opened
+        onRekey={key => pick({ activeSheetTable: key })} />
+    </div>
   );
 }
 
@@ -104,6 +126,7 @@ function ViewPanel({ field, system }: { field: FieldModel; system: System }) {
         </Card>
       ) : <span className="faint">Поле не стоит ни в одном блоке — вид задаётся в блоке.</span>}
       <TableColumnCard id={field.home} table={table} column={column} system={system}
+        onOpenTable={() => pick({ activeSheetTable: field.home, activeFieldTag: null })}
         bounds={!(view && takesBounds(view.kind, column))}
         edit={change => editSystem(draft => { const target = draft.tables?.[field.home]; if (target) change(target); })}
         onClose={() => pick({ activeFieldTag: null })} />
@@ -139,6 +162,7 @@ function ColumnPanel({ table: id, column: key, system }: { table: string; column
     <>
       {placed ? <Card><BlockViewField tableId={id} column={column} system={system} block={activeIn} /></Card> : null}
       <TableColumnCard id={id} table={table} column={column} system={system}
+        onOpenTable={() => pick({ activeSheetTable: id, activeColumn: null })}
         edit={change => editSystem(draft => { const target = draft.tables?.[id]; if (target) change(target); })}
         onClose={() => pick({ activeColumn: null })} />
     </>

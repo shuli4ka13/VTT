@@ -19,7 +19,7 @@ const open = (system: System, table: string, key: string) => {
 };
 
 const rename = (text: string) => {
-  const input = screen.getByPlaceholderText('как зовётся колонка');
+  const input = screen.getByPlaceholderText(/^как зовётся (поле|колонка|свойство)$/);
   fireEvent.change(input, { target: { value: text } });
   fireEvent.blur(input);
 };
