@@ -85,14 +85,13 @@ describe('эффекты пресетов собираются руками: Sha
     expect(built('serious_wound_rule')).toEqual(goal);
   });
 
-  it('Shadowrun «Сбой» (glitch): подписка «завершено» на действие, без шагов', { timeout: 60000 }, () => {
+  it('Shadowrun «Сбой» (glitch): подписка «бросок окончен», без шагов', { timeout: 60000 }, () => {
     const [goal] = start('shadowrun6', ['glitch']);
     const ui = within();
     head(ui, '+ срабатывает сам', 'Сбой', 'glitch', goal!);
-    ui.select('Что именно', 'ranged_attack');
-    ui.select('Когда именно', 'done');
-    ui.select('Кого касается', '@действующий == @носитель');
-    ui.when('=@атака_бросок.atMin * 2 > @атака_бросок.rolled и @атака_бросок.natural >= 1');
+    ui.select('Что случилось', 'rolled');
+    ui.select('Кого касается', '@бросающий == @носитель');
+    ui.when('=@roll.atMin * 2 > @roll.rolled и @roll.natural >= 1 и не есть(@roll.tags, "инициатива")');
     dump({ got: built('glitch'), goal });
     expect(built('glitch')).toEqual(goal);
   });
@@ -120,7 +119,7 @@ describe('эффекты пресетов собираются руками: Sha
     const ui = within();
     head(ui, '+ срабатывает сам', goal!.label!, 'reroll_failures', goal!);
     seenHead(ui);
-    ui.when('=не (@носитель.edge_ban_charisma >= 1 и (есть(@roll.tags, "обман") или есть(@roll.tags, "убеждение") или есть(@roll.tags, "социальная")) или @носитель.edge_ban_logic >= 1 и (есть(@roll.tags, "биотехнологии") или есть(@roll.tags, "взлом") или есть(@roll.tags, "инженерное дело") или есть(@roll.tags, "электроника")) или @носитель.edge_ban_hands >= 1 и (есть(@roll.tags, "атака") или есть(@roll.tags, "стрельба") или есть(@roll.tags, "ближний бой") или есть(@roll.tags, "экзотическое оружие") или есть(@roll.tags, "взлом замков")) или @носитель.edge_ban_social >= 1 и (есть(@roll.tags, "обман") или есть(@roll.tags, "убеждение") или есть(@roll.tags, "социальная")))');
+    ui.when('=не (@носитель.edge_ban_charisma >= 1 и (есть(@roll.tags, "обман") или есть(@roll.tags, "убеждение") или есть(@roll.tags, "социальная")) или @носитель.edge_ban_logic >= 1 и (есть(@roll.tags, "биотехнологии") или есть(@roll.tags, "взлом") или есть(@roll.tags, "инженерное дело") или есть(@roll.tags, "электроника")) или @носитель.edge_ban_hands >= 1 и (есть(@roll.tags, "атака") или есть(@roll.tags, "стрельба") или есть(@roll.tags, "ближний бой") или есть(@roll.tags, "экзотическое оружие") или есть(@roll.tags, "взлом замков")) или @носитель.edge_ban_social >= 1 и (есть(@roll.tags, "обман") или есть(@roll.tags, "убеждение") или есть(@roll.tags, "социальная"))) и не @roll.atMin * 2 > @roll.rolled и не есть(@roll.tags, "инициатива")');
     spendFromHolder();
     ui.click('+ перебросить');
     const card = stepCard(/^2 · /);
@@ -134,7 +133,7 @@ describe('эффекты пресетов собираются руками: Sha
     const ui = within();
     head(ui, '+ срабатывает сам', goal!.label!, 'push_edge', goal!);
     seenHead(ui);
-    ui.when('=не (@носитель.edge_ban_charisma >= 1 и (есть(@roll.tags, "обман") или есть(@roll.tags, "убеждение") или есть(@roll.tags, "социальная")) или @носитель.edge_ban_logic >= 1 и (есть(@roll.tags, "биотехнологии") или есть(@roll.tags, "взлом") или есть(@roll.tags, "инженерное дело") или есть(@roll.tags, "электроника")) или @носитель.edge_ban_hands >= 1 и (есть(@roll.tags, "атака") или есть(@roll.tags, "стрельба") или есть(@roll.tags, "ближний бой") или есть(@roll.tags, "экзотическое оружие") или есть(@roll.tags, "взлом замков")) или @носитель.edge_ban_social >= 1 и (есть(@roll.tags, "обман") или есть(@roll.tags, "убеждение") или есть(@roll.tags, "социальная")))');
+    ui.when('=не (@носитель.edge_ban_charisma >= 1 и (есть(@roll.tags, "обман") или есть(@roll.tags, "убеждение") или есть(@roll.tags, "социальная")) или @носитель.edge_ban_logic >= 1 и (есть(@roll.tags, "биотехнологии") или есть(@roll.tags, "взлом") или есть(@roll.tags, "инженерное дело") или есть(@roll.tags, "электроника")) или @носитель.edge_ban_hands >= 1 и (есть(@roll.tags, "атака") или есть(@roll.tags, "стрельба") или есть(@roll.tags, "ближний бой") или есть(@roll.tags, "экзотическое оружие") или есть(@roll.tags, "взлом замков")) или @носитель.edge_ban_social >= 1 и (есть(@roll.tags, "обман") или есть(@roll.tags, "убеждение") или есть(@roll.tags, "социальная"))) и не есть(@roll.tags, "инициатива")');
     spendFromHolder();
     ui.click('+ докинуть');
     const card = () => stepCard(/^2 · /);
