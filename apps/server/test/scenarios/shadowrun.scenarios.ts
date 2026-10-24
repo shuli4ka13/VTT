@@ -7,7 +7,7 @@ const shot = (range: string, extra: Record<string, number | string> = {}) => ({
 const batonInRound1 = [
   { turn: 'start', order: ['razor', 'lone_star'] },
   { turn: 'next' },
-  { act: 'stun_baton:0', from: 'lone_star', to: 'razor', inputs: shot('вплотную') },
+  { act: 'stun_baton:0', from: 'lone_star', to: 'razor', inputs: { 'приём': 'нет' } },
 ] as Scenario['steps'];
 
 const batonDice = [

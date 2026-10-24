@@ -38,7 +38,6 @@ group('Shadowrun 6, глава «Риггинг»: ситуации книжни
     const thug = sheetOf('mafia', { edge_left: 0 });
     const hit = (faces: number[]) => exchange({
       system, compendium, die: tape(...faces), sheets: [thug, sheetOf('drone_doberman')], actionId: 'sap:0', fromId: 'mafia', toIds: ['drone_doberman'],
-      inputs: { дистанция: 'вплотную' },
     }).sheets.find(s => s.id === 'drone_doberman')!;
     eq(hit([5, 5, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]).values.stun ?? 0, 0, 'СУ 2 + 2 = 4 — не больше Тела 4');
     eq(hit([5, 5, 5, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 5, 5, 2, 2]).values.stun, 3, 'СУ 2 + 3 = 5 больше Тела 4 — проходит; сопротивление Телом модели 4 кубика, 2 успеха — остаток 3');

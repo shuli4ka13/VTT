@@ -77,7 +77,7 @@ group('Shadowrun 6: Преимущество и действия', () => {
   const desk = (battle: boolean) => ({ id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: { battle }, has: [], effects: [] }) as unknown as Sheet;
   const hit = (from: Sheet, to: Sheet, action: string, die: () => number, inputs: Record<string, unknown>, battle = false) => exchange({
     system, compendium, die, sheets: [from, to, desk(battle)], actionId: action, fromId: from.id, toId: to.id,
-    inputs: { дистанция: 'близкая', ...inputs } as never,
+    inputs: { ...(/^(stun_baton|katana|sap|combat_knife):/.test(action) ? {} : { дистанция: 'близкая' }), ...inputs } as never,
   });
 
   test('не больше 2 очков Преимущества за раунд', () => {
@@ -88,7 +88,7 @@ group('Shadowrun 6: Преимущество и действия', () => {
 
   test('«Вырубить ударом» за 2 очка: урон больше Воли — счётчик оглушения полон', () => {
     const out = hit(sheetOf('lone_star', { edge_left: 2 }), sheetOf('humanis'), 'stun_baton:0', dice([7, 6], [4, 1], [2, 1]),
-      { дистанция: 'вплотную', приём: 'Вырубить ударом' });
+      { приём: 'Вырубить ударом' });
     eq(after(out, 'lone_star').values.edge_left, 1, 'заплатил 2, получил 1 за АТК 6 против ЗЩТ 2');
     eq(after(out, 'humanis').values.stun, 9);
     ok(wears(after(out, 'humanis'), 'unconscious'));
@@ -271,7 +271,7 @@ group('Shadowrun 6: состояния (стр. 52–54)', () => {
     const lying = wearing('humanis', { effectId: 'prone' });
     const defense = (range: string) => {
       const out = shoot(sheetOf('razor'), lying, 'predator_vi:0', () => 1, range);
-      return out.reports.flatMap(r => r.report.trace as { step: unknown; rolls?: number[] }[]).find(one => one.step === 'атака_против')?.rolls?.length;
+      return out.reports.flatMap(r => r.report.trace as { step: unknown; rolls?: number[] }[]).find(one => one.step === 'защита')?.rolls?.length;
     };
     const base = computed(lying, 'defense_pool');
     eq(defense('средняя'), base + 2);
