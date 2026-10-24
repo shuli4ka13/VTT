@@ -62,7 +62,7 @@ describe('таблица прямо на листе', () => {
     renderOpen(<SheetTab />);
     press('блоки и типы листов');
     press('+ таблица');
-    const row = screen.getByPlaceholderText('слово');
+    const row = screen.getByPlaceholderText('как зовётся строка');
     fireEvent.change(row, { target: { value: 'сила' } });
     fireEvent.blur(row);
     openAll();
@@ -72,5 +72,41 @@ describe('таблица прямо на листе', () => {
     expect(useWorld.getState().activeSheetTable).toBeNull();
     press('новая таблица:');
     expect(useWorld.getState().activeSheetTable).not.toBeNull();
+  });
+
+  it('строка таблицы — одно название: слово для формул выводится из него и идёт за ним, формулы следуют за словом', () => {
+    useWorld.getState().replaceWorld({
+      system: { ...emptySystem(), tables: {
+        действия: { label: 'Действия', key: 'word', owner: 'sheet', rows: [{ value: '' }], columns: [{ key: 'value', label: 'Осталось', kind: 'number' }] },
+        лист: { shape: 'single', columns: [{ key: 'x', label: 'X', expr: { expr: '@действия.главное.value' } }] },
+      } as never },
+      compendium: { records: [] },
+      sheets: [],
+    });
+    useWorld.getState().pick({ activeSheetTable: 'действия' });
+    renderOpen(<SheetTab />);
+    const name = (text: string, at = 0) => {
+      const input = screen.getAllByPlaceholderText('как зовётся строка')[at]!;
+      fireEvent.change(input, { target: { value: text } });
+      fireEvent.blur(input);
+      openAll();
+    };
+    const rows = () => useWorld.getState().system.tables!.действия!.rows!;
+
+    name('Бонусное действие');
+    expect(rows()[0]!.value).toBe('бонусное_действие');
+    expect(rows()[0]!.label).toBe('Бонусное действие');
+
+    name('Реакция', 0);
+    expect(rows()[0]!.value, 'слово идёт за названием').toBe('реакция');
+    expect(rows()[0]!.label).toBe('Реакция');
+
+    useWorld.getState().editSystem(draft => { draft.tables!.действия!.rows = [{ value: 'главное', cells: {} }]; });
+    openAll();
+    name('Главное действие', 0);
+    expect(rows()[0]!.value).toBe('главное_действие');
+    expect(rows()[0]!.label).toBe('Главное действие');
+    const formula = useWorld.getState().system.tables!.лист!.columns![0]!.expr as { expr: string };
+    expect(formula.expr, 'формула, которая читала строку, переписана на новое слово').toBe('@действия.главное_действие.value');
   });
 });

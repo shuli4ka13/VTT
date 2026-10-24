@@ -188,9 +188,10 @@ export function TableCard({ id, table, system, editSystem, usage, opened, onReke
   return (
     <div ref={ref}>
     <Fold
-      title={table.label || id} count={rows.length} summary={summary} open={openAtStart || undefined}
+      title={table.label || id} count={rows.length} open={openAtStart || undefined}
       rename={{ value: table.label ?? '', placeholder: 'как зовётся таблица', onCommit: relabel }}
     >
+      <Fold title="ещё" summary={`чьи значения, ключ строки, подсказка · ${summary}`}>
       <FieldRow
         id="table-head"
         fields={[
@@ -250,6 +251,7 @@ export function TableCard({ id, table, system, editSystem, usage, opened, onReke
       />
 
       <UsageRow title="Где используется:" items={users.map(text => ({ key: text, text }))} />
+      </Fold>
 
       {rekey ? (
         <Verdict tone="warn" action={(
@@ -470,7 +472,7 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
   });
 
   const placed = onSheet(table);
-  const lead = byRange ? ['от', 'до'] : [key === 'number' ? 'число' : 'слово', 'подпись'];
+  const lead = byRange ? ['от', 'до'] : key === 'number' ? ['число', 'подпись'] : ['строка'];
   const gridColumns: GridColumn[] = [
     ...lead.map(name => ({ key: `:${name}`, label: name, width: byRange ? 90 : defaultWidth() })),
     ...columns.map(c => ({
@@ -611,8 +613,16 @@ function RowCells({ tableId, row, at, rowKey, columns, system, edit, setCell, us
         </>
       ) : (
         <>
-          <KeyInput value={row.value} numeric={rowKey === 'number'} taken={taken} onRename={onRename} />
-          <Input value={row.label ?? ''} placeholder="как показать" onChange={next => set(r => { if (next.trim()) r.label = next; else delete r.label; })} />
+          {rowKey === 'number' ? (
+            <>
+              <KeyInput value={row.value} numeric taken={taken} onRename={onRename} />
+              <Input value={row.label ?? ''} placeholder="как показать" onChange={next => set(r => { if (next.trim()) r.label = next; else delete r.label; })} />
+            </>
+          ) : (
+            <RowName row={row} taken={taken} onRename={onRename}
+              onLabel={label => set(r => { if (label === undefined) delete r.label; else r.label = label; })}
+              onFirst={(value, label) => set(r => { r.value = value as never; if (label === undefined) delete r.label; else r.label = label; })} />
+          )}
         </>
       )}
       {columns.map(column => (
@@ -634,6 +644,56 @@ function RowCells({ tableId, row, at, rowKey, columns, system, edit, setCell, us
         <Button size="sm" variant="ghost" title="убрать строку" onClick={() => edit(draft => { draft.rows?.splice(at, 1); })}>×</Button>
       )}
     </>
+  );
+}
+
+function RowName({ row, taken, onRename, onLabel, onFirst }: {
+  row: TableRow;
+  taken: (next: unknown) => boolean;
+  onRename: (next: unknown) => void;
+  onLabel: (label: string | undefined) => void;
+  onFirst: (value: string, label: string | undefined) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const [trouble, setTrouble] = useState<string | null>(null);
+  const key = row.value === undefined ? '' : String(row.value);
+  const shown = draft ?? row.label ?? key;
+  const labelFor = (name: string, value: string) => (name === value ? undefined : name);
+
+  const commit = () => {
+    if (draft === null) return;
+    const name = draft.trim();
+    setDraft(null);
+    if (!name || name === (row.label ?? key)) { setTrouble(null); return; }
+    const slug = slugOf(name);
+    if (!slug) { setTrouble('нужны буквы или цифры'); return; }
+    if (!key) {
+      if (taken(slug)) { setTrouble(`«${name}» уже есть`); return; }
+      setTrouble(null);
+      onFirst(slug, labelFor(name, slug));
+      return;
+    }
+    setTrouble(null);
+    if (slug !== key && !taken(slug)) {
+      onRename(slug);
+      onLabel(labelFor(name, slug));
+      return;
+    }
+    onLabel(labelFor(name, key));
+  };
+
+  return (
+    <div className="stack stack--tight">
+      <Input
+        value={shown}
+        invalid={Boolean(trouble)}
+        placeholder="как зовётся строка"
+        onChange={setDraft}
+        onBlur={commit}
+        onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+      />
+      {trouble ? <span className="field__error">{trouble}</span> : null}
+    </div>
   );
 }
 
