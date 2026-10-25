@@ -18,6 +18,7 @@ export interface PlayArgs {
   inputs?: Record<string, number | string>;
   claims?: { source?: string[]; target?: string[] };
   answer?: (question: Question) => string[];
+  newId?: () => string;
 }
 
 export interface Played {
@@ -34,7 +35,7 @@ export function exchange(args: PlayArgs): Played {
   for (let round = 0; round < 64; round++) {
     const out = act({
       system: args.system, compendium: args.compendium, clock: args.clock ?? null, sheets: args.sheets,
-      die: args.die, journal, declineAll: !args.answer,
+      die: args.die, journal, declineAll: !args.answer, ...(args.newId ? { newId: args.newId } : {}),
     }, {
       actionId: args.actionId, fromId: args.fromId, toIds,
       ...(args.inputs ? { inputs: args.inputs } : {}),

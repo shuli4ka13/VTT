@@ -7,7 +7,7 @@ import type { RefContext, Bound } from '../engine/refs.ts';
 import { splitPath, referencedTable, reach } from '../engine/navigate.ts';
 import { findField, calc } from '../engine/calc.ts';
 import { lapse } from '../events/durations.ts';
-import { sweepBonds } from '../events/bonds.ts';
+import { sweepBonds, freeHolders } from '../events/bonds.ts';
 import { lifecycleChanges, HOOK_WORDS, HEARD_WORDS } from '../events/lifecycle.ts';
 import { MOMENTS } from '../events/moments.ts';
 import { ROLLED, ROLLED_LABEL } from '../events/happenings.ts';
@@ -102,7 +102,7 @@ export interface Frame {
   claims: Claims;
   hop: number;
   inSub: boolean;
-  bond?: { sheet: string; effect: string };
+  bond?: WornEffect['bond'];
   seenRoll?: { value: Roll; bonus?: number };
   lazy?: Lazy;
   alone?: boolean;
@@ -139,7 +139,7 @@ export interface Delivery {
   inputs?: Record<string, number | string>;
   claims?: Claims;
   lazy?: Lazy;
-  bond?: { sheet: string; effect: string };
+  bond?: WornEffect['bond'];
   offset?: number;
   lead?: Record<string, unknown>[];
   cost?: boolean;
@@ -457,7 +457,15 @@ export class Run {
       read: (sheetId, tag) => this.read(sheetId, tag),
       write: (sheetId, tag, value) => this.write(sheetId, tag, value, sink),
       attach: (sheetId, effectId, args) => this.attach(frame, sheetId, effectId, args, sink, path),
-      detach: (sheetId, effectId) => this.detach(sheetId, effectId, frame.owner, sink),
+      detach: (sheetId, effectId, pick) => this.detach(sheetId, effectId, frame.owner, sink, pick && {
+        ...(pick.where !== undefined ? { where: (entry: WornEffect) => {
+          const blank = Object.fromEntries((this.system.effects?.[effectId]?.params ?? []).map(param => [param.key, null]));
+          const value = resolveRef(pick.where, { ...ref, results: { ...results, ...blank, ...(entry.args ?? {}) } });
+          if (typeof value !== 'boolean') throw new EngineError(`${frame.owner || 'правило'}: условие «какие снять» должно давать да/нет, а дало ${JSON.stringify(value)}`);
+          return value;
+        } } : {}),
+        ...(pick.one ? { one: true } : {}),
+      }),
       edited: (call, param, base, tags, args) => this.edited(call, param, base, tags, args),
       call: (event, args, payload) => this.callEvent(frame, event, payload, args, sink, path),
       ...(frame.seenRoll ? { seenRoll: frame.seenRoll } : {}),
@@ -738,15 +746,20 @@ export class Run {
     if (!sink.effects.includes(effectId)) sink.effects.push(effectId);
   }
 
-  private detach(sheetId: string, effectId: string, owner: string, sink: Sink): void {
+  private detach(sheetId: string, effectId: string, owner: string, sink: Sink, pick?: { where?: (entry: WornEffect) => boolean; one?: boolean }): void {
     requireEffect(this.system, effectId, owner);
     const sheet = this.sheet(sheetId)!;
     const own = this.running.at(-1);
     const self = own && own.sheetId === sheetId && own.effectId === effectId ? own : null;
     let nth = 0;
+    let taken = 0;
     const worn = (sheet.effects ?? []).filter(entry => {
       if (entry.effectId !== effectId) return true;
-      return self ? this.instOf(entry, false, nth++) !== self.inst : false;
+      if (self) return this.instOf(entry, false, nth++) !== self.inst;
+      if (pick?.where && !pick.where(entry)) return true;
+      if (pick?.one && taken > 0) return true;
+      taken += 1;
+      return false;
     });
     if (worn.length === (sheet.effects ?? []).length) return;
     this.state.put({ ...sheet, effects: worn });
@@ -917,6 +930,20 @@ export class Run {
 
   holdsAt(frame: Frame, guard: unknown): boolean {
     return this.ctx(frame, {}, {}, frame.path.phase('bond'), newSink(), new Set()).holds(guard);
+  }
+
+  valuesAt(frame: Frame, refs: Record<string, unknown>): Record<string, StoredValue> {
+    const ctx = this.ctx(frame, {}, {}, frame.path.phase('bond'), newSink(), new Set());
+    const out: Record<string, StoredValue> = {};
+    for (const [key, ref] of Object.entries(refs)) {
+      const value = ctx.value(ref);
+      if (value === null || value === undefined || value === '') continue;
+      if (typeof value !== 'number' && typeof value !== 'string' && typeof value !== 'boolean') {
+        throw new EngineError(`${frame.owner || 'правило'}: держатель запоминает число, строку или лист, а «${key}» дал ${JSON.stringify(value)}`);
+      }
+      out[key] = value;
+    }
+    return out;
   }
 
   private returnsOf(callee: Effect, frame: Frame, ran: Ran): Record<string, unknown> | null {
@@ -1102,10 +1129,11 @@ export class Run {
 
   private letGo(bond: NonNullable<WornEffect['bond']>): Entry[] {
     const holder = this.sheet(bond.sheet);
-    if (!holder || !(holder.effects ?? []).some(entry => entry.effectId === bond.effect)) return [];
-    const held = this.state.sheets.some(sheet => (sheet.effects ?? []).some(entry => entry.bond?.sheet === bond.sheet && entry.bond.effect === bond.effect));
+    const mine = (entry: WornEffect): boolean => entry.effectId === bond.effect && (!bond.inst || entry.inst === bond.inst);
+    if (!holder || !(holder.effects ?? []).some(mine)) return [];
+    const held = this.state.sheets.some(sheet => (sheet.effects ?? []).some(entry => entry.bond?.sheet === bond.sheet && entry.bond.effect === bond.effect && entry.bond.inst === bond.inst));
     if (held) return [];
-    this.state.put({ ...holder, effects: (holder.effects ?? []).filter(entry => entry.effectId !== bond.effect) });
+    this.state.put({ ...holder, effects: (holder.effects ?? []).filter(entry => !mine(entry)) });
     return [{ text: `«${effectLabelOf(this.system, bond.effect)}» спало с ${holder.name}: держать больше нечего` }];
   }
 
@@ -1190,7 +1218,12 @@ export class Run {
       for (const broken of swept.broken) {
         this.state.write({ text: `«${effectLabelOf(this.system, broken.effectId)}» спало с ${this.sheet(broken.sheetId)?.name ?? broken.sheetId}: держать стало нечем` });
       }
-      if (!crossed && !swept.broken.length) return;
+      const loose = freeHolders(before, [...this.state.sheets]);
+      this.state.replace(loose.sheets);
+      for (const one of loose.freed) {
+        this.state.write({ text: `«${effectLabelOf(this.system, one.effectId)}» спало с ${this.sheet(one.sheetId)?.name ?? one.sheetId}: держать больше нечего` });
+      }
+      if (!crossed && !swept.broken.length && !loose.freed.length) return;
     }
     throw new EngineError(`наложения, поля и связи будят друг друга без остановки: больше ${this.limits.settleRounds} кругов`);
   }

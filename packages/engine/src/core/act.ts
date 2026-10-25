@@ -23,7 +23,7 @@ import type { Entry } from './log.ts';
 import type { RollResult } from './dice.ts';
 import type { StepData } from './steps.ts';
 import type { Clock } from '../engine/clock.ts';
-import type { System, Sheet, Compendium, Die } from '../model/types.ts';
+import type { System, Sheet, Compendium, Die, WornEffect } from '../model/types.ts';
 import { tableOf } from '../model/buttons.ts';
 import { TARGETS_SEED } from '../model/references.ts';
 
@@ -118,7 +118,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
     bound[param.key] = table[param.key] === 'actor' ? actor : table[param.key] === 'targets' ? (param.many ? targets : targets[0] ?? null) : null;
   }
   const bondSheet = effect.bond ? bound[effect.bond.by] : null;
-  let bond = effect.bond && typeof bondSheet === 'string' ? { sheet: bondSheet, effect: effect.bond.effect } : undefined;
+  let bond: WornEffect['bond'] = effect.bond && typeof bondSheet === 'string' ? { sheet: bondSheet, effect: effect.bond.effect } : undefined;
 
   const top = (path: Path, owner: string, extra: Partial<Frame> = {}): Frame => ({
     path, effectId: action.effect, label: action.label, owner, home: actor, bound,
@@ -126,6 +126,14 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
   });
 
   if (bond && effect.bond?.if && !run.holdsAt(top(root.phase('bond'), `держание «${action.label}»`), effect.bond.if)) bond = undefined;
+  const many = Boolean(effect.bond?.many) && bond !== undefined;
+  const holderArgs = many && effect.bond?.args ? run.valuesAt(top(root.phase('bond'), `держание «${action.label}»`), effect.bond.args) : {};
+  if (bond && many) {
+    const taken = new Set((run.sheet(bond.sheet)?.effects ?? []).map(entry => entry.inst));
+    let inst = run.ext.id(root.phase('bond').phase(bond.effect));
+    for (let n = 2; taken.has(inst); n += 1) inst = `${inst.replace(/~\d+$/, '')}~${n}`;
+    bond = { ...bond, inst };
+  }
 
   if (effect.cost?.length) {
     const sink = newSink();
@@ -138,7 +146,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
     state.write(...sink.after);
   }
 
-  if (effect.bond && bond) {
+  if (effect.bond && bond && !many) {
     const released = releaseHolder(system, [...state.sheets], bond.sheet, bond.effect);
     state.replace(released.sheets);
     for (const broken of released.broken) {
@@ -200,9 +208,14 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
     calls = [{ ...base, steps, path: root, subject: null, bound }];
   }
 
+  if (bond && many) {
+    const holder = run.sheet(bond.sheet)!;
+    state.put({ ...holder, effects: [...(holder.effects ?? []), { effectId: bond.effect, inst: bond.inst!, ...(Object.keys(holderArgs).length ? { args: holderArgs } : {}) }] });
+  }
+
   const delivered: Delivered[] = [];
   run.group(calls, root, out => {
-    if (bond) {
+    if (bond && !many) {
       const holder = run.sheet(bond.sheet)!;
       if (!(holder.effects ?? []).some(entry => entry.effectId === bond.effect)) {
         state.put({ ...holder, effects: [...(holder.effects ?? []), { effectId: bond.effect }] });

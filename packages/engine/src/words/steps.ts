@@ -207,6 +207,11 @@ export const STEP_WORDS = {
       },
       { key: 'to', label: 'На кого', kind: 'sheet', main: true, required: true, allow: ['expr'] },
       { key: 'args', label: 'Что наложенное запомнит', kind: 'args', allow: [] },
+      { key: 'where', label: 'Какие снять', kind: 'ref', allow: ['expr', 'empty'], onlyIf: { key: 'mode', is: 'remove' } },
+      {
+        key: 'one', label: 'Сколько снять', kind: 'flag', fallback: 'false', onlyIf: { key: 'mode', is: 'remove' },
+        choice: [['false', 'все'], ['true', 'одно, самое раннее']],
+      },
     ],
     outputs: [],
     reasons: {},

@@ -42,7 +42,7 @@ export interface StepContext {
   read(sheetId: string, tag: string): unknown;
   write(sheetId: string, tag: string, value: StoredValue): void;
   attach(sheetId: string, effectId: string, args: Record<string, StoredValue>): void;
-  detach(sheetId: string, effectId: string): void;
+  detach(sheetId: string, effectId: string, pick?: { where?: unknown; one?: boolean }): void;
   edited(call: string, param: string, base: number, tags: string[], args: Record<string, unknown>): number;
   call(event: string, args: Record<string, unknown>, payload: EmittedEvent): NestedRun;
   seenRoll?: { value: Roll; bonus?: number };

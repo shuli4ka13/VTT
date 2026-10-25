@@ -16,13 +16,18 @@ export function releaseHolder(
   return sweepBonds(system, freed);
 }
 
-const held = (entry: WornEffect): { from: string; holder: string } | null =>
-  (entry.bond ? { from: entry.bond.sheet, holder: entry.bond.effect } : null);
+const held = (entry: WornEffect): { from: string; holder: string; inst?: string } | null =>
+  (entry.bond ? { from: entry.bond.sheet, holder: entry.bond.effect, ...(entry.bond.inst ? { inst: entry.bond.inst } : {}) } : null);
+
+const slot = (sheet: string, effect: string, inst?: string): string => `${sheet}\u0000${effect}\u0000${inst ?? ''}`;
 
 export function sweepBonds(system: System, sheets: Sheet[]): { sheets: Sheet[]; broken: BondBreak[] } {
-  const wearing = new Map<string, Set<string>>();
+  const wearing = new Set<string>();
   for (const sheet of sheets) {
-    wearing.set(sheet.id, new Set((sheet.effects ?? []).map(entry => entry.effectId)));
+    for (const entry of sheet.effects ?? []) {
+      wearing.add(slot(sheet.id, entry.effectId));
+      if (entry.inst) wearing.add(slot(sheet.id, entry.effectId, entry.inst));
+    }
   }
 
   const broken: BondBreak[] = [];
@@ -32,12 +37,40 @@ export function sweepBonds(system: System, sheets: Sheet[]): { sheets: Sheet[]; 
       const bond = held(entry);
       if (!bond) return true;
       if (!findEffect(system, bond.holder)) return true;
-      const alive = wearing.get(bond.from)?.has(bond.holder) ?? false;
-      if (!alive) broken.push({ sheetId: sheet.id, effectId: entry.effectId, ...bond });
+      const alive = wearing.has(slot(bond.from, bond.holder, bond.inst));
+      if (!alive) broken.push({ sheetId: sheet.id, effectId: entry.effectId, from: bond.from, holder: bond.holder });
       return alive;
     });
     return left.length === worn.length ? sheet : { ...sheet, effects: left };
   });
 
   return { sheets: next, broken };
+}
+
+const heldSlots = (sheets: readonly Sheet[]): Set<string> => {
+  const out = new Set<string>();
+  for (const sheet of sheets) {
+    for (const entry of sheet.effects ?? []) {
+      if (entry.bond?.inst) out.add(slot(entry.bond.sheet, entry.bond.effect, entry.bond.inst));
+    }
+  }
+  return out;
+};
+
+export function freeHolders(before: readonly Sheet[], sheets: Sheet[]): { sheets: Sheet[]; freed: { sheetId: string; effectId: string }[] } {
+  const was = heldSlots(before);
+  const now = heldSlots(sheets);
+  const freed: { sheetId: string; effectId: string }[] = [];
+  const next = sheets.map(sheet => {
+    const worn = sheet.effects ?? [];
+    const left = worn.filter(entry => {
+      if (!entry.inst) return true;
+      const key = slot(sheet.id, entry.effectId, entry.inst);
+      if (!was.has(key) || now.has(key)) return true;
+      freed.push({ sheetId: sheet.id, effectId: entry.effectId });
+      return false;
+    });
+    return left.length === worn.length ? sheet : { ...sheet, effects: left };
+  });
+  return { sheets: next, freed };
 }

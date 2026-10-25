@@ -230,7 +230,7 @@ export const tagContract = z.object({
 export const effect = z.object({
   group: z.string().optional(),
   tags: z.array(z.string().min(1)).optional(),
-  bond: z.object({ effect: z.string().min(1), by: z.string().min(1), if: formula.optional() }).strict().optional(),
+  bond: z.object({ effect: z.string().min(1), by: z.string().min(1), if: formula.optional(), many: z.boolean().optional(), args: z.record(z.string(), formula).optional() }).strict().optional(),
   label: z.string().optional(),
   icon: z.string().optional(),
   description: z.string().optional(),
@@ -340,7 +340,7 @@ export const wornEffect = z.object({
   combat: z.boolean().optional(),
   scene: z.boolean().optional(),
   args: z.record(z.string(), storedValue).optional(),
-  bond: z.object({ sheet: z.string().min(1), effect: z.string().min(1) }).strict().optional(),
+  bond: z.object({ sheet: z.string().min(1), effect: z.string().min(1), inst: z.string().min(1).optional() }).strict().optional(),
 }).strict();
 
 export const owned = z.object({

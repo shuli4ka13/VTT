@@ -35,7 +35,9 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
     const to = ctx.sheet(step.to, 'на кого');
     if (!to) throw new EngineError(`${who(ctx)}: шагу «состояние» не сказано, на чей лист`);
     if (mode === 'remove') {
-      ctx.detach(to, id);
+      const where = step.where === undefined || step.where === null || step.where === '' ? undefined : step.where;
+      const one = step.one === true || step.one === 'true';
+      ctx.detach(to, id, where === undefined && !one ? undefined : { ...(where !== undefined ? { where } : {}), ...(one ? { one } : {}) });
       return { value: id, trace: { mode, effect: id, sheet: to }, break: null };
     }
     const given: Record<string, StoredValue> = {};

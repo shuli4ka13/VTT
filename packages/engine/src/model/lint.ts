@@ -21,7 +21,7 @@ import { tableOf } from './buttons.ts';
 import { MOMENTS } from '../events/moments.ts';
 import { TABS, STEP, SHEET } from '../words/glossary.ts';
 import {
-  referencesOf, declaredOf, chainRefs, listenerOf, withAddresses, heardNames, callNamesOf, formulaDeps, sourcesOf,
+  referencesOf, declaredOf, chainRefs, heldParamsOf, listenerOf, withAddresses, heardNames, callNamesOf, formulaDeps, sourcesOf,
   type Where, type Reference, type RefKind, type Declared, type Listener,
   LISTEN, contractsOf, HOLDER, DESK_NAME, holderNameOf, tiedToHolder,
 } from './references.ts';
@@ -246,7 +246,7 @@ export function lintStep(step: Step, system: System, effect: Effect, earlier: Ea
   const params = new Set([...all.filter(p => p.kind !== 'sheet').map(p => p.key), ...rows, ...visible.filter(one => one.kind !== 'sheet').map(one => one.name)]);
   const sheets = [...all.filter(p => p.kind === 'sheet').map(p => p.key), 'носитель', ...earlier.filter(e => e.type === 'each' && !e.table).map(e => e.id), ...visible.filter(one => one.kind === 'sheet').map(one => one.name)];
   const known = new Set([...earlier.map(e => e.id), ...visible.filter(one => one.kind !== 'sheet').map(one => one.name)]);
-  const refs = withAddresses(system, chainRefs([step], () => where, params, sheets))
+  const refs = withAddresses(system, chainRefs([step], () => where, params, sheets, [], [], heldParamsOf(system)))
     .filter(ref => !(ref.kind === 'step' && known.has(ref.key)))
     .filter(ref => !(ref.kind === 'field' && known.has(ref.key)));
   const [first] = refProblems(refs, declared, () => false, system);
@@ -1309,6 +1309,11 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
       if (!sheets.has(effect.bond.by)) out.push({ where, level: 'error', text: `держатель выдаётся листу «${effect.bond.by}», а такого входа-листа у эффекта нет` });
       const holder = system.effects[effect.bond.effect];
       if (!holder || (holder.activation ?? 'manual') !== 'passive') out.push({ where, level: 'error', text: `держит «${effect.bond.effect}» — это должен быть висящий эффект` });
+      const keys = new Set((holder?.params ?? []).map(param => param.key));
+      for (const key of Object.keys(effect.bond.args ?? {})) {
+        if (!effect.bond.many) out.push({ where, level: 'error', text: `держатель запоминает «${key}» только при многоместном держании` });
+        else if (holder && !keys.has(key)) out.push({ where, level: 'error', text: `держатель «${holder.label ?? effect.bond.effect}» не знает входа «${key}»` });
+      }
     }
     if (effect.duration?.by && !sheets.has(effect.duration.by)) {
       out.push({ where, level: 'error', text: `срок считает ходы листа «${effect.duration.by}», а такого входа-листа у эффекта нет` });
