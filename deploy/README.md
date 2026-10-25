@@ -1,46 +1,42 @@
-# Полигон на cdm: как выкатить
+# Стенд на VPS: выкатка
 
-Один контейнер (Nest: статика + API + сокет) + том под sqlite. Чужой стек
-на машине (`/opt/cdm`, critscroll.com) не трогается вообще: своя папка
-`/opt/vtt`, свои имена, свой порт, жёсткий лимит памяти 300 MB.
+Один контейнер `vtt-poligon` (Nest: статика + API + сокет) на личном VPS (`ssh vps`, <VPS>),
+папка `/opt/vtt` (`compose.yaml`, `.env` с `VTT_AUTH`), база — том `vtt_vtt_data` (`/data/vtt.db`).
+Соседние сервисы на машине (bolota и другие) не трогаются: своё имя, свой порт 8100, свой
+`DOCKER_CONFIG=/opt/vtt/.docker` для входа в реестр.
 
-## Что попросить у владельца машины (или сделать в консоли AWS)
+## Как выкатывается
 
-Открыть входящий TCP-порт **8100** в security group инстанса
-`<EC2>` (ip-172-31-41-206, Франкфурт). Одно правило:
-`Custom TCP · 8100 · 0.0.0.0/0`. Больше ничего: 80/443 и стек CDM
-не затрагиваются, наружу торчит только наш порт, и он за паролем.
+Пуш в `cdm` → GitHub Actions (`.github/workflows/deploy.yml`):
 
-Пока порт не открыт, можно жить туннелем:
-`ssh -L 8100:localhost:8100 cdm` и в compose поставить `VTT_BIND=127.0.0.1`.
+1. **Тесты** — schema, engine, server, web (`vitest run`). Упали — дальше не идёт.
+2. **Образ** — `deploy/Dockerfile`, linux/amd64, в `ghcr.io/shuli4ka13/vtt:<коммит>`. Сборка многостадийная:
+   dev-зависимости и исходники остаются в стадии `builder`; в образ попадают только
+   `yarn install --production` (стадия `deps`) и собранные `dist` пакетов, сервера и веба плюс `samples`.
+3. **Выкатка** — по ssh скрипт `deploy/remote-deploy.sh`: копия базы (`VACUUM INTO`) в
+   `/opt/vtt/backups/vtt.db.pre-deploy-<время>` (хранятся 15 последних), прежний образ помечается
+   `vtt-poligon:previous`, новый становится `vtt-poligon:latest`, `docker compose up -d`, ожидание `healthy`.
+   Не поднялся — откат на `previous`, выкатка помечается упавшей.
 
-## Выкатка (с локальной машины)
+После выкатки засев приводит миры-образцы на стенде (автор «Образцы») к версии из гита: система и книга
+перезаписываются и публикуются заново, готовые листы мира — тоже (`node apps/server/dist/seed-run.js`, без
+dev-зависимостей). Системы других авторов, в том числе их копии образцов, не трогаются. Вручную — Actions →
+«Проверки и выкатка стенда» → Run workflow.
+
+## Секреты репозитория (Settings → Secrets and variables → Actions)
+
+| Имя | Что |
+|---|---|
+| `VPS_HOST` | `<VPS>` |
+| `VPS_USER` | `root` |
+| `VPS_SSH_KEY` | закрытый ключ, у которого открытая половина лежит в `~/.ssh/authorized_keys` на VPS (комментарий `vtt-github-actions-deploy`) |
+| `VPS_KNOWN_HOSTS` | строка `ssh-keyscan -t ed25519 <VPS>`; отпечаток `SHA256:Km3GubVsRNrruS+sk8b42UQubG5y/j+zw8iro34/5Rw` |
+
+Вход в `ghcr.io` на VPS — одноразовым `GITHUB_TOKEN` каждой выкатки, после выкатки — `docker logout`.
+
+## Откат руками
 
 ```bash
-# 1. Собрать образ под x86_64 (мак — arm, машина — amd64):
-docker buildx build --platform linux/amd64 -f deploy/Dockerfile -t vtt-poligon:latest .
-
-# 2. Перевезти образ по ssh (реестра нет, и не надо):
-docker save vtt-poligon:latest | gzip | ssh cdm 'gunzip | docker load'
-
-# 3. Разложить и запустить (первый раз):
-ssh cdm 'mkdir -p /opt/vtt' 2>/dev/null || ssh cdm 'sudo mkdir -p /opt/vtt && sudo chown ubuntu /opt/vtt'
-scp deploy/compose.yaml cdm:/opt/vtt/compose.yaml
-ssh cdm 'cd /opt/vtt && echo "VTT_AUTH=мастер:ПРИДУМАТЬ_ПАРОЛЬ" > .env && docker compose up -d'
-
-# 4. Посадить образцовые миры (один раз, изнутри машины):
-ssh cdm 'docker exec -e VTT_URL=http://localhost:8100 -e VTT_AUTH="$(grep VTT_AUTH /opt/vtt/.env | cut -d= -f2-)" vtt-poligon yarn --cwd apps/server seed'
+ssh vps 'cd /opt/vtt && docker tag vtt-poligon:previous vtt-poligon:latest && docker compose up -d'
+# база: docker cp backups/vtt.db.pre-deploy-<время> vtt-poligon:/data/vtt.db && docker restart vtt-poligon
 ```
-
-Обновление версии: повторить шаги 1–2 и `ssh cdm 'cd /opt/vtt && docker compose up -d'`.
-База в томе `vtt_vtt_data` — пересборки её не трогают.
-
-## Проверка
-
-```bash
-curl -si http://<EC2>:8100/ | head -3          # 401 — калитка стоит
-curl -si -u мастер:пароль http://<EC2>:8100/ | head -3   # 200 — пустили
-```
-
-Мастерам выдаётся: `http://<EC2>:8100` + логин/пароль. Внутри — свой
-вход по имени, как на локальном стенде.

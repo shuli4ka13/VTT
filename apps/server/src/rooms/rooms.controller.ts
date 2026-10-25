@@ -1,5 +1,5 @@
 import { seenBy } from './visibility.ts';
-import { Controller, Get, Post, Body, Param, Headers, UsePipes, Inject } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Headers, UsePipes, Inject } from '@nestjs/common';
 import { RoomsService } from './rooms.service.ts';
 import { WorldsService } from '../worlds/worlds.service.ts';
 import { AuthService } from '../auth/auth.service.ts';
@@ -27,6 +27,16 @@ export class RoomsController {
     const { userId } = await this.auth.whoIs(bearer(header));
     return this.worldsService.publish(
       userId, body.title, body.systemId, body.compendiumIds, body.sheets);
+  }
+
+  @Put('worlds/:id')
+  async updateWorld(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(api.publishRequest)) body: PublishRequest,
+    @Headers('authorization') header?: string,
+  ) {
+    const { userId } = await this.auth.whoIs(bearer(header));
+    return this.worldsService.update(userId, id, body.title, body.systemId, body.compendiumIds, body.sheets);
   }
 
   @Get('rooms')
