@@ -357,34 +357,42 @@ describe('эффекты D&D собираются в конструкторе р
         within(at(n)).formula(within(at(n)).arg(name), text);
       }
     };
+    ui.click('+ изменение');
+    within(at(3)).click('↑');
+    within(at(2)).click('вызов');
+    within(at(2)).select('Какой эффект', 'spell_dice');
+    for (const [name, text] of [['Круг заклинания', '@spell_level'], ['Каким кругом', '@slot'], ['Сколько костей', '@dice_count'], ['Костей за каждый круг выше', '@dice_up']] as const) {
+      within(at(2)).formula(within(at(2)).arg(name), text);
+    }
+    nameStep(at(2), 'по_ячейке');
     ui.click('+ если');
     within(headOf(block(0))).when('=не пусто(@damage_die)');
     addToArm(block(0), 0, 'number');
     within(headOf(block(0))).click('↑');
-    within(at(2)).formula('Формула', 'кинуть(@damage_die, @dice_count + (@slot - @spell_level) * @dice_up)');
-    nameStep(at(2), 'урон_всего');
+    within(at(3)).formula('Формула', 'кинуть(@damage_die, @по_ячейке.кости)');
+    nameStep(at(3), 'урон_всего');
 
-    savingThrow(document.body, 4, [['Чем спасается', '@save_by'], ['Сложность', '@действующий.spell_dc']]);
+    savingThrow(document.body, 5, [['Чем спасается', '@save_by'], ['Сложность', '@действующий.spell_dc']]);
 
-    const fail = callIf(4, 'Спасбросок', 'не спасся');
+    const fail = callIf(5, 'Спасбросок', 'не спасся');
     addToArm(block(fail), 0, 'branch');
     const inner = blocks().length - 1;
     within(headOf(block(inner))).when('=не пусто(@damage_die)');
     addToArm(block(inner), 0, 'change');
-    hit(5, '@урон_всего');
+    hit(6, '@урон_всего');
     addToArm(block(fail), 0, 'branch');
     const second = blocks().length - 1;
     within(headOf(block(second))).when('=не пусто(@status)');
     addToArm(block(second), 0, 'change');
-    within(at(6)).click('состояние');
-    within(at(6)).select('Какое', ':вход:status');
-    within(at(6)).formula('На кого', '@цель');
-    within(at(6)).formula('Запомнит: Запомненное число', '@действующий.spell_dc');
-    within(at(6)).formula('Запомнит: Кто наложил', '@действующий');
+    within(at(7)).click('состояние');
+    within(at(7)).select('Какое', ':вход:status');
+    within(at(7)).formula('На кого', '@цель');
+    within(at(7)).formula('Запомнит: Запомненное число', '@действующий.spell_dc');
+    within(at(7)).formula('Запомнит: Кто наложил', '@действующий');
     addArm(block(fail), '+ иначе, если');
     within(headOf(block(fail), 1)).when('=@half и не пусто(@damage_die)');
     addToArm(block(fail), 1, 'change');
-    hit(7, 'округлить вниз(@урон_всего * 0.5)');
+    hit(8, 'округлить вниз(@урон_всего * 0.5)');
     dump({ got: built('spell_save'), goal });
     expect(built('spell_save')).toEqual(goal);
   });

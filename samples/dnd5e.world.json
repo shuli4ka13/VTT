@@ -244,7 +244,7 @@
             "key": "hp_max",
             "label": "Максимум хитов",
             "expr": {
-              "expr": "если(пусто(@class_name), @hp_block, максимум костей(@hit_die) + (@level - 1) * (округлить вниз(максимум костей(@hit_die) / 2) + 1) + @level * @abilities.телосложение.mod) + @hp_bonus"
+              "expr": "если(пусто(@class_name), @hp_block, @class_name.hp) + @hp_bonus"
             }
           },
           {
@@ -1992,6 +1992,14 @@
             "key": "hit_die",
             "label": "Кость хитов",
             "kind": "dice"
+          },
+          {
+            "key": "hp",
+            "label": "Хиты по уровню",
+            "kind": "number",
+            "expr": {
+              "expr": "максимум костей(@строка.hit_die) + (@level - 1) * (округлить вниз(максимум костей(@строка.hit_die) / 2) + 1) + @level * @abilities.телосложение.mod"
+            }
           },
           {
             "key": "saves",
@@ -3851,9 +3859,28 @@
         ],
         "steps": [
           {
+            "id": "по_ячейке",
+            "type": "emit",
+            "effect": "spell_dice",
+            "args": {
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              },
+              "dice_count": {
+                "expr": "@dice_count"
+              },
+              "dice_up": {
+                "expr": "@dice_up"
+              }
+            }
+          },
+          {
             "type": "roll",
             "fixed": {
-              "expr": "(кинуть(@damage_die, (@dice_count + (@slot - @spell_level) * @dice_up)) + ((@dice_count + (@slot - @spell_level) * @dice_up) * @per_die))"
+              "expr": "кинуть(@damage_die, @по_ячейке.кости) + @по_ячейке.кости * @per_die"
             },
             "id": "урон"
           },
@@ -4061,9 +4088,28 @@
         ],
         "steps": [
           {
+            "id": "по_ячейке",
+            "type": "emit",
+            "effect": "spell_dice",
+            "args": {
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              },
+              "dice_count": {
+                "expr": "@dice_count"
+              },
+              "dice_up": {
+                "expr": "@dice_up"
+              }
+            }
+          },
+          {
             "type": "roll",
             "fixed": {
-              "expr": "(кинуть(@heal_die, (@dice_count + (@slot - @spell_level) * @dice_up)) + @действующий.spell_mod)"
+              "expr": "кинуть(@heal_die, @по_ячейке.кости) + @действующий.spell_mod"
             },
             "id": "сколько"
           },
@@ -7993,6 +8039,43 @@
           }
         ]
       },
+      "spell_dice": {
+        "label": "Костей с учётом ячейки",
+        "group": "Шаги для других",
+        "description": "Сколько костей бросает заклинание: свои кости и добавка за каждый круг ячейки выше круга заклинания.",
+        "params": [
+          {
+            "key": "spell_level",
+            "label": "Круг заклинания",
+            "kind": "number"
+          },
+          {
+            "key": "slot",
+            "label": "Каким кругом",
+            "kind": "number"
+          },
+          {
+            "key": "dice_count",
+            "label": "Сколько костей",
+            "kind": "number"
+          },
+          {
+            "key": "dice_up",
+            "label": "Костей за каждый круг выше",
+            "kind": "number"
+          }
+        ],
+        "returns": [
+          {
+            "key": "кости",
+            "label": "костей",
+            "kind": "number",
+            "expr": {
+              "expr": "@dice_count + (@slot - @spell_level) * @dice_up"
+            }
+          }
+        ]
+      },
       "attack_roll": {
         "label": "Бросок атаки",
         "group": "Шаги для других",
@@ -8322,6 +8405,25 @@
         },
         "steps": [
           {
+            "id": "по_ячейке",
+            "type": "emit",
+            "effect": "spell_dice",
+            "args": {
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              },
+              "dice_count": {
+                "expr": "@dice_count"
+              },
+              "dice_up": {
+                "expr": "@dice_up"
+              }
+            }
+          },
+          {
             "type": "branch",
             "if": {
               "expr": "не пусто(@damage_die)"
@@ -8331,7 +8433,7 @@
             "id": "урон_всего",
             "type": "roll",
             "fixed": {
-              "expr": "кинуть(@damage_die, @dice_count + (@slot - @spell_level) * @dice_up)"
+              "expr": "кинуть(@damage_die, @по_ячейке.кости)"
             }
           },
           {
