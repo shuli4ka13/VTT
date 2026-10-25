@@ -113,6 +113,14 @@ group('Shadowrun 6: заклинания', () => {
     deepEq([computed(after(stopped, 'mage'), 'strength'), sustaining(after(stopped, 'mage'))], [4, 0]);
   });
 
+  test('неудавшееся длительное не поддерживается: штрафа нет (решение владельца)', () => {
+    const chromed = sheetOf('humanis', {}, [{ of: 'cyberjack', values: { rating: 6 } }, { of: 'cybereyes', values: { rating: 4 } }]);
+    ok(computed(chromed, 'essence') <= 4, 'порог 5 − Сущность не ниже 1');
+    const out = exchange({ system, compendium, die: () => 1, sheets: [mage(), chromed], actionId: 'spell_increase_attribute:0', fromId: 'mage', toIds: ['humanis'], inputs: { want: 3, attr: 'strength' } });
+    eq(wears(after(out, 'humanis'), 'sp_increase_attribute'), false, 'не легло');
+    eq(sustaining(after(out, 'mage')), 0);
+  });
+
   test('поддержание — одно на сотворение: два заклинания — два, «Прекратить» отпускает только своё (стр. 131)', () => {
     const ally = sheetOf('humanis', { strength: 4 });
     const first = exchange({ system, compendium, die: tape(...six(6), ...one(6), ...six(9)), sheets: [mage({}, [{ of: 'spell_armor' }]), ally], actionId: 'spell_increase_attribute:0', fromId: 'mage', toIds: ['humanis'], inputs: { want: 3, attr: 'strength' } });

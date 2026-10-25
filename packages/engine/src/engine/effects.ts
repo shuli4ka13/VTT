@@ -133,6 +133,9 @@ export function wornEffects(
   return out;
 }
 
+export const isPureTrace = (system: System, trace: { type?: unknown; event?: unknown }): boolean =>
+  trace.type === 'emit' && isPureCall(system, trace.event);
+
 export function isPureCall(system: System, id: unknown): boolean {
   const called = typeof id === 'string' ? system.effects?.[id] : undefined;
   return Boolean(called && !called.steps?.length && !called.on?.length && called.returns?.length);

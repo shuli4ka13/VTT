@@ -477,7 +477,7 @@ function Bond({ effect, system, id, edit }: {
   const holderParams = holder ? paramsOf(system, holder) : [];
   return (
     <div className="row">
-      <Field label="Держит" hint="Концентрация: наложенное этим действием держится, пока у листа есть эффект-держатель; взялся за новое — старое спало.">
+      <Field label="Держит" hint="Наложенное этим действием держится, пока у листа есть эффект-держатель. Одно: взялся за новое — старое спало (концентрация). Каждое отдельно: у каждого действия свой держатель.">
         <EffectPick
           value={effect.bond?.effect || null}
           system={system}

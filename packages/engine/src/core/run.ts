@@ -215,6 +215,7 @@ export class Run {
   private seenAsks = 0;
   private seeing = 0;
   private readonly insts = new WeakMap<WornEffect, string>();
+  private readonly holding = new Map<string, Record<string, StoredValue>>();
   private mark: { sink: Sink; at: number; count: number } | null = null;
   clock: Clock | null;
 
@@ -716,6 +717,19 @@ export class Run {
     this.state.put(item ? withItemValue(holder, item.key, item.column, value) : { ...holder, values: { ...holder.values, [tag]: value } });
   }
 
+  hold(inst: string, args: Record<string, StoredValue>): void {
+    this.holding.set(inst, args);
+  }
+
+  private placeHolder(bond: NonNullable<WornEffect['bond']>): void {
+    const inst = bond.inst;
+    if (!inst || !this.holding.has(inst)) return;
+    const holder = this.sheet(bond.sheet);
+    if (!holder || (holder.effects ?? []).some(entry => entry.inst === inst)) return;
+    const args = this.holding.get(inst)!;
+    this.state.put({ ...holder, effects: [...(holder.effects ?? []), { effectId: bond.effect, inst, ...(Object.keys(args).length ? { args } : {}) }] });
+  }
+
   private attach(frame: Frame, sheetId: string, effectId: string, args: Record<string, StoredValue>, sink: Sink, path: Path): void {
     const effect = requireEffect(this.system, effectId, frame.owner);
     const sheet = this.sheet(sheetId)!;
@@ -743,6 +757,7 @@ export class Run {
     } else if (reapplyOf(effect) === 'stack') worn.push(fresh);
     else return;
     this.state.put({ ...sheet, effects: worn });
+    if (frame.bond) this.placeHolder(frame.bond);
     if (!sink.effects.includes(effectId)) sink.effects.push(effectId);
   }
 

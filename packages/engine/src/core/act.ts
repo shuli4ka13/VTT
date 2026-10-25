@@ -2,7 +2,7 @@ import { lazyPlan } from '../model/flow.ts';
 import { actionOf, effectLabelOf } from '../events/actions.ts';
 import { asksOf } from '../model/asks.ts';
 import { loopOf } from '../engine/steps/each.ts';
-import { requireEffect, isPipeline, isPureCall } from '../engine/effects.ts';
+import { requireEffect, isPipeline, isPureTrace } from '../engine/effects.ts';
 import { releaseHolder } from '../events/bonds.ts';
 import { refusalWords } from '../events/refusal.ts';
 import { propsOf, keyOf } from '../model/owned.ts';
@@ -133,6 +133,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
     let inst = run.ext.id(root.phase('bond').phase(bond.effect));
     for (let n = 2; taken.has(inst); n += 1) inst = `${inst.replace(/~\d+$/, '')}~${n}`;
     bond = { ...bond, inst };
+    run.hold(inst, holderArgs);
   }
 
   if (effect.cost?.length) {
@@ -189,7 +190,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
       const why = refusalWords(reportOf('effect', action.effect, actor, action.label, sink, ran.stopped, false), system);
       throw new EngineError(`«${action.label}» не состоялось: ${why ?? 'цепочка оборвана'}`);
     }
-    if (sink.trace.some(one => !(one.type === 'emit' && isPureCall(system, one.event))) || sink.changes.length || sink.effects.length || sink.removed.length) {
+    if (sink.trace.some(one => !isPureTrace(system, one)) || sink.changes.length || sink.effects.length || sink.removed.length) {
       state.write({ fromId: actor, toId: actor, report: reportOf('effect', action.effect, actor, action.label, sink, null, false) });
     }
     state.write(...sink.after);
@@ -206,11 +207,6 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
     }));
   } else {
     calls = [{ ...base, steps, path: root, subject: null, bound }];
-  }
-
-  if (bond && many) {
-    const holder = run.sheet(bond.sheet)!;
-    state.put({ ...holder, effects: [...(holder.effects ?? []), { effectId: bond.effect, inst: bond.inst!, ...(Object.keys(holderArgs).length ? { args: holderArgs } : {}) }] });
   }
 
   const delivered: Delivered[] = [];
