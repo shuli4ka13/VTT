@@ -1,7 +1,8 @@
 import { EngineError } from '../errors.ts';
-import { requireCalled } from '../effects.ts';
+import { requireCalled, isPureCall } from '../effects.ts';
 import { amountParamOf } from '../../model/lists.ts';
 import type { EmittedEvent } from '../rule.ts';
+import type { System } from '../../model/types.ts';
 import type { StepData, StepContext, StepModule } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 
@@ -15,6 +16,8 @@ export function reasonWord(reason: string): string | null {
 }
 
 export const icon = '➤';
+
+export const idle = (trace: Record<string, unknown>, system: System): boolean => isPureCall(system, trace.event);
 
 export function calls(step: StepData): string | null {
   return typeof step.effect === 'string' ? step.effect : null;

@@ -34,7 +34,7 @@ const rowKeyOf = (table: Table, input: unknown): string => {
   return String(input);
 };
 
-export interface Scope { resolve: (name: string) => unknown; tools: Tools; seen: Set<string> }
+export interface Scope { resolve: (name: string) => unknown; tools: Tools; seen: Set<string>; owns?: (head: string) => boolean }
 
 const onSheet = (system: System, name: string): boolean => {
   const head = name.split('.')[0]!;
@@ -51,7 +51,7 @@ export function readCell(
   if (isLive(table, spec, row)) return pass.resolve(addressOf(tableId, row, column));
   const source = cellSource(spec, row);
   if (source.kind === 'value') return source.value;
-  if (source.kind === 'input') return undefined;
+  if (source.kind === 'input') return spec.default;
 
   const tag = cellTagOf(tableId, rowKeyOf(table, input), column);
   const formula = compile(withRow(system, tableId, row, source.expr));
@@ -61,7 +61,7 @@ export function readCell(
   }
   scope.seen.add(tag);
   try {
-    const base = formula.evaluate(name => (onSheet(system, name) ? pass.resolve(name) : scope.resolve(name)), scope.tools);
+    const base = formula.evaluate(name => (!scope.owns?.(name.split('.')[0]!) && onSheet(system, name) ? pass.resolve(name) : scope.resolve(name)), scope.tools);
     return applyValueModifiers(base, tag, pass, [columnTagOf(tableId, column)]);
   } finally {
     scope.seen.delete(tag);

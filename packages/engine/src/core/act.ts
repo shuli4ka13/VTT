@@ -2,7 +2,7 @@ import { lazyPlan } from '../model/flow.ts';
 import { actionOf, effectLabelOf } from '../events/actions.ts';
 import { asksOf } from '../model/asks.ts';
 import { loopOf } from '../engine/steps/each.ts';
-import { requireEffect, isPipeline, isPureTrace } from '../engine/effects.ts';
+import { requireEffect, isPipeline } from '../engine/effects.ts';
 import { releaseHolder } from '../events/bonds.ts';
 import { refusalWords } from '../events/refusal.ts';
 import { propsOf, keyOf } from '../model/owned.ts';
@@ -13,7 +13,7 @@ import { render, renderLines } from './render.ts';
 import { External, Pause, emptyJournal } from './external.ts';
 import { Path } from './path.ts';
 import { Run, newSink, reportOf } from './run.ts';
-import { runnerOf } from './steps.ts';
+import { runnerOf, idleTrace } from './steps.ts';
 import { keysOf } from './subs.ts';
 import { CUT_WORDS } from './limits.ts';
 import type { Journal, Mode, Question } from './external.ts';
@@ -190,7 +190,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
       const why = refusalWords(reportOf('effect', action.effect, actor, action.label, sink, ran.stopped, false), system);
       throw new EngineError(`«${action.label}» не состоялось: ${why ?? 'цепочка оборвана'}`);
     }
-    if (sink.trace.some(one => !isPureTrace(system, one)) || sink.changes.length || sink.effects.length || sink.removed.length) {
+    if (sink.trace.some(one => !idleTrace(one, system)) || sink.changes.length || sink.effects.length || sink.removed.length) {
       state.write({ fromId: actor, toId: actor, report: reportOf('effect', action.effect, actor, action.label, sink, null, false) });
     }
     state.write(...sink.after);

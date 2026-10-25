@@ -50,6 +50,19 @@ function linked(column: TableColumn, columnKey: string, rest: string[], owner: s
   return link;
 }
 
+function emptyEnd(system: System, tableId: string, path: string[]): unknown {
+  let current = tableId;
+  for (let i = 0; i < path.length; i++) {
+    const column = (tableOf(system, current)?.columns ?? []).find(c => c.key === path[i]);
+    if (!column) return null;
+    if (i === path.length - 1) return column.default ?? null;
+    const link = linkOf(column);
+    if (!link) return null;
+    current = link;
+  }
+  return null;
+}
+
 export function walk(
   system: System, pass: Pass, tableId: string, key: unknown, path: string[], owner: string, scope?: Scope,
 ): unknown {
@@ -57,7 +70,7 @@ export function walk(
   let value = key;
   for (let i = 0; i < path.length; i++) {
     const columnKey = path[i]!;
-    if (value === null || value === undefined || value === '') return null;
+    if (value === null || value === undefined || value === '') return emptyEnd(system, current, path.slice(i));
     const column = columnAt(system, current, columnKey, owner);
     const cell = readCell(system, pass, current, value, columnKey, owner, scope);
     if (i === path.length - 1) return cell;

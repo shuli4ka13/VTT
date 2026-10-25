@@ -146,7 +146,7 @@ function rowPath(system: System, tableId: string, row: TableRow, path: string[])
     if (rest.length) throw new EngineError(`${where}: «${column.label || head}» — формула, дальше идти некуда`);
     return `(${withRow(system, tableId, row, source.expr)})`;
   }
-  const cell = source.kind === 'value' ? source.value : undefined;
+  const cell = source.kind === 'value' ? source.value : column.default;
   const link = linkOf(column);
   if (link && rest.length) {
     const target = rowByKey(system.tables?.[link], cell);

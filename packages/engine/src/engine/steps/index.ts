@@ -89,6 +89,8 @@ export interface StepModule {
 
   calls?: (step: StepData) => string | null;
 
+  idle?: (trace: Record<string, unknown>, system: System) => boolean;
+
   thrownBy?: (step: StepData) => unknown;
 
   flow?: 'open' | 'alt' | 'close';

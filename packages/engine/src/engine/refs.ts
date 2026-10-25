@@ -190,7 +190,12 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
     if (ctx.lazy) ctx.lazy(name.split('.')[0]!);
     if (ctx.item && name === ITEM_NAME) return ctx.item.key;
     if (ctx.item && name.startsWith(`${ITEM_NAME}.`)) {
-      const column = name.slice(ITEM_NAME.length + 1);
+      const [column, ...rest] = name.slice(ITEM_NAME.length + 1).split('.') as [string, ...string[]];
+      if (rest.length) {
+        const link = referencedTable(system, column);
+        if (!link) throw new EngineError(`${who(ctx)}: «${column}» у вещи не из таблицы — «${rest.join('.')}» прочитать негде`);
+        return walk(system, ctx.pass, link, resolve(`${ITEM_NAME}.${column}`), rest, who(ctx), scope);
+      }
       if (!ctx.props || !(column in ctx.props)) return null;
       if (ctx.itemRead) return ctx.itemRead(column) ?? null;
       return recordValue(column, { ...ctx, recordScope: true });
@@ -205,7 +210,7 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
       const split = splitPath(rest);
       const table = split && !isField(system, rest) ? referencedTable(system, split.head, ctx.paramDefs) : undefined;
       const read = (id: string): unknown => (split && table
-        ? walk(system, view(id), table, (ctx.paramDefs ?? []).some(p => p.key === split.head) ? resolve(split.head) : view(id).resolve(split.head), split.path, who(ctx))
+        ? walk(system, view(id), table, (ctx.paramDefs ?? []).some(p => p.key === split.head) ? resolve(split.head) : view(id).resolve(split.head), split.path, who(ctx), scope)
         : view(id).resolve(rest));
       return Array.isArray(bound) ? bound.map(read) : read(bound as string);
     }
@@ -242,7 +247,8 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
   };
   const tools = toolsOf(system, ctx.pass, who(ctx), ctx.die);
   if (ctx.sheets) {
-    scope = { resolve, seen: new Set(), tools: { ...tools, roll: () => { throw new EngineError(`${who(ctx)}: «кинуть» в клетке таблицы нельзя — кости бросает шаг эффекта`); } } };
+    const owns = (head: string): boolean => head in results || head in (ctx.sheets?.bound ?? {}) || (ctx.paramDefs ?? []).some(param => param.key === head) || (Boolean(ctx.item) && head === ITEM_NAME);
+    scope = { resolve, seen: new Set(), owns, tools: { ...tools, roll: () => { throw new EngineError(`${who(ctx)}: «кинуть» в клетке таблицы нельзя — кости бросает шаг эффекта`); } } };
   }
   return compile(String(expr)).evaluate(resolve, {
     ...tools,
