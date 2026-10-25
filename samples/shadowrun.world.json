@@ -966,13 +966,6 @@
             "default": "нет"
           },
           {
-            "key": "sustained",
-            "label": "Поддерживаемых заклинаний",
-            "kind": "number",
-            "default": 0,
-            "min": 0
-          },
-          {
             "key": "drain_stun",
             "label": "Оглушающий урон истощения",
             "kind": "number",
@@ -20353,25 +20346,6 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@sustain"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@действующий.sustained"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "branch",
-            "if": {
               "expr": "(@defense == \"Воля + Интуиция\" или @defense == \"Реакция + Воля\" или @defense == \"Тело + Воля\" или @defense == \"Логика + Воля\" или @defense == \"Воля\" или @defense == \"Интуиция + Логика\" или @defense == \"Тело\" или @defense == \"Тело + Сила\" или @defense == \"Воля + выбранная характеристика\") и @действующий.spell_ar - большее из(@цели.plane_dr) >= 4"
             }
           },
@@ -20632,7 +20606,20 @@
           {
             "type": "end"
           }
-        ]
+        ],
+        "bond": {
+          "effect": "sustaining",
+          "by": "действующий",
+          "if": {
+            "expr": "@sustain"
+          },
+          "many": true,
+          "args": {
+            "заклинание": {
+              "expr": "@spell_effect"
+            }
+          }
+        }
       },
       "heal_spell": {
         "label": "Исцеляющее заклинание",
@@ -20857,25 +20844,6 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@sustain"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@действующий.sustained"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "branch",
-            "if": {
               "expr": "(@defense == \"Воля + Интуиция\" или @defense == \"Реакция + Воля\" или @defense == \"Тело + Воля\" или @defense == \"Логика + Воля\" или @defense == \"Воля\" или @defense == \"Интуиция + Логика\" или @defense == \"Тело\" или @defense == \"Тело + Сила\" или @defense == \"Воля + выбранная характеристика\") и @действующий.spell_ar - большее из(@цели.plane_dr) >= 4"
             }
           },
@@ -21020,7 +20988,20 @@
           {
             "type": "end"
           }
-        ]
+        ],
+        "bond": {
+          "effect": "sustaining",
+          "by": "действующий",
+          "if": {
+            "expr": "@sustain"
+          },
+          "many": true,
+          "args": {
+            "заклинание": {
+              "expr": "@spell_effect"
+            }
+          }
+        }
       },
       "boost_spell": {
         "label": "Усиливающее заклинание",
@@ -21242,25 +21223,6 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@sustain"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@действующий.sustained"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "branch",
-            "if": {
               "expr": "(@defense == \"Воля + Интуиция\" или @defense == \"Реакция + Воля\" или @defense == \"Тело + Воля\" или @defense == \"Логика + Воля\" или @defense == \"Воля\" или @defense == \"Интуиция + Логика\" или @defense == \"Тело\" или @defense == \"Тело + Сила\" или @defense == \"Воля + выбранная характеристика\") и @действующий.spell_ar - большее из(@цели.plane_dr) >= 4"
             }
           },
@@ -21361,27 +21323,30 @@
           {
             "type": "end"
           }
-        ]
+        ],
+        "bond": {
+          "effect": "sustaining",
+          "by": "действующий",
+          "if": {
+            "expr": "@sustain"
+          },
+          "many": true,
+          "args": {
+            "заклинание": {
+              "expr": "@spell_effect"
+            }
+          }
+        }
       },
       "stop_spell": {
         "label": "Прекратить заклинание",
         "group": "Магия",
-        "description": "Отпустить поддерживаемое заклинание с цели: −1 к числу поддерживаемых (стр. 131).",
+        "description": "Отпустить поддерживаемое заклинание: снять одно «Поддержание» заклинателя с этим заклинанием — заклинание спадает со всех целей (стр. 131).",
         "params": [
           {
             "key": "действующий",
             "label": "Заклинатель",
             "kind": "sheet"
-          },
-          {
-            "key": "цели",
-            "label": "Цели",
-            "kind": "sheet",
-            "many": true,
-            "item": {
-              "key": "цель",
-              "label": "Цель"
-            }
           },
           {
             "key": "spell_effect",
@@ -21392,28 +21357,33 @@
         ],
         "steps": [
           {
-            "type": "each",
-            "of": "цели"
-          },
-          {
             "type": "status",
             "mode": "remove",
-            "effect": {
-              "expr": "@spell_effect"
-            },
+            "effect": "sustaining",
             "to": {
-              "expr": "@цель"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@действующий.sustained"
+              "expr": "@действующий"
             },
-            "direction": "subtract",
-            "value": {
-              "expr": "меньшее из(1, @действующий.sustained)"
-            }
+            "where": {
+              "expr": "@заклинание == @spell_effect"
+            },
+            "one": true
+          }
+        ]
+      },
+      "sustaining": {
+        "label": "Поддержание",
+        "group": "Магия",
+        "description": "Заклинатель поддерживает длительное заклинание или сложную форму: −2 кубика к проверкам за каждое (стр. 131). Одно на сотворение; спадает, когда держать больше нечего.",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "reapply": "stack",
+        "params": [
+          {
+            "key": "заклинание",
+            "label": "Что поддерживается",
+            "kind": "text"
           }
         ]
       },
@@ -22966,6 +22936,12 @@
             "default": false
           },
           {
+            "key": "spell_effect",
+            "label": "Висящий эффект",
+            "kind": "text",
+            "optional": true
+          },
+          {
             "key": "outcome",
             "label": "Исход",
             "kind": "text",
@@ -23091,25 +23067,6 @@
                 "expr": "@действующий.willpower + @действующий.logic"
               }
             }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@sustain"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@действующий.sustained"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "end"
           },
           {
             "type": "each",
@@ -23374,7 +23331,20 @@
           {
             "type": "end"
           }
-        ]
+        ],
+        "bond": {
+          "effect": "sustaining",
+          "by": "действующий",
+          "if": {
+            "expr": "@sustain"
+          },
+          "many": true,
+          "args": {
+            "заклинание": {
+              "expr": "@spell_effect"
+            }
+          }
+        }
       },
       "cast_form_attr": {
         "label": "Запустить сложную форму (характеристика)",
@@ -23432,6 +23402,12 @@
             "label": "Длительное",
             "kind": "boolean",
             "default": false
+          },
+          {
+            "key": "spell_effect",
+            "label": "Висящий эффект",
+            "kind": "text",
+            "optional": true
           },
           {
             "key": "outcome",
@@ -23563,25 +23539,6 @@
             }
           },
           {
-            "type": "branch",
-            "if": {
-              "expr": "@sustain"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@действующий.sustained"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "1"
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
             "type": "each",
             "of": "цели"
           },
@@ -23844,7 +23801,20 @@
           {
             "type": "end"
           }
-        ]
+        ],
+        "bond": {
+          "effect": "sustaining",
+          "by": "действующий",
+          "if": {
+            "expr": "@sustain"
+          },
+          "many": true,
+          "args": {
+            "заклинание": {
+              "expr": "@spell_effect"
+            }
+          }
+        }
       },
       "compile_sprite": {
         "label": "Компилировать спрайта",
@@ -25697,10 +25667,10 @@
             "param": "count",
             "op": "add",
             "value": {
-              "expr": "0 - 2 * @носитель.sustained"
+              "expr": "0 - 2 * @носитель.sustaining"
             },
             "if": {
-              "expr": "@бросающий == @носитель и @носитель.sustained >= 1"
+              "expr": "@бросающий == @носитель и @носитель.sustaining >= 1"
             },
             "notTags": [
               "защита",
@@ -28939,6 +28909,9 @@
               },
               "per_hit": {
                 "expr": "\"чистые\""
+              },
+              "spell_effect": {
+                "expr": "\"form_infusion\""
               }
             }
           },

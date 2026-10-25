@@ -15,6 +15,7 @@ const computed = (sheet: Sheet, tag: string) => calc(system, sheet, tag, newPass
 const wears = (sheet: Sheet | undefined, id: string) => (sheet?.effects ?? []).some(e => e.effectId === id);
 const tape = (...faces: number[]) => { const rest = [...faces]; return () => rest.shift() ?? 1; };
 const after = (out: ReturnType<typeof exchange>, id: string) => out.sheets.find(s => s.id === id)!;
+const sustaining = (sheet: Sheet) => (sheet.effects ?? []).filter(e => e.effectId === 'sustaining').length;
 const refusal = (fn: () => unknown) => { try { fn(); return ''; } catch (error) { return (error as Error).message; } };
 const six = (n: number) => Array(n).fill(6) as number[];
 const one = (n: number) => Array(n).fill(1) as number[];
@@ -107,9 +108,21 @@ group('Shadowrun 6: заклинания', () => {
   test('Улучшение характеристики: +применённые, поддержание −2 кубика; «Прекратить» снимает (стр. 137, 131)', () => {
     const out = exchange({ system, compendium, die: tape(...six(6), ...one(6), ...six(9)), sheets: [mage()], actionId: 'spell_increase_attribute:0', fromId: 'mage', toIds: ['mage'], inputs: { want: 3, attr: 'strength' } });
     const boosted = after(out, 'mage');
-    deepEq([computed(boosted, 'strength'), boosted.values.sustained], [7, 1]);
+    deepEq([computed(boosted, 'strength'), sustaining(boosted)], [7, 1]);
     const stopped = exchange({ system, compendium, die: () => 1, sheets: [boosted], actionId: 'spell_increase_attribute:1', fromId: 'mage', toIds: ['mage'] });
-    deepEq([computed(after(stopped, 'mage'), 'strength'), after(stopped, 'mage').values.sustained], [4, 0]);
+    deepEq([computed(after(stopped, 'mage'), 'strength'), sustaining(after(stopped, 'mage'))], [4, 0]);
+  });
+
+  test('поддержание — одно на сотворение: два заклинания — два, «Прекратить» отпускает только своё (стр. 131)', () => {
+    const ally = sheetOf('humanis', { strength: 4 });
+    const first = exchange({ system, compendium, die: tape(...six(6), ...one(6), ...six(9)), sheets: [mage({}, [{ of: 'spell_armor' }]), ally], actionId: 'spell_increase_attribute:0', fromId: 'mage', toIds: ['humanis'], inputs: { want: 3, attr: 'strength' } });
+    eq(sustaining(after(first, 'mage')), 1);
+    const both = exchange({ system, compendium, die: tape(...six(6), ...one(6), ...six(9)), sheets: first.sheets, actionId: 'spell_armor:0', fromId: 'mage', toIds: ['humanis'] });
+    eq(sustaining(after(both, 'mage')), 2);
+    const stopped = exchange({ system, compendium, die: () => 1, sheets: both.sheets, actionId: 'spell_increase_attribute:1', fromId: 'mage', toIds: [] });
+    eq(sustaining(after(stopped, 'mage')), 1, 'осталось поддержание брони');
+    eq(computed(after(stopped, 'humanis'), 'strength'), 4);
+    ok(wears(after(stopped, 'humanis'), 'sp_armor'), 'броня держится');
   });
 });
 

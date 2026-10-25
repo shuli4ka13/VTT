@@ -15,6 +15,7 @@ const tape = (...faces: number[]) => { const rest = [...faces]; return () => res
 const six = (n: number) => Array(n).fill(6) as number[];
 const one = (n: number) => Array(n).fill(1) as number[];
 const after = (out: ReturnType<typeof exchange>, id: string) => out.sheets.find(s => s.id === id)!;
+const sustaining = (sheet: Sheet) => (sheet.effects ?? []).filter(e => e.effectId === 'sustaining').length;
 const refusal = (fn: () => unknown) => { try { fn(); return ''; } catch (error) { return (error as Error).message; } };
 const deckId = compendium.records.find(r => (r.cells as Record<string, unknown> | undefined)?.device_kind === 'кибердека')!.id;
 
@@ -48,7 +49,7 @@ group('Shadowrun 6: сложные формы', () => {
 
   test('Инфузия: порог 4, + успехи сверх порога, не больше базового значения; поддержание (стр. 190)', () => {
     const out = act([technomancer()], 'cf_infusion:0', ['tm'], tape(...six(8), 1, ...six(9)), { attr: 'ВМ' });
-    deepEq([computed(after(out, 'tm'), 'm_dp'), after(out, 'tm').values.sustained], [9, 1]);
+    deepEq([computed(after(out, 'tm'), 'm_dp'), sustaining(after(out, 'tm'))], [9, 1]);
   });
 
   test('не техномант — отказ', () => {

@@ -86,7 +86,8 @@ group('Shadowrun 6, глава «Магия»: ситуации книжника
   });
 
   test('mag-07 (стр. 132): два поддерживаемых заклинания — −4 кубика к сотворению, истощение без штрафа', () => {
-    const mage = caster({ tradition: 'шаманизм', magic: 5, charisma: 5, willpower: 4, 'skills.колдовство.rank': 5, sustained: 2 });
+    const held = (inst: string) => ({ effectId: 'sustaining', inst, args: { заклинание: 'sp_armor' } });
+    const mage = { ...caster({ tradition: 'шаманизм', magic: 5, charisma: 5, willpower: 4, 'skills.колдовство.rank': 5 }), effects: [held('а'), held('б')] };
     const out = cast(mage, [sheet('цель', { willpower: 2, intuition: 2 })], 'spell_stunbolt', [6, 5, 4, 3, 2, 1]);
     const trace = out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]);
     eq(trace.find(t => t.step === 'сотворение')?.rolls?.length, 6);
