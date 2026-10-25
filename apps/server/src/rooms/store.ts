@@ -9,7 +9,7 @@ export interface Commit {
   sheets?: Sheet[];
   clock?: ClockState;
   pending?: { id: string; data: string } | null;
-  log?: { id: string; at: string; text: string; hidden: boolean }[];
+  log?: { id: string; at: string; text: string; lines?: string | null; hidden: boolean }[];
   journal?: { at: string; userId: string; op: string; input: string; dice: string; result: string };
   member?: { userId: string; sheetId: string | null };
 }
@@ -42,8 +42,8 @@ export class RoomStore {
   }
 
   log(roomId: string): LogEntry[] {
-    return (this.raw.prepare('SELECT id, at, text, hidden FROM log_entries WHERE room_id = ? ORDER BY seq').all(roomId) as { id: string; at: string; text: string; hidden: number }[])
-      .map(row => ({ id: row.id, at: row.at, text: row.text, ...(row.hidden ? { hidden: true } : {}) }));
+    return (this.raw.prepare('SELECT id, at, text, lines, hidden FROM log_entries WHERE room_id = ? ORDER BY seq').all(roomId) as { id: string; at: string; text: string; lines: string | null; hidden: number }[])
+      .map(row => ({ id: row.id, at: row.at, text: row.text, ...(row.lines ? { lines: JSON.parse(row.lines) as string[] } : {}), ...(row.hidden ? { hidden: true } : {}) }));
   }
 
   commit(change: Commit): void {
@@ -66,8 +66,8 @@ export class RoomStore {
       if (change.log?.length) {
         const { count } = this.raw.prepare('SELECT COUNT(*) AS count FROM log_entries WHERE room_id = ?').get(roomId) as { count: number };
         change.log.forEach((entry, at) => {
-          this.raw.prepare('INSERT INTO log_entries (id, room_id, at, text, seq, hidden) VALUES (?, ?, ?, ?, ?, ?)')
-            .run(entry.id, roomId, entry.at, entry.text, count + at, entry.hidden ? 1 : 0);
+          this.raw.prepare('INSERT INTO log_entries (id, room_id, at, text, lines, seq, hidden) VALUES (?, ?, ?, ?, ?, ?, ?)')
+            .run(entry.id, roomId, entry.at, entry.text, entry.lines ?? null, count + at, entry.hidden ? 1 : 0);
         });
       }
       if (change.member) {

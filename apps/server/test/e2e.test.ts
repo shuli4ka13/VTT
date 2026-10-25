@@ -618,6 +618,9 @@ describe('скрытый бросок ведущего', () => {
     expect(seenByPlayer).toContain('Ведущий бросает втайне');
     expect(seenByPlayer).not.toContain('Длинный меч');
     expect(seenByGm).toContain('Длинный меч');
+    const linesOf = async (token: string) => ((await as(token)(http().get(`/rooms/${roomId}`))).body.log as { lines?: string[] }[]).flatMap(e => e.lines ?? []);
+    expect(await linesOf(player.token), 'подробности скрытой строки игроку не уходят').toEqual([]);
+    expect((await linesOf(gm.token)).join(' · ')).toContain('Длинный меч');
 
     const journal = (await as(player.token)(http().get(`/rooms/${roomId}/journal`))).body as { op: string; dice: number[] }[];
     expect(journal.filter(entry => entry.op === 'act').every(entry => entry.dice.length === 0)).toBe(true);

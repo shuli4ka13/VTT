@@ -9,7 +9,7 @@ import { propsOf, keyOf } from '../model/owned.ts';
 import { entryByKey } from '../model/item-ref.ts';
 import type { Inputs } from '../model/asks.ts';
 import { EngineError } from '../engine/errors.ts';
-import { render } from './render.ts';
+import { render, renderLines } from './render.ts';
 import { External, Pause, emptyJournal } from './external.ts';
 import { Path } from './path.ts';
 import { Run, newSink, reportOf } from './run.ts';
@@ -50,8 +50,8 @@ export interface ActWorld {
 }
 
 export type ActOutcome =
-  | { kind: 'done'; sheets: Sheet[]; log: string[]; entries: Entry[]; journal: Journal; fresh: number[] }
-  | { kind: 'paused'; sheets: Sheet[]; log: string[]; entries: Entry[]; journal: Journal; fresh: number[]; question: Question };
+  | { kind: 'done'; sheets: Sheet[]; log: string[]; lines: (string[] | null)[]; entries: Entry[]; journal: Journal; fresh: number[] }
+  | { kind: 'paused'; sheets: Sheet[]; log: string[]; lines: (string[] | null)[]; entries: Entry[]; journal: Journal; fresh: number[]; question: Question };
 
 export function act(world: ActWorld, intent: ActIntent): ActOutcome {
   const { system, compendium, clock } = world;
@@ -65,12 +65,12 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
     runAct(run, intent, root);
     run.settle(world.sheets, root);
     const log = [...state.log];
-    return { kind: 'done', sheets: [...state.sheets], log: render(log, system, state.sheets), entries: log, journal: ext.settled(), fresh: ext.fresh };
+    return { kind: 'done', sheets: [...state.sheets], log: render(log, system, state.sheets), lines: renderLines(log, system, state.sheets), entries: log, journal: ext.settled(), fresh: ext.fresh };
   } catch (err) {
     if (!(err instanceof Pause)) throw err;
     const log = [...state.log];
     return {
-      kind: 'paused', sheets: [...state.sheets], log: render(log, system, state.sheets), entries: log,
+      kind: 'paused', sheets: [...state.sheets], log: render(log, system, state.sheets), lines: renderLines(log, system, state.sheets), entries: log,
       journal: ext.snapshot(), fresh: ext.fresh, question: err.question,
     };
   }

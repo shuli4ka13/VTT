@@ -93,6 +93,7 @@ export const logEntries = sqliteTable('log_entries', {
   roomId: text('room_id').notNull(),
   at: text('at').notNull(),
   text: text('text').notNull(),
+  lines: text('lines'),
   seq: integer('seq').notNull(),
   hidden: integer('hidden').notNull().default(0),
 });

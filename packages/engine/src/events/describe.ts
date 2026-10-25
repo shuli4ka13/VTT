@@ -60,6 +60,14 @@ export function describeEntry(
   entry: { fromId: string; toId: string; report: any },
   system: System, sheets: Sheet[],
 ): string {
+  const { head, lines } = describeParts(entry, system, sheets);
+  return lines.length ? `${head} · ${lines.join(' · ')}` : head;
+}
+
+export function describeParts(
+  entry: { fromId: string; toId: string; report: any },
+  system: System, sheets: Sheet[],
+): { head: string; lines: string[] } {
   const nameOf = (id: string) => sheets.find(s => s.id === id)?.name ?? id;
   const label = String(entry.report.label ?? '') || effectLabelOf(system, entry.report.effect);
   const head = entry.fromId === entry.toId
@@ -192,8 +200,5 @@ export function describeEntry(
   const stopped = entry.report.stopped as { type: string; reason: string; note?: string } | null;
   const stop = stopped ? (stopped.note || breakReasonWord(stopped.type, stopped.reason)) : '';
 
-  const tail = [calculation.join(' · '), shown.join(', '), told.join('; '), stop]
-    .filter(Boolean).join(' · ');
-  if (!tail) return head;
-  return `${head} · ${tail}`;
+  return { head, lines: [...calculation, shown.join(', '), told.join('; '), stop].filter(Boolean) };
 }
