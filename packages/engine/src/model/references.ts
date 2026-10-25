@@ -418,6 +418,8 @@ function modifierRefs(system: System, list: Modifier[] | undefined, from: Where,
     } else {
       if (target.includes('{@строка.')) {
         for (const slot of target.matchAll(/\{@строка\.([\p{L}\p{N}_]+)\}/gu)) if (own && !own.has(slot[1]!)) out.push({ kind: 'prop', key: slot[1]!, from, scope: 'foreign' });
+      } else if (/\{@(?!строка\.)/u.test(target)) {
+        for (const slot of target.matchAll(/\{@([\p{L}\p{N}_]+)/gu)) if (!inputs.some(p => p.key === slot[1])) out.push({ kind: 'param', key: slot[1]!, from, scope: 'missing' });
       } else if (target && !target.includes(':') && target !== '*') out.push({ kind: 'field', key: target, from });
       const condition = (mod as { if?: { expr: string } }).if;
       const valueScope = inputs.length ? { ...plainScope(), params: new Set(inputs.filter(p => p.kind !== 'sheet').map(p => p.key)) } : plainScope();

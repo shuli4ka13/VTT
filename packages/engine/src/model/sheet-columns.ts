@@ -15,6 +15,30 @@ export const TARGET_SLOT = /\{@строка\.([\p{L}\p{N}_]+)\}/gu;
 
 export const hasTargetSlot = (target: string): boolean => target.includes('{@строка.');
 
+export const INPUT_SLOT = /\{@(?!строка\.)([\p{L}\p{N}_]+)((?:\.[\p{L}\p{N}_]+)*)\}/gu;
+
+export const hasInputSlot = (target: string): boolean => /\{@(?!строка\.)/u.test(target);
+
+export function inputTarget(system: System, target: string, params: readonly { key: string; kind?: string; from?: string; default?: unknown }[], args: Record<string, unknown>): string | null {
+  let missing = false;
+  const out = target.replace(INPUT_SLOT, (_, head: string, tail: string) => {
+    const param = params.find(one => one.key === head);
+    let value: unknown = args[head] ?? param?.default;
+    let table = param?.kind === 'choice' ? param.from : undefined;
+    for (const column of tail ? tail.slice(1).split('.') : []) {
+      const spec = table ? (system.tables?.[table]?.columns ?? []).find(one => one.key === column) : undefined;
+      const row = table && spec ? (system.tables?.[table]?.rows ?? []).find(one => String(one.value) === String(value)) : undefined;
+      if (!spec || !row) { missing = true; return ''; }
+      const cell = (row.cells ?? {})[column];
+      value = cell === undefined || cell === '' ? spec.default : cell;
+      table = linkOf(spec);
+    }
+    if (value === undefined || value === null || value === '' || typeof value === 'object') { missing = true; return ''; }
+    return String(value);
+  });
+  return missing ? null : out;
+}
+
 export function itemTarget(target: string, cells: Record<string, unknown>): string | null {
   let missing = false;
   const out = target.replace(TARGET_SLOT, (_, column: string) => {

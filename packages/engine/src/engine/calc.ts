@@ -109,7 +109,7 @@ export function calc(system: System, sheet: Sheet, tag: string, pass: Pass = new
   pass.visiting.add(tag);
   pass.path.push(tag);
   try {
-    const value = applyValueModifiers(computeBase(field, pass), tag, pass);
+    const value = applyValueModifiers(computeBase(field, pass), tag, pass, [], field.cell);
     pass.memo.set(tag, value);
     pass.computed.push(tag);
     return value;

@@ -8,9 +8,10 @@ import { stackStages, targetStages, VALUE_OPS } from './stages.ts';
 import { anyRowSays } from './tables.ts';
 import { findRecord, kindOfRecord, sheetKindOf, propsOf, working, keyOf } from '../model/owned.ts';
 import { tagsHold } from './roll-tags.ts';
-import type { System, Sheet, Compendium, Modifier, RollEdit, RollEditOp, Param } from '../model/types.ts';
+import type { System, Sheet, Compendium, Modifier, RollEdit, RollEditOp, Param, CellMark, TableRow } from '../model/types.ts';
 import type { Pass } from './calc.ts';
-import { withRecord, hasTargetSlot, itemTarget } from '../model/sheet-columns.ts';
+import { withRecord, hasTargetSlot, itemTarget, hasInputSlot, inputTarget, withRow, rowKeyOf } from '../model/sheet-columns.ts';
+import { cellTagOf, columnTagOf } from './cells.ts';
 import { toolsOf } from './refs.ts';
 import { rollHeld, rollEdits } from '../core/edits.ts';
 import { PLUS_OP } from '../core/dice.ts';
@@ -115,8 +116,14 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
 
   for (const { id, effect, entry } of wornEffects(system, sheet, { compendium })) {
     if (activationOf(effect) !== 'passive') continue;
+    const args = (entry.args ?? {}) as Record<string, unknown>;
+    const modifiers = (effect.modifiers || []).flatMap(mod => {
+      if (mod.kind !== 'value' || !hasInputSlot(mod.target)) return [mod];
+      const target = inputTarget(system, mod.target, effect.params ?? [], args);
+      return target ? [{ ...mod, target }] : [];
+    });
     sources.push({
-      type: 'effect', id, label: effect.label || id, modifiers: effect.modifiers || [],
+      type: 'effect', id, label: effect.label || id, modifiers,
       ...(effect.params?.length ? { params: effect.params, args: (entry.args ?? {}) as Record<string, unknown> } : {}),
     });
   }
@@ -126,15 +133,30 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
 
 
 export function applyValueModifiers(
-  base: unknown, tag: string, pass: Pass, also: readonly string[] = [],
+  base: unknown, tag: string, pass: Pass, also: readonly string[] = [], cell?: CellMark,
 ): unknown {
   const staged = targetStages(pass.system, tag).length > 0;
   if (!pass.modifiers) return staged ? stackNumber([], base, tag, pass) : base;
-  const mods = [tag, ...also].flatMap(one => pass.modifiers!.value.get(one) ?? []);
+  const row = cell ? (pass.system.tables?.[cell.table]?.rows ?? []).find(one => rowKeyOf(one) === cell.row) : undefined;
+  const near = cell && row ? [cellTagOf(cell.table, String(row.value), cell.column), columnTagOf(cell.table, cell.column)] : [];
+  const mods = [tag, ...also, ...near].flatMap(one => pass.modifiers!.value.get(one) ?? [])
+    .map(mod => (cell && row ? onRow(mod, cell.table, row, pass.system) : mod));
   const active = mods.filter(m => conditionHolds(m, pass));
   if (active.length === 0 && !staged) return base;
 
   return stackNumber(active, base, tag, pass);
+}
+
+function onRow(mod: SourcedModifier, table: string, row: TableRow, system: System): SourcedModifier {
+  const value = (mod as { value?: { expr?: string } }).value?.expr;
+  const condition = (mod as { if?: { expr?: string } }).if?.expr;
+  const rowed = (expr: string | undefined): boolean => typeof expr === 'string' && expr.includes('@строка');
+  if (!rowed(value) && !rowed(condition)) return mod;
+  return {
+    ...mod,
+    ...(rowed(value) ? { value: { expr: withRow(system, table, row, value!) } } : {}),
+    ...(rowed(condition) ? { if: { expr: withRow(system, table, row, condition!) } } : {}),
+  } as SourcedModifier;
 }
 
 function stackNumber(active: SourcedModifier[], base: unknown, tag: string, pass: Pass): unknown {
