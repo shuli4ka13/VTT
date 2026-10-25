@@ -607,7 +607,7 @@ describe('список слева: «ничего не делает» знает
 describe('одно правило «шаг для других»', () => {
   afterEach(cleanup);
 
-  it('подпись в библиотеке совпадает с палитрой шагов: D&D — «Урон», «Лечение», «Бросок атаки», «Спасбросок», «Повторный спасбросок», «Новый ход»', () => {
+  it('подпись в библиотеке совпадает с палитрой шагов: D&D — «Урон», «Лечение», «Бросок атаки», «Спасбросок», «Повторный спасбросок», «Новый ход», «Костей с учётом ячейки»', () => {
     const world = SAMPLE_WORLDS.find(one => one.system.name === 'D&D 5e')!;
     const strike = Object.entries(world.system.effects).find(([, effect]) => effect.label === 'Атака')![0];
     useWorld.setState(state => ({ ...state, system: world.system, compendium: world.compendium, activeEffectId: strike }));
@@ -616,7 +616,7 @@ describe('одно правило «шаг для других»', () => {
       .filter(item => item.textContent?.includes('шаг для других'))
       .map(item => item.querySelector('.list__name')?.textContent).sort();
     const palette = [...document.querySelectorAll('.bricks__row:not(.bricks__row--plain) button')].map(button => button.textContent).sort();
-    expect(palette).toEqual(['Бросок атаки', 'Лечение', 'Новый ход', 'Повторный спасбросок', 'Спасбросок', 'Урон']);
+    expect(palette).toEqual(['Бросок атаки', 'Костей с учётом ячейки', 'Лечение', 'Новый ход', 'Повторный спасбросок', 'Спасбросок', 'Урон']);
     expect(listed).toEqual(palette);
   });
 });
