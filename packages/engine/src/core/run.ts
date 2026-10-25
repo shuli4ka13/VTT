@@ -14,6 +14,7 @@ import { ROLLED, ROLLED_LABEL } from '../events/happenings.ts';
 import type { MomentKey } from '../events/moments.ts';
 import { effectLabelOf } from '../events/actions.ts';
 import { requireEffect, requireCalled, reapplyOf, usesMax } from '../engine/effects.ts';
+import { tagsFit } from '../engine/modifiers.ts';
 import { expiryOf } from '../engine/clock.ts';
 import { burnsUse } from '../events/durations.ts';
 import { refusalWords } from '../events/refusal.ts';
@@ -1266,9 +1267,13 @@ export class Run {
           };
           this.momentReact(hook, at.phase('hook'), {}, {}, `«${name}» ${HOOK_WORDS[change.turn]}`, `${name} · ${HOOK_WORDS[change.turn]}`, true);
         }
-        const key = `${change.turn === 'attach' ? 'gained' : 'lost'}:${change.entry.effectId}`;
-        this.hooked(key, { лист: change.sheetId }, at, { about: { ...(change.entry.args ?? {}) } }, `«${name}» ${HEARD_WORDS[change.turn]}`,
-          sub => `«${name}» ${HEARD_WORDS[change.turn]} у «${labelOf(sub)}»`);
+        const turn = change.turn === 'attach' ? 'gained' : 'lost';
+        const seed = { about: { ...(change.entry.args ?? {}) }, эффект: change.entry.effectId };
+        for (const heard of [change.entry.effectId, ...(effect.tags ?? []).filter(tag => tag !== change.entry.effectId)]) {
+          const where = heard === change.entry.effectId ? at : at.phase('tag').phase(heard);
+          this.hooked(`${turn}:${heard}`, { лист: change.sheetId }, where, seed, `«${name}» ${HEARD_WORDS[change.turn]}`,
+            sub => `«${name}» ${HEARD_WORDS[change.turn]} у «${labelOf(sub)}»`);
+        }
       }
     }
   }
@@ -1454,7 +1459,7 @@ export class Run {
         const listening = (confirm: boolean): Sub[] => {
           const sheet = this.sheet(sheetId);
           if (!sheet) return [];
-          return this.subs(sheet).filter(sub => sub.handler.on === 'seen' && Boolean(sub.handler.confirm) === confirm);
+          return this.subs(sheet).filter(sub => sub.handler.on === 'seen' && Boolean(sub.handler.confirm) === confirm && tagsFit(sub.handler, tags));
         };
         for (const sub of listening(false)) {
           const out = this.react(sub, {
@@ -1496,7 +1501,7 @@ export class Run {
       for (const holder of this.holders()) {
         const sheet = this.sheet(holder.id);
         if (!sheet) continue;
-        for (const sub of this.subs(sheet).filter(one => one.handler.on === ROLLED && !one.handler.confirm)) {
+        for (const sub of this.subs(sheet).filter(one => one.handler.on === ROLLED && !one.handler.confirm && tagsFit(one.handler, tags))) {
           const out = this.react(sub, {
             path: path.phase(ROLLED).handler(holder.id, sub.key, sub.inst), names, seed, hop, chosen: false,
             owner: `«${labelOf(sub)}» — ${ROLLED_LABEL}`, roll: cell,

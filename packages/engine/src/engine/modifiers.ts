@@ -187,14 +187,16 @@ export function claimedModifiers(system: System, keys: string[]): SourcedModifie
   });
 }
 
+export function tagsFit(spec: { tags?: readonly string[]; anyTags?: readonly string[]; notTags?: readonly string[] }, tags: readonly string[]): boolean {
+  if (spec.tags?.length && !tagsHold([...spec.tags], tags)) return false;
+  if (spec.anyTags?.length && !spec.anyTags.some(t => tags.includes(t))) return false;
+  if (spec.notTags?.length && spec.notTags.some(t => tags.includes(t))) return false;
+  return true;
+}
+
 export function editMatches(mod: SourcedModifier, tags: readonly string[], system: System): boolean {
-  const all = (mod as { tags?: string[] }).tags;
-  const any = (mod as { anyTags?: string[] }).anyTags;
-  const avoid = (mod as { notTags?: string[] }).notTags;
   const where = (mod as { where?: { table: string; column: string; is: unknown } }).where;
-  if (all?.length && !tagsHold(all, tags)) return false;
-  if (any?.length && !any.some(t => tags.includes(t))) return false;
-  if (avoid?.length && avoid.some(t => tags.includes(t))) return false;
+  if (!tagsFit(mod as { tags?: string[]; anyTags?: string[]; notTags?: string[] }, tags)) return false;
   if (where && !anyRowSays(system, [...tags], where)) return false;
   return true;
 }

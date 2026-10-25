@@ -214,6 +214,9 @@ export const step = z.object({
 export const handler = z.object({
   on: z.string().min(1),
   if: formula.optional(),
+  tags: z.array(z.string().min(1)).optional(),
+  anyTags: z.array(z.string().min(1)).optional(),
+  notTags: z.array(z.string().min(1)).optional(),
   confirm: z.boolean().optional(),
   cost: z.array(step).optional(),
   steps: z.array(step).optional(),

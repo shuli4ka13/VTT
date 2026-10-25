@@ -459,7 +459,7 @@ export function sourcesOf(system: System, key: string): Effect[] {
 export function heardNames(system: System, listener: Listener): HeardNames {
   if (listener.kind === 'seen' || listener.kind === 'rolled') return { sheets: ['бросающий', 'против'], seeds: ['roll'], listened: null };
   if (listener.kind === 'moment') return { sheets: TURN_MOMENTS.has(listener.key) ? ['ходит'] : listener.key === 'combat-leave' ? ['лист'] : [], seeds: ['moment'], listened: null };
-  if (listener.kind === 'gained' || listener.kind === 'lost') return { sheets: ['лист'], seeds: ['about'], listened: null };
+  if (listener.kind === 'gained' || listener.kind === 'lost') return { sheets: ['лист'], seeds: ['about', 'эффект'], listened: null };
   if (listener.kind === 'field') return { sheets: ['лист'], seeds: ['field'], listened: null };
   if (listener.kind !== 'call') return { sheets: [], seeds: [], listened: null };
   if (listener.key === ANY_ACTION) return { sheets: [], seeds: [], listened: null };
@@ -542,7 +542,7 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
     if (heard.kind === 'call' && heard.key !== ANY_ACTION && !system.tags?.[heard.key]) {
       out.push({ kind: 'effect', key: heard.key, from: head, scope: LISTEN });
     }
-    if (heard.kind === 'gained' || heard.kind === 'lost') out.push({ kind: 'effect', key: heard.key, from: head });
+    if ((heard.kind === 'gained' || heard.kind === 'lost') && !Object.values(system.effects ?? {}).some(other => other.tags?.includes(heard.key))) out.push({ kind: 'effect', key: heard.key, from: head });
     if (heard.kind === 'field') out.push({ kind: 'field', key: heard.key, from: head });
     if (handler.if) {
       const found: Reference[] = [];

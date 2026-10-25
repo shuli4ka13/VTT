@@ -566,6 +566,7 @@ function handlerDiceProblems(system: System): Problem[] {
       if (rollsDice(handler.if)) out.push({ where, level: 'error', text: 'в условии подписки кости не бросают — «кинуть» уберите' });
       if ((handler.on === 'seen' || handler.on === ROLLED) && readsAgainst(handler.if)) out.push({ where, level: 'warn', text: SEEN_AGAINST });
       if (handler.on === ROLLED && handler.confirm) out.push({ where, level: 'error', text: `«${ROLLED_LABEL}» не спрашивает игрока — снимите «спросить»` });
+      if (handler.on !== 'seen' && handler.on !== ROLLED && (handler.tags?.length || handler.anyTags?.length || handler.notTags?.length)) out.push({ where, level: 'error', text: `метки броска фильтруют только «${SEEN_LABEL}» и «${ROLLED_LABEL}» — здесь броска нет` });
     });
   }
   return out;
