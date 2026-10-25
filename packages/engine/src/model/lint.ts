@@ -2,7 +2,7 @@ import { paramStages, targetStages } from '../engine/stages.ts';
 import { armsOf, balance, flowOf, inBlock, isFlow } from './flow.ts';
 import { loopOf, loopParam } from '../engine/steps/each.ts';
 import { chosenEffect, choicesOfInput, emittedChoices } from './payments.ts';
-import { SEEN_LABEL, ANY_ACTION, PHASES } from '../events/bus.ts';
+import { SEEN_LABEL, ROLLED, ROLLED_LABEL, ANY_ACTION, PHASES } from '../events/bus.ts';
 import { HEARD_WORDS } from '../events/lifecycle.ts';
 import type { System, Compendium, Effect, Step, Stage, Guard, Param, Table, Modifier } from './types.ts';
 import { registry } from '../engine/steps/index.ts';
@@ -25,7 +25,7 @@ import {
   type Where, type Reference, type RefKind, type Declared, type Listener,
   LISTEN, contractsOf, HOLDER, DESK_NAME, holderNameOf, tiedToHolder,
 } from './references.ts';
-import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, rowKeyOf, hasField, ROW } from './sheet-columns.ts';
+import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, holderOf, rowKeyOf, hasField, ROW } from './sheet-columns.ts';
 import { isRange, rowByKey } from './tables.ts';
 import { walkSheet } from './paths.ts';
 import { variantProblems, cellScopeProblems } from './variants.ts';
@@ -380,6 +380,34 @@ function rowNameProblems(system: System): Problem[] {
   return out;
 }
 
+function labelTwinProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  const groups = new Map<string, { table: string; key: string; label: string }[]>();
+  for (const [id, table] of Object.entries(system.tables ?? {})) {
+    const group = isSingle(table) ? `single:${holderOf(table)}` : `table:${id}`;
+    const list = groups.get(group) ?? [];
+    for (const column of table.columns ?? []) list.push({ table: id, key: column.key, label: (column.label || column.key).trim() });
+    groups.set(group, list);
+  }
+  for (const list of groups.values()) {
+    const seen = new Map<string, { table: string; key: string; label: string }>();
+    for (const column of list) {
+      const name = column.label.toLowerCase();
+      const first = seen.get(name);
+      if (!first) { seen.set(name, column); continue; }
+      const table = system.tables![column.table]!;
+      const where = isSingle(table) && holderOf(table) === 'sheet'
+        ? { tab: 'sheet' as const, field: column.key }
+        : { tab: 'rules' as const, section: 'tables', key: column.table };
+      const tables = first.table === column.table
+        ? `в таблице «${table.label || column.table}»`
+        : `в таблицах «${system.tables![first.table]!.label || first.table}» и «${table.label || column.table}»`;
+      out.push({ where, level: 'warn', text: `${tables} два поля «${column.label}» — на листе и в формулах их не различить; переименуйте или удалите одно` });
+    }
+  }
+  return out;
+}
+
 function viewProblems(system: System): Problem[] {
   const out: Problem[] = [];
   const where = { tab: 'sheet' as const };
@@ -484,6 +512,38 @@ function rollsDice(expr: unknown): boolean {
   return visit(ast);
 }
 
+function thrownDiceProblems(steps: Step[], where: (index: number) => Where): Problem[] {
+  const out: Problem[] = [];
+  const thrown = new Set<string>();
+  steps.forEach((step, index) => {
+    for (const text of exprsIn(step)) {
+      let ast: Node;
+      try { ast = compile(text).ast; } catch { continue; }
+      const visit = (node: Node): void => {
+        switch (node.kind) {
+          case 'Call': {
+            const first = node.args[0];
+            const head = first?.kind === 'Ref' ? first.tag.split('.')[0]! : '';
+            if (node.name === 'кинуть' && thrown.has(head)) {
+              out.push({ where: where(index), level: 'error', text: `«кинуть(@${head})»: в «${head}» уже выпавшее число, а не кость — кость задают так: кинуть(к6) или входом с костью` });
+            }
+            node.args.forEach(visit);
+            return;
+          }
+          case 'Unary': visit(node.operand); return;
+          case 'Binary': visit(node.left); visit(node.right); return;
+          case 'Conditional': visit(node.test); visit(node.then); visit(node.otherwise); return;
+          case 'Pick': visit(node.key); return;
+          default: return;
+        }
+      };
+      visit(ast);
+    }
+    if ((step.type === 'roll' || step.type === 'check') && step.id) thrown.add(String(step.id));
+  });
+  return out;
+}
+
 const NO_DICE_IN_IF = 'в условии правки кости не бросают — «кинуть» уберите';
 
 const NO_DICE_HERE = 'кости бросает только шаг эффекта и прибавка к броску — здесь «кинуть» уберите';
@@ -504,7 +564,8 @@ function handlerDiceProblems(system: System): Problem[] {
     (effect.on ?? []).forEach((handler, index) => {
       const where = { tab: 'effects' as const, effect: id, part: 'on', handler: index };
       if (rollsDice(handler.if)) out.push({ where, level: 'error', text: 'в условии подписки кости не бросают — «кинуть» уберите' });
-      if (handler.on === 'seen' && readsAgainst(handler.if)) out.push({ where, level: 'warn', text: SEEN_AGAINST });
+      if ((handler.on === 'seen' || handler.on === ROLLED) && readsAgainst(handler.if)) out.push({ where, level: 'warn', text: SEEN_AGAINST });
+      if (handler.on === ROLLED && handler.confirm) out.push({ where, level: 'error', text: `«${ROLLED_LABEL}» не спрашивает игрока — снимите «спросить»` });
     });
   }
   return out;
@@ -867,6 +928,7 @@ const namesUsedIn = (...parts: unknown[]): Set<string> =>
 function heardLabel(system: System, heard: Listener): string {
   switch (heard.kind) {
     case 'seen': return SEEN_LABEL;
+    case 'rolled': return ROLLED_LABEL;
     case 'call': return system.effects?.[heard.key]?.label || system.tags?.[heard.key]?.label || heard.key;
     case 'moment': return MOMENTS[heard.key as keyof typeof MOMENTS] ?? heard.key;
     case 'field': return `${fieldOf(system, heard.key)?.label ?? heard.key} стало верным`;
@@ -978,6 +1040,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   for (const [id, effect] of Object.entries(system.effects)) {
     for (const chain of chainsOf(id, effect)) {
       out.push(...stepProblems(chain.steps, chain.where));
+      out.push(...thrownDiceProblems(chain.steps, chain.where));
       const loops = chain.steps.flatMap((step, index) => (registry.get(step.type)?.loops ? [index] : []));
       for (const index of loops.slice(1)) {
         out.push({ where: chain.where(index), level: 'error', text: `«${STEP_WORDS.each.label}» в цепочке может быть только один` });
@@ -1093,6 +1156,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...fieldRollProblems(system), ...viewProblems(system));
   out.push(...fieldNameProblems(system));
   out.push(...rowNameProblems(system));
+  out.push(...labelTwinProblems(system));
   out.push(...tableFieldProblems(system));
   for (const found of [...variantProblems(system), ...cellScopeProblems(system)]) {
     if (!out.some(p => sameWhere(p.where, found.where) && p.text === found.text)) out.push({ where: found.where, level: 'error', text: found.text });

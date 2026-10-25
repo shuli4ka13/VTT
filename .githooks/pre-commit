@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+log="${TMPDIR:-/tmp}/vtt-code-style.log"
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+if grep -qE '\.(ts|tsx)$' <<<"$staged"; then
+  (cd apps/web && npx vitest run src/code-style.test.ts --reporter=dot >"$log" 2>&1) || {
+    echo "pre-commit: в коде комментарии — подробности в $log" >&2
+    exit 1
+  }
+fi

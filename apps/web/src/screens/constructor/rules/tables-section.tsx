@@ -1,6 +1,6 @@
 import { ColumnSheetFields } from '../table-field.tsx';
 import { rowNames } from '../row-names.ts';
-import { renameLayoutColumn } from '@vtt/engine/model/layout';
+import { renameLayoutColumn, renameLayoutTable } from '@vtt/engine/model/layout';
 export { rowNames } from '../row-names.ts';
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
 import { isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowPieces } from '@vtt/engine/model/sheet-columns';
@@ -16,7 +16,7 @@ import { FieldRow } from '../../../ui/field-row.tsx';
 import type { GridColumn } from '../../../ui/sheet-grid.tsx';
 import { ValueEditor } from '../../../ui/value-editor.tsx';
 import { newTable } from '../factory.ts';
-import { inUse, usersOf, useUsage } from '../usage.ts';
+import { usersOf, useUsage, insideTable } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
 import { freeId, slugOf, useBook } from '../../../store/world.ts';
 import { listUsers } from '@vtt/engine/model/lists';
@@ -75,6 +75,25 @@ const addTable = (editSystem: EditSystem) => {
   if (key) useWorld.getState().pick({ activeTableId: key });
 };
 
+export function renameTable(system: System, id: string, label: string, world: { compendium?: unknown; sheets?: unknown }): string {
+  const table = system.tables?.[id];
+  if (!table) return id;
+  const auto = /^таблица(_\d+)?$/u.test(id) || id === slugOf(table.label ?? '');
+  const { [id]: _self, ...others } = system.tables ?? {};
+  const rest = JSON.stringify({ s: { ...system, blocks: undefined, tables: others }, c: world.compendium, sh: world.sheets });
+  const named = new RegExp(`(?<![\\p{L}\\p{N}_])${id}(?![\\p{L}\\p{N}_])`, 'u').test(rest);
+  return auto && !named && slugOf(label)
+    ? freeId([...Object.keys(others), ...fieldsOf(system).map(f => f.tag)], label)
+    : id;
+}
+
+export function moveTable(draft: System, from: string, to: string): void {
+  if (from === to || !draft.tables?.[from]) return;
+  draft.tables = Object.fromEntries(Object.entries(draft.tables).map(([key, table]) => [key === from ? to : key, table]));
+  renameLayoutTable(draft, from, to);
+  forgetFields(draft);
+}
+
 const OWNER_GROUPS: [string | undefined, string][] = [
   ['sheet', 'Своё у каждого листа'],
   ['group', 'Общее у группы'],
@@ -118,20 +137,20 @@ export function TablesSection({ system, editSystem, usage }: Props) {
   );
 }
 
-function TableCard({ id, table, system, editSystem, usage }: Props & { id: string; table: Table }) {
+export function TableCard({ id, table, system, editSystem, usage, opened, onRekey, onClose }: Props & { id: string; table: Table; opened?: boolean; onRekey?: (key: string) => void; onClose?: () => void }) {
   const byRange = isRange(table);
   const rows = table.rows ?? [];
   const columns = table.columns ?? [];
-  const users = [...new Set([...listUsers(system, id), ...usersOf(usage, 'table', id, system)])];
+  const users = [...new Set([...listUsers(system, id), ...usersOf(usage, 'table', id, system, insideTable(id))])];
   const wanted = useWorld(s => s.activeTableId) === id;
-  const [openAtStart] = useState(wanted);
+  const [openAtStart] = useState(wanted || Boolean(opened));
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!wanted) return;
     ref.current?.scrollIntoView?.({ block: 'start' });
     useWorld.getState().pick({ activeTableId: null });
   }, [wanted]);
-  const held = users.length > 0 || inUse(usage, 'table', id);
+  const held = users.length > 0;
   const [picked, setPicked] = useState<string | null>(null);
   const [rekey, setRekey] = useState<TableKey | null>(null);
   const broken = byRange && rangesBroken(rows);
@@ -148,6 +167,17 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
     const target = draft.tables?.[id];
     if (target) change(target);
   });
+  const relabel = (next: string) => {
+    const state = useWorld.getState();
+    const fresh = renameTable(state.system, id, next, { compendium: state.compendium, sheets: state.sheets });
+    editSystem(draft => {
+      const target = draft.tables?.[id];
+      if (target) target.label = next;
+      moveTable(draft, id, fresh);
+    });
+    if (fresh === id) return;
+    if (onRekey) onRekey(fresh); else state.pick({ activeTableId: fresh });
+  };
 
   const summary = users.length
     ? (users.length > 3
@@ -158,9 +188,11 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
   return (
     <div ref={ref}>
     <Fold
-      title={table.label || id} count={rows.length} summary={summary} open={openAtStart || undefined}
-      rename={{ value: table.label ?? '', placeholder: 'как зовётся таблица', onCommit: next => edit(draft => { draft.label = next; }) }}
+      title={table.label || id} count={rows.length} open={openAtStart || undefined}
+      rename={{ value: table.label ?? '', placeholder: 'как зовётся таблица', onCommit: relabel }}
+      {...(onClose ? { actions: <Button size="sm" variant="ghost" title="закрыть таблицу" onClick={onClose}>×</Button> } : {})}
     >
+      <Fold title="ещё" summary={`чьи значения, ключ строки, подсказка · ${summary}`}>
       <FieldRow
         id="table-head"
         fields={[
@@ -220,6 +252,7 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
       />
 
       <UsageRow title="Где используется:" items={users.map(text => ({ key: text, text }))} />
+      </Fold>
 
       {rekey ? (
         <Verdict tone="warn" action={(
@@ -234,7 +267,7 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
       {broken ? <Verdict tone="warn">диапазоны перекрываются или дырявы</Verdict> : null}
 
       {picked && columns.some(c => c.key === picked) ? (
-        <TableColumnCard id={id} table={table} column={columns.find(c => c.key === picked)!} system={system} edit={edit} onClose={() => setPicked(null)} />
+        <TableColumnCard id={id} table={table} column={columns.find(c => c.key === picked)!} system={system} edit={edit} onClose={() => setPicked(null)} onRekey={setPicked} />
       ) : null}
 
       <Rows id={id} table={table} system={system} edit={edit} editSystem={editSystem} picked={picked} onPick={setPicked} />
@@ -270,7 +303,19 @@ export function moveColumn(draft: System, tableId: string, key: string, holder: 
   draft.tables = withColumn(draft, column, holder).tables;
 }
 
-export function TableColumnCard({ id, table, column, system, edit, onClose, extra, lead, bounds = true }: {
+const HOLDER_WORDS: Record<Holder, string> = { sheet: 'у каждого героя своё', group: 'общее у группы', desk: 'одно на весь стол' };
+
+export function whose(table: Table, column: TableColumn, id: string): string {
+  const holder = holderOf(table);
+  if (isSingle(table)) return column.expr !== undefined ? 'поле · считается по формуле' : `поле · ${HOLDER_WORDS[holder ?? 'sheet']}`;
+  if (table.shape === 'book') return `свойство «${table.label || id}» · у каждой записи своё`;
+  const value = column.expr !== undefined ? 'одна формула на все строки' : holder ? `в каждой строке ${HOLDER_WORDS[holder]}` : 'у каждой строки своё значение';
+  return `колонка таблицы «${table.label || id}» · ${value}`;
+}
+
+export function TableColumnCard({ id, table, column, system, edit, onClose, onRekey, onOpenTable, extra, lead, bounds = true }: {
+  onRekey?: (key: string) => void;
+  onOpenTable?: () => void;
   extra?: ReactNode;
   lead?: ReactNode;
   bounds?: boolean;
@@ -297,16 +342,22 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, extr
   const users = single ? usersOf(usage, 'field', column.key, system) : [];
 
   const rename = (label: string) => {
-    if (!single) { set(c => { c.label = label; }); return; }
     const state = useWorld.getState();
-    const world = JSON.stringify({ s: state.system, c: state.compendium, sh: state.sheets });
-    const virgin = (/^field(_\d+)?$/.test(column.key) || column.key === slugOf(column.label ?? ''))
-      && world.split(`"${column.key}"`).length - 1 <= 1
-      && !new RegExp(`[@#]${column.key}(?![\\p{L}\\p{N}_])`, 'u').test(world);
-    const taken = [...fieldsOf(state.system).map(f => f.tag).filter(tag => tag !== column.key), ...Object.keys(state.system.tables ?? {})];
-    const fresh = virgin && slugOf(label) ? freeId(taken, label) : column.key;
-    editSystem(draft => renameColumn(draft, id, column.key, label, fresh));
-    if (fresh !== column.key) pick({ activeFieldTag: fresh });
+    const key = column.key;
+    const world = JSON.stringify({ s: { ...state.system, blocks: undefined }, c: state.compendium, sh: state.sheets });
+    const auto = /^(field|колонка)(_\d+)?$/u.test(key) || key === slugOf(column.label ?? '');
+    const named = new RegExp(`[@#.]${key}(?![\\p{L}\\p{N}_])`, 'u').test(world);
+    const filled = (table.rows ?? []).some(row => row.cells && key in row.cells);
+    const virgin = !book && auto && !named && (single ? world.split(`"${key}"`).length - 1 <= 1 : !filled);
+    const taken = single
+      ? [...fieldsOf(state.system).map(f => f.tag).filter(tag => tag !== key), ...Object.keys(state.system.tables ?? {})]
+      : (table.columns ?? []).map(c => c.key).filter(other => other !== key);
+    const fresh = virgin && slugOf(label) ? freeId(taken, label) : key;
+    editSystem(draft => renameColumn(draft, id, key, label, fresh));
+    if (fresh === key) return;
+    if (single) pick({ activeFieldTag: fresh });
+    if (state.activeColumn?.table === id && state.activeColumn.column === key) pick({ activeColumn: { table: id, column: fresh } });
+    onRekey?.(fresh);
   };
 
   return (
@@ -319,6 +370,8 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, extr
       many
       formulaHint={single ? 'Формула для всех листов' : book ? 'Формула для всех записей' : 'Формула для всех строк'}
       where={`${table.label || id} · ${name}`}
+      noun={single ? 'поле' : book ? 'свойство' : 'колонка'}
+      sub={<>{whose(table, column, id)}{onOpenTable && !single && !book ? <> <Button size="sm" variant="ghost" onClick={onOpenTable}>открыть таблицу</Button></> : null}</>}
       {...(single ? {} : { names: rowNames(system, id) })}
       system={system}
       onChange={patch => (patch.label !== undefined ? rename(patch.label) : set(c => applyPatch(c, patch)))}
@@ -420,7 +473,7 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
   });
 
   const placed = onSheet(table);
-  const lead = byRange ? ['от', 'до'] : [key === 'number' ? 'число' : 'слово', 'подпись'];
+  const lead = byRange ? ['от', 'до'] : key === 'number' ? ['число', 'подпись'] : ['строка'];
   const gridColumns: GridColumn[] = [
     ...lead.map(name => ({ key: `:${name}`, label: name, width: byRange ? 90 : defaultWidth() })),
     ...columns.map(c => ({
@@ -561,8 +614,16 @@ function RowCells({ tableId, row, at, rowKey, columns, system, edit, setCell, us
         </>
       ) : (
         <>
-          <KeyInput value={row.value} numeric={rowKey === 'number'} taken={taken} onRename={onRename} />
-          <Input value={row.label ?? ''} placeholder="как показать" onChange={next => set(r => { if (next.trim()) r.label = next; else delete r.label; })} />
+          {rowKey === 'number' ? (
+            <>
+              <KeyInput value={row.value} numeric taken={taken} onRename={onRename} />
+              <Input value={row.label ?? ''} placeholder="как показать" onChange={next => set(r => { if (next.trim()) r.label = next; else delete r.label; })} />
+            </>
+          ) : (
+            <RowName row={row} taken={taken} onRename={onRename}
+              onLabel={label => set(r => { if (label === undefined) delete r.label; else r.label = label; })}
+              onFirst={(value, label) => set(r => { r.value = value as never; if (label === undefined) delete r.label; else r.label = label; })} />
+          )}
         </>
       )}
       {columns.map(column => (
@@ -584,6 +645,56 @@ function RowCells({ tableId, row, at, rowKey, columns, system, edit, setCell, us
         <Button size="sm" variant="ghost" title="убрать строку" onClick={() => edit(draft => { draft.rows?.splice(at, 1); })}>×</Button>
       )}
     </>
+  );
+}
+
+function RowName({ row, taken, onRename, onLabel, onFirst }: {
+  row: TableRow;
+  taken: (next: unknown) => boolean;
+  onRename: (next: unknown) => void;
+  onLabel: (label: string | undefined) => void;
+  onFirst: (value: string, label: string | undefined) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const [trouble, setTrouble] = useState<string | null>(null);
+  const key = row.value === undefined ? '' : String(row.value);
+  const shown = draft ?? row.label ?? key;
+  const labelFor = (name: string, value: string) => (name === value ? undefined : name);
+
+  const commit = () => {
+    if (draft === null) return;
+    const name = draft.trim();
+    setDraft(null);
+    if (!name || name === (row.label ?? key)) { setTrouble(null); return; }
+    const slug = slugOf(name);
+    if (!slug) { setTrouble('нужны буквы или цифры'); return; }
+    if (!key) {
+      if (taken(slug)) { setTrouble(`«${name}» уже есть`); return; }
+      setTrouble(null);
+      onFirst(slug, labelFor(name, slug));
+      return;
+    }
+    setTrouble(null);
+    if (slug !== key && !taken(slug)) {
+      onRename(slug);
+      onLabel(labelFor(name, slug));
+      return;
+    }
+    onLabel(labelFor(name, key));
+  };
+
+  return (
+    <div className="stack stack--tight">
+      <Input
+        value={shown}
+        invalid={Boolean(trouble)}
+        placeholder="как зовётся строка"
+        onChange={setDraft}
+        onBlur={commit}
+        onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+      />
+      {trouble ? <span className="field__error">{trouble}</span> : null}
+    </div>
   );
 }
 

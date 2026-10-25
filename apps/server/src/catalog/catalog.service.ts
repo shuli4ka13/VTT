@@ -115,16 +115,18 @@ export class CatalogService {
       return { id: row.id, title: row.title, systemName: data.name ?? data.id,
         authorName: await this.author(row.ownerId), updatedAt: row.updatedAt,
         status: row.status === 'published' ? 'published' as const : 'draft' as const,
-        mine: row.ownerId === viewerId };
+        mine: row.ownerId === viewerId,
+        ...(row.ownerId === viewerId && row.publishedData !== null ? { behind: row.data !== row.publishedData } : {}) };
     }));
   }
 
-  async system(id: string): Promise<{ id: string; title: string; updatedAt: string; system: System }> {
+  async system(id: string): Promise<{ id: string; title: string; updatedAt: string; system: System; behind?: boolean }> {
     const row = (await this.db.select().from(publishedSystems).where(eq(publishedSystems.id, id)))[0];
     if (!row) throw new NotFoundException(`системы «${id}» нет`);
     return {
       id: row.id, title: row.title, updatedAt: row.updatedAt,
       system: JSON.parse(row.data) as System,
+      ...(row.publishedData !== null ? { behind: row.data !== row.publishedData } : {}),
     };
   }
 

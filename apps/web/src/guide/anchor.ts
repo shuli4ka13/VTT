@@ -10,7 +10,8 @@ const CLICKABLE = 'button, [role="button"], [role="tab"], a, summary, select, la
 
 const textOf = (el: Element): string => {
   if (el instanceof HTMLSelectElement) return el.options[el.selectedIndex]?.text ?? '';
-  return (el.textContent ?? '').replace(/\s+/g, ' ');
+  const spoken = [...el.querySelectorAll('[aria-hidden]')].reduce((text, mark) => text.replace(mark.textContent ?? '', ''), el.textContent ?? '');
+  return spoken.replace(/\s+/g, ' ');
 };
 
 export function shown(el: Element): boolean {
@@ -30,6 +31,9 @@ function homes(name: string, root: ParentNode): Element[] {
   for (const head of root.querySelectorAll('.column__head > span:first-child, .column__spine')) {
     if (same(textOf(head), name)) { const column = head.closest('.column'); if (column) out.add(column); }
   }
+  for (const block of root.querySelectorAll('.block-fold__name')) {
+    if (same(textOf(block), name)) { const fold = block.closest('details'); if (fold) out.add(fold); }
+  }
   for (const title of root.querySelectorAll('.card__title')) {
     if (same(textOf(title), name)) { const card = title.closest('.card'); if (card) out.add(card); }
   }
@@ -40,6 +44,12 @@ export function findAnchor(anchor: Anchor | undefined, root: ParentNode = docume
   if (!anchor) return null;
   if ('field' in anchor) {
     return [...root.querySelectorAll<HTMLElement>('[data-field]')].find(el => el.dataset.field === anchor.field && shown(el)) ?? null;
+  }
+  if ('input' in anchor) {
+    const fields = [...root.querySelectorAll<HTMLInputElement>('input[placeholder], textarea[placeholder]')]
+      .filter(el => shown(el) && same(el.getAttribute('placeholder'), anchor.input));
+    const focused = fields.find(el => el === document.activeElement);
+    return focused ?? fields.find(el => !el.value) ?? fields[0] ?? null;
   }
   if ('guide' in anchor) {
     return [...root.querySelectorAll<HTMLElement>('[data-guide]')].find(el => el.dataset.guide === anchor.guide && shown(el)) ?? null;

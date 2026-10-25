@@ -350,6 +350,8 @@
 .start__item-name { font-weight: 600; }
 .start__item-meta { font-size: var(--fs-2); color: var(--text-muted); }
 .worldbar__state { font-size: var(--fs-2); color: var(--text-muted); }
+.worldbar__publication { font-size: var(--fs-2); color: var(--text-muted); white-space: nowrap; flex: none; }
+.worldbar__publication--behind { color: var(--warn); }
 
 .start__item-head { display: flex; align-items: center; gap: var(--s-2); }
 .tag {

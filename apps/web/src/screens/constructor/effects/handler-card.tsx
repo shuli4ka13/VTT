@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Card, CardHead, Field, Select, DangerButton, Button } from '../../../ui/primitives.tsx';
 import { formulaWords } from '../../../ui/formula-words.ts';
 import { MOMENTS as TIMES } from '@vtt/engine/events/moments';
-import { MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, PHASES, SEEN, SEEN_LABEL, ANY_ACTION, callHappening, happeningOf } from '@vtt/engine/events/bus';
+import { MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, PHASES, SEEN, SEEN_LABEL, ROLLED, ROLLED_LABEL, ANY_ACTION, callHappening, happeningOf } from '@vtt/engine/events/bus';
 import type { Phase } from '@vtt/engine/events/bus';
 import type { MomentKey } from '@vtt/engine/events/moments';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
@@ -18,11 +18,12 @@ import { cardTitle } from './words.ts';
 import { outcomeRefs } from '../slots.tsx';
 import type { System, Handler } from '@vtt/schema';
 
-type Kind = 'call' | 'seen' | 'moment' | 'field' | 'gained' | 'lost';
+type Kind = 'call' | 'seen' | 'rolled' | 'moment' | 'field' | 'gained' | 'lost';
 
 const KINDS: readonly (readonly [Kind, string])[] = [
   ['call', 'действие или вызов'],
   ['seen', SEEN_LABEL],
+  ['rolled', ROLLED_LABEL],
   ['moment', 'время'],
   ['field', 'поле стало верным'],
   ['gained', 'эффект появился на листе'],
@@ -33,6 +34,7 @@ const PHASE_OPTIONS = (Object.keys(PHASES) as Phase[]).map(key => [key, PHASES[k
 
 const kindOf = (on: string): Kind => {
   if (on === SEEN) return 'seen';
+  if (on === ROLLED) return 'rolled';
   if (on.startsWith(MOMENT_PREFIX)) return 'moment';
   if (on.startsWith(FIELD_PREFIX)) return 'field';
   if (on.startsWith(GAINED_PREFIX)) return 'gained';
@@ -47,7 +49,7 @@ const subjectOf = (on: string): string => {
   return at > 0 ? on.slice(at + 1) : '';
 };
 
-const PREFIX: Record<Exclude<Kind, 'call' | 'seen'>, string> = {
+const PREFIX: Record<Exclude<Kind, 'call' | 'seen' | 'rolled'>, string> = {
   moment: MOMENT_PREFIX, field: FIELD_PREFIX, gained: GAINED_PREFIX, lost: LOST_PREFIX,
 };
 
@@ -123,6 +125,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
 
   const setOn = (nextKind: Kind, nextSubject: string, nextPhase: Phase) => edit(draft => {
     draft.on = nextKind === 'seen' ? SEEN
+      : nextKind === 'rolled' ? ROLLED
       : nextKind === 'call' ? happeningOf(nextPhase, nextSubject || ANY_ACTION)
         : `${PREFIX[nextKind]}${nextSubject}`;
     delete draft.if;
@@ -135,6 +138,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
   const spoken = kind === 'call' && phase !== 'done' ? callSubjects(tags, actions, true) : subjects;
   const subjectWord = spoken.find(([key]) => key === subject)?.[1] ?? subject;
   const happened = kind === 'seen' ? SEEN_LABEL
+    : kind === 'rolled' ? ROLLED_LABEL
     : kind === 'call' ? `${PHASES[phase].label} ${subjectWord}`
       : kind === 'moment' ? subjectWord
         : kind === 'field' ? `${subjectWord} стало верным`
@@ -178,7 +182,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
             onChange={next => setOn(next, '', 'before')}
           />
         </Field>
-        {kind === 'seen' ? null : (
+        {kind === 'seen' || kind === 'rolled' ? null : (
           <Field label={kind === 'call' ? 'Что именно' : kind === 'moment' ? 'Когда' : 'Какое'} needed={!subject}>
             <Select<string>
               value={subject}

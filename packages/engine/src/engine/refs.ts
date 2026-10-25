@@ -265,7 +265,10 @@ export function lonelyField(ref: unknown, system?: System): string | null {
 function namedValue(name: string, ctx: RefContext): unknown {
   const decl = (ctx.paramDefs || []).find(p => p.key === name);
   const passed = Boolean(decl) && isGiven((ctx.params || {})[name]);
-  if (!passed && ctx.inputs && name in ctx.inputs) return ctx.inputs[name];
+  if (!passed && ctx.inputs && name in ctx.inputs) {
+    const answer = ctx.inputs[name];
+    return decl?.kind === 'boolean' && (answer === 'да' || answer === 'нет') ? answer === 'да' : answer;
+  }
   if (!decl) return undefined;
   const value = ctx.params && name in ctx.params ? fromArgs(name, ctx) : undefined;
   if (Array.isArray(value)) return value;

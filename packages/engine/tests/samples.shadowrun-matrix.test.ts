@@ -2,6 +2,7 @@ import { group, test, eq, deepEq, ok } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { exchange } from './play.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
+import { asksOf, checkInputs } from '../src/model/asks.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const sr = PLAYABLE_WORLDS.find(w => (w.system as System).id === 'shadowrun6')!;
@@ -67,7 +68,7 @@ group('Shadowrun 6: действия в Матрице', () => {
   });
 
   test('Брутфорс: успех — висящий «Доступ»; админ без пользователя — защита +2 кубика (стр. 180)', () => {
-    const out = act(decker(), [victim()], 'mx_brute:0', dice([11, 6], [20, 1]), { level: 'администратор', had_user: 0 });
+    const out = act(decker(), [victim()], 'mx_brute:0', dice([11, 6], [20, 1]), { level: 'администратор', had_user: 'нет' });
     ok(wears(after(out, 'razor'), 'matrix_access'));
     ok(out.log.join('\n').includes('Бросок (защита, матрица): [1, 1, 1, 1, 1, 1]'));
   });
@@ -123,3 +124,35 @@ group('Shadowrun 6: сервер и лёд', () => {
     eq(computed(after(out, 'razor'), 'm_firewall'), 0);
   });
 });
+
+group('Shadowrun 6, глава «Матрица»: ситуации книжника (стр. 170–188)', () => {
+  test('MX-4 (стр. 180, 46): брутфорс администратора без доступа — ЗЩ +4: при ЗА − ЗЩ = 4 очка уже нет', () => {
+    const user = act(decker({ edge_left: 0 }), [victim()], 'mx_brute:0', dice([30, 1]), { level: 'пользователь', had_user: 'нет' });
+    const admin = act(decker({ edge_left: 0 }), [victim()], 'mx_brute:0', dice([30, 1]), { level: 'администратор', had_user: 'нет' });
+    const gain = (out: ReturnType<typeof exchange>) => Number(after(out, 'razor').values.edge_left ?? 0);
+    eq(computed(decker(), 'matrix_ar') - computed(victim(), 'matrix_dr'), 3);
+    eq(gain(user), 0);
+    eq(gain(admin), 0);
+  });
+
+  test('MX-7 (стр. 176): демпшок — холодный сим 3о, горячий 3ф, сопротивление Волей; дезориентация', () => {
+    const hit = (mode: string) => act(sheetOf('baraholka_killer'), [decker({ matrix_damage: 2, matrix_mode: mode, willpower: 4 })], 'ic_strike:0', dice([6, 6], [2, 1], [5, 1], [1, 6], [1, 6], [1, 5], [2, 2], [20, 2]));
+    const cold = after(hit('холодная ВР'), 'razor');
+    const hot = after(hit('горячая ВР'), 'razor');
+    eq(cold.values.stun, 1);
+    eq(hot.values.physical, 1);
+    ok(wears(cold, 'dumpshocked') && wears(hot, 'dumpshocked'));
+  });
+
+  test('вопрос «да/нет»: «Доступ пользователя уже есть» — «да» снимает +2 к защите; иное слово — отказ', () => {
+    const defense = (had: string) => {
+      const out = act(decker(), [victim()], 'mx_brute:0', dice([40, 1]), { level: 'администратор', had_user: had });
+      return out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]).find(t => t.step === 'отпор')?.rolls?.length;
+    };
+    eq((defense('нет') ?? 0) - (defense('да') ?? 0), 2);
+    const asked = asksOf('mx_brute:0', { system, compendium });
+    ok(String(checkInputs(asked, { level: 'администратор', had_user: 'может' }, system)).includes('«да» или «нет»'));
+    eq(checkInputs(asked, { level: 'администратор', had_user: 'да' }, system), null);
+  });
+});
+

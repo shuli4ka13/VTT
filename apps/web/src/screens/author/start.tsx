@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useWorld, emptySystem } from '../../store/world.ts';
+import { useWorld, emptySystem, publicationOf } from '../../store/world.ts';
 import { Button, Card, CardHead, Empty, Fold, Input, Verdict } from '../../ui/primitives.tsx';
 import { listSystems, getSystem, createSystem } from '../../api/client.ts';
 import { rememberVersion, markClean } from '../../store/autosave.ts';
@@ -21,9 +21,9 @@ export function copyTitle(title: string, taken: readonly string[]): string {
   return `${base} ${n}`;
 }
 
-function Status({ status }: { status: 'draft' | 'published' }) {
+function Status({ status, behind }: { status: 'draft' | 'published'; behind?: boolean }) {
   return status === 'published'
-    ? <span className="tag tag--done">опубликована</span>
+    ? <span className="tag tag--done">{behind ? 'опубликована · есть правки' : 'опубликована'}</span>
     : <span className="tag">черновик</span>;
 }
 
@@ -52,9 +52,10 @@ export function SystemStart() {
       rememberVersion({ system: saved.updatedAt, compendium: undefined });
       replaceWorld({ system: named, compendium: { records: [] }, sheets: [] });
       setOrigin({
-        mode: 'system', systemId: saved.id, systemTitle: name, systemMine: true,
+        mode: 'system', systemId: saved.id, systemTitle: name, systemMine: true, publication: 'draft',
         compendiumId: undefined, compendiumTitle: undefined, lesson: undefined,
       });
+      markClean();
       navigate('/author/system');
     } catch (err) {
       setTrouble((err as Error).message);
@@ -72,7 +73,7 @@ export function SystemStart() {
       rememberVersion({ system: saved.updatedAt, compendium: undefined });
       replaceWorld({ system: saved.system, compendium: { records: [] }, sheets: [] });
       setOrigin({
-        mode: 'system', systemId: saved.id, systemTitle: saved.title, systemMine: true,
+        mode: 'system', systemId: saved.id, systemTitle: saved.title, systemMine: true, publication: publicationOf(saved.behind),
         compendiumId: undefined, compendiumTitle: undefined, lesson: undefined,
       });
       markClean();
@@ -129,7 +130,7 @@ export function SystemStart() {
         <Card>
           <CardHead
             title={mode === 'edit' ? 'Что открыть' : 'С чего снять копию'}
-            sub={mode === 'copy' ? 'Копия сохранится отдельной системой: правки не заденут исходную.' : undefined}
+            sub={mode === 'copy' ? 'Копия берёт всё целиком, и чужое тоже. Нужны только куски — «Начать с нуля» и «Готовое из образцов».' : undefined}
           />
           {shown.length === 0
             ? <Empty title="Систем пока нет" hint="Начните с нуля — она появится здесь сразу после создания." />
@@ -160,7 +161,7 @@ function SystemList({ items, busy, onOpen }: {
         <button key={item.id} type="button" className="start__item" disabled={busy} onClick={() => onOpen(item)}>
           <span className="start__item-head">
             <span className="start__item-name">{item.title}</span>
-            <Status status={item.status} />
+            <Status status={item.status} behind={item.behind} />
           </span>
           <span className="start__item-meta">{item.mine ? '' : `${item.authorName} · `}{when(item.updatedAt)}</span>
         </button>

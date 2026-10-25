@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { world as W } from '@vtt/schema';
 import type { System, Compendium, Sheet } from '@vtt/schema';
-import { useWorld } from './world.ts';
+import { useWorld, publicationOf } from './world.ts';
 import type { Origin, ConstructorTab } from './world.ts';
 import { useSession } from './session.ts';
 import { settle, markClean, rememberVersion } from './autosave.ts';
@@ -85,10 +85,12 @@ const close = (note: string | null = null): void => {
 async function giveBack(real: Snapshot): Promise<string | null> {
   const world = useWorld.getState();
   const systemId = real.origin?.systemId;
+  let publication = real.origin?.publication;
   if (systemId) {
     try {
       const saved = await getSystem(systemId);
       rememberVersion({ system: saved.updatedAt, compendium: undefined });
+      publication = publicationOf(saved.behind);
       world.replaceWorld({ system: saved.system, compendium: real.compendium, sheets: real.sheets });
     } catch (err) {
       return `вернуть вашу систему не удалось: ${(err as Error).message} — попробуйте ещё раз`;
@@ -98,7 +100,7 @@ async function giveBack(real: Snapshot): Promise<string | null> {
     if (!parsed.success) return 'запомненная система не прошла проверку';
     world.replaceWorld(parsed.data as never);
   }
-  useWorld.setState({ origin: real.origin });
+  useWorld.setState({ origin: publication ? { ...real.origin, publication } : real.origin });
   world.pick({ activeTab: real.tab ?? 'sheet', activeTableId: null, activeStepIndex: null, activeSheetKind: null });
   markClean();
   return null;

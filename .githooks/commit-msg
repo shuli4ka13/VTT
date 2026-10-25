@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+if grep -qi '^co-authored-by:' "$1"; then
+  echo "commit-msg: в коммитах VTT соавторство не пишется — уберите строку Co-Authored-By" >&2
+  exit 1
+fi

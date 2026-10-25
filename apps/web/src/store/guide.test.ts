@@ -74,7 +74,7 @@ describe('учебная копия', () => {
     expect(await useGuide.getState().exit()).toBe(true);
     expect(getSystem).toHaveBeenCalledWith('с1');
     expect(useWorld.getState().system.name).toBe('С сервера');
-    expect(useWorld.getState().origin).toEqual({ mode: 'system', systemId: 'с1', systemTitle: 'Моя система' });
+    expect(useWorld.getState().origin).toEqual({ mode: 'system', systemId: 'с1', systemTitle: 'Моя система', publication: 'draft' });
     expect(useWorld.getState().activeTab).toBe('effects');
   });
 

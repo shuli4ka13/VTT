@@ -1051,3 +1051,34 @@ group('линт: подписка «после» видит итоги вызо�
     eq(errorTexts(system).filter(t => t.includes('совпадает с')).length, 1);
   });
 });
+
+group('линт: двойники полей по подписи', () => {
+  test('два поля листа с одной подписью — предупреждение, не ошибка; таблицы листа — одно пространство', () => {
+    const system = bare();
+    system.tables.лист!.columns.push({ key: 'field', label: ' хиты ', kind: 'number' } as never);
+    system.tables.доп = { shape: 'single', owner: 'sheet', label: 'Доп', columns: [{ key: 'хп2', label: 'Хиты', kind: 'number' }] } as never;
+    const found = lintSystem(system).filter(p => p.text.includes('два поля'));
+    deepEq(found.map(p => `${p.level}: ${p.text}`), [
+      'warn: в таблице «лист» два поля «хиты» — на листе и в формулах их не различить; переименуйте или удалите одно',
+      'warn: в таблицах «лист» и «Доп» два поля «Хиты» — на листе и в формулах их не различить; переименуйте или удалите одно',
+    ]);
+    deepEq(found[0]!.where, { tab: 'sheet', field: 'field' });
+    eq(errorTexts(system).length, 0);
+  });
+
+  test('у стола и у листа одна подпись — не двойники', () => {
+    const system = bare();
+    system.tables.лист!.columns.push({ key: 'fear', label: 'Страх', kind: 'number' } as never);
+    eq(lintSystem(system).filter(p => p.text.includes('два поля')).length, 0);
+  });
+});
+
+group('линт: кинуть уже выпавшее число', () => {
+  test('«кинуть(@шаг-бросок)» — ошибка; «кинуть(@вход)» с костью — нет', () => {
+    const roll = { id: 'число', type: 'roll', die: 'd20' } as unknown as Step;
+    const bad = withEffect('удар', { params: [WHO as never], steps: [roll, mend('@действующий.hp', 'кинуть(@число)')] });
+    ok(errorTexts(bad).some(t => t.includes('уже выпавшее число')), errorTexts(bad).join('\n'));
+    const good = withEffect('удар', { params: [WHO as never, { key: 'кость', label: 'Кость', kind: 'text', default: '1к6' } as never], steps: [roll, mend('@действующий.hp', 'кинуть(@кость)')] });
+    ok(!errorTexts(good).some(t => t.includes('уже выпавшее число')), errorTexts(good).join('\n'));
+  });
+});

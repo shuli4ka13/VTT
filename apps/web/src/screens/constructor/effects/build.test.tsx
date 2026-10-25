@@ -488,48 +488,40 @@ describe('эффекты пресетов собираются в констру
     expect(built('hero_attack')).toEqual(goal);
   });
 
-  it('Shadowrun «Атаковать» (ranged_attack) по формам: защита и сопротивление в цикле, счёт успехов, «Если»', { timeout: 90000 }, () => {
+  it('Shadowrun «Выстрелить» (shoot): по цели — вызов «Отразить атаку», промах — стоп, вызов «Нанести урон»', { timeout: 90000 }, () => {
     const world = structuredClone(worldOf('shadowrun6'));
-    const goal = structuredClone(world.system.effects.ranged_attack!);
-    const steps = goal.steps! as { id?: string; type: string; if?: { expr: string }; value?: { expr: string } }[];
-    const from = steps.findIndex(step => step.id === 'атака_против');
-    const upTo = steps.findIndex(step => step.id === 'вред');
-    world.system.effects.ranged_attack!.steps = goal.steps!.slice(0, from);
+    const goal = structuredClone(world.system.effects.shoot!);
+    const steps = goal.steps! as { id?: string; type: string; args?: Record<string, { expr: string }> }[];
+    const from = steps.findIndex(step => step.id === 'отпор');
+    world.system.effects.shoot!.steps = goal.steps!.slice(0, from);
     useWorld.setState(state => ({
       ...state, system: world.system as System, compendium: world.compendium,
-      activeEffectId: 'ranged_attack', activeFieldTag: null, activeRecordKind: null, activeSheetKind: null,
+      activeEffectId: 'shoot', activeFieldTag: null, activeRecordKind: null, activeSheetKind: null,
     }));
     render(<EffectsTab />);
     openAll();
     const ui = within();
-    const at = (n: number) => stepCard(new RegExp(`^${n} · `));
+    const at = (n: number) => () => stepCard(new RegExp(`^${n} · `));
     const first = lastNumber() + 1;
     const shown = blocks().length;
+    const call = (n: number, effect: string, name: string, args: Record<string, { expr: string }>, labels: Record<string, string>) => {
+      ui.click('+ изменение');
+      within(at(n)()).click('вызов');
+      within(at(n)()).select('Какой эффект', effect);
+      for (const [key, label] of Object.entries(labels)) within(at(n)()).formula(within(at(n)()).arg(label), args[key]!.expr);
+      nameStep(at(n)(), name);
+    };
 
-    ui.click('+ число');
-    within(at(first)).formula('Формула', `кинуть(@pool, ${(steps[from] as unknown as { count: { expr: string } }).count.expr})`);
-    within(at(first)).select('Кто бросает', '@цель');
-    marks(at(first), 'защита');
-    nameStep(at(first), 'атака_против');
-
-    ui.click('+ проверка');
-    within(at(first + 1)).formula('Проверка', '@атака_бросок >= @атака_против');
-    nameStep(at(first + 1), 'атака');
-
+    call(first, 'defend', 'отпор', steps[from]!.args!, { кто: 'Кто защищается', успехов: 'Успехов атаки', атк: 'Значение атаки', навык: 'Навык атаки', близко: 'Вплотную или близко' });
     ui.click('+ если');
     addToArm(block(shown), 0, 'stop');
-    within(headOf(block(shown))).when(`=${steps[from + 2]!.if!.expr}`);
-    stopNote(first + 2, 'промах: успехов атаки меньше, чем у защиты');
+    within(headOf(block(shown))).when('=не @отпор.попал');
+    stopNote(first + 1, 'промах: успехов атаки меньше, чем у защиты');
+    call(first + 2, 'strike_damage', 'вред', steps[from + 4]!.args!, { цель: 'Кого бьют', источник: 'Кто бьёт', су: 'Сила урона', физический: 'Урон физический', электричество: 'Электрический урон', вырубить: 'Вырубить ударом', без_урона: 'Без урона' });
 
-    ui.click('+ проверка');
-    within(at(first + 3)).formula('Проверка', 'кинуть(@pool, @цель.body) >= 0');
-    within(at(first + 3)).select('Кто бросает', '@цель');
-    marks(at(first + 3), 'сопротивление');
-    nameStep(at(first + 3), 'сопротивление');
-
-    const got = built('ranged_attack')!;
-    dump({ got: { ...got, steps: got.steps }, goal: { ...goal, steps: goal.steps!.slice(0, upTo) } });
-    expect(got.steps).toEqual(goal.steps!.slice(0, upTo));
+    const got = built('shoot')!;
+    dump({ got: got.steps, goal: goal.steps });
+    expect(got.steps).toEqual(goal.steps);
   });
 
   it('Blades «Залечь на дно» (lay_low): условная метка броска, степени успеха, «стало» формулой', { timeout: 90000 }, () => {

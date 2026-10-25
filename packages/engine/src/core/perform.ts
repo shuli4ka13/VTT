@@ -1,4 +1,5 @@
 import { compile } from '../formula/index.ts';
+import { calc } from '../engine/calc.ts';
 import { EngineError } from '../engine/errors.ts';
 import { availableActions, actionOf } from '../events/actions.ts';
 import { asksOf, checkInputs, normalizeInputs } from '../model/asks.ts';
@@ -104,7 +105,26 @@ export function initiative(run: Run, root: Path): { order: string[]; rolls: Init
     run.state.write(...checked.entries);
     return { sheetId: sheet.id, rolls: checked.thrown.result.dice.rolls, total: checked.total, edits: checked.thrown.roll.edits };
   });
-  return { order: [...rolls].sort((a, b) => b.total - a.total).map(r => r.sheetId), rolls };
+  const ties = spec.ties ?? [];
+  if (!ties.length) return { order: [...rolls].sort((a, b) => b.total - a.total).map(r => r.sheetId), rolls };
+  const ranks = new Map(rolls.map(r => {
+    const sheet = run.state.sheets.find(s => s.id === r.sheetId)!;
+    return [r.sheetId, [r.total, ...ties.map(tag => Number(calc(run.system, sheet, tag, run.view(sheet.id))) || 0)]];
+  }));
+  const same = (a: number[], b: number[]) => a.length === b.length && a.every((x, i) => x === b[i]);
+  for (let toss = 0; toss < 8; toss++) {
+    const tied = rolls.filter(r => rolls.some(o => o !== r && same(ranks.get(o.sheetId)!, ranks.get(r.sheetId)!)));
+    if (!tied.length) break;
+    for (const r of tied) ranks.set(r.sheetId, [...ranks.get(r.sheetId)!, run.ext.dice(root.phase('initiative-lot').item(toss).at(r.sheetId))(6)]);
+  }
+  const width = Math.max(...[...ranks.values()].map(k => k.length));
+  const rank = (id: string) => [...ranks.get(id)!, ...Array(width - ranks.get(id)!.length).fill(0)];
+  const order = [...rolls].map(r => r.sheetId).sort((a, b) => {
+    const x = rank(a); const y = rank(b);
+    for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return y[i]! - x[i]!;
+    return 0;
+  });
+  return { order, rolls };
 }
 
 const OPS: { [K in Op['op']]: Handler<K> } = {
@@ -270,7 +290,8 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
         const rolled = initiative(run, root);
         line = rolled.order;
         if (rolled.rolls.length) {
-          run.state.write({ text: `Инициатива: ${[...rolled.rolls].sort((a, b) => b.total - a.total).map(r => `${nameOf(r.sheetId)} ${r.total}`).join(', ')}` });
+          const totals = new Map(rolled.rolls.map(r => [r.sheetId, r.total]));
+          run.state.write({ text: `Инициатива: ${rolled.order.filter(id => totals.has(id)).map(id => `${nameOf(id)} ${totals.get(id)}`).join(', ')}` });
         }
       }
       next = startCombat(before, line);

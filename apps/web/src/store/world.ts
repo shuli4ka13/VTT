@@ -5,6 +5,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { world as W } from '@vtt/schema';
 import type { System, Compendium, Sheet, Effect, Column } from '@vtt/schema';
 import { lazyStorage } from './lazy-storage.ts';
+import { useLookup } from './lookup.ts';
 import { withLibrary } from '@vtt/engine/model/owned';
 import { forgetFields } from '@vtt/engine/model/sheet-columns';
 
@@ -12,11 +13,17 @@ const fresh = (system: System): System => { forgetFields(system); return system;
 
 export type WorkMode = 'system' | 'compendium';
 
+export type Publication = 'draft' | 'live' | 'behind';
+
+export const publicationOf = (behind?: boolean): Publication =>
+  behind === undefined ? 'draft' : behind ? 'behind' : 'live';
+
 export interface Origin {
   mode: WorkMode;
   systemId?: string;
   systemTitle?: string;
   systemMine?: boolean;
+  publication?: Publication;
   compendiumId?: string;
   compendiumTitle?: string;
   lesson?: string;
@@ -44,10 +51,11 @@ export interface WorldState {
   activeIn: string | null;
   activeBlock: string | null;
   activeRow: { table: string; row: string } | null;
+  activeSheetTable: string | null;
 
   pick: (what: Partial<Pick<WorldState,
     'activeFieldTag' | 'activeGroupName' | 'activeEffectId' | 'activeRecordKind' | 'activeSheetKind' | 'activeRecordId' | 'activeSheetId'
-    | 'activeTab' | 'activeStepIndex' | 'activeTableId' | 'activeColumn' | 'activeBlock' | 'activeRow' | 'activeIn'>>) => void;
+    | 'activeTab' | 'activeStepIndex' | 'activeTableId' | 'activeColumn' | 'activeBlock' | 'activeRow' | 'activeIn' | 'activeSheetTable'>>) => void;
 
   editSystem: (edit: (draft: System) => void) => void;
   editEffect: (id: string, edit: (draft: Effect) => void) => void;
@@ -96,6 +104,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
   activeBlock: null,
   activeRow: null,
   activeIn: null,
+  activeSheetTable: null,
 
   pick: what => set(what),
 
@@ -149,20 +158,24 @@ export const useWorld = create<WorldState>()(persist(set => ({
 
   setOrigin: patch => set(state => ({ origin: { ...state.origin, ...patch } })),
 
-  replaceWorld: world => set({
-    ...world,
-    activeFieldTag: null,
-    activeColumn: null,
-    activeBlock: null,
-    activeRow: null,
-    activeIn: null,
-    activeGroupName: null,
-    activeEffectId: null,
-    activeRecordKind: null,
-  activeSheetKind: null,
-    activeRecordId: null,
-    activeSheetId: world.sheets[0]?.id ?? null,
-  }),
+  replaceWorld: world => {
+    useLookup.getState().close();
+    set({
+      ...world,
+      activeFieldTag: null,
+      activeColumn: null,
+      activeBlock: null,
+      activeRow: null,
+      activeIn: null,
+      activeGroupName: null,
+      activeEffectId: null,
+      activeRecordKind: null,
+      activeSheetKind: null,
+      activeRecordId: null,
+      activeSheetTable: null,
+      activeSheetId: world.sheets[0]?.id ?? null,
+    });
+  },
 }), {
   name: 'vtt.world',
   storage: createJSONStorage(() => worldStorage),

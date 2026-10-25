@@ -4,7 +4,8 @@ import type { ConstructorTab } from '../store/world.ts';
 export type Anchor =
   | { text: string; in?: string }
   | { field: string }
-  | { guide: string };
+  | { guide: string }
+  | { input: string };
 
 export interface View {
   system: System;
@@ -19,6 +20,12 @@ export interface View {
 export interface Trap {
   when: (view: View) => boolean;
   say: string;
+}
+
+export interface Move {
+  at: Anchor;
+  say?: string;
+  done?: (view: View) => boolean;
 }
 
 export interface Chapter {
@@ -37,7 +44,7 @@ export interface Step {
   hint?: string;
   tab?: ConstructorTab;
   panel?: string;
-  at?: Anchor;
+  at?: Anchor | Move[];
   via?: Anchor | Anchor[];
   done?: (view: View) => boolean;
 }

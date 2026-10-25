@@ -1,13 +1,20 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
+import { create } from 'zustand';
 import { useWorld } from '../../store/world.ts';
 import { Button, Verdict, Empty } from '../../ui/primitives.tsx';
 import { useProblems, whereLabel, pickFor } from './problems.ts';
+
+interface PanelState { open: boolean; set: (open: boolean) => void }
+
+export const useProblemsPanel = create<PanelState>()(set => ({ open: false, set: open => set({ open }) }));
 
 export function ProblemsButton() {
   const problems = useProblems();
   const system = useWorld(s => s.system);
   const pick = useWorld(s => s.pick);
-  const [open, setOpen] = useState(false);
+  const open = useProblemsPanel(s => s.open);
+  const setOpen = useProblemsPanel(s => s.set);
+  useEffect(() => () => setOpen(false), [setOpen]);
   const errors = problems.filter(p => p.level === 'error').length;
 
   return (
@@ -15,7 +22,7 @@ export function ProblemsButton() {
       <Button
         size="sm"
         variant={errors ? 'danger' : undefined}
-        onClick={() => setOpen(value => !value)}
+        onClick={() => setOpen(!open)}
         title={errors ? 'с ошибками система не публикуется' : 'предупреждения публиковать не мешают'}
       >
         Проблемы ({problems.length})

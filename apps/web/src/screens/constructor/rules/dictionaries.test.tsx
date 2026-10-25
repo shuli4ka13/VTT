@@ -462,7 +462,7 @@ describe('Словари: кости, правки броска, таблицы'
     renderOpen(<><FormulaBar /><RulesTab /></>);
     открыть('Таблицы');
     fireEvent.click(screen.getAllByText('Способ атаки').at(-1)!);
-    expect(screen.getAllByPlaceholderText('как показать').length).toBe(1);
+    expect(screen.getByDisplayValue('ближний бой')).toBeTruthy();
     expect(document.querySelector('.formula-bar')).toBeNull();
 
     fireEvent.click(screen.getByTitle('@сила + 2'));

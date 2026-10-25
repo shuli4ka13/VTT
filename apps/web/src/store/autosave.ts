@@ -109,6 +109,7 @@ function schedule(): void {
   };
 
   useAutosave.getState().set({ kind: 'dirty' });
+  if (mode === 'system' && origin.publication === 'live') useWorld.getState().setOrigin({ publication: 'behind' });
 
   if (timer) clearTimeout(timer);
   timer = setTimeout(() => { void flush(); }, PAUSE);

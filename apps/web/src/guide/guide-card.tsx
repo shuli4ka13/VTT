@@ -8,7 +8,7 @@ import { LESSONS, lessonOf } from './lessons/index.ts';
 import { findAnchor, firstOf, foldOf, openedDialog } from './anchor.ts';
 import { Spot } from './spot.tsx';
 import type { Box } from './spot.tsx';
-import type { Lesson, Step, View } from './types.ts';
+import type { Lesson, Move, Step, View } from './types.ts';
 import './guide.css';
 
 export const TAB_WORDS: Record<ConstructorTab, string> = {
@@ -22,7 +22,26 @@ export const PAUSE_MS = 900;
 
 export interface Point { prompt: string | null; target: HTMLElement | null }
 
-export function pointOf(step: Step, tab: ConstructorTab, root: ParentNode = document): Point {
+export const movesOf = (step: Step): Move[] =>
+  step.at === undefined ? [] : Array.isArray(step.at) ? step.at : [{ at: step.at }];
+
+export const moveAt = (step: Step, view: View): number => {
+  const moves = movesOf(step);
+  const at = moves.findIndex(move => !move.done?.(view));
+  return at < 0 ? moves.length - 1 : at;
+};
+
+export const moveOf = (step: Step, view: View): Move | undefined => movesOf(step)[moveAt(step, view)];
+
+export const viewNow = (): View => {
+  const state = useWorld.getState();
+  return {
+    system: state.system, tab: state.activeTab, effect: state.activeEffectId, record: state.activeRecordKind,
+    block: state.activeBlock, field: state.activeFieldTag, opened: (name: string) => openedDialog(name),
+  };
+};
+
+export function pointOf(step: Step, tab: ConstructorTab, view: View = viewNow(), root: ParentNode = document): Point {
   if (step.tab && step.tab !== tab) {
     const word = TAB_WORDS[step.tab];
     const list = root.querySelector('[role="tablist"]') ?? root;
@@ -30,7 +49,7 @@ export function pointOf(step: Step, tab: ConstructorTab, root: ParentNode = docu
   }
   const fold = step.panel ? foldOf(step.panel, root) : null;
   if (fold) return { prompt: `Разверните панель «${step.panel}».`, target: fold };
-  return { prompt: null, target: findAnchor(step.at, root) ?? firstOf(step.via, root) };
+  return { prompt: null, target: findAnchor(moveOf(step, view)?.at, root) ?? firstOf(step.via, root) };
 }
 
 function useDomTick(): number {
@@ -138,7 +157,9 @@ function LessonCard() {
   }, [got, key]);
 
   const tab = useWorld(s => s.activeTab);
-  const point = step.alone ? { prompt: null, target: null } : pointOf(step, tab);
+  const point = step.alone ? { prompt: null, target: null } : pointOf(step, tab, view);
+  const move = moveAt(step, view);
+  const said = movesOf(step).map(one => one.say).filter((text): text is string => Boolean(text));
   const success = got === key;
   const already = Boolean(step.done && (current.already || revisit) && done);
   const free = !step.done || current.already || revisit || done || success;
@@ -161,7 +182,7 @@ function LessonCard() {
 
   return (
     <>
-      {folded || step.alone || (step.done && (done || success)) ? null : <Spot place={`${key}|${point.prompt ?? ''}`} target={() => pointOf(step, useWorld.getState().activeTab).target} onBox={aside} />}
+      {folded || step.alone || (step.done && (done || success)) ? null : <Spot place={`${key}|${move}|${point.prompt ?? ''}`} target={() => pointOf(step, useWorld.getState().activeTab).target} onBox={aside} />}
       <div ref={host} className={left ? 'guide guide--left' : 'guide'} role="region" aria-label="Урок">
         {folded ? (
           <button type="button" className="guide__strip" onClick={() => fold(false)}>
@@ -174,8 +195,15 @@ function LessonCard() {
             {step.lead ? <p className="guide__lead">{step.lead}</p> : null}
             {point.prompt ? <p className="guide__prompt">{point.prompt}</p> : null}
             <p className="guide__say">{step.alone ? <b>Сами: </b> : null}{step.say}</p>
+            {said.length > 1 ? (
+              <ol className="guide__moves">
+                {said.map((text, at) => (
+                  <li key={at} className={at < move || done || success ? 'guide__move guide__move--done' : at === move ? 'guide__move guide__move--now' : 'guide__move'}>{text}</li>
+                ))}
+              </ol>
+            ) : null}
             {success || already ? <Verdict tone="ok">{already ? `уже сделано: ${resultOf(step, view)}` : resultOf(step, view)}</Verdict> : null}
-            {trap ? <Verdict tone="warn">похоже, {trap}</Verdict> : null}
+            {trap ? <Verdict tone="warn">{trap}</Verdict> : null}
             {sum ? <p className="guide__sum">Глава «{place.title}»: {sum}</p> : null}
             {step.hint ? <Fold title={step.alone ? 'подсказка' : 'не получается?'}><p className="guide__hint">{step.hint}</p></Fold> : null}
             {note ? <Verdict tone="bad">{note}</Verdict> : null}

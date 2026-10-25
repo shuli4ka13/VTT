@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { Card, CardHead, Field, Button, DangerButton, Fold, Select, LabelInput } from '../../../ui/primitives.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import type { System, ValueKind } from '@vtt/schema';
+import { TABS } from '../../../words.ts';
 
 export const BY_FORMULA = '';
 
@@ -28,7 +29,7 @@ export interface ColumnPatch {
 }
 
 
-export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, where, names, system, onChange, onDelete, onClose, lead, extra, preview, bounds = true, table }: {
+export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, where, names, system, onChange, onDelete, onClose, lead, extra, preview, bounds = true, table, sub, noun = 'колонка' }: {
   table?: string;
   column: ColumnShape;
   kinds: readonly (readonly [string, string])[];
@@ -46,11 +47,14 @@ export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, w
   bounds?: boolean;
   extra?: ReactNode;
   preview?: ReactNode;
+  sub?: ReactNode;
+  noun?: string;
 }) {
   return (
     <Card>
       <CardHead
-        title={<LabelInput value={column.label} placeholder="как зовётся колонка" onCommit={label => onChange({ label })} />}
+        title={<LabelInput value={column.label} placeholder={`как зовётся ${noun}`} onCommit={label => onChange({ label })} />}
+        sub={sub}
         actions={<>
           {onDelete ? <DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>
             : <Button size="sm" variant="danger" disabled title="колонкой пользуются">Удалить</Button>}
@@ -65,7 +69,10 @@ export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, w
         </Field>
         {column.kind === 'choice' ? (
           <>
-            <Field label="Из таблицы">
+            <Field label="Из таблицы" needed={!column.from}
+              error={column.from ? undefined : tables.length
+                ? 'выбирать не из чего, пока не указана таблица'
+                : `выбирать не из чего: сперва заведите таблицу со строками — «${TABS.rules}» → «Таблицы»`}>
               <Select
                 value={column.from ?? ''}
                 options={[['', '— какая —'], ...tables] as never}
