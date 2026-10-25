@@ -1,0 +1,577 @@
+{
+ "cluster": "Состояния и здоровье (24 эффекта: prone, shocked, dazed, chilled, fatigued, frightened, unconscious, bleeding, dead, knock_out, bleed_out, die, come_to, burning, immobilized, petrified, blinded, poisoned, corroded, wet, nauseated, beatdown, insecurity_shaken, insecurity_check)",
+ "items": [
+  {
+   "id": "prone",
+   "label": "Распластан",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "ladder-in-formula",
+     "where": "defend, шаг 3 «защита», count; shoot шаг 12 аргумент «близко»",
+     "evidence": "«большее из(0, @кто.defense_pool + если(@кто.prone >= 1, если(@близко, -2, 2), 0))»; shoot: «близко: (@дистанция.close или нет)»",
+     "mechanism": "column-of-reference-table",
+     "target": "Справочник «Дистанции» `ranges`: новая колонка `prone_defense`, подпись «Защита лёжа», вид число: вплотную −2, близкая −2, средняя +2, дальняя +2, экстремальная +2. В `defend` вход `близко` (да/нет) заменить на `дистанция` (выбор из `ranges`); набор защиты = `большее из(0, @кто.defense_pool + если(@кто.prone >= 1, @дистанция.prone_defense, 0))`. shoot передаёт `дистанция=@дистанция`, melee_strike — `дистанция=\"вплотную\"`. Колонку `ranges.close` удалить (её читает только shoot для «близко»). Числа оружия лёжа уже колонки (`firearm.prone_ar`, `firearm.prone_pool`, `melee.prone_pool`) — оставить.",
+     "rule_source": "описание prone (стр. 53); опись docs/reports/shadowrun-inventory-2026-10-24.md, строка «Распластан» (стр. 53–54): «защита +2 от дальних атак со средней дистанции и дальше, −2 вплотную и на близкой»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "весь мир: шага «снять prone» нет нигде",
+     "evidence": "prone накладывают strike_damage/blast_damage/cast_spell; опись (стр. 42–43): «Встать (И): снять «Распластан» … нет (act_stand, stand_up, act_go_prone сняты); prone — бессрочное, кроме ручного снятия ничем не снимается»",
+     "mechanism": "other",
+     "target": "Новая кнопка `stand_up` «Встать» (группа «Действия»): вход `действующий` (лист, роль actor, «Кто действует»); Плата: ВЫЗОВ spend_action(лист=@действующий, сложное=нет, простых=1); шаг: СНЯТЬ (status, mode remove) `prone` с `@действующий`. У prone: `grants: [\"stand_up\"]` — кнопка есть только у лежащего (выданная кнопка = действие листа `+stand_up`).",
+     "rule_source": "опись стр. 42–43; вид действия «И» — простое ли, вопрос владельцу",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "blast_damage, шаг 1 «урон»",
+     "evidence": "«большее из(0, @dv - если(@цель.prone >= 1, 2, 0) - @сопротивление_бросок.total)»",
+     "mechanism": "keep-as-is",
+     "target": "Оставить до ответа владельца; правила «лежащий получает от взрыва СУ −2» в выписках нет (описание prone стр. 53–54 его не называет). Если правило подтвердится — число в колонку типа «Взрывчатка/граната» `grenade` (ключ `prone_dv`, «Лёжа: к СУ», −2), если нет — убрать.",
+     "rule_source": "вопрос владельцу",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "shocked",
+   "label": "Электрошок",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "missing-column-default",
+     "where": "shocked.duration.max",
+     "evidence": "«@rounds или 2» при входе rounds с default 2, min 1",
+     "mechanism": "column-default",
+     "target": "duration.max = `{expr: \"@level\"}` (после переименования входа, см. ниже). Умолчание 2 уже даёт вход (refs.ts: namedValue подставляет default при пустом аргументе) — «или 2» снять.",
+     "rule_source": "опись стр. 110: «Электричество: получил хотя бы 1 ячейку — «Электрошок» на 2 раунда»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "tag-candidate",
+     "where": "shocked.params; cast_spell шаги 25–33",
+     "evidence": "burning/corroded принимают `level`, chilled/shocked — `rounds`; cast_spell: 4 ветки «@element == \"огонь\" … \"кислота\" … \"холод\" … \"электричество\"» с разными именами аргумента",
+     "mechanism": "tag-contract",
+     "target": "Вход `rounds` переименовать в `level` (подпись «Раундов», умолчание 2, мин. 1). Метка эффекта «стихия» (договор: вход level:number). Тогда ветки «Сотворить» отличаются только данными (какой эффект) — это не «По …», а колонка `spell_elements.накладывает` и один шаг (см. метку «стихия»). strike_damage/blast_damage накладывают shocked без аргументов — не меняются.",
+     "rule_source": "опись стр. 132–133: «холод — Заморозка и электричество — Электрошок на чистые раунды»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "shocked.modifiers",
+     "evidence": "правка condition_mod −1; condition_mod не входит в `soak` («если(@veh_body >= 1, @veh_body, @body)»)",
+     "mechanism": "other",
+     "target": "Только если владелец подтвердит: добавить правку броска {kind: edit, call: roll, param: count, op: add, value: -1, if: «@бросающий == @носитель», tags: [\"сопротивление\"]}. Сейчас −1 Электрошока не действует на сопротивление урону, а в выписке исключение названо только у Заморозки и Утомления.",
+     "rule_source": "опись стр. 54 «Электрошок: … −1 ко всем наборам» против стр. 52–53/54 «Заморозка/Утомление: … кроме сопротивления урону»; вопрос владельцу",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "dazed",
+   "label": "Ошеломление",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "dazed.modifiers[1..2]; insecurity_shaken.modifiers; dumpshocked.modifiers",
+     "evidence": "в трёх эффектах одна пара: edge_no_gain add 1, edge_no_spend add 1",
+     "mechanism": "merge-copies",
+     "target": "Новый висящий эффект `edge_locked` «Без Преимущества» (группа «Состояния», passive, срок permanent, описание «Нельзя получать и тратить Преимущество»; правки: edge_no_gain add 1, edge_no_spend add 1). У dazed, insecurity_shaken, dumpshocked обе правки удалить и поставить `grants: [\"edge_locked\"]` (выдача эффектом — engine/effects.ts: grantedTo, держится, пока висит выдающий). У dazed остаётся только init_mod −4. «Выжженный» (только запрет тратить) не трогать.",
+     "rule_source": "описания: dazed (стр. 53), insecurity_shaken (стр. 77), dumpshocked (стр. 176) — «нельзя получать и тратить Преимущество»",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "chilled",
+   "label": "Заморозка",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "missing-column-default",
+     "where": "chilled.duration.max",
+     "evidence": "«@rounds или 3» при входе rounds с default 3",
+     "mechanism": "column-default",
+     "target": "duration.max = `{expr: \"@level\"}`; вход `rounds` → `level` (подпись «Раундов», умолчание 3, мин. 1) под договор метки «стихия».",
+     "rule_source": "опись стр. 110: «холод — «Заморозка» на 3 раунда»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "gained-lost-by-tag-candidate",
+     "where": "chilled.on[0] «gained:chilled», chilled.on[1] «gained:burning»",
+     "evidence": "chilled: gained:chilled → снять burning; gained:burning → снять chilled. Те же два отношения второй раз записаны в burning.on[3] и burning.on[1]",
+     "mechanism": "effect-tag",
+     "target": "Обе подписки у chilled удалить. chilled получает метку «гасит горение» (и «стихия»). Всё отношение «Горение ⟷ гасящие» держит burning (см. burning). Подписка на собственное появление с условием «@лист == @носитель» — это шаги «при наложении» (`attach`), а не подписка.",
+     "rule_source": "описание chilled (стр. 52): «Отменяется Горением и отменяет его»",
+     "engine_gap": "для формы с меткой — «появилось/ушло по метке» и «снять по метке» (см. engine_gaps); без них — переходная форма в burning с id"
+    }
+   ]
+  },
+  {
+   "id": "fatigued",
+   "label": "Утомление",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "frightened",
+   "label": "Испуг",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "defend (сравнение в итогах), shoot шаг 6 и melee_strike шаг 2 (бросок атаки до «Для каждого»)",
+     "evidence": "правка Испуга: «@бросающий == @носитель и не пусто(@источник) и @против == @источник»; defend: итог «попал=@успехов >= @защита», вход «успехов:number»; ни у одного броска атаки/защиты в мире нет сравнения-проверки, поэтому @против пусто",
+     "mechanism": "other",
+     "target": "−4 сейчас не действует ни на атаку, ни на защиту (против известен только из шага «Проверка», docs/roll-against.md п.1.1–1.2). В `defend`: вход `успехов` (число) заменить на `атака` (вид «бросок»); после броска «защита» шаг ПРОВЕРКА `попадание`: «@атака против @защита» (успех, если не меньше); итоги: `попал` = `@попадание.success`, `чистые` = `большее из(0, @попадание.margin)`. shoot/melee_strike передают `атака=@атака_бросок`. Тогда противник броска защиты = атакующий, бросок атаки пересчитывается против каждой цели. Это правка кластера атаки; сам frightened не меняется.",
+     "rule_source": "описание frightened (стр. 52–53): «−4 к проверкам против источника страха и к защите от него»",
+     "engine_gap": "движку хватает (вход вида roll и пересчёт «против» у сравнения — docs/roll-against.md п.1.2, core/against.ts); проверить тестом на «Испуг» при выстреле"
+    },
+    {
+     "kind": "other",
+     "where": "frightened.params[0] «источник» optional; modifiers[0].if",
+     "evidence": "«не пусто(@источник) и @против == @источник»",
+     "mechanism": "other",
+     "target": "Вход «Кого боится» сделать обязательным (убрать optional), условие правки — «@бросающий == @носитель и @против == @источник». Без источника правило не действует ни на что, а пустой вход совпал бы с пустым @против.",
+     "rule_source": "описание frightened (стр. 52–53): штраф только «против источника»",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "unconscious",
+   "label": "Без сознания",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "stored-should-be-computed",
+     "where": "unconscious (накладывают knock_out, снимает come_to); блок листа «Счётчики»",
+     "evidence": "поля `knocked_out` «@stun >= @stun_max», `conscious` «@stun < @stun_max и @physical_total < @physical_max» уже вычисляются и стоят на листе переключателями; эффект — хранимая копия того же факта",
+     "mechanism": "other",
+     "target": "Выдача по условию: в `system.grants` вместо `knock_out`/`come_to` элемент `{ effect: \"unconscious\", if: { expr: \"не @conscious\" } }`. Эффект появляется/уходит сам (events/lifecycle.ts сравнивает действующее до и после), «появилось/ушло» слышно как сейчас. Отличие от нынешнего: «Без сознания» встанет и при полном счётчике здоровья без полного оглушения — так говорит описание bleeding («без сознания»); см. вопрос владельцу. Переходная форма без движка: четыре мостика свести в один выданный эффект (см. knock_out).",
+     "rule_source": "описания unconscious/bleeding; опись (стр. 36–58): счётчики сделаны по книге",
+     "engine_gap": "«выдача по условию» нет: grants — z.array(z.string()) (packages/schema/src/world.ts), engine/effects.ts: grantedTo условий не считает"
+    }
+   ]
+  },
+  {
+   "id": "bleeding",
+   "label": "Тяжело ранен",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "stored-should-be-computed",
+     "where": "bleeding (накладывает bleed_out, снимают die и come_to)",
+     "evidence": "поле `bleeding_out` «@physical_total >= @physical_max» на листе; эффект — его копия",
+     "mechanism": "other",
+     "target": "`system.grants`: `{ effect: \"bleeding\", if: { expr: \"@bleeding_out и не @is_dead\" } }`; шаги «снять bleeding» в die и come_to уходят вместе с мостиками. Поведение то же: при смерти «Тяжело ранен» снимается, при возвращении счётчика — тоже.",
+     "rule_source": "описание bleeding: «Полон счётчик здоровья: без сознания, дальше урон критический»",
+     "engine_gap": "«выдача по условию» (см. engine_gaps)"
+    }
+   ]
+  },
+  {
+   "id": "dead",
+   "label": "Мёртв",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "dead.description",
+     "evidence": "описание «Критический урон достиг Тело × 2.»; поле is_dead: «@critical >= @body * 2 + @critical_bonus или @essence <= 0»",
+     "mechanism": "other",
+     "target": "Описание: «Критический урон достиг Тело × 2 (с лишними ячейками) или Сущность 0». Сам эффект оставить хранимым (смерть — событие, а не вычисляемое: лечение критического не должно «оживлять») — если владелец не решит иначе.",
+     "rule_source": "опись: «смерть при Сущности 0 тоже верны»; вопрос владельцу о необратимости",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "knock_out",
+   "label": "Потеря сознания",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "stored-should-be-computed",
+     "where": "knock_out.on[0] «field:knocked_out», system.grants[0]",
+     "evidence": "«когда field:knocked_out если @лист == @носитель → НАЛОЖИТЬ unconscious»",
+     "mechanism": "other",
+     "target": "Удалить эффект и его строку в `system.grants` — заменяет выдача по условию у unconscious. Переходная форма без движка: knock_out, bleed_out, die, come_to — один выданный эффект «Счётчики: состояния» с четырьмя подписками (одно место вместо четырёх).",
+     "rule_source": "тот же паттерн «поле стало верным → наложить / другое поле → снять» в D&D (fall/wake/death_now/stabilize) и Daggerheart (stress_limit/stress_relief) — общий пробел движка",
+     "engine_gap": "«выдача по условию» (engine/effects.ts: grantedTo)"
+    }
+   ]
+  },
+  {
+   "id": "bleed_out",
+   "label": "Тяжёлое ранение",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "stored-should-be-computed",
+     "where": "bleed_out.on[0] «field:bleeding_out», system.grants[1]",
+     "evidence": "«когда field:bleeding_out если @лист == @носитель → НАЛОЖИТЬ bleeding»",
+     "mechanism": "other",
+     "target": "Удалить эффект и строку в `system.grants` — заменяет выдача по условию у bleeding.",
+     "rule_source": "как у knock_out",
+     "engine_gap": "«выдача по условию»"
+    }
+   ]
+  },
+  {
+   "id": "die",
+   "label": "Смерть",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "stored-should-be-computed",
+     "where": "die.on[0] шаг 0",
+     "evidence": "«СНЯТЬ bleeding; НАЛОЖИТЬ dead» по field:is_dead",
+     "mechanism": "other",
+     "target": "Оставить подписку field:is_dead → НАЛОЖИТЬ dead (смерть — событие); шаг «снять bleeding» удалить — bleeding вычисляется с «и не @is_dead». Если владелец решит, что «Мёртв» вычисляемое, — удалить и die, а в system.grants добавить `{ effect: \"dead\", if: { expr: \"@is_dead\" } }`.",
+     "rule_source": "вопрос владельцу (необратимость смерти; «Ещё живой» при сжигании Преимущества, опись стр. 49)",
+     "engine_gap": "«выдача по условию» — для снятия шага"
+    }
+   ]
+  },
+  {
+   "id": "come_to",
+   "label": "Приходит в себя",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "stored-should-be-computed",
+     "where": "come_to.on[0] «field:conscious», system.grants[3]",
+     "evidence": "«СНЯТЬ unconscious; СНЯТЬ bleeding» — обратная половина knock_out/bleed_out",
+     "mechanism": "other",
+     "target": "Удалить эффект и строку в `system.grants`: уход «Без сознания» и «Тяжело ранен» даёт само условие выдачи.",
+     "rule_source": "как у knock_out",
+     "engine_gap": "«выдача по условию»"
+    }
+   ]
+  },
+  {
+   "id": "burning",
+   "label": "Горение",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "burning.on[0], corroded.on[0], poisoned.on[0] (moment:round-start); те же два шага в strike_damage 0–1, blast_damage 0–2, cast_spell 20–21",
+     "evidence": "«ЧИСЛО стойкость = кинуть pool x@носитель.soak by @носитель метки ['сопротивление']; ВЫЗОВ вред=take_damage(лист=@носитель, amount=большее из(0, @level - @стойкость.total), physical_hit=да)»",
+     "mechanism": "shared-function",
+     "target": "Новая функция `resist_damage` «Сопротивиться урону» (группа «Общие правила», как take_damage — без activation). Входы: `лист` (лист, роль target, «Кто получает урон»); `источник` (лист, роль actor, необязательный, «Источник»); `величина` (число, роль amount, «Урон до сопротивления»); `физический` (да/нет, умолчание да, «Физический урон»); `электричество` (да/нет, умолчание нет, «Электричество»); `метки` (текст, список, необязательный, «Метки стихии»). Шаги: 1) ЧИСЛО `стойкость` = кинуть pool × `@лист.soak`, бросает `@лист`, метки [\"сопротивление\", {expr: \"@метки\"}]; 2) ВЫЗОВ `вред` = take_damage(лист=@лист, источник=@источник, amount=большее из(0, @величина - @стойкость.total), physical_hit=@физический, dv=@величина, electric=@электричество). Итог `урон` = `@вред.урон`. В burning подписка moment:round-start — один шаг: ВЫЗОВ resist_damage(лист=@носитель, величина=@level). Атака и магия зовут ту же функцию вместо своих пар шагов (их кластеры).",
+     "rule_source": "опись стр. 52: «Урон от состояния (Горение, Разъедание и др.) — сопротивление Телом» — общее правило",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "burning.on[1] «gained:burning если @лист == @носитель»",
+     "evidence": "подписка на собственное появление",
+     "mechanism": "other",
+     "target": "Шаги перенести в `burning.attach` («при наложении»: run.ts lifecycle зовёт effect.attach у появившегося, @носитель виден); подписку удалить. Так же у chilled/wet/petrified.",
+     "rule_source": "не правило книги — устройство движка (effect.attach)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "gained-lost-by-tag-candidate",
+     "where": "burning.on[1..3], chilled.on[0..1], wet.on[0..1]",
+     "evidence": "4 отношения («пришло Горение → снять Сырость», «… → снять Заморозку», «пришла Сырость → снять Горение», «пришла Заморозка → снять Горение») записаны каждое дважды: 8 шагов «снять» в 7 подписках трёх эффектов",
+     "mechanism": "gained-lost-by-tag",
+     "target": "Метка «гасит горение» у wet и chilled. В burning: `attach`: СНЯТЬ по метке «гасит горение» с @носитель; подписка `gained:гасит горение` (если «@лист == @носитель») → СНЯТЬ burning с @носитель. У wet и chilled подписок не остаётся. Переходная форма до движка: burning.attach — СНЯТЬ wet, СНЯТЬ chilled; burning.on — `gained:wet` и `gained:chilled` (если «@лист == @носитель») → СНЯТЬ burning; у wet/chilled подписки удалить.",
+     "rule_source": "описание burning (стр. 52): «Сырость и Заморозка его отменяют, и оно отменяет их»; опись стр. 52",
+     "engine_gap": "«появилось/ушло по метке» (core/run.ts: lifecycle, ключ gained:<effectId>) и «снять по метке» (engine/steps/status.ts снимает только по id)"
+    },
+    {
+     "kind": "other",
+     "where": "весь мир: кнопки «Сбить пламя» нет",
+     "evidence": "описание: «Снять — сложное действие «Сбить пламя» (Проворство + Реакция (2))»; опись стр. 52: «Нет кнопки «Сбить пламя»»",
+     "mechanism": "other",
+     "target": "Кнопка `put_out_fire` «Сбить пламя» (группа «Действия»): вход `действующий` (лист, роль actor); Плата: ВЫЗОВ spend_action(лист=@действующий, сложное=да, простых=0); шаги: ВЫЗОВ `попытка` = attr_test(лист=@действующий, набор=@действующий.agility + @действующий.reaction, порог=2) (функция — см. nauseated); ЕСЛИ @попытка.успех → СНЯТЬ burning с @действующий. У burning: `grants: [\"put_out_fire\"]` — кнопка только у горящего. «Прыжок в воду» = наложить wet — уже покрыто отменой.",
+     "rule_source": "описание burning (стр. 52); опись стр. 52",
+     "engine_gap": ""
+    },
+    {
+     "kind": "tag-candidate",
+     "where": "burning.tags (нет)",
+     "evidence": "меток у эффектов нет ни одной; Окаменение и модификации брони перечисляют Горение по id",
+     "mechanism": "effect-tag",
+     "target": "Метки «стихия» и «урон в раунд» (договоры — см. tags_proposed); вход `level` уже есть.",
+     "rule_source": "опись стр. 53 (Окаменение), стр. 266 (модификации брони)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "immobilized",
+   "label": "Неподвижность",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "petrified",
+   "label": "Окаменение",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "petrified.on[0] «gained:petrified если @лист == @носитель»",
+     "evidence": "подписка на собственное появление",
+     "mechanism": "other",
+     "target": "Шаги перенести в `petrified.attach`, подписку удалить.",
+     "rule_source": "устройство движка (effect.attach)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "string-membership",
+     "where": "petrified.on[0], шаги 0–2",
+     "evidence": "«СНЯТЬ burning; СНЯТЬ corroded; СНЯТЬ poisoned» — множество «наносящие урон состояния» перечислено по id",
+     "mechanism": "effect-tag",
+     "target": "`petrified.attach`: один шаг СНЯТЬ по метке «урон в раунд» с @носитель. Переходная форма до движка — те же три «снять» в attach.",
+     "rule_source": "описание petrified (стр. 53): «снимает все наносящие урон состояния»",
+     "engine_gap": "«снять по метке» (engine/steps/status.ts: finish → ctx.detach(to, id) только по id)"
+    }
+   ]
+  },
+  {
+   "id": "blinded",
+   "label": "Ослепление",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "blinded.modifiers[0].value",
+     "evidence": "«если(@level >= 3, -99, -3 * @level)» — «−99 кубиков» вместо автоматического провала",
+     "mechanism": "other",
+     "target": "Две правки броска вместо одной (ветки делают разное): 1) {call: roll, param: count, op: add, value: «-3 * @level», if: «@бросающий == @носитель и @level < 3», tags: [\"зрение\"]}; 2) {call: roll, param: <автопровал>, if: «@бросающий == @носитель и @level >= 3», tags: [\"зрение\"]}. Глухота I–III (опись стр. 52, не собрана) — та же пара по метке «слух».",
+     "rule_source": "описание blinded (стр. 53): «III — такие проверки проваливаются»; опись стр. 52 (Глухота)",
+     "engine_gap": "у броска нет параметра «провал без броска»: words/calls.ts — только edits/bonus/count/threshold; engine/steps/check.ts принуждает исход только по кости (succeedOn/failOn)"
+    }
+   ]
+  },
+  {
+   "id": "poisoned",
+   "label": "Отравление",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "poisoned.on[0] шаги 0–1",
+     "evidence": "тот же бросок soak + take_damage, что у burning/corroded, но physical_hit=@physical_hit",
+     "mechanism": "shared-function",
+     "target": "ВЫЗОВ resist_damage(лист=@носитель, величина=@level, физический=@physical_hit). Метка «урон в раунд».",
+     "rule_source": "опись стр. 52–53",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "poisoned.on[0] шаги 2–5",
+     "evidence": "«СНЯТЬ poisoned; ЕСЛИ @level > 1: НАЛОЖИТЬ poisoned (level=@level - 1, physical_hit=@physical_hit)» — состояние пересобирает само себя, чтобы уменьшить своё число",
+     "mechanism": "other",
+     "target": "После доработки движка: ИЗМЕНИТЬ `@level` вычесть 1 (вход висящего эффекта); ЕСЛИ @level < 1 → СНЯТЬ poisoned. Нынешняя пересборка — рабочая временная форма (принята в docs/sr6-compendium.md §9 «переналожение с новым входом (проверить)»), журнал каждый раунд пишет «снято/наложено».",
+     "rule_source": "описание poisoned (стр. 53): «число снижается на 1 каждый раунд, на нуле состояние снимается»",
+     "engine_gap": "«Изменение» пишет только в поле/клетку листа, стола, вещи (core/run.ts: fieldOf, write; engine/steps/apply.ts) — входа висящего эффекта (sheet.effects[].args) не меняет"
+    }
+   ]
+  },
+  {
+   "id": "corroded",
+   "label": "Разъедание",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "corroded.on[0]",
+     "evidence": "копия шагов burning.on[0] один в один",
+     "mechanism": "shared-function",
+     "target": "ВЫЗОВ resist_damage(лист=@носитель, величина=@level). Метки «стихия», «урон в раунд». «Снимается снаряжением» (Химическая герметизация — 6 раз) — слушатель в кластере снаряжения через «появилось по метке».",
+     "rule_source": "описание corroded (стр. 53); запись armor_chem_seal (стр. 266)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "wet",
+   "label": "Сырость",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "gained-lost-by-tag-candidate",
+     "where": "wet.on[0] «gained:wet», wet.on[1] «gained:burning»",
+     "evidence": "обе подписки дублируют burning.on[2] и burning.on[1]",
+     "mechanism": "effect-tag",
+     "target": "Обе подписки удалить; метка «гасит горение»; отношение держит burning.",
+     "rule_source": "описание wet (стр. 54): «Отменяет Горение и отменяется им»",
+     "engine_gap": "для формы с меткой — «появилось по метке» / «снять по метке»"
+    },
+    {
+     "kind": "other",
+     "where": "wet.modifiers (нет)",
+     "evidence": "описание: «Штраф −6 к сопротивлению урону от холода и электричества»; опись стр. 54: «Штрафа −6 к сопротивлению нет»",
+     "mechanism": "other",
+     "target": "Правка броска {kind: edit, call: roll, param: count, op: add, value: -6, if: «@бросающий == @носитель», tags: [\"сопротивление\"], anyTags: [\"холод\", \"электричество\"]}. Условие: бросок сопротивления несёт метку стихии — вход `метки` у resist_damage (кластер атаки передаёт «электричество» при электрическом уроне, магия — `@element` для холода).",
+     "rule_source": "описание wet (стр. 54); опись стр. 54",
+     "engine_gap": "движку хватает: метки броска — формулы (engine/steps/roll.ts: tagsOf), у правки броска есть anyTags"
+    }
+   ]
+  },
+  {
+   "id": "nauseated",
+   "label": "Тошнота",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "nauseated.on[0] шаги 0–1; insecurity_check шаги 0–2; будущая «Сбить пламя»",
+     "evidence": "«кинуть pool x@носитель.body + @носитель.willpower»; «nausea_lost set если(@тошнота.total >= 2, 1, 2)» — порог проверки сравнением в формуле, а у insecurity_check тот же смысл — шагом «Проверка»; наборы без @wound_mod и @condition_mod",
+     "mechanism": "shared-function",
+     "target": "Новая функция `attr_test` «Проверка характеристик» (группа «Общие правила»). Входы: `лист` (лист, роль actor, «Кто проверяет»); `набор` (число, «Характеристики»); `порог` (число, «Порог»); `метки` (текст, список, необязательный, «Метки броска»). Шаги: ЧИСЛО `бросок` = кинуть pool × «большее из(0, @набор + @лист.wound_mod + @лист.condition_mod)», бросает @лист, метки [\"проверка\", {expr: \"@метки\"}]; ПРОВЕРКА `итог`: @бросок против @порог. Итоги: `успех` (да/нет) = @итог.success, `чистые` = большее из(0, @итог.margin). Тошнота: ВЫЗОВ `тошнота` = attr_test(лист=@носитель, набор=@носитель.body + @носитель.willpower, порог=2).",
+     "rule_source": "описание nauseated (стр. 54) «Тело + Воля (2)»; штраф состояний «ко всем наборам, кроме сопротивления урону» (Заморозка/Утомление, стр. 52–54); все составные наборы листа (composure, judge_intentions, memory, lift_carry, defense_pool) уже прибавляют wound_mod и condition_mod — правило из данных; применимость штрафа за раны — вопрос владельцу",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "поле лист.nausea_lost; turn_actions шаги 5–9",
+     "evidence": "«nausea_lost: 1 — минус простое, 2 — без действий»; общее правило turn_actions: «ЕСЛИ @носитель.nausea_lost >= 2 … ИНАЧЕ ЕСЛИ @носитель.nausea_lost >= 1» — общее правило знает конкретное состояние и числовой код",
+     "mechanism": "other",
+     "target": "Поле `nausea_lost` заменить двумя общими хранимыми полями таблицы «лист»: `round_lock` «Нельзя действовать в этом раунде» (да/нет) и `round_simple_lost` «Потеряно простых действий в этом раунде» (число, мин. 0). Тошнота (round-start): ИЗМЕНИТЬ @носитель.round_lock задать «не @тошнота.успех»; ИЗМЕНИТЬ @носитель.round_simple_lost задать «если(@тошнота.успех, 1, 0)». detach: оба в «нет»/0. turn_actions: «ЕСЛИ @носитель.action_lock >= 1 или @носитель.round_lock» → оба счётчика 0; затем simple_left вычесть @носитель.round_simple_lost — без лесенки.",
+     "rule_source": "описание nauseated (стр. 54): «провал — нельзя действовать в раунд, успех — минус простое действие»",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "beatdown",
+   "label": "Взбучка",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "beatdown целиком",
+     "evidence": "висящий на 1 ход, правка «Бросок → прибавка +4» по метке «проверка»; никто не накладывает; опись стр. 49: «Эффект недостижим. Нет снижения характеристики и обнуления запаса. +4 идёт прибавкой (не в natural) без автоматического успеха — по книге автоматический успех + 4 чистых»",
+     "mechanism": "other",
+     "target": "Это не состояние, а исход сжигания Преимущества (кластер «Преимущество»): убрать из состояний. Сжигание — справочник «Сжигание Преимущества» `edge_burns` (строки «Взбучка», «Ещё живой»; колонка `text` «По книге») и одна кнопка «Сжечь Преимущество» (Плата: Преимущество-характеристика −1 не ниже 0, запас edge_left = 0; вход-выбор из `edge_burns`). «Взбучка» — правка броска «автоуспех с 4 чистыми» на свою проверку.",
+     "rule_source": "опись стр. 49 (Сжигание Преимущества); когда заявляется — вопрос владельцу",
+     "engine_gap": "нет «автоуспеха с N чистыми» у броска/проверки (words/calls.ts, engine/steps/check.ts)"
+    }
+   ]
+  },
+  {
+   "id": "insecurity_shaken",
+   "label": "Неуверенность: сорвалось",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "insecurity_shaken.modifiers",
+     "evidence": "edge_no_gain add 1, edge_no_spend add 1 — та же пара, что у dazed и dumpshocked",
+     "mechanism": "merge-copies",
+     "target": "Правки удалить, `grants: [\"edge_locked\"]` (см. dazed). Срок combat оставить.",
+     "rule_source": "описание (стр. 77)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "insecurity_check",
+   "label": "Неуверенность",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "компендиум: записи качества «Неуверенность» нет; на insecurity_check никто не ссылается",
+     "evidence": "поиск id по миру — 0 ссылок; качеств в компендиуме 7, «Неуверенности» среди них нет",
+     "mechanism": "record-of-book-type",
+     "target": "Запись типа «Качество» `quality`: id `insecurity`, «Неуверенность», ячейка kind «отрицательное», karma — по книге; `grants: [\"insecurity_check\"]`. Без записи эффект недостижим.",
+     "rule_source": "описание (стр. 77); цена в карме в выписках не названа — вопрос владельцу",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "insecurity_check.on[0] шаги 0–2",
+     "evidence": "«кинуть pool x@носитель.willpower … ПРОВЕРКА итог: @выдержка против 2» — набор без штрафов ран и состояний",
+     "mechanism": "shared-function",
+     "target": "ВЫЗОВ `выдержка` = attr_test(лист=@носитель, набор=@носитель.willpower, порог=2); ЕСЛИ не @выдержка.успех → НАЛОЖИТЬ insecurity_shaken на @носитель.",
+     "rule_source": "описание (стр. 77) «Воля, порог 2»; штрафы — как у nauseated",
+     "engine_gap": ""
+    }
+   ]
+  }
+ ],
+ "tags_proposed": [
+  {
+   "tag": "стихия",
+   "meaning": "Стихийное состояние: огонь, холод, электричество, кислота. Договор (system.tags): label «Стихийное состояние», inputs [{key: \"level\", kind: \"number\"}] — число чистых успехов стихии (у Горения/Разъедания — урон в раунд, у Заморозки/Электрошока — раунды)",
+   "effects": [
+    "burning",
+    "chilled",
+    "shocked",
+    "corroded"
+   ],
+   "who_listens": "«Сотворить заклинание» cast_spell: справочник «Стихия» spell_elements получает колонку `накладывает` (вид «эффект»): огонь → burning, холод → chilled, электричество → shocked, кислота → corroded, нет — пусто; четыре ветки шагов 25–33 → один шаг «ЕСЛИ большее из(0, @итог.margin) >= 1 → НАЛОЖИТЬ @element.накладывает на @цель (level = чистые)», вход element — выбор из spell_elements, ячейка spell.status (запись «Огненный шар») — лишний второй источник. Модификации брони armor_mod (колонка status «Гасит состояние» есть, механики нет) — через «появилось по метке»"
+  },
+  {
+   "tag": "урон в раунд",
+   "meaning": "Состояние, наносящее урон каждый раунд. Договор: label «Урон каждый раунд», inputs [{key: \"level\", kind: \"number\"}]",
+   "effects": [
+    "burning",
+    "corroded",
+    "poisoned"
+   ],
+   "who_listens": "Окаменение petrified: при наложении снять по метке. Возможно «Стабилизация» («для цели с … продолжительным уроном (состояние)») — вопрос владельцу"
+  },
+  {
+   "tag": "гасит горение",
+   "meaning": "Состояние, которое отменяет Горение и отменяется им. Договор: label «Гасит Горение», входов нет",
+   "effects": [
+    "wet",
+    "chilled"
+   ],
+   "who_listens": "Горение burning: при наложении — снять по метке «гасит горение»; подписка «появилось: гасит горение» (если «@лист == @носитель») → снять burning"
+  }
+ ],
+ "engine_gaps": [
+  {
+   "what": "Выдача по условию: элемент grants вида { effect, if } — эффект действует на лист, пока формула верна на этом листе",
+   "why": "Пары «поле стало верным → наложить / другое поле → снять» — хранимая копия вычисляемого: Shadowrun knock_out/bleed_out/come_to/die (unconscious, bleeding), D&D fall/wake/death_now/stabilize, Daggerheart stress_limit/stress_relief. С условием выдачи «появилось/ушло» даёт сама разница действующего (events/lifecycle.ts). Это изменение модели: по CLAUDE.md — документ в docs/ и советник; учесть круг «условие читает поле, которое правит выданный эффект»",
+   "where": "packages/schema/src/world.ts (grants у system, sheets, table, compendiumRecord, effect — z.array(z.string())); packages/engine/src/engine/effects.ts: grantedTo (стр. 94–111) и wornEffects (113–134)"
+  },
+  {
+   "what": "«Появилось / ушло» по метке эффекта и имя появившегося эффекта в подписке",
+   "why": "Горение слушает «гасит горение»; модификации брони — «стихия» (нужно знать, какой именно эффект пришёл, — в seed сейчас только about = входы); отходняк наркотиков (5 подписок lost:<id>)",
+   "where": "packages/engine/src/core/run.ts: lifecycle (~стр. 1221, ключ `gained:${effectId}`), hooked (стр. 1139, точное sub.handler.on === key); core/subs.ts: tagsOf (стр. 39); model/references.ts: listenerOf (стр. 445) и проверка ключа как id эффекта (стр. 539)"
+  },
+  {
+   "what": "Шаг «Снять» по метке: снять все висящие эффекты с меткой",
+   "why": "Окаменение снимает «урон в раунд», Горение снимает «гасит горение»; сейчас множества перечисляются по id",
+   "where": "packages/engine/src/engine/steps/status.ts: finish (mode remove → ctx.detach(to, id) только по id); core/run.ts: detach (стр. 741); words/steps.ts — слоты шага «состояние»"
+  },
+  {
+   "what": "«Изменение» входа висящего эффекта (sheet.effects[].args) из его подписки",
+   "why": "Отравление: «число снижается на 1 каждый раунд» — сейчас снять себя и наложить заново с level − 1",
+   "where": "packages/engine/src/core/run.ts: fieldOf (стр. 470–493 — адрес только поле/клетка листа, стола, вещи) и write (стр. 702); engine/steps/apply.ts"
+  },
+  {
+   "what": "Принудительный исход броска: автопровал и автоуспех с N чистыми (параметр правки броска)",
+   "why": "Ослепление III и Глухота III (сейчас −99 кубиков), Взбучка (автоуспех и 4 чистых), автоуспехи существ и адептов (docs/shadowrun6.md «Нет механизма»)",
+   "where": "packages/engine/src/words/calls.ts (параметры броска: edits, bonus, count, threshold); core/edits.ts: gather; engine/steps/check.ts (стр. 68–74: исход принуждается только по кости succeedOn/failOn)"
+  }
+ ],
+ "questions_for_owner": [
+  "Горение, Разъедание, Отравление на листе, где уже висит такое же (новый огонь по горящему): сейчас новое игнорируется (reapply по умолчанию ignore). По книге — оставить, заменить большим числом или сложить? В выписках этого нет.",
+  "«Отменяет» у Горения, Сырости и Заморозки: новое снимает старое и остаётся (как сейчас) или гаснут оба?",
+  "Электрошок «−1 ко всем наборам» действует и на сопротивление урону? У Заморозки и Утомления выписка исключение называет, у Электрошока — нет; сейчас −1 на сопротивление не идёт.",
+  "Без сознания, Тяжело ранен, Мёртв сейчас не запрещают действовать: нет action_lock, «Начало хода» выдаёт действия. Запрещать?",
+  "«Без сознания» при полном счётчике здоровья, если оглушение не полно: сейчас не накладывается, есть только «Тяжело ранен», хотя в его описании написано «без сознания». Показывать оба?",
+  "«Мёртв» — навсегда (событие) или пока верно поле is_dead (Стабилизация убирает критический урон — и персонаж «оживает»)?",
+  "Распластан: −2 к урону от взрыва (blast_damage) — откуда это правило? В выписках по Распластан (стр. 53–54) его нет.",
+  "«Встать» (опись: «Встать (И)», стр. 42–43) — это простое действие?",
+  "Неуверенность (стр. 77): записи качества в компендиуме нет — какая цена в карме? «Столкновение» — только бой, или ещё взлом и убеждение (Преимущество сгорает «по завершении боя, взлома, убеждения»)?",
+  "Штраф за раны в проверках только по характеристикам (Тошнота: Тело + Воля, Неуверенность: Воля, «Сбить пламя»: Проворство + Реакция) по книге действует? Составные наборы листа его уже учитывают, а эти броски — нет.",
+  "Взбучка: «автоматический успех и 4 чистых» заявляется до проверки или после броска?",
+  "«Стабилизация» («для цели с … продолжительным уроном (состояние)») снимает Горение, Разъедание, Отравление?"
+ ]
+}

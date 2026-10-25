@@ -1,0 +1,696 @@
+{
+ "cluster": "Действия, Преимущество, бой",
+ "items": [
+  {
+   "id": "spend_action",
+   "label": "Потратить действие",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "inline-copy-of-existing-function",
+     "where": "«Плата» 13 эффектов других кластеров: matrix_check, matrix_spike, matrix_tarpit, matrix_hack — cost[18..28]; ic_attack — cost[15..25]; throw_blast, launch_blast — cost[9..14]; detonate — cost[3..8]; cast_spell — cost[12..17]; heal_spell, boost_spell — cost[9..14]; cast_form, cast_form_attr — cost[6..11]",
+     "evidence": "matrix_check cost[18]: ЕСЛИ @стол.battle и @kind == \"сложное\" → ЕСЛИ @действующий.complex_left < 1 → СТОП \"сложное действие на этом ходу уже потрачено\"; ИЗМЕНИТЬ @действующий.complex_left -= 1; ИНАЧЕ ЕСЛИ @стол.battle и @kind == \"простое\" → … СТОП \"простых действий не осталось\" … ИЗМЕНИТЬ simple_left -= 1. Функцию spend_action зовут только 6 эффектов (shoot, melee_strike, reload, act_dodge, act_block, act_full_defense)",
+     "mechanism": "shared-function",
+     "target": "Каждый вписанный блок (от «Если @стол.battle…» до его «конец» включительно) заменить одним шагом. Матрица (5 эффектов): «ВЫЗОВ spend_action(лист=@действующий, сложное=@kind.complex, простых=@kind.simple)». Остальные 8 (взрывы, заклинания, сложные формы): «ВЫЗОВ spend_action(лист=@действующий, сложное=да)». Тексты стопов — те, что в функции (у копий Матрицы было «простых действий не осталось» — станет «простых действий на этом ходу не хватает»). Сигнатуру spend_action не менять: 6 нынешних вызовов остаются как есть.",
+     "rule_source": "docs/samples-dry.md, правило 3 («spend_action вместо 13 копий»); docs/sr6-review.md, раздел «Копии»; книга стр. 41, 107 — по описанию эффекта в данных",
+     "engine_gap": ""
+    },
+    {
+     "kind": "string-membership",
+     "where": "копии в Матрице: cost[18] и cost[23] (у ic_attack — cost[15], cost[20]); справочник «Вид действия» action_kinds",
+     "evidence": "@kind == \"сложное\" / @kind == \"простое\"; action_kinds: columns: [] (строки «простое», «сложное» без колонок)",
+     "mechanism": "column-of-reference-table",
+     "target": "action_kinds: новые колонки complex «Сложное» (да/нет, умолчание нет) и simple «Простых» (число, умолчание 0). Строки: «простое» — simple: 1; «сложное» — complex: да (умолчания не пишутся). Вызов читает колонки выбранной строки: сложное=@kind.complex, простых=@kind.simple — сравнений со строкой в кавычках не остаётся. Попутно для кластера «Атака»: у «Боезапас: контейнер» reload_kinds колонка complex (да/нет) — тоже «вид действия»; заменить на колонку action «Действие» (выбор из action_kinds: обойма — «простое», остальные — «сложное»), а reload передаёт сложное=@вещь.reload.action.complex, простых=@вещь.reload.action.simple. Что делать с пустым контейнером, решает кластер «Атака».",
+     "rule_source": "docs/sr6-review.md, строка таблицы «Вид действия»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "guards-should-be-plata",
+     "where": "turn_actions on[0].steps[2..5] (обнуление при action_lock) → spend_action steps[0]",
+     "evidence": "turn_actions: ЕСЛИ @носитель.action_lock >= 1 → simple_left = 0, complex_left = 0 — запрет срабатывает только в начале хода; «Окаменение», наложенное посреди раунда, оставшиеся действия не отнимает",
+     "mechanism": "plata",
+     "target": "Первым шагом spend_action, до блока «в бою»: «ЕСЛИ @лист.action_lock >= 1 → СТОП \"сейчас не может действовать\"». Так «Окаменение» (petrified) и «Ловушка» (sprite_trap) с их action_lock +1 отказывают в любом действии с платой, в бою и вне боя. Ветку action_lock из turn_actions убрать (см. turn_actions).",
+     "rule_source": "docs/sr6-compendium.md, §9, ревью этапа 3: ««нельзя действовать» — поля can_act/can_move в «Плате» действий»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "stored-should-be-computed",
+     "where": "spend_action steps[0]: if «@стол.battle»; колонка стол.battle (таблица «Стол»); пишут battle_start и battle_end",
+     "evidence": "ЕСЛИ @стол.battle … — флаг боя хранится в данных стола и дублирует часы комнаты",
+     "mechanism": "other",
+     "target": "После доработки движка (E4 — имя состояния боя для формул) читать @стол.бой (только чтение, считает движок по часам). Колонку battle из таблицы «Стол», эффекты battle_start и battle_end, а в тестах стол с values.battle — удалить. До доработки оставить как есть.",
+     "rule_source": "CLAUDE.md: «Хранимое ≠ вычисляемое»",
+     "engine_gap": "Формула часов не видит: в packages/engine/src/engine/clock.ts:20 есть inCombat(clock), а packages/engine/src/engine/refs.ts:75 (DESK_NAME = 'стол') отдаёт только хранимые поля стола; Clock (core/run.ts:222, this.clock) в RefContext не передаётся"
+    }
+   ]
+  },
+  {
+   "id": "gain_edge",
+   "label": "Получить очко Преимущества",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "gain_edge steps[0].if",
+     "evidence": "@лист.edge_no_gain >= 1 или @лист.edge_left >= 7 или @лист.edge_gained >= 2 — а edge_gained обнуляет только round_edge на moment:round-start, то есть только в бою",
+     "mechanism": "other",
+     "target": "Условие: «@лист.edge_no_gain >= 1 или @лист.edge_left >= 7 или (@стол.battle и @лист.edge_gained >= 2)» (после E4 — @стол.бой). Вне боя предела «2 за раунд» нет, есть только 7. Сейчас, получив вне боя два бонусных очка, лист больше не получает ни одного до первого раунда следующего боя.",
+     "rule_source": "docs/sr6-compendium.md, §9, «Решено по книге, стр. 45–47»: «не может получить больше двух бонусных очков преимущества в боевом раунде»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "gain_edge steps[0].if: числа 7 и 2",
+     "evidence": "edge_left >= 7 и edge_gained >= 2 повторяют границы колонок «Группа»: edge_left max 7, edge_gained max 2",
+     "mechanism": "keep-as-is",
+     "target": "Оставить. Шаг «Изменить» и так обрезает по границе (engine/steps/apply.ts: to = граница), но стоп всё равно нужен, чтобы не засчитать очко в edge_gained, когда запас полон. Формула границу колонки не видит. Работа низкого приоритета: если в движке появится имя границы колонки, читать её.",
+     "rule_source": "docs/sr6-compendium.md, §9 (пределы 7 и 2)",
+     "engine_gap": "необязательно: имени «граница колонки» в формулах нет (packages/engine/src/engine/refs.ts)"
+    }
+   ]
+  },
+  {
+   "id": "spend_edge",
+   "label": "Потратить Преимущество",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "reroll_failures",
+   "label": "Преимущество: перебросить все неуспехи",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "string-membership",
+     "where": "reroll_failures on[0].if (та же скобка запретов — в push_edge, edge_reroll_one, edge_bump, edge_plus_hit: 5 копий)",
+     "evidence": "не (@носитель.edge_ban_charisma >= 1 и (есть(@roll.tags, \"обман\") или есть(@roll.tags, \"убеждение\") или есть(@roll.tags, \"социальная\")) или @носитель.edge_ban_logic >= 1 и (… \"биотехнологии\" … \"взлом\" … \"инженерное дело\" … \"электроника\") или @носитель.edge_ban_hands >= 1 и (… \"атака\" … \"стрельба\" … \"ближний бой\" … \"экзотическое оружие\" … \"взлом замков\") или @носитель.edge_ban_social >= 1 и (… \"обман\" … \"убеждение\" … \"социальная\"))",
+     "mechanism": "handler-tag-filter",
+     "target": "Запрет по меткам проверки переносится к своему источнику, а реакции получают один структурный фильтр. 1) Движок: E1 (фильтр меток броска у подписки) и E2 (правка броска «метка»). 2) Таблица «Броски» rolls: новая колонка claim «Заявляет игрок или ведущий» (да/нет, умолчание нет) и новая строка «без Преимущества» с claim: да — ведущий может объявить её по ситуации. 3) Качество «Дрожь в руках» shaky_hands: правку «edge_ban_hands +1» заменить правкой броска «метка»: {kind: edit, call: roll, param: marks, метка «без Преимущества», anyTags: [\"атака\",\"стрельба\",\"ближний бой\",\"экзотическое оружие\",\"взлом замков\"], if: @бросающий == @носитель}. 4) Из таблицы «Лист» удалить колонки edge_ban_charisma, edge_ban_logic, edge_ban_hands, edge_ban_social. Три из них не ставит ни одна запись и ни один эффект (проверено поиском по образцу; edge_ban_hands ставит только shaky_hands), а у charisma и social списки меток одинаковые. 5) Подписка: if «@бросающий == @носитель и не @roll.atMin * 2 > @roll.rolled», notTags [\"инициатива\",\"без Преимущества\"]. То же у push_edge, edge_bump, edge_plus_hit (их if — «@бросающий == @носитель»). У edge_reroll_one — notTags [\"без Преимущества\"]. Общий запрет (Ошеломление, Выжженный, Неуверенность, демпшок) остаётся счётчиком edge_no_spend в spend_edge: это одно место, и оно годится для трат без броска (лечение, приём атаки). 6) Тест сборки кликами apps/web/src/screens/constructor/effects/build-cover-other.test.tsx и тест «Дрожь в руках» (samples.shadowrun-magic.test.ts:62) перевести на новую форму.",
+     "rule_source": "«Дрожь в руках» стр. 76–77 — описание записи в данных; docs/sr6-compendium.md, §9, Е9: «запреты по меткам проверки … флаги «не получать / не тратить»»; docs/sr6-review.md, раздел «Метки и подписки»",
+     "engine_gap": "Нет фильтра меток у подписки: packages/schema/src/world.ts:214 handler — только on/if/confirm/cost/steps. Источник не может пометить бросок: у встроенного вызова roll параметры только edits/bonus/count/threshold (packages/engine/src/words/calls.ts), метку добавляет только заявка (core/run.ts:574–580)"
+    },
+    {
+     "kind": "handler-tag-filter-candidate",
+     "where": "reroll_failures on[0].if: хвост условия",
+     "evidence": "и не есть(@roll.tags, \"инициатива\")",
+     "mechanism": "handler-tag-filter",
+     "target": "notTags: [\"инициатива\"] у подписки (E1), из if убрать. Так же у push_edge, edge_bump, edge_plus_hit, glitch, critical_glitch.",
+     "rule_source": "тест «со стола» (samples.shadowrun-combat.test.ts:190, стр. 45, 47) — данные, не выписка",
+     "engine_gap": "packages/schema/src/world.ts:214 handler без tags/notTags; проверка — в core/run.ts:982 holds(), сверка как в engine/modifiers.ts:190 editMatches"
+    },
+    {
+     "kind": "other",
+     "where": "reroll_failures on[0].if: «не @roll.atMin * 2 > @roll.rolled»",
+     "evidence": "формула сбоя повторена в трёх местах: здесь, в glitch on[0].if и critical_glitch on[0].if",
+     "mechanism": "other",
+     "target": "После E7 (свойство броска «сбой», заданное данными у кости pool) писать «не @roll.сбой». До E7 оставить копию.",
+     "rule_source": "тест SR-CH-07 (стр. 48) и описание эффекта — данные",
+     "engine_gap": "Свойства броска выводятся только из движка: total/natural/rolls/kept/parts/rolled/atMax/atMin/edited/tags — packages/engine/src/core/run.ts:1394–1399. Данные свои свойства задать не могут (schema diceReading у system.constants)"
+    },
+    {
+     "kind": "other",
+     "where": "reroll_failures on[0].cost[0].args.note (так же в push_edge, edge_reroll_one, edge_bump, edge_init, edge_plus_hit)",
+     "evidence": "note: \"нужно 4 очк. Преимущества\" — текст никто не видит: реакцию, у которой не проходит плата, окно не предлагает (core/run.ts:1424: this.refusal(…) → continue)",
+     "mechanism": "other",
+     "target": "Убрать аргумент note из платы шести реакций; spend_edge возьмёт умолчание входа. Число очков остаётся в одном месте — amount.",
+     "rule_source": "вопрос устройства, а не правил",
+     "engine_gap": ""
+    },
+    {
+     "kind": "copy-of-effect",
+     "where": "system.roll_edits.reroll_failures",
+     "evidence": "слово словаря «Преимущество: перебросить все неуспехи» {op: reroll, n: 4} — ни одна правка его не зовёт, но экран стола показывает все слова словаря как заявки (apps/web/src/screens/play/table.tsx:276, sheet.tsx:368 claimWords). Заявка перебрасывает неуспехи без платы Преимуществом",
+     "mechanism": "merge-copies",
+     "target": "Удалить слово roll_edits.reroll_failures (wild_die оставить). Приём остаётся один — подписка reroll_failures с платой.",
+     "rule_source": "docs/roll-edits-v2.md, §2 (когда слово живёт в словаре); плата 4 очка — описание эффекта, стр. 48",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "system.tables.skills, колонка pool, roll.tags",
+     "evidence": "проверка навыка по полю несёт только [\"проверка\"] (проверено движком: fieldOf(skills.обман.pool).roll.tags = [\"проверка\"]), поэтому метки навыков «стрельба», «ближний бой», «внимание» и прочие до броска не доходят: запреты и бонусы по навыку на проверке навыка не срабатывают",
+     "mechanism": "other",
+     "target": "skills.pool.roll.tags = [\"проверка\", \"{value}\"] — подстановка строки уже работает (проверено: [\"проверка\",\"обман\"]). «{attribute}» не добавлять: подставит латинский ключ «charisma», а он попадёт в журнал (вопрос владельцу). Последствие: начнут срабатывать правки по меткам навыков в других кластерах (aud_enh_spatial_recognizer, «Ослепление»), поэтому сверить золотой снимок.",
+     "rule_source": "docs/sr6-compendium.md, §9, таблица видов механики: «бросок навыка несёт [\"проверка\", \"{value}\", \"{attribute}\"]»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "switch-correct-keep",
+     "where": "шесть реакций Преимущества (reroll_failures, push_edge, edge_reroll_one, edge_bump, edge_plus_hit, edge_init)",
+     "evidence": "у каждой своя плата (4/4/1/2/3/1) и свой шаг реакции на бросок: roll-reroll upTo 4, roll-add, roll-reroll lowest, roll-bump, roll-plus 1, roll-plus 3",
+     "mechanism": "keep-as-is",
+     "target": "Оставить шесть эффектов. Ветки делали бы разные шаги, но выбор приёма — это и есть список предложений окна «увидев кости». Одна реакция с развилкой «По «приём»» потребовала бы вопроса выбора внутри реакции, а такого окна в движке нет. Общее у шести — фильтр меток (E1), плата одной функцией spend_edge и метка рода «приём Преимущества».",
+     "rule_source": "docs/sr6-compendium.md, §9: «Действия Преимущества — один способ…»",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "push_edge",
+   "label": "Преимущество: добавить к набору",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "string-membership",
+     "where": "push_edge on[0].if",
+     "evidence": "та же скобка запретов edge_ban_* × есть(@roll.tags, …), что у reroll_failures",
+     "mechanism": "handler-tag-filter",
+     "target": "Как у reroll_failures, пункт 1: if «@бросающий == @носитель», notTags [\"инициатива\",\"без Преимущества\"].",
+     "rule_source": "см. reroll_failures",
+     "engine_gap": "E1, E2 — см. reroll_failures"
+    },
+    {
+     "kind": "other",
+     "where": "push_edge on[0].cost[0].args.note",
+     "evidence": "note: \"нужно 4 очк. Преимущества\"",
+     "mechanism": "other",
+     "target": "Убрать аргумент note — см. reroll_failures.",
+     "rule_source": "—",
+     "engine_gap": ""
+    },
+    {
+     "kind": "copy-of-effect",
+     "where": "system.roll_edits.push_edge",
+     "evidence": "слово «Преимущество: добавить характеристику к набору с подрывом шестёрок» {addDie @edge; explode apart} доступно заявкой до броска без платы",
+     "mechanism": "merge-copies",
+     "target": "Удалить слово roll_edits.push_edge. Если после E5 приём переедет «до броска», это будет заявка с платой, а не бесплатное слово.",
+     "rule_source": "docs/roll-edits-v2.md, §2; описание эффекта (стр. 48, 105)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "push_edge — момент выбора",
+     "evidence": "description: «По книге выбирается до броска и подрываются шестёрки всего набора (стр. 48, 105); здесь — после броска, подрываются добавленные кубики: окна «перед броском» с платой в движке нет»",
+     "mechanism": "keep-as-is",
+     "target": "Пока оставить упрощение (оно записано в описании; перенести в docs/production-differences.md, если его там нет). По книге — заявка до броска с платой spend_edge(4) и операциями «добавить @edge костей» + «подрыв всего набора»; для этого нужен E5.",
+     "rule_source": "docs/sr6-compendium.md, §9: «Бонусы «обычно выбираются перед броском, за исключением того, что указано в описаниях» (переброс — после)»",
+     "engine_gap": "E5: заявка не несёт платы — core/run.ts:572–581 применяет слова заявки без цены; у schema rollEdit (packages/schema/src/world.ts ~150) нет cost"
+    }
+   ]
+  },
+  {
+   "id": "round_edge",
+   "label": "Новый раунд: предел Преимущества",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "round_edge on[] (сейчас одна подписка moment:round-start); правила запаса Преимущества раскиданы или отсутствуют",
+     "evidence": "edge_left пишут только gain_edge, spend_edge и кнопка scene_start; правило выписки «очки сверх характеристики пропадают в конце столкновения» нигде не исполняется",
+     "mechanism": "other",
+     "target": "round_edge (id сохранить) переименовать в «Преимущество: пределы раунда и сцены». Подписки: (1) moment:round-start — «ИЗМЕНИТЬ @носитель.edge_gained set 0», как сейчас; (2) moment:scene-end — «ИЗМЕНИТЬ @носитель.edge_left set @носитель.edge» (переезжает из кнопки scene_start, см. там); (3) moment:combat-end — «ИЗМЕНИТЬ @носитель.edge_left set меньшее из(@носитель.edge_left, @носитель.edge)». Подписка (3) — новое исполнение правила выписки, включать после подтверждения владельца (вопрос 3).",
+     "rule_source": "(3) — docs/sr6-compendium.md, §9, «Решено по книге, стр. 45–47»; (2) — описание scene_start в данных («В начале сцены очков Преимущества — сколько характеристика»), не выписка",
+     "engine_gap": "хватает: моменты scene-end и combat-end есть (packages/engine/src/events/moments.ts: MOMENTS; ход «сцена» → everyone('scene-end'))"
+    }
+   ]
+  },
+  {
+   "id": "turn_actions",
+   "label": "Начало хода: действия",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "ladder-in-steps",
+     "where": "turn_actions on[0].steps[2..13]",
+     "evidence": "ЕСЛИ @носитель.action_lock >= 1 → simple_left = 0, complex_left = 0; ЕСЛИ @носитель.nausea_lost >= 2 → simple_left = 0, complex_left = 0; ИНАЧЕ ЕСЛИ @носитель.nausea_lost >= 1 → simple_left −= 1 — ветки отличаются только числами и называют поля чужих состояний",
+     "mechanism": "other",
+     "target": "1) Таблица «Лист»: новая колонка simple_per_turn «Простых действий за ход» (число, формула «меньшее из(5, 1 + @init_dice)», не меньше 0). 2) «Тошнота» nauseated: правки «пока висит» {kind: value, target: action_lock, op: add, value: 1, if: @nausea_lost >= 2} и {kind: value, target: simple_per_turn, op: add, value: -1, if: @nausea_lost == 1}; голое поле — как у «Обездвижен» (@reaction). 3) «Нельзя действовать» проверяется в spend_action (см. там), petrified и sprite_trap остаются с action_lock +1. 4) Шаги turn_actions — два, без веток: «ИЗМЕНИТЬ @носитель.simple_left set @носитель.simple_per_turn», «ИЗМЕНИТЬ @носитель.complex_left set 1». Правило состояния живёт в состоянии, а кнопка хода не знает имён состояний.",
+     "rule_source": "описание turn_actions (стр. 41, 107); «Тошнота» стр. 54 — описание в данных; docs/sr6-compendium.md, §9, ревью: «нельзя действовать — … в «Плате» действий»",
+     "engine_gap": "хватает: правка поля с условием — packages/schema/src/world.ts valueModifier.if; правки ложатся и на колонку-формулу (так тип листа «Дух» задаёт init_dice)"
+    },
+    {
+     "kind": "other",
+     "where": "turn_actions on[0].on = moment:turn-start",
+     "evidence": "бюджет сбрасывается в начале своего хода; простое действие, потраченное до своего хода в этом раунде (act_dodge, act_block — spend_action простых=1), возвращается",
+     "mechanism": "keep-as-is",
+     "target": "Оставить до ответа владельца (вопрос 2). Если по книге действия считаются на раунд, сброс переезжает в moment:round-start с условием по листам боя.",
+     "rule_source": "вопрос владельцу (стр. 41–43 в выписках нет)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "edge_reroll_one",
+   "label": "Преимущество: перебросить 1 кубик",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "string-membership",
+     "where": "edge_reroll_one on[0].if",
+     "evidence": "та же скобка запретов edge_ban_* × есть(@roll.tags, …); проверки «инициатива» нет, и это намеренно (тест «со стола»: переброс на инициативе предлагается)",
+     "mechanism": "handler-tag-filter",
+     "target": "if «@бросающий == @носитель», notTags [\"без Преимущества\"] (E1, E2) — см. reroll_failures, пункт 1.",
+     "rule_source": "см. reroll_failures; samples.shadowrun-combat.test.ts:190 (стр. 45, 47)",
+     "engine_gap": "E1, E2"
+    },
+    {
+     "kind": "other",
+     "where": "edge_reroll_one on[0].cost[0].args.note",
+     "evidence": "note: \"нужно 1 очк. Преимущества\"",
+     "mechanism": "other",
+     "target": "Убрать аргумент note — см. reroll_failures.",
+     "rule_source": "—",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "edge_bump",
+   "label": "Преимущество: +1 к значению кубика",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "string-membership",
+     "where": "edge_bump on[0].if",
+     "evidence": "скобка запретов edge_ban_* × есть(@roll.tags, …) и «не есть(@roll.tags, \"инициатива\")»",
+     "mechanism": "handler-tag-filter",
+     "target": "if «@бросающий == @носитель», notTags [\"инициатива\",\"без Преимущества\"] — см. reroll_failures, пункты 1–2.",
+     "rule_source": "см. reroll_failures",
+     "engine_gap": "E1, E2"
+    },
+    {
+     "kind": "other",
+     "where": "edge_bump on[0].cost[0].args.note",
+     "evidence": "note: \"нужно 2 очк. Преимущества\"",
+     "mechanism": "other",
+     "target": "Убрать аргумент note.",
+     "rule_source": "—",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "edge_init",
+   "label": "Преимущество: +3 к инициативе",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "handler-tag-filter-candidate",
+     "where": "edge_init on[0].if",
+     "evidence": "@бросающий == @носитель и есть(@roll.tags, \"инициатива\")",
+     "mechanism": "handler-tag-filter",
+     "target": "if «@бросающий == @носитель», tags [\"инициатива\"] (E1).",
+     "rule_source": "тест «со стола» (стр. 47) — данные",
+     "engine_gap": "E1: packages/schema/src/world.ts:214 handler без tags"
+    },
+    {
+     "kind": "other",
+     "where": "edge_init on[0].cost[0].args.note",
+     "evidence": "note: \"нужно 1 очк. Преимущества\"",
+     "mechanism": "other",
+     "target": "Убрать аргумент note.",
+     "rule_source": "—",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "edge_init — когда доступно",
+     "evidence": "description: «+3 к показателю инициативы — до боя или в бою, чтобы ходить раньше»; исполняется только на броске инициативы",
+     "mechanism": "keep-as-is",
+     "target": "Оставить (вопрос 12). Чтобы покупать +3 посреди боя, нужен E6.",
+     "rule_source": "описание эффекта (стр. 47) — данные",
+     "engine_gap": "E6: показатель инициативы в бою — clock.scores (packages/engine/src/engine/clock.ts), ни один шаг его не меняет"
+    }
+   ]
+  },
+  {
+   "id": "edge_plus_hit",
+   "label": "Преимущество: +1 успех",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "string-membership",
+     "where": "edge_plus_hit on[0].if",
+     "evidence": "скобка запретов edge_ban_* × есть(@roll.tags, …) и «не есть(@roll.tags, \"инициатива\")»",
+     "mechanism": "handler-tag-filter",
+     "target": "if «@бросающий == @носитель», notTags [\"инициатива\",\"без Преимущества\"] — см. reroll_failures.",
+     "rule_source": "см. reroll_failures",
+     "engine_gap": "E1, E2"
+    },
+    {
+     "kind": "other",
+     "where": "edge_plus_hit on[0].cost[0].args.note",
+     "evidence": "note: \"нужно 3 очк. Преимущества\"",
+     "mechanism": "other",
+     "target": "Убрать аргумент note.",
+     "rule_source": "—",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "edge_plus_hit — момент выбора",
+     "evidence": "реакция «увидев кости», то есть после броска; по выписке бонусы выбираются до броска, если в описании не сказано иное",
+     "mechanism": "keep-as-is",
+     "target": "Оставить до ответа владельца (вопрос 1). Если по книге — до броска, то так же, как push_edge: заявка с платой (E5).",
+     "rule_source": "docs/sr6-compendium.md, §9 («обычно выбираются перед броском…»)",
+     "engine_gap": "E5"
+    }
+   ]
+  },
+  {
+   "id": "edge_bonus_вкус",
+   "label": "Бонусное очко Преимущества: вкус",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "edge_bonus_вкус / _обоняние / _слух / _зрение / _осязание — on[0]; записи adept_improved_sense (grants: все пять), aud_enh_spatial_recognizer (grants: edge_bonus_слух)",
+     "evidence": "пять подписок «@бросающий == @носитель и есть(@roll.tags, \"<чувство>\")» → ВЫЗОВ gain_edge(лист=@носитель); «Улучшение чувства»: «Выберите чувство…», но выдаёт все пять сразу",
+     "mechanism": "handler-tag-filter",
+     "target": "1) Одно висящее edge_bonus «Бонусное очко Преимущества» (группа «Преимущество», в system.grants вместо пяти): подписка seen, if «@бросающий == @носитель», tags [\"бонус Преимущества\"] (E1), шаг «ВЫЗОВ gain_edge(лист=@носитель)». 2) Таблица «Броски» rolls: строка «бонус Преимущества» (claim нет). 3) Новый справочник «Чувства» senses (ключ word; колонка claim «Заявляет игрок или ведущий», да/нет, умолчание нет; строки «зрение», «слух», «осязание», «вкус», «обоняние», у каждой claim: да). Эти пять строк убрать из rolls: метками они останутся, потому что словарь меток собирается из строк всех таблиц (engine/roll-tags.ts: tagWords). Игрок отметит чувство заявкой перед проверкой (экран берёт строки с claim: да — apps/web/src/screens/play/sheet.tsx:368 claimWords). 4) Тип «Способность адепта» adept_power: колонка sense «Чувство» (выбор из senses) — у экземпляра, как skill у «Улучшения навыка». 5) Запись adept_improved_sense: убрать grants и клетку choice_note, добавить правку броска «метка» {kind: edit, call: roll, param: marks, метка «бонус Преимущества», if: @бросающий == @носитель и есть(@метки, @строка.sense)}. @метки и @строка в условии правки видны — core/edits.ts refOf, и так уже делает запись aud_enh_spatial_recognizer (@строка.wireless). 6) Запись aud_enh_spatial_recognizer: убрать grants, добавить ту же правку «метка» с tags [\"внимание\",\"слух\"] и if «@бросающий == @носитель». 7) Удалить пять эффектов edge_bonus_*. Остальные «бонусные очки» книги (десятки качеств и имплантов, по выписке) — одной такой правкой у записи, без новых эффектов. Сработает при метке навыка на проверке (см. reroll_failures, пункт про skills.pool.roll.tags).",
+     "rule_source": "описания записей: «Улучшение чувства» стр. 158, «Пространственный распознаватель» стр. 276 — данные; docs/sr6-compendium.md, §9: «одна общая правка броска «+1 Преимущество на эту проверку»… метки/заявка», «одна функция gain_edge, её зовут … качества и вещи»",
+     "engine_gap": "E1 (фильтр меток у подписки) и E2 (правка броска «метка»). Выдача grants не несёт входов и склеивает экземпляры по id (packages/engine/src/engine/effects.ts:94–110 grantedTo), поэтому «выдать эффект с выбранным чувством» данными не собрать — через метку собирается"
+    },
+    {
+     "kind": "other",
+     "where": "сейчас чувства на бросок не попадают",
+     "evidence": "ни у одной строки таблиц нет claim: да (проверено), у проверки навыка метки только [\"проверка\"] — пять подписок в игре не срабатывают никогда",
+     "mechanism": "other",
+     "target": "Решается пунктами 3 и 5 выше и метками навыка (reroll_failures). Ограничения записи «не больше одного очка за столкновение для проверок одного чувства», «если сразу используете его», «если не потратить сразу, сгорает» сейчас не исполняются и в цель не входят — это вопрос 6.",
+     "rule_source": "описания записей (стр. 158, 276) — данные",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "edge_bonus_обоняние",
+   "label": "Бонусное очко Преимущества: обоняние",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "edge_bonus_обоняние on[0]",
+     "evidence": "@бросающий == @носитель и есть(@roll.tags, \"обоняние\") → ВЫЗОВ gain_edge(лист=@носитель)",
+     "mechanism": "merge-copies",
+     "target": "Удалить; одно edge_bonus, а чувство — метка-заявка из «Чувства» senses. См. edge_bonus_вкус.",
+     "rule_source": "см. edge_bonus_вкус",
+     "engine_gap": "E1, E2"
+    }
+   ]
+  },
+  {
+   "id": "edge_bonus_слух",
+   "label": "Бонусное очко Преимущества: слух",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "edge_bonus_слух on[0]; выдают adept_improved_sense и aud_enh_spatial_recognizer",
+     "evidence": "@бросающий == @носитель и есть(@roll.tags, \"слух\") → ВЫЗОВ gain_edge(лист=@носитель)",
+     "mechanism": "merge-copies",
+     "target": "Удалить; распознаватель получает правку броска «метка» «бонус Преимущества» с tags [\"внимание\",\"слух\"]. См. edge_bonus_вкус, пункт 6.",
+     "rule_source": "см. edge_bonus_вкус",
+     "engine_gap": "E1, E2"
+    }
+   ]
+  },
+  {
+   "id": "edge_bonus_зрение",
+   "label": "Бонусное очко Преимущества: зрение",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "edge_bonus_зрение on[0]",
+     "evidence": "@бросающий == @носитель и есть(@roll.tags, \"зрение\") → ВЫЗОВ gain_edge(лист=@носитель)",
+     "mechanism": "merge-copies",
+     "target": "Удалить — см. edge_bonus_вкус.",
+     "rule_source": "см. edge_bonus_вкус",
+     "engine_gap": "E1, E2"
+    }
+   ]
+  },
+  {
+   "id": "edge_bonus_осязание",
+   "label": "Бонусное очко Преимущества: осязание",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "edge_bonus_осязание on[0]",
+     "evidence": "@бросающий == @носитель и есть(@roll.tags, \"осязание\") → ВЫЗОВ gain_edge(лист=@носитель)",
+     "mechanism": "merge-copies",
+     "target": "Удалить — см. edge_bonus_вкус.",
+     "rule_source": "см. edge_bonus_вкус",
+     "engine_gap": "E1, E2"
+    }
+   ]
+  },
+  {
+   "id": "scene_start",
+   "label": "Начало сцены",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "scene_start steps[1].value",
+     "evidence": "ДЛЯ КАЖДОГО цели: ИЗМЕНИТЬ @цель.edge_left set @действующий.edge — каждой цели ставится характеристика того, кто нажал; кнопка act_scene лежит на листе раннера razor",
+     "mechanism": "other",
+     "target": "Ошибка уходит вместе с кнопкой (следующий пункт). Если владелец оставит кнопку — @цель.edge.",
+     "rule_source": "описание эффекта: «очков Преимущества — сколько характеристика Преимущество» (данные)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "scene_start целиком; запись act_scene; razor.has в samples/shadowrun.world.json; samples/pieces.json:384",
+     "evidence": "событие стола оформлено кнопкой игрока с входами «Кто действует» и «Цели»",
+     "mechanism": "other",
+     "target": "Обновление запаса — подписка moment:scene-end в round_edge: «ИЗМЕНИТЬ @носитель.edge_left set @носитель.edge». Её слышит каждый лист, когда ведущий закрывает сцену. Удалить эффект scene_start, запись act_scene, её строку в has листа razor и в samples/pieces.json.",
+     "rule_source": "описание эффекта в данных; книгу проверить (вопрос 3)",
+     "engine_gap": "хватает: ход «сцена» рассылает scene-end всем листам (packages/engine/src/events/moments.ts: momentsOfTurn)"
+    }
+   ]
+  },
+  {
+   "id": "second_wind",
+   "label": "Второе дыхание",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "second_wind params «цели», steps[0..1]",
+     "evidence": "ДЛЯ КАЖДОГО цели: ИЗМЕНИТЬ @цель.stun -= меньшее из(@действующий.stun, 1) — величина берётся у действующего, а лечится цель; приём Преимущества лечит себя",
+     "mechanism": "other",
+     "target": "Без входа «цели» и без «Для каждого»: шаг на @действующий (см. следующий пункт). «меньшее из(…, 1)» не нужно: шаг «Изменить» сам держит нижнюю границу поля (engine/steps/apply.ts), а граница оглушения — истощение.",
+     "rule_source": "описание: «За 3 очка Преимущества — освободить 1 ячейку оглушения» (данные); engine-model: «действия над собой — шаги до «Для каждой цели»»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "copy-of-effect",
+     "where": "second_wind и shrug_off; записи act_second_wind, act_shrug (тип «Действие» action)",
+     "evidence": "два эффекта одной формы: плата spend_edge(3 / 4) и шаг stun / physical −1",
+     "mechanism": "record-of-book-type",
+     "target": "1) Тип записи «Действие» action: колонки edge_cost «Цена, очков Преимущества» (число, умолчание 0), heal_stun «Снимает ячеек оглушения» (число, умолчание 0), heal_physical «Снимает ячеек физического» (число, умолчание 0). 2) Клетки записей: act_second_wind — edge_cost 3, heal_stun 1; act_shrug — edge_cost 4, heal_physical 1. Обе кнопки зовут edge_heal, подписи кнопок прежние. 3) Новый эффект edge_heal «Залечить за Преимущество» (группа «Преимущество», метка «приём Преимущества»). Входы: действующий (лист, роль actor), edge_cost (число), heal_stun (число, умолчание 0), heal_physical (число, умолчание 0); имена входов совпадают со свойствами записи, поэтому значения приходят сами (model/owned.ts: argsWithProps). Плата: «ВЫЗОВ spend_edge(лист=@действующий, amount=@edge_cost)». Шаги: «ЕСЛИ @heal_stun >= 1 → ИЗМЕНИТЬ @действующий.stun -= @heal_stun», «ЕСЛИ @heal_physical >= 1 → ИЗМЕНИТЬ @действующий.physical -= @heal_physical». 4) Удалить second_wind и shrug_off, а также их строки в samples/pieces.json:382–383. 5) Текст отказа станет умолчанием spend_edge («не хватает очков Преимущества»): сценарий apps/server/test/scenarios/shadowrun.scenarios.ts:115 ждёт «нужно 3» — поправить ожидание или сделать E8.",
+     "rule_source": "описания эффектов (данные); docs/sr6-attack-v2.md, принцип 2 (числа — колонками)",
+     "engine_gap": "хватает; текст стопа с числом — необязательный E8"
+    }
+   ]
+  },
+  {
+   "id": "shrug_off",
+   "label": "Ранен не так сильно",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "shrug_off params «цели», steps[1].value",
+     "evidence": "ИЗМЕНИТЬ @цель.physical -= меньшее из(@действующий.physical, 1)",
+     "mechanism": "other",
+     "target": "Лечит себя — см. second_wind, пункт 1.",
+     "rule_source": "описание: «За 4 очка Преимущества — освободить 1 ячейку здоровья» (данные)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "copy-of-effect",
+     "where": "shrug_off целиком",
+     "evidence": "копия second_wind с другими числами (4, physical)",
+     "mechanism": "record-of-book-type",
+     "target": "Слить в edge_heal, числа — клетки записи act_shrug (edge_cost 4, heal_physical 1). См. second_wind, пункт 2.",
+     "rule_source": "см. second_wind",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "battle_start",
+   "label": "Начало боя",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "stored-should-be-computed",
+     "where": "battle_start on[0] moment:combat-start; колонка стол.battle",
+     "evidence": "ИЗМЕНИТЬ @стол.battle set да — подписку выдают все листы (system.grants), стол её не получает (engine/effects.ts:100), поэтому флаг пишется N раз; это копия состояния часов",
+     "mechanism": "other",
+     "target": "После E4 удалить battle_start и колонку стол.battle, читатели переходят на @стол.бой (spend_action и 13 бывших копий в нём, gain_edge). До E4 оставить.",
+     "rule_source": "CLAUDE.md: «Хранимое ≠ вычисляемое»",
+     "engine_gap": "E4 — packages/engine/src/engine/clock.ts:20 inCombat не виден формулам (engine/refs.ts:75)"
+    }
+   ]
+  },
+  {
+   "id": "battle_end",
+   "label": "Конец боя",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "stored-should-be-computed",
+     "where": "battle_end on[0] moment:combat-end",
+     "evidence": "ИЗМЕНИТЬ @стол.battle set нет",
+     "mechanism": "other",
+     "target": "Удалить после E4 — см. battle_start.",
+     "rule_source": "см. battle_start",
+     "engine_gap": "E4"
+    }
+   ]
+  },
+  {
+   "id": "glitch",
+   "label": "Сбой",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "handler-tag-filter-candidate",
+     "where": "glitch on[0].if",
+     "evidence": "… и не есть(@roll.tags, \"инициатива\")",
+     "mechanism": "handler-tag-filter",
+     "target": "notTags [\"инициатива\"] у подписки rolled (E1); if «@бросающий == @носитель и @roll.atMin * 2 > @roll.rolled и @roll.natural >= 1».",
+     "rule_source": "тест «со стола»: на инициативе сбоя нет (стр. 45) — данные",
+     "engine_gap": "E1"
+    },
+    {
+     "kind": "other",
+     "where": "glitch on[0].if: «@roll.atMin * 2 > @roll.rolled»",
+     "evidence": "формула сбоя есть ещё в critical_glitch и reroll_failures",
+     "mechanism": "other",
+     "target": "После E7: у кости pool в system.constants — свойство броска «сбой» с формулой «@roll.atMin * 2 > @roll.rolled»; условие станет «@бросающий == @носитель и @roll.сбой и @roll.natural >= 1». Деление на «сбой» и «критический сбой» двумя эффектами оставить: это два разных исхода с разными строками журнала, общих шагов нет.",
+     "rule_source": "описание эффекта (стр. 45) — данные; docs/shadowrun6.md: «сбой по единицам считается на любой проверке», «сбой по двойкам (Невезение)» — нет механизма",
+     "engine_gap": "E7 — свойства броска только из движка (core/run.ts:1394–1399)"
+    }
+   ]
+  },
+  {
+   "id": "critical_glitch",
+   "label": "Критический сбой",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "handler-tag-filter-candidate",
+     "where": "critical_glitch on[0].if",
+     "evidence": "… и не есть(@roll.tags, \"инициатива\")",
+     "mechanism": "handler-tag-filter",
+     "target": "notTags [\"инициатива\"] (E1); if «@бросающий == @носитель и @roll.atMin * 2 > @roll.rolled и @roll.natural == 0», после E7 — «… и @roll.сбой и @roll.natural == 0».",
+     "rule_source": "описание эффекта (стр. 45) — данные",
+     "engine_gap": "E1, E7"
+    }
+   ]
+  }
+ ],
+ "tags_proposed": [
+  {
+   "tag": "приём Преимущества",
+   "meaning": "Метка рода эффекта: трата очков Преимущества на приём — на бросок или на лечение. Договор system.tags[\"приём Преимущества\"] = { label: \"Приём Преимущества\" }, входов не требует; после E3 — признак «не больше одного за бросок (действие)».",
+   "effects": [
+    "reroll_failures",
+    "push_edge",
+    "edge_reroll_one",
+    "edge_bump",
+    "edge_plus_hit",
+    "edge_init",
+    "edge_heal (вместо second_wind и shrug_off)"
+   ],
+   "who_listens": "Движок: правило «за одно действие — одно использование Преимущества» (E3) — из предложений окна «увидев кости» с этой меткой можно взять одно. Окно стола группирует их одним выбором."
+  },
+  {
+   "tag": "без Преимущества",
+   "meaning": "Метка броска (строка таблицы «Броски» rolls, заявляемая: claim да): на этот бросок Преимущество не тратят.",
+   "effects": [
+    "shaky_hands — правка броска «метка» с anyTags [атака, стрельба, ближний бой, экзотическое оружие, взлом замков] (E2)",
+    "заявка ведущего по ситуации"
+   ],
+   "who_listens": "Все подписки с меткой «приём Преимущества» на броске — notTags [\"без Преимущества\"] (E1)"
+  },
+  {
+   "tag": "бонус Преимущества",
+   "meaning": "Метка броска (строка rolls): за этот бросок носитель получает бонусное очко Преимущества (пределы 7 и 2 за боевой раунд — в gain_edge).",
+   "effects": [
+    "adept_improved_sense — правка «метка» с условием есть(@метки, @строка.sense)",
+    "aud_enh_spatial_recognizer — правка «метка» с tags [внимание, слух]",
+    "прочие «бонусные очки» качеств и имплантов книги — той же правкой"
+   ],
+   "who_listens": "Одно висящее edge_bonus — подписка seen с tags [\"бонус Преимущества\"] (E1) → gain_edge"
+  },
+  {
+   "tag": "инициатива",
+   "meaning": "Существующая метка броска инициативы (system.initiative.tags).",
+   "effects": [
+    "бросок инициативы стола"
+   ],
+   "who_listens": "edge_init (tags); reroll_failures, push_edge, edge_bump, edge_plus_hit, glitch, critical_glitch (notTags); edge_reroll_one её не исключает — по тесту «со стола»"
+  },
+  {
+   "tag": "зрение / слух / осязание / вкус / обоняние",
+   "meaning": "Заявляемые метки броска — справочник «Чувства» senses с claim да. Игрок отмечает, на какое чувство опирается проверка.",
+   "effects": [
+    "заявка игрока перед проверкой (экран стола: claimWords)"
+   ],
+   "who_listens": "Правки источников: adept_improved_sense (есть(@метки, @строка.sense)), aud_enh_spatial_recognizer (tags [внимание, слух]), «Ослепление» blinded (tags [зрение])"
+  }
+ ],
+ "engine_gaps": [
+  {
+   "what": "E1. Фильтр меток броска у подписки: tags / anyTags / notTags — как у правки броска",
+   "why": "В условиях подписок 90 проверок есть(@roll.tags, \"…\") (Преимущество, сбой, бонусы); структурный фильтр виден словами в карточке и проверяется линтом",
+   "where": "packages/schema/src/world.ts:214 handler (strict: on/if/confirm/cost/steps); проверка — packages/engine/src/core/run.ts:982 holds() по seed.roll.tags для seen и rolled (окно — core/run.ts:1389–1460); сверка — как packages/engine/src/engine/modifiers.ts:190 editMatches; линт (только для seen/rolled, метки из словаря tagWords) — packages/engine/src/model/lint.ts; карточка подписки в конструкторе"
+  },
+  {
+   "what": "E2. Правка броска «метка»: источник при условии (держатель, метки броска) добавляет метку к броску носителя",
+   "why": "Запрет Преимущества («Дрожь в руках») и бонусное очко (адепт, распознаватель, десятки качеств) — свойства источника. Сейчас метку на бросок ставит только заявка игрока, поэтому получилось 5 копий скобки запретов, 4 поля-счётчика и 5 копий эффекта бонуса",
+   "where": "packages/engine/src/words/calls.ts CALL_WORDS.roll.params (новый param marks «метки», значение — слот-имя метки); packages/engine/src/core/run.ts:565–589 roll(): после заявок (574–580) собрать правки {call: roll, param: marks} держателей (core/edits.ts gather с метками броска и @бросающий/@против) и дописать метки до throwDice и окна seen; бросок по полю идёт через тот же roll() (core/run.ts:1285)"
+  },
+  {
+   "what": "E3. «Одно использование Преимущества за действие»: из предложений с одной меткой рода в окне — не больше одного",
+   "why": "Правило выписки; сейчас в одном окне можно взять сразу «перебросить неуспехи», «+1 успех» и «+1 к кубику»",
+   "where": "packages/schema/src/world.ts tagContract (strict: label/includes/inputs/each/outputs) — новый признак, например once: 'roll'; packages/engine/src/core/run.ts:1306 choose() и окно seen (1440: for chosen…); packages/engine/src/core/external.ts Question — сведения для экрана (одиночный выбор в группе)"
+  },
+  {
+   "what": "E4. Состояние боя в формулах: имя только для чтения @стол.бой (по желанию — и номер раунда)",
+   "why": "Флаг @стол.battle хранится и поддерживается двумя подписками на каждом листе — это копия часов. Его читают spend_action, 13 копий в других кластерах и (по цели) gain_edge",
+   "where": "packages/engine/src/engine/clock.ts:20 inCombat(clock) уже есть; packages/engine/src/engine/refs.ts:75 DESK_NAME — стол отдаёт только хранимые поля; Clock (packages/engine/src/core/run.ts:222 this.clock) в RefContext/Pass не передаётся; слово — в packages/engine/src/words/"
+  },
+  {
+   "what": "E5. Заявка до броска с платой (слово словаря или эффект с cost, проверяемым до броска)",
+   "why": "«Добавить к набору» по книге выбирается до броска, и подрываются шестёрки всего набора; «бонусы обычно выбираются перед броском». Сейчас либо после броска (упрощение), либо бесплатной заявкой из словаря",
+   "where": "packages/engine/src/core/run.ts:572–581 — слова заявки применяются без цены; packages/schema/src/world.ts rollEdit (~150) без cost; экран стола apps/web/src/screens/play/table.tsx:276 (заявки)"
+  },
+  {
+   "what": "E6. Изменить показатель инициативы посреди боя шагом эффекта",
+   "why": "«+3 к инициативе — до боя или в бою, чтобы ходить раньше» (описание edge_init); сейчас только на броске инициативы",
+   "where": "packages/engine/src/engine/clock.ts Clock.scores / order — ни один шаг их не меняет"
+  },
+  {
+   "what": "E7. Свойство броска, заданное данными у кости (например «сбой» = @roll.atMin * 2 > @roll.rolled), видное как @roll.<имя>",
+   "why": "Формула сбоя повторена в glitch, critical_glitch и reroll_failures; «Невезение» (сбой по двойкам) записано в выписке как «нет механизма»",
+   "where": "packages/schema/src/world.ts diceReading (system.constants.pool.read); packages/engine/src/core/run.ts:1394–1399 — состав seed.roll; линт имён @roll.*"
+  },
+  {
+   "what": "E8 (необязательно). Число в тексте стопа — подстановка или склейка текста",
+   "why": "«нужно 3 очк. Преимущества» дублирует amount; при слиянии second_wind и shrug_off текст отказа станет общим",
+   "where": "packages/engine/src/formula/evaluate.ts:162–176 — «+» только для чисел"
+  }
+ ],
+ "questions_for_owner": [
+  "Когда по книге выбираются «Добавить к набору» (Push the Limit) и «+1 успех» — до броска или после (стр. 47–48)? Сейчас оба после броска, а у «Добавить к набору» взрываются только докинутые кубики. Делать заявку с платой до броска (нужен движок, E5) или оставить упрощение?",
+  "Действия хода считаются на свой ход или на раунд (стр. 41–43, в выписках нет)? Сейчас бюджет сбрасывается в начале своего хода, и простое действие, потраченное до хода на «Уклониться» или «Блокировать», возвращается.",
+  "Запас Преимущества: «в начале сцены — сколько характеристика» взято из описания эффекта в данных — так ли по книге? Включать ли правило выписки «очки сверх характеристики пропадают в конце столкновения» (сейчас не исполняется нигде) — в конце боя и при закрытии сцены?",
+  "Запреты тратить Преимущество на проверки Харизмы, Логики и социальные (поля edge_ban_charisma, edge_ban_logic, edge_ban_social): ни одна запись и ни один эффект их не ставят. Есть ли такие источники в книге? Если нет — удаляем.",
+  "«Дрожь в руках»: метки «взлом замков» не даёт ни один бросок (такого навыка нет), а «скрытность для вытаскивания из кармана» не отличить от обычной скрытности. Нужна заявляемая метка «руками» или хватит метки «атака»?",
+  "«Улучшение чувства» (стр. 158): исполнять ли «не больше одного очка за столкновение для проверок одного чувства» и «если сразу используете его»? У «Пространственного распознавателя» (стр. 276) — «если не потратить сразу, сгорает». Нужна память на листе и сгорание — или оставить справкой?",
+  "У каких типов листа есть Преимущество? Сейчас все приёмы Преимущества и «Начало хода» выданы всем листам (system.grants), а у Сервера, Льда и Транспорта характеристика по умолчанию 2 — они тоже тратят Преимущество.",
+  "Подтвердите, что вне боя предела «2 бонусных очка за раунд» нет, а есть только 7. Сейчас после двух очков вне боя лист не получает новых до первого раунда следующего боя.",
+  "Метки проверки навыка: добавлять ли к названию навыка и характеристику? «{attribute}» подставит латинский ключ (charisma) в журнал; метки «проверка Харизмы / Логики» нужны только для запретов из вопроса 4.",
+  "«Одно использование Преимущества за действие» (выписка): считать по броску или по всему действию? Приём при атаке («Метко попасть…» за очки) и реакция на бросок той же атаки — это два использования?",
+  "«Залечить за Преимущество» (бывшие «Второе дыхание» и «Ранен не так сильно») при пустом счётчике списывает очки впустую. Отказывать в «Плате» с текстом «нечего залечивать»?",
+  "Нужна ли покупка «+3 к инициативе» посреди боя, чтобы ходить раньше (описание edge_init)? Для этого нужен движок (E6).",
+  "«Перебросить 1 кубик» на броске инициативы разрешён (так требует тест «со стола», стр. 45, 47), а «+1 к кубику», «+1 успех», «перебросить неуспехи» — нет. Так ли по книге (стр. 47)?"
+ ]
+}

@@ -1,0 +1,433 @@
+{
+ "cluster": "Транспорт, токсины, наркотики, существа (drive_check, intoxicate, drug_crashes, dg_alcohol, dg_alcohol_take, dg_jazz, dg_jazz_take, dg_long_way, dg_zubrila, dg_kamikaze, dg_nitro, creature_template). Каждое целевое устройство проверено прогоном на копии мира в памяти: скрипты лежат в /tmp/claude-0/-home-user-VTT/ebb31c9f-dfa7-5326-b522-f0920eaeb3f6/scratchpad/sr7/ (drive.mts, drug.mts, drug2.mts, tox.mts, beast.mts, alc*.mts, creature.mts, jazz.mts; запуск: node_modules/.bin/tsx <файл>, система — через flattenSystem). Блок-выбор «По «…»» (switch) ни в одном эффекте кластера не нужен: ветки везде отличаются только данными (набор, порог, какое состояние, сколько урона), а не разными действиями. Поэтому всё уходит в колонки, а единственные «Если» (урон при аварии, урон токсина) включают или выключают вызов по колонке. Switch понадобится только тогда, когда режимы «Кто ведёт» начнут делать разное (например, демпшок риггеру в захвате). Сейчас таких правил в выписках нет.",
+ "items": [
+  {
+   "id": "drive_check",
+   "label": "Проверка управляемости",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "ladder-in-formula",
+     "where": "drive_check · шаг «вождение» (count) и шаг «удержать» (count); шаг «итог» (versus) и шаг «авария» (versus); условие «Если @действующий != @цель» перед уроном аварии",
+     "evidence": "count: «большее из(0, если(@действующий == @цель, @цель.as_maneuver + @цель.veh_pilot, если(@цель.jumped, @цель.rig_pilot + @цель.rig_int + @цель.rig_vcr, @действующий.skills.пилотирование.pool)) - @цель.veh_speed_pen)»; versus: «большее из(0, @цель.veh_handling - если(@цель.jumped, @цель.rig_vcr, 0) + @shift)»; «ЕСЛИ @действующий != @цель → ЧИСЛО тело …»",
+     "mechanism": "column-of-reference-table",
+     "target": "1) Новый справочник `veh_control` «Кто ведёт» (key: word). Строки: `сам` «Сам (автопилот)», `водитель` «Водитель», `захват` «Риггер в захвате». Колонки: `pool` «Набор вождения» (число, формула в клетке): сам — `@цель.as_maneuver + @цель.veh_pilot`, водитель — `@действующий.skills.пилотирование.pool`, захват — `@цель.rig_pilot + @цель.rig_int + @цель.rig_vcr`; `handling_cut` «Порог ниже на» (число, умолчание 0): захват — `{expr: @цель.rig_vcr}`; `inside` «Ведущий внутри» (да/нет, умолчание нет): водитель — да, захват — да (как сейчас: урон получает каждый, кто не сам транспорт). Пока движок не читает умолчание колонки справочника (дыра 5), клетки 0/нет у «сам» и «водитель» пишутся явно; после правки их снять. 2) Новая функция `drive_mode` «Кто ведёт», папка «Шаги для других». Входы: `действующий` (лист, роль «кто действует»), `цель` (лист, роль «цель»). Шагов нет. Итог `кто` (выбор из `veh_control`) = `если(@действующий == @цель, \"сам\", если(@цель.jumped, \"захват\", \"водитель\"))`. Это выбор строки по условию, тот же приём, что «Исход атаки» в D&D (docs/samples-dry.md, «Открыто»). 3) Шаги drive_check: Для каждого из цели → ВЫЗОВ режим = drive_mode(действующий=@действующий, цель=@цель) → ЧИСЛО набор = `большее из(0, @режим.кто.pool - @цель.veh_speed_pen)` (расчёт) → ЧИСЛО порог = `большее из(0, @цель.veh_handling - @режим.кто.handling_cut + @shift)` (расчёт) → ЧИСЛО вождение = кинуть pool × @набор, бросает @действующий, метки [проверка, вождение, пилотирование] → ПРОВЕРКА итог: @вождение против @порог → Если не @итог.success: ЧИСЛО удержать = кинуть pool × @набор, бросает @действующий, метки [проверка, вождение, авария] → ПРОВЕРКА авария: @удержать против @порог → Если не @авария.success: Если @режим.кто.inside: ЧИСЛО тело = кинуть pool × @действующий.body, бросает @действующий, метки [сопротивление] → ВЫЗОВ take_damage(лист=@действующий, amount=`большее из(0, округлить вниз(@цель.speed / 10) - @тело.total)`, physical_hit=да); конец → ИЗМЕНИТЬ @цель.speed = 0; конец; конец. Switch не нужен: режимы различаются только числами.",
+     "rule_source": "данные: описание эффекта (стр. 199–200); docs/sr6-compendium.md §14 «Вождение», «Риггер», «МКТ». Правило не меняется: прототип (scratchpad/sr7/drive.mts против drive0.mts) дал те же исходы для дрона-автопилота, водителя с провалом и аварией (урон 5, скорость 50 → 0) и водителя с успехом; в журнале добавились только две строки «расчёт». Линт чист.",
+     "engine_gap": ""
+    },
+    {
+     "kind": "copy-of-effect",
+     "where": "drive_check · формула набора повторена в шагах «вождение» и «удержать», формула порога — в «итог» и «авария»",
+     "evidence": "count шага «удержать» дословно повторяет count шага «вождение»; versus шага «авария» дословно повторяет versus шага «итог»",
+     "mechanism": "merge-copies",
+     "target": "Набор и порог считаются один раз на цель: шаги «ЧИСЛО набор» и «ЧИСЛО порог» (расчёт без костей) сразу после вызова drive_mode. Оба броска берут `@набор`, обе проверки — `@порог` (см. шаги в проблеме выше).",
+     "rule_source": "данные (без изменения правила)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "запись veh_drive · bindings[0].args.действующий",
+     "evidence": "«args»: {«действующий»: {«expr»: «@действующий»}}",
+     "mechanism": "other",
+     "target": "Удалить аргумент `действующий` из привязки. Входы-листы кнопки заполняет `table` или вывод: первый одиночный лист — кто действует (core/act.ts: `bound[param.key] = table[...]`). Аргумент для листа движок не читает; по CLAUDE.md «умолчания в данных не пишутся».",
+     "rule_source": "движок: packages/engine/src/core/act.ts (входы-листы связываются из table, args не читаются)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "drive_check · метки шага «удержать» (проверка аварии)",
+     "evidence": "tags: [«проверка», «вождение», «авария»] — без «пилотирование»; у первого броска оно есть. Спрайт «Диагностика» (anyTags: … «пилотирование») даёт кубики первому броску, но не броску аварии",
+     "mechanism": "other",
+     "target": "Только после ответа владельца: метки «удержать» = [проверка, вождение, пилотирование, авария]. Без ответа не трогать: от этого зависит, какие правки броска сработают.",
+     "rule_source": "docs/sr6-compendium.md §14: «Аварию» (Пилотирование против управляемости) — это тоже проверка Пилотирования; вопрос владельцу",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "intoxicate",
+   "label": "Токсин",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "table-data-copied-into-steps",
+     "where": "запись tox_gamma_scopolamine · bindings[0].args (power, dmg, s1, s2, inhaled) и её клетки",
+     "evidence": "args: power «12», dmg «\"нет\"», s1 «\"immobilized\"», s2 «\"dazed\"», inhaled «нет»; в клетках той же записи: power 12, damage «нет», statuses [«immobilized», «dazed»], vector «инъекционный», а также незаявленные клетки speed_rounds и statuses",
+     "mechanism": "record-of-book-type",
+     "target": "Кнопка уходит на тип записи. У таблицы `toxin` «Токсин»: `bindings: [{label: «Ввести», effect: «intoxicate», args: {power: @power, damage: @damage, statuses: @statuses, vector: @vector}}]` — так же, как «Выстрелить» у `firearm`. У tox_gamma_scopolamine удалить `bindings`, клетки `damage: «нет»` и `speed_rounds`. У `toxin` новая колонка `statuses` «Состояния» (эффект, список). Колонку `damage` перевести в выбор из `damage_kinds` с пометкой «необязательная» (пусто — урона нет), колонку `vector` — в выбор из `toxin_vectors` (см. ниже). Аргумент `действующий` не писать.",
+     "rule_source": "данные записи (стр. 122). Прототип scratchpad/sr7/tox.mts: кнопка типа подставила @power/@vector, пустой @damage пропустил вызов урона, линт чист",
+     "engine_gap": ""
+    },
+    {
+     "kind": "string-membership",
+     "where": "intoxicate · условие «@dmg != \"нет\"» и аргумент physical_hit вызова take_damage",
+     "evidence": "ЕСЛИ @dmg != \"нет\" → ВЫЗОВ take_damage(…, physical_hit=@dmg == \"физический\"); вход dmg — текст с умолчанием «нет»",
+     "mechanism": "column-of-reference-table",
+     "target": "Вход `dmg` заменить входом `damage` «Урон»: выбор из `damage_kinds` (справочник уже есть, колонка `physical` — да/нет), необязательный, без умолчания. Шаги: Если `не(пусто(@damage))` → ВЫЗОВ take_damage(лист=@цель, amount=@итог.margin, physical_hit=@damage.physical); конец.",
+     "rule_source": "данные (справочник damage_kinds); прототип tox.mts",
+     "engine_gap": ""
+    },
+    {
+     "kind": "copy-of-effect",
+     "where": "intoxicate · три ветки «ЕСЛИ @s1/@s2/@s3 != \"\" → НАЛОЖИТЬ @sN на @цель» и входы s1, s2, s3",
+     "evidence": "ЕСЛИ @s1 != \"\" / НАЛОЖИТЬ @s1 на @цель; то же для s2, s3. Шаг «Наложить» с пустым эффектом и так пропускается (engine/steps/status.ts: «состояние: не задано — шаг пропущен»)",
+     "mechanism": "other",
+     "target": "Входы s1, s2, s3 заменить одним входом `statuses` «Состояния» (эффект, список, необязательный). Шесть шагов и три охраны заменить одним шагом «НАЛОЖИТЬ @statuses на @цель» внутри «Если @итог.success». Охраны «!= \"\"» удалить.",
+     "rule_source": "данные",
+     "engine_gap": "Шаг «Наложить» не принимает список: engine/steps/status.ts: finish → «состоянию нужен id эффекта, а пришло [\"immobilized\",\"dazed\"]» (проверено tox.mts list). Нужно наложить каждый эффект списка с теми же аргументами (дыра 4). Обходить тремя колонками не надо."
+    },
+    {
+     "kind": "ladder-in-formula",
+     "where": "intoxicate · шаг «итог» (value), вход inhaled; шаг «стойкость» (метки)",
+     "evidence": "value: «большее из(0, @power + @doses - @цель.tox_cut - если(@inhaled, @цель.tox_cut_inhaled, 0))»; inhaled — да/нет, дублирует клетку vector записи; метки броска [«сопротивление», «токсин»] без пути введения",
+     "mechanism": "column-of-reference-table",
+     "target": "Новый справочник `toxin_vectors` «Путь введения» (key: word), строки: `контактный`, `поглощаемый`, `вдыхаемый`, `инъекционный`. Колонка `cut` «Сила ниже на» (число): формула колонки для всех строк `@цель.tox_cut`, у строки `вдыхаемый` своя клетка `@цель.tox_cut + @цель.tox_cut_inhaled`. Колонки `toxin.vector` и `drug.vector` перевести в выбор из `toxin_vectors` (значения клеток уже совпадают: «инъекционный», «поглощаемый», «вдыхаемый»). Вход `inhaled` заменить входом `vector` (выбор из `toxin_vectors`). Шаг «итог»: value = `большее из(0, @power + @doses - @vector.cut)`. Шаг «стойкость»: метки [сопротивление, токсин, {expr: @vector}] — метки броска принимают формулу (engine/steps/roll.ts: tagsOf).",
+     "rule_source": "данные (лист: tox_cut, tox_cut_inhaled); docs/reports/shadowrun-inventory-2026-10-24.md, стр. 121 (пути введения). Прототип tox.mts: метка «инъекционный» попала в бросок",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "запись surv_respirator (Выживание) · modifiers[0].tags — побочное следствие этой перестройки",
+     "evidence": "tags: [«сопротивление», «токсин»]; описание записи: «…при проверках сопротивления химикатам вдыхаемым путём (стр. 280)». В прототипе респиратор добавил 3 кубика против инъекционного гамма-скополамина (6 → 9 кубиков)",
+     "mechanism": "tag-contract",
+     "target": "Когда бросок понесёт метку пути введения, у правки респиратора метки = [сопротивление, токсин, вдыхаемый].",
+     "rule_source": "описание записи «Респиратор» (стр. 280); опись docs/reports/shadowrun-inventory-2026-10-24.md, стр. 121",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "intoxicate · шаг «итог» (successWhen не задан, значит «не меньше»)",
+     "evidence": "сила 12 против 12 успехов: успех с запасом 0, и «Неподвижность» с «Ошеломлением» накладываются",
+     "mechanism": "other",
+     "target": "Только после ответа владельца: у шага «итог» `successWhen: \"over\"`. Это меняет исход при равенстве, поэтому в перестройку не входит.",
+     "rule_source": "docs/reports/shadowrun-inventory-2026-10-24.md, стр. 122: «сила снижена до 0 — ни урона, ни эффектов»; вопрос владельцу",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "drug_crashes",
+   "label": "Отходняк",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "gained-lost-by-tag-candidate",
+     "where": "drug_crashes · пять подписок on: lost:dg_jazz, lost:dg_long_way, lost:dg_zubrila, lost:dg_kamikaze, lost:dg_nitro; system.grants[18] = «drug_crashes»",
+     "evidence": "по подписке на каждый наркотик; разница — только число оглушающего урона (12/6/6/9) и состояние (dazed/fatigued); каждая подписка охраняется «@лист == @носитель»",
+     "mechanism": "merge-copies",
+     "target": "Удалить эффект drug_crashes и строку «drug_crashes» из system.grants. Отходняк становится собственным шагом «при спадании» (`detach`) единого висящего эффекта `drug_effect` (см. dg_alcohol). Шаги detach: Если `@drug.crash_stun >= 1` → ВЫЗОВ take_damage(лист=@носитель, amount=@drug.crash_stun, physical_hit=нет); конец → НАЛОЖИТЬ @drug.crash_status (level=@drug.crash_level) на @носитель (пустое состояние движок пропускает). Числа — колонки записи `drug`: `crash_stun` «Отходняк: оглушающий урон» (число, умолч. 0), `crash_status` «Отходняк: состояние» (эффект, необязательная), `crash_level` «Отходняк: уровень состояния» (число, умолч. 1). Значения как сейчас: «Джаз» — dazed; «Долгий путь» — 12 и fatigued; «Зубрила» — 6; «Камикадзе» — 6 и fatigued; «Нитро» — 9. Метка «появилось/ушло» для этого не нужна: эффект один, и спадание слышит он сам, без охраны «@лист == @носитель».",
+     "rule_source": "данные (нынешние подписки); описания наркотиков (стр. 124–125)",
+     "engine_gap": "«При спадании» и шаги не читают колонку записи через вход: `@drug.crash_status` даёт «чьё поле?» для вида «запись» и «таблица «drug» не знает «drug_jazz»» для выбора из книжной таблицы (scratchpad/sr7/drug2.mts). Места в коде: engine/navigate.ts: referencedTable (знает только kind choice), engine/cells.ts: readCell и engine/tables.ts: rowOf/lookupCell (строки только из system.tables[t].rows, записей книги не видят) — дыра 2."
+    },
+    {
+     "kind": "other",
+     "where": "drug_crashes · подписка lost:dg_jazz",
+     "evidence": "НАЛОЖИТЬ \"dazed\" на @лист — состояние бессрочное; в описании «Джаза»: «Ошеломление на столько же, сколько длился эффект»; в клетке записи drug_jazz лежит незаявленный crash_minutes_mul: 1",
+     "mechanism": "other",
+     "target": "Только после ответа владельца: второй висящий эффект «Отходняк» (`drug_crash`) с входами drug и dur, сроком «минуты» = `@dur * @drug.crash_times`, новая колонка `crash_times` «Отходняк: длительность × срок наркотика». Без ответа отходняк бессрочный, как сейчас.",
+     "rule_source": "описание записи drug_jazz (стр. 124); опись, стр. 124 («частично»); вопрос владельцу",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "dg_alcohol",
+   "label": "Алкоголь",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "dg_alcohol (и такие же dg_jazz, dg_long_way, dg_zubrila, dg_kamikaze, dg_nitro) — целиком",
+     "evidence": "шесть висящих эффектов с одинаковым остовом: вход dur «Минут» = 60, срок «минуты» `@dur или 60`, reapply refresh; отличаются только числами правок (Реакция −1, Логика −1, pain_relief +1 …)",
+     "mechanism": "record-of-book-type",
+     "target": "Один висящий эффект `drug_effect` «Действие наркотика» (папка «Химия», висящий, reapply refresh). Входы: `drug` «Наркотик» (запись из `drug`), `dur` «Минут» (число, умолч. 60). Срок: минуты, max = `@dur`. Правки «пока висит»: body + `@drug.up_body` (этап «аугментация»); agility + `@drug.up_agility` (аугментация); reaction + `@drug.up_reaction` (аугментация); strength + `@drug.up_strength` (аугментация); willpower + `@drug.up_willpower` (аугментация); logic + `@drug.up_logic` (аугментация); init_dice + `@drug.up_init_dice`; pain_relief + `@drug.up_pain`. Детач — отходняк (см. drug_crashes). Новые колонки таблицы `drug` (число, умолч. 0): `up_body` «Тело +», `up_agility` «Проворство +», `up_reaction` «Реакция +», `up_strength` «Сила +», `up_willpower` «Воля +», `up_logic` «Логика +», `up_init_dice` «Кубики инициативы +», `up_pain` «Устойчивость к боли». Запись drug_alcohol: up_reaction −1, up_logic −1, up_pain 1. Удалить dg_alcohol.",
+     "rule_source": "данные (правки dg_alcohol), описание записи (стр. 124)",
+     "engine_gap": "Правка висящего эффекта видит только вход целиком: `@drug.up_reaction` падает с «в таблице «Наркотик» нет строки «up_reaction»», а линт молчит (scratchpad/sr7/drug.mts, оба вида входа — запись и выбор). Место: engine/modifiers.ts: resolverOf (и conditionHolds) — `@вход.колонка` уходит в pass.resolve как адрес таблицы (дыры 1 и 2)."
+    },
+    {
+     "kind": "table-data-copied-into-steps",
+     "where": "запись drug_alcohol · клетки boosts, dur_expr, statuses, damage, speed_rounds, crash",
+     "evidence": "boosts: [{field: reaction, add: −1}, {field: logic, add: −1}, {field: pain_relief, add: 1}] — вторая копия правок dg_alcohol; dur_expr: «большее из(60, (8 - @носитель.body) * 60)» — копия формулы dg_alcohol_take; таких колонок у `drug` и `gear` нет, их никто не читает; линт молчит",
+     "mechanism": "column-of-reference-table",
+     "target": "Удалить клетки boosts, dur_expr, statuses, damage, speed_rounds и пустую crash; их смысл переходит в колонки up_*, dur_minutes, crash_*. Текстовые колонки vector/speed/duration/effect/crash остаются справкой.",
+     "rule_source": "данные",
+     "engine_gap": "Линт компендиума не находит клеток записи, которых нет среди колонок её типа и предков: model/lint.ts: lintCompendium (дыра 8)."
+    },
+    {
+     "kind": "missing-column-default",
+     "where": "dg_alcohol (и все dg_*) · duration.max",
+     "evidence": "«@dur или 60» при входе dur с default 60",
+     "mechanism": "column-default",
+     "target": "В drug_effect срок = `@dur`: умолчание входа уже 60 (refs.ts: namedValue отдаёт default), «или 60» — мёртвая заплатка.",
+     "rule_source": "данные",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "dg_alcohol · modifiers[1] (logic −1); так же dg_kamikaze willpower +1 и dg_nitro willpower +2",
+     "evidence": "у правок Логики и Воли нет stage, у Реакции, Тела, Силы, Проворства — есть «аугментация»",
+     "mechanism": "other",
+     "target": "В drug_effect у всех правок характеристик явно стоит `stage: \"аугментация\"`. Это обязательно: «Облик существа» добавляет этап «основа» первым, а правка без этапа попадает в первый этап (engine/stages.ts: stageOf) и ушла бы из-под предела +4. Других правок характеристик без этапа в мире нет (проверено обходом).",
+     "rule_source": "данные (этапы колонок листа)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "dg_alcohol_take",
+   "label": "Принять: Алкоголь",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "dg_alcohol_take и dg_jazz_take — целиком; записи drug_alcohol и drug_jazz · bindings",
+     "evidence": "обе функции: ЧИСЛО срок = <формула срока>; НАЛОЖИТЬ \"dg_X\" на @действующий (dur=большее из(1, @срок)); у каждой записи своя кнопка «Принять»",
+     "mechanism": "record-of-book-type",
+     "target": "Одна функция `take_drug` «Принять наркотик» (папка «Химия»). Вход: `действующий` (лист). Шаги: ЧИСЛО срок = `@вещь.dur_minutes + @вещь.dur_d6_minutes * кинуть(к6, @вещь.dur_d6)` (расчёт; при 0 кубиков `кинуть` даёт 0) → НАЛОЖИТЬ \"drug_effect\" на @действующий (drug=@вещь, dur=@срок). Кнопка у типа: `drug.bindings = [{label: «Принять», effect: «take_drug»}]`; у записей bindings удалить. Новые колонки `drug` (число, умолч. 0): `dur_minutes` «Срок, минут» (клетка — число или формула от листа принявшего), `dur_d6` «Срок: кубиков к6», `dur_d6_minutes` «Срок: минут за очко к6». drug_alcohol.dur_minutes = `{expr: большее из(60, (8 - @носитель.body) * 60)}`. Удалить dg_alcohol_take и dg_jazz_take. «большее из(1, @срок)» не переносить: срок и так не меньше 10.",
+     "rule_source": "описание записи (стр. 124): (8 − Тело) часов, не меньше часа. Прототип scratchpad/sr7/alc.mts: Тело 2/5/8 → 360/180/60 минут",
+     "engine_gap": "Клетка записи, прочитанная через `@вещь.колонка`, считается на листе хозяина без имён. Голое `@body` работает, но линт ставит ошибку «чьё поле?», а с ошибкой линта сервер систему не публикует. `@носитель.body` линт принимает, а движок падает: «система не объявляет тег «носитель.body»» (alc_носитель.mts). Место: core/run.ts: itemRead → model/item-ref.ts: itemStored → resolveRef({expr}, {pass}) без sheets (дыра 6). Кроме того, `@вещь` даёт ключ экземпляра, а не id записи (engine/refs.ts: ctx.item.key) — у вещи с собственным id вход drug получит не тот ключ (дыра 2)."
+    }
+   ]
+  },
+  {
+   "id": "dg_jazz",
+   "label": "«Джаз»",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "dg_jazz — целиком",
+     "evidence": "тот же остов, что у dg_alcohol; правки: reaction +1 (аугментация), init_dice +2",
+     "mechanism": "record-of-book-type",
+     "target": "Удалить. Запись drug_jazz: up_reaction 1, up_init_dice 2, dur_d6 1, dur_d6_minutes 10, crash_status «dazed»; vector — выбор «вдыхаемый». Удалить незаявленные клетки dur_dice, crash_minutes_mul, dur_expr, boosts, statuses, damage, speed_rounds.",
+     "rule_source": "данные dg_jazz, описание записи (стр. 124)",
+     "engine_gap": "дыры 1 и 2 (правки и «при спадании» читают колонки записи через вход)"
+    },
+    {
+     "kind": "other",
+     "where": "dg_jazz · reapply: refresh при входе dur, который бросается при каждом приёме",
+     "evidence": "три приёма «Джаза» (кость 4, 2, 5) повесили три экземпляра {dur:40}, {dur:20}, {dur:50}: Реакция 3 → 6, кубиков инициативы 7 (scratchpad/sr7/jazz.mts). «Обновить» заменяет только экземпляр с полностью совпадающими аргументами (core/run.ts: attach, sameArgs)",
+     "mechanism": "other",
+     "target": "У drug_effect «обновлять по входу drug»: повторный приём того же наркотика заменяет экземпляр (новый срок), другой наркотик висит рядом. Нужна правка движка (дыра 7). До ответа владельца о повторных дозах сохранить смысл «обновить», а не «сложить».",
+     "rule_source": "данные (reapply refresh); правило повторной дозы — вопрос владельцу (в выписках есть только «Долгий путь»)",
+     "engine_gap": "core/run.ts: attach — sameArgs сравнивает все входы; движку нужен ключ обновления (например, effect.reapplyBy: [\"drug\"]) — дыра 7"
+    }
+   ]
+  },
+  {
+   "id": "dg_jazz_take",
+   "label": "Принять: «Джаз»",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "table-data-copied-into-steps",
+     "where": "dg_jazz_take · шаг «срок»",
+     "evidence": "ЧИСЛО срок = 10 * кинуть(к6) — длительность наркотика числом в шаге; в записи то же лежит текстом («10 × 1к6 минут») и незаявленной клеткой dur_dice",
+     "mechanism": "column-of-reference-table",
+     "target": "Удалить (сливается в take_drug, см. dg_alcohol_take). Длительность — колонки записи drug_jazz: dur_d6 = 1, dur_d6_minutes = 10. Кости в клетку не кладутся: «кинуть в клетке таблицы нельзя» (engine/refs.ts), поэтому число кубиков и минуты за очко — две числовые колонки, а бросок делает шаг take_drug.",
+     "rule_source": "описание записи (стр. 124). Прототип scratchpad/sr7/drug.mts: кость 4 → срок 40, наложено с dur 40",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "dg_long_way",
+   "label": "«Долгий путь»",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "dg_long_way — целиком; записи drug нет",
+     "evidence": "висящий эффект без правок (modifiers: []), его никто не накладывает: записи «Долгий путь» в компендиуме нет, кнопки «Принять» нет; если ведущий повесит его руками, срок — умолчание 60 минут",
+     "mechanism": "record-of-book-type",
+     "target": "Удалить эффект. Новая запись `drug_long_way` типа `drug`: подпись «Долгий путь», описание из dg_long_way, power 11, cost 50, avail 0, page 125, crash_stun 12, crash_status «fatigued» (как сейчас в drug_crashes). Срок по описанию: dur_minutes 5760 (4 дня) — поставить только после ответа владельца; до ответа запись без dur_minutes даст срок 0, поэтому без ответа запись не добавлять.",
+     "rule_source": "описание эффекта (стр. 124–125); docs/shadowrun6.md: «цепочка доз «Долгого пути»» — нет механизма в движке; вопрос владельцу",
+     "engine_gap": "дыры 1 и 2"
+    }
+   ]
+  },
+  {
+   "id": "dg_zubrila",
+   "label": "«Зубрила»",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "dg_zubrila — целиком; записи drug нет",
+     "evidence": "правки reaction +1 (аугментация), init_dice +1; эффект недостижим: нет записи и кнопки",
+     "mechanism": "record-of-book-type",
+     "target": "Удалить эффект. Новая запись `drug_zubrila` типа `drug`: подпись «Зубрила», описание из эффекта, power 8, cost 10, avail 2, legal «лицензия», page 125, up_reaction 1, up_init_dice 1, crash_stun 6, dur_minutes `{expr: большее из(60, (12 - @носитель.body) * 60)}`.",
+     "rule_source": "описание эффекта (стр. 125): «(12 − Тело) часов, не меньше часа», «6 оглушающего урона без сопротивления»",
+     "engine_gap": "дыра 6 (формула клетки записи от листа хозяина), дыры 1 и 2"
+    }
+   ]
+  },
+  {
+   "id": "dg_kamikaze",
+   "label": "«Камикадзе»",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "dg_kamikaze — целиком; записи drug нет",
+     "evidence": "шесть правок числами (Тело +1, Проворство +1, Сила +2, Воля +1 без этапа, init_dice +2, pain_relief +1); недостижим",
+     "mechanism": "record-of-book-type",
+     "target": "Удалить эффект. Новая запись `drug_kamikaze`: подпись «Камикадзе», описание из эффекта, power 10, cost 100, avail 3, legal «лицензия», page 125, up_body 1, up_agility 1, up_strength 2, up_willpower 1, up_init_dice 2, up_pain 1, dur_d6 1, dur_d6_minutes 10, crash_stun 6, crash_status «fatigued», crash_level 1 (как сейчас; по описанию — II, см. вопросы).",
+     "rule_source": "данные dg_kamikaze и drug_crashes; описание (стр. 125)",
+     "engine_gap": "дыры 1 и 2"
+    }
+   ]
+  },
+  {
+   "id": "dg_nitro",
+   "label": "Нитро",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "dg_nitro — целиком; записи drug нет",
+     "evidence": "правки Сила +2, Воля +2 (без этапа), init_dice +1, pain_relief +1; недостижим",
+     "mechanism": "record-of-book-type",
+     "target": "Удалить эффект. Новая запись `drug_nitro`: подпись «Нитро», описание из эффекта, power 12, cost 50, avail 2, legal «лицензия», page 125, up_strength 2, up_willpower 2, up_init_dice 1, up_pain 1, dur_d6 1, dur_d6_minutes 10, crash_stun 9.",
+     "rule_source": "данные dg_nitro и drug_crashes; описание (стр. 125)",
+     "engine_gap": "дыры 1 и 2"
+    },
+    {
+     "kind": "other",
+     "where": "dg_nitro · описание против правок",
+     "evidence": "в описании «Внимание +2» и «штраф −2 ко всем проверкам … на столько же времени» (отходняк); в правках и подписке этого нет",
+     "mechanism": "other",
+     "target": "Только после ответа владельца: колонка `up_perception` «Внимание + (кубики)» у `drug` (число, умолч. 0) и правка броска в drug_effect: {call: roll, param: count, op: add, value: @drug.up_perception, anyTags: [внимание], if: @бросающий == @носитель}. Штраф −2 после — через отходняк-эффект со сроком (см. вопрос про отходняк).",
+     "rule_source": "описание эффекта (стр. 125); опись, стр. 124–125 («расходится»); вопрос владельцу",
+     "engine_gap": "дыра 1"
+    }
+   ]
+  },
+  {
+   "id": "creature_template",
+   "label": "Облик существа",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "stored-should-be-computed",
+     "where": "creature_template · 18 шагов «Изменить» (9 характеристик и Магия, 9 навыков); тип листа creature",
+     "evidence": "ИЗМЕНИТЬ @цель.strength set большее из(если(пусто(@tpl.strength), @цель.strength, @tpl.strength), 0) … ИЗМЕНИТЬ @цель.skills.убеждение.rank set @tpl.sk_убеждение или 0. Прогон (scratchpad/sr7/creature.mts): у западного дракона Сила 40 → 26 и Магия 10 → 6 (запись срезается пределом поля: engine/steps/apply.ts, max = предел метатипа + 20); волк после адского пса сохраняет Магию 5 (пустая клетка — «оставить, что было»)",
+     "mechanism": "sheet-type-modifier",
+     "target": "1) Таблица `лист`: новая колонка `creature_kind` «Вид существа» (выбор из `creatures`, необязательная); показать на листе так же, как «Вид духа» и «Модель транспорта». 2) Этап «основа» первым: у body, agility, reaction, strength — перед [адепт, аугментация]; у willpower, logic, intuition, charisma — перед [аугментация]; у `skills.rank` — перед [адепт]; этап `{key: «основа», label: «основа (вид)»}` без предела. 3) Тип листа `creature`, 18 правок: для каждой из body, agility, reaction, strength, willpower, logic, intuition, charisma, magic — `{kind: value, target: <х-ка>, op: set, stage: «основа», value: @creature_kind.<х-ка>, if: не(пусто(@creature_kind))}`; для каждого из астрал, атлетика, ближний_бой, внимание, воплощение, колдовство, ориентирование, скрытность, убеждение — `{… target: skills.<навык>.rank, op: set, stage: «основа», value: @creature_kind.sk_<навык>, if: не(пусто(@creature_kind))}`. 4) Удалить эффект creature_template и запись wd_creature (вид выбирается на листе) — или оставить кнопку из одного шага, см. вопрос. 5) Подсказка типа листа: «Существо по виду из справочника «Существо»: характеристики, Магию и навыки считает тип листа (стр. 216–221)».",
+     "rule_source": "docs/sr6-review.md («правки типа листа «Существо» читают выбранную строку; «Облик» пишет только выбор строки»; «Не копировать строку справочника на лист»). Прототип scratchpad/sr7/beast.mts: дракон — Сила 40, Тело 20, Магия 10, инициатива 16, счётчик 18 (совпадает с клетками init_base и cm книги); адский пёс 9/11; волк 9/10; лист без вида — набранные руками значения; линт чист",
+     "engine_gap": "Без «или 0» у волка Магия = пусто: умолчание колонки справочника не читается (дыра 5). Сам подход собирается: правка типа листа по выбору строки и правка клетки skills.<x>.rank работают."
+    },
+    {
+     "kind": "missing-column-default",
+     "where": "creature_template · 9 шагов навыков; справочник creatures · колонки sk_* и magic",
+     "evidence": "«@tpl.sk_астрал или 0» … «@tpl.sk_убеждение или 0» — у колонок нет умолчания",
+     "mechanism": "column-default",
+     "target": "У creatures: magic и все sk_* (астрал, атлетика, ближний_бой, внимание, воплощение, колдовство, ориентирование, скрытность, убеждение) — `default: 0`; в правках типа листа без «или 0».",
+     "rule_source": "данные",
+     "engine_gap": "engine/cells.ts: readCell — для пустой клетки справочника (source.kind === 'input') возвращает undefined, а column.default не берёт. Проверено: creatures.magic default 0 → волк: undefined (scratchpad/sr7/def.mts). Отсюда «или 0» по всему образцу (39 шт.) — дыра 5."
+    },
+    {
+     "kind": "other",
+     "where": "справочник creatures · подписи колонок",
+     "evidence": "label совпадает с ключом: «body», «agility», «init_base», «cm», «sk_атлетика», «sk_ближний_бой», «armor_worn_extra», «magic_text» …",
+     "mechanism": "other",
+     "target": "Подписи по-русски: group «Группа», body «Тело», agility «Проворство», reaction «Реакция», strength «Сила», willpower «Воля», logic «Логика», intuition «Интуиция», charisma «Харизма», essence «Сущность», init_base «Инициатива», init_dice «Кубики инициативы», actions «Действия», cm «Счётчик», cm_stun «Счётчик оглушения», move «Передвижение», defense «Защита», defense_magic «Защита от магии», armor «Броня», armor_magic «Магическая броня», armor_worn_extra «Надетая броня сверху», skills_text «Навыки (текст)», powers «Способности», weaknesses «Уязвимости», attacks «Атаки», range «Дистанция», magic «Магия», magic_text «Магия (текст)», essence_text «Сущность (текст)», note «Примечание», description «Описание», page «Стр.», sk_<навык> — название навыка («Атлетика», «Ближний бой», «Внимание», «Убеждение», «Ориентирование», «Скрытность», «Астрал», «Воплощение», «Колдовство»).",
+     "rule_source": "CLAUDE.md: «слова вместо ключей», «без английских имён»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "запись wd_creature · bindings[0].args.действующий",
+     "evidence": "«действующий»: {«expr»: «@действующий»}",
+     "mechanism": "other",
+     "target": "Удалить вместе с записью; если кнопку оставят — аргумент не писать (core/act.ts: входы-листы из table).",
+     "rule_source": "движок: core/act.ts",
+     "engine_gap": ""
+    }
+   ]
+  }
+ ],
+ "tags_proposed": [
+  {
+   "tag": "вдыхаемый / поглощаемый / контактный / инъекционный (метки броска сопротивления токсину)",
+   "meaning": "путь введения токсина или наркотика: значение входа vector (строка справочника «Путь введения»), которое ставится меткой на бросок «стойкость»",
+   "effects": [
+    "intoxicate (шаг «стойкость»: метки [сопротивление, токсин, @vector])"
+   ],
+   "who_listens": "правка броска «Респиратор» (surv_respirator) по меткам [сопротивление, токсин, вдыхаемый] — сейчас срабатывает и против инъекционного; позже противогаз и фильтры (опись, стр. 121: иммунитет к вдыхаемым). Фильтр меток структурный — у правки броска он уже есть (tags/anyTags/notTags)"
+  },
+  {
+   "tag": "токсин (метка эффекта)",
+   "meaning": "отравление: сопротивление Тело + Воля против силы и последствия. Договор system.tags.токсин: inputs [цели: sheet many, power: number, vector: choice], each: «цель», outputs [«итог»]",
+   "effects": [
+    "intoxicate"
+   ],
+   "who_listens": "сейчас никто. Кандидаты: «Невосприимчивость (токсины)» у существ (вампир, крысы; сейчас текст в колонке powers) — подписка «до токсин» с условием @цель == @носитель; будущие газовые гранаты и способность «Яд» вызывают intoxicate и попадают под те же подписки. Одноимённая метка броска «токсин» уже есть, её слушает респиратор; метка эффекта и метка броска — разные слои, конфликта нет"
+  },
+  {
+   "tag": "вождение (метка эффекта)",
+   "meaning": "проверка управления транспортом. Договор system.tags.вождение: inputs [действующий: sheet, цели: sheet many], each: «цель», outputs [«итог», «авария»]",
+   "effects": [
+    "drive_check (будущие «Таран» и проверки дрона — тем же договором)"
+   ],
+   "who_listens": "сейчас никто. Кандидат — «бонусное очко Преимущества» модуля контроля при захвате (опись, стр. 197/283: «бонусного очка нет») подпиской «после вождения». Вводить вместе с первой такой подпиской, не заранее"
+  }
+ ],
+ "engine_gaps": [
+  {
+   "what": "1. Правка висящего эффекта не читает колонку своего входа (`@drug.up_reaction`, `@вход.колонка` для выбора и для записи) — ни в значении, ни в условии. Линт при этом молчит.",
+   "why": "Наркотики — записи типа `drug`, их числа должны жить в колонках записи, а висящий эффект — хранить только ссылку на запись и срок. Иначе либо шесть копий-эффектов, либо копия строки записи в аргументы на листе (нарушает «хранимое ≠ вычисляемое»). Проверено: scratchpad/sr7/drug.mts — «в таблице «Наркотик» нет строки «up_reaction»», lintSystem — ноль находок.",
+   "where": "packages/engine/src/engine/modifiers.ts: resolverOf и conditionHolds (знают только точные имена входов, `@x.y` уходит в pass.resolve как адрес таблицы); проверка — packages/engine/src/model/references.ts / lint.ts (имена правок висящего эффекта)"
+  },
+  {
+   "what": "2. Вход «запись книги» не ведёт к колонкам записи: в шагах, «при наложении/спадании» и подписках `@drug.crash_stun` даёт «чьё поле?» (вид record) или «таблица «drug» не знает «drug_jazz»» (выбор из книжной таблицы). Кнопка вещи отдаёт `@вещь` как ключ экземпляра, а не id записи.",
+   "why": "Отходняк — «при спадании» единого drug_effect по колонкам записи. Без этого пять подписок по id и шесть копий остаются. Проверено: scratchpad/sr7/drug2.mts.",
+   "where": "packages/engine/src/engine/navigate.ts: referencedTable (только kind choice); packages/engine/src/engine/cells.ts: readCell и engine/tables.ts: rowOf/lookupCell (строки только из system.tables[t].rows; нужна ветка «книжная таблица → findRecord(pass.compendium) + propsOf(record) с умолчаниями и формулами клеток через itemExpr»); packages/engine/src/engine/refs.ts: `ctx.item && name === ITEM_NAME → ctx.item.key` (нужен способ взять id записи; ItemRef.record наружу не выходит)"
+  },
+  {
+   "what": "3. (Не требуется для этого кластера) Подписка gained:/lost: видит входы ушедшего эффекта только как `@about.<вход>`; дальше по колонке (`@about.drug.crash_stun`) не пройти.",
+   "why": "После слияния наркотиков отходняк делается собственным detach, поэтому «появилось/ушло по метке» и типизированный @about здесь не нужны. Отмечено, чтобы не строить по-метке-gained ради наркотиков.",
+   "where": "packages/engine/src/core/run.ts: lifecycle (ключ `gained:/lost:<effectId>`, seed `about`), choiceOf (знает только итоги вызовов); model/references.ts: heardNames (listened: null для gained/lost)"
+  },
+  {
+   "what": "4. Шаг «Наложить» не принимает список эффектов (вход «эффект, список»).",
+   "why": "Состояния токсина — список в клетке записи (`statuses: [immobilized, dazed]`); сейчас вместо него три входа s1..s3 и три одинаковые ветки. Проверено: scratchpad/sr7/tox.mts list — «состоянию нужен id эффекта, а пришло [\"immobilized\",\"dazed\"]».",
+   "where": "packages/engine/src/engine/steps/status.ts: finish (typeof id !== 'string' → ошибка; нужно наложить каждый с теми же args, trace — списком); слот «Наложить» в words/steps и линт — разрешить kind effect many"
+  },
+  {
+   "what": "5. Умолчание колонки справочника (`column.default`) не отдаётся для пустой клетки.",
+   "why": "Корень заплаток «или 0» (39 в образце): creatures.sk_*/magic, @sprite_kind.x или 0, @vehicle_model.x или 0. Проверено: scratchpad/sr7/def.mts — creatures.magic default 0, волк → undefined. У книжных записей умолчание работает (owned.ts: propsOf).",
+   "where": "packages/engine/src/engine/cells.ts: readCell — ветка `source.kind === 'input'` возвращает undefined; для таблицы без владельца нужно вернуть spec.default (model/sheet-columns.ts: cellSource его не учитывает)"
+  },
+  {
+   "what": "6. Формула клетки записи, прочитанная через `@вещь.колонка`, считается на листе хозяина без имён: голое `@body` работает, но линт пишет «чьё поле?»; `@носитель.body` линт принимает, а движок падает «система не объявляет тег «носитель.body»».",
+   "why": "Срок наркотика — метод записи: (8 − Тело) часов у Алкоголя, (12 − Тело) у Зубрилы. Линт и движок расходятся, и чистого способа записать формулу нет. Проверено: scratchpad/sr7/alc.mts, alc_носитель.mts, alc_действующий.mts.",
+   "where": "packages/engine/src/core/run.ts: itemRead → packages/engine/src/model/item-ref.ts: itemStored (count → resolveRef({expr}, {pass, owner}) без sheets: { bound: { носитель: хозяин } }); проверка имён клеток записи в месте чтения — model/variants.ts: cellScopeProblems"
+  },
+  {
+   "what": "7. «Обновить при повторном наложении» (reapply: refresh) заменяет только экземпляр с полностью совпадающими входами; при входе-сроке, который бросается заново, повтор складывается.",
+   "why": "Три приёма «Джаза» дали три экземпляра: Реакция 3 → 6, кубиков инициативы 7 (scratchpad/sr7/jazz.mts). У drug_effect экземпляр определяет вход drug, а не dur.",
+   "where": "packages/engine/src/core/run.ts: attach (sameArgs по всем kept); схема packages/schema/src/world.ts: effect — например `reapplyBy: string[]` (какие входы задают экземпляр, без него — все, как сейчас); линт (ключи — входы эффекта); редактор — под «ещё»"
+  },
+  {
+   "what": "8. Линт компендиума не замечает клеток записи с ключами, которых нет среди колонок её типа и предков.",
+   "why": "В записях кластера мёртвые копии: drug_alcohol (boosts, dur_expr, statuses, damage, speed_rounds), drug_jazz (dur_dice, crash_minutes_mul, …), tox_gamma_scopolamine (speed_rounds, statuses); при этом lintSystem + lintCompendium дают 0 находок по всему миру.",
+   "where": "packages/engine/src/model/lint.ts: lintCompendium"
+  }
+ ],
+ "questions_for_owner": [
+  "Токсин (стр. 122 по описи docs/reports/shadowrun-inventory-2026-10-24.md): при силе, равной успехам сопротивления, состояния сейчас накладываются (проверка «не меньше»). По книге «сила снижена до 0 — ни урона, ни эффектов». Ставить «больше» (successWhen: over)?",
+  "Токсин: защитное снаряжение сейчас снижает силу (tox_cut, tox_cut_inhaled), а по книге (стр. 121–122) даёт кубики к сопротивлению, у вдыхаемых — иммунитет у противогаза и герметизации. Переводить на кубики и иммунитет или оставить снижение силы?",
+  "Наркотики, повторная доза: обновлять срок (один экземпляр на наркотик), складывать или как у «Долгого пути» (вторая доза — после окончания первой)? В выписках правило есть только для «Долгого пути».",
+  "Отходняк по описаниям записей (стр. 124–125): у «Джаза» Ошеломление на тот же срок (сейчас бессрочно); у «Камикадзе» Реакция −1, Воля −1, Утомление II на двойной срок (сейчас Утомление I бессрочно, без −1/−1); у «Нитро» −2 ко всем проверкам на тот же срок (сейчас нет); у «Долгого пути» 12 оглушающего — только за 5-ю и следующие дозы (сейчас за любую). Переносить в данные (отдельный висящий «Отходняк» со сроком и колонками crash_*) или оставить как сейчас?",
+  "«Нитро»: в описании «Внимание +2», в правках этого нет. Добавить колонкой up_perception и правкой броска по метке «внимание»?",
+  "Этап бонусов наркотиков: в данных — «аугментация» (общий предел +4), а в docs/sr6-compendium.md §14 (решение ревью этапа 7) записано: «бонусы наркотиков — отдельный этап «химия» над «аугментацией» (не суммируются с её +4)». Какое правило верно по книге?",
+  "Записи «Долгий путь», «Зубрила», «Камикадзе», «Нитро» сняты из компендиума (опись: «сняты в 81f0320»), а их висящие эффекты остались недостижимыми. Восстанавливать их записями типа «Наркотик» с числами из описаний? Для «Долгого пути» нужен срок: 4 дня (5760 минут)?",
+  "Проверка аварии: сейчас тот же набор, что у проверки управляемости (Пилотирование + Реакция со штрафом интервала), но без метки «пилотирование». В sr6-compendium §14 — «Пилотирование против управляемости». Набор и метки броска аварии — как у первой проверки?",
+  "Авария (стр. 200 по описи): урон получают «все внутри», а сейчас только водитель. Нужен вход «кто внутри» (листы) у «Проверки управляемости»? И получает ли урон риггер в захвате, если его нет в машине (sr6-compendium: «авария при присутствии — своё Тело»)?",
+  "«Кто ведёт» сейчас выводится трижды и по-разному: в проверке — «кнопку нажал сам транспорт», иначе «захвачено», иначе водитель; в защите и значении атаки листа транспорта — «захвачено», иначе driver_pilot ≥ 1, иначе автопилот. Риггер в захвате, нажав кнопку с листа дрона, получит набор автопилота. Сделать «Кто ведёт» хранимым выбором на листе транспорта (одно место для проверки, защиты и атаки)? И брать набор риггера с его листа, а не с полей-копий rig_*?",
+  "«Облик существа»: удалить кнопку (вид выбирается на листе, числа считает тип листа) или оставить кнопку из одного шага «вписать вид» для нескольких листов сразу (стая)?",
+  "Пешки: у справочника «Заготовка пешки» (grunt_templates) нет ни кнопки, ни правок типа листа, а подсказка типа «Существо» обещает «существо или пешку по заготовке». Делать «Вид заготовки» на листе пешки тем же способом, что «Вид существа»?",
+  "Гамма-скополамин (стр. 122): «сыворотка правды» (Воля −3, не ниже 1, второй час) в данных не выражена. Добавлять?"
+ ]
+}

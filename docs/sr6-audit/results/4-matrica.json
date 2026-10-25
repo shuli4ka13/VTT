@@ -1,0 +1,553 @@
+{
+ "cluster": "Матрица и лёд",
+ "items": [
+  {
+   "id": "matrix_hurt",
+   "label": "Урон в Матрице",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "string-membership",
+     "where": "steps[6] «Если» биоотдачи и аргумент physical_hit шага steps[8]",
+     "evidence": "@bio >= 1 и (@лист.matrix_mode == \"холодная ВР\" или @лист.matrix_mode == \"горячая ВР\"); physical_hit=не @bio_stun и @лист.matrix_mode == \"горячая ВР\"",
+     "mechanism": "column-of-reference-table",
+     "target": "Справочник «Режим Матрицы» matrix_modes, новые колонки: online «В Матрице» (да/нет, умолчание нет; строки ДР, холодная ВР, горячая ВР — да); vr «Виртуальная реальность» (да/нет, умолчание нет; холодная ВР, горячая ВР — да); hot «Горячий сим» (да/нет, умолчание нет; горячая ВР — да). В шагах: `@лист.matrix_mode.vr`, `@лист.matrix_mode.hot`. Те же колонки читают dumpshock, convergence, device_bricked и (другой кластер) формула инициативы листа.",
+     "rule_source": "описание эффекта (стр. 176, 178); docs/sr6-compendium.md §11, строка «Режим»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "string-membership",
+     "where": "steps[1] «Если»",
+     "evidence": "@лист.awakened == \"техномант\"",
+     "mechanism": "column-of-reference-table",
+     "target": "Справочник «Пробуждённый» awakened_kinds: колонка living_persona «Живой аватар (урон Матрицы — оглушающим)» (да/нет, умолчание нет; техномант — да). Условие: `@лист.awakened.living_persona`. Сама развилка «Если / Иначе» остаётся: руки делают разное («Урон» оглушающий против «Изменить урон Матрицы»). Та же колонка заменит 5 условий `@awakened == \"техномант\"` в правках типа листа «Раннер» (другой кластер).",
+     "rule_source": "docs/sr6-compendium.md §13, строка «Урон Матрицы техноманту»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "входы bio, bio_stun; steps[6]–[9] (биоотдача внутри урона Матрицы)",
+     "evidence": "ЕСЛИ @bio >= 1 и (...ВР) → ЧИСЛО воля = кинуть … @лист.willpower … + @лист.bio_resist_bonus → ВЫЗОВ take_damage(…, physical_hit=не @bio_stun и …)",
+     "mechanism": "shared-function",
+     "target": "Выделить функцию bio_hurt «Биоотдача» (группа «Шаги для других»): входы лист «Кто получает» (лист, приходит сам: цель), amount «Биоотдача» (число, величина), оглушающая «Только оглушающая» (да/нет, умолчание нет). Шаги: Если `@amount >= 1 и @лист.matrix_mode.vr` → ЧИСЛО воля = кинуть набор `если(@лист.m_bio_filter >= 1, большее из(@лист.willpower, @лист.dev_rating, @лист.body), @лист.willpower)` бросает @лист, метки [сопротивление, биоотдача] → ВЫЗОВ take_damage(лист=@лист, amount=большее из(0, @amount - @воля.total), physical_hit=не @оглушающая и @лист.matrix_mode.hot) → конец. В matrix_hurt убрать входы bio, bio_stun и шаги 6–9; добавить вход источник «Кто наносит» (лист, роль «кто действует», необязательный); итог урон «урон Матрицы» (число) = `большее из(0, @amount - @экран.total)`; метка эффекта «урон Матрицы». Зовущие: ic_attack (искрящий, чёрный) зовёт bio_hurt сам; инфошип и смоляная яма — через подписки программ (см. matrix_spike). sprite_storm и sprite_power_use передают только лист и amount — не ломаются.",
+     "rule_source": "описание эффекта (стр. 176, 178); правило из данных",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "steps[4] и steps[7] — поля-зацепки",
+     "evidence": "+ если(@amount >= 1, @лист.m_vm_extra, 0); если(@лист.m_bio_filter >= 1, …); + @лист.bio_resist_bonus — ни одна запись образца эти поля не пишет",
+     "mechanism": "other",
+     "target": "bio_resist_bonus — снести поле: бросок воли в bio_hurt получает метку «биоотдача», отголосок «Нейрофильтр» (когда появится запись) — правка броска «Набор +1» с меткой «биоотдача» и условием «бросает носитель». m_vm_extra и m_bio_filter оставить полями до ответа владельца (вопрос «поля без источника»).",
+     "rule_source": "docs/sr6-compendium.md §13, решение 10 («Нейрофильтр — +1 к сопротивлению биоотдаче»); вопрос владельцу",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "dumpshock",
+   "label": "Демпшок",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "string-membership",
+     "where": "steps[0] «Если» и аргумент physical_hit шага steps[4]",
+     "evidence": "не (@лист.matrix_mode == \"холодная ВР\" или @лист.matrix_mode == \"горячая ВР\"); physical_hit=@лист.matrix_mode == \"горячая ВР\"",
+     "mechanism": "column-of-reference-table",
+     "target": "`не @лист.matrix_mode.vr` и `physical_hit=@лист.matrix_mode.hot` (колонки vr, hot справочника matrix_modes — см. matrix_hurt).",
+     "rule_source": "описание (стр. 176)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "switch-correct-keep",
+     "where": "steps[0]–[2] СТОП «не в ВР — демпшока нет»",
+     "evidence": "демпшок — функция, её зовут из подписок convergence и device_bricked",
+     "mechanism": "keep-as-is",
+     "target": "Стоп оставить в шагах функции (не в «Плате»: стоп платы во вложенном вызове — отказ всего действия, а «Удар льда» не должен отменяться оттого, что цель не в ВР). Эта проверка — единственное место правила «демпшок только в ВР»: зовущие свою копию снимают (см. convergence, device_bricked).",
+     "rule_source": "core: emit.ts — стоп вызванной функции рвёт зовущего только в цене",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "steps[5] НАЛОЖИТЬ dumpshocked",
+     "evidence": "НАЛОЖИТЬ \"dumpshocked\" на @лист — без входов; срок «(10 − Воля) минут» не передаётся",
+     "mechanism": "other",
+     "target": "НАЛОЖИТЬ dumpshocked на @лист с аргументом минут = `10 - @лист.willpower` (вход см. dumpshocked).",
+     "rule_source": "описание «(10 − Воля) минут без Преимущества» (стр. 176); docs/sr6-compendium.md §11 ревью — «срок формулой»",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "dumpshocked",
+   "label": "Дезориентация после демпшока",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "duration",
+     "evidence": "\"duration\": {\"kind\": \"scene\"}; описание: «минуты — до этапа времени держится до конца сцены»",
+     "mechanism": "other",
+     "target": "Временная замена устарела — игровое время есть (durationKind minutes, clock.ts; так сделаны наркотики `@dur`). Новый вход минут «Минут» (число, умолчание 1); duration = {kind: \"minutes\", max: {expr: \"@минут\"}}. Правки edge_no_gain / edge_no_spend оставить (общая точка запрета с «Ошеломлением» и «Неуверенностью»). Описание поправить: убрать оговорку про сцену.",
+     "rule_source": "описание (стр. 176); вопрос владельцу — что при Воле ≥ 10",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "link_lock",
+   "label": "Залипание",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "modifiers[0] — поле link_locked",
+     "evidence": "link_locked пишет только этот эффект; ни одна формула образца его не читает; режим Матрицы matrix_mode — поле-выбор, его правит игрок",
+     "mechanism": "other",
+     "target": "Эффект и поле-запрет оставить (точка для нескольких источников, как edge_no_gain). Читатели — в «Плате» действий, которые запрещает залипание: «Сменить режим», «Перезагрузить устройство», «Войти на сервер / Покинуть сервер»: `ЕСЛИ @действующий.link_locked >= 1 → СТОП «залипание: сначала «Отключиться»»`; действие «Отключиться» снимает link_lock. В образце этих действий нет — делать после ответа владельца.",
+     "rule_source": "описание (стр. 176); вопрос владельцу",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "matrix_access",
+   "label": "Доступ",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "missing-column-default",
+     "where": "on[0] (moment:round-start) steps[0]",
+     "evidence": "@level.overwatch или 1",
+     "mechanism": "column-default",
+     "target": "`@level.overwatch` — у обеих строк access_levels клетка есть, у входа level умолчание «пользователь»; «или 1» — след пустой клетки. Подписку на начало раунда без условия оставить: момент раунда не ходовой, носитель один.",
+     "rule_source": "описание (стр. 175)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "matrix_drain",
+   "label": "Смоляная яма: ВМ снижена",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "modifiers[0]",
+     "evidence": "target dev_dp, stage «основа», value 0 - @amount — а «Характеристика Матрицы снижена» (сковывающий лёд) снижает m_dp на этапе «снижение»; Плата действий: `@действующий.m_dp < 1 и @действующий.dev_dp >= 1` — после ямы до нуля dev_dp = 0, стоп не срабатывает",
+     "mechanism": "other",
+     "target": "После ответа владельца: target m_dp, stage «снижение», value `0 - @amount` — один слой со снижением от льда; тогда стоп «Вычислительная мощность снижена до 0» работает и для ямы.",
+     "rule_source": "описание (стр. 184–185); ic_kinds.text «сковывающий: при 0 — никаких действий в Матрице»; вопрос владельцу",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "duration + modifiers[0]",
+     "evidence": "описание «по 1 за раунд возвращается», а правка держит всё снижение `amount` раундов целиком",
+     "mechanism": "other",
+     "target": "Если владелец подтвердит: значение правки `0 - @осталось` (сколько раундов срока осталось). Иначе записать упрощение в docs/production-differences.md.",
+     "rule_source": "описание (стр. 185); вопрос владельцу",
+     "engine_gap": "формулам правок висящего эффекта не подаётся остаток срока: engine/modifiers.ts sourcesOf передаёт только args; events/durations.ts держит until/turnsLeft/atSec внутри"
+    }
+   ]
+  },
+  {
+   "id": "convergence",
+   "label": "Конвергенция",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "on[0] (field:converged) steps[0]–[2]",
+     "evidence": "ЕСЛИ @носитель.matrix_mode == \"холодная ВР\" или … \"горячая ВР\" → ВЫЗОВ dumpshock — копия ветки device_bricked, а проверка ВР ещё и внутри самого dumpshock",
+     "mechanism": "merge-copies",
+     "target": "Шаги подписки: ИЗМЕНИТЬ @носитель.matrix_damage = @носитель.matrix_cm; ИЗМЕНИТЬ @носитель.overwatch = 0. Полный счётчик делает поле device_dead верным → срабатывает «Сдохшее устройство» (демпшок в ВР, выброс). Ветку удалить. Порядок: демпшок теперь после записи урона, кость та же одна (тест «ПН 40 — конвергенция» не меняется). Подписку field:converged с условием `@лист == @носитель` оставить.",
+     "rule_source": "описание (стр. 176) + описание device_bricked (стр. 174)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "device_bricked",
+   "label": "Сдохшее устройство",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "string-membership",
+     "where": "on[0].if",
+     "evidence": "@носитель.matrix_mode != \"нет\" или @носитель.implant_dead_dv >= 1",
+     "mechanism": "column-of-reference-table",
+     "target": "`@лист == @носитель и (@носитель.matrix_mode.online или @носитель.implant_dead_dv >= 1)` (колонка online справочника matrix_modes).",
+     "rule_source": "описание (стр. 174)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "inline-copy-of-existing-function",
+     "where": "on[0] steps[0]–[2]",
+     "evidence": "ЕСЛИ (холодная ВР или горячая ВР) → ВЫЗОВ dumpshock — повтор стопа «не в ВР» самого dumpshock",
+     "mechanism": "shared-function",
+     "target": "Шаги: ВЫЗОВ dumpshock(лист=@носитель); ИЗМЕНИТЬ @носитель.matrix_mode = \"нет\"; ЕСЛИ @носитель.implant_dead_dv >= 1 → ВЫЗОВ implant_blast(…) → конец. В журнале при ДР появится строка демпшока «не в ВР» (вопрос владельцу). Подписку на поле оставить.",
+     "rule_source": "описание (стр. 174)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "matrix_check",
+   "label": "Действие в Матрице",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "cost (29 шагов) и steps[0]–[14]",
+     "evidence": "cost совпадает у matrix_check, matrix_spike, matrix_tarpit, matrix_hack; у ic_attack тот же без стопа ВМ; steps[0..14] совпадают у check/spike/tarpit/ic_attack, у hack — 4 отличия",
+     "mechanism": "shared-function",
+     "target": "Две функции в группе «Шаги для других». (а) matrix_ready «Готовность к Матрице»: входы действующий «Кто действует» (лист, роль «кто действует»; имя обязательно — его читают клетки matrix_links), целей «Сколько целей» (число, умолчание 1), link «Связано с» (выбор из matrix_links, умолчание «нет»). Шаги — стопы с прежними словами: `@целей > 1 + @действующий.m_fork`; `@действующий.dev_rating < 1`; `@действующий.m_dp < 1 и @действующий.dev_dp >= 1`; `@действующий.device_dead`; `@действующий.noise > @действующий.dev_rating`; `@link.zero`. (б) matrix_defend «Отпор в Матрице»: входы цель «Кто защищается» (лист, роль «цель»; имя обязательно — его читают клетки matrix_defenses), действующий (лист, кто действует), взлом «Бросок действия» (вид «бросок»), защита (выбор из matrix_defenses, умолчание «нет»), illegal «Незаконное» (да/нет, умолчание нет), порог (число, умолчание 0), к_зщ «Прибавка к значению защиты» (число, умолчание 0), к_защите «Прибавка к набору защиты» (число, умолчание 0). Итоги: вышло (да/нет, «нет» — «не вышло») = `@итог.success`; чистые «чистые успехи» (число) = `большее из(0, @итог.margin)`. Шаги: ЧИСЛО зщ = `@цель.matrix_dr + @к_зщ - если(@illegal, @действующий.m_def_cut, 0)`; Если `@действующий.matrix_ar - @зщ >= 4` → gain_edge(лист=@действующий), Иначе если `@зщ - @действующий.matrix_ar >= 4` → gain_edge(лист=@цель); ЧИСЛО отпор = кинуть набор `большее из(0, если(@цель.is_device, @защита.device, @защита.persona) + @к_защите)` бросает @цель, метки [защита, матрица]; ПРОВЕРКА итог: `@взлом` против `если(@защита.threshold, @порог, @отпор)`; Если `@illegal и @защита.opposed` → ИЗМЕНИТЬ @действующий.overwatch + `если(@действующий.ow_hide >= 1, 0, @отпор.total + если(@действующий.hack_programs >= 1, 1, 0))`. Сама кнопка matrix_check: Плата — ВЫЗОВ matrix_ready(действующий=@действующий, целей=сколько(@цели), link=@link); ВЫЗОВ spend_action(лист=@действующий, сложное=@kind.complex, простых=@kind.simple). Шаги: ЧИСЛО взлом = кинуть набор `большее из(0, @pool + @link.penalty)` бросает @действующий, метки [проверка, матрица, @action]; Для каждого из «цели»; ВЫЗОВ отпор = matrix_defend(цель=@цель, действующий=@действующий, взлом=@взлом, защита=@защита, illegal=@illegal, порог=@порог); Если не @отпор.вышло → СТОП «не вышло»; Если не пусто(@урон) → ВЫЗОВ matrix_hurt(лист=@цель, источник=@действующий, amount=@урон); Если не пусто(@накладывает) → НАЛОЖИТЬ @накладывает на @цель (amount=@урон). Новые входы: урон «Урон Матрицы» (число, необязательный), накладывает «Накладывает» (эффект, необязательный). Итого 2 шага платы и 8 шагов тела, как у D&D «Атака». Та же сердцевина вписана в cast_form, cast_form_attr, sprite_power_use (кластер техномантов) — им звать matrix_defend.",
+     "rule_source": "описание (стр. 175–185); docs/sr6-compendium.md §11 ревью: «Одна функция «Действие в Матрице»», «ПН»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "inline-copy-of-existing-function",
+     "where": "cost[18]–[28]",
+     "evidence": "ЕСЛИ @стол.battle и @kind == \"сложное\" → complex_left < 1 СТОП → complex_left -= 1; ИНАЧЕ ЕСЛИ @стол.battle и @kind == \"простое\" → simple_left < 1 СТОП → simple_left -= 1",
+     "mechanism": "column-of-reference-table",
+     "target": "Справочник «Вид действия» action_kinds, колонки: complex «Сложное» (да/нет, умолчание нет; сложное — да), simple «Простых действий» (число, умолчание 0; простое — 1). Вместо 11 шагов — ВЫЗОВ spend_action(лист=@действующий, сложное=@kind.complex, простых=@kind.simple). Слова стопа станут словами spend_action («простых действий на этом ходу не хватает»).",
+     "rule_source": "docs/samples-dry.md правило 3; docs/sr6-review.md, строка «Вид действия»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "string-membership",
+     "where": "cost[15] «Если»",
+     "evidence": "@link == \"Проникновение\" и @действующий.m_attack < 1 или @link == \"Ускользание\" и @действующий.m_sleaze < 1",
+     "mechanism": "column-of-reference-table",
+     "target": "Справочник «Связь действия» matrix_links: колонка zero «Связанная характеристика на нуле» (да/нет, формула на строку, умолчание нет): Проникновение `@действующий.m_attack < 1`, Ускользание `@действующий.m_sleaze < 1`. В matrix_ready: `ЕСЛИ @link.zero → СТОП «связанная характеристика упала до 0»`.",
+     "rule_source": "данные (cost, matrix_links.penalty); docs/sr6-compendium.md §11 «Связанная характеристика»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "ladder-in-formula",
+     "where": "steps[8] versus; steps[9] условие ПН",
+     "evidence": "если(@защита == \"порог\", @порог или 0, @отпор); @illegal и @защита != \"порог\" и @защита != \"нет\"",
+     "mechanism": "column-of-reference-table",
+     "target": "Справочник «Защита в Матрице» matrix_defenses: threshold «Порог ведущего» (да/нет, умолчание нет; «порог» — да), opposed «Встречная проверка» (да/нет, умолчание да; «порог», «нет» — нет). versus = `если(@защита.threshold, @порог, @отпор)`; ПН — при `@illegal и @защита.opposed`. Бросок отпора остаётся безусловным (0 кубиков у «порог»/«нет») — кости и журнал прежние. «@порог или 0» → умолчание входа порог = 0.",
+     "rule_source": "данные; docs/sr6-review.md, строка «Защита в Матрице»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "missing-column-default",
+     "where": "steps[0] count, steps[2]/[4] условия, steps[7] count",
+     "evidence": "@pool + 0 + @link.penalty; @цель.matrix_dr + 0 - если(…); @защита.device) + 0)",
+     "mechanism": "column-default",
+     "target": "«+ 0» — пустые прорези под прибавки «Взлома: доступ». Становятся входами к_зщ / к_защите функции matrix_defend с умолчанием 0; в кнопках «+ 0» убрать.",
+     "rule_source": "данные",
+     "engine_gap": ""
+    },
+    {
+     "kind": "inline-copy-of-existing-function",
+     "where": "cost[9] «Если»",
+     "evidence": "@действующий.matrix_damage >= @действующий.matrix_cm — поле device_dead уже = если(@dev_rating >= 1 и @matrix_damage >= @matrix_cm, 1, 0)",
+     "mechanism": "other",
+     "target": "В matrix_ready: `ЕСЛИ @действующий.device_dead → СТОП «устройство сдохло — нужна починка»` (рейтинг ≥ 1 уже проверен стопом выше).",
+     "rule_source": "данные (поле листа device_dead)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "тип записи matrix_action и привязки записей mx_hide, mx_spike, mx_tarpit",
+     "evidence": "у типа колонок нет (hint «набор, защита, законность, связь»), каждая запись несёт свою привязку с 7 аргументами-данными: pool, защита, illegal, kind, link, action",
+     "mechanism": "record-of-book-type",
+     "target": "Классы записей. Новая основа matrix_base «Матрица: действие» (без привязок и записей), колонки: pool «Набор» (число; формула на тип `@действующий.skills.взлом.pool`, запись может своей клеткой), защита «Защита» (выбор из matrix_defenses, умолчание «нет»), illegal «Незаконное» (да/нет, умолчание нет), kind «Вид действия» (выбор из action_kinds, умолчание «сложное»), link «Связано с» (выбор из matrix_links, умолчание «нет»), action «Метка броска» (текст). matrix_action extends matrix_base: колонки урон «Урон Матрицы» (число; формула на запись; пусто — без урона), накладывает «Накладывает» (эффект; пусто — ничего); одна привязка типа {effect: matrix_check, args: {pool: @pool, защита: @защита, illegal: @illegal, kind: @kind, link: @link, action: @action, урон: @урон, накладывает: @накладывает}} — как D&D weapon. Записи (привязки снять): mx_hide — pool `@действующий.skills.взлом.pool - @действующий.logic + @действующий.intuition`, защита «Интуиция + ВМ», illegal да, action «спрятаться»; mx_spike — защита «ВМ + СЭ», illegal да, link «Проникновение», action «инфошип», урон `округлить вверх(@действующий.matrix_ar / 2) + @отпор.чистые`; mx_tarpit — то же, action «смоляная яма», урон `1 + @отпор.чистые`, накладывает «matrix_drain». Доступ — свой класс (см. matrix_hack); основа нужна, потому что наследник matrix_action получил бы аргументы урон/накладывает родителя (model/inherit.ts: byOrder сливает args привязки). ic_strike и tm_sprite_compile из типа уходят (см. ic_attack; техномант — вопрос). id записей и действий (mx_spike:0) сохраняются. Проверить тестом клетку записи с именем шага кнопки `@отпор.чистые` (refs.ts fromArgs → recordNamesInline, тот же путь, что D&D status).",
+     "rule_source": "docs/sr6-review.md, строка «Действия Матрицы»; docs/sr6-attack-v2.md «Классы = типы записей с наследованием»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "tag-candidate",
+     "where": "эффект целиком",
+     "evidence": "у эффектов Матрицы нет ни одной метки, договоров меток в системе нет",
+     "mechanism": "tag-contract",
+     "target": "Метка «действие в Матрице» на matrix_check, matrix_hack, ic_attack; договор — в tags_proposed.",
+     "rule_source": "docs/sr6-review.md «Метки и подписки»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "тип записи program, modifiers[0]",
+     "evidence": "hack_programs + если(@строка.category == \"взлом\", 1, 0)",
+     "mechanism": "column-of-reference-table",
+     "target": "Справочник «Вид программы» program_kinds: колонка hacking «Программа взлома» (да/нет, умолчание нет; взлом — да); правка `если(@строка.category.hacking, 1, 0)`. Счётчик hack_programs оставить: «+1 ПН, если запущена хоть одна» на подписки не ложится (N программ дали бы +N).",
+     "rule_source": "docs/sr6-compendium.md §11 «ПН: +1 за действие с программой взлома»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "steps[7] count; поле is_device",
+     "evidence": "если(@цель.is_device < 1, @защита.persona, @защита.device); is_device — число 0/1 (min 0, max 1), типы «Сервер», «Лёд» задают 1",
+     "mechanism": "other",
+     "target": "Колонка is_device — вид «да/нет»; типы листа host и ic задают «да»; чтение `если(@цель.is_device, @защита.device, @защита.persona)`. Так же у читателей в кластере техномантов.",
+     "rule_source": "docs/sr6-attack-v2.md «Итог да/нет»",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "matrix_spike",
+   "label": "Инфошип",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "эффект целиком",
+     "evidence": "params, cost и steps[0..14] = matrix_check; своё — 4 шага в конце",
+     "mechanism": "record-of-book-type",
+     "target": "Эффект удалить. Инфошип — строка mx_spike типа matrix_action с клеткой урон `округлить вверх(@действующий.matrix_ar / 2) + @отпор.чистые` (см. matrix_check). Тесты зовут mx_spike:0 — id сохраняется.",
+     "rule_source": "описание (стр. 181)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "inline-copy-of-existing-function",
+     "where": "steps[15] аргументы amount и bio",
+     "evidence": "@итог.total - если(@защита == \"порог\", @порог или 0, @отпор.total) — дважды",
+     "mechanism": "shared-function",
+     "target": "Проверка уже отдаёт margin (успехи − порог/отпор с поправкой порога правками) → итог чистые функции matrix_defend: `@отпор.чистые`.",
+     "rule_source": "engine/steps/check.ts: итог margin",
+     "engine_gap": ""
+    },
+    {
+     "kind": "tag-candidate",
+     "where": "steps[15] аргументы bio, bio_stun; steps[16]–[18]",
+     "evidence": "bio=если(@действующий.m_bio + @действующий.m_bio_stun >= 1, <копия amount>, 0); bio_stun=@действующий.m_bio < 1 и @действующий.m_bio_stun >= 1; ЕСЛИ @действующий.m_lockdown >= 1 → НАЛОЖИТЬ link_lock",
+     "mechanism": "effect-tag",
+     "target": "Программы — подписками на метку «урон Матрицы», атака о них не знает. prog_biofeedback: снять правку m_bio +1, grants [\"biofeedback_attack\"]; новый висящий biofeedback_attack «Биоотдача атакой» (группа «Матрица»): on [{on: \"after:урон Матрицы\", if: \"@источник == @носитель\", steps: [ВЫЗОВ bio_hurt(лист=@лист, amount=@amount)]}]. prog_lockdown: снять m_lockdown +1, grants [\"lockdown_attack\"]; висящий lockdown_attack «Локдаун»: on [{on: \"after:урон Матрицы\", if: \"@источник == @носитель\", steps: [НАЛОЖИТЬ link_lock на @лист]}]. Поля m_bio, m_lockdown удалить; m_bio_stun — вопрос. Порядок костей прежний: Сетевой экран, потом Воля.",
+     "rule_source": "записи prog_biofeedback, prog_lockdown (стр. 185)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "matrix_tarpit",
+   "label": "Смоляная яма",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "эффект целиком",
+     "evidence": "params, cost и steps[0..14] = matrix_check; своё — 5 шагов в конце",
+     "mechanism": "record-of-book-type",
+     "target": "Эффект удалить. Строка mx_tarpit типа matrix_action: урон `1 + @отпор.чистые`, накладывает «matrix_drain»; кнопка накладывает с amount=@урон.",
+     "rule_source": "описание (стр. 184–185)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "inline-copy-of-existing-function",
+     "where": "steps[15] amount и bio; steps[19] args.amount",
+     "evidence": "1 + @итог.total - если(@защита == \"порог\", @порог или 0, @отпор.total) — трижды",
+     "mechanism": "shared-function",
+     "target": "`@отпор.чистые` в клетке урон; аргумент наложения — `@урон`.",
+     "rule_source": "engine/steps/check.ts: итог margin",
+     "engine_gap": ""
+    },
+    {
+     "kind": "tag-candidate",
+     "where": "steps[15] bio/bio_stun; steps[16]–[18]",
+     "evidence": "те же флаги m_bio / m_bio_stun / m_lockdown, что в «Инфошипе»",
+     "mechanism": "effect-tag",
+     "target": "Как в matrix_spike: biofeedback_attack и lockdown_attack слушают «after:урон Матрицы».",
+     "rule_source": "записи программ (стр. 185)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "matrix_hack",
+   "label": "Взлом: доступ",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "cost (29) и steps[0..14]",
+     "evidence": "cost = matrix_check; в шагах 4 отличия (+@probe_hits, +4 к ЗЩ дважды, +2 к набору защиты)",
+     "mechanism": "shared-function",
+     "target": "Плата — как у matrix_check (matrix_ready + spend_action). Шаги: ЧИСЛО взлом = кинуть набор `большее из(0, @pool + @probe_hits + @link.penalty)` бросает @действующий, метки [проверка, матрица, @action]; Для каждого из «цели»; ВЫЗОВ отпор = matrix_defend(цель=@цель, действующий=@действующий, взлом=@взлом, защита=@защита, illegal=@illegal, порог=@порог, к_зщ=если(@had_user, 0, @level.dr_bonus), к_защите=если(@had_user, 0, @level.pool_bonus)); Если не @отпор.вышло → СТОП «не вышло»; НАЛОЖИТЬ matrix_access на @действующий (цель=@цель, level=@level). Входы — прежние (level и had_user спрашиваются у игрока).",
+     "rule_source": "описание (стр. 180–181); тест MX-4 (стр. 180)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "ladder-in-formula",
+     "where": "steps[2], steps[4], steps[7]",
+     "evidence": "если(@level == \"администратор\" и не @had_user, 4, 0) — дважды; если(@level == \"администратор\" и не @had_user, 2, 0)",
+     "mechanism": "column-of-reference-table",
+     "target": "Справочник «Уровень доступа» access_levels, колонки: dr_bonus «К ЗЩ цели без доступа пользователя» (число, умолчание 0; администратор — 4), pool_bonus «К набору защиты без доступа пользователя» (число, умолчание 0; администратор — 2).",
+     "rule_source": "тест MX-4 (стр. 180); описание записи mx_brute",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "класс записи mx_brute",
+     "evidence": "доступ спрашивает level и had_user — вопросы берутся из входов эффекта кнопки (model/asks.ts asksOf), поэтому одна кнопка на все действия спрашивала бы уровень доступа и у «Инфошипа»",
+     "mechanism": "record-of-book-type",
+     "target": "Своя кнопка — по делу (руки разные: другой вопрос, прибавки к защите, исход на действующем). Тип записи matrix_access_action «Взлом доступа» extends matrix_base (см. matrix_check), привязка {effect: matrix_hack, args: {pool: @pool, защита: @защита, illegal: @illegal, kind: @kind, link: @link, action: @action}}; mx_brute → table matrix_access_action, клетки: защита «Воля + СЭ», illegal да, link «Проникновение», action «брутфорс». «Зондирование» и «Бэкдор» — сюда же.",
+     "rule_source": "docs/sr6-compendium.md §11 ревью: «доступ: Брутфорс/Зондирование/Бэкдор»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "description",
+     "evidence": "«админ без пользователя — защита +2 к СЭ и +4 к набору», а шаги и тест MX-4: ЗЩ +4, набор защиты +2",
+     "mechanism": "other",
+     "target": "Описание: «администратор без доступа пользователя — значение защиты цели +4, набор защиты +2 (стр. 180)».",
+     "rule_source": "тест MX-4 (стр. 180); вопрос владельцу — подтвердить по книге",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "matrix_stat_cut",
+   "label": "Характеристика Матрицы снижена",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "ladder-in-formula",
+     "where": "modifiers[0]–[3]",
+     "evidence": "m_attack: если(@attr == \"П\", 0 - @amount, 0); m_sleaze: если(@attr == \"У\", …); m_dp: если(@attr == \"ВМ\", …); m_firewall: если(@attr == \"СЭ\", …)",
+     "mechanism": "column-of-reference-table",
+     "target": "Справочник «Характеристики Матрицы» matrix_attrs: колонка persona «Поле персоны» (вид «поле»): П → m_attack, У → m_sleaze, ВМ → m_dp, СЭ → m_firewall. Одна правка {kind: value, target: \"{@attr.persona}\", op: add, stage: \"снижение\", value: 0 - @amount}. Так же — form_diffusion и form_infusion (кластер техномантов).",
+     "rule_source": "описание (стр. 187)",
+     "engine_gap": "мишень правки висящего эффекта из его входа-выбора не раскрывается: engine/modifiers.ts sourcesOf кладёт effect.modifiers как есть (прорезь раскрывается только у записей через aimed/itemTarget); model/sheet-columns.ts:16 hasTargetSlot знает только «{@строка.…}»"
+    },
+    {
+     "kind": "copy-of-effect",
+     "where": "modifiers[0]–[3]",
+     "evidence": "те же 4 правки «0 - @amount» у form_diffusion «Диффузия»; отличаются только reapply (stack / refresh) и вид входа attr (выбор / текст)",
+     "mechanism": "other",
+     "target": "Эффекты не сливать — сроки и повторное наложение разные. После правки движка у обоих одна правка с мишенью «{@attr.persona}»; у form_diffusion вход attr — выбор из matrix_attrs.",
+     "rule_source": "данные",
+     "engine_gap": "то же: мишень из входа"
+    }
+   ]
+  },
+  {
+   "id": "ic_attack",
+   "label": "Удар льда",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "cost (26) и steps[0..14]",
+     "evidence": "копия matrix_check без стопа «Вычислительная мощность снижена до 0»",
+     "mechanism": "shared-function",
+     "target": "Входы: только действующий (лист) и цели (список): pool, защита, illegal, kind, action, link, порог у льда постоянные. Плата: ВЫЗОВ matrix_ready(действующий=@действующий, целей=сколько(@цели)); ВЫЗОВ spend_action(лист=@действующий, сложное=да). Шаги: ЧИСЛО взлом = кинуть набор `@действующий.host_rating * 2` бросает @действующий, метки [проверка, матрица, лёд]; Для каждого из «цели»; ВЫЗОВ отпор = matrix_defend(цель=@цель, действующий=@действующий, взлом=@взлом, защита=@действующий.ic_kind.defense); Если не @отпор.вышло → СТОП «не вышло»; исход — см. следующую находку. Стоп ВМ льду — вопрос владельцу.",
+     "rule_source": "описание (стр. 186); запись ic_strike",
+     "engine_gap": ""
+    },
+    {
+     "kind": "ladder-in-steps",
+     "where": "steps[15]–[34]",
+     "evidence": "9 рук `@действующий.ic_kind == \"взрывной\" / \"искрящий\" / \"липнущий\" / \"едкий\" / \"подавляющий\" / \"проявляющий\" / \"сковывающий\" / \"убивающий\" / \"чёрный\"` — конструктор уже рисует это развилкой «По «Вид льда»», но руки отличаются только числами и тем, что наложить",
+     "mechanism": "column-of-reference-table",
+     "target": "Развилку снять, это колонки. Справочник «Вид льда» ic_kinds: dmg «Урон Матрицы» (число, формула на строку; пусто — не бьёт): взрывной `@действующий.host_rating`, убивающий `@действующий.host_rating + @отпор.чистые`, чёрный `@действующий.host_rating + @отпор.чистые`; bio «Биоотдача» (число, формула; пусто — нет): искрящий и чёрный `@действующий.host_rating + @отпор.чистые`; lock «Залипание» (да/нет, умолчание нет): взрывной, липнущий — да; cut «Снижает» (выбор из matrix_attrs; пусто): едкий СЭ, подавляющий П, проявляющий У, сковывающий ВМ. Шаги исхода: Если не пусто(@действующий.ic_kind.dmg) → ВЫЗОВ matrix_hurt(лист=@цель, источник=@действующий, amount=@действующий.ic_kind.dmg); Если не пусто(@действующий.ic_kind.bio) → ВЫЗОВ bio_hurt(лист=@цель, amount=@действующий.ic_kind.bio); Если @действующий.ic_kind.lock → НАЛОЖИТЬ link_lock на @цель; Если не пусто(@действующий.ic_kind.cut) → НАЛОЖИТЬ matrix_stat_cut на @цель (attr=@действующий.ic_kind.cut, amount=@отпор.чистые). Порядок «урон → биоотдача → залипание» прежний; «искрящий» больше не бросает Сетевой экран при нулевом уроне Матрицы (журнал — вопрос).",
+     "rule_source": "ic_kinds.text и шаги — правило из данных; «Убивающий» сверен по стр. 188 (docs/sr6-compendium.md §11 ревью); «Взрывной» — вопрос",
+     "engine_gap": "клетка справочника, прочитанная через поле-выбор листа (`@действующий.ic_kind.dmg`), не видит имён эффекта (@отпор): engine/refs.ts evaluate, ветка onSheet (≈стр. 208) зовёт walk(...) без scope, ветки входа и шага (стр. 223, 233) его передают"
+    },
+    {
+     "kind": "inline-copy-of-existing-function",
+     "where": "steps[19], [21], [23], [25], [27], [29], [31]",
+     "evidence": "@итог.total - если(@защита == \"порог\", @порог или 0, @отпор.total) — 7 раз",
+     "mechanism": "shared-function",
+     "target": "`@отпор.чистые` (итог matrix_defend).",
+     "rule_source": "engine/steps/check.ts: итог margin",
+     "engine_gap": ""
+    },
+    {
+     "kind": "missing-column-default",
+     "where": "запись ic_strike (bindings[0].args) и лист baraholka_killer",
+     "evidence": "защита: @действующий.ic_kind.defense или \"нет\"; pool: @действующий.host_rating * 2; illegal: нет; kind: \"сложное\"; link: \"нет\" — постоянные класса «Лёд» лежат в записи, которую каждому листу льда надо выдать руками (has: [ic_strike])",
+     "mechanism": "sheet-type-modifier",
+     "target": "ic_kinds.defense — умолчание «нет» (строка «нет» без клеток). Удар — метод типа листа: system.sheets.ic.grants = [\"ic_attack\"]; запись ic_strike удалить; у baraholka_killer убрать has ic_strike; тесты ic_strike:0 → +ic_attack (вопрос). Без правки движка — запасной путь: вход вид (выбор из ic_kinds) у ic_attack и запись в своей таблице ic_action с привязкой вид=@действующий.ic_kind, чтение `@вид.dmg` (вход-выбор видит имена эффекта).",
+     "rule_source": "тип листа «Лёд» (стр. 186): набор — рейтинг × 2",
+     "engine_gap": "то же: refs.ts, ветка onSheet без scope"
+    },
+    {
+     "kind": "stored-should-be-computed",
+     "where": "лист baraholka_killer (тип ic)",
+     "evidence": "values: host_rating 4, dev_attack 5, dev_sleaze 4, dev_dp 7, dev_firewall 6 — копия листа сервера baraholka",
+     "mechanism": "other",
+     "target": "Лёд читает рейтинг и характеристики своего сервера, а не хранит копию. Решение — за владельцем (крупная правка движка), до того — копия.",
+     "rule_source": "docs/sr6-compendium.md §11 ревью: «лёд — лист ic со своими хранимыми копиями характеристик сервера»; вопрос владельцу",
+     "engine_gap": "формулы листа не читают другой лист: calc(system, sheet, tag, pass) считает поле одного листа, колонок вида «лист» в таблицах листа нет"
+    }
+   ]
+  }
+ ],
+ "tags_proposed": [
+  {
+   "tag": "урон Матрицы",
+   "meaning": "Эффект наносит урон Матрицы листу. Договор: входы лист (лист), источник (лист), amount (число); выходы: урон",
+   "effects": [
+    "matrix_hurt"
+   ],
+   "who_listens": "biofeedback_attack «Биоотдача атакой» и lockdown_attack «Локдаун» (выдают программы prog_biofeedback, prog_lockdown): after:урон Матрицы, если @источник == @носитель. Они заменяют флаги m_bio / m_lockdown, которые сейчас читают «Инфошип» и «Смоляная яма»"
+  },
+  {
+   "tag": "действие в Матрице",
+   "meaning": "Род действия: проверка в Матрице против защиты цели. Договор: входы действующий (лист), цели (лист, список), illegal (да/нет), kind (выбор из action_kinds); each «цель»; выходы: взлом, отпор",
+   "effects": [
+    "matrix_check",
+    "matrix_hack",
+    "ic_attack"
+   ],
+   "who_listens": "В образце пока никто. По выпискам — действия Преимущества Матрицы (docs/sr6-compendium.md §13, решение 8): «Вне поля видимости» снимает себя на done:действие в Матрице вместо поля ow_hide; «Сигнальный вопль», «Аварийное усиление» — так же. Позже метку получают cast_form, cast_form_attr, sprite_power_use"
+  },
+  {
+   "tag": "биоотдача",
+   "meaning": "Метка броска сопротивления биоотдаче (Воля) в функции bio_hurt",
+   "effects": [
+    "bio_hurt"
+   ],
+   "who_listens": "Правка броска отголоска «Нейрофильтр» (+1 к набору, бросает носитель) вместо поля bio_resist_bonus, которое читает «Урон в Матрице»"
+  }
+ ],
+ "engine_gaps": [
+  {
+   "what": "Мишень правки «пока висит» из входа-выбора висящего эффекта: target \"{@attr.persona}\" раскрывается в поле по колонке строки, выбранной во входе",
+   "why": "«Характеристика Матрицы снижена» (и «Диффузия», «Инфузия» техномантов) держат 4 правки с лесенкой `если(@attr == \"П\", …)`, по одной на поле",
+   "where": "packages/engine/src/engine/modifiers.ts: sourcesOf — ветка висящих эффектов (wornEffects) кладёт effect.modifiers без aimed/itemTarget; packages/engine/src/model/sheet-columns.ts:16 hasTargetSlot / itemTarget — только «{@строка.колонка}» у записей; плюс engine/targets.ts assertTarget и линт мишеней"
+  },
+  {
+   "what": "Клетка справочника, прочитанная через поле-выбор листа (`@действующий.ic_kind.dmg`), должна видеть имена эффекта — так же, как через вход-выбор или итог шага",
+   "why": "«Удар льда» как метод типа листа «Лёд» (выдача) читает урон вида льда с чистыми успехами `@отпор.чистые`; без этого льду нужен лишний вход «вид» и запись-кнопка на каждом листе",
+   "where": "packages/engine/src/engine/refs.ts: evaluate, ветка onSheet (≈стр. 208) — walk(system, view(id), table, …, who(ctx)) без scope; в ветках входа и шага (стр. 223, 233) scope передаётся; engine/cells.ts readCell без scope считает клетку только по листу"
+  },
+  {
+   "what": "Остаток срока висящего эффекта (`@осталось` — раундов, ходов, применений) в формуле его правки",
+   "why": "«Смоляная яма: ВМ снижена» по описанию возвращает по 1 за раунд, а держит всё снижение до конца срока. Делать, только если владелец подтвердит",
+   "where": "packages/engine/src/engine/modifiers.ts: sourcesOf передаёт правкам только args; packages/engine/src/events/durations.ts — until / turnsLeft / usesLeft / atSec формулам не видны"
+  },
+  {
+   "what": "Вопрос входа с условием (ask.if): спрашивать вход, только если формула по другим входам или клеткам записи верна",
+   "why": "«Порог · говорит ведущий» стоит в форме каждого действия Матрицы, хотя нужен только при защите «порог». Низкий приоритет",
+   "where": "packages/engine/src/model/asks.ts: asksOf отбирает вопросы только по аргументам привязки; packages/schema/src/world.ts: ask = {by, hint}; форма apps/web/src/screens/play/action-form.tsx"
+  },
+  {
+   "what": "Поле листа, ссылающееся на другой лист, в формулах листа",
+   "why": "Лёд хранит копию рейтинга и четырёх характеристик сервера (хранимое вместо вычисляемого). Крупная правка, решение владельца",
+   "where": "packages/engine/src/engine/calc.ts: calc(system, sheet, tag, pass) считает одно поле одного листа; колонок вида «лист» в таблицах листа нет (model/sheet-columns.ts)"
+  }
+ ],
+ "questions_for_owner": [
+  "В «Ударе льда» в «Плате» нет стопа «Вычислительная мощность снижена до 0», а в четырёх других действиях Матрицы он есть. Общая «Готовность к Матрице» распространит его и на лёд. Так задумано, или лёд от него свободен?",
+  "«Разветвление» (две цели): +1 ПН за запущенные программы взлома сейчас начисляется на каждую цель — шаг стоит внутри «Для каждой цели», а по выписке это «+1 за действие». Очко Преимущества атакующему тоже считается по каждой цели, тогда как в бою (docs/sr6-attack-v2.md) — один раз против наивысшей ЗЩ. Как по книге?",
+  "«Смоляная яма» снижает dev_dp на этапе «основа», а «Сковывающий лёд» — m_dp на этапе «снижение». Поэтому после ямы до нуля стоп «ВМ снижена до 0» не срабатывает. Перевести яму на m_dp / «снижение»? И делать ли возврат «по 1 за раунд» (нужен движок), или записать как упрощение?",
+  "«Дезориентация после демпшока» держится до конца сцены как временная замена, а игровое время уже есть. Ставить (10 − Воля) минут? Что делать при Воле 10 и выше?",
+  "«Залипание» пишет поле link_locked, но его никто не читает: действий «Сменить режим», «Перезагрузить», «Войти/покинуть сервер», «Отключиться» в образце нет, а режим Матрицы игрок меняет прямо в поле. Добавлять эти действия (запрет в их «Плате»), или пока оставить справкой?",
+  "Поля-зацепки без источника: ow_hide, m_def_cut, m_vm_extra, m_bio_filter, bio_resist_bonus, m_bio_stun, implant_dead_dv — в образце нет ни одной записи, которая их пишет (в выписке было 41 действие и 20 программ, в образце 5 и 4). Оставить их до возвращения полной книги или убрать? bio_resist_bonus предлагаю заменить правкой броска по метке «биоотдача».",
+  "«Спрятаться»: набор «Взлом.набор − Логика + Интуиция» ломается у хакера без навыка (ранг 0). Вводить у действия Матрицы колонки «навык» + «характеристика» с общей формулой набора?",
+  "«Взлом: доступ»: описание эффекта говорит «+2 к СЭ и +4 к набору», а шаги и тест MX-4 — «ЗЩ +4, набор защиты +2». Подтвердите по стр. 180, что верны шаги.",
+  "Программа «только оглушающая биоотдача» (поле m_bio_stun, записи нет): нужна ли она? Если у хакера обе программы, сейчас побеждает физическая. При переводе программ на подписки это потребует условия «нет физической».",
+  "«Доступ» складывается: пользователь и администратор на одну цель дают ПН 1 + 3 за раунд. Так по книге, или берётся наибольший?",
+  "«Взрывной лёд»: урон = рейтинг сервера без чистых успехов (так в шагах и в тексте вида льда). По книге сверен только «Убивающий» (стр. 188). Подтвердите стр. 187.",
+  "Журнал после перестройки изменится. «Искрящий лёд» перестанет бросать Сетевой экран при нулевом уроне Матрицы. Если устройство сдохло в ДР, появится строка демпшока «не в ВР». Золотой снимок Shadowrun поменяется по костям. Принять?",
+  "«Удар льда» станет действием типа листа «Лёд» (выдача), а не записью книги, которую дают каждому льду. id действия сменится: ic_strike:0 → +ic_attack (три теста в samples.shadowrun-matrix). Можно?",
+  "«Компилировать спрайта» (tm_sprite_compile) лежит в типе «Действие в Матрице». Чтобы у типа была одна кнопка, его надо перенести к действиям техноманта. Согласны?",
+  "Лёд хранит копию рейтинга и характеристик сервера. Делать лист льда ссылкой на лист сервера (крупная правка движка), или оставить копию?"
+ ]
+}

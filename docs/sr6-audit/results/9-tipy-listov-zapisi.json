@@ -1,0 +1,1428 @@
+{
+ "cluster": "Типы листов и записи книги",
+ "items": [
+  {
+   "id": "sheet:runner",
+   "label": "Тип листа «Раннер» (runner)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "system.sheets.runner.modifiers — все 12 правок; system.sheets.opponent.modifiers = []; system.sheets.grunt.modifiers",
+     "evidence": "Общие правила стоят только у раннера: «Магия/Резонанс: 0 - @essence_loss», «init_dice + @matrix_mode.init_dice», «бросок: @носитель.matrix_wound - @носитель.noise» (метка «матрица»), «0 - 2 * @носитель.sustained», «-2 при @носитель.astral_mode != \"нет\"», живая персона (5 правок). У «Противника» правок нет совсем, у «Пешки» — только шкала. Шаман-пешка (shaman_zaboty_o_terre, magic=2) не получает штрафа поддержания, противник-декер не получает кубов ВР",
+     "mechanism": "sheet-type-modifier",
+     "target": "Новый тип листа `person` «Метачеловек» (hint: «Общие правила живого метачеловека: потеря Магии и Резонанса от Сущности, поддержание, астрал, ВР, урон Матрицы и шум, живая персона»). В него перенести все 12 правок раннера (с условиями из пунктов ниже). `runner.extends = \"person\"`, свои modifiers у runner снять. `npc` «По заготовке» (см. «Пешка») `extends: \"person\"`; `opponent.extends = \"npc\"`, `grunt.extends = \"npc\"`. Проверено пробой: `extends` у типа листа работает (model/inherit.ts: flattenSystem → sheets, mergeKind складывает modifiers, blocks — объединение; противник с `extends: runner` получил правки раннера)",
+     "rule_source": "правила книги не делят на «раннер/противник»; что NPC подчиняются тем же правилам — вопрос владельцу",
+     "engine_gap": ""
+    },
+    {
+     "kind": "type-dispatch-by-string",
+     "where": "runner.modifiers dev_attack / dev_sleaze / dev_dp / dev_firewall / dev_rating (этап «аватар»), `if`; Лист.programs_loaded.max",
+     "evidence": "`@awakened == \"техномант\"` пять раз подряд в условиях правок; `max: если(@awakened == \"техномант\", 0, 99)`",
+     "mechanism": "column-of-reference-table",
+     "target": "awakened_kinds: новая колонка `living_persona` «Живая персона», вид да/нет, default нет; строка «техномант» = да. Условия пяти правок → `@awakened.living_persona`; Лист.programs_loaded.max → `если(@awakened.living_persona, 0, 99)`. Плата «Компилировать спрайта» `не @действующий.awakened == \"техномант\"` → `не @действующий.awakened.living_persona` (кластер техноманта)",
+     "rule_source": "docs/sr6-compendium.md §13 «Живой аватар», ревью этапа 6 (3)",
+     "engine_gap": "пока движок не подставляет умолчание колонки справочника (engine/cells.ts: readCell, `source.kind === 'input'` → undefined), «нет» вписать явно во все шесть строк awakened_kinds"
+    },
+    {
+     "kind": "string-membership",
+     "where": "runner.modifiers — правка броска «−2» (notTags магия…), `if`",
+     "evidence": "`@бросающий == @носитель и @носитель.astral_mode != \"нет\"`",
+     "mechanism": "column-of-reference-table",
+     "target": "astral_modes: колонка `active` «В астрале», да/нет, default нет; «восприятие» = да, «проекция» = да. Условие → `@бросающий == @носитель и @носитель.astral_mode.active`",
+     "rule_source": "docs/sr6-compendium.md §12 В10 «астрал (−2 к немагическим при восприятии)»",
+     "engine_gap": "то же умолчание колонки справочника (cells.ts: readCell)"
+    },
+    {
+     "kind": "stored-should-be-computed",
+     "where": "runner.modifiers — `unarmed_physical`",
+     "evidence": "`set (@metatype.unarmed_physical или нет)` — свойство метатипа задаётся правкой одного типа листа; у противников его нет",
+     "mechanism": "column-default",
+     "target": "Лист.unarmed_physical: вместо хранимого — формула `@metatype.unarmed_physical` (вид да/нет, этап «основа» set:max остаётся — «Плотность костей» задаёт да). Правку у раннера удалить. У metatypes.unarmed_physical default=false уже стоит",
+     "rule_source": "metatypes.traits тролля «безоружный урон физический» — данные",
+     "engine_gap": "движок не берёт default колонки справочника для пустой клетки: проба — у эльфа `@metatype.unarmed_physical` = undefined при default=false (engine/cells.ts: readCell, ветка `source.kind === 'input'`)"
+    },
+    {
+     "kind": "other",
+     "where": "runner.modifiers — правка броска «0 - 2 * @носитель.sustained»",
+     "evidence": "качество «Сосредоточенность» (focus): «За каждый уровень 1 дополнительное заклинание или сложная форма без штрафа поддержки» — правок у записи нет, штраф считает всё",
+     "mechanism": "sheet-type-modifier",
+     "target": "Лист: новая колонка `sustain_free` «Поддержание без штрафа», число, default 0, min 0. Запись focus: правка `{kind: value, target: sustain_free, op: add, value: @строка.level}`. Правка броска: value `0 - 2 * большее из(0, @носитель.sustained - @носитель.sustain_free)`, if `@бросающий == @носитель и @носитель.sustained > @носитель.sustain_free`",
+     "rule_source": "описание записи «Сосредоточенность» (стр. 73) — данные образца",
+     "engine_gap": ""
+    },
+    {
+     "kind": "stored-should-be-computed",
+     "where": "sheets[razor].values.essence",
+     "evidence": "`\"essence\": 5` хранится, а Сущность — поле-формула `6 - @essence_mul * (…)`; значение мёртвое (computeBase берёт формулу), линт молчит (lintSystem по образцу — 0 находок)",
+     "mechanism": "other",
+     "target": "удалить `essence` из values листа «Бритва»; если Сущность 5 задумана — дать ему имплант",
+     "rule_source": "CLAUDE.md «Хранимое ≠ вычисляемое»",
+     "engine_gap": "линт не сообщает о хранимом значении поля-формулы (model/lint.ts) — проверки не нашёл"
+    }
+   ]
+  },
+  {
+   "id": "sheet:grunt",
+   "label": "Тип листа «Пешка» (grunt)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "system.sheets.grunt.modifiers; Лист.conscious, Лист.stun_overflow",
+     "evidence": "тип задаёт physical_max = 8 + ⌈большее(Воля, Тело)/2⌉ и physical_total = @physical + @stun, но не stun_max. conscious = `@stun < @stun_max и @physical_total < @physical_max`: Тело 6, Воля 2 → шкала 11, stun_max 9; 9 оглушения — «без сознания», хотя единая шкала 9/11 не полна",
+     "mechanism": "sheet-type-modifier",
+     "target": "добавить правку `{kind: value, target: stun_max, op: set, value: @physical_max}`; knocked_out = нет оставить",
+     "rule_source": "hint типа «одна шкала на оба вида урона (стр. 203)» — данные",
+     "engine_gap": ""
+    },
+    {
+     "kind": "stored-should-be-computed",
+     "where": "sheets fiveeyes, fiveeyes_2 (и opponent: humanis, sauron, lone_star, mafia); grunt_templates; adversaries",
+     "evidence": "values листов = копия строки grunt_templates `chlen_motobandy_pyatiglazye` (8 характеристик + 6 рангов навыков); таблица `adversaries` (14 строк, колонки c0…c11 текстом «2(3)», «4 + 1к6») — текстовая копия первых 14 строк grunt_templates; `attr_aug` — JSON строкой в клетке (`{\"agility\":6,\"reaction\":5}`)",
+     "mechanism": "sheet-type-modifier",
+     "target": "Лист: колонка `npc_template` «Заготовка», выбор из grunt_templates, optional. Новый тип листа `npc` «По заготовке» (extends person): правки body…charisma `set @npc_template.<х-ка>` с этапом «основа»; magic, resonance `set` (этап «основа» у них есть); init_dice `set @npc_template.init_dice`; essence `set @npc_template.essence`. В колонках Лист body…charisma, edge первым этапом добавить `{key: основа, label: «основа: тип листа»}` — проба: без него `set 15` по Телу обрезан этапами «адепт/аугментация» до 8, с ним — 15, и аугментация +4 ложится сверху. attr_aug → четыре колонки grunt_templates `body_aug_add`, `agility_aug_add`, `reaction_aug_add`, `strength_aug_add` «прибавка аугментаций», число, default 0 (значения = из JSON минус базовая) и правки `add` этапа «аугментация». Навыки: `skills.<навык>.rank = @npc_template.sk_<навык>` — одной правкой по колонке (см. дыру движка). grunt.extends = npc. Листы образца: values → только `npc_template` (+ metatype у орка). Таблицу `adversaries` удалить. Колонки init_base, cm, defense заготовок — напечатанные книгой вычисленные (Р+И, 8+⌈…⌉, Тело+броня) — второй источник правды: удалить или унести в тест-сверку",
+     "rule_source": "docs/sr6-compendium.md §2 «лист выбирает модель/вид, а его поля — формулы от выбранного … правками типа листа set»; CLAUDE.md «не копировать строку справочника на лист»",
+     "engine_gap": "правка по колонке «cell:skills.*.rank» не доходит до живых клеток: проба — `set 7` дал 0 (engine/calc.ts:112 зовёт applyValueModifiers без тега колонки; engine/cells.ts: readCell, ветка isLive); значение такой правки не видит `@строка`. Пустая клетка заготовки (magic у немага) даёт `set` пустым — нужен пропуск пустого `set` (engine/stages.ts: stackStages, `of('set')`) или `if: не(пусто(...))` у каждой правки"
+    },
+    {
+     "kind": "other",
+     "where": "grunt.modifiers — wound_mod",
+     "evidence": "`0 - округлить вниз(меньшее из(@physical + @stun, @physical_max) / 2)` — без pain_relief / pain_ignore / pain_mul, которые учитывает общая формула",
+     "mechanism": "keep-as-is",
+     "target": "оставить до ответа владельца; если облегчение боли действует и на пешек — `(…) * @pain_mul + @pain_relief` как в Лист.wound_mod",
+     "rule_source": "вопрос владельцу (стр. 203 в выписках нет)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "sheet:opponent",
+   "label": "Тип листа «Противник» (opponent)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "stored-should-be-computed",
+     "where": "sheets humanis, sauron, lone_star, mafia; opponent.modifiers = []",
+     "evidence": "«Головорез из «Хуманиса» (ПР 0)»: values = строка grunt_templates golovorez_iz_humanisa один в один; правок у типа нет",
+     "mechanism": "sheet-type-modifier",
+     "target": "opponent.extends = \"npc\" (тип «По заготовке», см. «Пешка»); листам образца — `npc_template` вместо копий характеристик и навыков; вещи (has) оставить",
+     "rule_source": "docs/sr6-compendium.md §2; CLAUDE.md",
+     "engine_gap": "та же дыра правки по колонке навыков (engine/calc.ts:112, cells.ts: readCell)"
+    },
+    {
+     "kind": "other",
+     "where": "opponent.blocks",
+     "evidence": "нет «Личное дело» (метатип) и «Особые» (Магия) — у орка-громилы метатип не виден, у мага-противника не видна Магия",
+     "mechanism": "other",
+     "target": "blocks: + «Личное дело», «Особые», «Магия», «Матрица» (новые блоки — см. «Раскладка листа»)",
+     "rule_source": "данные заготовок (маги, орки)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "sheet:host",
+   "label": "Тип листа «Сервер» (host)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "stored-should-be-computed",
+     "where": "sheets baraholka (host) и baraholka_killer (ic); host.modifiers; Лист.host_rating",
+     "evidence": "сервер хранит host_rating 4 и dev_attack 5, dev_sleaze 4, dev_dp 7, dev_firewall 6 — абсолютные числа, повторяющие R (R…R+3); лёд хранит те же пять чисел ещё раз (hint льда «Копия характеристик сервера»)",
+     "mechanism": "sheet-type-modifier",
+     "target": "Новая таблица `host` «Сервер», shape single, owner group: `host_rating` «Рейтинг сервера» (перенести из Лист, число 0–12), `host_attack_add` «Проникновение: + к рейтингу», `host_sleaze_add`, `host_dp_add`, `host_fw_add` (число 0–3, default 0 — порядок ведущего). Новый базовый тип листа `matrix_host` «Узел сервера»: is_device set да; dev_rating set `@host_rating` (основа); dev_attack set `@host_rating + @host_attack_add` (основа) и так же три остальных. host.extends = matrix_host; ic.extends = matrix_host. Лёд ставится в группу своего сервера (`group: <id листа сервера>`): поле группы делегируется листу группы (engine/calc.ts:68-70, 104; решение 28.09 «группы листов»). Образец: сервер — host_rating 4 и прибавки 1/0/3/2; лёд — только ic_kind и group. Поля общей таблицы «Группа» (Преимущество, урон) лёд тоже будет брать у сервера — для льда они не используются",
+     "rule_source": "hint сервера «R, R+1, R+2, R+3 в порядке ведущего (стр. 185)»; прежнее решение docs/sr6-compendium.md §11 «лёд — со своими хранимыми копиями» и есть копия — пересобрать",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "Лист.is_device; host.modifiers, ic.modifiers",
+     "evidence": "«Устройство или сервер» — kind number, min 0 max 1, правка `set \"1\"`",
+     "mechanism": "other",
+     "target": "is_device: вид да/нет, правка `set да`",
+     "rule_source": "CLAUDE.md (слова вместо ключей, одна форма)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "host.blocks (нет)",
+     "evidence": "без списка блоков у сервера на экране Тело, Проворство, счётчики здоровья (physical_max 10, defense_rating 3 у сервера в пробе)",
+     "mechanism": "other",
+     "target": "blocks: [«Сервер», «Матрица»]",
+     "rule_source": "данные",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "sheet:ic",
+   "label": "Тип листа «Лёд» (ic)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "stored-should-be-computed",
+     "where": "sheets[baraholka_killer].values; ic.modifiers",
+     "evidence": "host_rating и четыре характеристики переписаны с сервера руками",
+     "mechanism": "sheet-type-modifier",
+     "target": "ic.extends = matrix_host (см. «Сервер»); свои правки: matrix_cm set `@host_rating * 2`, initiative set `@m_dp * 2`, init_dice set 3. Лист льда — в группе сервера",
+     "rule_source": "hint «набор и счётчик — рейтинг × 2, инициатива ВМ × 2 + 3к6 (стр. 186)»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "запись ic_strike (matrix_action) в has льда",
+     "evidence": "«Удар льда» — запись книги, которую лист льда должен «иметь»; аргументы `pool: @действующий.host_rating * 2`, `защита: @действующий.ic_kind.defense или \"нет\"`",
+     "mechanism": "other",
+     "target": "ic.grants = [\"ic_attack\"] (выданная кнопка `+ic_attack`); запись ic_strike удалить; набор и защиту ic_attack считает сам от действующего (кластер Матрицы)",
+     "rule_source": "engine-model.md «Выданная кнопка … становится действием листа»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "missing-column-default",
+     "where": "аргумент `защита` у ic_strike",
+     "evidence": "`@действующий.ic_kind.defense или \"нет\"` — у строки «нет» ic_kinds клетка пуста",
+     "mechanism": "column-default",
+     "target": "ic_kinds.defense: default «нет»; «или» убрать",
+     "rule_source": "данные",
+     "engine_gap": "engine/cells.ts: readCell не отдаёт default колонки справочника"
+    },
+    {
+     "kind": "other",
+     "where": "ic.blocks (нет)",
+     "evidence": "лёд показывает все блоки",
+     "mechanism": "other",
+     "target": "blocks: [«Сервер», «Матрица», «Инициатива»]",
+     "rule_source": "данные",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "sheet:spirit",
+   "label": "Тип листа «Дух» (spirit)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "stored-should-be-computed",
+     "where": "spirit.modifiers; эффект summon_spirit (шаги после «Если @итог.margin >= 1»); spirit_kinds",
+     "evidence": "«Призвать духа» на каждый из 6 видов пишет 8 характеристик (`большее из(1, @force + -2)` …), magic и 4–5 рангов навыков — числа из spirit_kinds второй раз, лесенкой `@kind == \"воздуха\"`…",
+     "mechanism": "sheet-type-modifier",
+     "target": "Правки типа «Дух»: body…charisma `set большее из(1, @spirit_force + @spirit_kind.<х-ка>)` этап «основа» (новый первый этап характеристик, см. «Пешка»); magic `set @spirit_force` этап «основа». spirit_kinds.skills → вид «выбор», from skills, many: да; значения из нынешних шагов: воздуха, огня, воды — [астрал, атлетика, ближний бой, внимание, экзотическое оружие]; земли — [астрал, ближний бой, внимание, экзотическое оружие]; зверей — [астрал, ближний бой, внимание]; предков — [астрал, ближний бой, внимание, колдовство]. Ранги — одна правка по колонке `skills.*.rank`: `если(есть(@spirit_kind.skills, @строка), @spirit_force, 0)`. «Призвать» пишет только spirit_force, spirit_kind, services",
+     "rule_source": "docs/sr6-compendium.md §2 и §12 «Духи (В4–В5): … призыв пишет services/summoner»",
+     "engine_gap": "правка по колонке живой таблицы не применяется и не видит `@строка` (engine/calc.ts:112; engine/cells.ts: readCell; engine/modifiers.ts: valueOf) — без этого 19 правок по навыкам"
+    },
+    {
+     "kind": "other",
+     "where": "spirit.modifiers — attr_limits.<х-ка>.bonus add 20 (8 правок)",
+     "evidence": "+20 к пределу каждой характеристики — только потому, что шаги «Изменение» обрезают запись по max (engine/steps/apply.ts:72-73)",
+     "mechanism": "other",
+     "target": "удалить все 8: правки типа листа предел не режет (calc.ts не ограничивает; engine/limits.ts: breaches проверяет только поля-формулы)",
+     "rule_source": "движок, проверено по коду",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "spirit.modifiers — defense_rating add @spirit_force; spirit_hard",
+     "evidence": "защита + Мощь против любой атаки, а hint: «от обычного оружия защита + Мощь»; поле spirit_hard задаётся, но его не читает никто (поиск по образцу)",
+     "mechanism": "effect-tag",
+     "target": "правку defense_rating удалить; функция защиты атаки (ЗЩ цели) прибавляет `@цель.spirit_hard`, если у атаки нет метки «магическое» (см. метки)",
+     "rule_source": "hint типа (стр. 147–148); docs/sr6-compendium.md §12 В4–В5 «метка «магическое» … защита против неё без множителя»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "spirit_kinds.columns.label",
+     "evidence": "подписи — ключи: «body», «agility», …, «skills», «powers», «weak», «move»",
+     "mechanism": "other",
+     "target": "«Тело: к Мощи», «Проворство: к Мощи», «Реакция: к Мощи», «Сила: к Мощи», «Воля: к Мощи», «Логика: к Мощи», «Интуиция: к Мощи», «Харизма: к Мощи», «Навыки», «Способности», «Слабости», «Передвижение»",
+     "rule_source": "CLAUDE.md «слова вместо ключей»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "spirit.blocks (нет)",
+     "evidence": "spirit_kind, spirit_force, services не стоят ни в одном блоке",
+     "mechanism": "other",
+     "target": "блок «Дух» (spirit_kind, spirit_force, services); blocks: [«Дух», «Характеристики», «Особые», «Навыки», «Наборы кубиков», «Защита», «Счётчики», «Инициатива»]",
+     "rule_source": "данные",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "sheet:sprite",
+   "label": "Тип листа «Спрайт» (sprite)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "stored-should-be-computed",
+     "where": "эффект compile_sprite (после «Если @итог.success»); sprite.modifiers",
+     "evidence": "«Компилировать» пишет resonance, willpower/logic/intuition/charisma = уровень и ранги взлом, электроника, инженерное дело всем видам",
+     "mechanism": "sheet-type-modifier",
+     "target": "Правки типа: resonance `set @sprite_level` (этап «основа»), willpower…charisma `set большее из(1, @sprite_level)` (этап «основа»); sprite_kinds.skills → выбор из skills, many: да (взломщик, инфоспрайт, крушитель, посыльный — [взлом, электроника]; техноспрайт — [инженерное дело, электроника]); ранги — правка по колонке `если(есть(@sprite_kind.skills, @строка), @sprite_level, 0)`. «Компилировать» пишет только sprite_level, sprite_kind, tasks, sprite_registered",
+     "rule_source": "docs/sr6-compendium.md §13 ревью этапа 6 (6): «характеристики листа спрайта — формулы по виду и уровню … кнопки пишут только уровень, вид, задачи, создателя»; навыки по виду или все три — вопрос владельцу",
+     "engine_gap": "та же дыра правки по колонке навыков (engine/calc.ts:112, cells.ts: readCell)"
+    },
+    {
+     "kind": "missing-column-default",
+     "where": "sprite.modifiers dev_attack, dev_sleaze, dev_dp, dev_firewall, initiative",
+     "evidence": "`(@sprite_kind.attack или 0)` ×4, `(@sprite_kind.init или 0)`; проба: без вида `@sprite_kind.attack + 1` — ошибка «левый операнд «+» … null»",
+     "mechanism": "column-default",
+     "target": "sprite_kinds.attack/sleaze/dp/firewall/init: default 0; «или 0» убрать",
+     "rule_source": "данные",
+     "engine_gap": "default колонки справочника не берётся ни для пустой клетки, ни для невыбранной строки (engine/cells.ts: readCell; engine/calc.ts: resolve → walk)"
+    },
+    {
+     "kind": "other",
+     "where": "sprite.modifiers — attr_limits.(willpower|logic|intuition|charisma).bonus add 20",
+     "evidence": "4 правки-обхода предела",
+     "mechanism": "other",
+     "target": "удалить после перевода характеристик на правки типа",
+     "rule_source": "движок (steps/apply.ts:72-73)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "sprite_kinds.columns.label; sprite.blocks",
+     "evidence": "подписи «attack», «sleaze», «dp», «firewall», «init»; поля спрайта не в блоках",
+     "mechanism": "other",
+     "target": "«Проникновение: к уровню», «Ускользание: к уровню», «Вычислительная мощность: к уровню», «Сетевой экран: к уровню», «Инициатива: к уровню × 2»; блок «Спрайт» (sprite_kind, sprite_level, tasks, sprite_registered, sprite_lifetime); blocks: [«Спрайт», «Матрица», «Характеристики», «Навыки», «Инициатива»]",
+     "rule_source": "CLAUDE.md",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "sheet:vehicle",
+   "label": "Тип листа «Транспорт» (vehicle)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "ladder-in-formula",
+     "where": "vehicle.modifiers defense_rating; Лист.veh_ar; эффект drive_check (два места)",
+     "evidence": "`если(@jumped, @rig_pilot, если(@driver_pilot >= 1, @driver_pilot, @as_maneuver)) + @veh_armor`; `если(@jumped, @rig_pilot, если(@driver_pilot >= 1, @driver_pilot, @veh_pilot)) + @veh_sensor`; `если(@цель.jumped, @цель.rig_vcr, 0)` — три лесенки по одному режиму «кто ведёт», закодированному двумя полями",
+     "mechanism": "column-of-reference-table",
+     "target": "Справочник `control_modes` «Кто ведёт» (key word): строки «автопилот», «водитель», «риггер»; колонки `def_pilot` «Пилотирование к защите» (число, формула на строку: автопилот `@drone_skills.маневрирование.rating` (сейчас @as_maneuver), водитель `@driver_pilot`, риггер `@rig_pilot`), `ar_pilot` «Пилотирование к атаке» (автопилот `@veh_pilot`, водитель `@driver_pilot`, риггер `@rig_pilot`), `vcr` «Модуль контроля к управлению» (0, 0, `@rig_vcr`). Лист: колонка `control` «Кто ведёт», выбор из control_modes, default «автопилот»; `jumped` удалить. defense_rating set `@control.def_pilot + @veh_armor`; Лист.veh_ar `@control.ar_pilot + @veh_sensor`; drive_check `- @цель.control.vcr`",
+     "rule_source": "hint (стр. 196–201); docs/sr6-compendium.md §14 ревью этапа 7 (2, 9)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "type-dispatch-by-string",
+     "where": "Лист.soak",
+     "evidence": "`если(@veh_body >= 1, @veh_body, @body)` — «транспорт ли это» угадывается по числу",
+     "mechanism": "sheet-type-modifier",
+     "target": "Лист.soak = `@body`; vehicle: правка `soak set @veh_body`",
+     "rule_source": "данные",
+     "engine_gap": ""
+    },
+    {
+     "kind": "stored-should-be-computed",
+     "where": "Лист.driver_pilot, rig_pilot, rig_int, rig_log, rig_wil, rig_cha, rig_vcr",
+     "evidence": "«Водитель: Пилотирование + Реакция», «Риггер: Интуиция» … — копии значений чужого листа, вводятся руками (никакой эффект их не пишет)",
+     "mechanism": "other",
+     "target": "Лист: колонка `controller` «Кто управляет», вид «лист»; формулы `@controller.skills.пилотирование.pool`, `@controller.intuition` вместо семи копий; «Захватить управление» пишет только ссылку",
+     "rule_source": "CLAUDE.md «Хранимое ≠ вычисляемое»",
+     "engine_gap": "формула листа не читает другой лист по полю-ссылке: в проходе есть только стол и группа (engine/calc.ts: newPass, pass.desk / pass.group)"
+    },
+    {
+     "kind": "missing-column-default",
+     "where": "Лист.veh_body, veh_armor, veh_pilot, veh_sensor, veh_interval, veh_accel, veh_top, veh_handling",
+     "evidence": "`@vehicle_model.body или 0` и ещё 8 «или 0» — следы невыбранной модели",
+     "mechanism": "column-default",
+     "target": "vehicle_models: default 0 у числовых колонок; «или 0» убрать",
+     "rule_source": "данные",
+     "engine_gap": "engine/cells.ts: readCell и engine/calc.ts: resolve → walk — default колонки при пустой клетке и невыбранной строке"
+    },
+    {
+     "kind": "other",
+     "where": "запись veh_drive (vehicle_action) в has дрона",
+     "evidence": "«Проверка управляемости» — запись, которую каждый лист транспорта должен «иметь»",
+     "mechanism": "other",
+     "target": "vehicle.grants = [\"drive_check\"]; запись veh_drive и has дрона убрать",
+     "rule_source": "engine-model.md (выданная кнопка)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "vehicle.blocks (нет)",
+     "evidence": "vehicle_model, speed, offroad, jumped, rig_* не в блоках; на листе дрона — Тело/Проворство человека",
+     "mechanism": "other",
+     "target": "блок «Транспорт» (vehicle_model, veh_body, veh_armor, veh_pilot, veh_sensor, veh_handling, veh_accel, veh_interval, veh_top, speed, offroad, control, controller, autosofts_on, mounts_used); blocks: [«Транспорт», «Защита», «Счётчики», «Инициатива»]",
+     "rule_source": "данные",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "sheet:creature",
+   "label": "Тип листа «Существо» (creature)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "stored-should-be-computed",
+     "where": "эффект creature_template «Облик существа» (19 шагов); creature.modifiers",
+     "evidence": "`ИЗМЕНИТЬ @цель.body set большее из(если(пусто(@tpl.body), @цель.body, @tpl.body), 0)` ×9 и `skills.X.rank set @tpl.sk_X или 0` ×10; hint «Облик по заготовке пишет характеристики и навыки»",
+     "mechanism": "sheet-type-modifier",
+     "target": "Лист: колонка `creature_kind` «Вид существа», выбор из creatures, optional. Правки типа: body…charisma, magic `set @creature_kind.<х-ка>` (этап «основа»); essence `set @creature_kind.essence`; init_dice `set @creature_kind.init_dice`; armor_natural `add @creature_kind.armor`; ранги — правкой по колонке `skills.*.rank` из `sk_<навык>`. Эффект creature_template и запись wd_creature удалить; hint переписать («вид — выбор строки, числа считает тип листа»). Колонки creatures init_base, cm, defense (напечатанные книгой вычисленные) — удалить или в тест-сверку; подписи creatures «body», «init_base»… → русские",
+     "rule_source": "docs/sr6-compendium.md §2, §15",
+     "engine_gap": "правка по колонке навыков (engine/calc.ts:112, cells.ts: readCell); пустая клетка в `set` (engine/stages.ts)"
+    },
+    {
+     "kind": "other",
+     "where": "creature.modifiers — attr_limits.*.bonus add 20 (8 правок)",
+     "evidence": "обход предела под запись шагами",
+     "mechanism": "other",
+     "target": "удалить",
+     "rule_source": "движок (steps/apply.ts:72-73)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "creature.blocks (нет)",
+     "evidence": "все блоки, включая Матрицу и Магию",
+     "mechanism": "other",
+     "target": "блок «Существо» (creature_kind); blocks: [«Существо», «Характеристики», «Особые», «Навыки», «Наборы кубиков», «Защита», «Счётчики», «Инициатива»]",
+     "rule_source": "данные",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "fields:list",
+   "label": "Формулы полей таблицы «Лист»",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "ladder-in-formula",
+     "where": "Лист.initiative",
+     "evidence": "`если(@matrix_mode == \"холодная ВР\" или @matrix_mode == \"горячая ВР\", если(@awakened == \"техномант\", @logic + @intuition, @intuition + @m_dp), @reaction + @intuition)`",
+     "mechanism": "column-of-reference-table",
+     "target": "matrix_modes: колонка `init_base` «Основа инициативы» (число, формула на строку: нет и ДР — `@reaction + @intuition`; холодная ВР и горячая ВР — `@awakened.vr_init`); колонка `vr` «Виртуальная реальность» (да/нет, default нет; обе ВР — да); колонка `online` «В Матрице» (да/нет; нет — нет, остальные — да). awakened_kinds: колонка `vr_init` «Инициатива в ВР» (формула: техномант `@logic + @intuition`, остальные пять строк `@intuition + @m_dp`). initiative = `округлить вниз((@matrix_mode.init_base + @wound_mod + @condition_mod + @init_mod) / если(@init_half >= 1, 2, 1))`",
+     "rule_source": "docs/sr6-compendium.md §11 (ВР — Интуиция + ВМ), §13 ревью (11) (техномант — Логика + Интуиция)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "type-dispatch-by-string",
+     "where": "Лист.drain_pool",
+     "evidence": "`если(@awakened == \"адепт\", @body + @willpower, @willpower + @trad_attr)`",
+     "mechanism": "column-of-reference-table",
+     "target": "awakened_kinds: колонка `drain_add` «К Воле в сопротивлении истощению» (число, формула на строку: адепт `@body`, остальные `@trad_attr`); drain_pool = `@willpower + @awakened.drain_add`",
+     "rule_source": "docs/sr6-compendium.md §12 В10 «истощение адепта Тело + Воля»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "type-dispatch-by-string",
+     "where": "Лист.plane_dr",
+     "evidence": "`если(@astral_mode == \"проекция\", @astral_dr, @defense_rating)`",
+     "mechanism": "column-of-reference-table",
+     "target": "astral_modes: колонка `dr` «Защита на своём плане» (формула: нет, восприятие — `@defense_rating`; проекция — `@astral_dr`); plane_dr = `@astral_mode.dr`",
+     "rule_source": "данные",
+     "engine_gap": ""
+    },
+    {
+     "kind": "missing-column-default",
+     "where": "Лист body…edge (max), defense_rating, physical_max, astral_dr",
+     "evidence": "`(@metatype.body_max или 6)` ×9, `(@metatype.dermal или 0)`, `(@metatype.toughness или 0)`, `(@armor_natural или 0)`",
+     "mechanism": "column-default",
+     "target": "у metatype default «человек», во всех пяти строках клетки заполнены — «или» убрать; armor_natural, armor_worn, armor_extra, cover — default 0 (хранимые поля default берут: calc.ts: readStored)",
+     "rule_source": "данные",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "Лист.essence",
+     "evidence": "`6 - @essence_mul * (сумма(строки(\"implant\", \"essence\")) + сумма(строки(\"implant_weapon\", \"essence\")))` — две суммы, потому что имплантированное оружие не наследник импланта",
+     "mechanism": "other",
+     "target": "после множественной основы у «Имплантированного оружия» — `6 - @essence_mul * сумма(строки(\"implant\", \"essence\"))`",
+     "rule_source": "данные",
+     "engine_gap": "у типа записи одна основа (packages/schema/src/world.ts: table.extends — строка; model/inherit.ts: lineOf)"
+    }
+   ]
+  },
+  {
+   "id": "layout",
+   "label": "Раскладка листа: блоки и типы листов",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "system.blocks; system.sheets.*.blocks",
+     "evidence": "161 из 200 колонок «Листа» не стоят ни в одном блоке (Матрица, Магия, техномант, дух, спрайт, сервер, транспорт, репутация, служебные счётчики правок) — уходят в «Без блока», который показывается любому типу листа (model/blocks.ts: fieldsByBlock кладёт их в NO_BLOCK без проверки shown); списки блоков есть только у пешки и противника",
+     "mechanism": "other",
+     "target": "system.blocks добавить: «Матрица» (matrix_mode, cfg_*, m_attack, m_sleaze, m_dp, m_firewall, matrix_ar, matrix_dr, matrix_damage, matrix_cm, matrix_wound, overwatch, noise, dev_rating, device_dead, converged), «Магия» (awakened, tradition, aspect, trad_attr, spell_ar, drain_pool, astral_mode, astral_dr, plane_dr, sustained, initiate_grade, spirits_force, focus_force_total, pp_spent), «Техномант» (tm_attack, tm_sleaze, tm_dp, tm_fw, tm_points, submersion_grade, echoes, sprites_unreg, sprites_reg), «Дух», «Спрайт», «Сервер» (host_rating, ic_kind), «Транспорт», «Существо», «Мир» (reputation, heat), «Служебное» (edge_no_gain, edge_no_spend, action_lock, pain_*, focus_*, m_* флаги, has_*, aided_*) — не входит ни в один тип листа. runner.blocks — явный список всех, кроме «Служебное». Блоки типов — в пунктах типов листа",
+     "rule_source": "данные; CLAUDE.md «сложность скрыта»",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:weapon",
+   "label": "Тип записи «Оружие» (weapon, основа)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "firearm.columns.prone_pool (default 0), melee.columns.prone_pool (default −4)",
+     "evidence": "одна колонка «Атакующий лёжа: к набору» объявлена дважды в двух наследниках",
+     "mechanism": "merge-copies",
+     "target": "объявить один раз в weapon: `prone_pool` «Атакующий лёжа: к набору», число, default 0; в melee оставить только `{key: prone_pool, default: -4}` (наследование сливает колонку по ключу: model/inherit.ts: byKey)",
+     "rule_source": "CLAUDE.md «одно понятие — одно место»",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:firearm",
+   "label": "Тип записи «Стрелковое оружие» (firearm)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "table-data-copied-into-steps",
+     "where": "records colt_l36, predator_vi, ak_97, rpk, striker — cells.mounts",
+     "evidence": "mounts каждой записи = текст weapon_classes.mods её класса: «сверху, ствол» = [\"сверху\",\"ствол\"]; «сверху, ствол, подствол»; «сверху, подствол»",
+     "mechanism": "method-column-of-record-type",
+     "target": "weapon_classes.mods: вид «выбор», from mounts, many: да (значения из текста; «нельзя» — пусто); firearm.mounts: `expr: @class.mods`; клетки mounts у пяти записей удалить",
+     "rule_source": "данные (таблица классов «Куда ставятся модификации»)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "table-data-copied-into-steps",
+     "where": "records firearm — cells.skill",
+     "evidence": "навык по классу: пистолеты, винтовки, пулемёты — «стрельба», лук — «атлетика», ракетная установка — «экзотическое оружие»",
+     "mechanism": "method-column-of-record-type",
+     "target": "weapon_classes: колонка `skill` «Навык», выбор из skills (значения по строкам из записей образца); weapon.skill: `expr: @class.skill`; клетки skill у записей с классом удалить (запись с особым навыком оставляет клетку)",
+     "rule_source": "данные образца (все записи совпадают); навык класса по книге — сверить",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "record striker.bindings",
+     "evidence": "своя кнопка «Выстрелить» → launch_blast сливается по позиции с кнопкой типа: в вызов уходят чужие входы attack_pool, physical_hit, dv, electric, attack_skill (проба bindingsOf)",
+     "mechanism": "record-of-book-type",
+     "target": "новый тип записи `launcher` «Пусковая установка», extends firearm, bindings [{label «Выстрелить», effect launch_blast}]; striker перенести в launcher, его bindings удалить",
+     "rule_source": "данные (класс «ракетная установка», патрон — ракетный снаряд)",
+     "engine_gap": "кнопка наследника/записи сливает аргументы с кнопкой основы даже при другом эффекте (model/inherit.ts:49 byOrder; events/actions.ts:18 bindingsOf); линт не видит аргументов, которых у эффекта нет (model/lint.ts); убрать кнопку основы у наследника нельзя"
+    },
+    {
+     "kind": "missing-column-default",
+     "where": "firearm.str_need, firearm.sight",
+     "evidence": "`(@str_min или 0)`, `@smart или 0`",
+     "mechanism": "column-default",
+     "target": "str_min, smart: default 0; «или 0» убрать (у записей default берётся: model/owned.ts: propsOf)",
+     "rule_source": "данные",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "firearm.bindings[0].args, melee.bindings[0].args",
+     "evidence": "`dv: @dv`, `electric: @electric` — одноимённое свойство записи",
+     "mechanism": "keep-as-is",
+     "target": "убрать из args: вход берёт клетку записи сам (model/implicit.ts: fillMissing — явный → клетка записи → «сам»)",
+     "rule_source": "engine-model.md «Аргументы «сами»»",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:melee",
+   "label": "Тип записи «Оружие ближнего боя» (melee)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "records combat_knife, katana, stun_baton, sap — cells.class (пусто); weapon_classes; edge_actions «Пырнуть»",
+     "evidence": "класс только текстом описания («Клинки. …», «Дробящее. …»); в weapon_classes ни одной строки ближнего боя; «Пырнуть»: «клинком — штраф снижается до −2» — сейчас доступно любой дубинке",
+     "mechanism": "column-of-reference-table",
+     "target": "weapon_classes: строки «клинок», «дробящее», «безоружное» (skill «ближний бой», mods пусто); class: combat_knife, katana — «клинок»; stun_baton, sap — «дробящее»; implant_weapon spurs — «клинок», hardened_fist, shock_hand — «безоружное». edge_actions: колонка `needs_class` «Только для класса», выбор из weapon_classes («Пырнуть» — «клинок»); проверка — в Плате атаки (кластер атаки)",
+     "rule_source": "описания записей (стр. 249, 290); edge_actions (стр. 48)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:armor",
+   "label": "Тип записи «Броня» (armor)",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "book:action",
+   "label": "Тип записи «Действие» (action)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "records act_scene, act_second_wind, act_shrug; has листов razor, silk, hammer, koshka; system.grants",
+     "evidence": "общие действия Преимущества — записи, которые каждый лист должен «иметь» (у противников их нет — «Второе дыхание» им недоступно), а «Уклониться», «Блокировать», «Глухая оборона» выданы всем через system.grants",
+     "mechanism": "other",
+     "target": "три записи и их has удалить; second_wind, shrug_off, scene_start — в grants типа `person` (или system.grants, как act_dodge)",
+     "rule_source": "CLAUDE.md «одно понятие — одно место»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "copy-of-effect",
+     "where": "эффекты second_wind и shrug_off; подписи записей",
+     "evidence": "одинаковые шаги (Плата spend_edge N; «Изменение» шкалы на −1), разница — данные: 3/«stun», 4/«physical»; число в подписи «(3 Преимущества)»",
+     "mechanism": "column-of-reference-table",
+     "target": "справочник `edge_moves` «Действия Преимущества вне атаки»: строки «Второе дыхание» (cost 3, track stun), «Ранен не так сильно» (cost 4, track physical); колонки `cost` «Цена, очков» (число), `track` «Шкала» (вид «поле»). Одна выданная кнопка `edge_move` «Действие Преимущества»: вход `приём` — выбор из edge_moves, спрашивается; Плата spend_edge(amount=@приём.cost); шаг — шкала `@приём.track` действующего −1. Эффекты second_wind, shrug_off удалить",
+     "rule_source": "описания эффектов («За 3 очка … 1 ячейку оглушения», «За 4 очка … здоровья»)",
+     "engine_gap": "«Изменение» по полю из колонки вида «поле» — проверить по месту (core/run.ts: fieldOf); не адресуется — дописать"
+    },
+    {
+     "kind": "other",
+     "where": "second_wind.steps, shrug_off.steps",
+     "evidence": "`ДЛЯ КАЖДОГО цели; ИЗМЕНИТЬ @цель.stun … меньшее из(@действующий.stun, 1)` — пишет цели, читает действующего",
+     "mechanism": "keep-as-is",
+     "target": "если действие только на себя — без целей, `@действующий.stun`; на другого — читать `@цель.stun`",
+     "rule_source": "вопрос владельцу",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:gear",
+   "label": "Тип записи «Снаряжение» (gear, основа)",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "book:weapon_mod",
+   "label": "Тип записи «Модификация оружия» (weapon_mod)",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "book:ammo_kind",
+   "label": "Тип записи «Патроны» (ammo_kind)",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "book:grenade",
+   "label": "Тип записи «Граната, ракета» (grenade)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "grenade.bindings «Бросить»; records rocket_frag, rocket_antivehicle (launched=true)",
+     "evidence": "ракетные снаряды наследуют кнопку «Бросить» (throw_blast) — ракету можно «бросить рукой»; признак «Для гранатомёта или установки» — колонка-флаг вместо типа",
+     "mechanism": "record-of-book-type",
+     "target": "основа `explosive_round` «Взрывной снаряд» (dv_e, dv_c, dv_n, blast, damage_kind, physical_dmg, electric, status, status_level, ar_vehicle, count), без кнопки; `grenade` extends её с кнопкой «Бросить»; новый `rocket` «Ракетный снаряд» extends её без кнопки; ракеты перенести в rocket; колонку launched удалить; blast_rings.rocket_dv: `строки(\"rocket\", …)`",
+     "rule_source": "описания записей (стр. 263)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "missing-column-default",
+     "where": "grenade.physical_dmg",
+     "evidence": "`если(пусто(@damage_kind), да, @damage_kind.physical)`",
+     "mechanism": "column-default",
+     "target": "damage_kind: default «физический»; physical_dmg: `@damage_kind.physical`",
+     "rule_source": "данные",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "grenade.count, explosive.count",
+     "evidence": "«Сколько штук» — `expr: 1` (постоянная формула), а это значение экземпляра",
+     "mechanism": "column-default",
+     "target": "`default: 1` вместо expr",
+     "rule_source": "данные",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:explosive",
+   "label": "Тип записи «Взрывчатка» (explosive)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "ladder-in-formula",
+     "where": "record explosive_pack — cells.cost, cells.avail",
+     "evidence": "`если(@rating <= 3, @rating * 10, если(@rating <= 6, @rating * 50, … @rating * 5000))` и такая же лесенка доступности",
+     "mechanism": "column-of-reference-table",
+     "target": "справочник `explosive_grades` «Взрывпакет по рейтингу», key range: 1–3 (price 10, avail 1), 4–6 (50, 2), 7–9 (100, 3), 10–12 (250, 4), 13–15 (500, 5), 16–18 (1000, 6), 19–20 (5000, 7); cost `{@rating * таблица(\"explosive_grades\", @rating, \"price\")}`, avail `{таблица(\"explosive_grades\", @rating, \"avail\")}` (клетка записи понимает таблица(): model/sheet-columns.ts: recordPath)",
+     "rule_source": "описание записи (стр. 264)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "record detonator",
+     "evidence": "детонатор — в типе «Взрывчатка», наследует кнопку «Подорвать»",
+     "mechanism": "record-of-book-type",
+     "target": "перенести в electronics (или gear)",
+     "rule_source": "описание записи (стр. 264)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:helmet",
+   "label": "Тип записи «Шлем» (helmet)",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "book:shield",
+   "label": "Тип записи «Щит» (shield)",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "book:armor_mod",
+   "label": "Тип записи «Модификация брони» (armor_mod)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "armor_mod.columns status, charges; records armor_fire, armor_chem_seal",
+     "evidence": "колонки не читает никто; у «Защиты от огня» status пуст («Отменяет состояние Горение рейтинг раз»); у «Химической герметизации» status пуст, charges = @rating без рейтинга («Нейтрализует Разъедание шесть раз»)",
+     "mechanism": "other",
+     "target": "клетки: armor_fire status «burning»; armor_chem_seal status «corroded», charges 6. Механика у типа: подписка `gained:{@строка.status}` с условием «@лист == @носитель и @вещь.charges >= 1» → снять состояние, `@вещь.charges` −1",
+     "rule_source": "описания записей (стр. 266)",
+     "engine_gap": "у типа записи нет подписок (`on`) с `@вещь` (packages/schema/src/world.ts: table — только bindings/grants/modifiers; engine/effects.ts: wornEffects)"
+    }
+   ]
+  },
+  {
+   "id": "book:clothing",
+   "label": "Тип записи «Одежда» (clothing)",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "book:implant",
+   "label": "Тип записи «Имплант» (implant)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "ladder-in-formula",
+     "where": "records cyberjack (ess_base, cost_base, avail_base), cybereyes (cost_base, avail_base, capacity)",
+     "evidence": "`если(@rating == 1, 1, если(@rating == 2, 1.5, … 3))` и ещё пять лесенок по рейтингу",
+     "mechanism": "column-of-reference-table",
+     "target": "справочник `cyberjack_ratings` «Киберразъём по рейтингу», key number 1…6: ess 1/1.5/2/2.3/2.6/3; cost 45000/65000/80000/95000/140000/210000; avail 3/3/3/4/5/6. Справочник `cybereyes_ratings` 1…5: cost 1000/4000/6000/10000/16000; avail 2/2/3/3/3; capacity 1/4/8/12/16. Клетки: `{таблица(\"cyberjack_ratings\", @rating, \"ess\")}` и т. д.",
+     "rule_source": "описания записей (стр. 284) — числа совпадают с лесенками",
+     "engine_gap": ""
+    },
+    {
+     "kind": "string-membership",
+     "where": "record cyberjack — правка init_dice",
+     "evidence": "`если(@matrix_mode == \"холодная ВР\" или @matrix_mode == \"горячая ВР\", если(@строка.rating >= 4, 2, 1), 0)`",
+     "mechanism": "column-of-reference-table",
+     "target": "value `если(@строка.rating >= 4, 2, 1)`, if `@matrix_mode.vr` (колонка matrix_modes.vr — см. «Формулы полей»)",
+     "rule_source": "описание записи (стр. 284)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "missing-column-default",
+     "where": "implant.essence, cost, avail (и копии в implant_weapon)",
+     "evidence": "`(@grade.ess или 1)`, `(@grade.cost или 1)`, `(@grade.avail или 0)`",
+     "mechanism": "column-default",
+     "target": "grade default «стандарт», все строки grades заполнены — «или» убрать",
+     "rule_source": "данные",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:bioware",
+   "label": "Тип записи «Биоимплант» (bioware)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "ladder-in-formula",
+     "where": "record bone_density — правки unarmed_ar_bonus, unarmed_dv",
+     "evidence": "`если(@строка.rating == 1, 1, если(@строка.rating == 4, 3, 2))`, `если(@строка.rating >= 3, 4, 3)`",
+     "mechanism": "column-of-reference-table",
+     "target": "справочник `bone_density_ratings` «Плотность костей по рейтингу», key number 1…4: dv 3/3/4/4, ar 1/2/2/3; правки: `таблица(\"bone_density_ratings\", @строка.rating, \"dv\")`, `… \"ar\"`; unarmed_physical `set да` вместо `1`",
+     "rule_source": "описание записи (стр. 291) «3ф/+1, 3ф/+2, 4ф/+2, 4ф/+3»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "record reflex_recorder — правка",
+     "evidence": "`skills.{@строка.skill}.pool add 1`, а описание: «Добавляет 1 к рейтингу навыка»",
+     "mechanism": "keep-as-is",
+     "target": "мишень `skills.{@строка.skill}.rank` (необученный навык с ним становится обученным)",
+     "rule_source": "описание записи (стр. 292)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "table-data-copied-into-steps",
+     "where": "bioware.cultured; record reflex_recorder",
+     "evidence": "`cultured=true` повторяет slot «культивированный»",
+     "mechanism": "column-of-reference-table",
+     "target": "implant_slots: колонка `cultured` «Культивированный» (да/нет; «культивированный» — да); bioware.cultured: `expr: @slot.cultured`, клетку удалить",
+     "rule_source": "данные",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:cyberlimb",
+   "label": "Тип записи «Киберконечность» (cyberlimb)",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "book:limb_accessory",
+   "label": "Тип записи «Аксессуар конечности» (limb_accessory)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "record gyromount (limb_accessory) vs weapon_mod gyro_mount",
+     "evidence": "«Имплантированная версия модификации оружия «Гирокрепление»» — клеток механики нет (у оружейной: ease_burst 4, ease_full 3, str_ease 1)",
+     "mechanism": "other",
+     "target": "Лист: колонки `recoil_ease_burst`, `recoil_ease_full`, `str_ease_body` (число, default 0); правки записи gyromount: +4, +3, +1; firearm.recoil_burst/recoil_full/str_need прибавляют `@носитель.<поле>`",
+     "rule_source": "описание записи (стр. 288); те же ли числа у имплантированной — вопрос владельцу",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:implant_weapon",
+   "label": "Тип записи «Имплантированное оружие» (implant_weapon)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "implant_weapon.columns",
+     "evidence": "девять колонок импланта (slot, grade, ess_base, cost_base, avail_base, essence, excl, cost, avail) с теми же формулами переписаны вручную (порядок другой), потому что основа — melee",
+     "mechanism": "merge-copies",
+     "target": "`extends: [\"melee\", \"implant\"]`; свои колонки удалить; Лист.essence — одна сумма по implant",
+     "rule_source": "CLAUDE.md «одно понятие — одно место»",
+     "engine_gap": "одна основа у типа записи (packages/schema/src/world.ts: table.extends — строка; model/inherit.ts: lineOf / mergeKind)"
+    }
+   ]
+  },
+  {
+   "id": "book:quality",
+   "label": "Тип записи «Качество» (quality)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "record focus «Сосредоточенность»",
+     "evidence": "механики нет — правило в описании",
+     "mechanism": "sheet-type-modifier",
+     "target": "правка `sustain_free add @строка.level` (см. «Раннер»)",
+     "rule_source": "описание записи (стр. 73)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "string-membership",
+     "where": "record burned_out — правка edge_no_spend",
+     "evidence": "`если(@matrix_mode != \"нет\", 1, 0)`",
+     "mechanism": "column-of-reference-table",
+     "target": "value 1, if `@matrix_mode.online` (колонка matrix_modes.online)",
+     "rule_source": "описание записи (стр. 76)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "record spirit_guide_q; тип mentor (запись mentor_shark); record code_white_hat",
+     "evidence": "качество «Дух-наставник» с choice_note «какой дух-наставник» и отдельный тип «Дух-наставник» с самим духом; «Кодекс: Белая шляпа» — «кодекс для качества «Связан честью»»",
+     "mechanism": "record-of-book-type",
+     "target": "mentor.extends = \"quality\", колонки-умолчания mentor: kind «положительное», karma 10; запись spirit_guide_q удалить — наставник сам и есть качество. Так же кодексы: тип «Кодекс» extends quality",
+     "rule_source": "hint типа mentor «Дух-наставник (качество)»; описание spirit_guide_q (стр. 72)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:adept_power",
+   "label": "Тип записи «Способность адепта» (adept_power)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "record adept_improved_sense.grants; эффекты edge_bonus_зрение, _слух, _осязание, _вкус, _обоняние",
+     "evidence": "выдаёт все пять бонусов, хотя «Выберите чувство» (0,25 ОС — за все пять чувств); пять эффектов совпадают на 98–99 %, разница — строка `есть(@roll.tags, \"слух\")`",
+     "mechanism": "column-of-reference-table",
+     "target": "справочник `senses` «Чувства», owner sheet: строки зрение, слух, осязание, вкус, обоняние; колонка `edge_bonus` «Бонусное очко Преимущества», число, default 0. adept_power: колонка `sense` «Чувство», выбор из senses (у экземпляра); правка записи `{target: \"senses.{@строка.sense}.edge_bonus\", op: add, value: 1}`; grants убрать. Пять эффектов → один `edge_bonus_sense` «Бонусное очко Преимущества по чувству» в общей выдаче: подписка seen, цикл по строкам senses (as чувство), условие `@бросающий == @носитель и есть(@roll.tags, @чувство) и @носитель.senses.[@чувство].edge_bonus >= 1` → gain_edge",
+     "rule_source": "описание записи (стр. 158)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "record adept_improved_skill — cells.pp",
+     "evidence": "`0.5 * @level` — «1 ОС за уровень для боевых навыков… (в записи указана цена небоевого)»",
+     "mechanism": "column-of-reference-table",
+     "target": "skills: колонка `combat` «Боевой навык» (да/нет, default нет); pp `{@level * если(@skill.combat, 1, 0.5)}`",
+     "rule_source": "описание записи (стр. 157); какие навыки боевые — вопрос владельцу",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:lifestyle",
+   "label": "Тип записи «Уровень жизни» (lifestyle)",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "book:device",
+   "label": "Тип записи «Устройство Матрицы» (device)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "type-dispatch-by-string",
+     "where": "device.modifiers — noise",
+     "evidence": "`0 - если(@строка.device_kind == \"РПУ\", @строка.device_rating или 0, @строка.noise_cut или 0)`; у ДронМастера noise_cut=3 уже равен рейтингу",
+     "mechanism": "method-column-of-record-type",
+     "target": "device_kinds: колонка `noise_per_rating` «Шумоподавление на рейтинг» (число, default 0; РПУ — 1); device.noise_cut: `expr: @device_rating * @device_kind.noise_per_rating`; клетку noise_cut у dev_rcc_dronemaster удалить; правка `noise add 0 - @строка.noise_cut`",
+     "rule_source": "описание записи (стр. 197) «шумоподавление 3 (равно рейтингу)»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "missing-column-default",
+     "where": "device.modifiers dev_rating, dev_attack, dev_sleaze, dev_dp, dev_firewall",
+     "evidence": "`@строка.device_rating или 0` и ещё четыре «или 0»",
+     "mechanism": "column-default",
+     "target": "device_rating, m_attack, m_sleaze, m_dp, m_firewall, noise_cut: default 0 (default записи берётся: model/owned.ts: propsOf); «или 0» убрать",
+     "rule_source": "данные",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:program",
+   "label": "Тип записи «Программа» (program)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "type-dispatch-by-string",
+     "where": "program.modifiers — hack_programs",
+     "evidence": "`если(@строка.category == \"взлом\", 1, 0)`",
+     "mechanism": "column-of-reference-table",
+     "target": "program_kinds: колонка `hack` «Программа взлома», число (базовая 0, взлом 1); value `@строка.category.hack`",
+     "rule_source": "данные",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:electronics",
+   "label": "Тип записи «Электроника» (electronics)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "record soft_autosoft «Автософт»",
+     "evidence": "дубль типа «Автософт» (цена рейтинг × 500, доступность = рейтинг, 1–9) — шесть записей autosoft уже есть",
+     "mechanism": "merge-copies",
+     "target": "запись удалить",
+     "rule_source": "описание (стр. 271) и записи autosoft (стр. 201, 311)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:vision",
+   "label": "Тип записи «Оптика» (vision)",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "book:audio",
+   "label": "Тип записи «Аудио» (audio)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "record aud_enh_spatial_recognizer.grants",
+     "evidence": "выдаёт копию-эффект edge_bonus_слух",
+     "mechanism": "column-of-reference-table",
+     "target": "grants убрать, правка `senses.слух.edge_bonus add 1` (см. «Способность адепта»)",
+     "rule_source": "описание записи (стр. 276)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:sensor",
+   "label": "Тип записи «Сенсор» (sensor)",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "book:security",
+   "label": "Тип записи «Охрана» (security)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "record sec_biometric",
+     "evidence": "«См. аксессуар «Биометрический считыватель» (стр. 267)» — та же вещь, что acc_biometric_reader (цена 200, доступность 2)",
+     "mechanism": "merge-copies",
+     "target": "запись удалить, оставить acc_biometric_reader",
+     "rule_source": "описание записи (стр. 278)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:breaking",
+   "label": "Тип записи «Взлом» (breaking)",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "book:survival",
+   "label": "Тип записи «Выживание» (survival)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "record surv_respirator — правка броска",
+     "evidence": "tags [\"сопротивление\", \"токсин\"] — действует на любой токсин, а описание: «при проверках сопротивления химикатам вдыхаемым путём»",
+     "mechanism": "keep-as-is",
+     "target": "бросок «Токсина» получает метку пути введения («вдыхаемый» и т. д., из колонки vectors — см. «Токсин»); респиратор: tags [\"сопротивление\", \"токсин\", \"вдыхаемый\"]",
+     "rule_source": "описание записи (стр. 280)",
+     "engine_gap": "метка броска из значения входа — проверить по месту (engine/steps/roll.ts: tags)"
+    }
+   ]
+  },
+  {
+   "id": "book:document",
+   "label": "Тип записи «Документ» (document)",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "book:matrix_action",
+   "label": "Тип записи «Действие в Матрице» (matrix_action)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "table-data-copied-into-steps",
+     "where": "records mx_brute, mx_spike, mx_tarpit, mx_hide — bindings.args; matrix_action.columns (нет)",
+     "evidence": "у каждой записи своя кнопка и 7 аргументов-свойств действия: `защита: \"Воля + СЭ\"`, `illegal: да`, `kind: \"сложное\"`, `link: \"Проникновение\"`, `action: \"брутфорс\"`, `pool: @действующий.skills.взлом.pool`; у типа колонок нет",
+     "mechanism": "method-column-of-record-type",
+     "target": "колонки matrix_action: `skill` «Навык» (выбор из skills), `attribute` «Характеристика вместо навыковой» (выбор из attributes, optional — «Спрятаться»: intuition), `defense` «Защита» (выбор из matrix_defenses), `illegal` «Незаконное» (да/нет, default нет), `action_kind` «Вид действия» (выбор из action_kinds, default «сложное»), `link` «Связь» (выбор из matrix_links, default «нет»), `outcome` «Исход» (вид эффект: matrix_hack / matrix_spike / matrix_tarpit / пусто). Кнопка у типа: [{label «Выполнить», effect matrix_check}], исход — вызов `@outcome` (шаг вызова берёт эффект формулой: engine/steps/emit.ts:67). Кнопки записей удалить",
+     "rule_source": "docs/sr6-compendium.md §11 «33 действия — записи типа matrix_action (навык, характеристика, защита, законность, простое/сложное, доступ)»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "records ic_strike, tm_sprite_compile",
+     "evidence": "«Удар льда» и «Компилировать спрайта» — не действия персоны из книги, лежат среди них",
+     "mechanism": "other",
+     "target": "ic_strike → выдача типа «Лёд»; tm_sprite_compile → выдача по виду пробуждённого (см. «Магическое действие»)",
+     "rule_source": "данные",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:spell",
+   "label": "Тип записи «Заклинание» (spell)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "table-data-copied-into-steps",
+     "where": "records spell_* — bindings.args",
+     "evidence": "кнопки повторяют свои клетки: category, `drain_base: 6` (= drain), defense, area, combat, element; выводимые: `sustain: да` (= duration «Д»), `astral: да` (= stype «А»), `damage_phys: да` (= damage «ф»), `spell_effect: \"sp_armor\"`, `cap: 4/20`",
+     "mechanism": "method-column-of-record-type",
+     "target": "кнопки — у типа (или у подтипов по исходу, если функции «Сотворить» не сольют), аргументы только переименованные: `drain_base: @drain`, `sustain: @duration.sustained` (spell_durations: колонка `sustained` да/нет, «Д» — да), `astral: @stype.astral` (spell_stypes: колонка `astral`, «А» — да), `damage_phys: @damage.physical` (spell_damage: колонка `physical`, «ф» — да), `spell_effect: @sustain_effect` (новая колонка вида эффект: sp_increase_attribute, sp_armor), `cap: @boost_cap` (новая колонка: 4, 20); одноимённые входы (category, defense, area, combat, element, threshold) не передаются; кнопки записей удалить",
+     "rule_source": "данные (клетки тех же записей)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "spell.status (огненный шар — «burning»); spell_defenses строки «исцеление», «критические», «порог», «нет»",
+     "evidence": "состояние стихии повторено в записи; в справочнике защит лежат пороги исцеления, а `stabilize: да` повторяет защиту «критические»",
+     "mechanism": "column-of-reference-table",
+     "target": "spell_elements: колонка `status` (эффект: огонь — burning …), spell.status удалить; пороги — отдельный справочник «Порог заклинания» (5 − Сущность, ячейки критического, число), stabilize — из него (кластер магии)",
+     "rule_source": "docs/sr6-review.md «Стихия заклинания»; описания записей (стр. 135–136)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:ritual",
+   "label": "Тип записи «Ритуал» (ritual)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "table-data-copied-into-steps",
+     "where": "record ritual_roving_spell.bindings",
+     "evidence": "`threshold: 6` = клетка threshold=6",
+     "mechanism": "method-column-of-record-type",
+     "target": "кнопка у типа [{label «Провести», effect ritual_cast}] без аргументов (вход threshold берёт клетку сам); кнопку записи удалить",
+     "rule_source": "данные",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:focus",
+   "label": "Тип записи «Источник» (focus)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "type-dispatch-by-string",
+     "where": "focus.modifiers — 13 правок focus_power … focus_sp_управление",
+     "evidence": "`если(@строка.focus_kind == \"Источник силы\", @строка.rating, 0)` ×8 и `… == \"Источник сотворения заклинаний\" и @строка.category == \"боевое\"` ×5",
+     "mechanism": "column-of-reference-table",
+     "target": "focus_kinds: owner sheet (как skills: клетки справочника остаются, новая колонка живая), колонка `force` «Мощь надетых», число, default 0, этап «основа» combine add:max; колонка `by_category` «По категории заклинаний» (да/нет; «Источник сотворения заклинаний» — да). spell_categories: owner sheet, колонка `focus` — живое число (default 0, этап «основа» add:max) вместо формулы `@действующий.focus_sp_<категория>`. Правки типа: `{target: \"focus_kinds.{@строка.focus_kind}.force\", op: add, value: @строка.rating}` и `{target: \"spell_categories.{@строка.category}.focus\", op: add, value: @строка.rating, if: @строка.focus_kind.by_category}`. 13 полей focus_* из Листа удалить; читатели `@действующий.focus_power` → `@действующий.focus_kinds.Источник_силы.force` (кластер магии)",
+     "rule_source": "docs/sr6-compendium.md §12 В6 «прибавка Мощи — поля с этапом add: max»",
+     "engine_gap": ""
+    },
+    {
+     "kind": "table-data-copied-into-steps",
+     "where": "records focus_ritual, focus_power, focus_weapon — cells.cost, cells.avail",
+     "evidence": "`@rating * 4000 / 18000 / 7000`, `@rating`, `@rating + 3` = focus_kinds.cost_mul и avail_add тех же видов",
+     "mechanism": "method-column-of-record-type",
+     "target": "focus.cost: `expr: @rating * @focus_kind.cost_mul`; focus.avail: `expr: @rating + @focus_kind.avail_add`; клетки удалить",
+     "rule_source": "данные (справочник видов источников)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "other",
+     "where": "focus_kinds.columns.label; focus_kinds.category vs focus.category",
+     "evidence": "подписи «category», «bond_mul», «cost_mul», «avail_add», «text»; две колонки «category» с разным смыслом",
+     "mechanism": "other",
+     "target": "focus_kinds.category → ключ `group` «Группа»; подписи «Карма привязки × Мощь», «Цена × Мощь», «К доступности», «По книге»",
+     "rule_source": "CLAUDE.md",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:magic_good",
+   "label": "Тип записи «Магический товар» (magic_good)",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "book:metamagic",
+   "label": "Тип записи «Метамагия» (metamagic)",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "book:mentor",
+   "label": "Тип записи «Дух-наставник» (mentor)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "тип mentor; record mentor_shark; quality spirit_guide_q",
+     "evidence": "наставник — текстовые колонки без кармы; карма и «качество» — в другой записи",
+     "mechanism": "record-of-book-type",
+     "target": "mentor.extends = \"quality\" (kind «положительное», karma 10 — умолчания колонок у mentor); см. «Качество»",
+     "rule_source": "hint типа «Дух-наставник (качество)»",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:magic_action",
+   "label": "Тип записи «Магическое действие» (magic_action)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "record mg_summon; лист koshka (has)",
+     "evidence": "кнопка «Призвать духа» есть только у листа, который «имеет» запись; шаман «Кошка» её не имеет — призвать не может",
+     "mechanism": "column-of-reference-table",
+     "target": "awakened_kinds: колонка `grants` «Даёт действия» (эффект, many: маг, аспектный маг, мистический адепт — summon_spirit; техномант — compile_sprite); записи mg_summon и tm_sprite_compile удалить. Пока нет — выдача в типе `person` (Плата «Призвать» уже отказывает без Магии)",
+     "rule_source": "данные",
+     "engine_gap": "выдачи по выбранной строке справочника нет: grants собираются только у системы, типа листа, записи и эффекта (engine/effects.ts:99)"
+    }
+   ]
+  },
+  {
+   "id": "book:complex_form",
+   "label": "Тип записи «Сложная форма» (complex_form)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "table-data-copied-into-steps",
+     "where": "records cf_infusion, cf_res_spike — bindings.args; эффекты cast_form / cast_form_attr",
+     "evidence": "аргументы = клетки: skill, `fading_si: 4` (= fading), `защита` (= defense), threshold, illegal, outcome, per_hit, `sustain` (= duration «Д»); два эффекта совпадают на 100 %",
+     "mechanism": "method-column-of-record-type",
+     "target": "кнопки у типа: «Запустить» → cast_form {fading_si: @fading, защита: @defense, sustain: @duration.sustained}; «Прекратить» → stop_spell {spell_effect: @sustain_effect} (новая колонка вида эффект, cf_infusion — form_infusion); cast_form_attr удалить; кнопки записей удалить. skill → выбор из skills; outcome, per_hit → выбор из новых справочников «Исход сложной формы» (строки из нынешних значений) и «Считать успехи» (чистые / все)",
+     "rule_source": "docs/sr6-review.md «Копии»; данные",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:sprite_power",
+   "label": "Тип записи «Способность спрайта» (sprite_power)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "table-data-copied-into-steps",
+     "where": "records spw_trap, spw_hash — bindings.args",
+     "evidence": "skill, `use_res: 0` (= use_resonance false), `защита` (= defense), outcome, `kind` (= action)",
+     "mechanism": "method-column-of-record-type",
+     "target": "кнопка у типа → sprite_power_use {use_res: @use_resonance, защита: @defense, kind: @action}; action → выбор из action_kinds; skill → выбор из skills; duration_rounds (текст «Уровень × 10») → число, клетка `{@носитель.sprite_level * 10}`; кнопки записей удалить",
+     "rule_source": "описания записей (стр. 194–195)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:echo",
+   "label": "Тип записи «Отголосок» (echo)",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "book:vehicle_action",
+   "label": "Тип записи «Действие с транспортом» (vehicle_action)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "record veh_drive",
+     "evidence": "общее действие любого транспорта — запись в has",
+     "mechanism": "other",
+     "target": "vehicle.grants = [\"drive_check\"]; запись удалить (тип оставить под таран и захват, если будут записями)",
+     "rule_source": "engine-model.md (выданная кнопка)",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:autosoft",
+   "label": "Тип записи «Автософт» (autosoft)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "type-dispatch-by-string",
+     "where": "autosoft.modifiers — 6 правок as_maneuver … as_clear_sight; cells.as_attr",
+     "evidence": "`если(@строка.as_skill == \"маневрирование\", @строка.rating, 0)` ×6; as_attr («Пилотирование»/«Сенсоры») повторён в каждой записи — это свойство навыка",
+     "mechanism": "column-of-reference-table",
+     "target": "справочник `drone_skills` «Навыки дрона», owner sheet: строки маневрирование, прицеливание, РЭБ, скрытность, уклонение, чистый взгляд; колонки `attribute` «Характеристика» (вид поле: veh_pilot / veh_sensor по нынешним as_attr), `rating` «Рейтинг автософта» (число, default 0, этап «основа» set:max). autosoft.as_skill → выбор из drone_skills; as_attr удалить; одна правка `{target: \"drone_skills.{@строка.as_skill}.rating\", op: set, stage: основа, value: @строка.rating}`; поля as_* Листа удалить, читатели — `@drone_skills.маневрирование.rating`",
+     "rule_source": "описания записей (стр. 201, 311)",
+     "engine_gap": ""
+    },
+    {
+     "kind": "table-data-copied-into-steps",
+     "where": "records as_* — cells cost, avail, rating_max, legal",
+     "evidence": "во всех шести: `@rating * 500`, `@rating`, 9, «свободно»",
+     "mechanism": "method-column-of-record-type",
+     "target": "колонки autosoft: cost `expr: @rating * 500`, avail `expr: @rating`, rating_max default 9, legal default «свободно»; клетки удалить",
+     "rule_source": "описания записей",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:vehicle_mod",
+   "label": "Тип записи «Модификация транспорта» (vehicle_mod)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "missing-column-default",
+     "where": "vehicle_mod.modifiers — mounts_used",
+     "evidence": "`@строка.mount_slots или 0`",
+     "mechanism": "column-default",
+     "target": "mount_slots: default 0; «или 0» убрать",
+     "rule_source": "данные",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:toxin",
+   "label": "Тип записи «Токсин» (toxin)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "table-data-copied-into-steps",
+     "where": "record tox_gamma_scopolamine — bindings.args и cells",
+     "evidence": "`power: 12` (= клетка), `dmg: \"нет\"` (= damage), `s1: \"immobilized\"`, `s2: \"dazed\"` (= клетка statuses без колонки), `inhaled: нет` (выводится из vector); клетки без колонок: speed_rounds, statuses, page",
+     "mechanism": "method-column-of-record-type",
+     "target": "справочник `vectors` «Путь введения»: контактный, поглощаемый, вдыхаемый, инъекционный; колонка `inhaled` «Вдыхаемый» (да/нет). toxin.vector → выбор из vectors; damage → выбор из damage_kinds (пусто — без урона); колонка `statuses` «Состояния» (эффект, many). Кнопка у типа «Ввести» → intoxicate {inhaled: @vector.inhaled}; входы intoxicate dmg → damage, s1/s2/s3 → statuses (список). Кнопку записи и клетки speed_rounds, page удалить",
+     "rule_source": "docs/sr6-compendium.md §14 «Токсины»",
+     "engine_gap": "шаг «Наложить» не берёт список эффектов (engine/steps/status.ts: finish, `typeof id !== 'string'` → ошибка); линт не видит клеток без колонки (model/lint.ts)"
+    }
+   ]
+  },
+  {
+   "id": "book:drug",
+   "label": "Тип записи «Наркотик» (drug)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "copy-of-effect",
+     "where": "records drug_alcohol, drug_jazz — bindings; эффекты dg_alcohol_take, dg_jazz_take",
+     "evidence": "у каждой записи свой эффект «Принять»: «ЧИСЛО срок = …; НАЛОЖИТЬ \"dg_…\"» — разница только данные (формула срока, какой эффект)",
+     "mechanism": "shared-function",
+     "target": "функция `take_drug` «Принять наркотик» (входы: действующий; on_take — эффект; dur_minutes — число): НАЛОЖИТЬ @on_take на @действующий (dur = @dur_minutes). Колонки drug: `on_take` «Действие» (эффект: dg_alcohol, dg_jazz), `dur_minutes` «Срок, минут» (число; клетки: алкоголь `{большее из(60, (8 - @носитель.body) * 60)}`, джаз `{10 * кинуть(к6)}`). Кнопка у типа «Принять» → take_drug; dg_*_take удалить",
+     "rule_source": "docs/sr6-compendium.md §14 ревью (3, 4)",
+     "engine_gap": "кость в клетке записи, прочитанной шагом, — проверить по месту (model/sheet-columns.ts: recordPath встраивает формулу в шаг)"
+    },
+    {
+     "kind": "other",
+     "where": "cells drug_alcohol, drug_jazz",
+     "evidence": "клетки без колонок: boosts (`[{field: reaction, add: -1}…]` — копия правок эффектов dg_*), dur_expr (копия шага), dur_dice, crash_minutes_mul, statuses, damage, speed_rounds, page",
+     "mechanism": "merge-copies",
+     "target": "удалить (числа живут в правках dg_* и в колонке dur_minutes)",
+     "rule_source": "CLAUDE.md",
+     "engine_gap": "линт не проверяет клетки записей против колонок типа (model/lint.ts)"
+    },
+    {
+     "kind": "gained-lost-by-tag-candidate",
+     "where": "эффект drug_crashes — 5 подписок lost:dg_jazz … lost:dg_nitro",
+     "evidence": "отходняк — данные наркотика (12 / 6 / 6 / 9 оглушения, fatigued / dazed) по подписке на каждый id",
+     "mechanism": "gained-lost-by-tag",
+     "target": "колонки drug `crash_stun` «Отходняк: оглушающий» (число), `crash_status` «Отходняк: состояние» (эффект); take_drug передаёт их во входы висящего; одна подписка `lost:<метка «наркотик»>` (кластер химии)",
+     "rule_source": "описания записей (стр. 124–125)",
+     "engine_gap": "gained/lost слушают только id (core/run.ts: ключ gained:<effectId>)"
+    }
+   ]
+  },
+  {
+   "id": "book:world_action",
+   "label": "Тип записи «Действие мира» (world_action)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "stored-should-be-computed",
+     "where": "record wd_creature «Облик существа»",
+     "evidence": "кнопка копирует строку справочника на лист",
+     "mechanism": "sheet-type-modifier",
+     "target": "удалить вместе с эффектом creature_template (см. «Существо»)",
+     "rule_source": "CLAUDE.md",
+     "engine_gap": ""
+    }
+   ]
+  },
+  {
+   "id": "book:creature_power",
+   "label": "Тип записи «Способность существа» (creature_power)",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "id": "book:creature_weakness",
+   "label": "Тип записи «Уязвимость существа» (creature_weakness)",
+   "verdict": "rework",
+   "problems": [
+    {
+     "kind": "other",
+     "where": "record cweak_allergiya",
+     "evidence": "пустая запись «Как негативное качество Аллергия (стр. 74)»",
+     "mechanism": "record-of-book-type",
+     "target": "creature_weakness.extends = \"quality\" (или существо берёт качество «Аллергия» напрямую); дубль удалить",
+     "rule_source": "описание записи (стр. 229)",
+     "engine_gap": ""
+    }
+   ]
+  }
+ ],
+ "tags_proposed": [
+  {
+   "tag": "наркотик",
+   "meaning": "висящий эффект принятого наркотика; договор: входы dur (число, минут), crash_stun (число), crash_status (эффект) — их передаёт «Принять наркотик» из колонок записи",
+   "effects": [
+    "dg_alcohol",
+    "dg_jazz",
+    "dg_long_way",
+    "dg_zubrila",
+    "dg_kamikaze",
+    "dg_nitro"
+   ],
+   "who_listens": "«Отходняк» (drug_crashes): одна подписка lost:<наркотик> вместо пяти по id — урон @crash_stun и состояние @crash_status"
+  },
+  {
+   "tag": "поддерживаемое",
+   "meaning": "эффект, который держит заклинатель или техномант; договор: входы amount, attr, net",
+   "effects": [
+    "sp_increase_attribute",
+    "sp_armor",
+    "form_infusion",
+    "form_diffusion",
+    "form_channel"
+   ],
+   "who_listens": "«Прекратить заклинание» (stop_spell) — снимает эффект с этой меткой, наложенный носителем, без аргумента spell_effect у каждой записи; счётчик sustained и правка «−2 за поддержание» типа «Метачеловек»"
+  },
+  {
+   "tag": "магическое",
+   "meaning": "атака магией: боевое заклинание, оружие с оружейным источником, «Убийственные кулаки»",
+   "effects": [
+    "cast_spell",
+    "melee_strike (с оружейным источником)"
+   ],
+   "who_listens": "функция защиты в атаке: «защита от обычного оружия» духа (spirit_hard) прибавляется, только если метки нет"
+  }
+ ],
+ "engine_gaps": [
+  {
+   "what": "Умолчание колонки справочника (default) не подставляется: ни в пустую клетку, ни при невыбранной строке",
+   "why": "отсюда «или 0» / «или нет» в формулах типов листов и записей; проба: у эльфа `@metatype.unarmed_physical` = undefined при default=false; без вида спрайта `@sprite_kind.attack + 1` — ошибка null",
+   "where": "packages/engine/src/engine/cells.ts: readCell — `if (source.kind === 'input') return undefined` (для таблицы без владельца отдавать spec.default); packages/engine/src/engine/calc.ts: resolve → walk (выбор пуст → default колонки)"
+  },
+  {
+   "what": "Правка по всей колонке живой таблицы (`cell:skills.*.rank`) не применяется, а её значение не видит `@строка`",
+   "why": "навыки духа, спрайта, существа, заготовки пешки считаются от строки вида одной правкой; проба: `set 7` по `cell:skills.*.rank` дал 0",
+   "where": "packages/engine/src/engine/calc.ts:112 — applyValueModifiers без тега колонки; packages/engine/src/engine/cells.ts: readCell, ветка isLive; packages/engine/src/engine/modifiers.ts: valueOf — имя `@строка` = ключ строки"
+  },
+  {
+   "what": "Правка «задать» пустым значением задаёт пусто",
+   "why": "тип «По заготовке»/«Существо»: у немага клетка magic пуста — без пропуска нужен `if: не(пусто(...))` у каждой из ~10 правок",
+   "where": "packages/engine/src/engine/stages.ts: stackStages, `of('set')` — пропускать null/undefined"
+  },
+  {
+   "what": "Формула листа не читает другой лист по полю-ссылке (вид «лист»)",
+   "why": "транспорт хранит копии характеристик водителя и риггера (driver_pilot, rig_*); дух и спрайт — создателя",
+   "where": "packages/engine/src/engine/calc.ts: newPass — в проходе только pass.desk и pass.group"
+  },
+  {
+   "what": "У типа записи одна основа",
+   "why": "«Имплантированное оружие» переписывает 9 колонок импланта, Сущность считается двумя суммами",
+   "where": "packages/schema/src/world.ts: table.extends — строка; packages/engine/src/model/inherit.ts: lineOf / mergeKind"
+  },
+  {
+   "what": "Кнопка записи/наследника сливает аргументы с кнопкой основы по позиции даже при другом эффекте; линт не видит лишних аргументов; убрать кнопку основы у наследника нельзя",
+   "why": "«Страйкер»: launch_blast получает пять входов shoot; ракета наследует «Бросить»",
+   "where": "packages/engine/src/model/inherit.ts:49 byOrder; packages/engine/src/events/actions.ts:18 bindingsOf; packages/engine/src/model/lint.ts (нет проверки аргументов кнопки)"
+  },
+  {
+   "what": "Линт не проверяет клетки записи против колонок типа (с наследованием)",
+   "why": "мёртвые клетки boosts, dur_expr, statuses, speed_rounds, page у наркотиков и токсина; lintSystem по образцу — 0 находок",
+   "where": "packages/engine/src/model/lint.ts"
+  },
+  {
+   "what": "У типа записи нет подписок (`on`) с `@вещь`",
+   "why": "«Защита от огня»: гасить Горение рейтинг раз, уменьшая заряды экземпляра",
+   "where": "packages/schema/src/world.ts: table (bindings/grants/modifiers); packages/engine/src/engine/effects.ts: wornEffects"
+  },
+  {
+   "what": "Шаг «Наложить» не берёт список эффектов",
+   "why": "у токсина три входа-слота s1/s2/s3 вместо колонки «Состояния» (many)",
+   "where": "packages/engine/src/engine/steps/status.ts: finish — `typeof id !== 'string'` → ошибка"
+  },
+  {
+   "what": "Нет выдачи по выбранной строке справочника",
+   "why": "«Призвать духа» — магам, «Компилировать спрайта» — техномантам без записей в has",
+   "where": "packages/engine/src/engine/effects.ts:99 — grants только системы, типа листа, записи, эффекта"
+  },
+  {
+   "what": "«Появилось/ушло» по метке",
+   "why": "один «Отходняк» на все наркотики",
+   "where": "packages/engine/src/core/run.ts — ключ gained:<effectId>/lost:<effectId>"
+  }
+ ],
+ "questions_for_owner": [
+  "Отряд пешек: поля «Физический урон» и «Оглушающий урон» живут в группе — весь отряд делит одну шкалу на всех. Так по книге (стр. 203), или у каждой пешки своя шкала, а общее только Преимущество?",
+  "Штраф за раны у пешки не учитывает облегчение боли (алкоголь, способности) — так по книге?",
+  "Общие правила раннера (−2 за каждое поддерживаемое, −2 в астрале, кубы инициативы в ВР, урон Матрицы и шум, потеря Магии от Сущности, живая персона) переносятся в общий тип «Метачеловек» и начнут действовать на противников и пешек — по книге так?",
+  "Транспорт: инициатива «Пилотирование × 2 + 4к6» — у всех машин или только у дронов (в подсказке «дрон —»)? Нужен ли транспорту отдельный счётчик оглушения (сейчас он равен счётчику здоровья)?",
+  "Дрон в Матрице — устройство (защита как у устройства, «Устройство или сервер» = да)? В типе листа это не задано.",
+  "Спрайт: навыки по виду (по таблице: техноспрайт — Инженерное дело и Электроника, остальные — Взлом и Электроника) или все три всем видам, как пишет сейчас «Компилировать» (стр. 193)?",
+  "«Улучшение навыка» адепта: какие навыки «боевые» (цена 1 ОС за уровень, стр. 157)?",
+  "Имплантированное «Гирокрепление» (стр. 288): те же числа, что у оружейного (гасит штраф очередей 4, непрерывного огня 3, Сила −1), для любого оружия в руках?",
+  "«Второе дыхание» и «Ранен не так сильно» — только на себя или можно на другого? Сейчас шаг пишет цели, а читает действующего.",
+  "Шлем доспеха полной защиты (+2, Ёмкость 6, 500 ¥) — отдельной записи нет; как он складывается с доспехом (в описании «книга не уточняет»)?",
+  "Броня существа: брать из колонки «Броня» справочника существ или из записи способности «Броня» — оба сразу дадут двойную прибавку."
+ ]
+}
