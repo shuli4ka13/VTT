@@ -2,7 +2,7 @@ import { compile } from '../formula/index.ts';
 import { UnknownTagError, CycleError, EngineError } from './errors.ts';
 import { toolsOf } from './refs.ts';
 import { referencedTable, resolveAddress, splitPath, walk } from './navigate.ts';
-import { deskField, DESK_ID } from './owners.ts';
+import { deskField, DESK_ID, COMBAT_NAME } from './owners.ts';
 import { collectModifiers, applyValueModifiers } from './modifiers.ts';
 import { wornEffects } from './effects.ts';
 import type { CollectedModifiers } from './modifiers.ts';
@@ -30,6 +30,7 @@ export interface PassOptions {
   modifiers?: CollectedModifiers;
   shared?: readonly Sheet[] | null;
   only?: Scope;
+  combat?: () => boolean;
 }
 
 export const livesOn = (field: Pick<Field, 'lives'> | null | undefined): 'sheet' | 'desk' | 'group' => field?.lives ?? 'sheet';
@@ -64,7 +65,7 @@ export function newPass(system: System, sheet: Sheet, options: PassOptions = {})
   };
 
   const deskSheet = options.shared?.find(s => s.id === DESK_ID);
-  if (deskSheet && sheet.id !== DESK_ID) pass.desk = newPass(system, deskSheet, { only: 'desk' });
+  if (deskSheet && sheet.id !== DESK_ID) pass.desk = newPass(system, deskSheet, { only: 'desk', ...(options.combat ? { combat: options.combat } : {}) });
   const groupSheet = sheet.group ? options.shared?.find(s => s.id === sheet.group) : undefined;
   if (groupSheet && groupSheet.id !== sheet.id) {
     pass.group = newPass(system, groupSheet, { compendium: options.compendium, shared: options.shared?.filter(s => s.id !== groupSheet.id) });
@@ -72,6 +73,7 @@ export function newPass(system: System, sheet: Sheet, options: PassOptions = {})
 
   pass.resolve = tag => {
     const onDesk = deskField(tag);
+    if (onDesk === COMBAT_NAME && !findField(system, COMBAT_NAME)) return options.combat?.() ?? false;
     if (onDesk) {
       if (sheet.id === DESK_ID) return pass.resolve(onDesk);
       if (!pass.desk) throw new EngineError(`стола нет — «${onDesk}» читать неоткуда`);

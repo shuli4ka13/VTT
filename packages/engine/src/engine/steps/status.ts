@@ -1,5 +1,5 @@
 import { EngineError } from '../errors.ts';
-import type { StepContext, StepModule } from './index.ts';
+import type { StepContext, StepModule, StepData } from './index.ts';
 import type { StoredValue } from '../../model/types.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 
@@ -29,8 +29,14 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
   finish(step, ctx) {
     const mode = String(step.mode || 'apply');
     if (!(mode in MODES)) throw new EngineError(`${who(ctx)}: у шага «состояние» нет режима «${mode}»; умею ${Object.keys(MODES).join(', ')}`);
-    const id = ctx.value(step.effect);
-    if (id === null || id === undefined || id === '') return { value: null, trace: { mode, effect: null }, break: null };
+    const picked = ctx.value(step.effect);
+    const ids = (Array.isArray(picked) ? picked : [picked]).filter(one => one !== null && one !== undefined && one !== '');
+    if (!ids.length) return { value: null, trace: { mode, effect: null }, break: null };
+    if (ids.length > 1) {
+      const traces = ids.map(one => runner.finish({ ...step, effect: { expr: JSON.stringify(one) } } as StepData, ctx).trace);
+      return { value: ids, trace: { mode, effect: ids[0], effects: ids, parts: traces }, break: null };
+    }
+    const id = ids[0];
     if (typeof id !== 'string') throw new EngineError(`${who(ctx)}: состоянию нужен id эффекта, а пришло ${JSON.stringify(id)}`);
     const to = ctx.sheet(step.to, 'на кого');
     if (!to) throw new EngineError(`${who(ctx)}: шагу «состояние» не сказано, на чей лист`);

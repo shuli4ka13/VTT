@@ -28,6 +28,9 @@ import { ITEM_NAME } from './item-ref.ts';
 
 export const DESK_NAME = 'стол';
 
+export { COMBAT_NAME } from '../engine/owners.ts';
+import { COMBAT_NAME } from '../engine/owners.ts';
+
 export const LISTEN = 'listen';
 
 export type Tab = 'sheet' | 'rules' | 'effects' | 'records' | 'book';
@@ -275,6 +278,7 @@ export function exprRefs(source: string, from: Where, scope: ChainScope, out: Re
         cell(parts[0]!, parts[1]);
         continue;
       }
+      if (top === DESK_NAME && parts.length === 1 && parts[0] === COMBAT_NAME) continue;
       const near = parts.length > 1 && scope.rows?.size ? [...scope.rows.keys()] : [];
       out.push({ kind: 'field', key: parts[0]!, from, scope: top === DESK_NAME ? 'desk' : 'sheet', ...(parts.length > 1 ? { path: rest } : {}), ...(near.length ? { near } : {}) });
       continue;
