@@ -2,7 +2,6 @@
 set -eu
 
 IMAGE="$1"
-SEED="${2:-no}"
 NAME=vtt-poligon
 HOME_DIR=/opt/vtt
 export DOCKER_CONFIG="$HOME_DIR/.docker"
@@ -44,10 +43,8 @@ if [ "$STATE" != healthy ]; then
   exit 1
 fi
 
-if [ "$SEED" = yes ]; then
-  echo "== образцы: добавить недостающие"
-  docker exec -e VTT_URL=http://localhost:8100 "$NAME" node apps/server/dist/seed-run.js
-fi
+echo "== образцы: как в гите"
+docker exec -e VTT_URL=http://localhost:8100 -e VTT_OWNER=Образцы "$NAME" node apps/server/dist/seed-run.js
 
 ls -1t backups/vtt.db.pre-deploy-* 2>/dev/null | tail -n +16 | xargs -r rm -f
 docker image prune -f >/dev/null

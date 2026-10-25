@@ -9,29 +9,36 @@ export async function seed(url: string, owner: string, mark = ''): Promise<strin
   const login = await call(`${url}/auth/login`, 'POST', null, { name: owner }) as { token: string };
   const token = login.token;
 
-  const existing = await call(`${url}/worlds`, 'GET', token) as { title: string }[];
-  const taken = new Set(existing.map(w => w.title));
+  const systems = await call(`${url}/systems`, 'GET', token) as { id: string; title: string; mine?: boolean }[];
+  const worlds = await call(`${url}/worlds`, 'GET', token) as { id: string; title: string; authorName: string }[];
 
-  const published: string[] = [];
+  const done: string[] = [];
   for (const { title: name, world } of sampleWorlds()) {
     const title = mark ? `${name} · ${mark}` : name;
-    if (taken.has(title)) {
-      console.log(`· «${title}» уже на стенде — пропущен`);
-      continue;
-    }
-    const system = await call(`${url}/systems`, 'POST', token,
-      { title, system: world.system }) as { id: string };
-    const compendium = await call(`${url}/compendiums`, 'POST', token,
-      { title: `${title} · основная книга`, systemId: system.id, compendium: world.compendium }) as { id: string };
-    await call(`${url}/systems/${system.id}/publish`, 'POST', token, {});
-    await call(`${url}/compendiums/${compendium.id}/publish`, 'POST', token, {});
-    await call(`${url}/worlds`, 'POST', token, {
-      title, systemId: system.id, compendiumIds: [compendium.id], sheets: world.sheets,
-    });
-    console.log(`✓ «${title}» опубликован (автор: ${owner})`);
-    published.push(title);
+    const book = `${title} · основная книга`;
+
+    const known = systems.find(s => s.mine && s.title === title);
+    const systemId = known
+      ? (await call(`${url}/systems/${known.id}`, 'PUT', token, { title, system: world.system }) as { id: string }).id
+      : (await call(`${url}/systems`, 'POST', token, { title, system: world.system }) as { id: string }).id;
+    await call(`${url}/systems/${systemId}/publish`, 'POST', token, {});
+
+    const books = await call(`${url}/compendiums?systemId=${encodeURIComponent(systemId)}`, 'GET', token) as { id: string; title: string; systemId: string }[];
+    const shelf = books.find(c => c.systemId === systemId && c.title === book);
+    const compendiumId = shelf
+      ? (await call(`${url}/compendiums/${shelf.id}`, 'PUT', token, { title: book, systemId, compendium: world.compendium }) as { id: string }).id
+      : (await call(`${url}/compendiums`, 'POST', token, { title: book, systemId, compendium: world.compendium }) as { id: string }).id;
+    await call(`${url}/compendiums/${compendiumId}/publish`, 'POST', token, {});
+
+    const body = { title, systemId, compendiumIds: [compendiumId], sheets: world.sheets };
+    const placed = worlds.find(w => w.title === title && w.authorName === owner);
+    if (placed) await call(`${url}/worlds/${placed.id}`, 'PUT', token, body);
+    else await call(`${url}/worlds`, 'POST', token, body);
+
+    console.log(`${known ? '↻' : '✓'} «${title}» ${known ? 'обновлён' : 'опубликован'} (автор: ${owner})`);
+    done.push(title);
   }
-  return published;
+  return done;
 }
 
 async function call(url: string, method: string, token: string | null, body?: unknown): Promise<any> {

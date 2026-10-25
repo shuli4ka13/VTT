@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { eq, desc } from 'drizzle-orm';
 import { DB, CLOCK, IDS } from '../common/tokens.ts';
 import type { Db } from '../db/db.ts';
@@ -31,6 +31,24 @@ export class WorldsService {
       sheets: JSON.stringify(parsedSheets.data),
       updatedAt: this.now(),
     });
+    return { id };
+  }
+
+  async update(ownerId: string, id: string, title: string, systemId: string,
+    compendiumIds: string[], sheets: Sheet[]): Promise<{ id: string }> {
+    const row = (await this.db.select().from(worlds).where(eq(worlds.id, id)))[0];
+    if (!row) throw new NotFoundException(`мира «${id}» на сервере нет`);
+    if (row.ownerId !== ownerId) throw new ForbiddenException('мир принадлежит другому автору');
+    await this.catalog.playableSystem(systemId);
+    await this.mergeCompendiums(systemId, compendiumIds);
+    const parsedSheets = W.sheet.array().safeParse(sheets);
+    if (!parsedSheets.success) throw new BadRequestException('листы мира не проходят схему');
+    await this.db.update(worlds).set({
+      title, systemId,
+      compendiumIds: JSON.stringify(compendiumIds),
+      sheets: JSON.stringify(parsedSheets.data),
+      updatedAt: this.now(),
+    }).where(eq(worlds.id, id));
     return { id };
   }
 

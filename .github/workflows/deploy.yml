@@ -4,11 +4,6 @@ on:
   push:
     branches: [cdm]
   workflow_dispatch:
-    inputs:
-      seed:
-        description: 'После выкатки добавить недостающие миры-образцы'
-        type: boolean
-        default: false
 
 concurrency:
   group: vtt-stand
@@ -88,9 +83,8 @@ jobs:
         env:
           TARGET: ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}
           IMAGE: ${{ needs.image.outputs.image }}
-          SEED: ${{ inputs.seed && 'yes' || 'no' }}
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           printf '%s' "$TOKEN" | ssh "$TARGET" "DOCKER_CONFIG=/opt/vtt/.docker docker login ghcr.io -u ${{ github.actor }} --password-stdin"
-          ssh "$TARGET" sh -s -- "$IMAGE" "$SEED" < deploy/remote-deploy.sh
+          ssh "$TARGET" sh -s -- "$IMAGE" < deploy/remote-deploy.sh
           ssh "$TARGET" "DOCKER_CONFIG=/opt/vtt/.docker docker logout ghcr.io"

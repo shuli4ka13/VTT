@@ -39,10 +39,23 @@ describe('сид стенда', () => {
     for (const w of worlds) expect(w.sheetCount).toBeGreaterThan(1);
   });
 
-  it('повторный запуск ничего не дублирует', async () => {
+  it('повторный запуск обновляет образцы на месте и ничего не дублирует', async () => {
     const again = await seed(url, 'Стенд');
-    expect(again).toHaveLength(0);
+    expect(again).toHaveLength(sampleWorlds().length);
     const worlds = await fetch(`${url}/worlds`).then(r => r.json());
     expect(worlds).toHaveLength(sampleWorlds().length);
+    const systems = await fetch(`${url}/systems`).then(r => r.json());
+    expect(systems).toHaveLength(sampleWorlds().length);
+  });
+
+  it('обновить мир может только его автор', async () => {
+    const [world] = await fetch(`${url}/worlds`).then(r => r.json()) as { id: string; title: string }[];
+    const login = await fetch(`${url}/auth/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'Чужой' }) }).then(r => r.json()) as { token: string };
+    const res = await fetch(`${url}/worlds/${world!.id}`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${login.token}` },
+      body: JSON.stringify({ title: 'захват', systemId: 'x', compendiumIds: [], sheets: [] }),
+    });
+    expect(res.status).toBe(403);
   });
 });
