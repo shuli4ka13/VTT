@@ -40,6 +40,14 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
     if (typeof id !== 'string') throw new EngineError(`${who(ctx)}: состоянию нужен id эффекта, а пришло ${JSON.stringify(id)}`);
     const to = ctx.sheet(step.to, 'на кого');
     if (!to) throw new EngineError(`${who(ctx)}: шагу «состояние» не сказано, на чей лист`);
+    if (mode === 'remove' && !ctx.system.effects?.[id]) {
+      const tagged = Object.entries(ctx.system.effects ?? {}).filter(([, effect]) => effect.tags?.includes(id)).map(([key]) => key);
+      if (!tagged.length) throw new EngineError(`${who(ctx)}: снять «${id}» — нет ни эффекта, ни метки эффекта с таким именем`);
+      const sheet = ctx.sheet(step.to, 'с кого');
+      if (!sheet) throw new EngineError(`${who(ctx)}: шагу «состояние» не сказано, с чьего листа`);
+      for (const one of tagged) ctx.detach(sheet, one);
+      return { value: id, trace: { mode, effect: tagged[0], effects: tagged, sheet }, break: null };
+    }
     if (mode === 'remove') {
       const where = step.where === undefined || step.where === null || step.where === '' ? undefined : step.where;
       const one = step.one === true || step.one === 'true';

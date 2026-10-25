@@ -1,4 +1,4 @@
-import { group, test, eq, ok } from './harness.ts';
+import { group, test, eq, ok, deepEq } from './harness.ts';
 import { exchange } from './play.ts';
 import { errorsOf, lintSystem } from '../src/model/lint.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
@@ -53,6 +53,15 @@ group('подписка на бросок с фильтром меток', () =>
     };
     const sheet = { ...me(), effects: [{ effectId: 'слух' }, { effectId: 'дрожь' }] } as Sheet;
     eq(exchange({ system: shaky, compendium, die: () => 3, sheets: [sheet], actionId: 'кнопки:1', fromId: 'я', toIds: [] }).sheets[0]!.values.счёт, 1);
+  });
+
+  test('подписка висящего видит «@осталось» — остаток срока', () => {
+    const timed = structuredClone(system) as System & { effects: Record<string, any> };
+    timed.effects.слух.duration = { kind: 'turns', max: 3 };
+    timed.effects.слух.on = [{ on: 'rolled', if: { expr: '@бросающий == @носитель' }, steps: [{ type: 'apply', target: { expr: '@носитель.счёт' }, direction: 'add', value: { expr: '@осталось' } }] }];
+    const sheet = { ...me(), effects: [{ effectId: 'слух', turnsLeft: 2 }] } as Sheet;
+    eq(exchange({ system: timed, compendium, die: () => 3, sheets: [sheet], actionId: 'кнопки:1', fromId: 'я', toIds: [] }).sheets[0]!.values.счёт, 2);
+    deepEq(errorsOf(lintSystem(timed, compendium)).map(p => p.text), []);
   });
 
   test('метки у подписки не на бросок — ошибка «Проблем»', () => {

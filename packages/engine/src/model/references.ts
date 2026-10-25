@@ -28,6 +28,8 @@ import { ITEM_NAME } from './item-ref.ts';
 
 export const DESK_NAME = 'стол';
 
+import { LEFT_NAME } from '../events/durations.ts';
+
 export { COMBAT_NAME } from '../engine/owners.ts';
 import { COMBAT_NAME } from '../engine/owners.ts';
 
@@ -310,7 +312,7 @@ function guardRefs(guard: Guard | undefined, from: Where, scope: ChainScope, out
 
 export function chainRefs(
   steps: Step[], whereOf: (index: number) => Where, params: Set<string>, sheets: Iterable<string>, seeds: string[] = [],
-  defs: readonly Param[] = [], heldParams: (effectId: string) => readonly string[] = () => [],
+  defs: readonly Param[] = [], held: Held = NO_HELD,
 ): Reference[] {
   const out: Reference[] = [];
   const earlier = new Set<string>(seeds);
@@ -328,8 +330,9 @@ export function chainRefs(
     for (const slot of (mod?.slots ?? []) as { key: string; kind?: string; refersTo?: string }[]) {
       if (slot.key === 'if') continue;
       const kind = slot.refersTo ? `${slot.refersTo}Ref` : slot.kind;
+      if (step.type === 'status' && slot.key === 'effect' && (step as { mode?: unknown }).mode === 'remove' && typeof (step as { effect?: unknown }).effect === 'string' && held.tag(String((step as { effect?: unknown }).effect))) continue;
       const removed = step.type === 'status' && slot.key === 'where' && typeof (step as { effect?: unknown }).effect === 'string'
-        ? heldParams(String((step as { effect?: unknown }).effect)) : [];
+        ? held.params(String((step as { effect?: unknown }).effect)) : [];
       slotRefs(readPath(step, slot.key), kind, from, removed.length ? { ...scope, params: new Set([...scope.params, ...removed]) } : scope, out);
     }
     guardRefs(step.if, from, scope, out);
@@ -521,11 +524,17 @@ function typedRefs(spec: { kind?: string; from?: string }, from: Where, out: Ref
   if (spec.kind === 'record') out.push({ kind: 'recordKind', key: spec.from, from });
 }
 
-export const heldParamsOf = (system: System) => (effectId: string): readonly string[] =>
-  (system.effects?.[effectId]?.params ?? []).map(param => param.key);
+export interface Held { params: (effectId: string) => readonly string[]; tag: (name: string) => boolean }
+
+const NO_HELD: Held = { params: () => [], tag: () => false };
+
+export const heldOf = (system: System): Held => ({
+  params: effectId => (system.effects?.[effectId]?.params ?? []).map(param => param.key),
+  tag: name => !system.effects?.[name] && Object.values(system.effects ?? {}).some(effect => effect.tags?.includes(name)),
+});
 
 function effectRefs(system: System, id: string, effect: Effect, out: Reference[]): void {
-  const held = heldParamsOf(system);
+  const held = heldOf(system);
   const sheetKeys = (effect.params ?? []).filter(p => p.kind === 'sheet').map(p => p.key);
   const params = new Set((effect.params ?? []).filter(p => p.kind !== 'sheet').map(p => p.key));
   for (const param of effect.params ?? []) {
@@ -537,7 +546,8 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
   (effect.on ?? []).forEach((handler, index) => {
     const head: Where = { tab: 'effects', effect: id, part: 'on', handler: index };
     const heard = listenerOf(handler);
-    const names = heardNames(system, heard);
+    const heardOf = heardNames(system, heard);
+    const names = { ...heardOf, seeds: [...heardOf.seeds, LEFT_NAME] };
     const sheets = [...names.sheets, ...sheetKeys, HOLDER];
     const weak = heard.kind === 'call' && heard.key !== ANY_ACTION && !system.effects?.[heard.key] && !system.tags?.[heard.key];
     const soften = (refs: Reference[]): Reference[] => (weak

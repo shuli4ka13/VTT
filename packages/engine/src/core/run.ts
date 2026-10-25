@@ -6,7 +6,7 @@ import { resolveRef, resolveNumber, resolveOptionalNumber, holdsNow, sheetHead }
 import type { RefContext, Bound } from '../engine/refs.ts';
 import { splitPath, referencedTable, reach } from '../engine/navigate.ts';
 import { findField, calc } from '../engine/calc.ts';
-import { lapse } from '../events/durations.ts';
+import { lapse, leftOf, LEFT_NAME } from '../events/durations.ts';
 import { sweepBonds, freeHolders } from '../events/bonds.ts';
 import { lifecycleChanges, HOOK_WORDS, HEARD_WORDS } from '../events/lifecycle.ts';
 import { MOMENTS } from '../events/moments.ts';
@@ -1017,6 +1017,8 @@ export class Run {
       if (sheets.has(param.key)) bound[param.key] = typeof value === 'string' ? value : null;
       else if (typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean') inputs[param.key] = value as never;
     }
+    const left = leftOf(sub.entry, this.clock);
+    if (left !== null) inputs[LEFT_NAME] = left;
     return { bound, inputs };
   }
 

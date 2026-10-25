@@ -4,6 +4,13 @@ import type { Effect, Sheet, System, WornEffect } from '../model/types.ts';
 
 export type TurnEdge = 'turn-end' | 'turn-start';
 
+export const LEFT_NAME = 'осталось';
+
+export const leftOf = (entry: WornEffect, clock: Pick<Clock, 'round'> | null | undefined): number | null =>
+  typeof entry.turnsLeft === 'number' ? entry.turnsLeft
+    : typeof entry.usesLeft === 'number' ? entry.usesLeft
+      : typeof entry.until === 'number' && clock ? Math.max(0, entry.until - clock.round) : null;
+
 
 export interface Expired { sheetId: string; effectId: string }
 
