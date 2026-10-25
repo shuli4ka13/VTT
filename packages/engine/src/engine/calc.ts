@@ -31,6 +31,7 @@ export interface PassOptions {
   shared?: readonly Sheet[] | null;
   only?: Scope;
   combat?: () => boolean;
+  peer?: (id: string) => Pass | null;
 }
 
 export const livesOn = (field: Pick<Field, 'lives'> | null | undefined): 'sheet' | 'desk' | 'group' => field?.lives ?? 'sheet';
@@ -48,6 +49,9 @@ export const holderIdOf = (field: Pick<Field, 'lives'> | null | undefined, sheet
 export function findField(system: System, tag: string): Field | null {
   return fieldOf(system, tag) ?? null;
 }
+
+const isSheetField = (system: System, key: string): boolean =>
+  Object.values(system.tables ?? {}).some(table => table.shape === 'single' && (table.columns ?? []).some(column => column.key === key && column.kind === 'sheet'));
 
 export function newPass(system: System, sheet: Sheet, options: PassOptions = {}): Pass {
   const pass: Pass = {
@@ -84,6 +88,14 @@ export function newPass(system: System, sheet: Sheet, options: PassOptions = {})
     const address = field ? null : resolveAddress(system, pass, tag);
     if (address) return address.value;
     const split = field ? null : splitPath(tag);
+    const head = split ? findField(system, split.head) : null;
+    if (split && head && isSheetField(system, split.head)) {
+      const id = calc(system, sheet, split.head, pass);
+      if (id === null || id === undefined || id === '') return null;
+      const other = options.peer?.(String(id));
+      if (!other) throw new EngineError(`«${head.label}»: листа «${String(id)}» нет — «${split.path.join('.')}» прочитать не у кого`);
+      return other.resolve(split.path.join('.'));
+    }
     const table = split ? referencedTable(system, split.head) : undefined;
     if (split && table) {
       return walk(system, pass, table, calc(system, sheet, split.head, pass), split.path, `поле «${split.head}»`);

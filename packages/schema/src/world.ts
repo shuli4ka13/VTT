@@ -193,6 +193,7 @@ export const reapply = z.enum(['ignore', 'refresh', 'stack']);
 export const ask = z.object({
   by: z.enum(['actor', 'gm']),
   hint: z.string().optional(),
+  if: formula.optional(),
 });
 
 export const param = column.extend({

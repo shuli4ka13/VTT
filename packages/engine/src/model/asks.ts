@@ -19,6 +19,7 @@ export function asksOf(actionId: string, { system, compendium }: { system: Syste
   const own = (effect.params ?? [])
     .filter((param): param is Param & { ask: Ask } => Boolean(param.ask))
     .filter(param => bound[param.key] === undefined || bound[param.key] === null)
+    .filter(param => askHolds(system, effect.params ?? [], bound as Record<string, unknown>, param.ask))
     .map(param => ({ ...param, effect: action.effect, effectLabel: effect.label ?? action.effect }));
   const taken = new Set(own.map(param => param.key));
   const paid: AskedParam[] = [];
@@ -30,6 +31,32 @@ export function asksOf(actionId: string, { system, compendium }: { system: Syste
     }
   }
   return [...own, ...paid];
+}
+
+function askHolds(system: System, params: readonly Param[], bound: Record<string, unknown>, ask: Ask): boolean {
+  const condition = (ask as { if?: { expr?: string } }).if?.expr;
+  if (!condition?.trim()) return true;
+  const literal = (key: string): unknown => {
+    const arg = bound[key];
+    const text = arg && typeof arg === 'object' ? (arg as { expr?: unknown }).expr : arg;
+    if (text === undefined || text === null || text === '') return (params.find(one => one.key === key)?.default ?? null);
+    try { return compile(String(text)).evaluate(() => null); } catch { return null; }
+  };
+  const value = compile(condition).evaluate(name => {
+    const [head, ...path] = name.split('.');
+    let value = literal(head!);
+    let table = params.find(one => one.key === head)?.from;
+    for (const key of path) {
+      const spec = table ? (system.tables?.[table]?.columns ?? []).find(one => one.key === key) : undefined;
+      const row = table ? (system.tables?.[table]?.rows ?? []).find(one => String(one.value) === String(value)) : undefined;
+      if (!spec) return null;
+      const cell = row ? (row.cells ?? {})[key] : undefined;
+      value = cell === undefined || cell === '' ? spec.default ?? null : cell;
+      table = spec.kind === 'choice' ? spec.from : undefined;
+    }
+    return value as never;
+  });
+  return value !== false;
 }
 
 export const ASKABLE = ['number', 'choice', 'text', 'boolean'] as const;

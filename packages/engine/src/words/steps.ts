@@ -56,6 +56,8 @@ export const STEP_WORDS = {
       },
       { key: 'succeedOn', label: 'Всегда успех, если на кости не меньше', kind: 'ref', allow: ['expr', 'empty'] },
       { key: 'failOn', label: 'Всегда провал, если на кости не больше', kind: 'ref', allow: ['expr', 'empty'] },
+      { key: 'failIf', label: 'Всегда провал, если', kind: 'ref', allow: ['expr', 'empty'] },
+      { key: 'passWith', label: 'Всегда успех с запасом', kind: 'ref', allow: ['expr', 'empty'] },
       { key: 'degrees', label: 'Степени успеха', kind: 'degrees' },
     ],
     outputs: [

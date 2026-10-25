@@ -76,6 +76,17 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
   }
 }
 
+const isKind = (system: System, of: unknown, kind: string): boolean => {
+  const seen = new Set<string>();
+  let at = typeof of === 'string' ? of : undefined;
+  while (at && !seen.has(at)) {
+    if (at === kind) return true;
+    seen.add(at);
+    at = (system.sheets?.[at] as { extends?: string } | undefined)?.extends;
+  }
+  return false;
+};
+
 export function runAct(run: Run, intent: ActIntent, root: Path): void {
   const { system, compendium } = run.world;
   const { state } = run;
@@ -116,6 +127,14 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
   for (const param of paramDefs) {
     if (param.kind !== 'sheet') continue;
     bound[param.key] = table[param.key] === 'actor' ? actor : table[param.key] === 'targets' ? (param.many ? targets : targets[0] ?? null) : null;
+  }
+  for (const param of paramDefs) {
+    const kind = param.kind === 'sheet' && typeof param.from === 'string' ? param.from : null;
+    const value = kind ? bound[param.key] : null;
+    for (const id of Array.isArray(value) ? value : typeof value === 'string' ? [value] : []) {
+      const sheet = run.sheet(id);
+      if (sheet && !isKind(system, sheet.of, kind!)) throw new EngineError(`«${action.label}»: «${param.label ?? param.key}» — нужен лист «${system.sheets?.[kind!]?.label ?? kind}», а «${sheet.name}» не такой`);
+    }
   }
   const bondSheet = effect.bond ? bound[effect.bond.by] : null;
   let bond: WornEffect['bond'] = effect.bond && typeof bondSheet === 'string' ? { sheet: bondSheet, effect: effect.bond.effect } : undefined;

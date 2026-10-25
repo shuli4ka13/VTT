@@ -72,7 +72,11 @@ export function finish(step: StepData, ctx: StepContext) {
     throw new EngineError(`${who(ctx)}: «всегда успех / провал на кости» требует проверять бросок — укажите шаг броска: @имя`);
   }
   const forced = natural === null ? null : failOn !== null && natural <= failOn ? false : succeedOn !== null && natural >= succeedOn ? true : null;
-  const success = forced ?? judged.success;
+  const doomed = step.failIf !== undefined && step.failIf !== null && step.failIf !== '' && ctx.holds(step.failIf);
+  const granted = doomed ? null : ctx.optional(step.passWith, 'запас верного успеха');
+  const ruled = doomed ? 'провал' : granted !== null ? 'успех' : null;
+  if (granted !== null) judged.margin = granted;
+  const success = doomed ? false : granted !== null ? true : forced ?? judged.success;
   const scale = step.degrees && step.degrees.table ? step.degrees : null;
   const degree = scale
     ? lookupDegree(ctx.system, scale.table, scale.of === 'margin' ? judged.margin : total, Number(roll?.degreeShift ?? 0), ctx.owner)
@@ -88,7 +92,8 @@ export function finish(step: StepData, ctx: StepContext) {
     trace: {
       total, versus, margin: judged.margin, success, value: total, ...(of ? { of } : {}), ...(against ? { versusTag: against } : {}),
       ...(roll && Array.isArray(roll.tags) && roll.tags.length ? { tags: roll.tags } : {}),
-      ...(forced !== null ? { forced: natural } : {}),
+      ...(forced !== null && !ruled ? { forced: natural } : {}),
+      ...(ruled ? { ruled } : {}),
       ...(scale ? { degree } : {}),
       ...(mine || theirs ? { faced: [mine?.trace, theirs?.trace].filter(Boolean) } : {}),
     },
@@ -103,7 +108,8 @@ export function lint(step: StepData) {
 }
 
 export function traceLine(t: any) {
-  const taken = t.forced != null ? `${t.success ? 'вышло' : 'не вышло'} (${forcedWords(t.forced, t.success)})`
+  const taken = t.ruled ? `${t.success ? 'вышло' : 'не вышло'} (по правилу — ${t.ruled})`
+    : t.forced != null ? `${t.success ? 'вышло' : 'не вышло'} (${forcedWords(t.forced, t.success)})`
     : t.success ? `вышло (запас ${t.margin})` : `не вышло (недобор ${-t.margin})`;
   const verdict = t.degree !== undefined && t.degree !== null ? `${taken}, степень ${t.degree}` : taken;
   return `${facedWords(t.faced)}проверка: ${t.total} с ${t.versus} — ${verdict}`;

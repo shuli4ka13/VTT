@@ -51,6 +51,16 @@ export const byOrder = (base: Binding[], own: Binding[]): Binding[] => own.map((
   return was ? { ...was, ...item, args: { ...(was.args ?? {}), ...(item.args ?? {}) } } : item;
 }).concat(base.slice(own.length));
 
+export const byEffect = (base: Binding[], own: Binding[]): Binding[] => {
+  const out = base.map(item => ({ ...item }));
+  for (const item of own) {
+    const at = out.findIndex(was => was.effect === item.effect);
+    if (at < 0) out.push(item);
+    else out[at] = { ...out[at]!, ...item, args: { ...(out[at]!.args ?? {}), ...(item.args ?? {}) } };
+  }
+  return out;
+};
+
 const union = (base: string[] | undefined, own: string[] | undefined): string[] => [...new Set([...(base ?? []), ...(own ?? [])])];
 
 function dropEmpty(holder: Loose, keys: string[]): void {
@@ -65,7 +75,7 @@ function mergeKind<K extends Table | SheetKind>(base: K, own: K): K {
   const o = own as AnyKind;
   const merged: Loose = { ...base, ...own };
   merged.columns = byKey(b.columns ?? [], o.columns ?? []);
-  merged.bindings = byOrder(b.bindings ?? [], o.bindings ?? []);
+  merged.bindings = byEffect(b.bindings ?? [], o.bindings ?? []);
   merged.modifiers = [...(b.modifiers ?? []), ...(o.modifiers ?? [])] as Modifier[];
   merged.grants = union(b.grants, o.grants);
   merged.blocks = union(b.blocks, o.blocks);

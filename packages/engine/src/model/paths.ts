@@ -54,6 +54,12 @@ export function walkSheet(system: System, path: string): Walked | null {
   if (!field) return null;
   const label = field.label ?? field.tag;
   const link = fieldLinkOf(system, field);
+  const viaSheet = Object.values(system.tables ?? {}).some(one => one.shape === 'single' && (one.columns ?? []).some(column => column.key === head && column.kind === 'sheet'));
+  if (viaSheet) {
+    const rest = parts.slice(1).join('.');
+    const target = fieldOf(system, parts[1]!);
+    return target ? { ok: true, label: `${label} → ${target.label ?? rest}` } : { ok: false, text: `у листа «${label}» нет поля «${rest}»` };
+  }
   if (!link) return { ok: false, text: `поле «${label}» не из таблицы — дальше «${parts.slice(1).join('.')}» идти некуда` };
   const columns = walkColumns(system, link, parts.slice(1));
   return columns.ok ? { ok: true, label: `${label} → ${columns.label}` } : columns;
