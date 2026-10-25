@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { paramsOf } from '@vtt/engine/model/inherit';
 import { EffectPick } from '../effect-pick.tsx';
 import { ConditionField } from '../condition-field.tsx';
+import { CallEditor } from '../call-editor.tsx';
 import { TagsField } from '../tags-field.tsx';
 import { useWorld } from '../../../store/world.ts';
 import { newHandler, payStep } from '../factory.ts';
@@ -472,6 +473,8 @@ function Bond({ effect, system, id, edit }: {
   effect: Effect; system: System; id: string; edit: (change: (draft: Effect) => void) => void;
 }) {
   const sheets = paramsOf(system, effect).filter(param => param.kind === 'sheet' && !param.many);
+  const holder = system.effects[effect.bond?.effect ?? ''];
+  const holderParams = holder ? paramsOf(system, holder) : [];
   return (
     <div className="row">
       <Field label="Держит" hint="Концентрация: наложенное этим действием держится, пока у листа есть эффект-держатель; взялся за новое — старое спало.">
@@ -502,6 +505,31 @@ function Bond({ effect, system, id, edit }: {
         where="держание · только если"
         placeholder="например: @holds"
       />
+      <Field label="Сколько держит">
+        <Select
+          value={effect.bond?.many ? 'many' : 'one'}
+          options={[['one', 'одно — новое отпускает прежнее'], ['many', 'каждое отдельно']] as const}
+          onChange={next => edit(draft => {
+            if (!draft.bond) return;
+            if (next === 'many') draft.bond.many = true; else { delete draft.bond.many; delete draft.bond.args; }
+          })}
+        />
+      </Field>
+      {effect.bond?.many && holderParams.length ? (
+        <CallEditor
+          system={system}
+          effect={effect.bond.effect}
+          args={effect.bond.args as Record<string, unknown> | undefined}
+          onArg={(key, next) => edit(draft => {
+            if (!draft.bond) return;
+            const args = { ...(draft.bond.args ?? {}) };
+            if (next === undefined || next === null || !String((next as { expr?: unknown }).expr ?? '').trim()) delete args[key]; else args[key] = next as { expr: string };
+            if (Object.keys(args).length) draft.bond.args = args; else delete draft.bond.args;
+          })}
+          context={{ system, effect, earlier: [] }}
+          where="держание · что запомнит держатель"
+        />
+      ) : null}
     </div>
   );
 }

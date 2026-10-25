@@ -20,6 +20,7 @@ import type { EditFn, WithNumber } from '../words.ts';
 import { SendBody } from './send-body.tsx';
 import { callArgs, retarget } from '../call-args.ts';
 import { CallEditor } from '../../call-editor.tsx';
+import { ConditionField } from '../../condition-field.tsx';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import { fieldsOf, cellSource } from '@vtt/engine/model/sheet-columns';
 import { DESK_ID } from '@vtt/engine/engine/owners';
@@ -394,7 +395,10 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
             <Select
               value={String(step.mode ?? 'apply')}
               options={[['apply', 'вешаем'], ['remove', 'снимаем']] as const}
-              onChange={next => edit(applyIndex, draft => { if (next === 'apply') delete (draft as any).mode; else (draft as any).mode = next; })}
+              onChange={next => edit(applyIndex, draft => {
+                const d = draft as any;
+                if (next === 'apply') { delete d.mode; delete d.where; delete d.one; } else d.mode = next;
+              })}
             />
           </Field>
           <Field label="Какое">
@@ -429,6 +433,27 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
               })}
             />
           </Field>
+          {String(step.mode ?? 'apply') === 'remove' ? (
+            <>
+              <ConditionField
+                value={step.where?.expr}
+                onChange={expr => edit(applyIndex, draft => { const d = draft as any; if (expr) d.where = { expr }; else delete d.where; })}
+                system={system}
+                sheets={context.sheets}
+                quick={(system.effects[effectNameOf(step.effect)]?.params ?? []).filter(param => param.kind === 'boolean').map(param => ({ ref: param.key, label: param.label ?? param.key, kind: 'boolean' as const }))}
+                title="Какие снять"
+                where="состояние · какие снять"
+                placeholder="например: @заклинание == @spell_effect"
+              />
+              <Field label="Сколько снять">
+                <Select
+                  value={step.one ? 'one' : 'all'}
+                  options={[['all', 'все'], ['one', 'одно, самое раннее']] as const}
+                  onChange={next => edit(applyIndex, draft => { const d = draft as any; if (next === 'one') d.one = true; else delete d.one; })}
+                />
+              </Field>
+            </>
+          ) : null}
           <StatusArgs step={step} context={context} onArg={(key, next) => edit(applyIndex, draft => {
             const d = draft as any;
             const args = { ...(d.args ?? {}) };
