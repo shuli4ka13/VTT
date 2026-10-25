@@ -8,10 +8,12 @@ const system = {
     лист: { shape: 'single', columns: [] },
     защиты: { label: 'Защиты', columns: [{ key: 'ведущий', label: 'Порог от ведущего', kind: 'boolean', default: false }], rows: [{ value: 'порог', cells: { ведущий: true } }, { value: 'воля', cells: {} }] },
     чары: {
-      shape: 'book', use: 'action', label: 'Чары', columns: [],
+      shape: 'book', use: 'action', label: 'Чары',
+      columns: [{ key: 'по_области', label: 'По области', kind: 'boolean', default: false }, { key: 'защита', label: 'Защита', kind: 'choice', from: 'защиты' }],
       bindings: [
         { label: 'По области', effect: 'колдовать', args: { область: { expr: 'да' }, защита: { expr: '"воля"' } } },
         { label: 'В одного', effect: 'колдовать', args: { область: { expr: 'нет' }, защита: { expr: '"порог"' } } },
+        { label: 'По записи', effect: 'колдовать', args: { область: { expr: '@по_области' }, защита: { expr: '@защита' } } },
       ],
     },
   },
@@ -28,11 +30,12 @@ const system = {
     },
   },
 } as unknown as System;
-const compendium = { records: [{ id: 'чары', table: 'чары', label: 'Чары', cells: {} }] } as unknown as Compendium;
+const compendium = { records: [{ id: 'чары', table: 'чары', label: 'Чары', cells: {} }, { id: 'шар', table: 'чары', label: 'Шар', cells: { по_области: true, защита: 'воля' } }] } as unknown as Compendium;
 
 group('вопрос по условию', () => {
   test('спрашивают только то, чьё условие верно', () => {
     deepEq(asksOf('чары:0', { system, compendium }).map(p => p.key), ['расширение']);
     deepEq(asksOf('чары:1', { system, compendium }).map(p => p.key), ['порог']);
+    deepEq(asksOf('шар:2', { system, compendium }).map(p => p.key), ['расширение']);
   });
 });

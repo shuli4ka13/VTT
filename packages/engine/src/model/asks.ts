@@ -2,6 +2,7 @@ import { actionOf } from '../events/actions.ts';
 import { listOf } from './lists.ts';
 import { compile } from '../formula/index.ts';
 import { paymentsOf } from './payments.ts';
+import { propsOf } from './owned.ts';
 import type { Pass } from '../engine/calc.ts';
 import type { System, Compendium, Ask, Param } from './types.ts';
 
@@ -19,7 +20,7 @@ export function asksOf(actionId: string, { system, compendium }: { system: Syste
   const own = (effect.params ?? [])
     .filter((param): param is Param & { ask: Ask } => Boolean(param.ask))
     .filter(param => bound[param.key] === undefined || bound[param.key] === null)
-    .filter(param => askHolds(system, effect.params ?? [], bound as Record<string, unknown>, param.ask))
+    .filter(param => askHolds(system, effect.params ?? [], bound as Record<string, unknown>, param.ask, propsOf(action.record, system) ?? {}))
     .map(param => ({ ...param, effect: action.effect, effectLabel: effect.label ?? action.effect }));
   const taken = new Set(own.map(param => param.key));
   const paid: AskedParam[] = [];
@@ -33,14 +34,14 @@ export function asksOf(actionId: string, { system, compendium }: { system: Syste
   return [...own, ...paid];
 }
 
-function askHolds(system: System, params: readonly Param[], bound: Record<string, unknown>, ask: Ask): boolean {
+function askHolds(system: System, params: readonly Param[], bound: Record<string, unknown>, ask: Ask, props: Record<string, unknown>): boolean {
   const condition = (ask as { if?: { expr?: string } }).if?.expr;
   if (!condition?.trim()) return true;
   const literal = (key: string): unknown => {
     const arg = bound[key];
     const text = arg && typeof arg === 'object' ? (arg as { expr?: unknown }).expr : arg;
     if (text === undefined || text === null || text === '') return (params.find(one => one.key === key)?.default ?? null);
-    try { return compile(String(text)).evaluate(() => null); } catch { return null; }
+    try { return compile(String(text)).evaluate(name => (props[name] ?? null) as never); } catch { return null; }
   };
   const value = compile(condition).evaluate(name => {
     const [head, ...path] = name.split('.');
