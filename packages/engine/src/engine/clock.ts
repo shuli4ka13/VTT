@@ -7,6 +7,7 @@ export interface Clock {
   order: string[];
   active: string | null;
   sec?: number;
+  scores?: Record<string, number>;
 }
 
 export const idleClock = (sec = 0): Clock => ({ round: 0, order: [], active: null, ...(sec ? { sec } : {}) });
@@ -34,9 +35,34 @@ export function expiryOf(effect: Effect, clock: Clock | null | undefined, counte
   return {};
 }
 
-export function startCombat(clock: Clock, order: string[]): Clock {
+export function startCombat(clock: Clock, order: string[], scores: Record<string, number> = {}): Clock {
   if (!order.length) throw new EngineError('бой не начать: порядок ходов пуст');
-  return { round: 1, order: [...order], active: order[0]!, ...(secOf(clock) ? { sec: secOf(clock) } : {}) };
+  return {
+    round: 1, order: [...order], active: order[0]!,
+    ...(secOf(clock) ? { sec: secOf(clock) } : {}),
+    ...(Object.keys(scores).length ? { scores: { ...scores } } : {}),
+  };
+}
+
+export function joinCombat(clock: Clock, who: string[], scores: Record<string, number> = {}): Clock {
+  if (!inCombat(clock)) throw new EngineError('бой не идёт — вступать некуда');
+  const order = [...clock.order];
+  const known = { ...(clock.scores ?? {}), ...scores };
+  const ranked = Boolean(clock.scores) && who.every(id => id in scores);
+  for (const id of who) {
+    if (!ranked) { order.push(id); continue; }
+    const at = order.findIndex(other => (known[other] ?? Number.NEGATIVE_INFINITY) < known[id]!);
+    order.splice(at < 0 ? order.length : at, 0, id);
+  }
+  return { ...clock, order, ...(ranked ? { scores: known } : {}) };
+}
+
+export function leaveCombat(clock: Clock, who: string[]): Clock {
+  if (!inCombat(clock)) throw new EngineError('бой не идёт — выходить не из чего');
+  const order = clock.order.filter(id => !who.includes(id));
+  if (!order.length) return stopCombat(clock);
+  const scores = clock.scores ? Object.fromEntries(Object.entries(clock.scores).filter(([id]) => !who.includes(id))) : undefined;
+  return { ...clock, order, ...(scores ? { scores } : {}) };
 }
 
 export const stopCombat = (clock?: Clock | null): Clock => idleClock(secOf(clock));

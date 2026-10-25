@@ -49,6 +49,7 @@ function verdictOf(system: System, owner: string, entry: WornEffect, event: Laps
       if (owner !== event.sheetId || typeof entry.until !== 'number' || !clock) return undefined;
       return entry.until > clock.round ? undefined : null;
     case 'combat-end':
+    case 'combat-leave':
       if (owner !== event.sheetId) return undefined;
       return typeof entry.until === 'number' || typeof entry.turnsLeft === 'number' || entry.combat === true ? null : undefined;
     case 'scene-end':

@@ -5,8 +5,9 @@ import { availableActions, actionOf } from '../events/actions.ts';
 import { asksOf, checkInputs, normalizeInputs } from '../model/asks.ts';
 import { findRecord, sheetKindOf, keyOf } from '../model/owned.ts';
 import { findEffect, usesMax, reapplyOf } from '../engine/effects.ts';
-import { expiryOf, inCombat, startCombat, nextTurn, stopCombat, passTime, spanText } from '../engine/clock.ts';
+import { expiryOf, inCombat, startCombat, nextTurn, stopCombat, passTime, spanText, joinCombat, leaveCombat } from '../engine/clock.ts';
 import { momentsOfTurn } from '../events/moments.ts';
+import type { MomentEvent } from '../events/moments.ts';
 import { fieldCheck } from '../engine/check.ts';
 import { newBreaches } from '../engine/limits.ts';
 import { fieldOf, misfit } from '../model/sheet-columns.ts';
@@ -16,7 +17,7 @@ import { Path } from './path.ts';
 import { addendsText } from './dice.ts';
 import { Run } from './run.ts';
 import { runAct } from './act.ts';
-import { render } from './render.ts';
+import { render, renderLines } from './render.ts';
 import type { ActIntent } from './act.ts';
 import type { Journal, Mode, Question } from './external.ts';
 import type { Entry } from './log.ts';
@@ -31,7 +32,7 @@ export type Op =
   | { op: 'belonging'; sheetId: string; list: 'has' | 'effects'; id: string; on: boolean; off?: boolean; inst?: string; add?: boolean; in?: string | null }
   | { op: 'kind'; sheetId: string; of: string | null }
   | { op: 'group'; sheetId: string; group: string | null }
-  | { op: 'turn'; turn: TurnOp; order?: string[]; seconds?: number }
+  | { op: 'turn'; turn: TurnOp; order?: string[]; who?: string[]; seconds?: number }
   | { op: 'sheet'; name: string; of?: string };
 
 export interface PerformWorld {
@@ -46,8 +47,8 @@ export interface PerformWorld {
 }
 
 export type Performed =
-  | { kind: 'done'; sheets: Sheet[]; clock: Clock | null; log: string[]; entries: Entry[]; journal: Journal; fresh: number[] }
-  | { kind: 'paused'; sheets: Sheet[]; clock: Clock | null; log: string[]; entries: Entry[]; journal: Journal; fresh: number[]; question: Question };
+  | { kind: 'done'; sheets: Sheet[]; clock: Clock | null; log: string[]; lines: (string[] | null)[]; entries: Entry[]; journal: Journal; fresh: number[] }
+  | { kind: 'paused'; sheets: Sheet[]; clock: Clock | null; log: string[]; lines: (string[] | null)[]; entries: Entry[]; journal: Journal; fresh: number[]; question: Question };
 
 export function perform(world: PerformWorld, op: Op): Performed {
   const journal: Journal = { ...emptyJournal(), ...(world.journal ?? {}) } as Journal;
@@ -60,14 +61,14 @@ export function perform(world: PerformWorld, op: Op): Performed {
     if (settles) run.settle(before, root);
     const log = [...run.state.log];
     return {
-      kind: 'done', sheets: [...run.state.sheets], clock: run.clock, log: render(log, world.system, run.state.sheets),
+      kind: 'done', sheets: [...run.state.sheets], clock: run.clock, log: render(log, world.system, run.state.sheets), lines: renderLines(log, world.system, run.state.sheets),
       entries: log, journal: ext.settled(), fresh: ext.fresh,
     };
   } catch (err) {
     if (!(err instanceof Pause)) throw err;
     const log = [...run.state.log];
     return {
-      kind: 'paused', sheets: [...run.state.sheets], clock: world.clock, log: render(log, world.system, run.state.sheets),
+      kind: 'paused', sheets: [...run.state.sheets], clock: world.clock, log: render(log, world.system, run.state.sheets), lines: renderLines(log, world.system, run.state.sheets),
       entries: log, journal: ext.snapshot(), fresh: ext.fresh, question: err.question,
     };
   }
@@ -96,12 +97,24 @@ function bound(run: Run, sheetId: string, raw: unknown, what: string): number | 
 
 export interface InitiativeRoll { sheetId: string; rolls: number[]; total: number; edits: string[] }
 
-export function initiative(run: Run, root: Path): { order: string[]; rolls: InitiativeRoll[] } {
+export function fightersOf(run: Run, who?: string[]): Sheet[] {
+  const grouped = (sheet: Sheet) => run.state.sheets.some(other => other.group === sheet.id);
+  if (!who) return run.state.sheets.filter(sheet => !isDesk(sheet) && !grouped(sheet));
+  if (new Set(who).size !== who.length) throw new EngineError('участник боя указан дважды');
+  return who.map(id => {
+    const sheet = sheetOf(run, id);
+    if (isDesk(sheet)) throw new EngineError('стол в бою не участвует');
+    if (grouped(sheet)) throw new EngineError(`«${sheet.name}» — группа: в бой вступают её участники`);
+    return sheet;
+  });
+}
+
+export function initiative(run: Run, root: Path, who?: string[], phase = 'initiative'): { order: string[]; rolls: InitiativeRoll[] } {
   const spec = run.system.initiative;
-  const fighters = run.state.sheets.filter(sheet => !isDesk(sheet) && !run.state.sheets.some(other => other.group === sheet.id));
+  const fighters = fightersOf(run, who);
   if (!spec) return { order: fighters.map(sheet => sheet.id), rolls: [] };
   const rolls = fighters.map((sheet): InitiativeRoll => {
-    const checked = run.check(sheet.id, spec as never, root.phase('initiative').at(sheet.id), 'инициатива');
+    const checked = run.check(sheet.id, spec as never, root.phase(phase).at(sheet.id), 'инициатива');
     run.state.write(...checked.entries);
     return { sheetId: sheet.id, rolls: checked.thrown.result.dice.rolls, total: checked.total, edits: checked.thrown.roll.edits };
   });
@@ -115,7 +128,7 @@ export function initiative(run: Run, root: Path): { order: string[]; rolls: Init
   for (let toss = 0; toss < 8; toss++) {
     const tied = rolls.filter(r => rolls.some(o => o !== r && same(ranks.get(o.sheetId)!, ranks.get(r.sheetId)!)));
     if (!tied.length) break;
-    for (const r of tied) ranks.set(r.sheetId, [...ranks.get(r.sheetId)!, run.ext.dice(root.phase('initiative-lot').item(toss).at(r.sheetId))(6)]);
+    for (const r of tied) ranks.set(r.sheetId, [...ranks.get(r.sheetId)!, run.ext.dice(root.phase(`${phase}-lot`).item(toss).at(r.sheetId))(6)]);
   }
   const width = Math.max(...[...ranks.values()].map(k => k.length));
   const rank = (id: string) => [...ranks.get(id)!, ...Array(width - ranks.get(id)!.length).fill(0)];
@@ -277,25 +290,65 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     return true;
   },
 
-  turn(run, { turn, order, seconds }, root) {
+  turn(run, { turn, order, who, seconds }, root) {
     const before = run.clock ?? { round: 0, order: [], active: null };
     const nameOf = (id: string) => run.sheet(id)?.name ?? id;
+    const totalsOf = (rolls: InitiativeRoll[]) => Object.fromEntries(rolls.map(r => [r.sheetId, r.total]));
     let next: Clock = before;
+    let events: MomentEvent[] | null = null;
     if (turn === 'start') {
+      if (order?.length && who?.length) throw new EngineError('либо бросок инициативы, либо порядок руками — не оба');
       let line = order ?? [];
+      let scores: Record<string, number> = {};
       if (line.length) {
         const unknown = line.find(id => !run.sheet(id));
         if (unknown) throw new EngineError(`в комнате нет листа «${unknown}»`);
       } else {
-        const rolled = initiative(run, root);
+        const rolled = initiative(run, root, who?.length ? who : undefined);
         line = rolled.order;
+        scores = totalsOf(rolled.rolls);
         if (rolled.rolls.length) {
-          const totals = new Map(rolled.rolls.map(r => [r.sheetId, r.total]));
-          run.state.write({ text: `Инициатива: ${rolled.order.filter(id => totals.has(id)).map(id => `${nameOf(id)} ${totals.get(id)}`).join(', ')}` });
+          run.state.write({ text: `Инициатива: ${rolled.order.filter(id => id in scores).map(id => `${nameOf(id)} ${scores[id]}`).join(', ')}` });
         }
       }
-      next = startCombat(before, line);
+      next = startCombat(before, line, scores);
       run.state.write({ text: `Раунд 1. Ход: ${nameOf(String(next.active))}` });
+    } else if (turn === 'join') {
+      if (!who?.length) throw new EngineError('кто вступает в бой — не указано');
+      if (!inCombat(before)) throw new EngineError('бой не идёт — вступать некуда');
+      const already = who.find(id => before.order.includes(id));
+      if (already) throw new EngineError(`«${nameOf(already)}» уже в бою`);
+      const ranked = Boolean(before.scores);
+      const rolled = ranked ? initiative(run, root, who, 'join') : { order: who, rolls: [] };
+      const scores = totalsOf(rolled.rolls);
+      next = joinCombat(before, rolled.order, scores);
+      for (const id of who) run.state.write({ text: id in scores ? `${nameOf(id)} вступает в бой: инициатива ${scores[id]}` : `${nameOf(id)} вступает в бой` });
+      events = [];
+    } else if (turn === 'leave') {
+      if (!who?.length) throw new EngineError('кто выходит из боя — не указано');
+      if (!inCombat(before)) throw new EngineError('бой не идёт — выходить не из чего');
+      const stranger = who.find(id => !before.order.includes(id));
+      if (stranger) throw new EngineError(`«${nameOf(stranger)}» не в бою`);
+      for (const id of who) run.state.write({ text: `${nameOf(id)} выходит из боя` });
+      if (before.order.every(id => who.includes(id))) {
+        next = stopCombat(before);
+        run.state.write({ text: 'Бой окончен' });
+        events = momentsOfTurn('stop', before, next, [...run.state.sheets]);
+      } else {
+        let moved = before;
+        const passed: MomentEvent[] = [];
+        while (moved.active && who.includes(String(moved.active))) {
+          const step = nextTurn(moved);
+          passed.push(...momentsOfTurn('next', moved, step, [...run.state.sheets])
+            .filter(event => !(event.moment === 'turn-start' || event.moment === 'turn-end') || !who.includes(event.sheetId) || (event.moment === 'turn-end' && event.sheetId === before.active)));
+          moved = step;
+        }
+        next = leaveCombat(moved, who);
+        if (next.active !== before.active) {
+          run.state.write({ text: next.round !== before.round ? `Раунд ${next.round}. Ход: ${nameOf(String(next.active))}` : `Ход: ${nameOf(String(next.active))}` });
+        }
+        events = [...passed, ...who.map(sheetId => ({ moment: 'combat-leave' as const, sheetId }))];
+      }
     } else if (turn === 'next') {
       next = nextTurn(before);
       run.state.write({ text: next.round !== before.round ? `Раунд ${next.round}. Ход: ${nameOf(String(next.active))}` : `Ход: ${nameOf(String(next.active))}` });
@@ -314,11 +367,11 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
       run.state.write({ text: 'Сцена закрыта' });
     }
     run.clock = next;
-    const events = momentsOfTurn(turn, before, next, [...run.state.sheets]);
-    for (const [index, event] of events.entries()) {
-      if (index > 0 && events[index - 1]!.moment === event.moment) continue;
+    const fired = events ?? momentsOfTurn(turn, before, next, [...run.state.sheets]);
+    for (const [index, event] of fired.entries()) {
+      if (index > 0 && fired[index - 1]!.moment === event.moment) continue;
       const subjects: string[] = [];
-      for (let at = index; at < events.length && events[at]!.moment === event.moment; at += 1) subjects.push(events[at]!.sheetId);
+      for (let at = index; at < fired.length && fired[at]!.moment === event.moment; at += 1) subjects.push(fired[at]!.sheetId);
       run.moment(event.moment, subjects, root);
     }
     return true;

@@ -1120,10 +1120,11 @@ export class Run {
       expired.push(...lapsed.expired);
     }
     const turn = moment === 'turn-start' || moment === 'turn-end';
+    const own = turn || moment === 'combat-leave';
     const round = this.clock?.round ?? 0;
-    const who = turn ? subjects : [null];
+    const who = own ? subjects : [null];
     for (const subject of who) {
-      const names: Record<string, Bound> = subject ? { ходит: subject } : {};
+      const names: Record<string, Bound> = subject ? { [turn ? 'ходит' : 'лист']: subject } : {};
       const at = subject ? path.phase(moment).at(subject) : path.phase(moment);
       this.hooked(`moment:${moment}`, names, at, { moment: { moment, round, ...(subject ? { sheet: subject } : {}) } }, MOMENTS[moment],
         sub => `момент «${MOMENTS[moment]}» у «${labelOf(sub)}»`);

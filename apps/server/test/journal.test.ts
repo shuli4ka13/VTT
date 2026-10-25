@@ -69,8 +69,10 @@ describe('журнал стола: намерение + кости = тот же
       act(), act(['advantage']),
       { op: 'set', userId: me, input: { sheetId: mirra.id, tag: 'hp_current', value: 3 } },
       act(),
-      { op: 'turn', userId: me, input: { roomId: first.roomId, op: 'start' } },
+      { op: 'turn', userId: me, input: { roomId: first.roomId, op: 'start', who: [arven.id] } },
+      { op: 'turn', userId: me, input: { roomId: first.roomId, op: 'join', who: [mirra.id] } },
       { op: 'turn', userId: me, input: { roomId: first.roomId, op: 'next' } },
+      { op: 'turn', userId: me, input: { roomId: first.roomId, op: 'leave', who: [arven.id] } },
       { op: 'turn', userId: me, input: { roomId: first.roomId, op: 'stop' } },
     ];
     for (const step of script) {

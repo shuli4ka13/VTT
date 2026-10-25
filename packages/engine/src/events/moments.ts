@@ -14,6 +14,7 @@ export const MOMENTS = {
   'round-start': 'в начале раунда',
   'combat-start': 'когда начался бой',
   'combat-end': 'когда бой кончился',
+  'combat-leave': 'когда вышел из боя',
   'scene-end': 'когда закрыли сцену',
   'short-rest': 'на коротком отдыхе',
   'long-rest': 'на долгом отдыхе',
@@ -42,7 +43,7 @@ export interface MomentEvent {
   sheetId: string;
 }
 
-export type TurnOp = 'start' | 'next' | 'stop' | 'scene' | 'short-rest' | 'long-rest' | 'time';
+export type TurnOp = 'start' | 'next' | 'stop' | 'scene' | 'short-rest' | 'long-rest' | 'time' | 'join' | 'leave';
 
 export function momentsOfTurn(op: TurnOp, before: Clock, after: Clock, sheets: Sheet[]): MomentEvent[] {
   const desk = sheets.find(isDesk);
@@ -67,6 +68,7 @@ export function momentsOfTurn(op: TurnOp, before: Clock, after: Clock, sheets: S
   if (op === 'short-rest') return everyone('short-rest');
   if (op === 'long-rest') return [...everyone('short-rest'), ...everyone('long-rest')];
   if (op === 'time') return everyone('time');
+  if (op === 'join' || op === 'leave') return [];
   return everyone('scene-end');
 }
 

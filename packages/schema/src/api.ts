@@ -116,12 +116,14 @@ export const clockState = z.object({
   order: z.array(z.string()),
   active: z.string().nullable(),
   sec: z.number().nonnegative().optional(),
+  scores: z.record(z.string(), z.number()).optional(),
 });
 
 export const logEntry = z.object({
   id: z.string(),
   at: z.string(),
   text: z.string(),
+  lines: z.array(z.string()).optional(),
   hidden: z.boolean().optional(),
 });
 
@@ -138,12 +140,16 @@ export const roomState = z.object({
   pending: pendingState.nullable().optional(),
 });
 
+const sheetList = z.array(z.string().min(1)).min(1).refine(list => new Set(list).size === list.length, 'лист указан дважды');
+
 export const turnIntent = z.object({
   roomId: z.string(),
-  op: z.enum(['start', 'next', 'stop', 'scene', 'short-rest', 'long-rest', 'time']),
+  op: z.enum(['start', 'next', 'stop', 'scene', 'short-rest', 'long-rest', 'time', 'join', 'leave']),
   order: z.array(z.string().min(1)).optional(),
+  who: sheetList.optional(),
   seconds: z.number().positive().optional(),
-});
+}).refine(intent => !(intent.order?.length && intent.who), 'либо бросок инициативы, либо порядок руками — не оба')
+  .refine(intent => (intent.op !== 'join' && intent.op !== 'leave') || Boolean(intent.who), 'кто вступает или выходит — не указано');
 
 export const actIntent = z.object({
   roomId: z.string(),

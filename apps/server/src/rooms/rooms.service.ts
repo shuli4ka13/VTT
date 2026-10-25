@@ -138,7 +138,7 @@ export class RoomsService {
   }
 
   turn(userId: string, intent: TurnIntent): Promise<RoomDelta> {
-    return this.world(intent.roomId, userId, 'turn', intent, { op: 'turn', turn: intent.op, ...(intent.order ? { order: intent.order } : {}), ...(intent.seconds ? { seconds: intent.seconds } : {}) }, false);
+    return this.world(intent.roomId, userId, 'turn', intent, { op: 'turn', turn: intent.op, ...(intent.order ? { order: intent.order } : {}), ...(intent.who ? { who: intent.who } : {}), ...(intent.seconds ? { seconds: intent.seconds } : {}) }, false);
   }
 
   setValue(userId: string, roomId: string, sheetId: string, tag: string, value: StoredValue): Promise<RoomDelta> {
@@ -275,7 +275,7 @@ export class RoomsService {
       throw new BadRequestException(message);
     }
     const sheets = this.changed(this.store.sheets(room.id), out.sheets);
-    const log = this.lines(out.log.slice(record.logged), record.hidden);
+    const log = this.lines(out.log.slice(record.logged), record.hidden, out.lines.slice(record.logged));
     const clock = (out.clock ?? idleClock()) as ClockState;
     const turned = JSON.stringify(clock) !== JSON.stringify(record.clock);
     if (out.kind === 'done') {
@@ -310,12 +310,14 @@ export class RoomsService {
     return next.filter(sheet => was.get(sheet.id) !== JSON.stringify(sheet));
   }
 
-  private lines(texts: string[], hidden: boolean): LogEntry[] {
-    return texts.map(text => ({ id: this.newId(), at: this.now(), text, ...(hidden ? { hidden: true } : {}) }));
+  private lines(texts: string[], hidden: boolean, parts: (string[] | null)[] = []): LogEntry[] {
+    return texts.map((text, at) => ({
+      id: this.newId(), at: this.now(), text, ...(parts[at] ? { lines: parts[at]! } : {}), ...(hidden ? { hidden: true } : {}),
+    }));
   }
 
-  private rows(log: LogEntry[]): { id: string; at: string; text: string; hidden: boolean }[] {
-    return log.map(entry => ({ id: entry.id, at: entry.at, text: entry.text, hidden: Boolean(entry.hidden) }));
+  private rows(log: LogEntry[]): { id: string; at: string; text: string; lines: string | null; hidden: boolean }[] {
+    return log.map(entry => ({ id: entry.id, at: entry.at, text: entry.text, lines: entry.lines ? JSON.stringify(entry.lines) : null, hidden: Boolean(entry.hidden) }));
   }
 
   private journalRow(userId: string, op: string, input: unknown, dice: number[], delta: RoomDelta) {
