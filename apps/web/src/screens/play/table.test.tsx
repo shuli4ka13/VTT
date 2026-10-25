@@ -4,6 +4,7 @@ import { screen, cleanup, fireEvent, act } from '@testing-library/react';
 import { renderOpen } from '../../testing/render-open.tsx';
 import { useRoom } from '../../store/room.ts';
 import { useSession } from '../../store/session.ts';
+import { tableSocket } from '../../api/socket.ts';
 import { TableScreen, mayAnswer } from './table.tsx';
 import type { RoomState } from '@vtt/schema';
 
@@ -193,5 +194,111 @@ describe('панель «Стол»', () => {
     expect(screen.getByText('общий для всех — правит ведущий')).toBeTruthy();
     expect(screen.queryByDisplayValue('3')).toBeNull();
     expect(screen.getByText('3')).toBeTruthy();
+  });
+});
+
+describe('полоса боя: начать, вступить, выйти', () => {
+  const sent: unknown[] = [];
+  const original = tableSocket.turn.bind(tableSocket);
+  const withInitiative = (clock: object | null): RoomState => {
+    const base = room(clock);
+    return { ...base, system: { ...base.system, initiative: { die: 'к6', count: 1 } } } as unknown as RoomState;
+  };
+  beforeEach(() => {
+    sent.length = 0;
+    tableSocket.turn = intent => { sent.push(intent); };
+    useSession.setState(state => ({ ...state, userId: 'u' }));
+  });
+  afterEach(() => { cleanup(); tableSocket.turn = original; });
+
+  it('«Бросить инициативу» шлёт отмеченных, «Задать порядок» — порядок стрелками без броска', () => {
+    useRoom.setState(state => ({ ...state, room: withInitiative(null), log: [], error: null }));
+    renderOpen(<TableScreen />);
+    fireEvent.click(screen.getByText('Начать бой…'));
+    fireEvent.click(screen.getByLabelText('Мирра'));
+    fireEvent.click(screen.getAllByText('Бросить инициативу').at(-1)!.closest('button')!);
+    expect(sent.at(-1)).toEqual({ roomId: 'к', op: 'start', who: ['а'] });
+
+    fireEvent.click(screen.getByText('Начать бой…'));
+    fireEvent.click(screen.getByText('Задать порядок'));
+    fireEvent.click(screen.getByLabelText('Мирра выше'));
+    fireEvent.click(screen.getByText('Начать по порядку'));
+    expect(sent.at(-1)).toEqual({ roomId: 'к', op: 'start', order: ['б', 'а'] });
+  });
+
+  it('в бою — числа инициативы, кольцо у того, чей ход; «Вступить» шлёт join, крестик — leave', () => {
+    useRoom.setState(state => ({ ...state, room: withInitiative({ round: 1, order: ['а'], active: 'а', scores: { а: 14 }, sec: 86400 + 3 }), log: [], error: null }));
+    renderOpen(<TableScreen />);
+    expect(screen.getByText('Раунд 1 · ходит Арвен')).toBeTruthy();
+    expect(screen.getByText('День 2, 00:00:03')).toBeTruthy();
+    expect(document.querySelector('.fight__score')?.textContent).toBe('14');
+    expect(document.querySelector('.token--turn .token__name')?.textContent).toBe('Арвен');
+
+    fireEvent.click(screen.getByText('Вступить…'));
+    fireEvent.click(screen.getByLabelText('Мирра'));
+    fireEvent.click(screen.getAllByText('Вступить').at(-1)!.closest('button')!);
+    expect(sent.at(-1)).toEqual({ roomId: 'к', op: 'join', who: ['б'] });
+
+    fireEvent.click(screen.getByLabelText('Арвен: выйти из боя'));
+    expect(sent.at(-1)).toEqual({ roomId: 'к', op: 'leave', who: ['а'] });
+  });
+
+  it('«Прошло время» — число и единица', () => {
+    useRoom.setState(state => ({ ...state, room: room(null), log: [], error: null }));
+    renderOpen(<TableScreen />);
+    fireEvent.change(document.querySelector('.fight__span input')!, { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText('единица времени'), { target: { value: 'days' } });
+    fireEvent.click(screen.getByText('Прошло время'));
+    expect(sent.at(-1)).toEqual({ roomId: 'к', op: 'time', seconds: 172800 });
+  });
+});
+
+describe('журнал строками и фишки со сроками', () => {
+  afterEach(() => { cleanup(); });
+
+  it('запись действия: шапка, итог, подробности под «ещё»; без строк — текст целиком', () => {
+    useRoom.setState(state => ({
+      ...state, room: room(null), error: null,
+      log: [
+        { id: '1', at: 'не время', text: 'Арвен применяет «Удар» по Мирра · Бросок: [5] · хп: 10 → 7', lines: ['Арвен применяет «Удар» по Мирра', 'Бросок: [5]', 'хп: 10 → 7'] },
+        { id: '2', at: 'не время', text: 'Мирра вступает в бой: инициатива 9' },
+      ],
+    }));
+    renderOpen(<TableScreen />);
+    const [act, plain] = [...document.querySelectorAll('.log-line')];
+    expect(act!.querySelector('.log-line__head')?.textContent).toBe('Арвен применяет «Удар» по Мирра');
+    expect(act!.querySelector('.log-line__outcome')?.textContent).toBe('хп: 10 → 7');
+    expect(act!.querySelector('details .log-line__detail')?.textContent).toBe('Бросок: [5]');
+    expect(plain!.textContent).toBe('Мирра вступает в бой: инициатива 9');
+  });
+
+  it('на фишке — значок висящего эффекта со сроком словами', () => {
+    const base = room({ round: 2, order: ['а', 'б'], active: 'а' });
+    base.system.effects = { яд: { label: 'Яд', activation: 'passive' } } as never;
+    base.sheets[1]!.effects = [{ effectId: 'яд', turnsLeft: 2 }];
+    useRoom.setState(state => ({ ...state, room: base, log: [], error: null }));
+    renderOpen(<TableScreen />);
+    const badge = document.querySelector('.token .hang__badge') as HTMLElement;
+    expect(badge.textContent).toBe('Ядещё 2 хода');
+    expect(badge.title).toBe('Яд — ещё 2 хода');
+  });
+});
+
+describe('+ лист со стола', () => {
+  const made: unknown[][] = [];
+  const original = tableSocket.createSheet.bind(tableSocket);
+  beforeEach(() => { made.length = 0; tableSocket.createSheet = (...args) => { made.push(args); }; });
+  afterEach(() => { cleanup(); tableSocket.createSheet = original; });
+
+  it('имя и тип одной формой', () => {
+    const base = room(null);
+    base.system.sheets = { npc: { label: 'Противник' }, pc: { label: 'Раннер' } } as never;
+    useRoom.setState(state => ({ ...state, room: base, log: [], error: null }));
+    renderOpen(<TableScreen />);
+    fireEvent.click(screen.getByText('+ лист'));
+    fireEvent.change(screen.getByPlaceholderText('имя'), { target: { value: 'Охранник' } });
+    fireEvent.change(screen.getByLabelText('тип листа'), { target: { value: 'npc' } });
+    fireEvent.click(screen.getByText('Завести'));
+    expect(made.at(-1)).toEqual(['к', 'Охранник', 'npc']);
   });
 });

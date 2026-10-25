@@ -4,6 +4,7 @@ import { screen, cleanup, fireEvent } from '@testing-library/react';
 import { renderOpen } from '../../testing/render-open.tsx';
 import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
+import { useSession } from '../../store/session.ts';
 import { SheetScreen } from './sheet.tsx';
 import type { RoomState } from '@vtt/schema';
 
@@ -97,5 +98,53 @@ describe('заявки к броску с листа', () => {
       ] } },
     } as never;
     expect(claimWords(system)).toEqual([['wild', 'Дикий кубик'], ['зрение', 'зрение'], ['голос', 'голос']]);
+  });
+});
+
+describe('висит сейчас: срок словами', () => {
+  afterEach(cleanup);
+
+  it('ходы, раунд, минуты, сцена, бой и применения — словами; «повесить…» отдельно', () => {
+    const state = room();
+    state.system.effects = {
+      оглушение: { label: 'Оглушение', activation: 'passive' },
+      ярость: { label: 'Ярость', activation: 'passive' },
+      джаз: { label: 'Джаз', activation: 'passive' },
+      укрытие: { label: 'Укрытие', activation: 'passive' },
+      бой: { label: 'Боевой транс', activation: 'passive' },
+      заряд: { label: 'Заряд', activation: 'passive' },
+      щит: { label: 'Щит', activation: 'passive' },
+    } as never;
+    state.clock = { round: 3, order: ['а'], active: 'а', sec: 600 };
+    state.sheets[0]!.effects = [
+      { effectId: 'оглушение', turnsLeft: 2 },
+      { effectId: 'ярость', until: 5 },
+      { effectId: 'джаз', atSec: 600 + 40 * 60 },
+      { effectId: 'укрытие', scene: true },
+      { effectId: 'бой', combat: true },
+      { effectId: 'заряд', usesLeft: 2 },
+    ];
+    useSession.setState(s => ({ ...s, userId: 'u' }));
+    useRoom.setState(s => ({ ...s, room: state, mySheetId: 'а', log: [], error: null }));
+    renderOpen(<SheetScreen />);
+    const rows = [...document.querySelectorAll('.hang__row')].map(node => node.textContent);
+    expect(rows).toEqual([
+      'Оглушениеещё 2 хода×', 'Яростьдо раунда 5×', 'Джазещё 40 мин×',
+      'Укрытиедо конца сцены×', 'Боевой трансдо конца боя×', 'Зарядещё 2 применения×',
+    ]);
+    expect([...document.querySelectorAll('.fold__title')].map(n => n.textContent)).toContain('Повесить…');
+    expect(screen.getByText('Щит')).toBeTruthy();
+  });
+
+  it('склонение и крупные единицы времени', async () => {
+    const { expiryWords, dayTime } = await import('./clock-words.ts');
+    expect(expiryWords({ effectId: 'x', turnsLeft: 1 }, null)).toBe('ещё 1 ход');
+    expect(expiryWords({ effectId: 'x', turnsLeft: 5 }, null)).toBe('ещё 5 ходов');
+    expect(expiryWords({ effectId: 'x', usesLeft: 1 }, null)).toBe('ещё 1 применение');
+    expect(expiryWords({ effectId: 'x', atSec: 2 * 86400 }, { round: 0, order: [], active: null })).toBe('ещё 2 дня');
+    expect(expiryWords({ effectId: 'x', atSec: 5400 }, { round: 0, order: [], active: null })).toBe('ещё 1 ч 30 мин');
+    expect(expiryWords({ effectId: 'x' }, null)).toBeNull();
+    expect(dayTime(0)).toBe('День 1, 00:00');
+    expect(dayTime(2 * 86400 + 1800)).toBe('День 3, 00:30');
   });
 });

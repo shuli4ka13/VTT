@@ -4,11 +4,12 @@ import { tableSocket } from '../../api/socket.ts';
 import { useReader } from '../../engine/use-calc.ts';
 import { maySheet } from '../../engine/rights.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
-import { Card, Empty, Fold, Chip, Input, Button, Field, Select } from '../../ui/primitives.tsx';
+import { Card, CardHead, Empty, Fold, Chip, Input, Button, Field, Select } from '../../ui/primitives.tsx';
 import { SheetView } from '../../sheet/sheet-view.tsx';
 import { recordDetails } from '../../sheet/record-view.tsx';
 import { useSession } from '../../store/session.ts';
 import { Lobby } from './lobby.tsx';
+import { Hanging } from './hanging.tsx';
 import type { Sheet, System, RoomState, Owned, CompendiumRecord } from '@vtt/schema';
 import { blockNames, blockOf, NO_BLOCK } from '@vtt/engine/model/blocks';
 import { availableActions } from '@vtt/engine/events/actions';
@@ -134,6 +135,15 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
           />
         </Field>
       ) : null}
+      {!isDesk && (sheet.effects ?? []).length ? (
+        <Card>
+          <CardHead title="Висит сейчас" />
+          <Hanging
+            room={room} sheet={sheet}
+            {...(editable ? { onRemove: entry => tableSocket.setBelonging(room.id, sheet.id, 'effects', entry.effectId, false) } : {})}
+          />
+        </Card>
+      ) : null}
       <SheetView
         system={system}
         fields={fields}
@@ -199,6 +209,7 @@ function shelvesOf<T extends CompendiumRecord>(system: System, items: readonly T
 }
 
 function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
+  const me = useSession(s => s.userId);
   const [query, setQuery] = useState('');
   const available = actionsOf(sheet, room);
 
@@ -249,12 +260,7 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const hangable = Object.entries(room.system.effects)
     .filter(([, effect]) => (effect.activation ?? 'manual') !== 'manual');
 
-  const heldIds = (sheet.effects ?? [])
-    .map(entry => entry.effectId)
-    .filter(id => !hangable.some(([key]) => key === id));
-  const held = [...new Set(heldIds)]
-    .map(id => [id, room.system.effects[id]] as const)
-    .filter((entry): entry is [string, NonNullable<typeof entry[1]>] => Boolean(entry[1]));
+  const editable = maySheet(room, me, sheet.id);
 
   return (
     <>
@@ -341,46 +347,19 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
           )}
       </Fold>
 
-      <Fold title="Висящие эффекты" count={(sheet.effects ?? []).length}>
-        {held.length ? (
-          <div className="stack stack--tight">
-            <span className="field__label">Держится этим листом</span>
-            <div className="inline inline--tight">
-              {held.map(([id, effect]) => (
-                <Chip
-                  key={id}
-                  active
-                  title="снять — связанное спадёт со всех"
-                  onClick={() => toggle('effects', id, false)}
-                >
-                  {effect.label ?? id}
-                </Chip>
-              ))}
-            </div>
-          </div>
-        ) : null}
-
-        {hangable.length === 0
-          ? <span className="faint">В системе нет эффектов, которые можно повесить.</span>
-          : (
-            <div className="inline inline--tight">
-              {hangable.map(([id, effect]) => {
-                const entry = wornOf(id);
-                return (
-                  <Chip
-                    key={id}
-                    active={Boolean(entry)}
-                    title={entry?.usesLeft ? `осталось: ${entry.usesLeft}` : undefined}
-                    onClick={() => toggle('effects', id, !entry)}
-                  >
-                    {effect.label ?? id}
-                    {entry?.usesLeft ? ` · ${entry.usesLeft}` : ''}
-                  </Chip>
-                );
-              })}
-            </div>
-          )}
-      </Fold>
+      {editable ? (
+        <Fold title="Повесить…" count={hangable.length}>
+          {hangable.length === 0
+            ? <span className="faint">В системе нет эффектов, которые можно повесить.</span>
+            : (
+              <div className="inline inline--tight">
+                {hangable.filter(([id]) => !wornOf(id)).map(([id, effect]) => (
+                  <Chip key={id} onClick={() => toggle('effects', id, true)}>{effect.label ?? id}</Chip>
+                ))}
+              </div>
+            )}
+        </Fold>
+      ) : null}
 
     </>
   );

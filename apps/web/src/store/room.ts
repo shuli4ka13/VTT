@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import { tableSocket } from '../api/socket.ts';
 import { currentToken } from '../api/client.ts';
-import type { RoomState, Sheet } from '@vtt/schema';
+import type { RoomState, Sheet, LogEntry } from '@vtt/schema';
 
 export interface RoomStore {
   room: RoomState | null;
-  log: { id: string; at: string; text: string; hidden?: boolean }[];
+  log: LogEntry[];
   error: string | null;
 
   mySheetId: string | null;
@@ -45,6 +45,17 @@ export const useRoom = create<RoomStore>(set => ({
   setError: message => set({ error: message }),
 }));
 
+export function mergeLog(known: LogEntry[], fresh: LogEntry[]): LogEntry[] {
+  const at = new Map(known.map((entry, index) => [entry.id, index]));
+  const next = [...known];
+  for (const entry of fresh) {
+    const index = at.get(entry.id);
+    if (index === undefined) { at.set(entry.id, next.length); next.push(entry); }
+    else next[index] = entry;
+  }
+  return next;
+}
+
 let listening = false;
 
 export function listenToRoom(): void {
@@ -81,7 +92,7 @@ export function listenToRoom(): void {
             ...(message.delta.clock ? { clock: message.delta.clock } : {}),
             ...(message.delta.pending !== undefined ? { pending: message.delta.pending } : {}),
           },
-          log: [...current.log, ...message.delta.log.filter((entry: { id: string }) => !current.log.some(seen => seen.id === entry.id))],
+          log: mergeLog(current.log, message.delta.log),
         };
       });
     }
