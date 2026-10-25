@@ -1,0 +1,318 @@
+{
+ "checks": [
+  {
+   "id": "matrix_hurt",
+   "where": "steps[6] «Если» биоотдачи и аргумент physical_hit шага steps[8]",
+   "status": "fix",
+   "reason": "Колонки выбраны верно, но в текущем движке цель не собирается. Умолчание колонки справочника движок не подставляет: в engine/cells.ts readCell при пустой клетке (cellSource → 'input') возвращается undefined, lookupCell возвращает cells[column] без default. Проверил через tsx: readCell(fire_modes, «одиночный выстрел», always) даёт true, а readCell(ranges, «средняя», close) при default=false даёт undefined. Поэтому образец везде пишет «(@режим.always или нет)». Строки «нет»/«ДР» без клетки vr дадут undefined, а в условии «@bio >= 1 и @лист.matrix_mode.vr» получится не да/нет: holdsNow бросит ошибку. Сам путь чтения клетки через поле-выбор листа (refs.ts, ветка onSheet → walk → readCell) для постоянных клеток работает.",
+   "corrected_target": "Сначала дописать движок. В packages/engine/src/engine/cells.ts readCell: если клетка пуста (source.kind === 'input') и таблица не живая, вернуть spec.default, если оно задано; так же в engine/tables.ts lookupCell. Линт и тест: пустая клетка с умолчанием читается как умолчание. После этого в справочник «Режим Матрицы» matrix_modes добавить колонки: online «В Матрице» (да/нет, умолчание нет; да у ДР, холодной ВР и горячей ВР), vr «Виртуальная реальность» (да/нет, умолчание нет; да у холодной и горячей ВР), hot «Горячий сим» (да/нет, умолчание нет; да у горячей ВР). В шагах читать `@лист.matrix_mode.vr` и `@лист.matrix_mode.hot` без «или нет». Те же колонки читают dumpshock, device_bricked, bio_hurt и формула инициативы. Заполнять «нет» во всех клетках, чтобы обойти отсутствие умолчания, нельзя: это данные под дыру движка."
+  },
+  {
+   "id": "matrix_hurt",
+   "where": "steps[1] «Если»",
+   "status": "fix",
+   "reason": "Колонка нужна, а развилка остаётся по делу: в ветках разные шаги. Но у строк «нет», «маг», «адепт» и других клетки не будет, и `@лист.awakened.living_persona` даст undefined, а это ошибка условия (то же отсутствие умолчания в readCell).",
+   "corrected_target": "Справочник «Пробуждённый» awakened_kinds: колонка living_persona «Живой аватар (урон Матрицы — оглушающим)» (да/нет, умолчание нет; у техноманта — да). Работает только после правки движка: readCell подставляет column.default в пустую клетку (см. matrix_hurt, steps[6]). Условие: `@лист.awakened.living_persona`; развилка «Если / Иначе» остаётся. Та же колонка заменит 5 условий `@awakened == \"техномант\"` в правках типа листа «Раннер»."
+  },
+  {
+   "id": "matrix_hurt",
+   "where": "входы bio, bio_stun; steps[6]–[9] (биоотдача внутри урона Матрицы)",
+   "status": "keep",
+   "reason": "Проверено в коде. Подписка after:<метка> раскрывается через subs.ts keysOf/tagsOf. В обработчике видны листы вызова (лист, источник) и его входы с итогами (seed = values + results + returns, run.ts:794), amount — уже после правок (emit.ts: args[main.key] = amountNow). Стоп bio_hurt рвёт зовущего только в «Плате» (emit.ts: break при ctx.inCost). Условие `@лист.matrix_mode.vr` зависит от правки умолчания клетки (см. первую находку).",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_hurt",
+   "where": "steps[4] и steps[7] — поля-зацепки",
+   "status": "keep",
+   "reason": "Правка броска с метками (kind edit, call roll, tags) в движке есть, а метка «биоотдача» на броске воли её включит. Оставить m_vm_extra и m_bio_filter до ответа владельца разумно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "dumpshock",
+   "where": "steps[0] «Если» и аргумент physical_hit шага steps[4]",
+   "status": "keep",
+   "reason": "Цель верна, но держится на колонках vr/hot, а значит и на правке движка из matrix_hurt (умолчание пустой клетки). Иначе `не @лист.matrix_mode.vr` даст «не undefined» = да — тихо неверный результат без ошибки, демпшок пропадёт для любого режима.",
+   "corrected_target": ""
+  },
+  {
+   "id": "dumpshock",
+   "where": "steps[0]–[2] СТОП «не в ВР — демпшока нет»",
+   "status": "keep",
+   "reason": "Подтверждено в engine/steps/emit.ts: break возвращается только при ctx.inCost && received. Значит, стоп вызванной функции в шагах не рвёт зовущего, а в «Плате» рвёт всё действие. Оставить стоп в шагах верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "dumpshock",
+   "where": "steps[5] НАЛОЖИТЬ dumpshocked",
+   "status": "keep",
+   "reason": "Шаг status передаёт args, у срока minutes с формулой max входы видны (так сделаны наркотики dg_* `@dur`).",
+   "corrected_target": ""
+  },
+  {
+   "id": "dumpshocked",
+   "where": "duration",
+   "status": "keep",
+   "reason": "durationKind minutes есть в schema, срок формулой входа работает (dg_alcohol и другие). Вопрос про Волю ≥ 10 вынесен верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "link_lock",
+   "where": "modifiers[0] — поле link_locked",
+   "status": "keep",
+   "reason": "Поле-запрет как общая точка оправдано; читателей в «Плате» отложили до ответа владельца, правило не выдумано.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_access",
+   "where": "on[0] (moment:round-start) steps[0]",
+   "status": "keep",
+   "reason": "У обеих строк access_levels клетка overwatch заполнена, и «или 1» действительно лишнее: умолчание здесь не нужно. Аргументы висящего эффекта в подписке видны (так работает сейчас).",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_drain",
+   "where": "modifiers[0]",
+   "status": "keep",
+   "reason": "Расхождение слоёв dev_dp/основа и m_dp/снижение реально, и стоп «ВМ снижена до 0» после ямы не срабатывает. Решение за владельцем.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_drain",
+   "where": "duration + modifiers[0]",
+   "status": "keep",
+   "reason": "Пробел движка подтверждён: modifiers.ts sourcesOf даёт правкам висящего эффекта только params/args; turnsLeft, until и atSec формулам не видны.",
+   "corrected_target": ""
+  },
+  {
+   "id": "convergence",
+   "where": "on[0] (field:converged) steps[0]–[2]",
+   "status": "keep",
+   "reason": "Проверено в core/run.ts crossings: поля сверяются волнами. Запись matrix_damage = matrix_cm на следующей волне делает device_dead верным, и срабатывает field:device_dead. Цепочка «Конвергенция → Сдохшее устройство → демпшок» собирается без копии ветки. Бросок воли с метками [сопротивление] правку matrix_wound (метка «матрица») не получает, так что перестановка порядка кости не меняет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "device_bricked",
+   "where": "on[0].if",
+   "status": "keep",
+   "reason": "Цель верна, держится на колонке online и правке умолчания клетки (см. matrix_hurt). Без неё у строки «нет» online = undefined, и «undefined или …» даст не да/нет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "device_bricked",
+   "where": "on[0] steps[0]–[2]",
+   "status": "keep",
+   "reason": "Безусловный вызов dumpshock верен: стоп в шагах вызванной функции не рвёт подписку (emit.ts). Строку журнала «не в ВР» вынесли вопросом.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_check",
+   "where": "cost (29 шагов) и steps[0]–[14]",
+   "status": "fix",
+   "reason": "Разбиение на функции собирается. Вызов в «Плате» со стопом даёт отказ действия (emit.ts inCost). Вход вида «бросок» передаётся (emit.ts rollArg, run.ts rollsOf). Итоги функции видны как @отпор.вышло / @отпор.чистые (emit.ts value = payload + returns). Клетки matrix_links и matrix_defenses видят @действующий и @цель через ветку входа-выбора со scope. Но две ошибки. (1) `ЕСЛИ @действующий.device_dead` не собирается: device_dead — числовое поле `если(…, 1, 0)`, а holdsNow требует да/нет. (2) `@link.zero`, `@kind.complex`/`@kind.simple`, `@защита.threshold`/`@защита.opposed` при пустых клетках дают undefined (readCell не берёт умолчание колонки); spend_action получит вход «сложное» пустым, и вызов упадёт с «параметр не заполнен».",
+   "corrected_target": "Движок: readCell (engine/cells.ts) и lookupCell (engine/tables.ts) подставляют column.default в пустую клетку справочника. Поле листа device_dead сделать да/нет: формула `@dev_rating >= 1 и @matrix_damage >= @matrix_cm`, подписка field:device_dead работает и с да. Функции в группе «Шаги для других». (а) matrix_ready «Готовность к Матрице». Входы: действующий «Кто действует» (лист, роль «кто действует»; имя обязательно, его читают клетки matrix_links), целей «Сколько целей» (число, умолчание 1), link «Связано с» (выбор из matrix_links, умолчание «нет»). Шаги — стопы с прежними словами: `@целей > 1 + @действующий.m_fork`; `@действующий.dev_rating < 1`; `@действующий.m_dp < 1 и @действующий.dev_dp >= 1`; `@действующий.device_dead`; `@действующий.noise > @действующий.dev_rating`; `@link.zero`. (б) matrix_defend «Отпор в Матрице». Входы: цель «Кто защищается» (лист, роль «цель»; имя обязательно), действующий (лист), взлом «Бросок действия» (бросок), защита (выбор из matrix_defenses, умолчание «нет»), illegal (да/нет, умолчание нет), порог (число, умолчание 0), к_зщ (число, умолчание 0), к_защите (число, умолчание 0). Итоги: вышло = `@итог.success`; чистые = `большее из(0, @итог.margin)`. Шаги: ЧИСЛО зщ = `@цель.matrix_dr + @к_зщ - если(@illegal, @действующий.m_def_cut, 0)`; Если `@действующий.matrix_ar - @зщ >= 4` → gain_edge(лист=@действующий), Иначе если `@зщ - @действующий.matrix_ar >= 4` → gain_edge(лист=@цель); ЧИСЛО отпор = кинуть набор `большее из(0, если(@цель.is_device, @защита.device, @защита.persona) + @к_защите)` бросает @цель, метки [защита, матрица]; ПРОВЕРКА итог: `@взлом` против `если(@защита.threshold, @порог, @отпор)`; Если `@illegal и @защита.opposed` → ИЗМЕНИТЬ @действующий.overwatch + `если(@действующий.ow_hide >= 1, 0, @отпор.total + если(@действующий.hack_programs >= 1, 1, 0))`. Кнопка matrix_check. Плата: ВЫЗОВ matrix_ready(действующий=@действующий, целей=сколько(@цели), link=@link); ВЫЗОВ spend_action(лист=@действующий, сложное=@kind.complex, простых=@kind.simple). Шаги: ЧИСЛО взлом = кинуть набор `большее из(0, @pool + @link.penalty)` бросает @действующий, метки [проверка, матрица, @action]; Для каждого из «цели»; ВЫЗОВ отпор = matrix_defend(цель=@цель, действующий=@действующий, взлом=@взлом, защита=@защита, illegal=@illegal, порог=@порог); Если не @отпор.вышло → СТОП «не вышло»; Если не пусто(@урон) → ВЫЗОВ matrix_hurt(лист=@цель, источник=@действующий, amount=@урон); НАЛОЖИТЬ @накладывает на @цель (amount=@урон) — шаг status с пустым эффектом сам пропускается (status.ts), отдельное «Если» не нужно. Новые входы: урон (число, необязательный), накладывает (эффект, необязательный). Чтение `@цель.is_device` как да/нет — вместе с находкой про is_device. Ту же сердцевину звать из cast_form, cast_form_attr, sprite_power_use."
+  },
+  {
+   "id": "matrix_check",
+   "where": "cost[18]–[28]",
+   "status": "fix",
+   "reason": "Вызов spend_action верен (функция есть, её входы «сложное»/«простых» совпадают). Но у строки «простое» нет клетки complex, а у «сложное» — клетки simple. Без подстановки умолчания readCell даст undefined, emit.ts пустые значения не передаёт, а у входа «сложное» spend_action умолчания нет — ошибка «параметр не заполнен».",
+   "corrected_target": "Движок: readCell/lookupCell подставляют column.default в пустую клетку справочника. Справочник «Вид действия» action_kinds, колонки: complex «Сложное» (да/нет, умолчание нет; у «сложное» — да) и simple «Простых действий» (число, умолчание 0; у «простое» — 1). Вместо 11 шагов — ВЫЗОВ spend_action(лист=@действующий, сложное=@kind.complex, простых=@kind.simple); слова стопа станут словами spend_action."
+  },
+  {
+   "id": "matrix_check",
+   "where": "cost[15] «Если»",
+   "status": "fix",
+   "reason": "Формула на строку в колонке да/нет работает (cellSource formula), и `@действующий` в клетке через вход-выбор виден благодаря scope. Но у строки «нет» клетки zero не будет: `ЕСЛИ @link.zero` даст undefined, и holdsNow бросит ошибку.",
+   "corrected_target": "Движок: readCell подставляет column.default в пустую клетку справочника. Справочник «Связь действия» matrix_links, колонка zero «Связанная характеристика на нуле» (да/нет, умолчание нет; формула на строку): у «Проникновения» `@действующий.m_attack < 1`, у «Ускользания» `@действующий.m_sleaze < 1`. В matrix_ready: `ЕСЛИ @link.zero → СТОП «связанная характеристика упала до 0»`."
+  },
+  {
+   "id": "matrix_check",
+   "where": "steps[8] versus; steps[9] условие ПН",
+   "status": "fix",
+   "reason": "Колонки — верный механизм, но тот же пробел: для opposed с умолчанием «да» у восьми с лишним строк клеток не будет, `@защита.opposed` даст undefined, а «@illegal и undefined» — не да/нет. У threshold то же для всех строк, кроме «порог»; к тому же Conditional «если(…)» требует логическое значение.",
+   "corrected_target": "Движок: readCell подставляет column.default в пустую клетку справочника. Справочник «Защита в Матрице» matrix_defenses, колонки: threshold «Порог ведущего» (да/нет, умолчание нет; у «порог» — да) и opposed «Встречная проверка» (да/нет, умолчание да; у «порог» и «нет» — нет). versus = `если(@защита.threshold, @порог, @отпор)`; ПН — при `@illegal и @защита.opposed`. Бросок отпора безусловный, «@порог или 0» снимается умолчанием входа порог = 0."
+  },
+  {
+   "id": "matrix_check",
+   "where": "steps[0] count, steps[2]/[4] условия, steps[7] count",
+   "status": "keep",
+   "reason": "«+ 0» — пустые прорези, они становятся входами с умолчанием 0. Умолчание входа движок подставляет (refs.ts namedValue: decl.default).",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_check",
+   "where": "cost[9] «Если»",
+   "status": "fix",
+   "reason": "Использовать готовое поле верно, но device_dead числовое (`если(…, 1, 0)`), поэтому голое `ЕСЛИ @действующий.device_dead` даст число 1, а holdsNow требует да/нет — ошибка.",
+   "corrected_target": "Поле листа device_dead перевести в да/нет: формула `@dev_rating >= 1 и @matrix_damage >= @matrix_cm`. Подписка field:device_dead срабатывает на «верное» и с да (run.ts crossings: truthy). В matrix_ready: `ЕСЛИ @действующий.device_dead → СТОП «устройство сдохло — нужна починка»`."
+  },
+  {
+   "id": "matrix_check",
+   "where": "тип записи matrix_action и привязки записей mx_hide, mx_spike, mx_tarpit",
+   "status": "keep",
+   "reason": "Проверено. model/inherit.ts byOrder сливает args привязки наследника с родительскими по номеру — основа matrix_base нужна. Формула колонки типа попадает в клетки записи (owned.ts propsOf: p.expr). Число записи встраивается в выражение входа (refs.ts recordNamesInline) и считается в шагах кнопки, где виден @отпор. Пустая клетка урон у записи даёт null (declaredProp), так что пусто(@урон) верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_check",
+   "where": "эффект целиком",
+   "status": "keep",
+   "reason": "Договор метки (system.tags: inputs/each/outputs) в схеме есть. Слушателей в образце пока нет — польза отложенная, но вреда нет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_check",
+   "where": "тип записи program, modifiers[0]",
+   "status": "fix",
+   "reason": "Колонка верна, но у строки «базовая» клетки hacking не будет: `если(@строка.category.hacking, 1, 0)` получит undefined, а условие «если» требует логическое значение — ошибка.",
+   "corrected_target": "Движок: readCell подставляет column.default в пустую клетку справочника. Справочник «Вид программы» program_kinds: колонка hacking «Программа взлома» (да/нет, умолчание нет; у «взлом» — да). Правка: `если(@строка.category.hacking, 1, 0)`. Счётчик hack_programs оставить."
+  },
+  {
+   "id": "matrix_check",
+   "where": "steps[7] count; поле is_device",
+   "status": "keep",
+   "reason": "Поле хранимое, его задают типы листа; перевод в да/нет и голое чтение собираются.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_spike",
+   "where": "эффект целиком",
+   "status": "keep",
+   "reason": "Собирается через запись класса matrix_action (см. matrix_check).",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_spike",
+   "where": "steps[15] аргументы amount и bio",
+   "status": "keep",
+   "reason": "check.ts отдаёт margin = total − (versus + versusShift). С поправкой порога правками это точнее нынешней формулы.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_spike",
+   "where": "steps[15] аргументы bio, bio_stun; steps[16]–[18]",
+   "status": "keep",
+   "reason": "Выдача эффекта записью (compendiumRecord.grants, engine/effects.ts) и подписка after:<метка> на вложенный вызов есть (run.ts:794). В обработчике видны @лист, @источник, @amount. Обработчик после урона даёт порядок костей «Сетевой экран, потом Воля».",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_tarpit",
+   "where": "эффект целиком",
+   "status": "keep",
+   "reason": "Запись mx_tarpit с уроном и наложением собирается; шаг status принимает эффект формулой и аргументы.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_tarpit",
+   "where": "steps[15] amount и bio; steps[19] args.amount",
+   "status": "keep",
+   "reason": "То же, что у инфошипа: margin из check.ts.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_tarpit",
+   "where": "steps[15] bio/bio_stun; steps[16]–[18]",
+   "status": "keep",
+   "reason": "Тот же механизм подписок, что у matrix_spike.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_hack",
+   "where": "cost (29) и steps[0..14]",
+   "status": "keep",
+   "reason": "Собирается через matrix_ready/matrix_defend. `@level.dr_bonus` зависит от умолчания клетки (см. следующую находку).",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_hack",
+   "where": "steps[2], steps[4], steps[7]",
+   "status": "fix",
+   "reason": "Колонки верны, но у строки «пользователь» клеток dr_bonus/pool_bonus не будет. readCell даст undefined, и `@цель.matrix_dr + undefined` упадёт с «должен быть числом».",
+   "corrected_target": "Движок: readCell подставляет column.default в пустую клетку справочника. Справочник «Уровень доступа» access_levels, колонки: dr_bonus «К ЗЩ цели без доступа пользователя» (число, умолчание 0; у «администратор» — 4) и pool_bonus «К набору защиты без доступа пользователя» (число, умолчание 0; у «администратор» — 2). В matrix_hack: к_зщ=если(@had_user, 0, @level.dr_bonus), к_защите=если(@had_user, 0, @level.pool_bonus)."
+  },
+  {
+   "id": "matrix_hack",
+   "where": "класс записи mx_brute",
+   "status": "keep",
+   "reason": "Своя кнопка оправдана: другие вопросы (asks.ts), прибавки и исход. Основа matrix_base снимает слияние args.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_hack",
+   "where": "description",
+   "status": "keep",
+   "reason": "Противоречие описания с шагами и тестом MX-4 реально, сверка по книге вынесена владельцу.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_stat_cut",
+   "where": "modifiers[0]–[3]",
+   "status": "keep",
+   "reason": "Пробел движка подтверждён. modifiers.ts sourcesOf применяет aimed/itemTarget только к записям; у висящих эффектов effect.modifiers идут как есть. Прорезь в sheet-columns.ts знает только «{@строка.…}». Вид колонки «field» в schema есть (valueKind). Лесенка — по правилу колонка.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_stat_cut",
+   "where": "modifiers[0]–[3]",
+   "status": "keep",
+   "reason": "Сроки и повторное наложение у эффектов разные — не сливать верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "ic_attack",
+   "where": "cost (26) и steps[0..14]",
+   "status": "keep",
+   "reason": "Собирается. Защита через поле-выбор листа (`@действующий.ic_kind.defense`) — постоянная клетка, она читается и без scope. spend_action(сложное=да) верен.",
+   "corrected_target": ""
+  },
+  {
+   "id": "ic_attack",
+   "where": "steps[15]–[34]",
+   "status": "fix",
+   "reason": "Снять развилку верно: ветки отличаются только данными. Первый пробел найден правильно: refs.ts, ветка onSheet, зовёт walk без scope, поэтому клетка с @отпор и @действующий не считается. Но есть второй: `Если @действующий.ic_kind.lock` у строк без клетки даст undefined (readCell не берёт умолчание) — ошибка условия. dmg, bio и cut проверяются через пусто(…) и работают.",
+   "corrected_target": "Движок, два пункта. (1) В refs.ts evaluate, ветка onSheet, передавать scope в walk, когда головная часть пути — поле-выбор листа (как в ветках входа и шага); тест по образцу engine.cell-scope.test.ts. (2) readCell/lookupCell подставляют column.default в пустую клетку справочника. Данные — справочник «Вид льда» ic_kinds. dmg «Урон Матрицы» (число, формула на строку; пусто — не бьёт): взрывной `@действующий.host_rating`, убивающий и чёрный `@действующий.host_rating + @отпор.чистые`. bio «Биоотдача» (число, формула; пусто — нет): искрящий и чёрный `@действующий.host_rating + @отпор.чистые`. lock «Залипание» (да/нет, умолчание нет): да у взрывного и липнущего. cut «Снижает» (выбор из matrix_attrs; пусто): едкий СЭ, подавляющий П, проявляющий У, сковывающий ВМ. Шаги исхода: Если не пусто(@действующий.ic_kind.dmg) → ВЫЗОВ matrix_hurt(лист=@цель, источник=@действующий, amount=@действующий.ic_kind.dmg); Если не пусто(@действующий.ic_kind.bio) → ВЫЗОВ bio_hurt(лист=@цель, amount=@действующий.ic_kind.bio); Если @действующий.ic_kind.lock → НАЛОЖИТЬ link_lock на @цель; Если не пусто(@действующий.ic_kind.cut) → НАЛОЖИТЬ matrix_stat_cut на @цель (attr=@действующий.ic_kind.cut, amount=@отпор.чистые). Порядок «урон → биоотдача → залипание» прежний."
+  },
+  {
+   "id": "ic_attack",
+   "where": "steps[19], [21], [23], [25], [27], [29], [31]",
+   "status": "keep",
+   "reason": "margin из check.ts через итог matrix_defend.",
+   "corrected_target": ""
+  },
+  {
+   "id": "ic_attack",
+   "where": "запись ic_strike (bindings[0].args) и лист baraholka_killer",
+   "status": "keep",
+   "reason": "Выдача типом листа есть в движке: engine/effects.ts читает sheetKindOf(...).grants. Удар как метод типа «Лёд» собирается после правки onSheet+scope. Запасной путь подан как обход, не как цель.",
+   "corrected_target": ""
+  },
+  {
+   "id": "ic_attack",
+   "where": "лист baraholka_killer (тип ic)",
+   "status": "keep",
+   "reason": "Пробел верен: calc считает поле одного листа, колонок вида «лист» в листе нет. Решение за владельцем.",
+   "corrected_target": ""
+  }
+ ],
+ "missed": [
+  {
+   "id": "engine-column-default",
+   "where": "packages/engine/src/engine/cells.ts readCell (source.kind === 'input' → return undefined) и engine/tables.ts lookupCell (cellOf без default)",
+   "problem": "Разбор строит десяток целей на умолчании колонки справочника (vr/hot/online, living_persona, zero, threshold/opposed, complex/simple, hacking, dr_bonus/pool_bonus, ic lock) и пишет engine_gap пустым. Но движок умолчание колонки справочной таблицы (не листа и не книги) не подставляет: пустая клетка даёт undefined. Проверено прогоном tsx: ranges «средняя» close при default=false даёт undefined. Поэтому в образце `(@режим.always или нет)`, `(@приём.no_damage или нет)`, `(@дистанция.close или нет)` при объявленном default=false. Вводная задачи («или нет» — след пустой клетки, лечится умолчанием) без правки движка не выполняется: голое чтение даёт ошибку условия или арифметики, а под «не …» — тихо неверный результат.",
+   "target": "Дописать движок: в readCell при пустой клетке нежилой таблицы вернуть spec.default (если задано), иначе undefined; то же в lookupCell; тест в packages/engine/tests (пустая клетка с умолчанием да/нет и числом читается как умолчание; явная клетка его перекрывает). Затем снять «или нет» / «или 0» после чтения колонок с умолчанием по всему образцу Shadowrun (fire_modes, ranges, edge_actions, metatypes.unarmed_physical и др.)."
+  },
+  {
+   "id": "device_dead-boolean",
+   "where": "поле листа device_dead (таблица «лист»), читатели: device_bricked on[0], будущий matrix_ready",
+   "problem": "device_dead — число 0/1 (`если(@dev_rating >= 1 и @matrix_damage >= @matrix_cm, 1, 0)`). Разбор предлагает голое `ЕСЛИ @действующий.device_dead`, а holdsNow требует да/нет. Это то же «Итог да/нет», что разбор применил к is_device.",
+   "target": "Формула поля: `@dev_rating >= 1 и @matrix_damage >= @matrix_cm` (да/нет); подписка field:device_dead работает и с да (crossings: truthy); читать голым `@…device_dead`."
+  },
+  {
+   "id": "converged-boolean",
+   "where": "поле листа converged",
+   "problem": "Тот же приём «если(…, 1, 0)» для признака: `если(@overwatch >= 40, 1, 0)`; читается только подпиской field:converged.",
+   "target": "Формула поля: `@overwatch >= 40` (да/нет)."
+  }
+ ]
+}

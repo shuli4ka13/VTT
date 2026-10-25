@@ -1,0 +1,283 @@
+{
+ "checks": [
+  {
+   "id": "prone",
+   "where": "defend, шаг 3 «защита», count; shoot шаг 12 аргумент «близко»",
+   "status": "fix",
+   "reason": "Лесенку разбор нашёл верно, и его цель собирается: вход-выбор из ranges и чтение @дистанция.колонка уже работают в shoot. Но число Распластан остаётся в общем правиле defend (@кто.prone >= 1), то есть общее правило знает конкретное состояние; у nausea_lost разбор сам называет это ошибкой. У правки броска уже есть фильтр where {table, column, is} (engine/modifiers.ts: editMatches; engine/tables.ts: anyRowSays): он сверяет метки броска со строками таблицы, в dnd5e им размечена правка урона. Метки броска могут быть формулами (engine/steps/roll.ts: tagsOf), значит правило можно держать на самом prone. Оговорка: rowSays берёт клетку как есть, без умолчания колонки, а клетку, равную умолчанию, редактор снимает. Поэтому is: false по колонке да/нет с умолчанием «нет» не сработает, и нужна колонка, заполненная у каждой строки.",
+   "corrected_target": "Справочник ranges: колонку close (да/нет, её читает только shoot) заменить колонкой reach «Близко или далеко», вид текст, без умолчания, заполнена у каждой строки: вплотную и близкая — «близко»; средняя, дальняя, экстремальная — «далеко». В defend вход «близко» (да/нет) заменить на «дистанция» (выбор из ranges). Бросок «защита»: count = большее из(0, @кто.defense_pool), метки = [защита, {expr: @навык}, {expr: @дистанция}]. shoot передаёт дистанция=@дистанция, melee_strike — дистанция=«вплотную». У prone две правки броска: {kind: edit, call: roll, param: count, op: add, value: -2, if: @бросающий == @носитель, tags: [защита], where: {table: ranges, column: reach, is: «близко»}}; вторая такая же с value: +2 и is: «далеко». Числа оружия лёжа (firearm.prone_ar, firearm.prone_pool, melee.prone_pool) не трогать. Если владелец против метки-дистанции у броска защиты, запасной вариант — цель разбора: колонка prone_defense и формула в defend."
+  },
+  {
+   "id": "prone",
+   "where": "весь мир: шага «снять prone» нет нигде",
+   "status": "keep",
+   "reason": "Собирается. events/actions.ts берёт кнопки из grantedTo (engine/effects.ts), а grantedTo по очереди обходит grants висящих эффектов: prone.grants [stand_up] даст кнопку только лежащему. spend_action есть, у него входы лист, сложное, простых; шаг status с mode remove тоже есть. Что «Встать» — простое действие, верно вынесено вопросом владельцу.",
+   "corrected_target": ""
+  },
+  {
+   "id": "prone",
+   "where": "blast_damage, шаг 1 «урон»",
+   "status": "keep",
+   "reason": "Правило в выписках не найдено, поэтому вопрос владельцу — честный выход. Если правило подтвердится, лучше держать число на самом prone: правкой вызова take_damage или strike_damage, а не колонкой гранаты. Это то же правило «состояние держит свои числа», что и у защиты.",
+   "corrected_target": ""
+  },
+  {
+   "id": "shocked",
+   "where": "shocked.duration.max",
+   "status": "keep",
+   "reason": "Подтверждено: срок считает run.ts: durationOf через resolveRef с paramDefs, а refs.ts: namedValue при пустом аргументе подставляет default. Хвост «или 2» лишний.",
+   "corrected_target": ""
+  },
+  {
+   "id": "shocked",
+   "where": "shocked.params; cast_spell шаги 25–33",
+   "status": "keep",
+   "reason": "Собирается. Шаг status вычисляет effect формулой (engine/steps/status.ts: ctx.value(step.effect)), и в мире это уже есть: cast_spell шаг 35 @spell_effect, heal_spell @clears. Пустая клетка у строки «нет» даёт null, и шаг пропускается. Договор метки с inputs level проверяет линт (model/lint.ts: метка требует вход). Переименование rounds в level обязательно: run.ts: attach отбрасывает необъявленные входы, и level молча потерялся бы, остался бы срок по умолчанию. Учесть два места. Вход element у cast_spell сейчас текстовый, его надо сделать выбором из spell_elements (в tags_proposed это сказано). Линт не сверяет аргументы шага status, когда эффект задан формулой, поэтому договор метки здесь — единственная страховка.",
+   "corrected_target": ""
+  },
+  {
+   "id": "shocked",
+   "where": "shocked.modifiers",
+   "status": "keep",
+   "reason": "Факт верен: soak не включает condition_mod. Правило не выводится из выписок, поэтому вопрос владельцу — правильно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "dazed",
+   "where": "dazed.modifiers[1..2]; insecurity_shaken.modifiers; dumpshocked.modifiers",
+   "status": "keep",
+   "reason": "Собирается: grantedTo по очереди обходит grants висящих эффектов, а wornEffects добавляет выданные пассивные эффекты вместе с их правками. Одно понятие окажется в одном месте.",
+   "corrected_target": ""
+  },
+  {
+   "id": "chilled",
+   "where": "chilled.duration.max",
+   "status": "keep",
+   "reason": "Как у shocked: умолчание входа работает в durationOf.",
+   "corrected_target": ""
+  },
+  {
+   "id": "chilled",
+   "where": "chilled.on[0] «gained:chilled», chilled.on[1] «gained:burning»",
+   "status": "keep",
+   "reason": "Пробел движка подтверждён: run.ts: lifecycle строит ключ gained:<effectId>, а hooked ищет точное совпадение sub.handler.on === key. В затравке события только about = входы, имени эффекта нет. Переходная форма с id собирается и сохраняет нынешнее поведение.",
+   "corrected_target": ""
+  },
+  {
+   "id": "frightened",
+   "where": "defend (сравнение в итогах), shoot шаг 6 и melee_strike шаг 2 (бросок атаки до «Для каждого»)",
+   "status": "keep",
+   "reason": "Проверено по коду. Вход вида roll передаётся объектом (engine/steps/emit.ts: rollArg; run.ts: rollsOf), запись броска лежит при нём. Взгляд вперёд (run.ts: ahead) через namesAt.roller берёт бросающего входа-броска из recordOf. Значит, для броска защиты противником станет атакующий, а сравнение (run.ts: faced → retarget) пересчитает атаку против защищающегося. Сейчас итог «попал» считается формулой в returns, а не шагом «Проверка», поэтому @против пуст: штраф −4 действительно мёртв. Входы-броски в образцах ещё не встречались (это сказано в docs/roll-against.md), так что тест на «Испуг» при выстреле обязателен.",
+   "corrected_target": ""
+  },
+  {
+   "id": "frightened",
+   "where": "frightened.params[0] «источник» optional; modifiers[0].if",
+   "status": "keep",
+   "reason": "Верно: без источника правка не имеет смысла. Надо учесть, что «Испуг» сейчас не накладывает ни одно правило, только ведущий вручную, и обязательный вход он заполнит при наложении.",
+   "corrected_target": ""
+  },
+  {
+   "id": "unconscious",
+   "where": "unconscious (накладывают knock_out, снимает come_to); блок листа «Счётчики»",
+   "status": "keep",
+   "reason": "Пробел подтверждён: grants везде — массив строк (packages/schema/src/world.ts), grantedTo условий не считает. bond (events/bonds.ts) держит только связь с эффектом заклинателя, условия у него нет. lifecycleChanges сравнивает действующее до и после, так что появилось/ушло для выдачи по условию придёт само. Это смена модели: по CLAUDE.md нужен документ в docs/ и советник. Стоит добавить, что unconscious и bleeding сейчас — пустые метки: правок нет, их никто не слушает (в мире 3 упоминания unconscious: объявление и два мостика).",
+   "corrected_target": ""
+  },
+  {
+   "id": "bleeding",
+   "where": "bleeding (накладывает bleed_out, снимают die и come_to)",
+   "status": "keep",
+   "reason": "То же, что у unconscious. Условие «@bleeding_out и не @is_dead» верно повторяет нынешнее снятие в die.",
+   "corrected_target": ""
+  },
+  {
+   "id": "dead",
+   "where": "dead.description",
+   "status": "keep",
+   "reason": "Подпись is_dead и описание расходятся, как сказано в разборе. Что смерть — событие, верно оставлено вопросом владельцу.",
+   "corrected_target": ""
+  },
+  {
+   "id": "knock_out",
+   "where": "knock_out.on[0] «field:knocked_out», system.grants[0]",
+   "status": "keep",
+   "reason": "Мостик «поле стало верным → наложить» подтверждён в run.ts: crossings. Переходная форма — один выданный эффект с четырьмя подписками — собирается без движка.",
+   "corrected_target": ""
+  },
+  {
+   "id": "bleed_out",
+   "where": "bleed_out.on[0] «field:bleeding_out», system.grants[1]",
+   "status": "keep",
+   "reason": "То же, что у knock_out.",
+   "corrected_target": ""
+  },
+  {
+   "id": "die",
+   "where": "die.on[0] шаг 0",
+   "status": "keep",
+   "reason": "Согласовано с bleeding (условие «и не @is_dead»). Подписка field:is_dead срабатывает только на переход в «верно», поэтому смерть как событие сохраняется.",
+   "corrected_target": ""
+  },
+  {
+   "id": "come_to",
+   "where": "come_to.on[0] «field:conscious», system.grants[3]",
+   "status": "keep",
+   "reason": "То же, что у knock_out.",
+   "corrected_target": ""
+  },
+  {
+   "id": "burning",
+   "where": "burning.on[0], corroded.on[0], poisoned.on[0] (moment:round-start); те же два шага в strike_damage 0–1, blast_damage 0–2, cast_spell 20–21",
+   "status": "fix",
+   "reason": "Функция собирается: шаг roll с метками-формулами, вызов take_damage с итогом. Но разбор не заметил, что ни один бросок сопротивления в мире не несёт метку «физический», а правка «Аугментации плотности костей» (compendium.records[53], bone_density) требует tags [сопротивление, физический]. Сейчас она не срабатывает ни в атаке, ни у Горения. Раз resist_damage становится единственным местом броска сопротивления, метку физического урона надо ставить там. dv для take_damage безвреден: его читает только правка vehicle «(@dv или @amount)».",
+   "corrected_target": "Функция resist_damage «Сопротивиться урону» (группа «Общие правила», без activation). Входы: лист (лист, роль target, «Кто получает урон»); источник (лист, роль actor, необязательный); величина (число, роль amount, «Урон до сопротивления»); физический (да/нет, умолчание да); электричество (да/нет, умолчание нет); метки (текст, список, необязательный, «Метки стихии»). Шаги: 1) ЧИСЛО стойкость = кинуть pool × @лист.soak, бросает @лист, метки [сопротивление, {expr: если(@физический, «физический», «»)}, {expr: @метки}] (пустую метку tagsOf отбрасывает); 2) ВЫЗОВ вред = take_damage(лист=@лист, источник=@источник, amount=большее из(0, @величина - @стойкость.total), physical_hit=@физический, dv=@величина, electric=@электричество). Итог урон = @вред.урон. В burning подписка moment:round-start — один шаг: ВЫЗОВ resist_damage(лист=@носитель, величина=@level). Атака и магия зовут ту же функцию вместо своих пар шагов (их кластеры)."
+  },
+  {
+   "id": "burning",
+   "where": "burning.on[1] «gained:burning если @лист == @носитель»",
+   "status": "keep",
+   "reason": "Подтверждено: run.ts: lifecycle при появлении эффекта выполняет его effect.attach с @носитель, так уже работает detach у nauseated. Повторное наложение при reapply ignore изменений не даёт, attach не срабатывает — так же, как сейчас gained.",
+   "corrected_target": ""
+  },
+  {
+   "id": "burning",
+   "where": "burning.on[1..3], chilled.on[0..1], wet.on[0..1]",
+   "status": "keep",
+   "reason": "Оба пробела подтверждены. Снятие: status.ts → ctx.detach(to, id), run.ts: detach фильтрует только по effectId. Появление: точный ключ gained:<effectId>. Переходная форма корректна: attach снимает wet и chilled, gained:wet и gained:chilled снимают burning.",
+   "corrected_target": ""
+  },
+  {
+   "id": "burning",
+   "where": "весь мир: кнопки «Сбить пламя» нет",
+   "status": "keep",
+   "reason": "Собирается: кнопка выдаётся через burning.grants, Плата — spend_action, attr_test — новая функция (см. nauseated).",
+   "corrected_target": ""
+  },
+  {
+   "id": "burning",
+   "where": "burning.tags (нет)",
+   "status": "keep",
+   "reason": "У эффекта есть поле tags, договор задаётся в system.tags (packages/schema/src/world.ts). Линт проверяет вход level. Сейчас system.tags пуст.",
+   "corrected_target": ""
+  },
+  {
+   "id": "petrified",
+   "where": "petrified.on[0] «gained:petrified если @лист == @носитель»",
+   "status": "keep",
+   "reason": "Как у burning: attach есть в движке.",
+   "corrected_target": ""
+  },
+  {
+   "id": "petrified",
+   "where": "petrified.on[0], шаги 0–2",
+   "status": "keep",
+   "reason": "Шага «снять по метке» нет (status.ts снимает по одному id) — подтверждено. Переходная форма из трёх «снять» в attach собирается.",
+   "corrected_target": ""
+  },
+  {
+   "id": "blinded",
+   "where": "blinded.modifiers[0].value",
+   "status": "keep",
+   "reason": "Подтверждено: параметры броска в words/calls.ts — только edits, bonus, count, threshold. check.ts принуждает исход только по кости (succeedOn/failOn). Две правки здесь уместны: ветки делают разное, одна вычитает кости, другая проваливает бросок.",
+   "corrected_target": ""
+  },
+  {
+   "id": "poisoned",
+   "where": "poisoned.on[0] шаги 0–1",
+   "status": "keep",
+   "reason": "То же, что у burning: ВЫЗОВ resist_damage с физический=@physical_hit (с поправкой про метку «физический»).",
+   "corrected_target": ""
+  },
+  {
+   "id": "poisoned",
+   "where": "poisoned.on[0] шаги 2–5",
+   "status": "fix",
+   "reason": "Пробел подтверждён: run.ts: fieldOf пишет только в поле или клетку листа, стола, вещи; аргументы висящего эффекта не меняются. Но предложенная доработка (Изменить вход висящего эффекта) — запись в хранимое того, что по правилу вычисляется: «число снижается на 1 каждый раунд, на нуле снимается» — это обратный отсчёт срока. Срок «раунды» в движке уже есть (run.ts: attach → expiryOf, events/durations.ts: снятие на round-start), не хватает одного: остаток срока не виден формулам эффекта. Доработка уже и чище: не нужна запись в аргументы. Уточнение: lifecycleChanges сопоставляет эффекты по effectId, поэтому нынешние «снять и наложить» в одном прогоне не будят ни attach, ни «появилось/ушло»; лишние строки есть только в журнале шагов.",
+   "corrected_target": "После доработки движка: у poisoned срок {kind: rounds, max: {expr: @level}}, урон каждый раунд = остаток срока: ВЫЗОВ resist_damage(лист=@носитель, величина=@осталось, физический=@physical_hit). Шаги «снять poisoned / ЕСЛИ @level > 1 наложить заново» удалить: на нуле срок снимает движок. Доработка движка: имя «осталось» (остаток раундов или ходов висящего эффекта: until − clock.round, turnsLeft, usesLeft) видно в формулах его подписок и правок (core/run.ts: react — names и seed для подписки висящего; engine/refs.ts). Проверить порядок на начале раунда: снятие по сроку (events/durations.ts) и подписка moment:round-start, чтобы урон 3→2→1 вышел ровно столько раз, сколько велит число. Переходная форма до доработки — нынешняя пересборка."
+  },
+  {
+   "id": "corroded",
+   "where": "corroded.on[0]",
+   "status": "keep",
+   "reason": "Копия burning один в один — подтверждено.",
+   "corrected_target": ""
+  },
+  {
+   "id": "wet",
+   "where": "wet.on[0] «gained:wet», wet.on[1] «gained:burning»",
+   "status": "keep",
+   "reason": "Как у chilled.",
+   "corrected_target": ""
+  },
+  {
+   "id": "wet",
+   "where": "wet.modifiers (нет)",
+   "status": "keep",
+   "reason": "Собирается: у правки броска есть anyTags (editMatches), метки броска — формулы. Это работает, только если resist_damage несёт метку стихии; сейчас её не передаёт никто.",
+   "corrected_target": ""
+  },
+  {
+   "id": "nauseated",
+   "where": "nauseated.on[0] шаги 0–1; insecurity_check шаги 0–2; будущая «Сбить пламя»",
+   "status": "keep",
+   "reason": "Собирается: функция с итогами, «Проверка» против числа уже работает в insecurity_check. Готовой функции проверки характеристик в мире нет: из эффектов с итогами есть только defend, strike_damage, take_damage, spell_drain. Ручное «+ wound_mod + condition_mod» внутри функции — следствие более общего пробела (см. missed).",
+   "corrected_target": ""
+  },
+  {
+   "id": "nauseated",
+   "where": "поле лист.nausea_lost; turn_actions шаги 5–9",
+   "status": "keep",
+   "reason": "Собирается полями листа и шагом «Изменить». Это итог броска, хранить его законно. Лесенка из turn_actions уходит.",
+   "corrected_target": ""
+  },
+  {
+   "id": "beatdown",
+   "where": "beatdown целиком",
+   "status": "keep",
+   "reason": "Пробел «автоуспех с N чистыми» подтверждён (check.ts, words/calls.ts). Что эффект недостижим, тоже подтверждено: в мире одно упоминание.",
+   "corrected_target": ""
+  },
+  {
+   "id": "insecurity_shaken",
+   "where": "insecurity_shaken.modifiers",
+   "status": "keep",
+   "reason": "Как у dazed.",
+   "corrected_target": ""
+  },
+  {
+   "id": "insecurity_check",
+   "where": "компендиум: записи качества «Неуверенность» нет; на insecurity_check никто не ссылается",
+   "status": "keep",
+   "reason": "Тип quality (shape book, колонки kind, karma, level) есть, у записи компендиума есть grants. Цену в карме верно оставили вопросом владельцу.",
+   "corrected_target": ""
+  },
+  {
+   "id": "insecurity_check",
+   "where": "insecurity_check.on[0] шаги 0–2",
+   "status": "keep",
+   "reason": "Как у nauseated.",
+   "corrected_target": ""
+  }
+ ],
+ "missed": [
+  {
+   "id": "fatigued",
+   "where": "chilled, shocked, fatigued: правка поля condition_mod; лист.wound_mod; все броски с бросающим",
+   "problem": "Элемент fatigued помечен ok, но «−N ко всем наборам, кроме сопротивления урону» записано полем condition_mod, которое каждый набор обязан прибавить сам. Из 51 броска с бросающим 26 не читают ни condition_mod, ни готовый набор листа: nauseated, insecurity_check, «+ 0» в матричных отпорах, отпоры заклинаний, drive_check и др. Штраф состояний и ран на них не действует, а attr_test в разборе снова прибавляет его вручную. По принципу «метками триггерными — всё, что может так работать» это одна правка броска на состоянии с фильтром меток, а не поле, о котором помнит каждая формула.",
+   "target": "Вынести советнику и в документ (затрагивает все кластеры). У chilled и shocked — правка броска {kind: edit, call: roll, param: count, op: add, value: -1, if: @бросающий == @носитель, notTags: [сопротивление]}, у fatigued то же с value: -2 * @level. Штраф за раны — такой же правкой типа листа (system.sheets[].modifiers, value: @wound_mod). condition_mod и wound_mod убрать из составных наборов листа и колонок навыков, иначе штраф посчитается дважды. Тогда attr_test не прибавляет штрафы вручную. Отдельно проверить броски защиты, у которых в выписках другое исключение."
+  },
+  {
+   "id": "frightened",
+   "where": "frightened, blinded, nauseated, petrified",
+   "problem": "Эти состояния не накладывает ни одно правило мира: в samples/shadowrun.world.json у каждого одно упоминание — объявление. Их накладывает только ведущий вручную. Разбор отметил недостижимость только у beatdown и insecurity_check.",
+   "target": "Вопрос владельцу: какие источники накладывают эти состояния (заклинания, способности существ, токсины). Источник с данными — ячейка statuses у токсина, как у immobilized, или spell_effect у заклинания."
+  },
+  {
+   "id": "burning",
+   "where": "compendium.records[53] bone_density, strike_damage/blast_damage/cast_spell броски сопротивления",
+   "problem": "Правка «Аугментация плотности костей» требует метки броска [сопротивление, физический], а ни один бросок сопротивления в мире метку «физический» не ставит. Бонус не действует нигде.",
+   "target": "Метку «физический» ставит resist_damage по своему входу «физический» (см. поправку burning); атака и магия зовут resist_damage вместо своих бросков."
+  }
+ ]
+}

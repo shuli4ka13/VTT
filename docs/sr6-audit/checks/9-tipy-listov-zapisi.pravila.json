@@ -1,0 +1,736 @@
+{
+ "checks": [
+  {
+   "id": "sheet:runner",
+   "where": "system.sheets.runner.modifiers — все 12 правок; system.sheets.opponent.modifiers = []; system.sheets.grunt.modifiers",
+   "status": "fix",
+   "reason": "Цель меняет поведение противников и пешек: на них начнут действовать −2 за поддержание, −2 в астрале, кубики ВР, урон Матрицы и шум, срез Магии от Сущности. В выписках эти правила записаны для «листа бегущего» (docs/sr6-compendium.md §4), про NPC там ничего нет. Разбор сам выносит это владельцу, но цель уже распространяет правила. Отдельная ловушка: Магия в заготовках пешек напечатана книгой уже итоговой. Сейчас у всех магов-заготовок Сущность 6, так что совпадает случайно; в общем случае «Магия − потеря Сущности» поверх напечатанной Магии посчитает потерю дважды.",
+   "corrected_target": "Новый тип листа `person` «Метачеловек» с 12 правками раннера (с условиями из пунктов ниже); `runner.extends = \"person\"`, свои правки у runner снять — для раннера поведение то же. `npc`/`opponent`/`grunt` переводить на `extends: person` только после ответа владельца, что NPC подчиняются тем же правилам. Если подтвердит: у типа «По заготовке» Магию брать из заготовки как итоговую (правка `magic set @npc_template.magic` этапом после среза Сущности) или срез не применять, чтобы потеря Сущности не вычиталась второй раз."
+  },
+  {
+   "id": "sheet:runner",
+   "where": "runner.modifiers dev_attack / dev_sleaze / dev_dp / dev_firewall / dev_rating (этап «аватар»), `if`; Лист.programs_loaded.max",
+   "status": "keep",
+   "reason": "Колонка «Живая персона» (да только у техноманта) даёт то же условие, что пять сравнений со строкой; числа не меняются.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:runner",
+   "where": "runner.modifiers — правка броска «−2» (notTags магия…), `if`",
+   "status": "keep",
+   "reason": "«восприятие» и «проекция» = да — то же множество, что «!= нет»; −2 к немагическим — по §12 В10.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:runner",
+   "where": "runner.modifiers — `unarmed_physical`",
+   "status": "keep",
+   "reason": "Итог тот же (свойство метатипа + «Плотность костей» через этап set:max); у противников-троллей появится — это правило метатипа, а не раннера.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:runner",
+   "where": "runner.modifiers — правка броска «0 - 2 * @носитель.sustained»",
+   "status": "keep",
+   "reason": "Запись «Сосредоточенность»: «За каждый уровень 1 дополнительное заклинание или сложная форма без штрафа поддержки». Формула с вычитанием sustain_free передаёт это один в один.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:runner",
+   "where": "sheets[razor].values.essence",
+   "status": "keep",
+   "reason": "Значение мёртвое: Сущность — поле-формула, у «Бритвы» имплантов нет, итог 6 и после удаления.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:grunt",
+   "where": "system.sheets.grunt.modifiers; Лист.conscious, Лист.stun_overflow",
+   "status": "keep",
+   "reason": "Шкала у пешки одна, поэтому «без сознания» должно наступать, когда она заполнена. Удар «вырубить» (strike_damage шаг 9: stun = stun_max) при stun_max = physical_max тоже заполнит общую шкалу — исход тот же.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:grunt",
+   "where": "sheets fiveeyes, fiveeyes_2 (и opponent: humanis, sauron, lone_star, mafia); grunt_templates; adversaries",
+   "status": "fix",
+   "reason": "Неверно утверждение, что колонки init_base, cm и defense — «напечатанные книгой вычисленные». Сверка всех 22 строк: cm расходится с 8 + ⌈большее(Воля, Тело)/2⌉ у восьми заготовок (сборщик данных 12 против 10, мастер клинка 14/10, инженер ООР 17/11, ангел 20/11, коммандо 19/11, шаман Сиу 21/11 и др.). defense расходится у шести: мафиози 7/5 (кожные пластины), офицер спецназа 14/11, офицер ООР 14/11, самурай 16/12, морпех 15/10, Сиу 16/11. Эти числа содержат то, чего в данных нет (импланты в тексте «extra»), — удалить их значит потерять данные книги.",
+   "corrected_target": "Как в разборе: колонка `npc_template` на листе, тип `npc` «По заготовке» с правками `set @npc_template.<х-ка>` этапом «основа», прибавки аугментаций четырьмя колонками, ранги навыков одной правкой по колонке (после дыры движка), таблицу `adversaries` удалить. Колонки cm, defense, init_base заготовок НЕ удалять: оставить как «по книге» (подписи русские) и вынести владельцу, откуда расхождения с формулой пешки и формулой защиты (импланты из «extra», лейтенанты). Пока нет ответа — лист считает по формулам, как сейчас."
+  },
+  {
+   "id": "sheet:grunt",
+   "where": "grunt.modifiers — wound_mod",
+   "status": "keep",
+   "reason": "Цель: оставить как есть до ответа владельца. Поведение не меняется.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:opponent",
+   "where": "sheets humanis, sauron, lone_star, mafia; opponent.modifiers = []",
+   "status": "fix",
+   "reason": "Сама цель верная: значения листов совпадают со строками заготовок. Но `npc` в разборе наследует `person`, а значит противники получат общие правила раннера до ответа владельца (см. «Раннер»).",
+   "corrected_target": "opponent.extends = \"npc\"; листам образца — `npc_template` вместо копий характеристик и навыков; вещи (has) оставить; сам `npc` пока без `extends: person` (до ответа владельца)."
+  },
+  {
+   "id": "sheet:opponent",
+   "where": "opponent.blocks",
+   "status": "keep",
+   "reason": "Раскладка, на правила не влияет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:host",
+   "where": "sheets baraholka (host) и baraholka_killer (ic); host.modifiers; Лист.host_rating",
+   "status": "fix",
+   "reason": "Числа сохраняются: 4 + 1/0/3/2 = 5/4/7/6. Но если лёд вписать в группу сервера, с сервером станут общими все поля таблицы «Группа»: edge_left, edge_gained, physical, stun. Разбор пишет, что для льда они «не используются», — это неверно: ic_attack (шаги 2–5) зовёт gain_edge действующему, и очки Преимущества льда начнут копиться в общем запасе с сервером и всеми его льдами. По выпискам такого правила нет (§11: лёд — отдельный лист).",
+   "corrected_target": "Таблица `host` «Сервер» (owner group: host_rating, host_attack_add, host_sleaze_add, host_dp_add, host_fw_add 0–3, default 0), базовый тип `matrix_host` с правками dev_rating = @host_rating и dev_* = @host_rating + прибавка, этап «основа»; host.extends и ic.extends = matrix_host — как в разборе. Перед переводом льда в группу сервера — вопрос владельцу: общий ли у сервера и его льдов запас Преимущества (и урон из «Группы»). Если нет — лёд читает сервер по полю-ссылке «Сервер» (вид «лист»), это та же дыра движка, что у транспорта (engine/calc.ts: newPass), а до её закрытия копии на листе льда остаются."
+  },
+  {
+   "id": "sheet:host",
+   "where": "Лист.is_device; host.modifiers, ic.modifiers",
+   "status": "fix",
+   "reason": "Сменить вид на да/нет мало. Поле читают одиннадцать формул защиты в действиях Матрицы: `если(@цель.is_device < 1, @защита.persona, @защита.device)` (matrix_check, matrix_hack, matrix_spike, matrix_tarpit, ic_attack и др.). Сравнение «да/нет < 1» — не тот же смысл, а может оказаться и ошибкой типа.",
+   "corrected_target": "is_device: вид да/нет, default нет; правки host/ic (после — matrix_host) `set да`; во всех читателях `@цель.is_device < 1` → `не @цель.is_device`."
+  },
+  {
+   "id": "sheet:host",
+   "where": "host.blocks (нет)",
+   "status": "keep",
+   "reason": "Раскладка.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:ic",
+   "where": "sheets[baraholka_killer].values; ic.modifiers",
+   "status": "fix",
+   "reason": "Числа льда (счётчик = рейтинг × 2, инициатива ВМ × 2 + 3к6) совпадают с решением §11. Но цель опирается на то, что лёд стоит в группе сервера, — это меняет запас Преимущества (см. «Сервер»).",
+   "corrected_target": "ic.extends = matrix_host; свои правки: matrix_cm set `@host_rating * 2`, initiative set `@m_dp * 2`, init_dice set 3. Откуда лёд берёт рейтинг и прибавки сервера (группа или поле-ссылка) — по ответу владельца об общем Преимуществе, см. «Сервер»."
+  },
+  {
+   "id": "sheet:ic",
+   "where": "запись ic_strike (matrix_action) в has льда",
+   "status": "keep",
+   "reason": "ic_attack уже есть. Набор «рейтинг сервера × 2» и защита вида льда переезжают внутрь функции без изменения чисел.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:ic",
+   "where": "аргумент `защита` у ic_strike",
+   "status": "keep",
+   "reason": "«нет» есть в matrix_defenses; умолчание даёт то же, что «или \"нет\"».",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:ic",
+   "where": "ic.blocks (нет)",
+   "status": "keep",
+   "reason": "Раскладка.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:spirit",
+   "where": "spirit.modifiers; эффект summon_spirit (шаги после «Если @итог.margin >= 1»); spirit_kinds",
+   "status": "keep",
+   "reason": "Сверено с шагами 10–89 summon_spirit: смещения характеристик и списки навыков по видам совпадают с целью, включая «Экзотическое дистанционное оружие» → экзотическое_оружие и колдовство у предков. Магия = Мощь. Порядок и числа те же.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:spirit",
+   "where": "spirit.modifiers — attr_limits.<х-ка>.bonus add 20 (8 правок)",
+   "status": "keep",
+   "reason": "Проверено по коду: calc.ts (calc → applyValueModifiers) значение не обрезает, режет только шаг «Изменение» (steps/apply.ts:72-73). Когда характеристики станут правками типа, обход не нужен.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:spirit",
+   "where": "spirit.modifiers — defense_rating add @spirit_force; spirit_hard",
+   "status": "keep",
+   "reason": "Совпадает с hint («от обычного оружия защита + Мощь») и решением §12 В4–В5 («магическое» — без прибавки). Сейчас прибавка ко всем атакам, включая сравнение ЗА заклинания с ЗЩ для Преимущества, — это расхождение с решением, а не правило.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:spirit",
+   "where": "spirit_kinds.columns.label",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:spirit",
+   "where": "spirit.blocks (нет)",
+   "status": "keep",
+   "reason": "Раскладка.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:sprite",
+   "where": "эффект compile_sprite (после «Если @итог.success»); sprite.modifiers",
+   "status": "fix",
+   "reason": "Навыки по виду (техноспрайт — Инженерное дело и Электроника, остальные — Взлом и Электроника) меняют поведение: сейчас «Компилировать» (шаги 13–15) даёт все три навыка всем видам. Разбор сам вынес это владельцу, а цель уже выбрала ответ.",
+   "corrected_target": "Правки типа: resonance `set @sprite_level` (основа), willpower…charisma `set большее из(1, @sprite_level)` (основа). Ранги — одна правка по колонке навыков (после дыры движка) с тем же поведением, что сейчас: взлом, электроника, инженерное дело = @sprite_level всем видам. Колонку sprite_kinds.skills (выбор из skills, many) завести, но читать её в правке только после ответа владельца, по виду ли навыки. «Компилировать» пишет только sprite_level, sprite_kind, tasks, sprite_registered."
+  },
+  {
+   "id": "sheet:sprite",
+   "where": "sprite.modifiers dev_attack, dev_sleaze, dev_dp, dev_firewall, initiative",
+   "status": "keep",
+   "reason": "Умолчание 0 = нынешнее «или 0».",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:sprite",
+   "where": "sprite.modifiers — attr_limits.(willpower|logic|intuition|charisma).bonus add 20",
+   "status": "keep",
+   "reason": "См. «Дух»: правка типа предел не режет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:sprite",
+   "where": "sprite_kinds.columns.label; sprite.blocks",
+   "status": "keep",
+   "reason": "Подписи и раскладка.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:vehicle",
+   "where": "vehicle.modifiers defense_rating; Лист.veh_ar; эффект drive_check (два места)",
+   "status": "keep",
+   "reason": "Числа ЗЩ, ЗА и модуля контроля по трём режимам совпадают с нынешними лесенками и с §14 (автономный — Маневрирование + Броня, водитель — его Пилотирование, ЗА без водителя — Пилотирование модели). Что не охвачено — в пропущенном.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:vehicle",
+   "where": "Лист.soak",
+   "status": "keep",
+   "reason": "Итог тот же: у транспорта Тело модели, у остальных своё Тело.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:vehicle",
+   "where": "Лист.driver_pilot, rig_pilot, rig_int, rig_log, rig_wil, rig_cha, rig_vcr",
+   "status": "fix",
+   "reason": "Одна формула `@controller.skills.пилотирование.pool` на всё ломает числа. driver_pilot — «Пилотирование + Реакция» (набор), а rig_pilot — «Риггер: Пилотирование» без характеристики: в drive_check при захвате набор = rig_pilot + rig_int + rig_vcr, то есть Реакцию заменяет Интуиция риггера. Если rig_pilot станет набором, Реакция добавится, а Интуиция — сверху (§14: «набор = навык риггера + его характеристика по таблице МКТ»).",
+   "corrected_target": "Лист: колонка `controller` «Кто управляет», вид «лист». Водитель: `@controller.skills.пилотирование.pool` (Пилотирование + Реакция) вместо driver_pilot. Риггер при захвате: ранг `@controller.skills.пилотирование.rank` вместо rig_pilot, `@controller.intuition`, `.logic`, `.willpower`, `.charisma` вместо rig_int/log/wil/cha, рейтинг модуля контроля — из импланта риггера (control_module) вместо rig_vcr. «Захватить управление» пишет только ссылку и режим «Кто ведёт» = риггер. До закрытия дыры (формула не читает другой лист) — копии остаются."
+  },
+  {
+   "id": "sheet:vehicle",
+   "where": "Лист.veh_body, veh_armor, veh_pilot, veh_sensor, veh_interval, veh_accel, veh_top, veh_handling",
+   "status": "keep",
+   "reason": "Умолчание 0 = «или 0».",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:vehicle",
+   "where": "запись veh_drive (vehicle_action) в has дрона",
+   "status": "keep",
+   "reason": "Та же функция drive_check с тем же аргументом.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:vehicle",
+   "where": "vehicle.blocks (нет)",
+   "status": "keep",
+   "reason": "Раскладка.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:creature",
+   "where": "эффект creature_template «Облик существа» (19 шагов); creature.modifiers",
+   "status": "fix",
+   "reason": "Цель добавляет то, чего «Облик» не делает: `armor_natural add @creature_kind.armor`, essence и init_dice. Броня — открытый вопрос самого разбора: колонка «Броня» плюс запись способности «Броня» дадут прибавку дважды. Колонки creatures cm и defense не вычисляемые: у волка defense 11 при Теле 4 и броне 2, — удалять их нельзя. Кубики инициативы из справочника (волк 2) отвечают книге, но это новое поведение, его стоит назвать.",
+   "corrected_target": "Лист: колонка `creature_kind` «Вид существа», выбор из creatures, optional. Правки типа: body…charisma, magic `set @creature_kind.<х-ка>` (основа, пустую клетку пропускать — дыра движка stages.ts), ранги — правкой по колонке из `sk_<навык>`, init_dice `set @creature_kind.init_dice` (новое, по книге), essence `set @creature_kind.essence`. Броню НЕ добавлять до ответа владельца, откуда её брать (колонка или запись способности). Эффект creature_template и запись wd_creature удалить. Колонки init_base, cm, defense, cm_stun — оставить «по книге» с русскими подписями, не удалять."
+  },
+  {
+   "id": "sheet:creature",
+   "where": "creature.modifiers — attr_limits.*.bonus add 20 (8 правок)",
+   "status": "keep",
+   "reason": "См. «Дух».",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:creature",
+   "where": "creature.blocks (нет)",
+   "status": "keep",
+   "reason": "Раскладка.",
+   "corrected_target": ""
+  },
+  {
+   "id": "fields:list",
+   "where": "Лист.initiative",
+   "status": "keep",
+   "reason": "ДР и «нет» — Реакция + Интуиция, ВР — Интуиция + ВМ, у техноманта — Логика + Интуиция (§11, §13 (11)); строка «нет» в awakened_kinds тоже получает Интуицию + ВМ — как сейчас.",
+   "corrected_target": ""
+  },
+  {
+   "id": "fields:list",
+   "where": "Лист.drain_pool",
+   "status": "keep",
+   "reason": "Адепт — Тело + Воля (§12 В10), остальные (в том числе мистический адепт) — Воля + характеристика традиции, как сейчас.",
+   "corrected_target": ""
+  },
+  {
+   "id": "fields:list",
+   "where": "Лист.plane_dr",
+   "status": "keep",
+   "reason": "Тот же выбор.",
+   "corrected_target": ""
+  },
+  {
+   "id": "fields:list",
+   "where": "Лист body…edge (max), defense_rating, physical_max, astral_dr",
+   "status": "keep",
+   "reason": "Без метатипа сейчас предел 6, кожа и стойкость 0 — у строки «человек» те же числа.",
+   "corrected_target": ""
+  },
+  {
+   "id": "fields:list",
+   "where": "Лист.essence",
+   "status": "keep",
+   "reason": "Та же сумма после наследования.",
+   "corrected_target": ""
+  },
+  {
+   "id": "layout",
+   "where": "system.blocks; system.sheets.*.blocks",
+   "status": "keep",
+   "reason": "Раскладка, на правила не влияет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:weapon",
+   "where": "firearm.columns.prone_pool (default 0), melee.columns.prone_pool (default −4)",
+   "status": "keep",
+   "reason": "Умолчания 0 и −4 сохраняются.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:firearm",
+   "where": "records colt_l36, predator_vi, ak_97, rpk, striker — cells.mounts",
+   "status": "keep",
+   "reason": "У всех пяти записей места совпадают с текстом класса.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:firearm",
+   "where": "records firearm — cells.skill",
+   "status": "fix",
+   "reason": "Навык в образце подтверждён только для шести классов, у которых есть записи. Для остальных 14 строк weapon_classes (шокер, дробовик, гранатомёт, штурмовая пушка, дротиковые, ДМСО…) навыка в выписках нет — заполнить их «по строкам из записей» значит выдумать.",
+   "corrected_target": "weapon_classes: колонка `skill` «Навык», выбор из skills; заполнить только подтверждённые строки (лёгкий и тяжёлый пистолет, штурмовая винтовка, тяжёлый пулемёт — стрельба; лук — атлетика; ракетная установка — экзотическое оружие); остальные пусто — вопрос владельцу по книге. weapon.skill: `expr: @class.skill`, при пустой клетке класса — клетка записи; клетки записей с подтверждённым классом удалить."
+  },
+  {
+   "id": "book:firearm",
+   "where": "record striker.bindings",
+   "status": "keep",
+   "reason": "launch_blast тот же; уходят только чужие входы.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:firearm",
+   "where": "firearm.str_need, firearm.sight",
+   "status": "keep",
+   "reason": "Умолчание 0 = «или 0».",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:firearm",
+   "where": "firearm.bindings[0].args, melee.bindings[0].args",
+   "status": "keep",
+   "reason": "Вход берёт ту же клетку.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:melee",
+   "where": "records combat_knife, katana, stun_baton, sap — cells.class (пусто); weapon_classes; edge_actions «Пырнуть»",
+   "status": "keep",
+   "reason": "Классы взяты из описаний записей; ограничение «Пырнуть» клинком — из описания действия Преимущества. Сейчас его можно сделать любой дубинкой — это расхождение с правилом, цель его исправляет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:action",
+   "where": "records act_scene, act_second_wind, act_shrug; has листов razor, silk, hammer, koshka; system.grants",
+   "status": "fix",
+   "reason": "Выдача в `person` или system.grants даст «Второе дыхание», «Ранен не так сильно» и «Начало сцены» противникам и пешкам. У пешек Преимущество общее на отряд (таблица «Группа»), и могут ли NPC тратить его на эти действия, в выписках нет. Сейчас эти записи есть только у четырёх раннеров.",
+   "corrected_target": "Три записи и их has удалить; second_wind, shrug_off (или одна edge_move), scene_start — в grants типа `runner`; распространять на `person`/NPC — после ответа владельца вместе с вопросом об общих правилах."
+  },
+  {
+   "id": "book:action",
+   "where": "эффекты second_wind и shrug_off; подписи записей",
+   "status": "keep",
+   "reason": "3/оглушение и 4/физический сохраняются строками справочника; Плата та же.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:action",
+   "where": "second_wind.steps, shrug_off.steps",
+   "status": "keep",
+   "reason": "Цель — вопрос владельцу, без смены поведения.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:grenade",
+   "where": "grenade.bindings «Бросить»; records rocket_frag, rocket_antivehicle (launched=true)",
+   "status": "keep",
+   "reason": "Числа снарядов те же; ракету нельзя будет бросить рукой — так по описаниям (стр. 263).",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:grenade",
+   "where": "grenade.physical_dmg",
+   "status": "keep",
+   "reason": "Пусто → физический, как сейчас.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:grenade",
+   "where": "grenade.count, explosive.count",
+   "status": "keep",
+   "reason": "Значение экземпляра (у «Бритвы» count 2) — умолчание 1.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:explosive",
+   "where": "record explosive_pack — cells.cost, cells.avail",
+   "status": "keep",
+   "reason": "Числа справочника совпадают с лесенками и описанием (×10…×5000; доступность 1–7).",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:explosive",
+   "where": "record detonator",
+   "status": "keep",
+   "reason": "Правил не меняет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:armor_mod",
+   "where": "armor_mod.columns status, charges; records armor_fire, armor_chem_seal",
+   "status": "keep",
+   "reason": "Горение — рейтинг раз, Разъедание — шесть раз (описания стр. 266; §3 «снимает состояние рейтинг раз»). «Предотвращает состояния от контактного и вдыхаемого токсина» и активация герметизации не покрыты — остаётся справкой.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:implant",
+   "where": "records cyberjack (ess_base, cost_base, avail_base), cybereyes (cost_base, avail_base, capacity)",
+   "status": "keep",
+   "reason": "Сверено: Сущность 1/1,5/2/2,3/2,6/3, цены и доступности киберразъёма, цены, доступности и ёмкость киберглаз совпадают с лесенками.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:implant",
+   "where": "record cyberjack — правка init_dice",
+   "status": "keep",
+   "reason": "+1/+1/+1/+2/+2/+2 в ВР — по описанию.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:implant",
+   "where": "implant.essence, cost, avail (и копии в implant_weapon)",
+   "status": "keep",
+   "reason": "У строки «стандарт» те же числа 1/1/0.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:bioware",
+   "where": "record bone_density — правки unarmed_ar_bonus, unarmed_dv",
+   "status": "keep",
+   "reason": "СУ 3/3/4/4 и ЗА +1/+2/+2/+3 совпадают с описанием и лесенками.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:bioware",
+   "where": "record reflex_recorder — правка",
+   "status": "keep",
+   "reason": "Описание: «Добавляет 1 к рейтингу навыка» — ранг, а не набор; цель приводит к правилу.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:bioware",
+   "where": "bioware.cultured; record reflex_recorder",
+   "status": "keep",
+   "reason": "Тот же признак.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:limb_accessory",
+   "where": "record gyromount (limb_accessory) vs weapon_mod gyro_mount",
+   "status": "fix",
+   "reason": "Числа имплантированной версии в выписках нет (вопрос владельцу). К тому же цель даёт гашение «любому оружию в руках», а описание оружейного: «для винтовки или пулемёта», «требование Силы для средних и тяжёлых пулемётов падает». ease_full 3 там — «+3 к значению атаки при непрерывном огне», а не гашение отдачи.",
+   "corrected_target": "До ответа владельца механику не вводить, запись — справкой. Если подтвердит те же числа: Лист `recoil_ease_burst`, `recoil_ease_full`, `str_ease_body` (default 0), правки gyromount +4/+3/+1, а firearm.recoil_burst/recoil_full/str_need прибавляют их только для оружия классов винтовок и пулемётов (условие по колонке класса), как у оружейного гирокрепления."
+  },
+  {
+   "id": "book:implant_weapon",
+   "where": "implant_weapon.columns",
+   "status": "keep",
+   "reason": "Формулы те же, только наследованием.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:quality",
+   "where": "record focus «Сосредоточенность»",
+   "status": "keep",
+   "reason": "См. «Раннер».",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:quality",
+   "where": "record burned_out — правка edge_no_spend",
+   "status": "keep",
+   "reason": "«online» = все режимы, кроме «нет», — то же множество.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:quality",
+   "where": "record spirit_guide_q; тип mentor (запись mentor_shark); record code_white_hat",
+   "status": "keep",
+   "reason": "Карма 10 и «положительное» взяты из spirit_guide_q; на spirit_guide_q никто не ссылается. Поправка к разбору: записи с id code_white_hat нет, есть запись с подписью «Кодекс: Белая шляпа».",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:adept_power",
+   "where": "record adept_improved_sense.grants; эффекты edge_bonus_зрение, _слух, _осязание, _вкус, _обоняние",
+   "status": "keep",
+   "reason": "Описание: «Выберите чувство… можно брать несколько раз для разных чувств». Сейчас одна покупка за 0,25 ОС даёт все пять — цель возвращает правило.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:adept_power",
+   "where": "record adept_improved_skill — cells.pp",
+   "status": "keep",
+   "reason": "Умолчание «нет» оставляет цену 0,5; что считать боевым — вопрос владельцу.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:device",
+   "where": "device.modifiers — noise",
+   "status": "keep",
+   "reason": "РПУ в образце одно (ДронМастер, рейтинг 3, шумоподавление 3) — совпадает.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:device",
+   "where": "device.modifiers dev_rating, dev_attack, dev_sleaze, dev_dp, dev_firewall",
+   "status": "keep",
+   "reason": "Умолчание 0 = «или 0».",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:program",
+   "where": "program.modifiers — hack_programs",
+   "status": "keep",
+   "reason": "Тот же признак.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:electronics",
+   "where": "record soft_autosoft «Автософт»",
+   "status": "keep",
+   "reason": "Цена и доступность совпадают с шестью записями автософтов.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:audio",
+   "where": "record aud_enh_spatial_recognizer.grants",
+   "status": "keep",
+   "reason": "То же бонусное очко за слух.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:security",
+   "where": "record sec_biometric",
+   "status": "keep",
+   "reason": "Та же вещь (200 ¥, доступность 2).",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:survival",
+   "where": "record surv_respirator — правка броска",
+   "status": "keep",
+   "reason": "Описание: «при проверках сопротивления химикатам вдыхаемым путём» — сужение приводит к правилу.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:matrix_action",
+   "where": "records mx_brute, mx_spike, mx_tarpit, mx_hide — bindings.args; matrix_action.columns (нет)",
+   "status": "fix",
+   "reason": "Одна кнопка типа «matrix_check, затем вызов @outcome» не повторяет порядок броска. У брутфорса функция matrix_hack сама меняет бросок: вход probe_hits прибавляется к набору; администратор без пользователя даёт +4 к защите цели в сравнении для Преимущества и +2 к набору защиты — всё до проверки (шаги 0, 2, 7). Если сначала идёт matrix_check, а исход зовётся после, эти поправки пропадут.",
+   "corrected_target": "Колонки matrix_action: `skill`, `attribute` (optional; «Спрятаться» — intuition), `defense` (из matrix_defenses), `illegal` (default нет), `action_kind` (default «сложное»), `link` (default «нет»), `effect` «Действие» — вид эффект, значения как сейчас: matrix_hack / matrix_spike / matrix_tarpit / matrix_check. Кнопка у типа «Выполнить» вызывает `@effect` (вызов эффекта формулой: steps/emit.ts) с входами из колонок; кнопки записей удалить."
+  },
+  {
+   "id": "book:matrix_action",
+   "where": "records ic_strike, tm_sprite_compile",
+   "status": "keep",
+   "reason": "Перенос выдачи; ограничения по виду пробуждённого — см. «Магическое действие».",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:spell",
+   "where": "records spell_* — bindings.args",
+   "status": "keep",
+   "reason": "Сверено по шести записям: «Д» → sustain да, «А» → astral да, «ф» → damage_phys да, cap 4/20 — совпадает. Функции разные по исходу (cast_spell, heal_spell, boost_spell), поэтому кнопка — у подтипов по исходу или через колонку эффекта исхода, как и оговаривает разбор.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:spell",
+   "where": "spell.status (огненный шар — «burning»); spell_defenses строки «исцеление», «критические», «порог», «нет»",
+   "status": "keep",
+   "reason": "Состояние стихии огня то же; пороги исцеления 5 − Сущность — по §12 В2.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:ritual",
+   "where": "record ritual_roving_spell.bindings",
+   "status": "keep",
+   "reason": "Порог 6 из клетки.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:focus",
+   "where": "focus.modifiers — 13 правок focus_power … focus_sp_управление",
+   "status": "keep",
+   "reason": "Этап add:max сохраняет правило «одна прибавка» (§12 В6), числа те же.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:focus",
+   "where": "records focus_ritual, focus_power, focus_weapon — cells.cost, cells.avail",
+   "status": "keep",
+   "reason": "4000/18000/7000 и +0/+3/+3 совпадают с focus_kinds.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:focus",
+   "where": "focus_kinds.columns.label; focus_kinds.category vs focus.category",
+   "status": "keep",
+   "reason": "Подписи и ключи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:mentor",
+   "where": "тип mentor; record mentor_shark; quality spirit_guide_q",
+   "status": "keep",
+   "reason": "См. «Качество».",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:magic_action",
+   "where": "record mg_summon; лист koshka (has)",
+   "status": "fix",
+   "reason": "Запасной вариант «выдача в типе person, Плата уже отказывает без Магии» ломает правило: Плата summon_spirit отказывает только аспектному магу не по воплощению и при Магии < 1. Адепт (Магия ≥ 1) пройдёт её и сможет призвать духа.",
+   "corrected_target": "awakened_kinds: колонка `grants` «Даёт действия» (эффект, many): маг, аспектный маг, мистический адепт — summon_spirit; техномант — compile_sprite; записи mg_summon и tm_sprite_compile удалить (после дыры движка effects.ts:99). До неё — выдача в типе с отказом в Плате «Призвать» по колонке awakened_kinds `can_summon` «Может призывать» (да: маг, аспектный маг, мистический адепт; адепт, техномант, «нет» — нет), а не только по Магии."
+  },
+  {
+   "id": "book:complex_form",
+   "where": "records cf_infusion, cf_res_spike — bindings.args; эффекты cast_form / cast_form_attr",
+   "status": "fix",
+   "reason": "Функции совпадают не на 100%. У cast_form_attr вход attr «Какая характеристика» спрашивается у действующего (`ask: {by: actor}`), у cast_form — необязательный и не спрашивается. Если удалить cast_form_attr, Инфузия не спросит, какую характеристику поднимать, и по правилу (стр. 190: «выбранная характеристика») сработать не сможет.",
+   "corrected_target": "Кнопки у типа: «Запустить» → одна функция cast_form {fading_si: @fading, защита: @defense, sustain: @duration.sustained}, в которой attr спрашивается у действующего, когда исход «характеристика +» (или вход attr передаётся колонкой формы «Какую характеристику спросить»); «Прекратить» → stop_spell {spell_effect: @sustain_effect}. cast_form_attr удалить только после этого; skill, outcome, per_hit — выбор из справочников, кнопки записей удалить."
+  },
+  {
+   "id": "book:sprite_power",
+   "where": "records spw_trap, spw_hash — bindings.args",
+   "status": "keep",
+   "reason": "Те же значения из клеток; Хеш — Уровень × 10 раундов по описанию.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:vehicle_action",
+   "where": "record veh_drive",
+   "status": "keep",
+   "reason": "Та же функция.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:autosoft",
+   "where": "autosoft.modifiers — 6 правок as_maneuver … as_clear_sight; cells.as_attr",
+   "status": "keep",
+   "reason": "Этап set:max как у as_*; характеристики Пилотирование/Сенсоры — из описаний записей.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:autosoft",
+   "where": "records as_* — cells cost, avail, rating_max, legal",
+   "status": "keep",
+   "reason": "У всех шести одинаково — по описанию «рейтинг × 500, доступность = рейтинг, 1–9».",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:vehicle_mod",
+   "where": "vehicle_mod.modifiers — mounts_used",
+   "status": "keep",
+   "reason": "Умолчание 0.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:toxin",
+   "where": "record tox_gamma_scopolamine — bindings.args и cells",
+   "status": "keep",
+   "reason": "Путь «инъекционный» → не вдыхаемый (inhaled: нет), сила 12, состояния те же.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:drug",
+   "where": "records drug_alcohol, drug_jazz — bindings; эффекты dg_alcohol_take, dg_jazz_take",
+   "status": "keep",
+   "reason": "Сроки те же: большее из(60, (8 − Тело) × 60) минут и 10 × 1к6 минут; пол «большее из(1, …)» сохранить в take_drug. Кость в клетке — разбор сам отмечает, что это надо проверить.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:drug",
+   "where": "cells drug_alcohol, drug_jazz",
+   "status": "keep",
+   "reason": "Мёртвые клетки; числа живут в правках dg_* и шагах.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:drug",
+   "where": "эффект drug_crashes — 5 подписок lost:dg_jazz … lost:dg_nitro",
+   "status": "keep",
+   "reason": "12/6/6/9 оглушения и fatigued/dazed переезжают в колонки без изменения; у алкоголя отходняка нет — умолчания 0 и пусто.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:world_action",
+   "where": "record wd_creature «Облик существа»",
+   "status": "keep",
+   "reason": "См. «Существо».",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:creature_weakness",
+   "where": "record cweak_allergiya",
+   "status": "keep",
+   "reason": "Пустая запись-ссылка, механики нет.",
+   "corrected_target": ""
+  }
+ ],
+ "missed": [
+  {
+   "id": "sheet:vehicle",
+   "where": "vehicle.modifiers initiative (`@veh_pilot * 2`, init_dice 4)",
+   "problem": "§14 (ревью этапа 7): «инициатива дрона Пилотирование × 2 + 4к6, при захвате — ВР-инициатива риггера». Ветки «при захвате» нет: захваченный дрон ходит по своей инициативе. Справочник «Кто ведёт» из разбора её не охватывает.",
+   "target": "control_modes: колонки `init_base` (автопилот и водитель — `@veh_pilot * 2`; риггер — ВР-инициатива риггера по полю-ссылке «Кто управляет»: `@controller.intuition + @controller.m_dp` или его поле initiative) и `init_dice` (4 / по ВР риггера); vehicle.initiative и init_dice set из `@control.*`. «Только дроны или все машины» — уже вопрос владельцу."
+  },
+  {
+   "id": "sheet:vehicle",
+   "where": "эффект drive_check, шаги 1 и 4 (набор)",
+   "problem": "Третья лесенка «кто ведёт» — `если(@действующий == @цель, @цель.as_maneuver + @цель.veh_pilot, если(@цель.jumped, @цель.rig_pilot + @цель.rig_int + @цель.rig_vcr, @действующий.skills.пилотирование.pool))` — в справочник control_modes не попала (разбор перенёс только ЗЩ, ЗА и модуль контроля).",
+   "target": "control_modes: колонка `drive_pool` «Набор управления» (автопилот — `@drone_skills.маневрирование.rating + @veh_pilot`; водитель — Пилотирование + Реакция водителя; риггер — его Пилотирование + Интуиция + рейтинг модуля контроля); drive_check: `большее из(0, @цель.control.drive_pool - @цель.veh_speed_pen)`."
+  },
+  {
+   "id": "sheet:grunt",
+   "where": "grunt.modifiers physical_max против grunt_templates.cm",
+   "problem": "Формула пешки 8 + ⌈большее(Воля, Тело)/2⌉ не совпадает со счётчиком, напечатанным книгой, у восьми из 22 заготовок (12/10, 13/10, 14/10, 15/10, 17/11, 19/11, 20/11, 21/11), а шкала пешки на листе считается по формуле. По правилам книги так выходит или в формуле чего-то не хватает (лейтенанты, импланты) — в выписках нет.",
+   "target": "Вопрос владельцу (стр. 203–208): откуда расхождение; до ответа — формула как сейчас, колонку cm сохранить."
+  },
+  {
+   "id": "sheet:spirit",
+   "where": "spirit_kinds (колонки); решение docs/sr6-compendium.md §12 В4–В5",
+   "problem": "Принятое решение: в spirit_kinds — «смещение защиты, множитель против обычного оружия, смещение инициативы». Таких колонок нет; spirit_hard = Мощь и инициатива 2к6 жёстко записаны в типе листа. Разбор сверял с кодом, а не с решением.",
+   "target": "Сверить с книгой (стр. 147–148), есть ли у видов духов разные смещения защиты и инициативы. Если есть — колонки в spirit_kinds и правки типа «Дух» от `@spirit_kind.*`; если у всех одинаково — записать решение в docs/decisions.md как упрощение."
+  },
+  {
+   "id": "book:magic_action",
+   "where": "эффект summon_spirit, cost",
+   "problem": "Плата «Призвать» не отказывает адепту: проверяет только аспектного мага и Магию < 1. Сейчас это закрыто тем, что запись mg_summon есть не у всех, но при любой общей выдаче адепт сможет призывать.",
+   "target": "В Плате — отказ по колонке awakened_kinds `can_summon` (да у мага, аспектного мага, мистического адепта)."
+  }
+ ]
+}

@@ -1,0 +1,755 @@
+{
+ "checks": [
+  {
+   "id": "sheet:runner",
+   "where": "system.sheets.runner.modifiers — все 12 правок; system.sheets.opponent.modifiers = []; system.sheets.grunt.modifiers",
+   "status": "keep",
+   "reason": "Собирается: model/inherit.ts flattenSystem проходит system.sheets (flat(system.sheets, () => true)), mergeKind складывает modifiers и объединяет grants и blocks. Двойного вычета Магии у NPC в нынешних данных нет: у всех заготовок с magic Сущность 6. Остаётся вопрос владельцу (он уже в списке). Побочное: тип `person` попадёт в список типов для нового листа.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:runner",
+   "where": "runner.modifiers dev_attack / dev_sleaze / dev_dp / dev_firewall / dev_rating (этап «аватар»), `if`; Лист.programs_loaded.max",
+   "status": "keep",
+   "reason": "Верно: ветки отличаются только данными, нужна колонка. Дыра с умолчанием подтверждена: cells.ts readCell у таблицы без владельца на пустой клетке даёт `source.kind === 'input'` → undefined. А modifiers.ts conditionHolds бросает ошибку, если `if` вернул не да/нет. Поэтому указание вписать «нет» явно во все шесть строк обязательно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:runner",
+   "where": "runner.modifiers — правка броска «−2» (notTags магия…), `if`",
+   "status": "fix",
+   "reason": "Цель полагается на «default нет», а движок умолчание справочника не подставляет. У строки «нет» `@носитель.astral_mode.active` даст undefined, и conditionHolds упадёт с «должно давать да или нет» на каждом броске каждого листа.",
+   "corrected_target": "astral_modes: колонка `active` «В астрале», да/нет, значения во всех трёх строках явно: «нет» — нет, «восприятие» — да, «проекция» — да. Умолчание (default нет) поставить тоже, но не полагаться на него, пока cells.ts: readCell его не подставляет. Условие правки: `@бросающий == @носитель и @носитель.astral_mode.active`"
+  },
+  {
+   "id": "sheet:runner",
+   "where": "runner.modifiers — `unarmed_physical`",
+   "status": "fix",
+   "reason": "Поле unarmed_physical во всём образце никто не читает: оно встречается только в этой правке и в правке «Плотности костей». Безоружная атака его не учитывает, так что перенос в формулу ничего не изменит на экране. Кроме того, этап «основа» с combine set:max превращает да/нет в число: Math.max(true) = 1.",
+   "corrected_target": "Лист.unarmed_physical: формула `@metatype.unarmed_physical` (да/нет). В metatypes.unarmed_physical — значения во всех пяти строках явно, пока readCell не берёт default. У этапа «основа» убрать combine set:max (да/нет не складываются по максимуму); «Плотность костей» — `set да`. Правку у раннера удалить. Безоружный удар (эффект атаки без оружия) должен читать `@действующий.unarmed_physical` для вида урона — сейчас не читает"
+  },
+  {
+   "id": "sheet:runner",
+   "where": "runner.modifiers — правка броска «0 - 2 * @носитель.sustained»",
+   "status": "keep",
+   "reason": "Собирается: новое хранимое поле со значением по умолчанию 0, правка записи `add @строка.level` (withRecord), формула правки броска. Правило — по описанию записи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:runner",
+   "where": "sheets[razor].values.essence",
+   "status": "keep",
+   "reason": "Подтверждено: calc.ts computeBase для поля-формулы не читает values, значит значение мёртвое. Проверки в lint.ts нет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:grunt",
+   "where": "system.sheets.grunt.modifiers; Лист.conscious, Лист.stun_overflow",
+   "status": "keep",
+   "reason": "Правка типа stun_max = @physical_max собирается: calc применяет правки и к полю-формуле. После неё conscious сводится к одной шкале.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:grunt",
+   "where": "sheets fiveeyes, fiveeyes_2 (и opponent: humanis, sauron, lone_star, mafia); grunt_templates; adversaries",
+   "status": "fix",
+   "reason": "Замысел верен, но есть три дыры, которые цель не закрывает. (1) У skills.rank единственный этап «адепт» с upToTimes 1.5. `set` от хранимого 0 обрежется до ceil(0×1,5) = 0, так что любая правка ранга по заготовке даст 0. (2) Выражения для «sk_<навык> по строке» нет. `@строка` даёт значение строки «ближний бой», колонка зовётся `sk_ближний_бой`. Pick `@npc_template.[…]` (formula/evaluate.ts) не переводит ключ в слаг, а склейки текста в formula/functions.ts нет. (3) Пропускать пустой `set` в stages.ts — неверная семантика. Правильно — default 0 у колонок заготовки и подстановка default в readCell. Плюс у листа без заготовки (npc_template optional) `walk` даёт null, и все `set` запишут пусто.",
+   "corrected_target": "Лист: колонка `npc_template` «Заготовка», выбор из grunt_templates. Тип листа `npc` «По заготовке» (extends person) — все его правки с `if: не пусто(@npc_template)`. Правки: body…charisma, edge `set @npc_template.<х-ка>` этапа «основа»; magic, resonance `set` этапа «основа»; init_dice `set @npc_template.init_dice`; essence `set @npc_template.essence`. В Лист body…edge первым этапом добавить `{key: основа, label: «основа: тип листа»}`; то же в skills.rank первым этапом (`основа`), иначе этап «адепт» (upToTimes 1.5) обрежет `set` ранга до 0. attr_aug → четыре колонки `<х-ка>_aug_add` (default 0) и правки `add` этапа «аугментация». У grunt_templates magic, resonance, sk_* — default 0; дописать движок, чтобы readCell брал default колонки справочника для пустой клетки (cells.ts, ветка `source.kind === 'input'`), вместо пропуска пустого `set` в stages.ts. Навыки — одной правкой по колонке `cell:skills.*.rank`. Это требует дописать движок: (а) calc.ts:112 передавать тег колонки в applyValueModifiers для живых клеток; (б) в значении такой правки `@строка` = строка skills; (в) брать колонку заготовки по строке — либо Pick переводит ключ в слаг (formula/evaluate.ts, Pick → slugOf), либо колонки заготовки названы ключами строк skills и формула `@npc_template.[@строка]`. grunt.extends = npc. Листы образца: values → только `npc_template` (+ metatype). Таблицу `adversaries` удалить. init_base, cm, defense заготовок — в тест-сверку или удалить"
+  },
+  {
+   "id": "sheet:grunt",
+   "where": "grunt.modifiers — wound_mod",
+   "status": "keep",
+   "reason": "Правильно оставлено до ответа владельца; в выписках правила нет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:opponent",
+   "where": "sheets humanis, sauron, lone_star, mafia; opponent.modifiers = []",
+   "status": "keep",
+   "reason": "Верно при поправках к «Пешке»: `if: не пусто(@npc_template)`, этап «основа» у skills.rank, правка по колонке навыков. Все четыре листа образца — с заготовок.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:opponent",
+   "where": "opponent.blocks",
+   "status": "keep",
+   "reason": "Данные раскладки; blocks типа объединяются при наследовании (union).",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:host",
+   "where": "sheets baraholka (host) и baraholka_killer (ic); host.modifiers; Лист.host_rating",
+   "status": "fix",
+   "reason": "Связь «лёд — сервер» через группу листов подгоняет данные под дыру движка. Чем это обернётся по коду: лист-группа выпадает из боя (core/perform.ts: fightersOf — «группа: в бой вступают её участники»); группы не вкладываются (perform.ts:281), так что лёд не встанет ни в какой отряд; таблица «Группа» (owner group: edge_left, edge_gained, physical, stun) делегируется — лёд делил бы с сервером и другим льдом Преимущество и урон. Решение 28.09 (docs/decisions.md:433) — про общее состояние отряда, а не про ссылку на владельца. Нужна ссылка лист → лист: та же дыра, что «Кто управляет» у транспорта.",
+   "corrected_target": "Лист: колонки `host_attack_add`, `host_sleaze_add`, `host_dp_add`, `host_fw_add` «прибавка к рейтингу» (число 0–3, default 0 — порядок ведущего); host_rating остаётся. Тип `matrix_host` «Узел сервера»: is_device set да; dev_rating set `@host_rating` (основа); dev_attack set `@host_rating + @host_attack_add` (основа) и так же три остальных. host.extends = matrix_host. Лёд: колонка Лист `host` «Сервер льда», вид «лист» (ссылка на лист сервера); ic: is_device set да; dev_rating, dev_attack, dev_sleaze, dev_dp, dev_firewall set `@host.<то же поле>` (основа). Дописать движок: формула и правка листа читают поле другого листа по колонке вида «лист» (engine/calc.ts: newPass — сейчас в проходе только pass.desk и pass.group; resolve по `голова.поле`, если голова — колонка вида «лист»). Группу листов для льда не использовать. Образец: сервер — host_rating 4, прибавки 1/0/3/2; лёд — ic_kind и host"
+  },
+  {
+   "id": "sheet:host",
+   "where": "Лист.is_device; host.modifiers, ic.modifiers",
+   "status": "fix",
+   "reason": "Смена вида на да/нет ломает читателей: в защитах Матрицы трижды `если(@цель.is_device < 1, @защита.persona, @защита.device)` — сравнение да/нет с числом.",
+   "corrected_target": "is_device: вид да/нет, умолчание нет; правки `set да` (у matrix_host / ic); во всех читателях `@цель.is_device < 1` → `не @цель.is_device`"
+  },
+  {
+   "id": "sheet:host",
+   "where": "host.blocks (нет)",
+   "status": "keep",
+   "reason": "Подтверждено: model/blocks.ts fieldsByBlock — без списка блоков показывается всё.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:ic",
+   "where": "sheets[baraholka_killer].values; ic.modifiers",
+   "status": "fix",
+   "reason": "Цель опирается на «лёд в группе сервера» и на ic.extends = matrix_host с `@host_rating`. Чем плоха группа — см. «Сервер»; при ссылке на лист характеристики льда берутся от сервера по ссылке.",
+   "corrected_target": "Лёд: колонка `host` вид «лист» (см. «Сервер», та же дыра движка); правки ic: is_device set да; dev_rating, dev_attack, dev_sleaze, dev_dp, dev_firewall set `@host.<поле>` (основа); matrix_cm set `@host.host_rating * 2`; initiative set `@m_dp * 2`; init_dice set 3. Хранимые host_rating и четыре характеристики у листа льда удалить"
+  },
+  {
+   "id": "sheet:ic",
+   "where": "запись ic_strike (matrix_action) в has льда",
+   "status": "keep",
+   "reason": "Выдача типом листа собирается (engine/effects.ts: grantedTo берёт sheetKindOf().grants). Выданная кнопка не передаёт аргументов (events/actions.ts: grantedAction — binding {effect}). Значит, ic_attack должен сам считать pool и защиту от действующего — это отмечено как работа кластера Матрицы. Источник рейтинга — `@действующий.host.host_rating` после поправки «Сервера».",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:ic",
+   "where": "аргумент `защита` у ic_strike",
+   "status": "keep",
+   "reason": "Дыра указана верно: readCell на пустой клетке справочника не берёт default.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:ic",
+   "where": "ic.blocks (нет)",
+   "status": "keep",
+   "reason": "Данные раскладки.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:spirit",
+   "where": "spirit.modifiers; эффект summon_spirit (шаги после «Если @итог.margin >= 1»); spirit_kinds",
+   "status": "fix",
+   "reason": "Не учтены три вещи. (1) У willpower, logic, intuition, charisma, edge только этап «аугментация» (upTo 4), у body/agility/reaction — «адепт» (upToTimes 1.5). `set` Мощи без нового первого этапа обрежется. (2) У skills.rank этап «адепт» обрежет `set` ранга от 0 до 0. (3) spirit_kind optional: без вида `walk` даёт null, и `@spirit_force + null` — ошибка, как у спрайта.",
+   "corrected_target": "Лист body…edge и skills.rank: первым этапом `основа`. Правки типа «Дух», все с `if: не пусто(@spirit_kind)`: body…charisma `set большее из(1, @spirit_force + @spirit_kind.<х-ка>)` (основа); magic `set @spirit_force` (основа). spirit_kinds.skills → выбор из skills, many: да (воздуха, огня, воды — астрал, атлетика, ближний бой, внимание, экзотическое оружие; земли — астрал, ближний бой, внимание, экзотическое оружие; зверей — астрал, ближний бой, внимание; предков — астрал, ближний бой, внимание, колдовство). Ранги — одна правка `cell:skills.*.rank` set (основа) `если(есть(@spirit_kind.skills, @строка), @spirit_force, 0)` — нужно дописать движок: calc.ts:112 передавать тег колонки для живых клеток, `@строка` в значении правки (modifiers.ts: valueOf). «Призвать» пишет только spirit_force, spirit_kind, services"
+  },
+  {
+   "id": "sheet:spirit",
+   "where": "spirit.modifiers — attr_limits.<х-ка>.bonus add 20 (8 правок)",
+   "status": "keep",
+   "reason": "Подтверждено: обрезает только шаг «Изменение» (steps/apply.ts:72-73). engine/limits.ts breaches проверяет лишь поля-формулы, а calc не ограничивает.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:spirit",
+   "where": "spirit.modifiers — defense_rating add @spirit_force; spirit_hard",
+   "status": "keep",
+   "reason": "Подтверждено: spirit_hard в образце никто не читает. Цель — данные плюс метка у атаки; работа функции защиты в кластере атаки.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:spirit",
+   "where": "spirit_kinds.columns.label",
+   "status": "keep",
+   "reason": "Подписи — ключи; правка слов.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:spirit",
+   "where": "spirit.blocks (нет)",
+   "status": "keep",
+   "reason": "Данные раскладки.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:sprite",
+   "where": "эффект compile_sprite (после «Если @итог.success»); sprite.modifiers",
+   "status": "fix",
+   "reason": "willpower…charisma — только этап «аугментация» (upTo 4 от хранимых 3): `set` уровня 8+ обрежется; этапа «основа» у них нет, а цель его называет. skills.rank — этап «адепт» обрежет до 0. Без вида спрайта `@sprite_kind.skills` — null.",
+   "corrected_target": "Лист willpower…charisma и skills.rank: первым этапом `основа`. Правки типа, с `if: не пусто(@sprite_kind)` там, где читается вид: resonance `set @sprite_level` (основа); willpower…charisma `set большее из(1, @sprite_level)` (основа); sprite_kinds.skills → выбор из skills, many: да (взломщик, инфоспрайт, крушитель, посыльный — взлом, электроника; техноспрайт — инженерное дело, электроника — или все три, по ответу владельца); ранги — правка `cell:skills.*.rank` set (основа) `если(есть(@sprite_kind.skills, @строка), @sprite_level, 0)` (та же дыра движка: calc.ts:112, `@строка` в valueOf). «Компилировать» пишет только sprite_level, sprite_kind, tasks, sprite_registered"
+  },
+  {
+   "id": "sheet:sprite",
+   "where": "sprite.modifiers dev_attack, dev_sleaze, dev_dp, dev_firewall, initiative",
+   "status": "keep",
+   "reason": "Обе дыры подтверждены: readCell (пусто → undefined) и navigate.ts walk (пустой выбор → null). Подставлять default в обоих местах — правильная доработка движка.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:sprite",
+   "where": "sprite.modifiers — attr_limits.(willpower|logic|intuition|charisma).bonus add 20",
+   "status": "keep",
+   "reason": "Как у духа: правки типа предел не режет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:sprite",
+   "where": "sprite_kinds.columns.label; sprite.blocks",
+   "status": "keep",
+   "reason": "Слова и раскладка.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:vehicle",
+   "where": "vehicle.modifiers defense_rating; Лист.veh_ar; эффект drive_check (два места)",
+   "status": "keep",
+   "reason": "Собирается: клетка-формула справочника без владельца считается в проходе листа (cells.ts readCell → pass.resolve; прецедент — awakened_kinds.pp_max `@magic`). Из эффекта через `@цель.control.vcr` — по виду цели (refs.ts → walk(view(id))). Клетка «автопилот» зависит от переделки автософтов — до неё `@as_maneuver`.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:vehicle",
+   "where": "Лист.soak",
+   "status": "keep",
+   "reason": "Правка типа set по полю-формуле собирается.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:vehicle",
+   "where": "Лист.driver_pilot, rig_pilot, rig_int, rig_log, rig_wil, rig_cha, rig_vcr",
+   "status": "keep",
+   "reason": "Дыра подтверждена: вид «лист» (schema valueKind 'sheet') работает только у входов эффекта (core/run.ts, implicit.ts). В calc.ts newPass нет чтения чужого листа по полю.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:vehicle",
+   "where": "Лист.veh_body, veh_armor, veh_pilot, veh_sensor, veh_interval, veh_accel, veh_top, veh_handling",
+   "status": "keep",
+   "reason": "vehicle_model optional: невыбранная модель → walk null; обе дыры названы верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:vehicle",
+   "where": "запись veh_drive (vehicle_action) в has дрона",
+   "status": "keep",
+   "reason": "drive_check принимает только действующий, цели, shift; выдача типом листа собирается.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:vehicle",
+   "where": "vehicle.blocks (нет)",
+   "status": "keep",
+   "reason": "Данные раскладки.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:creature",
+   "where": "эффект creature_template «Облик существа» (19 шагов); creature.modifiers",
+   "status": "fix",
+   "reason": "Те же упущения: нет первого этапа «основа» у характеристик (willpower… — только «аугментация» upTo 4) и у skills.rank (этап «адепт» обрежет до 0). Невыбранный вид → null в `set`. Пропуск пустого `set` в stages.ts — неверное средство; правильно — default у колонок creatures.",
+   "corrected_target": "Лист: колонка `creature_kind` «Вид существа», выбор из creatures, optional; все правки типа с `if: не пусто(@creature_kind)`. Лист body…edge и skills.rank — первым этапом `основа`. Правки: body…charisma, magic `set @creature_kind.<х-ка>` (основа); essence `set @creature_kind.essence`; init_dice `set @creature_kind.init_dice`; armor_natural `add @creature_kind.armor`; ранги — правка `cell:skills.*.rank` по колонкам sk_* (та же дыра движка, что у «По заготовке»: тег колонки в calc.ts:112, `@строка`, выбор колонки по строке со слагом). У creatures magic, sk_* — default 0, плюс подстановка default в cells.ts readCell. Эффект creature_template и запись wd_creature удалить; init_base, cm, defense — в тест-сверку; подписи колонок — русские"
+  },
+  {
+   "id": "sheet:creature",
+   "where": "creature.modifiers — attr_limits.*.bonus add 20 (8 правок)",
+   "status": "keep",
+   "reason": "Как у духа.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:creature",
+   "where": "creature.blocks (нет)",
+   "status": "keep",
+   "reason": "Данные раскладки.",
+   "corrected_target": ""
+  },
+  {
+   "id": "fields:list",
+   "where": "Лист.initiative",
+   "status": "fix",
+   "reason": "Механизм верный: клетки-формулы matrix_modes и awakened_kinds считаются в проходе листа, цикла нет. Но `vr` и `online` заданы через «default нет», а их читают условия правок (киберразъём, «Выгоревший»). Пустая клетка → undefined → conditionHolds бросает ошибку.",
+   "corrected_target": "matrix_modes: колонка `init_base` «Основа инициативы» (формула на строку: нет и ДР — `@reaction + @intuition`; холодная и горячая ВР — `@awakened.vr_init`); `vr` «Виртуальная реальность» — явно во всех четырёх строках (нет — нет, ДР — нет, холодная ВР — да, горячая ВР — да); `online` «В Матрице» — явно (нет — нет, остальные — да). awakened_kinds: колонка `vr_init` «Инициатива в ВР» (техномант `@logic + @intuition`, остальные пять — `@intuition + @m_dp`). initiative = `округлить вниз((@matrix_mode.init_base + @wound_mod + @condition_mod + @init_mod) / если(@init_half >= 1, 2, 1))`"
+  },
+  {
+   "id": "fields:list",
+   "where": "Лист.drain_pool",
+   "status": "keep",
+   "reason": "Колонка-формула на строку справочника собирается (прецедент — pp_max).",
+   "corrected_target": ""
+  },
+  {
+   "id": "fields:list",
+   "where": "Лист.plane_dr",
+   "status": "keep",
+   "reason": "Колонка-формула на строку; в astral_modes три строки — заполнить все три.",
+   "corrected_target": ""
+  },
+  {
+   "id": "fields:list",
+   "where": "Лист body…edge (max), defense_rating, physical_max, astral_dr",
+   "status": "fix",
+   "reason": "У хранимого числа без default движок уже даёт 0 (model/sheet-columns.ts valueOf: `start ?? ZERO[type]`). Писать default 0 — лишнее умолчание в данных. Достаточно убрать «или». metatype default «человек» уже стоит.",
+   "corrected_target": "убрать «или 6», «или 0» в max body…edge, defense_rating, physical_max, astral_dr: metatype default «человек» уже есть, клетки body_max…, dermal, toughness заполнены во всех пяти строках; armor_natural и другие хранимые числа без default уже читаются как 0 — default не дописывать"
+  },
+  {
+   "id": "fields:list",
+   "where": "Лист.essence",
+   "status": "keep",
+   "reason": "Подтверждено: table.extends — строка (schema), lineOf идёт одной цепочкой; строки() берёт наследников через isUnder, implant_weapon (основа melee) не попадает.",
+   "corrected_target": ""
+  },
+  {
+   "id": "layout",
+   "where": "system.blocks; system.sheets.*.blocks",
+   "status": "keep",
+   "reason": "Подтверждено: fieldsByBlock кладёт поле без placements в NO_BLOCK без проверки shown.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:weapon",
+   "where": "firearm.columns.prone_pool (default 0), melee.columns.prone_pool (default −4)",
+   "status": "keep",
+   "reason": "byKey сливает колонку по ключу: `{key, default: -4}` у melee переопределит только умолчание.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:firearm",
+   "where": "records colt_l36, predator_vi, ak_97, rpk, striker — cells.mounts",
+   "status": "keep",
+   "reason": "recordPath строит `таблица(\"weapon_classes\", …, \"mods\")`, список вернётся как есть. Колонку mounts никто не читает — см. пропущенное.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:firearm",
+   "where": "records firearm — cells.skill",
+   "status": "keep",
+   "reason": "propsOf: клетка записи важнее expr, особые навыки сохраняются. Щит (shield extends melee) без класса держит свою клетку skill, поэтому `таблица(...,\"\")` не вызовется. Довод «все записи совпадают» слабый: на каждый класс по одной записи — сверять по книге, как и сказано.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:firearm",
+   "where": "record striker.bindings",
+   "status": "fix",
+   "reason": "Предложенный тип `launcher extends firearm` с кнопкой launch_blast болезнь не лечит. mergeKind сливает bindings типов тем же byOrder по позиции (model/inherit.ts), и кнопка 0 типа launcher впитает пять аргументов shoot. Доработка движка обязательна, а не попутна.",
+   "corrected_target": "Дописать движок: слияние кнопок наследника с основой — по эффекту (или подписи), а не по позиции; аргументы основы не переходят на кнопку с другим эффектом (model/inherit.ts: byOrder — и для mergeKind, и для events/actions.ts: bindingsOf); линт — аргументы, которых нет у эффекта (model/lint.ts). После этого: тип `launcher` «Пусковая установка» extends firearm, bindings [{label «Выстрелить», effect launch_blast}], «Перезарядить» наследуется; striker → launcher, его bindings удалить"
+  },
+  {
+   "id": "book:firearm",
+   "where": "firearm.str_need, firearm.sight",
+   "status": "keep",
+   "reason": "model/owned.ts propsOf подставляет default колонки записи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:firearm",
+   "where": "firearm.bindings[0].args, melee.bindings[0].args",
+   "status": "keep",
+   "reason": "Цель верна, но ссылка на код неверная: model/implicit.ts fillMissing не существует. Вход берёт свойство записи по имени через props кадра (core/act.ts: propsOf → frame.props; core/run.ts argValues; engine/refs.ts recordScope/recordValue).",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:melee",
+   "where": "records combat_knife, katana, stun_baton, sap — cells.class (пусто); weapon_classes; edge_actions «Пырнуть»",
+   "status": "keep",
+   "reason": "Данные строк и колонка выбора; проверка — в Плате атаки (другой кластер).",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:action",
+   "where": "records act_scene, act_second_wind, act_shrug; has листов razor, silk, hammer, koshka; system.grants",
+   "status": "keep",
+   "reason": "Выдача типом `person` правильнее system.grants: system.grants получают все листы, кроме стола, включая сервер, лёд и транспорт (effects.ts grantedTo).",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:action",
+   "where": "эффекты second_wind и shrug_off; подписи записей",
+   "status": "keep",
+   "reason": "Справочник плюс одна функция. Цель «Изменения» из колонки вида «поле» проверить по месту: core/run.ts fieldOf принимает адрес и вход вида «поле», а Pick `@действующий.[@приём.track]` — не очевидно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:action",
+   "where": "second_wind.steps, shrug_off.steps",
+   "status": "keep",
+   "reason": "Вопрос владельцу; шкалы stun/physical к тому же живут в группе (owner group).",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:grenade",
+   "where": "grenade.bindings «Бросить»; records rocket_frag, rocket_antivehicle (launched=true)",
+   "status": "keep",
+   "reason": "Основа без кнопки, наследник с кнопкой — слияние byOrder тут не мешает.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:grenade",
+   "where": "grenade.physical_dmg",
+   "status": "keep",
+   "reason": "default колонки записи берёт propsOf; recordPath доведёт до damage_kinds.physical.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:grenade",
+   "where": "grenade.count, explosive.count",
+   "status": "keep",
+   "reason": "Верно: это значение экземпляра (entry.values важнее всего в propsOf), ему место в default, а не в expr.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:explosive",
+   "where": "record explosive_pack — cells.cost, cells.avail",
+   "status": "keep",
+   "reason": "таблица() идёт через readCell → rowOf, а rowOf понимает диапазоны (cells.ts rowKeyOf/isRange).",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:explosive",
+   "where": "record detonator",
+   "status": "keep",
+   "reason": "Подтверждено: кнопка «Подорвать» наследуется от типа.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:armor_mod",
+   "where": "armor_mod.columns status, charges; records armor_fire, armor_chem_seal",
+   "status": "keep",
+   "reason": "Дыра верна. Выдача (grants) пассивного эффекта с подпиской собирается, но `@вещь` (заряды экземпляра) он не видит. Ключ события с подстановкой `gained:{@строка.status}` тоже надо дописать.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:implant",
+   "where": "records cyberjack (ess_base, cost_base, avail_base), cybereyes (cost_base, avail_base, capacity)",
+   "status": "keep",
+   "reason": "таблица() в клетке записи собирается (recordPath/itemExpr).",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:implant",
+   "where": "record cyberjack — правка init_dice",
+   "status": "fix",
+   "reason": "`if: @matrix_mode.vr` у листа в режиме «нет»/«ДР» упадёт на пустой клетке — а в цели «Формул полей» vr дан через default.",
+   "corrected_target": "value `если(@строка.rating >= 4, 2, 1)`, if `@matrix_mode.vr` — при условии, что matrix_modes.vr заполнен явно во всех четырёх строках (см. «Формулы полей»)"
+  },
+  {
+   "id": "book:implant",
+   "where": "implant.essence, cost, avail (и копии в implant_weapon)",
+   "status": "fix",
+   "reason": "default «стандарт» у колонки grade уже стоит и в implant, и в implant_weapon; propsOf его подставляет. Писать нечего — только убрать «или».",
+   "corrected_target": "убрать «или 1» / «или 0» в implant.essence, cost, avail и в implant_weapon (grade default «стандарт» уже есть, все строки grades заполнены)"
+  },
+  {
+   "id": "book:bioware",
+   "where": "record bone_density — правки unarmed_ar_bonus, unarmed_dv",
+   "status": "keep",
+   "reason": "Справочник по рейтингу собирается. Но unarmed_physical никто не читает (см. «Раннер»).",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:bioware",
+   "where": "record reflex_recorder — правка",
+   "status": "keep",
+   "reason": "Колонка skill у implant есть, мишень `skills.{@строка.skill}.rank` собирается (itemTarget). По описанию — правка ранга.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:bioware",
+   "where": "bioware.cultured; record reflex_recorder",
+   "status": "fix",
+   "reason": "implant_slots без владельца: пустая клетка → undefined, и `@slot.cultured` у семи прочих слотов даст пусто, а не «нет».",
+   "corrected_target": "implant_slots: колонка `cultured` «Культивированный», да/нет, явно во всех восьми строках («культивированный» — да, остальные — нет); bioware.cultured: `expr: @slot.cultured`; клетку у reflex_recorder удалить"
+  },
+  {
+   "id": "book:limb_accessory",
+   "where": "record gyromount (limb_accessory) vs weapon_mod gyro_mount",
+   "status": "keep",
+   "reason": "Собирается правками и прибавкой в формулах firearm; числа — вопрос владельцу.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:implant_weapon",
+   "where": "implant_weapon.columns",
+   "status": "keep",
+   "reason": "Дыра подтверждена: schema table.extends — z.string(), inherit.ts lineOf — одна цепочка.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:quality",
+   "where": "record focus «Сосредоточенность»",
+   "status": "keep",
+   "reason": "Та же правка, что у «Раннера».",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:quality",
+   "where": "record burned_out — правка edge_no_spend",
+   "status": "fix",
+   "reason": "`if: @matrix_mode.online` упадёт на строке «нет», если online задан только через default.",
+   "corrected_target": "value 1, if `@matrix_mode.online` — matrix_modes.online заполнен явно во всех четырёх строках (нет — нет, остальные — да)"
+  },
+  {
+   "id": "book:quality",
+   "where": "record spirit_guide_q; тип mentor (запись mentor_shark); record code_white_hat",
+   "status": "keep",
+   "reason": "byKey позволяет наследнику переопределить default колонок kind/karma.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:adept_power",
+   "where": "record adept_improved_sense.grants; эффекты edge_bonus_зрение, _слух, _осязание, _вкус, _обоняние",
+   "status": "keep",
+   "reason": "Собирается: мишень записи `senses.{@строка.sense}.edge_bonus` (itemTarget). Pick `@носитель.senses.[@чувство].edge_bonus` есть в языке (formula/parse.ts Pick → resolve с ключом). У справочника с владельцем пустая клетка edge_bonus станет живой — это и задумано.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:adept_power",
+   "where": "record adept_improved_skill — cells.pp",
+   "status": "fix",
+   "reason": "У skills есть владелец (лист). Пустая клетка новой колонки `combat` станет живым полем, которое игрок правит на каждом листе (model/sheet-columns.ts isLive), а не «нет» по умолчанию.",
+   "corrected_target": "skills: колонка `combat` «Боевой навык», да/нет, значение вписано во всех 19 строках (какие — вопрос владельцу); pp `{@level * если(@skill.combat, 1, 0.5)}`"
+  },
+  {
+   "id": "book:device",
+   "where": "device.modifiers — noise",
+   "status": "fix",
+   "reason": "device_kinds без владельца: «коммуникатор» и «кибердека» с пустой клеткой дадут `@device_rating * undefined`.",
+   "corrected_target": "device_kinds: колонка `noise_per_rating` «Шумоподавление на рейтинг», число, явно во всех трёх строках (коммуникатор 0, кибердека 0, РПУ 1); device.noise_cut: `expr: @device_rating * @device_kind.noise_per_rating`; клетку noise_cut у dev_rcc_dronemaster удалить; правка `noise add 0 - @строка.noise_cut`"
+  },
+  {
+   "id": "book:device",
+   "where": "device.modifiers dev_rating, dev_attack, dev_sleaze, dev_dp, dev_firewall",
+   "status": "keep",
+   "reason": "default колонки записи берёт propsOf, withRecord подставит его в правку.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:program",
+   "where": "program.modifiers — hack_programs",
+   "status": "keep",
+   "reason": "`@строка.category.hack` → recordPath → таблица(\"program_kinds\", …, \"hack\"); обе строки заполнены явно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:electronics",
+   "where": "record soft_autosoft «Автософт»",
+   "status": "keep",
+   "reason": "Клетки совпадают с колонками autosoft.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:audio",
+   "where": "record aud_enh_spatial_recognizer.grants",
+   "status": "keep",
+   "reason": "Следует из «Способности адепта».",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:security",
+   "where": "record sec_biometric",
+   "status": "keep",
+   "reason": "Цена 200, доступность 2 — как у acc_biometric_reader.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:survival",
+   "where": "record surv_respirator — правка броска",
+   "status": "keep",
+   "reason": "Проверено: метка броска может быть формулой (engine/steps/roll.ts tagsOf → ctx.value), значит метку пути введения можно взять из входа. Дыры нет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:matrix_action",
+   "where": "records mx_brute, mx_spike, mx_tarpit, mx_hide — bindings.args; matrix_action.columns (нет)",
+   "status": "keep",
+   "reason": "Шаг вызова берёт эффект формулой (steps/emit.ts: ctx.value(step.effect), пусто → ничего). Умолчания колонок записи — через propsOf.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:matrix_action",
+   "where": "records ic_strike, tm_sprite_compile",
+   "status": "keep",
+   "reason": "Следует из «Льда» и «Магического действия».",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:spell",
+   "where": "records spell_* — bindings.args",
+   "status": "fix",
+   "reason": "Новые да/нет колонки spell_durations.sustained, spell_stypes.astral, spell_damage.physical в цели заданы одной строкой «да». Справочники без владельца: в остальных строках будет undefined, а не «нет».",
+   "corrected_target": "кнопки — у типа (или у подтипов по исходу), аргументы только переименованные: `drain_base: @drain`, `sustain: @duration.sustained`, `astral: @stype.astral`, `damage_phys: @damage.physical`, `spell_effect: @sustain_effect`, `cap: @boost_cap`; spell_durations.sustained явно во всех четырёх строках («Д» — да, прочие — нет), spell_stypes.astral в обеих («А» — да, «Ф» — нет), spell_damage.physical в обеих («ф» — да, «о» — нет); новые колонки spell: `sustain_effect` (вид эффект), `boost_cap` (число); одноимённые входы не передаются; кнопки записей удалить"
+  },
+  {
+   "id": "book:spell",
+   "where": "spell.status (огненный шар — «burning»); spell_defenses строки «исцеление», «критические», «порог», «нет»",
+   "status": "keep",
+   "reason": "Данные в колонку стихии; работа кластера магии.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:ritual",
+   "where": "record ritual_roving_spell.bindings",
+   "status": "keep",
+   "reason": "threshold берётся из клетки записи по имени (props кадра).",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:focus",
+   "where": "focus.modifiers — 13 правок focus_power … focus_sp_управление",
+   "status": "fix",
+   "reason": "focus_kinds получает владельца (лист). Пустая клетка любой его колонки становится живым полем (isLive). Колонка `by_category` с одной строкой «да» даст 14 живых, правимых игроком полей. Живыми должны быть только `force` и spell_categories.focus.",
+   "corrected_target": "focus_kinds: owner sheet; колонка `force` «Мощь надетых», число, default 0, этап «основа» combine add:max (клетки пустые — живые); колонка `by_category` «По категории заклинаний», да/нет, значение явно во всех 15 строках («Источник сотворения заклинаний» — да, остальные — нет). spell_categories: owner sheet, клетки `focus` очистить (формулы `@действующий.focus_sp_*` удалить), колонка — живое число default 0, этап «основа» add:max. Правки типа: `{target: \"focus_kinds.{@строка.focus_kind}.force\", op: add, value: @строка.rating}`, `{target: \"spell_categories.{@строка.category}.focus\", op: add, value: @строка.rating, if: @строка.focus_kind.by_category}`. 13 полей focus_* удалить; читатели → `@действующий.focus_kinds.Источник_силы.force` и т. п."
+  },
+  {
+   "id": "book:focus",
+   "where": "records focus_ritual, focus_power, focus_weapon — cells.cost, cells.avail",
+   "status": "keep",
+   "reason": "expr типа записи через recordPath собирается.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:focus",
+   "where": "focus_kinds.columns.label; focus_kinds.category vs focus.category",
+   "status": "keep",
+   "reason": "Слова.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:mentor",
+   "where": "тип mentor; record mentor_shark; quality spirit_guide_q",
+   "status": "keep",
+   "reason": "Тот же пункт, что у «Качества».",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:magic_action",
+   "where": "record mg_summon; лист koshka (has)",
+   "status": "keep",
+   "reason": "Дыра подтверждена: effects.ts grantedTo собирает выдачу только у записи и её типа, у типа листа, у системы и цепочкой у эффектов. Выдачи по выбранной строке справочника нет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:complex_form",
+   "where": "records cf_infusion, cf_res_spike — bindings.args; эффекты cast_form / cast_form_attr",
+   "status": "keep",
+   "reason": "Подтверждено: у cast_form и cast_form_attr одинаковые входы. Кнопка у типа с переименованием собирается.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:sprite_power",
+   "where": "records spw_trap, spw_hash — bindings.args",
+   "status": "keep",
+   "reason": "Собирается. В клетке `{@носитель.sprite_level * 10}` имя `@носитель` есть только при чтении из эффекта; при расчёте листа надёжнее `@sprite_level`.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:vehicle_action",
+   "where": "record veh_drive",
+   "status": "keep",
+   "reason": "То же, что у «Транспорта».",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:autosoft",
+   "where": "autosoft.modifiers — 6 правок as_maneuver … as_clear_sight; cells.as_attr",
+   "status": "keep",
+   "reason": "Справочник с владельцем и одна правка по мишени из клетки собирается. Колонка вида «поле» в клетке-значении читается как имя поля (walk → readCell отдаёт строку); значение поля даёт только формула строки `@строка.attribute`.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:autosoft",
+   "where": "records as_* — cells cost, avail, rating_max, legal",
+   "status": "keep",
+   "reason": "expr и default колонок записи собираются.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:vehicle_mod",
+   "where": "vehicle_mod.modifiers — mounts_used",
+   "status": "keep",
+   "reason": "default колонки записи берётся.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:toxin",
+   "where": "record tox_gamma_scopolamine — bindings.args и cells",
+   "status": "keep",
+   "reason": "Дыра шага «Наложить» подтверждена: steps/status.ts — `typeof id !== 'string'` → ошибка. Метка «вдыхаемый» из входа собирается (roll.ts tagsOf; run.ts argValues кладёт выбор в метки).",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:drug",
+   "where": "records drug_alcohol, drug_jazz — bindings; эффекты dg_alcohol_take, dg_jazz_take",
+   "status": "keep",
+   "reason": "Функция с входом-эффектом собирается (вход вида эффект → шаг «Наложить» по формуле). Кость в клетке записи — проверить, как сказано.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:drug",
+   "where": "cells drug_alcohol, drug_jazz",
+   "status": "keep",
+   "reason": "Клетки без колонок — мёртвые; propsOf их не читает.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:drug",
+   "where": "эффект drug_crashes — 5 подписок lost:dg_jazz … lost:dg_nitro",
+   "status": "keep",
+   "reason": "Подтверждено: core/run.ts:1221 — ключ `lost:<effectId>`; аргументы висящего уходят в about.",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:world_action",
+   "where": "record wd_creature «Облик существа»",
+   "status": "keep",
+   "reason": "Следует из «Существа».",
+   "corrected_target": ""
+  },
+  {
+   "id": "book:creature_weakness",
+   "where": "record cweak_allergiya",
+   "status": "keep",
+   "reason": "Пустая запись (cells {}).",
+   "corrected_target": ""
+  }
+ ],
+ "missed": [
+  {
+   "id": "skills-rank-stage",
+   "where": "Лист → skills.rank (stages: только «адепт», upTo 4, upToTimes 1.5)",
+   "problem": "Любая правка `set` ранга от типа листа (дух, спрайт, существо, «По заготовке») обрежется этапом «адепт» до ceil(0 × 1,5) = 0 (engine/stages.ts stackStages, entry = хранимое 0). Разбор добавил этап «основа» характеристикам, а рангу — нет.",
+   "target": "skills.rank: первым этапом `{key: основа, label: «основа: тип листа»}`; правки рангов от типа листа — со stage «основа»"
+  },
+  {
+   "id": "unarmed-physical-dead",
+   "where": "Лист.unarmed_physical; metatypes.unarmed_physical; bone_density",
+   "status": "",
+   "problem": "Поле «Безоружная атака: физический урон» никто не читает: во всём образце оно только пишется (правка раннера и «Плотности костей»). Тролль и «Плотность костей» на вид урона безоружного удара не влияют. Этап «основа» с set:max превращает да/нет в число.",
+   "target": "безоружный удар читает `@действующий.unarmed_physical` для вида урона; у этапа поля убрать combine set:max"
+  },
+  {
+   "id": "mounts-unchecked",
+   "where": "firearm.mounts; weapon_mod.mount",
+   "problem": "Колонку «Куда ставятся модификации» у оружия никто не читает: модификацию в чужое крепление (подствол на пистолет без подствола) поставить можно, проверки нет.",
+   "target": "проверка при надевании модификации в вещь: `есть(@вещь.mounts, @строка.mount)` — в Плате/условии размещения (core/perform.ts, размещение `in`); если такого условия у размещения нет — дописать движок: условие допустимости размещения у типа записи"
+  },
+  {
+   "id": "vehicle-damage-or",
+   "where": "vehicle.modifiers — правка take_damage.amount, `if`",
+   "problem": "`(@dv или @amount) <= @носитель.veh_body` — ещё один след «или»: вход dv необязателен, подстановка amount вместо него.",
+   "target": "у take_damage вход dv с умолчанием (= amount) или явная передача dv всеми вызывающими; условие `@dv <= @носитель.veh_body`"
+  },
+  {
+   "id": "drive-check-ladder",
+   "where": "эффект drive_check — набор",
+   "problem": "Набор «Проверки управляемости» — та же лесенка по «кто ведёт»: `если(@действующий == @цель, @цель.as_maneuver + @цель.veh_pilot, если(@цель.jumped, @цель.rig_pilot + @цель.rig_int + @цель.rig_vcr, @действующий.skills.пилотирование…))`. Разбор заменил только часть vcr.",
+   "target": "control_modes: колонка `drive_pool` «Набор управления» (формула на строку: автопилот — Маневрирование + Пилотирование машины; риггер — Пилотирование + Интуиция + модуль контроля риггера по ссылке `controller`; водитель — его Пилотирование); drive_check — `@цель.control.drive_pool`"
+  },
+  {
+   "id": "weapon-mod-wireless",
+   "where": "records laser_sight (aim), hidden_holster (conceal_mod), bipod (brace)",
+   "problem": "Вердикт ok у «Модификации оружия» сомнителен: в трёх записях `если(@wireless == да, 2, 1)` — беспроводной бонус как ветка с данными. Это один и тот же приём («обычное / в беспроводном режиме»), записанный трижды по-разному.",
+   "target": "низкий приоритет: у weapon_mod колонки беспроводной прибавки (`aim_wireless`, `brace_wireless`, `conceal_wireless`, число, default 0), а формулы firearm (sight, brace_bonus) прибавляют их при `@вещь.wireless`; либо оставить клетки-формулы осознанно"
+  },
+  {
+   "id": "creature-power-text",
+   "where": "creature_power.columns action, range, duration, kind",
+   "problem": "Вердикт ok сомнителен: вид действия, дальность, срок и род способности существа — текстом. У «Способности спрайта» разбор переводит action в выбор из action_kinds.",
+   "target": "action → выбор из action_kinds; kind, duration, range → выбор из справочников (строки — из нынешних значений)"
+  },
+  {
+   "id": "abstract-sheet-type",
+   "where": "system.sheets.person / npc / matrix_host (новые основы)",
+   "problem": "Новые базовые типы листа станут обычными типами в выборе «новый лист»: признака «только основа» у типа листа в схеме нет (packages/schema/src/world.ts sheetKind).",
+   "target": "решить с владельцем: либо основа выбираема (безвредно), либо признак «только основа» у sheetKind и фильтр в списке типов"
+  }
+ ]
+}

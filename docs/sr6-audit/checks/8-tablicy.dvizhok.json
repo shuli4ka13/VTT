@@ -1,0 +1,983 @@
+{
+ "checks": [
+  {
+   "id": "лист",
+   "where": "system.tables.лист, колонка initiative «Уровень инициативы», expr",
+   "status": "keep",
+   "reason": "Собирается: клетка-формула строки перебивает формулу колонки (sheet-columns.ts cellSource), клетка читает выбор другого справочника через pass.resolve (cells.ts:64, navigate.ts walk).",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист, колонка drain_pool «Сопротивление истощению», expr",
+   "status": "keep",
+   "reason": "Тот же механизм, что traditions.attr; собирается.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист, колонка plane_dr «Значение защиты на своём плане», expr",
+   "status": "keep",
+   "reason": "Колонка с формулой и клеткой-исключением; собирается.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист, колонка programs_loaded «Программ запущено (техномант — ни одной)», max",
+   "status": "keep",
+   "reason": "Этапы с set у поля есть (stages.ts); подключает мёртвую device.programs_max. В итоге оговорить: предел по слотам устройства вместо 99 — правило книги (sr6-compendium.md:246), а не перезапись прежнего.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист: max у body…edge; physical_max; defense_rating; astral_dr",
+   "status": "keep",
+   "reason": "metatype по умолчанию «человек», у всех 5 строк клетки заполнены (проверено); число без умолчания = 0 (valueOf: start ?? ZERO).",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист: veh_body, veh_armor, veh_pilot, veh_sensor, veh_interval, veh_accel, veh_top, veh_handling",
+   "status": "keep",
+   "reason": "Дыры подтверждены в коде: navigate.ts walk — пустой ключ даёт null; cells.ts:54 — пустая клетка справочника даёт undefined без default.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист, колонка soak «Тело: сопротивление урону», expr",
+   "status": "keep",
+   "reason": "Правка типа листа vehicle — тот же приём, что уже у physical_max.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист, колонка veh_ar; тип листа vehicle, правка defense_rating; подпись driver_pilot «(0 — автопилот)»",
+   "status": "keep",
+   "reason": "Режим управления — выбор, числа — клетки-формулы справочника; собирается. Кто ставит «водитель» — вопрос уже вынесен.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист, колонка veh_handling, expr; колонка offroad",
+   "status": "keep",
+   "reason": "Верно; пустая модель упирается в дыру B — указано.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист: focus_power, focus_summon, focus_banish, focus_counter, focus_ritual, focus_alchemy, focus_disenchant, focus_weapon, focus_sp_боевое, focus_sp_иллюзия, focus_sp_исцеление, focus_sp_обнаружение, focus_sp_управление",
+   "status": "keep",
+   "reason": "Таблица с владельцем-листом с этапами колонки поддерживается (stages.ts targetStages по cell-адресу). Слот {@строка.x} даёт slug, он совпадает с rowKeyOf строки.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист: as_maneuver, as_targeting, as_ew, as_stealth, as_evasion, as_clear_sight",
+   "status": "keep",
+   "reason": "Так же устроены skills: колонка вида «поле» читается через @строка.attribute в формуле колонки pool.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист: edge_ban_charisma, edge_ban_logic, edge_ban_hands, edge_ban_social; условия подписок seen в reroll_failures, push_edge, edge_reroll_one, edge_bump, edge_plus_hit",
+   "status": "fix",
+   "reason": "Мысль верна, но цель смешивает обход и дыру. Фильтр меток у подписки здесь не нужен: проверка стоит в «Плате» подписки (handler.cost есть в схеме). Нужны две вещи: функция пересечения списков и колонка меток, у которой есть откуда выбирать.",
+   "corrected_target": "Справочник edge_bans «Запреты Преимущества», владелец — лист; строки «харизма», «логика», «руки», «социальные». Колонки: tags «Метки проверок» — неподвижная, выбор многих из rolls; до этого пополнить rolls строками меток навыков или выбирать из skills — решить в кластере «Преимущество». count «Запретов» — число, умолчание 0, живёт на листе. 4 поля edge_ban_* удалить; качества правят edge_bans.<строка>.count. Одна функция «Можно ли тратить Преимущество» (вход: метки броска) в «Плате» пяти подписок: цикл each rows edge_bans, СТОП при `@строка.count >= 1 и пересекаются(@метки, @строка.tags)`. Дописать движок: функцию «пересекаются(список, список)» в packages/engine/src/formula/functions.ts (сейчас только «есть(список, значение)»)."
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист: is_device, smartlink, has_jack, has_fa_kit, has_medkit, aided_fa, aided_kit, init_half, device_dead, converged",
+   "status": "keep",
+   "reason": "field:-подписки срабатывают по truthy (run.ts crossings), значит да/нет работает так же, как 1.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист: tm_attack_cap, tm_sleaze_cap, tm_dp_cap, tm_fw_cap — подписи",
+   "status": "keep",
+   "reason": "Только подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист, колонка essence «Сущность», expr",
+   "status": "keep",
+   "reason": "Дыра D подтверждена: extends — одна строка.",
+   "corrected_target": ""
+  },
+  {
+   "id": "metatypes",
+   "where": "system.tables.metatypes, колонки body_max…charisma_max, edge_max, toughness, dermal",
+   "status": "keep",
+   "reason": "Порядок верный: «или» в Лист мёртвые уже сейчас, клетки снимать только после дыры A.",
+   "corrected_target": ""
+  },
+  {
+   "id": "metatypes",
+   "where": "тип листа runner, правка unarmed_physical",
+   "status": "keep",
+   "reason": "Клетка есть только у тролля, default false не применяется (cells.ts:54) — без дыры A «или нет» нужно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "metatypes",
+   "where": "system.tables.metatypes, колонка ranges «Пределы характеристик (стр. 65)»",
+   "status": "keep",
+   "reason": "Текстовая копия чисел *_max.",
+   "corrected_target": ""
+  },
+  {
+   "id": "ranges",
+   "where": "system.effects.throw_blast, cost, условие стопа «так далеко гранату не бросить»",
+   "status": "keep",
+   "reason": "Принадлежность множеству — колонка да/нет; собирается.",
+   "corrected_target": ""
+  },
+  {
+   "id": "ranges",
+   "where": "system.tables.ranges, колонка item_ar, клетки всех 5 строк; system.effects.melee_strike",
+   "status": "keep",
+   "reason": "Умолчание колонки типа записи подставляет propsOf (owned.ts:103).",
+   "corrected_target": ""
+  },
+  {
+   "id": "ranges",
+   "where": "system.effects.shoot, вызов defend, аргумент близко",
+   "status": "keep",
+   "reason": "close заполнен только у двух строк; без дыры A не работает — указано.",
+   "corrected_target": ""
+  },
+  {
+   "id": "fire_modes",
+   "where": "system.effects.shoot, шаг атк",
+   "status": "keep",
+   "reason": "Клетка справочника с @вещь видит вещь через scope (cells.ts:64), как ranges.item_ar. Клетки с 0 заданы явно, дыра A не мешает.",
+   "corrected_target": ""
+  },
+  {
+   "id": "fire_modes",
+   "where": "system.effects.shoot: плата и шаги",
+   "status": "keep",
+   "reason": "Умолчание входа-выбора — namedValue (refs.ts); булевы клетки — дыра A.",
+   "corrected_target": ""
+  },
+  {
+   "id": "edge_actions",
+   "where": "system.effects.shoot и system.effects.melee_strike: плата и шаги; клетки knockout: false в строках",
+   "status": "keep",
+   "reason": "Подтверждено: у cost, dv, pool нет default; булевы — дыра A.",
+   "corrected_target": ""
+  },
+  {
+   "id": "damage_kinds",
+   "where": "system.tables: damage_kinds, damage_choice, spell_damage, heal_kinds",
+   "status": "keep",
+   "reason": "Одно понятие — одна таблица.",
+   "corrected_target": ""
+  },
+  {
+   "id": "damage_kinds",
+   "where": "system.effects.heal_spell, ветки после успеха",
+   "status": "keep",
+   "reason": "Проверено по коду: клетка вида «поле» отдаёт ключ строкой (cells.ts:53). Pick `@цель.[@x.track]` в чтении — evaluate.ts Pick, в записи — run.ts addressName. Ветки делают одно действие с разным полем, значит колонка, а не «По».",
+   "corrected_target": ""
+  },
+  {
+   "id": "skills",
+   "where": "system.tables.skills, колонка pool, roll.tags",
+   "status": "keep",
+   "reason": "Подстановка {value} в метки — по разбору проверена пробой; механизм договора меток верный.",
+   "corrected_target": ""
+  },
+  {
+   "id": "adversaries",
+   "where": "system.tables.adversaries (14 строк, колонки c0…c11 текстом)",
+   "status": "keep",
+   "reason": "Не читается, текстовая копия grunt_templates.",
+   "corrected_target": ""
+  },
+  {
+   "id": "weapon",
+   "where": "system.tables.weapon, колонки ar1…ar5",
+   "status": "keep",
+   "reason": "propsOf подставляет default.",
+   "corrected_target": ""
+  },
+  {
+   "id": "firearm",
+   "where": "system.tables.firearm: ammo_max, smart, str_min; system.effects.shoot, reload, launch_blast",
+   "status": "keep",
+   "reason": "Колонки типа записи — default через propsOf.",
+   "corrected_target": ""
+  },
+  {
+   "id": "firearm",
+   "where": "compendium.records striker (firearm) — своя кнопка",
+   "status": "keep",
+   "reason": "Класс с наследованием кнопок.",
+   "corrected_target": ""
+  },
+  {
+   "id": "firearm",
+   "where": "system.effects.launch_blast, шаг атк",
+   "status": "keep",
+   "reason": "Колонка firearm.sight уже есть дословно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "firearm",
+   "where": "system.effects.launch_blast, вызов blast_damage; колонки firearm.ammo_stun / ammo_shock",
+   "status": "keep",
+   "reason": "«строки» с хозяином @вещь и «сколько(…, да)» уже работают в этих колонках.",
+   "corrected_target": ""
+  },
+  {
+   "id": "reload_kinds",
+   "where": "system.tables.reload_kinds, колонка complex; system.effects.reload, плата",
+   "status": "keep",
+   "reason": "Путь через несколько ссылок поддерживает walk/rowPath; spend_action в образце есть.",
+   "corrected_target": ""
+  },
+  {
+   "id": "weapon_classes",
+   "where": "system.tables.weapon_classes, колонка mods «Куда ставятся модификации»",
+   "status": "keep",
+   "reason": "Текст вместо выбора многих.",
+   "corrected_target": ""
+  },
+  {
+   "id": "gear",
+   "where": "system.tables.gear, колонка wireless; клетки записей laser_sight.aim, hidden_holster.conceal_mod, bipod.brace; правки medkit, aud_enh_spatial_recognizer",
+   "status": "keep",
+   "reason": "propsOf берёт default false (отсекает только null и пустую строку).",
+   "corrected_target": ""
+  },
+  {
+   "id": "gear",
+   "where": "system.tables.gear, колонка rating; system.effects.detonate",
+   "status": "keep",
+   "reason": "Верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "ammo_kind",
+   "where": "system.tables.ammo_kind, колонки cost_mul, class; записи ammo_apds, ammo_shock",
+   "status": "keep",
+   "reason": "Колонка-формула типа переопределяет gear.cost по ключу.",
+   "corrected_target": ""
+  },
+  {
+   "id": "grenade",
+   "where": "system.tables.grenade, колонка physical_dmg (expr) и damage_kind",
+   "status": "keep",
+   "reason": "default выбора у колонки типа записи подставляет propsOf.",
+   "corrected_target": ""
+  },
+  {
+   "id": "grenade",
+   "where": "system.tables.grenade: electric, launched; system.effects.throw_blast",
+   "status": "keep",
+   "reason": "Верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "grenade",
+   "where": "system.tables.grenade, колонка count «Сколько штук»",
+   "status": "keep",
+   "reason": "Хранимый счётчик экземпляра: values перебивают умолчание (propsOf).",
+   "corrected_target": ""
+  },
+  {
+   "id": "grenade",
+   "where": "system.tables.grenade: status, status_level, ar_vehicle, blast",
+   "status": "keep",
+   "reason": "Вопрос владельцу уместен.",
+   "corrected_target": ""
+  },
+  {
+   "id": "explosive",
+   "where": "system.tables.explosive, колонка count; system.effects.detonate",
+   "status": "keep",
+   "reason": "Верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "explosive",
+   "where": "compendium.records explosive_pack, клетки cost и avail",
+   "status": "keep",
+   "reason": "«Проверить по месту» снимается: model/tables.ts linkOf принимает kind number + from, rowByKey ищет строку-промежуток — `@rating.cost_mul` у колонки типа записи соберётся.",
+   "corrected_target": ""
+  },
+  {
+   "id": "armor_mod",
+   "where": "system.tables.armor_mod: status «Гасит состояние», charges «Осталось защит»",
+   "status": "keep",
+   "reason": "Подписка gained: с наложенным из колонки — уместно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "attributes",
+   "where": "system.effects.sp_increase_attribute, 8 правок; вход attr (вид «текст»); system.effects.boost_spell",
+   "status": "keep",
+   "reason": "Дыра C подтверждена: источник-эффект отдаёт правки как есть (modifiers.ts sourcesOf), слот {@строка.x} — только у записей.",
+   "corrected_target": ""
+  },
+  {
+   "id": "attributes",
+   "where": "compendium.records mx_hide (matrix_action), аргумент pool",
+   "status": "fix",
+   "reason": "Колонка own с 11 формулами `@body`… — ещё одна копия рядом с уже имеющейся колонкой target (`@цель.body`…). У target к тому же нет клеток у edge, magic, resonance. Значение строки уже и есть тег поля.",
+   "corrected_target": "attributes: одна колонка field «Поле листа» вида «поле» (клетка = тег во всех 11 строках: body…resonance) вместо target и вместо новой own. Читатели: в эффектах — `@цель.[@attr]` (Pick по значению строки, без колонки), 5 чтений `@attr.target` переписать так же; в формуле колонки типа matrix_action.pool — `@attribute.field`: rowPath для вида «поле» раскрывает его в `@<тег>` владельца (sheet-columns.ts:156). Колонку target удалить."
+  },
+  {
+   "id": "attr_limits",
+   "where": "system.sheets spirit, sprite, creature — правки attr_limits.<х-ка>.bonus",
+   "status": "keep",
+   "reason": "Дыра G подтверждена: calc.ts применяет правки только по точному тегу клетки, cellTargets строит «*» только для справочников.",
+   "corrected_target": ""
+  },
+  {
+   "id": "implant",
+   "where": "system.tables.implant и implant_weapon: колонки essence, cost, avail (expr)",
+   "status": "keep",
+   "reason": "grade default «стандарт» стоит, у всех строк grades заполнены ess/cost/avail.",
+   "corrected_target": ""
+  },
+  {
+   "id": "implant",
+   "where": "compendium.records cyberjack (ess_base, cost_base, avail_base), cybereyes (cost_base, avail_base, capacity)",
+   "status": "keep",
+   "reason": "Рейтинг — колонка gear, ссылку на таблицу у одной записи не поставить, поэтому таблица() уместна.",
+   "corrected_target": ""
+  },
+  {
+   "id": "implant",
+   "where": "compendium.records cyberjack, правка init_dice",
+   "status": "keep",
+   "reason": "if правки записи идёт через withRecord.",
+   "corrected_target": ""
+  },
+  {
+   "id": "bioware",
+   "where": "compendium.records bone_density, правки unarmed_ar_bonus и unarmed_dv",
+   "status": "keep",
+   "reason": "Верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "implant_weapon",
+   "where": "system.tables.implant_weapon: slot, grade, ess_base, cost_base, avail_base, essence, excl, cost, avail",
+   "status": "keep",
+   "reason": "Дыра D.",
+   "corrected_target": ""
+  },
+  {
+   "id": "quality",
+   "where": "compendium.records burned_out, правка edge_no_spend",
+   "status": "keep",
+   "reason": "Верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "adept_power",
+   "where": "compendium.records adept_improved_sense: grants, choice_note",
+   "status": "fix",
+   "reason": "Дыра I здесь не нужна: условие подписки seen `есть(@roll.tags, @sense)` работает уже сейчас (вход висящего виден в условии). Нужна только H.",
+   "corrected_target": "Справочник senses «Чувства» (зрение, слух, осязание, вкус, обоняние — те же слова, что метки бросков); тип adept_power: колонка sense «Чувство» (выбор из senses). Один висящий эффект «Бонусное очко Преимущества: чувство» со входом sense и подпиской seen с условием `есть(@roll.tags, @sense)` и сравнением с носителем; 5 копий удалить. Дописать движок (H): выдача записью передаёт входы из её клеток — engine/effects.ts:130-134 entry {effectId, args из propsOf по одноимённым входам}, и экземпляр выдачи различается по записи, а не только по id (:94-110)."
+  },
+  {
+   "id": "action_kinds",
+   "where": "system.effects matrix_check, matrix_spike, matrix_tarpit, matrix_hack, ic_attack — плата",
+   "status": "keep",
+   "reason": "Функция spend_action в образце есть.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_modes",
+   "where": "system.effects matrix_hurt, dumpshock, convergence, device_bricked; Лист.initiative; records cyberjack, burned_out",
+   "status": "keep",
+   "reason": "Принадлежность множеству — колонки да/нет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_attrs",
+   "where": "system.effects matrix_stat_cut, form_infusion, form_diffusion — по 4 правки; вход attr (у form_* — вид «текст»)",
+   "status": "keep",
+   "reason": "Дыра C в двухуровневом виде верна. У matrix_attrs уже есть колонка target_persona (`@цель.m_attack`…) — при правке не плодить третью параллельную колонку без нужды.",
+   "corrected_target": ""
+  },
+  {
+   "id": "program_kinds",
+   "where": "system.tables.program, правка hack_programs",
+   "status": "keep",
+   "reason": "Верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_links",
+   "where": "system.effects matrix_check, matrix_spike, matrix_tarpit, matrix_hack, ic_attack — плата",
+   "status": "keep",
+   "reason": "Клетка видит имена эффекта (@действующий) — так уже работает penalty.",
+   "corrected_target": ""
+  },
+  {
+   "id": "access_levels",
+   "where": "system.effects.matrix_hack, шаги 2, 4, 7",
+   "status": "keep",
+   "reason": "Верно; сверка с книгой вынесена в вопрос.",
+   "corrected_target": ""
+  },
+  {
+   "id": "access_levels",
+   "where": "system.effects.matrix_access, подписка moment:round-start",
+   "status": "keep",
+   "reason": "Умолчание входа висящего — resolverOf (modifiers.ts) и namedValue.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_defenses",
+   "where": "system.effects matrix_check, matrix_spike, matrix_tarpit, matrix_hack, ic_attack, cast_form, cast_form_attr, sprite_power_use",
+   "status": "fix",
+   "reason": "Колонки opposed/threshold верны. Но фраза «запись даёт его сама по имени колонки» не подтверждается кодом: owned.ts:146 argsWithProps — пустышка (возвращает binding.args), refs.ts namedValue без аргумента берёт умолчание или падает «параметр не заполнен».",
+   "corrected_target": "matrix_defenses: колонки opposed «Встречная проверка» (да/нет: да у 12 наборов, нет у «порог» и «нет») и threshold «Порог» (формула на строку: порог `@threshold`, нет 0). Чтения: против = `если(@защита.opposed, @отпор, @защита.threshold)`; ПН — `ЕСЛИ @illegal и @защита.opposed`; Преимущество за ЗА — `ЕСЛИ @защита.opposed`. Вход порога один — threshold, спрашиваемый; у кнопки типа записи явный аргумент `threshold: @threshold` (так dnd5e weapon «Удар» передаёт клетки). Либо дописать argsWithProps: одноимённое свойство записи становится аргументом `@свойство`, как описано в engine-model.md. Бросок отпора оставить безусловным."
+  },
+  {
+   "id": "matrix_defenses",
+   "where": "system.tables.matrix_defenses, колонка text «Набор (аватар / устройство)»",
+   "status": "keep",
+   "reason": "Пустая колонка.",
+   "corrected_target": ""
+  },
+  {
+   "id": "device",
+   "where": "system.tables.device, правки dev_rating, dev_attack, dev_sleaze, dev_dp, dev_firewall, noise",
+   "status": "keep",
+   "reason": "propsOf подставляет default и в правки записи (modifiers.ts:100).",
+   "corrected_target": ""
+  },
+  {
+   "id": "device",
+   "where": "system.tables.device, правка noise",
+   "status": "keep",
+   "reason": "Верно, вопрос владельцу.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_action",
+   "where": "system.tables.matrix_action (колонок нет); записи mx_brute, mx_spike, mx_tarpit, mx_hide, ic_strike — свои кнопки",
+   "status": "fix",
+   "reason": "Опора «входы по имени свойства — model/owned.ts: argsWithProps» неверна: функция — пустышка (owned.ts:146), неявного аргумента из клетки нет. Набор через `@attribute.own` — см. attributes.",
+   "corrected_target": "Колонки типа matrix_action: skill (выбор из skills), attribute (выбор из attributes), defense (выбор из matrix_defenses), illegal (да/нет, умолчание нет), kind (выбор из action_kinds, умолчание «сложное»), link (выбор из matrix_links, умолчание «нет»), tag «Метка броска» (выбор из rolls), outcome «Исход» (вид «эффект»), pool «Набор» — формула типа `большее из(0, @skills.[@skill].rank + @attribute.field + @wound_mod + @condition_mod)`; у ic_strike — клетка `@host_rating * 2`. Одна кнопка у типа — общая функция действия в Матрице, с явными аргументами `вход: @колонка` для каждой колонки (как dnd5e weapon «Удар»), либо после дописанного argsWithProps — без них. Кнопки записей удалить."
+  },
+  {
+   "id": "matrix_action",
+   "where": "compendium.records tm_sprite_compile (matrix_action)",
+   "status": "keep",
+   "reason": "Верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "ic_kinds",
+   "where": "system.effects.ic_attack — блок «По «Вид льда»» на 9 веток",
+   "status": "keep",
+   "reason": "Ветки различаются данными. Клетки читают входы функции «чистые»/«рейтинг» через scope (cells.ts:64); пустой эффект — шаг пропускается (status.ts).",
+   "corrected_target": ""
+  },
+  {
+   "id": "ic_kinds",
+   "where": "compendium.records ic_strike, аргумент защита; строка «нет»",
+   "status": "keep",
+   "reason": "Дыра A.",
+   "corrected_target": ""
+  },
+  {
+   "id": "awakened_kinds",
+   "where": "тип листа runner — 5 правок dev_*; system.effects matrix_hurt, cast_form, cast_form_attr, compile_sprite; Лист.programs_loaded, initiative",
+   "status": "keep",
+   "reason": "Верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "awakened_kinds",
+   "where": "system.effects cast_spell, heal_spell, boost_spell, summon_spirit, ritual_cast — плата",
+   "status": "keep",
+   "reason": "Стоп функции из платы — отказ (Delivery.cost).",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell_categories",
+   "where": "system.tables.spell_categories, колонка focus — клетки-формулы",
+   "status": "keep",
+   "reason": "Живая клетка таблицы с владельцем читается с листа прохода (cells.ts:51).",
+   "corrected_target": ""
+  },
+  {
+   "id": "heal_kinds",
+   "where": "system.tables.heal_kinds",
+   "status": "keep",
+   "reason": "Копия damage_kinds.",
+   "corrected_target": ""
+  },
+  {
+   "id": "astral_modes",
+   "where": "тип листа runner, правка броска count −2; Лист.plane_dr",
+   "status": "keep",
+   "reason": "Верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell_defenses",
+   "where": "system.effects cast_spell, heal_spell, boost_spell — по 3 места",
+   "status": "keep",
+   "reason": "Принадлежность множеству — колонка да/нет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell_defenses",
+   "where": "system.effects cast_spell/heal_spell/boost_spell, шаг итог, versus",
+   "status": "fix",
+   "reason": "Колонка threshold с формулой на строку верна, но «запись заполняет сама» не работает (argsWithProps — пустышка).",
+   "corrected_target": "spell_defenses: колонка threshold «Порог» (формула на строку): исцеление `большее из(0, округлить вниз(5 - @цель.essence))`, критические `@цель.critical`, порог / Сопротивление материалов / Мощь источника × 2 — `@threshold`, нет 0. versus = `если(@defense.opposed, @отпор, @defense.threshold)`. Вход порога один — threshold, спрашиваемый; кнопка типа spell передаёт `threshold: @threshold` явно (или после дописанного argsWithProps)."
+  },
+  {
+   "id": "spell_defenses",
+   "where": "system.tables.spell_defenses, колонка text «Набор»",
+   "status": "keep",
+   "reason": "Пустая колонка.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell_durations",
+   "where": "кнопки записей spell_* и cf_*: аргумент sustain",
+   "status": "keep",
+   "reason": "Верно; вход duration функция получает аргументом кнопки типа (см. spell).",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell_combat",
+   "where": "system.effects.cast_spell, ветки после успеха; вход combat",
+   "status": "fix",
+   "reason": "«По» уместен: ветки делают разные шаги, условие chain.tsx caseAt/sourceOf проверено. Но «имя совпадает с колонкой — запись заполняет сама» не работает.",
+   "corrected_target": "Ветки — блок «По «Боевое действие»»: вход combat — выбор из spell_combat, условия ровно `@combat == \"прямое\"` / `\"косвенное\"`. Кнопка типа spell передаёт `combat: @combat` явным аргументом (argsWithProps — пустышка, owned.ts:146), либо дописать argsWithProps."
+  },
+  {
+   "id": "spell_damage",
+   "where": "system.tables.spell_damage («ф», «о»); аргумент damage_phys кнопок заклинаний",
+   "status": "keep",
+   "reason": "Копия damage_kinds.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell_elements",
+   "where": "system.effects.cast_spell, ветка «косвенное»; вход element (вид «текст»)",
+   "status": "keep",
+   "reason": "Колонка вида «эффект» есть (valueKind), шаг «Наложить» с формулой работает, пустое значение — шаг пропускается.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell_outcomes",
+   "where": "кнопки записей spell_*: выбор эффекта cast_spell / heal_spell / boost_spell",
+   "status": "keep",
+   "reason": "Ветки делают разные шаги — «По» уместен.",
+   "corrected_target": ""
+  },
+  {
+   "id": "focus_kinds",
+   "where": "system.tables.focus — 13 правок; system.tables.focus_kinds",
+   "status": "keep",
+   "reason": "isLive — пустая клетка в таблице с владельцем = ввод, поэтому by_category во всех строках обязателен; учтено.",
+   "corrected_target": ""
+  },
+  {
+   "id": "focus_kinds",
+   "where": "system.tables.focus_kinds — подписи колонок",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spirit_kinds",
+   "where": "system.effects.summon_spirit — блок «По «kind»» на 6 веток; колонка skills (текст)",
+   "status": "keep",
+   "reason": "Ветки различаются данными; дыры B и G указаны верно (у правок типа листа нет @строка и «*»).",
+   "corrected_target": ""
+  },
+  {
+   "id": "spirit_kinds",
+   "where": "system.tables.spirit_kinds — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "astral_assense",
+   "where": "system.tables.astral_assense",
+   "status": "keep",
+   "reason": "Верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "astral_tracking",
+   "where": "system.tables.astral_tracking — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "magic_barriers",
+   "where": "system.tables.magic_barriers — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "material_resistance",
+   "where": "system.tables.material_resistance — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell",
+   "where": "compendium.records spell_fireball, spell_mana_bolt, spell_heal, spell_stabilize, spell_increase_attribute, spell_armor — 8 кнопок записей",
+   "status": "fix",
+   "reason": "Ссылка на model/owned.ts: argsWithProps как на работающий механизм неверна — это пустышка. Без явных аргументов вызов падает «параметр не заполнен» или берёт умолчание.",
+   "corrected_target": "Кнопки у типа spell: «Сотворить» — одна функция; у кнопки типа явные аргументы `category: @category, drain: @drain, defense: @defense, area: @area, combat: @combat, element: @element, damage: @damage, duration: @duration, outcome: @outcome, status: @status, threshold: @threshold, stabilize: @stabilize, boost_cap: @boost_cap` — один раз у типа, как dnd5e spell_* «Сотворить». Либо дописать argsWithProps (одноимённое свойство становится аргументом), тогда args не нужны. «Прекратить» → stop_spell (вход status). 8 кнопок записей и вход astral удалить."
+  },
+  {
+   "id": "spell",
+   "where": "compendium.records spell_fireball, колонка status",
+   "status": "keep",
+   "reason": "Верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell",
+   "where": "кнопки spell_stabilize (stabilize да), spell_increase_attribute (cap 4), spell_armor (cap 20)",
+   "status": "keep",
+   "reason": "Свойства заклинания — колонки.",
+   "corrected_target": ""
+  },
+  {
+   "id": "ritual",
+   "where": "compendium.records ritual_roving_spell — своя кнопка",
+   "status": "fix",
+   "reason": "«Вход threshold берётся из колонки сам» — не так в коде.",
+   "corrected_target": "Кнопка «Провести» у типа ritual → ritual_cast с аргументом `threshold: @threshold` у кнопки типа (или после дописанного argsWithProps — без него); кнопку записи удалить."
+  },
+  {
+   "id": "focus",
+   "where": "system.tables.focus, modifiers (13 из 14)",
+   "status": "keep",
+   "reason": "Слот {@строка.x} в цели правки записи есть (itemTarget), if через withRecord/recordPath.",
+   "corrected_target": ""
+  },
+  {
+   "id": "focus",
+   "where": "compendium.records focus_ritual, focus_power, focus_weapon — клетки cost и avail",
+   "status": "keep",
+   "reason": "Колонки-формулы типа.",
+   "corrected_target": ""
+  },
+  {
+   "id": "complex_form",
+   "where": "compendium.records cf_infusion, cf_res_spike — свои кнопки; эффекты cast_form и cast_form_attr",
+   "status": "fix",
+   "reason": "«Входы названы как колонки» сами не заполняются (argsWithProps — пустышка).",
+   "corrected_target": "Кнопка «Запустить» у типа complex_form → одна функция формы; у кнопки типа явные аргументы `fading: @fading, skill: @skill, defense: @defense, illegal: @illegal, duration: @duration, outcome: @outcome, status: @status, threshold: @threshold` (или дописать argsWithProps); «Прекратить» — у типа; кнопки записей и копия cast_form_attr удаляются."
+  },
+  {
+   "id": "complex_form",
+   "where": "system.tables.complex_form, колонка skill (текст); бросок формы в cast_form/cast_form_attr; то же в sprite_power_use",
+   "status": "keep",
+   "reason": "Pick `@действующий.skills.[@skill].rank` поддержан.",
+   "corrected_target": ""
+  },
+  {
+   "id": "complex_form",
+   "where": "system.tables.complex_form, колонка outcome (текст); cast_form — 9 веток по @outcome",
+   "status": "keep",
+   "reason": "Разные «Изменения» — «По»; три «Наложить» сведены в колонку.",
+   "corrected_target": ""
+  },
+  {
+   "id": "complex_form",
+   "where": "system.tables.complex_form, колонка per_hit «Считать»; cast_form — 18 мест",
+   "status": "keep",
+   "reason": "Вопрос владельцу уместен.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sprite_power",
+   "where": "compendium.records spw_trap, spw_hash — свои кнопки",
+   "status": "fix",
+   "reason": "Тот же неверный расчёт на неявные аргументы.",
+   "corrected_target": "Кнопка у типа sprite_power → sprite_power_use с явными аргументами `skill: @skill, use_resonance: @use_resonance, defense: @defense, status: @status` (или дописать argsWithProps); кнопки записей удалить; вход use_res (число) → use_resonance (да/нет); вход kind не читается — удалить."
+  },
+  {
+   "id": "sprite_power",
+   "where": "system.tables.sprite_power: action (текст), skill (текст)",
+   "status": "keep",
+   "reason": "Верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sprite_power",
+   "where": "system.effects.sprite_power_use, ветки по @outcome (текст)",
+   "status": "keep",
+   "reason": "Различаются эффектом — колонка; у висящего есть attach.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sprite_kinds",
+   "where": "тип листа sprite — правки dev_attack, dev_sleaze, dev_dp, dev_firewall, initiative",
+   "status": "keep",
+   "reason": "Дыры A и B — верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sprite_kinds",
+   "where": "system.tables.sprite_kinds: колонка skills (текст); подписи",
+   "status": "keep",
+   "reason": "Верно, расхождение — вопрос владельцу.",
+   "corrected_target": ""
+  },
+  {
+   "id": "submersion",
+   "where": "system.tables.submersion (1 строка, 7 текстовых колонок с ключами вместо подписей)",
+   "status": "keep",
+   "reason": "Правила уже считают поля.",
+   "corrected_target": ""
+  },
+  {
+   "id": "vehicle_models",
+   "where": "system.tables.vehicle_models: body, armor, pilot, sensor, interval, accel, top, handling_on, handling_off",
+   "status": "keep",
+   "reason": "Дыры A и B.",
+   "corrected_target": ""
+  },
+  {
+   "id": "autosoft",
+   "where": "system.tables.autosoft, modifiers (6 из 7)",
+   "status": "keep",
+   "reason": "Как skills и «Улучшение навыка».",
+   "corrected_target": ""
+  },
+  {
+   "id": "autosoft",
+   "where": "system.tables.autosoft, колонка as_attr (текст)",
+   "status": "keep",
+   "reason": "Свойство вида, а не записи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "autosoft",
+   "where": "compendium.records as_* (6 записей): cost, avail, rating_max",
+   "status": "keep",
+   "reason": "Колонки-формулы типа.",
+   "corrected_target": ""
+  },
+  {
+   "id": "vehicle_mod",
+   "where": "system.tables.vehicle_mod, правка mounts_used",
+   "status": "keep",
+   "reason": "Верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "toxin",
+   "where": "compendium.records tox_gamma_scopolamine — клетки без колонок",
+   "status": "keep",
+   "reason": "Верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "toxin",
+   "where": "кнопка tox_gamma_scopolamine → intoxicate; колонки damage (текст), vector (текст)",
+   "status": "fix",
+   "reason": "Дыра E подтверждена (status.ts: не строка → ошибка). Но «входы — из колонок» без явных аргументов не заполнятся.",
+   "corrected_target": "damage — выбор из damage_kinds (пусто = без урона): `ЕСЛИ не пусто(@damage) → take_damage(physical_hit=@damage.physical)`. Справочник vectors «Путь введения» с колонкой inhaled; toxin.vector — выбор из vectors. Кнопка «Ввести» у типа toxin с явными аргументами `power: @power, damage: @damage, statuses: @statuses, vector: @vector` (или дописать argsWithProps); `inhaled` → `@vector.inhaled`; s1/s2/s3 → `НАЛОЖИТЬ @statuses на @цель`. Дописать движок (E): шаг status при списке id накладывает каждый (engine/steps/status.ts finish)."
+  },
+  {
+   "id": "drug",
+   "where": "compendium.records drug_alcohol, drug_jazz — клетки без колонок",
+   "status": "keep",
+   "reason": "Верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "drug",
+   "where": "system.effects dg_jazz_take, dg_alcohol_take (кнопки записей); drug_crashes — 5 подписок lost:dg_*",
+   "status": "keep",
+   "reason": "Дыра F подтверждена (run.ts:1221 — ключ только по id; about с входами уже передаётся). Внутри функции кнопки `@вещь.*` читается без аргументов.",
+   "corrected_target": ""
+  },
+  {
+   "id": "metatype_mods",
+   "where": "system.tables.metatype_mods — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "grunt_templates",
+   "where": "system.tables.grunt_templates — подписи всех 42 колонок равны ключам",
+   "status": "keep",
+   "reason": "Подписи; вопрос о книжных итогах уместен.",
+   "corrected_target": ""
+  },
+  {
+   "id": "creatures",
+   "where": "system.effects.creature_template",
+   "status": "keep",
+   "reason": "Дыры G и B.",
+   "corrected_target": ""
+  },
+  {
+   "id": "creatures",
+   "where": "system.tables.creatures — подписи 40 колонок равны ключам",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "primes",
+   "where": "system.tables.primes — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "contacts_examples",
+   "where": "system.tables.contacts_examples — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "pr_ranges",
+   "where": "system.tables.pr_ranges — подписи; строки pr_min/pr_max",
+   "status": "keep",
+   "reason": "Подписи; промежутки поддерживаются.",
+   "corrected_target": ""
+  },
+  {
+   "id": "rep_changes",
+   "where": "system.tables.rep_changes — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "heat_effects",
+   "where": "system.tables.heat_effects — подписи; колонки heat + range",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "heat_meet_mods",
+   "where": "system.tables.heat_meet_mods — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "heat_reduce",
+   "where": "system.tables.heat_reduce — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "security_zones",
+   "where": "system.tables.security_zones — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "locks",
+   "where": "system.tables.locks — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sensors",
+   "where": "system.tables.sensors — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "chem_detect_mods",
+   "where": "system.tables.chem_detect_mods — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "cyber_scan",
+   "where": "system.tables.cyber_scan — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "pay_karma",
+   "where": "system.tables.pay_karma — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "pay_money",
+   "where": "system.tables.pay_money — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "search_mods",
+   "where": "system.tables.search_mods — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "damage_choice",
+   "where": "system.tables.damage_choice",
+   "status": "keep",
+   "reason": "Не читается.",
+   "corrected_target": ""
+  },
+  {
+   "id": "blocks-initiative-grants",
+   "where": "system.groups",
+   "status": "keep",
+   "reason": "Папки — только папки; инициатива и выдача в порядке.",
+   "corrected_target": ""
+  }
+ ],
+ "missed": [
+  {
+   "id": "argsWithProps",
+   "where": "packages/engine/src/model/owned.ts:146 argsWithProps; engine/refs.ts namedValue",
+   "problem": "Сквозная дыра, которую разбор принял за работающий механизм. argsWithProps возвращает binding.args как есть (docs/language-audit.md §9 тоже называет её пустышкой), а namedValue без аргумента берёт умолчание или падает «параметр не заполнен». .claude/rules/engine-model.md обещает неявный аргумент из одноимённого свойства, но кода нет. На этом держатся цели matrix_action, matrix_defenses, spell_defenses, spell_combat, spell, ritual, complex_form, sprite_power, toxin.",
+   "target": "Либо явные аргументы `вход: @колонка` у кнопки типа (образец dnd5e: weapon «Удар», spell_* «Сотворить»), либо дописать движок: argsWithProps дополняет args, и каждый вход эффекта с именем свойства записи без явного аргумента получает `{expr: \"@<имя>\"}`; пустая клетка → умолчание входа. Как описано в engine-model.md, с тестом в packages/engine."
+  },
+  {
+   "id": "группа",
+   "where": "system.tables.группа, колонки physical и stun, min",
+   "problem": "Помечена ok, но `@drain_phys или 0` и `@drain_stun или 0` — след не пустой клетки, а чтения чужого носителя: drain_phys — поле Лист, а min считается у листа группы, где этого поля нет. «или 0» прячет, что предел не действует.",
+   "target": "Вопрос владельцу (уже в списке: чей предел у отряда). По ответу: либо поля истощения у группы (owner group), либо дописать движку чтение полей участников из формулы группы. «или 0» не оставлять."
+  },
+  {
+   "id": "attributes",
+   "where": "system.tables.attributes, колонка target «у цели»",
+   "problem": "Колонка с 8 формулами `@цель.body`… копирует значение строки (оно и есть тег поля). У edge, magic, resonance клетки нет: `@attr.target` для них даёт пусто, это бьёт по защите «Воля + выбранная характеристика» (5 чтений).",
+   "target": "Удалить target; читать `@цель.[@attr]` (Pick по значению строки). Для формул типа записи — одна колонка вида «поле» field (см. исправление attributes)."
+  }
+ ]
+}

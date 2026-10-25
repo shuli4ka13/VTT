@@ -1,0 +1,990 @@
+{
+ "checks": [
+  {
+   "id": "лист",
+   "where": "system.tables.лист, колонка initiative «Уровень инициативы», expr",
+   "status": "keep",
+   "reason": "Равносильно: ВР — техномант Логика+Интуиция, иначе Интуиция+ВМ; вне ВР — Реакция+Интуиция (sr6-compendium.md:239, :385). Проба разбора совпала.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист, колонка drain_pool «Сопротивление истощению», expr",
+   "status": "keep",
+   "reason": "Равносильно: адепт Тело+Воля, остальные Воля+характеристика традиции.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист, колонка plane_dr «Значение защиты на своём плане», expr",
+   "status": "keep",
+   "reason": "Равносильно: проекция — астральная защита, иначе обычная.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист, колонка programs_loaded «Программ запущено (техномант — ни одной)», max",
+   "status": "fix",
+   "reason": "Цель меняет поведение: сейчас предел 99 (без ограничения) у всех, кроме техноманта; цель вводит предел по слотам устройства. У РПУ dev_rcc_dronemaster нет programs_max — риггер с одним РПУ не запустит ни одной программы. В выписке (sr6-compendium.md:246) слоты — «предупреждение», а не жёсткий предел; это новое правило, а не перезапись.",
+   "corrected_target": "awakened_kinds: колонка programs_cap «Программ можно запустить» (число, default 99; клетка строки «техномант» 0). Лист.programs_loaded max = `@awakened.programs_cap`; число 99 и строка «техномант» уходят из формулы. Предел по слотам устройства (device.programs_max → поле dev_programs) — отдельным решением владельца (у РПУ programs_max не заполнено), не в этой перестройке."
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист: max у body…edge; physical_max; defense_rating; astral_dr",
+   "status": "keep",
+   "reason": "Все 5 строк metatypes заполнены, metatype с умолчанием «человек» — «или» мёртвые; числа не меняются.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист: veh_body, veh_armor, veh_pilot, veh_sensor, veh_interval, veh_accel, veh_top, veh_handling",
+   "status": "keep",
+   "reason": "Числа те же; нужны правки движка A и B — отмечено.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист, колонка soak «Тело: сопротивление урону», expr",
+   "status": "keep",
+   "reason": "Тело транспорта = модель (sr6-compendium.md:396); у листа без модели разница только в вырожденном случае.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист, колонка veh_ar; тип листа vehicle, правка defense_rating; подпись driver_pilot «(0 — автопилот)»",
+   "status": "fix",
+   "reason": "Числа совпадают только при согласованном ручном выборе. Сейчас «водитель» выводится из данных (driver_pilot ≥ 1); с новым выбором «Кто ведёт» «Отпустить управление» ставит «автопилот» даже при живом водителе (сейчас — водитель), а ввод driver_pilot без смены выбора даёт автопилот. Ветвление здесь не по строкам, а приоритет по данным — новый ручной выбор не нужен.",
+   "corrected_target": "Приоритет «риггер → водитель → автопилот» остаётся выводимым из данных, без нового справочника и ручного выбора. Лист: has_driver «Ведёт человек» (да/нет, формула `@jumped или @driver_pilot >= 1`), pilot_driver «Пилотирование ведущего» (формула `если(@jumped, @rig_pilot, @driver_pilot)`). veh_ar = `если(@has_driver, @pilot_driver, @veh_pilot) + @veh_sensor`; правка типа vehicle defense_rating set `если(@has_driver, @pilot_driver, @as_maneuver) + @veh_armor` (после таблицы autosofts — `@autosofts.маневрирование.rating`). Из подписи driver_pilot убрать «(0 — автопилот)» → «(0 — нет водителя)». «Проверка управляемости» — кластер «Транспорт»."
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист, колонка veh_handling, expr; колонка offroad",
+   "status": "keep",
+   "reason": "Равносильно (дорога/бездорожье — колонки модели).",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист: focus_power, focus_summon, focus_banish, focus_counter, focus_ritual, focus_alchemy, focus_disenchant, focus_weapon, focus_sp_боевое, focus_sp_иллюзия, focus_sp_исцеление, focus_sp_обнаружение, focus_sp_управление",
+   "status": "fix",
+   "reason": "В цели у ritual_cast потеряна прибавка Источника силы: сейчас `большее из(@действующий.focus_power, @действующий.focus_ritual)`, в цели — только ритуальный источник. Это снижает набор ритуала у мага с Источником силы.",
+   "corrected_target": "Удалить 13 полей focus_*; значения — клетки focus_kinds.<вид>.power и spell_categories.<категория>.focus (устройство — в пунктах focus_kinds, spell_categories, focus). Читатели: cast_spell/heal_spell/boost_spell — `большее из(@действующий.focus_kinds.Источник_силы.power, @действующий.spell_categories.[@category].focus)`; summon_spirit — `большее из(@действующий.focus_kinds.Источник_силы.power, @действующий.focus_kinds.Источник_призыва.power)`; ritual_cast — `большее из(@действующий.focus_kinds.Источник_силы.power, @действующий.focus_kinds.Источник_ритуального_заклинания.power)`. focus_force_total остаётся полем."
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист: as_maneuver, as_targeting, as_ew, as_stealth, as_evasion, as_clear_sight",
+   "status": "keep",
+   "reason": "Читается только as_maneuver (drive_check: as_maneuver + veh_pilot) — pool = rating + veh_pilot совпадает; привязка остальных — из as_attr записей.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист: edge_ban_charisma, edge_ban_logic, edge_ban_hands, edge_ban_social; условия подписок seen в reroll_failures, push_edge, edge_reroll_one, edge_bump, edge_plus_hit",
+   "status": "keep",
+   "reason": "Списки меток не меняются, проверка та же; правка движка отмечена.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист: is_device, smartlink, has_jack, has_fa_kit, has_medkit, aided_fa, aided_kit, init_half, device_dead, converged",
+   "status": "keep",
+   "reason": "Да/нет вместо 1/0 — значения те же, подписки field: срабатывают так же.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист: tm_attack_cap, tm_sleaze_cap, tm_dp_cap, tm_fw_cap — подписи",
+   "status": "keep",
+   "reason": "Только подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "лист",
+   "where": "system.tables.лист, колонка essence «Сущность», expr",
+   "status": "keep",
+   "reason": "Сумма та же после множественной основы; правка движка отмечена.",
+   "corrected_target": ""
+  },
+  {
+   "id": "metatypes",
+   "where": "system.tables.metatypes, колонки body_max…charisma_max, edge_max, toughness, dermal",
+   "status": "keep",
+   "reason": "Клетки равны умолчаниям, пределы не меняются.",
+   "corrected_target": ""
+  },
+  {
+   "id": "metatypes",
+   "where": "тип листа runner, правка unarmed_physical",
+   "status": "keep",
+   "reason": "Умолчание колонки уже нет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "metatypes",
+   "where": "system.tables.metatypes, колонка ranges «Пределы характеристик (стр. 65)»",
+   "status": "keep",
+   "reason": "Текст ranges повторяет *_max (минимум везде 1).",
+   "corrected_target": ""
+  },
+  {
+   "id": "ranges",
+   "where": "system.effects.throw_blast, cost, условие стопа «так далеко гранату не бросить»",
+   "status": "keep",
+   "reason": "Те же строки (дальняя, экстремальная) — стоп.",
+   "corrected_target": ""
+  },
+  {
+   "id": "ranges",
+   "where": "system.tables.ranges, колонка item_ar, клетки всех 5 строк; system.effects.melee_strike",
+   "status": "keep",
+   "reason": "0 = не бьёт, плата проверяет < 1 — так же.",
+   "corrected_target": ""
+  },
+  {
+   "id": "ranges",
+   "where": "system.effects.shoot, вызов defend, аргумент близко",
+   "status": "keep",
+   "reason": "Равносильно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "fire_modes",
+   "where": "system.effects.shoot, шаг атк",
+   "status": "keep",
+   "reason": "Совпадает с текущим шагом: длинная и короткая очереди гасятся recoil_burst, непрерывный — recoil_full, одиночный — 0; штраф не выше 0 (sr6-compendium.md:167). Ветка «остатком патронов» должна остаться внутри: `меньшее из(0, если(@выстрелов >= 1 и @выстрелов < @режим.rounds, 0 - @выстрелов, @режим.ar) + @режим.recoil_ease)` — гашение прибавляется и к ней, как сейчас.",
+   "corrected_target": ""
+  },
+  {
+   "id": "fire_modes",
+   "where": "system.effects.shoot: плата и шаги",
+   "status": "keep",
+   "reason": "Пустой режим сейчас = 1 патрон, ЗА 0, СУ 0, «всегда» — ровно строка «одиночный выстрел».",
+   "corrected_target": ""
+  },
+  {
+   "id": "edge_actions",
+   "where": "system.effects.shoot и system.effects.melee_strike: плата и шаги; клетки knockout: false в строках",
+   "status": "keep",
+   "reason": "Строка «нет» есть (0/0/0); умолчания равны «или».",
+   "corrected_target": ""
+  },
+  {
+   "id": "damage_kinds",
+   "where": "system.tables: damage_kinds, damage_choice, spell_damage, heal_kinds",
+   "status": "keep",
+   "reason": "Одно понятие, числа не меняются.",
+   "corrected_target": ""
+  },
+  {
+   "id": "damage_kinds",
+   "where": "system.effects.heal_spell, ветки после успеха",
+   "status": "fix",
+   "reason": "Один шаг по колонке track верен, но сейчас пустой heal_kind уходит в ветку «физический»; в цели пустой выбор даст пустой адрес «Изменения».",
+   "corrected_target": "damage_kinds: колонка track «Счётчик» (вид «поле»): физический → physical, оглушающий → stun. Вход heal_kind (выбор из damage_kinds) — умолчание «физический». После успеха: `ЕСЛИ @stabilize → ИЗМЕНИТЬ @цель.physical -= меньшее из(@цель.physical, @цель.critical)`; `ИНАЧЕ → ИЗМЕНИТЬ @цель.[@heal_kind.track] -= меньшее из(@цель.[@heal_kind.track], большее из(0, @итог.margin))`; «clears» — как есть."
+  },
+  {
+   "id": "skills",
+   "where": "system.tables.skills, колонка pool, roll.tags",
+   "status": "keep",
+   "reason": "Метка навыка у проверки — по выписке (sr6-compendium.md:187); правки по меткам навыков начнут срабатывать, как и задумано правилом.",
+   "corrected_target": ""
+  },
+  {
+   "id": "adversaries",
+   "where": "system.tables.adversaries (14 строк, колонки c0…c11 текстом)",
+   "status": "keep",
+   "reason": "Все 14 строк есть в grunt_templates с теми же ПР, Телом, защитой, инициативой и счётчиком (аугментированные — в attr_aug/defense_aug).",
+   "corrected_target": ""
+  },
+  {
+   "id": "weapon",
+   "where": "system.tables.weapon, колонки ar1…ar5",
+   "status": "keep",
+   "reason": "0 = не бьёт.",
+   "corrected_target": ""
+  },
+  {
+   "id": "firearm",
+   "where": "system.tables.firearm: ammo_max, smart, str_min; system.effects.shoot, reload, launch_blast",
+   "status": "keep",
+   "reason": "Умолчания равны «или 0».",
+   "corrected_target": ""
+  },
+  {
+   "id": "firearm",
+   "where": "compendium.records striker (firearm) — своя кнопка",
+   "status": "keep",
+   "reason": "Кнопка класса вместо кнопки записи — поведение то же.",
+   "corrected_target": ""
+  },
+  {
+   "id": "firearm",
+   "where": "system.effects.launch_blast, шаг атк",
+   "status": "keep",
+   "reason": "Формула атк launch_blast дословно = firearm.sight.",
+   "corrected_target": ""
+  },
+  {
+   "id": "firearm",
+   "where": "system.effects.launch_blast, вызов blast_damage; колонки firearm.ammo_stun / ammo_shock",
+   "status": "keep",
+   "reason": "Для единственной установки (striker) равносильно; shoot у неё не используется.",
+   "corrected_target": ""
+  },
+  {
+   "id": "reload_kinds",
+   "where": "system.tables.reload_kinds, колонка complex; system.effects.reload, плата",
+   "status": "keep",
+   "reason": "Пустой контейнер только у лука (ammo_max пуст) — он остановится раньше; стоп «не перезаряжают» до траты действия — правильнее, чем сейчас (тратится действие).",
+   "corrected_target": ""
+  },
+  {
+   "id": "weapon_classes",
+   "where": "system.tables.weapon_classes, колонка mods «Куда ставятся модификации»",
+   "status": "keep",
+   "reason": "Справка, правило не меняется.",
+   "corrected_target": ""
+  },
+  {
+   "id": "gear",
+   "where": "system.tables.gear, колонка wireless; клетки записей laser_sight.aim, hidden_holster.conceal_mod, bipod.brace; правки medkit, aud_enh_spatial_recognizer",
+   "status": "keep",
+   "reason": "Равносильно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "gear",
+   "where": "system.tables.gear, колонка rating; system.effects.detonate",
+   "status": "keep",
+   "reason": "Равносильно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "ammo_kind",
+   "where": "system.tables.ammo_kind, колонки cost_mul, class; записи ammo_apds, ammo_shock",
+   "status": "keep",
+   "reason": "Цена пачки = база класса × cost_mul — по выписке (sr6-compendium.md:47).",
+   "corrected_target": ""
+  },
+  {
+   "id": "grenade",
+   "where": "system.tables.grenade, колонка physical_dmg (expr) и damage_kind",
+   "status": "keep",
+   "reason": "Пусто = физический — то же.",
+   "corrected_target": ""
+  },
+  {
+   "id": "grenade",
+   "where": "system.tables.grenade: electric, launched; system.effects.throw_blast",
+   "status": "keep",
+   "reason": "Равносильно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "grenade",
+   "where": "system.tables.grenade, колонка count «Сколько штук»",
+   "status": "keep",
+   "reason": "Значение 1 то же.",
+   "corrected_target": ""
+  },
+  {
+   "id": "grenade",
+   "where": "system.tables.grenade: status, status_level, ar_vehicle, blast",
+   "status": "keep",
+   "reason": "Вопрос владельцу — верно, не выдумано.",
+   "corrected_target": ""
+  },
+  {
+   "id": "explosive",
+   "where": "system.tables.explosive, колонка count; system.effects.detonate",
+   "status": "keep",
+   "reason": "Значение 1 то же.",
+   "corrected_target": ""
+  },
+  {
+   "id": "explosive",
+   "where": "compendium.records explosive_pack, клетки cost и avail",
+   "status": "keep",
+   "reason": "Ступени и числа сверены с лесенкой (10/50/100/250/500/1000/5000; доступность 1–7).",
+   "corrected_target": ""
+  },
+  {
+   "id": "armor_mod",
+   "where": "system.tables.armor_mod: status «Гасит состояние», charges «Осталось защит»",
+   "status": "keep",
+   "reason": "Либо по выписке (sr6-compendium.md:50), либо справка — решение за владельцем.",
+   "corrected_target": ""
+  },
+  {
+   "id": "attributes",
+   "where": "system.effects.sp_increase_attribute, 8 правок; вход attr (вид «текст»); system.effects.boost_spell",
+   "status": "keep",
+   "reason": "Правка та же; дыра движка отмечена.",
+   "corrected_target": ""
+  },
+  {
+   "id": "attributes",
+   "where": "compendium.records mx_hide (matrix_action), аргумент pool",
+   "status": "keep",
+   "reason": "Колонка-ссылка, числа не меняются.",
+   "corrected_target": ""
+  },
+  {
+   "id": "attr_limits",
+   "where": "system.sheets spirit, sprite, creature — правки attr_limits.<х-ка>.bonus",
+   "status": "keep",
+   "reason": "+20 те же; дыра движка отмечена.",
+   "corrected_target": ""
+  },
+  {
+   "id": "implant",
+   "where": "system.tables.implant и implant_weapon: колонки essence, cost, avail (expr)",
+   "status": "keep",
+   "reason": "grade с умолчанием «стандарт», все 5 сортов заполнены.",
+   "corrected_target": ""
+  },
+  {
+   "id": "implant",
+   "where": "compendium.records cyberjack (ess_base, cost_base, avail_base), cybereyes (cost_base, avail_base, capacity)",
+   "status": "keep",
+   "reason": "Числа сверены с лесенками записей.",
+   "corrected_target": ""
+  },
+  {
+   "id": "implant",
+   "where": "compendium.records cyberjack, правка init_dice",
+   "status": "keep",
+   "reason": "1,1,1,2,2,2 в ВР — то же.",
+   "corrected_target": ""
+  },
+  {
+   "id": "bioware",
+   "where": "compendium.records bone_density, правки unarmed_ar_bonus и unarmed_dv",
+   "status": "keep",
+   "reason": "Числа сверены: 1,2,2,3 и 3,3,4,4.",
+   "corrected_target": ""
+  },
+  {
+   "id": "implant_weapon",
+   "where": "system.tables.implant_weapon: slot, grade, ess_base, cost_base, avail_base, essence, excl, cost, avail",
+   "status": "keep",
+   "reason": "Те же колонки; дыра движка отмечена.",
+   "corrected_target": ""
+  },
+  {
+   "id": "quality",
+   "where": "compendium.records burned_out, правка edge_no_spend",
+   "status": "keep",
+   "reason": "Равносильно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "adept_power",
+   "where": "compendium.records adept_improved_sense: grants, choice_note",
+   "status": "keep",
+   "reason": "Цель следует тексту способности (одно чувство) — это меняет нынешнее «все пять», вопрос владельцу уже вынесен; дыры движка отмечены.",
+   "corrected_target": ""
+  },
+  {
+   "id": "action_kinds",
+   "where": "system.effects matrix_check, matrix_spike, matrix_tarpit, matrix_hack, ic_attack — плата",
+   "status": "keep",
+   "reason": "spend_action делает то же (в бою, сложное/простое); пустой вид сейчас ничего не тратит — kind во всех записях задан.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_modes",
+   "where": "system.effects matrix_hurt, dumpshock, convergence, device_bricked; Лист.initiative; records cyberjack, burned_out",
+   "status": "keep",
+   "reason": "Равносильно (ВР — холодная/горячая, горячий — физическая биоотдача, подключён — не «нет»).",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_attrs",
+   "where": "system.effects matrix_stat_cut, form_infusion, form_diffusion — по 4 правки; вход attr (у form_* — вид «текст»)",
+   "status": "keep",
+   "reason": "Те же поля; дыра движка отмечена.",
+   "corrected_target": ""
+  },
+  {
+   "id": "program_kinds",
+   "where": "system.tables.program, правка hack_programs",
+   "status": "keep",
+   "reason": "Равносильно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_links",
+   "where": "system.effects matrix_check, matrix_spike, matrix_tarpit, matrix_hack, ic_attack — плата",
+   "status": "keep",
+   "reason": "Равносильно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "access_levels",
+   "where": "system.effects.matrix_hack, шаги 2, 4, 7",
+   "status": "keep",
+   "reason": "Числа те же; вопрос по книге вынесен.",
+   "corrected_target": ""
+  },
+  {
+   "id": "access_levels",
+   "where": "system.effects.matrix_access, подписка moment:round-start",
+   "status": "keep",
+   "reason": "Умолчание «пользователь» = ПН 1, как «или 1».",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_defenses",
+   "where": "system.effects matrix_check, matrix_spike, matrix_tarpit, matrix_hack, ic_attack, cast_form, cast_form_attr, sprite_power_use",
+   "status": "fix",
+   "reason": "Цель вешает условие `@защита.opposed` на Преимущество за ЗА/ЗЩ во всех восьми функциях. Сейчас в matrix_check, matrix_spike, matrix_tarpit, matrix_hack, ic_attack Преимущество даётся без условия по защите (и при пороге); условие есть только в cast_form, cast_form_attr, sprite_power_use. Цель меняет правило для пяти действий Матрицы; в выписках этого различия нет.",
+   "corrected_target": "matrix_defenses: колонки opposed «Встречная проверка» (да у 12 наборов: Логика + ВМ, Воля + СЭ, Воля + У, Логика + СЭ, Интуиция + СЭ, ВМ + СЭ, Харизма + ВМ, Интуиция + ВМ, ВМ + рейтинг, Воля + П, Воля + ВМ, Рейтинг + СЭ; нет у «порог» и «нет») и threshold «Порог» (число: порог `@threshold`, нет 0). Против = `если(@защита.opposed, @отпор, @защита.threshold)`; ПН — `ЕСЛИ @illegal и @защита.opposed`. Преимущество за ЗА/ЗЩ — как сейчас: в matrix_check, matrix_spike, matrix_tarpit, matrix_hack, ic_attack без условия; в cast_form, cast_form_attr, sprite_power_use — `ЕСЛИ @защита.opposed`; свести к одному — только решением владельца (вопрос). Вход порога один — threshold. Бросок отпора безусловный (0 кубиков)."
+  },
+  {
+   "id": "matrix_defenses",
+   "where": "system.tables.matrix_defenses, колонка text «Набор (аватар / устройство)»",
+   "status": "keep",
+   "reason": "Клеток нет ни в одной строке.",
+   "corrected_target": ""
+  },
+  {
+   "id": "device",
+   "where": "system.tables.device, правки dev_rating, dev_attack, dev_sleaze, dev_dp, dev_firewall, noise",
+   "status": "keep",
+   "reason": "Равносильно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "device",
+   "where": "system.tables.device, правка noise",
+   "status": "keep",
+   "reason": "У единственной РПУ device_rating 3 — клетка записи, а не рейтинг экземпляра; noise_cut 3 то же. Вопрос о правиле вынесен.",
+   "corrected_target": ""
+  },
+  {
+   "id": "program",
+   "where": "system.tables.program, правка hack_programs",
+   "status": "keep",
+   "reason": "Равносильно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "matrix_action",
+   "where": "system.tables.matrix_action (колонок нет); записи mx_brute, mx_spike, mx_tarpit, mx_hide, ic_strike — свои кнопки",
+   "status": "fix",
+   "reason": "Формула набора в цели теряет правило «без обучения»: сейчас skills.pool при ранге 0 даёт 0 (Взлом без обучения нельзя), цель даёт ранг 0 + характеристика — бросок Логикой без навыка. Набор должен повторять skills.pool с заменённой характеристикой.",
+   "corrected_target": "Колонки типа matrix_action — как в разборе (skill, attribute, defense, illegal, kind, link, tag, outcome); pool «Набор» — формула типа `большее из(0, если(@skills.[@skill].rank > 0, @skills.[@skill].rank + @attribute.own, если(@skills.[@skill].untrained, @attribute.own - 1, 0)) + @wound_mod + @condition_mod)` (тот же расчёт, что skills.pool, с характеристикой из колонки); у ic_strike клетка `@host_rating * 2`. Одна кнопка у типа — общая функция, входы названы как колонки; кнопки записей удалить. Отметить владельцу: у «Спрятаться» при ранге 0 сейчас выходит 0 − Логика + Интуиция, после перестройки — 0 (по правилу «без обучения»)."
+  },
+  {
+   "id": "matrix_action",
+   "where": "compendium.records tm_sprite_compile (matrix_action)",
+   "status": "keep",
+   "reason": "Перенос записи, поведение то же.",
+   "corrected_target": ""
+  },
+  {
+   "id": "ic_kinds",
+   "where": "system.effects.ic_attack — блок «По «Вид льда»» на 9 веток",
+   "status": "keep",
+   "reason": "Сверено с ветками ic_attack: числа, наложения, снижение характеристики на чистые совпадают.",
+   "corrected_target": ""
+  },
+  {
+   "id": "ic_kinds",
+   "where": "compendium.records ic_strike, аргумент защита; строка «нет»",
+   "status": "keep",
+   "reason": "Строка «нет» без клетки — умолчание нужно; дыра A отмечена.",
+   "corrected_target": ""
+  },
+  {
+   "id": "awakened_kinds",
+   "where": "тип листа runner — 5 правок dev_*; system.effects matrix_hurt, cast_form, cast_form_attr, compile_sprite; Лист.programs_loaded, initiative",
+   "status": "keep",
+   "reason": "Равносильно («не» связывает слабее сравнения — проверено в parse.ts).",
+   "corrected_target": ""
+  },
+  {
+   "id": "awakened_kinds",
+   "where": "system.effects cast_spell, heal_spell, boost_spell, summon_spirit, ritual_cast — плата",
+   "status": "keep",
+   "reason": "Те же стопы (колдовство/воплощение), функция со стопом в плате.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell_categories",
+   "where": "system.tables.spell_categories, колонка focus — клетки-формулы",
+   "status": "keep",
+   "reason": "Значения те же, источник — правки focus.",
+   "corrected_target": ""
+  },
+  {
+   "id": "heal_kinds",
+   "where": "system.tables.heal_kinds",
+   "status": "keep",
+   "reason": "Одно понятие.",
+   "corrected_target": ""
+  },
+  {
+   "id": "astral_modes",
+   "where": "тип листа runner, правка броска count −2; Лист.plane_dr",
+   "status": "keep",
+   "reason": "Те же −2 у восприятия и проекции, notTags правки остаются.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell_defenses",
+   "where": "system.effects cast_spell, heal_spell, boost_spell — по 3 места",
+   "status": "keep",
+   "reason": "9 наборов совпадают с текущими сравнениями; Преимущество в магии уже под этим условием.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell_defenses",
+   "where": "system.effects cast_spell/heal_spell/boost_spell, шаг итог, versus",
+   "status": "keep",
+   "reason": "Пороги сверены: 5 − Сущность вниз, критические, threshold.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell_defenses",
+   "where": "system.tables.spell_defenses, колонка text «Набор»",
+   "status": "keep",
+   "reason": "Клеток нет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell_durations",
+   "where": "кнопки записей spell_* и cf_*: аргумент sustain",
+   "status": "keep",
+   "reason": "Д у всех записей с sustain да, М/П — нет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell_combat",
+   "where": "system.effects.cast_spell, ветки после успеха; вход combat",
+   "status": "keep",
+   "reason": "Ветки делают разные шаги — «По» уместен.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell_damage",
+   "where": "system.tables.spell_damage («ф», «о»); аргумент damage_phys кнопок заклинаний",
+   "status": "keep",
+   "reason": "Одно понятие.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell_elements",
+   "where": "system.effects.cast_spell, ветка «косвенное»; вход element (вид «текст»)",
+   "status": "keep",
+   "reason": "Тот же порог (чистые ≥ 1), та же ветка «косвенное».",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell_outcomes",
+   "where": "кнопки записей spell_*: выбор эффекта cast_spell / heal_spell / boost_spell",
+   "status": "keep",
+   "reason": "Ветки разные — «По» уместен.",
+   "corrected_target": ""
+  },
+  {
+   "id": "focus_kinds",
+   "where": "system.tables.focus — 13 правок; system.tables.focus_kinds",
+   "status": "keep",
+   "reason": "Клетка by_category нужна в каждой строке — верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "focus_kinds",
+   "where": "system.tables.focus_kinds — подписи колонок",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spirit_kinds",
+   "where": "system.effects.summon_spirit — блок «По «kind»» на 6 веток; колонка skills (текст)",
+   "status": "fix",
+   "reason": "Цель «Призвать пишет только Мощь, вид, услуги» теряет текущий шаг `@цель.magic set @force`: Магия духа = Мощь перестанет ставиться. Списки навыков и смещения совпадают с шагами (сверено).",
+   "corrected_target": "spirit_kinds: колонка skill_list «Навыки» (выбор многих из skills) вместо текста: воздуха [астрал, атлетика, ближний бой, внимание, экзотическое оружие]; земли [астрал, ближний бой, внимание, экзотическое оружие]; огня [астрал, атлетика, ближний бой, внимание, экзотическое оружие]; воды [астрал, атлетика, ближний бой, внимание, экзотическое оружие]; зверей [астрал, ближний бой, внимание]; предков [астрал, ближний бой, внимание, колдовство]. Правки типа листа «Дух»: `body set большее из(1, @spirit_force + @spirit_kind.body)` и так для 8 характеристик; `magic set @spirit_force`; `skills.*.rank set @spirit_force`, if `есть(@spirit_kind.skill_list, @строка)`. «Призвать» пишет Мощь, вид, услуги (кластер «Типы листов»). Нужны правки движка B и G."
+  },
+  {
+   "id": "spirit_kinds",
+   "where": "system.tables.spirit_kinds — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "astral_assense",
+   "where": "system.tables.astral_assense",
+   "status": "keep",
+   "reason": "Подписи/ключи строк, правило не меняется.",
+   "corrected_target": ""
+  },
+  {
+   "id": "astral_tracking",
+   "where": "system.tables.astral_tracking — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "magic_barriers",
+   "where": "system.tables.magic_barriers — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "material_resistance",
+   "where": "system.tables.material_resistance — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell",
+   "where": "compendium.records spell_fireball, spell_mana_bolt, spell_heal, spell_stabilize, spell_increase_attribute, spell_armor — 8 кнопок записей",
+   "status": "keep",
+   "reason": "Аргументы кнопок равны клеткам; вход astral не читается.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell",
+   "where": "compendium.records spell_fireball, колонка status",
+   "status": "keep",
+   "reason": "cast_spell колонку status не читает — огонь накладывает стихия.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spell",
+   "where": "кнопки spell_stabilize (stabilize да), spell_increase_attribute (cap 4), spell_armor (cap 20)",
+   "status": "keep",
+   "reason": "Числа из кнопок; предел Брони 20 — вопрос владельцу вынесен.",
+   "corrected_target": ""
+  },
+  {
+   "id": "ritual",
+   "where": "compendium.records ritual_roving_spell — своя кнопка",
+   "status": "keep",
+   "reason": "threshold 6 тот же.",
+   "corrected_target": ""
+  },
+  {
+   "id": "focus",
+   "where": "system.tables.focus, modifiers (13 из 14)",
+   "status": "keep",
+   "reason": "Две правки дают те же значения; виды без читателей ничего не меняют.",
+   "corrected_target": ""
+  },
+  {
+   "id": "focus",
+   "where": "compendium.records focus_ritual, focus_power, focus_weapon — клетки cost и avail",
+   "status": "keep",
+   "reason": "Множители сверены с focus_kinds (4000/18000/7000; +0/+3/+3).",
+   "corrected_target": ""
+  },
+  {
+   "id": "complex_form",
+   "where": "compendium.records cf_infusion, cf_res_spike — свои кнопки; эффекты cast_form и cast_form_attr",
+   "status": "keep",
+   "reason": "Аргументы равны клеткам.",
+   "corrected_target": ""
+  },
+  {
+   "id": "complex_form",
+   "where": "system.tables.complex_form, колонка skill (текст); бросок формы в cast_form/cast_form_attr; то же в sprite_power_use",
+   "status": "keep",
+   "reason": "Две ветки навыка — равносильно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "complex_form",
+   "where": "system.tables.complex_form, колонка outcome (текст); cast_form — 9 веток по @outcome",
+   "status": "fix",
+   "reason": "Цель «урон Матрицы техноманту — функцией урона Матрицы» добавляет бросок сопротивления Сетевым экраном (matrix_hurt кидает @лист.m_firewall). Сейчас «урон Матрицы» формы идёт без сопротивления (и техноманту — оглушающий take_damage, и прочим — прямо в matrix_damage); выписка (sr6-compendium.md:345) — «урон Матрицы без сопротивления».",
+   "corrected_target": "Справочник form_outcomes «Исход сложной формы»: урон Матрицы, лечение Матрицы, шум цели +, ПН цели +, свой ПН −, наложить на себя, наложить на цель, нет. complex_form.outcome — выбор из него; колонка status «Висящий эффект» (вид «эффект»): Канал → form_channel (на себя), Инфузия → form_infusion, Диффузия → form_diffusion (на цель). В функции — блок «По «Исход»»; ветки «Наложить» — `НАЛОЖИТЬ @status на @действующий` / `на @цель`. «Урон Матрицы» — без сопротивления, как сейчас: `ЕСЛИ @цель.awakened.living_persona → take_damage(оглушающий, amount)` иначе `@цель.matrix_damage += amount`; если сводить с matrix_hurt — только с новым входом «без сопротивления»."
+  },
+  {
+   "id": "complex_form",
+   "where": "system.tables.complex_form, колонка per_hit «Считать»; cast_form — 18 мест",
+   "status": "keep",
+   "reason": "Вопрос владельцу — верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sprite_power",
+   "where": "compendium.records spw_trap, spw_hash — свои кнопки",
+   "status": "keep",
+   "reason": "Аргументы равны клеткам.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sprite_power",
+   "where": "system.tables.sprite_power: action (текст), skill (текст)",
+   "status": "keep",
+   "reason": "use_res 0 у обеих записей = use_resonance нет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sprite_power",
+   "where": "system.effects.sprite_power_use, ветки по @outcome (текст)",
+   "status": "fix",
+   "reason": "Перенос немедленного урона в наложение с dmg=Резонанс меняет поведение: сейчас sprite_storm накладывается без входа dmg (урон в начале раунда считается от пустого входа), а немедленный matrix_hurt(amount=Резонанс) идёт отдельным шагом. Передача dmg начинает наносить Резонанс каждый раунд — правила в выписках нет. Кроме того, Диагностика ждёт вход amount, а не dmg: один шаг с dmg ей ничего не даст.",
+   "corrected_target": "Колонка status «Висящий эффект» (вид «эффект»): Ловушка → sprite_trap, Электрошторм → sprite_storm, Диагностика → sprite_diagnostics, Хеш и прочие — пусто. Шаг `НАЛОЖИТЬ @status на @цель` без новых входов (как сейчас). Немедленный урон Электрошторма — колонкой sprite_power.hit_now «Сразу урон Матрицы» (число; у Электрошторма формула `@действующий.resonance`, у прочих 0) и шагом `ЕСЛИ @hit_now >= 1 → matrix_hurt(лист=@цель, amount=@hit_now)` — порядок «наложить, потом урон» как сейчас. Вход dmg Электрошторма (урон в начале раунда) и amount Диагностики сейчас не передаются — что передавать, решает владелец по книге."
+  },
+  {
+   "id": "sprite_kinds",
+   "where": "тип листа sprite — правки dev_attack, dev_sleaze, dev_dp, dev_firewall, initiative",
+   "status": "keep",
+   "reason": "Умолчания равны «или 0»; дыры отмечены.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sprite_kinds",
+   "where": "system.tables.sprite_kinds: колонка skills (текст); подписи",
+   "status": "keep",
+   "reason": "Расхождение с «Компилировать» вынесено вопросом.",
+   "corrected_target": ""
+  },
+  {
+   "id": "submersion",
+   "where": "system.tables.submersion (1 строка, 7 текстовых колонок с ключами вместо подписей)",
+   "status": "keep",
+   "reason": "Предел Резонанса и отголосков уже считает лист; текст правила сохраняется в описании.",
+   "corrected_target": ""
+  },
+  {
+   "id": "vehicle_models",
+   "where": "system.tables.vehicle_models: body, armor, pilot, sensor, interval, accel, top, handling_on, handling_off",
+   "status": "keep",
+   "reason": "Как у Лист.",
+   "corrected_target": ""
+  },
+  {
+   "id": "autosoft",
+   "where": "system.tables.autosoft, modifiers (6 из 7)",
+   "status": "keep",
+   "reason": "Совпадает с единственным читателем (маневрирование + Пилотирование); привязки из as_attr записей.",
+   "corrected_target": ""
+  },
+  {
+   "id": "autosoft",
+   "where": "system.tables.autosoft, колонка as_attr (текст)",
+   "status": "keep",
+   "reason": "Не читается.",
+   "corrected_target": ""
+  },
+  {
+   "id": "autosoft",
+   "where": "compendium.records as_* (6 записей): cost, avail, rating_max",
+   "status": "keep",
+   "reason": "Все 6 записей одинаковы.",
+   "corrected_target": ""
+  },
+  {
+   "id": "vehicle_mod",
+   "where": "system.tables.vehicle_mod, правка mounts_used",
+   "status": "keep",
+   "reason": "Равносильно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "toxin",
+   "where": "compendium.records tox_gamma_scopolamine — клетки без колонок",
+   "status": "keep",
+   "reason": "Колонки для существующих клеток.",
+   "corrected_target": ""
+  },
+  {
+   "id": "toxin",
+   "where": "кнопка tox_gamma_scopolamine → intoxicate; колонки damage (текст), vector (текст)",
+   "status": "keep",
+   "reason": "Тот же бросок, те же состояния; дыра «Наложить списком» отмечена.",
+   "corrected_target": ""
+  },
+  {
+   "id": "drug",
+   "where": "compendium.records drug_alcohol, drug_jazz — клетки без колонок",
+   "status": "keep",
+   "reason": "Правки висящих эффектов совпадают с boosts.",
+   "corrected_target": ""
+  },
+  {
+   "id": "drug",
+   "where": "system.effects dg_jazz_take, dg_alcohol_take (кнопки записей); drug_crashes — 5 подписок lost:dg_*",
+   "status": "fix",
+   "reason": "Числа отходняка в цели переносятся в колонки записей, а записей у «Долгого пути», «Зубрилы», «Камикадзе», «Нитро» нет (только Алкоголь и «Джаз») — отходняк этих четырёх пропадёт. Сами числа (12+Утомление, 6, 6+Утомление, 9, Ошеломление) сверены.",
+   "corrected_target": "Кнопка «Принять» у типа drug → одна функция (срок `если(@вещь.duration_d6 >= 1, @вещь.duration_d6 * кинуть(к6), @вещь.duration_min)`, `НАЛОЖИТЬ @вещь.acts`). Числа отходняка — входы висящих эффектов dg_* (crash_stun, crash_status) с умолчаниями в самом эффекте: dg_long_way 12 и fatigued, dg_zubrila 6, dg_kamikaze 6 и fatigued, dg_nitro 9, dg_jazz — dazed; колонки записи только переопределяют их. Висящие наркотики помечены «наркотик»; одна подписка `lost:наркотик` читает входы ушедшего (нужна правка движка: lost: по метке). Записи для четырёх наркотиков — вопрос владельцу."
+  },
+  {
+   "id": "metatype_mods",
+   "where": "system.tables.metatype_mods — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "grunt_templates",
+   "where": "system.tables.grunt_templates — подписи всех 42 колонок равны ключам",
+   "status": "keep",
+   "reason": "Подписи; вопрос про итоги вынесен.",
+   "corrected_target": ""
+  },
+  {
+   "id": "creatures",
+   "where": "system.effects.creature_template",
+   "status": "fix",
+   "reason": "Перевод в правки типа листа не сохраняет «пустая клетка — не трогать»: у 6 из 18 существ нет клетки magic, сейчас Магия листа остаётся, в цели `magic set @creature.magic` даст пусто. Характеристики заполнены у всех 18.",
+   "corrected_target": "Поле creature «Заготовка» (выбор из creatures) на листе; правки типа «Существо»: `body set @creature.body` и т. д. для 8 характеристик; `magic set @creature.magic` с if `не пусто(@creature.magic)`; ранги — `skills.*.rank set @creature.sk_<навык>` (колонки sk_* с default 0, ключи — как строки skills). «Облик» пишет только выбор. Нужны правки движка B и G."
+  },
+  {
+   "id": "creatures",
+   "where": "system.tables.creatures — подписи 40 колонок равны ключам",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "primes",
+   "where": "system.tables.primes — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "contacts_examples",
+   "where": "system.tables.contacts_examples — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "pr_ranges",
+   "where": "system.tables.pr_ranges — подписи; строки pr_min/pr_max",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "rep_changes",
+   "where": "system.tables.rep_changes — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "heat_effects",
+   "where": "system.tables.heat_effects — подписи; колонки heat + range",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "heat_meet_mods",
+   "where": "system.tables.heat_meet_mods — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "heat_reduce",
+   "where": "system.tables.heat_reduce — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "security_zones",
+   "where": "system.tables.security_zones — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "locks",
+   "where": "system.tables.locks — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sensors",
+   "where": "system.tables.sensors — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "chem_detect_mods",
+   "where": "system.tables.chem_detect_mods — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "cyber_scan",
+   "where": "system.tables.cyber_scan — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "pay_karma",
+   "where": "system.tables.pay_karma — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "pay_money",
+   "where": "system.tables.pay_money — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "search_mods",
+   "where": "system.tables.search_mods — подписи",
+   "status": "keep",
+   "reason": "Подписи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "damage_choice",
+   "where": "system.tables.damage_choice",
+   "status": "keep",
+   "reason": "Не читается.",
+   "corrected_target": ""
+  },
+  {
+   "id": "blocks-initiative-grants",
+   "where": "system.groups",
+   "status": "keep",
+   "reason": "Папки, правила не затрагивает.",
+   "corrected_target": ""
+  }
+ ],
+ "missed": [
+  {
+   "id": "ranges",
+   "where": "system.tables.ranges, колонки throw_ricochet / launch_ricochet; system.effects throw_blast, launch_blast",
+   "problem": "Одно понятие «поправка рикошета по дистанции» читается с разным знаком: «Бросить гранату» вычитает throw_ricochet (2к6 − успехи − поправка), «Выстрелить из пусковой установки» прибавляет launch_ricochet (2к6 − успехи + поправка). В выписках правила рикошета нет — сверить по книге.",
+   "target": "Одна запись: клетки — поправка со знаком («к рикошету»), обе функции прибавляют `+ @дистанция.<колонка>`; знаки клеток — по книге (вопрос владельцу)."
+  },
+  {
+   "id": "fire_modes",
+   "where": "system.tables.fire_modes, колонка area «Радиус, м» (непрерывный огонь 1)",
+   "problem": "Колонку не читает ни один эффект: непрерывный огонь как атака по площади не собран, число книги лежит без механики и без пометки справкой.",
+   "target": "Подключить в «Выстрелить» (непрерывный огонь — несколько целей в радиусе, как у взрыва) или перенести в справку с причиной (docs/shadowrun6.md, «Пространство»)."
+  },
+  {
+   "id": "reload_kinds",
+   "where": "system.tables.reload_kinds, колонка reload (текст); system.effects.reload",
+   "problem": "Правила текстом не собраны: «дульнозарядное — сложное действие на каждый заряд» (сейчас одно действие заряжает всё), «барабан: со сменным барабаном — простое». Разбор #34 переводит это в одну колонку «сложное» и теряет оба уточнения.",
+   "target": "reload_kinds: колонка per_round «По одному заряду» (да у дульнозарядного) — «Перезарядить» добавляет 1, а не до ammo_max; сменный барабан — свойство экземпляра/модификации (простое действие) или справка с причиной."
+  }
+ ]
+}

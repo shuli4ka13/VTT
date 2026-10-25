@@ -1,0 +1,352 @@
+{
+ "checks": [
+  {
+   "id": "fading",
+   "where": "fading: шаги 1–2 (бросок «выдержка», вызов «Урон»); для сравнения spell_drain «Истощение», шаги 1–2",
+   "status": "keep",
+   "reason": "Собирается на текущем движке. @вид.pool — вход-выбор, поэтому путь идёт через referencedTable → walk со scope (refs.ts, ветка входа), и клетка-формула {expr: @лист.drain_pool} видит лист из эффекта (cells.ts: readCell, onSheet → scope.resolve). Метка броска {expr: @вид.tag} работает: tagsOf в steps/roll.ts считает формулы, так уже сделано в matrix_check ({expr: @action}). Других ссылок на id fading и spell_drain, кроме пяти вызовов, нет: ни правок call, ни подписок, — слияние ничего не ломает. Оговорка: drain (boolean, default нет) переживает пустую клетку только случайно. Читается undefined, emit выкидывает пустой аргумент, и срабатывает умолчание take_damage.drain = нет. Подтверждением, что умолчания колонок работают, это не считать (см. missed «A»). Побочный эффект: значение выбора «вид» попадёт в метки вызова (emit.ts: chosenTags), это безвредно. Слияние с «Истощением» согласовать с кластером «Магия».",
+   "corrected_target": ""
+  },
+  {
+   "id": "fading",
+   "where": "вход pool: в вызовах из cast_form, cast_form_attr, compile_sprite",
+   "status": "keep",
+   "reason": "Верно: набор сопротивления — колонка-формула pool справочника видов отдачи, а у вызывающих остаётся вид. Клетка видит @лист (scope).",
+   "corrected_target": ""
+  },
+  {
+   "id": "form_infusion",
+   "where": "form_infusion: правки 1–4",
+   "status": "keep",
+   "reason": "Подтверждено по коду. У висящего подстановки слота нет: modifiers.ts sourcesOf, цикл wornEffects, кладёт effect.modifiers как есть; `aimed` и itemTarget (sheet-columns.ts: TARGET_SLOT знает только {@строка.…}) есть только у записей. assertTarget в collectModifiers упадёт на слоте. Обхода данными нет: правка с if всё равно оставляет четыре строки. Дыру движка разбор назвал точно: слот {@вход.колонка} → значение из entry.args → строка справочника from → сырая клетка колонки вида field. Плюс lint и references.",
+   "corrected_target": ""
+  },
+  {
+   "id": "form_infusion",
+   "where": "form_infusion: вход attr",
+   "status": "keep",
+   "reason": "Вход choice from matrix_attrs нужен и для слота, и для проверки. В matrix_stat_cut так уже сделано.",
+   "corrected_target": ""
+  },
+  {
+   "id": "form_infusion",
+   "where": "form_infusion ≈ form_diffusion ≈ matrix_stat_cut",
+   "status": "keep",
+   "reason": "Причина отложить подтверждена: run.ts detach снимает все записи эффекта на листе, кроме случая, когда снимает себя сама подписка этого висящего (self). Значит, «Прекратить» по id сняло бы и Инфузию, и Диффузию. Сливать после «снять по входам» — верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "form_infusion",
+   "where": "form_infusion: метки и входы",
+   "status": "keep",
+   "reason": "Метка и вход держит собираются: status.ts передаёт аргументы, attach хранит только объявленные входы. Учтено, что держит входит в сравнение аргументов при refresh (sameArgs): Инфузии от разных техномантов будут отдельными наложениями — по смыслу так и надо.",
+   "corrected_target": ""
+  },
+  {
+   "id": "form_diffusion",
+   "where": "form_diffusion: правки 1–4",
+   "status": "keep",
+   "reason": "То же, что у form_infusion: та же дыра слота, цель верна.",
+   "corrected_target": ""
+  },
+  {
+   "id": "form_diffusion",
+   "where": "form_diffusion целиком",
+   "status": "keep",
+   "reason": "Отложенное слияние обосновано тем же detach по id (run.ts).",
+   "corrected_target": ""
+  },
+  {
+   "id": "form_channel",
+   "where": "form_channel: вход attr",
+   "status": "keep",
+   "reason": "Вход attr не читается ни одной правкой: это мёртвый вход, удалить.",
+   "corrected_target": ""
+  },
+  {
+   "id": "form_channel",
+   "where": "form_channel: метки",
+   "status": "keep",
+   "reason": "Условно и по делу: длительности формы в выписках нет, вопрос владельцу вынесен.",
+   "corrected_target": ""
+  },
+  {
+   "id": "cast_form",
+   "where": "cast_form: «Плата», шаги 7–12",
+   "status": "keep",
+   "reason": "Готовая функция spend_action повторяет эти шаги один в один. В «Плате» отказ вызова обрывает действие: emit.ts возвращает break emit-stopped при ctx.inCost. Так уже сделано в act_full_defense.",
+   "corrected_target": ""
+  },
+  {
+   "id": "cast_form",
+   "where": "cast_form: «Плата», шаг 1. Та же проверка ещё в 12 местах: compile_sprite (плата 1), matrix_hurt (шаг 2), колонка initiative, 5 правок типа runner «живой аватар», programs_loaded.max",
+   "status": "fix",
+   "reason": "Механизм выбран верно (колонка вместо строки), но на текущем движке не собирается. Умолчание колонки справочника не подставляется в пустую клетку: cells.ts readCell, ветка `source.kind === 'input'` → undefined (проверено пробой). У «маг», «адепт» и других строк клетки living_persona нет, а писать «нет» в каждую строку запрещает правило «умолчания в данных не пишутся». Отрицание в «Плате» работает случайно: `не ничего` даёт да (проба formula: `не @x` при undefined = true). Тесты эту ошибку спрячут. Положительные чтения ломаются: `ЕСЛИ @лист.awakened.living_persona` в matrix_harm/matrix_hurt даёт «условие должно давать да/нет», `если(@awakened.living_persona, …)` в колонке initiative и правках runner даёт «условие тернарного оператора… получено ничего». Это касается всех нетехномантов.",
+   "corrected_target": "Справочник «Пробуждённый» (awakened_kinds): колонка living_persona «Живой аватар» (boolean, default нет), клетка да только у строки «техномант», у остальных клеток нет. Условие в «Плате» cast_form и compile_sprite: ЕСЛИ не @действующий.awakened.living_persona → СТОП. Остальные 12 мест — @awakened.living_persona / @лист.awakened.living_persona. Сначала дописать движок, без этого переделку не начинать: в packages/engine/src/engine/cells.ts readCell, если у таблицы нет owner (справочник) и cellSource даёт 'input', вернуть spec.default; то же в lookupCell (engine/tables.ts) и в подстановке @строка.x (model/sheet-columns.ts: rowPath). У типов записей так уже сделано (model/owned.ts: propsOf, стр. 103). Плюс тест: пустая клетка boolean-колонки с default нет даёт нет в условии и в если()."
+  },
+  {
+   "id": "cast_form",
+   "where": "cast_form: шаг «форма» (бросок), количество",
+   "status": "keep",
+   "reason": "Проверено по коду, «проверить по месту» снимается. В теле эффекта @skill.rank идёт так: refs.ts evaluate → referencedTable(skill) = skills → walk(ctx.pass) → readCell → isLive (у skills owner sheet, у rank клетки нет) → pass.resolve. Здесь ctx.pass = view(frame.home), а у кнопки home = действующий (act.ts:124/159). Внутри «Для каждого» home не меняется. Тот же путь у @skill.pool в привязках оружия. Можно писать и явно @действующий.skill.rank (ветка sheetHead → walk(view(id))). Клетки «электроника» и «взлом» совпадают со строками skills.",
+   "corrected_target": ""
+  },
+  {
+   "id": "cast_form",
+   "where": "cast_form: вызов fading",
+   "status": "keep",
+   "reason": "Следует из fading/backlash, собирается.",
+   "corrected_target": ""
+  },
+  {
+   "id": "cast_form",
+   "where": "cast_form: шаги внутри «Для каждого», 1–8 (Преимущество по ЗА/ЗЩ, «отпор», «итог», ПН). Те же шаги — в cast_form_attr, sprite_power_use, matrix_check, matrix_spike, matrix_tarpit, matrix_hack, ic_attack",
+   "status": "fix",
+   "reason": "Функция верна, а вход-бросок уже проверен в движке. emit.ts rollArg передаёт бросок целиком, run.ts:762 rollsOf/totalsOf кладёт его в rolls вызова, check.ts rollOf/facedOf читает @бросок. Тесты: packages/engine/tests/library.test.ts:189–241 («бросок передаётся в вызов целиком»), там же lint чист. Пункт engine_gap «проверить по месту» снимается. Чего не хватает: условие `ЕСЛИ @защита.opposed` опирается на умолчание да в 11 строках matrix_defenses, где клетки нет. Сегодня readCell отдаёт там undefined, и holdsNow бросает ошибку (см. дыру A). Строка «нет» в matrix_defenses есть, это проверено. Мелочь: бросок «отпор» на 0 кубиков при пороге можно не делать — если() вычисляет только нужную ветку, так что ссылку на @отпор при пороге никто не тронет.",
+   "corrected_target": "Функция matrix_versus «Проверка против цели в Матрице» (группа «Шаги для других»), как в разборе. Входы: действующий (sheet, role actor), цель (sheet, role target), бросок (roll), защита (choice from matrix_defenses, default «нет»), незаконное (boolean, default нет), порог (number, default 0). Итоги: успех, чистые, успехов, отпор. Шаги. 1) ЕСЛИ @защита.opposed → Преимущество по разнице ЗА/ЗЩ ≥ 4 (с m_def_cut при незаконном). 2) ЕСЛИ @защита.opposed → ЧИСЛО отпор = кинуть pool x большее из(0, если(@цель.is_device < 1, @защита.persona, @защита.device)) by @цель метки [защита, матрица]; КОНЕЦ. 3) ПРОВЕРКА итог: @бросок против если(@защита.opposed, @отпор, @порог). 4) ЕСЛИ @незаконное и @защита.opposed → ПН. Вызовы из cast_form и sprite_power_use: «итог» = matrix_versus(…), защиту передавать явно (у неё default, по имени она не подставится: model/implicit.ts). Предусловие в движке — дыра A: в engine/cells.ts readCell брать spec.default для пустой клетки справочника без owner. Без неё colonka opposed с default да не читается."
+  },
+  {
+   "id": "cast_form",
+   "where": "cast_form: три места (условие Преимущества, «против» у проверки, условие ПН)",
+   "status": "fix",
+   "reason": "Колонка вместо принадлежности множеству — верно. Но клетка да в 11 строках не пишется («умолчания не пишутся»), а readCell пустую клетку справочника отдаёт как undefined (cells.ts: source.kind 'input'). Получится «условие должно давать да/нет», ПРОВЕРКА против если(undefined, …) упадёт. Строка «нет» в matrix_defenses есть.",
+   "corrected_target": "В matrix_defenses колонка opposed «Встречная» (boolean, default да); клетка нет только у строк «порог» и «нет». Три условия → @защита.opposed (внутри matrix_versus). Предусловие: дописать движок (дыра A) — engine/cells.ts readCell, для таблицы без owner при cellSource 'input' вернуть spec.default; то же в engine/tables.ts lookupCell."
+  },
+  {
+   "id": "cast_form",
+   "where": "cast_form: величина во всех 9 исходах",
+   "status": "keep",
+   "reason": "Колонка записи net_hits с default да работает и без дыры A: у записей умолчание берёт model/owned.ts propsOf (стр. 103). ЧИСЛО без костей шаг roll умеет (die пустой → только формула).",
+   "corrected_target": ""
+  },
+  {
+   "id": "cast_form",
+   "where": "cast_form: «ЕСЛИ @итог.success» → 9 веток по @outcome",
+   "status": "fix",
+   "reason": "Диагноз, почему конструктор не рисует блок, верен: chain.tsx casesAt/caseAt требуют у всех голов `@ref == \"строка\"` с одним ref, а sourceOf находит варианты только у входа-выбора. Но цель противоречит собственному критерию. Три ветки «НАЛОЖИТЬ @outcome.status» («свой шум −», «характеристика +», «характеристика −») делают одно действие и отличаются только данными: какой эффект, на кого, какой потолок. Движок уже собирает их одним шагом. status берёт id из формулы (status.ts: ctx.value(step.effect); так сделано в cast_spell и в D&D strike). «на кого» — формула, дающая id листа (run.ts sheetOf). Клетка-формула справочника видит @величина, @attr, @цель через scope. Ветки «урон Матрицы» (вызов), «лечение», «шум цели +», «ПН цели +», «свой ПН −» правят разные поля в разные стороны. Шаг apply берёт мишень только через ctx.field(step.target), колонку «поле» он не прочтёт. Поэтому эти ветки остаются блоком «По «Исход»» — обоснованно. Всё, кроме самого блока, зависит от дыры A (default колонок on_self/amount).",
+   "corrected_target": "Справочник form_outcomes «Исход сложной формы» (key word), строки как в разборе плюс «нет». Колонки: status «Висящее» (effect, optional): «свой шум −» → form_channel, «характеристика +» → form_infusion, «характеристика −» → form_diffusion. on_self «На себя» (boolean, default нет; да у «свой шум −»). amount «Величина висящего» (number, формула на строку; default — формула @величина): «характеристика +» → меньшее из(@величина, @attr.target_device); «характеристика −» → меньшее из(@величина, большее из(0, @attr.target_persona - 1)). needs_attr (boolean, default нет; да у «характеристика ±»). Вход outcome и колонка complex_form.outcome — choice from form_outcomes (default «нет»). После «Если успех» и шага «величина»: 1) блок «По «Исход»», ветки только с условием @outcome == «…»: урон Матрицы → ВЫЗОВ matrix_harm(лист=@цель, amount=@величина); лечение Матрицы → ИЗМЕНИТЬ @цель.matrix_damage subtract меньшее из(@цель.matrix_damage, @величина); шум цели + → ИЗМЕНИТЬ @цель.noise add @величина; ПН цели + → ИЗМЕНИТЬ @цель.overwatch add @величина; свой ПН − → ИЗМЕНИТЬ @действующий.overwatch subtract меньшее из(@действующий.overwatch, @величина). Для трёх висящих и «нет» ветки нет. 2) Один шаг: НАЛОЖИТЬ @outcome.status на если(@outcome.on_self, @действующий, @цель) (attr=@attr, amount=@outcome.amount, держит=@действующий); при пустом status шаг пропускается (status.ts). Предусловие в движке — дыра A (engine/cells.ts readCell: spec.default для пустой клетки справочника)."
+  },
+  {
+   "id": "cast_form",
+   "where": "cast_form: ветка «урон Матрицы»; matrix_hurt, шаг 2",
+   "status": "fix",
+   "reason": "Функция matrix_harm — правильное слияние развилки. Но её условие `ЕСЛИ @лист.awakened.living_persona` положительное: у всех нетехномантов клетки нет, readCell отдаёт undefined, и holdsNow бросает «условие должно давать да/нет». Значит, урон Матрицы любому устройству или декеру упадёт. engine_gap в разборе пуст, это неверно.",
+   "corrected_target": "Функция matrix_harm «Нанести урон Матрицы», как в разборе: входы лист (sheet, role target), amount (number, role amount); ЕСЛИ @лист.awakened.living_persona → ВЫЗОВ take_damage(лист=@лист, amount=@amount, physical_hit=нет); ИНАЧЕ → ИЗМЕНИТЬ @лист.matrix_damage add @amount. Вызовы из matrix_hurt и cast_form — как в разборе. Предусловие: дыра A в движке (engine/cells.ts readCell — spec.default для пустой клетки справочника без owner), иначе условие падает у всех, кроме техноманта."
+  },
+  {
+   "id": "cast_form",
+   "where": "cast_form: «против» у проверки; исходы «характеристика ±»",
+   "status": "keep",
+   "reason": "Верно: default 0 у порога, «или 0» у @attr.* снимается благодаря стопу в «Плате». «@threshold или @порог» — осмысленный выбор, а не след пустой клетки. Вопрос порога при каждом запуске остаётся из-за asks.ts:21, эта дыра в разборе названа.",
+   "corrected_target": ""
+  },
+  {
+   "id": "cast_form",
+   "where": "cast_form: исходы «характеристика ±»",
+   "status": "fix",
+   "reason": "Стоп в «Плате» — верный механизм. Но `@outcome.needs_attr и пусто(@attr)` у строк без клетки needs_attr даёт `undefined и …` = undefined (проба), а holdsNow бросает ошибку. Значит, упадёт запуск любой формы, кроме двух. Нужна дыра A.",
+   "corrected_target": "В «Плату» cast_form после проверки Резонанса: ЕСЛИ @outcome.needs_attr и пусто(@attr) → СТОП «у формы не выбрана характеристика». Колонка form_outcomes.needs_attr (boolean, default нет; клетка да только у «характеристика +» и «характеристика −»). Предусловие: дыра A в движке (engine/cells.ts readCell — spec.default для пустой клетки справочника)."
+  },
+  {
+   "id": "cast_form",
+   "where": "записи cf_infusion и cf_res_spike: привязки «Запустить»",
+   "status": "keep",
+   "reason": "Собирается. Привязки типа записи сливаются с привязками записи по номеру (inherit.ts byOrder), аргументы типа считаются в окружении записи: для входа-выбора fromArgs → evaluate с recordScope, для числа — recordNamesInline. @duration.sustained (колонка записи → spell_durations) проходит через referencedTable по колонкам родов записей. Пустая клетка sustained здесь не страшна: аргумент даёт undefined, и namedValue берёт default входа sustain (нет). Однако условие кнопки if: @duration.sustained (следующая находка) без дыры A не сработает. «действующий» подставляет buttons.ts tableOf.",
+   "corrected_target": ""
+  },
+  {
+   "id": "cast_form",
+   "where": "запись cf_infusion: привязка «Прекратить»",
+   "status": "fix",
+   "reason": "Дыра верна: у привязки нет if (schema world.ts: binding — label/effect/table/args; events/actions.ts actionsOfRecord). Промежуточная заглушка [{effect: \"cast_form\"}, {Прекратить}] держится только на слиянии по номеру (byOrder) — это данные, подогнанные под дыру движка. Правило проекта такое запрещает. Цель — привязка типа с условием, а дыра движка блокирует переделку. Кроме того, @duration.sustained в условии требует умолчание колонки (дыра A).",
+   "corrected_target": "У типа complex_form вторая привязка: {label: «Прекратить», effect: «stop_spell», if: @duration.sustained, args: {spell_effect: @outcome.status}}; у записей своих привязок нет. Колонка spell_durations.sustained (boolean, default нет; да у «Д»). Предусловия в движке: 1) binding.if — packages/schema/src/world.ts (binding), events/actions.ts actionsOfRecord (отбросить привязку с ложным условием, считая формулу по клеткам записи), model/inherit.ts byOrder (переносить if), проверка в model/lint.ts; номера действий у записи не должны съезжать — индекс считать по полному списку. 2) Дыра A (engine/cells.ts readCell — spec.default). Заглушку-привязку не заводить, до доработки оставить как сейчас."
+  },
+  {
+   "id": "cast_form",
+   "where": "cast_form: шаг «ЕСЛИ @sustain»; stop_spell, шаг 3",
+   "status": "keep",
+   "reason": "Дыра подтверждена: run.ts:1221 — ключ gained:/lost:<effectId>. По метке не слышно. Но hooked обходит все листы-держатели (run.ts:1135), так что системный висящий на листе мага или техноманта услышит наложение на цели. @about несёт аргументы (держит). Чтобы цель не читали как «хранимое вместо вычисляемого»: счётчик остаётся хранимым, потому что висящие лежат на чужих листах, а формула листа чужие висящие не считает. Это стоит дописать в обоснование. Альтернатива на текущем движке — свои шаги attach/detach у каждого висящего (schema effect.attach/detach; run.ts momentReact hook) — дала бы копии в 5+ эффектах. Решение «по метке» правильнее.",
+   "corrected_target": ""
+  },
+  {
+   "id": "cast_form",
+   "where": "cast_form: метки эффекта",
+   "status": "keep",
+   "reason": "Договор метки (system.tags: inputs/each/outputs) в схеме есть. Слушателей пока нет, но это точка для будущих отголосков. Договор не противоречит вызову «итог» внутри «Для каждого».",
+   "corrected_target": ""
+  },
+  {
+   "id": "cast_form_attr",
+   "where": "cast_form_attr целиком",
+   "status": "keep",
+   "reason": "Клетки экземпляра поддерживаются: propsOf берёт entry.values раньше клеток записи (owned.ts:99–101), id действия несёт экземпляр (actions.ts INSTANCE). Цель собирается. Как с Диффузией — вопрос владельцу вынесен.",
+   "corrected_target": ""
+  },
+  {
+   "id": "compile_sprite",
+   "where": "compile_sprite: «Плата», шаг 1",
+   "status": "fix",
+   "reason": "Отрицание «не @…living_persona» на текущем движке даёт верный ответ случайно: пустая клетка = undefined, а `не ничего` = да. Сама колонка и её положительные чтения требуют дыры A. Тест этого не поймает.",
+   "corrected_target": "ЕСЛИ не @действующий.awakened.living_persona → СТОП «только техномант»; колонка living_persona — как в cast_form; остальные стопы «Платы» на месте. Предусловие: дыра A (engine/cells.ts readCell — spec.default для пустой клетки справочника), иначе проверка держится на том, что `не ничего` = да."
+  },
+  {
+   "id": "compile_sprite",
+   "where": "compile_sprite: шаги после «ЕСЛИ @итог.success», 3–10",
+   "status": "keep",
+   "reason": "Верно: хранимое ≠ вычисляемое, значения считает тип листа. Сборка зависит от правок типа «Спрайт» (см. sheet:sprite).",
+   "corrected_target": ""
+  },
+  {
+   "id": "compile_sprite",
+   "where": "compile_sprite: вызов fading",
+   "status": "keep",
+   "reason": "Следует из backlash.",
+   "corrected_target": ""
+  },
+  {
+   "id": "compile_sprite",
+   "where": "compile_sprite: счётчик sprites_unreg",
+   "status": "keep",
+   "reason": "Правило не выводится из выписок — вопрос владельцу. Так и надо.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sprite_trap",
+   "where": "sprite_trap: подписок нет",
+   "status": "keep",
+   "reason": "Собирается. keysOf (core/subs.ts) даёт ключи id плюс метки эффекта, before:<метка> слышен при каждой доставке (run.ts:909). hear обходит все листы-держатели (run.ts:942), так что Ловушка на другой цели тоже услышит. Входы-листы висящего привязываются из его аргументов (run.ts hanging), и @спрайт доступен. detach из своей подписки снимает только своё наложение (run.ts detach: self). Оговорка «без целей «до» не слышно» верна: доставок нет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sprite_storm",
+   "where": "sprite_storm: подписка только moment:round-start",
+   "status": "keep",
+   "reason": "Механизм тот же, что у Ловушки, собирается. Замечание: раз вход спрайт появляется, урон за раунд можно читать как @спрайт.resonance и снять вход dmg. Тогда «урон сразу» (hit) и «урон за раунд» не будут одним аргументом. Но если лист спрайта уберут, чтение упадёт, так что вариант разбора допустим.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sprite_diagnostics",
+   "where": "вызов в sprite_power_use: аргумент amount",
+   "status": "keep",
+   "reason": "Правило «не меньше 1» на своём месте, фильтр anyTags у правки броска оставлен правильно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sprite_power_use",
+   "where": "sprite_power_use: шаг «способность» (бросок), количество",
+   "status": "fix",
+   "reason": "Лесенку по skill убрать через choice from skills — верно, путь @skill.rank проверен (см. cast_form). Но удалять use_res и use_resonance можно только при условии, что Резонанс спрайта = Уровень. Сам разбор выносит это владельцу. Цель должна быть условной, а не безусловной.",
+   "corrected_target": "Вход skill и колонку sprite_power.skill сделать choice from skills. Количество: большее из(0, @skill.rank + если(@use_res >= 1, @действующий.resonance, @действующий.sprite_level)). Если владелец подтвердит «Резонанс спрайта = Уровень», вход use_res и колонку use_resonance удалить, а количество станет большее из(0, @skill.rank + @действующий.resonance). До ответа use_res оставить."
+  },
+  {
+   "id": "sprite_power_use",
+   "where": "sprite_power_use: вход kind",
+   "status": "fix",
+   "reason": "Колонки action_kinds и вызов spend_action — верно. Но у строки «простое» клетки complex нет, readCell отдаёт undefined, emit выкидывает пустой аргумент. У spend_action.сложное умолчания нет, и namedValue бросает «параметр «сложное» не заполнен». simple у строки «сложное» переживёт это случайно: у простых есть default 0. Нужна дыра A.",
+   "corrected_target": "В action_kinds колонки complex «Сложное» (boolean, default нет; да у «сложное») и simple «Простых» (number, default 0; 1 у «простое»). Колонка sprite_power.action и вход kind — choice from action_kinds. В «Плате» после проверки задач: ВЫЗОВ spend_action(лист=@действующий, сложное=@kind.complex, простых=@kind.simple), затем tasks subtract 1. Предусловие: дыра A (engine/cells.ts readCell — spec.default для пустой клетки справочника); заодно дать spend_action.сложное default нет (умолчание функции, а не клетка)."
+  },
+  {
+   "id": "sprite_power_use",
+   "where": "sprite_power_use: шаги внутри «Для каждого», 1–7",
+   "status": "keep",
+   "reason": "Вход-бросок проверен (library.test.ts:189–241). Дополнительное предусловие (opposed, дыра A) — в записях про matrix_versus.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sprite_power_use",
+   "where": "sprite_power_use: условие Преимущества и «против» у проверки",
+   "status": "fix",
+   "reason": "Как в cast_form: @защита.opposed не читается без умолчания колонки (дыра A).",
+   "corrected_target": "@защита.opposed внутри matrix_versus; колонка matrix_defenses.opposed (boolean, default да; нет у «порог» и «нет»). Предусловие: дыра A в engine/cells.ts readCell."
+  },
+  {
+   "id": "sprite_power_use",
+   "where": "sprite_power_use: «ЕСЛИ @итог.success» → 3 ветки по @outcome",
+   "status": "keep",
+   "reason": "Верно: ветки отличаются данными. status с id из формулы и пустой id → пропуск (status.ts). attach хранит только объявленные входы (run.ts attach: kept). Колонка записи hit с формулой {expr: @действующий.resonance} доходит до числового входа через recordNamesInline (refs.ts) и считается в окружении эффекта. Умолчание колонки записи hit = 0 берёт propsOf. Дыра A здесь не нужна.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sprite_power_use",
+   "where": "записи spw_trap и spw_hash: привязки",
+   "status": "keep",
+   "reason": "Одна привязка на тип записи собирается: byOrder, аргументы из клеток записи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sprite_power_use",
+   "where": "sprite_power_use: «против» у проверки",
+   "status": "keep",
+   "reason": "threshold ни одна запись не передаёт — мёртвый вход. Default 0 у порога верен.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sprite_power_use",
+   "where": "sprite_power_use: метки эффекта",
+   "status": "keep",
+   "reason": "Метка нужна подписке before:<метка> у Ловушки и Электрошторма; ключи по меткам движок даёт (core/subs.ts keysOf).",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:sprite",
+   "where": "sheets.sprite.modifiers и подсказка типа",
+   "status": "fix",
+   "reason": "Перенос в правки типа — верно. Но формулы `если(@sprite_kind.hacking, @sprite_level, 0)` упадут в двух случаях. 1) Пустой лист без вида: navigate.ts walk при пустом ключе даёт null, если(null, …) бросает «условие тернарного оператора… получено ничего» (проба), и тогда весь расчёт листа спрайта ломается ещё до компиляции. 2) Строки, где клетки hacking/electronics/engineering нет (default нет не пишется): readCell отдаёт undefined (дыра A). Правка типа на клетку таблицы листа доказана только формой со слотом записи (skills.{@строка.skill}.rank, op add). Форма set от типа листа остаётся «проверить пробой».",
+   "corrected_target": "Добавить правки типа «Спрайт»: resonance set @sprite_level (stage «основа»); willpower, logic, intuition, charisma — set большее из(1, @sprite_level). skills.взлом.rank / skills.электроника.rank / skills.инженерное_дело.rank — set если(@sprite_kind.hacking, @sprite_level, 0) и так далее (если владелец скажет «всем три навыка = Уровень», то set @sprite_level без условия). Подсказку поправить; правки attr_limits.*.bonus +20 снести после проверки. Предусловия в движке: дыра A — engine/cells.ts readCell, spec.default для пустой клетки справочника; дыра B — engine/navigate.ts walk, при пустом выборе отдавать default колонки последнего шага. Плюс проба: правка типа листа op set на skills.<строка>.rank считается в calc."
+  },
+  {
+   "id": "sheet:sprite",
+   "where": "sprite_kinds.skills и compile_sprite",
+   "status": "fix",
+   "reason": "Три булевы колонки вместо текста — верно и уже условно по ответу владельца. Но клетки нет у строк, где навыка нет (default нет), а такие клетки читаются как undefined (дыра A).",
+   "corrected_target": "Текстовую колонку skills заменить тремя булевыми: hacking «Взлом», electronics «Электроника», engineering «Инженерное дело» (boolean, default нет). Клетки да: hacking и electronics у взломщика, инфоспрайта, крушителя, посыльного; electronics и engineering у техноспрайта. Если владелец скажет «всем три навыка = Уровень», колонки не нужны. Предусловие: дыра A (engine/cells.ts readCell — spec.default)."
+  },
+  {
+   "id": "sheet:sprite",
+   "where": "sheets.sprite: правки dev_attack, dev_sleaze, dev_dp, dev_firewall, initiative",
+   "status": "keep",
+   "reason": "Верно. У всех пяти строк клетки attack/sleaze/dp/firewall/init заполнены, «или 0» закрывает только пустой выбор вида. Это дыра B (navigate.ts walk → null), разбор её назвал.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:sprite",
+   "where": "sprite_kinds: подписи колонок",
+   "status": "keep",
+   "reason": "Английские подписи запрещены правилом проекта.",
+   "corrected_target": ""
+  },
+  {
+   "id": "sheet:sprite",
+   "where": "sprite_kinds.powers",
+   "status": "keep",
+   "reason": "Дыра подтверждена: events/actions.ts availableActions берёт действия только из heldBy и grantedTo, действий из клетки выбранной строки нет.",
+   "corrected_target": ""
+  }
+ ],
+ "missed": [
+  {
+   "id": "engine-gap-A",
+   "where": "packages/engine/src/engine/cells.ts: readCell, ветка `if (source.kind === 'input') return undefined;`; model/sheet-columns.ts: cellSource (нет ветки column.default); engine/tables.ts: lookupCell",
+   "problem": "Разбор упоминает в движке только умолчание при пустом выборе (navigate.ts:60). Он не видит, что у справочника умолчание колонки не подставляется и в пустую клетку выбранной строки. Проверено пробой: колонка boolean с default false, строка без клетки — cellSource даёт {kind: 'input'}, lookupCell даёт undefined. В образце это уже прикрыто заплатками «(@режим.ease_full или нет)» у fire_modes. Без этой правки не собираются цели разбора: living_persona (положительные чтения в matrix_harm/matrix_hurt, initiative, правки runner), matrix_defenses.opposed, form_outcomes.needs_attr / on_self / amount, spell_durations.sustained (в условии кнопки), action_kinds.complex, sprite_kinds.hacking / electronics / engineering. «не @…» при undefined даёт да, поэтому стоп в «Плате» по living_persona проходит случайно, и тесты этого не поймают. backlash.drain и action_kinds.simple тоже выживают случайно: emit выкидывает пустой аргумент, и срабатывает умолчание вызываемого.",
+   "target": "Дописать движок: в readCell при таблице без owner и cellSource = 'input' возвращать spec.default; то же в lookupCell и в подстановке @строка.x (sheet-columns.ts rowPath). Тест: если(@выбор.флаг, 1, 0) с пустой клеткой и default нет даёт 0. После этого снять «или нет» / «или 0» у клеток. Это дыра A, общая с кластерами «Атака», «Магия», «Таблицы»."
+  },
+  {
+   "id": "cast_form-apply-arms",
+   "where": "cast_form: ветки «свой шум −», «характеристика +», «характеристика −» в цели разбора (switch «По «Исход»»)",
+   "problem": "Разбор оставляет три ветки «НАЛОЖИТЬ @outcome.status» в switch, хотя они делают одно действие и отличаются только данными: эффект, лист, потолок величины. По принципу «ветки отличаются данными — колонка» и при том, что движок уже это умеет (status.effect из формулы, to — формула, дающая лист, клетка-формула видит @величина и @attr через scope), их надо заменить одним шагом после switch.",
+   "target": "Колонки form_outcomes: on_self (boolean), amount (формула на строку). Один шаг НАЛОЖИТЬ @outcome.status на если(@outcome.on_self, @действующий, @цель) (attr=@attr, amount=@outcome.amount, держит=@действующий); в switch остаются только ветки с разными действиями (подробно — в checks, cast_form switch). Нужна дыра A."
+  },
+  {
+   "id": "apply-dynamic-field",
+   "where": "cast_form: ветки «шум цели +» и «ПН цели +» (и «лечение» / «свой ПН −»)",
+   "problem": "Эти ветки отличаются только полем (noise / overwatch / matrix_damage) и листом. Колонкой «поле» их не свести: шаг apply берёт мишень только из ctx.field(step.target) (steps/apply.ts), значения колонки вида field он не примет. Разбор этого не назвал. Оставлять ветками switch можно, но с этой причиной.",
+   "target": "Записать как обоснованное исключение: switch по исходу остаётся, потому что у apply нет мишени из колонки. Если владелец захочет свести и эти ветки — дыра движка: мишень apply из значения вида field (вход или клетка) плюс лист."
+  },
+  {
+   "id": "verified-not-gaps",
+   "where": "engine_gaps: «Проверить вход-бросок (вид roll) у вызова»; cast_form: «@skill.rank … проверить по месту»",
+   "problem": "Разбор держит открытыми вопросами то, что в движке уже есть. Вход-бросок: emit.ts rollArg, run.ts:762 rollsOf/totalsOf, check.ts rollOf, тесты packages/engine/tests/library.test.ts:189–241. @skill.rank через вход-выбор: refs.ts → walk(ctx.pass = view(home = действующий)) → readCell → isLive → pass.resolve. Это тот же путь, что у @skill.pool оружия. Наложение по формуле id уже стоит в cast_spell, boost_spell и D&D strike.",
+   "target": "Убрать эти пункты из «недостающего в движке». Открытой оставить только пробу правки типа листа op set на skills.<строка>.rank."
+  }
+ ]
+}

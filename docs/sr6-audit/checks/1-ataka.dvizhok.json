@@ -1,0 +1,354 @@
+{
+ "checks": [
+  {
+   "id": "shoot",
+   "where": "shoot.cost, шаги 16–19 (ветка «приём.cost ≥ 1 → Потратить Преимущество» и «Потратить действие»); слово в слово вся «Плата» melee_strike",
+   "status": "keep",
+   "reason": "Проверил в коде, собирается. Признак цены доходит во вложенный вызов: core/run.ts callEvent передаёт frame.cost, а engine/steps/emit.ts:92 при остановке внутри «Платы» даёт break 'emit-stopped'. Значит, стоп spend_edge внутри attack_cost отменяет всё действие. Пункт 1 нужен по-настоящему только для «если(@приём.simple, 1, 0)»: simple пустой в 6 строках edge_actions, а readCell отдаёт undefined (engine/cells.ts:54). «не @приём.cover_free» работает и сейчас: «не» от пустого даёт «да» (formula/evaluate.ts: !given). Функция вместо копии выбрана верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "shoot",
+   "where": "shoot.steps: «атака_бросок», «Изменить aim_bonus = 0», ветка «@атк − большее из(@цели.defense_rating) >= 4 и cover < 1 → gain_edge»; те же 5 шагов в melee_strike",
+   "status": "keep",
+   "reason": "Собирается. callEvent исполняет шаги функции в тот же sink, поэтому шаг атака_бросок остаётся в трассе. Тесты (samples.shadowrun.test.ts:284, samples.shadowrun-book-calc.test.ts:74/94) ищут кости по имени шага в трассе, а не по пути, и выживут. Бросок с «бросает» не ленивый (engine/steps/roll.ts: lazy), поэтому до «Для каждого» он бросается один раз. Итог считается returnsOf после шагов, то есть уже с правками «увидев кости». Скрипт fn.ts из разбора лежит на другой машине, проверить его я не мог.",
+   "corrected_target": ""
+  },
+  {
+   "id": "shoot",
+   "where": "shoot.steps: часть режима в шаге «атк» и в шаге «ур»",
+   "status": "keep",
+   "reason": "Колонка вместо лесенки выбрана верно. Механика есть. Колонка-формула справочника видит имена эффекта (@выстрелов) через scope: engine/cells.ts readCell, коммит 7260599b. @строка.x подставляет withRow, в том числе для общей формулы колонки (cellSource → column.expr). Формула ease читает @вещь через ctx.item. Это скрытая связь: клетка справочника знает имя шага «выстрелов» в «Выстрелить», и переименование шага ломает клетку. Не блокирует, но отметить надо. Дыра пункта 1 указана точно: пустая ease у «одиночного выстрела» в rowPath даёт literal(undefined) = \"\", и сложение падает. rounds, ar и dv заполнены во всех строках fire_modes, так что penalty и dv_shot их читают без дыры.",
+   "corrected_target": ""
+  },
+  {
+   "id": "shoot",
+   "where": "shoot.cost и shoot.steps: 10 раз «или 0», 10 раз «или нет», 4 раза «или 1»; клетки ranges.item_ar (5 раз)",
+   "status": "fix",
+   "reason": "Цель верна, но запись о дыре неверна: почти всё здесь собирается на текущем движке. Умолчания колонок типа записи читаются уже сейчас (model/owned.ts propsOf, model/item-ref.ts itemStored, recordPath/cellExpr по cells из propsOf). Умолчание входа берётся сейчас: refs.ts namedValue. Пустой аргумент вызова выпадает и берёт умолчание входа (emit.ts:76). «не» от пустого даёт «да». В edge_actions cost, dv, pool и knockout заполнены во всех строках, в fire_modes заполнены rounds. Пункт 1 нужен только там, где пустая клетка справочника идёт в арифметику, условие «если» или сравнение. Здесь такого нет. Пример «если(@приём.simple, 1, 0)» относится к «Плате» (проблема 1), а не к этой.",
+   "corrected_target": "Вход режим: умолчание \"одиночный выстрел\" (остаётся необязательным и спрашиваемым); из проверки режима убрать «не пусто(@режим) и». Вход приём: умолчание \"нет\". Тип weapon: у ar1…ar5 умолчание 0. Тип firearm: у ammo_max, str_min, smart умолчание 0; str_need = «@str_min - …», в sight — «@smart». Клетки ranges.item_ar — @вещь.ar1 … @вещь.ar5. У входов defend.близко, strike_damage.вырубить и strike_damage.без_урона — умолчание «нет». Формулы «Выстрелить». Плата: «не @режим.always и не есть(@вещь.modes, @режим)»; «@вещь.ammo_max >= 1 и @вещь.ammo < 1»; «@вещь.ammo_max >= 1 и не @режим.partial и @вещь.ammo < @режим.rounds». Шаг: выстрелов = если(@вещь.ammo_max >= 1, меньшее из(@вещь.ammo, @режим.rounds), 0). Вызов «Отразить атаку»: близко=@дистанция.close (пустая клетка выпадает из вызова и берёт умолчание входа). Вызов «Нанести урон»: вырубить=@приём.knockout, без_урона=@приём.no_damage. Дописывать движок для этой правки не нужно: умолчания типа записи и входов уже читаются (owned.ts propsOf, refs.ts namedValue, emit.ts — пустой аргумент выпадает), а клетки справочника, которые здесь читаются в арифметике (приём.cost/dv/pool, режим.rounds), заполнены во всех строках. Пункт 1 нужен только «Плате» (если(@приём.simple, …)) и колонке ease."
+  },
+  {
+   "id": "shoot",
+   "where": "shoot.steps: «ур» (+ @вещь.ammo_dv) и вызов «Нанести урон» (физический, электричество)",
+   "status": "keep",
+   "reason": "Собирается. Аргументы кнопки типа с формулами по колонкам записи уже работают: refs.ts fromArgs → recordNamesInline для чисел, evaluate в recordScope для да/нет. @damage_kind.physical идёт через referencedTable по колонкам типов и walk (так в данных сейчас). Данные урона собираются в одном месте, как у «Ударить».",
+   "corrected_target": ""
+  },
+  {
+   "id": "shoot",
+   "where": "shoot: у эффекта нет меток",
+   "status": "keep",
+   "reason": "Движок поддерживает: effect.tags в схеме, includes разворачивает core/subs.ts tagsOf, договор проверяет model/lint.ts (входы, each = «цель», выход «вред» внутри «Для каждого»). У shoot петля называется «цель», шаг «вред» внутри «Для каждого» есть, линт пройдёт.",
+   "corrected_target": ""
+  },
+  {
+   "id": "melee_strike",
+   "where": "melee_strike.cost целиком",
+   "status": "keep",
+   "reason": "То же, что «Плата» у «Выстрелить»: стоп во вложенном вызове в «Плате» отменяет действие (emit.ts:92). Пункт 1 нужен ради «если(@приём.simple, …)».",
+   "corrected_target": ""
+  },
+  {
+   "id": "melee_strike",
+   "where": "melee_strike.steps: «атака_бросок», «aim_bonus = 0», ветка gain_edge",
+   "status": "keep",
+   "reason": "Та же функция attack_roll, собирается (см. «Выстрелить»).",
+   "corrected_target": ""
+  },
+  {
+   "id": "melee_strike",
+   "where": "melee_strike.steps «атк» и набор атаки",
+   "status": "fix",
+   "reason": "Основной вариант дублирует одно число в двух местах: у входа prone_pool умолчание −4, и у колонки melee.prone_pool тоже −4. Он делает «Ударить» непохожим на «Выстрелить», хотя тот читает @вещь (sight, ammo_ar, prone_ar). Довод «подойдёт для безоружной атаки» держится на кнопке без вещи, а выдача кнопки сейчас идёт без аргументов (system.grants: string[], пункт 5). Безоружной кнопки без дописывания движка не будет. Запасной вариант самого разбора проще и собирается сегодня: умолчание колонки типа читается (propsOf).",
+   "corrected_target": "У weapon.ar1 умолчание 0 (общее с «Выстрелить»). Шаг атк = @вещь.ar1 + @действующий.ar_mod. В attack_roll набор = @attack_pool + @приём.pool + если(@действующий.prone >= 1, @вещь.prone_pool, 0) (умолчание −4 остаётся одно — у колонки melee.prone_pool). Входы ar и prone_pool у «Ударить» не заводить. Безоружную атаку — отдельным вопросом владельцу: кнопка без вещи потребует выдачи кнопки с аргументами (пункт 5)."
+  },
+  {
+   "id": "melee_strike",
+   "where": "melee_strike.steps: «ур», вызов «Нанести урон»",
+   "status": "fix",
+   "reason": "Цель верна, а ссылка на пункт 1 неверна. В edge_actions dv и knockout заполнены во всех строках. Пустой no_damage даёт undefined, и аргумент выпадает из вызова (emit.ts:76), а дальше берётся умолчание входа strike_damage.без_урона. Пустой electric у оружия: у weapon.electric умолчание false (propsOf). Дописывать движок не нужно.",
+   "corrected_target": "Вход приём: умолчание \"нет\". ур = @dv + @приём.dv + @действующий.melee_dv_bonus. Вызов: strike_damage(цель=@цель, источник=@действующий, су=@ур + @отпор.чистые, физический=@physical_hit, электричество=@electric, вырубить=@приём.knockout, без_урона=@приём.no_damage). У strike_damage.вырубить и strike_damage.без_урона — умолчание «нет». Собирается на текущем движке: пустая клетка no_damage выпадает из вызова и берёт умолчание входа."
+  },
+  {
+   "id": "melee_strike",
+   "where": "melee_strike: у эффекта нет меток",
+   "status": "keep",
+   "reason": "Метки и includes поддержаны (subs.ts tagsOf), договор «атака» через includes проверяет линт (contractsOf). Петля «цель» и шаг «вред» у melee_strike есть.",
+   "corrected_target": ""
+  },
+  {
+   "id": "defend",
+   "where": "defend.steps «защита», метки броска",
+   "status": "keep",
+   "reason": "Собирается. У шага броска метки могут быть формулами: так уже сделано с {expr: @навык}. Слова меток броска берутся из значений строк таблиц (engine/roll-tags.ts tagWords), поэтому строки attack_kinds сами становятся словами меток. Вход-выбор попадает и в метки вызова defend (emit.ts chosenTags). Механизм выбран верно: род атаки — данные вызывающего, а не догадка по навыку.",
+   "corrected_target": ""
+  },
+  {
+   "id": "defend",
+   "where": "defend.params «близко»",
+   "status": "keep",
+   "reason": "Проверено в emit.ts:76: пустой аргумент выпадает, и у вызываемого берётся decl.default (refs.ts namedValue). Собирается на текущем движке.",
+   "corrected_target": ""
+  },
+  {
+   "id": "strike_damage",
+   "where": "strike_damage.steps 1–2 («сопротивление_бросок» Телом → «Урон»); та же пара шагов в blast_damage и implant_blast, а вне кластера — в burning, poisoned, corroded (подписка round-start) и drive_check (авария)",
+   "status": "keep",
+   "reason": "Функция с итогом собирается: returnsOf, вложенный emit. Шаг сопротивление_бросок остаётся в трассе, тесты ищут его по имени в трассе. Правок значения на soak в образце нет, поэтому для implant_blast «то же Тело» верно: soak = если(@veh_body >= 1, @veh_body, @body).",
+   "corrected_target": ""
+  },
+  {
+   "id": "strike_damage",
+   "where": "бросок сопротивления в strike_damage, blast_damage и implant_blast",
+   "status": "keep",
+   "reason": "Метка-формула на броске поддержана. Учесть, что меняется игра: имплант «Аугментация плотности костей» начнёт прибавлять кубики к сопротивлению физическому урону, в том числе от взрыва и детонации импланта. По его описанию так и должно быть.",
+   "corrected_target": ""
+  },
+  {
+   "id": "strike_damage",
+   "where": "strike_damage.params «вырубить», «без_урона»",
+   "status": "keep",
+   "reason": "Умолчание входа работает сейчас (namedValue). От него зависят цели blast_damage и melee_strike.",
+   "corrected_target": ""
+  },
+  {
+   "id": "take_damage",
+   "where": "take_damage.steps 9–13 (ветка «@amount >= 1»)",
+   "status": "keep",
+   "reason": "Проверено: aided_fa и aided_kit встречаются в образце по 2 раза, в коде и тестах — 0 раз. Запись, которую никто не читает.",
+   "corrected_target": ""
+  },
+  {
+   "id": "take_damage",
+   "where": "take_damage.steps 1–8",
+   "status": "keep",
+   "reason": "Ветки пишут в разные поля, то есть это разные действия, а условие — вход да/нет. Ветвление уместно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "reload",
+   "where": "reload.cost, аргументы spend_action",
+   "status": "fix",
+   "reason": "Дыра пункта 2 подтверждена: refs.ts:194 при ключе «reload.complex» отдаёт null, и это не ловит линт. В колонке типа записи recordPath идёт по ссылке (@reload.complex там читается), но это не повод подгонять данные: чинить надо refs.ts. Новая хранимая колонка simple рядом с complex — второй факт об одном и том же, а у «обоймы» он может разойтись с complex. Поэтому число простых — вычисляемое. Записи без контейнера (лук) отсечёт перенос проверки ammo_max в начало «Платы».",
+   "corrected_target": "Движок (пункт 2): в engine/refs.ts, ветка ctx.item, путь @вещь.<колонка-выбор>.<колонка> идёт по ссылке колонки типа (как navigate.ts walk), плюс находка линта на неизвестный путь @вещь. Справочник reload_kinds: новая колонка simple «Простых действий» (число) — общая формула колонки «если(@строка.complex, 0, 1)», а не хранимые клетки. «Плата» (после проверки «@вещь.ammo_max < 1 → Стоп»): spend_action(лист=@действующий, сложное=@вещь.reload.complex, простых=@вещь.reload.simple). Какое правило главное, стр. 44 или стр. 245, — вопрос 1; ответ меняет только клетки complex."
+  },
+  {
+   "id": "reload",
+   "where": "reload.steps 1–3",
+   "status": "keep",
+   "reason": "Подтверждено в core/act.ts: без «Для каждого» (split < 0) «Плата» уже записана (стр. 137–138), а стоп в теле её не откатывает. Проверка «можно ли» должна стоять в «Плате».",
+   "corrected_target": ""
+  },
+  {
+   "id": "dodge_ready",
+   "where": "dodge_ready: duration и подписка «бросок окончен»",
+   "status": "keep",
+   "reason": "Подтверждено: core/run.ts react после шагов подписки зовёт burn, если срок «uses» (стр. 1065), а usesLeft ставится при наложении (стр. 729, perform.ts:247). Подписка без шагов допустима: steps ?? [], линт на пустую подписку не ругается. Правка броска срабатывает на том же броске раньше, чем «бросок окончен».",
+   "corrected_target": ""
+  },
+  {
+   "id": "dodge_ready",
+   "where": "dodge_ready.on[0].if",
+   "status": "keep",
+   "reason": "Дыра пункта 3 настоящая: packages/schema/src/world.ts handler .strict() (on/if/confirm/cost/steps), а отбор подписок seen и rolled — core/run.ts:1409/1451. Проверку взять из editMatches (engine/modifiers.ts) и tagsHold (engine/roll-tags.ts).",
+   "corrected_target": ""
+  },
+  {
+   "id": "block_ready",
+   "where": "block_ready: duration и подписка «бросок окончен»",
+   "status": "keep",
+   "reason": "Как у dodge_ready: использование тратится в react/burn.",
+   "corrected_target": ""
+  },
+  {
+   "id": "block_ready",
+   "where": "block_ready.on[0].if",
+   "status": "keep",
+   "reason": "Пункт 3 подтверждён. tagsHold требует все метки, как в правке броска.",
+   "corrected_target": ""
+  },
+  {
+   "id": "act_dodge",
+   "where": "act_dodge, act_block, act_full_defense — три эффекта-кнопки по 2 шага",
+   "status": "fix",
+   "reason": "Устройство верное: ветки отличаются только данными, значит справочник плюс один эффект. Шаг status с эффектом из формулы работает (engine/steps/status.ts: ctx.value(step.effect)), колонка вида «эффект» в схеме есть (valueKind 'effect'). Ссылка на пункт 1 лишняя. Пустой simple выпадает из вызова (emit.ts:76) в spend_action.простых, у которого умолчание 0. Падает только пустой complex, потому что у spend_action.сложное умолчания нет. Достаточно умолчания «нет» у этого входа, движок дописывать не нужно.",
+   "corrected_target": "Новый справочник defense_actions «Защитные действия». Колонки: status «Накладывает» (эффект), complex «Сложное действие» (да/нет, умолчание нет), simple «Простых действий» (число, умолчание 0), text «По книге» (текст). Строки: «Уклониться» (status dodge_ready, simple 1, text «Простое действие: Атлетика — к одной проверке защиты (стр. 43)»); «Блокировать» (block_ready, simple 1, «Простое действие: Ближний бой — к одной защите в рукопашной (стр. 42)»); «Глухая оборона» (full_defense, complex да, «Сложное действие: Воля — ко всем защитам до следующего раунда (стр. 43)»). Один эффект-кнопка defense_action «Защитное действие», папка «Действия». Входы: действующий (лист, actor); действие «Что делает» (выбор из defense_actions, спрашивается у игрока). «Плата»: spend_action(лист=@действующий, сложное=@действие.complex, простых=@действие.simple). Шаг: Наложить @действие.status на @действующий. У входа spend_action.сложное — умолчание «нет»: пустые клетки выпадают из вызова и берут умолчания входов, так что пункт 1 не нужен. В system.grants заменить act_dodge, act_block и act_full_defense на defense_action; эффекты act_* удалить; тесты группы «действия защиты» перевести на +defense_action с ответом «действие». Три отдельные кнопки на одной функции — только с выдачей кнопки с аргументами (пункт 5, вопрос 11)."
+  },
+  {
+   "id": "act_block",
+   "where": "act_block",
+   "status": "keep",
+   "reason": "Строка справочника defense_actions. Ссылка на пункт 1 лишняя: хватит умолчания у spend_action.сложное (см. act_dodge).",
+   "corrected_target": ""
+  },
+  {
+   "id": "act_full_defense",
+   "where": "act_full_defense",
+   "status": "keep",
+   "reason": "Строка справочника. complex = да заполнено, simple выпадает в умолчание 0. Пункт 1 не нужен.",
+   "corrected_target": ""
+  },
+  {
+   "id": "cover",
+   "where": "cover.modifiers[1] (правка броска «атака»)",
+   "status": "keep",
+   "reason": "Собирается. В условии правки виден @level: core/edits.ts refOf кладёт в results входы источника, то есть mod.source.args. Значение правки должно быть формулой {expr: \"-2\"}: amountOf требует raw.expr. Это мелочь записи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "blast_damage",
+   "where": "blast_damage.steps целиком",
+   "status": "fix",
+   "reason": "Устройство собирается. Правка вызова «Распластан» работает только на главном входе вызова: emit.ts:83 ctx.edited, amountParamOf. Поэтому у su должна быть роль amount: в данных роль пишется ключом \"amount\", а не словом. Условие @цель == @носитель видит листы вызываемого (run.ts edited → namesOf). Цель зависит от умолчаний «нет» у strike_damage.вырубить и без_урона. Вредная часть одна: замена «(@dv или @amount)» на @dv в правке листа «Транспорт». take_damage зовут без dv и с оглушающим уроном и вне кластера: cast_spell (оглушающие заклинания), cast_form, matrix_hurt, drug_crashes. Тогда @dv пусто, условие правки падает, edits.ts holds превращает ошибку в «нет», и правка молча перестаёт гасить оглушающий урон по транспорту. Ещё одно: strike_damage.источник обязателен, поэтому «необязательный» у blast_damage.источник не сходится с вызовом. Все три кнопки передают @действующий. Поведение меняется, владельцу знать: источник урона теперь атакующий, а не сама цель; правило транспорта сравнивает СУ до сопротивления.",
+   "corrected_target": "blast_damage — тонкая функция, папка «Шаги для других». Входы: цель (лист, target); источник «Кто взорвал» (лист, actor — обязательный, как у strike_damage); су «Сила урона» (число, role \"amount\"); физический (да/нет, умолчание да); электричество (да/нет, умолчание нет). Шаг: Вызвать вред = strike_damage(цель=@цель, источник=@источник, су=@су, физический=@физический, электричество=@электричество); у strike_damage.вырубить и без_урона — умолчание «нет» (без этого вызов не соберётся). Итог: урон = @вред.урон. «Лёжа против взрыва СУ −2» — правкой на эффекте prone «Распластан»: {kind: edit, call: blast_damage, param: су, op: add, value: {expr: \"-2\"}, if: @цель == @носитель}; в описание «Распластан» — «против взрыва СУ −2». Правку листа «Транспорт» («(@dv или @amount)») не трогать: take_damage зовут без dv и вне кластера (cast_spell, cast_form, matrix_hurt, drug_crashes). Сократить её до @dv — только когда все вызовы take_damage с оглушающим уроном передают dv. В итог владельцу: источник урона от взрыва — бросивший, правило транспорта сравнивает СУ до сопротивления."
+  },
+  {
+   "id": "throw_blast",
+   "where": "throw_blast.cost, шаги 10–17; та же копия в launch_blast.cost и detonate.cost",
+   "status": "keep",
+   "reason": "Готовая функция spend_action уже есть. Копию заменить вызовом.",
+   "corrected_target": ""
+  },
+  {
+   "id": "throw_blast",
+   "where": "throw_blast.cost, шаг 7",
+   "status": "keep",
+   "reason": "Принадлежность множеству — это колонка. Подтверждено: «не» от пустого даёт «да» (formula/evaluate.ts), и пустая клетка throwable у «дальней» и «экстремальной» даёт отказ уже на текущем движке.",
+   "corrected_target": ""
+  },
+  {
+   "id": "throw_blast",
+   "where": "throw_blast.cost, шаг 1; колонка grenade.launched; записи rocket_frag и rocket_antivehicle",
+   "status": "keep",
+   "reason": "Наследование типов записей есть (model/inherit.ts: колонки по ключу, кнопки по номеру). строки(\"rocket\", …, @вещь) находит записи наследников через isUnder (refs.ts rowsOfTable). Аргумент кнопки attack_pool = @skill.pool с умолчанием skill работает, как у firearm: propsOf, затем referencedTable и walk.",
+   "corrected_target": ""
+  },
+  {
+   "id": "throw_blast",
+   "where": "blast_rings: колонки grenade_dv, rocket_dv, charge_dv; вызовы blast_damage в трёх кнопках",
+   "status": "keep",
+   "reason": "Собирается. Клетка справочника с @вещь.dv_e идёт через scope, ctx.item и recordValue. Формула колонки типа (explosive: @rating, launcher: строки(…)) считается в recordScope. Одна колонка dv работает как полиморфный метод общего вида «Взрывчатое».",
+   "corrected_target": ""
+  },
+  {
+   "id": "throw_blast",
+   "where": "throw_blast.steps «рикошет» + «Изменить @стол.scatter»; то же в launch_blast",
+   "status": "keep",
+   "reason": "Функция собирается: «кинуть» в шаге функции разрешено, @стол виден. Числа launch_ricochet со знаком минус дают тот же результат: 2к6 − успехи + 2/0/2/4/6. Тесты ищут кости по шагу в трассе, а вложенный вызов пишет в тот же sink.",
+   "corrected_target": ""
+  },
+  {
+   "id": "throw_blast",
+   "where": "throw_blast: вызов blast_damage и «Плата»",
+   "status": "keep",
+   "reason": "Умолчание колонки типа записи (blast_item.electric = нет) подставляется уже сейчас: propsOf и itemStored. count — формула 1. Пункт 1 не нужен.",
+   "corrected_target": ""
+  },
+  {
+   "id": "throw_blast",
+   "where": "throw_blast.steps «атака_бросок»",
+   "status": "keep",
+   "reason": "Набор атаки — данные вещи и кнопки, как у оружия. Аргумент кнопки с @skill.pool работает.",
+   "corrected_target": ""
+  },
+  {
+   "id": "throw_blast",
+   "where": "throw_blast.steps «атк»",
+   "status": "keep",
+   "reason": "Шаг, результат которого никто не читает; решение зависит от вопроса 4. attack_edge собирается: вызов функции с числами.",
+   "corrected_target": ""
+  },
+  {
+   "id": "launch_blast",
+   "where": "запись striker (таблица firearm) — кнопка задана в самой записи",
+   "status": "keep",
+   "reason": "Тип-наследник с кнопкой №0 собирается (inherit.ts byOrder). Колонку electric можно перекрыть формулой: byKey сливает поля, а propsOf ставит expr раньше default. Пункт 4 подтверждён: byOrder сливает args родителя, а линт кнопок (lint.ts ~1382) ловит только незаполненные входы. Лишние аргументы не вычисляются, их никто не читает. Смежная дыра в модели — в missed (боезапас и поставленные снаряды).",
+   "corrected_target": ""
+  },
+  {
+   "id": "launch_blast",
+   "where": "launch_blast.steps «атк»",
+   "status": "keep",
+   "reason": "Колонка-метод firearm.sight уже есть, и launcher её унаследует. @вещь.sight читается через itemRead с листа хозяина, поэтому @smartlink внутри формулы находится.",
+   "corrected_target": ""
+  },
+  {
+   "id": "launch_blast",
+   "where": "launch_blast.cost, шаг 7; вызов blast_damage",
+   "status": "keep",
+   "reason": "Колонки-методы типа launcher через строки(\"rocket\", …, @вещь) собираются. Формулы клеток снарядов считаются через itemExpr (refs.ts rowsOfTable).",
+   "corrected_target": ""
+  },
+  {
+   "id": "launch_blast",
+   "where": "launch_blast.steps «атака_бросок»",
+   "status": "keep",
+   "reason": "Как у оружия: набор атаки передаёт кнопка типа.",
+   "corrected_target": ""
+  },
+  {
+   "id": "launch_blast",
+   "where": "launch_blast.cost, шаги 10–17",
+   "status": "keep",
+   "reason": "Вместо копии зовётся spend_action. Умолчание ammo_max = 0 у колонки типа читается.",
+   "corrected_target": ""
+  },
+  {
+   "id": "launch_blast",
+   "where": "launch_blast.steps «рикошет» и «@стол.scatter»",
+   "status": "keep",
+   "reason": "Функция scatter (см. «Бросить гранату»).",
+   "corrected_target": ""
+  },
+  {
+   "id": "launch_blast",
+   "where": "launch_blast.steps «атк»; колонка grenade.ar_vehicle",
+   "status": "keep",
+   "reason": "Решение за владельцем (вопросы 4 и 10). Перестройка правила не трогает.",
+   "corrected_target": ""
+  },
+  {
+   "id": "detonate",
+   "where": "detonate.cost, шаги 4–11",
+   "status": "keep",
+   "reason": "Вместо копии зовётся spend_action. count — формула 1.",
+   "corrected_target": ""
+  },
+  {
+   "id": "detonate",
+   "where": "detonate.steps 1–3",
+   "status": "keep",
+   "reason": "Тип explosive от blast_item с формулами dv_e, dv_c, dv_n по @rating собирается: recordPath и cellExpr. Запасной вариант (стоп в «Плату» до «Потратить действие») — правильное место для проверки «можно ли».",
+   "corrected_target": ""
+  },
+  {
+   "id": "detonate",
+   "where": "detonate.steps: вызов blast_damage",
+   "status": "keep",
+   "reason": "Тот же вызов, что у гранаты. Умолчания damage_kind и electric у blast_item читаются через propsOf.",
+   "corrected_target": ""
+  },
+  {
+   "id": "implant_blast",
+   "where": "implant_blast.steps целиком",
+   "status": "keep",
+   "reason": "Вызов функции из подписки field:device_dead с листом (role target) собирается. Правок значения на soak нет, а soak у персонажа равно @body, так что поведение то же. Общие следствия урона не добавляются (вопрос 13): resist_damage их не содержит.",
+   "corrected_target": ""
+  }
+ ],
+ "missed": [
+  {
+   "id": "spend_action",
+   "where": "spend_action.params «сложное»",
+   "problem": "У входа «сложное» нет умолчания, у «простых» умолчание 0 есть. Поэтому каждый вызывающий пишет «сложное=нет/да» явно, а пустая клетка справочника (defense_actions.complex, reload_kinds) в этом аргументе падает с «параметр не заполнен». Пустой аргумент выпадает из вызова (emit.ts:76) и берёт умолчание входа, так что умолчание здесь снимает зависимость от пункта 1 у защитных действий и перезарядки.",
+   "target": "У spend_action.сложное — умолчание «нет»; вызовы с «сложное=нет» — без этого аргумента (act_* до их сноса и прочие кнопки вне кластера)."
+  },
+  {
+   "id": "launch_blast",
+   "where": "тип launcher (запись striker): firearm.ammo и поставленные снаряды rocket",
+   "problem": "Один факт «заряжено» хранится дважды: число ammo (боезапас 1) и вставленные записи снарядов. Выстрел снимает ammo, но снаряд остаётся на месте, поэтому «Заряд поставлен» (charged) навсегда «да», СУ берётся от того же снаряда. «Перезарядить» возвращает ammo = ammo_max, не тратя ни одного снаряда. Шага, который убирает или уменьшает вставленную вещь (запись внутри @вещь), в движке нет: шаги apply, emit, status, each, roll… работают с @вещь и листами, а вложенную вещь адресовать нечем.",
+   "target": "Хранить один факт — поставленные снаряды. ammo у launcher — формула: сумма(строки(\"rocket\", \"count\", @вещь)). Выстрел тратит снаряд. Для этого движку нужен способ изменить или убрать вложенную вещь (например, шаг «Изменить» по пути к вставленной записи или операция «снять вещь» в шаге), то есть дописать движок, а не подгонять данные. До этого вынести владельцу вопрос: как тратится снаряд установки и что делает «Перезарядить» у «Страйкера»."
+  }
+ ]
+}

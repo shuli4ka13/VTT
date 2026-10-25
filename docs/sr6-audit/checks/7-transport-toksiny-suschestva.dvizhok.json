@@ -1,0 +1,233 @@
+{
+ "checks": [
+  {
+   "id": "drive_check",
+   "where": "drive_check · шаг «вождение» (count) и шаг «удержать» (count); шаг «итог» (versus) и шаг «авария» (versus); условие «Если @действующий != @цель» перед уроном аварии",
+   "status": "fix",
+   "reason": "Механизм верный и собирается. `@режим.кто.pool`: refs.ts → known[режим] → choiceOf → walk → readCell со scope. Формула клетки видит `@цель`/`@действующий` через scope.resolve → sheetHead, это проверено по коду. Ветки различаются только числами, поэтому switch не нужен. Плохо одно: «клетки 0/нет у «сам» и «водитель» писать явно, потом снять» — это данные под дыру движка, к тому же нарушено «умолчания в данных не пишутся». Сейчас cells.ts: readCell для пустой клетки (source.kind === 'input') возвращает undefined, и `Если @режим.кто.inside` упадёт: «условие должно давать да/нет». Значит, дыра 5 должна быть предусловием, а не обходом.",
+   "corrected_target": "Предусловие — дописать движок (дыра 5): packages/engine/src/engine/cells.ts: readCell, ветка `source.kind === 'input'`: для таблицы без владельца вернуть `spec.default`, если оно задано, иначе undefined. Тот же учёт умолчания нужен в model/sheet-columns.ts: cellSource и в lookupCell. Тест: пустая клетка справочника с default отдаёт умолчание. Затем данные. 1) Новый справочник `veh_control` «Кто ведёт» (key: word). Строки: `сам` «Сам (автопилот)», `водитель` «Водитель», `захват` «Риггер в захвате». Колонки: `pool` «Набор вождения» (число; клетки-формулы: сам — `@цель.as_maneuver + @цель.veh_pilot`, водитель — `@действующий.skills.пилотирование.pool`, захват — `@цель.rig_pilot + @цель.rig_int + @цель.rig_vcr`); `handling_cut` «Порог ниже на» (число, default 0; клетка только у «захват» — `{expr: @цель.rig_vcr}`); `inside` «Ведущий внутри» (да/нет, default нет; клетки «да» только у «водитель» и «захват»). Явных клеток 0/нет не писать. 2) Функция `drive_mode` «Кто ведёт» (папка «Шаги для других»). Входы: `действующий` (лист), `цель` (лист). Шагов нет. Итог `кто` — выбор из `veh_control` = `если(@действующий == @цель, \"сам\", если(@цель.jumped, \"захват\", \"водитель\"))`. 3) Шаги drive_check: Для каждого из цели → ВЫЗОВ режим = drive_mode(действующий=@действующий, цель=@цель) → ЧИСЛО набор = `большее из(0, @режим.кто.pool - @цель.veh_speed_pen)` → ЧИСЛО порог = `большее из(0, @цель.veh_handling - @режим.кто.handling_cut + @shift)` → ЧИСЛО вождение = кинуть pool × @набор, бросает @действующий, метки [проверка, вождение, пилотирование] → ПРОВЕРКА итог: @вождение против @порог → Если не @итог.success: ЧИСЛО удержать = кинуть pool × @набор, бросает @действующий, метки [проверка, вождение, авария] → ПРОВЕРКА авария: @удержать против @порог → Если не @авария.success: Если @режим.кто.inside: ЧИСЛО тело = кинуть pool × @действующий.body, бросает @действующий, метки [сопротивление] → ВЫЗОВ take_damage(лист=@действующий, amount=`большее из(0, округлить вниз(@цель.speed / 10) - @тело.total)`, physical_hit=да); конец → ИЗМЕНИТЬ @цель.speed = 0; конец; конец. Switch не нужен."
+  },
+  {
+   "id": "drive_check",
+   "where": "drive_check · формула набора повторена в шагах «вождение» и «удержать», формула порога — в «итог» и «авария»",
+   "status": "keep",
+   "reason": "Копии дословные (видно в выгрузке). Набор и порог, посчитанные один раз шагами без костей, — правильное слияние.",
+   "corrected_target": ""
+  },
+  {
+   "id": "drive_check",
+   "where": "запись veh_drive · bindings[0].args.действующий",
+   "status": "keep",
+   "reason": "Подтверждено в core/act.ts:118: входы-листы связываются из table (actor/targets), args для листа не читаются. Аргумент мёртвый.",
+   "corrected_target": ""
+  },
+  {
+   "id": "drive_check",
+   "where": "drive_check · метки шага «удержать» (проверка аварии)",
+   "status": "keep",
+   "reason": "Метки определяют, какие правки броска сработают, — это правило игры. Вынести вопрос владельцу правильно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "intoxicate",
+   "where": "запись tox_gamma_scopolamine · bindings[0].args (power, dmg, s1, s2, inhaled) и её клетки",
+   "status": "keep",
+   "reason": "Кнопка у типа записи — прецедент firearm.bindings с args `@колонка` (проверено в данных). Аргумент записи вычисляется в recordScope (refs.ts: fromArgs → inRecord). Пустая необязательная клетка даёт null (declaredProp → null; namedValue → optional → null). Колонки вида «эффект, список» схема допускает (typed.many). Мелочь про ключ колонки урона — в missed.",
+   "corrected_target": ""
+  },
+  {
+   "id": "intoxicate",
+   "where": "intoxicate · условие «@dmg != \"нет\"» и аргумент physical_hit вызова take_damage",
+   "status": "keep",
+   "reason": "У damage_kinds есть колонка physical (boolean). `@damage.physical` идёт так: refs.ts → referencedTable (вход kind choice) → walk → readCell. Охрана `не(пусто(@damage))` при необязательном входе работает: namedValue → null.",
+   "corrected_target": ""
+  },
+  {
+   "id": "intoxicate",
+   "where": "intoxicate · три ветки «ЕСЛИ @s1/@s2/@s3 != \"\" → НАЛОЖИТЬ @sN на @цель» и входы s1, s2, s3",
+   "status": "keep",
+   "reason": "Дыра 4 подтверждена: steps/status.ts: finish бросает ошибку при `typeof id !== 'string'`. Обойти её шагом «Для каждого» нельзя: each.ts умеет только `of` (листы, splits по bound) и `rows` (строки таблицы), а не список значений. Пустой эффект шаг пропускает сам — охраны лишние.",
+   "corrected_target": ""
+  },
+  {
+   "id": "intoxicate",
+   "where": "intoxicate · шаг «итог» (value), вход inhaled; шаг «стойкость» (метки)",
+   "status": "keep",
+   "reason": "Собирается. В cellSource формула колонки (column.expr) служит умолчанием, клетка строки её перекрывает. `@vector.cut` идёт через walk → readCell со scope, `@цель` видна. Формулу в метках принимает roll.ts: tagsOf (ctx.value). Колонка вместо лесенки — по принципу. Дыра в линте (формулы колонки не проверяются) — в missed.",
+   "corrected_target": ""
+  },
+  {
+   "id": "intoxicate",
+   "where": "запись surv_respirator (Выживание) · modifiers[0].tags — побочное следствие этой перестройки",
+   "status": "keep",
+   "reason": "Структурный фильтр меток у правки броска уже есть (modifiers.ts: editMatches, tags). С меткой пути введения это исправление по описанию записи.",
+   "corrected_target": ""
+  },
+  {
+   "id": "intoxicate",
+   "where": "intoxicate · шаг «итог» (successWhen не задан, значит «не меньше»)",
+   "status": "keep",
+   "reason": "Исход меняется при равенстве — это правило игры. Вопрос владельцу правильный.",
+   "corrected_target": ""
+  },
+  {
+   "id": "drug_crashes",
+   "where": "drug_crashes · пять подписок on: lost:dg_jazz, lost:dg_long_way, lost:dg_zubrila, lost:dg_kamikaze, lost:dg_nitro; system.grants[18] = «drug_crashes»",
+   "status": "fix",
+   "reason": "Направление верное: один висящий эффект и detach по колонкам записи. Detach видит входы экземпляра: run.ts:966 берёт sub.entry.args. Но разбор упустил дыру, которая ломает именно эту цель. events/lifecycle.ts: lifecycleChanges сопоставляет экземпляры только по effectId (`old.findIndex(o => o.effectId === entry.effectId)`). Пример: до — [drug_effect(алкоголь), drug_effect(джаз)], срок алкоголя истёк, после — [drug_effect(джаз)]. Джаз совпадает с old[0]=алкоголь, и «спавшим» объявлен экземпляр джаза. Отходняк джаза сработает при живом джазе, а отходняк алкоголя пропадёт. Пока у каждого наркотика свой id, этого не видно. Кроме того, run.ts: detach (шаг «Снять») снимает все экземпляры effectId сразу.",
+   "corrected_target": "Удалить эффект drug_crashes и строку «drug_crashes» из system.grants. Отходняк — собственные шаги «при спадании» (detach) единого висящего эффекта `drug_effect`: Если `@drug.crash_stun >= 1` → ВЫЗОВ take_damage(лист=@носитель, amount=@drug.crash_stun, physical_hit=нет); конец → НАЛОЖИТЬ @drug.crash_status (level=@drug.crash_level) на @носитель (пустое состояние шаг пропускает). Колонки записи `drug`: `crash_stun` «Отходняк: оглушающий урон» (число, default 0), `crash_status` «Отходняк: состояние» (эффект, необязательная), `crash_level` «Отходняк: уровень состояния» (число, default 1). Значения как сейчас: «Джаз» — dazed; «Долгий путь» — 12 и fatigued; «Зубрила» — 6; «Камикадзе» — 6 и fatigued; «Нитро» — 9. Метка «появилось/ушло» не нужна. Дописать движок: (а) дыра 2 — `@drug.колонка` для входа-записи и для выбора из книжной таблицы (navigate.ts: referencedTable, cells.ts: readCell / tables.ts: rowOf → findRecord + propsOf с умолчаниями и формулами клеток); (б) новая дыра — events/lifecycle.ts: lifecycleChanges должен сопоставлять тот же экземпляр (по тождеству записи WornEffect или по effectId + args/inst, как run.ts: instIn/instOf), а не первый с тем же effectId; иначе detach и lost: получают входы чужого экземпляра. Тест: два экземпляра одного эффекта с разными входами, истекает первый — detach видит его входы. (в) Отметить, что шаг «Снять» drug_effect (run.ts: detach) снимет все наркотики сразу; адресного снятия по входу сейчас нет — пока его никто не зовёт, но это ограничение надо записать."
+  },
+  {
+   "id": "drug_crashes",
+   "where": "drug_crashes · подписка lost:dg_jazz",
+   "status": "keep",
+   "reason": "Длительность отходняка — правило из описания записи, а не из данных. Вопрос владельцу правильный.",
+   "corrected_target": ""
+  },
+  {
+   "id": "dg_alcohol",
+   "where": "dg_alcohol (и такие же dg_jazz, dg_long_way, dg_zubrila, dg_kamikaze, dg_nitro) — целиком",
+   "status": "fix",
+   "reason": "Слияние в одну функцию-эффект по записи верное. Дыра 1 подтверждена: modifiers.ts: resolverOf знает только точные имена входов, `@drug.up_reaction` уходит в pass.resolve. Но у цели не названа дыра lifecycleChanges: после слияния в один effectId detach (отходняк) получает входы не того экземпляра. Не названа и зависимость от дыры 7: без неё повторный приём складывается.",
+   "corrected_target": "Один висящий эффект `drug_effect` «Действие наркотика» (папка «Химия», висящий, reapply refresh, после дыры 7 — «обновлять по входу drug»). Входы: `drug` «Наркотик» (запись из `drug`), `dur` «Минут» (число, default 60). Срок: минуты, max = `@dur`. Правки «пока висит», все характеристики с явным `stage: \"аугментация\"`: body + `@drug.up_body`, agility + `@drug.up_agility`, reaction + `@drug.up_reaction`, strength + `@drug.up_strength`, willpower + `@drug.up_willpower`, logic + `@drug.up_logic`; init_dice + `@drug.up_init_dice`; pain_relief + `@drug.up_pain`. Detach — отходняк (см. drug_crashes). Новые колонки `drug` (число, default 0): `up_body` «Тело +», `up_agility` «Проворство +», `up_reaction` «Реакция +», `up_strength` «Сила +», `up_willpower` «Воля +», `up_logic` «Логика +», `up_init_dice` «Кубики инициативы +», `up_pain` «Устойчивость к боли». Запись drug_alcohol: up_reaction −1, up_logic −1, up_pain 1. Удалить dg_alcohol. Дописать движок, без этого не собирается: дыра 1 — engine/modifiers.ts: resolverOf и conditionHolds должны проводить `@вход.колонка` через referencedTable/walk (и для записи книги), плюс проверка этих имён в линте; дыра 2 — вход-запись ведёт к колонкам записи; дыра 7 — ключ обновления; events/lifecycle.ts: lifecycleChanges — сопоставление по экземпляру, а не по effectId."
+  },
+  {
+   "id": "dg_alcohol",
+   "where": "запись drug_alcohol · клетки boosts, dur_expr, statuses, damage, speed_rounds, crash",
+   "status": "keep",
+   "reason": "Колонок boosts, dur_expr, statuses, damage, speed_rounds нет ни у `drug`, ни у `gear` (проверено в данных). Это мёртвые копии. Дыра 8 в линте — правдоподобная находка.",
+   "corrected_target": ""
+  },
+  {
+   "id": "dg_alcohol",
+   "where": "dg_alcohol (и все dg_*) · duration.max",
+   "status": "keep",
+   "reason": "У входа dur стоит default 60 (проверено в данных). Срок считает resolveRef с paramDefs, а refs.ts: namedValue отдаёт decl.default. «или 60» мёртвое.",
+   "corrected_target": ""
+  },
+  {
+   "id": "dg_alcohol",
+   "where": "dg_alcohol · modifiers[1] (logic −1); так же dg_kamikaze willpower +1 и dg_nitro willpower +2",
+   "status": "keep",
+   "reason": "stages.ts: stageOf кладёт правку без этапа в первый этап. Обход мира подтвердил: правок характеристик без этапа ровно три, перечисленные. С этапом «основа» первым они ушли бы из-под предела +4.",
+   "corrected_target": ""
+  },
+  {
+   "id": "dg_alcohol_take",
+   "where": "dg_alcohol_take и dg_jazz_take — целиком; записи drug_alcohol и drug_jazz · bindings",
+   "status": "keep",
+   "reason": "Подтверждено: core/roll.ts: diceTools.roll при many < 1 даёт 0, так что `кинуть(к6, 0)` = 0. Дыра 6 подтверждена: run.ts: read → itemStored → resolveRef({expr}, {pass, owner}) без sheets, поэтому `@носитель.body` уходит в pass.resolve. `@вещь` = ctx.item.key (refs.ts) — ключ экземпляра. Кнопка у типа — прецедент firearm.",
+   "corrected_target": ""
+  },
+  {
+   "id": "dg_jazz",
+   "where": "dg_jazz — целиком",
+   "status": "keep",
+   "reason": "Тот же остов, числа уходят в колонки записи. Зависит от дыр 1 и 2 и от правки lifecycleChanges (см. drug_crashes).",
+   "corrected_target": ""
+  },
+  {
+   "id": "dg_jazz",
+   "where": "dg_jazz · reapply: refresh при входе dur, который бросается при каждом приёме",
+   "status": "keep",
+   "reason": "Подтверждено: core/run.ts: attach — sameArgs сравнивает все входы, при другом dur приём складывается. Ключ обновления по входу drug — правильная правка движка, это не обход.",
+   "corrected_target": ""
+  },
+  {
+   "id": "dg_jazz_take",
+   "where": "dg_jazz_take · шаг «срок»",
+   "status": "keep",
+   "reason": "Кости в клетке запрещены (refs.ts: scope.tools.roll бросает «кинуть в клетке таблицы нельзя»), поэтому бросок делает шаг, а число кубиков и минуты за очко лежат в колонках.",
+   "corrected_target": ""
+  },
+  {
+   "id": "dg_long_way",
+   "where": "dg_long_way — целиком; записи drug нет",
+   "status": "keep",
+   "reason": "Эффект недостижим: на него ссылается только lost: в drug_crashes. Решение отложено до ответа владельца, это верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "dg_zubrila",
+   "where": "dg_zubrila — целиком; записи drug нет",
+   "status": "fix",
+   "reason": "Разбор сам спрашивает владельца (вопрос 7), восстанавливать ли снятые записи, а здесь создаёт запись безусловно. Это не сходится с «Долгим путём», где запись условная. Без записи эффект недостижим. Чинить без ответа можно только удалением копии.",
+   "corrected_target": "Эффект недостижим (записи и кнопки нет). До ответа владельца на вопрос 7 записей не создавать. После «да»: удалить эффект; новая запись `drug_zubrila` типа `drug`: подпись «Зубрила», описание из эффекта, power 8, cost 10, avail 2, legal «лицензия», page 125, up_reaction 1, up_init_dice 1, crash_stun 6, dur_minutes `{expr: большее из(60, (12 - @носитель.body) * 60)}`. Собирается только после дыр 1, 2, 6 и правки lifecycleChanges. После «нет»: удалить эффект dg_zubrila и подписку lost:dg_zubrila."
+  },
+  {
+   "id": "dg_kamikaze",
+   "where": "dg_kamikaze — целиком; записи drug нет",
+   "status": "fix",
+   "reason": "То же, что у «Зубрилы»: запись создаётся безусловно, хотя восстановление вынесено в вопрос 7.",
+   "corrected_target": "Эффект недостижим. До ответа владельца на вопрос 7 записей не создавать. После «да»: удалить эффект; новая запись `drug_kamikaze`: подпись «Камикадзе», описание из эффекта, power 10, cost 100, avail 3, legal «лицензия», page 125, up_body 1, up_agility 1, up_strength 2, up_willpower 1, up_init_dice 2, up_pain 1, dur_d6 1, dur_d6_minutes 10, crash_stun 6, crash_status «fatigued», crash_level 1 (как сейчас; уровень II — по вопросу об отходняке). Собирается после дыр 1, 2 и правки lifecycleChanges. После «нет»: удалить эффект и подписку lost:dg_kamikaze."
+  },
+  {
+   "id": "dg_nitro",
+   "where": "dg_nitro — целиком; записи drug нет",
+   "status": "fix",
+   "reason": "То же: создание записи должно зависеть от ответа на вопрос 7.",
+   "corrected_target": "Эффект недостижим. До ответа владельца на вопрос 7 записей не создавать. После «да»: удалить эффект; новая запись `drug_nitro`: подпись «Нитро», описание из эффекта, power 12, cost 50, avail 2, legal «лицензия», page 125, up_strength 2, up_willpower 2, up_init_dice 1, up_pain 1, dur_d6 1, dur_d6_minutes 10, crash_stun 9. Собирается после дыр 1, 2 и правки lifecycleChanges. После «нет»: удалить эффект и подписку lost:dg_nitro."
+  },
+  {
+   "id": "dg_nitro",
+   "where": "dg_nitro · описание против правок",
+   "status": "keep",
+   "reason": "Добавление «Внимания +2» меняет игру, поэтому решать должен владелец. Механизм — правка броска по метке с anyTags, он в движке есть.",
+   "corrected_target": ""
+  },
+  {
+   "id": "creature_template",
+   "where": "creature_template · 18 шагов «Изменить» (9 характеристик и Магия, 9 навыков); тип листа creature",
+   "status": "keep",
+   "reason": "Собирается. engine/calc.ts:87 проводит `@поле-выбор.колонка` через walk. Предел max у хранимого поля проверяется только при записи; engine/limits.ts: breaches смотрит лишь поля-формулы, так что посчитанная правками Сила 40 не срезается. У magic этап «основа» уже есть (atLeast 0). Пустые клетки характеристик у creatures есть только в magic (акула, волк, кошка, лошадь, собака, вампир), и умолчание 0 безопасно. Это и есть «хранимое ≠ вычисляемое»: вид выбирается, числа считает тип листа.",
+   "corrected_target": ""
+  },
+  {
+   "id": "creature_template",
+   "where": "creature_template · 9 шагов навыков; справочник creatures · колонки sk_* и magic",
+   "status": "keep",
+   "reason": "Дыра 5 подтверждена в cells.ts: readCell (source.kind === 'input' → undefined, spec.default не берётся). Умолчание в колонке справочника — данные-описание, а не обход.",
+   "corrected_target": ""
+  },
+  {
+   "id": "creature_template",
+   "where": "справочник creatures · подписи колонок",
+   "status": "keep",
+   "reason": "Подписи совпадают с ключами, это противоречит «слова вместо ключей».",
+   "corrected_target": ""
+  },
+  {
+   "id": "creature_template",
+   "where": "запись wd_creature · bindings[0].args.действующий",
+   "status": "keep",
+   "reason": "core/act.ts: входы-листы связываются из table, аргумент мёртвый.",
+   "corrected_target": ""
+  }
+ ],
+ "missed": [
+  {
+   "id": "drug_crashes",
+   "where": "packages/engine/src/events/lifecycle.ts: lifecycleChanges (используется в core/run.ts: lifecycle)",
+   "problem": "Экземпляры висящих эффектов «до» и «после» сопоставляются только по effectId. Когда несколько экземпляров одного эффекта с разными входами (единый drug_effect, а также любой reapply stack/refresh-по-входу), истечение первого объявляется спаданием другого. Detach и lost: получают входы чужого экземпляра; при наложении второго экземпляра attach не срабатывает, если старый в тот же момент ушёл. Разбор строит отходняк на detach единого эффекта, не замечая этого.",
+   "target": "Дописать движок: lifecycleChanges сопоставляет тот же экземпляр — по тождеству записи WornEffect (refresh подменяет запись, для этого случая нужен inst из run.ts: insts) или по effectId + args/inst, — а не первый с тем же effectId. Тест в packages/engine/tests/events.lifecycle.test.ts: два экземпляра одного эффекта с разными входами, уходит первый — в изменениях detach с его входами."
+  },
+  {
+   "id": "intoxicate",
+   "where": "packages/engine/src/model/variants.ts: cellScopeProblems",
+   "problem": "Линт имён в формулах справочника обходит только клетки строк (`row.cells[column]` с expr), а формулу колонки (column.expr) не проверяет. Формула колонки `toxin_vectors.cut` = `@цель.tox_cut` уйдёт мимо линта: ошибка имени в ней всплывёт только при игре.",
+   "target": "cellScopeProblems: проверять и column.expr — для каждой строки, у которой нет своей клетки-формулы (как делает cellSource)."
+  },
+  {
+   "id": "intoxicate",
+   "where": "таблица toxin · колонка damage; вход intoxicate.damage",
+   "problem": "Одно понятие — два имени: у оружия «Вид урона» — колонка `damage_kind` (выбор из damage_kinds), а у токсина разбор оставляет ключ `damage` с тем же смыслом.",
+   "target": "Колонку токсина назвать `damage_kind` «Вид урона» (выбор из damage_kinds, необязательная), вход intoxicate — `damage_kind`; в шагах `не(пусто(@damage_kind))` и `physical_hit=@damage_kind.physical`."
+  },
+  {
+   "id": "drive_check",
+   "where": "тип листа vehicle · правка defense_rating",
+   "problem": "«Кто ведёт» в третий раз выведен лесенкой `если(@jumped, @rig_pilot, если(@driver_pilot >= 1, @driver_pilot, @as_maneuver))` по своему правилу, а не по drive_mode. Правка типа листа функцию звать не может, так что drive_mode одним местом не станет. Разбор отметил это только в вопросах, отдельной проблемой не завёл.",
+   "target": "После ответа владельца на вопрос про «Кто ведёт»: хранимый выбор `veh_control` на листе транспорта (поле-выбор). Тогда defense_rating = `@veh_control.defense + @veh_armor` (колонка справочника), drive_mode — только «сам» при нажатии с листа транспорта, иначе выбор с листа. До ответа ничего не менять."
+  }
+ ]
+}

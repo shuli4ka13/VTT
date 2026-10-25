@@ -1,0 +1,359 @@
+{
+ "checks": [
+  {
+   "id": "spend_action",
+   "where": "«Плата» 13 эффектов других кластеров (matrix_*, ic_attack, throw_blast, launch_blast, detonate, cast_spell, heal_spell, boost_spell, cast_form, cast_form_attr)",
+   "status": "keep",
+   "reason": "Подтверждено по образцу: «@стол.battle» встречается 21 раз — spend_action (1), battle_start и battle_end (2), 5 копий Матрицы по 2 раза (если и иначе-если), 8 прочих копий по 1 разу, у каждой из них только сложное действие. Вызов функции из «Платы» на текущем движке работает: признак платы передаётся во вложенный вызов, и стоп внутри функции означает отказ (так уже работает spend_edge в «Плате»). Сигнатура функции подходит: сложное=нет, простых=1 даёт ровно то, что делает ветка «простое» в копии.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spend_action",
+   "where": "копии в Матрице cost[18]/cost[23] (ic_attack cost[15]/cost[20]); справочник action_kinds",
+   "status": "keep",
+   "reason": "Собирается. Вход kind — это выбор из action_kinds, поэтому @kind.complex разбирается в refs.ts:231–233 (splitPath, referencedTable, walk) и даёт клетку выбранной строки. Пустая клетка возвращает умолчание колонки. Сравнения строк в кавычках уходят. Пункт про reload_kinds относится к кластеру «Атака», а здесь его можно только отметить.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spend_action",
+   "where": "turn_actions on[0].steps[2..5] → spend_action steps[0]",
+   "status": "keep",
+   "reason": "Механизм выбран верно: «нельзя действовать» должно отказывать в «Плате». action_lock — поле листа, его ставят petrified и sprite_trap. Ограничение такое: запрет сработает только у действий, которые зовут spend_action в «Плате». Поэтому пункт надо делать после замены 13 копий (пункт 0) — см. missed.",
+   "corrected_target": ""
+  },
+  {
+   "id": "spend_action",
+   "where": "spend_action steps[0]: if «@стол.battle»; колонка стол.battle",
+   "status": "keep",
+   "reason": "Пробел описан точно. В RefContext (refs.ts:20–57) часов нет, в «стол.» отдаются только хранимые поля через pass.resolve, а clock.ts:20 inCombat в формулы не попадает (в run.ts this.clock используется только для сроков и моментов). Дописать движок, а до этого оставить как есть — правильно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "gain_edge",
+   "where": "gain_edge steps[0].if",
+   "status": "keep",
+   "reason": "Ошибка настоящая. Колонку edge_gained обнуляет только round_edge на moment:round-start, а вне боя этот момент не рассылается. После двух очков вне боя лист заперт до следующего боя. Цель собирается из данных.",
+   "corrected_target": ""
+  },
+  {
+   "id": "gain_edge",
+   "where": "gain_edge steps[0].if: числа 7 и 2",
+   "status": "keep",
+   "reason": "Оставить верно: имени «граница колонки» в формулах нет. Стоп нужен, чтобы не прибавлять к edge_gained, когда запас полон.",
+   "corrected_target": ""
+  },
+  {
+   "id": "reroll_failures",
+   "where": "reroll_failures on[0].if (скобка запретов в 5 реакциях)",
+   "status": "keep",
+   "reason": "Пробелы описаны точно. Подписка: schema world.ts:214 — strict-объект on/if/confirm/cost/steps, фильтра меток нет. Бросок: в run.ts:565–589 roll() метки к броску добавляют только заявки (claimed → marks), правки-источники меток не ставят. У правки броска фильтры tags/anyTags/notTags есть (world.ts:177–179), но они только отбирают броски и метку не добавляют. Поэтому без E1+E2 не собирается, и обход данными не нужен. Подтверждено по образцу: edge_ban_charisma, edge_ban_logic, edge_ban_social встречаются по 6 раз — объявление колонки и 5 подписок, источников нет. edge_ban_hands — 7 раз, седьмой ставит shaky_hands. claimWords (sheet.tsx:368) действительно берёт строки любой таблицы с claim: да. Оговорка про «ведущий может объявить» — в missed.",
+   "corrected_target": ""
+  },
+  {
+   "id": "reroll_failures",
+   "where": "reroll_failures on[0].if: «не есть(@roll.tags, \"инициатива\")»",
+   "status": "keep",
+   "reason": "Это частный случай E1, цель верна.",
+   "corrected_target": ""
+  },
+  {
+   "id": "reroll_failures",
+   "where": "reroll_failures on[0].if: «не @roll.atMin * 2 > @roll.rolled»",
+   "status": "keep",
+   "reason": "Подтверждено: seed броска в run.ts:1395–1398 содержит только свойства, которые выводит движок. Данными свойство броска не задать — нужен E7.",
+   "corrected_target": ""
+  },
+  {
+   "id": "reroll_failures",
+   "where": "reroll_failures on[0].cost[0].args.note (и ещё 5 реакций)",
+   "status": "keep",
+   "reason": "Подтверждено: в окне seen (run.ts:1418) действие с непрошедшей платой отбрасывается через refusal → continue, текст стопа никто не видит. Удалять безопасно: у входа note в spend_edge есть умолчание «не хватает очков Преимущества», так что при пустом аргументе ошибки «параметр не заполнен» не будет.",
+   "corrected_target": ""
+  },
+  {
+   "id": "reroll_failures",
+   "where": "system.roll_edits.reroll_failures",
+   "status": "keep",
+   "reason": "Подтверждено: claimWords отдаёт заявками все слова roll_edits. Заявка «перебросить неуспехи» проходит без платы. Удалить верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "reroll_failures",
+   "where": "system.tables.skills, колонка pool, roll.tags",
+   "status": "keep",
+   "reason": "Подтверждено: у skills.pool.roll.tags сейчас только [\"проверка\"]. Подстановка {…} по строке в описании броска колонки есть (sheet-columns.ts: deep/fill). Предупреждение про латинский ключ у {attribute} и про сверку золотого снимка верное.",
+   "corrected_target": ""
+  },
+  {
+   "id": "reroll_failures",
+   "where": "шесть реакций Преимущества",
+   "status": "keep",
+   "reason": "Ветки делают разные шаги и стоят разную плату, а окно seen само предлагает их списком. Слияние в развилку потребовало бы вопроса выбора внутри реакции. Оставить верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "push_edge",
+   "where": "push_edge on[0].if",
+   "status": "keep",
+   "reason": "Та же цель, что у reroll_failures, нужны E1 и E2.",
+   "corrected_target": ""
+  },
+  {
+   "id": "push_edge",
+   "where": "push_edge on[0].cost[0].args.note",
+   "status": "keep",
+   "reason": "Текст не виден, у входа есть умолчание.",
+   "corrected_target": ""
+  },
+  {
+   "id": "push_edge",
+   "where": "system.roll_edits.push_edge",
+   "status": "keep",
+   "reason": "Бесплатная заявка в обход платы. Удалить верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "push_edge",
+   "where": "push_edge — момент выбора",
+   "status": "keep",
+   "reason": "Подтверждено: заявка в run.ts:572–581 применяется без цены. Нужен E5, до него — упрощение плюс вопрос владельцу.",
+   "corrected_target": ""
+  },
+  {
+   "id": "round_edge",
+   "where": "round_edge on[] — пределы раунда и сцены",
+   "status": "keep",
+   "reason": "Собирается. moments.ts: ход «сцена» рассылает scene-end, ход «стоп» — combat-end, оба через everyone(), то есть всем листам, кроме общих. Оговорка: обновление на scene-end срабатывает в конце сцены, а не в начале, поэтому первая сцена комнаты идёт с запасом из засева. Это стоит записать в описании или в production-differences. Подписка (3) — по выписке, после подтверждения владельца, как и сказано.",
+   "corrected_target": ""
+  },
+  {
+   "id": "turn_actions",
+   "where": "turn_actions on[0].steps[2..13]",
+   "status": "keep",
+   "reason": "Собирается. valueModifier.if есть в схеме (world.ts:164). Условие считается resolverOf(mod, pass), поэтому голое @nausea_lost читается с листа носителя (как @reaction у immobilized). nauseated — висящий эффект, его правки попадают в sourcesOf через wornEffects. Правки ложатся и на колонку-формулу. Ветки отличались только данными и называли чужие состояния — переносить в состояния правильно. Зависит от пункта spend_action про action_lock.",
+   "corrected_target": ""
+  },
+  {
+   "id": "turn_actions",
+   "where": "turn_actions on[0].on = moment:turn-start",
+   "status": "keep",
+   "reason": "Правило в выписках не выводится — вопрос владельцу, а не выдумка.",
+   "corrected_target": ""
+  },
+  {
+   "id": "edge_reroll_one",
+   "where": "edge_reroll_one on[0].if",
+   "status": "keep",
+   "reason": "E1 и E2, «инициатива» не исключается — по тесту.",
+   "corrected_target": ""
+  },
+  {
+   "id": "edge_reroll_one",
+   "where": "edge_reroll_one on[0].cost[0].args.note",
+   "status": "keep",
+   "reason": "См. reroll_failures.",
+   "corrected_target": ""
+  },
+  {
+   "id": "edge_bump",
+   "where": "edge_bump on[0].if",
+   "status": "keep",
+   "reason": "E1 и E2.",
+   "corrected_target": ""
+  },
+  {
+   "id": "edge_bump",
+   "where": "edge_bump on[0].cost[0].args.note",
+   "status": "keep",
+   "reason": "См. reroll_failures.",
+   "corrected_target": ""
+  },
+  {
+   "id": "edge_init",
+   "where": "edge_init on[0].if",
+   "status": "keep",
+   "reason": "tags [\"инициатива\"] через E1.",
+   "corrected_target": ""
+  },
+  {
+   "id": "edge_init",
+   "where": "edge_init on[0].cost[0].args.note",
+   "status": "keep",
+   "reason": "См. reroll_failures.",
+   "corrected_target": ""
+  },
+  {
+   "id": "edge_init",
+   "where": "edge_init — когда доступно",
+   "status": "keep",
+   "reason": "clock.scores ни один шаг не меняет — нужен E6, это вопрос владельцу.",
+   "corrected_target": ""
+  },
+  {
+   "id": "edge_plus_hit",
+   "where": "edge_plus_hit on[0].if",
+   "status": "keep",
+   "reason": "E1 и E2.",
+   "corrected_target": ""
+  },
+  {
+   "id": "edge_plus_hit",
+   "where": "edge_plus_hit on[0].cost[0].args.note",
+   "status": "keep",
+   "reason": "См. reroll_failures.",
+   "corrected_target": ""
+  },
+  {
+   "id": "edge_plus_hit",
+   "where": "edge_plus_hit — момент выбора",
+   "status": "keep",
+   "reason": "Вопрос владельцу, а по книге нужен E5.",
+   "corrected_target": ""
+  },
+  {
+   "id": "edge_bonus_вкус",
+   "where": "edge_bonus_вкус/_обоняние/_слух/_зрение/_осязание; adept_improved_sense, aud_enh_spatial_recognizer",
+   "status": "keep",
+   "reason": "Механизм верный: метка у источника и одна подписка. Проверил, что собирается после E1+E2. Правки записи проходят через withRecord (modifiers.ts:105): клетки экземпляра подставляются, поэтому @строка.sense в условии превратится в строку (так уже работает @строка.wireless). @метки видны в условии правки (core/edits.ts:53, results.метки). Выдать эффект с выбранным чувством через grants нельзя, поэтому путь через метку — правильный. Новый справочник senses оправдан: колонке sense у adept_power нужен список только чувств.",
+   "corrected_target": ""
+  },
+  {
+   "id": "edge_bonus_вкус",
+   "where": "сейчас чувства на бросок не попадают",
+   "status": "keep",
+   "reason": "Подтверждено: у строк rolls нет claim, у pool метки только [\"проверка\"]. Сейчас эти подписки не срабатывают никогда.",
+   "corrected_target": ""
+  },
+  {
+   "id": "edge_bonus_обоняние",
+   "where": "edge_bonus_обоняние on[0]",
+   "status": "keep",
+   "reason": "Слить в edge_bonus.",
+   "corrected_target": ""
+  },
+  {
+   "id": "edge_bonus_слух",
+   "where": "edge_bonus_слух on[0]",
+   "status": "keep",
+   "reason": "Слить в edge_bonus, у распознавателя — правка «метка».",
+   "corrected_target": ""
+  },
+  {
+   "id": "edge_bonus_зрение",
+   "where": "edge_bonus_зрение on[0]",
+   "status": "keep",
+   "reason": "Слить в edge_bonus.",
+   "corrected_target": ""
+  },
+  {
+   "id": "edge_bonus_осязание",
+   "where": "edge_bonus_осязание on[0]",
+   "status": "keep",
+   "reason": "Слить в edge_bonus.",
+   "corrected_target": ""
+  },
+  {
+   "id": "scene_start",
+   "where": "scene_start steps[1].value",
+   "status": "keep",
+   "reason": "Ошибка настоящая: в шаг подставляется @действующий.edge вместо @цель.edge.",
+   "corrected_target": ""
+  },
+  {
+   "id": "scene_start",
+   "where": "scene_start целиком; act_scene; razor.has; samples/pieces.json:384",
+   "status": "keep",
+   "reason": "Событие стола — это момент, а не кнопка игрока. scene-end рассылается всем листам. Оговорку про «в конце, а не в начале» см. в round_edge.",
+   "corrected_target": ""
+  },
+  {
+   "id": "second_wind",
+   "where": "second_wind params «цели», steps[0..1]",
+   "status": "keep",
+   "reason": "Ошибка настоящая: величина берётся у действующего, а лечится цель. Действие над собой должно стоять до «Для каждого». Нижнюю границу держит сам шаг «Изменить».",
+   "corrected_target": ""
+  },
+  {
+   "id": "second_wind",
+   "where": "second_wind и shrug_off; записи act_second_wind, act_shrug",
+   "status": "fix",
+   "reason": "Слить в одну функцию верно, но довод «значения приходят сами (model/owned.ts: argsWithProps)» ложный. В коде owned.ts:146 argsWithProps возвращает binding.args без изменений. В act.ts:107 args берутся только из binding.args. Вход тела в refs.ts namedValue клетку записи не берёт: recordScope ставится только при вычислении формулы аргумента (inRecord). D&D тоже передаёт колонки явно: у weapon binding.args = {damage_dice: {expr: \"@damage_dice\"}, …}. Без явных args edge_cost упадёт с «параметр не заполнен». Кнопку на уровне типа «Действие» ставить нельзя: под тип попала бы и act_scene. Значит, args пишутся в собственных bindings записей.",
+   "corrected_target": "1) Тип записи «Действие» action: колонки edge_cost «Цена, очков Преимущества» (число, умолчание 0), heal_stun «Снимает ячеек оглушения» (число, умолчание 0), heal_physical «Снимает ячеек физического» (число, умолчание 0). 2) Клетки: act_second_wind — edge_cost 3, heal_stun 1; act_shrug — edge_cost 4, heal_physical 1. 3) Новый эффект edge_heal «Залечить за Преимущество» (группа «Преимущество», метка «приём Преимущества»). Входы: действующий (лист, роль actor), edge_cost (число), heal_stun (число, умолчание 0), heal_physical (число, умолчание 0). Плата: «ВЫЗОВ spend_edge(лист=@действующий, amount=@edge_cost)». Шаги до «Для каждого», без него: «ЕСЛИ @heal_stun >= 1 → ИЗМЕНИТЬ @действующий.stun -= @heal_stun», «ЕСЛИ @heal_physical >= 1 → ИЗМЕНИТЬ @действующий.physical -= @heal_physical». 4) Собственные bindings обеих записей: effect edge_heal, подпись прежняя, args ЯВНО: {edge_cost: {expr: \"@edge_cost\"}, heal_stun: {expr: \"@heal_stun\"}, heal_physical: {expr: \"@heal_physical\"}} — так же, как у типов D&D. Неявной подстановки по имени свойства в движке нет: owned.ts:146 argsWithProps возвращает binding.args как есть. Кнопку на тип «Действие» не ставить — под тип попадёт act_scene. 5) Удалить second_wind и shrug_off и их строки в samples/pieces.json:382–383. 6) Текст отказа станет умолчанием spend_edge «не хватает очков Преимущества». Поправить ожидание «нужно 3» в apps/server/test/scenarios/shadowrun.scenarios.ts:115 или сделать необязательный E8."
+  },
+  {
+   "id": "shrug_off",
+   "where": "shrug_off params «цели», steps[1].value",
+   "status": "keep",
+   "reason": "Та же ошибка, что у second_wind: величина берётся у действующего.",
+   "corrected_target": ""
+  },
+  {
+   "id": "shrug_off",
+   "where": "shrug_off целиком",
+   "status": "fix",
+   "reason": "Тот же ложный довод про неявную подстановку свойств записи: нужны явные args в binding записи act_shrug.",
+   "corrected_target": "Слить в edge_heal (см. second_wind). Клетки записи act_shrug: edge_cost 4, heal_physical 1. Binding записи act_shrug: effect edge_heal, args {edge_cost: {expr: \"@edge_cost\"}, heal_stun: {expr: \"@heal_stun\"}, heal_physical: {expr: \"@heal_physical\"}}. Удалить shrug_off."
+  },
+  {
+   "id": "battle_start",
+   "where": "battle_start on[0] moment:combat-start; колонка стол.battle",
+   "status": "keep",
+   "reason": "Хранимая копия часов. До E4 оставить, после — удалить.",
+   "corrected_target": ""
+  },
+  {
+   "id": "battle_end",
+   "where": "battle_end on[0] moment:combat-end",
+   "status": "keep",
+   "reason": "То же, что battle_start.",
+   "corrected_target": ""
+  },
+  {
+   "id": "glitch",
+   "where": "glitch on[0].if",
+   "status": "keep",
+   "reason": "notTags через E1.",
+   "corrected_target": ""
+  },
+  {
+   "id": "glitch",
+   "where": "glitch on[0].if: формула сбоя",
+   "status": "keep",
+   "reason": "E7 описан точно. «Сбой» и «критический сбой» — два разных исхода с разным журналом, оставить двумя эффектами верно.",
+   "corrected_target": ""
+  },
+  {
+   "id": "critical_glitch",
+   "where": "critical_glitch on[0].if",
+   "status": "keep",
+   "reason": "E1 и E7.",
+   "corrected_target": ""
+  }
+ ],
+ "missed": [
+  {
+   "id": "spend_action",
+   "where": "порядок пунктов: action_lock в spend_action и замена 13 копий",
+   "problem": "После переноса запрета из turn_actions в spend_action «Окаменение» и «Ловушка» отказывают только тем действиям, которые зовут spend_action в «Плате». Пока 13 копий не заменены (Матрица, заклинания, взрывы, сложные формы), эти действия под запретом проходят, а обнуление в turn_actions уже снято. Получается регресс, если пункты сделать не в том порядке. Проверки по полю (кнопка навыка) spend_action не зовут вовсе.",
+   "target": "Сначала заменить 13 копий вызовом spend_action, потом добавить в spend_action стоп по action_lock, а последней убрать ветку action_lock из turn_actions — одним коммитом или в этом порядке. Проверки по полю действием хода не являются; это вопрос в описании, а не дыра."
+  },
+  {
+   "id": "second_wind",
+   "where": ".claude/rules/engine-model.md и model/owned.ts:146 argsWithProps",
+   "problem": "Правило проекта говорит: «Вход с именем свойства записи получает неявный аргумент @свойство (owned.ts: argsWithProps)». В коде такой подстановки нет: argsWithProps возвращает binding.args как есть. Все типы D&D передают свойства явно. На это ложное правило опирается разбор edge_heal (и, вероятно, разборы других кластеров).",
+   "target": "Писать args в bindings явно ({вход: {expr: \"@свойство\"}}). Отдельно сообщить владельцу о расхождении правила и кода: либо дописать подстановку в движок, либо поправить текст правила."
+  },
+  {
+   "id": "reroll_failures",
+   "where": "пункт 2 цели: строка rolls «без Преимущества» с claim да — «ведущий может объявить её по ситуации»",
+   "problem": "Заявки броска приходят в намерении того, кто действует (claims: {листId: правки[]}, run.ts:572 frame.claims[by]). Способа, которым ведущий добавляет метку к броску чужого листа, разбор в коде не показал. Фраза «ведущий может объявить» не подтверждена.",
+   "target": "Строка rolls «без Преимущества» с claim да — заявка того, кто бросает. Ведущий может её объявить, только если у ведущего есть такой путь; иначе либо дописать движок (заявка ведущего на бросок чужого листа), либо вынести вопрос владельцу. Источник «Дрожь в руках» ставит метку правкой E2 и от этого не зависит."
+  },
+  {
+   "id": "round_edge",
+   "where": "round_edge (2) moment:scene-end вместо кнопки scene_start",
+   "problem": "Запас обновляется на закрытии сцены, а описание говорит «в начале сцены». Первая сцена комнаты не обновляется (запас берётся из засева листа), а после последней обновляется впустую. По смыслу почти то же, но это сознательное упрощение.",
+   "target": "Записать упрощение в описание round_edge и в docs/production-differences.md. Если движок научится «начинать сцену» — перенести на момент начала."
+  }
+ ]
+}
