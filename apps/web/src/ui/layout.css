@@ -604,3 +604,72 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .number-line > .input { flex: 0 0 9rem; width: 9rem; }
 .number-line__eq { padding-top: 0.4rem; color: var(--muted, inherit); }
 .number-line__formula { flex: 1 1 auto; min-width: 0; }
+
+@media (max-width: 700px) {
+  .shell { overflow: clip; }
+  .topbar { height: auto; min-height: var(--header-h); flex-wrap: wrap; gap: var(--s-2) var(--s-4); padding: var(--s-2) var(--s-5); }
+  .topbar__nav { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .topbar__link { flex: none; }
+  .worldbar { gap: var(--s-2) var(--s-3); }
+  .worldbar > .spacer { display: none; }
+  .worldbar__name { width: auto; flex: 1 1 160px; }
+  .worldbar__note { flex: 1 1 100%; max-width: none; white-space: normal; }
+  .appbar__row { flex-wrap: wrap; height: auto; min-height: var(--header-h); gap: var(--s-2) var(--s-3); padding: var(--s-2) var(--s-5); white-space: normal; }
+  .appbar__sep, .appbar__row > .spacer, .appbar__row > .muted:not(.worldbar__note) { display: none; }
+  .appbar .tabs { flex: 1 0 100%; height: auto; overflow-x: auto; scrollbar-width: none; }
+  .appbar .tabs__item { flex: none; }
+  .formula-bar { flex-wrap: wrap; padding: var(--s-2) var(--s-5); }
+  .formula-bar__where { max-width: 100%; }
+  .problems { left: 0; right: 0; width: auto; max-height: 75vh; border-radius: 0; border-inline: 0; }
+
+  .column { padding: var(--s-4) var(--s-5); }
+  .column--main { padding: var(--s-5); }
+  .columns:has(.tokens) > .column--side { order: 1; }
+  .column--folded { position: relative; flex-direction: row; align-items: center; padding: var(--s-3) var(--s-5); }
+  .column--folded .column__spine { flex: 1; min-width: 0; writing-mode: horizontal-tb; overflow: hidden; text-overflow: ellipsis; }
+  .column--folded .column__fold { order: 1; }
+  .column--side .column__fold { transform: rotate(90deg); }
+  .column--right .column__fold { transform: rotate(-90deg); }
+  .column--folded .column__fold::after { content: ''; position: absolute; inset: 0; }
+  .column--side .list, .palette { grid-template-columns: minmax(0, 1fr); }
+
+  .roles { justify-content: flex-start; padding: var(--s-7) var(--s-5); }
+  .roles__title { font-size: 30px; }
+  .roles__eyebrow { letter-spacing: 2px; text-align: center; }
+  .gate__form { flex-wrap: wrap; }
+  .gate__form > :first-child { flex: 1 1 180px; width: auto; }
+  .start { padding: var(--s-6) var(--s-5); }
+
+  .param-list--table { display: flex; flex-direction: column; }
+  .param-list--table .param-head, .args-table__head { display: none; }
+  .param-list--table .param-item { display: block; }
+  .param-list--table .param-line { grid-template-columns: 14px minmax(0, 1fr) auto; column-gap: var(--s-3); padding: var(--s-2) 0; }
+  .param-list--table .param-line__sum { grid-column: 2; display: flex; flex-direction: column; align-items: flex-start; gap: 0; padding: 0; }
+  .param-list--table .param-line > .sources { grid-column: 2; grid-row: 2; }
+  .param-list--table .param-line > :last-child { grid-column: 3; grid-row: 1; }
+  .args-table { display: flex; flex-direction: column; }
+  .args-row { grid-template-columns: auto minmax(0, 1fr); column-gap: var(--s-3); row-gap: var(--s-2); }
+  .args-row__kind { text-align: right; }
+  .args-row__fill { grid-column: 1 / -1; }
+  .button-head { grid-template-columns: minmax(0, 1fr); }
+  .step-card, .flow-block { --label-w: 0px; }
+  .step-card { padding: var(--s-3) var(--s-4) var(--s-4); }
+  .step-card .field, .step-card .call-row .pair.call-row__arg { grid-template-columns: minmax(0, 1fr); }
+  .step-card .field > :not(.field__label), .step-card .call-row__arg > :not(.call-args__name) { grid-column: 1; }
+  .flow-head { grid-template-columns: minmax(0, 1fr) auto; }
+  .flow-head__cond { grid-column: 1 / -1; }
+  .flow-head__actions { grid-column: 2; grid-row: 1; }
+  .when-body { margin-left: 0; }
+  .mod-row { flex-wrap: wrap; }
+  .sheet .card:has(> .sheet-table) { overflow-x: auto; }
+  .sheet-table { width: max-content; min-width: 100%; }
+  .number-line { flex-wrap: wrap; }
+  .number-line__formula { flex: 1 1 100%; }
+}
+
+@media (pointer: coarse) {
+  .tabs__item, .topbar__link, .list__item, .start__item { min-height: 40px; }
+  .topbar__link { display: inline-flex; align-items: center; }
+  .step-card .card__head .btn, .step-card .step-fold__row .btn { min-height: 40px; }
+  .column__fold, .list__fold, .list__group-pick { min-width: 40px; min-height: 40px; }
+}

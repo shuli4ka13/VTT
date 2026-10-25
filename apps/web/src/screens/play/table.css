@@ -79,3 +79,10 @@
 .log { display: flex; flex-direction: column; gap: var(--s-1); max-height: 42vh; overflow-y: auto; }
 .log-line { display: flex; gap: var(--s-2); align-items: baseline; }
 .log-line__at { color: var(--text-muted); font-variant-numeric: tabular-nums; font-size: var(--fs-1); }
+
+@media (max-width: 700px) {
+  .tokens { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+  .actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .actions .btn--primary { min-height: 44px; white-space: normal; }
+  .log { max-height: none; }
+}

@@ -25,3 +25,11 @@
 }
 .guide__strip:hover { border-color: var(--accent-hover); }
 .guide--left { right: auto; left: var(--s-5); align-items: flex-start; }
+
+@media (max-width: 700px) {
+  .guide, .guide--left { left: 0; right: 0; bottom: 0; width: 100%; align-items: stretch; }
+  .guide__card { border-radius: var(--r-3) var(--r-3) 0 0; border-bottom: 0; max-height: 60vh; overflow-y: auto; }
+  .guide__strip { border-radius: var(--r-3) var(--r-3) 0 0; border-bottom: 0; min-height: 44px; text-align: left; }
+  body:has(.guide__card) .columns { padding-bottom: 60vh; }
+  body:has(.guide__strip) .columns { padding-bottom: 48px; }
+}

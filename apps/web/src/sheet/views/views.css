@@ -528,3 +528,10 @@ span.v-chip { cursor: default; }
   background-repeat: no-repeat; background-position: right 2px center; background-size: 10px 6px;
   padding-right: 18px; height: 28px; min-height: 28px; line-height: 26px;
 }
+
+@media (pointer: coarse) {
+  .v-toggle, .v-ring { min-height: 40px; }
+  .v-stepper { height: 40px; }
+  .v-stepper__btn { width: 40px; }
+  .v-signed { height: 40px; }
+}
