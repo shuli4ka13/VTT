@@ -187,6 +187,24 @@ export function rollEdits(held: Held[], claims: readonly string[], roller: Pass)
   };
 }
 
+export function rollMarks(holders: readonly Holder[], rollerId: string, againstId: string | null, tags: readonly string[]): string[] {
+  const view = (id: string): Pass => {
+    const found = holders.find(holder => holder.id === id);
+    if (!found) throw new EngineError(`бросок: листа «${id}» нет среди носителей`);
+    return found.view;
+  };
+  const names: Record<string, Bound> = { бросающий: rollerId, против: againstId };
+  const marks = gather(holders, { call: ROLL_CALL, param: 'tags', tags, names, values: {}, view }).flatMap(held => {
+    const raw = (held as { value?: { expr: string } }).value;
+    if (!raw?.expr?.trim()) return [];
+    const value = resolveRef(raw, held.ref);
+    const list = Array.isArray(value) ? value : [value];
+    if (list.some(one => typeof one !== 'string' || !one)) throw new EngineError(`правка «${who(held)}»: метка броска — текст, а пришло ${JSON.stringify(value)}`);
+    return list as string[];
+  });
+  return [...new Set(marks)].filter(mark => !tags.includes(mark));
+}
+
 export function rollHeld(holders: readonly Holder[], rollerId: string, againstId: string | null, tags: readonly string[]): Held[] {
   const view = (id: string): Pass => {
     const found = holders.find(holder => holder.id === id);

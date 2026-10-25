@@ -24,7 +24,7 @@ import { isDesk, DESK_ID } from '../engine/owners.ts';
 import { Views } from './view.ts';
 import { State } from './state.ts';
 import { limitsOf, CUT_WORDS, PROBES_WORDS } from './limits.ts';
-import { gather, stack, rollHeld, amountOf, THRESHOLD_PARAM } from './edits.ts';
+import { gather, stack, rollHeld, rollMarks, amountOf, THRESHOLD_PARAM } from './edits.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import { recordOf, retarget, opponentIn, mentions } from './against.ts';
 import type { Faced, Names } from './against.ts';
@@ -590,6 +590,8 @@ export class Run {
     }
     const claims = claimed.filter(claim => words[claim]);
     const holders = this.holderViews();
+    const added = rollMarks(holders, by, opponent, tags);
+    if (added.length) tags = [...tags, ...added];
     const roller = this.view(by);
     const thrown = throwDice({
       spec, tags, claims, held: rollHeld(holders, by, opponent, tags), roller, die,

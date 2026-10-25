@@ -266,6 +266,7 @@ export const binding = z.object({
   effect: z.string(),
   table: z.record(z.string(), tableFill).optional(),
   args: z.record(z.string(), bindingArg).optional(),
+  if: formula.optional(),
 }).strict();
 
 export const tableShape = z.enum(['rows', 'single', 'book']);

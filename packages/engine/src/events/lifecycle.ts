@@ -20,7 +20,9 @@ export function lifecycleChanges(before: Sheet[], after: Sheet[], world: { syste
     if (!was || was === sheet) continue;
     const old = actingOn(was, world);
     for (const entry of actingOn(sheet, world)) {
-      const at = old.findIndex(o => o.effectId === entry.effectId);
+      const mine = (o: WornEffect): boolean => o.effectId === entry.effectId && (o.inst === undefined || entry.inst === undefined || o.inst === entry.inst);
+      const same = old.findIndex(o => mine(o) && JSON.stringify(o.args ?? {}) === JSON.stringify(entry.args ?? {}));
+      const at = same >= 0 ? same : old.findIndex(mine);
       if (at >= 0) old.splice(at, 1);
       else out.push({ sheetId: sheet.id, entry, turn: 'attach' });
     }

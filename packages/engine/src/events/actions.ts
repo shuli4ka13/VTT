@@ -1,4 +1,6 @@
-import { findRecord, heldBy, isItem, kindOfRecord, argsWithProps, propKeysOf } from '../model/owned.ts';
+import { findRecord, heldBy, isItem, kindOfRecord, argsWithProps, propKeysOf, propsOf } from '../model/owned.ts';
+import { compile } from '../formula/index.ts';
+import { linkOf } from '../model/tables.ts';
 import { findEffect, isPipeline, grantedTo } from '../engine/effects.ts';
 import { byOrder } from '../model/inherit.ts';
 import { EngineError } from '../engine/errors.ts';
@@ -36,7 +38,8 @@ function grantedAction(id: string, system: System): Action | null {
 export function availableActions(
   sheet: Sheet, { system, compendium }: { system: System; compendium: Compendium },
 ): Action[] {
-  const own = heldBy(sheet, compendium).flatMap(({ record, entry }) => actionsOfRecord(record, system, isItem(system, record), entry.id));
+  const own = heldBy(sheet, compendium).flatMap(({ record, entry }) => actionsOfRecord(record, system, isItem(system, record), entry.id)
+    .filter(action => bindingHolds(system, record, action.binding)));
   if (isDesk(sheet)) return own;
   const granted = grantedTo(system, sheet, compendium)
     .map(id => grantedAction(id, system))
@@ -69,10 +72,34 @@ export function actionOf(
       `запись «${record.label}» (${recordId}) не даёт действия №${index}: ` +
       'ни своей привязки, ни привязки у её рода');
   }
+  if (!bindingHolds(system, record, action.binding)) throw new EngineError(`«${action.label}»: у записи «${record.label}» этой кнопки нет`);
   return action;
 }
 
 export const INSTANCE = '@';
+
+export function bindingHolds(system: System, record: CompendiumRecord, binding: Binding): boolean {
+  const condition = (binding as { if?: { expr?: string } }).if?.expr;
+  if (!condition?.trim()) return true;
+  const props = propsOf(record, system) ?? {};
+  const kind = kindOfRecord(system, record);
+  const value = compile(condition).evaluate(name => {
+    const [head, ...path] = name.split('.');
+    let column = (kind?.columns ?? []).find(one => one.key === head);
+    let value: unknown = props[head!];
+    for (const key of path) {
+      const table = linkOf(column) ? system.tables?.[linkOf(column)!] : undefined;
+      const row = (table?.rows ?? []).find(one => String(one.value) === String(value));
+      column = (table?.columns ?? []).find(one => one.key === key);
+      if (!row || !column) return null;
+      const cell = (row.cells ?? {})[key];
+      value = cell === undefined || cell === '' ? column.default ?? null : cell;
+    }
+    return (value ?? null) as never;
+  });
+  if (typeof value !== 'boolean') throw new EngineError(`условие кнопки «${binding.label ?? binding.effect}» у «${record.label}» должно давать да/нет, а дало ${JSON.stringify(value)}`);
+  return value;
+}
 
 function actionsOfRecord(record: CompendiumRecord, system: System, fromItem: boolean, inst?: string): Action[] {
   const bindings = bindingsOf(record, system);

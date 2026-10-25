@@ -1,6 +1,6 @@
 import { compile } from '../formula/index.ts';
 import { assertTarget } from './targets.ts';
-import { ROLL_CALL } from '../words/calls.ts';
+import { ROLL_CALL, CALL_WORDS } from '../words/calls.ts';
 import { amountParamOf } from '../model/lists.ts';
 import { wornEffects, activationOf } from './effects.ts';
 import { EngineError } from './errors.ts';
@@ -39,8 +39,8 @@ export const editKey = (call: string, param: string): string => `${call}.${param
 
 const assertCall = (system: System, mod: EditModifier, owner?: string): void => {
   if (mod.call === ROLL_CALL) {
-    if (mod.param === 'edits' || mod.param === 'bonus' || mod.param === 'count' || mod.param === 'threshold') return;
-    throw new EngineError(`${owner ? `«${owner}»: ` : ''}у броска нет параметра «${mod.param}» — есть «edits», «bonus», «count» и «threshold»`);
+    if (mod.param in CALL_WORDS.roll.params) return;
+    throw new EngineError(`${owner ? `«${owner}»: ` : ''}у броска нет параметра «${mod.param}» — есть ${Object.keys(CALL_WORDS.roll.params).map(one => `«${one}»`).join(', ')}`);
   }
   const who = owner ? `«${owner}»: ` : '';
   const effect = system.effects?.[mod.call];

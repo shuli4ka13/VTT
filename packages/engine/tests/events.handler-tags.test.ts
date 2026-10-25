@@ -45,6 +45,16 @@ group('подписка на бросок с фильтром меток', () =>
     eq(score('кнопки:1'), 10);
   });
 
+  test('правка броска добавляет метку: подписка «без меток» её видит', () => {
+    const shaky = structuredClone(system) as System & { effects: Record<string, any> };
+    shaky.effects.дрожь = {
+      label: 'Дрожь', activation: 'passive', duration: { kind: 'permanent' },
+      modifiers: [{ kind: 'edit', call: 'roll', param: 'tags', value: { expr: '"защита"' }, if: { expr: '@бросающий == @носитель' } }],
+    };
+    const sheet = { ...me(), effects: [{ effectId: 'слух' }, { effectId: 'дрожь' }] } as Sheet;
+    eq(exchange({ system: shaky, compendium, die: () => 3, sheets: [sheet], actionId: 'кнопки:1', fromId: 'я', toIds: [] }).sheets[0]!.values.счёт, 1);
+  });
+
   test('метки у подписки не на бросок — ошибка «Проблем»', () => {
     const bad = structuredClone(system) as System & { effects: Record<string, any> };
     bad.effects.слух.on[0].on = 'before:бросок';
