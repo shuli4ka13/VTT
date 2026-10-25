@@ -2,7 +2,7 @@ import { lazyPlan } from '../model/flow.ts';
 import { actionOf, effectLabelOf } from '../events/actions.ts';
 import { asksOf } from '../model/asks.ts';
 import { loopOf } from '../engine/steps/each.ts';
-import { requireEffect, isPipeline } from '../engine/effects.ts';
+import { requireEffect, isPipeline, isPureCall } from '../engine/effects.ts';
 import { releaseHolder } from '../events/bonds.ts';
 import { refusalWords } from '../events/refusal.ts';
 import { propsOf, keyOf } from '../model/owned.ts';
@@ -181,7 +181,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
       const why = refusalWords(reportOf('effect', action.effect, actor, action.label, sink, ran.stopped, false), system);
       throw new EngineError(`«${action.label}» не состоялось: ${why ?? 'цепочка оборвана'}`);
     }
-    if (sink.trace.length || sink.changes.length || sink.effects.length || sink.removed.length) {
+    if (sink.trace.some(one => !(one.type === 'emit' && isPureCall(system, one.event))) || sink.changes.length || sink.effects.length || sink.removed.length) {
       state.write({ fromId: actor, toId: actor, report: reportOf('effect', action.effect, actor, action.label, sink, null, false) });
     }
     state.write(...sink.after);

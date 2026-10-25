@@ -1,6 +1,7 @@
 import { compile } from '../formula/index.ts';
 import type { Tools } from '../formula/index.ts';
 import { EngineError } from './errors.ts';
+import { diceTools } from '../core/roll.ts';
 import { applyValueModifiers } from './modifiers.ts';
 import { lookupCell, rowOf } from './tables.ts';
 import { VALUE_COLUMN, isRange } from '../model/tables.ts';
@@ -54,7 +55,7 @@ export function readCell(
 
   const tag = cellTagOf(tableId, rowKeyOf(table, input), column);
   const formula = compile(withRow(system, tableId, row, source.expr));
-  if (!scope) return applyValueModifiers(formula.evaluate(pass.resolve), tag, pass, [columnTagOf(tableId, column)]);
+  if (!scope) return applyValueModifiers(formula.evaluate(pass.resolve, diceTools()), tag, pass, [columnTagOf(tableId, column)]);
   if (scope.seen.has(tag)) {
     throw new EngineError(`клетка «${table.label || tableId}» → «${rowKeyOf(table, input)}» → «${spec.label ?? column}» читает сама себя по кругу`);
   }

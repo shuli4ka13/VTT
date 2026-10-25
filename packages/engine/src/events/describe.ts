@@ -2,6 +2,7 @@ import { parseItemTag } from '../model/item-ref.ts';
 import { recordKinds } from '../model/owned.ts';
 import { loopOf } from '../engine/steps/each.ts';
 import { effectLabelOf } from './actions.ts';
+import { isPureCall } from '../engine/effects.ts';
 import { breakReasonWord, registry as stepRegistry } from '../engine/steps/index.ts';
 import { outcomeWords, rollName } from '../engine/roll-tags.ts';
 import type { System, Sheet } from '../model/types.ts';
@@ -171,7 +172,7 @@ export function describeParts(
   };
   const eventLabel = (id: string) => system.effects?.[id]?.label ?? id;
   const idle = (trace: Record<string, unknown>): boolean =>
-    trace.type === 'apply' && trace.from === trace.to;
+    (trace.type === 'apply' && trace.from === trace.to) || (trace.type === 'emit' && isPureCall(system, trace.event));
   const calculation = (entry.report.trace ?? []).flatMap((trace: Record<string, unknown>) => {
     if (trace.skipped || idle(trace)) return [];
     const named = trace.within && !rolled(trace) ? null : namedTrace(trace);

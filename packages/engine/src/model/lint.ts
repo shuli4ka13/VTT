@@ -790,7 +790,7 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
   }
   for (const key of emitted) {
     const called = system.effects[key];
-    if (!called || called.steps?.length || heardEvents.has(key)) continue;
+    if (!called || called.steps?.length || called.returns?.length || heardEvents.has(key)) continue;
     out.push({
       where: { tab: 'effects', effect: key }, level: 'warn',
       text: `эффект «${called.label || key}» вызывают, но он ничего не делает: ни шагов, ни слушателей`,

@@ -132,3 +132,8 @@ export function wornEffects(
   }
   return out;
 }
+
+export function isPureCall(system: System, id: unknown): boolean {
+  const called = typeof id === 'string' ? system.effects?.[id] : undefined;
+  return Boolean(called && !called.steps?.length && !called.on?.length && called.returns?.length);
+}
