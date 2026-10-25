@@ -9,7 +9,7 @@
 
 Пуш в `cdm` → GitHub Actions (`.github/workflows/deploy.yml`):
 
-1. **Тесты** — schema, engine, server, web (`vitest run`). Упали — дальше не идёт.
+1. **Тесты** — schema, engine, server, web (`vitest run`), параллельно: движок тремя частями, веб четырьмя (`--shard`). Упали — выкатки нет.
 2. **Образ** — `deploy/Dockerfile`, linux/amd64, в `ghcr.io/shuli4ka13/vtt:<коммит>`. Сборка многостадийная:
    dev-зависимости и исходники остаются в стадии `builder`; в образ попадают только
    `yarn install --production` (стадия `deps`) и собранные `dist` пакетов, сервера и веба плюс `samples`.
