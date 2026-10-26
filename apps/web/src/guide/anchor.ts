@@ -3,7 +3,7 @@ import { same } from './find.ts';
 
 const NAMED = [
   'button', '[role="tab"]', '[role="button"]', 'a', 'label', 'summary', 'select',
-  '.field__label', '.list__name', '.fold__title', '.block-fold__name', '.card__title', '.param-line__name',
+  '.field__label', '.list__name', '.fold__title', '.block-fold__name', '.card__title', '.param-line__name', '.cond__title',
 ].join(', ');
 
 const CLICKABLE = 'button, [role="button"], [role="tab"], a, summary, select, label';

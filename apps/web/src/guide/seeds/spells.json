@@ -1,0 +1,117 @@
+{
+  "id": "учебная",
+  "name": "Учебная система",
+  "blocks": [
+    {
+      "name": "Бой",
+      "parts": [
+        {
+          "table": "лист"
+        }
+      ]
+    }
+  ],
+  "tables": {
+    "лист": {
+      "shape": "single",
+      "columns": [
+        {
+          "key": "хиты",
+          "label": "Хиты",
+          "kind": "number",
+          "default": 10,
+          "min": 0
+        }
+      ]
+    },
+    "сроки": {
+      "label": "Сроки",
+      "shape": "rows",
+      "key": "word",
+      "columns": [
+        {
+          "key": "держится",
+          "label": "Держится",
+          "kind": "boolean"
+        }
+      ],
+      "rows": [
+        {
+          "value": "мгновенное",
+          "label": "Мгновенное",
+          "cells": {
+            "держится": false
+          }
+        },
+        {
+          "value": "концентрация",
+          "label": "Концентрация",
+          "cells": {
+            "держится": true
+          }
+        }
+      ]
+    },
+    "заклинание": {
+      "label": "Заклинание",
+      "shape": "book",
+      "use": "action",
+      "columns": [
+        {
+          "key": "срок",
+          "label": "Срок",
+          "kind": "choice",
+          "from": "сроки"
+        }
+      ]
+    }
+  },
+  "effects": {
+    "поддержание": {
+      "label": "Поддержание",
+      "activation": "passive"
+    },
+    "сотворить": {
+      "label": "Сотворить",
+      "activation": "manual",
+      "params": [
+        {
+          "key": "колдун",
+          "label": "Колдун",
+          "kind": "sheet",
+          "role": "actor"
+        },
+        {
+          "key": "срок",
+          "label": "Срок",
+          "kind": "choice",
+          "from": "сроки",
+          "optional": true
+        }
+      ],
+      "steps": []
+    },
+    "прекращение": {
+      "label": "Прекратить",
+      "activation": "manual",
+      "params": [
+        {
+          "key": "колдун",
+          "label": "Колдун",
+          "kind": "sheet",
+          "role": "actor"
+        }
+      ],
+      "steps": [
+        {
+          "type": "status",
+          "mode": "remove",
+          "effect": "поддержание",
+          "to": {
+            "expr": "@колдун"
+          }
+        }
+      ]
+    }
+  }
+}

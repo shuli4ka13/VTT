@@ -1,0 +1,75 @@
+{
+  "id": "учебная",
+  "name": "Учебная система",
+  "blocks": [
+    {
+      "name": "Бой",
+      "parts": [
+        {
+          "table": "лист"
+        }
+      ]
+    }
+  ],
+  "tables": {
+    "лист": {
+      "shape": "single",
+      "columns": [
+        {
+          "key": "хиты",
+          "label": "Хиты",
+          "kind": "number",
+          "default": 10,
+          "min": 0
+        }
+      ]
+    },
+    "метки_бросков": {
+      "label": "Метки бросков",
+      "shape": "rows",
+      "key": "word",
+      "rows": [
+        {
+          "value": "атака"
+        },
+        {
+          "value": "защита"
+        }
+      ]
+    }
+  },
+  "effects": {
+    "сырость": {
+      "label": "Сырость",
+      "activation": "passive"
+    },
+    "горение": {
+      "label": "Горение",
+      "activation": "passive"
+    },
+    "удача": {
+      "label": "Удача",
+      "activation": "passive"
+    },
+    "холод": {
+      "label": "Холод",
+      "activation": "passive"
+    },
+    "иней": {
+      "label": "Иней",
+      "activation": "passive"
+    },
+    "согреться": {
+      "label": "Согреться",
+      "activation": "manual",
+      "params": [
+        {
+          "key": "действующий",
+          "label": "Кто действует",
+          "kind": "sheet"
+        }
+      ],
+      "steps": []
+    }
+  }
+}

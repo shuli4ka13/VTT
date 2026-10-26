@@ -248,6 +248,57 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     problems: openProblems,
     armor: () => edit(d => { d.tables!.kind_2 = { shape: 'book', use: 'item', label: 'Броня', modifiers: [{ kind: 'value', target: 'класс_брони', op: 'add', value: { expr: '2' } }] } as never; }),
   },
+  tags: {
+    tag: [
+      () => pick({ activeEffectId: 'сырость' }),
+      () => edit(d => { d.effects.сырость!.tags = ['гасит огонь']; }),
+    ],
+    when: [
+      () => pick({ activeEffectId: 'горение' }),
+      () => edit(d => { d.effects.горение!.on = [{ on: '' }]; }),
+      () => edit(d => { d.effects.горение!.on = [{ on: 'gained:' }]; }),
+      () => edit(d => { d.effects.горение!.on = [{ on: 'gained:гасит огонь' }]; }),
+    ],
+    who: () => edit(d => { d.effects.горение!.on![0]!.if = { expr: '@лист == @носитель' }; }),
+    remove: [
+      () => edit(d => { d.effects.горение!.on![0]!.steps = [{ type: 'apply' }]; }),
+      () => edit(d => { d.effects.горение!.on![0]!.steps = [{ type: 'status' }]; }),
+      () => edit(d => { d.effects.горение!.on![0]!.steps = [{ type: 'status', mode: 'remove' }]; }),
+      () => edit(d => { d.effects.горение!.on![0]!.steps = [{ type: 'status', mode: 'remove', effect: 'горение', to: { expr: '@лист' } }]; }),
+    ],
+    seen: [
+      () => pick({ activeEffectId: 'удача' }),
+      () => edit(d => { d.effects.удача!.on = [{ on: '' }]; }),
+      () => edit(d => { d.effects.удача!.on = [{ on: 'seen' }]; }),
+      () => edit(d => { d.effects.удача!.on = [{ on: 'seen', notTags: ['защита'] }]; }),
+    ],
+    plus: () => edit(d => { d.effects.удача!.on![0]!.steps = [{ type: 'roll-plus', value: { expr: '1' } }]; }),
+    problems: openProblems,
+    clear: () => edit(d => {
+      d.effects.холод!.tags = ['стужа'];
+      d.effects.иней!.tags = ['стужа'];
+      d.effects.согреться!.steps = [{ type: 'status', mode: 'remove', by: 'tag', effect: 'стужа', to: { expr: '@действующий' } }] as never;
+    }),
+  },
+  spells: {
+    open: () => pick({ activeRecordKind: 'заклинание' }),
+    cast: [
+      () => edit(d => { d.tables!.заклинание!.bindings = [{ effect: '', label: '' }] as never; }),
+      () => edit(d => { d.tables!.заклинание!.bindings = [{ effect: 'сотворить', label: 'Сотворить', args: { срок: { expr: '@срок' } } }] as never; }),
+    ],
+    stop: [
+      () => edit(d => { d.tables!.заклинание!.bindings!.push({ effect: '', label: '' } as never); }),
+      () => edit(d => { d.tables!.заклинание!.bindings![1] = { effect: 'прекращение', label: 'Прекратить' } as never; }),
+    ],
+    if: () => edit(d => { d.tables!.заклинание!.bindings![1]!.if = { expr: '@срок.держится' }; }),
+    bond: [
+      () => pick({ activeEffectId: 'сотворить' }),
+      () => edit(d => { d.effects.сотворить!.bond = { effect: 'поддержание', by: 'колдун' }; }),
+    ],
+    many: () => edit(d => { d.effects.сотворить!.bond!.many = true; }),
+    problems: openProblems,
+    term: () => edit(d => { d.tables!.сроки!.rows!.push({ value: 'час', label: 'Час', cells: { держится: true } }); }),
+  },
 };
 
 const takePiece = (id: string) => {
