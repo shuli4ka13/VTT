@@ -206,8 +206,8 @@ group('Shadowrun 6, глава «Инициатива и действия»: с�
 
 group('Shadowrun 6: действия защиты (стр. 42–43)', () => {
   const desk = (battle: boolean) => ({ id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: { battle }, has: [], effects: [] }) as unknown as Sheet;
-  const prepare = (who: Sheet, action: string, battle = false) => {
-    const out = exchange({ system, compendium, die: tape(), sheets: [who, desk(battle)], actionId: action, fromId: who.id, toIds: [] });
+  const prepare = (who: Sheet, pick: string, battle = false) => {
+    const out = exchange({ system, compendium, die: tape(), sheets: [who, desk(battle)], actionId: '+defense_action', fromId: who.id, toIds: [], inputs: { действие: pick } });
     return after(out, who.id);
   };
   const defenseDice = (attacker: Sheet, weapon: string, target: Sheet) => {
@@ -219,24 +219,24 @@ group('Shadowrun 6: действия защиты (стр. 42–43)', () => {
   const thug = fighter('бандит', { agility: 3, 'skills.ближний_бой.rank': 3, 'skills.стрельба.rank': 3 }, [{ of: 'sap' }, { of: 'colt_l36' }]);
 
   test('INI-06 (стр. 42): Блокировать — Реакция 4 + Интуиция 3 + Ближний бой 5 = 12 кубиков на одну защиту в рукопашной; потом снова 7', () => {
-    const ready = prepare(whitney(), '+act_block');
+    const ready = prepare(whitney(), 'Блокировать');
     const first = defenseDice(thug, 'sap:0', ready);
     eq(first.dice, 12);
     eq(defenseDice(thug, 'sap:0', first.target).dice, 7);
   });
 
   test('Блокировать не помогает против стрельбы (стр. 42)', () => {
-    eq(defenseDice(thug, 'colt_l36:0', prepare(whitney(), '+act_block')).dice, 7);
+    eq(defenseDice(thug, 'colt_l36:0', prepare(whitney(), 'Блокировать')).dice, 7);
   });
 
   test('Уклониться — Атлетика к одной защите, в бою тратит простое действие (стр. 43)', () => {
-    const ready = prepare({ ...whitney(), values: { ...whitney().values, simple_left: 2 } } as Sheet, '+act_dodge', true);
+    const ready = prepare({ ...whitney(), values: { ...whitney().values, simple_left: 2 } } as Sheet, 'Уклониться', true);
     eq(ready.values.simple_left, 1);
     eq(defenseDice(thug, 'colt_l36:0', ready).dice, 9);
   });
 
   test('Глухая оборона — Воля ко всем защитам раунда, тратит сложное действие (стр. 43)', () => {
-    const ready = prepare({ ...whitney(), values: { ...whitney().values, complex_left: 1 } } as Sheet, '+act_full_defense', true);
+    const ready = prepare({ ...whitney(), values: { ...whitney().values, complex_left: 1 } } as Sheet, 'Глухая оборона', true);
     eq(at(ready, 'complex_left'), 0);
     const first = defenseDice(thug, 'sap:0', ready);
     eq(first.dice, 10);

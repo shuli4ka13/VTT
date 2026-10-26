@@ -111,7 +111,7 @@ group('Shadowrun 6: сервер и лёд', () => {
   });
 
   test('убивающий лёд: чистые успехи + рейтинг; полный счётчик — устройство сдохло, демпшок (стр. 188, 174)', () => {
-    const out = act(sheetOf('baraholka_killer'), [decker({ matrix_damage: 1 })], 'ic_strike:0', dice([6, 6], [2, 1], [5, 1], [1, 1], [3, 1]));
+    const out = act(sheetOf('baraholka_killer'), [decker({ matrix_damage: 1 })], '+ic_attack', dice([6, 6], [2, 1], [5, 1], [1, 1], [3, 1]));
     const d = after(out, 'razor');
     eq(d.values.matrix_damage, 11);
     ok(wears(d, 'dumpshocked'), out.log.join('\n'));
@@ -120,7 +120,7 @@ group('Shadowrun 6: сервер и лёд', () => {
   });
 
   test('едкий лёд: Сетевой экран −1 за чистый успех, не ниже 0 (стр. 187)', () => {
-    const out = act(sheetOf('baraholka_killer', { ic_kind: 'едкий' }), [decker()], 'ic_strike:0', dice([6, 6], [2, 1], [20, 1]));
+    const out = act(sheetOf('baraholka_killer', { ic_kind: 'едкий' }), [decker()], '+ic_attack', dice([6, 6], [2, 1], [20, 1]));
     eq(computed(after(out, 'razor'), 'm_firewall'), 0);
   });
 });
@@ -136,7 +136,7 @@ group('Shadowrun 6, глава «Матрица»: ситуации книжни
   });
 
   test('MX-7 (стр. 176): демпшок — холодный сим 3о, горячий 3ф, сопротивление Волей; дезориентация', () => {
-    const hit = (mode: string) => act(sheetOf('baraholka_killer'), [decker({ matrix_damage: 2, matrix_mode: mode, willpower: 4 })], 'ic_strike:0', dice([6, 6], [2, 1], [5, 1], [1, 6], [1, 6], [1, 5], [2, 2], [20, 2]));
+    const hit = (mode: string) => act(sheetOf('baraholka_killer'), [decker({ matrix_damage: 2, matrix_mode: mode, willpower: 4 })], '+ic_attack', dice([6, 6], [2, 1], [5, 1], [1, 6], [1, 6], [1, 5], [2, 2], [20, 2]));
     const cold = after(hit('холодная ВР'), 'razor');
     const hot = after(hit('горячая ВР'), 'razor');
     eq(cold.values.stun, 1);

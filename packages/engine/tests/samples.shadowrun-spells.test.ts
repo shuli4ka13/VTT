@@ -7,15 +7,15 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 const sr = PLAYABLE_WORLDS.find(w => (w.system as System).id === 'shadowrun6')!;
 const system = sr.system as System;
 const book = sr.compendium as Compendium;
-const like = (id: string, label: string, from: string, args: Record<string, string>) => {
+const like = (id: string, label: string, from: string, cells: Record<string, unknown>) => {
   const base = book.records.find(r => r.id === from)!;
-  const binding = (base.bindings as { args: Record<string, { expr: string }> }[])[0]!;
-  return { ...base, id, label, bindings: [{ ...binding, args: { ...binding.args, ...Object.fromEntries(Object.entries(args).map(([k, v]) => [k, { expr: v }])) } }] };
+  const { bindings: _kept, ...rest } = base as typeof base & { bindings?: unknown };
+  return { ...rest, id, label, cells: { ...base.cells, ...cells } };
 };
 const compendium = { ...book, records: [...book.records,
-  like('spell_ice_spear', 'Ледяное копьё', 'spell_fireball', { drain_base: '5', area: '0', element: '"холод"' }),
-  like('spell_stunbolt', 'Оглушающий разряд', 'spell_mana_bolt', { drain_base: '3', damage: '"оглушающий"' }),
-  like('spell_manaball', 'Шар маны', 'spell_mana_bolt', { drain_base: '5', area: '1' }),
+  like('spell_ice_spear', 'Ледяное копьё', 'spell_fireball', { drain: 5, area: false, element: 'холод' }),
+  like('spell_stunbolt', 'Оглушающий разряд', 'spell_mana_bolt', { drain: 3, damage: 'оглушающий' }),
+  like('spell_manaball', 'Шар маны', 'spell_mana_bolt', { drain: 5, area: true }),
 ] } as Compendium;
 
 const sheet = (id: string, values: Record<string, unknown>, has: Sheet['has'] = []): Sheet => ({

@@ -112,7 +112,7 @@ export const scenarios: Scenario[] = [
     dice: [],
     steps: [
       { act: 'act_second_wind:0', from: 'razor', to: 'razor' },
-      { act: 'act_second_wind:0', from: 'silk', to: 'silk', refused: 'нужно 3' },
+      { act: 'act_second_wind:0', from: 'silk', to: 'silk', refused: 'не хватает очков Преимущества' },
     ],
     expect: { values: { razor: { edge_left: 0, stun: 2 }, silk: { edge_left: 2, stun: 3 } } },
   },
