@@ -355,7 +355,7 @@ function rowFree(text: string, from: Where, own: Set<string> | undefined, out: R
   if (!own) return text;
   return text.replace(ROW_PATH, (_, tail: string) => {
     const head = tail.slice(1).split('.')[0] ?? '';
-    if (!own.has(head)) out.push({ kind: 'prop', key: head || 'строка', from, scope: 'foreign' });
+    if (head && !own.has(head)) out.push({ kind: 'prop', key: head, from, scope: 'foreign' });
     return '0';
   });
 }
@@ -404,8 +404,10 @@ export function tiedToHolder(condition: Guard | undefined): boolean {
   return visit(ast);
 }
 
-function modifierRefs(system: System, list: Modifier[] | undefined, from: Where, out: Reference[], own?: Set<string>, inputs: Param[] = []): void {
+function modifierRefs(system: System, list: Modifier[] | undefined, from: Where, out: Reference[], given?: Set<string>, inputs: Param[] = []): void {
   for (const mod of list ?? []) {
+    const anyRow = mod.kind === 'value' ? /^cell:([^.]+)\.\*\./u.exec(mod.target)?.[1] : undefined;
+    const own = given ?? (anyRow && system.tables?.[anyRow] ? new Set((system.tables[anyRow]!.columns ?? []).map(column => column.key)) : undefined);
     const target = String((mod as { target?: string }).target ?? '');
     if (mod.kind === 'edit') {
       if (mod.call === ROLL_CALL) {

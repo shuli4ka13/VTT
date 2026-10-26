@@ -1,4 +1,5 @@
 import { group, test, deepEq } from './harness.ts';
+import { errorsOf, lintSystem } from '../src/model/lint.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
@@ -15,7 +16,7 @@ const system = {
   effects: {
     уровень: {
       label: 'По уровню', activation: 'passive', duration: { kind: 'permanent' },
-      modifiers: [{ kind: 'value', target: 'cell:навыки.*.ранг', op: 'add', value: { expr: '@уровень + @строка.база' } }],
+      modifiers: [{ kind: 'value', target: 'cell:навыки.*.ранг', op: 'add', value: { expr: '@уровень + @строка.база' }, if: { expr: '@строка != "никакой"' } }],
     },
   },
 } as unknown as System;
@@ -35,3 +36,10 @@ group('правка по всей колонке таблицы листа', () 
     deepEq([read(s, 'навыки.бег.ранг'), read(s, 'навыки.плавание.ранг')], [1, 0]);
   });
 });
+
+group('правка по всей колонке: проверка системы', () => {
+  test('«@строка» в правке «любая строка» — не ошибка', () => {
+    deepEq(errorsOf(lintSystem(system, compendium)).map(p => p.text), []);
+  });
+});
+
