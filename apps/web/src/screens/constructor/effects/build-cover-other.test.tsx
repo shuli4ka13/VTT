@@ -39,6 +39,10 @@ const head = (ui: ReturnType<typeof within>, create: string, label: string, key:
   if (goal.group) ui.select('Папка', goal.group);
   if (goal.icon) ui.type('Значок', goal.icon);
   if (goal.description) ui.type('Описание', goal.description);
+  for (const tag of goal.tags ?? []) {
+    if (tag in (useWorld.getState().system.tags ?? {})) ui.select('Метки', tag);
+    else { ui.select('Метки', ':своя'); ui.type('Метки', tag); ui.click('добавить'); }
+  }
 };
 
 describe('эффекты пресетов собираются руками: Shadowrun, Cyberpunk, Daggerheart, Blades', () => {
@@ -91,7 +95,8 @@ describe('эффекты пресетов собираются руками: Sha
     head(ui, '+ срабатывает сам', 'Сбой', 'glitch', goal!);
     ui.select('Что случилось', 'rolled');
     ui.select('Кого касается', '@бросающий == @носитель');
-    ui.when('=@roll.atMin * 2 > @roll.rolled и @roll.natural >= 1 и не есть(@roll.tags, "инициатива")');
+    ui.when('=@roll.atMin * 2 > @roll.rolled и @roll.natural >= 1');
+    ui.select('Кроме меток', 'инициатива');
     dump({ got: built('glitch'), goal });
     expect(built('glitch')).toEqual(goal);
   });
@@ -119,7 +124,9 @@ describe('эффекты пресетов собираются руками: Sha
     const ui = within();
     head(ui, '+ срабатывает сам', goal!.label!, 'reroll_failures', goal!);
     seenHead(ui);
-    ui.when('=не (@носитель.edge_ban_hands >= 1 и (есть(@roll.tags, "атака") или есть(@roll.tags, "стрельба") или есть(@roll.tags, "ближний бой") или есть(@roll.tags, "экзотическое оружие") или есть(@roll.tags, "взлом замков"))) и не @roll.atMin * 2 > @roll.rolled и не есть(@roll.tags, "инициатива")');
+    ui.when('=не @roll.atMin * 2 > @roll.rolled');
+    ui.select('Кроме меток', 'инициатива');
+    ui.select('Кроме меток', 'без Преимущества');
     spendFromHolder();
     ui.click('+ перебросить');
     const card = stepCard(/^2 · /);
@@ -133,7 +140,8 @@ describe('эффекты пресетов собираются руками: Sha
     const ui = within();
     head(ui, '+ срабатывает сам', goal!.label!, 'push_edge', goal!);
     seenHead(ui);
-    ui.when('=не (@носитель.edge_ban_hands >= 1 и (есть(@roll.tags, "атака") или есть(@roll.tags, "стрельба") или есть(@roll.tags, "ближний бой") или есть(@roll.tags, "экзотическое оружие") или есть(@roll.tags, "взлом замков"))) и не есть(@roll.tags, "инициатива")');
+    ui.select('Кроме меток', 'инициатива');
+    ui.select('Кроме меток', 'без Преимущества');
     spendFromHolder();
     ui.click('+ докинуть');
     const card = () => stepCard(/^2 · /);
