@@ -1,4 +1,4 @@
-import { group, test, eq, ok } from './harness.ts';
+import { group, test, eq, ok, deepEq } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { exchange } from './play.ts';
 import { fieldCheck } from '../src/engine/check.ts';
@@ -169,6 +169,60 @@ group('Shadowrun 6: оружие — книга, шаг 8', () => {
     const out = reloadIn('striker', false);
     eq(out.values.complex_left, 0);
     eq(out.values.simple_left, 3);
+  });
+});
+
+group('Shadowrun 6: существа и пешки — книга, шаг 8', () => {
+  const creature = (kind: string, values: Record<string, unknown> = {}) => ({ id: 'зверь', systemId: 'shadowrun6', of: 'creature', name: 'Существо', values: { creature_kind: kind, ...values }, has: [], effects: [] }) as unknown as Sheet;
+
+  test('вид существа (стр. 216–220): Сила сбойной крысы 0, Сила и Магия восточного дракона 30 и 10, Сущность 10, Сущность гуля 5', () => {
+    const rat = creature('sboynaya_krysa');
+    eq(computed(rat, 'strength'), 0);
+    const dragon = creature('vostochnyy_drakon');
+    deepEq([computed(dragon, 'strength'), computed(dragon, 'magic'), computed(dragon, 'essence')], [30, 10, 10]);
+    eq(computed(creature('gul'), 'essence'), 5);
+  });
+
+  test('Магия вампира — меньшее из 6 и Сущности (стр. 217)', () => {
+    eq(computed(creature('vampir'), 'magic'), 6);
+  });
+
+  test('броня существа (стр. 216, 222): защита дракона 26, акулы 11', () => {
+    eq(computed(creature('vostochnyy_drakon'), 'defense_rating'), 26);
+    eq(computed(creature('akula'), 'defense_rating'), 11);
+  });
+
+  test('защита в астрале (стр. 160): естественная броня в неё не входит', () => {
+    eq(computed(sheetOf('razor', { armor_natural: 4 }), 'astral_dr'), computed(sheetOf('razor'), 'astral_dr'));
+  });
+
+  test('поддержание заклинаний (стр. 132, 222): пешка и существо — −2 кубика за заклинание, как у бегущего', () => {
+    const roll = (sheet: Sheet, sustaining: number) => {
+      const held = { ...sheet, effects: [...sheet.effects, ...Array.from({ length: sustaining }, () => ({ effectId: 'sustaining' }))] } as Sheet;
+      const out = perform({ system, compendium, clock: null, sheets: [held], die: () => 6 }, { op: 'roll', sheetId: held.id, tag: 'skills.стрельба.pool' } as never);
+      if (out.kind !== 'done') throw new Error(out.kind);
+      return (/\[([^\]]*)\]/.exec(out.log.join('\n'))?.[1] ?? '').split(',').filter(Boolean).length;
+    };
+    for (const sheet of [sheetOf('fiveeyes', { 'skills.стрельба.rank': 3, edge_left: 0 }), creature('volk', { 'skills.стрельба.rank': 3, edge_left: 0 })]) eq(roll(sheet, 0) - roll(sheet, 1), 2);
+  });
+
+  test('командир отряда (стр. 203): профессиональный рейтинг добавляется к счётчику', () => {
+    const base = computed(sheetOf('fiveeyes'), 'physical_max') as number;
+    eq(computed(sheetOf('fiveeyes', { grunt_leader: true, grunt_pr: 3 }), 'physical_max'), base + 3);
+  });
+
+  test('пешка (стр. 203): добит оглушающим — без сознания, физическим — истекает кровью', () => {
+    const finishing = (from: Sheet, action: string, inputs: Record<string, unknown>) => {
+      const pawn = sheetOf('fiveeyes');
+      const nearly = { ...pawn, values: { ...pawn.values, stun: (computed(pawn, 'physical_max') as number) - 1 } } as Sheet;
+      let used = 0;
+      const out = exchange({ system, compendium, die: () => (used++ < 24 ? 6 : 1), sheets: [from, nearly], actionId: action, fromId: from.id, toId: 'fiveeyes', inputs: inputs as never });
+      return after(out, 'fiveeyes');
+    };
+    const stunned = finishing(sheetOf('lone_star'), 'stun_baton:0', {});
+    ok(wears(stunned, 'unconscious') && !wears(stunned, 'bleeding'), JSON.stringify(stunned.effects));
+    const shot = finishing(sheetOf('razor', { agility: 1, 'skills.стрельба.rank': 1 }), 'predator_vi:0', { дистанция: 'близкая' });
+    ok(wears(shot, 'bleeding') && !wears(shot, 'unconscious'), JSON.stringify(shot.effects));
   });
 });
 

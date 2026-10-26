@@ -965,7 +965,7 @@
             "key": "astral_dr",
             "label": "Значение защиты в астрале",
             "expr": {
-              "expr": "@intuition + @armor_natural + @astral_armor"
+              "expr": "@intuition + @astral_armor"
             }
           },
           {
@@ -1193,6 +1193,29 @@
             "kind": "choice",
             "from": "sprite_kinds",
             "optional": true
+          },
+          {
+            "key": "creature_kind",
+            "label": "Вид существа",
+            "kind": "choice",
+            "from": "creatures",
+            "optional": true
+          },
+          {
+            "key": "grunt_leader",
+            "label": "Командир отряда",
+            "kind": "boolean"
+          },
+          {
+            "key": "grunt_pr",
+            "label": "Профессиональный рейтинг",
+            "kind": "number",
+            "min": 0
+          },
+          {
+            "key": "last_hit_physical",
+            "label": "Последний урон физический",
+            "kind": "boolean"
           },
           {
             "key": "sprite_level",
@@ -17282,6 +17305,16 @@
         ],
         "steps": [
           {
+            "type": "apply",
+            "target": {
+              "expr": "@лист.last_hit_physical"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "@physical_hit"
+            }
+          },
+          {
             "type": "branch",
             "if": {
               "expr": "@physical_hit"
@@ -22393,223 +22426,6 @@
           }
         ]
       },
-      "creature_template": {
-        "label": "Облик существа",
-        "group": "Мир",
-        "description": "Записать на лист характеристики и навыки существа книги (стр. 216–221).",
-        "params": [
-          {
-            "key": "действующий",
-            "label": "Кто",
-            "kind": "sheet"
-          },
-          {
-            "key": "цели",
-            "label": "Лист",
-            "kind": "sheet",
-            "many": true,
-            "item": {
-              "key": "цель",
-              "label": "Лист"
-            }
-          },
-          {
-            "key": "tpl",
-            "label": "Существо",
-            "kind": "choice",
-            "from": "creatures",
-            "ask": {
-              "by": "gm"
-            }
-          }
-        ],
-        "steps": [
-          {
-            "type": "each",
-            "of": "цели"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.body"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(если(пусто(@tpl.body), @цель.body, @tpl.body), 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.agility"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(если(пусто(@tpl.agility), @цель.agility, @tpl.agility), 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.reaction"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(если(пусто(@tpl.reaction), @цель.reaction, @tpl.reaction), 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.strength"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(если(пусто(@tpl.strength), @цель.strength, @tpl.strength), 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.willpower"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(если(пусто(@tpl.willpower), @цель.willpower, @tpl.willpower), 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.logic"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(если(пусто(@tpl.logic), @цель.logic, @tpl.logic), 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.intuition"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(если(пусто(@tpl.intuition), @цель.intuition, @tpl.intuition), 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.charisma"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(если(пусто(@tpl.charisma), @цель.charisma, @tpl.charisma), 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.magic"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(если(пусто(@tpl.magic), @цель.magic, @tpl.magic), 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.астрал.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@tpl.sk_астрал"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.атлетика.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@tpl.sk_атлетика"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.ближний_бой.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@tpl.sk_ближний_бой"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.внимание.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@tpl.sk_внимание"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.воплощение.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@tpl.sk_воплощение"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.колдовство.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@tpl.sk_колдовство"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.ориентирование.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@tpl.sk_ориентирование"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.скрытность.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@tpl.sk_скрытность"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.убеждение.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@tpl.sk_убеждение"
-            }
-          }
-        ]
-      },
       "insecurity_shaken": {
         "label": "Неуверенность: сорвалось",
         "group": "Качества",
@@ -24147,6 +23963,23 @@
             "if": {
               "expr": "не пусто(@npc_template)"
             }
+          },
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "0 - 2 * @носитель.sustaining"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель и @носитель.sustaining >= 1"
+            },
+            "notTags": [
+              "защита",
+              "сопротивление",
+              "инициатива"
+            ]
           }
         ]
       },
@@ -24177,7 +24010,7 @@
             "target": "knocked_out",
             "op": "set",
             "value": {
-              "expr": "нет"
+              "expr": "@physical_total >= @physical_max и не @last_hit_physical"
             }
           },
           {
@@ -24186,6 +24019,25 @@
             "op": "set",
             "value": {
               "expr": "0 - округлить вниз(меньшее из(@physical + @stun, @physical_max) / 2)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "bleeding_out",
+            "op": "set",
+            "value": {
+              "expr": "@physical_total >= @physical_max и @last_hit_physical"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "physical_max",
+            "op": "add",
+            "value": {
+              "expr": "@grunt_pr"
+            },
+            "if": {
+              "expr": "@grunt_leader"
             }
           }
         ],
@@ -24676,71 +24528,274 @@
       "creature": {
         "label": "Существо",
         "icon": "🐺",
-        "hint": "Существо или пешка по заготовке книги: «Облик по заготовке» пишет характеристики и навыки (стр. 204–221).",
+        "hint": "Существо книги: выберите «Вид существа» — характеристики, Магия, Сущность, навыки и броня берутся из книги (стр. 216–221).",
         "modifiers": [
           {
             "kind": "value",
-            "target": "attr_limits.body.bonus",
-            "op": "add",
+            "target": "body",
+            "op": "set",
+            "stage": "основа",
             "value": {
-              "expr": "20"
+              "expr": "@creature_kind.body"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind)"
             }
           },
           {
             "kind": "value",
-            "target": "attr_limits.agility.bonus",
-            "op": "add",
+            "target": "agility",
+            "op": "set",
+            "stage": "основа",
             "value": {
-              "expr": "20"
+              "expr": "@creature_kind.agility"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind)"
             }
           },
           {
             "kind": "value",
-            "target": "attr_limits.reaction.bonus",
-            "op": "add",
+            "target": "reaction",
+            "op": "set",
+            "stage": "основа",
             "value": {
-              "expr": "20"
+              "expr": "@creature_kind.reaction"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind)"
             }
           },
           {
             "kind": "value",
-            "target": "attr_limits.strength.bonus",
-            "op": "add",
+            "target": "strength",
+            "op": "set",
+            "stage": "основа",
             "value": {
-              "expr": "20"
+              "expr": "@creature_kind.strength"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind)"
             }
           },
           {
             "kind": "value",
-            "target": "attr_limits.willpower.bonus",
-            "op": "add",
+            "target": "willpower",
+            "op": "set",
+            "stage": "основа",
             "value": {
-              "expr": "20"
+              "expr": "@creature_kind.willpower"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind)"
             }
           },
           {
             "kind": "value",
-            "target": "attr_limits.logic.bonus",
-            "op": "add",
+            "target": "logic",
+            "op": "set",
+            "stage": "основа",
             "value": {
-              "expr": "20"
+              "expr": "@creature_kind.logic"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind)"
             }
           },
           {
             "kind": "value",
-            "target": "attr_limits.intuition.bonus",
-            "op": "add",
+            "target": "intuition",
+            "op": "set",
+            "stage": "основа",
             "value": {
-              "expr": "20"
+              "expr": "@creature_kind.intuition"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind)"
             }
           },
           {
             "kind": "value",
-            "target": "attr_limits.charisma.bonus",
+            "target": "charisma",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@creature_kind.charisma"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "magic",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@creature_kind.magic"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind.magic)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "essence",
+            "op": "set",
+            "value": {
+              "expr": "@creature_kind.essence"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind.essence)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "magic",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "меньшее из(6, @essence)"
+            },
+            "if": {
+              "expr": "@creature_kind == \"vampir\""
+            }
+          },
+          {
+            "kind": "value",
+            "target": "skills.астрал.rank",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@creature_kind.sk_астрал"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "skills.атлетика.rank",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@creature_kind.sk_атлетика"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "skills.ближний_бой.rank",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@creature_kind.sk_ближний_бой"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "skills.внимание.rank",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@creature_kind.sk_внимание"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "skills.воплощение.rank",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@creature_kind.sk_воплощение"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "skills.колдовство.rank",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@creature_kind.sk_колдовство"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "skills.ориентирование.rank",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@creature_kind.sk_ориентирование"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "skills.скрытность.rank",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@creature_kind.sk_скрытность"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "skills.убеждение.rank",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@creature_kind.sk_убеждение"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "armor_natural",
             "op": "add",
             "value": {
-              "expr": "20"
+              "expr": "@creature_kind.armor"
+            },
+            "if": {
+              "expr": "не пусто(@creature_kind.armor)"
             }
+          },
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "0 - 2 * @носитель.sustaining"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель и @носитель.sustaining >= 1"
+            },
+            "notTags": [
+              "защита",
+              "сопротивление",
+              "инициатива"
+            ]
           }
         ]
       }
@@ -27196,17 +27251,6 @@
                 "expr": "@действующий"
               }
             }
-          }
-        ]
-      },
-      {
-        "id": "wd_creature",
-        "table": "world_action",
-        "label": "Облик существа",
-        "bindings": [
-          {
-            "label": "Облик существа",
-            "effect": "creature_template"
           }
         ]
       },
