@@ -67,6 +67,15 @@ group('Shadowrun 6: действия в Матрице', () => {
     ok(wears(after(out, 'жертва'), 'matrix_drain'));
   });
 
+  test('Смоляная яма (стр. 184): снижается Вычислительная мощность цели; при ВМ 0 действие в Матрице отказывает', () => {
+    const before = computed(victim({ matrix_mode: 'нет' }), 'm_dp') as number;
+    const out = act(decker(), [victim({ matrix_mode: 'нет' })], 'mx_tarpit:0', dice([3, 6], [20, 1]));
+    eq(computed(after(out, 'жертва'), 'm_dp'), Math.max(0, before - 4));
+    const drained = { ...decker(), effects: [{ effectId: 'matrix_drain', args: { amount: 99 } }] } as Sheet;
+    const why = refusal(() => act(drained, [victim()], 'mx_spike:0', dice([30, 1])));
+    ok(why.includes('снижена до 0'), why);
+  });
+
   test('Брутфорс: успех — висящий «Доступ»; админ без пользователя — защита +2 кубика (стр. 180)', () => {
     const out = act(decker(), [victim()], 'mx_brute:0', dice([11, 6], [20, 1]), { level: 'администратор', had_user: 'нет' });
     ok(wears(after(out, 'razor'), 'matrix_access'));
@@ -119,6 +128,15 @@ group('Shadowrun 6: сервер и лёд', () => {
     eq(d.values.matrix_mode, 'нет');
   });
 
+  test('дозорный лёд (стр. 187): в бою тратит простое действие, сложное не тронуто, урона нет', () => {
+    const desk = { id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: { battle: true }, has: [], effects: [] } as unknown as Sheet;
+    const watcher = sheetOf('baraholka_killer', { ic_kind: 'дозорный', simple_left: 3, complex_left: 1 });
+    const out = exchange({ system, compendium, die: dice([6, 6], [20, 1]), sheets: [watcher, decker(), desk], actionId: '+ic_attack', fromId: 'baraholka_killer', toIds: ['razor'] });
+    eq(after(out, 'baraholka_killer').values.simple_left, 2);
+    eq(after(out, 'baraholka_killer').values.complex_left, 1);
+    eq(Number(after(out, 'razor').values.matrix_damage ?? 0), 0);
+  });
+
   test('едкий лёд: Сетевой экран −1 за чистый успех, не ниже 0 (стр. 187)', () => {
     const out = act(sheetOf('baraholka_killer', { ic_kind: 'едкий' }), [decker()], '+ic_attack', dice([6, 6], [2, 1], [20, 1]));
     eq(computed(after(out, 'razor'), 'm_firewall'), 0);
@@ -142,6 +160,14 @@ group('Shadowrun 6, глава «Матрица»: ситуации книжни
     eq(cold.values.stun, 1);
     eq(hot.values.physical, 1);
     ok(wears(cold, 'dumpshocked') && wears(hot, 'dumpshocked'));
+    eq(cold.effects.find(e => e.effectId === 'dumpshocked')?.args?.минут, 6, '10 − Воля 4 = 6 минут');
+  });
+
+  test('MX-7б (стр. 176): при Воле 10 демпшок есть (выброс из Матрицы), а дезориентации нет', () => {
+    const out = act(sheetOf('baraholka_killer'), [decker({ matrix_damage: 2, matrix_mode: 'холодная ВР', willpower: 10 })], '+ic_attack', dice([6, 6], [2, 1], [5, 1], [1, 6], [1, 6], [1, 5], [2, 2], [20, 2]));
+    const d = after(out, 'razor');
+    eq(d.values.matrix_mode, 'нет');
+    ok(!wears(d, 'dumpshocked'));
   });
 
   test('вопрос «да/нет»: «Доступ пользователя уже есть» — «да» снимает +2 к защите; иное слово — отказ', () => {
