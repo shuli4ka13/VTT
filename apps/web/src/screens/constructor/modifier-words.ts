@@ -6,6 +6,7 @@ import { tiedToHolder } from '@vtt/engine/model/references';
 import { labelOfTag } from '../../ui/formula.tsx';
 import { formulaWords } from '../../ui/formula-words.ts';
 import { rowNames } from './row-names.ts';
+import { ROW } from '@vtt/engine/model/sheet-columns';
 
 type Loose = Record<string, unknown>;
 
@@ -46,12 +47,28 @@ function whoseWords(system: System, mod: Loose, sheetLabels: Record<string, stri
 export const rowNamesOf = (system: System, table: string | undefined): Names =>
   (table ? rowNames(flattenSystem(system, true), table) : undefined);
 
+const columnLabel = (system: System, table: string, key: string): string =>
+  (system.tables?.[table]?.columns ?? []).find(one => one.key === key)?.label ?? key;
+
+function targetLabel(system: System, target: string, table?: string): string {
+  const anyRow = /^cell:([^.]+)\.\*\.(.+)$/u.exec(target);
+  if (anyRow) return `${system.tables?.[anyRow[1]!]?.label ?? anyRow[1]} → ${columnLabel(system, anyRow[1]!, anyRow[2]!)} — у каждой`;
+  const byProp = /^([^.]+)\.\{@строка\.([\p{L}\p{N}_]+)\}\.(.+)$/u.exec(target);
+  if (byProp) return `${system.tables?.[byProp[1]!]?.label ?? byProp[1]} → ${columnLabel(system, byProp[1]!, byProp[3]!)} по «${table ? columnLabel(system, table, byProp[2]!) : byProp[2]}»`;
+  const byInput = /^\{@([\p{L}\p{N}_]+)(?:\.([\p{L}\p{N}_]+))?\}$/u.exec(target);
+  if (byInput) return `поле из «${byInput[1]}»`;
+  return labelOfTag(system, target);
+}
+
 export function modifierSentence(system: System, modifier: Modifier, table?: string): string {
   const mod = modifier as unknown as Loose;
-  const names = rowNamesOf(system, table);
+  const anyRow = mod.kind === 'value' ? /^cell:([^.]+)\.\*\./u.exec(String(mod.target ?? ''))?.[1] : undefined;
+  const names = anyRow
+    ? new Map([...(rowNamesOf(system, anyRow) ?? new Map()), [ROW, `каждая из «${system.tables?.[anyRow]?.label ?? anyRow}»`]])
+    : rowNamesOf(system, table);
   if (mod.kind === 'value') {
     const target = String(mod.target ?? '');
-    const field = target ? labelOfTag(system, target) : 'какое поле?';
+    const field = target ? targetLabel(system, target, table) : 'какое поле?';
     const op = OP_WORDS[String(mod.op ?? 'add')] ?? (value => `${String(mod.op)} ${value}`);
     const condition = exprOf(mod.if) ? ` — если ${formulaWords(system, exprOf(mod.if), names)}` : '';
     return `«${field}» ${op(valueWords(system, mod.value, names))}${stageWords(targetStages(system, target), mod.stage)}${condition}`;
