@@ -67,4 +67,21 @@ group('Shadowrun 6, глава «Снаряжение и импланты»: с�
     const both = [...laser(true), { of: 'smartgun_external', in: 'ствол' }] as Sheet['has'];
     eq(colt(both, { smartlink: true }), base + 2);
   });
+
+  test('SR-GEAR-bone (стр. 291): плотность костей добавляет рейтинг к сопротивлению физическому урону, оглушающему — нет', () => {
+    const soakDice = (damage: 'физический' | 'оглушающий') => {
+      const target = { ...runner({ body: 3 }, [{ of: 'bone_density', values: { rating: 2 } }]), id: 'цель' } as Sheet;
+      const bare = { ...runner({ body: 3 }), id: 'цель' } as Sheet;
+      const dice = (sheet: Sheet) => {
+        const out = exchange({
+          system, compendium, die: () => 6, sheets: [runner({ agility: 4, 'skills.стрельба.rank': 5, 'skills.ближний_бой.rank': 5 }, [{ of: damage === 'физический' ? 'predator_vi' : 'stun_baton' }]), sheet],
+          actionId: damage === 'физический' ? 'predator_vi:0' : 'stun_baton:0', fromId: 'бег', toIds: ['цель'], inputs: damage === 'физический' ? { дистанция: 'близкая' } : {},
+        });
+        return out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]).find(entry => entry.step === 'сопротивление_бросок')?.rolls?.length as number;
+      };
+      return dice(target) - dice(bare);
+    };
+    eq(soakDice('физический'), 2);
+    eq(soakDice('оглушающий'), 0);
+  });
 });

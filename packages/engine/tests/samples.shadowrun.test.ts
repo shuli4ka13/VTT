@@ -140,6 +140,38 @@ group('Shadowrun 6: Преимущество — книга, шаг 8', () => {
   });
 });
 
+group('Shadowrun 6: оружие — книга, шаг 8', () => {
+  const deskIn = { id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: { battle: true }, has: [], effects: [] } as unknown as Sheet;
+  const reloadIn = (weapon: string, smartlink: boolean) => {
+    const holder = { ...sheetOf('silk', { complex_left: 1, simple_left: 3, smartlink }), has: [{ of: weapon, values: { ammo: 0 } }] } as Sheet;
+    return exchange({ system, compendium, die: () => 1, sheets: [holder, deskIn], actionId: `${weapon}:1`, fromId: 'silk', toIds: [] }).sheets.find(s => s.id === 'silk')!;
+  };
+
+  test('перезарядка обоймы (стр. 42, 44): без смартлинка — сложное действие', () => {
+    const out = reloadIn('colt_l36', false);
+    eq(out.values.complex_left, 0);
+    eq(out.values.simple_left, 3);
+  });
+
+  test('перезарядка смартгана (стр. 42): со смартлинком — простое действие', () => {
+    const out = reloadIn('predator_vi', true);
+    eq(out.values.complex_left, 1);
+    eq(out.values.simple_left, 2);
+  });
+
+  test('перезарядка смартгана без смартлинка (стр. 44) — сложное действие', () => {
+    const out = reloadIn('predator_vi', false);
+    eq(out.values.complex_left, 0);
+    eq(out.values.simple_left, 3);
+  });
+
+  test('«Страйкер» (стр. 44): перезарядка ракетного снаряда — сложное действие', () => {
+    const out = reloadIn('striker', false);
+    eq(out.values.complex_left, 0);
+    eq(out.values.simple_left, 3);
+  });
+});
+
 group('Shadowrun 6: отряд пешек', () => {
   test('счётчик урона и Преимущество у отряда общие: урон по одному виден у другого', () => {
     const sheets = [sheetOf('razor'), sheetOf('fiveeyes'), sheetOf('fiveeyes_2'), sheetOf('fiveeyes_squad')];

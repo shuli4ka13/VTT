@@ -42,4 +42,18 @@ group('Shadowrun 6, глава «Риггинг»: ситуации книжни
     eq(hit([5, 5, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]).values.stun ?? 0, 0, 'СУ 2 + 2 = 4 — не больше Тела 4');
     eq(hit([5, 5, 5, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 5, 5, 2, 2]).values.stun, 3, 'СУ 2 + 3 = 5 больше Тела 4 — проходит; сопротивление Телом модели 4 кубика, 2 успеха — остаток 3');
   });
+
+  test('rig-5 (стр. 114, 196): оглушающая граната по транспорту — сравнивается СУ до сопротивления; электрическая действует и при СУ не больше Тела', () => {
+    const grenade = (dv: number, electric: boolean) => ({ id: 'grenade_probe', table: 'grenade', label: 'Проба', cells: { dv_e: dv, dv_c: dv, dv_n: dv, blast: 5, physical_dmg: false, electric } });
+    const thrown = (dv: number, electric: boolean) => {
+      const thrower = { ...sheetOf('mafia', { edge_left: 0 }), has: [{ of: 'grenade_probe', values: { count: 2 } }] } as Sheet;
+      return exchange({
+        system, compendium: { ...compendium, records: [...compendium.records, grenade(dv, electric)] } as Compendium, die: tape(), sheets: [thrower, sheetOf('drone_doberman')],
+        actionId: 'grenade_probe:0', fromId: 'mafia', toIds: ['drone_doberman'], inputs: { дистанция: 'близкая', кольцо: { drone_doberman: 'эпицентр' } } as never,
+      }).sheets.find(s => s.id === 'drone_doberman')!;
+    };
+    eq(thrown(4, false).values.stun ?? 0, 0, 'СУ 4 не больше Тела 4');
+    eq((thrown(6, false).values.stun as number) > 0, true, 'СУ 6 больше Тела 4');
+    eq((thrown(4, true).values.stun as number) > 0, true, 'электрическая при СУ не больше Тела');
+  });
 });
