@@ -139,7 +139,7 @@ group('Shadowrun 6: оружие, патроны, модификации, взр
   };
   const kit: Record<string, () => Sheet> = {
     silk: () => equip('silk', {}, { of: 'laser_sight', in: 'colt_l36' }),
-    razor: () => equip('razor', { smartlink: 1 }, { of: 'ammo_apds', in: 'predator_vi' }),
+    razor: () => equip('razor', { smartlink: true }, { of: 'ammo_apds', in: 'predator_vi' }),
   };
   const fire = (from: string, to: string, action: string, inputs: Record<string, unknown>, die = () => 1) => exchange({
     system, compendium, die, sheets: [kit[from]?.() ?? sheetOf(from), sheetOf(to)], actionId: action, fromId: from, toId: to, inputs: inputs as never,

@@ -65,6 +65,6 @@ group('Shadowrun 6, глава «Снаряжение и импланты»: с�
     eq(colt(laser(false)), base + 1);
     eq(colt(laser(true)), base + 2);
     const both = [...laser(true), { of: 'smartgun_external', in: 'ствол' }] as Sheet['has'];
-    eq(colt(both, { smartlink: 1 }), base + 2);
+    eq(colt(both, { smartlink: true }), base + 2);
   });
 });

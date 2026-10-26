@@ -102,7 +102,7 @@ describe('эффекты пресетов собираются руками: Sha
     within(stepCard(/^1 · /)).click('вызов');
     const card = () => stepCard(/^1 · /);
     within(card()).select('Какой эффект', 'spend_edge');
-    for (const [name, text] of [['Кто тратит', '@носитель'], ['Сколько очков', '4'], ['Если не хватает', '"нужно 4 очк. Преимущества"']] as const) {
+    for (const [name, text] of [['Кто тратит', '@носитель'], ['Сколько очков', '4']] as const) {
       within(card()).formula(within(card()).arg(name), text);
     }
     within(card()).click('↑');
@@ -119,7 +119,7 @@ describe('эффекты пресетов собираются руками: Sha
     const ui = within();
     head(ui, '+ срабатывает сам', goal!.label!, 'reroll_failures', goal!);
     seenHead(ui);
-    ui.when('=не (@носитель.edge_ban_charisma >= 1 и (есть(@roll.tags, "обман") или есть(@roll.tags, "убеждение") или есть(@roll.tags, "социальная")) или @носитель.edge_ban_logic >= 1 и (есть(@roll.tags, "биотехнологии") или есть(@roll.tags, "взлом") или есть(@roll.tags, "инженерное дело") или есть(@roll.tags, "электроника")) или @носитель.edge_ban_hands >= 1 и (есть(@roll.tags, "атака") или есть(@roll.tags, "стрельба") или есть(@roll.tags, "ближний бой") или есть(@roll.tags, "экзотическое оружие") или есть(@roll.tags, "взлом замков")) или @носитель.edge_ban_social >= 1 и (есть(@roll.tags, "обман") или есть(@roll.tags, "убеждение") или есть(@roll.tags, "социальная"))) и не @roll.atMin * 2 > @roll.rolled и не есть(@roll.tags, "инициатива")');
+    ui.when('=не (@носитель.edge_ban_hands >= 1 и (есть(@roll.tags, "атака") или есть(@roll.tags, "стрельба") или есть(@roll.tags, "ближний бой") или есть(@roll.tags, "экзотическое оружие") или есть(@roll.tags, "взлом замков"))) и не @roll.atMin * 2 > @roll.rolled и не есть(@roll.tags, "инициатива")');
     spendFromHolder();
     ui.click('+ перебросить');
     const card = stepCard(/^2 · /);
@@ -133,7 +133,7 @@ describe('эффекты пресетов собираются руками: Sha
     const ui = within();
     head(ui, '+ срабатывает сам', goal!.label!, 'push_edge', goal!);
     seenHead(ui);
-    ui.when('=не (@носитель.edge_ban_charisma >= 1 и (есть(@roll.tags, "обман") или есть(@roll.tags, "убеждение") или есть(@roll.tags, "социальная")) или @носитель.edge_ban_logic >= 1 и (есть(@roll.tags, "биотехнологии") или есть(@roll.tags, "взлом") или есть(@roll.tags, "инженерное дело") или есть(@roll.tags, "электроника")) или @носитель.edge_ban_hands >= 1 и (есть(@roll.tags, "атака") или есть(@roll.tags, "стрельба") или есть(@roll.tags, "ближний бой") или есть(@roll.tags, "экзотическое оружие") или есть(@roll.tags, "взлом замков")) или @носитель.edge_ban_social >= 1 и (есть(@roll.tags, "обман") или есть(@roll.tags, "убеждение") или есть(@roll.tags, "социальная"))) и не есть(@roll.tags, "инициатива")');
+    ui.when('=не (@носитель.edge_ban_hands >= 1 и (есть(@roll.tags, "атака") или есть(@roll.tags, "стрельба") или есть(@roll.tags, "ближний бой") или есть(@roll.tags, "экзотическое оружие") или есть(@roll.tags, "взлом замков"))) и не есть(@roll.tags, "инициатива")');
     spendFromHolder();
     ui.click('+ докинуть');
     const card = () => stepCard(/^2 · /);
