@@ -11,6 +11,20 @@ export const isRange = (table: Table): boolean => table.key === 'range';
 
 export const isNumberKeyed = (table: Table | undefined): boolean => table?.key === 'number' || table?.key === 'range';
 
+export function staticCell(system: System, table: string | undefined, value: unknown, path: readonly string[]): unknown {
+  let at = table;
+  let current = value;
+  for (const key of path) {
+    const spec = at ? (system.tables?.[at]?.columns ?? []).find(one => one.key === key) : undefined;
+    if (!spec) return null;
+    const row = (system.tables?.[at!]?.rows ?? []).find(one => String(one.value) === String(current));
+    const cell = row ? (row.cells ?? {})[key] : undefined;
+    current = cell === undefined || cell === '' ? spec.default ?? null : cell;
+    at = linkOf(spec);
+  }
+  return current ?? null;
+}
+
 export const linkOf = (column: { kind?: string; from?: string } | undefined): string | undefined =>
   (column?.from && (column.kind === 'choice' || column.kind === 'number') ? column.from : undefined);
 

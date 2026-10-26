@@ -21,7 +21,7 @@ import { tableOf } from './buttons.ts';
 import { MOMENTS } from '../events/moments.ts';
 import { TABS, STEP, SHEET } from '../words/glossary.ts';
 import {
-  referencesOf, declaredOf, chainRefs, heldOf, listenerOf, withAddresses, heardNames, callNamesOf, formulaDeps, sourcesOf,
+  referencesOf, declaredOf, chainRefs, listenerOf, withAddresses, heardNames, callNamesOf, formulaDeps, sourcesOf,
   type Where, type Reference, type RefKind, type Declared, type Listener,
   LISTEN, contractsOf, HOLDER, DESK_NAME, holderNameOf, tiedToHolder,
 } from './references.ts';
@@ -246,7 +246,7 @@ export function lintStep(step: Step, system: System, effect: Effect, earlier: Ea
   const params = new Set([...all.filter(p => p.kind !== 'sheet').map(p => p.key), ...rows, ...visible.filter(one => one.kind !== 'sheet').map(one => one.name)]);
   const sheets = [...all.filter(p => p.kind === 'sheet').map(p => p.key), 'носитель', ...earlier.filter(e => e.type === 'each' && !e.table).map(e => e.id), ...visible.filter(one => one.kind === 'sheet').map(one => one.name)];
   const known = new Set([...earlier.map(e => e.id), ...visible.filter(one => one.kind !== 'sheet').map(one => one.name)]);
-  const refs = withAddresses(system, chainRefs([step], () => where, params, sheets, [], [], heldOf(system)))
+  const refs = withAddresses(system, chainRefs([step], () => where, params, sheets, [], [], system))
     .filter(ref => !(ref.kind === 'step' && known.has(ref.key)))
     .filter(ref => !(ref.kind === 'field' && known.has(ref.key)));
   const [first] = refProblems(refs, declared, () => false, system);

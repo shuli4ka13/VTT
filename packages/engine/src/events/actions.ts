@@ -1,6 +1,6 @@
 import { findRecord, heldBy, isItem, kindOfRecord, argsWithProps, propKeysOf, propsOf } from '../model/owned.ts';
 import { compile } from '../formula/index.ts';
-import { linkOf } from '../model/tables.ts';
+import { linkOf, staticCell } from '../model/tables.ts';
 import { findEffect, isPipeline, grantedTo } from '../engine/effects.ts';
 import { byOrder } from '../model/inherit.ts';
 import { EngineError } from '../engine/errors.ts';
@@ -85,17 +85,7 @@ export function bindingHolds(system: System, record: CompendiumRecord, binding: 
   const kind = kindOfRecord(system, record);
   const value = compile(condition).evaluate(name => {
     const [head, ...path] = name.split('.');
-    let column = (kind?.columns ?? []).find(one => one.key === head);
-    let value: unknown = props[head!];
-    for (const key of path) {
-      const table = linkOf(column) ? system.tables?.[linkOf(column)!] : undefined;
-      const row = (table?.rows ?? []).find(one => String(one.value) === String(value));
-      column = (table?.columns ?? []).find(one => one.key === key);
-      if (!row || !column) return null;
-      const cell = (row.cells ?? {})[key];
-      value = cell === undefined || cell === '' ? column.default ?? null : cell;
-    }
-    return (value ?? null) as never;
+    return staticCell(system, linkOf((kind?.columns ?? []).find(one => one.key === head)), props[head!], path) as never;
   });
   if (typeof value !== 'boolean') throw new EngineError(`условие кнопки «${binding.label ?? binding.effect}» у «${record.label}» должно давать да/нет, а дало ${JSON.stringify(value)}`);
   return value;

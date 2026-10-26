@@ -1,7 +1,8 @@
 import { armsOf, sees } from './flow.ts';
 import { loopOf, loopParam } from '../engine/steps/each.ts';
 import { flattenSystem } from './inherit.ts';
-import { heardNames, listenerOf, callNamesOf, sourcesOf, CALL_TAGS, HOLDER, TARGETS_SEED } from './references.ts';
+import { heardNames, listenerOf, callNamesOf, sourcesOf, CALL_TAGS, HOLDER, TARGETS_SEED, DESK_NAME, COMBAT_NAME } from './references.ts';
+import { LEFT_NAME } from '../events/durations.ts';
 import { calledOf } from '../engine/effects.ts';
 import { STEP_WORDS } from '../words/steps.ts';
 import type { StepWords } from '../words/steps.ts';
@@ -63,6 +64,10 @@ const fromParam = (param: Param, group: NameGroup, system?: System): NameAt => w
 }, system);
 
 const holder = (): NameAt => ({ name: HOLDER, label: 'носитель — тот, на ком висит', kind: 'sheet', group: 'holder' });
+
+const left = (): NameAt => ({ name: LEFT_NAME, label: 'осталось срока у этого висящего', kind: 'number', group: 'holder' });
+
+const combat = (): NameAt => ({ name: `${DESK_NAME}.${COMBAT_NAME}`, label: 'идёт ли бой', kind: 'boolean', group: 'holder' });
 
 const returnsOf = (system: System | undefined, step: Step): NameChild[] => {
   const called = (step as { effect?: unknown }).effect;
@@ -175,7 +180,7 @@ export function namesAt(raw: System, effectId: string, place: Place): NameAt[] {
 
   switch (place.part) {
     case 'steps':
-      return dedupe([...inputs, ...stepsBefore(effect.steps ?? [], place.index, true, effect.params ?? [], system), ...tags, ...constants(system)]);
+      return dedupe([...inputs, ...stepsBefore(effect.steps ?? [], place.index, true, effect.params ?? [], system), ...tags, combat(), ...constants(system)]);
     case 'cost':
       return dedupe([...inputs, ...stepsBefore(effect.cost ?? [], place.index, false, [], system), ...tags, ...constants(system)]);
     case 'attach':
@@ -188,12 +193,12 @@ export function namesAt(raw: System, effectId: string, place: Place): NameAt[] {
       if (!handler) return [];
       const own = place.part === 'handler' ? stepsBefore(handler.steps ?? [], place.index, false, [], system)
         : place.part === 'handler-cost' ? stepsBefore(handler.cost ?? [], place.index, false, [], system) : [];
-      return dedupe([holder(), ...heard(system, handler), ...inputs, ...own, ...constants(system)]);
+      return dedupe([holder(), left(), ...heard(system, handler), ...inputs, ...own, combat(), ...constants(system)]);
     }
     case 'modifier': {
       const mod = effect.modifiers?.[place.modifier];
       if (!mod) return [];
-      if (mod.kind !== 'edit') return constants(system);
+      if (mod.kind !== 'edit') return [left(), ...constants(system)];
       const call = callNamesOf(system, mod.call);
       const params = new Map((system.effects?.[mod.call]?.params ?? []).map(param => [param.key, param]));
       const callNames: NameAt[] = [

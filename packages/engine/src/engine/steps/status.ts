@@ -1,6 +1,6 @@
 import { EngineError } from '../errors.ts';
 import type { StepContext, StepModule, StepData } from './index.ts';
-import type { StoredValue } from '../../model/types.ts';
+import type { StoredValue, System } from '../../model/types.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 
 export const type = 'status';
@@ -13,6 +13,12 @@ export const MODES = {
 };
 
 export const mayBreak = false;
+
+export const slotNames = (step: StepData, slot: string, system: System): readonly string[] =>
+  (slot === 'where' && step.by !== 'tag' && typeof step.effect === 'string' ? (system.effects?.[step.effect]?.params ?? []).map(param => param.key) : []);
+
+export const slotRefers = (step: StepData, slot: string): string | null =>
+  (slot === 'effect' && step.mode === 'remove' && step.by === 'tag' ? 'tag' : null);
 
 export const icon = '☄';
 
@@ -40,9 +46,9 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
     if (typeof id !== 'string') throw new EngineError(`${who(ctx)}: состоянию нужен id эффекта, а пришло ${JSON.stringify(id)}`);
     const to = ctx.sheet(step.to, 'на кого');
     if (!to) throw new EngineError(`${who(ctx)}: шагу «состояние» не сказано, на чей лист`);
-    if (mode === 'remove' && !ctx.system.effects?.[id]) {
+    if (mode === 'remove' && step.by === 'tag') {
       const tagged = Object.entries(ctx.system.effects ?? {}).filter(([, effect]) => effect.tags?.includes(id)).map(([key]) => key);
-      if (!tagged.length) throw new EngineError(`${who(ctx)}: снять «${id}» — нет ни эффекта, ни метки эффекта с таким именем`);
+      if (!tagged.length) throw new EngineError(`${who(ctx)}: снять эффекты с меткой «${id}» — ни у одного эффекта нет такой метки`);
       const sheet = ctx.sheet(step.to, 'с кого');
       if (!sheet) throw new EngineError(`${who(ctx)}: шагу «состояние» не сказано, с чьего листа`);
       for (const one of tagged) ctx.detach(sheet, one);

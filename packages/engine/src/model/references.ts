@@ -150,7 +150,7 @@ function slotRefs(value: unknown, slotKind: string | undefined, from: Where, sco
   if ('expr' in r) exprRefs(String(r.expr ?? ''), from, scope, out);
 }
 
-const NAMED: Record<string, RefKind> = { effectRef: 'effect', constantRef: 'constant', tableRef: 'table' };
+const NAMED: Record<string, RefKind> = { effectRef: 'effect', constantRef: 'constant', tableRef: 'table', tagRef: 'tag' };
 
 export const lookupColumnsIn = (source: string): [string, string][] => {
   let ast: Node;
@@ -312,7 +312,7 @@ function guardRefs(guard: Guard | undefined, from: Where, scope: ChainScope, out
 
 export function chainRefs(
   steps: Step[], whereOf: (index: number) => Where, params: Set<string>, sheets: Iterable<string>, seeds: string[] = [],
-  defs: readonly Param[] = [], held: Held = NO_HELD,
+  defs: readonly Param[] = [], system?: System,
 ): Reference[] {
   const out: Reference[] = [];
   const earlier = new Set<string>(seeds);
@@ -329,11 +329,10 @@ export function chainRefs(
     const mod = registry.get(step.type);
     for (const slot of (mod?.slots ?? []) as { key: string; kind?: string; refersTo?: string }[]) {
       if (slot.key === 'if') continue;
-      const kind = slot.refersTo ? `${slot.refersTo}Ref` : slot.kind;
-      if (step.type === 'status' && slot.key === 'effect' && (step as { mode?: unknown }).mode === 'remove' && typeof (step as { effect?: unknown }).effect === 'string' && held.tag(String((step as { effect?: unknown }).effect))) continue;
-      const removed = step.type === 'status' && slot.key === 'where' && typeof (step as { effect?: unknown }).effect === 'string'
-        ? held.params(String((step as { effect?: unknown }).effect)) : [];
-      slotRefs(readPath(step, slot.key), kind, from, removed.length ? { ...scope, params: new Set([...scope.params, ...removed]) } : scope, out);
+      const refers = mod?.slotRefers?.(step as never, slot.key) ?? slot.refersTo;
+      const kind = refers ? `${refers}Ref` : slot.kind;
+      const extra = system ? mod?.slotNames?.(step as never, slot.key, system) ?? [] : [];
+      slotRefs(readPath(step, slot.key), kind, from, extra.length ? { ...scope, params: new Set([...scope.params, ...extra]) } : scope, out);
     }
     guardRefs(step.if, from, scope, out);
     if (step.id) earlier.add(String(step.id));
@@ -526,25 +525,16 @@ function typedRefs(spec: { kind?: string; from?: string }, from: Where, out: Ref
   if (spec.kind === 'record') out.push({ kind: 'recordKind', key: spec.from, from });
 }
 
-export interface Held { params: (effectId: string) => readonly string[]; tag: (name: string) => boolean }
-
-const NO_HELD: Held = { params: () => [], tag: () => false };
-
-export const heldOf = (system: System): Held => ({
-  params: effectId => (system.effects?.[effectId]?.params ?? []).map(param => param.key),
-  tag: name => !system.effects?.[name] && Object.values(system.effects ?? {}).some(effect => effect.tags?.includes(name)),
-});
 
 function effectRefs(system: System, id: string, effect: Effect, out: Reference[]): void {
-  const held = heldOf(system);
   const sheetKeys = (effect.params ?? []).filter(p => p.kind === 'sheet').map(p => p.key);
   const params = new Set((effect.params ?? []).filter(p => p.kind !== 'sheet').map(p => p.key));
   for (const param of effect.params ?? []) {
     typedRefs(param, { tab: 'effects', effect: id, part: 'params', key: param.key }, out);
     if (param.kind === 'effect' && typeof param.default === 'string' && param.default) out.push({ kind: 'effect', key: param.default, from: { tab: 'effects', effect: id, part: 'params', key: param.key } });
   }
-  out.push(...chainRefs(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, sheetKeys, [CALL_TAGS], effect.params ?? [], held));
-  out.push(...chainRefs(effect.cost ?? [], step => ({ tab: 'effects', effect: id, step, part: 'cost' }), params, sheetKeys, [CALL_TAGS], [], held));
+  out.push(...chainRefs(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, sheetKeys, [CALL_TAGS], effect.params ?? [], system));
+  out.push(...chainRefs(effect.cost ?? [], step => ({ tab: 'effects', effect: id, step, part: 'cost' }), params, sheetKeys, [CALL_TAGS], [], system));
   (effect.on ?? []).forEach((handler, index) => {
     const head: Where = { tab: 'effects', effect: id, part: 'on', handler: index };
     const heard = listenerOf(handler);
@@ -555,8 +545,8 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
     const soften = (refs: Reference[]): Reference[] => (weak
       ? refs.map(ref => (ref.kind === 'step' || (ref.kind === 'field' && ref.scope === 'bare') ? { ...ref, scope: LISTEN } : ref))
       : refs);
-    out.push(...soften(chainRefs(handler.steps ?? [], step => ({ tab: 'effects', effect: id, handler: index, step }), params, sheets, names.seeds, [], held)));
-    out.push(...soften(chainRefs(handler.cost ?? [], step => ({ tab: 'effects', effect: id, handler: index, step, part: 'cost' }), params, sheets, names.seeds, [], held)));
+    out.push(...soften(chainRefs(handler.steps ?? [], step => ({ tab: 'effects', effect: id, handler: index, step }), params, sheets, names.seeds, [], system)));
+    out.push(...soften(chainRefs(handler.cost ?? [], step => ({ tab: 'effects', effect: id, handler: index, step, part: 'cost' }), params, sheets, names.seeds, [], system)));
     if (heard.kind === 'call' && heard.key !== ANY_ACTION && !system.tags?.[heard.key]) {
       out.push({ kind: 'effect', key: heard.key, from: head, scope: LISTEN });
     }
@@ -579,7 +569,7 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
     }
   });
   for (const turn of ['attach', 'detach'] as const) {
-    out.push(...chainRefs(effect[turn] ?? [], step => ({ tab: 'effects', effect: id, step, part: turn }), params, [...sheetKeys, HOLDER], [], [], held));
+    out.push(...chainRefs(effect[turn] ?? [], step => ({ tab: 'effects', effect: id, step, part: turn }), params, [...sheetKeys, HOLDER], [], [], system));
   }
   const stepIds = [...(effect.steps ?? []), ...(effect.cost ?? [])].map(step => step.id).filter((one): one is string => Boolean(one));
   const bondIf = (effect.bond as { if?: { expr?: unknown } } | undefined)?.if?.expr;

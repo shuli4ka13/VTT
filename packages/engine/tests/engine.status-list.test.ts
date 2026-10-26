@@ -22,7 +22,7 @@ const system = {
     тошнота: { label: 'Тошнота', activation: 'passive', tags: ['отрава'], duration: { kind: 'permanent' } },
     противоядие: {
       label: 'Противоядие', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }],
-      steps: [{ type: 'status', mode: 'remove', effect: 'отрава', to: { expr: '@действующий' } }],
+      steps: [{ type: 'status', mode: 'remove', by: 'tag', effect: 'отрава', to: { expr: '@действующий' } }],
     },
     слабость: { label: 'Слабость', activation: 'passive', duration: { kind: 'permanent' } },
   },

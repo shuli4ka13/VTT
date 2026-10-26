@@ -3,6 +3,7 @@ import { listOf } from './lists.ts';
 import { compile } from '../formula/index.ts';
 import { paymentsOf } from './payments.ts';
 import { propsOf } from './owned.ts';
+import { staticCell } from './tables.ts';
 import type { Pass } from '../engine/calc.ts';
 import type { System, Compendium, Ask, Param } from './types.ts';
 
@@ -45,17 +46,8 @@ function askHolds(system: System, params: readonly Param[], bound: Record<string
   };
   const value = compile(condition).evaluate(name => {
     const [head, ...path] = name.split('.');
-    let value = literal(head!);
-    let table = params.find(one => one.key === head)?.from;
-    for (const key of path) {
-      const spec = table ? (system.tables?.[table]?.columns ?? []).find(one => one.key === key) : undefined;
-      const row = table ? (system.tables?.[table]?.rows ?? []).find(one => String(one.value) === String(value)) : undefined;
-      if (!spec) return null;
-      const cell = row ? (row.cells ?? {})[key] : undefined;
-      value = cell === undefined || cell === '' ? spec.default ?? null : cell;
-      table = spec.kind === 'choice' ? spec.from : undefined;
-    }
-    return value as never;
+    const param = params.find(one => one.key === head);
+    return staticCell(system, param?.kind === 'choice' ? param.from : undefined, literal(head!), path) as never;
   });
   return value !== false;
 }

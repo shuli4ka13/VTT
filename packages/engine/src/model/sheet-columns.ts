@@ -1,7 +1,7 @@
 import { EngineError } from '../engine/errors.ts';
 import type { System, Table, TableRow, TableColumn, CellView, Field, FieldValue, CellMark, Holder, Placement } from './types.ts';
 import type { SheetPart, Control } from '@vtt/schema';
-import { linkOf, rowByKey } from './tables.ts';
+import { linkOf, rowByKey, staticCell } from './tables.ts';
 
 export type { CellMark };
 
@@ -23,16 +23,8 @@ export function inputTarget(system: System, target: string, params: readonly { k
   let missing = false;
   const out = target.replace(INPUT_SLOT, (_, head: string, tail: string) => {
     const param = params.find(one => one.key === head);
-    let value: unknown = args[head] ?? param?.default;
-    let table = param?.kind === 'choice' ? param.from : undefined;
-    for (const column of tail ? tail.slice(1).split('.') : []) {
-      const spec = table ? (system.tables?.[table]?.columns ?? []).find(one => one.key === column) : undefined;
-      const row = table && spec ? (system.tables?.[table]?.rows ?? []).find(one => String(one.value) === String(value)) : undefined;
-      if (!spec || !row) { missing = true; return ''; }
-      const cell = (row.cells ?? {})[column];
-      value = cell === undefined || cell === '' ? spec.default : cell;
-      table = linkOf(spec);
-    }
+    const given = args[head] ?? param?.default;
+    const value = tail ? staticCell(system, param?.kind === 'choice' ? param.from : undefined, given, tail.slice(1).split('.')) : given;
     if (value === undefined || value === null || value === '' || typeof value === 'object') { missing = true; return ''; }
     return String(value);
   });

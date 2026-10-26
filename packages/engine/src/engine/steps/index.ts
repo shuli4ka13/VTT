@@ -91,6 +91,10 @@ export interface StepModule {
 
   idle?: (trace: Record<string, unknown>, system: System) => boolean;
 
+  slotNames?: (step: StepData, slot: string, system: System) => readonly string[];
+
+  slotRefers?: (step: StepData, slot: string) => string | null;
+
   thrownBy?: (step: StepData) => unknown;
 
   flow?: 'open' | 'alt' | 'close';
