@@ -63,7 +63,7 @@ group('Shadowrun 6, глава «Магия»: ситуации книжника
     const out = cast(mage, [target], 'spell_ice_spear', [6, 5, 5, 4, 3, 3, 2, 1, 1, 6, 6, 5, 4, 3, 2, 2, 1, 1, 6, 5, 4, 3, 2, 2, 1, 6, 5, 3, 2, 1]);
     eq(after(out, 'маг').values.edge_left, 3);
     eq(after(out, 'цель').values.physical, 2);
-    eq(level(after(out, 'цель'), 'chilled')?.rounds, 1);
+    eq(level(after(out, 'цель'), 'chilled')?.level, 1);
     eq(after(out, 'маг').values.stun, 2);
   });
 

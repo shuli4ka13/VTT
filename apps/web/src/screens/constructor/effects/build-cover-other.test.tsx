@@ -49,12 +49,12 @@ describe('эффекты пресетов собираются руками: Sha
     const [goal] = start('shadowrun6', ['shocked']);
     const ui = within();
     head(ui, '+ висит и правит', 'Электрошок', 'shocked', goal!);
-    param(ui, 'shocked', 0, 'Раундов', 'number', 'rounds');
+    param(ui, 'shocked', 0, 'Раундов', 'number', 'level');
     ui.select(ui.cell('Если не передали', 0), 'value');
     ui.type(ui.cell('Если не передали', 0), '2');
     ui.type(ui.cell('Границы', 0).querySelector<HTMLInputElement>('input[placeholder="не ниже"]')!, '1');
     ui.select('Сколько висит', 'rounds');
-    ui.formula('Сколько', '@rounds или 2');
+    ui.formula('Сколько', '@level');
     for (const [target, value] of [['condition_mod', '-1'], ['init_mod', '-2']] as const) {
       ui.click('+ правит поле');
       const card = () => [...document.querySelectorAll<HTMLElement>('.card')].filter(c => (c.querySelector('.card__head')?.textContent ?? '').startsWith('Правит поле')).at(-1)!;
