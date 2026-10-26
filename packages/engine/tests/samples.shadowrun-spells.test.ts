@@ -1,4 +1,4 @@
-import { group, test, eq, ok } from './harness.ts';
+import { group, test, eq, ok, deepEq } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { exchange } from './play.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
@@ -100,6 +100,13 @@ group('Shadowrun 6, глава «Магия»: ситуации книжника
     const out = cast(mage, [sheet('а', { body: 3, armor_worn: 4 }), sheet('б', { body: 3, armor_worn: 2 })], 'spell_manaball', [...Array(11).fill(2), 6, 6, 5, 5, 4, 3, 2, 1], { widen: 2 });
     eq(after(out, 'маг').values.edge_left, 0);
     eq(after(out, 'маг').values.stun, 3);
+  });
+
+  test('стр. 46: ЗЩ цели 9 против ЗА 2 — цель получает одно очко Преимущества, не два', () => {
+    const weak = caster({ tradition: 'шаманизм', magic: 1, charisma: 1, willpower: 1, 'skills.колдовство.rank': 1 });
+    const tank = sheet('цель', { body: 9, willpower: 9 });
+    deepEq([at(weak, 'spell_ar'), at(tank, 'plane_dr')], [2, 9]);
+    eq(after(cast(weak, [tank], 'spell_mana_bolt', Array(40).fill(5)), 'цель').values.edge_left, 1);
   });
 
   test('mag-09 (стр. 146): призыв — 3 успеха против 3 у духа: духа нет; истощение = успехи духа − 1 = 2о', () => {

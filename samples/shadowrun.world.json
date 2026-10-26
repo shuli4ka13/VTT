@@ -19784,33 +19784,6 @@
             "of": "цели"
           },
           {
-            "type": "branch",
-            "if": {
-              "expr": "@defense.opposed"
-            }
-          },
-          {
-            "type": "branch",
-            "if": {
-              "expr": "@цель.plane_dr == большее из(@цели.plane_dr) и @цель.plane_dr - @действующий.spell_ar >= 4"
-            }
-          },
-          {
-            "type": "emit",
-            "effect": "gain_edge",
-            "args": {
-              "лист": {
-                "expr": "@цель"
-              }
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
-            "type": "end"
-          },
-          {
             "type": "emit",
             "id": "защита",
             "effect": "spell_defense",
