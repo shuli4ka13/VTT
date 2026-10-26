@@ -127,5 +127,21 @@ group('Shadowrun 6, глава «Магия»: ситуации книжника
     eq(hard.values.physical, 9);
     ok(hard.effects.some(e => e.effectId === 'prone'));
   });
+
+  test('Сырость (стр. 54): Ледяное копьё — сопротивление на 6 кубиков меньше, Огненный шар — без штрафа', () => {
+    const soakDice = (spell: string, wet: boolean) => {
+      const target = { ...sheet('цель', { body: 8, willpower: 1, intuition: 1, reaction: 1 }), effects: wet ? [{ effectId: 'wet' }] : [] } as Sheet;
+      const mage = caster({ tradition: 'герметизм', magic: 6, logic: 6, willpower: 6, charisma: 6, 'skills.колдовство.rank': 6 });
+      const out = exchange({ system, compendium, die: () => 6, sheets: [mage, target], actionId: `${spell}:0`, fromId: 'маг', toIds: ['цель'], inputs: { amp: 0, widen: 0 } });
+      return out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]).find(entry => entry.step === 'сопротивление_бросок')?.rolls?.length as number;
+    };
+    eq(soakDice('spell_ice_spear', false) - soakDice('spell_ice_spear', true), 6);
+    eq(soakDice('spell_fireball', false) - soakDice('spell_fireball', true), 0);
+  });
+
+  test('Неподвижность (стр. 53): значение атаки заклинаний меньше на 3', () => {
+    const mage = caster({ tradition: 'герметизм', magic: 6, logic: 4 });
+    eq(at({ ...mage, effects: [{ effectId: 'immobilized' }] } as Sheet, 'spell_ar'), (at(mage, 'spell_ar') as number) - 3);
+  });
 });
 

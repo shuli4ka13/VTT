@@ -123,6 +123,13 @@ group('Shadowrun 6: заклинания', () => {
     eq(after(out, 'humanis').values.physical, 6 - 3);
   });
 
+  test('Исцеление мёртвого: урон остаётся (стр. 121)', () => {
+    const dead = sheetOf('humanis', { physical: 40 });
+    eq(computed(dead, 'is_dead'), true);
+    const out = act(mage(), [dead], 'spell_heal:0', tape(...six(3), ...one(9), ...six(9)), { heal_kind: 'физический' });
+    eq(after(out, 'humanis').values.physical, 40);
+  });
+
   test('Улучшение характеристики: +применённые, поддержание −2 кубика; «Прекратить» снимает (стр. 137, 131)', () => {
     const out = exchange({ system, compendium, die: tape(...six(6), ...one(6), ...six(9)), sheets: [mage()], actionId: 'spell_increase_attribute:0', fromId: 'mage', toIds: ['mage'], inputs: { want: 3, attr: 'strength' } });
     const boosted = after(out, 'mage');

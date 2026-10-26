@@ -84,4 +84,17 @@ group('Shadowrun 6, глава «Снаряжение и импланты»: с�
     eq(soakDice('физический'), 2);
     eq(soakDice('оглушающий'), 0);
   });
+
+  test('Сырость (стр. 54): электрошоковый удар — сопротивление на 6 кубиков меньше, обычный — без штрафа', () => {
+    const soakDice = (wet: boolean, baton: string) => {
+      const target = { ...runner({ body: 8, reaction: 1, intuition: 1 }), id: 'цель', effects: wet ? [{ effectId: 'wet' }] : [] } as Sheet;
+      const out = exchange({
+        system, compendium, die: () => 6, sheets: [runner({ 'skills.ближний_бой.rank': 5, agility: 5 }, [{ of: baton }]), target],
+        actionId: `${baton}:0`, fromId: 'бег', toIds: ['цель'], inputs: {},
+      });
+      return out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]).find(entry => entry.step === 'сопротивление_бросок')?.rolls?.length as number;
+    };
+    eq(soakDice(false, 'stun_baton') - soakDice(true, 'stun_baton'), 6);
+    eq(soakDice(false, 'sap') - soakDice(true, 'sap'), 0);
+  });
 });

@@ -316,7 +316,31 @@ group('Shadowrun 6: состояния (стр. 52–54)', () => {
 
   test('Утомление II: −4 ко всем наборам; Электрошок: инициатива −2', () => {
     eq(computed(wearing('razor', { effectId: 'fatigued', args: { level: 2 } }), 'condition_mod'), -4);
-    eq(computed(wearing('razor', { effectId: 'shocked' }), 'initiative'), computed(sheetOf('razor'), 'initiative') - 2 - 1);
+    eq(computed(wearing('razor', { effectId: 'shocked' }), 'initiative'), computed(sheetOf('razor'), 'initiative') - 2);
+  });
+
+  test('Заморозка (стр. 52–53): инициатива −4, а не −5; Утомление II инициативу не режет (стр. 54)', () => {
+    const base = computed(sheetOf('razor'), 'initiative');
+    eq(computed(wearing('razor', { effectId: 'chilled' }), 'initiative'), (base as number) - 4);
+    eq(computed(wearing('razor', { effectId: 'fatigued', args: { level: 2 } }), 'initiative'), base);
+  });
+
+  test('Ослепление III (стр. 53): проверка зрением в сравнении с порогом 0 — автоматический провал', () => {
+    const probe = structuredClone(system) as System & { effects: Record<string, unknown> };
+    probe.effects.зр_проба = {
+      label: 'Проба зрения', params: [{ key: 'действующий', label: 'Кто', kind: 'sheet', role: 'actor' }],
+      steps: [
+        { id: 'бросок', type: 'roll', die: 'pool', count: { expr: '5' }, tags: ['зрение'], by: { expr: '@действующий' } },
+        { id: 'итог', type: 'check', value: { expr: '@бросок' }, versus: { expr: '0' } },
+      ],
+    };
+    const withProbe = { ...compendium, records: [...compendium.records, { id: 'зр_проба', table: 'action', label: 'Проба зрения', bindings: [{ effect: 'зр_проба' }] }] } as unknown as Compendium;
+    const verdict = (level: number) => {
+      const out = exchange({ system: probe, compendium: withProbe, die: () => 6, sheets: [wearing('razor', ...(level ? [{ effectId: 'blinded', args: { level } }] : []))], actionId: 'зр_проба:0', fromId: 'razor', toIds: [] });
+      return out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; success?: boolean }[]).find(entry => entry.step === 'итог')?.success;
+    };
+    eq(verdict(0), true);
+    eq(verdict(3), false);
   });
 
   test('Отравление 3: в начале раунда — урон после сопротивления, потом 2', () => {
