@@ -13,6 +13,7 @@ import type { Node } from '@vtt/engine/formula';
 import { sheetsAt, placeNamesAt } from './names.ts';
 import { namesAt } from '@vtt/engine/model/names-at';
 import { ConditionField } from '../condition-field.tsx';
+import { TagsField } from '../tags-field.tsx';
 import { WhileWhenRow } from './while-when.tsx';
 import { cardTitle } from './words.ts';
 import { outcomeRefs } from '../slots.tsx';
@@ -116,11 +117,17 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
   const actions = Object.entries(system.effects).filter(([key, e]) => key !== id && (e.activation ?? 'manual') === 'manual');
   const tags = Object.entries(system.tags ?? {});
 
-  const subjects: (readonly [string, string])[] = kind === 'call'
+  const effectTags = [...new Set(Object.values(system.effects).flatMap(e => e.tags ?? []))]
+    .filter(tag => !hanging.some(([key]) => key === tag));
+
+  const subjects: (readonly [string, string] | readonly [string, string, string])[] = kind === 'call'
     ? callSubjects(tags, actions, false)
     : kind === 'moment' ? (Object.keys(TIMES) as MomentKey[]).map(key => [key, TIMES[key]] as const)
       : kind === 'field' ? watchable.map(f => [f.tag, `«${f.label}»`] as const)
-        : kind === 'gained' || kind === 'lost' ? hanging.map(([key, e]) => [key, `«${e.label ?? key}»`] as const)
+        : kind === 'gained' || kind === 'lost' ? [
+          ...hanging.map(([key, e]) => [key, `«${e.label ?? key}»`] as const),
+          ...effectTags.map(tag => [tag, `с меткой «${tag}»`, 'метки'] as const),
+        ]
           : [];
 
   const setOn = (nextKind: Kind, nextSubject: string, nextPhase: Phase) => edit(draft => {
@@ -129,6 +136,11 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
       : nextKind === 'call' ? happeningOf(nextPhase, nextSubject || ANY_ACTION)
         : `${PREFIX[nextKind]}${nextSubject}`;
     delete draft.if;
+    if (nextKind !== 'seen' && nextKind !== 'rolled') { delete draft.tags; delete draft.anyTags; delete draft.notTags; }
+  });
+  const setTags = (key: 'tags' | 'anyTags' | 'notTags', next: readonly unknown[]) => edit(draft => {
+    const list = next.filter((tag): tag is string => typeof tag === 'string');
+    if (list.length) draft[key] = list; else delete draft[key];
   });
   const setIf = (expr: string | null) => edit(draft => {
     if (expr) draft.if = { expr }; else delete draft.if;
@@ -197,6 +209,20 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
           </Field>
         ) : null}
       </div>
+
+      {kind === 'seen' || kind === 'rolled' ? (
+        <div className="row">
+          <Field label="С метками" hint="Бросок должен нести все эти метки. Пусто — любой бросок.">
+            <TagsField system={system} value={handler.tags} empty="любой бросок" onChange={next => setTags('tags', next)} />
+          </Field>
+          <Field label="Любая из меток">
+            <TagsField system={system} value={handler.anyTags} empty="любая метка" onChange={next => setTags('anyTags', next)} />
+          </Field>
+          <Field label="Кроме меток">
+            <TagsField system={system} value={handler.notTags} empty="+ кроме метки…" onChange={next => setTags('notTags', next)} />
+          </Field>
+        </div>
+      ) : null}
 
       <div className="row">
         <ConditionField

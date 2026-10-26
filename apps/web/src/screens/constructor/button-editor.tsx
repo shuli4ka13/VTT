@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useWorld, useBook } from '../../store/world.ts';
 import type { System, Effect, Param, Binding, SlotRef } from '@vtt/schema';
 import type { RecordKind } from '@vtt/engine/model/owned';
@@ -10,6 +11,7 @@ import { ValueField, asText, type SlotOption } from './value-field.tsx';
 import { paymentsOf } from '@vtt/engine/model/payments';
 import { grouped as byRole } from './effects/roles.ts';
 import { kindWords } from './effects/params-editor.tsx';
+import { ConditionField } from './condition-field.tsx';
 import { shapeProblem, shapeOfKind, type Shape } from './formula-shape.ts';
 
 const EMPTY = '';
@@ -33,6 +35,8 @@ export function ButtonEditor({ binding, system, recordKind, kindId, onEdit, onDe
   const params = effect ? paramsOf(system, effect) : [];
   const buttons = Object.entries(system.effects).filter(([, e]) => (e.activation ?? 'manual') !== 'passive');
   const where = binding.label || effect?.label || binding.effect;
+  const [more, setMore] = useState(false);
+  const columnNames = new Map((recordKind.columns ?? []).map(prop => [prop.key, prop.label ?? prop.key] as const));
 
   const onArg = (key: string, next: SlotRef | null) => onEdit(draft => {
     draft.args ??= {};
@@ -113,6 +117,21 @@ export function ButtonEditor({ binding, system, recordKind, kindId, onEdit, onDe
           ))}
         </div>
       ) : <span className="faint">«{effect.label || binding.effect}» ничего не принимает.</span>) : null}
+      {more || binding.if?.expr ? (
+        <div className="row">
+          <ConditionField
+            value={binding.if?.expr}
+            onChange={expr => onEdit(draft => { if (expr) draft.if = { expr }; else delete draft.if; })}
+            system={system}
+            names={columnNames}
+            where={`${where} · только если`}
+            placeholder="например: @срок.держится"
+            ruleHint="Пока условие неверно, у записи этой кнопки нет."
+          />
+        </div>
+      ) : (
+        <Button size="sm" variant="ghost" onClick={() => setMore(true)}>ещё</Button>
+      )}
     </Card>
   );
 }

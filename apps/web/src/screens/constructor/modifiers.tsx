@@ -233,6 +233,7 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
   const isRoll = call === ROLL_CALL;
   const effect = isRoll ? undefined : system.effects[call];
   const amount = amountParamOf(effect);
+  const tagsParam = isRoll && m.param === 'tags';
   const pickCall = (next: string) => onChange(d => {
     if (next === d.call) return;
     for (const key of ['edit', 'op', 'value', 'stage', 'as', 'tags', 'anyTags', 'notTags', 'where']) delete d[key];
@@ -247,6 +248,7 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
     for (const key of ['edit', 'op', 'value', 'stage']) delete d[key];
     d.param = next;
     if (next === 'edits') d.edit = edits[0]?.[0] ?? '';
+    else if (next === 'tags') d.value = { expr: '"метка"' };
     else Object.assign(d, { op: 'add', value: { expr: '1' } });
   });
   const number = (
@@ -256,11 +258,11 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
           <Select value={String(m.op ?? 'add')} options={OPS} onChange={op => onChange(d => { d.op = op; })} />
         </Field>
       )}
-      <Field label="На сколько">
+      <Field label={tagsParam ? 'Какая метка' : 'На сколько'} hint={tagsParam ? 'Формула, дающая текст метки, например «без Преимущества».' : undefined}>
         <FormulaInput
-          where="правка вызова · на сколько" system={system}
+          where={tagsParam ? 'правка броска · какая метка' : 'правка вызова · на сколько'} system={system}
           {...(names ? { extraNames: names } : {})}
-          {...(isRoll ? { placeholder: DICE_HINT, options: [DICE_BAR_OPTION], problem: shapeProblem((m.value as { expr?: string } | undefined)?.expr ?? '', 'number', () => 'any') } : {})}
+          {...(tagsParam ? { placeholder: 'например: "без Преимущества"' } : isRoll ? { placeholder: DICE_HINT, options: [DICE_BAR_OPTION], problem: shapeProblem((m.value as { expr?: string } | undefined)?.expr ?? '', 'number', () => 'any') } : {})}
           value={(m.value as { expr?: string } | undefined)?.expr ?? ''}
           onChange={expr => onChange(d => { d.value = { expr }; })}
         />

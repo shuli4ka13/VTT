@@ -62,6 +62,7 @@ export function modifierSentence(system: System, modifier: Modifier, table?: str
     const who = whoseWords(system, mod, { бросающий: 'бросает носитель', против: 'бросают против носителя' }, 'бросает кто угодно', names);
     const what = mod.param === 'bonus'
       ? OP_WORDS.add!(valueWords(system, mod.value, names))
+      : mod.param === 'tags' ? `метка ${valueWords(system, mod.value, names)}`
       : system.roll_edits?.[String(mod.edit ?? '')]?.label ?? String(mod.edit ?? 'какая правка?');
     const lead = `${CALL_WORDS.roll.label}${tags ? ` с метками ${tags}` : ''}${who ? `, ${who}` : ''}`;
     return `${lead}: ${what}`;
