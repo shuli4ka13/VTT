@@ -21535,7 +21535,13 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ baraholka · high · бой": {
     "baraholka": {
       "values": {
+        "edge_gained": 1,
         "edge_left": 3,
+      },
+    },
+    "baraholka_killer": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -21549,8 +21555,14 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ baraholka · low · бой": {
     "baraholka": {
       "values": {
+        "edge_gained": 1,
         "edge_left": 3,
         "matrix_damage": 4,
+      },
+    },
+    "baraholka_killer": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -21565,8 +21577,14 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ baraholka · walk · бой": {
     "baraholka": {
       "values": {
+        "edge_gained": 1,
         "edge_left": 3,
         "matrix_damage": 2,
+      },
+    },
+    "baraholka_killer": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -21581,6 +21599,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ baraholka_killer · high · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -21595,6 +21615,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ baraholka_killer · low · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
         "matrix_damage": 4,
       },
@@ -21611,6 +21633,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ baraholka_killer · walk · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
         "matrix_damage": 2,
       },
@@ -21627,6 +21651,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ drone_doberman · high · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -21651,6 +21677,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ drone_doberman · low · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -21675,6 +21703,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ drone_doberman · walk · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -21699,6 +21729,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ fiveeyes · high · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -21723,6 +21755,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ fiveeyes · low · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -21747,6 +21781,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ fiveeyes · walk · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -21771,6 +21807,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ fiveeyes_2 · high · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -21795,6 +21833,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ fiveeyes_2 · low · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -21819,6 +21859,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ fiveeyes_2 · walk · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -21843,6 +21885,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ fiveeyes_squad · high · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -21867,6 +21911,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ fiveeyes_squad · low · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -21891,6 +21937,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ fiveeyes_squad · walk · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -21915,6 +21963,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ hammer · high · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -21939,6 +21989,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ hammer · low · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -21963,6 +22015,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ hammer · walk · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -21987,6 +22041,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ humanis · high · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22011,6 +22067,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ humanis · low · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22035,6 +22093,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ humanis · walk · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22059,6 +22119,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ koshka · high · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22083,6 +22145,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ koshka · low · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22107,6 +22171,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ koshka · walk · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22131,6 +22197,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ lone_star · high · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22155,6 +22223,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ lone_star · low · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22179,6 +22249,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ lone_star · walk · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22203,6 +22275,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ mafia · high · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22227,6 +22301,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ mafia · low · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22251,6 +22327,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ mafia · walk · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22275,6 +22353,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ razor · high · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22299,6 +22379,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ razor · low · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22323,6 +22405,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ razor · walk · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22347,6 +22431,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ sauron · high · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22371,6 +22457,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ sauron · low · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22395,6 +22483,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ sauron · walk · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22419,6 +22509,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ silk · high · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22443,6 +22535,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ silk · low · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -22467,6 +22561,8 @@ exports[`итоги действий: shadowrun6 > baraholka_killer · +ic_attac
   "→ silk · walk · бой": {
     "baraholka_killer": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -23205,89 +23301,341 @@ exports[`итоги действий: shadowrun6 > hammer · ak_97:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > hammer · ak_97:1 1`] = `
 {
-  "→ baraholka · high · бой": {},
+  "→ baraholka · high · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka · high · вне боя": {},
-  "→ baraholka · low · бой": {},
+  "→ baraholka · low · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka · low · вне боя": {},
-  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka · walk · вне боя": {},
-  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka_killer · high · вне боя": {},
-  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka_killer · low · вне боя": {},
-  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka_killer · walk · вне боя": {},
-  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ drone_doberman · high · вне боя": {},
-  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ drone_doberman · low · вне боя": {},
-  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ drone_doberman · walk · вне боя": {},
-  "→ fiveeyes · high · бой": {},
+  "→ fiveeyes · high · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes · high · вне боя": {},
-  "→ fiveeyes · low · бой": {},
+  "→ fiveeyes · low · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes · low · вне боя": {},
-  "→ fiveeyes · walk · бой": {},
+  "→ fiveeyes · walk · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes · walk · вне боя": {},
-  "→ fiveeyes_2 · high · бой": {},
+  "→ fiveeyes_2 · high · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_2 · high · вне боя": {},
-  "→ fiveeyes_2 · low · бой": {},
+  "→ fiveeyes_2 · low · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_2 · low · вне боя": {},
-  "→ fiveeyes_2 · walk · бой": {},
+  "→ fiveeyes_2 · walk · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_2 · walk · вне боя": {},
-  "→ fiveeyes_squad · high · бой": {},
+  "→ fiveeyes_squad · high · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_squad · high · вне боя": {},
-  "→ fiveeyes_squad · low · бой": {},
+  "→ fiveeyes_squad · low · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_squad · low · вне боя": {},
-  "→ fiveeyes_squad · walk · бой": {},
+  "→ fiveeyes_squad · walk · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_squad · walk · вне боя": {},
-  "→ hammer · high · бой": {},
+  "→ hammer · high · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ hammer · high · вне боя": {},
-  "→ hammer · low · бой": {},
+  "→ hammer · low · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ hammer · low · вне боя": {},
-  "→ hammer · walk · бой": {},
+  "→ hammer · walk · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ hammer · walk · вне боя": {},
-  "→ humanis · high · бой": {},
+  "→ humanis · high · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ humanis · high · вне боя": {},
-  "→ humanis · low · бой": {},
+  "→ humanis · low · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ humanis · low · вне боя": {},
-  "→ humanis · walk · бой": {},
+  "→ humanis · walk · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ humanis · walk · вне боя": {},
-  "→ koshka · high · бой": {},
+  "→ koshka · high · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ koshka · high · вне боя": {},
-  "→ koshka · low · бой": {},
+  "→ koshka · low · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ koshka · low · вне боя": {},
-  "→ koshka · walk · бой": {},
+  "→ koshka · walk · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ koshka · walk · вне боя": {},
-  "→ lone_star · high · бой": {},
+  "→ lone_star · high · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ lone_star · high · вне боя": {},
-  "→ lone_star · low · бой": {},
+  "→ lone_star · low · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ lone_star · low · вне боя": {},
-  "→ lone_star · walk · бой": {},
+  "→ lone_star · walk · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ lone_star · walk · вне боя": {},
-  "→ mafia · high · бой": {},
+  "→ mafia · high · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ mafia · high · вне боя": {},
-  "→ mafia · low · бой": {},
+  "→ mafia · low · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ mafia · low · вне боя": {},
-  "→ mafia · walk · бой": {},
+  "→ mafia · walk · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ mafia · walk · вне боя": {},
-  "→ razor · high · бой": {},
+  "→ razor · high · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ razor · high · вне боя": {},
-  "→ razor · low · бой": {},
+  "→ razor · low · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ razor · low · вне боя": {},
-  "→ razor · walk · бой": {},
+  "→ razor · walk · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ razor · walk · вне боя": {},
-  "→ sauron · high · бой": {},
+  "→ sauron · high · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ sauron · high · вне боя": {},
-  "→ sauron · low · бой": {},
+  "→ sauron · low · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ sauron · low · вне боя": {},
-  "→ sauron · walk · бой": {},
+  "→ sauron · walk · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ sauron · walk · вне боя": {},
-  "→ silk · high · бой": {},
+  "→ silk · high · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ silk · high · вне боя": {},
-  "→ silk · low · бой": {},
+  "→ silk · low · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ silk · low · вне боя": {},
-  "→ silk · walk · бой": {},
+  "→ silk · walk · бой": {
+    "hammer": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ silk · walk · вне боя": {},
 }
 `;
@@ -24065,13 +24413,24 @@ exports[`итоги действий: shadowrun6 > koshka · act_second_wind:0 1
 
 exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] = `
 {
-  "→ baraholka · high · бой": {},
+  "→ baraholka · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka · high · вне боя": {},
   "→ baraholka · low · бой": {
     "baraholka": {
       "values": {
         "last_hit_physical": true,
         "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -24090,6 +24449,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
         "physical": 2,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ baraholka · walk · вне боя": {
     "baraholka": {
@@ -24099,13 +24463,24 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
       },
     },
   },
-  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka_killer · high · вне боя": {},
   "→ baraholka_killer · low · бой": {
     "baraholka_killer": {
       "values": {
         "last_hit_physical": true,
         "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -24124,6 +24499,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
         "physical": 2,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ baraholka_killer · walk · вне боя": {
     "baraholka_killer": {
@@ -24133,13 +24513,24 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
       },
     },
   },
-  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ drone_doberman · high · вне боя": {},
   "→ drone_doberman · low · бой": {
     "drone_doberman": {
       "values": {
         "last_hit_physical": true,
         "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -24156,6 +24547,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
       "values": {
         "last_hit_physical": true,
         "physical": 1,
+      },
+    },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -24176,6 +24572,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
     "fiveeyes_squad": {
       "values": {
         "physical": 2,
+      },
+    },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -24205,6 +24606,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
     "fiveeyes_squad": {
       "values": {
         "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -24241,6 +24647,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
         "physical": 3,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes · walk · вне боя": {
     "fiveeyes": {
@@ -24270,6 +24681,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
         "physical": 2,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes_2 · high · вне боя": {
     "fiveeyes_2": {
@@ -24297,6 +24713,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
     "fiveeyes_squad": {
       "values": {
         "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -24333,6 +24754,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
         "physical": 3,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes_2 · walk · вне боя": {
     "fiveeyes_2": {
@@ -24351,13 +24777,24 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
       },
     },
   },
-  "→ fiveeyes_squad · high · бой": {},
+  "→ fiveeyes_squad · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_squad · high · вне боя": {},
   "→ fiveeyes_squad · low · бой": {
     "fiveeyes_squad": {
       "values": {
         "last_hit_physical": true,
         "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -24376,6 +24813,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
         "physical": 2,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes_squad · walk · вне боя": {
     "fiveeyes_squad": {
@@ -24388,7 +24830,13 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
   "→ hammer · high · бой": {
     "hammer": {
       "values": {
+        "edge_gained": 1,
         "edge_left": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -24402,9 +24850,15 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
   "→ hammer · low · бой": {
     "hammer": {
       "values": {
+        "edge_gained": 1,
         "edge_left": 3,
         "last_hit_physical": true,
         "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -24420,9 +24874,15 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
   "→ hammer · walk · бой": {
     "hammer": {
       "values": {
+        "edge_gained": 1,
         "edge_left": 3,
         "last_hit_physical": true,
         "physical": 1,
+      },
+    },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -24440,6 +24900,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
       "values": {
         "last_hit_physical": true,
         "physical": 2,
+      },
+    },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -24461,6 +24926,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
       "values": {
         "last_hit_physical": true,
         "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -24489,6 +24959,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
         "physical": 3,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ humanis · walk · вне боя": {
     "humanis": {
@@ -24506,6 +24981,7 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
   "→ koshka · high · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "last_hit_physical": true,
       },
     },
@@ -24520,6 +24996,7 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
   "→ koshka · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "last_hit_physical": true,
         "physical": 3,
       },
@@ -24536,6 +25013,7 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
   "→ koshka · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "last_hit_physical": true,
         "physical": 3,
       },
@@ -24549,9 +25027,20 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
       },
     },
   },
-  "→ lone_star · high · бой": {},
+  "→ lone_star · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ lone_star · high · вне боя": {},
   "→ lone_star · low · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "lone_star": {
       "values": {
         "last_hit_physical": true,
@@ -24568,6 +25057,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
     },
   },
   "→ lone_star · walk · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "lone_star": {
       "values": {
         "last_hit_physical": true,
@@ -24584,6 +25078,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
     },
   },
   "→ mafia · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "mafia": {
       "values": {
         "last_hit_physical": true,
@@ -24600,6 +25099,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
     },
   },
   "→ mafia · low · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "mafia": {
       "values": {
         "last_hit_physical": true,
@@ -24616,6 +25120,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
     },
   },
   "→ mafia · walk · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "mafia": {
       "values": {
         "last_hit_physical": true,
@@ -24631,9 +25140,20 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
       },
     },
   },
-  "→ razor · high · бой": {},
+  "→ razor · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ razor · high · вне боя": {},
   "→ razor · low · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "razor": {
       "values": {
         "last_hit_physical": true,
@@ -24650,6 +25170,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
     },
   },
   "→ razor · walk · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "razor": {
       "values": {
         "last_hit_physical": true,
@@ -24666,6 +25191,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
     },
   },
   "→ sauron · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "sauron": {
       "values": {
         "last_hit_physical": true,
@@ -24682,6 +25212,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
     },
   },
   "→ sauron · low · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "sauron": {
       "values": {
         "last_hit_physical": true,
@@ -24698,6 +25233,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
     },
   },
   "→ sauron · walk · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "sauron": {
       "values": {
         "last_hit_physical": true,
@@ -24713,9 +25253,20 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
       },
     },
   },
-  "→ silk · high · бой": {},
+  "→ silk · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ silk · high · вне боя": {},
   "→ silk · low · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "silk": {
       "effects": [
         {
@@ -24742,6 +25293,11 @@ exports[`итоги действий: shadowrun6 > koshka · combat_knife:0 1`] 
     },
   },
   "→ silk · walk · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "silk": {
       "values": {
         "last_hit_physical": true,
@@ -24780,6 +25336,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
         "physical": 6,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ baraholka · high · вне боя": {
     "baraholka": {
@@ -24809,6 +25370,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 6,
         "stun": 6,
       },
@@ -24848,6 +25410,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 2,
         "stun": 2,
       },
@@ -24896,6 +25459,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
         "physical": 6,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ baraholka_killer · high · вне боя": {
     "baraholka_killer": {
@@ -24925,6 +25493,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 6,
         "stun": 6,
       },
@@ -24964,6 +25533,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 2,
         "stun": 2,
       },
@@ -25012,6 +25582,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
         "physical": 5,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ drone_doberman · high · вне боя": {
     "drone_doberman": {
@@ -25041,6 +25616,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 6,
         "stun": 6,
       },
@@ -25080,6 +25656,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 2,
         "stun": 2,
       },
@@ -25135,6 +25712,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
         "physical": 9,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes · high · вне боя": {
     "fiveeyes": {
@@ -25180,6 +25762,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 6,
         "stun": 6,
       },
@@ -25232,6 +25815,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 2,
         "stun": 2,
       },
@@ -25291,6 +25875,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
         "physical": 9,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes_2 · high · вне боя": {
     "fiveeyes_2": {
@@ -25336,6 +25925,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 6,
         "stun": 6,
       },
@@ -25388,6 +25978,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 2,
         "stun": 2,
       },
@@ -25440,6 +26031,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
         "physical": 6,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes_squad · high · вне боя": {
     "fiveeyes_squad": {
@@ -25469,6 +26065,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 6,
         "stun": 6,
       },
@@ -25508,6 +26105,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 2,
         "stun": 2,
       },
@@ -25553,6 +26151,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
         "physical": 1,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ hammer · high · вне боя": {
     "hammer": {
@@ -25579,6 +26182,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 6,
         "stun": 6,
       },
@@ -25615,6 +26219,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 2,
         "stun": 2,
       },
@@ -25663,6 +26268,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
         "physical": 9,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ humanis · high · вне боя": {
     "humanis": {
@@ -25700,6 +26310,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 6,
         "stun": 6,
       },
@@ -25744,6 +26355,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 2,
         "stun": 2,
       },
@@ -25788,6 +26400,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
         },
       ],
       "values": {
+        "complex_left": 0,
         "last_hit_physical": true,
         "physical": 5,
       },
@@ -25815,6 +26428,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ koshka · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 6,
         "last_hit_physical": true,
         "physical": 3,
@@ -25846,6 +26460,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
         },
       ],
       "values": {
+        "complex_left": 0,
         "drain_stun": 2,
         "last_hit_physical": true,
         "physical": 4,
@@ -25875,6 +26490,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
   },
   "→ lone_star · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "lone_star": {
       "effects": [
         {
@@ -25915,6 +26535,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ lone_star · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 6,
         "stun": 6,
       },
@@ -25943,6 +26564,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ lone_star · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 2,
         "stun": 2,
       },
@@ -25991,6 +26613,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
   },
   "→ mafia · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "mafia": {
       "effects": [
         {
@@ -26031,6 +26658,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ mafia · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 6,
         "stun": 6,
       },
@@ -26059,6 +26687,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ mafia · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 2,
         "stun": 2,
       },
@@ -26107,6 +26736,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
   },
   "→ razor · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "razor": {
       "effects": [
         {
@@ -26141,6 +26775,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ razor · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 6,
         "stun": 6,
       },
@@ -26169,6 +26804,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ razor · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 2,
         "stun": 2,
       },
@@ -26211,6 +26847,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
   },
   "→ sauron · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "sauron": {
       "effects": [
         {
@@ -26251,6 +26892,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ sauron · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 6,
         "stun": 6,
       },
@@ -26279,6 +26921,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ sauron · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 2,
         "stun": 2,
       },
@@ -26327,6 +26970,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
     },
   },
   "→ silk · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "silk": {
       "effects": [
         {
@@ -26367,6 +27015,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ silk · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 6,
         "stun": 6,
       },
@@ -26405,6 +27054,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
   "→ silk · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 2,
         "stun": 2,
       },
@@ -26457,11 +27107,18 @@ exports[`итоги действий: shadowrun6 > koshka · spell_fireball:0 1`
 
 exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = `
 {
-  "→ baraholka · high · бой": {},
+  "→ baraholka · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka · high · вне боя": {},
   "→ baraholka · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 5,
         "stun": 5,
       },
@@ -26478,6 +27135,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
   "→ baraholka · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 1,
         "stun": 1,
       },
@@ -26491,11 +27149,18 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
       },
     },
   },
-  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka_killer · high · вне боя": {},
   "→ baraholka_killer · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 5,
         "stun": 5,
       },
@@ -26512,6 +27177,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
   "→ baraholka_killer · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 1,
         "stun": 1,
       },
@@ -26525,11 +27191,18 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
       },
     },
   },
-  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ drone_doberman · high · вне боя": {},
   "→ drone_doberman · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 5,
         "stun": 5,
       },
@@ -26546,6 +27219,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
   "→ drone_doberman · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 1,
         "stun": 1,
       },
@@ -26559,11 +27233,18 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
       },
     },
   },
-  "→ fiveeyes · high · бой": {},
+  "→ fiveeyes · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes · high · вне боя": {},
   "→ fiveeyes · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 5,
         "stun": 5,
       },
@@ -26580,6 +27261,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
   "→ fiveeyes · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 1,
         "stun": 1,
       },
@@ -26593,11 +27275,18 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
       },
     },
   },
-  "→ fiveeyes_2 · high · бой": {},
+  "→ fiveeyes_2 · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_2 · high · вне боя": {},
   "→ fiveeyes_2 · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 5,
         "stun": 5,
       },
@@ -26614,6 +27303,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
   "→ fiveeyes_2 · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 1,
         "stun": 1,
       },
@@ -26627,11 +27317,18 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
       },
     },
   },
-  "→ fiveeyes_squad · high · бой": {},
+  "→ fiveeyes_squad · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_squad · high · вне боя": {},
   "→ fiveeyes_squad · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 5,
         "stun": 5,
       },
@@ -26648,6 +27345,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
   "→ fiveeyes_squad · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 1,
         "stun": 1,
       },
@@ -26661,11 +27359,18 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
       },
     },
   },
-  "→ hammer · high · бой": {},
+  "→ hammer · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ hammer · high · вне боя": {},
   "→ hammer · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 5,
         "stun": 5,
       },
@@ -26682,6 +27387,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
   "→ hammer · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 1,
         "stun": 1,
       },
@@ -26695,11 +27401,18 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
       },
     },
   },
-  "→ humanis · high · бой": {},
+  "→ humanis · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ humanis · high · вне боя": {},
   "→ humanis · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 5,
         "stun": 5,
       },
@@ -26716,6 +27429,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
   "→ humanis · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 1,
         "stun": 1,
       },
@@ -26729,11 +27443,18 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
       },
     },
   },
-  "→ koshka · high · бой": {},
+  "→ koshka · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ koshka · high · вне боя": {},
   "→ koshka · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 5,
         "stun": 5,
       },
@@ -26750,6 +27471,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
   "→ koshka · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 1,
         "stun": 1,
       },
@@ -26763,11 +27485,18 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
       },
     },
   },
-  "→ lone_star · high · бой": {},
+  "→ lone_star · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ lone_star · high · вне боя": {},
   "→ lone_star · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 5,
         "stun": 5,
       },
@@ -26784,6 +27513,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
   "→ lone_star · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 1,
         "stun": 1,
       },
@@ -26797,11 +27527,18 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
       },
     },
   },
-  "→ mafia · high · бой": {},
+  "→ mafia · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ mafia · high · вне боя": {},
   "→ mafia · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 5,
         "stun": 5,
       },
@@ -26818,6 +27555,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
   "→ mafia · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 1,
         "stun": 1,
       },
@@ -26831,11 +27569,18 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
       },
     },
   },
-  "→ razor · high · бой": {},
+  "→ razor · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ razor · high · вне боя": {},
   "→ razor · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 5,
         "stun": 5,
       },
@@ -26852,6 +27597,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
   "→ razor · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 1,
         "stun": 1,
       },
@@ -26865,11 +27611,18 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
       },
     },
   },
-  "→ sauron · high · бой": {},
+  "→ sauron · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ sauron · high · вне боя": {},
   "→ sauron · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 5,
         "stun": 5,
       },
@@ -26886,6 +27639,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
   "→ sauron · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 1,
         "stun": 1,
       },
@@ -26899,11 +27653,18 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
       },
     },
   },
-  "→ silk · high · бой": {},
+  "→ silk · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ silk · high · вне боя": {},
   "→ silk · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 5,
         "stun": 5,
       },
@@ -26920,6 +27681,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_heal:0 1`] = 
   "→ silk · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 1,
         "stun": 1,
       },
@@ -26945,6 +27707,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
         "physical": 6,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ baraholka · high · вне боя": {
     "baraholka": {
@@ -26962,6 +27729,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 4,
         "stun": 4,
       },
@@ -26987,6 +27755,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
         "physical": 2,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ baraholka · walk · вне боя": {
     "baraholka": {
@@ -27001,6 +27774,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
       "values": {
         "last_hit_physical": true,
         "physical": 6,
+      },
+    },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -27020,6 +27798,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 4,
         "stun": 4,
       },
@@ -27045,6 +27824,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
         "physical": 2,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ baraholka_killer · walk · вне боя": {
     "baraholka_killer": {
@@ -27059,6 +27843,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
       "values": {
         "last_hit_physical": true,
         "physical": 6,
+      },
+    },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -27078,6 +27867,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 4,
         "stun": 4,
       },
@@ -27103,6 +27893,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
         "physical": 2,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ drone_doberman · walk · вне боя": {
     "drone_doberman": {
@@ -27121,6 +27916,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     "fiveeyes_squad": {
       "values": {
         "physical": 8,
+      },
+    },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -27144,6 +27944,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 4,
         "stun": 4,
       },
@@ -27171,6 +27972,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     "fiveeyes_squad": {
       "values": {
         "physical": 3,
+      },
+    },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -27197,6 +28003,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
         "physical": 8,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes_2 · high · вне боя": {
     "fiveeyes_2": {
@@ -27218,6 +28029,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 4,
         "stun": 4,
       },
@@ -27247,6 +28059,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
         "physical": 3,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes_2 · walk · вне боя": {
     "fiveeyes_2": {
@@ -27267,6 +28084,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
         "physical": 6,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes_squad · high · вне боя": {
     "fiveeyes_squad": {
@@ -27284,6 +28106,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 4,
         "stun": 4,
       },
@@ -27309,6 +28132,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
         "physical": 2,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes_squad · walk · вне боя": {
     "fiveeyes_squad": {
@@ -27323,6 +28151,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
       "values": {
         "last_hit_physical": true,
         "physical": 6,
+      },
+    },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -27342,6 +28175,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 4,
         "stun": 4,
       },
@@ -27367,6 +28201,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
         "physical": 2,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ hammer · walk · вне боя": {
     "hammer": {
@@ -27381,6 +28220,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
       "values": {
         "last_hit_physical": true,
         "physical": 8,
+      },
+    },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -27400,6 +28244,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     },
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 4,
         "stun": 4,
       },
@@ -27425,6 +28270,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
         "physical": 3,
       },
     },
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ humanis · walk · вне боя": {
     "humanis": {
@@ -27437,6 +28287,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
   "→ koshka · high · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "last_hit_physical": true,
         "physical": 4,
       },
@@ -27453,6 +28304,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
   "→ koshka · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 4,
         "last_hit_physical": true,
         "stun": 4,
@@ -27471,6 +28323,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
   "→ koshka · walk · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "last_hit_physical": true,
         "physical": 2,
       },
@@ -27485,6 +28338,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     },
   },
   "→ lone_star · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "lone_star": {
       "values": {
         "last_hit_physical": true,
@@ -27503,6 +28361,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
   "→ lone_star · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 4,
         "stun": 4,
       },
@@ -27527,6 +28386,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     },
   },
   "→ lone_star · walk · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "lone_star": {
       "values": {
         "last_hit_physical": true,
@@ -27543,6 +28407,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     },
   },
   "→ mafia · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "mafia": {
       "values": {
         "last_hit_physical": true,
@@ -27561,6 +28430,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
   "→ mafia · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 4,
         "stun": 4,
       },
@@ -27585,6 +28455,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     },
   },
   "→ mafia · walk · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "mafia": {
       "values": {
         "last_hit_physical": true,
@@ -27601,6 +28476,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     },
   },
   "→ razor · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "razor": {
       "values": {
         "last_hit_physical": true,
@@ -27619,6 +28499,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
   "→ razor · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 4,
         "stun": 4,
       },
@@ -27643,6 +28524,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     },
   },
   "→ razor · walk · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "razor": {
       "values": {
         "last_hit_physical": true,
@@ -27659,6 +28545,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     },
   },
   "→ sauron · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "sauron": {
       "values": {
         "last_hit_physical": true,
@@ -27677,6 +28568,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
   "→ sauron · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 4,
         "stun": 4,
       },
@@ -27701,6 +28593,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     },
   },
   "→ sauron · walk · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "sauron": {
       "values": {
         "last_hit_physical": true,
@@ -27717,6 +28614,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     },
   },
   "→ silk · high · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "silk": {
       "values": {
         "last_hit_physical": true,
@@ -27735,6 +28637,7 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
   "→ silk · low · бой": {
     "koshka": {
       "values": {
+        "complex_left": 0,
         "drain_stun": 4,
         "stun": 4,
       },
@@ -27759,6 +28662,11 @@ exports[`итоги действий: shadowrun6 > koshka · spell_mana_bolt:0 1
     },
   },
   "→ silk · walk · бой": {
+    "koshka": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "silk": {
       "values": {
         "last_hit_physical": true,
@@ -27957,89 +28865,341 @@ exports[`итоги действий: shadowrun6 > lone_star · colt_l36:0 1`] =
 
 exports[`итоги действий: shadowrun6 > lone_star · colt_l36:1 1`] = `
 {
-  "→ baraholka · high · бой": {},
+  "→ baraholka · high · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka · high · вне боя": {},
-  "→ baraholka · low · бой": {},
+  "→ baraholka · low · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka · low · вне боя": {},
-  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka · walk · вне боя": {},
-  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka_killer · high · вне боя": {},
-  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka_killer · low · вне боя": {},
-  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka_killer · walk · вне боя": {},
-  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ drone_doberman · high · вне боя": {},
-  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ drone_doberman · low · вне боя": {},
-  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ drone_doberman · walk · вне боя": {},
-  "→ fiveeyes · high · бой": {},
+  "→ fiveeyes · high · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes · high · вне боя": {},
-  "→ fiveeyes · low · бой": {},
+  "→ fiveeyes · low · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes · low · вне боя": {},
-  "→ fiveeyes · walk · бой": {},
+  "→ fiveeyes · walk · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes · walk · вне боя": {},
-  "→ fiveeyes_2 · high · бой": {},
+  "→ fiveeyes_2 · high · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_2 · high · вне боя": {},
-  "→ fiveeyes_2 · low · бой": {},
+  "→ fiveeyes_2 · low · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_2 · low · вне боя": {},
-  "→ fiveeyes_2 · walk · бой": {},
+  "→ fiveeyes_2 · walk · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_2 · walk · вне боя": {},
-  "→ fiveeyes_squad · high · бой": {},
+  "→ fiveeyes_squad · high · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_squad · high · вне боя": {},
-  "→ fiveeyes_squad · low · бой": {},
+  "→ fiveeyes_squad · low · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_squad · low · вне боя": {},
-  "→ fiveeyes_squad · walk · бой": {},
+  "→ fiveeyes_squad · walk · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_squad · walk · вне боя": {},
-  "→ hammer · high · бой": {},
+  "→ hammer · high · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ hammer · high · вне боя": {},
-  "→ hammer · low · бой": {},
+  "→ hammer · low · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ hammer · low · вне боя": {},
-  "→ hammer · walk · бой": {},
+  "→ hammer · walk · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ hammer · walk · вне боя": {},
-  "→ humanis · high · бой": {},
+  "→ humanis · high · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ humanis · high · вне боя": {},
-  "→ humanis · low · бой": {},
+  "→ humanis · low · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ humanis · low · вне боя": {},
-  "→ humanis · walk · бой": {},
+  "→ humanis · walk · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ humanis · walk · вне боя": {},
-  "→ koshka · high · бой": {},
+  "→ koshka · high · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ koshka · high · вне боя": {},
-  "→ koshka · low · бой": {},
+  "→ koshka · low · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ koshka · low · вне боя": {},
-  "→ koshka · walk · бой": {},
+  "→ koshka · walk · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ koshka · walk · вне боя": {},
-  "→ lone_star · high · бой": {},
+  "→ lone_star · high · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ lone_star · high · вне боя": {},
-  "→ lone_star · low · бой": {},
+  "→ lone_star · low · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ lone_star · low · вне боя": {},
-  "→ lone_star · walk · бой": {},
+  "→ lone_star · walk · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ lone_star · walk · вне боя": {},
-  "→ mafia · high · бой": {},
+  "→ mafia · high · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ mafia · high · вне боя": {},
-  "→ mafia · low · бой": {},
+  "→ mafia · low · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ mafia · low · вне боя": {},
-  "→ mafia · walk · бой": {},
+  "→ mafia · walk · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ mafia · walk · вне боя": {},
-  "→ razor · high · бой": {},
+  "→ razor · high · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ razor · high · вне боя": {},
-  "→ razor · low · бой": {},
+  "→ razor · low · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ razor · low · вне боя": {},
-  "→ razor · walk · бой": {},
+  "→ razor · walk · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ razor · walk · вне боя": {},
-  "→ sauron · high · бой": {},
+  "→ sauron · high · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ sauron · high · вне боя": {},
-  "→ sauron · low · бой": {},
+  "→ sauron · low · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ sauron · low · вне боя": {},
-  "→ sauron · walk · бой": {},
+  "→ sauron · walk · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ sauron · walk · вне боя": {},
-  "→ silk · high · бой": {},
+  "→ silk · high · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ silk · high · вне боя": {},
-  "→ silk · low · бой": {},
+  "→ silk · low · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ silk · low · вне боя": {},
-  "→ silk · walk · бой": {},
+  "→ silk · walk · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ silk · walk · вне боя": {},
 }
 `;
@@ -28056,6 +29216,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
       ],
       "values": {
         "stun": 3,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -28086,6 +29251,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
         "stun": 5,
       },
     },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ baraholka · low · вне боя": {
     "baraholka": {
@@ -28114,6 +29284,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
         "stun": 3,
       },
     },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ baraholka · walk · вне боя": {
     "baraholka": {
@@ -28137,6 +29312,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
       ],
       "values": {
         "stun": 3,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -28167,6 +29347,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
         "stun": 5,
       },
     },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ baraholka_killer · low · вне боя": {
     "baraholka_killer": {
@@ -28195,6 +29380,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
         "stun": 3,
       },
     },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ baraholka_killer · walk · вне боя": {
     "baraholka_killer": {
@@ -28218,6 +29408,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
       ],
       "values": {
         "stun": 2,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -28248,6 +29443,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
         "stun": 5,
       },
     },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ drone_doberman · low · вне боя": {
     "drone_doberman": {
@@ -28274,6 +29474,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
       ],
       "values": {
         "stun": 3,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -28304,6 +29509,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
     "fiveeyes_squad": {
       "values": {
         "stun": 6,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -28341,6 +29551,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
         "stun": 5,
       },
     },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes · low · вне боя": {
     "fiveeyes": {
@@ -28374,6 +29589,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
     "fiveeyes_squad": {
       "values": {
         "stun": 5,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -28411,6 +29631,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
         "stun": 6,
       },
     },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes_2 · high · вне боя": {
     "fiveeyes_2": {
@@ -28444,6 +29669,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
     "fiveeyes_squad": {
       "values": {
         "stun": 5,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -28481,6 +29711,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
         "stun": 5,
       },
     },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes_2 · walk · вне боя": {
     "fiveeyes_2": {
@@ -28511,6 +29746,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
         "stun": 3,
       },
     },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes_squad · high · вне боя": {
     "fiveeyes_squad": {
@@ -28537,6 +29777,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
       ],
       "values": {
         "stun": 5,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -28567,6 +29812,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
         "stun": 3,
       },
     },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes_squad · walk · вне боя": {
     "fiveeyes_squad": {
@@ -28583,7 +29833,13 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
   "→ hammer · high · бой": {
     "hammer": {
       "values": {
+        "edge_gained": 1,
         "edge_left": 3,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -28603,8 +29859,14 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
         },
       ],
       "values": {
+        "edge_gained": 1,
         "edge_left": 3,
         "stun": 5,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -28630,8 +29892,14 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
         },
       ],
       "values": {
+        "edge_gained": 1,
         "edge_left": 3,
         "stun": 1,
+      },
+    },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -28665,6 +29933,8 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
     },
     "lone_star": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -28706,6 +29976,8 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
     },
     "lone_star": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -28747,6 +30019,8 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
     },
     "lone_star": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -28786,6 +30060,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
         "stun": 4,
       },
     },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ koshka · high · вне боя": {
     "koshka": {
@@ -28817,6 +30096,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
         "stun": 5,
       },
     },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ koshka · low · вне боя": {
     "koshka": {
@@ -28845,6 +30129,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
         "stun": 3,
       },
     },
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ koshka · walk · вне боя": {
     "koshka": {
@@ -28867,6 +30156,7 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
         },
       ],
       "values": {
+        "complex_left": 0,
         "stun": 3,
       },
     },
@@ -28895,6 +30185,7 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
         },
       ],
       "values": {
+        "complex_left": 0,
         "stun": 5,
       },
     },
@@ -28923,6 +30214,7 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
         },
       ],
       "values": {
+        "complex_left": 0,
         "stun": 3,
       },
     },
@@ -28940,6 +30232,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
     },
   },
   "→ mafia · high · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "mafia": {
       "effects": [
         {
@@ -28971,6 +30268,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
     },
   },
   "→ mafia · low · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "mafia": {
       "effects": [
         {
@@ -29002,6 +30304,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
     },
   },
   "→ mafia · walk · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "mafia": {
       "effects": [
         {
@@ -29032,9 +30339,20 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
       },
     },
   },
-  "→ razor · high · бой": {},
+  "→ razor · high · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ razor · high · вне боя": {},
   "→ razor · low · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "razor": {
       "effects": [
         {
@@ -29059,9 +30377,20 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
       },
     },
   },
-  "→ razor · walk · бой": {},
+  "→ razor · walk · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ razor · walk · вне боя": {},
   "→ sauron · high · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "sauron": {
       "effects": [
         {
@@ -29093,6 +30422,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
     },
   },
   "→ sauron · low · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "sauron": {
       "effects": [
         {
@@ -29124,6 +30458,11 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
     },
   },
   "→ sauron · walk · бой": {
+    "lone_star": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "sauron": {
       "effects": [
         {
@@ -29157,6 +30496,8 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
   "→ silk · high · бой": {
     "lone_star": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -29198,6 +30539,8 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
   "→ silk · low · бой": {
     "lone_star": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -29239,6 +30582,8 @@ exports[`итоги действий: shadowrun6 > lone_star · stun_baton:0 1`]
   "→ silk · walk · бой": {
     "lone_star": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -29344,12 +30689,23 @@ exports[`итоги действий: shadowrun6 > mafia · +defense_action 1`] 
 
 exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
 {
-  "→ baraholka · high · бой": {},
+  "→ baraholka · high · бой": {
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka · high · вне боя": {},
   "→ baraholka · low · бой": {
     "baraholka": {
       "values": {
         "stun": 2,
+      },
+    },
+    "mafia": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -29360,14 +30716,31 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
       },
     },
   },
-  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · бой": {
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka · walk · вне боя": {},
-  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · бой": {
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka_killer · high · вне боя": {},
   "→ baraholka_killer · low · бой": {
     "baraholka_killer": {
       "values": {
         "stun": 2,
+      },
+    },
+    "mafia": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -29378,13 +30751,37 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
       },
     },
   },
-  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · бой": {
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka_killer · walk · вне боя": {},
-  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · бой": {
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ drone_doberman · high · вне боя": {},
-  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · бой": {
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ drone_doberman · low · вне боя": {},
-  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · бой": {
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ drone_doberman · walk · вне боя": {},
   "→ fiveeyes · high · бой": {
     "fiveeyes": {
@@ -29397,6 +30794,11 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
     "fiveeyes_squad": {
       "values": {
         "stun": 3,
+      },
+    },
+    "mafia": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -29420,6 +30822,11 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
         "stun": 2,
       },
     },
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes · low · вне боя": {
     "fiveeyes_squad": {
@@ -29432,6 +30839,11 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
     "fiveeyes_squad": {
       "values": {
         "stun": 2,
+      },
+    },
+    "mafia": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -29455,6 +30867,11 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
         "stun": 3,
       },
     },
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes_2 · high · вне боя": {
     "fiveeyes_2": {
@@ -29476,6 +30893,11 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
         "stun": 2,
       },
     },
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes_2 · low · вне боя": {
     "fiveeyes_squad": {
@@ -29490,6 +30912,11 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
         "stun": 2,
       },
     },
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ fiveeyes_2 · walk · вне боя": {
     "fiveeyes_squad": {
@@ -29498,12 +30925,23 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
       },
     },
   },
-  "→ fiveeyes_squad · high · бой": {},
+  "→ fiveeyes_squad · high · бой": {
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_squad · high · вне боя": {},
   "→ fiveeyes_squad · low · бой": {
     "fiveeyes_squad": {
       "values": {
         "stun": 2,
+      },
+    },
+    "mafia": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -29514,12 +30952,24 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
       },
     },
   },
-  "→ fiveeyes_squad · walk · бой": {},
+  "→ fiveeyes_squad · walk · бой": {
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_squad · walk · вне боя": {},
   "→ hammer · high · бой": {
     "hammer": {
       "values": {
+        "edge_gained": 1,
         "edge_left": 3,
+      },
+    },
+    "mafia": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -29533,8 +30983,14 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
   "→ hammer · low · бой": {
     "hammer": {
       "values": {
+        "edge_gained": 1,
         "edge_left": 3,
         "stun": 2,
+      },
+    },
+    "mafia": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -29549,7 +31005,13 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
   "→ hammer · walk · бой": {
     "hammer": {
       "values": {
+        "edge_gained": 1,
         "edge_left": 3,
+      },
+    },
+    "mafia": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -29573,6 +31035,8 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
     },
     "mafia": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -29602,6 +31066,8 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
     },
     "mafia": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -29626,6 +31092,8 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
     },
     "mafia": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -29648,6 +31116,11 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
         "stun": 1,
       },
     },
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ koshka · high · вне боя": {
     "koshka": {
@@ -29662,6 +31135,11 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
         "stun": 2,
       },
     },
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ koshka · low · вне боя": {
     "koshka": {
@@ -29670,14 +31148,31 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
       },
     },
   },
-  "→ koshka · walk · бой": {},
+  "→ koshka · walk · бой": {
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ koshka · walk · вне боя": {},
-  "→ lone_star · high · бой": {},
+  "→ lone_star · high · бой": {
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ lone_star · high · вне боя": {},
   "→ lone_star · low · бой": {
     "lone_star": {
       "values": {
         "stun": 2,
+      },
+    },
+    "mafia": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -29688,11 +31183,18 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
       },
     },
   },
-  "→ lone_star · walk · бой": {},
+  "→ lone_star · walk · бой": {
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ lone_star · walk · вне боя": {},
   "→ mafia · high · бой": {
     "mafia": {
       "values": {
+        "complex_left": 0,
         "stun": 2,
       },
     },
@@ -29707,6 +31209,7 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
   "→ mafia · low · бой": {
     "mafia": {
       "values": {
+        "complex_left": 0,
         "stun": 2,
       },
     },
@@ -29721,6 +31224,7 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
   "→ mafia · walk · бой": {
     "mafia": {
       "values": {
+        "complex_left": 0,
         "stun": 1,
       },
     },
@@ -29732,9 +31236,20 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
       },
     },
   },
-  "→ razor · high · бой": {},
+  "→ razor · high · бой": {
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ razor · high · вне боя": {},
   "→ razor · low · бой": {
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "razor": {
       "values": {
         "stun": 2,
@@ -29748,9 +31263,20 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
       },
     },
   },
-  "→ razor · walk · бой": {},
+  "→ razor · walk · бой": {
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ razor · walk · вне боя": {},
   "→ sauron · high · бой": {
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "sauron": {
       "values": {
         "stun": 2,
@@ -29765,6 +31291,11 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
     },
   },
   "→ sauron · low · бой": {
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "sauron": {
       "values": {
         "stun": 2,
@@ -29779,6 +31310,11 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
     },
   },
   "→ sauron · walk · бой": {
+    "mafia": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
     "sauron": {
       "values": {
         "stun": 1,
@@ -29795,6 +31331,8 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
   "→ silk · high · бой": {
     "mafia": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -29809,6 +31347,8 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
   "→ silk · low · бой": {
     "mafia": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -29833,6 +31373,8 @@ exports[`итоги действий: shadowrun6 > mafia · sap:0 1`] = `
   "→ silk · walk · бой": {
     "mafia": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 3,
       },
     },
@@ -30920,6 +32462,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -30956,6 +32500,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -30992,6 +32538,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31028,6 +32576,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31064,6 +32614,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31100,6 +32652,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31134,6 +32688,11 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
         "physical": 4,
       },
     },
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ drone_doberman · high · вне боя": {
     "drone_doberman": {
@@ -31160,6 +32719,11 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
         "physical": 4,
       },
     },
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ drone_doberman · low · вне боя": {
     "drone_doberman": {
@@ -31184,6 +32748,11 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
       "values": {
         "last_hit_physical": true,
         "physical": 5,
+      },
+    },
+    "razor": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -31218,6 +32787,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31262,6 +32833,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31306,6 +32879,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31350,6 +32925,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31394,6 +32971,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31438,6 +33017,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31478,6 +33059,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31514,6 +33097,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31550,6 +33135,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31578,6 +33165,11 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
         "last_hit_physical": true,
       },
     },
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
   },
   "→ hammer · high · вне боя": {
     "hammer": {
@@ -31591,6 +33183,11 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
       "values": {
         "last_hit_physical": true,
         "physical": 4,
+      },
+    },
+    "razor": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -31607,6 +33204,11 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
       "values": {
         "last_hit_physical": true,
         "physical": 4,
+      },
+    },
+    "razor": {
+      "values": {
+        "complex_left": 0,
       },
     },
   },
@@ -31632,6 +33234,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31668,6 +33272,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31704,6 +33310,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31740,6 +33348,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31776,6 +33386,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31812,6 +33424,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31848,6 +33462,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31884,6 +33500,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31920,6 +33538,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31956,6 +33576,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -31992,6 +33614,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -32028,6 +33652,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
     },
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -32053,6 +33679,7 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
   "→ razor · high · бой": {
     "razor": {
       "values": {
+        "complex_left": 0,
         "last_hit_physical": true,
         "physical": 1,
       },
@@ -32069,6 +33696,7 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
   "→ razor · low · бой": {
     "razor": {
       "values": {
+        "complex_left": 0,
         "last_hit_physical": true,
         "physical": 4,
       },
@@ -32085,6 +33713,7 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
   "→ razor · walk · бой": {
     "razor": {
       "values": {
+        "complex_left": 0,
         "last_hit_physical": true,
         "physical": 4,
       },
@@ -32101,6 +33730,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
   "→ sauron · high · бой": {
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -32137,6 +33768,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
   "→ sauron · low · бой": {
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -32173,6 +33806,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
   "→ sauron · walk · бой": {
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -32209,6 +33844,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
   "→ silk · high · бой": {
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -32245,6 +33882,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
   "→ silk · low · бой": {
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -32281,6 +33920,8 @@ exports[`итоги действий: shadowrun6 > razor · katana:0 1`] = `
   "→ silk · walk · бой": {
     "razor": {
       "values": {
+        "complex_left": 0,
+        "edge_gained": 1,
         "edge_left": 4,
       },
     },
@@ -32408,89 +34049,341 @@ exports[`итоги действий: shadowrun6 > razor · predator_vi:0 1`] = 
 
 exports[`итоги действий: shadowrun6 > razor · predator_vi:1 1`] = `
 {
-  "→ baraholka · high · бой": {},
+  "→ baraholka · high · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka · high · вне боя": {},
-  "→ baraholka · low · бой": {},
+  "→ baraholka · low · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka · low · вне боя": {},
-  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka · walk · вне боя": {},
-  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka_killer · high · вне боя": {},
-  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka_killer · low · вне боя": {},
-  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka_killer · walk · вне боя": {},
-  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ drone_doberman · high · вне боя": {},
-  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ drone_doberman · low · вне боя": {},
-  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ drone_doberman · walk · вне боя": {},
-  "→ fiveeyes · high · бой": {},
+  "→ fiveeyes · high · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes · high · вне боя": {},
-  "→ fiveeyes · low · бой": {},
+  "→ fiveeyes · low · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes · low · вне боя": {},
-  "→ fiveeyes · walk · бой": {},
+  "→ fiveeyes · walk · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes · walk · вне боя": {},
-  "→ fiveeyes_2 · high · бой": {},
+  "→ fiveeyes_2 · high · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_2 · high · вне боя": {},
-  "→ fiveeyes_2 · low · бой": {},
+  "→ fiveeyes_2 · low · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_2 · low · вне боя": {},
-  "→ fiveeyes_2 · walk · бой": {},
+  "→ fiveeyes_2 · walk · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_2 · walk · вне боя": {},
-  "→ fiveeyes_squad · high · бой": {},
+  "→ fiveeyes_squad · high · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_squad · high · вне боя": {},
-  "→ fiveeyes_squad · low · бой": {},
+  "→ fiveeyes_squad · low · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_squad · low · вне боя": {},
-  "→ fiveeyes_squad · walk · бой": {},
+  "→ fiveeyes_squad · walk · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_squad · walk · вне боя": {},
-  "→ hammer · high · бой": {},
+  "→ hammer · high · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ hammer · high · вне боя": {},
-  "→ hammer · low · бой": {},
+  "→ hammer · low · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ hammer · low · вне боя": {},
-  "→ hammer · walk · бой": {},
+  "→ hammer · walk · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ hammer · walk · вне боя": {},
-  "→ humanis · high · бой": {},
+  "→ humanis · high · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ humanis · high · вне боя": {},
-  "→ humanis · low · бой": {},
+  "→ humanis · low · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ humanis · low · вне боя": {},
-  "→ humanis · walk · бой": {},
+  "→ humanis · walk · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ humanis · walk · вне боя": {},
-  "→ koshka · high · бой": {},
+  "→ koshka · high · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ koshka · high · вне боя": {},
-  "→ koshka · low · бой": {},
+  "→ koshka · low · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ koshka · low · вне боя": {},
-  "→ koshka · walk · бой": {},
+  "→ koshka · walk · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ koshka · walk · вне боя": {},
-  "→ lone_star · high · бой": {},
+  "→ lone_star · high · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ lone_star · high · вне боя": {},
-  "→ lone_star · low · бой": {},
+  "→ lone_star · low · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ lone_star · low · вне боя": {},
-  "→ lone_star · walk · бой": {},
+  "→ lone_star · walk · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ lone_star · walk · вне боя": {},
-  "→ mafia · high · бой": {},
+  "→ mafia · high · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ mafia · high · вне боя": {},
-  "→ mafia · low · бой": {},
+  "→ mafia · low · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ mafia · low · вне боя": {},
-  "→ mafia · walk · бой": {},
+  "→ mafia · walk · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ mafia · walk · вне боя": {},
-  "→ razor · high · бой": {},
+  "→ razor · high · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ razor · high · вне боя": {},
-  "→ razor · low · бой": {},
+  "→ razor · low · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ razor · low · вне боя": {},
-  "→ razor · walk · бой": {},
+  "→ razor · walk · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ razor · walk · вне боя": {},
-  "→ sauron · high · бой": {},
+  "→ sauron · high · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ sauron · high · вне боя": {},
-  "→ sauron · low · бой": {},
+  "→ sauron · low · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ sauron · low · вне боя": {},
-  "→ sauron · walk · бой": {},
+  "→ sauron · walk · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ sauron · walk · вне боя": {},
-  "→ silk · high · бой": {},
+  "→ silk · high · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ silk · high · вне боя": {},
-  "→ silk · low · бой": {},
+  "→ silk · low · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ silk · low · вне боя": {},
-  "→ silk · walk · бой": {},
+  "→ silk · walk · бой": {
+    "razor": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ silk · walk · вне боя": {},
 }
 `;
@@ -33357,89 +35250,341 @@ exports[`итоги действий: shadowrun6 > silk · colt_l36:0 1`] = `
 
 exports[`итоги действий: shadowrun6 > silk · colt_l36:1 1`] = `
 {
-  "→ baraholka · high · бой": {},
+  "→ baraholka · high · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka · high · вне боя": {},
-  "→ baraholka · low · бой": {},
+  "→ baraholka · low · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka · low · вне боя": {},
-  "→ baraholka · walk · бой": {},
+  "→ baraholka · walk · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka · walk · вне боя": {},
-  "→ baraholka_killer · high · бой": {},
+  "→ baraholka_killer · high · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka_killer · high · вне боя": {},
-  "→ baraholka_killer · low · бой": {},
+  "→ baraholka_killer · low · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka_killer · low · вне боя": {},
-  "→ baraholka_killer · walk · бой": {},
+  "→ baraholka_killer · walk · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ baraholka_killer · walk · вне боя": {},
-  "→ drone_doberman · high · бой": {},
+  "→ drone_doberman · high · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ drone_doberman · high · вне боя": {},
-  "→ drone_doberman · low · бой": {},
+  "→ drone_doberman · low · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ drone_doberman · low · вне боя": {},
-  "→ drone_doberman · walk · бой": {},
+  "→ drone_doberman · walk · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ drone_doberman · walk · вне боя": {},
-  "→ fiveeyes · high · бой": {},
+  "→ fiveeyes · high · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes · high · вне боя": {},
-  "→ fiveeyes · low · бой": {},
+  "→ fiveeyes · low · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes · low · вне боя": {},
-  "→ fiveeyes · walk · бой": {},
+  "→ fiveeyes · walk · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes · walk · вне боя": {},
-  "→ fiveeyes_2 · high · бой": {},
+  "→ fiveeyes_2 · high · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_2 · high · вне боя": {},
-  "→ fiveeyes_2 · low · бой": {},
+  "→ fiveeyes_2 · low · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_2 · low · вне боя": {},
-  "→ fiveeyes_2 · walk · бой": {},
+  "→ fiveeyes_2 · walk · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_2 · walk · вне боя": {},
-  "→ fiveeyes_squad · high · бой": {},
+  "→ fiveeyes_squad · high · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_squad · high · вне боя": {},
-  "→ fiveeyes_squad · low · бой": {},
+  "→ fiveeyes_squad · low · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_squad · low · вне боя": {},
-  "→ fiveeyes_squad · walk · бой": {},
+  "→ fiveeyes_squad · walk · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ fiveeyes_squad · walk · вне боя": {},
-  "→ hammer · high · бой": {},
+  "→ hammer · high · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ hammer · high · вне боя": {},
-  "→ hammer · low · бой": {},
+  "→ hammer · low · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ hammer · low · вне боя": {},
-  "→ hammer · walk · бой": {},
+  "→ hammer · walk · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ hammer · walk · вне боя": {},
-  "→ humanis · high · бой": {},
+  "→ humanis · high · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ humanis · high · вне боя": {},
-  "→ humanis · low · бой": {},
+  "→ humanis · low · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ humanis · low · вне боя": {},
-  "→ humanis · walk · бой": {},
+  "→ humanis · walk · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ humanis · walk · вне боя": {},
-  "→ koshka · high · бой": {},
+  "→ koshka · high · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ koshka · high · вне боя": {},
-  "→ koshka · low · бой": {},
+  "→ koshka · low · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ koshka · low · вне боя": {},
-  "→ koshka · walk · бой": {},
+  "→ koshka · walk · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ koshka · walk · вне боя": {},
-  "→ lone_star · high · бой": {},
+  "→ lone_star · high · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ lone_star · high · вне боя": {},
-  "→ lone_star · low · бой": {},
+  "→ lone_star · low · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ lone_star · low · вне боя": {},
-  "→ lone_star · walk · бой": {},
+  "→ lone_star · walk · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ lone_star · walk · вне боя": {},
-  "→ mafia · high · бой": {},
+  "→ mafia · high · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ mafia · high · вне боя": {},
-  "→ mafia · low · бой": {},
+  "→ mafia · low · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ mafia · low · вне боя": {},
-  "→ mafia · walk · бой": {},
+  "→ mafia · walk · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ mafia · walk · вне боя": {},
-  "→ razor · high · бой": {},
+  "→ razor · high · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ razor · high · вне боя": {},
-  "→ razor · low · бой": {},
+  "→ razor · low · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ razor · low · вне боя": {},
-  "→ razor · walk · бой": {},
+  "→ razor · walk · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ razor · walk · вне боя": {},
-  "→ sauron · high · бой": {},
+  "→ sauron · high · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ sauron · high · вне боя": {},
-  "→ sauron · low · бой": {},
+  "→ sauron · low · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ sauron · low · вне боя": {},
-  "→ sauron · walk · бой": {},
+  "→ sauron · walk · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ sauron · walk · вне боя": {},
-  "→ silk · high · бой": {},
+  "→ silk · high · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ silk · high · вне боя": {},
-  "→ silk · low · бой": {},
+  "→ silk · low · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ silk · low · вне боя": {},
-  "→ silk · walk · бой": {},
+  "→ silk · walk · бой": {
+    "silk": {
+      "values": {
+        "complex_left": 0,
+      },
+    },
+  },
   "→ silk · walk · вне боя": {},
 }
 `;

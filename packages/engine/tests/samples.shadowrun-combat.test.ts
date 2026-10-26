@@ -1,7 +1,7 @@
 import { group, test, eq, ok } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
-import { exchange } from './play.ts';
+import { exchange, fight } from './play.ts';
 import { perform } from '../src/core/perform.ts';
 import { rollInitiative } from './kit.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
@@ -205,9 +205,9 @@ group('Shadowrun 6, глава «Инициатива и действия»: с�
 });
 
 group('Shadowrun 6: действия защиты (стр. 42–43)', () => {
-  const desk = (battle: boolean) => ({ id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: { battle }, has: [], effects: [] }) as unknown as Sheet;
+  const desk = { id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
   const prepare = (who: Sheet, pick: string, battle = false) => {
-    const out = exchange({ system, compendium, die: tape(), sheets: [who, desk(battle)], actionId: '+defense_action', fromId: who.id, toIds: [], inputs: { действие: pick } });
+    const out = exchange({ system, compendium, die: tape(), sheets: [who, desk], ...(battle ? { clock: fight(who.id) } : {}), actionId: '+defense_action', fromId: who.id, toIds: [], inputs: { действие: pick } });
     return after(out, who.id);
   };
   const defenseDice = (attacker: Sheet, weapon: string, target: Sheet) => {

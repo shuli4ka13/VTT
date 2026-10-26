@@ -1848,11 +1848,6 @@
         "owner": "desk",
         "columns": [
           {
-            "key": "battle",
-            "label": "Идёт бой",
-            "kind": "boolean"
-          },
-          {
             "key": "scatter",
             "label": "Рикошет последней гранаты, м",
             "kind": "number",
@@ -15468,7 +15463,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.battle"
+              "expr": "@стол.бой"
             }
           },
           {
@@ -15923,58 +15918,6 @@
               },
               {
                 "type": "end"
-              }
-            ]
-          }
-        ]
-      },
-      "battle_start": {
-        "label": "Начало боя",
-        "group": "Общие правила",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "description": "Бой пошёл: действия считаются.",
-        "on": [
-          {
-            "on": "moment:combat-start",
-            "steps": [
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@стол.battle"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "да"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "battle_end": {
-        "label": "Конец боя",
-        "group": "Общие правила",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "description": "Вне боя действия не считаются.",
-        "on": [
-          {
-            "on": "moment:combat-end",
-            "steps": [
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@стол.battle"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "нет"
-                }
               }
             ]
           }
@@ -17138,7 +17081,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@лист.edge_no_gain >= 1 или @лист.edge_left >= 7 или (@стол.battle и @лист.edge_gained >= 2)"
+              "expr": "@лист.edge_no_gain >= 1 или @лист.edge_left >= 7 или (@стол.бой и @лист.edge_gained >= 2)"
             }
           },
           {
@@ -17163,7 +17106,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.battle"
+              "expr": "@стол.бой"
             }
           },
           {
@@ -23607,8 +23550,6 @@
       "push_edge",
       "round_edge",
       "turn_actions",
-      "battle_start",
-      "battle_end",
       "glitch",
       "critical_glitch",
       "edge_reroll_one",
@@ -27665,9 +27606,7 @@
       "id": "стол",
       "systemId": "shadowrun6",
       "name": "Стол",
-      "values": {
-        "battle": false
-      },
+      "values": {},
       "has": [],
       "effects": []
     }

@@ -5,6 +5,8 @@ import type { Entry, Report } from '../src/core/log.ts';
 import type { Clock } from '../src/engine/clock.ts';
 import type { System, Sheet, Compendium, Die } from '../src/model/types.ts';
 
+export const fight = (...order: string[]): Clock => ({ round: 1, order, active: order[0] ?? null });
+
 export interface PlayArgs {
   system: System;
   compendium: Compendium;

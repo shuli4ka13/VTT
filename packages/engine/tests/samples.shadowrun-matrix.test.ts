@@ -1,6 +1,6 @@
 import { group, test, eq, deepEq, ok } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
-import { exchange } from './play.ts';
+import { exchange, fight } from './play.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import { asksOf, checkInputs } from '../src/model/asks.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
@@ -129,9 +129,9 @@ group('Shadowrun 6: сервер и лёд', () => {
   });
 
   test('дозорный лёд (стр. 187): в бою тратит простое действие, сложное не тронуто, урона нет', () => {
-    const desk = { id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: { battle: true }, has: [], effects: [] } as unknown as Sheet;
+    const desk = { id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
     const watcher = sheetOf('baraholka_killer', { ic_kind: 'дозорный', simple_left: 3, complex_left: 1 });
-    const out = exchange({ system, compendium, die: dice([6, 6], [20, 1]), sheets: [watcher, decker(), desk], actionId: '+ic_attack', fromId: 'baraholka_killer', toIds: ['razor'] });
+    const out = exchange({ system, compendium, die: dice([6, 6], [20, 1]), sheets: [watcher, decker(), desk], clock: fight('baraholka_killer', 'razor'), actionId: '+ic_attack', fromId: 'baraholka_killer', toIds: ['razor'] });
     eq(after(out, 'baraholka_killer').values.simple_left, 2);
     eq(after(out, 'baraholka_killer').values.complex_left, 1);
     eq(Number(after(out, 'razor').values.matrix_damage ?? 0), 0);

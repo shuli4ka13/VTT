@@ -1,6 +1,7 @@
 import { group, test, eq, deepEq, ok } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
-import { exchange } from './play.ts';
+import { exchange, fight } from './play.ts';
+import type { Clock } from '../src/engine/clock.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import { breaches } from '../src/engine/limits.ts';
 import { perform } from '../src/core/perform.ts';
@@ -27,8 +28,8 @@ const technomancer = (values: Record<string, unknown> = {}, has: Sheet['has'] = 
   has: [{ of: 'cf_res_spike' }, { of: 'cf_infusion' }, { of: 'tm_sprite_compile' }, ...has] } as Sheet);
 const decker = () => ({ ...razor(), values: { ...razor().values, matrix_mode: 'холодная ВР' }, has: [{ of: deckId }] } as Sheet);
 const blankSprite = () => ({ id: 'sp', systemId: sr.sheets[0]!.systemId, of: 'sprite', name: 'Спрайт', values: {}, has: [{ of: 'spw_trap' }], effects: [] } as unknown as Sheet);
-const act = (sheets: Sheet[], actionId: string, to: string[], die: () => number, inputs?: Record<string, string | number>) =>
-  exchange({ system, compendium, die, sheets, actionId, fromId: sheets[0]!.id, toIds: to, ...(inputs ? { inputs } : {}) });
+const act = (sheets: Sheet[], actionId: string, to: string[], die: () => number, inputs?: Record<string, string | number>, clock?: Clock) =>
+  exchange({ system, compendium, die, sheets, actionId, fromId: sheets[0]!.id, toIds: to, ...(inputs ? { inputs } : {}), ...(clock ? { clock } : {}) });
 
 group('Shadowrun 6: живой аватар', () => {
   test('Логика 5, Резонанс 4, три очка в ВМ — ВМ 8; инициатива в ВР — Логика + Интуиция (стр. 189)', () => {
@@ -82,7 +83,7 @@ group('Shadowrun 6: спрайты', () => {
   });
 
   const compiled = (kind: string, level = 4) => after(act([technomancer(), blankSprite()], 'tm_sprite_compile:0', ['sp'], tape(...six(5), ...one(5), 6, ...one(7), ...six(8)), { kind, level }), 'sp');
-  const desk = { id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: { battle: true }, has: [], effects: [] } as unknown as Sheet;
+  const desk = { id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
   const withPerform = (sheets: Sheet[], op: Record<string, unknown>) => {
     const out = perform({ system, compendium, clock: null, sheets, die: () => 1 }, op as never);
     if (out.kind !== 'done') throw new Error(out.kind);
@@ -98,10 +99,10 @@ group('Shadowrun 6: спрайты', () => {
 
   test('«Ловушка» в бою (стр. 194): сложное действие снято; вторая сложная способность в тот же ход отказывает, задача не списана', () => {
     const sprite = { ...compiled('крушитель'), values: { ...compiled('крушитель').values, complex_left: 1 } } as Sheet;
-    const first = act([sprite, decker(), desk], 'spw_trap:0', ['razor'], tape(...six(8), ...one(10)));
+    const first = act([sprite, decker(), desk], 'spw_trap:0', ['razor'], tape(...six(8), ...one(10)), undefined, fight('sp', 'razor'));
     eq(after(first, 'sp').values.complex_left, 0);
     eq(after(first, 'sp').values.tasks, 3);
-    const why = refusal(() => act([after(first, 'sp'), after(first, 'razor'), desk], 'spw_trap:0', ['razor'], tape(...six(8), ...one(10))));
+    const why = refusal(() => act([after(first, 'sp'), after(first, 'razor'), desk], 'spw_trap:0', ['razor'], tape(...six(8), ...one(10)), undefined, fight('sp', 'razor')));
     ok(why.includes('сложное действие'), why);
   });
 

@@ -3,7 +3,7 @@ import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { perform } from '../src/core/perform.ts';
 import { emptyJournal } from '../src/core/external.ts';
 import type { Journal, Question } from '../src/core/external.ts';
-import { exchange } from './play.ts';
+import { exchange, fight } from './play.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const sr = PLAYABLE_WORLDS.find(w => (w.system as System).id === 'shadowrun6')!;
@@ -58,14 +58,14 @@ group('Shadowrun 6, глава «Проверки и Преимущество»:
   test('SR-CH-05 (стр. 46): ЗА 10 против ЗЩ 6 — очко Преимущества; второе за раунд — последнее; третьего нет', () => {
     const shooter = { ...runner({ agility: 3, 'skills.стрельба.rank': 3, edge_left: 6, edge_gained: 1, complex_left: 1 }), has: [{ of: 'predator_vi' }] } as Sheet;
     const target = (armor: number) => ({ ...runner({ body: 2, armor_worn: armor }), id: 'цель' }) as Sheet;
-    const desk = { id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: { battle: true }, has: [], effects: [] } as unknown as Sheet;
-    const first = exchange({ system, compendium, die: tape(), sheets: [shooter, target(4), desk], actionId: 'predator_vi:0', fromId: 'бег', toId: 'цель', inputs: { дистанция: 'близкая' } });
+    const desk = { id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
+    const first = exchange({ system, compendium, die: tape(), sheets: [shooter, target(4), desk], clock: fight('бег', 'цель'), actionId: 'predator_vi:0', fromId: 'бег', toId: 'цель', inputs: { дистанция: 'близкая' } });
     const after = first.sheets.find(s => s.id === 'бег')!;
     eq(after.values.edge_left, 7);
     eq(after.values.edge_gained, 2);
-    const second = exchange({ system, compendium, die: tape(), sheets: [{ ...after, values: { ...after.values, complex_left: 1 } } as Sheet, target(3), desk], actionId: 'predator_vi:0', fromId: 'бег', toId: 'цель', inputs: { дистанция: 'близкая' } });
+    const second = exchange({ system, compendium, die: tape(), sheets: [{ ...after, values: { ...after.values, complex_left: 1 } } as Sheet, target(3), desk], clock: fight('бег', 'цель'), actionId: 'predator_vi:0', fromId: 'бег', toId: 'цель', inputs: { дистанция: 'близкая' } });
     eq(second.sheets.find(s => s.id === 'бег')!.values.edge_left, 7);
-    const three = exchange({ system, compendium, die: tape(), sheets: [{ ...shooter, values: { ...shooter.values, edge_left: 2, edge_gained: 0, complex_left: 1 } } as Sheet, target(5), desk], actionId: 'predator_vi:0', fromId: 'бег', toId: 'цель', inputs: { дистанция: 'близкая' } });
+    const three = exchange({ system, compendium, die: tape(), sheets: [{ ...shooter, values: { ...shooter.values, edge_left: 2, edge_gained: 0, complex_left: 1 } } as Sheet, target(5), desk], clock: fight('бег', 'цель'), actionId: 'predator_vi:0', fromId: 'бег', toId: 'цель', inputs: { дистанция: 'близкая' } });
     eq(three.sheets.find(s => s.id === 'бег')!.values.edge_left, 2, 'разница 3 — очка нет');
   });
 

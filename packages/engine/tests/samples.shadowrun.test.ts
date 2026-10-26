@@ -1,6 +1,6 @@
 import { group, test, eq, ok, deepEq } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
-import { exchange } from './play.ts';
+import { exchange, fight } from './play.ts';
 import { fieldCheck } from '../src/engine/check.ts';
 import { rollCheck } from './kit.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
@@ -74,9 +74,9 @@ group('Shadowrun 6: атака', () => {
 });
 
 group('Shadowrun 6: Преимущество и действия', () => {
-  const desk = (battle: boolean) => ({ id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: { battle }, has: [], effects: [] }) as unknown as Sheet;
+  const desk = { id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
   const hit = (from: Sheet, to: Sheet, action: string, die: () => number, inputs: Record<string, unknown>, battle = false) => exchange({
-    system, compendium, die, sheets: [from, to, desk(battle)], actionId: action, fromId: from.id, toId: to.id,
+    system, compendium, die, sheets: [from, to, desk], ...(battle ? { clock: fight(from.id, to.id) } : {}), actionId: action, fromId: from.id, toId: to.id,
     inputs: { ...(/^(stun_baton|katana|sap|combat_knife):/.test(action) ? {} : { дистанция: 'близкая' }), ...inputs } as never,
   });
 
@@ -141,10 +141,10 @@ group('Shadowrun 6: Преимущество — книга, шаг 8', () => {
 });
 
 group('Shadowrun 6: оружие — книга, шаг 8', () => {
-  const deskIn = { id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: { battle: true }, has: [], effects: [] } as unknown as Sheet;
+  const deskIn = { id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: {}, has: [], effects: [] } as unknown as Sheet;
   const reloadIn = (weapon: string, smartlink: boolean) => {
     const holder = { ...sheetOf('silk', { complex_left: 1, simple_left: 3, smartlink }), has: [{ of: weapon, values: { ammo: 0 } }] } as Sheet;
-    return exchange({ system, compendium, die: () => 1, sheets: [holder, deskIn], actionId: `${weapon}:1`, fromId: 'silk', toIds: [] }).sheets.find(s => s.id === 'silk')!;
+    return exchange({ system, compendium, die: () => 1, sheets: [holder, deskIn], clock: fight('silk'), actionId: `${weapon}:1`, fromId: 'silk', toIds: [] }).sheets.find(s => s.id === 'silk')!;
   };
 
   test('перезарядка обоймы (стр. 42, 44): без смартлинка — сложное действие', () => {
