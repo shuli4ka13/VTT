@@ -1,4 +1,4 @@
-import { group, test, eq } from './harness.ts';
+import { group, test, eq, deepEq } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import { exchange } from './play.ts';
@@ -97,4 +97,15 @@ group('Shadowrun 6, глава «Снаряжение и импланты»: с�
     eq(soakDice(false, 'stun_baton') - soakDice(true, 'stun_baton'), 6);
     eq(soakDice(false, 'sap') - soakDice(true, 'sap'), 0);
   });
+
+  test('SR-GEAR-reflex (стр. 293): Датчик рефлексов добавляет 1 к рангу навыка, набор растёт на 1', () => {
+    const rank = (ranked: number, withSensor: boolean) => {
+      const sheet = runner({ agility: 3, 'skills.стрельба.rank': ranked }, withSensor ? [{ of: 'reflex_recorder', values: { skill: 'стрельба' } }] : []);
+      return [at(sheet, 'skills.стрельба.rank'), at(sheet, 'skills.стрельба.pool')];
+    };
+    deepEq(rank(3, true), [4, 7]);
+    deepEq(rank(3, false), [3, 6]);
+    eq(rank(0, true)[0], 1);
+  });
 });
+

@@ -73,4 +73,11 @@ group('Shadowrun 6: спрайты', () => {
     eq(after(out, 'sp').values.tasks, 3);
     ok(wears(after(out, 'razor'), 'sprite_trap'));
   });
+
+  test('Резонанс спрайта = Уровень при 7 и выше (стр. 193): предел 6 его не режет', () => {
+    let used = 0;
+    const out = act([technomancer({ resonance: 7 }), blankSprite()], 'tm_sprite_compile:0', ['sp'], () => (used++ < 14 ? 6 : 1), { kind: 'крушитель', level: 7 });
+    eq(computed(after(out, 'sp'), 'resonance'), 7);
+  });
 });
+

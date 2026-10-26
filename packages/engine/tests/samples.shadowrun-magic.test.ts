@@ -103,13 +103,13 @@ group('Shadowrun 6: заклинания', () => {
   });
 
   test('Разряд маны: прямое — чистые успехи без сопротивления (стр. 133)', () => {
-    const out = act(mage(), [sheetOf('humanis')], 'spell_mana_bolt:0', tape(...six(5), ...one(7), ...six(9), ...one(4)), { amp: 0, widen: 0 });
+    const out = act(mage(), [sheetOf('humanis')], 'spell_mana_bolt:0', tape(...six(5), ...one(7), ...six(9), ...one(4)), { amp: 0 });
     eq(after(out, 'humanis').values.physical, 5);
   });
 
   test('насыщение больше Магии и Колдовства — отказ; второй цели у одиночного — отказ', () => {
-    ok(refusal(() => act(mage(), [sheetOf('humanis')], 'spell_mana_bolt:0', () => 1, { amp: 7, widen: 0 })).includes('усилений'));
-    ok(refusal(() => act(mage(), [sheetOf('humanis'), sheetOf('mafia')], 'spell_mana_bolt:0', () => 1, { amp: 0, widen: 0 })).includes('одна цель'));
+    ok(refusal(() => act(mage(), [sheetOf('humanis')], 'spell_mana_bolt:0', () => 1, { amp: 7 })).includes('усилений'));
+    ok(refusal(() => act(mage(), [sheetOf('humanis'), sheetOf('mafia')], 'spell_mana_bolt:0', () => 1, { amp: 0 })).includes('одна цель'));
   });
 
   test('истощение не лечится: Исцеление не опускает оглушающий ниже ячеек истощения (стр. 127)', () => {
@@ -128,6 +128,34 @@ group('Shadowrun 6: заклинания', () => {
     eq(computed(dead, 'is_dead'), true);
     const out = act(mage(), [dead], 'spell_heal:0', tape(...six(3), ...one(9), ...six(9)), { heal_kind: 'физический' });
     eq(after(out, 'humanis').values.physical, 40);
+  });
+
+  test('«Броня» (стр. 139): все чистые успехи идут в защиту без вопросов, истощение без надбавки', () => {
+    const out = act(mage({}, [{ of: 'spell_armor' }]), [sheetOf('humanis')], 'spell_armor:0', tape(...six(6), ...one(6), ...six(9)));
+    eq(computed(after(out, 'humanis'), 'armor_extra'), 6);
+    ok(out.log.join('\n').includes('зовёт «Истощение»: 4'), 'СИ 4 без надбавки');
+  });
+
+  test('«Улучшение характеристики» (стр. 137): Преимущество, Магию и Резонанс выбрать нельзя — отказ, ничего не потрачено', () => {
+    for (const attr of ['edge', 'magic', 'resonance']) {
+      const why = refusal(() => exchange({ system, compendium, die: () => 6, sheets: [mage()], actionId: 'spell_increase_attribute:0', fromId: 'mage', toIds: ['mage'], inputs: { want: 1, attr } }));
+      ok(why.includes('Преимущество'), `${attr}: ${why}`);
+    }
+  });
+
+  test('призыв духа (стр. 66): адепт не призывает, маг и мистический адепт — да', () => {
+    const spirit = { id: 'sp', systemId: sr.sheets[0]!.systemId, of: 'spirit', name: 'Дух', values: {}, has: [], effects: [] } as unknown as Sheet;
+    const summon = (kind: string) => refusal(() => act(mage({ awakened: kind, tradition: 'шаманизм', charisma: 5, willpower: 5 }), [spirit], 'mg_summon:0', () => 1, { kind: 'воздуха', force: 3 }));
+    ok(summon('адепт').includes('призывают только'));
+    ok(!summon('маг').includes('призывают только'));
+    ok(!summon('мистический адепт').includes('призывают только'));
+  });
+
+  test('Магия духа = Мощь при 7 и выше (стр. 147–148): предел 6 её не режет', () => {
+    const spirit = { id: 'sp', systemId: sr.sheets[0]!.systemId, of: 'spirit', name: 'Дух', values: {}, has: [], effects: [] } as unknown as Sheet;
+    let used = 0;
+    const out = act(mage({ magic: 7, initiate_grade: 1, tradition: 'шаманизм', charisma: 6, willpower: 6, 'skills.воплощение.rank': 6 }), [spirit], 'mg_summon:0', () => (used++ < 14 ? 6 : 1), { kind: 'воздуха', force: 7 });
+    eq(computed(after(out, 'sp'), 'magic'), 7);
   });
 
   test('Улучшение характеристики: +применённые, поддержание −2 кубика; «Прекратить» снимает (стр. 137, 131)', () => {

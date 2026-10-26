@@ -26,9 +26,10 @@ const sheet = (id: string, values: Record<string, unknown>, has: Sheet['has'] = 
 const SPELLS = ['spell_fireball', 'spell_mana_bolt', 'spell_stunbolt', 'spell_ice_spear', 'spell_manaball'];
 const caster = (values: Record<string, unknown>) => sheet('маг', { awakened: 'маг', ...values }, SPELLS.map(of => ({ of })));
 const tape = (...faces: number[]) => { const rest = [...faces]; return () => rest.shift() ?? 2; };
+const AREA = ['spell_fireball', 'spell_manaball'];
 const cast = (from: Sheet, to: Sheet[], spell: string, faces: number[], inputs: Record<string, number> = {}) => exchange({
   system, compendium, die: tape(...faces), sheets: [from, ...to], actionId: `${spell}:0`, fromId: from.id, toIds: to.map(s => s.id),
-  inputs: { amp: 0, widen: 0, ...inputs },
+  inputs: { amp: 0, ...(AREA.includes(spell) ? { widen: 0 } : {}), ...inputs },
 });
 const after = (out: { sheets: Sheet[] }, id: string) => out.sheets.find(s => s.id === id)!;
 const at = (s: Sheet, tag: string) => calc(system, s, tag, newPass(system, s, { compendium }));
@@ -132,7 +133,7 @@ group('Shadowrun 6, глава «Магия»: ситуации книжника
     const soakDice = (spell: string, wet: boolean) => {
       const target = { ...sheet('цель', { body: 8, willpower: 1, intuition: 1, reaction: 1 }), effects: wet ? [{ effectId: 'wet' }] : [] } as Sheet;
       const mage = caster({ tradition: 'герметизм', magic: 6, logic: 6, willpower: 6, charisma: 6, 'skills.колдовство.rank': 6 });
-      const out = exchange({ system, compendium, die: () => 6, sheets: [mage, target], actionId: `${spell}:0`, fromId: 'маг', toIds: ['цель'], inputs: { amp: 0, widen: 0 } });
+      const out = exchange({ system, compendium, die: () => 6, sheets: [mage, target], actionId: `${spell}:0`, fromId: 'маг', toIds: ['цель'], inputs: { amp: 0, ...(spell === 'spell_fireball' ? { widen: 0 } : {}) } });
       return out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]).find(entry => entry.step === 'сопротивление_бросок')?.rolls?.length as number;
     };
     eq(soakDice('spell_ice_spear', false) - soakDice('spell_ice_spear', true), 6);

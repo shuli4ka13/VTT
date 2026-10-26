@@ -310,7 +310,7 @@
               }
             ],
             "max": {
-              "expr": "6 + @initiate_grade"
+              "expr": "большее из(6 + @initiate_grade, @spirit_force)"
             }
           },
           {
@@ -326,7 +326,7 @@
               }
             ],
             "max": {
-              "expr": "6 + @submersion_grade"
+              "expr": "большее из(6 + @submersion_grade, @sprite_level)"
             }
           },
           {
@@ -2730,6 +2730,10 @@
                 "label": "способности адепта (×1,5 вверх, не больше +4)",
                 "upTo": 4,
                 "upToTimes": 1.5
+              },
+              {
+                "key": "импланты",
+                "label": "импланты"
               }
             ]
           },
@@ -5908,6 +5912,12 @@
             "label": "Программ можно запустить",
             "kind": "number",
             "default": 99
+          },
+          {
+            "key": "can_summon",
+            "label": "Может призывать духов",
+            "kind": "boolean",
+            "default": false
           }
         ],
         "rows": [
@@ -5920,7 +5930,8 @@
           {
             "value": "маг",
             "cells": {
-              "pp_max": 0
+              "pp_max": 0,
+              "can_summon": true
             }
           },
           {
@@ -5939,14 +5950,16 @@
             "cells": {
               "pp_max": {
                 "expr": "@mystic_pp"
-              }
+              },
+              "can_summon": true
             }
           },
           {
             "value": "аспектный маг",
             "cells": {
               "pp_max": 0,
-              "one_skill": true
+              "one_skill": true,
+              "can_summon": true
             }
           },
           {
@@ -19588,7 +19601,7 @@
             "ask": {
               "by": "actor",
               "if": {
-                "expr": "@category.amp или @area"
+                "expr": "@area"
               }
             }
           },
@@ -19707,6 +19720,21 @@
             "type": "end"
           },
           {
+            "type": "branch",
+            "if": {
+              "expr": "@pick_attr и (@attr == \"edge\" или @attr == \"magic\" или @attr == \"resonance\")"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"не действует на Преимущество, Сущность, Магию и Резонанс\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
             "type": "emit",
             "effect": "spend_action",
             "args": {
@@ -19748,7 +19776,7 @@
                 "expr": "@действующий"
               },
               "si": {
-                "expr": "@drain_base + 2 * @amp + @widen + большее из(0, @want - 1)"
+                "expr": "@drain_base + 2 * @amp + @widen + если(@choose_hits, большее из(0, @want - 1), 0)"
               }
             }
           },
@@ -19991,7 +20019,7 @@
             },
             "args": {
               "amount": {
-                "expr": "меньшее из(@want, @защита.чистые, @cap)"
+                "expr": "если(@choose_hits, меньшее из(@want, @защита.чистые, @cap), @защита.чистые)"
               },
               "attr": {
                 "expr": "@attr"
@@ -20228,6 +20256,21 @@
           }
         ],
         "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "не @действующий.awakened.can_summon"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"призывают только маги, аспектные маги Воплощения и мистические адепты\""
+            }
+          },
+          {
+            "type": "end"
+          },
           {
             "type": "emit",
             "effect": "can_cast",
@@ -25737,11 +25780,12 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "skills.{@строка.skill}.pool",
+            "target": "skills.{@строка.skill}.rank",
             "op": "add",
             "value": {
               "expr": "1"
-            }
+            },
+            "stage": "импланты"
           }
         ]
       },
@@ -26605,9 +26649,7 @@
           "defense": "нет",
           "outcome": "усиление поля",
           "boost_field": "armor_extra",
-          "spell_effect": "sp_armor",
-          "choose_hits": true,
-          "cap": 20
+          "spell_effect": "sp_armor"
         }
       },
       {
