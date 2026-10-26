@@ -109,6 +109,7 @@ export function roundTrip(name: string, part = 0, parts = 1): void {
   const world = SAMPLE_WORLDS.find(one => one.system.name === name);
   const mode = (globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env.ROUND_TRIP;
   const wanted = mode === 'full' || mode === name || QUICK.includes(name);
+  const limit = Number((globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env.ROUND_TRIP_MS) || 600000;
 
   describe('пресет не портится редактором: холостой коммит в каждом поле', () => {
     beforeEach(() => { try { localStorage.clear(); } catch { return; } });
@@ -142,7 +143,7 @@ export function roundTrip(name: string, part = 0, parts = 1): void {
             }
           }
           expect(found).toEqual([]);
-        }, 600000);
+        }, limit);
       }
     });
   });
