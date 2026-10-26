@@ -11,6 +11,8 @@ const sheetOf = (id: string, values: Record<string, unknown> = {}, has: Sheet['h
   const sheet = structuredClone(sr.sheets.find(s => s.id === id)!) as Sheet;
   return { ...sheet, values: { ...sheet.values, ...values }, has: [...sheet.has, ...has] } as Sheet;
 };
+const byHand = (values: Record<string, unknown> = {}, has: Sheet['has'] = []) =>
+  sheetOf('humanis', { npc_template: '', body: 2, agility: 2, reaction: 2, strength: 2, willpower: 2, logic: 2, intuition: 2, charisma: 1, ...values }, has);
 const computed = (sheet: Sheet, tag: string) => calc(system, sheet, tag, newPass(system, sheet, { compendium }));
 const wears = (sheet: Sheet | undefined, id: string) => (sheet?.effects ?? []).some(e => e.effectId === id);
 const tape = (...faces: number[]) => { const rest = [...faces]; return () => rest.shift() ?? 1; };
@@ -114,7 +116,7 @@ group('Shadowrun 6: заклинания', () => {
   });
 
   test('неудавшееся длительное не поддерживается: штрафа нет (решение владельца)', () => {
-    const chromed = sheetOf('humanis', {}, [{ of: 'cyberjack', values: { rating: 6 } }, { of: 'cybereyes', values: { rating: 4 } }]);
+    const chromed = byHand({}, [{ of: 'cyberjack', values: { rating: 6 } }, { of: 'cybereyes', values: { rating: 4 } }]);
     ok(computed(chromed, 'essence') <= 4, 'порог 5 − Сущность не ниже 1');
     const out = exchange({ system, compendium, die: () => 1, sheets: [mage(), chromed], actionId: 'spell_increase_attribute:0', fromId: 'mage', toIds: ['humanis'], inputs: { want: 3, attr: 'strength' } });
     eq(wears(after(out, 'humanis'), 'sp_increase_attribute'), false, 'не легло');
@@ -122,7 +124,7 @@ group('Shadowrun 6: заклинания', () => {
   });
 
   test('поддержание — одно на сотворение: два заклинания — два, «Прекратить» отпускает только своё (стр. 131)', () => {
-    const ally = sheetOf('humanis', { strength: 4 });
+    const ally = byHand({ strength: 4 });
     const first = exchange({ system, compendium, die: tape(...six(6), ...one(6), ...six(9)), sheets: [mage({}, [{ of: 'spell_armor' }]), ally], actionId: 'spell_increase_attribute:0', fromId: 'mage', toIds: ['humanis'], inputs: { want: 3, attr: 'strength' } });
     eq(sustaining(after(first, 'mage')), 1);
     const both = exchange({ system, compendium, die: tape(...six(6), ...one(6), ...six(9)), sheets: first.sheets, actionId: 'spell_armor:0', fromId: 'mage', toIds: ['humanis'] });
@@ -146,5 +148,12 @@ group('Shadowrun 6: духи', () => {
   test('суммарная Мощь духов не больше Магии × 3 (стр. 146)', () => {
     const spirit = { id: 'sp', systemId: sr.sheets[0]!.systemId, of: 'spirit', name: 'Дух', values: {}, has: [], effects: [] } as unknown as Sheet;
     ok(refusal(() => act(mage({ spirits_force: 16 }), [spirit], 'mg_summon:0', () => 1, { kind: 'воздуха', force: 4 })).includes('Магии × 3'));
+  });
+});
+
+group('Shadowrun 6: навыки духа одной правкой по колонке', () => {
+  test('дух воздуха Мощи 4 — свои навыки на Мощь, чужие — ноль', () => {
+    const spirit = { id: 'дух', of: 'spirit', systemId: system.id, name: 'Дух', values: { spirit_force: 4, spirit_kind: 'воздуха' }, has: [], effects: [] } as unknown as Sheet;
+    deepEq([computed(spirit, 'skills.астрал.rank'), computed(spirit, 'skills.колдовство.rank')], [4, 0]);
   });
 });

@@ -57,6 +57,13 @@
             "default": "человек"
           },
           {
+            "key": "npc_template",
+            "label": "Заготовка",
+            "kind": "choice",
+            "from": "grunt_templates",
+            "optional": true
+          },
+          {
             "key": "body",
             "label": "Тело",
             "kind": "number",
@@ -66,6 +73,10 @@
               "expr": "@metatype.body_max + @attr_limits.body.bonus"
             },
             "stages": [
+              {
+                "key": "основа",
+                "label": "основа"
+              },
               {
                 "key": "адепт",
                 "label": "способности адепта (×1,5 вверх, не больше +4)",
@@ -90,6 +101,10 @@
             },
             "stages": [
               {
+                "key": "основа",
+                "label": "основа"
+              },
+              {
                 "key": "адепт",
                 "label": "способности адепта (×1,5 вверх, не больше +4)",
                 "upTo": 4,
@@ -112,6 +127,10 @@
               "expr": "@metatype.reaction_max + @attr_limits.reaction.bonus"
             },
             "stages": [
+              {
+                "key": "основа",
+                "label": "основа"
+              },
               {
                 "key": "адепт",
                 "label": "способности адепта (×1,5 вверх, не больше +4)",
@@ -136,6 +155,10 @@
             },
             "stages": [
               {
+                "key": "основа",
+                "label": "основа"
+              },
+              {
                 "key": "адепт",
                 "label": "способности адепта (×1,5 вверх, не больше +4)",
                 "upTo": 4,
@@ -159,6 +182,10 @@
             },
             "stages": [
               {
+                "key": "основа",
+                "label": "основа"
+              },
+              {
                 "key": "аугментация",
                 "label": "аугментация (не больше +4)",
                 "upTo": 4
@@ -175,6 +202,10 @@
               "expr": "@metatype.logic_max + @attr_limits.logic.bonus"
             },
             "stages": [
+              {
+                "key": "основа",
+                "label": "основа"
+              },
               {
                 "key": "аугментация",
                 "label": "аугментация (не больше +4)",
@@ -193,6 +224,10 @@
             },
             "stages": [
               {
+                "key": "основа",
+                "label": "основа"
+              },
+              {
                 "key": "аугментация",
                 "label": "аугментация (не больше +4)",
                 "upTo": 4
@@ -210,6 +245,10 @@
             },
             "stages": [
               {
+                "key": "основа",
+                "label": "основа"
+              },
+              {
                 "key": "аугментация",
                 "label": "аугментация (не больше +4)",
                 "upTo": 4
@@ -226,6 +265,10 @@
               "expr": "@metatype.edge_max + @attr_limits.edge.bonus"
             },
             "stages": [
+              {
+                "key": "основа",
+                "label": "основа"
+              },
               {
                 "key": "аугментация",
                 "label": "аугментация (не больше +4)",
@@ -489,17 +532,13 @@
           {
             "key": "unarmed_physical",
             "label": "Безоружная атака: физический урон",
-            "kind": "boolean",
-            "default": false,
-            "min": 0,
-            "max": 1,
+            "expr": {
+              "expr": "@metatype.unarmed_physical"
+            },
             "stages": [
               {
                 "key": "основа",
-                "label": "основа",
-                "combine": {
-                  "set": "max"
-                }
+                "label": "основа"
               }
             ]
           },
@@ -1424,7 +1463,7 @@
             "key": "soak",
             "label": "Тело: сопротивление урону",
             "expr": {
-              "expr": "если(@veh_body >= 1, @veh_body, @body)"
+              "expr": "@body"
             }
           },
           {
@@ -2876,6 +2915,10 @@
             "title": "{label}",
             "default": 0,
             "stages": [
+              {
+                "key": "основа",
+                "label": "основа"
+              },
               {
                 "key": "адепт",
                 "label": "способности адепта (×1,5 вверх, не больше +4)",
@@ -6783,7 +6826,9 @@
           {
             "key": "skills",
             "label": "Навыки",
-            "kind": "text"
+            "kind": "choice",
+            "from": "skills",
+            "many": true
           },
           {
             "key": "powers",
@@ -6813,7 +6858,13 @@
               "logic": 0,
               "intuition": 0,
               "charisma": 0,
-              "skills": "Астрал, Атлетика, Ближний бой, Внимание, Экзотическое дистанционное оружие",
+              "skills": [
+                "астрал",
+                "атлетика",
+                "ближний бой",
+                "внимание",
+                "экзотическое оружие"
+              ],
               "powers": "Способности: Астральная форма, Замешательство, Изменение движения, Материализация, Поиск, Разум, Сглаз, Сокрытие, Хватка (воздух). Дополнительные (1 за каждые 3 полных очка Мощи): Охрана, Психокинез, Стихийная атака (холод или электричество), Страх, Энергетическая аура (холод или электричество), Ядовитое дыхание. Атаки: Стихийная атака [СУ (Мо) ф, АТК (Мо × 2)/(Мо × 2) − 2/(Мо × 2) − 8/(Мо × 2) − 10/—]; Хватка [СУ (Мо + 2) о + Утомление I, АТК (Мо × 2) + 1/—/—/—/—]",
               "weak": "Аллергия (вдыхаемый токсин, тяжёлая)",
               "move": "5/10/+5"
@@ -6830,7 +6881,12 @@
               "logic": -1,
               "intuition": 0,
               "charisma": 0,
-              "skills": "Астрал, Ближний бой, Внимание, Экзотическое дистанционное оружие",
+              "skills": [
+                "астрал",
+                "ближний бой",
+                "внимание",
+                "экзотическое оружие"
+              ],
               "powers": "Способности: Астральная форма, Изменение движения, Материализация, Охрана, Поиск, Разум, Сковывание. Дополнительные (1 за каждые 3 полных очка Мощи): Замешательство, Сокрытие, Стихийная атака (химикаты), Страх, Хватка (земля). Атаки: Стихийная атака [СУ (Мо) ф, АТК (Мо × 2)/(Мо × 2) − 2/(Мо × 2) − 8/(Мо × 2) − 10/—]",
               "weak": "Аллергия (электричество, тяжёлая)",
               "move": "5/10/+1"
@@ -6847,7 +6903,13 @@
               "logic": 0,
               "intuition": 1,
               "charisma": 0,
-              "skills": "Астрал, Атлетика, Ближний бой, Внимание, Экзотическое дистанционное оружие",
+              "skills": [
+                "астрал",
+                "атлетика",
+                "ближний бой",
+                "внимание",
+                "экзотическое оружие"
+              ],
               "powers": "Способности: Астральная форма, Замешательство, Материализация, Разум, Сглаз, Стихийная атака (огонь), Хватка (огонь), Энергетическая аура (огонь). Дополнительные (1 за каждые 3 полных очка Мощи): Охрана, Поиск, Страх, Ядовитое дыхание. Атаки: Стихийная атака [СУ (Мо) ф, АТК (Мо × 2)/(Мо × 2) − 2/(Мо × 2) − 8/(Мо × 2) − 10/—]; Хватка [СУ (Мо + 2) о + Утомление I, АТК (Мо × 2) + 1/—/—/—/—]",
               "weak": "Аллергия (холод, тяжёлая), Слабость (огнетушители)",
               "move": "5/10/+5"
@@ -6864,8 +6926,14 @@
               "logic": 0,
               "intuition": 0,
               "charisma": 0,
-              "skills": "Астрал, Атлетика (Плавание), Ближний бой, Внимание, Экзотическое дистанционное оружие",
-              "powers": "Способности: Астральная форма, Замешательство, Изменение движения, Материализация, Поиск, Разум, Сокрытие, Хватка (вода). Дополнительные (1 за каждые 3 полных очка Мощи): Охрана, Сглаз, Сковывание, Стихийная атака (холод), Управление погодой, Энергетическая аура (холод). Атаки: Стихийная атака [СУ (Мо) ф, АТК (Мо × 2)/(Мо × 2) − 2/(Мо × 2) − 8/(Мо × 2) − 10/—]; Хватка [СУ (Мо + 2) о + Утомление I, АТК (Мо × 2) + 1/—/—/—/—]",
+              "skills": [
+                "астрал",
+                "атлетика",
+                "ближний бой",
+                "внимание",
+                "экзотическое оружие"
+              ],
+              "powers": "Атлетика (Плавание). Способности: Астральная форма, Замешательство, Изменение движения, Материализация, Поиск, Разум, Сокрытие, Хватка (вода). Дополнительные (1 за каждые 3 полных очка Мощи): Охрана, Сглаз, Сковывание, Стихийная атака (холод), Управление погодой, Энергетическая аура (холод). Атаки: Стихийная атака [СУ (Мо) ф, АТК (Мо × 2)/(Мо × 2) − 2/(Мо × 2) − 8/(Мо × 2) − 10/—]; Хватка [СУ (Мо + 2) о + Утомление I, АТК (Мо × 2) + 1/—/—/—/—]",
               "weak": "Аллергия (огонь, тяжёлая)",
               "move": "5/10/+2"
             }
@@ -6881,7 +6949,11 @@
               "logic": 0,
               "intuition": 0,
               "charisma": 0,
-              "skills": "Астрал, Ближний бой, Внимание",
+              "skills": [
+                "астрал",
+                "ближний бой",
+                "внимание"
+              ],
               "powers": "Способности: Астральная форма, Изменение движения, Материализация, Обострённые чувства (обоняние, слух, сумеречное зрение), Разум, Страх, Управление животными. Дополнительные (1 за каждые 3 полных очка Мощи): Естественное оружие (когти/укус), Замешательство, Охрана, Поиск, Сокрытие, Яд, Ядовитое дыхание. Атаки: Когти/укус [СУ (Мо / 2) ф, АТК (Мо × 2)/—/—/—/—]",
               "weak": "Аллергия (серебро, тяжёлая)",
               "move": "5/10/+3"
@@ -6898,7 +6970,12 @@
               "logic": 1,
               "intuition": 0,
               "charisma": 0,
-              "skills": "Астрал, Ближний бой, Внимание, Колдовство",
+              "skills": [
+                "астрал",
+                "ближний бой",
+                "внимание",
+                "колдовство"
+              ],
               "powers": "Способности: Астральная форма, Внушение, Замешательство, Материализация, Обострённые чувства (сумеречное зрение, инфразрение), Охрана, Поиск, Разум, Сглаз, Сокрытие. Дополнительные (1 за каждые 3 полных очка Мощи): Врождённое заклинание (любое известное призывателю; можно добавить только один эффект заклинания), Изменение движения, Психокинез, Страх. Атаки: Кулаки [СУ (Мо / 2) о, АТК (Мо × 2)/—/—/—/—]",
               "weak": "Аллергия (металл с магнитными свойствами, тяжёлая)",
               "move": "5/10/+1"
@@ -7747,7 +7824,9 @@
           {
             "key": "skills",
             "label": "Навыки",
-            "kind": "text"
+            "kind": "choice",
+            "from": "skills",
+            "many": true
           },
           {
             "key": "powers",
@@ -7764,7 +7843,10 @@
               "dp": 2,
               "firewall": 1,
               "init": 2,
-              "skills": "Взлом, Электроника",
+              "skills": [
+                "взлом",
+                "электроника"
+              ],
               "powers": "Подавление, Фантом"
             }
           },
@@ -7776,7 +7858,10 @@
               "dp": 4,
               "firewall": 1,
               "init": 4,
-              "skills": "Взлом, Электроника",
+              "skills": [
+                "взлом",
+                "электроника"
+              ],
               "powers": "Водяной знак, Камуфляж"
             }
           },
@@ -7788,7 +7873,10 @@
               "dp": 1,
               "firewall": 2,
               "init": 1,
-              "skills": "Взлом, Электроника",
+              "skills": [
+                "взлом",
+                "электроника"
+              ],
               "powers": "Ловушка, Электрошторм"
             }
           },
@@ -7800,7 +7888,10 @@
               "dp": 1,
               "firewall": 2,
               "init": 1,
-              "skills": "Взлом, Электроника",
+              "skills": [
+                "взлом",
+                "электроника"
+              ],
               "powers": "Куки, Хеш"
             }
           },
@@ -7812,7 +7903,10 @@
               "dp": 3,
               "firewall": 2,
               "init": 3,
-              "skills": "Инженерное дело, Электроника",
+              "skills": [
+                "инженерное дело",
+                "электроника"
+              ],
               "powers": "Вмешательство, Диагностика, Стабильность"
             }
           }
@@ -10625,7 +10719,8 @@
           {
             "key": "magic",
             "label": "Магия",
-            "kind": "number"
+            "kind": "number",
+            "default": 0
           },
           {
             "key": "extra",
@@ -10668,9 +10763,28 @@
             "kind": "number"
           },
           {
-            "key": "attr_aug",
-            "label": "Характеристики с аугментациями",
-            "kind": "text"
+            "key": "body_aug_add",
+            "label": "Тело: прибавка аугментаций",
+            "kind": "number",
+            "default": 0
+          },
+          {
+            "key": "agility_aug_add",
+            "label": "Проворство: прибавка аугментаций",
+            "kind": "number",
+            "default": 0
+          },
+          {
+            "key": "reaction_aug_add",
+            "label": "Реакция: прибавка аугментаций",
+            "kind": "number",
+            "default": 0
+          },
+          {
+            "key": "strength_aug_add",
+            "label": "Сила: прибавка аугментаций",
+            "kind": "number",
+            "default": 0
           },
           {
             "key": "sk_биотехнологии",
@@ -10720,7 +10834,8 @@
           {
             "key": "resonance",
             "label": "Резонанс",
-            "kind": "number"
+            "kind": "number",
+            "default": 0
           },
           {
             "key": "sk_многозадачность",
@@ -10834,7 +10949,6 @@
               "init_base": 4,
               "init_dice": 1,
               "defense": 7,
-              "attr_aug": "{\"body\":3}",
               "actions": "С1, П2",
               "cm": 10,
               "gear": "армированная одежда (+2), коммуникатор (РУ 2)",
@@ -10846,7 +10960,8 @@
               "sk_биотехнологии": 1,
               "sk_ближний_бой": 4,
               "sk_внимание": 3,
-              "sk_стрельба": 2
+              "sk_стрельба": 2,
+              "body_aug_add": 1
             }
           },
           {
@@ -10931,7 +11046,6 @@
               "init_base": 9,
               "init_dice": 1,
               "defense": 5,
-              "attr_aug": "{\"reaction\":5}",
               "actions": "С1, П2",
               "cm": 13,
               "gear": "бронежилет (+3), коммуникатор (РУ 4), РПУ «Горизонт Оверсир» (РУ 4, ВМ/СЭ 5/4), дрон «Крайслер-Ниссан Персьют V», дрон «КТМ-Ниссан ротодрон» (АК-97), 2 × дрон «Горизонт Флаин Ай», мультистоп «ДжМК Бульдог»",
@@ -10949,7 +11063,8 @@
               "sk_скрытность": 2,
               "sk_стрельба": 3,
               "sk_убеждение": 1,
-              "sk_электроника": 3
+              "sk_электроника": 3,
+              "reaction_aug_add": 1
             }
           },
           {
@@ -11038,7 +11153,6 @@
               "init_base": 8,
               "init_dice": 2,
               "defense": 6,
-              "attr_aug": "{\"agility\":6,\"reaction\":5}",
               "actions": "С1, П3",
               "cm": 14,
               "skills_text": "Ближний бой: (6) (Клинки +2); Ориентирование: (Выслеживание +2)",
@@ -11052,7 +11166,9 @@
               "sk_ближний_бой": 5,
               "sk_внимание": 4,
               "sk_ориентирование": 2,
-              "sk_скрытность": 5
+              "sk_скрытность": 5,
+              "agility_aug_add": 1,
+              "reaction_aug_add": 1
             }
           },
           {
@@ -11114,7 +11230,6 @@
               "init_dice": 2,
               "defense": 14,
               "defense_aug": 16,
-              "attr_aug": "{\"agility\":4,\"reaction\":5,\"strength\":4}",
               "actions": "С1, П3",
               "cm": 15,
               "skills_text": "Ближний бой: (Дробящее оружие +2); Ориентирование: (Выслеживание +2); Убеждение: (Запугивание +2)",
@@ -11133,7 +11248,10 @@
               "sk_скрытность": 4,
               "sk_стрельба": 6,
               "sk_убеждение": 3,
-              "sk_электроника": 2
+              "sk_электроника": 2,
+              "agility_aug_add": 1,
+              "reaction_aug_add": 1,
+              "strength_aug_add": 1
             }
           },
           {
@@ -11153,7 +11271,6 @@
               "init_base": 11,
               "init_dice": 3,
               "defense": 14,
-              "attr_aug": "{\"agility\":6,\"reaction\":7,\"strength\":6}",
               "actions": "С1, П4",
               "cm": 11,
               "skills_text": "Атлетика: (Метание +2); Биотехнологии: (Первая помощь +2); Убеждение: (Запугивание +2)",
@@ -11170,7 +11287,10 @@
               "sk_скрытность": 3,
               "sk_стрельба": 5,
               "sk_убеждение": 4,
-              "sk_электроника": 2
+              "sk_электроника": 2,
+              "agility_aug_add": 2,
+              "reaction_aug_add": 2,
+              "strength_aug_add": 2
             }
           },
           {
@@ -11232,7 +11352,6 @@
               "init_base": 12,
               "init_dice": 3,
               "defense": 16,
-              "attr_aug": "{\"agility\":8,\"reaction\":7,\"strength\":7}",
               "actions": "С1, П4",
               "cm": 11,
               "skills_text": "Атлетика: (Метание +2); Ближний бой: (Клинки +2)",
@@ -11250,7 +11369,10 @@
               "sk_скрытность": 5,
               "sk_стрельба": 7,
               "sk_убеждение": 4,
-              "sk_электроника": 3
+              "sk_электроника": 3,
+              "agility_aug_add": 3,
+              "reaction_aug_add": 2,
+              "strength_aug_add": 3
             }
           },
           {
@@ -11271,7 +11393,6 @@
               "init_base": 13,
               "init_dice": 4,
               "defense": 10,
-              "attr_aug": "{\"agility\":7,\"reaction\":8}",
               "actions": "С1, П5",
               "cm": 20,
               "skills_text": "Стрельба: (Пистолет-пулемёт +2)",
@@ -11291,7 +11412,9 @@
               "sk_скрытность": 6,
               "sk_стрельба": 7,
               "sk_убеждение": 5,
-              "sk_электроника": 3
+              "sk_электроника": 3,
+              "agility_aug_add": 2,
+              "reaction_aug_add": 3
             }
           },
           {
@@ -11311,7 +11434,6 @@
               "init_base": 15,
               "init_dice": 4,
               "defense": 15,
-              "attr_aug": "{\"agility\":8,\"reaction\":9,\"strength\":8}",
               "actions": "С1, П5",
               "cm": 11,
               "skills_text": "Ориентирование: (Выслеживание +2); Убеждение: (Запугивание +2)",
@@ -11330,7 +11452,10 @@
               "sk_скрытность": 7,
               "sk_стрельба": 8,
               "sk_убеждение": 4,
-              "sk_электроника": 3
+              "sk_электроника": 3,
+              "agility_aug_add": 3,
+              "reaction_aug_add": 3,
+              "strength_aug_add": 3
             }
           },
           {
@@ -11350,7 +11475,6 @@
               "init_base": 16,
               "init_dice": 3,
               "defense": 11,
-              "attr_aug": "{\"reaction\":10}",
               "actions": "С1, П4",
               "cm": 19,
               "skills_text": "Убеждение: (Запугивание +2)",
@@ -11370,7 +11494,8 @@
               "sk_скрытность": 5,
               "sk_стрельба": 6,
               "sk_убеждение": 3,
-              "sk_электроника": 8
+              "sk_электроника": 8,
+              "reaction_aug_add": 4
             }
           },
           {
@@ -11390,7 +11515,6 @@
               "init_base": 14,
               "init_dice": 3,
               "defense": 8,
-              "attr_aug": "{\"agility\":11,\"reaction\":8,\"strength\":7}",
               "actions": "С1, П4",
               "cm": 11,
               "skills_text": "Атлетика: (8) (Метание +2); Биотехнологии: (Первая помощь +2); Ближний бой: (8) (Клинки +2); Ориентирование: (Выслеживание +2); Стрельба: (10); Убеждение: (Запугивание +2)",
@@ -11409,7 +11533,10 @@
               "sk_скрытность": 7,
               "sk_стрельба": 9,
               "sk_убеждение": 7,
-              "sk_электроника": 4
+              "sk_электроника": 4,
+              "agility_aug_add": 4,
+              "reaction_aug_add": 2,
+              "strength_aug_add": 2
             }
           },
           {
@@ -11429,7 +11556,6 @@
               "init_base": 15,
               "init_dice": 2,
               "defense": 9,
-              "attr_aug": "{\"body\":6,\"reaction\":9}",
               "actions": "С1, П3",
               "cm": 20,
               "skills_text": "Ориентирование: (Выслеживание +2); Пилотирование: (Воздушный транспорт +2); Убеждение: (Запугивание +2)",
@@ -11449,7 +11575,9 @@
               "sk_скрытность": 7,
               "sk_стрельба": 7,
               "sk_убеждение": 4,
-              "sk_электроника": 9
+              "sk_электроника": 9,
+              "body_aug_add": 2,
+              "reaction_aug_add": 3
             }
           },
           {
@@ -11511,7 +11639,6 @@
               "init_base": 15,
               "init_dice": 5,
               "defense": 16,
-              "attr_aug": "{\"body\":7,\"agility\":10,\"reaction\":9,\"strength\":9}",
               "actions": "С1, П6",
               "cm": 11,
               "skills_text": "Атлетика: (Метание +2); Биотехнологии: (Первая помощь +2); Ближний бой: (Клинки +2); Ориентирование: (Выслеживание +2); Стрельба: (Винтовка +2); Убеждение: (Запугивание +2)",
@@ -11531,7 +11658,11 @@
               "sk_скрытность": 8,
               "sk_стрельба": 8,
               "sk_убеждение": 6,
-              "sk_электроника": 4
+              "sk_электроника": 4,
+              "body_aug_add": 2,
+              "agility_aug_add": 4,
+              "reaction_aug_add": 4,
+              "strength_aug_add": 4
             }
           }
         ]
@@ -20379,785 +20510,6 @@
             }
           },
           {
-            "type": "branch",
-            "if": {
-              "expr": "@kind == \"воздуха\""
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.body"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + -2)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.agility"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 3)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.reaction"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 4)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.strength"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + -3)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.willpower"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.logic"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.intuition"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.charisma"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.астрал.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.атлетика.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.ближний_бой.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.внимание.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.экзотическое_оружие.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "orElse",
-            "if": {
-              "expr": "@kind == \"земли\""
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.body"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 4)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.agility"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + -2)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.reaction"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + -1)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.strength"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 4)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.willpower"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.logic"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + -1)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.intuition"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.charisma"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.астрал.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.ближний_бой.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.внимание.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.экзотическое_оружие.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "orElse",
-            "if": {
-              "expr": "@kind == \"огня\""
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.body"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 1)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.agility"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 2)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.reaction"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 3)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.strength"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + -2)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.willpower"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.logic"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.intuition"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 1)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.charisma"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.астрал.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.атлетика.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.ближний_бой.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.внимание.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.экзотическое_оружие.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "orElse",
-            "if": {
-              "expr": "@kind == \"воды\""
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.body"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.agility"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 1)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.reaction"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 2)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.strength"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.willpower"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.logic"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.intuition"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.charisma"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.астрал.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.атлетика.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.ближний_бой.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.внимание.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.экзотическое_оружие.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "orElse",
-            "if": {
-              "expr": "@kind == \"зверей\""
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.body"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 2)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.agility"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 1)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.reaction"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.strength"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 2)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.willpower"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.logic"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.intuition"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.charisma"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.астрал.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.ближний_бой.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.внимание.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "orElse",
-            "if": {
-              "expr": "@kind == \"предков\""
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.body"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 1)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.agility"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.reaction"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 2)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.strength"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + -2)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.willpower"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.logic"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 1)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.intuition"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.charisma"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @force + 0)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.астрал.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.ближний_бой.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.внимание.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.колдовство.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@force"
-            }
-          },
-          {
-            "type": "end"
-          },
-          {
             "type": "apply",
             "target": {
               "expr": "@действующий.spirits_force"
@@ -21956,76 +21308,6 @@
             "type": "apply",
             "target": {
               "expr": "@цель.resonance"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@level"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.willpower"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @level)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.logic"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @level)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.intuition"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @level)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.charisma"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "большее из(1, @level)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.взлом.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@level"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.электроника.rank"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@level"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "expr": "@цель.skills.инженерное_дело.rank"
             },
             "direction": "set",
             "value": {
@@ -24417,10 +23699,10 @@
       "defense_action"
     ],
     "sheets": {
-      "runner": {
-        "label": "Раннер",
+      "person": {
+        "label": "Метачеловек",
         "icon": "🕶",
-        "hint": "Лист игрока: все блоки.",
+        "hint": "Правила метачеловека: Сущность съедает Магию и Резонанс, режим Матрицы, поддержание, астрал, живой аватар.",
         "modifiers": [
           {
             "kind": "value",
@@ -24436,14 +23718,6 @@
             "op": "add",
             "value": {
               "expr": "0 - @essence_loss"
-            }
-          },
-          {
-            "kind": "value",
-            "target": "unarmed_physical",
-            "op": "set",
-            "value": {
-              "expr": "@metatype.unarmed_physical"
             }
           },
           {
@@ -24568,7 +23842,211 @@
           }
         ]
       },
+      "runner": {
+        "extends": "person",
+        "label": "Раннер",
+        "icon": "🕶",
+        "hint": "Лист игрока: все блоки."
+      },
+      "npc": {
+        "label": "По заготовке",
+        "icon": "👥",
+        "hint": "Лист по заготовке книги: характеристики, Магия, Резонанс, Сущность и кубики инициативы берутся из выбранной заготовки (стр. 204–221).",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "body",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@npc_template.body"
+            },
+            "if": {
+              "expr": "не пусто(@npc_template)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "agility",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@npc_template.agility"
+            },
+            "if": {
+              "expr": "не пусто(@npc_template)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "reaction",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@npc_template.reaction"
+            },
+            "if": {
+              "expr": "не пусто(@npc_template)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "strength",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@npc_template.strength"
+            },
+            "if": {
+              "expr": "не пусто(@npc_template)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "willpower",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@npc_template.willpower"
+            },
+            "if": {
+              "expr": "не пусто(@npc_template)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "logic",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@npc_template.logic"
+            },
+            "if": {
+              "expr": "не пусто(@npc_template)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "intuition",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@npc_template.intuition"
+            },
+            "if": {
+              "expr": "не пусто(@npc_template)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "charisma",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@npc_template.charisma"
+            },
+            "if": {
+              "expr": "не пусто(@npc_template)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "magic",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@npc_template.magic"
+            },
+            "if": {
+              "expr": "не пусто(@npc_template)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "resonance",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "@npc_template.resonance"
+            },
+            "if": {
+              "expr": "не пусто(@npc_template)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "init_dice",
+            "op": "set",
+            "value": {
+              "expr": "@npc_template.init_dice"
+            },
+            "if": {
+              "expr": "не пусто(@npc_template)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "essence",
+            "op": "set",
+            "value": {
+              "expr": "@npc_template.essence"
+            },
+            "if": {
+              "expr": "не пусто(@npc_template)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "body",
+            "op": "add",
+            "stage": "аугментация",
+            "value": {
+              "expr": "@npc_template.body_aug_add"
+            },
+            "if": {
+              "expr": "не пусто(@npc_template)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "agility",
+            "op": "add",
+            "stage": "аугментация",
+            "value": {
+              "expr": "@npc_template.agility_aug_add"
+            },
+            "if": {
+              "expr": "не пусто(@npc_template)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "reaction",
+            "op": "add",
+            "stage": "аугментация",
+            "value": {
+              "expr": "@npc_template.reaction_aug_add"
+            },
+            "if": {
+              "expr": "не пусто(@npc_template)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "strength",
+            "op": "add",
+            "stage": "аугментация",
+            "value": {
+              "expr": "@npc_template.strength_aug_add"
+            },
+            "if": {
+              "expr": "не пусто(@npc_template)"
+            }
+          }
+        ]
+      },
       "grunt": {
+        "extends": "npc",
         "label": "Пешка",
         "icon": "👥",
         "hint": "Пешка из отряда (стр. 203): одна шкала на оба вида урона, 8 + ⌈больше из Воли и Тела / 2⌉, штраф за каждые 2 ячейки.",
@@ -24616,6 +24094,7 @@
         ]
       },
       "opponent": {
+        "extends": "npc",
         "label": "Противник",
         "icon": "👤",
         "hint": "Лист противника: характеристики, навыки, защита, счётчики.",
@@ -24629,10 +24108,10 @@
         ],
         "modifiers": []
       },
-      "host": {
-        "label": "Сервер",
+      "matrix_host": {
+        "label": "Узел Матрицы",
         "icon": "🏢",
-        "hint": "Рейтинг R и четыре характеристики R, R+1, R+2, R+3 в порядке ведущего (стр. 185).",
+        "hint": "Устройство Матрицы, рейтинг которого задан рейтингом сервера.",
         "modifiers": [
           {
             "kind": "value",
@@ -24653,28 +24132,21 @@
           }
         ]
       },
+      "host": {
+        "extends": "matrix_host",
+        "label": "Сервер",
+        "icon": "🏢",
+        "hint": "Рейтинг R и четыре характеристики R, R+1, R+2, R+3 в порядке ведущего (стр. 185)."
+      },
       "ic": {
+        "extends": "matrix_host",
         "label": "Лёд",
         "icon": "🧊",
         "hint": "Копия характеристик сервера; набор и счётчик — рейтинг × 2, инициатива ВМ × 2 + 3к6 (стр. 186).",
+        "grants": [
+          "ic_attack"
+        ],
         "modifiers": [
-          {
-            "kind": "value",
-            "target": "is_device",
-            "op": "set",
-            "value": {
-              "expr": "да"
-            }
-          },
-          {
-            "kind": "value",
-            "target": "dev_rating",
-            "op": "set",
-            "value": {
-              "expr": "@host_rating"
-            },
-            "stage": "основа"
-          },
           {
             "kind": "value",
             "target": "matrix_cm",
@@ -24699,15 +24171,12 @@
               "expr": "3"
             }
           }
-        ],
-        "grants": [
-          "ic_attack"
         ]
       },
       "spirit": {
         "label": "Дух",
         "icon": "👻",
-        "hint": "Дух: характеристики = Мощь + смещение вида (пишет «Призыв»); счётчик (Мощь/2) + 8, инициатива 2к6, от обычного оружия защита + Мощь (стр. 147–148).",
+        "hint": "Дух: характеристики = Мощь + смещение вида, навыки вида = Мощь; счётчик (Мощь/2) + 8, инициатива 2к6, от обычного оружия защита + Мощь (стр. 147–148).",
         "modifiers": [
           {
             "kind": "value",
@@ -24751,66 +24220,110 @@
           },
           {
             "kind": "value",
-            "target": "attr_limits.body.bonus",
-            "op": "add",
+            "target": "body",
+            "op": "set",
+            "stage": "основа",
             "value": {
-              "expr": "20"
+              "expr": "большее из(1, @spirit_force + @spirit_kind.body)"
+            },
+            "if": {
+              "expr": "не пусто(@spirit_kind)"
             }
           },
           {
             "kind": "value",
-            "target": "attr_limits.agility.bonus",
-            "op": "add",
+            "target": "agility",
+            "op": "set",
+            "stage": "основа",
             "value": {
-              "expr": "20"
+              "expr": "большее из(1, @spirit_force + @spirit_kind.agility)"
+            },
+            "if": {
+              "expr": "не пусто(@spirit_kind)"
             }
           },
           {
             "kind": "value",
-            "target": "attr_limits.reaction.bonus",
-            "op": "add",
+            "target": "reaction",
+            "op": "set",
+            "stage": "основа",
             "value": {
-              "expr": "20"
+              "expr": "большее из(1, @spirit_force + @spirit_kind.reaction)"
+            },
+            "if": {
+              "expr": "не пусто(@spirit_kind)"
             }
           },
           {
             "kind": "value",
-            "target": "attr_limits.strength.bonus",
-            "op": "add",
+            "target": "strength",
+            "op": "set",
+            "stage": "основа",
             "value": {
-              "expr": "20"
+              "expr": "большее из(1, @spirit_force + @spirit_kind.strength)"
+            },
+            "if": {
+              "expr": "не пусто(@spirit_kind)"
             }
           },
           {
             "kind": "value",
-            "target": "attr_limits.willpower.bonus",
-            "op": "add",
+            "target": "willpower",
+            "op": "set",
+            "stage": "основа",
             "value": {
-              "expr": "20"
+              "expr": "большее из(1, @spirit_force + @spirit_kind.willpower)"
+            },
+            "if": {
+              "expr": "не пусто(@spirit_kind)"
             }
           },
           {
             "kind": "value",
-            "target": "attr_limits.logic.bonus",
-            "op": "add",
+            "target": "logic",
+            "op": "set",
+            "stage": "основа",
             "value": {
-              "expr": "20"
+              "expr": "большее из(1, @spirit_force + @spirit_kind.logic)"
+            },
+            "if": {
+              "expr": "не пусто(@spirit_kind)"
             }
           },
           {
             "kind": "value",
-            "target": "attr_limits.intuition.bonus",
-            "op": "add",
+            "target": "intuition",
+            "op": "set",
+            "stage": "основа",
             "value": {
-              "expr": "20"
+              "expr": "большее из(1, @spirit_force + @spirit_kind.intuition)"
+            },
+            "if": {
+              "expr": "не пусто(@spirit_kind)"
             }
           },
           {
             "kind": "value",
-            "target": "attr_limits.charisma.bonus",
-            "op": "add",
+            "target": "charisma",
+            "op": "set",
+            "stage": "основа",
             "value": {
-              "expr": "20"
+              "expr": "большее из(1, @spirit_force + @spirit_kind.charisma)"
+            },
+            "if": {
+              "expr": "не пусто(@spirit_kind)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "cell:skills.*.rank",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "меньшее из(10, @spirit_force)"
+            },
+            "if": {
+              "expr": "если(пусто(@spirit_kind), нет, есть(@spirit_kind.skills, @строка))"
             }
           }
         ]
@@ -24818,7 +24331,7 @@
       "sprite": {
         "label": "Спрайт",
         "icon": "🧚",
-        "hint": "Спрайт: характеристики Матрицы = уровень + смещение вида, психические и навыки = уровень (пишет «Компилировать»), инициатива (У × 2) + смещение + 4к6 (стр. 193).",
+        "hint": "Спрайт: характеристики Матрицы = уровень + смещение вида, психические и навыки = уровень, инициатива (У × 2) + смещение + 4к6 (стр. 193).",
         "modifiers": [
           {
             "kind": "value",
@@ -24883,34 +24396,86 @@
           },
           {
             "kind": "value",
-            "target": "attr_limits.willpower.bonus",
-            "op": "add",
+            "target": "willpower",
+            "op": "set",
+            "stage": "основа",
             "value": {
-              "expr": "20"
+              "expr": "большее из(1, @sprite_level)"
+            },
+            "if": {
+              "expr": "не пусто(@sprite_kind)"
             }
           },
           {
             "kind": "value",
-            "target": "attr_limits.logic.bonus",
-            "op": "add",
+            "target": "logic",
+            "op": "set",
+            "stage": "основа",
             "value": {
-              "expr": "20"
+              "expr": "большее из(1, @sprite_level)"
+            },
+            "if": {
+              "expr": "не пусто(@sprite_kind)"
             }
           },
           {
             "kind": "value",
-            "target": "attr_limits.intuition.bonus",
-            "op": "add",
+            "target": "intuition",
+            "op": "set",
+            "stage": "основа",
             "value": {
-              "expr": "20"
+              "expr": "большее из(1, @sprite_level)"
+            },
+            "if": {
+              "expr": "не пусто(@sprite_kind)"
             }
           },
           {
             "kind": "value",
-            "target": "attr_limits.charisma.bonus",
-            "op": "add",
+            "target": "charisma",
+            "op": "set",
+            "stage": "основа",
             "value": {
-              "expr": "20"
+              "expr": "большее из(1, @sprite_level)"
+            },
+            "if": {
+              "expr": "не пусто(@sprite_kind)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "skills.взлом.rank",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "меньшее из(10, @sprite_level)"
+            },
+            "if": {
+              "expr": "не пусто(@sprite_kind)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "skills.электроника.rank",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "меньшее из(10, @sprite_level)"
+            },
+            "if": {
+              "expr": "не пусто(@sprite_kind)"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "skills.инженерное_дело.rank",
+            "op": "set",
+            "stage": "основа",
+            "value": {
+              "expr": "меньшее из(10, @sprite_level)"
+            },
+            "if": {
+              "expr": "не пусто(@sprite_kind)"
             }
           }
         ]
@@ -24986,6 +24551,17 @@
             "tags": [
               "атака"
             ]
+          },
+          {
+            "kind": "value",
+            "target": "soak",
+            "op": "set",
+            "value": {
+              "expr": "@veh_body"
+            },
+            "if": {
+              "expr": "@veh_body >= 1"
+            }
           }
         ],
         "grants": [
@@ -27699,14 +27275,7 @@
       "of": "opponent",
       "name": "Головорез из «Хуманиса» (ПР 0)",
       "values": {
-        "body": 2,
-        "agility": 2,
-        "reaction": 2,
-        "strength": 2,
-        "willpower": 2,
-        "logic": 2,
-        "intuition": 2,
-        "charisma": 1,
+        "npc_template": "golovorez_iz_humanisa",
         "skills.атлетика.rank": 1,
         "skills.ближний_бой.rank": 3,
         "skills.убеждение.rank": 1
@@ -27720,14 +27289,7 @@
       "of": "grunt",
       "name": "Член мотобанды «Пятиглазые» №1",
       "values": {
-        "body": 2,
-        "agility": 2,
-        "reaction": 2,
-        "strength": 2,
-        "willpower": 2,
-        "logic": 2,
-        "intuition": 2,
-        "charisma": 1,
+        "npc_template": "chlen_motobandy_pyatiglazye",
         "skills.атлетика.rank": 2,
         "skills.ближний_бой.rank": 3,
         "skills.внимание.rank": 1,
@@ -27759,14 +27321,7 @@
       "of": "grunt",
       "name": "Член мотобанды «Пятиглазые» №2",
       "values": {
-        "body": 2,
-        "agility": 2,
-        "reaction": 2,
-        "strength": 2,
-        "willpower": 2,
-        "logic": 2,
-        "intuition": 2,
-        "charisma": 1,
+        "npc_template": "chlen_motobandy_pyatiglazye",
         "skills.атлетика.rank": 2,
         "skills.ближний_бой.rank": 3,
         "skills.внимание.rank": 1,
@@ -27789,14 +27344,7 @@
       "name": "Громила «Сынов Саурона» (ПР 2)",
       "values": {
         "metatype": "орк",
-        "body": 3,
-        "agility": 2,
-        "reaction": 2,
-        "strength": 4,
-        "willpower": 2,
-        "logic": 1,
-        "intuition": 2,
-        "charisma": 1,
+        "npc_template": "gromila_synov_saurona",
         "skills.атлетика.rank": 2,
         "skills.ближний_бой.rank": 4,
         "skills.внимание.rank": 3,
@@ -27816,14 +27364,7 @@
       "of": "opponent",
       "name": "Патрульный «Одинокой звезды» (ПР 3)",
       "values": {
-        "body": 3,
-        "agility": 3,
-        "reaction": 3,
-        "strength": 3,
-        "willpower": 3,
-        "logic": 2,
-        "intuition": 3,
-        "charisma": 2,
+        "npc_template": "patrulnyy_odinokoy_zvezdy",
         "skills.атлетика.rank": 1,
         "skills.биотехнологии.rank": 1,
         "skills.ближний_бой.rank": 4,
@@ -27853,14 +27394,7 @@
       "of": "opponent",
       "name": "Солдат мафии (ПР 4)",
       "values": {
-        "body": 3,
-        "agility": 2,
-        "reaction": 2,
-        "strength": 3,
-        "willpower": 2,
-        "logic": 1,
-        "intuition": 2,
-        "charisma": 1,
+        "npc_template": "soldat_mafii",
         "skills.атлетика.rank": 3,
         "skills.биотехнологии.rank": 2,
         "skills.ближний_бой.rank": 5,

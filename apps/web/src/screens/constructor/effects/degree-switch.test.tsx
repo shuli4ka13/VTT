@@ -40,7 +40,14 @@ describe('«Если» по ступеням — switch', () => {
   });
 
   it('switch по входу-выбору: «Призвать духа» — руки по видам духов', () => {
-    open('shadowrun6', 'summon_spirit');
+    open('shadowrun6', 'summon_spirit', system => {
+      const steps = system.effects.summon_spirit!.steps!;
+      const kinds = ['воздуха', 'земли', 'предков'];
+      steps.splice(10, 0, ...kinds.flatMap((kind, i) => [
+        { type: i === 0 ? 'branch' : 'orElse', if: { expr: `@kind == "${kind}"` } },
+        { type: 'apply', target: { expr: '@цель.services' }, direction: 'set', value: { expr: '1' } },
+      ] as never[]), { type: 'end' } as never);
+    });
     const spirits = switches().map(text).join(' | ');
     expect(spirits).toContain('воздуха:');
     expect(spirits).toContain('предков:');
