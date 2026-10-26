@@ -21,6 +21,7 @@ export interface Pass {
 
   desk?: Pass;
   group?: Pass;
+  round?: () => number | null;
   only?: Scope;
   compendium?: Compendium;
 }
@@ -31,6 +32,7 @@ export interface PassOptions {
   shared?: readonly Sheet[] | null;
   only?: Scope;
   combat?: () => boolean;
+  round?: () => number | null;
   peer?: (id: string) => Pass | null;
 }
 
@@ -66,6 +68,7 @@ export function newPass(system: System, sheet: Sheet, options: PassOptions = {})
     resolve: () => undefined,
     ...(options.only ? { only: options.only } : {}),
     ...(options.compendium ? { compendium: options.compendium } : {}),
+    ...(options.round ? { round: options.round } : {}),
   };
 
   const deskSheet = options.shared?.find(s => s.id === DESK_ID);

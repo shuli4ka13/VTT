@@ -7,7 +7,7 @@ export class Views {
   private sharedFor: { sheets: readonly Sheet[]; shared: Sheet[] } | null = null;
   private readonly cache = new WeakMap<Sheet, { shared: Sheet[]; pass: Pass }>();
 
-  constructor(readonly system: System, readonly compendium: Compendium, private readonly combat?: () => boolean) {}
+  constructor(readonly system: System, readonly compendium: Compendium, private readonly combat?: () => boolean, private readonly round?: () => number | null) {}
 
   shared(sheets: readonly Sheet[]): Sheet[] {
     if (this.sharedFor?.sheets !== sheets) this.sharedFor = { sheets, shared: sharedOf(this.system, sheets) };
@@ -24,7 +24,7 @@ export class Views {
     const shared = this.shared(sheets);
     const known = this.cache.get(sheet);
     if (known && known.shared === shared) return known.pass;
-    const pass = newPass(this.system, sheet, { compendium: this.compendium, shared, peer: other => (this.sheet(sheets, other) ? this.of(sheets, other) : null), ...(this.combat ? { combat: this.combat } : {}) });
+    const pass = newPass(this.system, sheet, { compendium: this.compendium, shared, peer: other => (this.sheet(sheets, other) ? this.of(sheets, other) : null), ...(this.combat ? { combat: this.combat } : {}), ...(this.round ? { round: this.round } : {}) });
     this.cache.set(sheet, { shared, pass });
     return pass;
   }

@@ -8,7 +8,8 @@ import { stackStages, targetStages, VALUE_OPS } from './stages.ts';
 import { anyRowSays } from './tables.ts';
 import { findRecord, kindOfRecord, sheetKindOf, propsOf, working, keyOf } from '../model/owned.ts';
 import { tagsHold } from './roll-tags.ts';
-import type { System, Sheet, Compendium, Modifier, RollEdit, RollEditOp, Param, CellMark, TableRow } from '../model/types.ts';
+import type { System, Sheet, Compendium, Modifier, RollEdit, RollEditOp, Param, CellMark, TableRow, WornEffect } from '../model/types.ts';
+import { leftOf, LEFT_NAME } from '../events/durations.ts';
 import type { Pass } from './calc.ts';
 import { withRecord, hasTargetSlot, itemTarget, hasInputSlot, inputTarget, withRow, rowKeyOf } from '../model/sheet-columns.ts';
 import { cellTagOf, columnTagOf } from './cells.ts';
@@ -24,6 +25,7 @@ export interface ModifierSource {
   modifiers: Modifier[];
   params?: Param[];
   args?: Record<string, unknown>;
+  worn?: WornEffect;
 }
 
 export type SourcedModifier = Modifier & { source: ModifierSource };
@@ -125,6 +127,7 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
     sources.push({
       type: 'effect', id, label: effect.label || id, modifiers,
       ...(effect.params?.length ? { params: effect.params, args: (entry.args ?? {}) as Record<string, unknown> } : {}),
+      worn: entry,
     });
   }
 
@@ -226,9 +229,13 @@ export function editMatches(mod: SourcedModifier, tags: readonly string[], syste
 
 function resolverOf(mod: SourcedModifier, pass: Pass): (name: string) => unknown {
   const params = mod.source.params;
-  if (!params?.length) return pass.resolve;
+  const worn = mod.source.worn;
+  const left = (name: string): unknown => (worn && name === LEFT_NAME ? leftOf(worn, typeof pass.round?.() === 'number' ? { round: pass.round!()! } : null) : undefined);
+  if (!params?.length) return worn ? name => left(name) ?? pass.resolve(name) : pass.resolve;
   const args = mod.source.args ?? {};
   return name => {
+    const remaining = left(name);
+    if (remaining !== undefined && remaining !== null) return remaining;
     const param = params.find(one => one.key === name);
     if (!param) return pass.resolve(name);
     const given = args[name];

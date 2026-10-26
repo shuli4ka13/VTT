@@ -230,7 +230,7 @@ export class Run {
         this.insts.set(entry, instOf(entry, false, nth));
       }
     }
-    this.views = new Views(world.system, world.compendium, () => inCombat(this.clock));
+    this.views = new Views(world.system, world.compendium, () => inCombat(this.clock), () => this.clock?.round ?? null);
     this.limits = limitsOf(world.system);
     this.state = new State(world.sheets, this.limits.budget);
   }
