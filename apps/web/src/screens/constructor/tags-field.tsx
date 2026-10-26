@@ -12,7 +12,7 @@ const keyOf = (tag: TagValue): string => (typeof tag === 'string' ? tag : `=${ta
 const OWN = ':своя';
 const COMPUTED = ':формула';
 
-export function TagsField({ system, value, onChange, known = [], templates = [], computed = false, empty = '+ метка…' }: {
+export function TagsField({ system, value, onChange, known = [], templates = [], computed = false, empty = '+ метка…', boxed = false }: {
   system: System;
   value: readonly TagValue[] | undefined;
   onChange: (next: TagValue[]) => void;
@@ -20,6 +20,7 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
   templates?: readonly TagTemplate[];
   computed?: boolean;
   empty?: string;
+  boxed?: boolean;
 }) {
   const [typing, setTyping] = useState<'own' | 'formula' | null>(null);
   const [draft, setDraft] = useState('');
@@ -51,7 +52,7 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
   };
 
   return (
-    <div className="inline inline--tight">
+    <div className={boxed ? 'tagbox' : 'inline inline--tight'}>
       {picked.map(tag => (
         <Chip key={keyOf(tag)} active={typeof tag === 'string'} onRemove={() => drop(tag)}
           {...(typeof tag === 'string' ? {} : { title: 'метка вычисляется формулой при броске' })}>

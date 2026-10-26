@@ -118,6 +118,24 @@ describe('«бросок окончен»', () => {
   });
 });
 
+describe('«увидев кости»: заголовок и условие', () => {
+  afterEach(cleanup);
+
+  it('заголовок называет фильтр меток, а условие — выходы броска словами', () => {
+    card({ on: 'seen', notTags: ['инициатива'], tags: ['огонь'], if: { expr: '@roll.rolled > 2' }, steps: [] });
+    const text = document.body.textContent!;
+    expect(text).toContain('только с метками «огонь», кроме бросков с метками «инициатива»');
+    expect(text).toContain('сколько костей бросили');
+    expect(text).not.toContain('roll.rolled');
+  });
+
+  it('фильтры меток стоят в одном ряду, пояснения — в подсказке при наведении', () => {
+    const { view } = card({ on: 'seen', steps: [] });
+    expect(view.container.querySelectorAll('.tagbox').length).toBe(3);
+    expect(view.container.querySelector('.field__hint')).toBeNull();
+  });
+});
+
 describe('«когда»: фраза называет итог вызова словами', () => {
   afterEach(cleanup);
 

@@ -59,7 +59,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
         && t !== '+ шаг для других' && t !== '+ новый' && t !== '+ блок'
         && t !== '+ ещё одно' && t !== '+ вход' && t !== '+ итог' && t !== '+ держание' && !t.startsWith('+ в «')
         && !['+ блок', '+ метки', '+ описание для игрока', '+ занимает', '+ какие метки бывают', '+ сколько висит', '+ на основе'].includes(t));
-    expect(palette).toEqual(['+ проверка', '+ изменение', '+ вызов', '+ таблица', '+ для каждого из списка', '+ если', '+ стоп', '+ число']);
+    expect(palette).toEqual(['+ проверка', '+ изменение', '+ таблица', '+ для каждого из списка', '+ если', '+ стоп', '+ число']);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     const card = screen.getByText('1 · Проверка').closest('.step-fold, .card') as HTMLElement;
     expect(card).toBeTruthy();
@@ -607,7 +607,7 @@ describe('список слева: «ничего не делает» знает
 describe('одно правило «шаг для других»', () => {
   afterEach(cleanup);
 
-  it('подпись в библиотеке совпадает с палитрой шагов: D&D — «Урон», «Лечение», «Бросок атаки», «Спасбросок», «Повторный спасбросок», «Новый ход», «Костей с учётом ячейки»', () => {
+  it('все «шаги для других» из библиотеки есть в выборе «+ эффект», висящих и самого эффекта там нет: D&D — «Урон», «Лечение», «Бросок атаки», «Спасбросок», «Повторный спасбросок», «Новый ход», «Костей с учётом ячейки»', () => {
     const world = SAMPLE_WORLDS.find(one => one.system.name === 'D&D 5e')!;
     const strike = Object.entries(world.system.effects).find(([, effect]) => effect.label === 'Атака')![0];
     useWorld.setState(state => ({ ...state, system: world.system, compendium: world.compendium, activeEffectId: strike }));
@@ -615,8 +615,12 @@ describe('одно правило «шаг для других»', () => {
     const listed = [...document.querySelectorAll('.list__item')]
       .filter(item => item.textContent?.includes('шаг для других'))
       .map(item => item.querySelector('.list__name')?.textContent).sort();
-    const palette = [...document.querySelectorAll('.bricks__row:not(.bricks__row--plain) button')].map(button => button.textContent).sort();
-    expect(palette).toEqual(['Бросок атаки', 'Костей с учётом ячейки', 'Лечение', 'Новый ход', 'Повторный спасбросок', 'Спасбросок', 'Урон']);
-    expect(listed).toEqual(palette);
+    const pick = [...document.querySelectorAll<HTMLSelectElement>('.bricks select')].find(select => select.options[0]?.textContent === '+ эффект')!;
+    const offered = [...pick.options].slice(1).map(option => option.textContent!);
+    expect(offered).toEqual(expect.arrayContaining(['Бросок атаки', 'Костей с учётом ячейки', 'Лечение', 'Новый ход', 'Повторный спасбросок', 'Спасбросок', 'Урон']));
+    for (const name of listed) expect(offered).toContain(name);
+    expect(offered).not.toContain('Атака');
+    const passive = Object.values(world.system.effects).filter(effect => effect.activation === 'passive').map(effect => effect.label);
+    for (const name of passive) expect(offered).not.toContain(name);
   });
 });

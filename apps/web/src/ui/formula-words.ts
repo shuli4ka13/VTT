@@ -2,6 +2,7 @@ import type { System } from '@vtt/schema';
 import { compile, AND, OR, NOT } from '@vtt/engine/formula';
 import type { Node } from '@vtt/engine/formula';
 import { ROW } from '@vtt/engine/model/sheet-columns';
+import { STEP_WORDS } from '@vtt/engine/words/steps';
 import { formulaAsLabels } from './formula-labels.ts';
 
 const COMPARE: Record<string, string> = { '==': '=', '!=': '≠', '>=': '≥', '<=': '≤', '>': '>', '<': '<' };
@@ -22,7 +23,8 @@ const pathWords = (ref: (text: string) => string, tag: string): string => {
   if (dot < 0) return `«${ref(`@${tag}`)}»`;
   const head = tag.slice(0, dot);
   const rest = tag.slice(dot + 1);
-  const known = ROLL_FIELDS[rest] ?? (rest.startsWith('parts.') ? `часть «${rest.slice(6)}»` : undefined);
+  const known = ROLL_FIELDS[rest] ?? (rest.startsWith('parts.') ? `часть «${rest.slice(6)}»` : undefined)
+    ?? (head === SEEN_ROLL ? STEP_WORDS.roll.outputs.find(output => output.path === `.${rest}`)?.label : undefined);
   if (known) return `«${head === SEEN_ROLL ? 'Бросок' : ref(`@${head}`)}»: ${known}`;
   return `«${ref(`@${tag}`)}»`;
 };

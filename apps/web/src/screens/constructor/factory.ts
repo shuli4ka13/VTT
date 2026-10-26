@@ -136,11 +136,6 @@ export const BRICKS: StepTemplate[] = [
     make: () => [{ type: 'apply' } as unknown as Step],
   },
   {
-    key: 'call', label: '+ вызов',
-    hint: 'Вызвать любой эффект системы — выбрать его в списке «Какой эффект».',
-    make: () => [{ type: 'emit' } as unknown as Step],
-  },
-  {
     key: 'table', label: '+ таблица',
     hint: 'Прочитать строку таблицы по броску или числу: травма, исход, сложность по дистанции.',
     make: (system, taken) => [{

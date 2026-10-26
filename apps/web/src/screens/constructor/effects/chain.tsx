@@ -3,6 +3,7 @@ import { degreeWords } from '@vtt/engine/model/tables';
 import { listOf, choiceTableOf } from '@vtt/engine/model/lists';
 import { fieldOf } from '@vtt/engine/model/sheet-columns';
 import { withRole } from './roles.ts';
+import { activationOf } from '@vtt/engine/engine/effects';
 import type { ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useWorld, freeId } from '../../../store/world.ts';
@@ -26,7 +27,7 @@ import { namesAt } from '@vtt/engine/model/names-at';
 import type { Place } from '@vtt/engine/model/names-at';
 import { useOpened } from '../../../store/opened.ts';
 import { findDonorBlock, copyDonorBlock } from '../donors.tsx';
-import type { System, Effect, Step, ValueKind, Compendium } from '@vtt/schema';
+import type { System, Effect, Step, ValueKind } from '@vtt/schema';
 
 export type Lane = 'steps' | 'cost';
 
@@ -35,8 +36,14 @@ const CALL_PREFIX = 'call:';
 const ABOVE_PAY = 'над чертой «Плата»: выполняется сначала и один раз';
 const BELOW_PAY = 'под черту «Плата»: в шаги';
 
-export const bricksOf = (system: System, except: string, compendium: Compendium | null = null): [string, Effect][] =>
-  withRole(system, compendium, 'step', except);
+export const callableOf = (system: System, except: string): [string, Effect, string | undefined][] =>
+  Object.entries(system.effects ?? {})
+    .filter(([key, one]) => key !== except && activationOf(one) !== 'passive')
+    .map(([key, one]) => [key, one, one.group || undefined] as [string, Effect, string | undefined])
+    .sort((a, b) => (a[2] ?? '').localeCompare(b[2] ?? '', 'ru') || (a[1].label || a[0]).localeCompare(b[1].label || b[0], 'ru'));
+
+const callOptions = (system: System, except: string): (readonly [string, string] | readonly [string, string, string])[] =>
+  callableOf(system, except).map(([key, one, group]) => (group ? [`${CALL_PREFIX}${key}`, one.label || key, group] as const : [`${CALL_PREFIX}${key}`, one.label || key] as const));
 
 const callStep = (system: System, caller: Effect, key: string, earlier: readonly Step[]): Step =>
   filledStep(system, caller, { type: 'emit', effect: key }, earlier) as unknown as Step;
@@ -67,7 +74,6 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
   onRoll?: boolean;
 }) {
   const pick = useWorld(s => s.pick);
-  const compendium = useWorld(s => s.compendium);
   const onOpenEffect = (id: string) => pick({ activeEffectId: id });
   const [removed, setRemoved] = useState<{ text: string; before: Step[]; after: string } | null>(null);
 
@@ -370,7 +376,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
       value=""
       title="Добавить шаг в эту ветку"
       options={[['', '+ шаг'],
-        ...bricksOf(system, id, compendium).map(([key, one]) => [`${CALL_PREFIX}${key}`, one.label || key] as const),
+        ...callOptions(system, id),
         ...[...BRICKS, ...(onRoll ? SEEN_BRICKS : [])].filter(b => b.key !== 'each').map(b => [b.key, b.label.replace(/^\+ /, '')] as const)]}
       onChange={key => {
         const called = key.startsWith(CALL_PREFIX) ? key.slice(CALL_PREFIX.length) : null;
@@ -569,20 +575,6 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
       {lined && !bare ? <div className="chain-run">{run}</div> : run}
 
       {bare ? null : <div className="bricks">
-        {bricksOf(system, id, compendium).length ? (
-          <div className="bricks__row">
-            <span className="bricks__title">Шаги для других</span>
-            {bricksOf(system, id, compendium).map(([key, one]) => (
-              <Button key={key} size="sm" title={one.description || `вызвать «${one.label || key}»`}
-                onClick={() => edit(draft => {
-                  const made = callStep(system, draft, key, draft.steps ?? []);
-                  (draft.steps ??= []).push(made);
-                })}>
-                {one.label || key}
-              </Button>
-            ))}
-          </div>
-        ) : null}
         <div className="bricks__row bricks__row--plain">
         <span className="bricks__title">Шаг</span>
         {[...BRICKS, ...(onRoll ? SEEN_BRICKS : [])].map(b => (
@@ -595,6 +587,19 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
             {b.label}
           </Button>
         ))}
+        <Select<string>
+          value=""
+          title="Вызвать другой эффект системы шагом: он выполнится здесь"
+          options={[['', '+ эффект'], ...callOptions(system, id)]}
+          onChange={key => {
+            if (!key.startsWith(CALL_PREFIX)) return;
+            const called = key.slice(CALL_PREFIX.length);
+            edit(draft => {
+              const made = callStep(system, draft, called, draft.steps ?? []);
+              (draft.steps ??= []).push(made);
+            });
+          }}
+        />
         {onAddCost ? <CostPick system={system} except={id} onPick={onAddCost} /> : null}
         </div>
       </div>}
@@ -604,9 +609,9 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
 
 export function PayDivider({ system, except, onAdd }: { system: System; except?: string; onAdd?: (id: string) => void }) {
   return (
-    <div className="pay-divider" title="Плата: шаги выше выполняются сначала, один раз за действие, даже если целей несколько. Не хватило — действие не состоялось, ничего не изменилось.">
+    <div className="pay-divider" title="Плата: шаги выше выполняются сначала. Не хватило — действие не состоится, ничего не изменится.">
       <span className="pay-divider__word">Плата</span>
-      <span className="pay-divider__hint">выше — сначала и один раз</span>
+      <span className="pay-divider__hint">не хватило — действие не состоится</span>
       {onAdd ? <CostPick system={system} except={except} onPick={onAdd} /> : null}
     </div>
   );

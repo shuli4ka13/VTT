@@ -475,6 +475,7 @@ function Bond({ effect, system, id, edit }: {
   const sheets = paramsOf(system, effect).filter(param => param.kind === 'sheet' && !param.many);
   const holder = system.effects[effect.bond?.effect ?? ''];
   const holderParams = holder ? paramsOf(system, holder) : [];
+  const inputNames = new Map(paramsOf(system, effect).map(param => [param.key, param.label ?? param.key] as const));
   return (
     <div className="row">
       <Field label="Держит" hint="Наложенное этим действием держится, пока у листа есть эффект-держатель. Одно: взялся за новое — старое спало (концентрация). Каждое отдельно: у каждого действия свой держатель.">
@@ -502,6 +503,7 @@ function Bond({ effect, system, id, edit }: {
         })}
         system={system}
         quick={paramsOf(system, effect).filter(param => param.kind === 'boolean').map(param => ({ ref: param.key, label: param.label ?? param.key, kind: 'boolean' as const }))}
+        names={inputNames}
         where="держание · только если"
         placeholder="например: @holds"
       />

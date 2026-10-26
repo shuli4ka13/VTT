@@ -463,6 +463,10 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
                 onChange={expr => edit(applyIndex, draft => { const d = draft as any; if (expr) d.where = { expr }; else delete d.where; })}
                 system={system}
                 sheets={context.sheets}
+                names={new Map([
+                  ...(context.effect.params ?? []),
+                  ...(system.effects[effectNameOf(step.effect)]?.params ?? []),
+                ].map(param => [param.key, param.label ?? param.key] as const))}
                 quick={(system.effects[effectNameOf(step.effect)]?.params ?? []).filter(param => param.kind === 'boolean').map(param => ({ ref: param.key, label: param.label ?? param.key, kind: 'boolean' as const }))}
                 title="Какие снять"
                 where="состояние · какие снять"

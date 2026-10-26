@@ -204,7 +204,7 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => edit(d => { d.effects.урон!.returns = [{ key: 'осталось', label: 'Осталось', kind: 'number', expr: { expr: '@лист.хиты' } }] as never; }),
     ],
     call: [
-      () => { act(() => { fireEvent.change(findAnchor({ text: '+ шаг' })!, { target: { value: 'call' } }); }); },
+      () => { act(() => { fireEvent.change(findAnchor({ text: '+ шаг' })!, { target: { value: 'call:урон' } }); }); },
       () => edit(d => setSteps(d, 'удар', steps('удар').map(step => (step.type === 'emit' ? { ...step, effect: 'урон', args: { лист: { expr: '@цель' }, amount: { expr: '5' } } } : step)))),
     ],
     drop: () => edit(d => setSteps(d, 'удар', steps('удар').filter(step => step.type !== 'apply'))),

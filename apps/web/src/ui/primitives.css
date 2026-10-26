@@ -91,6 +91,12 @@
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: var(--s-4);
 }
+.tagbox {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2);
+  flex: 1; min-height: 32px; padding: var(--s-1) var(--s-3);
+  background: var(--bg-sunken); border: 1px solid var(--border); border-radius: var(--r-2);
+}
+.tagbox .select { border: 0; background: transparent; padding-left: 0; min-width: 6em; flex: 1 1 6em; width: auto; }
 .row--2 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 
 .pair {

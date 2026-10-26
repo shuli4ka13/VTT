@@ -184,6 +184,9 @@ export function changeReadback(step: Step, amount: Step | null, system: System, 
       const known = id ? system.effects?.[id] : undefined;
       what = known ? seg(`«${known.label ?? id}».`) : hole(`«${id || '?'}» — в системе нет`);
     } else what = refSegment(ref, system, effect, 'какое состояние?', names);
+    if ((s.mode ?? 'apply') === 'remove' && s.by === 'tag') {
+      return [seg(`С ${whoOf(effect, s.to)} снимаются все эффекты с меткой`), typeof ref === 'string' && ref ? seg(`«${ref}».`) : hole('какая метка?')];
+    }
     return (s.mode ?? 'apply') === 'remove'
       ? [seg(`С ${whoOf(effect, s.to)} снимается состояние`), what]
       : [seg(`На ${whoOf(effect, s.to)} вешается состояние`), what];

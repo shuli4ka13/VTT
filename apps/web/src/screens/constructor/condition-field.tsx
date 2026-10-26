@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { HOLDER } from '@vtt/engine/model/references';
 import { compile } from '@vtt/engine/formula';
@@ -36,7 +37,7 @@ export function readyOf(quick: readonly QuickRef[], phrases: readonly Phrase[]):
 
 export function ConditionField({
   value, onChange, system, holders = [], quick = [], phrases = [], names, sheets, where, placeholder,
-  title = 'Только если', holderLabel = 'Кого касается', holderHint, ruleHint, bare = false, spoken, tail,
+  title = 'Только если', holderLabel = 'Кого касается', holderHint, holderTip, aside, ruleHint, bare = false, spoken, tail,
 }: {
   value: string | undefined;
   onChange: (expr: string | null) => void;
@@ -51,6 +52,8 @@ export function ConditionField({
   title?: string;
   holderLabel?: string;
   holderHint?: string;
+  holderTip?: string;
+  aside?: ReactNode;
   ruleHint?: string;
   required?: boolean;
   bare?: boolean;
@@ -64,17 +67,19 @@ export function ConditionField({
   const ready = readyOf(quick, phrases);
   const said = rest.trim() && compiles(rest) ? `${formulaWords(system, rest, names)}${tail ? ` — ${tail}` : ''}` : '';
 
+  const holderField = options.length ? (
+    <Field label={holderLabel} {...(holderTip ? { tip: holderTip } : { hint: holderHint ?? 'Носитель — лист, на котором это висит.' })}>
+      <Select<string>
+        value={holder}
+        options={[['', 'всех — без условия'], ...options]}
+        onChange={next => write(next, rest)}
+      />
+    </Field>
+  ) : null;
+
   return (
     <>
-      {options.length ? (
-        <Field label={holderLabel} hint={holderHint ?? 'Носитель — лист, на котором это висит.'}>
-          <Select<string>
-            value={holder}
-            options={[['', 'всех — без условия'], ...options]}
-            onChange={next => write(next, rest)}
-          />
-        </Field>
-      ) : null}
+      {aside ? <div className="row">{holderField}{aside}</div> : holderField}
       <div className={`cond${bare ? ' cond--bare' : ''}`}>
         {bare ? null : <span className="cond__title">{title}</span>}
         <div className="cond__fact">

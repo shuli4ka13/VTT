@@ -27,15 +27,16 @@ export function CardHead({ title, sub, badge, actions }: {
   );
 }
 
-export function Field({ label, hint, error, needed, children }: {
+export function Field({ label, hint, tip, error, needed, children }: {
   label: ReactNode;
   hint?: ReactNode;
+  tip?: string;
   error?: ReactNode;
   needed?: boolean;
   children: ReactNode;
 }) {
   return (
-    <label className={`field ${needed ? 'field--needed' : ''}`}>
+    <label className={`field ${needed ? 'field--needed' : ''}`} {...(tip ? { title: tip } : {})}>
       <span className="field__label">{label}{needed ? <span aria-hidden>·заполнить</span> : null}</span>
       {children}
       {hint ? <span className="field__hint">{hint}</span> : null}

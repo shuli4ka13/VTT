@@ -149,8 +149,14 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
 
   const spoken = kind === 'call' && phase !== 'done' ? callSubjects(tags, actions, true) : subjects;
   const subjectWord = spoken.find(([key]) => key === subject)?.[1] ?? subject;
-  const happened = kind === 'seen' ? SEEN_LABEL
-    : kind === 'rolled' ? ROLLED_LABEL
+  const quoted = (list?: readonly string[]): string => (list ?? []).map(tag => `«${tag}»`).join(', ');
+  const filter = [
+    handler.tags?.length ? `только с метками ${quoted(handler.tags)}` : '',
+    handler.anyTags?.length ? `с любой из меток ${quoted(handler.anyTags)}` : '',
+    handler.notTags?.length ? `кроме бросков с метками ${quoted(handler.notTags)}` : '',
+  ].filter(Boolean).join(', ');
+  const happened = kind === 'seen' ? `${SEEN_LABEL}${filter ? `, ${filter}` : ''}`
+    : kind === 'rolled' ? `${ROLLED_LABEL}${filter ? `, ${filter}` : ''}`
     : kind === 'call' ? `${PHASES[phase].label} ${subjectWord}`
       : kind === 'moment' ? subjectWord
         : kind === 'field' ? `${subjectWord} стало верным`
@@ -212,19 +218,19 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
 
       {kind === 'seen' || kind === 'rolled' ? (
         <div className="row">
-          <Field label="С метками" hint="Бросок должен нести все эти метки. Пусто — любой бросок.">
-            <TagsField system={system} value={handler.tags} empty="любой бросок" onChange={next => setTags('tags', next)} />
+          <Field label="С метками" tip="Бросок должен нести все эти метки. Пусто — любой бросок.">
+            <TagsField boxed system={system} value={handler.tags} empty="любой бросок" onChange={next => setTags('tags', next)} />
           </Field>
-          <Field label="Любая из меток">
-            <TagsField system={system} value={handler.anyTags} empty="любая метка" onChange={next => setTags('anyTags', next)} />
+          <Field label="Любая из меток" tip="Бросок должен нести хотя бы одну из этих меток.">
+            <TagsField boxed system={system} value={handler.anyTags} empty="любая метка" onChange={next => setTags('anyTags', next)} />
           </Field>
-          <Field label="Кроме меток">
-            <TagsField system={system} value={handler.notTags} empty="+ кроме метки…" onChange={next => setTags('notTags', next)} />
+          <Field label="Кроме меток" tip="Бросок с любой из этих меток не подходит.">
+            <TagsField boxed system={system} value={handler.notTags} empty="+ кроме метки…" onChange={next => setTags('notTags', next)} />
           </Field>
         </div>
       ) : null}
 
-      <div className="row">
+      <div className="stack">
         <ConditionField
           value={handler.if?.expr}
           onChange={setIf}
@@ -235,15 +241,18 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
           sheets={sheets}
           where={`подписка №${index + 1} · только если`}
           placeholder={phase === 'done' ? 'например: сколько(@итоги.шаг.success, да) >= 1' : 'например: @носитель.поле <= 0'}
-          holderHint="Носитель — лист, на котором висит эта подписка."
+          holderHint=""
+          holderTip="Носитель — лист, на котором висит эта подписка."
+          aside={(
+            <Field label="Решение">
+              <Select<string>
+                value={handler.confirm ? 'ask' : ''}
+                options={[['', 'срабатывает само'], ['ask', 'решает игрок носителя']]}
+                onChange={next => edit(draft => { if (next) draft.confirm = true; else delete draft.confirm; })}
+              />
+            </Field>
+          )}
         />
-        <Field label="Решение">
-          <Select<string>
-            value={handler.confirm ? 'ask' : ''}
-            options={[['', 'срабатывает само'], ['ask', 'решает игрок носителя']]}
-            onChange={next => edit(draft => { if (next) draft.confirm = true; else delete draft.confirm; })}
-          />
-        </Field>
       </div>
     </Card>
   );
