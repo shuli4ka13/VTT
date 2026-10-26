@@ -7535,6 +7535,9 @@
               },
               "hit_now": {
                 "expr": "@hit_now"
+              },
+              "kind": {
+                "expr": "@action"
               }
             }
           }
@@ -21226,8 +21229,14 @@
           "kind": "permanent"
         },
         "reapply": "refresh",
-        "description": "Цель не действует, пока спрайт держит ловушку (снимает спрайт или ведущий, когда спрайт делает другое) (стр. 194).",
-        "params": [],
+        "description": "Цель не действует, пока спрайт держит ловушку; ловушка спадает, когда спрайт применяет любую способность (стр. 194).",
+        "params": [
+          {
+            "key": "спрайт",
+            "label": "Спрайт",
+            "kind": "sheet"
+          }
+        ],
         "modifiers": [
           {
             "kind": "value",
@@ -21236,6 +21245,27 @@
             "value": {
               "expr": "1"
             }
+          }
+        ],
+        "on": [
+          {
+            "on": "before:sprite_power_use",
+            "if": {
+              "expr": "@действующий == @спрайт"
+            },
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": "sprite_trap",
+                "to": {
+                  "expr": "@носитель"
+                },
+                "where": {
+                  "expr": "@спрайт == @действующий"
+                }
+              }
+            ]
           }
         ]
       },
@@ -21247,13 +21277,12 @@
           "kind": "permanent"
         },
         "reapply": "refresh",
-        "description": "Каждый раунд — урон Матрицы = Резонанс спрайта, шум +2 (стр. 195).",
+        "description": "Когда спрайт применяет способность, цель получает урон Матрицы, равный Резонансу спрайта; шум +2; шторм спадает, когда спрайт получает урон Матрицы (стр. 195).",
         "params": [
           {
-            "key": "dmg",
-            "label": "Урон",
-            "kind": "number",
-            "default": 1
+            "key": "спрайт",
+            "label": "Спрайт",
+            "kind": "sheet"
           }
         ],
         "modifiers": [
@@ -21268,7 +21297,10 @@
         ],
         "on": [
           {
-            "on": "moment:round-start",
+            "on": "before:sprite_power_use",
+            "if": {
+              "expr": "@действующий == @спрайт"
+            },
             "steps": [
               {
                 "type": "emit",
@@ -21278,8 +21310,27 @@
                     "expr": "@носитель"
                   },
                   "amount": {
-                    "expr": "@dmg"
+                    "expr": "@спрайт.resonance"
                   }
+                }
+              }
+            ]
+          },
+          {
+            "on": "field:matrix_damage",
+            "if": {
+              "expr": "@лист == @спрайт"
+            },
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": "sprite_storm",
+                "to": {
+                  "expr": "@носитель"
+                },
+                "where": {
+                  "expr": "@спрайт == @лист"
                 }
               }
             ]
@@ -21388,9 +21439,31 @@
               "by": "gm"
             },
             "default": 0
+          },
+          {
+            "key": "kind",
+            "label": "Простое или сложное",
+            "kind": "choice",
+            "from": "action_kinds",
+            "default": "сложное"
           }
         ],
         "cost": [
+          {
+            "type": "emit",
+            "effect": "spend_action",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "сложное": {
+                "expr": "@kind.complex"
+              },
+              "простых": {
+                "expr": "@kind.simple"
+              }
+            }
+          },
           {
             "type": "branch",
             "if": {
@@ -21473,6 +21546,11 @@
             },
             "to": {
               "expr": "@цель"
+            },
+            "args": {
+              "спрайт": {
+                "expr": "@действующий"
+              }
             }
           },
           {
@@ -24367,7 +24445,7 @@
               "expr": "меньшее из(10, @sprite_level)"
             },
             "if": {
-              "expr": "не пусто(@sprite_kind)"
+              "expr": "не пусто(@sprite_kind) и есть(@sprite_kind.skills, \"взлом\")"
             }
           },
           {
@@ -24379,7 +24457,7 @@
               "expr": "меньшее из(10, @sprite_level)"
             },
             "if": {
-              "expr": "не пусто(@sprite_kind)"
+              "expr": "не пусто(@sprite_kind) и есть(@sprite_kind.skills, \"электроника\")"
             }
           },
           {
@@ -24391,7 +24469,7 @@
               "expr": "меньшее из(10, @sprite_level)"
             },
             "if": {
-              "expr": "не пусто(@sprite_kind)"
+              "expr": "не пусто(@sprite_kind) и есть(@sprite_kind.skills, \"инженерное дело\")"
             }
           }
         ]

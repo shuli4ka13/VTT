@@ -3,6 +3,7 @@ import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { exchange } from './play.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import { breaches } from '../src/engine/limits.ts';
+import { perform } from '../src/core/perform.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const sr = PLAYABLE_WORLDS.find(w => (w.system as System).id === 'shadowrun6')!;
@@ -78,6 +79,49 @@ group('Shadowrun 6: спрайты', () => {
     let used = 0;
     const out = act([technomancer({ resonance: 7 }), blankSprite()], 'tm_sprite_compile:0', ['sp'], () => (used++ < 14 ? 6 : 1), { kind: 'крушитель', level: 7 });
     eq(computed(after(out, 'sp'), 'resonance'), 7);
+  });
+
+  const compiled = (kind: string, level = 4) => after(act([technomancer(), blankSprite()], 'tm_sprite_compile:0', ['sp'], tape(...six(5), ...one(5), 6, ...one(7), ...six(8)), { kind, level }), 'sp');
+  const desk = { id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: { battle: true }, has: [], effects: [] } as unknown as Sheet;
+  const withPerform = (sheets: Sheet[], op: Record<string, unknown>) => {
+    const out = perform({ system, compendium, clock: null, sheets, die: () => 1 }, op as never);
+    if (out.kind !== 'done') throw new Error(out.kind);
+    return out.sheets;
+  };
+
+  test('навыки спрайта по виду (стр. 193–194): техноспрайт — Инженерное дело и Электроника, без Взлома; крушитель — наоборот', () => {
+    const techno = compiled('техноспрайт', 3);
+    deepEq([computed(techno, 'skills.взлом.rank'), computed(techno, 'skills.инженерное_дело.rank'), computed(techno, 'skills.электроника.rank')], [0, 3, 3]);
+    const crusher = compiled('крушитель', 4);
+    deepEq([computed(crusher, 'skills.взлом.rank'), computed(crusher, 'skills.инженерное_дело.rank'), computed(crusher, 'skills.электроника.rank')], [4, 0, 4]);
+  });
+
+  test('«Ловушка» в бою (стр. 194): сложное действие снято; вторая сложная способность в тот же ход отказывает, задача не списана', () => {
+    const sprite = { ...compiled('крушитель'), values: { ...compiled('крушитель').values, complex_left: 1 } } as Sheet;
+    const first = act([sprite, decker(), desk], 'spw_trap:0', ['razor'], tape(...six(8), ...one(10)));
+    eq(after(first, 'sp').values.complex_left, 0);
+    eq(after(first, 'sp').values.tasks, 3);
+    const why = refusal(() => act([after(first, 'sp'), after(first, 'razor'), desk], 'spw_trap:0', ['razor'], tape(...six(8), ...one(10))));
+    ok(why.includes('сложное действие'), why);
+  });
+
+  test('«Ловушка» (стр. 194): любая следующая способность спрайта освобождает цель', () => {
+    const sprite = compiled('крушитель');
+    const first = act([sprite, decker()], 'spw_trap:0', ['razor'], tape(...six(8), ...one(10)));
+    ok(wears(after(first, 'razor'), 'sprite_trap'));
+    const second = act([after(first, 'sp'), after(first, 'razor')], 'spw_hash:0', ['razor'], () => 1);
+    ok(!wears(after(second, 'razor'), 'sprite_trap'));
+  });
+
+  test('«Электрошторм» (стр. 195): урон Матрицы — когда спрайт применяет способность, а не каждый раунд; урон по спрайту шторм снимает', () => {
+    const sprite = compiled('крушитель');
+    const stormed = { ...decker(), effects: [{ effectId: 'sprite_storm', args: { спрайт: 'sp' } }] } as Sheet;
+    const idle = withPerform([sprite, stormed], { op: 'turn', turn: 'start', order: ['razor'] });
+    eq(Number(idle.find(s => s.id === 'razor')!.values.matrix_damage ?? 0), 0);
+    const used = act([sprite, stormed], 'spw_hash:0', ['razor'], () => 1);
+    ok(Number(after(used, 'razor').values.matrix_damage ?? 0) > 0);
+    const hurt = withPerform([sprite, stormed], { op: 'set', sheetId: 'sp', tag: 'matrix_damage', value: 1 });
+    ok(!wears(hurt.find(s => s.id === 'razor'), 'sprite_storm'));
   });
 });
 
