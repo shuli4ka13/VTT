@@ -10,7 +10,7 @@ import type { ActIntent, ActOutcome } from '../src/core/act.ts';
 import type { Journal, Question } from '../src/core/external.ts';
 import type { Sheet, System, Compendium } from '../src/model/types.ts';
 
-const SEEDS = Number(process.env.FUZZ_SEEDS ?? 6);
+const SEEDS = Number(process.env.FUZZ_SEEDS ?? (process.env.CI ? 6 : 0));
 const CHAIN = 4;
 
 function rng(seed: number): () => number {
@@ -99,8 +99,8 @@ for (const world of SAMPLE_WORLDS) {
   const compendium = world.compendium;
   const players = world.sheets.filter((s: Sheet) => s.id !== 'стол');
 
-  describe(`перебор: ${system.id}`, () => {
-    for (let seed = 1; seed <= SEEDS; seed++) {
+  describe.skipIf(!SEEDS)(`перебор: ${system.id}`, () => {
+    for (let seed = 1; seed <= Math.max(SEEDS, 1); seed++) {
       for (const inCombat of [false, true]) {
         it(`зерно ${seed} · ${inCombat ? 'в бою' : 'вне боя'}`, () => {
           const random = rng(seed * 7919 + (inCombat ? 1 : 0));
