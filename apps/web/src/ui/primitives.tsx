@@ -2,12 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { ReactNode, ChangeEvent, FocusEvent, KeyboardEvent } from 'react';
 
-export function Card({ children, tone, className = '' }: {
+export function Card({ children, tone, className = '', label }: {
   children: ReactNode;
   tone?: 'bad' | 'flat' | 'check' | 'change' | 'number' | 'table';
   className?: string;
+  label?: string;
 }) {
-  return <div className={`card ${tone ? `card--${tone}` : ''} ${className}`}>{children}</div>;
+  return <div className={`card ${tone ? `card--${tone}` : ''} ${className}`} {...(label ? { role: 'group', 'aria-label': label } : {})}>{children}</div>;
 }
 
 export function CardHead({ title, sub, badge, actions }: {

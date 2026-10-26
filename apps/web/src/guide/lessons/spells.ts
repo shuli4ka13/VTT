@@ -108,8 +108,8 @@ export const spells: Lesson = {
       panel: 'книги',
       say: 'Покажите «Прекратить» только тем записям, у которых срок держится.',
       hint: 'У второй кнопки нажмите «ещё». В «Только если» выберите «Срок · Держится».',
-      at: { text: 'Только если' },
-      via: { text: 'ещё' },
+      at: { text: 'Только если', in: 'кнопка «Прекратить»' },
+      via: { text: 'ещё', in: 'кнопка «Прекратить»' },
       done: view => {
         const prop = termColumn(view);
         const holds = holdsColumn(view);

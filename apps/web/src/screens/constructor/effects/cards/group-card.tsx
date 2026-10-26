@@ -177,7 +177,7 @@ export function GroupCard({
 
   return (
     <>
-      <Card tone={problem ? 'bad' : (group.kind as 'check' | 'change' | 'number' | 'table')} className="step-card">
+      <Card tone={problem ? 'bad' : (group.kind as 'check' | 'change' | 'number' | 'table')} className="step-card" label={`шаг «${called}»`}>
         <CardHead
           title={head}
           actions={actions}

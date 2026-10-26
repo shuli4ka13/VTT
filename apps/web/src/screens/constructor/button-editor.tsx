@@ -54,7 +54,7 @@ export function ButtonEditor({ binding, system, recordKind, kindId, onEdit, onDe
   });
 
   return (
-    <Card tone="flat">
+    <Card tone="flat" label={`кнопка «${where}»`}>
       <div className="button-head">
         <Field label="Кнопка на листе">
           <LabelInput value={binding.label ?? ''} placeholder="как назвать кнопку" onCommit={label => onEdit(draft => { draft.label = label; })} />
