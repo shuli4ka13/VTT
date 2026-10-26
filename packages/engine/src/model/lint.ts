@@ -665,7 +665,16 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
     for (const mod of modifiers) {
       if (mod.kind === 'value') {
         const at = { ...where, part: 'modifiers' };
-        out.push(...stageProblems(targetStages(system, String(mod.target)), mod.stage as string | undefined, String(mod.target), at));
+        const slotted = /\{@(?!строка\.)([\p{L}\p{N}_]+)((?:\.[\p{L}\p{N}_]+)*)\}/u.exec(String(mod.target));
+        if (slotted) {
+          const owner = (where as { effect?: string }).effect ? system.effects?.[(where as { effect?: string }).effect!] : undefined;
+          const param = (owner?.params ?? []).find(one => one.key === slotted[1]);
+          const column = slotted[2]?.slice(1);
+          const rows = param?.kind === 'choice' && param.from && column ? system.tables?.[param.from]?.rows ?? [] : [];
+          const tags = rows.map(row => (row.cells ?? {})[column!]).filter((tag): tag is string => typeof tag === 'string' && tag !== '');
+          const stages = [...new Map(tags.flatMap(tag => targetStages(system, String(mod.target).replace(slotted[0], tag))).map(one => [one.key, one])).values()];
+          if (tags.length) out.push(...stageProblems(stages, mod.stage as string | undefined, String(mod.target), at));
+        } else out.push(...stageProblems(targetStages(system, String(mod.target)), mod.stage as string | undefined, String(mod.target), at));
         if (rollsDice(mod.value) || rollsDice(mod.if)) out.push({ where: at, level: 'error', text: NO_DICE_HERE });
         continue;
       }
