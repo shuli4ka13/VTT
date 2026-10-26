@@ -68,6 +68,22 @@ group('Shadowrun 6: долг этапа 3 механикой', () => {
     ok(offers([{ of: 'shaky_hands' }]) < offers([]));
   });
 
+  test('Дрожь в руках: при защите от выстрела трату Преимущества предлагают (стр. 76)', () => {
+    const offers = (has: Sheet['has']) => exchange({ system, compendium, die: () => 3, sheets: [sheetOf('silk', { edge_left: 0 }), sheetOf('razor', { edge_left: 3 }, has)], actionId: 'colt_l36:0', fromId: 'silk', toId: 'razor',
+      inputs: { дистанция: 'близкая' } as never, answer: () => [] }).questions.length;
+    eq(offers([{ of: 'shaky_hands' }]), offers([]));
+    ok(offers([]) > 0);
+  });
+
+  test('Дрожь в руках: приём Преимущества при атаке отказывает, очки не списаны (стр. 76)', () => {
+    const baton = sheetOf('lone_star', { edge_left: 2 }, [{ of: 'shaky_hands' }]);
+    let message = '';
+    let sheets: Sheet[] = [];
+    try { sheets = exchange({ system, compendium, die: () => 1, sheets: [baton, sheetOf('humanis')], actionId: 'stun_baton:0', fromId: 'lone_star', toId: 'humanis', inputs: { приём: 'Вырубить ударом' } as never }).sheets; } catch (error) { message = (error as Error).message; }
+    ok(message.includes('Дрожь в руках'), message);
+    eq(sheets.length, 0);
+  });
+
   test('Кортексная микробомба: 18 физического, сопротивление Телом (стр. 283)', () => {
     const out = act(sheetOf('razor', {}, [{ of: 'cortex_bomb_micro' }]), [], 'cortex_bomb_micro:0', () => 1);
     eq(after(out, 'razor').values.physical, 18);

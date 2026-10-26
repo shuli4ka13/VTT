@@ -82,8 +82,11 @@ group('Shadowrun 6: Преимущество и действия', () => {
 
   test('не больше 2 очков Преимущества за раунд', () => {
     const razor = sheetOf('razor', { edge_left: 0, edge_gained: 2 });
-    const out = hit(razor, sheetOf('humanis'), 'predator_vi:0', dice([11, 1], [4, 1]), {});
+    const out = hit(razor, sheetOf('humanis'), 'predator_vi:0', dice([11, 1], [4, 1]), {}, true);
     eq(after(out, 'razor').values.edge_left, 0);
+    const outside = hit(razor, sheetOf('humanis'), 'predator_vi:0', dice([11, 1], [4, 1]), {});
+    eq(after(outside, 'razor').values.edge_left, 1, 'вне боя предела за раунд нет (стр. 46)');
+    eq(after(outside, 'razor').values.edge_gained, 2, 'вне боя счётчик раунда не растёт');
   });
 
   test('«Вырубить ударом» за 2 очка: урон больше Воли — счётчик оглушения полон', () => {
@@ -100,6 +103,40 @@ group('Shadowrun 6: Преимущество и действия', () => {
     let refused = '';
     try { hit(sheetOf('razor', { complex_left: 0 }), sheetOf('humanis'), 'predator_vi:0', dice(), {}, true); } catch (err) { refused = (err as Error).message; }
     ok(refused.includes('сложное действие'), refused);
+  });
+});
+
+group('Shadowrun 6: Преимущество — книга, шаг 8', () => {
+  const closeScene = (sheet: Sheet) => {
+    const out = perform({ system, compendium, clock: null, sheets: [sheet], die: () => 1 }, { op: 'turn', turn: 'scene' } as never);
+    if (out.kind !== 'done') throw new Error(out.kind);
+    return out.sheets.find(s => s.id === sheet.id)!;
+  };
+
+  test('конец сцены (стр. 46): очки сверх характеристики Преимущество пропадают, недостающие не восполняются', () => {
+    eq(closeScene(sheetOf('razor', { edge: 3, edge_left: 5 })).values.edge_left, 3);
+    eq(closeScene(sheetOf('razor', { edge: 3, edge_left: 1 })).values.edge_left, 1);
+  });
+
+  test('конец боя (стр. 46): очки сверх характеристики Преимущество пропадают', () => {
+    const out = perform({ system, compendium, clock: null, sheets: [sheetOf('razor', { edge: 3, edge_left: 6 })], die: () => 1 }, { op: 'turn', turn: 'stop' } as never);
+    if (out.kind !== 'done') throw new Error(out.kind);
+    eq(out.sheets[0]!.values.edge_left, 3);
+  });
+
+  test('«Начало игровой встречи» (стр. 45): Преимущество цели — её характеристика, действующий не меняется', () => {
+    const out = exchange({ system, compendium, die: () => 1, sheets: [sheetOf('razor', { edge_left: 0 }), sheetOf('silk', { edge: 4, edge_left: 0 })], actionId: 'act_scene:0', fromId: 'razor', toIds: ['silk'] });
+    eq(after(out, 'silk').values.edge_left, 4);
+    eq(after(out, 'razor').values.edge_left, 0);
+  });
+
+  test('«Второе дыхание» и «Ранен не так сильно» (стр. 48) лечат действующего, а не цель', () => {
+    const wind = exchange({ system, compendium, die: () => 1, sheets: [sheetOf('razor', { edge_left: 3, stun: 3 }), sheetOf('silk', { stun: 2 })], actionId: 'act_second_wind:0', fromId: 'razor', toIds: ['silk'] });
+    eq(after(wind, 'razor').values.stun, 2);
+    eq(after(wind, 'silk').values.stun, 2);
+    const shrug = exchange({ system, compendium, die: () => 1, sheets: [sheetOf('razor', { edge_left: 4, physical: 3 }), sheetOf('silk', { physical: 2 })], actionId: 'act_shrug:0', fromId: 'razor', toIds: ['silk'] });
+    eq(after(shrug, 'razor').values.physical, 2);
+    eq(after(shrug, 'silk').values.physical, 2);
   });
 });
 
