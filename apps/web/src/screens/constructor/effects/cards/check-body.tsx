@@ -66,6 +66,15 @@ export function CheckBody({ step, roll, context, edit, system, onUnpair, asIf = 
       onCommit={text => edit(at, draft => { const d = loose(draft); if (text.trim()) d[key] = { expr: text.trim() }; else delete d[key]; })}
     />
   );
+  const always = (key: 'failIf' | 'passWith') => (
+    <FormulaField
+      value={String((step[key] as { expr?: unknown } | undefined)?.expr ?? '')}
+      system={system}
+      where={`проверка · ${key === 'failIf' ? 'всегда провал' : 'всегда успех с запасом'}`}
+      placeholder={key === 'failIf' ? 'например: @носитель.ки == 0' : 'например: 1'}
+      onCommit={text => edit(at, draft => { const d = loose(draft); if (text.trim()) d[key] = { expr: text.trim() }; else delete d[key]; })}
+    />
+  );
   const rolled = Boolean(roll || readsRoll(step, context));
   const summary = moreSummary(step, rolled);
   return (
@@ -81,17 +90,19 @@ export function CheckBody({ step, roll, context, edit, system, onUnpair, asIf = 
       </div>
       {roll ? <RollTags roll={roll} system={system} onRoll={change => edit(0, draft => change(loose(draft)))} /> : null}
       <ContestLine step={step} roll={roll} context={context} />
-      {rolled || more.length ? (
-        <Fold title="ещё" summary={summary}>
-          {more.length ? <FieldRow id="check-more" fields={more} /> : null}
-          {rolled ? (
-            <div className="row">
-              <Field label="Успех, если на кости не меньше" hint="Если на кости выпало столько или больше — успех, что бы ни прибавили.">{forced('succeedOn')}</Field>
-              <Field label="Провал, если на кости не больше" hint="Натуральная 1: что бы ни прибавили — провал.">{forced('failOn')}</Field>
-            </div>
-          ) : null}
-        </Fold>
-      ) : null}
+      <Fold title="ещё" summary={summary}>
+        {more.length ? <FieldRow id="check-more" fields={more} /> : null}
+        {rolled ? (
+          <div className="row">
+            <Field label="Успех, если на кости не меньше" hint="Если на кости выпало столько или больше — успех, что бы ни прибавили.">{forced('succeedOn')}</Field>
+            <Field label="Провал, если на кости не больше" hint="Натуральная 1: что бы ни прибавили — провал.">{forced('failOn')}</Field>
+          </div>
+        ) : null}
+        <div className="row">
+          <Field label="Всегда провал, если" hint="Условие да/нет: если верно — провал, что бы ни выпало.">{always('failIf')}</Field>
+          <Field label="Всегда успех с запасом" hint="Число: проверка проходит с таким запасом над порогом.">{always('passWith')}</Field>
+        </div>
+      </Fold>
     </>
   );
 }
@@ -99,6 +110,8 @@ export function CheckBody({ step, roll, context, edit, system, onUnpair, asIf = 
 const moreSummary = (step: any, rolled: boolean): string => [
   step.degrees?.table ? 'исход ступенями' : '',
   rolled && step.succeedOn ? `успех от ${String(step.succeedOn.expr ?? '')} на кости` : '',
+  step.failIf ? 'есть условие провала' : '',
+  step.passWith ? 'успех с запасом' : '',
   rolled && step.failOn ? `провал до ${String(step.failOn.expr ?? '')}` : '',
 ].filter(Boolean).join(' · ');
 

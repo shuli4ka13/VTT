@@ -397,10 +397,32 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
               options={[['apply', 'вешаем'], ['remove', 'снимаем']] as const}
               onChange={next => edit(applyIndex, draft => {
                 const d = draft as any;
-                if (next === 'apply') { delete d.mode; delete d.where; delete d.one; } else d.mode = next;
+                if (next === 'apply') { delete d.mode; delete d.where; delete d.one; delete d.by; } else d.mode = next;
               })}
             />
           </Field>
+          {String(step.mode ?? 'apply') === 'remove' ? (
+            <Field label="Снять">
+              <Select
+                value={step.by === 'tag' ? 'tag' : 'effect'}
+                options={[['effect', 'этот эффект'], ['tag', 'все эффекты с меткой']] as const}
+                onChange={next => edit(applyIndex, draft => {
+                  const d = draft as any;
+                  delete d.effect; delete d.args;
+                  if (next === 'tag') { d.by = 'tag'; delete d.where; } else delete d.by;
+                })}
+              />
+            </Field>
+          ) : null}
+          {String(step.mode ?? 'apply') === 'remove' && step.by === 'tag' ? (
+            <Field label="Какая метка" needed={!step.effect}>
+              <Select
+                value={typeof step.effect === 'string' ? step.effect : ''}
+                options={[['', '— какая метка —'], ...[...new Set(Object.values(system.effects ?? {}).flatMap(one => one.tags ?? []))].sort().map(tag => [tag, tag] as const)] as never}
+                onChange={next => edit(applyIndex, draft => { const d = draft as any; if (next) d.effect = next; else delete d.effect; })}
+              />
+            </Field>
+          ) : (
           <Field label="Какое">
             <EffectPick
               value={step.effect}
@@ -419,6 +441,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
               })}
             />
           </Field>
+          )}
           <Field label={String(step.mode ?? 'apply') === 'remove' ? 'С кого' : 'На кого'} needed={!step.to}>
             <SheetPick
               value={step.to} sheets={sheetChoices(context).singles} system={system} where="состояние · на кого"
@@ -435,7 +458,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
           </Field>
           {String(step.mode ?? 'apply') === 'remove' ? (
             <>
-              <ConditionField
+              {step.by === 'tag' ? null : <ConditionField
                 value={step.where?.expr}
                 onChange={expr => edit(applyIndex, draft => { const d = draft as any; if (expr) d.where = { expr }; else delete d.where; })}
                 system={system}
@@ -444,7 +467,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
                 title="Какие снять"
                 where="состояние · какие снять"
                 placeholder="например: @заклинание == @spell_effect"
-              />
+              />}
               <Field label="Сколько снять">
                 <Select
                   value={step.one ? 'one' : 'all'}

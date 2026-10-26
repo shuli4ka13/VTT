@@ -157,7 +157,7 @@ describe('GroupCard: условие и ход — не у шага', () => {
     render(<GroupCard group={group} position={1} system={system} effect={effect}
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
     const text = document.body.textContent ?? '';
-    for (const gone of ['Шаги ниже идут при', 'Что сказать при остановке', 'Только если', 'Всегда успех', 'Всегда провал', 'Степени успеха']) expect(text).not.toContain(gone);
+    for (const gone of ['Шаги ниже идут при', 'Что сказать при остановке', 'Только если', 'Всегда успех, если', 'Всегда провал, если на кости', 'Степени успеха']) expect(text).not.toContain(gone);
     expect(screen.queryByPlaceholderText('например: не хватает ячейки')).toBeNull();
     for (const label of ['Проверка', 'Успех, если на кости не меньше', 'Провал, если на кости не больше']) expect(cards().field(label)).toBeTruthy();
   });

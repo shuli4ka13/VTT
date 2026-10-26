@@ -10,6 +10,7 @@ import { Card, CardHead, Field, Input, Select, Button, LabelInput } from '../../
 import { ColumnList } from './column-list.tsx';
 import type { Effect, Param, System, ValueKind, Stage } from '@vtt/schema';
 import { StagesEditor } from '../stages-editor.tsx';
+import { ConditionField } from '../condition-field.tsx';
 
 const SHEETS = 'sheet+many';
 const PARAM_KINDS = [...kindsFor('param'), [SHEETS, 'список листов'] as const];
@@ -157,7 +158,7 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
   const kind = String(param.kind ?? 'number');
   const askable = (ASKABLE as readonly string[]).includes(kind);
   const tables = choiceTables(system).map(([key, list]) => [key, list.label || key] as const);
-  const rare = Boolean(param.ask?.hint) || Boolean(param.role) || param.min !== undefined || param.max !== undefined;
+  const rare = Boolean(param.ask?.hint) || Boolean(param.ask?.if) || (kind === 'sheet' && Boolean(param.from)) || Boolean(param.role) || param.min !== undefined || param.max !== undefined;
   const [more, setMore] = useState(rare);
   const full = more || rare;
   return (
@@ -173,7 +174,7 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
               if (next === SHEETS) { t.many = true; t.item ??= { key: freeId(keys, 'каждый'), label: 'Каждый' }; } else { delete t.many; delete t.item; }
               if (next !== 'number') { if (t.role === 'amount') delete t.role; delete (t as { stages?: unknown }).stages; }
               if (next !== 'sheet' && (t.role === 'target' || t.role === 'actor')) delete t.role;
-              if (next !== 'choice') delete t.from;
+              if (next !== 'choice' && next !== 'sheet' && next !== SHEETS) delete t.from;
               if (!(ASKABLE as readonly string[]).includes(next)) delete t.ask;
             })}
           />
@@ -232,6 +233,29 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
                   if (!t.ask) return;
                   if (next) t.ask.hint = next; else delete t.ask.hint;
                 })}
+              />
+            </Field>
+          ) : null}
+          {param.ask ? (
+            <ConditionField
+              value={param.ask.if?.expr}
+              onChange={expr => change(t => {
+                if (!t.ask) return;
+                if (expr) t.ask.if = { expr }; else delete t.ask.if;
+              })}
+              system={system}
+              title="Спрашивать, только если"
+              where={`вход «${param.label ?? param.key}» · спрашивать`}
+              quick={(effect.params ?? []).filter(one => one.key !== param.key && one.kind === 'boolean').map(one => ({ ref: one.key, label: one.label ?? one.key, kind: 'boolean' as const }))}
+              placeholder="например: @сложность > 0"
+            />
+          ) : null}
+          {kind === 'sheet' && Object.keys(system.sheets ?? {}).length ? (
+            <Field label="Только лист типа" hint="пусто — подойдёт любой лист">
+              <Select
+                value={String(param.from ?? '')}
+                options={[['', '— любой —'], ...Object.entries(system.sheets ?? {}).map(([key, one]) => [key, (one as { label?: string }).label || key] as const)] as never}
+                onChange={next => change(t => { if (next) t.from = next; else delete t.from; })}
               />
             </Field>
           ) : null}
