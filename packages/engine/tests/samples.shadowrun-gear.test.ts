@@ -2,6 +2,7 @@ import { group, test, eq, deepEq } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import { exchange } from './play.ts';
+import { perform } from '../src/core/perform.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const sr = PLAYABLE_WORLDS.find(w => (w.system as System).id === 'shadowrun6')!;
@@ -106,6 +107,76 @@ group('Shadowrun 6, глава «Снаряжение и импланты»: с�
     deepEq(rank(3, true), [4, 7]);
     deepEq(rank(3, false), [3, 6]);
     eq(rank(0, true)[0], 1);
+  });
+
+  const toxin = (vector: string) => {
+    const base = compendium.records.find(r => r.id === 'tox_gamma_scopolamine')!;
+    return { ...base, id: 'tox_probe', cells: { ...(base.cells as Record<string, unknown>), vector } };
+  };
+  const poisoned = (vector: string, victim: Sheet, die: () => number) => exchange({
+    system, compendium: { ...compendium, records: [...compendium.records, toxin(vector)] } as Compendium, die,
+    sheets: [runner({}, [{ of: 'tox_probe' }]), victim], actionId: 'tox_probe:0', fromId: 'бег', toIds: ['цель'],
+  });
+  const resistDice = (out: ReturnType<typeof exchange>) =>
+    out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]).find(entry => entry.step === 'стойкость')?.rolls?.length as number;
+
+  test('SR-DRUG-respirator (стр. 280): респиратор 3 даёт +3 кубика против вдыхаемого, против инъекционного — нет', () => {
+    const wearer = (vector: string, mask: boolean) => resistDice(poisoned(vector, { ...runner({}, mask ? [{ of: 'surv_respirator', values: { rating: 3 } }] : []), id: 'цель' } as Sheet, () => 2));
+    eq(wearer('вдыхаемый', true) - wearer('вдыхаемый', false), 3);
+    eq(wearer('инъекционный', true) - wearer('инъекционный', false), 0);
+  });
+
+  test('SR-DRUG-over (стр. 122): сила 12 против 12 успехов — эффектов нет, против 11 — Неподвижность и Ошеломление', () => {
+    const victim = () => ({ ...runner({ body: 6, willpower: 6 }), id: 'цель' }) as Sheet;
+    const tapeOf = (hits: number) => { const faces = [...Array(hits).fill(6), ...Array(12 - hits).fill(1)] as number[]; return () => faces.shift() ?? 1; };
+    const clean = poisoned('инъекционный', victim(), tapeOf(12)).sheets.find(s => s.id === 'цель')!;
+    eq(clean.effects.some(e => e.effectId === 'immobilized' || e.effectId === 'dazed'), false);
+    const hit = poisoned('инъекционный', victim(), tapeOf(11)).sheets.find(s => s.id === 'цель')!;
+    eq(['immobilized', 'dazed'].every(id => hit.effects.some(e => e.effectId === id)), true);
+  });
+
+  const dropEffect = (sheet: Sheet, effectId: string) => {
+    const out = perform({ system, compendium, clock: null, sheets: [sheet], die: () => 1 }, { op: 'belonging', sheetId: sheet.id, list: 'effects', id: effectId, on: false } as never);
+    if (out.kind !== 'done') throw new Error(out.kind);
+    return out.sheets[0]!;
+  };
+  const withEffect = (sheet: Sheet, effectId: string, args: Record<string, unknown>) => ({ ...sheet, effects: [...sheet.effects, { effectId, args }] }) as Sheet;
+
+  test('SR-DRUG-kamikaze (стр. 125): отходняк — Реакция −1, Воля −1, Утомление II и 6 оглушающего на вдвое больший срок; ломка снимает своё Утомление', () => {
+    const fresh = runner({});
+    const crashed = dropEffect(withEffect(fresh, 'dg_kamikaze', { dur: 30 }), 'dg_kamikaze');
+    eq(crashed.values.stun, 6);
+    eq(crashed.effects.find(e => e.effectId === 'dg_kamikaze_crash')?.args?.dur, 60);
+    eq(crashed.effects.find(e => e.effectId === 'fatigued')?.args?.level, 2);
+    eq(at(crashed, 'reaction'), (at(fresh, 'reaction') as number) - 1);
+    eq(at(crashed, 'willpower'), (at(fresh, 'willpower') as number) - 1);
+    const done = dropEffect(crashed, 'dg_kamikaze_crash');
+    eq(done.effects.some(e => e.effectId === 'fatigued'), false);
+  });
+
+  test('SR-DRUG-nitro (стр. 125): Нитро — Внимание +2; отходняк — 9 оглушающего и −2 кубика всем проверкам, включая сопротивление, на срок эффекта', () => {
+    const fresh = runner({});
+    eq(at(withEffect(fresh, 'dg_nitro', { dur: 30 }), 'skills.внимание.pool'), (at(fresh, 'skills.внимание.pool') as number) + 2);
+    const crashed = dropEffect(withEffect(fresh, 'dg_nitro', { dur: 30 }), 'dg_nitro');
+    eq(crashed.values.stun, 9);
+    eq(crashed.effects.find(e => e.effectId === 'dg_nitro_crash')?.args?.dur, 30);
+    const dice = (sheet: Sheet, tag: string) => {
+      const out = perform({ system, compendium, clock: null, sheets: [sheet], die: () => 6 }, { op: 'roll', sheetId: sheet.id, tag } as never);
+      if (out.kind !== 'done') throw new Error(out.kind);
+      return (/\[([^\]]*)\]/.exec(out.log.join('\n'))?.[1] ?? '').split(',').filter(Boolean).length;
+    };
+    eq(dice(fresh, 'skills.внимание.pool') - dice(crashed, 'skills.внимание.pool'), 2);
+    const soak = (target: Sheet) => {
+      const out = exchange({ system, compendium, die: () => 6, sheets: [runner({ agility: 4, 'skills.стрельба.rank': 5 }, [{ of: 'predator_vi' }]), { ...target, id: 'цель' } as Sheet], actionId: 'predator_vi:0', fromId: 'бег', toIds: ['цель'], inputs: { дистанция: 'близкая' } });
+      return out.reports.flatMap(r => (r.report.trace ?? []) as { step: unknown; rolls?: number[] }[]).find(entry => entry.step === 'сопротивление_бросок')?.rolls?.length as number;
+    };
+    eq(soak(fresh) - soak({ ...crashed, effects: crashed.effects.filter(e => e.effectId !== 'fatigued') } as Sheet), 2);
+  });
+
+  test('SR-DRUG-longway (стр. 125): конец «Долгого пути» не наносит 12 оглушающего, даёт Утомление I', () => {
+    const crashed = dropEffect(withEffect(runner({}), 'dg_long_way', { dur: 30 }), 'dg_long_way');
+    eq(Number(crashed.values.stun ?? 0), 0);
+    eq(crashed.effects.find(e => e.effectId === 'fatigued')?.args?.level ?? 1, 1);
   });
 });
 

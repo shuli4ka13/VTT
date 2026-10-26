@@ -21855,7 +21855,8 @@
             },
             "versus": {
               "expr": "@стойкость"
-            }
+            },
+            "successWhen": "over"
           },
           {
             "type": "branch",
@@ -21932,21 +21933,6 @@
             },
             "steps": [
               {
-                "type": "emit",
-                "effect": "take_damage",
-                "args": {
-                  "лист": {
-                    "expr": "@лист"
-                  },
-                  "amount": {
-                    "expr": "12"
-                  },
-                  "physical_hit": {
-                    "expr": "нет"
-                  }
-                }
-              },
-              {
                 "type": "status",
                 "effect": "fatigued",
                 "to": {
@@ -22001,9 +21987,14 @@
               },
               {
                 "type": "status",
-                "effect": "fatigued",
+                "effect": "dg_kamikaze_crash",
                 "to": {
                   "expr": "@лист"
+                },
+                "args": {
+                  "dur": {
+                    "expr": "2 * @about.dur"
+                  }
                 }
               }
             ]
@@ -22026,6 +22017,18 @@
                   },
                   "physical_hit": {
                     "expr": "нет"
+                  }
+                }
+              },
+              {
+                "type": "status",
+                "effect": "dg_nitro_crash",
+                "to": {
+                  "expr": "@лист"
+                },
+                "args": {
+                  "dur": {
+                    "expr": "@about.dur"
                   }
                 }
               }
@@ -22378,6 +22381,14 @@
             "op": "add",
             "value": {
               "expr": "1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "skills.внимание.pool",
+            "op": "add",
+            "value": {
+              "expr": "2"
             }
           }
         ]
@@ -23664,6 +23675,106 @@
             },
             "to": {
               "expr": "@действующий"
+            }
+          }
+        ]
+      },
+      "dg_kamikaze_crash": {
+        "label": "Ломка «Камикадзе»",
+        "group": "Химия",
+        "activation": "passive",
+        "duration": {
+          "kind": "minutes",
+          "max": {
+            "expr": "@dur"
+          }
+        },
+        "description": "Реакция −1, Воля −1 и Утомление II на время, вдвое большее срока эффекта (стр. 125).",
+        "params": [
+          {
+            "key": "dur",
+            "label": "Минут",
+            "kind": "number"
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "reaction",
+            "op": "add",
+            "value": {
+              "expr": "-1"
+            },
+            "stage": "аугментация"
+          },
+          {
+            "kind": "value",
+            "target": "willpower",
+            "op": "add",
+            "value": {
+              "expr": "-1"
+            },
+            "stage": "аугментация"
+          }
+        ],
+        "attach": [
+          {
+            "type": "status",
+            "effect": "fatigued",
+            "to": {
+              "expr": "@носитель"
+            },
+            "args": {
+              "level": {
+                "expr": "2"
+              }
+            }
+          }
+        ],
+        "detach": [
+          {
+            "type": "status",
+            "mode": "remove",
+            "effect": "fatigued",
+            "to": {
+              "expr": "@носитель"
+            },
+            "where": {
+              "expr": "@level == 2"
+            },
+            "one": true
+          }
+        ]
+      },
+      "dg_nitro_crash": {
+        "label": "Ломка Нитро",
+        "group": "Химия",
+        "activation": "passive",
+        "duration": {
+          "kind": "minutes",
+          "max": {
+            "expr": "@dur"
+          }
+        },
+        "description": "−2 ко всем проверкам, включая сопротивление урону, на срок эффекта (стр. 125).",
+        "params": [
+          {
+            "key": "dur",
+            "label": "Минут",
+            "kind": "number"
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "-2"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель"
             }
           }
         ]
@@ -26537,7 +26648,8 @@
             },
             "tags": [
               "сопротивление",
-              "токсин"
+              "токсин",
+              "вдыхаемый"
             ],
             "if": {
               "expr": "@бросающий == @носитель"
