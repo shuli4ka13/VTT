@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { fireMoments } from './kit.ts';
-import { exchange } from './play.ts';
+import { exchange, fight } from './play.ts';
 import type { System, Sheet, Effect } from '../src/model/types.ts';
 
 const dnd = PLAYABLE_WORLDS.find(w => (w.system as System).id === 'dnd5e')!;
@@ -10,7 +10,6 @@ const sheetOf = (id: string, values: Record<string, unknown> = {}, effects: stri
   const sheet = structuredClone(dnd.sheets.find(s => s.id === id)!) as Sheet;
   return { ...sheet, values: { ...sheet.values, ...values }, effects: [...(sheet.effects ?? []), ...effects.map(effectId => ({ effectId }))] } as Sheet;
 };
-const desk = (battle: boolean) => sheetOf('стол', { battle });
 const world = (die: number, own: System = system) => ({ system: own, compendium: dnd.compendium, die: () => die });
 
 describe('D&D: отдых восполняет строки таблиц, а не перечень в правиле', () => {
@@ -35,7 +34,7 @@ describe('D&D: отдых восполняет строки таблиц, а н�
 
 describe('D&D: начало хода — «В начале хода» каждой строки «За ход»', () => {
   const start = (effects: string[]) => fireMoments([{ moment: 'turn-start', sheetId: 'arven' }],
-    [sheetOf('arven', { 'turn.действие.left': 0, 'turn.бонусное.left': 0, 'turn.реакция.left': 0, 'turn.атаки.left': 3 }, effects), desk(true)], world(1) as never)
+    [sheetOf('arven', { 'turn.действие.left': 0, 'turn.бонусное.left': 0, 'turn.реакция.left': 0, 'turn.атаки.left': 3 }, effects)], world(1) as never)
     .sheets.find(s => s.id === 'arven')!.values;
 
   it('одно действие, по одному бонусному и реакции, атак — ноль', () => {
@@ -99,7 +98,7 @@ describe('D&D: «Лечение» — один шаг для всего, что 
 describe('D&D: плата реакции вложена в три вызова — и всё равно отказывает', () => {
   const attacked = (values: Record<string, unknown>) => exchange({
     system, compendium: dnd.compendium, die: () => 15,
-    sheets: [sheetOf('orc'), sheetOf('mirra', values), desk(true)], actionId: 'orc_greataxe:0', fromId: 'orc', toId: 'mirra',
+    sheets: [sheetOf('orc'), sheetOf('mirra', values)], clock: fight('orc', 'mirra'), actionId: 'orc_greataxe:0', fromId: 'orc', toId: 'mirra',
     answer: () => [],
   }).questions.flatMap(question => question.offers.map(offer => offer.label));
 

@@ -102,11 +102,6 @@
             "kind": "number",
             "min": 0,
             "max": 6
-          },
-          {
-            "key": "battle",
-            "label": "Идёт бой",
-            "kind": "boolean"
           }
         ]
       },
@@ -722,7 +717,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.battle"
+              "expr": "@стол.бой"
             }
           },
           {
@@ -769,16 +764,6 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@стол.battle"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "да"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
                   "expr": "@носитель.turn_standard"
                 },
                 "direction": "set",
@@ -804,32 +789,6 @@
                 "direction": "set",
                 "value": {
                   "expr": "1"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "battle_end": {
-        "label": "Конец боя",
-        "group": "Общие правила",
-        "description": "Вне боя действия не считаются.",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "on": [
-          {
-            "on": "moment:combat-end",
-            "steps": [
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@стол.battle"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "нет"
                 }
               }
             ]
@@ -984,7 +943,6 @@
     },
     "grants": [
       "battle_start",
-      "battle_end",
       "turn_refresh"
     ],
     "sheets": {
@@ -1136,17 +1094,6 @@
               },
               "turn_quick": {
                 "kind": "pips"
-              }
-            }
-          },
-          {
-            "table": "стол",
-            "columns": [
-              "battle"
-            ],
-            "views": {
-              "battle": {
-                "kind": "toggle"
               }
             }
           }
@@ -1400,8 +1347,7 @@
       "systemId": "13age",
       "name": "Стол",
       "values": {
-        "escalation": 0,
-        "battle": false
+        "escalation": 0
       },
       "has": [],
       "effects": []

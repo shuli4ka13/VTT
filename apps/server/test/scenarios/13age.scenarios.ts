@@ -92,7 +92,7 @@ export const scenarios: Scenario[] = [
       { act: 'longsword:0', from: 'kai', to: 'orc' },
       { act: 'longsword:0', from: 'kai', to: 'orc', refused: 'потрачено' },
     ],
-    expect: { values: { kai: { turn_standard: 0 }, orc: { hp: 18 }, 'стол': { battle: true } } },
+    expect: { values: { kai: { turn_standard: 0 }, orc: { hp: 18 } } },
   },
   {
     name: 'новый ход героя возвращает потраченное стандартное действие',
@@ -119,7 +119,7 @@ export const scenarios: Scenario[] = [
       { act: 'longsword:0', from: 'kai', to: 'orc' },
       { act: 'longsword:0', from: 'kai', to: 'orc' },
     ],
-    expect: { values: { 'стол': { battle: false }, orc: { hp: 6 } } },
+    expect: { values: { orc: { hp: 6 } } },
   },
   {
     name: 'кость эскалации растёт сама с началом нового раунда боя',

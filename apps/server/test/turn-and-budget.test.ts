@@ -98,8 +98,7 @@ describe('часы и траты хода не портятся', () => {
     expect(broken.body.message).toContain('нет_такой_правки');
 
     const state = (await as(http().get(`/rooms/${roomId}`))).body;
-    const desk = state.sheets.find((sheet: { id: string }) => sheet.id === 'стол');
-    expect(desk.values.battle, 'начало боя отметило бой на столе').toBe(true);
+    expect(state.clock.round, 'бой идёт').toBeGreaterThan(0);
     expect(state.sheets.find((sheet: { id: string }) => sheet.id === mirra.id).values.turn_action ?? 1, 'упавшее действие не потратило действие').toBe(1);
 
     const done = await as(http().post(`/rooms/${roomId}/act`)).send(spray).expect(201);

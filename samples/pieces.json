@@ -116,7 +116,6 @@
     ],
     "grants": [
       "battle_start",
-      "battle_end",
       "turn_refresh",
       "dodge",
       "dash",

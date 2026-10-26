@@ -269,18 +269,6 @@
           }
         ]
       },
-      "стол": {
-        "label": "Стол",
-        "shape": "single",
-        "owner": "desk",
-        "columns": [
-          {
-            "key": "battle",
-            "label": "Идёт бой",
-            "kind": "boolean"
-          }
-        ]
-      },
       "dv_range": {
         "label": "Сложность по дистанции",
         "key": "range",
@@ -1579,7 +1567,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.battle"
+              "expr": "@стол.бой"
             }
           },
           {
@@ -1882,16 +1870,6 @@
               {
                 "type": "apply",
                 "target": {
-                  "expr": "@стол.battle"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "да"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
                   "expr": "@носитель.turn_action"
                 },
                 "direction": "set",
@@ -1907,32 +1885,6 @@
                 "direction": "set",
                 "value": {
                   "expr": "1"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "battle_end": {
-        "label": "Конец боя",
-        "group": "Общие правила",
-        "description": "Вне боя действия не считаются.",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "on": [
-          {
-            "on": "moment:combat-end",
-            "steps": [
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@стол.battle"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "нет"
                 }
               }
             ]
@@ -1981,7 +1933,6 @@
     },
     "grants": [
       "battle_start",
-      "battle_end",
       "turn_refresh",
       "serious_wound_rule",
       "death_save",
@@ -2324,14 +2275,6 @@
                 "kind": "pips"
               }
             }
-          },
-          {
-            "table": "стол",
-            "views": {
-              "battle": {
-                "kind": "toggle"
-              }
-            }
           }
         ]
       }
@@ -2457,16 +2400,6 @@
           "of": "kevlar"
         }
       ],
-      "effects": []
-    },
-    {
-      "id": "стол",
-      "systemId": "cp-slice",
-      "name": "Стол",
-      "values": {
-        "battle": false
-      },
-      "has": [],
       "effects": []
     }
   ]

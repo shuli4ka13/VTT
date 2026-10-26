@@ -440,18 +440,6 @@
           }
         ]
       },
-      "стол": {
-        "label": "Стол",
-        "shape": "single",
-        "owner": "desk",
-        "columns": [
-          {
-            "key": "battle",
-            "label": "Идёт бой",
-            "kind": "boolean"
-          }
-        ]
-      },
       "turn": {
         "label": "За ход",
         "key": "word",
@@ -4456,7 +4444,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.battle"
+              "expr": "@стол.бой"
             }
           },
           {
@@ -5326,7 +5314,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.battle и @лист.turn.атаки.left < 1"
+              "expr": "@стол.бой и @лист.turn.атаки.left < 1"
             }
           },
           {
@@ -5357,7 +5345,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.battle"
+              "expr": "@стол.бой"
             }
           },
           {
@@ -5681,7 +5669,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@стол.battle"
+              "expr": "@стол.бой"
             }
           },
           {
@@ -7738,16 +7726,6 @@
             "on": "moment:combat-start",
             "steps": [
               {
-                "type": "apply",
-                "target": {
-                  "expr": "@стол.battle"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "да"
-                }
-              },
-              {
                 "type": "emit",
                 "effect": "turn_reset",
                 "args": {
@@ -7764,32 +7742,6 @@
                 "direction": "add",
                 "value": {
                   "expr": "меньшее из(1, @носитель.hasted)"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "battle_end": {
-        "label": "Конец боя",
-        "group": "Общие правила",
-        "description": "Вне боя действия не считаются.",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "on": [
-          {
-            "on": "moment:combat-end",
-            "steps": [
-              {
-                "type": "apply",
-                "target": {
-                  "expr": "@стол.battle"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "нет"
                 }
               }
             ]
@@ -8556,7 +8508,6 @@
     },
     "grants": [
       "battle_start",
-      "battle_end",
       "turn_refresh",
       "taken_rule",
       "exhaustion_rule",
@@ -8887,14 +8838,6 @@
       {
         "name": "В бою",
         "parts": [
-          {
-            "table": "стол",
-            "views": {
-              "battle": {
-                "kind": "toggle"
-              }
-            }
-          },
           {
             "table": "turn",
             "views": {
@@ -10039,16 +9982,6 @@
           "of": "ogre_club"
         }
       ],
-      "effects": []
-    },
-    {
-      "id": "стол",
-      "systemId": "dnd5e",
-      "name": "Стол",
-      "values": {
-        "battle": false
-      },
-      "has": [],
       "effects": []
     }
   ]
