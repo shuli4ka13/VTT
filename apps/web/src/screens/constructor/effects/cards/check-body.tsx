@@ -198,7 +198,7 @@ function CheckFormula({ step, roll, context, edit, onUnpair, lead = null }: { st
 
   return (
     <>
-      {lead ? <div className="roll-formula">{lead}{formula}</div> : formula}
+      <span data-guide="check-formula">{lead ? <div className="roll-formula">{lead}{formula}</div> : formula}</span>
       {trouble ? <span className="field__error">{trouble}</span> : null}
     </>
   );

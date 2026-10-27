@@ -51,7 +51,7 @@ describe('FormulaChips', () => {
     expect(screen.getByDisplayValue('@сил')).toBeTruthy();
   });
 
-  it('имена «здесь же» стоят выше полей листа, а совпавшие с начала — выше вложенных', () => {
+  it('имена «в этом эффекте» стоят выше полей листа, а совпавшие с начала — выше вложенных', () => {
     const рядом = new Map([['damage_dice', 'Кость урона']]);
     const большая = withColumn(
       withColumn(system, { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 10 }),
@@ -64,7 +64,7 @@ describe('FormulaChips', () => {
     fireEvent.click(input);
 
     const предложено = [...document.querySelectorAll('.slot__option')].map(o => o.textContent?.trim());
-    expect(предложено).toEqual(['здесь жеКость урона', 'полеКость хитов', 'полеЛовкость']);
+    expect(предложено).toEqual(['в этом эффектеКость урона', 'поле листаКость хитов', 'поле листаЛовкость']);
   });
 
   it('фишка с длинной подписью укорачивается, полное имя — в подсказке', () => {
@@ -177,7 +177,7 @@ describe('лист поля — часть имени', () => {
     input.setSelectionRange(value.length, value.length);
     fireEvent.click(input);
     const groups = [...document.querySelectorAll('.slot__option')].map(o => o.textContent?.trim());
-    expect(groups).toEqual(['поле: цельСила', 'поле: Кто действуетСила']);
+    expect(groups).toEqual(['у «цель»Сила', 'у «Кто действует»Сила']);
     fireEvent.mouseDown(screen.getAllByText('Сила')[1]!);
     expect(value).toBe('@действующий.сила');
   });

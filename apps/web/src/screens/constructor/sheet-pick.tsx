@@ -20,7 +20,7 @@ export function SheetPick({ value, onChange, sheets, system, empty = '— как
   const list = [...(sheets ?? new Map<string, string>())];
   const names = new Map([...list, ...(known ?? [])]);
   const options: BarOption[] = [
-    ...list.map(([name, label]) => ({ group: 'листы', label, name, onPick: (insert: (piece: string) => string, bar: BarApi) => bar.write(insert(`@${name}`)) })),
+    ...list.map(([name, label]) => ({ group: 'лист целиком', label, name, onPick: (insert: (piece: string) => string, bar: BarApi) => bar.write(insert(`@${name}`)) })),
     ...extra.filter(([formula]) => formula !== '').map(([formula, label]) => ({ group: 'ещё', label, onPick: (_insert: (piece: string) => string, bar: BarApi) => bar.write(formula) })),
   ];
   return (

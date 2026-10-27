@@ -49,7 +49,7 @@ export function pointOf(step: Step, tab: ConstructorTab, view: View = viewNow(),
   }
   const fold = step.panel ? foldOf(step.panel, root) : null;
   if (fold) return { prompt: `Разверните панель «${step.panel}».`, target: fold };
-  return { prompt: null, target: findAnchor(moveOf(step, view)?.at, root) ?? firstOf(step.via, root) };
+  return { prompt: null, target: firstOf(moveOf(step, view)?.at, root) ?? firstOf(step.via, root) };
 }
 
 function useDomTick(): number {

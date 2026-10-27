@@ -389,12 +389,12 @@ describe('уроки конструктора', () => {
         const parts = Array.isArray(solve) ? solve : [];
         for (const [at, move] of movesOf(step).entries()) {
           expect(moveAt(step, view!), `${lesson.id}/${step.id}: ход ${at + 1} — рамка не на нём`).toBe(at);
-          for (let k = 0; k < 4 && !findAnchor(move.at) && step.via; k++) {
+          for (let k = 0; k < 4 && !firstOf(move.at) && step.via; k++) {
             const via = firstOf(step.via);
             expect(via, `${lesson.id}/${step.id}: нет «${JSON.stringify(step.via)}»`).not.toBeNull();
             press(via!);
           }
-          expect(findAnchor(move.at), `${lesson.id}/${step.id}: ход ${at + 1}, нет якоря ${JSON.stringify(move.at)}`).not.toBeNull();
+          expect(firstOf(move.at), `${lesson.id}/${step.id}: ход ${at + 1}, нет якоря ${JSON.stringify(move.at)}`).not.toBeNull();
           parts[at]?.();
           openAll();
           if (move.done) expect(move.done(view!), `${lesson.id}/${step.id}: ход ${at + 1} не засчитан`).toBe(true);

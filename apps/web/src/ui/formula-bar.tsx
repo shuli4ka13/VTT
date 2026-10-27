@@ -45,7 +45,7 @@ export function FormulaBar() {
           if (e.key === 'Escape') { e.preventDefault(); cancel(); }
         }}
       />
-      <Button size="sm" variant="ghost" onClick={commit}>готово</Button>
+      <span data-guide="formula-done"><Button size="sm" variant="ghost" onClick={commit}>готово</Button></span>
     </div>
   );
 }

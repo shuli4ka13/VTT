@@ -260,10 +260,10 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
             </Field>
           ) : null}
           {kind === 'sheet' && !param.many ? (
-            <Field label="Приходит сам" hint="если вызов не передал лист явно: текущая цель вызывающего или тот, кто действует">
+            <Field label="Приходит сам" hint="когда другой эффект вызвал этот и лист не передал. Пример: «Удар» в «Для каждого из» вызывает «Урон» — «Урон» сам получит ту цель, по которой сейчас идёт «Удар»">
               <Select
                 value={param.role === 'target' || param.role === 'actor' ? param.role : ''}
-                options={[['', 'нет — передают явно'], ['target', 'текущая цель'], ['actor', 'кто действует']] as const}
+                options={[['', 'нет — пусть передают'], ['target', 'цель, по которой идёт вызвавший'], ['actor', 'кто нажал кнопку']] as const}
                 onChange={next => change(t => { if (next) t.role = next as 'target' | 'actor'; else delete t.role; })}
               />
             </Field>

@@ -300,20 +300,20 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     ];
     const offered = new Set((extraOptions ?? []).map(o => o.name).filter(Boolean));
     const viaSheet = (tag: string) => [...(sheets?.keys() ?? [])].some(name => extraNames?.has(`${name}.${tag}`));
-    const local = [...(extraNames ?? [])].filter(([tag]) => !offered.has(tag) && !viaSheet(tag)).map(([tag, label]) => ({ tag, label, group: 'здесь же' }));
+    const local = [...(extraNames ?? [])].filter(([tag]) => !offered.has(tag) && !viaSheet(tag)).map(([tag, label]) => ({ tag, label, group: 'в этом эффекте' }));
     const states = statesOf(system);
     if (!sheets?.size) {
       return [
-        ...local, ...pickOptions(system, table), ...sheet.map(f => ({ tag: f.tag, label: f.label, group: f.via ? 'по ссылке' : 'поле' })),
+        ...local, ...pickOptions(system, table), ...sheet.map(f => ({ tag: f.tag, label: f.label, group: f.via ? 'по ссылке' : 'поле листа' })),
         ...states.map(s => ({ ...s, group: 'висит на листе' })), ...desk,
       ];
     }
     const named = [...sheets];
     return [
       ...local,
-      ...named.map(([name, label]) => ({ tag: name, label, group: 'листы' })),
-      ...named.flatMap(([name, label]) => sheet.map(f => ({ tag: `${name}.${f.tag}`, label: f.label, group: `поле: ${label}` }))),
-      ...named.flatMap(([name, label]) => states.map(s => ({ tag: `${name}.${s.tag}`, label: s.label, group: `висит: ${label}` }))),
+      ...named.map(([name, label]) => ({ tag: name, label, group: 'лист целиком' })),
+      ...named.flatMap(([name, label]) => sheet.map(f => ({ tag: `${name}.${f.tag}`, label: f.label, group: `у «${label}»` }))),
+      ...named.flatMap(([name, label]) => states.map(s => ({ tag: `${name}.${s.tag}`, label: s.label, group: `висит у «${label}»` }))),
       ...desk,
     ];
   }, [system, extraNames, extraOptions, paths, sheets, table]);
