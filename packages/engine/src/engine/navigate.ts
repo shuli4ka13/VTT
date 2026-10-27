@@ -29,10 +29,13 @@ export function splitPath(name: string): { head: string; path: string[] } | null
   return { head: name.slice(0, dot), path: name.slice(dot + 1).split('.') };
 }
 
+const columnBy = (columns: readonly TableColumn[] | undefined, key: string | undefined): TableColumn | undefined =>
+  (columns ?? []).find(c => c.key === key) ?? (columns ?? []).find(c => c.key === slugOf(key));
+
 function columnAt(system: System, tableId: string, columnKey: string, owner: string): TableColumn {
   const table = tableOf(system, tableId);
   if (!table) throw new EngineError(`${owner}: таблицы «${tableId}» нет`);
-  const column = (table.columns ?? []).find(c => c.key === columnKey);
+  const column = columnBy(table.columns, columnKey);
   if (!column) {
     throw new EngineError(
       `${owner}: у таблицы «${table.label || tableId}» нет колонки «${columnKey}» — `
@@ -53,7 +56,7 @@ function linked(column: TableColumn, columnKey: string, rest: string[], owner: s
 function emptyEnd(system: System, tableId: string, path: string[]): unknown {
   let current = tableId;
   for (let i = 0; i < path.length; i++) {
-    const column = (tableOf(system, current)?.columns ?? []).find(c => c.key === path[i]);
+    const column = columnBy(tableOf(system, current)?.columns, path[i]);
     if (!column) return null;
     if (i === path.length - 1) return column.default ?? null;
     const link = linkOf(column);
@@ -69,9 +72,9 @@ export function walk(
   let current = tableId;
   let value = key;
   for (let i = 0; i < path.length; i++) {
-    const columnKey = path[i]!;
     if (value === null || value === undefined || value === '') return emptyEnd(system, current, path.slice(i));
-    const column = columnAt(system, current, columnKey, owner);
+    const column = columnAt(system, current, path[i]!, owner);
+    const columnKey = column.key;
     const cell = readCell(system, pass, current, value, columnKey, owner, scope);
     if (i === path.length - 1) return cell;
     current = linked(column, columnKey, path.slice(i + 1), owner);
@@ -86,12 +89,12 @@ export function reach(
   let current = tableId;
   let value = key;
   for (let i = 0; i < path.length; i++) {
-    const columnKey = path[i]!;
     const table = tableOf(system, current);
     if (value === null || value === undefined || value === '') {
       throw new EngineError(`${owner}: строка «${table?.label || current}» не задана — какую клетку менять?`);
     }
-    const column = columnAt(system, current, columnKey, owner);
+    const column = columnAt(system, current, path[i]!, owner);
+    const columnKey = column.key;
     if (i === path.length - 1) {
       const row = rowOf(system, current, value, owner);
       if (!row) throw new EngineError(`${owner}: в таблице «${table?.label || current}» нет строки «${String(value)}»`);
@@ -105,12 +108,13 @@ export function reach(
 }
 
 export function resolveAddress(system: System, pass: Pass, name: string): { value: unknown } | null {
-  const [tableId, rowKey, column, ...rest] = name.split('.');
+  const [tableId, rowKey, segment, ...rest] = name.split('.');
   const table = tableId ? system.tables?.[tableId] : undefined;
   if (!table || rowKey === undefined || isRange(table) || hasField(system, tableId)) return null;
   const row = (table.rows ?? []).find(r => rowKeyOf(r) === slugOf(rowKey));
   if (!row) throw new EngineError(`«${name}»: в таблице «${table.label || tableId}» нет строки «${rowKey}»`);
-  if (!column) return { value: row.value };
+  if (!segment) return { value: row.value };
+  const column = columnBy(table.columns, segment)?.key ?? segment;
   const checked = walkColumns(system, tableId!, [column, ...rest]);
   if (!checked.ok) throw new EngineError(`«${name}»: ${checked.text}`);
   const cell = readCell(system, pass, tableId!, row.value, column, name);
