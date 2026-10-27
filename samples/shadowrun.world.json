@@ -4100,24 +4100,28 @@
           },
           {
             "key": "dv_e",
+            "label": "СУ в эпицентре",
             "expr": {
               "expr": "@rating"
             }
           },
           {
             "key": "dv_c",
+            "label": "СУ вплотную",
             "expr": {
               "expr": "округлить вниз(@rating / 2)"
             }
           },
           {
             "key": "dv_n",
+            "label": "СУ близко",
             "expr": {
               "expr": "округлить вниз(@rating / 4)"
             }
           },
           {
             "key": "blast",
+            "label": "Взрыв, м",
             "expr": {
               "expr": "@rating"
             }
@@ -7321,12 +7325,14 @@
           },
           {
             "key": "cost",
+            "label": "Цена, ¥",
             "expr": {
               "expr": "@rating * @focus_kind.cost_mul"
             }
           },
           {
             "key": "avail",
+            "label": "Доступность",
             "expr": {
               "expr": "@rating + @focus_kind.avail_add"
             }
@@ -10138,22 +10144,26 @@
           },
           {
             "key": "cost",
+            "label": "Цена, ¥",
             "expr": {
               "expr": "@rating * 500"
             }
           },
           {
             "key": "avail",
+            "label": "Доступность",
             "expr": {
               "expr": "@rating"
             }
           },
           {
             "key": "rating_max",
+            "label": "Предел рейтинга",
             "default": 9
           },
           {
             "key": "legal",
+            "label": "Легальность",
             "default": "свободно"
           }
         ],
@@ -26188,6 +26198,19 @@
               "expr": "если(@matrix_mode.online, 1, 0)"
             }
           }
+        ]
+      },
+      {
+        "id": "insecurity",
+        "table": "quality",
+        "label": "Неуверенность",
+        "description": "В начале столкновения — проверка Воли с порогом 2; провал — до конца столкновения Преимущество не получать и не тратить (стр. 77)",
+        "cells": {
+          "kind": "отрицательное",
+          "karma": 6
+        },
+        "grants": [
+          "insecurity_check"
         ]
       },
       {
