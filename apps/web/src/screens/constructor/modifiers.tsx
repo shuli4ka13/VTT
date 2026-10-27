@@ -16,6 +16,7 @@ import { callNamesOf, holderConditionOf } from '@vtt/engine/model/references';
 import { ConditionField } from './condition-field.tsx';
 import { DICE_HINT, DICE_BAR_OPTION } from './value-field.tsx';
 import { shapeProblem } from './formula-shape.ts';
+import { rowPicks } from './row-picks.ts';
 
 const OPS = [
   ['add', 'прибавить'],
@@ -89,7 +90,9 @@ export function useModifierRows({ system, modifiers, onEdit, editSystem, table, 
     }); },
   };
 
-  const rows = modifiers.map((modifier, index) => (
+  const rows = modifiers.map((modifier, index) => {
+    const picks = modifier.kind === 'value' ? rowPicks(system, modifier.target, names) : null;
+    return (
     <div key={index} className="mod-item">
       {isOpen(index) ? (
         <Card className="mod-card">
@@ -122,7 +125,7 @@ export function useModifierRows({ system, modifiers, onEdit, editSystem, table, 
                 <FormulaInput
                   where="модификатор · на сколько"
                   system={system}
-                  {...(names ? { extraNames: names } : {})}
+                  {...(picks ? { extraNames: picks.names, options: picks.options } : names ? { extraNames: names } : {})}
                   value={modifier.value?.expr ?? ''}
                   onChange={expr => onEdit(draft => {
                     (draft[index] as { value: { expr: string } }).value = { expr };
@@ -154,7 +157,7 @@ export function useModifierRows({ system, modifiers, onEdit, editSystem, table, 
                 if (expr) d.if = { expr }; else delete d.if;
               })}
               system={system}
-              {...(names ? { names } : {})}
+              {...(picks ? { names: picks.names, phrases: picks.phrases } : names ? { names } : {})}
               where="модификатор · только когда"
               placeholder="например: @тяжёлая_броня"
               ruleHint="На листе носителя. Не сошлось — правка не действует."
@@ -174,7 +177,8 @@ export function useModifierRows({ system, modifiers, onEdit, editSystem, table, 
         </WhileWhenRow>
       )}
     </div>
-  ));
+    );
+  });
 
   return { rows, add };
 }

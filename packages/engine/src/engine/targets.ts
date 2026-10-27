@@ -33,7 +33,7 @@ function cellTargets(system: System): Target[] {
       const colName = column.label || column.key;
       out.push({
         tag: columnTagOf(id, column.key),
-        label: `${name} → ${colName} — любая строка`,
+        label: `${name} → ${colName} — у каждой строки`,
         group: 'Таблицы',
         kind: 'cell',
         from: id,

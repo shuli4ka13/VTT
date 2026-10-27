@@ -52,7 +52,7 @@ const columnLabel = (system: System, table: string, key: string): string =>
 
 function targetLabel(system: System, target: string, table?: string): string {
   const anyRow = /^cell:([^.]+)\.\*\.(.+)$/u.exec(target);
-  if (anyRow) return `${system.tables?.[anyRow[1]!]?.label ?? anyRow[1]} → ${columnLabel(system, anyRow[1]!, anyRow[2]!)} — у каждой`;
+  if (anyRow) return `${system.tables?.[anyRow[1]!]?.label ?? anyRow[1]} → ${columnLabel(system, anyRow[1]!, anyRow[2]!)} — у каждой строки`;
   const byProp = /^([^.]+)\.\{@строка\.([\p{L}\p{N}_]+)\}\.(.+)$/u.exec(target);
   if (byProp) return `${system.tables?.[byProp[1]!]?.label ?? byProp[1]} → ${columnLabel(system, byProp[1]!, byProp[3]!)} по «${table ? columnLabel(system, table, byProp[2]!) : byProp[2]}»`;
   const byInput = /^\{@([\p{L}\p{N}_]+)(?:\.([\p{L}\p{N}_]+))?\}$/u.exec(target);
