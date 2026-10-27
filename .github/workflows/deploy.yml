@@ -11,9 +11,22 @@ concurrency:
 
 jobs:
   checks:
-    name: Тесты
+    name: Тесты ${{ matrix.suite }} ${{ matrix.shard }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { suite: schema, dir: packages/schema, shard: 1/1 }
+          - { suite: engine, dir: packages/engine, shard: 1/3 }
+          - { suite: engine, dir: packages/engine, shard: 2/3 }
+          - { suite: engine, dir: packages/engine, shard: 3/3 }
+          - { suite: server, dir: apps/server, shard: 1/1 }
+          - { suite: web, dir: apps/web, shard: 1/4 }
+          - { suite: web, dir: apps/web, shard: 2/4 }
+          - { suite: web, dir: apps/web, shard: 3/4 }
+          - { suite: web, dir: apps/web, shard: 4/4 }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,22 +35,11 @@ jobs:
           cache: yarn
       - run: yarn install --frozen-lockfile --non-interactive
       - run: yarn build
-      - name: schema
-        run: npx vitest run --reporter=dot
-        working-directory: packages/schema
-      - name: engine
-        run: npx vitest run --reporter=dot
-        working-directory: packages/engine
-      - name: server
-        run: npx vitest run --reporter=dot
-        working-directory: apps/server
-      - name: web
-        run: npx vitest run --reporter=dot
-        working-directory: apps/web
+      - run: npx vitest run --reporter=dot --shard=${{ matrix.shard }}
+        working-directory: ${{ matrix.dir }}
 
   image:
     name: Образ
-    needs: checks
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -66,7 +68,7 @@ jobs:
 
   deploy:
     name: Выкатка на стенд
-    needs: image
+    needs: [checks, image]
     runs-on: ubuntu-latest
     permissions:
       contents: read
