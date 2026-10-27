@@ -62,6 +62,7 @@ export interface GuideState {
   note: string | null;
   passed: string[];
   started: Record<string, number>;
+  marks: Record<number, System>;
   start: (id: string, again?: boolean) => Promise<boolean>;
   go: (step: number) => void;
   fold: (folded: boolean) => void;
@@ -79,7 +80,7 @@ const marked = (id: string | null): boolean => {
 const close = (note: string | null = null): void => {
   const saved = readSaved();
   if (saved.real) writeSaved({ ...saved, real: null });
-  useGuide.setState({ lesson: null, step: 0, folded: false, note, started: stepsOf() });
+  useGuide.setState({ lesson: null, step: 0, folded: false, note, started: stepsOf(), marks: {} });
 };
 
 async function giveBack(real: Snapshot): Promise<string | null> {
@@ -114,6 +115,7 @@ export const useGuide = create<GuideState>()(persist((set, get) => ({
   note: null,
   passed: readPassed(),
   started: stepsOf(),
+  marks: {},
 
   start: async (id, again = false) => {
     const lesson = lessonOf(id);
@@ -140,12 +142,24 @@ export const useGuide = create<GuideState>()(persist((set, get) => ({
     set({ lesson: lesson.id, step, folded: false, note: null, run: get().run + 1, started: stepsOf() });
     useWorld.setState({ origin: { mode: 'system', systemTitle: lesson.title, lesson: lesson.id } });
     world.replaceWorld({ system: structuredClone(entry?.system ?? lesson.seed), compendium: { records: [] }, sheets: [] });
+    set({ marks: { [step]: structuredClone(useWorld.getState().system) } });
     world.pick({ activeTab: lesson.tab, activeTableId: null, activeStepIndex: null, activeSheetKind: null, activeEffectId: null, activeFieldTag: null });
     markClean();
     return true;
   },
 
-  go: step => set({ step, note: null }),
+  go: step => {
+    const now = get().step;
+    const world = useWorld.getState();
+    const marks = Object.fromEntries(Object.entries(get().marks).filter(([at]) => Number(at) <= step));
+    if (step > now) marks[step] = structuredClone(world.system);
+    const back = step < now ? get().marks[step] : undefined;
+    if (back) {
+      world.replaceWorld({ system: structuredClone(back), compendium: world.compendium, sheets: world.sheets });
+      markClean();
+    }
+    set({ step, note: null, marks });
+  },
 
   fold: folded => set({ folded }),
 
@@ -204,12 +218,13 @@ export const useGuide = create<GuideState>()(persist((set, get) => ({
 }), {
   name: 'vtt.guide',
   storage: createJSONStorage(() => localStorage),
-  partialize: state => ({ lesson: state.lesson, step: state.step }),
+  partialize: state => ({ lesson: state.lesson, step: state.step, marks: state.marks }),
   merge: (saved, current) => {
-    const raw = (saved ?? {}) as { lesson?: unknown; step?: unknown };
+    const raw = (saved ?? {}) as { lesson?: unknown; step?: unknown; marks?: unknown };
     const lesson = typeof raw.lesson === 'string' && lessonOf(raw.lesson) ? raw.lesson : null;
     const step = typeof raw.step === 'number' && Number.isInteger(raw.step) && raw.step >= 0 ? raw.step : 0;
-    return { ...current, lesson, step: lesson ? step : 0 };
+    const marks = lesson && raw.marks && typeof raw.marks === 'object' ? raw.marks as Record<number, System> : {};
+    return { ...current, lesson, step: lesson ? step : 0, marks };
   },
 }));
 

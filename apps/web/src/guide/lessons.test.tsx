@@ -602,6 +602,21 @@ describe('уроки конструктора', () => {
     expect(within(card()).has('Дальше')).toBe(true);
   });
 
+  it('«Назад» возвращает систему к началу прежнего шага', async () => {
+    mount();
+    await start('first-system');
+    edit(d => { d.blocks = [{ name: 'Бой', parts: [] }]; });
+    act(() => { useGuide.getState().go(1); });
+    edit(d => { addColumn(d, { key: 'хиты', label: 'Хиты', kind: 'number' }, 'sheet', 'Бой'); });
+    act(() => { useGuide.getState().go(2); });
+    act(() => { fireEvent.click(within(card()).button('Назад')); });
+    expect(useGuide.getState().step).toBe(1);
+    expect(useWorld.getState().system.blocks?.map(block => block.name)).toEqual(['Бой']);
+    expect(Object.keys(useWorld.getState().system.tables?.лист?.columns ?? []).length).toBe(0);
+    act(() => { fireEvent.click(within(card()).button('Назад')); });
+    expect(useWorld.getState().system.blocks ?? []).toEqual([]);
+  });
+
   it('«Опубликовать» в уроке выключена', async () => {
     mount();
     await start('items');
