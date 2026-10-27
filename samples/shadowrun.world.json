@@ -3158,6 +3158,18 @@
             "args": {
               "attack_pool": {
                 "expr": "@skill.pool"
+              },
+              "ar_bonus": {
+                "expr": "@sight"
+              },
+              "prone_ar": {
+                "expr": "@prone_ar + @brace_bonus"
+              },
+              "physical_hit": {
+                "expr": "@physical_dmg"
+              },
+              "electric": {
+                "expr": "@electric"
               }
             }
           },
@@ -3241,6 +3253,21 @@
               },
               "attack_skill": {
                 "expr": "@skill"
+              },
+              "modes": {
+                "expr": "@modes"
+              },
+              "str_need": {
+                "expr": "@str_need"
+              },
+              "ar_bonus": {
+                "expr": "@sight + @ammo_ar"
+              },
+              "prone_ar": {
+                "expr": "@prone_ar + @brace_bonus"
+              },
+              "prone_pool": {
+                "expr": "@prone_pool"
               }
             }
           },
@@ -3285,6 +3312,12 @@
               },
               "attack_skill": {
                 "expr": "@skill"
+              },
+              "attack_rating": {
+                "expr": "@ar1"
+              },
+              "prone_pool": {
+                "expr": "@prone_pool"
               }
             }
           }
@@ -4026,6 +4059,12 @@
             "args": {
               "attack_pool": {
                 "expr": "@skill.pool"
+              },
+              "physical_hit": {
+                "expr": "@physical_dmg"
+              },
+              "electric": {
+                "expr": "@electric"
               }
             }
           }
@@ -4087,7 +4126,12 @@
         "bindings": [
           {
             "label": "Подорвать",
-            "effect": "detonate"
+            "effect": "detonate",
+            "args": {
+              "rating": {
+                "expr": "@rating"
+              }
+            }
           }
         ]
       },
@@ -14795,6 +14839,37 @@
               "by": "actor"
             },
             "default": "нет"
+          },
+          {
+            "key": "modes",
+            "label": "Режимы оружия",
+            "kind": "choice",
+            "from": "fire_modes",
+            "many": true
+          },
+          {
+            "key": "str_need",
+            "label": "Сила, чтобы стрелять",
+            "kind": "number",
+            "default": 0
+          },
+          {
+            "key": "ar_bonus",
+            "label": "Прибавка к значению атаки",
+            "kind": "number",
+            "default": 0
+          },
+          {
+            "key": "prone_ar",
+            "label": "Лёжа: к значению атаки",
+            "kind": "number",
+            "default": 0
+          },
+          {
+            "key": "prone_pool",
+            "label": "Лёжа: к набору",
+            "kind": "number",
+            "default": 0
           }
         ],
         "cost": [
@@ -14816,7 +14891,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не @режим.always и не есть(@вещь.modes, @режим)"
+              "expr": "не @режим.always и не есть(@modes, @режим)"
             }
           },
           {
@@ -14846,7 +14921,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@действующий.strength < @вещь.str_need"
+              "expr": "@действующий.strength < @str_need"
             }
           },
           {
@@ -14932,7 +15007,7 @@
             "id": "атк",
             "type": "roll",
             "fixed": {
-              "expr": "@дистанция.item_ar + @режим.penalty + @вещь.sight + @вещь.ammo_ar + если(@действующий.prone >= 1, @вещь.prone_ar + @вещь.brace_bonus, 0) + @действующий.ar_mod"
+              "expr": "@дистанция.item_ar + @режим.penalty + @ar_bonus + если(@действующий.prone >= 1, @prone_ar, 0) + @действующий.ar_mod"
             }
           },
           {
@@ -14951,7 +15026,7 @@
                 "expr": "@действующий"
               },
               "набор": {
-                "expr": "@attack_pool + @приём.pool + если(@действующий.prone >= 1, @вещь.prone_pool, 0)"
+                "expr": "@attack_pool + @приём.pool + если(@действующий.prone >= 1, @prone_pool, 0)"
               },
               "атк": {
                 "expr": "@атк"
@@ -15095,13 +15170,25 @@
               "by": "actor"
             },
             "default": "нет"
+          },
+          {
+            "key": "attack_rating",
+            "label": "Значение атаки",
+            "kind": "number",
+            "default": 0
+          },
+          {
+            "key": "prone_pool",
+            "label": "Лёжа: к набору",
+            "kind": "number",
+            "default": 0
           }
         ],
         "cost": [
           {
             "type": "branch",
             "if": {
-              "expr": "пусто(@вещь.skill)"
+              "expr": "пусто(@attack_skill)"
             }
           },
           {
@@ -15131,7 +15218,7 @@
             "id": "атк",
             "type": "roll",
             "fixed": {
-              "expr": "@вещь.ar1 + @действующий.ar_mod"
+              "expr": "@attack_rating + @действующий.ar_mod"
             }
           },
           {
@@ -15150,7 +15237,7 @@
                 "expr": "@действующий"
               },
               "набор": {
-                "expr": "@attack_pool + @приём.pool + если(@действующий.prone >= 1, @вещь.prone_pool, 0)"
+                "expr": "@attack_pool + @приём.pool + если(@действующий.prone >= 1, @prone_pool, 0)"
               },
               "атк": {
                 "expr": "@атк"
@@ -16637,6 +16724,18 @@
             "key": "attack_pool",
             "label": "Набор атаки",
             "kind": "number"
+          },
+          {
+            "key": "physical_hit",
+            "label": "Урон физический",
+            "kind": "boolean",
+            "default": true
+          },
+          {
+            "key": "electric",
+            "label": "Электрический урон",
+            "kind": "boolean",
+            "default": false
           }
         ],
         "cost": [
@@ -16759,10 +16858,10 @@
                 "expr": "@кольцо.dv"
               },
               "физический": {
-                "expr": "@вещь.physical_dmg"
+                "expr": "@physical_hit"
               },
               "электричество": {
-                "expr": "@вещь.electric"
+                "expr": "@electric"
               },
               "источник": {
                 "expr": "@действующий"
@@ -16818,6 +16917,30 @@
             "key": "attack_pool",
             "label": "Набор атаки",
             "kind": "number"
+          },
+          {
+            "key": "ar_bonus",
+            "label": "Прибавка к значению атаки",
+            "kind": "number",
+            "default": 0
+          },
+          {
+            "key": "prone_ar",
+            "label": "Лёжа: к значению атаки",
+            "kind": "number",
+            "default": 0
+          },
+          {
+            "key": "physical_hit",
+            "label": "Урон физический",
+            "kind": "boolean",
+            "default": true
+          },
+          {
+            "key": "electric",
+            "label": "Электрический урон",
+            "kind": "boolean",
+            "default": false
           }
         ],
         "cost": [
@@ -16899,7 +17022,7 @@
             "id": "атк",
             "type": "roll",
             "fixed": {
-              "expr": "@дистанция.item_ar + @вещь.sight + если(@действующий.prone >= 1, @вещь.prone_ar + @вещь.brace_bonus, 0)"
+              "expr": "@дистанция.item_ar + @ar_bonus + если(@действующий.prone >= 1, @prone_ar, 0)"
             }
           },
           {
@@ -16955,10 +17078,10 @@
                 "expr": "@кольцо.dv"
               },
               "физический": {
-                "expr": "@вещь.physical_dmg"
+                "expr": "@physical_hit"
               },
               "электричество": {
-                "expr": "@вещь.electric"
+                "expr": "@electric"
               },
               "источник": {
                 "expr": "@действующий"
@@ -16996,6 +17119,12 @@
             "ask": {
               "by": "actor"
             }
+          },
+          {
+            "key": "rating",
+            "label": "Рейтинг",
+            "kind": "number",
+            "default": 0
           }
         ],
         "cost": [
@@ -17046,7 +17175,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "(@вещь.rating или 0) < 1"
+              "expr": "@rating < 1"
             }
           },
           {
