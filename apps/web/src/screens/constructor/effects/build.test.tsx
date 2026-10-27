@@ -66,6 +66,7 @@ describe('эффекты пресетов собираются в констру
     const [goal] = start('dnd5e', ['strike']);
     const ui = within();
     ui.click('+ кнопкой');
+    ui.click('+ для каждого из списка');
     ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Атака');
     if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');
@@ -208,6 +209,7 @@ describe('эффекты пресетов собираются в констру
     const [goal] = start('cp-slice', ['shoot']);
     const ui = within();
     ui.click('+ кнопкой');
+    ui.click('+ для каждого из списка');
     ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Выстрел');
     if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');
@@ -337,6 +339,7 @@ describe('эффекты пресетов собираются в констру
     const [goal] = start('dnd5e', ['spell_buff']);
     const ui = within();
     ui.click('+ кнопкой');
+    ui.click('+ для каждого из списка');
     ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, goal!.label!);
     if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');
@@ -435,6 +438,7 @@ describe('эффекты пресетов собираются в констру
     const [goal] = start('daggerheart', ['hero_attack']);
     const ui = within();
     ui.click('+ кнопкой');
+    ui.click('+ для каждого из списка');
     ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Атака героя');
     if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');
@@ -528,6 +532,7 @@ describe('эффекты пресетов собираются в констру
     const [goal] = start('blades', ['lay_low']);
     const ui = within();
     ui.click('+ кнопкой');
+    ui.click('+ для каждого из списка');
     ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Залечь на дно');
     if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');

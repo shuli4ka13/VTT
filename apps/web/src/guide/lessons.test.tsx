@@ -91,12 +91,16 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     ],
     strike: [
       () => {
-        edit(d => { d.effects.удар = { ...structuredClone(seed.effects.удар!), label: 'Новый эффект' }; setSteps(d, 'удар', [{ type: 'each', of: 'цели' }]); });
+        edit(d => { d.effects.удар = { ...structuredClone(seed.effects.удар!), label: 'Новый эффект', params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }] }; setSteps(d, 'удар', []); });
         pick({ activeEffectId: 'удар' });
       },
       () => edit(d => { d.effects.удар!.label = 'Удар'; }),
     ],
     everyone: () => edit(d => { d.grants = ['удар']; }),
+    each: () => edit(d => {
+      d.effects.удар!.params = [...(d.effects.удар!.params ?? []), { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' } }] as never;
+      setSteps(d, 'удар', [{ type: 'each', of: 'цели' }]);
+    }),
     check: [
       () => edit(d => setSteps(d, 'удар', [...steps('удар'),
         { id: 'проверка_бросок', type: 'roll', die: 'кость', by: { expr: '@действующий' } },
@@ -486,10 +490,11 @@ describe('уроки конструктора', () => {
       clickAt({ text: '+ кнопкой', in: 'Библиотека эффектов' });
       ui.type(screen.getByPlaceholderText('как зовётся эффект'), 'Удар');
     });
-    await closing('everyone', () => {
+    await pass('everyone', () => {
       if (!ui.has('свернуть свойства')) ui.click('свойства');
       ui.select('У кого есть', 'all');
-    }, 'у каждого героя');
+    });
+    await closing('each', () => { ui.click('+ для каждого из списка'); }, 'по каждой цели');
     await pass('check', () => {
       ui.click('+ проверка');
       inBar(within(stepCard(/^2 · /)).field('Проверка'), '@проверка_бросок >= @цель.класс_брони');

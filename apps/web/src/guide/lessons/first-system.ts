@@ -134,7 +134,7 @@ export const firstSystem: Lesson = {
         { at: { input: 'как зовётся эффект' }, say: 'Впишите название «Удар».' },
       ],
       done: view => Boolean(strike(view)),
-      result: () => 'Эффект «Удар» заведён. Первый шаг «Для каждого из · Цели» уже стоит: шаги под ним повторятся для каждой цели.',
+      result: () => 'Эффект «Удар» заведён. Пока у него один вход — «Кто действует».',
     },
     {
       id: 'everyone',
@@ -149,6 +149,21 @@ export const firstSystem: Lesson = {
         return Boolean(found && (view.system.grants ?? []).includes(found[0]));
       },
       result: () => 'Кнопка «Удар» — у каждого героя.',
+    },
+    {
+      id: 'each',
+      chapter: 'Кость и удар',
+      lead: '«Удар» бьёт тех, кого выбрали за столом. Для этого нужен разделитель: шаги выше него выполнятся один раз, шаги ниже — для каждой цели по очереди.',
+      tab: 'effects',
+      say: 'В палитре «Шаг» нажмите «+ для каждого из списка».',
+      hint: 'Вход «Цели» появится сам: из него разделитель берёт, кого перебирать.',
+      at: { text: '+ для каждого из списка' },
+      done: view => {
+        const found = strike(view)?.[1];
+        const list = (found?.params ?? []).find(param => param.kind === 'sheet' && param.many)?.key;
+        return Boolean(list && stepsOf(found).some(step => step.type === 'each' && (step as unknown as { of?: string }).of === list));
+      },
+      result: () => 'У «Удара» есть вход «Цели» и шаг «Для каждого из · Цели»: всё, что ниже, сработает по каждой цели.',
     },
     {
       id: 'check',
@@ -232,7 +247,7 @@ export const firstSystem: Lesson = {
       alone: true,
       tab: 'effects',
       say: 'Сделайте эффект «Лечение»: он прибавляет 3 хита тому, кто действует.',
-      hint: '«+ кнопкой», затем «+ изменение» выше «Для каждого из»: «У кого» — «Кто действует», «Какое поле» — «Хиты», «Как» — «прибавить», «Сколько» — 3.',
+      hint: '«+ кнопкой», затем «+ изменение»: «У кого» — «Кто действует», «Какое поле» — «Хиты», «Как» — «прибавить», «Сколько» — 3.',
       done: view => {
         const key = hp(view)?.tag;
         return Boolean(key && stepsOf(effectBy(view.system, 'Лечение')?.[1]).some(step =>

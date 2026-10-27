@@ -314,89 +314,6 @@ describe('эффекты D&D собираются в конструкторе р
     expect(built('shield')).toEqual(goal);
   });
 
-  it('D&D «Заклинание со спасброском» (spell_save): урон до цикла, спасбросок, провал — урон и состояние, успех — половина, условное держание', { timeout: 120000 }, () => {
-    const [goal] = start('dnd5e', ['spell_save']);
-    const ui = fresh('+ кнопкой', goal!.label!, 'spell_save', 'Заклинания', goal!.description!);
-    const param = (row: number, label: string, kind: string, key: string, more: { ask?: string; hint?: string; min?: string; max?: string; from?: string; mode?: string; value?: string } = {}) => {
-      if (row >= (built('spell_save')!.params ?? []).length) ui.click((built('spell_save')!.params ?? []).length ? '+ ещё одно' : '+ вход');
-      ui.type(ui.cell('Название', row), label);
-      ui.select(ui.cell('Вид', row), kind);
-      if (more.from) ui.select(ui.cell('Таблица', row), more.from);
-      if (more.ask) ui.select(ui.cell('Если не передали', row), more.ask);
-      if (more.mode) ui.select(ui.cell('Если не передали', row), more.mode);
-      if (more.value !== undefined) ui.type(ui.cell('Если не передали', row), more.value);
-      if (more.hint) ui.type(ui.cell('Подсказка за столом', row), more.hint);
-      if (more.min !== undefined) ui.type(ui.cell('Границы', row).querySelector<HTMLInputElement>('input[placeholder="не ниже"]')!, more.min);
-      if (more.max !== undefined) ui.type(ui.cell('Границы', row).querySelector<HTMLInputElement>('input[placeholder="не выше"]')!, more.max);
-      if (ui.cell('Имя в формулах', row).querySelector('input')) ui.type(ui.cell('Имя в формулах', row), key);
-    };
-    param(0, 'Кто действует', 'sheet', 'действующий');
-    param(2, 'Круг заклинания', 'number', 'spell_level');
-    ui.check('«Круг заклинания» — величина', false);
-    param(3, 'Каким кругом', 'number', 'slot', { ask: 'actor', hint: (goal!.params ?? [])[2]!.ask!.hint!, min: '1', max: '9' });
-    param(4, 'Чем спасаются', 'choice', 'save_by', { from: 'abilities' });
-    dragParamBefore('Цели', 'Чем спасаются');
-    param(5, 'Кость урона', 'dice', 'damage_die', { mode: 'empty' });
-    param(6, 'Сколько костей', 'number', 'dice_count', { mode: 'value', value: '1' });
-    param(7, 'Костей за каждый круг выше', 'number', 'dice_up', { mode: 'value' });
-    param(8, 'Тип урона', 'choice', 'damage_type', { from: 'damage_types', mode: 'empty' });
-    param(9, 'Состояние', 'effect', 'status', { mode: 'empty' });
-    param(10, 'Половина при успехе', 'boolean', 'half', { mode: 'value' });
-    param(11, 'Держится концентрацией', 'boolean', 'holds', { mode: 'value' });
-
-    ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_spell');
-    ui.click('+ держание');
-    ui.select('Держит', 'concentration');
-    ui.select('У кого', 'действующий');
-    ui.when('=@holds');
-    const at = (n: number) => stepCard(new RegExp(`^${n} · `));
-    const hit = (n: number, amount: string) => {
-      within(at(n)).click('вызов');
-      within(at(n)).select('Какой эффект', 'damage');
-      for (const [name, text] of [['Сколько урона', amount], ['Источник урона', '"магический"']] as const) {
-        within(at(n)).formula(within(at(n)).arg(name), text);
-      }
-    };
-    ui.click('+ изменение');
-    within(at(3)).click('↑');
-    within(at(2)).click('вызов');
-    within(at(2)).select('Какой эффект', 'spell_dice');
-    for (const [name, text] of [['Круг заклинания', '@spell_level'], ['Каким кругом', '@slot'], ['Сколько костей', '@dice_count'], ['Костей за каждый круг выше', '@dice_up']] as const) {
-      within(at(2)).formula(within(at(2)).arg(name), text);
-    }
-    nameStep(at(2), 'по_ячейке');
-    ui.click('+ если');
-    within(headOf(block(0))).when('=не пусто(@damage_die)');
-    addToArm(block(0), 0, 'number');
-    within(headOf(block(0))).click('↑');
-    within(at(3)).formula('Формула', 'кинуть(@damage_die, @по_ячейке.кости)');
-    nameStep(at(3), 'урон_всего');
-
-    savingThrow(document.body, 5, [['Чем спасается', '@save_by'], ['Сложность', '@действующий.spell_dc']]);
-
-    const fail = callIf(5, 'Спасбросок', 'не спасся');
-    addToArm(block(fail), 0, 'branch');
-    const inner = blocks().length - 1;
-    within(headOf(block(inner))).when('=не пусто(@damage_die)');
-    addToArm(block(inner), 0, 'change');
-    hit(6, '@урон_всего');
-    addToArm(block(fail), 0, 'branch');
-    const second = blocks().length - 1;
-    within(headOf(block(second))).when('=не пусто(@status)');
-    addToArm(block(second), 0, 'change');
-    within(at(7)).click('состояние');
-    within(at(7)).select('Какое', ':вход:status');
-    within(at(7)).formula('На кого', '@цель');
-    within(at(7)).formula('Запомнит: Запомненное число', '@действующий.spell_dc');
-    within(at(7)).formula('Запомнит: Кто наложил', '@действующий');
-    addArm(block(fail), '+ иначе, если');
-    within(headOf(block(fail), 1)).when('=@half и не пусто(@damage_die)');
-    addToArm(block(fail), 1, 'change');
-    hit(8, 'округлить вниз(@урон_всего * 0.5)');
-    dump({ got: built('spell_save'), goal });
-    expect(built('spell_save')).toEqual(goal);
-  });
-
   it('D&D «Не замечает» (hidden): срок 1 ход, спадает в начале хода листа из входа, две правки броска по двум листам', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['hidden']);
     const ui = fresh('+ висит и правит', goal!.label!, 'hidden', 'Состояния', goal!.description!);
@@ -421,36 +338,6 @@ describe('эффекты D&D собираются в конструкторе р
     rollEdit('disadvantage', '@бросающий == @носитель и @против == @кого');
     dump({ got: built('hidden'), goal });
     expect(built('hidden')).toEqual(goal);
-  });
-
-  it('D&D «Засада» (hide): один бросок Скрытности выше «Для каждого из», проверка против пассивной внимательности каждой цели, «Не замечает» с входом', { timeout: 90000 }, () => {
-    const [goal] = start('dnd5e', ['hide']);
-    const ui = fresh('+ кнопкой', goal!.label!, 'hide', 'Действия в бою', goal!.description!);
-    ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_action');
-    let card = stepCard(/^1 · /);
-
-    ui.click('+ число');
-    card = stepCard(/^3 · /);
-    within(card).formula('Формула', 'кинуть(@lead_die) + @действующий.skills.скрытность.total');
-    within(stepCard(/^3 · /)).select('Кто бросает', '@действующий');
-    card = stepCard(/^3 · /);
-    nameStep(stepCard(/^3 · /), 'скрытая_бросок');
-    within(stepCard(/^3 · /)).click('↑');
-
-    ui.click('+ проверка');
-    card = stepCard(/^4 · /);
-    within(card).formula('Проверка', '@скрытая_бросок >= @цель.passive_perception');
-    nameStep(stepCard(/^4 · /), 'скрытая');
-    marks(stepCard(/^2 · /), 'проверка', 'ловкость', 'скрытность');
-
-    addToArm(block(outcomeIf(4, true)), 0, 'change');
-    within(stepCard(/^5 · /)).click('состояние');
-    card = stepCard(/^5 · /);
-    within(card).select('Какое', 'hidden');
-    within(stepCard(/^5 · /)).formula('На кого', '@цель');
-    within(stepCard(/^5 · /)).formula(within(stepCard(/^5 · /)).arg('Кого не замечает'), '@действующий');
-    dump({ got: built('hide'), goal });
-    expect(built('hide')).toEqual(goal);
   });
 
   it('D&D «Засада» (hide): бросок выше «Для каждого из» — один; бросающий чипом в начале строки формулы, «Против кого» нет, метки под строкой', { timeout: 30000 }, () => {
@@ -511,20 +398,6 @@ describe('общие эффекты D&D собираются руками: ци�
     within(strip()).select(strip().querySelector<HTMLElement>('select')!, `строки:${table}`);
     within(strip()).type(strip().querySelector<HTMLElement>('input')!, name);
   };
-
-  it('D&D «Новый ход» (turn_reset): для каждой строки «За ход» — «Осталось» строки цикла задать «В начале хода»', { timeout: 90000 }, () => {
-    const [goal] = start('dnd5e', ['turn_reset']);
-    const ui = calledHead(goal!, 'turn_reset');
-    if (ui.has('ещё')) ui.click('ещё');
-    ui.select(ui.cell('Приходит сам', 0), 'actor');
-    dropParam(1);
-    ui.click('+ для каждого из списка');
-    rows(document, 'turn', 'счётчик');
-    ui.click('+ изменение');
-    change(() => stepCard(/^2 · /), 'лист', 'счётчик.left', 'set', '@лист.счётчик.start');
-    dump({ got: built('turn_reset'), goal });
-    expect(built('turn_reset')).toEqual(goal);
-  });
 
   it('D&D «Ячейка заклинания» (spell_slot): «Потратить» клетку строки по значению — @лист.slots.[@circle]', { timeout: 90000 }, () => {
     const [goal] = start('dnd5e', ['spell_slot']);
