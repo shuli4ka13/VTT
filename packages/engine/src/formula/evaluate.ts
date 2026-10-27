@@ -75,6 +75,18 @@ const FUNCTIONS: Record<string, Fn> = {
       return tools.table(String(args[0]), args[1] as Value, args.length > 2 ? String(args[2]) : null);
     },
   },
+  кость: {
+    arity: '1+',
+    apply: () => 0,
+    raw: args => {
+      if (args.length > 2) throw new FormulaRuntimeError('«кость» ждёт число граней и, если нужно, сколько костей');
+      const sides = Number(args[0]);
+      const count = args.length > 1 ? Number(args[1]) : 1;
+      if (!Number.isInteger(sides) || sides < 1) throw new FormulaRuntimeError(`«кость»: граней должно быть целое число от 1, получено ${String(args[0])}`);
+      if (!Number.isInteger(count) || count < 1) throw new FormulaRuntimeError(`«кость»: костей должно быть целое число от 1, получено ${String(args[1])}`);
+      return `${count}к${sides}`;
+    },
+  },
   кинуть: {
     arity: '1+',
     apply: args => args[0]!,
