@@ -7,6 +7,7 @@ import { isPipeline } from '../engine/effects.ts';
 import { EngineError } from '../engine/errors.ts';
 import { registry } from '../engine/steps/index.ts';
 import { listOf } from '../model/lists.ts';
+import { fieldsOf } from '../model/sheet-columns.ts';
 import type { System, Compendium, Sheet, Die, Effect } from '../model/types.ts';
 import type { Clock } from '../engine/clock.ts';
 
@@ -39,6 +40,11 @@ export function sampleArg(
   if (kind === 'choice' && effect && key) return firstChoice(effect, key) ?? '';
   return '';
 }
+
+const sampleCell = (system: System, sheet: string): unknown => {
+  const field = fieldsOf(system).find(one => !one.lives && !one.cell && one.value.kind === 'stored' && one.value.type === 'number' && typeof one.value.default === 'number');
+  return field ? { sheet, tag: field.tag } : '';
+};
 
 function firstChoice(effect: Effect, key: string): string | null {
   for (const step of effect.steps ?? []) {
@@ -88,7 +94,7 @@ export function trial({ system, compendium, effectId, from, to, args, dice = 'av
     if (args?.[param.key] === undefined && (param.default !== undefined || (param.optional && param.kind === 'effect'))) continue;
     filled[param.key] = args?.[param.key] !== undefined
       ? args[param.key]
-      : sampleArg(param.kind, system, effect, param.key, param.from);
+      : param.kind === 'field' ? sampleCell(system, from.id) : sampleArg(param.kind, system, effect, param.key, param.from);
   }
   const probe: System = {
     ...system,

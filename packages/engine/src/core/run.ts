@@ -477,7 +477,7 @@ export class Run {
     return Object.defineProperty(ctx, 'here', { get: () => this.view(frame.home), enumerable: true }) as Ctx;
   }
 
-  private fieldOf(frame: Frame, refValue: unknown, ref: RefContext): FieldRef {
+  private fieldOf(frame: Frame, refValue: unknown, ref: RefContext, seen: ReadonlySet<string> = new Set()): FieldRef {
     const expr = refValue && typeof refValue === 'object' && 'expr' in refValue ? String((refValue as { expr: unknown }).expr) : null;
     const name = expr ? this.addressName(frame, expr, ref) : null;
     if (name && frame.item && name.startsWith(`${ITEM_NAME}.`)) {
@@ -489,6 +489,10 @@ export class Run {
       const param = frame.paramDefs.find(one => one.key === name && one.kind === 'field');
       const passed = param ? frame.args[param.key] : undefined;
       if (passed && typeof passed === 'object' && 'sheet' in passed && 'tag' in passed) return passed as FieldRef;
+      if (passed && typeof passed === 'object' && 'expr' in passed) {
+        if (seen.has(name)) throw new EngineError(`${frame.owner || 'правило'}: вход «${param!.label ?? name}» ссылается сам на себя`);
+        return this.fieldOf(frame, passed, ref, new Set([...seen, name]));
+      }
       if (name.startsWith(`${DESK_ID}.`)) return { sheet: DESK_ID, tag: this.cellOf(frame, DESK_ID, name.slice(DESK_ID.length + 1), ref) };
       const onSheet = sheetHead(name, ref.sheets);
       if (onSheet?.rest) {

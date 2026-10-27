@@ -97,6 +97,8 @@ const isGiven = (arg: unknown): boolean => arg !== null && arg !== undefined && 
 const nameRegex = (name: string): RegExp =>
   new RegExp(`[@#]${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}_.])`, 'gu');
 
+const reading = new WeakMap<object, Set<string>>();
+
 function fromArgs(key: string, ctx: RefContext): unknown {
   const arg = (ctx.params || {})[key];
   if (arg === null || typeof arg !== 'object') return arg;
@@ -104,7 +106,16 @@ function fromArgs(key: string, ctx: RefContext): unknown {
   if ('expr' in arg) {
     const source = String((arg as AnyRef).expr);
     const decl = (ctx.paramDefs || []).find(p => p.key === key);
-    return !decl || decl.kind === 'number' ? recordNamesInline(source, ctx) : evaluate(source, inRecord(ctx));
+    if (!decl || decl.kind === 'number') return recordNamesInline(source, ctx);
+    const busy = reading.get(arg) ?? new Set<string>();
+    if (busy.has(key)) throw new EngineError(`${who(ctx)}: вход «${decl.label ?? key}» ссылается сам на себя`);
+    busy.add(key);
+    reading.set(arg, busy);
+    try {
+      return evaluate(source, inRecord(ctx));
+    } finally {
+      busy.delete(key);
+    }
   }
   throw new EngineError(
     `${who(ctx)}: аргумент «${key}» неизвестной формы ${JSON.stringify(arg)} — умею значение или { expr }`);
