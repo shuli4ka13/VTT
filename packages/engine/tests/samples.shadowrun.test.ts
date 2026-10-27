@@ -2,7 +2,7 @@ import { group, test, eq, ok, deepEq } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { exchange, fight } from './play.ts';
 import { fieldCheck } from '../src/engine/check.ts';
-import { rollCheck } from './kit.ts';
+import { rollCheck, fireMoments } from './kit.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import { perform } from '../src/core/perform.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
@@ -431,5 +431,19 @@ group('Shadowrun 6: состояния (стр. 52–54)', () => {
     const pool = out.reports.flatMap(r => r.report.trace as { step: unknown; rolls?: number[] }[]).find(one => one.step === 'атака_бросок')?.rolls?.length;
     eq(pool, computed(sheetOf('razor'), 'skills.стрельба.pool') - 2);
     eq(computed(hidden, 'defense_rating'), computed(sheetOf('razor'), 'defense_rating') + 4);
+  });
+});
+
+group('Shadowrun 6: «Неуверенность» (стр. 77)', () => {
+  const unsure = () => ({ ...sheetOf('razor', { willpower: 3 }), has: [...sheetOf('razor').has, { of: 'insecurity' }] } as Sheet);
+  const start = (face: number) => fireMoments([{ moment: 'combat-start', sheetId: 'razor' }], [unsure()], { system, compendium, die: () => face })
+    .sheets.find(s => s.id === 'razor');
+
+  test('провал проверки Воли в начале боя — «сорвалось»: Преимущество не получать и не тратить', () => {
+    ok(wears(start(1), 'insecurity_shaken'));
+  });
+
+  test('успех — ничего не висит', () => {
+    ok(!wears(start(6), 'insecurity_shaken'));
   });
 });

@@ -3160,7 +3160,7 @@
                 "expr": "@skill.pool"
               },
               "ar_bonus": {
-                "expr": "@sight"
+                "expr": "@вещь.sight"
               },
               "prone_ar": {
                 "expr": "@prone_ar + @brace_bonus"
@@ -3261,7 +3261,7 @@
                 "expr": "@str_need"
               },
               "ar_bonus": {
-                "expr": "@sight + @ammo_ar"
+                "expr": "@вещь.sight + @ammo_ar"
               },
               "prone_ar": {
                 "expr": "@prone_ar + @brace_bonus"
