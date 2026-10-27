@@ -206,6 +206,7 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     target: () => edit(d => { d.effects.урон!.params![0]!.role = 'target'; }),
     returns: [
       () => press(findAnchor({ text: '+ итог' })!),
+      () => edit(d => { d.effects.урон!.returns = [{ key: 'осталось', label: 'Осталось', kind: 'number' }] as never; }),
       () => edit(d => { d.effects.урон!.returns = [{ key: 'осталось', label: 'Осталось', kind: 'number', expr: { expr: '@лист.хиты' } }] as never; }),
     ],
     call: [
