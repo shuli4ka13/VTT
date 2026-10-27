@@ -1064,9 +1064,6 @@
         "parts": [
           {
             "table": "стол",
-            "columns": [
-              "escalation"
-            ],
             "views": {
               "escalation": {
                 "kind": "stepper"
