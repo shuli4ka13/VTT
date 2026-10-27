@@ -299,6 +299,36 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     problems: openProblems,
     term: () => edit(d => { d.tables!.сроки!.rows!.push({ value: 'час', label: 'Час', cells: { держится: true } }); }),
   },
+  templates: {
+    open: () => pick({ activeSheetKind: 'по_заготовке' }),
+    target: [
+      () => edit(d => { d.sheets!.по_заготовке!.modifiers = [{ kind: 'value', target: 'акт', op: 'add', value: { expr: '1' } }] as never; }),
+      () => edit(d => { (d.sheets!.по_заготовке!.modifiers![0] as { target: string }).target = 'cell:навыки.*.ранг'; }),
+    ],
+    op: () => edit(d => { (d.sheets!.по_заготовке!.modifiers![0] as { op: string }).op = 'set'; }),
+    value: () => edit(d => { (d.sheets!.по_заготовке!.modifiers![0] as { value: unknown }).value = { expr: '@заготовка.[@строка]' }; }),
+    when: () => edit(d => { (d.sheets!.по_заготовке!.modifiers![0] as { if: unknown }).if = { expr: 'не пусто(@заготовка)' }; }),
+    problems: openProblems,
+    more: () => edit(d => { d.tables!.заготовки!.rows!.push({ value: 'разведчик', label: 'Разведчик', cells: { ближний_бой: 2, стрельба: 3 } }); }),
+  },
+  combat: {
+    if: [
+      () => pick({ activeEffectId: 'удар' }),
+      () => edit(d => setSteps(d, 'удар', [{ type: 'branch' }, { type: 'end' }])),
+      () => edit(d => setSteps(d, 'удар', [{ type: 'branch', if: { expr: '@стол.бой' } }, { type: 'end' }])),
+    ],
+    spend: [
+      () => edit(d => setSteps(d, 'удар', beforeEnd(steps('удар'), { type: 'apply', target: { expr: '@действующий' } }))),
+      () => edit(d => setSteps(d, 'удар', applied({ target: { expr: '@действующий.действий_осталось' }, value: { expr: '1' } }))),
+    ],
+    problems: openProblems,
+    refuse: () => edit(d => setSteps(d, 'удар', [
+      { type: 'branch', if: { expr: '@стол.бой и @действующий.действий_осталось < 1' } },
+      { type: 'stop' },
+      { type: 'end' },
+      ...steps('удар'),
+    ])),
+  },
 };
 
 const takePiece = (id: string) => {

@@ -5,8 +5,10 @@ import { links } from './links.ts';
 import { items } from './items.ts';
 import { tags } from './tags.ts';
 import { spells } from './spells.ts';
+import { templates } from './templates.ts';
+import { combat } from './combat.ts';
 import { ready } from './ready.ts';
 
-export const LESSONS: Lesson[] = [firstSystem, tables, links, items, tags, spells, ready];
+export const LESSONS: Lesson[] = [firstSystem, tables, links, items, tags, spells, templates, combat, ready];
 
 export const lessonOf = (id: string | null | undefined): Lesson | undefined => LESSONS.find(lesson => lesson.id === id);

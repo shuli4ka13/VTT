@@ -12,6 +12,7 @@ export interface View {
   tab: ConstructorTab;
   effect: string | null;
   record: string | null;
+  sheetKind: string | null;
   block: string | null;
   field: string | null;
   opened: (name: string) => boolean;

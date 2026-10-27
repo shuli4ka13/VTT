@@ -68,16 +68,17 @@ export function StopStrip({ step, position, problem, edit, actions }: {
   );
 }
 
-export function HeadFrame({ word, bad = false, actions, children }: {
+export function HeadFrame({ word, bad = false, actions, children, guide }: {
   word: string;
   bad?: boolean;
+  guide?: string;
   actions: ReactNode;
   children: ReactNode;
 }) {
   return (
     <div className={`flow-head${bad ? ' flow-head--bad' : ''}`}>
       <span className="flow-head__word">{word}</span>
-      <div className="flow-head__cond">{children}</div>
+      <div className="flow-head__cond" {...(guide ? { 'data-guide': guide } : {})}>{children}</div>
       <div className="flow-head__actions">{actions}</div>
     </div>
   );
@@ -97,7 +98,7 @@ export function FlowHead({ word, step, context, earlier, required, edit, actions
   const written = (step as { if?: { expr?: string } }).if?.expr;
   const bare = !required && written === undefined;
   return (
-    <HeadFrame word={word} bad={Boolean(problem)} actions={actions}>
+    <HeadFrame word={word} bad={Boolean(problem)} actions={actions} guide="if-condition">
       {bare ? null : (
         <ConditionField
           bare required spoken={!problem}

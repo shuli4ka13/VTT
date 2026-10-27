@@ -36,7 +36,7 @@ export const moveOf = (step: Step, view: View): Move | undefined => movesOf(step
 export const viewNow = (): View => {
   const state = useWorld.getState();
   return {
-    system: state.system, tab: state.activeTab, effect: state.activeEffectId, record: state.activeRecordKind,
+    system: state.system, tab: state.activeTab, effect: state.activeEffectId, record: state.activeRecordKind, sheetKind: state.activeSheetKind,
     block: state.activeBlock, field: state.activeFieldTag, opened: (name: string) => openedDialog(name),
   };
 };
@@ -72,10 +72,11 @@ export function useView(): View {
   const tab = useWorld(s => s.activeTab);
   const effect = useWorld(s => s.activeEffectId);
   const record = useWorld(s => s.activeRecordKind);
+  const sheetKind = useWorld(s => s.activeSheetKind);
   const block = useWorld(s => s.activeBlock);
   const field = useWorld(s => s.activeFieldTag);
-  return useMemo(() => ({ system, tab, effect, record, block, field, opened: (name: string) => openedDialog(name) }),
-    [system, tab, effect, record, block, field]);
+  return useMemo(() => ({ system, tab, effect, record, sheetKind, block, field, opened: (name: string) => openedDialog(name) }),
+    [system, tab, effect, record, sheetKind, block, field]);
 }
 
 const safeDone = (step: Step | undefined, view: View): boolean => {
