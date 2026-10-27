@@ -9,6 +9,7 @@ const strike = (view: View) => effectBy(view.system, 'Удар');
 
 const inFight = (view: View) => fieldsOf(view.system).filter(field => !field.cell && inBlock(field, 'Бой'));
 
+const targetsOf = (view: View) => (strike(view)?.[1].params ?? []).find(param => param.kind === 'sheet' && param.many && param.item?.key === 'цель');
 const checkAt = (view: View): number => stepsOf(strike(view)?.[1]).findIndex(step => step.type === 'check');
 
 const branchAt = (view: View): number => {
@@ -151,19 +152,32 @@ export const firstSystem: Lesson = {
       result: () => 'Кнопка «Удар» — у каждого героя.',
     },
     {
+      id: 'targets',
+      chapter: 'Кость и удар',
+      lead: 'Эффект похож на функцию: всё, что ему нужно, приходит входами, и у каждого входа есть вид. «Число» — урон или бонус, «да / нет» — признак, «из таблицы» — строка справочника, «лист» — один герой, «список листов» — сколько угодно героев. Кого бить, решают за столом, поэтому «Удару» нужен вход-список.',
+      tab: 'effects',
+      say: 'Добавьте «Удару» вход «Цели» вида «список листов».',
+      hint: 'Один лист из списка в шагах зовётся по полю «Каждый» — назовите его «Цель».',
+      at: [
+        { at: { text: '+ ещё одно' }, say: 'В «Что приходит» нажмите «+ ещё одно».', done: view => (strike(view)?.[1].params ?? []).length > 1 },
+        { at: { text: 'Название' }, say: 'В «Название» впишите «Цели», в «Вид» выберите «список листов», в «Каждый» — «Цель».' },
+      ],
+      done: view => Boolean(targetsOf(view)),
+      result: () => 'У «Удара» два входа: «Кто действует» — лист, «Цели» — список листов, каждый из них — «Цель».',
+    },
+    {
       id: 'each',
       chapter: 'Кость и удар',
-      lead: '«Удар» бьёт тех, кого выбрали за столом. Для этого нужен разделитель: шаги выше него выполнятся один раз, шаги ниже — для каждой цели по очереди.',
+      lead: 'Теперь разделитель: шаги выше него выполнятся один раз, шаги ниже — для каждой цели по очереди.',
       tab: 'effects',
       say: 'В палитре «Шаг» нажмите «+ для каждого из списка».',
-      hint: 'Вход «Цели» появится сам: из него разделитель берёт, кого перебирать.',
+      hint: 'Разделитель сам возьмёт список «Цели».',
       at: { text: '+ для каждого из списка' },
       done: view => {
-        const found = strike(view)?.[1];
-        const list = (found?.params ?? []).find(param => param.kind === 'sheet' && param.many)?.key;
-        return Boolean(list && stepsOf(found).some(step => step.type === 'each' && (step as unknown as { of?: string }).of === list));
+        const list = targetsOf(view)?.key;
+        return Boolean(list && stepsOf(strike(view)?.[1]).some(step => step.type === 'each' && (step as unknown as { of?: string }).of === list));
       },
-      result: () => 'У «Удара» есть вход «Цели» и шаг «Для каждого из · Цели»: всё, что ниже, сработает по каждой цели.',
+      result: () => 'Стоит «Для каждого из · Цели»: всё, что ниже, сработает по каждой цели.',
     },
     {
       id: 'check',

@@ -97,10 +97,11 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => edit(d => { d.effects.удар!.label = 'Удар'; }),
     ],
     everyone: () => edit(d => { d.grants = ['удар']; }),
-    each: () => edit(d => {
-      d.effects.удар!.params = [...(d.effects.удар!.params ?? []), { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' } }] as never;
-      setSteps(d, 'удар', [{ type: 'each', of: 'цели' }]);
-    }),
+    targets: [
+      () => press(findAnchor({ text: '+ ещё одно' })!),
+      () => edit(d => { d.effects.удар!.params!.splice(1, 1, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' } } as never); }),
+    ],
+    each: () => edit(d => setSteps(d, 'удар', [{ type: 'each', of: 'цели' }])),
     check: [
       () => edit(d => setSteps(d, 'удар', [...steps('удар'),
         { id: 'проверка_бросок', type: 'roll', die: 'кость', by: { expr: '@действующий' } },
@@ -493,6 +494,12 @@ describe('уроки конструктора', () => {
     await pass('everyone', () => {
       if (!ui.has('свернуть свойства')) ui.click('свойства');
       ui.select('У кого есть', 'all');
+    });
+    await pass('targets', () => {
+      ui.click('+ ещё одно');
+      ui.type(ui.cell('Название', 1), 'Цели');
+      ui.select(ui.cell('Вид', 1), 'sheet+many');
+      ui.type(ui.cell('Каждый', 1), 'Цель');
     });
     await closing('each', () => { ui.click('+ для каждого из списка'); }, 'по каждой цели');
     await pass('check', () => {
