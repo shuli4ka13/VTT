@@ -61,8 +61,9 @@ describe('конструктор не порождает систему, кот�
   afterEach(() => { cleanup(); });
 
   for (const [baseName, base] of BASES) {
+    const heavy = baseName.startsWith('Shadowrun') && !['full', baseName].includes(process.env.ROUND_TRIP ?? '');
     for (const [tabName, tab] of TABS) {
-      it(`${tabName} · ${baseName}: каждая кнопка «+» оставляет систему верной`, () => {
+      it.skipIf(heavy)(`${tabName} · ${baseName}: каждая кнопка «+» оставляет систему верной`, () => {
         load(base());
         expect(issues()).toEqual([]);
         const found: string[] = [];
@@ -92,7 +93,7 @@ describe('конструктор не порождает систему, кот�
         expect(unexpected(found)).toEqual([]);
       }, 300000);
 
-      it(`${tabName} · ${baseName}: пустой вариант любого списка оставляет систему верной`, () => {
+      it.skipIf(heavy)(`${tabName} · ${baseName}: пустой вариант любого списка оставляет систему верной`, () => {
         const found: string[] = [];
         const picks = picksOf(tabName, base());
         for (const pick of picks.length ? picks : [{}]) {
