@@ -22,7 +22,7 @@ import { FlowHead, FlowActions, ArmLabel, OutcomePick, HeadFrame } from './cards
 import { outcomeWords } from '@vtt/engine/engine/roll-tags';
 import { newCost } from '../factory.ts';
 import { GroupCard } from './cards/group-card.tsx';
-import { sheetsAt, placeNamesAt } from './names.ts';
+import { sheetsAt, placeNamesAt, placeTablesAt } from './names.ts';
 import { filledStep } from './call-args.ts';
 import { namesAt } from '@vtt/engine/model/names-at';
 import type { Place } from '@vtt/engine/model/names-at';
@@ -371,6 +371,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     system, effect, earlier: earlierOf(index),
     ...(sheetsAt(system, id, placeAt(index)) ? { sheets: sheetsAt(system, id, placeAt(index)) } : {}),
     names: placeNamesAt(system, id, placeAt(index)),
+    tables: placeTablesAt(system, id, placeAt(index)),
   });
 
   const armAdd = (head: number) => (

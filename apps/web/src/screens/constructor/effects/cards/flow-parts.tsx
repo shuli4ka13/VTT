@@ -110,6 +110,7 @@ export function FlowHead({ word, step, context, earlier, required, edit, actions
           system={context.system}
           quick={quickOf(context, earlier)}
           names={namesOf(context)}
+          {...(context.tables ? { tables: context.tables } : {})}
           {...(context.sheets ? { sheets: context.sheets } : {})}
           {...(tail ? { tail } : {})}
           where={`${word.toLowerCase()} · условие`}

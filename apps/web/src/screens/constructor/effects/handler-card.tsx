@@ -10,7 +10,7 @@ import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { TARGETS_SEED, HOLDER } from '@vtt/engine/model/references';
 import { compile, printFormula, andParts } from '@vtt/engine/formula';
 import type { Node } from '@vtt/engine/formula';
-import { sheetsAt, placeNamesAt } from './names.ts';
+import { sheetsAt, placeNamesAt, placeTablesAt } from './names.ts';
 import { namesAt } from '@vtt/engine/model/names-at';
 import { splitsTargets } from '@vtt/engine/engine/steps/index';
 import { ConditionField } from '../condition-field.tsx';
@@ -147,6 +147,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
     if (expr) draft.if = { expr }; else delete draft.if;
   });
   const visible = placeNamesAt(system, id, { part: 'handler-if', handler: index });
+  const tables = placeTablesAt(system, id, { part: 'handler-if', handler: index });
 
   const spoken = kind === 'call' && phase !== 'done' ? callSubjects(tags, actions, true) : subjects;
   const subjectWord = spoken.find(([key]) => key === subject)?.[1] ?? subject;
@@ -166,11 +167,11 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
     const text = handler.if?.expr?.trim();
     if (!text) return '';
     let parts: Node[];
-    try { parts = andParts(compile(text).ast); } catch { return formulaWords(system, text, visible); }
+    try { parts = andParts(compile(text).ast); } catch { return formulaWords(system, text, visible, tables); }
     return parts.map(part => {
       const holder = part.kind === 'Binary' && part.op === '==' && part.left.kind === 'Ref' && part.right.kind === 'Ref' && part.right.tag === HOLDER ? part.left.tag : null;
       const label = holder ? names.find(([name]) => name === holder)?.[1] : undefined;
-      return label ? `«${label}» — носитель` : formulaWords(system, printFormula(part), visible);
+      return label ? `«${label}» — носитель` : formulaWords(system, printFormula(part), visible, tables);
     }).join(' и ');
   })();
   const sentence = `${happened || 'что случилось?'}${condition ? `, если ${condition}` : ''}${handler.confirm ? ' — решает игрок носителя' : ''}`;

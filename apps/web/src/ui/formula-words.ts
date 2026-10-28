@@ -4,6 +4,8 @@ import type { Node } from '@vtt/engine/formula';
 import { ROW } from '@vtt/engine/model/sheet-columns';
 import { STEP_WORDS } from '@vtt/engine/words/steps';
 import { formulaAsLabels, pickTail } from './formula-labels.ts';
+import { listOf } from '@vtt/engine/model/lists';
+import { fieldOf, fieldLinkOf } from '@vtt/engine/model/sheet-columns';
 
 const COMPARE: Record<string, string> = { '==': '=', '!=': '≠', '>=': '≥', '<=': '≤', '>': '>', '<': '<' };
 const ARITH: Record<string, string> = { '+': '+', '-': '−', '*': '×', '/': '÷' };
@@ -29,7 +31,7 @@ const pathWords = (ref: (text: string) => string, tag: string): string => {
   return `«${ref(`@${tag}`)}»`;
 };
 
-export function formulaWords(system: System, source: string, names?: Map<string, string>): string {
+export function formulaWords(system: System, source: string, names?: ReadonlyMap<string, string>, tables?: ReadonlyMap<string, string>): string {
   let ast: Node;
   try { ast = compile(source).ast; } catch { return formulaAsLabels(system, source, names); }
   const ref = (text: string): string => formulaAsLabels(system, text, names);
@@ -56,7 +58,8 @@ export function formulaWords(system: System, source: string, names?: Map<string,
           return top ? text : `(${text})`;
         }
         const op = COMPARE[node.op] ?? ARITH[node.op] ?? node.op;
-        const text = `${words(node.left)} ${op} ${words(node.right)}`;
+        const side = (one: Node, other: Node): string => (COMPARE[node.op] ? choiceWord(other, one) ?? words(one) : words(one));
+        const text = `${side(node.left, node.right)} ${op} ${side(node.right, node.left)}`;
         return top || COMPARE[node.op] ? text : `(${text})`;
       }
       case 'Conditional': {
@@ -66,6 +69,13 @@ export function formulaWords(system: System, source: string, names?: Map<string,
       case 'Call': return call(node.name, node.args);
       default: return '';
     }
+  };
+
+  const choiceWord = (ref: Node, value: Node): string | null => {
+    if (ref.kind !== 'Ref' || value.kind !== 'Text' || value.dice) return null;
+    const table = tables?.get(ref.tag) ?? fieldChoice(system, ref.tag);
+    const row = table ? (listOf(system, table) ?? []).find(one => String(one.value) === value.value) : undefined;
+    return row ? `«${row.label}»` : null;
   };
 
   const call = (name: string, args: Node[]): string => {
@@ -90,4 +100,12 @@ export function formulaWords(system: System, source: string, names?: Map<string,
   };
 
   return words(ast, true);
+}
+
+function fieldChoice(system: System, tag: string): string | undefined {
+  for (const one of [tag, tag.slice(tag.indexOf('.') + 1)]) {
+    const link = fieldLinkOf(system, fieldOf(system, one));
+    if (link) return link;
+  }
+  return undefined;
 }

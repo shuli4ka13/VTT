@@ -1,9 +1,11 @@
-import { sheetNamesAt, labelsAt, labelsOf } from '@vtt/engine/model/names-at';
+import { sheetNamesAt, labelsAt, labelsOf, choiceTablesAt } from '@vtt/engine/model/names-at';
 import type { Place } from '@vtt/engine/model/names-at';
 import type { SheetNames } from '../../../ui/formula-chips.tsx';
 import type { System } from '@vtt/schema';
 
 export const placeNamesAt = labelsAt;
+
+export const placeTablesAt = choiceTablesAt;
 
 export { labelsOf };
 

@@ -66,7 +66,7 @@ export function walkSheet(system: System, path: string): Walked | null {
   return columns.ok ? { ok: true, label: `${label} → ${columns.label}` } : columns;
 }
 
-export interface ColumnChoice { path: string; label: string; kind: string }
+export interface ColumnChoice { path: string; label: string; kind: string; from?: string }
 
 export function columnChoices(system: System, tableId: string): ColumnChoice[] {
   const out: ColumnChoice[] = [];
@@ -74,7 +74,7 @@ export function columnChoices(system: System, tableId: string): ColumnChoice[] {
     for (const column of typeColumns(system, table)) {
       const at = `${path}.${column.key}`;
       const said = words ? `${words} → ${columnName(column)}` : columnName(column);
-      out.push({ path: at, label: said, kind: column.kind ?? 'number' });
+      out.push({ path: at, label: said, kind: column.kind ?? 'number', ...(column.kind === 'choice' && column.from ? { from: column.from } : {}) });
       const link = nextTable(column);
       if (link && depth < DEEPEST) step(link, at, said, depth + 1);
     }

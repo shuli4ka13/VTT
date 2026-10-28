@@ -36,7 +36,7 @@ export function readyOf(quick: readonly QuickRef[], phrases: readonly Phrase[]):
 }
 
 export function ConditionField({
-  value, onChange, system, holders = [], quick = [], phrases = [], names, sheets, where, placeholder,
+  value, onChange, system, holders = [], quick = [], phrases = [], names, tables, sheets, where, placeholder,
   title = 'Только если', holderLabel = 'Кого касается', holderHint, holderTip, aside, ruleHint, bare = false, spoken, tail,
 }: {
   value: string | undefined;
@@ -46,6 +46,7 @@ export function ConditionField({
   quick?: readonly QuickRef[];
   phrases?: readonly Phrase[];
   names?: Map<string, string>;
+  tables?: ReadonlyMap<string, string>;
   sheets?: SheetNames;
   where: string;
   placeholder?: string;
@@ -65,7 +66,7 @@ export function ConditionField({
   const write = (nextHolder: string, nextRest: string) =>
     onChange(joinHolder(nextRest && holderIn(nextRest, options.map(([expr]) => expr)) ? '' : nextHolder, nextRest));
   const ready = readyOf(quick, phrases);
-  const said = rest.trim() && compiles(rest) ? `${formulaWords(system, rest, names)}${tail ? ` — ${tail}` : ''}` : '';
+  const said = rest.trim() && compiles(rest) ? `${formulaWords(system, rest, names, tables)}${tail ? ` — ${tail}` : ''}` : '';
 
   const holderField = options.length ? (
     <Field label={holderLabel} {...(holderTip ? { tip: holderTip } : { hint: holderHint ?? 'Носитель — лист, на котором это висит.' })}>

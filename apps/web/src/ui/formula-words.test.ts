@@ -101,3 +101,19 @@ describe('слова формул: клетка своей строки', () => 
     expect(formulaWords(withRow, '@строка.total + 1', names)).toBe('«Итого» + 1');
   });
 });
+
+describe('слова формул: значение выбора — подписью строки таблицы входа', () => {
+  const chosen = {
+    id: 'с', name: 'с', effects: {},
+    tables: { черты: { label: 'Черты', columns: [], rows: [{ value: 'edge', label: 'Преимущество' }, { value: 'magic', label: 'Магия' }] } },
+  } as unknown as System;
+
+  it('вход-выбор сравнивается со строкой — слово строки', () => {
+    expect(formulaWords(chosen, '@черта == "edge"', new Map([['черта', 'Характеристика']]), new Map([['черта', 'черты']])))
+      .toBe('«Характеристика» = «Преимущество»');
+  });
+
+  it('без таблицы входа значение остаётся как написано', () => {
+    expect(formulaWords(chosen, '@черта == "edge"', new Map([['черта', 'Характеристика']]))).toBe('«Характеристика» = «edge»');
+  });
+});

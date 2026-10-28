@@ -88,6 +88,8 @@ export interface SlotContext {
   sheets?: SheetNames;
 
   names?: ReadonlyMap<string, string>;
+
+  tables?: ReadonlyMap<string, string>;
 }
 
 export const EVENT_NAMES: [string, string][] = [['метки', 'метки вызова: значения выборов']];

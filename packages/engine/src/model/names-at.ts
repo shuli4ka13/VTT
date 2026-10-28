@@ -78,7 +78,7 @@ const returnsOf = (system: System | undefined, step: Step): NameChild[] => {
     const label = column.label ?? column.key;
     const own: NameChild = { path: `.${column.key}`, label, kind: column.kind ?? 'number', ...(column.kind === 'choice' && column.from ? { from: column.from } : {}) };
     const rows = column.kind === 'choice' && column.from && !column.many ? rowChildren(system, column.from) : [];
-    return [own, ...rows.map(row => ({ path: `.${column.key}${row.path}`, label: `${label} — ${row.label}`, kind: row.kind }))];
+    return [own, ...rows.map(row => ({ path: `.${column.key}${row.path}`, label: `${label} — ${row.label}`, kind: row.kind, ...(row.from ? { from: row.from } : {}) }))];
   });
 };
 
@@ -244,3 +244,14 @@ export function labelsOf(names: readonly NameAt[], system?: System): Map<string,
 }
 
 export const labelsAt = (system: System, effectId: string, place: Place): Map<string, string> => labelsOf(namesAt(system, effectId, place), system);
+
+export function choiceTablesOf(names: readonly NameAt[]): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const one of names) {
+    if (one.kind === 'choice' && one.from && !one.many) out.set(one.name, one.from);
+    for (const child of one.children ?? []) if (child.from) out.set(`${one.name}${child.path}`, child.from);
+  }
+  return out;
+}
+
+export const choiceTablesAt = (system: System, effectId: string, place: Place): Map<string, string> => choiceTablesOf(namesAt(system, effectId, place));
