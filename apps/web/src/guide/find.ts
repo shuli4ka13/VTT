@@ -1,6 +1,7 @@
 import type { System, Effect, Table, Column, Step as EffectStep } from '@vtt/schema';
 import { lintSystem } from '@vtt/engine/model/lint';
 import { flattenSystem } from '@vtt/engine/model/inherit';
+import { armsOf, flowOf } from '@vtt/engine/model/flow';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import type { Field } from '@vtt/engine/model/types';
 
@@ -48,16 +49,19 @@ export const reads = (value: unknown, ref: string): boolean =>
 export const isStep = (step: EffectStep | Record<string, unknown>, type: string): boolean =>
   (step as { type?: unknown }).type === type;
 
+export const isArm = (step: { type?: unknown }): boolean => {
+  const flow = flowOf(step.type);
+  return flow === 'open' || flow === 'alt';
+};
+
 export function armOf(steps: Record<string, unknown>[], branch: number): Record<string, unknown>[] {
-  const out: Record<string, unknown>[] = [];
-  let depth = 0;
-  for (const step of steps.slice(branch + 1)) {
-    if (step.type === 'branch') depth += 1;
-    if (step.type === 'end') { if (depth === 0) break; depth -= 1; }
-    if (depth === 0 && step.type === 'orElse') break;
-    out.push(step);
-  }
-  return out;
+  const head = steps[branch];
+  if (!head) return [];
+  const arms = armsOf(steps);
+  const own = arms[branch] ?? [];
+  const arm = flowOf(head.type) === 'alt' ? own[own.length - 1] : { open: branch, arm: 0 };
+  if (!arm) return [];
+  return steps.filter((_, k) => k > branch && (arms[k] ?? []).some(one => one.open === arm.open && one.arm === arm.arm));
 }
 
 export const errorsOf = (system: System): number =>

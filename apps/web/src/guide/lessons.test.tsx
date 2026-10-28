@@ -631,4 +631,18 @@ describe('уроки конструктора', () => {
     act(() => { fireEvent.click(within(card()).button('Урок · Тип вещи · шаг 1 из 3')); });
     expect(cardText()).toContain('глава 1 из 3 · шаг 1 из 3');
   });
+
+  it('«отказ в бою»: «Если не бой» → «Иначе, если действий меньше 1» → «Стоп» → «Конец» засчитывается', () => {
+    const lesson = lessonOf('combat')!;
+    const refuse = lesson.steps.find(step => step.id === 'refuse')!;
+    const system = structuredClone(lesson.seed);
+    system.effects.удар!.steps = [
+      { type: 'branch', if: { expr: 'не @стол.бой' } },
+      { type: 'orElse', if: { expr: '@действующий.действий_осталось < 1' } },
+      { type: 'stop' },
+      { type: 'end' },
+    ] as never;
+    const view = { system, tab: 'effects', effect: 'удар', record: null, sheetKind: null, block: null, field: null, opened: () => true } as View;
+    expect(refuse.done!(view)).toBe(true);
+  });
 });

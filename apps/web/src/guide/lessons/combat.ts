@@ -1,6 +1,7 @@
 import type { System, Effect } from '@vtt/schema';
 import type { Lesson, View, Move } from '../types.ts';
-import { effectBy, fieldBy, stepsOf, reads, armOf, errorsOf } from '../find.ts';
+import { lazyPlan } from '@vtt/engine/model/flow';
+import { effectBy, fieldBy, stepsOf, reads, armOf, errorsOf, isArm } from '../find.ts';
 import { problemsClean } from './first-system.ts';
 import seed from '../seeds/combat.json' with { type: 'json' };
 
@@ -11,7 +12,7 @@ const steps = (view: View): Record<string, unknown>[] => stepsOf(strike(view)?.[
 const counter = (view: View): string | undefined => fieldBy(view.system, 'Действий осталось')?.tag;
 
 const inCombat = (view: View): number =>
-  steps(view).findIndex(step => step.type === 'branch' && reads(step.if, COMBAT));
+  steps(view).findIndex(step => isArm(step) && reads(step.if, COMBAT));
 
 const spends = (view: View): boolean => {
   const at = inCombat(view);
@@ -23,17 +24,14 @@ const spends = (view: View): boolean => {
 const refuses = (view: View): boolean => {
   const tag = counter(view);
   if (!tag) return false;
-  const stack: string[] = [];
-  for (const step of steps(view)) {
-    if (step.type === 'branch') stack.push(String((step.if as { expr?: unknown } | undefined)?.expr ?? ''));
-    else if (step.type === 'orElse') stack[stack.length - 1] = String((step.if as { expr?: unknown } | undefined)?.expr ?? '');
-    else if (step.type === 'end') stack.pop();
-    else if (step.type === 'stop') {
-      const text = stack.join(' ');
-      if (reads(text, COMBAT) && reads(text, `@действующий.${tag}`)) return true;
-    }
-  }
-  return false;
+  const list = steps(view);
+  let guards: Map<number, string | null>;
+  try { guards = lazyPlan(list, () => true).guards; } catch { return false; }
+  return list.some((step, at) => {
+    if (step.type !== 'stop') return false;
+    const text = guards.get(at);
+    return reads(text, COMBAT) && reads(text, `@действующий.${tag}`);
+  });
 };
 
 const opened = (label: string): Move => ({

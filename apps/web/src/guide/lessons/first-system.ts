@@ -1,7 +1,7 @@
 import { emptySystem } from '../../store/world.ts';
 import type { Lesson, View } from '../types.ts';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
-import { fieldBy, inBlock, columnOf, effectBy, stepsOf, reads, armOf, numberOf, errorsOf, exprOf } from '../find.ts';
+import { fieldBy, inBlock, columnOf, effectBy, stepsOf, reads, armOf, numberOf, errorsOf, exprOf, isArm } from '../find.ts';
 
 const hp = (view: View) => fieldBy(view.system, 'Хиты');
 const ac = (view: View) => fieldBy(view.system, 'Класс брони');
@@ -17,7 +17,7 @@ const branchAt = (view: View): number => {
   const at = checkAt(view);
   const id = steps[at]?.id;
   if (at < 0 || typeof id !== 'string') return -1;
-  return steps.findIndex((step, k) => k > at && step.type === 'branch' && reads(step.if, `@${id}.success`));
+  return steps.findIndex((step, k) => k > at && isArm(step) && reads(step.if, `@${id}.success`));
 };
 
 const applies = (view: View) => stepsOf(strike(view)?.[1]).filter(step => step.type === 'apply');

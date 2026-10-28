@@ -1,6 +1,6 @@
 import type { System, Param, Effect } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
-import { effectBy, fieldBy, stepsOf, reads, armOf, errorsOf, same } from '../find.ts';
+import { effectBy, fieldBy, stepsOf, reads, armOf, errorsOf, same, isArm } from '../find.ts';
 import { problemsClean } from './first-system.ts';
 import base from '../seeds/base.json' with { type: 'json' };
 
@@ -18,7 +18,7 @@ const calls = (view: View) => callsOf(view, damage(view)?.[0]);
 const successArm = (view: View) => {
   const steps = stepsOf(strike(view)?.[1]);
   const check = steps.find(step => step.type === 'check')?.id;
-  const at = steps.findIndex(step => step.type === 'branch' && typeof check === 'string' && reads(step.if, `@${check}.success`));
+  const at = steps.findIndex(step => isArm(step) && typeof check === 'string' && reads(step.if, `@${check}.success`));
   return at < 0 ? [] : armOf(steps, at);
 };
 
