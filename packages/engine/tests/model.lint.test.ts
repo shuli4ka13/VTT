@@ -266,6 +266,14 @@ group('линт: слушатели, круги, входы', () => {
     eq(problem?.where.binding, 0);
   });
 
+  test('привязка с пустым аргументом не закрывает обязательный вход — как без ключа', () => {
+    const system = withEffect('strike', { params: [{ key: 'dice', label: 'Кость урона' }], steps: [] });
+    system.tables = { weapon: { shape: 'book', use: 'item', label: 'Оружие', columns: [], bindings: [{ label: 'Удар', effect: 'strike', args: { dice: '' } }] } } as never;
+    const [problem] = errorsOf(lintSystem(system));
+    ok(problem?.text.includes('не заполняет вход «Кость урона»'), problem?.text);
+    eq(problem?.where.binding, 0);
+  });
+
   test('кнопка заполняет входы-листы сама: первый одиночный — нажавший, список — выбранные; лишний лист — ошибка', () => {
     const system = withEffect('strike', { params: [WHO, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }], steps: [] });
     system.tables = { weapon: { shape: 'book', use: 'item', label: 'Оружие', columns: [], bindings: [{ label: 'Удар', effect: 'strike', args: {} }] } } as never;

@@ -1,4 +1,5 @@
 import type { System, Table, TableRow } from './types.ts';
+import { isBlank, orDefault } from './blank.ts';
 
 export const VALUE_COLUMN = 'value';
 
@@ -19,7 +20,7 @@ export function staticCell(system: System, table: string | undefined, value: unk
     if (!spec) return null;
     const row = (system.tables?.[at!]?.rows ?? []).find(one => String(one.value) === String(current));
     const cell = row ? (row.cells ?? {})[key] : undefined;
-    current = cell === undefined || cell === '' ? spec.default ?? null : cell;
+    current = orDefault(cell, spec);
     at = linkOf(spec);
   }
   return current ?? null;
@@ -29,7 +30,7 @@ export const linkOf = (column: { kind?: string; from?: string } | undefined): st
   (column?.from && (column.kind === 'choice' || column.kind === 'number') ? column.from : undefined);
 
 export function rowByKey(table: Table | undefined, key: unknown): TableRow | undefined {
-  if (!table || key === null || key === undefined || key === '') return undefined;
+  if (!table || isBlank(key)) return undefined;
   if (isRange(table)) {
     const n = Number(key);
     return (table.rows ?? []).find(r => n >= (r.from ?? -Infinity) && n <= (r.to ?? Infinity));

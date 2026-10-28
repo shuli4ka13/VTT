@@ -17,6 +17,7 @@ import { recordKinds } from '../model/owned.ts';
 import { heldBy, propsOf, withLibrary, isBook, isUnder } from '../model/owned.ts';
 import { isSingle } from '../model/sheet-columns.ts';
 import { typeColumn } from '../model/inherit.ts';
+import { isBlank, orDefault } from '../model/blank.ts';
 
 export interface RefContext {
   pass: Pass;
@@ -93,7 +94,7 @@ const inRecord = (ctx: RefContext): RefContext => (ctx.props ? { ...ctx, recordS
 const isFormula = (decl: Param | undefined, value: unknown): value is string =>
   decl?.kind === 'number' && typeof value === 'string';
 
-const isGiven = (arg: unknown): boolean => arg !== null && arg !== undefined && arg !== '';
+const isGiven = (arg: unknown): boolean => !isBlank(arg);
 
 const nameRegex = (name: string): RegExp =>
   new RegExp(`[@#]${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}_.])`, 'gu');
@@ -198,8 +199,8 @@ const ownLink = (system: System, type: unknown, column: string): string | undefi
   return found ? linkOf(found) : undefined;
 };
 
-const orDefault = (value: unknown, system: System, type: unknown, column: string): unknown =>
-  (value === null || value === undefined || value === '' ? typeColumn(system, typeof type === 'string' ? type : undefined, column)?.default ?? null : value);
+const columnOfType = (system: System, type: unknown, column: string) =>
+  typeColumn(system, typeof type === 'string' ? type : undefined, column);
 
 function evaluate(expr: unknown, ctx: RefContext): unknown {
   const results = ctx.results ?? {};
@@ -219,9 +220,9 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
         return walk(system, ctx.pass, link, resolve(`${ITEM_NAME}.${column}`), rest, who(ctx), scope);
       }
       const type = asked === name ? undefined : (ctx.paramDefs ?? []).find(param => param.kind === 'record')?.from;
-      if (!ctx.props || !(column in ctx.props)) return type ? orDefault(null, system, type, column) : null;
-      if (ctx.itemRead) return type ? orDefault(ctx.itemRead(column), system, type, column) : ctx.itemRead(column) ?? null;
-      return type ? orDefault(recordValue(column, ctx), system, type, column) : recordValue(column, { ...ctx, recordScope: true });
+      if (!ctx.props || !(column in ctx.props)) return type ? orDefault(null, columnOfType(system, type, column)) : null;
+      if (ctx.itemRead) return type ? orDefault(ctx.itemRead(column), columnOfType(system, type, column)) : ctx.itemRead(column) ?? null;
+      return type ? orDefault(recordValue(column, ctx), columnOfType(system, type, column)) : recordValue(column, { ...ctx, recordScope: true });
     }
     const onSheet = sheetHead(name, ctx.sheets);
     if (onSheet) {
@@ -301,19 +302,19 @@ function namedValue(name: string, ctx: RefContext): unknown {
   if (!decl) return undefined;
   const value = ctx.params && name in ctx.params ? fromArgs(name, ctx) : undefined;
   if (Array.isArray(value)) return value;
-  if (value === undefined || value === null || value === '') {
+  if (isBlank(value)) {
     if (decl.default !== undefined) return decl.default;
     if (decl.optional) return null;
     throw new EngineError(`${who(ctx)}: параметр «${name}» не заполнен`);
   }
-  if (decl.kind === 'field' && typeof value === 'object' && 'sheet' in value && 'tag' in value) {
+  if (decl.kind === 'field' && typeof value === 'object' && value !== null && 'sheet' in value && 'tag' in value) {
     const field = value as { sheet: string; tag: string };
     return (ctx.sheets ? ctx.sheets.view(field.sheet) : ctx.pass).resolve(field.tag);
   }
   if (typeof value === 'object') return undefined;
   if (!isFormula(decl, value)) return value;
   const out = evaluate(value, inRecord(ctx));
-  return (out === null || out === undefined || out === '') && decl.default !== undefined ? decl.default : out;
+  return isBlank(out) && decl.default !== undefined ? decl.default : out;
 }
 
 function recordNamesInline(expr: string, ctx: RefContext): string {

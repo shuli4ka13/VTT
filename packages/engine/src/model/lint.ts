@@ -5,7 +5,8 @@ import { chosenEffect, choicesOfInput, emittedChoices } from './payments.ts';
 import { SEEN_LABEL, ROLLED, ROLLED_LABEL, ANY_ACTION, PHASES } from '../events/bus.ts';
 import { HEARD_WORDS } from '../events/lifecycle.ts';
 import type { System, Compendium, Effect, Step, Stage, Guard, Param, Table, Modifier } from './types.ts';
-import { registry } from '../engine/steps/index.ts';
+import { registry, loopsAt, splitsTargets } from '../engine/steps/index.ts';
+import { isBlank } from './blank.ts';
 import { STEP_WORDS, slotShown, type SlotGate } from '../words/steps.ts';
 import { ROLL_CALL, CALL_WORDS } from '../words/calls.ts';
 import { modifierLists } from './integrity.ts';
@@ -242,9 +243,9 @@ export function lintStep(step: Step, system: System, effect: Effect, earlier: Ea
   if (structural) return structural;
   const declared = declaredOf(system);
   const all = paramsOf(system, effect);
-  const rows = earlier.filter(e => e.type === 'each' && e.table).map(e => e.id);
+  const rows = earlier.filter(e => loopsAt(e) && e.table).map(e => e.id);
   const params = new Set([...all.filter(p => p.kind !== 'sheet').map(p => p.key), ...rows, ...visible.filter(one => one.kind !== 'sheet').map(one => one.name)]);
-  const sheets = [...all.filter(p => p.kind === 'sheet').map(p => p.key), 'носитель', ...earlier.filter(e => e.type === 'each' && !e.table).map(e => e.id), ...visible.filter(one => one.kind === 'sheet').map(one => one.name)];
+  const sheets = [...all.filter(p => p.kind === 'sheet').map(p => p.key), 'носитель', ...earlier.filter(e => loopsAt(e) && !e.table).map(e => e.id), ...visible.filter(one => one.kind === 'sheet').map(one => one.name)];
   const known = new Set([...earlier.map(e => e.id), ...visible.filter(one => one.kind !== 'sheet').map(one => one.name)]);
   const refs = withAddresses(system, chainRefs([step], () => where, params, sheets, [], [], system))
     .filter(ref => !(ref.kind === 'step' && known.has(ref.key)))
@@ -866,7 +867,7 @@ function paramProblems(system: System, compendium?: Compendium): Problem[] {
           const called = system.effects[choice];
           if (!called) continue;
           for (const param of called.params ?? []) {
-            if (!applying && param.kind === 'roll' && args[param.key] !== undefined) {
+            if (!applying && param.kind === 'roll' && !isBlank(args[param.key])) {
               const text = String((args[param.key] as { expr?: unknown } | null)?.expr ?? '');
               const lone = /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(text)?.[1];
               const step = lone ? steps.slice(0, index).find(one => one.id === lone) : undefined;
@@ -884,7 +885,7 @@ function paramProblems(system: System, compendium?: Compendium): Problem[] {
               const text = `во вход «${param.label ?? param.key}» ${applying ? 'наложения' : 'вызова'} «${called.label ?? choice}» передано «${stray.value}» — в таблице «${stray.table}» такой строки нет`;
               if (!out.some(p => sameWhere(p.where, whereOf(index)) && p.text === text)) out.push({ where: whereOf(index), level: 'error', text });
             }
-            if (args[param.key] !== undefined || param.optional || param.ask || param.default !== undefined) continue;
+            if (!isBlank(args[param.key]) || param.optional || param.ask || param.default !== undefined) continue;
             const effectName = `«${called.label ?? choice}»`;
             const inputName = `«${param.label ?? param.key}»`;
             out.push({
@@ -908,7 +909,7 @@ function paramProblems(system: System, compendium?: Compendium): Problem[] {
       const args = argsWithProps(system, binding, props) ?? {};
       const table = tableOf(binding, effect);
       for (const param of effect.params ?? []) {
-        if (args[param.key] !== undefined || table[param.key]) continue;
+        if (!isBlank(args[param.key]) || table[param.key]) continue;
         if (param.ask || param.optional || param.default !== undefined) continue;
         out.push({
           where: { tab: 'records', kind, part: 'bindings', binding: index }, level: 'error',
@@ -1027,7 +1028,7 @@ function perTargetProblems(system: System): Problem[] {
     if (!each.length) continue;
     const keys = new Set(each.map(param => param.key));
     const steps = effect.steps ?? [];
-    const loop = steps.findIndex(step => registry.get(step.type)?.loops && (step as { of?: unknown }).of);
+    const loop = steps.findIndex(step => loopsAt(step) && (step as { of?: unknown }).of);
     for (const param of each) {
       const name = param.label ?? param.key;
       if (!param.ask) out.push({ where: { tab: 'effects', effect: id, key: param.key, part: 'params' }, level: 'error', text: `вход «${name}» спрашивается для каждой цели — ему нужен вопрос игроку («Спросить»)` });
@@ -1275,7 +1276,7 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
     }
     for (const chain of chainsOf(id, effect)) {
       chain.steps.forEach((step, index) => {
-        if (step.type !== 'each') return;
+        if (!loopsAt(step)) return;
         const raw = step as { of?: unknown; rows?: unknown; as?: unknown };
         const at = chain.where(index);
         const listed = raw.of !== undefined && raw.of !== '';
@@ -1356,7 +1357,7 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
           }
         }
         const steps = effect.steps ?? [];
-        const split = steps.findIndex(step => step.type === 'each');
+        const split = steps.findIndex(step => splitsTargets(step));
         if (contract.each && (split < 0 || loopOf(effect.params, steps[split] as { of?: unknown })?.key !== contract.each)) {
           out.push({ where, level: 'error', text: `метка «${tag}» требует «для каждого» с именем «${contract.each}»` });
         }
@@ -1396,7 +1397,7 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
     if (where.tab !== 'book') continue;
     const args = argsWithProps(system, binding, props) ?? {};
     for (const param of effect.params ?? []) {
-      if (args[param.key] !== undefined || table[param.key] || param.ask || param.optional || param.default !== undefined) continue;
+      if (!isBlank(args[param.key]) || table[param.key] || param.ask || param.optional || param.default !== undefined) continue;
       out.push({ where, level: 'error', text: `кнопка «${binding.label ?? effect.label ?? binding.effect}» не заполняет вход «${param.label ?? param.key}» эффекта «${effect.label ?? binding.effect}»` });
     }
   }

@@ -7,6 +7,7 @@ import { staticCell } from './tables.ts';
 import type { Pass } from '../engine/calc.ts';
 import { asItem, ITEM_NAME } from './item-ref.ts';
 import { typeColumn } from './inherit.ts';
+import { isBlank, orDefault } from './blank.ts';
 import type { System, Compendium, Ask, Param } from './types.ts';
 
 export interface AskedParam extends Param {
@@ -22,7 +23,7 @@ export function asksOf(actionId: string, { system, compendium }: { system: Syste
   const bound = action.binding.args ?? {};
   const own = (effect.params ?? [])
     .filter((param): param is Param & { ask: Ask } => Boolean(param.ask))
-    .filter(param => bound[param.key] === undefined || bound[param.key] === null)
+    .filter(param => isBlank(bound[param.key]))
     .filter(param => askHolds(system, effect.params ?? [], bound as Record<string, unknown>, param.ask, propsOf(action.record, system) ?? {}))
     .map(param => ({ ...param, effect: action.effect, effectLabel: effect.label ?? action.effect }));
   const taken = new Set(own.map(param => param.key));
@@ -43,7 +44,7 @@ function askHolds(system: System, params: readonly Param[], bound: Record<string
   const literal = (key: string): unknown => {
     const arg = bound[key];
     const text = arg && typeof arg === 'object' ? (arg as { expr?: unknown }).expr : arg;
-    if (text === undefined || text === null || text === '') return (params.find(one => one.key === key)?.default ?? null);
+    if (isBlank(text)) return (params.find(one => one.key === key)?.default ?? null);
     try { return compile(String(text)).evaluate(name => (props[name] ?? null) as never); } catch { return null; }
   };
   const record = params.find(one => one.kind === 'record');
@@ -52,7 +53,7 @@ function askHolds(system: System, params: readonly Param[], bound: Record<string
     if (item.startsWith(`${ITEM_NAME}.`)) {
       const column = item.slice(ITEM_NAME.length + 1).split('.')[0]!;
       const cell = props[column];
-      return (cell === undefined || cell === null || cell === '' ? typeColumn(system, record!.from, column)?.default ?? null : cell) as never;
+      return orDefault(cell, typeColumn(system, record!.from, column)) as never;
     }
     const [head, ...path] = name.split('.');
     const param = params.find(one => one.key === head);
@@ -73,7 +74,7 @@ export function choicesOf(system: System, param: Param): string[] {
 }
 
 const boundOf = (bound: unknown, actor: Pass | undefined): number | null => {
-  if (bound === undefined || bound === null || bound === '') return null;
+  if (isBlank(bound)) return null;
   if (typeof bound === 'number') return bound;
   if (!actor) return null;
   const text = typeof bound === 'object' ? String((bound as { expr?: unknown }).expr ?? '') : String(bound);
@@ -89,7 +90,7 @@ export type Inputs = Record<string, InputValue | Record<string, InputValue>>;
 export const isPerTarget = (param: Param): boolean => Boolean((param as { perTarget?: boolean }).perTarget);
 
 function valueProblem(param: AskedParam, value: unknown, name: string, system: System, actor: Pass | undefined): string | null {
-  if (value === undefined || value === '') return `не заполнено: ${name}`;
+  if (isBlank(value)) return `не заполнено: ${name}`;
   const kind = askKindOf(param);
   if (kind === 'number') {
     const number = Number(value);
@@ -119,7 +120,7 @@ export function checkInputs(
   for (const param of asked) {
     const value = given[param.key];
     const name = param.label ?? param.key;
-    const empty = value === undefined || value === null || value === '';
+    const empty = isBlank(value);
     if (empty && param.optional && !isPerTarget(param)) continue;
     if (isPerTarget(param) && targets && !targets.length) return `${name}: спрашивается для каждой цели — сначала выберите цели`;
     if (!isPerTarget(param)) {

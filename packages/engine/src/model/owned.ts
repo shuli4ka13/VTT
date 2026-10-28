@@ -1,6 +1,7 @@
 import { compile } from '../formula/index.ts';
 import { DESK_ID, isDesk } from '../engine/owners.ts';
-import { paramsOf, basedOn } from './inherit.ts';
+import { paramsOf, basedOn, typeColumns } from './inherit.ts';
+import { isBlank } from './blank.ts';
 import type { Binding, Compendium, CompendiumRecord, Owned, Sheet, SheetKind, System, Table } from './types.ts';
 
 export type RecordKind = Table;
@@ -92,15 +93,15 @@ export function isUnder(system: System, table: string | undefined, base: string)
 }
 
 export function propsOf(record: CompendiumRecord, system: System, entry?: Owned): Record<string, unknown> | null {
-  const decl = kindOfRecord(system, record);
-  if (!decl?.columns || !decl.columns.length) return null;
+  const columns = kindOfRecord(system, record) ? typeColumns(system, record.table) : [];
+  if (!columns.length) return null;
   const props: Record<string, unknown> = {};
-  for (const p of decl.columns) {
+  for (const p of columns) {
     const own = entry?.values?.[p.key];
-    if (own !== undefined) props[p.key] = own;
-    else if (record.cells && record.cells[p.key] !== undefined) props[p.key] = record.cells[p.key];
+    if (!isBlank(own)) props[p.key] = own;
+    else if (record.cells && !isBlank(record.cells[p.key])) props[p.key] = record.cells[p.key];
     else if (p.expr) props[p.key] = p.expr;
-    else if (p.default !== undefined && p.default !== null && p.default !== '') props[p.key] = p.default;
+    else if (!isBlank(p.default)) props[p.key] = p.default;
   }
   return props;
 }
@@ -152,10 +153,10 @@ export function propsNeeded(system: System, kind: RecordKind | undefined, bindin
     const args = argsWithProps(system, binding, props) ?? {};
     const effect = system.effects[binding.effect];
     for (const param of effect ? paramsOf(system, effect) : []) {
-      const arg = args[param.key] as { expr?: string } | undefined;
-      if (param.optional || param.default !== undefined || !arg?.expr) continue;
+      const text = (args[param.key] as { expr?: string } | undefined)?.expr;
+      if (param.optional || param.default !== undefined || isBlank(text)) continue;
       let deps: readonly string[];
-      try { deps = compile(arg.expr).deps; } catch { continue; }
+      try { deps = compile(text as string).deps; } catch { continue; }
       for (const dep of deps) if (props.has(dep)) out.add(dep);
     }
   }

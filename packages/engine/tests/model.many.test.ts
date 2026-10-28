@@ -2,6 +2,7 @@ import { group, test, eq, ok } from './harness.ts';
 import { compile } from '../src/formula/index.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { rowUsers, danglingRows, renameRow, renameRowInBook } from '../src/model/integrity.ts';
+import { bindingHolds } from '../src/events/actions.ts';
 import type { System, Compendium } from '../src/model/types.ts';
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
@@ -39,5 +40,23 @@ group('ссылка «несколько значений» — многие к�
     system.tables!.weapon_properties!.rows = system.tables!.weapon_properties!.rows!.filter(r => r.value !== 'лёгкое');
     const висят = danglingRows(system, мир.compendium as Compendium).map(d => d.text);
     ok(висят.some(t => t.includes('Кинжал') && t.includes('лёгкое')), висят.slice(0, 3).join('\n'));
+  });
+});
+
+group('условие кнопки по колонке основы типа записи', () => {
+  test('пустая клетка берёт умолчание колонки основы: «Только если» видит 5 и да', () => {
+    const system = {
+      id: 'у', name: 'у',
+      tables: {
+        снаряжение: { shape: 'book', use: 'item', label: 'Снаряжение', columns: [
+          { key: 'ammo', label: 'Патроны', kind: 'number', default: 5 },
+        ] },
+        оружие: { shape: 'book', use: 'item', label: 'Оружие', extends: 'снаряжение', columns: [] },
+      },
+      effects: { выстрел: { label: 'Выстрел', steps: [] } },
+    } as unknown as System;
+    const binding = { label: 'Выстрел', effect: 'выстрел', if: { expr: '@ammo > 0' } } as never;
+    eq(bindingHolds(system, { id: 'пистолет', table: 'оружие', label: 'Пистолет', cells: {} } as never, binding), true);
+    eq(bindingHolds(system, { id: 'пустой', table: 'оружие', label: 'Пустой', cells: { ammo: 0 } } as never, binding), false);
   });
 });

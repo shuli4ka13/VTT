@@ -42,4 +42,30 @@ describe('стражи пакета engine', () => {
     const hand = sources.filter(file => !allowed.some(end => file.endsWith(end)) && /\.extends\b/.test(readFileSync(file, 'utf8')));
     expect(hand).toEqual([]);
   });
+
+  it('«пусто» проверяет одно место — model/blank.ts: ручная проверка null и пустой строки в одной строке только там', () => {
+    const src = join(root, 'src');
+    const manual = /=== null/;
+    const empty = /=== ''/;
+    const offenders = [...walk(src)]
+      .filter(file => !file.endsWith(join('model', 'blank.ts')))
+      .filter(file => readFileSync(file, 'utf8').split('\n').some(line => manual.test(line) && empty.test(line)))
+      .map(file => file.slice(src.length + 1).split('\\').join('/'))
+      .sort();
+    expect(offenders).toEqual([
+      'core/perform.ts',
+      'core/run.ts',
+      'engine/calc.ts',
+      'engine/navigate.ts',
+      'engine/readings.ts',
+      'engine/steps/apply.ts',
+      'engine/steps/dice-ref.ts',
+      'engine/steps/emit.ts',
+      'engine/steps/roll-reroll.ts',
+      'engine/steps/roll.ts',
+      'engine/steps/status.ts',
+      'formula/evaluate.ts',
+      'model/integrity.ts',
+    ]);
+  });
 });

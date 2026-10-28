@@ -51,6 +51,10 @@ group('значение, которое называет человек за с�
     eq(checkInputs(asked, { дистанция: 5, прицел: 'тело' }, system), null);
   });
 
+  test('ответ null на обязательное число — не заполнено', () => {
+    ok(checkInputs(asked, { дистанция: null as never, прицел: 'тело' }, system)!.includes('не заполнено: Дистанция'));
+  });
+
   test('число приходит числом, выбор — строкой', () => {
     const clean = normalizeInputs(asked, { дистанция: '7', прицел: 'голова' });
     eq(typeof clean.дистанция, 'number');

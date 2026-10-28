@@ -7,6 +7,7 @@ import { FormulaView } from '../../ui/formula-field.tsx';
 import { ValueField, asText, type SlotOption } from './value-field.tsx';
 import type { SlotContext } from './slots.tsx';
 import { listOf } from '@vtt/engine/model/lists';
+import { isBlank } from '@vtt/engine/model/blank';
 import { EffectPick } from './effect-pick.tsx';
 import { paramsOf } from '@vtt/engine/model/inherit';
 import { choiceRows, pickedRow } from './choice-rows.ts';
@@ -76,7 +77,7 @@ const effectOf = (value: unknown): string | null => {
 
 export function placeOf(input: CallInput, props: ReadonlySet<string>): Place {
   const { value, param } = input;
-  if (value === undefined || value === null) {
+  if (isBlank(value)) {
     if (input.fromProp) return 'record';
     if (param.ask) return 'asked';
     if (param.default !== undefined) return 'computed';
@@ -108,7 +109,7 @@ function valueShown(system: System, input: CallInput, names?: Map<string, string
     const chip = <span className="chips__chip"><span>{system.effects[id]?.label || id}</span></span>;
     return effectOf(input.value) ? chip : <span>{chip} <span className="faint">— как у эффекта</span></span>;
   }
-  if (input.value === undefined || input.value === null) {
+  if (isBlank(input.value)) {
     if (input.param.default !== undefined) return <span>{String(input.param.default)} <span className="faint">— как у эффекта</span></span>;
     return <span className="faint">{input.param.optional ? 'нет' : 'не передаётся'}</span>;
   }
@@ -205,7 +206,7 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, onArg
     />
   );
 
-  const empty = (input: CallInput) => input.value === undefined || input.value === null;
+  const empty = (input: CallInput) => isBlank(input.value);
   const rare = (input: CallInput) => empty(input)
     && (Boolean(input.param.optional) || Boolean(input.param.ask));
   const byDefault = (input: CallInput) => {

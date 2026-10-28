@@ -2,6 +2,7 @@ import { EngineError } from '../engine/errors.ts';
 import type { System, Table, TableRow, TableColumn, CellView, Field, FieldValue, CellMark, Holder, Placement } from './types.ts';
 import type { SheetPart, Control } from '@vtt/schema';
 import { linkOf, rowByKey, staticCell } from './tables.ts';
+import { isBlank } from './blank.ts';
 
 export type { CellMark };
 
@@ -25,7 +26,7 @@ export function inputTarget(system: System, target: string, params: readonly { k
     const param = params.find(one => one.key === head);
     const given = args[head] ?? param?.default;
     const value = tail ? staticCell(system, param?.kind === 'choice' ? param.from : undefined, given, tail.slice(1).split('.')) : given;
-    if (value === undefined || value === null || value === '' || typeof value === 'object') { missing = true; return ''; }
+    if (isBlank(value) || typeof value === 'object') { missing = true; return ''; }
     return String(value);
   });
   return missing ? null : out;
@@ -35,7 +36,7 @@ export function itemTarget(target: string, cells: Record<string, unknown>): stri
   let missing = false;
   const out = target.replace(TARGET_SLOT, (_, column: string) => {
     const value = cells[column];
-    if (value === undefined || value === null || value === '' || typeof value === 'object') { missing = true; return ''; }
+    if (isBlank(value) || typeof value === 'object') { missing = true; return ''; }
     return slugOf(value);
   });
   return missing ? null : out;
@@ -55,7 +56,7 @@ export type CellSource =
 export function cellSource(column: TableColumn, row?: TableRow): CellSource {
   const cell = (row?.cells ?? {})[column.key];
   if (isFormulaCell(cell)) return { kind: 'formula', expr: cell.expr };
-  if (cell !== undefined && cell !== '') return { kind: 'value', value: cell };
+  if (!isBlank(cell)) return { kind: 'value', value: cell };
   if (column.expr !== undefined) return { kind: 'formula', expr: column.expr.expr };
   return { kind: 'input' };
 }
@@ -124,7 +125,7 @@ const TYPE_WORDS: Record<string, string> = { number: 'число', text: 'тек
 export const valueWord = (value: unknown): string =>
   (typeof value === 'boolean' ? (value ? 'да' : 'нет')
     : Array.isArray(value) ? (value.length ? value.map(valueWord).join(', ') : '—')
-      : value === null || value === undefined || value === '' ? '—' : String(value));
+      : isBlank(value) ? '—' : String(value));
 
 export function misfit(field: Pick<Field, 'label' | 'value'>, value: unknown): string | null {
   if (field.value.kind !== 'stored' || value === null || value === undefined) return null;
@@ -450,7 +451,7 @@ export function sectionOf(system: System, part: SheetPart, field: Field): Pick<F
   const source = cellSource(column, row);
   if (source.kind !== 'value') return { sectionBy: addressOf(field.home, row, column.key) };
   const value = source.value;
-  if (value === undefined || value === null || value === '') return {};
+  if (isBlank(value)) return {};
   const options = column.kind === 'choice' && column.from ? system.tables?.[column.from]?.rows ?? [] : [];
   const at = options.findIndex(r => String(r.value) === String(value));
   if (typeof value === 'boolean') return { section: value ? part.views?.[column.key]?.yes ?? 'да' : part.views?.[column.key]?.no ?? 'нет', sectionAt: value ? 1 : 0 };

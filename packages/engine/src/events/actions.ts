@@ -2,7 +2,8 @@ import { findRecord, heldBy, isItem, kindOfRecord, argsWithProps, propKeysOf, pr
 import { compile } from '../formula/index.ts';
 import { linkOf, staticCell } from '../model/tables.ts';
 import { findEffect, isPipeline, grantedTo } from '../engine/effects.ts';
-import { byOrder } from '../model/inherit.ts';
+import { byOrder, typeColumn } from '../model/inherit.ts';
+import { orDefault } from '../model/blank.ts';
 import { EngineError } from '../engine/errors.ts';
 import { isDesk } from './desk.ts';
 import type { System, Sheet, Compendium, CompendiumRecord, Binding } from '../model/types.ts';
@@ -82,10 +83,10 @@ export function bindingHolds(system: System, record: CompendiumRecord, binding: 
   const condition = (binding as { if?: { expr?: string } }).if?.expr;
   if (!condition?.trim()) return true;
   const props = propsOf(record, system) ?? {};
-  const kind = kindOfRecord(system, record);
   const value = compile(condition).evaluate(name => {
     const [head, ...path] = name.split('.');
-    return staticCell(system, linkOf((kind?.columns ?? []).find(one => one.key === head)), props[head!], path) as never;
+    const column = typeColumn(system, record.table, head!);
+    return staticCell(system, linkOf(column), orDefault(props[head!], column), path) as never;
   });
   if (typeof value !== 'boolean') throw new EngineError(`условие кнопки «${binding.label ?? binding.effect}» у «${record.label}» должно давать да/нет, а дало ${JSON.stringify(value)}`);
   return value;
