@@ -10,6 +10,7 @@ import { useWorld, freeId } from '../../../store/world.ts';
 import { renameStep, stepIdsOf } from '../keys.ts';
 import { STEP } from '../../../words.ts';
 import { loopOf, loopParam } from '@vtt/engine/engine/steps/each';
+import { loopsAt, splitsTargets } from '@vtt/engine/engine/steps/index';
 import { cardTitle, titleOf } from './words.ts';
 import { Button, CardHead, Select, Verdict } from '../../../ui/primitives.tsx';
 import { problemOf } from '../step-card.tsx';
@@ -105,13 +106,14 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     steps.slice(0, index)
       .map((step, at) => ({ step, at }))
       .filter(({ at }) => sees(arms, at, index))
-      .filter(({ step }) => step.id || (step.type === 'each' && (loopOf(effect.params, step as { of?: unknown }) || loopParam(step as never))))
+      .filter(({ step }) => step.id || (loopsAt(step) && (loopOf(effect.params, step as { of?: unknown }) || loopParam(step as never))))
       .map(({ step, at }) => {
-        const row = step.type === 'each' ? loopParam(step as never) : null;
-        const loop = step.type === 'each' ? loopOf(effect.params, step as { of?: unknown }) : null;
-        const called = step.type === 'each' ? row?.label ?? loop?.label : cardTitle(cards, at, system, effect);
+        const row = loopsAt(step) ? loopParam(step as never) : null;
+        const loop = loopsAt(step) ? loopOf(effect.params, step as { of?: unknown }) : null;
+        const called = loopsAt(step) ? row?.label ?? loop?.label : cardTitle(cards, at, system, effect);
         return {
-          id: String(step.type === 'each' ? row?.key ?? loop?.key : step.id), type: step.type,
+          id: String(loopsAt(step) ? row?.key ?? loop?.key : step.id), type: step.type,
+          ...(splitsTargets(step) ? { splits: true } : {}),
           ...(called ? { title: called } : {}),
           ...(row?.from ? { table: row.from } : {}),
           ...(returnsOf(system, step).length ? { outputs: returnsOf(system, step) } : {}),
@@ -377,7 +379,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
       title="Добавить шаг в эту ветку"
       options={[['', '+ шаг'],
         ...callOptions(system, id),
-        ...[...BRICKS, ...(onRoll ? SEEN_BRICKS : [])].filter(b => b.key !== 'each').map(b => [b.key, b.label.replace(/^\+ /, '')] as const)]}
+        ...[...BRICKS, ...(onRoll ? SEEN_BRICKS : [])].filter(b => !loopsAt({ type: b.key })).map(b => [b.key, b.label.replace(/^\+ /, '')] as const)]}
       onChange={key => {
         const called = key.startsWith(CALL_PREFIX) ? key.slice(CALL_PREFIX.length) : null;
         const brick = [...BRICKS, ...SEEN_BRICKS].find(b => b.key === key);

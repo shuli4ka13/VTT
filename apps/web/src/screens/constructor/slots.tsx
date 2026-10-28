@@ -3,7 +3,7 @@ import type { SheetNames } from '../../ui/formula-chips.tsx';
 import type { System, Effect, SlotRef } from '@vtt/schema';
 import type { RecordKind } from '@vtt/engine/model/owned';
 import { columnPaths } from '../../ui/formula.tsx';
-import { stepModule } from '@vtt/engine/engine/steps/index';
+import { stepModule, loopsAt } from '@vtt/engine/engine/steps/index';
 import { calledOf } from '@vtt/engine/engine/effects';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import { STEP } from '../../words.ts';
@@ -12,7 +12,7 @@ import { recordKinds } from '@vtt/engine/model/owned';
 
 export interface StepOutput { path: string; label: string; kind?: string; no?: string }
 
-export interface EarlierStep { id: string; type: string; title?: string; table?: string; outputs?: StepOutput[] }
+export interface EarlierStep { id: string; type: string; title?: string; table?: string; splits?: boolean; outputs?: StepOutput[] }
 
 function outputsOf(type: string): StepOutput[] {
   try {
@@ -24,14 +24,14 @@ function outputsOf(type: string): StepOutput[] {
 
 const outputsAt = (step: EarlierStep): StepOutput[] => [...(step.outputs ?? []), ...outputsOf(step.type)];
 
-export const formulaName = (step: EarlierStep): string => (step.type === 'each' ? step.title || step.id : step.id ? step.id.replace(/_/g, ' ') : step.title || STEP.one);
+export const formulaName = (step: EarlierStep): string => (loopsAt(step) ? step.title || step.id : step.id ? step.id.replace(/_/g, ' ') : step.title || STEP.one);
 
 const said = (name: string, label: string): string => (name.toLowerCase() === label.toLowerCase() ? name : `${name} — ${label}`);
 
 export function outputRefs(earlier: EarlierStep[], nameOf: (step: EarlierStep) => string = formulaName): { ref: string; label: string; kind?: string }[] {
   const out: { ref: string; label: string; kind?: string }[] = [];
   for (const step of earlier) {
-    if (step.type === 'each') continue;
+    if (loopsAt(step)) continue;
     const outputs = outputsAt(step);
     const name = nameOf(step);
     if (!outputs.length) {
@@ -51,7 +51,7 @@ const outcomeWord = (output: StepOutput): string => output.label.replace(/^да 
 
 export function outcomeRefs(earlier: EarlierStep[]): OutcomeRef[] {
   const rows = earlier
-    .filter(step => step.type !== 'each')
+    .filter(step => !loopsAt(step))
     .flatMap(step => outputsAt(step).map(output => ({ step, output })));
   const plain = rows.map(({ step, output }) => `${step.title || formulaName(step)} — ${outcomeWord(output)}`);
   return rows.map(({ step, output }, at) => {

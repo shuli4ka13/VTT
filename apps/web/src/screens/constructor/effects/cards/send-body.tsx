@@ -6,7 +6,6 @@ import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { callable } from '../../slots.tsx';
 import { callArgs } from '../call-args.ts';
-import { loopsAt } from '@vtt/engine/engine/steps/index';
 import { WhatNext, meddlersOf } from '../what-next.tsx';
 
 const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
@@ -35,7 +34,7 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
           if (!next) { delete d.effect; return; }
           d.effect = next;
           if (typeof next !== 'string') return;
-          const args = callArgs(system, context.effect, next, d.args as Record<string, unknown> | undefined, { inLoop: context.earlier.some(s => loopsAt(s)) });
+          const args = callArgs(system, context.effect, next, d.args as Record<string, unknown> | undefined, { inLoop: context.earlier.some(s => s.splits) });
           if (Object.keys(args).length) d.args = args; else delete d.args;
         })}
         args={args}

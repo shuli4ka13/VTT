@@ -1,6 +1,7 @@
 import { slugOf, freeId } from '../../store/world.ts';
 import { usageIndex, inUse } from './usage.ts';
 import type { System, Compendium } from '@vtt/schema';
+import { splitsTargets } from '@vtt/engine/engine/steps/index';
 
 const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -42,7 +43,7 @@ function loopsOver(node: unknown, key: string): boolean {
   if (Array.isArray(node)) return node.some(item => loopsOver(item, key));
   if (!node || typeof node !== 'object') return false;
   const o = node as Record<string, unknown>;
-  if (o.type === 'each' && o.of === key) return true;
+  if (splitsTargets(o) && o.of === key) return true;
   return Object.values(o).some(value => loopsOver(value, key));
 }
 

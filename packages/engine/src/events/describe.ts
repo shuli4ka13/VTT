@@ -2,7 +2,7 @@ import { parseItemTag } from '../model/item-ref.ts';
 import { recordKinds } from '../model/owned.ts';
 import { loopOf } from '../engine/steps/each.ts';
 import { effectLabelOf } from './actions.ts';
-import { breakReasonWord, registry as stepRegistry } from '../engine/steps/index.ts';
+import { breakReasonWord, registry as stepRegistry, splitsTargets } from '../engine/steps/index.ts';
 import { outcomeWords, rollName } from '../engine/roll-tags.ts';
 import type { System, Sheet } from '../model/types.ts';
 import { fieldOf, hasField, valueWord } from '../model/sheet-columns.ts';
@@ -92,7 +92,7 @@ export function describeParts(
   const params: { key: string; label?: string; kind?: string }[] = effect?.params ?? [];
   const sheetHeads = new Set([
     ...params.filter(p => p.kind === 'sheet').map(p => p.key),
-    ...(effect?.steps ?? []).filter((step: any) => step.type === 'each').map((step: any) => loopOf(params as never, step)?.key).filter(Boolean) as string[],
+    ...(effect?.steps ?? []).filter((step: any) => splitsTargets(step)).map((step: any) => loopOf(params as never, step)?.key).filter(Boolean) as string[],
     'носитель',
   ]);
   const nameLabel = (name: string): string => {
