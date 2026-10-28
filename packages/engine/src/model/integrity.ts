@@ -1,7 +1,8 @@
 import { emittedChoices } from './payments.ts';
 import { renameLayoutRow } from './layout.ts';
 import { rowsOf } from './tables.ts';
-import { recordsOf, recordKinds, kindsOf } from './owned.ts';
+import { recordsOf, recordKinds, kindsOf, kindOfRecord } from './owned.ts';
+import { typeColumns } from './inherit.ts';
 import { compile } from '../formula/index.ts';
 import type { Node } from '../formula/index.ts';
 import { tagTablesOf, choiceTableOf } from './lists.ts';
@@ -214,15 +215,11 @@ export function rowUsers(system: System, table: string, key: unknown, compendium
   for (const { where, args, key: arg } of choiceArgs(system, table)) {
     if (holds(constOf(args[arg]), key)) out.push({ where, text: 'значение входа при вызове' });
   }
-  for (const [rk, kind] of recordKinds(system)) {
-    const props = (kind.columns ?? []).filter(p => (p as Loose).kind === 'choice' && (p as Loose).from === table);
-    for (const record of recordsOf(compendium)) {
-      if (record.table !== rk) continue;
-      for (const prop of props) {
-        if (holds((record.cells ?? {})[prop.key], key)) {
-          out.push({ where: { tab: 'book', record: record.id }, text: `запись «${record.label || record.id}»` });
-        }
-      }
+  for (const record of recordsOf(compendium)) {
+    if (!kindOfRecord(system, record)) continue;
+    const props = typeColumns(system, record.table).filter(p => p.kind === 'choice' && p.from === table);
+    if (props.some(prop => holds((record.cells ?? {})[prop.key], key))) {
+      out.push({ where: { tab: 'book', record: record.id }, text: `запись «${record.label || record.id}»` });
     }
   }
   for (const field of fieldsOf(system)) {
@@ -283,19 +280,16 @@ export function danglingRows(system: System, compendium?: Compendium): Dangling[
     const text = badCondition(system, cond, 'условие шага');
     if (text) out.push({ where, text });
   }
-  for (const [rk, kind] of recordKinds(system)) {
-    for (const prop of (kind.columns ?? [])) {
-      const p = prop as Loose;
-      if (p.kind !== 'choice' || typeof p.from !== 'string') continue;
-      for (const record of recordsOf(compendium)) {
-        if (record.table !== rk) continue;
-        const lost = missing(system, p.from, (record.cells ?? {})[prop.key]);
-        if (!lost.length) continue;
-        out.push({
-          where: { tab: 'book', record: record.id },
-          text: `у «${record.label || record.id}» в «${prop.label || prop.key}» стоит «${lost.map(String).join('», «')}», а в «${tables[p.from]?.label || p.from}» такой строки нет`,
-        });
-      }
+  for (const record of recordsOf(compendium)) {
+    if (!kindOfRecord(system, record)) continue;
+    for (const prop of typeColumns(system, record.table)) {
+      if (prop.kind !== 'choice' || typeof prop.from !== 'string') continue;
+      const lost = missing(system, prop.from, (record.cells ?? {})[prop.key]);
+      if (!lost.length) continue;
+      out.push({
+        where: { tab: 'book', record: record.id },
+        text: `у «${record.label || record.id}» в «${prop.label || prop.key}» стоит «${lost.map(String).join('», «')}», а в «${tables[prop.from]?.label || prop.from}» такой строки нет`,
+      });
     }
   }
   return out;
@@ -355,14 +349,11 @@ export function renameRow(system: System, table: string, from: unknown, to: unkn
 export function renameRowInBook(system: System, book: Compendium, table: string, from: unknown, to: unknown): void {
   if (from === undefined || from === null || from === '') return;
   repathRow(recordsOf(book), table, from, to);
-  for (const [rk, kind] of recordKinds(system)) {
-    const props = (kind.columns ?? []).filter(p => (p as Loose).kind === 'choice' && (p as Loose).from === table);
-    if (!props.length) continue;
-    for (const record of recordsOf(book)) {
-      if (record.table !== rk || !record.cells) continue;
-      for (const prop of props) {
-        if (holds(record.cells[prop.key], from)) record.cells[prop.key] = swap(record.cells[prop.key], from, to);
-      }
+  for (const record of recordsOf(book)) {
+    if (!kindOfRecord(system, record) || !record.cells) continue;
+    for (const prop of typeColumns(system, record.table)) {
+      if (prop.kind !== 'choice' || prop.from !== table) continue;
+      if (holds(record.cells[prop.key], from)) record.cells[prop.key] = swap(record.cells[prop.key], from, to);
     }
   }
 }

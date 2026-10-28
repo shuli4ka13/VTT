@@ -83,3 +83,31 @@ group('ключ строке без ключа — не переименован
   });
 });
 
+
+group('строка справочника у основы типа записи', () => {
+  const наследие = (): { system: System; книга: Compendium } => ({
+    system: {
+      id: 'н', name: 'н',
+      tables: {
+        сорта: { label: 'Сорта', key: 'word', columns: [], rows: [{ value: 'стандарт' }, { value: 'альфа' }] },
+        снаряжение: { shape: 'book', use: 'item', label: 'Снаряжение', columns: [
+          { key: 'grade', label: 'Сорт', kind: 'choice', from: 'сорта' },
+        ] },
+        имплант: { shape: 'book', use: 'item', label: 'Имплант', extends: 'снаряжение', columns: [] },
+      },
+      effects: {},
+    } as unknown as System,
+    книга: { records: [{ id: 'мышцы', table: 'имплант', label: 'Замена мускулов', cells: { grade: 'стандарт' } }] } as unknown as Compendium,
+  });
+
+  test('колонка-выбор объявлена у основы, запись — у наследника: строка видна и переименовывается в клетке', () => {
+    const { system, книга } = наследие();
+    const кто = rowUsers(system, 'сорта', 'стандарт', книга).map(u => u.text);
+    eq(кто.length, 1, кто.join(' | '));
+    ok(кто[0]!.includes('Замена мускулов'), кто.join(' | '));
+    renameRow(system, 'сорта', 'стандарт', 'норма');
+    renameRowInBook(system, книга, 'сорта', 'стандарт', 'норма');
+    eq(книга.records!.find(r => r.id === 'мышцы')!.cells!.grade, 'норма');
+    eq(danglingRows(system, книга).length, 0);
+  });
+});

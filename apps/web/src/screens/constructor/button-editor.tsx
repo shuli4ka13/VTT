@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useWorld, useBook } from '../../store/world.ts';
 import type { System, Effect, Param, Binding, SlotRef } from '@vtt/schema';
 import type { RecordKind } from '@vtt/engine/model/owned';
+import { isUnder, propsOf as propsOfRecord } from '@vtt/engine/model/owned';
 import { tableOf } from '@vtt/engine/model/buttons';
 import { paramsOf, typeColumns } from '@vtt/engine/model/inherit';
 import { columnChoices, type ColumnChoice } from '@vtt/engine/model/paths';
@@ -329,9 +330,9 @@ function Examples({ system, kind, kindId, prop }: { system: System; kind: Record
   const book = useBook();
   const column = (kind.columns ?? []).find(one => one.key === prop);
   if (!column) return null;
-  const records = (book.records ?? []).filter(record => record.table === kindId);
+  const records = (book.records ?? []).filter(record => isUnder(system, record.table, kindId));
   if (!records.length) return null;
-  const shown = records.slice(0, SHOWN).map(record => `${record.label || record.id} ${cellWords(system, column, record.cells?.[prop])}`);
+  const shown = records.slice(0, SHOWN).map(record => `${record.label || record.id} ${cellWords(system, column, propsOfRecord(record, system)?.[prop])}`);
   const rest = records.length - SHOWN;
   return <span className="args-row__eg">в книге: {shown.join(' · ')}{rest > 0 ? ` · ещё ${rest}` : ''}</span>;
 }
