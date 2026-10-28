@@ -60,7 +60,7 @@ const fromParam = (param: Param, group: NameGroup, system?: System): NameAt => w
   group,
   ...(param.many ? { many: true } : {}),
   ...(param.optional ? { optional: true } : {}),
-  ...(param.kind === 'choice' && param.from ? { from: param.from } : {}),
+  ...((param.kind === 'choice' || param.kind === 'record') && param.from ? { from: param.from } : {}),
 }, system);
 
 const holder = (): NameAt => ({ name: HOLDER, label: 'носитель — тот, на ком висит', kind: 'sheet', group: 'holder' });

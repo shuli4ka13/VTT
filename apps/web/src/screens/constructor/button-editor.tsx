@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useWorld, useBook } from '../../store/world.ts';
 import type { System, Effect, Param, Binding, SlotRef } from '@vtt/schema';
 import type { RecordKind } from '@vtt/engine/model/owned';
 import { tableOf } from '@vtt/engine/model/buttons';
-import { paramsOf } from '@vtt/engine/model/inherit';
+import { paramsOf, flattenSystem } from '@vtt/engine/model/inherit';
+import { columnChoices } from '@vtt/engine/model/paths';
 import { listOf } from '@vtt/engine/model/lists';
 import { Card, Field, Select, LabelInput, Button, DangerButton } from '../../ui/primitives.tsx';
 import { asDice } from '@vtt/engine/words/glossary';
@@ -20,7 +21,7 @@ const OWN = 'Своё у каждой записи';
 
 type Fill = 'actor' | 'targets';
 
-export function ButtonEditor({ binding, system, recordKind, kindId, onEdit, onDelete, onFillWithProps }: {
+export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onEdit, onDelete, onFillWithProps }: {
   binding: Binding;
   system: System;
 
@@ -31,6 +32,9 @@ export function ButtonEditor({ binding, system, recordKind, kindId, onEdit, onDe
 
   onFillWithProps?: (params: Param[]) => void;
 }) {
+  const flat = useMemo(() => flattenSystem(system, true), [system]);
+  const recordKind = (kindId ? flat.tables?.[kindId] as RecordKind | undefined : undefined) ?? ownKind;
+  const propNames = useMemo(() => new Map(kindId ? columnChoices(flat, kindId).map(one => [one.path.slice(1), one.label] as const) : []), [flat, kindId]);
   const effect = system.effects[binding.effect];
   const params = effect ? paramsOf(system, effect) : [];
   const buttons = Object.entries(system.effects).filter(([, e]) => (e.activation ?? 'manual') !== 'passive');
@@ -106,6 +110,7 @@ export function ButtonEditor({ binding, system, recordKind, kindId, onEdit, onDe
               params={params}
               system={system}
               recordKind={recordKind}
+              propNames={propNames}
               effectId={binding.effect}
               {...(kindId ? { kindId } : {})}
               effect={effect}
@@ -179,13 +184,14 @@ const freeParam = (param: Param): boolean => Boolean(loose(param).optional) || p
 
 const LONE = /^@([\p{L}\p{N}_]+)(?:\.[\p{L}\p{N}_]+)?$/u;
 
-function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, effect, where, onArg, onSheet, onNew }: {
+function ArgRow({ param, binding, params, system, recordKind, propNames, kindId, effectId, effect, where, onArg, onSheet, onNew }: {
   param: Param;
   kindId?: string;
   binding: Binding;
   params: Param[];
   system: System;
   recordKind: RecordKind;
+  propNames: ReadonlyMap<string, string>;
   effectId: string;
   effect: Effect;
   where: string;
@@ -262,7 +268,7 @@ function ArgRow({ param, binding, params, system, recordKind, kindId, effectId, 
         <ValueField
           where={`${where} · ${name}`}
           value={(text ? { expr: text } : undefined) as never}
-          context={{ system, effect: { ...effect, params: [] }, earlier: [], recordKind, sheets: new Map(params.filter(one => one.kind === 'sheet' && !one.many).map(one => [one.key, one.label ?? one.key] as const)) }}
+          context={{ system, effect: { ...effect, params: [] }, earlier: [], recordKind, names: propNames, sheets: new Map(params.filter(one => one.kind === 'sheet' && !one.many).map(one => [one.key, one.label ?? one.key] as const)) }}
           allow={['prop', 'table', 'tag']}
           extraOptions={hintsOf(param, system, effect, binding.args as Record<string, unknown> | undefined, onNew && !byName ? onNew : undefined)}
           placeholder={emptyWords(param, system)}
