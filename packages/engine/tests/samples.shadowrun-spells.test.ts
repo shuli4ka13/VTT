@@ -1,6 +1,7 @@
 import { group, test, eq, ok, deepEq } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { exchange } from './play.ts';
+import { asksOf } from '../src/model/asks.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
@@ -153,3 +154,11 @@ group('Shadowrun 6, глава «Магия»: ситуации книжника
   });
 });
 
+
+group('Shadowrun 6: вопрос «Характеристика» — только у заклинаний, где её выбирает заклинатель', () => {
+  test('у «Огненного шара» не спрашивают, у «Повышения характеристики» — спрашивают', () => {
+    const asked = (id: string) => asksOf(`${id}:0`, { system, compendium: book }).map(param => param.key);
+    ok(!asked('spell_fireball').includes('attr'));
+    ok(asked('spell_increase_attribute').includes('attr'));
+  });
+});

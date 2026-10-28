@@ -5,6 +5,8 @@ import { paymentsOf } from './payments.ts';
 import { propsOf } from './owned.ts';
 import { staticCell } from './tables.ts';
 import type { Pass } from '../engine/calc.ts';
+import { asItem, ITEM_NAME } from './item-ref.ts';
+import { typeColumn } from './inherit.ts';
 import type { System, Compendium, Ask, Param } from './types.ts';
 
 export interface AskedParam extends Param {
@@ -44,7 +46,14 @@ function askHolds(system: System, params: readonly Param[], bound: Record<string
     if (text === undefined || text === null || text === '') return (params.find(one => one.key === key)?.default ?? null);
     try { return compile(String(text)).evaluate(name => (props[name] ?? null) as never); } catch { return null; }
   };
+  const record = params.find(one => one.kind === 'record');
   const value = compile(condition).evaluate(name => {
+    const item = record ? asItem(name, params) : name;
+    if (item.startsWith(`${ITEM_NAME}.`)) {
+      const column = item.slice(ITEM_NAME.length + 1).split('.')[0]!;
+      const cell = props[column];
+      return (cell === undefined || cell === null || cell === '' ? typeColumn(system, record!.from, column)?.default ?? null : cell) as never;
+    }
     const [head, ...path] = name.split('.');
     const param = params.find(one => one.key === head);
     return staticCell(system, param?.kind === 'choice' ? param.from : undefined, literal(head!), path) as never;
