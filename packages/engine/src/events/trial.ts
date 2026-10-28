@@ -8,6 +8,7 @@ import { EngineError } from '../engine/errors.ts';
 import { registry } from '../engine/steps/index.ts';
 import { listOf } from '../model/lists.ts';
 import { fieldsOf } from '../model/sheet-columns.ts';
+import { isUnder } from '../model/owned.ts';
 import type { System, Compendium, Sheet, Die, Effect } from '../model/types.ts';
 import type { Clock } from '../engine/clock.ts';
 
@@ -96,15 +97,18 @@ export function trial({ system, compendium, effectId, from, to, args, dice = 'av
       ? args[param.key]
       : param.kind === 'field' ? sampleCell(system, from.id) : sampleArg(param.kind, system, effect, param.key, param.from);
   }
+  const type = (effect.params ?? []).find(param => param.kind === 'record' && typeof param.from === 'string')?.from as string | undefined;
+  const sample = type ? (compendium?.records ?? []).find(record => isUnder(system, record.table, type)) : undefined;
+  const kind = sample ? system.tables?.[sample.table ?? ''] : undefined;
   const probe: System = {
     ...system,
     tables: {
       ...(system.tables ?? {}),
-      [TRIAL_KIND]: { shape: 'book', use: 'action', label: 'Проба', columns: [], bindings: [{ label: effect.label ?? effectId, effect: effectId, args: filled }] },
+      [TRIAL_KIND]: { shape: 'book', use: kind?.use ?? 'action', label: 'Проба', columns: kind?.columns ?? [], bindings: [{ label: effect.label ?? effectId, effect: effectId, args: filled }] },
     },
   } as System;
   const book: Compendium = {
-    records: [...(compendium?.records ?? []), { id: TRIAL_RECORD, table: TRIAL_KIND, label: effect.label ?? effectId, cells: {} }],
+    records: [...(compendium?.records ?? []), { id: TRIAL_RECORD, table: TRIAL_KIND, label: effect.label ?? effectId, cells: sample?.cells ?? {} }],
   };
   const sender: Sheet = { ...from, has: [...(from.has ?? []), { of: TRIAL_RECORD }] };
   const people = from.id === to.id ? [sender] : [sender, to];

@@ -8,7 +8,7 @@ import { readCell } from './cells.ts';
 import type { Scope } from './cells.ts';
 import { rowOf } from './tables.ts';
 import { referencedTable, splitPath, walk } from './navigate.ts';
-import { VALUE_COLUMN } from '../model/tables.ts';
+import { VALUE_COLUMN, linkOf } from '../model/tables.ts';
 import { diceTools } from '../core/roll.ts';
 import type { Param, Die, System } from '../model/types.ts';
 import type { Pass } from './calc.ts';
@@ -192,6 +192,22 @@ export function toolsOf(system: System, pass: Pass, owner: string, die?: Die): T
   };
 }
 
+function ownColumn(system: System, type: unknown, column: string) {
+  for (let at = typeof type === 'string' ? type : undefined; at; at = system.tables?.[at]?.extends) {
+    const found = (system.tables?.[at]?.columns ?? []).find(one => one.key === column);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+const ownLink = (system: System, type: unknown, column: string): string | undefined => {
+  const found = ownColumn(system, type, column);
+  return found ? linkOf(found) : undefined;
+};
+
+const orDefault = (value: unknown, system: System, type: unknown, column: string): unknown =>
+  (value === null || value === undefined || value === '' ? ownColumn(system, type, column)?.default ?? null : value);
+
 function evaluate(expr: unknown, ctx: RefContext): unknown {
   const results = ctx.results ?? {};
   const known = knownOf(ctx);
@@ -199,18 +215,20 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
   let scope: Scope | undefined;
   const resolve = (asked: string): unknown => {
     if (ctx.lazy) ctx.lazy(asked.split('.')[0]!);
-    const name = ctx.item ? asItem(asked, ctx.paramDefs) : asked;
-    if (ctx.item && name === ITEM_NAME) return ctx.item.key;
-    if (ctx.item && name.startsWith(`${ITEM_NAME}.`)) {
+    const record = Boolean(ctx.item || ctx.props);
+    const name = record ? asItem(asked, ctx.paramDefs) : asked;
+    if (record && name === ITEM_NAME) return ctx.item?.key ?? null;
+    if (record && name.startsWith(`${ITEM_NAME}.`)) {
       const [column, ...rest] = name.slice(ITEM_NAME.length + 1).split('.') as [string, ...string[]];
       if (rest.length) {
-        const link = referencedTable(system, column);
+        const link = ownLink(system, (ctx.paramDefs ?? []).find(param => param.kind === 'record' && asked !== name)?.from, column) ?? referencedTable(system, column);
         if (!link) throw new EngineError(`${who(ctx)}: «${column}» у вещи не из таблицы — «${rest.join('.')}» прочитать негде`);
         return walk(system, ctx.pass, link, resolve(`${ITEM_NAME}.${column}`), rest, who(ctx), scope);
       }
-      if (!ctx.props || !(column in ctx.props)) return null;
-      if (ctx.itemRead) return ctx.itemRead(column) ?? null;
-      return recordValue(column, { ...ctx, recordScope: true });
+      const type = asked === name ? undefined : (ctx.paramDefs ?? []).find(param => param.kind === 'record')?.from;
+      if (!ctx.props || !(column in ctx.props)) return type ? orDefault(null, system, type, column) : null;
+      if (ctx.itemRead) return type ? orDefault(ctx.itemRead(column), system, type, column) : ctx.itemRead(column) ?? null;
+      return type ? orDefault(recordValue(column, ctx), system, type, column) : recordValue(column, { ...ctx, recordScope: true });
     }
     const onSheet = sheetHead(name, ctx.sheets);
     if (onSheet) {
