@@ -1,5 +1,6 @@
 import { armsOf, sees } from './flow.ts';
 import { loopOf, loopParam } from '../engine/steps/each.ts';
+import { loopsAt, splitsTargets } from '../engine/steps/index.ts';
 import { flattenSystem } from './inherit.ts';
 import { heardNames, listenerOf, callNamesOf, sourcesOf, CALL_TAGS, HOLDER, TARGETS_SEED, DESK_NAME, COMBAT_NAME } from './references.ts';
 import { LEFT_NAME } from '../events/durations.ts';
@@ -91,7 +92,7 @@ function stepsBefore(steps: readonly Step[], index: number, withLoop: boolean, p
   const arms = armsOf(steps);
   steps.slice(0, index).forEach((step, at) => {
     if (!sees(arms, at, index)) return;
-    if (step.type === 'each') {
+    if (loopsAt(step)) {
       const row = loopParam(step as never);
       if (row) {
         out.push(withRows({ name: row.key, label: row.label ?? row.key, kind: 'choice', group: 'loop', ...(row.from ? { from: row.from } : {}) }, system));
@@ -123,7 +124,7 @@ function constants(system: System): NameAt[] {
 function targetsChildren(listened: Effect | null, system?: System): NameChild[] {
   if (!listened) return [];
   const steps = listened.steps ?? [];
-  const at = steps.findIndex(step => step.type === 'each');
+  const at = steps.findIndex(step => splitsTargets(step));
   if (at < 0) return [];
   return steps.slice(at + 1).filter(step => step.id).flatMap(step => {
     const outputs = [...returnsOf(system, step), ...outputsOf(step.type)];

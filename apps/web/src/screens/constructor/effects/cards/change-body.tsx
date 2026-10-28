@@ -24,6 +24,7 @@ import { ConditionField } from '../../condition-field.tsx';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import { fieldsOf, cellSource } from '@vtt/engine/model/sheet-columns';
 import { DESK_ID } from '@vtt/engine/engine/owners';
+import { loopsAt } from '@vtt/engine/engine/steps/index';
 
 const fieldTarget = (target: unknown): { sheet: string; tag: string } | null => {
   const expr = target && typeof target === 'object' && 'expr' in target ? String((target as { expr: unknown }).expr) : '';
@@ -35,7 +36,7 @@ const rowNamesOf = (context: SlotContext): { name: string; label: string; table:
   ...(context.effect.params ?? [])
     .filter(param => param.kind === 'choice' && typeof param.from === 'string' && !param.many)
     .map(param => ({ name: param.key, label: param.label ?? param.key, table: String(param.from) })),
-  ...context.earlier.filter(step => step.type === 'each' && step.table).map(step => ({ name: step.id, label: step.id, table: step.table! })),
+  ...context.earlier.filter(step => step.table).map(step => ({ name: step.id, label: step.id, table: step.table! })),
 ];
 
 const storedColumns = (system: System, table: string) => {
@@ -355,7 +356,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
             d.effect ??= firstEvent ?? '';
             const main = amountParamOf(system.effects[String(d.effect)]);
             if (group.amount?.id && main) d.args = { ...(d.args ?? {}), [main.key]: { expr: `@${group.amount.id}` } };
-            const filled = callArgs(system, context.effect, String(d.effect), d.args, { inLoop: context.earlier.some(one => one.type === 'each') });
+            const filled = callArgs(system, context.effect, String(d.effect), d.args, { inLoop: context.earlier.some(one => loopsAt(one)) });
             if (Object.keys(filled).length) d.args = filled;
           } else {
             retype(draft, 'apply');
@@ -436,7 +437,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
                 if (!next) { delete d.effect; return; }
                 d.effect = next;
                 if (typeof next !== 'string') return;
-                const args = callArgs(system, context.effect, next, d.args, { inLoop: context.earlier.some(one => one.type === 'each'), to: d.to, applied: true });
+                const args = callArgs(system, context.effect, next, d.args, { inLoop: context.earlier.some(one => loopsAt(one)), to: d.to, applied: true });
                 if (Object.keys(args).length) d.args = args; else delete d.args;
               })}
             />

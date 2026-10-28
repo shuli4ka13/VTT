@@ -12,6 +12,7 @@ import { compile, printFormula, andParts } from '@vtt/engine/formula';
 import type { Node } from '@vtt/engine/formula';
 import { sheetsAt, placeNamesAt } from './names.ts';
 import { namesAt } from '@vtt/engine/model/names-at';
+import { splitsTargets } from '@vtt/engine/engine/steps/index';
 import { ConditionField } from '../condition-field.tsx';
 import { TagsField } from '../tags-field.tsx';
 import { WhileWhenRow } from './while-when.tsx';
@@ -66,7 +67,7 @@ function outcomesOf(system: System, listened: string, phase: Phase): (readonly [
   const source = system.effects[listened];
   if (!source) return [];
   const steps = source.steps ?? [];
-  const split = steps.findIndex(step => step.type === 'each');
+  const split = steps.findIndex(step => splitsTargets(step));
   const cards = groupSteps(steps);
   const earlier = steps.flatMap((step, index) => {
     const title = cardTitle(cards, index, system, source);

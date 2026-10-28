@@ -14,6 +14,7 @@ import { whoOf } from '../../readback.ts';
 import { parseCheckFormula, formatCheckFormula, compare } from '../../roll-formula.ts';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { rowTables } from '@vtt/engine/model/tables';
+import { splitsTargets } from '@vtt/engine/engine/steps/index';
 
 const loose = (draft: unknown): Record<string, any> => draft as Record<string, any>;
 
@@ -209,7 +210,7 @@ const loneRef = (ref: unknown): string | null =>
 
 function ContestLine({ step, roll, context }: { step: any; roll: any | null; context: SlotContext }) {
   const steps = (context.effect.steps ?? []) as any[];
-  const split = steps.findIndex(one => one.type === 'each');
+  const split = steps.findIndex(one => splitsTargets(one));
   const find = (name: string | null) => (name ? steps.findIndex(one => one.id === name && one.type === 'roll' && one.by) : -1);
   const mineAt = roll ? steps.indexOf(roll) : find(loneRef(step.value));
   const theirsAt = find(loneRef(step.versus));

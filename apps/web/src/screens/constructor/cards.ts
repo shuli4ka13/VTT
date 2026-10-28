@@ -2,6 +2,7 @@ import { compile } from '@vtt/engine/formula';
 import { STEP_WORDS } from '@vtt/engine/words/steps';
 import type { Step } from '@vtt/schema';
 import { armsOf, balance, endOf, flowOf, inBlock } from '@vtt/engine/model/flow';
+import { loopsAt } from '@vtt/engine/engine/steps/index';
 
 export type CardKind = 'check' | 'change' | 'number' | 'table' | 'split' | 'seen' | 'flow' | 'stop' | 'unknown';
 
@@ -104,7 +105,7 @@ function atomsOf(steps: Step[]): Atom[] {
 export const validFlow = (steps: Step[]): boolean => {
   if (balance(steps).length) return false;
   const arms = armsOf(steps);
-  return !steps.some((step, index) => step.type === 'each' && inBlock(arms, index));
+  return !steps.some((step, index) => loopsAt(step) && inBlock(arms, index));
 };
 
 function swap(steps: Step[], a: Atom, b: Atom): Step[] {

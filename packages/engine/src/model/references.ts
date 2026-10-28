@@ -1,14 +1,14 @@
 import { flattenSystem } from './inherit.ts';
 import { armsOf, sees } from './flow.ts';
 import { paymentsOf } from './payments.ts';
-import { loopOf, loopParam, splits as splitsTargets } from '../engine/steps/each.ts';
+import { loopOf, loopParam } from '../engine/steps/each.ts';
 import { tagWords } from '../engine/roll-tags.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import type { System, Compendium, Effect, Step, Modifier, Guard, Param, Table } from './types.ts';
 import { compile, FUNCTION_NAMES } from '../formula/index.ts';
 import { isFormulaCell } from './sheet-columns.ts';
 import type { Node } from '../formula/index.ts';
-import { registry } from '../engine/steps/index.ts';
+import { registry, loopsAt, splitsTargets } from '../engine/steps/index.ts';
 import { recordsOf, recordKinds, kindsOf } from './owned.ts';
 import { VALUE_COLUMN } from './tables.ts';
 
@@ -336,7 +336,7 @@ export function chainRefs(
     }
     guardRefs(step.if, from, scope, out);
     if (step.id) earlier.add(String(step.id));
-    const loop = step.type === 'each' ? loopOf(defs, step as { of?: unknown })?.key : undefined;
+    const loop = loopsAt(step) ? loopOf(defs, step as { of?: unknown })?.key : undefined;
     if (loop) named.add(loop);
     const row = loopParam(step as never);
     if (row) {
@@ -486,11 +486,13 @@ export function heardNames(system: System, listener: Listener): HeardNames {
   const effect = system.effects?.[listener.key] ?? null;
   const params = effect?.params ?? [];
   const steps = effect?.steps ?? [];
-  const split = steps.findIndex(step => step.type === 'each' && splitsTargets(step as never));
+  const split = steps.findIndex(step => splitsTargets(step));
   const loop = split >= 0 ? loopOf(params, steps[split] as { of?: unknown })?.key : undefined;
   const rowAt = steps.findIndex(step => loopParam(step as never));
   const cuts = [listener.phase === 'done' ? split : -1, rowAt].filter(at => at >= 0);
-  const visible = cuts.length ? steps.slice(0, Math.min(...cuts)) : steps;
+  const at = cuts.length ? Math.min(...cuts) : steps.length;
+  const arms = armsOf(steps);
+  const visible = steps.slice(0, at).filter((_, index) => sees(arms, index, at));
   return {
     sheets: [...params.filter(p => p.kind === 'sheet').map(p => p.key), ...(loop && listener.phase !== 'done' ? [loop] : [])],
     seeds: [
