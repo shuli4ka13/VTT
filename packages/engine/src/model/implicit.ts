@@ -1,5 +1,7 @@
 import { loopOf } from '../engine/steps/each.ts';
-import type { Effect, Param, Step } from './types.ts';
+import { splitsTargets } from '../engine/steps/index.ts';
+import { rolesOf } from './buttons.ts';
+import type { Effect, Param } from './types.ts';
 
 export type Implicit =
   | { by: 'name'; from: string }
@@ -12,18 +14,17 @@ const sameKind = (a: Param, b: Param): boolean => (a.kind ?? 'number') === (b.ki
   && (a.kind !== 'choice' || !a.from || !b.from || a.from === b.from);
 
 export function loopItemOf(caller: Pick<Effect, 'params' | 'steps'>): string | null {
-  const each = (caller.steps ?? []).find((step: Step) => step.type === 'each') as { of?: unknown } | undefined;
-  return each ? loopOf(caller.params, each)?.key ?? null : null;
+  const split = (caller.steps ?? []).find(splitsTargets) as { of?: unknown } | undefined;
+  return split ? loopOf(caller.params, split)?.key ?? null : null;
 }
 
 export const HOLDER = 'носитель';
 
 export function actorOf(caller: Pick<Effect, 'params' | 'activation'>): string | null {
-  const sheets = (caller.params ?? []).filter(p => p.kind === 'sheet');
-  const declared = sheets.find(p => p.role === 'actor');
+  const declared = (caller.params ?? []).find(p => p.kind === 'sheet' && !p.many && p.role === 'actor');
   if (declared) return declared.key;
   if ((caller.activation ?? 'manual') === 'passive') return HOLDER;
-  return sheets.find(p => !p.many)?.key ?? null;
+  return rolesOf(caller).actor ?? null;
 }
 
 export function implicitOf(param: Param, caller: Pick<Effect, 'params' | 'steps' | 'activation'>): Implicit | null {

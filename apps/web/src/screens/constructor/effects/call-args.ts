@@ -1,6 +1,7 @@
 import type { System, Effect } from '@vtt/schema';
 import { implicitOf, appliedOf } from '@vtt/engine/model/implicit';
 import { paramsOf } from '@vtt/engine/model/inherit';
+import { splitsTargets } from '@vtt/engine/engine/steps/index';
 
 type Args = Record<string, unknown>;
 
@@ -49,6 +50,6 @@ export function retarget(system: System, caller: Pick<Effect, 'params' | 'steps'
 export function filledStep(system: System, caller: Pick<Effect, 'params' | 'steps' | 'activation'>, step: Record<string, unknown>, earlier: readonly { type: string }[]): Record<string, unknown> {
   const id = typeof step.effect === 'string' ? step.effect : '';
   if (!id) return step;
-  const args = callArgs(system, caller, id, step.args as Args | undefined, { inLoop: earlier.some(one => one.type === 'each'), to: step.to, applied: step.type === 'status' });
+  const args = callArgs(system, caller, id, step.args as Args | undefined, { inLoop: earlier.some(one => splitsTargets(one)), to: step.to, applied: step.type === 'status' });
   return Object.keys(args).length ? { ...step, args } : step;
 }

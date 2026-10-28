@@ -2,6 +2,7 @@ import { endOf, isFlow } from './flow.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import { holderConditionOf } from './references.ts';
 import { findRoll, writeRoll, factorsOf, bare, tight } from './amounts.ts';
+import { rolesOf } from './buttons.ts';
 import type { System, Step } from './types.ts';
 
 export type CritChoice = 'off' | 'double' | 'explode';
@@ -208,8 +209,10 @@ export function armorOf(system: System, event: string): ArmorReading {
   return { choice: 'none', armor, hp };
 }
 
-export const sheetInputOf = (effect: System['effects'][string] | undefined): string | null =>
-  (effect?.params ?? []).find(param => param.kind === 'sheet' && !param.many)?.key ?? null;
+export const sheetInputOf = (effect: System['effects'][string] | undefined): string | null => {
+  const roles = rolesOf({ params: (effect?.params ?? []).filter(param => !param.many) });
+  return roles.targets ?? roles.actor ?? null;
+};
 
 export function setArmor(draft: System, choice: ArmorChoice, at: { event: string; armor: string; hp: string }): void {
   const called = draft.effects?.[at.event];

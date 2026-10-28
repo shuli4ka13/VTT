@@ -1,6 +1,7 @@
 import { roleOf, ROLE_WORDS } from './roles.ts';
 import { useState } from 'react';
 import { paramsOf } from '@vtt/engine/model/inherit';
+import { rolesOf } from '@vtt/engine/model/buttons';
 import { EffectPick } from '../effect-pick.tsx';
 import { ConditionField } from '../condition-field.tsx';
 import { CallEditor } from '../call-editor.tsx';
@@ -162,7 +163,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
                   key: 'bond', label: 'держание', on: !!effect.bond,
                   add: () => edit(draft => {
                     const holder = Object.entries(system.effects).find(([key, other]) => key !== id && (other.activation ?? 'manual') === 'passive')?.[0];
-                    const by = paramsOf(system, draft).find(p => p.kind === 'sheet' && !p.many)?.key;
+                    const by = rolesOf({ params: paramsOf(system, draft) }).actor;
                     if (holder && by) draft.bond = { effect: holder, by };
                   }),
                   drop: () => edit(draft => { delete draft.bond; }),
