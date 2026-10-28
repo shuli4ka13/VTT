@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { recordKinds } from '@vtt/engine/model/owned';
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
 import { choiceTables } from '@vtt/engine/model/tables';
 import { ASKABLE } from '@vtt/engine/model/asks';
@@ -174,11 +175,20 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
               if (next === SHEETS) { t.many = true; t.item ??= { key: freeId(keys, 'каждый'), label: 'Каждый' }; } else { delete t.many; delete t.item; }
               if (next !== 'number') { if (t.role === 'amount') delete t.role; delete (t as { stages?: unknown }).stages; }
               if (next !== 'sheet' && (t.role === 'target' || t.role === 'actor')) delete t.role;
-              if (next !== 'choice' && next !== 'sheet' && next !== SHEETS) delete t.from;
+              if (next !== 'choice' && next !== 'record' && next !== 'sheet' && next !== SHEETS) delete t.from;
               if (!(ASKABLE as readonly string[]).includes(next)) delete t.ask;
             })}
           />
         </Field>
+        {kind === 'record' ? (
+          <Field label="Тип записи" hint="эффект получает ту вещь, на которой нажали кнопку, и читает её свойства по имени входа">
+            <Select
+              value={String(param.from ?? '')}
+              options={[['', '— какой тип —'], ...recordKinds(system).map(([key, table]) => [key, table.label || key] as const)] as never}
+              onChange={next => change(t => { if (next) t.from = next; else delete t.from; })}
+            />
+          </Field>
+        ) : null}
         {kind === 'choice' ? (
           <Field label="Таблица">
             <Select

@@ -1,5 +1,5 @@
 import { isFormulaCell, itemExpr } from '../model/sheet-columns.ts';
-import { ITEM_NAME } from '../model/item-ref.ts';
+import { ITEM_NAME, asItem } from '../model/item-ref.ts';
 import type { ItemRef } from '../model/item-ref.ts';
 import { compile } from '../formula/index.ts';
 import type { Tools, Value } from '../formula/index.ts';
@@ -197,8 +197,9 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
   const known = knownOf(ctx);
   const system = ctx.pass.system;
   let scope: Scope | undefined;
-  const resolve = (name: string): unknown => {
-    if (ctx.lazy) ctx.lazy(name.split('.')[0]!);
+  const resolve = (asked: string): unknown => {
+    if (ctx.lazy) ctx.lazy(asked.split('.')[0]!);
+    const name = ctx.item ? asItem(asked, ctx.paramDefs) : asked;
     if (ctx.item && name === ITEM_NAME) return ctx.item.key;
     if (ctx.item && name.startsWith(`${ITEM_NAME}.`)) {
       const [column, ...rest] = name.slice(ITEM_NAME.length + 1).split('.') as [string, ...string[]];

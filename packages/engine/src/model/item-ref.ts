@@ -9,6 +9,13 @@ const ITEM_TAG = `${ITEM_NAME}:`;
 
 export interface ItemRef { sheet: string; key: string; record: string }
 
+export function asItem(name: string, params: readonly { key: string; kind?: string }[] | undefined): string {
+  const alias = (params ?? []).find(param => param.kind === 'record')?.key;
+  if (!alias) return name;
+  if (name === alias) return ITEM_NAME;
+  return name.startsWith(`${alias}.`) ? `${ITEM_NAME}${name.slice(alias.length)}` : name;
+}
+
 export const itemTag = (key: string, column: string): string => `${ITEM_TAG}${key}.${column}`;
 
 export function parseItemTag(tag: string): { key: string; column: string } | null {

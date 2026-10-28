@@ -2403,7 +2403,7 @@
               "throw_ricochet": 4,
               "launch_ricochet": 2,
               "item_ar": {
-                "expr": "@ar1"
+                "expr": "@оружие.ar1"
               },
               "close": true,
               "throwable": true
@@ -2417,7 +2417,7 @@
               "throw_ricochet": 2,
               "launch_ricochet": 0,
               "item_ar": {
-                "expr": "@ar2"
+                "expr": "@оружие.ar2"
               },
               "close": true,
               "throwable": true
@@ -2431,7 +2431,7 @@
               "throw_ricochet": 0,
               "launch_ricochet": 2,
               "item_ar": {
-                "expr": "@ar3"
+                "expr": "@оружие.ar3"
               },
               "throwable": true
             }
@@ -2444,7 +2444,7 @@
               "throw_ricochet": 0,
               "launch_ricochet": 4,
               "item_ar": {
-                "expr": "@ar4"
+                "expr": "@оружие.ar4"
               }
             }
           },
@@ -2456,7 +2456,7 @@
               "throw_ricochet": 0,
               "launch_ricochet": 6,
               "item_ar": {
-                "expr": "@ar5"
+                "expr": "@оружие.ar5"
               }
             }
           }
@@ -2543,7 +2543,7 @@
               "rounds": 2,
               "area": 0,
               "ease": {
-                "expr": "@recoil_burst"
+                "expr": "@оружие.recoil_burst"
               }
             }
           },
@@ -2556,7 +2556,7 @@
               "area": 0,
               "partial": true,
               "ease": {
-                "expr": "@recoil_burst"
+                "expr": "@оружие.recoil_burst"
               }
             }
           },
@@ -2568,7 +2568,7 @@
               "rounds": 10,
               "area": 1,
               "ease": {
-                "expr": "@recoil_full"
+                "expr": "@оружие.recoil_full"
               }
             }
           }
@@ -3159,47 +3159,8 @@
               "attack_pool": {
                 "expr": "@skill.pool"
               },
-              "ar_bonus": {
-                "expr": "@вещь.sight"
-              },
-              "prone_ar": {
-                "expr": "@prone_ar + @brace_bonus"
-              },
-              "physical_hit": {
-                "expr": "@physical_dmg"
-              },
-              "electric": {
-                "expr": "@electric"
-              },
-              "патроны": {
-                "expr": "@вещь.ammo"
-              },
-              "charged": {
-                "expr": "@вещь.charged"
-              },
-              "ar1": {
-                "expr": "@ar1"
-              },
-              "ar2": {
-                "expr": "@ar2"
-              },
-              "ar3": {
-                "expr": "@ar3"
-              },
-              "ar4": {
-                "expr": "@ar4"
-              },
-              "ar5": {
-                "expr": "@ar5"
-              },
-              "dv_e": {
-                "expr": "@вещь.dv_e"
-              },
-              "dv_c": {
-                "expr": "@вещь.dv_c"
-              },
-              "dv_n": {
-                "expr": "@вещь.dv_n"
+              "оружие": {
+                "expr": "@вещь"
               }
             }
           },
@@ -3207,14 +3168,8 @@
             "label": "Перезарядить",
             "effect": "reload",
             "args": {
-              "патроны": {
-                "expr": "@вещь.ammo"
-              },
-              "ammo_max": {
-                "expr": "@вещь.ammo_max"
-              },
-              "smart_reload": {
-                "expr": "не пусто(@вещь.reload) и @вещь.reload.smart_simple и @действующий.smartlink и большее из(0, @вещь.smart, строки(\"weapon_mod\", \"aim_link\", @вещь)) >= 1"
+              "оружие": {
+                "expr": "@вещь"
               }
             }
           }
@@ -3295,47 +3250,8 @@
               "attack_skill": {
                 "expr": "@skill"
               },
-              "modes": {
-                "expr": "@modes"
-              },
-              "str_need": {
-                "expr": "@str_need"
-              },
-              "ar_bonus": {
-                "expr": "@вещь.sight + @ammo_ar"
-              },
-              "prone_ar": {
-                "expr": "@prone_ar + @brace_bonus"
-              },
-              "prone_pool": {
-                "expr": "@prone_pool"
-              },
-              "патроны": {
-                "expr": "@вещь.ammo"
-              },
-              "ammo_max": {
-                "expr": "@ammo_max"
-              },
-              "ar1": {
-                "expr": "@ar1"
-              },
-              "ar2": {
-                "expr": "@ar2"
-              },
-              "ar3": {
-                "expr": "@ar3"
-              },
-              "ar4": {
-                "expr": "@ar4"
-              },
-              "ar5": {
-                "expr": "@ar5"
-              },
-              "recoil_burst": {
-                "expr": "@вещь.recoil_burst"
-              },
-              "recoil_full": {
-                "expr": "@вещь.recoil_full"
+              "оружие": {
+                "expr": "@вещь"
               }
             }
           },
@@ -3343,14 +3259,8 @@
             "label": "Перезарядить",
             "effect": "reload",
             "args": {
-              "патроны": {
-                "expr": "@вещь.ammo"
-              },
-              "ammo_max": {
-                "expr": "@вещь.ammo_max"
-              },
-              "smart_reload": {
-                "expr": "не пусто(@вещь.reload) и @вещь.reload.smart_simple и @действующий.smartlink и большее из(0, @вещь.smart, строки(\"weapon_mod\", \"aim_link\", @вещь)) >= 1"
+              "оружие": {
+                "expr": "@вещь"
               }
             }
           }
@@ -3392,11 +3302,8 @@
               "attack_skill": {
                 "expr": "@skill"
               },
-              "attack_rating": {
-                "expr": "@ar1"
-              },
-              "prone_pool": {
-                "expr": "@prone_pool"
+              "оружие": {
+                "expr": "@вещь"
               }
             }
           }
@@ -4139,23 +4046,8 @@
               "attack_pool": {
                 "expr": "@skill.pool"
               },
-              "physical_hit": {
-                "expr": "@physical_dmg"
-              },
-              "electric": {
-                "expr": "@electric"
-              },
-              "количество": {
-                "expr": "@вещь.count"
-              },
-              "dv_e": {
-                "expr": "@вещь.dv_e"
-              },
-              "dv_c": {
-                "expr": "@вещь.dv_c"
-              },
-              "dv_n": {
-                "expr": "@вещь.dv_n"
+              "оружие": {
+                "expr": "@вещь"
               }
             }
           }
@@ -4223,20 +4115,8 @@
             "label": "Подорвать",
             "effect": "detonate",
             "args": {
-              "rating": {
-                "expr": "@rating"
-              },
-              "количество": {
-                "expr": "@вещь.count"
-              },
-              "dv_e": {
-                "expr": "@вещь.dv_e"
-              },
-              "dv_c": {
-                "expr": "@вещь.dv_c"
-              },
-              "dv_n": {
-                "expr": "@вещь.dv_n"
+              "оружие": {
+                "expr": "@вещь"
               }
             }
           }
@@ -4337,7 +4217,7 @@
             "cells": {
               "meters": "до 1",
               "dv": {
-                "expr": "@dv_e"
+                "expr": "@оружие.dv_e"
               }
             }
           },
@@ -4346,7 +4226,7 @@
             "cells": {
               "meters": "1–3",
               "dv": {
-                "expr": "@dv_c"
+                "expr": "@оружие.dv_c"
               }
             }
           },
@@ -4355,7 +4235,7 @@
             "cells": {
               "meters": "4 — радиус взрыва",
               "dv": {
-                "expr": "@dv_n"
+                "expr": "@оружие.dv_n"
               }
             }
           }
@@ -14954,95 +14834,17 @@
             "default": "нет"
           },
           {
-            "key": "modes",
-            "label": "Режимы оружия",
-            "kind": "choice",
-            "from": "fire_modes",
-            "many": true
-          },
-          {
-            "key": "str_need",
-            "label": "Сила, чтобы стрелять",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "ar_bonus",
-            "label": "Прибавка к значению атаки",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "prone_ar",
-            "label": "Лёжа: к значению атаки",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "prone_pool",
-            "label": "Лёжа: к набору",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "патроны",
-            "label": "Патроны",
-            "kind": "field"
-          },
-          {
-            "key": "ammo_max",
-            "label": "Ёмкость магазина",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "ar1",
-            "label": "АТК: вплотную",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "ar2",
-            "label": "АТК: близкая",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "ar3",
-            "label": "АТК: средняя",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "ar4",
-            "label": "АТК: дальняя",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "ar5",
-            "label": "АТК: экстремальная",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "recoil_burst",
-            "label": "Гашение отдачи: очередь",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "recoil_full",
-            "label": "Гашение отдачи: непрерывный огонь",
-            "kind": "number",
-            "default": 0
+            "key": "оружие",
+            "label": "Оружие",
+            "kind": "record",
+            "from": "ranged_weapon"
           }
         ],
         "cost": [
           {
             "type": "branch",
             "if": {
-              "expr": "не @режим.always и не есть(@modes, @режим)"
+              "expr": "не @режим.always и не есть(@оружие.modes, @режим)"
             }
           },
           {
@@ -15072,7 +14874,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@действующий.strength < @str_need"
+              "expr": "@действующий.strength < @оружие.str_need"
             }
           },
           {
@@ -15087,7 +14889,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@ammo_max >= 1 и @патроны < 1"
+              "expr": "@оружие.ammo_max >= 1 и @оружие.ammo < 1"
             }
           },
           {
@@ -15102,7 +14904,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@ammo_max >= 1 и не @режим.partial и @патроны < @режим.rounds"
+              "expr": "@оружие.ammo_max >= 1 и не @режим.partial и @оружие.ammo < @режим.rounds"
             }
           },
           {
@@ -15132,7 +14934,7 @@
             "id": "выстрелов",
             "type": "roll",
             "fixed": {
-              "expr": "если(@ammo_max >= 1, меньшее из(@патроны, @режим.rounds), 0)"
+              "expr": "если(@оружие.ammo_max >= 1, меньшее из(@оружие.ammo, @режим.rounds), 0)"
             }
           },
           {
@@ -15144,7 +14946,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@патроны"
+              "expr": "@оружие.ammo"
             },
             "direction": "subtract",
             "value": {
@@ -15158,7 +14960,7 @@
             "id": "атк",
             "type": "roll",
             "fixed": {
-              "expr": "@дистанция.item_ar + @режим.penalty + @ar_bonus + если(@действующий.prone >= 1, @prone_ar, 0) + @действующий.ar_mod"
+              "expr": "@дистанция.item_ar + @режим.penalty + (@оружие.sight + @оружие.ammo_ar) + если(@действующий.prone >= 1, (@оружие.prone_ar + @оружие.brace_bonus), 0) + @действующий.ar_mod"
             }
           },
           {
@@ -15177,7 +14979,7 @@
                 "expr": "@действующий"
               },
               "набор": {
-                "expr": "@attack_pool + @приём.pool + если(@действующий.prone >= 1, @prone_pool, 0)"
+                "expr": "@attack_pool + @приём.pool + если(@действующий.prone >= 1, @оружие.prone_pool, 0)"
               },
               "атк": {
                 "expr": "@атк"
@@ -15323,16 +15125,10 @@
             "default": "нет"
           },
           {
-            "key": "attack_rating",
-            "label": "Значение атаки",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "prone_pool",
-            "label": "Лёжа: к набору",
-            "kind": "number",
-            "default": 0
+            "key": "оружие",
+            "label": "Оружие",
+            "kind": "record",
+            "from": "melee"
           }
         ],
         "cost": [
@@ -15369,7 +15165,7 @@
             "id": "атк",
             "type": "roll",
             "fixed": {
-              "expr": "@attack_rating + @действующий.ar_mod"
+              "expr": "@оружие.ar1 + @действующий.ar_mod"
             }
           },
           {
@@ -15388,7 +15184,7 @@
                 "expr": "@действующий"
               },
               "набор": {
-                "expr": "@attack_pool + @приём.pool + если(@действующий.prone >= 1, @prone_pool, 0)"
+                "expr": "@attack_pool + @приём.pool + если(@действующий.prone >= 1, @оружие.prone_pool, 0)"
               },
               "атк": {
                 "expr": "@атк"
@@ -16591,21 +16387,10 @@
             "kind": "sheet"
           },
           {
-            "key": "патроны",
-            "label": "Патроны",
-            "kind": "field"
-          },
-          {
-            "key": "ammo_max",
-            "label": "Ёмкость магазина",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "smart_reload",
-            "label": "Смартлинк ускоряет перезарядку",
-            "kind": "boolean",
-            "default": false
+            "key": "оружие",
+            "label": "Оружие",
+            "kind": "record",
+            "from": "ranged_weapon"
           }
         ],
         "cost": [
@@ -16617,10 +16402,10 @@
                 "expr": "@действующий"
               },
               "сложное": {
-                "expr": "не @smart_reload"
+                "expr": "не (не пусто(@оружие.reload) и @оружие.reload.smart_simple и @действующий.smartlink и большее из(0, @оружие.smart, строки(\"weapon_mod\", \"aim_link\", @оружие)) >= 1)"
               },
               "простых": {
-                "expr": "если(@smart_reload, 1, 0)"
+                "expr": "если((не пусто(@оружие.reload) и @оружие.reload.smart_simple и @действующий.smartlink и большее из(0, @оружие.smart, строки(\"weapon_mod\", \"aim_link\", @оружие)) >= 1), 1, 0)"
               }
             }
           }
@@ -16629,7 +16414,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@ammo_max < 1"
+              "expr": "@оружие.ammo_max < 1"
             }
           },
           {
@@ -16644,11 +16429,11 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@патроны"
+              "expr": "@оружие.ammo"
             },
             "direction": "set",
             "value": {
-              "expr": "@ammo_max"
+              "expr": "@оружие.ammo_max"
             }
           }
         ]
@@ -16879,46 +16664,17 @@
             "kind": "number"
           },
           {
-            "key": "physical_hit",
-            "label": "Урон физический",
-            "kind": "boolean",
-            "default": true
-          },
-          {
-            "key": "electric",
-            "label": "Электрический урон",
-            "kind": "boolean",
-            "default": false
-          },
-          {
-            "key": "количество",
-            "label": "Сколько штук",
-            "kind": "field"
-          },
-          {
-            "key": "dv_e",
-            "label": "СУ в эпицентре",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "dv_c",
-            "label": "СУ вплотную",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "dv_n",
-            "label": "СУ близко",
-            "kind": "number",
-            "default": 0
+            "key": "оружие",
+            "label": "Граната",
+            "kind": "record",
+            "from": "grenade"
           }
         ],
         "cost": [
           {
             "type": "branch",
             "if": {
-              "expr": "@количество < 1"
+              "expr": "@оружие.count < 1"
             }
           },
           {
@@ -16996,7 +16752,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@количество"
+              "expr": "@оружие.count"
             },
             "direction": "subtract",
             "value": {
@@ -17019,10 +16775,10 @@
                 "expr": "@кольцо.dv"
               },
               "физический": {
-                "expr": "@physical_hit"
+                "expr": "@оружие.physical_dmg"
               },
               "электричество": {
-                "expr": "@electric"
+                "expr": "@оружие.electric"
               },
               "источник": {
                 "expr": "@действующий"
@@ -17080,87 +16836,10 @@
             "kind": "number"
           },
           {
-            "key": "ar_bonus",
-            "label": "Прибавка к значению атаки",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "prone_ar",
-            "label": "Лёжа: к значению атаки",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "physical_hit",
-            "label": "Урон физический",
-            "kind": "boolean",
-            "default": true
-          },
-          {
-            "key": "electric",
-            "label": "Электрический урон",
-            "kind": "boolean",
-            "default": false
-          },
-          {
-            "key": "патроны",
-            "label": "Заряды",
-            "kind": "field"
-          },
-          {
-            "key": "charged",
-            "label": "Заряд поставлен",
-            "kind": "boolean",
-            "default": false
-          },
-          {
-            "key": "ar1",
-            "label": "АТК: вплотную",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "ar2",
-            "label": "АТК: близкая",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "ar3",
-            "label": "АТК: средняя",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "ar4",
-            "label": "АТК: дальняя",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "ar5",
-            "label": "АТК: экстремальная",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "dv_e",
-            "label": "СУ в эпицентре",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "dv_c",
-            "label": "СУ вплотную",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "dv_n",
-            "label": "СУ близко",
-            "kind": "number",
-            "default": 0
+            "key": "оружие",
+            "label": "Оружие",
+            "kind": "record",
+            "from": "launcher"
           }
         ],
         "cost": [
@@ -17182,7 +16861,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@патроны < 1"
+              "expr": "@оружие.ammo < 1"
             }
           },
           {
@@ -17197,7 +16876,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "не @charged"
+              "expr": "не @оружие.charged"
             }
           },
           {
@@ -17227,7 +16906,7 @@
             "id": "атк",
             "type": "roll",
             "fixed": {
-              "expr": "@дистанция.item_ar + @ar_bonus + если(@действующий.prone >= 1, @prone_ar, 0)"
+              "expr": "@дистанция.item_ar + @оружие.sight + если(@действующий.prone >= 1, (@оружие.prone_ar + @оружие.brace_bonus), 0)"
             }
           },
           {
@@ -17260,7 +16939,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@патроны"
+              "expr": "@оружие.ammo"
             },
             "direction": "subtract",
             "value": {
@@ -17283,10 +16962,10 @@
                 "expr": "@кольцо.dv"
               },
               "физический": {
-                "expr": "@physical_hit"
+                "expr": "@оружие.physical_dmg"
               },
               "электричество": {
-                "expr": "@electric"
+                "expr": "@оружие.electric"
               },
               "источник": {
                 "expr": "@действующий"
@@ -17326,40 +17005,17 @@
             }
           },
           {
-            "key": "rating",
-            "label": "Рейтинг",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "количество",
-            "label": "Сколько пакетов",
-            "kind": "field"
-          },
-          {
-            "key": "dv_e",
-            "label": "СУ в эпицентре",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "dv_c",
-            "label": "СУ вплотную",
-            "kind": "number",
-            "default": 0
-          },
-          {
-            "key": "dv_n",
-            "label": "СУ близко",
-            "kind": "number",
-            "default": 0
+            "key": "оружие",
+            "label": "Взрывчатка",
+            "kind": "record",
+            "from": "explosive"
           }
         ],
         "cost": [
           {
             "type": "branch",
             "if": {
-              "expr": "@количество < 1"
+              "expr": "@оружие.count < 1"
             }
           },
           {
@@ -17388,7 +17044,7 @@
           {
             "type": "branch",
             "if": {
-              "expr": "@rating < 1"
+              "expr": "@оружие.rating < 1"
             }
           },
           {
@@ -17403,7 +17059,7 @@
           {
             "type": "apply",
             "target": {
-              "expr": "@количество"
+              "expr": "@оружие.count"
             },
             "direction": "subtract",
             "value": {

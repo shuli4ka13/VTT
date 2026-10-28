@@ -49,7 +49,7 @@ import type { Thrown } from './roll.ts';
 import type { Sub } from './subs.ts';
 import type { Ctx, StepData, FieldRef } from './steps.ts';
 import { tagWords } from '../engine/roll-tags.ts';
-import { ITEM_NAME, itemColumn, itemStored, itemTag, parseItemTag, withItemValue } from '../model/item-ref.ts';
+import { ITEM_NAME, asItem, itemColumn, itemStored, itemTag, parseItemTag, withItemValue } from '../model/item-ref.ts';
 import type { ItemRef } from '../model/item-ref.ts';
 
 export interface World {
@@ -479,7 +479,8 @@ export class Run {
 
   private fieldOf(frame: Frame, refValue: unknown, ref: RefContext, seen: ReadonlySet<string> = new Set()): FieldRef {
     const expr = refValue && typeof refValue === 'object' && 'expr' in refValue ? String((refValue as { expr: unknown }).expr) : null;
-    const name = expr ? this.addressName(frame, expr, ref) : null;
+    const named = expr ? this.addressName(frame, expr, ref) : null;
+    const name = named && frame.item ? asItem(named, frame.paramDefs) : named;
     if (name && frame.item && name.startsWith(`${ITEM_NAME}.`)) {
       const sheet = this.sheet(frame.item.sheet);
       if (!sheet) throw new EngineError(`${frame.owner || 'правило'}: листа с вещью «${frame.item.key}» нет`);
