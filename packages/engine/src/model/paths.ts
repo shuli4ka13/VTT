@@ -1,6 +1,7 @@
 import { fieldOf, fieldsOf, fieldLinkOf, hasField, rowKeyOf } from './sheet-columns.ts';
 import { linkOf, isRange, VALUE_COLUMN } from './tables.ts';
 import type { System, TableColumn } from './types.ts';
+import { typeColumn, typeColumns } from './inherit.ts';
 
 export type Walked = { ok: true; label: string } | { ok: false; text: string };
 
@@ -16,7 +17,7 @@ export function walkColumns(system: System, tableId: string, path: readonly stri
   for (const [at, key] of path.entries()) {
     const table = system.tables?.[current];
     if (!table) return { ok: false, text: `таблицы «${current}» нет` };
-    const column = (table.columns ?? []).find(one => one.key === key);
+    const column = typeColumn(system, current, key);
     const last = at === path.length - 1;
     if (!column) {
       if (key === VALUE_COLUMN && last) { labels.push('значение'); break; }
@@ -70,7 +71,7 @@ export interface ColumnChoice { path: string; label: string; kind: string }
 export function columnChoices(system: System, tableId: string): ColumnChoice[] {
   const out: ColumnChoice[] = [];
   const step = (table: string, path: string, words: string, depth: number) => {
-    for (const column of system.tables?.[table]?.columns ?? []) {
+    for (const column of typeColumns(system, table)) {
       const at = `${path}.${column.key}`;
       const said = words ? `${words} → ${columnName(column)}` : columnName(column);
       out.push({ path: at, label: said, kind: column.kind ?? 'number' });

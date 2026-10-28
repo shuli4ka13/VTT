@@ -1,5 +1,5 @@
 import { EngineError } from '../engine/errors.ts';
-import type { System, Effect, Table, SheetKind, Param, Binding, Modifier } from './types.ts';
+import type { System, Effect, Table, SheetKind, Param, Binding, Modifier, TableColumn } from './types.ts';
 import { recordKinds, kindsOf } from './owned.ts';
 
 type AnyKind = Table & SheetKind;
@@ -100,6 +100,12 @@ export function hasBases(system: System): boolean {
 
 const flattened = new WeakSet<System>();
 const made = { strict: new WeakMap<System, System>(), lenient: new WeakMap<System, System>() };
+
+export const typeColumns = (system: System, id: string | undefined): TableColumn[] =>
+  (id ? flattenSystem(system, true).tables?.[id]?.columns ?? [] : []);
+
+export const typeColumn = (system: System, id: string | undefined, column: string): TableColumn | undefined =>
+  typeColumns(system, id).find(one => one.key === column);
 
 export function flattenSystem(system: System, lenient = false): System {
   if (flattened.has(system) || !hasBases(system)) return system;

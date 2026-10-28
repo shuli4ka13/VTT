@@ -1,8 +1,8 @@
 import type { System, Field } from './types.ts';
 import { fieldsOf } from './sheet-columns.ts';
 import { kindsOf, kindOf } from './owned.ts';
+import { basedOn } from './inherit.ts';
 
-type Loose = Record<string, unknown>;
 
 export const NO_BLOCK = 'Без блока';
 
@@ -24,7 +24,7 @@ export function blockOf(system: System, thing: { group?: string; block?: string;
   while (at && !seen.has(at)) {
     if (at.group ?? at.block) return at.group ?? at.block;
     seen.add(at);
-    const base = (at as Loose).extends;
+    const base = basedOn(at);
     at = base
       ? (system.effects?.[String(base)] ?? kindOf(system, String(base))) as typeof at
       : undefined;

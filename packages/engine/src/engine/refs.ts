@@ -16,6 +16,7 @@ import { hasField } from '../model/sheet-columns.ts';
 import { recordKinds } from '../model/owned.ts';
 import { heldBy, propsOf, withLibrary, isBook, isUnder } from '../model/owned.ts';
 import { isSingle } from '../model/sheet-columns.ts';
+import { typeColumn } from '../model/inherit.ts';
 
 export interface RefContext {
   pass: Pass;
@@ -192,21 +193,13 @@ export function toolsOf(system: System, pass: Pass, owner: string, die?: Die): T
   };
 }
 
-function ownColumn(system: System, type: unknown, column: string) {
-  for (let at = typeof type === 'string' ? type : undefined; at; at = system.tables?.[at]?.extends) {
-    const found = (system.tables?.[at]?.columns ?? []).find(one => one.key === column);
-    if (found) return found;
-  }
-  return undefined;
-}
-
 const ownLink = (system: System, type: unknown, column: string): string | undefined => {
-  const found = ownColumn(system, type, column);
+  const found = typeColumn(system, typeof type === 'string' ? type : undefined, column);
   return found ? linkOf(found) : undefined;
 };
 
 const orDefault = (value: unknown, system: System, type: unknown, column: string): unknown =>
-  (value === null || value === undefined || value === '' ? ownColumn(system, type, column)?.default ?? null : value);
+  (value === null || value === undefined || value === '' ? typeColumn(system, typeof type === 'string' ? type : undefined, column)?.default ?? null : value);
 
 function evaluate(expr: unknown, ctx: RefContext): unknown {
   const results = ctx.results ?? {};

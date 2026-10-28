@@ -5,6 +5,7 @@ import type { System, Table } from './types.ts';
 import { isBook, kindOf, blockLine } from './owned.ts';
 import { tidyLayout } from './layout.ts';
 import type { SheetPart } from '@vtt/schema';
+import { basedOn } from './inherit.ts';
 
 export type PartKind = 'field' | 'group' | 'block' | 'effect' | 'table' | 'constant' | 'rollEdit' | 'recordKind' | 'record';
 
@@ -33,7 +34,6 @@ const REF_PARTS: Partial<Record<Reference['kind'], PartKind>> = {
   table: 'table', rollEdit: 'rollEdit', recordKind: 'recordKind',
 };
 
-type Loose = Record<string, unknown>;
 
 function tableDeps(system: System, key: string): Part[] {
   const table = system.tables?.[key];
@@ -109,7 +109,7 @@ export function dependencies(donor: System): (part: Part) => Part[] {
       if (cancel) out.push({ kind: 'rollEdit', key: cancel });
     }
     if (part.kind === 'recordKind') {
-      const base = (kindOf(donor, part.key) as Loose | undefined)?.extends;
+      const base = basedOn(kindOf(donor, part.key));
       out.push(...tableDeps(donor, part.key));
       if (typeof base === 'string') out.push({ kind: 'recordKind', key: base });
     }

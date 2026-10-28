@@ -26,6 +26,7 @@ import type { Clock } from '../engine/clock.ts';
 import type { System, Sheet, Compendium, Die, WornEffect } from '../model/types.ts';
 import { tableOf } from '../model/buttons.ts';
 import { TARGETS_SEED } from '../model/references.ts';
+import { basedOn } from '../model/inherit.ts';
 
 export { tableOf };
 
@@ -82,7 +83,7 @@ const isKind = (system: System, of: unknown, kind: string): boolean => {
   while (at && !seen.has(at)) {
     if (at === kind) return true;
     seen.add(at);
-    at = (system.sheets?.[at] as { extends?: string } | undefined)?.extends;
+    at = basedOn(system.sheets?.[at]);
   }
   return false;
 };

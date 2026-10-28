@@ -7,6 +7,7 @@ import { fieldOf, hasField, ITEM_NAME } from './sheet-columns.ts';
 import { choiceTableOf, listOf } from './lists.ts';
 import { degreeWords, isRange } from './tables.ts';
 import type { System, Effect, Step } from './types.ts';
+import { typeColumn } from './inherit.ts';
 import type { Where } from './references.ts';
 
 export interface Variants { words: string[]; label: string }
@@ -18,20 +19,11 @@ export function tableVariants(system: System, key: string | undefined): Variants
   return words.length ? { words, label: table.label || key! } : null;
 }
 
-function columnOf(system: System, tableKey: string, column: string): { kind?: string; from?: string } | undefined {
-  const seen = new Set<string>();
-  for (let key: string | undefined = tableKey; key && !seen.has(key); key = system.tables?.[key]?.extends as string | undefined) {
-    seen.add(key);
-    const found = (system.tables?.[key]?.columns ?? []).find(one => one.key === column);
-    if (found) return found as { kind?: string; from?: string };
-  }
-  return undefined;
-}
 
 function itemColumn(system: System, effectId: string, column: string): string | undefined {
   for (const [key, table] of Object.entries(system.tables ?? {})) {
     if (!(table.bindings ?? []).some(binding => binding.effect === effectId)) continue;
-    const found = columnOf(system, key, column);
+    const found = typeColumn(system, key, column);
     if (found?.kind === 'choice' && found.from) return found.from;
   }
   return undefined;

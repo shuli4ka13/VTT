@@ -3,7 +3,7 @@ import { useWorld, useBook } from '../../store/world.ts';
 import type { System, Effect, Param, Binding, SlotRef } from '@vtt/schema';
 import type { RecordKind } from '@vtt/engine/model/owned';
 import { tableOf } from '@vtt/engine/model/buttons';
-import { paramsOf, flattenSystem } from '@vtt/engine/model/inherit';
+import { paramsOf, typeColumns } from '@vtt/engine/model/inherit';
 import { columnChoices, type ColumnChoice } from '@vtt/engine/model/paths';
 import { ITEM_NAME } from '@vtt/engine/model/item-ref';
 import { listOf } from '@vtt/engine/model/lists';
@@ -33,9 +33,8 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
 
   onFillWithProps?: (params: Param[]) => void;
 }) {
-  const flat = useMemo(() => flattenSystem(system, true), [system]);
-  const recordKind = (kindId ? flat.tables?.[kindId] as RecordKind | undefined : undefined) ?? ownKind;
-  const props = useMemo(() => propsOf(flat, kindId), [flat, kindId]);
+  const recordKind = useMemo(() => (kindId ? { ...ownKind, columns: typeColumns(system, kindId) } : ownKind), [system, ownKind, kindId]);
+  const props = useMemo(() => propsOf(system, kindId), [system, kindId]);
   const propNames = useMemo(() => new Map([[ITEM_NAME, 'эта вещь'], ...[...props].map(([key, one]) => [key, one.label] as const)]), [props]);
   const effect = system.effects[binding.effect];
   const params = effect ? paramsOf(system, effect) : [];
@@ -337,8 +336,8 @@ function Examples({ system, kind, kindId, prop }: { system: System; kind: Record
   return <span className="args-row__eg">в книге: {shown.join(' · ')}{rest > 0 ? ` · ещё ${rest}` : ''}</span>;
 }
 
-const propsOf = (flat: System, kindId: string | undefined): Map<string, ColumnChoice> =>
-  new Map(kindId ? columnChoices(flat, kindId).map(one => [one.path.slice(1), one] as const) : []);
+const propsOf = (system: System, kindId: string | undefined): Map<string, ColumnChoice> =>
+  new Map(kindId ? columnChoices(system, kindId).map(one => [one.path.slice(1), one] as const) : []);
 
 export const namesOf = (system: System, kindId: string | undefined): Map<string, string> =>
-  new Map([...propsOf(flattenSystem(system, true), kindId)].map(([key, one]) => [key, one.label] as const));
+  new Map([...propsOf(system, kindId)].map(([key, one]) => [key, one.label] as const));

@@ -3,7 +3,7 @@ import { TABS } from '../../words.ts';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { splitPath } from '@vtt/engine/engine/navigate';
 import { choiceTableOf } from '@vtt/engine/model/lists';
-import { recordsOf, argsWithProps, propKeysOf, recordKinds } from '@vtt/engine/model/owned';
+import { recordsOf, argsWithProps, propKeysOf, recordKinds, isUnder } from '@vtt/engine/model/owned';
 import { kindWord } from '@vtt/engine/words/kinds';
 import type { RefKind } from '@vtt/engine/model/references';
 import type { System, Compendium, Effect } from '@vtt/schema';
@@ -244,7 +244,7 @@ export function explainName(
   for (const [kindKey, kind] of recordKinds(system)) {
     const prop = (kind.columns ?? []).find(p => p.key === head);
     if (!prop) continue;
-    const records = recordsOf(compendium).filter(r => r.table === kindKey);
+    const records = recordsOf(compendium).filter(r => isUnder(system, r.table, kindKey));
     return {
       kind: 'свойство записи',
       title: `${prop.label ?? prop.key} · ${kind.label ?? kindKey}`,
