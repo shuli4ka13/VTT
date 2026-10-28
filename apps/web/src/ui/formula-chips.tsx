@@ -4,8 +4,10 @@ import type { System } from '@vtt/schema';
 import { matchTagQuery } from './tag-suggest.tsx';
 import { fieldPaths, sheetPathLabel } from './paths.ts';
 import { DESK_ID } from '@vtt/engine/engine/owners';
-import { fieldsOf, fieldOf, hasField, fieldLinkOf, ROW } from '@vtt/engine/model/sheet-columns';
+import { fieldsOf, hasField, fieldLinkOf, ROW } from '@vtt/engine/model/sheet-columns';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
+import { typeColumns } from '@vtt/engine/model/inherit';
+import { plainLabel, pickTail } from './formula-labels.ts';
 import { callAt, partAt, functionSpec } from '@vtt/engine/formula';
 import type { FunctionSpec } from '@vtt/engine/formula';
 
@@ -30,9 +32,6 @@ function Signature({ at }: { at: { spec: FunctionSpec; index: number } }) {
   );
 }
 
-const plainLabel = (system: System, tag: string, extra?: Map<string, string>): string =>
-  fieldOf(system, tag)?.label ?? extra?.get(tag) ?? sheetPathLabel(system, tag)
-  ?? system.effects?.[tag]?.label ?? tag;
 
 const statesOf = (system: System): { tag: string; label: string }[] =>
   Object.entries(system.effects ?? {})
@@ -48,12 +47,7 @@ export function lookupNames(system: System, value: string): Map<string, string> 
     const table = system.tables?.[found[1]!];
     if (!table) continue;
     out.set(found[1]!, table.label || found[1]!);
-    for (const column of table.columns ?? []) out.set(column.key, column.label || column.key);
-  }
-  for (const found of value.matchAll(/,\s*"([^"]+)"\s*\)/gu)) {
-    if (out.has(found[1]!)) continue;
-    const column = Object.values(system.tables ?? {}).flatMap(table => table.columns ?? []).find(one => one.key === found[1]);
-    if (column) out.set(found[1]!, column.label || found[1]!);
+    for (const column of typeColumns(system, found[1]!)) out.set(column.key, column.label || column.key);
   }
   return out;
 }
@@ -87,9 +81,7 @@ export function pickWords(system: System, part: { tag: string; by?: string; rest
     ? (system.tables?.[table]?.columns ?? []).find(c => c.key === inner.slice(ROW.length + 1))
     : undefined;
   const by = own ? own.label || own.key : inner ? shortLabel(labelOfTag(system, inner, extra, sheets)) : (part.by ?? '').trim();
-  const link = fieldLinkOf(system, fieldOf(system, part.tag));
-  const tail = part.rest ? (system.tables?.[link ?? '']?.columns ?? []).find(c => c.key === part.rest) : undefined;
-  return `${shortLabel(labelOfTag(system, part.tag, extra, sheets))} · колонка по [${by}]${part.rest ? ` · ${tail?.label || part.rest}` : ''}`;
+  return `${shortLabel(labelOfTag(system, part.tag, extra, sheets))} · колонка по [${by}]${part.rest ? ` · ${pickTail(system, part.tag, part.rest)}` : ''}`;
 }
 
 export function pickOptions(system: System, table: string | undefined): { tag: string; label: string; group: string }[] {

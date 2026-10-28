@@ -8,7 +8,6 @@ import { calledOf } from '@vtt/engine/engine/effects';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import { STEP } from '../../words.ts';
 import { hasField } from '@vtt/engine/model/sheet-columns';
-import { recordKinds } from '@vtt/engine/model/owned';
 
 export interface StepOutput { path: string; label: string; kind?: string; no?: string }
 
@@ -91,16 +90,6 @@ export interface SlotContext {
   names?: ReadonlyMap<string, string>;
 }
 
-export function declaredProps(system: System): Map<string, string> {
-  const out = new Map<string, string>();
-  for (const [, kind] of recordKinds(system)) {
-    for (const prop of kind.columns ?? []) {
-      out.set(prop.key, `${prop.label ?? prop.key} · ${kind.label ?? 'род'}`);
-    }
-  }
-  return out;
-}
-
 export const EVENT_NAMES: [string, string][] = [['метки', 'метки вызова: значения выборов']];
 
 export const isCalled = (ctx: SlotContext): boolean =>
@@ -127,7 +116,7 @@ export function namesOf(ctx: SlotContext): Map<string, string> {
   for (const [key, label] of propsFor(ctx)) out.set(key, label);
   for (const param of ctx.effect.params ?? []) out.set(param.key, param.label ?? param.key);
   const heads = (ctx.effect.params ?? [])
-    .filter(p => p.kind === 'choice' && p.from)
+    .filter(p => (p.kind === 'choice' || p.kind === 'record') && p.from)
     .map(p => ({ key: p.key, label: p.label ?? p.key, from: p.from }));
   for (const [key, label] of columnPaths(ctx.system, heads)) out.set(key, label);
   const engine = new Set(ctx.names?.keys() ?? []);

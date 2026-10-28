@@ -7,6 +7,7 @@ import type { SlotContext, SlotKind } from './slots.tsx';
 import { writeTableCall } from '@vtt/engine/model/amounts';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { rowTables } from '@vtt/engine/model/tables';
+import { walkColumns } from '@vtt/engine/model/paths';
 
 export function asText(value: unknown): string | null {
   if (value === null || value === undefined) return null;
@@ -46,16 +47,17 @@ export const DICE_OPTION: SlotOption = { group: 'Кости', label: DICE_LABEL,
 
 export const DICE_BAR_OPTION: BarOption = { group: 'Кости', label: DICE_LABEL, onPick: (insert, bar) => bar.write(insert('кинуть(к6)')) };
 
-const tableOption = (ctx: SlotContext, table: string, column: string): (Pick<SlotOption, 'name' | 'formula'> & { label?: string }) | null => {
+const tableOptions = (ctx: SlotContext, table: string, column: string): (Pick<SlotOption, 'name' | 'formula'> & { label?: string })[] => {
   const props = ctx.recordKind?.columns ?? [];
-  const chosen = props.find(p => (p as { kind?: string }).kind === 'choice' && (p as { from?: string }).from === table);
-  if (chosen) {
-    const label = ctx.system.tables?.[table]?.columns?.find(one => one.key === column)?.label || column;
-    return { name: `${chosen.key}.${column}`, label: `${chosen.label ?? chosen.key} · ${label}` };
+  const chosen = props.filter(p => (p as { kind?: string }).kind === 'choice' && (p as { from?: string }).from === table);
+  if (chosen.length) {
+    const said = walkColumns(ctx.system, table, [column]);
+    const label = said.ok ? said.label : column;
+    return chosen.map(prop => ({ name: `${prop.key}.${column}`, label: `${prop.label ?? prop.key} → ${label}` }));
   }
   const by = props[0];
-  if (!by) return null;
-  return { formula: writeTableCall({ table, arg: `@${by.key}`, column }) };
+  if (!by) return [];
+  return [{ formula: writeTableCall({ table, arg: `@${by.key}`, column }) }];
 };
 
 export function optionsFor(ctx: SlotContext, allow: SlotKind[] | undefined): SlotOption[] {
@@ -71,8 +73,7 @@ export function optionsFor(ctx: SlotContext, allow: SlotKind[] | undefined): Slo
     for (const [key, table] of rowTables(ctx.system)) {
       const name = table.label || key;
       for (const column of table.columns ?? []) {
-        const found = tableOption(ctx, key, column.key);
-        if (found) out.push({ group: 'По таблице', ...found, label: found.label ?? `«${name}» → ${column.label || column.key}` });
+        for (const found of tableOptions(ctx, key, column.key)) out.push({ group: 'По таблице', ...found, label: found.label ?? `«${name}» → ${column.label || column.key}` });
       }
     }
   }

@@ -27,6 +27,7 @@ import { BoundFormula } from '../bound-field.tsx';
 import { ReturnsEditor } from './returns-editor.tsx';
 import { launchOf, activationFor, DURATIONS, REAPPLY } from '@vtt/engine/model/effect-kinds';
 import type { System, Effect, Step } from '@vtt/schema';
+import { placeNamesAt } from './names.ts';
 
 const DURATION_OPTIONS = Object.entries(DURATIONS).map(([key, word]) => [key, word.label] as const);
 
@@ -529,7 +530,7 @@ function Bond({ effect, system, id, edit }: {
             if (next === undefined || next === null || !String((next as { expr?: unknown }).expr ?? '').trim()) delete args[key]; else args[key] = next as { expr: string };
             if (Object.keys(args).length) draft.bond.args = args; else delete draft.bond.args;
           })}
-          context={{ system, effect, earlier: [] }}
+          context={{ system, effect, earlier: [], names: placeNamesAt(system, id, { part: 'steps', index: (effect.steps ?? []).length }) }}
           where="держание · что запомнит держатель"
         />
       ) : null}

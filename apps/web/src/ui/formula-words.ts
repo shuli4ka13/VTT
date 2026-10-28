@@ -3,7 +3,7 @@ import { compile, AND, OR, NOT } from '@vtt/engine/formula';
 import type { Node } from '@vtt/engine/formula';
 import { ROW } from '@vtt/engine/model/sheet-columns';
 import { STEP_WORDS } from '@vtt/engine/words/steps';
-import { formulaAsLabels } from './formula-labels.ts';
+import { formulaAsLabels, pickTail } from './formula-labels.ts';
 
 const COMPARE: Record<string, string> = { '==': '=', '!=': '≠', '>=': '≥', '<=': '≤', '>': '>', '<': '<' };
 const ARITH: Record<string, string> = { '+': '+', '-': '−', '*': '×', '/': '÷' };
@@ -40,7 +40,7 @@ export function formulaWords(system: System, source: string, names?: Map<string,
       case 'Text': return node.dice ? diceWords(node.value) : `«${node.value}»`;
       case 'Bool': return node.value ? 'да' : 'нет';
       case 'Ref': return node.tag.startsWith(`${ROW}.`) ? `«${ref(`@${node.tag}`)}»` : pathWords(ref, node.tag);
-      case 'Pick': return `«${ref(`@${node.tag}`)}» по ${words(node.key, true)}${node.rest ? ` · ${node.rest}` : ''}`;
+      case 'Pick': return `«${ref(`@${node.tag}`)}» по ${words(node.key, true)}${node.rest ? ` · ${pickTail(system, node.tag, node.rest)}` : ''}`;
       case 'Unary': {
         if (node.op === NOT) {
           const inner = node.operand;

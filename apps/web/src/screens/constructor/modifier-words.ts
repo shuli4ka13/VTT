@@ -1,7 +1,7 @@
 import type { System, Modifier } from '@vtt/schema';
 import { ROLL_CALL, CALL_WORDS } from '@vtt/engine/words/calls';
 import { targetStages, paramStages } from '@vtt/engine/engine/stages';
-import { flattenSystem } from '@vtt/engine/model/inherit';
+import { typeColumn } from '@vtt/engine/model/inherit';
 import { tiedToHolder } from '@vtt/engine/model/references';
 import { labelOfTag } from '../../ui/formula.tsx';
 import { formulaWords } from '../../ui/formula-words.ts';
@@ -45,10 +45,10 @@ function whoseWords(system: System, mod: Loose, sheetLabels: Record<string, stri
 }
 
 export const rowNamesOf = (system: System, table: string | undefined): Names =>
-  (table ? rowNames(flattenSystem(system, true), table) : undefined);
+  (table ? rowNames(system, table) : undefined);
 
 const columnLabel = (system: System, table: string, key: string): string =>
-  (system.tables?.[table]?.columns ?? []).find(one => one.key === key)?.label ?? key;
+  typeColumn(system, table, key)?.label || key;
 
 function targetLabel(system: System, target: string, table?: string): string {
   const anyRow = /^cell:([^.]+)\.\*\.(.+)$/u.exec(target);
