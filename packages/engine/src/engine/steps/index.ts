@@ -134,3 +134,11 @@ export function stepModule(type: string): StepModule {
   }
   return mod;
 }
+
+export const loopsAt = (step: { type?: string }): boolean => Boolean(registry.get(String(step.type))?.loops);
+
+export const splitsTargets = (step: { type?: string }): boolean =>
+  Boolean(registry.get(String(step.type))?.splits?.(step as StepData));
+
+export const rowsLoop = (step: { type?: string }): { table: string; as: string } | null =>
+  registry.get(String(step.type))?.rows?.(step as StepData) ?? null;
