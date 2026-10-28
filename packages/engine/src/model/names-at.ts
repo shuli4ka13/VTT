@@ -8,6 +8,7 @@ import { calledOf } from '../engine/effects.ts';
 import { STEP_WORDS } from '../words/steps.ts';
 import type { StepWords } from '../words/steps.ts';
 import { columnChoices } from './paths.ts';
+import { onSheet } from './sheet-columns.ts';
 import type { System, Effect, Step, Param } from './types.ts';
 
 export type Place =
@@ -213,3 +214,33 @@ export function namesAt(raw: System, effectId: string, place: Place): NameAt[] {
 
 export const sheetNamesAt = (system: System, effectId: string, place: Place): NameAt[] =>
   namesAt(system, effectId, place).filter(one => one.kind === 'sheet');
+
+const childLabel = (one: NameAt, label: string): string => {
+  if (one.kind !== 'result') return `${one.label} → ${label}`;
+  const name = one.name.replace(/_/g, ' ');
+  return name.toLowerCase() === label.toLowerCase() ? name : `${name} — ${label}`;
+};
+
+export function labelsOf(names: readonly NameAt[], system?: System): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const one of names) {
+    if (!out.has(one.name)) out.set(one.name, one.label);
+    for (const child of one.children ?? []) {
+      const key = `${one.name}${child.path}`;
+      if (!out.has(key)) out.set(key, childLabel(one, child.label));
+    }
+  }
+  const sheets = names.filter(one => one.kind === 'sheet' && !one.many);
+  for (const row of names) {
+    if (!row.from || !onSheet(system?.tables?.[row.from])) continue;
+    for (const sheet of sheets) {
+      for (const child of row.children ?? []) {
+        const key = `${sheet.name}.${row.name}${child.path}`;
+        if (!out.has(key)) out.set(key, `${childLabel(row, child.label)} (${sheet.name})`);
+      }
+    }
+  }
+  return out;
+}
+
+export const labelsAt = (system: System, effectId: string, place: Place): Map<string, string> => labelsOf(namesAt(system, effectId, place), system);

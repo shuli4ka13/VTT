@@ -5,7 +5,10 @@ import { effectLabelOf } from './actions.ts';
 import { breakReasonWord, registry as stepRegistry, splitsTargets } from '../engine/steps/index.ts';
 import { outcomeWords, rollName } from '../engine/roll-tags.ts';
 import type { System, Sheet } from '../model/types.ts';
-import { fieldOf, hasField, valueWord } from '../model/sheet-columns.ts';
+import { hasField, valueWord } from '../model/sheet-columns.ts';
+import { walkSheet } from '../model/paths.ts';
+import { typeColumn } from '../model/inherit.ts';
+import { labelsAt } from '../model/names-at.ts';
 import { forcedWords } from '../words/steps.ts';
 import { addendsText } from '../core/dice.ts';
 import type { Addend } from '../core/dice.ts';
@@ -21,10 +24,13 @@ const tagsOfStep = (step: Record<string, any> | undefined, trace?: Record<string
 
 const rollTitle = (tags: string[], fallback: string): string => (tags.length ? `${fallback} (${rollName(tags)})` : fallback);
 
-const columnLabel = (system: System, key: string): string | null => {
-  for (const table of Object.values(system.tables ?? {})) {
-    const column = table.columns?.find(c => c.key === key);
-    if (column?.label) return column.label;
+const tagLabel = (system: System, tag: string, params: readonly { kind?: string; from?: unknown }[] = []): string | null => {
+  const walked = walkSheet(system, tag);
+  if (walked?.ok) return walked.label;
+  for (const param of params) {
+    if (param.kind !== 'record' || typeof param.from !== 'string') continue;
+    const column = typeColumn(system, param.from, tag);
+    if (column) return column.label || column.key;
   }
   return null;
 };
@@ -49,10 +55,9 @@ export function previewLines(system: System, effectId: string, trace: Record<str
     if (one.type !== 'check') continue;
     const words = outcomeWords(system, (one.tags as string[] | undefined) ?? []);
     const forced = one.forced != null ? ` (${forcedWords(Number(one.forced), Boolean(one.success))})` : '';
-    const named = typeof one.versusTag === 'string' ? `${fieldOf(system, one.versusTag)?.label ?? columnLabel(system, one.versusTag) ?? one.versusTag} ` : '';
+    const named = typeof one.versusTag === 'string' ? `${tagLabel(system, one.versusTag, system.effects?.[effectId]?.params) ?? one.versusTag} ` : '';
     lines.push(`против ${named}${one.versus}: ${one.success ? words.success : words.fail}${forced}`);
   }
-  void effectId;
   return lines;
 }
 
@@ -84,7 +89,7 @@ export function describeParts(
       const column = recordKinds(system).flatMap(([, kind]) => kind.columns ?? []).find(one => one.key === item.column);
       return `${column?.label ?? item.column} (вещь ${item.key})`;
     }
-    return fieldOf(system, tag)?.label ?? columnLabel(system, tag) ?? tag;
+    return tagLabel(system, tag, system.effects?.[String(entry.report.effect)]?.params) ?? tag;
   }
   const effect = system.effects[String(entry.report.effect)] as any;
   const stepOf = (trace: Record<string, unknown>) => (((trace.within ? system.effects[String(trace.within)] : effect) as any)?.steps ?? [])
@@ -95,12 +100,23 @@ export function describeParts(
     ...(effect?.steps ?? []).filter((step: any) => splitsTargets(step)).map((step: any) => loopOf(params as never, step)?.key).filter(Boolean) as string[],
     'носитель',
   ]);
+  const known = new Map<string, Map<string, string>>();
+  const labelsFor = (id: string): Map<string, string> => {
+    if (!known.has(id)) {
+      const one = system.effects?.[id];
+      known.set(id, one ? labelsAt(system, id, { part: 'steps', index: (one.steps ?? []).length }) : new Map());
+    }
+    return known.get(id)!;
+  };
+  const labels = labelsFor(String(entry.report.effect));
   const nameLabel = (name: string): string => {
     const dot = name.indexOf('.');
     const rest = dot > 0 ? name.slice(dot + 1) : '';
     const sheet = dot > 0 && !hasField(system, name) && (sheetHeads.has(name.slice(0, dot)) || hasField(system, rest));
     if (sheet) return nameLabel(rest);
     if (name.includes('.') && !hasField(system, name)) {
+      const known = labels.get(name);
+      if (known) return known;
       const output = outputLabel(name);
       return output !== name ? output : name.split('.').map(labelOf).join(' · ');
     }
@@ -125,7 +141,11 @@ export function describeParts(
       const param = ((own.params ?? []) as { key: string; label?: string; kind?: string }[]).find(p => p.key === local[1]);
       const tail = local[2] ? local[2].slice(1).split('.') : [];
       if (param && !tail.length) return String(param.label ?? param.key);
-      if (param?.kind === 'sheet' && tail.length) return labelOf(tail[tail.length - 1]!);
+      if (param?.kind === 'sheet' && tail.length) return labelsFor(String(within)).get(tail.join('.'))?.split(' → ').pop() ?? labelOf(tail[tail.length - 1]!);
+      if (param && tail.length) {
+        const path = labelsFor(String(within)).get(`${local[1]}${local[2]}`);
+        if (path) return path;
+      }
     }
     if (typeof ref === 'string') return system.constants?.[ref]?.label ?? system.effects?.[ref]?.label ?? system.tables?.[ref]?.label ?? ref;
     if (!ref || typeof ref !== 'object') return null;
