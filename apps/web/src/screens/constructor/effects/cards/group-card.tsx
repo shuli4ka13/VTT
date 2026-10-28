@@ -44,7 +44,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, names, takenNames, onRename, onUnpair, ifBy, byOutput, activeOutput, onUnwrap, asIf = false, outcome = '', headCond, headBy,
+  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, names, tables, takenNames, onRename, onUnpair, ifBy, byOutput, activeOutput, onUnwrap, asIf = false, outcome = '', headCond, headBy,
 }: {
   group: CardGroup;
   position: number;
@@ -71,6 +71,7 @@ export function GroupCard({
   onFold?: () => void;
   sheets?: SheetNames;
   names?: ReadonlyMap<string, string>;
+  tables?: ReadonlyMap<string, string>;
   onUnpair?: () => void;
   ifBy?: { label: string; run: () => void }[];
   byOutput?: Record<string, () => void>;
@@ -83,7 +84,7 @@ export function GroupCard({
   takenNames?: readonly string[];
   onRename?: (from: string, to: string) => void;
 }) {
-  const context: SlotContext = { system, effect, earlier, ...(sheets ? { sheets } : {}), ...(names ? { names } : {}) };
+  const context: SlotContext = { system, effect, earlier, ...(sheets ? { sheets } : {}), ...(names ? { names } : {}), ...(tables ? { tables } : {}) };
   const step = group.step as any;
   const edit: typeof editStep = (at, change) => editStep(at, draft => {
     change(draft);

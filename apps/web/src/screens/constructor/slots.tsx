@@ -8,6 +8,7 @@ import { calledOf } from '@vtt/engine/engine/effects';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import { STEP } from '../../words.ts';
 import { hasField } from '@vtt/engine/model/sheet-columns';
+import { withTables } from '../../ui/formula-words.ts';
 
 export interface StepOutput { path: string; label: string; kind?: string; no?: string }
 
@@ -123,7 +124,7 @@ export function namesOf(ctx: SlotContext): Map<string, string> {
   for (const [key, label] of columnPaths(ctx.system, heads)) out.set(key, label);
   const engine = new Set(ctx.names?.keys() ?? []);
   for (const [key, label] of stepNames(ctx)) if (!out.has(key) || !engine.has(key)) out.set(key, label);
-  return out;
+  return withTables(out, ctx.tables);
 }
 
 export function refForName(ctx: SlotContext, name: string): SlotRef | null {

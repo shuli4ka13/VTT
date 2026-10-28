@@ -275,6 +275,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         problem={problem}
         sheets={sheetsAt(system, id, placeAt(group.indices[0]!))}
         names={placeNamesAt(system, id, placeAt(group.indices[0]!))}
+        tables={placeTablesAt(system, id, placeAt(group.indices[0]!))}
         lane={lane}
         folded={!opened[foldKey(group)]}
         onFold={() => toggleFold(foldKey(group))}

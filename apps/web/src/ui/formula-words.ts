@@ -31,7 +31,15 @@ const pathWords = (ref: (text: string) => string, tag: string): string => {
   return `«${ref(`@${tag}`)}»`;
 };
 
-export function formulaWords(system: System, source: string, names?: ReadonlyMap<string, string>, tables?: ReadonlyMap<string, string>): string {
+const TABLES = new WeakMap<ReadonlyMap<string, string>, ReadonlyMap<string, string>>();
+
+export function withTables<T extends ReadonlyMap<string, string>>(names: T, tables: ReadonlyMap<string, string> | undefined): T {
+  if (tables) TABLES.set(names, tables);
+  return names;
+}
+
+export function formulaWords(system: System, source: string, names?: ReadonlyMap<string, string>, given?: ReadonlyMap<string, string>): string {
+  const tables = given ?? (names ? TABLES.get(names) : undefined);
   let ast: Node;
   try { ast = compile(source).ast; } catch { return formulaAsLabels(system, source, names); }
   const ref = (text: string): string => formulaAsLabels(system, text, names);
@@ -93,7 +101,7 @@ export function formulaWords(system: System, source: string, names?: ReadonlyMap
       case 'меньшее из': return `меньшее из ${all(' и ')}`;
       case 'большее из': return `большее из ${all(' и ')}`;
       case 'сколько': return args.length > 1 ? `сколько ${arg(1)} среди ${arg(0)}` : `сколько ${arg(0)}`;
-      case 'есть': return `${arg(0)} содержит ${arg(1)}`;
+      case 'есть': return `${arg(0)} содержит ${args[0] && args[1] ? choiceWord(args[0], args[1]) ?? arg(1) : arg(1)}`;
       case 'первый': return `первый из ${arg(0)}`;
       default: return `${name} ${all(', ')}`;
     }

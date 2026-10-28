@@ -248,7 +248,7 @@ export const labelsAt = (system: System, effectId: string, place: Place): Map<st
 export function choiceTablesOf(names: readonly NameAt[]): Map<string, string> {
   const out = new Map<string, string>();
   for (const one of names) {
-    if (one.kind === 'choice' && one.from && !one.many) out.set(one.name, one.from);
+    if (one.kind === 'choice' && one.from) out.set(one.name, one.from);
     for (const child of one.children ?? []) if (child.from) out.set(`${one.name}${child.path}`, child.from);
   }
   return out;

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { System, Modifier } from '@vtt/schema';
-import { formulaWords } from './formula-words.ts';
+import { formulaWords, withTables } from './formula-words.ts';
 import { modifierSentence } from '../screens/constructor/modifier-words.ts';
 
 const system = { id: 'с', name: 'с', tables: {}, effects: {} } as unknown as System;
@@ -115,5 +115,22 @@ describe('слова формул: значение выбора — подпи�
 
   it('без таблицы входа значение остаётся как написано', () => {
     expect(formulaWords(chosen, '@черта == "edge"', new Map([['черта', 'Характеристика']]))).toBe('«Характеристика» = «edge»');
+  });
+});
+
+describe('слова формул: «есть в списке» и пересказ по именам с таблицами', () => {
+  const chosen = {
+    id: 'с', name: 'с', effects: {},
+    tables: { черты: { label: 'Черты', columns: [], rows: [{ value: 'edge', label: 'Преимущество' }] } },
+  } as unknown as System;
+
+  it('значение в «есть» — слово строки', () => {
+    expect(formulaWords(chosen, 'есть(@черты_выбраны, "edge")', new Map([['черты_выбраны', 'Черты']]), new Map([['черты_выбраны', 'черты']])))
+      .toBe('«Черты» содержит «Преимущество»');
+  });
+
+  it('таблицы, привязанные к именам, видны без отдельного параметра', () => {
+    const names = withTables(new Map([['черта', 'Характеристика']]), new Map([['черта', 'черты']]));
+    expect(formulaWords(chosen, 'если(@черта == "edge", 1, 0)', names)).toBe('1, если «Характеристика» = «Преимущество», иначе 0');
   });
 });
