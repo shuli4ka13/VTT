@@ -194,7 +194,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
           </div>
           {bindings.map((binding, index) => (
             <CallSummary key={index} system={system} effect={binding.effect} args={binding.args as Record<string, unknown> | undefined}
-              props={new Set((kind.columns ?? []).map(prop => prop.key))} names={namesOf(kind, system)} label={binding.label ?? 'Применение'} />
+              props={new Set((kind.columns ?? []).map(prop => prop.key))} names={namesOf(system, record.table)} label={binding.label ?? 'Применение'} />
           ))}
         </Card>
       ) : null}

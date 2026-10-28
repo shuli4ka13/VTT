@@ -4,7 +4,8 @@ import type { System, Effect, Param, Binding, SlotRef } from '@vtt/schema';
 import type { RecordKind } from '@vtt/engine/model/owned';
 import { tableOf } from '@vtt/engine/model/buttons';
 import { paramsOf, flattenSystem } from '@vtt/engine/model/inherit';
-import { columnChoices } from '@vtt/engine/model/paths';
+import { columnChoices, type ColumnChoice } from '@vtt/engine/model/paths';
+import { ITEM_NAME } from '@vtt/engine/model/item-ref';
 import { listOf } from '@vtt/engine/model/lists';
 import { Card, Field, Select, LabelInput, Button, DangerButton } from '../../ui/primitives.tsx';
 import { asDice } from '@vtt/engine/words/glossary';
@@ -34,13 +35,13 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
 }) {
   const flat = useMemo(() => flattenSystem(system, true), [system]);
   const recordKind = (kindId ? flat.tables?.[kindId] as RecordKind | undefined : undefined) ?? ownKind;
-  const propNames = useMemo(() => new Map(kindId ? columnChoices(flat, kindId).map(one => [one.path.slice(1), one.label] as const) : []), [flat, kindId]);
+  const props = useMemo(() => propsOf(flat, kindId), [flat, kindId]);
+  const propNames = useMemo(() => new Map([[ITEM_NAME, 'эта вещь'], ...[...props].map(([key, one]) => [key, one.label] as const)]), [props]);
   const effect = system.effects[binding.effect];
   const params = effect ? paramsOf(system, effect) : [];
   const buttons = Object.entries(system.effects).filter(([, e]) => (e.activation ?? 'manual') !== 'passive');
   const where = binding.label || effect?.label || binding.effect;
   const [more, setMore] = useState(false);
-  const columnNames = new Map((recordKind.columns ?? []).map(prop => [prop.key, prop.label ?? prop.key] as const));
 
   const onArg = (key: string, next: SlotRef | null) => onEdit(draft => {
     draft.args ??= {};
@@ -110,6 +111,7 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
               params={params}
               system={system}
               recordKind={recordKind}
+              props={props}
               propNames={propNames}
               effectId={binding.effect}
               {...(kindId ? { kindId } : {})}
@@ -128,7 +130,7 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
             value={binding.if?.expr}
             onChange={expr => onEdit(draft => { if (expr) draft.if = { expr }; else delete draft.if; })}
             system={system}
-            names={columnNames}
+            names={propNames}
             where={`${where} · только если`}
             placeholder="например: @срок.держится"
             ruleHint="Пока условие неверно, у записи этой кнопки нет."
@@ -184,13 +186,14 @@ const freeParam = (param: Param): boolean => Boolean(loose(param).optional) || p
 
 const LONE = /^@([\p{L}\p{N}_]+)(?:\.[\p{L}\p{N}_]+)?$/u;
 
-function ArgRow({ param, binding, params, system, recordKind, propNames, kindId, effectId, effect, where, onArg, onSheet, onNew }: {
+function ArgRow({ param, binding, params, system, recordKind, props, propNames, kindId, effectId, effect, where, onArg, onSheet, onNew }: {
   param: Param;
   kindId?: string;
   binding: Binding;
   params: Param[];
   system: System;
   recordKind: RecordKind;
+  props: ReadonlyMap<string, ColumnChoice>;
   propNames: ReadonlyMap<string, string>;
   effectId: string;
   effect: Effect;
@@ -258,7 +261,7 @@ function ArgRow({ param, binding, params, system, recordKind, propNames, kindId,
   }
 
   const lone = LONE.exec(text)?.[1];
-  const problem = text ? shapeProblem(text, kind, tag => shapeIn(tag, recordKind, system, effect, binding.args as Record<string, unknown> | undefined)) : null;
+  const problem = text ? shapeProblem(text, kind, tag => shapeIn(tag, props, system, effect, binding.args as Record<string, unknown> | undefined)) : null;
   return (
     <div className={`args-row${need ? ' args-row--need' : ''}${problem ? ' args-row--bad' : ''}`}>
       <span className="args-row__name">{name}</span>
@@ -290,15 +293,9 @@ function ArgRow({ param, binding, params, system, recordKind, propNames, kindId,
   );
 }
 
-function shapeIn(tag: string, kind: RecordKind, system: System, effect: Effect, args: Record<string, unknown> | undefined): Shape {
-  const [head, column] = tag.split('.');
-  const prop = (kind.columns ?? []).find(one => one.key === head);
-  if (prop && !column) return shapeOfKind(prop.kind);
-  if (prop && column) {
-    const from = prop.kind === 'choice' && prop.from ? system.tables?.[prop.from] : undefined;
-    const found = from?.columns?.find(one => one.key === column);
-    return found ? shapeOfKind(found.kind) : 'any';
-  }
+function shapeIn(tag: string, props: ReadonlyMap<string, ColumnChoice>, system: System, effect: Effect, args: Record<string, unknown> | undefined): Shape {
+  const prop = props.get(tag);
+  if (prop) return shapeOfKind(prop.kind);
   const asked = paymentsOf(system, effect, args ?? {})
     .flatMap(({ payment }) => payment.params ?? []).find(one => one.key === tag && one.ask);
   return asked ? shapeOfKind(asked.kind) : 'any';
@@ -340,13 +337,8 @@ function Examples({ system, kind, kindId, prop }: { system: System; kind: Record
   return <span className="args-row__eg">в книге: {shown.join(' · ')}{rest > 0 ? ` · ещё ${rest}` : ''}</span>;
 }
 
-export function namesOf(kind: RecordKind, system: System): Map<string, string> {
-  const out = new Map<string, string>();
-  for (const prop of kind.columns ?? []) {
-    const label = prop.label ?? prop.key;
-    out.set(prop.key, label);
-    const table = prop.kind === 'choice' && prop.from ? system.tables?.[prop.from] : undefined;
-    for (const column of table?.columns ?? []) out.set(`${prop.key}.${column.key}`, `${label} · ${column.label || column.key}`);
-  }
-  return out;
-}
+const propsOf = (flat: System, kindId: string | undefined): Map<string, ColumnChoice> =>
+  new Map(kindId ? columnChoices(flat, kindId).map(one => [one.path.slice(1), one] as const) : []);
+
+export const namesOf = (system: System, kindId: string | undefined): Map<string, string> =>
+  new Map([...propsOf(flattenSystem(system, true), kindId)].map(([key, one]) => [key, one.label] as const));
