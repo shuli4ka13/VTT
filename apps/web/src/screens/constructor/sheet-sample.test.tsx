@@ -2,6 +2,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { SheetSample } from './sheet-sample.tsx';
+import { ThingPanel } from './thing-panel.tsx';
 import { useWorld } from '../../store/world.ts';
 import type { System } from '@vtt/schema';
 
@@ -26,16 +27,22 @@ describe('образец листа: сумка из типов вещей и у
     expect(screen.getByText('Оружие 1')).toBeTruthy();
     expect(useWorld.getState().system).toBe(system);
     expect(document.body.textContent).toMatch(/Урон: \d+/);
-    expect(screen.getByText('Оружие 1').closest('.card')!.querySelector('input:not([type=checkbox])')).toBeNull();
+    expect(screen.getByText('Оружие 1').closest('.card')!.querySelector('input')).toBeNull();
     fireEvent.click(screen.getByText('убрать'));
     expect(screen.queryByText('Оружие 1')).toBeNull();
   });
 
-  it('галочка «что видно в строке» снимает свойство со строки вещи и пишет это в тип', () => {
-    useWorld.setState(state => ({ ...state, system, compendium: { records: [] }, activePage: null, activeBlock: null }));
-    function Live() { return <SheetSample system={useWorld(state => state.system)} />; }
+  it('снаряжение делится по типам; щелчок по типу открывает слева «что видно в строке», галочка пишет признак в тип', () => {
+    useWorld.setState(state => ({ ...state, system, compendium: { records: [] }, activePage: null, activeBlock: null, activeThing: null }));
+    function Live() {
+      const current = useWorld(state => state.system);
+      const thing = useWorld(state => state.activeThing);
+      return <>{thing ? <ThingPanel table={thing} system={current} /> : null}<SheetSample system={current} /></>;
+    }
     render(<Live />);
     fireEvent.change(screen.getByLabelText('добавить образец'), { target: { value: 'оружие' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Оружие' }));
+    expect(useWorld.getState().activeThing).toBe('оружие');
     expect(document.body.textContent).toMatch(/Урон: \d+/);
     fireEvent.click(screen.getByLabelText('Урон'));
     expect(useWorld.getState().system.tables!['оружие']!.columns![0]!.onSheet).toBe(false);

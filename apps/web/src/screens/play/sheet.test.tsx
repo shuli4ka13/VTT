@@ -44,7 +44,7 @@ describe('сумка: экземпляры вещей', () => {
     fireEvent.click(screen.getAllByText('✕ убрать')[1]!);
     expect(calls.at(-1)).toEqual(['к', 'а', 'has', 'предатор', false, undefined, { inst: 'п2' }]);
 
-    fireEvent.click(screen.getByText(/Предатор · \+ ещё один/));
+    fireEvent.click([...screen.getByText('Предатор №1').closest('.inline')!.querySelectorAll('.chip')].find(node => node.textContent === '+ ещё один')!);
     expect(calls.at(-1)).toEqual(['к', 'а', 'has', 'предатор', true, false, { add: true }]);
 
     const laser = screen.getAllByText('Лазер')[0]!.closest('div')!.parentElement!;
@@ -78,7 +78,7 @@ describe('сумка: добавить вещь', () => {
 
     fireEvent.change(screen.getByPlaceholderText('найти по названию'), { target: { value: 'глаз' } });
     expect(screen.getByText('Киберглаза')).toBeTruthy();
-    expect([...document.querySelectorAll('.chip')].map(node => node.textContent)).not.toContain('Лазер');
+    expect([...document.querySelectorAll('.fold .fold .chip')].map(node => node.textContent)).not.toContain('Лазер');
     expect(titles().filter(one => one === 'Импланты')).toHaveLength(1);
     expect((screen.getByText('Импланты').closest('details') as HTMLDetailsElement).open).toBe(true);
 

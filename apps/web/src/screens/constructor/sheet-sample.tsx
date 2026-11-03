@@ -5,6 +5,7 @@ import { useReader } from '../../engine/use-calc.ts';
 import { SheetView } from '../../sheet/sheet-view.tsx';
 import { Card, CardHead, Chip, Field, Select, Button } from '../../ui/primitives.tsx';
 import { recordDetails } from '../../sheet/record-view.tsx';
+import { ThingsList, ThingLine } from '../../sheet/things-list.tsx';
 import { sheetKinds, shownOn, recordKinds, recordKindOf } from '@vtt/engine/model/owned';
 import { availableActions } from '@vtt/engine/events/actions';
 import { pageOfBlock } from '@vtt/engine/model/pages';
@@ -97,39 +98,16 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
         <div className="inline inline--tight">
           {samples.length === 0 ? <span className="faint">У образца пока ничего нет — добавьте образец вещи или умения.</span> : null}
         </div>
-        {samples.map((record, at) => (
-          <div key={record.id}>
-            <div className="inline inline--tight">
-              <Chip>{record.label ?? record.id}</Chip>
-              <Button size="sm" variant="ghost" onClick={() => change(at, item => ({ ...item, cells: sampleCells(system, recordKindOf(system, item.table)?.columns ?? []) }))}>другие значения</Button>
-              <Button size="sm" variant="ghost" onClick={() => setBag(bag.filter((_, other) => other !== at))}>убрать</Button>
-            </div>
-            <div className="faint">{recordDetails(record, system, book).map(line => `${line.label}: ${line.value}`).join(' · ')}</div>
-          </div>
-        ))}
-        {[...new Set(samples.map(record => record.table!))].map(table => {
-          const columns = system.tables?.[table]?.columns ?? [];
-          return columns.length ? (
-            <Field key={table} label={`Что видно в строке у «${system.tables![table]!.label || table}»`}>
-              <div className="inline inline--tight">
-                {columns.map(column => (
-                  <label key={column.key} className="inline inline--tight">
-                    <input type="checkbox" checked={column.onSheet !== false}
-                      onChange={event => {
-                        const on = event.currentTarget.checked;
-                        editSystem(draft => {
-                          const target = draft.tables?.[table]?.columns?.find(one => one.key === column.key);
-                          if (!target) return;
-                          if (on) delete target.onSheet; else target.onSheet = false;
-                        });
-                      }} />
-                    {column.label || column.key}
-                  </label>
-                ))}
-              </div>
-            </Field>
-          ) : null;
-        })}
+        <ThingsList system={system} records={samples} onPickKind={table => pick({ ...OPEN_PAGE, activeThing: table })} row={record => {
+          const at = samples.indexOf(record);
+          return (
+            <ThingLine label={record.label ?? record.id} details={recordDetails(record, system, book).map(line => `${line.label}: ${line.value}`).join(' · ')}
+              actions={<>
+                <Button size="sm" variant="ghost" onClick={() => change(at, item => ({ ...item, cells: sampleCells(system, recordKindOf(system, item.table)?.columns ?? []) }))}>другие значения</Button>
+                <Button size="sm" variant="ghost" onClick={() => setBag(bag.filter((_, other) => other !== at))}>убрать</Button>
+              </>} />
+          );
+        }} />
         <Select<string> label="добавить образец" value=""
           options={[['', bookKinds.length ? '+ образец вещи или умения' : 'типов вещей и умений ещё нет'], ...bookKinds
             .map(([key, table]) => [key, table.label || key] as const)]}

@@ -96,7 +96,7 @@ export function PagePanel({ name, system }: { name: string; system: System }) {
   );
 }
 
-export const OPEN_PAGE = { activeBlock: null, activeFieldTag: null, activeColumn: null, activeRow: null, activeSheetTable: null, activeGroupName: null } as const;
+export const OPEN_PAGE = { activeThing: null, activeBlock: null, activeFieldTag: null, activeColumn: null, activeRow: null, activeSheetTable: null, activeGroupName: null } as const;
 
 export function PageBar({ system }: { system: System }) {
   const editSystem = useWorld(s => s.editSystem);

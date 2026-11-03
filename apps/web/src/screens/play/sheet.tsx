@@ -15,6 +15,7 @@ import type { Sheet, System, RoomState, Owned, CompendiumRecord, PageList } from
 import { blockNames, blockOf, NO_BLOCK } from '@vtt/engine/model/blocks';
 import { availableActions } from '@vtt/engine/events/actions';
 import { recordsOf, isItem, sheetKinds, sheetKindOf, shownOn, recordKindOf } from '@vtt/engine/model/owned';
+import { ThingsList, ThingLine } from '../../sheet/things-list.tsx';
 import { fieldsFor, livesOn } from '@vtt/engine/engine/calc';
 import { isGroup, sharedOf } from '@vtt/engine/events/desk';
 import { isDesk as atDesk } from '@vtt/engine/engine/owners';
@@ -306,37 +307,24 @@ function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode;
           ? <span className="faint">В компендиуме мира нет предметов.</span>
           : (
             <div className="stack stack--tight">
-              {items.filter(item => copies(item.id).length).map(item => {
-                const mine = copies(item.id);
+              <ThingsList system={system} records={items.filter(item => copies(item.id).length)} row={item => copies(item.id).map((entry, at) => {
+                const hosts = (sheet.has ?? []).filter(one => !inside(keyOf(entry)).has(keyOf(one)));
                 return (
-                  <div key={item.id}>
-                    <Chip active={mine.some(entry => !entry.off)} onClick={() => add(item.id)}>
-                      {item.label ?? item.id} · + ещё один
-                    </Chip>
-                    {mine.map(entry => {
-                      const hosts = (sheet.has ?? []).filter(one => !inside(keyOf(entry)).has(keyOf(one)));
-                      const details = itemDetails(item, entry);
-                      return (
-                        <div key={keyOf(entry)}>
-                          <div className="inline inline--tight">
-                            <span className="faint">{labelOf(keyOf(entry))}</span>
-                            <Chip onClick={() => belong(item.id, entry, { on: true, off: !entry.off })}>{entry.off ? 'в сумке' : 'надето'}</Chip>
-                            <Chip onClick={() => belong(item.id, entry, { on: false })}>✕ убрать</Chip>
-                            {hosts.length ? (
-                              <Select
-                                value={entry.in ?? ''}
-                                options={[['', 'стоит отдельно'], ...hosts.map(one => [keyOf(one), `в: ${labelOf(keyOf(one))}`] as const)] as never}
-                                onChange={next => belong(item.id, entry, { on: true, off: Boolean(entry.off), in: next || null })}
-                              />
-                            ) : null}
-                          </div>
-                          {details ? <div className="faint">{details}</div> : null}
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <ThingLine key={keyOf(entry)} label={labelOf(keyOf(entry))} active={!entry.off} details={itemDetails(item, entry)}
+                    actions={<>
+                      <Chip onClick={() => belong(item.id, entry, { on: true, off: !entry.off })}>{entry.off ? 'в сумке' : 'надето'}</Chip>
+                      <Chip onClick={() => belong(item.id, entry, { on: false })}>✕ убрать</Chip>
+                      {at === 0 ? <Chip onClick={() => add(item.id)}>+ ещё один</Chip> : null}
+                      {hosts.length ? (
+                        <Select
+                          value={entry.in ?? ''}
+                          options={[['', 'стоит отдельно'], ...hosts.map(one => [keyOf(one), `в: ${labelOf(keyOf(one))}`] as const)] as never}
+                          onChange={next => belong(item.id, entry, { on: true, off: Boolean(entry.off), in: next || null })}
+                        />
+                      ) : null}
+                    </>} />
                 );
-              })}
+              })} />
               <span className="field__label">Добавить вещь</span>
               <Input value={query} onChange={setQuery} placeholder="найти по названию" />
               {shelves.length === 0
