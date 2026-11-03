@@ -26,8 +26,21 @@ describe('образец листа: сумка из типов вещей и у
     expect(screen.getByText('Оружие 1')).toBeTruthy();
     expect(useWorld.getState().system).toBe(system);
     expect(document.body.textContent).toMatch(/Урон: \d+/);
-    expect(screen.getByText('Оружие 1').closest('.card')!.querySelector('input')).toBeNull();
+    expect(screen.getByText('Оружие 1').closest('.card')!.querySelector('input:not([type=checkbox])')).toBeNull();
     fireEvent.click(screen.getByText('убрать'));
     expect(screen.queryByText('Оружие 1')).toBeNull();
+  });
+
+  it('галочка «что видно в строке» снимает свойство со строки вещи и пишет это в тип', () => {
+    useWorld.setState(state => ({ ...state, system, compendium: { records: [] }, activePage: null, activeBlock: null }));
+    function Live() { return <SheetSample system={useWorld(state => state.system)} />; }
+    render(<Live />);
+    fireEvent.change(screen.getByLabelText('добавить образец'), { target: { value: 'оружие' } });
+    expect(document.body.textContent).toMatch(/Урон: \d+/);
+    fireEvent.click(screen.getByLabelText('Урон'));
+    expect(useWorld.getState().system.tables!['оружие']!.columns![0]!.onSheet).toBe(false);
+    expect(document.body.textContent).not.toMatch(/Урон: \d+/);
+    fireEvent.click(screen.getByLabelText('Урон'));
+    expect(useWorld.getState().system.tables!['оружие']!.columns![0]).not.toHaveProperty('onSheet');
   });
 });

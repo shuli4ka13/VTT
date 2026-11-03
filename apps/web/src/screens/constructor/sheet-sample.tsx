@@ -107,6 +107,29 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
             <div className="faint">{recordDetails(record, system, book).map(line => `${line.label}: ${line.value}`).join(' · ')}</div>
           </div>
         ))}
+        {[...new Set(samples.map(record => record.table!))].map(table => {
+          const columns = system.tables?.[table]?.columns ?? [];
+          return columns.length ? (
+            <Field key={table} label={`Что видно в строке у «${system.tables![table]!.label || table}»`}>
+              <div className="inline inline--tight">
+                {columns.map(column => (
+                  <label key={column.key} className="inline inline--tight">
+                    <input type="checkbox" checked={column.onSheet !== false}
+                      onChange={event => {
+                        const on = event.currentTarget.checked;
+                        editSystem(draft => {
+                          const target = draft.tables?.[table]?.columns?.find(one => one.key === column.key);
+                          if (!target) return;
+                          if (on) delete target.onSheet; else target.onSheet = false;
+                        });
+                      }} />
+                    {column.label || column.key}
+                  </label>
+                ))}
+              </div>
+            </Field>
+          ) : null;
+        })}
         <Select<string> label="добавить образец" value=""
           options={[['', bookKinds.length ? '+ образец вещи или умения' : 'типов вещей и умений ещё нет'], ...bookKinds
             .map(([key, table]) => [key, table.label || key] as const)]}
