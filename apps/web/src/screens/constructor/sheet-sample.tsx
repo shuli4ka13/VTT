@@ -8,7 +8,7 @@ import { recordDetails } from '../../sheet/record-view.tsx';
 import { sheetKinds, shownOn, recordKinds, recordKindOf } from '@vtt/engine/model/owned';
 import { availableActions } from '@vtt/engine/events/actions';
 import { pageOfBlock } from '@vtt/engine/model/pages';
-import { SHEET_LISTS } from '@vtt/engine/words/glossary';
+import { SHEET_LISTS, dice } from '@vtt/engine/words/glossary';
 import { OPEN_PAGE } from './page-panel.tsx';
 import type { PageList } from '@vtt/schema';
 import type { Sheet, StoredValue, System, CompendiumRecord, Column } from '@vtt/schema';
@@ -17,7 +17,7 @@ import { listOf } from '@vtt/engine/model/lists';
 
 const ZERO: Record<string, unknown> = { number: 0, text: '', boolean: false, choice: '' };
 
-const DICE = ['1d4', '1d6', '1d8', '1d10', '1d12', '2d6'];
+const DICE = [[1, 4], [1, 6], [1, 8], [1, 10], [1, 12], [2, 6]].map(([count, sides]) => dice(count, sides!));
 
 const anyOf = <T,>(list: readonly T[]): T | undefined => list[Math.floor(Math.random() * list.length)];
 
