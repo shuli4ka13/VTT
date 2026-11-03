@@ -806,10 +806,7 @@ function pageProblems(system: System): Problem[] {
   for (const block of system.blocks ?? []) {
     if (block.page && !names.has(block.page)) out.push({ where, level: 'error', text: `блок «${block.name}» стоит на странице «${block.page}», а её нет` });
     for (const kind of block.kinds ?? []) if (!system.tables?.[kind]) out.push({ where, level: 'warn', text: `блок «${block.name}» показывает в снаряжении тип «${kind}», а его нет` });
-    if (block.parent && (block.page || block.width || block.under)) {
-      out.push({ where, level: 'error', text: `блок «${block.name}» внутри «${block.parent}»: страницу и место берёт у него, своих не задаёт` });
-    }
-    if (!block.parent && block.under && block.width) out.push({ where, level: 'warn', text: `блок «${block.name}» стоит под предыдущим — ширину задаёт верхний блок, своя не действует` });
+    if (block.under && block.width) out.push({ where, level: 'warn', text: `блок «${block.name}» стоит под предыдущим — ширину задаёт верхний блок, своя не действует` });
   }
   return out;
 }

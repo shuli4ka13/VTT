@@ -165,8 +165,7 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
   const parents = sheetBlockList(system).map(b => b.name).filter(other => !barred.has(other));
 
   const pages = pagesOf(system);
-  const top = !block.parent;
-  const head = top ? cellHead(system, name) : undefined;
+  const head = cellHead(system, name);
 
   return (
     <Card>
@@ -184,27 +183,23 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
           options={[['', 'на верхнем уровне'], ...parents.map(p => [p, p] as const)]}
           onChange={next => edit(target => { if (next) target.parent = next; else delete target.parent; })} />
       </Field>
-      {top ? (
-        <>
-          {pages.length ? (
-          <Field label="Страница">
-            <Select<string> label="страница блока" value={block.page ?? ''}
-              options={[['', `${pages.find(page => !page.top)?.name ?? 'первая'} — первая закладка`], ...pages.map(page => [page.name, page.top ? `${page.name} · над закладками` : page.name] as const)]}
-              onChange={next => edit(target => { if (next) target.page = next; else delete target.page; })} />
-          </Field>
-          ) : null}
-          <Field label="Ширина" hint={block.under ? `общая с блоком «${head?.name}», над которым он стоит` : 'можно и потянуть за правый край блока на образце'}>
-            <Select<string> label="ширина блока" value={String(head?.width ?? GRID)}
-              options={Array.from({ length: GRID }, (_, at) => [String(at + 1), widthWords(at + 1)] as const).reverse()}
-              onChange={next => editSystem(draft => setWidth(draft, name, Number(next)))} />
-          </Field>
-          <label className="inline inline--tight">
-            <input type="checkbox" checked={block.under === true}
-              onChange={event => { const on = event.currentTarget.checked; edit(target => { if (on) { target.under = true; delete target.width; } else delete target.under; }); }} />
-            Под предыдущим блоком
-          </label>
-        </>
+      {pages.length ? (
+        <Field label="Страница">
+          <Select<string> label="страница блока" value={block.page ?? ''}
+            options={[['', block.parent ? `как у «${block.parent}»` : `${pages.find(page => !page.top)?.name ?? 'первая'} — первая закладка`], ...pages.map(page => [page.name, page.top ? `${page.name} · над закладками` : page.name] as const)]}
+            onChange={next => edit(target => { if (next) target.page = next; else delete target.page; })} />
+        </Field>
       ) : null}
+      <Field label="Ширина" hint={block.under ? `общая с блоком «${head?.name}», над которым он стоит` : 'можно и потянуть за правый край блока на образце'}>
+        <Select<string> label="ширина блока" value={String(head?.width ?? GRID)}
+          options={Array.from({ length: GRID }, (_, at) => [String(at + 1), widthWords(at + 1)] as const).reverse()}
+          onChange={next => editSystem(draft => setWidth(draft, name, Number(next)))} />
+      </Field>
+      <label className="inline inline--tight">
+        <input type="checkbox" checked={block.under === true}
+          onChange={event => { const on = event.currentTarget.checked; edit(target => { if (on) { target.under = true; delete target.width; } else delete target.under; }); }} />
+        Под предыдущим блоком
+      </label>
       <Field label="Высота" hint="в точках экрана; пусто — по содержимому; можно и потянуть за нижний край блока на образце">
         <LabelInput value={block.height ? String(block.height) : ''} placeholder="по содержимому"
           onCommit={text => {

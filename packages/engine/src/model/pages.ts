@@ -9,24 +9,17 @@ export const topPage = (system: System): SheetPage | undefined => pagesOf(system
 
 export const tabPages = (system: System): SheetPage[] => pagesOf(system).filter(page => !page.top);
 
-export function rootBlock(system: System, name: string): SheetBlock | undefined {
-  const blocks = system.blocks ?? [];
-  let at = blocks.find(block => block.name === name);
-  const seen = new Set<string>();
-  while (at?.parent && !seen.has(at.name)) {
-    seen.add(at.name);
-    const parent = blocks.find(block => block.name === at!.parent);
-    if (!parent) break;
-    at = parent;
-  }
-  return at;
-}
-
 export function pageOfBlock(system: System, name: string): string | undefined {
   const pages = pagesOf(system);
   if (!pages.length) return undefined;
-  const own = rootBlock(system, name)?.page;
-  if (own && pages.some(page => page.name === own)) return own;
+  const blocks = system.blocks ?? [];
+  let at = blocks.find(block => block.name === name);
+  const seen = new Set<string>();
+  while (at && !seen.has(at.name)) {
+    if (at.page && pages.some(page => page.name === at!.page)) return at.page;
+    seen.add(at.name);
+    at = at.parent ? blocks.find(block => block.name === at!.parent) : undefined;
+  }
   return tabPages(system)[0]?.name ?? pages[0]!.name;
 }
 
@@ -40,7 +33,7 @@ export interface Cell { width: number; blocks: string[] }
 const clampWidth = (width: number | undefined): number => Math.min(GRID, Math.max(1, Math.round(width ?? GRID)));
 
 export function topBlocksOn(system: System, page: string | undefined): SheetBlock[] {
-  return (system.blocks ?? []).filter(block => !block.parent && (page === undefined || pageOfBlock(system, block.name) === page));
+  return (system.blocks ?? []).filter(block => page === undefined || pageOfBlock(system, block.name) === page);
 }
 
 export function cellsOf(system: System, page: string | undefined): Cell[] {
@@ -54,11 +47,11 @@ export function cellsOf(system: System, page: string | undefined): Cell[] {
 }
 
 export function cellHead(system: System, name: string): SheetBlock | undefined {
-  const root = rootBlock(system, name);
-  if (!root) return undefined;
-  const page = pagesOf(system).length ? pageOfBlock(system, root.name) : undefined;
-  const cell = cellsOf(system, page).find(one => one.blocks.includes(root.name));
-  return cell ? (system.blocks ?? []).find(block => block.name === cell.blocks[0]) : root;
+  const own = (system.blocks ?? []).find(block => block.name === name);
+  if (!own) return undefined;
+  const page = pagesOf(system).length ? pageOfBlock(system, own.name) : undefined;
+  const cell = cellsOf(system, page).find(one => one.blocks.includes(own.name));
+  return cell ? (system.blocks ?? []).find(block => block.name === cell.blocks[0]) : own;
 }
 
 export function setWidth(system: System, name: string, width: number): void {
@@ -81,8 +74,8 @@ export type Place = 'before' | 'after' | 'under';
 
 export function placeBlock(system: System, name: string, target: string, where: Place): void {
   const blocks = system.blocks ?? [];
-  const moving = rootBlock(system, name);
-  const anchor = rootBlock(system, target);
+  const moving = blocks.find(block => block.name === name);
+  const anchor = blocks.find(block => block.name === target);
   if (!moving || !anchor || moving.name === anchor.name) return;
   const hasPages = pagesOf(system).length > 0;
   const pageOf = (block: SheetBlock) => (hasPages ? pageOfBlock(system, block.name) : undefined);
@@ -93,7 +86,11 @@ export function placeBlock(system: System, name: string, target: string, where: 
     if (moving.width !== undefined) heir.width = moving.width; else delete heir.width;
   }
   const targetCell = cellsOf(system, pageOf(anchor)).find(cell => cell.blocks.includes(anchor.name));
-  if (anchor.page) moving.page = anchor.page; else delete moving.page;
+  if (hasPages) {
+    const page = pageOfBlock(system, anchor.name);
+    delete moving.page;
+    if (pageOfBlock(system, moving.name) !== page) moving.page = page;
+  }
   const without = blocks.filter(block => block !== moving);
   const indexOf = (blockName: string) => without.findIndex(block => block.name === blockName);
   let at: number;

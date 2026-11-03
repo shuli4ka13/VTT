@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import type { CSSProperties, ReactNode, PointerEvent as ReactPointerEvent } from 'react';
 import type { System } from '@vtt/schema';
-import { cellsOf, rootBlock, pageOfBlock, pagesOf, GRID, HEIGHT_STEP } from '@vtt/engine/model/pages';
+import { cellsOf, pageOfBlock, pagesOf, GRID, HEIGHT_STEP } from '@vtt/engine/model/pages';
 import type { Place } from '@vtt/engine/model/pages';
 import { widthWords } from '@vtt/engine/words/glossary';
 
@@ -27,7 +27,7 @@ export function SheetGrid({ system, page, names, render, edit }: {
   const blocks = system.blocks ?? [];
   const placed = new Set<string>();
   const cells = cellsOf(system, page).map(cell => {
-    const members = cell.blocks.flatMap(top => [top, ...blocks.filter(block => block.parent && rootBlock(system, block.name)?.name === top).map(block => block.name)]);
+    const members = cell.blocks;
     members.forEach(name => placed.add(name));
     return { head: cell.blocks[0]!, width: cell.width, names: members.filter(name => shown.has(name)) };
   }).filter(cell => cell.names.length);
@@ -125,7 +125,7 @@ export function SheetGrid({ system, page, names, render, edit }: {
                 className={`sheet-slot${height ? ' sheet-slot--sized' : ''}${over?.name === name ? ` sheet-slot--${over.where}` : ''}${dragging === name ? ' sheet-slot--dragging' : ''}`}
                 {...(height ? { style: { '--h': `${height}px` } as CSSProperties } : {})}
                 data-slot={name}>
-                {edit && !blocks.find(block => block.name === name)?.parent ? (
+                {edit ? (
                   <span className="sheet-grip" title="потяните блок: на левую или правую половину другого — встанет рядом, на его нижний край — под него"
                     onPointerDown={move(name)}>⋮⋮</span>
                 ) : null}

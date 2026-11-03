@@ -69,10 +69,10 @@ describe('раскладка блока', () => {
     expect(sys().blocks![1]).not.toHaveProperty('per');
   });
 
-  it('у вложенного блока нет «Страницы» и «Ширины»', () => {
+  it('вложенный блок раскладывается как любой: своя ширина, страница по умолчанию — как у родителя', () => {
     panel('Внутри');
-    expect(screen.queryByText('Страница')).toBeNull();
-    expect(screen.queryByLabelText('ширина блока')).toBeNull();
+    expect(screen.getByLabelText('ширина блока')).toBeTruthy();
+    expect([...(screen.getByLabelText('страница блока') as HTMLSelectElement).options][0]!.textContent).toBe('как у «Навыки»');
   });
 
   it('«Список в блоке» ставит список и снимает его с другого блока', () => {
