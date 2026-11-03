@@ -68,6 +68,15 @@ export function setWidth(system: System, name: string, width: number): void {
   if (next === GRID) delete head.width; else head.width = next;
 }
 
+export const HEIGHT_STEP = 10;
+
+export function setHeight(system: System, name: string, height: number | undefined): void {
+  const block = (system.blocks ?? []).find(one => one.name === name);
+  if (!block) return;
+  if (height === undefined) { delete block.height; return; }
+  block.height = Math.min(3000, Math.max(40, Math.round(height / HEIGHT_STEP) * HEIGHT_STEP));
+}
+
 export type Place = 'before' | 'after' | 'under';
 
 export function placeBlock(system: System, name: string, target: string, where: Place): void {

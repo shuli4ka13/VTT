@@ -132,6 +132,7 @@ export const sheetBlock = z.object({
   page: z.string().min(1).optional(),
   width: z.number().int().min(1).max(12).optional(),
   under: z.literal(true).optional(),
+  height: z.number().int().min(40).max(3000).optional(),
   split: z.number().int().min(2).max(12).optional(),
   list: sheetList.optional(),
   kinds: z.array(z.string().min(1)).optional(),

@@ -695,6 +695,10 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .sheet-resize { touch-action: none; position: absolute; top: 0; bottom: 0; right: calc(var(--s-3) / -2 - 4px); width: 8px; cursor: ew-resize; z-index: 2; border-radius: 4px; }
 .sheet-resize:hover, .sheet-resize:active { background: color-mix(in srgb, var(--accent) 35%, transparent); }
 .sheet-resize__label { position: absolute; top: 8px; right: 12px; white-space: nowrap; background: var(--accent); color: var(--bg); font-size: 12px; padding: 2px 6px; border-radius: 6px; }
+.sheet-slot--sized > .card { height: var(--h); overflow: auto; }
+.sheet-hresize { touch-action: none; position: absolute; left: 0; right: 0; bottom: calc(var(--s-3) / -2 - 4px); height: 8px; cursor: ns-resize; z-index: 2; border-radius: 4px; }
+.sheet-hresize:hover, .sheet-hresize:active { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+.sheet-hresize .sheet-resize__label { top: auto; bottom: 10px; right: 50%; transform: translateX(50%); }
 @container (max-width: 600px) { .sheet-cell { grid-column: 1 / -1; } }
-@media (max-width: 700px) { .sheet-cell { grid-column: 1 / -1; } .sheet-resize { display: none; } }
+@media (max-width: 700px) { .sheet-cell { grid-column: 1 / -1; } .sheet-resize, .sheet-hresize { display: none; } .sheet-slot--sized > .card { height: auto; } }
 @media (max-width: 700px) { .row--per { grid-template-columns: minmax(0, 1fr) !important; } }

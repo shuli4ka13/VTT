@@ -107,6 +107,17 @@ describe('раскладка блока', () => {
     expect(sys().blocks![0]!.kinds).toEqual(['доспех', 'оружие']);
   });
 
+  it('«Высота»: число пишет высоту с шагом 10, пусто снимает', () => {
+    panel('Навыки');
+    const input = () => screen.getByPlaceholderText('по содержимому') as HTMLInputElement;
+    fireEvent.change(input(), { target: { value: '255' } });
+    fireEvent.blur(input());
+    expect(sys().blocks![0]!.height).toBe(260);
+    fireEvent.change(input(), { target: { value: '' } });
+    fireEvent.blur(input());
+    expect(sys().blocks![0]).not.toHaveProperty('height');
+  });
+
   it('без страниц у системы «Страницы» нет', () => {
     load(false);
     panel('Навыки');

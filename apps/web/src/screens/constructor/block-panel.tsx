@@ -6,7 +6,7 @@ import { Card, CardHead, Field, Select, Button, DangerButton, LabelInput, Verdic
 import { readyForSheet } from './table-field.tsx';
 import { onSheet, rowKeyOf, fieldsOf, isSingle } from '@vtt/engine/model/sheet-columns';
 import { recordKinds } from '@vtt/engine/model/owned';
-import { pagesOf, cellHead, setWidth, GRID, SHEET_LIST_KEYS } from '@vtt/engine/model/pages';
+import { pagesOf, cellHead, setWidth, setHeight, GRID, SHEET_LIST_KEYS } from '@vtt/engine/model/pages';
 import { SHEET_LISTS, widthWords, splitWords, perRowWords } from '@vtt/engine/words/glossary';
 import { isRange } from '@vtt/engine/model/tables';
 import type { System, SheetBlock, SheetPart, SheetList } from '@vtt/schema';
@@ -205,6 +205,15 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
           </label>
         </>
       ) : null}
+      <Field label="Высота" hint="в точках экрана; пусто — по содержимому; можно и потянуть за нижний край блока на образце">
+        <LabelInput value={block.height ? String(block.height) : ''} placeholder="по содержимому"
+          onCommit={text => {
+            const clean = text.trim();
+            const n = Number(clean);
+            if (clean && !Number.isFinite(n)) return;
+            editSystem(draft => setHeight(draft, name, clean ? n : undefined));
+          }} />
+      </Field>
       <Field label="Список в блоке" hint="Показывается после полей блока; в другом блоке этот список снимается.">
         <Select<string> label="список в блоке" value={block.list ?? ''}
           options={[['', 'нет'], ...SHEET_LIST_KEYS.map(list => [list, SHEET_LISTS[list]] as const)]}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cellsOf, placeBlock, setWidth, pageOfBlock, renamePage, removePage } from '../src/model/pages.ts';
+import { cellsOf, placeBlock, setWidth, setHeight, pageOfBlock, renamePage, removePage } from '../src/model/pages.ts';
 import { tidyLayout } from '../src/model/layout.ts';
 import { splitWords, perRowWords, widthWords } from '../src/words/glossary.ts';
 import { lintSystem } from '../src/model/lint.ts';
@@ -99,5 +99,15 @@ describe('страницы листа', () => {
     expect([3, 4, 5, 12].map(widthWords)).toEqual(['четверть', 'треть', '5/12', 'вся ширина']);
     expect([1, 2, 5, 11].map(splitWords)).toEqual(['одним списком', 'в 2 столбца', 'в 5 столбцов', 'в 11 столбцов']);
     expect([1, 3].map(perRowWords)).toEqual(['по одному в строку', 'по 3 в строку']);
+  });
+
+  it('высота блока прилипает к шагу 10 и держится в пределах; пусто — по содержимому', () => {
+    const s = system();
+    setHeight(s, 'Здоровье', 333);
+    expect(s.blocks![0]!.height).toBe(330);
+    setHeight(s, 'Здоровье', 5);
+    expect(s.blocks![0]!.height).toBe(40);
+    setHeight(s, 'Здоровье', undefined);
+    expect(s.blocks![0]).not.toHaveProperty('height');
   });
 });

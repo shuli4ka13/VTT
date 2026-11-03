@@ -181,6 +181,15 @@ describe('страницы листа', () => {
     expect(cells()).toEqual([['4', ['Два']], ['12', ['Четыре']]]);
   });
 
+  it('заданная высота ставится блоку; без высоты — по содержимому', () => {
+    const system = pagedSystem({ pages: [{ name: 'Главная' }], blocks: [{ name: 'Один', height: 300, parts: [{ table: 'а' }] }, { name: 'Два', parts: [{ table: 'б' }] }] });
+    render(<SheetView system={system} {...base} pages={{ at: null, onAt: () => {} }} />);
+    const one = document.querySelector('[data-slot="Один"]') as HTMLElement;
+    expect(one.className).toContain('sheet-slot--sized');
+    expect(one.style.getPropertyValue('--h')).toBe('300px');
+    expect((document.querySelector('[data-slot="Два"]') as HTMLElement).className).not.toContain('sheet-slot--sized');
+  });
+
   it('без правки на листе нет ручек переноса и растягивания', () => {
     render(<SheetView system={pagedSystem()} {...base} pages={{ at: null, onAt: () => {} }} />);
     expect(document.querySelector('.sheet-grip, .sheet-resize')).toBeNull();

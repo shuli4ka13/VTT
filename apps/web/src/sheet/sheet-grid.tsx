@@ -1,13 +1,14 @@
 import { useRef, useState } from 'react';
 import type { CSSProperties, ReactNode, PointerEvent as ReactPointerEvent } from 'react';
 import type { System } from '@vtt/schema';
-import { cellsOf, rootBlock, pageOfBlock, pagesOf, GRID } from '@vtt/engine/model/pages';
+import { cellsOf, rootBlock, pageOfBlock, pagesOf, GRID, HEIGHT_STEP } from '@vtt/engine/model/pages';
 import type { Place } from '@vtt/engine/model/pages';
 import { widthWords } from '@vtt/engine/words/glossary';
 
 export interface GridEdit {
   onPlace: (name: string, target: string, where: Place) => void;
   onWidth: (name: string, width: number) => void;
+  onHeight: (name: string, height: number | undefined) => void;
 }
 
 export function SheetGrid({ system, page, names, render, edit }: {
@@ -21,6 +22,7 @@ export function SheetGrid({ system, page, names, render, edit }: {
   const [dragging, setDragging] = useState<string | null>(null);
   const [over, setOver] = useState<{ name: string; where: Place } | null>(null);
   const [sizing, setSizing] = useState<{ head: string; width: number } | null>(null);
+  const [lifting, setLifting] = useState<{ name: string; height: number } | null>(null);
   const shown = new Set(names);
   const blocks = system.blocks ?? [];
   const placed = new Set<string>();
@@ -86,23 +88,57 @@ export function SheetGrid({ system, page, names, render, edit }: {
     setSizing({ head, width });
   };
 
+  const stretch = (name: string) => (event: ReactPointerEvent<HTMLSpanElement>) => {
+    if (!edit) return;
+    event.preventDefault();
+    const slot = event.currentTarget.parentElement!;
+    const startHeight = slot.getBoundingClientRect().height;
+    const start = event.clientY;
+    const target = event.currentTarget;
+    target.setPointerCapture(event.pointerId);
+    let now = startHeight;
+    const step = (next: PointerEvent) => {
+      now = Math.max(40, Math.round((startHeight + next.clientY - start) / HEIGHT_STEP) * HEIGHT_STEP);
+      setLifting({ name, height: now });
+    };
+    const up = () => {
+      target.removeEventListener('pointermove', step);
+      target.removeEventListener('pointerup', up);
+      setLifting(null);
+      if (Math.abs(now - startHeight) >= HEIGHT_STEP / 2) edit.onHeight(name, now);
+    };
+    target.addEventListener('pointermove', step);
+    target.addEventListener('pointerup', up);
+  };
+
   return (
     <div ref={grid} className={`sheet-layout${edit ? ' sheet-layout--edit' : ''}`}>
       {all.map(cell => {
         const width = sizing?.head === cell.head ? sizing.width : cell.width;
         return (
           <div key={cell.head} className="sheet-cell" style={{ '--w': width } as CSSProperties}>
-            {cell.names.map(name => (
+            {cell.names.map(name => {
+              const own = blocks.find(block => block.name === name)?.height;
+              const height = lifting?.name === name ? lifting.height : own;
+              return (
               <div key={name}
-                className={`sheet-slot${over?.name === name ? ` sheet-slot--${over.where}` : ''}${dragging === name ? ' sheet-slot--dragging' : ''}`}
+                className={`sheet-slot${height ? ' sheet-slot--sized' : ''}${over?.name === name ? ` sheet-slot--${over.where}` : ''}${dragging === name ? ' sheet-slot--dragging' : ''}`}
+                {...(height ? { style: { '--h': `${height}px` } as CSSProperties } : {})}
                 data-slot={name}>
                 {edit && !blocks.find(block => block.name === name)?.parent ? (
                   <span className="sheet-grip" title="потяните блок: на левую или правую половину другого — встанет рядом, на его нижний край — под него"
                     onPointerDown={move(name)}>⋮⋮</span>
                 ) : null}
                 {render(name)}
+                {edit ? (
+                  <span className="sheet-hresize" title="потяните, чтобы сделать выше или ниже; двойной щелчок — по содержимому"
+                    onPointerDown={stretch(name)} onDoubleClick={() => edit.onHeight(name, undefined)}>
+                    {lifting?.name === name ? <span className="sheet-resize__label">{`${lifting.height} точек`}</span> : null}
+                  </span>
+                ) : null}
               </div>
-            ))}
+              );
+            })}
             {edit ? (
               <span className="sheet-resize" title="потяните, чтобы сделать шире или уже" onPointerDown={resize(cell.head, cell.width)}>
                 {sizing?.head === cell.head ? <span className="sheet-resize__label">{widthWords(width)}</span> : null}
