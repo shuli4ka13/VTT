@@ -7,10 +7,11 @@ import type { Reader } from '../engine/use-calc.ts';
 
 const system = {
   tables: { лист: { shape: 'single', columns: [
-    { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 14, roll: { label: 'Проверка Ловкости' } },
+    { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 14 },
     { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
     { key: 'броня', label: 'Броня', expr: { expr: '10' } },
   ] } },
+  rolls: { проверка: { die: 'к20', fields: [{ table: 'лист', column: 'ловкость' }] } },
 } as unknown as System;
 
 const sheet = { id: 'а', name: 'Арвен', values: { ловкость: 14, хиты: 17 } } as unknown as Sheet;

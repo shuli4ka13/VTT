@@ -75,7 +75,6 @@ export const emptySystem = (): System => ({
   grants: [],
   constants: {},
   tables: {},
-  rolls: [],
 });
 
 const BROKEN_KEY = 'vtt.world.broken';

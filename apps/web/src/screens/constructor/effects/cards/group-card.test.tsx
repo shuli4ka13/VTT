@@ -8,8 +8,7 @@ import type { System, Effect, Step } from '@vtt/schema';
 
 const system = {
   tables: { лист: { shape: 'single', columns: [{ key: 'armor', label: 'Класс брони', kind: 'number', default: 10 }] } },
-  constants: { lead: { label: 'Ведущая кость', kind: 'die', dice: [{ sides: 20 }] } },
-  rolls: [], effects: {},
+  constants: { lead: { label: 'Ведущая кость', kind: 'die', dice: [{ sides: 20 }] } }, effects: {},
 } as unknown as System;
 const effect = { params: [] } as unknown as Effect;
 
