@@ -484,17 +484,7 @@
             "expr": {
               "expr": "@строка.stat + @строка.rank"
             },
-            "title": "{label} — всего",
-            "roll": {
-              "label": "Проверка: {label}",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@строка.total"
-              }
-            }
+            "title": "{label} — всего"
           }
         ],
         "rows": [
@@ -2278,7 +2268,19 @@
           }
         ]
       }
-    ]
+    ],
+    "rolls": {
+      "проверка": {
+        "label": "Проверка",
+        "die": "lead_die",
+        "fields": [
+          {
+            "table": "skills",
+            "column": "total"
+          }
+        ]
+      }
+    }
   },
   "compendium": {
     "records": [

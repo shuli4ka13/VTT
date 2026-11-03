@@ -89,114 +89,42 @@
             "label": "Проворство",
             "kind": "number",
             "min": -3,
-            "max": 6,
-            "roll": {
-              "label": "Бросок: Проворство",
-              "die": "duality",
-              "tags": [
-                "действие",
-                "герой",
-                "проворство"
-              ],
-              "bonus": {
-                "expr": "@agility"
-              }
-            }
+            "max": 6
           },
           {
             "key": "strength",
             "label": "Сила",
             "kind": "number",
             "min": -3,
-            "max": 6,
-            "roll": {
-              "label": "Бросок: Сила",
-              "die": "duality",
-              "tags": [
-                "действие",
-                "герой",
-                "сила"
-              ],
-              "bonus": {
-                "expr": "@strength"
-              }
-            }
+            "max": 6
           },
           {
             "key": "finesse",
             "label": "Искусность",
             "kind": "number",
             "min": -3,
-            "max": 6,
-            "roll": {
-              "label": "Бросок: Искусность",
-              "die": "duality",
-              "tags": [
-                "действие",
-                "герой",
-                "искусность"
-              ],
-              "bonus": {
-                "expr": "@finesse"
-              }
-            }
+            "max": 6
           },
           {
             "key": "instinct",
             "label": "Чутьё",
             "kind": "number",
             "min": -3,
-            "max": 6,
-            "roll": {
-              "label": "Бросок: Чутьё",
-              "die": "duality",
-              "tags": [
-                "действие",
-                "герой",
-                "чутьё"
-              ],
-              "bonus": {
-                "expr": "@instinct"
-              }
-            }
+            "max": 6
           },
           {
             "key": "presence",
             "label": "Присутствие",
             "kind": "number",
             "min": -3,
-            "max": 6,
-            "roll": {
-              "label": "Бросок: Присутствие",
-              "die": "duality",
-              "tags": [
-                "действие",
-                "герой",
-                "присутствие"
-              ],
-              "bonus": {
-                "expr": "@presence"
-              }
-            }
+            "max": 6
           },
           {
             "key": "knowledge",
             "label": "Знание",
             "kind": "number",
             "min": -3,
-            "max": 6,
-            "roll": {
-              "label": "Бросок: Знание",
-              "die": "duality",
-              "tags": [
-                "действие",
-                "герой",
-                "знание"
-              ],
-              "bonus": {
-                "expr": "@knowledge"
-              }
-            }
+            "max": 6
           },
           {
             "key": "level",
@@ -3064,7 +2992,63 @@
           }
         ]
       }
-    ]
+    ],
+    "rolls": {
+      "действие": {
+        "label": "Бросок",
+        "die": "duality",
+        "fields": [
+          {
+            "table": "лист",
+            "column": "agility",
+            "tags": [
+              "герой",
+              "проворство"
+            ]
+          },
+          {
+            "table": "лист",
+            "column": "strength",
+            "tags": [
+              "герой",
+              "сила"
+            ]
+          },
+          {
+            "table": "лист",
+            "column": "finesse",
+            "tags": [
+              "герой",
+              "искусность"
+            ]
+          },
+          {
+            "table": "лист",
+            "column": "instinct",
+            "tags": [
+              "герой",
+              "чутьё"
+            ]
+          },
+          {
+            "table": "лист",
+            "column": "presence",
+            "tags": [
+              "герой",
+              "присутствие"
+            ]
+          },
+          {
+            "table": "лист",
+            "column": "knowledge",
+            "tags": [
+              "герой",
+              "знание"
+            ]
+          }
+        ]
+      }
+    }
   },
   "compendium": {
     "records": [

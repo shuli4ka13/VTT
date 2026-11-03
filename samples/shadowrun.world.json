@@ -334,16 +334,6 @@
             "label": "Самообладание",
             "expr": {
               "expr": "большее из(0, @willpower + @charisma + @wound_mod + @condition_mod)"
-            },
-            "roll": {
-              "label": "Самообладание",
-              "die": "pool",
-              "tags": [
-                "проверка"
-              ],
-              "count": {
-                "expr": "@composure"
-              }
             }
           },
           {
@@ -351,16 +341,6 @@
             "label": "Проницательность",
             "expr": {
               "expr": "большее из(0, @willpower + @intuition + @wound_mod + @condition_mod)"
-            },
-            "roll": {
-              "label": "Проницательность",
-              "die": "pool",
-              "tags": [
-                "проверка"
-              ],
-              "count": {
-                "expr": "@judge_intentions"
-              }
             }
           },
           {
@@ -368,16 +348,6 @@
             "label": "Память",
             "expr": {
               "expr": "большее из(0, @logic + @intuition + @wound_mod + @condition_mod)"
-            },
-            "roll": {
-              "label": "Память",
-              "die": "pool",
-              "tags": [
-                "проверка"
-              ],
-              "count": {
-                "expr": "@memory"
-              }
             }
           },
           {
@@ -385,16 +355,6 @@
             "label": "Поднятие тяжестей",
             "expr": {
               "expr": "большее из(0, @body + @strength + @wound_mod + @condition_mod)"
-            },
-            "roll": {
-              "label": "Поднятие тяжестей",
-              "die": "pool",
-              "tags": [
-                "проверка"
-              ],
-              "count": {
-                "expr": "@lift_carry"
-              }
             }
           },
           {
@@ -1590,21 +1550,6 @@
             "label": "Прыжок",
             "expr": {
               "expr": "@skills.атлетика.pool"
-            },
-            "roll": {
-              "label": "Прыжок",
-              "die": "pool",
-              "count": {
-                "expr": "@jump"
-              },
-              "tags": [
-                "проверка",
-                "атлетика",
-                "прыжок"
-              ],
-              "threshold": {
-                "expr": "@jump_need"
-              }
             }
           },
           {
@@ -1715,16 +1660,6 @@
             "label": "Защита: набор (Реакция + Интуиция)",
             "expr": {
               "expr": "большее из(0, @reaction + @intuition + @cover + @wound_mod + @condition_mod)"
-            },
-            "roll": {
-              "label": "Защита",
-              "die": "pool",
-              "tags": [
-                "проверка"
-              ],
-              "count": {
-                "expr": "@defense_pool"
-              }
             }
           },
           {
@@ -2762,17 +2697,7 @@
             "expr": {
               "expr": "большее из(0, если(@строка.rank > 0, @строка.rank + @строка.attribute, если(@строка.untrained, @строка.attribute - 1, 0)) + @wound_mod + @condition_mod)"
             },
-            "title": "{label}: набор",
-            "roll": {
-              "label": "Проверка: {label}",
-              "die": "pool",
-              "count": {
-                "expr": "@строка.pool"
-              },
-              "tags": [
-                "проверка"
-              ]
-            }
+            "title": "{label}: набор"
           }
         ],
         "rows": [
@@ -24617,7 +24542,51 @@
           }
         ]
       }
-    ]
+    ],
+    "rolls": {
+      "проверка": {
+        "label": "Проверка",
+        "die": "pool",
+        "number": "count",
+        "fields": [
+          {
+            "table": "лист",
+            "column": "composure"
+          },
+          {
+            "table": "лист",
+            "column": "judge_intentions"
+          },
+          {
+            "table": "лист",
+            "column": "memory"
+          },
+          {
+            "table": "лист",
+            "column": "lift_carry"
+          },
+          {
+            "table": "лист",
+            "column": "jump",
+            "tags": [
+              "атлетика",
+              "прыжок"
+            ],
+            "threshold": {
+              "expr": "@jump_need"
+            }
+          },
+          {
+            "table": "лист",
+            "column": "defense_pool"
+          },
+          {
+            "table": "skills",
+            "column": "pool"
+          }
+        ]
+      }
+    }
   },
   "compendium": {
     "records": [

@@ -181,7 +181,7 @@ group('увидев кости на броске по полю листа', () =
       везунчик: { label: 'Везунчик', activation: 'passive', on: [{ on: 'seen', if: { expr: mine }, steps: [{ type: 'roll-reroll', upTo: { expr: '1' } }] }] },
       вдохновение: { label: 'Вдохновение', activation: 'passive', on: [{ on: 'seen', confirm: true, if: { expr: mine }, steps: [{ type: 'roll-plus', value: { expr: '10' } }] }] },
     });
-    const field = { ...system, tables: { ...system.tables, лист: { ...(system.tables as never as Record<string, { columns: unknown[] }>).лист, columns: [...(system.tables as never as Record<string, { columns: unknown[] }>).лист.columns, { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 0, roll: { die: 'к20', tags: ['атака'] } }] } } } as never;
+    const field = { ...system, tables: { ...system.tables, лист: { ...(system.tables as never as Record<string, { columns: unknown[] }>).лист, columns: [...(system.tables as never as Record<string, { columns: unknown[] }>).лист.columns, { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 0 }] } }, rolls: { атака: { die: 'к20', fields: [{ table: 'лист', column: 'ловкость' }] } } } as never;
     const sheets = [sheet('а', ['везунчик', 'вдохновение'])];
     const first = perform({ system: field, compendium: book, clock: null, sheets, die: queue(1, 12) }, { op: 'roll', sheetId: 'а', tag: 'ловкость' });
     eq(first.kind, 'paused');

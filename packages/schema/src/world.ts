@@ -111,7 +111,7 @@ export const columnValue = z.object({
 export const column = columnValue.extend({
   key: tag,
   label: z.string().optional(),
-  roll: z.lazy(() => rollSpec.partial({ die: true }).extend({ label: z.string().optional() })).optional(),
+  roll: z.never({ message: 'бросок поля задаётся в «Бросках» системы (system.rolls), а не у колонки' }).optional(),
   title: z.string().optional(),
   onSheet: z.boolean().optional(),
   optional: z.boolean().optional(),
@@ -148,6 +148,21 @@ export const tableRow = z.object({
 });
 
 export const tableKey = z.enum(['word', 'number', 'range']);
+
+export const rollField = z.object({
+  table: z.string().min(1),
+  column: z.string().min(1),
+  tags: z.array(z.string().min(1)).optional(),
+  threshold: slotRef.optional(),
+}).strict();
+
+export const systemRoll = z.object({
+  label: z.string().optional(),
+  die: z.string().min(1),
+  number: z.enum(['bonus', 'count']).optional(),
+  tags: z.array(z.string().min(1)).optional(),
+  fields: z.array(rollField),
+}).strict();
 
 export const rollEditOp = z.object({ op: z.string().min(1) }).passthrough();
 
@@ -322,6 +337,7 @@ export const system = z.object({
   tables: z.record(z.string(), table).optional(),
   tags: z.record(z.string(), tagContract).optional(),
   roll_edits: z.record(z.string(), rollEdit).optional(),
+  rolls: z.record(z.string(), z.lazy(() => systemRoll)).optional(),
 
   initiative: z.lazy(() => rollSpec.extend({ ties: z.array(z.string().min(1)).optional() })).optional(),
   limits: z.object({
@@ -397,6 +413,8 @@ export const world = z.object({
 export type SlotRef = z.infer<typeof slotRef>;
 export type Formula = z.infer<typeof formula>;
 export type RollSpec = z.infer<typeof rollSpec>;
+export type SystemRoll = z.infer<typeof systemRoll>;
+export type RollField = z.infer<typeof rollField>;
 export type ValueKind = z.infer<typeof valueKind>;
 export type Tag = z.infer<typeof tag>;
 export type DiceTerm = z.infer<typeof diceTerm>;

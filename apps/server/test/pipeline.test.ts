@@ -11,10 +11,11 @@ import { RoomsService } from '../src/rooms/rooms.service.ts';
 const system = {
   id: 'конвейер', name: 'Конвейер',
   constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
+  rolls: { ловкость: { die: 'к20', fields: [{ table: 'лист', column: 'ловкость' }] } },
   tables: {
     лист: { shape: 'single', owner: 'sheet', columns: [
       { key: 'хп', label: 'Хиты', kind: 'number', default: 20, min: 0, max: 30 },
-      { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 0, roll: { die: 'к20' } },
+      { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 0 },
     ] },
     приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] },
   },

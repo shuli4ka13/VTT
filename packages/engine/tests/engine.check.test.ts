@@ -25,10 +25,13 @@ group('проверка — одна на всё: шаг, бросок с лис
     eq(rollCheck(system, arven, field, { compendium, die: seven, owner: field.label }).total, initiative);
   });
 
-  test('бросок без кости: у стола — отказ словами, у автора — ошибка линта', () => {
-    const abilities = system.tables!.abilities!;
-    const bare = { ...system, tables: { ...system.tables, abilities: { ...abilities, columns: abilities.columns!.map(c => (c.key === 'mod' ? { ...c, roll: { label: 'Ловкость' } } : c)) } } } as System;
-    throws(() => fieldCheck(bare, 'abilities.ловкость.mod'), 'кость не выбрана');
-    ok(lintSystem(bare).some(p => p.level === 'error' && p.where.field === 'abilities.ловкость.mod' && p.text.includes('кость не выбрана')));
+  test('бросок с костью, которой нет в «Костях», — ошибка линта', () => {
+    const bare = { ...system, rolls: { ...system.rolls, проверка: { ...system.rolls!.проверка!, die: 'нет_такой' } } } as System;
+    ok(lintSystem(bare).some(p => p.level === 'error' && p.text.includes('кости «нет_такой» нет в «Костях»')));
+  });
+
+  test('одно поле — в одном броске', () => {
+    const twice = { ...system, rolls: { ...system.rolls, ещё: { die: system.rolls!.проверка!.die, fields: [{ table: 'abilities', column: 'mod' }] } } } as System;
+    ok(lintSystem(twice).some(p => p.level === 'error' && p.text.includes('бросают двумя бросками')));
   });
 });

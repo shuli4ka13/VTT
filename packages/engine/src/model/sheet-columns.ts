@@ -1,6 +1,7 @@
 import { EngineError } from '../engine/errors.ts';
 import type { System, Table, TableRow, TableColumn, CellView, Field, FieldValue, CellMark, Holder, Placement } from './types.ts';
-import type { SheetPart, Control } from '@vtt/schema';
+import type { SheetPart, Control, SystemRoll, RollField } from '@vtt/schema';
+import { isTagWord } from '../engine/roll-tags.ts';
 import { linkOf, rowByKey, staticCell } from './tables.ts';
 import { isBlank } from './blank.ts';
 
@@ -78,7 +79,6 @@ export const viewOf = (table: Table | undefined, column: string, row?: TableRow)
   const spec = (table?.columns ?? []).find(c => c.key === column);
   const own: CellView = {
     ...(spec?.title !== undefined ? { label: spec.title } : {}),
-    ...(spec?.roll !== undefined ? { roll: spec.roll } : {}),
     ...(spec?.default !== undefined ? { default: spec.default } : {}),
     ...(spec?.min !== undefined ? { min: spec.min } : {}),
     ...(spec?.max !== undefined ? { max: spec.max } : {}),
@@ -351,12 +351,46 @@ const livesOf = (table: Table): { lives?: 'group' | 'desk' } => {
   return holder === 'group' || holder === 'desk' ? { lives: holder } : {};
 };
 
-function singleFields(tableId: string, table: Table): Field[] {
+function rollEntryOf(system: System, tableId: string, column: string): { key: string; roll: SystemRoll; entry: RollField } | undefined {
+  for (const [key, roll] of Object.entries(system.rolls ?? {})) {
+    const entry = roll.fields.find(one => one.table === tableId && one.column === column);
+    if (entry) return { key, roll, entry };
+  }
+  return undefined;
+}
+
+function rollTags(table: Table, row: TableRow | undefined): string[] {
+  if (!row) return [];
+  const linked = (table.columns ?? [])
+    .filter(column => column.kind === 'choice' && column.from && !column.many)
+    .map(column => (row.cells ?? {})[column.key])
+    .filter((value): value is string => typeof value === 'string' && value !== '');
+  return [...linked, String(row.value ?? '')].filter(isTagWord);
+}
+
+export function fieldRollOf(system: System, tableId: string, column: string, row?: TableRow): Field['roll'] | undefined {
+  const found = rollEntryOf(system, tableId, column);
+  const table = system.tables?.[tableId];
+  if (!found || !table) return undefined;
+  const { key, roll, entry } = found;
+  const label = row ? String(row.label ?? row.value ?? '') : (table.columns ?? []).find(one => one.key === column)?.label ?? column;
+  const number = { expr: row ? `@${ROW}.${column}` : `@${column}` };
+  return {
+    label: roll.label ? `${roll.label}: ${label}` : label,
+    die: roll.die,
+    ...(roll.number === 'count' ? { count: number } : { bonus: number }),
+    tags: [...new Set([key, ...(roll.tags ?? []), ...rollTags(table, row), ...(entry.tags ?? [])])],
+    ...(entry.threshold !== undefined ? { threshold: entry.threshold } : {}),
+  } as Field['roll'];
+}
+
+function singleFields(system: System, tableId: string, table: Table): Field[] {
   return (table.columns ?? []).map((column): Field => {
+    const roll = fieldRollOf(system, tableId, column.key);
     return {
       tag: column.key,
       label: column.label ?? column.key,
-      ...(column.roll ? { roll: column.roll } : {}),
+      ...(roll ? { roll } : {}),
       value: column.expr !== undefined ? { kind: 'formula', expr: column.expr.expr, ...boundsOf(column) } : valueOf(column, column.default),
       ...livesOf(table),
       home: tableId,
@@ -375,7 +409,14 @@ function rowFields(system: System, tableId: string, table: Table): Field[] {
       const value: FieldValue = source.kind === 'formula'
         ? rowRefs(system, tableId, row, { kind: 'formula', expr: withRow(system, tableId, row, source.expr), ...(deep(system, table, row, boundsOf(view)) as object) }) as FieldValue
         : rowRefs(system, tableId, row, deep(system, table, row, valueOf(column, view.default, view))) as FieldValue;
-      const roll = view.roll ? rowRefs(system, tableId, row, deep(system, table, row, view.roll)) as Field['roll'] : undefined;
+      const base = fieldRollOf(system, tableId, column.key, row);
+      const own = row.view?.[column.key]?.roll;
+      const merged = base || own ? {
+        ...base, ...own,
+        ...(own && (own.bonus || own.count) ? (own.count ? { bonus: undefined } : { count: undefined }) : {}),
+        ...(base?.tags || own?.tags ? { tags: [...new Set([...(base?.tags ?? []), ...(own?.tags ?? [])])] } : {}),
+      } : undefined;
+      const roll = merged ? rowRefs(system, tableId, row, deep(system, table, row, merged)) as Field['roll'] : undefined;
       out.push({
         tag: addressOf(tableId, row, column.key),
         label: fill(system, table, row, view.label ?? defaultLabel(column, at === 0)),
@@ -393,12 +434,12 @@ function rowFields(system: System, tableId: string, table: Table): Field[] {
 export function tableFields(system: System, tableId: string): Field[] {
   const table = system.tables?.[tableId];
   if (!table || !onSheet(table)) return [];
-  return isSingle(table) ? singleFields(tableId, table) : rowFields(system, tableId, table);
+  return isSingle(table) ? singleFields(system, tableId, table) : rowFields(system, tableId, table);
 }
 
 export interface FieldProblem { table: string; message: string }
 
-interface Built { fields: Field[]; byTag: Map<string, Field>; problems: FieldProblem[] }
+interface Built { fields: Field[]; byTag: Map<string, Field>; problems: FieldProblem[]; rolls?: System['rolls'] }
 
 const EMPTY: Built = { fields: [], byTag: new Map(), problems: [] };
 
@@ -414,14 +455,14 @@ export function buildFields(system: System): Built {
   }
   const byTag = new Map<string, Field>();
   for (const field of fields) if (!byTag.has(field.tag)) byTag.set(field.tag, field);
-  return { fields, byTag, problems };
+  return { fields, byTag, problems, ...(system.rolls ? { rolls: system.rolls } : {}) };
 }
 
 function builtOf(system: System): Built {
   const tables = system.tables;
   if (!tables) return EMPTY;
   let hit = built.get(tables);
-  if (!hit) { hit = buildFields(system); built.set(tables, hit); }
+  if (!hit || hit.rolls !== system.rolls) { hit = buildFields(system); built.set(tables, hit); }
   if (!system.blocks) return hit;
   let byTables = placedCache.get(system.blocks);
   if (!byTables) { byTables = new WeakMap(); placedCache.set(system.blocks, byTables); }
