@@ -108,3 +108,125 @@ describe('лист за столом', () => {
     expect(underTitles()).toEqual({ Акробатика: 'нет', Скрытность: 'владение', Атлетика: 'мастерство' });
   });
 });
+
+const single = (key: string, label: string) => ({ shape: 'single', columns: [{ key, label, kind: 'number', default: 1 }] });
+
+const pagedSystem = (extra: Record<string, unknown> = {}) => ({
+  tables: { а: single('а1', 'Сила'), б: single('б1', 'Хиты'), в: single('в1', 'Монеты'), г: single('г1', 'Заметка') },
+  pages: [{ name: 'Шапка', top: true }, { name: 'Бой', icon: '⚔' }, { name: 'Вещи' }, { name: 'Пустая' }],
+  blocks: [
+    { name: 'Главное', page: 'Шапка', parts: [{ table: 'а' }] },
+    { name: 'Здоровье', page: 'Бой', parts: [{ table: 'б' }] },
+    { name: 'Деньги', page: 'Вещи', parts: [{ table: 'в' }] },
+    { name: 'Скрытое', page: 'Пустая', parts: [{ table: 'г' }] },
+  ],
+  ...extra,
+}) as unknown as System;
+
+describe('страницы листа', () => {
+  afterEach(cleanup);
+  const base = { sheet, reader, onChange: () => {} };
+
+  it('без pages закладок нет и все блоки подряд', () => {
+    render(<SheetView system={pagedSystem()} {...base} />);
+    expect(screen.queryByRole('tablist')).toBeNull();
+    expect(document.body.textContent).toContain('Здоровье');
+    expect(document.body.textContent).toContain('Деньги');
+  });
+
+  it('шапка видна всегда, закладки по страницам, переключение меняет блоки', () => {
+    const chosen: string[] = [];
+    const view = (at: string | null) => (
+      <SheetView system={pagedSystem()} {...base} only={['а1', 'б1', 'в1']} pages={{ at, onAt: name => chosen.push(name) }} />
+    );
+    const { rerender } = render(view(null));
+    expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual(['⚔ Бой', 'Вещи']);
+    expect(document.body.textContent).toContain('Главное');
+    expect(document.body.textContent).toContain('Здоровье');
+    expect(document.body.textContent).not.toContain('Деньги');
+    fireEvent.click(screen.getByText('Вещи'));
+    expect(chosen).toEqual(['Вещи']);
+    rerender(view('Вещи'));
+    expect(document.body.textContent).toContain('Главное');
+    expect(document.body.textContent).toContain('Деньги');
+    expect(document.body.textContent).not.toContain('Здоровье');
+  });
+
+  it('страница без видимых блоков получает закладку, только если есть переданный список', () => {
+    const system = pagedSystem({ pages: [{ name: 'Шапка', top: true }, { name: 'Бой' }, { name: 'Сумка', lists: ['things'] }] });
+    const { rerender } = render(<SheetView system={system} {...base} pages={{ at: 'Сумка', onAt: () => {} }} />);
+    expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual(['Бой']);
+    rerender(<SheetView system={system} {...base} pages={{ at: 'Сумка', onAt: () => {}, lists: { things: <p>Снаряжение тут</p> } }} />);
+    expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual(['Бой', 'Сумка']);
+    expect(screen.getByText('Снаряжение тут')).toBeTruthy();
+  });
+
+  it('столбцы: блок с stack 2 — в правой стопке, wide — отдельная полоса', () => {
+    const system = pagedSystem({
+      pages: [{ name: 'Главная', stacks: 2 }],
+      blocks: [
+        { name: 'Один', parts: [{ table: 'а' }] },
+        { name: 'Два', stack: 2, parts: [{ table: 'б' }] },
+        { name: 'Широкий', wide: true, parts: [{ table: 'в' }] },
+        { name: 'Три', parts: [{ table: 'г' }] },
+      ],
+    });
+    render(<SheetView system={system} {...base} pages={{ at: null, onAt: () => {} }} />);
+    const bands = [...document.querySelectorAll('.sheet-page > *')];
+    expect(bands).toHaveLength(3);
+    const cols = bands[0]!.querySelectorAll('.sheet-stacks__col');
+    expect(cols).toHaveLength(2);
+    expect(cols[0]!.textContent).toContain('Один');
+    expect(cols[1]!.textContent).toContain('Два');
+    expect(bands[1]!.className).toBe('sheet-band');
+    expect(bands[1]!.textContent).toContain('Широкий');
+    expect(bands[2]!.querySelectorAll('.sheet-stacks__col')[0]!.textContent).toContain('Три');
+    expect(bands[2]!.querySelectorAll('.sheet-stacks__col')[1]!.textContent).toBe('');
+  });
+});
+
+describe('таблица блока в несколько столбцов', () => {
+  afterEach(cleanup);
+  const table = {
+    abilities: { shape: 'rows', columns: [{ key: 'name', label: 'Название', kind: 'text' }], rows: [
+      { value: 'str', label: 'Сила' }, { value: 'dex', label: 'Ловкость' },
+    ] },
+    навыки: { shape: 'rows', owner: 'sheet', columns: [
+      { key: 'ability', label: 'Характеристика', kind: 'choice', from: 'abilities' },
+      { key: 'prof', label: 'Мастерство', kind: 'number' },
+    ], rows: [
+      { value: 'a1', label: 'Атлетика', cells: { ability: 'str' } },
+      { value: 'a2', label: 'Борьба', cells: { ability: 'str' } },
+      { value: 'b1', label: 'Акробатика', cells: { ability: 'dex' } },
+      { value: 'b2', label: 'Скрытность', cells: { ability: 'dex' } },
+    ] },
+  };
+  const make = (part: Record<string, unknown>, split?: number) => ({
+    tables: table,
+    blocks: [{ name: 'Навыки', ...(split ? { split } : {}), parts: [{ table: 'навыки', ...part }] }],
+  }) as unknown as System;
+
+  it('split 2: две сетки, у каждой свои шапки колонок', () => {
+    render(<SheetView system={make({}, 2)} sheet={sheet} reader={reader} onChange={() => {}} />);
+    const grids = document.querySelectorAll('.sheet-table');
+    expect(grids).toHaveLength(2);
+    for (const grid of grids) expect(grid.querySelector('.field__label')?.textContent).toBeTruthy();
+    expect([...grids[0]!.querySelectorAll('.sheet-table__row')].map(n => n.textContent)).toEqual(['Атлетика', 'Борьба']);
+    expect([...grids[1]!.querySelectorAll('.sheet-table__row')].map(n => n.textContent)).toEqual(['Акробатика', 'Скрытность']);
+  });
+
+  it('подзаголовок не остаётся последним в столбце: уходит вместе со строками', () => {
+    render(<SheetView system={make({ by: 'ability' }, 2)} sheet={sheet} reader={reader} onChange={() => {}} />);
+    const grids = document.querySelectorAll('.sheet-table');
+    expect(grids).toHaveLength(2);
+    expect([...grids[0]!.querySelectorAll('.sheet-table__section')].map(n => n.textContent)).toEqual(['Сила']);
+    expect([...grids[1]!.querySelectorAll('.sheet-table__section')].map(n => n.textContent)).toEqual(['Ловкость']);
+    expect(grids[0]!.lastElementChild!.classList.contains('sheet-table__section')).toBe(false);
+  });
+
+  it('без split — одна сетка', () => {
+    render(<SheetView system={make({})} sheet={sheet} reader={reader} onChange={() => {}} />);
+    expect(document.querySelectorAll('.sheet-table')).toHaveLength(1);
+  });
+});
+

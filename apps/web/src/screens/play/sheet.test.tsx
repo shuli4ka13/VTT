@@ -148,3 +148,38 @@ describe('висит сейчас: срок словами', () => {
     expect(dayTime(2 * 86400 + 1800)).toBe('День 3, 00:30');
   });
 });
+
+describe('списки на страницах листа', () => {
+  beforeEach(() => {
+    useRoom.setState(state => ({ ...state, log: [], error: null }));
+  });
+  afterEach(cleanup);
+
+  const withPages = (lists: Record<string, string[]>) => {
+    const state = room();
+    (state.system as unknown as Record<string, unknown>).pages = [
+      { name: 'Шапка', top: true },
+      ...Object.entries(lists).map(([name, on]) => ({ name, lists: on })),
+    ];
+    useRoom.setState(s => ({ ...s, room: state, mySheetId: 'а' }));
+  };
+
+  it('список со страницы уходит из правой панели, остальные остаются', () => {
+    withPages({ Сумка: ['things'] });
+    renderOpen(<SheetScreen />);
+    expect(screen.getAllByText('Снаряжение')).toHaveLength(1);
+    expect(screen.getByText('Известные действия')).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Сумка' })).toBeTruthy();
+    expect(screen.getByText('Снаряжение и действия')).toBeTruthy();
+  });
+
+  it('все три списка на страницах — правой панели нет', () => {
+    withPages({ Сумка: ['things'], Дела: ['actions', 'hanging'] });
+    renderOpen(<SheetScreen />);
+    expect(screen.queryByText('Снаряжение и действия')).toBeNull();
+    expect(screen.getByRole('tab', { name: 'Сумка' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('tab', { name: 'Дела' }));
+    expect(screen.getByText('Известные действия')).toBeTruthy();
+  });
+});
+

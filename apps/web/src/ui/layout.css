@@ -675,3 +675,19 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
   .step-card .card__head .btn, .step-card .step-fold__row .btn { min-height: 40px; }
   .column__fold, .list__fold, .list__group-pick { min-width: 40px; min-height: 40px; }
 }
+
+.sheet--paged { container-type: inline-size; }
+.sheet-page { display: flex; flex-direction: column; gap: var(--s-3); }
+.sheet--paged .tabs { flex-wrap: wrap; max-width: 100%; height: auto; min-height: var(--tabs-h); padding-block: var(--s-1); }
+.sheet-stacks { display: grid; gap: var(--s-3); align-items: start; }
+.sheet-stacks--1 { grid-template-columns: minmax(0, 1fr); }
+.sheet-stacks--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sheet-stacks--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.sheet-stacks__col { display: flex; flex-direction: column; gap: var(--s-3); min-width: 0; }
+.sheet-band { min-width: 0; }
+.sheet-split { display: flex; flex-wrap: wrap; gap: var(--s-3) var(--s-4); align-items: flex-start; }
+.sheet-split__col { flex: 1 1 260px; min-width: 0; overflow-x: auto; }
+@container (max-width: 600px) { .sheet-stacks--2, .sheet-stacks--3 { grid-template-columns: minmax(0, 1fr); } }
+@container (max-width: 880px) { .sheet-stacks--3 { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 700px) { .sheet-stacks--2, .sheet-stacks--3 { grid-template-columns: minmax(0, 1fr); } }
+.sheet-stacks__col > .card, .sheet-band > .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-3); padding: 13px 15px; gap: 10px; }

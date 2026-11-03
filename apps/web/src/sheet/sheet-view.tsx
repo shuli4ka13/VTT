@@ -3,14 +3,17 @@ import type { ReactNode } from 'react';
 import { Card, CardHead, Chip } from '../ui/primitives.tsx';
 import { FieldCell } from './field-cell.tsx';
 import type { Reader } from '../engine/use-calc.ts';
-import type { Sheet, System, StoredValue } from '@vtt/schema';
+import { Tabs } from '../ui/layout.tsx';
+import type { Sheet, System, StoredValue, PageList } from '@vtt/schema';
 import type { Field as FieldModel } from '@vtt/engine/model/types';
 import { fieldsOf, rowKeyOf, fieldOf } from '@vtt/engine/model/sheet-columns';
 import { optionsOf } from '@vtt/engine/model/lists';
 import { fieldsByBlock } from '@vtt/engine/model/blocks';
 import { blockShown } from '@vtt/engine/model/owned';
+import { pagesOf, topPage, tabPages, pageOfBlock, rootBlock, bandsOf } from '@vtt/engine/model/pages';
 
-export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only, fields, onPick, picked, onPickBlock, onPickRow }: {
+export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only, fields, onPick, picked, onPickBlock, onPickRow, pages }: {
+  pages?: { at: string | null; onAt: (name: string) => void; lists?: Partial<Record<PageList, ReactNode>> };
   onPickBlock?: (name: string) => void;
   onPickRow?: (table: string, row: string) => void;
   system: System;
@@ -47,25 +50,67 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
     ) : view;
   };
 
-  return (
-    <div className="sheet">
-      <div className="sheet__top">
-        <h2 className="sheet__name">{sheet.name ?? sheet.id}</h2>
-        {badge ? <Chip>{badge}</Chip> : null}
-      </div>
+  const card = (group: string, fields: FieldModel[]) => (
+    <Card key={group}>
+      <CardHead title={onPickBlock ? <button type="button" className="sheet-pick__head" title="настройки блока" onClick={() => onPickBlock(group)}>{group}</button> : group} />
+      {piecesOf(fields).map(piece => (piece.table ? (
+        <TableBlock key={piece.table} system={system} tableId={piece.table!} split={(system.blocks ?? []).find(block => block.name === group)?.split} sections={sectionsOf(piece.fields, system, reader)} cell={cell} {...(onPickRow ? { onPickRow } : {})} />
+      ) : (
+        <div key={piece.fields[0]!.tag} className="row">
+          {piece.fields.map(field => cell(field))}
+        </div>
+      )))}
+    </Card>
+  );
 
-      {shown.map(([group, fields]) => (
-        <Card key={group}>
-          <CardHead title={onPickBlock ? <button type="button" className="sheet-pick__head" title="настройки блока" onClick={() => onPickBlock(group)}>{group}</button> : group} />
-          {piecesOf(fields).map(piece => (piece.table ? (
-            <TableBlock key={piece.table} system={system} tableId={piece.table!} sections={sectionsOf(piece.fields, system, reader)} cell={cell} {...(onPickRow ? { onPickRow } : {})} />
-          ) : (
-            <div key={piece.fields[0]!.tag} className="row">
-              {piece.fields.map(field => cell(field))}
-            </div>
-          )))}
-        </Card>
-      ))}
+  const head = (
+    <div className="sheet__top">
+      <h2 className="sheet__name">{sheet.name ?? sheet.id}</h2>
+      {badge ? <Chip>{badge}</Chip> : null}
+    </div>
+  );
+
+  if (!pages || !pagesOf(system).length) {
+    return (
+      <div className="sheet">
+        {head}
+        {shown.map(([group, fields]) => card(group, fields))}
+      </div>
+    );
+  }
+
+  const top = topPage(system);
+  const listsOf = (names: readonly PageList[] | undefined) => (names ?? []).filter(name => pages.lists?.[name] != null);
+  const blocksOn = (name: string) => shown.filter(([group]) => pageOfBlock(system, group) === name);
+  const visible = tabPages(system).filter(page => blocksOn(page.name).length || listsOf(page.lists).length);
+  const current = visible.find(page => page.name === pages.at) ?? visible[0];
+
+  const body = (page: NonNullable<typeof top>) => (
+    <>
+      {bandsOf(blocksOn(page.name), page.stacks ?? 1, ([group]) => {
+        const root = rootBlock(system, group);
+        return { stack: root?.stack, wide: root?.wide };
+      }).map((band, at) => ('wide' in band ? (
+        <div key={at} className="sheet-band">{card(band.wide[0], band.wide[1])}</div>
+      ) : (
+        <div key={at} className={`sheet-stacks sheet-stacks--${band.stacks.length}`}>
+          {band.stacks.map((stack, column) => (
+            <div key={column} className="sheet-stacks__col">{stack.map(([group, fields]) => card(group, fields))}</div>
+          ))}
+        </div>
+      )))}
+      {listsOf(page.lists).map(name => <Fragment key={name}>{pages.lists![name]}</Fragment>)}
+    </>
+  );
+
+  return (
+    <div className="sheet sheet--paged">
+      {head}
+      {top ? body(top) : null}
+      {visible.length ? (
+        <Tabs value={current?.name ?? ''} options={visible.map(page => ({ key: page.name, label: page.name, ...(page.icon ? { icon: page.icon } : {}) }))} onChange={pages.onAt} />
+      ) : null}
+      {current ? <div className="sheet-page">{body(current)}</div> : null}
     </div>
   );
 }
@@ -111,11 +156,32 @@ function sectionTitle(field: FieldModel, system: System, reader: Reader): [strin
   return [value === undefined || value === null || value === '' ? '—' : String(value), Number.MAX_SAFE_INTEGER];
 }
 
-function TableBlock({ system, tableId, sections, cell, onPickRow }: {
+type Section = { title: string | null; fields: FieldModel[] };
+
+function splitRows(sections: Section[], count: number): { title: string | null; rows: string[] }[][] {
+  const rowsOf = sections.map(part => ({ title: part.title, rows: [...new Set(part.fields.map(f => f.cell!.row))] }));
+  const total = rowsOf.reduce((sum, part) => sum + part.rows.length, 0);
+  const per = Math.max(1, Math.ceil(total / count));
+  const out: { title: string | null; rows: string[] }[][] = [[]];
+  let size = 0;
+  for (const part of rowsOf) {
+    let open: { title: string | null; rows: string[] } | null = null;
+    for (const row of part.rows) {
+      if (size >= per && out.length < count) { out.push([]); size = 0; open = null; }
+      if (!open) { open = { title: part.title, rows: [] }; out[out.length - 1]!.push(open); }
+      open.rows.push(row);
+      size += 1;
+    }
+  }
+  return out;
+}
+
+function TableBlock({ system, tableId, sections, cell, onPickRow, split }: {
   onPickRow?: (table: string, row: string) => void;
   system: System;
   tableId: string;
-  sections: { title: string | null; fields: FieldModel[] }[];
+  split?: number | undefined;
+  sections: Section[];
   cell: (field: FieldModel, bare?: boolean) => ReactNode;
 }) {
   const table = system.tables?.[tableId];
@@ -130,26 +196,34 @@ function TableBlock({ system, tableId, sections, cell, onPickRow }: {
     return column?.label || key;
   };
   const at = new Map(fields.map(f => [`${f.cell!.row}.${f.cell!.column}`, f]));
-  return (
-    <div className="sheet-table" style={{ gridTemplateColumns: `minmax(110px, max-content) repeat(${columns.length}, minmax(80px, max-content))` }}>
+  const grid = (parts: { title: string | null; rows: string[] }[], key?: number) => (
+    <div key={key} className="sheet-table" style={{ gridTemplateColumns: `minmax(110px, max-content) repeat(${columns.length}, minmax(80px, max-content))` }}>
       <span />
-      {columns.map(key => <span key={key} className="field__label">{columnLabel(key)}</span>)}
-      {sections.map(part => (
+      {columns.map(column => <span key={column} className="field__label">{columnLabel(column)}</span>)}
+      {parts.map(part => (
         <Fragment key={part.title ?? ''}>
           {part.title ? <h4 className="sheet-section__title sheet-table__section">{part.title}</h4> : null}
-          {[...new Set(part.fields.map(f => f.cell!.row))].map(row => (
+          {part.rows.map(row => (
             <Fragment key={row}>
               {onPickRow
                 ? <button type="button" className="sheet-table__row sheet-pick__head" title="эта строка таблицы" onClick={() => onPickRow(tableId, row)}>{rowLabel(row)}</button>
                 : <span className="sheet-table__row">{rowLabel(row)}</span>}
-              {columns.map(key => {
-                const field = at.get(`${row}.${key}`);
-                return field ? <Fragment key={key}>{cell(field, true)}</Fragment> : <span key={key} />;
+              {columns.map(column => {
+                const field = at.get(`${row}.${column}`);
+                return field ? <Fragment key={column}>{cell(field, true)}</Fragment> : <span key={column} />;
               })}
             </Fragment>
           ))}
         </Fragment>
       ))}
+    </div>
+  );
+  if (!split || split < 2) {
+    return grid(sections.map(part => ({ title: part.title, rows: [...new Set(part.fields.map(f => f.cell!.row))] })));
+  }
+  return (
+    <div className="sheet-split">
+      {splitRows(sections, split).map((parts, index) => <div key={index} className="sheet-split__col">{grid(parts)}</div>)}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
 import { useReader } from '../../engine/use-calc.ts';
@@ -10,7 +11,7 @@ import { recordDetails } from '../../sheet/record-view.tsx';
 import { useSession } from '../../store/session.ts';
 import { Lobby } from './lobby.tsx';
 import { Hanging } from './hanging.tsx';
-import type { Sheet, System, RoomState, Owned, CompendiumRecord } from '@vtt/schema';
+import type { Sheet, System, RoomState, Owned, CompendiumRecord, PageList } from '@vtt/schema';
 import { blockNames, blockOf, NO_BLOCK } from '@vtt/engine/model/blocks';
 import { availableActions } from '@vtt/engine/events/actions';
 import { recordsOf, isItem, sheetKinds, sheetKindOf, shownOn, recordKindOf } from '@vtt/engine/model/owned';
@@ -18,6 +19,7 @@ import { fieldsFor, livesOn } from '@vtt/engine/engine/calc';
 import { isGroup, sharedOf } from '@vtt/engine/events/desk';
 import { isDesk as atDesk } from '@vtt/engine/engine/owners';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { pageOfList, pagesOf, PAGE_LISTS } from '@vtt/engine/model/pages';
 
 export function SheetScreen() {
   const room = useRoom(s => s.room);
@@ -37,6 +39,7 @@ export function SheetScreen() {
     setNewName('');
   };
   const kinds = sheetKinds(room.system as System);
+  const rest = sheet && !atDesk(sheet) ? sideLists(room.system as System, !isGroup(sheet, room.sheets)) : [];
 
   return (
     <Columns
@@ -79,10 +82,10 @@ export function SheetScreen() {
       }}
       main={{
         body: sheet
-          ? <SheetBody room={room} sheet={sheet} />
+          ? <SheetBody key={sheet.id} room={room} sheet={sheet} />
           : <Empty title="Выберите лист слева" hint="Тот, которым играете." />,
       }}
-      right={sheet && !atDesk(sheet) ? { head: 'Снаряжение и действия', body: <SidePanel room={room} sheet={sheet} /> } : undefined}
+      right={sheet && !atDesk(sheet) && rest.length ? { head: 'Снаряжение и действия', body: <SidePanel room={room} sheet={sheet} lists={rest} /> } : undefined}
     />
   );
 }
@@ -103,6 +106,10 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const editable = maySheet(room, me, sheet.id);
   const [claims, setClaims] = useState<string[]>([]);
   const claimable = useMemo(() => claimWords(system), [system]);
+  const [at, setAt] = useState<string | null>(null);
+  const paged = !isDesk && !asGroup && pagesOf(system).length > 0;
+  const onPage = (list: PageList) => paged && pageOfList(system, list) !== undefined;
+  const pieces = useSheetPieces(room, sheet);
 
   return (
     <>
@@ -135,21 +142,14 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
           />
         </Field>
       ) : null}
-      {!isDesk && (sheet.effects ?? []).length ? (
-        <Card>
-          <CardHead title="Висит сейчас" />
-          <Hanging
-            room={room} sheet={sheet}
-            {...(editable ? { onRemove: entry => tableSocket.setBelonging(room.id, sheet.id, 'effects', entry.effectId, false) } : {})}
-          />
-        </Card>
-      ) : null}
+      {!isDesk && !onPage('hanging') ? pieces.hangingNow : null}
       <SheetView
         system={system}
         fields={fields}
         sheet={sheet}
         reader={reader}
         only={only}
+        {...(paged ? { pages: { at, onAt: setAt, lists: { hanging: pieces.hanging, things: pieces.things, actions: pieces.actions } } } : {})}
         badge={isDesk ? 'стол' : kind?.label ?? 'лист'}
         onChange={editable ? (tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value) : undefined}
         onRoll={tag => {
@@ -208,7 +208,21 @@ function shelvesOf<T extends CompendiumRecord>(system: System, items: readonly T
   return [...shelves].sort(([a], [b]) => at(a) - at(b));
 }
 
-function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
+const sideLists = (system: System, paged: boolean): PageList[] =>
+  PAGE_LISTS.filter(list => !paged || pageOfList(system, list) === undefined);
+
+function SidePanel({ room, sheet, lists }: { room: RoomState; sheet: Sheet; lists: PageList[] }) {
+  const pieces = useSheetPieces(room, sheet);
+  return (
+    <>
+      {lists.includes('actions') ? pieces.actions : null}
+      {lists.includes('things') ? pieces.things : null}
+      {lists.includes('hanging') ? pieces.hangable : null}
+    </>
+  );
+}
+
+function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode; hangable: ReactNode; hanging: ReactNode; things: ReactNode; actions: ReactNode } {
   const me = useSession(s => s.userId);
   const [query, setQuery] = useState('');
   const available = actionsOf(sheet, room);
@@ -262,19 +276,32 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
 
   const editable = maySheet(room, me, sheet.id);
 
-  return (
-    <>
-      <Fold title="Что применить" count={available.length} open>
-        {available.length === 0
-          ? <span className="faint">Нечего: наденьте предмет или выучите действие ниже.</span>
-          : available.map(action => (
-            <Card key={action.id} tone="flat">
-              <span className="nowrap" title="применяется за столом">{action.label}</span>
-            </Card>
-          ))}
+  const hangingNow = (sheet.effects ?? []).length ? (
+    <Card>
+      <CardHead title="Висит сейчас" />
+      <Hanging
+        room={room} sheet={sheet}
+        {...(editable ? { onRemove: entry => tableSocket.setBelonging(room.id, sheet.id, 'effects', entry.effectId, false) } : {})}
+      />
+    </Card>
+  ) : null;
+  const hangFold = editable ? (
+      <Fold title="Повесить…" count={hangable.length}>
+        {hangable.length === 0
+          ? <span className="faint">В системе нет эффектов, которые можно повесить.</span>
+          : (
+            <div className="inline inline--tight">
+              {hangable.filter(([id]) => !wornOf(id)).map(([id, effect]) => (
+                <Chip key={id} onClick={() => toggle('effects', id, true)}>{effect.label ?? id}</Chip>
+              ))}
+            </div>
+          )}
       </Fold>
-
-      <Fold title="Снаряжение" count={carried}>
+    ) : null;
+  const hanging = hangingNow || hangFold ? <>{hangingNow}{hangFold}</> : null;
+  const things = (
+    <>
+      <Fold title="Снаряжение" count={carried} open={pageOfList(system, 'things') !== undefined}>
         {items.length === 0
           ? <span className="faint">В компендиуме мира нет предметов.</span>
           : (
@@ -328,8 +355,21 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
             </div>
           )}
       </Fold>
+    </>
+  );
+  const actionsList = (
+    <>
+      <Fold title="Что применить" count={available.length} open>
+        {available.length === 0
+          ? <span className="faint">Нечего: наденьте предмет или выучите действие ниже.</span>
+          : available.map(action => (
+            <Card key={action.id} tone="flat">
+              <span className="nowrap" title="применяется за столом">{action.label}</span>
+            </Card>
+          ))}
+      </Fold>
 
-      <Fold title="Известные действия" count={known}>
+      <Fold title="Известные действия" count={known} open={pageOfList(system, 'actions') !== undefined}>
         {actions.length === 0
           ? <span className="faint">В компендиуме мира нет действий.</span>
           : (
@@ -346,23 +386,9 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
             </div>
           )}
       </Fold>
-
-      {editable ? (
-        <Fold title="Повесить…" count={hangable.length}>
-          {hangable.length === 0
-            ? <span className="faint">В системе нет эффектов, которые можно повесить.</span>
-            : (
-              <div className="inline inline--tight">
-                {hangable.filter(([id]) => !wornOf(id)).map(([id, effect]) => (
-                  <Chip key={id} onClick={() => toggle('effects', id, true)}>{effect.label ?? id}</Chip>
-                ))}
-              </div>
-            )}
-        </Fold>
-      ) : null}
-
     </>
   );
+  return { hangingNow, hangable: hangFold, hanging, things, actions: actionsList };
 }
 
 export function claimWords(system: System): [string, string][] {
