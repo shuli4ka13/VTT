@@ -41,3 +41,5 @@ export const FORBIDDEN_STEMS = ['карточк', 'карточе', 'кирпи�
 export const OUTCOME_COLUMNS = { success: 'успех', fail: 'провал' } as const;
 
 export const COST_BLOCK = 'Плата';
+
+export const SHEET_LISTS = { hanging: 'Висит сейчас', things: 'Снаряжение', actions: 'Действия' } as const;

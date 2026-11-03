@@ -19,7 +19,7 @@ import { bindingsOf } from '../events/actions.ts';
 import { kindOfRecord } from './owned.ts';
 import { tableOf } from './buttons.ts';
 import { MOMENTS } from '../events/moments.ts';
-import { TABS, STEP, SHEET } from '../words/glossary.ts';
+import { TABS, STEP, SHEET, SHEET_LISTS } from '../words/glossary.ts';
 import {
   referencesOf, declaredOf, chainRefs, listenerOf, withAddresses, heardNames, callNamesOf, formulaDeps, sourcesOf,
   type Where, type Reference, type RefKind, type Declared, type Listener,
@@ -781,6 +781,33 @@ function layoutProblems(system: System): Problem[] {
       if (part.by && !keys.has(part.by)) out.push({ where, level: 'error', text: `блок «${block.name}» группирует по колонке «${part.by}», а её нет` });
       const rows = new Set((table.rows ?? []).map(r => rowKeyOf(r)));
       for (const row of part.rows ?? []) if (!rows.has(row)) out.push({ where, level: 'warn', text: `блок «${block.name}»: в таблице «${table.label || part.table}» нет строки «${row}»` });
+    }
+  }
+  return [...out, ...pageProblems(system)];
+}
+
+function pageProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  const where = { tab: 'sheet' as const };
+  const pages = system.pages ?? [];
+  const names = new Set<string>();
+  for (const page of pages) {
+    if (names.has(page.name)) out.push({ where, level: 'error', text: `страница листа «${page.name}» названа дважды` });
+    names.add(page.name);
+  }
+  if (pages.filter(page => page.top).length > 1) out.push({ where, level: 'error', text: 'шапка листа одна, а страниц-шапок несколько' });
+  const lists = new Map<string, string>();
+  for (const page of pages) {
+    for (const list of page.lists ?? []) {
+      const was = lists.get(list);
+      if (was) out.push({ where, level: 'error', text: `список «${SHEET_LISTS[list]}» стоит и на «${was}», и на «${page.name}»` });
+      else lists.set(list, page.name);
+    }
+  }
+  for (const block of system.blocks ?? []) {
+    if (block.page && !names.has(block.page)) out.push({ where, level: 'error', text: `блок «${block.name}» стоит на странице «${block.page}», а её нет` });
+    if (block.parent && (block.page || block.stack || block.wide)) {
+      out.push({ where, level: 'error', text: `блок «${block.name}» внутри «${block.parent}»: страницу и столбец берёт у него, своих не задаёт` });
     }
   }
   return out;

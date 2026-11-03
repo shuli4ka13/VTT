@@ -4,6 +4,7 @@ import { isFormulaCell, fieldsOf, fieldOf, hasField, rowKeyOf } from './sheet-co
 import type { System, Table } from './types.ts';
 import { isBook, kindOf, blockLine } from './owned.ts';
 import { tidyLayout } from './layout.ts';
+import { tidyPages } from './pages.ts';
 import type { SheetPart } from '@vtt/schema';
 
 export type PartKind = 'field' | 'group' | 'block' | 'effect' | 'table' | 'constant' | 'rollEdit' | 'recordKind' | 'record';
@@ -214,6 +215,7 @@ export function bringIn(target: System, donor: System, roots: Part[], grants: st
     if (!(system.grants ?? []).includes(key)) system.grants = [...system.grants ?? [], key];
   }
   pruneBlocks(system, donor, fresh, arrived);
+  tidyPages(system);
   return { system, added, kept };
 }
 

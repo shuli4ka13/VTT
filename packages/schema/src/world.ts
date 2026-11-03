@@ -124,10 +124,26 @@ export const sheetPart = z.object({
   views: z.record(z.string(), control).optional(),
 }).strict();
 
+export const stackCount = z.union([z.literal(2), z.literal(3)]);
+
 export const sheetBlock = z.object({
   name: z.string().min(1),
   parent: z.string().min(1).optional(),
+  page: z.string().min(1).optional(),
+  stack: stackCount.optional(),
+  wide: z.literal(true).optional(),
+  split: stackCount.optional(),
   parts: z.array(sheetPart),
+}).strict();
+
+export const pageList = z.enum(['hanging', 'things', 'actions']);
+
+export const sheetPage = z.object({
+  name: z.string().min(1),
+  icon: z.string().optional(),
+  top: z.literal(true).optional(),
+  stacks: stackCount.optional(),
+  lists: z.array(pageList).optional(),
 }).strict();
 
 export const groupSpec = z.object({
@@ -311,6 +327,7 @@ export const system = z.object({
   fields: z.never({ message: 'полей больше нет — это колонки таблицы листа (system.tables, shape: single)' }).optional(),
   groups: z.record(z.string(), groupSpec).optional(),
   blocks: z.array(sheetBlock).optional(),
+  pages: z.array(sheetPage).optional(),
   effects: z.record(z.string(), effect),
 
   grants: z.array(z.string()).optional(),
@@ -424,6 +441,8 @@ export type Ask = z.infer<typeof ask>;
 export type Control = z.infer<typeof control>;
 export type SheetBlock = z.infer<typeof sheetBlock>;
 export type SheetPart = z.infer<typeof sheetPart>;
+export type SheetPage = z.infer<typeof sheetPage>;
+export type PageList = z.infer<typeof pageList>;
 export type ControlKind = z.infer<typeof controlKind>;
 export type FieldOption = z.infer<typeof fieldOption>;
 export type Guard = z.infer<typeof formula>;
