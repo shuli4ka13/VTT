@@ -80,6 +80,8 @@ export const cellView = z.object({
   label: z.string().optional(),
   roll: z.lazy(() => rollSpec.partial()).optional(),
   default: startValue.optional(),
+  min: bound.optional(),
+  max: bound.optional(),
 });
 
 export const stageCombine = z.object({

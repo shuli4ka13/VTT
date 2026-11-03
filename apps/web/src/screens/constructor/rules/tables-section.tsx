@@ -29,6 +29,8 @@ import type { System, Table, TableRow, TableKey } from '@vtt/schema';
 import { StagesEditor } from '../stages-editor.tsx';
 import type { TableColumn, Holder } from '@vtt/engine/model/types';
 import type { WorldState } from '../../../store/world.ts';
+import { setRowView } from '../row-view.ts';
+import type { RowViewKey } from '../row-view.ts';
 
 type EditSystem = WorldState['editSystem'];
 interface Props { system: System; editSystem: EditSystem; usage: UsageIndex }
@@ -270,7 +272,7 @@ export function TableCard({ id, table, system, editSystem, usage, opened, onReke
         <TableColumnCard id={id} table={table} column={columns.find(c => c.key === picked)!} system={system} edit={edit} onClose={() => setPicked(null)} onRekey={setPicked} />
       ) : null}
 
-      <Rows id={id} table={table} system={system} edit={edit} editSystem={editSystem} picked={picked} onPick={setPicked} />
+      <Rows key={id} id={id} table={table} system={system} edit={edit} editSystem={editSystem} picked={picked} onPick={setPicked} />
     </Fold>
     </div>
   );
@@ -487,12 +489,31 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
     onPick(key);
   };
   const names = rowNames(system, id);
+  const tuned = placed ? columns.filter(c => (c.kind ?? 'number') === 'number' && c.expr === undefined) : [];
+  const [own, setOwn] = useState(() => rows.some(row => tuned.some(c => row.view?.[c.key] && ('min' in row.view[c.key]! || 'max' in row.view[c.key]! || 'default' in row.view[c.key]!))));
+  const showOwn = own && tuned.length > 0;
+  const VIEW_PARTS: [RowViewKey, string][] = [['default', 'по умолчанию'], ['min', 'не ниже'], ['max', 'не выше']];
+  const ownColumns: GridColumn[] = showOwn ? tuned.flatMap(c => VIEW_PARTS.map(([part, word]) => ({
+    key: `:${c.key}:${part}`, label: `${c.label || c.key}: ${word}`, sub: 'своё у строки', width: defaultWidth(),
+  }))) : [];
+  const generalOf = (column: TableColumn, part: RowViewKey): unknown => (part === 'default' ? column.default ?? 0 : column[part]);
+  const setOwnCell = (i: number, column: TableColumn, part: RowViewKey, value: unknown) => {
+    if (part === 'default' && value !== null && typeof value === 'object') return;
+    edit(draft => {
+      const row = draft.rows?.[i];
+      if (row) setRowView(row, column.key, part, value, generalOf(column, part));
+    });
+  };
 
   return (
     <div className="stack stack--tight">
       <span className="field__label">Строки</span>
+      {tuned.length ? (
+        <Button size="sm" variant="ghost" title="у колонки — общее; строка может перебить своим: пустая клетка — как у колонки"
+          onClick={() => setOwn(!own)}>{showOwn ? 'скрыть умолчание и пределы строк' : 'ещё: умолчание и пределы строк'}</Button>
+      ) : null}
 
-      <SheetGrid id={`table.${id}`} columns={gridColumns} tailHead={<span data-guide="add-column"><Button size="sm" variant="ghost" title="добавить колонку" onClick={addColumn}>+</Button></span>}>
+      <SheetGrid id={`table.${id}`} columns={[...gridColumns, ...ownColumns]} tailHead={<span data-guide="add-column"><Button size="sm" variant="ghost" title="добавить колонку" onClick={addColumn}>+</Button></span>}>
           {rows.map((row, i) => (
             <RowCells
               key={i} tableId={id} row={row} at={i} rowKey={key} columns={columns} system={system} placed={placed}
@@ -501,6 +522,19 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
                 ? edit(draft => { const target = draft.rows?.[i]; if (target) target.value = to as never; })
                 : rename(row.value, to))} taken={next => taken(next, i)}
               edit={edit} setCell={setCell} names={names}
+              own={showOwn ? tuned.flatMap(c => VIEW_PARTS.map(([part]) => (
+                <CellEditor
+                  key={`${c.key}:${part}`}
+                  column={{ key: `${c.key}:${part}`, label: c.label, kind: 'number' }}
+                  value={row.view?.[c.key]?.[part]}
+                  system={system}
+                  where={`${table.label || id} · «${String(row.value ?? '')}» · ${c.label || c.key}`}
+                  names={names}
+                  placed={false}
+                  placeholder={generalWord(generalOf(c, part))}
+                  onChange={value => setOwnCell(i, c, part, value)}
+                />
+              ))) : undefined}
               where={column => `${table.label || id} · «${String(row.value ?? `${row.from}–${row.to}`)}» · ${column.label || column.key}`}
             />
           ))}
@@ -522,12 +556,19 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
 
 const TYPED = ['number', 'text', 'dice'];
 
+const generalWord = (value: unknown): string => {
+  if (value === undefined || value === null || value === '') return 'как у колонки: нет';
+  if (typeof value === 'object' && 'expr' in (value as object)) return 'как у колонки: формула';
+  return `как у колонки: ${String(value)}`;
+};
+
 export const spoken = (system: System, tableId: string, row: TableRow, expr: string): RowPiece[] | undefined => {
   try { return rowPieces(system, tableId, row, expr); } catch { return undefined; }
 };
 
-export function CellEditor({ column, value, system, where, names, placed, inherited, onChange }: {
+export function CellEditor({ column, value, system, where, names, placed, inherited, placeholder, onChange }: {
   inherited?: RowPiece[];
+  placeholder?: string;
   column: TableColumn;
   value: unknown;
   system: System;
@@ -550,7 +591,7 @@ export function CellEditor({ column, value, system, where, names, placed, inheri
     );
   }
   const empty = value === undefined || value === '';
-  const hint = column.expr !== undefined ? '= как у колонки' : placed ? 'вводит игрок' : '';
+  const hint = placeholder ?? (column.expr !== undefined ? '= как у колонки' : placed ? 'вводит игрок' : '');
   if (!TYPED.includes(column.kind ?? 'text')) {
     return <ValueEditor type={column} value={empty ? '' : value} system={system} blank={hint || '— нет —'} onChange={next => onChange(next === '' ? undefined : next)} />;
   }
@@ -587,8 +628,9 @@ export function CellEditor({ column, value, system, where, names, placed, inheri
   );
 }
 
-function RowCells({ tableId, row, at, rowKey, columns, system, edit, setCell, users, onRename, taken, where, placed, names }: {
+function RowCells({ tableId, row, at, rowKey, columns, system, edit, setCell, users, onRename, taken, where, placed, names, own }: {
   tableId: string;
+  own?: ReactNode[];
   placed: boolean;
   names: Map<string, string>;
   row: TableRow;
@@ -639,6 +681,7 @@ function RowCells({ tableId, row, at, rowKey, columns, system, edit, setCell, us
           onChange={value => setCell(at, column.key, value)}
         />
       ))}
+      {own}
       {users.length ? (
         <Button size="sm" variant="ghost" disabled title={`строку используют: ${users.slice(0, 4).join('; ')}${users.length > 4 ? ` и ещё ${users.length - 4}` : ''}`}>×</Button>
       ) : (

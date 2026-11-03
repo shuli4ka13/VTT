@@ -80,6 +80,8 @@ export const viewOf = (table: Table | undefined, column: string, row?: TableRow)
     ...(spec?.title !== undefined ? { label: spec.title } : {}),
     ...(spec?.roll !== undefined ? { roll: spec.roll } : {}),
     ...(spec?.default !== undefined ? { default: spec.default } : {}),
+    ...(spec?.min !== undefined ? { min: spec.min } : {}),
+    ...(spec?.max !== undefined ? { max: spec.max } : {}),
   };
   return { ...own, ...row?.view?.[column] };
 };
@@ -322,7 +324,7 @@ export function withRecord<T>(system: System, tableId: string, cells: Record<str
 export const defaultLabel = (column: TableColumn, first: boolean): string =>
   (first ? '{label}' : `${column.label || column.key}: {label}`);
 
-const valueOf = (column: TableColumn, start: unknown): FieldValue => {
+const valueOf = (column: TableColumn, start: unknown, bounds: Pick<TableColumn, 'min' | 'max'> = column): FieldValue => {
   const kind = column.kind ?? 'number';
   const type = (STORED.includes(kind) ? kind : 'text') as 'number' | 'text' | 'boolean' | 'choice';
   const many = type === 'choice' && column.many === true;
@@ -331,13 +333,13 @@ const valueOf = (column: TableColumn, start: unknown): FieldValue => {
     ...(column.from && type === 'choice' ? { from: column.from } : {}),
     ...(many ? { many: true as const } : {}),
     default: (many ? (Array.isArray(start) ? start : []) : start ?? ZERO[type]) as number | string | boolean,
-    ...boundsOf(column),
+    ...boundsOf(bounds),
   };
 };
 
 const flatBound = (bound: unknown): number | string => (typeof bound === 'number' ? bound : String((bound as { expr?: unknown }).expr ?? ''));
 
-function boundsOf(column: TableColumn): { min?: number | string; max?: number | string } {
+function boundsOf(column: Pick<TableColumn, 'min' | 'max'>): { min?: number | string; max?: number | string } {
   return {
     ...(column.min !== undefined ? { min: flatBound(column.min) } : {}),
     ...(column.max !== undefined ? { max: flatBound(column.max) } : {}),
@@ -371,8 +373,8 @@ function rowFields(system: System, tableId: string, table: Table): Field[] {
       if (source.kind === 'value') continue;
       const view = viewOf(table, column.key, row);
       const value: FieldValue = source.kind === 'formula'
-        ? rowRefs(system, tableId, row, { kind: 'formula', expr: withRow(system, tableId, row, source.expr), ...boundsOf(column) }) as FieldValue
-        : rowRefs(system, tableId, row, deep(system, table, row, valueOf(column, view.default))) as FieldValue;
+        ? rowRefs(system, tableId, row, { kind: 'formula', expr: withRow(system, tableId, row, source.expr), ...(deep(system, table, row, boundsOf(view)) as object) }) as FieldValue
+        : rowRefs(system, tableId, row, deep(system, table, row, valueOf(column, view.default, view))) as FieldValue;
       const roll = view.roll ? rowRefs(system, tableId, row, deep(system, table, row, view.roll)) as Field['roll'] : undefined;
       out.push({
         tag: addressOf(tableId, row, column.key),
