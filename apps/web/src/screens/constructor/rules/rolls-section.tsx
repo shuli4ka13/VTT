@@ -1,5 +1,6 @@
 import { Card, CardHead, Button, DangerButton, Input, Select, Chip } from '../../../ui/primitives.tsx';
 import { TagsField } from '../tags-field.tsx';
+import { FormulaField } from '../../../ui/formula-field.tsx';
 import { dieEntries } from './dice-section.tsx';
 import { addRoll } from './rolls.ts';
 import { fieldsOf, onSheet, isSingle } from '@vtt/engine/model/sheet-columns';
@@ -7,6 +8,8 @@ import type { System, SystemRoll } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
 
 type EditSystem = WorldState['editSystem'];
+
+const DEGREE_NAMES = new Map([['выпало', 'выпало'], ['число', 'число поля']]);
 
 const NUMBER_WORDS = [
   ['bonus', 'прибавка к кости'],
@@ -63,7 +66,14 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
         <Select value={roll.die} options={dice.map(([key, c]) => [key, c.label || key] as const) as never}
           onChange={next => edit(draft => { draft.die = next; })} />
         <Select value={roll.number ?? 'bonus'} options={NUMBER_WORDS as never}
-          onChange={next => edit(draft => { if (next === 'bonus') delete draft.number; else draft.number = next; })} />
+          onChange={next => edit(draft => { if (next === 'bonus') delete draft.number; else draft.number = next; if (next !== 'count') delete draft.keep; })} />
+        {roll.number === 'count' ? (
+          <>
+            <span className="dict-row__label dict-row__label--tight">оставить лучшие</span>
+            <FormulaField value={typeof roll.keep === 'object' ? roll.keep.expr : roll.keep ?? ''} system={system} where={`${roll.label || id} · сколько оставить`} placeholder="все"
+              onCommit={text => edit(draft => { if (text.trim()) draft.keep = { expr: text.trim() }; else delete draft.keep; })} />
+          </>
+        ) : null}
       </div>
       <div className="dict-row dict-row--wrap roll-line">
         <span className="dict-row__label">Бросают</span>
@@ -77,6 +87,24 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
           <Select value="" options={[['', '+ поле…'], ...free] as never}
             onChange={(next: string) => { if (!next) return; const [table, column] = next.split('\u0000'); edit(draft => { draft.fields.push({ table: table!, column: column! }); }); }} />
         ) : null}
+      </div>
+      {(roll.degrees ?? []).map((degree, at) => (
+        <div key={at} className="dict-row roll-line">
+          <span className="dict-row__label">{at ? '' : 'Степени'}</span>
+          <span className="roll-word__name">
+            <Input value={degree.label} placeholder="как зовётся степень"
+              onChange={label => edit(draft => { const one = draft.degrees?.[at]; if (one) one.label = label; })} />
+          </span>
+          <span className="dict-row__label dict-row__label--tight">если</span>
+          <FormulaField value={degree.if.expr} system={system} where={`${roll.label || id} · степень`} extraNames={DEGREE_NAMES} placeholder="@выпало <= @число"
+            onCommit={text => edit(draft => { const one = draft.degrees?.[at]; if (one) one.if = { expr: text.trim() }; })} />
+          <button type="button" className="chips__x" aria-label="убрать степень"
+            onClick={() => edit(draft => { draft.degrees?.splice(at, 1); if (!draft.degrees?.length) delete draft.degrees; })}>×</button>
+        </div>
+      ))}
+      <div className="dict-row dict-row--wrap roll-line">
+        <span className="dict-row__label">{roll.degrees?.length ? '' : 'Степени'}</span>
+        <Button size="sm" variant="ghost" onClick={() => edit(draft => { (draft.degrees ??= []).push({ label: 'Новая степень', if: { expr: '@выпало <= @число' } }); })}>+ степень</Button>
       </div>
       <div className="dict-row dict-row--wrap roll-line">
         <span className="dict-row__label">Ещё метки</span>

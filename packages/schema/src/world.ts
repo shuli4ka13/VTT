@@ -33,11 +33,15 @@ export const control = z.object({
   no: z.string().min(1).optional(),
 }).strict();
 
+export const rollDegree = z.object({ label: z.string().min(1), if: formula }).strict();
+
 export const rollSpec = z.object({
   die: z.string().min(1),
   count: formula.optional(),
   bonus: formula.optional(),
   sides: formula.optional(),
+  keep: z.union([formula, z.string()]).optional(),
+  degrees: z.array(rollDegree).optional(),
   under: z.literal(true).optional(),
   tags: z.array(z.string().min(1)).optional(),
 }).passthrough();
@@ -72,6 +76,7 @@ export const dieConstant = z.object({
   kind: z.literal('die'),
   dice: z.array(diceTerm),
   read: diceReading.optional(),
+  zero: z.object({ count: z.number().int().positive(), keep: z.enum(['best', 'worst']).optional() }).strict().optional(),
 }).passthrough();
 
 export const tableValue = z.union([z.number(), z.string(), z.boolean()]);
@@ -156,12 +161,15 @@ export const rollField = z.object({
   column: z.string().min(1),
   tags: z.array(z.string().min(1)).optional(),
   threshold: slotRef.optional(),
+  keep: slotRef.optional(),
 }).strict();
 
 export const systemRoll = z.object({
   label: z.string().optional(),
   die: z.string().min(1),
   number: z.enum(['bonus', 'count', 'sides', 'under', 'over']).optional(),
+  keep: slotRef.optional(),
+  degrees: z.array(rollDegree).optional(),
   tags: z.array(z.string().min(1)).optional(),
   fields: z.array(rollField),
 }).strict();

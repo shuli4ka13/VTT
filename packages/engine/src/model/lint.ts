@@ -32,6 +32,7 @@ import { walkSheet } from './paths.ts';
 import { variantProblems, cellScopeProblems } from './variants.ts';
 import { editStages, PLUS_OP } from '../core/dice.ts';
 import { compile } from '../formula/index.ts';
+import { ROLLED_NAME, NUMBER_NAME } from '../engine/check.ts';
 import type { Node } from '../formula/index.ts';
 
 export type Level = 'error' | 'warn';
@@ -439,15 +440,38 @@ function viewProblems(system: System): Problem[] {
 function fieldRollProblems(system: System): Problem[] {
   const out: Problem[] = [];
   const taken = new Map<string, string>();
+  for (const [key, constant] of Object.entries(system.constants ?? {})) {
+    if (constant.kind !== 'die' || !(constant as { zero?: unknown }).zero) continue;
+    if ((constant.dice ?? []).filter(term => !term.bonus && !term.name).length !== 1) out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `кость «${constant.label ?? key}»: «если костей ноль» — только у кости из одного вида` });
+  }
   for (const [key, roll] of Object.entries(system.rolls ?? {})) {
     const name = roll.label || key;
     const die = system.constants?.[roll.die];
     if (die?.kind !== 'die') out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `бросок «${name}»: кости «${roll.die}» нет в «Костях»` });
     else if ((roll.number === 'count' || roll.number === 'sides') && (die.dice ?? []).length !== 1) out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `бросок «${name}»: число поля — ${roll.number === 'count' ? 'сколько костей' : 'грани кости'}, а кость «${die.label ?? roll.die}» составная` });
+    const where = { tab: 'rules' as const, section: 'rolls' };
+    const broken = (ref: unknown): string | null => {
+      if (typeof ref !== 'object' || ref === null) return null;
+      try { compile(String((ref as { expr: unknown }).expr ?? '')); return null; } catch (err) { return (err as Error).message; }
+    };
+    const keepBroken = broken(roll.keep);
+    if (keepBroken) out.push({ where, level: 'error', text: `бросок «${name}»: «сколько оставить» — ${keepBroken}` });
+    if ((roll.keep !== undefined || roll.fields.some(one => one.keep !== undefined)) && roll.number !== 'count') out.push({ where, level: 'error', text: `бросок «${name}»: оставить лучшие можно, только когда число поля — сколько костей` });
+    for (const [at, degree] of (roll.degrees ?? []).entries()) {
+      const bad = broken(degree.if);
+      if (bad) out.push({ where, level: 'error', text: `бросок «${name}», степень «${degree.label || at + 1}»: ${bad}` });
+    }
+    if (roll.degrees?.length) {
+      for (const taken of [ROLLED_NAME, NUMBER_NAME]) {
+        if (fieldsOf(system).some(field => field.tag === taken)) out.push({ where, level: 'error', text: `бросок «${name}»: имя «${taken}» в степенях значит итог броска или число поля, а так зовётся и поле листа — переименуйте поле` });
+      }
+    }
     for (const entry of roll.fields) {
       const table = system.tables?.[entry.table];
       const column = (table?.columns ?? []).find(one => one.key === entry.column);
       if (!table || !column) { out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `бросок «${name}»: колонки «${entry.column}» в таблице «${table?.label || entry.table}» нет` }); continue; }
+      const ownKeep = broken(entry.keep);
+      if (ownKeep) out.push({ where, level: 'error', text: `бросок «${name}», «${column.label || column.key}»: «сколько оставить» — ${ownKeep}` });
       if (entry.threshold !== undefined && (roll.number === 'under' || roll.number === 'over')) out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `бросок «${name}»: у «${column.label || column.key}» свой порог, а порог броска — само число поля` });
       const at = `${entry.table}.${entry.column}`;
       const other = taken.get(at);

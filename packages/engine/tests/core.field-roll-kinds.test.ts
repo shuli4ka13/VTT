@@ -4,10 +4,10 @@ import { flattenSystem } from '../src/model/inherit.ts';
 import { lintSystem, errorsOf } from '../src/model/lint.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
-const world = (number: string, die: Record<string, unknown>, extra: Record<string, unknown> = {}) => flattenSystem({
+const world = (number: string, die: Record<string, unknown>, extra: Record<string, unknown> = {}, common: Record<string, unknown> = {}) => flattenSystem({
   id: 'с', name: 'с', tags: {}, effects: {},
   constants: { кость: { label: 'Кость', kind: 'die', ...die } },
-  rolls: { проверка: { label: 'Проверка', die: 'кость', number, fields: [{ table: 'лист', column: 'навык', ...extra }] } },
+  rolls: { проверка: { label: 'Проверка', die: 'кость', number, ...common, fields: [{ table: 'лист', column: 'навык', ...extra }] } },
   tables: {
     rolls: { label: 'Броски', key: 'word', columns: [], rows: [{ value: 'проверка' }] },
     лист: { shape: 'single', owner: 'sheet', columns: [{ key: 'навык', label: 'Навык', kind: 'number', default: 40 }] },
@@ -50,5 +50,40 @@ describe('число поля в броске: грани, не больше, н
     expect(errorsOf(lintSystem(composite)).some(p => p.text.includes('грани кости'))).toBe(true);
     const twice = world('under', { dice: [{ count: 1, sides: 100 }] }, { threshold: { expr: '3' } });
     expect(errorsOf(lintSystem(twice)).some(p => p.text.includes('порог броска — само число поля'))).toBe(true);
+  });
+
+  it('оставить лучшие: бросить 5, оставить 2 — сумма двух старших', () => {
+    const system = world('count', { dice: [{ count: 1, sides: 10 }] }, {}, { keep: { expr: '2' } });
+    expect(roll(system, hero(5), [6, 1, 5, 2, 3]).log).toContain('= 11');
+    expect(errorsOf(lintSystem(system))).toEqual([]);
+  });
+
+  it('ноль костей: две, худшая — при числе 0 кидают две и берут меньшую', () => {
+    const system = world('count', { dice: [{ count: 1, sides: 6 }], read: 'best', zero: { count: 2, keep: 'worst' } });
+    const out = roll(system, hero(0), [5, 2]);
+    expect(out.seen).toEqual([6, 6]);
+    expect(out.log).toContain('= 2');
+    expect(roll(system, hero(2), [5, 2]).log).toContain('= 5');
+  });
+
+  it('степени: к100 против 50 — 9 экстремальный, 24 трудный, 40 обычный, 70 провал без степени', () => {
+    const degrees = [
+      { label: 'экстремальный успех', if: { expr: '@выпало <= округлить вниз(@число / 5)' } },
+      { label: 'трудный успех', if: { expr: '@выпало <= округлить вниз(@число / 2)' } },
+      { label: 'обычный успех', if: { expr: '@выпало <= @число' } },
+    ];
+    const system = world('under', { dice: [{ count: 1, sides: 100 }] }, {}, { degrees });
+    expect(roll(system, hero(50), [9]).log).toContain('· экстремальный успех');
+    expect(roll(system, hero(50), [24]).log).toContain('· трудный успех');
+    expect(roll(system, hero(50), [40]).log).toContain('· обычный успех');
+    expect(roll(system, hero(50), [70]).log).not.toContain('успех ·');
+    expect(errorsOf(lintSystem(system))).toEqual([]);
+  });
+
+  it('«оставить» без «сколько костей» и сломанная формула степени — ошибки «Проблем»', () => {
+    const keep = world('bonus', { dice: [{ count: 1, sides: 20 }] }, {}, { keep: { expr: '1' } });
+    expect(errorsOf(lintSystem(keep)).some(p => p.text.includes('оставить лучшие можно'))).toBe(true);
+    const bad = world('under', { dice: [{ count: 1, sides: 100 }] }, {}, { degrees: [{ label: 'x', if: { expr: '@выпало <=' } }] });
+    expect(errorsOf(lintSystem(bad)).some(p => p.text.includes('степень «x»'))).toBe(true);
   });
 });

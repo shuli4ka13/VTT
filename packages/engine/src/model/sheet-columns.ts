@@ -389,6 +389,8 @@ export function fieldRollOf(system: System, tableId: string, column: string, row
     ...numberOf(roll.number, number),
     tags: [...new Set([key, ...(roll.tags ?? []), ...rollTags(table, row), ...(entry.tags ?? [])])],
     ...(entry.threshold !== undefined && (roll.number !== 'under' && roll.number !== 'over') ? { threshold: entry.threshold } : {}),
+    ...((entry.keep ?? roll.keep) !== undefined ? { keep: entry.keep ?? roll.keep } : {}),
+    ...(roll.degrees?.length ? { degrees: roll.degrees } : {}),
   } as Field['roll'];
 }
 
@@ -421,7 +423,7 @@ function rowFields(system: System, tableId: string, table: Table): Field[] {
       const own = row.view?.[column.key]?.roll;
       const merged = base || own ? {
         ...base, ...own,
-        ...(own && (own.bonus || own.count || own.sides) ? { bonus: own.bonus, count: own.count, sides: own.sides, under: undefined, ...(base?.under ? { threshold: own.threshold } : {}) } : {}),
+        ...(own && (own.bonus || own.count || own.sides) ? { bonus: own.bonus, count: own.count, sides: own.sides, under: undefined, keep: own.count ? own.keep ?? base?.keep : undefined, ...(base?.under || (base?.threshold && !base.bonus && !base.count && !base.sides) ? { threshold: own.threshold } : {}) } : {}),
         ...(base?.tags || own?.tags ? { tags: [...new Set([...(base?.tags ?? []), ...(own?.tags ?? [])])] } : {}),
       } : undefined;
       const roll = merged ? rowRefs(system, tableId, row, deep(system, table, row, merged)) as Field['roll'] : undefined;
