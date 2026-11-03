@@ -153,11 +153,14 @@ export function BlockViewField({ tableId, column, system, block, row, cell = row
       if (own) own.max = { expr: single ? `@${key}` : `@${ROW}.${key}` };
     });
   };
+  const title = row
+    ? `Вид «${own?.label ?? row}» в блоке «${block}»`
+    : single ? `Вид «${column.label || column.key}» в блоке «${block}»` : `Вид колонки «${column.label || column.key}» в блоке «${block}»`;
   return (
     <>
-      <Field label={row ? `Вид только у «${own?.label ?? row}»` : `Вид в блоке «${block}»`}>
+      <Field label={title}>
         <ViewGallery
-          label={row ? `Вид только у «${own?.label ?? row}»` : 'Вид'}
+          label={row ? title : 'Вид'}
           value={kind}
           family={columnFamily(column)}
           computed={!stored}
