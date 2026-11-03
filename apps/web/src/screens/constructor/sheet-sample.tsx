@@ -8,7 +8,7 @@ import { recordDetails } from '../../sheet/record-view.tsx';
 import { ThingsList, ThingLine } from '../../sheet/things-list.tsx';
 import { sheetKinds, shownOn, recordKinds, recordKindOf } from '@vtt/engine/model/owned';
 import { availableActions } from '@vtt/engine/events/actions';
-import { pageOfBlock } from '@vtt/engine/model/pages';
+import { pageOfBlock, placeBlock, setWidth } from '@vtt/engine/model/pages';
 import { SHEET_LISTS, dice } from '@vtt/engine/words/glossary';
 import { OPEN_PAGE } from './page-panel.tsx';
 import type { SheetList } from '@vtt/schema';
@@ -149,6 +149,10 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
         badge="образец"
         pages={{ at: at ?? null, onAt: name => pick({ ...OPEN_PAGE, activePage: name }), all: true }}
         lists={lists}
+        edit={{
+          onPlace: (block, target, where) => editSystem(draft => placeBlock(draft, block, target, where)),
+          onWidth: (block, width) => editSystem(draft => setWidth(draft, block, width)),
+        }}
         {...(onPick ? { onPick } : {})}
         {...(onPickBlock ? { onPickBlock } : {})}
         {...(onPickRow ? { onPickRow } : {})}

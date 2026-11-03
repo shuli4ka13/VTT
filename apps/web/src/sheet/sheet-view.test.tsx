@@ -164,43 +164,26 @@ describe('страницы листа', () => {
     expect(screen.getByText('Снаряжение тут').closest('.card')!.textContent).toContain('Вещи');
   });
 
-  it('столбцы: блок с stack 2 — в правой стопке, wide — отдельная полоса', () => {
+  it('сетка: ячейка шириной блока, «под» — в той же ячейке, скрытый первый блок держит ячейку, пустая ячейка уходит', () => {
     const system = pagedSystem({
-      pages: [{ name: 'Главная', stacks: 2 }],
+      pages: [{ name: 'Главная' }],
       blocks: [
-        { name: 'Один', parts: [{ table: 'а' }] },
-        { name: 'Два', stack: 2, parts: [{ table: 'б' }] },
-        { name: 'Широкий', wide: true, parts: [{ table: 'в' }] },
-        { name: 'Три', parts: [{ table: 'г' }] },
+        { name: 'Один', width: 4, parts: [{ table: 'а' }] },
+        { name: 'Два', under: true, parts: [{ table: 'б' }] },
+        { name: 'Три', width: 8, parts: [{ table: 'в' }] },
+        { name: 'Четыре', parts: [{ table: 'г' }] },
       ],
     });
-    render(<SheetView system={system} {...base} pages={{ at: null, onAt: () => {} }} />);
-    const bands = [...document.querySelectorAll('.sheet-page > *')];
-    expect(bands).toHaveLength(3);
-    const cols = bands[0]!.querySelectorAll('.sheet-stacks__col');
-    expect(cols).toHaveLength(2);
-    expect(cols[0]!.textContent).toContain('Один');
-    expect(cols[1]!.textContent).toContain('Два');
-    expect(bands[1]!.className).toBe('sheet-band');
-    expect(bands[1]!.textContent).toContain('Широкий');
-    expect(bands[2]!.querySelectorAll('.sheet-stacks__col')[0]!.textContent).toContain('Три');
-    expect(bands[2]!.querySelectorAll('.sheet-stacks__col')[1]!.textContent).toBe('');
+    const cells = () => [...document.querySelectorAll('.sheet-page .sheet-cell')].map(cell => [(cell as HTMLElement).style.getPropertyValue('--w'), [...cell.querySelectorAll('.sheet-slot')].map(slot => (slot as HTMLElement).dataset.slot)]);
+    const { rerender } = render(<SheetView system={system} {...base} pages={{ at: null, onAt: () => {} }} />);
+    expect(cells()).toEqual([['4', ['Один', 'Два']], ['8', ['Три']], ['12', ['Четыре']]]);
+    rerender(<SheetView system={system} {...base} only={['б1', 'г1']} pages={{ at: null, onAt: () => {} }} />);
+    expect(cells()).toEqual([['4', ['Два']], ['12', ['Четыре']]]);
   });
 
-  it('столбец, в котором у этого листа нет ни одного блока, не оставляет пустого места', () => {
-    const system = pagedSystem({
-      pages: [{ name: 'Главная', stacks: 3 }],
-      blocks: [
-        { name: 'Один', parts: [{ table: 'а' }] },
-        { name: 'Два', stack: 2, parts: [{ table: 'б' }] },
-        { name: 'Три', stack: 3, parts: [{ table: 'в' }] },
-      ],
-    });
-    render(<SheetView system={system} {...base} only={['б1', 'в1']} pages={{ at: null, onAt: () => {} }} />);
-    const cols = [...document.querySelectorAll('.sheet-stacks__col')].map(col => col.textContent);
-    expect(cols).toHaveLength(2);
-    expect(cols[0]).toContain('Два');
-    expect(cols[1]).toContain('Три');
+  it('без правки на листе нет ручек переноса и растягивания', () => {
+    render(<SheetView system={pagedSystem()} {...base} pages={{ at: null, onAt: () => {} }} />);
+    expect(document.querySelector('.sheet-grip, .sheet-resize')).toBeNull();
   });
 
   it('«по два в строку» ставит полям блока два столбца', () => {

@@ -33,21 +33,73 @@ export function pageOfBlock(system: System, name: string): string | undefined {
 export const blockOfList = (system: System, list: SheetList): string | undefined =>
   (system.blocks ?? []).find(block => block.list === list)?.name;
 
-export type Band<T> = { wide: T } | { stacks: T[][] };
+export const GRID = 12;
 
-export function bandsOf<T>(items: readonly T[], stacks: number, place: (item: T) => { stack?: number; wide?: boolean }): Band<T>[] {
-  const count = Math.max(1, stacks);
-  const out: Band<T>[] = [];
-  let open: T[][] | null = null;
-  for (const item of items) {
-    const { stack, wide } = place(item);
-    if (wide && count > 1) { out.push({ wide: item }); open = null; continue; }
-    if (!open) { open = Array.from({ length: count }, () => []); out.push({ stacks: open }); }
-    open[Math.min(Math.max(stack ?? 1, 1), count) - 1]!.push(item);
+export interface Cell { width: number; blocks: string[] }
+
+const clampWidth = (width: number | undefined): number => Math.min(GRID, Math.max(1, Math.round(width ?? GRID)));
+
+export function topBlocksOn(system: System, page: string | undefined): SheetBlock[] {
+  return (system.blocks ?? []).filter(block => !block.parent && (page === undefined || pageOfBlock(system, block.name) === page));
+}
+
+export function cellsOf(system: System, page: string | undefined): Cell[] {
+  const out: Cell[] = [];
+  for (const block of topBlocksOn(system, page)) {
+    const last = out[out.length - 1];
+    if (block.under && last) last.blocks.push(block.name);
+    else out.push({ width: clampWidth(block.width), blocks: [block.name] });
   }
   return out;
 }
 
+export function cellHead(system: System, name: string): SheetBlock | undefined {
+  const root = rootBlock(system, name);
+  if (!root) return undefined;
+  const page = pagesOf(system).length ? pageOfBlock(system, root.name) : undefined;
+  const cell = cellsOf(system, page).find(one => one.blocks.includes(root.name));
+  return cell ? (system.blocks ?? []).find(block => block.name === cell.blocks[0]) : root;
+}
+
+export function setWidth(system: System, name: string, width: number): void {
+  const head = cellHead(system, name);
+  if (!head) return;
+  const next = clampWidth(width);
+  if (next === GRID) delete head.width; else head.width = next;
+}
+
+export type Place = 'before' | 'after' | 'under';
+
+export function placeBlock(system: System, name: string, target: string, where: Place): void {
+  const blocks = system.blocks ?? [];
+  const moving = rootBlock(system, name);
+  const anchor = rootBlock(system, target);
+  if (!moving || !anchor || moving.name === anchor.name) return;
+  const hasPages = pagesOf(system).length > 0;
+  const pageOf = (block: SheetBlock) => (hasPages ? pageOfBlock(system, block.name) : undefined);
+  const own = cellsOf(system, pageOf(moving)).find(cell => cell.blocks.includes(moving.name));
+  if (own && own.blocks[0] === moving.name && own.blocks.length > 1) {
+    const heir = blocks.find(block => block.name === own.blocks[1])!;
+    delete heir.under;
+    if (moving.width !== undefined) heir.width = moving.width; else delete heir.width;
+  }
+  const targetCell = cellsOf(system, pageOf(anchor)).find(cell => cell.blocks.includes(anchor.name));
+  if (anchor.page) moving.page = anchor.page; else delete moving.page;
+  const without = blocks.filter(block => block !== moving);
+  const indexOf = (blockName: string) => without.findIndex(block => block.name === blockName);
+  let at: number;
+  if (where === 'under') {
+    at = indexOf(anchor.name) + 1;
+    moving.under = true;
+    delete moving.width;
+  } else {
+    const cellNames = (targetCell?.blocks ?? [anchor.name]).filter(one => one !== moving.name);
+    at = where === 'before' ? indexOf(cellNames[0]!) : indexOf(cellNames[cellNames.length - 1]!) + 1;
+    delete moving.under;
+  }
+  without.splice(Math.max(0, at), 0, moving);
+  system.blocks = without;
+}
 export function renamePage(system: System, from: string, to: string): void {
   if (from === to) return;
   for (const page of system.pages ?? []) if (page.name === from) page.name = to;
@@ -73,3 +125,4 @@ export function tidyPages(system: System): void {
     }
   }
 }
+

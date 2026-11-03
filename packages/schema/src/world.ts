@@ -124,27 +124,24 @@ export const sheetPart = z.object({
   views: z.record(z.string(), control).optional(),
 }).strict();
 
-export const stackCount = z.union([z.literal(2), z.literal(3)]);
-
 export const sheetList = z.enum(['hanging', 'things', 'actions']);
 
 export const sheetBlock = z.object({
   name: z.string().min(1),
   parent: z.string().min(1).optional(),
   page: z.string().min(1).optional(),
-  stack: stackCount.optional(),
-  wide: z.literal(true).optional(),
-  split: stackCount.optional(),
+  width: z.number().int().min(1).max(12).optional(),
+  under: z.literal(true).optional(),
+  split: z.number().int().min(2).max(12).optional(),
   list: sheetList.optional(),
   kinds: z.array(z.string().min(1)).optional(),
-  per: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
+  per: z.number().int().min(1).max(12).optional(),
   parts: z.array(sheetPart),
 }).strict();
 
 export const sheetPage = z.object({
   name: z.string().min(1),
   top: z.literal(true).optional(),
-  stacks: stackCount.optional(),
 }).strict();
 
 export const groupSpec = z.object({

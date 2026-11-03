@@ -43,3 +43,20 @@ export const OUTCOME_COLUMNS = { success: 'успех', fail: 'провал' } a
 export const COST_BLOCK = 'Плата';
 
 export const SHEET_LISTS = { hanging: 'Висит сейчас', things: 'Снаряжение', actions: 'Действия' } as const;
+
+export const WIDTH_WORDS: Record<number, string> = { 3: 'четверть', 4: 'треть', 6: 'половина', 8: 'две трети', 9: 'три четверти', 12: 'вся ширина' };
+
+export const widthWords = (width: number): string => WIDTH_WORDS[width] ?? `${width}/12`;
+
+const pluralRu = (n: number, one: string, few: string, many: string): string => {
+  const tens = n % 100;
+  const ones = n % 10;
+  if (tens >= 11 && tens <= 14) return many;
+  if (ones === 1) return one;
+  if (ones >= 2 && ones <= 4) return few;
+  return many;
+};
+
+export const splitWords = (n: number): string => (n <= 1 ? 'одним списком' : `в ${n} ${pluralRu(n, 'столбец', 'столбца', 'столбцов')}`);
+
+export const perRowWords = (n: number): string => (n === 1 ? 'по одному в строку' : `по ${n} в строку`);

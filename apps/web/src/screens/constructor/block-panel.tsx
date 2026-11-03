@@ -6,12 +6,10 @@ import { Card, CardHead, Field, Select, Button, DangerButton, LabelInput, Verdic
 import { readyForSheet } from './table-field.tsx';
 import { onSheet, rowKeyOf, fieldsOf, isSingle } from '@vtt/engine/model/sheet-columns';
 import { recordKinds } from '@vtt/engine/model/owned';
-import { pagesOf, pageOfBlock, SHEET_LIST_KEYS } from '@vtt/engine/model/pages';
-import { SHEET_LISTS } from '@vtt/engine/words/glossary';
+import { pagesOf, cellHead, setWidth, GRID, SHEET_LIST_KEYS } from '@vtt/engine/model/pages';
+import { SHEET_LISTS, widthWords, splitWords, perRowWords } from '@vtt/engine/words/glossary';
 import { isRange } from '@vtt/engine/model/tables';
 import type { System, SheetBlock, SheetPart, SheetList } from '@vtt/schema';
-
-const SPOTS: Record<2 | 3, string[]> = { 2: ['левый столбец', 'правый столбец'], 3: ['левый столбец', 'средний столбец', 'правый столбец'] };
 
 export const SHEET_TABLE = 'лист';
 
@@ -168,7 +166,7 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
 
   const pages = pagesOf(system);
   const top = !block.parent;
-  const stacks = pages.find(page => page.name === pageOfBlock(system, name))?.stacks ?? 1;
+  const head = top ? cellHead(system, name) : undefined;
 
   return (
     <Card>
@@ -186,24 +184,25 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
           options={[['', 'на верхнем уровне'], ...parents.map(p => [p, p] as const)]}
           onChange={next => edit(target => { if (next) target.parent = next; else delete target.parent; })} />
       </Field>
-      {top && pages.length ? (
+      {top ? (
         <>
+          {pages.length ? (
           <Field label="Страница">
             <Select<string> label="страница блока" value={block.page ?? ''}
               options={[['', `${pages.find(page => !page.top)?.name ?? 'первая'} — первая закладка`], ...pages.map(page => [page.name, page.top ? `${page.name} · над закладками` : page.name] as const)]}
               onChange={next => edit(target => { if (next) target.page = next; else delete target.page; })} />
           </Field>
-          {stacks > 1 ? (
-            <Field label="Место на странице">
-              <Select<string> label="место на странице" value={block.wide ? 'wide' : String(Math.min(block.stack ?? 1, stacks))}
-                options={[['wide', 'во всю ширину'], ...SPOTS[stacks === 3 ? 3 : 2].map((word, at) => [String(at + 1), word] as const)]}
-                onChange={next => edit(target => {
-                  delete target.wide; delete target.stack;
-                  if (next === 'wide') target.wide = true;
-                  else if (Number(next) > 1) target.stack = Number(next) as 2 | 3;
-                })} />
-            </Field>
           ) : null}
+          <Field label="Ширина" hint={block.under ? `общая с блоком «${head?.name}», над которым он стоит` : 'можно и потянуть за правый край блока на образце'}>
+            <Select<string> label="ширина блока" value={String(head?.width ?? GRID)}
+              options={Array.from({ length: GRID }, (_, at) => [String(at + 1), widthWords(at + 1)] as const).reverse()}
+              onChange={next => editSystem(draft => setWidth(draft, name, Number(next)))} />
+          </Field>
+          <label className="inline inline--tight">
+            <input type="checkbox" checked={block.under === true}
+              onChange={event => { const on = event.currentTarget.checked; edit(target => { if (on) { target.under = true; delete target.width; } else delete target.under; }); }} />
+            Под предыдущим блоком
+          </label>
         </>
       ) : null}
       <Field label="Список в блоке" hint="Показывается после полей блока; в другом блоке этот список снимается.">
@@ -230,15 +229,15 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
       {block.parts.some(part => isSingle(system.tables?.[part.table])) ? (
         <Field label="Поля внутри блока">
           <Select<string> label="поля внутри блока" value={String(block.per ?? '')}
-            options={[['', 'как поместятся'], ['1', 'по одному в строку'], ['2', 'по два в строку'], ['3', 'по три в строку'], ['4', 'по четыре в строку']]}
-            onChange={next => edit(target => { if (next) target.per = Number(next) as 1 | 2 | 3 | 4; else delete target.per; })} />
+            options={[['', 'как поместятся'], ...Array.from({ length: GRID }, (_, at) => [String(at + 1), perRowWords(at + 1)] as const)]}
+            onChange={next => edit(target => { if (next) target.per = Number(next); else delete target.per; })} />
         </Field>
       ) : null}
       {block.parts.some(part => !isSingle(system.tables?.[part.table])) ? (
         <Field label="Строки таблицы">
           <Select<string> label="строки таблицы" value={String(block.split ?? 1)}
-            options={[['1', 'одним списком'], ['2', 'в два столбца'], ['3', 'в три столбца']]}
-            onChange={next => edit(target => { if (Number(next) > 1) target.split = Number(next) as 2 | 3; else delete target.split; })} />
+            options={Array.from({ length: GRID }, (_, at) => [String(at + 1), splitWords(at + 1)] as const)}
+            onChange={next => edit(target => { if (Number(next) > 1) target.split = Number(next); else delete target.split; })} />
         </Field>
       ) : null}
       {block.parts.map((part, index) => {

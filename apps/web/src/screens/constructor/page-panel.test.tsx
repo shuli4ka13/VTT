@@ -64,14 +64,6 @@ describe('страницы листа в конструкторе', () => {
     expect(sys().pages).toEqual([{ name: 'Основное' }, { name: 'Магия' }]);
   });
 
-  it('как стоят блоки: в два столбца пишет stacks, 1 снимает ключ', () => {
-    panel('Основное');
-    fireEvent.change(screen.getByLabelText('как стоят блоки'), { target: { value: '2' } });
-    expect(sys().pages![0]).toEqual({ name: 'Основное', stacks: 2 });
-    fireEvent.change(screen.getByLabelText('как стоят блоки'), { target: { value: '1' } });
-    expect(sys().pages![0]).toEqual({ name: 'Основное' });
-  });
-
   it('удаление: блоки остаются без страницы', () => {
     panel('Магия');
     fireEvent.click(screen.getByText('Удалить страницу'));

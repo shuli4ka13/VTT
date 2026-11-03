@@ -1,9 +1,9 @@
 import { useWorld } from '../../store/world.ts';
-import { Card, CardHead, Field, Select, Button, DangerButton, LabelInput } from '../../ui/primitives.tsx';
+import { Card, CardHead, Field, Button, DangerButton, LabelInput } from '../../ui/primitives.tsx';
 import { pagesOf, pageOfBlock, renamePage, removePage } from '@vtt/engine/model/pages';
 import { moveKey } from '../../ui/pick-order.tsx';
 import { useDragList } from '../../ui/drag-list.ts';
-import type { System, SheetPage } from '@vtt/schema';
+import type { System } from '@vtt/schema';
 
 export const FIRST_PAGE = 'Основное';
 
@@ -30,10 +30,6 @@ export function setTop(draft: System, name: string, on: boolean): void {
   }
 }
 
-export function setStacks(page: SheetPage, count: number): void {
-  if (count === 2 || count === 3) page.stacks = count; else delete page.stacks;
-}
-
 export function PagePanel({ name, system }: { name: string; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
@@ -41,10 +37,6 @@ export function PagePanel({ name, system }: { name: string; system: System }) {
   const drag = useDragList((key, to, after) => editSystem(draft => movePage(draft, key, to, after)), 'x');
   const page = pages.find(item => item.name === name);
   if (!page) return null;
-  const edit = (change: (target: SheetPage) => void) => editSystem(draft => {
-    const target = (draft.pages ?? []).find(item => item.name === name);
-    if (target) change(target);
-  });
 
   return (
     <Card>
@@ -61,11 +53,6 @@ export function PagePanel({ name, system }: { name: string; system: System }) {
         <input type="checkbox" checked={page.top === true} onChange={event => editSystem(draft => setTop(draft, name, event.currentTarget.checked))} />
         Над закладками — видна всегда
       </label>
-      <Field label="Как стоят блоки">
-        <Select<string> label="как стоят блоки" value={String(page.stacks ?? 1)}
-          options={[['1', 'друг под другом'], ['2', 'в два столбца'], ['3', 'в три столбца']]}
-          onChange={next => edit(target => setStacks(target, Number(next)))} />
-      </Field>
       <Field label="Порядок страниц">
         <div className="stack stack--tight block-pick">
           <span className="block-pick__title">перетащите, чтобы поменять порядок закладок</span>

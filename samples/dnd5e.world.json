@@ -8615,6 +8615,7 @@
       {
         "name": "Личное дело",
         "page": "Шапка",
+        "width": 4,
         "parts": [
           {
             "table": "лист",
@@ -8630,6 +8631,7 @@
       },
       {
         "name": "Характеристики",
+        "width": 6,
         "parts": [
           {
             "table": "abilities",
@@ -8641,7 +8643,7 @@
       },
       {
         "name": "Модификаторы",
-        "stack": 2,
+        "width": 6,
         "parts": [
           {
             "table": "abilities",
@@ -8659,7 +8661,7 @@
       {
         "name": "Прогрессия",
         "page": "Шапка",
-        "stack": 2,
+        "width": 4,
         "parts": [
           {
             "table": "лист",
@@ -8685,7 +8687,7 @@
       },
       {
         "name": "Спасброски",
-        "stack": 2,
+        "under": true,
         "parts": [
           {
             "table": "abilities",
@@ -8707,7 +8709,6 @@
       },
       {
         "name": "Навыки",
-        "wide": true,
         "split": 2,
         "parts": [
           {
@@ -8726,6 +8727,7 @@
       },
       {
         "name": "Чувства и движение",
+        "width": 6,
         "parts": [
           {
             "table": "лист",
@@ -8745,9 +8747,68 @@
         ]
       },
       {
+        "name": "В бою",
+        "under": true,
+        "parts": [
+          {
+            "table": "turn",
+            "views": {
+              "left": {
+                "kind": "pips"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Блок монстра",
+        "under": true,
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "hp_block"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Атака",
+        "width": 6,
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "attacks_per_action",
+              "crit_from",
+              "sneak_dice"
+            ],
+            "views": {
+              "attacks_per_action": {
+                "kind": "stepper"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Стойкость к урону",
+        "under": true,
+        "parts": [
+          {
+            "table": "damage_types",
+            "views": {
+              "taken": {
+                "kind": "choice"
+              }
+            }
+          }
+        ]
+      },
+      {
         "name": "Защита",
         "page": "Шапка",
-        "stack": 3,
+        "width": 4,
         "parts": [
           {
             "table": "лист",
@@ -8768,7 +8829,6 @@
       {
         "name": "Здоровье",
         "page": "Шапка",
-        "wide": true,
         "parts": [
           {
             "table": "лист",
@@ -8817,49 +8877,6 @@
               },
               "is_stable": {
                 "kind": "toggle"
-              }
-            }
-          }
-        ]
-      },
-      {
-        "name": "Блок монстра",
-        "parts": [
-          {
-            "table": "лист",
-            "columns": [
-              "hp_block"
-            ]
-          }
-        ]
-      },
-      {
-        "name": "Атака",
-        "stack": 2,
-        "parts": [
-          {
-            "table": "лист",
-            "columns": [
-              "attacks_per_action",
-              "crit_from",
-              "sneak_dice"
-            ],
-            "views": {
-              "attacks_per_action": {
-                "kind": "stepper"
-              }
-            }
-          }
-        ]
-      },
-      {
-        "name": "В бою",
-        "parts": [
-          {
-            "table": "turn",
-            "views": {
-              "left": {
-                "kind": "pips"
               }
             }
           }
@@ -8956,38 +8973,24 @@
         "name": "Висит сейчас",
         "page": "Эффекты",
         "list": "hanging",
+        "width": 6,
         "parts": []
       },
       {
         "name": "Действия",
         "page": "Эффекты",
         "list": "actions",
+        "width": 6,
         "parts": []
-      },
-      {
-        "name": "Стойкость к урону",
-        "stack": 2,
-        "parts": [
-          {
-            "table": "damage_types",
-            "views": {
-              "taken": {
-                "kind": "choice"
-              }
-            }
-          }
-        ]
       }
     ],
     "pages": [
       {
         "name": "Шапка",
-        "top": true,
-        "stacks": 3
+        "top": true
       },
       {
-        "name": "Основное",
-        "stacks": 2
+        "name": "Основное"
       },
       {
         "name": "Магия"

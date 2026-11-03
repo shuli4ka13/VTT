@@ -10,9 +10,12 @@ import { fieldsOf, rowKeyOf, fieldOf } from '@vtt/engine/model/sheet-columns';
 import { optionsOf } from '@vtt/engine/model/lists';
 import { fieldsByBlock } from '@vtt/engine/model/blocks';
 import { blockShown } from '@vtt/engine/model/owned';
-import { pagesOf, topPage, tabPages, pageOfBlock, rootBlock, bandsOf } from '@vtt/engine/model/pages';
+import { pagesOf, topPage, tabPages, pageOfBlock } from '@vtt/engine/model/pages';
+import { SheetGrid } from './sheet-grid.tsx';
+import type { GridEdit } from './sheet-grid.tsx';
 
-export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only, fields, onPick, picked, onPickBlock, onPickRow, pages, lists }: {
+export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only, fields, onPick, picked, onPickBlock, onPickRow, pages, lists, edit }: {
+  edit?: GridEdit;
   pages?: { at: string | null; onAt: (name: string) => void; all?: boolean };
   lists?: Partial<Record<SheetList, ReactNode>>;
   onPickBlock?: (name: string) => void;
@@ -82,11 +85,16 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
     </div>
   );
 
+  const byName = new Map(shown);
+  const grid = (page: string | undefined, names: readonly string[]) => (
+    <SheetGrid system={system} page={page} names={names} edit={edit} render={name => card(name, byName.get(name) ?? [])} />
+  );
+
   if (!pages || !pagesOf(system).length) {
     return (
       <div className="sheet">
         {head}
-        {shown.map(([group, fields]) => card(group, fields))}
+        {grid(undefined, shown.map(([group]) => group))}
       </div>
     );
   }
@@ -97,28 +105,7 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
   const visible = tabPages(system).filter(page => pages.all || filled(page.name));
   const current = visible.find(page => page.name === pages.at) ?? visible[0];
 
-  const stackOf = (page: NonNullable<typeof top>, group: string) => Math.min(rootBlock(system, group)?.stack ?? 1, page.stacks ?? 1);
-  const usedStacks = (page: NonNullable<typeof top>) => {
-    const used = new Set(blocksOn(page.name).filter(([group]) => !(rootBlock(system, group)?.wide && (page.stacks ?? 1) > 1)).map(([group]) => stackOf(page, group)));
-    return used.size ? [...used].sort((a, b) => a - b) : [1];
-  };
-
-  const body = (page: NonNullable<typeof top>) => (
-    <>
-      {bandsOf(blocksOn(page.name), usedStacks(page).length, ([group]) => {
-        const root = rootBlock(system, group);
-        return { stack: usedStacks(page).indexOf(stackOf(page, group)) + 1, wide: root?.wide };
-      }).map((band, at) => ('wide' in band ? (
-        <div key={at} className="sheet-band">{card(band.wide[0], band.wide[1])}</div>
-      ) : (
-        <div key={at} className={`sheet-stacks sheet-stacks--${band.stacks.length}`}>
-          {band.stacks.map((stack, column) => (
-            <div key={column} className="sheet-stacks__col">{stack.map(([group, fields]) => card(group, fields))}</div>
-          ))}
-        </div>
-      )))}
-    </>
-  );
+  const body = (page: NonNullable<typeof top>) => grid(page.name, blocksOn(page.name).map(([group]) => group));
 
   return (
     <div className="sheet sheet--paged">
