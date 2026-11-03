@@ -3,8 +3,9 @@ import type { ReactNode } from 'react';
 import { useWorld, useBook } from '../../store/world.ts';
 import { useReader } from '../../engine/use-calc.ts';
 import { SheetView } from '../../sheet/sheet-view.tsx';
-import { Card, CardHead, Chip, Field, Select } from '../../ui/primitives.tsx';
-import { sheetKinds, shownOn, recordKinds } from '@vtt/engine/model/owned';
+import { Card, CardHead, Chip, Field, Select, Fold, LabelInput, Button } from '../../ui/primitives.tsx';
+import { ValueEditor } from '../../ui/value-editor.tsx';
+import { sheetKinds, shownOn, recordKinds, recordKindOf } from '@vtt/engine/model/owned';
 import { availableActions } from '@vtt/engine/events/actions';
 import { pageOfBlock } from '@vtt/engine/model/pages';
 import { SHEET_LISTS } from '@vtt/engine/words/glossary';
@@ -49,12 +50,13 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
   const activeBlock = useWorld(s => s.activeBlock);
   const kinds = sheetKinds(system);
   const [of, setOf] = useState('');
-  const [carried, setCarried] = useState<string[]>([]);
+  const [bag, setBag] = useState<{ table: string; label?: string; cells: Record<string, unknown> }[]>([]);
   const kind = of ? system.sheets?.[of] : undefined;
   const bookKinds = recordKinds(system);
-  const samples = useMemo<CompendiumRecord[]>(() => carried
-    .filter(table => system.tables?.[table])
-    .map((table, at) => ({ id: `образец-${at + 1}`, table, label: `${system.tables![table]!.label || table} (образец)` })), [carried, system.tables]);
+  const samples = useMemo<CompendiumRecord[]>(() => bag
+    .filter(item => system.tables?.[item.table])
+    .map((item, at) => ({ id: `образец-${at + 1}`, table: item.table, label: item.label || `${system.tables![item.table]!.label || item.table} (образец)`, cells: item.cells })), [bag, system.tables]);
+  const change = (at: number, next: (item: (typeof bag)[number]) => (typeof bag)[number]) => setBag(bag.map((item, other) => (other === at ? next(item) : item)));
   const book = useMemo(() => ({ ...compendium, records: [...(compendium.records ?? []), ...samples] }), [compendium, samples]);
   const sample = useMemo<Sheet>(() => ({
     id: 'образец', systemId: system.id ?? '', name: kind?.label ?? 'Образец листа',
@@ -71,14 +73,34 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
         <CardHead title={SHEET_LISTS.things} />
         <div className="inline inline--tight">
           {samples.length === 0 ? <span className="faint">У образца пока ничего нет — добавьте образец вещи или умения.</span> : null}
-          {samples.map((record, at) => (
-            <Chip key={record.id} onRemove={() => setCarried(carried.filter((_, other) => other !== at))}>{record.label}</Chip>
-          ))}
         </div>
+        {samples.map((record, at) => (
+          <Fold key={record.id} title={record.label ?? record.id} open={at === samples.length - 1 && !Object.keys(record.cells ?? {}).length}>
+            <div className="stack stack--tight">
+              <Field label="Название">
+                <LabelInput value={bag[at]!.label ?? ''} placeholder={record.label ?? ''}
+                  onCommit={label => change(at, item => ({ ...item, label: label.trim() || undefined }))} />
+              </Field>
+              <div className="row">
+                {(recordKindOf(system, record.table)?.columns ?? []).map(prop => (
+                  <Field key={prop.key} label={prop.label ?? prop.key}>
+                    <ValueEditor type={prop} value={record.cells?.[prop.key]} system={system} compendium={book} onlyWorn except={record.id}
+                      onChange={next => change(at, item => {
+                        const cells = { ...item.cells };
+                        if (next === undefined || next === '' || (Array.isArray(next) && !next.length)) delete cells[prop.key]; else cells[prop.key] = next;
+                        return { ...item, cells };
+                      })} />
+                  </Field>
+                ))}
+              </div>
+              <Button size="sm" variant="ghost" onClick={() => setBag(bag.filter((_, other) => other !== at))}>убрать из сумки</Button>
+            </div>
+          </Fold>
+        ))}
         <Select<string> label="добавить образец" value=""
           options={[['', bookKinds.length ? '+ образец вещи или умения' : 'типов вещей и умений ещё нет'], ...bookKinds
             .map(([key, table]) => [key, table.label || key] as const)]}
-          onChange={key => { if (key) setCarried([...carried, key]); }} />
+          onChange={key => { if (key) setBag([...bag, { table: key, cells: {} }]); }} />
       </Card>
     ),
     actions: (

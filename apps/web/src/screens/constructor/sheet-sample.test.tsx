@@ -18,15 +18,19 @@ const system = {
 describe('образец листа: сумка из типов вещей и умений', () => {
   afterEach(cleanup);
 
-  it('добавляет образец типа и убирает его, книга мира не нужна', () => {
+  it('добавляет образец типа, вписывает его свойства и убирает, книга мира не нужна', () => {
     useWorld.setState(state => ({ ...state, system, compendium: { records: [] }, activePage: null, activeBlock: null }));
     render(<SheetSample system={system} />);
     expect(screen.getByText('У образца пока ничего нет — добавьте образец вещи или умения.')).toBeTruthy();
     fireEvent.change(screen.getByLabelText('добавить образец'), { target: { value: 'оружие' } });
     expect(screen.getByText('Оружие (образец)')).toBeTruthy();
     expect(useWorld.getState().system).toBe(system);
-    fireEvent.mouseDown(document.querySelector('.chips__x, [aria-label^="убрать"]') ?? screen.getByText('×'));
-    fireEvent.click(document.querySelector('[aria-label^="убрать"]') ?? screen.getByText('×'));
+    const input = () => screen.getByText('Урон').closest('label')!.querySelector('input')!;
+    fireEvent.change(input(), { target: { value: '8' } });
+    fireEvent.keyDown(input(), { key: 'Enter' });
+    fireEvent.blur(input());
+    expect(input().value).toBe('8');
+    fireEvent.click(screen.getByText('убрать из сумки'));
     expect(screen.queryByText('Оружие (образец)')).toBeNull();
   });
 });
