@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
-import { PagePanel, PageBar } from './page-panel.tsx';
+import { PagePanel, PageBar, movePage } from './page-panel.tsx';
 import { useWorld } from '../../store/world.ts';
 import type { System } from '@vtt/schema';
 
@@ -72,15 +72,6 @@ describe('страницы листа в конструкторе', () => {
     expect(sys().pages![0]).toEqual({ name: 'Основное' });
   });
 
-  it('список переезжает с другой страницы; пустой массив — ключа нет', () => {
-    load([{ name: 'Основное', lists: ['things', 'actions'] }, { name: 'Магия' }]);
-    panel('Магия');
-    fireEvent.click(screen.getByLabelText('Снаряжение'));
-    expect(sys().pages).toEqual([{ name: 'Основное', lists: ['actions'] }, { name: 'Магия', lists: ['things'] }]);
-    fireEvent.click(screen.getByLabelText('Снаряжение'));
-    expect(sys().pages![1]).toEqual({ name: 'Магия' });
-  });
-
   it('удаление: блоки остаются без страницы', () => {
     panel('Магия');
     fireEvent.click(screen.getByText('Удалить страницу'));
@@ -89,9 +80,8 @@ describe('страницы листа в конструкторе', () => {
     expect(sys().blocks!.find(b => b.name === 'Заклинания')).not.toHaveProperty('page');
   });
 
-  it('порядок: «позже» двигает страницу', () => {
-    panel('Основное');
-    fireEvent.click(screen.getByText('↓ позже'));
+  it('порядок: перенос страницы за другую меняет порядок закладок', () => {
+    useWorld.getState().editSystem(draft => movePage(draft, 'Основное', 'Магия', true));
     expect(sys().pages!.map(p => p.name)).toEqual(['Магия', 'Основное']);
   });
 });

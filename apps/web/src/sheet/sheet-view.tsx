@@ -4,7 +4,7 @@ import { Card, CardHead, Chip } from '../ui/primitives.tsx';
 import { FieldCell } from './field-cell.tsx';
 import type { Reader } from '../engine/use-calc.ts';
 import { Tabs } from '../ui/layout.tsx';
-import type { Sheet, System, StoredValue, PageList } from '@vtt/schema';
+import type { Sheet, System, StoredValue, SheetList } from '@vtt/schema';
 import type { Field as FieldModel } from '@vtt/engine/model/types';
 import { fieldsOf, rowKeyOf, fieldOf } from '@vtt/engine/model/sheet-columns';
 import { optionsOf } from '@vtt/engine/model/lists';
@@ -12,8 +12,9 @@ import { fieldsByBlock } from '@vtt/engine/model/blocks';
 import { blockShown } from '@vtt/engine/model/owned';
 import { pagesOf, topPage, tabPages, pageOfBlock, rootBlock, bandsOf } from '@vtt/engine/model/pages';
 
-export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only, fields, onPick, picked, onPickBlock, onPickRow, pages }: {
-  pages?: { at: string | null; onAt: (name: string) => void; lists?: Partial<Record<PageList, ReactNode>>; all?: boolean };
+export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only, fields, onPick, picked, onPickBlock, onPickRow, pages, lists }: {
+  pages?: { at: string | null; onAt: (name: string) => void; all?: boolean };
+  lists?: Partial<Record<SheetList, ReactNode>>;
   onPickBlock?: (name: string) => void;
   onPickRow?: (table: string, row: string) => void;
   system: System;
@@ -28,7 +29,14 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
   picked?: string | null;
 }) {
   const all = fields ?? fieldsOf(system);
-  const shown = fieldsByBlock(system, only ? all.filter(f => only.includes(f.tag)) : all, blockShown(system, sheet));
+  const visibleBlock = blockShown(system, sheet);
+  const byFields = fieldsByBlock(system, only ? all.filter(f => only.includes(f.tag)) : all, visibleBlock);
+  const order = (system.blocks ?? []).map(block => block.name);
+  const listed = (system.blocks ?? [])
+    .filter(block => block.list && lists?.[block.list] != null && visibleBlock(block.name) && !byFields.some(([group]) => group === block.name))
+    .map(block => [block.name, []] as [string, FieldModel[]]);
+  const rank = (name: string) => (order.indexOf(name) < 0 ? order.length : order.indexOf(name));
+  const shown = listed.length ? [...byFields, ...listed].sort(([a], [b]) => rank(a) - rank(b)) : byFields;
 
   const cell = (field: FieldModel, bare = false) => {
     const view = (
@@ -62,6 +70,7 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
           {piece.fields.map(field => cell(field))}
         </div>
       )))}
+      {own?.list && lists?.[own.list] != null ? lists[own.list] : null}
     </Card>
     );
   };
@@ -83,10 +92,9 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
   }
 
   const top = topPage(system);
-  const listsOf = (names: readonly PageList[] | undefined) => (names ?? []).filter(name => pages.lists?.[name] != null);
   const blocksOn = (name: string) => shown.filter(([group]) => pageOfBlock(system, group) === name);
-  const filled = (name: string, lists?: readonly PageList[]) => blocksOn(name).length > 0 || listsOf(lists).length > 0;
-  const visible = tabPages(system).filter(page => pages.all || filled(page.name, page.lists));
+  const filled = (name: string) => blocksOn(name).length > 0;
+  const visible = tabPages(system).filter(page => pages.all || filled(page.name));
   const current = visible.find(page => page.name === pages.at) ?? visible[0];
 
   const stackOf = (page: NonNullable<typeof top>, group: string) => Math.min(rootBlock(system, group)?.stack ?? 1, page.stacks ?? 1);
@@ -109,7 +117,6 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
           ))}
         </div>
       )))}
-      {listsOf(page.lists).map(name => <Fragment key={name}>{pages.lists![name]}</Fragment>)}
     </>
   );
 
@@ -120,7 +127,7 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
       {visible.length ? (
         <Tabs value={current?.name ?? ''} options={visible.map(page => ({ key: page.name, label: page.name }))} onChange={pages.onAt} />
       ) : null}
-      {current ? <div className="sheet-page">{filled(current.name, current.lists) ? body(current) : <span className="faint">На этой странице пока пусто — выберите блок и укажите ему эту страницу.</span>}</div> : null}
+      {current ? <div className="sheet-page">{filled(current.name) ? body(current) : <span className="faint">На этой странице пока пусто — выберите блок и укажите ему эту страницу.</span>}</div> : null}
     </div>
   );
 }

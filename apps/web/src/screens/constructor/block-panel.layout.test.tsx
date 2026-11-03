@@ -77,6 +77,38 @@ describe('раскладка блока', () => {
     expect(screen.queryByLabelText('место на странице')).toBeNull();
   });
 
+  it('«Список в блоке» ставит список и снимает его с другого блока', () => {
+    panel('Навыки');
+    fireEvent.change(screen.getByLabelText('список в блоке'), { target: { value: 'things' } });
+    expect(sys().blocks![0]!.list).toBe('things');
+    cleanup();
+    panel('Внутри');
+    fireEvent.change(screen.getByLabelText('список в блоке'), { target: { value: 'things' } });
+    expect(sys().blocks![1]!.list).toBe('things');
+    expect(sys().blocks![0]).not.toHaveProperty('list');
+    fireEvent.change(screen.getByLabelText('список в блоке'), { target: { value: '' } });
+    expect(sys().blocks![1]).not.toHaveProperty('list');
+  });
+
+  it('у блока со снаряжением — «Типы в списке»: снятый тип пропадает, возвращённый встаёт в конец', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...state.system,
+        tables: {
+          оружие: { label: 'Оружие', shape: 'book', use: 'item', columns: [] },
+          доспех: { label: 'Доспех', shape: 'book', use: 'item', columns: [] },
+        },
+        blocks: [{ name: 'Снаряжение', list: 'things', parts: [] }],
+      } as unknown as System,
+    }));
+    panel('Снаряжение');
+    fireEvent.click(screen.getByLabelText('Оружие'));
+    expect(sys().blocks![0]!.kinds).toEqual(['доспех']);
+    fireEvent.click(screen.getByLabelText('Оружие'));
+    expect(sys().blocks![0]!.kinds).toEqual(['доспех', 'оружие']);
+  });
+
   it('без страниц у системы «Страницы» нет', () => {
     load(false);
     panel('Навыки');

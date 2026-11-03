@@ -243,6 +243,6 @@ function pruneBlocks(system: System, donor: System, fresh: Set<SheetPart>, arriv
     });
   }
   const blocks = system.blocks;
-  system.blocks = blocks.filter(block => !arrived.has(block.name) || block.parts.length > 0 || blocks.some(other => other.parent === block.name));
+  system.blocks = blocks.filter(block => !arrived.has(block.name) || block.parts.length > 0 || block.list || blocks.some(other => other.parent === block.name));
   tidyLayout(system);
 }

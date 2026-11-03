@@ -34,6 +34,7 @@ export function renameLayoutRow(system: System, table: string, from: unknown, to
 
 export function renameLayoutTable(system: System, from: string, to: string): void {
   for (const part of parts(system)) if (part.table === from) part.table = to;
+  for (const block of system.blocks ?? []) if (block.kinds) block.kinds = block.kinds.map(kind => (kind === from ? to : kind));
 }
 
 export function tidyLayout(system: System): void {

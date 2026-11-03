@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { useWorld } from '../../store/world.ts';
 import { useDragList } from '../../ui/drag-list.ts';
+import { PickOrder } from '../../ui/pick-order.tsx';
 import { Card, CardHead, Field, Select, Button, DangerButton, LabelInput, Verdict } from '../../ui/primitives.tsx';
 import { readyForSheet } from './table-field.tsx';
 import { onSheet, rowKeyOf, fieldsOf, isSingle } from '@vtt/engine/model/sheet-columns';
-import { pagesOf, pageOfBlock } from '@vtt/engine/model/pages';
+import { recordKinds } from '@vtt/engine/model/owned';
+import { pagesOf, pageOfBlock, SHEET_LIST_KEYS } from '@vtt/engine/model/pages';
+import { SHEET_LISTS } from '@vtt/engine/words/glossary';
 import { isRange } from '@vtt/engine/model/tables';
-import type { System, SheetBlock, SheetPart } from '@vtt/schema';
+import type { System, SheetBlock, SheetPart, SheetList } from '@vtt/schema';
 
 const SPOTS: Record<2 | 3, string[]> = { 2: ['левый столбец', 'правый столбец'], 3: ['левый столбец', 'средний столбец', 'правый столбец'] };
 
@@ -114,7 +117,7 @@ function ColumnGroup({ title, keys, chosen, labelOf, onToggle, onMove }: {
   const drag = useDragList(onMove, 'x');
   return (
     <div className="stack stack--tight block-pick">
-      <span className="block-pick__title">{title}{ordered && keys.length > 1 ? <span className="faint"> · перетащите, чтобы поменять порядок на листе</span> : null}</span>
+      <span className="block-pick__title">{ordered ? 'показываются' : title}{ordered && keys.length > 1 ? <span className="faint"> · перетащите, чтобы поменять порядок</span> : null}</span>
       <div className="inline inline--tight">
         {keys.map(key => {
           const on = chosen.includes(key);
@@ -203,6 +206,27 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
           ) : null}
         </>
       ) : null}
+      <Field label="Список в блоке" hint="Показывается после полей блока; в другом блоке этот список снимается.">
+        <Select<string> label="список в блоке" value={block.list ?? ''}
+          options={[['', 'нет'], ...SHEET_LIST_KEYS.map(list => [list, SHEET_LISTS[list]] as const)]}
+          onChange={next => editSystem(draft => {
+            for (const other of draft.blocks ?? []) {
+              if (other.name === name) { if (next) other.list = next as SheetList; else delete other.list; }
+              else if (next && other.list === next) delete other.list;
+            }
+          })} />
+      </Field>
+      {block.list === 'things' ? (() => {
+        const all = recordKinds(system).filter(([, kind]) => kind.use === 'item').map(([key]) => key);
+        return (
+          <Field label="Типы в списке">
+            <PickOrder keys={all} chosen={block.kinds ?? all} labelOf={key => system.tables?.[key]?.label || key}
+              onChange={next => edit(target => {
+                if (next.length === all.length && next.every((key, at) => key === all[at])) delete target.kinds; else target.kinds = next;
+              })} />
+          </Field>
+        );
+      })() : null}
       {block.parts.some(part => isSingle(system.tables?.[part.table])) ? (
         <Field label="Поля внутри блока">
           <Select<string> label="поля внутри блока" value={String(block.per ?? '')}
@@ -247,23 +271,13 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
             </Field>
             {single ? null : (
               <Field label="Строки">
-                <div className="inline inline--tight">
-                  <Button size="sm" variant={part.rows ? 'ghost' : 'primary'} onClick={() => editPart(index, target => { delete target.rows; })}>все</Button>
-                  {rows.map(row => {
-                    const key = rowKeyOf(row);
-                    return (
-                      <label key={key} className="inline inline--tight">
-                        <input type="checkbox" checked={chosenRows.includes(key)}
-                          onChange={() => editPart(index, target => {
-                            const now = target.rows ?? rows.map(rowKeyOf);
-                            const next = now.includes(key) ? now.filter(k => k !== key) : rows.map(rowKeyOf).filter(k => k === key || now.includes(k));
-                            if (next.length === rows.length) delete target.rows; else target.rows = next;
-                          })} />
-                        {row.label ?? String(row.value ?? key)}
-                      </label>
-                    );
-                  })}
-                </div>
+                <PickOrder keys={rows.map(rowKeyOf)} chosen={chosenRows}
+                  labelOf={key => { const row = rows.find(one => rowKeyOf(one) === key); return row?.label ?? String(row?.value ?? key); }}
+                  onChange={next => editPart(index, target => {
+                    const all = rows.map(rowKeyOf);
+                    if (!next.length) return;
+                    if (next.length === all.length && next.every((key, at) => key === all[at])) delete target.rows; else target.rows = next;
+                  })} />
               </Field>
             )}
             <Field label="Группировать по">

@@ -12,8 +12,8 @@ const system = {
     лист: { shape: 'single', columns: [{ key: 'монеты', label: 'Монеты', kind: 'number' }] },
     оружие: { label: 'Оружие', shape: 'book', use: 'item', columns: [{ key: 'урон', label: 'Урон', kind: 'number' }] },
   },
-  pages: [{ name: 'Сумка', lists: ['things'] }],
-  blocks: [{ name: 'Деньги', page: 'Сумка', parts: [{ table: 'лист' }] }],
+  pages: [{ name: 'Сумка' }],
+  blocks: [{ name: 'Деньги', page: 'Сумка', parts: [{ table: 'лист' }] }, { name: 'Вещи', page: 'Сумка', list: 'things', parts: [] }],
 } as unknown as System;
 
 describe('образец листа: сумка из типов вещей и умений', () => {

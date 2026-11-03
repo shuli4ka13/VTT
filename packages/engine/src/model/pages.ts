@@ -1,7 +1,7 @@
-import type { SheetBlock, SheetPage, PageList } from '@vtt/schema';
+import type { SheetBlock, SheetPage, SheetList } from '@vtt/schema';
 import type { System } from './types.ts';
 
-export const PAGE_LISTS: readonly PageList[] = ['hanging', 'things', 'actions'];
+export const SHEET_LIST_KEYS: readonly SheetList[] = ['hanging', 'things', 'actions'];
 
 export const pagesOf = (system: System): SheetPage[] => system.pages ?? [];
 
@@ -30,8 +30,8 @@ export function pageOfBlock(system: System, name: string): string | undefined {
   return tabPages(system)[0]?.name ?? pages[0]!.name;
 }
 
-export const pageOfList = (system: System, list: PageList): string | undefined =>
-  pagesOf(system).find(page => (page.lists ?? []).includes(list))?.name;
+export const blockOfList = (system: System, list: SheetList): string | undefined =>
+  (system.blocks ?? []).find(block => block.list === list)?.name;
 
 export type Band<T> = { wide: T } | { stacks: T[][] };
 
@@ -62,5 +62,14 @@ export function removePage(system: System, name: string): void {
 
 export function tidyPages(system: System): void {
   const names = new Set(pagesOf(system).map(page => page.name));
-  for (const block of system.blocks ?? []) if (block.page && !names.has(block.page)) delete block.page;
+  const placed = new Set<SheetList>();
+  for (const block of system.blocks ?? []) {
+    if (block.page && !names.has(block.page)) delete block.page;
+    if (block.list && placed.has(block.list)) delete block.list;
+    else if (block.list) placed.add(block.list);
+    if (block.kinds) {
+      const kinds = block.list === 'things' ? block.kinds.filter(kind => system.tables?.[kind]) : [];
+      if (kinds.length) block.kinds = kinds; else delete block.kinds;
+    }
+  }
 }

@@ -1,8 +1,9 @@
 import { useWorld } from '../../store/world.ts';
 import { Card, CardHead, Field, Select, Button, DangerButton, LabelInput } from '../../ui/primitives.tsx';
-import { PAGE_LISTS, pagesOf, pageOfBlock, renamePage, removePage } from '@vtt/engine/model/pages';
-import { SHEET_LISTS } from '@vtt/engine/words/glossary';
-import type { System, SheetPage, PageList } from '@vtt/schema';
+import { pagesOf, pageOfBlock, renamePage, removePage } from '@vtt/engine/model/pages';
+import { moveKey } from '../../ui/pick-order.tsx';
+import { useDragList } from '../../ui/drag-list.ts';
+import type { System, SheetPage } from '@vtt/schema';
 
 export const FIRST_PAGE = 'Основное';
 
@@ -16,13 +17,10 @@ export function addPage(draft: System, name: string): void {
   draft.pages = [...pagesOf(draft), { name }];
 }
 
-export function movePage(draft: System, name: string, by: -1 | 1): void {
+export function movePage(draft: System, name: string, target: string, after: boolean): void {
   const pages = draft.pages ?? [];
-  const at = pages.findIndex(page => page.name === name);
-  const to = at + by;
-  if (at < 0 || to < 0 || to >= pages.length) return;
-  const [moving] = pages.splice(at, 1);
-  pages.splice(to, 0, moving!);
+  const order = moveKey(pages.map(page => page.name), name, target, after);
+  draft.pages = order.map(key => pages.find(page => page.name === key)!);
 }
 
 export function setTop(draft: System, name: string, on: boolean): void {
@@ -36,20 +34,12 @@ export function setStacks(page: SheetPage, count: number): void {
   if (count === 2 || count === 3) page.stacks = count; else delete page.stacks;
 }
 
-export function setList(draft: System, name: string, list: PageList, on: boolean): void {
-  for (const page of draft.pages ?? []) {
-    const rest = (page.lists ?? []).filter(item => item !== list);
-    const next = page.name === name && on ? PAGE_LISTS.filter(item => item === list || rest.includes(item)) : rest;
-    if (next.length) page.lists = next; else delete page.lists;
-  }
-}
-
 export function PagePanel({ name, system }: { name: string; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
   const pages = pagesOf(system);
-  const index = pages.findIndex(page => page.name === name);
-  const page = pages[index];
+  const drag = useDragList((key, to, after) => editSystem(draft => movePage(draft, key, to, after)), 'x');
+  const page = pages.find(item => item.name === name);
   if (!page) return null;
   const edit = (change: (target: SheetPage) => void) => editSystem(draft => {
     const target = (draft.pages ?? []).find(item => item.name === name);
@@ -76,20 +66,20 @@ export function PagePanel({ name, system }: { name: string; system: System }) {
           options={[['1', 'друг под другом'], ['2', 'в два столбца'], ['3', 'в три столбца']]}
           onChange={next => edit(target => setStacks(target, Number(next)))} />
       </Field>
-      <Field label="Списки на этой странице">
-        <div className="stack stack--tight">
-          {PAGE_LISTS.map(list => (
-            <label key={list} className="inline inline--tight">
-              <input type="checkbox" checked={(page.lists ?? []).includes(list)}
-                onChange={event => editSystem(draft => setList(draft, name, list, event.currentTarget.checked))} />
-              {SHEET_LISTS[list]}
-            </label>
-          ))}
+      <Field label="Порядок страниц">
+        <div className="stack stack--tight block-pick">
+          <span className="block-pick__title">перетащите, чтобы поменять порядок закладок</span>
+          <div className="inline inline--tight">
+            {pages.map(item => (
+              <span key={item.name} className={`inline inline--tight drag-item${drag.mark(item.name)}`} {...drag.props(item.name)}>
+                <span className="drag-grip" aria-hidden>⋮⋮</span>
+                {item.name === name ? <b>{item.name}</b> : item.name}
+              </span>
+            ))}
+          </div>
         </div>
       </Field>
       <div className="inline inline--tight">
-        <Button size="sm" disabled={index === 0} onClick={() => editSystem(draft => movePage(draft, name, -1))}>↑ раньше</Button>
-        <Button size="sm" disabled={index === pages.length - 1} onClick={() => editSystem(draft => movePage(draft, name, 1))}>↓ позже</Button>
         <DangerButton size="sm" onConfirm={() => { editSystem(draft => removePage(draft, name)); pick({ activePage: null }); }}>Удалить страницу</DangerButton>
       </div>
     </Card>

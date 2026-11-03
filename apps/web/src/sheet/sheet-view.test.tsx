@@ -152,13 +152,16 @@ describe('страницы листа', () => {
     expect(document.body.textContent).not.toContain('Здоровье');
   });
 
-  it('страница без видимых блоков получает закладку, только если есть переданный список', () => {
-    const system = pagedSystem({ pages: [{ name: 'Шапка', top: true }, { name: 'Бой' }, { name: 'Сумка', lists: ['things'] }] });
+  it('блок со списком без полей виден, только если список передан; список рисуется внутри блока', () => {
+    const system = pagedSystem({
+      pages: [{ name: 'Шапка', top: true }, { name: 'Бой' }, { name: 'Сумка' }],
+      blocks: [{ name: 'Здоровье', page: 'Бой', parts: [{ table: 'б' }] }, { name: 'Вещи', page: 'Сумка', list: 'things', parts: [] }],
+    });
     const { rerender } = render(<SheetView system={system} {...base} pages={{ at: 'Сумка', onAt: () => {} }} />);
     expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual(['Бой']);
-    rerender(<SheetView system={system} {...base} pages={{ at: 'Сумка', onAt: () => {}, lists: { things: <p>Снаряжение тут</p> } }} />);
+    rerender(<SheetView system={system} {...base} pages={{ at: 'Сумка', onAt: () => {} }} lists={{ things: <p>Снаряжение тут</p> }} />);
     expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual(['Бой', 'Сумка']);
-    expect(screen.getByText('Снаряжение тут')).toBeTruthy();
+    expect(screen.getByText('Снаряжение тут').closest('.card')!.textContent).toContain('Вещи');
   });
 
   it('столбцы: блок с stack 2 — в правой стопке, wide — отдельная полоса', () => {

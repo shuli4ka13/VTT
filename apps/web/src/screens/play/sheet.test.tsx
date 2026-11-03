@@ -149,22 +149,27 @@ describe('висит сейчас: срок словами', () => {
   });
 });
 
-describe('списки на страницах листа', () => {
+describe('списки в блоках листа', () => {
   beforeEach(() => {
     useRoom.setState(state => ({ ...state, log: [], error: null }));
   });
   afterEach(cleanup);
 
-  const withPages = (lists: Record<string, string[]>) => {
+  const NAMES: Record<string, string> = { things: 'Снаряжение', actions: 'Действия', hanging: 'Висит сейчас' };
+  const withPages = (lists: Record<string, string[]>, hidden?: string[]) => {
     const state = room();
-    (state.system as unknown as Record<string, unknown>).pages = [
-      { name: 'Шапка', top: true },
-      ...Object.entries(lists).map(([name, on]) => ({ name, lists: on })),
-    ];
+    const system = state.system as unknown as Record<string, unknown>;
+    system.pages = [{ name: 'Шапка', top: true }, ...Object.keys(lists).map(name => ({ name }))];
+    const listed = Object.entries(lists).flatMap(([page, on]) => on.map(list => ({ name: NAMES[list]!, page, list, parts: [] })));
+    system.blocks = [...((system.blocks as unknown[]) ?? []), ...listed];
+    if (hidden) {
+      system.sheets = { враг: { label: 'Враг', blocks: listed.map(block => block.name).filter(name => !hidden.includes(name)) } };
+      (state.sheets as unknown as Record<string, unknown>[]).forEach(sheet => { sheet.of = 'враг'; });
+    }
     useRoom.setState(s => ({ ...s, room: state, mySheetId: 'а' }));
   };
 
-  it('список со страницы уходит из правой панели, остальные остаются', () => {
+  it('список в блоке уходит из правой панели, остальные остаются', () => {
     withPages({ Сумка: ['things'] });
     renderOpen(<SheetScreen />);
     expect(screen.getAllByText('Снаряжение')).toHaveLength(1);
@@ -173,13 +178,21 @@ describe('списки на страницах листа', () => {
     expect(screen.getByText('Снаряжение и действия')).toBeTruthy();
   });
 
-  it('все три списка на страницах — правой панели нет', () => {
+  it('все три списка в блоках — правой панели нет', () => {
     withPages({ Сумка: ['things'], Дела: ['actions', 'hanging'] });
     renderOpen(<SheetScreen />);
     expect(screen.queryByText('Снаряжение и действия')).toBeNull();
     expect(screen.getByRole('tab', { name: 'Сумка' })).toBeTruthy();
     fireEvent.click(screen.getByRole('tab', { name: 'Дела' }));
     expect(screen.getByText('Известные действия')).toBeTruthy();
+  });
+
+  it('блок со списком, скрытый типом листа, не возвращает список в правую панель', () => {
+    withPages({ Сумка: ['things'], Дела: ['actions', 'hanging'] }, ['Снаряжение']);
+    renderOpen(<SheetScreen />);
+    expect(screen.queryByText('Снаряжение и действия')).toBeNull();
+    expect(screen.queryByText('Снаряжение')).toBeNull();
+    expect(screen.queryByRole('tab', { name: 'Сумка' })).toBeNull();
   });
 });
 

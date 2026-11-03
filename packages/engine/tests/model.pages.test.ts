@@ -7,11 +7,11 @@ import type { System } from '../src/model/types.ts';
 const system = (): System => ({
   id: 'x', name: 'x', effects: {},
   tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number' }] } },
-  pages: [{ name: 'Шапка', top: true }, { name: 'Основное', stacks: 2 }, { name: 'Магия', lists: ['hanging'] }],
+  pages: [{ name: 'Шапка', top: true }, { name: 'Основное', stacks: 2 }, { name: 'Магия' }],
   blocks: [
     { name: 'Здоровье', page: 'Шапка', parts: [{ table: 'лист' }] },
     { name: 'Без страницы', parts: [{ table: 'лист' }] },
-    { name: 'Заклинания', page: 'Магия', parts: [{ table: 'лист' }] },
+    { name: 'Заклинания', page: 'Магия', list: 'hanging', parts: [{ table: 'лист' }] },
     { name: 'Ячейки', parent: 'Заклинания', parts: [{ table: 'лист' }] },
   ],
 } as unknown as System);
@@ -50,12 +50,13 @@ describe('страницы листа', () => {
   it('проверка ловит лишнюю шапку, повтор списка, чужую страницу и страницу у вложенного', () => {
     const s = system();
     expect(texts(s)).toEqual([]);
-    s.pages!.push({ name: 'Ещё шапка', top: true, lists: ['hanging'] });
+    s.pages!.push({ name: 'Ещё шапка', top: true });
+    s.blocks!.push({ name: 'Эффекты', list: 'hanging', parts: [] });
     s.blocks![1]!.page = 'Нет такой';
     s.blocks![3]!.page = 'Магия';
     const found = texts(s);
     expect(found).toContain('шапка листа одна, а страниц-шапок несколько');
-    expect(found).toContain('список «Висит сейчас» стоит и на «Магия», и на «Ещё шапка»');
+    expect(found).toContain('список «Висит сейчас» стоит и в блоке «Заклинания», и в «Эффекты»');
     expect(found).toContain('блок «Без страницы» стоит на странице «Нет такой», а её нет');
     expect(found).toContain('блок «Ячейки» внутри «Заклинания»: страницу и столбец берёт у него, своих не задаёт');
   });

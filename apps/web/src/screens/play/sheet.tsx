@@ -11,7 +11,7 @@ import { recordDetails } from '../../sheet/record-view.tsx';
 import { useSession } from '../../store/session.ts';
 import { Lobby } from './lobby.tsx';
 import { Hanging } from './hanging.tsx';
-import type { Sheet, System, RoomState, Owned, CompendiumRecord, PageList } from '@vtt/schema';
+import type { Sheet, System, RoomState, Owned, CompendiumRecord, SheetList } from '@vtt/schema';
 import { blockNames, blockOf, NO_BLOCK } from '@vtt/engine/model/blocks';
 import { availableActions } from '@vtt/engine/events/actions';
 import { recordsOf, isItem, sheetKinds, sheetKindOf, shownOn, recordKindOf } from '@vtt/engine/model/owned';
@@ -20,7 +20,7 @@ import { fieldsFor, livesOn } from '@vtt/engine/engine/calc';
 import { isGroup, sharedOf } from '@vtt/engine/events/desk';
 import { isDesk as atDesk } from '@vtt/engine/engine/owners';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
-import { pageOfList, pagesOf, PAGE_LISTS } from '@vtt/engine/model/pages';
+import { blockOfList, pagesOf, SHEET_LIST_KEYS } from '@vtt/engine/model/pages';
 
 export function SheetScreen() {
   const room = useRoom(s => s.room);
@@ -109,7 +109,8 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const claimable = useMemo(() => claimWords(system), [system]);
   const [at, setAt] = useState<string | null>(null);
   const paged = !isDesk && !asGroup && pagesOf(system).length > 0;
-  const onPage = (list: PageList) => paged && pageOfList(system, list) !== undefined;
+  const own = !isDesk && !asGroup;
+  const inBlock = (list: SheetList) => own && blockOfList(system, list) !== undefined;
   const pieces = useSheetPieces(room, sheet);
 
   return (
@@ -143,14 +144,15 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
           />
         </Field>
       ) : null}
-      {!isDesk && !onPage('hanging') ? pieces.hangingNow : null}
+      {!isDesk && !inBlock('hanging') ? pieces.hangingNow : null}
       <SheetView
         system={system}
         fields={fields}
         sheet={sheet}
         reader={reader}
         only={only}
-        {...(paged ? { pages: { at, onAt: setAt, lists: { hanging: pieces.hanging, things: pieces.things, actions: pieces.actions } } } : {})}
+        {...(paged ? { pages: { at, onAt: setAt } } : {})}
+        {...(own ? { lists: pieces.bare } : {})}
         badge={isDesk ? 'стол' : kind?.label ?? 'лист'}
         onChange={editable ? (tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value) : undefined}
         onRoll={tag => {
@@ -209,10 +211,10 @@ function shelvesOf<T extends CompendiumRecord>(system: System, items: readonly T
   return [...shelves].sort(([a], [b]) => at(a) - at(b));
 }
 
-const sideLists = (system: System, paged: boolean): PageList[] =>
-  PAGE_LISTS.filter(list => !paged || pageOfList(system, list) === undefined);
+const sideLists = (system: System, own: boolean): SheetList[] =>
+  SHEET_LIST_KEYS.filter(list => !own || blockOfList(system, list) === undefined);
 
-function SidePanel({ room, sheet, lists }: { room: RoomState; sheet: Sheet; lists: PageList[] }) {
+function SidePanel({ room, sheet, lists }: { room: RoomState; sheet: Sheet; lists: SheetList[] }) {
   const pieces = useSheetPieces(room, sheet);
   return (
     <>
@@ -223,7 +225,7 @@ function SidePanel({ room, sheet, lists }: { room: RoomState; sheet: Sheet; list
   );
 }
 
-function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode; hangable: ReactNode; hanging: ReactNode; things: ReactNode; actions: ReactNode } {
+function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode; hangable: ReactNode; hanging: ReactNode; things: ReactNode; actions: ReactNode; bare: Record<SheetList, ReactNode> } {
   const me = useSession(s => s.userId);
   const [query, setQuery] = useState('');
   const available = actionsOf(sheet, room);
@@ -300,14 +302,14 @@ function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode;
       </Fold>
     ) : null;
   const hanging = hangingNow || hangFold ? <>{hangingNow}{hangFold}</> : null;
-  const things = (
+  const thingsKinds = (system.blocks ?? []).find(block => block.list === 'things')?.kinds;
+  const thingsBody = (
     <>
-      <Fold title="Снаряжение" count={carried} open={pageOfList(system, 'things') !== undefined}>
         {items.length === 0
           ? <span className="faint">В компендиуме мира нет предметов.</span>
           : (
             <div className="stack stack--tight">
-              <ThingsList system={system} records={items.filter(item => copies(item.id).length)} row={item => copies(item.id).map((entry, at) => {
+              <ThingsList system={system} kinds={thingsKinds} records={items.filter(item => copies(item.id).length)} row={item => copies(item.id).map((entry, at) => {
                 const hosts = (sheet.has ?? []).filter(one => !inside(keyOf(entry)).has(keyOf(one)));
                 return (
                   <ThingLine key={keyOf(entry)} label={labelOf(keyOf(entry))} active={!entry.off} details={itemDetails(item, entry)}
@@ -342,9 +344,9 @@ function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode;
                 ))}
             </div>
           )}
-      </Fold>
     </>
   );
+  const things = <Fold title="Снаряжение" count={carried}>{thingsBody}</Fold>;
   const actionsList = (
     <>
       <Fold title="Что применить" count={available.length} open>
@@ -357,7 +359,7 @@ function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode;
           ))}
       </Fold>
 
-      <Fold title="Известные действия" count={known} open={pageOfList(system, 'actions') !== undefined}>
+      <Fold title="Известные действия" count={known}>
         {actions.length === 0
           ? <span className="faint">В компендиуме мира нет действий.</span>
           : (
@@ -376,7 +378,19 @@ function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode;
       </Fold>
     </>
   );
-  return { hangingNow, hangable: hangFold, hanging, things, actions: actionsList };
+  const bare = {
+    hanging: (
+      <>
+        {(sheet.effects ?? []).length
+          ? <Hanging room={room} sheet={sheet} {...(editable ? { onRemove: entry => tableSocket.setBelonging(room.id, sheet.id, 'effects', entry.effectId, false) } : {})} />
+          : <span className="faint">Ничего не висит.</span>}
+        {hangFold}
+      </>
+    ),
+    things: thingsBody,
+    actions: actionsList,
+  };
+  return { hangingNow, hangable: hangFold, hanging, things, actions: actionsList, bare };
 }
 
 export function claimWords(system: System): [string, string][] {

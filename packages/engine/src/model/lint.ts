@@ -797,15 +797,15 @@ function pageProblems(system: System): Problem[] {
   }
   if (pages.filter(page => page.top).length > 1) out.push({ where, level: 'error', text: 'шапка листа одна, а страниц-шапок несколько' });
   const lists = new Map<string, string>();
-  for (const page of pages) {
-    for (const list of page.lists ?? []) {
-      const was = lists.get(list);
-      if (was) out.push({ where, level: 'error', text: `список «${SHEET_LISTS[list]}» стоит и на «${was}», и на «${page.name}»` });
-      else lists.set(list, page.name);
-    }
+  for (const block of system.blocks ?? []) {
+    if (!block.list) continue;
+    const was = lists.get(block.list);
+    if (was) out.push({ where, level: 'error', text: `список «${SHEET_LISTS[block.list]}» стоит и в блоке «${was}», и в «${block.name}»` });
+    else lists.set(block.list, block.name);
   }
   for (const block of system.blocks ?? []) {
     if (block.page && !names.has(block.page)) out.push({ where, level: 'error', text: `блок «${block.name}» стоит на странице «${block.page}», а её нет` });
+    for (const kind of block.kinds ?? []) if (!system.tables?.[kind]) out.push({ where, level: 'warn', text: `блок «${block.name}» показывает в снаряжении тип «${kind}», а его нет` });
     if (block.parent && (block.page || block.stack || block.wide)) {
       out.push({ where, level: 'error', text: `блок «${block.name}» внутри «${block.parent}»: страницу и столбец берёт у него, своих не задаёт` });
     }

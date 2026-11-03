@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { useWorld, useBook } from '../../store/world.ts';
 import { useReader } from '../../engine/use-calc.ts';
 import { SheetView } from '../../sheet/sheet-view.tsx';
-import { Card, CardHead, Chip, Field, Select, Button } from '../../ui/primitives.tsx';
+import { Card, Chip, Field, Select, Button } from '../../ui/primitives.tsx';
 import { recordDetails } from '../../sheet/record-view.tsx';
 import { ThingsList, ThingLine } from '../../sheet/things-list.tsx';
 import { sheetKinds, shownOn, recordKinds, recordKindOf } from '@vtt/engine/model/owned';
@@ -11,7 +11,7 @@ import { availableActions } from '@vtt/engine/events/actions';
 import { pageOfBlock } from '@vtt/engine/model/pages';
 import { SHEET_LISTS, dice } from '@vtt/engine/words/glossary';
 import { OPEN_PAGE } from './page-panel.tsx';
-import type { PageList } from '@vtt/schema';
+import type { SheetList } from '@vtt/schema';
 import type { Sheet, StoredValue, System, CompendiumRecord, Column } from '@vtt/schema';
 import { fieldsOf, fieldOf, rowKeyOf } from '@vtt/engine/model/sheet-columns';
 import { listOf } from '@vtt/engine/model/lists';
@@ -91,14 +91,13 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
 
   const at = (activeBlock ? pageOfBlock(system, activeBlock) : undefined) ?? activePage;
   const actions = (() => { try { return availableActions(sample, { system, compendium: book }); } catch { return []; } })();
-  const lists: Partial<Record<PageList, ReactNode>> = {
+  const lists: Partial<Record<SheetList, ReactNode>> = {
     things: (
-      <Card>
-        <CardHead title={SHEET_LISTS.things} />
+      <>
         <div className="inline inline--tight">
           {samples.length === 0 ? <span className="faint">У образца пока ничего нет — добавьте образец вещи или умения.</span> : null}
         </div>
-        <ThingsList system={system} records={samples} onPickKind={table => pick({ ...OPEN_PAGE, activeThing: table })} row={record => {
+        <ThingsList system={system} kinds={(system.blocks ?? []).find(block => block.list === 'things')?.kinds} records={samples} onPickKind={table => pick({ ...OPEN_PAGE, activeThing: table })} row={record => {
           const at = samples.indexOf(record);
           return (
             <ThingLine label={record.label ?? record.id} details={recordDetails(record, system, book).map(line => `${line.label}: ${line.value}`).join(' · ')}
@@ -117,22 +116,16 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
             const number = bag.filter(item => item.table === key).length + 1;
             setBag([...bag, { table: key, label: `${kindOfKey?.label || key} ${number}`, cells: sampleCells(system, kindOfKey?.columns ?? []) }]);
           }} />
-      </Card>
+      </>
     ),
     actions: (
-      <Card>
-        <CardHead title={SHEET_LISTS.actions} />
+      <>
         {actions.length === 0
           ? <span className="faint">Применить нечего — добавьте вещь или умение в «{SHEET_LISTS.things}».</span>
           : <div className="inline inline--tight">{actions.map(action => <Chip key={action.id}>{action.label}</Chip>)}</div>}
-      </Card>
+      </>
     ),
-    hanging: (
-      <Card>
-        <CardHead title={SHEET_LISTS.hanging} />
-        <span className="faint">На образце ничего не висит.</span>
-      </Card>
-    ),
+    hanging: <span className="faint">На образце ничего не висит.</span>,
   };
 
   return (
@@ -154,7 +147,8 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
         reader={reader}
         only={only}
         badge="образец"
-        pages={{ at: at ?? null, onAt: name => pick({ ...OPEN_PAGE, activePage: name }), lists, all: true }}
+        pages={{ at: at ?? null, onAt: name => pick({ ...OPEN_PAGE, activePage: name }), all: true }}
+        lists={lists}
         {...(onPick ? { onPick } : {})}
         {...(onPickBlock ? { onPickBlock } : {})}
         {...(onPickRow ? { onPickRow } : {})}
