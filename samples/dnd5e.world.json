@@ -8964,23 +8964,19 @@
       },
       {
         "name": "Основное",
-        "icon": "⚔️",
         "stacks": 2
       },
       {
-        "name": "Магия",
-        "icon": "✨"
+        "name": "Магия"
       },
       {
         "name": "Снаряжение",
-        "icon": "🎒",
         "lists": [
           "things"
         ]
       },
       {
         "name": "Эффекты",
-        "icon": "⚡",
         "lists": [
           "hanging",
           "actions"

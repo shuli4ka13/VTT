@@ -113,7 +113,7 @@ const single = (key: string, label: string) => ({ shape: 'single', columns: [{ k
 
 const pagedSystem = (extra: Record<string, unknown> = {}) => ({
   tables: { а: single('а1', 'Сила'), б: single('б1', 'Хиты'), в: single('в1', 'Монеты'), г: single('г1', 'Заметка') },
-  pages: [{ name: 'Шапка', top: true }, { name: 'Бой', icon: '⚔' }, { name: 'Вещи' }, { name: 'Пустая' }],
+  pages: [{ name: 'Шапка', top: true }, { name: 'Бой' }, { name: 'Вещи' }, { name: 'Пустая' }],
   blocks: [
     { name: 'Главное', page: 'Шапка', parts: [{ table: 'а' }] },
     { name: 'Здоровье', page: 'Бой', parts: [{ table: 'б' }] },
@@ -140,7 +140,7 @@ describe('страницы листа', () => {
       <SheetView system={pagedSystem()} {...base} only={['а1', 'б1', 'в1']} pages={{ at, onAt: name => chosen.push(name) }} />
     );
     const { rerender } = render(view(null));
-    expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual(['⚔ Бой', 'Вещи']);
+    expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual(['Бой', 'Вещи']);
     expect(document.body.textContent).toContain('Главное');
     expect(document.body.textContent).toContain('Здоровье');
     expect(document.body.textContent).not.toContain('Деньги');
@@ -182,6 +182,34 @@ describe('страницы листа', () => {
     expect(bands[1]!.textContent).toContain('Широкий');
     expect(bands[2]!.querySelectorAll('.sheet-stacks__col')[0]!.textContent).toContain('Три');
     expect(bands[2]!.querySelectorAll('.sheet-stacks__col')[1]!.textContent).toBe('');
+  });
+
+  it('столбец, в котором у этого листа нет ни одного блока, не оставляет пустого места', () => {
+    const system = pagedSystem({
+      pages: [{ name: 'Главная', stacks: 3 }],
+      blocks: [
+        { name: 'Один', parts: [{ table: 'а' }] },
+        { name: 'Два', stack: 2, parts: [{ table: 'б' }] },
+        { name: 'Три', stack: 3, parts: [{ table: 'в' }] },
+      ],
+    });
+    render(<SheetView system={system} {...base} only={['б1', 'в1']} pages={{ at: null, onAt: () => {} }} />);
+    const cols = [...document.querySelectorAll('.sheet-stacks__col')].map(col => col.textContent);
+    expect(cols).toHaveLength(2);
+    expect(cols[0]).toContain('Два');
+    expect(cols[1]).toContain('Три');
+  });
+
+  it('«по два в строку» ставит полям блока два столбца', () => {
+    const system = pagedSystem({ blocks: [{ name: 'Главное', per: 2, parts: [{ table: 'а' }] }] });
+    render(<SheetView system={system} {...base} />);
+    expect((document.querySelector('.row--per') as HTMLElement).style.gridTemplateColumns).toBe('repeat(2, minmax(0, 1fr))');
+  });
+
+  it('с all закладка есть и у пустой страницы, на ней — подсказка', () => {
+    render(<SheetView system={pagedSystem()} {...base} only={['а1', 'б1']} pages={{ at: 'Вещи', onAt: () => {}, all: true }} />);
+    expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual(['Бой', 'Вещи', 'Пустая']);
+    expect(document.body.textContent).toContain('На этой странице пока пусто');
   });
 });
 

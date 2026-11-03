@@ -133,6 +133,7 @@ export const sheetBlock = z.object({
   stack: stackCount.optional(),
   wide: z.literal(true).optional(),
   split: stackCount.optional(),
+  per: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
   parts: z.array(sheetPart),
 }).strict();
 
@@ -140,7 +141,6 @@ export const pageList = z.enum(['hanging', 'things', 'actions']);
 
 export const sheetPage = z.object({
   name: z.string().min(1),
-  icon: z.string().optional(),
   top: z.literal(true).optional(),
   stacks: stackCount.optional(),
   lists: z.array(pageList).optional(),

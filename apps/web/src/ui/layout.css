@@ -691,3 +691,4 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 @container (max-width: 880px) { .sheet-stacks--3 { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 700px) { .sheet-stacks--2, .sheet-stacks--3 { grid-template-columns: minmax(0, 1fr); } }
 .sheet-stacks__col > .card, .sheet-band > .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-3); padding: 13px 15px; gap: 10px; }
+@media (max-width: 700px) { .row--per { grid-template-columns: minmax(0, 1fr) !important; } }

@@ -13,7 +13,7 @@ import { blockShown } from '@vtt/engine/model/owned';
 import { pagesOf, topPage, tabPages, pageOfBlock, rootBlock, bandsOf } from '@vtt/engine/model/pages';
 
 export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only, fields, onPick, picked, onPickBlock, onPickRow, pages }: {
-  pages?: { at: string | null; onAt: (name: string) => void; lists?: Partial<Record<PageList, ReactNode>> };
+  pages?: { at: string | null; onAt: (name: string) => void; lists?: Partial<Record<PageList, ReactNode>>; all?: boolean };
   onPickBlock?: (name: string) => void;
   onPickRow?: (table: string, row: string) => void;
   system: System;
@@ -50,18 +50,21 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
     ) : view;
   };
 
-  const card = (group: string, fields: FieldModel[]) => (
+  const card = (group: string, fields: FieldModel[]) => {
+    const own = (system.blocks ?? []).find(block => block.name === group);
+    return (
     <Card key={group}>
       <CardHead title={onPickBlock ? <button type="button" className="sheet-pick__head" title="настройки блока" onClick={() => onPickBlock(group)}>{group}</button> : group} />
       {piecesOf(fields).map(piece => (piece.table ? (
-        <TableBlock key={piece.table} system={system} tableId={piece.table!} split={(system.blocks ?? []).find(block => block.name === group)?.split} sections={sectionsOf(piece.fields, system, reader)} cell={cell} {...(onPickRow ? { onPickRow } : {})} />
+        <TableBlock key={piece.table} system={system} tableId={piece.table!} split={own?.split} sections={sectionsOf(piece.fields, system, reader)} cell={cell} {...(onPickRow ? { onPickRow } : {})} />
       ) : (
-        <div key={piece.fields[0]!.tag} className="row">
+        <div key={piece.fields[0]!.tag} className={own?.per ? 'row row--per' : 'row'} {...(own?.per ? { style: { gridTemplateColumns: `repeat(${own.per}, minmax(0, 1fr))` } } : {})}>
           {piece.fields.map(field => cell(field))}
         </div>
       )))}
     </Card>
-  );
+    );
+  };
 
   const head = (
     <div className="sheet__top">
@@ -82,14 +85,21 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
   const top = topPage(system);
   const listsOf = (names: readonly PageList[] | undefined) => (names ?? []).filter(name => pages.lists?.[name] != null);
   const blocksOn = (name: string) => shown.filter(([group]) => pageOfBlock(system, group) === name);
-  const visible = tabPages(system).filter(page => blocksOn(page.name).length || listsOf(page.lists).length);
+  const filled = (name: string, lists?: readonly PageList[]) => blocksOn(name).length > 0 || listsOf(lists).length > 0;
+  const visible = tabPages(system).filter(page => pages.all || filled(page.name, page.lists));
   const current = visible.find(page => page.name === pages.at) ?? visible[0];
+
+  const stackOf = (page: NonNullable<typeof top>, group: string) => Math.min(rootBlock(system, group)?.stack ?? 1, page.stacks ?? 1);
+  const usedStacks = (page: NonNullable<typeof top>) => {
+    const used = new Set(blocksOn(page.name).filter(([group]) => !(rootBlock(system, group)?.wide && (page.stacks ?? 1) > 1)).map(([group]) => stackOf(page, group)));
+    return used.size ? [...used].sort((a, b) => a - b) : [1];
+  };
 
   const body = (page: NonNullable<typeof top>) => (
     <>
-      {bandsOf(blocksOn(page.name), page.stacks ?? 1, ([group]) => {
+      {bandsOf(blocksOn(page.name), usedStacks(page).length, ([group]) => {
         const root = rootBlock(system, group);
-        return { stack: root?.stack, wide: root?.wide };
+        return { stack: usedStacks(page).indexOf(stackOf(page, group)) + 1, wide: root?.wide };
       }).map((band, at) => ('wide' in band ? (
         <div key={at} className="sheet-band">{card(band.wide[0], band.wide[1])}</div>
       ) : (
@@ -108,9 +118,9 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
       {head}
       {top ? body(top) : null}
       {visible.length ? (
-        <Tabs value={current?.name ?? ''} options={visible.map(page => ({ key: page.name, label: page.name, ...(page.icon ? { icon: page.icon } : {}) }))} onChange={pages.onAt} />
+        <Tabs value={current?.name ?? ''} options={visible.map(page => ({ key: page.name, label: page.name }))} onChange={pages.onAt} />
       ) : null}
-      {current ? <div className="sheet-page">{body(current)}</div> : null}
+      {current ? <div className="sheet-page">{filled(current.name, current.lists) ? body(current) : <span className="faint">На этой странице пока пусто — выберите блок и укажите ему эту страницу.</span>}</div> : null}
     </div>
   );
 }
