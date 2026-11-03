@@ -35,7 +35,7 @@ for (const world of SAMPLE_WORLDS) {
   const compendium = world.compendium;
   const players = world.sheets.filter((s: Sheet) => s.id !== 'стол');
 
-  describe.skipIf(!process.env.GOLDEN && !process.env.CI)(`итоги действий: ${system.id}`, () => {
+  describe.skipIf(!process.env.GOLDEN_SAMPLES)(`итоги действий: ${system.id}`, () => {
     for (const from of players) {
       for (const action of availableActions(from, { system, compendium })) {
         it(`${from.id} · ${action.id}`, () => {

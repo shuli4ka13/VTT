@@ -4,6 +4,11 @@ on:
   push:
     branches: [cdm]
   workflow_dispatch:
+    inputs:
+      heavy:
+        description: Долгие проверки — итоги всех действий и случайные цепочки (Shadowrun идёт больше 30 минут)
+        type: boolean
+        default: false
 
 concurrency:
   group: vtt-stand
@@ -37,6 +42,10 @@ jobs:
       - run: yarn build
       - run: npx vitest run --reporter=dot --shard=${{ matrix.shard }}
         working-directory: ${{ matrix.dir }}
+        env:
+          GOLDEN: fast
+          GOLDEN_SAMPLES: ${{ inputs.heavy && '1' || '' }}
+          FUZZ_SEEDS: ${{ inputs.heavy && '6' || '0' }}
 
   image:
     name: Образ

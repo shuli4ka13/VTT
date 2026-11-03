@@ -10,7 +10,7 @@ import type { ActIntent, ActOutcome } from '../src/core/act.ts';
 import type { Journal, Question } from '../src/core/external.ts';
 import type { Sheet, System, Compendium } from '../src/model/types.ts';
 
-const SEEDS = Number(process.env.FUZZ_SEEDS ?? (process.env.CI ? 6 : 0));
+const SEEDS = Number(process.env.FUZZ_SEEDS ?? 0);
 const CHAIN = 4;
 
 function rng(seed: number): () => number {
