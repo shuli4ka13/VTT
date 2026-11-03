@@ -161,7 +161,8 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     const sheet = sheetOf(run, sheetId);
     const check = fieldCheck(run.system, tag);
     const { thrown, bonus, total, entries, threshold } = run.check(sheetId, check, root.step('roll'), check.label, claims ?? []);
-    const verdict = threshold === null ? '' : ` · порог ${threshold}: ${total >= threshold ? 'успех' : 'провал'}`;
+    const passed = threshold === null ? false : check.under ? total <= threshold : total >= threshold;
+    const verdict = threshold === null ? '' : ` · ${check.under ? 'не больше' : 'порог'} ${threshold}: ${passed ? 'успех' : 'провал'}`;
     const rolled = thrown.result;
     const named = thrown.roll.edits.length ? ` (${thrown.roll.edits.join(', ')})` : '';
     const shown = rolled.dice.kept != null && rolled.dice.rolls.length > 1
@@ -169,7 +170,9 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     run.state.write({
       text: thrown.roll.claim.read.kind === 'count'
         ? `${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} — успехов: ${total}${verdict}`
-        : `${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} + ${bonus} = ${total}${verdict}`,
+        : check.bonus
+          ? `${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} + ${bonus} = ${total}${verdict}`
+          : `${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} = ${total}${verdict}`,
     }, ...entries);
     return true;
   },

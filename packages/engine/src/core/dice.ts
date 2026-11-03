@@ -97,6 +97,16 @@ export function withCount(spec: Spec, count: number, owner: string): Spec {
   return { ...spec, terms: [{ ...spec.terms[0]!, count }] };
 }
 
+export function withSides(spec: Spec, sides: number, owner: string): Spec {
+  if (!Number.isInteger(sides) || sides < 1) {
+    throw new EngineError(`${owner}: грани кости «${spec.label || '?'}» должны быть целым числом от единицы, а вышло ${sides}`);
+  }
+  if (spec.terms.length !== 1) {
+    throw new EngineError(`${owner}: грани задаёт проверка, а кость «${spec.label || '?'}» составная — возьмите кость из одного вида`);
+  }
+  return { ...spec, terms: [{ ...spec.terms[0]!, sides }] };
+}
+
 export function times(spec: Spec, n: number): Spec {
   const k = Math.max(0, Math.floor(n));
   return { ...spec, terms: spec.terms.map(term => ({ ...term, count: term.count * k })) };

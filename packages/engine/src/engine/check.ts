@@ -6,6 +6,8 @@ export interface Check {
   die: string;
   count?: SlotRef;
   bonus?: SlotRef;
+  sides?: SlotRef;
+  under?: true;
   tags?: string[];
   threshold?: SlotRef;
 }
@@ -16,13 +18,15 @@ export function fieldCheck(system: System, tag: string): Check & { label: string
   if (!field.roll) throw new EngineError(`по полю «${field.label}» не бросают — включите броски в конструкторе`);
   const constant = (field.roll as { die?: string }).die;
   if (!constant) throw new EngineError(`по полю «${field.label}» бросают, но кость не выбрана`);
-  const { label, count, bonus, tags } = field.roll;
+  const { label, count, bonus, sides, under, tags } = field.roll;
   const threshold = (field.roll as { threshold?: SlotRef }).threshold;
   return {
     label: label ?? field.label,
     die: constant,
     ...(count ? { count } : {}),
     ...(bonus ? { bonus } : {}),
+    ...(sides ? { sides } : {}),
+    ...(under ? { under } : {}),
     ...(tags?.length ? { tags } : {}),
     ...(threshold ? { threshold } : {}),
   };

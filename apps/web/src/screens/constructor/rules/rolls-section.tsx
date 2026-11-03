@@ -8,7 +8,21 @@ import type { WorldState } from '../../../store/world.ts';
 
 type EditSystem = WorldState['editSystem'];
 
-const NUMBER_WORDS = [['bonus', 'прибавка к кости'], ['count', 'сколько костей']] as const;
+const NUMBER_WORDS = [
+  ['bonus', 'прибавка к кости'],
+  ['count', 'сколько костей'],
+  ['sides', 'сколько граней'],
+  ['under', 'выкинуть не больше'],
+  ['over', 'выкинуть не меньше'],
+] as const;
+
+function saidOf(number: SystemRoll['number'], die: string): string {
+  if (number === 'count') return `число поля — сколько бросить: ${die}`;
+  if (number === 'sides') return `${die}, грани — число поля`;
+  if (number === 'under') return `${die}, успех — не больше числа поля`;
+  if (number === 'over') return `${die}, успех — не меньше числа поля`;
+  return `${die} + число поля`;
+}
 
 function columnsOf(system: System): [string, string][] {
   const out: [string, string][] = [];
@@ -33,7 +47,7 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
   const die = dice.find(([key]) => key === roll.die)?.[1];
   const dieName = die?.label || roll.die;
   const sample = fieldsOf(system).find(f => roll.fields.some(one => one.table === f.home && (f.cell ? f.cell.column === one.column : f.tag === one.column)))?.roll;
-  const said = `${roll.number === 'count' ? `число поля — сколько бросить: ${dieName}` : `${dieName} + число поля`}${sample?.tags?.length ? ` · метки: ${sample.tags.join(', ')}` : ''}`;
+  const said = `${saidOf(roll.number, dieName)}${sample?.tags?.length ? ` · метки: ${sample.tags.join(', ')}` : ''}`;
   return (
     <div className="dict-block roll-word">
       <div className="dict-row">
@@ -49,7 +63,7 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
         <Select value={roll.die} options={dice.map(([key, c]) => [key, c.label || key] as const) as never}
           onChange={next => edit(draft => { draft.die = next; })} />
         <Select value={roll.number ?? 'bonus'} options={NUMBER_WORDS as never}
-          onChange={next => edit(draft => { if (next === 'count') draft.number = 'count'; else delete draft.number; })} />
+          onChange={next => edit(draft => { if (next === 'bonus') delete draft.number; else draft.number = next; })} />
       </div>
       <div className="dict-row dict-row--wrap roll-line">
         <span className="dict-row__label">Бросают</span>

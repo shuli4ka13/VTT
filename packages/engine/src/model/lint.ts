@@ -443,11 +443,12 @@ function fieldRollProblems(system: System): Problem[] {
     const name = roll.label || key;
     const die = system.constants?.[roll.die];
     if (die?.kind !== 'die') out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `бросок «${name}»: кости «${roll.die}» нет в «Костях»` });
-    else if (roll.number === 'count' && (die.dice ?? []).length !== 1) out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `бросок «${name}»: число поля — сколько костей, а кость «${die.label ?? roll.die}» составная` });
+    else if ((roll.number === 'count' || roll.number === 'sides') && (die.dice ?? []).length !== 1) out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `бросок «${name}»: число поля — ${roll.number === 'count' ? 'сколько костей' : 'грани кости'}, а кость «${die.label ?? roll.die}» составная` });
     for (const entry of roll.fields) {
       const table = system.tables?.[entry.table];
       const column = (table?.columns ?? []).find(one => one.key === entry.column);
       if (!table || !column) { out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `бросок «${name}»: колонки «${entry.column}» в таблице «${table?.label || entry.table}» нет` }); continue; }
+      if (entry.threshold !== undefined && (roll.number === 'under' || roll.number === 'over')) out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `бросок «${name}»: у «${column.label || column.key}» свой порог, а порог броска — само число поля` });
       const at = `${entry.table}.${entry.column}`;
       const other = taken.get(at);
       if (other) out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `«${column.label || column.key}» бросают двумя бросками: «${other}» и «${name}» — оставьте один` });
@@ -461,7 +462,7 @@ function fieldRollProblems(system: System): Problem[] {
     if (!die) { out.push({ where, level: 'error', text: `по полю «${field.label}» бросают, но кость не выбрана` }); continue; }
     const constant = system.constants?.[die];
     const derived = Object.values(system.rolls ?? {}).some(roll => roll.die === die && roll.fields.some(one => one.table === field.home && (field.cell ? field.cell.column === one.column : field.tag === one.column)));
-    if (!derived && field.roll.count && constant?.kind === 'die' && (constant.dice ?? []).length !== 1) {
+    if (!derived && (field.roll.count || field.roll.sides) && constant?.kind === 'die' && (constant.dice ?? []).length !== 1) {
       out.push({ where, level: 'error', text: `поле «${field.label}» задаёт число костей, а кость «${constant.label ?? die}» составная` });
     }
   }

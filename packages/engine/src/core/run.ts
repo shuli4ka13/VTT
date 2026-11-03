@@ -30,7 +30,7 @@ import { recordOf, retarget, opponentIn, mentions } from './against.ts';
 import type { Faced, Names } from './against.ts';
 import type { Holder } from './edits.ts';
 import { throwDice } from './roll.ts';
-import { result, parse, withCount, start, addendsText } from './dice.ts';
+import { result, parse, withCount, withSides, start, addendsText } from './dice.ts';
 import { dieConstant } from '../engine/lead-die.ts';
 import type { Check } from '../engine/check.ts';
 import { subsOf, same, instOf, keysOf } from './subs.ts';
@@ -1342,7 +1342,8 @@ export class Run {
     const sink = newSink();
     const ctx = this.ctx(frame, {}, {}, path, sink, new Set());
     const spec = parse(dieConstant(this.system, check.die), (ref, what) => ctx.number(ref, what));
-    const sized = check.count === undefined || check.count === null ? spec : withCount(spec, ctx.number(check.count, `${owner} · сколько костей`), owner);
+    const counted = check.count === undefined || check.count === null ? spec : withCount(spec, ctx.number(check.count, `${owner} · сколько костей`), owner);
+    const sized = check.sides === undefined || check.sides === null ? counted : withSides(counted, ctx.number(check.sides, `${owner} · грани`), owner);
     const bonus = check.bonus ? ctx.optional(check.bonus, `${owner} · прибавка`) ?? 0 : 0;
     const thrown = ctx.roll(sized, [...(check.tags ?? [])], sheetId, null, check.bonus ? { ref: check.bonus, value: bonus } : undefined);
     let threshold: number | null = null;

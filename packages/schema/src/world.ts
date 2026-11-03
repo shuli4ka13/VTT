@@ -37,6 +37,8 @@ export const rollSpec = z.object({
   die: z.string().min(1),
   count: formula.optional(),
   bonus: formula.optional(),
+  sides: formula.optional(),
+  under: z.literal(true).optional(),
   tags: z.array(z.string().min(1)).optional(),
 }).passthrough();
 
@@ -159,7 +161,7 @@ export const rollField = z.object({
 export const systemRoll = z.object({
   label: z.string().optional(),
   die: z.string().min(1),
-  number: z.enum(['bonus', 'count']).optional(),
+  number: z.enum(['bonus', 'count', 'sides', 'under', 'over']).optional(),
   tags: z.array(z.string().min(1)).optional(),
   fields: z.array(rollField),
 }).strict();

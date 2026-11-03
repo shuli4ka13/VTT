@@ -368,6 +368,14 @@ function rollTags(table: Table, row: TableRow | undefined): string[] {
   return [...linked, String(row.value ?? '')].filter(isTagWord);
 }
 
+function numberOf(kind: SystemRoll['number'], number: { expr: string }): Record<string, unknown> {
+  if (kind === 'count') return { count: number };
+  if (kind === 'sides') return { sides: number };
+  if (kind === 'under') return { threshold: number, under: true };
+  if (kind === 'over') return { threshold: number };
+  return { bonus: number };
+}
+
 export function fieldRollOf(system: System, tableId: string, column: string, row?: TableRow): Field['roll'] | undefined {
   const found = rollEntryOf(system, tableId, column);
   const table = system.tables?.[tableId];
@@ -378,9 +386,9 @@ export function fieldRollOf(system: System, tableId: string, column: string, row
   return {
     label: roll.label ? `${roll.label}: ${label}` : label,
     die: roll.die,
-    ...(roll.number === 'count' ? { count: number } : { bonus: number }),
+    ...numberOf(roll.number, number),
     tags: [...new Set([key, ...(roll.tags ?? []), ...rollTags(table, row), ...(entry.tags ?? [])])],
-    ...(entry.threshold !== undefined ? { threshold: entry.threshold } : {}),
+    ...(entry.threshold !== undefined && (roll.number !== 'under' && roll.number !== 'over') ? { threshold: entry.threshold } : {}),
   } as Field['roll'];
 }
 
@@ -413,7 +421,7 @@ function rowFields(system: System, tableId: string, table: Table): Field[] {
       const own = row.view?.[column.key]?.roll;
       const merged = base || own ? {
         ...base, ...own,
-        ...(own && (own.bonus || own.count) ? (own.count ? { bonus: undefined } : { count: undefined }) : {}),
+        ...(own && (own.bonus || own.count || own.sides) ? { bonus: own.bonus, count: own.count, sides: own.sides, under: undefined, ...(base?.under ? { threshold: own.threshold } : {}) } : {}),
         ...(base?.tags || own?.tags ? { tags: [...new Set([...(base?.tags ?? []), ...(own?.tags ?? [])])] } : {}),
       } : undefined;
       const roll = merged ? rowRefs(system, tableId, row, deep(system, table, row, merged)) as Field['roll'] : undefined;
