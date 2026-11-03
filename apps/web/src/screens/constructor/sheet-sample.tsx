@@ -3,18 +3,41 @@ import type { ReactNode } from 'react';
 import { useWorld, useBook } from '../../store/world.ts';
 import { useReader } from '../../engine/use-calc.ts';
 import { SheetView } from '../../sheet/sheet-view.tsx';
-import { Card, CardHead, Chip, Field, Select, Fold, LabelInput, Button } from '../../ui/primitives.tsx';
-import { ValueEditor } from '../../ui/value-editor.tsx';
+import { Card, CardHead, Chip, Field, Select, Button } from '../../ui/primitives.tsx';
+import { recordDetails } from '../../sheet/record-view.tsx';
 import { sheetKinds, shownOn, recordKinds, recordKindOf } from '@vtt/engine/model/owned';
 import { availableActions } from '@vtt/engine/events/actions';
 import { pageOfBlock } from '@vtt/engine/model/pages';
 import { SHEET_LISTS } from '@vtt/engine/words/glossary';
 import { OPEN_PAGE } from './page-panel.tsx';
 import type { PageList } from '@vtt/schema';
-import type { Sheet, StoredValue, System, CompendiumRecord } from '@vtt/schema';
+import type { Sheet, StoredValue, System, CompendiumRecord, Column } from '@vtt/schema';
 import { fieldsOf, fieldOf, rowKeyOf } from '@vtt/engine/model/sheet-columns';
+import { listOf } from '@vtt/engine/model/lists';
 
 const ZERO: Record<string, unknown> = { number: 0, text: '', boolean: false, choice: '' };
+
+const DICE = ['1d4', '1d6', '1d8', '1d10', '1d12', '2d6'];
+
+const anyOf = <T,>(list: readonly T[]): T | undefined => list[Math.floor(Math.random() * list.length)];
+
+export function sampleCells(system: System, columns: readonly Column[]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const column of columns) {
+    const kind = column.kind ?? 'text';
+    if (kind === 'number') {
+      const low = typeof column.min === 'number' ? column.min : 1;
+      const high = typeof column.max === 'number' ? column.max : Math.max(low, 10);
+      out[column.key] = low + Math.floor(Math.random() * (high - low + 1));
+    } else if (kind === 'boolean') out[column.key] = Math.random() < 0.5;
+    else if (kind === 'dice') out[column.key] = anyOf(DICE);
+    else if (kind === 'choice') {
+      const pick = anyOf(listOf(system, column.from) ?? []);
+      if (pick) out[column.key] = column.many ? [pick.value] : pick.value;
+    }
+  }
+  return out;
+}
 
 export function setSample(draft: System, tag: string, value: StoredValue): void {
   const field = fieldOf(draft, tag);
@@ -55,7 +78,7 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
   const bookKinds = recordKinds(system);
   const samples = useMemo<CompendiumRecord[]>(() => bag
     .filter(item => system.tables?.[item.table])
-    .map((item, at) => ({ id: `образец-${at + 1}`, table: item.table, label: item.label || `${system.tables![item.table]!.label || item.table} (образец)`, cells: item.cells })), [bag, system.tables]);
+    .map((item, at) => ({ id: `образец-${at + 1}`, table: item.table, label: item.label || `${system.tables![item.table]!.label || item.table} ${at + 1}`, cells: item.cells })), [bag, system.tables]);
   const change = (at: number, next: (item: (typeof bag)[number]) => (typeof bag)[number]) => setBag(bag.map((item, other) => (other === at ? next(item) : item)));
   const book = useMemo(() => ({ ...compendium, records: [...(compendium.records ?? []), ...samples] }), [compendium, samples]);
   const sample = useMemo<Sheet>(() => ({
@@ -75,32 +98,24 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
           {samples.length === 0 ? <span className="faint">У образца пока ничего нет — добавьте образец вещи или умения.</span> : null}
         </div>
         {samples.map((record, at) => (
-          <Fold key={record.id} title={record.label ?? record.id} open={at === samples.length - 1 && !Object.keys(record.cells ?? {}).length}>
-            <div className="stack stack--tight">
-              <Field label="Название">
-                <LabelInput value={bag[at]!.label ?? ''} placeholder={record.label ?? ''}
-                  onCommit={label => change(at, item => ({ ...item, label: label.trim() || undefined }))} />
-              </Field>
-              <div className="row">
-                {(recordKindOf(system, record.table)?.columns ?? []).map(prop => (
-                  <Field key={prop.key} label={prop.label ?? prop.key}>
-                    <ValueEditor type={prop} value={record.cells?.[prop.key]} system={system} compendium={book} onlyWorn except={record.id}
-                      onChange={next => change(at, item => {
-                        const cells = { ...item.cells };
-                        if (next === undefined || next === '' || (Array.isArray(next) && !next.length)) delete cells[prop.key]; else cells[prop.key] = next;
-                        return { ...item, cells };
-                      })} />
-                  </Field>
-                ))}
-              </div>
-              <Button size="sm" variant="ghost" onClick={() => setBag(bag.filter((_, other) => other !== at))}>убрать из сумки</Button>
+          <div key={record.id}>
+            <div className="inline inline--tight">
+              <Chip>{record.label ?? record.id}</Chip>
+              <Button size="sm" variant="ghost" onClick={() => change(at, item => ({ ...item, cells: sampleCells(system, recordKindOf(system, item.table)?.columns ?? []) }))}>другие значения</Button>
+              <Button size="sm" variant="ghost" onClick={() => setBag(bag.filter((_, other) => other !== at))}>убрать</Button>
             </div>
-          </Fold>
+            <div className="faint">{recordDetails(record, system, book).map(line => `${line.label}: ${line.value}`).join(' · ')}</div>
+          </div>
         ))}
         <Select<string> label="добавить образец" value=""
           options={[['', bookKinds.length ? '+ образец вещи или умения' : 'типов вещей и умений ещё нет'], ...bookKinds
             .map(([key, table]) => [key, table.label || key] as const)]}
-          onChange={key => { if (key) setBag([...bag, { table: key, cells: {} }]); }} />
+          onChange={key => {
+            if (!key) return;
+            const kindOfKey = recordKindOf(system, key);
+            const number = bag.filter(item => item.table === key).length + 1;
+            setBag([...bag, { table: key, label: `${kindOfKey?.label || key} ${number}`, cells: sampleCells(system, kindOfKey?.columns ?? []) }]);
+          }} />
       </Card>
     ),
     actions: (

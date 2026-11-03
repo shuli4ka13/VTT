@@ -18,19 +18,16 @@ const system = {
 describe('образец листа: сумка из типов вещей и умений', () => {
   afterEach(cleanup);
 
-  it('добавляет образец типа, вписывает его свойства и убирает, книга мира не нужна', () => {
+  it('добавляет образец типа, со случайными свойствами только для показа, убирает, книга мира не нужна', () => {
     useWorld.setState(state => ({ ...state, system, compendium: { records: [] }, activePage: null, activeBlock: null }));
     render(<SheetSample system={system} />);
     expect(screen.getByText('У образца пока ничего нет — добавьте образец вещи или умения.')).toBeTruthy();
     fireEvent.change(screen.getByLabelText('добавить образец'), { target: { value: 'оружие' } });
-    expect(screen.getByText('Оружие (образец)')).toBeTruthy();
+    expect(screen.getByText('Оружие 1')).toBeTruthy();
     expect(useWorld.getState().system).toBe(system);
-    const input = () => screen.getByText('Урон').closest('label')!.querySelector('input')!;
-    fireEvent.change(input(), { target: { value: '8' } });
-    fireEvent.keyDown(input(), { key: 'Enter' });
-    fireEvent.blur(input());
-    expect(input().value).toBe('8');
-    fireEvent.click(screen.getByText('убрать из сумки'));
-    expect(screen.queryByText('Оружие (образец)')).toBeNull();
+    expect(document.body.textContent).toMatch(/Урон: \d+/);
+    expect(screen.getByText('Оружие 1').closest('.card')!.querySelector('input')).toBeNull();
+    fireEvent.click(screen.getByText('убрать'));
+    expect(screen.queryByText('Оружие 1')).toBeNull();
   });
 });
