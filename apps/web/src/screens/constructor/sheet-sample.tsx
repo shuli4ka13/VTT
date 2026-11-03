@@ -3,13 +3,14 @@ import type { ReactNode } from 'react';
 import { useWorld, useBook } from '../../store/world.ts';
 import { useReader } from '../../engine/use-calc.ts';
 import { SheetView } from '../../sheet/sheet-view.tsx';
-import { Card, Field, Select } from '../../ui/primitives.tsx';
-import { sheetKinds, shownOn } from '@vtt/engine/model/owned';
-import { pageOfBlock, PAGE_LISTS } from '@vtt/engine/model/pages';
+import { Card, CardHead, Chip, Field, Select } from '../../ui/primitives.tsx';
+import { sheetKinds, shownOn, recordKinds } from '@vtt/engine/model/owned';
+import { availableActions } from '@vtt/engine/events/actions';
+import { pageOfBlock } from '@vtt/engine/model/pages';
 import { SHEET_LISTS } from '@vtt/engine/words/glossary';
 import { OPEN_PAGE } from './page-panel.tsx';
 import type { PageList } from '@vtt/schema';
-import type { Sheet, StoredValue, System } from '@vtt/schema';
+import type { Sheet, StoredValue, System, CompendiumRecord } from '@vtt/schema';
 import { fieldsOf, fieldOf, rowKeyOf } from '@vtt/engine/model/sheet-columns';
 
 const ZERO: Record<string, unknown> = { number: 0, text: '', boolean: false, choice: '' };
@@ -48,18 +49,53 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
   const activeBlock = useWorld(s => s.activeBlock);
   const kinds = sheetKinds(system);
   const [of, setOf] = useState('');
+  const [carried, setCarried] = useState<string[]>([]);
   const kind = of ? system.sheets?.[of] : undefined;
+  const bookKinds = recordKinds(system);
+  const samples = useMemo<CompendiumRecord[]>(() => carried
+    .filter(table => system.tables?.[table])
+    .map((table, at) => ({ id: `образец-${at + 1}`, table, label: `${system.tables![table]!.label || table} (образец)` })), [carried, system.tables]);
+  const book = useMemo(() => ({ ...compendium, records: [...(compendium.records ?? []), ...samples] }), [compendium, samples]);
   const sample = useMemo<Sheet>(() => ({
     id: 'образец', systemId: system.id ?? '', name: kind?.label ?? 'Образец листа',
-    ...(of ? { of } : {}), values: {}, has: [], effects: [],
-  }), [system.id, of, kind?.label]);
-  const reader = useReader(system, sample, compendium);
+    ...(of ? { of } : {}), values: {}, has: samples.map(record => ({ of: record.id })), effects: [],
+  }), [system.id, of, kind?.label, samples]);
+  const reader = useReader(system, sample, book);
   const only = kind?.blocks?.length ? fieldsOf(system).filter(shownOn(system, sample)).map(f => f.tag) : undefined;
 
   const at = (activeBlock ? pageOfBlock(system, activeBlock) : undefined) ?? activePage;
-  const lists = Object.fromEntries(PAGE_LISTS.map(list => [list, (
-    <Card><span className="faint">здесь будет: {SHEET_LISTS[list]}</span></Card>
-  )])) as Partial<Record<PageList, ReactNode>>;
+  const actions = (() => { try { return availableActions(sample, { system, compendium: book }); } catch { return []; } })();
+  const lists: Partial<Record<PageList, ReactNode>> = {
+    things: (
+      <Card>
+        <CardHead title={SHEET_LISTS.things} />
+        <div className="inline inline--tight">
+          {samples.length === 0 ? <span className="faint">У образца пока ничего нет — добавьте образец вещи или умения.</span> : null}
+          {samples.map((record, at) => (
+            <Chip key={record.id} onRemove={() => setCarried(carried.filter((_, other) => other !== at))}>{record.label}</Chip>
+          ))}
+        </div>
+        <Select<string> label="добавить образец" value=""
+          options={[['', bookKinds.length ? '+ образец вещи или умения' : 'типов вещей и умений ещё нет'], ...bookKinds
+            .map(([key, table]) => [key, table.label || key] as const)]}
+          onChange={key => { if (key) setCarried([...carried, key]); }} />
+      </Card>
+    ),
+    actions: (
+      <Card>
+        <CardHead title={SHEET_LISTS.actions} />
+        {actions.length === 0
+          ? <span className="faint">Применить нечего — добавьте вещь или умение в «{SHEET_LISTS.things}».</span>
+          : <div className="inline inline--tight">{actions.map(action => <Chip key={action.id}>{action.label}</Chip>)}</div>}
+      </Card>
+    ),
+    hanging: (
+      <Card>
+        <CardHead title={SHEET_LISTS.hanging} />
+        <span className="faint">На образце ничего не висит.</span>
+      </Card>
+    ),
+  };
 
   return (
     <>
@@ -80,7 +116,7 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
         reader={reader}
         only={only}
         badge="образец"
-        pages={{ at: at ?? null, onAt: name => pick({ ...OPEN_PAGE, activePage: name }), lists }}
+        pages={{ at: at ?? null, onAt: name => pick({ ...OPEN_PAGE, activePage: name }), lists, all: true }}
         {...(onPick ? { onPick } : {})}
         {...(onPickBlock ? { onPickBlock } : {})}
         {...(onPickRow ? { onPickRow } : {})}

@@ -99,7 +99,7 @@ function viewsFor(world: World, path: Key[]): View[] {
     const page = world.system.pages?.[Number(id)];
     return page ? [sheet({ activePage: page.name })] : [];
   }
-  if (part === 'blocks' && id && ['page', 'stack', 'wide', 'split'].includes(sub ?? '')) {
+  if (part === 'blocks' && id) {
     const block = world.system.blocks?.[Number(id)];
     return block ? [sheet({ activeBlock: block.name })] : [];
   }
@@ -115,7 +115,7 @@ const load = (world: World, pick: Record<string, unknown>): void => {
   useWorld.setState(state => ({
     ...state, system: structuredClone(world.system), compendium: structuredClone(world.compendium),
     activeFieldTag: null, activeGroupName: null, activeEffectId: null, activeRecordKind: null,
-    activeSheetKind: null, activePage: null, activeStepIndex: null, activeTableId: null, activeRecordId: null,
+    activeSheetKind: null, activePage: null, activeBlock: null, activeRow: null, activeColumn: null, activeSheetTable: null, activeStepIndex: null, activeTableId: null, activeRecordId: null,
     ...pick,
   }));
 };

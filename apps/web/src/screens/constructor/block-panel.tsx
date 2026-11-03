@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useWorld } from '../../store/world.ts';
 import { useDragList } from '../../ui/drag-list.ts';
-import { Card, CardHead, Field, Select, Segmented, Fold, Button, DangerButton, LabelInput, Verdict } from '../../ui/primitives.tsx';
+import { Card, CardHead, Field, Select, Button, DangerButton, LabelInput, Verdict } from '../../ui/primitives.tsx';
 import { readyForSheet } from './table-field.tsx';
-import { onSheet, rowKeyOf, fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { onSheet, rowKeyOf, fieldsOf, isSingle } from '@vtt/engine/model/sheet-columns';
 import { pagesOf, pageOfBlock } from '@vtt/engine/model/pages';
 import { isRange } from '@vtt/engine/model/tables';
 import type { System, SheetBlock, SheetPart } from '@vtt/schema';
+
+const SPOTS: Record<2 | 3, string[]> = { 2: ['левый столбец', 'правый столбец'], 3: ['левый столбец', 'средний столбец', 'правый столбец'] };
 
 export const SHEET_TABLE = 'лист';
 
@@ -185,17 +187,35 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
         <>
           <Field label="Страница">
             <Select<string> label="страница блока" value={block.page ?? ''}
-              options={[['', 'первая закладка'], ...pages.map(page => [page.name, page.top ? `${page.name} · шапка` : page.name] as const)]}
+              options={[['', `${pages.find(page => !page.top)?.name ?? 'первая'} — первая закладка`], ...pages.map(page => [page.name, page.top ? `${page.name} · над закладками` : page.name] as const)]}
               onChange={next => edit(target => { if (next) target.page = next; else delete target.page; })} />
           </Field>
           {stacks > 1 ? (
-            <Field label="Столбец">
-              <Segmented<string> value={String(block.stack ?? 1)}
-                options={Array.from({ length: stacks }, (_, at) => ({ key: String(at + 1), label: String(at + 1) }))}
-                onChange={next => edit(target => { if (Number(next) > 1) target.stack = Number(next) as 2 | 3; else delete target.stack; })} />
+            <Field label="Место на странице">
+              <Select<string> label="место на странице" value={block.wide ? 'wide' : String(Math.min(block.stack ?? 1, stacks))}
+                options={[['wide', 'во всю ширину'], ...SPOTS[stacks === 3 ? 3 : 2].map((word, at) => [String(at + 1), word] as const)]}
+                onChange={next => edit(target => {
+                  delete target.wide; delete target.stack;
+                  if (next === 'wide') target.wide = true;
+                  else if (Number(next) > 1) target.stack = Number(next) as 2 | 3;
+                })} />
             </Field>
           ) : null}
         </>
+      ) : null}
+      {block.parts.some(part => isSingle(system.tables?.[part.table])) ? (
+        <Field label="Поля внутри блока">
+          <Select<string> label="поля внутри блока" value={String(block.per ?? '')}
+            options={[['', 'как поместятся'], ['1', 'по одному в строку'], ['2', 'по два в строку'], ['3', 'по три в строку'], ['4', 'по четыре в строку']]}
+            onChange={next => edit(target => { if (next) target.per = Number(next) as 1 | 2 | 3 | 4; else delete target.per; })} />
+        </Field>
+      ) : null}
+      {block.parts.some(part => !isSingle(system.tables?.[part.table])) ? (
+        <Field label="Строки таблицы">
+          <Select<string> label="строки таблицы" value={String(block.split ?? 1)}
+            options={[['1', 'одним списком'], ['2', 'в два столбца'], ['3', 'в три столбца']]}
+            onChange={next => edit(target => { if (Number(next) > 1) target.split = Number(next) as 2 | 3; else delete target.split; })} />
+        </Field>
       ) : null}
       {block.parts.map((part, index) => {
         const table = system.tables?.[part.table];
@@ -266,22 +286,6 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
           </div>
         </Verdict>
       ) : null}
-      <Fold title="ещё">
-        <div className="stack stack--tight">
-          {top && pages.length ? (
-            <label className="inline inline--tight">
-              <input type="checkbox" checked={block.wide === true}
-                onChange={event => edit(target => { if (event.currentTarget.checked) target.wide = true; else delete target.wide; })} />
-              Во всю ширину страницы
-            </label>
-          ) : null}
-          <Field label="Строки — в 1/2/3 столбца">
-            <Segmented<string> value={String(block.split ?? 1)}
-              options={[{ key: '1', label: '1' }, { key: '2', label: '2' }, { key: '3', label: '3' }]}
-              onChange={next => edit(target => { if (Number(next) > 1) target.split = Number(next) as 2 | 3; else delete target.split; })} />
-          </Field>
-        </div>
-      </Fold>
       <div className="inline inline--tight">
         <Select<string> label="добавить поля из таблицы" value=""
           options={[['', '+ поля из таблицы…'], ...tables.map(([id, label]) => [id, label] as const)]}

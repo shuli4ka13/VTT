@@ -58,18 +58,17 @@ describe('страницы листа в конструкторе', () => {
   it('шапка одна: включение у другой страницы снимает прежнюю, выключение снимает ключ', () => {
     load([{ name: 'Основное', top: true }, { name: 'Магия' }]);
     panel('Магия');
-    fireEvent.click(screen.getByLabelText('Шапка — видна всегда'));
+    fireEvent.click(screen.getByLabelText('Над закладками — видна всегда'));
     expect(sys().pages).toEqual([{ name: 'Основное' }, { name: 'Магия', top: true }]);
-    fireEvent.click(screen.getByLabelText('Шапка — видна всегда'));
+    fireEvent.click(screen.getByLabelText('Над закладками — видна всегда'));
     expect(sys().pages).toEqual([{ name: 'Основное' }, { name: 'Магия' }]);
   });
 
-  it('столбцов: 2 пишет stacks, 1 снимает ключ', () => {
+  it('как стоят блоки: в два столбца пишет stacks, 1 снимает ключ', () => {
     panel('Основное');
-    const group = screen.getByText('Столбцов').closest('label')!;
-    fireEvent.click([...group.querySelectorAll('button')].find(b => b.textContent === '2')!);
+    fireEvent.change(screen.getByLabelText('как стоят блоки'), { target: { value: '2' } });
     expect(sys().pages![0]).toEqual({ name: 'Основное', stacks: 2 });
-    fireEvent.click([...group.querySelectorAll('button')].find(b => b.textContent === '1')!);
+    fireEvent.change(screen.getByLabelText('как стоят блоки'), { target: { value: '1' } });
     expect(sys().pages![0]).toEqual({ name: 'Основное' });
   });
 

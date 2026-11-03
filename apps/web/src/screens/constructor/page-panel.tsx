@@ -1,5 +1,5 @@
 import { useWorld } from '../../store/world.ts';
-import { Card, CardHead, Field, Segmented, Button, DangerButton, LabelInput } from '../../ui/primitives.tsx';
+import { Card, CardHead, Field, Select, Button, DangerButton, LabelInput } from '../../ui/primitives.tsx';
 import { PAGE_LISTS, pagesOf, pageOfBlock, renamePage, removePage } from '@vtt/engine/model/pages';
 import { SHEET_LISTS } from '@vtt/engine/words/glossary';
 import type { System, SheetPage, PageList } from '@vtt/schema';
@@ -67,17 +67,13 @@ export function PagePanel({ name, system }: { name: string; system: System }) {
             pick({ activePage: clean });
           }} />}
         actions={<Button size="sm" variant="ghost" onClick={() => pick({ activePage: null })}>×</Button>} />
-      <Field label="Значок">
-        <LabelInput value={page.icon ?? ''} placeholder="без значка"
-          onCommit={next => edit(target => { const clean = next.trim(); if (clean) target.icon = clean; else delete target.icon; })} />
-      </Field>
       <label className="inline inline--tight">
         <input type="checkbox" checked={page.top === true} onChange={event => editSystem(draft => setTop(draft, name, event.currentTarget.checked))} />
-        Шапка — видна всегда
+        Над закладками — видна всегда
       </label>
-      <Field label="Столбцов">
-        <Segmented<string> value={String(page.stacks ?? 1)}
-          options={[{ key: '1', label: '1' }, { key: '2', label: '2' }, { key: '3', label: '3' }]}
+      <Field label="Как стоят блоки">
+        <Select<string> label="как стоят блоки" value={String(page.stacks ?? 1)}
+          options={[['1', 'друг под другом'], ['2', 'в два столбца'], ['3', 'в три столбца']]}
           onChange={next => edit(target => setStacks(target, Number(next)))} />
       </Field>
       <Field label="Списки на этой странице">
@@ -109,13 +105,12 @@ export function PageBar({ system }: { system: System }) {
   const activeBlock = useWorld(s => s.activeBlock);
   const shown = activeBlock ? pageOfBlock(system, activeBlock) : activePage;
   const pages = pagesOf(system);
-  const ordered = [...pages.filter(page => page.top), ...pages.filter(page => !page.top)];
   return (
     <div className="inline inline--tight page-bar">
-      {ordered.map(page => (
+      {pages.filter(page => page.top).map(page => (
         <Button key={page.name} size="sm" variant={page.name === shown ? 'primary' : 'ghost'}
           onClick={() => pick({ ...OPEN_PAGE, activePage: page.name })}>
-          {page.icon ? `${page.icon} ` : ''}{page.name}{page.top ? ' · шапка' : ''}
+          над закладками: {page.name}
         </Button>
       ))}
       <Button size="sm" onClick={() => {
