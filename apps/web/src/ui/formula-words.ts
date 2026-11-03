@@ -33,6 +33,15 @@ const pathWords = (ref: (text: string) => string, tag: string): string => {
 
 const TABLES = new WeakMap<ReadonlyMap<string, string>, ReadonlyMap<string, string>>();
 
+export const tablesOf = (names: ReadonlyMap<string, string> | undefined): ReadonlyMap<string, string> | undefined =>
+  (names ? TABLES.get(names) : undefined);
+
+export const choiceTableOf = (system: System, tag: string, tables?: ReadonlyMap<string, string>): string | undefined =>
+  tables?.get(tag) ?? fieldChoice(system, tag);
+
+export const rowLabelOf = (system: System, table: string | undefined, value: string): string | undefined =>
+  (table ? (listOf(system, table) ?? []).find(one => String(one.value) === value)?.label : undefined);
+
 export function withTables<T extends ReadonlyMap<string, string>>(names: T, tables: ReadonlyMap<string, string> | undefined): T {
   if (tables) TABLES.set(names, tables);
   return names;
@@ -81,9 +90,8 @@ export function formulaWords(system: System, source: string, names?: ReadonlyMap
 
   const choiceWord = (ref: Node, value: Node): string | null => {
     if (ref.kind !== 'Ref' || value.kind !== 'Text' || value.dice) return null;
-    const table = tables?.get(ref.tag) ?? fieldChoice(system, ref.tag);
-    const row = table ? (listOf(system, table) ?? []).find(one => String(one.value) === value.value) : undefined;
-    return row ? `«${row.label}»` : null;
+    const label = rowLabelOf(system, choiceTableOf(system, ref.tag, tables), value.value);
+    return label ? `«${label}»` : null;
   };
 
   const call = (name: string, args: Node[]): string => {

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { System, Modifier } from '@vtt/schema';
 import { formulaWords, withTables } from './formula-words.ts';
+import { choiceLits } from './formula-chips.tsx';
 import { modifierSentence } from '../screens/constructor/modifier-words.ts';
 
 const system = { id: 'с', name: 'с', tables: {}, effects: {} } as unknown as System;
@@ -132,5 +133,18 @@ describe('слова формул: «есть в списке» и переск�
   it('таблицы, привязанные к именам, видны без отдельного параметра', () => {
     const names = withTables(new Map([['черта', 'Характеристика']]), new Map([['черта', 'черты']]));
     expect(formulaWords(chosen, 'если(@черта == "edge", 1, 0)', names)).toBe('1, если «Характеристика» = «Преимущество», иначе 0');
+  });
+});
+
+describe('поле формулы: значение выбора — фишкой со словом строки', () => {
+  const chosen = {
+    id: 'с', name: 'с', effects: {},
+    tables: { черты: { label: 'Черты', columns: [], rows: [{ value: 'edge', label: 'Преимущество' }, { value: 'magic', label: 'Магия' }] } },
+  } as unknown as System;
+
+  it('значения в сравнении и в «есть» получают слова, формула не меняется', () => {
+    const text = '@черта == "edge" или есть(@черты_выбраны, "magic")';
+    const tables = new Map([['черта', 'черты'], ['черты_выбраны', 'черты']]);
+    expect([...choiceLits(chosen, text, tables).values()]).toEqual(['Преимущество', 'Магия']);
   });
 });

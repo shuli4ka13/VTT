@@ -8,6 +8,7 @@ import { fieldsOf, hasField, fieldLinkOf, ROW } from '@vtt/engine/model/sheet-co
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { typeColumns } from '@vtt/engine/model/inherit';
 import { plainLabel, pickTail } from './formula-labels.ts';
+import { tablesOf, choiceTableOf, rowLabelOf } from './formula-words.ts';
 import { callAt, partAt, functionSpec } from '@vtt/engine/formula';
 import type { FunctionSpec } from '@vtt/engine/formula';
 
@@ -70,7 +71,7 @@ const labelOfTag = (system: System, tag: string, extra?: Map<string, string>, sh
 const knownSheetName = (system: System, tag: string): boolean =>
   hasField(system, tag) || sheetPathLabel(system, tag) !== null || Boolean(system.effects?.[tag]);
 
-export type Part = { text: string } | { tag: string; lit?: boolean; by?: string; rest?: string };
+export type Part = { text: string } | { tag: string; lit?: boolean; label?: string; by?: string; rest?: string };
 
 const LONE_REF = /^\s*[@#]([\p{L}\p{N}_.]+)\s*$/u;
 
@@ -152,9 +153,29 @@ export function lookupLits(system: System, value: string): Map<number, string> {
     if (table && owner) out.set(table.at, owner.label || table.id);
     const column = quoted(args[2]);
     if (!column) continue;
-    const pool = owner ? [owner] : Object.values(system.tables ?? {});
-    const hit = pool.flatMap(one => one.columns ?? []).find(one => one.key === column.id);
+    const hit = owner && table ? typeColumns(system, table.id).find(one => one.key === column.id) : undefined;
     if (hit) out.set(column.at, hit.label || column.id);
+  }
+  return out;
+}
+
+const CHOICE_LITS = [
+  /@([\p{L}\p{N}_.]+)\s*(?:==|!=)\s*(")/gu,
+  /есть\(\s*@([\p{L}\p{N}_.]+)\s*,\s*(")/gu,
+];
+
+export function choiceLits(system: System, value: string, tables?: ReadonlyMap<string, string>): Map<number, string> {
+  const out = new Map<number, string>();
+  const put = (tag: string, at: number) => {
+    const end = value.indexOf('"', at + 1);
+    if (end < 0) return;
+    const label = rowLabelOf(system, choiceTableOf(system, tag, tables), value.slice(at + 1, end));
+    if (label) out.set(at, label);
+  };
+  for (const pattern of CHOICE_LITS) for (const found of value.matchAll(pattern)) put(found[1]!, found.index! + found[0].length - 1);
+  for (const found of value.matchAll(/"([^"]*)"\s*(?:==|!=)\s*@([\p{L}\p{N}_.]+)/gu)) {
+    const label = rowLabelOf(system, choiceTableOf(system, found[2]!, tables), found[1]!);
+    if (label) out.set(found.index!, label);
   }
   return out;
 }
@@ -178,7 +199,7 @@ export function partsOf(value: string, known?: (tag: string) => boolean, lits?: 
       continue;
     }
     out.push({ text: text + rest.slice(0, m.index) });
-    out.push(lit ? { tag: m[5]!, lit: true }
+    out.push(lit ? { tag: m[5]!, lit: true, ...(lits?.get(offset + m.index) ? { label: lits.get(offset + m.index)! } : {}) }
       : picked ? { tag: m[1]!, by: m[2]!, ...(m[3] ? { rest: m[3].slice(1) } : {}) }
         : { tag: m[4]! });
     text = '';
@@ -244,7 +265,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
 }) {
   const paths = useMemo(() => fieldPaths(system), [system]);
   const marks = useMemo(() => tagWords(system), [system]);
-  const lits = useMemo(() => lookupLits(system, value), [system, value]);
+  const lits = useMemo(() => new Map([...lookupLits(system, value), ...choiceLits(system, value, tablesOf(extraNames))]), [system, value, extraNames]);
   const parts = useMemo(
     () => partsOf(value, tag => {
       const owned = onSheet(tag, sheets);
@@ -515,7 +536,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
         {prefix}
         {empty ? <span className="chips__placeholder">{placeholder}</span> : parts.map((part, index) => ('tag' in part ? (
           part.lit ? (
-            <span key={index} className="chips__chip chips__chip--lookup" title="из таблицы">{lookups.get(part.tag) ?? part.tag}</span>
+            <span key={index} className="chips__chip chips__chip--lookup" title="из таблицы">{part.label ?? lookups.get(part.tag) ?? part.tag}</span>
           ) : names?.[part.tag] !== undefined ? (
             <span key={index} className="chips__group">{names[part.tag]}</span>
           ) : (
@@ -547,7 +568,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
         {parts.map((part, index) => 'tag' in part ? (
           part.lit ? (
             <span key={index} className="chips__chip chips__chip--lookup" title="из таблицы">
-              <span>{lookups.get(part.tag) ?? part.tag}</span>
+              <span>{part.label ?? lookups.get(part.tag) ?? part.tag}</span>
               <button type="button" className="chips__x" aria-label="убрать"
                 onMouseDown={e => { e.preventDefault(); dropChip(index); }}>×</button>
             </span>
