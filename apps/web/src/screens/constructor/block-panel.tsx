@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useWorld } from '../../store/world.ts';
 import { useDragList } from '../../ui/drag-list.ts';
-import { Card, CardHead, Field, Select, Button, DangerButton, LabelInput, Verdict } from '../../ui/primitives.tsx';
+import { Card, CardHead, Field, Select, Segmented, Fold, Button, DangerButton, LabelInput, Verdict } from '../../ui/primitives.tsx';
 import { readyForSheet } from './table-field.tsx';
 import { onSheet, rowKeyOf, fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { pagesOf, pageOfBlock } from '@vtt/engine/model/pages';
 import { isRange } from '@vtt/engine/model/tables';
 import type { System, SheetBlock, SheetPart } from '@vtt/schema';
 
@@ -160,6 +161,10 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
   const barred = new Set([name, ...descendants(name)]);
   const parents = sheetBlockList(system).map(b => b.name).filter(other => !barred.has(other));
 
+  const pages = pagesOf(system);
+  const top = !block.parent;
+  const stacks = pages.find(page => page.name === pageOfBlock(system, name))?.stacks ?? 1;
+
   return (
     <Card>
       <CardHead
@@ -176,6 +181,22 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
           options={[['', 'на верхнем уровне'], ...parents.map(p => [p, p] as const)]}
           onChange={next => edit(target => { if (next) target.parent = next; else delete target.parent; })} />
       </Field>
+      {top && pages.length ? (
+        <>
+          <Field label="Страница">
+            <Select<string> label="страница блока" value={block.page ?? ''}
+              options={[['', 'первая закладка'], ...pages.map(page => [page.name, page.top ? `${page.name} · шапка` : page.name] as const)]}
+              onChange={next => edit(target => { if (next) target.page = next; else delete target.page; })} />
+          </Field>
+          {stacks > 1 ? (
+            <Field label="Столбец">
+              <Segmented<string> value={String(block.stack ?? 1)}
+                options={Array.from({ length: stacks }, (_, at) => ({ key: String(at + 1), label: String(at + 1) }))}
+                onChange={next => edit(target => { if (Number(next) > 1) target.stack = Number(next) as 2 | 3; else delete target.stack; })} />
+            </Field>
+          ) : null}
+        </>
+      ) : null}
       {block.parts.map((part, index) => {
         const table = system.tables?.[part.table];
         const columns = table?.columns ?? [];
@@ -245,6 +266,22 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
           </div>
         </Verdict>
       ) : null}
+      <Fold title="ещё">
+        <div className="stack stack--tight">
+          {top && pages.length ? (
+            <label className="inline inline--tight">
+              <input type="checkbox" checked={block.wide === true}
+                onChange={event => edit(target => { if (event.currentTarget.checked) target.wide = true; else delete target.wide; })} />
+              Во всю ширину страницы
+            </label>
+          ) : null}
+          <Field label="Строки — в 1/2/3 столбца">
+            <Segmented<string> value={String(block.split ?? 1)}
+              options={[{ key: '1', label: '1' }, { key: '2', label: '2' }, { key: '3', label: '3' }]}
+              onChange={next => edit(target => { if (Number(next) > 1) target.split = Number(next) as 2 | 3; else delete target.split; })} />
+          </Field>
+        </div>
+      </Fold>
       <div className="inline inline--tight">
         <Select<string> label="добавить поля из таблицы" value=""
           options={[['', '+ поля из таблицы…'], ...tables.map(([id, label]) => [id, label] as const)]}

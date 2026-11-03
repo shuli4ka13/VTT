@@ -1,9 +1,14 @@
 import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useWorld, useBook } from '../../store/world.ts';
 import { useReader } from '../../engine/use-calc.ts';
 import { SheetView } from '../../sheet/sheet-view.tsx';
 import { Card, Field, Select } from '../../ui/primitives.tsx';
 import { sheetKinds, shownOn } from '@vtt/engine/model/owned';
+import { pageOfBlock, PAGE_LISTS } from '@vtt/engine/model/pages';
+import { SHEET_LISTS } from '@vtt/engine/words/glossary';
+import { OPEN_PAGE } from './page-panel.tsx';
+import type { PageList } from '@vtt/schema';
 import type { Sheet, StoredValue, System } from '@vtt/schema';
 import { fieldsOf, fieldOf, rowKeyOf } from '@vtt/engine/model/sheet-columns';
 
@@ -38,6 +43,9 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
 }) {
   const compendium = useBook();
   const editSystem = useWorld(s => s.editSystem);
+  const pick = useWorld(s => s.pick);
+  const activePage = useWorld(s => s.activePage);
+  const activeBlock = useWorld(s => s.activeBlock);
   const kinds = sheetKinds(system);
   const [of, setOf] = useState('');
   const kind = of ? system.sheets?.[of] : undefined;
@@ -47,6 +55,11 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
   }), [system.id, of, kind?.label]);
   const reader = useReader(system, sample, compendium);
   const only = kind?.blocks?.length ? fieldsOf(system).filter(shownOn(system, sample)).map(f => f.tag) : undefined;
+
+  const at = (activeBlock ? pageOfBlock(system, activeBlock) : undefined) ?? activePage;
+  const lists = Object.fromEntries(PAGE_LISTS.map(list => [list, (
+    <Card><span className="faint">здесь будет: {SHEET_LISTS[list]}</span></Card>
+  )])) as Partial<Record<PageList, ReactNode>>;
 
   return (
     <>
@@ -67,6 +80,7 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
         reader={reader}
         only={only}
         badge="образец"
+        pages={{ at: at ?? null, onAt: name => pick({ ...OPEN_PAGE, activePage: name }), lists }}
         {...(onPick ? { onPick } : {})}
         {...(onPickBlock ? { onPickBlock } : {})}
         {...(onPickRow ? { onPickRow } : {})}
