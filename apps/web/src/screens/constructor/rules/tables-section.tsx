@@ -154,6 +154,8 @@ export function TableCard({ id, table, system, editSystem, usage, opened, onReke
   }, [wanted]);
   const held = users.length > 0;
   const [picked, setPicked] = useState<string | null>(null);
+  const [general, setGeneral] = useState(false);
+  const pick = (key: string | null, toGeneral = false) => { setPicked(key); setGeneral(toGeneral); };
   const [rekey, setRekey] = useState<TableKey | null>(null);
   const broken = byRange && rangesBroken(rows);
   const applyKey = (next: TableKey) => edit(draft => {
@@ -269,10 +271,10 @@ export function TableCard({ id, table, system, editSystem, usage, opened, onReke
       {broken ? <Verdict tone="warn">диапазоны перекрываются или дырявы</Verdict> : null}
 
       {picked && columns.some(c => c.key === picked) ? (
-        <TableColumnCard id={id} table={table} column={columns.find(c => c.key === picked)!} system={system} edit={edit} onClose={() => setPicked(null)} onRekey={setPicked} />
+        <TableColumnCard key={`${picked}:${general}`} id={id} table={table} column={columns.find(c => c.key === picked)!} system={system} edit={edit} more={general} onClose={() => pick(null)} onRekey={key => pick(key)} />
       ) : null}
 
-      <Rows key={id} id={id} table={table} system={system} edit={edit} editSystem={editSystem} picked={picked} onPick={setPicked} />
+      <Rows key={id} id={id} table={table} system={system} edit={edit} editSystem={editSystem} picked={picked} onPick={pick} />
     </Fold>
     </div>
   );
@@ -315,7 +317,8 @@ export function whose(table: Table, column: TableColumn, id: string): string {
   return `колонка таблицы «${table.label || id}» · ${value}`;
 }
 
-export function TableColumnCard({ id, table, column, system, edit, onClose, onRekey, onOpenTable, extra, lead, bounds = true }: {
+export function TableColumnCard({ id, table, column, system, edit, onClose, onRekey, onOpenTable, extra, lead, bounds = true, more = false }: {
+  more?: boolean;
   onRekey?: (key: string) => void;
   onOpenTable?: () => void;
   extra?: ReactNode;
@@ -389,6 +392,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, onRe
         ? <LiveValue system={system} compendium={compendium} tag={column.key} source={column.expr.expr} /> : null}
       lead={lead}
       bounds={bounds}
+      more={more}
       extra={<>
         {single || onSheet(table) ? <ColumnSheetFields tableId={id} column={column} system={system} /> : null}
         {(column.kind ?? 'number') === 'number' && (single || column.stages) ? (
@@ -447,7 +451,7 @@ const defaultWidth = (column?: TableColumn): number =>
 
 function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
   picked: string | null;
-  onPick: (key: string | null) => void;
+  onPick: (key: string | null, toGeneral?: boolean) => void;
   id: string;
   table: Table;
   system: System;
@@ -492,9 +496,11 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
   const tuned = placed ? columns.filter(c => (c.kind ?? 'number') === 'number' && c.expr === undefined) : [];
   const [own, setOwn] = useState(() => rows.some(row => tuned.some(c => row.view?.[c.key] && ('min' in row.view[c.key]! || 'max' in row.view[c.key]! || 'default' in row.view[c.key]!))));
   const showOwn = own && tuned.length > 0;
-  const VIEW_PARTS: [RowViewKey, string][] = [['default', 'по умолчанию'], ['min', 'не ниже'], ['max', 'не выше']];
-  const ownColumns: GridColumn[] = showOwn ? tuned.flatMap(c => VIEW_PARTS.map(([part, word]) => ({
-    key: `:${c.key}:${part}`, label: `${c.label || c.key}: ${word}`, sub: 'своё у строки', width: defaultWidth(),
+  const shown = tuned.some(c => c.key === picked) ? tuned.filter(c => c.key === picked) : tuned;
+  const VIEW_PARTS: [RowViewKey, string][] = [['default', 'в новом листе'], ['min', 'не ниже'], ['max', 'не выше']];
+  const ownColumns: GridColumn[] = showOwn ? shown.flatMap(c => VIEW_PARTS.map(([part, word]) => ({
+    key: `:${c.key}:${part}`, label: `${c.label || c.key}: ${word}`, sub: 'своё у строки · общее — щелчком', width: defaultWidth(),
+    active: picked === c.key, onClick: () => onPick(c.key, true),
   }))) : [];
   const generalOf = (column: TableColumn, part: RowViewKey): unknown => (part === 'default' ? column.default ?? 0 : column[part]);
   const setOwnCell = (i: number, column: TableColumn, part: RowViewKey, value: unknown) => {
@@ -510,7 +516,7 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
       <span className="field__label">Строки</span>
       {tuned.length ? (
         <Button size="sm" variant="ghost" title="у колонки — общее; строка может перебить своим: пустая клетка — как у колонки"
-          onClick={() => setOwn(!own)}>{showOwn ? 'скрыть умолчание и пределы строк' : 'ещё: умолчание и пределы строк'}</Button>
+          onClick={() => setOwn(!own)}>{showOwn ? 'скрыть «в новом листе» и границы строк' : 'ещё: «в новом листе» и границы строк'}</Button>
       ) : null}
 
       <SheetGrid id={`table.${id}`} columns={[...gridColumns, ...ownColumns]} tailHead={<span data-guide="add-column"><Button size="sm" variant="ghost" title="добавить колонку" onClick={addColumn}>+</Button></span>}>
@@ -522,7 +528,7 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
                 ? edit(draft => { const target = draft.rows?.[i]; if (target) target.value = to as never; })
                 : rename(row.value, to))} taken={next => taken(next, i)}
               edit={edit} setCell={setCell} names={names}
-              own={showOwn ? tuned.flatMap(c => VIEW_PARTS.map(([part]) => (
+              own={showOwn ? shown.flatMap(c => VIEW_PARTS.map(([part]) => (
                 <CellEditor
                   key={`${c.key}:${part}`}
                   column={{ key: `${c.key}:${part}`, label: c.label, kind: 'number' }}

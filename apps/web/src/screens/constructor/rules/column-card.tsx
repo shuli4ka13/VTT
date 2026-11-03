@@ -29,7 +29,8 @@ export interface ColumnPatch {
 }
 
 
-export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, where, names, system, onChange, onDelete, onClose, lead, extra, preview, bounds = true, table, sub, noun = 'колонка' }: {
+export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, where, names, system, onChange, onDelete, onClose, lead, extra, preview, bounds = true, table, sub, noun = 'колонка', more = false }: {
+  more?: boolean;
   table?: string;
   column: ColumnShape;
   kinds: readonly (readonly [string, string])[];
@@ -121,7 +122,7 @@ export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, w
       {preview}
       {lead}
       {(bounds && column.kind === 'number') || extra ? (
-        <Fold title="ещё" summary="на листе, бросок, границы">
+        <Fold title="ещё" summary="на листе, бросок, границы" open={more}>
           {bounds && column.kind === 'number' ? (
             <div className="row">
               <Field label="Не ниже">
