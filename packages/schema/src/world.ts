@@ -179,7 +179,8 @@ export const rollEditOp = z.object({ op: z.string().min(1) }).passthrough();
 export const rollEdit = z.object({
   label: z.string().optional(),
   ops: z.array(rollEditOp),
-  canceledBy: z.string().optional(),
+  cancels: z.array(z.string().min(1)).optional(),
+  stacks: z.literal(true).optional(),
 }).passthrough();
 
 export const valueModifier = z.object({

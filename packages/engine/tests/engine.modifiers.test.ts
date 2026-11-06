@@ -205,8 +205,8 @@ group('модификаторы', () => {
         ...system,
         roll_edits: {
           ...system.roll_edits,
-          advantage: { ...system.roll_edits.advantage, canceledBy: undefined },
-          disadvantage: { ...system.roll_edits.disadvantage, canceledBy: undefined },
+          advantage: { ...system.roll_edits.advantage, cancels: undefined },
+          disadvantage: { ...system.roll_edits.disadvantage, cancels: undefined },
         },
         effects: {
           ...system.effects,

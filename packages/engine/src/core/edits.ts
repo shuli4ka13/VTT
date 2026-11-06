@@ -10,6 +10,7 @@ import { stackStages } from '../engine/stages.ts';
 import type { Stage } from '../model/types.ts';
 import type { SourcedModifier } from '../engine/modifiers.ts';
 import type { Pass } from '../engine/calc.ts';
+import { cancels } from '../model/cancels.ts';
 import type { RollEdit, RollEditOp } from '../model/types.ts';
 
 export const COUNT_PARAM = 'count';
@@ -152,21 +153,39 @@ export function rollEdits(held: Held[], claims: readonly string[], roller: Pass)
     ...(claimedModifiers(system, [...claims]) as EditMod[]).map((mod): Held => ({ ...mod, view: roller, ref: { pass: roller } })),
   ];
   const dictionary = system.roll_edits || {};
-  const first = new Map<string, Held>();
+  const given = new Map<string, Map<string, Held>>();
   for (const mod of named) {
     const key = String(mod.edit);
     if (!dictionary[key]) throw new EngineError(`правка «${who(mod)}» ссылается на правку броска «${key}», которой нет в словаре системы`);
-    if (!first.has(key)) first.set(key, mod);
+    const from = given.get(key) ?? new Map<string, Held>();
+    const source = (mod as { source?: { type?: string; id?: string } }).source;
+    const id = `${mod.view.sheet.id}\u0000${source?.type ?? ''}\u0000${source?.id ?? ''}`;
+    if (!from.has(id)) from.set(id, mod);
+    given.set(key, from);
   }
-  const keys = [...first.keys()];
-  const surviving = keys.filter(key => {
-    const canceledBy = dictionary[key]!.canceledBy;
-    return !canceledBy || !keys.includes(canceledBy);
-  });
-  const words = surviving.map(key => {
-    const view = first.get(key)!.view;
-    return { view, edit: withValues({ ...dictionary[key]!, label: dictionary[key]!.label || key }, view) };
-  });
+  const order = Object.keys(dictionary);
+  const keys = [...given.keys()].sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  const stacks = (key: string): boolean => dictionary[key]!.stacks === true;
+  const start = new Map(keys.map(key => [key, stacks(key) ? given.get(key)!.size : 1]));
+  const left = new Map(start);
+  for (const [at, a] of keys.entries()) {
+    for (const b of keys.slice(at + 1)) {
+      if (!cancels(dictionary, a, b)) continue;
+      if (stacks(a) && stacks(b)) {
+        const m = Math.min(left.get(a)!, left.get(b)!);
+        left.set(a, left.get(a)! - m);
+        left.set(b, left.get(b)! - m);
+      } else {
+        left.set(a, 0);
+        left.set(b, 0);
+      }
+    }
+  }
+  const surviving = keys.flatMap(key => Array<string>(left.get(key)!).fill(key));
+  const canceled = keys.flatMap(key => Array<string>(start.get(key)! - left.get(key)!).fill(key));
+  const words = keys.flatMap(key => [...given.get(key)!.values()].slice(0, left.get(key)!).map(mod => ({
+    view: mod.view, edit: withValues({ ...dictionary[key]!, label: dictionary[key]!.label || key }, mod.view),
+  })));
   const dice = held.filter(mod => !mod.edit && (mod as { param?: string }).param === COUNT_PARAM).map(mod => {
     const op = (mod as { op?: unknown }).op;
     if (op !== 'add') throw new EngineError(`правка «${who(mod)}»: кубики к броску только прибавляются, а здесь «${String(op ?? 'не задано')}»`);
@@ -181,7 +200,7 @@ export function rollEdits(held: Held[], claims: readonly string[], roller: Pass)
       ...bonuses.map(bonusAddend),
     ],
     words: surviving,
-    canceled: keys.filter(key => !surviving.includes(key)),
+    canceled,
     counts: dice,
     bonuses: bonuses.map(who),
   };

@@ -684,7 +684,11 @@ function rollEditProblems(system: System): Problem[] {
   for (const [key, edit] of Object.entries(system.roll_edits ?? {})) {
     const where = { tab: 'rules' as const, section: 'roll_edits', key };
     const name = edit.label || key;
-    if (edit.canceledBy && !system.roll_edits?.[edit.canceledBy]) out.push({ where, level: 'error', text: `правка броска «${name}» гасится словом «${edit.canceledBy}», которого нет в словаре` });
+    for (const other of edit.cancels ?? []) {
+      if (other === key) out.push({ where, level: 'error', text: `правка броска «${name}» гасит сама себя` });
+      else if (!system.roll_edits?.[other]) out.push({ where, level: 'error', text: `правка броска «${name}» гасит слово «${other}», которого нет в словаре` });
+      else if (!system.roll_edits[other]!.cancels?.includes(key)) out.push({ where, level: 'warn', text: `«${name}» гасит «${system.roll_edits[other]!.label || other}», а встречной связи нет — уберите и поставьте пару заново` });
+    }
     for (const op of edit.ops ?? []) {
       const value = (op as { value?: { expr?: unknown } }).value;
       if (!known.has(String(op.op))) out.push({ where, level: 'error', text: `у правки броска «${name}» неизвестное действие «${String(op.op)}»` });

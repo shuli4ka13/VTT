@@ -1384,7 +1384,7 @@
             }
           }
         ],
-        "canceledBy": "disadvantage"
+        "cancels": ["disadvantage"]
       },
       "disadvantage": {
         "label": "Помеха",
@@ -1396,7 +1396,7 @@
             }
           }
         ],
-        "canceledBy": "advantage"
+        "cancels": ["advantage"]
       },
       "gm_advantage": {
         "label": "Преимущество противника",
@@ -1409,7 +1409,7 @@
             "n": 1
           }
         ],
-        "canceledBy": "gm_disadvantage"
+        "cancels": ["gm_disadvantage"]
       },
       "gm_disadvantage": {
         "label": "Помеха противника",
@@ -1422,7 +1422,7 @@
             "n": 1
           }
         ],
-        "canceledBy": "gm_advantage"
+        "cancels": ["gm_advantage"]
       }
     },
     "effects": {

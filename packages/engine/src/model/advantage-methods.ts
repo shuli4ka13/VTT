@@ -4,7 +4,7 @@ export interface EditRecipe {
   key: string;
   label: string;
   ops: RollEditOp[];
-  canceledBy?: string;
+  cancels?: string[];
 }
 
 export interface AdvantageMethod {
@@ -18,8 +18,8 @@ export interface AdvantageMethod {
 const pair = (
   up: [string, string, RollEditOp[]], down: [string, string, RollEditOp[]],
 ): EditRecipe[] => [
-  { key: up[0], label: up[1], ops: up[2], canceledBy: down[0] },
-  { key: down[0], label: down[1], ops: down[2], canceledBy: up[0] },
+  { key: up[0], label: up[1], ops: up[2], cancels: [down[0]] },
+  { key: down[0], label: down[1], ops: down[2], cancels: [up[0]] },
 ];
 
 export const ADVANTAGE_METHODS: AdvantageMethod[] = [
@@ -114,7 +114,7 @@ export function installMethod(system: System, methodId: string): string[] {
     edits[recipe.key] = {
       label: recipe.label,
       ops: JSON.parse(JSON.stringify(recipe.ops)),
-      ...(recipe.canceledBy ? { canceledBy: recipe.canceledBy } : {}),
+      ...(recipe.cancels ? { cancels: [...recipe.cancels] } : {}),
     };
     added.push(recipe.key);
   }

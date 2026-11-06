@@ -3192,7 +3192,7 @@
             "n": 1
           }
         ],
-        "canceledBy": "disadvantage"
+        "cancels": ["disadvantage"]
       },
       "disadvantage": {
         "label": "Помеха",
@@ -3205,7 +3205,7 @@
             "n": 1
           }
         ],
-        "canceledBy": "advantage"
+        "cancels": ["advantage"]
       },
       "lucky": {
         "label": "Везучий",

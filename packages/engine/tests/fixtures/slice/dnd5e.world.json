@@ -2661,7 +2661,7 @@
             "n": 1
           }
         ],
-        "canceledBy": "advantage"
+        "cancels": ["advantage"]
       },
       "advantage": {
         "label": "Преимущество",
@@ -2674,7 +2674,7 @@
             "n": 1
           }
         ],
-        "canceledBy": "disadvantage"
+        "cancels": ["disadvantage"]
       }
     },
     "initiative": {

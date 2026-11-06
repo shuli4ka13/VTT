@@ -92,7 +92,7 @@ describe('схема стережёт инварианты, а не только
   it('запись словаря правок: имя автора, примитивы, «гасится»', () => {
     const edit = (value: unknown) => W.rollEdit.safeParse(value).success;
     expect(edit({ label: 'Фора', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }] })).toBe(true);
-    expect(edit({ label: 'Помеха', ops: [], canceledBy: 'advantage' }), 'пустая правка — законна').toBe(true);
+    expect(edit({ label: 'Помеха', ops: [], cancels: ['advantage'] }), 'пустая правка — законна').toBe(true);
     expect(edit({ label: 'Кривая', ops: [{ n: 1 }] }), 'примитив без имени — не примитив').toBe(false);
     expect(edit({ label: 'Без списка' }), 'ops обязателен: правка без действий не описана').toBe(false);
   });
