@@ -123,8 +123,8 @@ group('любой бросок ловит правку, ничего для эт
     tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }, { value: 'спас' }] } },
     constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
     roll_edits: {
-      advantage: { label: 'Преимущество', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }], canceledBy: 'disadvantage' },
-      disadvantage: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }], canceledBy: 'advantage' },
+      advantage: { label: 'Преимущество', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }], cancels: ['disadvantage'] },
+      disadvantage: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }], cancels: ['advantage'] },
     },
     effects: {},
   });

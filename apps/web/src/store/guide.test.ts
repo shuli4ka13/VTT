@@ -7,7 +7,7 @@ const saveSystem = vi.fn();
 const createSystem = vi.fn();
 vi.mock('../api/client.ts', async importOriginal => ({ ...await importOriginal<object>(), getSystem, saveSystem, createSystem }));
 
-const mine = (): System => ({ id: 'моя', name: 'Моя система', effects: {}, grants: [], constants: {}, tables: {}, rolls: [] } as System);
+const mine = (): System => ({ id: 'моя', name: 'Моя система', effects: {}, grants: [], constants: {}, tables: {} } as System);
 
 const load = async () => {
   vi.resetModules();

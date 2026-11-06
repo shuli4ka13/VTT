@@ -8,8 +8,7 @@ import { within } from '../../../../testing/cards.ts';
 import type { System, Effect, Step } from '@vtt/schema';
 
 const system = {
-  tables: {}, constants: { lead: { label: 'Ведущая кость', kind: 'die', dice: [{ sides: 20 }] } },
-  rolls: [], effects: {},
+  tables: {}, constants: { lead: { label: 'Ведущая кость', kind: 'die', dice: [{ sides: 20 }] } }, effects: {},
 } as unknown as System;
 
 const effect = {

@@ -482,7 +482,7 @@ describe('уроки конструктора', () => {
     await pass('die', () => {
       ui.click(TABS.rules);
       openAll();
-      clickAt({ text: 'Кости', in: 'Разделы правил' });
+      clickAt({ text: 'Броски', in: 'Разделы правил' });
       ui.click('+ кость');
       ui.type(screen.getByPlaceholderText('название кости'), 'Кость проверки');
     });

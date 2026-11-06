@@ -56,8 +56,8 @@ describe('слово словаря прибавляет', () => {
   const system = {
     id: 'с', name: 'с', tables: { лист: { shape: 'single', owner: 'sheet', columns: [] } }, effects: {},
     roll_edits: {
-      advantage: { label: 'Преимущество', ops: [{ op: 'plus', value: { expr: 'кинуть(к6)' } }], canceledBy: 'disadvantage' },
-      disadvantage: { label: 'Помеха', ops: [{ op: 'plus', value: { expr: '-кинуть(к6)' } }], canceledBy: 'advantage' },
+      advantage: { label: 'Преимущество', ops: [{ op: 'plus', value: { expr: 'кинуть(к6)' } }], cancels: ['disadvantage'] },
+      disadvantage: { label: 'Помеха', ops: [{ op: 'plus', value: { expr: '-кинуть(к6)' } }], cancels: ['advantage'] },
     },
   } as unknown as System;
   const sheet = { id: 'я', systemId: 'с', name: 'я', values: {}, has: [], effects: [] } as unknown as Sheet;
@@ -99,7 +99,7 @@ describe('слово словаря прибавляет', () => {
   it('линт: кость как число, «кинуть» вне броска, «гасится» в пустоту', () => {
     const broken = {
       ...system,
-      roll_edits: { a: { label: 'А', ops: [{ op: 'plus', value: { expr: 'к4 + 1' } }], canceledBy: 'нет_такого' } },
+      roll_edits: { a: { label: 'А', ops: [{ op: 'plus', value: { expr: 'к4 + 1' } }], cancels: ['нет_такого'] } },
       effects: {
         урон: { label: 'Урон', activation: 'manual', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [] },
         x: {
@@ -113,6 +113,6 @@ describe('слово словаря прибавляет', () => {
     expect(texts).toContain('в формуле «к4 + 1» кость стоит как число — кость кидают так: кинуть(к4)');
     expect(texts).toContain('кости бросает только шаг эффекта и прибавка к броску — здесь «кинуть» уберите');
     expect(texts).toContain('в условии подписки кости не бросают — «кинуть» уберите');
-    expect(texts).toContain('правка броска «А» гасится словом «нет_такого», которого нет в словаре');
+    expect(texts).toContain('правка броска «А» гасит слово «нет_такого», которого нет в словаре');
   });
 });

@@ -226,6 +226,18 @@ export function explainName(
     };
   }
 
+  const ownRoll = system.rolls?.[rest];
+  if (ownRoll && !Object.values(system.tables ?? {}).some(t => (t.rows ?? []).some(r => r.value === rest))) {
+    return {
+      kind: 'метка броска',
+      title: ownRoll.label || rest,
+      facts: [['бросок системы', ownRoll.label || rest]],
+      from: ['название броска из «Бросков» — каждый бросок этого вида несёт его меткой'],
+      shown: [], users: [...new Set([...usersBy(usage, 'roll', rest, system), ...usersBy(usage, 'tag', rest, system)])],
+      go: { label: 'открыть «Правила»', pick: { activeTab: 'dictionaries' } },
+    };
+  }
+
   const table = tagWords(system).get(rest);
   if (table) {
     const [tableKey, spec] = Object.entries(system.tables ?? {}).find(([, t]) => (t.rows ?? []).some(r => r.value === rest))!;

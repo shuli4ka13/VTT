@@ -20,15 +20,15 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('«+ из справочника» кладёт в словарь готовую пару: преимущество и помеха гасят друг друга', () => {
     renderOpen(<RulesTab />);
-    открыть('Кости');
+    открыть('Броски');
     fireEvent.click(screen.getByText('Переброс кости и выбор лучшего/худшего броска'));
 
     const edits = useWorld.getState().system.roll_edits ?? {};
-    expect(edits.advantage?.canceledBy).toBe('disadvantage');
-    expect(edits.disadvantage?.canceledBy).toBe('advantage');
+    expect(edits.advantage?.cancels).toEqual(['disadvantage']);
+    expect(edits.disadvantage?.cancels).toEqual(['advantage']);
     expect(edits.advantage?.ops).toEqual([{ op: 'addDie' }, { op: 'keepBest', n: 1 }]);
     expect(screen.getByText('Кинуть на кость больше, оставить лучшую.')).toBeTruthy();
-    expect(screen.getByText(/«Преимущество» ⟷ «Помеха»/)).toBeTruthy();
+    expect(screen.getAllByTitle('больше не гасят друг друга')).toHaveLength(2);
   });
 
   it('справочник не затирает запись, которую автор уже завёл под тем же ключом', () => {
@@ -38,7 +38,7 @@ describe('Словари: кости, правки броска, таблицы'
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Кости');
+    открыть('Броски');
     fireEvent.click(screen.getByText('Переброс кости и выбор лучшего/худшего броска'));
 
     const edits = useWorld.getState().system.roll_edits ?? {};
@@ -48,7 +48,7 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('кость заводится и попадает в словарь системы', () => {
     renderOpen(<RulesTab />);
-    открыть('Кости');
+    открыть('Броски');
     fireEvent.click(screen.getByText('+ кость'));
     const dies = Object.values(useWorld.getState().system.constants ?? {});
     expect(dies.some(c => c.kind === 'die')).toBe(true);
@@ -56,7 +56,7 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('«+ ещё часть» превращает бросок в составной и просит имена частей', () => {
     renderOpen(<RulesTab />);
-    открыть('Кости');
+    открыть('Броски');
     fireEvent.click(screen.getByText('+ кость'));
     fireEvent.click(screen.getByText('+ ещё часть'));
 
@@ -73,7 +73,7 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('поле «сколько»: единица и пустое поле снимают ключ — умолчание в данные не пишется', () => {
     renderOpen(<RulesTab />);
-    открыть('Кости');
+    открыть('Броски');
     fireEvent.click(screen.getByText('+ кость'));
     const dice = () => Object.values(useWorld.getState().system.constants ?? {})[0]!.dice!;
     expect(dice()).toEqual([{ sides: 20 }]);
@@ -104,7 +104,7 @@ describe('Словари: кости, правки броска, таблицы'
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Кости');
+    открыть('Броски');
     fireEvent.change(screen.getByPlaceholderText('сколько'), { target: { value: '@пул' } });
 
     expect(Object.values(useWorld.getState().system.constants ?? {})[0]?.dice?.[0])
@@ -114,7 +114,7 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('чтение кости выбирается селектом; сумма в данных не оседает', () => {
     renderOpen(<RulesTab />);
-    открыть('Кости');
+    открыть('Броски');
     fireEvent.click(screen.getByText('+ кость'));
     const [key] = Object.keys(useWorld.getState().system.constants ?? {});
 
@@ -134,7 +134,7 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('у одной кости чтение спрятано под свёрнутым «ещё», у составной — на виду', () => {
     renderOpen(<RulesTab />);
-    открыть('Кости');
+    открыть('Броски');
     fireEvent.click(screen.getByText('+ кость'));
     expect((screen.getByDisplayValue('сумма').closest('details') as HTMLDetailsElement | null)?.open).toBe(false);
 
@@ -144,7 +144,7 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('правка броска заводится со своим именем и набором примитивов', () => {
     renderOpen(<RulesTab />);
-    открыть('Правки броска');
+    открыть('Броски');
     fireEvent.click(screen.getByText('+ правка'));
 
     const name = screen.getByPlaceholderText('как это зовётся в вашем мире');
@@ -163,7 +163,7 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('название из нескольких слов набирается целиком, ключ не меняется', () => {
     renderOpen(<RulesTab />);
-    открыть('Кости');
+    открыть('Броски');
     fireEvent.click(screen.getByText('+ кость'));
     const [ключ] = Object.keys(useWorld.getState().system.constants ?? {});
     const name = screen.getByPlaceholderText('название кости');
@@ -179,7 +179,7 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('грани кости: стёр «20», набрал «100» — кость стала к100', () => {
     renderOpen(<RulesTab />);
-    открыть('Кости');
+    открыть('Броски');
     fireEvent.click(screen.getByText('+ кость'));
     const term = document.querySelector('.dice-term')!;
     const [, sides] = [...term.querySelectorAll('input')] as HTMLInputElement[];
@@ -195,7 +195,7 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('«прибавить к итогу» — формула с костью: слово кладёт прибавку, а не кость в набор', () => {
     renderOpen(<RulesTab />);
-    открыть('Правки броска');
+    открыть('Броски');
     fireEvent.click(screen.getByText('+ правка'));
     fireEvent.change(screen.getAllByDisplayValue('+ добавить…')[0]!, { target: { value: 'plus' } });
 
@@ -207,7 +207,7 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('палитра правок — готовые фразы, включая оба направления взрыва', () => {
     renderOpen(<RulesTab />);
-    открыть('Правки броска');
+    открыть('Броски');
     fireEvent.click(screen.getByText('+ правка'));
     const [add] = screen.getAllByDisplayValue('+ добавить…') as HTMLSelectElement[];
     const options = [...add!.options].map(o => o.textContent);
@@ -227,7 +227,7 @@ describe('Словари: кости, правки броска, таблицы'
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Правки броска');
+    открыть('Броски');
     expect(document.querySelectorAll('.chip__part').length).toBe(0);
   });
 
@@ -250,7 +250,7 @@ describe('Словари: кости, правки броска, таблицы'
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Правки броска');
+    открыть('Броски');
 
     const part = document.querySelector('.chip__part') as HTMLSelectElement;
     expect(part, 'части есть — селектор появился').toBeTruthy();
@@ -277,13 +277,13 @@ describe('Словари: кости, правки броска, таблицы'
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Правки броска');
+    открыть('Броски');
 
-    fireEvent.change(screen.getByDisplayValue('+ пара…'), { target: { value: 'up\u0000down' } });
+    fireEvent.change(screen.getAllByDisplayValue('+ слово…')[0]!, { target: { value: 'down' } });
 
     const edits = useWorld.getState().system.roll_edits!;
-    expect(edits.up!.canceledBy).toBe('down');
-    expect(edits.down!.canceledBy).toBe('up');
+    expect(edits.up!.cancels).toEqual(['down']);
+    expect(edits.down!.cancels).toEqual(['up']);
   });
 
   it('пару «гасят друг друга» снимают с обеих сторон, даже если ссылка была односторонней', () => {
@@ -293,15 +293,15 @@ describe('Словари: кости, правки броска, таблицы'
         ...emptySystem(),
         roll_edits: {
           a: { label: 'Фора', ops: [{ op: 'addDie' }] },
-          z: { label: 'Подножка', ops: [{ op: 'addDie' }], canceledBy: 'a' },
+          z: { label: 'Подножка', ops: [{ op: 'addDie' }], cancels: ['a'] },
         },
       },
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Правки броска');
-    fireEvent.click(screen.getByTitle('больше не гасят друг друга'));
-    expect('canceledBy' in useWorld.getState().system.roll_edits!.z!).toBe(false);
+    открыть('Броски');
+    fireEvent.click(screen.getAllByTitle('больше не гасят друг друга')[0]!);
+    expect('cancels' in useWorld.getState().system.roll_edits!.z!).toBe(false);
   });
 
   it('удалённая правка забирает за собой встречную ссылку', () => {
@@ -310,21 +310,21 @@ describe('Словари: кости, правки броска, таблицы'
       system: {
         ...emptySystem(),
         roll_edits: {
-          up: { label: 'Фора', ops: [{ op: 'addDie' }], canceledBy: 'down' },
-          down: { label: 'Подножка', ops: [{ op: 'addDie' }], canceledBy: 'up' },
+          up: { label: 'Фора', ops: [{ op: 'addDie' }], cancels: ['down'] },
+          down: { label: 'Подножка', ops: [{ op: 'addDie' }], cancels: ['up'] },
         },
       },
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Правки броска');
+    открыть('Броски');
 
     const [remove] = screen.getAllByText('Убрать') as HTMLButtonElement[];
     fireEvent.click(remove!);
 
     const edits = useWorld.getState().system.roll_edits!;
     expect(edits.up).toBeUndefined();
-    expect('canceledBy' in edits.down!, 'ссылки в пустоту не остаётся').toBe(false);
+    expect('cancels' in edits.down!, 'ссылки в пустоту не остаётся').toBe(false);
   });
 
   it('правку, на которую ссылается эффект, удалить нельзя', () => {
@@ -333,7 +333,6 @@ describe('Словари: кости, правки броска, таблицы'
       system: {
         ...emptySystem(),
         roll_edits: { up: { label: 'Фора', ops: [{ op: 'addDie' }] } },
-        rolls: [{ tag: 'attack_roll', label: 'Бросок атаки' }],
         effects: {
           lucky: {
             label: 'Везучий', activation: 'passive',
@@ -344,7 +343,7 @@ describe('Словари: кости, правки броска, таблицы'
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Правки броска');
+    открыть('Броски');
     const guarded = screen.getByTitle('правка используется эффектом') as HTMLButtonElement;
     expect(guarded.disabled).toBe(true);
   });
@@ -381,7 +380,7 @@ describe('Словари: кости, правки броска, таблицы'
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Кости');
+    открыть('Броски');
 
     const first = screen.getByDisplayValue('Кость А');
     fireEvent.change(first, { target: { value: 'Секира' } });
@@ -408,7 +407,7 @@ describe('Словари: кости, правки броска, таблицы'
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Кости');
+    открыть('Броски');
     const guarded = screen.getByTitle('кость используется') as HTMLButtonElement;
     expect(guarded.disabled).toBe(true);
   });

@@ -148,7 +148,7 @@ describe('один редактор — шесть механизмов', () => 
     expect(optionsOf(edit)).toContain('+ Преимущество · Переброс кости и выбор лучшего/худшего броска');
     fireEvent.change(edit, { target: { value: 'recipe:rerollBest:advantage' } });
 
-    expect(draft.roll_edits?.advantage?.canceledBy).toBe('disadvantage');
+    expect(draft.roll_edits?.advantage?.cancels).toEqual(['disadvantage']);
     expect(draft.roll_edits?.disadvantage).toBeTruthy();
     expect(mods[0]!.edit).toBe('advantage');
   });

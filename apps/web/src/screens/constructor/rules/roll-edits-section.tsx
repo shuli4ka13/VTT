@@ -10,6 +10,7 @@ import { DICE_BAR_OPTION, DICE_HINT } from '../value-field.tsx';
 import { shapeProblem } from '../formula-shape.ts';
 import { newRollEdit } from '../factory.ts';
 import { inUse as isUsed } from '../usage.ts';
+import { cancels } from '@vtt/engine/model/cancels';
 import type { UsageIndex } from '../usage.ts';
 import type { System, RollEdit, RollEditOp } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
@@ -176,14 +177,13 @@ function WordRow({ wordKey, edit, system, editSystem, parts, used }: {
           title={used ? 'правка используется эффектом' : undefined}
           onClick={() => editSystem(draft => {
             delete draft.roll_edits?.[wordKey];
-            for (const other of Object.values(draft.roll_edits ?? {})) {
-              if (other.canceledBy === wordKey) delete other.canceledBy;
-            }
+            for (const other of Object.values(draft.roll_edits ?? {})) unlinkFrom(other, wordKey);
           })}
         >
           Убрать
         </Button>
       </div>
+      <Cancels wordKey={wordKey} edit={edit} system={system} editSystem={editSystem} />
       <div className="dict-row dict-row--wrap roll-word__ops">
         {ops.map((op, i) => (
           <OpChip
@@ -234,57 +234,56 @@ function WordRow({ wordKey, edit, system, editSystem, parts, used }: {
   );
 }
 
-function Pairs({ entries, editSystem }: { entries: [string, RollEdit][]; editSystem: EditSystem }) {
-  const name = (key: string): string => entries.find(([k]) => k === key)?.[1].label || key;
-  const known = (key: string): boolean => entries.some(([k]) => k === key);
-  const pairs = new Map<string, [string, string]>();
-  const dangling: [string, string][] = [];
-  for (const [key, edit] of entries) {
-    if (!edit.canceledBy) continue;
-    if (!known(edit.canceledBy)) { dangling.push([key, edit.canceledBy]); continue; }
-    const pair = [key, edit.canceledBy].sort() as [string, string];
-    pairs.set(pair.join('\u0000'), pair);
-  }
-  const paired = new Set([...pairs.values()].flat());
-  const free = entries.filter(([key, edit]) => !edit.canceledBy && !paired.has(key)).map(([key]) => key);
-  const offers = free.flatMap((a, i) => free.slice(i + 1).map(b => [`${a}\u0000${b}`, `«${name(a)}» ⟷ «${name(b)}»`] as const));
-  if (!pairs.size && !dangling.length && !offers.length) return null;
-  const unlink = (a: string, b: string) => editSystem(draft => {
-    const dict = draft.roll_edits;
-    if (dict?.[a]?.canceledBy === b) delete dict[a]!.canceledBy;
-    if (dict?.[b]?.canceledBy === a) delete dict[b]!.canceledBy;
+const STACK_WORDS = [['', 'два источника — одно'], ['yes', 'каждый источник считается']] as const;
+
+function unlinkFrom(edit: RollEdit, key: string): void {
+  if (!edit.cancels) return;
+  edit.cancels = edit.cancels.filter(one => one !== key);
+  if (!edit.cancels.length) delete edit.cancels;
+}
+
+function Cancels({ wordKey, edit, system, editSystem }: { wordKey: string; edit: RollEdit; system: System; editSystem: EditSystem }) {
+  const dict = system.roll_edits ?? {};
+  const name = (key: string): string => dict[key]?.label || key;
+  const linked = Object.keys(dict).filter(other => cancels(dict, wordKey, other));
+  const dangling = (edit.cancels ?? []).filter(other => !dict[other]);
+  const free = Object.keys(dict).filter(other => other !== wordKey && !linked.includes(other));
+  const unlink = (other: string) => editSystem(draft => {
+    const all = draft.roll_edits ?? {};
+    if (all[wordKey]) unlinkFrom(all[wordKey]!, other);
+    if (all[other]) unlinkFrom(all[other]!, wordKey);
   });
-  const link = (a: string, b: string) => editSystem(draft => {
-    const dict = draft.roll_edits;
-    if (!dict?.[a] || !dict[b]) return;
-    dict[a]!.canceledBy = b;
-    dict[b]!.canceledBy = a;
+  const link = (other: string) => editSystem(draft => {
+    const all = draft.roll_edits ?? {};
+    if (!all[wordKey] || !all[other]) return;
+    all[wordKey]!.cancels = [...new Set([...(all[wordKey]!.cancels ?? []), other])];
+    all[other]!.cancels = [...new Set([...(all[other]!.cancels ?? []), wordKey])];
   });
   return (
-    <div className="dict-row dict-row--wrap roll-pairs">
-      <span className="dict-row__label">Гасят друг друга</span>
-      {[...pairs.values()].map(([a, b]) => (
-        <span key={`${a}\u0000${b}`} className="chip">
-          «{name(a)}» ⟷ «{name(b)}»
-          <button className="chip__x" type="button" title="больше не гасят друг друга" onClick={() => unlink(a, b)}>×</button>
+    <div className="dict-row dict-row--wrap roll-line">
+      <span className="dict-row__label">Гасит</span>
+      {linked.map(other => (
+        <span key={other} className="chip">
+          {name(other)}
+          <button className="chip__x" type="button" title="больше не гасят друг друга" onClick={() => unlink(other)}>×</button>
         </span>
       ))}
-      {dangling.map(([a, b]) => (
-        <span key={`${a}\u0000${b}`} className="chip chip--bad">
-          «{name(a)}» ⟷ «{b}» — такого слова нет
-          <button className="chip__x" type="button" title="убрать ссылку" onClick={() => unlink(a, b)}>×</button>
+      {dangling.map(other => (
+        <span key={other} className="chip chip--bad">
+          {other} — такого слова нет
+          <button className="chip__x" type="button" title="убрать ссылку" onClick={() => unlink(other)}>×</button>
         </span>
       ))}
-      {offers.length ? (
-        <Select
-          value=""
-          options={[['', '+ пара…'], ...offers] as never}
-          onChange={pick => {
-            const [a, b] = pick.split('\u0000');
-            if (a && b) link(a, b);
-          }}
-        />
+      {free.length ? (
+        <Select value="" options={[['', '+ слово…'], ...free.map(other => [other, name(other)] as const)] as never}
+          onChange={(other: string) => { if (other) link(other); }} />
       ) : null}
+      <Select value={edit.stacks ? 'yes' : ''} options={STACK_WORDS as never}
+        onChange={(next: string) => editSystem(draft => {
+          const cur = draft.roll_edits?.[wordKey];
+          if (!cur) return;
+          if (next) cur.stacks = true; else delete cur.stacks;
+        })} />
     </div>
   );
 }
@@ -313,7 +312,6 @@ export function RollEditsSection({ system, editSystem, usage }: Props) {
               parts={parts} used={isUsed(usage, 'rollEdit', key)}
             />
           ))}
-          <Pairs entries={entries} editSystem={editSystem} />
         </div>
       )}
     </Card>

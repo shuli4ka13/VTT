@@ -33,10 +33,16 @@ export const control = z.object({
   no: z.string().min(1).optional(),
 }).strict();
 
+export const rollDegree = z.object({ label: z.string().min(1), if: formula }).strict();
+
 export const rollSpec = z.object({
   die: z.string().min(1),
   count: formula.optional(),
   bonus: formula.optional(),
+  sides: formula.optional(),
+  keep: z.union([formula, z.string()]).optional(),
+  degrees: z.array(rollDegree).optional(),
+  under: z.literal(true).optional(),
   tags: z.array(z.string().min(1)).optional(),
 }).passthrough();
 
@@ -70,6 +76,7 @@ export const dieConstant = z.object({
   kind: z.literal('die'),
   dice: z.array(diceTerm),
   read: diceReading.optional(),
+  zero: z.object({ count: z.number().int().positive(), keep: z.enum(['best', 'worst']).optional() }).strict().optional(),
 }).passthrough();
 
 export const tableValue = z.union([z.number(), z.string(), z.boolean()]);
@@ -80,6 +87,8 @@ export const cellView = z.object({
   label: z.string().optional(),
   roll: z.lazy(() => rollSpec.partial()).optional(),
   default: startValue.optional(),
+  min: bound.optional(),
+  max: bound.optional(),
 });
 
 export const stageCombine = z.object({
@@ -109,7 +118,7 @@ export const columnValue = z.object({
 export const column = columnValue.extend({
   key: tag,
   label: z.string().optional(),
-  roll: z.lazy(() => rollSpec.partial({ die: true }).extend({ label: z.string().optional() })).optional(),
+  roll: z.never({ message: 'бросок поля задаётся в «Бросках» системы (system.rolls), а не у колонки' }).optional(),
   title: z.string().optional(),
   onSheet: z.boolean().optional(),
   optional: z.boolean().optional(),
@@ -162,12 +171,31 @@ export const tableRow = z.object({
 
 export const tableKey = z.enum(['word', 'number', 'range']);
 
+export const rollField = z.object({
+  table: z.string().min(1),
+  column: z.string().min(1),
+  tags: z.array(z.string().min(1)).optional(),
+  threshold: slotRef.optional(),
+  keep: slotRef.optional(),
+}).strict();
+
+export const systemRoll = z.object({
+  label: z.string().optional(),
+  die: z.string().min(1),
+  number: z.enum(['bonus', 'count', 'sides', 'under', 'over']).optional(),
+  keep: slotRef.optional(),
+  degrees: z.array(rollDegree).optional(),
+  tags: z.array(z.string().min(1)).optional(),
+  fields: z.array(rollField),
+}).strict();
+
 export const rollEditOp = z.object({ op: z.string().min(1) }).passthrough();
 
 export const rollEdit = z.object({
   label: z.string().optional(),
   ops: z.array(rollEditOp),
-  canceledBy: z.string().optional(),
+  cancels: z.array(z.string().min(1)).optional(),
+  stacks: z.literal(true).optional(),
 }).passthrough();
 
 export const valueModifier = z.object({
@@ -336,6 +364,7 @@ export const system = z.object({
   tables: z.record(z.string(), table).optional(),
   tags: z.record(z.string(), tagContract).optional(),
   roll_edits: z.record(z.string(), rollEdit).optional(),
+  rolls: z.record(z.string(), z.lazy(() => systemRoll)).optional(),
 
   initiative: z.lazy(() => rollSpec.extend({ ties: z.array(z.string().min(1)).optional() })).optional(),
   limits: z.object({
@@ -411,6 +440,8 @@ export const world = z.object({
 export type SlotRef = z.infer<typeof slotRef>;
 export type Formula = z.infer<typeof formula>;
 export type RollSpec = z.infer<typeof rollSpec>;
+export type SystemRoll = z.infer<typeof systemRoll>;
+export type RollField = z.infer<typeof rollField>;
 export type ValueKind = z.infer<typeof valueKind>;
 export type Tag = z.infer<typeof tag>;
 export type DiceTerm = z.infer<typeof diceTerm>;

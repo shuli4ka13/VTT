@@ -7,6 +7,7 @@ import { tidyLayout } from './layout.ts';
 import { tidyPages } from './pages.ts';
 import type { SheetPart } from '@vtt/schema';
 import { basedOn } from './inherit.ts';
+import { cancels } from './cancels.ts';
 
 export type PartKind = 'field' | 'group' | 'block' | 'effect' | 'table' | 'constant' | 'rollEdit' | 'recordKind' | 'record';
 
@@ -106,8 +107,9 @@ export function dependencies(donor: System): (part: Part) => Part[] {
       }
     }
     if (part.kind === 'rollEdit') {
-      const cancel = donor.roll_edits?.[part.key]?.canceledBy;
-      if (cancel) out.push({ kind: 'rollEdit', key: cancel });
+      for (const other of Object.keys(donor.roll_edits ?? {})) {
+        if (cancels(donor.roll_edits ?? {}, part.key, other)) out.push({ kind: 'rollEdit', key: other });
+      }
     }
     if (part.kind === 'recordKind') {
       const base = basedOn(kindOf(donor, part.key));

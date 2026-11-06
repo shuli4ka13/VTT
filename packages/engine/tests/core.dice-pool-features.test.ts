@@ -10,20 +10,22 @@ const system = flattenSystem({
   id: 'с', name: 'с',
   constants: { pool: { label: 'набор к6', kind: 'die', dice: [{ count: 1, sides: 6 }], read: { kind: 'count', atLeast: 5 } } },
   roll_edits: { wild: { label: 'Дикий кубик', ops: [{ op: 'wild' }] } },
+  rolls: { проверка: { label: 'Проверка', die: 'pool', number: 'count', fields: [
+    { table: 'лист', column: 'ловкость' },
+    { table: 'лист', column: 'прыжок', tags: ['прыжок'], threshold: { expr: '3' } },
+    { table: 'навыки', column: 'pool' },
+  ] } },
   tags: {},
   tables: {
     rolls: { label: 'Броски', key: 'word', columns: [], rows: [{ value: 'проверка' }, { value: 'зрение' }, { value: 'ближний бой' }, { value: 'прыжок' }] },
     лист: { shape: 'single', owner: 'sheet', columns: [
       { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 3,
-        stages: [{ key: 'аугментация', upTo: 4 }],
-        roll: { label: 'Ловкость', die: 'pool', count: { expr: '@ловкость' }, tags: ['проверка'] } },
-      { key: 'прыжок', label: 'Прыжок', kind: 'number', default: 3,
-        roll: { label: 'Прыжок', die: 'pool', count: { expr: '@прыжок' }, tags: ['проверка', 'прыжок'], threshold: { expr: '3' } } },
+        stages: [{ key: 'аугментация', upTo: 4 }] },
+      { key: 'прыжок', label: 'Прыжок', kind: 'number', default: 3 },
     ] },
     навыки: { label: 'Навыки', key: 'word', owner: 'sheet', columns: [
       { key: 'rank', label: 'Уровень', kind: 'number', default: 0 },
-      { key: 'pool', label: 'Набор', kind: 'number', expr: { expr: '@строка.rank + 2' },
-        roll: { label: 'Проверка: {label}', die: 'pool', count: { expr: '@строка.pool' }, tags: ['проверка', '{value}'] } },
+      { key: 'pool', label: 'Набор', kind: 'number', expr: { expr: '@строка.rank + 2' } },
     ], rows: [{ value: 'ближний бой' }, { value: 'внимание' }] },
     имплант: { shape: 'book', use: 'item', label: 'Имплант', columns: [
       { key: 'skill', label: 'Навык', kind: 'choice', from: 'навыки' },

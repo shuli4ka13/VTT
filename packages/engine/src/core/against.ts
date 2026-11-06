@@ -1,5 +1,6 @@
 import { compile } from '../formula/index.ts';
 import { rollEdits, rollHeld } from './edits.ts';
+import { cancels } from '../model/cancels.ts';
 import type { Held, Holder, RollEdits } from './edits.ts';
 import { claimOf, applyResults, nextId, onlyPlus, changesFaces, result } from './dice.ts';
 import type { Roll, RollResult, Rolled, Spec, Term } from './dice.ts';
@@ -158,7 +159,7 @@ export function retarget(record: RollRecord, opponent: string, name: string, die
     ...gained.map(key => {
       const from = now.find(held => held.edit === key && !was.some(old => old.edit === key));
       const head = from ? `${who(from)} — ${wordLabel(key)}` : wordLabel(key);
-      const partner = dictionary[key]?.canceledBy;
+      const partner = after.canceled.find(other => cancels(dictionary, key, other));
       if (!after.canceled.includes(key) || !partner) return head;
       explained.add(partner);
       return `${head} гасит «${wordLabel(partner)}»`;

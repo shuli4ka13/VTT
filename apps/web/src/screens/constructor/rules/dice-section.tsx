@@ -27,6 +27,8 @@ function readKindOf(constant: SystemConstant): string {
   return typeof read === 'string' ? read : read?.kind ?? 'sum';
 }
 
+
+const ZERO_WORDS = [['', 'ничего не бросаем'], ['worst', 'бросаем две, берём худшую'], ['best', 'бросаем две, берём лучшую']] as const;
 export function DiceSection({ system, editSystem, usage }: Props) {
   const entries = dieEntries(system);
 
@@ -59,7 +61,9 @@ export function DiceSection({ system, editSystem, usage }: Props) {
               change(cur.dice);
             });
 
+            const zero = (constant as { zero?: { count: number; keep?: 'best' | 'worst' } }).zero;
             const reading = (
+              <>
                   <div className="dict-row">
                     <span className="dict-row__label">Из выпавшего берём</span>
                     <Select
@@ -92,6 +96,21 @@ export function DiceSection({ system, editSystem, usage }: Props) {
                       </>
                     ) : null}
                   </div>
+                  {dice.length === 1 ? (
+                    <div className="dict-row">
+                      <span className="dict-row__label">Если костей ноль</span>
+                      <Select
+                        value={zero ? zero.keep ?? 'worst' : ''}
+                        options={ZERO_WORDS as never}
+                        onChange={(next: string) => editSystem(draft => {
+                          const cur = draft.constants?.[key] as { zero?: unknown } | undefined;
+                          if (!cur) return;
+                          if (next) cur.zero = next === 'worst' ? { count: 2 } : { count: 2, keep: 'best' }; else delete cur.zero;
+                        })}
+                      />
+                    </div>
+                  ) : null}
+              </>
             );
 
             return (

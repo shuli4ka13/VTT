@@ -148,18 +148,6 @@
             "label": "Инициатива",
             "expr": {
               "expr": "@abilities.ловкость.mod"
-            },
-            "roll": {
-              "label": "Инициатива",
-              "tags": [
-                "проверка",
-                "ловкость",
-                "инициатива"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@initiative"
-              }
             }
           },
           {
@@ -1724,18 +1712,7 @@
             "expr": {
               "expr": "округлить вниз((@строка.score - 10) / 2)"
             },
-            "title": "Модификатор: {label}",
-            "roll": {
-              "label": "Проверка: {label}",
-              "tags": [
-                "проверка",
-                "{value}"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@строка.mod"
-              }
-            }
+            "title": "Модификатор: {label}"
           },
           {
             "key": "save_extra",
@@ -1760,18 +1737,7 @@
             "expr": {
               "expr": "@строка.mod + @строка.save_prof * @prof_bonus"
             },
-            "title": "Спасбросок: {label}",
-            "roll": {
-              "label": "Спасбросок: {label}",
-              "tags": [
-                "спасбросок",
-                "{value}"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@строка.save"
-              }
-            }
+            "title": "Спасбросок: {label}"
           }
         ],
         "rows": [
@@ -1827,19 +1793,7 @@
             "expr": {
               "expr": "@строка.ability.mod + @строка.prof * @prof_bonus"
             },
-            "title": "{label}",
-            "roll": {
-              "label": "Проверка: {label}",
-              "tags": [
-                "проверка",
-                "{ability}",
-                "{value}"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@строка.total"
-              }
-            }
+            "title": "{label}"
           }
         ],
         "rows": [
@@ -3238,7 +3192,7 @@
             "n": 1
           }
         ],
-        "canceledBy": "disadvantage"
+        "cancels": ["disadvantage"]
       },
       "disadvantage": {
         "label": "Помеха",
@@ -3251,7 +3205,7 @@
             "n": 1
           }
         ],
-        "canceledBy": "advantage"
+        "cancels": ["advantage"]
       },
       "lucky": {
         "label": "Везучий",
@@ -9001,7 +8955,41 @@
       {
         "name": "Эффекты"
       }
-    ]
+    ],
+    "rolls": {
+      "проверка": {
+        "label": "Проверка",
+        "die": "lead_die",
+        "fields": [
+          {
+            "table": "лист",
+            "column": "initiative",
+            "tags": [
+              "ловкость",
+              "инициатива"
+            ]
+          },
+          {
+            "table": "abilities",
+            "column": "mod"
+          },
+          {
+            "table": "skills",
+            "column": "total"
+          }
+        ]
+      },
+      "спасбросок": {
+        "label": "Спасбросок",
+        "die": "lead_die",
+        "fields": [
+          {
+            "table": "abilities",
+            "column": "save"
+          }
+        ]
+      }
+    }
   },
   "compendium": {
     "records": [
