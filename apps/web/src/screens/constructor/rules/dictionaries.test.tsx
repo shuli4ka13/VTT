@@ -24,11 +24,11 @@ describe('Словари: кости, правки броска, таблицы'
     fireEvent.click(screen.getByText('Переброс кости и выбор лучшего/худшего броска'));
 
     const edits = useWorld.getState().system.roll_edits ?? {};
-    expect(edits.advantage?.canceledBy).toBe('disadvantage');
-    expect(edits.disadvantage?.canceledBy).toBe('advantage');
+    expect(edits.advantage?.cancels).toEqual(['disadvantage']);
+    expect(edits.disadvantage?.cancels).toEqual(['advantage']);
     expect(edits.advantage?.ops).toEqual([{ op: 'addDie' }, { op: 'keepBest', n: 1 }]);
     expect(screen.getByText('Кинуть на кость больше, оставить лучшую.')).toBeTruthy();
-    expect(screen.getByText(/«Преимущество» ⟷ «Помеха»/)).toBeTruthy();
+    expect(screen.getAllByTitle('больше не гасят друг друга')).toHaveLength(2);
   });
 
   it('справочник не затирает запись, которую автор уже завёл под тем же ключом', () => {
@@ -279,11 +279,11 @@ describe('Словари: кости, правки броска, таблицы'
     renderOpen(<RulesTab />);
     открыть('Броски');
 
-    fireEvent.change(screen.getByDisplayValue('+ пара…'), { target: { value: 'up\u0000down' } });
+    fireEvent.change(screen.getAllByDisplayValue('+ слово…')[0]!, { target: { value: 'down' } });
 
     const edits = useWorld.getState().system.roll_edits!;
-    expect(edits.up!.canceledBy).toBe('down');
-    expect(edits.down!.canceledBy).toBe('up');
+    expect(edits.up!.cancels).toEqual(['down']);
+    expect(edits.down!.cancels).toEqual(['up']);
   });
 
   it('пару «гасят друг друга» снимают с обеих сторон, даже если ссылка была односторонней', () => {
@@ -293,15 +293,15 @@ describe('Словари: кости, правки броска, таблицы'
         ...emptySystem(),
         roll_edits: {
           a: { label: 'Фора', ops: [{ op: 'addDie' }] },
-          z: { label: 'Подножка', ops: [{ op: 'addDie' }], canceledBy: 'a' },
+          z: { label: 'Подножка', ops: [{ op: 'addDie' }], cancels: ['a'] },
         },
       },
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
     открыть('Броски');
-    fireEvent.click(screen.getByTitle('больше не гасят друг друга'));
-    expect('canceledBy' in useWorld.getState().system.roll_edits!.z!).toBe(false);
+    fireEvent.click(screen.getAllByTitle('больше не гасят друг друга')[0]!);
+    expect('cancels' in useWorld.getState().system.roll_edits!.z!).toBe(false);
   });
 
   it('удалённая правка забирает за собой встречную ссылку', () => {
@@ -310,8 +310,8 @@ describe('Словари: кости, правки броска, таблицы'
       system: {
         ...emptySystem(),
         roll_edits: {
-          up: { label: 'Фора', ops: [{ op: 'addDie' }], canceledBy: 'down' },
-          down: { label: 'Подножка', ops: [{ op: 'addDie' }], canceledBy: 'up' },
+          up: { label: 'Фора', ops: [{ op: 'addDie' }], cancels: ['down'] },
+          down: { label: 'Подножка', ops: [{ op: 'addDie' }], cancels: ['up'] },
         },
       },
       activeEffectId: null,
@@ -324,7 +324,7 @@ describe('Словари: кости, правки броска, таблицы'
 
     const edits = useWorld.getState().system.roll_edits!;
     expect(edits.up).toBeUndefined();
-    expect('canceledBy' in edits.down!, 'ссылки в пустоту не остаётся').toBe(false);
+    expect('cancels' in edits.down!, 'ссылки в пустоту не остаётся').toBe(false);
   });
 
   it('правку, на которую ссылается эффект, удалить нельзя', () => {

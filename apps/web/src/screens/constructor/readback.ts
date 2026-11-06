@@ -389,7 +389,7 @@ export function editNotation(edit: { ops?: Record<string, unknown>[] }, system: 
 }
 
 export function editReadback(
-  edit: { ops?: Record<string, unknown>[]; canceledBy?: string },
+  edit: { ops?: Record<string, unknown>[]; cancels?: string[] },
   system: System,
 ): Segment[] {
   const ops = edit.ops ?? [];
@@ -401,9 +401,8 @@ export function editReadback(
     + (phrases.length > 1 ? ', ' + phrases.slice(1).join(', ') : '');
   const out: Segment[] = [seg(text + '.')];
 
-  if (edit.canceledBy) {
-    const other = system.roll_edits?.[edit.canceledBy];
-    out.push(seg(`Гасится: ${other?.label || edit.canceledBy}.`));
+  if (edit.cancels?.length) {
+    out.push(seg(`Гасится: ${edit.cancels.map(key => system.roll_edits?.[key]?.label || key).join(', ')}.`));
   }
   return out;
 }

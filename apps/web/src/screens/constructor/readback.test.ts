@@ -90,7 +90,7 @@ describe('editReadback — правка броска словами', () => {
   });
 
   it('гашение названо лейблом встречной правки, а не её ключом', () => {
-    const edit = { label: 'Преимущество', ops: [{ op: 'addDie' }], canceledBy: 'down' };
+    const edit = { label: 'Преимущество', ops: [{ op: 'addDie' }], cancels: ['down'] };
     expect(joinReadback(editReadback(edit, sys)))
       .toBe('Кинуть на кость больше. Гасится: Помеха.');
   });
