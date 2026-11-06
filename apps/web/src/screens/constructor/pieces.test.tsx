@@ -133,7 +133,7 @@ describe('вид поля на листе выбирается в констру
       activeFieldTag: 'навыки.атлетика.ранг',
     }));
     renderOpen(<SheetTab />);
-    const group = screen.getAllByRole('radiogroup').find(el => /^Вид только у/.test(el.getAttribute('aria-label') ?? ''))!;
+    const group = screen.getAllByRole('radiogroup').find(el => /^Вид «/.test(el.getAttribute('aria-label') ?? ''))!;
     fireEvent.click(within(group).getByRole('radio', { name: 'Точки' }));
     expect(part().views).toEqual({ ранг: { kind: 'stepper', step: 2 }, 'атлетика.ранг': { kind: 'pips' } });
     fireEvent.click(within(group).getByRole('radio', { name: 'Как у колонки' }));

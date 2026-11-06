@@ -2,7 +2,7 @@ export * as world from './world.ts';
 export * as api from './api.ts';
 
 export type {
-  SlotRef, Formula, RollSpec, GroupSpec, ValueKind, Tag, TagContract, TableFill, Column, Stage, ColumnValue, CellView, TableShape, TableOwner, Control, ControlKind, SheetBlock, SheetPart, FieldOption, DiceTerm, DieConstant,
+  SlotRef, Formula, RollSpec, GroupSpec, ValueKind, Tag, TagContract, TableFill, Column, Stage, ColumnValue, CellView, TableShape, TableOwner, Control, ControlKind, SheetBlock, SheetPart, SheetPage, SheetList, FieldOption, DiceTerm, DieConstant,
   SystemConstant, Table, TableRow, TableKey, RollEditOp, RollEdit, Modifier, Param,
   Step, Guard, Ask, Handler, Effect,
   Activation, DurationKind, Reapply, Binding, SheetKind, TableUse, System,

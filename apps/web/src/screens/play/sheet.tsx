@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
 import { useReader } from '../../engine/use-calc.ts';
@@ -10,14 +11,16 @@ import { recordDetails } from '../../sheet/record-view.tsx';
 import { useSession } from '../../store/session.ts';
 import { Lobby } from './lobby.tsx';
 import { Hanging } from './hanging.tsx';
-import type { Sheet, System, RoomState, Owned, CompendiumRecord } from '@vtt/schema';
+import type { Sheet, System, RoomState, Owned, CompendiumRecord, SheetList } from '@vtt/schema';
 import { blockNames, blockOf, NO_BLOCK } from '@vtt/engine/model/blocks';
 import { availableActions } from '@vtt/engine/events/actions';
 import { recordsOf, isItem, sheetKinds, sheetKindOf, shownOn, recordKindOf } from '@vtt/engine/model/owned';
+import { ThingsList, ThingLine } from '../../sheet/things-list.tsx';
 import { fieldsFor, livesOn } from '@vtt/engine/engine/calc';
 import { isGroup, sharedOf } from '@vtt/engine/events/desk';
 import { isDesk as atDesk } from '@vtt/engine/engine/owners';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { blockOfList, pagesOf, SHEET_LIST_KEYS } from '@vtt/engine/model/pages';
 
 export function SheetScreen() {
   const room = useRoom(s => s.room);
@@ -37,6 +40,7 @@ export function SheetScreen() {
     setNewName('');
   };
   const kinds = sheetKinds(room.system as System);
+  const rest = sheet && !atDesk(sheet) ? sideLists(room.system as System, !isGroup(sheet, room.sheets)) : [];
 
   return (
     <Columns
@@ -79,10 +83,10 @@ export function SheetScreen() {
       }}
       main={{
         body: sheet
-          ? <SheetBody room={room} sheet={sheet} />
+          ? <SheetBody key={sheet.id} room={room} sheet={sheet} />
           : <Empty title="Выберите лист слева" hint="Тот, которым играете." />,
       }}
-      right={sheet && !atDesk(sheet) ? { head: 'Снаряжение и действия', body: <SidePanel room={room} sheet={sheet} /> } : undefined}
+      right={sheet && !atDesk(sheet) && rest.length ? { head: 'Снаряжение и действия', body: <SidePanel room={room} sheet={sheet} lists={rest} /> } : undefined}
     />
   );
 }
@@ -103,6 +107,11 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const editable = maySheet(room, me, sheet.id);
   const [claims, setClaims] = useState<string[]>([]);
   const claimable = useMemo(() => claimWords(system), [system]);
+  const [at, setAt] = useState<string | null>(null);
+  const paged = !isDesk && !asGroup && pagesOf(system).length > 0;
+  const own = !isDesk && !asGroup;
+  const inBlock = (list: SheetList) => own && blockOfList(system, list) !== undefined;
+  const pieces = useSheetPieces(room, sheet);
 
   return (
     <>
@@ -135,21 +144,15 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
           />
         </Field>
       ) : null}
-      {!isDesk && (sheet.effects ?? []).length ? (
-        <Card>
-          <CardHead title="Висит сейчас" />
-          <Hanging
-            room={room} sheet={sheet}
-            {...(editable ? { onRemove: entry => tableSocket.setBelonging(room.id, sheet.id, 'effects', entry.effectId, false) } : {})}
-          />
-        </Card>
-      ) : null}
+      {!isDesk && !inBlock('hanging') ? pieces.hangingNow : null}
       <SheetView
         system={system}
         fields={fields}
         sheet={sheet}
         reader={reader}
         only={only}
+        {...(paged ? { pages: { at, onAt: setAt } } : {})}
+        {...(own ? { lists: pieces.bare } : {})}
         badge={isDesk ? 'стол' : kind?.label ?? 'лист'}
         onChange={editable ? (tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value) : undefined}
         onRoll={tag => {
@@ -208,7 +211,21 @@ function shelvesOf<T extends CompendiumRecord>(system: System, items: readonly T
   return [...shelves].sort(([a], [b]) => at(a) - at(b));
 }
 
-function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
+const sideLists = (system: System, own: boolean): SheetList[] =>
+  SHEET_LIST_KEYS.filter(list => !own || blockOfList(system, list) === undefined);
+
+function SidePanel({ room, sheet, lists }: { room: RoomState; sheet: Sheet; lists: SheetList[] }) {
+  const pieces = useSheetPieces(room, sheet);
+  return (
+    <>
+      {lists.includes('actions') ? pieces.actions : null}
+      {lists.includes('things') ? pieces.things : null}
+      {lists.includes('hanging') ? pieces.hangable : null}
+    </>
+  );
+}
+
+function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode; hangable: ReactNode; hanging: ReactNode; things: ReactNode; actions: ReactNode; bare: Record<SheetList, ReactNode> } {
   const me = useSession(s => s.userId);
   const [query, setQuery] = useState('');
   const available = actionsOf(sheet, room);
@@ -262,54 +279,54 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
 
   const editable = maySheet(room, me, sheet.id);
 
-  return (
-    <>
-      <Fold title="Что применить" count={available.length} open>
-        {available.length === 0
-          ? <span className="faint">Нечего: наденьте предмет или выучите действие ниже.</span>
-          : available.map(action => (
-            <Card key={action.id} tone="flat">
-              <span className="nowrap" title="применяется за столом">{action.label}</span>
-            </Card>
-          ))}
+  const hangingNow = (sheet.effects ?? []).length ? (
+    <Card>
+      <CardHead title="Висит сейчас" />
+      <Hanging
+        room={room} sheet={sheet}
+        {...(editable ? { onRemove: entry => tableSocket.setBelonging(room.id, sheet.id, 'effects', entry.effectId, false) } : {})}
+      />
+    </Card>
+  ) : null;
+  const hangFold = editable ? (
+      <Fold title="Повесить…" count={hangable.length}>
+        {hangable.length === 0
+          ? <span className="faint">В системе нет эффектов, которые можно повесить.</span>
+          : (
+            <div className="inline inline--tight">
+              {hangable.filter(([id]) => !wornOf(id)).map(([id, effect]) => (
+                <Chip key={id} onClick={() => toggle('effects', id, true)}>{effect.label ?? id}</Chip>
+              ))}
+            </div>
+          )}
       </Fold>
-
-      <Fold title="Снаряжение" count={carried}>
+    ) : null;
+  const hanging = hangingNow || hangFold ? <>{hangingNow}{hangFold}</> : null;
+  const thingsKinds = (system.blocks ?? []).find(block => block.list === 'things')?.kinds;
+  const thingsBody = (
+    <>
         {items.length === 0
           ? <span className="faint">В компендиуме мира нет предметов.</span>
           : (
             <div className="stack stack--tight">
-              {items.filter(item => copies(item.id).length).map(item => {
-                const mine = copies(item.id);
+              <ThingsList system={system} kinds={thingsKinds} records={items.filter(item => copies(item.id).length)} row={item => copies(item.id).map((entry, at) => {
+                const hosts = (sheet.has ?? []).filter(one => !inside(keyOf(entry)).has(keyOf(one)));
                 return (
-                  <div key={item.id}>
-                    <Chip active={mine.some(entry => !entry.off)} onClick={() => add(item.id)}>
-                      {item.label ?? item.id} · + ещё один
-                    </Chip>
-                    {mine.map(entry => {
-                      const hosts = (sheet.has ?? []).filter(one => !inside(keyOf(entry)).has(keyOf(one)));
-                      const details = itemDetails(item, entry);
-                      return (
-                        <div key={keyOf(entry)}>
-                          <div className="inline inline--tight">
-                            <span className="faint">{labelOf(keyOf(entry))}</span>
-                            <Chip onClick={() => belong(item.id, entry, { on: true, off: !entry.off })}>{entry.off ? 'в сумке' : 'надето'}</Chip>
-                            <Chip onClick={() => belong(item.id, entry, { on: false })}>✕ убрать</Chip>
-                            {hosts.length ? (
-                              <Select
-                                value={entry.in ?? ''}
-                                options={[['', 'стоит отдельно'], ...hosts.map(one => [keyOf(one), `в: ${labelOf(keyOf(one))}`] as const)] as never}
-                                onChange={next => belong(item.id, entry, { on: true, off: Boolean(entry.off), in: next || null })}
-                              />
-                            ) : null}
-                          </div>
-                          {details ? <div className="faint">{details}</div> : null}
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <ThingLine key={keyOf(entry)} label={labelOf(keyOf(entry))} active={!entry.off} details={itemDetails(item, entry)}
+                    actions={<>
+                      <Chip onClick={() => belong(item.id, entry, { on: true, off: !entry.off })}>{entry.off ? 'в сумке' : 'надето'}</Chip>
+                      <Chip onClick={() => belong(item.id, entry, { on: false })}>✕ убрать</Chip>
+                      {at === 0 ? <Chip onClick={() => add(item.id)}>+ ещё один</Chip> : null}
+                      {hosts.length ? (
+                        <Select
+                          value={entry.in ?? ''}
+                          options={[['', 'стоит отдельно'], ...hosts.map(one => [keyOf(one), `в: ${labelOf(keyOf(one))}`] as const)] as never}
+                          onChange={next => belong(item.id, entry, { on: true, off: Boolean(entry.off), in: next || null })}
+                        />
+                      ) : null}
+                    </>} />
                 );
-              })}
+              })} />
               <span className="field__label">Добавить вещь</span>
               <Input value={query} onChange={setQuery} placeholder="найти по названию" />
               {shelves.length === 0
@@ -327,6 +344,19 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
                 ))}
             </div>
           )}
+    </>
+  );
+  const things = <Fold title="Снаряжение" count={carried}>{thingsBody}</Fold>;
+  const actionsList = (
+    <>
+      <Fold title="Что применить" count={available.length} open>
+        {available.length === 0
+          ? <span className="faint">Нечего: наденьте предмет или выучите действие ниже.</span>
+          : available.map(action => (
+            <Card key={action.id} tone="flat">
+              <span className="nowrap" title="применяется за столом">{action.label}</span>
+            </Card>
+          ))}
       </Fold>
 
       <Fold title="Известные действия" count={known}>
@@ -346,23 +376,21 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
             </div>
           )}
       </Fold>
-
-      {editable ? (
-        <Fold title="Повесить…" count={hangable.length}>
-          {hangable.length === 0
-            ? <span className="faint">В системе нет эффектов, которые можно повесить.</span>
-            : (
-              <div className="inline inline--tight">
-                {hangable.filter(([id]) => !wornOf(id)).map(([id, effect]) => (
-                  <Chip key={id} onClick={() => toggle('effects', id, true)}>{effect.label ?? id}</Chip>
-                ))}
-              </div>
-            )}
-        </Fold>
-      ) : null}
-
     </>
   );
+  const bare = {
+    hanging: (
+      <>
+        {(sheet.effects ?? []).length
+          ? <Hanging room={room} sheet={sheet} {...(editable ? { onRemove: entry => tableSocket.setBelonging(room.id, sheet.id, 'effects', entry.effectId, false) } : {})} />
+          : <span className="faint">Ничего не висит.</span>}
+        {hangFold}
+      </>
+    ),
+    things: thingsBody,
+    actions: actionsList,
+  };
+  return { hangingNow, hangable: hangFold, hanging, things, actions: actionsList, bare };
 }
 
 export function claimWords(system: System): [string, string][] {

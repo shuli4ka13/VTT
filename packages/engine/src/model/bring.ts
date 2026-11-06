@@ -4,6 +4,7 @@ import { isFormulaCell, fieldsOf, fieldOf, hasField, rowKeyOf } from './sheet-co
 import type { System, Table } from './types.ts';
 import { isBook, kindOf, blockLine } from './owned.ts';
 import { tidyLayout } from './layout.ts';
+import { tidyPages } from './pages.ts';
 import type { SheetPart } from '@vtt/schema';
 import { basedOn } from './inherit.ts';
 
@@ -214,6 +215,7 @@ export function bringIn(target: System, donor: System, roots: Part[], grants: st
     if (!(system.grants ?? []).includes(key)) system.grants = [...system.grants ?? [], key];
   }
   pruneBlocks(system, donor, fresh, arrived);
+  tidyPages(system);
   return { system, added, kept };
 }
 
@@ -241,6 +243,6 @@ function pruneBlocks(system: System, donor: System, fresh: Set<SheetPart>, arriv
     });
   }
   const blocks = system.blocks;
-  system.blocks = blocks.filter(block => !arrived.has(block.name) || block.parts.length > 0 || blocks.some(other => other.parent === block.name));
+  system.blocks = blocks.filter(block => !arrived.has(block.name) || block.parts.length > 0 || block.list || blocks.some(other => other.parent === block.name));
   tidyLayout(system);
 }

@@ -1,6 +1,7 @@
 import type { SheetPart } from '@vtt/schema';
 import type { System } from './types.ts';
 import { rowKeyOf, cellSource, isSingle } from './sheet-columns.ts';
+import { tidyPages } from './pages.ts';
 
 const parts = (system: System): SheetPart[] => (system.blocks ?? []).flatMap(block => block.parts);
 
@@ -33,9 +34,11 @@ export function renameLayoutRow(system: System, table: string, from: unknown, to
 
 export function renameLayoutTable(system: System, from: string, to: string): void {
   for (const part of parts(system)) if (part.table === from) part.table = to;
+  for (const block of system.blocks ?? []) if (block.kinds) block.kinds = block.kinds.map(kind => (kind === from ? to : kind));
 }
 
 export function tidyLayout(system: System): void {
+  tidyPages(system);
   if (!system.blocks) return;
   for (const block of system.blocks) {
     block.parts = block.parts.flatMap(part => {

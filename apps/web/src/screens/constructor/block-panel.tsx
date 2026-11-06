@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { useWorld } from '../../store/world.ts';
 import { useDragList } from '../../ui/drag-list.ts';
+import { PickOrder } from '../../ui/pick-order.tsx';
 import { Card, CardHead, Field, Select, Button, DangerButton, LabelInput, Verdict } from '../../ui/primitives.tsx';
 import { readyForSheet } from './table-field.tsx';
-import { onSheet, rowKeyOf, fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { onSheet, rowKeyOf, fieldsOf, isSingle } from '@vtt/engine/model/sheet-columns';
+import { recordKinds } from '@vtt/engine/model/owned';
+import { pagesOf, cellHead, setWidth, setHeight, GRID, SHEET_LIST_KEYS } from '@vtt/engine/model/pages';
+import { SHEET_LISTS, widthWords, splitWords, perRowWords } from '@vtt/engine/words/glossary';
 import { isRange } from '@vtt/engine/model/tables';
-import type { System, SheetBlock, SheetPart } from '@vtt/schema';
+import type { System, SheetBlock, SheetPart, SheetList } from '@vtt/schema';
 
 export const SHEET_TABLE = 'лист';
 
@@ -111,7 +115,7 @@ function ColumnGroup({ title, keys, chosen, labelOf, onToggle, onMove }: {
   const drag = useDragList(onMove, 'x');
   return (
     <div className="stack stack--tight block-pick">
-      <span className="block-pick__title">{title}{ordered && keys.length > 1 ? <span className="faint"> · перетащите, чтобы поменять порядок на листе</span> : null}</span>
+      <span className="block-pick__title">{ordered ? 'показываются' : title}{ordered && keys.length > 1 ? <span className="faint"> · перетащите, чтобы поменять порядок</span> : null}</span>
       <div className="inline inline--tight">
         {keys.map(key => {
           const on = chosen.includes(key);
@@ -160,6 +164,9 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
   const barred = new Set([name, ...descendants(name)]);
   const parents = sheetBlockList(system).map(b => b.name).filter(other => !barred.has(other));
 
+  const pages = pagesOf(system);
+  const head = cellHead(system, name);
+
   return (
     <Card>
       <CardHead
@@ -176,6 +183,67 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
           options={[['', 'на верхнем уровне'], ...parents.map(p => [p, p] as const)]}
           onChange={next => edit(target => { if (next) target.parent = next; else delete target.parent; })} />
       </Field>
+      {pages.length ? (
+        <Field label="Страница">
+          <Select<string> label="страница блока" value={block.page ?? ''}
+            options={[['', block.parent ? `как у «${block.parent}»` : `${pages.find(page => !page.top)?.name ?? 'первая'} — первая закладка`], ...pages.map(page => [page.name, page.top ? `${page.name} · над закладками` : page.name] as const)]}
+            onChange={next => edit(target => { if (next) target.page = next; else delete target.page; })} />
+        </Field>
+      ) : null}
+      <Field label="Ширина" hint={block.under ? `общая с блоком «${head?.name}», над которым он стоит` : 'можно и потянуть за правый край блока на образце'}>
+        <Select<string> label="ширина блока" value={String(head?.width ?? GRID)}
+          options={Array.from({ length: GRID }, (_, at) => [String(at + 1), widthWords(at + 1)] as const).reverse()}
+          onChange={next => editSystem(draft => setWidth(draft, name, Number(next)))} />
+      </Field>
+      <label className="inline inline--tight">
+        <input type="checkbox" checked={block.under === true}
+          onChange={event => { const on = event.currentTarget.checked; edit(target => { if (on) { target.under = true; delete target.width; } else delete target.under; }); }} />
+        Под предыдущим блоком
+      </label>
+      <Field label="Высота" hint="в точках экрана; пусто — по содержимому; можно и потянуть за нижний край блока на образце">
+        <LabelInput value={block.height ? String(block.height) : ''} placeholder="по содержимому"
+          onCommit={text => {
+            const clean = text.trim();
+            const n = Number(clean);
+            if (clean && !Number.isFinite(n)) return;
+            editSystem(draft => setHeight(draft, name, clean ? n : undefined));
+          }} />
+      </Field>
+      <Field label="Список в блоке" hint="Показывается после полей блока; в другом блоке этот список снимается.">
+        <Select<string> label="список в блоке" value={block.list ?? ''}
+          options={[['', 'нет'], ...SHEET_LIST_KEYS.map(list => [list, SHEET_LISTS[list]] as const)]}
+          onChange={next => editSystem(draft => {
+            for (const other of draft.blocks ?? []) {
+              if (other.name === name) { if (next) other.list = next as SheetList; else delete other.list; }
+              else if (next && other.list === next) delete other.list;
+            }
+          })} />
+      </Field>
+      {block.list === 'things' ? (() => {
+        const all = recordKinds(system).filter(([, kind]) => kind.use === 'item').map(([key]) => key);
+        return (
+          <Field label="Типы в списке">
+            <PickOrder keys={all} chosen={block.kinds ?? all} labelOf={key => system.tables?.[key]?.label || key}
+              onChange={next => edit(target => {
+                if (next.length === all.length && next.every((key, at) => key === all[at])) delete target.kinds; else target.kinds = next;
+              })} />
+          </Field>
+        );
+      })() : null}
+      {block.parts.some(part => isSingle(system.tables?.[part.table])) ? (
+        <Field label="Поля внутри блока">
+          <Select<string> label="поля внутри блока" value={String(block.per ?? '')}
+            options={[['', 'как поместятся'], ...Array.from({ length: GRID }, (_, at) => [String(at + 1), perRowWords(at + 1)] as const)]}
+            onChange={next => edit(target => { if (next) target.per = Number(next); else delete target.per; })} />
+        </Field>
+      ) : null}
+      {block.parts.some(part => !isSingle(system.tables?.[part.table])) ? (
+        <Field label="Строки таблицы">
+          <Select<string> label="строки таблицы" value={String(block.split ?? 1)}
+            options={Array.from({ length: GRID }, (_, at) => [String(at + 1), splitWords(at + 1)] as const)}
+            onChange={next => edit(target => { if (Number(next) > 1) target.split = Number(next); else delete target.split; })} />
+        </Field>
+      ) : null}
       {block.parts.map((part, index) => {
         const table = system.tables?.[part.table];
         const columns = table?.columns ?? [];
@@ -206,23 +274,13 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
             </Field>
             {single ? null : (
               <Field label="Строки">
-                <div className="inline inline--tight">
-                  <Button size="sm" variant={part.rows ? 'ghost' : 'primary'} onClick={() => editPart(index, target => { delete target.rows; })}>все</Button>
-                  {rows.map(row => {
-                    const key = rowKeyOf(row);
-                    return (
-                      <label key={key} className="inline inline--tight">
-                        <input type="checkbox" checked={chosenRows.includes(key)}
-                          onChange={() => editPart(index, target => {
-                            const now = target.rows ?? rows.map(rowKeyOf);
-                            const next = now.includes(key) ? now.filter(k => k !== key) : rows.map(rowKeyOf).filter(k => k === key || now.includes(k));
-                            if (next.length === rows.length) delete target.rows; else target.rows = next;
-                          })} />
-                        {row.label ?? String(row.value ?? key)}
-                      </label>
-                    );
-                  })}
-                </div>
+                <PickOrder keys={rows.map(rowKeyOf)} chosen={chosenRows}
+                  labelOf={key => { const row = rows.find(one => rowKeyOf(one) === key); return row?.label ?? String(row?.value ?? key); }}
+                  onChange={next => editPart(index, target => {
+                    const all = rows.map(rowKeyOf);
+                    if (!next.length) return;
+                    if (next.length === all.length && next.every((key, at) => key === all[at])) delete target.rows; else target.rows = next;
+                  })} />
               </Field>
             )}
             <Field label="Группировать по">

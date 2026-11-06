@@ -20,7 +20,7 @@ import { bindingsOf } from '../events/actions.ts';
 import { kindOfRecord } from './owned.ts';
 import { tableOf } from './buttons.ts';
 import { MOMENTS } from '../events/moments.ts';
-import { TABS, STEP, SHEET } from '../words/glossary.ts';
+import { TABS, STEP, SHEET, SHEET_LISTS } from '../words/glossary.ts';
 import {
   referencesOf, declaredOf, chainRefs, listenerOf, withAddresses, heardNames, callNamesOf, formulaDeps, sourcesOf,
   type Where, type Reference, type RefKind, type Declared, type Listener,
@@ -783,6 +783,31 @@ function layoutProblems(system: System): Problem[] {
       const rows = new Set((table.rows ?? []).map(r => rowKeyOf(r)));
       for (const row of part.rows ?? []) if (!rows.has(row)) out.push({ where, level: 'warn', text: `блок «${block.name}»: в таблице «${table.label || part.table}» нет строки «${row}»` });
     }
+  }
+  return [...out, ...pageProblems(system)];
+}
+
+function pageProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  const where = { tab: 'sheet' as const };
+  const pages = system.pages ?? [];
+  const names = new Set<string>();
+  for (const page of pages) {
+    if (names.has(page.name)) out.push({ where, level: 'error', text: `страница листа «${page.name}» названа дважды` });
+    names.add(page.name);
+  }
+  if (pages.filter(page => page.top).length > 1) out.push({ where, level: 'error', text: 'шапка листа одна, а страниц-шапок несколько' });
+  const lists = new Map<string, string>();
+  for (const block of system.blocks ?? []) {
+    if (!block.list) continue;
+    const was = lists.get(block.list);
+    if (was) out.push({ where, level: 'error', text: `список «${SHEET_LISTS[block.list]}» стоит и в блоке «${was}», и в «${block.name}»` });
+    else lists.set(block.list, block.name);
+  }
+  for (const block of system.blocks ?? []) {
+    if (block.page && !names.has(block.page)) out.push({ where, level: 'error', text: `блок «${block.name}» стоит на странице «${block.page}», а её нет` });
+    for (const kind of block.kinds ?? []) if (!system.tables?.[kind]) out.push({ where, level: 'warn', text: `блок «${block.name}» показывает в снаряжении тип «${kind}», а его нет` });
+    if (block.under && block.width) out.push({ where, level: 'warn', text: `блок «${block.name}» стоит под предыдущим — ширину задаёт верхний блок, своя не действует` });
   }
   return out;
 }
