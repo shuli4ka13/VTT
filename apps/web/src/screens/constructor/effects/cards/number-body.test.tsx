@@ -194,10 +194,9 @@ describe('шаг «Бросок»: поле листа', () => {
     expect(draft).toEqual({ id: 'а', type: 'roll', field: { expr: '@действующий' } });
   });
 
-  it('смена фишки переписывает голову адреса, хвост сохраняется', () => {
-    const { draft, view } = editedIn({ id: 'а', type: 'roll', field: { expr: '@действующий.навык.итог' } });
-    within(view.container).select('Кто бросает', '@цель');
-    expect(draft).toEqual({ id: 'а', type: 'roll', field: { expr: '@цель.навык.итог' } });
+  it('бросающий — голова адреса: отдельного выбора «Кто бросает» нет', () => {
+    const { view } = editedIn({ id: 'а', type: 'roll', field: { expr: '@действующий.навык.итог' } });
+    expect(view.container.querySelector('[data-field="Кто бросает"]')).toBeNull();
     expect(view.container.textContent).toContain('Ещё метки');
   });
 

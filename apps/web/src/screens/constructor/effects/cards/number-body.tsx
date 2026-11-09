@@ -38,8 +38,6 @@ const HEAD = /^\s*(@[\p{L}\p{N}_]+)/u;
 
 const headOf = (address: string): string => HEAD.exec(address)?.[1] ?? '';
 
-const withHead = (address: string, head: string): string => (HEAD.test(address) ? address.replace(HEAD, head) : `${head}${address.trim()}`);
-
 const toField = (it: Loose, head: string): void => {
   delete it.die;
   delete it.count;
@@ -206,12 +204,6 @@ export function NumberBody({ step, context, edit, onAddParam, takenNames, onRena
           />
           <span className="number-line__eq">=</span>
           <div data-field="Формула" className="number-line__formula roll-formula">
-            <RollerPick
-              by={{ expr: headOf(addressText) }}
-              context={context}
-              keep
-              onPick={next => edit(0, target => { const it = loose(target); it.field = { expr: withHead(exprOf(it.field), next) }; })}
-            />
             <span className="number-line__eq">бросок поля</span>
             <div data-field="Адрес поля" className="number-line__formula">
               <FormulaField
