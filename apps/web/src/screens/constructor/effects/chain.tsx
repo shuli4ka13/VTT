@@ -112,7 +112,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         const loop = loopsAt(step) ? loopOf(effect.params, step as { of?: unknown }) : null;
         const called = loopsAt(step) ? row?.label ?? loop?.label : cardTitle(cards, at, system, effect);
         return {
-          id: String(loopsAt(step) ? row?.key ?? loop?.key : step.id), type: step.type,
+          id: String(loopsAt(step) ? row?.key ?? loop?.key : step.id), type: step.type, ...((step as { field?: unknown }).field ? { fielded: true } : {}),
           ...(splitsTargets(step) ? { splits: true } : {}),
           ...(called ? { title: called } : {}),
           ...(row?.from ? { table: row.from } : {}),

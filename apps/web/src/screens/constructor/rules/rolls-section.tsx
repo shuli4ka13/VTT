@@ -9,7 +9,9 @@ import type { WorldState } from '../../../store/world.ts';
 
 type EditSystem = WorldState['editSystem'];
 
-const DEGREE_NAMES = new Map([['выпало', 'выпало'], ['число', 'число поля']]);
+const DEGREE_NAMES = new Map([['выпало', 'выпало'], ['число', 'число поля'], ['порог', 'порог'], ['успех', 'успех'], ['степени', 'степени']]);
+
+const RULE_NAMES = new Map([['выпало', 'выпало'], ['число', 'число поля'], ['порог', 'порог']]);
 
 const NUMBER_WORDS = [
   ['bonus', 'прибавка к кости'],
@@ -88,6 +90,20 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
             onChange={(next: string) => { if (!next) return; const [table, column] = next.split('\u0000'); edit(draft => { draft.fields.push({ table: table!, column: column! }); }); }} />
         ) : null}
       </div>
+      {roll.number === 'under' || roll.number === 'over' || roll.success || roll.margin ? (
+        <>
+          {([
+            ['success', 'Успех, если', roll.number === 'under' ? '@выпало <= @порог' : '@выпало >= @порог', 'успех'],
+            ['margin', 'Степени числом', roll.number === 'under' ? '@порог - @выпало' : '@выпало - @порог', 'степени'],
+          ] as const).map(([key, label, hint, where]) => (
+            <div key={key} className="dict-row dict-row--wrap roll-line">
+              <span className="dict-row__label">{label}</span>
+              <FormulaField value={roll[key]?.expr ?? ''} system={system} where={`${roll.label || id} · ${where}`} extraNames={RULE_NAMES} placeholder={hint}
+                onCommit={text => edit(draft => { if (text.trim()) draft[key] = { expr: text.trim() }; else delete draft[key]; })} />
+            </div>
+          ))}
+        </>
+      ) : null}
       {(roll.degrees ?? []).map((degree, at) => (
         <div key={at} className="dict-row roll-line">
           <span className="dict-row__label">{at ? '' : 'Степени'}</span>

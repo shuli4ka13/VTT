@@ -49,7 +49,7 @@ function contextOf(system: System, effect: Effect): SlotContext {
       ...(column.no ? { no: column.no } : {}),
     }));
     const title = callee?.label ?? words?.label;
-    earlier.push({ id: String(step.id), type: step.type, ...(title ? { title } : {}), ...(outputs.length ? { outputs } : {}) });
+    earlier.push({ id: String(step.id), type: step.type, ...((step as { field?: unknown }).field ? { fielded: true } : {}), ...(title ? { title } : {}), ...(outputs.length ? { outputs } : {}) });
   }
   return { system, effect, earlier };
 }

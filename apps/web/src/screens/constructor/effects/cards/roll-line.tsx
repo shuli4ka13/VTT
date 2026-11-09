@@ -50,7 +50,8 @@ export function RollerPick({ by, context, keep = false, onPick }: {
   );
 }
 
-export function RollTags({ roll, system, onRoll }: {
+export function RollTags({ roll, system, label = 'Метки', onRoll }: {
+  label?: string;
   roll: Roll;
   system: System;
   onRoll: (change: (draft: Roll) => void) => void;
@@ -58,7 +59,7 @@ export function RollTags({ roll, system, onRoll }: {
   const tags = (roll.tags ?? []) as TagValue[];
   return (
     <div className="field roll-tags" title="По меткам бросок находят правки и подписки; метка — строка любой таблицы системы">
-      <span className="field__label">Метки</span>
+      <span className="field__label">{label}</span>
       <TagsField system={system} value={tags} computed empty="+ метка"
         onChange={next => onRoll(draft => { if (next.length) draft.tags = next; else delete draft.tags; })} />
       <Listeners names={rollListeners(system, tags.filter((tag): tag is string => typeof tag === 'string'))} />

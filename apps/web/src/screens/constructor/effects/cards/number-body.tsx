@@ -1,6 +1,7 @@
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { parseRollFormula, formatRollFormula } from '../../roll-formula.ts';
 import { RollerPick, RollTags, setRoller } from './roll-line.tsx';
+import { sheetChoices } from '../../slots.tsx';
 import { useMemo, useState } from 'react';
 import type { Step, ValueKind } from '@vtt/schema';
 import { Button, Input } from '../../../../ui/primitives.tsx';
@@ -31,6 +32,30 @@ const looksLikeRoll = (text: string): boolean => {
   return found.before.trim() === '' && /^\s*([+-]|$)/.test(found.after);
 };
 
+const exprOf = (value: unknown): string => String((value as { expr?: unknown } | undefined)?.expr ?? '');
+
+const HEAD = /^\s*(@[\p{L}\p{N}_]+)/u;
+
+const headOf = (address: string): string => HEAD.exec(address)?.[1] ?? '';
+
+const withHead = (address: string, head: string): string => (HEAD.test(address) ? address.replace(HEAD, head) : `${head}${address.trim()}`);
+
+const toField = (it: Loose, head: string): void => {
+  delete it.die;
+  delete it.count;
+  delete it.fixed;
+  delete it.bonus;
+  delete it.by;
+  it.field = { expr: head };
+};
+
+const toDice = (it: Loose): void => {
+  const head = headOf(exprOf(it.field));
+  delete it.field;
+  delete it.shift;
+  if (head) it.by = { expr: head };
+};
+
 const asRoll = (it: Loose, parsed: { die?: unknown; count?: unknown; bonus?: unknown }): void => {
   delete it.fixed;
   it.die = parsed.die;
@@ -51,6 +76,7 @@ export function NumberBody({ step, context, edit, onAddParam, takenNames, onRena
   const current = typeof (step as { id?: unknown }).id === 'string' ? (step as { id: string }).id : '';
   const [draft, setDraft] = useState<string | null>(null);
   const read = loose(step);
+  const fielded = read.field !== undefined;
   const owned = Boolean(read.by);
   const [trouble, setTrouble] = useState<string | null>(null);
   const stored = owned
@@ -58,7 +84,7 @@ export function NumberBody({ step, context, edit, onAddParam, takenNames, onRena
     : textOf(read) || (asOneFormula(step) ?? '');
   const shown = draft ?? stored;
   const names = useMemo(() => namesOf(context), [context]);
-  const pickable = owned || !('error' in parseRollFormula(stored, context.system));
+  const pickable = !fielded && (owned || !('error' in parseRollFormula(stored, context.system)));
 
   const unknown = [...new Set([...shown.matchAll(/@([\p{L}\p{N}_.]+)/gu)].map(m => m[1]!))]
     .filter(name => !name.includes('.'))
@@ -150,6 +176,93 @@ export function NumberBody({ step, context, edit, onAddParam, takenNames, onRena
     />
   );
 
+  const addressText = exprOf(read.field);
+  const [addressDraft, setAddressDraft] = useState<string | null>(null);
+  const [shiftDraft, setShiftDraft] = useState<string | null>(null);
+  const hasRolls = Object.keys(context.system.rolls ?? {}).length > 0;
+  const firstSheet = [...sheetChoices(context).singles.keys()][0];
+
+  const switchToField = () => edit(0, target => {
+    const it = loose(target);
+    toField(it, headOf(exprOf(it.by)) || (firstSheet ? `@${firstSheet}` : ''));
+  });
+  const switchToDice = () => { setAddressDraft(null); setShiftDraft(null); edit(0, target => toDice(loose(target))); };
+
+  if (fielded) {
+    return (
+      <>
+        <div className="inline inline--tight number-line">
+          <Input
+            mono
+            value={nameDraft ?? current}
+            placeholder="имя"
+            invalid={Boolean(nameTrouble)}
+            onChange={next => { setNameTrouble(null); setNameDraft(next); }}
+            onBlur={commitName}
+            onKeyDown={event => {
+              if (event.key === 'Enter') commitName();
+              if (event.key === 'Escape') { setNameDraft(null); setNameTrouble(null); }
+            }}
+          />
+          <span className="number-line__eq">=</span>
+          <div data-field="Формула" className="number-line__formula roll-formula">
+            <RollerPick
+              by={{ expr: headOf(addressText) }}
+              context={context}
+              keep
+              onPick={next => edit(0, target => { const it = loose(target); it.field = { expr: withHead(exprOf(it.field), next) }; })}
+            />
+            <span className="number-line__eq">бросок поля</span>
+            <div data-field="Адрес поля" className="number-line__formula">
+              <FormulaField
+                value={addressDraft ?? addressText}
+                system={context.system}
+                where="бросок поля · какое поле"
+                extraNames={names}
+                {...(context.sheets ? { sheets: context.sheets } : {})}
+                badges={inputBadges(context)}
+                placeholder="наберите @ и выберите поле"
+                onChange={next => setAddressDraft(next)}
+                onCommit={typed => {
+                  setAddressDraft(null);
+                  if (typed.trim() === addressText.trim()) return;
+                  edit(0, target => { loose(target).field = { expr: typed.trim() }; });
+                }}
+                onCancel={() => setAddressDraft(null)}
+              />
+            </div>
+            <span className="number-line__eq">поправка</span>
+            <div data-field="Поправка" className="number-line__formula">
+              <FormulaField
+                value={shiftDraft ?? exprOf(read.shift)}
+                system={context.system}
+                where="бросок поля · поправка"
+                extraNames={names}
+                {...(context.sheets ? { sheets: context.sheets } : {})}
+                badges={inputBadges(context)}
+                placeholder="нет"
+                onChange={next => setShiftDraft(next)}
+                onCommit={typed => {
+                  setShiftDraft(null);
+                  if (typed.trim() === exprOf(read.shift).trim()) return;
+                  edit(0, target => {
+                    const it = loose(target);
+                    if (typed.trim()) it.shift = { expr: typed.trim() }; else delete it.shift;
+                  });
+                }}
+                onCancel={() => setShiftDraft(null)}
+              />
+            </div>
+          </div>
+        </div>
+        {nameTrouble ? <span className="field__error">{nameTrouble}</span> : null}
+        <span className="faint">кость, успех и степени — из «Правил → Броски»</span>
+        <RollTags label="Ещё метки" roll={read} system={context.system} onRoll={change => edit(0, draft => change(loose(draft)))} />
+        <Button size="sm" variant="ghost" onClick={switchToDice}>← кости</Button>
+      </>
+    );
+  }
+
   return (
     <>
       <div className="inline inline--tight number-line">
@@ -180,6 +293,8 @@ export function NumberBody({ step, context, edit, onAddParam, takenNames, onRena
           onClick={() => { onAddParam(name, 'number', name); }}
         >{`взять «${name}» из записи`}</Button>
       )) : null}
+
+      {hasRolls ? <Button size="sm" variant="ghost" onClick={switchToField}>бросить поле листа</Button> : null}
 
       {owned ? <RollTags roll={read} system={context.system} onRoll={change => edit(0, draft => change(loose(draft)))} /> : null}
     </>

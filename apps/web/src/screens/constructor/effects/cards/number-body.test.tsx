@@ -166,3 +166,54 @@ describe('шаг «Число»: под полем нет второй копи�
     expect(draft).toMatchObject({ die: 'lead', count: { expr: '2' }, bonus: { expr: '@damage_with' }, by: { expr: '@действующий' } });
   });
 });
+
+describe('шаг «Бросок»: поле листа', () => {
+  afterEach(cleanup);
+  const rolled = { ...context, system: { ...system, rolls: { r: { die: 'lead', fields: [] } } } as unknown as System };
+  const editedIn = (step: Record<string, unknown>) => {
+    const draft = structuredClone(step);
+    const view = render(<NumberBody step={step as unknown as Step} context={rolled} edit={(_, change) => change(draft as never)} />);
+    return { draft, view };
+  };
+
+  it('без бросков в системе кнопки нет', () => {
+    const view = body({ id: 'а', type: 'roll', die: 'lead' });
+    expect(view.container.textContent).not.toContain('бросить поле листа');
+  });
+
+  it('в поле: кость, число, прибавка и бросающий снимаются, голова — прежний бросающий', () => {
+    const { draft, view } = editedIn({ id: 'а', type: 'roll', die: 'lead', count: { expr: '2' }, bonus: { expr: '1' }, by: { expr: '@цель' }, tags: ['атака'] });
+    fireEvent.click(screen.getByText('бросить поле листа'));
+    expect(draft).toEqual({ id: 'а', type: 'roll', field: { expr: '@цель' }, tags: ['атака'] });
+    expect(view.container).toBeTruthy();
+  });
+
+  it('в поле без бросающего голова — первый лист', () => {
+    const { draft } = editedIn({ id: 'а', type: 'roll', fixed: { expr: '1' } });
+    fireEvent.click(screen.getByText('бросить поле листа'));
+    expect(draft).toEqual({ id: 'а', type: 'roll', field: { expr: '@действующий' } });
+  });
+
+  it('смена фишки переписывает голову адреса, хвост сохраняется', () => {
+    const { draft, view } = editedIn({ id: 'а', type: 'roll', field: { expr: '@действующий.навык.итог' } });
+    within(view.container).select('Кто бросает', '@цель');
+    expect(draft).toEqual({ id: 'а', type: 'roll', field: { expr: '@цель.навык.итог' } });
+    expect(view.container.textContent).toContain('Ещё метки');
+  });
+
+  it('поправка пишется и снимается пустой', () => {
+    const { draft, view } = editedIn({ id: 'а', type: 'roll', field: { expr: '@действующий.х' } });
+    within(view.container).formula('Поправка', '20');
+    expect(draft).toEqual({ id: 'а', type: 'roll', field: { expr: '@действующий.х' }, shift: { expr: '20' } });
+    cleanup();
+    const again = editedIn({ id: 'а', type: 'roll', field: { expr: '@действующий.х' }, shift: { expr: '20' } });
+    within(again.view.container).formula('Поправка', '');
+    expect(again.draft).toEqual({ id: 'а', type: 'roll', field: { expr: '@действующий.х' } });
+  });
+
+  it('«← кости» снимает поле и поправку, ставит бросающего', () => {
+    const { draft } = editedIn({ id: 'а', type: 'roll', field: { expr: '@цель.х' }, shift: { expr: '1' } });
+    fireEvent.click(screen.getByText('← кости'));
+    expect(draft).toEqual({ id: 'а', type: 'roll', by: { expr: '@цель' } });
+  });
+});
