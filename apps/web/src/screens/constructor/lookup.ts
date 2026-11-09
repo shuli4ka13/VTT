@@ -142,10 +142,17 @@ export function explainName(
     const table = decl.from ? system.tables?.[decl.from] : undefined;
     if (rest !== head) {
       const columnKey = rest.slice(head.length + 1);
-      const column = table?.columns?.find(c => c.key === columnKey);
+      const chain: string[] = [];
+      let at = table;
+      let column: { label?: string; expr?: unknown; from?: string } | undefined;
+      for (const key of columnKey.split('.')) {
+        column = at?.columns?.find(c => c.key === key) as typeof column;
+        chain.push(column?.label ?? key);
+        at = column?.from ? system.tables?.[column.from] : undefined;
+      }
       return {
         kind: 'колонка по выбору',
-        title: `${table?.label ?? decl.from} → ${column?.label ?? columnKey}`,
+        title: [table?.label ?? decl.from, ...chain].join(' → '),
         facts: [...ownerFact, ['строка', `та, что пришла во входе «${param.label ?? param.key}»`],
           ...(column?.expr ? [['считается', `${owner ?? 'листом, где читают'} — формулой колонки`] as [string, string]] : [])],
         from: callersOf(system, effectId, param.key),

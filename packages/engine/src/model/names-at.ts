@@ -236,7 +236,7 @@ export function labelsOf(names: readonly NameAt[], system?: System): Map<string,
     for (const sheet of sheets) {
       for (const child of row.children ?? []) {
         const key = `${sheet.name}.${row.name}${child.path}`;
-        if (!out.has(key)) out.set(key, `${childLabel(row, child.label)} (${sheet.name})`);
+        if (!out.has(key)) out.set(key, `${childLabel(row, child.label)} (${sheet.label})`);
       }
     }
   }
