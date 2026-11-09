@@ -183,6 +183,8 @@ function stepProblems(steps: Step[], whereOf: (index: number) => Where): Problem
         out.push({ where, level: 'error', text: `${slot.label.toLowerCase()}: ссылка старой формы ${JSON.stringify(value)} — нужно имя или формула` });
       }
     }
+    const own = mod.problems?.(step as never);
+    if (own) out.push({ where, level: 'error', text: own });
     const thrower = mod.thrownBy?.(step as never);
     const formula = (step as { fixed?: unknown }).fixed;
     if (thrower !== undefined && thrower !== null && formula !== undefined && formula !== null && ((step as { die?: unknown }).die === undefined || (step as { die?: unknown }).die === null)) {

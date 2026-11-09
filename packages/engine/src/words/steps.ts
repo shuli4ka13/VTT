@@ -4,7 +4,7 @@ export interface StepWords {
   label: string;
   hint: string;
   slots: readonly Record<string, unknown>[];
-  outputs: readonly { path: string; label: string; kind?: string }[];
+  outputs: readonly { path: string; label: string; kind?: string; onlyWith?: string }[];
   reasons: Readonly<Record<string, string>>;
   breakLines: Readonly<Record<string, string>>;
 }
@@ -22,11 +22,13 @@ export function slotShown(slot: { onlyIf?: SlotGate }, step: Readonly<Record<str
 export const STEP_WORDS = {
   roll: {
     label: 'Бросок',
-    hint: `Бросить кости или посчитать число. Если указано, кто бросает, — это чей-то бросок: на него действуют правки и «увидев кости»; против кого — решает сравнение, лист на другой его стороне. Без бросающего — просто расчёт. Кость пишется как ${diceExample}.`,
+    hint: `Бросить кости или посчитать число. Если указано, кто бросает, — это чей-то бросок: на него действуют правки и «увидев кости»; против кого — решает сравнение, лист на другой его стороне. Без бросающего — просто расчёт. Кость пишется как ${diceExample}. Или бросить поле листа — как щелчком по нему: кость, успех и степени берутся из «Правил → Броски», бросает тот, чьё поле.`,
     slots: [
       { key: 'die', label: 'Кость', kind: 'ref', main: true, allow: ['name', 'expr', 'empty'], refersTo: 'constant' },
       { key: 'count', label: 'Сколько костей', kind: 'ref', allow: ['expr', 'empty'] },
       { key: 'fixed', label: 'Формула', kind: 'ref', main: true, allow: ['expr', 'empty'] },
+      { key: 'field', label: 'Поле листа', kind: 'field', main: true, allow: ['expr', 'empty'] },
+      { key: 'shift', label: 'Поправка к числу поля', kind: 'ref', allow: ['expr', 'empty'] },
       { key: 'bonus', label: 'Прибавка', kind: 'ref', main: true, allow: ['expr', 'empty'] },
       { key: 'by', label: 'Кто бросает', kind: 'sheet', allow: ['expr', 'empty'] },
       { key: 'tags', label: 'Метки броска', kind: 'roll', allow: [] },
@@ -38,6 +40,9 @@ export const STEP_WORDS = {
       { path: '.atMax', label: 'сколько костей легло максимумом', kind: 'number' },
       { path: '.atMin', label: 'сколько костей легло единицей', kind: 'number' },
       { path: '.edited', label: 'да или нет: правили', kind: 'boolean' },
+      { path: '.success', label: 'да или нет: пройден', kind: 'boolean', onlyWith: 'field' },
+      { path: '.margin', label: 'степени успеха числом', kind: 'number', onlyWith: 'field' },
+      { path: '.degree', label: 'какая ступень успеха', kind: 'text', onlyWith: 'field' },
     ],
     reasons: {},
     breakLines: {},

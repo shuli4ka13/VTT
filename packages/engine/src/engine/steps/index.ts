@@ -17,6 +17,7 @@ import type { Pass } from '../calc.ts';
 import type { Roll, RollResult, Spec } from '../../core/dice.ts';
 import type { Thrown } from '../../core/roll.ts';
 import type { Faced } from '../../core/against.ts';
+import type { Check, FieldThrow } from '../check.ts';
 
 export type StepData = Step & Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -37,6 +38,7 @@ export interface StepContext {
   view(sheetId: string): Pass;
   rolled(name: string): Record<string, unknown> | null;
   roll(spec: Spec, tags: string[], by: string | null, against: string | null, bonus?: { ref: unknown; value: number }): Thrown;
+  fieldRoll(sheetId: string, check: Check, extra: { shift: number; tags: readonly string[]; against: string | null }): FieldThrow;
   ahead?(): string | null;
   faced?(name: string, other: unknown): Faced | null;
   read(sheetId: string, tag: string): unknown;
@@ -71,6 +73,7 @@ export interface StepModule {
 
   finish(step: StepData, ctx: StepContext): StepResult;
   lint?: (...args: never[]) => unknown;
+  problems?: (step: StepData) => string | null;
   traceLine?: (...args: never[]) => unknown;
 
   reasonWord?: (reason: string) => string | null;

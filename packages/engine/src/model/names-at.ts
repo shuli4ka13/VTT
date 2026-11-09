@@ -42,9 +42,9 @@ const HEARD_LABELS: Record<string, string> = {
   [TARGETS_SEED]: 'итоги по каждой цели',
 };
 
-const outputsOf = (type: string): NameChild[] =>
-  ((STEP_WORDS as Record<string, StepWords>)[type]?.outputs ?? [])
-    .filter(output => output.path)
+const outputsOf = (step: { type: string; [key: string]: unknown }): NameChild[] =>
+  ((STEP_WORDS as Record<string, StepWords>)[step.type]?.outputs ?? [])
+    .filter(output => output.path && (!output.onlyWith || (step[output.onlyWith] !== undefined && step[output.onlyWith] !== null)))
     .map(output => ({ path: output.path, label: output.label, kind: output.kind ?? 'number' }));
 
 const rowChildren = (system: System | undefined, from: string | undefined): NameChild[] =>
@@ -104,7 +104,7 @@ function stepsBefore(steps: readonly Step[], index: number, withLoop: boolean, p
       return;
     }
     if (!step.id) return;
-    const children = [...returnsOf(system, step), ...outputsOf(step.type)];
+    const children = [...returnsOf(system, step), ...outputsOf(step)];
     out.push({
       name: String(step.id),
       label: stepLabel(system, step, String(step.id)),
@@ -128,7 +128,7 @@ function targetsChildren(listened: Effect | null, system?: System): NameChild[] 
   const at = steps.findIndex(step => splitsTargets(step));
   if (at < 0) return [];
   return steps.slice(at + 1).filter(step => step.id).flatMap(step => {
-    const outputs = [...returnsOf(system, step), ...outputsOf(step.type)];
+    const outputs = [...returnsOf(system, step), ...outputsOf(step)];
     const own = { path: `.${String(step.id)}`, label: `шаг «${String(step.id)}» у каждой цели`, kind: 'result' };
     return [own, ...outputs.map(output => ({ path: `.${String(step.id)}${output.path}`, label: output.label, kind: output.kind }))];
   });
@@ -154,7 +154,7 @@ function heard(system: System, handler: NonNullable<Effect['on']>[number]): Name
     if (param) { out.push(fromParam(param, 'heard', system)); continue; }
     const step = steps.get(name);
     if (step) {
-      const children = [...returnsOf(system, step), ...outputsOf(step.type)];
+      const children = [...returnsOf(system, step), ...outputsOf(step)];
       out.push({ name, label: stepLabel(system, step, name), kind: 'result', group: 'heard', ...(children.length ? { children } : {}) });
       continue;
     }

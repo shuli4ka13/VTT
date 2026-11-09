@@ -391,6 +391,8 @@ export function fieldRollOf(system: System, tableId: string, column: string, row
     ...(entry.threshold !== undefined && (roll.number !== 'under' && roll.number !== 'over') ? { threshold: entry.threshold } : {}),
     ...((entry.keep ?? roll.keep) !== undefined ? { keep: entry.keep ?? roll.keep } : {}),
     ...(roll.degrees?.length ? { degrees: roll.degrees } : {}),
+    ...(roll.success ? { success: roll.success } : {}),
+    ...(roll.margin ? { margin: roll.margin } : {}),
   } as Field['roll'];
 }
 

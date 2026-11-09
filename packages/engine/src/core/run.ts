@@ -32,8 +32,8 @@ import type { Holder } from './edits.ts';
 import { throwDice } from './roll.ts';
 import { result, parse, withCount, withSides, withKeep, start, addendsText } from './dice.ts';
 import { dieConstant } from '../engine/lead-die.ts';
-import { ROLLED_NAME, NUMBER_NAME } from '../engine/check.ts';
-import type { Check } from '../engine/check.ts';
+import { ROLLED_NAME, NUMBER_NAME, THRESHOLD_NAME, SUCCESS_NAME, MARGIN_NAME } from '../engine/check.ts';
+import type { Check, FieldThrow } from '../engine/check.ts';
 import { subsOf, same, instOf, keysOf } from './subs.ts';
 import { same as sameValue, hasField, rowKeyOf } from '../model/sheet-columns.ts';
 import { runnerOf, calledBy } from './steps.ts';
@@ -455,6 +455,7 @@ export class Run {
       },
       roll: (spec, tags, by, against, bonus) => this.roll(frame, spec, tags, by, against, path.phase('roll').nth(rollsMade++), sink,
         bonus ? { label: this.bonusLabel(frame, bonus.ref), value: bonus.value } : undefined),
+      fieldRoll: (sheetId, check, extra) => this.throwField(frame, ctx as Ctx, path, sink, sheetId, check, extra),
       ahead: () => (at ? this.ahead(frame, at.steps, at.index, rolls) : null),
       faced: (name, other) => this.faced(frame, name, other, rolls),
       read: (sheetId, tag) => this.read(sheetId, tag),
@@ -1335,37 +1336,60 @@ export class Run {
     }
   }
 
-  check(sheetId: string, check: Check, path: Path, owner: string, claims: readonly string[] = []): { thrown: Thrown; bonus: number; total: number; entries: Entry[]; threshold: number | null; degree: string | null } {
+  check(sheetId: string, check: Check, path: Path, owner: string, claims: readonly string[] = []): FieldThrow & { entries: Entry[] } {
     const frame: Frame = {
       path, effectId: '', label: owner, owner, home: sheetId, bound: null,
       args: {}, paramDefs: [], props: null, claims: claims.length ? { [sheetId]: [...claims] } : {}, hop: 0, inSub: false,
     };
     const sink = newSink();
     const ctx = this.ctx(frame, {}, {}, path, sink, new Set());
-    const spec = parse(dieConstant(this.system, check.die), (ref, what) => ctx.number(ref, what));
-    const count = check.count === undefined || check.count === null ? null : ctx.number(check.count, `${owner} · сколько костей`);
-    const sides = check.sides === undefined || check.sides === null ? null : ctx.number(check.sides, `${owner} · грани`);
-    const counted = count === null ? spec : withCount(spec, count, owner);
+    const made = this.throwField(frame, ctx, path, sink, sheetId, check, { shift: 0, tags: [], against: null });
+    return { ...made, entries: sink.after };
+  }
+
+  private throwField(frame: Frame, ctx: Ctx, path: Path, sink: Sink, sheetId: string, check: Check,
+    extra: { shift: number; tags: readonly string[]; against: string | null }): FieldThrow {
+    const owner = frame.owner;
+    const plain: Frame = { path: frame.path, effectId: '', label: frame.label, owner, home: sheetId, bound: null, args: {}, paramDefs: [], props: null, claims: {}, hop: frame.hop, inSub: frame.inSub };
+    const judgeOf = (names: Record<string, unknown>) => this.ctx(plain, names, {}, path, sink, new Set(Object.keys(names)));
+    const sheetCtx = judgeOf({});
+    const num = (ref: unknown, what: string) => sheetCtx.number(ref, what);
+    const spec = parse(dieConstant(this.system, check.die), num);
+    const slot = check.count !== undefined && check.count !== null ? 'count' : check.sides !== undefined && check.sides !== null ? 'sides'
+      : check.bonus ? 'bonus' : check.threshold !== undefined && check.threshold !== null ? 'threshold' : null;
+    if (extra.shift && slot === 'sides') throw new EngineError(`${owner}: число поля — грани кости; поправку к граням не прибавить — это правка броска`);
+    if (extra.shift && slot === null) throw new EngineError(`${owner}: у броска нет числа поля — поправку прибавить не к чему`);
+    const plus = (key: typeof slot): number => (slot === key ? extra.shift : 0);
+    const count = check.count === undefined || check.count === null ? null : num(check.count, `${owner} · сколько костей`);
+    const sides = check.sides === undefined || check.sides === null ? null : num(check.sides, `${owner} · грани`);
+    const counted = count === null ? spec : withCount(spec, Math.max(0, count + plus('count')), owner);
     const sided = sides === null ? counted : withSides(counted, sides, owner);
-    const sized = check.keep === undefined || check.keep === null ? sided : withKeep(sided, ctx.number(check.keep, `${owner} · сколько оставить`), owner);
-    const bonus = check.bonus ? ctx.optional(check.bonus, `${owner} · прибавка`) ?? 0 : 0;
-    const thrown = ctx.roll(sized, [...(check.tags ?? [])], sheetId, null, check.bonus ? { ref: check.bonus, value: bonus } : undefined);
+    const sized = check.keep === undefined || check.keep === null ? sided : withKeep(sided, num(check.keep, `${owner} · сколько оставить`), owner);
+    const field = check.bonus ? sheetCtx.optional(check.bonus, `${owner} · прибавка`) ?? 0 : 0;
+    const bonus = field + plus('bonus');
+    const tags = [...new Set([...(check.tags ?? []), ...extra.tags])];
+    const thrown = ctx.roll(sized, tags, sheetId, extra.against, check.bonus ? { ref: check.bonus, value: bonus } : undefined);
     let threshold: number | null = null;
     let base: number | null = null;
     if (check.threshold !== undefined && check.threshold !== null) {
       const holders = this.holderViews();
       const view = (id: string) => holders.find(holder => holder.id === id)!.view;
-      const shift = gather(holders, { call: ROLL_CALL, param: THRESHOLD_PARAM, tags: thrown.thrower?.tags ?? check.tags ?? [], names: { бросающий: sheetId, против: null }, values: {}, view })
+      const shift = gather(holders, { call: ROLL_CALL, param: THRESHOLD_PARAM, tags: thrown.thrower?.tags ?? tags, names: { бросающий: sheetId, против: extra.against }, values: {}, view })
         .reduce((sum, held) => sum + amountOf(held), 0);
-      base = ctx.number(check.threshold, `${owner} · порог`);
-      threshold = Math.max(0, base + shift);
+      const versus = thrown.roll.claim.versusShift * (check.under ? -1 : 1);
+      base = num(check.threshold, `${owner} · порог`);
+      threshold = Math.max(0, base + plus('threshold') + shift + versus);
     }
     const total = thrown.result.total + bonus;
-    const number = check.under ? base : count ?? sides ?? (check.bonus ? bonus : base);
-    const named = { [ROLLED_NAME]: total, [NUMBER_NAME]: number ?? 0 };
-    const judge = this.ctx(frame, named, {}, path, sink, new Set(Object.keys(named)));
-    const degree = (check.degrees ?? []).find((one, at) => (at >= 0 && judge.holds(one.if)))?.label ?? null;
-    return { thrown, bonus, total, entries: sink.after, threshold, degree };
+    const number = check.under ? base : count ?? sides ?? (check.bonus ? field : base);
+    const named: Record<string, unknown> = { [ROLLED_NAME]: total, [NUMBER_NAME]: number ?? 0, ...(threshold === null ? {} : { [THRESHOLD_NAME]: threshold }) };
+    const judge = judgeOf(named);
+    const success = check.success ? judge.holds(check.success) : threshold === null ? null : check.under ? total <= threshold : total >= threshold;
+    const reckoned = check.margin ? judge.number(check.margin, `${owner} · степени`) : threshold === null ? null : check.under ? threshold - total : total - threshold;
+    const margin = reckoned === null ? null : reckoned + thrown.roll.claim.degreeShift;
+    const graded = judgeOf({ ...named, ...(success === null ? {} : { [SUCCESS_NAME]: success }), ...(margin === null ? {} : { [MARGIN_NAME]: margin }) });
+    const degree = (check.degrees ?? []).find(one => graded.holds(one.if))?.label ?? null;
+    return { thrown, bonus, total, threshold, degree, success, margin, number };
   }
 
   private probeAsking<T>(work: () => T): T {

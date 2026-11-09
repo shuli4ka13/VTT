@@ -160,9 +160,11 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
   roll(run, { sheetId, tag, claims }, root) {
     const sheet = sheetOf(run, sheetId);
     const check = fieldCheck(run.system, tag);
-    const { thrown, bonus, total, entries, threshold, degree } = run.check(sheetId, check, root.step('roll'), check.label, claims ?? []);
-    const passed = threshold === null ? false : check.under ? total <= threshold : total >= threshold;
-    const verdict = `${threshold === null ? '' : ` · ${check.under ? 'не больше' : 'порог'} ${threshold}: ${passed ? 'успех' : 'провал'}`}${degree ? ` · ${degree}` : ''}`;
+    const { thrown, bonus, total, entries, threshold, degree, success, margin } = run.check(sheetId, check, root.step('roll'), check.label, claims ?? []);
+    const bar = threshold === null ? '' : ` · ${check.under ? 'не больше' : 'порог'} ${threshold}`;
+    const passed = success === null ? '' : `${bar ? ':' : ' ·'} ${success ? 'успех' : 'провал'}`;
+    const steps = check.margin && margin !== null ? ` · степеней: ${margin}` : '';
+    const verdict = `${bar}${passed}${steps}${degree ? ` · ${degree}` : ''}`;
     const rolled = thrown.result;
     const named = thrown.roll.edits.length ? ` (${thrown.roll.edits.join(', ')})` : '';
     const shown = rolled.dice.kept != null && rolled.dice.rolls.length > 1

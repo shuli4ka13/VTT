@@ -1,9 +1,24 @@
 import { EngineError } from './errors.ts';
 import type { SlotRef, System } from '../model/types.ts';
 import { fieldOf } from '../model/sheet-columns.ts';
+import type { Thrown } from '../core/roll.ts';
 
 export const ROLLED_NAME = 'выпало';
 export const NUMBER_NAME = 'число';
+export const THRESHOLD_NAME = 'порог';
+export const SUCCESS_NAME = 'успех';
+export const MARGIN_NAME = 'степени';
+
+export interface FieldThrow {
+  thrown: Thrown;
+  bonus: number;
+  total: number;
+  threshold: number | null;
+  degree: string | null;
+  success: boolean | null;
+  margin: number | null;
+  number: number | null;
+}
 
 export interface Check {
   die: string;
@@ -12,6 +27,8 @@ export interface Check {
   sides?: SlotRef;
   keep?: SlotRef;
   degrees?: { label: string; if: SlotRef }[];
+  success?: SlotRef;
+  margin?: SlotRef;
   under?: true;
   tags?: string[];
   threshold?: SlotRef;
@@ -24,6 +41,7 @@ export function fieldCheck(system: System, tag: string): Check & { label: string
   const constant = (field.roll as { die?: string }).die;
   if (!constant) throw new EngineError(`по полю «${field.label}» бросают, но кость не выбрана`);
   const { label, count, bonus, sides, keep, degrees, under, tags } = field.roll;
+  const { success, margin } = field.roll as { success?: SlotRef; margin?: SlotRef };
   const threshold = (field.roll as { threshold?: SlotRef }).threshold;
   return {
     label: label ?? field.label,
@@ -33,6 +51,8 @@ export function fieldCheck(system: System, tag: string): Check & { label: string
     ...(sides ? { sides } : {}),
     ...(keep ? { keep } : {}),
     ...(degrees?.length ? { degrees } : {}),
+    ...(success ? { success } : {}),
+    ...(margin ? { margin } : {}),
     ...(under ? { under } : {}),
     ...(tags?.length ? { tags } : {}),
     ...(threshold ? { threshold } : {}),
