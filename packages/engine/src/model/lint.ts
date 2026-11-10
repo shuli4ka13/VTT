@@ -26,7 +26,7 @@ import {
   type Where, type Reference, type RefKind, type Declared, type Listener,
   LISTEN, contractsOf, HOLDER, DESK_NAME, holderNameOf, tiedToHolder,
 } from './references.ts';
-import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, holderOf, rowKeyOf, hasField, ROW } from './sheet-columns.ts';
+import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, holderOf, rowKeyOf, hasField, rollEntryOf, ROW } from './sheet-columns.ts';
 import { isRange, rowByKey } from './tables.ts';
 import { walkSheet } from './paths.ts';
 import { variantProblems, cellScopeProblems } from './variants.ts';
@@ -556,6 +556,67 @@ function rollsDice(expr: unknown): boolean {
     }
   };
   return visit(ast);
+}
+
+const FIELD_ADDRESS = /^\s*@[\p{L}\p{N}_]+\.([\p{L}\p{N}_.]+)\s*$/u;
+
+function rolledColumn(system: System, effect: Effect, address: unknown): { table: string; column: string } | null {
+  const tail = FIELD_ADDRESS.exec(String((address as { expr?: unknown } | undefined)?.expr ?? ''))?.[1]?.split('.');
+  if (!tail) return null;
+  const column = tail[tail.length - 1]!;
+  if (tail.length === 1) {
+    const home = Object.entries(system.tables ?? {}).find(([, table]) => isSingle(table) && (table.columns ?? []).some(one => one.key === column));
+    return home ? { table: home[0], column } : null;
+  }
+  const input = (effect.params ?? []).find(param => param.key === tail[0] && param.kind === 'choice' && param.from);
+  if (tail.length === 2) return input?.from && system.tables?.[input.from] ? { table: input.from, column } : null;
+  return tail.length === 3 && system.tables?.[tail[0]!] && !isSingle(system.tables[tail[0]!]!) ? { table: tail[0]!, column } : null;
+}
+
+const plainDie = (system: System, name: string): boolean => {
+  const die = system.constants?.[name] as { dice?: { count?: unknown; minus?: unknown }[]; read?: unknown; zero?: unknown } | undefined;
+  const terms = die?.dice ?? [];
+  return terms.length === 1 && typeof terms[0]!.count !== 'object' && !terms[0]!.minus && (die?.read === undefined || die.read === 'sum') && die?.zero === undefined;
+};
+
+const THROWN_DIE = /кинуть\(\s*[@#]([\p{L}\p{N}_]+)\s*[,)]/gu;
+
+function rollStepProblems(system: System, effect: Effect, steps: Step[], where: (index: number) => Where): Problem[] {
+  const out: Problem[] = [];
+  const dieLabel = (name: string): string => system.constants?.[name]?.label || name;
+  steps.forEach((raw, index) => {
+    const step = raw as Step & { field?: unknown; bonus?: unknown; shift?: unknown; die?: unknown; count?: unknown };
+    const filled = (value: unknown): boolean => value !== undefined && value !== null;
+    for (const text of exprsIn(raw)) {
+      for (const found of text.matchAll(THROWN_DIE)) {
+        const name = found[1]!;
+        if (system.constants?.[name]?.kind !== 'die' || (effect.params ?? []).some(param => param.key === name) || plainDie(system, name)) continue;
+        out.push({ where: where(index), level: 'error', text: `кость «${dieLabel(name)}» в формуле не бросить: у неё несколько частей или свои настройки («вычитается», «считать успехи», «если костей ноль») — бросьте её шагом «Бросок»` });
+      }
+    }
+    if (raw.type !== 'roll') return;
+    if (typeof step.die === 'string' && filled(step.count) && ((system.constants?.[step.die] as { dice?: unknown[] } | undefined)?.dice ?? []).length > 1) {
+      out.push({ where: where(index), level: 'error', text: `у кости «${dieLabel(step.die)}» несколько частей — «сколько костей» ей не задать` });
+    }
+    if (!filled(step.field)) return;
+    const at = rolledColumn(system, effect, step.field);
+    if (!at) return;
+    const found = rollEntryOf(system, at.table, at.column);
+    const table = system.tables![at.table]!;
+    const label = (table.columns ?? []).find(one => one.key === at.column)?.label || at.column;
+    if (!found) {
+      out.push({ where: where(index), level: 'error', text: `по полю «${isSingle(table) ? label : `${table.label || at.table} → ${label}`}» не бросают — добавьте его в «Правила → Броски»` });
+      return;
+    }
+    const kind = found.roll.number;
+    if (filled(step.bonus) && (kind === 'under' || kind === 'over')) {
+      out.push({ where: where(index), level: 'error', text: `бросок «${found.roll.label || found.key}» сравнивают с порогом — прибавку к итогу не прибавить, пишите поправку к числу поля` });
+    }
+    if (filled(step.shift) && kind === 'sides') {
+      out.push({ where: where(index), level: 'error', text: `у броска «${found.roll.label || found.key}» число поля — грани кости: поправки к нему нет` });
+    }
+  });
+  return out;
 }
 
 function thrownDiceProblems(steps: Step[], where: (index: number) => Where): Problem[] {
@@ -1126,6 +1187,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
     for (const chain of chainsOf(id, effect)) {
       out.push(...stepProblems(chain.steps, chain.where));
       out.push(...thrownDiceProblems(chain.steps, chain.where));
+      out.push(...rollStepProblems(system, effect, chain.steps, chain.where));
       const loops = chain.steps.flatMap((step, index) => (registry.get(step.type)?.loops ? [index] : []));
       for (const index of loops.slice(1)) {
         out.push({ where: chain.where(index), level: 'error', text: `«${STEP_WORDS.each.label}» в цепочке может быть только один` });

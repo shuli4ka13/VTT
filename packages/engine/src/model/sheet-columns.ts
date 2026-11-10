@@ -351,7 +351,7 @@ const livesOf = (table: Table): { lives?: 'group' | 'desk' } => {
   return holder === 'group' || holder === 'desk' ? { lives: holder } : {};
 };
 
-function rollEntryOf(system: System, tableId: string, column: string): { key: string; roll: SystemRoll; entry: RollField } | undefined {
+export function rollEntryOf(system: System, tableId: string, column: string): { key: string; roll: SystemRoll; entry: RollField } | undefined {
   for (const [key, roll] of Object.entries(system.rolls ?? {})) {
     const entry = roll.fields.find(one => one.table === tableId && one.column === column);
     if (entry) return { key, roll, entry };

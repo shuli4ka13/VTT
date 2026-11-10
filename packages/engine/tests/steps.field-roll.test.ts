@@ -130,3 +130,25 @@ group('кость системы в формуле', () => {
     eq(fight(system, 40, 40, [7]).hp, 2);
   });
 });
+
+group('проверка системы: бросок', () => {
+  const texts = (system: System) => errorsOf(lintSystem(system, book)).map(p => p.text);
+  const one = (step: Record<string, unknown>, rule: Record<string, unknown> = {}) => build([step], rule);
+
+  test('поле, которого нет в «Бросках»', () => {
+    deepEq(texts(one({ id: 'б', type: 'roll', field: { expr: '@действующий.хп' } })), ['по полю «Хиты» не бросают — добавьте его в «Правила → Броски»']);
+    deepEq(texts(one({ id: 'б', type: 'roll', field: { expr: '@действующий.навык' } })), []);
+  });
+
+  test('прибавка к итогу у броска с порогом и поправка у «граней»', () => {
+    ok(texts(one({ id: 'б', type: 'roll', field: { expr: '@действующий.навык' }, bonus: { expr: '1' } }))[0]!.includes('прибавку к итогу не прибавить'));
+    ok(texts(one({ id: 'б', type: 'roll', field: { expr: '@действующий.навык' }, shift: { expr: '1' } }, { number: 'sides', success: undefined, margin: undefined, degrees: undefined }))[0]!.includes('грани кости'));
+  });
+
+  test('кость с настройками в «кинуть» и кость с формулой в одном шаге', () => {
+    const minus = one({ id: 'ч', type: 'roll', fixed: { expr: 'кинуть(@к100) + 1' } });
+    (minus.constants!.к100 as { dice: { minus?: boolean }[] }).dice[0]!.minus = true;
+    ok(texts(minus)[0]!.includes('в формуле не бросить'));
+    deepEq(texts(one({ id: 'ч', type: 'roll', die: 'к100', fixed: { expr: '1' } })), ['кость и формула в одном шаге — формулу перенесите в прибавку']);
+  });
+});

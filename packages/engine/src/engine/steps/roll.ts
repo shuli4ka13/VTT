@@ -152,6 +152,7 @@ export function lint(step: StepData): string | null {
     return null;
   }
   if (has(step.shift)) return 'поправка к числу — только у броска поля';
+  if (has(step.die) && has(step.fixed)) return 'кость и формула в одном шаге — формулу перенесите в прибавку';
   if (step.die === undefined && step.fixed === undefined) return 'шаг пуст: впишите формулу или выберите бросок';
   return null;
 }
