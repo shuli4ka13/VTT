@@ -622,6 +622,19 @@ function rollStepProblems(system: System, effect: Effect, steps: Step[], where: 
       return;
     }
     const kind = found.roll.number;
+    const graded = kind === 'under' || kind === 'over' || found.entry.threshold !== undefined;
+    const gives: Record<string, boolean> = {
+      success: graded || Boolean(found.roll.success),
+      margin: graded || Boolean(found.roll.margin),
+      degree: Boolean(found.roll.degrees?.length),
+    };
+    const words: Record<string, string> = { success: 'пройден ли', margin: 'степени успеха', degree: 'ступень' };
+    const name = String(raw.id ?? '');
+    const reads = name ? [...everyStep, ...((effect.returns ?? []) as unknown as Step[])].flatMap(one => exprsIn(one)) : [];
+    for (const [output, ok] of Object.entries(gives)) {
+      if (ok || !reads.some(text => new RegExp(`@${name}\\.${output}(?![\\p{L}\\p{N}_])`, 'u').test(text))) continue;
+      out.push({ where: where(index), level: 'error', text: `«${name}» читают как «${words[output]}», а бросок «${found.roll.label || found.key}» этого не считает — у него нет порога и правила «${words[output]}» в «Правилах → Броски»` });
+    }
     if (filled(step.bonus) && (kind === 'under' || kind === 'over' || found.entry.threshold !== undefined)) {
       out.push({ where: where(index), level: 'error', text: `бросок «${found.roll.label || found.key}» сравнивают с порогом — прибавку к итогу не прибавить, пишите поправку к числу поля` });
     }
@@ -1030,7 +1043,9 @@ function paramProblems(system: System, compendium?: Compendium): Problem[] {
             }
             const stray = strayRow(system, param, args[param.key]);
             if (stray) {
-              const text = `во вход «${param.label ?? param.key}» ${applying ? 'наложения' : 'вызова'} «${called.label ?? choice}» передано «${stray.value}» — в таблице «${stray.table}» такой строки нет`;
+              const home = Object.values(system.tables ?? {}).flatMap(table => (table.rows ?? []).map(row => ({ row, table }))).find(one => String(one.row.value) === stray.value);
+              const shown = home ? `«${home.row.label || stray.value}» из таблицы «${home.table.label || ''}»` : `«${stray.value}»`;
+              const text = `во вход «${param.label ?? param.key}» ${applying ? 'наложения' : 'вызова'} «${called.label ?? choice}» передано ${shown} — в таблице «${stray.table}» такой строки нет`;
               if (!out.some(p => sameWhere(p.where, whereOf(index)) && p.text === text)) out.push({ where: whereOf(index), level: 'error', text });
             }
             if (!isBlank(args[param.key]) || param.optional || param.ask || param.default !== undefined) continue;

@@ -263,7 +263,11 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
       const table = split ? referencedTable(system, split.head, ctx.paramDefs) : undefined;
       if (split && table) return walk(system, ctx.pass, table, resolve(split.head), split.path, who(ctx), scope);
       if (ctx.stepIds?.has(split?.head ?? name)) {
-        throw new EngineError(`${who(ctx)}: шаг «${split?.head ?? name}» ещё не прошёл — его результата здесь нет`);
+        const head = split?.head ?? name;
+        if (head !== name && (head in results || known[head] !== undefined || ctx.rolls?.[head] !== undefined)) {
+          throw new EngineError(`${who(ctx)}: у шага «${head}» нет итога «${name.slice(head.length + 1)}»`);
+        }
+        throw new EngineError(`${who(ctx)}: шаг «${head}» ещё не прошёл — его результата здесь нет`);
       }
     }
     if (ctx.sheets && !ctx.bare && !name.startsWith(`${DESK_NAME}.`)) {

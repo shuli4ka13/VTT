@@ -190,3 +190,29 @@ group('кость из частей и кость со счётом по фор�
     deepEq(pool('большее из(1, @цели)', mine), []);
   });
 });
+
+group('степени у броска без порога', () => {
+  test('читать степени броска, у правила которого нет порога, — ошибка «Проблем» и понятный отказ за столом', () => {
+    const system = build([
+      { id: 'удар', type: 'roll', field: { expr: '@действующий.навык' } },
+      EACH,
+      { id: 'попал', type: 'check', value: { expr: '@удар.margin' }, versus: { expr: '0' } },
+    ], { number: undefined, success: undefined, margin: undefined, degrees: undefined });
+    deepEq(errorsOf(lintSystem(system, book)).map(p => p.text),
+      ['«удар» читают как «степени успеха», а бросок «Проверка» этого не считает — у него нет порога и правила «степени успеха» в «Правилах → Броски»']);
+    let said = '';
+    try { fight(system, 40, 40, [7, 7]); } catch (error) { said = (error as Error).message; }
+    ok(said.includes('у шага «удар» нет итога «margin»'), said);
+  });
+});
+
+group('строка не из той таблицы', () => {
+  test('сообщение называет строку её названием и таблицу, откуда она', () => {
+    const system = build([]);
+    (system.tables as Record<string, unknown>).навыки = { label: 'Навыки', key: 'word', columns: [], rows: [{ value: 'бег', label: 'Бег' }] };
+    (system.tables as Record<string, unknown>).черты = { label: 'Черты', key: 'word', columns: [], rows: [{ value: 'сила', label: 'Сила' }] };
+    system.effects!.взять = { label: 'Взять', params: [{ key: 'черта', label: 'Черта', kind: 'choice', from: 'черты' }], steps: [{ id: 'н', type: 'roll', fixed: { expr: '1' } }] } as never;
+    system.effects!.удар!.steps!.push({ type: 'emit', effect: 'взять', args: { черта: { expr: '"бег"' } } } as never);
+    ok(errorsOf(lintSystem(system, book)).some(p => p.text.includes('передано «Бег» из таблицы «Навыки» — в таблице «Черты» такой строки нет')));
+  });
+});
