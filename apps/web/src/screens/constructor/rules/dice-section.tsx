@@ -3,7 +3,9 @@ import { Readback } from '../effects/cards/group-card.tsx';
 import { dieReadback } from '../readback.ts';
 import { slugOf } from '../../../store/world.ts';
 import { Card, CardHead, Input, NumInput, Button, Select, Fold } from '../../../ui/primitives.tsx';
-import { BoundField } from '../bound-field.tsx';
+import { useState } from 'react';
+import { boundOf, boundText } from '../bound-field.tsx';
+import type { Bound } from '../bound-field.tsx';
 import { diceCount } from '../dice-expr.ts';
 import { newDie, DIE_KINDS } from '../factory.ts';
 import type { DieKind } from '../factory.ts';
@@ -58,6 +60,7 @@ export function DiceSection({ system, editSystem, usage }: Props) {
             const total = diceCount(dice);
 
             const readKind = readKindOf(constant);
+            const driven = Object.values(system.rolls ?? {}).some(roll => roll.die === key && roll.number === 'count');
             const asksReading = total !== 1 || readKind !== 'sum';
             const countRead = typeof constant.read === 'object' ? constant.read : null;
 
@@ -141,9 +144,9 @@ export function DiceSection({ system, editSystem, usage }: Props) {
                   </Button>
                 </div>
 
-                <Readback segments={dieReadback(constant, system)} />
+                <Readback segments={dieReadback(constant, system, driven)} />
 
-                <DiceComposer dice={dice} onEdit={editDice} driven={Object.values(system.rolls ?? {}).some(roll => roll.die === key && roll.number === 'count')} />
+                <DiceComposer dice={dice} onEdit={editDice} driven={driven} />
 
                 {asksReading ? reading : <Fold title="ещё" summary={readKind === 'sum' ? 'берём сумму' : 'чтение выпавшего'}>{reading}</Fold>}
               </div>
@@ -169,8 +172,8 @@ function DiceComposer({ dice, onEdit, driven = false }: {
         return (
           <div key={i} className="dice-term">
             <span className={`dice-term__num dice-term__num--wide${driven && !many ? ' dice-term__num--said' : ''}`}>
-              <BoundField value={term.count ?? (driven && !many ? null : 1)} placeholder={driven && !many ? 'задаёт бросок' : 'сколько'}
-                onChange={next => onEdit(list => { if (next === null || next === 1) delete list[i]!.count; else list[i]!.count = next; })} />
+              <CountField value={term.count ?? (driven && !many ? null : 1)} placeholder={driven && !many ? 'задаёт бросок' : 'сколько'}
+                onCommit={next => onEdit(list => { if (next === null || next === 1) delete list[i]!.count; else list[i]!.count = next; })} />
             </span>
 
             <span className="dice-term__d">к</span>
@@ -248,4 +251,18 @@ function DraftNum({ value, least, onCommit }: {
   onCommit: (n: number) => void;
 }) {
   return <NumInput mono int least={least} value={value} onCommit={onCommit} />;
+}
+
+function CountField({ value, placeholder, onCommit }: {
+  value: unknown;
+  placeholder: string;
+  onCommit: (next: Bound | null) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const commit = () => { if (draft === null) return; const typed = draft; setDraft(null); if (typed.trim() !== boundText(value)) onCommit(boundOf(typed)); };
+  return (
+    <Input mono value={draft ?? boundText(value)} placeholder={placeholder}
+      onChange={setDraft} onBlur={commit}
+      onKeyDown={event => { if (event.key === 'Enter') commit(); if (event.key === 'Escape') setDraft(null); }} />
+  );
 }

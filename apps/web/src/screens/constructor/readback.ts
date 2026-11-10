@@ -417,7 +417,15 @@ export function editReadback(
   return out;
 }
 
-export function dieReadback(constant: SystemConstant, system: System): Segment[] {
+export function dieReadback(constant: SystemConstant, system: System, driven = false): Segment[] {
+  const lone = (constant.dice ?? []).length === 1 && (constant.dice![0]!.count === undefined || constant.dice![0]!.count === null);
+  if (driven && lone) {
+    const read = constant.read;
+    const how = typeof read === 'string' ? read : read?.kind ?? 'sum';
+    const least = typeof read === 'object' ? read.atLeast : undefined;
+    const end = how === 'best' ? 'взять лучшую' : how === 'worst' ? 'взять худшую' : how === 'count' ? `посчитать, сколько выпало не ниже ${least ?? '?'}` : 'сложить';
+    return [seg(`Кинуть ${DIE_LETTER}${constant.dice![0]!.sides} — сколько костей, задаёт бросок — и ${end}.`)];
+  }
 
   const dice = (constant.dice ?? []).map(d => {
     const head = typeof d.count === 'object' && d.count !== null

@@ -111,15 +111,18 @@ describe('Словари: кости, правки броска, таблицы'
     expect(dice()[1]).toEqual({ sides: 20 });
 
     const [count] = screen.getAllByPlaceholderText('сколько');
-    fireEvent.change(count!, { target: { value: '3' } });
+    fireEvent.change(count!, { target: { value: '3' } }); fireEvent.blur(count!);
     expect(dice()[0]!.count).toBe(3);
-    fireEvent.change(count!, { target: { value: '1' } });
+    fireEvent.change(count!, { target: { value: '1' } }); fireEvent.blur(count!);
     expect('count' in dice()[0]!).toBe(false);
 
-    fireEvent.change(count!, { target: { value: '2' } });
+    fireEvent.change(count!, { target: { value: '2' } }); fireEvent.blur(count!);
     expect(dice()[0]!.count).toBe(2);
-    fireEvent.change(count!, { target: { value: '' } });
+    fireEvent.change(count!, { target: { value: '' } }); fireEvent.blur(count!);
     expect('count' in dice()[0]!).toBe(false);
+
+    fireEvent.change(count!, { target: { value: '' } });
+    expect((count as HTMLInputElement).value).toBe('');
   });
 
   it('счёт костей — число или формула в одном поле: @пул берёт число из листа', () => {
@@ -134,7 +137,7 @@ describe('Словари: кости, правки броска, таблицы'
     }));
     renderOpen(<RulesTab />);
     открыть('Броски');
-    fireEvent.change(screen.getByPlaceholderText('сколько'), { target: { value: '@пул' } });
+    fireEvent.change(screen.getByPlaceholderText('сколько'), { target: { value: '@пул' } }); fireEvent.blur(screen.getByPlaceholderText('сколько'));
 
     expect(Object.values(useWorld.getState().system.constants ?? {})[0]?.dice?.[0])
       .toEqual({ count: { expr: '@пул' }, sides: 6 });

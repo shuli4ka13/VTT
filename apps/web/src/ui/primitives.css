@@ -937,3 +937,4 @@
 .roll-form__body:not(.roll-form__body--wrap) > .select { flex: 1 1 auto; max-width: none; }
 .roll-form .dict-row__label { flex-basis: 132px; }
 .dice-term__num--said { flex-basis: 132px; }
+.dict-row > .select:has(option[value='worst']) { flex-basis: 240px; }
