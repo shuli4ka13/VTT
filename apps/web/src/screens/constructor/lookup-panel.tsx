@@ -36,7 +36,7 @@ function LookupPanel({ at }: { at: Looked }) {
   return (
     <>
       <Card>
-        <CardHead title={told.kind === 'не найдено' ? at.label || told.title : told.title} sub={`${told.kind} · в «${at.where}»`} />
+        <CardHead title={told.kind === 'не найдено' || told.kind === 'результат шага' ? at.label || told.title : told.title} sub={`${told.kind} · в «${at.where}»`} />
         {told.facts.length ? (
           <dl className="lookup__facts">
             {told.facts.map(([term, text]) => (
