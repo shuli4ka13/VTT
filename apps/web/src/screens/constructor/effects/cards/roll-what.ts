@@ -1,7 +1,7 @@
 import { isSingle } from '@vtt/engine/model/sheet-columns';
 import type { Effect, System } from '@vtt/schema';
 
-export interface Rollable { tail: string; label: string; group: string; rule: string }
+export interface Rollable { tail: string; label: string; group: string; rule: string; roll: string }
 
 export const BY_INPUT = 'По входу эффекта';
 export const ON_SHEET = 'Поля листа';
@@ -16,11 +16,11 @@ export function rollableFields(system: System, effect: Effect): Rollable[] {
       const table = system.tables?.[one.table];
       if (!table) continue;
       const name = table.columns?.find(column => column.key === one.column)?.label || one.column;
-      if (isSingle(table)) { singles.push({ tail: one.column, label: name, group: ON_SHEET, rule }); continue; }
+      if (isSingle(table)) { singles.push({ tail: one.column, label: name, group: ON_SHEET, rule, roll: key }); continue; }
       for (const param of effect.params ?? []) {
-        if (param.kind === 'choice' && param.from === one.table) inputs.push({ tail: `${param.key}.${one.column}`, label: `${param.label || param.key} → ${name}`, group: BY_INPUT, rule });
+        if (param.kind === 'choice' && param.from === one.table) inputs.push({ tail: `${param.key}.${one.column}`, label: `${param.label || param.key} → ${name}`, group: BY_INPUT, rule, roll: key });
       }
-      for (const row of (table.rows ?? []).filter(one => /^[\p{L}\p{N}_]+$/u.test(String(one.value)))) rows.push({ tail: `${one.table}.${row.value}.${one.column}`, label: `${row.label || row.value} → ${name}`, group: table.label || one.table, rule });
+      for (const row of (table.rows ?? []).filter(one => /^[\p{L}\p{N}_]+$/u.test(String(one.value)))) rows.push({ tail: `${one.table}.${row.value}.${one.column}`, label: `${row.label || row.value} → ${name}`, group: table.label || one.table, rule, roll: key });
     }
   }
   return [...inputs, ...singles, ...rows];

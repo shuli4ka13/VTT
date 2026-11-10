@@ -11,6 +11,8 @@ import { Extras } from './extras.tsx';
 import type { Extra } from './extras.tsx';
 import { RollTags } from './roll-line.tsx';
 import { useStepName } from './step-name.tsx';
+import { dieSaid } from '../../readback.ts';
+import { rollSaid } from '../../rules/rolls.ts';
 import {
   DIE, EXPR, FIELD, OWN_DIE, OWN_FIELD, headOf, rollableFields, setDie, setField, setWho, tailOf, whatOf, whatOptions,
 } from './roll-what.ts';
@@ -109,14 +111,18 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
     ),
   });
 
-  const rule = fielded ? rollableFields(context.system, context.effect).find(one => one.tail === tailOf(exprOf(read.field)))?.rule : undefined;
+  const several = typeof read.die === 'string' && ((context.system.constants?.[read.die] as { dice?: unknown[] } | undefined)?.dice ?? []).length > 1;
+  const picked = fielded ? rollableFields(context.system, context.effect).find(one => one.tail === tailOf(exprOf(read.field))) : undefined;
+  const rule = picked ? context.system.rolls?.[picked.roll] : undefined;
+  const constant = typeof read.die === 'string' ? context.system.constants?.[read.die] : undefined;
+  const die = constant ? dieSaid(constant, context.system, read.count !== undefined && read.count !== null) : null;
   const extras: Extra[] = fielded
     ? [
       slot('shift', 'Поправка к числу поля', 'поправка', 'например +20 за лёгкую задачу'),
       ...(read.bonus !== undefined && read.bonus !== null ? [slot('bonus', 'Прибавка к итогу', 'прибавка', 'нет')] : []),
     ]
     : [
-      slot('count', 'Сколько костей', 'сколько костей', 'как у кости'),
+      ...(several && (read.count === undefined || read.count === null) ? [] : [slot('count', 'Сколько костей', 'сколько костей', 'как у кости')]),
       slot('bonus', 'Прибавка', 'прибавка', 'нет'),
     ];
 
@@ -151,9 +157,10 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
       </div>
       {name.trouble}
       {read.fixed !== undefined && read.fixed !== null ? <span className="field__error">в шаге осталась формула «{exprOf(read.fixed)}» — она снимется, когда выберете, что бросают</span> : null}
-      {rule ? <span className="faint">по правилу «{rule}» из «Правил → Броски»: кость, успех и степени — оттуда</span> : null}
+      {picked && rule ? <span className="faint">по правилу «{picked.rule}» из «Правил → Броски»: {rollSaid(context.system, rule)}</span> : null}
+      {constant && die ? <span className="faint">{constant.label || String(read.die)}: {die}</span> : null}
       {!fielded && who === '' ? <span className="faint">кости ничьи: правки броска и вопросы «увидев кости» на них не действуют</span> : null}
-      <Extras items={extras} />
+      <div className="roll-extras"><Extras items={extras} /></div>
       <RollTags label={fielded ? 'Ещё метки' : 'Метки'} roll={read} system={context.system} onRoll={change => set(change)} />
     </>
   );

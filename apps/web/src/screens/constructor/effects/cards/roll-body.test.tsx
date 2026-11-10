@@ -232,3 +232,34 @@ describe('форма «Бросок»: свои значения и сохран
     expect(fielded.draft).toMatchObject(keep);
   });
 });
+
+describe('форма «Бросок»: что это за кость — словами под строкой', () => {
+  afterEach(cleanup);
+  const pools = {
+    ...system,
+    constants: {
+      ...system.constants,
+      pool: { label: 'набор к6', kind: 'die', dice: [{ sides: 6 }], read: { kind: 'count', atLeast: 5 } },
+      twin: { label: 'Кости двойственности', kind: 'die', dice: [{ sides: 12, name: 'hope', label: 'Надежда' }, { sides: 12, name: 'fear', label: 'Страх' }] },
+    },
+    rolls: { r: { label: 'Проверка', die: 'pool', number: 'count', fields: [{ table: 'stats', column: 'initiative' }] } },
+  } as unknown as System;
+  const shown = (step: unknown) => render(<RollBody step={step as Step} context={{ ...context, system: pools }} edit={() => {}} />).container.textContent!;
+
+  it('набор со счётом успехов называет, что считается; простая кость молчит', () => {
+    expect(shown({ id: 'б', type: 'roll', die: 'pool', by: { expr: '@действующий' }, count: { expr: '4' } })).toContain('набор к6: к6 — считаются выпавшие не ниже 5');
+    expect(shown({ id: 'б', type: 'roll', die: 'lead', by: { expr: '@действующий' } })).not.toContain('Ведущая кость:');
+  });
+
+  it('кость из частей называет части, а «+ сколько костей» ей не предлагается', () => {
+    const text = shown({ id: 'б', type: 'roll', die: 'twin', by: { expr: '@действующий' } });
+    expect(text).toContain('Кости двойственности: 1к12 «Надежда» + 1к12 «Страх» — складываются');
+    expect(text).toContain('+ прибавка');
+    expect(text).not.toContain('+ сколько костей');
+  });
+
+  it('бросок с листа называет правило: что значит число поля и какой костью', () => {
+    expect(shown({ id: 'б', type: 'roll', field: { expr: '@действующий.initiative' } }))
+      .toContain('по правилу «Проверка» из «Правил → Броски»: число поля — сколько бросить: набор к6 (успехи от 5)');
+  });
+});

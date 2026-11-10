@@ -444,6 +444,27 @@ export function dieReadback(constant: SystemConstant, system: System): Segment[]
   return [seg(`Кинуть ${dice} и ${tail}.`)];
 }
 
+export function dieSaid(constant: SystemConstant, system: System, counted: boolean): string | null {
+  const terms = constant.dice ?? [];
+  if (!terms.length) return null;
+  const read = constant.read;
+  const kind = typeof read === 'string' ? read : read?.kind ?? 'sum';
+  const atLeast = typeof read === 'object' ? read.atLeast : undefined;
+  const lone = terms.length === 1;
+  if (lone && kind === 'sum' && (terms[0]!.count ?? 1) === 1) return null;
+  const dice = terms.map(term => {
+    const head = counted && lone ? `${DIE_LETTER}${term.sides}`
+      : typeof term.count === 'object' && term.count !== null ? `${DIE_LETTER}${term.sides} по числу «${countWord(system, term.count)}»`
+        : diceText(term.count, term.sides);
+    return term.name ? `${head} «${term.label || term.name}»` : head;
+  }).join(' + ');
+  const tail = kind === 'best' ? 'берётся лучшая'
+    : kind === 'worst' ? 'берётся худшая'
+      : kind === 'count' ? `считаются выпавшие не ниже ${atLeast ?? '?'}`
+        : 'складываются';
+  return `${dice} — ${tail}`;
+}
+
 export const joinReadback = (segments: Segment[]): string =>
   segments.map(part => ('text' in part ? part.text : `⟨${part.hole}⟩`))
     .join(' ')

@@ -717,3 +717,4 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .roll-formula > .number-line__eq { padding-top: 0; flex: none; }
 @media (max-width: 720px) { .check-line { flex-wrap: wrap; } .check-line__side { flex: 1 1 100%; } }
 .number-line__sealed { padding-top: 0.4rem; color: var(--text-muted); }
+.step-card .roll-extras { --value-w: 860px; }
