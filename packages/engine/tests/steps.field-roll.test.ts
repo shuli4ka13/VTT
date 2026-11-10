@@ -216,3 +216,19 @@ group('строка не из той таблицы', () => {
     ok(errorsOf(lintSystem(system, book)).some(p => p.text.includes('передано «Бег» из таблицы «Навыки» — в таблице «Черты» такой строки нет')));
   });
 });
+
+group('вход-строка из другой таблицы', () => {
+  test('передать в вызов вход из другой таблицы — ошибка «Проблем»; из той же — нет', () => {
+    const make = (from: string) => {
+      const system = build([]);
+      (system.tables as Record<string, unknown>).навыки = { label: 'Навыки', key: 'word', columns: [], rows: [{ value: 'бег', label: 'Бег' }] };
+      (system.tables as Record<string, unknown>).черты = { label: 'Черты', key: 'word', columns: [], rows: [{ value: 'сила', label: 'Сила' }] };
+      system.effects!.взять = { label: 'Взять', params: [{ key: 'черта', label: 'Черта', kind: 'choice', from: 'черты' }], steps: [{ id: 'н', type: 'roll', fixed: { expr: '1' } }] } as never;
+      system.effects!.удар!.params!.push({ key: 'выбор', label: 'Чем защищается', kind: 'choice', from, ask: { by: 'actor' } } as never);
+      system.effects!.удар!.steps!.push({ type: 'emit', effect: 'взять', args: { черта: { expr: '@выбор' } } } as never);
+      return errorsOf(lintSystem(system, book)).map(p => p.text);
+    };
+    deepEq(make('навыки'), ['во вход «Черта» вызова «Взять» передан вход «Чем защищается» — это строка таблицы «Навыки», а нужна строка «Черты»']);
+    deepEq(make('черты'), []);
+  });
+});

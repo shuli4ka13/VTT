@@ -1041,6 +1041,13 @@ function paramProblems(system: System, compendium?: Compendium): Problem[] {
                 });
               }
             }
+            const passed = /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((args[param.key] as { expr?: unknown } | undefined)?.expr ?? ''))?.[1];
+            const giver = passed ? (effect.params ?? []).find(one => one.key === passed && one.kind === 'choice' && one.from) : undefined;
+            if (giver && param.kind === 'choice' && param.from && giver.from !== param.from) {
+              const label = (table: string) => system.tables?.[table]?.label || table;
+              const text = `во вход «${param.label ?? param.key}» ${applying ? 'наложения' : 'вызова'} «${called.label ?? choice}» передан вход «${giver.label ?? giver.key}» — это строка таблицы «${label(giver.from!)}», а нужна строка «${label(param.from)}»`;
+              if (!out.some(p => sameWhere(p.where, whereOf(index)) && p.text === text)) out.push({ where: whereOf(index), level: 'error', text });
+            }
             const stray = strayRow(system, param, args[param.key]);
             if (stray) {
               const home = Object.values(system.tables ?? {}).flatMap(table => (table.rows ?? []).map(row => ({ row, table }))).find(one => String(one.row.value) === stray.value);

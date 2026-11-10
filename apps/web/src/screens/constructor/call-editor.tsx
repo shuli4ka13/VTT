@@ -41,29 +41,59 @@ const lonely = (value: unknown): string | null => {
 
 const BY_FORMULA = ':формула';
 
-function ChoiceArg({ system, param, value, onArg, children }: {
+const FROM_NAME = /^@([\p{L}\p{N}_.]+)$/u;
+
+function namedSources(context: SlotContext): { name: string; label: string; table: string }[] {
+  const tables = new Map<string, string>(context.tables ?? []);
+  for (const param of context.effect.params ?? []) if (param.kind === 'choice' && param.from && !tables.has(param.key)) tables.set(param.key, param.from);
+  const labelOf = (name: string): string => {
+    const param = (context.effect.params ?? []).find(one => one.key === name);
+    if (param) return `вход «${param.label ?? param.key}»`;
+    const named = context.names?.get(name);
+    return named ? `«${named}»` : `«${name}»`;
+  };
+  return [...tables].map(([name, table]) => ({ name, table, label: labelOf(name) }));
+}
+
+function ChoiceArg({ system, param, value, onArg, context, children }: {
   system: System;
   param: Param;
   value: unknown;
   onArg: (key: string, next: SlotRef | null) => void;
+  context: SlotContext;
   children: ReactNode;
 }) {
   const rows = choiceRows(system, param);
   const text = asText(value)?.trim() ?? '';
   const picked = pickedRow(system, param, value);
+  const sources = namedSources(context);
+  const fitting = sources.filter(one => one.table === param.from);
+  const named = FROM_NAME.exec(text)?.[1];
+  const source = named ? sources.find(one => one.name === named) : undefined;
   const [formula, setFormula] = useState(false);
-  const byFormula = formula || (text !== '' && !picked);
+  const byFormula = formula || (text !== '' && !picked && !source);
+  const tableOf = (id: string): string => system.tables?.[id]?.label || id;
+  const options: (readonly [string, string, string])[] = [
+    ['', '— выберите —', ''],
+    ...rows.map(row => [JSON.stringify(row.value), row.label, `Строка «${tableOf(param.from ?? '')}»`] as const),
+    ...fitting.map(one => [`@${one.name}`, one.label, 'Из этого эффекта'] as const),
+    ...(source && source.table !== param.from ? [[`@${source.name}`, `${source.label} — строка «${tableOf(source.table)}», не подходит`, 'Из этого эффекта'] as const] : []),
+    [BY_FORMULA, 'формулой…', 'Другое'],
+  ];
   return (
     <div className="stack stack--tight">
       <Select<string>
-        value={byFormula ? BY_FORMULA : picked ? JSON.stringify(picked.value) : ''}
-        options={[['', '— выберите —'], ...rows.map(row => [JSON.stringify(row.value), row.label] as const), [BY_FORMULA, 'формулой…']]}
+        value={byFormula ? BY_FORMULA : picked ? JSON.stringify(picked.value) : source ? `@${source.name}` : ''}
+        options={options.map(([key, label, group]) => (group ? [key, label, group] as const : [key, label] as const))}
         onChange={next => {
           if (next === BY_FORMULA) { setFormula(true); return; }
           setFormula(false);
           onArg(param.key, next ? { expr: next } : null);
         }}
       />
+      {source && source.table !== param.from ? (
+        <span className="field__error">{source.label} — строка таблицы «{tableOf(source.table)}», а сюда нужна строка «{tableOf(param.from ?? '')}»</span>
+      ) : null}
       {byFormula ? children : null}
     </div>
   );
@@ -191,7 +221,7 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, onArg
         onChange={next => onArg(input.param.key, next ? { expr: JSON.stringify(next) } : null)}
       />
     ) : choiceRows(system, input.param).length
-      ? <ChoiceArg system={system} param={input.param} value={input.value} onArg={onArg}>{valueField(input)}</ChoiceArg>
+      ? <ChoiceArg system={system} param={input.param} value={input.value} onArg={onArg} context={context}>{valueField(input)}</ChoiceArg>
       : valueField(input)
   );
 
