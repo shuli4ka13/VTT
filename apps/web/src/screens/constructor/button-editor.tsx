@@ -42,6 +42,11 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
   const buttons = Object.entries(system.effects).filter(([, e]) => (e.activation ?? 'manual') !== 'passive');
   const where = binding.label || effect?.label || binding.effect;
   const [more, setMore] = useState(false);
+  const usual = tableOf({}, { params });
+  const filled = tableOf(binding, { params });
+  const asUsual = (param: Param): boolean =>
+    param.kind === 'sheet' && (filled[param.key] ?? '') === (usual[param.key] ?? '') && (Boolean(usual[param.key]) || Boolean(loose(param).optional));
+  const shown = more ? params : params.filter(param => !asUsual(param));
 
   const onArg = (key: string, next: SlotRef | null) => onEdit(draft => {
     draft.args ??= {};
@@ -103,7 +108,7 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
       {effect ? (params.length ? (
         <div className="args-table">
           <div className="args-table__head" aria-hidden><span>Вход</span><span>Что это</span><span>Чем заполнить</span></div>
-          {params.map(param => (
+          {shown.map(param => (
             <ArgRow
               key={param.key}
               param={param}
@@ -137,7 +142,7 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
           />
         </div>
       ) : (
-        <Button size="sm" variant="ghost" onClick={() => setMore(true)}>ещё</Button>
+        <Button size="sm" variant="ghost" title={params.some(asUsual) ? 'кто действует и цели — как обычно: кто нажал кнопку и цели, выбранные за столом; условие кнопки' : 'условие кнопки'} onClick={() => setMore(true)}>ещё</Button>
       )}
     </Card>
   );

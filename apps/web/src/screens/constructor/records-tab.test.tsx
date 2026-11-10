@@ -91,7 +91,7 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     expect(строкаВхода('Кость урона').className).not.toContain('args-row--need');
   });
 
-  it('входы-листы, которые кнопка заполняет сама, подписаны, а не горят «не заполнено»', () => {
+  it('входы-листы, которые кнопка заполняет как обычно, спрятаны под «ещё» и там подписаны', () => {
     useWorld.setState(state => ({
       ...state,
       system: {
@@ -105,6 +105,9 @@ describe('RecordsTab: тип видит входы эффекта', () => {
       },
     }));
     render(<RecordsTab />);
+    expect(screen.queryByDisplayValue('кто нажал кнопку')).toBeNull();
+    expect(screen.queryByText('не заполнено')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'ещё' }));
     expect(screen.getByDisplayValue('кто нажал кнопку')).toBeTruthy();
     expect(screen.getByDisplayValue('цели, выбранные за столом')).toBeTruthy();
     expect(screen.queryByText('не заполнено')).toBeNull();
