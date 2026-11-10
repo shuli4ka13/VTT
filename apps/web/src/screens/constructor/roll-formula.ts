@@ -1,5 +1,5 @@
 import type { System, SlotRef } from '@vtt/schema';
-import { compile, printFormula, FormulaError, operandText } from '@vtt/engine/formula';
+import { compile, printFormula, FormulaError } from '@vtt/engine/formula';
 import type { Node } from '@vtt/engine/formula';
 import { asDice } from '../../words.ts';
 import { dieRef, unquote } from './roll-expr.ts';
@@ -10,16 +10,7 @@ export interface RollParts {
   bonus: SlotRef | null;
 }
 
-export interface CheckParts {
-  roll: RollParts;
-  successWhen: string;
-  versus: SlotRef;
-}
-
-export interface Compared { left: string; op: string; right: string }
-
 const OP_OF: Record<string, string> = { '>=': 'atLeast', '<=': 'notOver', '>': 'over', '<': 'under', '==': 'equals' };
-const TEXT_OF: Record<string, string> = { atLeast: '>=', notOver: '<=', over: '>', under: '<', equals: '==' };
 const ROLL = 'кинуть';
 
 const quoteDice = (text: string): string =>
@@ -33,7 +24,6 @@ function treeOf(text: string): Node | { error: string } {
   }
 }
 
-
 function walk(text: string, visit: (i: number, ch: string, depth: number) => boolean): void {
   let depth = 0;
   let quote: string | null = null;
@@ -45,21 +35,6 @@ function walk(text: string, visit: (i: number, ch: string, depth: number) => boo
     if (ch === ')') depth--;
     if (visit(i, ch, depth)) return;
   }
-}
-
-const SIGNS = ['>=', '<=', '==', '>', '<'];
-
-function splitCompare(text: string): Compared | null {
-  let found: Compared | null = null;
-  walk(text, (i, ch, depth) => {
-    if (depth !== 0 || !'<>='.includes(ch)) return false;
-    if (ch === '=' && (text[i - 1] === '!' || text[i - 1] === '<' || text[i - 1] === '>' || text[i - 1] === '=')) return false;
-    const sign = SIGNS.find(one => text.startsWith(one, i));
-    if (!sign) return false;
-    found = { left: text.slice(0, i).trim(), op: OP_OF[sign]!, right: text.slice(i + sign.length).trim() };
-    return true;
-  });
-  return found;
 }
 
 function rawRoll(text: string): { args: string[]; tail: string } {
@@ -77,12 +52,6 @@ function rawRoll(text: string): { args: string[]; tail: string } {
 }
 
 const isError = (value: unknown): value is { error: string } => Boolean(value && typeof value === 'object' && 'error' in value);
-
-export function compare(text: string): Compared | null {
-  const tree = treeOf(text);
-  if (isError(tree) || tree.kind !== 'Binary' || !OP_OF[tree.op]) return null;
-  return splitCompare(quoteDice(text.trim()));
-}
 
 function terms(node: Node): { sign: '+' | '-'; node: Node }[] {
   if (node.kind === 'Binary' && (node.op === '+' || node.op === '-')) {
@@ -124,20 +93,6 @@ export function parseRollFormula(text: string, system: System): RollParts | { er
   return rollFrom(tree, system, quoteDice(text.trim()));
 }
 
-export function parseCheckFormula(text: string, system: System): CheckParts | { error: string } {
-  const tree = treeOf(text);
-  if (isError(tree)) return tree;
-  if (tree.kind !== 'Binary' || !OP_OF[tree.op]) return { error: 'проверка — это сравнение: «кинуть(@кость) + прибавка >= порог»' };
-  const sides = splitCompare(quoteDice(text.trim()));
-  if (!sides) return { error: 'проверка — это сравнение: «кинуть(@кость) + прибавка >= порог»' };
-  const roll = rollFrom(tree.left, system, sides.left);
-  if (isError(roll)) return roll;
-  if (terms(tree.right).some(term => term.node.kind === 'Call' && term.node.name === ROLL)) {
-    return { error: 'встречный бросок — отдельный шаг «бросок» того, кто защищается; справа напишите его имя' };
-  }
-  return { roll, successWhen: OP_OF[tree.op]!, versus: { expr: sides.right } };
-}
-
 const refText = (ref: unknown): string =>
   (ref && typeof ref === 'object' ? String((ref as { expr?: unknown }).expr ?? '') : ref === undefined || ref === null ? '' : String(ref));
 
@@ -147,10 +102,4 @@ export function formatRollFormula(roll: { die?: unknown; count?: unknown; bonus?
   const count = roll.count ? `, ${refText(roll.count)}` : '';
   const tail = refText(roll.bonus).trim();
   return `${ROLL}(${head}${count})${tail ? (tail.startsWith('-') ? ` - ${tail.slice(1).trim()}` : ` + ${tail}`) : ''}`;
-}
-
-export function formatCheckFormula(roll: { die?: unknown; count?: unknown; bonus?: unknown } | null, check: { value?: unknown; successWhen?: unknown; versus?: unknown }): string {
-  const op = TEXT_OF[String(check.successWhen ?? 'atLeast')] ?? '>=';
-  const left = roll ? formatRollFormula(roll) : operandText(refText(check.value), op);
-  return `${left} ${op} ${operandText(refText(check.versus), op)}`.trim();
 }

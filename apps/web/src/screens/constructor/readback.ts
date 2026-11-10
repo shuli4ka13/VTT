@@ -107,37 +107,42 @@ export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs
 }
 
 
-export function checkReadback(step: Step, roll: Step | null, system: System, effect: Effect, names?: Names): Segment[] {
+const SIGN_WORDS: Record<string, string> = { atLeast: 'не меньше', over: 'больше', notOver: 'не больше', under: 'меньше', equals: 'равно' };
+
+export function checkReadback(step: Step, system: System, effect: Effect, names?: Names): Segment[] {
   const s = step as any;
-  const tail = '.';
-  if (!roll) {
-    return [refSegment(s.value, system, effect, 'что проверяем?', names), seg('с'), refSegment(s.versus, system, effect, 'с чем?', names), seg(tail)];
+  return [
+    refSegment(s.value, system, effect, 'что проверяем?', names),
+    seg(SIGN_WORDS[String(s.successWhen ?? 'atLeast')] ?? 'не меньше'),
+    refSegment(s.versus, system, effect, 'с чем?', names),
+    seg('.'),
+  ];
+}
+
+export function rollReadback(step: Step, system: System, effect: Effect, names?: Names): Segment[] {
+  const r = step as any;
+  const filled = (value: unknown): boolean => value !== undefined && value !== null;
+  const out: Segment[] = r.id ? [seg(`${String(r.id)} =`)] : [];
+  if (filled(r.field)) {
+    out.push(seg('бросок поля'), refSegment(r.field, system, effect, 'какое поле?', names));
+    if (filled(r.shift)) out.push(seg('с поправкой'), refSegment(r.shift, system, effect, '', names));
+    return out;
   }
-  const r = roll as any;
-  const out: Segment[] = [seg(`${whoOf(effect, r.by)} бросает`)];
-  out.push(r.die ? refSegment(r.die, system, effect, 'какой костью?', names) : hole('какой костью?'));
-  const tags = (r.tags ?? []) as unknown[];
-  if (tags.length) {
-    const plain = tags.map(tag => (typeof tag === 'string' ? tag : null));
-    if (plain.every(Boolean)) out.push(seg(`(${plain.join(', ')})`));
-    else tags.forEach(tag => out.push(typeof tag === 'string' ? seg(tag) : refSegment(tag, system, effect, 'метка?', names)));
-  }
-  if (r.bonus !== undefined && r.bonus !== null) {
+  out.push(seg(filled(r.by) ? `${whoOf(effect, r.by)} бросает` : 'кости ничьи:'));
+  out.push(filled(r.die) ? refSegment(r.die, system, effect, 'что бросает?', names) : hole('что бросает?'));
+  if (filled(r.count)) out.push(seg('×'), refSegment(r.count, system, effect, 'сколько костей?', names));
+  if (filled(r.bonus)) {
     const bonus = refSegment(r.bonus, system, effect, 'прибавка?', names);
     if (!('text' in bonus) || (bonus.text !== '0' && bonus.text !== '')) out.push(seg('+'), bonus);
   }
-  out.push(seg('— с'), refSegment(s.versus, system, effect, 'с чем сравнить?', names), seg(tail));
+  const tags = ((r.tags ?? []) as unknown[]).filter((tag): tag is string => typeof tag === 'string');
+  if (tags.length) out.push(seg(`(${tags.join(', ')})`));
   return out;
 }
 
 export function amountValueSegments(step: Step, system: System, effect: Effect, names?: Names): Segment[] {
   const s = step as any;
   const out: Segment[] = [];
-  if (s.field) {
-    out.push(seg('бросок поля'), refSegment(s.field, system, effect, 'какое поле?', names));
-    if (s.shift) out.push(seg('с поправкой'), refSegment(s.shift, system, effect, '', names));
-    return out;
-  }
   if (s.die) out.push(refSegment(s.die, system, effect, 'какие кости?', names));
   if (s.fixed) {
     if (out.length) out.push(seg('+'));

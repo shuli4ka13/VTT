@@ -102,16 +102,19 @@ describe('вызываемые блоки D&D собираются руками'
     param(ui, 'attack_roll', 1, 'Против кого', 'sheet', 'против', { role: 'target' });
     param(ui, 'attack_roll', 2, 'Бонус атаки', 'number', 'бонус', { value: '0' });
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
-    ui.click('+ число');
-    within(at(1)()).formula('Формула', 'кинуть(@lead_die) + @бонус');
+    ui.click('+ бросок');
     within(at(1)()).select('Кто бросает', '@кто');
+    within(at(1)()).select('Что бросает', 'die:lead_die');
+    within(at(1)()).click('+ прибавка');
+    within(at(1)()).formula('Прибавка', '@бонус');
     within(at(1)()).select('Метки', 'атака');
     nameStep(at(1)(), 'бросок');
     ui.click('+ проверка');
-    within(at(2)()).formula('Проверка', '@бросок >= @против.ac');
-    within(at(1)()).formula('Успех, если на кости не меньше', '@кто.crit_from');
-    within(at(1)()).formula('Провал, если на кости не больше', '1');
-    nameStep(at(1)(), 'проверка');
+    within(at(2)()).formula('Что проверяем', '@бросок');
+    within(at(2)()).formula('С чем', '@против.ac');
+    within(at(2)()).formula('Успех, если на кости не меньше', '@кто.crit_from');
+    within(at(2)()).formula('Провал, если на кости не больше', '1');
+    nameStep(at(2)(), 'проверка');
     returns([
       ['исход', 'choice', 'исход', '=если(не @проверка.success, "промах", если(@проверка.natural >= @кто.crit_from, "крит", "попадание"))', undefined, 'attack_outcomes'],
       ['на костях', 'number', 'на_костях', 'Проверка — что выпало на костях, без прибавок'],
@@ -129,17 +132,20 @@ describe('вызываемые блоки D&D собираются руками'
     param(ui, 'saving_throw', 1, 'Чем спасается', 'choice', 'характеристика', { from: 'abilities' });
     param(ui, 'saving_throw', 2, 'Сложность', 'number', 'сложность');
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
-    ui.click('+ число');
-    within(at(1)()).formula('Формула', 'кинуть(@lead_die) + @кто.характеристика.save');
+    ui.click('+ бросок');
     within(at(1)()).select('Кто бросает', '@кто');
+    within(at(1)()).select('Что бросает', 'die:lead_die');
+    within(at(1)()).click('+ прибавка');
+    within(at(1)()).formula('Прибавка', '@кто.характеристика.save');
     within(at(1)()).select('Метки', 'спасбросок');
     within(at(1)()).select('Метки', ':формула');
     within(at(1)()).type('Метки', '@характеристика');
     within(at(1)()).click('добавить');
     nameStep(at(1)(), 'бросок');
     ui.click('+ проверка');
-    within(at(2)()).formula('Проверка', '@бросок >= @сложность');
-    nameStep(at(1)(), 'проверка');
+    within(at(2)()).formula('Что проверяем', '@бросок');
+    within(at(2)()).formula('С чем', '@сложность');
+    nameStep(at(2)(), 'проверка');
     returns([
       ['спасся', 'boolean', 'прошёл', 'Проверка — пройдена', 'не спасся'],
       ['на костях', 'number', 'на_костях', 'Проверка — что выпало на костях, без прибавок'],

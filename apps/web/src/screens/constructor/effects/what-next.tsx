@@ -4,7 +4,7 @@ import { Readback } from './cards/group-card.tsx';
 import { groupSteps } from '../cards.ts';
 import { stepNames } from '../slots.tsx';
 import { CARD_TITLES, titleOf } from './words.ts';
-import { checkReadback, changeReadback, numberReadback, sendReadback } from '../readback.ts';
+import { checkReadback, changeReadback, numberReadback, rollReadback, sendReadback } from '../readback.ts';
 import type { Segment } from '../readback.ts';
 import { formulaAsLabels } from '../../../ui/formula.tsx';
 
@@ -15,7 +15,8 @@ const loose = (thing: unknown): Loose => thing as Loose;
 function linesOf(
   kind: string, step: Step, amount: Step | null, system: System, effect: Effect, names: Map<string, string>,
 ): Segment[] {
-  if (kind === 'check') return checkReadback(step, amount, system, effect, names);
+  if (kind === 'check') return checkReadback(step, system, effect, names);
+  if (kind === 'roll') return rollReadback(step, system, effect, names);
   if (kind === 'change') return changeReadback(step, amount, system, effect, names);
   if (kind === 'number') return numberReadback(step, system, effect, names);
   if (kind === 'send') return sendReadback(step, system, effect, names);

@@ -208,7 +208,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
   };
 
   const checkWords = (group: (typeof cards)[number]) => {
-    const roll = group.amount ?? steps.find(one => one.id && `@${one.id}` === String((group.step as { value?: { expr?: unknown } }).value?.expr ?? '').trim());
+    const roll = steps.find(one => one.id && `@${one.id}` === String((group.step as { value?: { expr?: unknown } }).value?.expr ?? '').trim());
     const tags = (((roll as { tags?: unknown[] } | undefined)?.tags) ?? []).filter((tag): tag is string => typeof tag === 'string');
     return outcomeWords(system, tags);
   };
@@ -268,9 +268,6 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         effect={effect}
         earlier={[
           ...earlierOf(group.indices[0]!),
-          ...(group.amount?.id
-            ? [{ id: String(group.amount.id), type: 'roll' }]
-            : []),
         ]}
         problem={problem}
         sheets={sheetsAt(system, id, placeAt(group.indices[0]!))}
@@ -279,7 +276,6 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         lane={lane}
         folded={!opened[foldKey(group)]}
         onFold={() => toggleFold(foldKey(group))}
-        {...(group.kind === 'check' && group.amount ? { onUnpair: () => edit(draft => { draft.steps = (draft.steps ?? []).filter((_, i) => i !== group.indices[0]); }) } : {})}
         problemAction={donorFix ? (
           <Button size="sm" onClick={() => copyDonorBlock(donorFix.donor, donorFix.group)}>
             {`взять блок «${donorFix.group}» из «${donorFix.donor.name}»`}

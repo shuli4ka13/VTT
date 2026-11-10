@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
 import { compile, printFormula } from '@vtt/engine/formula';
-import { parseRollFormula, parseCheckFormula, formatRollFormula, formatCheckFormula, compare } from './roll-formula.ts';
+import { parseRollFormula, formatRollFormula } from './roll-formula.ts';
 import type { System } from '@vtt/schema';
 
 type Loose = Record<string, any>;
@@ -38,25 +38,6 @@ describe('бросок и проверка одной грамматикой к�
     expect(seen).toBeGreaterThan(20);
   });
 
-  it('каждая проверка-пара в образцах переживает «в текст и обратно»', () => {
-    let seen = 0;
-    for (const system of SAMPLE_SYSTEMS) {
-      const steps = stepsIn(Object.values(system.effects ?? {}));
-      steps.forEach((step, i) => {
-        const next = steps[i + 1];
-        if (!(step.type === 'roll' && step.by && step.die && next?.type === 'check' && next.value?.expr === `@${step.id}`)) return;
-        const text = formatCheckFormula(step, next);
-        const parsed = parseCheckFormula(text, system);
-        expect('error' in parsed ? parsed.error : null, text).toBeNull();
-        const got = parsed as Loose;
-        expect({ ...lean(got.roll), op: got.successWhen, versus: norm(got.versus) }, text)
-          .toEqual({ ...lean(step), op: next.successWhen ?? 'atLeast', versus: norm(next.versus) });
-        seen++;
-      });
-    }
-    expect(seen).toBeGreaterThanOrEqual(7);
-  });
-
   const system = {
     constants: {
       lead: { label: 'Ведущая', kind: 'die', dice: [{ count: 1, sides: 20 }] },
@@ -79,18 +60,8 @@ describe('бросок и проверка одной грамматикой к�
     expect(parseRollFormula('кинуть(@нет)', system)).toHaveProperty('error');
   });
 
-  it('третье число («оставить») — только в расчёте; сравнение — только в проверке', () => {
+  it('третье число («оставить») — только в расчёте; сравнение — не здесь', () => {
     expect(parseRollFormula('кинуть(@lead, 2, 1)', system)).toHaveProperty('error');
     expect(parseRollFormula('кинуть(@lead) >= 10', system)).toHaveProperty('error');
-  });
-
-  it('проверка: сравнение, встречный бросок справа — ошибка словами', () => {
-    expect(parseCheckFormula('кинуть(@lead) + 2 >= @цель.ac', system)).toEqual({ roll: { die: 'lead', bonus: { expr: '2' } }, successWhen: 'atLeast', versus: { expr: '@цель.ac' } });
-    expect(parseCheckFormula('кинуть(@lead) + 2', system)).toHaveProperty('error');
-    expect((parseCheckFormula('кинуть(@lead) > кинуть(@lead)', system) as { error: string }).error).toMatch(/встречный бросок/);
-  });
-
-  it('сравнение не смотрит внутрь кавычек', () => {
-    expect(compare('если(@x == "a > b", 1, 0) >= 1')).toEqual({ left: 'если(@x == "a > b", 1, 0)', op: 'atLeast', right: '1' });
   });
 });

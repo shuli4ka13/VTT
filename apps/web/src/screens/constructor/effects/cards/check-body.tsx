@@ -1,6 +1,4 @@
-import { RollerPick, RollTags, setRoller } from './roll-line.tsx';
 import { useMemo, useState } from 'react';
-import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { Select, Fold, Field } from '../../../../ui/primitives.tsx';
 import { FieldRow } from '../../../../ui/field-row.tsx';
@@ -11,7 +9,6 @@ import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { badFormula } from '../../roll-expr.ts';
 import { whoOf } from '../../readback.ts';
-import { parseCheckFormula, formatCheckFormula, compare } from '../../roll-formula.ts';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { rowTables } from '@vtt/engine/model/tables';
 import { splitsTargets } from '@vtt/engine/engine/steps/index';
@@ -20,16 +17,14 @@ const loose = (draft: unknown): Record<string, any> => draft as Record<string, a
 
 const SUCCESS = [['atLeast', 'не меньше порога'], ['over', 'строго больше'], ['notOver', 'не больше порога'], ['under', 'строго меньше'], ['equals', 'ровно порог']] as const;
 
-export function CheckBody({ step, roll, context, edit, system, onUnpair, asIf = false }: {
+export function CheckBody({ step, context, edit, system, asIf = false }: {
   step: any;
-  roll: any | null;
   context: SlotContext;
   edit: EditFn;
   system: System;
-  onUnpair?: () => void;
   asIf?: boolean;
 }) {
-  const at = roll ? 1 : 0;
+  const at = 0;
   const tables = rowTables(system);
 
   const more: RowField[] = [
@@ -76,21 +71,41 @@ export function CheckBody({ step, roll, context, edit, system, onUnpair, asIf = 
       onCommit={text => edit(at, draft => { const d = loose(draft); if (text.trim()) d[key] = { expr: text.trim() }; else delete d[key]; })}
     />
   );
-  const rolled = Boolean(roll || readsRoll(step, context));
+  const rolled = readsRoll(step, context);
   const summary = moreSummary(step, rolled);
+  const names = useMemo(() => {
+    const out = namesOf(context);
+    for (const word of tagWords(context.system).keys()) out.set(word, word);
+    return out;
+  }, [context]);
+  const side = (key: 'value' | 'versus', label: string, placeholder: string) => (
+    <div data-field={label} className="check-line__side" {...(key === 'versus' ? { 'data-guide': 'check-formula' } : {})}>
+      <SideFormula value={step[key]} where={`проверка · ${label.toLowerCase()}`} placeholder={placeholder} context={context} names={names}
+        onSet={text => edit(at, draft => {
+          const d = loose(draft);
+          if (text) d[key] = { expr: text }; else delete d[key];
+          if (key === 'value' && !readsRoll({ value: d.value }, context)) { delete d.succeedOn; delete d.failOn; }
+        })} />
+    </div>
+  );
+  const inside = insideFormula(step, context);
+  const against = againstWords(step, context);
   return (
     <>
       <div className="field">
-        <span className="field__label">{asIf ? "Условие" : "Проверка"}</span>
-        <CheckFormula step={step} roll={roll} context={context} edit={edit}
-          lead={roll ? <RollerPick by={roll.by} context={context} keep onPick={next => edit(0, draft => setRoller(loose(draft), next))} /> : null}
-          {...(onUnpair ? { onUnpair } : {})} />
-        <span className="field__hint">{roll
-          ? 'кость, прибавка, знак и порог; против кого — лист справа: >= цель.Класс брони'
-          : rolled ? 'Бросок, знак и порог: число, поле через лист или бросок соперника' : 'Число, знак и порог: @носитель.ки >= 1'}</span>
+        <span className="field__label">{asIf ? 'Условие' : 'Проверка'}</span>
+        <div className="check-line">
+          {side('value', 'Что проверяем', 'бросок или число')}
+          <span data-field="Знак" className="check-line__sign">
+            <Select label="Знак" value={String(step.successWhen ?? 'atLeast')} options={SIGNS}
+              onChange={next => edit(at, draft => setSuccessWhen(loose(draft), next))} />
+          </span>
+          {side('versus', 'С чем', 'порог: число, поле через лист или бросок соперника')}
+        </div>
       </div>
-      {roll ? <RollTags roll={roll} system={system} onRoll={change => edit(0, draft => change(loose(draft)))} /> : null}
-      <ContestLine step={step} roll={roll} context={context} />
+      {against ? <span className="faint">{against}</span> : null}
+      {inside ? <span className="faint">бросок «{inside}» стоит внутри формулы: «успех на кости», сдвиг порога и правки «против» на такое сравнение не действуют</span> : null}
+      <ContestLine step={step} roll={null} context={context} />
       <Fold title="ещё" summary={summary}>
         {more.length ? <FieldRow id="check-more" fields={more} /> : null}
         {rolled ? (
@@ -106,6 +121,85 @@ export function CheckBody({ step, roll, context, edit, system, onUnpair, asIf = 
       </Fold>
     </>
   );
+}
+
+const SIGNS = [['atLeast', 'не меньше  ≥'], ['over', 'больше  >'], ['notOver', 'не больше  ≤'], ['under', 'меньше  <'], ['equals', 'равно  =']] as const;
+
+function SideFormula({ value, where, placeholder, context, names, onSet }: {
+  value: unknown;
+  where: string;
+  placeholder: string;
+  context: SlotContext;
+  names: Map<string, string>;
+  onSet: (text: string) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const [trouble, setTrouble] = useState<string | null>(null);
+  const stored = String((value as { expr?: unknown } | undefined)?.expr ?? '');
+  return (
+    <>
+      <FormulaField
+        value={draft ?? stored}
+        system={context.system}
+        where={where}
+        extraNames={names}
+        {...(context.sheets ? { sheets: context.sheets } : {})}
+        badges={inputBadges(context)}
+        invalid={Boolean(trouble)}
+        placeholder={placeholder}
+        onChange={next => { setTrouble(null); setDraft(next); }}
+        onCommit={typed => {
+          const text = typed.trim();
+          if (text === stored.trim()) { setDraft(null); setTrouble(null); return; }
+          const bad = text ? badFormula({ expr: text }) : null;
+          if (bad) { setTrouble(bad); return; }
+          setDraft(null);
+          setTrouble(null);
+          onSet(text);
+        }}
+        onCancel={() => { setDraft(null); setTrouble(null); }}
+      />
+      {trouble ? <span className="field__error">{trouble}</span> : null}
+    </>
+  );
+}
+
+const exprText = (ref: unknown): string => String((ref as { expr?: unknown } | undefined)?.expr ?? '');
+
+const throwsOf = (context: SlotContext): any[] =>
+  ((context.effect.steps ?? []) as any[]).filter(one => one.type === 'roll' && one.id && (one.by || one.field));
+
+const throwerOf = (roll: any): string | null =>
+  /^\s*@([\p{L}\p{N}_]+)/u.exec(exprText(roll.field ?? roll.by))?.[1] ?? null;
+
+const readsInside = (text: string, id: string): boolean =>
+  new RegExp(`@${id}(?![\\p{L}\\p{N}_])`, 'u').test(text) && text.trim() !== `@${id}`;
+
+function insideFormula(step: any, context: SlotContext): string | null {
+  for (const roll of throwsOf(context)) {
+    if (readsInside(exprText(step.value), roll.id) || readsInside(exprText(step.versus), roll.id)) return String(roll.id);
+  }
+  return null;
+}
+
+function againstWords(step: any, context: SlotContext): string | null {
+  const rolls = throwsOf(context);
+  const whole = (ref: unknown) => rolls.find(one => exprText(ref).trim() === `@${one.id}`);
+  const mine = whole(step.value) ?? whole(step.versus);
+  if (!mine) return null;
+  const other = exprText(mine === whole(step.value) ? step.versus : step.value);
+  const roller = throwerOf(mine);
+  const found = new Set<string>();
+  for (const [name] of context.sheets ?? []) {
+    if (name !== 'стол' && name !== roller && new RegExp(`@${name}(?![\\p{L}\\p{N}_])`, 'u').test(other)) found.add(name);
+  }
+  const theirs = whole({ expr: other });
+  const their = theirs ? throwerOf(theirs) : null;
+  if (their && their !== roller) found.add(their);
+  if (!found.size) return null;
+  if (found.size > 1) return 'правки «против» на этом сравнении не действуют: в пороге назван не один лист';
+  const [only] = [...found];
+  return `правки «против» на этом сравнении — против: ${context.sheets?.get(only!) ?? only}`;
 }
 
 const moreSummary = (step: any, rolled: boolean): string => [
@@ -124,86 +218,6 @@ const readsRoll = (step: any, context: SlotContext): boolean => {
 const setSuccessWhen = (d: Record<string, unknown>, op: string): void => {
   if (op === 'atLeast') delete d.successWhen; else d.successWhen = op;
 };
-
-function CheckFormula({ step, roll, context, edit, onUnpair, lead = null }: { step: any; roll: any | null; context: SlotContext; edit: EditFn; onUnpair?: () => void; lead?: ReactNode }) {
-  const [draft, setDraft] = useState<string | null>(null);
-  const [trouble, setTrouble] = useState<string | null>(null);
-  const names = useMemo(() => {
-    const out = namesOf(context);
-    for (const word of tagWords(context.system).keys()) out.set(word, word);
-    return out;
-  }, [context]);
-
-  const drop = () => { setDraft(null); setTrouble(null); };
-  const commit = (text: string) => {
-    if (text.trim() === formatCheckFormula(roll, step)) { drop(); return; }
-    const cmp = compare(text.trim());
-    const own = Boolean(roll?.id && cmp && cmp.left === `@${roll.id}`);
-    const plain = Boolean(cmp && !cmp.left.startsWith('кинуть(') && !own);
-    if (roll && own && cmp) {
-      if (!cmp.right) { setTrouble('справа от сравнения пусто — с чем сравниваем?'); return; }
-      const bad = badFormula({ expr: cmp.right });
-      if (bad) { setTrouble(bad); return; }
-      edit(1, target => { const d = loose(target); d.versus = { expr: cmp.right }; setSuccessWhen(d, cmp.op); });
-      drop();
-      return;
-    }
-    if (!roll || (plain && onUnpair)) {
-      if (!cmp || !cmp.left || !cmp.right) { setTrouble('проверка — это сравнение: «@носитель.ки >= 1»'); return; }
-      const bad = badFormula({ expr: cmp.left }) ?? badFormula({ expr: cmp.right });
-      if (bad) { setTrouble(bad); return; }
-      edit(roll ? 1 : 0, target => {
-        const d = loose(target);
-        d.value = { expr: cmp.left };
-        d.versus = { expr: cmp.right };
-        setSuccessWhen(d, cmp.op);
-        if (roll && !readsRoll({ value: d.value }, context)) { delete d.succeedOn; delete d.failOn; }
-      });
-      if (roll) onUnpair?.();
-      drop();
-      return;
-    }
-    const parsed = parseCheckFormula(text, context.system);
-    if ('error' in parsed) { setTrouble(parsed.error); return; }
-    const bad = badFormula(parsed.roll.bonus) ?? badFormula(parsed.versus);
-    if (bad) { setTrouble(bad); return; }
-    edit(0, target => {
-      const d = loose(target);
-      d.die = parsed.roll.die;
-      if (parsed.roll.count) d.count = parsed.roll.count; else delete d.count;
-      if (parsed.roll.bonus) d.bonus = parsed.roll.bonus; else delete d.bonus;
-    });
-    edit(1, target => {
-      const d = loose(target);
-      setSuccessWhen(d, parsed.successWhen);
-      d.versus = parsed.versus;
-    });
-    drop();
-  };
-
-  const formula = (
-    <FormulaField
-      value={draft ?? formatCheckFormula(roll, step)}
-      system={context.system}
-      where="проверка"
-      extraNames={names}
-      {...(context.sheets ? { sheets: context.sheets } : {})}
-      badges={inputBadges(context)}
-      invalid={Boolean(trouble)}
-      placeholder={roll ? 'кинуть(@кость) + прибавка >= @цель.кд' : '@носитель.ки >= 1'}
-      onChange={next => { setTrouble(null); setDraft(next); }}
-      onCommit={commit}
-      onCancel={drop}
-    />
-  );
-
-  return (
-    <>
-      <span data-guide="check-formula">{lead ? <div className="roll-formula">{lead}{formula}</div> : formula}</span>
-      {trouble ? <span className="field__error">{trouble}</span> : null}
-    </>
-  );
-}
 
 const loneRef = (ref: unknown): string | null =>
   /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((ref as { expr?: unknown } | undefined)?.expr ?? ''))?.[1] ?? null;

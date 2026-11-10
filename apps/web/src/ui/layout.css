@@ -702,3 +702,17 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 @container (max-width: 600px) { .sheet-cell { grid-column: 1 / -1; } }
 @media (max-width: 700px) { .sheet-cell { grid-column: 1 / -1; } .sheet-resize, .sheet-hresize { display: none; } .sheet-slot--sized > .card { height: auto; } }
 @media (max-width: 700px) { .row--per { grid-template-columns: minmax(0, 1fr) !important; } }
+.check-line { display: flex; align-items: flex-start; gap: var(--s-3); min-width: 0; }
+.check-line__side { flex: 1 1 0; min-width: 0; }
+.check-line__side:first-child { flex-grow: 2; }
+.check-line__sign { flex: 0 0 auto; }
+.check-line__sign .select { width: auto; height: 32px; min-height: 32px; }
+.step-card .field:has(> .check-line) { --value-w: 860px; }
+.step-card .check-line .formula-field { width: 100%; max-width: none; }
+.step-card .check-line .select { width: auto; }
+.step-card .roll-formula > .roll-what { flex: 0 1 300px; }
+.step-card .roll-formula .formula-field { width: 100%; }
+.number-line__note { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s-3); }
+.roll-formula > [data-field] { flex: 1 1 auto; min-width: 0; }
+.roll-formula > .number-line__eq { padding-top: 0; flex: none; }
+@media (max-width: 720px) { .check-line { flex-wrap: wrap; } .check-line__side { flex: 1 1 100%; } }

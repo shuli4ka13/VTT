@@ -104,8 +104,9 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     each: () => edit(d => setSteps(d, 'удар', [{ type: 'each', of: 'цели' }])),
     check: [
       () => edit(d => setSteps(d, 'удар', [...steps('удар'),
-        { id: 'проверка_бросок', type: 'roll', die: 'кость', by: { expr: '@действующий' } },
-        { id: 'проверка', type: 'check', value: { expr: '@проверка_бросок' }, versus: { expr: '10' } }])),
+        { id: 'бросок', type: 'roll', die: 'кость', by: { expr: '@действующий' } }])),
+      () => edit(d => setSteps(d, 'удар', [...steps('удар'),
+        { id: 'проверка', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } }])),
       () => edit(d => setSteps(d, 'удар', steps('удар').map(step => (step.type === 'check' ? { ...step, versus: { expr: '@цель.класс_брони' } } : step)))),
     ],
     branch: () => edit(d => setSteps(d, 'удар', [...steps('удар'), { type: 'branch', if: { expr: '@проверка.success' } }, { type: 'end' }])),
@@ -504,12 +505,13 @@ describe('уроки конструктора', () => {
     });
     await closing('each', () => { ui.click('+ для каждого из списка'); }, 'по каждой цели');
     await pass('check', () => {
+      ui.click('+ бросок');
       ui.click('+ проверка');
-      inBar(within(stepCard(/^2 · /)).field('Проверка'), '@проверка_бросок >= @цель.класс_брони');
+      inBar(within(stepCard(/^3 · /)).field('С чем'), '@цель.класс_брони');
     });
-    await pass('branch', () => { within(stepCard(/^2 · /)).click('+ по итогу'); });
+    await pass('branch', () => { within(stepCard(/^3 · /)).click('+ по итогу'); });
     addToArm(block(0), 0, 'change');
-    const change = () => stepCard(/^3 · /);
+    const change = () => stepCard(/^4 · /);
     within(change()).select('Какое поле', 'хиты');
     await act(async () => { vi.advanceTimersByTime(300); });
     expect(cardText()).toContain('В «У кого» стоит «Кто действует» — удар ранит самого героя');

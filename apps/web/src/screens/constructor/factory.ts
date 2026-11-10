@@ -9,6 +9,7 @@ import type { RecordKind } from '@vtt/engine/model/owned';
 import { filledStep } from './effects/call-args.ts';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { rowTables } from '@vtt/engine/model/tables';
+import { isThrow } from './cards-kind.ts';
 
 export interface Made<T> { key: string; value: T }
 
@@ -108,15 +109,24 @@ const rollerOf = (effect: Effect | undefined, sheets: SheetNames | undefined): s
   return names.find(name => !lists.has(name));
 };
 
-const blankCheck = (system: System, taken: string[], effect?: Effect, sheets?: SheetNames): Step[] => {
+const blankRoll = (system: System, taken: string[], effect?: Effect, sheets?: SheetNames): Step[] => {
   const die = firstDie(system);
-  const id = freeId(taken, 'проверка');
-  const roll = freeId([...taken, id], `${id}_бросок`);
   const by = rollerOf(effect, sheets);
-  return [
-    { id: roll, type: 'roll', ...(die ? { die } : {}), ...(by ? { by: { expr: `@${by}` } } : {}) } as unknown as Step,
-    { id, type: 'check', value: { expr: `@${roll}` }, versus: { expr: '10' } } as unknown as Step,
-  ];
+  return [{ id: freeId(taken, 'бросок'), type: 'roll', ...(die ? { die } : {}), ...(by ? { by: { expr: `@${by}` } } : {}) } as unknown as Step];
+};
+
+const wholeRef = (value: unknown): string | null =>
+  /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((value as { expr?: unknown } | undefined)?.expr ?? ''))?.[1] ?? null;
+
+const freeRoll = (effect: Effect | undefined): string | undefined => {
+  const steps = (effect?.steps ?? []) as (Step & { value?: unknown; versus?: unknown })[];
+  const compared = new Set(steps.filter(step => step.type === 'check').flatMap(step => [wholeRef(step.value), wholeRef(step.versus)]));
+  return [...steps].reverse().find(step => isThrow(step) && step.id && !compared.has(step.id))?.id;
+};
+
+const blankCheck = (taken: string[], effect?: Effect): Step[] => {
+  const roll = freeRoll(effect);
+  return [{ id: freeId(taken, 'проверка'), type: 'check', ...(roll ? { value: { expr: `@${roll}` } } : {}), versus: { expr: '10' } } as unknown as Step];
 };
 
 export const SEEN_BRICKS: StepTemplate[] = (['roll-add', 'roll-reroll', 'roll-plus', 'roll-bump'] as const).map(type => ({
@@ -126,9 +136,14 @@ export const SEEN_BRICKS: StepTemplate[] = (['roll-add', 'roll-reroll', 'roll-pl
 
 export const BRICKS: StepTemplate[] = [
   {
+    key: 'roll', label: '+ бросок',
+    hint: 'Кто-то бросает кости: кость системы или число с листа по правилу из «Бросков». Итог читают шаги ниже.',
+    make: (system, taken, effect, sheets) => blankRoll(system, taken, effect, sheets),
+  },
+  {
     key: 'check', label: '+ проверка',
-    hint: 'Бросок и сравнение с порогом. Итог — да или нет: его читают «Если» ниже.',
-    make: (system, taken, effect, sheets) => blankCheck(system, taken, effect, sheets),
+    hint: 'Сравнить бросок или число с порогом. Итог — да или нет: его читают «Если» ниже.',
+    make: (_system, taken, effect) => blankCheck(taken, effect),
   },
   {
     key: 'change', label: '+ изменение',
@@ -166,7 +181,7 @@ export const BRICKS: StepTemplate[] = [
   },
   {
     key: 'number', label: '+ число',
-    hint: 'Отдельное число или бросок: урон, лечение, одно число на несколько изменений.',
+    hint: 'Число формулой: урон, лечение, одно число на несколько изменений.',
     make: (_system, taken) => [{ id: freeId(taken, 'число'), type: 'roll', fixed: { expr: '0' } } as unknown as Step],
   },
 ];

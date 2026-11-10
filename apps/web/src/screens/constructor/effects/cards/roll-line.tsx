@@ -1,54 +1,9 @@
 import type { System } from '@vtt/schema';
-import { loneSheet } from '../../sheet-pick.tsx';
 import { TagsField } from '../../tags-field.tsx';
 import type { TagValue } from '../../tags-field.tsx';
-import { sheetChoices } from '../../slots.tsx';
-import type { SlotContext } from '../../slots.tsx';
 import { ROLL_CALL } from '@vtt/engine/words/calls';
-import { useFormulaBar } from '../../../../store/formula-bar.ts';
 
 type Roll = Record<string, unknown>;
-
-const NO_ROLLER = 'просто кости';
-
-export function setRoller(draft: Roll, next: string): void {
-  if (next) draft.by = { expr: next }; else delete draft.by;
-}
-
-export function RollerPick({ by, context, keep = false, onPick }: {
-  by: unknown;
-  context: SlotContext;
-  keep?: boolean;
-  onPick: (next: string) => void;
-}) {
-  const { singles } = sheetChoices(context);
-  const current = String((by as { expr?: unknown } | undefined)?.expr ?? '').trim();
-  const sheets: (readonly [string, string])[] = [...singles].map(([name, label]) => [`@${name}`, label] as const);
-  const unset = current === '';
-  const stray = !unset && !sheets.some(([value]) => value === current);
-  const shown: (readonly [string, string])[] = [
-    ...(keep ? (unset ? [['', 'Кто бросает'] as const] : []) : [['', NO_ROLLER] as const]),
-    ...(stray ? [[current, `${loneSheet(by) || current} — такого листа здесь нет`] as const] : []),
-    ...sheets,
-  ];
-  return (
-    <select
-      className={`roll-by${unset && !keep ? ' roll-by--none' : ''}`}
-      data-field="Кто бросает"
-      aria-label="Кто бросает"
-      title={`Кто бросает — на его бросок действуют правки (преимущество, «Благословение») и вопросы «увидев кости».${keep ? '' : ` «${NO_ROLLER}» — правки не действуют.`}`}
-      value={current}
-      onFocus={() => useFormulaBar.getState().commit()}
-      onChange={event => {
-        const next = event.target.value;
-        if (next === current || (!next && keep)) return;
-        onPick(next);
-      }}
-    >
-      {shown.map(([value, label]) => <option key={value} value={value} disabled={!value && keep}>{label}</option>)}
-    </select>
-  );
-}
 
 export function RollTags({ roll, system, label = 'Метки', onRoll }: {
   label?: string;
