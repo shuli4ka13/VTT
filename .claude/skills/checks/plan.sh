@@ -18,7 +18,6 @@ echo "## Перед «готово» — в фоне"
 has '^packages/schema/' && echo "(cd packages/schema && npx vitest run --reporter=dot)"
 if has '^packages/engine/' || has '^samples/'; then
   echo "(cd packages/engine && npx vitest run --reporter=dot)"
-  echo "(cd packages/engine && GOLDEN=fast npx vitest run tests/golden --reporter=dot)"
 fi
 core='^(packages/|samples/)'
 if has '^apps/server/' || has "$core"; then echo "(cd apps/server && npx tsc -b ../../packages/engine && npx vitest run --reporter=dot)   # сценарии сервера играют образцы"; fi
