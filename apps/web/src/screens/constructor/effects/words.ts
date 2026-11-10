@@ -53,7 +53,7 @@ export function titleOf(kind: string, step: Step | undefined, system: System, ef
     const tag = fieldOfTarget(s.target);
     return tag ? `${STEP_TITLES.set} «${labelOfTag(system, tag, names)}»` : STEP_TITLES.set;
   }
-  if (kind === 'number') return named(s?.by ? STEP_TITLES.roll : STEP_TITLES.number, s?.id);
+  if (kind === 'number') return named(s?.by || s?.field ? STEP_TITLES.roll : STEP_TITLES.number, s?.id);
   if (kind === 'table') return named(CARD_TITLES[kind] ?? kind, s?.id);
   if (kind === "seen" && typeof s?.type === "string" && s.type in STEP_WORDS) return STEP_WORDS[s.type as keyof typeof STEP_WORDS].label;
   return CARD_TITLES[kind] ?? kind;

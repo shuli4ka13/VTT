@@ -133,6 +133,11 @@ export function checkReadback(step: Step, roll: Step | null, system: System, eff
 export function amountValueSegments(step: Step, system: System, effect: Effect, names?: Names): Segment[] {
   const s = step as any;
   const out: Segment[] = [];
+  if (s.field) {
+    out.push(seg('бросок поля'), refSegment(s.field, system, effect, 'какое поле?', names));
+    if (s.shift) out.push(seg('с поправкой'), refSegment(s.shift, system, effect, '', names));
+    return out;
+  }
   if (s.die) out.push(refSegment(s.die, system, effect, 'какие кости?', names));
   if (s.fixed) {
     if (out.length) out.push(seg('+'));

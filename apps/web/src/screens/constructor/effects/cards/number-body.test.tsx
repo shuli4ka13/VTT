@@ -169,39 +169,64 @@ describe('шаг «Число»: под полем нет второй копи�
 
 describe('шаг «Бросок»: поле листа', () => {
   afterEach(cleanup);
-  const rolled = { ...context, system: { ...system, rolls: { r: { die: 'lead', fields: [] } } } as unknown as System };
+  const rolled = {
+    ...context,
+    system: {
+      ...system,
+      tables: { skills: { label: 'Навыки', owner: 'sheet', columns: [{ key: 'total', label: 'Итог', kind: 'number' }], rows: [{ value: 'athletics', label: 'Атлетика' }] } },
+      rolls: { r: { label: 'Проверка', die: 'lead', fields: [{ table: 'skills', column: 'total' }] } },
+    } as unknown as System,
+    effect: { params: [{ key: 'skill', label: 'Навык', kind: 'choice', from: 'skills' }] } as unknown as Effect,
+  };
   const editedIn = (step: Record<string, unknown>) => {
     const draft = structuredClone(step);
     const view = render(<NumberBody step={step as unknown as Step} context={rolled} edit={(_, change) => change(draft as never)} />);
     return { draft, view };
   };
+  const what = (view: ReturnType<typeof render>) => view.container.querySelector<HTMLSelectElement>('[data-field="Что это"]');
+  const which = (view: ReturnType<typeof render>) => view.container.querySelector<HTMLSelectElement>('select[aria-label="Какое поле"]');
 
-  it('без бросков в системе кнопки нет', () => {
+  it('без бросков в системе выбора «формула / поле листа» нет', () => {
     const view = body({ id: 'а', type: 'roll', die: 'lead' });
-    expect(view.container.textContent).not.toContain('бросить поле листа');
+    expect(what(view)).toBeNull();
   });
 
   it('в поле: кость, число, прибавка и бросающий снимаются, голова — прежний бросающий', () => {
     const { draft, view } = editedIn({ id: 'а', type: 'roll', die: 'lead', count: { expr: '2' }, bonus: { expr: '1' }, by: { expr: '@цель' }, tags: ['атака'] });
-    fireEvent.click(screen.getByText('бросить поле листа'));
+    fireEvent.change(what(view)!, { target: { value: 'field' } });
     expect(draft).toEqual({ id: 'а', type: 'roll', field: { expr: '@цель' }, tags: ['атака'] });
-    expect(view.container).toBeTruthy();
   });
 
   it('в поле без бросающего голова — первый лист', () => {
-    const { draft } = editedIn({ id: 'а', type: 'roll', fixed: { expr: '1' } });
-    fireEvent.click(screen.getByText('бросить поле листа'));
+    const { draft, view } = editedIn({ id: 'а', type: 'roll', fixed: { expr: '1' } });
+    fireEvent.change(what(view)!, { target: { value: 'field' } });
     expect(draft).toEqual({ id: 'а', type: 'roll', field: { expr: '@действующий' } });
   });
 
-  it('бросающий — голова адреса: отдельного выбора «Кто бросает» нет', () => {
-    const { view } = editedIn({ id: 'а', type: 'roll', field: { expr: '@действующий.навык.итог' } });
-    expect(view.container.querySelector('[data-field="Кто бросает"]')).toBeNull();
-    expect(view.container.textContent).toContain('Ещё метки');
+  it('поле выбирается из списка: только поля «Бросков» — по входу эффекта и по строкам таблицы', () => {
+    const { draft, view } = editedIn({ id: 'а', type: 'roll', field: { expr: '@действующий' } });
+    const options = [...which(view)!.options].map(option => option.textContent);
+    expect(options).toEqual(['— не выбрано —', 'Навык → Итог', 'Атлетика → Итог', 'своим адресом…']);
+    fireEvent.change(which(view)!, { target: { value: 'skill.total' } });
+    expect(draft).toEqual({ id: 'а', type: 'roll', field: { expr: '@действующий.skill.total' } });
   });
 
-  it('поправка пишется и снимается пустой', () => {
+  it('бросающий — первый выбор строки: смена листа меняет голову адреса, поле остаётся', () => {
+    const { draft, view } = editedIn({ id: 'а', type: 'roll', field: { expr: '@действующий.skills.athletics.total' } });
+    expect(which(view)!.value).toBe('skills.athletics.total');
+    fireEvent.change(view.container.querySelector('[data-field="Кто бросает"]')!, { target: { value: '@цель' } });
+    expect(draft).toEqual({ id: 'а', type: 'roll', field: { expr: '@цель.skills.athletics.total' } });
+  });
+
+  it('адрес не из списка остаётся формулой', () => {
+    const { view } = editedIn({ id: 'а', type: 'roll', field: { expr: '@действующий.х' } });
+    expect(which(view)).toBeNull();
+    expect(view.container.querySelector('[data-field="Адрес поля"]')).not.toBeNull();
+  });
+
+  it('поправка — под «+ поправка к числу поля»: пишется и снимается пустой', () => {
     const { draft, view } = editedIn({ id: 'а', type: 'roll', field: { expr: '@действующий.х' } });
+    fireEvent.click(screen.getByText('+ поправка к числу поля'));
     within(view.container).formula('Поправка', '20');
     expect(draft).toEqual({ id: 'а', type: 'roll', field: { expr: '@действующий.х' }, shift: { expr: '20' } });
     cleanup();
@@ -210,9 +235,23 @@ describe('шаг «Бросок»: поле листа', () => {
     expect(again.draft).toEqual({ id: 'а', type: 'roll', field: { expr: '@действующий.х' } });
   });
 
-  it('«← кости» снимает поле и поправку, ставит бросающего', () => {
-    const { draft } = editedIn({ id: 'а', type: 'roll', field: { expr: '@цель.х' }, shift: { expr: '1' } });
-    fireEvent.click(screen.getByText('← кости'));
+  it('у формулы выбор — «формула / поле листа»; у броска листа — ещё и «кости»', () => {
+    const plain = editedIn({ id: 'а', type: 'roll', fixed: { expr: '1 + 2' } });
+    expect([...what(plain.view)!.options].map(option => option.textContent)).toEqual(['формула', 'поле листа']);
+    cleanup();
+    const owned = editedIn({ id: 'а', type: 'roll', die: 'lead', by: { expr: '@цель' } });
+    expect([...what(owned.view)!.options].map(option => option.textContent)).toEqual(['формула', 'кости', 'поле листа']);
+  });
+
+  it('«формула» снимает поле, поправку и бросающего', () => {
+    const { draft, view } = editedIn({ id: 'а', type: 'roll', field: { expr: '@цель.skill.total' }, shift: { expr: '1' } });
+    fireEvent.change(what(view)!, { target: { value: 'formula' } });
+    expect(draft).toEqual({ id: 'а', type: 'roll' });
+  });
+
+  it('«кости» снимает поле и поправку, ставит бросающего', () => {
+    const { draft, view } = editedIn({ id: 'а', type: 'roll', field: { expr: '@цель.skill.total' }, shift: { expr: '1' } });
+    fireEvent.change(what(view)!, { target: { value: 'dice' } });
     expect(draft).toEqual({ id: 'а', type: 'roll', by: { expr: '@цель' } });
   });
 });

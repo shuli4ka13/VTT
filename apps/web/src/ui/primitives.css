@@ -757,6 +757,7 @@
 .call-group__value { display: inline-flex; align-items: center; gap: var(--s-2); min-width: 0; }
 .roll-formula { --value-w: none; display: flex; align-items: center; gap: var(--s-3); min-width: 0; }
 .roll-formula > .formula-field { flex: 1 1 auto; min-width: 0; }
+.roll-formula > .select { flex: 0 1 320px; min-width: 0; height: 32px; min-height: 32px; }
 .roll-by {
   -webkit-appearance: none; appearance: none; field-sizing: content;
   flex: none; height: 22px; max-width: 220px; margin: 0; padding: 0 18px 0 var(--s-3);
@@ -838,6 +839,23 @@
 .roll-word__said--hole { color: var(--danger); }
 .roll-line .select { flex: 0 1 auto; width: auto; max-width: 260px; }
 .roll-line > .inline { flex: 1 1 auto; }
+.roll-form { display: grid; gap: var(--s-3); padding: var(--s-3) 0 var(--s-2); }
+.roll-form > .dict-row { padding: 0; min-height: var(--control-h); gap: var(--s-4); }
+.roll-form .dict-row__label { flex: 0 0 112px; white-space: nowrap; font-size: var(--fs-3); }
+.roll-line--top { align-items: flex-start; }
+.roll-line--top > .dict-row__label { line-height: var(--control-h); }
+.roll-form__body { flex: 0 1 560px; min-width: 0; display: flex; align-items: center; gap: var(--s-3); }
+.roll-form__body--wrap { flex-wrap: wrap; }
+.roll-form__body--stack { flex-direction: column; align-items: stretch; }
+.roll-form__body--halves > .select { flex: 1 1 0; min-width: 0; max-width: none; }
+.roll-form__body--wrap .select { flex: 0 0 auto; width: 220px; max-width: 100%; }
+.roll-form__body > .formula-field, .roll-degree > .formula-field { flex: 1 1 auto; height: var(--control-h); padding: 0 var(--s-3); border-radius: var(--r-2); flex-wrap: nowrap; white-space: nowrap; }
+.roll-form .chip { min-height: 26px; }
+.roll-degree { display: flex; align-items: center; gap: var(--s-3); min-width: 0; }
+.roll-degree > .input { flex: 0 0 200px; min-width: 0; }
+.roll-degree__if { flex: 0 0 auto; color: var(--kind-check, var(--text-faint)); font-size: var(--fs-2); }
+.roll-form__add { align-self: flex-start; height: var(--control-h); padding: 0 var(--s-3); border: 1px dashed var(--border-strong); border-radius: var(--r-2); background: none; color: var(--text-muted); font: inherit; font-size: var(--fs-2); cursor: pointer; }
+.roll-form__add:hover { border-color: var(--accent); color: var(--text); }
 .chip--formula { padding-right: var(--s-2); }
 .chip__formula { min-width: 120px; }
 .roll-pairs { border-top: 1px solid var(--border); padding-top: var(--s-3); }
