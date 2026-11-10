@@ -305,12 +305,9 @@ export const effect = z.object({
 
 export const bindingArg = formula;
 
-export const tableFill = z.enum(['actor', 'targets']);
-
 export const binding = z.object({
   label: z.string().optional(),
   effect: z.string(),
-  table: z.record(z.string(), tableFill).optional(),
   args: z.record(z.string(), bindingArg).optional(),
   if: formula.optional(),
 }).strict();
@@ -482,7 +479,6 @@ export type Handler = z.infer<typeof handler>;
 export type Effect = z.infer<typeof effect>;
 export type Binding = z.infer<typeof binding>;
 export type TagContract = z.infer<typeof tagContract>;
-export type TableFill = z.infer<typeof tableFill>;
 export type BindingArg = z.infer<typeof bindingArg>;
 export type SheetKind = z.infer<typeof sheetKind>;
 export type TableUse = z.infer<typeof tableUse>;

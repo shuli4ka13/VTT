@@ -91,7 +91,7 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     expect(строкаВхода('Кость урона').className).not.toContain('args-row--need');
   });
 
-  it('входы-листы, которые кнопка заполняет как обычно, спрятаны под «ещё» и там подписаны', () => {
+  it('входы-листы кнопка не показывает: их заполняет стол — кто нажал и цели', () => {
     useWorld.setState(state => ({
       ...state,
       system: {
@@ -106,11 +106,10 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     }));
     render(<RecordsTab />);
     expect(screen.queryByDisplayValue('кто нажал кнопку')).toBeNull();
+    expect(screen.queryByText('Кто действует')).toBeNull();
     expect(screen.queryByText('не заполнено')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'ещё' }));
-    expect(screen.getByDisplayValue('кто нажал кнопку')).toBeTruthy();
-    expect(screen.getByDisplayValue('цели, выбранные за столом')).toBeTruthy();
-    expect(screen.queryByText('не заполнено')).toBeNull();
+    expect(screen.queryByDisplayValue('кто нажал кнопку')).toBeNull();
   });
 
   it('на экране нет слов «дырка», «параметр», «привязка»', () => {

@@ -1,4 +1,6 @@
-import type { Binding, Effect, TableFill } from './types.ts';
+import type { Effect } from './types.ts';
+
+export type TableFill = 'actor' | 'targets';
 
 export function rolesOf(effect: Pick<Effect, 'params'>): { actor?: string; targets?: string } {
   const sheets = (effect.params ?? []).filter(param => param.kind === 'sheet');
@@ -8,8 +10,7 @@ export function rolesOf(effect: Pick<Effect, 'params'>): { actor?: string; targe
   return { ...(actor ? { actor: actor.key } : {}), ...(targets ? { targets: targets.key } : {}) };
 }
 
-export function tableOf(binding: Pick<Binding, 'table'>, effect: Pick<Effect, 'params'>): Record<string, TableFill> {
-  if (binding.table) return binding.table;
+export function tableOf(effect: Pick<Effect, 'params'>): Record<string, TableFill> {
   const { actor, targets } = rolesOf(effect);
   return { ...(actor ? { [actor]: 'actor' as const } : {}), ...(targets ? { [targets]: 'targets' as const } : {}) };
 }

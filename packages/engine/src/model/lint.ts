@@ -1077,13 +1077,13 @@ function paramProblems(system: System, compendium?: Compendium): Problem[] {
       const effect = system.effects[binding.effect];
       if (!effect) return;
       const args = argsWithProps(system, binding, props) ?? {};
-      const table = tableOf(binding, effect);
+      const table = tableOf(effect);
       for (const param of effect.params ?? []) {
         if (!isBlank(args[param.key]) || table[param.key]) continue;
         if (param.ask || param.optional || param.default !== undefined) continue;
         out.push({
           where: { tab: 'records', kind, part: 'bindings', binding: index }, level: 'error',
-          text: `кнопка «${binding.label ?? effect.label ?? binding.effect}» не заполняет вход «${param.label ?? param.key}» эффекта «${effect.label ?? binding.effect}»`,
+          text: `кнопка «${binding.label ?? effect.label ?? binding.effect}» не заполняет вход «${param.label ?? param.key}» эффекта «${effect.label ?? binding.effect}»${param.kind === 'sheet' ? ' — у входа-листа в эффекте выберите «Приходит сам: цель»' : ''}`,
         });
       }
     });
@@ -1556,20 +1556,14 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
   for (const { binding, where, props } of lists) {
     const effect = system.effects[binding.effect];
     if (!effect) continue;
-    const table = tableOf(binding, effect);
+    const table = tableOf(effect);
     const sheets = sheetsOf(effect);
-    const fills = Object.entries(table);
-    if (fills.filter(([, fill]) => fill === 'actor').length !== 1 && sheets.size) out.push({ where, level: 'error', text: `кнопка «${binding.label ?? effect.label ?? binding.effect}»: ровно один вход заполняет «кто нажал»` });
-    if (fills.filter(([, fill]) => fill === 'targets').length > 1) out.push({ where, level: 'error', text: `кнопка «${binding.label ?? effect.label ?? binding.effect}»: «выбранные» заполняет не больше одного входа` });
-    for (const [key, fill] of fills) {
-      if (!sheets.has(key)) out.push({ where, level: 'error', text: `кнопка «${binding.label ?? effect.label ?? binding.effect}» заполняет «${key}», а такого входа-листа нет` });
-      else if (fill === 'actor' && sheets.get(key)) out.push({ where, level: 'error', text: `«кто нажал» — один лист, а вход «${key}» — список` });
-    }
+    if (sheets.size && !Object.values(table).includes('actor')) out.push({ where, level: 'error', text: `кнопка «${binding.label ?? effect.label ?? binding.effect}»: у эффекта «${effect.label ?? binding.effect}» нет входа «один лист» для того, кто нажал` });
     if (where.tab !== 'book') continue;
     const args = argsWithProps(system, binding, props) ?? {};
     for (const param of effect.params ?? []) {
       if (!isBlank(args[param.key]) || table[param.key] || param.ask || param.optional || param.default !== undefined) continue;
-      out.push({ where, level: 'error', text: `кнопка «${binding.label ?? effect.label ?? binding.effect}» не заполняет вход «${param.label ?? param.key}» эффекта «${effect.label ?? binding.effect}»` });
+      out.push({ where, level: 'error', text: `кнопка «${binding.label ?? effect.label ?? binding.effect}» не заполняет вход «${param.label ?? param.key}» эффекта «${effect.label ?? binding.effect}»${param.kind === 'sheet' ? ' — у входа-листа в эффекте выберите «Приходит сам: цель»' : ''}` });
     }
   }
   return out;

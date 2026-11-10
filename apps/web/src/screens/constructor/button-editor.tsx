@@ -3,7 +3,6 @@ import { useWorld, useBook } from '../../store/world.ts';
 import type { System, Effect, Param, Binding, SlotRef } from '@vtt/schema';
 import type { RecordKind } from '@vtt/engine/model/owned';
 import { isUnder, propsOf as propsOfRecord } from '@vtt/engine/model/owned';
-import { tableOf } from '@vtt/engine/model/buttons';
 import { paramsOf, typeColumns } from '@vtt/engine/model/inherit';
 import { columnChoices, type ColumnChoice } from '@vtt/engine/model/paths';
 import { ITEM_NAME } from '@vtt/engine/model/item-ref';
@@ -20,8 +19,6 @@ import { shapeProblem, shapeOfKind, type Shape } from './formula-shape.ts';
 const EMPTY = '';
 const NEW = '+';
 const OWN = 'Своё у каждой записи';
-
-type Fill = 'actor' | 'targets';
 
 export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onEdit, onDelete, onFillWithProps }: {
   binding: Binding;
@@ -42,11 +39,7 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
   const buttons = Object.entries(system.effects).filter(([, e]) => (e.activation ?? 'manual') !== 'passive');
   const where = binding.label || effect?.label || binding.effect;
   const [more, setMore] = useState(false);
-  const usual = tableOf({}, { params });
-  const filled = tableOf(binding, { params });
-  const asUsual = (param: Param): boolean =>
-    param.kind === 'sheet' && (filled[param.key] ?? '') === (usual[param.key] ?? '') && (Boolean(usual[param.key]) || Boolean(loose(param).optional));
-  const shown = more ? params : params.filter(param => !asUsual(param));
+  const shown = params.filter(param => param.kind !== 'sheet');
 
   const onArg = (key: string, next: SlotRef | null) => onEdit(draft => {
     draft.args ??= {};
@@ -54,14 +47,6 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
     if (!Object.keys(draft.args).length) delete draft.args;
   });
 
-  const onSheet = (key: string, fill: Fill | '') => onEdit(draft => {
-    const table: Record<string, Fill> = { ...tableOf(draft, { params }) };
-    if (fill) table[key] = fill; else delete table[key];
-    const guessed = tableOf({}, { params });
-    const same = Object.keys(table).length === Object.keys(guessed).length
-      && Object.entries(table).every(([at, value]) => guessed[at] === value);
-    if (same) delete draft.table; else draft.table = table;
-  });
 
   return (
     <Card tone="flat" label={`кнопка «${where}»`}>
@@ -105,7 +90,7 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
           <DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>
         </div>
       </div>
-      {effect ? (params.length ? (
+      {effect ? (shown.length ? (
         <div className="args-table">
           <div className="args-table__head" aria-hidden><span>Вход</span><span>Что это</span><span>Чем заполнить</span></div>
           {shown.map(param => (
@@ -123,12 +108,11 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
               effect={effect}
               where={where}
               onArg={next => onArg(param.key, next)}
-              onSheet={fill => onSheet(param.key, fill)}
               {...(onFillWithProps ? { onNew: () => onFillWithProps([param]) } : {})}
             />
           ))}
         </div>
-      ) : <span className="faint">«{effect.label || binding.effect}» ничего не принимает.</span>) : null}
+      ) : <span className="faint">{params.length ? `«${effect.label || binding.effect}» берёт только того, кто нажал, и цели — заполнять нечего.` : `«${effect.label || binding.effect}» ничего не принимает.`}</span>) : null}
       {more || binding.if?.expr ? (
         <div className="row">
           <ConditionField
@@ -142,7 +126,7 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
           />
         </div>
       ) : (
-        <Button size="sm" variant="ghost" title={params.some(asUsual) ? 'кто действует и цели — как обычно: кто нажал кнопку и цели, выбранные за столом; условие кнопки' : 'условие кнопки'} onClick={() => setMore(true)}>ещё</Button>
+        <Button size="sm" variant="ghost" title="условие кнопки" onClick={() => setMore(true)}>ещё</Button>
       )}
     </Card>
   );
@@ -191,7 +175,7 @@ const freeParam = (param: Param): boolean => Boolean(loose(param).optional) || p
 
 const LONE = /^@([\p{L}\p{N}_]+)(?:\.[\p{L}\p{N}_]+)?$/u;
 
-function ArgRow({ param, binding, params, system, recordKind, props, propNames, kindId, effectId, effect, where, onArg, onSheet, onNew }: {
+function ArgRow({ param, binding, params, system, recordKind, props, propNames, kindId, effectId, effect, where, onArg, onNew }: {
   param: Param;
   kindId?: string;
   binding: Binding;
@@ -204,30 +188,11 @@ function ArgRow({ param, binding, params, system, recordKind, props, propNames, 
   effect: Effect;
   where: string;
   onArg: (next: SlotRef | null) => void;
-  onSheet: (fill: Fill | '') => void;
   onNew?: () => void;
 }) {
   const name = param.label ?? param.key;
   const kind = String(param.kind ?? 'number');
   const free = freeParam(param);
-
-  if (kind === 'sheet') {
-    const fill = tableOf(binding, { params })[param.key] ?? '';
-    return (
-      <div className={`args-row${!fill && !loose(param).optional ? ' args-row--need' : ''}`}>
-        <span className="args-row__name">{name}</span>
-        <KindCell param={param} system={system} />
-        <div className="args-row__fill">
-          <Select<string>
-            label={`«${name}» — чем заполняет тип`}
-            value={fill}
-            options={[['actor', 'кто нажал кнопку'], ['targets', 'цели, выбранные за столом'], ['', loose(param).optional ? 'не передаётся' : '— не заполнено —']]}
-            onChange={next => onSheet(next as Fill | '')}
-          />
-        </div>
-      </div>
-    );
-  }
 
   const byName = (recordKind.columns ?? []).some(prop => prop.key === param.key);
   const arg = binding.args?.[param.key] as unknown;
