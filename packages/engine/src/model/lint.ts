@@ -189,7 +189,7 @@ function stepProblems(steps: Step[], whereOf: (index: number) => Where): Problem
     const thrower = mod.thrownBy?.(step as never);
     const formula = (step as { fixed?: unknown }).fixed;
     if (thrower !== undefined && thrower !== null && formula !== undefined && formula !== null && ((step as { die?: unknown }).die === undefined || (step as { die?: unknown }).die === null)) {
-      out.push({ where, level: 'error', text: 'у сложной формулы кости ничьи — оставьте кинуть(кость, сколько) + прибавка или уберите бросающего' });
+      out.push({ where, level: 'error', text: 'у броска вместо кости формула — выберите, что бросают, или уберите «Кто бросает»: шаг станет числом' });
     }
     if (step.id) earlier.add(String(step.id));
   });
