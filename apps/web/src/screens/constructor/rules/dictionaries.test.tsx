@@ -9,6 +9,8 @@ import { useWorld, emptySystem } from '../../../store/world.ts';
 
 const открыть = (раздел: string) => fireEvent.click(screen.getAllByText(раздел)[0]!);
 
+const завести = (вид = 'one') => fireEvent.change(screen.getByLabelText('добавить кость'), { target: { value: вид } });
+
 describe('Словари: кости, правки броска, таблицы', () => {
   beforeEach(() => {
     useWorld.setState(state => ({
@@ -49,15 +51,30 @@ describe('Словари: кости, правки броска, таблицы'
   it('кость заводится и попадает в словарь системы', () => {
     renderOpen(<RulesTab />);
     открыть('Броски');
-    fireEvent.click(screen.getByText('+ кость'));
+    завести();
     const dies = Object.values(useWorld.getState().system.constants ?? {});
     expect(dies.some(c => c.kind === 'die')).toBe(true);
+  });
+
+  it('заготовки кости: набор со счётом успехов, набор с лучшей, две кости с именами — и чтение у набора сразу на виду', () => {
+    renderOpen(<RulesTab />);
+    открыть('Броски');
+    const последняя = () => Object.values(useWorld.getState().system.constants ?? {}).at(-1)!;
+    завести('hits');
+    expect(последняя()).toEqual({ label: '', kind: 'die', dice: [{ sides: 6 }], read: { kind: 'count', atLeast: 5 } });
+    expect(screen.getByText('Из выпавшего берём')).toBeTruthy();
+    завести('best');
+    expect(последняя()).toEqual({ label: '', kind: 'die', dice: [{ sides: 6 }], read: 'best' });
+    завести('parts');
+    expect(последняя().dice).toEqual([{ sides: 12, name: 'первая', label: 'Первая' }, { sides: 12, name: 'вторая', label: 'Вторая' }]);
+    завести('sum');
+    expect(последняя().dice).toEqual([{ count: 2, sides: 6 }]);
   });
 
   it('«+ ещё часть» превращает бросок в составной и просит имена частей', () => {
     renderOpen(<RulesTab />);
     открыть('Броски');
-    fireEvent.click(screen.getByText('+ кость'));
+    завести();
     fireEvent.click(screen.getByText('+ ещё часть'));
 
     const die = Object.values(useWorld.getState().system.constants ?? {})[0];
@@ -74,7 +91,7 @@ describe('Словари: кости, правки броска, таблицы'
   it('поле «сколько»: единица и пустое поле снимают ключ — умолчание в данные не пишется', () => {
     renderOpen(<RulesTab />);
     открыть('Броски');
-    fireEvent.click(screen.getByText('+ кость'));
+    завести();
     const dice = () => Object.values(useWorld.getState().system.constants ?? {})[0]!.dice!;
     expect(dice()).toEqual([{ sides: 20 }]);
 
@@ -115,7 +132,7 @@ describe('Словари: кости, правки броска, таблицы'
   it('чтение кости выбирается селектом; сумма в данных не оседает', () => {
     renderOpen(<RulesTab />);
     открыть('Броски');
-    fireEvent.click(screen.getByText('+ кость'));
+    завести();
     const [key] = Object.keys(useWorld.getState().system.constants ?? {});
 
     fireEvent.click(screen.getByText('+ ещё часть'));
@@ -135,7 +152,7 @@ describe('Словари: кости, правки броска, таблицы'
   it('у одной кости чтение спрятано под свёрнутым «ещё», у составной — на виду', () => {
     renderOpen(<RulesTab />);
     открыть('Броски');
-    fireEvent.click(screen.getByText('+ кость'));
+    завести();
     expect((screen.getByDisplayValue('сумма').closest('details') as HTMLDetailsElement | null)?.open).toBe(false);
 
     fireEvent.click(screen.getByText('+ ещё часть'));
@@ -164,7 +181,7 @@ describe('Словари: кости, правки броска, таблицы'
   it('название из нескольких слов набирается целиком, ключ не меняется', () => {
     renderOpen(<RulesTab />);
     открыть('Броски');
-    fireEvent.click(screen.getByText('+ кость'));
+    завести();
     const [ключ] = Object.keys(useWorld.getState().system.constants ?? {});
     const name = screen.getByPlaceholderText('название кости');
 
@@ -180,7 +197,7 @@ describe('Словари: кости, правки броска, таблицы'
   it('грани кости: стёр «20», набрал «100» — кость стала к100', () => {
     renderOpen(<RulesTab />);
     открыть('Броски');
-    fireEvent.click(screen.getByText('+ кость'));
+    завести();
     const term = document.querySelector('.dice-term')!;
     const [, sides] = [...term.querySelectorAll('input')] as HTMLInputElement[];
 

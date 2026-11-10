@@ -48,9 +48,29 @@ export const newProp = (kind: RecordKind): Column => ({
   kind: 'number',
 });
 
-export const newDie = (system: System): Made<SystemConstant> => ({
+export const DIE_KINDS = [
+  ['one', 'одна кость — к20'],
+  ['sum', 'несколько костей, сумма — 2к6'],
+  ['hits', 'набор костей (пул): считаем успехи — к6, от 5'],
+  ['best', 'набор костей (пул): берём лучшую — к6'],
+  ['percent', 'процентная — к100'],
+  ['parts', 'две кости с именами — к12 и к12'],
+] as const;
+
+export type DieKind = typeof DIE_KINDS[number][0];
+
+const DIE_SHAPES: Record<DieKind, Omit<SystemConstant, 'label' | 'kind'>> = {
+  one: { dice: [{ sides: 20 }] },
+  sum: { dice: [{ count: 2, sides: 6 }] },
+  hits: { dice: [{ sides: 6 }], read: { kind: 'count', atLeast: 5 } },
+  best: { dice: [{ sides: 6 }], read: 'best' },
+  percent: { dice: [{ sides: 100 }] },
+  parts: { dice: [{ sides: 12, name: 'первая', label: 'Первая' }, { sides: 12, name: 'вторая', label: 'Вторая' }] },
+};
+
+export const newDie = (system: System, kind: DieKind = 'one'): Made<SystemConstant> => ({
   key: freeId(Object.keys(system.constants ?? {}), 'кость'),
-  value: { label: '', kind: 'die', dice: [{ sides: 20 }] },
+  value: { label: '', kind: 'die', ...structuredClone(DIE_SHAPES[kind]) },
 });
 
 export const newRollEdit = (system: System): Made<RollEdit> => ({

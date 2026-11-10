@@ -933,3 +933,4 @@
   label.inline:has(> input[type='checkbox']) { min-height: 40px; }
   .inline > input[type='checkbox'] { width: 20px; height: 20px; }
 }
+.head-pick > .select { field-sizing: content; width: auto; max-width: 140px; min-width: 0; height: 28px; min-height: 28px; font-size: var(--fs-2); }

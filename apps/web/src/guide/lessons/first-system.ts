@@ -116,7 +116,7 @@ export const firstSystem: Lesson = {
       say: 'Заведите кость к20 для проверок.',
       hint: 'Кость заводится раньше проверки: новая проверка берёт первую кость системы.',
       at: [
-        { at: { text: '+ кость' }, say: 'В разделе «Броски», в «Костях», нажмите «+ кость».', done: view => Object.values(view.system.constants ?? {}).some(constant => constant.kind === 'die') },
+        { at: { text: '+ кость' }, say: 'В разделе «Броски», в «Костях», раскройте «+ кость» и выберите «одна кость — к20».', done: view => Object.values(view.system.constants ?? {}).some(constant => constant.kind === 'die') },
         { at: { input: 'название кости' }, say: 'Впишите название «Кость проверки». Граней 20 — так и оставьте.' },
       ],
       via: { text: 'Броски', in: 'Разделы правил' },

@@ -5,7 +5,8 @@ import { slugOf } from '../../../store/world.ts';
 import { Card, CardHead, Input, NumInput, Button, Select, Fold } from '../../../ui/primitives.tsx';
 import { BoundField } from '../bound-field.tsx';
 import { diceCount } from '../dice-expr.ts';
-import { newDie } from '../factory.ts';
+import { newDie, DIE_KINDS } from '../factory.ts';
+import type { DieKind } from '../factory.ts';
 import { inUse as isUsed } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
 import type { System, SystemConstant, DiceTerm } from '@vtt/schema';
@@ -17,8 +18,8 @@ interface Props { system: System; editSystem: EditSystem; usage: UsageIndex }
 export const dieEntries = (system: System): [string, SystemConstant][] =>
   Object.entries(system.constants ?? {}).filter(([, c]) => c.kind === 'die');
 
-const addDie = (editSystem: EditSystem) => editSystem(draft => {
-  const made = newDie(draft);
+const addDie = (editSystem: EditSystem, kind: DieKind) => editSystem(draft => {
+  const made = newDie(draft, kind);
   (draft.constants ??= {})[made.key] = made.value;
 });
 
@@ -37,7 +38,13 @@ export function DiceSection({ system, editSystem, usage }: Props) {
       <CardHead
         title="Кости"
         sub="Чем бросают проверки в этом мире. Обычно тут одна запись; кости вещей живут в самих записях."
-        actions={<Button size="sm" onClick={() => addDie(editSystem)}>+ кость</Button>}
+        actions={(
+          <span className="head-pick">
+            <Select<string> value="" label="добавить кость" title="Какая кость: заготовка встанет в список, дальше её можно править"
+              options={[['', '+ кость'], ...DIE_KINDS]}
+              onChange={kind => { if (kind) addDie(editSystem, kind as DieKind); }} />
+          </span>
+        )}
       />
       {entries.length === 0 ? (
         <span className="faint">
@@ -50,8 +57,8 @@ export function DiceSection({ system, editSystem, usage }: Props) {
             const inUse = isUsed(usage, 'constant', key);
             const total = diceCount(dice);
 
-            const asksReading = total !== 1;
             const readKind = readKindOf(constant);
+            const asksReading = total !== 1 || readKind !== 'sum';
             const countRead = typeof constant.read === 'object' ? constant.read : null;
 
             const editDice = (change: (list: DiceTerm[]) => void) => editSystem(draft => {

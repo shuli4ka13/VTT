@@ -484,7 +484,7 @@ describe('уроки конструктора', () => {
       ui.click(TABS.rules);
       openAll();
       clickAt({ text: 'Броски', in: 'Разделы правил' });
-      ui.click('+ кость');
+      ui.select(screen.getByLabelText('добавить кость'), 'one');
       ui.type(screen.getByPlaceholderText('название кости'), 'Кость проверки');
     });
     await pass('strike', () => {
