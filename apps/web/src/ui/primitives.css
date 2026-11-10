@@ -938,3 +938,8 @@
 .roll-form .dict-row__label { flex-basis: 132px; }
 .dice-term__num--said { flex-basis: 132px; }
 .dict-row > .select:has(option[value='worst']) { flex-basis: 240px; }
+.locked { position: relative; display: inline-flex; }
+.locked .btn:disabled { pointer-events: none; }
+.locked__tip { display: none; position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; width: 340px; padding: var(--s-3) var(--s-4); flex-direction: column; gap: var(--s-1); background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: var(--r-2); box-shadow: 0 8px 24px rgba(0, 0, 0, .35); font-size: var(--fs-2); line-height: 1.4; color: var(--text); white-space: normal; text-align: left; }
+.locked:hover .locked__tip { display: flex; }
+.locked__head { color: var(--text-muted); margin-bottom: var(--s-1); }

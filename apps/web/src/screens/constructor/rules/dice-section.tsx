@@ -9,7 +9,7 @@ import type { Bound } from '../bound-field.tsx';
 import { diceCount } from '../dice-expr.ts';
 import { newDie, DIE_KINDS } from '../factory.ts';
 import type { DieKind } from '../factory.ts';
-import { inUse as isUsed } from '../usage.ts';
+import { inUse as isUsed, usersOf } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
 import type { System, SystemConstant, DiceTerm } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
@@ -135,13 +135,15 @@ export function DiceSection({ system, editSystem, usage }: Props) {
                       if (cur) cur.label = label;
                     })}
                   />
-                  <Button
-                    size="sm" variant="danger" disabled={inUse}
-                    title={inUse ? 'кость используется' : undefined}
-                    onClick={() => editSystem(draft => { delete draft.constants?.[key]; })}
-                  >
-                    Убрать
-                  </Button>
+                  <span className="locked">
+                    <Button
+                      size="sm" variant="danger" disabled={inUse}
+                      onClick={() => editSystem(draft => { delete draft.constants?.[key]; })}
+                    >
+                      Убрать
+                    </Button>
+                    {inUse ? <LockedTip users={usersOf(usage, 'constant', key, system)} /> : null}
+                  </span>
                 </div>
 
                 <Readback segments={dieReadback(constant, system, driven)} />
@@ -264,5 +266,17 @@ function CountField({ value, placeholder, onCommit }: {
     <Input mono value={draft ?? boundText(value)} placeholder={placeholder}
       onChange={setDraft} onBlur={commit}
       onKeyDown={event => { if (event.key === 'Enter') commit(); if (event.key === 'Escape') setDraft(null); }} />
+  );
+}
+
+const SHOWN = 6;
+
+function LockedTip({ users }: { users: string[] }) {
+  return (
+    <span className="locked__tip" role="tooltip">
+      <span className="locked__head">Убрать нельзя — кость используется. Сначала поменяйте её здесь:</span>
+      {users.slice(0, SHOWN).map(user => <span key={user} className="locked__item">{user}</span>)}
+      {users.length > SHOWN ? <span className="locked__item faint">и ещё {users.length - SHOWN}</span> : null}
+    </span>
   );
 }
