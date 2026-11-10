@@ -10,6 +10,7 @@ import { parseRollExpr, badFormula, exprText } from '../../roll-expr.ts';
 import { FormulaField } from '../../../../ui/formula-field.tsx';
 import type { BarApi } from '../../../../store/formula-bar.ts';
 import { labelOfTag } from '../../../../ui/formula.tsx';
+import { formulaWords } from '../../../../ui/formula-words.ts';
 import { EffectPick, effectNameOf } from '../../effect-pick.tsx';
 import { dieWord, readingWord } from '../../readback.ts';
 import { unquote } from '../../roll-expr.ts';
@@ -124,7 +125,9 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   const bonus = (amount as Record<string, any> | undefined)?.bonus;
   const diceChip = dieChip(dice, context);
   const bonusText = exprText(bonus);
+  const fixedText = exprText((amount as Record<string, any> | undefined)?.fixed);
   const both = Boolean(diceChip && bonusText);
+  const said = (text: string) => formulaWords(context.system, text, рядом);
 
   const sentChip = (label: ReactNode, onRemove: () => void, key: string) => (
     <span key={key} className="chips__chip chips__chip--sent">
@@ -147,6 +150,12 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
           'dice',
         ) : null}
         {both ? <span className="chips__plus" aria-hidden>+</span> : null}
+        {fixedText ? (
+          <span key="fixed" className="chips__chip chips__chip--sent">
+            {said(fixedText)}
+            <span className="chips__side chips__side--calc" title="считается шагом-расчётом раньше изменения">расчёт</span>
+          </span>
+        ) : null}
         {bonusText ? sentChip(
           bonusText.replace(/[@#]([\p{L}\p{N}_.]+)/gu, (_, tag: string) => labelOfTag(context.system, tag)),
           () => edit(0, step => { delete (step as Record<string, unknown>).bonus; }),
