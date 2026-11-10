@@ -2,6 +2,7 @@ import { group, test, eq, ok, deepEq } from './harness.ts';
 import { exchange } from './play.ts';
 import { perform } from '../src/core/perform.ts';
 import { lintSystem, errorsOf } from '../src/model/lint.ts';
+import { namesAt } from '../src/model/names-at.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const ACTOR = { key: 'действующий', kind: 'sheet' };
@@ -158,5 +159,34 @@ group('проверка системы: бросок', () => {
     (minus.constants!.к100 as { dice: { minus?: boolean }[] }).dice[0]!.minus = true;
     ok(texts(minus)[0]!.includes('в формуле не бросить'));
     deepEq(texts(one({ id: 'ч', type: 'roll', die: 'к100', fixed: { expr: '1' } })), ['кость и формула в одном шаге — формулу перенесите в прибавку']);
+  });
+});
+
+group('кость из частей и кость со счётом по формуле', () => {
+  const halves = () => {
+    const system = build([
+      { id: 'бросок', type: 'roll', die: 'двойная', by: { expr: '@действующий' } },
+      { id: 'число', type: 'roll', fixed: { expr: '1' } },
+    ]);
+    (system.constants as Record<string, unknown>).двойная = { label: 'Двойная', kind: 'die', dice: [{ sides: 12, name: 'надежда', label: 'Надежда' }, { sides: 12, name: 'страх' }] };
+    return system;
+  };
+
+  test('части кости предлагаются итогами броска — своим словом', () => {
+    const roll = namesAt(halves(), 'удар', { part: 'steps', index: 1 }).find(one => one.name === 'бросок')!;
+    deepEq((roll.children ?? []).filter(child => child.path.startsWith('.parts.')).map(child => [child.path, child.label]),
+      [['.parts.надежда', 'что выпало на кости «Надежда»'], ['.parts.страх', 'что выпало на кости «страх»']]);
+  });
+
+  test('кость считает кости по имени, которого у эффекта и на листе нет', () => {
+    const pool = (count: string, step: Record<string, unknown>) => {
+      const system = build([step]);
+      (system.constants as Record<string, unknown>).набор = { label: 'Набор', kind: 'die', dice: [{ count: { expr: count }, sides: 6 }] };
+      return errorsOf(lintSystem(system, book)).map(p => p.text);
+    };
+    const mine = { id: 'б', type: 'roll', die: 'набор', by: { expr: '@действующий' } };
+    ok(pool('большее из(1, @рейтинг)', mine)[0]!.includes('берёт число костей из «рейтинг»'));
+    deepEq(pool('большее из(1, @навык)', mine), []);
+    deepEq(pool('большее из(1, @цели)', mine), []);
   });
 });

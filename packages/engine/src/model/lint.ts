@@ -27,6 +27,7 @@ import {
   LISTEN, contractsOf, HOLDER, DESK_NAME, holderNameOf, tiedToHolder,
 } from './references.ts';
 import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, holderOf, rowKeyOf, hasField, rollEntryOf, ROW } from './sheet-columns.ts';
+import { rolledColumn, thrownDie } from './rolled.ts';
 import { isRange, rowByKey } from './tables.ts';
 import { walkSheet } from './paths.ts';
 import { variantProblems, cellScopeProblems } from './variants.ts';
@@ -558,21 +559,6 @@ function rollsDice(expr: unknown): boolean {
   return visit(ast);
 }
 
-const FIELD_ADDRESS = /^\s*@[\p{L}\p{N}_]+\.([\p{L}\p{N}_.]+)\s*$/u;
-
-function rolledColumn(system: System, effect: Effect, address: unknown): { table: string; column: string } | null {
-  const tail = FIELD_ADDRESS.exec(String((address as { expr?: unknown } | undefined)?.expr ?? ''))?.[1]?.split('.');
-  if (!tail) return null;
-  const column = tail[tail.length - 1]!;
-  if (tail.length === 1) {
-    const home = Object.entries(system.tables ?? {}).find(([, table]) => isSingle(table) && (table.columns ?? []).some(one => one.key === column));
-    return home ? { table: home[0], column } : null;
-  }
-  const input = (effect.params ?? []).find(param => param.key === tail[0] && param.kind === 'choice' && param.from);
-  if (tail.length === 2) return input?.from && system.tables?.[input.from] ? { table: input.from, column } : null;
-  return tail.length === 3 && system.tables?.[tail[0]!] && !isSingle(system.tables[tail[0]!]!) ? { table: tail[0]!, column } : null;
-}
-
 const plainDie = (system: System, name: string): boolean => {
   const die = system.constants?.[name] as { dice?: { count?: unknown; minus?: unknown; name?: unknown; bonus?: unknown }[]; read?: unknown; zero?: unknown } | undefined;
   const terms = die?.dice ?? [];
@@ -607,11 +593,25 @@ function rollStepProblems(system: System, effect: Effect, steps: Step[], where: 
       }
     }
     if (raw.type !== 'roll') return;
+    const thrown = thrownDie(system, effect.params ?? [], raw);
+    const onSheetOnly = filled(step.field);
+    const everyStep = [...(effect.steps ?? []), ...(effect.cost ?? []), ...(effect.on ?? []).flatMap(handler => [...(handler.steps ?? []), ...(handler.cost ?? [])])];
+    const here = (name: string): boolean => hasField(system, name) || Boolean(system.tables?.[name])
+      || (!onSheetOnly && ((effect.params ?? []).some(param => param.key === name) || everyStep.some(one => one.id === name)));
+    for (const term of (thrown ? system.constants?.[thrown]?.dice : undefined) ?? []) {
+      const counted = typeof term.count === 'object' && term.count !== null ? String((term.count as { expr?: unknown }).expr ?? '') : '';
+      for (const name of new Set((counted ? formulaDeps(counted) ?? [] : []).map(dep => dep.split('.')[0]!))) {
+        if (here(name)) continue;
+        out.push({ where: where(index), level: 'error', text: onSheetOnly
+          ? `кость «${dieLabel(thrown!)}» берёт число костей из «${name}», а на листе такого поля нет — бросок с листа входов эффекта не видит`
+          : `кость «${dieLabel(thrown!)}» берёт число костей из «${name}» — у этого эффекта нет такого входа, а на листе нет такого поля` });
+      }
+    }
     if (typeof step.die === 'string' && filled(step.count) && ((system.constants?.[step.die] as { dice?: unknown[] } | undefined)?.dice ?? []).length > 1) {
       out.push({ where: where(index), level: 'error', text: `у кости «${dieLabel(step.die)}» несколько частей — «сколько костей» ей не задать` });
     }
     if (!filled(step.field)) return;
-    const at = rolledColumn(system, effect, step.field);
+    const at = rolledColumn(system, effect.params ?? [], step.field);
     if (!at) return;
     const found = rollEntryOf(system, at.table, at.column);
     const table = system.tables![at.table]!;

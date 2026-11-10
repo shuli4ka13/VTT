@@ -9,6 +9,7 @@ import { STEP_WORDS } from '../words/steps.ts';
 import type { StepWords } from '../words/steps.ts';
 import { columnChoices } from './paths.ts';
 import { onSheet } from './sheet-columns.ts';
+import { dieParts, thrownDie } from './rolled.ts';
 import type { System, Effect, Step, Param } from './types.ts';
 
 export type Place =
@@ -42,10 +43,16 @@ const HEARD_LABELS: Record<string, string> = {
   [TARGETS_SEED]: 'итоги по каждой цели',
 };
 
-const outputsOf = (step: { type: string; [key: string]: unknown }): NameChild[] =>
-  ((STEP_WORDS as Record<string, StepWords>)[step.type]?.outputs ?? [])
+const partsOf = (step: Step, system: System | undefined, inputs: readonly Param[]): NameChild[] =>
+  (step.type !== 'roll' || !system ? [] : dieParts(system, thrownDie(system, inputs, step))
+    .map(part => ({ path: `.parts.${part.name}`, label: `что выпало на кости «${part.label}»`, kind: 'number' })));
+
+const outputsOf = (step: { type: string; [key: string]: unknown }, system?: System, inputs: readonly Param[] = []): NameChild[] => [
+  ...((STEP_WORDS as Record<string, StepWords>)[step.type]?.outputs ?? [])
     .filter(output => output.path && (!output.onlyWith || (step[output.onlyWith] !== undefined && step[output.onlyWith] !== null)))
-    .map(output => ({ path: output.path, label: output.label, kind: output.kind ?? 'number' }));
+    .map(output => ({ path: output.path, label: output.label, kind: output.kind ?? 'number' })),
+  ...partsOf(step as unknown as Step, system, inputs),
+];
 
 const rowChildren = (system: System | undefined, from: string | undefined): NameChild[] =>
   (system && from ? columnChoices(system, from) : []);
@@ -88,7 +95,7 @@ function stepLabel(system: System | undefined, step: Step, fallback: string): st
   return label ?? (STEP_WORDS as Record<string, StepWords>)[step.type]?.label ?? fallback;
 }
 
-function stepsBefore(steps: readonly Step[], index: number, withLoop: boolean, params: readonly Param[] = [], system?: System): NameAt[] {
+function stepsBefore(steps: readonly Step[], index: number, withLoop: boolean, params: readonly Param[] = [], system?: System, inputs: readonly Param[] = params): NameAt[] {
   const out: NameAt[] = [];
   const arms = armsOf(steps);
   steps.slice(0, index).forEach((step, at) => {
@@ -104,7 +111,7 @@ function stepsBefore(steps: readonly Step[], index: number, withLoop: boolean, p
       return;
     }
     if (!step.id) return;
-    const children = [...returnsOf(system, step), ...outputsOf(step)];
+    const children = [...returnsOf(system, step), ...outputsOf(step, system, inputs)];
     out.push({
       name: String(step.id),
       label: stepLabel(system, step, String(step.id)),
@@ -128,7 +135,7 @@ function targetsChildren(listened: Effect | null, system?: System): NameChild[] 
   const at = steps.findIndex(step => splitsTargets(step));
   if (at < 0) return [];
   return steps.slice(at + 1).filter(step => step.id).flatMap(step => {
-    const outputs = [...returnsOf(system, step), ...outputsOf(step)];
+    const outputs = [...returnsOf(system, step), ...outputsOf(step, system, listened.params ?? [])];
     const own = { path: `.${String(step.id)}`, label: `шаг «${String(step.id)}» у каждой цели`, kind: 'result' };
     return [own, ...outputs.map(output => ({ path: `.${String(step.id)}${output.path}`, label: output.label, kind: output.kind }))];
   });
@@ -154,7 +161,7 @@ function heard(system: System, handler: NonNullable<Effect['on']>[number]): Name
     if (param) { out.push(fromParam(param, 'heard', system)); continue; }
     const step = steps.get(name);
     if (step) {
-      const children = [...returnsOf(system, step), ...outputsOf(step)];
+      const children = [...returnsOf(system, step), ...outputsOf(step, system, listened?.params ?? [])];
       out.push({ name, label: stepLabel(system, step, name), kind: 'result', group: 'heard', ...(children.length ? { children } : {}) });
       continue;
     }
@@ -184,17 +191,17 @@ export function namesAt(raw: System, effectId: string, place: Place): NameAt[] {
     case 'steps':
       return dedupe([...inputs, ...stepsBefore(effect.steps ?? [], place.index, true, effect.params ?? [], system), ...tags, combat(), ...constants(system)]);
     case 'cost':
-      return dedupe([...inputs, ...stepsBefore(effect.cost ?? [], place.index, false, [], system), ...tags, ...constants(system)]);
+      return dedupe([...inputs, ...stepsBefore(effect.cost ?? [], place.index, false, [], system, effect.params ?? []), ...tags, ...constants(system)]);
     case 'attach':
     case 'detach':
-      return dedupe([holder(), ...inputs, ...stepsBefore(effect[place.part] ?? [], place.index, false, [], system), ...constants(system)]);
+      return dedupe([holder(), ...inputs, ...stepsBefore(effect[place.part] ?? [], place.index, false, [], system, effect.params ?? []), ...constants(system)]);
     case 'handler-if':
     case 'handler':
     case 'handler-cost': {
       const handler = effect.on?.[place.handler];
       if (!handler) return [];
-      const own = place.part === 'handler' ? stepsBefore(handler.steps ?? [], place.index, false, [], system)
-        : place.part === 'handler-cost' ? stepsBefore(handler.cost ?? [], place.index, false, [], system) : [];
+      const own = place.part === 'handler' ? stepsBefore(handler.steps ?? [], place.index, false, [], system, effect.params ?? [])
+        : place.part === 'handler-cost' ? stepsBefore(handler.cost ?? [], place.index, false, [], system, effect.params ?? []) : [];
       return dedupe([holder(), left(), ...heard(system, handler), ...inputs, ...own, combat(), ...constants(system)]);
     }
     case 'modifier': {
