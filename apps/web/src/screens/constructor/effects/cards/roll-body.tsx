@@ -150,6 +150,7 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
         </div>
       </div>
       {name.trouble}
+      {read.fixed !== undefined && read.fixed !== null ? <span className="field__error">в шаге осталась формула «{exprOf(read.fixed)}» — она снимется, когда выберете, что бросают</span> : null}
       {rule ? <span className="faint">по правилу «{rule}» из «Правил → Броски»: кость, успех и степени — оттуда</span> : null}
       {!fielded && who === '' ? <span className="faint">кости ничьи: правки броска и вопросы «увидев кости» на них не действуют</span> : null}
       <Extras items={extras} />

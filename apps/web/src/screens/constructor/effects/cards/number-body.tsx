@@ -12,6 +12,7 @@ import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { hasField } from '@vtt/engine/model/sheet-columns';
 import { useStepName } from './step-name.tsx';
+import { rollReadback, joinReadback } from '../../readback.ts';
 
 type Loose = Record<string, unknown>;
 
@@ -60,6 +61,30 @@ export function NumberBody({ step, context, edit, onAddParam, takenNames, onRena
   const parsed = thrown && !keyed ? parseRollFormula(stored, context.system) : null;
   const asRoll = parsed && !('error' in parsed) && !parsed.count ? parsed : null;
   const roller = [...sheetChoices(context).singles.keys()][0];
+
+  const written = typeof read.die === 'object' && /^["']?\d*\s*[кdд]\s*\d+["']?$/iu.test(String((read.die as { expr?: unknown } | null)?.expr ?? '').trim());
+  const sealed = keyed && ((typeof read.die === 'object' && !written) || (read.count !== undefined && read.count !== null));
+  if (sealed) {
+    return (
+      <>
+        <div className="inline inline--tight number-line">
+          {name.input}
+          <span className="number-line__eq">=</span>
+          <div data-field="Формула" className="number-line__formula number-line__sealed">
+            {joinReadback(rollReadback({ ...step, id: undefined } as Step, context.system, context.effect, names))}
+          </div>
+        </div>
+        {name.trouble}
+        <span className="faint number-line__note">
+          кости ничьи: правки броска и вопросы «увидев кости» на них не действуют
+          {roller ? (
+            <Button size="sm" variant="ghost" title="Шаг станет броском листа"
+              onClick={() => edit(0, target => { loose(target).by = { expr: `@${roller}` }; })}>сделать броском</Button>
+          ) : null}
+        </span>
+      </>
+    );
+  }
 
   return (
     <>

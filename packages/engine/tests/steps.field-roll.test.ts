@@ -145,6 +145,14 @@ group('проверка системы: бросок', () => {
     ok(texts(one({ id: 'б', type: 'roll', field: { expr: '@действующий.навык' }, shift: { expr: '1' } }, { number: 'sides', success: undefined, margin: undefined, degrees: undefined }))[0]!.includes('грани кости'));
   });
 
+  test('кость в формуле без «кинуть» и поле со своим броском у строки', () => {
+    ok(texts(one({ id: 'ч', type: 'roll', fixed: { expr: '@к100 + 1' } }))[0]!.includes('стоит в формуле как число'));
+    const own = one({ id: 'б', type: 'roll', field: { expr: '@действующий.умения.бег.итог' } });
+    (own.tables as Record<string, unknown>).умения = { label: 'Умения', owner: 'sheet', key: 'word',
+      columns: [{ key: 'итог', label: 'Итог', kind: 'number' }], rows: [{ value: 'бег', label: 'Бег', view: { итог: { roll: { die: 'к100' } } } }] };
+    deepEq(texts(own), []);
+  });
+
   test('кость с настройками в «кинуть» и кость с формулой в одном шаге', () => {
     const minus = one({ id: 'ч', type: 'roll', fixed: { expr: 'кинуть(@к100) + 1' } });
     (minus.constants!.к100 as { dice: { minus?: boolean }[] }).dice[0]!.minus = true;

@@ -132,7 +132,7 @@ function danglingText(ref: Reference, declared: Declared): string | null {
   if (ref.kind === 'field' && ref.scope === 'plain' && !declared.field.has(ref.key) && declared.prop.has(ref.key)) return null;
   if (ref.kind === 'field' && ref.path === ref.key && declared.table.has(ref.key.split('.')[0]!)) return null;
   if (ref.kind === 'field' && ref.scope === 'bare' && !declared.field.has(ref.key) && declared.prop.has(ref.key)) return null;
-  if (ref.kind === 'field' && ref.scope === 'bare' && !declared.field.has(ref.key) && declared.constant.has(ref.key)) return null;
+  if (ref.kind === 'field' && ref.scope === 'bare' && !declared.field.has(ref.key) && declared.dice.has(ref.key)) return null;
   if (ref.kind === 'field' && ref.scope === 'bare' && !declared.field.has(ref.key)) {
     return `«${ref.key}» — нет ни входа, ни шага с таким именем`;
   }
@@ -574,10 +574,15 @@ function rolledColumn(system: System, effect: Effect, address: unknown): { table
 }
 
 const plainDie = (system: System, name: string): boolean => {
-  const die = system.constants?.[name] as { dice?: { count?: unknown; minus?: unknown }[]; read?: unknown; zero?: unknown } | undefined;
+  const die = system.constants?.[name] as { dice?: { count?: unknown; minus?: unknown; name?: unknown; bonus?: unknown }[]; read?: unknown; zero?: unknown } | undefined;
   const terms = die?.dice ?? [];
-  return terms.length === 1 && typeof terms[0]!.count !== 'object' && !terms[0]!.minus && (die?.read === undefined || die.read === 'sum') && die?.zero === undefined;
+  const only = terms[0];
+  return terms.length === 1 && typeof only!.count !== 'object' && !only!.minus && !only!.name && !only!.bonus
+    && (die?.read === undefined || die.read === 'sum') && die?.zero === undefined;
 };
+
+const ownRolls = (table: Table | undefined, column: string): boolean =>
+  (table?.rows ?? []).some(row => Boolean((row as { view?: Record<string, { roll?: unknown }> }).view?.[column]?.roll));
 
 const THROWN_DIE = /кинуть\(\s*[@#]([\p{L}\p{N}_]+)\s*[,)]/gu;
 
@@ -593,6 +598,13 @@ function rollStepProblems(system: System, effect: Effect, steps: Step[], where: 
         if (system.constants?.[name]?.kind !== 'die' || (effect.params ?? []).some(param => param.key === name) || plainDie(system, name)) continue;
         out.push({ where: where(index), level: 'error', text: `кость «${dieLabel(name)}» в формуле не бросить: у неё несколько частей или свои настройки («вычитается», «считать успехи», «если костей ноль») — бросьте её шагом «Бросок»` });
       }
+      const rest = text.replace(THROWN_DIE, ' ');
+      for (const name of Object.keys(system.constants ?? {})) {
+        if (system.constants![name]!.kind !== 'die' || (effect.params ?? []).some(param => param.key === name)) continue;
+        if (new RegExp(`(^|[^\\p{L}\\p{N}_.])[@#]${name}(?![\\p{L}\\p{N}_])`, 'u').test(rest)) {
+          out.push({ where: where(index), level: 'error', text: `кость «${dieLabel(name)}» стоит в формуле как число — кость бросают так: кинуть(${dieLabel(name)})` });
+        }
+      }
     }
     if (raw.type !== 'roll') return;
     if (typeof step.die === 'string' && filled(step.count) && ((system.constants?.[step.die] as { dice?: unknown[] } | undefined)?.dice ?? []).length > 1) {
@@ -604,12 +616,13 @@ function rollStepProblems(system: System, effect: Effect, steps: Step[], where: 
     const found = rollEntryOf(system, at.table, at.column);
     const table = system.tables![at.table]!;
     const label = (table.columns ?? []).find(one => one.key === at.column)?.label || at.column;
+    if (ownRolls(table, at.column)) return;
     if (!found) {
       out.push({ where: where(index), level: 'error', text: `по полю «${isSingle(table) ? label : `${table.label || at.table} → ${label}`}» не бросают — добавьте его в «Правила → Броски»` });
       return;
     }
     const kind = found.roll.number;
-    if (filled(step.bonus) && (kind === 'under' || kind === 'over')) {
+    if (filled(step.bonus) && (kind === 'under' || kind === 'over' || found.entry.threshold !== undefined)) {
       out.push({ where: where(index), level: 'error', text: `бросок «${found.roll.label || found.key}» сравнивают с порогом — прибавку к итогу не прибавить, пишите поправку к числу поля` });
     }
     if (filled(step.shift) && kind === 'sides') {

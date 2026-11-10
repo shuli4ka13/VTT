@@ -20,7 +20,7 @@ export function rollableFields(system: System, effect: Effect): Rollable[] {
       for (const param of effect.params ?? []) {
         if (param.kind === 'choice' && param.from === one.table) inputs.push({ tail: `${param.key}.${one.column}`, label: `${param.label || param.key} → ${name}`, group: BY_INPUT, rule });
       }
-      for (const row of table.rows ?? []) rows.push({ tail: `${one.table}.${row.value}.${one.column}`, label: `${row.label || row.value} → ${name}`, group: table.label || one.table, rule });
+      for (const row of (table.rows ?? []).filter(one => /^[\p{L}\p{N}_]+$/u.test(String(one.value)))) rows.push({ tail: `${one.table}.${row.value}.${one.column}`, label: `${row.label || row.value} → ${name}`, group: table.label || one.table, rule });
     }
   }
   return [...inputs, ...singles, ...rows];
@@ -80,11 +80,13 @@ export function setDie(step: Record<string, unknown>, die: unknown): void {
     delete step.shift;
     if (head) step.by = { expr: head };
   }
+  delete step.fixed;
   step.die = die;
 }
 
 export function setField(step: Record<string, unknown>, tail: string, firstSheet: string | undefined): void {
   const head = step.field !== undefined ? headOf(exprOf(step.field)) : headOf(exprOf(step.by)) || (firstSheet ? `@${firstSheet}` : '');
+  if (!head && !tail) return;
   delete step.die;
   delete step.count;
   delete step.bonus;

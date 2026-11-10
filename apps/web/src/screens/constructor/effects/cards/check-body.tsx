@@ -104,7 +104,7 @@ export function CheckBody({ step, context, edit, system, asIf = false }: {
         </div>
       </div>
       {against ? <span className="faint">{against}</span> : null}
-      {inside ? <span className="faint">бросок «{inside}» стоит внутри формулы: «успех на кости», сдвиг порога и правки «против» на такое сравнение не действуют</span> : null}
+      {inside ? <span className="faint">бросок «{inside}» стоит внутри формулы: «успех на кости», сдвиг порога и пересчёт правок «против» для каждой цели на такое сравнение не действуют</span> : null}
       <ContestLine step={step} roll={null} context={context} />
       <Fold title="ещё" summary={summary}>
         {more.length ? <FieldRow id="check-more" fields={more} /> : null}
@@ -191,7 +191,7 @@ function againstWords(step: any, context: SlotContext): string | null {
   const roller = throwerOf(mine);
   const found = new Set<string>();
   for (const [name] of context.sheets ?? []) {
-    if (name !== 'стол' && name !== roller && new RegExp(`@${name}(?![\\p{L}\\p{N}_])`, 'u').test(other)) found.add(name);
+    if (name !== 'стол' && name !== roller && new RegExp(`@${name}\\.`, 'u').test(other)) found.add(name);
   }
   const theirs = whole({ expr: other });
   const their = theirs ? throwerOf(theirs) : null;

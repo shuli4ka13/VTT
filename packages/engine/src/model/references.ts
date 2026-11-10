@@ -68,6 +68,7 @@ export interface Declared {
   field: Set<string>;
   effect: Set<string>;
   constant: Set<string>;
+  dice: Set<string>;
   table: Set<string>;
   rollEdit: Set<string>;
   event: Set<string>;
@@ -84,6 +85,7 @@ export function declaredOf(system: System): Declared {
     field: new Set(fieldsOf(system).map(f => f.tag)),
     effect: new Set(Object.keys(system.effects ?? {})),
     constant: new Set(Object.keys(system.constants ?? {})),
+    dice: new Set(Object.entries(system.constants ?? {}).filter(([, one]) => one.kind === 'die').map(([key]) => key)),
     table: new Set(Object.keys(system.tables ?? {})),
     rollEdit: new Set(Object.keys(system.roll_edits ?? {})),
     event: new Set(Object.keys(system.effects ?? {})),
