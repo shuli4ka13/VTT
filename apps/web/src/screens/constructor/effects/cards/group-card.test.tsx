@@ -538,3 +538,23 @@ describe('GroupCard: взять из таблицы', () => {
     expect(step.dice).toBeDefined();
   });
 });
+
+describe('GroupCard: проверка читает бросок', () => {
+  const warned = (value: string) => {
+    const effect = { label: 'Удар', params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }], steps: [
+      { id: 'удар', type: 'roll', die: 'lead', by: { expr: '@действующий' } },
+      { id: 'попал', type: 'check', value: { expr: value }, versus: { expr: '10' } },
+    ] } as unknown as Effect;
+    const groups = groupSteps(effect.steps!);
+    const view = render(<GroupCard group={groups[1]!} position={2} system={system} effect={effect} earlier={[{ id: 'удар', type: 'roll' }]} sheets={sheets} edit={() => {}} onDelete={() => {}} />);
+    const text = view.container.textContent!;
+    view.unmount();
+    return text.includes('стоит внутри формулы');
+  };
+
+  it('итог броска целиком или его часть — без предупреждения; бросок в арифметике — с ним', () => {
+    expect(warned('@удар')).toBe(false);
+    expect(warned('@удар.margin')).toBe(false);
+    expect(warned('@удар + 1')).toBe(true);
+  });
+});

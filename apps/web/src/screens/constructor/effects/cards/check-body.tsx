@@ -173,7 +173,7 @@ const throwerOf = (roll: any): string | null =>
   /^\s*@([\p{L}\p{N}_]+)/u.exec(exprText(roll.field ?? roll.by))?.[1] ?? null;
 
 const readsInside = (text: string, id: string): boolean =>
-  new RegExp(`@${id}(?![\\p{L}\\p{N}_])`, 'u').test(text) && text.trim() !== `@${id}`;
+  new RegExp(`@${id}(?![\\p{L}\\p{N}_])`, 'u').test(text) && !new RegExp(`^@${id}(\\.[\\p{L}\\p{N}_.]+)?$`, 'u').test(text.trim());
 
 function insideFormula(step: any, context: SlotContext): string | null {
   for (const roll of throwsOf(context)) {
