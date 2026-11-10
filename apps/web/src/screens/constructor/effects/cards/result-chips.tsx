@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { listOf } from '@vtt/engine/model/lists';
 import { formulaWords } from '../../../../ui/formula-words.ts';
@@ -123,19 +123,22 @@ function forkedLabel(system: System, outputs: readonly ResultOutput[], active: s
   return `${label} → ${column?.label ?? flag}`;
 }
 
-export function ResultChips({ name, outputs, system, branches = {}, active, onName }: {
+export function ResultChips({ name, outputs, system, branches = {}, active, onName, nameSlot }: {
   name: string;
   outputs: readonly ResultOutput[];
   system: System;
   branches?: Record<string, () => void>;
   active?: string | undefined;
-  onName: () => void;
+  onName?: (() => void) | undefined;
+  nameSlot?: ReactNode;
 }) {
   return (
     <div className="result-row">
-      <button type="button" className="result-row__name" title="так результат шага зовётся в формулах — нажмите, чтобы переименовать" onClick={onName}>
-        {name || 'результат…'}
-      </button>
+      {nameSlot ?? (onName
+        ? <button type="button" className="result-row__name" title="так результат шага зовётся в формулах — нажмите, чтобы переименовать" onClick={onName}>
+            {name || 'результат…'}
+          </button>
+        : <span className="result-row__name" title="так результат шага зовётся в формулах; на это имя уже ссылаются шаги ниже, поэтому переименовать его нельзя">{name}</span>)}
       <span className="result-row__arrow" aria-hidden="true">→</span>
       <span className="result-row__chips">
         {outputs.map(one => <ResultChip key={one.key} one={one} system={system} branch={branches[one.key]} active={active} branches={branches} forked={active ? forkedLabel(system, outputs, active) : undefined} />)}

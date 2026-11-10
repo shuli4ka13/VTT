@@ -269,22 +269,32 @@ function StepName({ group, effect, system, edit, branches, active }: { group: Ca
   const calledId = group.step.type === 'emit' ? (group.step as { effect?: unknown }).effect : undefined;
   const gives = typeof calledId === 'string' && (system.effects[calledId]?.returns ?? []).length > 0;
   if (!id && group.step.type !== 'apply' && !gives) return null;
-  if (!open) {
+  const st = useWorld.getState();
+  const locked = Boolean(id) && referenced({ s: st.system, c: st.compendium }, id, { steps: effect.steps ?? [], cost: effect.cost ?? [] });
+  const taken = [...(effect.steps ?? []), ...(effect.cost ?? [])].map(s => String(s.id ?? '')).filter(Boolean);
+  const rename = (next: string) => edit(group.amount ? 1 : 0, draft => { if (next) draft.id = next; else delete draft.id; });
+  if (gives) {
+    const field = open && !locked
+      ? <span className="result-row__name-field" ref={el => { if (el && !el.contains(document.activeElement)) el.querySelector('input')?.focus(); }} onBlur={() => setOpen(false)}><KeyField optional value={id} locked={false} taken={taken} onChange={rename} /></span>
+      : undefined;
     return (
       <div className="inline inline--tight step-name">
-        {gives
-          ? <ResultChips name={id} outputs={system.effects[String(calledId)]?.returns ?? []} system={system} {...(branches ? { branches } : {})} active={active} onName={() => setOpen(true)} />
-          : <Button size="sm" variant="ghost" title="как итог шага зовётся в формулах: @имя" onClick={() => setOpen(true)}>{id ? `имя в формулах: ${id}` : 'имя в формулах…'}</Button>}
+        <ResultChips name={id} outputs={system.effects[String(calledId)]?.returns ?? []} system={system} {...(branches ? { branches } : {})} active={active}
+          onName={locked ? undefined : () => setOpen(true)} nameSlot={field} />
       </div>
     );
   }
-  const st = useWorld.getState();
-  const taken = [...(effect.steps ?? []), ...(effect.cost ?? [])].map(s => String(s.id ?? '')).filter(Boolean);
-  const rename = (next: string) => edit(group.amount ? 1 : 0, draft => { if (next) draft.id = next; else delete draft.id; });
+  if (!open) {
+    return (
+      <div className="inline inline--tight step-name">
+        <Button size="sm" variant="ghost" title="как итог шага зовётся в формулах: @имя" onClick={() => setOpen(true)}>{id ? `имя в формулах: ${id}` : 'имя в формулах…'}</Button>
+      </div>
+    );
+  }
   return (
     <div className="inline inline--tight step-name">
-      <span className="faint">{gives ? 'результат называется' : 'имя в формулах'}</span>
-      <KeyField optional value={id} locked={Boolean(id) && referenced({ s: st.system, c: st.compendium }, id, { steps: effect.steps ?? [], cost: effect.cost ?? [] })} taken={taken} onChange={rename} />
+      <span className="faint">имя в формулах</span>
+      <KeyField optional value={id} locked={locked} taken={taken} onChange={rename} />
     </div>
   );
 }
