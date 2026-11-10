@@ -440,8 +440,10 @@ describe('Словари: кости, правки броска, таблицы'
     }));
     renderOpen(<RulesTab />);
     открыть('Броски');
-    const guarded = screen.getByTitle('кость используется') as HTMLButtonElement;
-    expect(guarded.disabled).toBe(true);
+    const tip = screen.getByRole('tooltip');
+    expect(tip.textContent).toContain('Убрать нельзя — кость используется');
+    expect(tip.textContent).toContain('«Удар»');
+    expect((tip.closest('.locked')!.querySelector('button') as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('таблицу, на которую ссылается поле, удалить нельзя', () => {
