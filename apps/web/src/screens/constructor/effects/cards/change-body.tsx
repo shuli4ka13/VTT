@@ -10,7 +10,6 @@ import { parseRollExpr, badFormula, exprText } from '../../roll-expr.ts';
 import { FormulaField } from '../../../../ui/formula-field.tsx';
 import type { BarApi } from '../../../../store/formula-bar.ts';
 import { labelOfTag } from '../../../../ui/formula.tsx';
-import { formulaWords } from '../../../../ui/formula-words.ts';
 import { EffectPick, effectNameOf } from '../../effect-pick.tsx';
 import { dieWord, readingWord } from '../../readback.ts';
 import { unquote } from '../../roll-expr.ts';
@@ -113,9 +112,16 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   const amountId = String((amount as Record<string, any> | undefined)?.id ?? '');
 
   const direction = String((apply as Record<string, any>).direction ?? 'subtract');
-  const asExpr = (): string => {
+  const valueText = (): string => {
     const value = (apply as Record<string, any>).value;
-    const written = value && typeof value === 'object' && 'expr' in value ? String(value.expr) : '';
+    return value && typeof value === 'object' && 'expr' in value ? String(value.expr) : '';
+  };
+  const fixedText = exprText((amount as Record<string, any> | undefined)?.fixed);
+  const inline = Boolean(fixedText) && !(amount as Record<string, any> | undefined)?.die && !exprText((amount as Record<string, any> | undefined)?.bonus)
+    && Boolean(amountId) && [`@${amountId}`, ''].includes(valueText().trim());
+  const asExpr = (): string => {
+    if (inline) return fixedText;
+    const written = valueText();
     return written.trim() ? written : amountId ? `@${amountId}` : '';
   };
 
@@ -125,9 +131,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   const bonus = (amount as Record<string, any> | undefined)?.bonus;
   const diceChip = dieChip(dice, context);
   const bonusText = exprText(bonus);
-  const fixedText = exprText((amount as Record<string, any> | undefined)?.fixed);
   const both = Boolean(diceChip && bonusText);
-  const said = (text: string) => formulaWords(context.system, text, рядом);
 
   const sentChip = (label: ReactNode, onRemove: () => void, key: string) => (
     <span key={key} className="chips__chip chips__chip--sent">
@@ -150,12 +154,6 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
           'dice',
         ) : null}
         {both ? <span className="chips__plus" aria-hidden>+</span> : null}
-        {fixedText ? (
-          <span key="fixed" className="chips__chip chips__chip--sent">
-            {said(fixedText)}
-            <span className="chips__side chips__side--calc" title="считается шагом-расчётом раньше изменения">расчёт</span>
-          </span>
-        ) : null}
         {bonusText ? sentChip(
           bonusText.replace(/[@#]([\p{L}\p{N}_.]+)/gu, (_, tag: string) => labelOfTag(context.system, tag)),
           () => edit(0, step => { delete (step as Record<string, unknown>).bonus; }),
@@ -203,6 +201,14 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
 
   const commit = (typed: string) => {
     const text = typed.trim();
+    if (inline) {
+      const bad = text ? badFormula({ expr: text }) : null;
+      if (bad) { setTrouble(bad); return; }
+      edit(0, step => { const a = step as Record<string, any>; if (text) a.fixed = { expr: text }; else delete a.fixed; });
+      setDraft(null);
+      setTrouble(null);
+      return;
+    }
 
     const bare = text.replace(/"[^"]*"|'[^']*'/g, m => ' '.repeat(m.length));
     const rolled = bare.match(THROWN) ?? bare.match(DICE);
