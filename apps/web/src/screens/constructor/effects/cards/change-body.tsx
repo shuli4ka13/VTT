@@ -24,6 +24,8 @@ import { ConditionField } from '../../condition-field.tsx';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import { fieldsOf, cellSource } from '@vtt/engine/model/sheet-columns';
 import { DESK_ID } from '@vtt/engine/engine/owners';
+import { byBlock } from '../../field-groups.ts';
+import { NO_BLOCK } from '@vtt/engine/model/blocks';
 
 const fieldTarget = (target: unknown): { sheet: string; tag: string } | null => {
   const expr = target && typeof target === 'object' && 'expr' in target ? String((target as { expr: unknown }).expr) : '';
@@ -82,7 +84,7 @@ function TargetPick({ target, context, onChange }: {
         <Field label="Какое поле" needed={!picked}>
           <Select<string>
             value={picked?.tag ?? ''}
-            options={[['', '— какое поле —'], ...fields.map(f => [f.tag, f.label ?? f.tag] as const), ...cells]}
+            options={[['', '— какое поле —'], ...byBlock(system, fields.map(f => [f.tag, f.label ?? f.tag, f.placements?.[0]?.group ?? NO_BLOCK] as const)), ...cells]}
             onChange={next => onChange(next ? { expr: `@${owner}.${next}` } : null)}
           />
         </Field>

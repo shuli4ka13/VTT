@@ -1,5 +1,6 @@
 import type { System, SystemRoll, RollField } from '@vtt/schema';
 import { freeId } from '../../../store/world.ts';
+import { readingWord } from '../readback.ts';
 
 export function rollOfColumn(system: System, table: string, column: string): { key: string; roll: SystemRoll; entry: RollField } | null {
   for (const [key, roll] of Object.entries(system.rolls ?? {})) {
@@ -27,4 +28,18 @@ export function addRoll(draft: System, die: string): string {
   const key = freeId(Object.keys(draft.rolls ?? {}), 'бросок');
   (draft.rolls ??= {})[key] = { label: 'Новый бросок', die, fields: [] };
   return key;
+}
+
+export function saidOf(number: SystemRoll['number'], die: string): string {
+  if (number === 'count') return `число поля — сколько бросить: ${die}`;
+  if (number === 'sides') return `${die}, грани — число поля`;
+  if (number === 'under') return `${die}, успех — не больше числа поля`;
+  if (number === 'over') return `${die}, успех — не меньше числа поля`;
+  return `${die} + число поля`;
+}
+
+export function rollSaid(system: System, roll: SystemRoll): string {
+  const name = system.constants?.[roll.die]?.label || roll.die;
+  const reading = readingWord(system, roll.die);
+  return saidOf(roll.number, reading ? `${name} (${reading})` : name);
 }
