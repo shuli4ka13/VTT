@@ -132,6 +132,7 @@ function danglingText(ref: Reference, declared: Declared): string | null {
   if (ref.kind === 'field' && ref.scope === 'plain' && !declared.field.has(ref.key) && declared.prop.has(ref.key)) return null;
   if (ref.kind === 'field' && ref.path === ref.key && declared.table.has(ref.key.split('.')[0]!)) return null;
   if (ref.kind === 'field' && ref.scope === 'bare' && !declared.field.has(ref.key) && declared.prop.has(ref.key)) return null;
+  if (ref.kind === 'field' && ref.scope === 'bare' && !declared.field.has(ref.key) && declared.constant.has(ref.key)) return null;
   if (ref.kind === 'field' && ref.scope === 'bare' && !declared.field.has(ref.key)) {
     return `«${ref.key}» — нет ни входа, ни шага с таким именем`;
   }

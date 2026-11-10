@@ -4,6 +4,7 @@ import type { ItemRef } from '../model/item-ref.ts';
 import { compile } from '../formula/index.ts';
 import type { Tools, Value } from '../formula/index.ts';
 import { EngineError } from './errors.ts';
+import { dieText } from './lead-die.ts';
 import { readCell } from './cells.ts';
 import type { Scope } from './cells.ts';
 import { rowOf } from './tables.ts';
@@ -257,6 +258,7 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
       if (ctx.recordScope && ctx.props && declaredProp(system, name)) return null;
       const named = namedValue(name, ctx);
       if (named !== undefined) return named;
+      if (system.constants?.[name]?.kind === 'die') return dieText(system, name);
       const split = splitPath(name);
       const table = split ? referencedTable(system, split.head, ctx.paramDefs) : undefined;
       if (split && table) return walk(system, ctx.pass, table, resolve(split.head), split.path, who(ctx), scope);

@@ -120,3 +120,13 @@ group('бросок поля в эффекте: кость, успех и сте
     ok(log.includes('не больше 47: успех · степеней: 2 · твёрдый успех'), log);
   });
 });
+
+group('кость системы в формуле', () => {
+  const system = build([EACH, { id: 'урон', type: 'roll', fixed: { expr: 'кинуть(@к100) + 1' } },
+    { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '@урон' } }]);
+
+  test('«кинуть» читает кость по имени, проверка системы её принимает', () => {
+    deepEq(errorsOf(lintSystem(system, book)).map(p => p.text), []);
+    eq(fight(system, 40, 40, [7]).hp, 2);
+  });
+});
