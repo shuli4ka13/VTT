@@ -52,7 +52,7 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     expect(строкаВхода('Кость урона').querySelector('.chips__chip')?.textContent).toContain('Кость урона');
   });
 
-  it('каждый вход эффекта — строка у типа, даже новый', () => {
+  it('каждый обязательный вход эффекта — строка у типа, даже новый; необязательный — в «+ передать…»', () => {
     useWorld.setState(state => ({
       ...state,
       system: {
@@ -67,7 +67,10 @@ describe('RecordsTab: тип видит входы эффекта', () => {
       },
     }));
     render(<RecordsTab />);
-    expect([...document.querySelectorAll('.args-row__name')].map(el => el.textContent)).toEqual(['Кость урона', 'Новый вход', 'Сколько костей']);
+    expect([...document.querySelectorAll('.args-row__name')].map(el => el.textContent)).toEqual(['Кость урона', 'Новый вход']);
+    const spare = screen.getByRole('combobox', { name: 'передать ещё' }) as HTMLSelectElement;
+    expect([...spare.options].map(o => o.textContent)).toContain('Сколько костей — сейчас как у эффекта: 1');
+    fireEvent.change(spare, { target: { value: 'сколько' } });
     expect(строкаВхода('Новый вход').className).toContain('args-row--need');
     fireEvent.click(within(строкаВхода('Новый вход') as HTMLElement).getByRole('button', { name: '+ свойство' }));
     expect(useWorld.getState().system.tables!.weapon!.columns!.some(p => p.key === 'новый' && p.label === 'Новый вход')).toBe(true);

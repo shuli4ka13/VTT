@@ -2564,7 +2564,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "strike",
+            "effect": "spell_strike",
             "args": {
               "attack_with": {
                 "expr": "@действующий.spell_attack"
@@ -2733,7 +2733,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "strike",
+            "effect": "spell_strike",
             "args": {
               "attack_with": {
                 "expr": "@действующий.spell_attack"
@@ -3250,7 +3250,176 @@
       "strike": {
         "label": "Атака",
         "group": "Атака",
-        "description": "Бросок атаки против класса брони, урон костью. На крите кости урона удваиваются. Бонус атаки и прибавку к урону приносит тот, кто зовёт: оружие считает их по листу, существо вписывает числами. Посчитанное уходит в общий эффект «Урон».",
+        "description": "Бросок атаки оружием против класса брони, урон костью. На крите кости урона удваиваются. Бонус атаки и прибавку к урону приносит тот, кто зовёт: оружие считает их по листу, существо вписывает числами. Посчитанное уходит в общий эффект «Урон».",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
+          },
+          {
+            "key": "attack_with",
+            "label": "Бонус атаки",
+            "kind": "number"
+          },
+          {
+            "key": "damage_with",
+            "label": "Прибавка к урону",
+            "kind": "number",
+            "default": 0
+          },
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "dice",
+            "label": "Сколько костей",
+            "kind": "number",
+            "default": 1
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types"
+          },
+          {
+            "key": "damage_source",
+            "label": "Источник урона",
+            "kind": "choice",
+            "from": "damage_source"
+          },
+          {
+            "key": "status",
+            "label": "Состояние при попадании",
+            "kind": "effect",
+            "optional": true
+          },
+          {
+            "key": "цена",
+            "label": "Плата",
+            "kind": "effect",
+            "default": "cost_attack"
+          }
+        ],
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели"
+          },
+          {
+            "id": "бросок",
+            "type": "emit",
+            "effect": "attack_roll",
+            "args": {
+              "бонус": {
+                "expr": "@attack_with"
+              },
+              "кто": {
+                "expr": "@действующий"
+              },
+              "против": {
+                "expr": "@цель"
+              }
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@бросок.исход.hit"
+            }
+          },
+          {
+            "id": "урон",
+            "type": "roll",
+            "fixed": {
+              "expr": "кинуть(@damage_dice, @dice * @бросок.исход.dice_mul) + @damage_with"
+            }
+          },
+          {
+            "type": "emit",
+            "effect": "damage",
+            "args": {
+              "amount": {
+                "expr": "@урон"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
+              },
+              "damage_source": {
+                "expr": "@damage_source"
+              }
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "не пусто(@status)"
+            }
+          },
+          {
+            "type": "status",
+            "effect": {
+              "expr": "@status"
+            },
+            "to": {
+              "expr": "@цель"
+            },
+            "args": {
+              "наложил": {
+                "expr": "@действующий"
+              }
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "effect": {
+              "expr": "@цена"
+            },
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ],
+        "tags": [
+          "атака"
+        ]
+      },
+      "spell_strike": {
+        "label": "Атака заклинанием",
+        "group": "Атака",
+        "description": "Бросок атаки заклинанием против класса брони, урон костью. На крите кости урона удваиваются. Бонус атаки, кости и плату приносит заклинание: заговор платит действием, заклинание с кругом — ячейкой не ниже своего круга. Посчитанное уходит в общий эффект «Урон».",
         "params": [
           {
             "key": "действующий",

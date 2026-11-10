@@ -39,7 +39,11 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
   const buttons = Object.entries(system.effects).filter(([, e]) => (e.activation ?? 'manual') !== 'passive');
   const where = binding.label || effect?.label || binding.effect;
   const [more, setMore] = useState(false);
-  const shown = params.filter(param => param.kind !== 'sheet');
+  const given = (param: Param): boolean => binding.args?.[param.key] !== undefined && binding.args?.[param.key] !== null;
+  const [opened, setOpened] = useState<ReadonlySet<string>>(() => new Set(params.filter(given).map(param => param.key)));
+  const inputs = params.filter(param => param.kind !== 'sheet');
+  const shown = inputs.filter(param => !freeParam(param) || given(param) || opened.has(param.key));
+  const spare = inputs.filter(param => !shown.includes(param));
 
   const onArg = (key: string, next: SlotRef | null) => onEdit(draft => {
     draft.args ??= {};
@@ -112,7 +116,17 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
             />
           ))}
         </div>
-      ) : <span className="faint">{params.length ? `«${effect.label || binding.effect}» берёт только того, кто нажал, и цели — заполнять нечего.` : `«${effect.label || binding.effect}» ничего не принимает.`}</span>) : null}
+      ) : <span className="faint">{spare.length ? `Обязательных входов у «${effect.label || binding.effect}» нет.` : params.length ? `«${effect.label || binding.effect}» берёт только того, кто нажал, и цели — заполнять нечего.` : `«${effect.label || binding.effect}» ничего не принимает.`}</span>) : null}
+      {effect && spare.length ? (
+        <div className="row">
+          <Select<string>
+            label="передать ещё"
+            value=""
+            options={[['', `+ передать… (${spare.length})`], ...spare.map(param => [param.key, `${param.label ?? param.key} — сейчас ${emptyWords(param, system)}`] as const)]}
+            onChange={key => { if (key) setOpened(prev => new Set([...prev, key])); }}
+          />
+        </div>
+      ) : null}
       {more || binding.if?.expr ? (
         <div className="row">
           <ConditionField

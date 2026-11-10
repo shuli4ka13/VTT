@@ -31,7 +31,7 @@ group('плата из входа проверяется до игры', () => {
     const { lintSystem, errorsOf } = await import('../src/model/lint.ts');
     const system = structuredClone(world.system);
     eq(errorsOf(lintSystem(system, world.compendium)).some((p: any) => p.text.includes('не заполняет его вход')), false);
-    delete system.effects.strike.cost[0].args.spell_level;
+    delete system.effects.spell_strike.cost[0].args.spell_level;
     const texts = errorsOf(lintSystem(system, world.compendium)).map((p: any) => p.text);
     eq(texts.some((t: string) => t.includes('вызов «Стоимость: действие и ячейка» не заполняет его вход «Круг заклинания»')), true);
   });
