@@ -71,6 +71,18 @@ describe('Словари: кости, правки броска, таблицы'
     expect(последняя().dice).toEqual([{ count: 2, sides: 6 }]);
   });
 
+  it('у набора, которому число костей задаёт бросок, вместо единицы — «задаёт бросок»', () => {
+    useWorld.setState(state => ({ ...state, system: {
+      ...emptySystem(),
+      constants: { pool: { label: 'набор', kind: 'die', dice: [{ sides: 6 }], read: { kind: 'count', atLeast: 5 } }, one: { label: 'одна', kind: 'die', dice: [{ sides: 20 }] } },
+      rolls: { r: { die: 'pool', number: 'count', fields: [] } },
+    } as never }));
+    renderOpen(<RulesTab />);
+    открыть('Броски');
+    expect(screen.getAllByPlaceholderText('задаёт бросок')).toHaveLength(1);
+    expect((screen.getByPlaceholderText('задаёт бросок') as HTMLInputElement).value).toBe('');
+  });
+
   it('«+ ещё часть» превращает бросок в составной и просит имена частей', () => {
     renderOpen(<RulesTab />);
     открыть('Броски');

@@ -4,7 +4,7 @@ import { NO_BLOCK } from '@vtt/engine/model/blocks';
 import { TagsField } from '../tags-field.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { dieEntries } from './dice-section.tsx';
-import { addRoll, rollSaid } from './rolls.ts';
+import { addRoll } from './rolls.ts';
 import { blockOfColumn, byBlock } from '../field-groups.ts';
 import type { Grouped } from '../field-groups.ts';
 import { fieldsOf, onSheet, isSingle } from '@vtt/engine/model/sheet-columns';
@@ -20,11 +20,11 @@ const DEGREE_NAMES = new Map([['выпало', 'выпало'], ['число', '
 const RULE_NAMES = new Map([['выпало', 'выпало'], ['число', 'число поля'], ['порог', 'порог']]);
 
 const NUMBER_WORDS = [
-  ['bonus', 'прибавка к кости'],
-  ['count', 'сколько костей'],
-  ['sides', 'сколько граней'],
-  ['under', 'выкинуть не больше'],
-  ['over', 'выкинуть не меньше'],
+  ['bonus', 'прибавка к выпавшему'],
+  ['count', 'сколько костей бросить'],
+  ['sides', 'сколько граней у кости'],
+  ['under', 'порог: выкинуть не больше'],
+  ['over', 'порог: выкинуть не меньше'],
 ] as const;
 
 function columnsOf(system: System): Grouped[] {
@@ -52,7 +52,7 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
   const free = service ? untaken : untaken.filter(([, , group]) => group !== NO_BLOCK);
   const dice = dieEntries(system);
   const sample = fieldsOf(system).find(f => roll.fields.some(one => one.table === f.home && (f.cell ? f.cell.column === one.column : f.tag === one.column)))?.roll;
-  const said = `${rollSaid(system, roll)}${sample?.tags?.length ? ` · метки: ${sample.tags.join(', ')}` : ''}`;
+  const tags = sample?.tags?.length ? `метки: ${sample.tags.join(', ')}` : '';
   return (
     <div className="dict-block roll-word">
       <div className="dict-row">
@@ -60,28 +60,10 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
           <Input value={roll.label ?? ''} placeholder="как бросок зовётся"
             onChange={next => edit(draft => { if (next) draft.label = next; else delete draft.label; })} />
         </span>
-        <span className="roll-word__said">{said}</span>
+        <span className="roll-word__said">{tags}</span>
         <DangerButton size="sm" onConfirm={() => editSystem(draft => { delete draft.rolls?.[id]; if (draft.rolls && !Object.keys(draft.rolls).length) delete draft.rolls; })}>Убрать</DangerButton>
       </div>
       <div className="roll-form">
-        <div className="dict-row roll-line">
-          <span className="dict-row__label">Кость</span>
-          <div className="roll-form__body roll-form__body--halves">
-            <Select value={roll.die} options={dice.map(([key, c]) => [key, c.label || key] as const) as never}
-              onChange={next => edit(draft => { draft.die = next; })} />
-            <Select value={roll.number ?? 'bonus'} options={NUMBER_WORDS as never}
-              onChange={next => edit(draft => { if (next === 'bonus') delete draft.number; else draft.number = next; if (next !== 'count') delete draft.keep; })} />
-          </div>
-        </div>
-        {roll.number === 'count' ? (
-          <div className="dict-row roll-line">
-            <span className="dict-row__label">Оставить лучшие</span>
-            <div className="roll-form__body">
-              <FormulaField value={typeof roll.keep === 'object' ? roll.keep.expr : roll.keep ?? ''} system={system} where={`${roll.label || id} · сколько оставить`} placeholder="все"
-                onCommit={text => edit(draft => { if (text.trim()) draft.keep = { expr: text.trim() }; else delete draft.keep; })} />
-            </div>
-          </div>
-        ) : null}
         <div className="dict-row roll-line">
           <span className="dict-row__label">Бросают</span>
           <div className="roll-form__body roll-form__body--wrap">
@@ -102,6 +84,29 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
             ) : null}
           </div>
         </div>
+        <div className="dict-row roll-line">
+          <span className="dict-row__label">Кость</span>
+          <div className="roll-form__body">
+            <Select label="Кость" value={roll.die} options={dice.map(([key, c]) => [key, c.label || key] as const) as never}
+              onChange={next => edit(draft => { draft.die = next; })} />
+          </div>
+        </div>
+        <div className="dict-row roll-line">
+          <span className="dict-row__label">Число поля — это</span>
+          <div className="roll-form__body">
+            <Select label="Число поля — это" value={roll.number ?? 'bonus'} options={NUMBER_WORDS as never}
+              onChange={next => edit(draft => { if (next === 'bonus') delete draft.number; else draft.number = next; if (next !== 'count') delete draft.keep; })} />
+          </div>
+        </div>
+        {roll.number === 'count' ? (
+          <div className="dict-row roll-line">
+            <span className="dict-row__label">Оставить лучшие</span>
+            <div className="roll-form__body">
+              <FormulaField value={typeof roll.keep === 'object' ? roll.keep.expr : roll.keep ?? ''} system={system} where={`${roll.label || id} · сколько оставить`} placeholder="все"
+                onCommit={text => edit(draft => { if (text.trim()) draft.keep = { expr: text.trim() }; else delete draft.keep; })} />
+            </div>
+          </div>
+        ) : null}
         {roll.number === 'under' || roll.number === 'over' || roll.success || roll.margin ? (
           <>
             {([
@@ -153,7 +158,7 @@ export function RollsSection({ system, editSystem }: { system: System; editSyste
   const die = dieEntries(system)[0]?.[0];
   return (
     <Card>
-      <CardHead title="Броски" sub="Щелчок по полю на листе бросает его броском."
+      <CardHead title="Броски" sub="Как бросают поля листа: щелчок по полю и шаг «Бросок» с полем."
         actions={die ? <Button size="sm" onClick={() => editSystem(draft => { addRoll(draft, die); })}>+ бросок</Button> : null} />
       {rolls.length ? (
         <div className="stack">

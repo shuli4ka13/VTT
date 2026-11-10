@@ -143,7 +143,7 @@ export function DiceSection({ system, editSystem, usage }: Props) {
 
                 <Readback segments={dieReadback(constant, system)} />
 
-                <DiceComposer dice={dice} onEdit={editDice} />
+                <DiceComposer dice={dice} onEdit={editDice} driven={Object.values(system.rolls ?? {}).some(roll => roll.die === key && roll.number === 'count')} />
 
                 {asksReading ? reading : <Fold title="ещё" summary={readKind === 'sum' ? 'берём сумму' : 'чтение выпавшего'}>{reading}</Fold>}
               </div>
@@ -156,7 +156,8 @@ export function DiceSection({ system, editSystem, usage }: Props) {
   );
 }
 
-function DiceComposer({ dice, onEdit }: {
+function DiceComposer({ dice, onEdit, driven = false }: {
+  driven?: boolean;
   dice: DiceTerm[];
   onEdit: (change: (list: DiceTerm[]) => void) => void;
 }) {
@@ -167,8 +168,8 @@ function DiceComposer({ dice, onEdit }: {
       {dice.map((term, i) => {
         return (
           <div key={i} className="dice-term">
-            <span className="dice-term__num dice-term__num--wide">
-              <BoundField value={term.count ?? 1} placeholder="сколько"
+            <span className={`dice-term__num dice-term__num--wide${driven && !many ? ' dice-term__num--said' : ''}`}>
+              <BoundField value={term.count ?? (driven && !many ? null : 1)} placeholder={driven && !many ? 'задаёт бросок' : 'сколько'}
                 onChange={next => onEdit(list => { if (next === null || next === 1) delete list[i]!.count; else list[i]!.count = next; })} />
             </span>
 
