@@ -21,7 +21,7 @@ export const pickTail = (system: System, tag: string, rest: string): string =>
 
 export function labelOfTag(system: System, tag: string, names?: ReadonlyMap<string, string>): string {
   const owned = onSheet(system, tag, names);
-  if (owned) return `${labelOfTag(system, owned.rest, names)} (${owned.head})`;
+  if (owned) return `${labelOfTag(system, owned.rest, names)} (${names?.get(owned.head) ?? owned.head})`;
   return plainLabel(system, tag, names);
 }
 

@@ -4,6 +4,7 @@ import { Select, Fold, Field } from '../../../../ui/primitives.tsx';
 import { FieldRow } from '../../../../ui/field-row.tsx';
 import type { RowField } from '../../../../ui/field-row.tsx';
 import { FormulaField } from '../../../../ui/formula-field.tsx';
+import { formulaWords } from '../../../../ui/formula-words.ts';
 import { namesOf, inputBadges } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
@@ -53,11 +54,18 @@ export function CheckBody({ step, context, edit, system, asIf = false }: {
       ),
     }] : []),
   ];
+  const names = useMemo(() => {
+    const out = namesOf(context);
+    for (const word of tagWords(context.system).keys()) out.set(word, word);
+    return out;
+  }, [context]);
+  const shared = { extraNames: names, badges: inputBadges(context), ...(context.sheets ? { sheets: context.sheets } : {}) };
   const forced = (key: 'succeedOn' | 'failOn') => (
     <FormulaField
       value={String((step[key] as { expr?: unknown } | undefined)?.expr ?? '')}
       system={system}
       where={`проверка · ${key === 'succeedOn' ? 'успех на кости' : 'провал на кости'}`}
+      {...shared}
       placeholder={key === 'succeedOn' ? 'например: 20' : 'например: 1'}
       onCommit={text => edit(at, draft => { const d = loose(draft); if (text.trim()) d[key] = { expr: text.trim() }; else delete d[key]; })}
     />
@@ -67,17 +75,13 @@ export function CheckBody({ step, context, edit, system, asIf = false }: {
       value={String((step[key] as { expr?: unknown } | undefined)?.expr ?? '')}
       system={system}
       where={`проверка · ${key === 'failIf' ? 'всегда провал' : 'всегда успех с запасом'}`}
+      {...shared}
       placeholder={key === 'failIf' ? 'например: @носитель.ки == 0' : 'например: 1'}
       onCommit={text => edit(at, draft => { const d = loose(draft); if (text.trim()) d[key] = { expr: text.trim() }; else delete d[key]; })}
     />
   );
   const rolled = readsRoll(step, context);
-  const summary = moreSummary(step, rolled);
-  const names = useMemo(() => {
-    const out = namesOf(context);
-    for (const word of tagWords(context.system).keys()) out.set(word, word);
-    return out;
-  }, [context]);
+  const summary = moreSummary(step, rolled, text => formulaWords(system, text, names));
   const side = (key: 'value' | 'versus', label: string, placeholder: string) => (
     <div data-field={label} className="check-line__side" {...(key === 'versus' ? { 'data-guide': 'check-formula' } : {})}>
       <SideFormula value={step[key]} where={`проверка · ${label.toLowerCase()}`} placeholder={placeholder} context={context} names={names}
@@ -202,12 +206,12 @@ function againstWords(step: any, context: SlotContext): string | null {
   return `правки «против» на этом сравнении — против: ${context.sheets?.get(only!) ?? only}`;
 }
 
-const moreSummary = (step: any, rolled: boolean): string => [
+const moreSummary = (step: any, rolled: boolean, said: (text: string) => string): string => [
   step.degrees?.table ? 'исход ступенями' : '',
-  rolled && step.succeedOn ? `успех от ${String(step.succeedOn.expr ?? '')} на кости` : '',
+  rolled && step.succeedOn ? `успех от ${said(String(step.succeedOn.expr ?? ''))} на кости` : '',
   step.failIf ? 'есть условие провала' : '',
   step.passWith ? 'успех с запасом' : '',
-  rolled && step.failOn ? `провал до ${String(step.failOn.expr ?? '')}` : '',
+  rolled && step.failOn ? `провал до ${said(String(step.failOn.expr ?? ''))}` : '',
 ].filter(Boolean).join(' · ');
 
 const readsRoll = (step: any, context: SlotContext): boolean => {
