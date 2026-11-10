@@ -23,7 +23,7 @@ describe('доноры-образцы', () => {
       expect(system.roll_edits?.[key], `правка «${key}» приехала вместе с эффектом`).toBeTruthy();
     }
 
-    const cancels = Object.values(system.roll_edits ?? {}).map(e => e.canceledBy).filter(Boolean);
+    const cancels = Object.values(system.roll_edits ?? {}).flatMap(e => e.cancels ?? []);
     for (const key of cancels) {
       expect(system.roll_edits?.[key as string], 'встречная правка приехала тоже').toBeTruthy();
     }

@@ -10,7 +10,7 @@ import { walkSheet } from '../model/paths.ts';
 import { typeColumn } from '../model/inherit.ts';
 import { labelsAt } from '../model/names-at.ts';
 import { forcedWords } from '../words/steps.ts';
-import { addendsText } from '../core/dice.ts';
+import { addendsText, verdictText } from '../core/dice.ts';
 import type { Addend } from '../core/dice.ts';
 import { facedText } from '../core/against.ts';
 import type { FacedTrace } from '../core/against.ts';
@@ -123,7 +123,7 @@ export function describeParts(
     const param = params.find(p => p.key === name);
     if (param) return String(param.label ?? name);
     const source = (effect?.steps ?? []).find((step: any) => String(step.id) === name);
-    if (source?.type === 'roll') return rollTitle(((source.tags ?? []) as unknown[]).filter((tag): tag is string => typeof tag === 'string'), source.by ? 'бросок' : 'расчёт');
+    if (source?.type === 'roll') return rollTitle(((source.tags ?? []) as unknown[]).filter((tag): tag is string => typeof tag === 'string'), source.by || source.field ? 'бросок' : 'расчёт');
     return labelOf(name);
   };
   const outputLabel = (name: string): string => {
@@ -174,7 +174,8 @@ export function describeParts(
       const bonus = step?.bonus ? ` + ${refLabel(step.bonus, trace.within) ?? 'Бонус'}: ${trace.bonus}` : trace.bonus ? ` + ${trace.bonus}` : '';
       const parts = trace.parts && Object.keys(trace.parts).length
         ? ' · ' + Object.entries(trace.parts).map(([k, v]) => `${k}: ${v}`).join(', ') : '';
-      return `${title}: ${rolls}${edits}${addendsText(addsOf(trace))}${bonus} = ${trace.total}${parts}`;
+      const verdict = verdictText({ threshold: trace.threshold, under: trace.under === true, success: trace.success, margin: trace.said, degree: trace.degree });
+      return `${title}: ${rolls}${edits}${addendsText(addsOf(trace))}${bonus} = ${trace.total}${parts}${verdict}`;
     }
     if (trace.type === 'check') {
       const versus = typeof trace.versusTag === 'string' ? labelOf(trace.versusTag) : refLabel(step?.versus, trace.within) ?? 'порог';

@@ -33,10 +33,16 @@ export const control = z.object({
   no: z.string().min(1).optional(),
 }).strict();
 
+export const rollDegree = z.object({ label: z.string().min(1), if: formula }).strict();
+
 export const rollSpec = z.object({
   die: z.string().min(1),
   count: formula.optional(),
   bonus: formula.optional(),
+  sides: formula.optional(),
+  keep: z.union([formula, z.string()]).optional(),
+  degrees: z.array(rollDegree).optional(),
+  under: z.literal(true).optional(),
   tags: z.array(z.string().min(1)).optional(),
 }).passthrough();
 
@@ -70,6 +76,7 @@ export const dieConstant = z.object({
   kind: z.literal('die'),
   dice: z.array(diceTerm),
   read: diceReading.optional(),
+  zero: z.object({ count: z.number().int().positive(), keep: z.enum(['best', 'worst']).optional() }).strict().optional(),
 }).passthrough();
 
 export const tableValue = z.union([z.number(), z.string(), z.boolean()]);
@@ -80,6 +87,8 @@ export const cellView = z.object({
   label: z.string().optional(),
   roll: z.lazy(() => rollSpec.partial()).optional(),
   default: startValue.optional(),
+  min: bound.optional(),
+  max: bound.optional(),
 });
 
 export const stageCombine = z.object({
@@ -109,7 +118,7 @@ export const columnValue = z.object({
 export const column = columnValue.extend({
   key: tag,
   label: z.string().optional(),
-  roll: z.lazy(() => rollSpec.partial({ die: true }).extend({ label: z.string().optional() })).optional(),
+  roll: z.never({ message: 'бросок поля задаётся в «Бросках» системы (system.rolls), а не у колонки' }).optional(),
   title: z.string().optional(),
   onSheet: z.boolean().optional(),
   optional: z.boolean().optional(),
@@ -125,10 +134,25 @@ export const sheetPart = z.object({
   views: z.record(z.string(), control).optional(),
 }).strict();
 
+export const sheetList = z.enum(['hanging', 'things', 'actions']);
+
 export const sheetBlock = z.object({
   name: z.string().min(1),
   parent: z.string().min(1).optional(),
+  page: z.string().min(1).optional(),
+  width: z.number().int().min(1).max(12).optional(),
+  under: z.literal(true).optional(),
+  height: z.number().int().min(40).max(3000).optional(),
+  split: z.number().int().min(2).max(12).optional(),
+  list: sheetList.optional(),
+  kinds: z.array(z.string().min(1)).optional(),
+  per: z.number().int().min(1).max(12).optional(),
   parts: z.array(sheetPart),
+}).strict();
+
+export const sheetPage = z.object({
+  name: z.string().min(1),
+  top: z.literal(true).optional(),
 }).strict();
 
 export const groupSpec = z.object({
@@ -148,12 +172,33 @@ export const tableRow = z.object({
 
 export const tableKey = z.enum(['word', 'number', 'range']);
 
+export const rollField = z.object({
+  table: z.string().min(1),
+  column: z.string().min(1),
+  tags: z.array(z.string().min(1)).optional(),
+  threshold: slotRef.optional(),
+  keep: slotRef.optional(),
+}).strict();
+
+export const systemRoll = z.object({
+  label: z.string().optional(),
+  die: z.string().min(1),
+  number: z.enum(['bonus', 'count', 'sides', 'under', 'over']).optional(),
+  keep: slotRef.optional(),
+  degrees: z.array(rollDegree).optional(),
+  success: formula.optional(),
+  margin: formula.optional(),
+  tags: z.array(z.string().min(1)).optional(),
+  fields: z.array(rollField),
+}).strict();
+
 export const rollEditOp = z.object({ op: z.string().min(1) }).passthrough();
 
 export const rollEdit = z.object({
   label: z.string().optional(),
   ops: z.array(rollEditOp),
-  canceledBy: z.string().optional(),
+  cancels: z.array(z.string().min(1)).optional(),
+  stacks: z.literal(true).optional(),
 }).passthrough();
 
 export const valueModifier = z.object({
@@ -262,12 +307,9 @@ export const effect = z.object({
 
 export const bindingArg = formula;
 
-export const tableFill = z.enum(['actor', 'targets']);
-
 export const binding = z.object({
   label: z.string().optional(),
   effect: z.string(),
-  table: z.record(z.string(), tableFill).optional(),
   args: z.record(z.string(), bindingArg).optional(),
   if: formula.optional(),
 }).strict();
@@ -313,6 +355,7 @@ export const system = z.object({
   fields: z.never({ message: 'полей больше нет — это колонки таблицы листа (system.tables, shape: single)' }).optional(),
   groups: z.record(z.string(), groupSpec).optional(),
   blocks: z.array(sheetBlock).optional(),
+  pages: z.array(sheetPage).optional(),
   effects: z.record(z.string(), effect),
 
   grants: z.array(z.string()).optional(),
@@ -322,6 +365,7 @@ export const system = z.object({
   tables: z.record(z.string(), table).optional(),
   tags: z.record(z.string(), tagContract).optional(),
   roll_edits: z.record(z.string(), rollEdit).optional(),
+  rolls: z.record(z.string(), z.lazy(() => systemRoll)).optional(),
 
   grid: z.object({
     step: z.number().positive(),
@@ -403,6 +447,8 @@ export const world = z.object({
 export type SlotRef = z.infer<typeof slotRef>;
 export type Formula = z.infer<typeof formula>;
 export type RollSpec = z.infer<typeof rollSpec>;
+export type SystemRoll = z.infer<typeof systemRoll>;
+export type RollField = z.infer<typeof rollField>;
 export type ValueKind = z.infer<typeof valueKind>;
 export type Tag = z.infer<typeof tag>;
 export type DiceTerm = z.infer<typeof diceTerm>;
@@ -432,6 +478,8 @@ export type Ask = z.infer<typeof ask>;
 export type Control = z.infer<typeof control>;
 export type SheetBlock = z.infer<typeof sheetBlock>;
 export type SheetPart = z.infer<typeof sheetPart>;
+export type SheetPage = z.infer<typeof sheetPage>;
+export type SheetList = z.infer<typeof sheetList>;
 export type ControlKind = z.infer<typeof controlKind>;
 export type FieldOption = z.infer<typeof fieldOption>;
 export type Guard = z.infer<typeof formula>;
@@ -439,7 +487,6 @@ export type Handler = z.infer<typeof handler>;
 export type Effect = z.infer<typeof effect>;
 export type Binding = z.infer<typeof binding>;
 export type TagContract = z.infer<typeof tagContract>;
-export type TableFill = z.infer<typeof tableFill>;
 export type BindingArg = z.infer<typeof bindingArg>;
 export type SheetKind = z.infer<typeof sheetKind>;
 export type TableUse = z.infer<typeof tableUse>;

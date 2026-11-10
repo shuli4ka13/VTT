@@ -126,13 +126,13 @@ describe('блок «Если»: условие строкой, руки, «Ст
     head.when('Проверка — не пройдена');
     expect(steps()[2]).toEqual({ type: 'branch', if: { expr: 'не @hit.success' } });
     expect(isFused(block(0))).toBe(true);
-    expect(armWord(block(0))).toBe('1 · Проверка');
+    expect(armWord(block(0))).toBe('2 · Проверка');
     expect(headOf(block(0)).querySelector('.flow-head__words')!.textContent).toBe('по итогу «hit»: провал / успех');
     expect(armLabel(block(0))).toBe('провал:');
     expect(within(block(0).querySelector<HTMLElement>(':scope > .flow-block__foot')!).has('+ успех')).toBe(true);
   });
 
-  it('проверка и «Если» по её исходу — одна рамка: рука подписана словом исхода, «+ провал» — рука без условия, «Удалить» на проверке сносит и блок', () => {
+  it('проверка и «Если» по её исходу — одна рамка: рука подписана словом исхода, «+ провал» — рука без условия, «Удалить» на проверке сносит и блок, бросок остаётся', () => {
     start(checked);
     within().click('+ если');
     within(headOf(block(0))).when('Проверка — пройдена');
@@ -141,7 +141,7 @@ describe('блок «Если»: условие строкой, руки, «Ст
     const frame = block(0);
     expect(isFused(frame)).toBe(true);
     expect(frame.querySelector(':scope > .card')).toBeNull();
-    expect(armWord(frame)).toBe('1 · Проверка');
+    expect(armWord(frame)).toBe('2 · Проверка');
     expect(headOf(frame).classList.contains('flow-head--label')).toBe(false);
     expect(armLabel(frame)).toBe('успех:');
     expect(headOf(frame).querySelector('.cond')).toBeNull();
@@ -158,7 +158,7 @@ describe('блок «Если»: условие строкой, руки, «Ст
 
     within(headOf(block(0))).click('Удалить');
     within(headOf(block(0))).click('точно убрать');
-    expect(steps()).toEqual([]);
+    expect(steps().map(step => step.type)).toEqual(['roll']);
     expect(document.querySelectorAll('.flow-block')).toHaveLength(0);
   });
 
@@ -168,7 +168,7 @@ describe('блок «Если»: условие строкой, руки, «Ст
     const head = headOf(frame);
     expect(head.classList.contains('flow-head')).toBe(true);
     expect(frame.querySelector(':scope > .card')).toBeNull();
-    expect(armWord(frame)).toBe('1 · Проверка');
+    expect(armWord(frame)).toBe('2 · Проверка');
     const words = head.querySelector<HTMLButtonElement>('.flow-head__words')!;
     expect(words.textContent).toBe('по итогу «hit»: успех / провал');
     expect(words.getAttribute('aria-expanded')).toBe('true');
@@ -184,7 +184,7 @@ describe('блок «Если»: условие строкой, руки, «Ст
 
   it('у простого «Если» номера нет, у слитого он стоит перед словом; подписи веток — бледные, строчные, с двоеточием', () => {
     start([...checked, { type: 'branch', if: { expr: '@hit.success' } }, { type: 'end' }, { type: 'branch', if: { expr: '1 > 0' } }, { type: 'end' }]);
-    expect([0, 1].map(k => armWord(block(k)))).toEqual(['1 · Проверка', 'Если']);
+    expect([0, 1].map(k => armWord(block(k)))).toEqual(['2 · Проверка', 'Если']);
     addArm(block(0), '+ провал');
     addArm(block(1), '+ иначе');
     expect([0, 1].map(k => armLabel(block(0), k))).toEqual(['успех:', 'провал:']);
@@ -208,11 +208,11 @@ describe('блок «Если»: условие строкой, руки, «Ст
     expect(document.querySelectorAll('.flow-block')).toHaveLength(0);
   });
 
-  it('«Удалить» в шапке слитого «Если» сносит проверку и блок вместе, плашка называет шаг, а не номер', () => {
+  it('«Удалить» в шапке слитого «Если» сносит проверку и блок вместе (бросок остаётся), плашка называет шаг, а не номер', () => {
     start([...checked, { type: 'branch', if: { expr: '@hit.success' } }, { type: 'end' }]);
     within(headOf(block(0))).click('Удалить');
     within(headOf(block(0))).click('точно убрать');
-    expect(steps()).toEqual([]);
+    expect(steps().map(step => step.type)).toEqual(['roll']);
     expect([...document.querySelectorAll('.verdict')].map(el => el.textContent).join('|')).toMatch(/Убран шаг: Проверка/);
     expect(document.body.textContent).not.toMatch(/шаг \d+ ·/);
   });
@@ -441,7 +441,7 @@ describe('цепочка: заголовок раздела и розовая ч
   });
 });
 
-describe('«+ проверка»: бросающий по умолчанию берётся из места шага', () => {
+describe('«+ бросок» и «+ проверка»: что кладётся по умолчанию', () => {
   const sheet = (key: string, many = false) => ({ key, label: key, kind: 'sheet', ...(many ? { many: true, item: { key: 'цель', label: 'Цель' } } : {}) });
 
   const system = (effects: Record<string, object>): System => ({
@@ -457,15 +457,15 @@ describe('«+ проверка»: бросающий по умолчанию б�
     return shown.steps![0] as unknown as Record<string, unknown>;
   };
 
-  it('кнопкой: первый одиночный вход-лист, пусть он зовётся не «действующий»', () => {
+  it('кнопкой: бросающий — первый одиночный вход-лист, пусть он зовётся не «действующий»; кость — первая кость системы', () => {
     const effect = { label: 'Удар', activation: 'manual', params: [sheet('цели', true), sheet('атакующий')], steps: [] } as unknown as Effect;
-    const roll = added('удар', effect, index => ({ part: 'steps', index }), effect, '+ проверка');
-    expect(roll).toMatchObject({ type: 'roll', by: { expr: '@атакующий' } });
+    const roll = added('удар', effect, index => ({ part: 'steps', index }), effect, '+ бросок');
+    expect(roll).toMatchObject({ type: 'roll', die: 'к20', by: { expr: '@атакующий' } });
   });
 
   it('входов-листов нет — бросок без бросающего', () => {
     const effect = { label: 'Счёт', activation: 'manual', params: [{ key: 'сколько', label: 'Сколько', kind: 'number' }], steps: [] } as unknown as Effect;
-    const roll = added('счёт', effect, index => ({ part: 'steps', index }), effect, '+ проверка');
+    const roll = added('счёт', effect, index => ({ part: 'steps', index }), effect, '+ бросок');
     expect(roll.type).toBe('roll');
     expect(roll).not.toHaveProperty('by');
   });
@@ -473,7 +473,7 @@ describe('«+ проверка»: бросающий по умолчанию б�
   it('в подписке бросающий — носитель', () => {
     const real = { label: 'Тик', activation: 'passive', duration: { kind: 'permanent' }, on: [{ on: 'moment:turn-start', steps: [] }] };
     const handler = { ...real, steps: [] } as unknown as Effect;
-    const roll = added('тик', real, index => ({ part: 'handler', handler: 0, index }), handler, '+ проверка');
+    const roll = added('тик', real, index => ({ part: 'handler', handler: 0, index }), handler, '+ бросок');
     expect(roll).toMatchObject({ type: 'roll', by: { expr: '@носитель' } });
   });
 
@@ -481,8 +481,17 @@ describe('«+ проверка»: бросающий по умолчанию б�
     const effect = { label: 'Удар', activation: 'manual', params: [sheet('кто'), sheet('цели', true)], steps: [{ type: 'each', of: 'цели' }, { type: 'branch' }, { type: 'end' }] } as unknown as Effect;
     cleanup();
     render(<Chain id="удар" placeAt={index => ({ part: 'steps', index })} effect={effect} system={system({ удар: effect })} edit={change => change(effect)} />);
-    fireEvent.change(screen.getAllByDisplayValue('+ шаг')[0]!, { target: { value: 'check' } });
+    fireEvent.change(screen.getAllByDisplayValue('+ шаг')[0]!, { target: { value: 'roll' } });
     const roll = effect.steps!.find(step => step.type === 'roll') as unknown as Record<string, unknown>;
     expect(roll).toMatchObject({ by: { expr: '@кто' } });
+  });
+
+  it('«+ проверка» кладёт одну проверку, без нового броска; сравнивает ближайший бросок выше, ещё ни с чем не сравнённый', () => {
+    const effect = { label: 'Удар', activation: 'manual', params: [sheet('атакующий')], steps: [{ id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@атакующий' } }] } as unknown as Effect;
+    cleanup();
+    render(<Chain id="удар" placeAt={index => ({ part: 'steps', index })} effect={effect} system={system({ удар: effect })} edit={change => change(effect)} />);
+    fireEvent.click(screen.getAllByText('+ проверка')[0]!);
+    expect(effect.steps).toHaveLength(2);
+    expect(effect.steps![1]).toEqual({ id: 'проверка', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } });
   });
 });

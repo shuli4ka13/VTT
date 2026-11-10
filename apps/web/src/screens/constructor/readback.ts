@@ -107,26 +107,36 @@ export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs
 }
 
 
-export function checkReadback(step: Step, roll: Step | null, system: System, effect: Effect, names?: Names): Segment[] {
+const SIGN_WORDS: Record<string, string> = { atLeast: 'не меньше', over: 'больше', notOver: 'не больше', under: 'меньше', equals: 'равно' };
+
+export function checkReadback(step: Step, system: System, effect: Effect, names?: Names): Segment[] {
   const s = step as any;
-  const tail = '.';
-  if (!roll) {
-    return [refSegment(s.value, system, effect, 'что проверяем?', names), seg('с'), refSegment(s.versus, system, effect, 'с чем?', names), seg(tail)];
+  return [
+    refSegment(s.value, system, effect, 'что проверяем?', names),
+    seg(SIGN_WORDS[String(s.successWhen ?? 'atLeast')] ?? 'не меньше'),
+    refSegment(s.versus, system, effect, 'с чем?', names),
+    seg('.'),
+  ];
+}
+
+export function rollReadback(step: Step, system: System, effect: Effect, names?: Names): Segment[] {
+  const r = step as any;
+  const filled = (value: unknown): boolean => value !== undefined && value !== null;
+  const out: Segment[] = r.id ? [seg(`${String(r.id)} =`)] : [];
+  if (filled(r.field)) {
+    out.push(seg('бросок поля'), refSegment(r.field, system, effect, 'какое поле?', names));
+    if (filled(r.shift)) out.push(seg('с поправкой'), refSegment(r.shift, system, effect, '', names));
+    return out;
   }
-  const r = roll as any;
-  const out: Segment[] = [seg(`${whoOf(effect, r.by)} бросает`)];
-  out.push(r.die ? refSegment(r.die, system, effect, 'какой костью?', names) : hole('какой костью?'));
-  const tags = (r.tags ?? []) as unknown[];
-  if (tags.length) {
-    const plain = tags.map(tag => (typeof tag === 'string' ? tag : null));
-    if (plain.every(Boolean)) out.push(seg(`(${plain.join(', ')})`));
-    else tags.forEach(tag => out.push(typeof tag === 'string' ? seg(tag) : refSegment(tag, system, effect, 'метка?', names)));
-  }
-  if (r.bonus !== undefined && r.bonus !== null) {
+  out.push(seg(filled(r.by) ? `${whoOf(effect, r.by)} бросает` : 'кости ничьи:'));
+  out.push(filled(r.die) ? refSegment(r.die, system, effect, 'что бросает?', names) : hole('что бросает?'));
+  if (filled(r.count)) out.push(seg('×'), refSegment(r.count, system, effect, 'сколько костей?', names));
+  if (filled(r.bonus)) {
     const bonus = refSegment(r.bonus, system, effect, 'прибавка?', names);
     if (!('text' in bonus) || (bonus.text !== '0' && bonus.text !== '')) out.push(seg('+'), bonus);
   }
-  out.push(seg('— с'), refSegment(s.versus, system, effect, 'с чем сравнить?', names), seg(tail));
+  const tags = ((r.tags ?? []) as unknown[]).filter((tag): tag is string => typeof tag === 'string');
+  if (tags.length) out.push(seg(`(${tags.join(', ')})`));
   return out;
 }
 
@@ -389,7 +399,7 @@ export function editNotation(edit: { ops?: Record<string, unknown>[] }, system: 
 }
 
 export function editReadback(
-  edit: { ops?: Record<string, unknown>[]; canceledBy?: string },
+  edit: { ops?: Record<string, unknown>[]; cancels?: string[] },
   system: System,
 ): Segment[] {
   const ops = edit.ops ?? [];
@@ -401,14 +411,21 @@ export function editReadback(
     + (phrases.length > 1 ? ', ' + phrases.slice(1).join(', ') : '');
   const out: Segment[] = [seg(text + '.')];
 
-  if (edit.canceledBy) {
-    const other = system.roll_edits?.[edit.canceledBy];
-    out.push(seg(`Гасится: ${other?.label || edit.canceledBy}.`));
+  if (edit.cancels?.length) {
+    out.push(seg(`Гасится: ${edit.cancels.map(key => system.roll_edits?.[key]?.label || key).join(', ')}.`));
   }
   return out;
 }
 
-export function dieReadback(constant: SystemConstant, system: System): Segment[] {
+export function dieReadback(constant: SystemConstant, system: System, driven = false): Segment[] {
+  const lone = (constant.dice ?? []).length === 1 && (constant.dice![0]!.count === undefined || constant.dice![0]!.count === null);
+  if (driven && lone) {
+    const read = constant.read;
+    const how = typeof read === 'string' ? read : read?.kind ?? 'sum';
+    const least = typeof read === 'object' ? read.atLeast : undefined;
+    const end = how === 'best' ? 'взять лучшую' : how === 'worst' ? 'взять худшую' : how === 'count' ? `посчитать, сколько выпало не ниже ${least ?? '?'}` : 'сложить';
+    return [seg(`Кинуть ${DIE_LETTER}${constant.dice![0]!.sides} — сколько костей, задаёт бросок — и ${end}.`)];
+  }
 
   const dice = (constant.dice ?? []).map(d => {
     const head = typeof d.count === 'object' && d.count !== null
@@ -433,6 +450,27 @@ export function dieReadback(constant: SystemConstant, system: System): Segment[]
         ? `посчитать, сколько выпало не ниже ${atLeast ?? '?'}`
         : 'сложить';
   return [seg(`Кинуть ${dice} и ${tail}.`)];
+}
+
+export function dieSaid(constant: SystemConstant, system: System, counted: boolean): string | null {
+  const terms = constant.dice ?? [];
+  if (!terms.length) return null;
+  const read = constant.read;
+  const kind = typeof read === 'string' ? read : read?.kind ?? 'sum';
+  const atLeast = typeof read === 'object' ? read.atLeast : undefined;
+  const lone = terms.length === 1;
+  if (lone && kind === 'sum' && (terms[0]!.count ?? 1) === 1) return null;
+  const dice = terms.map(term => {
+    const head = counted && lone ? `${DIE_LETTER}${term.sides}`
+      : typeof term.count === 'object' && term.count !== null ? `${DIE_LETTER}${term.sides} по числу «${countWord(system, term.count)}»`
+        : diceText(term.count, term.sides);
+    return term.name ? `${head} «${term.label || term.name}»` : head;
+  }).join(' + ');
+  const tail = kind === 'best' ? 'берётся лучшая'
+    : kind === 'worst' ? 'берётся худшая'
+      : kind === 'count' ? `считаются выпавшие не ниже ${atLeast ?? '?'}`
+        : 'складываются';
+  return `${dice} — ${tail}`;
 }
 
 export const joinReadback = (segments: Segment[]): string =>

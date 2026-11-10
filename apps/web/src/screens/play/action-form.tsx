@@ -159,12 +159,13 @@ function AskInput({ system, param, value, onChange }: {
   system: System; param: AskedParam; value: string; onChange: (next: string) => void;
 }) {
   const kind = askKindOf(param);
+  const said = new Map((system.tables?.[String(param.from ?? '')]?.rows ?? []).map(row => [String(row.value), row.label || String(row.value)] as const));
   return kind === 'choice' || kind === 'boolean'
     ? (
       <Select
         value={value}
         options={[['', '— какой вариант —'],
-          ...(kind === 'boolean' ? [...YES_NO] : choicesOf(system, param)).map((option: string) => [option, option] as const)] as never}
+          ...(kind === 'boolean' ? [...YES_NO] : choicesOf(system, param)).map((option: string) => [option, said.get(option) ?? option] as const)] as never}
         onChange={onChange}
       />
     )

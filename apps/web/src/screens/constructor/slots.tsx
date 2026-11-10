@@ -12,17 +12,17 @@ import { withTables } from '../../ui/formula-words.ts';
 
 export interface StepOutput { path: string; label: string; kind?: string; no?: string }
 
-export interface EarlierStep { id: string; type: string; title?: string; table?: string; splits?: boolean; outputs?: StepOutput[] }
+export interface EarlierStep { id: string; type: string; title?: string; table?: string; splits?: boolean; fielded?: boolean; outputs?: StepOutput[] }
 
-function outputsOf(type: string): StepOutput[] {
+function outputsOf(type: string, fielded = false): StepOutput[] {
   try {
-    return (stepModule(type).outputs ?? []) as StepOutput[];
+    return ((stepModule(type).outputs ?? []) as (StepOutput & { onlyWith?: string })[]).filter(output => !output.onlyWith || (output.onlyWith === 'field' && fielded));
   } catch {
     return [];
   }
 }
 
-const outputsAt = (step: EarlierStep): StepOutput[] => [...(step.outputs ?? []), ...outputsOf(step.type)];
+const outputsAt = (step: EarlierStep): StepOutput[] => [...(step.outputs ?? []), ...outputsOf(step.type, step.fielded)];
 
 export const formulaName = (step: EarlierStep): string => (loopsAt(step) ? step.title || step.id : step.id ? step.id.replace(/_/g, ' ') : step.title || STEP.one);
 

@@ -124,3 +124,9 @@ export function RecordView({ record, system, compendium }: {
     </Card>
   );
 }
+
+export function groupsByKind<T extends CompendiumRecord>(system: System, records: readonly T[]): { table: string; title: string; records: T[] }[] {
+  const out = new Map<string, T[]>();
+  for (const record of records) out.set(record.table ?? '', [...(out.get(record.table ?? '') ?? []), record]);
+  return [...out].map(([table, list]) => ({ table, title: recordKindOf(system, table)?.label || table || '—', records: list }));
+}

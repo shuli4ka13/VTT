@@ -24,6 +24,8 @@ import { ConditionField } from '../../condition-field.tsx';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import { fieldsOf, cellSource } from '@vtt/engine/model/sheet-columns';
 import { DESK_ID } from '@vtt/engine/engine/owners';
+import { byBlock } from '../../field-groups.ts';
+import { NO_BLOCK } from '@vtt/engine/model/blocks';
 
 const fieldTarget = (target: unknown): { sheet: string; tag: string } | null => {
   const expr = target && typeof target === 'object' && 'expr' in target ? String((target as { expr: unknown }).expr) : '';
@@ -82,7 +84,7 @@ function TargetPick({ target, context, onChange }: {
         <Field label="Какое поле" needed={!picked}>
           <Select<string>
             value={picked?.tag ?? ''}
-            options={[['', '— какое поле —'], ...fields.map(f => [f.tag, f.label ?? f.tag] as const), ...cells]}
+            options={[['', '— какое поле —'], ...byBlock(system, fields.map(f => [f.tag, f.label ?? f.tag, f.placements?.[0]?.group ?? NO_BLOCK] as const)), ...cells]}
             onChange={next => onChange(next ? { expr: `@${owner}.${next}` } : null)}
           />
         </Field>
@@ -110,9 +112,16 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   const amountId = String((amount as Record<string, any> | undefined)?.id ?? '');
 
   const direction = String((apply as Record<string, any>).direction ?? 'subtract');
-  const asExpr = (): string => {
+  const valueText = (): string => {
     const value = (apply as Record<string, any>).value;
-    const written = value && typeof value === 'object' && 'expr' in value ? String(value.expr) : '';
+    return value && typeof value === 'object' && 'expr' in value ? String(value.expr) : '';
+  };
+  const fixedText = exprText((amount as Record<string, any> | undefined)?.fixed);
+  const inline = Boolean(fixedText) && !(amount as Record<string, any> | undefined)?.die && !exprText((amount as Record<string, any> | undefined)?.bonus)
+    && Boolean(amountId) && [`@${amountId}`, ''].includes(valueText().trim());
+  const asExpr = (): string => {
+    if (inline) return fixedText;
+    const written = valueText();
     return written.trim() ? written : amountId ? `@${amountId}` : '';
   };
 
@@ -192,6 +201,14 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
 
   const commit = (typed: string) => {
     const text = typed.trim();
+    if (inline) {
+      const bad = text ? badFormula({ expr: text }) : null;
+      if (bad) { setTrouble(bad); return; }
+      edit(0, step => { const a = step as Record<string, any>; if (text) a.fixed = { expr: text }; else delete a.fixed; });
+      setDraft(null);
+      setTrouble(null);
+      return;
+    }
 
     const bare = text.replace(/"[^"]*"|'[^']*'/g, m => ' '.repeat(m.length));
     const rolled = bare.match(THROWN) ?? bare.match(DICE);

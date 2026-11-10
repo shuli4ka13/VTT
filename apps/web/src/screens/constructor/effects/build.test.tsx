@@ -92,11 +92,9 @@ describe('эффекты пресетов собираются в констру
     param(7, 'Источник урона', 'choice', 'damage_source', 'damage_source');
     param(8, 'Состояние при попадании', 'effect', 'status');
     param(9, 'Плата', 'effect', 'цена');
-    param(10, 'Круг заклинания', 'number', 'spell_level');
     ui.select(ui.cell('Если не передали', 3), 'value');
     ui.select(ui.cell('Если не передали', 5), 'value');
     ui.type(ui.cell('Если не передали', 5), '1');
-    ui.select(ui.cell('Если не передали', 10), 'empty');
     ui.select(ui.cell('Если не передали', 9), 'value');
     ui.select(ui.cell('Если не передали', 9).querySelectorAll('select')[1]!, 'cost_attack');
     ui.select(ui.cell('Если не передали', 8), 'empty');
@@ -106,12 +104,6 @@ describe('эффекты пресетов собираются в констру
     cost = stepCard(/^1 · /);
     within(cost).formula(within(cost).arg('Лист'), '@действующий');
     within(cost).formula(within(cost).arg('Источник'), '@действующий');
-    useWorld.setState(state => {
-      const effect = state.system.effects.strike!;
-      const step = effect.cost![0] as unknown as { args: Record<string, unknown> };
-      step.args = { ...step.args, spell_level: { expr: '@spell_level' } };
-      return { ...state, system: { ...state.system, effects: { ...state.system.effects, strike: { ...effect } } } };
-    });
 
 
     ui.click('+ изменение');
@@ -259,10 +251,12 @@ describe('эффекты пресетов собираются в констру
     const aim = number(4, '@действующий.skills.пистолеты.total + (@spend_luck - если(@aim == "по голове", 8, 0))', 'прицел');
     up(aim);
 
-    ui.click('+ число');
+    ui.click('+ бросок');
     card = stepCard(/^5 · /);
-    within(card).formula('Формула', 'кинуть(@lead_die) + @прицел');
     within(card).select('Кто бросает', '@действующий');
+    within(card).select('Что бросает', 'die:lead_die');
+    within(card).click('+ прибавка');
+    within(card).formula('Прибавка', '@прицел');
     card = stepCard(/^5 · /);
     marks(card, 'атака');
     nameStep(card, 'попадание_бросок');
@@ -284,7 +278,8 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ проверка');
     card = stepCard(/^9 · /);
-    within(card).formula('Проверка', '@попадание_бросок >= @сложность');
+    within(card).formula('Что проверяем', '@попадание_бросок');
+    within(card).formula('С чем', '@сложность');
     nameStep(stepCard(/^9 · /), 'попадание');
 
     const hit = outcomeIf(9, true);
@@ -455,10 +450,12 @@ describe('эффекты пресетов собираются в констру
     };
     (goal!.params ?? []).slice(2).forEach((p, index) => param(index + 2, p.label!, p.kind!, p.key, p.from));
 
-    ui.click('+ число');
+    ui.click('+ бросок');
     let card = stepCard(/^2 · /);
-    within(card).formula('Формула', 'кинуть(@duality) + @trait.value + @attack_bonus');
     within(card).select('Кто бросает', '@действующий');
+    within(card).select('Что бросает', 'die:duality');
+    within(card).click('+ прибавка');
+    within(card).formula('Прибавка', '@trait.value + @attack_bonus');
     card = stepCard(/^2 · /);
     marks(card, 'атака', 'герой');
     nameStep(card, 'бросок_бросок');
@@ -472,7 +469,8 @@ describe('эффекты пресетов собираются в констру
 
     ui.click('+ проверка');
     card = stepCard(/^4 · /);
-    within(card).formula('Проверка', '@бросок_бросок >= @цель.difficulty');
+    within(card).formula('Что проверяем', '@бросок_бросок');
+    within(card).formula('С чем', '@цель.difficulty');
     card = stepCard(/^4 · /);
     nameStep(card, 'бросок');
 
@@ -550,16 +548,17 @@ describe('эффекты пресетов собираются в констру
     ui.type(ui.cell('Границы', 2).querySelector<HTMLInputElement>('input[placeholder="не выше"]')!, '4');
     ui.type(ui.cell('Имя в формулах', 2), 'rating');
 
-    ui.click('+ число');
+    ui.click('+ бросок');
     const at = (n: number) => stepCard(new RegExp(`^${n} · `));
-    within(at(2)).formula('Формула', 'кинуть(@pool)');
     within(at(2)).select('Кто бросает', '@действующий');
+    within(at(2)).select('Что бросает', 'die:pool');
     marks(at(2), 'действие', '=если(@rating == 0, "нулевой", "")');
     nameStep(at(2), 'бросок_бросок');
     within(at(2)).click('↑');
 
     ui.click('+ проверка');
-    within(at(3)).formula('Проверка', '@бросок_бросок >= 4');
+    within(at(3)).formula('Что проверяем', '@бросок_бросок');
+    within(at(3)).formula('С чем', '4');
     within(at(3)).select('Исход ступенями', 'outcome');
     nameStep(at(3), 'бросок');
 

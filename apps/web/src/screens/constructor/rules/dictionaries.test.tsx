@@ -9,6 +9,8 @@ import { useWorld, emptySystem } from '../../../store/world.ts';
 
 const открыть = (раздел: string) => fireEvent.click(screen.getAllByText(раздел)[0]!);
 
+const завести = (вид = 'one') => fireEvent.change(screen.getByLabelText('добавить кость'), { target: { value: вид } });
+
 describe('Словари: кости, правки броска, таблицы', () => {
   beforeEach(() => {
     useWorld.setState(state => ({
@@ -20,15 +22,15 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('«+ из справочника» кладёт в словарь готовую пару: преимущество и помеха гасят друг друга', () => {
     renderOpen(<RulesTab />);
-    открыть('Кости');
+    открыть('Броски');
     fireEvent.click(screen.getByText('Переброс кости и выбор лучшего/худшего броска'));
 
     const edits = useWorld.getState().system.roll_edits ?? {};
-    expect(edits.advantage?.canceledBy).toBe('disadvantage');
-    expect(edits.disadvantage?.canceledBy).toBe('advantage');
+    expect(edits.advantage?.cancels).toEqual(['disadvantage']);
+    expect(edits.disadvantage?.cancels).toEqual(['advantage']);
     expect(edits.advantage?.ops).toEqual([{ op: 'addDie' }, { op: 'keepBest', n: 1 }]);
     expect(screen.getByText('Кинуть на кость больше, оставить лучшую.')).toBeTruthy();
-    expect(screen.getByText(/«Преимущество» ⟷ «Помеха»/)).toBeTruthy();
+    expect(screen.getAllByTitle('больше не гасят друг друга')).toHaveLength(2);
   });
 
   it('справочник не затирает запись, которую автор уже завёл под тем же ключом', () => {
@@ -38,7 +40,7 @@ describe('Словари: кости, правки броска, таблицы'
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Кости');
+    открыть('Броски');
     fireEvent.click(screen.getByText('Переброс кости и выбор лучшего/худшего броска'));
 
     const edits = useWorld.getState().system.roll_edits ?? {};
@@ -48,16 +50,43 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('кость заводится и попадает в словарь системы', () => {
     renderOpen(<RulesTab />);
-    открыть('Кости');
-    fireEvent.click(screen.getByText('+ кость'));
+    открыть('Броски');
+    завести();
     const dies = Object.values(useWorld.getState().system.constants ?? {});
     expect(dies.some(c => c.kind === 'die')).toBe(true);
   });
 
+  it('заготовки кости: набор со счётом успехов, набор с лучшей, две кости с именами — и чтение у набора сразу на виду', () => {
+    renderOpen(<RulesTab />);
+    открыть('Броски');
+    const последняя = () => Object.values(useWorld.getState().system.constants ?? {}).at(-1)!;
+    завести('hits');
+    expect(последняя()).toEqual({ label: '', kind: 'die', dice: [{ sides: 6 }], read: { kind: 'count', atLeast: 5 } });
+    expect(screen.getByText('Из выпавшего берём')).toBeTruthy();
+    завести('best');
+    expect(последняя()).toEqual({ label: '', kind: 'die', dice: [{ sides: 6 }], read: 'best' });
+    завести('parts');
+    expect(последняя().dice).toEqual([{ sides: 12, name: 'первая', label: 'Первая' }, { sides: 12, name: 'вторая', label: 'Вторая' }]);
+    завести('sum');
+    expect(последняя().dice).toEqual([{ count: 2, sides: 6 }]);
+  });
+
+  it('у набора, которому число костей задаёт бросок, вместо единицы — «задаёт бросок»', () => {
+    useWorld.setState(state => ({ ...state, system: {
+      ...emptySystem(),
+      constants: { pool: { label: 'набор', kind: 'die', dice: [{ sides: 6 }], read: { kind: 'count', atLeast: 5 } }, one: { label: 'одна', kind: 'die', dice: [{ sides: 20 }] } },
+      rolls: { r: { die: 'pool', number: 'count', fields: [] } },
+    } as never }));
+    renderOpen(<RulesTab />);
+    открыть('Броски');
+    expect(screen.getAllByPlaceholderText('задаёт бросок')).toHaveLength(1);
+    expect((screen.getByPlaceholderText('задаёт бросок') as HTMLInputElement).value).toBe('');
+  });
+
   it('«+ ещё часть» превращает бросок в составной и просит имена частей', () => {
     renderOpen(<RulesTab />);
-    открыть('Кости');
-    fireEvent.click(screen.getByText('+ кость'));
+    открыть('Броски');
+    завести();
     fireEvent.click(screen.getByText('+ ещё часть'));
 
     const die = Object.values(useWorld.getState().system.constants ?? {})[0];
@@ -73,8 +102,8 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('поле «сколько»: единица и пустое поле снимают ключ — умолчание в данные не пишется', () => {
     renderOpen(<RulesTab />);
-    открыть('Кости');
-    fireEvent.click(screen.getByText('+ кость'));
+    открыть('Броски');
+    завести();
     const dice = () => Object.values(useWorld.getState().system.constants ?? {})[0]!.dice!;
     expect(dice()).toEqual([{ sides: 20 }]);
 
@@ -82,15 +111,18 @@ describe('Словари: кости, правки броска, таблицы'
     expect(dice()[1]).toEqual({ sides: 20 });
 
     const [count] = screen.getAllByPlaceholderText('сколько');
-    fireEvent.change(count!, { target: { value: '3' } });
+    fireEvent.change(count!, { target: { value: '3' } }); fireEvent.blur(count!);
     expect(dice()[0]!.count).toBe(3);
-    fireEvent.change(count!, { target: { value: '1' } });
+    fireEvent.change(count!, { target: { value: '1' } }); fireEvent.blur(count!);
     expect('count' in dice()[0]!).toBe(false);
 
-    fireEvent.change(count!, { target: { value: '2' } });
+    fireEvent.change(count!, { target: { value: '2' } }); fireEvent.blur(count!);
     expect(dice()[0]!.count).toBe(2);
-    fireEvent.change(count!, { target: { value: '' } });
+    fireEvent.change(count!, { target: { value: '' } }); fireEvent.blur(count!);
     expect('count' in dice()[0]!).toBe(false);
+
+    fireEvent.change(count!, { target: { value: '' } });
+    expect((count as HTMLInputElement).value).toBe('');
   });
 
   it('счёт костей — число или формула в одном поле: @пул берёт число из листа', () => {
@@ -104,8 +136,8 @@ describe('Словари: кости, правки броска, таблицы'
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Кости');
-    fireEvent.change(screen.getByPlaceholderText('сколько'), { target: { value: '@пул' } });
+    открыть('Броски');
+    fireEvent.change(screen.getByPlaceholderText('сколько'), { target: { value: '@пул' } }); fireEvent.blur(screen.getByPlaceholderText('сколько'));
 
     expect(Object.values(useWorld.getState().system.constants ?? {})[0]?.dice?.[0])
       .toEqual({ count: { expr: '@пул' }, sides: 6 });
@@ -114,8 +146,8 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('чтение кости выбирается селектом; сумма в данных не оседает', () => {
     renderOpen(<RulesTab />);
-    открыть('Кости');
-    fireEvent.click(screen.getByText('+ кость'));
+    открыть('Броски');
+    завести();
     const [key] = Object.keys(useWorld.getState().system.constants ?? {});
 
     fireEvent.click(screen.getByText('+ ещё часть'));
@@ -134,8 +166,8 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('у одной кости чтение спрятано под свёрнутым «ещё», у составной — на виду', () => {
     renderOpen(<RulesTab />);
-    открыть('Кости');
-    fireEvent.click(screen.getByText('+ кость'));
+    открыть('Броски');
+    завести();
     expect((screen.getByDisplayValue('сумма').closest('details') as HTMLDetailsElement | null)?.open).toBe(false);
 
     fireEvent.click(screen.getByText('+ ещё часть'));
@@ -144,7 +176,7 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('правка броска заводится со своим именем и набором примитивов', () => {
     renderOpen(<RulesTab />);
-    открыть('Правки броска');
+    открыть('Броски');
     fireEvent.click(screen.getByText('+ правка'));
 
     const name = screen.getByPlaceholderText('как это зовётся в вашем мире');
@@ -163,8 +195,8 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('название из нескольких слов набирается целиком, ключ не меняется', () => {
     renderOpen(<RulesTab />);
-    открыть('Кости');
-    fireEvent.click(screen.getByText('+ кость'));
+    открыть('Броски');
+    завести();
     const [ключ] = Object.keys(useWorld.getState().system.constants ?? {});
     const name = screen.getByPlaceholderText('название кости');
 
@@ -179,8 +211,8 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('грани кости: стёр «20», набрал «100» — кость стала к100', () => {
     renderOpen(<RulesTab />);
-    открыть('Кости');
-    fireEvent.click(screen.getByText('+ кость'));
+    открыть('Броски');
+    завести();
     const term = document.querySelector('.dice-term')!;
     const [, sides] = [...term.querySelectorAll('input')] as HTMLInputElement[];
 
@@ -195,7 +227,7 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('«прибавить к итогу» — формула с костью: слово кладёт прибавку, а не кость в набор', () => {
     renderOpen(<RulesTab />);
-    открыть('Правки броска');
+    открыть('Броски');
     fireEvent.click(screen.getByText('+ правка'));
     fireEvent.change(screen.getAllByDisplayValue('+ добавить…')[0]!, { target: { value: 'plus' } });
 
@@ -207,7 +239,7 @@ describe('Словари: кости, правки броска, таблицы'
 
   it('палитра правок — готовые фразы, включая оба направления взрыва', () => {
     renderOpen(<RulesTab />);
-    открыть('Правки броска');
+    открыть('Броски');
     fireEvent.click(screen.getByText('+ правка'));
     const [add] = screen.getAllByDisplayValue('+ добавить…') as HTMLSelectElement[];
     const options = [...add!.options].map(o => o.textContent);
@@ -227,7 +259,7 @@ describe('Словари: кости, правки броска, таблицы'
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Правки броска');
+    открыть('Броски');
     expect(document.querySelectorAll('.chip__part').length).toBe(0);
   });
 
@@ -250,7 +282,7 @@ describe('Словари: кости, правки броска, таблицы'
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Правки броска');
+    открыть('Броски');
 
     const part = document.querySelector('.chip__part') as HTMLSelectElement;
     expect(part, 'части есть — селектор появился').toBeTruthy();
@@ -277,13 +309,13 @@ describe('Словари: кости, правки броска, таблицы'
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Правки броска');
+    открыть('Броски');
 
-    fireEvent.change(screen.getByDisplayValue('+ пара…'), { target: { value: 'up\u0000down' } });
+    fireEvent.change(screen.getAllByDisplayValue('+ слово…')[0]!, { target: { value: 'down' } });
 
     const edits = useWorld.getState().system.roll_edits!;
-    expect(edits.up!.canceledBy).toBe('down');
-    expect(edits.down!.canceledBy).toBe('up');
+    expect(edits.up!.cancels).toEqual(['down']);
+    expect(edits.down!.cancels).toEqual(['up']);
   });
 
   it('пару «гасят друг друга» снимают с обеих сторон, даже если ссылка была односторонней', () => {
@@ -293,15 +325,15 @@ describe('Словари: кости, правки броска, таблицы'
         ...emptySystem(),
         roll_edits: {
           a: { label: 'Фора', ops: [{ op: 'addDie' }] },
-          z: { label: 'Подножка', ops: [{ op: 'addDie' }], canceledBy: 'a' },
+          z: { label: 'Подножка', ops: [{ op: 'addDie' }], cancels: ['a'] },
         },
       },
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Правки броска');
-    fireEvent.click(screen.getByTitle('больше не гасят друг друга'));
-    expect('canceledBy' in useWorld.getState().system.roll_edits!.z!).toBe(false);
+    открыть('Броски');
+    fireEvent.click(screen.getAllByTitle('больше не гасят друг друга')[0]!);
+    expect('cancels' in useWorld.getState().system.roll_edits!.z!).toBe(false);
   });
 
   it('удалённая правка забирает за собой встречную ссылку', () => {
@@ -310,21 +342,21 @@ describe('Словари: кости, правки броска, таблицы'
       system: {
         ...emptySystem(),
         roll_edits: {
-          up: { label: 'Фора', ops: [{ op: 'addDie' }], canceledBy: 'down' },
-          down: { label: 'Подножка', ops: [{ op: 'addDie' }], canceledBy: 'up' },
+          up: { label: 'Фора', ops: [{ op: 'addDie' }], cancels: ['down'] },
+          down: { label: 'Подножка', ops: [{ op: 'addDie' }], cancels: ['up'] },
         },
       },
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Правки броска');
+    открыть('Броски');
 
     const [remove] = screen.getAllByText('Убрать') as HTMLButtonElement[];
     fireEvent.click(remove!);
 
     const edits = useWorld.getState().system.roll_edits!;
     expect(edits.up).toBeUndefined();
-    expect('canceledBy' in edits.down!, 'ссылки в пустоту не остаётся').toBe(false);
+    expect('cancels' in edits.down!, 'ссылки в пустоту не остаётся').toBe(false);
   });
 
   it('правку, на которую ссылается эффект, удалить нельзя', () => {
@@ -333,7 +365,6 @@ describe('Словари: кости, правки броска, таблицы'
       system: {
         ...emptySystem(),
         roll_edits: { up: { label: 'Фора', ops: [{ op: 'addDie' }] } },
-        rolls: [{ tag: 'attack_roll', label: 'Бросок атаки' }],
         effects: {
           lucky: {
             label: 'Везучий', activation: 'passive',
@@ -344,7 +375,7 @@ describe('Словари: кости, правки броска, таблицы'
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Правки броска');
+    открыть('Броски');
     const guarded = screen.getByTitle('правка используется эффектом') as HTMLButtonElement;
     expect(guarded.disabled).toBe(true);
   });
@@ -381,7 +412,7 @@ describe('Словари: кости, правки броска, таблицы'
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Кости');
+    открыть('Броски');
 
     const first = screen.getByDisplayValue('Кость А');
     fireEvent.change(first, { target: { value: 'Секира' } });
@@ -408,9 +439,11 @@ describe('Словари: кости, правки броска, таблицы'
       activeEffectId: null,
     }));
     renderOpen(<RulesTab />);
-    открыть('Кости');
-    const guarded = screen.getByTitle('кость используется') as HTMLButtonElement;
-    expect(guarded.disabled).toBe(true);
+    открыть('Броски');
+    const tip = screen.getByRole('tooltip');
+    expect(tip.textContent).toContain('Убрать нельзя — кость используется');
+    expect(tip.textContent).toContain('«Удар»');
+    expect((tip.closest('.locked')!.querySelector('button') as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('таблицу, на которую ссылается поле, удалить нельзя', () => {

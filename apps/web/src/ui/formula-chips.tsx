@@ -215,6 +215,7 @@ const rankOf = (f: { tag: string; label: string }, needle: string): number => {
   const label = f.label.toLowerCase();
   const tag = f.tag.toLowerCase();
   if (label.startsWith(needle) || tag.startsWith(needle)) return 0;
+  if (label.split(' → ').some((part, at) => at > 0 && part.startsWith(needle))) return 0;
   if (new RegExp(`\\b${needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'u').test(label)) return 1;
   if (label.includes(needle) || tag.includes(needle)) return 2;
   return 3;
@@ -313,7 +314,16 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     ];
     const offered = new Set((extraOptions ?? []).map(o => o.name).filter(Boolean));
     const viaSheet = (tag: string) => [...(sheets?.keys() ?? [])].some(name => extraNames?.has(`${name}.${tag}`));
-    const local = [...(extraNames ?? [])].filter(([tag]) => !offered.has(tag) && !viaSheet(tag)).map(([tag, label]) => ({ tag, label, group: 'в этом эффекте' }));
+    const ownerOf = (tag: string): string | undefined => {
+      const head = tag.split('.')[0]!;
+      return tag.includes('.') ? sheets?.get(head) : undefined;
+    };
+    const local = [...(extraNames ?? [])].filter(([tag]) => !offered.has(tag) && !viaSheet(tag)).map(([tag, label]) => {
+      const owner = ownerOf(tag);
+      return owner
+        ? { tag, label: label.endsWith(` (${owner})`) ? label.slice(0, -` (${owner})`.length) : label, group: `у «${owner}»` }
+        : { tag, label, group: 'в этом эффекте' };
+    }).sort((a, b) => a.label.split(' → ').length - b.label.split(' → ').length);
     const states = statesOf(system);
     if (!sheets?.size) {
       return [
@@ -369,8 +379,9 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
   };
   const deeper = (base: string) => {
     const prefix = `${base}.`;
+    const through = [...(sheets?.keys() ?? [])].filter(name => name !== base).map(name => `${name}.${base}.`);
     return {
-      fields: fields.filter(f => f.tag.startsWith(prefix)),
+      fields: fields.filter(f => f.tag.startsWith(prefix) || through.some(via => f.tag.startsWith(via))),
       extras: (extraOptions ?? []).filter(o => o.name?.startsWith(prefix)),
     };
   };
@@ -494,6 +505,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     setClosed(false);
     const next = parts.map((p, i) => (i === index ? { text } : p));
     setCaret(at);
+    if (text.includes('@')) pendingFocus.current = { offset: joinParts(parts.slice(0, index)).length + at, skip: [] };
     commitParts(next);
   };
 

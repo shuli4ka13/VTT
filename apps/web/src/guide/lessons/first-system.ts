@@ -11,6 +11,7 @@ const inFight = (view: View) => fieldsOf(view.system).filter(field => !field.cel
 
 const targetsOf = (view: View) => (strike(view)?.[1].params ?? []).find(param => param.kind === 'sheet' && param.many && param.item?.key === 'цель');
 const checkAt = (view: View): number => stepsOf(strike(view)?.[1]).findIndex(step => step.type === 'check');
+const rollAt = (view: View): number => stepsOf(strike(view)?.[1]).findIndex(step => step.type === 'roll' && (step as { by?: unknown }).by !== undefined);
 
 const branchAt = (view: View): number => {
   const steps = stepsOf(strike(view)?.[1]);
@@ -115,10 +116,10 @@ export const firstSystem: Lesson = {
       say: 'Заведите кость к20 для проверок.',
       hint: 'Кость заводится раньше проверки: новая проверка берёт первую кость системы.',
       at: [
-        { at: { text: '+ кость' }, say: 'В разделе «Кости» нажмите «+ кость».', done: view => Object.values(view.system.constants ?? {}).some(constant => constant.kind === 'die') },
+        { at: { text: '+ кость' }, say: 'В разделе «Броски», в «Костях», раскройте «+ кость» и выберите «одна кость — к20».', done: view => Object.values(view.system.constants ?? {}).some(constant => constant.kind === 'die') },
         { at: { input: 'название кости' }, say: 'Впишите название «Кость проверки». Граней 20 — так и оставьте.' },
       ],
-      via: { text: 'Кости', in: 'Разделы правил' },
+      via: { text: 'Броски', in: 'Разделы правил' },
       done: view => Object.values(view.system.constants ?? {}).some(constant =>
         constant.kind === 'die' && constant.label?.trim() === 'Кость проверки' && constant.dice?.[0]?.sides === 20),
       result: () => '«Кость проверки» — к20.',
@@ -182,19 +183,20 @@ export const firstSystem: Lesson = {
     {
       id: 'check',
       chapter: 'Проверка и урон',
-      lead: 'Проверка — бросок кости против числа. Здесь число — класс брони цели: выпало не меньше — попадание.',
+      lead: 'Бросок и проверка — два шага: сначала кто-то бросает кость, потом итог сравнивается с числом. Здесь число — класс брони цели: выпало не меньше — попадание.',
       tab: 'effects',
-      say: 'Сделайте проверку: «Кость проверки» против класса брони цели.',
-      hint: 'Формула открывается строкой наверху экрана. Названия полей не печатайте — выбирайте в подсказке после «@».',
+      say: 'Сделайте бросок и проверку: «Кость проверки» против класса брони цели.',
+      hint: 'Порог — поле «С чем». Формула открывается строкой наверху экрана. Названия полей не печатайте — выбирайте в подсказке после «@».',
       at: [
-        { at: { text: '+ проверка' }, say: 'В палитре «Шаг» нажмите «+ проверка». Встанет бросок против 10.', done: view => checkAt(view) >= 0 },
-        { at: [{ guide: 'formula-done' }, { guide: 'check-formula' }], say: 'Щёлкните формулу проверки. В строке наверху сотрите 10, наберите «@» и в группе «у «Цель»» выберите «Класс брони». Нажмите «готово».' },
+        { at: { text: '+ бросок' }, say: 'В палитре «Шаг» нажмите «+ бросок». Встанет бросок: «Кто действует» бросает «Кость проверки».', done: view => rollAt(view) >= 0 },
+        { at: { text: '+ проверка' }, say: 'Теперь нажмите «+ проверка». Она сравнит этот бросок с 10.', done: view => checkAt(view) >= 0 },
+        { at: [{ guide: 'formula-done' }, { guide: 'check-formula' }], say: 'Щёлкните поле «С чем» у проверки. В строке наверху сотрите 10, наберите «@» и в группе «у «Цель»» выберите «Класс брони». Нажмите «готово».' },
       ],
       done: view => {
         const key = ac(view)?.tag;
         return Boolean(key && stepsOf(strike(view)?.[1]).some(step => step.type === 'check' && reads(step.versus, `@цель.${key}`)));
       },
-      result: () => 'Проверка: кость против класса брони цели.',
+      result: () => 'Бросок кости и проверка: итог против класса брони цели.',
     },
     {
       id: 'branch',

@@ -148,18 +148,6 @@
             "label": "Инициатива",
             "expr": {
               "expr": "@abilities.ловкость.mod"
-            },
-            "roll": {
-              "label": "Инициатива",
-              "tags": [
-                "проверка",
-                "ловкость",
-                "инициатива"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@initiative"
-              }
             }
           },
           {
@@ -1724,18 +1712,7 @@
             "expr": {
               "expr": "округлить вниз((@строка.score - 10) / 2)"
             },
-            "title": "Модификатор: {label}",
-            "roll": {
-              "label": "Проверка: {label}",
-              "tags": [
-                "проверка",
-                "{value}"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@строка.mod"
-              }
-            }
+            "title": "Модификатор: {label}"
           },
           {
             "key": "save_extra",
@@ -1760,18 +1737,7 @@
             "expr": {
               "expr": "@строка.mod + @строка.save_prof * @prof_bonus"
             },
-            "title": "Спасбросок: {label}",
-            "roll": {
-              "label": "Спасбросок: {label}",
-              "tags": [
-                "спасбросок",
-                "{value}"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@строка.save"
-              }
-            }
+            "title": "Спасбросок: {label}"
           }
         ],
         "rows": [
@@ -1827,19 +1793,7 @@
             "expr": {
               "expr": "@строка.ability.mod + @строка.prof * @prof_bonus"
             },
-            "title": "{label}",
-            "roll": {
-              "label": "Проверка: {label}",
-              "tags": [
-                "проверка",
-                "{ability}",
-                "{value}"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@строка.total"
-              }
-            }
+            "title": "{label}"
           }
         ],
         "rows": [
@@ -2610,7 +2564,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "strike",
+            "effect": "spell_strike",
             "args": {
               "attack_with": {
                 "expr": "@действующий.spell_attack"
@@ -2779,7 +2733,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "strike",
+            "effect": "spell_strike",
             "args": {
               "attack_with": {
                 "expr": "@действующий.spell_attack"
@@ -3238,7 +3192,7 @@
             "n": 1
           }
         ],
-        "canceledBy": "disadvantage"
+        "cancels": ["disadvantage"]
       },
       "disadvantage": {
         "label": "Помеха",
@@ -3251,7 +3205,7 @@
             "n": 1
           }
         ],
-        "canceledBy": "advantage"
+        "cancels": ["advantage"]
       },
       "lucky": {
         "label": "Везучий",
@@ -3300,7 +3254,176 @@
       "strike": {
         "label": "Атака",
         "group": "Атака",
-        "description": "Бросок атаки против класса брони, урон костью. На крите кости урона удваиваются. Бонус атаки и прибавку к урону приносит тот, кто зовёт: оружие считает их по листу, существо вписывает числами. Посчитанное уходит в общий эффект «Урон».",
+        "description": "Бросок атаки оружием против класса брони, урон костью. На крите кости урона удваиваются. Бонус атаки и прибавку к урону приносит тот, кто зовёт: оружие считает их по листу, существо вписывает числами. Посчитанное уходит в общий эффект «Урон».",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
+          },
+          {
+            "key": "attack_with",
+            "label": "Бонус атаки",
+            "kind": "number"
+          },
+          {
+            "key": "damage_with",
+            "label": "Прибавка к урону",
+            "kind": "number",
+            "default": 0
+          },
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "dice",
+            "label": "Сколько костей",
+            "kind": "number",
+            "default": 1
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types"
+          },
+          {
+            "key": "damage_source",
+            "label": "Источник урона",
+            "kind": "choice",
+            "from": "damage_source"
+          },
+          {
+            "key": "status",
+            "label": "Состояние при попадании",
+            "kind": "effect",
+            "optional": true
+          },
+          {
+            "key": "цена",
+            "label": "Плата",
+            "kind": "effect",
+            "default": "cost_attack"
+          }
+        ],
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели"
+          },
+          {
+            "id": "бросок",
+            "type": "emit",
+            "effect": "attack_roll",
+            "args": {
+              "бонус": {
+                "expr": "@attack_with"
+              },
+              "кто": {
+                "expr": "@действующий"
+              },
+              "против": {
+                "expr": "@цель"
+              }
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@бросок.исход.hit"
+            }
+          },
+          {
+            "id": "урон",
+            "type": "roll",
+            "fixed": {
+              "expr": "кинуть(@damage_dice, @dice * @бросок.исход.dice_mul) + @damage_with"
+            }
+          },
+          {
+            "type": "emit",
+            "effect": "damage",
+            "args": {
+              "amount": {
+                "expr": "@урон"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
+              },
+              "damage_source": {
+                "expr": "@damage_source"
+              }
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "не пусто(@status)"
+            }
+          },
+          {
+            "type": "status",
+            "effect": {
+              "expr": "@status"
+            },
+            "to": {
+              "expr": "@цель"
+            },
+            "args": {
+              "наложил": {
+                "expr": "@действующий"
+              }
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "effect": {
+              "expr": "@цена"
+            },
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ],
+        "tags": [
+          "атака"
+        ]
+      },
+      "spell_strike": {
+        "label": "Атака заклинанием",
+        "group": "Атака",
+        "description": "Бросок атаки заклинанием против класса брони, урон костью. На крите кости урона удваиваются. Бонус атаки, кости и плату приносит заклинание: заговор платит действием, заклинание с кругом — ячейкой не ниже своего круга. Посчитанное уходит в общий эффект «Урон».",
         "params": [
           {
             "key": "действующий",
@@ -8551,6 +8674,9 @@
           "Ячейки заклинаний",
           "Ресурсы класса",
           "Богатство",
+          "Снаряжение",
+          "Висит сейчас",
+          "Действия",
           "Стойкость к урону"
         ]
       },
@@ -8576,7 +8702,9 @@
           "Здоровье",
           "Блок монстра",
           "В бою",
-          "Стойкость к урону"
+          "Стойкость к урону",
+          "Висит сейчас",
+          "Действия"
         ],
         "modifiers": [
           {
@@ -8613,6 +8741,8 @@
     "blocks": [
       {
         "name": "Личное дело",
+        "page": "Шапка",
+        "width": 4,
         "parts": [
           {
             "table": "лист",
@@ -8628,6 +8758,7 @@
       },
       {
         "name": "Характеристики",
+        "width": 6,
         "parts": [
           {
             "table": "abilities",
@@ -8639,6 +8770,7 @@
       },
       {
         "name": "Модификаторы",
+        "width": 6,
         "parts": [
           {
             "table": "abilities",
@@ -8655,6 +8787,8 @@
       },
       {
         "name": "Прогрессия",
+        "page": "Шапка",
+        "width": 4,
         "parts": [
           {
             "table": "лист",
@@ -8680,6 +8814,7 @@
       },
       {
         "name": "Спасброски",
+        "under": true,
         "parts": [
           {
             "table": "abilities",
@@ -8701,6 +8836,7 @@
       },
       {
         "name": "Навыки",
+        "split": 2,
         "parts": [
           {
             "table": "skills",
@@ -8718,6 +8854,7 @@
       },
       {
         "name": "Чувства и движение",
+        "width": 6,
         "parts": [
           {
             "table": "лист",
@@ -8737,7 +8874,68 @@
         ]
       },
       {
+        "name": "В бою",
+        "under": true,
+        "parts": [
+          {
+            "table": "turn",
+            "views": {
+              "left": {
+                "kind": "pips"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Блок монстра",
+        "under": true,
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "hp_block"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Атака",
+        "width": 6,
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "attacks_per_action",
+              "crit_from",
+              "sneak_dice"
+            ],
+            "views": {
+              "attacks_per_action": {
+                "kind": "stepper"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Стойкость к урону",
+        "under": true,
+        "parts": [
+          {
+            "table": "damage_types",
+            "views": {
+              "taken": {
+                "kind": "choice"
+              }
+            }
+          }
+        ]
+      },
+      {
         "name": "Защита",
+        "page": "Шапка",
+        "width": 4,
         "parts": [
           {
             "table": "лист",
@@ -8757,6 +8955,7 @@
       },
       {
         "name": "Здоровье",
+        "page": "Шапка",
         "parts": [
           {
             "table": "лист",
@@ -8811,49 +9010,8 @@
         ]
       },
       {
-        "name": "Блок монстра",
-        "parts": [
-          {
-            "table": "лист",
-            "columns": [
-              "hp_block"
-            ]
-          }
-        ]
-      },
-      {
-        "name": "Атака",
-        "parts": [
-          {
-            "table": "лист",
-            "columns": [
-              "attacks_per_action",
-              "crit_from",
-              "sneak_dice"
-            ],
-            "views": {
-              "attacks_per_action": {
-                "kind": "stepper"
-              }
-            }
-          }
-        ]
-      },
-      {
-        "name": "В бою",
-        "parts": [
-          {
-            "table": "turn",
-            "views": {
-              "left": {
-                "kind": "pips"
-              }
-            }
-          }
-        ]
-      },
-      {
         "name": "Магия",
+        "page": "Магия",
         "parts": [
           {
             "table": "лист",
@@ -8895,6 +9053,7 @@
       },
       {
         "name": "Ресурсы класса",
+        "page": "Магия",
         "parts": [
           {
             "table": "лист",
@@ -8919,6 +9078,7 @@
       },
       {
         "name": "Богатство",
+        "page": "Снаряжение",
         "parts": [
           {
             "table": "лист",
@@ -8931,19 +9091,78 @@
         ]
       },
       {
-        "name": "Стойкость к урону",
-        "parts": [
+        "name": "Снаряжение",
+        "page": "Снаряжение",
+        "list": "things",
+        "parts": []
+      },
+      {
+        "name": "Висит сейчас",
+        "page": "Эффекты",
+        "list": "hanging",
+        "width": 6,
+        "parts": []
+      },
+      {
+        "name": "Действия",
+        "page": "Эффекты",
+        "list": "actions",
+        "width": 6,
+        "parts": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "Шапка",
+        "top": true
+      },
+      {
+        "name": "Основное"
+      },
+      {
+        "name": "Магия"
+      },
+      {
+        "name": "Снаряжение"
+      },
+      {
+        "name": "Эффекты"
+      }
+    ],
+    "rolls": {
+      "проверка": {
+        "label": "Проверка",
+        "die": "lead_die",
+        "fields": [
           {
-            "table": "damage_types",
-            "views": {
-              "taken": {
-                "kind": "choice"
-              }
-            }
+            "table": "лист",
+            "column": "initiative",
+            "tags": [
+              "ловкость",
+              "инициатива"
+            ]
+          },
+          {
+            "table": "abilities",
+            "column": "mod"
+          },
+          {
+            "table": "skills",
+            "column": "total"
+          }
+        ]
+      },
+      "спасбросок": {
+        "label": "Спасбросок",
+        "die": "lead_die",
+        "fields": [
+          {
+            "table": "abilities",
+            "column": "save"
           }
         ]
       }
-    ]
+    }
   },
   "compendium": {
     "records": [

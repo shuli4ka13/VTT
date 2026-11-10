@@ -71,7 +71,7 @@ function outcomesOf(system: System, listened: string, phase: Phase): (readonly [
   const cards = groupSteps(steps);
   const earlier = steps.flatMap((step, index) => {
     const title = cardTitle(cards, index, system, source);
-    return step.id ? [{ id: String(step.id), type: step.type, ...(title ? { title } : {}) }] : [];
+    return step.id ? [{ id: String(step.id), type: step.type, ...((step as { field?: unknown }).field ? { fielded: true } : {}), ...(title ? { title } : {}) }] : [];
   });
   return outcomeRefs(earlier).filter(output => output.kind === 'boolean').map(output => {
     const index = steps.findIndex(step => step.id && output.ref.startsWith(`${step.id}.`));

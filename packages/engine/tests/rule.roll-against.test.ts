@@ -45,10 +45,10 @@ const world = (steps: unknown[]): System => ({
     пул: { label: 'Пул', kind: 'die', dice: [{ count: 6, sides: 6 }], read: { kind: 'count', atLeast: 5 } },
   },
   roll_edits: {
-    advantage: { label: 'Преимущество', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }], canceledBy: 'disadvantage' },
-    disadvantage: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }], canceledBy: 'advantage' },
-    boon: { label: 'Подмога', ops: [{ op: 'plus', value: { expr: "кинуть('1к6')" } }], canceledBy: 'bane' },
-    bane: { label: 'Сбивка', ops: [{ op: 'plus', value: { expr: "0 - кинуть('1к6')" } }], canceledBy: 'boon' },
+    advantage: { label: 'Преимущество', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }], cancels: ['disadvantage'] },
+    disadvantage: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }], cancels: ['advantage'] },
+    boon: { label: 'Подмога', ops: [{ op: 'plus', value: { expr: "кинуть('1к6')" } }], cancels: ['bane'] },
+    bane: { label: 'Сбивка', ops: [{ op: 'plus', value: { expr: "0 - кинуть('1к6')" } }], cancels: ['boon'] },
     reroll: { label: 'Переброс', ops: [{ op: 'reroll', n: 1 }] },
     cover: { label: 'Укрытие', ops: [{ op: 'shiftVersus', by: 2 }] },
   },
@@ -231,7 +231,7 @@ group('линт правок «против»', () => {
 
   test('бросающий у сложной формулы — ошибка', () => {
     const system = world([{ id: 'кости', type: 'roll', fixed: { expr: "кинуть('1к6') + 1" }, by: { expr: '@действующий' } }]);
-    ok(texts(system).some(text => text.includes('у сложной формулы кости ничьи')));
+    ok(texts(system).some(text => text.includes('у броска вместо кости формула')));
   });
 
   test('общий бросок прочитан мимо сравнения — предупреждение с подсказкой', () => {
@@ -251,7 +251,7 @@ group('линт правок «против»', () => {
 
   test('заготовка броска без кости и формулы не ругается на «сложную формулу»', () => {
     const system = world([{ id: 'кости', type: 'roll', by: { expr: '@действующий' } }]);
-    ok(!texts(system).some(text => text.includes('у сложной формулы кости ничьи')));
+    ok(!texts(system).some(text => text.includes('у броска вместо кости формула')));
   });
 
   test('чтение частей общего броска не тревожит', () => {

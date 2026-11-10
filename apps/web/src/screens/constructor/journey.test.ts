@@ -28,9 +28,11 @@ function assemble(): { system: System; compendium: Compendium; sheets: Sheet[]; 
     { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' } },
   ];
   const each = BRICKS.find(b => b.key === 'each')!.make(system, [], effect.value)[0]!;
-  const [roll, check] = bricks('check', system, [], effect.value) as [Record<string, any>, Record<string, any>];
+  const roll = bricks('roll', system, [], effect.value)[0] as Record<string, any>;
+  effect.value.steps = [roll as Step];
+  const check = bricks('check', system, [String(roll.id)], effect.value)[0] as Record<string, any>;
   check.versus = { expr: '5' };
-  const amount = bricks('number', system, ['проверка', 'проверка_бросок'])[0] as Record<string, any>;
+  const amount = bricks('number', system, [String(roll.id), String(check.id)])[0] as Record<string, any>;
   amount.die = { expr: '"1d4"' };
   delete amount.fixed;
   const change = bricks('change', system)[0] as Record<string, any>;

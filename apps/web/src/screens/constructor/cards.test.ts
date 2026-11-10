@@ -6,39 +6,50 @@ import type { System, Effect, Step } from '@vtt/schema';
 const steps = (list: object[]) => list as unknown as Step[];
 const system = { tables: {}, constants: { lead: { label: 'Ведущая кость', kind: 'die', dice: [{ sides: 20 }] } }, effects: {} } as unknown as System;
 
-const pair = (id: string) => [
-  { id: `${id}_бросок`, type: 'roll', die: 'lead', by: { expr: '@действующий' } },
-  { id, type: 'check', value: { expr: `@${id}_бросок` }, versus: { expr: '10' } },
-];
+const thrown = (id: string) => ({ id, type: 'roll', die: 'lead', by: { expr: '@действующий' } });
+const compared = (id: string, over: string) => ({ id: `${id}_против`, type: 'check', value: { expr: `@${id}` }, versus: { expr: over } });
 
 describe('groupSteps', () => {
-  it('бросок с бросающим и проверка склеиваются в одну проверку, расчёт и изменение — в одно изменение', () => {
+  it('бросок и проверка — два шага на экране, не склеиваются; расчёт и изменение — одно изменение', () => {
     const groups = groupSteps(steps([
-      ...pair('hit'),
+      thrown('hit'),
+      compared('hit', '10'),
       { id: 'dmg', type: 'roll', fixed: { expr: '1' } },
       { type: 'apply', value: { expr: '@dmg' } },
     ]));
-    expect(groups.map(g => g.kind)).toEqual(['check', 'change']);
+    expect(groups.map(g => g.kind)).toEqual(['roll', 'check', 'change']);
+    expect(groups.map(g => g.indices)).toEqual([[0], [1], [2, 3]]);
+    expect(groups[2]!.amount?.id).toBe('dmg');
+  });
+
+  it('вид «Бросок» дают только by и field; кость без бросающего, fixed и пустой шаг — «Число»', () => {
+    const groups = groupSteps(steps([
+      { id: 'a', type: 'roll', by: { expr: '@действующий' } },
+      { id: 'b', type: 'roll', field: { expr: '@цель.armor' } },
+      { id: 'c', type: 'roll', die: 'lead' },
+      { id: 'd', type: 'roll', fixed: { expr: '1' } },
+      { id: 'e', type: 'roll' },
+    ]));
+    expect(groups.map(g => g.kind)).toEqual(['roll', 'roll', 'number', 'number', 'number']);
+  });
+
+  it('кость без бросающего — расчёт: «число + изменение» склеиваются, величина — «кость + прибавка»', () => {
+    const groups = groupSteps(steps([
+      { id: 'dmg', type: 'roll', die: 'lead', bonus: { expr: '1' } },
+      { type: 'apply', value: { expr: '@dmg' } },
+    ]));
+    expect(groups.map(g => g.kind)).toEqual(['change']);
     expect(groups[0]!.indices).toEqual([0, 1]);
-    expect(groups[0]!.amount?.id).toBe('hit_бросок');
-    expect(groups[1]!.indices).toEqual([2, 3]);
-    expect(groups[1]!.amount?.id).toBe('dmg');
+    expect(groups[0]!.amount?.id).toBe('dmg');
   });
 
-  it('бросок без бросающего с проверкой не склеивается: это расчёт', () => {
+  it('бросок в склейку «число + изменение» не входит, даже если изменение берёт его целиком', () => {
     const groups = groupSteps(steps([
-      { id: 'n', type: 'roll', fixed: { expr: '1' } },
-      { id: 'c', type: 'check', value: { expr: '@n' }, versus: { expr: '10' } },
+      thrown('hit'),
+      { type: 'apply', value: { expr: '@hit' } },
     ]));
-    expect(groups.map(g => g.kind)).toEqual(['number', 'check']);
-  });
-
-  it('проверка остаётся одним шагом с броском, даже если число броска читает кто-то ещё', () => {
-    const groups = groupSteps(steps([
-      ...pair('hit'),
-      { type: 'apply', value: { expr: '@hit_бросок' } },
-    ]));
-    expect(groups.map(g => g.kind)).toEqual(['check', 'change']);
+    expect(groups.map(g => g.kind)).toEqual(['roll', 'change']);
+    expect(groups.map(g => g.indices)).toEqual([[0], [1]]);
   });
 
   it('не склеивается, если на число ссылается кто-то ещё', () => {
@@ -96,64 +107,89 @@ describe('BRICKS', () => {
     expect(BRICKS.find(b => b.key === 'stop')!.make(system, [])).toEqual([{ type: 'stop' }]);
   });
 
-  const check = (effect?: object, sheets?: Map<string, string>) =>
-    BRICKS.find(b => b.key === 'check')!.make(system, [], effect as Effect | undefined, sheets) as unknown as Record<string, any>[];
+  const brick = (key: string, effect?: object, sheets?: Map<string, string>, taken: string[] = []) =>
+    BRICKS.find(b => b.key === key)!.make(system, taken, effect as Effect | undefined, sheets) as unknown as Record<string, any>[];
 
   const inputs = (...list: [string, boolean?][]) => ({
     params: list.map(([key, many]) => ({ key, label: key, kind: 'sheet', ...(many ? { many: true } : {}) })),
   });
 
-  it('«+ проверка» отдаёт пару: бросок с бросающим и проверку, читающую его', () => {
-    const [roll, verdict] = check(inputs(['действующий'], ['цели', true]));
-    expect(roll).toMatchObject({ type: 'roll', by: { expr: '@действующий' } });
-    expect(verdict).toMatchObject({ type: 'check', value: { expr: `@${roll!.id}` } });
-    expect(groupSteps([roll, verdict] as unknown as Step[]).map(g => g.kind)).toEqual(['check']);
+  it('«+ бросок» кладёт один шаг: первая кость системы и первый одиночный лист, список целей пропускается', () => {
+    const made = brick('roll', inputs(['цели', true], ['атакующий'], ['защитник']));
+    expect(made).toEqual([{ id: 'бросок', type: 'roll', die: 'lead', by: { expr: '@атакующий' } }]);
+    expect(groupSteps(made as unknown as Step[]).map(g => g.kind)).toEqual(['roll']);
   });
 
-  it('бросающий по умолчанию — первый одиночный вход-лист эффекта, а не имя «действующий»; список целей пропускается', () => {
-    expect(check(inputs(['цели', true], ['атакующий'], ['защитник']))[0]).toMatchObject({ by: { expr: '@атакующий' } });
-    expect(check(inputs(['кто']))[0]).toMatchObject({ by: { expr: '@кто' } });
-  });
-
-  it('входов-листов нет — бросающего нет: бросок остаётся расчётом, пары с проверкой не выходит', () => {
+  it('«+ бросок» без листа или без кости не выдумывает их; без листа шаг — «Число»', () => {
     for (const effect of [{ params: [{ key: 'сколько', label: 'Сколько', kind: 'number' }] }, inputs(['цели', true]), undefined]) {
-      const [roll, verdict] = check(effect);
-      expect(roll).not.toHaveProperty('by');
-      expect(groupSteps([roll, verdict] as unknown as Step[]).map(g => g.kind)).toEqual(['number', 'check']);
+      const made = brick('roll', effect);
+      expect(made[0]).not.toHaveProperty('by');
+      expect(groupSteps(made as unknown as Step[]).map(g => g.kind)).toEqual(['number']);
     }
+    const bare = BRICKS.find(b => b.key === 'roll')!.make({ tables: {}, constants: {}, effects: {} } as unknown as System, [], inputs(['кто']) as unknown as Effect);
+    expect(bare[0]).not.toHaveProperty('die');
   });
 
   it('в месте шага бросающий — первый одиночный лист этого места: в подписке и наложении это носитель', () => {
     const sheets = new Map([['носитель', 'носитель — тот, на ком висит'], ['лист', 'лист, с которым это случилось'], ['цели', 'Цели']]);
-    expect(check({ params: [] }, sheets)[0]).toMatchObject({ by: { expr: '@носитель' } });
-    expect(check(inputs(['цели', true]), new Map([['цели', 'Цели'], ['цель', 'Цель']]))[0]).toMatchObject({ by: { expr: '@цель' } });
-    expect(check({ params: [] }, new Map())[0]).not.toHaveProperty('by');
+    expect(brick('roll', { params: [] }, sheets)[0]).toMatchObject({ by: { expr: '@носитель' } });
+    expect(brick('roll', inputs(['цели', true]), new Map([['цели', 'Цели'], ['цель', 'Цель']]))[0]).toMatchObject({ by: { expr: '@цель' } });
+    expect(brick('roll', { params: [] }, new Map())[0]).not.toHaveProperty('by');
+  });
+
+  it('«+ проверка» кладёт один шаг: без пары и без имён «_бросок»; порог 10', () => {
+    const made = brick('check', inputs(['действующий']));
+    expect(made).toEqual([{ id: 'проверка', type: 'check', versus: { expr: '10' } }]);
+  });
+
+  it('«+ проверка» берёт ближайший выше бросок, который ещё ни с чем не сравнён', () => {
+    const effect = { params: [], steps: [thrown('первый'), thrown('второй'), { id: 'число', type: 'roll', fixed: { expr: '1' } }] };
+    expect(brick('check', effect)[0]).toMatchObject({ value: { expr: '@второй' }, versus: { expr: '10' } });
+  });
+
+  it('«+ проверка» пропускает уже сравнённые броски — и слева, и справа', () => {
+    const left = { params: [], steps: [thrown('а'), thrown('б'), { id: 'п', type: 'check', value: { expr: '@б' }, versus: { expr: '10' } }] };
+    expect(brick('check', left)[0]).toMatchObject({ value: { expr: '@а' } });
+    const right = { params: [], steps: [thrown('а'), thrown('б'), { id: 'п', type: 'check', value: { expr: '5' }, versus: { expr: '@б' } }] };
+    expect(brick('check', right)[0]).toMatchObject({ value: { expr: '@а' } });
+  });
+
+  it('«+ проверка» без свободного броска оставляет «что проверяем» пустым', () => {
+    const effect = { params: [], steps: [thrown('а'), compared('а', '10')] };
+    expect(brick('check', effect)[0]).not.toHaveProperty('value');
+    expect(brick('check', undefined)[0]).not.toHaveProperty('value');
+  });
+
+  it('«+ число» — один расчётный шаг с нулём', () => {
+    expect(brick('number', undefined)).toEqual([{ id: 'число', type: 'roll', fixed: { expr: '0' } }]);
+    expect(groupSteps(brick('number', undefined) as unknown as Step[]).map(g => g.kind)).toEqual(['number']);
   });
 });
 
 describe('moveGroup', () => {
   const chain = () => steps([
-    ...pair('a'),
+    thrown('a'),
+    compared('a', '10'),
     { id: 'n', type: 'roll', fixed: { expr: '1' } },
     { type: 'apply', value: { expr: '@n' } },
     { type: 'status', effect: 'горение', to: { expr: '@цель' } },
   ]);
 
-  it('склеенная пара переносится целиком, а не половиной', () => {
-    const moved = moveGroup(chain(), 1, -1);
-    expect(moved.map(s => s.type)).toEqual(['roll', 'apply', 'roll', 'check', 'status']);
-    expect(groupSteps(moved).map(g => g.kind)).toEqual(['change', 'check', 'change']);
+  it('склеенные «число + изменение» переносятся целиком, а не половиной', () => {
+    const moved = moveGroup(chain(), 2, -1);
+    expect(moved.map(s => s.type)).toEqual(['roll', 'roll', 'apply', 'check', 'status']);
+    expect(groupSteps(moved).map(g => g.kind)).toEqual(['roll', 'change', 'check', 'change']);
   });
 
-  it('перенос вниз меняет соседей местами', () => {
+  it('бросок и проверка переносятся каждый сам, перенос вниз меняет соседей местами', () => {
     const moved = moveGroup(chain(), 0, 1);
-    expect(moved.map(s => s.type)).toEqual(['roll', 'apply', 'roll', 'check', 'status']);
+    expect(moved.map(s => s.type)).toEqual(['check', 'roll', 'roll', 'apply', 'status']);
   });
 
   it('за край не двигает', () => {
     const source = chain();
     expect(moveGroup(source, 0, -1)).toBe(source);
-    expect(moveGroup(source, 2, 1)).toBe(source);
+    expect(moveGroup(source, 3, 1)).toBe(source);
   });
 });
 

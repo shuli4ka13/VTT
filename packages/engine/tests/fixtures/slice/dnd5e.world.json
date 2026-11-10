@@ -27,97 +27,37 @@
             "key": "str",
             "label": "Сила",
             "kind": "number",
-            "default": 10,
-            "roll": {
-              "label": "Проверка Силы",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@str"
-              }
-            }
+            "default": 10
           },
           {
             "key": "dex",
             "label": "Ловкость",
             "kind": "number",
-            "default": 10,
-            "roll": {
-              "label": "Проверка Ловкости",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@dex"
-              }
-            }
+            "default": 10
           },
           {
             "key": "con",
             "label": "Телосложение",
             "kind": "number",
-            "default": 10,
-            "roll": {
-              "label": "Проверка Телосложения",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@con"
-              }
-            }
+            "default": 10
           },
           {
             "key": "int",
             "label": "Интеллект",
             "kind": "number",
-            "default": 10,
-            "roll": {
-              "label": "Проверка Интеллекта",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@int"
-              }
-            }
+            "default": 10
           },
           {
             "key": "wis",
             "label": "Мудрость",
             "kind": "number",
-            "default": 10,
-            "roll": {
-              "label": "Проверка Мудрости",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@wis"
-              }
-            }
+            "default": 10
           },
           {
             "key": "cha",
             "label": "Харизма",
             "kind": "number",
-            "default": 10,
-            "roll": {
-              "label": "Проверка Харизмы",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@cha"
-              }
-            }
+            "default": 10
           },
           {
             "key": "str_mod",
@@ -202,16 +142,6 @@
             "label": "Атлетика",
             "expr": {
               "expr": "#str_mod + #athletics_prof * #prof_bonus"
-            },
-            "roll": {
-              "label": "Проверка: Атлетика",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@athletics"
-              }
             }
           },
           {
@@ -226,16 +156,6 @@
             "label": "Акробатика",
             "expr": {
               "expr": "#dex_mod + #acrobatics_prof * #prof_bonus"
-            },
-            "roll": {
-              "label": "Проверка: Акробатика",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@acrobatics"
-              }
             }
           },
           {
@@ -250,16 +170,6 @@
             "label": "Ловкость рук",
             "expr": {
               "expr": "#dex_mod + #sleight_of_hand_prof * #prof_bonus"
-            },
-            "roll": {
-              "label": "Проверка: Ловкость рук",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@sleight_of_hand"
-              }
             }
           },
           {
@@ -274,16 +184,6 @@
             "label": "Скрытность",
             "expr": {
               "expr": "#dex_mod + #stealth_prof * #prof_bonus"
-            },
-            "roll": {
-              "label": "Проверка: Скрытность",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@stealth"
-              }
             }
           },
           {
@@ -298,16 +198,6 @@
             "label": "Магия",
             "expr": {
               "expr": "#int_mod + #arcana_prof * #prof_bonus"
-            },
-            "roll": {
-              "label": "Проверка: Магия",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@arcana"
-              }
             }
           },
           {
@@ -322,16 +212,6 @@
             "label": "История",
             "expr": {
               "expr": "#int_mod + #history_prof * #prof_bonus"
-            },
-            "roll": {
-              "label": "Проверка: История",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@history"
-              }
             }
           },
           {
@@ -346,16 +226,6 @@
             "label": "Анализ",
             "expr": {
               "expr": "#int_mod + #investigation_prof * #prof_bonus"
-            },
-            "roll": {
-              "label": "Проверка: Анализ",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@investigation"
-              }
             }
           },
           {
@@ -370,16 +240,6 @@
             "label": "Природа",
             "expr": {
               "expr": "#int_mod + #nature_prof * #prof_bonus"
-            },
-            "roll": {
-              "label": "Проверка: Природа",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@nature"
-              }
             }
           },
           {
@@ -394,16 +254,6 @@
             "label": "Религия",
             "expr": {
               "expr": "#int_mod + #religion_prof * #prof_bonus"
-            },
-            "roll": {
-              "label": "Проверка: Религия",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@religion"
-              }
             }
           },
           {
@@ -418,16 +268,6 @@
             "label": "Уход за животными",
             "expr": {
               "expr": "#wis_mod + #animal_handling_prof * #prof_bonus"
-            },
-            "roll": {
-              "label": "Проверка: Уход за животными",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@animal_handling"
-              }
             }
           },
           {
@@ -442,16 +282,6 @@
             "label": "Проницательность",
             "expr": {
               "expr": "#wis_mod + #insight_prof * #prof_bonus"
-            },
-            "roll": {
-              "label": "Проверка: Проницательность",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@insight"
-              }
             }
           },
           {
@@ -466,16 +296,6 @@
             "label": "Медицина",
             "expr": {
               "expr": "#wis_mod + #medicine_prof * #prof_bonus"
-            },
-            "roll": {
-              "label": "Проверка: Медицина",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@medicine"
-              }
             }
           },
           {
@@ -490,16 +310,6 @@
             "label": "Внимательность",
             "expr": {
               "expr": "#wis_mod + #perception_prof * #prof_bonus"
-            },
-            "roll": {
-              "label": "Проверка: Внимательность",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@perception"
-              }
             }
           },
           {
@@ -514,16 +324,6 @@
             "label": "Выживание",
             "expr": {
               "expr": "#wis_mod + #survival_prof * #prof_bonus"
-            },
-            "roll": {
-              "label": "Проверка: Выживание",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@survival"
-              }
             }
           },
           {
@@ -538,16 +338,6 @@
             "label": "Обман",
             "expr": {
               "expr": "#cha_mod + #deception_prof * #prof_bonus"
-            },
-            "roll": {
-              "label": "Проверка: Обман",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@deception"
-              }
             }
           },
           {
@@ -562,16 +352,6 @@
             "label": "Запугивание",
             "expr": {
               "expr": "#cha_mod + #intimidation_prof * #prof_bonus"
-            },
-            "roll": {
-              "label": "Проверка: Запугивание",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@intimidation"
-              }
             }
           },
           {
@@ -586,16 +366,6 @@
             "label": "Выступление",
             "expr": {
               "expr": "#cha_mod + #performance_prof * #prof_bonus"
-            },
-            "roll": {
-              "label": "Проверка: Выступление",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@performance"
-              }
             }
           },
           {
@@ -610,16 +380,6 @@
             "label": "Убеждение",
             "expr": {
               "expr": "#cha_mod + #persuasion_prof * #prof_bonus"
-            },
-            "roll": {
-              "label": "Проверка: Убеждение",
-              "tags": [
-                "проверка"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@persuasion"
-              }
             }
           },
           {
@@ -661,16 +421,6 @@
             "label": "Спасбросок Ловкости",
             "expr": {
               "expr": "#dex_mod + #dex_save_prof * #prof_bonus"
-            },
-            "roll": {
-              "label": "Спасбросок Ловкости",
-              "tags": [
-                "спасбросок"
-              ],
-              "die": "lead_die",
-              "bonus": {
-                "expr": "@dex_save"
-              }
             }
           },
           {
@@ -2911,7 +2661,7 @@
             "n": 1
           }
         ],
-        "canceledBy": "advantage"
+        "cancels": ["advantage"]
       },
       "advantage": {
         "label": "Преимущество",
@@ -2924,7 +2674,7 @@
             "n": 1
           }
         ],
-        "canceledBy": "disadvantage"
+        "cancels": ["disadvantage"]
       }
     },
     "initiative": {
@@ -3252,7 +3002,121 @@
           }
         ]
       }
-    ]
+    ],
+    "rolls": {
+      "проверка": {
+        "label": "Проверка",
+        "die": "lead_die",
+        "fields": [
+          {
+            "table": "лист",
+            "column": "str"
+          },
+          {
+            "table": "лист",
+            "column": "dex"
+          },
+          {
+            "table": "лист",
+            "column": "con"
+          },
+          {
+            "table": "лист",
+            "column": "int"
+          },
+          {
+            "table": "лист",
+            "column": "wis"
+          },
+          {
+            "table": "лист",
+            "column": "cha"
+          },
+          {
+            "table": "лист",
+            "column": "athletics"
+          },
+          {
+            "table": "лист",
+            "column": "acrobatics"
+          },
+          {
+            "table": "лист",
+            "column": "sleight_of_hand"
+          },
+          {
+            "table": "лист",
+            "column": "stealth"
+          },
+          {
+            "table": "лист",
+            "column": "arcana"
+          },
+          {
+            "table": "лист",
+            "column": "history"
+          },
+          {
+            "table": "лист",
+            "column": "investigation"
+          },
+          {
+            "table": "лист",
+            "column": "nature"
+          },
+          {
+            "table": "лист",
+            "column": "religion"
+          },
+          {
+            "table": "лист",
+            "column": "animal_handling"
+          },
+          {
+            "table": "лист",
+            "column": "insight"
+          },
+          {
+            "table": "лист",
+            "column": "medicine"
+          },
+          {
+            "table": "лист",
+            "column": "perception"
+          },
+          {
+            "table": "лист",
+            "column": "survival"
+          },
+          {
+            "table": "лист",
+            "column": "deception"
+          },
+          {
+            "table": "лист",
+            "column": "intimidation"
+          },
+          {
+            "table": "лист",
+            "column": "performance"
+          },
+          {
+            "table": "лист",
+            "column": "persuasion"
+          }
+        ]
+      },
+      "спасбросок": {
+        "label": "Спасбросок",
+        "die": "lead_die",
+        "fields": [
+          {
+            "table": "лист",
+            "column": "dex_save"
+          }
+        ]
+      }
+    }
   },
   "compendium": {
     "records": [

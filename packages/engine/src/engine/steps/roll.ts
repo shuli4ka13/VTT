@@ -7,6 +7,7 @@ import type { StepData, StepContext } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 import { DICE_TEXT } from '../../words/glossary.ts';
 import { keepRecord } from '../../core/against.ts';
+import { fieldCheck } from '../check.ts';
 
 export const type = 'roll';
 const words: StepWords = STEP_WORDS.roll;
@@ -14,9 +15,17 @@ export const { label, hint, slots, outputs } = words;
 
 export const mayBreak = false;
 
-export const lazy = (step: StepData): boolean => (step.by === undefined || step.by === null) && typeof step.id === 'string';
+const has = (value: unknown): boolean => value !== undefined && value !== null;
 
-export const thrownBy = (step: StepData): unknown => step.by;
+export const lazy = (step: StepData): boolean => !has(step.field) && !has(step.by) && typeof step.id === 'string';
+
+export function headOf(field: unknown): { expr: string } | null {
+  if (!field || typeof field !== 'object' || !('expr' in field)) return null;
+  const found = /^\s*@([\p{L}\p{N}_]+)\./u.exec(String((field as { expr: unknown }).expr));
+  return found ? { expr: `@${found[1]}` } : null;
+}
+
+export const thrownBy = (step: StepData): unknown => (has(step.field) ? headOf(step.field) : step.by);
 
 export const icon = '⚄';
 
@@ -56,7 +65,48 @@ export interface Rolled extends RollResult {
   degreeShift: number;
 }
 
+function fieldFinish(step: StepData, ctx: StepContext) {
+  const at = ctx.field(step.field);
+  const check = fieldCheck(ctx.system, at.tag);
+  const shift = ctx.optional(step.shift, 'поправка к числу поля') ?? 0;
+  const extra = ctx.optional(step.bonus, 'прибавка броска') ?? 0;
+  const against = ctx.ahead?.() ?? null;
+  const made = ctx.fieldRoll(at.sheet, check, { shift, tags: tagsOf(step.tags, ctx), against });
+  if (extra && made.threshold !== null) throw new EngineError(`${who(ctx)}: «${check.label}» сравнивают с порогом — прибавку к итогу не прибавить, пишите поправку к числу поля`);
+  const total = made.total + extra;
+  const result = made.thrown.result;
+  const roll: Rolled & { success?: boolean; margin?: number; degree?: string } = {
+    ...result, total,
+    versusShift: made.threshold === null ? made.thrown.roll.claim.versusShift : 0,
+    degreeShift: made.margin === null ? made.thrown.roll.claim.degreeShift : 0,
+    ...(made.success === null ? {} : { success: made.success }),
+    ...(made.margin === null ? {} : { margin: made.margin }),
+    ...(made.degree === null ? {} : { degree: made.degree }),
+  };
+  if (made.thrown.thrower && made.threshold === null) keepRecord(roll, made.thrown.thrower, made.bonus + extra);
+  const tags = made.thrown.thrower?.tags ?? result.tags ?? [];
+  return {
+    value: total,
+    roll,
+    trace: {
+      rolls: roll.dice.rolls, kept: roll.dice.kept, bonus: made.bonus + extra, total, by: at.sheet,
+      ...(tags.length ? { tags } : {}),
+      ...(made.thrown.roll.claim.read.kind !== 'sum' ? { read: made.thrown.roll.claim.read.kind } : {}),
+      ...(made.thrown.roll.edits.length ? { edits: made.thrown.roll.edits } : {}),
+      ...(made.thrown.roll.addends.length ? { adds: made.thrown.roll.addends } : {}),
+      ...(Object.keys(roll.parts).length ? { parts: roll.parts } : {}),
+      ...(made.threshold === null ? {} : { threshold: made.threshold, under: check.under === true }),
+      ...(made.success === null ? {} : { success: made.success }),
+      ...(made.margin === null ? {} : { margin: made.margin }),
+      ...(check.margin && made.margin !== null ? { said: made.margin } : {}),
+      ...(made.degree === null ? {} : { degree: made.degree }),
+    },
+    break: null,
+  };
+}
+
 export function finish(step: StepData, ctx: StepContext) {
+  if (has(step.field)) return fieldFinish(step, ctx);
   const tags = tagsOf(step.tags, ctx);
   const by = ctx.sheet(step.by, 'кто бросает');
   const against = by ? ctx.ahead?.() ?? null : null;
@@ -94,10 +144,20 @@ export function finish(step: StepData, ctx: StepContext) {
   };
 }
 
-export function lint(step: StepData) {
-  if (step.die === undefined && step.fixed === undefined) return 'броску нужна кость или формула';
+export function lint(step: StepData): string | null {
+  if (has(step.field)) {
+    if (has(step.die) || has(step.fixed) || has(step.count)) return 'бросок поля берёт кость из «Правил → Броски» — кость, сколько костей и формулу уберите';
+    if (has(step.by)) return 'бросок поля бросает тот, чьё поле, — «Кто бросает» уберите';
+    if (!headOf(step.field)) return 'бросок поля: не выбрано поле, которое бросают';
+    return null;
+  }
+  if (has(step.shift)) return 'поправка к числу — только у броска поля';
+  if (has(step.die) && has(step.fixed)) return 'кость и формула в одном шаге — формулу перенесите в прибавку';
+  if (step.die === undefined && step.fixed === undefined) return 'шаг пуст: впишите формулу или выберите бросок';
   return null;
 }
+
+export const problems = lint;
 
 export function traceLine(t: any) {
   const name = t.tags?.length ? ` «${t.tags.join(', ')}»` : '';
@@ -111,7 +171,10 @@ export function traceLine(t: any) {
   const plain = Array.isArray(t.rolls) && t.rolls.reduce((sum: number, v: number) => sum + v, 0) === t.fixed;
   const fixed = t.fixed !== undefined && t.fixed !== 0 && !plain ? String(t.fixed) : '';
   const sum = [fixed && dice ? `${dice} → ${fixed}` : dice || fixed, t.bonus ? String(t.bonus) : ''].filter(Boolean).join(' + ').replace(/\+ -/g, '− ') || '0';
-  return `${t.by ? 'бросок' : 'расчёт'}${name}: ${sum}${edits}${addendsText(adds)} = ${t.total}${parts}`;
+  const verdict = t.threshold === undefined ? '' : ` · ${t.under ? 'не больше' : 'порог'} ${t.threshold}`;
+  const passed = t.success === undefined ? '' : `${verdict ? ':' : ' ·'} ${t.success ? 'успех' : 'провал'}`;
+  const graded = `${verdict}${passed}${t.margin === undefined ? '' : ` · степеней: ${t.margin}`}${t.degree ? ` · ${t.degree}` : ''}`;
+  return `${t.by ? 'бросок' : 'расчёт'}${name}: ${sum}${edits}${addendsText(adds)} = ${t.total}${parts}${graded}`;
 }
 
 

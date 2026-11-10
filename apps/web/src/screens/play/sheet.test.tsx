@@ -44,7 +44,7 @@ describe('сумка: экземпляры вещей', () => {
     fireEvent.click(screen.getAllByText('✕ убрать')[1]!);
     expect(calls.at(-1)).toEqual(['к', 'а', 'has', 'предатор', false, undefined, { inst: 'п2' }]);
 
-    fireEvent.click(screen.getByText(/Предатор · \+ ещё один/));
+    fireEvent.click([...screen.getByText('Предатор №1').closest('.inline')!.querySelectorAll('.chip')].find(node => node.textContent === '+ ещё один')!);
     expect(calls.at(-1)).toEqual(['к', 'а', 'has', 'предатор', true, false, { add: true }]);
 
     const laser = screen.getAllByText('Лазер')[0]!.closest('div')!.parentElement!;
@@ -78,7 +78,7 @@ describe('сумка: добавить вещь', () => {
 
     fireEvent.change(screen.getByPlaceholderText('найти по названию'), { target: { value: 'глаз' } });
     expect(screen.getByText('Киберглаза')).toBeTruthy();
-    expect([...document.querySelectorAll('.chip')].map(node => node.textContent)).not.toContain('Лазер');
+    expect([...document.querySelectorAll('.fold .fold .chip')].map(node => node.textContent)).not.toContain('Лазер');
     expect(titles().filter(one => one === 'Импланты')).toHaveLength(1);
     expect((screen.getByText('Импланты').closest('details') as HTMLDetailsElement).open).toBe(true);
 
@@ -148,3 +148,51 @@ describe('висит сейчас: срок словами', () => {
     expect(dayTime(2 * 86400 + 1800)).toBe('День 3, 00:30');
   });
 });
+
+describe('списки в блоках листа', () => {
+  beforeEach(() => {
+    useRoom.setState(state => ({ ...state, log: [], error: null }));
+  });
+  afterEach(cleanup);
+
+  const NAMES: Record<string, string> = { things: 'Снаряжение', actions: 'Действия', hanging: 'Висит сейчас' };
+  const withPages = (lists: Record<string, string[]>, hidden?: string[]) => {
+    const state = room();
+    const system = state.system as unknown as Record<string, unknown>;
+    system.pages = [{ name: 'Шапка', top: true }, ...Object.keys(lists).map(name => ({ name }))];
+    const listed = Object.entries(lists).flatMap(([page, on]) => on.map(list => ({ name: NAMES[list]!, page, list, parts: [] })));
+    system.blocks = [...((system.blocks as unknown[]) ?? []), ...listed];
+    if (hidden) {
+      system.sheets = { враг: { label: 'Враг', blocks: listed.map(block => block.name).filter(name => !hidden.includes(name)) } };
+      (state.sheets as unknown as Record<string, unknown>[]).forEach(sheet => { sheet.of = 'враг'; });
+    }
+    useRoom.setState(s => ({ ...s, room: state, mySheetId: 'а' }));
+  };
+
+  it('список в блоке уходит из правой панели, остальные остаются', () => {
+    withPages({ Сумка: ['things'] });
+    renderOpen(<SheetScreen />);
+    expect(screen.getAllByText('Снаряжение')).toHaveLength(1);
+    expect(screen.getByText('Известные действия')).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Сумка' })).toBeTruthy();
+    expect(screen.getByText('Снаряжение и действия')).toBeTruthy();
+  });
+
+  it('все три списка в блоках — правой панели нет', () => {
+    withPages({ Сумка: ['things'], Дела: ['actions', 'hanging'] });
+    renderOpen(<SheetScreen />);
+    expect(screen.queryByText('Снаряжение и действия')).toBeNull();
+    expect(screen.getByRole('tab', { name: 'Сумка' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('tab', { name: 'Дела' }));
+    expect(screen.getByText('Известные действия')).toBeTruthy();
+  });
+
+  it('блок со списком, скрытый типом листа, не возвращает список в правую панель', () => {
+    withPages({ Сумка: ['things'], Дела: ['actions', 'hanging'] }, ['Снаряжение']);
+    renderOpen(<SheetScreen />);
+    expect(screen.queryByText('Снаряжение и действия')).toBeNull();
+    expect(screen.queryByText('Снаряжение')).toBeNull();
+    expect(screen.queryByRole('tab', { name: 'Сумка' })).toBeNull();
+  });
+});
+

@@ -39,8 +39,8 @@ export const CRIT_RULE = 'crit_explode_rule';
 export const ARMOR_STEP = 'сквозь_броню';
 
 const owned = (step: Step): boolean => {
-  const by = (step as { by?: unknown }).by;
-  return by !== undefined && by !== null;
+  const { by, field } = step as { by?: unknown; field?: unknown };
+  return (by !== undefined && by !== null) || (field !== undefined && field !== null);
 };
 
 const critOfCall = (system: System | undefined, step: Step): string | null => {

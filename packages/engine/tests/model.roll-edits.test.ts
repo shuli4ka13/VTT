@@ -8,8 +8,8 @@ group('правки броска — словарь автора', () => {
     const edits = system.roll_edits;
     eq(edits.advantage.label, 'Преимущество');
     eq(edits.disadvantage.label, 'Помеха');
-    eq(edits.advantage.canceledBy, 'disadvantage');
-    eq(edits.disadvantage.canceledBy, 'advantage');
+    eq(edits.advantage.cancels?.join(), 'disadvantage');
+    eq(edits.disadvantage.cancels?.join(), 'advantage');
   });
 
   test('преимущество собрано из примитивов, а не названо механикой', () => {
@@ -40,8 +40,8 @@ group('правки броска — словарь автора', () => {
   test('одинокая правка не ссылается на несуществующее гашение', () => {
 
     for (const [key, edit] of Object.entries(cyberpunk.roll_edits ?? {})) {
-      if (edit.canceledBy) {
-        ok(cyberpunk.roll_edits[edit.canceledBy], `«${key}» гасится тем, чего в мире нет`);
+      for (const other of edit.cancels ?? []) {
+        ok(cyberpunk.roll_edits[other], `«${key}» гасит то, чего в мире нет`);
       }
     }
   });
@@ -98,7 +98,7 @@ group('переворот числа — из справочника в реес
       const keys = new Set(m.recipes.map(r => r.key));
       for (const recipe of m.recipes) {
         for (const op of recipe.ops) ok(ops.has(String(op.op)), `${m.id}/${recipe.key}: примитив «${op.op}» неизвестен`);
-        if (recipe.canceledBy) ok(keys.has(recipe.canceledBy), `${m.id}/${recipe.key}: гасится тем, чего в рецепте нет`);
+        for (const other of recipe.cancels ?? []) ok(keys.has(other), `${m.id}/${recipe.key}: гасит то, чего в рецепте нет`);
       }
     }
   });

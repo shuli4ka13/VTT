@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { checkReadback, changeReadback, numberReadback, joinReadback, editReadback, dieReadback, editNotation, seenReadback } from './readback.ts';
+import { checkReadback, rollReadback, changeReadback, numberReadback, joinReadback, editReadback, dieReadback, editNotation, seenReadback } from './readback.ts';
 import type { System, Effect, Step } from '@vtt/schema';
 import { withColumn } from '@vtt/engine/model/sheet-columns';
 
@@ -18,27 +18,48 @@ const effect = { params: [{ key: 'p_1', label: 'кость урона', kind: 'd
 const hero = { ...effect, params: [...(effect.params ?? []), { key: 'атакующий', label: 'Атакующий', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' } }], steps: [{ type: 'each', of: 'цели' }] } as unknown as Effect;
 
 describe('checkReadback', () => {
-  it('бросок с бросающим читается фразой с лейблами системы, без первого лица; «против кого» — лист справа в сравнении; о ходе шагов проверка не говорит', () => {
-    const roll = { id: 'hit_бросок', type: 'roll', die: 'lead', bonus: { expr: '#power_mod' }, by: { expr: '@атакующий' } } as unknown as Step;
-    const step = {
-      id: 'hit', type: 'check', successWhen: 'atLeast',
-      value: { expr: '@hit_бросок' }, versus: { expr: '@цель.armor' },
-    } as unknown as Step;
-    expect(joinReadback(checkReadback(step, roll, system, hero)))
-      .toBe('«Атакующий» бросает 1к20 + «Мод Силы» — с «Класс брони» (цель).');
-  });
-
-  it('пустой бросок — оранжевые пропуски: кто бросает и с чем сравнить', () => {
-    const roll = { type: 'roll', die: 'lead' } as unknown as Step;
-    const step = { type: 'check', value: { expr: '@x' } } as unknown as Step;
-    expect(joinReadback(checkReadback(step, roll, system, effect)))
-      .toBe('⟨кто?⟩ бросает 1к20 — с ⟨с чем сравнить?⟩.');
-  });
-
-  it('сравнение без броска', () => {
+  it('сравнение читается фразой «что знак с чем»; лист справа в сравнении назван, о ходе шагов проверка не говорит', () => {
     const step = { type: 'check', value: { expr: '@dmg' }, versus: { expr: '@цель.armor' }, successWhen: 'over' } as unknown as Step;
-    expect(joinReadback(checkReadback(step, null, system, hero)))
-      .toBe('результат «dmg» с «Класс брони» (цель).');
+    expect(joinReadback(checkReadback(step, system, hero))).toBe('результат «dmg» больше «Класс брони» (цель).');
+  });
+
+  it('знак по умолчанию — «не меньше»; каждый знак сказан своими словами', () => {
+    const base = { type: 'check', value: { expr: '@x' }, versus: { expr: '10' } };
+    const said = (successWhen?: string) => joinReadback(checkReadback({ ...base, ...(successWhen ? { successWhen } : {}) } as unknown as Step, system, effect));
+    expect(said()).toBe('результат «x» не меньше 10.');
+    expect(said('atLeast')).toBe('результат «x» не меньше 10.');
+    expect(said('notOver')).toBe('результат «x» не больше 10.');
+    expect(said('under')).toBe('результат «x» меньше 10.');
+    expect(said('equals')).toBe('результат «x» равно 10.');
+  });
+
+  it('пустая проверка — оранжевые пропуски: что проверяем и с чем', () => {
+    const step = { type: 'check' } as unknown as Step;
+    expect(joinReadback(checkReadback(step, system, effect))).toBe('⟨что проверяем?⟩ не меньше ⟨с чем?⟩.');
+  });
+});
+
+describe('rollReadback', () => {
+  it('кость с хозяином: кто бросает, кость, счёт, прибавка и метки', () => {
+    const step = {
+      id: 'hit', type: 'roll', die: 'lead', count: { expr: '2' }, bonus: { expr: '#power_mod' }, by: { expr: '@атакующий' }, tags: ['атака', 'меч'],
+    } as unknown as Step;
+    expect(joinReadback(rollReadback(step, system, hero))).toBe('hit = «Атакующий» бросает 1к20 × 2 + «Мод Силы» (атака, меч)');
+  });
+
+  it('нулевая прибавка не пишется', () => {
+    const step = { type: 'roll', die: 'lead', by: { expr: '@атакующий' }, bonus: { expr: '0' } } as unknown as Step;
+    expect(joinReadback(rollReadback(step, system, hero))).toBe('«Атакующий» бросает 1к20');
+  });
+
+  it('бросок поля: поле и поправка', () => {
+    const step = { type: 'roll', field: { expr: '@цель.armor' }, shift: { expr: '2' } } as unknown as Step;
+    expect(joinReadback(rollReadback(step, system, hero))).toBe('бросок поля «Класс брони» (цель) с поправкой 2');
+  });
+
+  it('кости ничьи названы, а недостающее — оранжевым пропуском', () => {
+    expect(joinReadback(rollReadback({ type: 'roll', die: 'lead' } as unknown as Step, system, effect))).toBe('кости ничьи: 1к20');
+    expect(joinReadback(rollReadback({ type: 'roll' } as unknown as Step, system, effect))).toBe('кости ничьи: ⟨что бросает?⟩');
   });
 });
 
@@ -90,7 +111,7 @@ describe('editReadback — правка броска словами', () => {
   });
 
   it('гашение названо лейблом встречной правки, а не её ключом', () => {
-    const edit = { label: 'Преимущество', ops: [{ op: 'addDie' }], canceledBy: 'down' };
+    const edit = { label: 'Преимущество', ops: [{ op: 'addDie' }], cancels: ['down'] };
     expect(joinReadback(editReadback(edit, sys)))
       .toBe('Кинуть на кость больше. Гасится: Помеха.');
   });

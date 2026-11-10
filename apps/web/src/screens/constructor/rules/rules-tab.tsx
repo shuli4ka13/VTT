@@ -7,6 +7,7 @@ import { useProblems } from '../problems.ts';
 import { DiceSection, dieEntries } from './dice-section.tsx';
 import { RollEditsSection, AdvantagePalette } from './roll-edits-section.tsx';
 import { TablesSection } from './tables-section.tsx';
+import { RollsSection } from './rolls-section.tsx';
 import { TogglesSection } from './toggles-section.tsx';
 import { TagsSection } from './tags-section.tsx';
 import { CombatSection } from './combat-section.tsx';
@@ -15,7 +16,7 @@ import type { System } from '@vtt/schema';
 import { calledOf } from '@vtt/engine/engine/effects';
 import { rowTables } from '@vtt/engine/model/tables';
 
-type SectionKey = 'dice' | 'edits' | 'tables' | 'tags' | 'combat' | 'toggles';
+type SectionKey = 'rolls' | 'tables' | 'tags' | 'combat' | 'toggles';
 
 interface Section {
   key: SectionKey;
@@ -25,8 +26,7 @@ interface Section {
 }
 
 const SECTIONS: Section[] = [
-  { key: 'dice', label: 'Кости', count: system => dieEntries(system).length },
-  { key: 'edits', label: 'Правки броска', lint: 'roll_edits', count: system => Object.keys(system.roll_edits ?? {}).length },
+  { key: 'rolls', label: 'Броски', lint: 'roll_edits', count: system => dieEntries(system).length + Object.keys(system.rolls ?? {}).length + Object.keys(system.roll_edits ?? {}).length },
   { key: 'tables', label: 'Таблицы', count: system => rowTables(system).length },
   { key: 'tags', label: 'Метки', count: system => Object.keys(system.tags ?? {}).length },
   { key: 'combat', label: 'Бой', count: system => (system.initiative ? 1 : 0) },
@@ -52,7 +52,7 @@ export function RulesTab() {
 
   const right = useLookupPane({
     head: 'Готовое',
-    body: <AdvantagePalette system={system} editSystem={editSystem} onAdded={() => setSection('edits')} />,
+    body: <AdvantagePalette system={system} editSystem={editSystem} onAdded={() => setSection('rolls')} />,
   });
 
   return (
@@ -64,7 +64,7 @@ export function RulesTab() {
             {SECTIONS.map(item => (
               <ListItem
                 key={item.key}
-                icon={item.lint && broken.has(item.lint) ? '!' : undefined}
+                icon={(item.lint && broken.has(item.lint)) || broken.has(item.key) ? '!' : undefined}
                 name={item.label}
                 meta={`записей: ${item.count(system)}`}
                 active={item.key === section}
@@ -77,8 +77,13 @@ export function RulesTab() {
       main={{
         body: (
           <>
-            {section === 'dice' ? <DiceSection system={system} editSystem={editSystem} usage={usage} /> : null}
-            {section === 'edits' ? <RollEditsSection system={system} editSystem={editSystem} usage={usage} /> : null}
+            {section === 'rolls' ? (
+              <div className="stack">
+                <DiceSection system={system} editSystem={editSystem} usage={usage} />
+                <RollsSection system={system} editSystem={editSystem} />
+                <RollEditsSection system={system} editSystem={editSystem} usage={usage} />
+              </div>
+            ) : null}
             {section === 'tables' ? <TablesSection system={system} editSystem={editSystem} usage={usage} /> : null}
             {section === 'tags' ? <TagsSection system={system} editSystem={editSystem} /> : null}
             {section === 'combat' ? <CombatSection system={system} editSystem={editSystem} /> : null}

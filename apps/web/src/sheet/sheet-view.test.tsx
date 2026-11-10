@@ -7,10 +7,11 @@ import type { Reader } from '../engine/use-calc.ts';
 
 const system = {
   tables: { лист: { shape: 'single', columns: [
-    { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 14, roll: { label: 'Проверка Ловкости' } },
+    { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 14 },
     { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
     { key: 'броня', label: 'Броня', expr: { expr: '10' } },
   ] } },
+  rolls: { проверка: { die: 'к20', fields: [{ table: 'лист', column: 'ловкость' }] } },
 } as unknown as System;
 
 const sheet = { id: 'а', name: 'Арвен', values: { ловкость: 14, хиты: 17 } } as unknown as Sheet;
@@ -108,3 +109,148 @@ describe('лист за столом', () => {
     expect(underTitles()).toEqual({ Акробатика: 'нет', Скрытность: 'владение', Атлетика: 'мастерство' });
   });
 });
+
+const single = (key: string, label: string) => ({ shape: 'single', columns: [{ key, label, kind: 'number', default: 1 }] });
+
+const pagedSystem = (extra: Record<string, unknown> = {}) => ({
+  tables: { а: single('а1', 'Сила'), б: single('б1', 'Хиты'), в: single('в1', 'Монеты'), г: single('г1', 'Заметка') },
+  pages: [{ name: 'Шапка', top: true }, { name: 'Бой' }, { name: 'Вещи' }, { name: 'Пустая' }],
+  blocks: [
+    { name: 'Главное', page: 'Шапка', parts: [{ table: 'а' }] },
+    { name: 'Здоровье', page: 'Бой', parts: [{ table: 'б' }] },
+    { name: 'Деньги', page: 'Вещи', parts: [{ table: 'в' }] },
+    { name: 'Скрытое', page: 'Пустая', parts: [{ table: 'г' }] },
+  ],
+  ...extra,
+}) as unknown as System;
+
+describe('страницы листа', () => {
+  afterEach(cleanup);
+  const base = { sheet, reader, onChange: () => {} };
+
+  it('без pages закладок нет и все блоки подряд', () => {
+    render(<SheetView system={pagedSystem()} {...base} />);
+    expect(screen.queryByRole('tablist')).toBeNull();
+    expect(document.body.textContent).toContain('Здоровье');
+    expect(document.body.textContent).toContain('Деньги');
+  });
+
+  it('шапка видна всегда, закладки по страницам, переключение меняет блоки', () => {
+    const chosen: string[] = [];
+    const view = (at: string | null) => (
+      <SheetView system={pagedSystem()} {...base} only={['а1', 'б1', 'в1']} pages={{ at, onAt: name => chosen.push(name) }} />
+    );
+    const { rerender } = render(view(null));
+    expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual(['Бой', 'Вещи']);
+    expect(document.body.textContent).toContain('Главное');
+    expect(document.body.textContent).toContain('Здоровье');
+    expect(document.body.textContent).not.toContain('Деньги');
+    fireEvent.click(screen.getByText('Вещи'));
+    expect(chosen).toEqual(['Вещи']);
+    rerender(view('Вещи'));
+    expect(document.body.textContent).toContain('Главное');
+    expect(document.body.textContent).toContain('Деньги');
+    expect(document.body.textContent).not.toContain('Здоровье');
+  });
+
+  it('блок со списком без полей виден, только если список передан; список рисуется внутри блока', () => {
+    const system = pagedSystem({
+      pages: [{ name: 'Шапка', top: true }, { name: 'Бой' }, { name: 'Сумка' }],
+      blocks: [{ name: 'Здоровье', page: 'Бой', parts: [{ table: 'б' }] }, { name: 'Вещи', page: 'Сумка', list: 'things', parts: [] }],
+    });
+    const { rerender } = render(<SheetView system={system} {...base} pages={{ at: 'Сумка', onAt: () => {} }} />);
+    expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual(['Бой']);
+    rerender(<SheetView system={system} {...base} pages={{ at: 'Сумка', onAt: () => {} }} lists={{ things: <p>Снаряжение тут</p> }} />);
+    expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual(['Бой', 'Сумка']);
+    expect(screen.getByText('Снаряжение тут').closest('.card')!.textContent).toContain('Вещи');
+  });
+
+  it('сетка: ячейка шириной блока, «под» — в той же ячейке, скрытый первый блок держит ячейку, пустая ячейка уходит', () => {
+    const system = pagedSystem({
+      pages: [{ name: 'Главная' }],
+      blocks: [
+        { name: 'Один', width: 4, parts: [{ table: 'а' }] },
+        { name: 'Два', under: true, parts: [{ table: 'б' }] },
+        { name: 'Три', width: 8, parts: [{ table: 'в' }] },
+        { name: 'Четыре', parts: [{ table: 'г' }] },
+      ],
+    });
+    const cells = () => [...document.querySelectorAll('.sheet-page .sheet-cell')].map(cell => [(cell as HTMLElement).style.getPropertyValue('--w'), [...cell.querySelectorAll('.sheet-slot')].map(slot => (slot as HTMLElement).dataset.slot)]);
+    const { rerender } = render(<SheetView system={system} {...base} pages={{ at: null, onAt: () => {} }} />);
+    expect(cells()).toEqual([['4', ['Один', 'Два']], ['8', ['Три']], ['12', ['Четыре']]]);
+    rerender(<SheetView system={system} {...base} only={['б1', 'г1']} pages={{ at: null, onAt: () => {} }} />);
+    expect(cells()).toEqual([['4', ['Два']], ['12', ['Четыре']]]);
+  });
+
+  it('заданная высота ставится блоку; без высоты — по содержимому', () => {
+    const system = pagedSystem({ pages: [{ name: 'Главная' }], blocks: [{ name: 'Один', height: 300, parts: [{ table: 'а' }] }, { name: 'Два', parts: [{ table: 'б' }] }] });
+    render(<SheetView system={system} {...base} pages={{ at: null, onAt: () => {} }} />);
+    const one = document.querySelector('[data-slot="Один"]') as HTMLElement;
+    expect(one.className).toContain('sheet-slot--sized');
+    expect(one.style.getPropertyValue('--h')).toBe('300px');
+    expect((document.querySelector('[data-slot="Два"]') as HTMLElement).className).not.toContain('sheet-slot--sized');
+  });
+
+  it('без правки на листе нет ручек переноса и растягивания', () => {
+    render(<SheetView system={pagedSystem()} {...base} pages={{ at: null, onAt: () => {} }} />);
+    expect(document.querySelector('.sheet-grip, .sheet-resize')).toBeNull();
+  });
+
+  it('«по два в строку» ставит полям блока два столбца', () => {
+    const system = pagedSystem({ blocks: [{ name: 'Главное', per: 2, parts: [{ table: 'а' }] }] });
+    render(<SheetView system={system} {...base} />);
+    expect((document.querySelector('.row--per') as HTMLElement).style.gridTemplateColumns).toBe('repeat(2, minmax(0, 1fr))');
+  });
+
+  it('с all закладка есть и у пустой страницы, на ней — подсказка', () => {
+    render(<SheetView system={pagedSystem()} {...base} only={['а1', 'б1']} pages={{ at: 'Вещи', onAt: () => {}, all: true }} />);
+    expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual(['Бой', 'Вещи', 'Пустая']);
+    expect(document.body.textContent).toContain('На этой странице пока пусто');
+  });
+});
+
+describe('таблица блока в несколько столбцов', () => {
+  afterEach(cleanup);
+  const table = {
+    abilities: { shape: 'rows', columns: [{ key: 'name', label: 'Название', kind: 'text' }], rows: [
+      { value: 'str', label: 'Сила' }, { value: 'dex', label: 'Ловкость' },
+    ] },
+    навыки: { shape: 'rows', owner: 'sheet', columns: [
+      { key: 'ability', label: 'Характеристика', kind: 'choice', from: 'abilities' },
+      { key: 'prof', label: 'Мастерство', kind: 'number' },
+    ], rows: [
+      { value: 'a1', label: 'Атлетика', cells: { ability: 'str' } },
+      { value: 'a2', label: 'Борьба', cells: { ability: 'str' } },
+      { value: 'b1', label: 'Акробатика', cells: { ability: 'dex' } },
+      { value: 'b2', label: 'Скрытность', cells: { ability: 'dex' } },
+    ] },
+  };
+  const make = (part: Record<string, unknown>, split?: number) => ({
+    tables: table,
+    blocks: [{ name: 'Навыки', ...(split ? { split } : {}), parts: [{ table: 'навыки', ...part }] }],
+  }) as unknown as System;
+
+  it('split 2: две сетки, у каждой свои шапки колонок', () => {
+    render(<SheetView system={make({}, 2)} sheet={sheet} reader={reader} onChange={() => {}} />);
+    const grids = document.querySelectorAll('.sheet-table');
+    expect(grids).toHaveLength(2);
+    for (const grid of grids) expect(grid.querySelector('.field__label')?.textContent).toBeTruthy();
+    expect([...grids[0]!.querySelectorAll('.sheet-table__row')].map(n => n.textContent)).toEqual(['Атлетика', 'Борьба']);
+    expect([...grids[1]!.querySelectorAll('.sheet-table__row')].map(n => n.textContent)).toEqual(['Акробатика', 'Скрытность']);
+  });
+
+  it('подзаголовок не остаётся последним в столбце: уходит вместе со строками', () => {
+    render(<SheetView system={make({ by: 'ability' }, 2)} sheet={sheet} reader={reader} onChange={() => {}} />);
+    const grids = document.querySelectorAll('.sheet-table');
+    expect(grids).toHaveLength(2);
+    expect([...grids[0]!.querySelectorAll('.sheet-table__section')].map(n => n.textContent)).toEqual(['Сила']);
+    expect([...grids[1]!.querySelectorAll('.sheet-table__section')].map(n => n.textContent)).toEqual(['Ловкость']);
+    expect(grids[0]!.lastElementChild!.classList.contains('sheet-table__section')).toBe(false);
+  });
+
+  it('без split — одна сетка', () => {
+    render(<SheetView system={make({})} sheet={sheet} reader={reader} onChange={() => {}} />);
+    expect(document.querySelectorAll('.sheet-table')).toHaveLength(1);
+  });
+});
+

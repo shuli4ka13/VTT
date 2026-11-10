@@ -95,6 +95,14 @@ function viewsFor(world: World, path: Key[]): View[] {
     }
     return [rules('Таблицы', { activeTableId: id }, () => { if (label) press(label); }), sheet(), ...kinds];
   }
+  if (part === 'pages' && id) {
+    const page = world.system.pages?.[Number(id)];
+    return page ? [sheet({ activePage: page.name })] : [];
+  }
+  if (part === 'blocks' && id) {
+    const block = world.system.blocks?.[Number(id)];
+    return block ? [sheet({ activeBlock: block.name })] : [];
+  }
   const section = SECTION[part ?? ''];
   return [
     ...(section ? [rules(section)] : []),
@@ -107,7 +115,7 @@ const load = (world: World, pick: Record<string, unknown>): void => {
   useWorld.setState(state => ({
     ...state, system: structuredClone(world.system), compendium: structuredClone(world.compendium),
     activeFieldTag: null, activeGroupName: null, activeEffectId: null, activeRecordKind: null,
-    activeSheetKind: null, activeStepIndex: null, activeTableId: null, activeRecordId: null,
+    activeSheetKind: null, activePage: null, activeBlock: null, activeRow: null, activeColumn: null, activeSheetTable: null, activeStepIndex: null, activeTableId: null, activeRecordId: null,
     ...pick,
   }));
 };

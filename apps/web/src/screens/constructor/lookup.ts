@@ -38,7 +38,7 @@ type Loose = Record<string, any>;
 function stepsOf(effect: Effect | undefined): EarlierStep[] {
   const out: EarlierStep[] = [];
   const all = [...(effect?.cost ?? []), ...(effect?.steps ?? [])] as Loose[];
-  all.forEach(step => { if (step.id) out.push({ id: String(step.id), type: String(step.type) }); });
+  all.forEach(step => { if (step.id) out.push({ id: String(step.id), type: String(step.type), ...((step as { field?: unknown }).field ? { fielded: true } : {}) }); });
   return out;
 }
 
@@ -142,10 +142,17 @@ export function explainName(
     const table = decl.from ? system.tables?.[decl.from] : undefined;
     if (rest !== head) {
       const columnKey = rest.slice(head.length + 1);
-      const column = table?.columns?.find(c => c.key === columnKey);
+      const chain: string[] = [];
+      let at = table;
+      let column: { label?: string; expr?: unknown; from?: string } | undefined;
+      for (const key of columnKey.split('.')) {
+        column = at?.columns?.find(c => c.key === key) as typeof column;
+        chain.push(column?.label ?? key);
+        at = column?.from ? system.tables?.[column.from] : undefined;
+      }
       return {
         kind: 'колонка по выбору',
-        title: `${table?.label ?? decl.from} → ${column?.label ?? columnKey}`,
+        title: [table?.label ?? decl.from, ...chain].join(' → '),
         facts: [...ownerFact, ['строка', `та, что пришла во входе «${param.label ?? param.key}»`],
           ...(column?.expr ? [['считается', `${owner ?? 'листом, где читают'} — формулой колонки`] as [string, string]] : [])],
         from: callersOf(system, effectId, param.key),
@@ -222,6 +229,18 @@ export function explainName(
       facts: [...ownerFact, ['кости', dice || '—'], ...(owner ? [['кто бросает', owner.replace('лист ', '')] as [string, string]] : [])],
       from: ['раздел «Кости» на вкладке «Правила»'],
       shown: [], users: usersBy(usage, 'constant', rest, system),
+      go: { label: 'открыть «Правила»', pick: { activeTab: 'dictionaries' } },
+    };
+  }
+
+  const ownRoll = system.rolls?.[rest];
+  if (ownRoll && !Object.values(system.tables ?? {}).some(t => (t.rows ?? []).some(r => r.value === rest))) {
+    return {
+      kind: 'метка броска',
+      title: ownRoll.label || rest,
+      facts: [['бросок системы', ownRoll.label || rest]],
+      from: ['название броска из «Бросков» — каждый бросок этого вида несёт его меткой'],
+      shown: [], users: [...new Set([...usersBy(usage, 'roll', rest, system), ...usersBy(usage, 'tag', rest, system)])],
       go: { label: 'открыть «Правила»', pick: { activeTab: 'dictionaries' } },
     };
   }

@@ -178,16 +178,25 @@ describe('эффекты пресетов собираются руками: Sha
     within(h()).select('Кого касается', '@ходит == @носитель');
     within(h()).when('=@носитель.mortal');
 
-    within(handlerAt(1)).click('+ проверка');
     const at = (n: number, k: number) => () => stepCard(new RegExp(`^${k} · `), handlerAt(n));
-    within(at(1, 1)()).formula('Проверка', 'кинуть(@lead_die) + @носитель.death_penalty < @носитель.body');
+    within(handlerAt(1)).click('+ бросок');
+    within(at(1, 1)()).select('Кто бросает', '@носитель');
+    within(at(1, 1)()).select('Что бросает', 'die:lead_die');
+    within(at(1, 1)()).click('+ прибавка');
+    within(at(1, 1)()).formula('Прибавка', '@носитель.death_penalty');
     within(at(1, 1)()).select('Метки', 'спасбросок');
-    nameStep(at(1, 1), 'спас');
+    nameStep(at(1, 1), 'спас_бросок');
+
+    within(handlerAt(1)).click('+ проверка');
+    within(at(1, 2)()).formula('Что проверяем', '@спас_бросок');
+    within(at(1, 2)()).select('Знак', 'under');
+    within(at(1, 2)()).formula('С чем', '@носитель.body');
+    nameStep(at(1, 2), 'спас');
 
     within(handlerAt(1)).click('+ изменение');
-    change(at(1, 2), 'носитель', 'death_penalty', 'add', '1');
+    change(at(1, 3), 'носитель', 'death_penalty', 'add', '1');
     within(handlerAt(1)).click('+ изменение');
-    change(at(1, 3), 'носитель', 'dead', 'set', 'да', 'Проверка — не пройдена');
+    change(at(1, 4), 'носитель', 'dead', 'set', 'да', 'Проверка — не пройдена');
 
     ui.click('+ когда');
     h = () => stepCard(/^Когда №2/);
@@ -272,9 +281,11 @@ describe('эффекты пресетов собираются руками: Sha
       ui.click('+ если');
       within(headOf(block(flow))).when(`=${expr}`);
     };
-    const check = (flow: number, k: number, formula: string, name: string) => {
+    const check = (flow: number, k: number, formula: [string, string], name: string) => {
       addToArm(block(flow), 0, 'check');
-      within(at(k)()).formula('Проверка', formula);
+      within(at(k)()).formula('Что проверяем', formula[0]);
+      within(at(k)()).select('Знак', 'over');
+      within(at(k)()).formula('С чем', formula[1]);
       nameStep(at(k), name);
       addToArm(block(flow), 0, 'branch');
       const failed = `Проверка «${name.replace(/_/g, ' ')}» — не пройдена`;
@@ -293,11 +304,11 @@ describe('эффекты пресетов собираются руками: Sha
     };
 
     guarded(0, body);
-    check(0, 1, '@amount > @лист.sp_body', 'сквозь_броню');
+    check(0, 1, ['@amount', '@лист.sp_body'], 'сквозь_броню');
     apply(0, 3, 'hp', '@сквозь_броню.margin');
     apply(0, 4, 'sp_body', '1');
     guarded(2, headshot);
-    check(2, 5, '@amount > @лист.sp_head', 'сквозь_шлем');
+    check(2, 5, ['@amount', '@лист.sp_head'], 'сквозь_шлем');
     number(2, 7, '@сквозь_шлем.margin', 'в_голову_всего');
     number(2, 8, 'если(да, округлить вниз((@в_голову_всего) * 2), @в_голову_всего)', 'в_голову');
     apply(2, 9, 'hp', '@в_голову');

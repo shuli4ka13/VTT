@@ -12,6 +12,7 @@ export function tagWords(system: System): Map<string, string> {
       if (isTagWord(row.value) && !out.has(row.value)) out.set(row.value, table.label || key);
     }
   }
+  for (const [key, roll] of Object.entries(system.rolls ?? {})) if (isTagWord(key) && !out.has(key)) out.set(key, roll.label || key);
   return out;
 }
 

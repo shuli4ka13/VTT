@@ -1,0 +1,172 @@
+import { useState } from 'react';
+import { Card, CardHead, Button, DangerButton, Input, Select, Chip } from '../../../ui/primitives.tsx';
+import { NO_BLOCK } from '@vtt/engine/model/blocks';
+import { TagsField } from '../tags-field.tsx';
+import { FormulaField } from '../../../ui/formula-field.tsx';
+import { dieEntries } from './dice-section.tsx';
+import { addRoll } from './rolls.ts';
+import { blockOfColumn, byBlock } from '../field-groups.ts';
+import type { Grouped } from '../field-groups.ts';
+import { fieldsOf, onSheet, isSingle } from '@vtt/engine/model/sheet-columns';
+import type { System, SystemRoll } from '@vtt/schema';
+import type { WorldState } from '../../../store/world.ts';
+
+type EditSystem = WorldState['editSystem'];
+
+const SERVICE = '\u0001';
+
+const DEGREE_NAMES = new Map([['выпало', 'выпало'], ['число', 'число поля'], ['порог', 'порог'], ['успех', 'успех'], ['степени', 'степени']]);
+
+const RULE_NAMES = new Map([['выпало', 'выпало'], ['число', 'число поля'], ['порог', 'порог']]);
+
+const NUMBER_WORDS = [
+  ['bonus', 'прибавка к выпавшему'],
+  ['count', 'сколько костей бросить'],
+  ['sides', 'сколько граней у кости'],
+  ['under', 'порог: выкинуть не больше'],
+  ['over', 'порог: выкинуть не меньше'],
+] as const;
+
+function columnsOf(system: System): Grouped[] {
+  const out: Grouped[] = [];
+  const blockOf = blockOfColumn(system);
+  for (const [id, table] of Object.entries(system.tables ?? {})) {
+    if (!onSheet(table)) continue;
+    for (const column of table.columns ?? []) {
+      if ((column.kind ?? 'number') !== 'number') continue;
+      const name = column.label || column.key;
+      out.push([`${id}\u0000${column.key}`, isSingle(table) ? name : `${table.label || id} → ${name}`, blockOf(id, column.key)]);
+    }
+  }
+  return byBlock(system, out);
+}
+
+function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRoll; system: System; editSystem: EditSystem }) {
+  const edit = (change: (draft: SystemRoll) => void) => editSystem(draft => { const one = draft.rolls?.[id]; if (one) change(one); });
+  const columns = columnsOf(system);
+  const nameOf = (table: string, column: string) => columns.find(([key]) => key === `${table}\u0000${column}`)?.[1] ?? column;
+  const taken = new Set(Object.values(system.rolls ?? {}).flatMap(one => one.fields.map(f => `${f.table}\u0000${f.column}`)));
+  const [service, setService] = useState(false);
+  const untaken = columns.filter(([key]) => !taken.has(key));
+  const hidden = untaken.filter(([, , group]) => group === NO_BLOCK).length;
+  const free = service ? untaken : untaken.filter(([, , group]) => group !== NO_BLOCK);
+  const dice = dieEntries(system);
+  const sample = fieldsOf(system).find(f => roll.fields.some(one => one.table === f.home && (f.cell ? f.cell.column === one.column : f.tag === one.column)))?.roll;
+  const tags = sample?.tags?.length ? `метки: ${sample.tags.join(', ')}` : '';
+  return (
+    <div className="dict-block roll-word">
+      <div className="dict-row">
+        <span className="roll-word__name">
+          <Input value={roll.label ?? ''} placeholder="как бросок зовётся"
+            onChange={next => edit(draft => { if (next) draft.label = next; else delete draft.label; })} />
+        </span>
+        <span className="roll-word__said">{tags}</span>
+        <DangerButton size="sm" onConfirm={() => editSystem(draft => { delete draft.rolls?.[id]; if (draft.rolls && !Object.keys(draft.rolls).length) delete draft.rolls; })}>Убрать</DangerButton>
+      </div>
+      <div className="roll-form">
+        <div className="dict-row roll-line">
+          <span className="dict-row__label">Бросают</span>
+          <div className="roll-form__body roll-form__body--wrap">
+            {roll.fields.map(one => (
+              <Chip key={`${one.table}.${one.column}`}
+                onRemove={() => edit(draft => { draft.fields = draft.fields.filter(f => !(f.table === one.table && f.column === one.column)); })}>
+                {nameOf(one.table, one.column)}
+              </Chip>
+            ))}
+            {untaken.length ? (
+              <Select value="" label="добавить поле" options={[['', '+ поле…'], ...free, ...(hidden && !service ? [[SERVICE, `служебные поля, которых нет на листе (${hidden})…`]] : [])] as never}
+                onChange={(next: string) => {
+                  if (!next) return;
+                  if (next === SERVICE) { setService(true); return; }
+                  const [table, column] = next.split('\u0000');
+                  edit(draft => { draft.fields.push({ table: table!, column: column! }); });
+                }} />
+            ) : null}
+          </div>
+        </div>
+        <div className="dict-row roll-line">
+          <span className="dict-row__label">Кость</span>
+          <div className="roll-form__body">
+            <Select label="Кость" value={roll.die} options={dice.map(([key, c]) => [key, c.label || key] as const) as never}
+              onChange={next => edit(draft => { draft.die = next; })} />
+          </div>
+        </div>
+        <div className="dict-row roll-line">
+          <span className="dict-row__label">Число поля — это</span>
+          <div className="roll-form__body">
+            <Select label="Число поля — это" value={roll.number ?? 'bonus'} options={NUMBER_WORDS as never}
+              onChange={next => edit(draft => { if (next === 'bonus') delete draft.number; else draft.number = next; if (next !== 'count') delete draft.keep; })} />
+          </div>
+        </div>
+        {roll.number === 'count' ? (
+          <div className="dict-row roll-line">
+            <span className="dict-row__label">Оставить лучшие</span>
+            <div className="roll-form__body">
+              <FormulaField value={typeof roll.keep === 'object' ? roll.keep.expr : roll.keep ?? ''} system={system} where={`${roll.label || id} · сколько оставить`} placeholder="все"
+                onCommit={text => edit(draft => { if (text.trim()) draft.keep = { expr: text.trim() }; else delete draft.keep; })} />
+            </div>
+          </div>
+        ) : null}
+        {roll.number === 'under' || roll.number === 'over' || roll.success || roll.margin ? (
+          <>
+            {([
+              ['success', 'Успех, если', roll.number === 'under' ? '@выпало <= @порог' : '@выпало >= @порог', 'успех'],
+              ['margin', 'Степени числом', roll.number === 'under' ? '@порог - @выпало' : '@выпало - @порог', 'степени'],
+            ] as const).map(([key, label, hint, where]) => (
+              <div key={key} className="dict-row roll-line">
+                <span className="dict-row__label">{label}</span>
+                <div className="roll-form__body">
+                  <FormulaField value={roll[key]?.expr ?? ''} system={system} where={`${roll.label || id} · ${where}`} extraNames={RULE_NAMES} placeholder={hint}
+                    onCommit={text => edit(draft => { if (text.trim()) draft[key] = { expr: text.trim() }; else delete draft[key]; })} />
+                </div>
+              </div>
+            ))}
+          </>
+        ) : null}
+        <div className="dict-row roll-line roll-line--top">
+          <span className="dict-row__label">Ступени</span>
+          <div className="roll-form__body roll-form__body--stack">
+            {(roll.degrees ?? []).map((degree, at) => (
+              <div key={at} className="roll-degree">
+                <Input value={degree.label} placeholder="как зовётся ступень"
+                  onChange={label => edit(draft => { const one = draft.degrees?.[at]; if (one) one.label = label; })} />
+                <span className="roll-degree__if">если</span>
+                <FormulaField value={degree.if.expr} system={system} where={`${roll.label || id} · ступень`} extraNames={DEGREE_NAMES} placeholder="@выпало <= @число"
+                  onCommit={text => edit(draft => { const one = draft.degrees?.[at]; if (one) one.if = { expr: text.trim() }; })} />
+                <button type="button" className="chips__x" aria-label="убрать ступень"
+                  onClick={() => edit(draft => { draft.degrees?.splice(at, 1); if (!draft.degrees?.length) delete draft.degrees; })}>×</button>
+              </div>
+            ))}
+            <button type="button" className="roll-form__add"
+              onClick={() => edit(draft => { (draft.degrees ??= []).push({ label: 'Новая ступень', if: { expr: '@выпало <= @число' } }); })}>+ ступень</button>
+          </div>
+        </div>
+        <div className="dict-row roll-line">
+          <span className="dict-row__label">Ещё метки</span>
+          <div className="roll-form__body roll-form__body--wrap">
+            <TagsField system={system} value={roll.tags}
+              onChange={tags => edit(draft => { const list = tags.filter((t): t is string => typeof t === 'string'); if (list.length) draft.tags = list; else delete draft.tags; })} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function RollsSection({ system, editSystem }: { system: System; editSystem: EditSystem }) {
+  const rolls = Object.entries(system.rolls ?? {});
+  const die = dieEntries(system)[0]?.[0];
+  return (
+    <Card>
+      <CardHead title="Броски" sub="Как бросают поля листа: щелчок по полю и шаг «Бросок» с полем."
+        actions={die ? <Button size="sm" onClick={() => editSystem(draft => { addRoll(draft, die); })}>+ бросок</Button> : null} />
+      {rolls.length ? (
+        <div className="stack">
+          {rolls.map(([id, roll]) => <RollRow key={id} id={id} roll={roll} system={system} editSystem={editSystem} />)}
+        </div>
+      ) : (
+        <span className="faint">{die ? 'Бросков нет. Заведите бросок и выберите поля, которые им бросают.' : 'Сначала заведите кость в «Костях».'}</span>
+      )}
+    </Card>
+  );
+}

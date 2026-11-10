@@ -122,7 +122,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
   const item = entry ? { sheet: actor, key: keyOf(entry), record: action.record.id } : undefined;
   const paramDefs = effect.params ?? [];
   const claims: Claims = intent.claims ?? {};
-  const table = tableOf(action.binding, effect);
+  const table = tableOf(effect);
 
   const bound: Record<string, Bound> = { носитель: actor };
   for (const param of paramDefs) {

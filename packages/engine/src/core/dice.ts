@@ -6,7 +6,9 @@ import type { DieConstant, Die, RollEdit, RollEditOp } from '../model/types.ts';
 
 export interface Term { count: number; sides: number; part?: string; extra?: boolean; minus?: boolean }
 
-export interface Spec { label: string; terms: Term[]; read: ReadSpec }
+export interface Zero { count: number; keep?: 'best' | 'worst' }
+
+export interface Spec { label: string; terms: Term[]; read: ReadSpec; keeps?: Keep[]; zero?: Zero }
 
 export type Scope = { part: string } | 'unnamed' | 'main';
 
@@ -84,7 +86,8 @@ export function parse(input: string | DieConstant, countOf?: CountOf): Spec {
       ...(term.minus ? { minus: true } : {}),
     };
   });
-  return { label: input.label ?? '', terms, read: readingOf(input.read) };
+  const zero = (input as { zero?: Zero }).zero;
+  return { label: input.label ?? '', terms, read: readingOf(input.read), ...(zero ? { zero } : {}) };
 }
 
 export function withCount(spec: Spec, count: number, owner: string): Spec {
@@ -95,6 +98,22 @@ export function withCount(spec: Spec, count: number, owner: string): Spec {
     throw new EngineError(`${owner}: число костей задаёт проверка, а кость «${spec.label || '?'}» составная — возьмите кость из одного вида`);
   }
   return { ...spec, terms: [{ ...spec.terms[0]!, count }] };
+}
+
+export function withSides(spec: Spec, sides: number, owner: string): Spec {
+  if (!Number.isInteger(sides) || sides < 1) {
+    throw new EngineError(`${owner}: грани кости «${spec.label || '?'}» должны быть целым числом от единицы, а вышло ${sides}`);
+  }
+  if (spec.terms.length !== 1) {
+    throw new EngineError(`${owner}: грани задаёт проверка, а кость «${spec.label || '?'}» составная — возьмите кость из одного вида`);
+  }
+  return { ...spec, terms: [{ ...spec.terms[0]!, sides }] };
+}
+
+export function withKeep(spec: Spec, n: number, owner: string): Spec {
+  if (!Number.isInteger(n)) throw new EngineError(`${owner}: оставить можно целое число костей, а вышло ${n}`);
+  if (n < 1) return spec;
+  return { ...spec, keeps: [...(spec.keeps ?? []), { n, from: 'best', scope: 'main' }] };
 }
 
 export function times(spec: Spec, n: number): Spec {
@@ -264,13 +283,23 @@ export const nextId = (dice: readonly Rolled[]): (() => number) => {
 };
 
 export function claimOf(spec: Spec, edits: readonly RollEdit[]): Claim {
-  let claim: Claim = { terms: spec.terms, read: spec.read, keeps: [], versusShift: 0, degreeShift: 0 };
+  let claim: Claim = { terms: spec.terms, read: spec.read, keeps: [...(spec.keeps ?? [])], versusShift: 0, degreeShift: 0 };
   for (const edit of edits) {
     for (const op of edit.ops ?? []) {
       if (stageOf(op) === 'claim') claim = CLAIM[String(op.op)]!(claim, op);
     }
   }
-  return claim;
+  return spec.zero ? zeroed(claim, spec.zero) : claim;
+}
+
+function zeroed(claim: Claim, zero: Zero): Claim {
+  const main = claim.terms.filter(t => !t.extra && !t.part);
+  if (main.length !== 1 || main[0]!.count > 0 || zero.count < 1) return claim;
+  return {
+    ...claim,
+    terms: claim.terms.map(t => (t === main[0] ? { ...t, count: zero.count } : t)),
+    keeps: [...claim.keeps, { n: 1, from: zero.keep ?? 'worst', scope: 'unnamed' }],
+  };
 }
 
 export function start(spec: Spec, edits: (RollEdit & { label?: string })[], die: Die, tags: readonly string[] = []): Roll {
@@ -319,6 +348,13 @@ export function addTo(roll: Roll, pending: readonly PendingAddend[], die: Die): 
     if (!Number.isFinite(value)) throw new EngineError(`прибавка «${one.label}» дала не число`);
     return { label: one.label, value, dice };
   }));
+}
+
+export function verdictText(made: { threshold?: number | null; under?: boolean; success?: boolean | null; margin?: number | null; degree?: string | null }): string {
+  const bar = made.threshold === null || made.threshold === undefined ? '' : ` · ${made.under ? 'не больше' : 'порог'} ${made.threshold}`;
+  const passed = made.success === null || made.success === undefined ? '' : `${bar ? ':' : ' ·'} ${made.success ? 'успех' : 'провал'}`;
+  const steps = made.margin === null || made.margin === undefined ? '' : ` · степеней: ${made.margin}`;
+  return `${bar}${passed}${steps}${made.degree ? ` · ${made.degree}` : ''}`;
 }
 
 export function addendsText(addends: readonly { label: string; value: number; dice?: readonly { sides: number; value: number }[] }[]): string {

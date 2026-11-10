@@ -8,13 +8,14 @@ import { referenced } from '../../keys.ts';
 import { useWorld } from '../../../../store/world.ts';
 import type { CardGroup } from '../../cards.ts';
 import type { Segment } from '../../readback.ts';
-import { checkReadback, changeReadback, sendReadback, numberReadback, seenReadback, amountValueSegments } from '../../readback.ts';
+import { checkReadback, changeReadback, sendReadback, numberReadback, rollReadback, seenReadback, amountValueSegments } from '../../readback.ts';
 import { namesOf } from '../../slots.tsx';
 import type { SlotContext, EarlierStep } from '../../slots.tsx';
 import type { Problem } from '../../step-card.tsx';
 import { CheckBody } from './check-body.tsx';
 import { ChangeBody } from './change-body.tsx';
 import { NumberBody } from './number-body.tsx';
+import { RollBody } from './roll-body.tsx';
 import { SeenBody } from './seen-body.tsx';
 import { TableBody } from './table-body.tsx';
 import { StopStrip, StepHead, FlowActions } from './flow-parts.tsx';
@@ -44,7 +45,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, names, tables, takenNames, onRename, onUnpair, ifBy, byOutput, activeOutput, onUnwrap, asIf = false, outcome = '', headCond, headBy,
+  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, names, tables, takenNames, onRename, ifBy, byOutput, activeOutput, onUnwrap, asIf = false, outcome = '', headCond, headBy,
 }: {
   group: CardGroup;
   position: number;
@@ -72,7 +73,6 @@ export function GroupCard({
   sheets?: SheetNames;
   names?: ReadonlyMap<string, string>;
   tables?: ReadonlyMap<string, string>;
-  onUnpair?: () => void;
   ifBy?: { label: string; run: () => void }[];
   byOutput?: Record<string, () => void>;
   activeOutput?: string;
@@ -129,7 +129,8 @@ export function GroupCard({
   const body = (
     <>
       {problem ? <Verdict tone="bad" action={problemAction}>{problem.text}</Verdict> : null}
-      {group.kind === 'check' ? <CheckBody step={step} roll={group.amount} context={context} edit={edit} system={system} asIf={asIf} {...(onUnpair ? { onUnpair } : {})} /> : null}
+      {group.kind === 'check' ? <CheckBody step={step} context={context} edit={edit} system={system} asIf={asIf} /> : null}
+      {group.kind === 'roll' ? <RollBody step={step} context={context} edit={edit} {...(takenNames ? { takenNames } : {})} {...(onRename ? { onRename } : {})} /> : null}
       {group.kind === 'seen' ? <SeenBody step={step} context={context} edit={edit} /> : null}
       {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} withNumber={withNumber} system={system} onAddParam={onAddParam} onOpenEffect={onOpenEffect} lane={lane} /> : null}
       {group.kind === 'number'
@@ -137,7 +138,7 @@ export function GroupCard({
           {...(takenNames ? { takenNames } : {})} {...(onRename ? { onRename } : {})} />
         : null}
       {group.kind === 'table' ? <TableBody step={step} context={context} edit={edit} system={system} /> : null}
-      {group.kind === 'number' ? null : <StepName group={group} effect={effect} system={system} edit={edit} branches={byOutput} active={activeOutput} />}
+      {group.kind === 'number' || group.kind === 'roll' ? null : <StepName group={group} effect={effect} system={system} edit={edit} branches={byOutput} active={activeOutput} />}
     </>
   );
 
@@ -164,7 +165,7 @@ export function GroupCard({
   if (folded) {
     return (
       <>
-        <Card tone={problem ? 'bad' : (group.kind as 'check' | 'change' | 'number' | 'table')} className="step-card">
+        <Card tone={problem ? 'bad' : toneOf(group.kind)} className="step-card">
           <div className="step-fold__row">
             {head}
             <span className="step-fold__summary">{summaryOf(group, system, effect, namesOf(context))}</span>
@@ -178,7 +179,7 @@ export function GroupCard({
 
   return (
     <>
-      <Card tone={problem ? 'bad' : (group.kind as 'check' | 'change' | 'number' | 'table')} className="step-card" label={`шаг «${called}»`}>
+      <Card tone={problem ? 'bad' : toneOf(group.kind)} className="step-card" label={`шаг «${called}»`}>
         <CardHead
           title={head}
           actions={actions}
@@ -189,9 +190,12 @@ export function GroupCard({
   );
 }
 
+const toneOf = (kind: string): 'check' | 'change' | 'number' | 'table' => (kind === 'roll' ? 'number' : kind as 'check' | 'change' | 'number' | 'table');
+
 function summaryOf(group: CardGroup, system: System, effect: Effect, names: Map<string, string>): string {
   const step = group.step;
-  const segments = group.kind === 'check' ? checkReadback(step, group.amount, system, effect, names)
+  const segments = group.kind === 'check' ? checkReadback(step, system, effect, names)
+    : group.kind === 'roll' ? rollReadback(step, system, effect, names)
     : group.kind === 'number' ? (step.id ? [{ text: `${String(step.id)} =` }, ...amountValueSegments(step, system, effect, names)] : numberReadback(step, system, effect, names))
     : group.kind === 'table' ? tableReadback(step as Record<string, unknown>, system)
     : group.kind === 'seen' ? seenReadback(step, system)
@@ -265,30 +269,32 @@ function StepName({ group, effect, system, edit, branches, active }: { group: Ca
   const calledId = group.step.type === 'emit' ? (group.step as { effect?: unknown }).effect : undefined;
   const gives = typeof calledId === 'string' && (system.effects[calledId]?.returns ?? []).length > 0;
   if (!id && group.step.type !== 'apply' && !gives) return null;
-  if (!open) {
+  const st = useWorld.getState();
+  const locked = Boolean(id) && referenced({ s: st.system, c: st.compendium }, id, { steps: effect.steps ?? [], cost: effect.cost ?? [] });
+  const taken = [...(effect.steps ?? []), ...(effect.cost ?? [])].map(s => String(s.id ?? '')).filter(Boolean);
+  const rename = (next: string) => edit(group.amount ? 1 : 0, draft => { if (next) draft.id = next; else delete draft.id; });
+  if (gives) {
+    const field = open && !locked
+      ? <span className="result-row__name-field" ref={el => { if (el && !el.contains(document.activeElement)) el.querySelector('input')?.focus(); }} onBlur={() => setOpen(false)}><KeyField optional value={id} locked={false} taken={taken} onChange={rename} /></span>
+      : undefined;
     return (
       <div className="inline inline--tight step-name">
-        {gives
-          ? <ResultChips name={id} outputs={system.effects[String(calledId)]?.returns ?? []} system={system} {...(branches ? { branches } : {})} active={active} onName={() => setOpen(true)} />
-          : <Button size="sm" variant="ghost" title="как итог шага зовётся в формулах: @имя" onClick={() => setOpen(true)}>{id ? `имя в формулах: ${id}` : 'имя в формулах…'}</Button>}
+        <ResultChips name={id} outputs={system.effects[String(calledId)]?.returns ?? []} system={system} {...(branches ? { branches } : {})} active={active}
+          onName={locked ? undefined : () => setOpen(true)} nameSlot={field} />
       </div>
     );
   }
-  const st = useWorld.getState();
-  const taken = [...(effect.steps ?? []), ...(effect.cost ?? [])].map(s => String(s.id ?? '')).filter(Boolean);
-  const roll = group.amount?.id ? String(group.amount.id) : '';
-  const rename = (next: string) => {
-    const follows = Boolean(next) && group.kind === 'check' && roll === `${id}_бросок` && !taken.includes(`${next}_бросок`);
-    edit(group.amount ? 1 : 0, draft => {
-      if (next) draft.id = next; else delete draft.id;
-      if (follows) (draft as { value?: unknown }).value = { expr: `@${next}_бросок` };
-    });
-    if (follows) edit(0, draft => { draft.id = `${next}_бросок`; });
-  };
+  if (!open) {
+    return (
+      <div className="inline inline--tight step-name">
+        <Button size="sm" variant="ghost" title="как итог шага зовётся в формулах: @имя" onClick={() => setOpen(true)}>{id ? `имя в формулах: ${id}` : 'имя в формулах…'}</Button>
+      </div>
+    );
+  }
   return (
     <div className="inline inline--tight step-name">
-      <span className="faint">{gives ? 'результат называется' : 'имя в формулах'}</span>
-      <KeyField optional value={id} locked={Boolean(id) && referenced({ s: st.system, c: st.compendium }, id, { steps: effect.steps ?? [], cost: effect.cost ?? [] })} taken={taken} onChange={rename} />
+      <span className="faint">имя в формулах</span>
+      <KeyField optional value={id} locked={locked} taken={taken} onChange={rename} />
     </div>
   );
 }

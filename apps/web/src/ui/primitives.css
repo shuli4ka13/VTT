@@ -757,6 +757,7 @@
 .call-group__value { display: inline-flex; align-items: center; gap: var(--s-2); min-width: 0; }
 .roll-formula { --value-w: none; display: flex; align-items: center; gap: var(--s-3); min-width: 0; }
 .roll-formula > .formula-field { flex: 1 1 auto; min-width: 0; }
+.roll-formula > .select { flex: 0 1 320px; min-width: 0; height: 32px; min-height: 32px; }
 .roll-by {
   -webkit-appearance: none; appearance: none; field-sizing: content;
   flex: none; height: 22px; max-width: 220px; margin: 0; padding: 0 18px 0 var(--s-3);
@@ -836,6 +837,25 @@
 .roll-word__said { flex: 1 1 auto; color: var(--text-muted); font-size: var(--fs-2); }
 .roll-word__ops { padding-top: 0; }
 .roll-word__said--hole { color: var(--danger); }
+.roll-line .select { flex: 0 1 auto; width: auto; max-width: 260px; }
+.roll-line > .inline { flex: 1 1 auto; }
+.roll-form { display: grid; gap: var(--s-3); padding: var(--s-3) 0 var(--s-2); }
+.roll-form > .dict-row { padding: 0; min-height: var(--control-h); gap: var(--s-4); }
+.roll-form .dict-row__label { flex: 0 0 112px; white-space: nowrap; font-size: var(--fs-3); }
+.roll-line--top { align-items: flex-start; }
+.roll-line--top > .dict-row__label { line-height: var(--control-h); }
+.roll-form__body { flex: 0 1 560px; min-width: 0; display: flex; align-items: center; gap: var(--s-3); }
+.roll-form__body--wrap { flex-wrap: wrap; }
+.roll-form__body--stack { flex-direction: column; align-items: stretch; }
+.roll-form__body--halves > .select { flex: 1 1 0; min-width: 0; max-width: none; }
+.roll-form__body--wrap .select { flex: 0 0 auto; width: 220px; max-width: 100%; }
+.roll-form__body > .formula-field, .roll-degree > .formula-field { flex: 1 1 auto; height: var(--control-h); padding: 0 var(--s-3); border-radius: var(--r-2); flex-wrap: nowrap; white-space: nowrap; }
+.roll-form .chip { min-height: 26px; }
+.roll-degree { display: flex; align-items: center; gap: var(--s-3); min-width: 0; }
+.roll-degree > .input { flex: 0 0 200px; min-width: 0; }
+.roll-degree__if { flex: 0 0 auto; color: var(--kind-check, var(--text-faint)); font-size: var(--fs-2); }
+.roll-form__add { align-self: flex-start; height: var(--control-h); padding: 0 var(--s-3); border: 1px dashed var(--border-strong); border-radius: var(--r-2); background: none; color: var(--text-muted); font: inherit; font-size: var(--fs-2); cursor: pointer; }
+.roll-form__add:hover { border-color: var(--accent); color: var(--text); }
 .chip--formula { padding-right: var(--s-2); }
 .chip__formula { min-width: 120px; }
 .roll-pairs { border-top: 1px solid var(--border); padding-top: var(--s-3); }
@@ -913,3 +933,13 @@
   label.inline:has(> input[type='checkbox']) { min-height: 40px; }
   .inline > input[type='checkbox'] { width: 20px; height: 20px; }
 }
+.head-pick > .select { field-sizing: content; width: auto; max-width: 140px; min-width: 0; height: 28px; min-height: 28px; font-size: var(--fs-2); }
+.roll-form__body:not(.roll-form__body--wrap) > .select { flex: 1 1 auto; max-width: none; }
+.roll-form .dict-row__label { flex-basis: 132px; }
+.dice-term__num--said { flex-basis: 132px; }
+.dict-row > .select:has(option[value='worst']) { flex-basis: 240px; }
+.locked { position: relative; display: inline-flex; }
+.locked .btn:disabled { pointer-events: none; }
+.locked__tip { display: none; position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; width: 340px; padding: var(--s-3) var(--s-4); flex-direction: column; gap: var(--s-1); background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: var(--r-2); box-shadow: 0 8px 24px rgba(0, 0, 0, .35); font-size: var(--fs-2); line-height: 1.4; color: var(--text); white-space: normal; text-align: left; }
+.locked:hover .locked__tip { display: flex; }
+.locked__head { color: var(--text-muted); margin-bottom: var(--s-1); }

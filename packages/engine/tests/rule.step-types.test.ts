@@ -317,7 +317,7 @@ group('линт шага — для приговора в конструктор
 
   test('бросок: без кости и формулы — беда видна без выполнения', () => {
     const { lint } = rollStep;
-    ok(lint({ type: 'roll' }).includes('кост'));
+    ok(lint({ type: 'roll' }).includes('шаг пуст'));
     eq(lint({ type: 'roll', die: 'lead_die' }), null);
     eq(lint({ type: 'roll', fixed: { expr: '3' } }), null);
   });

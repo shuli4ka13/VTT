@@ -59,7 +59,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
         && t !== '+ шаг для других' && t !== '+ новый' && t !== '+ блок'
         && t !== '+ ещё одно' && t !== '+ вход' && t !== '+ итог' && t !== '+ держание' && !t.startsWith('+ в «')
         && !['+ блок', '+ метки', '+ описание для игрока', '+ занимает', '+ какие метки бывают', '+ сколько висит', '+ на основе'].includes(t));
-    expect(palette).toEqual(['+ проверка', '+ изменение', '+ таблица', '+ для каждого из списка', '+ если', '+ стоп', '+ число']);
+    expect(palette).toEqual(['+ бросок', '+ проверка', '+ изменение', '+ таблица', '+ для каждого из списка', '+ если', '+ стоп', '+ число']);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     const card = screen.getByText('1 · Проверка').closest('.step-fold, .card') as HTMLElement;
     expect(card).toBeTruthy();
@@ -93,9 +93,9 @@ describe('EffectsTab: палитра трёх понятий', () => {
       activeEffectId: 'fresh',
     }));
     render(<EffectsTab />);
-    expect(document.querySelectorAll('.step-fold[aria-expanded="false"]')).toHaveLength(1);
+    expect(document.querySelectorAll('.step-fold[aria-expanded="false"]')).toHaveLength(2);
     fireEvent.click(screen.getAllByText('+ проверка').at(-1)!);
-    expect(document.querySelectorAll('.step-fold[aria-expanded="false"]')).toHaveLength(1);
+    expect(document.querySelectorAll('.step-fold[aria-expanded="false"]')).toHaveLength(2);
     expect(document.querySelectorAll('.step-fold[aria-expanded="true"]')).toHaveLength(1);
   });
 
@@ -107,7 +107,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
     fireEvent.click(screen.getByText('точно убрать'));
     expect(useWorld.getState().system.effects.strike!.steps).toHaveLength(0);
     fireEvent.click(screen.getByText('вернуть шаг'));
-    expect(useWorld.getState().system.effects.strike!.steps!.map(step => step.type)).toEqual(['roll', 'check']);
+    expect(useWorld.getState().system.effects.strike!.steps!.map(step => step.type)).toEqual(['check']);
   });
 
   it('кнопки палитры не знают доменных слов', () => {
@@ -204,9 +204,9 @@ describe('ссылка на результат шага', () => {
     }));
   });
 
-  it('машинного имени проверки на экране нет (своё имя видно только у «Числа»), а сослаться на шаг всё равно можно', () => {
+  it('машинного имени проверки на экране нет (своё имя видно у «Броска» и «Числа»), а сослаться на шаг всё равно можно', () => {
     renderOpen(<EffectsTab />);
-    expect(screen.queryAllByPlaceholderText('имя').map(input => (input as HTMLInputElement).value)).toEqual(['сколько']);
+    expect(screen.queryAllByPlaceholderText('имя').map(input => (input as HTMLInputElement).value)).toEqual(['бросок_бросок', 'сколько']);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     const steps = useWorld.getState().system.effects.strike!.steps!;
     const id = String(steps.at(-1)!.id);
@@ -215,7 +215,7 @@ describe('ссылка на результат шага', () => {
     expect(shown).not.toContain(id);
   });
 
-  it('имя проверки задаётся под «ещё» и тянет за собой имя её броска', () => {
+  it('имя проверки задаётся под «ещё» и не трогает имя броска', () => {
     renderOpen(<EffectsTab />);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     const before = useWorld.getState().system.effects.strike!.steps!.map(step => step.id);
@@ -226,7 +226,8 @@ describe('ссылка на результат шага', () => {
     fireEvent.blur(input);
     const ids = useWorld.getState().system.effects.strike!.steps!.map(step => step.id);
     expect(ids).toContain('hit');
-    expect(ids).toContain('hit_бросок');
+    expect(ids).toContain('бросок_бросок');
+    expect(ids).not.toContain('hit_бросок');
   });
 
   it('формула числа предлагает выходы проверки поимённо', () => {
@@ -342,7 +343,7 @@ describe('вызываемый эффект — обычный эффект', ()
 
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     const key = useWorld.getState().activeEffectId!;
-    expect(useWorld.getState().system.effects[key]!.steps).toHaveLength(3);
+    expect(useWorld.getState().system.effects[key]!.steps).toHaveLength(2);
 
     fireEvent.click(screen.getByText('+ ещё одно'));
     const params = useWorld.getState().system.effects[key]!.params ?? [];
@@ -411,7 +412,7 @@ describe('крит — обычная формула, а не особый сл�
   });
   afterEach(() => { cleanup(); });
 
-  const строка = () => screen.getByDisplayValue('кинуть("2d6")') as HTMLInputElement;
+  const строка = () => screen.getByDisplayValue('кинуть("2к6")') as HTMLInputElement;
 
   const набрать = (текст: string) => {
     const поле = строка();
@@ -419,42 +420,50 @@ describe('крит — обычная формула, а не особый сл�
     fireEvent.keyDown(поле, { key: 'Enter' });
   };
 
-  it('старый шаг сразу показан одной строкой, трёх полей больше нет', () => {
+  const шаг = () => useWorld.getState().system.effects.удар!.steps![2]! as Record<string, unknown>;
+
+  it('кость без хозяина показана числом одной строкой, старых полей нет, под строкой — что кости ничьи', () => {
     renderOpen(<EffectsTab />);
     expect(screen.queryByText('удвоить кости, если')).toBeNull();
     expect(screen.queryByText('переписать одной строкой')).toBeNull();
     expect(screen.queryByText('сколько раз кинуть')).toBeNull();
     expect(screen.queryByText('прибавка')).toBeNull();
 
+    expect(document.querySelectorAll('[data-field="Кто бросает"]')).toHaveLength(1);
     expect(document.querySelector('.number-line [data-field="Формула"]')).toBeTruthy();
     expect(строка()).toBeTruthy();
+    expect(screen.getByText(/кости в формуле ничьи/)).toBeTruthy();
   });
 
   it('правка строки переносит старые поля в формулу', () => {
     renderOpen(<EffectsTab />);
-    набрать("кинуть('2d6') + @хиты");
-
-    const шаг = useWorld.getState().system.effects.удар!.steps![2]! as Record<string, unknown>;
-    expect(шаг.die, 'старые поля ушли').toBeUndefined();
-    expect((шаг.fixed as { expr: string }).expr).toBe("кинуть('2d6') + @хиты");
+    набрать("кинуть('2к6') + @хиты");
+    expect(шаг().die, 'старые поля ушли').toBeUndefined();
+    expect((шаг().fixed as { expr: string }).expr).toBe("кинуть('2к6') + @хиты");
   });
 
   it('набор не пишется в систему, пока строку не отпустили', () => {
     renderOpen(<EffectsTab />);
     fireEvent.change(строка(), { target: { value: 'кинуть(@кос' } });
-
-    const шаг = useWorld.getState().system.effects.удар!.steps![2]! as Record<string, unknown>;
-    expect(шаг.fixed, 'недобранное имя в систему не попало').toBeUndefined();
-    expect(шаг.die).toEqual({ expr: '"2d6"' });
+    expect(шаг().fixed, 'недобранное имя в систему не попало').toBeUndefined();
+    expect(шаг().die).toEqual({ expr: '"2d6"' });
   });
 
   it('незнакомое имя в строке предлагается взять из записи под тем же ключом', () => {
     renderOpen(<EffectsTab />);
     набрать('кинуть(@кость_врага)');
     fireEvent.click(screen.getByText('взять «кость_врага» из записи'));
-
     const effect = useWorld.getState().system.effects.удар!;
     expect(effect.params!.map(p => p.key)).toContain('кость_врага');
+  });
+
+  it('«сделать броском» ставит кость и бросающего и снимает формулу', () => {
+    useWorld.getState().editEffect('удар', draft => { draft.steps![2] = { id: 'урон', type: 'roll', die: 'к20' } as never; });
+    renderOpen(<EffectsTab />);
+    fireEvent.click(screen.getByText('сделать броском'));
+    expect(шаг().die).toBe('к20');
+    expect(шаг().by).toEqual({ expr: '@действующий' });
+    expect(шаг().fixed).toBeUndefined();
   });
 });
 

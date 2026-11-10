@@ -52,7 +52,7 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     expect(строкаВхода('Кость урона').querySelector('.chips__chip')?.textContent).toContain('Кость урона');
   });
 
-  it('каждый вход эффекта — строка у типа, даже новый', () => {
+  it('каждый обязательный вход эффекта — строка у типа, даже новый; необязательный — в «+ передать…»', () => {
     useWorld.setState(state => ({
       ...state,
       system: {
@@ -67,7 +67,10 @@ describe('RecordsTab: тип видит входы эффекта', () => {
       },
     }));
     render(<RecordsTab />);
-    expect([...document.querySelectorAll('.args-row__name')].map(el => el.textContent)).toEqual(['Кость урона', 'Новый вход', 'Сколько костей']);
+    expect([...document.querySelectorAll('.args-row__name')].map(el => el.textContent)).toEqual(['Кость урона', 'Новый вход']);
+    const spare = screen.getByRole('combobox', { name: 'передать ещё' }) as HTMLSelectElement;
+    expect([...spare.options].map(o => o.textContent)).toContain('Сколько костей — сейчас как у эффекта: 1');
+    fireEvent.change(spare, { target: { value: 'сколько' } });
     expect(строкаВхода('Новый вход').className).toContain('args-row--need');
     fireEvent.click(within(строкаВхода('Новый вход') as HTMLElement).getByRole('button', { name: '+ свойство' }));
     expect(useWorld.getState().system.tables!.weapon!.columns!.some(p => p.key === 'новый' && p.label === 'Новый вход')).toBe(true);
@@ -91,7 +94,7 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     expect(строкаВхода('Кость урона').className).not.toContain('args-row--need');
   });
 
-  it('входы-листы, которые кнопка заполняет сама, подписаны, а не горят «не заполнено»', () => {
+  it('входы-листы кнопка не показывает: их заполняет стол — кто нажал и цели', () => {
     useWorld.setState(state => ({
       ...state,
       system: {
@@ -105,9 +108,11 @@ describe('RecordsTab: тип видит входы эффекта', () => {
       },
     }));
     render(<RecordsTab />);
-    expect(screen.getByDisplayValue('кто нажал кнопку')).toBeTruthy();
-    expect(screen.getByDisplayValue('цели, выбранные за столом')).toBeTruthy();
+    expect(screen.queryByDisplayValue('кто нажал кнопку')).toBeNull();
+    expect(screen.queryByText('Кто действует')).toBeNull();
     expect(screen.queryByText('не заполнено')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'ещё' }));
+    expect(screen.queryByDisplayValue('кто нажал кнопку')).toBeNull();
   });
 
   it('на экране нет слов «дырка», «параметр», «привязка»', () => {

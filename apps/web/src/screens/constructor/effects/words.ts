@@ -16,7 +16,7 @@ export const launchHint = (kind: LaunchKind): string => LAUNCHES[kind].hint;
 export type EditFn = (slotIndexInGroup: number, change: (draft: Step) => void) => void;
 export type WithNumber = (change: (amount: Step, apply: Step, id: string) => void) => void;
 
-export const CARD_TITLES: Record<string, string> = { check: 'Проверка', change: 'Изменение', number: 'Число', table: 'Взять из таблицы', stop: 'Стоп' };
+export const CARD_TITLES: Record<string, string> = { check: 'Проверка', change: 'Изменение', roll: 'Бросок', number: 'Число', table: 'Взять из таблицы', stop: 'Стоп' };
 
 export const STEP_TITLES = { call: 'Вызов', callFrom: 'Вызвать переданное в', put: 'Наложить', take: 'Снять', set: 'Изменить', roll: 'Бросок', number: 'Число' };
 
@@ -53,7 +53,8 @@ export function titleOf(kind: string, step: Step | undefined, system: System, ef
     const tag = fieldOfTarget(s.target);
     return tag ? `${STEP_TITLES.set} «${labelOfTag(system, tag, names)}»` : STEP_TITLES.set;
   }
-  if (kind === 'number') return named(s?.by ? STEP_TITLES.roll : STEP_TITLES.number, s?.id);
+  if (kind === 'roll') return named(STEP_TITLES.roll, s?.id);
+  if (kind === 'number') return named(STEP_TITLES.number, s?.id);
   if (kind === 'table') return named(CARD_TITLES[kind] ?? kind, s?.id);
   if (kind === "seen" && typeof s?.type === "string" && s.type in STEP_WORDS) return STEP_WORDS[s.type as keyof typeof STEP_WORDS].label;
   return CARD_TITLES[kind] ?? kind;

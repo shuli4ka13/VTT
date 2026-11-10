@@ -3,8 +3,11 @@ import { STEP_WORDS } from '@vtt/engine/words/steps';
 import type { Step } from '@vtt/schema';
 import { armsOf, balance, endOf, flowOf, inBlock } from '@vtt/engine/model/flow';
 import { loopsAt } from '@vtt/engine/engine/steps/index';
+import { isThrow } from './cards-kind.ts';
 
-export type CardKind = 'check' | 'change' | 'number' | 'table' | 'split' | 'seen' | 'flow' | 'stop' | 'unknown';
+export { isThrow };
+
+export type CardKind = 'check' | 'change' | 'roll' | 'number' | 'table' | 'split' | 'seen' | 'flow' | 'stop' | 'unknown';
 
 export interface CardGroup {
   kind: CardKind;
@@ -62,17 +65,12 @@ export function groupSteps(list: Step[]): CardGroup[] {
     const step = list[i]!;
     const next = list[i + 1];
 
-    const owned = step.type === 'roll' && (step as { by?: unknown }).by !== undefined;
-    if (owned && step.id && next?.type === 'check' && takesWhole((next as { value?: unknown }).value, step.id)) {
-      out.push({ kind: 'check', indices: [i, i + 1], step: next, amount: step });
-      i++;
-      continue;
-    }
+    const thrown = isThrow(step);
     const call = next as { args?: Record<string, unknown>; value?: unknown } | undefined;
     const carried = next?.type === 'emit'
       ? Object.values(call?.args ?? {}).find(arg => takesWhole(arg, step.id ?? ''))
       : call?.value;
-    const glue = step.type === 'roll' && !owned && step.id
+    const glue = step.type === 'roll' && !thrown && step.id
       && (next?.type === 'apply' || next?.type === 'status')
       && (takesWhole(carried, step.id) || names(next!, step.id))
       && list.every((other, j) => j === i || j === i + 1 || !mentions(other, step.id!));
@@ -81,7 +79,7 @@ export function groupSteps(list: Step[]): CardGroup[] {
       i++;
       continue;
     }
-    out.push({ kind: KIND_OF[step.type] ?? 'unknown', indices: [i], step, amount: null });
+    out.push({ kind: thrown ? 'roll' : KIND_OF[step.type] ?? 'unknown', indices: [i], step, amount: null });
   }
   return out;
 }

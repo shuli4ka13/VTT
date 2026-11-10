@@ -1,6 +1,6 @@
 import { useWorld, freeId } from '../../store/world.ts';
 import { TagsField } from './tags-field.tsx';
-import { dieEntries } from './rules/dice-section.tsx';
+import { rollOfColumn, setColumnRoll, setEntryTags } from './rules/rolls.ts';
 import { ViewGallery } from './view-gallery.tsx';
 import { VIEWS, columnFamily, viewNeeds, takesBounds, TAKES_STEP } from '../../sheet/views/index.tsx';
 import { BoundFormula } from './bound-field.tsx';
@@ -31,8 +31,9 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
   const single = isSingle(table);
   const stored = single ? column.expr === undefined : (table.rows ?? []).some(row => cellSource(column, row).kind === 'input');
   const first = fieldsOf(system).find(f => f.home === tableId && (single ? f.tag === column.key : f.cell?.column === column.key));
-  const self = single ? `@${column.key}` : `@${ROW}.${column.key}`;
   const edit = (change: (draft: Column) => void) => editColumn(tableId, column.key, change);
+  const editSystem = useWorld(s => s.editSystem);
+  const rolled = rollOfColumn(system, tableId, column.key);
 
   return (
     <>
@@ -64,45 +65,16 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
           </Field>
         )}
       </div>
-      <Field label="Бросок">
+      <Field label="Бросок" hint="Как бросают — в «Правилах» → «Броски».">
         <div className="stack stack--tight">
           <Select
-            value={!column.roll ? '' : column.roll.count ? 'pool' : 'bonus'}
-            options={[['', 'не бросают'], ['bonus', 'значение — прибавка к кости'], ['pool', 'значение — число костей']] as const}
-            onChange={next => edit(draft => {
-              if (!next) { delete draft.roll; return; }
-              const die = dieEntries(system)[0]?.[0];
-              const roll = draft.roll ?? { ...(single ? { label: `Проверка: ${draft.label ?? draft.key}` } : {}), ...(die ? { die } : {}) };
-              if (next === 'pool') { roll.count = { expr: self }; delete roll.bonus; } else { roll.bonus = { expr: self }; delete roll.count; }
-              draft.roll = roll;
-            })}
+            value={rolled?.key ?? ''}
+            options={[['', 'не бросают'], ...Object.entries(system.rolls ?? {}).map(([key, roll]) => [key, roll.label || key] as const)] as never}
+            onChange={next => editSystem(draft => setColumnRoll(draft, tableId, column.key, next || null))}
           />
-          {column.roll ? (
-            <>
-              <Select
-                value={column.roll.die ?? ''}
-                options={[['', '— какой костью —'], ...dieEntries(system).map(([key, c]) => [key, c.label || key] as const)] as never}
-                onChange={key => edit(draft => {
-                  if (!draft.roll) return;
-                  if (key) draft.roll.die = key; else delete draft.roll.die;
-                })}
-              />
-              <TagsField
-                system={system}
-                value={column.roll.tags}
-                templates={single ? [] : [
-                  { value: '{value}', label: 'ключ строки' },
-                  ...(table.columns ?? []).filter(other => other.key !== column.key).map(other => ({ value: `{${other.key}}`, label: `«${other.label || other.key}» строки` })),
-                ]}
-                onChange={tags => edit(draft => {
-                  if (!draft.roll) return;
-                  const list = tags.filter((t): t is string => typeof t === 'string');
-                  if (list.length) draft.roll.tags = list; else delete draft.roll.tags;
-                })}
-              />
-              <Input value={column.roll.label ?? ''} placeholder={single ? 'подпись броска' : 'подпись броска: «Проверка: {label}» — {label} станет названием строки'}
-                onChange={next => edit(draft => { if (!draft.roll) return; if (next.trim()) draft.roll.label = next; else delete draft.roll.label; })} />
-            </>
+          {rolled && single ? (
+            <TagsField system={system} value={rolled.entry.tags} empty="+ своё слово-метка…"
+              onChange={tags => editSystem(draft => setEntryTags(draft, tableId, column.key, tags.filter((t): t is string => typeof t === 'string')))} />
           ) : null}
         </div>
       </Field>
@@ -153,11 +125,14 @@ export function BlockViewField({ tableId, column, system, block, row, cell = row
       if (own) own.max = { expr: single ? `@${key}` : `@${ROW}.${key}` };
     });
   };
+  const title = row
+    ? `Вид «${own?.label ?? row}» в блоке «${block}»`
+    : single ? `Вид «${column.label || column.key}» в блоке «${block}»` : `Вид колонки «${column.label || column.key}» в блоке «${block}»`;
   return (
     <>
-      <Field label={row ? `Вид только у «${own?.label ?? row}»` : `Вид в блоке «${block}»`}>
+      <Field label={title}>
         <ViewGallery
-          label={row ? `Вид только у «${own?.label ?? row}»` : 'Вид'}
+          label={row ? title : 'Вид'}
           value={kind}
           family={columnFamily(column)}
           computed={!stored}

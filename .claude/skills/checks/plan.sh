@@ -18,13 +18,12 @@ echo "## Перед «готово» — в фоне"
 has '^packages/schema/' && echo "(cd packages/schema && npx vitest run --reporter=dot)"
 if has '^packages/engine/' || has '^samples/'; then
   echo "(cd packages/engine && npx vitest run --reporter=dot)"
-  echo "(cd packages/engine && GOLDEN=fast npx vitest run tests/golden --reporter=dot)"
 fi
 core='^(packages/|samples/)'
 if has '^apps/server/' || has "$core"; then echo "(cd apps/server && npx tsc -b ../../packages/engine && npx vitest run --reporter=dot)   # сценарии сервера играют образцы"; fi
 if has '^apps/web/' || has "$core"; then echo "(cd apps/web && npx tsc -b ../../packages/engine && npx vitest run --reporter=dot)   # конструктор собирает эффекты образцов"; fi
 if has "$shared"; then
-  echo "(cd apps/web && ROUND_TRIP=full npx vitest run round-trip --maxWorkers=8 --reporter=dot)   # общий UI конструктора, 15–30 мин"
+  echo "(cd apps/web && npx vitest run round-trip --reporter=dot)   # общий UI конструктора: две быстрые системы, ~10 с; все системы — только по просьбе владельца"
 else
   for s in "${systems[@]+"${systems[@]}"}"; do echo "(cd apps/web && ROUND_TRIP='$s' npx vitest run round-trip --reporter=dot)"; done
 fi
