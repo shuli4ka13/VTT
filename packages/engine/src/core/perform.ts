@@ -14,7 +14,7 @@ import { fieldOf, misfit } from '../model/sheet-columns.ts';
 import { DESK_ID, isDesk } from '../engine/owners.ts';
 import { External, Pause, emptyJournal } from './external.ts';
 import { Path } from './path.ts';
-import { addendsText } from './dice.ts';
+import { addendsText, verdictText } from './dice.ts';
 import { Run } from './run.ts';
 import { runAct } from './act.ts';
 import { render, renderLines } from './render.ts';
@@ -161,10 +161,7 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     const sheet = sheetOf(run, sheetId);
     const check = fieldCheck(run.system, tag);
     const { thrown, bonus, total, entries, threshold, degree, success, margin } = run.check(sheetId, check, root.step('roll'), check.label, claims ?? []);
-    const bar = threshold === null ? '' : ` · ${check.under ? 'не больше' : 'порог'} ${threshold}`;
-    const passed = success === null ? '' : `${bar ? ':' : ' ·'} ${success ? 'успех' : 'провал'}`;
-    const steps = check.margin && margin !== null ? ` · степеней: ${margin}` : '';
-    const verdict = `${bar}${passed}${steps}${degree ? ` · ${degree}` : ''}`;
+    const verdict = verdictText({ threshold, under: check.under === true, success, margin: check.margin ? margin : null, degree });
     const rolled = thrown.result;
     const named = thrown.roll.edits.length ? ` (${thrown.roll.edits.join(', ')})` : '';
     const shown = rolled.dice.kept != null && rolled.dice.rolls.length > 1

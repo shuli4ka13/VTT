@@ -98,6 +98,7 @@ function fieldFinish(step: StepData, ctx: StepContext) {
       ...(made.threshold === null ? {} : { threshold: made.threshold, under: check.under === true }),
       ...(made.success === null ? {} : { success: made.success }),
       ...(made.margin === null ? {} : { margin: made.margin }),
+      ...(check.margin && made.margin !== null ? { said: made.margin } : {}),
       ...(made.degree === null ? {} : { degree: made.degree }),
     },
     break: null,
@@ -147,11 +148,11 @@ export function lint(step: StepData): string | null {
   if (has(step.field)) {
     if (has(step.die) || has(step.fixed) || has(step.count)) return 'бросок поля берёт кость из «Правил → Броски» — кость, сколько костей и формулу уберите';
     if (has(step.by)) return 'бросок поля бросает тот, чьё поле, — «Кто бросает» уберите';
-    if (!headOf(step.field)) return 'бросок поля: пишите поле через лист — @кто.поле';
+    if (!headOf(step.field)) return 'бросок поля: не выбрано поле, которое бросают';
     return null;
   }
   if (has(step.shift)) return 'поправка к числу — только у броска поля';
-  if (step.die === undefined && step.fixed === undefined) return 'броску нужна кость, формула или поле листа';
+  if (step.die === undefined && step.fixed === undefined) return 'шаг пуст: впишите формулу или выберите бросок';
   return null;
 }
 

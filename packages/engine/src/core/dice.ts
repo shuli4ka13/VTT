@@ -350,6 +350,13 @@ export function addTo(roll: Roll, pending: readonly PendingAddend[], die: Die): 
   }));
 }
 
+export function verdictText(made: { threshold?: number | null; under?: boolean; success?: boolean | null; margin?: number | null; degree?: string | null }): string {
+  const bar = made.threshold === null || made.threshold === undefined ? '' : ` · ${made.under ? 'не больше' : 'порог'} ${made.threshold}`;
+  const passed = made.success === null || made.success === undefined ? '' : `${bar ? ':' : ' ·'} ${made.success ? 'успех' : 'провал'}`;
+  const steps = made.margin === null || made.margin === undefined ? '' : ` · степеней: ${made.margin}`;
+  return `${bar}${passed}${steps}${made.degree ? ` · ${made.degree}` : ''}`;
+}
+
 export function addendsText(addends: readonly { label: string; value: number; dice?: readonly { sides: number; value: number }[] }[]): string {
   return addends.map(one => {
     const size = Math.abs(one.value);
