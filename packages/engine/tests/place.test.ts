@@ -37,6 +37,7 @@ describe('поле: мера между клетками', () => {
     expect(distanceOf(system, places, 'а', 'б')).toBe(10);
     expect(distanceOf(system, places, 'а', 'в')).toBeNull();
     expect(distanceOf({ ...system, grid: undefined }, places, 'а', 'б')).toBeNull();
+    expect(distanceOf({ ...system, grid: { step: 0.1 } }, { а: { x: 0, y: 0 }, б: { x: 3, y: 0 } }, 'а', 'б')).toBe(0.3);
   });
 
   it('полоса — строка, между границами которой мера', () => {
@@ -62,5 +63,7 @@ describe('поле: мера между клетками', () => {
     expect(texts.some(text => text.includes('нужен вопрос'))).toBe(true);
     expect(texts.some(text => text.includes('без границ'))).toBe(true);
     expect(lintSystem(system).filter(problem => /дистанц/.test(problem.text))).toEqual([]);
+    const formula = { ...system, tables: { полосы: { ...system.tables!.полосы!, rows: [{ value: 'близко', cells: { до: { expr: '@x' } } }] } } } as unknown as System;
+    expect(lintSystem(formula).some(problem => problem.text.includes('не формула'))).toBe(true);
   });
 });

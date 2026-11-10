@@ -68,7 +68,8 @@ export function authorize(room: Room, userId: string, want: Want): string | null
     if (!sheet) return `в комнате нет листа «${want.sheetId}»`;
     if (isDesk(sheet) || isGroup(sheet, room.sheets)) return 'стол и группа на поле не стоят';
     if (!room.system.grid) return 'в правилах нет сетки поля';
-    return maySheet(room, me, want.sheetId);
+    if (me.role === 'gm' || me.sheetId === want.sheetId) return null;
+    return me.sheetId ? 'это чужая фишка — двигает её владелец или ведущий' : 'сначала выберите своего персонажа — двигать можно только его';
   }
   if (want.kind === 'claim') {
     if (!want.sheetId) return null;

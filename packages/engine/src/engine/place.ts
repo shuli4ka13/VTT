@@ -22,7 +22,7 @@ export function distanceOf(system: System, places: Places | undefined, from: str
   const a = places?.[from];
   const b = places?.[to];
   if (!grid || !a || !b) return null;
-  return cellsBetween(a, b, grid.diagonal) * grid.step;
+  return Math.round(cellsBetween(a, b, grid.diagonal) * grid.step * 1e6) / 1e6;
 }
 
 const boundColumn = (system: System, key: string, bound: 'from' | 'to'): string | undefined =>

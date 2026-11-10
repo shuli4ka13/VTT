@@ -11,6 +11,7 @@ import { useSession } from '../../store/session.ts';
 import type { RoomState, Sheet, System } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/actions';
 import { isDesk } from '@vtt/engine/engine/owners';
+import { isGroup } from '@vtt/engine/events/desk';
 import { fieldsFor } from '@vtt/engine/engine/calc';
 import { sheetKinds } from '@vtt/engine/model/owned';
 import { useReader } from '../../engine/use-calc.ts';
@@ -49,6 +50,7 @@ function RoomTable({ room }: { room: RoomState }) {
   const turn = clock && clock.round > 0 ? clock.active : null;
   const grid = room.system.grid ?? null;
   const [moving, setMoving] = useState(false);
+  const pieces = people.filter(sheet => !isGroup(sheet, room.sheets));
   const off = grid ? people.filter(sheet => !room.places?.[sheet.id]) : people;
   const pick: Pick = {
     from, to, turn, party,
@@ -108,10 +110,10 @@ function RoomTable({ room }: { room: RoomState }) {
                 {grid ? (
                   <Field
                     room={room}
-                    people={people}
+                    people={pieces}
                     pick={pick}
                     pinned={pinned}
-                    sender={sender}
+                    sender={sender && !isGroup(sender, room.sheets) ? sender : null}
                     targets={targets}
                     moving={moving}
                     setMoving={setMoving}
@@ -127,7 +129,7 @@ function RoomTable({ room }: { room: RoomState }) {
                   }) : undefined}
                 >
                   {grid ? <span className="faint tokens__label">не на поле — перетащите на клетку; сюда — убрать с поля</span> : null}
-                  {(grid ? off : people).map(sheet => <Piece key={sheet.id} sheet={sheet} room={room} pick={pick} pinned={pinned} />)}
+                  {(grid ? off : people).map(sheet => <Piece key={sheet.id} sheet={sheet} room={room} pick={pick} pinned={pinned} fixed={!grid || isGroup(sheet, room.sheets)} />)}
                 </div>
                 <NewSheet room={room} />
               </Card>
@@ -141,7 +143,7 @@ function RoomTable({ room }: { room: RoomState }) {
                 targets={targets}
                 places={room.places}
                 onError={setError}
-                onClear={() => { setFrom(null); setTo([]); }}
+                onClear={() => { setFrom(null); setTo([]); setMoving(false); }}
                 onSelf={() => { if (sender) setTo(ids => (ids.includes(sender.id) ? ids : [...ids, sender.id])); }}
               /> : null}
             </>
@@ -161,16 +163,16 @@ interface Pick {
   onPick: (id: string) => void;
 }
 
-function Piece({ sheet, room, pick, pinned, field }: {
-  sheet: Sheet; room: RoomState; pick: Pick; pinned: string; field?: boolean;
+function Piece({ sheet, room, pick, pinned, field, fixed }: {
+  sheet: Sheet; room: RoomState; pick: Pick; pinned: string; field?: boolean; fixed?: boolean;
 }) {
   const { from, to, turn, party } = pick;
   const name = sheet.name ?? sheet.id;
   return (
     <button
       type="button"
-      draggable
-      onDragStart={e => { e.dataTransfer.setData('text/plain', sheet.id); e.dataTransfer.effectAllowed = 'move'; }}
+      draggable={!fixed}
+      onDragStart={fixed ? undefined : e => { e.dataTransfer.setData('text/plain', sheet.id); e.dataTransfer.effectAllowed = 'move'; }}
       className={`token ${field ? 'token--field' : ''} ${party.size ? (party.has(sheet.id) ? 'token--ally' : 'token--foe') : ''} ${sheet.id === from ? 'token--from' : ''} ${to.includes(sheet.id) ? 'token--to' : ''} ${sheet.id === turn ? 'token--turn' : ''}`}
       title={field
         ? `${name}${sheet.id === turn ? ' — ходит' : ''}`

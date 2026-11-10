@@ -1233,6 +1233,15 @@ function measureProblems(system: System): Problem[] {
       if (!column.bound) continue;
       if (column.kind && column.kind !== 'number') out.push({ where: { tab: 'rules', section: 'tables', key: id }, level: 'error', text: `таблица «${table.label || id}»: граница дистанции «${column.label || column.key}» — только число` });
     }
+    const bounds = (table.columns ?? []).filter(column => column.bound);
+    for (const row of table.rows ?? []) {
+      for (const column of bounds) {
+        const cell = (row.cells as Record<string, unknown> | undefined)?.[column.key];
+        if (cell !== undefined && cell !== null && cell !== '' && typeof cell !== 'number') {
+          out.push({ where: { tab: 'rules', section: 'tables', key: id }, level: 'error', text: `таблица «${table.label || id}», строка «${String(row.label ?? row.value)}»: граница дистанции «${column.label || column.key}» — только число, не формула` });
+        }
+      }
+    }
     const twice = (['from', 'to'] as const).filter(bound => (table.columns ?? []).filter(column => column.bound === bound).length > 1);
     for (const bound of twice) out.push({ where: { tab: 'rules', section: 'tables', key: id }, level: 'error', text: `таблица «${table.label || id}»: граница «${bound === 'from' ? 'от' : 'до'}» отмечена у двух колонок` });
   }

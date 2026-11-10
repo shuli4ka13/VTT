@@ -138,8 +138,9 @@ describe('поле: место фишки', () => {
     expect((await rooms.state(roomId)).places).toEqual({ арен: { x: 1, y: 2 }, бора: { x: 4, y: 2 } });
 
     await rooms.join(player.userId, roomId);
+    await expect(rooms.placePiece(player.userId, roomId, 'арен', { x: 0, y: 0 })).rejects.toThrow('выберите своего персонажа');
     await rooms.claimSheet(player.userId, roomId, 'бора');
-    await expect(rooms.placePiece(player.userId, roomId, 'арен', { x: 0, y: 0 })).rejects.toThrow('чужой лист');
+    await expect(rooms.placePiece(player.userId, roomId, 'арен', { x: 0, y: 0 })).rejects.toThrow('чужая фишка');
     await rooms.placePiece(player.userId, roomId, 'бора', null);
     expect((await rooms.state(roomId)).places).toEqual({ арен: { x: 1, y: 2 } });
     await expect(rooms.placePiece(gm.userId, roomId, 'стол', { x: 0, y: 0 })).rejects.toThrow('не стоят');
