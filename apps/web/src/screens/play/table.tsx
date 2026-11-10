@@ -17,6 +17,7 @@ import { useReader } from '../../engine/use-calc.ts';
 import { FieldCell } from '../../sheet/field-cell.tsx';
 import { CombatBar } from './combat.tsx';
 import { Journal } from './journal.tsx';
+import { distanceOf, distanceWords } from '@vtt/engine/engine/place';
 import { Hanging } from './hanging.tsx';
 import { QUESTION_ID } from './pending-bar.tsx';
 import './table.css';
@@ -46,6 +47,17 @@ function RoomTable({ room }: { room: RoomState }) {
   const deskFields = fieldsOf(room.system).filter(f => f.lives === 'desk');
   const clock = room.clock;
   const turn = clock && clock.round > 0 ? clock.active : null;
+  const grid = room.system.grid ?? null;
+  const [moving, setMoving] = useState(false);
+  const off = grid ? people.filter(sheet => !room.places?.[sheet.id]) : people;
+  const pick: Pick = {
+    from, to, turn, party,
+    onPick: id => {
+      if (id === from) { setFrom(null); setMoving(false); return; }
+      if (!from) { setFrom(id); setTo(ids => ids.filter(one => one !== id)); return; }
+      setTo(ids => (ids.includes(id) ? ids.filter(one => one !== id) : [...ids, id]));
+    },
+  };
 
   return (
     <div className={`at-table at-table--${tab}`}>
@@ -93,29 +105,29 @@ function RoomTable({ room }: { room: RoomState }) {
                   }
                 />
                 {people.length ? null : <Empty title="За столом пока никого" hint="Заведите первый лист ниже." />}
-                <div className="tokens">
-                  {people.map(sheet => (
-                    <button
-                      key={sheet.id}
-                      type="button"
-                      className={`token ${party.size ? (party.has(sheet.id) ? 'token--ally' : 'token--foe') : ''} ${sheet.id === from ? 'token--from' : ''} ${to.includes(sheet.id) ? 'token--to' : ''} ${sheet.id === turn ? 'token--turn' : ''}`}
-                      title={sheet.id === from ? 'действует' : to.includes(sheet.id) ? 'цель — клик снимает' : 'клик: цель; если никто не действует — станет действующим'}
-                      onClick={() => {
-                        if (sheet.id === from) { setFrom(null); return; }
-                        if (!from) { setFrom(sheet.id); setTo(ids => ids.filter(id => id !== sheet.id)); return; }
-                        setTo(ids => (ids.includes(sheet.id) ? ids.filter(id => id !== sheet.id) : [...ids, sheet.id]));
-                      }}
-                    >
-                      <span className="token__face" aria-hidden="true">
-                        {initialsOf(sheet.name ?? sheet.id)}
-                        {to.includes(sheet.id) ? <span className="token__aim">◎</span> : null}
-                      </span>
-                      <span className="token__name">{sheet.name ?? sheet.id}</span>
-                      {sheet.id === turn ? <span className="token__turn">ходит</span> : null}
-                      {pinned ? <span className="token__hp num">{String(sheet.values[pinned] ?? '—')}</span> : null}
-                      <Hanging room={room} sheet={sheet} compact />
-                    </button>
-                  ))}
+                {grid ? (
+                  <Field
+                    room={room}
+                    people={people}
+                    pick={pick}
+                    pinned={pinned}
+                    sender={sender}
+                    targets={targets}
+                    moving={moving}
+                    setMoving={setMoving}
+                  />
+                ) : null}
+                <div
+                  className={`tokens ${grid ? 'tokens--off' : ''}`}
+                  onDragOver={grid ? (e => e.preventDefault()) : undefined}
+                  onDrop={grid ? (e => {
+                    e.preventDefault();
+                    const id = e.dataTransfer.getData('text/plain');
+                    if (id && room.places?.[id]) tableSocket.placePiece(room.id, id, null);
+                  }) : undefined}
+                >
+                  {grid ? <span className="faint tokens__label">не на поле — перетащите на клетку; сюда — убрать с поля</span> : null}
+                  {(grid ? off : people).map(sheet => <Piece key={sheet.id} sheet={sheet} room={room} pick={pick} pinned={pinned} />)}
                 </div>
                 <NewSheet room={room} />
               </Card>
@@ -127,6 +139,7 @@ function RoomTable({ room }: { room: RoomState }) {
                 room={room}
                 sender={sender}
                 targets={targets}
+                places={room.places}
                 onError={setError}
                 onClear={() => { setFrom(null); setTo([]); }}
                 onSelf={() => { if (sender) setTo(ids => (ids.includes(sender.id) ? ids : [...ids, sender.id])); }}
@@ -136,6 +149,112 @@ function RoomTable({ room }: { room: RoomState }) {
         }}
         right={{ head: 'Журнал', pinned: true, body: <Journal key={tab} log={log} /> }}
       />
+    </div>
+  );
+}
+
+interface Pick {
+  from: string | null;
+  to: string[];
+  turn: string | null;
+  party: Set<string>;
+  onPick: (id: string) => void;
+}
+
+function Piece({ sheet, room, pick, pinned, field }: {
+  sheet: Sheet; room: RoomState; pick: Pick; pinned: string; field?: boolean;
+}) {
+  const { from, to, turn, party } = pick;
+  const name = sheet.name ?? sheet.id;
+  return (
+    <button
+      type="button"
+      draggable
+      onDragStart={e => { e.dataTransfer.setData('text/plain', sheet.id); e.dataTransfer.effectAllowed = 'move'; }}
+      className={`token ${field ? 'token--field' : ''} ${party.size ? (party.has(sheet.id) ? 'token--ally' : 'token--foe') : ''} ${sheet.id === from ? 'token--from' : ''} ${to.includes(sheet.id) ? 'token--to' : ''} ${sheet.id === turn ? 'token--turn' : ''}`}
+      title={field
+        ? `${name}${sheet.id === turn ? ' — ходит' : ''}`
+        : sheet.id === from ? 'действует' : to.includes(sheet.id) ? 'цель — клик снимает' : 'клик: цель; если никто не действует — станет действующим'}
+      onClick={() => pick.onPick(sheet.id)}
+    >
+      <span className="token__face" aria-hidden="true">
+        {initialsOf(name)}
+        {to.includes(sheet.id) ? <span className="token__aim">◎</span> : null}
+      </span>
+      {field ? null : <span className="token__name">{name}</span>}
+      {field ? null : sheet.id === turn ? <span className="token__turn">ходит</span> : null}
+      {field || !pinned ? null : <span className="token__hp num">{String(sheet.values[pinned] ?? '—')}</span>}
+      {field ? null : <Hanging room={room} sheet={sheet} compact />}
+    </button>
+  );
+}
+
+const FIELD_COLS = 20;
+const FIELD_ROWS = 12;
+
+function Field({ room, people, pick, pinned, sender, targets, moving, setMoving }: {
+  room: RoomState;
+  people: Sheet[];
+  pick: Pick;
+  pinned: string;
+  sender: Sheet | null;
+  targets: Sheet[];
+  moving: boolean;
+  setMoving: (on: boolean) => void;
+}) {
+  const system = room.system as System;
+  const places = room.places ?? {};
+  const standing = people.filter(sheet => places[sheet.id]);
+  const cols = Math.max(FIELD_COLS, ...standing.map(sheet => places[sheet.id]!.x + 1));
+  const rows = Math.max(FIELD_ROWS, ...standing.map(sheet => places[sheet.id]!.y + 1));
+  const at = new Map(standing.map(sheet => [`${places[sheet.id]!.x},${places[sheet.id]!.y}`, sheet]));
+  const put = (id: string, x: number, y: number) => {
+    tableSocket.placePiece(room.id, id, { x, y });
+    setMoving(false);
+  };
+  const aims = sender && places[sender.id]
+    ? targets.filter(sheet => sheet.id !== sender.id).flatMap(sheet => {
+      const distance = distanceOf(system, places, sender.id, sheet.id);
+      return distance === null ? [] : [`${sheet.name}: до ${sender.name} — ${distanceWords(system, distance)}`];
+    })
+    : [];
+  return (
+    <div className="stack stack--tight">
+      {sender ? (
+        <div className="inline inline--tight">
+          <Button size="sm" variant={moving ? 'primary' : 'ghost'} onClick={() => setMoving(!moving)}>
+            {moving ? `Куда ставим ${sender.name}? Щёлкните клетку` : `Переставить ${sender.name}`}
+          </Button>
+          {places[sender.id] ? <Button size="sm" variant="ghost" onClick={() => { tableSocket.placePiece(room.id, sender.id, null); setMoving(false); }}>Убрать с поля</Button> : null}
+        </div>
+      ) : null}
+      <div className="field-board" aria-label="Поле">
+        <div className="field-board__grid" style={{ gridTemplateColumns: `repeat(${cols}, 40px)`, gridTemplateRows: `repeat(${rows}, 40px)` }}>
+          {Array.from({ length: rows * cols }, (_, i) => {
+            const x = i % cols;
+            const y = Math.floor(i / cols);
+            const here = at.get(`${x},${y}`);
+            return (
+              <div
+                key={i}
+                className={`field-cell ${moving && !here ? 'field-cell--free' : ''}`}
+                data-x={x}
+                data-y={y}
+                onClick={() => { if (moving && !here && pick.from) put(pick.from, x, y); }}
+                onDragOver={e => e.preventDefault()}
+                onDrop={e => {
+                  e.preventDefault();
+                  const id = e.dataTransfer.getData('text/plain');
+                  if (id) put(id, x, y);
+                }}
+              >
+                {here ? <Piece sheet={here} room={room} pick={pick} pinned={pinned} field /> : null}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      {aims.map(line => <span key={line} className="faint">{line}</span>)}
     </div>
   );
 }
@@ -259,8 +378,9 @@ function ClaimRow({ label, edits, picked, onToggle }: {
   );
 }
 
-function Actions({ room, sender, targets, onError, onClear, onSelf }: {
+function Actions({ room, sender, targets, places, onError, onClear, onSelf }: {
   room: RoomState;
+  places?: RoomState['places'];
   sender: Sheet | null;
   targets: Sheet[];
   onClear: () => void;
@@ -333,6 +453,7 @@ function Actions({ room, sender, targets, onError, onClear, onSelf }: {
                 compendium={room.compendium}
                 actor={sender}
                 targets={targets}
+                places={places}
                 actionId={action.id}
                 label={action.label}
                 disabled={Boolean(room.pending)}

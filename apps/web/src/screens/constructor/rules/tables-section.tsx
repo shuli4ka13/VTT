@@ -401,6 +401,15 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, onRe
             />
           </Field>
         ) : null}
+        {!single && !book && !table.owner && (column.kind ?? 'number') === 'number' ? (
+          <Field label="Граница дистанции" hint="полоса дистанции в таблице: «от» и «до» в единицах клетки поля боя">
+            <Select
+              value={column.bound ?? ''}
+              options={[['', 'нет'], ['from', 'от'], ['to', 'до']] as const}
+              onChange={next => set(c => { if (next) c.bound = next as 'from' | 'to'; else delete c.bound; })}
+            />
+          </Field>
+        ) : null}
         {single ? <Field label="Чьё значение">
           <Select
             value={holderOf(table) ?? 'sheet'}

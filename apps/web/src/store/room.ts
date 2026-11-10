@@ -103,6 +103,12 @@ export function listenToRoom(): void {
       }));
     }
 
+    if (message.type === 'room:places') {
+      useRoom.setState(current => ({
+        room: current.room && current.room.id === message.roomId ? { ...current.room, places: message.places } : current.room,
+      }));
+    }
+
     if (message.type === 'error') {
 
       if (!useRoom.getState().room) localStorage.removeItem(LAST_ROOM);

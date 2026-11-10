@@ -119,6 +119,10 @@ export const clockState = z.object({
   scores: z.record(z.string(), z.number()).optional(),
 });
 
+export const place = z.object({ x: z.number().int().min(0).max(199), y: z.number().int().min(0).max(199) }).strict();
+
+export const places = z.record(z.string(), place);
+
 export const logEntry = z.object({
   id: z.string(),
   at: z.string(),
@@ -138,6 +142,7 @@ export const roomState = z.object({
 
   clock: clockState.optional(),
   pending: pendingState.nullable().optional(),
+  places: places.optional(),
 });
 
 const sheetList = z.array(z.string().min(1)).min(1).refine(list => new Set(list).size === list.length, 'лист указан дважды');
@@ -187,6 +192,7 @@ export const serverMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('room:state'), state: roomState }),
   z.object({ type: z.literal('room:delta'), delta: roomDelta }),
   z.object({ type: z.literal('room:members'), members: z.array(member) }),
+  z.object({ type: z.literal('room:places'), roomId: z.string(), places }),
   z.object({ type: z.literal('error'), message: z.string() }),
 ]);
 
@@ -203,6 +209,8 @@ export const clientMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('sheet:roll'), roomId: z.string(), sheetId: z.string(), tag: z.string().min(1), hidden: z.boolean().optional(), claims: z.array(z.string().min(1)).optional() }),
 
   z.object({ type: z.literal('sheet:claim'), roomId: z.string(), sheetId: z.string().nullable() }),
+
+  z.object({ type: z.literal('piece:place'), roomId: z.string(), sheetId: z.string().min(1), at: place.nullable() }),
 
   z.object({
     type: z.literal('sheet:of'),
@@ -256,6 +264,8 @@ export type CancelIntent = z.infer<typeof cancelIntent>;
 export type TurnIntent = z.infer<typeof turnIntent>;
 export type RoomDelta = z.infer<typeof roomDelta>;
 export type LogEntry = z.infer<typeof logEntry>;
+export type Place = z.infer<typeof place>;
+export type Places = z.infer<typeof places>;
 export type JournalEntry = z.infer<typeof journalEntry>;
 export type ServerMessage = z.infer<typeof serverMessage>;
 export type ClientMessage = z.infer<typeof clientMessage>;

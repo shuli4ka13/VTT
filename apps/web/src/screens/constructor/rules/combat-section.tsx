@@ -1,7 +1,7 @@
 import type { System } from '@vtt/schema';
 import { DEFAULT_LIMITS } from '@vtt/engine/core/limits';
 import type { Limits } from '@vtt/engine/core/limits';
-import { Card, CardHead, Field, Fold, Select, NumInput, Button } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Field, Fold, Select, NumInput, Button, Input } from '../../../ui/primitives.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { TagsField } from '../tags-field.tsx';
 import { dieEntries } from './dice-section.tsx';
@@ -17,8 +17,11 @@ const LIMIT_LABELS: Record<keyof Limits, string> = {
   probes: 'пересчётов в одном окне вопросов',
 };
 
+const DIAGONALS = [['one', 'как одна клетка'], ['alt', 'через одну — две'], ['line', 'по прямой']] as const;
+
 export function CombatSection({ system, editSystem }: { system: System; editSystem: EditSystem }) {
   const initiative = system.initiative;
+  const grid = system.grid;
   const limits = (system as { limits?: Partial<Limits> }).limits ?? {};
   return (
     <Card>
@@ -57,6 +60,38 @@ export function CombatSection({ system, editSystem }: { system: System; editSyst
             />
           </Field>
           <Button size="sm" variant="ghost" onClick={() => editSystem(draft => { delete draft.initiative; })}>убрать инициативу</Button>
+        </div>
+      ) : null}
+      <Field label="Поле боя" hint="Клетки, на которых стоят фишки; от них считается дистанция до цели.">
+        <label className="inline inline--tight">
+          <input
+            type="checkbox" className="sheet-grid__check"
+            aria-label="Есть поле с клетками"
+            checked={Boolean(grid)}
+            onChange={e => editSystem(draft => { if (e.target.checked) draft.grid ??= { step: 1 }; else delete draft.grid; })}
+          />
+          <span>Есть поле с клетками</span>
+        </label>
+      </Field>
+      {grid ? (
+        <div className="row">
+          <Field label="В клетке">
+            <NumInput least={0.01} value={grid.step} onCommit={n => editSystem(draft => { if (draft.grid && n > 0) draft.grid.step = n; })} />
+          </Field>
+          <Field label="Единица" hint="например «м» или «фт»">
+            <Input
+              value={grid.unit ?? ''}
+              placeholder="м"
+              onChange={next => editSystem(draft => { if (!draft.grid) return; if (next) draft.grid.unit = next; else delete draft.grid.unit; })}
+            />
+          </Field>
+          <Field label="Диагональ">
+            <Select<string>
+              value={grid.diagonal ?? 'one'}
+              options={DIAGONALS}
+              onChange={next => editSystem(draft => { if (!draft.grid) return; if (next === 'one') delete draft.grid.diagonal; else draft.grid.diagonal = next as 'alt' | 'line'; })}
+            />
+          </Field>
         </div>
       ) : null}
       <Fold title="ещё" summary="пределы цепочек реакций">

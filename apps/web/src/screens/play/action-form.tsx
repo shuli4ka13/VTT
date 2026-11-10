@@ -3,7 +3,8 @@ import { Button, Field, Input, Select, Verdict } from '../../ui/primitives.tsx';
 import { asksOf, askKindOf, checkInputs, choicesOf, isPerTarget, normalizeInputs, YES_NO } from '@vtt/engine/model/asks';
 import type { AskedParam, Inputs } from '@vtt/engine/model/asks';
 import { newPass } from '@vtt/engine/engine/calc';
-import type { System, Compendium, Sheet } from '@vtt/schema';
+import { distanceOf, distanceWords, measuredValue } from '@vtt/engine/engine/place';
+import type { System, Compendium, Sheet, Places } from '@vtt/schema';
 
 export interface ActionRequest {
   actionId: string;
@@ -12,7 +13,7 @@ export interface ActionRequest {
 
 type Answer = string | Record<string, string>;
 
-export function ActionForm({ system, compendium, actor, targets = [], actionId, label, disabled, onAct, expect }: {
+export function ActionForm({ system, compendium, actor, targets = [], actionId, label, disabled, onAct, expect, places }: {
   system: System;
   compendium: Compendium;
   actor?: Sheet;
@@ -22,6 +23,7 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
   disabled?: boolean;
   onAct: (request: ActionRequest) => void;
   expect?: (request: ActionRequest) => string | null;
+  places?: Places;
 }) {
   const asked = useMemo<AskedParam[]>(() => {
     try { return asksOf(actionId, { system, compendium }); } catch { return []; }
@@ -30,10 +32,39 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const ids = targets.map(target => target.id);
 
+  const measured = useMemo(() => {
+    const out: Record<string, { value: Answer; words: Record<string, string> }> = {};
+    if (!actor || !system.grid) return out;
+    for (const param of asked) {
+      if (!param.measure) continue;
+      const each: Record<string, string> = {};
+      const words: Record<string, string> = {};
+      for (const target of targets) {
+        const distance = distanceOf(system, places, actor.id, target.id);
+        if (distance === null) continue;
+        const value = measuredValue(system, param, distance);
+        if (value === null) continue;
+        each[target.id] = String(value);
+        words[target.id] = distanceWords(system, distance);
+      }
+      const first = targets[0] ? each[targets[0].id] : undefined;
+      if (isPerTarget(param)) { if (Object.keys(each).length) out[param.key] = { value: each, words }; }
+      else if (first !== undefined && targets[0]) out[param.key] = { value: first, words: { '': words[targets[0].id]! } };
+    }
+    return out;
+  }, [asked, system, places, actor, targets]);
+
+  const answerOf = (param: AskedParam): Answer | undefined => {
+    const own = answers[param.key];
+    const auto = measured[param.key]?.value;
+    if (isPerTarget(param)) return { ...((auto as Record<string, string> | undefined) ?? {}), ...((own as Record<string, string> | undefined) ?? {}) };
+    return own ?? auto;
+  };
+
   const collect = (): Inputs => {
     const given: Inputs = {};
     for (const param of asked) {
-      const value = answers[param.key];
+      const value = answerOf(param);
       if (isPerTarget(param)) {
         const each = Object.fromEntries(ids.map(id => [id, (value as Record<string, string> | undefined)?.[id] ?? '']).filter(([, one]) => one !== ''));
         given[param.key] = each;
@@ -95,10 +126,14 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
       </div>
       {asked.map(param => {
         const title = `${param.label ?? param.key}${param.ask.by === 'gm' ? ' · говорит ведущий' : ''}`;
+        const hintFor = (key: string): string | undefined => {
+          const words = measured[param.key]?.words[key];
+          return [param.ask.hint, words ? `по полю: ${words}` : ''].filter(Boolean).join(' · ') || undefined;
+        };
         if (!isPerTarget(param)) {
           return (
-            <Field key={param.key} label={title} hint={param.ask.hint}>
-              <AskInput system={system} param={param} value={(answers[param.key] as string | undefined) ?? ''}
+            <Field key={param.key} label={title} hint={hintFor('')}>
+              <AskInput system={system} param={param} value={(answerOf(param) as string | undefined) ?? ''}
                 onChange={next => setAnswers(all => ({ ...all, [param.key]: next }))} />
             </Field>
           );
@@ -106,9 +141,9 @@ export function ActionForm({ system, compendium, actor, targets = [], actionId, 
         if (!targets.length) {
           return <Field key={param.key} label={title} hint="спросит для каждой цели — сначала выберите цели">{null}</Field>;
         }
-        const each = (answers[param.key] as Record<string, string> | undefined) ?? {};
+        const each = (answerOf(param) as Record<string, string> | undefined) ?? {};
         return targets.map(target => (
-          <Field key={`${param.key}|${target.id}`} label={`${title} · ${target.name}`} hint={param.ask.hint}>
+          <Field key={`${param.key}|${target.id}`} label={`${title} · ${target.name}`} hint={hintFor(target.id)}>
             <AskInput system={system} param={param} value={each[target.id] ?? ''}
               onChange={next => setAnswers(all => ({ ...all, [param.key]: { ...((all[param.key] as Record<string, string> | undefined) ?? {}), [target.id]: next } }))} />
           </Field>

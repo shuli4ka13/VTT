@@ -106,3 +106,54 @@ describe('вход «для каждой цели»', () => {
     expect(sent).toEqual([{ actionId: 'граната:0', inputs: { место: { а: 'тело', б: 'голова' } } }]);
   });
 });
+
+describe('вход, заполняемый дистанцией по полю', () => {
+  afterEach(() => { cleanup(); });
+
+  const field = {
+    ...system,
+    grid: { step: 2, unit: 'м' },
+    tables: {
+      ...(system as unknown as { tables: object }).tables,
+      полосы: {
+        label: 'Полосы', key: 'word', columns: [{ key: 'от', kind: 'number', bound: 'from' }, { key: 'до', kind: 'number', bound: 'to' }],
+        rows: [{ value: 'вплотную', label: 'вплотную', cells: { от: 0, до: 3 } }, { value: 'далеко', label: 'далеко', cells: { от: 4, до: 99 } }],
+      },
+    },
+    effects: {
+      ...(system as unknown as { effects: object }).effects,
+      выстрел: {
+        label: 'Выстрел', activation: 'manual',
+        params: [
+          { key: 'дистанция', label: 'Дистанция', kind: 'number', measure: true, ask: { by: 'actor' } },
+          { key: 'полоса', label: 'Полоса', kind: 'choice', from: 'полосы', measure: true, ask: { by: 'actor' } },
+        ],
+        steps: [],
+      },
+    },
+  } as unknown as System;
+  const actor = { id: 'а', name: 'Анна', values: {}, has: [], effects: [] } as never;
+  const places = { а: { x: 0, y: 0 }, б: { x: 5, y: 0 } };
+
+  it('число и полоса предзаполнены по первой цели, подсказка говорит «по полю»; поправка сильнее', () => {
+    const sent: unknown[] = [];
+    render(<ActionForm system={field} compendium={compendium} actor={actor} places={places} actionId="ствол:0" label="Выстрел"
+      targets={[{ id: 'б', name: 'Борис' }]} onAct={r => sent.push(r)} />);
+    fireEvent.click(screen.getByText('Выстрел…'));
+    expect((document.querySelector('input[type=number]') as HTMLInputElement).value).toBe('10');
+    expect((document.querySelector('select') as HTMLSelectElement).value).toBe('далеко');
+    expect(screen.getAllByText('по полю: 10 м')).toHaveLength(2);
+
+    fireEvent.change(document.querySelector('input[type=number]')!, { target: { value: '8' } });
+    fireEvent.click(screen.getByText('Выстрел'));
+    expect(sent).toEqual([{ actionId: 'ствол:0', inputs: { дистанция: 8, полоса: 'далеко' } }]);
+  });
+
+  it('если кто-то не на поле — ничего не подставляется', () => {
+    render(<ActionForm system={field} compendium={compendium} actor={actor} places={{ а: { x: 0, y: 0 } }} actionId="ствол:0" label="Выстрел"
+      targets={[{ id: 'б', name: 'Борис' }]} onAct={() => {}} />);
+    fireEvent.click(screen.getByText('Выстрел…'));
+    expect((document.querySelector('input[type=number]') as HTMLInputElement).value).toBe('');
+    expect(screen.queryByText(/по полю/)).toBeNull();
+  });
+});

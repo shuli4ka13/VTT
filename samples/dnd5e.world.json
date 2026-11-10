@@ -3281,6 +3281,10 @@
         ]
       }
     },
+    "grid": {
+      "step": 5,
+      "unit": "фт"
+    },
     "initiative": {
       "die": "lead_die",
       "bonus": {

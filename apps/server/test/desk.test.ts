@@ -29,6 +29,7 @@ const system = {
   },
   
 };
+const gridded = { ...system, id: 'поле', name: 'поле', grid: { step: 2, unit: 'м' } };
 const compendium = { records: [{ id: 'удар', table: 'приём', label: 'Удар', cells: {} }] };
 const pc = (id: string) => ({ id, systemId: 'стол', name: id, values: {}, has: [{ of: 'удар' }], effects: [] });
 
@@ -113,5 +114,37 @@ describe('система без компендиума доходит до иг�
     if (act.status !== 201) throw new Error(JSON.stringify(act.body));
     const after = (await as(http().get(`/rooms/${roomId}`))).body;
     expect(after.sheets.find((s: { id: string }) => s.id === 'держит').values.хп).toBe(18);
+  });
+});
+
+describe('поле: место фишки', () => {
+  it('ведущий ставит фишку, клетка занята — отказ, игрок двигает только свой лист, без сетки — отказ', async () => {
+    const login = async (name: string) => (await http().post('/auth/login').send({ name })).body as { token: string; userId: string };
+    const gm = await login('Ведущий поля');
+    const player = await login('Игрок поля');
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${gm.token}`);
+    const make = async (sys: typeof system) => {
+      const systemId = (await as(http().post('/systems')).send({ title: sys.name, system: sys })).body.id;
+      await as(http().post(`/systems/${systemId}/publish`)).send({});
+      const worldId = (await as(http().post('/worlds')).send({ title: 'Мир', systemId, compendiumIds: [], sheets: [pc('арен'), pc('бора')] })).body.id;
+      return (await as(http().post('/rooms')).send({ worldId, title: 'Поле' })).body.id as string;
+    };
+    const rooms = app.get(RoomsService);
+    const roomId = await make(gridded);
+
+    expect(await rooms.placePiece(gm.userId, roomId, 'арен', { x: 1, y: 2 })).toEqual({ арен: { x: 1, y: 2 } });
+    await expect(rooms.placePiece(gm.userId, roomId, 'бора', { x: 1, y: 2 })).rejects.toThrow('клетка занята');
+    await rooms.placePiece(gm.userId, roomId, 'бора', { x: 4, y: 2 });
+    expect((await rooms.state(roomId)).places).toEqual({ арен: { x: 1, y: 2 }, бора: { x: 4, y: 2 } });
+
+    await rooms.join(player.userId, roomId);
+    await rooms.claimSheet(player.userId, roomId, 'бора');
+    await expect(rooms.placePiece(player.userId, roomId, 'арен', { x: 0, y: 0 })).rejects.toThrow('чужой лист');
+    await rooms.placePiece(player.userId, roomId, 'бора', null);
+    expect((await rooms.state(roomId)).places).toEqual({ арен: { x: 1, y: 2 } });
+    await expect(rooms.placePiece(gm.userId, roomId, 'стол', { x: 0, y: 0 })).rejects.toThrow('не стоят');
+
+    const plain = await make({ ...system, id: 'без поля', name: 'без поля' });
+    await expect(rooms.placePiece(gm.userId, plain, 'арен', { x: 0, y: 0 })).rejects.toThrow('нет сетки');
   });
 });

@@ -32,6 +32,7 @@ import { walkSheet } from './paths.ts';
 import { variantProblems, cellScopeProblems } from './variants.ts';
 import { editStages, PLUS_OP } from '../core/dice.ts';
 import { compile } from '../formula/index.ts';
+import { hasBands } from '../engine/place.ts';
 import type { Node } from '../formula/index.ts';
 
 export type Level = 'error' | 'warn';
@@ -1044,9 +1045,33 @@ function perTargetProblems(system: System): Problem[] {
   return out;
 }
 
+function measureProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  for (const [id, effect] of Object.entries(system.effects)) {
+    for (const param of effect.params ?? []) {
+      if (!param.measure) continue;
+      const where = { tab: 'effects' as const, effect: id, key: param.key, part: 'params' as const };
+      const name = param.label ?? param.key;
+      if (!param.ask) out.push({ where, level: 'error', text: `вход «${name}» заполняется дистанцией до цели — ему нужен вопрос («Спросить»), дистанцию можно поправить` });
+      if (!system.grid) out.push({ where, level: 'warn', text: `вход «${name}» заполняется дистанцией, а сетки поля в правилах нет — подставлять нечего` });
+      if (param.kind === 'choice' && !hasBands(system, param.from)) out.push({ where, level: 'error', text: `вход «${name}» — выбор из таблицы без границ «от» и «до»: по дистанции строку не найти` });
+      if (param.kind && param.kind !== 'number' && param.kind !== 'choice') out.push({ where, level: 'error', text: `вход «${name}»: дистанцией заполняется только число или выбор из таблицы` });
+    }
+  }
+  for (const [id, table] of Object.entries(system.tables ?? {})) {
+    for (const column of table.columns ?? []) {
+      if (!column.bound) continue;
+      if (column.kind && column.kind !== 'number') out.push({ where: { tab: 'rules', section: 'tables', key: id }, level: 'error', text: `таблица «${table.label || id}»: граница дистанции «${column.label || column.key}» — только число` });
+    }
+    const twice = (['from', 'to'] as const).filter(bound => (table.columns ?? []).filter(column => column.bound === bound).length > 1);
+    for (const bound of twice) out.push({ where: { tab: 'rules', section: 'tables', key: id }, level: 'error', text: `таблица «${table.label || id}»: граница «${bound === 'from' ? 'от' : 'до'}» отмечена у двух колонок` });
+  }
+  return out;
+}
+
 export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   const declared = declaredOf(system);
-  const out: Problem[] = [...perTargetProblems(system)];
+  const out: Problem[] = [...perTargetProblems(system), ...measureProblems(system)];
 
   for (const [id, effect] of Object.entries(system.effects)) {
     for (const chain of chainsOf(id, effect)) {
