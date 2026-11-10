@@ -23,6 +23,7 @@ export interface FormulaTarget {
   system: System;
   names?: Record<string, ReactNode>;
   extraNames?: Map<string, string>;
+  meanings?: Map<string, string>;
   badges?: Map<string, string>;
   sheets?: SheetNames;
   placeholder?: string;

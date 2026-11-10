@@ -854,6 +854,9 @@
 .roll-degree { display: flex; align-items: center; gap: var(--s-3); min-width: 0; }
 .roll-degree > .input { flex: 0 0 200px; min-width: 0; }
 .roll-degree__if { flex: 0 0 auto; color: var(--kind-check, var(--text-faint)); font-size: var(--fs-2); }
+.roll-degree__if--else { flex: 1 1 auto; }
+.roll-arrived { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
+.roll-arrived__name { padding: 1px var(--s-2); border: 1px solid var(--border); border-radius: var(--r-2); font-size: var(--fs-2); cursor: help; }
 .roll-form__add { align-self: flex-start; height: var(--control-h); padding: 0 var(--s-3); border: 1px dashed var(--border-strong); border-radius: var(--r-2); background: none; color: var(--text-muted); font: inherit; font-size: var(--fs-2); cursor: pointer; }
 .roll-form__add:hover { border-color: var(--accent); color: var(--text); }
 .chip--formula { padding-right: var(--s-2); }

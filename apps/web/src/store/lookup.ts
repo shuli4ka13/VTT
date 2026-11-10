@@ -5,6 +5,7 @@ export interface Looked {
   label: string;
   where: string;
   table?: string;
+  meaning?: string;
 }
 
 export interface LookupState {

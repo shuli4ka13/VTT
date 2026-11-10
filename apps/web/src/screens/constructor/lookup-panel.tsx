@@ -8,6 +8,7 @@ import { useReader } from '../../engine/use-calc.ts';
 import { mannequinsOf } from '../../engine/dry-run.ts';
 import { useUsage } from './usage.ts';
 import { explainName } from './lookup.ts';
+import type { Explained } from './lookup.ts';
 
 export function useLookupPane(pane: Pane): Pane;
 export function useLookupPane(): Pane | undefined;
@@ -31,7 +32,9 @@ function LookupPanel({ at }: { at: Looked }) {
   const usage = useUsage();
   const [sheet] = mannequinsOf(system);
   const reader = useReader(system, sheet ?? null, compendium);
-  const told = explainName(system, compendium, effectId, at.name, usage, at.table);
+  const told: Explained = at.meaning
+    ? { kind: 'имя правила броска', title: at.label || at.name, facts: [], from: [at.meaning], shown: [], users: [] }
+    : explainName(system, compendium, effectId, at.name, usage, at.table);
 
   return (
     <>
