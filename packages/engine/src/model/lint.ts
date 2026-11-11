@@ -27,7 +27,7 @@ import {
   LISTEN, contractsOf, HOLDER, DESK_NAME, holderNameOf, tiedToHolder,
 } from './references.ts';
 import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, holderOf, rowKeyOf, hasField, rollEntryOf, ROW } from './sheet-columns.ts';
-import { rolledColumn, thrownDie } from './rolled.ts';
+import { rolledColumn, thrownDie, fieldGives } from './rolled.ts';
 import { isRange, rowByKey } from './tables.ts';
 import { walkSheet } from './paths.ts';
 import { variantProblems, cellScopeProblems } from './variants.ts';
@@ -622,12 +622,7 @@ function rollStepProblems(system: System, effect: Effect, steps: Step[], where: 
       return;
     }
     const kind = found.roll.number;
-    const graded = kind === 'under' || kind === 'over' || found.entry.threshold !== undefined;
-    const gives: Record<string, boolean> = {
-      success: graded || Boolean(found.roll.success),
-      margin: graded || Boolean(found.roll.margin),
-      degree: Boolean(found.roll.degrees?.length),
-    };
+    const gives: Record<string, boolean> = { ...fieldGives(system, effect.params ?? [], step as Step)! };
     const words: Record<string, string> = { success: 'пройден ли', margin: 'степени успеха', degree: 'ступень' };
     const name = String(raw.id ?? '');
     const reads = name ? [...everyStep, ...((effect.returns ?? []) as unknown as Step[])].flatMap(one => exprsIn(one)) : [];

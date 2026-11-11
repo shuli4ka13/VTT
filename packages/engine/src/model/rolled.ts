@@ -16,6 +16,21 @@ export function rolledColumn(system: System, params: readonly Param[], address: 
   return tail.length === 3 && system.tables?.[tail[0]!] && !isSingle(system.tables[tail[0]!]!) ? { table: tail[0]!, column } : null;
 }
 
+export type Graded = { success: boolean; margin: boolean; degree: boolean };
+
+export function fieldGives(system: System, params: readonly Param[], step: Step): Graded | null {
+  const at = rolledColumn(system, params, (step as { field?: unknown }).field);
+  const found = at ? rollEntryOf(system, at.table, at.column) : undefined;
+  if (!found) return null;
+  const kind = found.roll.number;
+  const graded = kind === 'under' || kind === 'over' || found.entry.threshold !== undefined;
+  return {
+    success: graded || Boolean(found.roll.success),
+    margin: graded || Boolean(found.roll.margin),
+    degree: Boolean(found.roll.degrees?.length),
+  };
+}
+
 export function thrownDie(system: System, params: readonly Param[], step: Step): string | null {
   const it = step as { die?: unknown; field?: unknown };
   if (typeof it.die === 'string') return it.die;

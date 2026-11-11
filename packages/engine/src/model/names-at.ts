@@ -9,7 +9,7 @@ import { STEP_WORDS } from '../words/steps.ts';
 import type { StepWords } from '../words/steps.ts';
 import { columnChoices } from './paths.ts';
 import { onSheet } from './sheet-columns.ts';
-import { dieParts, thrownDie } from './rolled.ts';
+import { dieParts, thrownDie, fieldGives } from './rolled.ts';
 import type { System, Effect, Step, Param } from './types.ts';
 
 export type Place =
@@ -47,12 +47,23 @@ const partsOf = (step: Step, system: System | undefined, inputs: readonly Param[
   (step.type !== 'roll' || !system ? [] : dieParts(system, thrownDie(system, inputs, step))
     .map(part => ({ path: `.parts.${part.name}`, label: `что выпало на кости «${part.label}»`, kind: 'number' })));
 
-const outputsOf = (step: { type: string; [key: string]: unknown }, system?: System, inputs: readonly Param[] = []): NameChild[] => [
-  ...((STEP_WORDS as Record<string, StepWords>)[step.type]?.outputs ?? [])
-    .filter(output => output.path && (!output.onlyWith || (step[output.onlyWith] !== undefined && step[output.onlyWith] !== null)))
-    .map(output => ({ path: output.path, label: output.label, kind: output.kind ?? 'number' })),
-  ...partsOf(step as unknown as Step, system, inputs),
-];
+const GRADED: Record<string, 'success' | 'margin' | 'degree'> = { '.success': 'success', '.margin': 'margin', '.degree': 'degree' };
+
+export function resultsOf(system: System | undefined, inputs: readonly Param[], step: Step): NameChild[] {
+  const it = step as unknown as { type: string; [key: string]: unknown };
+  const fielded = it.field !== undefined && it.field !== null;
+  const gives = step.type === 'roll' && system && fielded ? fieldGives(system, inputs, step) : null;
+  return [
+    ...((STEP_WORDS as Record<string, StepWords>)[step.type]?.outputs ?? [])
+      .filter(output => !output.onlyWith || (it[output.onlyWith] !== undefined && it[output.onlyWith] !== null))
+      .filter(output => !output.onlyWith || !GRADED[output.path] || (gives?.[GRADED[output.path]!] ?? true))
+      .map(output => ({ path: output.path, label: output.label, kind: output.kind ?? 'number' })),
+    ...partsOf(step, system, inputs),
+  ];
+}
+
+const outputsOf = (step: { type: string; [key: string]: unknown }, system?: System, inputs: readonly Param[] = []): NameChild[] =>
+  resultsOf(system, inputs, step as unknown as Step).filter(output => output.path);
 
 const rowChildren = (system: System | undefined, from: string | undefined): NameChild[] =>
   (system && from ? columnChoices(system, from) : []);
