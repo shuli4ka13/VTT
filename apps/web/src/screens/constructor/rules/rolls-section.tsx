@@ -87,12 +87,6 @@ function RollFlow({ roll }: { roll: SystemRoll }) {
   const fieldGate = roll.fields.some(one => one.threshold !== undefined);
   const graded = roll.number === 'under' || roll.number === 'over' || fieldGate;
   const gate = fieldGate && roll.number !== 'under' && roll.number !== 'over' ? ' (у полей со своим порогом)' : '';
-  const number = NUMBER_WORDS.find(([key]) => key === (roll.number ?? 'bonus'))?.[1] ?? '';
-  const inputs: (readonly [string, string, string])[] = [
-    ['выпало', 'число', 'что выпало на костях, с прибавками и правками'],
-    ['число', 'число', `число поля с листа: ${number}`],
-    ...(graded ? [['порог', 'число', `число поля со сдвигом сложности и правками порога${gate}`] as const] : []),
-  ];
   const common = (STEP_WORDS.roll.outputs as readonly { label: string; kind?: string; onlyWith?: string }[]).filter(one => !one.onlyWith)
     .map(one => [one.label.replace(/^да или нет: /, ''), KIND_WORDS[one.kind ?? 'number'] ?? '', 'у любого броска'] as const);
   const own: (readonly [string, string, string])[] = [
@@ -102,10 +96,6 @@ function RollFlow({ roll }: { roll: SystemRoll }) {
   ];
   return (
     <>
-      <div className="dict-row roll-line roll-line--top">
-        <span className="dict-row__label" title="имена, которые правило видит в своих формулах">Что приходит</span>
-        <div className="roll-form__body roll-form__body--stack"><FlowList rows={inputs} /></div>
-      </div>
       <div className="dict-row roll-line roll-line--top">
         <span className="dict-row__label" title="что получает тот, кто бросил: @бросок и через точку — @бросок.пройден">Что отдаёт</span>
         <div className="roll-form__body roll-form__body--stack">
