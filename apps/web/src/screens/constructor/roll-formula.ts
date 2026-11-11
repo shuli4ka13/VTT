@@ -96,10 +96,11 @@ export function parseRollFormula(text: string, system: System): RollParts | { er
 const refText = (ref: unknown): string =>
   (ref && typeof ref === 'object' ? String((ref as { expr?: unknown }).expr ?? '') : ref === undefined || ref === null ? '' : String(ref));
 
-export function formatRollFormula(roll: { die?: unknown; count?: unknown; bonus?: unknown }): string {
+export function formatRollFormula(roll: { die?: unknown; count?: unknown; times?: unknown; bonus?: unknown }): string {
   const die = roll.die;
   const head = !die ? '' : typeof die === 'string' ? `@${die}` : `"${asDice(unquote(refText(die)))}"`;
-  const count = roll.count ? `, ${refText(roll.count)}` : '';
+  const repeat = roll.times ?? roll.count;
+  const count = repeat ? `, ${refText(repeat)}` : '';
   const tail = refText(roll.bonus).trim();
   return `${ROLL}(${head}${count})${tail ? (tail.startsWith('-') ? ` - ${tail.slice(1).trim()}` : ` + ${tail}`) : ''}`;
 }

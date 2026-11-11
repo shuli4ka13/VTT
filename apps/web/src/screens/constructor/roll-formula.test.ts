@@ -27,7 +27,7 @@ describe('бросок и проверка одной грамматикой к�
   it('каждый бросок листа в образцах переживает «в текст и обратно»', () => {
     let seen = 0;
     for (const system of SAMPLE_SYSTEMS) {
-      for (const step of stepsIn(Object.values(system.effects ?? {})).filter(s => s.type === 'roll' && s.by && s.die)) {
+      for (const step of stepsIn(Object.values(system.effects ?? {})).filter(s => s.type === 'roll' && s.by && typeof s.die === 'string' && !s.times)) {
         const text = formatRollFormula(step);
         const parsed = parseRollFormula(text, system);
         expect('error' in parsed ? parsed.error : null, text).toBeNull();

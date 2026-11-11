@@ -439,11 +439,12 @@ export function result(roll: Roll): RollResult {
 export const faces = (roll: Roll): number[] => roll.dice.map(d => (d.minus ? -d.face : d.face));
 
 export const LOWEST = 'lowest';
+export const ALL = 'all';
 
 export type SeenOp =
   | { kind: 'add'; count: number; sides?: number; keep?: 'best' | 'worst'; explode?: boolean }
   | { kind: 'reroll'; upTo: number }
-  | { kind: 'reroll'; which: typeof LOWEST }
+  | { kind: 'reroll'; which: typeof LOWEST | typeof ALL }
   | { kind: 'plus'; addend: Addend }
   | { kind: 'bump'; by: number };
 
@@ -484,8 +485,11 @@ export function see(roll: Roll, op: SeenOp, die: Die): Roll {
   const taken = new Set(kept(roll));
   if (op.kind === 'reroll') {
     let dice = [...roll.dice];
-    const lowest = 'which' in op ? lowestOf(roll) : null;
-    const targets = 'which' in op
+    const whole = 'which' in op && op.which === ALL;
+    const lowest = 'which' in op && !whole ? lowestOf(roll) : null;
+    const targets = whole
+      ? roll.dice.filter(d => !d.out && !d.extra && !d.part && !d.minus && d.from === undefined)
+      : 'which' in op
       ? (lowest ? [lowest] : [])
       : roll.dice.filter(d => taken.has(d) && !d.extra && d.from === undefined && d.value > 0 && d.value <= op.upTo);
     for (const target of targets) {
@@ -494,6 +498,7 @@ export function see(roll: Roll, op: SeenOp, die: Die): Roll {
       const at = dice.findIndex(d => d.id === target.id);
       dice = [...dice.slice(0, at).filter(d => d.from !== target.id), ...again, ...dice.slice(at + 1).filter(d => d.from !== target.id)];
     }
+    if (whole && result({ ...roll, dice }).total <= result(roll).total) return roll;
     return { ...roll, dice };
   }
   const sides = op.sides ?? roll.dice.find(d => !d.extra)?.sides ?? 6;

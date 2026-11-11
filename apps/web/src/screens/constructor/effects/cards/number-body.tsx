@@ -51,6 +51,7 @@ export function NumberBody({ step, context, edit, onAddParam, takenNames, onRena
       const it = loose(target);
       delete it.die;
       delete it.count;
+      delete it.times;
       delete it.bonus;
       if (typed.trim()) it.fixed = { expr: typed }; else delete it.fixed;
     });
@@ -63,7 +64,7 @@ export function NumberBody({ step, context, edit, onAddParam, takenNames, onRena
   const roller = [...sheetChoices(context).singles.keys()][0];
 
   const written = typeof read.die === 'object' && /^["']?\d*\s*[кdд]\s*\d+["']?$/iu.test(String((read.die as { expr?: unknown } | null)?.expr ?? '').trim());
-  const sealed = keyed && ((typeof read.die === 'object' && !written) || (read.count !== undefined && read.count !== null));
+  const sealed = keyed && ((typeof read.die === 'object' && !written) || (read.count !== undefined && read.count !== null) || (read.times !== undefined && read.times !== null));
   if (sealed) {
     return (
       <>

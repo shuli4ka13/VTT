@@ -171,3 +171,41 @@ group('перебросить одну меньшую: кого не трога�
     eq(traceLine({ before: 1, after: 2, rolls: [5, 6, 3] }), 'переброшено: [5, 6, 3] — итог 1 → 2');
   });
 });
+
+group('перебросить весь набор — «Свирепый атакующий»', () => {
+  const all = { kind: 'reroll', which: 'all' } as const;
+  const d6x2: DieConstant = { label: '2к6', kind: 'die', dice: [{ count: 2, sides: 6 }] } as DieConstant;
+
+  test('новый набор больше — остаётся новый целиком', () => {
+    const die = queue(1, 2, 4, 5);
+    const seen = seeRoll(rollLead(d6x2, die), all, die);
+    deepEq(seen.rolls, [4, 5]);
+    eq(seen.total, 9);
+  });
+
+  test('новый набор не больше — остаётся прежний', () => {
+    const die = queue(5, 6, 6, 2);
+    const seen = seeRoll(rollLead(d6x2, die), all, die);
+    deepEq(seen.rolls, [5, 6]);
+    eq(seen.total, 11);
+  });
+
+  test('правки результата действуют и на новый набор: «Бой большим оружием» поднимает 1 и 2 до 3', () => {
+    const great = { label: 'Бой большим оружием', ops: [{ op: 'floorDie', least: 3 }] } as never;
+    const die = queue(1, 1, 2, 6);
+    const seen = seeRoll(rollLead(d6x2, die, [great]), all, die);
+    eq(seen.total, 9, 'было 3 + 3, стало 3 + 6');
+  });
+
+  test('с «оставить лучшую» сравнивается итог, а не сумма граней', () => {
+    const adv = { label: 'Преимущество', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }] } as never;
+    const die = queue(18, 3, 12, 12);
+    const seen = seeRoll(rollLead(d20, die, [adv]), all, die);
+    eq(seen.total, 18, 'было 18 из [18, 3], новое 12 из [12, 12] — остаётся прежнее');
+  });
+
+  test('трасса', () => {
+    eq(traceLine({ which: 'all', before: 3, after: 9, rolls: [4, 5] }), 'переброшен весь набор: [4, 5] — итог 3 → 9');
+    eq(traceLine({ which: 'all', before: 11, after: 11, rolls: [5, 6] }), 'переброшен весь набор — прежний не меньше, итог 11');
+  });
+});

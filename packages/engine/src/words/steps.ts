@@ -26,6 +26,7 @@ export const STEP_WORDS = {
     slots: [
       { key: 'die', label: 'Кость', kind: 'ref', main: true, allow: ['name', 'expr', 'empty'], refersTo: 'constant' },
       { key: 'count', label: 'Сколько костей', kind: 'ref', allow: ['expr', 'empty'] },
+      { key: 'times', label: 'Сколько раз', kind: 'ref', allow: ['expr', 'empty'] },
       { key: 'fixed', label: 'Формула', kind: 'ref', main: true, allow: ['expr', 'empty'] },
       { key: 'field', label: 'Поле листа', kind: 'field', main: true, allow: ['expr', 'empty'] },
       { key: 'shift', label: 'Поправка к числу поля', kind: 'ref', allow: ['expr', 'empty'] },
@@ -168,11 +169,11 @@ export const STEP_WORDS = {
   },
   'roll-reroll': {
     label: 'Перебросить',
-    hint: 'Увидев кости: перебросить кости, на которых выпало не больше числа, — или одну меньшую кость (с преимуществом это та, что не взята в расчёт). Засчитывается новая грань, остальные кости остаются.',
+    hint: 'Увидев кости: перебросить кости, на которых выпало не больше числа, — или одну меньшую кость (с преимуществом это та, что не взята в расчёт), — или весь набор: остаётся тот, где на костях больше. Засчитывается новая грань, остальные кости остаются.',
     slots: [
       {
-        key: 'which', label: 'Что перебросить', kind: 'choice', options: ['', 'lowest'], fallback: '',
-        choice: [['', 'кости не выше числа'], ['lowest', 'одну меньшую кость']],
+        key: 'which', label: 'Что перебросить', kind: 'choice', options: ['', 'lowest', 'all'], fallback: '',
+        choice: [['', 'кости не выше числа'], ['lowest', 'одну меньшую кость'], ['all', 'весь набор — остаётся больший']],
       },
       { key: 'upTo', label: 'Перебросить, где выпало не больше', kind: 'ref', main: true, required: true, allow: ['expr'], onlyIf: { key: 'which', is: '' }, seed: { expr: '1' } },
     ],

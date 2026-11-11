@@ -1,6 +1,6 @@
 import { EngineError } from '../errors.ts';
 import { dieConstant } from '../lead-die.ts';
-import { parse, withCount, addendsText } from '../../core/dice.ts';
+import { parse, withCount, times as timesOf, addendsText } from '../../core/dice.ts';
 import type { RollResult, Spec } from '../../core/dice.ts';
 import type { Die } from '../../model/types.ts';
 import type { StepData, StepContext } from './index.ts';
@@ -31,7 +31,7 @@ export const icon = '⚄';
 
 const who = (ctx: StepContext): string => ctx.owner || 'правило';
 
-export function specOf(ctx: StepContext, die: unknown, count: unknown, roller: string | null = null): Spec {
+export function specOf(ctx: StepContext, die: unknown, count: unknown, roller: string | null = null, times?: unknown): Spec {
   let spec: Spec;
   if (typeof die === 'string' && die) {
     spec = parse(dieConstant(ctx.system, die), (ref, what) => (roller ? ctx.numberOn(roller, ref, what) : ctx.number(ref, what)));
@@ -42,8 +42,11 @@ export function specOf(ctx: StepContext, die: unknown, count: unknown, roller: s
   } else {
     throw new EngineError(`${who(ctx)}: броску нужна кость — константа системы или запись вроде «1к20»`);
   }
-  if (count === undefined || count === null) return spec;
-  return withCount(spec, ctx.number(count, 'сколько костей'), who(ctx));
+  const counted = count === undefined || count === null ? spec : withCount(spec, ctx.number(count, 'сколько костей'), who(ctx));
+  if (times === undefined || times === null) return counted;
+  const n = ctx.number(times, 'сколько раз');
+  if (!Number.isInteger(n) || n < 0) throw new EngineError(`${who(ctx)}: сколько раз бросить — целое не меньше нуля, а вышло ${n}`);
+  return timesOf(counted, n);
 }
 
 export function tagsOf(raw: unknown, ctx: StepContext): string[] {
@@ -113,7 +116,7 @@ export function finish(step: StepData, ctx: StepContext) {
   if (step.die === undefined && step.fixed === undefined) throw new EngineError(`${who(ctx)}: броску нужна кость или формула`);
   const bonus = ctx.optional(step.bonus, 'прибавка броска') ?? 0;
   const shown = step.bonus !== undefined && step.bonus !== null ? { ref: step.bonus, value: bonus } : undefined;
-  const thrown = step.die !== undefined && step.die !== null ? ctx.roll(specOf(ctx, step.die, step.count, by), tags, by, against, shown) : null;
+  const thrown = step.die !== undefined && step.die !== null ? ctx.roll(specOf(ctx, step.die, step.count, by, step.times), tags, by, against, shown) : null;
   const formula: { sides: number; value: number }[] = [];
   const fixed = step.fixed !== undefined && step.fixed !== null ? ctx.using(watched(ctx, formula)).optional(step.fixed, 'формула броска') ?? 0 : 0;
   const base: RollResult = thrown ? thrown.result : {
@@ -146,12 +149,13 @@ export function finish(step: StepData, ctx: StepContext) {
 
 export function lint(step: StepData): string | null {
   if (has(step.field)) {
-    if (has(step.die) || has(step.fixed) || has(step.count)) return 'бросок поля берёт кость из «Правил → Броски» — кость, сколько костей и формулу уберите';
+    if (has(step.die) || has(step.fixed) || has(step.count) || has(step.times)) return 'бросок поля берёт кость из «Правил → Броски» — кость, сколько костей и формулу уберите';
     if (has(step.by)) return 'бросок поля бросает тот, чьё поле, — «Кто бросает» уберите';
     if (!headOf(step.field)) return 'бросок поля: не выбрано поле, которое бросают';
     return null;
   }
   if (has(step.shift)) return 'поправка к числу — только у броска поля';
+  if (has(step.times) && !has(step.die)) return '«сколько раз» — только у броска кости';
   if (has(step.die) && has(step.fixed)) return 'кость и формула в одном шаге — формулу перенесите в прибавку';
   if (step.die === undefined && step.fixed === undefined) return 'шаг пуст: впишите формулу или выберите бросок';
   return null;

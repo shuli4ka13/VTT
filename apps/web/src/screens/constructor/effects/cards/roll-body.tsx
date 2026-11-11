@@ -123,6 +123,7 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
     ]
     : [
       ...(several && (read.count === undefined || read.count === null) ? [] : [slot('count', 'Сколько костей', 'сколько костей', 'как у кости')]),
+      ...(read.die !== undefined && read.die !== null ? [slot('times', 'Сколько раз', 'сколько раз', 'один раз')] : []),
       slot('bonus', 'Прибавка', 'прибавка', 'нет'),
     ];
 

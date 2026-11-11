@@ -34,43 +34,42 @@ group('тогл крита пишет данные, а не код', () => {
     eq(errorsOf(lintSystem(system)).length, 0);
   });
 
+  const damageOf = (system: System, effect: string): Record<string, unknown> =>
+    system.effects[effect]!.steps!.find(s => s.id === 'урон' || s.id === 'урон_всего') as Record<string, unknown>;
+  const timesIn = (system: System, effect: string): string => String((damageOf(system, effect).times as { expr?: unknown } | undefined)?.expr ?? '');
+
   test('«кости вдвое» вешает удвоение на каждое число после проверки действующего', () => {
     const system = dnd();
     setCrit(system, 'off');
     setCrit(system, 'double');
-    const lineOf = (effect: string): string => {
-      const step = system.effects[effect]!.steps!.find(s => s.type === 'roll' && !(s as { by?: unknown }).by) as Record<string, unknown>;
-      return String((step.fixed as { expr?: unknown } | undefined)?.expr ?? '');
-    };
-    eq(lineOf('strike'), 'кинуть(@damage_dice, @dice * @бросок.исход.dice_mul) + @damage_with');
-    ok(!lineOf('spell_save').includes('atMax'),
+    eq(timesIn(system, 'strike'), '@dice * @бросок.исход.dice_mul');
+    ok(!JSON.stringify(system.effects.spell_save!.steps).includes('atMax'),
       'урон Огненного шара бросается до спасбросков — удвоения нет, это не атака');
     eq(errorsOf(lintSystem(system)).length, 0);
   });
 
   test('«кости вдвое» поверх множителя из таблицы исходов не удваивает ещё раз', () => {
     const system = dnd();
-    const line = () => String(((system.effects.strike!.steps!.find(s => s.id === 'урон') as Record<string, unknown>).fixed as { expr: string }).expr);
-    const before = line();
+    const before = timesIn(system, 'strike');
     ok(before.includes('@бросок.исход.dice_mul'));
+    eq(critOf(system), 'double');
     setCrit(system, 'double');
-    eq(line(), before);
+    eq(timesIn(system, 'strike'), before);
     setCrit(system, 'explode');
-    eq(line(), 'кинуть(@damage_dice, @dice) + @damage_with');
+    eq(timesIn(system, 'strike'), '@dice');
   });
 
-  test('удвоение снимается из той же строки, не оставляя мусора', () => {
+  test('удвоение снимается из того же слота, не оставляя мусора', () => {
     const system = dnd();
-    const lineOf = (effect: string): string => {
-      const step = system.effects[effect]!.steps!.find(s => s.type === 'roll' && !(s as { by?: unknown }).by) as Record<string, unknown>;
-      return String((step.fixed as { expr?: unknown } | undefined)?.expr ?? '');
-    };
     setCrit(system, 'off');
-    const голые = ['strike'].map(lineOf);
-    deepEq(голые, ['кинуть(@damage_dice, @dice) + @damage_with']);
+    const голые = timesIn(system, 'strike');
+    eq(голые, '@dice');
     setCrit(system, 'double');
     setCrit(system, 'off');
-    deepEq(['strike'].map(lineOf), голые, 'круг туда-обратно ничего не копит');
+    eq(timesIn(system, 'strike'), голые, 'круг туда-обратно ничего не копит');
+    const step = damageOf(system, 'strike');
+    eq((step.die as { expr: string }).expr, '@damage_dice');
+    ok(step.count === undefined, 'число костей не трогается — у «2к6» их две');
   });
 });
 

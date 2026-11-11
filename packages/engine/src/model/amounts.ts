@@ -20,7 +20,7 @@ export function asOneFormula(step: Step): string | null {
   const die = s.die as Loose;
   if (!die || typeof die !== 'object' || !('expr' in die)) return null;
   const dice = String(die.expr).trim();
-  const times = nameOf(s.count);
+  const times = nameOf(s.times) ?? nameOf(s.count);
   const parts = [times ? `кинуть(${dice}, ${times})` : `кинуть(${dice})`];
   const fixed = nameOf(s.fixed);
   if (fixed) parts.push(fixed);
