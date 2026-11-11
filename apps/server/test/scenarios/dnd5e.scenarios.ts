@@ -57,7 +57,7 @@ export const scenarios: Scenario[] = [
     rule: `PHB/SRD, «Огненный шар»: 8к6 огнём, спасбросок Ловкости; успех — половина. Кости урона бросаются один раз на всех. Сложность Мирры 8 + 3 + 4 = 15, успех при равенстве. Кости 4+5+6+3+2+6+1+6 = 33. Гоблин (Лов +2): 12 → 14 — провал, 33. Орк (Лов +1): 14 → 15 — успех, 33 / 2 = 16 (с округлением вниз). Огр (Лов −1): 3 → 2 — провал, 33. Ячейка одна: 3 круга 1 → 0. Второе сотворение без ячейки — отказ. ${PAD}`,
     world: 'dnd5e',
     sheets: { mirra: { values: { 'slots.3.left': 1 } }, goblin: fat(40), orc: fat(40), ogre: fat(100) },
-    dice: [12, 4, 5, 6, 3, 2, 6, 1, 6, 14, 3],
+    dice: [4, 5, 6, 3, 2, 6, 1, 6, 12, 14, 3],
     steps: [
       { act: 'fireball:0', from: 'mirra', to: ['goblin', 'orc', 'ogre'], inputs: { slot: 3 } },
       { act: 'fireball:0', from: 'mirra', to: ['goblin'], inputs: { slot: 3 }, refused: 'нет ячейки' },
@@ -113,7 +113,7 @@ export const scenarios: Scenario[] = [
       orc: fat(40),
       ogre: { ...fat(100), effects: ['fire_vulnerable'] },
     },
-    dice: [14, 6, 5, 4, 5, 4, 3, 4, 4, 3, 3],
+    dice: [6, 5, 4, 5, 4, 3, 4, 4, 14, 3, 3],
     steps: [{ act: 'fireball:0', from: 'mirra', to: ['goblin', 'orc', 'ogre'], inputs: { slot: 3 } }],
     expect: { values: { goblin: { hp_current: 32 }, orc: { hp_current: 5 }, ogre: { hp_current: 30 } } },
   },
