@@ -141,6 +141,15 @@ export function misfit(field: Pick<Field, 'label' | 'value'>, value: unknown): s
   return ok ? null : `«${field.label}» хранит ${TYPE_WORDS[type] ?? type}, а пришло ${JSON.stringify(value)}`;
 }
 
+export function manyText(system: System, column: TableColumn, next: string): string {
+  const link = linkOf(column);
+  const target = (system.tables?.[link ?? '']?.columns ?? []).find(c => c.key === next);
+  const list = column.label || column.key;
+  const wanted = target?.label || next;
+  return `в «${list}» несколько значений — у какого из них брать «${wanted}»? `
+    + `Проверьте, есть ли нужное значение в списке: если(есть(«${list}», значение), …, 0) — и берите «${wanted}» у этого значения`;
+}
+
 const ZERO: Record<string, unknown> = { number: 0, text: '', boolean: false, choice: '' };
 
 export const ROW = 'строка';
@@ -165,6 +174,7 @@ function rowPath(system: System, tableId: string, row: TableRow, path: string[])
   }
   const cell = source.kind === 'value' ? source.value : column.default;
   const link = linkOf(column);
+  if (column.many && rest.length) throw new EngineError(`${where}: ${manyText(system, column, rest[0]!)}`);
   if (link && rest.length) {
     const target = rowByKey(system.tables?.[link], cell);
     if (!target) throw new EngineError(`${where}: «${String(cell)}» нет в таблице «${link}»`);
