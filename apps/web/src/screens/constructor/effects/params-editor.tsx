@@ -159,7 +159,7 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
   const kind = String(param.kind ?? 'number');
   const askable = (ASKABLE as readonly string[]).includes(kind);
   const tables = choiceTables(system).map(([key, list]) => [key, list.label || key] as const);
-  const rare = Boolean(param.ask?.hint) || Boolean(param.ask?.if) || (kind === 'sheet' && Boolean(param.from)) || Boolean(param.role) || param.min !== undefined || param.max !== undefined;
+  const rare = Boolean(param.ask?.hint) || Boolean(param.ask?.if) || (kind === 'sheet' && Boolean(param.from)) || Boolean(param.role) || param.min !== undefined || param.max !== undefined || Boolean(param.measure);
   const [more, setMore] = useState(rare);
   const full = more || rare;
   return (
@@ -177,6 +177,7 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
               if (next !== 'sheet' && (t.role === 'target' || t.role === 'actor')) delete t.role;
               if (next !== 'choice' && next !== 'record' && next !== 'sheet' && next !== SHEETS) delete t.from;
               if (!(ASKABLE as readonly string[]).includes(next)) delete t.ask;
+              if (next !== 'number' && next !== 'choice') delete t.measure;
             })}
           />
         </Field>
@@ -219,7 +220,7 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
               value={modeOf(param)}
               options={modesFor(kind, askable)}
               onChange={next => change(t => {
-                delete t.ask; delete t.default; delete t.optional;
+                delete t.ask; delete t.default; delete t.optional; delete t.measure;
                 if (next === 'empty') t.optional = true;
                 if (next === 'value') t.default = (kind === 'number' ? 0 : kind === 'boolean' ? false : '') as never;
                 if (next === 'actor' || next === 'gm') t.ask = { by: next };
@@ -259,6 +260,16 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
               quick={(effect.params ?? []).filter(one => one.key !== param.key && one.kind === 'boolean').map(one => ({ ref: one.key, label: one.label ?? one.key, kind: 'boolean' as const }))}
               placeholder="например: @сложность > 0"
             />
+          ) : null}
+          {param.ask && (kind === 'number' || kind === 'choice') ? (
+            <Field label="Заполнять дистанцией до цели" hint="спрошенному покажут дистанцию до каждой цели; в выбор попадёт строка, в чьи границы она входит">
+              <input
+                type="checkbox" className="sheet-grid__check"
+                aria-label={`«${param.label ?? param.key}» — заполнять дистанцией до цели`}
+                checked={Boolean(param.measure)}
+                onChange={e => change(t => { if (e.target.checked) t.measure = true; else delete t.measure; })}
+              />
+            </Field>
           ) : null}
           {kind === 'sheet' && Object.keys(system.sheets ?? {}).length ? (
             <Field label="Только лист типа" hint="пусто — подойдёт любой лист">

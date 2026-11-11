@@ -123,6 +123,7 @@ export const column = columnValue.extend({
   onSheet: z.boolean().optional(),
   optional: z.boolean().optional(),
   stages: z.array(stage).optional(),
+  bound: z.enum(['from', 'to']).optional(),
 }).strict();
 
 export const sheetPart = z.object({
@@ -244,6 +245,7 @@ export const ask = z.object({
 export const param = column.extend({
   ask: ask.optional(),
   perTarget: z.boolean().optional(),
+  measure: z.boolean().optional(),
   item: z.object({ key: tag, label: z.string().optional() }).strict().optional(),
 
   role: z.enum(['amount', 'target', 'actor']).optional(),
@@ -364,6 +366,12 @@ export const system = z.object({
   tags: z.record(z.string(), tagContract).optional(),
   roll_edits: z.record(z.string(), rollEdit).optional(),
   rolls: z.record(z.string(), z.lazy(() => systemRoll)).optional(),
+
+  grid: z.object({
+    step: z.number().positive(),
+    unit: z.string().optional(),
+    diagonal: z.enum(['one', 'alt', 'line']).optional(),
+  }).strict().optional(),
 
   initiative: z.lazy(() => rollSpec.extend({ ties: z.array(z.string().min(1)).optional() })).optional(),
   limits: z.object({

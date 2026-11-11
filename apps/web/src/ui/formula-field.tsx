@@ -16,6 +16,7 @@ export interface FormulaFieldProps {
   onCancel?: () => void;
   names?: Record<string, ReactNode>;
   extraNames?: Map<string, string>;
+  meanings?: Map<string, string>;
   badges?: Map<string, string>;
   sheets?: SheetNames;
   placeholder?: string;
@@ -46,6 +47,7 @@ export function FormulaField(props: FormulaFieldProps) {
         ...(props.table ? { table: props.table } : {}),
         ...(names ? { names } : {}),
         ...(extraNames ? { extraNames } : {}),
+        ...(props.meanings ? { meanings: props.meanings } : {}),
         ...(badges ? { badges } : {}),
         ...(sheets ? { sheets } : {}),
         ...(placeholder ? { placeholder } : {}),
@@ -75,7 +77,7 @@ export function FormulaField(props: FormulaFieldProps) {
           {...(sheets ? { sheets } : {})}
           {...(placeholder ? { placeholder } : {})}
           readOnly
-          onChipPick={(name, label) => useLookup.getState().show({ name, label, where: props.where, ...(props.table ? { table: props.table } : {}) })}
+          onChipPick={(name, label) => useLookup.getState().show({ name, label, where: props.where, ...(props.table ? { table: props.table } : {}), ...(props.meanings?.has(name) ? { meaning: props.meanings.get(name)! } : {}) })}
           onChange={() => {}}
         />
       ) : null}

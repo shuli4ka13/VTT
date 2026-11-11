@@ -84,3 +84,22 @@ describe('«Правила → Броски»: какое поле бросаю�
     expect(system.rolls!.r!.fields).toEqual([{ table: 'навыки', column: 'набор' }]);
   });
 });
+
+describe('«Правила → Броски»: ступени и встроенные имена', () => {
+  afterEach(cleanup);
+
+  it('последняя ступень «да» показана словом «иначе», новая ступень встаёт перед ней', () => {
+    const { system, view } = run({ number: 'under', degrees: [{ label: 'Успех', if: { expr: '@успех' } }, { label: 'Провал', if: { expr: 'да' } }] });
+    expect(row(view.container, 'Ступени').textContent).toContain('иначе');
+    expect(view.container.textContent).toContain('Берётся первая подходящая сверху.');
+    fireEvent.click([...view.container.querySelectorAll('button')].find(b => b.textContent === '+ ступень')!);
+    expect(system.rolls!.r!.degrees!.map(one => one.label)).toEqual(['Успех', 'Новая ступень', 'Провал']);
+  });
+
+  it('«Что приходит» называет имена броска со смыслом', () => {
+    const { view } = run({ number: 'under' });
+    const names = [...row(view.container, 'Что приходит').querySelectorAll<HTMLElement>('.roll-arrived__name')];
+    expect(names.map(one => one.textContent)).toEqual(['выпало', 'число поля', 'порог', 'успех', 'степени']);
+    expect(names[4]!.title).toContain('«Степени числом»');
+  });
+});

@@ -14,7 +14,8 @@ export type Want =
   | { kind: 'world'; op: Op; hidden?: boolean }
   | { kind: 'answer'; sheetId: string }
   | { kind: 'cancel' }
-  | { kind: 'claim'; sheetId: string | null };
+  | { kind: 'claim'; sheetId: string | null }
+  | { kind: 'place'; sheetId: string };
 
 export interface Room {
   system: System;
@@ -62,6 +63,14 @@ export function authorize(room: Room, userId: string, want: Want): string | null
   if (!me) return 'вы не в этой комнате';
   if (want.kind === 'cancel') return me.role === 'gm' ? null : 'отменить действие может только ведущий';
   if (want.kind === 'answer') return maySheet(room, me, want.sheetId);
+  if (want.kind === 'place') {
+    const sheet = room.sheets.find(s => s.id === want.sheetId);
+    if (!sheet) return `в комнате нет листа «${want.sheetId}»`;
+    if (isDesk(sheet) || isGroup(sheet, room.sheets)) return 'стол и группа на поле не стоят';
+    if (!room.system.grid) return 'в правилах нет сетки поля';
+    if (me.role === 'gm' || me.sheetId === want.sheetId) return null;
+    return me.sheetId ? 'это чужая фишка — двигает её владелец или ведущий' : 'сначала выберите своего персонажа — двигать можно только его';
+  }
   if (want.kind === 'claim') {
     if (!want.sheetId) return null;
     const sheet = room.sheets.find(s => s.id === want.sheetId);

@@ -147,6 +147,17 @@
 .asked--mine { background: color-mix(in srgb, var(--pink) 18%, var(--surface)); color: var(--text); border-bottom-color: var(--pink); }
 .asked--mine .asked__mark { background: var(--pink); color: var(--on-accent); }
 
+.tokens--off { margin-top: var(--s-3); }
+.tokens__label { grid-column: 1 / -1; }
+.field-board { overflow: auto; max-width: 100%; width: max-content; max-height: 520px; border: 1px solid var(--border); border-radius: var(--r-3); background: var(--bg); }
+.field-board__grid { display: grid; width: max-content; }
+.field-cell { box-sizing: border-box; width: 40px; height: 40px; display: grid; place-items: center; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.field-cell--free { cursor: pointer; }
+.field-cell--free:hover { background: var(--surface-2); }
+.token--field { padding: 0; gap: 0; border: 0; }
+.token--field .token__face { width: 32px; height: 32px; font-size: var(--fs-2); }
+.token--field.token--turn .token__face { outline-offset: 2px; }
+
 @media (max-width: 700px) {
   .tokens { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
   .actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }

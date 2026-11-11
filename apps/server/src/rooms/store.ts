@@ -1,5 +1,5 @@
 import type { DatabaseSync } from 'node:sqlite';
-import type { Sheet, ClockState, LogEntry } from '@vtt/schema';
+import type { Sheet, ClockState, LogEntry, Places } from '@vtt/schema';
 import type { Member } from '@vtt/engine/core/authorize';
 
 export interface RoomRow { id: string; title: string; worldId: string; system: string; compendium: string }
@@ -29,6 +29,16 @@ export class RoomStore {
   clock(roomId: string): ClockState | null {
     const row = this.raw.prepare('SELECT data FROM room_clocks WHERE room_id = ?').get(roomId) as { data: string } | undefined;
     return row ? JSON.parse(row.data) as ClockState : null;
+  }
+
+  places(roomId: string): Places {
+    const row = this.raw.prepare('SELECT data FROM room_places WHERE room_id = ?').get(roomId) as { data: string } | undefined;
+    return row ? JSON.parse(row.data) as Places : {};
+  }
+
+  savePlaces(roomId: string, places: Places): void {
+    this.raw.prepare('DELETE FROM room_places WHERE room_id = ?').run(roomId);
+    if (Object.keys(places).length) this.raw.prepare('INSERT INTO room_places (room_id, data) VALUES (?, ?)').run(roomId, JSON.stringify(places));
   }
 
   pending<T>(roomId: string): (T & { id: string }) | null {

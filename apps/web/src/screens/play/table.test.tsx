@@ -302,3 +302,41 @@ describe('+ лист со стола', () => {
     expect(made.at(-1)).toEqual(['к', 'Охранник', 'npc']);
   });
 });
+
+describe('поле боя', () => {
+  const placed: unknown[][] = [];
+  const original = tableSocket.placePiece.bind(tableSocket);
+  beforeEach(() => { placed.length = 0; tableSocket.placePiece = (...args) => { placed.push(args); }; });
+  afterEach(() => { cleanup(); tableSocket.placePiece = original; });
+
+  const withGrid = (): RoomState => {
+    const base = room(null);
+    base.system.grid = { step: 2, unit: 'м' } as never;
+    return { ...base, places: { а: { x: 3, y: 1 } } } as RoomState;
+  };
+
+  it('без сетки поля нет; с сеткой фишка стоит в своей клетке, а лист без места — «не на поле»', () => {
+    useRoom.setState(state => ({ ...state, room: room(null), log: [], error: null }));
+    const first = renderOpen(<TableScreen />);
+    expect(document.querySelector('.field-board')).toBeNull();
+    first.unmount();
+
+    useRoom.setState(state => ({ ...state, room: withGrid() }));
+    renderOpen(<TableScreen />);
+    const cell = document.querySelector('.field-cell[data-x="3"][data-y="1"]')!;
+    expect(cell.querySelector('.token__face')?.textContent).toBe('А');
+    expect(document.querySelectorAll('.field-board .token')).toHaveLength(1);
+    expect(document.querySelector('.tokens')?.textContent).toContain('Мирра');
+  });
+
+  it('отпускание фишки на клетку шлёт одно сообщение, а в плитку — снятие с поля', () => {
+    useRoom.setState(state => ({ ...state, room: withGrid(), log: [], error: null }));
+    renderOpen(<TableScreen />);
+    const cell = document.querySelector('.field-cell[data-x="5"][data-y="2"]')!;
+    fireEvent.drop(cell, { dataTransfer: { getData: () => 'б' } });
+    expect(placed).toEqual([['к', 'б', { x: 5, y: 2 }]]);
+
+    fireEvent.drop(document.querySelector('.tokens')!, { dataTransfer: { getData: () => 'а' } });
+    expect(placed.at(-1)).toEqual(['к', 'а', null]);
+  });
+});

@@ -39,7 +39,7 @@ export function FormulaBar() {
           onPick: (insert: (piece: string) => string) => option.onPick(insert, api),
         }))}
         onChange={write}
-        onChipPick={(name, label) => useLookup.getState().show({ name, label, where: target.where, ...(target.table ? { table: target.table } : {}) })}
+        onChipPick={(name, label) => useLookup.getState().show({ name, label, where: target.where, ...(target.table ? { table: target.table } : {}), ...(target.meanings?.has(name) ? { meaning: target.meanings.get(name)! } : {}) })}
         onKeyDown={e => {
           if (e.key === 'Enter') { e.preventDefault(); commit(); }
           if (e.key === 'Escape') { e.preventDefault(); cancel(); }

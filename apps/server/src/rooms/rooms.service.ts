@@ -9,7 +9,7 @@ import { WorldsService } from '../worlds/worlds.service.ts';
 import { RoomStore } from './store.ts';
 import type {
   RoomState, RoomSummary, RoomDelta, JournalEntry, ActIntent, TurnIntent, AnswerIntent, CancelIntent, ClockState, PendingState,
-  Sheet, System, Compendium, StoredValue, LogEntry,
+  Sheet, System, Compendium, StoredValue, LogEntry, Place, Places,
 } from '@vtt/schema';
 import { flattenSystem } from '@vtt/engine/model/inherit';
 import { perform } from '@vtt/engine/core/perform';
@@ -103,7 +103,7 @@ export class RoomsService {
     const sheets = this.store.sheets(roomId);
     return {
       id: room.id, title: room.title, ...this.worldOf(room), sheets, members: people,
-      log: this.store.log(roomId), clock: this.store.clock(roomId) ?? idleClock(),
+      log: this.store.log(roomId), clock: this.store.clock(roomId) ?? idleClock(), places: this.store.places(roomId),
       pending: pending ? this.pendingView(pending, sheets) : null,
     };
   }
@@ -213,6 +213,21 @@ export class RoomsService {
       const delta: RoomDelta = { roomId, sheets: [], log: [] };
       this.store.commit({ roomId, member: { userId, sheetId }, journal: this.journalRow(userId, 'claim', { sheetId }, [], delta) });
       return delta;
+    });
+  }
+
+  placePiece(userId: string, roomId: string, sheetId: string, at: Place | null): Promise<Places> {
+    return this.inTurn(roomId, () => {
+      const room = this.requireRoom(roomId);
+      this.allow(room, userId, { kind: 'place', sheetId }, true);
+      const places = { ...this.store.places(roomId) };
+      if (at) {
+        const taken = Object.entries(places).find(([id, one]) => id !== sheetId && one.x === at.x && one.y === at.y);
+        if (taken) throw new BadRequestException('клетка занята');
+        places[sheetId] = { x: at.x, y: at.y };
+      } else delete places[sheetId];
+      this.store.savePlaces(roomId, places);
+      return places;
     });
   }
 

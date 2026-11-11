@@ -14,6 +14,6 @@ export type {
   PublishCompendiumRequest, CompendiumSummary, PublishedCompendium,
   PublishRequest, WorldSummary, CreateRoomRequest,
   RoomSummary, RoomState, ActIntent, TurnIntent, ClockState, PendingState, AnswerIntent, CancelIntent,
-  RoomDelta, LogEntry, JournalEntry, ServerMessage, ClientMessage,
+  RoomDelta, LogEntry, Place, Places, JournalEntry, ServerMessage, ClientMessage,
   PublishState, SavedRef,
 } from './api.ts';

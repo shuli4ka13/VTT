@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS room_sheets (
   PRIMARY KEY (room_id, sheet_id));
 CREATE TABLE IF NOT EXISTS room_clocks (
   room_id TEXT PRIMARY KEY, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS room_places (
+  room_id TEXT PRIMARY KEY, data TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS room_pending (
   id TEXT PRIMARY KEY, room_id TEXT NOT NULL, data TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS members (

@@ -16,9 +16,32 @@ type EditSystem = WorldState['editSystem'];
 
 const SERVICE = '\u0001';
 
-const DEGREE_NAMES = new Map([['выпало', 'выпало'], ['число', 'число поля'], ['порог', 'порог'], ['успех', 'успех'], ['степени', 'степени']]);
+const RULE_WORDS = [
+  ['выпало', 'выпало', 'что выпало на кости этого броска'],
+  ['число', 'число поля', 'число брошенного поля как есть — например, «Итог: Атлетика»'],
+  ['порог', 'порог', 'с чем сравнивают выпавшее: число поля с поправкой шага «Бросок»'],
+] as const;
 
-const RULE_NAMES = new Map([['выпало', 'выпало'], ['число', 'число поля'], ['порог', 'порог']]);
+const DEGREE_WORDS = [
+  ...RULE_WORDS,
+  ['успех', 'успех', 'да или нет — итог строки «Успех, если» этого броска'],
+  ['степени', 'степени', 'число — итог строки «Степени числом» этого броска'],
+] as const;
+
+const RULE_NAMES = new Map(RULE_WORDS.map(([key, label]) => [key, label]));
+const DEGREE_NAMES = new Map(DEGREE_WORDS.map(([key, label]) => [key, label]));
+const DEGREE_MEANINGS = new Map<string, string>(DEGREE_WORDS.map(([key, , meaning]) => [key, `${meaning}; имя есть в каждом броске, объявлять его не нужно`]));
+
+const OTHERWISE = 'да';
+
+function Arrived({ words }: { words: readonly (readonly [string, string, string])[] }) {
+  return (
+    <span className="roll-arrived">
+      {words.map(([key, label, meaning]) => <span key={key} className="roll-arrived__name" title={meaning}>{label}</span>)}
+      <span className="faint">— есть в каждом броске; наведите или щёлкните имя в формуле, чтобы узнать, что это</span>
+    </span>
+  );
+}
 
 const NUMBER_WORDS = [
   ['bonus', 'прибавка к выпавшему'],
@@ -161,6 +184,14 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
             </div>
           </div>
         ) : null}
+        {roll.number === 'under' || roll.number === 'over' || roll.success || roll.margin || roll.degrees?.length ? (
+          <div className="dict-row roll-line roll-line--top">
+            <span className="dict-row__label">Что приходит</span>
+            <div className="roll-form__body">
+              <Arrived words={roll.number === 'under' || roll.number === 'over' || roll.success || roll.margin ? DEGREE_WORDS : DEGREE_WORDS.filter(([key]) => key === 'выпало' || key === 'число')} />
+            </div>
+          </div>
+        ) : null}
         {roll.number === 'under' || roll.number === 'over' || roll.success || roll.margin ? (
           <>
             {([
@@ -170,7 +201,7 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
               <div key={key} className="dict-row roll-line">
                 <span className="dict-row__label">{label}</span>
                 <div className="roll-form__body">
-                  <FormulaField value={roll[key]?.expr ?? ''} system={system} where={`${roll.label || id} · ${where}`} extraNames={RULE_NAMES} placeholder={hint}
+                  <FormulaField value={roll[key]?.expr ?? ''} system={system} where={`${roll.label || id} · ${where}`} extraNames={RULE_NAMES} meanings={DEGREE_MEANINGS} placeholder={hint}
                     onCommit={text => edit(draft => { if (text.trim()) draft[key] = { expr: text.trim() }; else delete draft[key]; })} />
                 </div>
               </div>
@@ -180,19 +211,40 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
         <div className="dict-row roll-line roll-line--top">
           <span className="dict-row__label">Ступени</span>
           <div className="roll-form__body roll-form__body--stack">
-            {(roll.degrees ?? []).map((degree, at) => (
+            {roll.degrees && roll.degrees.length > 1 ? <span className="faint">Берётся первая подходящая сверху.</span> : null}
+            {(roll.degrees ?? []).map((degree, at) => {
+              const otherwise = at > 0 && at === roll.degrees!.length - 1 && degree.if.expr.trim() === OTHERWISE;
+              return (
               <div key={at} className="roll-degree">
                 <Input value={degree.label} placeholder="как зовётся ступень"
                   onChange={label => edit(draft => { const one = draft.degrees?.[at]; if (one) one.label = label; })} />
-                <span className="roll-degree__if">если</span>
-                <FormulaField value={degree.if.expr} system={system} where={`${roll.label || id} · ступень`} extraNames={DEGREE_NAMES} placeholder="@выпало <= @число"
-                  onCommit={text => edit(draft => { const one = draft.degrees?.[at]; if (one) one.if = { expr: text.trim() }; })} />
+                {otherwise ? (
+                  <span className="roll-degree__if roll-degree__if--else" title="все исходы, которые не подошли ступеням выше">иначе</span>
+                ) : (
+                  <>
+                    <span className="roll-degree__if">если</span>
+                    <FormulaField value={degree.if.expr} system={system} where={`${roll.label || id} · ступень`} extraNames={DEGREE_NAMES} meanings={DEGREE_MEANINGS} placeholder="@выпало <= @число"
+                      onCommit={text => edit(draft => { const one = draft.degrees?.[at]; if (one) one.if = { expr: text.trim() }; })} />
+                  </>
+                )}
                 <button type="button" className="chips__x" aria-label="убрать ступень"
                   onClick={() => edit(draft => { draft.degrees?.splice(at, 1); if (!draft.degrees?.length) delete draft.degrees; })}>×</button>
               </div>
-            ))}
-            <button type="button" className="roll-form__add"
-              onClick={() => edit(draft => { (draft.degrees ??= []).push({ label: 'Новая ступень', if: { expr: '@выпало <= @число' } }); })}>+ ступень</button>
+              );
+            })}
+            <span className="inline inline--tight">
+              <button type="button" className="roll-form__add"
+                onClick={() => edit(draft => {
+                  const list = (draft.degrees ??= []);
+                  const last = list[list.length - 1];
+                  const fresh = { label: 'Новая ступень', if: { expr: '@выпало <= @число' } };
+                  if (list.length > 1 && last?.if.expr.trim() === OTHERWISE) list.splice(list.length - 1, 0, fresh); else list.push(fresh);
+                })}>+ ступень</button>
+              {roll.degrees?.length && roll.degrees[roll.degrees.length - 1]!.if.expr.trim() !== OTHERWISE ? (
+                <button type="button" className="roll-form__add"
+                  onClick={() => edit(draft => { (draft.degrees ??= []).push({ label: 'Иначе', if: { expr: OTHERWISE } }); })}>+ иначе</button>
+              ) : null}
+            </span>
           </div>
         </div>
         <div className="dict-row roll-line">
