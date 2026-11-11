@@ -133,13 +133,10 @@ describe('вызываемые блоки D&D собираются руками'
     param(ui, 'saving_throw', 2, 'Сложность', 'number', 'сложность');
     const at = (k: number) => () => stepCard(new RegExp(`^${k} · `));
     ui.click('+ бросок');
-    within(at(1)()).select('Кто бросает', '@кто');
-    within(at(1)()).select('Что бросает', 'die:lead_die');
-    within(at(1)()).click('+ прибавка');
-    within(at(1)()).formula('Прибавка', '@кто.характеристика.save');
-    within(at(1)()).select('Метки', 'спасбросок');
-    within(at(1)()).select('Метки', ':формула');
-    within(at(1)()).type('Метки', '@характеристика');
+    within(at(1)()).select('Что бросает', 'field:характеристика.save');
+    within(at(1)()).select('Ещё метки', 'спасбросок');
+    within(at(1)()).select('Ещё метки', ':формула');
+    within(at(1)()).type('Ещё метки', '@характеристика');
     within(at(1)()).click('добавить');
     nameStep(at(1)(), 'бросок');
     ui.click('+ проверка');

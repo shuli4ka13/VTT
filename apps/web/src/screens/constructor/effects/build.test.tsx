@@ -90,13 +90,17 @@ describe('эффекты пресетов собираются в констру
     param(5, 'Сколько костей', 'number', 'dice');
     param(6, 'Тип урона', 'choice', 'damage_type', 'damage_types');
     param(7, 'Источник урона', 'choice', 'damage_source', 'damage_source');
-    param(8, 'Состояние при попадании', 'effect', 'status');
-    param(9, 'Плата', 'effect', 'цена');
+    param(8, 'Свойства оружия', 'choice', 'свойства', 'weapon_properties');
+    param(9, 'Дальность', 'choice', 'дальность', 'reach');
+    param(10, 'Состояние при попадании', 'effect', 'status');
+    param(11, 'Плата', 'effect', 'цена');
     ui.select(ui.cell('Если не передали', 3), 'value');
     ui.select(ui.cell('Если не передали', 5), 'value');
     ui.type(ui.cell('Если не передали', 5), '1');
-    ui.select(ui.cell('Если не передали', 9), 'value');
-    ui.select(ui.cell('Если не передали', 9).querySelectorAll('select')[1]!, 'cost_attack');
+    ui.select(ui.cell('Если не передали', 11), 'value');
+    ui.select(ui.cell('Если не передали', 11).querySelectorAll('select')[1]!, 'cost_attack');
+    ui.select(ui.cell('Если не передали', 10), 'empty');
+    ui.select(ui.cell('Если не передали', 9), 'empty');
     ui.select(ui.cell('Если не передали', 8), 'empty');
     ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_attack');
     let cost = stepCard(/^1 · /);
@@ -117,9 +121,17 @@ describe('эффекты пресетов собираются в констру
     forkBy(stepCard(/^3 · /), 'исход', 'попал');
     const hit = blocks().length - 1;
     expect(armLabel(block(hit))).toBe('попадание · крит:');
-    addToArm(block(hit), 0, 'number');
+    addToArm(block(hit), 0, 'roll');
     card = stepCard(/^4 · /);
-    within(card).formula('Формула', 'кинуть(@damage_dice, @dice * @бросок.исход.dice_mul) + @damage_with');
+    within(card).select('Кто бросает', '@действующий');
+    within(card).select('Что бросает', 'own-die');
+    within(card).formula('Своя кость', '@damage_dice');
+    within(card).click('+ сколько раз');
+    within(card).formula('Сколько раз', '@dice * @бросок.исход.dice_mul');
+    within(card).click('+ прибавка');
+    within(card).formula('Прибавка', '@damage_with');
+    card = stepCard(/^4 · /);
+    marks(card, 'урон', 'оружие', '=@дальность', '=@свойства');
     nameStep(card, 'урон');
 
     addToArm(block(hit), 0, 'change');
@@ -138,8 +150,11 @@ describe('эффекты пресетов собираются в констру
     card = stepCard(/^6 · /);
     within(card).formula('Запомнит: Кто наложил', '@действующий');
     wrapIf(() => stepCard(/^6 · /), '=не пусто(@status)');
-    dump({ got: built('strike') ?? useWorld.getState().system.effects, goal });
-    expect(built('strike')).toEqual(goal);
+    const got = built('strike');
+    const listed = got?.params?.find(one => one.key === 'свойства');
+    if (listed) (listed as { many?: boolean }).many = true;
+    dump({ got: got ?? useWorld.getState().system.effects, goal });
+    expect(got).toEqual(goal);
   });
 
   it('D&D «Адское возмездие» (hellish_rebuke)', { timeout: 60000 }, () => {
@@ -175,9 +190,13 @@ describe('эффекты пресетов собираются в констру
 
     savingThrow(3, [['Кто спасается', '@источник'], ['Чем спасается', '"ловкость"'], ['Сложность', '@носитель.spell_dc']]);
 
-    ui.click('+ число');
+    ui.click('+ бросок');
     card = stepCard(/^4 · /);
-    within(card).formula('Формула', "(кинуть('2d10'))");
+    within(card).select('Кто бросает', '@носитель');
+    within(card).select('Что бросает', 'own-die');
+    within(card).formula('Своя кость', "'2d10'");
+    card = stepCard(/^4 · /);
+    marks(card, 'урон', 'заклинание');
     nameStep(card, 'урон_всего');
 
     ui.click('+ число');

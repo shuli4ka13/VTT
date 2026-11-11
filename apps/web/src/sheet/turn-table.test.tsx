@@ -16,7 +16,7 @@ describe('D&D: однотипное лежит таблицами, а не ро�
 
   it('счётчики хода — строки таблицы «За ход», у каждой свой потолок и начало', () => {
     const turn = fieldsOf(system).filter(field => field.home === 'turn');
-    expect(turn.map(field => field.label)).toEqual(['Действие', 'Бонусное действие', 'Реакция', 'Раз за ход', 'Атак осталось']);
+    expect(turn.map(field => field.label)).toEqual(['Действие', 'Бонусное действие', 'Реакция', 'Раз за ход', 'Свирепый атакующий', 'Атак осталось']);
     const action = fieldOf(system, 'turn.действие.left')!;
     expect(action.value).toMatchObject({ kind: 'stored', default: 1, max: '2' });
 

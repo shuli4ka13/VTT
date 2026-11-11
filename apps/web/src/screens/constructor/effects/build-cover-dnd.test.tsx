@@ -228,6 +228,7 @@ describe('эффекты D&D собираются в конструкторе р
     lifetime('uses');
     within(handlerHead(1)).select('Что случилось', 'seen');
     within(handlerHead(1)).select('Кого касается', '@бросающий == @носитель');
+    within(handlerHead(1)).when('=@бросающий == @носитель и (есть(@roll.tags, "атака") или есть(@roll.tags, "спасбросок") или есть(@roll.tags, "проверка"))');
     within(handlerHead(1)).select('Решение', 'ask');
     within(handlerAt(1)).click('+ прибавить');
     const card = stepCard(/^1 · /, handlerAt(1));
@@ -353,7 +354,7 @@ describe('эффекты D&D собираются в конструкторе р
     expect(chip.selectedOptions[0]!.textContent).toBe('Кто действует');
     expect(roll.querySelector('.number-line__formula')!.firstElementChild).toBe(chip);
     expect(roll.textContent).not.toContain('Против кого');
-    expect(within(roll).field('Метки')).toBeTruthy();
+    expect(within(roll).field('Ещё метки')).toBeTruthy();
     expect(useWorld.getState().system.effects.hide!.steps![0]).not.toHaveProperty('against');
   });
 });
