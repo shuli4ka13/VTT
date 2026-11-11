@@ -107,3 +107,17 @@ group('подписка на эффект — слабая ссылка', () => 
     deepEq(errorsOf(lintSystem(system)).map(e => e.text), []);
   });
 });
+
+group('кусок и броски полей', () => {
+  const skills = PIECES.find(piece => piece.label === 'Навыки D&D')!;
+
+  test('правило броска едет только к приехавшим колонкам', () => {
+    const { system } = bringPiece(empty(), skills);
+    const donor = donorOf(skills)!;
+    for (const roll of Object.values(system.rolls ?? {})) {
+      for (const one of roll.fields) ok((system.tables?.[one.table]?.columns ?? []).some(c => c.key === one.column), `${one.table}.${one.column} есть в системе`);
+    }
+    ok(Object.keys(system.rolls ?? {}).length > 0 && Object.keys(system.rolls!).every(key => donor.rolls?.[key]), 'правила взяты у донора');
+  });
+
+});

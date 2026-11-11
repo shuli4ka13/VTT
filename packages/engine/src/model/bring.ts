@@ -9,7 +9,7 @@ import type { SheetPart } from '@vtt/schema';
 import { basedOn } from './inherit.ts';
 import { cancels } from './cancels.ts';
 
-export type PartKind = 'field' | 'group' | 'block' | 'effect' | 'table' | 'constant' | 'rollEdit' | 'recordKind' | 'record';
+export type PartKind = 'field' | 'group' | 'block' | 'effect' | 'table' | 'constant' | 'rollEdit' | 'recordKind' | 'record' | 'roll';
 
 export interface Part { kind: PartKind; key: string }
 
@@ -61,6 +61,19 @@ function tableDeps(system: System, key: string): Part[] {
   return out;
 }
 
+function exprFields(values: unknown[]): Part[] {
+  const out: Part[] = [];
+  const walk = (value: unknown): void => {
+    if (typeof value === 'string' || value === null || typeof value !== 'object') return;
+    if (Array.isArray(value)) { value.forEach(walk); return; }
+    const expr = (value as { expr?: unknown }).expr;
+    if (typeof expr === 'string') for (const tag of formulaDeps(expr) ?? []) out.push({ kind: 'field', key: tag });
+    Object.values(value).forEach(walk);
+  };
+  values.forEach(walk);
+  return out;
+}
+
 function rowTables(system: System): Map<string, string> {
   const out = new Map<string, string>();
   for (const [key, table] of Object.entries(system.tables ?? {})) {
@@ -93,14 +106,30 @@ export function dependencies(donor: System): (part: Part) => Part[] {
     byOwner.set(partKey(owner), list);
   }
 
+  const rollsOf = (table: string, column?: string): Part[] =>
+    Object.entries(donor.rolls ?? {}).flatMap(([key, roll]) => {
+      const bound = roll.fields.filter(one => one.table === table && (column === undefined || one.column === column));
+      if (!bound.length) return [];
+      return [{ kind: 'roll' as const, key }, ...bound.flatMap(one => exprFields([one.threshold, one.keep]))];
+    });
+
   return part => {
     const out = [...byOwner.get(partKey(part)) ?? []];
     if (part.kind === 'field') {
       const field = fieldOf(donor, part.key);
       for (const place of field?.placements ?? []) out.push({ kind: 'block', key: place.group });
       if (field?.cell) out.push({ kind: 'table', key: field.cell.table });
+      if (field && !field.cell) out.push(...rollsOf(field.home, part.key));
+    }
+    if (part.kind === 'roll') {
+      const roll = donor.rolls?.[part.key];
+      if (roll) {
+        const { fields: _fields, ...rule } = roll;
+        out.push({ kind: 'constant', key: roll.die }, ...exprFields([rule]));
+      }
     }
     if (part.kind === 'table') {
+      out.push(...rollsOf(part.key));
       out.push(...tableDeps(donor, part.key));
       for (const field of fieldsOf(donor)) {
         if (field.cell?.table === part.key) out.push(...byOwner.get(partKey({ kind: 'field', key: field.tag })) ?? []);
@@ -137,6 +166,7 @@ const exists = (system: System, part: Part): boolean => {
     case 'table': return Boolean(system.tables?.[part.key]);
     case 'constant': return Boolean(system.constants?.[part.key]);
     case 'rollEdit': return Boolean(system.roll_edits?.[part.key]);
+    case 'roll': return Boolean(system.rolls?.[part.key]);
     case 'recordKind': return Boolean(kindOf(system, part.key));
     case 'record': return (system.library ?? []).some(record => record.id === part.key);
   }
@@ -186,7 +216,37 @@ function copyPart(target: System, donor: System, part: Part): void {
       else target.tables = { ...target.tables, [part.key]: clone(donor.tables![part.key]!) };
       return;
     case 'record': (target.library ??= []).push(clone(donor.library!.find(record => record.id === part.key)!)); return;
+    case 'roll': return;
   }
+}
+
+type Column = { table: string; column: string };
+
+function bringRoll(target: System, donor: System, key: string, arrived: Set<string>): 'added' | 'kept' | 'none' {
+  const from = donor.rolls![key]!;
+  const have = target.rolls?.[key];
+  if (have && (have.die !== from.die || (have.number ?? 'bonus') !== (from.number ?? 'bonus'))) return 'none';
+  const free = (one: Column) => arrived.has(`${one.table}.${one.column}`)
+    && !Object.values(target.rolls ?? {}).some(roll => roll.fields.some(own => own.table === one.table && own.column === one.column));
+  const fields = clone(from.fields.filter(free));
+  if (!fields.length) return 'none';
+  if (have) { have.fields.push(...fields); return 'kept'; }
+  target.rolls = { ...target.rolls, [key]: { ...clone(from), fields } };
+  return 'added';
+}
+
+function arrivedColumns(donor: System, parts: Part[]): Set<string> {
+  const out = new Set<string>();
+  for (const part of parts) {
+    if (part.kind === 'table' || part.kind === 'recordKind') {
+      for (const column of donor.tables?.[part.key]?.columns ?? []) out.add(`${part.key}.${column.key}`);
+    }
+    if (part.kind === 'field') {
+      const field = fieldOf(donor, part.key);
+      if (field && !field.cell) out.add(`${field.home}.${part.key}`);
+    }
+  }
+  return out;
 }
 
 export function bringIn(target: System, donor: System, roots: Part[], grants: string[] = []): Brought {
@@ -198,7 +258,26 @@ export function bringIn(target: System, donor: System, roots: Part[], grants: st
   const had = new Set(parts.filter(part => exists(system, part)).map(partKey));
   const fields = parts.filter(p => p.kind === 'field').sort((a, b) => (order.get(a.key) ?? 0) - (order.get(b.key) ?? 0));
   const blocks = parts.filter(p => p.kind === 'block');
-  for (const part of [...parts.filter(p => p.kind !== 'field' && p.kind !== 'block'), ...fields]) {
+  const rolls = parts.filter(p => p.kind === 'roll');
+  const depsOf = dependencies(donor);
+  const needed = new Set(parts.filter(p => p.kind !== 'roll').flatMap(depsOf).map(partKey));
+  const dice = new Set(rolls.map(part => donor.rolls![part.key]!.die).filter(die => !needed.has(partKey({ kind: 'constant', key: die }))));
+  const later = (part: Part) => part.kind === 'constant' && dice.has(part.key);
+  const copied: Part[] = [];
+  for (const part of [...parts.filter(p => p.kind !== 'field' && p.kind !== 'block' && p.kind !== 'roll' && !later(p)), ...fields]) {
+    if (had.has(partKey(part))) { kept.push(part); continue; }
+    copyPart(system, donor, part);
+    added.push(part);
+    copied.push(part);
+  }
+  const landed = arrivedColumns(donor, copied);
+  for (const part of rolls) {
+    const result = bringRoll(system, donor, part.key, landed);
+    if (result === 'added') added.push(part);
+    if (result === 'kept') kept.push(part);
+  }
+  for (const part of parts.filter(later)) {
+    if (!Object.values(system.rolls ?? {}).some(roll => roll.die === part.key)) continue;
     if (had.has(partKey(part))) { kept.push(part); continue; }
     copyPart(system, donor, part);
     added.push(part);

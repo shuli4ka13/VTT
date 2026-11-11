@@ -53,10 +53,10 @@ export function copyDonorBlock(donor: System, group: string): void {
 
 const PART_WORDS: Record<PartKind, string> = {
   field: 'Поля', group: 'Папки', block: 'Блоки листа', effect: 'Эффекты', table: 'Таблицы',
-  constant: 'Кости', rollEdit: 'Правки броска', recordKind: 'Книги', record: 'Записи',
+  constant: 'Кости', rollEdit: 'Правки броска', recordKind: 'Книги', record: 'Записи', roll: 'Броски',
 };
 
-const PART_ORDER: PartKind[] = ['field', 'block', 'effect', 'record', 'recordKind', 'table', 'rollEdit', 'constant', 'group'];
+const PART_ORDER: PartKind[] = ['field', 'block', 'effect', 'record', 'recordKind', 'table', 'roll', 'rollEdit', 'constant', 'group'];
 
 function partLabel(system: System, part: Part): string {
   switch (part.kind) {
@@ -67,6 +67,7 @@ function partLabel(system: System, part: Part): string {
     case 'rollEdit': return system.roll_edits?.[part.key]?.label ?? part.key;
     case 'recordKind': return kindOf(system, part.key)?.label ?? part.key;
     case 'record': return system.library?.find(r => r.id === part.key)?.label ?? part.key;
+    case 'roll': return system.rolls?.[part.key]?.label ?? part.key;
     case 'group': return part.key;
     case 'block': return part.key;
   }
