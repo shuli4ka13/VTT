@@ -417,6 +417,8 @@ export function editReadback(
   return out;
 }
 
+const signed = (text: string, at: number, minus: boolean): string => (at === 0 ? `${minus ? '−' : ''}${text}` : `${minus ? ' − ' : ' + '}${text}`);
+
 export function dieReadback(constant: SystemConstant, system: System, driven = false): Segment[] {
   const lone = (constant.dice ?? []).length === 1 && (constant.dice![0]!.count === undefined || constant.dice![0]!.count === null);
   if (driven && lone) {
@@ -433,7 +435,7 @@ export function dieReadback(constant: SystemConstant, system: System, driven = f
       : diceText(d.count, d.sides);
 
     return d.name ? `${head} (${d.label || d.name})` : head;
-  }).join(' + ');
+  }).map((text, at) => signed(text, at, constant.dice![at]!.minus === true)).join('');
   if (!dice) return [hole('из чего состоит бросок?')];
 
   const read = constant.read;
@@ -442,7 +444,7 @@ export function dieReadback(constant: SystemConstant, system: System, driven = f
 
   const single = (constant.dice ?? []).length === 1
     && ((constant.dice ?? [])[0]!.count ?? 1) === 1;
-  if (single && kind === 'sum') return [seg(`Кинуть ${dice}.`)];
+  if (single && kind === 'sum') return [seg(constant.dice![0]!.minus ? `Кинуть ${dice.slice(1)} и вычесть из суммы.` : `Кинуть ${dice}.`)];
 
   const tail = kind === 'best' ? 'взять лучшую'
     : kind === 'worst' ? 'взять худшую'
@@ -459,17 +461,18 @@ export function dieSaid(constant: SystemConstant, system: System, counted: boole
   const kind = typeof read === 'string' ? read : read?.kind ?? 'sum';
   const atLeast = typeof read === 'object' ? read.atLeast : undefined;
   const lone = terms.length === 1;
-  if (lone && kind === 'sum' && (terms[0]!.count ?? 1) === 1) return null;
+  if (lone && kind === 'sum' && (terms[0]!.count ?? 1) === 1 && !terms[0]!.minus) return null;
   const dice = terms.map(term => {
     const head = counted && lone ? `${DIE_LETTER}${term.sides}`
       : typeof term.count === 'object' && term.count !== null ? `${DIE_LETTER}${term.sides} по числу «${countWord(system, term.count)}»`
         : diceText(term.count, term.sides);
     return term.name ? `${head} «${term.label || term.name}»` : head;
-  }).join(' + ');
+  }).map((text, at) => signed(text, at, terms[at]!.minus === true)).join('');
   const tail = kind === 'best' ? 'берётся лучшая'
     : kind === 'worst' ? 'берётся худшая'
       : kind === 'count' ? `считаются выпавшие не ниже ${atLeast ?? '?'}`
         : 'складываются';
+  if (lone && kind === 'sum' && terms[0]!.minus) return `${dice.slice(1)} — вычитается из суммы`;
   return `${dice} — ${tail}`;
 }
 

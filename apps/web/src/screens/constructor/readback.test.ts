@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { checkReadback, rollReadback, changeReadback, numberReadback, joinReadback, editReadback, dieReadback, editNotation, seenReadback } from './readback.ts';
+import { checkReadback, rollReadback, changeReadback, numberReadback, joinReadback, editReadback, dieReadback, dieSaid, editNotation, seenReadback } from './readback.ts';
 import type { System, Effect, Step } from '@vtt/schema';
 import { withColumn } from '@vtt/engine/model/sheet-columns';
 
@@ -146,6 +146,19 @@ describe('editReadback — правка броска словами', () => {
   it('пустая правка — оранжевый пропуск, а не молчание', () => {
     expect(joinReadback(editReadback({ label: 'Фора', ops: [] }, sys)))
       .toBe('⟨что она делает с броском?⟩');
+  });
+});
+
+describe('кость «вычитается из суммы» словами', () => {
+  const system = { id: 'с', name: 'с' } as unknown as Parameters<typeof dieReadback>[1];
+  it('одна часть с вычитанием — «вычесть из суммы»', () => {
+    expect(joinReadback(dieReadback({ kind: 'die', dice: [{ count: 1, sides: 100, minus: true }] } as never, system))).toBe('Кинуть 1к100 и вычесть из суммы.');
+  });
+  it('часть с вычитанием среди других — со знаком минус', () => {
+    expect(joinReadback(dieReadback({ kind: 'die', dice: [{ count: 1, sides: 20 }, { count: 1, sides: 6, minus: true }] } as never, system))).toBe('Кинуть 1к20 − 1к6 и сложить.');
+  });
+  it('под шагом «Бросок» одна кость с вычитанием не молчит', () => {
+    expect(dieSaid({ kind: 'die', dice: [{ count: 1, sides: 100, minus: true }] } as never, system, false)).toBe('1к100 — вычитается из суммы');
   });
 });
 
