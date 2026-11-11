@@ -5,9 +5,9 @@ import { formulaWords } from '../../../../ui/formula-words.ts';
 
 export interface ResultOutput { key: string; label?: string; kind?: string; from?: string; many?: boolean; no?: string }
 
-const MARKS: Record<string, string> = { boolean: '◐', choice: '☰', number: '#' };
+const MARKS: Record<string, string> = { boolean: '◐', choice: '☰', number: '#', text: 'аб' };
 
-const KINDS: Record<string, string> = { boolean: 'да или нет', choice: 'один из вариантов', number: 'число' };
+const KINDS: Record<string, string> = { boolean: 'да или нет', choice: 'один из вариантов', number: 'число', text: 'текст' };
 
 function Fork() {
   return (

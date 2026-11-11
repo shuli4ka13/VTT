@@ -106,6 +106,14 @@ function explainRow(system: System, tableId: string, name: string): Explained | 
   };
 }
 
+const RULE_NAMES: Record<string, readonly [string, string]> = {
+  выпало: ['что выпало на костях, с прибавками и правками', 'даёт сам бросок; видно во всех формулах этого правила'],
+  число: ['число поля с листа', 'приходит с листа того, кто бросает; смысл — «Число поля — это»'],
+  порог: ['число поля со сдвигом сложности и правками порога', 'есть, когда число поля — порог «не больше» или «не меньше»'],
+  успех: ['что посчитала строка «Успех, если»', 'считается в этом правиле выше; видно в «Ступенях»'],
+  степени: ['что посчитала строка «Степени числом»', 'считается в этом правиле выше; видно в «Ступенях»'],
+};
+
 export function explainName(
   system: System, compendium: Compendium | undefined, effectId: string | null, name: string, usage: UsageIndex, tableId?: string,
 ): Explained {
@@ -273,6 +281,9 @@ export function explainName(
       go: { label: `открыть «${TABS.records}»`, pick: { activeTab: 'records', activeRecordKind: kindKey } },
     };
   }
+
+  const rule = !effectId && !tableId ? RULE_NAMES[name] : undefined;
+  if (rule) return { kind: 'имя правила броска', title: `${name} — ${rule[0]}`, facts: [], users: [], shown: [], from: [rule[1]] };
 
   return {
     kind: 'не найдено', title: name, facts: [], users: [], shown: [],

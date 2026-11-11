@@ -15,7 +15,7 @@ import { cardTitle, titleOf } from './words.ts';
 import { Button, CardHead, Select, Verdict } from '../../../ui/primitives.tsx';
 import { problemOf } from '../step-card.tsx';
 import type { StepOutput } from '../slots.tsx';
-import { outcomeRefs } from '../slots.tsx';
+import { outcomeRefs, fieldedOf } from '../slots.tsx';
 import { groupSteps, moveGroup, moveSpan, blockSpan, removeSteps, armEnd, addArm, unwrapBlock, BRICKS, SEEN_BRICKS } from '../cards.ts';
 import { armsOf, sees, endOf } from '@vtt/engine/model/flow';
 import { FlowHead, FlowActions, ArmLabel, OutcomePick, HeadFrame } from './cards/flow-parts.tsx';
@@ -112,7 +112,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         const loop = loopsAt(step) ? loopOf(effect.params, step as { of?: unknown }) : null;
         const called = loopsAt(step) ? row?.label ?? loop?.label : cardTitle(cards, at, system, effect);
         return {
-          id: String(loopsAt(step) ? row?.key ?? loop?.key : step.id), type: step.type, ...((step as { field?: unknown }).field ? { fielded: true } : {}),
+          id: String(loopsAt(step) ? row?.key ?? loop?.key : step.id), type: step.type, ...fieldedOf(system, effect.params ?? [], step),
           ...(splitsTargets(step) ? { splits: true } : {}),
           ...(called ? { title: called } : {}),
           ...(row?.from ? { table: row.from } : {}),

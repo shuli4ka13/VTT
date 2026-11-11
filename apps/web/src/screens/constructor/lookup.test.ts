@@ -49,3 +49,13 @@ describe('откуда это: щелчок по фишке объясняет �
     expect(told.go?.pick).toEqual({ activeTab: 'effects', activeEffectId: 'paralyzed' });
   });
 });
+
+describe('откуда это: имена в формулах правила броска', () => {
+  it('«выпало», «порог», «успех» объяснены словами, а не «не найдено»', () => {
+    for (const name of ['выпало', 'число', 'порог', 'успех', 'степени']) {
+      const told = explain(name);
+      expect(told.kind, name).toBe('имя правила броска');
+      expect(told.title.startsWith(`${name} — `), told.title).toBe(true);
+    }
+  });
+});

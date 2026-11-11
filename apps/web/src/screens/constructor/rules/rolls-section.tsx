@@ -8,6 +8,7 @@ import { addRoll } from './rolls.ts';
 import { blockOfColumn, byBlock } from '../field-groups.ts';
 import type { Grouped } from '../field-groups.ts';
 import { fieldsOf, onSheet, isSingle } from '@vtt/engine/model/sheet-columns';
+import { STEP_WORDS } from '@vtt/engine/words/steps';
 import type { System, SystemRoll } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
 
@@ -41,6 +42,58 @@ function columnsOf(system: System): Grouped[] {
   return byBlock(system, out);
 }
 
+const KIND_WORDS: Record<string, string> = { number: 'число', boolean: 'да или нет', text: 'текст' };
+
+function FlowList({ rows }: { rows: readonly (readonly [string, string, string])[] }) {
+  return (
+    <table className="roll-flow">
+      <tbody>
+        {rows.map(([name, kind, said]) => (
+          <tr key={name}>
+            <td className="roll-flow__name">{name}</td>
+            <td className="roll-flow__kind">{kind}</td>
+            <td className="roll-flow__said">{said}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function RollFlow({ roll }: { roll: SystemRoll }) {
+  const fieldGate = roll.fields.some(one => one.threshold !== undefined);
+  const graded = roll.number === 'under' || roll.number === 'over' || fieldGate;
+  const gate = fieldGate && roll.number !== 'under' && roll.number !== 'over' ? ' (у полей со своим порогом)' : '';
+  const number = NUMBER_WORDS.find(([key]) => key === (roll.number ?? 'bonus'))?.[1] ?? '';
+  const inputs: (readonly [string, string, string])[] = [
+    ['выпало', 'число', 'что выпало на костях, с прибавками и правками'],
+    ['число', 'число', `число поля с листа: ${number}`],
+    ...(graded ? [['порог', 'число', `число поля со сдвигом сложности и правками порога${gate}`] as const] : []),
+  ];
+  const common = (STEP_WORDS.roll.outputs as readonly { label: string; kind?: string; onlyWith?: string }[]).filter(one => !one.onlyWith)
+    .map(one => [one.label.replace(/^да или нет: /, ''), KIND_WORDS[one.kind ?? 'number'] ?? '', 'у любого броска'] as const);
+  const own: (readonly [string, string, string])[] = [
+    ...(graded || roll.success ? [['пройден', 'да или нет', roll.success ? '«Успех, если»' : roll.number === 'under' ? 'выпало не больше порога' : `выпало не меньше порога${gate}`] as const] : []),
+    ...(graded || roll.margin ? [['степени', 'число', roll.margin ? '«Степени числом»' : roll.number === 'under' ? 'порог минус выпало' : `выпало минус порог${gate}`] as const] : []),
+    ...(roll.degrees?.length ? [['ступень', 'текст', '«Ступени» — первая подошедшая'] as const] : []),
+  ];
+  return (
+    <>
+      <div className="dict-row roll-line roll-line--top">
+        <span className="dict-row__label" title="имена, которые правило видит в своих формулах">Что приходит</span>
+        <div className="roll-form__body roll-form__body--stack"><FlowList rows={inputs} /></div>
+      </div>
+      <div className="dict-row roll-line roll-line--top">
+        <span className="dict-row__label" title="что получает тот, кто бросил: @бросок и через точку — @бросок.пройден">Что отдаёт</span>
+        <div className="roll-form__body roll-form__body--stack">
+          <FlowList rows={[...own, ...common]} />
+          {own.length ? null : <span className="faint">успеха и степеней правило не считает — их решает «Проверка» в эффекте</span>}
+        </div>
+      </div>
+    </>
+  );
+}
+
 function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRoll; system: System; editSystem: EditSystem }) {
   const edit = (change: (draft: SystemRoll) => void) => editSystem(draft => { const one = draft.rolls?.[id]; if (one) change(one); });
   const columns = columnsOf(system);
@@ -64,6 +117,7 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
         <DangerButton size="sm" onConfirm={() => editSystem(draft => { delete draft.rolls?.[id]; if (draft.rolls && !Object.keys(draft.rolls).length) delete draft.rolls; })}>Убрать</DangerButton>
       </div>
       <div className="roll-form">
+        <RollFlow roll={roll} />
         <div className="dict-row roll-line">
           <span className="dict-row__label">Бросают</span>
           <div className="roll-form__body roll-form__body--wrap">

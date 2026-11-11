@@ -237,7 +237,10 @@ describe('ссылка на результат шага', () => {
     fireEvent.change(input, { target: { value: '@', selectionStart: 1 } });
 
     const options = () => [...document.querySelectorAll('.slot__option')].map(o => o.textContent?.trim());
-    expect(options()).toContain('в этом эффектебросок — на сколько перебил порог');
+    expect(options().some(one => one?.startsWith('в этом эффектебросок') && one.includes('. ещё')), options().join(' | ')).toBe(true);
+    expect(options()).not.toContain('в этом эффектебросок — на сколько перебил порог');
+    fireEvent.change(input, { target: { value: '@бросок.', selectionStart: 8 } });
+    expect(options()).toContain('в этом эффектена сколько перебил порог');
     fireEvent.change(input, { target: { value: '@легло', selectionStart: 6 } });
     expect(options()).toContain('в этом эффектебросок — сколько костей легло максимумом');
     expect(options()).toContain('в этом эффектебросок — сколько костей легло единицей');

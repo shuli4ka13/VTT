@@ -1,6 +1,8 @@
 import { rolesOf } from './effects/roles.ts';
 import type { SheetNames } from '../../ui/formula-chips.tsx';
-import type { System, Effect, SlotRef } from '@vtt/schema';
+import type { System, Effect, SlotRef, Param } from '@vtt/schema';
+import { fieldGives } from '@vtt/engine/model/rolled';
+import type { Graded } from '@vtt/engine/model/rolled';
 import type { RecordKind } from '@vtt/engine/model/owned';
 import { columnPaths } from '../../ui/formula.tsx';
 import { stepModule, loopsAt } from '@vtt/engine/engine/steps/index';
@@ -12,11 +14,18 @@ import { withTables } from '../../ui/formula-words.ts';
 
 export interface StepOutput { path: string; label: string; kind?: string; no?: string }
 
-export interface EarlierStep { id: string; type: string; title?: string; table?: string; splits?: boolean; fielded?: boolean; outputs?: StepOutput[] }
+export interface EarlierStep { id: string; type: string; title?: string; table?: string; splits?: boolean; fielded?: boolean | Graded; outputs?: StepOutput[] }
 
-function outputsOf(type: string, fielded = false): StepOutput[] {
+export const fieldedOf = (system: System, params: readonly Param[], step: unknown): { fielded?: boolean | Graded } =>
+  ((step as { field?: unknown }).field ? { fielded: fieldGives(system, params, step as never) ?? true } : {});
+
+const GRADED_PATHS: Record<string, keyof Graded> = { '.success': 'success', '.margin': 'margin', '.degree': 'degree' };
+
+function outputsOf(type: string, fielded: boolean | Graded = false): StepOutput[] {
   try {
-    return ((stepModule(type).outputs ?? []) as (StepOutput & { onlyWith?: string })[]).filter(output => !output.onlyWith || (output.onlyWith === 'field' && fielded));
+    return ((stepModule(type).outputs ?? []) as (StepOutput & { onlyWith?: string })[])
+      .filter(output => !output.onlyWith || (output.onlyWith === 'field' && Boolean(fielded)))
+      .filter(output => !output.onlyWith || typeof fielded !== 'object' || !GRADED_PATHS[output.path] || fielded[GRADED_PATHS[output.path]!]);
   } catch {
     return [];
   }
@@ -106,7 +115,7 @@ export function stepNames(ctx: SlotContext): Map<string, string> {
     out.set(key, (constant as { label?: string }).label ?? key);
   }
   for (const step of ctx.earlier) out.set(step.id, formulaName(step));
-  for (const output of outputRefs(ctx.earlier, formulaName)) out.set(output.ref, output.label);
+  for (const output of outputRefs(ctx.earlier, formulaName)) if (!ctx.names || ctx.names.has(output.ref)) out.set(output.ref, output.label);
   for (const [key, label] of ctx.names ?? []) if (!out.has(key)) out.set(key, label);
   return out;
 }

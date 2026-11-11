@@ -41,6 +41,17 @@ const statesOf = (system: System): { tag: string; label: string }[] =>
 
 export type SheetNames = ReadonlyMap<string, string>;
 
+function shortOf(label: string, base: string): string {
+  const head = `${base.replace(/_/g, ' ')} — `;
+  return label.startsWith(head) ? label.slice(head.length) : label;
+}
+
+function typedPath(text: string, caret: number): { base: string; at: number; needle: string } | null {
+  const found = text.slice(0, caret).match(/@([\p{L}\p{N}_]+(?:\.[\p{L}\p{N}_]+)*)\.([\p{L}\p{N}_]*)$/u);
+  if (!found) return null;
+  return { base: found[1]!, at: caret - found[0].length, needle: found[2]!.trim().toLowerCase() };
+}
+
 export function lookupNames(system: System, value: string): Map<string, string> {
   const out = new Map<string, string>();
   const call = /таблица\(\s*"([^"]+)"/gu;
@@ -388,28 +399,47 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
   const tail = (label: string): string => label.split(' · ').pop() ?? label;
   const dotted = dot && active === dot.index ? chipBefore(dot.index) : null;
 
+  const typed = !dotted && active !== null && 'text' in (parts[active] ?? {})
+    ? typedPath((parts[active] as { text: string }).text, caret)
+    : null;
+  const through = typed && (deeper(typed.base).fields.length || deeper(typed.base).extras.length) ? typed : null;
   const query = dotted
     ? { at: 0, needle: dot!.text.slice(1, caret).trim().toLowerCase() }
-    : active !== null && 'text' in (parts[active] ?? {})
-      ? matchTagQuery((parts[active] as { text: string }).text, caret)
-      : null;
-  const matches = dotted
-    ? deeper(dotted).fields
+    : through
+      ? { at: through.at, needle: through.needle }
+      : active !== null && 'text' in (parts[active] ?? {})
+        ? matchTagQuery((parts[active] as { text: string }).text, caret)
+        : null;
+  const tags = new Set(fields.map(f => f.tag));
+  const inside = (tag: string): string | null => {
+    const at = tag.indexOf('.');
+    const base = at > 0 ? tag.slice(0, at) : '';
+    return base && tags.has(base) ? base : null;
+  };
+  const below = (base: string): number => fields.filter(f => inside(f.tag) === base).length;
+  const hidden = (f: { tag: string }, needle: string): boolean => {
+    const base = inside(f.tag);
+    if (!base) return false;
+    const label = (fields.find(one => one.tag === base)?.label ?? '').toLowerCase();
+    return !needle || base.toLowerCase().startsWith(needle) || label.startsWith(needle);
+  };
+  const matches = dotted || through
+    ? deeper(dotted ?? through!.base).fields
       .filter(f => !query!.needle || rankOf({ tag: '', label: tail(f.label) }, query!.needle) < 3)
       .sort((a, b) => rankOf({ tag: '', label: tail(a.label) }, query!.needle) - rankOf({ tag: '', label: tail(b.label) }, query!.needle))
       .slice(0, 12)
     : query
-      ? fields.filter(f => !query.needle || rankOf(f, query.needle) < 3)
+      ? fields.filter(f => (!query.needle || rankOf(f, query.needle) < 3) && !hidden(f, query.needle))
         .sort((a, b) => rankOf(a, query.needle) - rankOf(b, query.needle))
         .slice(0, 12)
       : [];
-  const extras = dotted
-    ? deeper(dotted).extras
+  const extras = dotted || through
+    ? deeper(dotted ?? through!.base).extras
       .filter(o => !query!.needle || rankOf({ tag: '', label: tail(o.label) }, query!.needle) < 3)
       .sort((a, b) => rankOf({ tag: '', label: tail(a.label) }, query!.needle) - rankOf({ tag: '', label: tail(b.label) }, query!.needle))
     : query
       ? (extraOptions ?? [])
-        .filter(o => !query.needle || rankOf({ tag: '', label: o.label }, query.needle) < 3)
+        .filter(o => (!query.needle || rankOf({ tag: '', label: o.label }, query.needle) < 3) && !(o.name && hidden({ tag: o.name }, query.needle)))
         .sort((a, b) => rankOf({ tag: '', label: a.label }, query.needle) - rankOf({ tag: '', label: b.label }, query.needle))
       : [];
   const shownMenu = !closed && (matches.length > 0 || extras.length > 0);
@@ -423,7 +453,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     commitParts(next, { index: dot.index, caret: 0 });
   };
   const chooseExtra = (option: (typeof extras)[number]) => {
-    if (dotted && option.name) pickDotted(option.name); else pickExtra(option.onPick);
+    if (dotted && option.name) pickDotted(option.name); else if (through && option.name) pick(option.name); else pickExtra(option.onPick);
   };
   const chooseField = (tag: string) => {
     if (dotted) pickDotted(tag); else pick(tag);
@@ -697,7 +727,8 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
               onMouseDown={e => { e.preventDefault(); chooseField(f.tag); }}
             >
               <span className="slot__group">{f.group}</span>
-              {f.label}
+              {dotted || through ? shortOf(f.label, dotted ?? through!.base) : f.label}
+              {!dotted && !through && below(f.tag) ? <span className="slot__more" title="наберите точку после имени — откроется список">. ещё {below(f.tag)}</span> : null}
             </button>
           ))}
         </div>

@@ -12,6 +12,8 @@ import type { Extra } from './extras.tsx';
 import { RollTags } from './roll-line.tsx';
 import { useStepName } from './step-name.tsx';
 import { dieSaid } from '../../readback.ts';
+import { resultsOf } from '@vtt/engine/model/names-at';
+import { ResultChips } from './result-chips.tsx';
 import { rollSaid } from '../../rules/rolls.ts';
 import {
   DIE, EXPR, FIELD, OWN_DIE, OWN_FIELD, headOf, rollableFields, setDie, setField, setWho, tailOf, whatOf, whatOptions,
@@ -52,6 +54,13 @@ function SlotFormula({ value, label, where, placeholder, context, onSet }: {
       />
     </div>
   );
+}
+
+function ownDieSaid(context: SlotContext, text: string): string {
+  const input = /^@([\p{L}\p{N}_]+)$/u.exec(text.trim())?.[1];
+  const param = input ? (context.effect.params ?? []).find(one => one.key === input) : undefined;
+  const source = param ? `кость из входа «${param.label ?? param.key}»` : `кость «${text.replace(/['"]/g, '')}»`;
+  return `${source}: выпавшие грани складываются, правила успеха у неё нет`;
 }
 
 export function RollBody({ step, context, edit, takenNames, onRename }: {
@@ -160,8 +169,13 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
       {read.fixed !== undefined && read.fixed !== null ? <span className="field__error">в шаге осталась формула «{exprOf(read.fixed)}» — она снимется, когда выберете, что бросают</span> : null}
       {picked && rule ? <span className="faint">по правилу «{picked.rule}» из «Правил → Броски»: {rollSaid(context.system, rule)}</span> : null}
       {constant && die ? <span className="faint">{constant.label || String(read.die)}: {die}</span> : null}
+      {!fielded && !constant && read.die && typeof read.die === 'object' ? <span className="faint">{ownDieSaid(context, exprOf(read.die))}</span> : null}
       {!fielded && who === '' ? <span className="faint">кости ничьи: правки броска и вопросы «увидев кости» на них не действуют</span> : null}
       <div className="roll-extras"><Extras items={extras} /></div>
+      {current ? (
+        <ResultChips name={current} system={context.system} nameSlot={<span className="result-row__name" title="так итог броска зовётся в формулах: @имя, а через точку — его части">{current}</span>}
+          outputs={resultsOf(context.system, context.effect.params ?? [], step as never).map(one => ({ key: one.path.slice(1) || 'всего', label: one.label.replace(/^да или нет: /, ''), kind: one.kind }))} />
+      ) : null}
       <RollTags label={fielded ? 'Ещё метки' : 'Метки'} roll={read} system={context.system} onRoll={change => set(change)} />
     </>
   );

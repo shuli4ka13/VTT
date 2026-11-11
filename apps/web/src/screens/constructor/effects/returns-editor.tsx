@@ -10,7 +10,8 @@ import { KeyField } from '../../../ui/key-field.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { formulaAsLabels } from '../../../ui/formula.tsx';
 import { ColumnList } from './column-list.tsx';
-import { namesOf, inputBadges } from '../slots.tsx';
+import { namesOf, inputBadges, fieldedOf } from '../slots.tsx';
+import { resultsOf } from '@vtt/engine/model/names-at';
 import type { SlotContext, EarlierStep } from '../slots.tsx';
 import { sheetsAt } from './names.ts';
 import type { Effect, Step, System, ValueKind } from '@vtt/schema';
@@ -31,7 +32,7 @@ function sourcesOf(system: System, effect: Effect): Source[] {
     const callee = step.type === 'emit' && typeof called === 'string' ? system.effects?.[called] : undefined;
     const title = callee?.label ?? words?.label ?? step.type;
     for (const column of callee?.returns ?? []) out.push({ expr: `@${step.id}.${column.key}`, label: `${title} — ${column.label ?? column.key}`, kind: String(column.kind ?? 'number') });
-    for (const output of words?.outputs ?? []) out.push({ expr: `@${step.id}${output.path}`, label: `${title} — ${output.label.replace(/^да или нет: /, '')}`, kind: String(output.kind ?? 'number') });
+    for (const output of resultsOf(system, effect.params ?? [], step)) out.push({ expr: `@${step.id}${output.path}`, label: `${title} — ${output.label.replace(/^да или нет: /, '')}`, kind: String(output.kind ?? 'number') });
   }
   return out;
 }
@@ -49,7 +50,7 @@ function contextOf(system: System, effect: Effect): SlotContext {
       ...(column.no ? { no: column.no } : {}),
     }));
     const title = callee?.label ?? words?.label;
-    earlier.push({ id: String(step.id), type: step.type, ...((step as { field?: unknown }).field ? { fielded: true } : {}), ...(title ? { title } : {}), ...(outputs.length ? { outputs } : {}) });
+    earlier.push({ id: String(step.id), type: step.type, ...fieldedOf(system, effect.params ?? [], step), ...(title ? { title } : {}), ...(outputs.length ? { outputs } : {}) });
   }
   return { system, effect, earlier };
 }

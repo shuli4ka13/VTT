@@ -2,7 +2,7 @@ import type { System, Effect, Step } from '@vtt/schema';
 import { Drawer, Button, Empty, Chip } from '../../../ui/primitives.tsx';
 import { Readback } from './cards/group-card.tsx';
 import { groupSteps } from '../cards.ts';
-import { stepNames } from '../slots.tsx';
+import { stepNames, fieldedOf } from '../slots.tsx';
 import { CARD_TITLES, titleOf } from './words.ts';
 import { checkReadback, changeReadback, numberReadback, rollReadback, sendReadback } from '../readback.ts';
 import type { Segment } from '../readback.ts';
@@ -26,7 +26,7 @@ function linesOf(
 function namesInside(system: System, effect: Effect): Map<string, string> {
   const steps = (effect.steps ?? []) as Step[];
   const earlier = steps.map(step => ({
-    id: String(step.id ?? ''), type: step.type, ...((step as { field?: unknown }).field ? { fielded: true } : {}),
+    id: String(step.id ?? ''), type: step.type, ...fieldedOf(system, effect.params ?? [], step),
     title: titleOf(groupSteps([step])[0]?.kind ?? '', step, system),
   })).filter(step => step.id);
   return stepNames({ system, effect, earlier });
