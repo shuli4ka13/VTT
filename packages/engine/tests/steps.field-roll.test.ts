@@ -232,3 +232,12 @@ group('вход-строка из другой таблицы', () => {
     deepEq(make('черты'), []);
   });
 });
+
+group('бросок поля костью «вычитается из суммы»', () => {
+  test('часть кости с «вычитается» вычитается и в броске поля с прибавкой', () => {
+    const system = build([{ id: 'удар', type: 'roll', field: { expr: '@действующий.навык' } }], { number: undefined, success: undefined, margin: undefined, degrees: undefined });
+    (system.constants as Record<string, { dice: { minus?: boolean }[] }>).к100!.dice[0]!.minus = true;
+    const { trace } = fight(system, 23, 40, [87]);
+    eq((trace('удар') as unknown as { total: number }).total, -64);
+  });
+});
