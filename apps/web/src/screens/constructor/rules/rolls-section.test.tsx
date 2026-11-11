@@ -34,9 +34,22 @@ describe('«Правила → Броски»: успех и степени чи
     expect(again.system.rolls!.r).not.toHaveProperty('success');
   });
 
-  it('у обычного броска строк нет', () => {
+  it('у обычного броска строки видны и подсказывают, кто считает успех', () => {
     const { view } = run({});
-    expect(view.container.textContent).not.toContain('Успех, если');
+    for (const label of ['Успех, если', 'Степени числом', 'Ступени']) expect(row(view.container, label)).toBeTruthy();
+    expect(view.container.textContent).not.toContain('успеха и степеней правило не считает');
+    expect(view.container.innerHTML).toContain('пусто — успех считает «Проверка» в эффекте');
+    expect(view.container.textContent).toContain('бросок');
+  });
+
+  it('ступени пишутся списком и снимаются вместе с ключом', () => {
+    const { system, view } = run({});
+    fireEvent.click([...row(view.container, 'Ступени').querySelectorAll('button')].find(b => b.textContent === '+ ступень')!);
+    expect(system.rolls!.r!.degrees).toHaveLength(1);
+    cleanup();
+    const again = run({ degrees: [{ label: 'Успех', if: { expr: 'да' } }] });
+    fireEvent.click(again.view.container.querySelector('[aria-label="убрать ступень"]')!);
+    expect(again.system.rolls!.r).not.toHaveProperty('degrees');
   });
 });
 
@@ -99,7 +112,8 @@ describe('«Правила → Броски»: ступени и встроен�
   it('«Что приходит» называет имена броска со смыслом', () => {
     const { view } = run({ number: 'under' });
     const names = [...row(view.container, 'Что приходит').querySelectorAll<HTMLElement>('.roll-arrived__name')];
-    expect(names.map(one => one.textContent)).toEqual(['выпало', 'число поля', 'порог', 'успех', 'степени']);
-    expect(names[4]!.title).toContain('«Степени числом»');
+    expect(names.map(one => one.textContent)).toEqual(['бросок', 'выпало', 'число поля', 'порог', 'успех', 'степени']);
+    expect(names[0]!.title).toContain('как у шага «Бросок»');
+    expect(names[5]!.title).toContain('«Степени числом»');
   });
 });

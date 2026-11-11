@@ -1,5 +1,5 @@
 import { compile, printFormula, operandText, NOT } from '@vtt/engine/formula';
-import { degreeWords } from '@vtt/engine/model/tables';
+import { degreeWords as tableWords } from '@vtt/engine/model/tables';
 import { listOf, choiceTableOf } from '@vtt/engine/model/lists';
 import { fieldOf } from '@vtt/engine/model/sheet-columns';
 import { withRole } from './roles.ts';
@@ -162,11 +162,13 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
       ? (system.effects?.[called]?.returns ?? []).find(one => one.kind === 'choice' && one.from && !one.many && (key === undefined || one.key === key))
       : undefined;
   };
+  const degreeWords = (sys: typeof system, degrees: unknown): string[] =>
+    (Array.isArray(degrees) ? [...new Set(degrees.map(one => String((one as { label?: unknown }).label ?? '')).filter(Boolean))] : tableWords(sys, (degrees as { table?: string } | undefined)?.table));
   const sourceOf = (ref: string, open: number): { options: Option[]; title: string } | null => {
     if (ref.endsWith('.degree')) {
       const id = ref.slice(0, -'.degree'.length);
       const check = steps.find(step => step.type === 'check' && step.id === id);
-      const words = check ? degreeWords(system, (check as { degrees?: { table?: string } }).degrees?.table) : [];
+      const words = check ? degreeWords(system, (check as { degrees?: unknown }).degrees) : [];
       return words.length ? { options: words.map(value => ({ value, label: value })), title: `ступени «${id.replace(/_/g, ' ')}»` } : null;
     }
     const param = (effect.params ?? []).find(one => one.key === ref && one.kind === 'choice' && one.from && !one.many);
@@ -200,7 +202,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     return source ? { ref: first.ref, ...source } : null;
   };
   const degreesOf = (group: (typeof cards)[number]): string[] =>
-    (group.kind === 'check' ? degreeWords(system, (group.step as { degrees?: { table?: string } }).degrees?.table) : []);
+    (group.kind === 'check' ? degreeWords(system, (group.step as { degrees?: unknown }).degrees) : []);
   const casesOf = (group: (typeof cards)[number], open: number): Cases | null => {
     const found = group.step.id && (degreesOf(group).length || choiceReturnOf(group.step)) ? casesAt(open) : null;
     const own = `${String(group.step.id)}.`;

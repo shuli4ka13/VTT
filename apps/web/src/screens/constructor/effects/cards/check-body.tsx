@@ -9,6 +9,7 @@ import { namesOf, inputBadges } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { badFormula } from '../../roll-expr.ts';
+import { DegreeList } from '../../degree-list.tsx';
 import { whoOf } from '../../readback.ts';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { rowTables } from '@vtt/engine/model/tables';
@@ -27,9 +28,10 @@ export function CheckBody({ step, context, edit, system, asIf = false }: {
 }) {
   const at = 0;
   const tables = rowTables(system);
+  const listed: any[] | null = Array.isArray(step.degrees) ? step.degrees : null;
 
   const more: RowField[] = [
-    ...(tables.length ? [{
+    ...(tables.length && !listed?.length ? [{
       key: 'degrees', label: 'Исход ступенями', width: 190,
       hint: 'Вместо «да/нет» исход читается ступенями по таблице: «провал / успех с ценой / полный успех»',
       node: (
@@ -80,6 +82,8 @@ export function CheckBody({ step, context, edit, system, asIf = false }: {
       onCommit={text => edit(at, draft => { const d = loose(draft); if (text.trim()) d[key] = { expr: text.trim() }; else delete d[key]; })}
     />
   );
+  const degreeNames = useMemo(() => new Map([...names, ['успех', 'успех'], ['степени', 'степени']]), [names]);
+  const degreeMeanings = useMemo(() => new Map([['успех', 'да или нет — исход этой проверки'], ['степени', 'число — запас над порогом этой проверки']]), []);
   const rolled = readsRoll(step, context);
   const summary = moreSummary(step, rolled, text => formulaWords(system, text, names));
   const side = (key: 'value' | 'versus', label: string, placeholder: string) => (
@@ -112,6 +116,13 @@ export function CheckBody({ step, context, edit, system, asIf = false }: {
       <ContestLine step={step} roll={null} context={context} />
       <Fold title="ещё" summary={summary}>
         {more.length ? <FieldRow id="check-more" fields={more} /> : null}
+        {step.degrees?.table ? null : (
+          <Field label="Ступени" hint="Вместо «да/нет» исход читается ступенями: первая подходящая сверху. В условиях видны «успех», «степени» и шаги эффекта.">
+            <DegreeList list={listed ?? []} system={system} where="проверка · ступень" placeholder="@степени >= 5"
+              shared={{ extraNames: degreeNames, meanings: degreeMeanings, badges: inputBadges(context), ...(context.sheets ? { sheets: context.sheets } : {}) }}
+              change={apply => edit(at, draft => { const d = loose(draft); const list = Array.isArray(d.degrees) ? d.degrees : (d.degrees = []); apply(list); if (!list.length) delete d.degrees; })} />
+          </Field>
+        )}
         {rolled ? (
           <div className="row">
             <Field label="Успех, если на кости не меньше" hint="Если на кости выпало столько или больше — успех, что бы ни прибавили.">{forced('succeedOn')}</Field>
@@ -207,7 +218,7 @@ function againstWords(step: any, context: SlotContext): string | null {
 }
 
 const moreSummary = (step: any, rolled: boolean, said: (text: string) => string): string => [
-  step.degrees?.table ? 'исход ступенями' : '',
+  step.degrees?.table || (Array.isArray(step.degrees) && step.degrees.length) ? 'исход ступенями' : '',
   rolled && step.succeedOn ? `успех от ${said(String(step.succeedOn.expr ?? ''))} на кости` : '',
   step.failIf ? 'есть условие провала' : '',
   step.passWith ? 'успех с запасом' : '',
