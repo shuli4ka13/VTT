@@ -32,7 +32,7 @@ import type { Holder } from './edits.ts';
 import { throwDice } from './roll.ts';
 import { result, parse, withCount, withSides, withKeep, start, addendsText } from './dice.ts';
 import { dieConstant } from '../engine/lead-die.ts';
-import { ROLLED_NAME, NUMBER_NAME, THRESHOLD_NAME, SUCCESS_NAME, MARGIN_NAME } from '../engine/check.ts';
+import { ROLLED_NAME, ROLL_NAME, NUMBER_NAME, THRESHOLD_NAME, SUCCESS_NAME, MARGIN_NAME } from '../engine/check.ts';
 import type { Check, FieldThrow } from '../engine/check.ts';
 import { subsOf, same, instOf, keysOf } from './subs.ts';
 import { same as sameValue, hasField, rowKeyOf } from '../model/sheet-columns.ts';
@@ -475,6 +475,7 @@ export class Run {
       ...(frame.seenRoll ? { seenRoll: frame.seenRoll } : {}),
       ...(frame.cost ? { inCost: true } : {}),
       using: (other: Die) => this.ctx(frame, results, rolls, path, sink, stepIds, other),
+      naming: extra => this.ctx(frame, { ...results, ...extra }, rolls, path, sink, new Set([...stepIds, ...Object.keys(extra)]), given, at),
     } as Omit<Ctx, 'here'>;
     return Object.defineProperty(ctx, 'here', { get: () => this.view(frame.home), enumerable: true }) as Ctx;
   }
@@ -1351,7 +1352,7 @@ export class Run {
     extra: { shift: number; tags: readonly string[]; against: string | null }): FieldThrow {
     const owner = frame.owner;
     const plain: Frame = { path: frame.path, effectId: '', label: frame.label, owner, home: sheetId, bound: null, args: {}, paramDefs: [], props: null, claims: {}, hop: frame.hop, inSub: frame.inSub };
-    const judgeOf = (names: Record<string, unknown>) => this.ctx(plain, names, {}, path, sink, new Set(Object.keys(names)));
+    const judgeOf = (names: Record<string, unknown>, rolls: Record<string, RollResult> = {}) => this.ctx(plain, names, rolls, path, sink, new Set(Object.keys(names)));
     const sheetCtx = judgeOf({});
     const num = (ref: unknown, what: string) => sheetCtx.number(ref, what);
     const spec = parse(dieConstant(this.system, check.die), num);
@@ -1382,12 +1383,13 @@ export class Run {
     }
     const total = thrown.result.total + bonus;
     const number = check.under ? base : count ?? sides ?? (check.bonus ? field : base);
-    const named: Record<string, unknown> = { [ROLLED_NAME]: total, [NUMBER_NAME]: number ?? 0, ...(threshold === null ? {} : { [THRESHOLD_NAME]: threshold }) };
-    const judge = judgeOf(named);
+    const named: Record<string, unknown> = { [ROLLED_NAME]: total, [ROLL_NAME]: total, [NUMBER_NAME]: number ?? 0, ...(threshold === null ? {} : { [THRESHOLD_NAME]: threshold }) };
+    const self = { [ROLL_NAME]: { ...thrown.result, total } };
+    const judge = judgeOf(named, self);
     const success = check.success ? judge.holds(check.success) : threshold === null ? null : check.under ? total <= threshold : total >= threshold;
     const reckoned = check.margin ? judge.number(check.margin, `${owner} · степени`) : threshold === null ? null : check.under ? threshold - total : total - threshold;
     const margin = reckoned === null ? null : reckoned + thrown.roll.claim.degreeShift;
-    const graded = judgeOf({ ...named, ...(success === null ? {} : { [SUCCESS_NAME]: success }), ...(margin === null ? {} : { [MARGIN_NAME]: margin }) });
+    const graded = judgeOf({ ...named, ...(success === null ? {} : { [SUCCESS_NAME]: success }), ...(margin === null ? {} : { [MARGIN_NAME]: margin }) }, self);
     const degree = (check.degrees ?? []).find(one => graded.holds(one.if))?.label ?? null;
     return { thrown, bonus, total, threshold, degree, success, margin, number };
   }

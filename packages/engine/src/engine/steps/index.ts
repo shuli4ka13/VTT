@@ -50,6 +50,7 @@ export interface StepContext {
   seenRoll?: { value: Roll; bonus?: number };
   inCost?: boolean;
   using(die: Die): StepContext;
+  naming(extra: Record<string, unknown>): StepContext;
 }
 
 export interface FieldRef {

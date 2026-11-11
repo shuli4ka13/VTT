@@ -40,8 +40,9 @@ export function variantsOfRef(system: System, effectId: string, steps: readonly 
   const child = name.children?.find(one => one.path === `.${tail}`);
   if (child?.kind === 'choice' && child.from) return tableVariants(system, child.from);
   if (tail === 'degree') {
-    const check = steps.find(step => step.type === 'check' && step.id === head) as { degrees?: { table?: string } } | undefined;
-    const words = degreeWords(system, check?.degrees?.table);
+    const check = steps.find(step => step.type === 'check' && step.id === head) as { degrees?: { table?: string } | { label?: string }[] } | undefined;
+    const degrees = check?.degrees;
+    const words = Array.isArray(degrees) ? [...new Set(degrees.map(one => one.label).filter((label): label is string => Boolean(label)))] : degreeWords(system, degrees?.table);
     return words.length ? { words, label: `ступени «${head}»` } : null;
   }
   return null;

@@ -4,6 +4,7 @@ import { fieldOf } from '../model/sheet-columns.ts';
 import type { Thrown } from '../core/roll.ts';
 
 export const ROLLED_NAME = 'выпало';
+export const ROLL_NAME = 'бросок';
 export const NUMBER_NAME = 'число';
 export const THRESHOLD_NAME = 'порог';
 export const SUCCESS_NAME = 'успех';

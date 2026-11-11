@@ -165,3 +165,39 @@ group('правка одной части составного броска', ()
     eq(message.includes('котик'), true, message);
   });
 });
+
+group('ступени «Проверки» списком учитывают правку «повысить/понизить степень»', () => {
+  const sys: any = {
+    id: 'ход', name: 'ход',
+    constants: { пара: { label: '2к6', kind: 'die', dice: [{ count: 2, sides: 6 }] } },
+    tables: { лист: { shape: 'single', owner: 'sheet', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 10 }] }, приём: { shape: 'book', use: 'action', label: 'Приём' } },
+    roll_edits: { кураж: { label: 'Кураж', ops: [{ op: 'shiftDegree', by: 1 }] } },
+    effects: {
+      правило: { label: 'правило', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }], steps: [
+        { id: 'бросок', type: 'roll', die: 'пара', tags: ['ход'], by: { expr: '@действующий' } },
+        { type: 'each', of: 'цели' },
+        { id: 'ход', type: 'check', value: { expr: '@бросок' }, versus: { expr: '7' }, degrees: [
+          { label: 'с запасом', if: { expr: '@степени >= 1' } },
+          { label: 'впритык', if: { expr: '@успех' } },
+          { label: 'мимо', if: { expr: 'да' } },
+        ] },
+      ] },
+      кураж: { label: 'кураж', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['ход'], if: { expr: '@бросающий == @носитель' }, edit: 'кураж' }] },
+    },
+  };
+  const book: any = { records: [{ id: 'правило', table: 'приём', label: 'правило', bindings: [{ label: 'правило', effect: 'правило', args: {} }] }] };
+  const degreeOf = (effects: string[]) => {
+    const out = exchange({ system: sys, compendium: book, die: queue(3, 4), sheets: [
+      { id: 'герой', values: {}, has: [{ of: 'правило' }], effects: effects.map(effectId => ({ effectId })) }, { id: 'цель', values: {}, has: [], effects: [] },
+    ], actionId: 'правило:0', fromId: 'герой', toId: 'цель' } as any);
+    const lines = out.reports.flatMap((entry: any) => entry.report.trace) as any[];
+    const found = lines.find(line => line.step === "ход");
+    if (!found) throw new Error(JSON.stringify(out.reports.map((e: any) => e.report)).slice(0, 600));
+    return found.degree;
+  };
+
+  test('без правки 7 против 7 — «впритык», с «Куражом» на ступень выше — «с запасом»', () => {
+    eq(degreeOf([]), 'впритык');
+    eq(degreeOf(['кураж']), 'с запасом');
+  });
+});

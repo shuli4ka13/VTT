@@ -135,6 +135,10 @@ function slotRefs(value: unknown, slotKind: string | undefined, from: Where, sco
     for (const arg of Object.values((value ?? {}) as Record<string, unknown>)) slotRefs(arg, undefined, from, scope, out);
     return;
   }
+  if (slotKind === 'degrees' && Array.isArray(value)) {
+    for (const degree of value) slotRefs((degree as { if?: unknown } | null)?.if, undefined, from, scope, out);
+    return;
+  }
   if (slotKind === 'roll') {
     for (const tag of Array.isArray(value) ? value : [value]) {
       if (typeof tag === 'string') { if (tag) out.push({ kind: 'roll', key: tag, from }); }

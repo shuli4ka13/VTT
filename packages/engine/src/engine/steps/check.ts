@@ -1,6 +1,7 @@
 import { hasField } from '../../model/sheet-columns.ts';
 import { EngineError } from '../errors.ts';
 import { lookupDegree } from '../tables.ts';
+import { SUCCESS_NAME, MARGIN_NAME } from '../check.ts';
 import type { StepData, StepContext } from './index.ts';
 import { STEP_WORDS, forcedWords, type StepWords } from '../../words/steps.ts';
 import { facedText } from '../../core/against.ts';
@@ -13,6 +14,9 @@ export const { label, hint, slots, outputs } = words;
 export const mayBreak = false;
 
 export const icon = '⌖';
+
+export const slotNames = (step: StepData, slot: string): readonly string[] =>
+  (slot === 'degrees' && Array.isArray(step.degrees) ? [SUCCESS_NAME, MARGIN_NAME] : []);
 
 export const compares = (step: StepData): { value: unknown; versus: unknown } => ({ value: step.value, versus: step.versus });
 
@@ -77,24 +81,27 @@ export function finish(step: StepData, ctx: StepContext) {
   const ruled = doomed ? 'провал' : granted !== null ? 'успех' : null;
   if (granted !== null) judged.margin = granted;
   const success = doomed ? false : granted !== null ? true : forced ?? judged.success;
-  const scale = step.degrees && step.degrees.table ? step.degrees : null;
+  const listed: { label: string; if: unknown }[] | null = Array.isArray(step.degrees) ? step.degrees : null;
+  const scale = !listed && step.degrees && step.degrees.table ? step.degrees : null;
+  const graded = listed ? ctx.naming({ [SUCCESS_NAME]: success, [MARGIN_NAME]: judged.margin + (granted === null ? Number(roll?.degreeShift ?? 0) : 0) }) : null;
   const degree = scale
     ? lookupDegree(ctx.system, scale.table, scale.of === 'margin' ? judged.margin : total, Number(roll?.degreeShift ?? 0), ctx.owner)
-    : null;
+    : listed ? listed.find(one => graded!.holds(one.if))?.label ?? null : null;
+  const ranked = scale !== null || listed !== null;
   const of = fieldOfRef(step.value, ctx);
   const against = fieldOfRef(step.versus, ctx);
   return {
     value: {
       success, margin: judged.margin, total, versus,
       ...(roll ? { natural, rolled: roll.rolled, atMax: roll.atMax, atMin: roll.atMin, edited: roll.edited, dice: roll.dice, parts: roll.parts } : {}),
-      ...(scale ? { degree } : {}),
+      ...(ranked ? { degree } : {}),
     },
     trace: {
       total, versus, margin: judged.margin, success, value: total, ...(of ? { of } : {}), ...(against ? { versusTag: against } : {}),
       ...(roll && Array.isArray(roll.tags) && roll.tags.length ? { tags: roll.tags } : {}),
       ...(forced !== null && !ruled ? { forced: natural } : {}),
       ...(ruled ? { ruled } : {}),
-      ...(scale ? { degree } : {}),
+      ...(ranked ? { degree } : {}),
       ...(mine || theirs ? { faced: [mine?.trace, theirs?.trace].filter(Boolean) } : {}),
     },
     break: null,
@@ -104,6 +111,7 @@ export function finish(step: StepData, ctx: StepContext) {
 export function lint(step: StepData) {
   if (step.value === undefined) return 'проверке нужно, что проверять';
   if (step.versus === undefined) return 'проверке нужен порог';
+  if (Array.isArray(step.degrees) && step.degrees.some((one: { label?: unknown; if?: unknown }) => !one || !one.label || one.if === undefined || one.if === null)) return 'у ступени проверки нужны название и условие';
   return null;
 }
 

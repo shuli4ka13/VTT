@@ -34,7 +34,7 @@ import { variantProblems, cellScopeProblems } from './variants.ts';
 import { editStages, PLUS_OP } from '../core/dice.ts';
 import { compile } from '../formula/index.ts';
 import { hasBands } from '../engine/place.ts';
-import { ROLLED_NAME, NUMBER_NAME } from '../engine/check.ts';
+import { ROLLED_NAME, ROLL_NAME, NUMBER_NAME, SUCCESS_NAME, MARGIN_NAME } from '../engine/check.ts';
 import type { Node } from '../formula/index.ts';
 
 export type Level = 'error' | 'warn';
@@ -466,9 +466,9 @@ function fieldRollProblems(system: System): Problem[] {
       const bad = broken(degree.if);
       if (bad) out.push({ where, level: 'error', text: `бросок «${name}», степень «${degree.label || at + 1}»: ${bad}` });
     }
-    if (roll.degrees?.length) {
-      for (const taken of [ROLLED_NAME, NUMBER_NAME]) {
-        if (fieldsOf(system).some(field => field.tag === taken)) out.push({ where, level: 'error', text: `бросок «${name}»: имя «${taken}» в степенях значит итог броска или число поля, а так зовётся и поле листа — переименуйте поле` });
+    if (roll.degrees?.length || roll.success || roll.margin) {
+      for (const taken of [ROLLED_NAME, ROLL_NAME, NUMBER_NAME]) {
+        if (fieldsOf(system).some(field => field.tag === taken)) out.push({ where, level: 'error', text: `бросок «${name}»: имя «${taken}» в формулах броска значит сам бросок, его итог или число поля, а так зовётся и поле листа — переименуйте поле` });
       }
     }
     for (const entry of roll.fields) {
@@ -1303,6 +1303,14 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
             text: input.kind === 'sheet'
               ? `${STEP.one} «${step.id}» назван как вход «${input.label || input.key}» — @${step.id} всегда читает ${SHEET.one}, результат ${STEP.gen} так не прочесть; лучше переименовать ${STEP.one}`
               : `${STEP.one} «${step.id}» назван как вход «${input.label || input.key}» — до ${STEP.gen} @${step.id} читает вход, после — результат ${STEP.gen}; лучше переименовать ${STEP.one}`,
+          });
+        }
+        const graded = chain.steps.some(other => other.type === 'check' && Array.isArray((other as { degrees?: unknown }).degrees));
+        const ranked = [SUCCESS_NAME, MARGIN_NAME].filter(name => graded && (step.id === name || (index === 0 && (effect.params ?? []).some(param => param.key === name))));
+        for (const name of ranked) {
+          out.push({
+            where: chain.where(index), level: 'warn',
+            text: `«${name}» в условиях ступеней проверки значит её ${name === SUCCESS_NAME ? 'успех' : 'степени'} — ${step.id === name ? STEP.one : 'вход'} с этим именем там не прочесть; лучше переименовать`,
           });
         }
         const word = step.id ? ENGINE_WORDS.get(step.id) : undefined;
