@@ -194,7 +194,18 @@ export function TableCard({ id, table, system, editSystem, usage, opened, onReke
     <Fold
       title={table.label || id} count={rows.length} open={openAtStart || undefined}
       rename={{ value: table.label ?? '', placeholder: 'как зовётся таблица', onCommit: relabel }}
-      {...(onClose ? { actions: <Button size="sm" variant="ghost" title="закрыть таблицу" onClick={onClose}>×</Button> } : {})}
+      actions={(
+        <>
+          {held ? (
+            <Button size="sm" variant="danger" disabled title={`нельзя удалить: ${summary}`}>Удалить</Button>
+          ) : (
+            <DangerButton size="sm" title="удалить таблицу из системы" onConfirm={() => editSystem(draft => { delete draft.tables?.[id]; })}>
+              Удалить
+            </DangerButton>
+          )}
+          {onClose ? <Button size="sm" variant="ghost" title="закрыть таблицу" onClick={onClose}>×</Button> : null}
+        </>
+      )}
     >
       <Fold title="ещё" summary={`чьи значения, ключ строки, подсказка · ${summary}`}>
       <FieldRow
@@ -246,13 +257,6 @@ export function TableCard({ id, table, system, editSystem, usage, opened, onReke
             ),
           }] : []),
         ]}
-        tail={held ? (
-          <Button size="sm" variant="danger" disabled title="таблица используется">Удалить</Button>
-        ) : (
-          <DangerButton size="sm" onConfirm={() => editSystem(draft => { delete draft.tables?.[id]; })}>
-            Удалить
-          </DangerButton>
-        )}
       />
 
       <UsageRow title="Где используется:" items={users.map(text => ({ key: text, text }))} />

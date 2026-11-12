@@ -458,8 +458,21 @@ describe('Словари: кости, правки броска, таблицы'
     }));
     renderOpen(<RulesTab />);
     открыть('Таблицы');
-    const guarded = screen.getByTitle('таблица используется') as HTMLButtonElement;
+    const guarded = screen.getByTitle(/^нельзя удалить: берут отсюда:/) as HTMLButtonElement;
     expect(guarded.disabled).toBe(true);
+  });
+
+  it('таблицу, которую никто не берёт, удаляют кнопкой в её шапке', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: { ...emptySystem(), tables: { старое: { label: 'Старое', key: 'word', rows: [{ value: 'имя' }] } } },
+      activeEffectId: null,
+    }));
+    renderOpen(<RulesTab />);
+    открыть('Таблицы');
+    fireEvent.click(screen.getByTitle('удалить таблицу из системы'));
+    fireEvent.click(screen.getByText('точно убрать'));
+    expect(useWorld.getState().system.tables?.старое).toBeUndefined();
   });
 
   it('смена ключа на диапазоны не стирает строки молча — сначала вопрос', () => {

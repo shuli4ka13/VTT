@@ -101,7 +101,12 @@ export function CharacterSection({ system, editSystem, docked }: {
   const openTable = open ? system.tables?.[open.table] : undefined;
   const openColumn = open ? openTable?.columns?.find(c => c.key === open.column) : undefined;
 
-  const describe = (part: SheetPart, blockName?: string): ReactNode => {
+  const dropPart = (blockName: string, index: number, table: string) => editSystem(draft => {
+    const target = (draft.blocks ?? []).find(b => b.name === blockName);
+    if (target?.parts[index]?.table === table) target.parts.splice(index, 1);
+  });
+
+  const describe = (part: SheetPart, blockName?: string, index?: number): ReactNode => {
     const table = system.tables?.[part.table];
     const single = table?.shape === 'single';
     const placed = new Set(fieldsOf(system).filter(f => f.home === part.table).map(f => f.cell?.column ?? f.tag));
@@ -110,7 +115,7 @@ export function CharacterSection({ system, editSystem, docked }: {
     return (
       <div key={`${part.table}|${part.by ?? ''}|${(part.columns ?? []).join(',')}`} className="inline inline--tight">
         {single
-          ? <span className="faint">{table?.label || part.table}:</span>
+          ? null
           : <Button size="sm" variant="ghost" title="открыть таблицу" onClick={() => showTable(part.table)}>{table?.label || 'новая таблица'}:</Button>}
         {columns.map(column => {
           const on = single ? picked === column.key : cell?.table === part.table && cell.column === column.key;
@@ -124,6 +129,10 @@ export function CharacterSection({ system, editSystem, docked }: {
         })}
         {part.rows ? <span className="faint">· строки: {part.rows.length}</span> : null}
         {by ? <span className="faint">· группировать по «{by.label || by.key}»</span> : null}
+        {!single && blockName !== undefined && index !== undefined ? (
+          <DangerButton size="sm" title="убрать таблицу из блока — сама таблица останется в «Таблицах»"
+            onConfirm={() => dropPart(blockName, index, part.table)}>×</DangerButton>
+        ) : null}
       </div>
     );
   };
@@ -131,12 +140,14 @@ export function CharacterSection({ system, editSystem, docked }: {
   const drag = useDragList((from, to, after) => editSystem(draft => moveBlockTo(draft, from, to, after)));
   const fieldCount = (block: SheetBlock): number => fieldsOf(system).filter(f => (f.placements ?? []).some(place => place.group === block.name)).length;
   const sourceOf = (block: SheetBlock): string => block.parts
+    .filter(part => system.tables?.[part.table]?.shape !== 'single')
     .map(part => `${system.tables?.[part.table]?.label || part.table}${part.by ? ` · по «${system.tables?.[part.table]?.columns?.find(c => c.key === part.by)?.label ?? part.by}»` : ''}`)
     .join(', ');
   const from = (block: SheetBlock): string => {
     if (!block.parts.length) return 'пока пусто';
     const same = block.parts.length === 1 && !block.parts[0]!.by && (system.tables?.[block.parts[0]!.table]?.label || block.parts[0]!.table) === block.name;
-    return same ? '' : `из: ${sourceOf(block)}`;
+    const source = sourceOf(block);
+    return same || !source ? '' : `из: ${source}`;
   };
   const branch = (nodes: BlockNode[], depth: number): ReactNode => nodes.map(({ block, children }) => {
     const on = shown(block.name);
@@ -156,7 +167,7 @@ export function CharacterSection({ system, editSystem, docked }: {
 
         </summary>
         <div className="block-fold__body">
-          {block.parts.map(part => describe(part, block.name))}
+          {block.parts.map((part, index) => describe(part, block.name, index))}
           <div className="inline inline--tight">
             <Button size="sm" variant="ghost" title="одно значение: хиты, уровень, имя" onClick={() => add(block.name)}>+ поле</Button>
             <Button size="sm" variant="ghost" title="строки и колонки: характеристики, навыки" onClick={() => addTable(block.name)}>+ таблица</Button>

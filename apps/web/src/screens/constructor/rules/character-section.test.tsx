@@ -51,6 +51,20 @@ describe('листы: блоки и типы', () => {
     expect(useWorld.getState().system.sheets?.[key]?.blocks).toBeUndefined();
   });
 
+  it('таблицу из блока убирает «×», сама таблица остаётся', () => {
+    useWorld.setState(state => ({ ...state, system: { ...system(), blocks: [
+      { name: 'Здоровье', parts: [{ table: 'лист', columns: ['hp'] }, { table: 'навыки' }] },
+      { name: 'Богатство', parts: [{ table: 'лист', columns: ['gold'] }] },
+    ] } }));
+    render(<Sheets />);
+    const drop = screen.getAllByTitle('убрать таблицу из блока — сама таблица останется в «Таблицах»');
+    expect(drop).toHaveLength(1);
+    fireEvent.click(drop[0]!);
+    fireEvent.click(screen.getByText('точно убрать'));
+    expect(blocksNow().find(b => b.name === 'Здоровье')!.parts).toEqual([{ table: 'лист', columns: ['hp'] }]);
+    expect(useWorld.getState().system.tables?.навыки).toBeDefined();
+  });
+
   it('«+ блок» заводит пустой блок и выбирает его', () => {
     render(<Sheets />);
     fireEvent.click(screen.getByText('+ блок'));
