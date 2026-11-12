@@ -33,7 +33,8 @@ export type Op =
   | { op: 'kind'; sheetId: string; of: string | null }
   | { op: 'group'; sheetId: string; group: string | null }
   | { op: 'turn'; turn: TurnOp; order?: string[]; who?: string[]; seconds?: number }
-  | { op: 'sheet'; name: string; of?: string };
+  | { op: 'sheet'; name: string; of?: string }
+  | { op: 'drop'; sheetId: string };
 
 export interface PerformWorld {
   system: System;
@@ -385,6 +386,21 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     run.state.put(sheet);
     run.state.write({ text: `Лист «${name}» заведён` });
     return false;
+  },
+
+  drop(run, { sheetId }, root) {
+    const sheet = sheetOf(run, sheetId);
+    if (isDesk(sheet)) throw new EngineError('стол комнаты не убирается');
+    if (inCombat(run.clock) && run.clock.order.includes(sheetId)) OPS.turn(run, { op: 'turn', turn: 'leave', who: [sheetId] }, root.phase('leave'));
+    for (const other of run.state.sheets) {
+      if (other.group !== sheetId) continue;
+      const { group: _group, ...rest } = other;
+      run.state.put(rest as Sheet);
+      run.state.write({ text: `${other.name} выходит из группы «${sheet.name}»` });
+    }
+    run.state.drop(sheetId);
+    run.state.write({ text: `Лист «${sheet.name}» убран` });
+    return true;
   },
 };
 

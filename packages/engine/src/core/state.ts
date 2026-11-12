@@ -38,6 +38,10 @@ export class State {
     this.sheetList = at < 0 ? [...this.sheetList, sheet] : this.sheetList.map((s, i) => (i === at ? sheet : s));
   }
 
+  drop(id: string): void {
+    this.sheetList = this.sheetList.filter(sheet => sheet.id !== id);
+  }
+
   replace(sheets: readonly Sheet[]): void {
     this.sheetList = sheets;
   }
