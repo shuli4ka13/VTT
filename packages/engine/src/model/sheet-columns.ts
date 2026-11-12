@@ -182,6 +182,7 @@ function rowPath(system: System, tableId: string, row: TableRow, path: string[])
   }
   if (column.kind === 'field') return `@${String(cell)}${rest.length ? `.${rest.join('.')}` : ''}`;
   if (rest.length) throw new EngineError(`${where}: «${column.label || head}» — не ссылка, дальше идти некуда`);
+  if (Array.isArray(cell)) return `@${addressOf(tableId, row, column.key)}`;
   return literal(cell);
 }
 
