@@ -20,7 +20,7 @@ import { bindingsOf } from '../events/actions.ts';
 import { kindOfRecord } from './owned.ts';
 import { tableOf } from './buttons.ts';
 import { MOMENTS } from '../events/moments.ts';
-import { TABS, STEP, SHEET, SHEET_LISTS } from '../words/glossary.ts';
+import { TABS, STEP, SHEET, SHEET_LISTS, DICE_BY_STEP } from '../words/glossary.ts';
 import {
   referencesOf, declaredOf, chainRefs, listenerOf, withAddresses, heardNames, callNamesOf, formulaDeps, sourcesOf,
   type Where, type Reference, type RefKind, type Declared, type Listener,
@@ -109,7 +109,7 @@ function danglingText(ref: Reference, declared: Declared): string | null {
   if (ref.scope === LISTEN) return null;
   if (ref.key === HOLDER && (ref.kind === 'step' || (ref.kind === 'field' && ref.scope === 'bare'))) return HOLDER_ONLY;
   if (ref.kind === 'syntax' && ref.path === 'function') return `в формуле «${ref.key}» нет функции «${ref.scope}»`;
-  if (ref.kind === 'syntax' && ref.path === 'dice') return `в формуле «${ref.key}» кость стоит как число — кость кидают так: кинуть(к4)`;
+  if (ref.kind === 'syntax' && ref.path === 'dice') return `в формуле «${ref.key}» кость стоит как число — ${DICE_BY_STEP}`;
   if (ref.kind === 'syntax') return `формула «${ref.key}» не разбирается — проверьте скобки и знаки`;
   if (ref.kind === 'field' && ref.scope === 'bare' && !declared.field.has(ref.key) && declared.effect.has(ref.key)) {
     return `«${ref.key}» — сколько раз висит эффект на листе: пишите через лист, например @носитель.${ref.key}`;
@@ -461,6 +461,7 @@ function fieldRollProblems(system: System): Problem[] {
       if (typeof ref !== 'object' || ref === null) return null;
       try { compile(String((ref as { expr: unknown }).expr ?? '')); return null; } catch (err) { return (err as Error).message; }
     };
+    if (exprsIn(roll).some(throwsDice)) out.push({ where, level: 'error', text: `бросок «${name}»: ${DICE_NOT_HERE}` });
     const rollKeys = resultKeys({ type: 'roll' })!;
     const strays = (ref: unknown): string[] => {
       const expr = typeof ref === 'object' && ref !== null ? String((ref as { expr?: unknown }).expr ?? '') : '';
@@ -558,36 +559,8 @@ function costProblems(system: System): Problem[] {
   return out;
 }
 
-function rollsDice(expr: unknown): boolean {
-  const text = expr && typeof expr === 'object' && 'expr' in expr ? String((expr as { expr: unknown }).expr) : '';
-  if (!text.trim()) return false;
-  let ast: Node;
-  try { ast = compile(text).ast; } catch { return false; }
-  const visit = (node: Node): boolean => {
-    switch (node.kind) {
-      case 'Call': return node.name === 'кинуть' || node.args.some(visit);
-      case 'Unary': return visit(node.operand);
-      case 'Binary': return visit(node.left) || visit(node.right);
-      case 'Conditional': return visit(node.test) || visit(node.then) || visit(node.otherwise);
-      case 'Pick': return visit(node.key);
-      default: return false;
-    }
-  };
-  return visit(ast);
-}
-
-const plainDie = (system: System, name: string): boolean => {
-  const die = system.constants?.[name] as { dice?: { count?: unknown; minus?: unknown; name?: unknown; bonus?: unknown }[]; read?: unknown; zero?: unknown } | undefined;
-  const terms = die?.dice ?? [];
-  const only = terms[0];
-  return terms.length === 1 && typeof only!.count !== 'object' && !only!.minus && !only!.name && !only!.bonus
-    && (die?.read === undefined || die.read === 'sum') && die?.zero === undefined;
-};
-
 const ownRolls = (table: Table | undefined, column: string): boolean =>
   (table?.rows ?? []).some(row => Boolean((row as { view?: Record<string, { roll?: unknown }> }).view?.[column]?.roll));
-
-const THROWN_DIE = /кинуть\(\s*[@#]([\p{L}\p{N}_]+)\s*[,)]/gu;
 
 function rollStepProblems(system: System, effect: Effect, steps: Step[], where: (index: number) => Where): Problem[] {
   const out: Problem[] = [];
@@ -596,16 +569,10 @@ function rollStepProblems(system: System, effect: Effect, steps: Step[], where: 
     const step = raw as Step & { field?: unknown; bonus?: unknown; shift?: unknown; die?: unknown; count?: unknown };
     const filled = (value: unknown): boolean => value !== undefined && value !== null;
     for (const text of exprsIn(raw)) {
-      for (const found of text.matchAll(THROWN_DIE)) {
-        const name = found[1]!;
-        if (system.constants?.[name]?.kind !== 'die' || (effect.params ?? []).some(param => param.key === name) || plainDie(system, name)) continue;
-        out.push({ where: where(index), level: 'error', text: `кость «${dieLabel(name)}» в формуле не бросить: у неё несколько частей или свои настройки («вычитается», «считать успехи», «если костей ноль») — бросьте её шагом «Бросок»` });
-      }
-      const rest = text.replace(THROWN_DIE, ' ');
       for (const name of Object.keys(system.constants ?? {})) {
         if (system.constants![name]!.kind !== 'die' || (effect.params ?? []).some(param => param.key === name)) continue;
-        if (new RegExp(`(^|[^\\p{L}\\p{N}_.])[@#]${name}(?![\\p{L}\\p{N}_])`, 'u').test(rest)) {
-          out.push({ where: where(index), level: 'error', text: `кость «${dieLabel(name)}» стоит в формуле как число — кость бросают так: кинуть(${dieLabel(name)})` });
+        if (new RegExp(`(^|[^\\p{L}\\p{N}_.])[@#]${name}(?![\\p{L}\\p{N}_])`, 'u').test(text)) {
+          out.push({ where: where(index), level: 'error', text: `кость «${dieLabel(name)}» стоит в формуле как число — ${DICE_BY_STEP}` });
         }
       }
     }
@@ -657,41 +624,11 @@ function rollStepProblems(system: System, effect: Effect, steps: Step[], where: 
   return out;
 }
 
-function thrownDiceProblems(steps: Step[], where: (index: number) => Where): Problem[] {
-  const out: Problem[] = [];
-  const thrown = new Set<string>();
-  steps.forEach((step, index) => {
-    for (const text of exprsIn(step)) {
-      let ast: Node;
-      try { ast = compile(text).ast; } catch { continue; }
-      const visit = (node: Node): void => {
-        switch (node.kind) {
-          case 'Call': {
-            const first = node.args[0];
-            const head = first?.kind === 'Ref' ? first.tag.split('.')[0]! : '';
-            if (node.name === 'кинуть' && thrown.has(head)) {
-              out.push({ where: where(index), level: 'error', text: `«кинуть(@${head})»: в «${head}» уже выпавшее число, а не кость — кость задают так: кинуть(к6) или входом с костью` });
-            }
-            node.args.forEach(visit);
-            return;
-          }
-          case 'Unary': visit(node.operand); return;
-          case 'Binary': visit(node.left); visit(node.right); return;
-          case 'Conditional': visit(node.test); visit(node.then); visit(node.otherwise); return;
-          case 'Pick': visit(node.key); return;
-          default: return;
-        }
-      };
-      visit(ast);
-    }
-    if ((step.type === 'roll' || step.type === 'check') && step.id) thrown.add(String(step.id));
-  });
-  return out;
-}
+export const throwsDice = (text: string): boolean => /(^|[^\p{L}\p{N}_])кинуть\s*\(/u.test(text);
 
-const NO_DICE_IN_IF = 'в условии правки кости не бросают — «кинуть» уберите';
+const DICE_IN_ADDEND = 'кость прибавки выберите в «Сколько», а не формулой';
 
-const NO_DICE_HERE = 'кости бросает только шаг эффекта и прибавка к броску — здесь «кинуть» уберите';
+const DICE_NOT_HERE = 'здесь кости не бросают — бросок делает шаг «Бросок» в эффекте';
 
 const ANYONE_ROLLS = 'правка действует на броски всех листов в комнате — в условии нет носителя; обычно «бросает носитель» или «бросают против носителя»';
 
@@ -708,7 +645,7 @@ function handlerDiceProblems(system: System): Problem[] {
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
     (effect.on ?? []).forEach((handler, index) => {
       const where = { tab: 'effects' as const, effect: id, part: 'on', handler: index };
-      if (rollsDice(handler.if)) out.push({ where, level: 'error', text: 'в условии подписки кости не бросают — «кинуть» уберите' });
+      if (exprsIn(handler.if).some(throwsDice)) out.push({ where, level: 'error', text: DICE_NOT_HERE });
       if ((handler.on === 'seen' || handler.on === ROLLED) && readsAgainst(handler.if)) out.push({ where, level: 'warn', text: SEEN_AGAINST });
       if (handler.on === ROLLED && handler.confirm) out.push({ where, level: 'error', text: `«${ROLLED_LABEL}» не спрашивает игрока — снимите «спросить»` });
       if (handler.on !== 'seen' && handler.on !== ROLLED && (handler.tags?.length || handler.anyTags?.length || handler.notTags?.length)) out.push({ where, level: 'error', text: `метки броска фильтруют только «${SEEN_LABEL}» и «${ROLLED_LABEL}» — здесь броска нет` });
@@ -795,6 +732,7 @@ function rollEditProblems(system: System): Problem[] {
       const value = (op as { value?: { expr?: unknown } }).value;
       if (!known.has(String(op.op))) out.push({ where, level: 'error', text: `у правки броска «${name}» неизвестное действие «${String(op.op)}»` });
       if (AGAINST_NAME.test(JSON.stringify(op))) out.push({ where, level: 'error', text: `в словаре правок броска «@против» не пишут — у «${name}» он есть; противника проверяет условие правки на листе` });
+      else if (exprsIn(op).some(throwsDice)) out.push({ where, level: 'error', text: `у правки броска «${name}»: ${DICE_IN_ADDEND}` });
       else if (op.op === PLUS_OP && !hasDie(op) && !String(value?.expr ?? '').trim()) out.push({ where, level: 'error', text: `у правки броска «${name}» «прибавить» без формулы` });
     }
   }
@@ -824,13 +762,13 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
           const stages = [...new Map(tags.flatMap(tag => targetStages(system, String(mod.target).replace(slotted[0], tag))).map(one => [one.key, one])).values()];
           if (tags.length) out.push(...stageProblems(stages, mod.stage as string | undefined, String(mod.target), at));
         } else out.push(...stageProblems(targetStages(system, String(mod.target)), mod.stage as string | undefined, String(mod.target), at));
-        if (rollsDice(mod.value) || rollsDice(mod.if)) out.push({ where: at, level: 'error', text: NO_DICE_HERE });
+        if (exprsIn(mod).some(throwsDice)) out.push({ where: at, level: 'error', text: DICE_NOT_HERE });
         continue;
       }
       if (mod.kind !== 'edit') continue;
       const call = String(mod.call);
       const at = { ...where, part: 'modifiers' };
-      if (call !== ROLL_CALL && (rollsDice(mod.value) || rollsDice(mod.if))) out.push({ where: at, level: 'error', text: NO_DICE_HERE });
+      if (exprsIn(mod).some(throwsDice)) out.push({ where: at, level: 'error', text: call === ROLL_CALL && mod.param === 'bonus' && throwsDice(String((mod.value as { expr?: unknown } | undefined)?.expr ?? '')) ? DICE_IN_ADDEND : DICE_NOT_HERE });
       if (call === ROLL_CALL) {
         if (mod.stage !== undefined) out.push(...stageProblems([], mod.stage as string, CALL_WORDS.roll.label, at));
         if (!(String(mod.param) in CALL_WORDS.roll.params)) out.push({ where: at, level: 'error', text: `у броска нет параметра «${String(mod.param)}»` });
@@ -839,7 +777,6 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
         else if (mod.param === 'count' && !(mod.value as { expr?: string } | undefined)?.expr?.trim()) out.push({ where: at, level: 'error', text: 'у кубиков к броску не задано, сколько' });
         else if (mod.param === 'count' && mod.op !== 'add') out.push({ where: at, level: 'error', text: `кубики к броску только прибавляются, а здесь «${String(mod.op ?? 'не задано')}»` });
         else if (mod.param === 'bonus' && mod.op !== 'add') out.push({ where: at, level: 'error', text: `прибавка к броску только прибавляет, а здесь «${String(mod.op ?? 'не задано')}»` });
-        if (rollsDice(mod.if)) out.push({ where: at, level: 'error', text: NO_DICE_IN_IF });
         if (!tiedToHolder(mod.if as Guard | undefined)) out.push({ where: at, level: 'warn', text: ANYONE_ROLLS });
         if (readsAgainst(mod.if) && mod.param === 'edits' && mod.edit) {
           const word = system.roll_edits?.[String(mod.edit)];
@@ -1266,8 +1203,10 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   for (const [id, effect] of Object.entries(system.effects)) {
     for (const chain of chainsOf(id, effect)) {
       out.push(...stepProblems(chain.steps, chain.where));
-      out.push(...thrownDiceProblems(chain.steps, chain.where));
       out.push(...rollStepProblems(system, effect, chain.steps, chain.where));
+      chain.steps.forEach((step, index) => {
+        if (exprsIn(step).some(throwsDice)) out.push({ where: chain.where(index), level: 'error', text: step.type === 'roll-plus' ? DICE_IN_ADDEND : DICE_BY_STEP });
+      });
       const loops = chain.steps.flatMap((step, index) => (registry.get(step.type)?.loops ? [index] : []));
       for (const index of loops.slice(1)) {
         out.push({ where: chain.where(index), level: 'error', text: `«${STEP_WORDS.each.label}» в цепочке может быть только один` });

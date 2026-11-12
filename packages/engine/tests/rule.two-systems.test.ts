@@ -192,7 +192,7 @@ group('две системы одними слотами', () => {
           strike: {
             ...system.effects.strike,
             steps: system.effects.strike.steps.map(s => s.id === 'dmg'
-              ? { ...s, fixed: { expr: `${s.fixed.expr} + 2` } }
+              ? { ...s, bonus: { expr: `${s.bonus.expr} + 2` } }
               : s),
           },
         },

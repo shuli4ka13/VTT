@@ -1,7 +1,7 @@
 import { endOf, isFlow } from './flow.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import { holderConditionOf } from './references.ts';
-import { findRoll, writeRoll, factorsOf, bare, tight } from './amounts.ts';
+import { factorsOf, bare, tight } from './amounts.ts';
 import { rolesOf } from './buttons.ts';
 import type { System, Step } from './types.ts';
 
@@ -80,8 +80,7 @@ const amountsAfterCheck = (steps: Step[], system?: System): { check: Step; amoun
       continue;
     }
     if (!check) continue;
-    const rolls = s.die !== undefined || findRoll((s.fixed as { expr?: unknown } | undefined)?.expr) !== null;
-    if (rolls) out.push({ check, amount: step, crit });
+    if (s.die !== undefined) out.push({ check, amount: step, crit });
   }
   return out;
 };
@@ -113,10 +112,7 @@ const isDoubling = (step: Record<string, unknown>, doubler: Doubler): boolean =>
   if (repeated(step as Step) && typeof times === 'string') return factorsOf(bare(times)).some(part => doubler(bare(part)));
   if (owned(step as Step)) return false;
   const count = step.count as { expr?: unknown } | undefined;
-  if (typeof count?.expr === 'string' && DOUBLER.test(count.expr)) return true;
-  const call = findRoll((step.fixed as { expr?: unknown } | undefined)?.expr);
-  return call?.times !== null && call?.times !== undefined
-    && factorsOf(bare(call.times)).some(part => doubler(bare(part)));
+  return typeof count?.expr === 'string' && DOUBLER.test(count.expr);
 };
 
 const withoutDoubler = (step: Record<string, unknown>, doubler: Doubler): void => {
@@ -125,26 +121,12 @@ const withoutDoubler = (step: Record<string, unknown>, doubler: Doubler): void =
     const left = factorsOf(bare(repeat)).filter(part => !doubler(bare(part)));
     if (left.length) step.times = { expr: left.length === 1 ? bare(left[0]!) : left.map(tight).join(' * ') };
     else delete step.times;
-    return;
   }
-  const fixed = step.fixed as { expr?: unknown } | undefined;
-  const call = findRoll(fixed?.expr);
-  if (!call || !call.times) return;
-  const kept = factorsOf(bare(call.times)).filter(part => !doubler(bare(part)));
-  const times = kept.length === 1 ? bare(kept[0]!) : kept.length ? kept.map(tight).join(' * ') : null;
-  step.fixed = { ...fixed, expr: writeRoll({ ...call, times }) };
 };
 
 const withDoubler = (step: Record<string, unknown>, crit: string): void => {
-  const fixed = step.fixed as { expr?: unknown } | undefined;
-  const call = findRoll(fixed?.expr);
-  if (!call) {
-    const repeat = timesOf(step as Step)?.expr;
-    step.times = { expr: typeof repeat === 'string' ? `${tight(repeat)} * ${crit}` : crit };
-    return;
-  }
-  const times = call.times ? `${tight(call.times)} * ${crit}` : crit;
-  step.fixed = { ...fixed, expr: writeRoll({ ...call, times }) };
+  const repeat = timesOf(step as Step)?.expr;
+  step.times = { expr: typeof repeat === 'string' ? `${tight(repeat)} * ${crit}` : crit };
 };
 
 export function setCrit(draft: System, choice: CritChoice): void {

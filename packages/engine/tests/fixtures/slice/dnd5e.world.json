@@ -888,8 +888,11 @@
           },
           {
             "type": "roll",
-            "fixed": {
-              "expr": "кинуть(@damage_dice, (1) * если((@hit_бросок.natural >= 20), 2, 1))"
+            "die": {
+              "expr": "@damage_dice"
+            },
+            "times": {
+              "expr": "если((@hit_бросок.natural >= 20), 2, 1)"
             },
             "bonus": {
               "expr": "@действующий.str_mod"
@@ -1040,8 +1043,8 @@
         "steps": [
           {
             "type": "roll",
-            "fixed": {
-              "expr": "кинуть(@damage_dice, 1)"
+            "die": {
+              "expr": "@damage_dice"
             },
             "id": "dmg"
           },
@@ -1204,8 +1207,8 @@
         "steps": [
           {
             "type": "roll",
-            "fixed": {
-              "expr": "кинуть(@heal_dice, 1)"
+            "die": {
+              "expr": "@heal_dice"
             },
             "bonus": {
               "expr": "@действующий.cha_mod"
@@ -1334,8 +1337,8 @@
           },
           {
             "type": "roll",
-            "fixed": {
-              "expr": "кинуть(\"1d10\", 1)"
+            "die": {
+              "expr": "1к10"
             },
             "id": "dmg"
           },
@@ -1579,8 +1582,8 @@
         "steps": [
           {
             "type": "roll",
-            "fixed": {
-              "expr": "кинуть(@damage_dice, 1)"
+            "die": {
+              "expr": "@damage_dice"
             },
             "id": "dmg_всего"
           },
@@ -1885,8 +1888,8 @@
             "call": "roll",
             "param": "bonus",
             "op": "add",
-            "value": {
-              "expr": "кинуть(к4)"
+            "die": {
+              "expr": "1к4"
             },
             "if": {
               "expr": "@бросающий == @носитель"
@@ -2134,8 +2137,8 @@
             "steps": [
               {
                 "type": "roll",
-                "fixed": {
-                  "expr": "кинуть(\"1d4\", 1)"
+                "die": {
+                  "expr": "1к4"
                 },
                 "id": "back"
               },
@@ -2460,8 +2463,8 @@
               },
               {
                 "type": "roll",
-                "fixed": {
-                  "expr": "кинуть(\"2d10\", 1)"
+                "die": {
+                  "expr": "2к10"
                 },
                 "id": "dmg_всего"
               },

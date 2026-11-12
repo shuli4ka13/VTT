@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { SAMPLE_WORLDS } from '../src/model/systems.ts';
 import { flattenSystem } from '../src/model/inherit.ts';
-import { parse, start, result, see, keep, times, addTo, LOWEST } from '../src/core/dice.ts';
+import { parse, withCount, withKeep, start, result, see, keep, times, addTo, LOWEST } from '../src/core/dice.ts';
 import type { SeenOp } from '../src/core/dice.ts';
 import type { DieConstant, RollEdit } from '../src/model/types.ts';
 
@@ -155,12 +155,13 @@ describe('бросок — одна функция, стороны явные', 
     expect(versus.result.total).toBe(18);
   });
 
-  it('кинуть(…, оставить) идёт через тот же отбор', () => {
-    const tools = diceTools(replay([2, 6, 4]));
-    expect(tools.roll!('к6', 3, 2)).toBe(10);
-    expect(diceTools(replay([2, 6, 4])).roll!('к6', 3, -1)).toBe(2);
+  it('«оставить» шага идёт через тот же отбор, «максимум костей» — без броска', () => {
+    const three = withKeep(withCount(parse('к6'), 3, 'т'), 2, 'т');
+    expect(result(start(three, [], replay([2, 6, 4]))).total).toBe(10);
+    const worst = withKeep(withCount(parse('к6'), 3, 'т'), 1, 'т', 'worst');
+    expect(result(start(worst, [], replay([2, 6, 4]))).total).toBe(2);
     expect(diceTools().peak!('2к6', 2)).toBe(24);
-    expect(diceTools(replay([5])).roll!('к6', 0)).toBe(0);
+    expect(result(start(withCount(parse('к6'), 0, 'т'), [], replay([5]))).total).toBe(0);
   });
 });
 

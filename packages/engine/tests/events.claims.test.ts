@@ -42,7 +42,7 @@ const base = {
         EACH,
         { id: 'бросок', type: 'roll', die: 'к20', tags: ['атака'], by: { expr: '@действующий' } },
         { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@цель.кд' } },
-        { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1к6')" } },
+        { id: 'урон', type: 'roll', die: { expr: '1к6' } },
         { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '@урон' } },
       ],
     },
@@ -180,7 +180,7 @@ group('правка после того, как бросок увиден: вы�
     const t = main.trace[0] as any;
     deepEq(t.rolls, [7, 18], 'старая семёрка на месте, новая кость добавлена');
     eq(t.kept, 18);
-    const dmg = main.trace.find((x: any) => x.fixed !== undefined) as any;
+    const dmg = main.trace.find((x: any) => x.step === 'урон') as any;
     deepEq(dmg.rolls, [3], 'кости урона не перебрасывались');
   });
 

@@ -1,17 +1,39 @@
-import { group, test, eq, throws } from './harness.ts';
+import { group, test, eq, ok, throws } from './harness.ts';
 import { compile } from '../src/formula/index.ts';
-import { toolsOf, } from '../src/engine/refs.ts';
-import { newPass } from '../src/engine/calc.ts';
-import type { System, Sheet } from '../src/model/types.ts';
+import { exchange } from './play.ts';
+import type { System } from '../src/model/types.ts';
 
-const system = { id: 'к', name: 'к', tables: {}, effects: {} } as unknown as System;
-const sheet = { id: 'а', systemId: 'к', name: 'а', values: {}, has: [], effects: [] } as unknown as Sheet;
-const run = (expr: string, ...faces: number[]) =>
-  compile(expr).evaluate(() => undefined, toolsOf(system, newPass(system, sheet), 'проба', () => faces.shift() ?? 1));
+const шаг = (extra: Record<string, unknown>) => ({
+  id: 'r', label: 'Р', activation: 'manual',
+  params: [{ key: 'действующий', kind: 'sheet' }],
+  steps: [{ id: 'бросок', type: 'roll', die: { expr: '1к10' }, ...extra }],
+});
 
-group('кинуть(кость, сколько, оставить)', () => {
-  test('оставить лучшие: 3к10, две лучшие', () => eq(run('кинуть("1к10", 3, 2)', 4, 9, 7), 16));
-  test('оставить худшие — со знаком минус: 2к6, худшая', () => eq(run('кинуть("1к6", 2, -1)', 5, 2), 2));
-  test('без третьего аргумента — сумма, как раньше', () => eq(run('кинуть("1к6", 2)', 5, 2), 7));
-  test('ноль оставить нельзя — ошибка словами', () => throws(() => run('кинуть("1к6", 2, 0)'), 'сколько костей оставить'));
+const play = (extra: Record<string, unknown>, ...faces: number[]) => {
+  const система = {
+    id: 'к', name: 'к',
+    tables: { лист: { shape: 'single', owner: 'sheet', columns: [{ key: 'х', label: 'Х', kind: 'number', default: 1 }] } },
+    constants: {},
+    effects: { r: шаг(extra) },
+  } as unknown as System;
+  const книга = { records: [] } as never;
+  const я = { id: 'я', systemId: 'к', name: 'я', values: {}, has: [], effects: [] } as never;
+  return () => exchange({ system: система, compendium: книга, die: () => faces.shift() ?? 1, sheets: [я], actionId: '+r', fromId: 'я' }).reports[0]!.report.trace.find((t: Record<string, unknown>) => t.step === 'бросок') as Record<string, unknown>;
+};
+
+group('шаг «Бросок»: оставить лучшие или худшие', () => {
+  test('оставить лучшие: 3к10, две лучшие', () => eq(play({ count: { expr: '3' }, keep: { expr: '2' } }, 4, 9, 7)().total, 16));
+  test('оставить худшие: 2к10, худшая', () => eq(play({ count: { expr: '2' }, keep: { expr: '1' }, keepWorst: true }, 5, 2)().total, 2));
+  test('без «оставить» — сумма', () => eq(play({ count: { expr: '2' } }, 5, 2)().total, 7));
+  test('дробное число оставить — ошибка словами', () => {
+    const беда = throws(() => play({ count: { expr: '2' }, keep: { expr: '1.5' } })());
+    ok(String(беда.message).includes('оставить'), String(беда.message));
+  });
+});
+
+group('«кинуть(кость, сколько, оставить)» ушла из языка', () => {
+  test('узнаётся и отвечает, что кости бросает шаг', () => {
+    const беда = throws(() => compile('кинуть("1к10", 3, 2)').evaluate(() => undefined));
+    ok(String(беда.message).includes('шаг «Бросок»'), String(беда.message));
+  });
 });

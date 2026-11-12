@@ -41,7 +41,7 @@ const system = {
       cost: [{ type: 'emit', effect: 'ячейка', args: { лист: { expr: '@действующий' }, круг: { expr: '@круг' } } }],
       steps: [
         EACH,
-        { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d4', 2 + @круг)" }, bonus: { expr: '2 + @круг' } },
+        { id: 'урон', type: 'roll', die: { expr: '1d4' }, times: { expr: '2 + @круг' }, bonus: { expr: '2 + @круг' } },
         { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@урон' } },
       ],
     },
@@ -50,7 +50,7 @@ const system = {
       params: [ACTOR, TARGETS],
       steps: [
         EACH,
-        { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d6', округлить вверх(@действующий.уровень / 2))" } },
+        { id: 'урон', type: 'roll', die: { expr: '1d6' }, times: { expr: 'округлить вверх(@действующий.уровень / 2)' } },
         { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@урон' } },
       ],
     },
@@ -94,7 +94,7 @@ group('счёт костей числом и названное игроком �
   test('ноль раз — костей нет вовсе, а шаг не падает', () => {
     const none = { ...system, effects: { ...system.effects, скрытая: { ...system.effects.скрытая, steps: [
       EACH,
-      { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d6', 0)" }, bonus: { expr: '2' } },
+      { id: 'урон', type: 'roll', die: { expr: '1d6' }, times: { expr: '0' }, bonus: { expr: '2' } },
       { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@урон' } },
     ] } } } as unknown as System;
     const out = exchange({
@@ -240,7 +240,7 @@ group('наложенное помнит число, штрафная кость
       { key: 'крит_от', label: 'Крит от', kind: 'number', default: 19 },
       { key: 'заряды', label: 'Заряды', kind: 'number', default: 1, min: 0 },
     ] }, rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }] } , а: { shape: 'book', use: 'action', label: 'А', columns: [], bindings: [{ label: 'Поджечь', effect: 'поджечь', args: {} }] }, б: { shape: 'book', use: 'action', label: 'Б', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
-    roll_edits: { порча: { label: 'Порча', ops: [{ op: 'plus', value: { expr: '-кинуть(к4)' } }] } },
+    roll_edits: { порча: { label: 'Порча', ops: [{ op: 'plus', die: '1к4', minus: true }] } },
     effects: {
       горит: {
         label: 'Горит', activation: 'passive', params: [{ key: 'сила', label: 'Сила', kind: 'number', optional: true }],
@@ -255,7 +255,7 @@ group('наложенное помнит число, штрафная кость
           { id: 'hit_бросок', type: 'roll', die: 'к20', tags: ['атака'], by: { expr: '@действующий' } },
           { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '@цель.кд' } },
           { type: 'branch', if: { expr: 'не @hit.success' } }, { type: 'stop' }, { type: 'end' },
-          { id: 'dmg', type: 'roll', fixed: { expr: "кинуть('1d6', если(@hit.natural >= @действующий.крит_от, 2, 1))" } },
+          { id: 'dmg', type: 'roll', die: { expr: '1d6' }, times: { expr: 'если(@hit.natural >= @действующий.крит_от, 2, 1)' } },
           { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@dmg' } },
         ],
       },

@@ -47,8 +47,8 @@ const world = (steps: unknown[]): System => ({
   roll_edits: {
     advantage: { label: 'Преимущество', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }], cancels: ['disadvantage'] },
     disadvantage: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }], cancels: ['advantage'] },
-    boon: { label: 'Подмога', ops: [{ op: 'plus', value: { expr: "кинуть('1к6')" } }], cancels: ['bane'] },
-    bane: { label: 'Сбивка', ops: [{ op: 'plus', value: { expr: "0 - кинуть('1к6')" } }], cancels: ['boon'] },
+    boon: { label: 'Подмога', ops: [{ op: 'plus', die: '1к6' }], cancels: ['bane'] },
+    bane: { label: 'Сбивка', ops: [{ op: 'plus', die: '1к6', minus: true }], cancels: ['boon'] },
     reroll: { label: 'Переброс', ops: [{ op: 'reroll', n: 1 }] },
     cover: { label: 'Укрытие', ops: [{ op: 'shiftVersus', by: 2 }] },
   },

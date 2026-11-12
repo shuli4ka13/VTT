@@ -122,10 +122,10 @@ function wordAddend(label: string, op: RollEditOp, view: Pass): PendingAddend {
   if (!expr.trim()) throw new EngineError(`правка броска «${label}»: «прибавить» без формулы`);
   return {
     label,
-    value: die => {
+    value: () => {
       let value: unknown;
       try {
-        value = compile(expr).evaluate(view.resolve, toolsOf(view.system, view, `правка броска «${label}»`, die));
+        value = compile(expr).evaluate(view.resolve, toolsOf(view.system, view, `правка броска «${label}»`));
       } catch (err) {
         if (isRuleError(err)) throw new EngineError(`правка броска «${label}»: ${(err as Error).message}`);
         throw err;
@@ -143,9 +143,9 @@ function bonusAddend(held: Held, system: System): PendingAddend {
   if (op !== 'add') throw new EngineError(`правка «${who(held)}»: прибавка к броску только прибавляет, а здесь «${String(op ?? 'не задано')}»`);
   return {
     label: who(held),
-    value: die => {
+    value: () => {
       try {
-        return amountOf({ ...held, ref: { ...held.ref, die } });
+        return amountOf(held);
       } catch (err) {
         if (isRuleError(err) && !(err instanceof EngineError)) throw new EngineError(`правка «${who(held)}»: ${(err as Error).message}`);
         throw err;

@@ -30,7 +30,7 @@ const world = (effects: Record<string, unknown>, extra: Record<string, unknown> 
     приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] },
   },
   effects: {
-    уколоть: { label: 'Уколоть', params: [{ key: 'раненый', kind: 'sheet' }], steps: [hit('кинуть(\'1d6\')', '@раненый.хп')] },
+    уколоть: { label: 'Уколоть', params: [{ key: 'раненый', kind: 'sheet' }], steps: [{ id: 'к', type: 'roll', die: { expr: '1к6' } }, hit('@к', '@раненый.хп')] },
     ...effects,
   },
   ...extra,
@@ -57,7 +57,7 @@ group('новое ядро: ключи костей у повторов', () => 
   test('эффект, наложенный дважды, срабатывает дважды — у каждого своя кость', () => {
     const system = world({
       удар: strike([hit('1')]),
-      шипы: { label: 'Шипы', activation: 'passive', reapply: 'stack', on: [{ ...mine, steps: [hit('кинуть(\'1d6\')', '@действующий.хп')] }] },
+      шипы: { label: 'Шипы', activation: 'passive', reapply: 'stack', on: [{ ...mine, steps: [{ id: 'к', type: 'roll', die: { expr: '1к6' } }, hit('@к', '@действующий.хп')] }] },
     });
     const out = play(system, [sheet('а'), sheet('б', ['шипы', 'шипы'])], 'а', 'б', [3, 4]);
     eq(hp(out, 'а'), 13, '20 − 3 − 4');
@@ -75,8 +75,8 @@ group('новое ядро: ключи костей у повторов', () => 
 
 group('новое ядро: пауза и повтор', () => {
   const system = world({
-    удар: strike([hit('кинуть(\'1d6\')')]),
-    ответ: { label: 'Ответ', activation: 'passive', on: [{ ...mine, confirm: true, steps: [hit('кинуть(\'1d4\')', '@действующий.хп')] }] },
+    удар: strike([{ id: 'к', type: 'roll', die: { expr: '1к6' } }, hit('@к')]),
+    ответ: { label: 'Ответ', activation: 'passive', on: [{ ...mine, confirm: true, steps: [{ id: 'к', type: 'roll', die: { expr: '1к4' } }, hit('@к', '@действующий.хп')] }] },
   });
   const sheets = [sheet('а'), sheet('б', ['ответ'])];
 
@@ -98,23 +98,24 @@ group('новое ядро: пауза и повтор', () => {
 group('новое ядро: «для каждой цели»', () => {
   const twoTargets = (steps: unknown[], toIds = ['б', 'в']) => {
     const system = world({ удар: button(steps) });
-    return act({ system, compendium: book, clock: null, sheets: [sheet('а'), sheet('б'), sheet('в')], die: queue(2, 5, 9), journal: emptyJournal() },
+    return act({ system, compendium: book, clock: null, sheets: [sheet('а'), sheet('б'), sheet('в')], die: queue(5, 2, 9), journal: emptyJournal() },
       { actionId: 'приём:0', fromId: 'а', toIds });
   };
 
   test('шаг до разделителя — один раз у действующего, после — у каждой цели свой бросок', () => {
     const out = twoTargets([
-      { id: 'общая', type: 'roll', fixed: { expr: "кинуть('1d6')" } },
+      { id: 'общая', type: 'roll', die: { expr: '1d6' } },
       EACH,
-      hit("@общая + кинуть('1d10')"),
+      { id: 'своя', type: 'roll', die: { expr: '1d10' } },
+      hit('@общая + @своя'),
     ]);
-    eq(hp(out, 'б'), 20 - 2 - 5, 'общая кость 2, своя 5');
+    eq(hp(out, 'б'), 20 - 2 - 5, 'своя кость 5 брошена первой, общая 2 — при первом чтении');
     eq(hp(out, 'в'), 20 - 2 - 9, 'общая кость та же 2, своя 9');
   });
 
   test('общий расчёт до разделителя ленивый: при нуле целей кость не брошена', () => {
     const out = twoTargets([
-      { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d6')" } },
+      { id: 'урон', type: 'roll', die: { expr: '1d6' } },
       EACH,
       hit('@урон'),
     ], []);
@@ -125,7 +126,7 @@ group('новое ядро: «для каждой цели»', () => {
 
 group('новое ядро: урон бросается, только когда до него дошло', () => {
   const steps = [
-    { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d6')" } },
+    { id: 'урон', type: 'roll', die: { expr: '1d6' } },
     EACH,
     { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
     { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@цель.хп - 10' } },
@@ -155,7 +156,7 @@ group('новое ядро: урон бросается, только когда
 group('новое ядро: броски действующего не делят кости', () => {
   test('величина и проверка, брошенные заранее, берут разные кости', () => {
     const steps = [
-      { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d6')" } },
+      { id: 'урон', type: 'roll', die: { expr: '1d6' } },
       { id: 'бросок', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
       { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
       { type: 'branch', if: { expr: 'не @попал.success' } }, { type: 'stop' }, { type: 'end' },
@@ -174,7 +175,7 @@ group('новое ядро: броски действующего не деля�
       { id: 'попал', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } },
       { type: 'branch', if: { expr: 'не @попал.success' } }, { type: 'stop' }, { type: 'end' },
       { type: 'branch', if: { expr: '@бросок.natural >= 20' } },
-      { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d6')" } },
+      { id: 'урон', type: 'roll', die: { expr: '1d6' } },
       { type: 'end' },
       EACH,
       hit('1'),

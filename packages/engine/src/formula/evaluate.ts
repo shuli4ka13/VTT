@@ -1,12 +1,12 @@
 import { FormulaRuntimeError } from './errors.ts';
 import { AND, OR, NOT } from './parse.ts';
+import { DICE_BY_STEP } from '../words/glossary.ts';
 import type { Node, BinaryNode, CallNode } from './ast.ts';
 import type { Resolve } from '../model/types.ts';
 
 export type Value = number | boolean | string;
 
 export interface Tools {
-  roll?: (notation: string, times: number, keep?: number) => number;
   peak?: (notation: string, times: number) => number;
   table?: (name: string, key: Value | Value[], column: string | null) => Value;
   rows?: (table: string, column: string, host?: string) => Value[];
@@ -90,21 +90,7 @@ const FUNCTIONS: Record<string, Fn> = {
   кинуть: {
     arity: '1+',
     apply: args => args[0]!,
-    raw: (args, tools) => {
-      if (!tools.roll) {
-        throw new FormulaRuntimeError('«кинуть» здесь нельзя: кости бросает только шаг эффекта');
-      }
-      const notation = String(args[0]);
-      const times = args.length > 1 ? Number(args[1]) : 1;
-      if (!Number.isFinite(times)) {
-        throw new FormulaRuntimeError('второй аргумент «кинуть» — сколько раз, должен быть числом');
-      }
-      const keep = args.length > 2 ? Number(args[2]) : undefined;
-      if (keep !== undefined && (!Number.isInteger(keep) || keep === 0)) {
-        throw new FormulaRuntimeError('третий аргумент «кинуть» — сколько костей оставить: число лучших, со знаком минус — худших');
-      }
-      return tools.roll(notation, times, keep);
-    },
+    raw: () => { throw new FormulaRuntimeError(DICE_BY_STEP); },
   },
   'максимум костей': {
     arity: '1+',

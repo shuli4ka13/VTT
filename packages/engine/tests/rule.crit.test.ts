@@ -47,7 +47,7 @@ const attack = (bonus?: string) => [
   { type: 'branch', if: { expr: 'не @удар.success' } }, { type: 'stop' }, { type: 'end' },
 ];
 const hurt = { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@урон' } };
-const damage = { id: 'урон', type: 'roll', fixed: { expr: "кинуть('2d6', если(@удар.natural >= 20, 2, 1))" } };
+const damage = { id: 'урон', type: 'roll', die: { expr: '2d6' }, times: { expr: 'если(@удар.natural >= 20, 2, 1)' } };
 
 const steps = [...attack(), damage, hurt];
 
@@ -91,7 +91,7 @@ group('доля величины: половина при удачном спа�
   const chain = (times: number) => [
     { id: 'спас_бросок', type: 'roll', die: 'к20', by: { expr: '@цель' } },
     { id: 'спас', type: 'check', value: { expr: '@спас_бросок' }, versus: { expr: '10' } },
-    { id: 'всего', type: 'roll', fixed: { expr: "кинуть('2d6')" } },
+    { id: 'всего', type: 'roll', die: { expr: '2d6' } },
     { id: 'урон', type: 'roll', fixed: { expr: `если(@спас.success, округлить вниз(@всего * ${times}), @всего)` } },
     hurt,
   ];
@@ -109,9 +109,9 @@ group('доля величины: половина при удачном спа�
   test('доля округляется вниз и видна в трассе', () => {
     const saved = run([15, 3, 4]);
     eq(saved.out.sheet.values.хиты, 27, 'семь пополам — три');
-    const whole = saved.out.trace.find(line => line.step === 'всего') as { fixed?: number };
+    const whole = saved.out.trace.find(line => line.step === 'всего') as { total?: number };
     const half = saved.out.trace.find(line => line.step === 'урон') as { fixed?: number };
-    eq(whole?.fixed, 7);
+    eq(whole?.total, 7);
     eq(half?.fixed, 3);
   });
 

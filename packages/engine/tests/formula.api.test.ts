@@ -30,11 +30,9 @@ group('интерфейс модуля формул', () => {
 });
 
 group('запись кости: вычисление и печать', () => {
-  test('кинуть(к4) отдаёт «кинуть» запись 1к4', () => {
-    const asked: string[] = [];
-    const value = compile('кинуть(к4) + 1').evaluate(() => 0, { roll: notation => { asked.push(notation); return 3; } });
-    eq(value, 4);
-    deepEq(asked, ['1к4']);
+  test('кинуть(к4) узнаётся и отвечает, что кости бросает шаг «Бросок»', () => {
+    const беда = throws(() => compile('кинуть(к4) + 1').evaluate(() => 0));
+    ok(String(беда.message).includes('шаг «Бросок»'), String(беда.message));
   });
 
   test('голая кость в арифметике — ошибка вычисления, не тихий ноль', () => {

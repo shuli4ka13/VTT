@@ -119,7 +119,7 @@ group('увидев кости', () => {
     const system = world({
       точная: {
         label: 'Точная', activation: 'passive',
-        on: [{ on: 'seen', confirm: true, if: { expr: `${mine} и @roll.total < 13` }, steps: [{ type: 'roll-plus', value: { expr: 'кинуть(к6)' } }] }],
+        on: [{ on: 'seen', confirm: true, if: { expr: `${mine} и @roll.total < 13` }, steps: [{ type: 'roll-plus', die: { expr: '1к6' } }] }],
       },
     });
     (system.effects.удар!.steps as unknown[])[1] = roll({ bonus: { expr: '8' } });
@@ -222,7 +222,7 @@ group('наблюдатели: реакции третьих лиц', () => {
 group('наблюдатели: по ревью', () => {
   test('два наблюдателя с одним эффектом бросают каждый свою кость', () => {
     const system = world({
-      порча: { label: 'Порча', activation: 'passive', on: [{ on: 'seen', if: { expr: '@бросающий != @носитель' }, steps: [{ type: 'roll-plus', value: { expr: "0 - кинуть('1d4')" } }] }] },
+      порча: { label: 'Порча', activation: 'passive', on: [{ on: 'seen', if: { expr: '@бросающий != @носитель' }, steps: [{ type: 'roll-plus', die: { expr: '1к4' }, minus: true }] }] },
     });
     const out = play(system, [sheet('а'), sheet('б'), sheet('в', ['порча']), sheet('г', ['порча'])], [14, 1, 4]);
     eq(hp(out, 'б'), 20, '14 − 1 − 4 = 9 — промах; с одинаковыми костями было бы 14 − 1 − 1 = 12 и попадание');
@@ -327,7 +327,7 @@ group('ядро: по ревью Fable', () => {
   });
 
   test('две копии в стопке — у каждой своя кость', () => {
-    const system = world({ порча: { label: 'Порча', activation: 'passive', reapply: 'stack', on: [{ on: 'seen', if: { expr: mine }, steps: [{ type: 'roll-plus', value: { expr: "0 - кинуть('1d4')" } }] }] } });
+    const system = world({ порча: { label: 'Порча', activation: 'passive', reapply: 'stack', on: [{ on: 'seen', if: { expr: mine }, steps: [{ type: 'roll-plus', die: { expr: '1к4' }, minus: true }] }] } });
     const out = play(system, [sheet('а', ['порча', 'порча']), sheet('б')], [14, 1, 4]);
     eq(hp(out, 'б'), 20, '14 − 1 − 4 = 9 — промах; с одной костью на обе было бы 12');
   });

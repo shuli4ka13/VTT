@@ -85,7 +85,7 @@ group('шаги «бросок» и «проверка»', () => {
   });
 
   test('провал — стоп в блоке «Если» обрывает цепочку, в журнале видно и проверку, и стоп', () => {
-    const out = run([...attack(), { id: 'после', type: 'roll', fixed: { expr: "кинуть('1d8')" } }],
+    const out = run([...attack(), { id: 'после', type: 'roll', die: { expr: '1d8' } }],
       { die: queue(2, 5) });
     eq(out.stopped.reason, 'stop');
     eq(out.stopped.step, 4, 'оборвал шаг «Стоп» — пятый в цепочке после «Для каждой цели»');
@@ -155,7 +155,7 @@ group('шаги «бросок» и «проверка»', () => {
 
 group('шаг «бросок» без «бросает»: расчёт', () => {
   test('своя кость: кость из записи оружия плюс слагаемое-выражение', () => {
-    const out = run([{ id: 'dmg', type: 'roll', fixed: { expr: 'кинуть(@damage_dice) + @действующий.str_mod' } }],
+    const out = run([{ id: 'dmg', type: 'roll', die: { expr: '@damage_dice' }, bonus: { expr: '@действующий.str_mod' } }],
       { die: queue(5), props: { damage_dice: '1d8' }, ...viaInput('damage_dice', 'dice') });
     eq(out.results.dmg.total, 8, 'кость 5 плюс Сила 3');
     eq(out.trace[0].total, 8);
@@ -184,7 +184,7 @@ group('шаг «бросок» без «бросает»: расчёт', () => {
 
   test('на расчёт правки броска не действуют: кость урона не знает про помеху', () => {
     const poisoned = { ...arven, effects: [{ effectId: 'poisoned' }] };
-    const out = run([{ id: 'dmg', type: 'roll', fixed: { expr: "кинуть('1d8')" } }], { sender: poisoned, die: queue(5) });
+    const out = run([{ id: 'dmg', type: 'roll', die: { expr: '1d8' } }], { sender: poisoned, die: queue(5) });
     deepEq(out.trace[0].rolls, [5]);
   });
 });

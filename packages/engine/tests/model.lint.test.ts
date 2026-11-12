@@ -1081,12 +1081,19 @@ group('линт: двойники полей по подписи', () => {
   });
 });
 
-group('линт: кинуть уже выпавшее число', () => {
-  test('«кинуть(@шаг-бросок)» — ошибка; «кинуть(@вход)» с костью — нет', () => {
+group('линт: кинуть в формуле', () => {
+  test('«кинуть» в формуле шага — одна ошибка про шаг «Бросок», с любым аргументом', () => {
     const roll = { id: 'число', type: 'roll', die: 'd20' } as unknown as Step;
-    const bad = withEffect('удар', { params: [WHO as never], steps: [roll, mend('@действующий.hp', 'кинуть(@число)')] });
-    ok(errorTexts(bad).some(t => t.includes('уже выпавшее число')), errorTexts(bad).join('\n'));
-    const good = withEffect('удар', { params: [WHO as never, { key: 'кость', label: 'Кость', kind: 'text', default: '1к6' } as never], steps: [roll, mend('@действующий.hp', 'кинуть(@кость)')] });
-    ok(!errorTexts(good).some(t => t.includes('уже выпавшее число')), errorTexts(good).join('\n'));
+    const text = 'кости бросает шаг «Бросок»';
+    for (const expr of ['кинуть(@число)', 'кинуть(@кость)', "кинуть('1к6')"]) {
+      const bad = withEffect('удар', { params: [WHO as never, { key: 'кость', label: 'Кость', kind: 'text', default: '1к6' } as never], steps: [roll, mend('@действующий.hp', expr)] });
+      eq(errorTexts(bad).filter(t => t.includes(text)).length, 1, errorTexts(bad).join('\n'));
+    }
+  });
+
+  test('шаг «Бросок» с костью вместо «кинуть» — без ошибок про кости', () => {
+    const roll = { id: 'число', type: 'roll', die: { expr: '@кость' } } as unknown as Step;
+    const good = withEffect('удар', { params: [WHO as never, { key: 'кость', label: 'Кость', kind: 'text', default: '1к6' } as never], steps: [roll, mend('@действующий.hp', '@число')] });
+    ok(!errorTexts(good).some(t => t.includes('кости бросает')), errorTexts(good).join('\n'));
   });
 });

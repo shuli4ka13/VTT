@@ -3,7 +3,6 @@ import { withKeep, times as timesOf, addendsText } from '../../core/dice.ts';
 import { dieSpec } from '../../core/dice-addend.ts';
 import type { DieReader } from '../../core/dice-addend.ts';
 import type { RollResult, Spec } from '../../core/dice.ts';
-import type { Die } from '../../model/types.ts';
 import type { StepData, StepContext } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 import { keepRecord } from '../../core/against.ts';
@@ -56,10 +55,6 @@ export function tagsOf(raw: unknown, ctx: StepContext): string[] {
     if (Array.isArray(value)) return value.map(String);
     return value === null || value === undefined || value === '' ? [] : [String(value)];
   }))];
-}
-
-function watched(ctx: StepContext, thrown: { sides: number; value: number }[]): Die {
-  return sides => { const value = ctx.die(sides); thrown.push({ sides, value }); return value; };
 }
 
 export interface Rolled extends RollResult {
@@ -116,12 +111,10 @@ export function finish(step: StepData, ctx: StepContext) {
   const bonus = ctx.optional(step.bonus, 'прибавка броска') ?? 0;
   const shown = step.bonus !== undefined && step.bonus !== null ? { ref: step.bonus, value: bonus } : undefined;
   const thrown = step.die !== undefined && step.die !== null ? ctx.roll(specOf(ctx, step.die, step.count, by, step.times, { n: step.keep, worst: step.keepWorst === true }), tags, by, against, shown) : null;
-  const formula: { sides: number; value: number }[] = [];
-  const fixed = step.fixed !== undefined && step.fixed !== null ? ctx.using(watched(ctx, formula)).optional(step.fixed, 'формула броска') ?? 0 : 0;
+  const fixed = step.fixed !== undefined && step.fixed !== null ? ctx.optional(step.fixed, 'формула броска') ?? 0 : 0;
   const base: RollResult = thrown ? thrown.result : {
-    total: 0, natural: formula.reduce((sum, one) => sum + one.value, 0), rolled: formula.length,
-    atMax: formula.filter(one => one.value === one.sides).length, atMin: formula.filter(one => one.value === 1).length,
-    edited: false, dice: { rolls: formula.map(one => one.value), kept: null }, parts: {}, tags,
+    total: 0, natural: 0, rolled: 0, atMax: 0, atMin: 0,
+    edited: false, dice: { rolls: [], kept: null }, parts: {}, tags,
   };
   const total = (thrown ? thrown.result.total : 0) + fixed + bonus;
   const roll: Rolled = {

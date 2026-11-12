@@ -142,14 +142,15 @@ describe('новое ядро: сознательные изменения', () 
     expect(second.sheets.find(s => s.id === 'б')!.effects).toEqual([{ effectId: 'парир', usesLeft: 1 }]);
   });
 
-  it('кинуть() в прибавке броска бросает свою кость, а не делит ключ с ведущей', () => {
+  it('кость прибавки к броску бросает свою кость, а не делит ключ с ведущей', () => {
     const system = world({
+      благо: { label: 'Благо', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', die: { expr: '1к4' }, if: { expr: '@бросающий == @носитель' } }] },
       удар: button([
-        { id: 'бр', type: 'roll', die: 'к20', bonus: { expr: "кинуть('1к4')" }, by: { expr: '@действующий' } },
+        { id: 'бр', type: 'roll', die: 'к20', by: { expr: '@действующий' } },
         { id: 'б', type: 'check', value: { expr: '@бр' }, versus: { expr: '100' } },
       ]),
     });
-    const out = play(system, [sheet('а'), sheet('б')], 'б', [15, 3]);
+    const out = play(system, [sheet('а', {}, [{ effectId: 'благо' }]), sheet('б')], 'б', [15, 3]);
     expect(out.kind).toBe('done');
     expect(JSON.stringify(out.entries)).toContain('"total":18');
   });
@@ -167,7 +168,7 @@ describe('новое ядро: сознательные изменения', () 
   it('«при наложении» двух копий одним действием — у каждой своя кость', () => {
     const system = world({
       удар: button([{ type: 'status', effect: 'яд', to: { expr: '@цель' } }, { type: 'status', effect: 'яд', to: { expr: '@цель' } }]),
-      яд: { label: 'Яд', activation: 'passive', reapply: 'stack', attach: [hit("кинуть('1к6')", '@носитель.хп')] },
+      яд: { label: 'Яд', activation: 'passive', reapply: 'stack', attach: [{ id: 'к', type: 'roll', die: { expr: '1к6' } }, hit('@к', '@носитель.хп')] },
     });
     const out = play(system, [sheet('а'), sheet('б')], 'б', [3, 4]);
     expect(value(out, 'б', 'хп')).toBe(13);

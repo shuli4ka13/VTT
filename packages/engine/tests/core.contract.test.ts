@@ -53,7 +53,7 @@ const strike = (system: System, sheets: Sheet[], to: string, dice: number[], ext
 
 describe('режимы операции', () => {
   const system = world({
-    удар: button([sub("кинуть('1к6')")]),
+    удар: button([{ id: 'к', type: 'roll', die: { expr: '1к6' } }, sub('@к')]),
     щит: { label: 'Щит', activation: 'passive', on: [{ on: 'before:удар', if: { expr: '@цель == @носитель' }, confirm: true, steps: [] }] },
   });
   const sheets = [sheet('а'), sheet('б', {}, ['щит'])];

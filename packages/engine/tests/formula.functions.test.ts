@@ -9,7 +9,7 @@ const at = (before: string) => {
 
 group('реестр функций', () => {
   test('описана каждая функция языка и ничего лишнего, плюс «если»', () => {
-    deepEq(FUNCTIONS.map(one => one.name).filter(name => name !== 'если').sort(), [...FUNCTION_NAMES].sort());
+    deepEq(FUNCTIONS.map(one => one.name).filter(name => name !== 'если').sort(), [...FUNCTION_NAMES].filter(name => name !== 'кинуть').sort());
   });
 
   test('курсор внутри вызова: какая функция и какая её часть', () => {

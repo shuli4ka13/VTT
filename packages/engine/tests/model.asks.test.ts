@@ -20,7 +20,7 @@ const system = {
       ],
       steps: [
         { type: 'each', of: 'цели' },
-        { id: 'урон', type: 'roll', fixed: { expr: 'кинуть(@кость)' } },
+        { id: 'урон', type: 'roll', die: { expr: '@кость' } },
         { type: 'apply', target: { expr: '@цель.hp' }, direction: 'subtract', value: { expr: '@урон' } },
         { type: 'apply', target: { expr: '@цель.hp' }, direction: 'subtract', value: { expr: '@дистанция' } },
       ],

@@ -183,9 +183,9 @@ function rowsOfTable(system: System, pass: Pass, name: string, column: string, o
   return (table.rows ?? []).map(row => readCell(system, pass, name, row.value, column, owner) as Value);
 }
 
-export function toolsOf(system: System, pass: Pass, owner: string, die?: Die): Tools {
+export function toolsOf(system: System, pass: Pass, owner: string): Tools {
   return {
-    ...diceTools(die),
+    ...diceTools(),
     table: (name, key, column) => {
       const read = (one: unknown) => readCell(system, pass, name, one, column ?? VALUE_COLUMN, owner);
       if (!Array.isArray(key)) return read(key) as Value;
@@ -275,17 +275,12 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
     }
     return ctx.pass.resolve(name);
   };
-  const tools = toolsOf(system, ctx.pass, who(ctx), ctx.die);
+  const tools = toolsOf(system, ctx.pass, who(ctx));
   if (ctx.sheets) {
     const owns = (head: string): boolean => head in results || head in (ctx.sheets?.bound ?? {}) || (ctx.paramDefs ?? []).some(param => param.key === head) || (Boolean(ctx.item) && head === ITEM_NAME);
-    scope = { resolve, seen: new Set(), owns, tools: { ...tools, roll: () => { throw new EngineError(`${who(ctx)}: «кинуть» в клетке таблицы нельзя — кости бросает шаг эффекта`); } } };
+    scope = { resolve, seen: new Set(), owns, tools };
   }
-  return compile(String(expr)).evaluate(resolve, {
-    ...tools,
-    roll: tools.roll ?? (() => {
-      throw new EngineError(`${who(ctx)}: «кинуть» здесь нельзя — кости бросает только шаг эффекта`);
-    }),
-  });
+  return compile(String(expr)).evaluate(resolve, tools);
 }
 
 export function lonelyField(ref: unknown, system?: System): string | null {

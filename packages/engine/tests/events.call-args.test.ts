@@ -19,7 +19,7 @@ const system = {
         { key: 'сколько', label: 'Сколько костей', kind: 'number' },
       ],
       steps: [
-        { id: 'н', type: 'roll', fixed: { expr: 'кинуть(@кость, @сколько)' } },
+        { id: 'н', type: 'roll', die: { expr: '@кость' }, count: { expr: '@сколько' } },
         { type: 'apply', target: { expr: '@лист.хп' }, direction: 'subtract', value: { expr: '@н' } },
       ],
     },
@@ -66,7 +66,7 @@ group('вызов передаёт вызванному его входы', () =
     sidesSeen.length = 0;
     const { report } = hit('секира:0', 6);
     eq(JSON.stringify(sidesSeen), '[12,12]', 'грани берутся из записи оружия');
-    const число = report.trace.find((t: Record<string, unknown>) => Array.isArray(t.rolls) && t.fixed !== undefined) as Record<string, unknown>;
+    const число = report.trace.find((t: Record<string, unknown>) => t.step === 'н') as Record<string, unknown>;
     ok(число, JSON.stringify(report.trace));
     eq(JSON.stringify(число.rolls), '[6,6]', 'кость 1d12 из записи, брошенная дважды');
     eq(число.total, 12);

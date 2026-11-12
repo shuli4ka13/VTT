@@ -197,7 +197,7 @@ const PARAMETRIC = {
       by: { expr: '@действующий' } },
     { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '@versus или @цель.ac' } },
     { type: 'branch', if: { expr: 'не @hit.success' } }, { type: 'stop' }, { type: 'end' },
-    { id: 'dmg', type: 'roll', fixed: { expr: 'кинуть(@damage_dice)' }, bonus: { expr: '@damage_bonus' } },
+    { id: 'dmg', type: 'roll', die: { expr: '@damage_dice' }, bonus: { expr: '@damage_bonus' } },
     { type: 'apply', target: { expr: '@цель.hp_current' }, direction: 'subtract',
       value: { expr: '@dmg' } },
   ],

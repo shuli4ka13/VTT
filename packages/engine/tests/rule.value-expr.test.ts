@@ -37,7 +37,7 @@ const runRule = (sys: any, rule: any, sender: any, target: any, die: () => numbe
 const run = (expr: string, ...dice: number[]) => {
   const rule: any = {
     steps: [
-      { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d8')" } },
+      { id: 'урон', type: 'roll', die: { expr: '1d8' } },
       { type: 'apply', target: { expr: '@цель.хп' }, direction: 'set', value: { expr } },
     ],
   };
@@ -73,7 +73,7 @@ group('новое значение поля — выражение', () => {
     const collide: any = withColumn(sys as never, { key: 'урон', label: 'Урон в листе', kind: 'number', default: 100 });
     const rule: any = {
       steps: [
-        { id: 'урон', type: 'roll', fixed: { expr: "кинуть('1d8')" } },
+        { id: 'урон', type: 'roll', die: { expr: '1d8' } },
         { type: 'apply', target: { expr: '@цель.хп' }, direction: 'set', value: { expr: '@урон' } },
       ],
     };

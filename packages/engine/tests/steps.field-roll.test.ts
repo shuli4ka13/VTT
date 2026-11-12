@@ -122,11 +122,11 @@ group('бросок поля в эффекте: кость, успех и сте
   });
 });
 
-group('кость системы в формуле', () => {
-  const system = build([EACH, { id: 'урон', type: 'roll', fixed: { expr: 'кинуть(@к100) + 1' } },
+group('кость системы в шаге «Бросок»', () => {
+  const system = build([EACH, { id: 'урон', type: 'roll', die: 'к100', bonus: { expr: '1' } },
     { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '@урон' } }]);
 
-  test('«кинуть» читает кость по имени, проверка системы её принимает', () => {
+  test('шаг читает кость по имени, проверка системы её принимает', () => {
     deepEq(errorsOf(lintSystem(system, book)).map(p => p.text), []);
     eq(fight(system, 40, 40, [7]).hp, 2);
   });
@@ -154,10 +154,9 @@ group('проверка системы: бросок', () => {
     deepEq(texts(own), []);
   });
 
-  test('кость с настройками в «кинуть» и кость с формулой в одном шаге', () => {
-    const minus = one({ id: 'ч', type: 'roll', fixed: { expr: 'кинуть(@к100) + 1' } });
-    (minus.constants!.к100 as { dice: { minus?: boolean }[] }).dice[0]!.minus = true;
-    ok(texts(minus)[0]!.includes('в формуле не бросить'));
+  test('«кинуть» в формуле — ошибка про шаг «Бросок», и кость с формулой в одном шаге', () => {
+    const thrown = one({ id: 'ч', type: 'roll', fixed: { expr: 'кинуть(@к100) + 1' } });
+    ok(texts(thrown)[0]!.includes('кости бросает шаг «Бросок»'), texts(thrown).join('\n'));
     deepEq(texts(one({ id: 'ч', type: 'roll', die: 'к100', fixed: { expr: '1' } })), ['кость и формула в одном шаге — формулу перенесите в прибавку']);
   });
 });

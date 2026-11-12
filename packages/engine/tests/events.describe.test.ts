@@ -27,7 +27,7 @@ const system = {
         { type: 'each', of: 'цели' },
         { id: 'бросок', type: 'roll', die: { expr: '"1к20"' }, tags: ['спас'], by: { expr: '@цель' } },
         { id: 'п', type: 'check', value: { expr: '@бросок' }, versus: { expr: '@цель.броня' } },
-        { id: 'в', type: 'roll', fixed: { expr: "кинуть('8к6')" } },
+        { id: 'в', type: 'roll', die: { expr: '8к6' } },
       ],
     },
   },
@@ -79,7 +79,7 @@ group('журнал говорит словами стола, а не движк
   test('половина при успехе видна в строке: сколько выпало и сколько осталось', () => {
     const half = { ...system, effects: { шаблон: { ...(system.effects as any).шаблон,
       steps: [
-        { id: 'в', type: 'roll', fixed: { expr: "кинуть('8к6')" } },
+        { id: 'в', type: 'roll', die: { expr: '8к6' } },
         { id: 'ост', type: 'roll', fixed: { expr: 'округлить вниз(@в / 2)' } },
       ] } } } as unknown as System;
     const trace = [

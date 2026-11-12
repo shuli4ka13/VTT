@@ -4,6 +4,7 @@ import { paymentsOf } from './payments.ts';
 import { loopOf, loopParam } from '../engine/steps/each.ts';
 import { tagWords } from '../engine/roll-tags.ts';
 import { ROLL_CALL } from '../words/calls.ts';
+import { DICE_TEXT } from '../words/glossary.ts';
 import { STEP_WORDS, type StepWords } from '../words/steps.ts';
 import type { System, Compendium, Effect, Step, Modifier, Guard, Param, Table } from './types.ts';
 import { compile, FUNCTION_NAMES } from '../formula/index.ts';
@@ -159,7 +160,7 @@ function slotRefs(value: unknown, slotKind: string | undefined, from: Where, sco
   }
   if (typeof value === 'string') {
     const kind = NAMED[slotKind ?? ''];
-    if (kind && value) out.push({ kind, key: value, from });
+    if (kind && value && !(kind === 'constant' && DICE_TEXT.test(value.trim()))) out.push({ kind, key: value, from });
     return;
   }
   if (typeof value !== 'object') return;

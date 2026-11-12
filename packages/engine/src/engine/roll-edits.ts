@@ -19,7 +19,7 @@ const LABELS: Record<string, string> = {
 export const editPalette = (): { key: string; label: string; op: RollEditOp }[] => [
   { key: 'addDie', label: 'добавить кость в набор', op: { op: 'addDie' } },
   { key: 'wild', label: 'дикий кубик: 5–6 — три успеха, 1 гасит пятёрки', op: { op: 'wild' } },
-  { key: 'plus', label: 'прибавить к итогу…', op: { op: 'plus', value: { expr: 'кинуть(к6)' } } },
+  { key: 'plus', label: 'прибавить к итогу…', op: { op: 'plus', die: '1к6' } },
   { key: 'floorDie', label: 'считать не меньше…', op: { op: 'floorDie', least: 10 } },
   { key: 'keepBest', label: 'оставить лучшую', op: { op: 'keepBest', n: 1 } },
   { key: 'keepWorst', label: 'оставить худшую', op: { op: 'keepWorst', n: 1 } },
