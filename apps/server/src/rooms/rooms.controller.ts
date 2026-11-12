@@ -1,5 +1,5 @@
 import { seenBy } from './visibility.ts';
-import { Controller, Get, Post, Put, Body, Param, Headers, UsePipes, Inject } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Headers, UsePipes, Inject } from '@nestjs/common';
 import { RoomsService } from './rooms.service.ts';
 import { WorldsService } from '../worlds/worlds.service.ts';
 import { AuthService } from '../auth/auth.service.ts';
@@ -50,6 +50,13 @@ export class RoomsController {
   async createRoom(@Body() body: CreateRoomRequest, @Headers('authorization') header?: string) {
     const { userId } = await this.auth.whoIs(bearer(header));
     return this.roomsService.create(userId, body.worldId, body.title);
+  }
+
+  @Delete('rooms/:id')
+  async close(@Param('id') id: string, @Headers('authorization') header?: string) {
+    const { userId } = await this.auth.whoIs(bearer(header));
+    await this.roomsService.close(userId, id);
+    return { ok: true };
   }
 
   @Post('rooms/:id/join')

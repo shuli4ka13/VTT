@@ -7,6 +7,7 @@ export interface RoomRow { id: string; title: string; worldId: string; system: s
 export interface Commit {
   roomId: string;
   sheets?: Sheet[];
+  gone?: string[];
   clock?: ClockState;
   pending?: { id: string; data: string } | null;
   log?: { id: string; at: string; text: string; lines?: string | null; hidden: boolean }[];
@@ -46,6 +47,20 @@ export class RoomStore {
       .map(row => ({ id: row.id, at: row.at, text: row.text, ...(row.lines ? { lines: JSON.parse(row.lines) as string[] } : {}), ...(row.hidden ? { hidden: true } : {}) }));
   }
 
+  close(roomId: string): void {
+    this.raw.exec('BEGIN');
+    try {
+      for (const table of ['room_sheets', 'room_clocks', 'room_pending', 'room_journal', 'members', 'log_entries']) {
+        this.raw.prepare(`DELETE FROM ${table} WHERE room_id = ?`).run(roomId);
+      }
+      this.raw.prepare('DELETE FROM rooms WHERE id = ?').run(roomId);
+      this.raw.exec('COMMIT');
+    } catch (err) {
+      this.raw.exec('ROLLBACK');
+      throw err;
+    }
+  }
+
   commit(change: Commit): void {
     const { roomId } = change;
     this.raw.exec('BEGIN');
@@ -54,6 +69,10 @@ export class RoomStore {
         const known = this.raw.prepare('SELECT 1 FROM room_sheets WHERE room_id = ? AND sheet_id = ?').get(roomId, sheet.id);
         if (known) this.raw.prepare('UPDATE room_sheets SET data = ? WHERE room_id = ? AND sheet_id = ?').run(JSON.stringify(sheet), roomId, sheet.id);
         else this.raw.prepare('INSERT INTO room_sheets (room_id, sheet_id, data) VALUES (?, ?, ?)').run(roomId, sheet.id, JSON.stringify(sheet));
+      }
+      for (const id of change.gone ?? []) {
+        this.raw.prepare('DELETE FROM room_sheets WHERE room_id = ? AND sheet_id = ?').run(roomId, id);
+        this.raw.prepare('UPDATE members SET sheet_id = NULL WHERE room_id = ? AND sheet_id = ?').run(roomId, id);
       }
       if (change.clock) {
         this.raw.prepare('DELETE FROM room_clocks WHERE room_id = ?').run(roomId);

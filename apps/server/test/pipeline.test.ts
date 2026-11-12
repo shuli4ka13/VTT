@@ -181,10 +181,12 @@ describe('конвейер: журнал ходов', () => {
     await answerAll(await first.rooms.setBelonging(me, r, 'б', 'effects', 'яд', true), []);
     await first.rooms.setValue(me, r, 'б', 'хп', 7);
     await first.rooms.createSheet(me, r, 'Новичок');
+    const extra = await first.rooms.createSheet(me, r, 'Лишний');
+    await first.rooms.dropSheet(me, r, extra.sheets[0]!.id);
     await first.rooms.turn(me, { roomId: r, op: 'start', order: ['а', 'б'] });
     await answerAll(await first.rooms.turn(me, { roomId: r, op: 'next' }), ['вдох']);
     const written = await first.rooms.journal(me, r);
-    expect(written.map(e => e.op)).toEqual(expect.arrayContaining(['act', 'roll', 'answer', 'cancel', 'belonging', 'set', 'sheet', 'turn']));
+    expect(written.map(e => e.op)).toEqual(expect.arrayContaining(['act', 'roll', 'answer', 'cancel', 'belonging', 'set', 'sheet', 'drop', 'turn']));
 
     const tape = written.flatMap(e => e.dice);
     let at = 0;
@@ -201,6 +203,7 @@ describe('конвейер: журнал ходов', () => {
         case 'belonging': await s.setBelonging(entry.userId, second.roomId, input.sheetId, input.list, input.id, input.on, input.off); break;
         case 'set': await s.setValue(entry.userId, second.roomId, input.sheetId, input.tag, input.value); break;
         case 'sheet': await s.createSheet(entry.userId, second.roomId, input.name, input.of); break;
+        case 'drop': await s.dropSheet(entry.userId, second.roomId, input.sheetId); break;
         case 'turn': await s.turn(entry.userId, input); break;
         default: throw new Error(`неизвестный ход ${entry.op}`);
       }
