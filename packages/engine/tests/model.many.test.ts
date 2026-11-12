@@ -3,7 +3,9 @@ import { compile } from '../src/formula/index.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { rowUsers, danglingRows, renameRow, renameRowInBook } from '../src/model/integrity.ts';
 import { bindingHolds } from '../src/events/actions.ts';
-import type { System, Compendium } from '../src/model/types.ts';
+import type { System, Compendium, Sheet } from '../src/model/types.ts';
+import { calc } from '../src/engine/calc.ts';
+import { errorsOf, lintSystem } from '../src/model/lint.ts';
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 
@@ -58,5 +60,49 @@ group('условие кнопки по колонке основы типа з�
     const binding = { label: 'Выстрел', effect: 'выстрел', if: { expr: '@ammo > 0' } } as never;
     eq(bindingHolds(system, { id: 'пистолет', table: 'оружие', label: 'Пистолет', cells: {} } as never, binding), true);
     eq(bindingHolds(system, { id: 'пустой', table: 'оружие', label: 'Пустой', cells: { ammo: 0 } } as never, binding), false);
+  });
+});
+
+group('прибавка навыку, если фракция листа — среди фракций навыка', () => {
+  const система = (итог: string) => ({
+    id: 'w', name: 'w', constants: {}, effects: {},
+    tables: {
+      лист: { shape: 'single', columns: [{ kind: 'choice', from: 'фракции', key: 'фракция', label: 'Фракция' }] },
+      фракции: { label: 'Фракции', key: 'word', columns: [{ kind: 'number', key: 'мод', label: 'Модификатор' }],
+        rows: [{ value: 'инквизиция', cells: { мод: 5 } }, { value: 'флот', cells: { мод: 10 } }] },
+      навыки: { label: 'Навыки', owner: 'sheet', key: 'word', columns: [
+        { kind: 'choice', from: 'фракции', many: true, key: 'свои', label: 'Фракции навыка' },
+        { kind: 'number', key: 'итог', label: 'Итог', expr: { expr: итог } },
+      ], rows: [{ value: 'атлетика', cells: { свои: ['инквизиция'] } }, { value: 'стрельба', cells: { свои: ['инквизиция', 'флот'] } }] },
+    },
+  }) as unknown as System;
+  const лист = (фракция?: string) => ({ id: 'я', systemId: 'w', name: 'я', values: фракция ? { фракция } : {}, has: [], effects: [] }) as unknown as Sheet;
+
+  test('по списку дальше не пройти — «Проблемы» говорят подписями, что делать: и у вписанного списка, и у вводимого', () => {
+    const вписан = система('10 + @строка.свои.мод');
+    const вводят = система('10 + @строка.свои.мод') as unknown as { tables: Record<string, { rows: Record<string, unknown>[] }> };
+    вводят.tables.навыки!.rows[0] = { value: 'атлетика', view: { свои: { default: ['инквизиция'] } } };
+    for (const мир of [вписан, вводят as unknown as System]) {
+      const [беда] = errorsOf(lintSystem(мир));
+      ok(беда, 'ошибка есть');
+      ok(беда!.text.includes('в «Фракции навыка» несколько значений'), беда!.text);
+      ok(беда!.text.includes('брать «Модификатор»'), беда!.text);
+      ok(беда!.text.includes('есть(«Фракции навыка»'), беда!.text);
+    }
+  });
+
+  test('«есть» сравнивает фракцию листа со списком навыка', () => {
+    const верная = система('10 + если(есть(@строка.свои, @фракция), @фракция.мод, 0)');
+    eq(errorsOf(lintSystem(верная)).length, 0);
+    eq(calc(верная, лист('инквизиция'), 'навыки.атлетика.итог'), 15);
+    eq(calc(верная, лист('флот'), 'навыки.атлетика.итог'), 10);
+    eq(calc(верная, лист(), 'навыки.атлетика.итог'), 10);
+  });
+
+  test('вписанный в строку список из двух фракций приходит в формулу списком, а не текстом через запятую', () => {
+    const верная = система('10 + если(есть(@строка.свои, @фракция), @фракция.мод, 0)');
+    eq(calc(верная, лист('инквизиция'), 'навыки.стрельба.итог'), 15);
+    eq(calc(верная, лист('флот'), 'навыки.стрельба.итог'), 20);
+    eq(calc(верная, лист('флот'), 'навыки.атлетика.итог'), 10);
   });
 });

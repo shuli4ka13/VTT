@@ -1,4 +1,4 @@
-import { fieldOf, fieldsOf, fieldLinkOf, hasField, rowKeyOf } from './sheet-columns.ts';
+import { fieldOf, fieldsOf, fieldLinkOf, hasField, rowKeyOf, manyText } from './sheet-columns.ts';
 import { linkOf, isRange, VALUE_COLUMN } from './tables.ts';
 import type { System, TableColumn } from './types.ts';
 import { typeColumn, typeColumns } from './inherit.ts';
@@ -26,9 +26,9 @@ export function walkColumns(system: System, tableId: string, path: readonly stri
     labels.push(columnName(column));
     if (last) break;
     const link = nextTable(column);
+    if (column.many) return { ok: false, text: manyText(system, column, path[at + 1]!) };
     if (!link) {
-      const why = column.many ? 'список' : 'не из таблицы';
-      return { ok: false, text: `колонка «${columnName(column)}» — ${why}, дальше «${path.slice(at + 1).join('.')}» идти некуда` };
+      return { ok: false, text: `колонка «${columnName(column)}» — не из таблицы, дальше «${path.slice(at + 1).join('.')}» идти некуда` };
     }
     current = link;
   }
