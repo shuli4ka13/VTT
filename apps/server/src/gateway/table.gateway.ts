@@ -21,6 +21,10 @@ export class TableGateway {
     @Inject(AuthService) private readonly auth: AuthService,
   ) {
     this.roomsService.onDelta(delta => this.broadcast(delta.roomId, { type: 'room:delta', delta }));
+    this.roomsService.onClose(roomId => {
+      this.broadcast(roomId, { type: 'room:closed', roomId });
+      for (const guest of this.guests) if (guest.roomId === roomId) this.guests.delete(guest);
+    });
   }
 
   @SubscribeMessage('room:join')
@@ -148,6 +152,23 @@ export class TableGateway {
     try {
       await this.roomsService.createSheet(
         guest.userId, parsed.data.roomId, parsed.data.name, parsed.data.of);
+    } catch (err) {
+      this.fail(socket, (err as Error).message);
+    }
+  }
+
+  @SubscribeMessage('sheet:drop')
+  async dropSheet(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
+    const guest = this.guestOf(socket);
+    if (!guest) return this.fail(socket, 'сначала войдите в комнату');
+
+    const parsed = api.clientMessage.safeParse({ type: 'sheet:drop', ...(raw as object) });
+    if (!parsed.success || parsed.data.type !== 'sheet:drop') {
+      return this.fail(socket, 'удаление листа не проходит схему');
+    }
+    try {
+      await this.roomsService.dropSheet(guest.userId, parsed.data.roomId, parsed.data.sheetId);
+      await this.announceMembers(parsed.data.roomId);
     } catch (err) {
       this.fail(socket, (err as Error).message);
     }

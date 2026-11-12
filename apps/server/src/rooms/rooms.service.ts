@@ -50,6 +50,7 @@ const missing = (message: string): boolean => /^в комнате нет лис�
 export class RoomsService {
   private readonly store: RoomStore;
   private readonly listeners = new Set<(delta: RoomDelta) => void>();
+  private readonly closers = new Set<(roomId: string) => void>();
   private readonly queues = new Map<string, Promise<unknown>>();
 
   constructor(
@@ -68,6 +69,20 @@ export class RoomsService {
     return () => this.listeners.delete(listener);
   }
 
+  onClose(listener: (roomId: string) => void): () => void {
+    this.closers.add(listener);
+    return () => this.closers.delete(listener);
+  }
+
+  close(userId: string, roomId: string): Promise<void> {
+    return this.inTurn(roomId, () => {
+      const room = this.requireRoom(roomId);
+      this.allow(room, userId, { kind: 'close' });
+      this.store.close(roomId);
+      for (const listener of this.closers) listener(roomId);
+    });
+  }
+
   private worldOf(room: RoomRow): { system: System; compendium: Compendium } {
     return { system: flattenSystem(JSON.parse(room.system) as System), compendium: JSON.parse(room.compendium) as Compendium };
   }
@@ -75,21 +90,25 @@ export class RoomsService {
   async create(userId: string, worldId: string, title: string): Promise<RoomSummary> {
     const world = await this.worldsService.get(worldId);
     const id = this.newId();
+    const createdAt = this.now();
     await this.db.insert(rooms).values({
-      id, title, worldId, system: JSON.stringify(world.system), compendium: JSON.stringify(world.compendium), createdAt: this.now(),
+      id, title, worldId, system: JSON.stringify(world.system), compendium: JSON.stringify(world.compendium), createdAt,
     });
     const withDesk = hasDesk(world.system) && !deskOf(world.sheets)
       ? [...world.sheets, { id: DESK_ID, systemId: world.system.id, name: 'Стол', values: {}, has: [], effects: [] } as Sheet]
       : world.sheets;
     for (const sheet of withDesk) await this.db.insert(roomSheets).values({ roomId: id, sheetId: sheet.id, data: JSON.stringify(sheet) });
     await this.db.insert(members).values({ roomId: id, userId, role: 'gm', sheetId: null });
-    return { id, title, worldId, memberCount: 1 };
+    const [me] = await this.db.select().from(users).where(eq(users.id, userId));
+    return { id, title, worldId, memberCount: 1, createdAt, gmName: me?.name ?? 'неизвестен', gm: true };
   }
 
-  async join(userId: string, roomId: string): Promise<void> {
-    this.requireRoom(roomId);
-    if (this.store.members(roomId).some(member => member.userId === userId)) return;
-    await this.db.insert(members).values({ roomId, userId, role: 'player', sheetId: null });
+  join(userId: string, roomId: string): Promise<void> {
+    return this.inTurn(roomId, async () => {
+      this.requireRoom(roomId);
+      if (this.store.members(roomId).some(member => member.userId === userId)) return;
+      await this.db.insert(members).values({ roomId, userId, role: 'player', sheetId: null });
+    });
   }
 
   async state(roomId: string): Promise<RoomState> {
@@ -167,6 +186,10 @@ export class RoomsService {
       { op: 'belonging', sheetId, list, id, on, ...(off !== undefined ? { off } : {}), ...extra }, false);
   }
 
+  dropSheet(userId: string, roomId: string, sheetId: string): Promise<RoomDelta> {
+    return this.world(roomId, userId, 'drop', { sheetId }, { op: 'drop', sheetId }, false);
+  }
+
   setSheetKind(userId: string, roomId: string, sheetId: string, of: string | null): Promise<RoomDelta> {
     return this.world(roomId, userId, 'kind', { sheetId, of }, { op: 'kind', sheetId, of }, false);
   }
@@ -238,9 +261,17 @@ export class RoomsService {
   async listFor(userId: string): Promise<RoomSummary[]> {
     const all = await this.db.select().from(rooms).orderBy(desc(rooms.createdAt));
     const seats = await this.db.select().from(members);
+    const names = new Map((await this.db.select().from(users)).map(user => [user.id, user.name]));
     const mine = new Set(seats.filter(m => m.userId === userId).map(m => m.roomId));
     return all
-      .map(room => ({ id: room.id, title: room.title, worldId: room.worldId, memberCount: seats.filter(m => m.roomId === room.id).length }))
+      .map(room => {
+        const at = seats.filter(m => m.roomId === room.id);
+        const gm = at.find(m => m.role === 'gm');
+        return {
+          id: room.id, title: room.title, worldId: room.worldId, memberCount: at.length, createdAt: room.createdAt,
+          gmName: gm ? names.get(gm.userId) ?? 'неизвестен' : '—', gm: gm?.userId === userId,
+        };
+      })
       .sort((a, b) => Number(mine.has(b.id)) - Number(mine.has(a.id)));
   }
 
@@ -289,18 +320,20 @@ export class RoomsService {
       if (err instanceof EngineError && missing(message)) throw new NotFoundException(message);
       throw new BadRequestException(message);
     }
-    const sheets = this.changed(this.store.sheets(room.id), out.sheets);
+    const was = this.store.sheets(room.id);
+    const sheets = this.changed(was, out.sheets);
+    const gone = was.filter(sheet => !out.sheets.some(next => next.id === sheet.id)).map(sheet => sheet.id);
     const log = this.lines(out.log.slice(record.logged), record.hidden, out.lines.slice(record.logged));
     const clock = (out.clock ?? idleClock()) as ClockState;
     const turned = JSON.stringify(clock) !== JSON.stringify(record.clock);
     if (out.kind === 'done') {
       const delta: RoomDelta = {
-        roomId: room.id, sheets, log,
+        roomId: room.id, sheets, log, ...(gone.length ? { gone } : {}),
         ...(record.op.op === 'act' || record.op.op === 'turn' || turned ? { clock } : {}),
         ...(resumed ? { pending: null } : {}),
       };
       this.store.commit({
-        roomId: room.id, sheets, ...(turned ? { clock } : {}), ...(resumed ? { pending: null } : {}), log: this.rows(log),
+        roomId: room.id, sheets, ...(gone.length ? { gone } : {}), ...(turned ? { clock } : {}), ...(resumed ? { pending: null } : {}), log: this.rows(log),
         journal: this.journalRow(userId, name, input, dice, delta),
       });
       this.emit(delta);

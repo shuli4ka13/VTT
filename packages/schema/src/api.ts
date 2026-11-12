@@ -81,6 +81,9 @@ export const roomSummary = z.object({
   title: z.string(),
   worldId: z.string(),
   memberCount: z.number().int().nonnegative(),
+  createdAt: z.string(),
+  gmName: z.string(),
+  gm: z.boolean(),
 });
 
 export const member = z.object({
@@ -183,6 +186,7 @@ export const roomDelta = z.object({
   roomId: z.string(),
   sheets: z.array(sheet),
   log: z.array(logEntry),
+  gone: z.array(z.string()).optional(),
 
   clock: clockState.optional(),
   pending: pendingState.nullable().optional(),
@@ -193,6 +197,7 @@ export const serverMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('room:delta'), delta: roomDelta }),
   z.object({ type: z.literal('room:members'), members: z.array(member) }),
   z.object({ type: z.literal('room:places'), roomId: z.string(), places }),
+  z.object({ type: z.literal('room:closed'), roomId: z.string() }),
   z.object({ type: z.literal('error'), message: z.string() }),
 ]);
 
@@ -205,6 +210,7 @@ export const clientMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('sheet:set'), roomId: z.string(), sheetId: z.string(), tag: z.string(), value: storedValue }),
 
   z.object({ type: z.literal('sheet:create'), roomId: z.string(), name: z.string().min(1).max(64), of: z.string().min(1).optional() }),
+  z.object({ type: z.literal('sheet:drop'), roomId: z.string(), sheetId: z.string().min(1) }),
 
   z.object({ type: z.literal('sheet:roll'), roomId: z.string(), sheetId: z.string(), tag: z.string().min(1), hidden: z.boolean().optional(), claims: z.array(z.string().min(1)).optional() }),
 

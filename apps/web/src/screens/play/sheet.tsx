@@ -5,7 +5,7 @@ import { tableSocket } from '../../api/socket.ts';
 import { useReader } from '../../engine/use-calc.ts';
 import { maySheet } from '../../engine/rights.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
-import { Card, CardHead, Empty, Fold, Chip, Input, Button, Field, Select } from '../../ui/primitives.tsx';
+import { Card, CardHead, DangerButton, Empty, Fold, Chip, Input, Button, Field, Select } from '../../ui/primitives.tsx';
 import { SheetView } from '../../sheet/sheet-view.tsx';
 import { recordDetails } from '../../sheet/record-view.tsx';
 import { useSession } from '../../store/session.ts';
@@ -105,6 +105,8 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const hasGroups = fieldsOf(system).some(field => livesOn(field) === 'group');
   const only = kind?.blocks?.length ? fields.filter(shownOn(system, sheet)).map(f => f.tag) : undefined;
   const editable = maySheet(room, me, sheet.id);
+  const mine = room.members.find(m => m.userId === me);
+  const mayDrop = !isDesk && (mine?.role === 'gm' || mine?.sheetId === sheet.id);
   const [claims, setClaims] = useState<string[]>([]);
   const claimable = useMemo(() => claimWords(system), [system]);
   const [at, setAt] = useState<string | null>(null);
@@ -115,7 +117,17 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
 
   return (
     <>
-      {isDesk ? <span className="faint">общий стол комнаты — видят все, правит ведущий</span> : <ClaimRow room={room} sheet={sheet} />}
+      {isDesk ? <span className="faint">общий стол комнаты — видят все, правит ведущий</span> : (
+        <div className="inline">
+          <ClaimRow room={room} sheet={sheet} />
+          {mayDrop ? (
+            <>
+              <span className="spacer" />
+              <DangerButton size="sm" onConfirm={() => tableSocket.dropSheet(room.id, sheet.id)}>Удалить лист</DangerButton>
+            </>
+          ) : null}
+        </div>
+      )}
       {!isDesk && editable && claimable.length ? (
         <div className="inline inline--tight">
           <span className="faint">заявить к броску с листа:</span>

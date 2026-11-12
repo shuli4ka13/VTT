@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, CardHead, Empty, Input, Verdict } from '../../ui/primitives.tsx';
+import { RowsTable } from '../../ui/layout.tsx';
 import { listSystems, listCompendiums, publishWorld } from '../../api/client.ts';
 import type { CompendiumSummary, SystemSummary } from '@vtt/schema';
 
@@ -57,14 +58,17 @@ export function BuildWorld({ onBuilt }: { onBuilt: () => void }) {
           : (
             <div className="stack stack--tight">
               <span className="field__label">Из какой системы</span>
-              <div className="rooms">
-              {systems.map(item => (
-                <button key={item.id} type="button" className="room room--system" onClick={() => { setSystem(item); setTitle(item.title); }}>
-                  <span className="room__name">{item.title}</span>
-                  <span className="room__meta">{item.authorName}</span>
-                </button>
-              ))}
-              </div>
+              <RowsTable
+                columns={[
+                  { head: 'Система', width: 'minmax(0, 2fr)' },
+                  { head: 'Автор', width: 'minmax(0, 1fr)' },
+                ]}
+                rows={[...systems].sort((x, y) => x.title.localeCompare(y.title, 'ru')).map(item => ({
+                  key: item.id,
+                  onOpen: () => { setSystem(item); setTitle(item.title); },
+                  cells: [item.title, item.authorName],
+                }))}
+              />
             </div>
           )
       ) : (

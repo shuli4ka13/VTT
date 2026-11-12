@@ -81,12 +81,15 @@ export function listenToRoom(): void {
         if (!current.room) return current;
 
         const known = new Set(current.room.sheets.map(sheet => sheet.id));
-        const sheets = current.room.sheets.map(sheet =>
-          message.delta.sheets.find((next: Sheet) => next.id === sheet.id) ?? sheet);
+        const gone = new Set(message.delta.gone ?? []);
+        const sheets = current.room.sheets
+          .filter(sheet => !gone.has(sheet.id))
+          .map(sheet => message.delta.sheets.find((next: Sheet) => next.id === sheet.id) ?? sheet);
         for (const fresh of message.delta.sheets) {
           if (!known.has(fresh.id)) sheets.push(fresh);
         }
         return {
+          mySheetId: current.mySheetId && gone.has(current.mySheetId) ? null : current.mySheetId,
           room: {
             ...current.room, sheets,
             ...(message.delta.clock ? { clock: message.delta.clock } : {}),
@@ -107,6 +110,11 @@ export function listenToRoom(): void {
       useRoom.setState(current => ({
         room: current.room && current.room.id === message.roomId ? { ...current.room, places: message.places } : current.room,
       }));
+    }
+
+    if (message.type === 'room:closed' && state.room?.id === message.roomId) {
+      state.leave();
+      useRoom.setState({ error: 'Ведущий убрал этот стол' });
     }
 
     if (message.type === 'error') {

@@ -27,4 +27,14 @@ describe('стор комнаты: слияние дельт', () => {
     deliver({ type: 'room:delta', delta: { sheets: [], log: [{ id: '2', at: 'x', text: 'т', lines: ['ш', 'п'] }] } });
     expect(useRoom.getState().log.map(entry => entry.lines ?? null)).toEqual([null, ['ш', 'п']]);
   });
+
+  it('дельта с ушедшими листами убирает их и сбрасывает выбранный лист', () => {
+    listenToRoom();
+    const room = { id: 'к', title: 'Стол', members: [], system: { id: 'x', name: 'x', tables: {}, effects: {} }, compendium: { records: [] }, sheets: [{ id: 'а' }, { id: 'б' }], log: [] } as unknown as RoomState;
+    deliver({ type: 'room:state', state: room });
+    useRoom.getState().pickSheet('а');
+    deliver({ type: 'room:delta', delta: { sheets: [], gone: ['а'], log: [] } });
+    expect(useRoom.getState().room?.sheets.map(sheet => sheet.id)).toEqual(['б']);
+    expect(useRoom.getState().mySheetId).toBeNull();
+  });
 });

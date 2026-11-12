@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 export interface Pane {
 
@@ -123,6 +123,42 @@ export function Tabs<T extends string>({ value, options, onChange }: {
           {option.icon ? <span aria-hidden>{option.icon} </span> : null}
           {option.label}
         </button>
+      ))}
+    </div>
+  );
+}
+
+export interface RowsColumn { head: string; width: string; minor?: boolean }
+
+export interface RowsLine {
+  key: string;
+  cells: ReactNode[];
+  onOpen?: () => void;
+  selected?: boolean;
+}
+
+export function RowsTable({ columns, rows }: { columns: RowsColumn[]; rows: RowsLine[] }) {
+  const wide = columns.map(column => column.width).join(' ');
+  const narrow = columns.filter(column => !column.minor).map(column => column.width).join(' ');
+  const style = { '--rows-cols': wide, '--rows-cols-narrow': narrow } as CSSProperties;
+  return (
+    <div className="rows-table" role="table" style={style}>
+      <div className="rows-table__head" role="row">
+        {columns.map((column, index) => (
+          <span key={index} role="columnheader" className={column.minor ? 'rows-table__minor' : undefined}>{column.head}</span>
+        ))}
+      </div>
+      {rows.map(row => (
+        <div key={row.key} role="row" className="rows-table__row" aria-current={row.selected ? 'true' : undefined}>
+          {row.cells.map((cell, index) => (
+            <div key={index} role="cell"
+              className={`rows-table__cell${columns[index]?.minor ? ' rows-table__minor' : ''}${columns[index]?.head ? '' : ' rows-table__acts'}`}>
+              {index === 0 && row.onOpen
+                ? <button type="button" className="rows-table__open" onClick={row.onOpen}>{cell}</button>
+                : cell}
+            </div>
+          ))}
+        </div>
       ))}
     </div>
   );

@@ -15,7 +15,8 @@ export type Want =
   | { kind: 'answer'; sheetId: string }
   | { kind: 'cancel' }
   | { kind: 'claim'; sheetId: string | null }
-  | { kind: 'place'; sheetId: string };
+  | { kind: 'place'; sheetId: string }
+  | { kind: 'close' };
 
 export interface Room {
   system: System;
@@ -61,6 +62,7 @@ function subjectOf(op: Op): string | null {
 export function authorize(room: Room, userId: string, want: Want): string | null {
   const me = room.members.find(member => member.userId === userId);
   if (!me) return 'вы не в этой комнате';
+  if (want.kind === 'close') return me.role === 'gm' ? null : 'убрать стол может только ведущий';
   if (want.kind === 'cancel') return me.role === 'gm' ? null : 'отменить действие может только ведущий';
   if (want.kind === 'answer') return maySheet(room, me, want.sheetId);
   if (want.kind === 'place') {
@@ -84,6 +86,10 @@ export function authorize(room: Room, userId: string, want: Want): string | null
   if (want.op.op === 'turn' && me.role !== 'gm') {
     if (want.op.turn !== 'next') return 'бой, отдых и сцену ведёт ведущий';
     return me.sheetId && room.clock?.active === me.sheetId ? null : 'следующий ход передаёт ведущий или тот, чей сейчас ход';
+  }
+  if (want.op.op === 'drop') {
+    if (me.role === 'gm') return null;
+    return me.sheetId === want.op.sheetId ? null : 'убрать лист может ведущий или тот, кто им играет';
   }
   const subject = subjectOf(want.op);
   return subject ? maySheet(room, me, subject) : null;
