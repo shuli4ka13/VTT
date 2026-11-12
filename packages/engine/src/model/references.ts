@@ -4,6 +4,7 @@ import { paymentsOf } from './payments.ts';
 import { loopOf, loopParam } from '../engine/steps/each.ts';
 import { tagWords } from '../engine/roll-tags.ts';
 import { ROLL_CALL } from '../words/calls.ts';
+import { STEP_WORDS, type StepWords } from '../words/steps.ts';
 import type { System, Compendium, Effect, Step, Modifier, Guard, Param, Table } from './types.ts';
 import { compile, FUNCTION_NAMES } from '../formula/index.ts';
 import { isFormulaCell } from './sheet-columns.ts';
@@ -118,6 +119,16 @@ export interface ChainScope {
   bare: boolean;
   later?: Set<string>;
   rows?: ReadonlyMap<string, string>;
+  results?: ReadonlyMap<string, ReadonlySet<string>>;
+}
+
+const RESULT_EXTRAS: Record<string, readonly string[]> = { roll: ['total', 'dice', 'parts', 'tags'], check: ['dice', 'parts', 'rolled', 'edited'] };
+
+export function resultKeys(step: Pick<Step, 'type'>): ReadonlySet<string> | null {
+  const extras = RESULT_EXTRAS[step.type];
+  if (!extras) return null;
+  const outputs = (STEP_WORDS as Record<string, StepWords>)[step.type]?.outputs ?? [];
+  return new Set([...outputs.map(output => output.path.replace(/^\./, '').split('.')[0]!).filter(Boolean), ...extras]);
 }
 
 export const sheetScope = (params: Set<string>, sheets: Iterable<string>, earlier: Iterable<string> = []): ChainScope =>
@@ -304,7 +315,12 @@ export function exprRefs(source: string, from: Where, scope: ChainScope, out: Re
         cell(head, dep.slice(dot + 1).split('.')[0]);
         continue;
       }
-      if (scope.earlier.has(head)) continue;
+      if (scope.earlier.has(head)) {
+        const known = scope.results?.get(head);
+        const first = dep.slice(dot + 1).split('.')[0]!;
+        if (known && !known.has(first)) out.push({ kind: 'step', key: head, from, scope: 'result', path: first });
+        continue;
+      }
       out.push({ kind: 'step', key: head, from, scope: 'dotted', path: dep });
       continue;
     }
@@ -326,12 +342,13 @@ export function chainRefs(
   const rows = new Set<string>();
   const tables = new Map((defs ?? []).filter(param => param.kind === 'choice' && typeof param.from === 'string' && !param.many).map(param => [param.key, String(param.from)] as const));
   const ids = steps.map(step => step.id).filter((id): id is string => Boolean(id));
+  const results = new Map<string, ReadonlySet<string>>();
   const arms = armsOf(steps);
   steps.forEach((step, index) => {
     const from = whereOf(index);
     const visible = new Set([...seeds, ...steps.slice(0, index).flatMap((other, at) => (other.id && sees(arms, at, index) ? [String(other.id)] : []))]);
     const later = new Set(ids.filter(id => !visible.has(id)));
-    const scope: ChainScope = { params: rows.size ? new Set([...params, ...rows]) : params, earlier: visible, sheets: new Set(named), bare: true, later, rows: tables };
+    const scope: ChainScope = { params: rows.size ? new Set([...params, ...rows]) : params, earlier: visible, sheets: new Set(named), bare: true, later, rows: tables, results };
     const mod = registry.get(step.type);
     for (const slot of (mod?.slots ?? []) as { key: string; kind?: string; refersTo?: string }[]) {
       if (slot.key === 'if') continue;
@@ -341,7 +358,12 @@ export function chainRefs(
       slotRefs(readPath(step, slot.key), kind, from, extra.length ? { ...scope, params: new Set([...scope.params, ...extra]) } : scope, out);
     }
     guardRefs(step.if, from, scope, out);
-    if (step.id) earlier.add(String(step.id));
+    if (step.id) {
+      earlier.add(String(step.id));
+      const keys = resultKeys(step);
+      if (keys) results.set(String(step.id), keys);
+      else results.delete(String(step.id));
+    }
     const loop = loopsAt(step) ? loopOf(defs, step as { of?: unknown })?.key : undefined;
     if (loop) named.add(loop);
     const row = loopParam(step as never);

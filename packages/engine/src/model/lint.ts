@@ -24,7 +24,7 @@ import { TABS, STEP, SHEET, SHEET_LISTS } from '../words/glossary.ts';
 import {
   referencesOf, declaredOf, chainRefs, listenerOf, withAddresses, heardNames, callNamesOf, formulaDeps, sourcesOf,
   type Where, type Reference, type RefKind, type Declared, type Listener,
-  LISTEN, contractsOf, HOLDER, DESK_NAME, holderNameOf, tiedToHolder,
+  LISTEN, contractsOf, HOLDER, DESK_NAME, holderNameOf, tiedToHolder, resultKeys,
 } from './references.ts';
 import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, holderOf, rowKeyOf, hasField, rollEntryOf, ROW } from './sheet-columns.ts';
 import { rolledColumn, thrownDie, fieldGives } from './rolled.ts';
@@ -121,6 +121,7 @@ function danglingText(ref: Reference, declared: Declared): string | null {
     if (ref.scope?.startsWith('listened:')) {
       return `в эффекте «${ref.scope.slice('listened:'.length)}» нет ${STEP.gen} «${ref.key}» — условию срабатывания не на что смотреть`;
     }
+    if (ref.scope === 'result') return `у ${STEP.gen} «${ref.key}» нет итога «${ref.path}» — после «@${ref.key}.» выберите итог из подсказки`;
     if (ref.scope === 'dotted' && (declared.field.has(ref.key) || declared.prop.has(ref.key))) return null;
     return `${STEP.gen} «${ref.key}» выше по цепочке нет — на его результат не сослаться`;
   }
@@ -226,7 +227,7 @@ function rowsText(ref: Reference, declared: Declared): string | null {
 function refProblems(refs: Reference[], declared: Declared, earlierByWhere: (ref: Reference) => boolean, system?: System): Problem[] {
   const out: Problem[] = [];
   for (const ref of refs) {
-    if (ref.kind === 'step' && earlierByWhere(ref)) continue;
+    if (ref.kind === 'step' && ref.scope !== 'result' && earlierByWhere(ref)) continue;
     const walked = rowsText(ref, declared) ?? (system ? pathText(ref, declared, system) : null);
     const text = walked ?? danglingText(ref, declared) ?? (system ? ownerText(ref, system) : null);
     if (!text) continue;
@@ -460,6 +461,14 @@ function fieldRollProblems(system: System): Problem[] {
       if (typeof ref !== 'object' || ref === null) return null;
       try { compile(String((ref as { expr: unknown }).expr ?? '')); return null; } catch (err) { return (err as Error).message; }
     };
+    const rollKeys = resultKeys({ type: 'roll' })!;
+    const strays = (ref: unknown): string[] => {
+      const expr = typeof ref === 'object' && ref !== null ? String((ref as { expr?: unknown }).expr ?? '') : '';
+      return [...new Set((formulaDeps(expr) ?? []).filter(dep => dep.startsWith(`${ROLL_NAME}.`)).map(dep => dep.split('.')[1]!).filter(key => !rollKeys.has(key)))];
+    };
+    for (const ref of [roll.success, roll.margin, ...(Array.isArray(roll.degrees) ? roll.degrees.map(one => one.if) : [])]) {
+      for (const key of strays(ref)) out.push({ where, level: 'error', text: `бросок «${name}»: у броска нет итога «${key}» — после «@${ROLL_NAME}.» выберите итог из подсказки` });
+    }
     const keepBroken = broken(roll.keep);
     if (keepBroken) out.push({ where, level: 'error', text: `бросок «${name}»: «сколько оставить» — ${keepBroken}` });
     if ((roll.keep !== undefined || roll.fields.some(one => one.keep !== undefined)) && roll.number !== 'count') out.push({ where, level: 'error', text: `бросок «${name}»: оставить лучшие можно, только когда число поля — сколько костей` });
