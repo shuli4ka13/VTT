@@ -463,8 +463,14 @@
           },
           {
             "type": "roll",
-            "fixed": {
-              "expr": "(кинуть(@weapon_die, @действующий.level * @бросок.исход.dice_mul) + @damage_with)"
+            "die": {
+              "expr": "@weapon_die"
+            },
+            "times": {
+              "expr": "@действующий.level * @бросок.исход.dice_mul"
+            },
+            "bonus": {
+              "expr": "@damage_with"
             },
             "id": "урон"
           },

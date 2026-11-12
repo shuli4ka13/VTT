@@ -132,17 +132,19 @@ group('тогл брони переписывает общий эффект ур
   });
 });
 
-group('крит вдвое не ломает «кинуть» с тремя аргументами', () => {
+group('крит вдвое не ломает бросок урона с «оставить»', () => {
   const dh = () => clone(SAMPLE_WORLDS.find(w => (w.system as System).name === 'Daggerheart')!.system as System);
   const formulas = (system: System): string[] => Object.values(system.effects).flatMap(effect => (effect.steps ?? [])
-    .map(step => (step as { fixed?: { expr?: unknown } }).fixed?.expr)
-    .filter((expr): expr is string => typeof expr === 'string' && expr.includes('кинуть(')));
+    .filter(step => (step as { type?: string; die?: unknown }).type === 'roll' && (step as { die?: unknown }).die !== undefined)
+    .map(step => JSON.stringify(step)));
 
-  test('после «вдвое» формулы разбираются, третий аргумент остаётся третьим', () => {
+  test('после «вдвое» число костей и «оставить» урона героя на месте, удвоение — в «сколько раз»', () => {
     const system = dh();
     setCrit(system, 'double');
-    for (const expr of formulas(system)) compile(expr);
-    ok(formulas(system).some(expr => /кинуть\(@damage_die, .*если\(.*, 2, 1\), @действующий\.proficiency\)/.test(expr)), formulas(system).join('\n'));
+    const hero = formulas(system).find(text => text.includes('@damage_die'))!;
+    ok(hero.includes('"keep":{"expr":"@действующий.proficiency"}'), hero);
+    ok(hero.includes('"count":{"expr":"@действующий.proficiency + @extra_die"}'), hero);
+    ok(/"times":/.test(hero), hero);
   });
 
   test('туда и обратно — формулы прежние', () => {

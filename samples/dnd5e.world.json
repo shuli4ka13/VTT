@@ -6524,8 +6524,8 @@
             "steps": [
               {
                 "type": "roll-plus",
-                "value": {
-                  "expr": "кинуть(@кость)"
+                "die": {
+                  "expr": "@кость"
                 }
               }
             ]
@@ -6573,8 +6573,8 @@
             "steps": [
               {
                 "type": "roll-plus",
-                "value": {
-                  "expr": "кинуть(@носитель.superiority_die)"
+                "die": {
+                  "expr": "@носитель.superiority_die"
                 }
               }
             ]
@@ -7150,8 +7150,8 @@
             "call": "roll",
             "param": "bonus",
             "op": "add",
-            "value": {
-              "expr": "кинуть(к4)"
+            "die": {
+              "expr": "1к4"
             },
             "if": {
               "expr": "@бросающий == @носитель"
@@ -7165,8 +7165,8 @@
             "call": "roll",
             "param": "bonus",
             "op": "add",
-            "value": {
-              "expr": "кинуть(к4)"
+            "die": {
+              "expr": "1к4"
             },
             "if": {
               "expr": "@бросающий == @носитель"
@@ -7192,9 +7192,10 @@
             "call": "roll",
             "param": "bonus",
             "op": "add",
-            "value": {
-              "expr": "-кинуть(к4)"
+            "die": {
+              "expr": "1к4"
             },
+            "minus": true,
             "if": {
               "expr": "@бросающий == @носитель"
             }
@@ -7207,9 +7208,10 @@
             "call": "roll",
             "param": "bonus",
             "op": "add",
-            "value": {
-              "expr": "-кинуть(к4)"
+            "die": {
+              "expr": "1к4"
             },
+            "minus": true,
             "if": {
               "expr": "@бросающий == @носитель"
             }
@@ -7236,8 +7238,8 @@
             "steps": [
               {
                 "type": "roll-plus",
-                "value": {
-                  "expr": "кинуть(к4)"
+                "die": {
+                  "expr": "1к4"
                 }
               }
             ]

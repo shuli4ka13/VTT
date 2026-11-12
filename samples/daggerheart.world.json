@@ -1379,8 +1379,8 @@
         "ops": [
           {
             "op": "plus",
-            "value": {
-              "expr": "кинуть(к6)"
+            "die": {
+              "expr": "1к6"
             }
           }
         ],
@@ -1391,9 +1391,10 @@
         "ops": [
           {
             "op": "plus",
-            "value": {
-              "expr": "-кинуть(к6)"
-            }
+            "die": {
+              "expr": "1к6"
+            },
+            "minus": true
           }
         ],
         "cancels": ["advantage"]
@@ -1493,7 +1494,39 @@
             },
             "versus": {
               "expr": "@сложность"
-            }
+            },
+            "degrees": [
+              {
+                "label": "критический успех",
+                "if": {
+                  "expr": "@бросок_бросок.parts.надежда == @бросок_бросок.parts.страх"
+                }
+              },
+              {
+                "label": "успех с надеждой",
+                "if": {
+                  "expr": "@успех и @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+                }
+              },
+              {
+                "label": "успех со страхом",
+                "if": {
+                  "expr": "@успех"
+                }
+              },
+              {
+                "label": "провал с надеждой",
+                "if": {
+                  "expr": "@бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+                }
+              },
+              {
+                "label": "провал со страхом",
+                "if": {
+                  "expr": "да"
+                }
+              }
+            ]
           }
         ],
         "cost": [
@@ -1602,8 +1635,17 @@
           },
           {
             "type": "roll",
-            "fixed": {
-              "expr": "(кинуть(@damage_die, @действующий.proficiency + @extra_die, @действующий.proficiency) + @damage_bonus + если(@бросок_бросок.parts.надежда == @бросок_бросок.parts.страх, @действующий.proficiency * @die_size, 0))"
+            "die": {
+              "expr": "@damage_die"
+            },
+            "count": {
+              "expr": "@действующий.proficiency + @extra_die"
+            },
+            "keep": {
+              "expr": "@действующий.proficiency"
+            },
+            "bonus": {
+              "expr": "@damage_bonus + если(@бросок_бросок.parts.надежда == @бросок_бросок.parts.страх, @действующий.proficiency * @die_size, 0)"
             },
             "id": "урон"
           },
@@ -1619,7 +1661,39 @@
             },
             "versus": {
               "expr": "@цель.difficulty"
-            }
+            },
+            "degrees": [
+              {
+                "label": "критический успех",
+                "if": {
+                  "expr": "@бросок_бросок.parts.надежда == @бросок_бросок.parts.страх"
+                }
+              },
+              {
+                "label": "успех с надеждой",
+                "if": {
+                  "expr": "@успех и @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+                }
+              },
+              {
+                "label": "успех со страхом",
+                "if": {
+                  "expr": "@успех"
+                }
+              },
+              {
+                "label": "провал с надеждой",
+                "if": {
+                  "expr": "@бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+                }
+              },
+              {
+                "label": "провал со страхом",
+                "if": {
+                  "expr": "да"
+                }
+              }
+            ]
           },
           {
             "type": "branch",
@@ -1702,8 +1776,11 @@
           },
           {
             "type": "roll",
-            "fixed": {
-              "expr": "кинуть(@damage_dice) + @damage_bonus"
+            "die": {
+              "expr": "@damage_dice"
+            },
+            "bonus": {
+              "expr": "@damage_bonus"
             },
             "id": "урон"
           },
@@ -2079,13 +2156,20 @@
             "of": "цели"
           },
           {
+            "id": "страх",
+            "type": "roll",
+            "die": {
+              "expr": "1к4"
+            }
+          },
+          {
             "type": "apply",
             "target": {
               "expr": "@стол.fear"
             },
             "direction": "add",
             "value": {
-              "expr": "кинуть(\"1к4\")"
+              "expr": "@страх"
             }
           }
         ],
@@ -2117,13 +2201,23 @@
             "of": "цели"
           },
           {
+            "id": "страх",
+            "type": "roll",
+            "die": {
+              "expr": "1к4"
+            },
+            "bonus": {
+              "expr": "@героев"
+            }
+          },
+          {
             "type": "apply",
             "target": {
               "expr": "@стол.fear"
             },
             "direction": "add",
             "value": {
-              "expr": "кинуть(\"1к4\") + @героев"
+              "expr": "@страх"
             }
           }
         ],

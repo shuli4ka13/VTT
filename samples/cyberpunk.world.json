@@ -1178,8 +1178,8 @@
           },
           {
             "type": "roll",
-            "fixed": {
-              "expr": "(кинуть(@damage_dice))"
+            "die": {
+              "expr": "@damage_dice"
             },
             "id": "урон"
           },
