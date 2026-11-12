@@ -1,4 +1,5 @@
 import { isSingle, rollEntryOf } from './sheet-columns.ts';
+import { hasDegrees } from '../engine/check.ts';
 import type { System, Param, Step } from './types.ts';
 
 const FIELD_ADDRESS = /^\s*@[\p{L}\p{N}_]+\.([\p{L}\p{N}_.]+)\s*$/u;
@@ -27,7 +28,7 @@ export function fieldGives(system: System, params: readonly Param[], step: Step)
   return {
     success: graded || Boolean(found.roll.success),
     margin: graded || Boolean(found.roll.margin),
-    degree: Boolean(found.roll.degrees?.length),
+    degree: hasDegrees(found.roll.degrees),
   };
 }
 

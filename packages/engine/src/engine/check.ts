@@ -21,13 +21,19 @@ export interface FieldThrow {
   number: number | null;
 }
 
+export type Degrees = { label: string; if: SlotRef }[] | { table: string; of?: 'margin' };
+
+export function hasDegrees(degrees: Degrees | undefined): degrees is Degrees {
+  return Array.isArray(degrees) ? degrees.length > 0 : Boolean(degrees?.table);
+}
+
 export interface Check {
   die: string;
   count?: SlotRef;
   bonus?: SlotRef;
   sides?: SlotRef;
   keep?: SlotRef;
-  degrees?: { label: string; if: SlotRef }[];
+  degrees?: Degrees;
   success?: SlotRef;
   margin?: SlotRef;
   under?: true;
@@ -51,7 +57,7 @@ export function fieldCheck(system: System, tag: string): Check & { label: string
     ...(bonus ? { bonus } : {}),
     ...(sides ? { sides } : {}),
     ...(keep ? { keep } : {}),
-    ...(degrees?.length ? { degrees } : {}),
+    ...(hasDegrees(degrees) ? { degrees } : {}),
     ...(success ? { success } : {}),
     ...(margin ? { margin } : {}),
     ...(under ? { under } : {}),

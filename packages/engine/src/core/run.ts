@@ -34,6 +34,7 @@ import { result, parse, withCount, withSides, withKeep, start, addendsText } fro
 import { dieConstant } from '../engine/lead-die.ts';
 import { ROLLED_NAME, ROLL_NAME, NUMBER_NAME, THRESHOLD_NAME, SUCCESS_NAME, MARGIN_NAME } from '../engine/check.ts';
 import type { Check, FieldThrow } from '../engine/check.ts';
+import { lookupDegree } from '../engine/tables.ts';
 import { subsOf, same, instOf, keysOf } from './subs.ts';
 import { same as sameValue, hasField, rowKeyOf } from '../model/sheet-columns.ts';
 import { runnerOf, calledBy } from './steps.ts';
@@ -1390,7 +1391,11 @@ export class Run {
     const reckoned = check.margin ? judge.number(check.margin, `${owner} · степени`) : threshold === null ? null : check.under ? threshold - total : total - threshold;
     const margin = reckoned === null ? null : reckoned + thrown.roll.claim.degreeShift;
     const graded = judgeOf({ ...named, ...(success === null ? {} : { [SUCCESS_NAME]: success }), ...(margin === null ? {} : { [MARGIN_NAME]: margin }) }, self);
-    const degree = (check.degrees ?? []).find(one => graded.holds(one.if))?.label ?? null;
+    const scale = check.degrees && !Array.isArray(check.degrees) ? check.degrees : null;
+    if (scale?.of === 'margin' && reckoned === null) throw new EngineError(`${owner}: ступень по степеням, а степеней правило не считает — задайте порог или «Степени числом»`);
+    const degree = scale
+      ? String(lookupDegree(this.system, scale.table, scale.of === 'margin' ? reckoned : total, thrown.roll.claim.degreeShift, owner) ?? '') || null
+      : (Array.isArray(check.degrees) ? check.degrees : []).find(one => graded.holds(one.if))?.label ?? null;
     return { thrown, bonus, total, threshold, degree, success, margin, number };
   }
 

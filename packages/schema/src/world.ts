@@ -35,13 +35,17 @@ export const control = z.object({
 
 export const rollDegree = z.object({ label: z.string().min(1), if: formula }).strict();
 
+export const degreeScale = z.object({ table: z.string().min(1), of: z.literal('margin').optional() }).strict();
+
+export const rollDegrees = z.union([z.array(rollDegree), degreeScale]);
+
 export const rollSpec = z.object({
   die: z.string().min(1),
   count: formula.optional(),
   bonus: formula.optional(),
   sides: formula.optional(),
   keep: z.union([formula, z.string()]).optional(),
-  degrees: z.array(rollDegree).optional(),
+  degrees: rollDegrees.optional(),
   under: z.literal(true).optional(),
   tags: z.array(z.string().min(1)).optional(),
 }).passthrough();
@@ -185,7 +189,7 @@ export const systemRoll = z.object({
   die: z.string().min(1),
   number: z.enum(['bonus', 'count', 'sides', 'under', 'over']).optional(),
   keep: slotRef.optional(),
-  degrees: z.array(rollDegree).optional(),
+  degrees: rollDegrees.optional(),
   success: formula.optional(),
   margin: formula.optional(),
   tags: z.array(z.string().min(1)).optional(),

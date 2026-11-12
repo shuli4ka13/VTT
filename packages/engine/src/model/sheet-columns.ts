@@ -1,4 +1,5 @@
 import { EngineError } from '../engine/errors.ts';
+import { hasDegrees } from '../engine/check.ts';
 import type { System, Table, TableRow, TableColumn, CellView, Field, FieldValue, CellMark, Holder, Placement } from './types.ts';
 import type { SheetPart, Control, SystemRoll, RollField } from '@vtt/schema';
 import { isTagWord } from '../engine/roll-tags.ts';
@@ -401,7 +402,7 @@ export function fieldRollOf(system: System, tableId: string, column: string, row
     tags: [...new Set([key, ...(roll.tags ?? []), ...rollTags(table, row), ...(entry.tags ?? [])])],
     ...(entry.threshold !== undefined && (roll.number !== 'under' && roll.number !== 'over') ? { threshold: entry.threshold } : {}),
     ...((entry.keep ?? roll.keep) !== undefined ? { keep: entry.keep ?? roll.keep } : {}),
-    ...(roll.degrees?.length ? { degrees: roll.degrees } : {}),
+    ...(hasDegrees(roll.degrees) ? { degrees: roll.degrees } : {}),
     ...(roll.success ? { success: roll.success } : {}),
     ...(roll.margin ? { margin: roll.margin } : {}),
   } as Field['roll'];

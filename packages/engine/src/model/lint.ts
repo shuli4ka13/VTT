@@ -462,11 +462,17 @@ function fieldRollProblems(system: System): Problem[] {
     const keepBroken = broken(roll.keep);
     if (keepBroken) out.push({ where, level: 'error', text: `бросок «${name}»: «сколько оставить» — ${keepBroken}` });
     if ((roll.keep !== undefined || roll.fields.some(one => one.keep !== undefined)) && roll.number !== 'count') out.push({ where, level: 'error', text: `бросок «${name}»: оставить лучшие можно, только когда число поля — сколько костей` });
-    for (const [at, degree] of (roll.degrees ?? []).entries()) {
+    const listed = Array.isArray(roll.degrees) ? roll.degrees : [];
+    for (const [at, degree] of listed.entries()) {
       const bad = broken(degree.if);
       if (bad) out.push({ where, level: 'error', text: `бросок «${name}», степень «${degree.label || at + 1}»: ${bad}` });
     }
-    if (roll.degrees?.length || roll.success || roll.margin) {
+    const scale = roll.degrees && !Array.isArray(roll.degrees) ? roll.degrees : null;
+    if (scale && !system.tables?.[scale.table]) out.push({ where, level: 'error', text: `бросок «${name}»: ступени берутся из таблицы «${scale.table}», а её нет в «Таблицах»` });
+    if (scale?.of === 'margin' && !roll.margin && roll.number !== 'under' && roll.number !== 'over' && !roll.fields.some(one => one.threshold !== undefined)) {
+      out.push({ where, level: 'error', text: `бросок «${name}»: ступень по степеням, а степеней правило не считает — задайте порог или «Степени числом»` });
+    }
+    if (listed.length || roll.success || roll.margin) {
       for (const taken of [ROLLED_NAME, ROLL_NAME, NUMBER_NAME]) {
         if (fieldsOf(system).some(field => field.tag === taken)) out.push({ where, level: 'error', text: `бросок «${name}»: имя «${taken}» в формулах броска значит сам бросок, его итог или число поля, а так зовётся и поле листа — переименуйте поле` });
       }
