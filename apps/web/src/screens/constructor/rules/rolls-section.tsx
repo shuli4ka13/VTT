@@ -5,7 +5,7 @@ import { TagsField } from '../tags-field.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { dieEntries } from './dice-section.tsx';
 import { addRoll } from './rolls.ts';
-import { DegreeList } from '../degree-list.tsx';
+import { DegreesEditor } from '../degrees-editor.tsx';
 import { resultsOf } from '@vtt/engine/model/names-at';
 import { blockOfColumn, byBlock } from '../field-groups.ts';
 import type { Grouped } from '../field-groups.ts';
@@ -98,7 +98,7 @@ function RollFlow({ roll }: { roll: SystemRoll }) {
   const own: (readonly [string, string, string])[] = [
     ...(graded || roll.success ? [['пройден', 'да или нет', roll.success ? '«Успех, если»' : roll.number === 'under' ? 'выпало не больше порога' : `выпало не меньше порога${gate}`] as const] : []),
     ...(graded || roll.margin ? [['степени', 'число', roll.margin ? '«Степени числом»' : roll.number === 'under' ? 'порог минус выпало' : `выпало минус порог${gate}`] as const] : []),
-    ...(roll.degrees?.length ? [['ступень', 'текст', '«Ступени» — первая подошедшая'] as const] : []),
+    ...((Array.isArray(roll.degrees) ? roll.degrees.length : roll.degrees) ? [['ступень', 'текст', '«Ступени» — первая подошедшая'] as const] : []),
   ];
   return (
     <>
@@ -203,8 +203,8 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
         <div className="dict-row roll-line roll-line--top">
           <span className="dict-row__label">Ступени</span>
           <div className="roll-form__body roll-form__body--stack">
-            <DegreeList list={roll.degrees ?? []} system={system} where={`${roll.label || id} · ступень`} shared={{ extraNames: degreeNames, meanings: DEGREE_MEANINGS }}
-              change={apply => edit(draft => { const list = (draft.degrees ??= []); apply(list); if (!list.length) delete draft.degrees; })} />
+            <DegreesEditor value={roll.degrees} system={system} where={`${roll.label || id} · ступень`} shared={{ extraNames: degreeNames, meanings: DEGREE_MEANINGS }}
+              set={next => edit(draft => { if (next === undefined) delete draft.degrees; else draft.degrees = next; })} />
           </div>
         </div>
         <div className="dict-row roll-line">

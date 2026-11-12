@@ -1,18 +1,15 @@
 import { useMemo, useState } from 'react';
 import type { System } from '@vtt/schema';
 import { Select, Fold, Field } from '../../../../ui/primitives.tsx';
-import { FieldRow } from '../../../../ui/field-row.tsx';
-import type { RowField } from '../../../../ui/field-row.tsx';
 import { FormulaField } from '../../../../ui/formula-field.tsx';
 import { formulaWords } from '../../../../ui/formula-words.ts';
 import { namesOf, inputBadges } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { badFormula } from '../../roll-expr.ts';
-import { DegreeList } from '../../degree-list.tsx';
+import { DegreesEditor } from '../../degrees-editor.tsx';
 import { whoOf } from '../../readback.ts';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
-import { rowTables } from '@vtt/engine/model/tables';
 import { splitsTargets } from '@vtt/engine/engine/steps/index';
 
 const loose = (draft: unknown): Record<string, any> => draft as Record<string, any>;
@@ -27,35 +24,7 @@ export function CheckBody({ step, context, edit, system, asIf = false }: {
   asIf?: boolean;
 }) {
   const at = 0;
-  const tables = rowTables(system);
-  const listed: any[] | null = Array.isArray(step.degrees) ? step.degrees : null;
 
-  const more: RowField[] = [
-    ...(tables.length && !listed?.length ? [{
-      key: 'degrees', label: 'Исход ступенями', width: 190,
-      hint: 'Вместо «да/нет» исход читается ступенями по таблице: «провал / успех с ценой / полный успех»',
-      node: (
-        <Select
-          value={String(step.degrees?.table ?? '')}
-          options={[['', '— нет, да или нет —'], ...tables.map(([key, t]) => [key, t.label || key] as const)] as never}
-          onChange={next => edit(at, draft => {
-            const d = loose(draft);
-            if (next) d.degrees = { table: next, ...(d.degrees?.of && d.degrees.of !== 'total' ? { of: d.degrees.of } : {}) }; else delete d.degrees;
-          })}
-        />
-      ),
-    }] : []),
-    ...(step.degrees?.table ? [{
-      key: 'degreesOf', label: 'Ступень по', width: 170,
-      node: (
-        <Select
-          value={String(step.degrees.of ?? 'total')}
-          options={[['total', 'итогу'], ['margin', 'запасу против порога']] as const}
-          onChange={next => edit(at, draft => { if (next === 'total') delete loose(draft).degrees.of; else loose(draft).degrees.of = next; })}
-        />
-      ),
-    }] : []),
-  ];
   const names = useMemo(() => {
     const out = namesOf(context);
     for (const word of tagWords(context.system).keys()) out.set(word, word);
@@ -115,14 +84,11 @@ export function CheckBody({ step, context, edit, system, asIf = false }: {
       {inside ? <span className="faint">бросок «{inside}» стоит внутри формулы: «успех на кости», сдвиг порога и пересчёт правок «против» для каждой цели на такое сравнение не действуют</span> : null}
       <ContestLine step={step} roll={null} context={context} />
       <Fold title="ещё" summary={summary}>
-        {more.length ? <FieldRow id="check-more" fields={more} /> : null}
-        {step.degrees?.table ? null : (
-          <Field label="Ступени" hint="Вместо «да/нет» исход читается ступенями: первая подходящая сверху. В условиях видны «успех», «степени» и шаги эффекта.">
-            <DegreeList list={listed ?? []} system={system} where="проверка · ступень" placeholder="@степени >= 5"
-              shared={{ extraNames: degreeNames, meanings: degreeMeanings, badges: inputBadges(context), ...(context.sheets ? { sheets: context.sheets } : {}) }}
-              change={apply => edit(at, draft => { const d = loose(draft); const list = Array.isArray(d.degrees) ? d.degrees : (d.degrees = []); apply(list); if (!list.length) delete d.degrees; })} />
-          </Field>
-        )}
+        <Field label="Ступени" hint="Вместо «да/нет» исход читается ступенями: первая подходящая сверху. В условиях видны «успех», «степени» и шаги эффекта.">
+          <DegreesEditor value={step.degrees} system={system} where="проверка · ступень" placeholder="@степени >= 5"
+            shared={{ extraNames: degreeNames, meanings: degreeMeanings, badges: inputBadges(context), ...(context.sheets ? { sheets: context.sheets } : {}) }}
+            set={next => edit(at, draft => { const d = loose(draft); if (next === undefined) delete d.degrees; else d.degrees = next; })} />
+        </Field>
         {rolled ? (
           <div className="row">
             <Field label="Успех, если на кости не меньше" hint="Если на кости выпало столько или больше — успех, что бы ни прибавили.">{forced('succeedOn')}</Field>

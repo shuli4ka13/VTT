@@ -6,7 +6,7 @@ import { within } from '../../../testing/cards.ts';
 import type { System } from '@vtt/schema';
 
 const make = (roll: Record<string, unknown>) => ({
-  tables: {}, effects: {},
+  tables: { outcome: { label: 'Исходы', shape: 'rows', columns: [{ key: 'name', label: 'Название' }], rows: [] } }, effects: {},
   constants: { d: { label: 'Кость', kind: 'die', dice: [{ sides: 20 }] } },
   rolls: { r: { die: 'd', fields: [], ...roll } },
 }) as unknown as System;
@@ -50,6 +50,25 @@ describe('«Правила → Броски»: успех и степени чи
     const again = run({ degrees: [{ label: 'Успех', if: { expr: 'да' } }] });
     fireEvent.click(again.view.container.querySelector('[aria-label="убрать ступень"]')!);
     expect(again.system.rolls!.r).not.toHaveProperty('degrees');
+  });
+});
+
+describe('«Правила → Броски»: ступени таблицей', () => {
+  afterEach(cleanup);
+
+  it('таблица выбирается, «по степеням» пишет of, «списком» снимает ключ', () => {
+    const system = make({});
+    const view = render(<RollsSection system={system} editSystem={change => again(change)} />);
+    const again: Parameters<typeof RollsSection>[0]['editSystem'] = change => { change(system as never); view.rerender(<RollsSection system={system} editSystem={again} />); };
+    const box = () => row(view.container, 'Ступени');
+    within(view.container).select(box(), 'outcome');
+    expect(system.rolls!.r!.degrees).toEqual({ table: 'outcome' });
+    within(view.container).select(box().querySelectorAll('select')[1] as HTMLElement, 'margin');
+    expect(system.rolls!.r!.degrees).toEqual({ table: 'outcome', of: 'margin' });
+    within(view.container).select(box().querySelectorAll('select')[1] as HTMLElement, 'total');
+    expect(system.rolls!.r!.degrees).toEqual({ table: 'outcome' });
+    within(view.container).select(box(), '');
+    expect(system.rolls!.r).not.toHaveProperty('degrees');
   });
 });
 

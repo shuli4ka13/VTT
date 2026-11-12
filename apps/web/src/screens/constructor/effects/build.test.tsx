@@ -578,7 +578,7 @@ describe('эффекты пресетов собираются в констру
     ui.click('+ проверка');
     within(at(3)).formula('Что проверяем', '@бросок_бросок');
     within(at(3)).formula('С чем', '4');
-    within(at(3)).select('Исход ступенями', 'outcome');
+    within(at(3)).select('Ступени', 'outcome');
     nameStep(at(3), 'бросок');
 
     ui.click('+ изменение');
