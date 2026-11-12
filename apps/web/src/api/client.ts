@@ -115,6 +115,9 @@ export const listRooms = (): Promise<RoomSummary[]> =>
 export const createRoom = (worldId: string, title: string): Promise<RoomSummary> =>
   post('/rooms', api.roomSummary, { worldId, title });
 
+export const closeRoom = (roomId: string): Promise<{ ok: boolean }> =>
+  call(`/rooms/${roomId}`, z.object({ ok: z.boolean() }), { method: 'DELETE' });
+
 export const roomState = (roomId: string): Promise<RoomState> =>
   call(`/rooms/${roomId}`, api.roomState);
 

@@ -73,6 +73,10 @@ export class TableSocket {
     this.send('sheet:create', { roomId, name, ...(of ? { of } : {}) });
   }
 
+  dropSheet(roomId: string, sheetId: string): void {
+    this.send('sheet:drop', { roomId, sheetId });
+  }
+
   setSheetKind(roomId: string, sheetId: string, of: string | null): void {
     this.send('sheet:of', { roomId, sheetId, of });
   }

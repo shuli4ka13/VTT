@@ -380,29 +380,20 @@
 .block-head__more { visibility: hidden; }
 .block-head:hover .block-head__more, .block-head:focus-within .block-head__more { visibility: visible; }
 
-.rooms {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: var(--s-3);
+.rows-table { display: grid; grid-template-columns: var(--rows-cols); column-gap: var(--s-4); min-width: 0; }
+.rows-table__head { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; padding: 0 var(--s-2) var(--s-2); border-bottom: 1px solid var(--border-strong); font-size: var(--fs-1); text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
+.rows-table__row { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; min-height: 44px; padding: 0 var(--s-2); border-bottom: 1px solid var(--border); }
+.rows-table__row:hover { background: var(--surface-2); }
+.rows-table__row[aria-current='true'] { background: rgb(129 140 248 / 0.12); box-shadow: inset 3px 0 0 var(--accent); color: var(--accent); }
+.rows-table__cell { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rows-table__acts { display: flex; justify-content: flex-end; align-items: center; gap: var(--s-2); overflow: visible; }
+.rows-table__open { display: block; max-width: 100%; padding: 0; border: 0; background: none; font: inherit; font-weight: 600; color: inherit; text-align: left; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rows-table__open:hover { color: var(--accent-hover); }
+.rows-table__open:focus-visible { outline: none; box-shadow: var(--focus); }
+@media (max-width: 700px) {
+  .rows-table { grid-template-columns: var(--rows-cols-narrow); }
+  .rows-table__minor { display: none; }
 }
-.room {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-1);
-  padding: 12px 14px;
-  text-align: left;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--kind-change);
-  border-radius: 11px;
-  color: var(--text);
-  cursor: pointer;
-  transition: border-color 120ms ease, background 120ms ease;
-}
-.room:hover { border-color: var(--accent); background: var(--surface-3); }
-.room__name { font-weight: 600; font-size: var(--fs-4); }
-.room__meta { font-size: var(--fs-2); color: var(--text-muted); }
-.room--system { border-left-color: var(--accent); }
 
 .block-fold {
   border: 1px solid var(--border);
