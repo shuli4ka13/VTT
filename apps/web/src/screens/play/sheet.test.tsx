@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { screen, cleanup, fireEvent } from '@testing-library/react';
+import { screen, cleanup, fireEvent, within } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { renderOpen } from '../../testing/render-open.tsx';
 import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
 import { useSession } from '../../store/session.ts';
-import { SheetScreen } from './sheet.tsx';
+import { SheetScreen, pairFields } from './sheet.tsx';
 import type { RoomState } from '@vtt/schema';
 
 const room = (): RoomState => ({
@@ -98,6 +100,48 @@ describe('заявки к броску с листа', () => {
       ] } },
     } as never;
     expect(claimWords(system)).toEqual([['wild', 'Дикий кубик'], ['зрение', 'зрение'], ['голос', 'голос']]);
+  });
+});
+
+describe('бросок по полю: вторая характеристика и сложность', () => {
+  const fabula = JSON.parse(readFileSync(resolve(process.cwd(), '../../samples/fabula.lite.world.json'), 'utf8'));
+  const calls: unknown[][] = [];
+  const original = tableSocket.rollField.bind(tableSocket);
+  const open = (world: { system: unknown; sheets: unknown[]; compendium?: unknown }) => {
+    useSession.setState(state => ({ ...state, userId: 'u' }));
+    useRoom.setState(state => ({
+      ...state, log: [], error: null, mySheetId: (world.sheets[0] as { id: string }).id,
+      room: { id: 'к', title: 'Стол', members: [{ userId: 'u', name: 'Ведущий', role: 'gm' }], system: world.system, compendium: world.compendium ?? { records: [] }, sheets: world.sheets } as unknown as RoomState,
+    }));
+  };
+  beforeEach(() => {
+    calls.length = 0;
+    tableSocket.rollField = (...args: unknown[]) => { calls.push(args); };
+  });
+  afterEach(() => { cleanup(); tableSocket.rollField = original; });
+
+  it('в Fabula выбор второй характеристики и сложность уходят в бросок', () => {
+    open(fabula);
+    renderOpen(<SheetScreen />);
+    expect(screen.getByText('вторая характеристика:')).toBeTruthy();
+    expect(screen.getByText('сложность:')).toBeTruthy();
+    const pairs = pairFields(fabula.system);
+    expect(pairs.length).toBeGreaterThan(1);
+    const [first, other] = [pairs[0]!, pairs[1]!];
+    const select = screen.getAllByRole('combobox').find(one => within(one).queryByText('та же')) as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: other.tag } });
+    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '9' } });
+    expect(first.tag).not.toBe(other.tag);
+    fireEvent.click(screen.getAllByTitle(first.roll!.label ?? `Проверка: ${first.label}`)[0]!);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.slice(2)).toEqual([first.tag, false, [], other.tag, 9]);
+  });
+
+  it('в системе без парных правил выбора второй характеристики нет', () => {
+    open({ system: { id: 'x', name: 'x', effects: {}, tables: {} }, sheets: [{ id: 'а', systemId: 'x', name: 'Арвен', values: {}, effects: [], has: [] }] });
+    renderOpen(<SheetScreen />);
+    expect(screen.queryByText('вторая характеристика:')).toBeNull();
+    expect(screen.queryByText('сложность:')).toBeNull();
   });
 });
 

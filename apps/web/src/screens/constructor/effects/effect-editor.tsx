@@ -198,7 +198,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
       </Card>
 
       <ParamsEditor id={id} effect={effect} system={system} onEdit={edit} />
-      {effect.returns?.length || roleOf(system, useWorld.getState().compendium, id) === 'step' ? <ReturnsEditor id={id} effect={effect} system={system} onEdit={edit} /> : null}
+      {effect.returns?.length || launch.kind === 'manual' ? <ReturnsEditor id={id} effect={effect} system={system} onEdit={edit} /> : null}
 
       {pipeline ? (
         <>

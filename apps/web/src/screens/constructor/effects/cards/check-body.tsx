@@ -124,6 +124,7 @@ function SideFormula({ value, where, placeholder, context, names, onSet }: {
         system={context.system}
         where={where}
         extraNames={names}
+        whole
         {...(context.sheets ? { sheets: context.sheets } : {})}
         badges={inputBadges(context)}
         invalid={Boolean(trouble)}

@@ -100,9 +100,17 @@ export function withCount(spec: Spec, count: number, owner: string): Spec {
   return { ...spec, terms: [{ ...spec.terms[0]!, count }] };
 }
 
-export function withSides(spec: Spec, sides: number, owner: string): Spec {
-  if (!Number.isInteger(sides) || sides < 1) {
-    throw new EngineError(`${owner}: грани кости «${spec.label || '?'}» должны быть целым числом от единицы, а вышло ${sides}`);
+export function withSides(spec: Spec, sides: number | readonly number[], owner: string): Spec {
+  const list = typeof sides === 'number' ? [sides] : sides;
+  const wrong = list.find(one => !Number.isInteger(one) || one < 1);
+  if (wrong !== undefined) {
+    throw new EngineError(`${owner}: грани кости «${spec.label || '?'}» должны быть целым числом от единицы, а вышло ${wrong}`);
+  }
+  if (typeof sides !== 'number') {
+    if (spec.terms.length !== list.length) {
+      throw new EngineError(`${owner}: бросают ${list.length} поля, а в кости «${spec.label || '?'}» видов: ${spec.terms.length} — их должно быть поровну`);
+    }
+    return { ...spec, terms: spec.terms.map((term, at) => ({ ...term, sides: list[at]! })) };
   }
   if (spec.terms.length !== 1) {
     throw new EngineError(`${owner}: грани задаёт проверка, а кость «${spec.label || '?'}» составная — возьмите кость из одного вида`);

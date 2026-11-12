@@ -52,6 +52,11 @@ describe('rollReadback', () => {
     expect(joinReadback(rollReadback(step, system, hero))).toBe('«Атакующий» бросает 1к20');
   });
 
+  it('бросок поля с вторым полем называет оба поля', () => {
+    const step = { type: 'roll', field: { expr: '@цель.armor' }, second: { expr: '@цель.wounds' } } as unknown as Step;
+    expect(joinReadback(rollReadback(step, system, hero))).toBe('бросок поля «Класс брони» (цель) и «Текущие хиты» (цель)');
+  });
+
   it('бросок поля: поле и поправка', () => {
     const step = { type: 'roll', field: { expr: '@цель.armor' }, shift: { expr: '2' } } as unknown as Step;
     expect(joinReadback(rollReadback(step, system, hero))).toBe('бросок поля «Класс брони» (цель) с поправкой 2');

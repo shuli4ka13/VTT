@@ -219,9 +219,9 @@ export class TableGateway {
     if (!parsed.success || parsed.data.type !== 'sheet:roll') {
       return this.fail(socket, 'бросок с листа не проходит схему');
     }
-    const { roomId, sheetId, tag, hidden, claims } = parsed.data;
+    const { roomId, sheetId, tag, hidden, claims, second, versus } = parsed.data;
     try {
-      await this.roomsService.rollField(guest.userId, roomId, sheetId, tag, Boolean(hidden), claims);
+      await this.roomsService.rollField(guest.userId, roomId, sheetId, tag, Boolean(hidden), claims, second, versus);
     } catch (err) {
       this.fail(socket, (err as Error).message);
     }

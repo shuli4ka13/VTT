@@ -34,6 +34,17 @@
           }
         ],
         "read": "best"
+      },
+      "action_pool": {
+        "label": "пул действия к6",
+        "kind": "die",
+        "dice": [
+          {
+            "count": 1,
+            "sides": 6
+          }
+        ],
+        "read": "best"
       }
     },
     "roll_edits": {
@@ -265,24 +276,8 @@
         "shape": "book",
         "use": "action",
         "block": "Приёмы",
-        "columns": [
-          {
-            "key": "rating",
-            "label": "Рейтинг действия",
-            "kind": "number"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Бросить",
-            "effect": "risky_action",
-            "args": {
-              "rating": {
-                "expr": "@rating"
-              }
-            }
-          }
-        ]
+        "columns": [],
+        "bindings": []
       },
       "crew": {
         "label": "Дела банды",
@@ -337,22 +332,15 @@
           {
             "key": "rating",
             "label": "Рейтинг действия",
-            "kind": "number"
+            "kind": "field"
           }
         ],
         "steps": [
           {
             "id": "бросок_бросок",
             "type": "roll",
-            "die": "pool",
-            "tags": [
-              "действие",
-              {
-                "expr": "если(@rating == 0, \"нулевой\", \"\")"
-              }
-            ],
-            "by": {
-              "expr": "@действующий"
+            "field": {
+              "expr": "@rating"
             }
           },
           {
@@ -590,6 +578,35 @@
         "modifiers": [
           {
             "tags": [
+              "действие"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "tags",
+            "value": {
+              "expr": "\"нулевой\""
+            },
+            "if": {
+              "expr": "@бросающий == @носитель и @число == 0"
+            }
+          },
+          {
+            "tags": [
+              "действие"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель и @число == 0"
+            }
+          },
+          {
+            "tags": [
               "нулевой"
             ],
             "kind": "edit",
@@ -710,7 +727,67 @@
           }
         ]
       }
-    ]
+    ],
+    "rolls": {
+      "действие": {
+        "label": "Действие",
+        "die": "action_pool",
+        "number": "count",
+        "tags": [
+          "действие"
+        ],
+        "fields": [
+          {
+            "table": "лист",
+            "column": "hunt"
+          },
+          {
+            "table": "лист",
+            "column": "study"
+          },
+          {
+            "table": "лист",
+            "column": "survey"
+          },
+          {
+            "table": "лист",
+            "column": "tinker"
+          },
+          {
+            "table": "лист",
+            "column": "finesse"
+          },
+          {
+            "table": "лист",
+            "column": "prowl"
+          },
+          {
+            "table": "лист",
+            "column": "skirmish"
+          },
+          {
+            "table": "лист",
+            "column": "wreck"
+          },
+          {
+            "table": "лист",
+            "column": "attune"
+          },
+          {
+            "table": "лист",
+            "column": "command"
+          },
+          {
+            "table": "лист",
+            "column": "consort"
+          },
+          {
+            "table": "лист",
+            "column": "sway"
+          }
+        ]
+      }
+    }
   },
   "compendium": {
     "records": [
@@ -719,33 +796,51 @@
         "label": "Драка",
         "description": "Пул к6 по рейтингу «Драка».",
         "table": "move",
-        "cells": {
-          "rating": {
-            "expr": "@носитель.skirmish"
+        "bindings": [
+          {
+            "label": "Бросить",
+            "effect": "risky_action",
+            "args": {
+              "rating": {
+                "expr": "@носитель.skirmish"
+              }
+            }
           }
-        }
+        ]
       },
       {
         "id": "act_prowl",
         "label": "Скрытность",
         "description": "Пул к6 по рейтингу «Скрытность».",
         "table": "move",
-        "cells": {
-          "rating": {
-            "expr": "@носитель.prowl"
+        "bindings": [
+          {
+            "label": "Бросить",
+            "effect": "risky_action",
+            "args": {
+              "rating": {
+                "expr": "@носитель.prowl"
+              }
+            }
           }
-        }
+        ]
       },
       {
         "id": "act_sway",
         "label": "Убеждение",
         "description": "Пул к6 по рейтингу «Убеждение».",
         "table": "move",
-        "cells": {
-          "rating": {
-            "expr": "@носитель.sway"
+        "bindings": [
+          {
+            "label": "Бросить",
+            "effect": "risky_action",
+            "args": {
+              "rating": {
+                "expr": "@носитель.sway"
+              }
+            }
           }
-        }
+        ]
       },
       {
         "id": "resist",

@@ -3483,7 +3483,7 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@урон"
+                "expr": "@урон.total"
               },
               "лист": {
                 "expr": "@цель"
@@ -3671,7 +3671,7 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@урон"
+                "expr": "@урон.total"
               },
               "лист": {
                 "expr": "@цель"
@@ -3794,7 +3794,7 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@урон"
+                "expr": "@урон.total"
               },
               "лист": {
                 "expr": "@цель"
@@ -3916,7 +3916,7 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@урон"
+                "expr": "@урон.total"
               },
               "damage_source": {
                 "expr": "\"магический\""
@@ -4179,7 +4179,7 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@урон"
+                "expr": "@урон.total"
               },
               "damage_source": {
                 "expr": "\"магический\""
@@ -4421,7 +4421,7 @@
             "effect": "heal",
             "args": {
               "amount": {
-                "expr": "@сколько"
+                "expr": "@сколько.total"
               },
               "лист": {
                 "expr": "@цель"
@@ -4652,7 +4652,7 @@
             "effect": "heal",
             "args": {
               "amount": {
-                "expr": "@сколько"
+                "expr": "@сколько.total"
               },
               "лист": {
                 "expr": "@цель"
@@ -4714,7 +4714,7 @@
                 "expr": "@действующий"
               },
               "amount": {
-                "expr": "@сколько"
+                "expr": "@сколько.total"
               },
               "источник": {
                 "expr": "@действующий"
@@ -5445,7 +5445,7 @@
                 "expr": "@действующий"
               },
               "amount": {
-                "expr": "@сколько"
+                "expr": "@сколько.total"
               },
               "источник": {
                 "expr": "@действующий"
@@ -6066,7 +6066,7 @@
                 "effect": "damage",
                 "args": {
                   "amount": {
-                    "expr": "@жар"
+                    "expr": "@жар.total"
                   },
                   "damage_type": {
                     "expr": "\"огонь\""
@@ -6372,7 +6372,7 @@
                 "id": "урон",
                 "type": "roll",
                 "fixed": {
-                  "expr": "если(@спас.прошёл, округлить вниз((@урон_всего) * (0.5)), @урон_всего)"
+                  "expr": "если(@спас.прошёл, округлить вниз((@урон_всего.total) * (0.5)), @урон_всего.total)"
                 }
               },
               {
@@ -8853,7 +8853,7 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@урон_всего"
+                "expr": "@урон_всего.total"
               },
               "damage_source": {
                 "expr": "\"магический\""
@@ -8909,7 +8909,7 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "округлить вниз(@урон_всего * 0.5)"
+                "expr": "округлить вниз(@урон_всего.total * 0.5)"
               },
               "damage_source": {
                 "expr": "\"магический\""

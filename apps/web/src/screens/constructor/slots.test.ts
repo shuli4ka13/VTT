@@ -14,7 +14,8 @@ const call: EarlierStep = {
 describe('ссылка на шаг — по имени, без номера', () => {
   it('в формулах и выборах значения: имя шага и что это', () => {
     const earlier: EarlierStep[] = [{ id: 'урон_всего', type: 'roll', title: 'Число «урон всего»' }];
-    expect(outputRefs(earlier)[0]).toMatchObject({ ref: 'урон_всего', label: 'урон всего — сколько вышло всего, с прибавками', kind: 'number' });
+    expect(outputRefs(earlier)[0]).toMatchObject({ ref: 'урон_всего', label: 'урон всего', kind: 'roll' });
+    expect(outputRefs(earlier)[1]).toMatchObject({ ref: 'урон_всего.total', label: 'урон всего — сколько вышло всего, с прибавками', kind: 'number' });
     expect(outputRefs(earlier).every(one => !/шаг \d/.test(one.label))).toBe(true);
   });
 
@@ -30,7 +31,8 @@ describe('ссылка на шаг — по имени, без номера', ()
 
   it('справка называет результат шага по имени', () => {
     const earlier: EarlierStep[] = [{ id: 'урон', type: 'roll', title: 'Число «урон»' }];
-    expect(outputLabel('урон', earlier)).toBe('урон — сколько вышло всего, с прибавками');
+    expect(outputLabel('урон', earlier)).toBe('урон');
+    expect(outputLabel('урон.total', earlier)).toBe('урон — сколько вышло всего, с прибавками');
     expect(outputLabel('нет.итог', earlier)).toBe('шаг «нет» — итог');
   });
 });

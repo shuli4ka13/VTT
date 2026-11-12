@@ -188,6 +188,7 @@ export const systemRoll = z.object({
   label: z.string().optional(),
   die: z.string().min(1),
   number: z.enum(['bonus', 'count', 'sides', 'under', 'over']).optional(),
+  pair: z.literal(true).optional(),
   keep: slotRef.optional(),
   degrees: rollDegrees.optional(),
   success: formula.optional(),

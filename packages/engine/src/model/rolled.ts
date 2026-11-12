@@ -25,11 +25,34 @@ export function fieldGives(system: System, params: readonly Param[], step: Step)
   if (!found) return null;
   const kind = found.roll.number;
   const graded = kind === 'under' || kind === 'over' || found.entry.threshold !== undefined;
+  const waits = (ref: unknown): boolean =>
+    /@порог(?![\p{L}\p{N}_])/u.test(String((ref as { expr?: unknown } | undefined)?.expr ?? ''));
   return {
-    success: graded || Boolean(found.roll.success),
-    margin: graded || Boolean(found.roll.margin),
+    success: graded || (Boolean(found.roll.success) && !waits(found.roll.success)),
+    margin: graded || (Boolean(found.roll.margin) && !waits(found.roll.margin)),
     degree: hasDegrees(found.roll.degrees),
   };
+}
+
+const waitsThreshold = (ref: unknown): boolean =>
+  /@порог(?![\p{L}\p{N}_])/u.test(String((ref as { expr?: unknown } | undefined)?.expr ?? ''));
+
+export function rollsGive(system: System): Graded | null {
+  const rolls = Object.values(system.rolls ?? {});
+  if (!rolls.length) return null;
+  const each = rolls.map(roll => {
+    const graded = roll.number === 'under' || roll.number === 'over' || roll.fields.some(one => one.threshold !== undefined);
+    return {
+      success: graded || (Boolean(roll.success) && !waitsThreshold(roll.success)),
+      margin: graded || (Boolean(roll.margin) && !waitsThreshold(roll.margin)),
+      degree: hasDegrees(roll.degrees),
+    };
+  });
+  return { success: each.some(one => one.success), margin: each.some(one => one.margin), degree: each.some(one => one.degree) };
+}
+
+export function givesOf(system: System, params: readonly Param[], step: Step): Graded | null {
+  return fieldGives(system, params, step) ?? rollsGive(system);
 }
 
 export function thrownDie(system: System, params: readonly Param[], step: Step): string | null {

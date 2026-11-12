@@ -1,0 +1,5051 @@
+{
+  "title": "D&D 5e",
+  "system": {
+    "id": "dnd5e",
+    "name": "D&D 5e",
+    "groups": {
+      "Атака": {},
+      "Механика": {},
+      "Заклинания": {
+        "parent": "Механика"
+      },
+      "Умения класса": {
+        "parent": "Механика"
+      },
+      "Черты": {
+        "parent": "Механика"
+      },
+      "Состояния": {
+        "parent": "Механика"
+      },
+      "Реакции": {
+        "parent": "Механика"
+      },
+      "Действия в бою": {
+        "parent": "Механика"
+      },
+      "Отдых и смерть": {
+        "parent": "Механика"
+      },
+      "Лечение": {
+        "parent": "Механика"
+      },
+      "Общие правила": {
+        "parent": "Механика"
+      },
+      "Шаги для других": {
+        "parent": "Механика"
+      },
+      "Плата": {
+        "parent": "Механика"
+      },
+      "Книга": {},
+      "Снаряжение": {
+        "parent": "Книга"
+      },
+      "Расходники": {
+        "parent": "Книга"
+      },
+      "Умения и черты": {
+        "parent": "Книга"
+      },
+      "Бестиарий": {
+        "parent": "Книга"
+      }
+    },
+    "constants": {
+      "lead_die": {
+        "label": "Ведущая кость",
+        "kind": "die",
+        "dice": [
+          {
+            "sides": 20
+          }
+        ]
+      }
+    },
+    "tables": {
+      "prof_steps": {
+        "label": "Владение",
+        "key": "number",
+        "rows": [
+          {
+            "value": 0,
+            "label": "нет"
+          },
+          {
+            "value": 1,
+            "label": "владение"
+          },
+          {
+            "value": 2,
+            "label": "мастерство"
+          }
+        ]
+      },
+      "лист": {
+        "label": "Лист",
+        "shape": "single",
+        "columns": [
+          {
+            "key": "race",
+            "label": "Раса",
+            "kind": "choice",
+            "from": "races"
+          },
+          {
+            "key": "class_name",
+            "label": "Класс",
+            "kind": "choice",
+            "from": "classes"
+          },
+          {
+            "key": "subclass",
+            "label": "Подкласс",
+            "kind": "text"
+          },
+          {
+            "key": "background",
+            "label": "Предыстория",
+            "kind": "text"
+          },
+          {
+            "key": "alignment",
+            "label": "Мировоззрение",
+            "kind": "text"
+          },
+          {
+            "key": "level",
+            "label": "Уровень",
+            "kind": "number",
+            "from": "levels",
+            "default": 1,
+            "min": 1,
+            "max": 20
+          },
+          {
+            "key": "prof_bonus",
+            "label": "Бонус мастерства",
+            "expr": {
+              "expr": "@level.prof"
+            }
+          },
+          {
+            "key": "inspiration",
+            "label": "Вдохновение",
+            "kind": "number",
+            "min": 0,
+            "max": 1
+          },
+          {
+            "key": "xp",
+            "label": "Опыт",
+            "kind": "number",
+            "min": 0
+          },
+          {
+            "key": "initiative",
+            "label": "Инициатива",
+            "expr": {
+              "expr": "@abilities.ловкость.mod"
+            }
+          },
+          {
+            "key": "passive_perception",
+            "label": "Пассивная внимательность",
+            "expr": {
+              "expr": "10 + @skills.внимательность.total"
+            }
+          },
+          {
+            "key": "speed",
+            "label": "Скорость, футов",
+            "expr": {
+              "expr": "@race.speed или 30"
+            },
+            "stages": [
+              {
+                "key": "итог",
+                "label": "итог",
+                "atLeast": 0
+              }
+            ]
+          },
+          {
+            "key": "darkvision",
+            "label": "Тёмное зрение, футов",
+            "kind": "number",
+            "min": 0,
+            "stages": [
+              {
+                "key": "основа",
+                "label": "основа",
+                "combine": {
+                  "set": "max"
+                }
+              }
+            ]
+          },
+          {
+            "key": "languages",
+            "label": "Языки",
+            "kind": "text",
+            "default": "Общий"
+          },
+          {
+            "key": "ac_base",
+            "label": "База доспеха",
+            "kind": "number",
+            "default": 10,
+            "min": 0,
+            "stages": [
+              {
+                "key": "основа",
+                "label": "основа",
+                "combine": {
+                  "set": "max"
+                }
+              }
+            ]
+          },
+          {
+            "key": "armor_heaviness",
+            "label": "Тяжесть доспеха",
+            "kind": "choice",
+            "from": "heaviness"
+          },
+          {
+            "key": "ac_dex",
+            "label": "Ловкость в классе брони",
+            "expr": {
+              "expr": "если(пусто(@armor_heaviness), @abilities.ловкость.mod, @armor_heaviness.dex_ac)"
+            }
+          },
+          {
+            "key": "ac",
+            "label": "Класс брони",
+            "expr": {
+              "expr": "@ac_base + @ac_dex"
+            }
+          },
+          {
+            "key": "hp_max",
+            "label": "Максимум хитов",
+            "expr": {
+              "expr": "если(пусто(@class_name), @hp_block, @class_name.hp) + @hp_bonus"
+            }
+          },
+          {
+            "key": "hp_bonus",
+            "label": "Прибавка к максимуму хитов",
+            "kind": "number"
+          },
+          {
+            "key": "hp_block",
+            "label": "Хиты из блока монстра",
+            "kind": "number"
+          },
+          {
+            "key": "hp_current",
+            "label": "Хиты",
+            "kind": "number",
+            "default": 8,
+            "min": 0,
+            "max": {
+              "expr": "@hp_max"
+            }
+          },
+          {
+            "key": "hp_temp",
+            "label": "Временные хиты",
+            "kind": "number",
+            "min": 0
+          },
+          {
+            "key": "hit_die",
+            "label": "Кость хитов",
+            "expr": {
+              "expr": "@class_name.hit_die или @race.size.hit_die или \"1к8\""
+            }
+          },
+          {
+            "key": "hit_dice_left",
+            "label": "Костей хитов осталось",
+            "kind": "number",
+            "default": 1,
+            "min": 0,
+            "max": {
+              "expr": "@level"
+            }
+          },
+          {
+            "key": "death_ok",
+            "label": "Спасброски от смерти: успехи",
+            "kind": "number",
+            "min": 0,
+            "max": 3
+          },
+          {
+            "key": "death_fail",
+            "label": "Спасброски от смерти: провалы",
+            "kind": "number",
+            "min": 0,
+            "max": 3
+          },
+          {
+            "key": "exhaustion",
+            "label": "Истощение",
+            "kind": "number",
+            "min": 0,
+            "max": 6
+          },
+          {
+            "key": "down",
+            "label": "Без сил",
+            "expr": {
+              "expr": "@hp_current <= 0"
+            }
+          },
+          {
+            "key": "up",
+            "label": "На ногах",
+            "expr": {
+              "expr": "@hp_current > 0"
+            }
+          },
+          {
+            "key": "is_dead",
+            "label": "Три провала",
+            "expr": {
+              "expr": "@death_fail >= 3"
+            }
+          },
+          {
+            "key": "is_stable",
+            "label": "Три успеха",
+            "expr": {
+              "expr": "@death_ok >= 3"
+            }
+          },
+          {
+            "key": "attacks_per_action",
+            "label": "Атак за действие",
+            "kind": "number",
+            "default": 1,
+            "min": 1,
+            "max": 4
+          },
+          {
+            "key": "crit_from",
+            "label": "Крит на костях от",
+            "kind": "number",
+            "default": 20,
+            "min": 18,
+            "max": 20
+          },
+          {
+            "key": "sneak_dice",
+            "label": "Костей скрытой атаки",
+            "expr": {
+              "expr": "округлить вверх(@level / 2)"
+            }
+          },
+          {
+            "key": "spell_mod",
+            "label": "Заклинательный модификатор",
+            "expr": {
+              "expr": "@class_name.spell_ability.mod или @abilities.харизма.mod"
+            }
+          },
+          {
+            "key": "spell_dc",
+            "label": "Сложность заклинаний",
+            "expr": {
+              "expr": "8 + @prof_bonus + @spell_mod"
+            }
+          },
+          {
+            "key": "spell_attack",
+            "label": "Атака заклинанием",
+            "expr": {
+              "expr": "@prof_bonus + @spell_mod"
+            }
+          },
+          {
+            "key": "caster_level",
+            "label": "Уровень заклинателя",
+            "kind": "number",
+            "from": "spell_slots",
+            "min": 0,
+            "max": 20
+          },
+          {
+            "key": "attuned",
+            "label": "Настроено предметов",
+            "expr": {
+              "expr": "сколько(строки(\"wondrous\", \"attunement\"), да)"
+            },
+            "max": 3
+          },
+          {
+            "key": "cantrip_dice",
+            "label": "Костей заговора",
+            "expr": {
+              "expr": "@level.cantrips"
+            }
+          },
+          {
+            "key": "rage_damage",
+            "label": "Урон ярости",
+            "expr": {
+              "expr": "если(@class_name.rage == да, @level.rage_damage, 0)"
+            }
+          },
+          {
+            "key": "superiority_die",
+            "label": "Кость превосходства",
+            "expr": {
+              "expr": "@level.superiority_die"
+            }
+          },
+          {
+            "key": "gp",
+            "label": "Золотые",
+            "kind": "number",
+            "min": 0
+          },
+          {
+            "key": "sp",
+            "label": "Серебряные",
+            "kind": "number",
+            "min": 0
+          },
+          {
+            "key": "cp",
+            "label": "Медные",
+            "kind": "number",
+            "min": 0
+          }
+        ]
+      },
+      "turn": {
+        "label": "За ход",
+        "key": "word",
+        "owner": "sheet",
+        "columns": [
+          {
+            "key": "max",
+            "label": "Всего",
+            "kind": "number"
+          },
+          {
+            "key": "left",
+            "label": "Осталось",
+            "kind": "number",
+            "min": 0,
+            "max": {
+              "expr": "@строка.max"
+            },
+            "title": "{label}"
+          },
+          {
+            "key": "start",
+            "label": "В начале хода",
+            "kind": "number"
+          },
+          {
+            "key": "none",
+            "label": "Если не осталось",
+            "kind": "text"
+          }
+        ],
+        "rows": [
+          {
+            "value": "действие",
+            "label": "Действие",
+            "cells": {
+              "max": 2,
+              "start": 1,
+              "none": "действие на этом ходу уже потрачено"
+            },
+            "view": {
+              "left": {
+                "default": 1
+              }
+            }
+          },
+          {
+            "value": "бонусное",
+            "label": "Бонусное действие",
+            "cells": {
+              "max": 1,
+              "start": 1,
+              "none": "бонусное действие на этом ходу уже потрачено"
+            },
+            "view": {
+              "left": {
+                "default": 1
+              }
+            }
+          },
+          {
+            "value": "реакция",
+            "label": "Реакция",
+            "cells": {
+              "max": 1,
+              "start": 1,
+              "none": "реакция уже потрачена"
+            },
+            "view": {
+              "left": {
+                "default": 1
+              }
+            }
+          },
+          {
+            "value": "раз_за_ход",
+            "label": "Раз за ход",
+            "cells": {
+              "max": 1,
+              "start": 1,
+              "none": "это бывает раз за ход"
+            },
+            "view": {
+              "left": {
+                "default": 1
+              }
+            }
+          },
+          {
+            "value": "свирепый",
+            "label": "Свирепый атакующий",
+            "cells": {
+              "max": 1,
+              "start": 1,
+              "none": "«Свирепый атакующий» на этом ходу уже был"
+            },
+            "view": {
+              "left": {
+                "default": 1
+              }
+            }
+          },
+          {
+            "value": "атаки",
+            "label": "Атак осталось",
+            "cells": {
+              "max": 4,
+              "start": 0,
+              "none": "атак на этом ходу не осталось"
+            }
+          }
+        ]
+      },
+      "slots": {
+        "label": "Ячейки по кругам",
+        "key": "number",
+        "columns": [
+          {
+            "key": "circle",
+            "label": "Колонка в «Ячейках заклинаний»",
+            "kind": "column",
+            "from": "spell_slots"
+          },
+          {
+            "key": "max",
+            "label": "Всего",
+            "kind": "number",
+            "expr": {
+              "expr": "@caster_level.[@строка.circle]"
+            },
+            "title": "Всего ячеек: {label}"
+          },
+          {
+            "key": "left",
+            "label": "Осталось",
+            "kind": "number",
+            "min": 0,
+            "max": {
+              "expr": "@строка.max"
+            },
+            "title": "Ячейки: {label}",
+            "default": 0
+          },
+          {
+            "key": "none",
+            "label": "Если не осталось",
+            "kind": "text"
+          }
+        ],
+        "rows": [
+          {
+            "value": 1,
+            "label": "1-й круг",
+            "cells": {
+              "circle": "круг_1",
+              "none": "нет ячейки 1-го круга"
+            }
+          },
+          {
+            "value": 2,
+            "label": "2-й круг",
+            "cells": {
+              "circle": "круг_2",
+              "none": "нет ячейки 2-го круга"
+            }
+          },
+          {
+            "value": 3,
+            "label": "3-й круг",
+            "cells": {
+              "circle": "круг_3",
+              "none": "нет ячейки 3-го круга"
+            }
+          },
+          {
+            "value": 4,
+            "label": "4-й круг",
+            "cells": {
+              "circle": "круг_4",
+              "none": "нет ячейки 4-го круга"
+            }
+          },
+          {
+            "value": 5,
+            "label": "5-й круг",
+            "cells": {
+              "circle": "круг_5",
+              "none": "нет ячейки 5-го круга"
+            }
+          },
+          {
+            "value": 6,
+            "label": "6-й круг",
+            "cells": {
+              "circle": "круг_6",
+              "none": "нет ячейки 6-го круга"
+            }
+          },
+          {
+            "value": 7,
+            "label": "7-й круг",
+            "cells": {
+              "circle": "круг_7",
+              "none": "нет ячейки 7-го круга"
+            }
+          },
+          {
+            "value": 8,
+            "label": "8-й круг",
+            "cells": {
+              "circle": "круг_8",
+              "none": "нет ячейки 8-го круга"
+            }
+          },
+          {
+            "value": 9,
+            "label": "9-й круг",
+            "cells": {
+              "circle": "круг_9",
+              "none": "нет ячейки 9-го круга"
+            }
+          }
+        ],
+        "owner": "sheet"
+      },
+      "resources": {
+        "label": "Ресурсы класса",
+        "key": "word",
+        "columns": [
+          {
+            "key": "class",
+            "label": "Чей ресурс",
+            "kind": "choice",
+            "from": "classes",
+            "many": true
+          },
+          {
+            "key": "max",
+            "label": "Всего",
+            "kind": "number",
+            "min": 0,
+            "title": "{label}: всего",
+            "default": 0
+          },
+          {
+            "key": "left",
+            "label": "Осталось",
+            "kind": "number",
+            "min": 0,
+            "max": {
+              "expr": "@строка.max"
+            },
+            "title": "{label}: осталось",
+            "default": 0
+          },
+          {
+            "key": "short",
+            "label": "Восполняется коротким отдыхом",
+            "kind": "boolean"
+          }
+        ],
+        "rows": [
+          {
+            "value": "rages",
+            "label": "Ярость",
+            "cells": {
+              "class": [
+                "варвар"
+              ],
+              "short": false
+            }
+          },
+          {
+            "value": "ki",
+            "label": "Очки ци",
+            "cells": {
+              "class": [
+                "монах"
+              ],
+              "short": true
+            }
+          },
+          {
+            "value": "bardic",
+            "label": "Бардовское вдохновение",
+            "cells": {
+              "class": [
+                "бард"
+              ],
+              "short": false
+            }
+          },
+          {
+            "value": "channel",
+            "label": "Божественный канал",
+            "cells": {
+              "class": [
+                "жрец",
+                "паладин"
+              ],
+              "short": true
+            }
+          },
+          {
+            "value": "second_wind",
+            "label": "Второе дыхание",
+            "cells": {
+              "class": [
+                "воин"
+              ],
+              "short": true
+            }
+          },
+          {
+            "value": "action_surge",
+            "label": "Всплеск действий",
+            "cells": {
+              "class": [
+                "воин"
+              ],
+              "short": true
+            }
+          },
+          {
+            "value": "lay_on_hands",
+            "label": "Наложение рук: запас",
+            "cells": {
+              "class": [
+                "паладин"
+              ],
+              "short": false
+            }
+          },
+          {
+            "value": "sorcery",
+            "label": "Очки чародейства",
+            "cells": {
+              "class": [
+                "чародей"
+              ],
+              "short": false
+            }
+          },
+          {
+            "value": "superiority",
+            "label": "Кости превосходства",
+            "cells": {
+              "class": [
+                "воин"
+              ],
+              "short": true
+            }
+          },
+          {
+            "value": "luck",
+            "label": "Очки удачи",
+            "cells": {
+              "short": false
+            }
+          },
+          {
+            "value": "relentless",
+            "label": "Непоколебимая стойкость",
+            "cells": {
+              "short": false
+            }
+          }
+        ],
+        "owner": "sheet"
+      },
+      "levels": {
+        "label": "Уровень персонажа",
+        "key": "number",
+        "columns": [
+          {
+            "key": "prof",
+            "label": "Бонус мастерства",
+            "kind": "number"
+          },
+          {
+            "key": "cantrips",
+            "label": "Костей заговора",
+            "kind": "number"
+          },
+          {
+            "key": "rage_damage",
+            "label": "Урон ярости",
+            "kind": "number"
+          },
+          {
+            "key": "bardic_die",
+            "label": "Кость вдохновения",
+            "kind": "dice"
+          },
+          {
+            "key": "superiority_die",
+            "label": "Кость превосходства",
+            "kind": "dice"
+          }
+        ],
+        "rows": [
+          {
+            "value": 1,
+            "cells": {
+              "prof": 2,
+              "cantrips": 1,
+              "rage_damage": 2,
+              "bardic_die": "1к6",
+              "superiority_die": "1к8"
+            }
+          },
+          {
+            "value": 2,
+            "cells": {
+              "prof": 2,
+              "cantrips": 1,
+              "rage_damage": 2,
+              "bardic_die": "1к6",
+              "superiority_die": "1к8"
+            }
+          },
+          {
+            "value": 3,
+            "cells": {
+              "prof": 2,
+              "cantrips": 1,
+              "rage_damage": 2,
+              "bardic_die": "1к6",
+              "superiority_die": "1к8"
+            }
+          },
+          {
+            "value": 4,
+            "cells": {
+              "prof": 2,
+              "cantrips": 1,
+              "rage_damage": 2,
+              "bardic_die": "1к6",
+              "superiority_die": "1к8"
+            }
+          },
+          {
+            "value": 5,
+            "cells": {
+              "prof": 3,
+              "cantrips": 2,
+              "rage_damage": 2,
+              "bardic_die": "1к8",
+              "superiority_die": "1к8"
+            }
+          },
+          {
+            "value": 6,
+            "cells": {
+              "prof": 3,
+              "cantrips": 2,
+              "rage_damage": 2,
+              "bardic_die": "1к8",
+              "superiority_die": "1к8"
+            }
+          },
+          {
+            "value": 7,
+            "cells": {
+              "prof": 3,
+              "cantrips": 2,
+              "rage_damage": 2,
+              "bardic_die": "1к8",
+              "superiority_die": "1к8"
+            }
+          },
+          {
+            "value": 8,
+            "cells": {
+              "prof": 3,
+              "cantrips": 2,
+              "rage_damage": 2,
+              "bardic_die": "1к8",
+              "superiority_die": "1к8"
+            }
+          },
+          {
+            "value": 9,
+            "cells": {
+              "prof": 4,
+              "cantrips": 2,
+              "rage_damage": 3,
+              "bardic_die": "1к8",
+              "superiority_die": "1к8"
+            }
+          },
+          {
+            "value": 10,
+            "cells": {
+              "prof": 4,
+              "cantrips": 2,
+              "rage_damage": 3,
+              "bardic_die": "1к10",
+              "superiority_die": "1к10"
+            }
+          },
+          {
+            "value": 11,
+            "cells": {
+              "prof": 4,
+              "cantrips": 3,
+              "rage_damage": 3,
+              "bardic_die": "1к10",
+              "superiority_die": "1к10"
+            }
+          },
+          {
+            "value": 12,
+            "cells": {
+              "prof": 4,
+              "cantrips": 3,
+              "rage_damage": 3,
+              "bardic_die": "1к10",
+              "superiority_die": "1к10"
+            }
+          },
+          {
+            "value": 13,
+            "cells": {
+              "prof": 5,
+              "cantrips": 3,
+              "rage_damage": 3,
+              "bardic_die": "1к10",
+              "superiority_die": "1к10"
+            }
+          },
+          {
+            "value": 14,
+            "cells": {
+              "prof": 5,
+              "cantrips": 3,
+              "rage_damage": 3,
+              "bardic_die": "1к10",
+              "superiority_die": "1к10"
+            }
+          },
+          {
+            "value": 15,
+            "cells": {
+              "prof": 5,
+              "cantrips": 3,
+              "rage_damage": 3,
+              "bardic_die": "1к12",
+              "superiority_die": "1к10"
+            }
+          },
+          {
+            "value": 16,
+            "cells": {
+              "prof": 5,
+              "cantrips": 3,
+              "rage_damage": 4,
+              "bardic_die": "1к12",
+              "superiority_die": "1к10"
+            }
+          },
+          {
+            "value": 17,
+            "cells": {
+              "prof": 6,
+              "cantrips": 4,
+              "rage_damage": 4,
+              "bardic_die": "1к12",
+              "superiority_die": "1к10"
+            }
+          },
+          {
+            "value": 18,
+            "cells": {
+              "prof": 6,
+              "cantrips": 4,
+              "rage_damage": 4,
+              "bardic_die": "1к12",
+              "superiority_die": "1к12"
+            }
+          },
+          {
+            "value": 19,
+            "cells": {
+              "prof": 6,
+              "cantrips": 4,
+              "rage_damage": 4,
+              "bardic_die": "1к12",
+              "superiority_die": "1к12"
+            }
+          },
+          {
+            "value": 20,
+            "cells": {
+              "prof": 6,
+              "cantrips": 4,
+              "rage_damage": 4,
+              "bardic_die": "1к12",
+              "superiority_die": "1к12"
+            }
+          }
+        ]
+      },
+      "spell_slots": {
+        "label": "Ячейки заклинаний",
+        "key": "number",
+        "columns": [
+          {
+            "key": "круг_1",
+            "label": "1-й круг",
+            "kind": "number"
+          },
+          {
+            "key": "круг_2",
+            "label": "2-й круг",
+            "kind": "number"
+          },
+          {
+            "key": "круг_3",
+            "label": "3-й круг",
+            "kind": "number"
+          },
+          {
+            "key": "круг_4",
+            "label": "4-й круг",
+            "kind": "number"
+          },
+          {
+            "key": "круг_5",
+            "label": "5-й круг",
+            "kind": "number"
+          },
+          {
+            "key": "круг_6",
+            "label": "6-й круг",
+            "kind": "number"
+          },
+          {
+            "key": "круг_7",
+            "label": "7-й круг",
+            "kind": "number"
+          },
+          {
+            "key": "круг_8",
+            "label": "8-й круг",
+            "kind": "number"
+          },
+          {
+            "key": "круг_9",
+            "label": "9-й круг",
+            "kind": "number"
+          }
+        ],
+        "rows": [
+          {
+            "value": 0,
+            "cells": {
+              "круг_1": 0,
+              "круг_2": 0,
+              "круг_3": 0,
+              "круг_4": 0,
+              "круг_5": 0,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
+            }
+          },
+          {
+            "value": 1,
+            "cells": {
+              "круг_1": 2,
+              "круг_2": 0,
+              "круг_3": 0,
+              "круг_4": 0,
+              "круг_5": 0,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
+            }
+          },
+          {
+            "value": 2,
+            "cells": {
+              "круг_1": 3,
+              "круг_2": 0,
+              "круг_3": 0,
+              "круг_4": 0,
+              "круг_5": 0,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
+            }
+          },
+          {
+            "value": 3,
+            "cells": {
+              "круг_1": 4,
+              "круг_2": 2,
+              "круг_3": 0,
+              "круг_4": 0,
+              "круг_5": 0,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
+            }
+          },
+          {
+            "value": 4,
+            "cells": {
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 0,
+              "круг_4": 0,
+              "круг_5": 0,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
+            }
+          },
+          {
+            "value": 5,
+            "cells": {
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 2,
+              "круг_4": 0,
+              "круг_5": 0,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
+            }
+          },
+          {
+            "value": 6,
+            "cells": {
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 0,
+              "круг_5": 0,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
+            }
+          },
+          {
+            "value": 7,
+            "cells": {
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 1,
+              "круг_5": 0,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
+            }
+          },
+          {
+            "value": 8,
+            "cells": {
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 2,
+              "круг_5": 0,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
+            }
+          },
+          {
+            "value": 9,
+            "cells": {
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 1,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
+            }
+          },
+          {
+            "value": 10,
+            "cells": {
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 2,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
+            }
+          },
+          {
+            "value": 11,
+            "cells": {
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 2,
+              "круг_6": 1,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
+            }
+          },
+          {
+            "value": 12,
+            "cells": {
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 2,
+              "круг_6": 1,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
+            }
+          },
+          {
+            "value": 13,
+            "cells": {
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 2,
+              "круг_6": 1,
+              "круг_7": 1,
+              "круг_8": 0,
+              "круг_9": 0
+            }
+          },
+          {
+            "value": 14,
+            "cells": {
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 2,
+              "круг_6": 1,
+              "круг_7": 1,
+              "круг_8": 0,
+              "круг_9": 0
+            }
+          },
+          {
+            "value": 15,
+            "cells": {
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 2,
+              "круг_6": 1,
+              "круг_7": 1,
+              "круг_8": 1,
+              "круг_9": 0
+            }
+          },
+          {
+            "value": 16,
+            "cells": {
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 2,
+              "круг_6": 1,
+              "круг_7": 1,
+              "круг_8": 1,
+              "круг_9": 0
+            }
+          },
+          {
+            "value": 17,
+            "cells": {
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 2,
+              "круг_6": 1,
+              "круг_7": 1,
+              "круг_8": 1,
+              "круг_9": 1
+            }
+          },
+          {
+            "value": 18,
+            "cells": {
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 3,
+              "круг_6": 1,
+              "круг_7": 1,
+              "круг_8": 1,
+              "круг_9": 1
+            }
+          },
+          {
+            "value": 19,
+            "cells": {
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 3,
+              "круг_6": 2,
+              "круг_7": 1,
+              "круг_8": 1,
+              "круг_9": 1
+            }
+          },
+          {
+            "value": 20,
+            "cells": {
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 3,
+              "круг_6": 2,
+              "круг_7": 2,
+              "круг_8": 1,
+              "круг_9": 1
+            }
+          }
+        ]
+      },
+      "weapon_properties": {
+        "label": "Свойства оружия",
+        "key": "word",
+        "rows": [
+          {
+            "value": "лёгкое"
+          },
+          {
+            "value": "фехтовальное"
+          },
+          {
+            "value": "метательное"
+          },
+          {
+            "value": "двуручное"
+          },
+          {
+            "value": "тяжёлое"
+          },
+          {
+            "value": "досягаемость"
+          },
+          {
+            "value": "универсальное"
+          },
+          {
+            "value": "перезарядка"
+          },
+          {
+            "value": "боеприпасы"
+          }
+        ]
+      },
+      "damage_nature": {
+        "label": "Природа урона",
+        "key": "word",
+        "rows": [
+          {
+            "value": "физический"
+          },
+          {
+            "value": "стихийный"
+          },
+          {
+            "value": "прочий"
+          }
+        ]
+      },
+      "attack_outcomes": {
+        "label": "Исход атаки",
+        "key": "word",
+        "columns": [
+          {
+            "key": "dice_mul",
+            "label": "множитель костей урона",
+            "kind": "number"
+          },
+          {
+            "key": "hit",
+            "label": "попал",
+            "kind": "boolean"
+          }
+        ],
+        "rows": [
+          {
+            "value": "промах",
+            "cells": {
+              "dice_mul": 0,
+              "hit": false
+            }
+          },
+          {
+            "value": "попадание",
+            "cells": {
+              "dice_mul": 1,
+              "hit": true
+            }
+          },
+          {
+            "value": "крит",
+            "cells": {
+              "dice_mul": 2,
+              "hit": true
+            }
+          }
+        ]
+      },
+      "damage_source": {
+        "label": "Источник урона",
+        "key": "word",
+        "rows": [
+          {
+            "value": "немагический"
+          },
+          {
+            "value": "магический"
+          }
+        ]
+      },
+      "damage_types": {
+        "label": "Типы урона",
+        "key": "word",
+        "columns": [
+          {
+            "key": "nature",
+            "label": "Природа",
+            "kind": "choice",
+            "from": "damage_nature"
+          },
+          {
+            "key": "taken",
+            "label": "Стойкость",
+            "kind": "choice",
+            "from": "taken",
+            "default": "как есть",
+            "title": "{label}"
+          }
+        ],
+        "rows": [
+          {
+            "value": "рубящий",
+            "cells": {
+              "nature": "физический"
+            }
+          },
+          {
+            "value": "колющий",
+            "cells": {
+              "nature": "физический"
+            }
+          },
+          {
+            "value": "дробящий",
+            "cells": {
+              "nature": "физический"
+            }
+          },
+          {
+            "value": "огонь",
+            "cells": {
+              "nature": "стихийный"
+            }
+          },
+          {
+            "value": "холод",
+            "cells": {
+              "nature": "стихийный"
+            }
+          },
+          {
+            "value": "молния",
+            "cells": {
+              "nature": "стихийный"
+            }
+          },
+          {
+            "value": "гром",
+            "cells": {
+              "nature": "стихийный"
+            }
+          },
+          {
+            "value": "кислота",
+            "cells": {
+              "nature": "стихийный"
+            }
+          },
+          {
+            "value": "яд",
+            "cells": {
+              "nature": "прочий"
+            }
+          },
+          {
+            "value": "некротический",
+            "cells": {
+              "nature": "прочий"
+            }
+          },
+          {
+            "value": "излучение",
+            "cells": {
+              "nature": "прочий"
+            }
+          },
+          {
+            "value": "психический",
+            "cells": {
+              "nature": "прочий"
+            }
+          },
+          {
+            "value": "силовой",
+            "cells": {
+              "nature": "прочий"
+            }
+          }
+        ],
+        "owner": "sheet"
+      },
+      "reach": {
+        "label": "Дальность атаки",
+        "key": "word",
+        "rows": [
+          {
+            "value": "ближний"
+          },
+          {
+            "value": "дальний"
+          }
+        ]
+      },
+      "feat_kinds": {
+        "label": "Виды черт и особенностей",
+        "key": "word",
+        "rows": [
+          {
+            "value": "боевой стиль"
+          },
+          {
+            "value": "черта происхождения"
+          },
+          {
+            "value": "общая черта"
+          },
+          {
+            "value": "особенность класса"
+          },
+          {
+            "value": "особенность вида"
+          },
+          {
+            "value": "заклинание"
+          },
+          {
+            "value": "правило"
+          }
+        ]
+      },
+      "wield": {
+        "label": "Способ атаки",
+        "key": "word",
+        "columns": [
+          {
+            "key": "reach",
+            "label": "Дальность",
+            "kind": "choice",
+            "from": "reach"
+          },
+          {
+            "key": "attack",
+            "label": "Бонус атаки",
+            "kind": "number"
+          },
+          {
+            "key": "damage",
+            "label": "Прибавка к урону",
+            "kind": "number"
+          }
+        ],
+        "rows": [
+          {
+            "value": "ближний бой — Сила",
+            "cells": {
+              "reach": "ближний",
+              "attack": {
+                "expr": "@abilities.сила.mod + @prof_bonus"
+              },
+              "damage": {
+                "expr": "@abilities.сила.mod"
+              }
+            }
+          },
+          {
+            "value": "фехтовальное — Сила или Ловкость",
+            "cells": {
+              "reach": "ближний",
+              "attack": {
+                "expr": "большее из(@abilities.сила.mod, @abilities.ловкость.mod) + @prof_bonus"
+              },
+              "damage": {
+                "expr": "большее из(@abilities.сила.mod, @abilities.ловкость.mod)"
+              }
+            }
+          },
+          {
+            "value": "дальний бой — Ловкость",
+            "cells": {
+              "reach": "дальний",
+              "attack": {
+                "expr": "@abilities.ловкость.mod + @prof_bonus"
+              },
+              "damage": {
+                "expr": "@abilities.ловкость.mod"
+              }
+            }
+          }
+        ]
+      },
+      "heaviness": {
+        "label": "Тяжесть доспехов",
+        "key": "word",
+        "columns": [
+          {
+            "key": "dex_ac",
+            "label": "Ловкость в классе брони",
+            "kind": "number"
+          }
+        ],
+        "rows": [
+          {
+            "value": "лёгкий",
+            "cells": {
+              "dex_ac": {
+                "expr": "@abilities.ловкость.mod"
+              }
+            }
+          },
+          {
+            "value": "средний",
+            "cells": {
+              "dex_ac": {
+                "expr": "меньшее из(@abilities.ловкость.mod, 2)"
+              }
+            }
+          },
+          {
+            "value": "тяжёлый",
+            "cells": {
+              "dex_ac": 0
+            }
+          }
+        ]
+      },
+      "rolls": {
+        "label": "Броски",
+        "key": "word",
+        "columns": [
+          {
+            "key": "успех",
+            "label": "Успех",
+            "kind": "text"
+          },
+          {
+            "key": "провал",
+            "label": "Провал",
+            "kind": "text"
+          }
+        ],
+        "rows": [
+          {
+            "value": "атака",
+            "cells": {
+              "успех": "попадание",
+              "провал": "промах"
+            }
+          },
+          {
+            "value": "спасбросок",
+            "cells": {
+              "успех": "спасся",
+              "провал": "не спасся"
+            }
+          },
+          {
+            "value": "проверка",
+            "cells": {
+              "успех": "успех",
+              "провал": "провал"
+            }
+          },
+          {
+            "value": "инициатива"
+          },
+          {
+            "value": "урон"
+          },
+          {
+            "value": "лечение"
+          },
+          {
+            "value": "оружие"
+          }
+        ]
+      },
+      "abilities": {
+        "label": "Характеристики",
+        "key": "word",
+        "columns": [
+          {
+            "key": "score",
+            "label": "Значение",
+            "kind": "number",
+            "min": 1,
+            "max": 30,
+            "title": "{label}",
+            "default": 10
+          },
+          {
+            "key": "mod",
+            "label": "Модификатор",
+            "kind": "number",
+            "expr": {
+              "expr": "округлить вниз((@строка.score - 10) / 2)"
+            },
+            "title": "Модификатор: {label}"
+          },
+          {
+            "key": "save_extra",
+            "label": "Владение сверх класса",
+            "kind": "boolean",
+            "title": "Владение сверх класса: спасбросок {label}",
+            "default": false
+          },
+          {
+            "key": "save_prof",
+            "label": "Владение",
+            "kind": "number",
+            "expr": {
+              "expr": "большее из(если(@строка.save_extra, 1, 0), если(есть(@class_name.saves, @строка), 1, 0))"
+            },
+            "title": "Владение: спасбросок {label}"
+          },
+          {
+            "key": "save",
+            "label": "Спасбросок",
+            "kind": "number",
+            "expr": {
+              "expr": "@строка.mod + @строка.save_prof * @prof_bonus"
+            },
+            "title": "Спасбросок: {label}"
+          }
+        ],
+        "rows": [
+          {
+            "value": "сила",
+            "label": "Сила"
+          },
+          {
+            "value": "ловкость",
+            "label": "Ловкость"
+          },
+          {
+            "value": "телосложение",
+            "label": "Телосложение"
+          },
+          {
+            "value": "интеллект",
+            "label": "Интеллект"
+          },
+          {
+            "value": "мудрость",
+            "label": "Мудрость"
+          },
+          {
+            "value": "харизма",
+            "label": "Харизма"
+          }
+        ],
+        "owner": "sheet"
+      },
+      "skills": {
+        "label": "Навыки",
+        "key": "word",
+        "columns": [
+          {
+            "key": "ability",
+            "label": "Характеристика",
+            "kind": "choice",
+            "from": "abilities"
+          },
+          {
+            "key": "prof",
+            "label": "Владение",
+            "kind": "choice",
+            "title": "Владение: {label}",
+            "default": 0,
+            "from": "prof_steps"
+          },
+          {
+            "key": "total",
+            "label": "Навык",
+            "kind": "number",
+            "expr": {
+              "expr": "@строка.ability.mod + @строка.prof * @prof_bonus"
+            },
+            "title": "{label}"
+          }
+        ],
+        "rows": [
+          {
+            "value": "атлетика",
+            "label": "Атлетика",
+            "cells": {
+              "ability": "сила"
+            }
+          },
+          {
+            "value": "акробатика",
+            "label": "Акробатика",
+            "cells": {
+              "ability": "ловкость"
+            }
+          },
+          {
+            "value": "ловкость_рук",
+            "label": "Ловкость рук",
+            "cells": {
+              "ability": "ловкость"
+            }
+          },
+          {
+            "value": "скрытность",
+            "label": "Скрытность",
+            "cells": {
+              "ability": "ловкость"
+            }
+          },
+          {
+            "value": "магия",
+            "label": "Магия",
+            "cells": {
+              "ability": "интеллект"
+            }
+          },
+          {
+            "value": "история",
+            "label": "История",
+            "cells": {
+              "ability": "интеллект"
+            }
+          },
+          {
+            "value": "анализ",
+            "label": "Анализ",
+            "cells": {
+              "ability": "интеллект"
+            }
+          },
+          {
+            "value": "природа",
+            "label": "Природа",
+            "cells": {
+              "ability": "интеллект"
+            }
+          },
+          {
+            "value": "религия",
+            "label": "Религия",
+            "cells": {
+              "ability": "интеллект"
+            }
+          },
+          {
+            "value": "уход_за_животными",
+            "label": "Уход за животными",
+            "cells": {
+              "ability": "мудрость"
+            }
+          },
+          {
+            "value": "проницательность",
+            "label": "Проницательность",
+            "cells": {
+              "ability": "мудрость"
+            }
+          },
+          {
+            "value": "медицина",
+            "label": "Медицина",
+            "cells": {
+              "ability": "мудрость"
+            }
+          },
+          {
+            "value": "внимательность",
+            "label": "Внимательность",
+            "cells": {
+              "ability": "мудрость"
+            }
+          },
+          {
+            "value": "выживание",
+            "label": "Выживание",
+            "cells": {
+              "ability": "мудрость"
+            }
+          },
+          {
+            "value": "обман",
+            "label": "Обман",
+            "cells": {
+              "ability": "харизма"
+            }
+          },
+          {
+            "value": "запугивание",
+            "label": "Запугивание",
+            "cells": {
+              "ability": "харизма"
+            }
+          },
+          {
+            "value": "выступление",
+            "label": "Выступление",
+            "cells": {
+              "ability": "харизма"
+            }
+          },
+          {
+            "value": "убеждение",
+            "label": "Убеждение",
+            "cells": {
+              "ability": "харизма"
+            }
+          }
+        ],
+        "owner": "sheet"
+      },
+      "classes": {
+        "label": "Классы",
+        "key": "word",
+        "columns": [
+          {
+            "key": "hit_die",
+            "label": "Кость хитов",
+            "kind": "dice"
+          },
+          {
+            "key": "hp",
+            "label": "Хиты по уровню",
+            "kind": "number",
+            "expr": {
+              "expr": "максимум костей(@строка.hit_die) + (@level - 1) * (округлить вниз(максимум костей(@строка.hit_die) / 2) + 1) + @level * @abilities.телосложение.mod"
+            }
+          },
+          {
+            "key": "saves",
+            "label": "Спасброски",
+            "kind": "choice",
+            "from": "abilities",
+            "many": true
+          },
+          {
+            "key": "spell_ability",
+            "label": "Заклинательная характеристика",
+            "kind": "choice",
+            "from": "abilities"
+          },
+          {
+            "key": "rage",
+            "label": "Ярость",
+            "kind": "boolean"
+          }
+        ],
+        "rows": [
+          {
+            "value": "варвар",
+            "cells": {
+              "hit_die": "1к12",
+              "saves": [
+                "сила",
+                "телосложение"
+              ],
+              "rage": true
+            }
+          },
+          {
+            "value": "бард",
+            "cells": {
+              "hit_die": "1к8",
+              "saves": [
+                "ловкость",
+                "харизма"
+              ],
+              "spell_ability": "харизма"
+            }
+          },
+          {
+            "value": "жрец",
+            "cells": {
+              "hit_die": "1к8",
+              "saves": [
+                "мудрость",
+                "харизма"
+              ],
+              "spell_ability": "мудрость"
+            }
+          },
+          {
+            "value": "друид",
+            "cells": {
+              "hit_die": "1к8",
+              "saves": [
+                "интеллект",
+                "мудрость"
+              ],
+              "spell_ability": "мудрость"
+            }
+          },
+          {
+            "value": "воин",
+            "cells": {
+              "hit_die": "1к10",
+              "saves": [
+                "сила",
+                "телосложение"
+              ]
+            }
+          },
+          {
+            "value": "монах",
+            "cells": {
+              "hit_die": "1к8",
+              "saves": [
+                "сила",
+                "ловкость"
+              ]
+            }
+          },
+          {
+            "value": "паладин",
+            "cells": {
+              "hit_die": "1к10",
+              "saves": [
+                "мудрость",
+                "харизма"
+              ],
+              "spell_ability": "харизма"
+            }
+          },
+          {
+            "value": "следопыт",
+            "cells": {
+              "hit_die": "1к10",
+              "saves": [
+                "сила",
+                "ловкость"
+              ],
+              "spell_ability": "мудрость"
+            }
+          },
+          {
+            "value": "плут",
+            "cells": {
+              "hit_die": "1к8",
+              "saves": [
+                "ловкость",
+                "интеллект"
+              ]
+            }
+          },
+          {
+            "value": "чародей",
+            "cells": {
+              "hit_die": "1к6",
+              "saves": [
+                "телосложение",
+                "харизма"
+              ],
+              "spell_ability": "харизма"
+            }
+          },
+          {
+            "value": "колдун",
+            "cells": {
+              "hit_die": "1к8",
+              "saves": [
+                "мудрость",
+                "харизма"
+              ],
+              "spell_ability": "харизма"
+            }
+          },
+          {
+            "value": "волшебник",
+            "cells": {
+              "hit_die": "1к6",
+              "saves": [
+                "интеллект",
+                "мудрость"
+              ],
+              "spell_ability": "интеллект"
+            }
+          }
+        ]
+      },
+      "sizes": {
+        "label": "Размеры",
+        "key": "word",
+        "columns": [
+          {
+            "key": "hit_die",
+            "label": "Кость хитов существа",
+            "kind": "dice"
+          }
+        ],
+        "rows": [
+          {
+            "value": "крошечный",
+            "cells": {
+              "hit_die": "1к4"
+            }
+          },
+          {
+            "value": "маленький",
+            "cells": {
+              "hit_die": "1к6"
+            }
+          },
+          {
+            "value": "средний",
+            "cells": {
+              "hit_die": "1к8"
+            }
+          },
+          {
+            "value": "большой",
+            "cells": {
+              "hit_die": "1к10"
+            }
+          },
+          {
+            "value": "огромный",
+            "cells": {
+              "hit_die": "1к12"
+            }
+          },
+          {
+            "value": "громадный",
+            "cells": {
+              "hit_die": "1к20"
+            }
+          }
+        ]
+      },
+      "races": {
+        "label": "Расы и виды существ",
+        "key": "word",
+        "columns": [
+          {
+            "key": "size",
+            "label": "Размер",
+            "kind": "choice",
+            "from": "sizes"
+          },
+          {
+            "key": "speed",
+            "label": "Скорость, футов",
+            "kind": "number"
+          },
+          {
+            "key": "heavy_armor_ok",
+            "label": "Тяжёлый доспех не замедляет",
+            "kind": "boolean"
+          }
+        ],
+        "rows": [
+          {
+            "value": "дварф",
+            "cells": {
+              "size": "средний",
+              "speed": 25,
+              "heavy_armor_ok": true
+            }
+          },
+          {
+            "value": "эльф",
+            "cells": {
+              "size": "средний",
+              "speed": 30
+            }
+          },
+          {
+            "value": "полурослик",
+            "cells": {
+              "size": "маленький",
+              "speed": 25
+            }
+          },
+          {
+            "value": "человек",
+            "cells": {
+              "size": "средний",
+              "speed": 30
+            }
+          },
+          {
+            "value": "драконорождённый",
+            "cells": {
+              "size": "средний",
+              "speed": 30
+            }
+          },
+          {
+            "value": "гном",
+            "cells": {
+              "size": "маленький",
+              "speed": 25
+            }
+          },
+          {
+            "value": "полуэльф",
+            "cells": {
+              "size": "средний",
+              "speed": 30
+            }
+          },
+          {
+            "value": "полуорк",
+            "cells": {
+              "size": "средний",
+              "speed": 30
+            }
+          },
+          {
+            "value": "тифлинг",
+            "cells": {
+              "size": "средний",
+              "speed": 30
+            }
+          },
+          {
+            "value": "гоблин",
+            "cells": {
+              "size": "маленький",
+              "speed": 30
+            }
+          },
+          {
+            "value": "орк",
+            "cells": {
+              "size": "средний",
+              "speed": 30
+            }
+          },
+          {
+            "value": "огр",
+            "cells": {
+              "size": "большой",
+              "speed": 40
+            }
+          }
+        ]
+      },
+      "taken": {
+        "label": "Стойкость к урону",
+        "key": "word",
+        "columns": [
+          {
+            "key": "resist",
+            "label": "Сопротивление",
+            "kind": "number"
+          },
+          {
+            "key": "vuln",
+            "label": "Уязвимость",
+            "kind": "number"
+          }
+        ],
+        "rows": [
+          {
+            "value": "иммунитет",
+            "cells": {
+              "resist": 0,
+              "vuln": 1
+            }
+          },
+          {
+            "value": "сопротивление",
+            "cells": {
+              "resist": 0.5,
+              "vuln": 1
+            }
+          },
+          {
+            "value": "как есть",
+            "cells": {
+              "resist": 1,
+              "vuln": 1
+            }
+          },
+          {
+            "value": "уязвимость",
+            "cells": {
+              "resist": 1,
+              "vuln": 2
+            }
+          }
+        ]
+      },
+      "weapon": {
+        "label": "Оружие",
+        "icon": "⚔",
+        "hint": "Меч, рапира, лук — всё сразу. Кость и тип урона свои, а способ атаки выбирается свойством.",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "extends": "gear",
+        "columns": [
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types"
+          },
+          {
+            "key": "damage_source",
+            "label": "Источник урона",
+            "kind": "choice",
+            "from": "damage_source"
+          },
+          {
+            "key": "wield",
+            "label": "Способ атаки",
+            "kind": "choice",
+            "from": "wield"
+          },
+          {
+            "key": "properties",
+            "label": "Свойства",
+            "kind": "choice",
+            "from": "weapon_properties",
+            "many": true
+          },
+          {
+            "key": "range",
+            "label": "Дистанция",
+            "kind": "text",
+            "optional": true
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Удар",
+            "effect": "strike",
+            "args": {
+              "attack_with": {
+                "expr": "@wield.attack"
+              },
+              "damage_with": {
+                "expr": "@wield.damage"
+              },
+              "damage_dice": {
+                "expr": "@damage_dice"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
+              },
+              "damage_source": {
+                "expr": "@damage_source"
+              },
+              "свойства": {
+                "expr": "@properties"
+              },
+              "дальность": {
+                "expr": "@wield.reach"
+              }
+            }
+          }
+        ]
+      },
+      "armor": {
+        "label": "Доспех",
+        "icon": "🛡",
+        "hint": "Задаёт базу класса брони. От тяжести зависит, сколько Ловкости прибавится; тяжёлый без нужной Силы замедляет.",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "extends": "gear",
+        "columns": [
+          {
+            "key": "ac",
+            "label": "База класса брони",
+            "kind": "number"
+          },
+          {
+            "key": "heaviness",
+            "label": "Тяжесть",
+            "kind": "choice",
+            "from": "heaviness"
+          },
+          {
+            "key": "str_req",
+            "label": "Нужна Сила",
+            "kind": "number",
+            "optional": true
+          },
+          {
+            "key": "stealth",
+            "label": "Помеха на Скрытность",
+            "kind": "boolean"
+          }
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "ac_base",
+            "op": "set",
+            "value": {
+              "expr": "@строка.ac"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "armor_heaviness",
+            "op": "set",
+            "value": {
+              "expr": "@строка.heaviness"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "speed",
+            "op": "add",
+            "value": {
+              "expr": "-10"
+            },
+            "if": {
+              "expr": "@abilities.сила.score < (@строка.str_req или 0) и @race.heavy_armor_ok != да"
+            }
+          },
+          {
+            "tags": [
+              "скрытность"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage",
+            "if": {
+              "expr": "@бросающий == @носитель и @строка.stealth == да"
+            }
+          }
+        ]
+      },
+      "potion": {
+        "label": "Зелье",
+        "icon": "🧪",
+        "hint": "Выпил — восполнил хиты. Стол списывает хиты, склянку убирает игрок.",
+        "shape": "book",
+        "use": "item",
+        "block": "Расходники",
+        "extends": "gear",
+        "columns": [
+          {
+            "key": "heal_die",
+            "label": "Кости лечения",
+            "kind": "dice"
+          },
+          {
+            "key": "heal_bonus",
+            "label": "Прибавка",
+            "kind": "number"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Выпить",
+            "effect": "potion_heal",
+            "args": {
+              "heal_die": {
+                "expr": "@heal_die"
+              },
+              "heal_bonus": {
+                "expr": "@heal_bonus"
+              }
+            }
+          }
+        ]
+      },
+      "gear": {
+        "label": "Снаряжение",
+        "icon": "⬡",
+        "hint": "Верёвка, факел, набор инструментов. Ничего не считает — лежит на листе.",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "columns": [
+          {
+            "key": "weight",
+            "label": "Вес, фунтов",
+            "kind": "number",
+            "optional": true
+          },
+          {
+            "key": "cost",
+            "label": "Цена, зм",
+            "kind": "number",
+            "optional": true
+          }
+        ]
+      },
+      "spell_heal": {
+        "label": "Заклинание: лечение",
+        "icon": "✚",
+        "hint": "Лечение ран, слово лечения: кости плюс заклинательный модификатор.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [
+          {
+            "key": "spell_level",
+            "label": "Круг",
+            "kind": "number"
+          },
+          {
+            "key": "heal_die",
+            "label": "Кость лечения",
+            "kind": "dice"
+          },
+          {
+            "key": "dice_count",
+            "label": "Сколько костей",
+            "kind": "number"
+          },
+          {
+            "key": "dice_up",
+            "label": "Костей за круг выше",
+            "kind": "number"
+          },
+          {
+            "key": "cure",
+            "label": "Что снимает",
+            "kind": "effect"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "spell_heal",
+            "args": {
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "heal_die": {
+                "expr": "@heal_die"
+              },
+              "dice_count": {
+                "expr": "@dice_count"
+              },
+              "dice_up": {
+                "expr": "@dice_up"
+              },
+              "cure": {
+                "expr": "@cure"
+              }
+            }
+          }
+        ]
+      },
+      "monster_attack": {
+        "label": "Атака существа",
+        "icon": "🐺",
+        "hint": "Для НПС: бонус атаки и прибавка к урону вписаны числами — та же «Атака», что и у оружия.",
+        "shape": "book",
+        "use": "action",
+        "block": "Бестиарий",
+        "columns": [
+          {
+            "key": "to_hit",
+            "label": "Бонус атаки",
+            "kind": "number"
+          },
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "damage_bonus",
+            "label": "Прибавка к урону",
+            "kind": "number"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Атаковать",
+            "effect": "strike",
+            "args": {
+              "attack_with": {
+                "expr": "@to_hit"
+              },
+              "damage_with": {
+                "expr": "@damage_bonus"
+              },
+              "damage_source": {
+                "expr": "\"немагический\""
+              },
+              "damage_dice": {
+                "expr": "@damage_dice"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "roll_edits": {
+      "advantage": {
+        "label": "Преимущество",
+        "ops": [
+          {
+            "op": "addDie"
+          },
+          {
+            "op": "keepBest",
+            "n": 1
+          }
+        ],
+        "cancels": [
+          "disadvantage"
+        ]
+      },
+      "disadvantage": {
+        "label": "Помеха",
+        "ops": [
+          {
+            "op": "addDie"
+          },
+          {
+            "op": "keepWorst",
+            "n": 1
+          }
+        ],
+        "cancels": [
+          "advantage"
+        ]
+      },
+      "lucky": {
+        "label": "Везучий",
+        "ops": [
+          {
+            "op": "reroll",
+            "n": 1
+          }
+        ]
+      },
+      "great_weapon": {
+        "label": "Бой большим оружием",
+        "ops": [
+          {
+            "op": "floorDie",
+            "least": 3
+          }
+        ]
+      },
+      "reliable": {
+        "label": "Надёжный талант",
+        "ops": [
+          {
+            "op": "floorDie",
+            "least": 10
+          }
+        ]
+      },
+      "auto_fail": {
+        "label": "Автоматический провал",
+        "ops": [
+          {
+            "op": "shiftVersus",
+            "by": 99
+          }
+        ]
+      }
+    },
+    "grid": {
+      "step": 5,
+      "unit": "фт"
+    },
+    "initiative": {
+      "die": "lead_die",
+      "bonus": {
+        "expr": "@initiative"
+      },
+      "tags": [
+        "проверка",
+        "ловкость",
+        "инициатива"
+      ]
+    },
+    "effects": {
+      "strike": {
+        "label": "Атака",
+        "group": "Атака",
+        "description": "Бросок атаки оружием против класса брони, урон костью. На крите кости урона удваиваются. Бонус атаки и прибавку к урону приносит тот, кто зовёт: оружие считает их по листу, существо вписывает числами. Посчитанное уходит в общий эффект «Урон».",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
+          },
+          {
+            "key": "attack_with",
+            "label": "Бонус атаки",
+            "kind": "number"
+          },
+          {
+            "key": "damage_with",
+            "label": "Прибавка к урону",
+            "kind": "number",
+            "default": 0
+          },
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "dice",
+            "label": "Сколько костей",
+            "kind": "number",
+            "default": 1
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types"
+          },
+          {
+            "key": "damage_source",
+            "label": "Источник урона",
+            "kind": "choice",
+            "from": "damage_source"
+          },
+          {
+            "key": "свойства",
+            "label": "Свойства оружия",
+            "kind": "choice",
+            "from": "weapon_properties",
+            "many": true,
+            "optional": true
+          },
+          {
+            "key": "дальность",
+            "label": "Дальность",
+            "kind": "choice",
+            "from": "reach",
+            "optional": true
+          },
+          {
+            "key": "status",
+            "label": "Состояние при попадании",
+            "kind": "effect",
+            "optional": true
+          },
+          {
+            "key": "цена",
+            "label": "Плата",
+            "kind": "effect",
+            "default": "cost_attack"
+          }
+        ],
+        "steps": [
+          {
+            "type": "each",
+            "of": "цели"
+          },
+          {
+            "id": "бросок",
+            "type": "emit",
+            "effect": "attack_roll",
+            "args": {
+              "бонус": {
+                "expr": "@attack_with"
+              },
+              "кто": {
+                "expr": "@действующий"
+              },
+              "против": {
+                "expr": "@цель"
+              }
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@бросок.исход.hit"
+            }
+          },
+          {
+            "id": "урон",
+            "type": "roll",
+            "die": {
+              "expr": "@damage_dice"
+            },
+            "times": {
+              "expr": "@dice * @бросок.исход.dice_mul"
+            },
+            "bonus": {
+              "expr": "@damage_with"
+            },
+            "by": {
+              "expr": "@действующий"
+            },
+            "tags": [
+              "урон",
+              "оружие",
+              {
+                "expr": "@дальность"
+              },
+              {
+                "expr": "@свойства"
+              }
+            ]
+          },
+          {
+            "type": "emit",
+            "effect": "damage",
+            "args": {
+              "amount": {
+                "expr": "@урон.total"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "damage_type": {
+                "expr": "@damage_type"
+              },
+              "damage_source": {
+                "expr": "@damage_source"
+              }
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "не пусто(@status)"
+            }
+          },
+          {
+            "type": "status",
+            "effect": {
+              "expr": "@status"
+            },
+            "to": {
+              "expr": "@цель"
+            },
+            "args": {
+              "наложил": {
+                "expr": "@действующий"
+              }
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "end"
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "effect": {
+              "expr": "@цена"
+            },
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ],
+        "tags": [
+          "атака"
+        ]
+      },
+      "spell_heal": {
+        "label": "Заклинание: лечение",
+        "group": "Заклинания",
+        "description": "Тратит ячейку. Кости лечения плюс заклинательный модификатор; ячейка выше круга добавляет кости. Снимает состояние, если задано.",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "spell_level",
+            "label": "Круг заклинания",
+            "kind": "number"
+          },
+          {
+            "key": "slot",
+            "label": "Каким кругом",
+            "kind": "number",
+            "ask": {
+              "by": "actor",
+              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
+            },
+            "min": 1,
+            "max": 9
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
+          },
+          {
+            "key": "heal_die",
+            "label": "Кость лечения",
+            "kind": "dice"
+          },
+          {
+            "key": "dice_count",
+            "label": "Сколько костей",
+            "kind": "number"
+          },
+          {
+            "key": "dice_up",
+            "label": "Костей за каждый круг выше",
+            "kind": "number"
+          },
+          {
+            "key": "cure",
+            "label": "Что снимает",
+            "kind": "effect",
+            "optional": true
+          }
+        ],
+        "steps": [
+          {
+            "id": "по_ячейке",
+            "type": "emit",
+            "effect": "spell_dice",
+            "args": {
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              },
+              "dice_count": {
+                "expr": "@dice_count"
+              },
+              "dice_up": {
+                "expr": "@dice_up"
+              }
+            }
+          },
+          {
+            "type": "roll",
+            "die": {
+              "expr": "@heal_die"
+            },
+            "times": {
+              "expr": "@по_ячейке.кости"
+            },
+            "bonus": {
+              "expr": "@действующий.spell_mod"
+            },
+            "by": {
+              "expr": "@действующий"
+            },
+            "tags": [
+              "лечение",
+              "заклинание"
+            ],
+            "id": "сколько"
+          },
+          {
+            "type": "each",
+            "of": "цели"
+          },
+          {
+            "type": "emit",
+            "effect": "heal",
+            "args": {
+              "amount": {
+                "expr": "@сколько.total"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "slot": {
+                "expr": "@slot"
+              }
+            }
+          },
+          {
+            "type": "status",
+            "mode": "remove",
+            "effect": {
+              "expr": "@cure"
+            },
+            "to": {
+              "expr": "@цель"
+            }
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "effect": "cost_spell",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              },
+              "spell_level": {
+                "expr": "@spell_level"
+              },
+              "slot": {
+                "expr": "@slot"
+              }
+            }
+          }
+        ]
+      },
+      "potion_heal": {
+        "label": "Выпить зелье лечения",
+        "group": "Лечение",
+        "description": "Кости зелья плюс прибавка. Цель — тот, кто пьёт.",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
+          },
+          {
+            "key": "heal_die",
+            "label": "Кости лечения",
+            "kind": "dice"
+          },
+          {
+            "key": "heal_bonus",
+            "label": "Прибавка",
+            "kind": "number"
+          }
+        ],
+        "steps": [
+          {
+            "type": "roll",
+            "die": {
+              "expr": "@heal_die"
+            },
+            "bonus": {
+              "expr": "@heal_bonus"
+            },
+            "by": {
+              "expr": "@действующий"
+            },
+            "tags": [
+              "лечение"
+            ],
+            "id": "сколько"
+          },
+          {
+            "type": "each",
+            "of": "цели"
+          },
+          {
+            "type": "emit",
+            "effect": "heal",
+            "args": {
+              "amount": {
+                "expr": "@сколько.total"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "effect": "cost_action",
+            "args": {
+              "лист": {
+                "expr": "@действующий"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      "cost_action": {
+        "label": "Стоимость: действие",
+        "group": "Плата",
+        "description": "Списывается только в бою. Не хватило — действие не состоялось.",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet",
+            "role": "actor"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true,
+            "role": "actor"
+          }
+        ],
+        "steps": [
+          {
+            "type": "emit",
+            "effect": "turn_spend",
+            "args": {
+              "что": {
+                "expr": "\"действие\""
+              },
+              "лист": {
+                "expr": "@лист"
+              },
+              "источник": {
+                "expr": "@лист"
+              }
+            }
+          }
+        ]
+      },
+      "cost_attack": {
+        "label": "Стоимость: атака",
+        "group": "Плата",
+        "description": "Списывается только в бою. Не хватило — действие не состоялось.",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet",
+            "role": "actor"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true,
+            "role": "actor"
+          }
+        ],
+        "steps": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.бой и @лист.turn.атаки.left < 1"
+            }
+          },
+          {
+            "type": "emit",
+            "effect": "cost_action",
+            "args": {
+              "лист": {
+                "expr": "@лист"
+              },
+              "источник": {
+                "expr": "@лист"
+              }
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@лист.turn.атаки.left"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "@лист.attacks_per_action"
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.бой"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@лист.turn.атаки.left"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ]
+      },
+      "damage": {
+        "label": "Урон",
+        "group": "Шаги для других",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet",
+            "role": "target"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true,
+            "role": "actor"
+          },
+          {
+            "key": "amount",
+            "label": "Сколько урона",
+            "kind": "number",
+            "role": "amount",
+            "stages": [
+              {
+                "key": "прибавки",
+                "label": "прибавки",
+                "atLeast": 0
+              },
+              {
+                "key": "половина",
+                "label": "половина",
+                "round": "down"
+              },
+              {
+                "key": "сопротивление",
+                "label": "сопротивление",
+                "combine": {
+                  "mul": "min"
+                },
+                "round": "down"
+              },
+              {
+                "key": "уязвимость",
+                "label": "уязвимость",
+                "combine": {
+                  "mul": "max"
+                },
+                "round": "down"
+              }
+            ]
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types"
+          },
+          {
+            "key": "damage_source",
+            "label": "Источник урона",
+            "kind": "choice",
+            "from": "damage_source",
+            "optional": true
+          }
+        ],
+        "steps": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@лист.hp_current <= 0"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@лист.death_fail"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "id": "по_временным",
+            "target": {
+              "expr": "@лист.hp_temp"
+            },
+            "value": {
+              "expr": "@amount"
+            }
+          },
+          {
+            "type": "apply",
+            "id": "по_хитам",
+            "target": {
+              "expr": "@лист.hp_current"
+            },
+            "value": {
+              "expr": "@по_временным.overkill"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@по_хитам.overkill >= @лист.hp_max"
+            }
+          },
+          {
+            "type": "status",
+            "effect": "dead",
+            "to": {
+              "expr": "@лист"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ]
+      },
+      "heal": {
+        "label": "Лечение",
+        "group": "Шаги для других",
+        "description": "Прибавляет хиты листу. Через него лечит всё, что лечит: правка лечения правит его величину, а «Каким кругом» отличает лечение заклинанием от зелья и умений.",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet",
+            "role": "target"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true,
+            "role": "actor"
+          },
+          {
+            "key": "amount",
+            "label": "Сколько хитов",
+            "kind": "number",
+            "role": "amount"
+          },
+          {
+            "key": "slot",
+            "label": "Каким кругом, если лечит заклинание",
+            "kind": "number",
+            "optional": true
+          }
+        ],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@лист.hp_current"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "@amount"
+            }
+          }
+        ]
+      },
+      "spell_slot": {
+        "label": "Ячейка заклинания",
+        "group": "Плата",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet",
+            "role": "actor"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true,
+            "role": "actor"
+          },
+          {
+            "key": "circle",
+            "label": "Круг ячейки",
+            "kind": "number",
+            "role": "amount"
+          }
+        ],
+        "steps": [
+          {
+            "type": "emit",
+            "effect": "spend",
+            "args": {
+              "what": {
+                "expr": "@лист.slots.[@circle].left"
+              },
+              "amount": {
+                "expr": "1"
+              },
+              "note": {
+                "expr": "@лист.slots.[@circle].none"
+              },
+              "лист": {
+                "expr": "@лист"
+              },
+              "источник": {
+                "expr": "@лист"
+              }
+            }
+          }
+        ]
+      },
+      "spend": {
+        "label": "Потратить",
+        "group": "Плата",
+        "description": "Проверить, что запаса хватает, и отнять. Не хватает — действие обрывается.",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet",
+            "role": "actor"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true,
+            "role": "actor"
+          },
+          {
+            "key": "what",
+            "label": "Что тратим",
+            "kind": "field"
+          },
+          {
+            "key": "amount",
+            "label": "Сколько",
+            "kind": "number"
+          },
+          {
+            "key": "note",
+            "label": "Если не хватает",
+            "kind": "text",
+            "optional": true
+          }
+        ],
+        "steps": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@what < @amount"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "@note"
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@what"
+            },
+            "value": {
+              "expr": "@amount"
+            }
+          }
+        ]
+      },
+      "turn_spend": {
+        "label": "Потратить за ход",
+        "group": "Плата",
+        "description": "В бою списывает одну строку «За ход» — действие, бонусное, реакцию. Не осталось — действие не состоялось. Вне боя ничего не тратит.",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet",
+            "role": "actor"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true,
+            "role": "actor"
+          },
+          {
+            "key": "что",
+            "label": "Что тратим",
+            "kind": "choice",
+            "from": "turn"
+          }
+        ],
+        "steps": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@стол.бой"
+            }
+          },
+          {
+            "type": "emit",
+            "effect": "spend",
+            "args": {
+              "what": {
+                "expr": "@лист.что.left"
+              },
+              "amount": {
+                "expr": "1"
+              },
+              "note": {
+                "expr": "@лист.что.none"
+              },
+              "лист": {
+                "expr": "@лист"
+              },
+              "источник": {
+                "expr": "@лист"
+              }
+            }
+          },
+          {
+            "type": "end"
+          }
+        ]
+      },
+      "taken_rule": {
+        "label": "Что доходит до меня",
+        "group": "Общие правила",
+        "description": "Один раз на все типы урона: сколько доходит — сказано на листе. Иммунитет, сопротивление, уязвимость выставляются там же.",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "modifiers": [
+          {
+            "op": "mul",
+            "value": {
+              "expr": "@носитель.damage_types.[@damage_type].taken.resist"
+            },
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "if": {
+              "expr": "@лист == @носитель и не пусто(@носитель.damage_types.[@damage_type].taken)"
+            },
+            "stage": "сопротивление"
+          },
+          {
+            "op": "mul",
+            "value": {
+              "expr": "@носитель.damage_types.[@damage_type].taken.vuln"
+            },
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "if": {
+              "expr": "@лист == @носитель и не пусто(@носитель.damage_types.[@damage_type].taken)"
+            },
+            "stage": "уязвимость"
+          }
+        ]
+      },
+      "dead": {
+        "label": "Мёртв",
+        "group": "Состояния",
+        "description": "Три провала или урон, перекрывший максимум хитов.",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "speed",
+            "op": "set",
+            "value": {
+              "expr": "0"
+            }
+          }
+        ],
+        "reapply": "refresh"
+      },
+      "hasted": {
+        "label": "Ускорен",
+        "group": "Состояния",
+        "description": "+2 к классу брони, скорость вдвое, преимущество на спасброски Ловкости, ещё одно действие на ход (атака одним оружием, рывок, отход, засада или предмет — следит ведущий).",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "ac",
+            "op": "add",
+            "value": {
+              "expr": "2"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "speed",
+            "op": "mul",
+            "value": {
+              "expr": "2"
+            }
+          },
+          {
+            "tags": [
+              "спасбросок",
+              "ловкость"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "advantage",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            }
+          }
+        ],
+        "reapply": "refresh"
+      },
+      "battle_start": {
+        "label": "Начало боя",
+        "group": "Общие правила",
+        "description": "Бой пошёл: стоимость действий считается, у всех полный запас.",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "on": [
+          {
+            "on": "moment:combat-start",
+            "steps": [
+              {
+                "type": "emit",
+                "effect": "turn_reset",
+                "args": {
+                  "лист": {
+                    "expr": "@носитель"
+                  }
+                }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.turn.действие.left"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "меньшее из(1, @носитель.hasted)"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "turn_refresh": {
+        "label": "Начало хода",
+        "group": "Общие правила",
+        "description": "Действие, бонусное, реакция и «раз за ход» — снова по одному.",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "on": [
+          {
+            "on": "moment:turn-start",
+            "if": {
+              "expr": "@ходит == @носитель"
+            },
+            "steps": [
+              {
+                "type": "emit",
+                "effect": "turn_reset",
+                "args": {
+                  "лист": {
+                    "expr": "@носитель"
+                  }
+                }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.turn.действие.left"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "меньшее из(1, @носитель.hasted)"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "turn_reset": {
+        "label": "Новый ход",
+        "group": "Шаги для других",
+        "description": "Счётчики «За ход» — к началу хода: у каждой строки «Осталось» становится «В начале хода». Лишнее действие от «Ускорен» прибавляют «Начало хода» и «Начало боя» после вызова.",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet",
+            "role": "actor"
+          }
+        ],
+        "steps": [
+          {
+            "type": "each",
+            "rows": "turn",
+            "as": "счётчик"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@лист.счётчик.left"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "@лист.счётчик.start"
+            }
+          }
+        ]
+      },
+      "cost_spell": {
+        "label": "Стоимость: действие и ячейка",
+        "group": "Плата",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet",
+            "role": "actor"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true,
+            "role": "actor"
+          },
+          {
+            "key": "spell_level",
+            "label": "Круг заклинания",
+            "kind": "number"
+          },
+          {
+            "key": "slot",
+            "label": "Каким кругом",
+            "kind": "number",
+            "ask": {
+              "by": "actor",
+              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
+            },
+            "min": 1,
+            "max": 9
+          }
+        ],
+        "steps": [
+          {
+            "type": "emit",
+            "effect": "cost_action",
+            "args": {
+              "лист": {
+                "expr": "@лист"
+              },
+              "источник": {
+                "expr": "@лист"
+              }
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@slot < @spell_level"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"круг ячейки ниже круга заклинания\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "emit",
+            "effect": "spell_slot",
+            "args": {
+              "circle": {
+                "expr": "@slot"
+              },
+              "лист": {
+                "expr": "@лист"
+              },
+              "источник": {
+                "expr": "@лист"
+              }
+            }
+          }
+        ]
+      },
+      "spell_dice": {
+        "label": "Костей с учётом ячейки",
+        "group": "Шаги для других",
+        "description": "Сколько костей бросает заклинание: свои кости и добавка за каждый круг ячейки выше круга заклинания.",
+        "params": [
+          {
+            "key": "spell_level",
+            "label": "Круг заклинания",
+            "kind": "number"
+          },
+          {
+            "key": "slot",
+            "label": "Каким кругом",
+            "kind": "number"
+          },
+          {
+            "key": "dice_count",
+            "label": "Сколько костей",
+            "kind": "number"
+          },
+          {
+            "key": "dice_up",
+            "label": "Костей за каждый круг выше",
+            "kind": "number"
+          }
+        ],
+        "returns": [
+          {
+            "key": "кости",
+            "label": "костей",
+            "kind": "number",
+            "expr": {
+              "expr": "@dice_count + (@slot - @spell_level) * @dice_up"
+            }
+          }
+        ]
+      },
+      "attack_roll": {
+        "label": "Бросок атаки",
+        "group": "Шаги для других",
+        "description": "Бросок к20 + бонус против класса брони цели. 1 на кости — всегда промах; крит (с «Крит на костях от») — всегда попадание.",
+        "params": [
+          {
+            "key": "кто",
+            "label": "Кто бросает",
+            "kind": "sheet",
+            "role": "actor"
+          },
+          {
+            "key": "против",
+            "label": "Против кого",
+            "kind": "sheet",
+            "role": "target"
+          },
+          {
+            "key": "бонус",
+            "label": "Бонус атаки",
+            "kind": "number",
+            "default": 0
+          }
+        ],
+        "returns": [
+          {
+            "key": "исход",
+            "label": "исход",
+            "kind": "choice",
+            "from": "attack_outcomes",
+            "expr": {
+              "expr": "если(не @проверка.success, \"промах\", если(@проверка.natural >= @кто.crit_from, \"крит\", \"попадание\"))"
+            }
+          },
+          {
+            "key": "на_костях",
+            "label": "на костях",
+            "kind": "number",
+            "expr": {
+              "expr": "@проверка.natural"
+            }
+          }
+        ],
+        "steps": [
+          {
+            "id": "бросок",
+            "type": "roll",
+            "die": "lead_die",
+            "bonus": {
+              "expr": "@бонус"
+            },
+            "tags": [
+              "атака"
+            ],
+            "by": {
+              "expr": "@кто"
+            }
+          },
+          {
+            "id": "проверка",
+            "type": "check",
+            "value": {
+              "expr": "@бросок"
+            },
+            "versus": {
+              "expr": "@против.ac"
+            },
+            "succeedOn": {
+              "expr": "@кто.crit_from"
+            },
+            "failOn": {
+              "expr": "1"
+            }
+          }
+        ]
+      }
+    },
+    "grants": [
+      "battle_start",
+      "turn_refresh",
+      "taken_rule"
+    ],
+    "sheets": {
+      "персонаж": {
+        "label": "Персонаж",
+        "icon": "🧙",
+        "hint": "Лист героя: все блоки. На нуле хитов падает без сознания и делает спасброски от смерти.",
+        "grants": [],
+        "blocks": [
+          "Личное дело",
+          "Характеристики",
+          "Модификаторы",
+          "Прогрессия",
+          "Спасброски",
+          "Навыки",
+          "Чувства и движение",
+          "Защита",
+          "Здоровье",
+          "Атака",
+          "В бою",
+          "Магия",
+          "Ячейки заклинаний",
+          "Ресурсы класса",
+          "Богатство",
+          "Снаряжение",
+          "Висит сейчас",
+          "Действия",
+          "Стойкость к урону"
+        ]
+      },
+      "противник": {
+        "label": "Противник",
+        "icon": "👹",
+        "hint": "Лист противника: без личного дела, магии, ресурсов класса и богатства. Спасбросков от смерти нет — что с ним на нуле хитов, решает ведущий. Класс брони из книги монстров уже включает Ловкость.",
+        "grants": [],
+        "blocks": [
+          "Характеристики",
+          "Модификаторы",
+          "Прогрессия",
+          "Спасброски",
+          "Навыки",
+          "Чувства и движение",
+          "Защита",
+          "Здоровье",
+          "Блок монстра",
+          "В бою",
+          "Стойкость к урону",
+          "Висит сейчас",
+          "Действия"
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "ac_dex",
+            "op": "set",
+            "value": {
+              "expr": "0"
+            }
+          }
+        ]
+      }
+    },
+    "tags": {
+      "атака": {
+        "label": "Атака",
+        "inputs": [
+          {
+            "key": "действующий",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "kind": "sheet",
+            "many": true
+          }
+        ],
+        "each": "цель",
+        "outputs": [
+          "бросок"
+        ]
+      }
+    },
+    "blocks": [
+      {
+        "name": "Личное дело",
+        "page": "Шапка",
+        "width": 4,
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "race",
+              "class_name",
+              "subclass",
+              "background",
+              "alignment"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Характеристики",
+        "width": 6,
+        "parts": [
+          {
+            "table": "abilities",
+            "columns": [
+              "score"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Модификаторы",
+        "width": 6,
+        "parts": [
+          {
+            "table": "abilities",
+            "columns": [
+              "mod"
+            ],
+            "views": {
+              "mod": {
+                "kind": "signed"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Прогрессия",
+        "page": "Шапка",
+        "width": 4,
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "level",
+              "prof_bonus",
+              "inspiration",
+              "xp"
+            ],
+            "views": {
+              "level": {
+                "kind": "stepper"
+              },
+              "prof_bonus": {
+                "kind": "signed"
+              },
+              "inspiration": {
+                "kind": "pips"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Спасброски",
+        "under": true,
+        "parts": [
+          {
+            "table": "abilities",
+            "columns": [
+              "save_extra",
+              "save_prof",
+              "save"
+            ],
+            "views": {
+              "save_extra": {
+                "kind": "toggle"
+              },
+              "save": {
+                "kind": "signed"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Навыки",
+        "split": 2,
+        "parts": [
+          {
+            "table": "skills",
+            "by": "ability",
+            "views": {
+              "prof": {
+                "kind": "ring"
+              },
+              "total": {
+                "kind": "signed"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Чувства и движение",
+        "width": 6,
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "initiative",
+              "passive_perception",
+              "speed",
+              "darkvision",
+              "languages"
+            ],
+            "views": {
+              "initiative": {
+                "kind": "signed"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "В бою",
+        "under": true,
+        "parts": [
+          {
+            "table": "turn",
+            "views": {
+              "left": {
+                "kind": "pips"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Блок монстра",
+        "under": true,
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "hp_block"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Атака",
+        "width": 6,
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "attacks_per_action",
+              "crit_from",
+              "sneak_dice"
+            ],
+            "views": {
+              "attacks_per_action": {
+                "kind": "stepper"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Стойкость к урону",
+        "under": true,
+        "parts": [
+          {
+            "table": "damage_types",
+            "views": {
+              "taken": {
+                "kind": "choice"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Защита",
+        "page": "Шапка",
+        "width": 4,
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "ac_base",
+              "armor_heaviness",
+              "ac_dex",
+              "ac"
+            ],
+            "views": {
+              "ac": {
+                "kind": "big"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Здоровье",
+        "page": "Шапка",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "hp_max",
+              "hp_bonus",
+              "hp_current",
+              "hp_temp",
+              "hit_die",
+              "hit_dice_left",
+              "death_ok",
+              "death_fail",
+              "exhaustion",
+              "down",
+              "up",
+              "is_dead",
+              "is_stable"
+            ],
+            "views": {
+              "hp_current": {
+                "kind": "bar"
+              },
+              "hp_temp": {
+                "kind": "stepper"
+              },
+              "hit_dice_left": {
+                "kind": "stepper"
+              },
+              "death_ok": {
+                "kind": "pips"
+              },
+              "death_fail": {
+                "kind": "pips"
+              },
+              "exhaustion": {
+                "kind": "stepper"
+              },
+              "down": {
+                "kind": "toggle"
+              },
+              "up": {
+                "kind": "toggle"
+              },
+              "is_dead": {
+                "kind": "toggle"
+              },
+              "is_stable": {
+                "kind": "toggle"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Магия",
+        "page": "Магия",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "spell_mod",
+              "spell_dc",
+              "spell_attack",
+              "caster_level",
+              "attuned",
+              "cantrip_dice"
+            ],
+            "views": {
+              "spell_dc": {
+                "kind": "big"
+              },
+              "spell_attack": {
+                "kind": "signed"
+              },
+              "caster_level": {
+                "kind": "stepper"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Ячейки заклинаний",
+        "parts": [
+          {
+            "table": "slots",
+            "views": {
+              "left": {
+                "kind": "pips"
+              }
+            }
+          }
+        ],
+        "parent": "Магия"
+      },
+      {
+        "name": "Ресурсы класса",
+        "page": "Магия",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "rage_damage",
+              "superiority_die"
+            ]
+          },
+          {
+            "table": "resources",
+            "columns": [
+              "max",
+              "left"
+            ],
+            "views": {
+              "left": {
+                "kind": "stepper"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Богатство",
+        "page": "Снаряжение",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "gp",
+              "sp",
+              "cp"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Снаряжение",
+        "page": "Снаряжение",
+        "list": "things",
+        "parts": []
+      },
+      {
+        "name": "Висит сейчас",
+        "page": "Эффекты",
+        "list": "hanging",
+        "width": 6,
+        "parts": []
+      },
+      {
+        "name": "Действия",
+        "page": "Эффекты",
+        "list": "actions",
+        "width": 6,
+        "parts": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "Шапка",
+        "top": true
+      },
+      {
+        "name": "Основное"
+      },
+      {
+        "name": "Магия"
+      },
+      {
+        "name": "Снаряжение"
+      },
+      {
+        "name": "Эффекты"
+      }
+    ],
+    "rolls": {
+      "проверка": {
+        "label": "Проверка",
+        "die": "lead_die",
+        "fields": [
+          {
+            "table": "лист",
+            "column": "initiative",
+            "tags": [
+              "ловкость",
+              "инициатива"
+            ]
+          },
+          {
+            "table": "abilities",
+            "column": "mod"
+          },
+          {
+            "table": "skills",
+            "column": "total"
+          }
+        ]
+      },
+      "спасбросок": {
+        "label": "Спасбросок",
+        "die": "lead_die",
+        "fields": [
+          {
+            "table": "abilities",
+            "column": "save"
+          }
+        ]
+      }
+    }
+  },
+  "compendium": {
+    "records": [
+      {
+        "id": "longsword",
+        "label": "Длинный меч",
+        "description": "Воинское оружие, универсальное: двумя руками 1к10.",
+        "table": "weapon",
+        "cells": {
+          "damage_dice": "1d8",
+          "damage_type": "рубящий",
+          "damage_source": "немагический",
+          "wield": "ближний бой — Сила",
+          "properties": [
+            "универсальное"
+          ],
+          "weight": 3,
+          "cost": 15
+        }
+      },
+      {
+        "id": "greatsword",
+        "label": "Двуручный меч",
+        "description": "Воинское оружие, тяжёлое, двуручное: 2к6 рубящего.",
+        "table": "weapon",
+        "cells": {
+          "damage_dice": "2d6",
+          "damage_type": "рубящий",
+          "damage_source": "немагический",
+          "wield": "ближний бой — Сила",
+          "properties": [
+            "тяжёлое",
+            "двуручное"
+          ],
+          "weight": 6,
+          "cost": 50
+        }
+      },
+      {
+        "id": "dagger",
+        "label": "Кинжал",
+        "description": "Простое оружие, фехтовальное, лёгкое, метательное.",
+        "table": "weapon",
+        "cells": {
+          "damage_dice": "1d4",
+          "damage_type": "колющий",
+          "damage_source": "немагический",
+          "wield": "фехтовальное — Сила или Ловкость",
+          "properties": [
+            "лёгкое",
+            "фехтовальное",
+            "метательное"
+          ],
+          "weight": 1,
+          "cost": 2
+        }
+      },
+      {
+        "id": "rapier",
+        "label": "Рапира",
+        "description": "Воинское оружие, фехтовальное.",
+        "table": "weapon",
+        "cells": {
+          "damage_dice": "1d8",
+          "damage_type": "колющий",
+          "damage_source": "немагический",
+          "wield": "фехтовальное — Сила или Ловкость",
+          "properties": [
+            "фехтовальное"
+          ],
+          "weight": 2,
+          "cost": 25
+        }
+      },
+      {
+        "id": "shortbow",
+        "label": "Короткий лук",
+        "description": "Простое оружие, двуручное.",
+        "table": "weapon",
+        "cells": {
+          "damage_dice": "1d6",
+          "damage_type": "колющий",
+          "damage_source": "немагический",
+          "wield": "дальний бой — Ловкость",
+          "range": "80/320",
+          "properties": [
+            "двуручное",
+            "боеприпасы"
+          ],
+          "weight": 2,
+          "cost": 25
+        }
+      },
+      {
+        "id": "magic_sword_1",
+        "label": "Длинный меч +1",
+        "description": "Оружие с бонусом к атаке и урону.",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "cell:wield.*.attack",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "cell:wield.*.damage",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ],
+        "table": "weapon",
+        "cells": {
+          "damage_dice": "1d8",
+          "damage_type": "рубящий",
+          "damage_source": "магический",
+          "wield": "ближний бой — Сила",
+          "properties": [],
+          "weight": 3
+        }
+      },
+      {
+        "id": "leather",
+        "label": "Кожаный доспех",
+        "description": "Лёгкий доспех.",
+        "table": "armor",
+        "cells": {
+          "ac": 11,
+          "heaviness": "лёгкий",
+          "stealth": false,
+          "weight": 10,
+          "cost": 10
+        }
+      },
+      {
+        "id": "hide",
+        "label": "Шкурный доспех",
+        "description": "Средний доспех.",
+        "table": "armor",
+        "cells": {
+          "ac": 12,
+          "heaviness": "средний",
+          "stealth": false,
+          "weight": 12,
+          "cost": 10
+        }
+      },
+      {
+        "id": "chain_mail",
+        "label": "Кольчуга",
+        "description": "Тяжёлый доспех. Нужна Сила 13, помеха на Скрытность.",
+        "table": "armor",
+        "cells": {
+          "ac": 16,
+          "heaviness": "тяжёлый",
+          "str_req": 13,
+          "stealth": true,
+          "weight": 55,
+          "cost": 75
+        }
+      },
+      {
+        "id": "potion_healing",
+        "label": "Зелье лечения",
+        "description": "Восполняет 2к4 + 2 хитов.",
+        "table": "potion",
+        "cells": {
+          "heal_die": "2d4",
+          "heal_bonus": 2,
+          "weight": 0.5,
+          "cost": 50
+        }
+      },
+      {
+        "id": "cure_wounds",
+        "label": "Лечение ран",
+        "description": "Касание: 1к8 + заклинательный модификатор хитов. Круг выше — ещё 1к8.",
+        "table": "spell_heal",
+        "cells": {
+          "spell_level": 1,
+          "heal_die": "1d8",
+          "dice_count": 1,
+          "dice_up": 1
+        }
+      },
+      {
+        "id": "goblin_scimitar",
+        "label": "Гоблин: скимитар",
+        "description": "Гоблин бьёт кривым клинком.",
+        "table": "monster_attack",
+        "cells": {
+          "to_hit": 4,
+          "damage_dice": "1d6",
+          "damage_bonus": 2,
+          "damage_type": "рубящий"
+        }
+      },
+      {
+        "id": "orc_greataxe",
+        "label": "Орк: секира",
+        "description": "Орк рубит секирой.",
+        "table": "monster_attack",
+        "cells": {
+          "to_hit": 5,
+          "damage_dice": "1d12",
+          "damage_bonus": 3,
+          "damage_type": "рубящий"
+        }
+      },
+      {
+        "id": "ogre_club",
+        "label": "Огр: дубина",
+        "description": "Огр обрушивает дубину.",
+        "table": "monster_attack",
+        "cells": {
+          "to_hit": 6,
+          "damage_dice": "2d8",
+          "damage_bonus": 4,
+          "damage_type": "дробящий"
+        }
+      }
+    ]
+  },
+  "sheets": [
+    {
+      "id": "arven",
+      "systemId": "dnd5e",
+      "of": "персонаж",
+      "name": "Арвен",
+      "values": {
+        "race": "человек",
+        "class_name": "воин",
+        "subclass": "Чемпион",
+        "background": "Солдат",
+        "alignment": "Законно-добрая",
+        "abilities.сила.score": 18,
+        "abilities.ловкость.score": 14,
+        "abilities.телосложение.score": 16,
+        "abilities.интеллект.score": 10,
+        "abilities.мудрость.score": 12,
+        "abilities.харизма.score": 8,
+        "level": 5,
+        "xp": 6500,
+        "inspiration": 1,
+        "skills.атлетика.prof": 1,
+        "skills.внимательность.prof": 1,
+        "skills.выживание.prof": 1,
+        "skills.запугивание.prof": 2,
+        "languages": "Общий, Дварфский",
+        "hp_current": 49,
+        "hp_temp": 0,
+        "hit_dice_left": 5,
+        "crit_from": 19,
+        "resources.second_wind.max": 1,
+        "resources.second_wind.left": 1,
+        "resources.action_surge.max": 1,
+        "resources.action_surge.left": 1,
+        "gp": 120,
+        "sp": 40
+      },
+      "has": [
+        {
+          "of": "chain_mail"
+        },
+        {
+          "of": "longsword"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "mirra",
+      "systemId": "dnd5e",
+      "of": "персонаж",
+      "name": "Мирра",
+      "values": {
+        "race": "тифлинг",
+        "class_name": "чародей",
+        "subclass": "Драконья кровь",
+        "background": "Шарлатанка",
+        "alignment": "Хаотично-нейтральная",
+        "abilities.сила.score": 8,
+        "abilities.ловкость.score": 16,
+        "abilities.телосложение.score": 14,
+        "abilities.интеллект.score": 12,
+        "abilities.мудрость.score": 10,
+        "abilities.харизма.score": 18,
+        "level": 5,
+        "xp": 6500,
+        "caster_level": 5,
+        "skills.магия.prof": 1,
+        "skills.обман.prof": 1,
+        "skills.убеждение.prof": 2,
+        "darkvision": 60,
+        "languages": "Общий, Инфернальный",
+        "hp_current": 32,
+        "hit_dice_left": 5,
+        "slots.1.left": 4,
+        "slots.2.left": 3,
+        "slots.3.left": 2,
+        "resources.sorcery.max": 5,
+        "resources.sorcery.left": 5,
+        "gp": 95
+      },
+      "has": [
+        {
+          "of": "leather"
+        },
+        {
+          "of": "dagger"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "doran",
+      "systemId": "dnd5e",
+      "of": "персонаж",
+      "name": "Доран",
+      "values": {
+        "race": "дварф",
+        "class_name": "жрец",
+        "subclass": "Домен жизни",
+        "background": "Прислужник",
+        "alignment": "Нейтрально-добрый",
+        "abilities.сила.score": 14,
+        "abilities.ловкость.score": 10,
+        "abilities.телосложение.score": 16,
+        "abilities.интеллект.score": 10,
+        "abilities.мудрость.score": 18,
+        "abilities.харизма.score": 12,
+        "level": 5,
+        "xp": 6500,
+        "caster_level": 5,
+        "skills.медицина.prof": 1,
+        "skills.религия.prof": 1,
+        "skills.проницательность.prof": 1,
+        "skills.история.prof": 1,
+        "darkvision": 60,
+        "languages": "Общий, Дварфский",
+        "hp_current": 48,
+        "hit_dice_left": 5,
+        "slots.1.left": 4,
+        "slots.2.left": 3,
+        "slots.3.left": 2,
+        "resources.channel.max": 1,
+        "resources.channel.left": 1,
+        "gp": 60
+      },
+      "has": [
+        {
+          "of": "cure_wounds"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "sil",
+      "systemId": "dnd5e",
+      "of": "персонаж",
+      "name": "Силь",
+      "values": {
+        "race": "полурослик",
+        "class_name": "плут",
+        "subclass": "Вор",
+        "background": "Преступница",
+        "alignment": "Хаотично-нейтральная",
+        "abilities.сила.score": 10,
+        "abilities.ловкость.score": 18,
+        "abilities.телосложение.score": 14,
+        "abilities.интеллект.score": 14,
+        "abilities.мудрость.score": 12,
+        "abilities.харизма.score": 12,
+        "level": 5,
+        "xp": 6500,
+        "skills.акробатика.prof": 1,
+        "skills.анализ.prof": 1,
+        "skills.внимательность.prof": 1,
+        "skills.скрытность.prof": 2,
+        "skills.ловкость_рук.prof": 2,
+        "languages": "Общий, Воровской жаргон",
+        "hp_current": 38,
+        "hit_dice_left": 5,
+        "resources.luck.max": 3,
+        "resources.luck.left": 3,
+        "gp": 150
+      },
+      "has": [
+        {
+          "of": "rapier"
+        },
+        {
+          "of": "shortbow"
+        },
+        {
+          "of": "dagger"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "goblin",
+      "systemId": "dnd5e",
+      "of": "противник",
+      "name": "Гоблин-налётчик",
+      "values": {
+        "race": "гоблин",
+        "alignment": "Нейтрально-злой",
+        "abilities.сила.score": 8,
+        "abilities.ловкость.score": 14,
+        "abilities.телосложение.score": 10,
+        "abilities.интеллект.score": 10,
+        "abilities.мудрость.score": 8,
+        "abilities.харизма.score": 8,
+        "level": 1,
+        "darkvision": 60,
+        "hp_current": 7,
+        "hit_dice_left": 1,
+        "ac_base": 15,
+        "hp_block": 7
+      },
+      "has": [
+        {
+          "of": "goblin_scimitar"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "orc",
+      "systemId": "dnd5e",
+      "of": "противник",
+      "name": "Орк-воин",
+      "values": {
+        "race": "орк",
+        "alignment": "Хаотично-злой",
+        "abilities.сила.score": 16,
+        "abilities.ловкость.score": 12,
+        "abilities.телосложение.score": 16,
+        "abilities.интеллект.score": 7,
+        "abilities.мудрость.score": 11,
+        "abilities.харизма.score": 10,
+        "level": 2,
+        "darkvision": 60,
+        "hp_current": 15,
+        "hit_dice_left": 2,
+        "ac_base": 13,
+        "hp_block": 15
+      },
+      "has": [
+        {
+          "of": "orc_greataxe"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ogre",
+      "systemId": "dnd5e",
+      "of": "противник",
+      "name": "Огр",
+      "values": {
+        "race": "огр",
+        "alignment": "Хаотично-злой",
+        "abilities.сила.score": 19,
+        "abilities.ловкость.score": 8,
+        "abilities.телосложение.score": 16,
+        "abilities.интеллект.score": 5,
+        "abilities.мудрость.score": 7,
+        "abilities.харизма.score": 7,
+        "level": 7,
+        "darkvision": 60,
+        "hp_current": 59,
+        "hit_dice_left": 7,
+        "ac_base": 11,
+        "hp_block": 59
+      },
+      "has": [
+        {
+          "of": "ogre_club"
+        }
+      ],
+      "effects": []
+    }
+  ]
+}

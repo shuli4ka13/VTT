@@ -32,7 +32,7 @@ function sourcesOf(system: System, effect: Effect): Source[] {
     const callee = step.type === 'emit' && typeof called === 'string' ? system.effects?.[called] : undefined;
     const title = callee?.label ?? words?.label ?? step.type;
     for (const column of callee?.returns ?? []) out.push({ expr: `@${step.id}.${column.key}`, label: `${title} — ${column.label ?? column.key}`, kind: String(column.kind ?? 'number') });
-    for (const output of resultsOf(system, effect.params ?? [], step)) out.push({ expr: `@${step.id}${output.path}`, label: `${title} — ${output.label.replace(/^да или нет: /, '')}`, kind: String(output.kind ?? 'number') });
+    for (const output of resultsOf(system, effect.params ?? [], step).filter(one => one.kind !== 'roll')) out.push({ expr: `@${step.id}${output.path}`, label: `${title} — ${output.label.replace(/^да или нет: /, '')}`, kind: String(output.kind ?? 'number') });
   }
   return out;
 }

@@ -367,6 +367,11 @@
             "key": "value",
             "label": "Значение",
             "kind": "number"
+          },
+          {
+            "key": "field",
+            "label": "Поле листа",
+            "kind": "text"
           }
         ],
         "rows": [
@@ -375,7 +380,8 @@
             "cells": {
               "value": {
                 "expr": "@agility"
-              }
+              },
+              "field": "agility"
             }
           },
           {
@@ -383,7 +389,8 @@
             "cells": {
               "value": {
                 "expr": "@strength"
-              }
+              },
+              "field": "strength"
             }
           },
           {
@@ -391,7 +398,8 @@
             "cells": {
               "value": {
                 "expr": "@finesse"
-              }
+              },
+              "field": "finesse"
             }
           },
           {
@@ -399,7 +407,8 @@
             "cells": {
               "value": {
                 "expr": "@instinct"
-              }
+              },
+              "field": "instinct"
             }
           },
           {
@@ -407,7 +416,8 @@
             "cells": {
               "value": {
                 "expr": "@presence"
-              }
+              },
+              "field": "presence"
             }
           },
           {
@@ -415,7 +425,8 @@
             "cells": {
               "value": {
                 "expr": "@knowledge"
-              }
+              },
+              "field": "knowledge"
             }
           }
         ]
@@ -1471,20 +1482,15 @@
           {
             "id": "бросок_бросок",
             "type": "roll",
-            "die": "duality",
-            "bonus": {
-              "expr": "@trait.value + @опыт"
+            "field": {
+              "expr": "@действующий.[@trait.field]"
+            },
+            "shift": {
+              "expr": "@опыт"
             },
             "tags": [
-              "действие",
-              "герой",
-              {
-                "expr": "@trait"
-              }
-            ],
-            "by": {
-              "expr": "@действующий"
-            }
+              "действие"
+            ]
           },
           {
             "id": "бросок",
@@ -1621,17 +1627,15 @@
           {
             "id": "бросок_бросок",
             "type": "roll",
-            "die": "duality",
-            "bonus": {
-              "expr": "@trait.value + @attack_bonus"
+            "field": {
+              "expr": "@действующий.[@trait.field]"
+            },
+            "shift": {
+              "expr": "@attack_bonus"
             },
             "tags": [
-              "атака",
-              "герой"
-            ],
-            "by": {
-              "expr": "@действующий"
-            }
+              "атака"
+            ]
           },
           {
             "type": "roll",
@@ -1715,7 +1719,7 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@урон"
+                "expr": "@урон.total"
               },
               "лист": {
                 "expr": "@цель"
@@ -1812,7 +1816,7 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@урон + если(@удар.natural >= 20, максимум костей(@damage_dice), 0)"
+                "expr": "@урон.total + если(@удар.natural >= 20, максимум костей(@damage_dice), 0)"
               },
               "лист": {
                 "expr": "@цель"
@@ -2169,7 +2173,7 @@
             },
             "direction": "add",
             "value": {
-              "expr": "@страх"
+              "expr": "@страх.total"
             }
           }
         ],
@@ -2217,7 +2221,7 @@
             },
             "direction": "add",
             "value": {
-              "expr": "@страх"
+              "expr": "@страх.total"
             }
           }
         ],

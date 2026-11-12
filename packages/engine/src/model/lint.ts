@@ -456,7 +456,8 @@ function fieldRollProblems(system: System): Problem[] {
     const name = roll.label || key;
     const die = system.constants?.[roll.die];
     if (die?.kind !== 'die') out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `бросок «${name}»: кости «${roll.die}» нет в «Костях»` });
-    else if ((roll.number === 'count' || roll.number === 'sides') && (die.dice ?? []).length !== 1) out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `бросок «${name}»: число поля — ${roll.number === 'count' ? 'сколько костей' : 'грани кости'}, а кость «${die.label ?? roll.die}» составная` });
+    else if (roll.pair && (roll.number !== 'sides' || (die.dice ?? []).length !== 2)) out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `бросок «${name}»: два поля бросают костью из двух видов, и число поля — грани кости` });
+    else if (!roll.pair && (roll.number === 'count' || roll.number === 'sides') && (die.dice ?? []).length !== 1) out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `бросок «${name}»: число поля — ${roll.number === 'count' ? 'сколько костей' : 'грани кости'}, а кость «${die.label ?? roll.die}» составная` });
     const where = { tab: 'rules' as const, section: 'rolls' };
     const broken = (ref: unknown): string | null => {
       if (typeof ref !== 'object' || ref === null) return null;
@@ -662,11 +663,59 @@ function handlerDiceProblems(system: System): Problem[] {
 const loneRoll = (ref: unknown): string | null =>
   /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((ref as { expr?: unknown } | undefined)?.expr ?? ''))?.[1] ?? null;
 
-const SHARED_READ = (name: string): RegExp => new RegExp(`@${name}(?:\\.natural)?(?![\\p{L}\\p{N}_.])`, 'u');
-
 const MENTION = (name: string): RegExp => new RegExp(`@${name}(?![\\p{L}\\p{N}_])`, 'u');
 
-function sharedRollProblems(system: System): Problem[] {
+const SHARED_READ = (name: string): RegExp => new RegExp(`@${name}(?:\\.natural|\\.total)?(?![\\p{L}\\p{N}_.])`, 'u');
+
+const BARE = (name: string): RegExp => new RegExp(`@${name}(?![\\p{L}\\p{N}_.])`, 'u');
+
+const wholeTotal = (ref: unknown): string | null =>
+  /^\s*@([\p{L}\p{N}_]+)\.total\s*$/u.exec(String((ref as { expr?: unknown } | undefined)?.expr ?? ''))?.[1] ?? null;
+
+function rollTotalProblems(system: System, told: ReadonlySet<string>): Problem[] {
+  const out: Problem[] = [];
+  for (const [id, effect] of Object.entries(system.effects ?? {})) {
+    const chains = chainsOf(id, effect);
+    const thrown = new Set(chains.flatMap(chain => chain.steps as (Step & Record<string, unknown>)[])
+      .filter(step => typeof step.id === 'string' && registry.get(step.type)?.dice?.(step as never))
+      .map(step => step.id as string));
+    if (!thrown.size) continue;
+    const unpicked = (name: string): string => `у броска «${name}» не выбран итог — берётся «сколько вышло всего»; выберите итог после точки`;
+    for (const chain of chains) {
+      (chain.steps as (Step & Record<string, unknown>)[]).forEach((step, at) => {
+        const sides = registry.get(step.type)?.compares?.(step as never);
+        for (const ref of sides ? [sides.value, sides.versus] : []) {
+          const name = wholeTotal(ref);
+          if (name && thrown.has(name) && !(chain === chains[0] && told.has(`${id}:${at}:${name}`))) out.push({ where: chain.where(at), level: 'warn', text: `«${name}» сравнивается одним итогом — кости и правки порога так не видны; поставьте бросок целиком, без итога после точки` });
+        }
+        const callee = typeof step.effect === 'string' ? system.effects?.[step.effect] : undefined;
+        const whole = new Set((callee?.params ?? []).filter(param => param.kind === 'roll').map(param => param.key));
+        const unknown = step.effect !== undefined && !callee;
+        const args = step.args && typeof step.args === 'object'
+          ? Object.fromEntries(Object.entries(step.args as Record<string, unknown>).filter(([key, ref]) => !((unknown || whole.has(key)) && loneRoll(ref))))
+          : step.args;
+        const rest = sides
+          ? { ...step, id: undefined, args, value: loneRoll(sides.value) ? undefined : step.value, versus: loneRoll(sides.versus) ? undefined : step.versus }
+          : { ...step, id: undefined, args };
+        const text = JSON.stringify(rest);
+        for (const name of thrown) {
+          if (name === step.id || !BARE(name).test(text)) continue;
+          if (chain === chains[0] && told.has(`${id}:${at}:${name}`)) continue;
+          out.push({ where: chain.where(at), level: 'warn', text: unpicked(name) });
+        }
+      });
+    }
+    for (const column of effect.returns ?? []) {
+      const given = JSON.stringify(column.expr ?? '');
+      for (const name of thrown) {
+        if (BARE(name).test(given)) out.push({ where: { tab: 'effects', effect: id, part: 'returns', key: column.key }, level: 'warn', text: unpicked(name) });
+      }
+    }
+  }
+  return out;
+}
+
+function sharedRollProblems(system: System, told: Set<string> = new Set()): Problem[] {
   const out: Problem[] = [];
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
     const steps = (effect.steps ?? []) as (Step & Record<string, unknown>)[];
@@ -689,6 +738,7 @@ function sharedRollProblems(system: System): Problem[] {
         const text = JSON.stringify(ref ?? '');
         for (const roll of shared) {
           if (!MENTION(roll).test(text)) continue;
+          told.add(`${id}:${split + 1 + at}:${roll}`);
           out.push({
             where: { tab: 'effects', effect: id, step: split + 1 + at },
             level: 'warn',
@@ -710,6 +760,7 @@ function sharedRollProblems(system: System): Problem[] {
       const text = JSON.stringify(rest);
       for (const [name, check] of faced) {
         if (!SHARED_READ(name).test(text)) continue;
+        told.add(`${id}:${at}:${name}`);
         const via = check ? `@${check}` : 'сравнения';
         out.push({
           where: { tab: 'effects', effect: id, step: at },
@@ -1328,7 +1379,9 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...editProblems(system, compendium));
   out.push(...rollEditProblems(system));
   out.push(...handlerDiceProblems(system));
-  out.push(...sharedRollProblems(system));
+  const told = new Set<string>();
+  out.push(...sharedRollProblems(system, told));
+  out.push(...rollTotalProblems(system, told));
   out.push(...declaredStageProblems(system));
   out.push(...costProblems(system));
   out.push(...seenProblems(system));

@@ -454,8 +454,8 @@ export class Run {
         if (lazy && !(name in results)) this.lazyValue(lazy, name, results, rolls, sink);
         return (rolls[name] as unknown as Record<string, unknown> | undefined) ?? null;
       },
-      roll: (spec, tags, by, against, bonus) => this.roll(frame, spec, tags, by, against, path.phase('roll').nth(rollsMade++), sink,
-        bonus ? { label: this.bonusLabel(frame, bonus.ref), value: bonus.value } : undefined),
+      roll: (spec, tags, by, against, bonus, values) => this.roll(frame, spec, tags, by, against, path.phase('roll').nth(rollsMade++), sink,
+        bonus ? { label: this.bonusLabel(frame, bonus.ref), value: bonus.value } : undefined, values),
       fieldRoll: (sheetId, check, extra) => this.throwField(frame, ctx as Ctx, path, sink, sheetId, check, extra),
       ahead: () => (at ? this.ahead(frame, at.steps, at.index, rolls) : null),
       faced: (name, other) => this.faced(frame, name, other, rolls),
@@ -581,7 +581,7 @@ export class Run {
     return onSheet ? findField(this.system, onSheet[1]!)?.label ?? null : null;
   }
 
-  private roll(frame: Frame, spec: Spec, tags: string[], by: string | null, against: string | null, path: Path, sink: Sink, shown?: ShownBonus): Thrown {
+  private roll(frame: Frame, spec: Spec, tags: string[], by: string | null, against: string | null, path: Path, sink: Sink, shown?: ShownBonus, values: Record<string, unknown> = { [NUMBER_NAME]: null }): Thrown {
     const die = this.ext.dice(path);
     if (!by) {
       const roll = start(spec, [], die, tags);
@@ -599,14 +599,14 @@ export class Run {
     }
     const claims = claimed.filter(claim => words[claim]);
     const holders = this.holderViews();
-    const added = rollMarks(holders, by, opponent, tags);
+    const added = rollMarks(holders, by, opponent, tags, values);
     if (added.length) tags = [...tags, ...added];
     const roller = this.view(by);
     const thrown = throwDice({
-      spec, tags, claims, held: rollHeld(holders, by, opponent, tags), roller, die,
+      spec, tags, claims, held: rollHeld(holders, by, opponent, tags, values), roller, die,
       seen: roll => this.seen(by, opponent, roll, tags, path, frame.hop, sink, shown),
     });
-    return { ...thrown, thrower: { path, by, against: opponent, spec, tags, claims, roller, holders, roll: thrown.roll } };
+    return { ...thrown, thrower: { path, by, against: opponent, spec, tags, claims, roller, holders, roll: thrown.roll, values } };
   }
 
   private loneSheet(frame: Frame, ref: unknown): string | null {
@@ -1338,19 +1338,19 @@ export class Run {
     }
   }
 
-  check(sheetId: string, check: Check, path: Path, owner: string, claims: readonly string[] = []): FieldThrow & { entries: Entry[] } {
+  check(sheetId: string, check: Check, path: Path, owner: string, claims: readonly string[] = [], versus: number | null = null): FieldThrow & { entries: Entry[] } {
     const frame: Frame = {
       path, effectId: '', label: owner, owner, home: sheetId, bound: null,
       args: {}, paramDefs: [], props: null, claims: claims.length ? { [sheetId]: [...claims] } : {}, hop: 0, inSub: false,
     };
     const sink = newSink();
     const ctx = this.ctx(frame, {}, {}, path, sink, new Set());
-    const made = this.throwField(frame, ctx, path, sink, sheetId, check, { shift: 0, tags: [], against: null });
+    const made = this.throwField(frame, ctx, path, sink, sheetId, check, { shift: 0, tags: [], against: null, versus });
     return { ...made, entries: sink.after };
   }
 
   private throwField(frame: Frame, ctx: Ctx, path: Path, sink: Sink, sheetId: string, check: Check,
-    extra: { shift: number; tags: readonly string[]; against: string | null }): FieldThrow {
+    extra: { shift: number; tags: readonly string[]; against: string | null; versus?: number | null }): FieldThrow {
     const owner = frame.owner;
     const plain: Frame = { path: frame.path, effectId: '', label: frame.label, owner, home: sheetId, bound: null, args: {}, paramDefs: [], props: null, claims: {}, hop: frame.hop, inSub: frame.inSub };
     const judgeOf = (names: Record<string, unknown>, rolls: Record<string, RollResult> = {}) => this.ctx(plain, names, rolls, path, sink, new Set(Object.keys(names)));
@@ -1365,21 +1365,27 @@ export class Run {
     const count = check.count === undefined || check.count === null ? null : num(check.count, `${owner} · сколько костей`);
     const sides = check.sides === undefined || check.sides === null ? null : num(check.sides, `${owner} · грани`);
     const counted = count === null ? spec : withCount(spec, Math.max(0, count + plus('count')), owner);
-    const sided = sides === null ? counted : withSides(counted, sides, owner);
+    const sides2 = check.sides2 === undefined || check.sides2 === null ? null : num(check.sides2, `${owner} · грани второй кости`);
+    const sided = sides === null ? counted : withSides(counted, sides2 === null ? sides : [sides, sides2], owner);
     const sized = check.keep === undefined || check.keep === null ? sided : withKeep(sided, num(check.keep, `${owner} · сколько оставить`), owner);
     const field = check.bonus ? sheetCtx.optional(check.bonus, `${owner} · прибавка`) ?? 0 : 0;
     const bonus = field + plus('bonus');
     const tags = [...new Set([...(check.tags ?? []), ...extra.tags])];
-    const thrown = ctx.roll(sized, tags, sheetId, extra.against, check.bonus ? { ref: check.bonus, value: bonus } : undefined);
+    const asked = count !== null ? Math.max(0, count + plus('count')) : sides !== null ? sides : check.bonus ? bonus
+      : check.threshold !== undefined && check.threshold !== null ? num(check.threshold, `${owner} · порог`) + plus('threshold') : null;
+    const thrown = ctx.roll(sized, tags, sheetId, extra.against, check.bonus ? { ref: check.bonus, value: bonus } : undefined, { [NUMBER_NAME]: asked });
     let threshold: number | null = null;
     let base: number | null = null;
-    if (check.threshold !== undefined && check.threshold !== null) {
+    const own = check.threshold !== undefined && check.threshold !== null;
+    const given = extra.versus ?? null;
+    if (own && given !== null) throw new EngineError(`${owner}: у броска свой порог — сложность меняют словом правки, а не числом`);
+    if (own || given !== null) {
       const holders = this.holderViews();
       const view = (id: string) => holders.find(holder => holder.id === id)!.view;
-      const shift = gather(holders, { call: ROLL_CALL, param: THRESHOLD_PARAM, tags: thrown.thrower?.tags ?? tags, names: { бросающий: sheetId, против: extra.against }, values: {}, view })
+      const shift = gather(holders, { call: ROLL_CALL, param: THRESHOLD_PARAM, tags: thrown.thrower?.tags ?? tags, names: { бросающий: sheetId, против: extra.against }, values: { [NUMBER_NAME]: asked }, view })
         .reduce((sum, held) => sum + amountOf(held), 0);
       const versus = thrown.roll.claim.versusShift * (check.under ? -1 : 1);
-      base = num(check.threshold, `${owner} · порог`);
+      base = own ? num(check.threshold, `${owner} · порог`) : given!;
       threshold = Math.max(0, base + plus('threshold') + shift + versus);
     }
     const total = thrown.result.total + bonus;
@@ -1387,15 +1393,20 @@ export class Run {
     const named: Record<string, unknown> = { [ROLLED_NAME]: total, [ROLL_NAME]: total, [NUMBER_NAME]: number ?? 0, ...(threshold === null ? {} : { [THRESHOLD_NAME]: threshold }) };
     const self = { [ROLL_NAME]: { ...thrown.result, total } };
     const judge = judgeOf(named, self);
-    const success = check.success ? judge.holds(check.success) : threshold === null ? null : check.under ? total <= threshold : total >= threshold;
-    const reckoned = check.margin ? judge.number(check.margin, `${owner} · степени`) : threshold === null ? null : check.under ? threshold - total : total - threshold;
+    const blind = (ref: unknown, ...names: string[]): boolean => {
+      const expr = ref && typeof ref === 'object' && 'expr' in ref ? String((ref as { expr: unknown }).expr) : '';
+      return names.some(name => new RegExp(`@${name}(?![\\p{L}\\p{N}_])`, 'u').test(expr));
+    };
+    const waits = threshold === null ? [THRESHOLD_NAME] : [];
+    const success = check.success && !blind(check.success, ...waits) ? judge.holds(check.success) : threshold === null ? null : check.under ? total <= threshold : total >= threshold;
+    const reckoned = check.margin && !blind(check.margin, ...waits) ? judge.number(check.margin, `${owner} · степени`) : threshold === null ? null : check.under ? threshold - total : total - threshold;
     const margin = reckoned === null ? null : reckoned + thrown.roll.claim.degreeShift;
     const graded = judgeOf({ ...named, ...(success === null ? {} : { [SUCCESS_NAME]: success }), ...(margin === null ? {} : { [MARGIN_NAME]: margin }) }, self);
     const scale = check.degrees && !Array.isArray(check.degrees) ? check.degrees : null;
     if (scale?.of === 'margin' && reckoned === null) throw new EngineError(`${owner}: ступень по степеням, а степеней правило не считает — задайте порог или «Степени числом»`);
     const degree = scale
       ? String(lookupDegree(this.system, scale.table, scale.of === 'margin' ? reckoned : total, thrown.roll.claim.degreeShift, owner) ?? '') || null
-      : (Array.isArray(check.degrees) ? check.degrees : []).find(one => graded.holds(one.if))?.label ?? null;
+      : (Array.isArray(check.degrees) ? check.degrees : []).filter(one => !blind(one.if, ...waits, ...(success === null ? [SUCCESS_NAME] : []), ...(margin === null ? [MARGIN_NAME] : []))).find(one => graded.holds(one.if))?.label ?? null;
     return { thrown, bonus, total, threshold, degree, success, margin, number };
   }
 

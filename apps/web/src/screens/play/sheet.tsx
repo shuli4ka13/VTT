@@ -109,6 +109,10 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const mayDrop = !isDesk && (mine?.role === 'gm' || mine?.sheetId === sheet.id);
   const [claims, setClaims] = useState<string[]>([]);
   const claimable = useMemo(() => claimWords(system), [system]);
+  const [second, setSecond] = useState('');
+  const [versus, setVersus] = useState('');
+  const pairs = useMemo(() => pairFields(system), [system]);
+  const openRolls = useMemo(() => fieldsOf(system).some(openRoll), [system]);
   const [at, setAt] = useState<string | null>(null);
   const paged = !isDesk && !asGroup && pagesOf(system).length > 0;
   const own = !isDesk && !asGroup;
@@ -128,12 +132,24 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
           ) : null}
         </div>
       )}
-      {!isDesk && editable && claimable.length ? (
-        <div className="inline inline--tight">
-          <span className="faint">заявить к броску с листа:</span>
+      {!isDesk && editable && (claimable.length || pairs.length || openRolls) ? (
+        <div className="inline inline--tight roll-claims">
+          {claimable.length ? <span className="faint">заявить к броску с листа:</span> : null}
           {claimable.map(([key, label]) => (
             <Chip key={key} active={claims.includes(key)} onClick={() => setClaims(claims.includes(key) ? claims.filter(one => one !== key) : [...claims, key])}>{label}</Chip>
           ))}
+          {pairs.length ? (
+            <>
+              <span className="faint">вторая характеристика:</span>
+              <Select value={second} options={[['', 'та же'], ...pairs.map(field => [field.tag, field.label ?? field.tag] as const)] as never} onChange={setSecond} />
+            </>
+          ) : null}
+          {openRolls ? (
+            <>
+              <span className="faint">сложность:</span>
+              <Input type="number" value={versus} onChange={setVersus} />
+            </>
+          ) : null}
         </div>
       ) : null}
       {!isDesk && !asGroup && hasGroups && editable ? (
@@ -168,8 +184,13 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
         badge={isDesk ? 'стол' : kind?.label ?? 'лист'}
         onChange={editable ? (tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value) : undefined}
         onRoll={tag => {
-          tableSocket.rollField(room.id, sheet.id, tag, useRoom.getState().secret && room.members.some(m => m.userId === useSession.getState().userId && m.role === 'gm'), claims);
+          const rolled = fieldsOf(system).find(field => field.tag === tag);
+          const pair = rolled?.roll?.pair === true && second !== '' ? second : undefined;
+          const named = rolled !== undefined && openRoll(rolled) && versus.trim() !== '' && Number.isFinite(Number(versus)) ? Number(versus) : undefined;
+          tableSocket.rollField(room.id, sheet.id, tag, useRoom.getState().secret && room.members.some(m => m.userId === useSession.getState().userId && m.role === 'gm'), claims, pair, named);
           setClaims([]);
+          setSecond('');
+          setVersus('');
         }}
       />
     </>
@@ -403,6 +424,14 @@ function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode;
     actions: actionsList,
   };
   return { hangingNow, hangable: hangFold, hanging, things, actions: actionsList, bare };
+}
+
+export function pairFields(system: System) {
+  return fieldsOf(system).filter(field => field.roll?.pair === true);
+}
+
+export function openRoll(field: { roll?: { threshold?: unknown; under?: unknown } }): boolean {
+  return field.roll !== undefined && field.roll.threshold === undefined && !field.roll.under;
 }
 
 export function claimWords(system: System): [string, string][] {

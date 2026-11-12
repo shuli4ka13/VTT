@@ -16,7 +16,7 @@ import { resultsOf } from '@vtt/engine/model/names-at';
 import { ResultChips } from './result-chips.tsx';
 import { rollSaid } from '../../rules/rolls.ts';
 import {
-  DIE, EXPR, FIELD, OWN_DIE, OWN_FIELD, headOf, rollableFields, setDie, setField, setWho, tailOf, whatOf, whatOptions,
+  DIE, EXPR, FIELD, OWN_DIE, OWN_FIELD, anyPair, headOf, isPair, rollableFields, setDie, setField, setSecond, setWho, tailOf, whatOf, whatOptions,
 } from './roll-what.ts';
 
 type Loose = Record<string, unknown>;
@@ -71,9 +71,24 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
       return;
     }
     setHand(null);
-    if (next.startsWith(FIELD)) set(it => setField(it, next.slice(FIELD.length), firstSheet));
+    if (next.startsWith(FIELD)) {
+      const tail = next.slice(FIELD.length);
+      set(it => { setField(it, tail, firstSheet); if (!isPair(context.system, context.effect, tail)) delete it.second; });
+    }
     else if (next.startsWith(DIE)) set(it => setDie(it, next.slice(DIE.length)));
     else if (next.startsWith(EXPR)) set(it => setDie(it, { expr: next.slice(EXPR.length) }));
+  };
+
+  const secondTail = tailOf(exprOf(read.second));
+  const pairing = fielded && (what === OWN_FIELD ? anyPair(context.system) : isPair(context.system, context.effect, tailOf(exprOf(read.field))));
+  const fieldOptions = options.filter(([key]) => key.startsWith(FIELD));
+  const secondWhat = !secondTail ? '' : fieldOptions.some(([key]) => key === `${FIELD}${secondTail}`) ? `${FIELD}${secondTail}` : OWN_FIELD;
+  const [secondHand, setSecondHand] = useState(false);
+  const secondShown = secondHand ? OWN_FIELD : secondWhat;
+  const pickSecond = (next: string) => {
+    if (next === OWN_FIELD) { setSecondHand(true); return; }
+    setSecondHand(false);
+    set(it => setSecond(it, next.startsWith(FIELD) ? next.slice(FIELD.length) : ''));
   };
 
   const slot = (key: string, label: string, where: string, placeholder: string): Extra => ({
@@ -117,7 +132,7 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
   const extras: Extra[] = fielded
     ? [
       slot('shift', 'Поправка к числу поля', 'поправка', 'например +20 за лёгкую задачу'),
-      ...(read.bonus !== undefined && read.bonus !== null ? [slot('bonus', 'Прибавка к итогу', 'прибавка', 'нет')] : []),
+      slot('bonus', 'Прибавка к итогу', 'прибавка', 'нет'),
     ]
     : [
       ...(several && (read.count === undefined || read.count === null) ? [] : [slot('count', 'Сколько костей', 'сколько костей', 'как у кости')]),
@@ -130,7 +145,7 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
       <div className="inline inline--tight number-line">
         {name.input}
         <span className="number-line__eq">=</span>
-        <div data-field="Бросок" className="number-line__formula roll-formula">
+        <div data-field="Бросок" className={`number-line__formula roll-formula${pairing ? ' roll-formula--pair' : ''}`}>
           <select
             className={`roll-by${who === '' ? ' roll-by--none' : ''}`}
             data-field="Кто бросает"
@@ -152,6 +167,18 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
             <SlotFormula value={read.field} label="Адрес поля" system={context.system} where="бросок поля · какое поле" placeholder="наберите @ и выберите поле" context={context}
               onSet={text => { if (text) { setHand(null); set(it => { it.field = { expr: text }; }); } }} />
           ) : null}
+          {pairing ? (
+            <div className="roll-second">
+              <span className="number-line__eq">и</span>
+              <span data-field="Второе поле" className="roll-what">
+                <Select label="Второе поле" value={secondShown} options={[['', 'то же поле', ''], ...fieldOptions, [OWN_FIELD, 'поле своим адресом…', 'Другое']] as never} onChange={pickSecond} />
+              </span>
+              {secondShown === OWN_FIELD ? (
+                <SlotFormula value={read.second} label="Адрес второго поля" system={context.system} where="бросок поля · второе поле" placeholder="наберите @ и выберите поле" context={context}
+                  onSet={text => { setSecondHand(false); set(it => { if (text) it.second = { expr: text }; else delete it.second; }); }} />
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </div>
       {name.trouble}
@@ -163,7 +190,7 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
       <div className="roll-extras"><Extras items={extras} /></div>
       {current ? (
         <ResultChips name={current} system={context.system} nameSlot={<span className="result-row__name" title="так итог броска зовётся в формулах: @имя, а через точку — его части">{current}</span>}
-          outputs={resultsOf(context.system, context.effect.params ?? [], step as never).map(one => ({ key: one.path.slice(1) || 'всего', label: one.label.replace(/^да или нет: /, ''), kind: one.kind }))} />
+          outputs={resultsOf(context.system, context.effect.params ?? [], step as never).map(one => ({ key: one.path.slice(1) || 'целиком', label: one.label.replace(/^да или нет: /, ''), kind: one.kind }))} />
       ) : null}
       <RollTags label={fielded ? 'Ещё метки' : 'Метки'} roll={read} system={context.system} onRoll={change => set(change)} />
     </>

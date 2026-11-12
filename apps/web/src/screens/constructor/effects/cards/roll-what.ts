@@ -77,6 +77,7 @@ export function setDie(step: Record<string, unknown>, die: unknown): void {
   if (step.field !== undefined) {
     const head = headOf(exprOf(step.field));
     delete step.field;
+    delete step.second;
     delete step.shift;
     if (head) step.by = { expr: head };
   }
@@ -100,9 +101,24 @@ export function setField(step: Record<string, unknown>, tail: string, firstSheet
   step.field = { expr: tail ? `${head}.${tail}` : head };
 }
 
+export function setSecond(step: Record<string, unknown>, tail: string): void {
+  const head = headOf(exprOf(step.field));
+  if (!tail || !head) delete step.second;
+  else step.second = { expr: `${head}.${tail}` };
+}
+
+export function isPair(system: System, effect: Effect, tail: string): boolean {
+  const picked = rollableFields(system, effect).find(one => one.tail === tail);
+  return picked ? system.rolls?.[picked.roll]?.pair === true : false;
+}
+
+export const anyPair = (system: System): boolean => Object.values(system.rolls ?? {}).some(roll => roll.pair === true);
+
 export function setWho(step: Record<string, unknown>, who: string): void {
   if (step.field !== undefined) {
     const tail = tailOf(exprOf(step.field));
+    const second = tailOf(exprOf(step.second));
+    if (second) step.second = { expr: `${who}.${second}` };
     step.field = { expr: tail ? `${who}.${tail}` : who };
     return;
   }

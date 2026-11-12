@@ -23,8 +23,8 @@ describe('редактор модификаторов', () => {
     expect((screen.getByDisplayValue('Бросок') as HTMLSelectElement).value).toBe('roll');
     const whose = screen.getByDisplayValue('всех — без условия') as HTMLSelectElement;
     expect(optionsOf(whose)).toEqual(['всех — без условия', 'бросает носитель', 'бросают против носителя']);
-    expect(screen.getByText('атака')).toBeTruthy();
-    const more = screen.getByDisplayValue('+ ещё…') as HTMLSelectElement;
+    expect(screen.getByText('атака', { selector: 'span' })).toBeTruthy();
+    const more = screen.getAllByDisplayValue('+ ещё…')[0] as HTMLSelectElement;
     expect(optionsOf(more)).toContain('спасбросок');
     expect(more.querySelector('optgroup')?.getAttribute('label')).toBe('метки бросков · Броски');
   });

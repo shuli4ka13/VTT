@@ -1,7 +1,7 @@
 import { rolesOf } from './effects/roles.ts';
 import type { SheetNames } from '../../ui/formula-chips.tsx';
 import type { System, Effect, SlotRef, Param } from '@vtt/schema';
-import { fieldGives } from '@vtt/engine/model/rolled';
+import { givesOf } from '@vtt/engine/model/rolled';
 import type { Graded } from '@vtt/engine/model/rolled';
 import type { RecordKind } from '@vtt/engine/model/owned';
 import { columnPaths } from '../../ui/formula.tsx';
@@ -10,14 +10,20 @@ import { calledOf } from '@vtt/engine/engine/effects';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import { STEP } from '../../words.ts';
 import { hasField } from '@vtt/engine/model/sheet-columns';
-import { withTables } from '../../ui/formula-words.ts';
+import { withTables, withPicks } from '../../ui/formula-words.ts';
 
 export interface StepOutput { path: string; label: string; kind?: string; no?: string }
 
-export interface EarlierStep { id: string; type: string; title?: string; table?: string; splits?: boolean; fielded?: boolean | Graded; outputs?: StepOutput[] }
+export interface EarlierStep { id: string; type: string; title?: string; table?: string; splits?: boolean; fielded?: boolean | Graded; dice?: boolean; outputs?: StepOutput[] }
 
-export const fieldedOf = (system: System, params: readonly Param[], step: unknown): { fielded?: boolean | Graded } =>
-  ((step as { field?: unknown }).field ? { fielded: fieldGives(system, params, step as never) ?? true } : {});
+const throwsDice = (step: unknown): boolean => {
+  try { return stepModule((step as { type: string }).type).dice?.(step as never) === true; } catch { return false; }
+};
+
+export const fieldedOf = (system: System, params: readonly Param[], step: unknown): { fielded?: boolean | Graded; dice?: boolean } => ({
+  ...((step as { field?: unknown }).field ? { fielded: givesOf(system, params, step as never) ?? true } : {}),
+  ...(throwsDice(step) ? { dice: true } : {}),
+});
 
 const GRADED_PATHS: Record<string, keyof Graded> = { '.success': 'success', '.margin': 'margin', '.degree': 'degree' };
 
@@ -48,7 +54,7 @@ export function outputRefs(earlier: EarlierStep[], nameOf: (step: EarlierStep) =
       continue;
     }
     for (const o of outputs) {
-      out.push({ ref: `${step.id}${o.path}`, label: said(name, o.label), ...(o.kind ? { kind: o.kind } : {}) });
+      out.push({ ref: `${step.id}${o.path}`, label: o.path ? said(name, o.label) : name, ...(o.kind ? { kind: o.kind } : {}) });
     }
   }
   return out;
@@ -61,7 +67,7 @@ const outcomeWord = (output: StepOutput): string => output.label.replace(/^да 
 export function outcomeRefs(earlier: EarlierStep[]): OutcomeRef[] {
   const rows = earlier
     .filter(step => !loopsAt(step))
-    .flatMap(step => outputsAt(step).map(output => ({ step, output })));
+    .flatMap(step => outputsAt(step).filter(output => output.kind !== 'roll').map(output => ({ step, output })));
   const plain = rows.map(({ step, output }) => `${step.title || formulaName(step)} — ${outcomeWord(output)}`);
   return rows.map(({ step, output }, at) => {
     const title = step.title || formulaName(step);
@@ -133,7 +139,8 @@ export function namesOf(ctx: SlotContext): Map<string, string> {
   for (const [key, label] of columnPaths(ctx.system, heads)) out.set(key, label);
   const engine = new Set(ctx.names?.keys() ?? []);
   for (const [key, label] of stepNames(ctx)) if (!out.has(key) || !engine.has(key)) out.set(key, label);
-  return withTables(out, ctx.tables);
+  const picks = new Map(ctx.earlier.filter(step => step.dice && !loopsAt(step)).map(step => [step.id, `${step.id}.total`]));
+  return withPicks(withTables(out, ctx.tables), picks);
 }
 
 export function refForName(ctx: SlotContext, name: string): SlotRef | null {

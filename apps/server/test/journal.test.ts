@@ -7,9 +7,13 @@ import { allowBigWorlds } from '../src/common/body-limit.ts';
 import { AppModule } from '../src/app.module.ts';
 import { openDatabase } from '../src/db/db.ts';
 import { RoomsService } from '../src/rooms/rooms.service.ts';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { sliceWorld } from './slice.ts';
 
-async function stand(die: (sides: number) => number) {
+const fabula = () => JSON.parse(readFileSync(fileURLToPath(new URL('../../../samples/fabula.lite.world.json', import.meta.url)), 'utf8'));
+
+async function stand(die: (sides: number) => number, world: { system: any; compendium: any; sheets: any[] } = sliceWorld()) {
   const db = openDatabase(':memory:');
   let idAt = 0;
   const ref = await Test.createTestingModule({
@@ -28,7 +32,7 @@ async function stand(die: (sides: number) => number) {
   const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
   const ok = async (r: request.Test) => { const res = await as(r); if (res.status >= 300) throw new Error(JSON.stringify(res.body)); return res.body; };
 
-  const { system, compendium, sheets } = sliceWorld();
+  const { system, compendium, sheets } = world;
   const systemId = (await ok(http().post('/systems').send({ title: system.name, system }))).id;
   const bookId = (await ok(http().post('/compendiums').send({ title: 'Книга', systemId, compendium }))).id;
   await ok(http().post(`/systems/${systemId}/publish`).send({}));
@@ -49,7 +53,7 @@ function play(rooms: RoomsService, roomId: string, entry: Pick<JournalEntry, 'op
     case 'act': return rooms.act(entry.userId, input);
     case 'answer': return rooms.answer(entry.userId, input);
     case 'set': return rooms.setValue(entry.userId, roomId, input.sheetId, input.tag, input.value);
-    case 'roll': return rooms.rollField(entry.userId, roomId, input.sheetId, input.tag);
+    case 'roll': return rooms.rollField(entry.userId, roomId, input.sheetId, input.tag, false, input.claims, input.second, input.versus);
     default: throw new Error(`сценарий не знает хода «${entry.op}»`);
   }
 }
@@ -112,5 +116,40 @@ describe('журнал стола: намерение + кости = тот же
     expect(await room.journal()).toEqual([]);
     await expect(room.rooms.journal('чужой', room.roomId)).rejects.toThrow('участники');
     await room.close();
+  });
+
+  it('бросок с двумя характеристиками и названной сложностью пишется в журнал и переигрывается', async () => {
+    const first = await stand(lcg(7), fabula());
+    const me = first.userId;
+    const hero = first.sheets[0].id;
+    const script = [
+      { op: 'roll', userId: me, input: { sheetId: hero, tag: 'ловкость', second: 'сила', versus: 10 } },
+      { op: 'roll', userId: me, input: { sheetId: hero, tag: 'воля', versus: 7 } },
+    ];
+    for (const step of script) {
+      let delta = await play(first.rooms, first.roomId, step);
+      while (delta.pending) delta = await first.rooms.answer(me, { roomId: first.roomId, pendingId: delta.pending.id, chosen: [] });
+    }
+    const written = await first.journal();
+    expect(written.map(entry => entry.input)).toEqual([
+      { sheetId: hero, tag: 'ловкость', second: 'сила', versus: 10 },
+      { sheetId: hero, tag: 'воля', versus: 7 },
+    ]);
+    expect(written.every(entry => entry.dice.length === 2)).toBe(true);
+
+    const tape = written.flatMap(entry => entry.dice);
+    let at = 0;
+    const second = await stand(() => {
+      if (at >= tape.length) throw new Error('кость бросили сверх журнала');
+      return tape[at++]!;
+    }, fabula());
+    for (const entry of written) await play(second.rooms, second.roomId, { ...entry, input: JSON.parse(JSON.stringify(entry.input).split(first.roomId).join(second.roomId)) });
+    expect(at).toBe(tape.length);
+    const norm = (value: unknown) => JSON.stringify(value).split(second.roomId).join(first.roomId);
+    expect(norm(await second.journal())).toBe(norm(written));
+    expect(norm((await second.state()).sheets)).toBe(norm((await first.state()).sheets));
+
+    await first.close();
+    await second.close();
   });
 });

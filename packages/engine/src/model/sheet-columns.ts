@@ -405,6 +405,7 @@ export function fieldRollOf(system: System, tableId: string, column: string, row
     ...(hasDegrees(roll.degrees) ? { degrees: roll.degrees } : {}),
     ...(roll.success ? { success: roll.success } : {}),
     ...(roll.margin ? { margin: roll.margin } : {}),
+    ...(roll.pair ? { pair: true } : {}),
   } as Field['roll'];
 }
 

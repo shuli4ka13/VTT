@@ -11,7 +11,7 @@ help:
 	@echo "  make ts-server — только сервер (NestJS + вебсокет)"
 	@echo "  make ts-web    — только веб (React + Vite)"
 	@echo "  make ts-build  — собрать пакеты, сервер и веб в dist/"
-	@echo "  make ts-seed   — положить на сервер миры-образцы (5e и киберпанк)"
+	@echo "  make ts-seed   — положить на сервер миры-образцы: шесть систем, полный и лёгкий"
 	@echo "  make ts-test   — тесты всех пакетов"
 	@echo "  make ts-check  — проверка типов"
 	@echo ""

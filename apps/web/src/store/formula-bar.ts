@@ -26,6 +26,7 @@ export interface FormulaTarget {
   meanings?: Map<string, string>;
   badges?: Map<string, string>;
   sheets?: SheetNames;
+  whole?: boolean;
   placeholder?: string;
   options?: BarOption[];
   onChange?: (text: string) => void;

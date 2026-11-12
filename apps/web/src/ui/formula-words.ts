@@ -11,7 +11,7 @@ const COMPARE: Record<string, string> = { '==': '=', '!=': '≠', '>=': '≥', '
 const ARITH: Record<string, string> = { '+': '+', '-': '−', '*': '×', '/': '÷' };
 
 const ROLL_FIELDS: Record<string, string> = {
-  'dice.rolls': 'выпавшие кости', natural: 'на кости', total: 'итог', success: 'успех', margin: 'запас',
+  'dice.rolls': 'выпавшие кости', natural: 'на кости', total: 'сколько вышло всего', success: 'успех', margin: 'запас',
   atMax: 'кости на максимуме', atMin: 'кости на минимуме', degree: 'ступень', parts: 'части', versus: 'порог',
   tags: 'метки броска',
 };
@@ -41,6 +41,16 @@ export const choiceTableOf = (system: System, tag: string, tables?: ReadonlyMap<
 
 export const rowLabelOf = (system: System, table: string | undefined, value: string): string | undefined =>
   (table ? (listOf(system, table) ?? []).find(one => String(one.value) === value)?.label : undefined);
+
+const PICKS = new WeakMap<ReadonlyMap<string, string>, ReadonlyMap<string, string>>();
+
+export const picksOf = (names: ReadonlyMap<string, string> | undefined): ReadonlyMap<string, string> | undefined =>
+  (names ? PICKS.get(names) : undefined);
+
+export function withPicks<T extends ReadonlyMap<string, string>>(names: T, picks: ReadonlyMap<string, string>): T {
+  if (picks.size) PICKS.set(names, picks);
+  return names;
+}
 
 export function withTables<T extends ReadonlyMap<string, string>>(names: T, tables: ReadonlyMap<string, string> | undefined): T {
   if (tables) TABLES.set(names, tables);

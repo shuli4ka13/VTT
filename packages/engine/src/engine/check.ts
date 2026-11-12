@@ -32,6 +32,7 @@ export interface Check {
   count?: SlotRef;
   bonus?: SlotRef;
   sides?: SlotRef;
+  sides2?: SlotRef;
   keep?: SlotRef;
   degrees?: Degrees;
   success?: SlotRef;
@@ -41,7 +42,7 @@ export interface Check {
   threshold?: SlotRef;
 }
 
-export function fieldCheck(system: System, tag: string): Check & { label: string } {
+export function fieldCheck(system: System, tag: string, second?: string | null): Check & { label: string } {
   const field = fieldOf(system, tag);
   if (!field) throw new EngineError(`система не объявляет поля «${tag}»`);
   if (!field.roll) throw new EngineError(`по полю «${field.label}» не бросают — включите броски в конструкторе`);
@@ -50,18 +51,28 @@ export function fieldCheck(system: System, tag: string): Check & { label: string
   const { label, count, bonus, sides, keep, degrees, under, tags } = field.roll;
   const { success, margin } = field.roll as { success?: SlotRef; margin?: SlotRef };
   const threshold = (field.roll as { threshold?: SlotRef }).threshold;
+  const pair = (field.roll as { pair?: boolean }).pair === true;
+  const other = second === undefined || second === null ? null : fieldOf(system, second);
+  if (second !== undefined && second !== null) {
+    if (!pair) throw new EngineError(`по полю «${field.label}» бросают одно поле — второе указать нельзя`);
+    const fits = other?.roll && other.roll.tags?.[0] === tags?.[0] && (other.roll as { pair?: boolean }).pair === true && Boolean(other.roll.sides) && Boolean(sides);
+    if (!other || !fits) throw new EngineError(`поле «${other?.label ?? second}» не бросают вместе с «${field.label}» — оба должны стоять в одном броске «Правил»`);
+  }
+  const both = pair ? ` + ${other?.label ?? field.label}` : '';
+  const joined = [...new Set([...(tags ?? []), ...(other?.roll?.tags ?? [])])];
   return {
-    label: label ?? field.label,
+    label: `${label ?? field.label}${both}`,
     die: constant,
     ...(count ? { count } : {}),
     ...(bonus ? { bonus } : {}),
     ...(sides ? { sides } : {}),
+    ...(pair && sides ? { sides2: other?.roll?.sides ?? sides } : {}),
     ...(keep ? { keep } : {}),
     ...(hasDegrees(degrees) ? { degrees } : {}),
     ...(success ? { success } : {}),
     ...(margin ? { margin } : {}),
     ...(under ? { under } : {}),
-    ...(tags?.length ? { tags } : {}),
+    ...(joined.length ? { tags: joined } : {}),
     ...(threshold ? { threshold } : {}),
   };
 }

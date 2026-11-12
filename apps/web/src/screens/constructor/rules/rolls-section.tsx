@@ -93,7 +93,7 @@ function RollFlow({ roll }: { roll: SystemRoll }) {
   const fieldGate = roll.fields.some(one => one.threshold !== undefined);
   const graded = roll.number === 'under' || roll.number === 'over' || fieldGate;
   const gate = fieldGate && roll.number !== 'under' && roll.number !== 'over' ? ' (у полей со своим порогом)' : '';
-  const common = (STEP_WORDS.roll.outputs as readonly { label: string; kind?: string; onlyWith?: string }[]).filter(one => !one.onlyWith)
+  const common = (STEP_WORDS.roll.outputs as readonly { label: string; kind?: string; onlyWith?: string }[]).filter(one => !one.onlyWith && one.kind !== 'roll')
     .map(one => [one.label.replace(/^да или нет: /, ''), KIND_WORDS[one.kind ?? 'number'] ?? '', 'у любого броска'] as const);
   const own: (readonly [string, string, string])[] = [
     ...(graded || roll.success ? [['пройден', 'да или нет', roll.success ? '«Успех, если»' : roll.number === 'under' ? 'выпало не больше порога' : `выпало не меньше порога${gate}`] as const] : []),
@@ -171,6 +171,14 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
           <div className="roll-form__body">
             <Select label="Число поля — это" value={roll.number ?? 'bonus'} options={NUMBER_WORDS as never}
               onChange={next => edit(draft => { if (next === 'bonus') delete draft.number; else draft.number = next; if (next !== 'count') delete draft.keep; })} />
+          </div>
+        </div>
+        <div className="dict-row roll-line">
+          <span className="dict-row__label">Бросают два поля</span>
+          <div className="roll-form__body">
+            <input type="checkbox" aria-label="Бросают два поля" checked={roll.pair === true}
+              onChange={event => edit(draft => { if (event.target.checked) draft.pair = true; else delete draft.pair; })} />
+            <span className="faint">Кость из двух видов; грани каждой — своё поле</span>
           </div>
         </div>
         {roll.number === 'count' ? (

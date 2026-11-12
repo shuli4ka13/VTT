@@ -296,6 +296,8 @@
 .stack--loose { gap: var(--s-5); }
 .inline { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
 .inline--tight { gap: var(--s-2); }
+.roll-claims > .select { flex: 0 1 180px; width: auto; }
+.roll-claims > .input { flex: 0 0 6em; width: 6em; }
 .spacer { flex: 1; }
 .muted { color: var(--text-muted); }
 .faint { color: var(--text-faint); }

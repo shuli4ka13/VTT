@@ -19,6 +19,7 @@ export interface RollRecord {
   roller: Pass;
   holders: readonly Holder[];
   roll: Roll;
+  values: Record<string, unknown>;
   add: number;
 }
 
@@ -146,8 +147,8 @@ const facedOf = (roll: Roll, add: number, trace: FacedTrace): Faced => {
 const signedDice = (count: number): string => `${count > 0 ? '+' : '−'}${Math.abs(count)} ${diceWord(Math.abs(count))}`;
 
 export function retarget(record: RollRecord, opponent: string, name: string, die: (key: string) => Die, system: System): Faced | null {
-  const was = rollHeld(record.holders, record.by, record.against, record.tags);
-  const now = rollHeld(record.holders, record.by, opponent, record.tags);
+  const was = rollHeld(record.holders, record.by, record.against, record.tags, record.values);
+  const now = rollHeld(record.holders, record.by, opponent, record.tags, record.values);
   const before = rollEdits(was, record.claims, record.roller);
   const after = rollEdits(now, record.claims, record.roller);
   if (signature(before) === signature(after)) return null;

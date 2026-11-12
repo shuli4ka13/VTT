@@ -37,8 +37,8 @@ export interface StepContext {
   field(ref: unknown): FieldRef;
   view(sheetId: string): Pass;
   rolled(name: string): Record<string, unknown> | null;
-  roll(spec: Spec, tags: string[], by: string | null, against: string | null, bonus?: { ref: unknown; value: number }): Thrown;
-  fieldRoll(sheetId: string, check: Check, extra: { shift: number; tags: readonly string[]; against: string | null }): FieldThrow;
+  roll(spec: Spec, tags: string[], by: string | null, against: string | null, bonus?: { ref: unknown; value: number }, values?: Record<string, unknown>): Thrown;
+  fieldRoll(sheetId: string, check: Check, extra: { shift: number; tags: readonly string[]; against: string | null; versus?: number | null }): FieldThrow;
   ahead?(): string | null;
   faced?(name: string, other: unknown): Faced | null;
   read(sheetId: string, tag: string): unknown;
@@ -100,6 +100,7 @@ export interface StepModule {
   slotRefers?: (step: StepData, slot: string) => string | null;
 
   thrownBy?: (step: StepData) => unknown;
+  dice?: (step: StepData) => boolean;
 
   flow?: 'open' | 'alt' | 'close';
 

@@ -125,6 +125,7 @@ export function rollReadback(step: Step, system: System, effect: Effect, names?:
   const out: Segment[] = r.id ? [seg(`${String(r.id)} =`)] : [];
   if (filled(r.field)) {
     out.push(seg('бросок поля'), refSegment(r.field, system, effect, 'какое поле?', names));
+    if (filled(r.second)) out.push(seg('и'), refSegment(r.second, system, effect, 'какое второе поле?', names));
     if (filled(r.shift)) out.push(seg('с поправкой'), refSegment(r.shift, system, effect, '', names));
     return out;
   }

@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { useState } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { FormulaChips, partsOf, joinParts } from './formula-chips.tsx';
+import { withPicks } from './formula-words.ts';
 import type { System } from '@vtt/schema';
 import { withColumn } from '@vtt/engine/model/sheet-columns';
 
@@ -310,6 +311,109 @@ describe('точка после фишки', () => {
     const shown = [...document.querySelectorAll('.slot__option')].map(o => o.textContent ?? '');
     expect(shown.some(t => t.includes('Прибавка к урону')), shown.join(' | ')).toBe(true);
     expect(shown.some(t => t.includes('Бонус атаки'))).toBe(false);
+  });
+});
+
+describe('итоги шага после набора имени', () => {
+  const names = new Map([
+    ['бросок', 'бросок'],
+    ['бросок.total', 'бросок — сколько вышло всего, с прибавками'],
+    ['бросок.natural', 'бросок — что выпало на костях, без прибавок'],
+    ['бросок.rolled', 'бросок — сколько костей бросили'],
+  ]);
+  function Host({ seen }: { seen: (value: string) => void }) {
+    const [value, setValue] = useState('');
+    seen(value);
+    return <FormulaChips value={value} system={system} extraNames={names} onChange={setValue} />;
+  }
+  const type = (text: string) => {
+    for (let i = 1; i <= text.length; i++) {
+      const input = document.activeElement?.matches('input.chips__text') ? document.activeElement as HTMLInputElement : document.querySelector('input.chips__text') as HTMLInputElement;
+      input.focus();
+      fireEvent.focus(input);
+      fireEvent.change(input, { target: { value: text.slice(0, i), selectionStart: i } });
+    }
+  };
+  const menu = () => [...document.querySelectorAll('.slot__option')].map(o => o.textContent ?? '');
+
+  it('дописал имя броска — открыт список: бросок целиком и его итоги', () => {
+    let value = '';
+    render(<Host seen={next => { value = next; }} />);
+    type('@бросок');
+    expect(value).toBe('@бросок');
+    expect(menu().map(text => text.replace('в этом эффекте', ''))).toEqual([
+      'бросок целиком', 'сколько вышло всего, с прибавками', 'что выпало на костях, без прибавок', 'сколько костей бросили',
+    ]);
+  });
+
+  it('фишка имени шага — просто имя, как у вызова; итог виден у фишки с точкой', () => {
+    render(<FormulaChips value="@бросок + @бросок.natural" system={system} extraNames={names} onChange={() => {}} />);
+    const chips = [...document.querySelectorAll('.chips__chip')].map(chip => chip.textContent?.replace('×', ''));
+    expect(chips).toEqual(['бросок', 'бросок — что выпало на костях']);
+  });
+
+  it('выбор итога из списка заменяет фишку', () => {
+    let value = '';
+    render(<Host seen={next => { value = next; }} />);
+    type('@бросок');
+    fireEvent.mouseDown([...document.querySelectorAll('.slot__option')].find(o => o.textContent?.includes('на костях'))!);
+    expect(value).toBe('@бросок.natural');
+    expect(menu()).toEqual([]);
+  });
+
+  it('там, где бросок стоит целиком, Enter после имени оставляет его и не перехватывается списком', () => {
+    let value = '';
+    let entered = 0;
+    function Outer() {
+      const [text, setText] = useState('');
+      value = text;
+      return <FormulaChips whole value={text} system={system} extraNames={withPicks(new Map(names), new Map([['бросок', 'бросок.total']]))} onChange={setText} onKeyDown={e => { if (e.key === 'Enter') entered += 1; }} />;
+    }
+    const view = render(<Outer />);
+    type('@бросок');
+    fireEvent.keyDown(document.activeElement!, { key: 'Enter' });
+    expect(value).toBe('@бросок');
+    expect(menu()).toEqual([]);
+    view.unmount();
+    expect(entered).toBe(1);
+  });
+
+  it('щелчок по готовой фишке открывает итоги того же шага, выбор заменяет фишку', () => {
+    let value = '';
+    function Ready() {
+      const [text, setText] = useState('@бросок.natural + 2');
+      value = text;
+      return <FormulaChips value={text} system={system} extraNames={names} onChange={setText} />;
+    }
+    render(<Ready />);
+    fireEvent.mouseDown(screen.getByText(/что выпало на костях/));
+    expect(menu().length).toBe(4);
+    expect(document.querySelector('.slot__option--lit')?.textContent).toContain('что выпало на костях');
+    fireEvent.mouseDown([...document.querySelectorAll('.slot__option')].find(o => o.textContent?.includes('сколько костей бросили'))!);
+    expect(value).toBe('@бросок.rolled + 2');
+  });
+
+  it('там, где нужно число, после имени броска костей подсвечено «всего», Enter ставит его', () => {
+    let value = '';
+    function Numeric() {
+      const [text, setText] = useState('');
+      value = text;
+      return <FormulaChips value={text} system={system} extraNames={withPicks(new Map(names), new Map([['бросок', 'бросок.total']]))} onChange={setText} />;
+    }
+    render(<Numeric />);
+    type('@бросок');
+    expect(document.querySelector('.slot__option--lit')?.textContent).toContain('сколько вышло всего');
+    fireEvent.keyDown(document.activeElement!, { key: 'Enter' });
+    expect(value).toBe('@бросок.total');
+  });
+
+  it('буква после имени закрывает список и не клеится к фишке', () => {
+    let value = '';
+    render(<Host seen={next => { value = next; }} />);
+    type('@бросок');
+    const input = document.activeElement as HTMLInputElement;
+    fireEvent.change(input, { target: { value: '+', selectionStart: 1 } });
+    expect(value).toBe('@бросок+');
   });
 });
 

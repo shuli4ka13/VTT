@@ -1,0 +1,763 @@
+{
+  "title": "Blades in the Dark",
+  "system": {
+    "id": "blades",
+    "name": "Blades in the Dark",
+    "groups": {
+      "Банда": {},
+      "Ремесло": {},
+      "Приёмы": {}
+    },
+    "constants": {
+      "pool": {
+        "label": "пул к6",
+        "kind": "die",
+        "dice": [
+          {
+            "count": {
+              "expr": "большее из(1, @rating)"
+            },
+            "sides": 6
+          }
+        ],
+        "read": "best"
+      },
+      "resist_pool": {
+        "label": "пул сопротивления к6",
+        "kind": "die",
+        "dice": [
+          {
+            "count": {
+              "expr": "большее из(1, @resolve)"
+            },
+            "sides": 6
+          }
+        ],
+        "read": "best"
+      },
+      "action_pool": {
+        "label": "пул действия к6",
+        "kind": "die",
+        "dice": [
+          {
+            "count": 1,
+            "sides": 6
+          }
+        ],
+        "read": "best"
+      }
+    },
+    "roll_edits": {
+      "zero_rating": {
+        "label": "Без рейтинга: две кости, худшая",
+        "ops": [
+          {
+            "op": "addDie"
+          },
+          {
+            "op": "keepWorst",
+            "n": 1
+          }
+        ]
+      }
+    },
+    "tables": {
+      "лист": {
+        "label": "Лист",
+        "shape": "single",
+        "columns": [
+          {
+            "key": "hunt",
+            "label": "Охота",
+            "kind": "number",
+            "min": 0,
+            "max": 4
+          },
+          {
+            "key": "study",
+            "label": "Изучение",
+            "kind": "number",
+            "min": 0,
+            "max": 4
+          },
+          {
+            "key": "survey",
+            "label": "Разведка",
+            "kind": "number",
+            "min": 0,
+            "max": 4
+          },
+          {
+            "key": "tinker",
+            "label": "Механика",
+            "kind": "number",
+            "min": 0,
+            "max": 4
+          },
+          {
+            "key": "finesse",
+            "label": "Ловкость рук",
+            "kind": "number",
+            "min": 0,
+            "max": 4
+          },
+          {
+            "key": "prowl",
+            "label": "Скрытность",
+            "kind": "number",
+            "min": 0,
+            "max": 4
+          },
+          {
+            "key": "skirmish",
+            "label": "Драка",
+            "kind": "number",
+            "min": 0,
+            "max": 4
+          },
+          {
+            "key": "wreck",
+            "label": "Разрушение",
+            "kind": "number",
+            "min": 0,
+            "max": 4
+          },
+          {
+            "key": "attune",
+            "label": "Мистика",
+            "kind": "number",
+            "min": 0,
+            "max": 4
+          },
+          {
+            "key": "command",
+            "label": "Приказ",
+            "kind": "number",
+            "min": 0,
+            "max": 4
+          },
+          {
+            "key": "consort",
+            "label": "Связи",
+            "kind": "number",
+            "min": 0,
+            "max": 4
+          },
+          {
+            "key": "sway",
+            "label": "Убеждение",
+            "kind": "number",
+            "min": 0,
+            "max": 4
+          },
+          {
+            "key": "resolve",
+            "label": "Воля",
+            "kind": "number",
+            "expr": {
+              "expr": "если(@attune > 0, 1, 0) + если(@command > 0, 1, 0) + если(@consort > 0, 1, 0) + если(@sway > 0, 1, 0)"
+            }
+          },
+          {
+            "key": "stress",
+            "label": "Стресс",
+            "kind": "number",
+            "min": 0,
+            "max": 9
+          }
+        ]
+      },
+      "стол": {
+        "label": "Стол",
+        "shape": "single",
+        "owner": "desk",
+        "columns": [
+          {
+            "key": "alarm",
+            "label": "Часы тревоги",
+            "kind": "number",
+            "min": 0,
+            "max": 8
+          }
+        ]
+      },
+      "группа": {
+        "label": "Группа",
+        "shape": "single",
+        "owner": "group",
+        "columns": [
+          {
+            "key": "heat",
+            "label": "Жар банды",
+            "kind": "number",
+            "min": 0,
+            "max": 9
+          },
+          {
+            "key": "rep",
+            "label": "Репутация",
+            "kind": "number",
+            "min": 0
+          },
+          {
+            "key": "coin",
+            "label": "Монеты банды",
+            "kind": "number",
+            "default": 2,
+            "min": 0
+          },
+          {
+            "key": "wanted",
+            "label": "Уровень розыска",
+            "kind": "number",
+            "min": 0
+          },
+          {
+            "key": "tier",
+            "label": "Ярус",
+            "kind": "number",
+            "min": 0
+          }
+        ]
+      },
+      "outcome": {
+        "label": "Исход действия",
+        "key": "range",
+        "columns": [
+          {
+            "key": "value",
+            "label": "исход",
+            "kind": "text"
+          }
+        ],
+        "rows": [
+          {
+            "from": 1,
+            "to": 3,
+            "cells": {
+              "value": "провал"
+            }
+          },
+          {
+            "from": 4,
+            "to": 5,
+            "cells": {
+              "value": "успех с последствием"
+            }
+          },
+          {
+            "from": 6,
+            "to": 6,
+            "cells": {
+              "value": "успех"
+            }
+          }
+        ]
+      },
+      "rolls": {
+        "label": "Броски",
+        "key": "word",
+        "rows": [
+          {
+            "value": "действие"
+          },
+          {
+            "value": "нулевой"
+          },
+          {
+            "value": "сопротивление"
+          }
+        ]
+      },
+      "move": {
+        "label": "Действие",
+        "icon": "🎲",
+        "hint": "Какое действие бросается — формула рейтинга по листу.",
+        "shape": "book",
+        "use": "action",
+        "block": "Приёмы",
+        "columns": [],
+        "bindings": []
+      },
+      "crit": {
+        "label": "Критический успех",
+        "key": "range",
+        "columns": [
+          {
+            "key": "value",
+            "label": "исход",
+            "kind": "text"
+          }
+        ],
+        "rows": [
+          {
+            "from": 2,
+            "to": 99,
+            "cells": {
+              "value": "критический успех"
+            }
+          }
+        ]
+      }
+    },
+    "effects": {
+      "risky_action": {
+        "label": "Рискованное действие",
+        "group": "Ремесло",
+        "description": "Пул к6 по рейтингу действия, берётся лучшая кость: 1–3 провал, 4–5 успех с последствием, 6 успех. При рейтинге 0 — две кости, берётся худшая. Последствия крутят часы тревоги на столе. Две и более шестёрки при ненулевом рейтинге — критический успех.",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
+          },
+          {
+            "key": "rating",
+            "label": "Рейтинг действия",
+            "kind": "field"
+          }
+        ],
+        "steps": [
+          {
+            "id": "бросок_бросок",
+            "type": "roll",
+            "field": {
+              "expr": "@rating"
+            }
+          },
+          {
+            "type": "each",
+            "of": "цели"
+          },
+          {
+            "id": "бросок",
+            "type": "check",
+            "value": {
+              "expr": "@бросок_бросок"
+            },
+            "versus": {
+              "expr": "4"
+            },
+            "degrees": {
+              "table": "outcome"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@rating > 0 и сколько(@бросок.dice.rolls, 6) >= 2"
+            }
+          },
+          {
+            "type": "table",
+            "table": "crit",
+            "value": {
+              "expr": "сколько(@бросок.dice.rolls, 6)"
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@бросок.degree == \"успех с последствием\""
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@стол.alarm"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "меньшее из(8, @стол.alarm + 1)"
+            }
+          },
+          {
+            "type": "orElse",
+            "if": {
+              "expr": "@бросок.degree == \"провал\""
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@стол.alarm"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "меньшее из(8, @стол.alarm + 2)"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ]
+      },
+      "zero_rating_rule": {
+        "label": "Бросок без рейтинга",
+        "group": "Общие правила",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Действие с рейтингом 0: бросаются две кости и берётся худшая.",
+        "modifiers": [
+          {
+            "tags": [
+              "действие"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "tags",
+            "value": {
+              "expr": "\"нулевой\""
+            },
+            "if": {
+              "expr": "@бросающий == @носитель и @число == 0"
+            }
+          },
+          {
+            "tags": [
+              "действие"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "1"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель и @число == 0"
+            }
+          },
+          {
+            "tags": [
+              "нулевой"
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "zero_rating",
+            "if": {
+              "expr": "@бросающий == @носитель"
+            }
+          }
+        ]
+      }
+    },
+    "grants": [
+      "zero_rating_rule"
+    ],
+    "blocks": [
+      {
+        "name": "Действия",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "hunt",
+              "study",
+              "survey",
+              "tinker",
+              "finesse",
+              "prowl",
+              "skirmish",
+              "wreck",
+              "attune",
+              "command",
+              "consort",
+              "sway",
+              "resolve"
+            ],
+            "views": {
+              "hunt": {
+                "kind": "pips"
+              },
+              "study": {
+                "kind": "pips"
+              },
+              "survey": {
+                "kind": "pips"
+              },
+              "tinker": {
+                "kind": "pips"
+              },
+              "finesse": {
+                "kind": "pips"
+              },
+              "prowl": {
+                "kind": "pips"
+              },
+              "skirmish": {
+                "kind": "pips"
+              },
+              "wreck": {
+                "kind": "pips"
+              },
+              "attune": {
+                "kind": "pips"
+              },
+              "command": {
+                "kind": "pips"
+              },
+              "consort": {
+                "kind": "pips"
+              },
+              "sway": {
+                "kind": "pips"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Состояние",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "stress"
+            ],
+            "views": {
+              "stress": {
+                "kind": "pips"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Стол",
+        "parts": [
+          {
+            "table": "стол",
+            "views": {
+              "alarm": {
+                "kind": "pips"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Банда",
+        "parts": [
+          {
+            "table": "группа",
+            "views": {
+              "heat": {
+                "kind": "stepper"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "rolls": {
+      "действие": {
+        "label": "Действие",
+        "die": "action_pool",
+        "number": "count",
+        "tags": [
+          "действие"
+        ],
+        "fields": [
+          {
+            "table": "лист",
+            "column": "hunt"
+          },
+          {
+            "table": "лист",
+            "column": "study"
+          },
+          {
+            "table": "лист",
+            "column": "survey"
+          },
+          {
+            "table": "лист",
+            "column": "tinker"
+          },
+          {
+            "table": "лист",
+            "column": "finesse"
+          },
+          {
+            "table": "лист",
+            "column": "prowl"
+          },
+          {
+            "table": "лист",
+            "column": "skirmish"
+          },
+          {
+            "table": "лист",
+            "column": "wreck"
+          },
+          {
+            "table": "лист",
+            "column": "attune"
+          },
+          {
+            "table": "лист",
+            "column": "command"
+          },
+          {
+            "table": "лист",
+            "column": "consort"
+          },
+          {
+            "table": "лист",
+            "column": "sway"
+          }
+        ]
+      }
+    }
+  },
+  "compendium": {
+    "records": [
+      {
+        "id": "act_skirmish",
+        "label": "Драка",
+        "description": "Пул к6 по рейтингу «Драка».",
+        "table": "move",
+        "bindings": [
+          {
+            "label": "Бросить",
+            "effect": "risky_action",
+            "args": {
+              "rating": {
+                "expr": "@носитель.skirmish"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_prowl",
+        "label": "Скрытность",
+        "description": "Пул к6 по рейтингу «Скрытность».",
+        "table": "move",
+        "bindings": [
+          {
+            "label": "Бросить",
+            "effect": "risky_action",
+            "args": {
+              "rating": {
+                "expr": "@носитель.prowl"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "act_sway",
+        "label": "Убеждение",
+        "description": "Пул к6 по рейтингу «Убеждение».",
+        "table": "move",
+        "bindings": [
+          {
+            "label": "Бросить",
+            "effect": "risky_action",
+            "args": {
+              "rating": {
+                "expr": "@носитель.sway"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "sheets": [
+    {
+      "id": "vex",
+      "systemId": "blades",
+      "name": "Векс",
+      "values": {
+        "skirmish": 2,
+        "prowl": 1,
+        "finesse": 0,
+        "sway": 0,
+        "study": 1,
+        "stress": 0
+      },
+      "has": [
+        {
+          "of": "act_skirmish"
+        },
+        {
+          "of": "act_prowl"
+        },
+        {
+          "of": "act_sway"
+        }
+      ],
+      "effects": [],
+      "group": "crew"
+    },
+    {
+      "id": "mira",
+      "systemId": "blades",
+      "name": "Мира",
+      "values": {
+        "skirmish": 0,
+        "prowl": 3,
+        "finesse": 2,
+        "sway": 1,
+        "study": 0,
+        "stress": 2
+      },
+      "has": [
+        {
+          "of": "act_skirmish"
+        },
+        {
+          "of": "act_prowl"
+        },
+        {
+          "of": "act_sway"
+        }
+      ],
+      "effects": [],
+      "group": "crew"
+    },
+    {
+      "id": "crew",
+      "systemId": "blades",
+      "name": "Банда «Вороны»",
+      "values": {
+        "heat": 1,
+        "rep": 0,
+        "coin": 2,
+        "wanted": 0,
+        "tier": 0
+      },
+      "has": [],
+      "effects": []
+    },
+    {
+      "id": "стол",
+      "systemId": "blades",
+      "name": "Стол",
+      "values": {
+        "alarm": 0
+      },
+      "has": [],
+      "effects": []
+    }
+  ]
+}

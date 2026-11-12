@@ -1,0 +1,2703 @@
+{
+  "title": "Daggerheart",
+  "system": {
+    "id": "daggerheart",
+    "name": "Daggerheart",
+    "groups": {
+      "Действия": {},
+      "Атака": {},
+      "Шаги для других": {},
+      "Плата": {},
+      "Правила": {},
+      "Состояния": {},
+      "Смертельные ходы": {},
+      "Отдых": {},
+      "Способности Надежды": {},
+      "Ведущий": {},
+      "Снаряжение": {},
+      "Приёмы": {}
+    },
+    "constants": {
+      "duality": {
+        "label": "Кости двойственности",
+        "kind": "die",
+        "dice": [
+          {
+            "sides": 12,
+            "name": "надежда"
+          },
+          {
+            "sides": 12,
+            "name": "страх"
+          }
+        ]
+      },
+      "adversary_die": {
+        "label": "к20 противника",
+        "kind": "die",
+        "dice": [
+          {
+            "sides": 20
+          }
+        ]
+      },
+      "hope_die": {
+        "label": "Кость Надежды",
+        "kind": "die",
+        "dice": [
+          {
+            "sides": 12
+          }
+        ]
+      }
+    },
+    "tables": {
+      "лист": {
+        "label": "Лист",
+        "shape": "single",
+        "columns": [
+          {
+            "key": "class",
+            "label": "Класс",
+            "kind": "choice",
+            "from": "classes"
+          },
+          {
+            "key": "ancestry",
+            "label": "Происхождение",
+            "kind": "choice",
+            "from": "ancestries"
+          },
+          {
+            "key": "community",
+            "label": "Община",
+            "kind": "choice",
+            "from": "communities"
+          },
+          {
+            "key": "exp1",
+            "label": "Опыт 1 (+2)",
+            "kind": "text"
+          },
+          {
+            "key": "exp2",
+            "label": "Опыт 2 (+2)",
+            "kind": "text"
+          },
+          {
+            "key": "agility",
+            "label": "Проворство",
+            "kind": "number",
+            "min": -3,
+            "max": 6
+          },
+          {
+            "key": "strength",
+            "label": "Сила",
+            "kind": "number",
+            "min": -3,
+            "max": 6
+          },
+          {
+            "key": "finesse",
+            "label": "Искусность",
+            "kind": "number",
+            "min": -3,
+            "max": 6
+          },
+          {
+            "key": "instinct",
+            "label": "Чутьё",
+            "kind": "number",
+            "min": -3,
+            "max": 6
+          },
+          {
+            "key": "presence",
+            "label": "Присутствие",
+            "kind": "number",
+            "min": -3,
+            "max": 6
+          },
+          {
+            "key": "knowledge",
+            "label": "Знание",
+            "kind": "number",
+            "min": -3,
+            "max": 6
+          },
+          {
+            "key": "level",
+            "label": "Уровень",
+            "kind": "number",
+            "default": 1,
+            "min": 0,
+            "max": 10
+          },
+          {
+            "key": "tier",
+            "label": "Ступень",
+            "expr": {
+              "expr": "если(@level >= 8, 4, если(@level >= 5, 3, если(@level >= 2, 2, 1)))"
+            }
+          },
+          {
+            "key": "proficiency",
+            "label": "Мастерство",
+            "kind": "number",
+            "default": 1,
+            "min": 1,
+            "max": 6
+          },
+          {
+            "key": "evasion_bonus",
+            "label": "Уклонение: прибавка",
+            "kind": "number"
+          },
+          {
+            "key": "evasion",
+            "label": "Уклонение",
+            "expr": {
+              "expr": "(@class.evasion или 10) + (@ancestry.evasion_bonus или 0) + @evasion_bonus"
+            }
+          },
+          {
+            "key": "armor_score",
+            "label": "Броня",
+            "kind": "number",
+            "min": 0,
+            "max": 12
+          },
+          {
+            "key": "armor_marked",
+            "label": "Бронеслоты отмечены",
+            "kind": "number",
+            "min": 0,
+            "max": 12
+          },
+          {
+            "key": "major_base",
+            "label": "Порог серьёзного: основа",
+            "kind": "number",
+            "min": 0
+          },
+          {
+            "key": "severe_base",
+            "label": "Порог тяжёлого: основа",
+            "kind": "number",
+            "min": 0
+          },
+          {
+            "key": "major",
+            "label": "Порог серьёзного урона",
+            "expr": {
+              "expr": "если(@major_base > 0, @major_base + @level + (@ancestry.threshold_proficiency или 0) * @proficiency, @level)"
+            }
+          },
+          {
+            "key": "severe",
+            "label": "Порог тяжёлого урона",
+            "expr": {
+              "expr": "если(@severe_base > 0, @severe_base + @level + (@ancestry.threshold_proficiency или 0) * @proficiency, 2 * @level)"
+            }
+          },
+          {
+            "key": "hp_extra",
+            "label": "Хиты: дополнительные клетки",
+            "kind": "number",
+            "min": 0
+          },
+          {
+            "key": "hp_max",
+            "label": "Хиты: клеток",
+            "expr": {
+              "expr": "(@class.hp или 0) + (@ancestry.hp_bonus или 0) + @hp_extra"
+            }
+          },
+          {
+            "key": "hp",
+            "label": "Хиты отмечены",
+            "kind": "number",
+            "min": 0
+          },
+          {
+            "key": "stress_extra",
+            "label": "Стресс: дополнительные клетки",
+            "kind": "number",
+            "min": 0
+          },
+          {
+            "key": "stress_max",
+            "label": "Стресс: клеток",
+            "expr": {
+              "expr": "6 + (@ancestry.stress_bonus или 0) + @stress_extra"
+            }
+          },
+          {
+            "key": "stress",
+            "label": "Стресс отмечен",
+            "kind": "number",
+            "min": 0
+          },
+          {
+            "key": "down",
+            "label": "Последний хит отмечен",
+            "expr": {
+              "expr": "@hp_max > 0 и @hp >= @hp_max"
+            }
+          },
+          {
+            "key": "stress_full",
+            "label": "Весь Стресс отмечен",
+            "expr": {
+              "expr": "@stress_max > 0 и @stress >= @stress_max"
+            }
+          },
+          {
+            "key": "stress_free",
+            "label": "Есть свободный Стресс",
+            "expr": {
+              "expr": "@stress < @stress_max"
+            }
+          },
+          {
+            "key": "hope",
+            "label": "Надежда",
+            "kind": "number",
+            "default": 2,
+            "min": 0,
+            "max": 6
+          },
+          {
+            "key": "scars",
+            "label": "Шрамы (вычеркнутые клетки Надежды)",
+            "kind": "number",
+            "min": 0,
+            "max": 6
+          },
+          {
+            "key": "difficulty",
+            "label": "Сложность",
+            "kind": "number",
+            "default": 11,
+            "min": 1
+          },
+          {
+            "key": "adversary_hp",
+            "label": "Хиты противника",
+            "kind": "number",
+            "default": 3,
+            "min": 1
+          },
+          {
+            "key": "adversary_stress",
+            "label": "Стресс противника",
+            "kind": "number",
+            "default": 2,
+            "min": 0
+          },
+          {
+            "key": "attack_mod",
+            "label": "Модификатор атаки",
+            "kind": "number",
+            "default": 1
+          }
+        ]
+      },
+      "стол": {
+        "label": "Стол",
+        "shape": "single",
+        "owner": "desk",
+        "columns": [
+          {
+            "key": "fear",
+            "label": "Страх ведущего",
+            "kind": "number",
+            "min": 0,
+            "max": 12
+          }
+        ]
+      },
+      "rolls": {
+        "label": "Броски",
+        "key": "word",
+        "columns": [
+          {
+            "key": "успех",
+            "label": "Успех",
+            "kind": "text"
+          },
+          {
+            "key": "провал",
+            "label": "Провал",
+            "kind": "text"
+          }
+        ],
+        "rows": [
+          {
+            "value": "действие",
+            "cells": {
+              "успех": "успех",
+              "провал": "неудача"
+            }
+          },
+          {
+            "value": "атака",
+            "cells": {
+              "успех": "попадание",
+              "провал": "промах"
+            }
+          },
+          {
+            "value": "герой"
+          },
+          {
+            "value": "противник"
+          },
+          {
+            "value": "смерть"
+          }
+        ]
+      },
+      "traits": {
+        "label": "Черты",
+        "key": "word",
+        "columns": [
+          {
+            "key": "value",
+            "label": "Значение",
+            "kind": "number"
+          },
+          {
+            "key": "field",
+            "label": "Поле листа",
+            "kind": "text"
+          }
+        ],
+        "rows": [
+          {
+            "value": "проворство",
+            "cells": {
+              "value": {
+                "expr": "@agility"
+              },
+              "field": "agility"
+            }
+          },
+          {
+            "value": "сила",
+            "cells": {
+              "value": {
+                "expr": "@strength"
+              },
+              "field": "strength"
+            }
+          },
+          {
+            "value": "искусность",
+            "cells": {
+              "value": {
+                "expr": "@finesse"
+              },
+              "field": "finesse"
+            }
+          },
+          {
+            "value": "чутьё",
+            "cells": {
+              "value": {
+                "expr": "@instinct"
+              },
+              "field": "instinct"
+            }
+          },
+          {
+            "value": "присутствие",
+            "cells": {
+              "value": {
+                "expr": "@presence"
+              },
+              "field": "presence"
+            }
+          },
+          {
+            "value": "знание",
+            "cells": {
+              "value": {
+                "expr": "@knowledge"
+              },
+              "field": "knowledge"
+            }
+          }
+        ]
+      },
+      "classes": {
+        "label": "Классы",
+        "key": "word",
+        "columns": [
+          {
+            "key": "evasion",
+            "label": "Уклонение",
+            "kind": "number"
+          },
+          {
+            "key": "hp",
+            "label": "Хиты",
+            "kind": "number"
+          },
+          {
+            "key": "domains",
+            "label": "Домены",
+            "kind": "text"
+          },
+          {
+            "key": "hope_feature",
+            "label": "Способность Надежды (3 Надежды)",
+            "kind": "text"
+          },
+          {
+            "key": "features",
+            "label": "Особенности класса",
+            "kind": "text"
+          }
+        ],
+        "rows": [
+          {
+            "value": "Бард (Bard)",
+            "cells": {
+              "evasion": 10,
+              "hp": 5,
+              "domains": "Grace и Codex",
+              "hope_feature": "Make a Scene: временно отвлечь цель в ближней дистанции — её Сложность −2.",
+              "features": "Rally: раз за сессию вы и каждый союзник получаете кость сплочения к6 (к8 с 5-го уровня) — на бросок действия, реакции, урона или снять столько Стресса."
+            }
+          },
+          {
+            "value": "Друид (Druid)",
+            "cells": {
+              "evasion": 10,
+              "hp": 6,
+              "domains": "Sage и Arcana",
+              "hope_feature": "Evolution: принять облик зверя без отметки Стресса и поднять одну черту на +1.",
+              "features": "Beastform: отметить Стресс и принять облик зверя; Wildtouch."
+            }
+          },
+          {
+            "value": "Страж (Guardian)",
+            "cells": {
+              "evasion": 9,
+              "hp": 7,
+              "domains": "Valor и Blade",
+              "hope_feature": "Frontline Tank: освободить 2 бронеслота.",
+              "features": "Unstoppable: раз за долгий отдых — кость неудержимости к4 (к6 с 5-го уровня)."
+            }
+          },
+          {
+            "value": "Следопыт (Ranger)",
+            "cells": {
+              "evasion": 12,
+              "hp": 6,
+              "domains": "Bone и Sage",
+              "hope_feature": "Hold Them Off: удачная атака оружием — тот же бросок против ещё двух противников.",
+              "features": "Ranger’s Focus: за Надежду атака; при успехе цель — ваш фокус."
+            }
+          },
+          {
+            "value": "Плут (Rogue)",
+            "cells": {
+              "evasion": 12,
+              "hp": 6,
+              "domains": "Midnight и Grace",
+              "hope_feature": "Rogue’s Dodge: +2 к уклонению, пока по вам не попадут атакой (или до отдыха).",
+              "features": "Cloaked; Sneak Attack: +ступень × к6 урона, если вы скрыты или союзник вплотную к цели."
+            }
+          },
+          {
+            "value": "Серафим (Seraph)",
+            "cells": {
+              "evasion": 9,
+              "hp": 7,
+              "domains": "Splendor и Valor",
+              "hope_feature": "Life Support: освободить клетку хитов союзника в ближней дистанции.",
+              "features": "Prayer Dice: в начале сессии к4 по числу черты заклинаний — уменьшить урон, прибавить к броску или получить Надежду."
+            }
+          },
+          {
+            "value": "Чародей (Sorcerer)",
+            "cells": {
+              "evasion": 10,
+              "hp": 6,
+              "domains": "Arcana и Midnight",
+              "hope_feature": "Volatile Magic: перебросить любые кости урона атаки магическим уроном.",
+              "features": "Arcane Sense; Minor Illusion; Channel Raw Power."
+            }
+          },
+          {
+            "value": "Воин (Warrior)",
+            "cells": {
+              "evasion": 11,
+              "hp": 6,
+              "domains": "Blade и Bone",
+              "hope_feature": "No Mercy: +1 к броскам атаки до следующего отдыха.",
+              "features": "Attack of Opportunity; Combat Training: не учитывать обременение, + уровень к физическому урону."
+            }
+          },
+          {
+            "value": "Волшебник (Wizard)",
+            "cells": {
+              "evasion": 11,
+              "hp": 5,
+              "domains": "Codex и Splendor",
+              "hope_feature": "Not This Time: заставить противника в дальней дистанции перебросить атаку или урон.",
+              "features": "Prestidigitation; Strange Patterns: выбранное число на кости двойственности — Надежда или минус Стресс."
+            }
+          }
+        ]
+      },
+      "ancestries": {
+        "label": "Происхождения",
+        "key": "word",
+        "columns": [
+          {
+            "key": "first",
+            "label": "Первая особенность",
+            "kind": "text"
+          },
+          {
+            "key": "second",
+            "label": "Вторая особенность",
+            "kind": "text"
+          },
+          {
+            "key": "stress_bonus",
+            "label": "Стресс +",
+            "kind": "number"
+          },
+          {
+            "key": "hp_bonus",
+            "label": "Хиты +",
+            "kind": "number"
+          },
+          {
+            "key": "evasion_bonus",
+            "label": "Уклонение +",
+            "kind": "number"
+          },
+          {
+            "key": "threshold_proficiency",
+            "label": "Мастерство к порогам",
+            "kind": "number"
+          }
+        ],
+        "rows": [
+          {
+            "value": "Кланк (Clank)",
+            "cells": {
+              "first": "Purposeful Design: +1 навсегда к одному опыту",
+              "second": "Efficient: на коротком отдыхе можно выбрать дело долгого",
+              "stress_bonus": 0,
+              "hp_bonus": 0,
+              "evasion_bonus": 0,
+              "threshold_proficiency": 0
+            }
+          },
+          {
+            "value": "Дракона (Drakona)",
+            "cells": {
+              "first": "Scales: при тяжёлом уроне отметить Стресс и отметить на одну клетку хитов меньше",
+              "second": "Elemental Breath: атака Чутьём, очень близко, к8 маг. по мастерству",
+              "stress_bonus": 0,
+              "hp_bonus": 0,
+              "evasion_bonus": 0,
+              "threshold_proficiency": 0
+            }
+          },
+          {
+            "value": "Дворф (Dwarf)",
+            "cells": {
+              "first": "Thick Skin: при лёгком уроне отметить 2 Стресса вместо клетки хитов",
+              "second": "Increased Fortitude: за 3 Надежды вдвое уменьшить физический урон",
+              "stress_bonus": 0,
+              "hp_bonus": 0,
+              "evasion_bonus": 0,
+              "threshold_proficiency": 0
+            }
+          },
+          {
+            "value": "Эльф (Elf)",
+            "cells": {
+              "first": "Quick Reactions: отметить Стресс — преимущество на реакцию",
+              "second": "Celestial Trance: ещё одно дело на отдыхе",
+              "stress_bonus": 0,
+              "hp_bonus": 0,
+              "evasion_bonus": 0,
+              "threshold_proficiency": 0
+            }
+          },
+          {
+            "value": "Фея (Faerie)",
+            "cells": {
+              "first": "Luckbender: раз за сессию за 3 Надежды перебросить кости двойственности",
+              "second": "Wings: полёт; отметить Стресс — +2 уклонения против атаки",
+              "stress_bonus": 0,
+              "hp_bonus": 0,
+              "evasion_bonus": 0,
+              "threshold_proficiency": 0
+            }
+          },
+          {
+            "value": "Фавн (Faun)",
+            "cells": {
+              "first": "Caprine Leap: прыжок в пределах ближней дистанции",
+              "second": "Kick: отметить Стресс — +2к6 урона и отбросить",
+              "stress_bonus": 0,
+              "hp_bonus": 0,
+              "evasion_bonus": 0,
+              "threshold_proficiency": 0
+            }
+          },
+          {
+            "value": "Фирболг (Firbolg)",
+            "cells": {
+              "first": "Charge: рывок и 1к12 физ. всем вплотную за Стресс",
+              "second": "Unshakable: при отметке Стресса к6, на 6 не отмечать",
+              "stress_bonus": 0,
+              "hp_bonus": 0,
+              "evasion_bonus": 0,
+              "threshold_proficiency": 0
+            }
+          },
+          {
+            "value": "Фунгрил (Fungril)",
+            "cells": {
+              "first": "Fungril Network: связь на любом расстоянии",
+              "second": "Death Connection: память из недавнего тела за Стресс",
+              "stress_bonus": 0,
+              "hp_bonus": 0,
+              "evasion_bonus": 0,
+              "threshold_proficiency": 0
+            }
+          },
+          {
+            "value": "Галапа (Galapa)",
+            "cells": {
+              "first": "Shell: + мастерство к порогам урона",
+              "second": "Retract: отметить Стресс — сопротивление физическому урону",
+              "stress_bonus": 0,
+              "hp_bonus": 0,
+              "evasion_bonus": 0,
+              "threshold_proficiency": 1
+            }
+          },
+          {
+            "value": "Великан (Giant)",
+            "cells": {
+              "first": "Endurance: +1 клетка хитов при создании",
+              "second": "Reach: ближний бой считается «очень близко»",
+              "stress_bonus": 0,
+              "hp_bonus": 1,
+              "evasion_bonus": 0,
+              "threshold_proficiency": 0
+            }
+          },
+          {
+            "value": "Гоблин (Goblin)",
+            "cells": {
+              "first": "Surefooted: помеха на броски Проворства не действует",
+              "second": "Danger Sense: раз за отдых заставить противника перебросить атаку",
+              "stress_bonus": 0,
+              "hp_bonus": 0,
+              "evasion_bonus": 0,
+              "threshold_proficiency": 0
+            }
+          },
+          {
+            "value": "Полурослик (Halfling)",
+            "cells": {
+              "first": "Luckbringer: в начале сессии вся партия получает Надежду",
+              "second": "Internal Compass: перебросить 1 на кости Надежды",
+              "stress_bonus": 0,
+              "hp_bonus": 0,
+              "evasion_bonus": 0,
+              "threshold_proficiency": 0
+            }
+          },
+          {
+            "value": "Человек (Human)",
+            "cells": {
+              "first": "High Stamina: +1 клетка Стресса при создании",
+              "second": "Adaptability: провал с опытом — отметить Стресс и перебросить",
+              "stress_bonus": 1,
+              "hp_bonus": 0,
+              "evasion_bonus": 0,
+              "threshold_proficiency": 0
+            }
+          },
+          {
+            "value": "Инфернис (Infernis)",
+            "cells": {
+              "first": "Fearless: бросок со Страхом — отметить 2 Стресса, чтобы он стал с Надеждой",
+              "second": "Dread Visage: преимущество, чтобы запугать",
+              "stress_bonus": 0,
+              "hp_bonus": 0,
+              "evasion_bonus": 0,
+              "threshold_proficiency": 0
+            }
+          },
+          {
+            "value": "Катари (Katari)",
+            "cells": {
+              "first": "Feline Instincts: на Проворство за 2 Надежды перебросить кость Надежды",
+              "second": "Retracting Claws: цель вплотную становится уязвимой",
+              "stress_bonus": 0,
+              "hp_bonus": 0,
+              "evasion_bonus": 0,
+              "threshold_proficiency": 0
+            }
+          },
+          {
+            "value": "Орк (Orc)",
+            "cells": {
+              "first": "Sturdy: на последней клетке хитов атаки по вам с помехой",
+              "second": "Tusks: попадание вплотную — за Надежду +1к6 урона",
+              "stress_bonus": 0,
+              "hp_bonus": 0,
+              "evasion_bonus": 0,
+              "threshold_proficiency": 0
+            }
+          },
+          {
+            "value": "Риббет (Ribbet)",
+            "cells": {
+              "first": "Amphibious: дышит и двигается под водой",
+              "second": "Long Tongue: отметить Стресс — атака языком, к12 физ.",
+              "stress_bonus": 0,
+              "hp_bonus": 0,
+              "evasion_bonus": 0,
+              "threshold_proficiency": 0
+            }
+          },
+          {
+            "value": "Симиа (Simiah)",
+            "cells": {
+              "first": "Natural Climber: преимущество, чтобы лазать и держать равновесие",
+              "second": "Nimble: +1 к уклонению при создании",
+              "stress_bonus": 0,
+              "hp_bonus": 0,
+              "evasion_bonus": 1,
+              "threshold_proficiency": 0
+            }
+          }
+        ]
+      },
+      "communities": {
+        "label": "Общины",
+        "key": "word",
+        "columns": [
+          {
+            "key": "feature",
+            "label": "Особенность",
+            "kind": "text"
+          }
+        ],
+        "rows": [
+          {
+            "value": "Знать (Highborne)",
+            "cells": {
+              "feature": "Privilege: преимущество среди знати, в торге и когда пускаете в ход репутацию"
+            }
+          },
+          {
+            "value": "Книжники (Loreborne)",
+            "cells": {
+              "feature": "Well-Read: преимущество на историю, культуру и политику"
+            }
+          },
+          {
+            "value": "Орден (Orderborne)",
+            "cells": {
+              "feature": "Dedicated: три заповеди; раз за отдых, следуя им, кость Надежды — к20"
+            }
+          },
+          {
+            "value": "Горцы (Ridgeborne)",
+            "cells": {
+              "feature": "Steady: преимущество на скалах и в суровой местности"
+            }
+          },
+          {
+            "value": "Мореходы (Seaborne)",
+            "cells": {
+              "feature": "Know the Tide: бросок со Страхом даёт жетон, жетон — +1 к броску действия"
+            }
+          },
+          {
+            "value": "Проныры (Slyborne)",
+            "cells": {
+              "feature": "Scoundrel: преимущество с преступниками, на ложь и укрытие"
+            }
+          },
+          {
+            "value": "Подземные (Underborne)",
+            "cells": {
+              "feature": "Low-Light Living: преимущество в полутьме — прятаться, искать, замечать"
+            }
+          },
+          {
+            "value": "Странники (Wanderborne)",
+            "cells": {
+              "feature": "Nomadic Pack: раз за сессию за Надежду достать полезную вещь"
+            }
+          },
+          {
+            "value": "Лесные (Wildborne)",
+            "cells": {
+              "feature": "Lightfoot: двигается бесшумно"
+            }
+          }
+        ]
+      },
+      "damage_kinds": {
+        "label": "Вид урона",
+        "key": "word",
+        "rows": [
+          {
+            "value": "физический"
+          },
+          {
+            "value": "магический"
+          }
+        ]
+      },
+      "ranges": {
+        "label": "Дистанции",
+        "key": "word",
+        "rows": [
+          {
+            "value": "вплотную"
+          },
+          {
+            "value": "очень близко"
+          },
+          {
+            "value": "близко"
+          },
+          {
+            "value": "далеко"
+          },
+          {
+            "value": "очень далеко"
+          }
+        ]
+      },
+      "adversaries": {
+        "label": "Противники 1-й ступени",
+        "key": "word",
+        "columns": [
+          {
+            "key": "type",
+            "label": "Тип",
+            "kind": "text"
+          },
+          {
+            "key": "difficulty",
+            "label": "Сложность",
+            "kind": "number"
+          },
+          {
+            "key": "major",
+            "label": "Порог серьёзного",
+            "kind": "number"
+          },
+          {
+            "key": "severe",
+            "label": "Порог тяжёлого",
+            "kind": "number"
+          },
+          {
+            "key": "hp",
+            "label": "Хиты",
+            "kind": "number"
+          },
+          {
+            "key": "stress",
+            "label": "Стресс",
+            "kind": "number"
+          },
+          {
+            "key": "attack",
+            "label": "Атака",
+            "kind": "number"
+          },
+          {
+            "key": "move",
+            "label": "Приём",
+            "kind": "text"
+          }
+        ],
+        "rows": [
+          {
+            "value": "Кислотный землерой (Acid Burrower)",
+            "cells": {
+              "type": "Solo",
+              "difficulty": 14,
+              "major": 8,
+              "severe": 15,
+              "hp": 8,
+              "stress": 3,
+              "attack": 3,
+              "move": "acid_burrower_claws"
+            }
+          },
+          {
+            "value": "Медведь (Bear)",
+            "cells": {
+              "type": "Bruiser",
+              "difficulty": 14,
+              "major": 9,
+              "severe": 17,
+              "hp": 7,
+              "stress": 2,
+              "attack": 1,
+              "move": "bear_claws"
+            }
+          },
+          {
+            "value": "Пещерный огр (Cave Ogre)",
+            "cells": {
+              "type": "Solo",
+              "difficulty": 13,
+              "major": 8,
+              "severe": 15,
+              "hp": 8,
+              "stress": 3,
+              "attack": 1,
+              "move": "cave_ogre_club"
+            }
+          },
+          {
+            "value": "Конструкт (Construct)",
+            "cells": {
+              "type": "Solo",
+              "difficulty": 13,
+              "major": 7,
+              "severe": 15,
+              "hp": 9,
+              "stress": 4,
+              "attack": 4,
+              "move": "construct_slam"
+            }
+          },
+          {
+            "value": "Придворный (Courtier)",
+            "cells": {
+              "type": "Social",
+              "difficulty": 12,
+              "major": 4,
+              "severe": 8,
+              "hp": 3,
+              "stress": 4,
+              "attack": -4,
+              "move": "courtier_daggers"
+            }
+          },
+          {
+            "value": "Гигантские комары (Giant Mosquitoes)",
+            "cells": {
+              "type": "Horde",
+              "difficulty": 10,
+              "major": 5,
+              "severe": 9,
+              "hp": 6,
+              "stress": 3,
+              "attack": -2,
+              "move": "mosquito_proboscis"
+            }
+          },
+          {
+            "value": "Защитник Глубоких корней (Deeproot Defender)",
+            "cells": {
+              "type": "Bruiser",
+              "difficulty": 10,
+              "major": 8,
+              "severe": 14,
+              "hp": 7,
+              "stress": 3,
+              "attack": 2,
+              "move": "deeproot_vines"
+            }
+          },
+          {
+            "value": "Гигантская крыса (Giant Rat)",
+            "cells": {
+              "type": "Minion",
+              "difficulty": 10,
+              "major": 0,
+              "severe": 0,
+              "hp": 1,
+              "stress": 1,
+              "attack": -4,
+              "move": "rat_claws"
+            }
+          },
+          {
+            "value": "Лютый волк (Dire Wolf)",
+            "cells": {
+              "type": "Skulk",
+              "difficulty": 12,
+              "major": 5,
+              "severe": 9,
+              "hp": 4,
+              "stress": 3,
+              "attack": 2,
+              "move": "wolf_claws"
+            }
+          },
+          {
+            "value": "Гигантский скорпион (Giant Scorpion)",
+            "cells": {
+              "type": "Bruiser",
+              "difficulty": 13,
+              "major": 7,
+              "severe": 13,
+              "hp": 6,
+              "stress": 3,
+              "attack": 1,
+              "move": "scorpion_pincers"
+            }
+          },
+          {
+            "value": "Стеклянный змей (Glass Snake)",
+            "cells": {
+              "type": "Standard",
+              "difficulty": 14,
+              "major": 6,
+              "severe": 10,
+              "hp": 5,
+              "stress": 3,
+              "attack": 2,
+              "move": "glass_fangs"
+            }
+          },
+          {
+            "value": "Застрельщик (Harrier)",
+            "cells": {
+              "type": "Standard",
+              "difficulty": 12,
+              "major": 5,
+              "severe": 9,
+              "hp": 3,
+              "stress": 3,
+              "attack": 1,
+              "move": "harrier_javelin"
+            }
+          },
+          {
+            "value": "Стражник с клинком (Bladed Guard)",
+            "cells": {
+              "type": "Standard",
+              "difficulty": 12,
+              "major": 5,
+              "severe": 9,
+              "hp": 5,
+              "stress": 2,
+              "attack": 1,
+              "move": "guard_longsword"
+            }
+          },
+          {
+            "value": "Начальник стражи (Head Guard)",
+            "cells": {
+              "type": "Leader",
+              "difficulty": 15,
+              "major": 7,
+              "severe": 13,
+              "hp": 7,
+              "stress": 3,
+              "attack": 4,
+              "move": "head_guard_mace"
+            }
+          },
+          {
+            "value": "Стражник-лучник (Archer Guard)",
+            "cells": {
+              "type": "Ranged",
+              "difficulty": 10,
+              "major": 4,
+              "severe": 8,
+              "hp": 3,
+              "stress": 2,
+              "attack": 1,
+              "move": "archer_longbow"
+            }
+          },
+          {
+            "value": "Разбойник Зазубренного ножа (Jagged Knife Bandit)",
+            "cells": {
+              "type": "Standard",
+              "difficulty": 12,
+              "major": 8,
+              "severe": 14,
+              "hp": 5,
+              "stress": 3,
+              "attack": 1,
+              "move": "bandit_daggers"
+            }
+          },
+          {
+            "value": "Ворожей Зазубренного ножа (Jagged Knife Hexer)",
+            "cells": {
+              "type": "Support",
+              "difficulty": 13,
+              "major": 5,
+              "severe": 9,
+              "hp": 4,
+              "stress": 4,
+              "attack": 2,
+              "move": "hexer_staff"
+            }
+          },
+          {
+            "value": "Лейтенант Зазубренного ножа (Jagged Knife Lieutenant)",
+            "cells": {
+              "type": "Leader",
+              "difficulty": 13,
+              "major": 7,
+              "severe": 14,
+              "hp": 6,
+              "stress": 3,
+              "attack": 2,
+              "move": "lieutenant_javelin"
+            }
+          },
+          {
+            "value": "Костолом Зазубренного ножа (Jagged Knife Kneebreaker)",
+            "cells": {
+              "type": "Bruiser",
+              "difficulty": 12,
+              "major": 7,
+              "severe": 14,
+              "hp": 7,
+              "stress": 4,
+              "attack": -3,
+              "move": "kneebreaker_club"
+            }
+          },
+          {
+            "value": "Тень Зазубренного ножа (Jagged Knife Shadow)",
+            "cells": {
+              "type": "Skulk",
+              "difficulty": 12,
+              "major": 4,
+              "severe": 8,
+              "hp": 3,
+              "stress": 3,
+              "attack": 1,
+              "move": "shadow_daggers"
+            }
+          },
+          {
+            "value": "Шестёрка Зазубренного ножа (Jagged Knife Lackey)",
+            "cells": {
+              "type": "Minion",
+              "difficulty": 9,
+              "major": 0,
+              "severe": 0,
+              "hp": 1,
+              "stress": 1,
+              "attack": -2,
+              "move": "lackey_daggers"
+            }
+          },
+          {
+            "value": "Снайпер Зазубренного ножа (Jagged Knife Sniper)",
+            "cells": {
+              "type": "Ranged",
+              "difficulty": 13,
+              "major": 4,
+              "severe": 7,
+              "hp": 3,
+              "stress": 2,
+              "attack": -1,
+              "move": "sniper_shortbow"
+            }
+          },
+          {
+            "value": "Торговец (Merchant)",
+            "cells": {
+              "type": "Social",
+              "difficulty": 12,
+              "major": 4,
+              "severe": 8,
+              "hp": 3,
+              "stress": 3,
+              "attack": -4,
+              "move": "merchant_club"
+            }
+          }
+        ]
+      },
+      "weapon": {
+        "label": "Оружие",
+        "icon": "⚔",
+        "hint": "Черта, дистанция, кость урона и прибавка.",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "columns": [
+          {
+            "key": "trait",
+            "label": "Черта",
+            "kind": "choice",
+            "from": "traits"
+          },
+          {
+            "key": "range",
+            "label": "Дистанция",
+            "kind": "choice",
+            "from": "ranges"
+          },
+          {
+            "key": "damage_die",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "die_size",
+            "label": "Граней на кости",
+            "kind": "number"
+          },
+          {
+            "key": "damage_bonus",
+            "label": "Прибавка к урону",
+            "kind": "number"
+          },
+          {
+            "key": "attack_bonus",
+            "label": "Прибавка к атаке",
+            "kind": "number"
+          },
+          {
+            "key": "extra_die",
+            "label": "Ещё кость урона, худшая отбрасывается (1 — да)",
+            "kind": "number"
+          },
+          {
+            "key": "damage_kind",
+            "label": "Вид урона",
+            "kind": "choice",
+            "from": "damage_kinds"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Атака",
+            "effect": "hero_attack",
+            "args": {
+              "trait": {
+                "expr": "@trait"
+              },
+              "attack_bonus": {
+                "expr": "@attack_bonus"
+              },
+              "damage_die": {
+                "expr": "@damage_die"
+              },
+              "die_size": {
+                "expr": "@die_size"
+              },
+              "damage_bonus": {
+                "expr": "@damage_bonus"
+              },
+              "extra_die": {
+                "expr": "@extra_die"
+              }
+            }
+          }
+        ]
+      },
+      "armor": {
+        "label": "Доспех",
+        "icon": "🛡",
+        "hint": "Основа порогов и броня.",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "columns": [
+          {
+            "key": "major",
+            "label": "Основа порога серьёзного",
+            "kind": "number"
+          },
+          {
+            "key": "severe",
+            "label": "Основа порога тяжёлого",
+            "kind": "number"
+          },
+          {
+            "key": "score",
+            "label": "Броня",
+            "kind": "number"
+          }
+        ]
+      },
+      "adversary_move": {
+        "label": "Приём противника",
+        "icon": "👹",
+        "hint": "Урон вписан в приём, особенности — в описании.",
+        "shape": "book",
+        "use": "action",
+        "block": "Приёмы",
+        "columns": [
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "damage_bonus",
+            "label": "Прибавка",
+            "kind": "number"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Атака",
+            "effect": "adversary_attack",
+            "args": {
+              "damage_dice": {
+                "expr": "@damage_dice"
+              },
+              "damage_bonus": {
+                "expr": "@damage_bonus"
+              }
+            }
+          }
+        ]
+      },
+      "action": {
+        "label": "Действие",
+        "icon": "🎲",
+        "hint": "Бросок, отдых, смертельные ходы, способности.",
+        "shape": "book",
+        "use": "action",
+        "block": "Приёмы"
+      }
+    },
+    "roll_edits": {
+      "advantage": {
+        "label": "Преимущество",
+        "ops": [
+          {
+            "op": "plus",
+            "die": {
+              "expr": "1к6"
+            }
+          }
+        ],
+        "cancels": [
+          "disadvantage"
+        ]
+      },
+      "disadvantage": {
+        "label": "Помеха",
+        "ops": [
+          {
+            "op": "plus",
+            "die": {
+              "expr": "1к6"
+            },
+            "minus": true
+          }
+        ],
+        "cancels": [
+          "advantage"
+        ]
+      },
+      "gm_advantage": {
+        "label": "Преимущество противника",
+        "ops": [
+          {
+            "op": "addDie"
+          },
+          {
+            "op": "keepBest",
+            "n": 1
+          }
+        ],
+        "cancels": [
+          "gm_disadvantage"
+        ]
+      },
+      "gm_disadvantage": {
+        "label": "Помеха противника",
+        "ops": [
+          {
+            "op": "addDie"
+          },
+          {
+            "op": "keepWorst",
+            "n": 1
+          }
+        ],
+        "cancels": [
+          "gm_advantage"
+        ]
+      }
+    },
+    "effects": {
+      "action_roll": {
+        "label": "Бросок действия",
+        "group": "Действия",
+        "description": "Кости двойственности + черта (+2 за опыт, если потратить Надежду) против сложности, которую называет ведущий. Дубль — крит: успех при любом итоге.",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "trait",
+            "label": "Черта",
+            "kind": "choice",
+            "from": "traits",
+            "ask": {
+              "by": "actor"
+            }
+          },
+          {
+            "key": "опыт",
+            "label": "Опыт: 0 или +2 за Надежду",
+            "kind": "number",
+            "ask": {
+              "by": "actor"
+            },
+            "min": 0,
+            "max": 2
+          },
+          {
+            "key": "сложность",
+            "label": "Сложность",
+            "kind": "number",
+            "ask": {
+              "by": "gm"
+            },
+            "min": 1,
+            "max": 30
+          }
+        ],
+        "steps": [
+          {
+            "id": "бросок_бросок",
+            "type": "roll",
+            "field": {
+              "expr": "@действующий.[@trait.field]"
+            },
+            "shift": {
+              "expr": "@опыт"
+            },
+            "tags": [
+              "действие"
+            ]
+          },
+          {
+            "id": "бросок",
+            "type": "check",
+            "value": {
+              "expr": "@бросок_бросок"
+            },
+            "versus": {
+              "expr": "@сложность"
+            },
+            "degrees": [
+              {
+                "label": "критический успех",
+                "if": {
+                  "expr": "@бросок_бросок.parts.надежда == @бросок_бросок.parts.страх"
+                }
+              },
+              {
+                "label": "успех с надеждой",
+                "if": {
+                  "expr": "@успех и @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+                }
+              },
+              {
+                "label": "успех со страхом",
+                "if": {
+                  "expr": "@успех"
+                }
+              },
+              {
+                "label": "провал с надеждой",
+                "if": {
+                  "expr": "@бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+                }
+              },
+              {
+                "label": "провал со страхом",
+                "if": {
+                  "expr": "да"
+                }
+              }
+            ]
+          }
+        ],
+        "cost": [
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@опыт > 0"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@действующий.hope < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"на опыт нужна Надежда\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@действующий.hope"
+            },
+            "value": {
+              "expr": "1"
+            }
+          },
+          {
+            "type": "end"
+          }
+        ]
+      },
+      "hero_attack": {
+        "label": "Атака героя",
+        "group": "Атака",
+        "description": "Кости двойственности + черта оружия против сложности противника. Попал — кости урона по числу мастерства плюс прибавка; на крите сверху максимум костей урона.",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
+          },
+          {
+            "key": "trait",
+            "label": "Черта оружия",
+            "kind": "choice",
+            "from": "traits"
+          },
+          {
+            "key": "attack_bonus",
+            "label": "Прибавка к атаке",
+            "kind": "number"
+          },
+          {
+            "key": "damage_die",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "die_size",
+            "label": "Граней на кости урона",
+            "kind": "number"
+          },
+          {
+            "key": "damage_bonus",
+            "label": "Прибавка к урону",
+            "kind": "number"
+          },
+          {
+            "key": "extra_die",
+            "label": "Ещё кость урона, худшая отбрасывается (1 — да)",
+            "kind": "number"
+          }
+        ],
+        "steps": [
+          {
+            "id": "бросок_бросок",
+            "type": "roll",
+            "field": {
+              "expr": "@действующий.[@trait.field]"
+            },
+            "shift": {
+              "expr": "@attack_bonus"
+            },
+            "tags": [
+              "атака"
+            ]
+          },
+          {
+            "type": "roll",
+            "die": {
+              "expr": "@damage_die"
+            },
+            "count": {
+              "expr": "@действующий.proficiency + @extra_die"
+            },
+            "keep": {
+              "expr": "@действующий.proficiency"
+            },
+            "bonus": {
+              "expr": "@damage_bonus + если(@бросок_бросок.parts.надежда == @бросок_бросок.parts.страх, @действующий.proficiency * @die_size, 0)"
+            },
+            "id": "урон"
+          },
+          {
+            "type": "each",
+            "of": "цели"
+          },
+          {
+            "id": "бросок",
+            "type": "check",
+            "value": {
+              "expr": "@бросок_бросок"
+            },
+            "versus": {
+              "expr": "@цель.difficulty"
+            },
+            "degrees": [
+              {
+                "label": "критический успех",
+                "if": {
+                  "expr": "@бросок_бросок.parts.надежда == @бросок_бросок.parts.страх"
+                }
+              },
+              {
+                "label": "успех с надеждой",
+                "if": {
+                  "expr": "@успех и @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+                }
+              },
+              {
+                "label": "успех со страхом",
+                "if": {
+                  "expr": "@успех"
+                }
+              },
+              {
+                "label": "провал с надеждой",
+                "if": {
+                  "expr": "@бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+                }
+              },
+              {
+                "label": "провал со страхом",
+                "if": {
+                  "expr": "да"
+                }
+              }
+            ]
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "если(@бросок.success или @бросок.parts.надежда == @бросок.parts.страх, 1, 0) < 1"
+            }
+          },
+          {
+            "type": "stop",
+            "note": {
+              "expr": "\"промах\""
+            }
+          },
+          {
+            "type": "end"
+          },
+          {
+            "type": "emit",
+            "effect": "damage",
+            "args": {
+              "amount": {
+                "expr": "@урон.total"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
+          }
+        ]
+      },
+      "adversary_attack": {
+        "label": "Атака противника",
+        "group": "Атака",
+        "description": "к20 + модификатор атаки против уклонения героя; натуральная 20 попадает всегда. Попал — урон приёма; на натуральной 20 сверху максимум костей урона.",
+        "params": [
+          {
+            "key": "действующий",
+            "label": "Кто действует",
+            "kind": "sheet"
+          },
+          {
+            "key": "цели",
+            "label": "Цели",
+            "kind": "sheet",
+            "many": true,
+            "item": {
+              "key": "цель",
+              "label": "Цель"
+            }
+          },
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "damage_bonus",
+            "label": "Прибавка к урону",
+            "kind": "number"
+          }
+        ],
+        "steps": [
+          {
+            "id": "удар_бросок",
+            "type": "roll",
+            "die": "adversary_die",
+            "bonus": {
+              "expr": "@действующий.attack_mod"
+            },
+            "tags": [
+              "атака",
+              "противник"
+            ],
+            "by": {
+              "expr": "@действующий"
+            }
+          },
+          {
+            "type": "roll",
+            "die": {
+              "expr": "@damage_dice"
+            },
+            "bonus": {
+              "expr": "@damage_bonus"
+            },
+            "id": "урон"
+          },
+          {
+            "type": "each",
+            "of": "цели"
+          },
+          {
+            "id": "удар",
+            "type": "check",
+            "value": {
+              "expr": "@удар_бросок"
+            },
+            "versus": {
+              "expr": "@цель.evasion"
+            },
+            "succeedOn": {
+              "expr": "20"
+            }
+          },
+          {
+            "type": "branch",
+            "if": {
+              "expr": "@удар.success"
+            }
+          },
+          {
+            "type": "emit",
+            "effect": "damage",
+            "args": {
+              "amount": {
+                "expr": "@урон.total + если(@удар.natural >= 20, максимум костей(@damage_dice), 0)"
+              },
+              "лист": {
+                "expr": "@цель"
+              },
+              "источник": {
+                "expr": "@действующий"
+              }
+            }
+          },
+          {
+            "type": "end"
+          }
+        ]
+      },
+      "damage": {
+        "label": "Урон",
+        "group": "Шаги для других",
+        "description": "Урон против порогов: ниже серьёзного — одна клетка хитов, от серьёзного — две, от тяжёлого — три. Бронеслот игрок отмечает сам действием «Отметить бронеслот».",
+        "params": [
+          {
+            "key": "лист",
+            "label": "Лист",
+            "kind": "sheet",
+            "role": "target"
+          },
+          {
+            "key": "источник",
+            "label": "Источник",
+            "kind": "sheet",
+            "optional": true,
+            "role": "actor"
+          },
+          {
+            "key": "amount",
+            "label": "Сколько урона",
+            "kind": "number",
+            "role": "amount"
+          }
+        ],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "expr": "@лист.hp"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "если(@amount >= @лист.severe, 3, если(@amount >= @лист.major, 2, если(@amount >= 1, 1, 0)))"
+            }
+          }
+        ]
+      },
+      "duality": {
+        "label": "Двойственность",
+        "group": "Правила",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "После броска двойственности: больше выпало на Надежде — Надежда герою; на Страхе — Страх ведущему; дубль — крит: Надежда и минус один Стресс.",
+        "on": [
+          {
+            "on": "done:action_roll",
+            "if": {
+              "expr": "@действующий == @носитель и @бросок.parts.надежда > @бросок.parts.страх"
+            },
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.hope"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "1"
+                }
+              }
+            ]
+          },
+          {
+            "on": "done:action_roll",
+            "if": {
+              "expr": "@действующий == @носитель и @бросок.parts.страх > @бросок.parts.надежда"
+            },
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@стол.fear"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "1"
+                }
+              }
+            ]
+          },
+          {
+            "on": "done:action_roll",
+            "if": {
+              "expr": "@действующий == @носитель и @бросок.parts.надежда == @бросок.parts.страх"
+            },
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.hope"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "1"
+                }
+              },
+              {
+                "type": "branch",
+                "if": {
+                  "expr": "@носитель.stress >= 1"
+                }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.stress"
+                },
+                "value": {
+                  "expr": "1"
+                }
+              },
+              {
+                "type": "end"
+              }
+            ]
+          },
+          {
+            "on": "done:hero_attack",
+            "if": {
+              "expr": "@действующий == @носитель и @бросок_бросок.parts.надежда > @бросок_бросок.parts.страх"
+            },
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.hope"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "1"
+                }
+              }
+            ]
+          },
+          {
+            "on": "done:hero_attack",
+            "if": {
+              "expr": "@действующий == @носитель и @бросок_бросок.parts.страх > @бросок_бросок.parts.надежда"
+            },
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@стол.fear"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "1"
+                }
+              }
+            ]
+          },
+          {
+            "on": "done:hero_attack",
+            "if": {
+              "expr": "@действующий == @носитель и @бросок_бросок.parts.надежда == @бросок_бросок.parts.страх"
+            },
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.hope"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "1"
+                }
+              },
+              {
+                "type": "branch",
+                "if": {
+                  "expr": "@носитель.stress >= 1"
+                }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "expr": "@носитель.stress"
+                },
+                "value": {
+                  "expr": "1"
+                }
+              },
+              {
+                "type": "end"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "sheets": {
+      "hero": {
+        "label": "Герой",
+        "icon": "🗡",
+        "hint": "Лист игрока.",
+        "grants": [
+          "duality"
+        ]
+      },
+      "adversary": {
+        "label": "Противник",
+        "icon": "👹",
+        "hint": "Сложность, пороги, хиты и Стресс, модификатор атаки — числами из блока противника, без класса и уровня.",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "hp_max",
+            "op": "set",
+            "value": {
+              "expr": "@adversary_hp"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "stress_max",
+            "op": "set",
+            "value": {
+              "expr": "@adversary_stress"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "major",
+            "op": "set",
+            "value": {
+              "expr": "@major_base"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "severe",
+            "op": "set",
+            "value": {
+              "expr": "@severe_base"
+            }
+          }
+        ],
+        "blocks": [
+          "Пороги урона",
+          "Здоровье",
+          "Противник"
+        ]
+      }
+    },
+    "blocks": [
+      {
+        "name": "Личное дело",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "class",
+              "ancestry",
+              "community",
+              "exp1",
+              "exp2"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Черты",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "agility",
+              "strength",
+              "finesse",
+              "instinct",
+              "presence",
+              "knowledge"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Прогрессия",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "level",
+              "tier",
+              "proficiency"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Уклонение и броня",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "evasion_bonus",
+              "evasion",
+              "armor_score",
+              "armor_marked"
+            ],
+            "views": {
+              "evasion": {
+                "kind": "big"
+              },
+              "armor_marked": {
+                "kind": "pips"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Пороги урона",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "major_base",
+              "severe_base",
+              "major",
+              "severe"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Здоровье",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "hp_extra",
+              "hp_max",
+              "hp",
+              "stress_extra",
+              "stress_max",
+              "stress",
+              "down",
+              "stress_full",
+              "stress_free"
+            ],
+            "views": {
+              "hp": {
+                "kind": "pips"
+              },
+              "stress": {
+                "kind": "pips"
+              },
+              "down": {
+                "kind": "toggle"
+              },
+              "stress_full": {
+                "kind": "toggle"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Надежда",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "hope",
+              "scars"
+            ],
+            "views": {
+              "hope": {
+                "kind": "pips"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Противник",
+        "parts": [
+          {
+            "table": "лист",
+            "columns": [
+              "difficulty",
+              "adversary_hp",
+              "adversary_stress",
+              "attack_mod"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Стол",
+        "parts": [
+          {
+            "table": "стол"
+          }
+        ]
+      }
+    ],
+    "rolls": {
+      "действие": {
+        "label": "Бросок",
+        "die": "duality",
+        "fields": [
+          {
+            "table": "лист",
+            "column": "agility",
+            "tags": [
+              "герой",
+              "проворство"
+            ]
+          },
+          {
+            "table": "лист",
+            "column": "strength",
+            "tags": [
+              "герой",
+              "сила"
+            ]
+          },
+          {
+            "table": "лист",
+            "column": "finesse",
+            "tags": [
+              "герой",
+              "искусность"
+            ]
+          },
+          {
+            "table": "лист",
+            "column": "instinct",
+            "tags": [
+              "герой",
+              "чутьё"
+            ]
+          },
+          {
+            "table": "лист",
+            "column": "presence",
+            "tags": [
+              "герой",
+              "присутствие"
+            ]
+          },
+          {
+            "table": "лист",
+            "column": "knowledge",
+            "tags": [
+              "герой",
+              "знание"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "compendium": {
+    "records": [
+      {
+        "id": "longsword",
+        "label": "Длинный меч",
+        "description": "Longsword. Проворство, вплотную, к8 + 3 физ., двуручное.",
+        "table": "weapon",
+        "cells": {
+          "trait": "проворство",
+          "range": "вплотную",
+          "damage_die": "1d8",
+          "die_size": 8,
+          "damage_bonus": 3,
+          "attack_bonus": 0,
+          "extra_die": 0,
+          "damage_kind": "физический"
+        }
+      },
+      {
+        "id": "greatsword",
+        "label": "Двуручный меч",
+        "description": "Greatsword. Сила, вплотную, к10 + 3 физ., двуручное. Массивный: −1 к уклонению; при попадании ещё кость урона, худшая отбрасывается.",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "evasion",
+            "op": "add",
+            "value": {
+              "expr": "-1"
+            }
+          }
+        ],
+        "table": "weapon",
+        "cells": {
+          "trait": "сила",
+          "range": "вплотную",
+          "damage_die": "1d10",
+          "die_size": 10,
+          "damage_bonus": 3,
+          "attack_bonus": 0,
+          "extra_die": 1,
+          "damage_kind": "физический"
+        }
+      },
+      {
+        "id": "dagger",
+        "label": "Кинжал",
+        "description": "Dagger. Искусность, вплотную, к8 + 1 физ., одноручное.",
+        "table": "weapon",
+        "cells": {
+          "trait": "искусность",
+          "range": "вплотную",
+          "damage_die": "1d8",
+          "die_size": 8,
+          "damage_bonus": 1,
+          "attack_bonus": 0,
+          "extra_die": 0,
+          "damage_kind": "физический"
+        }
+      },
+      {
+        "id": "shortbow",
+        "label": "Короткий лук",
+        "description": "Shortbow. Проворство, далеко, к6 + 3 физ., двуручное.",
+        "table": "weapon",
+        "cells": {
+          "trait": "проворство",
+          "range": "далеко",
+          "damage_die": "1d6",
+          "die_size": 6,
+          "damage_bonus": 3,
+          "attack_bonus": 0,
+          "extra_die": 0,
+          "damage_kind": "физический"
+        }
+      },
+      {
+        "id": "leather",
+        "label": "Кожаный доспех",
+        "description": "Leather Armor. Пороги 6/13 + уровень, броня 3.",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "major_base",
+            "op": "add",
+            "value": {
+              "expr": "6"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "severe_base",
+            "op": "add",
+            "value": {
+              "expr": "13"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "armor_score",
+            "op": "add",
+            "value": {
+              "expr": "3"
+            }
+          }
+        ],
+        "table": "armor",
+        "cells": {
+          "major": 6,
+          "severe": 13,
+          "score": 3
+        }
+      },
+      {
+        "id": "chainmail",
+        "label": "Кольчуга",
+        "description": "Chainmail Armor. Пороги 7/15 + уровень, броня 4. Тяжёлая: −1 к уклонению.",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "major_base",
+            "op": "add",
+            "value": {
+              "expr": "7"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "severe_base",
+            "op": "add",
+            "value": {
+              "expr": "15"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "armor_score",
+            "op": "add",
+            "value": {
+              "expr": "4"
+            }
+          },
+          {
+            "kind": "value",
+            "target": "evasion",
+            "op": "add",
+            "value": {
+              "expr": "-1"
+            }
+          }
+        ],
+        "table": "armor",
+        "cells": {
+          "major": 7,
+          "severe": 15,
+          "score": 4
+        }
+      },
+      {
+        "id": "bear_claws",
+        "label": "Когти (Медведь)",
+        "description": "Вплотную. Overwhelming Force; Bite (3к4 + 10 и опутан); Momentum.",
+        "table": "adversary_move",
+        "cells": {
+          "damage_dice": "1d8",
+          "damage_bonus": 3
+        }
+      },
+      {
+        "id": "bandit_daggers",
+        "label": "Кинжалы (Разбойник Зазубренного ножа)",
+        "description": "Вплотную. Climber; From Above (1к10 + 1).",
+        "table": "adversary_move",
+        "cells": {
+          "damage_dice": "1d8",
+          "damage_bonus": 1
+        }
+      },
+      {
+        "id": "lackey_daggers",
+        "label": "Кинжалы (Шестёрка Зазубренного ножа)",
+        "description": "Вплотную, урон 2. Миньон (3); Group Attack.",
+        "table": "adversary_move",
+        "cells": {
+          "damage_dice": "1d1",
+          "damage_bonus": 1
+        }
+      },
+      {
+        "id": "sniper_shortbow",
+        "label": "Короткий лук (Снайпер Зазубренного ножа)",
+        "description": "Далеко. Unseen Strike (1к10 + 4 из укрытия).",
+        "table": "adversary_move",
+        "cells": {
+          "damage_dice": "1d10",
+          "damage_bonus": 2
+        }
+      },
+      {
+        "id": "act",
+        "label": "Бросок действия",
+        "bindings": [
+          {
+            "label": "Бросок действия",
+            "effect": "action_roll"
+          }
+        ],
+        "table": "action"
+      }
+    ]
+  },
+  "sheets": [
+    {
+      "id": "bran",
+      "systemId": "daggerheart",
+      "of": "hero",
+      "name": "Бран",
+      "values": {
+        "class": "Воин (Warrior)",
+        "ancestry": "Человек (Human)",
+        "community": "Горцы (Ridgeborne)",
+        "exp1": "Наёмник",
+        "exp2": "Выносливый",
+        "agility": 2,
+        "strength": 1,
+        "finesse": 0,
+        "instinct": 1,
+        "presence": 0,
+        "knowledge": -1,
+        "level": 1,
+        "proficiency": 1,
+        "hope": 2
+      },
+      "has": [
+        {
+          "of": "longsword"
+        },
+        {
+          "of": "chainmail"
+        },
+        {
+          "of": "act"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ilse",
+      "systemId": "daggerheart",
+      "of": "hero",
+      "name": "Ильзе",
+      "values": {
+        "class": "Плут (Rogue)",
+        "ancestry": "Симиа (Simiah)",
+        "community": "Проныры (Slyborne)",
+        "exp1": "Вор",
+        "exp2": "Акробатка",
+        "agility": 1,
+        "strength": -1,
+        "finesse": 2,
+        "instinct": 1,
+        "presence": 0,
+        "knowledge": 0,
+        "level": 1,
+        "proficiency": 1,
+        "hope": 2
+      },
+      "has": [
+        {
+          "of": "dagger"
+        },
+        {
+          "of": "leather"
+        },
+        {
+          "of": "act"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "toma",
+      "systemId": "daggerheart",
+      "of": "hero",
+      "name": "Тома",
+      "values": {
+        "class": "Серафим (Seraph)",
+        "ancestry": "Галапа (Galapa)",
+        "community": "Орден (Orderborne)",
+        "exp1": "Храмовница",
+        "exp2": "Лекарка",
+        "agility": 0,
+        "strength": 2,
+        "finesse": -1,
+        "instinct": 1,
+        "presence": 1,
+        "knowledge": 0,
+        "level": 1,
+        "proficiency": 1,
+        "hope": 2
+      },
+      "has": [
+        {
+          "of": "chainmail"
+        },
+        {
+          "of": "act"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "bandit",
+      "systemId": "daggerheart",
+      "of": "adversary",
+      "name": "Разбойник Зазубренного ножа",
+      "values": {
+        "difficulty": 12,
+        "major_base": 8,
+        "severe_base": 14,
+        "adversary_hp": 5,
+        "adversary_stress": 3,
+        "attack_mod": 1
+      },
+      "has": [
+        {
+          "of": "bandit_daggers"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "lackey",
+      "systemId": "daggerheart",
+      "of": "adversary",
+      "name": "Шестёрка Зазубренного ножа",
+      "values": {
+        "difficulty": 9,
+        "major_base": 0,
+        "severe_base": 0,
+        "adversary_hp": 1,
+        "adversary_stress": 1,
+        "attack_mod": -2
+      },
+      "has": [
+        {
+          "of": "lackey_daggers"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "sniper",
+      "systemId": "daggerheart",
+      "of": "adversary",
+      "name": "Снайпер Зазубренного ножа",
+      "values": {
+        "difficulty": 13,
+        "major_base": 4,
+        "severe_base": 7,
+        "adversary_hp": 3,
+        "adversary_stress": 2,
+        "attack_mod": -1
+      },
+      "has": [
+        {
+          "of": "sniper_shortbow"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "bear",
+      "systemId": "daggerheart",
+      "of": "adversary",
+      "name": "Медведь",
+      "values": {
+        "difficulty": 14,
+        "major_base": 9,
+        "severe_base": 17,
+        "adversary_hp": 7,
+        "adversary_stress": 2,
+        "attack_mod": 1
+      },
+      "has": [
+        {
+          "of": "bear_claws"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "стол",
+      "systemId": "daggerheart",
+      "name": "Стол",
+      "values": {
+        "fear": 0
+      },
+      "has": [],
+      "effects": []
+    }
+  ]
+}

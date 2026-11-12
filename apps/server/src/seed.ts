@@ -1,8 +1,36 @@
 import { createHash } from 'node:crypto';
-import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
+import { SAMPLE_WORLDS, LITE_WORLDS } from '@vtt/engine/model/systems';
+import { lintSystem, errorsOf } from '@vtt/engine/model/lint';
+import { flattenSystem } from '@vtt/engine/model/inherit';
+import type { SampleWorld } from '@vtt/engine/model/systems';
+
+export function blankOf(world: SampleWorld): SampleWorld {
+  const system = structuredClone(world.system) as unknown as Record<string, unknown> & { tables?: Record<string, Record<string, unknown>>; sheets?: Record<string, Record<string, unknown>> };
+  system.effects = {};
+  system.name = `${String(system.name ?? world.title)} · с нуля`;
+  for (const key of ['rolls', 'grants', 'roll_edits', 'tags']) delete system[key];
+  for (const kind of Object.values(system.sheets ?? {})) delete kind.grants;
+  for (const table of Object.values(system.tables ?? {})) {
+    if (table.shape !== 'book') continue;
+    for (const key of ['bindings', 'grants', 'modifiers']) delete table[key];
+  }
+  return {
+    title: world.title,
+    system: system as unknown as SampleWorld['system'],
+    compendium: { records: [] } as unknown as SampleWorld['compendium'],
+    sheets: world.sheets.map(sheet => ({ ...sheet, has: [], effects: [] })) as SampleWorld['sheets'],
+  };
+}
+
+const playable = (world: SampleWorld): boolean => errorsOf(lintSystem(flattenSystem(world.system), world.compendium)).length === 0;
+
 
 export function sampleWorlds() {
-  return structuredClone(SAMPLE_WORLDS.map(({ title, ...world }) => ({ title, world })));
+  return structuredClone([
+    ...SAMPLE_WORLDS.map(({ title, ...world }) => ({ title: `${title} · полный`, world })),
+    ...LITE_WORLDS.map(({ title, ...world }) => ({ title: `${title} · лёгкий`, world })),
+    ...LITE_WORLDS.map(blankOf).filter(playable).map(({ title, ...world }) => ({ title: `${title} · с нуля`, world })),
+  ]);
 }
 
 export async function seed(url: string, owner: string, mark = ''): Promise<string[]> {

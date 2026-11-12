@@ -27,7 +27,7 @@ import type { System, Sheet, Compendium, Die, StoredValue, WornEffect, Owned } f
 
 export type Op =
   | { op: 'act'; intent: ActIntent }
-  | { op: 'roll'; sheetId: string; tag: string; claims?: string[] }
+  | { op: 'roll'; sheetId: string; tag: string; claims?: string[]; second?: string; versus?: number }
   | { op: 'set'; sheetId: string; tag: string; value: StoredValue }
   | { op: 'belonging'; sheetId: string; list: 'has' | 'effects'; id: string; on: boolean; off?: boolean; inst?: string; add?: boolean; in?: string | null }
   | { op: 'kind'; sheetId: string; of: string | null }
@@ -158,10 +158,10 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     return true;
   },
 
-  roll(run, { sheetId, tag, claims }, root) {
+  roll(run, { sheetId, tag, claims, second, versus }, root) {
     const sheet = sheetOf(run, sheetId);
-    const check = fieldCheck(run.system, tag);
-    const { thrown, bonus, total, entries, threshold, degree, success, margin } = run.check(sheetId, check, root.step('roll'), check.label, claims ?? []);
+    const check = fieldCheck(run.system, tag, second);
+    const { thrown, bonus, total, entries, threshold, degree, success, margin } = run.check(sheetId, check, root.step('roll'), check.label, claims ?? [], versus ?? null);
     const verdict = verdictText({ threshold, under: check.under === true, success, margin: check.margin ? margin : null, degree });
     const rolled = thrown.result;
     const named = thrown.roll.edits.length ? ` (${thrown.roll.edits.join(', ')})` : '';

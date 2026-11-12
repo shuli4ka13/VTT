@@ -53,6 +53,24 @@ describe('«Правила → Броски»: успех и степени чи
   });
 });
 
+describe('«Правила → Броски»: два поля', () => {
+  afterEach(cleanup);
+
+  it('переключатель пишет pair и снимает ключ', () => {
+    const { system, view } = run({});
+    const box = () => view.container.querySelector<HTMLInputElement>('input[aria-label="Бросают два поля"]')!;
+    expect(view.container.textContent).toContain('Кость из двух видов; грани каждой — своё поле');
+    fireEvent.click(box());
+    expect(system.rolls!.r!.pair).toBe(true);
+    cleanup();
+    const again = run({ pair: true, number: 'sides' });
+    const on = again.view.container.querySelector<HTMLInputElement>('input[aria-label="Бросают два поля"]')!;
+    expect(on.checked).toBe(true);
+    fireEvent.click(on);
+    expect(again.system.rolls!.r).not.toHaveProperty('pair');
+  });
+});
+
 describe('«Правила → Броски»: ступени таблицей', () => {
   afterEach(cleanup);
 

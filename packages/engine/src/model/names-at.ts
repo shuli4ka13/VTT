@@ -9,7 +9,7 @@ import { STEP_WORDS } from '../words/steps.ts';
 import type { StepWords } from '../words/steps.ts';
 import { columnChoices } from './paths.ts';
 import { onSheet } from './sheet-columns.ts';
-import { dieParts, thrownDie, fieldGives } from './rolled.ts';
+import { dieParts, thrownDie, givesOf } from './rolled.ts';
 import type { System, Effect, Step, Param } from './types.ts';
 
 export type Place =
@@ -37,6 +37,7 @@ export interface NameAt {
 const HEARD_LABELS: Record<string, string> = {
   бросающий: 'кто бросает',
   против: 'против кого бросок',
+  число: 'число поля, которое бросают',
   ходит: 'чей ход',
   лист: 'лист, с которым это случилось',
   [CALL_TAGS]: 'метки вызова',
@@ -52,7 +53,7 @@ const GRADED: Record<string, 'success' | 'margin' | 'degree'> = { '.success': 's
 export function resultsOf(system: System | undefined, inputs: readonly Param[], step: Step): NameChild[] {
   const it = step as unknown as { type: string; [key: string]: unknown };
   const fielded = it.field !== undefined && it.field !== null;
-  const gives = step.type === 'roll' && system && fielded ? fieldGives(system, inputs, step) : null;
+  const gives = step.type === 'roll' && system && fielded ? givesOf(system, inputs, step) : null;
   return [
     ...((STEP_WORDS as Record<string, StepWords>)[step.type]?.outputs ?? [])
       .filter(output => !output.onlyWith || (it[output.onlyWith] !== undefined && it[output.onlyWith] !== null))

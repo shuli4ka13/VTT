@@ -479,7 +479,7 @@
             "effect": "damage",
             "args": {
               "amount": {
-                "expr": "@урон"
+                "expr": "@урон.total"
               },
               "лист": {
                 "expr": "@цель"

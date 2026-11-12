@@ -26,6 +26,7 @@ export interface FormulaFieldProps {
   barValue?: string;
   table?: string;
   spoken?: string;
+  whole?: boolean;
 }
 
 function SpokenFormula({ words, formula, onOpen }: { words: string; formula: string; onOpen: () => void }) {
@@ -50,6 +51,7 @@ export function FormulaField(props: FormulaFieldProps) {
         ...(props.meanings ? { meanings: props.meanings } : {}),
         ...(badges ? { badges } : {}),
         ...(sheets ? { sheets } : {}),
+        ...(props.whole ? { whole: true } : {}),
         ...(placeholder ? { placeholder } : {}),
         ...(props.options ? { options: props.options } : {}),
         ...(props.onChange ? { onChange: props.onChange } : {}),
@@ -85,7 +87,7 @@ export function FormulaField(props: FormulaFieldProps) {
   );
 }
 
-function InlineFormula({ value, system, onChange, onCommit, onCancel, names, extraNames, badges, sheets, placeholder, options, prefix, table, spoken }: FormulaFieldProps) {
+function InlineFormula({ value, system, onChange, onCommit, onCancel, names, extraNames, badges, sheets, placeholder, options, prefix, table, spoken, whole }: FormulaFieldProps) {
   const [text, setText] = useState<string | null>(null);
   const [asked, setAsked] = useState(false);
   const current = text ?? value;
@@ -106,6 +108,7 @@ function InlineFormula({ value, system, onChange, onCommit, onCancel, names, ext
       {...(placeholder ? { placeholder } : {})}
       {...(prefix ? { prefix } : {})}
       calculator
+      {...(whole ? { whole: true } : {})}
       {...(asked ? { autoFocus: true } : {})}
       extraOptions={(options ?? []).map(option => ({
         group: option.group,

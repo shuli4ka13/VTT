@@ -8,7 +8,7 @@ import { fieldsOf, hasField, fieldLinkOf, ROW } from '@vtt/engine/model/sheet-co
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { typeColumns } from '@vtt/engine/model/inherit';
 import { plainLabel, pickTail } from './formula-labels.ts';
-import { tablesOf, choiceTableOf, rowLabelOf } from './formula-words.ts';
+import { tablesOf, choiceTableOf, rowLabelOf, picksOf } from './formula-words.ts';
 import { callAt, partAt, functionSpec } from '@vtt/engine/formula';
 import type { FunctionSpec } from '@vtt/engine/formula';
 
@@ -240,7 +240,7 @@ export function joinParts(parts: Part[]): string {
     : p.text)).join('');
 }
 
-export function FormulaChips({ value, onChange, system, table, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, badges, sheets, extraOptions, calculator, readOnly, autoFocus, onChipPick }: {
+export function FormulaChips({ value, onChange, system, table, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, badges, sheets, extraOptions, calculator, readOnly, autoFocus, onChipPick, whole }: {
   value: string;
   onChange: (next: string) => void;
   system: System;
@@ -274,6 +274,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
   badges?: Map<string, string>;
 
   onChipPick?: (tag: string, label: string) => void;
+  whole?: boolean;
 }) {
   const paths = useMemo(() => fieldPaths(system), [system]);
   const marks = useMemo(() => tagWords(system), [system]);
@@ -294,7 +295,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
   const [caret, setCaret] = useState(0);
   const [highlight, setHighlight] = useState(0);
   const [closed, setClosed] = useState(false);
-  const [dot, setDot] = useState<{ index: number; text: string } | null>(null);
+  const [dot, setDot] = useState<{ index: number; text: string; offered?: boolean; base?: string } | null>(null);
   const signature = useMemo(() => {
     if (active === null || !parts[active] || !('text' in parts[active]!)) return null;
     const own = dot?.index === active ? dot.text : (parts[active] as { text: string }).text;
@@ -352,7 +353,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     ];
   }, [system, extraNames, extraOptions, paths, sheets, table]);
 
-  const pendingFocus = useRef<{ index: number; caret: number; value: string } | { offset: number; skip: string[] } | null>(null);
+  const pendingFocus = useRef<{ index: number; caret: number; value: string; offer?: boolean } | { offset: number; skip: string[]; offer?: boolean } | null>(null);
   useLayoutEffect(() => {
     const want = pendingFocus.current;
     if (!want) return;
@@ -376,6 +377,14 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     pendingFocus.current = null;
     el.focus();
     el.setSelectionRange(at, at);
+    const formed = want.offer && at === 0 ? chipBefore(index) : null;
+    if (formed && (deeper(formed).fields.length || deeper(formed).extras.length)) {
+      const preferred = whole ? undefined : picksOf(extraNames)?.get(formed);
+      setDot({ index, text: '', offered: true });
+      setCaret(0);
+      setHighlight(Math.max(0, [formed, ...deeper(formed).fields.map(f => f.tag)].indexOf(preferred ?? formed)));
+      setClosed(false);
+    }
   });
 
   const commitParts = (next: Part[], focusAt?: { index: number; caret: number }) => {
@@ -397,14 +406,14 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     };
   };
   const tail = (label: string): string => label.split(' · ').pop() ?? label;
-  const dotted = dot && active === dot.index ? chipBefore(dot.index) : null;
+  const dotted = dot && active === dot.index ? dot.base ?? chipBefore(dot.index) : null;
 
   const typed = !dotted && active !== null && 'text' in (parts[active] ?? {})
     ? typedPath((parts[active] as { text: string }).text, caret)
     : null;
   const through = typed && (deeper(typed.base).fields.length || deeper(typed.base).extras.length) ? typed : null;
   const query = dotted
-    ? { at: 0, needle: dot!.text.slice(1, caret).trim().toLowerCase() }
+    ? { at: 0, needle: dot!.offered ? '' : dot!.text.slice(1, caret).trim().toLowerCase() }
     : through
       ? { at: through.at, needle: through.needle }
       : active !== null && 'text' in (parts[active] ?? {})
@@ -423,11 +432,12 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     const label = (fields.find(one => one.tag === base)?.label ?? '').toLowerCase();
     return !needle || base.toLowerCase().startsWith(needle) || label.startsWith(needle);
   };
+  const wholeRow = dotted && dot!.offered ? fields.filter(f => f.tag === dotted).slice(0, 1) : [];
   const matches = dotted || through
-    ? deeper(dotted ?? through!.base).fields
+    ? [...wholeRow, ...deeper(dotted ?? through!.base).fields
       .filter(f => !query!.needle || rankOf({ tag: '', label: tail(f.label) }, query!.needle) < 3)
       .sort((a, b) => rankOf({ tag: '', label: tail(a.label) }, query!.needle) - rankOf({ tag: '', label: tail(b.label) }, query!.needle))
-      .slice(0, 12)
+      .slice(0, 12)]
     : query
       ? fields.filter(f => (!query.needle || rankOf(f, query.needle) < 3) && !hidden(f, query.needle))
         .sort((a, b) => rankOf(a, query.needle) - rankOf(b, query.needle))
@@ -447,10 +457,28 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
   const lit = total ? Math.min(highlight, total - 1) : 0;
   const pickDotted = (tag: string) => {
     if (!dot) return;
-    const rest = dot.text.slice(caret);
+    const rest = dot.offered ? (parts[dot.index] as { text: string }).text : dot.text.slice(caret);
     const next = parts.map((p, i) => (i === dot.index - 1 ? { tag } : i === dot.index ? { text: rest } : p));
     setDot(null);
     commitParts(next, { index: dot.index, caret: 0 });
+  };
+  const baseOf = (tag: string): string | null => {
+    for (let base = tag; base; base = base.includes('.') ? base.slice(0, base.lastIndexOf('.')) : '') {
+      if (fields.some(f => f.tag === base) && (deeper(base).fields.length || deeper(base).extras.length)) return base;
+    }
+    return null;
+  };
+  const offerAt = (chipIndex: number, tag: string): void => {
+    const base = baseOf(tag);
+    const input = inputs.current.get(chipIndex + 1);
+    if (!base || !input) return;
+    input.focus();
+    input.setSelectionRange(0, 0);
+    const list = [base, ...deeper(base).fields.map(f => f.tag)];
+    setDot({ index: chipIndex + 1, text: '', offered: true, base });
+    setCaret(0);
+    setHighlight(Math.max(0, list.indexOf(tag)));
+    setClosed(false);
   };
   const chooseExtra = (option: (typeof extras)[number]) => {
     if (dotted && option.name) pickDotted(option.name); else if (through && option.name) pick(option.name); else pickExtra(option.onPick);
@@ -535,7 +563,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     setClosed(false);
     const next = parts.map((p, i) => (i === index ? { text } : p));
     setCaret(at);
-    if (text.includes('@')) pendingFocus.current = { offset: joinParts(parts.slice(0, index)).length + at, skip: [] };
+    if (text.includes('@')) pendingFocus.current = { offset: joinParts(parts.slice(0, index)).length + at, skip: [], offer: true };
     commitParts(next);
   };
 
@@ -621,8 +649,14 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
             {sideOf(part.tag)}
             <span
               title={onChipPick ? `${labelOfTag(system, part.tag, extraNames, sheets)} — откуда это и где видно` : labelOfTag(system, part.tag, extraNames, sheets)}
-              className={onChipPick ? 'chips__name--pick' : undefined}
-              onMouseDown={onChipPick ? e => { e.preventDefault(); onChipPick(part.tag, labelOfTag(system, part.tag, extraNames, sheets)); } : undefined}
+              className={onChipPick || (part.by === undefined && baseOf(part.tag)) ? 'chips__name--pick' : undefined}
+              onMouseDown={e => {
+                if (part.by !== undefined) { if (onChipPick) { e.preventDefault(); onChipPick(part.tag, labelOfTag(system, part.tag, extraNames, sheets)); } return; }
+                if (!onChipPick && !baseOf(part.tag)) return;
+                e.preventDefault();
+                offerAt(index, part.tag);
+                onChipPick?.(part.tag, labelOfTag(system, part.tag, extraNames, sheets));
+              }}
             >
               {chipText(part)}
             </span>
@@ -647,9 +681,9 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
             }}
 
             className={`chips__text ${!part.text && index !== parts.length - 1 ? 'chips__text--ghost' : ''}`}
-            value={dot?.index === index ? dot.text : part.text}
+            value={dot?.index === index && !dot.offered ? dot.text : part.text}
             placeholder={empty ? placeholder : undefined}
-            size={Math.max(1, (dot?.index === index ? dot.text : part.text).length || (empty ? (placeholder?.length ?? 8) : 1))}
+            size={Math.max(1, (dot?.index === index && !dot.offered ? dot.text : part.text).length || (empty ? (placeholder?.length ?? 8) : 1))}
             spellCheck={false}
             onFocus={e => { setActive(index); setCaret(e.currentTarget.selectionStart ?? 0); onFocus?.(); }}
             onBlur={leave}
@@ -665,7 +699,9 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
                 menuRef.current?.children[next]?.scrollIntoView?.({ block: 'nearest' });
                 return;
               }
-              if (shownMenu && (e.key === 'Enter' || e.key === 'Tab')) {
+              if (shownMenu && (e.key === 'Enter' || e.key === 'Tab') && wholeRow.length && lit === extras.length && chipBefore(dot!.index) === dotted) {
+                setDot(null);
+              } else if (shownMenu && (e.key === 'Enter' || e.key === 'Tab')) {
                 e.preventDefault();
                 e.stopPropagation();
                 pickAt(lit);
@@ -727,7 +763,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
               onMouseDown={e => { e.preventDefault(); chooseField(f.tag); }}
             >
               <span className="slot__group">{f.group}</span>
-              {dotted || through ? shortOf(f.label, dotted ?? through!.base) : f.label}
+              {dotted && f.tag === dotted ? `${f.label} целиком` : dotted || through ? shortOf(f.label, dotted ?? through!.base) : f.label}
               {!dotted && !through && below(f.tag) ? <span className="slot__more" title="наберите точку после имени — откроется список">. ещё {below(f.tag)}</span> : null}
             </button>
           ))}

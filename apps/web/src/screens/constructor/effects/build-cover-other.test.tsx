@@ -70,21 +70,20 @@ describe('эффекты пресетов собираются руками: Sha
     expect(built('shocked')).toEqual(goal);
   });
 
-  it('Cyberpunk «Тяжёлая рана» (serious_wound_rule): две правки броска «прибавка» по меткам, умолчание «складываются» в данные не пишется', { timeout: 60000 }, () => {
+  it('Cyberpunk «Тяжёлая рана» (serious_wound_rule): одна правка броска «прибавка» на любую из двух меток, умолчание «складываются» в данные не пишется', { timeout: 60000 }, () => {
     const [goal] = start('cp-slice', ['serious_wound_rule']);
     const ui = within();
     head(ui, '+ висит и правит', 'Тяжёлая рана', 'serious_wound_rule', goal!);
     const edits = () => [...document.querySelectorAll<HTMLElement>('.card')].filter(c => (c.querySelector('.card__head')?.textContent ?? '').startsWith('Правка вызова'));
-    for (const [at, tag] of [[0, 'атака'], [1, 'проверка']] as const) {
-      ui.click('+ правка вызова');
-      const card = () => edits()[at]!;
-      within(card()).select('Чей вызов', 'roll');
-      within(card()).select('Что правим', 'bonus');
-      within(card()).select('С метками', tag);
-      within(card()).formula('Сколько', '-2');
-      within(card()).select('Кого касается', '@бросающий == @носитель');
-      within(card()).when('=@носитель.seriously');
-    }
+    ui.click('+ правка вызова');
+    const card = () => edits()[0]!;
+    within(card()).select('Чей вызов', 'roll');
+    within(card()).select('Что правим', 'bonus');
+    within(card()).select('С любой из меток', 'атака');
+    within(card()).select('С любой из меток', 'проверка');
+    within(card()).formula('Сколько', '-2');
+    within(card()).select('Кого касается', '@бросающий == @носитель');
+    within(card()).when('=@носитель.seriously');
     dump({ got: built('serious_wound_rule'), goal });
     expect(built('serious_wound_rule')).toEqual(goal);
   });

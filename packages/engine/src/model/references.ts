@@ -404,7 +404,7 @@ function rowFree(text: string, from: Where, own: Set<string> | undefined, out: R
 export interface CallNames { sheets: string[]; values: string[] }
 
 export function callNamesOf(system: System, key: string): CallNames {
-  if (key === ROLL_CALL) return { sheets: ['бросающий', 'против'], values: ['метки'] };
+  if (key === ROLL_CALL) return { sheets: ['бросающий', 'против'], values: ['метки', 'число'] };
   const effect = system.effects?.[key];
   const params = effect?.params ?? [];
   return {

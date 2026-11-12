@@ -24,7 +24,11 @@ export function headOf(field: unknown): { expr: string } | null {
   return found ? { expr: `@${found[1]}` } : null;
 }
 
+const passed = (field: unknown): boolean =>
+  Boolean(field && typeof field === 'object' && 'expr' in field && /^\s*@[\p{L}\p{N}_]+\s*$/u.test(String((field as { expr: unknown }).expr)));
+
 export const thrownBy = (step: StepData): unknown => (has(step.field) ? headOf(step.field) : step.by);
+export const dice = (step: StepData): boolean => has(step.die) || has(step.field);
 
 export const icon = '⚄';
 
@@ -64,7 +68,9 @@ export interface Rolled extends RollResult {
 
 function fieldFinish(step: StepData, ctx: StepContext) {
   const at = ctx.field(step.field);
-  const check = fieldCheck(ctx.system, at.tag);
+  const other = has(step.second) ? ctx.field(step.second) : null;
+  if (other && other.sheet !== at.sheet) throw new EngineError(`${who(ctx)}: два поля одного броска — с одного листа`);
+  const check = fieldCheck(ctx.system, at.tag, other?.tag);
   const shift = ctx.optional(step.shift, 'поправка к числу поля') ?? 0;
   const extra = ctx.optional(step.bonus, 'прибавка броска') ?? 0;
   const against = ctx.ahead?.() ?? null;
@@ -143,10 +149,11 @@ export function lint(step: StepData): string | null {
   if (has(step.field)) {
     if (has(step.die) || has(step.fixed) || has(step.count) || has(step.times)) return 'бросок поля берёт кость из «Правил → Броски» — кость, сколько костей и формулу уберите';
     if (has(step.by)) return 'бросок поля бросает тот, чьё поле, — «Кто бросает» уберите';
-    if (!headOf(step.field)) return 'бросок поля: не выбрано поле, которое бросают';
+    if (!headOf(step.field) && !passed(step.field)) return 'бросок поля: не выбрано поле, которое бросают';
     return null;
   }
   if (has(step.shift)) return 'поправка к числу — только у броска поля';
+  if (has(step.second)) return 'второе поле — только у броска поля';
   if (has(step.times) && !has(step.die)) return '«сколько раз» — только у броска кости';
   if ((has(step.keep) || has(step.keepWorst)) && !has(step.die)) return '«оставить» — только у броска кости';
   if (has(step.keepWorst) && !has(step.keep)) return '«оставить худшие» без числа — сколько оставить, не задано';

@@ -164,8 +164,12 @@ export class RoomsService {
     return this.world(roomId, userId, 'set', { sheetId, tag, value }, { op: 'set', sheetId, tag, value }, false);
   }
 
-  rollField(userId: string, roomId: string, sheetId: string, tag: string, hidden = false, claims: string[] = []): Promise<RoomDelta> {
-    const claimed = claims.length ? { claims } : {};
+  rollField(userId: string, roomId: string, sheetId: string, tag: string, hidden = false, claims: string[] = [], second?: string, versus?: number): Promise<RoomDelta> {
+    const claimed = {
+      ...(claims.length ? { claims } : {}),
+      ...(second ? { second } : {}),
+      ...(versus !== undefined ? { versus } : {}),
+    };
     return this.world(roomId, userId, 'roll', { sheetId, tag, ...(hidden ? { hidden } : {}), ...claimed }, { op: 'roll', sheetId, tag, ...claimed }, hidden);
   }
 
