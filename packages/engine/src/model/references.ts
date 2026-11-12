@@ -168,6 +168,15 @@ function slotRefs(value: unknown, slotKind: string | undefined, from: Where, sco
   if ('expr' in r) exprRefs(String(r.expr ?? ''), from, scope, out);
 }
 
+function dieRefs(source: unknown, from: Where, out: Reference[], formula: (expr: string) => void): void {
+  const { die, count } = source as { die?: unknown; count?: unknown };
+  if (typeof die === 'string' && die && !DICE_TEXT.test(die.trim())) out.push({ kind: 'constant', key: die, from });
+  for (const ref of [die, count]) {
+    const expr = ref && typeof ref === 'object' && 'expr' in ref ? String((ref as { expr: unknown }).expr ?? '').trim() : '';
+    if (expr && !DICE_TEXT.test(expr)) formula(expr);
+  }
+}
+
 const NAMED: Record<string, RefKind> = { effectRef: 'effect', constantRef: 'constant', tableRef: 'table', tagRef: 'tag' };
 
 export const lookupColumnsIn = (source: string): [string, string][] => {
@@ -240,6 +249,8 @@ export const diceAsNumber = (source: string): boolean => {
 
 const KNOWN_FUNCTIONS = new Set([...FUNCTION_NAMES, 'если']);
 
+const THROW_NAME = 'кинуть';
+
 export const unknownFunctions = (source: string): string[] => {
   let ast: Node;
   try { ast = compile(source).ast; } catch { return []; }
@@ -264,7 +275,7 @@ export function exprRefs(source: string, from: Where, scope: ChainScope, out: Re
     return;
   }
   if (diceAsNumber(text)) out.push({ kind: 'syntax', key: text, from, path: 'dice' });
-  for (const name of unknownFunctions(text)) out.push({ kind: 'syntax', key: text, from, path: 'function', scope: name });
+  for (const name of unknownFunctions(text)) out.push(name === THROW_NAME ? { kind: 'syntax', key: text, from, path: 'roll' } : { kind: 'syntax', key: text, from, path: 'function', scope: name });
   for (const table of tablesIn(text)) out.push({ kind: 'table', key: table, from });
   for (const [table, column] of lookupColumnsIn(text)) out.push({ kind: 'table', key: table, from, scope: 'column', path: column });
   const picked = new Set<string>();
@@ -319,7 +330,7 @@ export function exprRefs(source: string, from: Where, scope: ChainScope, out: Re
       if (scope.earlier.has(head)) {
         const known = scope.results?.get(head);
         const first = dep.slice(dot + 1).split('.')[0]!;
-        if (known && !known.has(first)) out.push({ kind: 'step', key: head, from, scope: 'result', path: first });
+        if (known && !known.has('*') && !known.has(first)) out.push({ kind: 'step', key: head, from, scope: 'result', path: first });
         continue;
       }
       out.push({ kind: 'step', key: head, from, scope: 'dotted', path: dep });
@@ -362,8 +373,10 @@ export function chainRefs(
     if (step.id) {
       earlier.add(String(step.id));
       const keys = resultKeys(step);
-      if (keys) results.set(String(step.id), keys);
-      else results.delete(String(step.id));
+      const id = String(step.id);
+      const before = results.get(id);
+      if (keys) results.set(id, before ? new Set([...before, ...keys]) : keys);
+      else if (before) results.set(id, new Set([...before, '*']));
     }
     const loop = loopsAt(step) ? loopOf(defs, step as { of?: unknown })?.key : undefined;
     if (loop) named.add(loop);
@@ -452,6 +465,7 @@ function modifierRefs(system: System, list: Modifier[] | undefined, from: Where,
       );
       if (mod.if?.expr.trim()) exprRefs(rowFree(mod.if.expr, from, own, out), from, scope, out);
       if (mod.value?.expr.trim()) exprRefs(rowFree(mod.value.expr, from, own, out), from, scope, out);
+      dieRefs(mod, from, out, ref => exprRefs(rowFree(ref, from, own, out), from, scope, out));
     } else {
       if (target.includes('{@строка.')) {
         for (const slot of target.matchAll(/\{@строка\.([\p{L}\p{N}_]+)\}/gu)) if (own && !own.has(slot[1]!)) out.push({ kind: 'prop', key: slot[1]!, from, scope: 'foreign' });
@@ -702,6 +716,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
       for (const value of Object.values(op)) {
         if (value && typeof value === 'object' && 'expr' in value) exprRefs(String((value as { expr: unknown }).expr), from, noScope, out);
       }
+      dieRefs(op, from, out, () => undefined);
     }
   }
 

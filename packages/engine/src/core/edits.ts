@@ -77,7 +77,7 @@ const AGAINST_NAME = /@против(?![\p{L}\p{N}_])/u;
 
 const unbound = (mod: SourcedModifier, spec: Gather): boolean =>
   Object.hasOwn(spec.names, 'против') && spec.names.против === null
-  && AGAINST_NAME.test(JSON.stringify((mod as { value?: unknown }).value ?? ''));
+  && AGAINST_NAME.test(JSON.stringify([(mod as { value?: unknown }).value, (mod as { die?: unknown }).die, (mod as { count?: unknown }).count]));
 
 export function gather(holders: readonly Holder[], spec: Gather): Held[] {
   return holders.flatMap(holder => (editsOf(holder.view, spec.call, spec.param) as EditMod[])

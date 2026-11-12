@@ -24,7 +24,7 @@ import { TABS, STEP, SHEET, SHEET_LISTS, DICE_BY_STEP } from '../words/glossary.
 import {
   referencesOf, declaredOf, chainRefs, listenerOf, withAddresses, heardNames, callNamesOf, formulaDeps, sourcesOf,
   type Where, type Reference, type RefKind, type Declared, type Listener,
-  LISTEN, contractsOf, HOLDER, DESK_NAME, holderNameOf, tiedToHolder, resultKeys,
+  LISTEN, contractsOf, HOLDER, DESK_NAME, holderNameOf, tiedToHolder,
 } from './references.ts';
 import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, holderOf, rowKeyOf, hasField, rollEntryOf, ROW } from './sheet-columns.ts';
 import { rolledColumn, thrownDie, fieldGives } from './rolled.ts';
@@ -108,6 +108,7 @@ const HOLDER_ONLY = `«${HOLDER}» есть только у того, что в�
 function danglingText(ref: Reference, declared: Declared): string | null {
   if (ref.scope === LISTEN) return null;
   if (ref.key === HOLDER && (ref.kind === 'step' || (ref.kind === 'field' && ref.scope === 'bare'))) return HOLDER_ONLY;
+  if (ref.kind === 'syntax' && ref.path === 'roll') return DICE_ANYWHERE;
   if (ref.kind === 'syntax' && ref.path === 'function') return `в формуле «${ref.key}» нет функции «${ref.scope}»`;
   if (ref.kind === 'syntax' && ref.path === 'dice') return `в формуле «${ref.key}» кость стоит как число — ${DICE_BY_STEP}`;
   if (ref.kind === 'syntax') return `формула «${ref.key}» не разбирается — проверьте скобки и знаки`;
@@ -462,7 +463,7 @@ function fieldRollProblems(system: System): Problem[] {
       try { compile(String((ref as { expr: unknown }).expr ?? '')); return null; } catch (err) { return (err as Error).message; }
     };
     if (exprsIn(roll).some(throwsDice)) out.push({ where, level: 'error', text: `бросок «${name}»: ${DICE_NOT_HERE}` });
-    const rollKeys = resultKeys({ type: 'roll' })!;
+    const rollKeys = new Set(['total', 'natural', 'rolled', 'atMax', 'atMin', 'edited', 'dice', 'parts', 'tags']);
     const strays = (ref: unknown): string[] => {
       const expr = typeof ref === 'object' && ref !== null ? String((ref as { expr?: unknown }).expr ?? '') : '';
       return [...new Set((formulaDeps(expr) ?? []).filter(dep => dep.startsWith(`${ROLL_NAME}.`)).map(dep => dep.split('.')[1]!).filter(key => !rollKeys.has(key)))];
@@ -571,7 +572,7 @@ function rollStepProblems(system: System, effect: Effect, steps: Step[], where: 
     for (const text of exprsIn(raw)) {
       for (const name of Object.keys(system.constants ?? {})) {
         if (system.constants![name]!.kind !== 'die' || (effect.params ?? []).some(param => param.key === name)) continue;
-        if (new RegExp(`(^|[^\\p{L}\\p{N}_.])[@#]${name}(?![\\p{L}\\p{N}_])`, 'u').test(text)) {
+        if (!throwsDice(text) && new RegExp(`(^|[^\\p{L}\\p{N}_.])[@#]${name}(?![\\p{L}\\p{N}_])`, 'u').test(text)) {
           out.push({ where: where(index), level: 'error', text: `кость «${dieLabel(name)}» стоит в формуле как число — ${DICE_BY_STEP}` });
         }
       }
@@ -629,6 +630,10 @@ export const throwsDice = (text: string): boolean => /(^|[^\p{L}\p{N}_])кину
 const DICE_IN_ADDEND = 'кость прибавки выберите в «Сколько», а не формулой';
 
 const DICE_NOT_HERE = 'здесь кости не бросают — бросок делает шаг «Бросок» в эффекте';
+
+const DICE_ANYWHERE = 'формула бросает кости — кости бросает только шаг «Бросок» в эффекте, его итог берут по имени (@имя)';
+
+const DICE_TEXTS = [DICE_BY_STEP, DICE_IN_ADDEND, DICE_NOT_HERE];
 
 const ANYONE_ROLLS = 'правка действует на броски всех листов в комнате — в условии нет носителя; обычно «бросает носитель» или «бросают против носителя»';
 
@@ -1337,7 +1342,9 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   }
   out.push(...danglingRows(system, compendium).map(d => ({ where: d.where, level: 'error' as const, text: d.text })));
   const seen = new Set<string>();
+  const precise = out.filter(problem => problem.text !== DICE_ANYWHERE && DICE_TEXTS.some(text => problem.text.includes(text)));
   return out.filter(problem => {
+    if (problem.text === DICE_ANYWHERE && precise.some(other => sameWhere(other.where, problem.where))) return false;
     const key = `${problem.level}|${problem.text}|${JSON.stringify(problem.where)}`;
     if (seen.has(key)) return false;
     seen.add(key);

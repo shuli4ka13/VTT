@@ -87,11 +87,6 @@ const FUNCTIONS: Record<string, Fn> = {
       return `${count}к${sides}`;
     },
   },
-  кинуть: {
-    arity: '1+',
-    apply: args => args[0]!,
-    raw: () => { throw new FormulaRuntimeError(DICE_BY_STEP); },
-  },
   'максимум костей': {
     arity: '1+',
     apply: args => args[0]!,
@@ -106,6 +101,8 @@ const FUNCTIONS: Record<string, Fn> = {
 };
 
 export const FUNCTION_NAMES = Object.keys(FUNCTIONS);
+
+const THROW_NAME = 'кинуть';
 
 export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value {
   return visit(ast);
@@ -187,6 +184,7 @@ export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value 
 
   function call(node: CallNode): Value {
     const fn = FUNCTIONS[node.name];
+    if (!fn && node.name === THROW_NAME) throw new FormulaRuntimeError(DICE_BY_STEP);
     if (!fn) {
       throw new FormulaRuntimeError(
         `нет функции «${node.name}»; доступны: ${FUNCTION_NAMES.join(', ')}`);
