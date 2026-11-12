@@ -14,8 +14,7 @@ import { ROLL_CALL, CALL_WORDS } from '@vtt/engine/words/calls';
 import { TagsField } from './tags-field.tsx';
 import { callNamesOf, holderConditionOf } from '@vtt/engine/model/references';
 import { ConditionField } from './condition-field.tsx';
-import { DICE_HINT, DICE_BAR_OPTION } from './value-field.tsx';
-import { shapeProblem } from './formula-shape.ts';
+import { AddendPick } from './effects/cards/die-pick.tsx';
 import { rowPicks } from './row-picks.ts';
 
 const OPS = [
@@ -240,7 +239,7 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
   const tagsParam = isRoll && m.param === 'tags';
   const pickCall = (next: string) => onChange(d => {
     if (next === d.call) return;
-    for (const key of ['edit', 'op', 'value', 'stage', 'as', 'tags', 'anyTags', 'notTags', 'where']) delete d[key];
+    for (const key of ['edit', 'op', 'value', 'die', 'count', 'minus', 'stage', 'as', 'tags', 'anyTags', 'notTags', 'where']) delete d[key];
     d.call = next;
     const holder = holderConditionOf(system, next);
     if (holder) d.if = { expr: holder }; else delete d.if;
@@ -249,7 +248,7 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
     Object.assign(d, { op: 'mul', value: { expr: '0.5' } });
   });
   const pickParam = (next: string) => onChange(d => {
-    for (const key of ['edit', 'op', 'value', 'stage']) delete d[key];
+    for (const key of ['edit', 'op', 'value', 'die', 'count', 'minus', 'stage']) delete d[key];
     d.param = next;
     if (next === 'edits') d.edit = edits[0]?.[0] ?? '';
     else if (next === 'tags') d.value = { expr: '"метка"' };
@@ -262,15 +261,21 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
           <Select value={String(m.op ?? 'add')} options={OPS} onChange={op => onChange(d => { d.op = op; })} />
         </Field>
       )}
-      <Field label={tagsParam ? 'Какая метка' : 'На сколько'} hint={tagsParam ? 'Формула, дающая текст метки, например «без Преимущества».' : undefined}>
-        <FormulaInput
-          where={tagsParam ? 'правка броска · какая метка' : 'правка вызова · на сколько'} system={system}
-          {...(names ? { extraNames: names } : {})}
-          {...(tagsParam ? { placeholder: 'например: "без Преимущества"' } : isRoll ? { placeholder: DICE_HINT, options: [DICE_BAR_OPTION], problem: shapeProblem((m.value as { expr?: string } | undefined)?.expr ?? '', 'number', () => 'any') } : {})}
-          value={(m.value as { expr?: string } | undefined)?.expr ?? ''}
-          onChange={expr => onChange(d => { d.value = { expr }; })}
-        />
-      </Field>
+      {isRoll && m.param === 'bonus' ? (
+        <Field label="Сколько">
+          <AddendPick source={m} system={system} where="правка броска · прибавка" onChange={onChange} />
+        </Field>
+      ) : (
+        <Field label={tagsParam ? 'Какая метка' : 'На сколько'} hint={tagsParam ? 'Формула, дающая текст метки, например «без Преимущества».' : undefined}>
+          <FormulaInput
+            where={tagsParam ? 'правка броска · какая метка' : 'правка вызова · на сколько'} system={system}
+            {...(names ? { extraNames: names } : {})}
+            {...(tagsParam ? { placeholder: 'например: "без Преимущества"' } : {})}
+            value={(m.value as { expr?: string } | undefined)?.expr ?? ''}
+            onChange={expr => onChange(d => { d.value = { expr }; })}
+          />
+        </Field>
+      )}
 <StagePick
         stages={isRoll ? [] : paramStages(effect?.params, String(m.param ?? ''))}
         value={m.stage as string | undefined}

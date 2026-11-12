@@ -131,6 +131,8 @@ export function rollReadback(step: Step, system: System, effect: Effect, names?:
   out.push(seg(filled(r.by) ? `${whoOf(effect, r.by)} бросает` : 'кости ничьи:'));
   out.push(filled(r.die) ? refSegment(r.die, system, effect, 'что бросает?', names) : hole('что бросает?'));
   if (filled(r.count)) out.push(seg('×'), refSegment(r.count, system, effect, 'сколько костей?', names));
+  if (filled(r.times)) out.push(seg('×'), refSegment(r.times, system, effect, 'сколько раз?', names), seg('раз'));
+  if (filled(r.keep)) out.push(seg(r.keepWorst === true ? 'оставить худших' : 'оставить лучших'), refSegment(r.keep, system, effect, 'сколько?', names));
   if (filled(r.bonus)) {
     const bonus = refSegment(r.bonus, system, effect, 'прибавка?', names);
     if (!('text' in bonus) || (bonus.text !== '0' && bonus.text !== '')) out.push(seg('+'), bonus);
@@ -288,8 +290,8 @@ function opPhrase(op: Record<string, unknown>, system: System): string {
   const only = op.part ? ` (${partLabel(system, String(op.part))})` : '';
   switch (op.op) {
     case 'addDie':
-      return (n === 1 ? 'кинуть на кость больше'
-        : `кинуть на ${n} ${plural(n, 'кость', 'кости', 'костей')} больше`) + only;
+      return (n === 1 ? 'добавить кость'
+        : `добавить ${n} ${plural(n, 'кость', 'кости', 'костей')}`) + only;
     case 'wild':
       return 'один кубик — дикий: 5–6 дают три успеха, 1 гасит пятёрки';
     case 'keepBest':
@@ -309,8 +311,8 @@ function opPhrase(op: Record<string, unknown>, system: System): string {
         : `сдвинуть степень успеха на ${-by} вниз`;
     case 'explode':
       return String(op.at ?? 'max') === 'min'
-        ? `на единице кинуть ещё раз и вычесть${only}`
-        : `на максимуме кинуть ещё раз и прибавить${only}`;
+        ? `на единице бросить ещё раз и вычесть${only}`
+        : `на максимуме бросить ещё раз и прибавить${only}`;
     case 'reroll':
       return (n === 1
         ? 'перебросить единицы, новый результат обязателен'
@@ -330,9 +332,25 @@ function opPhrase(op: Record<string, unknown>, system: System): string {
   }
 }
 
+export function addendWords(system: System, source: Record<string, unknown>): string {
+  const text = (ref: unknown): string => String((ref as { expr?: unknown } | undefined)?.expr ?? '').trim();
+  const die = source.die;
+  if (die !== undefined && die !== null && die !== '') {
+    const raw = typeof die === 'string' ? die : text(die);
+    const head = system.constants?.[raw] ? dieWord(system, raw)
+      : raw.startsWith('@') ? formulaWords(system, raw)
+        : asDice(raw.replace(/^(["'])(.*)\1$/su, '$2'));
+    const times = source.count !== undefined && source.count !== null ? `${formulaWords(system, text(source.count))} × ` : '';
+    return `${source.minus === true ? '−' : '+'} ${times}${head}`;
+  }
+  const value = text(source.value);
+  if (!value) return '+ …';
+  const said = formulaWords(system, value);
+  return /^[-−]/u.test(said) ? `− ${said.slice(1).trim()}` : `+ ${said}`;
+}
+
 function plusWords(op: Record<string, unknown>, system: System): string {
-  const expr = String((op.value as { expr?: unknown } | undefined)?.expr ?? '').trim();
-  return expr ? formulaWords(system, expr) : '…';
+  return addendWords(system, op).replace(/^([+−]) /u, '$1').replace(/^\+/u, '');
 }
 
 const LADDER = [4, 6, 8, 10, 12, 20];
@@ -495,7 +513,7 @@ export function seenReadback(step: Step, system: System): Segment[] {
     const keep = read.keep === 'best' ? ', оставить лучшую' : read.keep === 'worst' ? ', оставить худшую' : '';
     return [{ text: `${words(read.count)}${read.sides ? ` ${DIE_LETTER}${words(read.sides)}` : ''}${keep}` }];
   }
-  if (step.type === 'roll-plus') return [{ text: `+ ${words(read.value)}` }];
+  if (step.type === 'roll-plus') return [{ text: addendWords(system, read) }];
   if (step.type === 'roll-bump') return [{ text: `кость +${words(read.value)}` }];
   return [];
 }

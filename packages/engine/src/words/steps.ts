@@ -197,7 +197,7 @@ export const STEP_WORDS = {
     label: 'Прибавить',
     hint: 'Увидев кости: прибавить к итогу число или кость. Натуральная кость не меняется, кость видна в журнале.',
     slots: [
-      { key: 'value', label: 'Сколько', kind: 'ref', main: true, allow: ['expr', 'empty'], placeholder: 'число', dice: true },
+      { key: 'value', label: 'Сколько', kind: 'ref', main: true, allow: ['expr', 'empty'], placeholder: 'число' },
       { key: 'die', label: 'Кость', kind: 'ref', allow: ['name', 'expr', 'empty'], refersTo: 'constant' },
       { key: 'count', label: 'Сколько костей', kind: 'ref', allow: ['expr', 'empty'] },
       { key: 'minus', label: 'Вычесть', kind: 'flag' },

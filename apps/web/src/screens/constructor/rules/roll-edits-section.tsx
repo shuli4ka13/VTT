@@ -5,9 +5,7 @@ import { editPalette, paletteKeyOf } from '@vtt/engine/engine/roll-edits';
 import { ADVANTAGE_METHODS, installMethod } from '@vtt/engine/model/advantage-methods';
 import { editNotation, editReadback, joinReadback } from '../readback.ts';
 import { Card, CardHead, Input, Button, Select } from '../../../ui/primitives.tsx';
-import { FormulaField } from '../../../ui/formula-field.tsx';
-import { DICE_BAR_OPTION, DICE_HINT } from '../value-field.tsx';
-import { shapeProblem } from '../formula-shape.ts';
+import { AddendPick } from '../effects/cards/die-pick.tsx';
 import { newRollEdit } from '../factory.ts';
 import { inUse as isUsed } from '../usage.ts';
 import { cancels } from '@vtt/engine/model/cancels';
@@ -87,35 +85,23 @@ const templateOf = (op: Record<string, unknown>): Record<string, unknown> =>
 export const numberKeyOf = (op: Record<string, unknown>): string | null =>
   NUMBER_KEYS.find(key => key in op) ?? NUMBER_KEYS.find(key => key in templateOf(op)) ?? null;
 
-const exprOf = (value: unknown): string =>
-  (value && typeof value === 'object' && 'expr' in value ? String((value as { expr: unknown }).expr ?? '') : '');
-
-function OpChip({ op, system, parts, onNumber, onCount, onPart, onFormula, onRemove }: {
+function OpChip({ op, system, parts, onNumber, onCount, onPart, onChange, onRemove }: {
   op: Record<string, unknown>;
   system: System;
   parts: { name: string; label: string }[];
   onNumber: (value: number) => void;
   onCount: (value: Bound | null) => void;
   onPart: (part: string) => void;
-  onFormula: (expr: string) => void;
+  onChange: (change: (it: Record<string, unknown>) => void) => void;
   onRemove: () => void;
 }) {
   if (op.op === PLUS) {
-    const problem = shapeProblem(exprOf(op.value), 'number', () => 'any');
     return (
       <span className="chip chip--formula">
         прибавить
         <span className="chip__formula">
-          <FormulaField
-            value={exprOf(op.value)}
-            system={system}
-            where="правка броска · прибавить"
-            placeholder={DICE_HINT}
-            options={[DICE_BAR_OPTION]}
-            onCommit={text => onFormula(text.trim())}
-          />
+          <AddendPick source={op} system={system} where="правка броска · прибавить" dieOnly onChange={onChange} />
         </span>
-        {problem ? <span className="chip__bad">{problem}</span> : null}
         <button className="chip__x" type="button" title="убрать" onClick={onRemove}>×</button>
       </span>
     );
@@ -206,9 +192,9 @@ function WordRow({ wordKey, edit, system, editSystem, parts, used }: {
               if (!target) return;
               if (part) target.part = part; else delete target.part;
             })}
-            onFormula={expr => editSystem(draft => {
+            onChange={change => editSystem(draft => {
               const target = opAt(i)(draft);
-              if (target) target.value = { expr };
+              if (target) change(target);
             })}
             onRemove={() => editSystem(draft => {
               draft.roll_edits?.[wordKey]?.ops?.splice(i, 1);

@@ -232,7 +232,7 @@ describe('эффекты D&D собираются в конструкторе р
     within(handlerHead(1)).select('Решение', 'ask');
     within(handlerAt(1)).click('+ прибавить');
     const card = stepCard(/^1 · /, handlerAt(1));
-    within(card).formula('Сколько', 'кинуть(@кость)');
+    within(card).select('Сколько', 'expr:@кость');
     dump({ got: built('bardic_ready'), goal });
     expect(built('bardic_ready')).toEqual(goal);
   });

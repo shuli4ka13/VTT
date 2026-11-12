@@ -381,7 +381,7 @@ function Lifetime({ effect, system, edit }: {
       </Field>
 
       {COUNTED.has(kind) ? (
-        <Field label="Сколько" hint="число или формула от входов эффекта: «@rating * кинуть(1к6)»">
+        <Field label="Сколько" hint="число или формула от входов эффекта">
           <BoundFormula
             value={effect.duration?.max ?? 1} system={system} where="срок висящего эффекта"
             onChange={next => edit(draft => {

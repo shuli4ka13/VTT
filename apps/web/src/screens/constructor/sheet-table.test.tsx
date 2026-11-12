@@ -47,7 +47,7 @@ describe('таблица прямо на листе', () => {
       system: { ...emptySystem(), tables: { характеристики: { label: 'Характеристики', key: 'word', owner: 'sheet', rows: [{ value: 'сила' }], columns: [
         { key: 'value', label: 'Значение', kind: 'number' },
         { key: 'бонус', label: 'Бонус', expr: { expr: 'округлить вниз(@строка.value / 10)' } },
-      ] } } as never, blocks: [{ name: 'Характеристики', parts: [{ table: 'характеристики' }] }] },
+      ] } } as never },
       compendium: { records: [] },
       sheets: [],
     });

@@ -1,5 +1,6 @@
 import { compile, AND, OR, NOT, FUNCTION_SPECS } from '@vtt/engine/formula';
 import type { Node } from '@vtt/engine/formula';
+import { DICE_BY_STEP } from '@vtt/engine/words/glossary';
 
 export type Shape = 'number' | 'text' | 'bool' | 'any';
 
@@ -22,7 +23,7 @@ function shapeOf(node: Node, named: (tag: string) => Shape): Shape {
     case 'Ref': return named(node.tag);
     case 'Pick': return 'any';
     case 'Unary': {
-      if (isDice(node.operand)) throw new Clash('кость вычитают через «кинуть»: -кинуть(к4)');
+      if (isDice(node.operand)) throw new Clash(DICE_BY_STEP);
       const inner = shapeOf(node.operand, named);
       if (node.op === NOT) return 'bool';
       if (node.op === '-' && inner === 'text') throw new Clash('минус перед словом');
@@ -35,7 +36,7 @@ function shapeOf(node: Node, named: (tag: string) => Shape): Shape {
       if (node.op === AND) return left === 'bool' && right === 'bool' ? 'bool' : 'any';
       if (node.op === OR) return left === right ? left : 'any';
       if (!MATH.has(node.op)) return 'any';
-      if (isDice(node.left) || isDice(node.right)) throw new Clash('кость прибавляют через «кинуть»: кинуть(к4)');
+      if (isDice(node.left) || isDice(node.right)) throw new Clash(DICE_BY_STEP);
       if (left === 'text' || right === 'text') throw new Clash('слово нельзя складывать и умножать с числом');
       return 'number';
     }

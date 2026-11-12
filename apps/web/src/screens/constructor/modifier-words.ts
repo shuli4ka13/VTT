@@ -5,6 +5,7 @@ import { typeColumn } from '@vtt/engine/model/inherit';
 import { tiedToHolder } from '@vtt/engine/model/references';
 import { labelOfTag } from '../../ui/formula.tsx';
 import { formulaWords } from '../../ui/formula-words.ts';
+import { addendWords } from './readback.ts';
 import { rowNames } from './row-names.ts';
 import { ROW } from '@vtt/engine/model/sheet-columns';
 
@@ -78,7 +79,7 @@ export function modifierSentence(system: System, modifier: Modifier, table?: str
     const tags = tagList(mod.tags) || tagList(mod.anyTags);
     const who = whoseWords(system, mod, { бросающий: 'бросает носитель', против: 'бросают против носителя' }, 'бросает кто угодно', names);
     const what = mod.param === 'bonus'
-      ? OP_WORDS.add!(valueWords(system, mod.value, names))
+      ? addendWords(system, mod)
       : mod.param === 'tags' ? `метка ${valueWords(system, mod.value, names)}`
       : system.roll_edits?.[String(mod.edit ?? '')]?.label ?? String(mod.edit ?? 'какая правка?');
     const lead = `${CALL_WORDS.roll.label}${tags ? ` с метками ${tags}` : ''}${who ? `, ${who}` : ''}`;

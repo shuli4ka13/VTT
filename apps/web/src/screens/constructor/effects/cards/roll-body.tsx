@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
 import type { Step } from '@vtt/schema';
 import { Select } from '../../../../ui/primitives.tsx';
-import { FormulaField } from '../../../../ui/formula-field.tsx';
 import { useFormulaBar } from '../../../../store/formula-bar.ts';
-import { namesOf, inputBadges, sheetChoices } from '../../slots.tsx';
+import { sheetChoices } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import { loneSheet } from '../../sheet-pick.tsx';
 import type { EditFn } from '../words.ts';
 import { Extras } from './extras.tsx';
+import { SlotFormula } from './die-pick.tsx';
 import type { Extra } from './extras.tsx';
 import { RollTags } from './roll-line.tsx';
 import { useStepName } from './step-name.tsx';
@@ -26,35 +26,6 @@ const loose = (draft: unknown): Loose => draft as Loose;
 const exprOf = (value: unknown): string => String((value as { expr?: unknown } | undefined)?.expr ?? '');
 
 const NOBODY = 'никто — кости ничьи';
-
-function SlotFormula({ value, label, where, placeholder, context, onSet }: {
-  value: unknown;
-  label: string;
-  where: string;
-  placeholder: string;
-  context: SlotContext;
-  onSet: (text: string) => void;
-}) {
-  const [draft, setDraft] = useState<string | null>(null);
-  const names = useMemo(() => namesOf(context), [context]);
-  const stored = exprOf(value);
-  return (
-    <div data-field={label}>
-      <FormulaField
-        value={draft ?? stored}
-        system={context.system}
-        where={where}
-        extraNames={names}
-        {...(context.sheets ? { sheets: context.sheets } : {})}
-        badges={inputBadges(context)}
-        placeholder={placeholder}
-        onChange={next => setDraft(next)}
-        onCommit={typed => { setDraft(null); if (typed.trim() !== stored.trim()) onSet(typed.trim()); }}
-        onCancel={() => setDraft(null)}
-      />
-    </div>
-  );
-}
 
 function ownDieSaid(context: SlotContext, text: string): string {
   const input = /^@([\p{L}\p{N}_]+)$/u.exec(text.trim())?.[1];
@@ -114,7 +85,7 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
     node: (
       <div className="field">
         <span className="field__label">{label}</span>
-        <SlotFormula value={read[key]} label={label} where={`бросок · ${where}`} placeholder={placeholder} context={context}
+        <SlotFormula value={read[key]} label={label} system={context.system} where={`бросок · ${where}`} placeholder={placeholder} context={context}
           onSet={text => set(it => { if (text) it[key] = { expr: text }; else delete it[key]; })} />
       </div>
     ),
@@ -125,6 +96,24 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
   const rule = picked ? context.system.rolls?.[picked.roll] : undefined;
   const constant = typeof read.die === 'string' ? context.system.constants?.[read.die] : undefined;
   const die = constant ? dieSaid(constant, context.system, read.count !== undefined && read.count !== null) : null;
+  const keepExtra: Extra = {
+    key: 'keep',
+    label: 'оставить',
+    on: read.keep !== undefined && read.keep !== null,
+    add: () => {},
+    drop: () => set(it => { delete it.keep; delete it.keepWorst; }),
+    node: (
+      <div className="field">
+        <span className="field__label">Оставить</span>
+        <div className="inline inline--tight">
+          <SlotFormula value={read.keep} label="Сколько оставить" system={context.system} where="бросок · сколько оставить" placeholder="сколько костей" context={context}
+            onSet={text => set(it => { if (text) it.keep = { expr: text }; else { delete it.keep; delete it.keepWorst; } })} />
+          <Select label="Какие оставить" value={read.keepWorst === true ? 'worst' : ''} options={[['', 'лучших'], ['worst', 'худших']] as const}
+            onChange={next => set(it => { if (next === 'worst') it.keepWorst = true; else delete it.keepWorst; })} />
+        </div>
+      </div>
+    ),
+  };
   const extras: Extra[] = fielded
     ? [
       slot('shift', 'Поправка к числу поля', 'поправка', 'например +20 за лёгкую задачу'),
@@ -132,7 +121,7 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
     ]
     : [
       ...(several && (read.count === undefined || read.count === null) ? [] : [slot('count', 'Сколько костей', 'сколько костей', 'как у кости')]),
-      ...(read.die !== undefined && read.die !== null ? [slot('times', 'Сколько раз', 'сколько раз', 'один раз')] : []),
+      ...(read.die !== undefined && read.die !== null ? [slot('times', 'Сколько раз', 'сколько раз', 'один раз'), keepExtra] : []),
       slot('bonus', 'Прибавка', 'прибавка', 'нет'),
     ];
 
@@ -156,11 +145,11 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
           <span className="number-line__eq">бросает</span>
           <span data-field="Что бросает" className="roll-what"><Select label="Что бросает" value={what} options={options} onChange={pickWhat} /></span>
           {what === OWN_DIE ? (
-            <SlotFormula value={read.die && typeof read.die === 'object' ? read.die : undefined} label="Своя кость" where="бросок · кость" placeholder="2к6 или формула кости" context={context}
+            <SlotFormula value={read.die && typeof read.die === 'object' ? read.die : undefined} label="Своя кость" system={context.system} where="бросок · кость" placeholder="2к6 или формула кости" context={context}
               onSet={text => { if (text) { setHand(null); set(it => setDie(it, { expr: text })); } }} />
           ) : null}
           {what === OWN_FIELD ? (
-            <SlotFormula value={read.field} label="Адрес поля" where="бросок поля · какое поле" placeholder="наберите @ и выберите поле" context={context}
+            <SlotFormula value={read.field} label="Адрес поля" system={context.system} where="бросок поля · какое поле" placeholder="наберите @ и выберите поле" context={context}
               onSet={text => { if (text) { setHand(null); set(it => { it.field = { expr: text }; }); } }} />
           ) : null}
         </div>

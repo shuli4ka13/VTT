@@ -22,7 +22,7 @@ describe('groupSteps', () => {
     expect(groups[2]!.amount?.id).toBe('dmg');
   });
 
-  it('вид «Бросок» дают только by и field; кость без бросающего, fixed и пустой шаг — «Число»', () => {
+  it('вид «Бросок» дают by, field и кость; fixed и пустой шаг — «Число»', () => {
     const groups = groupSteps(steps([
       { id: 'a', type: 'roll', by: { expr: '@действующий' } },
       { id: 'b', type: 'roll', field: { expr: '@цель.armor' } },
@@ -30,7 +30,7 @@ describe('groupSteps', () => {
       { id: 'd', type: 'roll', fixed: { expr: '1' } },
       { id: 'e', type: 'roll' },
     ]));
-    expect(groups.map(g => g.kind)).toEqual(['roll', 'roll', 'number', 'number', 'number']);
+    expect(groups.map(g => g.kind)).toEqual(['roll', 'roll', 'roll', 'number', 'number']);
   });
 
   it('кость без бросающего — расчёт: «число + изменение» склеиваются, величина — «кость + прибавка»', () => {
@@ -120,11 +120,11 @@ describe('BRICKS', () => {
     expect(groupSteps(made as unknown as Step[]).map(g => g.kind)).toEqual(['roll']);
   });
 
-  it('«+ бросок» без листа или без кости не выдумывает их; без листа шаг — «Число»', () => {
+  it('«+ бросок» без листа или без кости не выдумывает их; без листа шаг с костью — всё равно «Бросок», без кости — «Число»', () => {
     for (const effect of [{ params: [{ key: 'сколько', label: 'Сколько', kind: 'number' }] }, inputs(['цели', true]), undefined]) {
       const made = brick('roll', effect);
       expect(made[0]).not.toHaveProperty('by');
-      expect(groupSteps(made as unknown as Step[]).map(g => g.kind)).toEqual(['number']);
+      expect(groupSteps(made as unknown as Step[]).map(g => g.kind)).toEqual([(made[0] as { die?: unknown }).die ? 'roll' : 'number']);
     }
     const bare = BRICKS.find(b => b.key === 'roll')!.make({ tables: {}, constants: {}, effects: {} } as unknown as System, [], inputs(['кто']) as unknown as Effect);
     expect(bare[0]).not.toHaveProperty('die');

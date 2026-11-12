@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { DICE_BY_STEP } from '@vtt/engine/words/glossary';
 import { cleanup, act, fireEvent } from '@testing-library/react';
 import { renderOpen } from '../../../testing/render-open.tsx';
 import { within, stepCard } from '../../../testing/cards.ts';
@@ -51,12 +52,21 @@ describe('кость в «Сколько» у «Изменения»', () => {
     expect((apply.value as { expr: string }).expr).toBe('@урон_оружия');
   });
 
-  it.each(['4к6', 'кинуть(4к6)', 'кинуть(4d6)'])('«%s» — один бросок 4к6, а не бросок уже брошенного числа', typed => {
+  it.each(['4к6', '4d6'])('«%s» — один бросок 4к6, а не бросок уже брошенного числа', typed => {
     renderOpen(<EffectsTab />);
     within(stepCard(/^2 · /)).formula('Сколько', typed);
     const { steps, apply } = amountOf();
     const roll = steps.find(step => step.type === 'roll')!;
     expect(roll.die).toEqual({ expr: '"4d6"' });
     expect((apply.value as { expr: string }).expr).toBe(`@${String(roll.id)}`);
+  });
+
+  it('старая запись «кинуть(4к6)» не превращается в шаг: подсказка — кости бросает шаг «Бросок»', () => {
+    renderOpen(<EffectsTab />);
+    within(stepCard(/^2 · /)).formula('Сколько', 'кинуть(4к6)');
+    const { steps, apply } = amountOf();
+    expect(steps.some(step => step.type === 'roll')).toBe(false);
+    expect((apply.value as { expr: string }).expr).toBe('1');
+    expect(document.body.textContent).toContain(DICE_BY_STEP);
   });
 });

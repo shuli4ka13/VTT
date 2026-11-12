@@ -29,7 +29,7 @@ describe('Словари: кости, правки броска, таблицы'
     expect(edits.advantage?.cancels).toEqual(['disadvantage']);
     expect(edits.disadvantage?.cancels).toEqual(['advantage']);
     expect(edits.advantage?.ops).toEqual([{ op: 'addDie' }, { op: 'keepBest', n: 1 }]);
-    expect(screen.getByText('Кинуть на кость больше, оставить лучшую.')).toBeTruthy();
+    expect(screen.getByText('Добавить кость, оставить лучшую.')).toBeTruthy();
     expect(screen.getAllByTitle('больше не гасят друг друга')).toHaveLength(2);
   });
 
@@ -225,7 +225,7 @@ describe('Словари: кости, правки броска, таблицы'
     expect(useWorld.getState().system.constants![key!]!.dice![0]!.sides).toBe(100);
   });
 
-  it('«прибавить к итогу» — формула с костью: слово кладёт прибавку, а не кость в набор', () => {
+  it('«прибавить к итогу» — кость: слово кладёт прибавку, а не кость в набор', () => {
     renderOpen(<RulesTab />);
     открыть('Броски');
     fireEvent.click(screen.getByText('+ правка'));
@@ -233,8 +233,8 @@ describe('Словари: кости, правки броска, таблицы'
 
     const edits = useWorld.getState().system.roll_edits!;
     const [key] = Object.keys(edits);
-    expect(edits[key!]!.ops).toEqual([{ op: 'plus', value: { expr: 'кинуть(к6)' } }]);
-    expect(screen.getByText('Прибавить к6.')).toBeTruthy();
+    expect(edits[key!]!.ops).toEqual([{ op: 'plus', die: '1к6' }]);
+    expect(screen.getByText('Прибавить 1к6.')).toBeTruthy();
   });
 
   it('палитра правок — готовые фразы, включая оба направления взрыва', () => {
@@ -293,7 +293,7 @@ describe('Словари: кости, правки броска, таблицы'
     expect(useWorld.getState().system.roll_edits!.вдох!.ops[0]).toEqual({ op: 'addDie', part: 'hope' });
 
     const phrase = part.closest('.dict-block')!.querySelector('.roll-word__said')!.textContent;
-    expect(phrase).toBe('Кинуть на кость больше (Надежда).');
+    expect(phrase).toBe('Добавить кость (Надежда).');
   });
 
   it('«гасится» ссылается на другую правку — закон гашения это данные', () => {

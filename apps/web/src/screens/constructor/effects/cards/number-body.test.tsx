@@ -29,13 +29,11 @@ const edited = (step: Record<string, unknown>) => {
   return { draft, view };
 };
 
-const NOTE = 'кости в формуле ничьи';
-
 describe('шаг «Число»', () => {
   afterEach(cleanup);
 
   it('формула показана фишками один раз — серой строкой словами она не повторяется', () => {
-    const view = body({ id: 'урон', type: 'roll', fixed: { expr: 'кинуть(@damage_dice, 2) + @damage_with' } });
+    const view = body({ id: 'урон', type: 'roll', fixed: { expr: '@damage_dice * @damage_with' } });
     const chips = [...view.container.querySelectorAll('.chips__chip')].map(el => el.textContent);
     expect(chips).toEqual(expect.arrayContaining([expect.stringContaining('Кость урона'), expect.stringContaining('Прибавка к урону')]));
     expect(view.container.textContent!.split('Прибавка к урону')).toHaveLength(2);
@@ -67,45 +65,16 @@ describe('шаг «Число»', () => {
   });
 
   it('у числа нет ни выбора бросающего, ни меток', () => {
-    const view = body({ id: 'а', type: 'roll', fixed: { expr: 'кинуть(@lead) + @damage_with' } });
+    const view = body({ id: 'а', type: 'roll', fixed: { expr: '@damage_with + 2' } });
     expect(view.container.querySelector('select')).toBeNull();
     expect(view.container.textContent).not.toContain('Метки');
   });
 
-  it('формула с «кинуть(» объясняет, что кости ничьи; без костей подписи нет', () => {
-    const thrown = body({ id: 'а', type: 'roll', fixed: { expr: 'кинуть(@damage_dice, 2) + @damage_with' } });
-    expect(thrown.container.textContent).toContain(NOTE);
-    cleanup();
-    const plain = body({ id: 'а', type: 'roll', fixed: { expr: '1 + 2' } });
-    expect(plain.container.textContent).not.toContain(NOTE);
-  });
-
-  it('«сделать броском» есть у «кинуть(@кость системы) + прибавка», у остальных записей нет', () => {
-    body({ id: 'а', type: 'roll', fixed: { expr: 'кинуть(@lead) + @damage_with' } });
-    expect(screen.queryByText('сделать броском')).not.toBeNull();
-    cleanup();
-    body({ id: 'а', type: 'roll', fixed: { expr: 'кинуть(@damage_dice, 2) + @damage_with' } });
-    expect(screen.queryByText('сделать броском')).toBeNull();
-    cleanup();
-    body({ id: 'а', type: 'roll', fixed: { expr: '1 + 2' } });
-    expect(screen.queryByText('сделать броском')).toBeNull();
-  });
-
-  it('«сделать броском» пишет кость, прибавку и бросающего и снимает формулу', () => {
-    const { draft } = edited({ id: 'а', type: 'roll', fixed: { expr: 'кинуть(@lead) + @damage_with' }, tags: ['урон'] });
-    fireEvent.click(screen.getByText('сделать броском'));
-    expect(draft).toEqual({ id: 'а', type: 'roll', die: 'lead', bonus: { expr: '@damage_with' }, by: { expr: '@действующий' }, tags: ['урон'] });
-    expect(draft).not.toHaveProperty('fixed');
-  });
-
-  it('кость без бросающего показана формулой; холостое открытие данных не меняет, правка формулы пишет fixed и снимает кость', () => {
-    const step = { id: 'урон', type: 'roll', die: 'lead', bonus: { expr: '@damage_with' } };
+  it('холостое открытие числа данных не меняет, правка формулы пишет fixed', () => {
+    const step = { id: 'урон', type: 'roll', fixed: { expr: '@damage_with' } };
     const { draft, view } = edited(step);
-    expect(view.container.textContent).toContain(NOTE);
     expect(draft).toEqual(step);
     within(view.container).formula('Формула', '2 + @damage_with');
-    expect(draft).toHaveProperty('fixed');
-    expect(draft).not.toHaveProperty('die');
-    expect(draft).not.toHaveProperty('bonus');
+    expect(draft).toEqual({ id: 'урон', type: 'roll', fixed: { expr: '2 + @damage_with' } });
   });
 });

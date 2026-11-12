@@ -32,6 +32,6 @@ describe('«Касается» отделяется по дереву форму
     expect(holderIn('@лист==@носитель', holders)).toBe(true);
     expect(holderIn('@a', holders)).toBe(false);
     expect(holderIn('@носитель.hp > 0', holders)).toBe(false);
-    expect(holderIn('кинуть(', holders)).toBe(false);
+    expect(holderIn('округлить(', holders)).toBe(false);
   });
 });

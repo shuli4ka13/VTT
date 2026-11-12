@@ -281,8 +281,12 @@ describe('эффекты пресетов собираются в констру
     nameStep(card, 'попадание_бросок');
     within(card).click('↑');
 
-    const dmg = number(6, '(кинуть(@damage_dice))', 'урон');
-    up(dmg);
+    ui.click('+ бросок');
+    card = stepCard(/^6 · /);
+    within(card).select('Кто бросает', '');
+    within(card).select('Что бросает', 'expr:@damage_dice');
+    nameStep(stepCard(/^6 · /), 'урон');
+    within(stepCard(/^6 · /)).click('↑');
     const boom = number(7, '5', 'взрыв');
     wrapIf(boom, '=@урон.atMax >= 2');
     within(headOf(block(0))).click('↑');
@@ -480,9 +484,18 @@ describe('эффекты пресетов собираются в констру
     nameStep(card, 'бросок_бросок');
     within(stepCard(/^2 · /)).click('↑');
 
-    ui.click('+ число');
+    const damage = goal!.steps![1] as unknown as { die: { expr: string }; count: { expr: string }; keep: { expr: string }; bonus: { expr: string } };
+    ui.click('+ бросок');
     card = stepCard(/^3 · /);
-    within(card).formula('Формула', String((goal!.steps![1] as { fixed: { expr: string } }).fixed.expr));
+    within(card).select('Кто бросает', '');
+    within(card).select('Что бросает', `expr:${damage.die.expr}`);
+    within(card).click('+ сколько костей');
+    within(card).formula('Сколько костей', damage.count.expr);
+    within(card).click('+ оставить');
+    within(card).formula('Сколько оставить', damage.keep.expr);
+    within(card).click('+ прибавка');
+    within(card).formula('Прибавка', damage.bonus.expr);
+    card = stepCard(/^3 · /);
     nameStep(card, 'урон');
     within(stepCard(/^3 · /)).click('↑');
 
@@ -490,6 +503,13 @@ describe('эффекты пресетов собираются в констру
     card = stepCard(/^4 · /);
     within(card).formula('Что проверяем', '@бросок_бросок');
     within(card).formula('С чем', '@цель.difficulty');
+    const ladder = (goal!.steps![3] as unknown as { degrees: { label: string; if: { expr: string } }[] }).degrees;
+    ladder.forEach((degree, at) => {
+      within(stepCard(/^4 · /)).click(degree.if.expr === 'да' ? '+ иначе' : '+ ступень');
+      const row = stepCard(/^4 · /).querySelectorAll<HTMLElement>('.roll-degree')[at]!;
+      within(row).type(row.querySelector<HTMLElement>('input.input')!, degree.label);
+      if (degree.if.expr !== 'да') within(stepCard(/^4 · /)).formula(stepCard(/^4 · /).querySelectorAll<HTMLElement>('.roll-degree')[at]!, degree.if.expr);
+    });
     card = stepCard(/^4 · /);
     nameStep(card, 'бросок');
 

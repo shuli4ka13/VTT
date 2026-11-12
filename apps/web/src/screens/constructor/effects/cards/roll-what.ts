@@ -84,6 +84,11 @@ export function setDie(step: Record<string, unknown>, die: unknown): void {
   step.die = die;
 }
 
+export function setAddendDie(item: Record<string, unknown>, die: unknown): void {
+  delete item.value;
+  item.die = die;
+}
+
 export function setField(step: Record<string, unknown>, tail: string, firstSheet: string | undefined): void {
   const head = step.field !== undefined ? headOf(exprOf(step.field)) : headOf(exprOf(step.by)) || (firstSheet ? `@${firstSheet}` : '');
   if (!head && !tail) return;

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { DICE_BY_STEP } from '@vtt/engine/words/glossary';
 import { shapeProblem, type Shape } from './formula-shape.ts';
 
 const named = (shapes: Record<string, Shape>) => (tag: string): Shape => shapes[tag] ?? 'any';
@@ -20,9 +21,8 @@ describe('вид формулы у входа', () => {
     expect(shapeProblem('@x', 'number', named({}))).toBeNull();
     expect(shapeProblem('если(@x > 1, 2, 3)', 'number', named({}))).toBeNull();
   });
-  it('кость в арифметике — подсказка про «кинуть»', () => {
-    expect(shapeProblem('к4 + 1', 'number', named({}))).toBe('кость прибавляют через «кинуть»: кинуть(к4)');
-    expect(shapeProblem('-к4', 'number', named({}))).toBe('кость вычитают через «кинуть»: -кинуть(к4)');
-    expect(shapeProblem('кинуть(к4) + 1', 'number', named({}))).toBeNull();
+  it('кость в арифметике — подсказка про шаг «Бросок»', () => {
+    expect(shapeProblem('к4 + 1', 'number', named({}))).toBe(DICE_BY_STEP);
+    expect(shapeProblem('-к4', 'number', named({}))).toBe(DICE_BY_STEP);
   });
 });

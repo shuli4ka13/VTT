@@ -81,7 +81,7 @@ describe('эффекты пресетов собираются руками: Sha
       within(card()).select('Чей вызов', 'roll');
       within(card()).select('Что правим', 'bonus');
       within(card()).select('С метками', tag);
-      within(card()).formula('На сколько', '-2');
+      within(card()).formula('Сколько', '-2');
       within(card()).select('Кого касается', '@бросающий == @носитель');
       within(card()).when('=@носитель.seriously');
     }

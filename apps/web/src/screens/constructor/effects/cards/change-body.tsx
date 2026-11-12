@@ -11,6 +11,8 @@ import { FormulaField } from '../../../../ui/formula-field.tsx';
 import type { BarApi } from '../../../../store/formula-bar.ts';
 import { labelOfTag } from '../../../../ui/formula.tsx';
 import { EffectPick, effectNameOf } from '../../effect-pick.tsx';
+import { throwsDice } from '@vtt/engine/model/lint';
+import { DICE_BY_STEP } from '@vtt/engine/words/glossary';
 import { dieWord, readingWord } from '../../readback.ts';
 import { unquote } from '../../roll-expr.ts';
 import { asDice } from '../../../../words.ts';
@@ -165,7 +167,6 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   } : undefined;
 
   const DICE = /(?<![\p{L}\p{N}_@.])(\d+)?\s*[dдк]\s*(\d+)/iu;
-  const THROWN = /кинуть\s*\(\s*(\d+)?\s*[dдк]\s*(\d+)\s*\)/iu;
 
   const mentions = (text: string, id: string) =>
     new RegExp(`[@#]${id}(?![\\p{L}\\p{N}_])`, 'u').test(text);
@@ -210,8 +211,10 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
       return;
     }
 
+    if (throwsDice(text)) { setTrouble(DICE_BY_STEP); return; }
+
     const bare = text.replace(/"[^"]*"|'[^']*'/g, m => ' '.repeat(m.length));
-    const rolled = bare.match(THROWN) ?? bare.match(DICE);
+    const rolled = bare.match(DICE);
     if (rolled) {
       const notation = `${rolled[1] ?? 1}d${rolled[2]}`;
       const picked = parseRollExpr(notation, context.system).die;

@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { renderOpen } from '../../../testing/render-open.tsx';
+import { within as within2, stepCard } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import { CREATE_KINDS } from './words.ts';
@@ -390,7 +391,7 @@ describe('эффект слушает время', () => {
   });
 });
 
-describe('крит — обычная формула, а не особый слот', () => {
+describe('кость без бросающего — шаг «Бросок»', () => {
   beforeEach(() => {
     useWorld.setState(state => ({
       ...state,
@@ -415,58 +416,38 @@ describe('крит — обычная формула, а не особый сл�
   });
   afterEach(() => { cleanup(); });
 
-  const строка = () => screen.getByDisplayValue('кинуть("2к6")') as HTMLInputElement;
-
-  const набрать = (текст: string) => {
-    const поле = строка();
-    fireEvent.change(поле, { target: { value: текст } });
-    fireEvent.keyDown(поле, { key: 'Enter' });
-  };
-
   const шаг = () => useWorld.getState().system.effects.удар!.steps![2]! as Record<string, unknown>;
 
-  it('кость без хозяина показана числом одной строкой, старых полей нет, под строкой — что кости ничьи', () => {
+  it('кость без хозяина — шаг «Бросок»: «никто — кости ничьи», старых полей «Числа» нет', () => {
     renderOpen(<EffectsTab />);
     expect(screen.queryByText('удвоить кости, если')).toBeNull();
     expect(screen.queryByText('переписать одной строкой')).toBeNull();
-    expect(screen.queryByText('сколько раз кинуть')).toBeNull();
-    expect(screen.queryByText('прибавка')).toBeNull();
-
-    expect(document.querySelectorAll('[data-field="Кто бросает"]')).toHaveLength(1);
-    expect(document.querySelector('.number-line [data-field="Формула"]')).toBeTruthy();
-    expect(строка()).toBeTruthy();
-    expect(screen.getByText(/кости в формуле ничьи/)).toBeTruthy();
+    expect(screen.queryByText('сделать броском')).toBeNull();
+    expect(document.querySelectorAll('[data-field="Что бросает"]')).toHaveLength(2);
+    expect(document.querySelectorAll('[data-field="Кто бросает"]')).toHaveLength(2);
+    expect(document.querySelector('.number-line [data-field="Формула"]')).toBeNull();
+    expect(screen.getAllByText(/кости ничьи/).length).toBeGreaterThan(0);
   });
 
-  it('правка строки переносит старые поля в формулу', () => {
+  it('холостое открытие броска данных не меняет', () => {
     renderOpen(<EffectsTab />);
-    набрать("кинуть('2к6') + @хиты");
-    expect(шаг().die, 'старые поля ушли').toBeUndefined();
-    expect((шаг().fixed as { expr: string }).expr).toBe("кинуть('2к6') + @хиты");
+    expect(шаг()).toEqual({ id: 'урон', type: 'roll', die: { expr: '"2d6"' } });
   });
 
-  it('набор не пишется в систему, пока строку не отпустили', () => {
+  it('«оставить»: число и «лучших / худших» пишутся в keep и keepWorst, умолчание ключа не оставляет', () => {
     renderOpen(<EffectsTab />);
-    fireEvent.change(строка(), { target: { value: 'кинуть(@кос' } });
-    expect(шаг().fixed, 'недобранное имя в систему не попало').toBeUndefined();
-    expect(шаг().die).toEqual({ expr: '"2d6"' });
-  });
-
-  it('незнакомое имя в строке предлагается взять из записи под тем же ключом', () => {
-    renderOpen(<EffectsTab />);
-    набрать('кинуть(@кость_врага)');
-    fireEvent.click(screen.getByText('взять «кость_врага» из записи'));
-    const effect = useWorld.getState().system.effects.удар!;
-    expect(effect.params!.map(p => p.key)).toContain('кость_врага');
-  });
-
-  it('«сделать броском» ставит кость и бросающего и снимает формулу', () => {
-    useWorld.getState().editEffect('удар', draft => { draft.steps![2] = { id: 'урон', type: 'roll', die: 'к20' } as never; });
-    renderOpen(<EffectsTab />);
-    fireEvent.click(screen.getByText('сделать броском'));
-    expect(шаг().die).toBe('к20');
-    expect(шаг().by).toEqual({ expr: '@действующий' });
-    expect(шаг().fixed).toBeUndefined();
+    const card = stepCard(/^3 · /);
+    within2(card).click('+ оставить');
+    within2(card).formula('Сколько оставить', '2');
+    expect(шаг().keep).toEqual({ expr: '2' });
+    expect(шаг()).not.toHaveProperty('keepWorst');
+    const which = () => card.querySelector<HTMLElement>('select[aria-label="Какие оставить"]')!;
+    within2(card).select(which(), 'worst');
+    expect(шаг().keepWorst).toBe(true);
+    within2(card).select(which(), '');
+    expect(шаг()).not.toHaveProperty('keepWorst');
+    within2(card).formula('Сколько оставить', '');
+    expect(шаг()).not.toHaveProperty('keep');
   });
 });
 

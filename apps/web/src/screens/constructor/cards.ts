@@ -79,7 +79,8 @@ export function groupSteps(list: Step[]): CardGroup[] {
       i++;
       continue;
     }
-    out.push({ kind: thrown ? 'roll' : KIND_OF[step.type] ?? 'unknown', indices: [i], step, amount: null });
+    const keyed = step.type === 'roll' && (step as { die?: unknown }).die !== undefined && (step as { die?: unknown }).die !== null;
+    out.push({ kind: thrown || keyed ? 'roll' : KIND_OF[step.type] ?? 'unknown', indices: [i], step, amount: null });
   }
   return out;
 }

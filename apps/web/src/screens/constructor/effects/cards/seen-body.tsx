@@ -1,7 +1,8 @@
 import type { Step } from '@vtt/schema';
 import { STEP_WORDS, slotShown } from '@vtt/engine/words/steps';
 import { Field, Select } from '../../../../ui/primitives.tsx';
-import { ValueField, DICE_OPTION } from '../../value-field.tsx';
+import { ValueField } from '../../value-field.tsx';
+import { AddendPick } from './die-pick.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 
@@ -12,6 +13,16 @@ export function SeenBody({ step, context, edit }: { step: Step; context: SlotCon
   const words = STEP_WORDS[step.type as keyof typeof STEP_WORDS];
   const read = step as unknown as Loose;
   const all = (words?.slots ?? []) as unknown as Slot[];
+  if (step.type === 'roll-plus') {
+    return (
+      <div className="row">
+        <Field label="Сколько">
+          <AddendPick source={read} system={context.system} effect={context.effect} context={context} where="прибавить · сколько"
+            onChange={change => edit(0, draft => change(draft as unknown as Loose))} />
+        </Field>
+      </div>
+    );
+  }
   return (
     <div className="row">
       {all.filter(slot => slotShown(slot, read, all as never)).map(slot => {
@@ -42,7 +53,6 @@ export function SeenBody({ step, context, edit }: { step: Step; context: SlotCon
               where={`${words?.label ?? step.type} · ${slot.label.toLowerCase()}`}
               value={read[slot.key] as never} context={context}
               {...(slot.placeholder ? { placeholder: slot.placeholder } : {})}
-              {...(slot.dice ? { extraOptions: [DICE_OPTION] } : {})}
               onChange={next => edit(0, draft => {
                 const it = draft as unknown as Loose;
                 if (next === null || next === undefined) delete it[slot.key]; else it[slot.key] = next;

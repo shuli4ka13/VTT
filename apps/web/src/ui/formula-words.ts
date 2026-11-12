@@ -98,13 +98,6 @@ export function formulaWords(system: System, source: string, names?: ReadonlyMap
     const all = (join: string) => args.map(arg => words(arg, true)).join(join);
     const arg = (at: number): string => (args[at] ? words(args[at]!, true) : '…');
     switch (name) {
-      case 'кинуть': {
-        const only = args.length === 1 ? args[0]! : null;
-        if (only?.kind === 'Text' && only.dice) return words(only, true);
-        const times = args[1] ? words(args[1]) : '';
-        const keep = args[2] ? `, оставить ${words(args[2])}` : '';
-        return `кинуть ${times && times !== '1' ? `${times} × ` : ''}${arg(0)}${keep}`;
-      }
       case 'пусто': return `не задано ${arg(0)}`;
       case 'меньшее из': return `меньшее из ${all(' и ')}`;
       case 'большее из': return `большее из ${all(' и ')}`;
