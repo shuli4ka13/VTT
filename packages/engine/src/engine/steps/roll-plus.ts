@@ -1,4 +1,8 @@
 import { operate } from './roll-ops.ts';
+import { readerOf } from './roll.ts';
+import { hasDie, dieSpec } from '../../core/dice-addend.ts';
+import { start, result } from '../../core/dice.ts';
+import { EngineError } from '../errors.ts';
 import { DIE_LETTER } from '../../words/glossary.ts';
 import type { Die } from '../../model/types.ts';
 import type { StepModule } from './index.ts';
@@ -24,7 +28,10 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
       dice.push({ sides, value });
       return value;
     };
-    const value = ctx.using(watched).number(step.value, 'сколько прибавить');
+    if (hasDie(step) && step.value !== undefined && step.value !== null) throw new EngineError(`${ctx.label}: прибавка — число или кость, не обе`);
+    const value = hasDie(step)
+      ? (step.minus === true ? -1 : 1) * result(start(dieSpec(ctx.system, step.die, step.count, readerOf(ctx), ctx.label), [], watched)).total
+      : ctx.using(watched).number(step.value, 'сколько прибавить');
     return operate(ctx, 'Прибавить', { kind: 'plus', addend: { label: ctx.label, value, dice } });
   },
 };

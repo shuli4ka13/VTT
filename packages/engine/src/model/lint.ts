@@ -32,6 +32,7 @@ import { isRange, rowByKey } from './tables.ts';
 import { walkSheet } from './paths.ts';
 import { variantProblems, cellScopeProblems } from './variants.ts';
 import { editStages, PLUS_OP } from '../core/dice.ts';
+import { hasDie } from '../core/dice-addend.ts';
 import { compile } from '../formula/index.ts';
 import { hasBands } from '../engine/place.ts';
 import { ROLLED_NAME, ROLL_NAME, NUMBER_NAME, SUCCESS_NAME, MARGIN_NAME } from '../engine/check.ts';
@@ -785,7 +786,7 @@ function rollEditProblems(system: System): Problem[] {
       const value = (op as { value?: { expr?: unknown } }).value;
       if (!known.has(String(op.op))) out.push({ where, level: 'error', text: `у правки броска «${name}» неизвестное действие «${String(op.op)}»` });
       if (AGAINST_NAME.test(JSON.stringify(op))) out.push({ where, level: 'error', text: `в словаре правок броска «@против» не пишут — у «${name}» он есть; противника проверяет условие правки на листе` });
-      else if (op.op === PLUS_OP && !String(value?.expr ?? '').trim()) out.push({ where, level: 'error', text: `у правки броска «${name}» «прибавить» без формулы` });
+      else if (op.op === PLUS_OP && !hasDie(op) && !String(value?.expr ?? '').trim()) out.push({ where, level: 'error', text: `у правки броска «${name}» «прибавить» без формулы` });
     }
   }
   return out;
@@ -825,7 +826,7 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
         if (mod.stage !== undefined) out.push(...stageProblems([], mod.stage as string, CALL_WORDS.roll.label, at));
         if (!(String(mod.param) in CALL_WORDS.roll.params)) out.push({ where: at, level: 'error', text: `у броска нет параметра «${String(mod.param)}»` });
         else if (mod.param === 'edits' && !mod.edit) out.push({ where: at, level: 'error', text: 'правка броска не выбрана' });
-        else if (mod.param === 'bonus' && !(mod.value as { expr?: string } | undefined)?.expr?.trim()) out.push({ where: at, level: 'error', text: 'у прибавки к броску не задано, на сколько' });
+        else if (mod.param === 'bonus' && !hasDie(mod as unknown as object) && !(mod.value as { expr?: string } | undefined)?.expr?.trim()) out.push({ where: at, level: 'error', text: 'у прибавки к броску не задано, на сколько' });
         else if (mod.param === 'count' && !(mod.value as { expr?: string } | undefined)?.expr?.trim()) out.push({ where: at, level: 'error', text: 'у кубиков к броску не задано, сколько' });
         else if (mod.param === 'count' && mod.op !== 'add') out.push({ where: at, level: 'error', text: `кубики к броску только прибавляются, а здесь «${String(mod.op ?? 'не задано')}»` });
         else if (mod.param === 'bonus' && mod.op !== 'add') out.push({ where: at, level: 'error', text: `прибавка к броску только прибавляет, а здесь «${String(mod.op ?? 'не задано')}»` });

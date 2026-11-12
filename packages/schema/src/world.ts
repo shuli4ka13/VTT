@@ -222,6 +222,9 @@ export const editModifier = z.object({
   edit: z.string().optional(),
   op: z.string().optional(),
   value: formula.optional(),
+  die: z.union([z.string().min(1), formula]).optional(),
+  count: formula.optional(),
+  minus: z.literal(true).optional(),
   stage: z.string().optional(),
   if: formula.optional(),
   tags: z.array(z.string().min(1)).optional(),
@@ -232,7 +235,7 @@ export const editModifier = z.object({
     column: z.string().min(1),
     is: tableValue,
   }).optional(),
-}).strict();
+}).strict().refine(mod => !(mod.value && mod.die), { message: 'прибавка — число или кость, не обе' });
 
 export const modifier = z.discriminatedUnion('kind', [valueModifier, editModifier]);
 

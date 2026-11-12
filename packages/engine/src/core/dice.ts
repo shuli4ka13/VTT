@@ -110,10 +110,10 @@ export function withSides(spec: Spec, sides: number, owner: string): Spec {
   return { ...spec, terms: [{ ...spec.terms[0]!, sides }] };
 }
 
-export function withKeep(spec: Spec, n: number, owner: string): Spec {
+export function withKeep(spec: Spec, n: number, owner: string, from: Keep['from'] = 'best'): Spec {
   if (!Number.isInteger(n)) throw new EngineError(`${owner}: оставить можно целое число костей, а вышло ${n}`);
   if (n < 1) return spec;
-  return { ...spec, keeps: [...(spec.keeps ?? []), { n, from: 'best', scope: 'main' }] };
+  return { ...spec, keeps: [...(spec.keeps ?? []), { n, from, scope: 'main' }] };
 }
 
 export function times(spec: Spec, n: number): Spec {

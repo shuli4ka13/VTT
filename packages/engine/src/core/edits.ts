@@ -3,6 +3,8 @@ import { resolveRef, toolsOf } from '../engine/refs.ts';
 import { compile } from '../formula/index.ts';
 import { PLUS_OP } from './dice.ts';
 import type { PendingAddend } from './dice.ts';
+import { hasDie, dieAddend } from './dice-addend.ts';
+import type { System } from '../model/types.ts';
 import type { RefContext, Bound } from '../engine/refs.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import { editsOf, editMatches, withValues, claimedModifiers } from '../engine/modifiers.ts';
@@ -111,6 +113,10 @@ export interface RollEdits {
 
 
 function wordAddend(label: string, op: RollEditOp, view: Pass): PendingAddend {
+  if (hasDie(op)) {
+    const evaluate = (ref: unknown): unknown => compile(String((ref as { expr?: unknown }).expr ?? '')).evaluate(view.resolve, toolsOf(view.system, view, `правка броска «${label}»`));
+    return dieAddend(label, view.system, op, { number: ref => Number(evaluate(ref)), text: evaluate });
+  }
   const raw = (op as { value?: unknown }).value;
   const expr = raw && typeof raw === 'object' && 'expr' in raw ? String((raw as { expr: unknown }).expr) : '';
   if (!expr.trim()) throw new EngineError(`правка броска «${label}»: «прибавить» без формулы`);
@@ -130,7 +136,9 @@ function wordAddend(label: string, op: RollEditOp, view: Pass): PendingAddend {
   };
 }
 
-function bonusAddend(held: Held): PendingAddend {
+function bonusAddend(held: Held, system: System): PendingAddend {
+  const source: unknown = held;
+  if (hasDie(source)) return dieAddend(who(held), system, source, { number: ref => Number(resolveRef(ref as never, held.ref)), text: ref => resolveRef(ref as never, held.ref) });
   const op = (held as { op?: unknown }).op;
   if (op !== 'add') throw new EngineError(`правка «${who(held)}»: прибавка к броску только прибавляет, а здесь «${String(op ?? 'не задано')}»`);
   return {
@@ -197,7 +205,7 @@ export function rollEdits(held: Held[], claims: readonly string[], roller: Pass)
     edits: [...dice, ...words.map(word => word.edit)],
     addends: [
       ...words.flatMap(({ edit, view }) => (edit.ops ?? []).filter(op => op.op === PLUS_OP).map(op => wordAddend(edit.label, op, view))),
-      ...bonuses.map(bonusAddend),
+      ...bonuses.map(one => bonusAddend(one, system)),
     ],
     words: surviving,
     canceled,
