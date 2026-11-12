@@ -60,7 +60,7 @@ export class RoomStore {
   close(roomId: string): void {
     this.raw.exec('BEGIN');
     try {
-      for (const table of ['room_sheets', 'room_clocks', 'room_pending', 'room_journal', 'members', 'log_entries']) {
+      for (const table of ['room_sheets', 'room_clocks', 'room_places', 'room_pending', 'room_journal', 'members', 'log_entries']) {
         this.raw.prepare(`DELETE FROM ${table} WHERE room_id = ?`).run(roomId);
       }
       this.raw.prepare('DELETE FROM rooms WHERE id = ?').run(roomId);
@@ -83,6 +83,11 @@ export class RoomStore {
       for (const id of change.gone ?? []) {
         this.raw.prepare('DELETE FROM room_sheets WHERE room_id = ? AND sheet_id = ?').run(roomId, id);
         this.raw.prepare('UPDATE members SET sheet_id = NULL WHERE room_id = ? AND sheet_id = ?').run(roomId, id);
+      }
+      if (change.gone?.length) {
+        const places = this.places(roomId);
+        const kept = Object.fromEntries(Object.entries(places).filter(([id]) => !change.gone!.includes(id)));
+        if (Object.keys(kept).length !== Object.keys(places).length) this.savePlaces(roomId, kept);
       }
       if (change.clock) {
         this.raw.prepare('DELETE FROM room_clocks WHERE room_id = ?').run(roomId);

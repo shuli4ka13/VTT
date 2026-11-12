@@ -11,7 +11,7 @@ import type { Database } from '../src/db/db.ts';
 import { RoomsService } from '../src/rooms/rooms.service.ts';
 
 const system = {
-  id: 'уборка', name: 'уборка',
+  id: 'уборка', name: 'уборка', grid: { step: 2, unit: 'м' },
   tables: {
     лист: { shape: 'single', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 20 }] },
     стол: { shape: 'single', owner: 'desk', columns: [{ key: 'страх', label: 'Страх', kind: 'number' }] },
@@ -28,7 +28,7 @@ const system = {
 const compendium = { records: [{ id: 'удар', table: 'приём', label: 'Удар', cells: {} }] };
 const pc = (id: string, group?: string) => ({ id, systemId: 'уборка', name: id, values: {}, has: [{ of: 'удар' }], effects: [], ...(group ? { group } : {}) });
 
-const ROOM_TABLES = ['room_sheets', 'room_clocks', 'room_pending', 'room_journal', 'members', 'log_entries'];
+const ROOM_TABLES = ['room_sheets', 'room_clocks', 'room_places', 'room_pending', 'room_journal', 'members', 'log_entries'];
 
 let app: INestApplication;
 let db: Database;
@@ -79,6 +79,7 @@ describe('удаление стола и листа', () => {
     await gm.as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'удар:0', fromId: 'а', toIds: ['б'] }).expect(201);
     await gm.as(http().post(`/rooms/${roomId}/turn`)).send({ roomId, op: 'start', order: ['а', 'б'] }).expect(201);
     await gm.as(http().post(`/rooms/${keepId}/act`)).send({ roomId: keepId, actionId: 'удар:0', fromId: 'а', toIds: ['б'] }).expect(201);
+    await app.get(RoomsService).placePiece(gm.userId, roomId, 'а', { x: 1, y: 1 });
     hang(roomId, 'б');
     for (const table of ROOM_TABLES) expect(rows(table, roomId), table).toBeGreaterThan(0);
 
@@ -110,8 +111,11 @@ describe('удаление стола и листа', () => {
     expect(await refused(rooms.dropSheet(player.userId, roomId, 'а'))).toBe(403);
     expect(await refused(rooms.dropSheet(gm.userId, roomId, 'стол'))).toBe(400);
 
+    await rooms.placePiece(gm.userId, roomId, 'а', { x: 2, y: 3 });
     const dropped = await rooms.dropSheet(gm.userId, roomId, 'а');
     expect(dropped.gone).toEqual(['а']);
+    expect((await rooms.state(roomId)).places).toEqual({});
+    expect(await rooms.placePiece(gm.userId, roomId, 'б', { x: 2, y: 3 })).toEqual({ б: { x: 2, y: 3 } });
     expect(dropped.clock).toMatchObject({ order: ['б', 'в'], active: 'б' });
     await rooms.dropSheet(gm.userId, roomId, 'отряд');
     let state = await rooms.state(roomId);
