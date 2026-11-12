@@ -143,7 +143,8 @@ export function TableCard({ id, table, system, editSystem, usage, opened, onReke
   const byRange = isRange(table);
   const rows = table.rows ?? [];
   const columns = table.columns ?? [];
-  const users = [...new Set([...listUsers(system, id), ...usersOf(usage, 'table', id, system, insideTable(id))])];
+  const blocks = (system.blocks ?? []).filter(block => block.parts.some(part => part.table === id)).map(block => `блок «${block.name}»`);
+  const users = [...new Set([...listUsers(system, id), ...usersOf(usage, 'table', id, system, insideTable(id)), ...blocks])];
   const wanted = useWorld(s => s.activeTableId) === id;
   const [openAtStart] = useState(wanted || Boolean(opened));
   const ref = useRef<HTMLDivElement>(null);

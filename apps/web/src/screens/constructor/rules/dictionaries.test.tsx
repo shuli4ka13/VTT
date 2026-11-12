@@ -462,6 +462,19 @@ describe('Словари: кости, правки броска, таблицы'
     expect(guarded.disabled).toBe(true);
   });
 
+  it('таблицу, которая стоит в блоке листа, удалить нельзя — подсказка называет блок', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: { ...emptySystem(), tables: { броня: { label: 'Броня', owner: 'sheet', key: 'word', columns: [{ key: 'класс', label: 'Класс', kind: 'number' }], rows: [{ value: 'голова' }] } },
+        blocks: [{ name: 'Бой', parts: [{ table: 'броня' }] }] },
+      activeEffectId: null,
+    }));
+    renderOpen(<RulesTab />);
+    открыть('Таблицы');
+    const guarded = screen.getByTitle(/^нельзя удалить: берут отсюда: .*блок «Бой»/) as HTMLButtonElement;
+    expect(guarded.disabled).toBe(true);
+  });
+
   it('таблицу, которую никто не берёт, удаляют кнопкой в её шапке', () => {
     useWorld.setState(state => ({
       ...state,
