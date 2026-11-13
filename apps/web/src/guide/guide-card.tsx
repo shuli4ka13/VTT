@@ -152,16 +152,16 @@ function LessonCard() {
   }, [done, key]);
 
   useEffect(() => {
-    if (got !== key || last || place.closes) return undefined;
+    if (got !== key || last || place.closes || revisit || !done) return undefined;
     const timer = window.setTimeout(() => { if (useGuide.getState().step === index) go(index + 1); }, PAUSE_MS);
     return () => window.clearTimeout(timer);
-  }, [got, key]);
+  }, [got, key, revisit, done]);
 
   const tab = useWorld(s => s.activeTab);
   const point = step.alone ? { prompt: null, target: null } : pointOf(step, tab, view);
   const move = moveAt(step, view);
   const said = movesOf(step).map(one => one.say).filter((text): text is string => Boolean(text));
-  const success = got === key;
+  const success = got === key && done && !revisit;
   const already = Boolean(step.done && (current.already || revisit) && done);
   const free = !step.done || current.already || revisit || done || success;
   const trap = done || success ? null : trapOf(step, view);

@@ -1,5 +1,5 @@
 import type { SheetNames } from './formula-chips.tsx';
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { useFormulaBar } from '../store/formula-bar.ts';
@@ -38,6 +38,10 @@ export function FormulaField(props: FormulaFieldProps) {
   const hosted = useFormulaBar(s => s.hosts > 0);
   const spot = useFormulaBar(s => (s.target?.id === id ? s.target : null));
   const open = useFormulaBar(s => s.open);
+  useEffect(() => () => {
+    const bar = useFormulaBar.getState();
+    if (bar.target?.id === id) bar.commit();
+  }, [id]);
   const { value, system, names, extraNames, badges, sheets, placeholder, prefix, invalid, spoken } = props;
 
   if (!hosted) return <InlineFormula {...props} />;

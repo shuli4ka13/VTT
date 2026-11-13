@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useFormulaBar } from './formula-bar.ts';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { world as W } from '@vtt/schema';
 import type { System, Compendium, Sheet } from '@vtt/schema';
@@ -149,6 +150,7 @@ export const useGuide = create<GuideState>()(persist((set, get) => ({
   },
 
   go: step => {
+    useFormulaBar.getState().dismiss();
     const now = get().step;
     const world = useWorld.getState();
     const marks = Object.fromEntries(Object.entries(get().marks).filter(([at]) => Number(at) <= step));

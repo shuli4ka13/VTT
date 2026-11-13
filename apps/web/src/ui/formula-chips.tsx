@@ -240,6 +240,8 @@ export function joinParts(parts: Part[]): string {
     : p.text)).join('');
 }
 
+const LONE_NUMBER = /^\s*-?\d+(?:[.,]\d+)?\s*$/;
+
 export function FormulaChips({ value, onChange, system, table, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, badges, sheets, extraOptions, calculator, readOnly, autoFocus, onChipPick, whole }: {
   value: string;
   onChange: (next: string) => void;
@@ -676,7 +678,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
               if (focusOnce.current && index === parts.length - 1) {
                 focusOnce.current = false;
                 el.focus();
-                el.setSelectionRange(el.value.length, el.value.length);
+                el.setSelectionRange(parts.length === 1 && LONE_NUMBER.test(el.value) ? 0 : el.value.length, el.value.length);
               }
             }}
 
