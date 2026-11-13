@@ -105,9 +105,9 @@ const SCREEN_EXCEPTIONS: Record<string, string> = {
   'tags/clear/все эффекты с меткой': 'задание «Сами»: вариант шага «состояние» живёт в шаге, которого к началу ещё нет',
   'tables/block/сила': 'название строки, которую автор впишет на шаге «Строки»',
   'tables/block/ловкость': 'название строки, которую автор впишет на шаге «Строки»',
-  'tables/through/Характеристика · Модификатор': 'пункт подсказки строки формул: список строится по набранному «@», тест вводит формулу мимо поля',
-  'spells/if/Срок · Держится': 'пункт выбора «Только если»: список строится по набранному «@»',
-  'templates/when/частых условиях': 'название группы подсказки строки формул, список строится по набранному «@»',
+  'tables/through/Характеристика · Модификатор': 'пункт подсказки строки формул: список строится по набранному, тест вводит формулу мимо поля',
+  'spells/if/Срок · Держится': 'пункт выбора «Только если»: список строится по набранному',
+  'templates/when/частых условиях': 'название группы подсказки строки формул, список строится по набранному',
   'items/armor/Автор книги': 'роль на экране входа: другой экран, сверено с screens/gate/gate.tsx',
   'items/armor/Завести запись': 'кнопка экрана компендиума: другой экран, сверено с screens/compendium/compendium.tsx',
   'ready/other/Счётчики здоровья и оглушения': 'кусок виден после раскрытия системы Shadowrun в «Готовое из образцов»',
@@ -739,7 +739,7 @@ describe('уроки конструктора', () => {
       expect(cardText()).toContain('Глава «');
       next(id);
     };
-    const inBar = (box: HTMLElement, text: string, probes: { opened?: () => void; typed?: () => void } = {}) => {
+    const inBar = (box: HTMLElement, text: string, probes: { opened?: () => void; typed?: () => void; pick?: { group: string; label: string; stored: string } } = {}) => {
       act(() => { fireEvent.click(box.querySelector('.formula-field') ?? box); });
       probes.opened?.();
       const chips = document.querySelector('.formula-bar .chips')!;
@@ -749,8 +749,16 @@ describe('уроки конструктора', () => {
         for (const other of inputs.slice(1)) fireEvent.change(other, { target: { value: '' } });
         fireEvent.change(inputs[0]!, { target: { value: text } });
       });
+      if (probes.pick) {
+        const { group, label, stored } = probes.pick;
+        const option = [...document.querySelectorAll<HTMLElement>('.slot__option')]
+          .find(one => one.querySelector('.slot__group')?.textContent === group && one.textContent === `${group}${label}`);
+        expect(option, `в подсказке по «${text}» нет «${label}» в группе «${group}»`).toBeDefined();
+        act(() => { fireEvent.mouseDown(option!); });
+        expect(useFormulaBar.getState().target?.value, 'выбор из подсказки записал имя').toBe(stored);
+      }
       probes.typed?.();
-      act(() => { fireEvent.keyDown(inputs[0]!, { key: 'Enter' }); });
+      act(() => { fireEvent.keyDown(document.querySelector<HTMLInputElement>('.formula-bar input.chips__text') ?? inputs[0]!, { key: 'Enter' }); });
       openAll();
     };
     const clickAt = (anchor: Parameters<typeof findAnchor>[0]) => {
@@ -813,7 +821,8 @@ describe('уроки конструктора', () => {
       ui.click('+ бросок');
       ui.click('+ проверка');
       const checkStep = lesson.steps.find(one => one.id === 'check')!;
-      inBar(within(stepCard(/^3 · /)).field('С чем'), '@цель.класс_брони', {
+      inBar(within(stepCard(/^3 · /)).field('С чем'), 'класс', {
+        pick: { group: 'у «Цель»', label: 'Класс брони', stored: '@цель.класс_брони' },
         opened: () => expect(moveAt(checkStep, view!), 'строка открылась — ход «щёлкните поле» засчитан').toBe(3),
         typed: () => expect(moveAt(checkStep, view!), 'формула набрана — ход «наберите и выберите» засчитан').toBe(4),
       });
@@ -1099,6 +1108,15 @@ describe('тексты уроков', () => {
     const bad = sourceTexts.filter(one => one.text.includes('\u2212')).map(one => `${one.file}: ${one.text}`);
     expect(bad, bad.join('\n')).toEqual([]);
     for (const lesson of LESSONS) expect(dataTexts(lesson).filter(text => text.includes('\u2212')), lesson.id).toEqual([]);
+  });
+
+  it('в текстах уроков нет указания набирать «@»', () => {
+    const AT = /(наб(е|и)р\p{L}*|введите|впишите|через|знак\p{L}*|символ\p{L}*|поставьте|нажмите)\s*(?:\p{L}+\s+){0,2}[«"„]?@/iu;
+    const bareAt = /«\s*@\s*»/u;
+    const bad = sourceTexts.filter(one => AT.test(one.text) || bareAt.test(one.text)).map(one => `${one.file}: ${one.text}`);
+    expect(bad, bad.join('\n')).toEqual([]);
+    const spoken = LESSONS.flatMap(lesson => dataTexts(lesson).filter(text => AT.test(text) || bareAt.test(text)).map(text => `${lesson.id}: ${text}`));
+    expect(spoken, spoken.join('\n')).toEqual([]);
   });
 
   it('всё, что в «ёлочках» похоже на формулу, разбирается парсером формул', () => {

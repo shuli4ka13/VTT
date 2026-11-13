@@ -73,7 +73,7 @@ export const items: Lesson = {
         },
         {
           at: { text: 'Сколько' },
-          say: 'Наберите «@» — число заменится — и выберите «Урон оружия».',
+          say: 'Начните набирать «урон» — число заменится — и выберите «Урон оружия» в списке.',
           done: view => is(barText(view), `@${weaponParam(view)?.key ?? ''}`) || paramUsed(view),
         },
         { at: [FORMULA_DONE, { text: 'Сколько' }], say: 'Нажмите «готово».' },

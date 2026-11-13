@@ -146,7 +146,7 @@ export const links: Lesson = {
         },
         {
           at: [{ text: 'Откуда' }, { text: 'Осталось' }],
-          say: 'Наберите «@» и в группе «у «Кто действует»» выберите «Хиты».',
+          say: 'Начните набирать «хиты» и в группе «у «Кто действует»» выберите «Хиты».',
           done: view => returnsRight(view, barText(view)) || returnedRight(view),
         },
         { at: [FORMULA_DONE, { text: 'Откуда' }, { text: 'Осталось' }], say: 'Нажмите «готово».' },
