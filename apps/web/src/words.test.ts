@@ -53,6 +53,16 @@ describe('одно слово на одно понятие', () => {
     expect(found, found.join('\n')).toEqual([]);
   });
 
+  it('подсказки и заглушки экрана не велят набирать «@» — знак живёт только в данных формул', () => {
+    const ASKS = /(набер\p{L}*\s[^'"`\n]*@|через\s+@|например:?\s[^'"`\n]*@|@\s+(подскажет|и\s)|\sили\s+@\s)/iu;
+    const found = sources
+      .filter(f => f.path.startsWith('apps/web/src/') && !f.path.startsWith('apps/web/src/guide/'))
+      .flatMap(f => f.code.split('\n').map((line, at) => ({ at, line, path: f.path })))
+      .filter(one => ASKS.test(one.line))
+      .map(one => `${one.path}:${one.at + 1}: ${one.line.trim().slice(0, 120)}`);
+    expect(found, found.join('\n')).toEqual([]);
+  });
+
   it('кость в подписях пишется через «к»: одна функция на всех', () => {
     expect(dice(1, 20)).toBe('1к20');
     expect(dice(null, 6)).toBe('1к6');

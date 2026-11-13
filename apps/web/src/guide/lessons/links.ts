@@ -2,9 +2,12 @@ import type { System, Param, Effect } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
 import { effectBy, fieldBy, stepsOf, is, subtracts, adds, numberOf, armOf, errorsOf, same, isArm, FORMULA_DONE, barOpen, barText } from '../find.ts';
 import { armsOf } from '@vtt/engine/model/flow';
-import { problemsClean } from './first-system.ts';
+import { problemsClean, trialShown } from './first-system.ts';
 import { visible } from '../anchor.ts';
 import base from '../seeds/base.json' with { type: 'json' };
+
+const rowOpen = (name: string): boolean =>
+  [...document.querySelectorAll('.param-item')].some(item => same(item.querySelector('.param-line__name')?.textContent, name) && item.querySelector('.param-form') !== null);
 
 const damage = (view: View) => effectBy(view.system, 'Урон');
 const strike = (view: View) => effectBy(view.system, 'Удар');
@@ -15,6 +18,10 @@ const amountParam = (view: View) => paramsOf(view).find(param => param.role === 
 
 const callsOf = (view: View, id: string | undefined) =>
   id ? stepsOf(strike(view)?.[1]).filter(step => step.type === 'emit' && step.effect === id) : [];
+const amountApplied = (view: View): boolean => {
+  const amount = amountParam(view)?.key;
+  return Boolean(amount && stepsOf(damage(view)?.[1]).some(step => step.type === 'apply' && is(step.value, `@${amount}`)));
+};
 const calls = (view: View) => callsOf(view, damage(view)?.[0]);
 
 const successArm = (view: View) => {
@@ -69,7 +76,7 @@ export const links: Lesson = {
           say: 'В «Библиотеке эффектов» нажмите «+ кнопкой».',
           done: view => Object.values(view.system.effects ?? {}).some(effect => !same(effect.label, 'Удар')),
         },
-        { at: { input: 'как зовётся эффект' }, say: 'Впишите название «Урон».' },
+        { at: { input: 'как зовётся эффект' }, say: 'Впишите название «Урон» и нажмите Enter.' },
       ],
       done: view => Boolean(damage(view)),
       result: () => '«Урон» заведён. Пока у него один вход — «Кто действует».',
@@ -86,13 +93,13 @@ export const links: Lesson = {
           done: view => paramsOf(view).length > 1,
         },
         {
-          at: { text: 'Вид', in: 'Что приходит' },
-          say: 'В «Название» впишите «Сколько», в «Вид» выберите «число».',
+          at: { text: 'Название', in: 'Что приходит' },
+          say: 'В «Название» впишите «Сколько» и нажмите Enter.',
           done: view => paramsOf(view).some(param => param.kind === 'number' && same(param.label, 'Сколько')),
         },
         {
           at: { text: 'Величина', in: 'Что приходит' },
-          say: 'Нажмите «ещё» у «Сколько» и отметьте «Величина».',
+          say: 'У «Сколько» нажмите «ещё» и отметьте «Величина».',
           hint: 'Без «Величины» «Урон» не получит числа, которое можно править. «Величина» спрятана под «ещё» у строки «Сколько».',
         },
       ],
@@ -104,10 +111,13 @@ export const links: Lesson = {
       id: 'target',
       chapter: 'Вызываемый эффект',
       tab: 'effects',
-      say: 'Чтобы «Удар» сам передавал свою цель, у «Кто действует» откройте «ещё» и в «Приходит сам» выберите «цель, по которой идёт вызвавший».',
+      say: 'Сделайте, чтобы «Удар» сам передавал «Урону» свою цель: у входа «Кто действует» в «Уроне» в «Приходит сам» выберите «цель, по которой идёт вызвавший».',
       hint: 'Без этого в вызове «Урона» у «Кто действует» будет красное «не передано».',
-      at: { text: 'Приходит сам' },
-      via: [{ text: 'ещё', in: 'Что приходит' }, { text: 'Кто действует', in: 'Что приходит' }],
+      at: [
+        { at: { text: 'Кто действует', in: 'Что приходит' }, say: 'В «Что приходит» щёлкните «Кто действует»: строка раскроется.', done: () => rowOpen('Кто действует') },
+        { at: { text: 'ещё', in: 'Что приходит' }, say: 'В раскрытой строке нажмите «ещё».', done: () => visible({ text: 'Приходит сам' }) },
+        { at: { text: 'Приходит сам' }, say: 'В «Приходит сам» выберите «цель, по которой идёт вызвавший».' },
+      ],
       done: view => sheetParam(view)?.role === 'target',
       result: () => '«Кто действует» приходит сам: это цель, по которой сейчас идёт «Удар».',
     },
@@ -116,9 +126,21 @@ export const links: Lesson = {
       chapter: 'Вызываемый эффект',
       tab: 'effects',
       say: 'Добавьте «Изменение»: у «Кто действует» отнять «Сколько». В «Какое поле» выберите «Хиты».',
+      hint: 'В «У кого» должно стоять «Кто действует», в «Как» — «отнять»: так они и стоят.',
       at: [
         { at: { text: '+ изменение' }, say: 'Нажмите «+ изменение».', done: view => stepsOf(damage(view)?.[1]).some(step => step.type === 'apply') },
-        { at: { text: 'Какое поле' }, say: 'В «У кого» оставьте «Кто действует», в «Какое поле» выберите «Хиты», в «Как» — «отнять», в «Сколько» поставьте «Сколько».' },
+        {
+          at: { text: 'Какое поле' },
+          say: 'В «Какое поле» выберите «Хиты».',
+          done: view => {
+            const sheet = sheetParam(view)?.key;
+            const hp = fieldBy(view.system, 'Хиты')?.tag;
+            return Boolean(sheet && hp && stepsOf(damage(view)?.[1]).some(step => step.type === 'apply' && is(step.target, `@${sheet}.${hp}`)));
+          },
+        },
+        { at: { text: 'Сколько' }, say: 'Щёлкните «Сколько» и начните набирать «сколько».', done: view => barOpen(view) || amountApplied(view) },
+        { at: { text: 'Сколько' }, say: 'В группе «в этом эффекте» выберите «Сколько».', done: view => is(barText(view), `@${amountParam(view)?.key ?? ''}`) || amountApplied(view) },
+        { at: [FORMULA_DONE, { text: 'Сколько' }], say: 'Нажмите Enter или «готово».' },
       ],
       done: view => {
         const sheet = sheetParam(view)?.key;
@@ -137,7 +159,8 @@ export const links: Lesson = {
       say: 'Добавьте в «Что получит тот, кто вызвал» число «Осталось» — хиты цели после урона.',
       at: [
         { at: { text: '+ итог' }, say: 'Нажмите «+ итог».', done: view => (damage(view)?.[1].returns ?? []).length > 0 },
-        { at: { text: 'Вид', in: 'Что получит тот, кто вызвал' }, say: 'В «Название» впишите «Осталось», в «Вид» выберите «число».', done: view => (damage(view)?.[1].returns ?? []).some(column => column.kind === 'number') },
+        { at: { text: 'Название', in: 'Что получит тот, кто вызвал' }, say: 'В «Название» впишите «Осталось» и нажмите Enter.', done: view => (damage(view)?.[1].returns ?? []).some(column => same(column.label, 'Осталось')) },
+        { at: { text: 'Вид', in: 'Что получит тот, кто вызвал' }, say: 'В «Вид» выберите «число».', done: view => (damage(view)?.[1].returns ?? []).some(column => column.kind === 'number') },
         {
           at: [{ text: 'Откуда' }, { text: 'Осталось' }],
           say: 'В «Откуда» выберите «формулой…» и щёлкните появившееся поле.',
@@ -149,7 +172,7 @@ export const links: Lesson = {
           say: 'Начните набирать «хиты» и в группе «у «Кто действует»» выберите «Хиты».',
           done: view => returnsRight(view, barText(view)) || returnedRight(view),
         },
-        { at: [FORMULA_DONE, { text: 'Откуда' }, { text: 'Осталось' }], say: 'Нажмите «готово».' },
+        { at: [FORMULA_DONE, { text: 'Откуда' }, { text: 'Осталось' }], say: 'Нажмите Enter или «готово».' },
       ],
       traps: [{
         when: view => (damage(view)?.[1].returns ?? []).some(column => column.kind !== 'number' && Boolean(column.expr)),
@@ -167,7 +190,12 @@ export const links: Lesson = {
       hint: '«Кто действует» заполнится сам — это цель. «как устроено →» в шаге вызова открывает сам «Урон».',
       at: [
         { at: { text: '+ шаг' }, say: 'Откройте «Удар». В ветке «успех» в списке «+ шаг» выберите «Урон».', done: view => stepsOf(strike(view)?.[1]).some(step => step.type === 'emit') },
-        { at: { text: 'Какой эффект' }, say: 'В «Какой эффект» выберите «Урон», в красном «Сколько» впишите 5.' },
+        {
+          at: { text: 'Какой эффект' },
+          say: 'В красном «Сколько» щёлкните поле и впишите 5.',
+          done: view => barText(view).trim() === '5' || calls(view).some(step => numberOf(((step.args ?? {}) as Record<string, unknown>)[amountParam(view)?.key ?? '']) === 5),
+        },
+        { at: [FORMULA_DONE, { text: 'Какой эффект' }], say: 'Нажмите Enter или «готово».' },
       ],
       via: { text: 'Удар', in: 'Библиотека эффектов' },
       done: view => {
@@ -186,6 +214,10 @@ export const links: Lesson = {
       chapter: 'Вызов',
       tab: 'effects',
       say: 'Удалите из ветки «успех» старое «Изменение»: хиты теперь снимает «Урон».',
+      at: [
+        { at: { text: 'Удалить', in: '4 · Изменить «Хиты»' }, say: 'У шага «Изменение» в ветке «успех» нажмите «Удалить».', done: () => visible({ text: 'точно убрать' }) },
+        { at: { text: 'точно убрать' }, say: 'Подтвердите: «точно убрать».' },
+      ],
       done: view => calls(view).length > 0 && !stepsOf(strike(view)?.[1]).some(step => step.type === 'apply'),
       result: () => 'Своего «Изменения» у «Удара» больше нет.',
     },
@@ -194,9 +226,10 @@ export const links: Lesson = {
       chapter: 'Вызов',
       tab: 'effects',
       say: 'Чтобы шаги ниже могли прочитать «Осталось», дайте вызову имя «урон».',
+      hint: 'Вызов свёрнут? В ветке «успех» щёлкните «4 · Урон»: он раскроется.',
       at: [
-        { at: { text: '4 · Урон' }, say: 'В ветке «успех» щёлкните свёрнутый шаг «4 · Урон»: он раскроется.', done: () => visible({ text: 'результат…' }) },
-        { at: { text: 'результат…' }, say: 'Под вызовом нажмите «результат…» и впишите имя «урон»: оно запомнится, когда вы щёлкнете мимо поля.' },
+        { at: [{ text: 'результат…' }, { text: '4 · Урон' }], say: 'Под вызовом нажмите «результат…».', done: () => visible({ guide: 'step-name' }) },
+        { at: { guide: 'step-name' }, say: 'Впишите имя «урон» и нажмите Enter.' },
       ],
       done: view => calls(view).some(step => typeof step.id === 'string' && step.id.trim() !== ''),
       result: view => `Вызов называется «${String(calls(view).find(step => step.id)?.id ?? '')}»: шаги ниже видят его «Осталось».`,
@@ -206,8 +239,13 @@ export const links: Lesson = {
       chapter: 'Вызов',
       tab: 'effects',
       panel: 'Рядом',
-      say: 'В панели «Рядом» откройте «Проба» и выберите кость «максимум». В «Что вышло» появится «Б · Хиты: 10 → 5»: урон прошёл через «Урон».',
-      at: { text: 'Проба' },
+      say: 'Проверьте «Удар» пробой: с костью «максимум» в «Что вышло» появится «Б · Хиты: 10 → 5» — урон прошёл через «Урон».',
+      at: [
+        { at: { text: 'Проба', in: 'Рядом' }, say: 'В панели «Рядом» нажмите «Проба».', done: () => visible({ text: 'Что вышло' }) },
+        { at: { text: 'Кость' }, say: 'В «Кость» выберите «максимум».', done: view => trialShown(view) },
+      ],
+      done: view => trialShown(view),
+      result: () => 'Проба показала: урон прошёл через «Урон».',
     },
     {
       id: 'problems',

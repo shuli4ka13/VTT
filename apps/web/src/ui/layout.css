@@ -496,6 +496,8 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .step-card .step-fold { font-family: var(--font); font-size: var(--fs-4); font-weight: 600; }
 .step-card .step-fold__row { min-height: 32px; }
 .step-card .card__head .btn, .step-card .step-fold__row .btn { min-height: 28px; }
+.danger-confirm { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--s-2); max-width: 100%; }
+.danger-confirm > .btn { flex: 0 0 auto; }
 
 .step-card .field { display: grid; grid-template-columns: var(--label-w) minmax(0, 1fr); column-gap: var(--s-4); row-gap: var(--s-1); align-items: center; }
 .step-card .field__label { font-size: var(--fs-3); font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--text-muted); }

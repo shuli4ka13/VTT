@@ -18,6 +18,7 @@ import type { System, Column, SheetBlock, SheetPart } from '@vtt/schema';
 import type { Field as FieldModel, Holder } from '@vtt/engine/model/types';
 import type { WorldState } from '../../../store/world.ts';
 import { fieldsOf, withColumn, singleTableOf } from '@vtt/engine/model/sheet-columns';
+import { focusNew } from '../../../ui/focus-new.ts';
 
 export const isCharacterColumn = (field: FieldModel): boolean => !field.cell;
 
@@ -69,12 +70,14 @@ export function CharacterSection({ system, editSystem, docked }: {
     if (names.every(name => next.includes(name))) delete target.blocks; else target.blocks = next;
   });
   const add = (block?: string) => {
+    focusNew('как зовётся поле');
     const made = newColumn(system);
     editSystem(draft => addColumn(draft, made.value, 'sheet', block));
     setCell(null);
     pick({ activeFieldTag: made.key, activeBlock: null });
   };
   const addTable = (block: string) => {
+    focusNew('как зовётся таблица');
     const made = newTable(system);
     editSystem(draft => {
       (draft.tables ??= {})[made.key] = made.value;
@@ -85,11 +88,13 @@ export function CharacterSection({ system, editSystem, docked }: {
   };
   const showTable = (table: string) => pick({ activeSheetTable: table, activeFieldTag: null, activeColumn: null, activeBlock: null, activeRow: null });
   const addBlock = (parent?: string) => {
+    focusNew('как зовётся блок');
     const name = freeBlockName(system, 'Новый блок');
     editSystem(draft => { (draft.blocks ??= []).push({ name, ...(parent ? { parent } : {}), parts: [] }); });
     pick({ activeBlock: name, activeFieldTag: null, activeColumn: null, activeRow: null });
   };
   const addType = () => {
+    focusNew('как зовётся тип листа');
     const key = freeId([...Object.keys(system.sheets ?? {}), ...Object.keys(system.tables ?? {})], 'лист');
     editSystem(draft => { (draft.sheets ??= {})[key] = { label: 'Новый тип листа' }; });
     setOf(key);
@@ -208,7 +213,7 @@ export function CharacterSection({ system, editSystem, docked }: {
       {kind ? (
         <>
           <div className="inline inline--tight">
-            <LabelInput value={kind.label ?? ''} placeholder="как зовётся тип листа"
+            <LabelInput key={of} value={kind.label ?? ''} placeholder="как зовётся тип листа"
               onCommit={label => editSystem(draft => { const target = draft.sheets?.[of]; if (target) target.label = label; })} />
             <DangerButton size="sm" onConfirm={() => { editSystem(draft => { delete draft.sheets?.[of]; }); setOf(''); }}>Удалить тип</DangerButton>
           </div>

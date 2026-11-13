@@ -1,6 +1,6 @@
 import type { System, Modifier, Table } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
-import { tableBy, columnBy, fieldBy, same, is, figure, errorsOf } from '../find.ts';
+import { tableBy, columnBy, fieldBy, same, is, figure, errorsOf, FORMULA_DONE, barOpen, barText } from '../find.ts';
 import { problemsClean } from './first-system.ts';
 import { Views } from '@vtt/engine/core/view';
 import { ROW } from '@vtt/engine/model/sheet-columns';
@@ -30,11 +30,14 @@ const fromPreset = (view: View): boolean => {
   const tag = presetTag(view);
   return Boolean(found && tag && loose(found).op === 'set' && is(loose(found).value, `@${tag}.[@${ROW}]`));
 };
+const whenHolds = (view: View, condition: unknown): boolean => {
+  const tag = presetTag(view);
+  const asked = (value: string) => figure(condition, { [tag!]: value });
+  return Boolean(tag && asked('') === false && asked('разведчик') === true && asked('громила') === true);
+};
 const whenPreset = (view: View): boolean => {
   const found = aimed(view);
-  const tag = presetTag(view);
-  const asked = (value: string) => figure(loose(found!).if, { [tag!]: value });
-  return Boolean(found && tag && asked('') === false && asked('разведчик') === true && asked('громила') === true);
+  return Boolean(found && whenHolds(view, loose(found).if));
 };
 
 const ranksFollow = (view: View): boolean => {
@@ -59,7 +62,7 @@ const ranksFollow = (view: View): boolean => {
 
 const taught = (view: View): boolean => {
   const rows = presets(view)?.[1].rows ?? [];
-  return rows.length >= 3 && rows.some(row => Object.values(row.cells ?? {}).some(cell => typeof cell === 'number' && cell > 0));
+  return rows.length >= 3 && rows.every(row => String(row.value ?? '').trim() !== '' && Object.values(row.cells ?? {}).some(cell => typeof cell === 'number' && cell > 0));
 };
 
 export const templates: Lesson = {
@@ -116,8 +119,11 @@ export const templates: Lesson = {
       lead: 'Под правкой видно, что она делает словами. Теперь нужно сказать, какое число ставить: то, что стоит в строке выбранной заготовки на пересечении со столбцом навыка.',
       tab: 'sheet',
       say: 'В «На сколько» возьмите клетку заготовки по строке: название навыка совпадает со столбцом.',
-      hint: 'Начните набирать «заготовка» и в разделе «эта строка» выберите «Заготовка» → клетка этой строки. Его предлагают, потому что у «Заготовок» есть столбец на каждый навык.',
-      at: { text: 'На сколько', in: CARD },
+      hint: 'Нужный пункт — в разделе «эта строка»: клетку этой строки предлагают, потому что у «Заготовок» есть столбец на каждый навык.',
+      at: [
+        { at: { text: 'На сколько', in: CARD }, say: 'Щёлкните «На сколько» и начните набирать «заготовка».', done: view => barOpen(view) || fromPreset(view) },
+        { at: { text: 'На сколько', in: CARD }, say: 'В списке выберите «Заготовка» → клетка этой строки.' },
+      ],
       via: [{ text: 'По заготовке', in: 'Листы' }, { text: 'блоки и типы листов' }],
       done: fromPreset,
       result: () => 'Ранг навыка берётся из столбца заготовки с тем же названием.',
@@ -127,8 +133,12 @@ export const templates: Lesson = {
       chapter: 'Откуда берём',
       tab: 'sheet',
       say: 'В «Только если» поставьте условие: заготовка выбрана.',
-      hint: 'Нажмите на поле, начните набирать «заготовка» и в «частых условиях» выберите «Заготовка» выбрано. Пока заготовки нет, правка не нужна.',
-      at: { text: 'Только если', in: CARD },
+      hint: 'Пока заготовки нет, правка не нужна: условие «Заготовка» выбрано это и говорит.',
+      at: [
+        { at: { text: 'Только если', in: CARD }, say: 'Щёлкните «Только если» и начните набирать «заготовка».', done: view => barOpen(view) || whenPreset(view) },
+        { at: { text: 'Только если', in: CARD }, say: 'В «частых условиях» выберите «Заготовка» выбрано.', done: view => whenHolds(view, barText(view)) || whenPreset(view) },
+        { at: [FORMULA_DONE, { text: 'Только если', in: CARD }], say: 'Нажмите Enter или «готово».' },
+      ],
       via: [{ text: 'По заготовке', in: 'Листы' }, { text: 'блоки и типы листов' }],
       done: view => fromPreset(view) && whenPreset(view),
       result: () => 'Правка действует, только если заготовка выбрана.',
@@ -147,7 +157,7 @@ export const templates: Lesson = {
       lead: 'Последнее задание — без подсказок.',
       alone: true,
       tab: 'dictionaries',
-      goal: 'в «Заготовках» не меньше трёх строк, у какой-то из них ранги не равны нулю; у листа с любой заготовкой «Ранг» навыков равен клетке её строки; в «Проблемах» нет ошибок.',
+      goal: 'в «Заготовках» не меньше трёх строк, у каждой есть название и ранги, не равные нулю; у листа с любой заготовкой «Ранг» навыков равен клетке её строки; в «Проблемах» нет ошибок.',
       say: 'Заведите в «Заготовках» ещё одну заготовку с рангами, не равными нулю, и убедитесь, что лист с каждой заготовкой получает ранги из её строки.',
       hint: 'Таблица «Заготовки» — в «Правила» → «Таблицы». Новую строку заполните как «Громилу».',
       done: view => taught(view) && fromPreset(view) && ranksFollow(view) && errorsOf(view.system) === 0,

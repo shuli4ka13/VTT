@@ -22,6 +22,7 @@ export function KeyField({ value, locked, taken, onChange, optional = false }: {
         value={draft ?? value}
         invalid={(!next && !optional) || busy}
         onChange={setDraft}
+        onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
         onBlur={() => {
           if (draft !== null && !busy && next !== value && (next || optional)) onChange(next);
           setDraft(null);

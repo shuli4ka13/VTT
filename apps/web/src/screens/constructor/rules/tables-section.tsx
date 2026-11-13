@@ -32,6 +32,7 @@ import type { TableColumn, Holder } from '@vtt/engine/model/types';
 import type { WorldState } from '../../../store/world.ts';
 import { setRowView } from '../row-view.ts';
 import type { RowViewKey } from '../row-view.ts';
+import { focusNew } from '../../../ui/focus-new.ts';
 
 type EditSystem = WorldState['editSystem'];
 interface Props { system: System; editSystem: EditSystem; usage: UsageIndex }
@@ -69,6 +70,7 @@ const rangesBroken = (rows: TableRow[]): boolean => {
 };
 
 const addTable = (editSystem: EditSystem) => {
+  focusNew('как зовётся таблица');
   let key = '';
   editSystem(draft => {
     const made = newTable(draft);
@@ -545,7 +547,20 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
       active: picked === c.key, onClick: () => onPick(picked === c.key ? null : c.key),
     })),
   ];
+  const addRow = () => {
+    if (!byRange) focusNew();
+    edit(draft => {
+      const list = (draft.rows ??= []);
+      if (byRange) {
+        const from = list.length ? (list[list.length - 1]!.to ?? 0) + 1 : 1;
+        list.push({ from, to: from, cells: {} });
+      } else {
+        list.push(blankRow(key, list));
+      }
+    });
+  };
   const addColumn = () => {
+    focusNew('как зовётся колонка');
     const key = freeId(columns.map(c => c.key), 'колонка');
     edit(draft => { (draft.columns ??= []).push({ key, label: '', kind: 'number' }); });
     onPick(key);
@@ -604,15 +619,7 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
           ))}
       </SheetGrid>
 
-      <Button size="sm" onClick={() => edit(draft => {
-        const list = (draft.rows ??= []);
-        if (byRange) {
-          const from = list.length ? (list[list.length - 1]!.to ?? 0) + 1 : 1;
-          list.push({ from, to: from, cells: {} });
-        } else {
-          list.push(blankRow(key, list));
-        }
-      })}>{byRange ? '+ ступень' : '+ строка'}</Button>
+      <Button size="sm" onClick={addRow}>{byRange ? '+ ступень' : '+ строка'}</Button>
 
     </div>
   );

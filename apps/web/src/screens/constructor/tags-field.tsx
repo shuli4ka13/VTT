@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { System } from '@vtt/schema';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { Chip, Input, Button } from '../../ui/primitives.tsx';
+import { focusNew } from '../../ui/focus-new.ts';
 
 export type TagValue = string | { expr: string };
 
@@ -64,7 +65,7 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
         <>
           <Input
             value={draft}
-            placeholder={typing === 'formula' ? 'например: если(@rating == 0, "нулевой", "")' : 'как назвать метку'}
+            placeholder={typing === 'formula' ? 'например: если(рейтинг == 0, "нулевой", "")' : 'как назвать метку'}
             onChange={setDraft}
             onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); commit(); } }}
           />
@@ -75,8 +76,8 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
         <select className="select" value="" onChange={event => {
           const next = event.target.value;
           if (!next) return;
-          if (next === OWN) { setTyping('own'); return; }
-          if (next === COMPUTED) { setTyping('formula'); return; }
+          if (next === OWN) { focusNew(); setTyping('own'); return; }
+          if (next === COMPUTED) { focusNew(); setTyping('formula'); return; }
           add(next);
         }}>
           <option value="">{picked.length ? '+ ещё…' : empty}</option>

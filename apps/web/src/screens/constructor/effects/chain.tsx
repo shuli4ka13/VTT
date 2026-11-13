@@ -134,15 +134,32 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
   const keys = cards.filter(card => card.kind !== 'flow').map(foldKey);
   const signature = keys.join('\n');
   const name = effect.label ?? '';
-  const seen = useRef<{ name: string; keys: string[] } | null>(null);
+  const seen = useRef<{ name: string; keys: string[]; shapes: { key: string; shape: string }[] } | null>(null);
+  const shapes = cards.filter(card => card.kind !== 'flow').map(card => ({ key: foldKey(card), shape: JSON.stringify(card.step) }));
   useEffect(() => {
     const now = signature ? signature.split('\n') : [];
     const before = seen.current;
-    seen.current = { name, keys: now };
-    if (!before || before.name !== name) return;
-    const fresh = now.filter(key => !before.keys.includes(key));
+    seen.current = { name, keys: now, shapes };
+    if (!before || before.name !== name || before.keys.join('\n') === signature) return;
+    const state = useOpened.getState().opened;
+    const queue = new Map<string, string[]>();
+    for (const { key, shape } of before.shapes) queue.set(shape, [...(queue.get(shape) ?? []), key]);
+    const lit: string[] = [];
+    const dim: string[] = [];
+    const added: string[] = [];
+    for (const { key, shape } of shapes) {
+      const was = queue.get(shape)?.shift();
+      if (was === undefined) { added.push(key); continue; }
+      if (was === key) continue;
+      (state[was] ? lit : dim).push(key);
+      if (!now.includes(was)) dim.push(was);
+    }
+    const grew = shapes.length > before.shapes.length;
+    const fresh = added.filter(key => grew || !before.keys.includes(key));
+    if (dim.length) setOpen(dim, false);
+    if (lit.length) setOpen(lit, true);
     if (fresh.length) setOpen(fresh, true);
-  }, [name, signature, setOpen]);
+  });
 
   type Option = { value: unknown; label: string };
   type Cases = { ref: string; options: Option[]; title: string; group?: (typeof cards)[number]; g?: number };

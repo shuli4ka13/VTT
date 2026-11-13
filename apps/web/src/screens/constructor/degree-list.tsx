@@ -9,7 +9,7 @@ export const OTHERWISE = 'да';
 
 type Shared = Pick<FormulaFieldProps, 'extraNames' | 'meanings' | 'badges' | 'sheets'>;
 
-export function DegreeList({ list, change, system, where, shared, placeholder = '@выпало <= @число' }: {
+export function DegreeList({ list, change, system, where, shared, placeholder = 'выпало <= число' }: {
   list: readonly Degree[];
   change: (apply: (draft: Degree[]) => void) => void;
   system: System;

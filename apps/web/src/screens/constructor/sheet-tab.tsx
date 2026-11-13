@@ -54,9 +54,9 @@ export function SheetTab() {
           : rowOpen
             ? <Docked at={`строка|${activeRow!.table}|${activeRow!.row}`}><RowPanel table={activeRow!.table} row={activeRow!.row} system={system} /></Docked>
             : columnOpen
-              ? <Docked at={`${activeColumn!.table}.${activeColumn!.column}`}><ColumnPanel table={activeColumn!.table} column={activeColumn!.column} system={system} /></Docked>
+              ? <Docked at={`${activeColumn!.table}.${activeColumn!.column}`}><ColumnPanel key={`${activeColumn!.table}.${activeColumn!.column}`} table={activeColumn!.table} column={activeColumn!.column} system={system} /></Docked>
               : blockOpen
-                ? <Docked at={`блок|${activeBlock}`}><BlockPanel name={activeBlock!} system={system} /></Docked>
+                ? <Docked at={`блок|${activeBlock}`}><BlockPanel key={activeBlock!} name={activeBlock!} system={system} /></Docked>
                 : thingOpen
                 ? <Docked at={`тип|${activeThing}`}><ThingPanel table={activeThing!} system={system} /></Docked>
                 : pageOpen
@@ -73,7 +73,7 @@ export function SheetTab() {
               options={[{ key: 'sample', label: 'образец листа' }, { key: 'kinds', label: 'блоки и типы листов' }]}
               onChange={next => setView(next as 'sample' | 'kinds')}
             />
-            {tableOpen ? <Docked at={`таблица|${activeSheetTable}`}><TablePanel id={activeSheetTable!} system={system} /></Docked> : null}
+            {tableOpen ? <Docked at={`таблица|${activeSheetTable}`}><TablePanel key={activeSheetTable!} id={activeSheetTable!} system={system} /></Docked> : null}
             {view === 'sample' ? <PageBar system={system} /> : null}
             {view === 'sample'
               ? <SheetSample system={system} picked={activeTag}

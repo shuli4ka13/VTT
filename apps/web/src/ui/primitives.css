@@ -487,6 +487,7 @@
 .chips__sig-part.is-optional { opacity: .7; }
 .chips__sig-part.is-on { color: var(--text); font-weight: 600; border-bottom: 1px solid var(--accent); }
 .chips__sig-hint { color: var(--text-muted); }
+.chips__note { margin-top: var(--s-2); font-size: var(--fs-2); color: var(--danger); }
 .chips__ops-split { width: 1px; align-self: stretch; background: var(--border); margin: 0 var(--s-1); }
 
 .chip__part {

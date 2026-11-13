@@ -159,7 +159,7 @@ export function useModifierRows({ system, modifiers, onEdit, editSystem, table, 
               system={system}
               {...(picks ? { names: picks.names, phrases: picks.phrases } : names ? { names } : {})}
               where="модификатор · только когда"
-              placeholder="например: @тяжёлая_броня"
+              placeholder="например: тяжёлая броня"
               ruleHint="На листе носителя. Не сошлось — правка не действует."
             />
           ) : (
@@ -437,7 +437,7 @@ function Concern({ system, modifier, names, onChange }: {
         {...(names ? { names } : {})}
         holders={holders}
         where="правка · только если"
-        placeholder="например: @носитель.ярость > 0"
+        placeholder="например: носитель.ярость > 0"
         holderHint="Носитель — лист, на котором висит эта правка."
       />
     </div>

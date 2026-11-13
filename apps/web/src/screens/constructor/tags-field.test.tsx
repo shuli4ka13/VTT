@@ -24,7 +24,7 @@ describe('одно поле меток', () => {
     let got: TagValue[] = [];
     render(<TagsField system={system} value={[]} computed onChange={next => { got = next; }} />);
     fireEvent.change(document.querySelector('select')!, { target: { value: ':формула' } });
-    fireEvent.change(screen.getByPlaceholderText(/если\(@rating/), { target: { value: 'если(@rating == 0, "нулевой", "")' } });
+    fireEvent.change(screen.getByPlaceholderText(/если\(рейтинг/), { target: { value: 'если(@rating == 0, "нулевой", "")' } });
     fireEvent.click(screen.getByText('добавить'));
     expect(got).toEqual([{ expr: 'если(@rating == 0, "нулевой", "")' }]);
     cleanup();

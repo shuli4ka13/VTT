@@ -37,6 +37,9 @@ function homes(name: string, root: ParentNode): Element[] {
   for (const title of root.querySelectorAll('.card__title')) {
     if (same(textOf(title), name)) { const card = title.closest('.card'); if (card) out.add(card); }
   }
+  for (const fold of root.querySelectorAll('.step-fold')) {
+    if (same(textOf(fold), name)) { const card = fold.closest('.step-card'); if (card) out.add(card); }
+  }
   return [...out].filter(shown);
 }
 

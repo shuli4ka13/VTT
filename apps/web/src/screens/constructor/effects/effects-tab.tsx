@@ -15,6 +15,7 @@ import { EffectEditor } from './effect-editor.tsx';
 import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
 import type { Effect } from '@vtt/schema';
 import { freeGroupName } from '../groups.ts';
+import { focusNew } from '../../../ui/focus-new.ts';
 
 export function EffectsTab() {
   const system = useWorld(s => s.system);
@@ -28,6 +29,7 @@ export function EffectsTab() {
   const roles = rolesOf(system, compendium);
 
   const addTo = (block: string) => {
+    focusNew('как зовётся эффект');
     const made = newEffect(system, 'manual');
     editSystem(draft => { draft.effects[made.key] = { ...made.value, group: block }; });
     useOpened.getState().setOpen([`effect-props|${made.key}`], true);

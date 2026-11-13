@@ -1,6 +1,6 @@
 import type { System } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
-import { effectBy, tableBy, fieldBy, stepsOf, is, numberOf, same, FORMULA_DONE, barOpen, barText } from '../find.ts';
+import { effectBy, tableBy, fieldBy, stepsOf, is, numberOf, same, errorsOf, FORMULA_DONE, barOpen, barText } from '../find.ts';
 import { problemsClean } from './first-system.ts';
 import { visible } from '../anchor.ts';
 import base from '../seeds/base.json' with { type: 'json' };
@@ -46,8 +46,9 @@ export const items: Lesson = {
       say: 'Заведите тип вещи «Оружие».',
       at: [
         { at: { text: '+ тип' }, say: 'В панели «книги» нажмите «+ тип».', done: view => Object.values(view.system.tables ?? {}).some(table => table.shape === 'book') },
-        { at: { input: 'как зовётся тип' }, say: 'Впишите название «Оружие». В «Чем является» оставьте «вещь».' },
+        { at: { input: 'как зовётся тип' }, say: 'Впишите название «Оружие» и нажмите Enter.' },
       ],
+      hint: 'В «Чем является» должно стоять «вещь» — оно и стоит.',
       done: view => Boolean(weapon(view)) && (weapon(view)?.[1].use ?? 'item') === 'item',
       result: () => 'Тип «Оружие» заведён.',
     },
@@ -60,7 +61,7 @@ export const items: Lesson = {
       hint: 'До шага с кнопкой «Проблемы» будут говорить, что «Урон оружия» никто не передаёт, — так и должно быть.',
       at: [
         { at: { text: '+ ещё одно' }, say: 'Откройте «Удар» и в «Что приходит» нажмите «+ ещё одно».', hint: '«Удара» не видно? Он в группе «Без блока» — раскройте её.', done: view => (strike(view)?.[1].params ?? []).length > 2 },
-        { at: { text: 'Название' }, say: 'В «Название» впишите «Урон оружия». Вид — «число».', done: view => Boolean(weaponParam(view)) },
+        { at: { text: 'Название' }, say: 'В «Название» впишите «Урон оружия» и нажмите Enter.', done: view => Boolean(weaponParam(view)) },
         {
           at: { text: '4 · Изменить «Хиты»' },
           say: 'В ветке «успех» щёлкните свёрнутый шаг «4 · Изменить»: он раскроется.',
@@ -73,10 +74,10 @@ export const items: Lesson = {
         },
         {
           at: { text: 'Сколько' },
-          say: 'Начните набирать «урон» — число заменится — и выберите «Урон оружия» в списке.',
+          say: 'Начните набирать «урон» — число заменится — и в группе «из записи» выберите «Урон оружия».',
           done: view => is(barText(view), `@${weaponParam(view)?.key ?? ''}`) || paramUsed(view),
         },
-        { at: [FORMULA_DONE, { text: 'Сколько' }], say: 'Нажмите «готово».' },
+        { at: [FORMULA_DONE, { text: 'Сколько' }], say: 'Нажмите Enter или «готово».' },
       ],
       via: { text: 'Удар', in: 'Библиотека эффектов' },
       done: paramUsed,
@@ -92,9 +93,11 @@ export const items: Lesson = {
       chapter: 'Тип вещи',
       tab: 'sheet',
       say: 'Чтобы «Удар» давало оружие, а не все подряд, на вкладке «Лист» в разделе «Что даёт всем листам» уберите «Удар» крестиком.',
-      hint: 'Раздела не видно? Выберите вид «блоки и типы листов» и кнопку «все блоки»: раздел показан только на ней.',
-      at: { field: 'Что даёт всем листам' },
-      via: [{ text: 'все блоки', in: 'Листы' }, { text: 'блоки и типы листов' }],
+      at: [
+        { at: { text: 'блоки и типы листов' }, say: 'Над листом нажмите «блоки и типы листов».', done: () => visible({ text: 'все блоки', in: 'Листы' }), maybe: true },
+        { at: { text: 'все блоки', in: 'Листы' }, say: 'В «Листы» нажмите «все блоки»: раздел показан только на ней.', done: () => visible({ field: 'Что даёт всем листам' }), maybe: true },
+        { at: { field: 'Что даёт всем листам' }, say: 'В «Что даёт всем листам» уберите «Удар» крестиком.' },
+      ],
       done: view => {
         const found = strike(view);
         return Boolean(found && !(view.system.grants ?? []).includes(found[0]));
@@ -131,7 +134,8 @@ export const items: Lesson = {
       say: 'Сделайте, чтобы оружие давало +1 к классу брони, пока оно у владельца.',
       at: [
         { at: { text: '+ правит поле' }, say: 'В «Что правит каждая вещь этого типа» нажмите «+ правит поле».', done: view => (weapon(view)?.[1].modifiers ?? []).length > 0 },
-        { at: { text: 'Что правим' }, say: 'В «Что правим» выберите «Класс брони», в «На сколько» впишите 1.' },
+        { at: { text: 'Что правим' }, say: 'В «Что правим» выберите «Класс брони».', done: view => Boolean(editsArmor(view, 'Оружие')) },
+        { at: { text: 'На сколько' }, say: 'Щёлкните «На сколько» и впишите 1.' },
       ],
       done: view => editsArmor(view, 'Оружие', 1),
       result: () => 'Пока оружие у владельца, класс брони +1.',
@@ -151,9 +155,9 @@ export const items: Lesson = {
       alone: true,
       tab: 'records',
       say: 'Заведите тип вещи «Броня», который правит «Класс брони».',
-      goal: 'есть тип вещи «Броня», у которого есть правка «Класса брони».',
-      hint: 'В панели «книги» нажмите «+ в» у любого блока: добавится новый тип. У нового типа нажмите «+ правит поле».',
-      done: view => editsArmor(view, 'Броня'),
+      goal: 'есть тип вещи «Броня», у которого есть правка «Класса брони», а в «Проблемах» нет ошибок.',
+      hint: 'В панели «книги» нажмите «+ в» под блоком «Снаряжение»: добавится новый тип. У нового типа нажмите «+ правит поле».',
+      done: view => editsArmor(view, 'Броня') && errorsOf(view.system) === 0,
       result: () => '«Броня» правит класс брони.',
     },
   ],

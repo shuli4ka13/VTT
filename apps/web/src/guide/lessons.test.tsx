@@ -95,18 +95,14 @@ const spokenPhrases = (lesson: Lesson, step: LessonStep): string[] =>
 
 const SCREEN_EXCEPTIONS: Record<string, string> = {
   'first-system/problems/Открыть': 'кнопка рядом с ошибкой: в чистой системе ошибок нет',
-  'first-system/trial/Что вышло': 'блок «Что вышло» и строка «Б · Хиты: 10 → 5» возникают в панели «Рядом» после щелчка по «Проба»',
-  'first-system/trial/Б · Хиты: 10 → 5': 'то же: итог пробы виден после щелчка по «Проба»',
-  'links/trial/максимум': 'выбор кости пробы виден после щелчка по «Проба»',
-  'links/trial/Что вышло': 'блок итога пробы виден после щелчка по «Проба»',
-  'links/trial/Б · Хиты: 10 → 5': 'итог пробы виден после щелчка по «Проба»',
+  'links/apply/в этом эффекте': 'название группы подсказки строки формул: список строится по набранному, тест вводит формулу мимо поля',
   'links/heal/прибавить': 'задание «Сами»: вариант «Как» живёт в шаге нового эффекта, которого к началу ещё нет',
   'tags/clear/снимаем': 'задание «Сами»: вариант шага «состояние» живёт в шаге, которого к началу ещё нет',
   'tags/clear/все эффекты с меткой': 'задание «Сами»: вариант шага «состояние» живёт в шаге, которого к началу ещё нет',
   'tables/block/сила': 'название строки, которую автор впишет на шаге «Строки»',
   'tables/block/ловкость': 'название строки, которую автор впишет на шаге «Строки»',
-  'tables/through/Характеристика · Модификатор': 'пункт подсказки строки формул: список строится по набранному, тест вводит формулу мимо поля',
-  'spells/if/Срок · Держится': 'пункт выбора «Только если»: список строится по набранному',
+  'tables/through/Характеристика → Модификатор': 'пункт подсказки строки формул: список строится по набранному, тест вводит формулу мимо поля',
+  'spells/if/Срок → Держится': 'пункт подсказки «Только если»: список строится по набранному',
   'templates/when/частых условиях': 'название группы подсказки строки формул, список строится по набранному',
   'items/armor/Автор книги': 'роль на экране входа: другой экран, сверено с screens/gate/gate.tsx',
   'items/armor/Завести запись': 'кнопка экрана компендиума: другой экран, сверено с screens/compendium/compendium.tsx',
@@ -120,12 +116,19 @@ let bars = 0;
 const openBar = (value: string) => act(() => { useFormulaBar.getState().open({ id: `урок-${++bars}`, where: 'урок', value, system: useWorld.getState().system }); });
 const typeBar = (text: string) => act(() => { useFormulaBar.getState().write(text); });
 
+const chooseDice = (mode: string) => {
+  const box = [...document.querySelectorAll<HTMLSelectElement>('select')].find(el => [...el.options].some(option => option.value === mode));
+  act(() => { fireEvent.change(box!, { target: { value: mode } }); });
+};
+
 const SOLVE_READY: Record<string, (() => void) | (() => void)[]> = {
   take: () => takePiece('d20-abilities'),
   drop: [() => pick({ activeFieldTag: 'inspiration' }), () => press(findAnchor({ text: 'Удалить' })!), () => dropField('inspiration')],
   problems: () => openProblems(),
-  effect: () => takeEffect('disengage'),
-  'problems-effect': () => undefined,
+  seen: () => press(findAnchor({ text: 'что пришло' })!),
+  effect: [() => {}, () => press(findAnchor({ text: 'Отдельные эффекты' })!), () => takeEffect('disengage')],
+  came: () => press(findAnchor({ text: 'что пришло' })!),
+  'problems-effect': () => openProblems(),
   other: () => { takePiece('sr-tracks'); dropField('wound_mod'); },
 };
 
@@ -133,6 +136,7 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
   ready: SOLVE_READY,
   'first-system': {
     block: [
+      () => press(findAnchor({ text: 'блоки и типы листов' })!),
       () => { edit(d => { (d.blocks ??= []).push({ name: 'Новый блок', parts: [] }); }); pick({ activeBlock: 'Новый блок' }); },
       () => { edit(d => { d.blocks!.find(one => one.name === 'Новый блок')!.name = 'Бой'; }); pick({ activeBlock: 'Бой' }); },
     ],
@@ -141,7 +145,10 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => act(() => { useWorld.getState().editColumn('лист', 'хиты', c => { c.label = 'Хиты'; }); }),
     ],
     'hp-start': () => act(() => { useWorld.getState().editColumn('лист', 'хиты', c => { c.default = 10; }); }),
-    'hp-min': () => act(() => { useWorld.getState().editColumn('лист', 'хиты', c => { c.min = 0; }); }),
+    'hp-min': [
+      () => { openBar(''); typeBar('0'); },
+      () => act(() => { useWorld.getState().editColumn('лист', 'хиты', c => { c.min = 0; }); }),
+    ],
     ac: [
       () => { edit(d => addColumn(d, { key: 'класс_брони', label: 'Новое поле', kind: 'number' }, 'sheet', 'Бой')); pick({ activeFieldTag: 'класс_брони', activeBlock: null }); },
       () => act(() => { useWorld.getState().editColumn('лист', 'класс_брони', c => { c.label = 'Класс брони'; }); }),
@@ -158,7 +165,11 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       },
       () => edit(d => { d.effects.удар!.label = 'Удар'; }),
     ],
-    everyone: () => edit(d => { d.grants = ['удар']; }),
+    everyone: [
+      () => press(findAnchor({ text: 'блоки и типы листов' })!),
+      () => press(findAnchor({ text: 'все блоки', in: 'Листы' })!),
+      () => edit(d => { d.grants = ['удар']; }),
+    ],
     targets: [
       () => press(findAnchor({ text: '+ ещё одно' })!),
       () => edit(d => { Object.assign(d.effects.удар!.params![1]!, { label: 'Цели', kind: 'sheet', many: true, item: { key: 'каждый', label: 'Каждый' } }); }),
@@ -178,9 +189,14 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     damage: [
       () => edit(d => setSteps(d, 'удар', beforeEnd(steps('удар'), { type: 'apply' }))),
       () => edit(d => setSteps(d, 'удар', applied({ target: { expr: '@цель.хиты' } }))),
+      () => { openBar(''); typeBar('5'); },
       () => edit(d => setSteps(d, 'удар', applied({ value: { expr: '5' } }))),
     ],
     problems: openProblems,
+    trial: [
+      () => press(findAnchor({ text: 'Проба' })!),
+      () => chooseDice('max'),
+    ],
     heal: () => edit(d => {
       d.effects.лечение = { label: 'Лечение', params: structuredClone(seed.effects.удар!.params), steps: [
         { type: 'apply', target: { expr: '@действующий.хиты' }, direction: 'add', value: { expr: '3' } },
@@ -189,6 +205,7 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
   },
   tables: {
     block: [
+      () => press(findAnchor({ text: 'блоки и типы листов' })!),
       () => { edit(d => { d.blocks!.push({ name: 'Новый блок', parts: [] }); }); pick({ activeBlock: 'Новый блок' }); },
       () => { edit(d => { d.blocks!.find(one => one.name === 'Новый блок')!.name = 'Характеристики'; }); pick({ activeBlock: 'Характеристики' }); },
     ],
@@ -203,11 +220,13 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => edit(d => { d.tables!.таблица!.label = 'Характеристики'; }),
     ],
     rows: [
+      () => {},
       () => edit(d => { d.tables!.таблица!.rows = [{ value: 'сила' }]; }),
       () => edit(d => { d.tables!.таблица!.rows = [{ value: 'сила' }, { value: '' }]; }),
       () => edit(d => { d.tables!.таблица!.rows = [{ value: 'сила' }, { value: 'ловкость' }]; }),
     ],
     modifier: [
+      () => {},
       () => press(findAnchor({ guide: 'add-column' })!),
       () => labelColumn('таблица', 'колонка', 'Модификатор'),
       () => { openBar(''); typeBar('округлить вниз(('); },
@@ -227,6 +246,7 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     ],
     problems: openProblems,
     skills: [
+      () => press(findAnchor({ text: 'блоки и типы листов' })!),
       () => { edit(d => { d.blocks!.push({ name: 'Новый блок', parts: [] }); }); pick({ activeBlock: 'Новый блок', activeFieldTag: null, activeSheetTable: null }); },
       () => { edit(d => { d.blocks!.find(one => one.name === 'Новый блок')!.name = 'Навыки'; }); pick({ activeBlock: 'Навыки' }); },
       () => {
@@ -240,17 +260,21 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => edit(d => { d.tables!.таблица_2!.rows = [{ value: 'атлетика' }]; }),
     ],
     link: [
+      () => {},
       () => press(findAnchor({ guide: 'add-column' })!),
       () => labelColumn('таблица_2', 'колонка', 'Характеристика'),
-      () => edit(d => {
-        const column = d.tables!.таблица_2!.columns!.find(c => c.key === 'колонка')!;
-        Object.assign(column, { kind: 'choice', from: 'таблица' });
-      }),
+      () => edit(d => { Object.assign(d.tables!.таблица_2!.columns!.find(c => c.key === 'колонка')!, { kind: 'choice' }); }),
+      () => edit(d => { Object.assign(d.tables!.таблица_2!.columns!.find(c => c.key === 'колонка')!, { from: 'таблица' }); }),
     ],
     pick: () => edit(d => { d.tables!.таблица_2!.rows = [{ value: 'атлетика', cells: { колонка: 'сила' } }]; }),
     through: [
+      () => {},
       () => press(findAnchor({ guide: 'add-column' })!),
       () => labelColumn('таблица_2', 'колонка_2', 'Итог'),
+      () => openBar(''),
+      () => typeBar('@строка.колонка.колонка'),
+      () => typeBar('@строка.колонка.колонка + '),
+      () => typeBar('@строка.колонка.колонка + @строка.value'),
       () => edit(d => {
         const column = d.tables!.таблица_2!.columns!.find(c => c.key === 'колонка_2')!;
         delete (column as { kind?: string }).kind;
@@ -278,26 +302,49 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => edit(d => { d.effects.урон!.params!.splice(1, 1, { key: 'amount', label: 'Сколько', kind: 'number' }); }),
       () => edit(d => { d.effects.урон!.params![1]!.role = 'amount'; }),
     ],
-    target: () => edit(d => { d.effects.урон!.params![0]!.role = 'target'; }),
+    target: [
+      () => {
+        const item = [...document.querySelectorAll<HTMLElement>('.param-item')].find(one => one.querySelector('.param-line__name')?.textContent?.trim() === 'Кто действует')!;
+        act(() => { fireEvent.click(item.querySelector('.param-line__sum')!); });
+        openAll();
+      },
+      () => press(findAnchor({ text: 'ещё', in: 'Что приходит' })!),
+      () => edit(d => { d.effects.урон!.params![0]!.role = 'target'; }),
+    ],
     apply: [
       () => press(findAnchor({ text: '+ изменение' })!),
+      () => edit(d => { d.effects.урон!.steps = [{ type: 'apply', target: { expr: '@действующий.хиты' } } as never]; }),
+      () => openBar(''),
+      () => typeBar('@amount'),
       () => edit(d => { d.effects.урон!.steps = [{ type: 'apply', target: { expr: '@действующий.хиты' }, value: { expr: '@amount' } } as never]; }),
     ],
     returns: [
       () => press(findAnchor({ text: '+ итог' })!),
-      () => edit(d => { d.effects.урон!.returns = [{ key: 'осталось', label: 'Осталось', kind: 'number' }] as never; }),
+      () => edit(d => { d.effects.урон!.returns![0]!.label = 'Осталось'; }),
+      () => edit(d => { d.effects.урон!.returns![0]!.kind = 'number'; }),
       () => openBar(''),
       () => typeBar('@действующий.хиты'),
       () => edit(d => { d.effects.урон!.returns = [{ key: 'осталось', label: 'Осталось', kind: 'number', expr: { expr: '@действующий.хиты' } }] as never; }),
     ],
     call: [
       () => { act(() => { fireEvent.change(findAnchor({ text: '+ шаг' })!, { target: { value: 'call:урон' } }); }); },
+      () => { openBar(''); typeBar('5'); },
       () => edit(d => setSteps(d, 'удар', steps('удар').map(step => (step.type === 'emit' ? { ...step, effect: 'урон', args: { действующий: { expr: '@цель' }, amount: { expr: '5' } } } : step)))),
     ],
-    drop: () => edit(d => setSteps(d, 'удар', steps('удар').filter(step => step.type !== 'apply'))),
+    drop: [
+      () => press(findAnchor({ text: 'Удалить', in: '4 · Изменить «Хиты»' })!),
+      () => edit(d => setSteps(d, 'удар', steps('удар').filter(step => step.type !== 'apply'))),
+    ],
     name: [
-      () => press(findAnchor({ text: '4 · Урон' })!),
+      () => {
+        if (!findAnchor({ text: 'результат…' })) press(findAnchor({ text: '4 · Урон' })!);
+        press(findAnchor({ text: 'результат…' })!);
+      },
       () => edit(d => setSteps(d, 'удар', steps('удар').map(step => (step.type === 'emit' ? { ...step, id: 'урон' } : step)))),
+    ],
+    trial: [
+      () => press(findAnchor({ text: 'Проба' })!),
+      () => chooseDice('max'),
     ],
     problems: openProblems,
     heal: () => edit(d => {
@@ -322,7 +369,11 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => typeBar('@урон_оружия'),
       () => edit(d => setSteps(d, 'удар', steps('удар').map(step => (step.type === 'apply' ? { ...step, value: { expr: '@урон_оружия' } } : step)))),
     ],
-    given: () => edit(d => { d.grants = []; }),
+    given: [
+      () => press(findAnchor({ text: 'блоки и типы листов' })!),
+      () => press(findAnchor({ text: 'все блоки', in: 'Листы' })!),
+      () => edit(d => { d.grants = []; }),
+    ],
     button: [
       () => press(findAnchor({ text: '+ кнопка' })!),
       () => {
@@ -336,6 +387,7 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     ],
     modifier: [
       () => press(findAnchor({ text: '+ правит поле' })!),
+      () => edit(d => { d.tables!.kind!.modifiers = [{ kind: 'value', target: 'класс_брони', op: 'add' }] as never; }),
       () => edit(d => { d.tables!.kind!.modifiers = [{ kind: 'value', target: 'класс_брони', op: 'add', value: { expr: '1' } }] as never; }),
     ],
     problems: openProblems,
@@ -344,6 +396,7 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
   tags: {
     tag: [
       () => pick({ activeEffectId: 'сырость' }),
+      () => { const el = findAnchor({ text: 'свойства' }); if (el) press(el); },
       () => { const box = findAnchor({ field: 'Метки' })!.querySelector('select')!; act(() => { fireEvent.change(box, { target: { value: ':своя' } }); }); },
       () => edit(d => { d.effects.сырость!.tags = ['гасит огонь']; }),
     ],
@@ -384,9 +437,15 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => edit(d => { d.tables!.заклинание!.bindings!.push({ effect: '', label: '' } as never); }),
       () => edit(d => { d.tables!.заклинание!.bindings![1] = { effect: 'прекращение', label: 'Прекратить' } as never; }),
     ],
-    if: () => edit(d => { d.tables!.заклинание!.bindings![1]!.if = { expr: '@срок.держится' }; }),
+    if: [
+      () => press(findAnchor({ text: 'ещё', in: 'кнопка «Прекратить»' })!),
+      () => openBar(''),
+      () => typeBar('@срок.держится'),
+      () => edit(d => { d.tables!.заклинание!.bindings![1]!.if = { expr: '@срок.держится' }; }),
+    ],
     bond: [
       () => pick({ activeEffectId: 'сотворить' }),
+      () => { const el = findAnchor({ text: 'свойства' }); if (el) press(el); },
       () => edit(d => { d.effects.сотворить!.bond = { effect: 'поддержание', by: 'колдун' }; }),
     ],
     many: () => edit(d => { d.effects.сотворить!.bond!.many = true; }),
@@ -400,8 +459,15 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => edit(d => { (d.sheets!.по_заготовке!.modifiers![0] as { target: string }).target = 'cell:навыки.*.ранг'; }),
     ],
     op: () => edit(d => { (d.sheets!.по_заготовке!.modifiers![0] as { op: string }).op = 'set'; }),
-    value: () => edit(d => { (d.sheets!.по_заготовке!.modifiers![0] as { value: unknown }).value = { expr: '@заготовка.[@строка]' }; }),
-    when: () => edit(d => { (d.sheets!.по_заготовке!.modifiers![0] as { if: unknown }).if = { expr: 'не пусто(@заготовка)' }; }),
+    value: [
+      () => openBar(''),
+      () => edit(d => { (d.sheets!.по_заготовке!.modifiers![0] as { value: unknown }).value = { expr: '@заготовка.[@строка]' }; }),
+    ],
+    when: [
+      () => openBar(''),
+      () => typeBar('не пусто(@заготовка)'),
+      () => edit(d => { (d.sheets!.по_заготовке!.modifiers![0] as { if: unknown }).if = { expr: 'не пусто(@заготовка)' }; }),
+    ],
     problems: openProblems,
     more: () => edit(d => { d.tables!.заготовки!.rows!.push({ value: 'разведчик', label: 'Разведчик', cells: { ближний_бой: 2, стрельба: 3 } }); }),
   },
@@ -409,10 +475,14 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     if: [
       () => pick({ activeEffectId: 'удар' }),
       () => edit(d => setSteps(d, 'удар', [{ type: 'branch' }, { type: 'end' }])),
+      () => openBar(''),
+      () => typeBar('@стол.бой'),
       () => edit(d => setSteps(d, 'удар', [{ type: 'branch', if: { expr: '@стол.бой' } }, { type: 'end' }])),
     ],
     spend: [
       () => edit(d => setSteps(d, 'удар', beforeEnd(steps('удар'), { type: 'apply' }))),
+      () => edit(d => setSteps(d, 'удар', applied({ target: { expr: '@действующий.действий_осталось' } }))),
+      () => { openBar(''); typeBar('1'); },
       () => edit(d => setSteps(d, 'удар', applied({ target: { expr: '@действующий.действий_осталось' }, value: { expr: '1' } }))),
     ],
     problems: openProblems,
@@ -432,6 +502,7 @@ const stepsIn = (d: System, effect: string) => d.effects[effect]!.steps as unkno
 const stepOf = (d: System, effect: string, type: string) => stepsIn(d, effect).find(one => one.type === type)!;
 const formula = (text: string) => ({ expr: text });
 const closed: Wrong = () => ({ opened: () => false });
+const away: Wrong = () => ({ tab: 'effects' });
 const broken: Wrong = d => { stepsIn(d, 'удар').splice(0, 0, { type: 'apply', target: formula('@фантом.поле'), value: formula('1') }); };
 const dropLabel = (d: System, label: string) => {
   for (const table of Object.values(d.tables ?? {})) table.columns = (table.columns ?? []).filter(column => column.label !== label);
@@ -465,10 +536,12 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
       d => { stepOf(d, 'удар', 'apply').target = formula('@цель.класс_брони'); },
     ],
     problems: [closed, broken],
+    trial: [broken],
     heal: [
       d => { delete stepOf(d, 'лечение', 'apply').direction; },
       d => { stepOf(d, 'лечение', 'apply').value = formula('4'); },
       d => { stepOf(d, 'лечение', 'apply').target = formula('@цель.хиты'); },
+      broken,
     ],
   },
   tables: {
@@ -476,6 +549,7 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
     table: [d => { d.tables!.таблица!.label = 'Статы'; }],
     rows: [d => { d.tables!.таблица!.rows = [{ value: 'сила' }, { value: 'ум' }]; }],
     modifier: [
+      d => { d.tables!.таблица!.rows = [{ value: 'сила' }]; },
       setExpr('таблица', 'колонка', '@строка.value / 2'),
       setExpr('таблица', 'колонка', '(@строка.value - 10) / 2'),
       setExpr('таблица', 'колонка', '@строка.value - 10'),
@@ -486,6 +560,7 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
       setExpr('лист', 'класс_брони', '@таблица.ловкость.колонка'),
       setExpr('лист', 'класс_брони', '10 - @таблица.ловкость.колонка'),
     ],
+    sample: [away],
     problems: [closed],
     skills: [d => { d.tables!.таблица_2!.rows = [{ value: 'акробатика' }]; }, d => { d.tables!.таблица_2!.label = 'Умения'; }],
     link: [d => { col(d, 'таблица_2', 'колонка').kind = 'number'; }, d => { col(d, 'таблица_2', 'колонка').from = 'лист'; }],
@@ -495,7 +570,7 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
       setExpr('таблица_2', 'колонка_2', '@строка.колонка.колонка'),
       setExpr('таблица_2', 'колонка_2', '@строка.value + @строка.value'),
     ],
-    save: [setExpr('таблица', 'колонка_3', '@строка.колонка + 1'), setExpr('таблица', 'колонка_3', '@строка.value')],
+    save: [setExpr('таблица', 'колонка_3', '@строка.колонка + 1'), setExpr('таблица', 'колонка_3', '@строка.value'), broken],
   },
   links: {
     called: [d => { d.effects.урон!.label = 'Вред'; }],
@@ -522,6 +597,7 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
       d => { d.effects.удар!.steps = stepsIn(d, 'удар').filter(one => one.type !== 'emit') as never; },
     ],
     name: [d => { stepOf(d, 'удар', 'emit').id = ''; }],
+    trial: [broken],
     problems: [closed],
     heal: [
       d => { delete stepOf(d, 'лечение', 'apply').direction; },
@@ -542,7 +618,7 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
       d => { (d.tables!.kind!.modifiers![0] as { target: string }).target = 'хиты'; },
     ],
     problems: [closed],
-    armor: [d => { (d.tables!.kind_2!.modifiers![0] as { target: string }).target = 'хиты'; }],
+    armor: [d => { (d.tables!.kind_2!.modifiers![0] as { target: string }).target = 'хиты'; }, broken],
   },
   tags: {
     tag: [d => { d.effects.сырость!.tags = ['гасит воду']; }],
@@ -569,7 +645,10 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
     bond: [d => { d.effects.сотворить!.bond!.effect = 'прекращение'; }],
     many: [d => { d.effects.сотворить!.bond!.many = false; }],
     problems: [closed],
-    term: [d => { const row = d.tables!.сроки!.rows!.find(one => one.value === 'час')!; row.cells = { держится: false }; }],
+    term: [
+      d => { const row = d.tables!.сроки!.rows!.find(one => one.value === 'час')!; row.cells = { держится: false }; },
+      d => { d.tables!.сроки!.rows!.find(one => one.value === 'час')!.value = ''; },
+    ],
   },
   templates: {
     open: [() => ({ sheetKind: null })],
@@ -581,7 +660,10 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
     ],
     when: [d => { (d.sheets!.по_заготовке!.modifiers![0] as { if: unknown }).if = formula('пусто(@заготовка)'); }],
     problems: [closed],
-    more: [d => { d.tables!.заготовки!.rows!.pop(); }],
+    more: [
+      d => { d.tables!.заготовки!.rows!.pop(); },
+      d => { d.tables!.заготовки!.rows!.at(-1)!.value = ''; },
+    ],
   },
   combat: {
     if: [d => { stepOf(d, 'удар', 'branch').if = formula('не @стол.бой'); }],
@@ -596,7 +678,9 @@ const BAD: Record<string, Record<string, Wrong[]>> = {
     take: [d => { const table = Object.values(d.tables!).find(one => one.label === 'Характеристики')!; table.rows = table.rows!.filter(row => row.value !== 'харизма'); }],
     drop: [d => { d.tables!.лист!.columns!.push({ key: 'вдохновение', label: 'Вдохновение', kind: 'number' } as never); }],
     problems: [closed],
+    seen: [away],
     effect: [d => { for (const key of Object.keys(d.effects)) if (d.effects[key]!.label === 'Отход') delete d.effects[key]; }],
+    came: [() => ({ tab: 'sheet' })],
     'problems-effect': [closed],
     other: [d => { dropLabel(d, 'Физический урон'); }],
   },
@@ -665,6 +749,14 @@ describe('уроки конструктора', () => {
         const solve = SOLVE[lesson.id]?.[step.id];
         const parts = Array.isArray(solve) ? solve : [];
         for (const [at, move] of movesOf(step).entries()) {
+          if (move.maybe && move.done?.(view!)) {
+            for (const phrase of phrasesIn(move.say, move.hint)) {
+              spoken.total += 1;
+              if (typedByAuthor(phrase) || said(screenText(), phrase) || SCREEN_EXCEPTIONS[`${lesson.id}/${step.id}/${phrase}`]) continue;
+              lateMoves.push({ at: at + 1, phrase });
+            }
+            continue;
+          }
           expect(moveAt(step, view!), `${lesson.id}/${step.id}: ход ${at + 1} — рамка не на нём`).toBe(at);
           for (let k = 0; k < 4 && !firstOf(move.at) && step.via; k++) {
             const via = firstOf(step.via);
@@ -838,8 +930,21 @@ describe('уроки конструктора', () => {
       inBar(within(change()).field('Сколько'), '5');
     });
     expect(cardText()).not.toContain('удар ранит самого героя');
-    await pass('problems', () => { clickAt({ guide: 'problems' }); });
+    expect(at()).toBe('problems');
+    clickAt({ guide: 'problems' });
+    await act(async () => { vi.advanceTimersByTime(300); });
+    clickAt({ guide: 'problems' });
+    await settleCard();
+    expect(at(), 'окно «Проблем» закрыто до перехода — шаг остаётся засчитанным').toBe('problems');
+    next('problems');
     clickAt({ text: 'Проба' });
+    await act(async () => { await Promise.resolve(); });
+    await act(async () => { vi.advanceTimersByTime(300); });
+    expect(cardText(), 'проба открыта, но без кости «максимум» шаг не засчитан').not.toContain('Проба показала');
+    chooseDice('max');
+    await act(async () => { await Promise.resolve(); });
+    await act(async () => { vi.advanceTimersByTime(300); });
+    expect(cardText()).toContain('Проба показала: Б теряет 5 хитов');
     expect(cardText()).toContain('Глава «Проверка и урон»');
     next('trial');
     expect(at()).toBe('heal');
@@ -923,14 +1028,14 @@ describe('уроки конструктора', () => {
     expect(useGuide.getState().step).toBe(2);
   });
 
-  it('шаг с условием без решения не даёт «Дальше», «Назад» показывает прежний шаг с «Дальше»', async () => {
+  it('шаг с условием без решения не даёт «Дальше» — и после «Назад» тоже, пока шаг не сделан заново', async () => {
     mount();
     await start('first-system');
     act(() => { useGuide.getState().go(1); });
     expect(within(card()).has('Дальше')).toBe(false);
     act(() => { fireEvent.click(within(card()).button('Назад')); });
     expect(useGuide.getState().step).toBe(0);
-    expect(within(card()).has('Дальше')).toBe(true);
+    expect(within(card()).has('Дальше')).toBe(false);
   });
 
   it('«Назад» возвращает систему к началу прежнего шага', async () => {

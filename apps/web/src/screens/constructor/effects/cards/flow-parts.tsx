@@ -114,7 +114,7 @@ export function FlowHead({ word, step, context, earlier, required, edit, actions
           {...(context.sheets ? { sheets: context.sheets } : {})}
           {...(tail ? { tail } : {})}
           where={`${word.toLowerCase()} · условие`}
-          placeholder="например: @шаг.natural >= 19"
+          placeholder="например: шаг.natural >= 19"
         />
       )}
       {problem ? <span className="field__error">{problem}</span> : null}

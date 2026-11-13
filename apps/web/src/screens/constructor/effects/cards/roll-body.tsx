@@ -164,7 +164,7 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
               onSet={text => { if (text) { setHand(null); set(it => setDie(it, { expr: text })); } }} />
           ) : null}
           {what === OWN_FIELD ? (
-            <SlotFormula value={read.field} label="Адрес поля" system={context.system} where="бросок поля · какое поле" placeholder="наберите @ и выберите поле" context={context}
+            <SlotFormula value={read.field} label="Адрес поля" system={context.system} where="бросок поля · какое поле" placeholder="начните набирать название поля" context={context}
               onSet={text => { if (text) { setHand(null); set(it => { it.field = { expr: text }; }); } }} />
           ) : null}
           {pairing ? (
@@ -174,7 +174,7 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
                 <Select label="Второе поле" value={secondShown} options={[['', 'то же поле', ''], ...fieldOptions, [OWN_FIELD, 'поле своим адресом…', 'Другое']] as never} onChange={pickSecond} />
               </span>
               {secondShown === OWN_FIELD ? (
-                <SlotFormula value={read.second} label="Адрес второго поля" system={context.system} where="бросок поля · второе поле" placeholder="наберите @ и выберите поле" context={context}
+                <SlotFormula value={read.second} label="Адрес второго поля" system={context.system} where="бросок поля · второе поле" placeholder="начните набирать название поля" context={context}
                   onSet={text => { setSecondHand(false); set(it => { if (text) it.second = { expr: text }; else delete it.second; }); }} />
               ) : null}
             </div>
@@ -189,7 +189,7 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
       {!fielded && who === '' ? <span className="faint">кости ничьи: правки броска и вопросы «увидев кости» на них не действуют</span> : null}
       <div className="roll-extras"><Extras items={extras} /></div>
       {current ? (
-        <ResultChips name={current} system={context.system} nameSlot={<span className="result-row__name" title="так итог броска зовётся в формулах: @имя, а через точку — его части">{current}</span>}
+        <ResultChips name={current} system={context.system} nameSlot={<span className="result-row__name" title="так итог броска зовётся в формулах, а через точку — его части">{current}</span>}
           outputs={resultsOf(context.system, context.effect.params ?? [], step as never).map(one => ({ key: one.path.slice(1) || 'целиком', label: one.label.replace(/^да или нет: /, ''), kind: one.kind }))} />
       ) : null}
       <RollTags label={fielded ? 'Ещё метки' : 'Метки'} roll={read} system={context.system} onRoll={change => set(change)} />

@@ -12,6 +12,7 @@ import { ColumnList } from './column-list.tsx';
 import type { Effect, Param, System, ValueKind, Stage } from '@vtt/schema';
 import { StagesEditor } from '../stages-editor.tsx';
 import { ConditionField } from '../condition-field.tsx';
+import { focusNew } from '../../../ui/focus-new.ts';
 
 const SHEETS = 'sheet+many';
 const PARAM_KINDS = [...kindsFor('param'), [SHEETS, 'список листов'] as const];
@@ -71,6 +72,7 @@ export function ParamsEditor({ id, effect, system, onEdit }: {
     if (target) fn(target);
   });
   const addParam = () => {
+    focusNew();
     const key = freeId(params.map(p => p.key), 'вход');
     setOpened(now => [...now, key]);
     onEdit(draft => {
@@ -258,7 +260,7 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
               title="Спрашивать, только если"
               where={`вход «${param.label ?? param.key}» · спрашивать`}
               quick={(effect.params ?? []).filter(one => one.key !== param.key && one.kind === 'boolean').map(one => ({ ref: one.key, label: one.label ?? one.key, kind: 'boolean' as const }))}
-              placeholder="например: @сложность > 0"
+              placeholder="например: сложность > 0"
             />
           ) : null}
           {param.ask && (kind === 'number' || kind === 'choice') ? (
@@ -305,7 +307,7 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
                   onChange={next => change(t => { const x = t as { stages?: Stage[] }; if (next) x.stages = next; else delete x.stages; })}
                 />
               ) : null}
-              <Field label="Границы" hint="не ниже и не выше — числом или формулой, например @удача">
+              <Field label="Границы" hint="не ниже и не выше — числом или формулой, например удача">
                 <span className="param-form__pair">
                   <BoundField value={param.min} placeholder="не ниже" onChange={next => change(t => { if (next === null) delete t.min; else t.min = next; })} />
                   <BoundField value={param.max} placeholder="не выше" onChange={next => change(t => { if (next === null) delete t.max; else t.max = next; })} />
@@ -313,7 +315,7 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
               </Field>
             </>
           ) : null}
-          <Field label="Имя в формулах" hint="как вход зовётся в формулах: @имя. Идёт за названием, пока на него никто не ссылается">
+          <Field label="Имя в формулах" hint="как вход зовётся в формулах. Идёт за названием, пока на него никто не ссылается">
             <KeyField value={param.key} locked={locked} taken={keys} onChange={onKey} />
           </Field>
         </div>

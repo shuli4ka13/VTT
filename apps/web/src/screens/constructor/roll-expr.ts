@@ -1,3 +1,4 @@
+import { unknownWords, NO_NAME } from '../../ui/formula-resolve.ts';
 import type { System, SlotRef } from '@vtt/schema';
 import { compile } from '@vtt/engine/formula';
 import { dieWord } from './readback.ts';
@@ -35,7 +36,7 @@ export function parseRollExpr(text: string, system: System, picked?: string | nu
   if (!t) return { die: undefined, bonus: null };
 
   const m = t.match(HEAD);
-  if (!m) return { error: 'бросок начинается с кости: «1к20» или «1к20 + @бонус»' };
+  if (!m) return { error: 'бросок начинается с кости: «1к20» или «1к20 + бонус»' };
 
   const count = Number(m[1] ?? 1);
   const sides = Number(m[2]);
@@ -63,7 +64,8 @@ export function badFormula(bonus: unknown): string | null {
   const text = String((bonus as { expr: unknown }).expr ?? '').trim();
   if (!text) return null;
   try { compile(text); return null; } catch (err) {
-    return (err as Error).message;
+    const [unknown] = unknownWords(text, []);
+    return unknown ? `${NO_NAME(unknown)} — выберите имя из списка` : (err as Error).message;
   }
 }
 

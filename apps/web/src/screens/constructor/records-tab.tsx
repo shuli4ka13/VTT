@@ -21,6 +21,7 @@ import type { AnyKind } from '@vtt/engine/model/owned';
 import { blockOf } from '@vtt/engine/model/blocks';
 import { blockTree, BlockBranches } from './block-tree.tsx';
 import { freeGroupName } from './groups.ts';
+import { focusNew } from '../../ui/focus-new.ts';
 
 const BASIS = [
   ['item', 'вещь — надевают и снимают'],
@@ -112,12 +113,14 @@ export function RecordsTab() {
   const active = kinds.find(([key]) => key === activeKind)?.[1];
 
   const add = () => {
+    focusNew('как зовётся тип');
     const made = newRecordKind(system);
     editSystem(draft => { (draft.tables ??= {})[made.key] = made.value; });
     pick({ activeRecordKind: made.key });
   };
 
   const addTo = (block: string) => {
+    focusNew('как зовётся тип');
     const made = newRecordKind(system);
     editSystem(draft => { (draft.tables ??= {})[made.key] = { ...made.value, block }; });
     pick({ activeRecordKind: made.key });

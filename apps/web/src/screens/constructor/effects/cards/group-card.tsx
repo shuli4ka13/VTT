@@ -278,7 +278,7 @@ function StepName({ group, effect, system, edit, branches, active }: { group: Ca
   const rename = (next: string) => edit(group.amount ? 1 : 0, draft => { if (next) draft.id = next; else delete draft.id; });
   if (gives) {
     const field = open && !locked
-      ? <span className="result-row__name-field" ref={el => { if (el && !el.contains(document.activeElement)) el.querySelector('input')?.focus(); }} onBlur={() => setOpen(false)}><KeyField optional value={id} locked={false} taken={taken} onChange={rename} /></span>
+      ? <span className="result-row__name-field" data-guide="step-name" ref={el => { if (el && !el.contains(document.activeElement)) el.querySelector('input')?.focus(); }} onBlur={() => setOpen(false)}><KeyField optional value={id} locked={false} taken={taken} onChange={rename} /></span>
       : undefined;
     return (
       <div className="inline inline--tight step-name">
@@ -290,7 +290,7 @@ function StepName({ group, effect, system, edit, branches, active }: { group: Ca
   if (!open) {
     return (
       <div className="inline inline--tight step-name">
-        <Button size="sm" variant="ghost" title="как итог шага зовётся в формулах: @имя" onClick={() => setOpen(true)}>{id ? `имя в формулах: ${id}` : 'имя в формулах…'}</Button>
+        <Button size="sm" variant="ghost" title="как итог шага зовётся в формулах" onClick={() => setOpen(true)}>{id ? `имя в формулах: ${id}` : 'имя в формулах…'}</Button>
       </div>
     );
   }

@@ -140,7 +140,7 @@ export function ValueField({ value, onChange, context, allow, placeholder, extra
         extraNames={names}
         badges={inputBadges(context)}
         options={menu}
-        placeholder={placeholder ?? 'число или формула — @ подскажет'}
+        placeholder={placeholder ?? 'число или формула — начните набирать название'}
         barValue={draft ?? initial}
         onChange={next => setDraft(next)}
         onCommit={commitTyped}

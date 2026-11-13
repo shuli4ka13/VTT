@@ -10,4 +10,4 @@ export const placeTablesAt = choiceTablesAt;
 export { labelsOf };
 
 export const sheetsAt = (system: System, id: string, place: Place): SheetNames =>
-  new Map(sheetNamesAt(system, id, place).map(one => [one.name, one.label]));
+  new Map(sheetNamesAt(system, id, place).filter(one => !one.many).map(one => [one.name, one.label]));

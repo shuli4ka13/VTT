@@ -19,6 +19,13 @@ const opened = (label: string): Move => ({
   done: view => Boolean(keyOf(view, label)) && view.effect === keyOf(view, label),
 });
 
+const propsOpened: Move = {
+  at: { text: 'свойства' },
+  say: 'Если свойств не видно, нажмите «свойства» рядом с названием эффекта.',
+  done: () => visible({ field: 'Метки' }),
+  maybe: true,
+};
+
 const gainedTag = (view: View): Handler | undefined =>
   handlers(view, 'Горение').find(handler => handler.on === `gained:${TAG}`);
 
@@ -73,15 +80,14 @@ export const tags: Lesson = {
       say: 'Поставьте «Сырости» метку «гасит огонь».',
       at: [
         opened('Сырость'),
+        propsOpened,
         {
           at: { field: 'Метки' },
-          say: 'В «Метки» выберите «новая метка…».',
-          hint: 'Свойств не видно? Нажмите «свойства» рядом с названием эффекта.',
+          say: 'В поле «Метки» откройте список «+ метка…» и выберите «новая метка…».',
           done: () => visible({ input: 'как назвать метку' }),
         },
         { at: { input: 'как назвать метку' }, say: 'Впишите «гасит огонь» и нажмите «добавить».' },
       ],
-      via: { text: 'свойства' },
       done: view => (effect(view, 'Сырость')?.tags ?? []).includes(TAG),
       result: () => '«Сырость» несёт метку «гасит огонь».',
     },
@@ -104,13 +110,13 @@ export const tags: Lesson = {
       id: 'who',
       chapter: 'Метка и реакция',
       tab: 'effects',
-      say: 'В «Кого касается» выберите «Лист» — носитель: чтобы «Горение» гасло только у того, на кого попала «Сырость».',
+      say: 'В «Кого касается» выберите «лист, с которым это случилось» — носитель: чтобы «Горение» гасло только у того, на кого попала «Сырость».',
       hint: 'Без этого подписка сработает на всех листах комнаты, где висит «Горение».',
       at: { text: 'Кого касается' },
       done: view => aboutCarrier(gainedTag(view)),
       traps: [{
         when: view => Boolean(gainedTag(view)) && !aboutCarrier(gainedTag(view)) && Boolean(gainedTag(view)?.if),
-        say: 'Условие стоит, но в нём нет «носитель». Выберите «Лист» — носитель в «Кого касается».',
+        say: 'Условие стоит, но в нём нет «носитель». В «Кого касается» выберите «лист, с которым это случилось» — носитель.',
       }],
       result: () => 'Подписка касается только листа-носителя.',
     },
@@ -125,7 +131,7 @@ export const tags: Lesson = {
         { at: { text: 'состояние' }, say: 'Выберите «состояние».', done: view => (gainedTag(view)?.steps ?? []).some(step => step.type === 'status') },
         { at: { text: 'Что делаем' }, say: 'В «Что делаем» выберите «снимаем».', done: view => (gainedTag(view)?.steps ?? []).some(step => (step as unknown as Record<string, unknown>).mode === 'remove') },
         { at: { text: 'Какое', in: 'шаг «Снять»' }, say: 'В «Какое» шага выберите «Горение».', done: view => (gainedTag(view)?.steps ?? []).some(step => (step as unknown as Record<string, unknown>).effect === keyOf(view, 'Горение')) },
-        { at: { text: 'С кого' }, say: 'В «С кого» выберите «Лист».' },
+        { at: { text: 'С кого' }, say: 'В «С кого» выберите «лист, с которым это случилось».' },
       ],
       done: removesBurning,
       result: () => 'Когда на лист попадает эффект с меткой «гасит огонь», «Горение» снимается.',
@@ -141,7 +147,7 @@ export const tags: Lesson = {
         opened('Удача'),
         { at: { text: '+ когда' }, say: 'Нажмите «+ когда».', done: view => handlers(view, 'Удача').length > 0 },
         { at: { text: 'Что случилось' }, say: 'В «Что случилось» выберите «кости выпали».', done: view => Boolean(luck(view)) },
-        { at: { text: 'Кроме меток' }, say: 'В «Кроме меток» выберите «защита».' },
+        { at: { text: 'Кроме меток' }, say: 'В «Кроме меток» откройте список «+ кроме метки…» и выберите «защита».' },
       ],
       done: view => Boolean(luck(view)?.notTags?.includes(GUARD)),
       result: () => '«Удача» слышит все броски, кроме защиты.',

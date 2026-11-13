@@ -34,10 +34,13 @@ export interface FormulaTarget {
   onCancel?: () => void;
 }
 
-type Opened = FormulaTarget & { initial: string };
+type Opened = FormulaTarget & { initial: string; final?: string };
 
 const settle = (target: Opened | null) => {
-  if (target && target.value !== target.initial) target.onCommit?.(target.value);
+  if (!target) return;
+  const value = target.final ?? target.value;
+  if (value !== target.value) target.onChange?.(value);
+  if (value !== target.initial) target.onCommit?.(value);
 };
 
 export interface FormulaBarState {
@@ -45,6 +48,7 @@ export interface FormulaBarState {
   hosts: number;
   open: (target: FormulaTarget) => void;
   write: (text: string) => void;
+  settleAs: (text: string) => void;
   commit: () => void;
   cancel: () => void;
   dismiss: () => void;
@@ -64,7 +68,12 @@ export const useFormulaBar = create<FormulaBarState>()((set, get) => ({
     const target = get().target;
     if (!target) return;
     target.onChange?.(text);
-    set({ target: { ...target, value: text } });
+    const { final: _final, ...rest } = target;
+    set({ target: { ...rest, value: text } });
+  },
+  settleAs: text => {
+    const target = get().target;
+    if (target) set({ target: { ...target, final: text } });
   },
   commit: () => {
     const target = get().target;

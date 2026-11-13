@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { ReactNode, ChangeEvent, FocusEvent, KeyboardEvent } from 'react';
+import { useFocusNew } from './focus-new.ts';
 
 export function Card({ children, tone, className = '', label }: {
   children: ReactNode;
@@ -59,8 +60,11 @@ export function Input({ value, onChange, placeholder, mono, invalid, type = 'tex
   onBlur?: (e: FocusEvent<HTMLInputElement>) => void;
   onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
 }) {
+  const ref = useRef<HTMLInputElement>(null);
+  useFocusNew(ref);
   return (
     <input
+      ref={ref}
       className={`input ${mono ? 'input--mono' : ''} ${invalid ? 'input--bad' : ''}`}
       type={type}
       value={value}
@@ -225,11 +229,11 @@ export function DangerButton({ children, onConfirm, size, title, keep }: {
     );
   }
   return (
-    <>
+    <span className="danger-confirm">
       <Button size={size} variant="danger" onClick={onConfirm}>{keep ? 'вместе с шагами' : 'точно убрать'}</Button>
       {keep ? <Button size={size} variant="ghost" onClick={keep.run}>{keep.label}</Button> : null}
       <Button size={size} variant="ghost" onClick={() => setArmed(false)}>отмена</Button>
-    </>
+    </span>
   );
 }
 

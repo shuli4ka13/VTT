@@ -163,7 +163,7 @@ export function BlockViewField({ tableId, column, system, block, row, cell = row
                   onChange={next => edit(draft => { if (next === null) delete draft.min; else draft.min = next; })} />
               </Field>
               <Field label={kind === 'stepper' ? 'Не выше' : kind === 'ring' || kind === 'choice' ? 'Верх' : 'Верх — сколько всего'}>
-                <BoundFormula value={column.max} system={system} table={tableId} {...(single ? {} : { names: rowNames(system, tableId) })} where={`${table.label || tableId} · ${column.label || column.key} · верх`} placeholder="число или формула: 3 или @ и название"
+                <BoundFormula value={column.max} system={system} table={tableId} {...(single ? {} : { names: rowNames(system, tableId) })} where={`${table.label || tableId} · ${column.label || column.key} · верх`} placeholder="число или формула: 3 или название поля"
                   onChange={next => edit(draft => { if (next === null) delete draft.max; else draft.max = next; })} />
               </Field>
             </div>

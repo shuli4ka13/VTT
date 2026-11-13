@@ -1,7 +1,7 @@
 import type { System, Effect } from '@vtt/schema';
 import type { Lesson, View, Move } from '../types.ts';
 import { lazyPlan } from '@vtt/engine/model/flow';
-import { effectBy, fieldBy, stepsOf, reads, is, subtracts, numberOf, armOf, errorsOf, isArm } from '../find.ts';
+import { effectBy, fieldBy, stepsOf, reads, is, subtracts, numberOf, armOf, errorsOf, isArm, FORMULA_DONE, barOpen, barText } from '../find.ts';
 import { problemsClean } from './first-system.ts';
 import seed from '../seeds/combat.json' with { type: 'json' };
 
@@ -59,11 +59,13 @@ export const combat: Lesson = {
       tab: 'effects',
       panel: 'Библиотека эффектов',
       say: 'В «Ударе» добавьте блок «Если» с условием «идёт ли бой».',
-      hint: 'В условии начните набирать «идёт» и выберите «идёт ли бой».',
+      hint: 'Условие читается словами: «идёт ли бой» — пункт подсказки, который появляется, когда начнёшь набирать «идёт».',
       at: [
         opened('Удар'),
         { at: { text: '+ если' }, say: 'В палитре «Шаг» нажмите «+ если».', done: view => steps(view).some(step => step.type === 'branch') },
-        { at: { guide: 'if-condition' }, say: 'В условии «Если» начните набирать «идёт» и выберите «идёт ли бой».' },
+        { at: { guide: 'if-condition' }, say: 'Щёлкните условие «Если» и начните набирать «идёт».', done: view => barOpen(view) || inCombat(view) >= 0 },
+        { at: { guide: 'if-condition' }, say: 'В списке выберите «идёт ли бой».', done: view => is(barText(view), COMBAT) || inCombat(view) >= 0 },
+        { at: [FORMULA_DONE, { guide: 'if-condition' }], say: 'Нажмите Enter или «готово».' },
       ],
       done: view => inCombat(view) >= 0,
       result: () => 'Блок «Если идёт ли бой» стоит.',
@@ -73,10 +75,16 @@ export const combat: Lesson = {
       chapter: 'Только в бою',
       tab: 'effects',
       say: 'Внутри блока сделайте изменение: «Действий осталось» минус 1.',
-      hint: '«У кого» оставьте «Кто действует», в «Какое поле» выберите «Действий осталось», «Как» оставьте «отнять», в «Сколько» впишите 1.',
+      hint: 'В «У кого» должно стоять «Кто действует», в «Как» — «отнять»: так они и стоят.',
       at: [
         { at: { text: '+ шаг' }, say: 'В ветке блока в списке «+ шаг» выберите «изменение».', done: view => inCombat(view) >= 0 && armOf(steps(view), inCombat(view)).some(step => step.type === 'apply') },
-        { at: { text: 'У кого' }, say: 'В «У кого» оставьте «Кто действует», в «Какое поле» выберите «Действий осталось», в «Сколько» впишите 1.' },
+        {
+          at: { text: 'Какое поле' },
+          say: 'В «Какое поле» выберите «Действий осталось».',
+          done: view => Boolean(counter(view) && inCombat(view) >= 0 && armOf(steps(view), inCombat(view)).some(step => step.type === 'apply' && is(step.target, `@действующий.${counter(view)}`))),
+        },
+        { at: { text: 'Сколько' }, say: 'Щёлкните «Сколько» и впишите 1.', done: view => barText(view).trim() === '1' || spends(view) },
+        { at: [FORMULA_DONE, { text: 'Сколько' }], say: 'Нажмите Enter или «готово».' },
       ],
       done: spends,
       traps: [{

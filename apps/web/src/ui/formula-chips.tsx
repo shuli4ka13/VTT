@@ -9,7 +9,8 @@ import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { typeColumns } from '@vtt/engine/model/inherit';
 import { plainLabel, pickTail } from './formula-labels.ts';
 import { tablesOf, choiceTableOf, rowLabelOf, picksOf } from './formula-words.ts';
-import { callAt, partAt, functionSpec, FUNCTION_SPECS } from '@vtt/engine/formula';
+import { callAt, partAt, functionSpec, FUNCTION_SPECS, AND, OR, NOT, BOOLEANS } from '@vtt/engine/formula';
+import { resolveNames, plain, NO_NAME } from './formula-resolve.ts';
 import type { FunctionSpec } from '@vtt/engine/formula';
 
 function Signature({ at }: { at: { spec: FunctionSpec; index: number } }) {
@@ -76,7 +77,8 @@ const onSheet = (tag: string, sheets?: SheetNames): { head: string; rest: string
 
 const labelOfTag = (system: System, tag: string, extra?: Map<string, string>, sheets?: SheetNames): string => {
   const owned = onSheet(tag, sheets);
-  return owned ? plainLabel(system, owned.rest, extra) : plainLabel(system, tag, extra);
+  const label = owned ? plainLabel(system, owned.rest, extra) : plainLabel(system, tag, extra);
+  return !owned && label === tag && sheets?.has(tag) ? sheets.get(tag)! : label;
 };
 
 const knownSheetName = (system: System, tag: string): boolean =>
@@ -221,7 +223,7 @@ export function partsOf(value: string, known?: (tag: string) => boolean, lits?: 
   return out;
 }
 
-const KEYWORDS: string[] = [...FUNCTION_SPECS.map(spec => spec.name), 'и', 'или', 'не', 'да', 'нет'];
+const KEYWORDS: string[] = [...FUNCTION_SPECS.map(spec => spec.name), AND, OR, NOT, ...Object.keys(BOOLEANS)];
 
 const rankOf = (f: { tag: string; label: string }, needle: string): number => {
   if (!needle) return 0;
@@ -245,12 +247,52 @@ export function joinParts(parts: Part[]): string {
 
 const LONE_NUMBER = /^\s*-?\d+(?:[.,]\d+)?\s*$/;
 
-export function FormulaChips({ value, onChange, system, table, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, badges, sheets, extraOptions, calculator, readOnly, autoFocus, onChipPick, whole }: {
+export type NameOption = { tag: string; label: string; group: string };
+
+export function namesOf(system: System, scope: { extraNames?: Map<string, string> | undefined; extraOptions?: { name?: string }[] | undefined; sheets?: SheetNames | undefined; table?: string | undefined }): NameOption[] {
+  const { extraNames, extraOptions, sheets, table } = scope;
+  const paths = fieldPaths(system);
+  const desk = fieldsOf(system).filter(f => f.lives === 'desk').map(f => ({ tag: `${DESK_ID}.${f.tag}`, label: f.label ?? f.tag, group: 'стол' }));
+  const sheet = [
+    ...fieldsOf(system).filter(f => f.lives !== 'desk').map(f => ({ tag: f.tag, label: f.label ?? f.tag, via: false })),
+    ...[...paths].map(([tag, label]) => ({ tag, label, via: true })),
+  ];
+  const offered = new Set((extraOptions ?? []).map(o => o.name).filter(Boolean));
+  const viaSheet = (tag: string) => [...(sheets?.keys() ?? [])].some(name => extraNames?.has(`${name}.${tag}`));
+  const ownerOf = (tag: string): string | undefined => {
+    const head = tag.split('.')[0]!;
+    return tag.includes('.') ? sheets?.get(head) : undefined;
+  };
+  const local = [...(extraNames ?? [])].filter(([tag]) => !offered.has(tag) && !viaSheet(tag) && !sheets?.has(tag)).map(([tag, label]) => {
+    const owner = ownerOf(tag);
+    return owner
+      ? { tag, label: label.endsWith(` (${owner})`) ? label.slice(0, -` (${owner})`.length) : label, group: `у «${owner}»` }
+      : { tag, label, group: 'в этом эффекте' };
+  }).sort((a, b) => a.label.split(' → ').length - b.label.split(' → ').length);
+  const states = statesOf(system);
+  if (!sheets?.size) {
+    return [
+      ...local, ...pickOptions(system, table), ...sheet.map(f => ({ tag: f.tag, label: f.label, group: f.via ? 'по ссылке' : 'поле листа' })),
+      ...states.map(s => ({ ...s, group: 'висит на листе' })), ...desk,
+    ];
+  }
+  const named = [...sheets];
+  return [
+    ...local,
+    ...named.map(([name, label]) => ({ tag: name, label, group: 'лист целиком' })),
+    ...named.flatMap(([name, label]) => sheet.map(f => ({ tag: `${name}.${f.tag}`, label: f.label, group: `у «${label}»` }))),
+    ...named.flatMap(([name, label]) => states.map(s => ({ tag: `${name}.${s.tag}`, label: s.label, group: `висит у «${label}»` }))),
+    ...desk,
+  ];
+}
+
+export function FormulaChips({ value, onChange, onFinal, system, table, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, badges, sheets, extraOptions, calculator, readOnly, autoFocus, onChipPick, whole, notes = true }: {
   value: string;
   onChange: (next: string) => void;
   system: System;
   table?: string;
   placeholder?: string;
+  onFinal?: (text: string) => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
   onBlur?: () => void;
 
@@ -280,6 +322,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
 
   onChipPick?: (tag: string, label: string) => void;
   whole?: boolean;
+  notes?: boolean;
 }) {
   const paths = useMemo(() => fieldPaths(system), [system]);
   const marks = useMemo(() => tagWords(system), [system]);
@@ -300,7 +343,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
   const [caret, setCaret] = useState(0);
   const [highlight, setHighlight] = useState(0);
   const [closed, setClosed] = useState(false);
-  const [dot, setDot] = useState<{ index: number; text: string; offered?: boolean; base?: string } | null>(null);
+  const [dot, setDot] = useState<{ index: number; text: string; offered?: boolean; base?: string; typed?: boolean } | null>(null);
   const signature = useMemo(() => {
     if (active === null || !parts[active] || !('text' in parts[active]!)) return null;
     const own = dot?.index === active ? dot.text : (parts[active] as { text: string }).text;
@@ -323,42 +366,9 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
       ? <span className="chips__side chips__side--mark" title={`метка броска из таблицы «${marks.get(tag)}»: по ней бросок находят правки — преимущество, «Благословение», «Щит»`}>метка</span>
       : null);
 
-  const fields = useMemo(() => {
-    const desk = fieldsOf(system).filter(f => f.lives === 'desk').map(f => ({ tag: `${DESK_ID}.${f.tag}`, label: f.label ?? f.tag, group: 'стол' }));
-    const sheet = [
-      ...fieldsOf(system).filter(f => f.lives !== 'desk').map(f => ({ tag: f.tag, label: f.label ?? f.tag, via: false })),
-      ...[...paths].map(([tag, label]) => ({ tag, label, via: true })),
-    ];
-    const offered = new Set((extraOptions ?? []).map(o => o.name).filter(Boolean));
-    const viaSheet = (tag: string) => [...(sheets?.keys() ?? [])].some(name => extraNames?.has(`${name}.${tag}`));
-    const ownerOf = (tag: string): string | undefined => {
-      const head = tag.split('.')[0]!;
-      return tag.includes('.') ? sheets?.get(head) : undefined;
-    };
-    const local = [...(extraNames ?? [])].filter(([tag]) => !offered.has(tag) && !viaSheet(tag)).map(([tag, label]) => {
-      const owner = ownerOf(tag);
-      return owner
-        ? { tag, label: label.endsWith(` (${owner})`) ? label.slice(0, -` (${owner})`.length) : label, group: `у «${owner}»` }
-        : { tag, label, group: 'в этом эффекте' };
-    }).sort((a, b) => a.label.split(' → ').length - b.label.split(' → ').length);
-    const states = statesOf(system);
-    if (!sheets?.size) {
-      return [
-        ...local, ...pickOptions(system, table), ...sheet.map(f => ({ tag: f.tag, label: f.label, group: f.via ? 'по ссылке' : 'поле листа' })),
-        ...states.map(s => ({ ...s, group: 'висит на листе' })), ...desk,
-      ];
-    }
-    const named = [...sheets];
-    return [
-      ...local,
-      ...named.map(([name, label]) => ({ tag: name, label, group: 'лист целиком' })),
-      ...named.flatMap(([name, label]) => sheet.map(f => ({ tag: `${name}.${f.tag}`, label: f.label, group: `у «${label}»` }))),
-      ...named.flatMap(([name, label]) => states.map(s => ({ tag: `${name}.${s.tag}`, label: s.label, group: `висит у «${label}»` }))),
-      ...desk,
-    ];
-  }, [system, extraNames, extraOptions, paths, sheets, table]);
+  const fields = useMemo(() => namesOf(system, { extraNames, extraOptions, sheets, table }), [system, extraNames, extraOptions, paths, sheets, table]);
 
-  const pendingFocus = useRef<{ index: number; caret: number; value: string; offer?: boolean } | { offset: number; skip: string[]; offer?: boolean } | null>(null);
+  const pendingFocus = useRef<{ index: number; caret: number; value: string; offer?: boolean | 'dot' } | { offset: number; skip: string[]; offer?: boolean | 'dot' } | null>(null);
   useLayoutEffect(() => {
     const want = pendingFocus.current;
     if (!want) return;
@@ -385,7 +395,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     const formed = want.offer && at === 0 ? chipBefore(index) : null;
     if (formed && (deeper(formed).fields.length || deeper(formed).extras.length)) {
       const preferred = whole ? undefined : picksOf(extraNames)?.get(formed);
-      setDot({ index, text: '', offered: true });
+      setDot({ index, text: '', offered: true, ...(want.offer === 'dot' ? { typed: true } : {}) });
       setCaret(0);
       setHighlight(Math.max(0, [formed, ...deeper(formed).fields.map(f => f.tag)].indexOf(preferred ?? formed)));
       setClosed(false);
@@ -396,6 +406,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     const joined = joinParts(next);
     if (focusAt) pendingFocus.current = { ...focusAt, value: joined };
     onChange(joined);
+    onFinal?.(resolveNames(joined, fields, { final: true }).text);
   };
 
   const chipBefore = (index: number): string | null => {
@@ -413,6 +424,18 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
   const tail = (label: string): string => label.split(' · ').pop() ?? label;
   const dotted = dot && active === dot.index ? dot.base ?? chipBefore(dot.index) : null;
 
+  const bareQuery = (text: string, at: number): { at: number; needle: string } | null => {
+    const found = matchTagQuery(text, at);
+    if (!found || text[found.at] === '@') return found;
+    const words = (/(?:[\p{L}\p{N}_]+ )+$/u.exec(text.slice(0, found.at))?.[0] ?? '').split(' ').filter(Boolean);
+    const labels = [...fields.map(f => f.label), ...(extraOptions ?? []).map(o => o.label)].map(plain);
+    for (let size = words.length; size >= 1; size -= 1) {
+      const lead = `${words.slice(-size).join(' ')} `;
+      if (labels.some(label => label.startsWith(plain(`${lead}${found.needle}`)))) return { at: found.at - lead.length, needle: `${lead}${found.needle}`.toLowerCase() };
+    }
+    return found;
+  };
+
   const typed = !dotted && active !== null && 'text' in (parts[active] ?? {})
     ? typedPath((parts[active] as { text: string }).text, caret)
     : null;
@@ -422,7 +445,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     : through
       ? { at: through.at, needle: through.needle }
       : active !== null && 'text' in (parts[active] ?? {})
-        ? matchTagQuery((parts[active] as { text: string }).text, caret)
+        ? bareQuery((parts[active] as { text: string }).text, caret)
         : null;
   const tags = new Set(fields.map(f => f.tag));
   const inside = (tag: string): string | null => {
@@ -461,7 +484,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     ? (parts[active] as { text: string }).text[query.at] !== '@'
     : false;
   const words = query && bare && !dotted && !through
-    ? KEYWORDS.filter(word => rankOf({ tag: '', label: word }, query.needle) < 3)
+    ? KEYWORDS.filter(word => query.needle !== '' && rankOf({ tag: '', label: word }, query.needle) < 1)
       .sort((a, b) => rankOf({ tag: '', label: a }, query.needle) - rankOf({ tag: '', label: b }, query.needle))
       .slice(0, 8)
     : [];
@@ -500,10 +523,9 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     if (dotted) pickDotted(tag); else pick(tag);
   };
   const pickAt = (index: number) => {
-    if (index < words.length) { pickWord(words[index]!); return; }
-    const at = index - words.length;
-    if (at < extras.length) chooseExtra(extras[at]!);
-    else chooseField(matches[at - extras.length]!.tag);
+    if (index < extras.length) chooseExtra(extras[index]!);
+    else if (index < extras.length + matches.length) chooseField(matches[index - extras.length]!.tag);
+    else pickWord(words[index - extras.length - matches.length]!);
   };
 
   const pickWord = (word: string) => {
@@ -546,6 +568,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
       ...parts.slice(active + 1),
     ];
     commitParts(next, { index: active + 2, caret: 0 });
+    if (pendingFocus.current && baseOf(tag) === tag) pendingFocus.current = { ...pendingFocus.current, offer: true };
   };
 
   const insertOp = (open: string, close = '') => {
@@ -568,7 +591,10 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     >{op.label}</button>
   );
 
-  const editText = (index: number, typed: string, typedAt: number) => {
+  const editText = (index: number, entered: string, enteredAt: number) => {
+    const continued = dot?.index === index && dot.offered && dot.typed && /^[\p{L}\p{N}_]/u.test(entered);
+    const typed = continued ? `.${entered}` : entered;
+    const typedAt = continued ? enteredAt + 1 : enteredAt;
     const base = chipBefore(index);
     if (base && typed.startsWith('.') && (dot?.index === index || !(parts[index] as { text: string }).text.startsWith('.'))) {
       const below = deeper(base);
@@ -586,9 +612,21 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     const at = glued ? typedAt + 1 : typedAt;
     setHighlight(0);
     setClosed(false);
-    const next = parts.map((p, i) => (i === index ? { text } : p));
-    setCaret(at);
-    if (text.includes('@')) pendingFocus.current = { offset: joinParts(parts.slice(0, index)).length + at, skip: [], offer: true };
+    const seen = text.includes('@') ? { text, caret: at } : resolveNames(text, fields, { caret: at });
+    const opened = text.includes('@') ? null : /@([\p{L}\p{N}_]+(?:\.[\p{L}\p{N}_]+)*)\.$/u.exec(seen.text.slice(0, seen.caret));
+    if (opened && (deeper(opened[1]!).fields.length || deeper(opened[1]!).extras.length)) {
+      const split = [
+        ...parts.slice(0, index),
+        { text: seen.text.slice(0, opened.index) }, { tag: opened[1]! }, { text: seen.text.slice(seen.caret) },
+        ...parts.slice(index + 1),
+      ];
+      commitParts(split, { index: index + 2, caret: 0 });
+      if (pendingFocus.current) pendingFocus.current = { ...pendingFocus.current, offer: 'dot' };
+      return;
+    }
+    const next = parts.map((p, i) => (i === index ? { text: seen.text } : p));
+    setCaret(seen.caret);
+    if (seen.text.includes('@')) pendingFocus.current = { offset: joinParts(parts.slice(0, index)).length + seen.caret, skip: [], offer: true };
     commitParts(next);
   };
 
@@ -621,6 +659,14 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
   const chipText = (part: { tag: string; by?: string; rest?: string }): string => (part.by !== undefined
     ? pickWords(system, part, table, extraNames, sheets)
     : shortLabel(labelOfTag(system, part.tag, extraNames, sheets)));
+
+  const unknownLine = notes && !readOnly
+    ? (() => {
+      const own = active !== null && 'text' in (parts[active] ?? {}) ? joinParts(parts.slice(0, active)).length + Math.min(caret, (parts[active] as { text: string }).text.length) : undefined;
+      const found = resolveNames(value, fields, own === undefined ? { final: true } : { caret: own }).unknown[0];
+      return found ? NO_NAME(found) : null;
+    })()
+    : null;
 
   const empty = parts.length === 1 && !(parts[0] as { text: string }).text;
 
@@ -760,6 +806,7 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
         {suffix}
       </div>
       {signature ? <Signature at={signature} /> : null}
+      {unknownLine ? <div className="chips__note" role="status">{unknownLine}</div> : null}
       {calculator && active !== null ? (
         <div className="chips__ops">
           {OPS.filter(op => !op.word).map(opButton)}
@@ -769,22 +816,11 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
       ) : null}
       {shownMenu ? (
         <div className="slot__menu" ref={menuRef} role="listbox">
-          {words.map((word, k) => (
-            <button
-              key={`word-${word}`} type="button" role="option" aria-selected={k === lit}
-              className={`slot__option${k === lit ? ' slot__option--lit' : ''}`}
-              onMouseEnter={() => setHighlight(k)}
-              onMouseDown={e => { e.preventDefault(); pickWord(word); }}
-            >
-              <span className="slot__group slot__group--record">формула</span>
-              {word}
-            </button>
-          ))}
           {extras.map((option, i) => (
             <button
-              key={`extra-${i}`} type="button" role="option" aria-selected={words.length + i === lit}
-              className={`slot__option${words.length + i === lit ? ' slot__option--lit' : ''}`}
-              onMouseEnter={() => setHighlight(words.length + i)}
+              key={`extra-${i}`} type="button" role="option" aria-selected={i === lit}
+              className={`slot__option${i === lit ? ' slot__option--lit' : ''}`}
+              onMouseEnter={() => setHighlight(i)}
               onMouseDown={e => { e.preventDefault(); chooseExtra(option); }}
             >
               <span className="slot__group slot__group--record">{option.group}</span>
@@ -793,14 +829,25 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
           ))}
           {matches.map((f, j) => (
             <button
-              key={f.tag} type="button" role="option" aria-selected={words.length + extras.length + j === lit}
-              className={`slot__option${words.length + extras.length + j === lit ? ' slot__option--lit' : ''}`}
-              onMouseEnter={() => setHighlight(words.length + extras.length + j)}
+              key={f.tag} type="button" role="option" aria-selected={extras.length + j === lit}
+              className={`slot__option${extras.length + j === lit ? ' slot__option--lit' : ''}`}
+              onMouseEnter={() => setHighlight(extras.length + j)}
               onMouseDown={e => { e.preventDefault(); chooseField(f.tag); }}
             >
               <span className="slot__group">{f.group}</span>
               {dotted && f.tag === dotted ? `${f.label} целиком` : dotted || through ? shortOf(f.label, dotted ?? through!.base) : f.label}
               {!dotted && !through && below(f.tag) ? <span className="slot__more" title="наберите точку после имени — откроется список">. ещё {below(f.tag)}</span> : null}
+            </button>
+          ))}
+          {words.map((word, k) => (
+            <button
+              key={`word-${word}`} type="button" role="option" aria-selected={extras.length + matches.length + k === lit}
+              className={`slot__option${extras.length + matches.length + k === lit ? ' slot__option--lit' : ''}`}
+              onMouseEnter={() => setHighlight(extras.length + matches.length + k)}
+              onMouseDown={e => { e.preventDefault(); pickWord(word); }}
+            >
+              <span className="slot__group slot__group--record">формула</span>
+              {word}
             </button>
           ))}
         </div>

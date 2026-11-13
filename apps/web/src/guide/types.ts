@@ -29,6 +29,7 @@ export interface Move {
   say?: string;
   hint?: string;
   done?: (view: View) => boolean;
+  maybe?: boolean;
 }
 
 export interface Chapter {

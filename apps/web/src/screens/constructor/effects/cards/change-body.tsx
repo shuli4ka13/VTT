@@ -323,7 +323,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
           {...(context.sheets ? { sheets: context.sheets } : {})}
           badges={inputBadges(context)}
           invalid={Boolean(trouble)}
-          placeholder={direction === 'set' ? 'например: @цель.поле' : 'например: @шаг'}
+          placeholder={direction === 'set' ? 'например: цель.поле' : 'например: название шага'}
           options={needs}
           onChange={next => { setTrouble(null); setDraft(next); }}
           onCommit={commit}
@@ -491,7 +491,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
                 quick={(system.effects[effectNameOf(step.effect)]?.params ?? []).filter(param => param.kind === 'boolean').map(param => ({ ref: param.key, label: param.label ?? param.key, kind: 'boolean' as const }))}
                 title="Какие снять"
                 where="состояние · какие снять"
-                placeholder="например: @заклинание == @spell_effect"
+                placeholder="например: заклинание == вызванный_эффект"
               />}
               <Field label="Сколько снять">
                 <Select
@@ -550,7 +550,7 @@ function StatusArgs({ step, context, onArg }: {
             system={context.system}
             where={`наложить · ${param.label ?? param.key}`}
             {...(context.sheets ? { sheets: context.sheets } : {})}
-            placeholder={param.kind === 'sheet' ? 'например: @действующий' : 'например: @действующий.поле'}
+            placeholder={param.kind === 'sheet' ? 'например: действующий' : 'например: действующий.поле'}
             onCommit={next => onArg(param.key, next.trim() ? { expr: next } : null)}
           />
         </Field>

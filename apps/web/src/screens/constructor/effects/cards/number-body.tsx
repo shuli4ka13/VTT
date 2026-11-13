@@ -66,7 +66,7 @@ export function NumberBody({ step, context, edit, onAddParam, takenNames, onRena
             extraNames={names}
             {...(context.sheets ? { sheets: context.sheets } : {})}
             badges={inputBadges(context)}
-            placeholder="наберите @ и выберите название"
+            placeholder="начните набирать название"
             onChange={next => setDraft(next)}
             onCommit={commit}
             onCancel={() => setDraft(null)}

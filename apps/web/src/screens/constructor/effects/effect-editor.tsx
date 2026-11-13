@@ -509,7 +509,7 @@ function Bond({ effect, system, id, edit }: {
         quick={paramsOf(system, effect).filter(param => param.kind === 'boolean').map(param => ({ ref: param.key, label: param.label ?? param.key, kind: 'boolean' as const }))}
         names={inputNames}
         where="держание · только если"
-        placeholder="например: @holds"
+        placeholder="например: держится"
       />
       <Field label="Сколько держит">
         <Select

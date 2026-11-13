@@ -100,7 +100,7 @@ function RollFlow({ roll }: { roll: SystemRoll }) {
   return (
     <>
       <div className="dict-row roll-line roll-line--top">
-        <span className="dict-row__label" title="что получает тот, кто бросил: @бросок и через точку — @бросок.пройден">Что отдаёт</span>
+        <span className="dict-row__label" title="что получает тот, кто бросил: бросок целиком и через точку — его части, например «бросок.пройден»">Что отдаёт</span>
         <div className="roll-form__body roll-form__body--stack">
           <FlowList rows={[...own, ...common]} />
         </div>

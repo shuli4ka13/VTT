@@ -47,7 +47,7 @@ export function CheckBody({ step, context, edit, system, asIf = false }: {
       system={system}
       where={`проверка · ${key === 'failIf' ? 'всегда провал' : 'всегда успех с запасом'}`}
       {...shared}
-      placeholder={key === 'failIf' ? 'например: @носитель.ки == 0' : 'например: 1'}
+      placeholder={key === 'failIf' ? 'например: носитель.ки == 0' : 'например: 1'}
       onCommit={text => edit(at, draft => { const d = loose(draft); if (text.trim()) d[key] = { expr: text.trim() }; else delete d[key]; })}
     />
   );
@@ -85,7 +85,7 @@ export function CheckBody({ step, context, edit, system, asIf = false }: {
       <ContestLine step={step} roll={null} context={context} />
       <Fold title="ещё" summary={summary}>
         <Field label="Ступени" hint="Вместо «да/нет» исход читается ступенями: первая подходящая сверху. В условиях видны «успех», «степени» и шаги эффекта.">
-          <DegreesEditor value={step.degrees} system={system} where="проверка · ступень" placeholder="@степени >= 5"
+          <DegreesEditor value={step.degrees} system={system} where="проверка · ступень" placeholder="степени >= 5"
             shared={{ extraNames: degreeNames, meanings: degreeMeanings, badges: inputBadges(context), ...(context.sheets ? { sheets: context.sheets } : {}) }}
             set={next => edit(at, draft => { const d = loose(draft); if (next === undefined) delete d.degrees; else d.degrees = next; })} />
         </Field>

@@ -15,6 +15,7 @@ import { resultsOf } from '@vtt/engine/model/names-at';
 import type { SlotContext, EarlierStep } from '../slots.tsx';
 import { sheetsAt } from './names.ts';
 import type { Effect, Step, System, ValueKind } from '@vtt/schema';
+import { focusNew } from '../../../ui/focus-new.ts';
 
 type Return = NonNullable<Effect['returns']>[number];
 
@@ -75,6 +76,7 @@ export function ReturnsEditor({ id, effect, system, onEdit }: {
     if (target) fn(target);
   });
   const add = () => {
+    focusNew();
     const key = freeId(keys, 'итог');
     setOpened(now => [...now, key]);
     onEdit(draft => { (draft.returns ??= []).push({ key, label: 'Новый итог', kind: 'boolean' } as Return); });
@@ -211,7 +213,7 @@ function ReturnForm({ column, sources, system, context, names, sheets, where, ke
       </div>
       {more ? (
         <div className="param-form__row">
-          <Field label="Имя в формулах" hint="как итог зовётся у вызвавшего: @шаг.имя. Идёт за названием, пока на него никто не ссылается">
+          <Field label="Имя в формулах" hint="как итог зовётся у вызвавшего. Идёт за названием, пока на него никто не ссылается">
             <KeyField value={column.key} locked={locked} taken={keys} onChange={onKey} />
           </Field>
         </div>

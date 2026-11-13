@@ -1,6 +1,7 @@
 import { emptySystem } from '../../store/world.ts';
 import type { Lesson, View } from '../types.ts';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { visible } from '../anchor.ts';
 import { fieldBy, inBlock, columnOf, effectBy, stepsOf, reads, is, subtracts, adds, armOf, numberOf, errorsOf, exprOf, isArm, same, FORMULA_DONE, barOpen, barText } from '../find.ts';
 
 const hp = (view: View) => fieldBy(view.system, 'Хиты');
@@ -44,6 +45,15 @@ const versusOk = (view: View): boolean => {
 
 export const PROBLEMS = 'Проблемы системы';
 
+const textOutsideGuide = (): string => {
+  const root = document.body.cloneNode(true) as HTMLElement;
+  root.querySelectorAll('.guide').forEach(node => node.remove());
+  return (root.textContent ?? '').replace(/\s+/g, ' ');
+};
+
+export const trialShown = (view: View): boolean =>
+  errorsOf(view.system) === 0 && textOutsideGuide().includes('Б · Хиты: 10 → 5');
+
 export const problemsClean = (view: View): boolean => view.opened(PROBLEMS) && errorsOf(view.system) === 0;
 
 export const firstSystem: Lesson = {
@@ -66,7 +76,8 @@ export const firstSystem: Lesson = {
       tab: 'sheet',
       say: 'Заведите на листе блок «Бой».',
       at: [
-        { at: { text: '+ блок', in: 'Листы' }, say: 'В виде «блоки и типы листов» нажмите «+ блок».', done: view => (view.system.blocks ?? []).length > 0 },
+        { at: { text: 'блоки и типы листов' }, say: 'Над листом нажмите «блоки и типы листов».', done: () => visible({ text: '+ блок', in: 'Листы' }) },
+        { at: { text: '+ блок', in: 'Листы' }, say: 'В «Листы» нажмите «+ блок».', done: view => (view.system.blocks ?? []).length > 0 },
         { at: { input: 'как зовётся блок' }, say: 'Впишите имя «Бой» и нажмите Enter.' },
       ],
       via: { text: 'блоки и типы листов' },
@@ -101,9 +112,12 @@ export const firstSystem: Lesson = {
       id: 'hp-min',
       chapter: 'Лист',
       tab: 'sheet',
-      say: 'Чтобы хиты не уходили в минус, там же в «Не ниже» впишите 0 и нажмите Enter.',
+      say: 'Чтобы хиты не уходили в минус, там же в «Не ниже» впишите 0.',
       hint: '«Не ниже» — поле формулы: после щелчка ввод идёт в строку формул наверху экрана. Enter или «готово» сохраняет.',
-      at: { text: 'Не ниже' },
+      at: [
+        { at: { text: 'Не ниже' }, say: 'Щёлкните «Не ниже» и впишите 0.', done: view => barText(view).trim() === '0' || numberOf(columnOf(view.system, hp(view))?.min) === 0 },
+        { at: [FORMULA_DONE, { text: 'Не ниже' }], say: 'Нажмите Enter или «готово».' },
+      ],
       via: [{ text: 'ещё', in: 'Лист' }, { text: 'Хиты', in: 'Листы' }, { text: 'Бой', in: 'Листы' }, { text: 'блоки и типы листов' }],
       done: view => numberOf(columnOf(view.system, hp(view))?.min) === 0,
       result: () => 'Хиты: в новом листе 10, не ниже 0.',
@@ -147,7 +161,7 @@ export const firstSystem: Lesson = {
       say: 'Заведите эффект «Удар».',
       at: [
         { at: { text: '+ кнопкой', in: 'Библиотека эффектов' }, say: 'В «Библиотеке эффектов» нажмите «+ кнопкой».', done: view => Object.keys(view.system.effects ?? {}).length > 0 },
-        { at: { input: 'как зовётся эффект' }, say: 'Впишите название «Удар».' },
+        { at: { input: 'как зовётся эффект' }, say: 'Впишите название «Удар» и нажмите Enter.' },
       ],
       done: view => Boolean(strike(view)),
       result: () => 'Эффект «Удар» заведён. Пока у него один вход — «Кто действует».',
@@ -157,9 +171,11 @@ export const firstSystem: Lesson = {
       chapter: 'Кость и удар',
       tab: 'sheet',
       say: 'Чтобы «Удар» был у каждого героя, на вкладке «Лист» в разделе «Что даёт всем листам» добавьте «Удар».',
-      hint: 'Раздела не видно? Выберите вид «блоки и типы листов» и кнопку «все блоки»: раздел показан только на ней.',
-      at: { field: 'Что даёт всем листам' },
-      via: [{ text: 'все блоки', in: 'Листы' }, { text: 'блоки и типы листов' }],
+      at: [
+        { at: { text: 'блоки и типы листов' }, say: 'Над листом нажмите «блоки и типы листов».', done: () => visible({ text: 'все блоки', in: 'Листы' }), maybe: true },
+        { at: { text: 'все блоки', in: 'Листы' }, say: 'В «Листы» нажмите «все блоки»: раздел показан только на ней.', done: () => visible({ field: 'Что даёт всем листам' }), maybe: true },
+        { at: { field: 'Что даёт всем листам' }, say: 'В «Что даёт всем листам» выберите «Удар».' },
+      ],
       done: view => {
         const found = strike(view);
         return Boolean(found && (view.system.grants ?? []).includes(found[0]));
@@ -214,7 +230,7 @@ export const firstSystem: Lesson = {
           say: 'Начните набирать «класс» — число заменится — и в группе «у «Цель»» выберите «Класс брони».',
           done: view => is(barText(view), `@цель.${ac(view)?.tag ?? ''}`) || versusOk(view),
         },
-        { at: [FORMULA_DONE, { guide: 'check-formula' }], say: 'Нажмите «готово».' },
+        { at: [FORMULA_DONE, { guide: 'check-formula' }], say: 'Нажмите Enter или «готово».' },
       ],
       done: view => rollsCheckDie(view) && versusOk(view),
       result: () => 'Бросок кости и проверка: итог против класса брони цели.',
@@ -246,7 +262,12 @@ export const firstSystem: Lesson = {
             return Boolean(key && armApplies(view).some(step => is(step.target, `@цель.${key}`)));
           },
         },
-        { at: { text: 'Сколько' }, say: 'В «Как» оставьте «отнять», в «Сколько» впишите 5.' },
+        {
+          at: { text: 'Сколько' },
+          say: 'Щёлкните «Сколько» и впишите 5.',
+          done: view => barText(view).trim() === '5' || Boolean(hp(view) && armApplies(view).some(step => numberOf(step.value) === 5)),
+        },
+        { at: [FORMULA_DONE, { text: 'Сколько' }], say: 'Нажмите Enter или «готово».' },
       ],
       done: view => {
         const key = hp(view)?.tag;
@@ -274,8 +295,13 @@ export const firstSystem: Lesson = {
       chapter: 'Проверка и урон',
       tab: 'effects',
       panel: 'Рядом',
-      say: 'В панели «Рядом» откройте «Проба» и выберите кость «максимум». В «Что вышло» появится «Б · Хиты: 10 → 5». Проба систему не меняет.',
-      at: { text: 'Проба' },
+      say: 'Проверьте «Удар» пробой: с костью «максимум» в «Что вышло» появится «Б · Хиты: 10 → 5». Проба систему не меняет.',
+      at: [
+        { at: { text: 'Проба', in: 'Рядом' }, say: 'В панели «Рядом» нажмите «Проба».', done: () => visible({ text: 'Что вышло' }) },
+        { at: { text: 'Кость' }, say: 'В «Кость» выберите «максимум».', done: view => trialShown(view) },
+      ],
+      done: view => trialShown(view),
+      result: () => 'Проба показала: Б теряет 5 хитов.',
     },
     {
       id: 'heal',
@@ -285,10 +311,10 @@ export const firstSystem: Lesson = {
       tab: 'effects',
       say: 'Сделайте эффект «Лечение»: он прибавляет 3 хита тому, кто действует.',
       hint: '«+ кнопкой», затем «+ изменение»: «У кого» — «Кто действует», «Какое поле» — «Хиты», «Как» — «прибавить», «Сколько» — 3.',
-      goal: 'у эффекта «Лечение» есть изменение: «Хиты» того, кто действует, прибавляются на 3.',
+      goal: 'у эффекта «Лечение» есть изменение: «Хиты» того, кто действует, прибавляются на 3, а в «Проблемах» нет ошибок.',
       done: view => {
         const key = hp(view)?.tag;
-        return Boolean(key && stepsOf(effectBy(view.system, 'Лечение')?.[1]).some(step =>
+        return Boolean(key && errorsOf(view.system) === 0 && stepsOf(effectBy(view.system, 'Лечение')?.[1]).some(step =>
           step.type === 'apply' && adds(step) && is(step.target, `@действующий.${key}`) && numberOf(step.value) === 3));
       },
       result: () => '«Лечение»: +3 хита своему листу.',

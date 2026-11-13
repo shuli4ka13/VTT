@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { useFormulaBar } from './formula-bar.ts';
+import { useProblemsPanel } from '../screens/constructor/problems-panel.tsx';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { world as W } from '@vtt/schema';
 import type { System, Compendium, Sheet } from '@vtt/schema';
@@ -154,6 +155,7 @@ export const useGuide = create<GuideState>()(persist((set, get) => ({
 
   go: step => {
     useFormulaBar.getState().dismiss();
+    useProblemsPanel.getState().set(false);
     const now = get().step;
     const world = useWorld.getState();
     const marks = Object.fromEntries(Object.entries(get().marks).filter(([at]) => Number(at) <= step));

@@ -44,12 +44,12 @@ export function CombatSection({ system, editSystem }: { system: System; editSyst
               onChange={next => editSystem(draft => { if (draft.initiative) draft.initiative.die = next; })}
             />
           </Field>
-          <Field label="Прибавка" hint="Формула по листу того, кто бросает: @ловкость.">
+          <Field label="Прибавка" hint="Формула по листу того, кто бросает: ловкость.">
             <FormulaField
               value={String(initiative.bonus?.expr ?? '')}
               system={system}
               where="инициатива · прибавка"
-              placeholder="например: @initiative"
+              placeholder="например: инициатива"
               onCommit={text => editSystem(draft => { if (!draft.initiative) return; if (text.trim()) draft.initiative.bonus = { expr: text.trim() }; else delete draft.initiative.bonus; })}
             />
           </Field>

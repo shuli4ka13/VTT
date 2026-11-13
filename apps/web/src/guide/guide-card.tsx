@@ -170,13 +170,16 @@ function LessonCard() {
   const [entry, setEntry] = useState<{ key: string; already: boolean }>(() => ({ key, already: done }));
   const [got, setGot] = useState<string | null>(null);
   const current = entry.key === key ? entry : { key, already: done };
-  if (entry.key !== key) setEntry(current);
+  if (entry.key !== key) {
+    setEntry(current);
+    if (got !== null) setGot(null);
+  }
   const revisit = index < reached.current;
 
   useEffect(() => { reached.current = Math.max(reached.current, index); }, [index]);
 
   useEffect(() => {
-    if (!step.done || current.already || revisit || !done || got === key) return;
+    if (!step.done || current.already || !done || got === key) return;
     setGot(key);
   }, [done, key]);
 
@@ -192,7 +195,7 @@ function LessonCard() {
   const said = movesOf(step).map(one => one.say).filter((text): text is string => Boolean(text));
   const success = got === key && done && !revisit;
   const already = Boolean(step.done && (current.already || revisit) && done);
-  const free = !step.done || current.already || revisit || done || success;
+  const free = !step.done || done || got === key;
   const trap = done || success ? null : trapOf(step, view);
   const hint = moveOf(step, view)?.hint ?? step.hint;
   const where = `глава ${place.chapter} из ${place.chapters} · шаг ${place.step} из ${place.steps}`;

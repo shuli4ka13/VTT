@@ -242,7 +242,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
           names={visible}
           sheets={sheets}
           where={`подписка №${index + 1} · только если`}
-          placeholder={phase === 'done' ? 'например: сколько(@итоги.шаг.success, да) >= 1' : 'например: @носитель.поле <= 0'}
+          placeholder={phase === 'done' ? 'например: сколько(итоги.шаг.success, да) >= 1' : 'например: носитель.поле <= 0'}
           holderHint=""
           holderTip="Носитель — лист, на котором висит эта подписка."
           aside={(

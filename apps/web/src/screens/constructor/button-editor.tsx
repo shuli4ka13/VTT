@@ -135,7 +135,7 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
             system={system}
             names={propNames}
             where={`${where} · только если`}
-            placeholder="например: @срок.держится"
+            placeholder="например: срок держится"
             ruleHint="Пока условие неверно, у записи этой кнопки нет."
           />
         </div>

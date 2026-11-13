@@ -1,6 +1,7 @@
 import type { System, Binding, Table } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
-import { effectBy, tableBy, columnBy, is, errorsOf } from '../find.ts';
+import { effectBy, tableBy, columnBy, is, errorsOf, FORMULA_DONE, barOpen, barText } from '../find.ts';
+import { visible } from '../anchor.ts';
 import { problemsClean } from './first-system.ts';
 import { bindingHolds } from '@vtt/engine/events/actions';
 import type { System as EngineSystem, CompendiumRecord } from '@vtt/engine/model/types';
@@ -41,9 +42,15 @@ const stopFollowsTerm = (view: View): boolean => {
   return rows.every(row => stopHolds(view, row.value) === ((row.cells ?? {})[holds] === true));
 };
 
+const holdsText = (view: View, text: string): boolean => {
+  const term = termColumn(view);
+  const holds = holdsColumn(view);
+  return Boolean(term && holds && text.replace(/\s+/g, '') === `@${term}.${holds}`);
+};
+
 const longTerms = (view: View): number => {
   const holds = holdsColumn(view);
-  return (terms(view)?.[1].rows ?? []).filter(row => holds && (row.cells ?? {})[holds] === true).length;
+  return (terms(view)?.[1].rows ?? []).filter(row => holds && String(row.value ?? '').trim() !== '' && (row.cells ?? {})[holds] === true).length;
 };
 
 export const spells: Lesson = {
@@ -108,9 +115,12 @@ export const spells: Lesson = {
       tab: 'records',
       panel: 'книги',
       say: 'Покажите «Прекратить» только тем записям, у которых срок держится.',
-      hint: 'У второй кнопки нажмите «ещё». В «Только если» выберите «Срок · Держится».',
-      at: { text: 'Только если', in: 'кнопка «Прекратить»' },
-      via: { text: 'ещё', in: 'кнопка «Прекратить»' },
+      at: [
+        { at: { text: 'ещё', in: 'кнопка «Прекратить»' }, say: 'У второй кнопки нажмите «ещё».', done: () => visible({ text: 'Только если', in: 'кнопка «Прекратить»' }) },
+        { at: { text: 'Только если', in: 'кнопка «Прекратить»' }, say: 'Щёлкните «Только если» и начните набирать «срок».', done: view => barOpen(view) || stopFollowsTerm(view) },
+        { at: { text: 'Только если', in: 'кнопка «Прекратить»' }, say: 'В списке выберите «Срок → Держится».', done: view => holdsText(view, barText(view)) || stopFollowsTerm(view) },
+        { at: [FORMULA_DONE, { text: 'Только если', in: 'кнопка «Прекратить»' }], say: 'Нажмите Enter или «готово».' },
+      ],
       done: view => {
         return stopFollowsTerm(view) && longTerms(view) > 0;
       },
@@ -123,12 +133,11 @@ export const spells: Lesson = {
       tab: 'effects',
       panel: 'Библиотека эффектов',
       say: 'Пусть «Сотворить» держит «Поддержание».',
-      hint: 'Свойств не видно? Нажмите «свойства» рядом с названием эффекта.',
       at: [
         { at: { text: 'Сотворить', in: 'Библиотека эффектов' }, say: 'В «Библиотеке эффектов» откройте «Сотворить».', done: view => view.effect === effectBy(view.system, 'Сотворить')?.[0] },
+        { at: { text: 'свойства' }, say: 'Если свойств не видно, нажмите «свойства» рядом с названием эффекта.', done: () => visible({ text: '+ держание' }), maybe: true },
         { at: { text: '+ держание' }, say: 'В свойствах нажмите «+ держание». В «Держит» встанет «Поддержание».' },
       ],
-      via: { text: 'свойства' },
       done: view => {
         const holder = effectBy(view.system, 'Поддержание')?.[0];
         return Boolean(holder && castEffect(view)?.bond?.effect === holder);

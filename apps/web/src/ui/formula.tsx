@@ -4,7 +4,9 @@ import type { System } from '@vtt/schema';
 import { compile } from '@vtt/engine/formula';
 import { Verdict } from './primitives.tsx';
 import { FormulaField } from './formula-field.tsx';
+import { namesOf } from './formula-chips.tsx';
 import type { SheetNames } from './formula-chips.tsx';
+import { resolveNames, NO_NAME } from './formula-resolve.ts';
 import type { BarOption } from '../store/formula-bar.ts';
 
 export { columnPaths, fieldPaths } from './paths.ts';
@@ -43,7 +45,10 @@ export function FormulaInput({ system, value, onChange, placeholder, where = 'ф
   options?: BarOption[];
   problem?: string | null;
 }) {
-  const parsed = useMemo(() => parseFormula(value), [value]);
+  const known = useMemo(() => namesOf(system, { extraNames, extraOptions: options, sheets }), [system, extraNames, options, sheets]);
+  const settled = useMemo(() => resolveNames(value, known, { final: true }), [value, known]);
+  const parsed = useMemo(() => parseFormula(settled.text), [settled.text]);
+  const lost = parsed.ok ? undefined : settled.unknown[0];
 
   return (
     <div className="stack stack--tight">
@@ -57,7 +62,8 @@ export function FormulaInput({ system, value, onChange, placeholder, where = 'ф
         {...(badges ? { badges } : {})}
         {...(sheets ? { sheets } : {})}
         {...(options ? { options } : {})}
-        placeholder={placeholder ?? 'наберите @ и выберите поле'}
+        placeholder={placeholder ?? 'начните набирать название поля'}
+        notes={false}
         onChange={onChange}
       />
 
@@ -66,6 +72,8 @@ export function FormulaInput({ system, value, onChange, placeholder, where = 'ф
           ? <Verdict tone="bad">{problem}</Verdict>
           : parsed.ok
           ? <Verdict tone="ok">правило верное · зависит от {parsed.deps.length}</Verdict>
+          : lost
+          ? <Verdict tone="bad">{NO_NAME(lost)}</Verdict>
           : <Verdict tone="bad">
               {parsed.error}
               {parsed.pos === undefined ? null : <span className="faint"> · позиция {parsed.pos}</span>}

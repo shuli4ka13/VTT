@@ -1,5 +1,5 @@
 import type { SheetNames } from './formula-chips.tsx';
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { useFormulaBar } from '../store/formula-bar.ts';
@@ -27,6 +27,7 @@ export interface FormulaFieldProps {
   table?: string;
   spoken?: string;
   whole?: boolean;
+  notes?: boolean;
 }
 
 function SpokenFormula({ words, formula, onOpen }: { words: string; formula: string; onOpen: () => void }) {
@@ -91,13 +92,21 @@ export function FormulaField(props: FormulaFieldProps) {
   );
 }
 
-function InlineFormula({ value, system, onChange, onCommit, onCancel, names, extraNames, badges, sheets, placeholder, options, prefix, table, spoken, whole }: FormulaFieldProps) {
+function InlineFormula({ value, system, onChange, onCommit, onCancel, names, extraNames, badges, sheets, placeholder, options, prefix, table, spoken, whole, notes }: FormulaFieldProps) {
   const [text, setText] = useState<string | null>(null);
   const [asked, setAsked] = useState(false);
   const current = text ?? value;
-  const write = (next: string) => { setText(next); onChange?.(next); };
-  const close = () => { setText(null); setAsked(false); };
-  const commit = () => { if (text !== null) onCommit?.(text); close(); };
+  const final = useRef<string | null>(null);
+  const write = (next: string) => { final.current = null; setText(next); onChange?.(next); };
+  const close = () => { final.current = null; setText(null); setAsked(false); };
+  const commit = () => {
+    if (text !== null) {
+      const done = final.current ?? text;
+      if (done !== text) onChange?.(done);
+      onCommit?.(done);
+    }
+    close();
+  };
   const api = { write, dismiss: () => setText(null) };
   if (spoken && !asked) return <SpokenFormula words={spoken} formula={value} onOpen={() => setAsked(true)} />;
   return (
@@ -112,6 +121,7 @@ function InlineFormula({ value, system, onChange, onCommit, onCancel, names, ext
       {...(placeholder ? { placeholder } : {})}
       {...(prefix ? { prefix } : {})}
       calculator
+      {...(notes === false ? { notes: false } : {})}
       {...(whole ? { whole: true } : {})}
       {...(asked ? { autoFocus: true } : {})}
       extraOptions={(options ?? []).map(option => ({
@@ -121,6 +131,7 @@ function InlineFormula({ value, system, onChange, onCommit, onCancel, names, ext
         onPick: (insert: (piece: string) => string) => option.onPick(insert, api),
       }))}
       onChange={write}
+      onFinal={text => { final.current = text; }}
       onBlur={commit}
       onKeyDown={e => {
         if (e.key === 'Enter') commit();
