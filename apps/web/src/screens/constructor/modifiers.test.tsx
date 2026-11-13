@@ -295,3 +295,20 @@ describe('кнопки добавления правок', () => {
     expect(screen.getByText('+ правка вызова')).toBeTruthy();
   });
 });
+
+describe('«На сколько» правки вызова знает листы-входы', () => {
+  const withTarget = {
+    ...system,
+    effects: { урон: { label: 'Урон', activation: 'manual', params: [
+      { key: 'цель', label: 'Цель', kind: 'sheet', role: 'target' },
+      { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' },
+    ], steps: [] } },
+  } as unknown as System;
+
+  it('@цель.ac рисуется фишкой с названием поля, а не сырым текстом', () => {
+    const mods = [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'add', value: { expr: '@цель.ac' } }] as Modifier[];
+    renderOpen(<ModifiersEditor system={withTarget} modifiers={mods} onEdit={vi.fn()} />);
+    expect(screen.getByText('Класс брони')).toBeTruthy();
+    expect(screen.queryByDisplayValue('@цель.ac')).toBeNull();
+  });
+});

@@ -2,7 +2,7 @@
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { render, cleanup, fireEvent, screen } from '@testing-library/react';
 import { useWorld, emptySystem } from '../../store/world.ts';
-import { ProblemsButton } from './problems-panel.tsx';
+import { ProblemsButton, problemsWord } from './problems-panel.tsx';
 import type { System } from '@vtt/schema';
 
 const broken = (): System => {
@@ -23,8 +23,8 @@ describe('панель проблем', () => {
 
   it('считает проблемы и по клику открывает вкладку, эффект и шаг', () => {
     render(<ProblemsButton />);
-    const button = screen.getByRole('button', { name: /Проблемы \(\d+\)/ });
-    expect(button.textContent).toContain('(');
+    const button = screen.getByRole('button', { name: /Проблемы: \d+ (ошиб|замеч)/ });
+    expect(button.textContent).toMatch(/\d+ ошиб/);
     fireEvent.click(button);
     const rows = screen.getAllByRole('alert');
     expect(rows.length).toBeGreaterThanOrEqual(2);
@@ -38,10 +38,18 @@ describe('панель проблем', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('без проблем — «Проблемы (0)» и пустая панель', () => {
+  it('без проблем — «Проблем нет» и пустая панель', () => {
     useWorld.setState(state => ({ ...state, system: emptySystem() }));
     render(<ProblemsButton />);
-    fireEvent.click(screen.getByRole('button', { name: 'Проблемы (0)' }));
-    expect(screen.getByText('Проблем нет')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Проблем нет' }));
+    expect(screen.getByRole('dialog').querySelector('.empty')).toBeTruthy();
+  });
+
+  it('склоняет ошибки и замечания раздельно', () => {
+    expect(problemsWord(2, 3)).toBe('Проблемы: 2 ошибки, 3 замечания');
+    expect(problemsWord(1, 0)).toBe('Проблемы: 1 ошибка');
+    expect(problemsWord(0, 5)).toBe('Проблемы: 5 замечаний');
+    expect(problemsWord(11, 21)).toBe('Проблемы: 11 ошибок, 21 замечание');
+    expect(problemsWord(0, 0)).toBe('Проблем нет');
   });
 });

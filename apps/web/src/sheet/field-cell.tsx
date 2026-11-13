@@ -17,7 +17,7 @@ export function FieldCell({ field, system, sheet, reader, onChange, onRoll, bare
   onChange?: (tag: string, value: StoredValue) => void;
   onRoll?: (tag: string) => void;
 }) {
-  const label: ReactNode = bare ? <span className="sr-only">{field.label}</span> : field.label;
+  const label: ReactNode = bare ? <span className="sr-only">{field.label}</span> : field.hint ? <span title={field.hint}>{field.label}</span> : field.label;
   const roll = field.roll && onRoll
     ? (
       <Button size="sm" title={field.roll.label ?? `Проверка: ${field.label}`} onClick={() => onRoll(field.tag)}>

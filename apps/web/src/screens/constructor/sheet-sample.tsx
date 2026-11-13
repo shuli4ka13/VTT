@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { useWorld, useBook } from '../../store/world.ts';
 import { useReader } from '../../engine/use-calc.ts';
 import { SheetView } from '../../sheet/sheet-view.tsx';
-import { Card, Chip, Field, Select, Button } from '../../ui/primitives.tsx';
+import { Card, Chip, Field, Select, Button, Fold } from '../../ui/primitives.tsx';
 import { recordDetails } from '../../sheet/record-view.tsx';
 import { ThingsList, ThingLine } from '../../sheet/things-list.tsx';
 import { sheetKinds, shownOn, recordKinds, recordKindOf } from '@vtt/engine/model/owned';
@@ -15,7 +15,7 @@ import { OPEN_PAGE } from './page-panel.tsx';
 import type { SheetList } from '@vtt/schema';
 import type { Sheet, StoredValue, System, CompendiumRecord, Column } from '@vtt/schema';
 import { fieldsOf, fieldOf, rowKeyOf } from '@vtt/engine/model/sheet-columns';
-import { listOf } from '@vtt/engine/model/lists';
+import { listOf, optionsOf } from '@vtt/engine/model/lists';
 import { setRowView } from './row-view.ts';
 
 const ZERO: Record<string, unknown> = { number: 0, text: '', boolean: false, choice: '' };
@@ -38,6 +38,19 @@ export function sampleCells(system: System, columns: readonly Column[]): Record<
       const pick = anyOf(listOf(system, column.from) ?? []);
       if (pick) out[column.key] = column.many ? [pick.value] : pick.value;
     }
+  }
+  return out;
+}
+
+export function sampleValues(system: System): Record<string, StoredValue> {
+  const out: Record<string, StoredValue> = {};
+  for (const field of fieldsOf(system)) {
+    const value = field.value;
+    if (value.kind !== 'stored' || value.type !== 'choice') continue;
+    const start = value.default;
+    if (start !== undefined && start !== '' && !(Array.isArray(start) && !start.length)) continue;
+    const first = optionsOf(system, field)[0];
+    if (first) out[field.tag] = (value.many ? [first.value] : first.value) as StoredValue;
   }
   return out;
 }
@@ -81,10 +94,14 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
   const book = useMemo(() => ({ ...compendium, records: [...(compendium.records ?? []), ...samples] }), [compendium, samples]);
   const sample = useMemo<Sheet>(() => ({
     id: 'образец', systemId: system.id ?? '', name: kind?.label ?? 'Образец листа',
-    ...(of ? { of } : {}), values: {}, has: samples.map(record => ({ of: record.id })), effects: [],
-  }), [system.id, of, kind?.label, samples]);
+    ...(of ? { of } : {}), values: sampleValues(system), has: samples.map(record => ({ of: record.id })), effects: [],
+  }), [system, of, kind?.label, samples]);
   const reader = useReader(system, sample, book);
-  const only = kind?.blocks?.length ? fieldsOf(system).filter(shownOn(system, sample)).map(f => f.tag) : undefined;
+  const everyField = fieldsOf(system);
+  const placed = everyField.filter(f => f.placements?.length);
+  const service = everyField.filter(f => !f.placements?.length);
+  const visible = shownOn(system, sample);
+  const only = placed.filter(f => !kind?.blocks?.length || visible(f)).map(f => f.tag);
 
   const at = (activeBlock ? pageOfBlock(system, activeBlock) : undefined) ?? activePage;
   const actions = (() => { try { return availableActions(sample, { system, compendium: book }); } catch { return []; } })();
@@ -161,6 +178,12 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
           editSystem(draft => setSample(draft, tag, value));
         }}
       />
+      <span className="faint">образец: значения подставлены для примера</span>
+      {service.length ? (
+        <Fold title="служебные поля" count={service.length}>
+          <div className="inline inline--tight">{service.map(f => <Chip key={f.tag}>{f.label || f.tag}</Chip>)}</div>
+        </Fold>
+      ) : null}
     </>
   );
 }

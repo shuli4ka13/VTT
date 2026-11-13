@@ -238,6 +238,10 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
   const isRoll = call === ROLL_CALL;
   const effect = isRoll ? undefined : system.effects[call];
   const amount = amountParamOf(effect);
+  const sheets = new Map<string, string>([
+    ...callNamesOf(system, call).sheets.map(name => [name, name] as const),
+    ...(effect?.params ?? []).filter(p => p.kind === 'sheet').map(p => [p.key, p.label ?? p.key] as const),
+  ]);
   const tagsParam = isRoll && m.param === 'tags';
   const pickCall = (next: string) => onChange(d => {
     if (next === d.call) return;
@@ -272,6 +276,7 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
           <FormulaInput
             where={tagsParam ? 'правка броска · какая метка' : 'правка вызова · на сколько'} system={system}
             {...(names ? { extraNames: names } : {})}
+            {...(sheets.size ? { sheets } : {})}
             {...(tagsParam ? { placeholder: 'например: "без Преимущества"' } : {})}
             value={(m.value as { expr?: string } | undefined)?.expr ?? ''}
             onChange={expr => onChange(d => { d.value = { expr }; })}

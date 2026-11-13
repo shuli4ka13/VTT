@@ -1,7 +1,7 @@
 import { BoundFormula } from '../bound-field.tsx';
 import type { Bound } from '../bound-field.tsx';
 import type { ReactNode } from 'react';
-import { Card, CardHead, Field, Button, DangerButton, Fold, Select, LabelInput } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Field, Button, DangerButton, Fold, Select, LabelInput, TextArea } from '../../../ui/primitives.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import type { System, ValueKind } from '@vtt/schema';
 import { TABS } from '../../../words.ts';
@@ -14,6 +14,7 @@ export interface ColumnShape {
   from?: string;
   many?: boolean;
   expr?: string;
+  hint?: string;
   min?: Bound;
   max?: Bound;
 }
@@ -24,13 +25,15 @@ export interface ColumnPatch {
   from?: string | null;
   many?: boolean;
   expr?: string | null;
+  hint?: string | null;
   min?: Bound | null;
   max?: Bound | null;
 }
 
 
-export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, where, names, system, onChange, onDelete, onClose, lead, extra, preview, bounds = true, table, sub, noun = 'колонка', more = false }: {
+export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, where, names, system, onChange, onDelete, onClose, lead, extra, preview, bounds = true, hinted = false, table, sub, noun = 'колонка', more = false }: {
   more?: boolean;
+  hinted?: boolean;
   table?: string;
   column: ColumnShape;
   kinds: readonly (readonly [string, string])[];
@@ -121,7 +124,7 @@ export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, w
       </Field>
       {preview}
       {lead}
-      {(bounds && column.kind === 'number') || extra ? (
+      {(bounds && column.kind === 'number') || extra || hinted ? (
         <Fold title="ещё" summary="на листе, бросок, границы" open={more}>
           {bounds && column.kind === 'number' ? (
             <div className="row">
@@ -132,6 +135,13 @@ export function ColumnCard({ column, kinds, tables, rowsOf, many, formulaHint, w
                 <BoundFormula value={column.max} system={system} where={`${where} · не выше`} {...(table ? { table } : {})} {...(names ? { names } : {})} onChange={next => onChange({ max: next })} />
               </Field>
             </div>
+          ) : null}
+          {hinted ? (
+            <Field label="Подсказка" hint="видна у подписи на листе">
+              <span data-field="Подсказка">
+                <TextArea value={column.hint ?? ''} placeholder="что это за значение" onChange={next => onChange({ hint: next.trim() ? next : null })} />
+              </span>
+            </Field>
           ) : null}
           {extra}
         </Fold>

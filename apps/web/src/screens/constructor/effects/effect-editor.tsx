@@ -8,7 +8,7 @@ import { CallEditor } from '../call-editor.tsx';
 import { TagsField } from '../tags-field.tsx';
 import { useWorld } from '../../../store/world.ts';
 import { newHandler, payStep } from '../factory.ts';
-import { Card, CardHead, Field, Input, Select, DangerButton, LabelInput, Button } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Field, Input, Select, DangerButton, LabelInput, Button, TextArea } from '../../../ui/primitives.tsx';
 import { useOpened } from '../../../store/opened.ts';
 import { useModifierRows, AddModifiers } from '../modifiers.tsx';
 import { LAUNCH_KINDS, launchHint } from './words.ts';
@@ -100,12 +100,22 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
         </div>
 
         <div data-field="Описание" title="Текст на листе. На расчёт не влияет">
-          <Input
+          <TextArea
             value={effect.description ?? ''}
             placeholder="что делает — словами книги правил"
-            onChange={next => edit(draft => { draft.description = next || undefined; })}
+            onChange={next => edit(draft => { if (next) draft.description = next; else delete draft.description; })}
           />
         </div>
+
+        <Field label="Заметка автора" hint="видна только здесь, игроку не показывается">
+          <span data-field="Заметка автора">
+            <TextArea
+              value={effect.note ?? ''}
+              placeholder="для себя: почему так, что проверить"
+              onChange={next => edit(draft => { if (next.trim()) draft.note = next; else delete draft.note; })}
+            />
+          </span>
+        </Field>
 
         {more ? (
           <div className="stack stack--tight effect-head__more">

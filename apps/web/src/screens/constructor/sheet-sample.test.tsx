@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
-import { SheetSample } from './sheet-sample.tsx';
+import { SheetSample, sampleValues } from './sheet-sample.tsx';
 import { ThingPanel } from './thing-panel.tsx';
 import { useWorld } from '../../store/world.ts';
 import type { System } from '@vtt/schema';
@@ -49,5 +49,35 @@ describe('образец листа: сумка из типов вещей и у
     expect(document.body.textContent).not.toMatch(/Урон: \d+/);
     fireEvent.click(screen.getByLabelText('Урон'));
     expect(useWorld.getState().system.tables!['оружие']!.columns![0]).not.toHaveProperty('onSheet');
+  });
+});
+
+describe('образец листа: служебные поля и выбор по умолчанию', () => {
+  afterEach(cleanup);
+
+  const world = {
+    id: 'x', name: 'x', effects: {},
+    tables: {
+      классы: { label: 'Классы', shape: 'rows', key: 'word', columns: [], rows: [{ value: 'воин', label: 'Воин' }, { value: 'маг', label: 'Маг' }] },
+      лист: { shape: 'single', columns: [
+        { key: 'класс', label: 'Класс', kind: 'choice', from: 'классы' },
+        { key: 'запас', label: 'Запас', kind: 'number' },
+      ] },
+      кошель: { shape: 'single', columns: [{ key: 'монеты', label: 'Монеты', kind: 'number' }] },
+    },
+    pages: [{ name: 'Сумка' }],
+    blocks: [{ name: 'Деньги', page: 'Сумка', parts: [{ table: 'кошель' }] }],
+  } as unknown as System;
+
+  it('выбор без умолчания получает первый вариант', () => {
+    expect(sampleValues(world)).toEqual({ класс: 'воин' });
+  });
+
+  it('показывает только поля из блоков, остальные — свёрнутой строкой', () => {
+    useWorld.setState(state => ({ ...state, system: world, compendium: { records: [] }, activePage: null, activeBlock: null }));
+    render(<SheetSample system={world} />);
+    expect(screen.getByText('образец: значения подставлены для примера')).toBeTruthy();
+    expect(screen.queryByLabelText('Запас')).toBeNull();
+    expect(document.body.textContent).toContain('служебные поля');
   });
 });

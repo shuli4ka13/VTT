@@ -156,3 +156,15 @@ describe('«Правила → Броски»: ступени и встроен�
     expect(names[5]!.title).toContain('«Степени числом»');
   });
 });
+
+describe('«Броски» без бросков', () => {
+  afterEach(cleanup);
+
+  it('пустое состояние — тем же блоком, что в «Таблицах», и объясняет, что броски не обязательны', () => {
+    const system = { tables: {}, effects: {}, constants: { d: { label: 'Кость', kind: 'die', dice: [{ sides: 20 }] } } } as unknown as System;
+    const view = render(<RollsSection system={system} editSystem={change => change(system as never)} />);
+    expect(view.container.querySelector('.empty')).toBeTruthy();
+    expect(view.container.textContent).toContain('Бросков с листа нет');
+    expect(view.container.textContent).toContain('«+ бросок»');
+  });
+});

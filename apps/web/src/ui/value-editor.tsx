@@ -1,12 +1,12 @@
 import type { System, Compendium, ValueKind } from '@vtt/schema';
 import { listOf } from '@vtt/engine/model/lists';
 import { rowTables } from '@vtt/engine/model/tables';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { recordsOf } from '@vtt/engine/model/owned';
 import { Input, Select } from './primitives.tsx';
 import { MultiChoice } from './multi-choice.tsx';
 import { DiceProp } from './dice-prop.tsx';
 import { FormulaField } from './formula-field.tsx';
+import { FieldPick } from './field-pick.tsx';
 
 export interface ValueType {
   kind?: ValueKind;
@@ -101,11 +101,7 @@ export function ValueEditor({ type, value, system, compendium, onlyWorn, except,
   }
   if (kind === 'field') {
     return (
-      <Select
-        value={String(value ?? '')}
-        options={[['', '— какое поле —'], ...fieldsOf(system).map(f => [f.tag, f.label] as const)] as never}
-        onChange={next => onChange(next)}
-      />
+      <FieldPick system={system} value={String(value ?? '')} onChange={onChange} />
     );
   }
   if (kind === 'choice') {

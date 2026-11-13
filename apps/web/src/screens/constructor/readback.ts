@@ -5,6 +5,7 @@ import { amountParamOf } from '@vtt/engine/model/lists';
 import type { System, Effect, Step, SystemConstant } from '@vtt/schema';
 import { labelOfTag, formulaAsLabels } from '../../ui/formula.tsx';
 import { formulaWords } from '../../ui/formula-words.ts';
+import { plural } from '../../ui/plural.ts';
 import { dice as diceText, asDice, DIE_LETTER } from '../../words.ts';
 import { ASK_YES, ASK_NO, ASK_WHOM } from '@vtt/engine/words/steps';
 import { fieldOf, hasField } from '@vtt/engine/model/sheet-columns';
@@ -276,15 +277,6 @@ export function numberReadback(step: Step, system: System, effect: Effect, names
   const by = (step as { by?: unknown }).by;
   return [seg(by ? `${whoOf(effect, by)} бросает:` : 'Считается число:'), ...amountValueSegments(step, system, effect, names), seg('.')];
 }
-
-const plural = (n: number, one: string, few: string, many: string) => {
-  const t = Math.abs(n) % 100;
-  const d = t % 10;
-  if (t > 10 && t < 20) return many;
-  if (d === 1) return one;
-  if (d >= 2 && d <= 4) return few;
-  return many;
-};
 
 function partLabel(system: System, part: string): string {
   for (const constant of Object.values(system.constants ?? {})) {

@@ -60,7 +60,7 @@ const dump = (what: unknown) => {
   if (process.env.BUILD_DUMP) writeFileSync(process.env.BUILD_DUMP, JSON.stringify(what, null, 1));
 };
 
-const fresh = (button: string, label: string, key: string, block: string, description: string) => {
+const fresh = (button: string, label: string, key: string, block: string, description: string, note?: string) => {
   const ui = within();
   ui.click(button);
   ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, label);
@@ -69,6 +69,7 @@ const fresh = (button: string, label: string, key: string, block: string, descri
   ui.type(document.querySelector<HTMLElement>('.step-name input')!, key);
   ui.select('Папка', block);
   ui.type('Описание', description);
+  if (note) ui.type('Заметка автора', note);
   return ui;
 };
 
@@ -217,7 +218,7 @@ describe('эффекты D&D собираются в конструкторе р
 
   it('D&D «Кость вдохновения наготове» (bardic_ready): вход-кость с умолчанием, на 1 срабатывание, «увидев кости» — прибавить кость из входа', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['bardic_ready']);
-    const ui = fresh('+ висит', goal!.label!, 'bardic_ready', 'Реакции', goal!.description!);
+    const ui = fresh('+ висит', goal!.label!, 'bardic_ready', 'Реакции', goal!.description!, goal!.note);
     within().click('+ когда');
     ui.click('+ вход');
     ui.type(ui.cell('Название', 0), 'Кость вдохновения');

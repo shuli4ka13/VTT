@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, CardHead, Button, DangerButton, Input, Select, Chip } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Button, DangerButton, Input, Select, Chip, Empty } from '../../../ui/primitives.tsx';
 import { NO_BLOCK } from '@vtt/engine/model/blocks';
 import { TagsField } from '../tags-field.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
@@ -260,7 +260,12 @@ export function RollsSection({ system, editSystem }: { system: System; editSyste
           {rolls.map(([id, roll]) => <RollRow key={id} id={id} roll={roll} system={system} editSystem={editSystem} />)}
         </div>
       ) : (
-        <span className="faint">{die ? 'Бросков нет. Заведите бросок и выберите поля, которые им бросают.' : 'Сначала заведите кость в «Костях».'}</span>
+        <Empty
+          title="Бросков с листа нет"
+          hint={die
+            ? 'Они не обязательны: успех может считать шаг «Проверка» в эффекте. Чтобы у поля на листе появилась кнопка «бросить» — заведите кость выше и нажмите «+ бросок».'
+            : 'Они не обязательны: успех может считать шаг «Проверка» в эффекте. Чтобы у поля на листе появилась кнопка «бросить» — сначала заведите кость в «Костях» выше.'}
+        />
       )}
     </Card>
   );

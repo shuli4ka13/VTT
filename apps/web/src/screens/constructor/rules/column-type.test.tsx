@@ -71,3 +71,19 @@ describe('выбор без таблицы', () => {
     expect(screen.getByText(/выбирать не из чего: сперва заведите таблицу со строками/)).toBeTruthy();
   });
 });
+
+describe('подсказка колонки', () => {
+  it('пишется в колонку и снимается пустым значением', () => {
+    const column = { key: 'сила', label: 'Сила', kind: 'number' } as TableColumn;
+    const system = { tables: { лист: { shape: 'single', columns: [column] } }, constants: {}, effects: {} } as unknown as System;
+    const view = render(<TableColumnCard id="лист" table={system.tables!.лист!} column={column} system={system}
+      edit={change => change(system.tables!.лист!)} onClose={() => {}} more />);
+    const area = () => document.querySelector<HTMLTextAreaElement>('[data-field="Подсказка"] textarea')!;
+    fireEvent.change(area(), { target: { value: 'мощь тела' } });
+    expect(column.hint).toBe('мощь тела');
+    view.rerender(<TableColumnCard id="лист" table={system.tables!.лист!} column={column} system={system}
+      edit={change => change(system.tables!.лист!)} onClose={() => {}} more />);
+    fireEvent.change(area(), { target: { value: '' } });
+    expect('hint' in column).toBe(false);
+  });
+});

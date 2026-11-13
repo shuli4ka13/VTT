@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { ReactNode, ChangeEvent, FocusEvent, KeyboardEvent } from 'react';
 
@@ -70,6 +70,34 @@ export function Input({ value, onChange, placeholder, mono, invalid, type = 'tex
       onFocus={onFocus}
       onKeyDown={onKeyDown}
       autoFocus={autoFocus}
+    />
+  );
+}
+
+export function TextArea({ value, onChange, placeholder, invalid, rows = 2, onBlur }: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  invalid?: boolean;
+  rows?: number;
+  onBlur?: (e: FocusEvent<HTMLTextAreaElement>) => void;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    node.style.height = 'auto';
+    if (node.scrollHeight) node.style.height = `${node.scrollHeight}px`;
+  }, [value]);
+  return (
+    <textarea
+      ref={ref}
+      className={`input textarea textarea--auto ${invalid ? 'input--bad' : ''}`}
+      rows={rows}
+      value={value}
+      placeholder={placeholder}
+      onChange={(e: ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
+      onBlur={onBlur}
     />
   );
 }

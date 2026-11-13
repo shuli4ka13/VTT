@@ -17,6 +17,8 @@ describe('куски на пустом листе', () => {
 
   it('пустой лист предлагает все куски систем', () => {
     renderOpen(<SheetTab />);
+    const donors = screen.getAllByRole('combobox').find(node => [...(node as HTMLSelectElement).options].some(option => option.value === '*'))!;
+    fireEvent.change(donors, { target: { value: '*' } });
     const titles = [...document.querySelectorAll('.card--pick .card__title')].map(node => node.textContent ?? '');
     for (const piece of PIECES) expect(titles, piece.label).toContain(piece.label);
   });

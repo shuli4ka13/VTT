@@ -6,7 +6,7 @@ export { rowNames } from '../row-names.ts';
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
 import { isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields, rowPieces } from '@vtt/engine/model/sheet-columns';
 import type { RowPiece } from '@vtt/engine/model/sheet-columns';
-import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty, Field, Chip } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty, Field, Chip, TextArea } from '../../../ui/primitives.tsx';
 import { LiveValue } from '../live-value.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { ColumnCard } from './column-card.tsx';
@@ -24,7 +24,7 @@ import { listUsers } from '@vtt/engine/model/lists';
 import { isRange, keyOf, choiceTables, rowTables, numberTables } from '@vtt/engine/model/tables';
 import { rowUsers, renameRow, renameRowInBook } from '@vtt/engine/model/integrity';
 import { useWorld } from '../../../store/world.ts';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useId } from 'react';
 import type { ReactNode } from 'react';
 import type { System, Table, TableRow, TableKey } from '@vtt/schema';
 import { StagesEditor } from '../stages-editor.tsx';
@@ -113,6 +113,30 @@ export function groupsOfTables(entries: [string, Table][]): [string, [string, Ta
     .filter(([, list]) => list.length);
 }
 
+export const NO_FOLDER = '';
+
+export const foldersOf = (system: System): string[] =>
+  [...new Set(Object.values(system.tables ?? {}).map(table => table.group).filter((g): g is string => Boolean(g)))]
+    .sort((a, b) => a.localeCompare(b, 'ru'));
+
+export function foldersInGroup(list: [string, Table][]): [string, [string, Table][]][] {
+  const folders = [...new Set(list.map(([, table]) => table.group ?? NO_FOLDER).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ru'));
+  const part = (folder: string) => list.filter(([, table]) => (table.group ?? NO_FOLDER) === folder);
+  return [...folders, NO_FOLDER]
+    .map(folder => [folder, part(folder)] as [string, [string, Table][]])
+    .filter(([, items]) => items.length);
+}
+
+function FolderInput({ value, folders, onChange }: { value: string; folders: string[]; onChange: (next: string) => void }) {
+  const list = useId();
+  return (
+    <>
+      <input className="input" list={list} value={value} placeholder="без папки" onChange={e => onChange(e.target.value)} />
+      <datalist id={list}>{folders.map(folder => <option key={folder} value={folder} />)}</datalist>
+    </>
+  );
+}
+
 export function TablesSection({ system, editSystem, usage }: Props) {
   const entries = rowTables(system);
 
@@ -129,12 +153,19 @@ export function TablesSection({ system, editSystem, usage }: Props) {
             hint="Справочники, прогрессия по уровню, списки выбора — всё это таблицы."
             action={<Button size="sm" onClick={() => addTable(editSystem)}>+ таблица</Button>}
           />
-        ) : groupsOfTables(entries).flatMap(([title, list]) => [
-          <span key={`группа|${title}`} className="table-group__title">{title}</span>,
-          ...list.map(([key, table]) => (
-            <TableCard key={key} id={key} table={table} system={system} editSystem={editSystem} usage={usage} />
-          )),
-        ])}
+        ) : groupsOfTables(entries).flatMap(([title, list]) => {
+          const folders = foldersInGroup(list);
+          const foldered = folders.some(([folder]) => folder !== NO_FOLDER);
+          return [
+            <span key={`группа|${title}`} className="table-group__title">{title}</span>,
+            ...folders.flatMap(([folder, items]) => [
+              ...(foldered ? [<span key={`папка|${title}|${folder}`} className="table-folder__title">{folder || 'без папки'}</span>] : []),
+              ...items.map(([key, table]) => (
+                <TableCard key={key} id={key} table={table} system={system} editSystem={editSystem} usage={usage} />
+              )),
+            ]),
+          ];
+        })}
       </div>
     </Card>
   );
@@ -243,7 +274,17 @@ export function TableCard({ id, table, system, editSystem, usage, opened, onReke
           },
           {
             key: 'hint', label: 'Подсказка', width: 220,
-            node: <Input value={table.hint ?? ''} placeholder="что это за таблица" onChange={next => edit(draft => { if (next.trim()) draft.hint = next; else delete draft.hint; })} />,
+            node: <TextArea value={table.hint ?? ''} placeholder="что это за таблица" onChange={next => edit(draft => { if (next.trim()) draft.hint = next; else delete draft.hint; })} />,
+          },
+          {
+            key: 'group', label: 'Папка', width: 180,
+            hint: 'Таблицы с одной папкой в списке идут вместе.',
+            node: <FolderInput value={table.group ?? ''} folders={foldersOf(system)} onChange={next => edit(draft => { if (next.trim()) draft.group = next.trim(); else delete draft.group; })} />,
+          },
+          {
+            key: 'note', label: 'Заметка автора', width: 260,
+            hint: 'Видна только здесь, игроку не показывается.',
+            node: <TextArea value={table.note ?? ''} placeholder="для себя" onChange={next => edit(draft => { if (next.trim()) draft.note = next; else delete draft.note; })} />,
           },
           ...(columns.length ? [{
             key: 'otherwise', label: 'Если ничего не совпало', width: 180,
@@ -374,7 +415,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, onRe
   return (
     <ColumnCard
       table={id}
-      column={{ label: column.label ?? '', kind: column.kind ?? (column.expr ? '' : single ? 'number' : 'text'), from: column.from, many: column.many, expr: column.expr?.expr, min: column.min, max: column.max }}
+      column={{ label: column.label ?? '', kind: column.kind ?? (column.expr ? '' : single ? 'number' : 'text'), from: column.from, many: column.many, expr: column.expr?.expr, hint: column.hint, min: column.min, max: column.max }}
       kinds={single ? FIELD_KINDS : book ? PROP_KINDS : COLUMN_KINDS}
       tables={others}
       rowsOf={numberTables(system).filter(([key]) => key !== id).map(([key, t]) => [key, t.label || key] as [string, string])}
@@ -399,6 +440,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, onRe
       lead={lead}
       bounds={bounds}
       more={more}
+      hinted
       extra={<>
         {single || onSheet(table) ? <ColumnSheetFields tableId={id} column={column} system={system} /> : null}
         {(column.kind ?? 'number') === 'number' && (single || column.stages) ? (
@@ -457,6 +499,7 @@ function applyPatch(c: TableColumn, patch: ColumnPatch): void {
     if (patch.expr !== null) c.expr = { expr: patch.expr };
     else { delete c.expr; if (c.kind === undefined) c.kind = 'number'; }
   }
+  if (patch.hint !== undefined) { if (patch.hint) c.hint = patch.hint; else delete c.hint; }
   if (patch.min !== undefined) { if (patch.min !== null) c.min = patch.min; else delete c.min; }
   if (patch.max !== undefined) { if (patch.max !== null) c.max = patch.max; else delete c.max; }
 }

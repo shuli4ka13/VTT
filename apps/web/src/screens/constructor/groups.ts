@@ -1,6 +1,7 @@
 import type { System } from '@vtt/schema';
 import type { Field } from '@vtt/engine/model/types';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { NO_BLOCK } from '@vtt/engine/model/blocks';
 
 export interface GroupNode {
   name: string;
@@ -29,7 +30,7 @@ export function groupTree(system: System): GroupNode[] {
   };
   for (const name of Object.keys(system.groups ?? {})) remember(name);
   for (const field of fieldsOf(system)) {
-    const name = field.group ?? 'Без блока';
+    const name = field.group ?? NO_BLOCK;
     remember(name);
     byName.get(name)!.push(field);
   }
@@ -52,7 +53,7 @@ export function groupTree(system: System): GroupNode[] {
 
 export function subtreeNames(system: System, name: string): string[] {
   const all = new Set([...Object.keys(system.groups ?? {}),
-    ...fieldsOf(system).map(f => f.group ?? 'Без блока')]);
+    ...fieldsOf(system).map(f => f.group ?? NO_BLOCK)]);
   return [...all].filter(candidate => groupChain(system, candidate).includes(name));
 }
 
@@ -76,7 +77,7 @@ export function renameGroup(draft: System, from: string, to: string): void {
 
 export function freeGroupName(system: System, base: string): string {
   const taken = new Set([...Object.keys(system.groups ?? {}),
-    ...fieldsOf(system).map(f => f.group ?? 'Без блока')]);
+    ...fieldsOf(system).map(f => f.group ?? NO_BLOCK)]);
   if (!taken.has(base)) return base;
   for (let n = 2; ; n++) {
     const candidate = `${base} ${n}`;

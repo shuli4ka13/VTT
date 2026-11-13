@@ -1,15 +1,7 @@
 import type { ClockState, Sheet } from '@vtt/schema';
+import { plural } from '../../ui/plural.ts';
 
 type Worn = NonNullable<Sheet['effects']>[number];
-
-export const plural = (n: number, one: string, few: string, many: string): string => {
-  const tens = Math.abs(n) % 100;
-  const units = tens % 10;
-  if (tens > 10 && tens < 20) return many;
-  if (units === 1) return one;
-  if (units >= 2 && units <= 4) return few;
-  return many;
-};
 
 const two = (n: number) => String(n).padStart(2, '0');
 

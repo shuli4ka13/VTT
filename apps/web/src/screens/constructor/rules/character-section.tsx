@@ -1,4 +1,5 @@
 import { SheetKindEditor } from '../records-tab.tsx';
+import { NO_BLOCK } from '@vtt/engine/model/blocks';
 import type { ReactNode } from 'react';
 import { TableColumnCard } from './tables-section.tsx';
 import { useWorld, freeId } from '../../../store/world.ts';
@@ -234,7 +235,7 @@ export function CharacterSection({ system, editSystem, docked }: {
       {branch(tree, 0)}
       {loose.length ? (
         <div className="stack stack--tight">
-          <span className="faint">Без блока</span>
+          <span className="faint">{NO_BLOCK}</span>
           <div className="inline inline--tight">
             {loose.map(item => (
               <span key={`${item.table}.${item.column}`} className="inline inline--tight">

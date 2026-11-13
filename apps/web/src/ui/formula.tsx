@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
+import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { compile } from '@vtt/engine/formula';
 import { Verdict } from './primitives.tsx';
 import { FormulaField } from './formula-field.tsx';
+import type { SheetNames } from './formula-chips.tsx';
 import type { BarOption } from '../store/formula-bar.ts';
 
 export { columnPaths, fieldPaths } from './paths.ts';
@@ -27,9 +29,13 @@ export function parseFormula(source: string): Parsed {
   }
 }
 
-export function FormulaInput({ system, value, onChange, placeholder, where = 'формула', extraNames, options, problem }: {
+export function FormulaInput({ system, value, onChange, placeholder, where = 'формула', names, extraNames, meanings, badges, sheets, options, problem }: {
   system: System;
+  names?: Record<string, ReactNode>;
   extraNames?: Map<string, string>;
+  meanings?: Map<string, string>;
+  badges?: Map<string, string>;
+  sheets?: SheetNames;
   value: string;
   onChange: (next: string) => void;
   placeholder?: string;
@@ -45,7 +51,11 @@ export function FormulaInput({ system, value, onChange, placeholder, where = 'ф
         value={value}
         system={system}
         where={where}
+        {...(names ? { names } : {})}
         {...(extraNames ? { extraNames } : {})}
+        {...(meanings ? { meanings } : {})}
+        {...(badges ? { badges } : {})}
+        {...(sheets ? { sheets } : {})}
         {...(options ? { options } : {})}
         placeholder={placeholder ?? 'наберите @ и выберите поле'}
         onChange={onChange}

@@ -11,11 +11,17 @@ import { blockLine } from '@vtt/engine/model/owned';
 import { launchOf, LAUNCHES } from '@vtt/engine/model/effect-kinds';
 import { fieldsOf, fieldOf } from '@vtt/engine/model/sheet-columns';
 import { kindOf } from '@vtt/engine/model/owned';
+import { NO_BLOCK } from '@vtt/engine/model/blocks';
+import { counted } from '../../ui/plural.ts';
+import { defaultDonor, effectStanding, fieldsStanding, ownWords, piecesStanding } from './donor-compare.ts';
 
 const DONORS = SAMPLE_SYSTEMS as System[];
 
 export function DonorPalette({ kind }: { kind: 'blocks' | 'effects' }) {
-  const [donorId, setDonorId] = useState<string>('*');
+  const [donorId, setDonorId] = useState<string>(() => {
+    const now = useWorld.getState();
+    return defaultDonor(now.system, DONORS, now.origin.systemId);
+  });
   const donors = donorId === '*' ? DONORS : DONORS.filter(d => d.id === donorId);
 
   return (
@@ -42,7 +48,7 @@ export function DonorPalette({ kind }: { kind: 'blocks' | 'effects' }) {
 export function findDonorBlock(tag: string): { donor: System; group: string } | null {
   for (const donor of DONORS) {
     const field = fieldOf(donor, tag);
-    if (field) return { donor, group: field.group ?? 'Без блока' };
+    if (field) return { donor, group: field.group ?? NO_BLOCK };
   }
   return null;
 }
@@ -118,14 +124,17 @@ function Pieces({ donor }: { donor: System }) {
   const system = useWorld(s => s.system);
   const pieces = useMemo(
     () => PIECES.filter(piece => piece.donor === donor.id && donorOf(piece))
-      .map(piece => ({ piece, added: bringPiece(system, piece).added })),
+      .map(piece => {
+        const brought = bringPiece(system, piece);
+        return { piece, added: brought.added, ...piecesStanding(system, donor, brought.added, brought.kept) };
+      }),
     [system, donor],
   );
   if (!pieces.length) return null;
 
   return (
     <div className="palette">
-      {pieces.map(({ piece, added }) => (
+      {pieces.map(({ piece, added, standing, own }) => (
         <button
           key={piece.id}
           type="button"
@@ -136,7 +145,9 @@ function Pieces({ donor }: { donor: System }) {
           style={added.length ? undefined : { opacity: 0.5, cursor: 'default' }}
         >
           <span className="card__title">{piece.label}</span>
-          <span className="card__sub card__sub--clamp">{added.length ? piece.hint : 'уже в системе'}</span>
+          <span className="card__sub card__sub--clamp">
+            {standing === 'new' ? piece.hint : standing === 'own' && own ? ownWords(partLabel(system, own)) : 'уже в системе'}
+          </span>
         </button>
       ))}
     </div>
@@ -150,18 +161,17 @@ function Blocks({ donor }: { donor: System }) {
     const names = new Map<string, number>();
     for (const field of fieldsOf(donor)) {
       const roots = new Set((field.placements ?? []).map(place => blockLine(donor, place.group).at(-1)!));
-      for (const key of roots.size ? roots : ['Без блока']) names.set(key, (names.get(key) ?? 0) + 1);
+      for (const key of roots.size ? roots : [NO_BLOCK]) names.set(key, (names.get(key) ?? 0) + 1);
     }
     return [...names];
   }, [donor]);
-
-  const have = new Set(fieldsOf(system).map(f => f.tag));
 
   return (
     <div className="palette">
       {blocks.map(([group, count]) => {
         const fields = fieldsOf(donor).filter(f => (f.placements ?? []).some(place => blockLine(donor, place.group).includes(group)));
-        const already = fields.every(f => have.has(f.tag));
+        const standing = fieldsStanding(system, donor, fields);
+        const already = standing !== 'new';
         const brings = [...new Set(
           closure(donor, blockParts(donor, group))
             .filter(part => part.kind === 'field')
@@ -179,8 +189,8 @@ function Blocks({ donor }: { donor: System }) {
           >
             <span className="card__title">{group}</span>
             <span className="card__sub">
-              {already ? 'уже в системе' : `полей: ${count}`}
-              {!already && brings.length > 1 ? ` · и ещё ${brings.length - 1} блок(а)` : ''}
+              {standing === 'same' ? 'уже в системе' : standing === 'own' ? ownWords(group) : `полей: ${count}`}
+              {!already && brings.length > 1 ? ` · и ещё ${counted(brings.length - 1, 'блок', 'блока', 'блоков')}` : ''}
             </span>
           </button>
         );
@@ -204,7 +214,8 @@ function Effects({ donor }: { donor: System }) {
   return (
     <div className="palette">
       {list.map(([id, effect]) => {
-        const already = Boolean(system.effects[id]);
+        const standing = effectStanding(system, donor, id);
+        const already = standing !== 'new';
         return (
           <button
             key={id}
@@ -216,7 +227,7 @@ function Effects({ donor }: { donor: System }) {
           >
             <span className="card__title">{effect.label ?? id}</span>
             <span className="card__sub">
-              {already ? 'уже в системе' : `${effect.group ?? 'Механики'} · ${activationWord(effect)}`}
+              {standing === 'same' ? 'уже в системе' : standing === 'own' ? ownWords(effect.label ?? id) : `${effect.group ?? 'Механики'} · ${activationWord(effect)}`}
             </span>
           </button>
         );
