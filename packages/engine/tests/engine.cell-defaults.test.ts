@@ -51,32 +51,32 @@ const system = {
   effects: {
     флаг: {
       label: 'Флаг', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'выбор', kind: 'choice', from: 'режимы' }],
+      params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'выбор', label: 'Выбор', kind: 'choice', from: 'режимы' }],
       steps: [{ type: 'apply', target: { expr: '@действующий.итог' }, direction: 'add', value: { expr: 'если(@выбор.flag, 10, 1) + @выбор.bonus' } }],
     },
     путь: {
       label: 'Путь', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'вид', kind: 'choice', from: 'виды' }],
+      params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'вид', label: 'Вид', kind: 'choice', from: 'виды' }],
       steps: [{ type: 'apply', target: { expr: '@действующий.итог' }, direction: 'add', value: { expr: 'если(@вид.режим.flag, 10, 1) + @вид.режим.bonus' } }],
     },
     чужая: {
       label: 'Чужая', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
+      params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
       steps: [{ type: 'each', of: 'цели' }, { type: 'emit', effect: 'магия входа', args: { лист: { expr: '@цель' }, маг: { expr: '"один"' } } }],
     },
     'магия входа': {
       label: 'Магия входа', activation: 'manual',
-      params: [{ key: 'лист', kind: 'sheet' }, { key: 'маг', kind: 'choice', from: 'маги' }],
+      params: [{ key: 'лист', label: 'Лист', kind: 'sheet' }, { key: 'маг', label: 'Маг', kind: 'choice', from: 'маги' }],
       steps: [{ type: 'apply', target: { expr: '@лист.итог' }, direction: 'add', value: { expr: '@маг.c' } }],
     },
     поле: {
       label: 'Поле', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'сила', kind: 'number' }],
+      params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'сила', label: 'Сила', kind: 'number' }],
       steps: [{ type: 'apply', target: { expr: '@действующий.итог' }, direction: 'add', value: { expr: '@действующий.режим.вдвое' } }],
     },
     удар: {
       label: 'Удар', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }],
+      params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }],
       steps: [{ type: 'apply', target: { expr: '@действующий.итог' }, direction: 'add', value: { expr: '@вещь.режим.bonus + если(@вещь.режим.flag, 10, 0)' } }],
     },
   },

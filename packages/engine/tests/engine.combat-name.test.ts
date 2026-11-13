@@ -12,7 +12,7 @@ const system = {
   },
   effects: {
     метка: {
-      label: 'Метка', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }],
+      label: 'Метка', activation: 'manual', params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }],
       steps: [{ type: 'apply', target: { expr: '@действующий.счёт' }, direction: 'add', value: { expr: 'если(@стол.бой, 10, 1)' } }],
     },
   },

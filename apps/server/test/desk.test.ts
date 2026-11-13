@@ -19,7 +19,7 @@ const system = {
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
+      params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
       steps: [
         { type: 'each', of: 'цели' },
         { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '2 + @стол.страх' } },

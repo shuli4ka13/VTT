@@ -147,6 +147,11 @@ function slotRefs(value: unknown, slotKind: string | undefined, from: Where, sco
     for (const arg of Object.values((value ?? {}) as Record<string, unknown>)) slotRefs(arg, undefined, from, scope, out);
     return;
   }
+  if (slotKind === 'degrees' && !Array.isArray(value)) {
+    const table = (value as { table?: unknown } | null)?.table;
+    if (typeof table === 'string' && table) out.push({ kind: 'table', key: table, from });
+    return;
+  }
   if (slotKind === 'degrees' && Array.isArray(value)) {
     for (const degree of value) slotRefs((degree as { if?: unknown } | null)?.if, undefined, from, scope, out);
     return;
@@ -648,6 +653,12 @@ export function withAddresses(system: System, refs: Reference[]): Reference[] {
 export function referencesOf(system: System, compendium?: Compendium): Reference[] {
   const out: Reference[] = [];
   const noScope = plainScope();
+
+  for (const [key, roll] of Object.entries(system.rolls ?? {})) {
+    const from: Where = { tab: 'rules', section: 'rolls', key };
+    out.push({ kind: 'constant', key: roll.die, from });
+    if (roll.degrees && !Array.isArray(roll.degrees)) out.push({ kind: 'table', key: roll.degrees.table, from });
+  }
 
   for (const field of fieldsOf(system)) {
     const from: Where = { tab: 'sheet', field: field.tag };

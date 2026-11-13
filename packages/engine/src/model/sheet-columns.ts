@@ -417,6 +417,7 @@ function singleFields(system: System, tableId: string, table: Table): Field[] {
     return {
       tag: column.key,
       label: column.label ?? column.key,
+      ...(column.hint ? { hint: column.hint } : {}),
       ...(roll ? { roll } : {}),
       value: column.expr !== undefined ? { kind: 'formula', expr: column.expr.expr, ...boundsOf(column) } : valueOf(column, column.default),
       ...livesOf(table),
@@ -447,6 +448,7 @@ function rowFields(system: System, tableId: string, table: Table): Field[] {
       out.push({
         tag: addressOf(tableId, row, column.key),
         label: fill(system, table, row, view.label ?? defaultLabel(column, at === 0)),
+        ...(column.hint ? { hint: column.hint } : {}),
         ...(roll ? { roll } : {}),
         value,
         ...livesOf(table),

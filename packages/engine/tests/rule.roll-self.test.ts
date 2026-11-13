@@ -68,8 +68,8 @@ group('правило броска видит сам бросок: @бросок
 });
 
 group('ступени «Проверки» списком: видят её успех, степени и бросок по имени', () => {
-  const ACTOR = { key: 'действующий', kind: 'sheet' };
-  const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
+  const ACTOR = { key: 'действующий', label: 'Кто действует', kind: 'sheet' };
+  const TARGETS = { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } };
   const duel = {
     id: 'д', name: 'д',
     constants: { двойная: { label: 'Двойная', kind: 'die', dice: [{ sides: 12, name: 'надежда' }, { sides: 12, name: 'страх' }] } },
@@ -110,8 +110,8 @@ group('ступени «Проверки» списком: видят её ус�
 });
 
 group('ступени «Проверки» списком: проверка «Проблем» и правки степени', () => {
-  const ACTOR = { key: 'действующий', kind: 'sheet' };
-  const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
+  const ACTOR = { key: 'действующий', label: 'Кто действует', kind: 'sheet' };
+  const TARGETS = { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } };
   const make = (degrees: unknown, extra: Record<string, unknown> = {}) => ({
     id: 'д', name: 'д',
     constants: { двойная: { label: 'Двойная', kind: 'die', dice: [{ sides: 12, name: 'надежда' }, { sides: 12, name: 'страх' }] } },

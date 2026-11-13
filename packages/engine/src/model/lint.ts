@@ -10,6 +10,7 @@ import { registry, loopsAt, splitsTargets } from '../engine/steps/index.ts';
 import { numbersOf, kindOfRule, placesOf, fitsPlace, fitKinds, countUnread, rollsCounting } from './die-kinds.ts';
 import { ROLL_KIND_WORDS, NUMBER_MISFIT, EDIT_MISFIT, EDIT_SIDES_MISFIT, COUNT_UNREAD, rollNumberWord } from '../words/dice-kinds.ts';
 import { editPrimitives } from '../engine/roll-edits.ts';
+import { namingProblems } from './naming.ts';
 import type { DieConstant } from './types.ts';
 import { isBlank } from './blank.ts';
 import { STEP_WORDS, slotShown, type SlotGate } from '../words/steps.ts';
@@ -1045,7 +1046,7 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
     if (!called || called.steps?.length || called.returns?.length || heardEvents.has(key)) continue;
     out.push({
       where: { tab: 'effects', effect: key }, level: 'warn',
-      text: `эффект «${called.label || key}» вызывают, но он ничего не делает: ни шагов, ни слушателей`,
+      text: `эффект «${called.label || key}» вызывают, но он ничего не делает: ни шагов, ни срабатываний`,
     });
   }
   const bound = new Set<string>();
@@ -1453,6 +1454,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...sheetKindProblems(system), ...layoutProblems(system));
   out.push(...editProblems(system, compendium));
   out.push(...rollEditProblems(system));
+  out.push(...namingProblems(system, compendium));
   out.push(...dieCountProblems(system));
   out.push(...handlerDiceProblems(system));
   const told = new Set<string>();

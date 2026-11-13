@@ -16,12 +16,12 @@ const system = {
   effects: {
     яд: {
       label: 'Яд', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'что', kind: 'effect', many: true }],
+      params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'что', label: 'Что', kind: 'effect', many: true }],
       steps: [{ type: 'status', effect: { expr: '@что' }, to: { expr: '@действующий' } }],
     },
     тошнота: { label: 'Тошнота', activation: 'passive', tags: ['отрава'], duration: { kind: 'permanent' } },
     противоядие: {
-      label: 'Противоядие', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }],
+      label: 'Противоядие', activation: 'manual', params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }],
       steps: [{ type: 'status', mode: 'remove', by: 'tag', effect: 'отрава', to: { expr: '@действующий' } }],
     },
     слабость: { label: 'Слабость', activation: 'passive', duration: { kind: 'permanent' } },

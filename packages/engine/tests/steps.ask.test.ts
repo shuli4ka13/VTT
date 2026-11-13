@@ -5,8 +5,8 @@ import { lintSystem } from '../src/model/lint.ts';
 import type { Journal } from '../src/core/external.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
-const ACTOR = { key: 'действующий', kind: 'sheet' };
-const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
+const ACTOR = { key: 'действующий', label: 'Кто действует', kind: 'sheet' };
+const TARGETS = { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } };
 const EACH = { type: 'each', of: 'цели' };
 const ASK = { id: 'решение', type: 'ask', label: 'Кто победил?', yes: 'Бьющий', no: 'Защитник' };
 const hit = (amount: number) => ({ type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: String(amount) } });

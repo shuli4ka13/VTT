@@ -13,8 +13,8 @@ const queue = (...values: number[]) => {
   };
 };
 
-const ACTOR = { key: 'действующий', kind: 'sheet', role: 'actor' };
-const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
+const ACTOR = { key: 'действующий', label: 'Кто действует', kind: 'sheet', role: 'actor' };
+const TARGETS = { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } };
 const WHAT = { key: 'что', label: 'Что', kind: 'choice', from: 'запасы' };
 
 const world = (effects: Record<string, unknown>, bindings: unknown[]): System => ({
@@ -88,7 +88,7 @@ describe('«Изменение» пишет туда же, откуда чита
   it('вход-поле вызова принимает тот же адрес', () => {
     const system = world({
       потратить: {
-        label: 'Потратить', params: [{ key: 'лист', kind: 'sheet', role: 'actor' }, { key: 'what', label: 'Что тратим', kind: 'field' }],
+        label: 'Потратить', params: [{ key: 'лист', label: 'Лист', kind: 'sheet', role: 'actor' }, { key: 'what', label: 'Что тратим', kind: 'field' }],
         steps: [spend('@what')],
       },
       трата: {
@@ -173,7 +173,7 @@ describe('«Для каждой строки таблицы»', () => {
   it('вызванная функция с циклом по строкам', () => {
     const system = world({
       заново: {
-        label: 'Заново', params: [{ key: 'лист', kind: 'sheet', role: 'actor' }],
+        label: 'Заново', params: [{ key: 'лист', label: 'Лист', kind: 'sheet', role: 'actor' }],
         steps: [
           { type: 'each', rows: 'запасы', as: 'запас' },
           { type: 'apply', target: { expr: '@лист.запас.осталось' }, direction: 'set', value: { expr: '@лист.запас.всего' } },
@@ -188,7 +188,7 @@ describe('«Для каждой строки таблицы»', () => {
 
   it('строка цикла — вход «строка таблицы»: строка передаётся явным аргументом', () => {
     const system = world({
-      трата: { label: 'Трата', params: [{ key: 'лист', kind: 'sheet', role: 'actor' }, { ...WHAT, key: 'запас' }], steps: [spend('@лист.запас.осталось')] },
+      трата: { label: 'Трата', params: [{ key: 'лист', label: 'Лист', kind: 'sheet', role: 'actor' }, { ...WHAT, key: 'запас' }], steps: [spend('@лист.запас.осталось')] },
       всё: {
         label: 'Всё', activation: 'manual', params: [ACTOR],
         steps: [{ type: 'each', rows: 'запасы', as: 'запас' }, { type: 'emit', effect: 'трата', args: { лист: { expr: '@действующий' }, запас: { expr: '@запас' } } }],
@@ -215,7 +215,7 @@ describe('«Для каждой строки таблицы»', () => {
   it('итог функции не смотрит на шаг внутри цикла', () => {
     const system = world({
       счёт: {
-        label: 'Счёт', params: [{ key: 'лист', kind: 'sheet', role: 'actor' }],
+        label: 'Счёт', params: [{ key: 'лист', label: 'Лист', kind: 'sheet', role: 'actor' }],
         returns: [{ key: 'сколько', label: 'сколько', kind: 'number', expr: { expr: '@шаг_в_цикле' } }],
         steps: [{ type: 'each', rows: 'запасы', as: 'запас' }, { id: 'шаг_в_цикле', type: 'roll', fixed: { expr: '1' } }],
       },
@@ -268,15 +268,15 @@ describe('линт адресов', () => {
 describe('плата подписки, вложенная в несколько вызовов', () => {
   const system = world({
     потратить: {
-      label: 'Потратить', params: [{ key: 'лист', kind: 'sheet', role: 'actor' }, { key: 'what', label: 'Что тратим', kind: 'field' }],
+      label: 'Потратить', params: [{ key: 'лист', label: 'Лист', kind: 'sheet', role: 'actor' }, { key: 'what', label: 'Что тратим', kind: 'field' }],
       steps: [{ type: 'branch', if: { expr: '@what < 1' } }, { type: 'stop', note: { expr: '"нечем"' } }, { type: 'end' }, spend('@what')],
     },
     реакция: {
-      label: 'Реакция', params: [{ key: 'лист', kind: 'sheet', role: 'actor' }],
+      label: 'Реакция', params: [{ key: 'лист', label: 'Лист', kind: 'sheet', role: 'actor' }],
       steps: [{ type: 'emit', effect: 'потратить', args: { лист: { expr: '@лист' }, what: { expr: '@лист.запасы.ки.осталось' } } }],
     },
     плата: {
-      label: 'Плата', params: [{ key: 'лист', kind: 'sheet', role: 'actor' }],
+      label: 'Плата', params: [{ key: 'лист', label: 'Лист', kind: 'sheet', role: 'actor' }],
       steps: [{ type: 'emit', effect: 'реакция', args: { лист: { expr: '@лист' } } }],
     },
     удар: { label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS], steps: [{ type: 'each', of: 'цели' }, spend('@цель.хп')] },

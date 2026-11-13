@@ -22,24 +22,24 @@ const system = {
       label: 'Колдовство', activation: 'manual',
       bond: { effect: 'поддержание', by: 'действующий', if: { expr: '@держит' }, many: true, args: { заклинание: { expr: '@чары' } } },
       params: [
-        { key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } },
-        { key: 'держит', kind: 'boolean', default: false }, { key: 'чары', kind: 'effect', default: 'щит' },
+        { key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } },
+        { key: 'держит', label: 'Держит', kind: 'boolean', default: false }, { key: 'чары', label: 'Чары', kind: 'effect', default: 'щит' },
       ],
       steps: [{ type: 'each', of: 'цели' }, { type: 'status', mode: 'apply', effect: { expr: '@чары' }, to: { expr: '@цель' } }],
     },
     прекратить: {
       label: 'Прекратить', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'чары', kind: 'effect', default: 'щит' }],
+      params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'чары', label: 'Чары', kind: 'effect', default: 'щит' }],
       steps: [{ type: 'status', mode: 'remove', effect: 'поддержание', to: { expr: '@действующий' }, where: { expr: '@заклинание == @чары' }, one: true }],
     },
     развеять: {
       label: 'Развеять', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
+      params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
       steps: [{ type: 'each', of: 'цели' }, { type: 'status', mode: 'remove', effect: 'щит', to: { expr: '@цель' } }],
     },
     поддержание: {
       label: 'Поддержание', activation: 'passive', duration: { kind: 'permanent' }, reapply: 'stack',
-      params: [{ key: 'заклинание', kind: 'effect' }],
+      params: [{ key: 'заклинание', label: 'Заклинание', kind: 'effect' }],
     },
     щит: {
       label: 'Щит', activation: 'passive', duration: { kind: 'permanent' }, reapply: 'refresh',

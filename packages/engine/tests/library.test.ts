@@ -13,13 +13,13 @@ const queue = (...values: number[]) => {
 
 const hit = (amount: string, field = '@цель.хп') => ({ type: 'apply', target: { expr: field }, direction: 'subtract', value: { expr: amount } });
 
-const ACTOR = { key: 'действующий', kind: 'sheet' };
-const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
+const ACTOR = { key: 'действующий', label: 'Кто действует', kind: 'sheet' };
+const TARGETS = { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } };
 const EACH = { type: 'each', of: 'цели' };
 
 const attackRoll = {
   label: 'Бросок атаки',
-  params: [{ key: 'кто', kind: 'sheet' }, { key: 'против', kind: 'sheet' }, { key: 'бонус', kind: 'number', default: 0 }],
+  params: [{ key: 'кто', label: 'Кто', kind: 'sheet' }, { key: 'против', label: 'Против кого', kind: 'sheet' }, { key: 'бонус', label: 'Бонус', kind: 'number', default: 0 }],
   returns: [
     { key: 'попал', label: 'попал', kind: 'boolean', no: 'промах', expr: { expr: '@проверка.success' } },
     { key: 'выпало', label: 'на костях', kind: 'number', expr: { expr: '@бросок.natural' } },
@@ -141,8 +141,8 @@ describe('«Стоп» во вложенном вызове из цены — о
   it('цена → функция → функция со «Стопом»: действие не состоялось, костей не бросали', () => {
     const system = world({
       удар: { ...strike(), cost: [{ type: 'emit', effect: 'плата', args: { лист: { expr: '@действующий' } } }] },
-      плата: { label: 'Плата', params: [{ key: 'лист', kind: 'sheet' }], steps: [{ type: 'emit', effect: 'ячейка', args: { лист: { expr: '@лист' } } }] },
-      ячейка: { label: 'Ячейка', params: [{ key: 'лист', kind: 'sheet' }], steps: [
+      плата: { label: 'Плата', params: [{ key: 'лист', label: 'Лист', kind: 'sheet' }], steps: [{ type: 'emit', effect: 'ячейка', args: { лист: { expr: '@лист' } } }] },
+      ячейка: { label: 'Ячейка', params: [{ key: 'лист', label: 'Лист', kind: 'sheet' }], steps: [
         { type: 'branch', if: { expr: '@лист.щит < 1' } }, { type: 'stop', note: { expr: '"нет ячейки"' } }, { type: 'end' },
       ] },
     });
@@ -174,7 +174,7 @@ describe('ревью: линт и журнал готовых блоков', () 
 
   it('вызов функции с величиной 0 пишется с числом, без величины — без', () => {
     const system = world({
-      урон: { label: 'Урон', params: [{ key: 'лист', kind: 'sheet' }, { key: 'сколько', kind: 'number', role: 'amount' }], steps: [hit('@сколько', '@лист.хп')] },
+      урон: { label: 'Урон', params: [{ key: 'лист', label: 'Лист', kind: 'sheet' }, { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [hit('@сколько', '@лист.хп')] },
       удар: strike([
         { id: 'атака', type: 'emit', effect: 'бросок_атаки', args: { кто: { expr: '@действующий' }, против: { expr: '@цель' } } },
         { type: 'emit', effect: 'урон', args: { лист: { expr: '@цель' }, сколько: { expr: '0' } } },
@@ -189,7 +189,7 @@ describe('ревью: линт и журнал готовых блоков', () 
 describe('бросок передаётся в вызов целиком (вход вида «бросок»)', () => {
   const compare = {
     label: 'Сверить с целью',
-    params: [{ key: 'бросок', kind: 'roll' }, { key: 'против', kind: 'sheet' }],
+    params: [{ key: 'бросок', label: 'Бросок', kind: 'roll' }, { key: 'против', label: 'Против кого', kind: 'sheet' }],
     returns: [
       { key: 'попал', label: 'попал', kind: 'boolean', no: 'промах', expr: { expr: '@проверка.success' } },
       { key: 'выпало', label: 'на костях', kind: 'number', expr: { expr: '@бросок.natural' } },
@@ -244,25 +244,25 @@ describe('линт входа-броска', () => {
 describe('аргументы «сами» — правила по ревью', () => {
   it('у висящего эффекта «кто действует» — носитель, а не первый лист-вход', async () => {
     const { implicitOf } = await import('../src/model/implicit.ts');
-    const hanging = { activation: 'passive', params: [{ key: 'помеченный', kind: 'sheet' }] } as never;
-    expect(implicitOf({ key: 'источник', kind: 'sheet', role: 'actor' } as never, hanging)).toEqual({ by: 'actor', from: 'носитель' });
+    const hanging = { activation: 'passive', params: [{ key: 'помеченный', label: 'помеченный', kind: 'sheet' }] } as never;
+    expect(implicitOf({ key: 'источник', label: 'Источник', kind: 'sheet', role: 'actor' } as never, hanging)).toEqual({ by: 'actor', from: 'носитель' });
   });
   it('одноимённый вход не перебивает умолчание вызываемого', async () => {
     const { implicitOf } = await import('../src/model/implicit.ts');
-    const caller = { params: [{ key: 'бонус', kind: 'number' }] } as never;
-    expect(implicitOf({ key: 'бонус', kind: 'number', default: 0 } as never, caller)).toBeNull();
-    expect(implicitOf({ key: 'бонус', kind: 'number' } as never, caller)).toEqual({ by: 'name', from: 'бонус' });
+    const caller = { params: [{ key: 'бонус', label: 'Бонус', kind: 'number' }] } as never;
+    expect(implicitOf({ key: 'бонус', label: 'Бонус', kind: 'number', default: 0 } as never, caller)).toBeNull();
+    expect(implicitOf({ key: 'бонус', label: 'Бонус', kind: 'number' } as never, caller)).toEqual({ by: 'name', from: 'бонус' });
   });
   it('вход-поле «сам» не приходит', async () => {
     const { implicitOf } = await import('../src/model/implicit.ts');
-    expect(implicitOf({ key: 'что', kind: 'field' } as never, { params: [{ key: 'что', kind: 'field' }] } as never)).toBeNull();
+    expect(implicitOf({ key: 'что', label: 'Что', kind: 'field' } as never, { params: [{ key: 'что', label: 'Что', kind: 'field' }] } as never)).toBeNull();
   });
 });
 
 describe('правка вызова видит переданный бросок целиком', () => {
   const damage = {
     label: 'Урон',
-    params: [{ key: 'лист', kind: 'sheet', role: 'target' }, { key: 'бросок', kind: 'roll' }, { key: 'сколько', kind: 'number', role: 'amount' }],
+    params: [{ key: 'лист', label: 'Лист', kind: 'sheet', role: 'target' }, { key: 'бросок', label: 'Бросок', kind: 'roll' }, { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }],
     steps: [hit('@сколько', '@лист.хп')],
   };
   const volley = {

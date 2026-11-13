@@ -6,8 +6,8 @@ import { serializeSheet } from '../src/model/serialize.ts';
 import { flattenSystem } from '../src/model/inherit.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
-const ACTOR = { key: 'действующий', kind: 'sheet' };
-const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
+const ACTOR = { key: 'действующий', label: 'Кто действует', kind: 'sheet' };
+const TARGETS = { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } };
 
 const world = (hull: boolean): System => flattenSystem({
   id: 'к', name: 'к',
@@ -23,7 +23,7 @@ const world = (hull: boolean): System => flattenSystem({
     человек: { label: 'Человек' },
   },
   effects: {
-    урон: { label: 'Урон', activation: 'manual', params: [{ key: 'кому', kind: 'sheet', role: 'target' }, { key: 'сколько', label: 'Сколько урона', kind: 'number', role: 'amount' }],
+    урон: { label: 'Урон', activation: 'manual', params: [{ key: 'кому', label: 'Кому', kind: 'sheet', role: 'target' }, { key: 'сколько', label: 'Сколько урона', kind: 'number', role: 'amount' }],
       steps: [{ type: 'apply', target: { expr: '@кому.хп' }, direction: 'subtract', value: { expr: '@сколько' } }] },
     удар: { label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS], steps: [
       { type: 'each', of: 'цели' },

@@ -19,8 +19,8 @@ const ELIF = (expr: string) => ({ type: 'orElse', if: { expr } });
 const ELSE = { type: 'orElse' };
 const END = { type: 'end' };
 
-const ACTOR = { key: 'действующий', kind: 'sheet' };
-const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
+const ACTOR = { key: 'действующий', label: 'Кто действует', kind: 'sheet' };
+const TARGETS = { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } };
 const EACH = { type: 'each', of: 'цели' };
 
 function world(steps: unknown[], params: unknown[] = [ACTOR, TARGETS]): System {
@@ -166,7 +166,7 @@ describe('переключатель брони и блоки', () => {
     const draft = {
       effects: {
         урон: {
-          label: 'Урон', params: [{ key: 'лист', kind: 'sheet' }, { key: 'amount', kind: 'number', role: 'amount' }],
+          label: 'Урон', params: [{ key: 'лист', label: 'Лист', kind: 'sheet' }, { key: 'amount', label: 'Amount', kind: 'number', role: 'amount' }],
           steps: [
             { type: 'apply', target: { expr: '@лист.хп' }, value: { expr: '@amount' } },
             IF('@amount > 10'), { type: 'apply', target: { expr: '@лист.ки' }, value: { expr: '1' } }, END,

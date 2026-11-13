@@ -16,12 +16,12 @@ const system = {
   effects: {
     усиление: {
       label: 'Усиление', activation: 'passive', duration: { kind: 'permanent' }, reapply: 'stack',
-      params: [{ key: 'что', kind: 'choice', from: 'характеристики' }, { key: 'сколько', kind: 'number', default: 1 }],
+      params: [{ key: 'что', label: 'Что', kind: 'choice', from: 'характеристики' }, { key: 'сколько', label: 'Сколько', kind: 'number', default: 1 }],
       modifiers: [{ kind: 'value', target: '{@что.поле}', op: 'add', value: { expr: '@сколько' } }],
     },
     прямо: {
       label: 'Прямо', activation: 'passive', duration: { kind: 'permanent' },
-      params: [{ key: 'куда', kind: 'field' }],
+      params: [{ key: 'куда', label: 'Куда', kind: 'field' }],
       modifiers: [{ kind: 'value', target: '{@куда}', op: 'add', value: { expr: '5' } }],
     },
   },

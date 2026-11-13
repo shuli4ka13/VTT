@@ -25,12 +25,12 @@ const system = {
     },
     меч: {
       label: 'Удар мечом', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }, { key: 'кость', label: 'Кость урона', kind: 'dice' }],
+      params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } }, { key: 'кость', label: 'Кость урона', kind: 'dice' }],
       steps: [{ type: 'each', of: 'цели' }, { type: 'emit', effect: 'урон_костями', args: { лист: { expr: '@цель' }, кость: { expr: '@кость' }, сколько: { expr: '2' } } }],
     },
     шар: {
       label: 'Огненный шар', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
+      params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } }],
       steps: [{ type: 'each', of: 'цели' }, { type: 'emit', effect: 'урон_костями', args: { лист: { expr: '@цель' }, кость: { expr: '"1d6"' }, сколько: { expr: '8' } } }],
     },
   },
@@ -77,7 +77,7 @@ group('вызов передаёт вызванному его входы', () =
       ...system,
       effects: {
         ...system.effects,
-        шар: { label: 'Огненный шар', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }], steps: [{ type: 'each', of: 'цели' }, { type: 'emit', effect: 'урон_костями', args: { лист: { expr: '@цель' } } }] },
+        шар: { label: 'Огненный шар', activation: 'manual', params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } }], steps: [{ type: 'each', of: 'цели' }, { type: 'emit', effect: 'урон_костями', args: { лист: { expr: '@цель' } } }] },
       },
     } as unknown as System;
     const беда = throws(() => hit('шар:0', 5, дырявый));
@@ -93,21 +93,21 @@ group('вызов до «Для каждого», в плате и в теле �
   const built = (place: Place) => ({
     id: 'метки', name: 'метки',
     tables: {
-      лист: { shape: 'single', owner: 'sheet', columns: [{ key: 'хп', kind: 'number', default: 40 }, { key: 'отметка', kind: 'text' }] },
+      лист: { shape: 'single', owner: 'sheet', columns: [{ key: 'хп', label: 'хп', kind: 'number', default: 40 }, { key: 'отметка', label: 'отметка', kind: 'text' }] },
       оружие: {
-        shape: 'book', use: 'item', label: 'Оружие', columns: [{ key: 'вид', kind: 'text' }],
+        shape: 'book', use: 'item', label: 'Оружие', columns: [{ key: 'вид', label: 'Вид', kind: 'text' }],
         bindings: [{ label: 'Удар', effect: 'удар', args: { вид: { expr: '@вид' } } }, { label: 'Удар огнём', effect: 'удар', args: { вид: { expr: '"огонь"' } } }],
       },
     },
     effects: {
       метка: {
         label: 'Метка',
-        params: [{ key: 'лист', kind: 'sheet' }, { key: 'вид', kind: 'text' }],
+        params: [{ key: 'лист', label: 'Лист', kind: 'sheet' }, { key: 'вид', label: 'Вид', kind: 'text' }],
         steps: [{ type: 'apply', target: { expr: '@лист.отметка' }, direction: 'set', value: { expr: '@вид' } }],
       },
       удар: {
         label: 'Удар',
-        params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }, { key: 'вид', kind: 'text' }],
+        params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } }, { key: 'вид', label: 'Вид', kind: 'text' }],
         steps: place === 'до цикла' ? [call, ...loop] : place === 'в теле' ? [loop[0], call, loop[1]] : loop,
         ...(place === 'в плате' ? { cost: [call] } : {}),
       },

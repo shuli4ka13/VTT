@@ -11,7 +11,7 @@ import { RoomsService } from '../src/rooms/rooms.service.ts';
 const system = {
   id: 'конвейер', name: 'Конвейер',
   constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
-  rolls: { ловкость: { die: 'к20', fields: [{ table: 'лист', column: 'ловкость' }] } },
+  rolls: { ловкость: { label: 'Ловкость', die: 'к20', fields: [{ table: 'лист', column: 'ловкость' }] } },
   tables: {
     лист: { shape: 'single', owner: 'sheet', columns: [
       { key: 'хп', label: 'Хиты', kind: 'number', default: 20, min: 0, max: 30 },
@@ -20,7 +20,7 @@ const system = {
     приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] },
   },
   effects: {
-    удар: { label: 'Удар', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } }], steps: [{ type: 'each', of: 'цели' }, { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '1' } }] },
+    удар: { label: 'Удар', activation: 'manual', params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } }], steps: [{ type: 'each', of: 'цели' }, { type: 'apply', target: { expr: '@цель.хп' }, direction: 'subtract', value: { expr: '1' } }] },
     удача: { label: 'Удача', activation: 'passive', on: [{ on: 'seen', confirm: true, steps: [{ type: 'roll-plus', value: { expr: '5' } }] }] },
     вдох: { label: 'Второе дыхание', activation: 'passive', on: [{ on: 'moment:turn-start', if: { expr: '@ходит == @носитель' }, confirm: true, steps: [{ type: 'apply', target: { expr: '@носитель.хп' }, direction: 'add', value: { expr: '3' } }] }] },
     яд: { label: 'Яд', activation: 'passive' },

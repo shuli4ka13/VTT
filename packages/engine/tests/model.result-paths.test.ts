@@ -2,8 +2,8 @@ import { group, test, eq, deepEq } from './harness.ts';
 import { lintSystem } from '../src/model/lint.ts';
 import type { System } from '../src/model/types.ts';
 
-const ACTOR = { key: 'действующий', kind: 'sheet' };
-const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
+const ACTOR = { key: 'действующий', label: 'Кто действует', kind: 'sheet' };
+const TARGETS = { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } };
 
 const system = (value: string, rule: Record<string, unknown> = {}) => ({
   id: 'к', name: 'к',

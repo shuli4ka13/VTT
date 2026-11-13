@@ -48,7 +48,7 @@ group('шина моментов', () => {
     eq(out.reports[0]!.report.kind, 'moment');
   });
 
-  test('чужой момент не будит слушателя другого момента', () => {
+  test('чужой момент не будит подписку другого момента', () => {
     const out = fireMoments([{ moment: 'turn-end', sheetId: 'а' }], [sheet(['отравление'])], world as never);
     eq(out.sheets[0]!.values.хиты, 20);
     eq(out.reports.length, 0);
@@ -133,7 +133,7 @@ group('поле стало верным', () => {
     has: [], effects: worn.map(effectId => ({ effectId })),
   } as unknown as Sheet);
 
-  test('было ложно, стало истинно — слушатель срабатывает один раз', () => {
+  test('было ложно, стало истинно — подписка срабатывает один раз', () => {
     const out = fireCrossings([with_(5)], [with_(0)], ctx as never);
     eq(out.reports.length, 1);
     eq(out.sheets[0]!.effects.map(e => e.effectId).join(), 'без_сознания');
@@ -149,7 +149,7 @@ group('поле стало верным', () => {
     eq(fireCrossings([], [with_(0)], ctx as never).reports.length, 0);
   });
 
-  test('ссылка на поле в слушателе разбирается', () => {
+  test('ссылка на поле в подписке разбирается', () => {
     eq(fieldOf('field:без_сил'), 'без_сил');
     eq(fieldOf('moment:turn-start'), null);
     eq(fieldOf(undefined), null);

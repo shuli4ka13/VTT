@@ -130,6 +130,7 @@ export const columnValue = z.object({
 export const column = columnValue.extend({
   key: tag,
   label: z.string().optional(),
+  hint: z.string().optional(),
   roll: z.never({ message: 'бросок поля задаётся в «Бросках» системы (system.rolls), а не у колонки' }).optional(),
   title: z.string().optional(),
   onSheet: z.boolean().optional(),
@@ -327,6 +328,7 @@ export const effect = z.object({
   label: z.string().optional(),
   icon: z.string().optional(),
   description: z.string().optional(),
+  note: z.string().optional(),
   activation: activation.optional(),
   duration: z.object({
     kind: durationKind,
@@ -376,6 +378,8 @@ export const table = z.object({
   use: tableUse.optional(),
   icon: z.string().optional(),
   hint: z.string().optional(),
+  group: z.string().optional(),
+  note: z.string().optional(),
   grants: z.array(z.string().min(1)).optional(),
   bindings: z.array(binding).optional(),
   modifiers: z.array(modifier).optional(),

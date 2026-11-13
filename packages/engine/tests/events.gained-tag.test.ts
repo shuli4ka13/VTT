@@ -19,7 +19,7 @@ const system = {
   effects: {
     наложить: {
       label: 'Наложить', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'что', kind: 'effect' }],
+      params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'что', label: 'Что', kind: 'effect' }],
       steps: [{ type: 'status', effect: { expr: '@что' }, to: { expr: '@действующий' } }],
     },
     мокрый: { label: 'Мокрый', activation: 'passive', tags: ['гасит горение'], duration: { kind: 'permanent' } },

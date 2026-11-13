@@ -4,8 +4,8 @@ import { fireMoments } from './kit.ts';
 import { lintSystem, errorsOf } from '../src/model/lint.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
-const ACTOR = { key: 'действующий', kind: 'sheet' };
-const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
+const ACTOR = { key: 'действующий', label: 'Кто действует', kind: 'sheet' };
+const TARGETS = { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } };
 const EACH = { type: 'each', of: 'цели' };
 const OWN = { expr: '@бросающий == @носитель' };
 

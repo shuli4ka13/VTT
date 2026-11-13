@@ -12,8 +12,8 @@ import { sliceWorld } from './slice.ts';
 
 const { system: dnd, compendium, sheets } = sliceWorld();
 
-const ACTOR = { key: 'действующий', kind: 'sheet' };
-const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
+const ACTOR = { key: 'действующий', label: 'Кто действует', kind: 'sheet' };
+const TARGETS = { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } };
 const EACH = { type: 'each', of: 'цели' };
 const button = (label: string, steps: unknown[], extra: Record<string, unknown> = {}) =>
   ({ label, activation: 'manual', ...extra, params: [ACTOR, TARGETS, ...((extra.params as unknown[]) ?? [])], steps: [EACH, ...steps] });
@@ -337,7 +337,7 @@ describe('ячейка тратится один раз на действие', 
 });
 
 describe('появилось и ушло с листа', () => {
-  it('надели вещь — её эффект «при наложении»; сняли эффект кнопкой — слушатель «с меня ушло»', async () => {
+  it('надели вещь — её эффект «при наложении»; сняли эффект кнопкой — подписка «с меня ушло»', async () => {
     const token = (await http().post('/auth/login').send({ name: 'Ведущий вещей' })).body.token as string;
     const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
     const me = (await as(http().get('/auth/me'))).body.userId as string;
@@ -376,7 +376,7 @@ describe('появилось и ушло с листа', () => {
 
     await rooms.setBelonging(me, roomId, 'воин', 'effects', 'бафф', true);
     const shed = await rooms.setBelonging(me, roomId, 'воин', 'effects', 'бафф', false);
-    expect(shed.sheets[0]!.values.снято, 'слушатель «с меня ушло» сработал').toBe(1);
+    expect(shed.sheets[0]!.values.снято, 'подписка «с меня ушло» сработал').toBe(1);
     expect(shed.log.map(e => e.text).join(' ')).toContain('Сторож');
   });
 });
@@ -493,7 +493,7 @@ describe('цель правит свой бросок, увидев его', () 
 });
 
 describe('поле стало верным', () => {
-  it('ведущий вписал ноль хитов — слушатель поля вешает состояние и пишет в журнал', async () => {
+  it('ведущий вписал ноль хитов — подписка поля вешает состояние и пишет в журнал', async () => {
     const token = (await http().post('/auth/login').send({ name: 'Ведущий порога' })).body.token as string;
     const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
     const me = (await as(http().get('/auth/me'))).body.userId as string;
@@ -654,7 +654,7 @@ describe('цепочка ответок', () => {
       id: 'шипы', name: 'С шипами',
       tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
       effects: {
-        урон: { label: 'Урон', params: [{ key: 'раненый', kind: 'sheet' }, { key: 'обидчик', kind: 'sheet' }], steps: [sub('@раненый.хиты', '1')] },
+        урон: { label: 'Урон', params: [{ key: 'раненый', label: 'Раненый', kind: 'sheet' }, { key: 'обидчик', label: 'обидчик', kind: 'sheet' }], steps: [sub('@раненый.хиты', '1')] },
         удар: button('Удар', [{ type: 'emit', effect: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' } } }]),
         шипы: {
           label: 'Шипы', activation: 'passive',
@@ -677,7 +677,7 @@ describe('вопросы на ответках', () => {
       tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
       effects: {
         урон: {
-          label: 'Урон', params: [{ key: 'раненый', kind: 'sheet' }, { key: 'обидчик', kind: 'sheet' }, { key: 'сколько', label: 'Сколько', kind: 'number' }],
+          label: 'Урон', params: [{ key: 'раненый', label: 'Раненый', kind: 'sheet' }, { key: 'обидчик', label: 'обидчик', kind: 'sheet' }, { key: 'сколько', label: 'Сколько', kind: 'number' }],
           steps: [{ ...sub('@раненый.хиты', '@сколько') }],
         },
         удар: button('Удар', [{ type: 'emit', effect: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' }, сколько: { expr: '5' } } }]),
@@ -724,13 +724,13 @@ describe('вопросы на ответках', () => {
       id: 'заслон', name: 'С заслоном',
       tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
       effects: {
-        урон: { label: 'Урон', params: [{ key: 'раненый', kind: 'sheet' }, { key: 'обидчик', kind: 'sheet' }, { key: 'сколько', kind: 'number' }], steps: [sub('@раненый.хиты', '@сколько')] },
+        урон: { label: 'Урон', params: [{ key: 'раненый', label: 'Раненый', kind: 'sheet' }, { key: 'обидчик', label: 'обидчик', kind: 'sheet' }, { key: 'сколько', label: 'Сколько', kind: 'number' }], steps: [sub('@раненый.хиты', '@сколько')] },
         удар: button('Удар', [{ type: 'emit', effect: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' }, сколько: { expr: '5' } } }]),
         шипы: {
           label: 'Шипы', activation: 'passive',
           on: [{ on: 'after:урон', if: { expr: '@раненый == @носитель' }, steps: [{ type: 'emit', effect: 'шип', args: { жертва: { expr: '@обидчик' } } }] }],
         },
-        шип: { label: 'Шип', params: [{ key: 'жертва', kind: 'sheet' }], steps: [sub('@жертва.хиты', '2')] },
+        шип: { label: 'Шип', params: [{ key: 'жертва', label: 'жертва', kind: 'sheet' }], steps: [sub('@жертва.хиты', '2')] },
         заслон: {
           label: 'Заслон', activation: 'passive',
           on: [{ on: 'before:шип', if: { expr: '@жертва == @носитель' }, confirm: true, steps: [sub('@носитель.хиты', '3', 'add')] }],
@@ -850,7 +850,7 @@ describe('отдых и плата ячейкой', () => {
       ] } , чары: { shape: 'book', use: 'action', label: 'Чары', columns: [], bindings: [{ label: 'Стрела', effect: 'стрела', args: {} }] } },
       effects: {
         ячейка: {
-          label: 'Ячейка', params: [{ key: 'лист', kind: 'sheet' }],
+          label: 'Ячейка', params: [{ key: 'лист', label: 'Лист', kind: 'sheet' }],
           steps: [
             { type: 'branch', if: { expr: '@лист.ячейки < 1' } },
             { type: 'stop', note: { expr: '"не хватает «Ячейки»"' } },

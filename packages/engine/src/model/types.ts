@@ -27,6 +27,7 @@ export interface Placement { group: string; section?: string; sectionAt?: number
 export interface Field {
   tag: string;
   label: string;
+  hint?: string;
   group?: string;
   section?: string;
   sectionAt?: number;

@@ -19,7 +19,7 @@ const system = {
   effects: {
     бросок: {
       label: 'Бросок', activation: 'manual',
-      params: [{ key: 'действующий', kind: 'sheet' }, { key: 'метка', kind: 'text' }],
+      params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'метка', label: 'Метка', kind: 'text' }],
       steps: [{ id: 'к', type: 'roll', die: 'к6', count: { expr: '1' }, tags: [{ expr: '@метка' }], by: { expr: '@действующий' } }],
     },
     слух: {

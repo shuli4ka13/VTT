@@ -5,8 +5,8 @@ import { lintSystem, errorsOf } from '../src/model/lint.ts';
 import { namesAt } from '../src/model/names-at.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
-const ACTOR = { key: 'действующий', kind: 'sheet' };
-const TARGETS = { key: 'цели', kind: 'sheet', many: true, item: { key: 'цель' } };
+const ACTOR = { key: 'действующий', label: 'Кто действует', kind: 'sheet' };
+const TARGETS = { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель' } };
 const EACH = { type: 'each', of: 'цели' };
 
 const build = (steps: unknown[], rule: Record<string, unknown> = {}) => ({
@@ -100,7 +100,7 @@ group('бросок поля в эффекте: кость, успех и сте
 
   test('вход эффекта «порог» не подменяет порог броска', () => {
     const system = withDifficulty(OPPOSED);
-    (system.effects.удар as { params: unknown[] }).params.push({ key: 'порог', kind: 'number', default: 0 });
+    (system.effects.удар as { params: unknown[] }).params.push({ key: 'порог', label: 'порог', kind: 'number', default: 0 });
     eq(fight(system, 47, 35, [23, 41]).trace('удар').margin, 2);
   });
 

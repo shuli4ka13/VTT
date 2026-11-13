@@ -946,7 +946,7 @@
               "hp": 8,
               "stress": 3,
               "attack": 3,
-              "move": "acid_burrower_claws"
+              "move": "Когти (Кислотный землерой)"
             }
           },
           {
@@ -959,7 +959,7 @@
               "hp": 7,
               "stress": 2,
               "attack": 1,
-              "move": "bear_claws"
+              "move": "Когти (Медведь)"
             }
           },
           {
@@ -972,7 +972,7 @@
               "hp": 8,
               "stress": 3,
               "attack": 1,
-              "move": "cave_ogre_club"
+              "move": "Дубина (Пещерный огр)"
             }
           },
           {
@@ -985,7 +985,7 @@
               "hp": 9,
               "stress": 4,
               "attack": 4,
-              "move": "construct_slam"
+              "move": "Удар кулаком (Конструкт)"
             }
           },
           {
@@ -998,7 +998,7 @@
               "hp": 3,
               "stress": 4,
               "attack": -4,
-              "move": "courtier_daggers"
+              "move": "Кинжалы (Придворный)"
             }
           },
           {
@@ -1011,7 +1011,7 @@
               "hp": 6,
               "stress": 3,
               "attack": -2,
-              "move": "mosquito_proboscis"
+              "move": "Хоботок (Гигантские комары)"
             }
           },
           {
@@ -1024,7 +1024,7 @@
               "hp": 7,
               "stress": 3,
               "attack": 2,
-              "move": "deeproot_vines"
+              "move": "Лозы (Защитник Глубоких корней)"
             }
           },
           {
@@ -1037,7 +1037,7 @@
               "hp": 1,
               "stress": 1,
               "attack": -4,
-              "move": "rat_claws"
+              "move": "Когти (Гигантская крыса)"
             }
           },
           {
@@ -1050,7 +1050,7 @@
               "hp": 4,
               "stress": 3,
               "attack": 2,
-              "move": "wolf_claws"
+              "move": "Когти (Лютый волк)"
             }
           },
           {
@@ -1063,7 +1063,7 @@
               "hp": 6,
               "stress": 3,
               "attack": 1,
-              "move": "scorpion_pincers"
+              "move": "Клешни (Гигантский скорпион)"
             }
           },
           {
@@ -1076,7 +1076,7 @@
               "hp": 5,
               "stress": 3,
               "attack": 2,
-              "move": "glass_fangs"
+              "move": "Стеклянные клыки (Стеклянный змей)"
             }
           },
           {
@@ -1089,7 +1089,7 @@
               "hp": 3,
               "stress": 3,
               "attack": 1,
-              "move": "harrier_javelin"
+              "move": "Дротик (Застрельщик)"
             }
           },
           {
@@ -1102,7 +1102,7 @@
               "hp": 5,
               "stress": 2,
               "attack": 1,
-              "move": "guard_longsword"
+              "move": "Длинный меч (Стражник с клинком)"
             }
           },
           {
@@ -1115,7 +1115,7 @@
               "hp": 7,
               "stress": 3,
               "attack": 4,
-              "move": "head_guard_mace"
+              "move": "Булава (Начальник стражи)"
             }
           },
           {
@@ -1128,7 +1128,7 @@
               "hp": 3,
               "stress": 2,
               "attack": 1,
-              "move": "archer_longbow"
+              "move": "Длинный лук (Стражник-лучник)"
             }
           },
           {
@@ -1141,7 +1141,7 @@
               "hp": 5,
               "stress": 3,
               "attack": 1,
-              "move": "bandit_daggers"
+              "move": "Кинжалы (Разбойник Зазубренного ножа)"
             }
           },
           {
@@ -1154,7 +1154,7 @@
               "hp": 4,
               "stress": 4,
               "attack": 2,
-              "move": "hexer_staff"
+              "move": "Посох (Ворожей Зазубренного ножа)"
             }
           },
           {
@@ -1167,7 +1167,7 @@
               "hp": 6,
               "stress": 3,
               "attack": 2,
-              "move": "lieutenant_javelin"
+              "move": "Дротик (Лейтенант Зазубренного ножа)"
             }
           },
           {
@@ -1180,7 +1180,7 @@
               "hp": 7,
               "stress": 4,
               "attack": -3,
-              "move": "kneebreaker_club"
+              "move": "Дубина (Костолом Зазубренного ножа)"
             }
           },
           {
@@ -1193,7 +1193,7 @@
               "hp": 3,
               "stress": 3,
               "attack": 1,
-              "move": "shadow_daggers"
+              "move": "Кинжалы (Тень Зазубренного ножа)"
             }
           },
           {
@@ -1206,7 +1206,7 @@
               "hp": 1,
               "stress": 1,
               "attack": -2,
-              "move": "lackey_daggers"
+              "move": "Кинжалы (Шестёрка Зазубренного ножа)"
             }
           },
           {
@@ -1219,7 +1219,7 @@
               "hp": 3,
               "stress": 2,
               "attack": -1,
-              "move": "sniper_shortbow"
+              "move": "Короткий лук (Снайпер Зазубренного ножа)"
             }
           },
           {
@@ -1232,7 +1232,7 @@
               "hp": 3,
               "stress": 3,
               "attack": -4,
-              "move": "merchant_club"
+              "move": "Дубина (Торговец)"
             }
           }
         ]
@@ -2262,7 +2262,7 @@
         ]
       },
       "no_mercy": {
-        "label": "No Mercy",
+        "label": "Без пощады (No Mercy)",
         "group": "Способности Надежды",
         "description": "Воин: за 3 Надежды +1 к броскам атаки до следующего отдыха.",
         "steps": [
@@ -2320,7 +2320,7 @@
         ]
       },
       "rogues_dodge": {
-        "label": "Rogue’s Dodge",
+        "label": "Уворот плута (Rogue’s Dodge)",
         "group": "Способности Надежды",
         "description": "Плут: за 3 Надежды +2 к уклонению, пока по вам не попадут атакой или до отдыха.",
         "steps": [
@@ -3590,7 +3590,7 @@
       },
       {
         "id": "hope_mercy",
-        "label": "No Mercy",
+        "label": "Без пощады (No Mercy)",
         "bindings": [
           {
             "label": "No Mercy",
@@ -3601,7 +3601,7 @@
       },
       {
         "id": "hope_dodge",
-        "label": "Rogue’s Dodge",
+        "label": "Уворот плута (Rogue’s Dodge)",
         "bindings": [
           {
             "label": "Rogue’s Dodge",

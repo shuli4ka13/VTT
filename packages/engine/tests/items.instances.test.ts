@@ -6,7 +6,7 @@ import { lintSystem, errorsOf } from '../src/model/lint.ts';
 import { flattenSystem } from '../src/model/inherit.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
-const ACTOR = { key: 'действующий', kind: 'sheet' };
+const ACTOR = { key: 'действующий', label: 'Кто действует', kind: 'sheet' };
 
 const raw = {
   id: 'с', name: 'с',
