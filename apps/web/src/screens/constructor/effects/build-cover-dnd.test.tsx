@@ -337,7 +337,7 @@ describe('эффекты D&D собираются в конструкторе р
       within().click('+ правка вызова');
       const card = lastModifier;
       within(card()).select('С метками', 'атака');
-      within(card()).select('Какая правка', edit);
+      within(card()).select('Какое слово', edit);
       within(card()).when(`=${when}`);
     };
     rollEdit('advantage', '@против == @носитель и @бросающий == @кого');

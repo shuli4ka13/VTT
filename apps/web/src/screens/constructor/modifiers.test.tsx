@@ -70,7 +70,7 @@ describe('редактор модификаторов', () => {
   it('правки предлагаются из словаря автора, а не из зашитого списка', () => {
     renderOpen(<ModifiersEditor system={system} modifiers={rollMod} onEdit={vi.fn()} />);
     const edit = screen.getByDisplayValue('Фора');
-    expect(optionsOf(edit)).toEqual(['— выберите правку —', 'Фора']);
+    expect(optionsOf(edit)).toEqual(['— выберите слово —', 'Фора']);
     expect(optionsOf(edit)).not.toContain('Преимущество');
   });
 

@@ -253,7 +253,8 @@ function WordRow({ wordKey, edit, system, editSystem, parts, used }: {
   );
 }
 
-const STACK_WORDS = [['', 'два источника — одно'], ['yes', 'каждый источник считается']] as const;
+const STACK_WORDS = [['', 'одно на бросок, сколько бы эффектов ни дали'], ['yes', 'по разу от каждого разного эффекта']] as const;
+const STACK_TIP = 'Копии одного и того же эффекта считаются одним: два «Поддержания» дадут слово один раз. «За каждую копию» — числом в самом эффекте.';
 
 function unlinkFrom(edit: RollEdit, key: string): void {
   if (!edit.cancels) return;
@@ -297,7 +298,7 @@ function Cancels({ wordKey, edit, system, editSystem }: { wordKey: string; edit:
         <Select value="" options={[['', '+ слово…'], ...free.map(other => [other, name(other)] as const)] as never}
           onChange={(other: string) => { if (other) link(other); }} />
       ) : null}
-      <Select value={edit.stacks ? 'yes' : ''} options={STACK_WORDS as never}
+      <Select value={edit.stacks ? 'yes' : ''} options={STACK_WORDS as never} title={STACK_TIP}
         onChange={(next: string) => editSystem(draft => {
           const cur = draft.roll_edits?.[wordKey];
           if (!cur) return;

@@ -24,6 +24,7 @@ import type { Entry } from './log.ts';
 import type { Clock } from '../engine/clock.ts';
 import type { TurnOp } from '../events/moments.ts';
 import type { System, Sheet, Compendium, Die, StoredValue, WornEffect, Owned } from '../model/types.ts';
+import { CALL_WORDS } from '../words/calls.ts';
 
 export type Op =
   | { op: 'act'; intent: ActIntent }
@@ -165,14 +166,15 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     const verdict = verdictText({ threshold, under: check.under === true, success, margin: check.margin ? margin : null, degree });
     const rolled = thrown.result;
     const named = thrown.roll.edits.length ? ` (${thrown.roll.edits.join(', ')})` : '';
+    const gone = CALL_WORDS.roll.canceled(thrown.roll.canceled ?? []);
     const shown = rolled.dice.kept != null && rolled.dice.rolls.length > 1
       ? `[${rolled.dice.rolls.join(', ')}] → ${rolled.dice.kept}` : `[${rolled.dice.rolls.join(', ')}]`;
     run.state.write({
       text: thrown.roll.claim.read.kind === 'count'
-        ? `${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} — успехов: ${total}${verdict}`
+        ? `${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} — успехов: ${total}${verdict}${gone}`
         : check.bonus
-          ? `${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} + ${bonus} = ${total}${verdict}`
-          : `${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} = ${total}${verdict}`,
+          ? `${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} + ${bonus} = ${total}${verdict}${gone}`
+          : `${sheet.name} бросает «${check.label}»: ${shown}${named}${addendsText(thrown.roll.addends)} = ${total}${verdict}${gone}`,
     }, ...entries);
     return true;
   },

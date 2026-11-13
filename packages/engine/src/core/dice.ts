@@ -45,6 +45,7 @@ export interface Roll {
   dice: Rolled[];
   results: RollEdit[];
   edits: string[];
+  canceled?: string[];
   addends: Addend[];
   tags: string[];
   exploded: boolean;

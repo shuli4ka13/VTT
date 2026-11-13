@@ -27,6 +27,26 @@ const OPS = [
 
 const RECIPE = 'recipe:';
 
+const NUMBER_GROUP = 'число — складывается';
+const WORD_GROUP = 'слово из «Правил» — одно на бросок';
+const MORE_GROUP = 'ещё';
+
+const ROLL_PARAMS = [
+  ['count', CALL_WORDS.roll.params.count, NUMBER_GROUP],
+  ['bonus', CALL_WORDS.roll.params.bonus, NUMBER_GROUP],
+  ['threshold', CALL_WORDS.roll.params.threshold, NUMBER_GROUP],
+  ['edits', CALL_WORDS.roll.params.edits, WORD_GROUP],
+  ['tags', CALL_WORDS.roll.params.tags, MORE_GROUP],
+] as const;
+
+const ROLL_PARAM_HINTS: Record<string, string> = {
+  count: 'Складывается: каждый висящий эффект и каждая его копия дают своё число.',
+  bonus: 'Складывается: каждый висящий эффект и каждая его копия дают своё число.',
+  threshold: 'Складывается: каждый висящий эффект и каждая его копия дают своё число.',
+  edits: 'Слово действует на бросок один раз, сколько бы эффектов его ни дали. Как оно гасится и считается — в «Правилах → Правки броска».',
+  tags: 'Бросок получает метку один раз, сколько бы эффектов её ни дали.',
+};
+
 type Loose = Record<string, unknown>;
 
 function StagePick({ stages, value, onChange }: {
@@ -302,10 +322,10 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
       </Field>
       {isRoll ? (
         <>
-          <Field label="Что правим">
+          <Field label="Что правим" hint={ROLL_PARAM_HINTS[String(m.param ?? 'edits')]}>
             <Select
               value={String(m.param ?? 'edits')}
-              options={Object.entries(CALL_WORDS.roll.params) as never}
+              options={ROLL_PARAMS as never}
               onChange={pickParam}
             />
           </Field>
@@ -335,12 +355,12 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
           </Field>
           {m.param === 'edits' ? (
             <Field
-              label="Какая правка" needed={!m.edit}
+              label="Какое слово" needed={!m.edit}
               hint={recipes.length ? 'Готовые механизмы приедут в словарь «Правки броска» со всеми словами.' : undefined}
             >
               <Select
                 value={String(m.edit ?? '')}
-                options={[['', '— выберите правку —'],
+                options={[['', '— выберите слово —'],
                   ...edits.map(([key, e]) => [key, e.label || key] as const),
                   ...recipes.map(({ method, recipe }) =>
                     [`${RECIPE}${method.id}:${recipe.key}`, `+ ${recipe.label} · ${method.label}`] as const),

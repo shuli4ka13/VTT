@@ -7,6 +7,7 @@ import type { StepData, StepContext } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 import { keepRecord } from '../../core/against.ts';
 import { fieldCheck } from '../check.ts';
+import { CALL_WORDS } from '../../words/calls.ts';
 
 export const type = 'roll';
 const words: StepWords = STEP_WORDS.roll;
@@ -96,6 +97,7 @@ function fieldFinish(step: StepData, ctx: StepContext) {
       ...(tags.length ? { tags } : {}),
       ...(made.thrown.roll.claim.read.kind !== 'sum' ? { read: made.thrown.roll.claim.read.kind } : {}),
       ...(made.thrown.roll.edits.length ? { edits: made.thrown.roll.edits } : {}),
+      ...(made.thrown.roll.canceled?.length ? { canceled: made.thrown.roll.canceled } : {}),
       ...(made.thrown.roll.addends.length ? { adds: made.thrown.roll.addends } : {}),
       ...(Object.keys(roll.parts).length ? { parts: roll.parts } : {}),
       ...(made.threshold === null ? {} : { threshold: made.threshold, under: check.under === true }),
@@ -138,6 +140,7 @@ export function finish(step: StepData, ctx: StepContext) {
       ...(tags.length ? { tags } : {}),
       ...(thrown && thrown.roll.claim.read.kind !== 'sum' ? { read: thrown.roll.claim.read.kind } : {}),
       ...(thrown?.roll.edits.length ? { edits: thrown.roll.edits } : {}),
+      ...(thrown?.roll.canceled?.length ? { canceled: thrown.roll.canceled } : {}),
       ...(thrown?.roll.addends.length ? { adds: thrown.roll.addends } : {}),
       ...(Object.keys(roll.parts).length ? { parts: roll.parts } : {}),
     },
@@ -173,13 +176,14 @@ export function traceLine(t: any) {
       : t.rolls.length ? `[${t.rolls.join(', ')}]` : '';
   const parts = t.parts && Object.keys(t.parts).length ? ' · ' + Object.entries(t.parts).map(([k, v]) => `${k}: ${v}`).join(', ') : '';
   const edits = t.edits?.length ? ` (${t.edits.join(', ')})` : '';
+  const gone = CALL_WORDS.roll.canceled(t.canceled ?? []);
   const plain = Array.isArray(t.rolls) && t.rolls.reduce((sum: number, v: number) => sum + v, 0) === t.fixed;
   const fixed = t.fixed !== undefined && t.fixed !== 0 && !plain ? String(t.fixed) : '';
   const sum = [fixed && dice ? `${dice} → ${fixed}` : dice || fixed, t.bonus ? String(t.bonus) : ''].filter(Boolean).join(' + ').replace(/\+ -/g, '− ') || '0';
   const verdict = t.threshold === undefined ? '' : ` · ${t.under ? 'не больше' : 'порог'} ${t.threshold}`;
   const passed = t.success === undefined ? '' : `${verdict ? ':' : ' ·'} ${t.success ? 'успех' : 'провал'}`;
   const graded = `${verdict}${passed}${t.margin === undefined ? '' : ` · степеней: ${t.margin}`}${t.degree ? ` · ${t.degree}` : ''}`;
-  return `${t.by ? 'бросок' : 'расчёт'}${name}: ${sum}${edits}${addendsText(adds)} = ${t.total}${parts}${graded}`;
+  return `${t.by ? 'бросок' : 'расчёт'}${name}: ${sum}${edits}${addendsText(adds)} = ${t.total}${parts}${graded}${gone}`;
 }
 
 

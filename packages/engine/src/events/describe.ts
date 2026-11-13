@@ -14,6 +14,7 @@ import { addendsText, verdictText } from '../core/dice.ts';
 import type { Addend } from '../core/dice.ts';
 import { facedText } from '../core/against.ts';
 import type { FacedTrace } from '../core/against.ts';
+import { CALL_WORDS } from '../words/calls.ts';
 
 const addsOf = (trace: Record<string, unknown>): Addend[] => (Array.isArray(trace.adds) ? trace.adds as Addend[] : []);
 
@@ -171,11 +172,12 @@ export function describeParts(
         : trace.kept != null && trace.rolls?.length > 1 ? `[${shown}] → ${trace.kept}` : `[${shown}]`;
       const title = rollTitle(tagsOfStep(step, trace), 'Бросок');
       const edits = trace.edits?.length ? ` (${trace.edits.join(', ')})` : '';
+      const gone = CALL_WORDS.roll.canceled(trace.canceled ?? []);
       const bonus = step?.bonus ? ` + ${refLabel(step.bonus, trace.within) ?? 'Бонус'}: ${trace.bonus}` : trace.bonus ? ` + ${trace.bonus}` : '';
       const parts = trace.parts && Object.keys(trace.parts).length
         ? ' · ' + Object.entries(trace.parts).map(([k, v]) => `${k}: ${v}`).join(', ') : '';
       const verdict = verdictText({ threshold: trace.threshold, under: trace.under === true, success: trace.success, margin: trace.said, degree: trace.degree });
-      return `${title}: ${rolls}${edits}${addendsText(addsOf(trace))}${bonus} = ${trace.total}${parts}${verdict}`;
+      return `${title}: ${rolls}${edits}${addendsText(addsOf(trace))}${bonus} = ${trace.total}${parts}${verdict}${gone}`;
     }
     if (trace.type === 'check') {
       const versus = typeof trace.versusTag === 'string' ? labelOf(trace.versusTag) : refLabel(step?.versus, trace.within) ?? 'порог';
