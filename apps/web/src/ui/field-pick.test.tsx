@@ -23,14 +23,19 @@ const build = (cols: ReturnType<typeof column>[]) => ({
   constants: {}, effects: {},
 }) as unknown as System;
 
-const options = () => [...document.querySelectorAll('option')].map(o => o.textContent);
-const groups = () => [...document.querySelectorAll('optgroup')].map(g => g.getAttribute('label'));
+const combo = () => screen.getByRole('combobox');
+const open = () => { fireEvent.focus(combo()); };
+const options = () => [...document.querySelectorAll('.slot__option')].map(o => o.textContent);
+const groups = () => [...document.querySelectorAll('.combo__group')].map(g => g.textContent);
+const pick = (text: string) => { fireEvent.mouseDown([...document.querySelectorAll('.slot__option')].find(o => o.textContent === text)!); };
+const typeIn = (text: string) => { fireEvent.change(combo(), { target: { value: text } }); };
 
 describe('выбор поля листа', () => {
   const system = build([column('str', 'Сила', 'Атрибуты'), column('hp', 'Здоровье', 'Бой'), column('secret', 'Скрытое')]);
 
   it('поля сгруппированы по блокам, служебные спрятаны за пунктом', () => {
     render(<FieldPick system={system} value="" onChange={() => {}} />);
+    open();
     expect(groups()).toEqual(['Атрибуты', 'Бой']);
     expect(options()).toContain('служебные поля (1)…');
     expect(options()).not.toContain('Скрытое');
@@ -39,7 +44,8 @@ describe('выбор поля листа', () => {
   it('пункт служебных полей раскрывает их и ничего не выбирает', () => {
     const onChange = vi.fn();
     render(<FieldPick system={system} value="" onChange={onChange} />);
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: '\u0000service' } });
+    open();
+    pick('служебные поля (1)…');
     expect(options()).toContain('Скрытое');
     expect(onChange).not.toHaveBeenCalled();
   });
@@ -47,40 +53,41 @@ describe('выбор поля листа', () => {
   it('выбор отдаёт тег поля', () => {
     const onChange = vi.fn();
     render(<FieldPick system={system} value="" onChange={onChange} />);
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'hp' } });
+    open();
+    pick('Здоровье');
     expect(onChange).toHaveBeenCalledWith('hp');
   });
 
   it('у поля без названия вместо ключа — «без названия»', () => {
     render(<FieldPick system={build([column('qq_key', undefined, 'Бой')])} value="qq_key" onChange={() => {}} />);
-    expect(options()).toContain('без названия');
+    expect((combo() as HTMLInputElement).value).toBe('без названия');
+    open();
     expect(options().join('|')).not.toContain('qq_key');
   });
 
   it('выбранное служебное поле видно сразу', () => {
     render(<FieldPick system={system} value="secret" onChange={() => {}} />);
-    expect(options()).toContain('Скрытое');
+    expect((combo() as HTMLInputElement).value).toBe('Скрытое');
   });
 });
 
-describe('поиск по названию', () => {
-  const many = build(Array.from({ length: 25 }, (_, at) => column(`f${at}`, at === 7 ? 'Ловкость' : `Поле ${at}`, 'Бой')));
+describe('ввод в списке', () => {
+  const system = build([column('str', 'Сила', 'Атрибуты'), column('dex', 'Ловкость', 'Атрибуты'), column('secret', 'Скрытая ловкость')]);
 
-  it('при числе пунктов больше двадцати над списком появляется строка поиска и фильтрует', () => {
-    render(<FieldPick system={many} value="" onChange={() => {}} />);
-    fireEvent.change(screen.getByPlaceholderText('поиск по названию'), { target: { value: 'ловк' } });
-    expect(options()).toEqual(['— какое поле —', 'Ловкость']);
+  it('набранный текст оставляет подходящие, включая служебные', () => {
+    render(<FieldPick system={system} value="" onChange={() => {}} />);
+    open();
+    typeIn('ловк');
+    expect(options()).toEqual(['Ловкость', 'Скрытая ловкость']);
   });
 
-  it('при малом числе пунктов поиска нет', () => {
-    render(<FieldPick system={build([column('a', 'А', 'Бой')])} value="" onChange={() => {}} />);
-    expect(screen.queryByPlaceholderText('поиск по названию')).toBeNull();
-  });
-
-  it('выбранное поле остаётся в списке под фильтром', () => {
-    render(<FieldPick system={many} value="f3" onChange={() => {}} />);
-    fireEvent.change(screen.getByPlaceholderText('поиск по названию'), { target: { value: 'ловк' } });
-    expect(options()).toContain('Поле 3');
+  it('Enter выбирает первое подходящее', () => {
+    const onChange = vi.fn();
+    render(<FieldPick system={system} value="" onChange={onChange} />);
+    open();
+    typeIn('сил');
+    fireEvent.keyDown(combo(), { key: 'Enter' });
+    expect(onChange).toHaveBeenCalledWith('str');
   });
 });
 
@@ -95,6 +102,7 @@ describe('одинаковые названия', () => {
       constants: {}, effects: {},
     } as unknown as System;
     render(<FieldPick system={system} value="" onChange={() => {}} />);
+    open();
     expect(options()).toEqual(expect.arrayContaining(['Сила · Лист', 'Сила · Спутник']));
   });
 });

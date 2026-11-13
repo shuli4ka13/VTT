@@ -4,10 +4,8 @@ import type { Field } from '@vtt/engine/model/types';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { NO_BLOCK } from '@vtt/engine/model/blocks';
 import { byBlock } from '../screens/constructor/field-groups.ts';
-import { Input, Select } from './primitives.tsx';
+import { Combo, type ComboOption } from './combo.tsx';
 
-const SEARCH_FROM = 20;
-const SERVICE = '\u0000service';
 const UNNAMED = 'без названия';
 
 type Option = readonly [string, string, string];
@@ -38,40 +36,29 @@ export function FieldPick({ system, value, onChange, fields, extra = [], blank =
   blank?: string;
   label?: string;
 }) {
-  const [needle, setNeedle] = useState('');
   const [opened, setOpened] = useState(false);
   const all = fieldOptions(system, fields ?? fieldsOf(system));
   const service = all.filter(option => option[2] === NO_BLOCK);
   const placed = all.filter(option => option[2] !== NO_BLOCK);
-  const total = all.length + extra.length;
-  const searching = total > SEARCH_FROM;
-  const query = needle.trim().toLowerCase();
-  const fits = (text: string, tag: string) => !query || text.toLowerCase().includes(query) || tag === value;
-  const showService = opened || Boolean(query) || service.some(option => option[0] === value);
+  const showService = opened || service.some(option => option[0] === value);
+  const item = (option: Option | readonly [string, string], group?: string): ComboOption =>
+    ({ value: option[0], label: option[1], ...(group ? { group } : {}) });
 
-  const shown: (readonly [string, string] | Option)[] = [
-    ['', blank],
-    ...placed.filter(option => fits(option[1], option[0])),
-    ...(showService ? service.filter(option => fits(option[1], option[0])) : []),
-    ...extra.filter(option => fits(option[1], option[0])),
+  const options: ComboOption[] = [
+    ...(value ? [item(['', blank])] : []),
+    ...placed.map(option => item(option, option[2])),
+    ...service.map(option => ({ ...item(option, option[2]), ...(showService ? {} : { hidden: true }) })),
+    ...extra.map(option => item(option)),
   ];
-  const hidden = !showService && service.length;
-  const options = hidden
-    ? [...shown, [SERVICE, `служебные поля (${service.length})…`] as const]
-    : shown;
 
   return (
-    <div className="stack stack--tight">
-      {searching ? <Input value={needle} placeholder="поиск по названию" onChange={setNeedle} /> : null}
-      <Select<string>
-        value={value}
-        {...(label ? { label } : {})}
-        options={options as never}
-        onChange={next => {
-          if (next === SERVICE) { setOpened(true); return; }
-          onChange(next);
-        }}
-      />
-    </div>
+    <Combo
+      value={value}
+      blank={blank}
+      {...(label ? { label } : {})}
+      options={options}
+      more={!showService && service.length ? { label: `служебные поля (${service.length})…`, run: () => setOpened(true) } : undefined}
+      onChange={onChange}
+    />
   );
 }

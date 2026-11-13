@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { useWorld, emptySystem } from '../../../store/world.ts';
+import { pickCombo } from '../../../testing/cards.ts';
 import { CharacterSection } from './character-section.tsx';
 import { SheetTab } from '../sheet-tab.tsx';
 import type { System } from '@vtt/schema';
@@ -162,7 +163,7 @@ describe('раздел «Что даёт всем листам»', () => {
     expect(screen.getByText('Что даёт всем листам')).toBeTruthy();
     expect(screen.getByText('Действует на любой лист, какого бы типа он ни был, и на лист без типа')).toBeTruthy();
     const box = document.querySelector<HTMLElement>('[data-field="Что даёт всем листам"]')!;
-    fireEvent.change(box.querySelector('select')!, { target: { value: 'удар' } });
+    pickCombo(box.querySelector<HTMLElement>('[role="combobox"]')!, 'удар');
     expect(useWorld.getState().system.grants).toEqual(['удар']);
     fireEvent.click(box.querySelector('.chip__x')!);
     expect('grants' in useWorld.getState().system).toBe(false);

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
+import { pickCombo } from '../../testing/cards.ts';
 import { renderOpen } from '../../testing/render-open.tsx';
 import { CompendiumScreen } from './compendium.tsx';
 import { useWorld } from '../../store/world.ts';
@@ -282,7 +283,7 @@ describe('свойство «несколько значений» — фишк�
     renderOpen(<CompendiumScreen />);
     const поле = [...document.querySelectorAll('label')].find(l => l.textContent?.includes('Свойства'))!;
     expect(поле.textContent).toContain('лёгкое');
-    fireEvent.change(поле.querySelector('select')!, { target: { value: 'тяжёлое' } });
+    pickCombo(поле.querySelector<HTMLElement>('[role="combobox"]')!, 'тяжёлое');
     expect(useWorld.getState().compendium.records[0]!.cells!.properties).toEqual(['лёгкое', 'тяжёлое']);
   });
 });

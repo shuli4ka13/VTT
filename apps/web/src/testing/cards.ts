@@ -73,6 +73,8 @@ export function within(root: ParentNode = document) {
   const select = (label: string | HTMLElement, option: string): void => {
     const box = typeof label === 'string' ? field(label) : label;
     const el = box instanceof HTMLSelectElement ? box : box.querySelector('select');
+    const combo = el ? null : box.matches('[role="combobox"]') ? box : box.querySelector<HTMLElement>('[role="combobox"]');
+    if (combo) { pickCombo(combo, option, String(label)); openAll(); return; }
     if (!el) throw new Error(`в «${String(label)}» нет списка`);
     const found = [...el.options].find(o => o.value === option || textOf(o) === option);
     if (!found) throw new Error(`в списке «${String(label)}» нет «${option}»; есть: ${[...el.options].map(o => `${o.value}=${textOf(o)}`).join(' | ')}`);
@@ -196,6 +198,18 @@ export function within(root: ParentNode = document) {
 
   return { arg, args, button, has, click, cell, field, select, type, formula, check, when, whenOptions };
 }
+
+export const pickCombo = (combo: HTMLElement, option: string, label = ''): void => {
+  act(() => { fireEvent.focus(combo); });
+  const menu = () => [...(combo.closest('.combo') ?? combo.parentElement!).querySelectorAll<HTMLElement>('.slot__option')];
+  const find = () => menu().find(o => o.dataset.value === option || textOf(o) === option);
+  let found = find();
+  const more = menu().find(o => o.dataset.value === '\u0000more');
+  if (!found && more) { act(() => { fireEvent.mouseDown(more); }); found = find(); }
+  if (!found) throw new Error(`в списке «${label}» нет «${option}»; есть: ${menu().map(o => `${o.dataset.value}=${textOf(o)}`).join(' | ')}`);
+  act(() => { fireEvent.mouseDown(found); });
+  act(() => { fireEvent.blur(combo); });
+};
 
 export const blocks = (root: ParentNode = document): HTMLElement[] => [...root.querySelectorAll<HTMLElement>('.flow-block')];
 

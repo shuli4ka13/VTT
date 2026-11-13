@@ -189,7 +189,7 @@ describe('эффекты D&D собираются в конструкторе р
     within(lastModifier()).click('Удалить');
     within(lastModifier()).click('точно убрать');
     ui.click('+ что даёт');
-    within(ui.field('Что даёт')).select(ui.field('Что даёт').querySelector('select') as HTMLElement, 'helpless');
+    within(ui.field('Что даёт')).select(ui.field('Что даёт'), 'helpless');
 
     ui.click('+ вход');
     ui.type(ui.cell('Название', 0), 'Запомненное число');
