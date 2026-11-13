@@ -216,7 +216,7 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
           </Field>
         ) : null}
         {kind === 'sheet' && !param.many ? (
-          <Field label="Кто это" hint="«цель» — за столом сюда встаёт выбранная цель, а когда эффект вызван из «Для каждого из» — та, по которой сейчас идёт вызвавший. «тот, кто действует» — кто нажал кнопку. Иначе лист обязан передать вызвавший">
+          <Field label="Кто это" hint="кого поставить сюда, если лист не передали">
             <Select
               value={param.role === 'target' || param.role === 'actor' ? param.role : ''}
               options={[['', 'кого передадут'], ['target', 'цель — выбранная за столом или текущая'], ['actor', 'тот, кто действует']] as const}
