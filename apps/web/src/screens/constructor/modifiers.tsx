@@ -325,6 +325,14 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
               onChange={tags => onChange(d => { const list = tags.filter((t): t is string => typeof t === 'string'); if (list.length) d.anyTags = list; else delete d.anyTags; })}
             />
           </Field>
+          <Field label="Кроме меток" hint="Бросок с любой из этих меток правка не трогает. Пусто — не смотрим.">
+            <TagsField
+              system={system}
+              value={(m.notTags as string[] | undefined)}
+              empty="не смотрим"
+              onChange={tags => onChange(d => { const list = tags.filter((t): t is string => typeof t === 'string'); if (list.length) d.notTags = list; else delete d.notTags; })}
+            />
+          </Field>
           {m.param === 'edits' ? (
             <Field
               label="Какая правка" needed={!m.edit}

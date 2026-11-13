@@ -84,11 +84,15 @@ export function modifierSentence(system: System, modifier: Modifier, table?: str
   if (call === ROLL_CALL) {
     const tags = tagList(mod.tags) || tagList(mod.anyTags);
     const who = whoseWords(system, mod, { бросающий: 'бросает носитель', против: 'бросают против носителя' }, 'бросает кто угодно', names);
+    const amount = (word: string): string => `${word} ${(OP_WORDS[String(mod.op ?? 'add')] ?? (value => `${String(mod.op)} ${value}`))(valueWords(system, mod.value, names))}`;
     const what = mod.param === 'bonus'
       ? addendWords(system, mod)
       : mod.param === 'tags' ? `метка ${valueWords(system, mod.value, names)}`
+      : mod.param === 'count' ? amount(CALL_WORDS.roll.params.count)
+      : mod.param === 'threshold' ? amount(CALL_WORDS.roll.params.threshold)
       : system.roll_edits?.[String(mod.edit ?? '')]?.label ?? String(mod.edit ?? 'какая правка?');
-    const lead = `${CALL_WORDS.roll.label}${tags ? ` с метками ${tags}` : ''}${who ? `, ${who}` : ''}`;
+    const except = tagList(mod.notTags);
+    const lead = `${CALL_WORDS.roll.label}${tags ? ` с метками ${tags}` : ''}${except ? ` кроме ${except}` : ''}${who ? `, ${who}` : ''}`;
     return `${lead}: ${what}`;
   }
   const effect = system.effects?.[call];

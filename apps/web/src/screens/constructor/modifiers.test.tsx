@@ -50,6 +50,22 @@ describe('редактор модификаторов', () => {
     expect((mods[0] as { if?: { expr: string } }).if).toEqual({ expr: '@носитель.ac > 1' });
   });
 
+  it('«Кроме меток» у правки броска: показывает записанное, выбор пишет notTags, пустой — снимает ключ', () => {
+    const mods = [{ kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-2' }, notTags: ['атака'] }] as Modifier[];
+    const onEdit = vi.fn((change: (d: Modifier[]) => void) => change(mods));
+    renderOpen(<ModifiersEditor system={system} modifiers={mods} onEdit={onEdit} />);
+    const field = [...document.querySelectorAll('.field__label')].find(el => el.textContent === 'Кроме меток')!.closest('label')!;
+    expect(field.textContent).toContain('атака');
+    fireEvent.change(field.querySelector('select')!, { target: { value: 'спасбросок' } });
+    expect((mods[0] as { notTags?: string[] }).notTags).toEqual(['атака', 'спасбросок']);
+  });
+
+  it('строка правки броска называет кубики и порог числом и говорит «кроме меток»', () => {
+    const count = { kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-2' }, notTags: ['атака'], if: { expr: '@бросающий == @носитель' } } as Modifier;
+    expect(modifierSentence(system, count)).toBe('Бросок кроме «атака», бросает носитель: кубики − 2');
+    expect(modifierSentence(system, { kind: 'edit', call: 'roll', param: 'threshold', op: 'add', value: { expr: '1' } } as Modifier)).toContain('порог + 1');
+  });
+
   it('правки предлагаются из словаря автора, а не из зашитого списка', () => {
     renderOpen(<ModifiersEditor system={system} modifiers={rollMod} onEdit={vi.fn()} />);
     const edit = screen.getByDisplayValue('Фора') as HTMLSelectElement;
