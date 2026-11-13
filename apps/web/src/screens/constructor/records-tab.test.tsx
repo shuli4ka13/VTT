@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
-import { RecordsTab } from './records-tab.tsx';
+import { RecordsTab, SheetKindEditor } from './records-tab.tsx';
 import { useWorld } from '../../store/world.ts';
 import { optionsFor } from './value-field.tsx';
 
@@ -344,5 +344,23 @@ describe('слот привязки подсказывает то, чем его
     fireEvent.change(поле, { target: { value: '@wield + 1' } });
     fireEvent.keyDown(поле, { key: 'Enter' });
     expect((useWorld.getState().system.tables!.weapon!.bindings![0] as any).args?.attack_with).toEqual({ expr: '@wield + 1' });
+  });
+});
+
+describe('RecordsTab: тип листа', () => {
+  const kind = { label: 'Противник' } as never;
+  const empty = { ...useWorld.getState().system, effects: {}, sheets: { враг: kind } } as never;
+  const withEffect = { ...(empty as object), effects: { aura: { label: 'Аура', activation: 'passive', params: [], steps: [] } } } as never;
+
+  it('у типа листа — только «+ правит поле», а выдавать без эффектов нечего', () => {
+    render(<SheetKindEditor id="враг" kind={kind} system={empty} />);
+    expect(screen.getByText('+ правит поле')).toBeTruthy();
+    expect(screen.queryByText('+ правка вызова')).toBeNull();
+    expect(screen.getByText(/Выдавать пока нечего/)).toBeTruthy();
+  });
+
+  it('с эффектами подсказки о пустой выдаче нет', () => {
+    render(<SheetKindEditor id="враг" kind={kind} system={withEffect} />);
+    expect(screen.queryByText(/Выдавать пока нечего/)).toBeNull();
   });
 });

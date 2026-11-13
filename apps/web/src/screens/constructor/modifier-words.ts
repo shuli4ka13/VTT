@@ -48,6 +48,12 @@ function whoseWords(system: System, mod: Loose, sheetLabels: Record<string, stri
 export const rowNamesOf = (system: System, table: string | undefined): Names =>
   (table ? rowNames(system, table) : undefined);
 
+export function inputNamesOf(system: System, call: string, base: Names): Names {
+  const params = call === ROLL_CALL ? [] : (system.effects?.[call]?.params ?? []).filter(p => p.label);
+  if (!params.length) return base;
+  return new Map([...(base ?? []), ...params.map(p => [p.key, p.label!] as const)]);
+}
+
 const columnLabel = (system: System, table: string, key: string): string =>
   typeColumn(system, table, key)?.label || key;
 
@@ -86,6 +92,7 @@ export function modifierSentence(system: System, modifier: Modifier, table?: str
     return `${lead}: ${what}`;
   }
   const effect = system.effects?.[call];
+  const inputs = inputNamesOf(system, call, names);
   const param = (effect?.params ?? []).find(p => p.key === mod.param);
   const sheets = Object.fromEntries((effect?.params ?? []).filter(p => p.kind === 'sheet').map(p => [p.key, `«${p.label ?? p.key}» — носитель`]));
   const filters = [
@@ -94,8 +101,8 @@ export function modifierSentence(system: System, modifier: Modifier, table?: str
     tagList(mod.notTags) ? `кроме ${tagList(mod.notTags)}` : '',
     mod.where ? `где «${(mod.where as Loose).column}» — «${(mod.where as Loose).is}»` : '',
   ].filter(Boolean).join(', ');
-  const who = whoseWords(system, mod, sheets, 'на всех листах', names);
+  const who = whoseWords(system, mod, sheets, 'на всех листах', inputs);
   const op = OP_WORDS[String(mod.op ?? 'mul')] ?? (value => value);
   const name = `«${effect?.label ?? (call || 'какой вызов?')}»${param ? ` · ${param.label ?? param.key}` : ''}`;
-  return `${name}${filters ? ` ${filters}` : ''}${who ? `, ${who}` : ''}: ${op(valueWords(system, mod.value, names))}${stageWords(paramStages(effect?.params, String(mod.param ?? '')), mod.stage)}`;
+  return `${name}${filters ? ` ${filters}` : ''}${who ? `, ${who}` : ''}: ${op(valueWords(system, mod.value, inputs))}${stageWords(paramStages(effect?.params, String(mod.param ?? '')), mod.stage)}`;
 }

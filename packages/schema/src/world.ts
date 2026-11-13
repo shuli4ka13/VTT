@@ -354,7 +354,7 @@ export const sheetKind = z.object({
   hint: z.string().optional(),
   blocks: z.array(z.string().min(1)).optional(),
   grants: z.array(z.string().min(1)).optional(),
-  modifiers: z.array(modifier).optional(),
+  modifiers: z.array(valueModifier).optional(),
 }).strict();
 
 export const system = z.object({

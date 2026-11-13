@@ -1,6 +1,6 @@
 import type { System, Modifier, Stage } from '@vtt/schema';
 import { paramStages, targetStages } from '@vtt/engine/engine/stages';
-import { modifierSentence, rowNamesOf } from './modifier-words.ts';
+import { modifierSentence, rowNamesOf, inputNamesOf } from './modifier-words.ts';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Card, CardHead, Field, Input, Select, Button, DangerButton } from '../../ui/primitives.tsx';
@@ -47,6 +47,7 @@ function StagePick({ stages, value, onChange }: {
 }
 
 type ModifierRowsProps = {
+  fieldsOnly?: boolean;
   system: System;
   modifiers: Modifier[];
   onEdit: (change: (draft: Modifier[]) => void) => void;
@@ -142,7 +143,7 @@ export function useModifierRows({ system, modifiers, onEdit, editSystem, table, 
             </div>
           ) : modifier.kind === 'edit' ? (
             <EditBody
-              system={system} modifier={modifier} calls={calls} edits={edits} recipes={recipes} names={names}
+              system={system} modifier={modifier} calls={calls} edits={edits} recipes={recipes} names={inputNamesOf(system, String(modifier.call ?? ''), names)}
               onChange={change => onEdit(draft => { change(draft[index] as Loose); })}
               onPickEdit={value => pickEdit(index, value)}
             />
@@ -162,7 +163,7 @@ export function useModifierRows({ system, modifiers, onEdit, editSystem, table, 
               ruleHint="На листе носителя. Не сошлось — правка не действует."
             />
           ) : (
-            <Concern system={system} modifier={modifier as Loose} names={names} onChange={change => onEdit(draft => { change(draft[index] as Loose); })} />
+            <Concern system={system} modifier={modifier as Loose} names={inputNamesOf(system, String((modifier as Loose).call ?? ''), names)} onChange={change => onEdit(draft => { change(draft[index] as Loose); })} />
           )}
         </Card>
       ) : (
@@ -182,24 +183,24 @@ export function useModifierRows({ system, modifiers, onEdit, editSystem, table, 
   return { rows, add };
 }
 
-export function AddModifiers({ add }: { add: ModifierAdd }) {
+export function AddModifiers({ add, fieldsOnly = false }: { add: ModifierAdd; fieldsOnly?: boolean }) {
   return (
     <>
       <Button size="sm" onClick={add.field}>
         + правит поле
       </Button>
-      <Button
+      {fieldsOnly ? null : <Button
         size="sm"
         title="Правит вызов: бросок (преимущество, прибавка) или вход эффекта (урон вдвое по огню)"
         onClick={add.call}
       >
         + правка вызова
-      </Button>
+      </Button>}
     </>
   );
 }
 
-export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editSystem, table }: ModifierRowsProps & {
+export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editSystem, table, fieldsOnly = false }: ModifierRowsProps & {
   title?: string;
   empty?: { title: string; hint: string };
 }) {
@@ -207,8 +208,8 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
   return (
     <>
       {title === ''
-        ? <div className="inline"><span className="spacer" /><AddModifiers add={add} /></div>
-        : <CardHead title={title ?? 'Что правит'} actions={<AddModifiers add={add} />} />}
+        ? <div className="inline"><span className="spacer" /><AddModifiers add={add} fieldsOnly={fieldsOnly} /></div>
+        : <CardHead title={title ?? 'Что правит'} actions={<AddModifiers add={add} fieldsOnly={fieldsOnly} />} />}
 
       {modifiers.length === 0 ? (
         <WhileWhenEmpty title={empty?.hint ?? 'Пассивный эффект правит цифры: даёт бонус к полю или вешает преимущество на бросок.'}>

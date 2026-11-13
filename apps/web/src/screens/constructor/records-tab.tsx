@@ -45,7 +45,8 @@ function SheetKindCards({ kind, system, edit }: {
       <Card>
         <CardHead title="Что правит на каждом листе этого типа" />
         <ModifiersEditor
-          empty={{ title: 'тип пока ничего не правит', hint: 'Например, «+2 к классу брони» каждому противнику.' }}
+          empty={{ title: 'тип пока ничего не правит', hint: 'Например, «+2 к классу брони» каждому противнику. Правило, которое меняет бросок или чужой эффект, — эффектом «висит · правит» из вкладки «Эффекты», выданным выше.' }}
+          fieldsOnly
           system={system}
           editSystem={editSystem}
           title=""

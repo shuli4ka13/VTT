@@ -13,5 +13,8 @@ export function GrantsEditor({ system, value, onChange, except, hanging = false 
   const options = Object.entries(system.effects)
     .filter(([key, effect]) => key !== except && !called.has(key) && !(hanging && isPipeline(effect)))
     .map(([key, effect]) => ({ value: key, label: effect.label || key, group: isPipeline(effect) ? 'кнопки' : 'висят' }));
+  if (!options.length && !(value ?? []).length) {
+    return <span className="faint">Выдавать пока нечего — заведите эффект на вкладке «Эффекты»: «+ висит» или «+ кнопкой».</span>;
+  }
   return <MultiChoice value={value ?? []} options={options} onChange={next => onChange(next.length ? next : undefined)} />;
 }

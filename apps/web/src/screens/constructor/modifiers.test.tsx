@@ -268,3 +268,30 @@ describe('правка типа говорит подписями колонок
     expect(document.body.textContent).not.toContain('строка.ac');
   });
 });
+
+describe('входы правимого вызова — словами', () => {
+  const withDamage = {
+    ...system,
+    effects: { урон: { label: 'Урон', activation: 'manual', params: [{ key: 'amount', label: 'Сколько урона', kind: 'number', role: 'amount' }, { key: 'electric', label: 'Электричество', kind: 'boolean' }], steps: [] } },
+  } as unknown as System;
+  const mods = [{ kind: 'edit', call: 'урон', param: 'amount', op: 'add', value: { expr: '0 - @amount' }, if: { expr: 'не @electric и @amount <= 3' } }] as Modifier[];
+
+  it('пересказ строки и поле условия называют входы по подписи, без ключей', () => {
+    expect(modifierSentence(withDamage, mods[0]!)).toContain('Сколько урона');
+    const { container } = renderOpen(<ModifiersEditor system={withDamage} modifiers={mods} onEdit={vi.fn()} />);
+    expect(container.textContent).toContain('Электричество');
+    expect(container.textContent).toContain('Сколько урона');
+    expect(container.textContent).not.toMatch(/amount|electric/);
+  });
+});
+
+describe('кнопки добавления правок', () => {
+  it('у типа листа — только «+ правит поле», у остальных обе', () => {
+    const { unmount } = renderOpen(<ModifiersEditor system={system} modifiers={[]} onEdit={vi.fn()} fieldsOnly />);
+    expect(screen.getByText('+ правит поле')).toBeTruthy();
+    expect(screen.queryByText('+ правка вызова')).toBeNull();
+    unmount();
+    renderOpen(<ModifiersEditor system={system} modifiers={[]} onEdit={vi.fn()} />);
+    expect(screen.getByText('+ правка вызова')).toBeTruthy();
+  });
+});

@@ -20,7 +20,8 @@
       "Мир": {},
       "Броски и проверки": {},
       "Что случается": {},
-      "Расчёты": {}
+      "Расчёты": {},
+      "Правила листов": {}
     },
     "constants": {
       "pool": {
@@ -14768,6 +14769,25 @@
             "label": "Что поддерживается",
             "kind": "text"
           }
+        ],
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "-2"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
+            "notTags": [
+              "защита",
+              "сопротивление",
+              "инициатива"
+            ]
+          }
         ]
       },
       "form_infusion": {
@@ -15140,6 +15160,100 @@
             }
           }
         ]
+      },
+      "sheet_matrix_noise": {
+        "label": "Матрица: рана и шум",
+        "group": "Правила листов",
+        "description": "К проверкам с меткой «матрица»: раны матричного счётчика прибавляют штраф, шум убирает кубики.",
+        "activation": "passive",
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "@носитель.matrix_wound - @носитель.noise"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель"
+            },
+            "tags": [
+              "матрица"
+            ]
+          }
+        ]
+      },
+      "sheet_astral_penalty": {
+        "label": "Астральное восприятие: помеха мирскому",
+        "group": "Правила листов",
+        "description": "Пока включено астральное восприятие: −2 кубика к проверкам, кроме магических и сопротивления истощению.",
+        "activation": "passive",
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "-2"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель и @носитель.astral_mode.active"
+            },
+            "notTags": [
+              "магия",
+              "колдовство",
+              "воплощение",
+              "зачарование",
+              "астрал",
+              "сопротивление истощению"
+            ]
+          }
+        ]
+      },
+      "vehicle_hull": {
+        "label": "Корпус транспорта",
+        "group": "Правила листов",
+        "description": "Транспорт невосприимчив к оглушающему урону с СУ не выше его Тела; электричество проходит.",
+        "activation": "passive",
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "take_damage",
+            "param": "amount",
+            "op": "add",
+            "value": {
+              "expr": "0 - @amount"
+            },
+            "if": {
+              "expr": "@лист == @носитель и не @physical_hit и не @electric и (@dv или @amount) <= @носитель.veh_body"
+            }
+          }
+        ]
+      },
+      "vehicle_speed_penalty": {
+        "label": "Скоростной интервал: штраф к атакам",
+        "group": "Правила листов",
+        "description": "Штраф скоростного интервала убирает кубики из проверок атаки с этого транспорта.",
+        "activation": "passive",
+        "modifiers": [
+          {
+            "kind": "edit",
+            "call": "roll",
+            "param": "count",
+            "op": "add",
+            "value": {
+              "expr": "0 - @носитель.veh_speed_pen"
+            },
+            "if": {
+              "expr": "@бросающий == @носитель и @носитель.veh_speed_pen >= 1"
+            },
+            "tags": [
+              "атака"
+            ]
+          }
+        ]
       }
     },
     "grants": [
@@ -15181,58 +15295,6 @@
             "value": {
               "expr": "@matrix_mode.init_dice"
             }
-          },
-          {
-            "kind": "edit",
-            "call": "roll",
-            "param": "count",
-            "op": "add",
-            "value": {
-              "expr": "@носитель.matrix_wound - @носитель.noise"
-            },
-            "if": {
-              "expr": "@бросающий == @носитель"
-            },
-            "tags": [
-              "матрица"
-            ]
-          },
-          {
-            "kind": "edit",
-            "call": "roll",
-            "param": "count",
-            "op": "add",
-            "value": {
-              "expr": "0 - 2 * @носитель.sustaining"
-            },
-            "if": {
-              "expr": "@бросающий == @носитель и @носитель.sustaining >= 1"
-            },
-            "notTags": [
-              "защита",
-              "сопротивление",
-              "инициатива"
-            ]
-          },
-          {
-            "kind": "edit",
-            "call": "roll",
-            "param": "count",
-            "op": "add",
-            "value": {
-              "expr": "-2"
-            },
-            "if": {
-              "expr": "@бросающий == @носитель и @носитель.astral_mode.active"
-            },
-            "notTags": [
-              "магия",
-              "колдовство",
-              "воплощение",
-              "зачарование",
-              "астрал",
-              "сопротивление истощению"
-            ]
           },
           {
             "kind": "value",
@@ -15294,6 +15356,10 @@
               "expr": "@awakened.living_persona"
             }
           }
+        ],
+        "grants": [
+          "sheet_matrix_noise",
+          "sheet_astral_penalty"
         ]
       },
       "runner": {
@@ -15508,23 +15574,6 @@
             "if": {
               "expr": "не пусто(@npc_template)"
             }
-          },
-          {
-            "kind": "edit",
-            "call": "roll",
-            "param": "count",
-            "op": "add",
-            "value": {
-              "expr": "0 - 2 * @носитель.sustaining"
-            },
-            "if": {
-              "expr": "@бросающий == @носитель и @носитель.sustaining >= 1"
-            },
-            "notTags": [
-              "защита",
-              "сопротивление",
-              "инициатива"
-            ]
           }
         ]
       },
@@ -16026,33 +16075,6 @@
             }
           },
           {
-            "kind": "edit",
-            "call": "take_damage",
-            "param": "amount",
-            "op": "add",
-            "value": {
-              "expr": "0 - @amount"
-            },
-            "if": {
-              "expr": "@лист == @носитель и не @physical_hit и не @electric и (@dv или @amount) <= @носитель.veh_body"
-            }
-          },
-          {
-            "kind": "edit",
-            "call": "roll",
-            "param": "count",
-            "op": "add",
-            "value": {
-              "expr": "0 - @носитель.veh_speed_pen"
-            },
-            "if": {
-              "expr": "@бросающий == @носитель и @носитель.veh_speed_pen >= 1"
-            },
-            "tags": [
-              "атака"
-            ]
-          },
-          {
             "kind": "value",
             "target": "soak",
             "op": "set",
@@ -16064,7 +16086,10 @@
             }
           }
         ],
-        "grants": []
+        "grants": [
+          "vehicle_hull",
+          "vehicle_speed_penalty"
+        ]
       },
       "creature": {
         "label": "Существо",
@@ -16320,23 +16345,6 @@
             "if": {
               "expr": "не пусто(@creature_kind.armor)"
             }
-          },
-          {
-            "kind": "edit",
-            "call": "roll",
-            "param": "count",
-            "op": "add",
-            "value": {
-              "expr": "0 - 2 * @носитель.sustaining"
-            },
-            "if": {
-              "expr": "@бросающий == @носитель и @носитель.sustaining >= 1"
-            },
-            "notTags": [
-              "защита",
-              "сопротивление",
-              "инициатива"
-            ]
           }
         ]
       }
