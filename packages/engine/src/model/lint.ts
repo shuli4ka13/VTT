@@ -1,3 +1,4 @@
+import { hasDegrees } from '../engine/check.ts';
 import { paramStages, targetStages } from '../engine/stages.ts';
 import { armsOf, balance, flowOf, inBlock, isFlow } from './flow.ts';
 import { loopOf, loopParam } from '../engine/steps/each.ts';
@@ -773,9 +774,26 @@ function sharedRollProblems(system: System, told: Set<string> = new Set()): Prob
   return out;
 }
 
+function checksOf(system: System): Record<string, unknown>[] {
+  const out: Record<string, unknown>[] = [];
+  const walk = (value: unknown): void => {
+    if (Array.isArray(value)) { value.forEach(walk); return; }
+    if (!value || typeof value !== 'object') return;
+    if ((value as { type?: unknown }).type === 'check') out.push(value as Record<string, unknown>);
+    Object.values(value).forEach(walk);
+  };
+  walk(system.effects ?? {});
+  return out;
+}
+
 function rollEditProblems(system: System): Problem[] {
   const known = new Set(editStages().map(one => one.op));
   const out: Problem[] = [];
+  const rules = Object.values(system.rolls ?? {});
+  const checks = checksOf(system);
+  const graded = rules.some(rule => hasDegrees(rule.degrees)) || checks.some(check => hasDegrees(check.degrees as never));
+  const compared = checks.length > 0
+    || rules.some(rule => rule.number === 'under' || rule.number === 'over' || rule.fields.some(field => field.threshold !== undefined && field.threshold !== null));
   for (const [key, edit] of Object.entries(system.roll_edits ?? {})) {
     const where = { tab: 'rules' as const, section: 'roll_edits', key };
     const name = edit.label || key;
@@ -787,6 +805,8 @@ function rollEditProblems(system: System): Problem[] {
     for (const op of edit.ops ?? []) {
       const value = (op as { value?: { expr?: unknown } }).value;
       if (!known.has(String(op.op))) out.push({ where, level: 'error', text: `у правки броска «${name}» неизвестное действие «${String(op.op)}»` });
+      if (op.op === 'shiftDegree' && !graded) out.push({ where, level: 'warn', text: `правка броска «${name}» сдвигает степень успеха, а ступеней нет ни у одного броска и ни у одной «Проверки» — она ничего не изменит` });
+      if (op.op === 'shiftVersus' && !compared) out.push({ where, level: 'warn', text: `правка броска «${name}» сдвигает порог, а сравнивать не с чем: ни у одного броска нет порога и нет ни одной «Проверки» — она ничего не изменит` });
       if (AGAINST_NAME.test(JSON.stringify(op))) out.push({ where, level: 'error', text: `в словаре правок броска «@против» не пишут — у «${name}» он есть; противника проверяет условие правки на листе` });
       else if (exprsIn(op).some(throwsDice)) out.push({ where, level: 'error', text: `у правки броска «${name}»: ${DICE_IN_ADDEND}` });
       else if (op.op === PLUS_OP && !hasDie(op) && !String(value?.expr ?? '').trim()) out.push({ where, level: 'error', text: `у правки броска «${name}» «прибавить» без формулы` });
