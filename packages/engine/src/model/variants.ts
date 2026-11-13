@@ -202,7 +202,7 @@ export function cellScopeProblems(system: System): { where: Where; text: string 
           for (const used of ast ? refsOf(ast) : []) {
             if (onSheet(system, used)) continue;
             const head = used.split('.')[0]!;
-            const at = `клетка «${table.label || found.table}» → «${String(row.value)}» → «${column}» читает «@${used}»`;
+            const at = `клетка «${table.label || found.table}» → «${String(row.value)}» → «${column}» читает «${used}»`;
             if (table.owner) report(site.where, `${at}: у таблицы с владельцем клетка видит только лист — цель, входы и шаги эффекта ей не видны`);
             else if (head !== ITEM_NAME && head !== CALL_TAGS && !names.some(one => one.name === head)) report(site.where, `${at}, а здесь такого имени нет`);
           }

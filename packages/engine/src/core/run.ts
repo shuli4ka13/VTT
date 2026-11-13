@@ -511,7 +511,7 @@ export class Run {
     }
     const value = resolveRef(refValue, ref);
     if (value && typeof value === 'object' && 'sheet' in value && 'tag' in value) return value as FieldRef;
-    throw new EngineError(`${frame.owner || 'правило'}: ${expr ?? JSON.stringify(refValue)} — не поле листа; пишите @лист.поле`);
+    throw new EngineError(`${frame.owner || 'правило'}: ${expr ?? JSON.stringify(refValue)} — не поле листа; выберите в списке лист, затем его поле`);
   }
 
   private addressName(frame: Frame, expr: string, ref: RefContext): string | null {

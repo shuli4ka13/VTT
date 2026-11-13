@@ -58,6 +58,6 @@ describe('клетка справочной таблицы, прочитанна
 
   it('«Проблемы»: имя в клетке, которого нет в этом месте эффекта, — ошибка у шага, который читает колонку', () => {
     const problems = errorsOf(lintSystem(withProbe({ ...cells, лишнее: '@нечто + 1' }))).map(p => p.text);
-    expect(problems).toEqual([expect.stringContaining('клетка «Проба» → «лишнее» → «значение» читает «@нечто»')]);
+    expect(problems).toEqual([expect.stringContaining('клетка «Проба» → «лишнее» → «значение» читает «нечто»')]);
   });
 });

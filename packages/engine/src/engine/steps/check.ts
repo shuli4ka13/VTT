@@ -73,7 +73,7 @@ export function finish(step: StepData, ctx: StepContext) {
   const failOn = ctx.optional(step.failOn, 'кость верного провала');
   const natural = roll ? Number(roll.natural) : null;
   if ((succeedOn !== null || failOn !== null) && natural === null) {
-    throw new EngineError(`${who(ctx)}: «всегда успех / провал на кости» требует проверять бросок — укажите шаг броска: @имя`);
+    throw new EngineError(`${who(ctx)}: «всегда успех / провал на кости» требует проверять бросок — укажите шаг броска по его имени`);
   }
   const forced = natural === null ? null : failOn !== null && natural <= failOn ? false : succeedOn !== null && natural >= succeedOn ? true : null;
   const doomed = step.failIf !== undefined && step.failIf !== null && step.failIf !== '' && ctx.holds(step.failIf);

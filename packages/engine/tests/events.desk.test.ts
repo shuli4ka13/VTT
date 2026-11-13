@@ -69,7 +69,7 @@ group('проверки конструктора про стол', () => {
     const wrong = JSON.parse(JSON.stringify(system)) as System;
     (wrong.effects.удар!.steps![1] as { value: { expr: string } }).value.expr = '3 + @эскалация';
     const texts = errorsOf(lintSystem(wrong, book)).map(p => p.text);
-    ok(texts.some(t => t.includes('лежит на столе') && t.includes('@стол.эскалация')), texts.join(' | '));
+    ok(texts.some(t => t.includes('лежит на столе') && t.includes('«Стол» → «Кость эскалации»')), texts.join(' | '));
   });
 
   test('правильная запись проходит', async () => {

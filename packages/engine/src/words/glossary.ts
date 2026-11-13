@@ -61,4 +61,4 @@ export const splitWords = (n: number): string => (n <= 1 ? 'одним спис�
 
 export const perRowWords = (n: number): string => (n === 1 ? 'по одному в строку' : `по ${n} в строку`);
 
-export const DICE_BY_STEP = 'кости бросает шаг «Бросок»: поставьте его перед этим шагом и возьмите его итог (@имя)';
+export const DICE_BY_STEP = 'кости бросает шаг «Бросок»: поставьте его перед этим шагом и возьмите его итог по имени шага';

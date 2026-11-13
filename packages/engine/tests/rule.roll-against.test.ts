@@ -226,7 +226,7 @@ group('линт правок «против»', () => {
   test('«увидев кости» с @против в условии — предупреждение', () => {
     const system = world(single) as unknown as { effects: Record<string, unknown> };
     system.effects.насмешка = { label: 'Насмешка', activation: 'passive', on: [{ on: 'seen', if: { expr: '@против == @носитель' }, steps: [{ type: 'roll-plus', value: { expr: '-1' } }] }] };
-    ok(texts(system as unknown as System).some(text => text.includes('«увидев кости» с «@против»')));
+    ok(texts(system as unknown as System).some(text => text.includes('«увидев кости» с условием «против кого бросок»')));
   });
 
   test('бросающий у сложной формулы — ошибка', () => {
@@ -236,7 +236,7 @@ group('линт правок «против»', () => {
 
   test('общий бросок прочитан мимо сравнения — предупреждение с подсказкой', () => {
     const steps = [...shared, { type: 'branch', if: { expr: '@бросок.natural >= 20' } }, { type: 'end' }];
-    ok(texts(world(steps)).some(text => text.includes('«бросок» здесь — общий бросок без правок цели') && text.includes('@попал.natural')));
+    ok(texts(world(steps)).some(text => text.includes('«бросок» здесь — общий бросок без правок цели') && text.includes('у «попал»')));
   });
 
   test('общий бросок сравнивается только внутри формулы — предупреждение', () => {

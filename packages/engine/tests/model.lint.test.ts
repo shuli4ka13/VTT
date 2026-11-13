@@ -144,12 +144,12 @@ group('линт: висячие ссылки называются словами
 group('линт: чьё поле', () => {
   test('голое имя поля в эффекте — ошибка с подсказкой, как написать', () => {
     const system = withEffect('a', { params: [WHO] as never, steps: [mend('@действующий.hp', '@hp')] });
-    ok(errorTexts(system).some(text => text.includes('«hp» — чьё поле?') && text.includes('@носитель.hp') && text.includes('@цель.hp')), errorTexts(system).join('\n'));
+    ok(errorTexts(system).some(text => text.includes('«Хиты» — чьё поле?') && text.includes('«носитель»')), errorTexts(system).join('\n'));
   });
 
   test('голое имя поля в условии подписки — тоже «чьё поле?»', () => {
     const system = withEffect('a', { activation: 'passive', on: [{ on: 'moment:turn-start', if: { expr: '@hp > 1' }, steps: [] }] });
-    ok(errorTexts(system).some(text => text.includes('«hp» — чьё поле?')), errorTexts(system).join('\n'));
+    ok(errorTexts(system).some(text => text.includes('«Хиты» — чьё поле?')), errorTexts(system).join('\n'));
   });
 
   test('имя листа в формулах листа не нужно: голое имя вне эффекта — законно', () => {
@@ -158,13 +158,13 @@ group('линт: чьё поле', () => {
     eq(errorTexts(system).join(''), '');
   });
 
-  test('поле стола — через @стол; через лист — отказ с подсказкой', () => {
+  test('поле стола — через стол; через лист — отказ с подсказкой', () => {
     const good = withEffect('a', { params: [WHO] as never, steps: [mend('@стол.страх')] });
     eq(errorTexts(good).join(''), '');
     const viaSheet = withEffect('a', { params: [WHO] as never, steps: [mend('@действующий.страх')] });
-    ok(errorTexts(viaSheet).some(text => text.includes('лежит на столе') && text.includes('@стол.страх')), errorTexts(viaSheet).join('\n'));
+    ok(errorTexts(viaSheet).some(text => text.includes('лежит на столе') && text.includes('«Стол» → «Страх»')), errorTexts(viaSheet).join('\n'));
     const bareDesk = withEffect('a', { params: [WHO] as never, steps: [mend('@действующий.hp', '@страх')] });
-    ok(errorTexts(bareDesk).some(text => text.includes('лежит на столе') && text.includes('@стол.страх')), errorTexts(bareDesk).join('\n'));
+    ok(errorTexts(bareDesk).some(text => text.includes('лежит на столе') && text.includes('«Стол» → «Страх»')), errorTexts(bareDesk).join('\n'));
   });
 
   test('поле листа через @стол — отказ: оно лежит на листе', () => {
@@ -600,7 +600,7 @@ group('линт: вход висящего эффекта и имена, кот�
 
   test('значение вызова и свой вход с одним именем: @имя в условии читает вызов — ошибка словами', () => {
     const system = hung([NUM('бонус', 'Запас')], { on: 'after:удар', if: { expr: '@бонус > 1' } });
-    eq(clashes(system).join('|'), 'вход «Запас» у «Заслон» совпадает с «бонус» у «Удар»: здесь @бонус — значение «Удар». Переименуйте свой вход');
+    eq(clashes(system).join('|'), 'вход «Запас» у «Заслон» совпадает с «бонус» у «Удар»: здесь «бонус» — значение «Удар». Переименуйте свой вход');
     const [problem] = lintSystem(system).filter(p => p.text.includes('совпадает с'));
     eq(problem?.level, 'error');
     eq(problem?.where.effect, 'заслон');
@@ -650,7 +650,7 @@ group('линт: вход висящего эффекта и имена, кот�
     const system = struck();
     system.tags = { атака: { label: 'Любая атака', inputs: [{ key: 'цель', label: 'Цель', kind: 'sheet' }] } } as never;
     const found = clashes(hung([LIST('цель')], { on: 'before:атака', if: { expr: '@цель == @носитель' } }, system));
-    eq(found.join('|'), 'вход «цель» у «Заслон» совпадает с «цель» у «Любая атака»: здесь @цель — значение «Любая атака». Переименуйте свой вход');
+    eq(found.join('|'), 'вход «цель» у «Заслон» совпадает с «цель» у «Любая атака»: здесь «цель» — значение «Любая атака». Переименуйте свой вход');
   });
 
   test('кости, моменты, появление и поле: вызов называется тем, что случилось', () => {
@@ -665,7 +665,7 @@ group('линт: вход висящего эффекта и имена, кот�
     ];
     for (const [on, name, source] of cases) {
       const found = clashes(hung([LIST(name)], { on, if: { expr: `@${name} == @носитель` } }, system));
-      eq(found.join('|'), `вход «${name}» у «Заслон» совпадает с «${name}» у «${source}»: здесь @${name} — значение «${source}». Переименуйте свой вход`, on);
+      eq(found.join('|'), `вход «${name}» у «Заслон» совпадает с «${name}» у «${source}»: здесь «${name}» — значение «${source}». Переименуйте свой вход`, on);
       eq(clashes(hung([LIST(name)], { on, if: { expr: 'да' } }, system)).length, 0, `${on}: не используется`);
     }
   });
@@ -684,7 +684,7 @@ group('линт: вход висящего эффекта и имена, кот�
 
   test('правка вызова: своё число с именем входа вызова, прочитанное в «сколько», — ошибка', () => {
     const system = edited([NUM('сколько', 'Запас')], { value: { expr: '@сколько / 2' } });
-    eq(clashes(system).join('|'), 'вход «Запас» у «Щит» совпадает с «сколько» у «Урон»: здесь @сколько — значение «Урон». Переименуйте свой вход');
+    eq(clashes(system).join('|'), 'вход «Запас» у «Щит» совпадает с «сколько» у «Урон»: здесь «сколько» — значение «Урон». Переименуйте свой вход');
     eq(lintSystem(system).find(p => p.text.includes('совпадает с'))?.where.part, 'modifiers');
   });
 
@@ -708,7 +708,7 @@ group('линт: вход висящего эффекта и имена, кот�
     });
     eq(clashes(system).length, 0, 'не читают — тишина');
     system.effects.щит!.modifiers = [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: '@против != @носитель и @бросающий == @носитель' } }] as never;
-    eq(clashes(system).join('|'), 'вход «против» у «Щит» совпадает с «против» у «Бросок»: здесь @против — значение «Бросок». Переименуйте свой вход');
+    eq(clashes(system).join('|'), 'вход «против» у «Щит» совпадает с «против» у «Бросок»: здесь «против» — значение «Бросок». Переименуйте свой вход');
   });
 });
 
@@ -719,7 +719,7 @@ group('линт: имя шага не совпадает с ключом вхо�
 
   test('в шагах — предупреждение словами, не ошибка', () => {
     const system = withInput({ steps: [rolled('сколько')] });
-    eq(named(system).join('|'), 'шаг «сколько» назван как вход «Сколько» — до шага @сколько читает вход, после — результат шага; лучше переименовать шаг');
+    eq(named(system).join('|'), 'шаг «сколько» назван как вход «Сколько» — до шага «сколько» читает вход, после — результат шага; лучше переименовать шаг');
     eq(errorTexts(system).filter(t => t.includes('назван как вход')).length, 0);
   });
 
@@ -760,12 +760,12 @@ group('линт: слово «строка» занято', () => {
     eq(found[0]!.level, 'error');
     eq(found[0]!.where.part, 'params');
     eq(found[0]!.where.key, 'строка');
-    eq(found[0]!.text, 'вход «Ряд» назван «строка» — это слово движка: так пишется клетка своей строки (@строка.колонка); переименуйте вход');
+    eq(found[0]!.text, 'вход «Ряд» назван «строка» — это слово движка: так зовётся своя строка записи; переименуйте вход');
   });
 
   test('шаг с именем «строка» — ошибка', () => {
     const system = withEffect('e', { params: [WHO] as never, steps: [{ id: 'строка', type: 'roll', fixed: { expr: '1' } }] as Step[] });
-    eq(errorTexts(system).filter(t => t.includes('слово движка')).join('|'), 'шаг не может зваться «строка» — это слово движка: так пишется клетка своей строки (@строка.колонка)');
+    eq(errorTexts(system).filter(t => t.includes('слово движка')).join('|'), 'шаг не может зваться «строка» — это слово движка: так зовётся своя строка записи');
   });
 
   test('«для каждой строки» не может звать строку словом «строка»', () => {
@@ -791,13 +791,13 @@ group('линт: клетка записи в правке типа и поле 
   };
   const bump = (value: string, rest: Record<string, unknown> = {}) => ({ kind: 'value', target: 'hp', op: 'add', value: { expr: value }, ...rest });
   const cellWarns = (system: System, book?: unknown) =>
-    lintSystem(system, book as never).filter(p => p.text.includes('клетку записи пишут'));
+    lintSystem(system, book as never).filter(p => p.text.includes('клетку записи берут'));
 
   test('голое имя колонки, совпавшее с полем листа, — предупреждение со словами', () => {
     const found = cellWarns(typed([bump('@hp')]));
     eq(found.length, 1);
     eq(found[0]!.level, 'warn');
-    eq(found[0]!.text, '«hp» — поле листа; клетку записи пишут @строка.hp');
+    eq(found[0]!.text, '«hp» — поле листа; клетку записи берут у строки: в списке «строка» → «hp»');
     eq(found[0]!.where.tab, 'records');
     eq(found[0]!.where.kind, 'оружие');
     eq(found[0]!.where.part, 'modifiers');
@@ -819,7 +819,7 @@ group('линт: клетка записи в правке типа и поле 
   test('правка вызова с голым полем и так ошибка «чьё поле?» — второго сообщения нет', () => {
     const system = typed([{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '@hp' }, if: { expr: '@бросающий == @носитель' } }]);
     eq(cellWarns(system).length, 0);
-    ok(errorTexts(system).some(t => t.includes('«hp» — чьё поле?')), errorTexts(system).join('|'));
+    ok(errorTexts(system).some(t => t.includes('«Хиты» — чьё поле?')), errorTexts(system).join('|'));
   });
 
   test('колонка, унаследованная от основы, считается колонкой типа', () => {
@@ -848,7 +848,7 @@ group('линт: клетка записи в правке типа и поле 
 });
 
 group('линт: проверки имён молчат на образцах', () => {
-  const words = ['совпадает с', 'назван как вход', 'слово движка', 'клетку записи пишут', 'наложение «', 'нет ни входа, ни шага'];
+  const words = ['совпадает с', 'назван как вход', 'слово движка', 'клетку записи берут', 'наложение «', 'нет ни входа, ни шага'];
   for (const system of SAMPLE_SYSTEMS) {
     test(`${system.name}: ни входов с чужими именами, ни занятого «строка», ни путаницы с клеткой записи`, () => {
       const world = SAMPLE_WORLDS.find(w => w.system === system);
@@ -982,14 +982,14 @@ group('линт: слова движка у входов и шагов — «н�
 
   test('вход «носитель» — ошибка со своим пояснением; «строка» сказано, как раньше', () => {
     eq(found(withEffect('e', { params: [WHO, input('носитель')] as never })).join('|'),
-      'вход «Кто» назван «носитель» — это слово движка: так пишется лист, на котором висит эффект (@носитель); переименуйте вход');
+      'вход «Кто» назван «носитель» — это слово движка: так зовётся лист, на котором висит эффект; переименуйте вход');
     eq(found(withEffect('e', { params: [WHO, input('строка')] as never })).join('|'),
-      'вход «Кто» назван «строка» — это слово движка: так пишется клетка своей строки (@строка.колонка); переименуйте вход');
+      'вход «Кто» назван «строка» — это слово движка: так зовётся своя строка записи; переименуйте вход');
   });
 
   test('вход «стол» — ошибка со своим пояснением и адресом входа', () => {
     const system = withEffect('e', { params: [WHO, input('стол')] as never });
-    eq(found(system).join('|'), 'вход «Кто» назван «стол» — это слово движка: так пишется стол (@стол.поле); переименуйте вход');
+    eq(found(system).join('|'), 'вход «Кто» назван «стол» — это слово движка: так зовётся стол; переименуйте вход');
     const [problem] = lintSystem(system).filter(p => p.text.includes('слово движка'));
     eq(problem?.level, 'error');
     eq(problem?.where.part, 'params');
@@ -998,9 +998,9 @@ group('линт: слова движка у входов и шагов — «н�
 
   test('шаг с именем «носитель» или «стол» — ошибка', () => {
     eq(found(withEffect('e', { params: [WHO] as never, steps: [named('носитель')] })).join('|'),
-      'шаг не может зваться «носитель» — это слово движка: так пишется лист, на котором висит эффект (@носитель)');
+      'шаг не может зваться «носитель» — это слово движка: так зовётся лист, на котором висит эффект');
     eq(found(withEffect('e', { params: [WHO] as never, steps: [named('стол')] })).join('|'),
-      'шаг не может зваться «стол» — это слово движка: так пишется стол (@стол.поле)');
+      'шаг не может зваться «стол» — это слово движка: так зовётся стол');
   });
 
   test('похожие слова и служебные имена объекта — можно', () => {

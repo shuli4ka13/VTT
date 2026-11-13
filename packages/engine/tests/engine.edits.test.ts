@@ -88,7 +88,7 @@ group('правка вызова в проверке системы', () => {
       { kind: 'edit', call: 'урон', param: 'тип', op: 'add', value: { expr: '1' } },
     ]);
     eq(text.includes('нет входа «нет»'), true, text);
-    eq(text.includes('«хп» — чьё поле?'), true, text);
+    eq(text.includes('«Хиты» — чьё поле?'), true, text);
     eq(text.includes('правит пока только величину'), true, text);
   });
 

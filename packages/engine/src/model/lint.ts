@@ -98,14 +98,14 @@ const stepsAt = (system: System, where: Where): Step[] | undefined => {
 function ownerText(ref: Reference, system: System): string | null {
   if (ref.kind !== 'field') return null;
   const field = fieldOf(system, ref.key);
-  if (ref.scope === 'plain' && field?.lives === 'desk') return `поле «${field.label}» лежит на столе — пишите @стол.${field.tag}`;
+  if (ref.scope === 'plain' && field?.lives === 'desk') return `поле «${field.label}» лежит на столе — возьмите его у стола: в списке «Стол» → «${field.label}»`;
   if (ref.scope === 'bare') {
-    if (field?.lives === 'desk') return `поле «${field.label}» лежит на столе — пишите @стол.${field.tag}`;
-    return field ? `«${field.tag}» — чьё поле? Пишите через лист: @носитель.${field.tag}, @цель.${field.tag} или другой вход-лист` : null;
+    if (field?.lives === 'desk') return `поле «${field.label}» лежит на столе — возьмите его у стола: в списке «Стол» → «${field.label}»`;
+    return field ? `«${field.label}» — чьё поле? Возьмите его у листа: выберите в списке нужный лист («носитель» или другой вход-лист), затем «${field.label}»` : null;
   }
   if (!field) return null;
   if (ref.scope === 'desk' && field.lives !== 'desk') return `поле «${field.label}» лежит на листе, а не на столе — пишите через вход-лист`;
-  if (ref.scope === 'sheet' && field.lives === 'desk') return `поле «${field.label}» лежит на столе — пишите @стол.${field.tag}`;
+  if (ref.scope === 'sheet' && field.lives === 'desk') return `поле «${field.label}» лежит на столе — возьмите его у стола: в списке «Стол» → «${field.label}»`;
   return null;
 }
 
@@ -119,7 +119,7 @@ function danglingText(ref: Reference, declared: Declared): string | null {
   if (ref.kind === 'syntax' && ref.path === 'dice') return `в формуле «${ref.key}» кость стоит как число — ${DICE_BY_STEP}`;
   if (ref.kind === 'syntax') return `формула «${ref.key}» не разбирается — проверьте скобки и знаки`;
   if (ref.kind === 'field' && ref.scope === 'bare' && !declared.field.has(ref.key) && declared.effect.has(ref.key)) {
-    return `«${ref.key}» — сколько раз висит эффект на листе: пишите через лист, например @носитель.${ref.key}`;
+    return `«${ref.key}» — сколько раз висит эффект на листе: возьмите это у листа: в списке «носитель» → «${ref.key}»`;
   }
   if (ref.kind === 'param') {
     return ref.scope === 'missing' ? `вход «${ref.key}» эффектом не объявлен` : null;
@@ -128,12 +128,12 @@ function danglingText(ref: Reference, declared: Declared): string | null {
     if (ref.scope?.startsWith('listened:')) {
       return `в эффекте «${ref.scope.slice('listened:'.length)}» нет ${STEP.gen} «${ref.key}» — условию срабатывания не на что смотреть`;
     }
-    if (ref.scope === 'result') return `у ${STEP.gen} «${ref.key}» нет итога «${ref.path}» — после «@${ref.key}.» выберите итог из подсказки`;
+    if (ref.scope === 'result') return `у ${STEP.gen} «${ref.key}» нет итога «${ref.path}» — после «${ref.key}» выберите итог из списка`;
     if (ref.scope === 'dotted' && (declared.field.has(ref.key) || declared.prop.has(ref.key))) return null;
     return `${STEP.gen} «${ref.key}» выше по цепочке нет — на его результат не сослаться`;
   }
   if (ref.kind === 'prop' && ref.scope === 'item') {
-    return declared.prop.has(ref.key) ? null : `у вещей нет свойства «${ref.key}» — @вещь.${ref.key} прочитать неоткуда`;
+    return declared.prop.has(ref.key) ? null : `у вещей нет свойства «${ref.key}» — прочитать его неоткуда`;
   }
   if (ref.kind === 'prop' && ref.scope === 'foreign') {
     return `свойство «${ref.key}» не объявлено у этого типа записи — привязка возьмёт его не оттуда`;
@@ -503,7 +503,7 @@ function fieldRollProblems(system: System): Problem[] {
       return [...new Set((formulaDeps(expr) ?? []).filter(dep => dep.startsWith(`${ROLL_NAME}.`)).map(dep => dep.split('.')[1]!).filter(key => !rollKeys.has(key)))];
     };
     for (const ref of [roll.total, roll.success, roll.margin, ...(Array.isArray(roll.degrees) ? roll.degrees.map(one => one.if) : [])]) {
-      for (const key of strays(ref)) out.push({ where, level: 'error', text: `бросок «${name}»: у броска нет итога «${key}» — после «@${ROLL_NAME}.» выберите итог из подсказки` });
+      for (const key of strays(ref)) out.push({ where, level: 'error', text: `бросок «${name}»: у броска нет итога «${key}» — после «${ROLL_NAME}» выберите итог из списка` });
     }
     if (roll.zero && roll.number !== 'count') out.push({ where, level: 'error', text: `бросок «${name}»: «если костей ноль» — только когда число поля задаёт, сколько костей бросить` });
     const early = [THRESHOLD_NAME, SUCCESS_NAME, MARGIN_NAME].filter(word => new RegExp(`@${word}(?![\\p{L}\\p{N}_])`, 'u').test(String(roll.total?.expr ?? '')));
@@ -675,7 +675,7 @@ const DICE_IN_ADDEND = 'кость прибавки выберите в «Ско
 
 const DICE_NOT_HERE = 'здесь кости не бросают — бросок делает шаг «Бросок» в эффекте';
 
-const DICE_ANYWHERE = 'формула бросает кости — кости бросает только шаг «Бросок» в эффекте, его итог берут по имени (@имя)';
+const DICE_ANYWHERE = 'формула бросает кости — кости бросает только шаг «Бросок» в эффекте, его итог берут по имени шага';
 
 const DICE_TEXTS = [DICE_BY_STEP, DICE_IN_ADDEND, DICE_NOT_HERE];
 
@@ -687,7 +687,7 @@ const readsAgainst = (guard: unknown): boolean => AGAINST_NAME.test(String((guar
 
 const FACED_OPS = new Set(['addDie', 'keepBest', 'keepWorst', 'shiftVersus', 'shiftDegree', PLUS_OP]);
 
-const SEEN_AGAINST = '«увидев кости» с «@против» в условии срабатывает, только когда бросок сравнивают с одним противником в той же части эффекта; у общего броска на несколько целей противника ещё нет';
+const SEEN_AGAINST = '«увидев кости» с условием «против кого бросок» срабатывает, только когда бросок сравнивают с одним противником в той же части эффекта; у общего броска на несколько целей противника ещё нет';
 
 function handlerDiceProblems(system: System): Problem[] {
   const out: Problem[] = [];
@@ -787,7 +787,7 @@ function sharedRollProblems(system: System, told: Set<string> = new Set()): Prob
           out.push({
             where: { tab: 'effects', effect: id, step: split + 1 + at },
             level: 'warn',
-            text: `«${roll}» сравнивается внутри формулы — правки цели (преимущество против неё и подобные) так не учтутся; поставьте бросок на сторону целиком: @${roll} >= …, прибавку — в сам бросок`,
+            text: `«${roll}» сравнивается внутри формулы — правки цели (преимущество против неё и подобные) так не учтутся; поставьте имя «${roll}» одним на сторону сравнения, прибавку — в сам бросок`,
           });
         }
       }
@@ -806,11 +806,11 @@ function sharedRollProblems(system: System, told: Set<string> = new Set()): Prob
       for (const [name, check] of faced) {
         if (!SHARED_READ(name).test(text)) continue;
         told.add(`${id}:${at}:${name}`);
-        const via = check ? `@${check}` : 'сравнения';
+        const via = check ? `«${check}»` : 'сравнения';
         out.push({
           where: { tab: 'effects', effect: id, step: at },
           level: 'warn',
-          text: `«${name}» здесь — общий бросок без правок цели (преимущество против неё и подобных); что выпало против цели — у сравнения: ${via}.natural, ${via}.success`,
+          text: `«${name}» здесь — общий бросок без правок цели (преимущество против неё и подобных); что выпало против цели — у ${via}: «что выпало на костях, без прибавок» и «да или нет»`,
         });
       }
     });
@@ -863,7 +863,7 @@ function rollEditProblems(system: System): Problem[] {
       }
       if (op.op === 'shiftDegree' && !graded) out.push({ where, level: 'warn', text: `правка броска «${name}» сдвигает степень успеха, а ступеней нет ни у одного броска и ни у одной «Проверки» — она ничего не изменит` });
       if (op.op === 'shiftVersus' && !compared) out.push({ where, level: 'warn', text: `правка броска «${name}» сдвигает порог, а сравнивать не с чем: ни у одного броска нет порога и нет ни одной «Проверки» — она ничего не изменит` });
-      if (AGAINST_NAME.test(JSON.stringify(op))) out.push({ where, level: 'error', text: `в словаре правок броска «@против» не пишут — у «${name}» он есть; противника проверяет условие правки на листе` });
+      if (AGAINST_NAME.test(JSON.stringify(op))) out.push({ where, level: 'error', text: `в словаре правок броска «против кого бросок» не берут — у «${name}» он есть; противника проверяет условие правки на листе` });
       else if (exprsIn(op).some(throwsDice)) out.push({ where, level: 'error', text: `у правки броска «${name}»: ${DICE_IN_ADDEND}` });
       else if (op.op === PLUS_OP && !hasDie(op) && !String(value?.expr ?? '').trim()) out.push({ where, level: 'error', text: `у правки броска «${name}» «прибавить» без формулы` });
     }
@@ -913,7 +913,7 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
         if (readsAgainst(mod.if) && mod.param === 'edits' && mod.edit) {
           const word = system.roll_edits?.[String(mod.edit)];
           const bad = [...new Set((word?.ops ?? []).map(op => String(op.op)).filter(op => !FACED_OPS.has(op)))];
-          if (bad.length) out.push({ where: at, level: 'error', text: `правка с «@против» в условии действует в каждом сравнении отдельно и может только добавлять и убирать кости, брать лучшую или худшую, прибавлять и сдвигать порог; у «${word?.label || String(mod.edit)}» есть ${bad.map(op => `«${op}»`).join(', ')}` });
+          if (bad.length) out.push({ where: at, level: 'error', text: `правка с условием «против кого бросок» действует в каждом сравнении отдельно и может только добавлять и убирать кости, брать лучшую или худшую, прибавлять и сдвигать порог; у «${word?.label || String(mod.edit)}» есть ${bad.map(op => `«${op}»`).join(', ')}` });
         }
         continue;
       }
@@ -1074,9 +1074,9 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
 }
 
 const ENGINE_WORDS = new Map([
-  [ROW, `так пишется клетка своей строки (@${ROW}.колонка)`],
-  [HOLDER, `так пишется лист, на котором висит эффект (@${HOLDER})`],
-  [DESK_NAME, `так пишется стол (@${DESK_NAME}.поле)`],
+  [ROW, 'так зовётся своя строка записи'],
+  [HOLDER, 'так зовётся лист, на котором висит эффект'],
+  [DESK_NAME, 'так зовётся стол'],
 ]);
 
 function paramProblems(system: System, compendium?: Compendium): Problem[] {
@@ -1210,7 +1210,7 @@ function nameClashProblems(system: System): Problem[] {
     if (!params.length) continue;
     const report = (where: Where, param: Param, source: string) => out.push({
       where, level: 'error',
-      text: `вход «${param.label || param.key}» у «${effect.label || id}» совпадает с «${param.key}» у «${source}»: здесь @${param.key} — значение «${source}». Переименуйте свой вход`,
+      text: `вход «${param.label || param.key}» у «${effect.label || id}» совпадает с «${param.key}» у «${source}»: здесь «${param.key}» — значение «${source}». Переименуйте свой вход`,
     });
     (effect.on ?? []).forEach((handler, index) => {
       const heard = listenerOf(handler);
@@ -1244,7 +1244,7 @@ function recordCellProblems(system: System, compendium?: Compendium): Problem[] 
       if (mod.kind !== 'value') continue;
       const used = namesUsedIn(mod.if, mod.value);
       for (const key of shared) {
-        if (used.has(key)) out.push({ where, level: 'warn', text: `«${key}» — поле листа; клетку записи пишут @${ROW}.${key}` });
+        if (used.has(key)) out.push({ where, level: 'warn', text: `«${key}» — поле листа; клетку записи берут у строки: в списке «${ROW}» → «${key}»` });
       }
     }
   };
@@ -1380,7 +1380,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
         if (step.id && declared.field.has(String(step.id))) {
           out.push({
             where: chain.where(index), level: 'warn',
-            text: `${STEP.one} «${step.id}» назван как поле листа — в формулах @${step.id} прочтёт поле, а не результат ${STEP.gen}`,
+            text: `${STEP.one} «${step.id}» назван как поле листа — в формулах «${step.id}» прочтёт поле, а не результат ${STEP.gen}`,
           });
         }
         const input = step.id ? (effect.params ?? []).find(param => param.key === step.id) : undefined;
@@ -1388,8 +1388,8 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
           out.push({
             where: chain.where(index), level: 'warn',
             text: input.kind === 'sheet'
-              ? `${STEP.one} «${step.id}» назван как вход «${input.label || input.key}» — @${step.id} всегда читает ${SHEET.one}, результат ${STEP.gen} так не прочесть; лучше переименовать ${STEP.one}`
-              : `${STEP.one} «${step.id}» назван как вход «${input.label || input.key}» — до ${STEP.gen} @${step.id} читает вход, после — результат ${STEP.gen}; лучше переименовать ${STEP.one}`,
+              ? `${STEP.one} «${step.id}» назван как вход «${input.label || input.key}» — «${step.id}» всегда читает ${SHEET.one}, результат ${STEP.gen} так не прочесть; лучше переименовать ${STEP.one}`
+              : `${STEP.one} «${step.id}» назван как вход «${input.label || input.key}» — до ${STEP.gen} «${step.id}» читает вход, после — результат ${STEP.gen}; лучше переименовать ${STEP.one}`,
           });
         }
         const graded = chain.steps.some(other => other.type === 'check' && Array.isArray((other as { degrees?: unknown }).degrees));

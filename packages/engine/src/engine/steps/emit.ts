@@ -60,7 +60,7 @@ function rollArg(ref: unknown, key: string, ctx: StepContext): Record<string, un
   if (!expr.trim()) return null;
   const name = /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(expr)?.[1];
   const roll = name ? ctx.rolled(name) : null;
-  if (!roll) throw new EngineError(`${who(ctx)}: во вход «${key}» передают бросок — имя шага броска или входа-броска (@бросок), а не «${expr}»`);
+  if (!roll) throw new EngineError(`${who(ctx)}: во вход «${key}» передают бросок — имя шага броска или входа-броска, а не «${expr}»`);
   return roll;
 }
 

@@ -271,7 +271,7 @@ function evaluate(expr: unknown, ctx: RefContext): unknown {
       }
     }
     if (ctx.sheets && !ctx.bare && !name.startsWith(`${DESK_NAME}.`)) {
-      throw new EngineError(`${who(ctx)}: «${name}» — чьё поле? Пишите через лист: ${Object.keys(ctx.sheets.bound).map(one => `@${one}.${name}`).join(', ') || `@носитель.${name}`}`);
+      throw new EngineError(`${who(ctx)}: «${name}» — чьё поле? Возьмите его у листа: ${Object.keys(ctx.sheets.bound).map(one => `«${one}»`).join(', ') || '«носитель»'}, затем «${name}»`);
     }
     return ctx.pass.resolve(name);
   };

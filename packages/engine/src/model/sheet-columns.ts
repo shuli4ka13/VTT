@@ -302,7 +302,7 @@ function recordPath(system: System, tableId: string, cells: Record<string, unkno
   const table = system.tables?.[tableId];
   const where = `тип «${table?.label || tableId}»`;
   const [head, ...rest] = path;
-  if (!head) throw new EngineError(`${where}: «@${ROW}» без колонки — напишите, какую клетку записи взять`);
+  if (!head) throw new EngineError(`${where}: «${ROW}» без колонки — напишите, какую клетку записи взять`);
   const found = (table?.columns ?? []).find(c => c.key === head);
   if (!found) throw new EngineError(`${where}: колонки «${head}» нет`);
   let spec: TableColumn = found;

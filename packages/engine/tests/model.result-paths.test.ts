@@ -22,7 +22,7 @@ const errors = (sys: System): string[] => lintSystem(sys).filter(one => one.leve
 
 group('«Проблемы» ловят опечатку в итоге шага', () => {
   test('после «Броска» и «Проверки» — имя, которого у шага нет', () => {
-    eq(errors(system('@бросок.natual')).includes('у шага «бросок» нет итога «natual» — после «@бросок.» выберите итог из подсказки'), true);
+    eq(errors(system('@бросок.natual')).includes('у шага «бросок» нет итога «natual» — после «бросок» выберите итог из списка'), true);
     eq(errors(system('если(@итог.sucess, 5, 0)')).some(text => text.includes('у шага «итог» нет итога «sucess»')), true);
   });
 

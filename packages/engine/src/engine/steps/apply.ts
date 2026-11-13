@@ -23,7 +23,7 @@ export const mayBreak = false;
 export const icon = '✎';
 
 export function lint(step: StepData) {
-  if (!step.target) return 'изменению нужно поле листа — @цель.хиты';
+  if (!step.target) return 'изменению нужно поле листа, например «Цель · Хиты»';
   if (!step.value) return 'применению нужна величина — что именно менять';
   if (step.direction && !DIRECTIONS[step.direction]) {
     return `неизвестное направление «${step.direction}» — умею: ${Object.keys(DIRECTIONS).join(', ')}`;
