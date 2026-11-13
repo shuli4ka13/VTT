@@ -17,7 +17,7 @@ export function BookBar() {
   const publish = async () => {
     if (!origin.compendiumId) return;
     if (!await settle()) {
-      setNote({ text: 'публиковать нечего: последние правки не сохранились — причина слева', bad: true });
+      setNote({ text: 'не опубликовано: правки не сохранились', bad: true });
       return;
     }
     try {

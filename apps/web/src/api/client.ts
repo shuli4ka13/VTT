@@ -34,7 +34,7 @@ async function call<S extends ZodType>(path: string, schema: S, init?: RequestIn
       ...(token ? { authorization: `Bearer ${token}` } : {}),
       ...init?.headers,
     },
-  });
+  }).catch(() => { throw new ApiError('сервер не отвечает — правки остались в этом окне; подождите и повторите', 0); });
 
   const body = await response.json().catch(() => null);
 
