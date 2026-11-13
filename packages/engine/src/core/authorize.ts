@@ -1,4 +1,4 @@
-import { isDesk } from '../engine/owners.ts';
+import { isDesk, DESK_ID } from '../engine/owners.ts';
 import { holderOf } from './view.ts';
 import type { Op } from './perform.ts';
 import type { Clock } from '../engine/clock.ts';
@@ -30,8 +30,8 @@ const isGroup = (sheet: Sheet, sheets: readonly Sheet[]): boolean => sheets.some
 export function maySheet(room: Room, me: Member, sheetId: string): string | null {
   if (me.role === 'gm') return null;
   const sheet = room.sheets.find(s => s.id === sheetId);
+  if (sheetId === DESK_ID || (sheet && isDesk(sheet))) return 'стол правит ведущий';
   if (!sheet) return null;
-  if (isDesk(sheet)) return 'стол правит ведущий';
   if (me.sheetId) return me.sheetId === sheetId ? null : 'это чужой лист — правит его владелец или ведущий';
   if (isGroup(sheet, room.sheets)) return 'лист группы правят её участники и ведущий';
   if (room.members.some(other => other.userId !== me.userId && other.sheetId === sheetId)) {

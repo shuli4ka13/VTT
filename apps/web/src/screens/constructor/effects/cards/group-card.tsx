@@ -8,7 +8,7 @@ import { referenced } from '../../keys.ts';
 import { useWorld } from '../../../../store/world.ts';
 import type { CardGroup } from '../../cards.ts';
 import type { Segment } from '../../readback.ts';
-import { checkReadback, changeReadback, sendReadback, numberReadback, rollReadback, seenReadback, amountValueSegments } from '../../readback.ts';
+import { checkReadback, changeReadback, sendReadback, numberReadback, rollReadback, seenReadback, askReadback, amountValueSegments } from '../../readback.ts';
 import { namesOf } from '../../slots.tsx';
 import type { SlotContext, EarlierStep } from '../../slots.tsx';
 import type { Problem } from '../../step-card.tsx';
@@ -18,6 +18,7 @@ import { NumberBody } from './number-body.tsx';
 import { RollBody } from './roll-body.tsx';
 import { SeenBody } from './seen-body.tsx';
 import { TableBody } from './table-body.tsx';
+import { AskBody } from './ask-body.tsx';
 import { StopStrip, StepHead, FlowActions } from './flow-parts.tsx';
 import { ResultChips } from './result-chips.tsx';
 import { titleOf } from '../words.ts';
@@ -138,6 +139,7 @@ export function GroupCard({
           {...(takenNames ? { takenNames } : {})} {...(onRename ? { onRename } : {})} />
         : null}
       {group.kind === 'table' ? <TableBody step={step} context={context} edit={edit} system={system} /> : null}
+      {group.kind === 'ask' ? <AskBody step={step} context={context} edit={edit} system={system} /> : null}
       {group.kind === 'number' || group.kind === 'roll' ? null : <StepName group={group} effect={effect} system={system} edit={edit} branches={byOutput} active={activeOutput} />}
     </>
   );
@@ -190,7 +192,7 @@ export function GroupCard({
   );
 }
 
-const toneOf = (kind: string): 'check' | 'change' | 'number' | 'table' => (kind === 'roll' ? 'number' : kind as 'check' | 'change' | 'number' | 'table');
+const toneOf = (kind: string): 'check' | 'change' | 'number' | 'table' => (kind === 'roll' ? 'number' : kind === 'ask' ? 'table' : kind as 'check' | 'change' | 'number' | 'table');
 
 function summaryOf(group: CardGroup, system: System, effect: Effect, names: Map<string, string>): string {
   const step = group.step;
@@ -198,6 +200,7 @@ function summaryOf(group: CardGroup, system: System, effect: Effect, names: Map<
     : group.kind === 'roll' ? rollReadback(step, system, effect, names)
     : group.kind === 'number' ? (step.id ? [{ text: `${String(step.id)} =` }, ...amountValueSegments(step, system, effect, names)] : numberReadback(step, system, effect, names))
     : group.kind === 'table' ? tableReadback(step as Record<string, unknown>, system)
+    : group.kind === 'ask' ? askReadback(step, effect)
     : group.kind === 'seen' ? seenReadback(step, system)
       : group.kind === 'change'
         ? (step.type === 'emit' ? sendReadback(step, system, effect, names) : changeReadback(step, group.amount, system, effect, names))

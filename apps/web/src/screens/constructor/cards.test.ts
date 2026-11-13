@@ -84,7 +84,7 @@ describe('BRICKS', () => {
     for (const brick of BRICKS) {
       const made = brick.make(system, []);
       for (const step of made) {
-        expect(['roll', 'check', 'apply', 'status', 'emit', 'table', 'each', 'branch', 'end', 'stop']).toContain(step.type);
+        expect(['roll', 'check', 'apply', 'status', 'emit', 'table', 'ask', 'each', 'branch', 'end', 'stop']).toContain(step.type);
       }
       expect(JSON.stringify(made)).not.toMatch(/"tag"/);
     }

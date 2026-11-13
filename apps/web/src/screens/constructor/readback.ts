@@ -6,7 +6,9 @@ import type { System, Effect, Step, SystemConstant } from '@vtt/schema';
 import { labelOfTag, formulaAsLabels } from '../../ui/formula.tsx';
 import { formulaWords } from '../../ui/formula-words.ts';
 import { dice as diceText, asDice, DIE_LETTER } from '../../words.ts';
+import { ASK_YES, ASK_NO, ASK_WHOM } from '@vtt/engine/words/steps';
 import { fieldOf, hasField } from '@vtt/engine/model/sheet-columns';
+
 
 export type Segment = { text: string } | { hole: string };
 
@@ -220,6 +222,14 @@ export function changeReadback(step: Step, amount: Step | null, system: System, 
   if (direction === 'set') return [field, seg('становится'), ...what, seg('.')];
   if (direction === 'add') return [field, seg('растёт на'), ...what, seg('.')];
   return [field, seg('уменьшается на'), ...what, seg('.')];
+}
+
+export function askReadback(step: Step, effect: Effect): Segment[] {
+  const s = step as Record<string, unknown>;
+  const word = (value: unknown, fallback: string) => (typeof value === 'string' && value.trim() ? value.trim() : fallback);
+  const to = s.to ? whoOf(effect, s.to) : ASK_WHOM;
+  const question = typeof s.label === 'string' && s.label.trim() ? `«${s.label.trim()}»` : '⟨вопрос?⟩';
+  return [{ text: `спросить ${to}: ${question} — ${word(s.yes, ASK_YES)} / ${word(s.no, ASK_NO)}` }];
 }
 
 export function sendReadback(step: Step, system: System, effect: Effect, names?: Names): Segment[] {

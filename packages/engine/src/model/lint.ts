@@ -555,6 +555,11 @@ function costProblems(system: System): Problem[] {
     ];
     for (const [steps, where] of chains) {
       (steps ?? []).forEach((step, index) => {
+        const mod = registry.get(step.type);
+        if (mod?.asks) {
+          if (steps !== effect.cost) out.push({ where: where(index), level: 'error', text: `в плате подписки шаг «${mod.label}» не спрашивает — перенесите его в шаги подписки` });
+          return;
+        }
         if (!pays(step)) out.push({ where: where(index), level: 'warn', text: `в цене «${effect.label || id}» — не плата, а действие: место ему в ${STEP.manyPrep}` });
       });
     }
@@ -654,6 +659,8 @@ function handlerDiceProblems(system: System): Problem[] {
       const where = { tab: 'effects' as const, effect: id, part: 'on', handler: index };
       if (exprsIn(handler.if).some(throwsDice)) out.push({ where, level: 'error', text: DICE_NOT_HERE });
       if ((handler.on === 'seen' || handler.on === ROLLED) && readsAgainst(handler.if)) out.push({ where, level: 'warn', text: SEEN_AGAINST });
+      const asking = handler.on === ROLLED ? [...(handler.steps ?? []), ...(handler.cost ?? [])].map(step => registry.get(step.type)).find(mod => mod?.asks) : undefined;
+      if (asking) out.push({ where, level: 'error', text: `«${ROLLED_LABEL}» не спрашивает — уберите шаг «${asking.label}»` });
       if (handler.on === ROLLED && handler.confirm) out.push({ where, level: 'error', text: `«${ROLLED_LABEL}» не спрашивает игрока — снимите «спросить»` });
       if (handler.on !== 'seen' && handler.on !== ROLLED && (handler.tags?.length || handler.anyTags?.length || handler.notTags?.length)) out.push({ where, level: 'error', text: `метки броска фильтруют только «${SEEN_LABEL}» и «${ROLLED_LABEL}» — здесь броска нет` });
     });

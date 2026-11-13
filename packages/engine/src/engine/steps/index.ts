@@ -6,6 +6,7 @@ import * as status from './status.ts';
 import * as emit from './emit.ts';
 import * as table from './table.ts';
 import * as each from './each.ts';
+import * as ask from './ask.ts';
 import * as rollAdd from './roll-add.ts';
 import * as rollReroll from './roll-reroll.ts';
 import * as rollPlus from './roll-plus.ts';
@@ -47,6 +48,7 @@ export interface StepContext {
   detach(sheetId: string, effectId: string, pick?: { where?: unknown; one?: boolean }): void;
   edited(call: string, param: string, base: number, tags: string[], args: Record<string, unknown>): number;
   call(event: string, args: Record<string, unknown>, payload: EmittedEvent): NestedRun;
+  question(sheetId: string | null, label: string, offers: readonly { id: string; label: string }[]): string | null;
   seenRoll?: { value: Roll; bonus?: number };
   inCost?: boolean;
   using(die: Die): StepContext;
@@ -84,6 +86,7 @@ export interface StepModule {
   lazy?: (step: StepData) => boolean;
 
   loops?: boolean;
+  asks?: boolean;
 
   splits?: (step: StepData) => boolean;
 
@@ -126,7 +129,7 @@ export function registerStepType(mod: StepModule): StepModule {
   return mod;
 }
 
-for (const mod of [roll, check, apply, status, emit, table, each, rollAdd, rollReroll, rollPlus, rollBump]) {
+for (const mod of [roll, check, apply, status, emit, table, each, ask, rollAdd, rollReroll, rollPlus, rollBump]) {
   registerStepType(mod as unknown as StepModule);
 }
 for (const mod of [branch, orElse, end, stop]) registerStepType(mod);

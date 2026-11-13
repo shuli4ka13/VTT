@@ -43,6 +43,7 @@ import type { Pass } from '../engine/calc.ts';
 import type { EmittedEvent, NestedRun } from '../engine/rule.ts';
 import type { System, Sheet, Compendium, Step, Param, StoredValue, WornEffect, Die, Effect } from '../model/types.ts';
 import { Pause } from './external.ts';
+import { ASK_ONE_WORDS } from '../words/steps.ts';
 import type { External, Question, Offer } from './external.ts';
 import type { Path, Window } from './path.ts';
 import type { Report, Entry, Stop, Change } from './log.ts';
@@ -417,6 +418,7 @@ export class Run {
       return value;
     };
     let rollsMade = 0;
+    let asksMade = 0;
     const ctx = {
       system: this.system,
       owner: frame.owner,
@@ -473,6 +475,7 @@ export class Run {
       }),
       edited: (call, param, base, tags, args) => this.edited(call, param, base, tags, args),
       call: (event, args, payload) => this.callEvent(frame, event, payload, args, sink, path),
+      question: (sheetId, label, offers) => this.question(sheetId ?? DESK_ID, label, offers, path.ask('step', sheetId ?? DESK_ID).nth(asksMade++), rolls),
       ...(frame.seenRoll ? { seenRoll: frame.seenRoll } : {}),
       ...(frame.cost ? { inCost: true } : {}),
       using: (other: Die) => this.ctx(frame, results, rolls, path, sink, stepIds, other),
@@ -1420,7 +1423,7 @@ export class Run {
   }
 
   private choose(question: Question): { chosen: string[]; skipped: boolean } {
-    const live = question.window === 'seen' && this.seenAsks > 0 && this.probing === 1;
+    const live = (question.window === 'seen' || question.window === 'step') && this.seenAsks > 0 && this.probing === 1;
     const { chosen, byPerson } = this.isProbing && !live
       ? { chosen: this.ext.peek(question.key) ?? [], byPerson: false }
       : this.ext.ask(question);
@@ -1428,6 +1431,15 @@ export class Run {
     const stray = unique.find(id => !question.offers.some(offer => offer.id === id));
     if (stray) throw new EngineError(`реакция «${stray}» сейчас не предлагается; можно: ${question.offers.map(o => o.id).join(', ') || '(ничего)'}`);
     return { chosen: unique, skipped: byPerson && !unique.length };
+  }
+
+  private question(sheetId: string, label: string, offers: readonly Offer[], path: Path, rolls: Record<string, RollResult>): string | null {
+    const { chosen, skipped } = this.choose({
+      key: path.key, sheetId, window: 'step', label, offers: [...offers], results: {}, one: true,
+      preview: Object.values(rolls).flatMap(roll => (roll.dice?.rolls?.length ? [`выпало: ${roll.dice.rolls.join(', ')}`] : [])),
+    });
+    if (chosen.length > 1 || skipped) throw new EngineError(`${ASK_ONE_WORDS}: ${offers.map(offer => offer.label).join(' / ')}`);
+    return chosen[0] ?? null;
   }
 
   private offers(sheetId: string, keys: readonly string[], names: Record<string, Bound>, seed: Record<string, unknown>,

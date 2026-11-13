@@ -316,8 +316,8 @@ export { mayAnswer };
 function Prompt({ room, onError }: { room: RoomState; onError: (message: string | null) => void }) {
   const pending = room.pending!;
   const userId = useSession(s => s.userId);
-  const may = mayAnswer(room, userId, pending.sheetId);
   const gm = room.members.some(m => m.userId === userId && m.role === 'gm');
+  const may = mayAnswer(room, userId, pending.sheetId);
   const why = may ? undefined : 'отвечает владелец листа или ведущий';
   const [chosen, setChosen] = useState<string[]>([]);
   const reply = (ids: string[]) => {
@@ -329,6 +329,20 @@ function Prompt({ room, onError }: { room: RoomState; onError: (message: string 
     <Card>
       <CardHead title={pending.question} />
       {pending.preview.map((line, i) => <div key={i} className="faint">{line}</div>)}
+      {pending.one ? (
+        <div className="inline inline--tight">
+          {pending.options.map(option => (
+            <Button key={option.id} size="sm" variant="primary" disabled={!may} title={why} onClick={() => reply([option.id])}>{option.label}</Button>
+          ))}
+          {gm ? (
+            <DangerButton size="sm" onConfirm={() => { onError(null); tableSocket.cancel({ roomId: room.id, pendingId: pending.id }); }}>
+              Отменить действие
+            </DangerButton>
+          ) : null}
+          {may ? null : <span className="faint">{why}</span>}
+        </div>
+      ) : (
+      <>
       <div className="inline inline--tight">
         {pending.options.map(option => (
           <Chip
@@ -351,6 +365,8 @@ function Prompt({ room, onError }: { room: RoomState; onError: (message: string 
         ) : null}
         {may ? null : <span className="faint">{why}</span>}
       </div>
+      </>
+      )}
     </Card>
   );
 }

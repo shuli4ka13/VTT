@@ -7,7 +7,7 @@ import { isThrow } from './cards-kind.ts';
 
 export { isThrow };
 
-export type CardKind = 'check' | 'change' | 'roll' | 'number' | 'table' | 'split' | 'seen' | 'flow' | 'stop' | 'unknown';
+export type CardKind = 'check' | 'change' | 'roll' | 'number' | 'table' | 'ask' | 'split' | 'seen' | 'flow' | 'stop' | 'unknown';
 
 export interface CardGroup {
   kind: CardKind;
@@ -21,7 +21,7 @@ export interface CardGroup {
 
 const KIND_OF: Record<string, CardKind> = {
   check: 'check', apply: 'change', status: 'change', emit: 'change',
-  roll: 'number', table: 'table', each: 'split',
+  roll: 'number', table: 'table', ask: 'ask', each: 'split',
   'roll-add': 'seen', 'roll-reroll': 'seen', 'roll-plus': 'seen', 'roll-bump': 'seen',
   branch: 'flow', orElse: 'flow', end: 'flow', stop: 'stop',
 };

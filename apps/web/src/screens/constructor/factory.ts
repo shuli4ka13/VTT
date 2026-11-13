@@ -179,6 +179,11 @@ export const BRICKS: StepTemplate[] = [
     make: () => [{ type: 'branch' } as unknown as Step, { type: 'end' } as unknown as Step],
   },
   {
+    key: 'ask', label: `+ ${STEP_WORDS.ask.label.toLowerCase()}`,
+    hint: STEP_WORDS.ask.hint,
+    make: (_system, taken) => [{ id: freeId(taken, 'решение'), type: 'ask' } as unknown as Step],
+  },
+  {
     key: 'stop', label: '+ стоп',
     hint: 'Дальше не идём. До «Для каждого из» и в цене — действие не состоялось; в теле — стоп для этой цели.',
     make: () => [{ type: 'stop' } as unknown as Step],

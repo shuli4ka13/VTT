@@ -93,13 +93,14 @@ describe('Imperium Maledictum: выстрел и первая помощь', () 
 describe('Imperium Maledictum: удар в ближнем бою (с. 190, 211)', () => {
   const queue = (...values: number[]) => () => values.shift() ?? 1;
 
-  const strike = (dice: number[], defender: Record<string, number> = {}, how = 'ближний_бой') => {
+  const strike = (dice: number[], defender: Record<string, number> = {}, how = 'ближний_бой', answer?: string) => {
     const sheets = world.sheets.map(one => one.id === 'культист'
       ? { ...one, values: { ...(one.values as Record<string, unknown>), ...defender } }
       : one) as Sheet[];
     return exchange({
       system, compendium: world.compendium, die: queue(...dice), sheets,
       actionId: 'sword:0', fromId: 'ваал', toId: 'культист', inputs: { чем: how },
+      ...(answer ? { answer: () => [answer] } : {}),
     } as never);
   };
 
@@ -131,9 +132,13 @@ describe('Imperium Maledictum: удар в ближнем бою (с. 190, 211)'
     expect(wounds(out.sheets, 'культист')).toBe(9);
   });
 
-  it('полная ничья (степени и навык равны, по 45): удара нет, в журнале «ничья — решает ведущий»', () => {
-    const out = strike([38, 38], { 'характеристики.ближний_бой.значение': 45 });
-    expect(wounds(out.sheets, 'культист')).toBe(0);
-    expect(out.log.join('\n')).toContain('ничья — решает ведущий');
+  it('полная ничья (степени и навык равны, по 45): решает ведущий — «Защитник»: ран нет; «Бьющий»: удар прошёл', () => {
+    const tie = { 'характеристики.ближний_бой.значение': 45 };
+    const lost = strike([38, 38], tie, 'ближний_бой', 'нет');
+    expect(lost.questions.map(one => `${one.sheetId}: ${one.label}`)).toEqual(['стол: Ничья. Кто победил?']);
+    expect(wounds(lost.sheets, 'культист')).toBe(0);
+    const won = strike([38, 38], tie, 'ближний_бой', 'да');
+    expect(wounds(won.sheets, 'культист')).toBe(5);
+    expect(won.log.join('\n')).toContain('«Ничья. Кто победил?»: Бьющий');
   });
 });

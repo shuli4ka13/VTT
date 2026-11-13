@@ -249,6 +249,19 @@ export const STEP_WORDS = {
     reasons: {},
     breakLines: {},
   },
+  ask: {
+    label: 'Спросить',
+    hint: 'Остановиться и спросить ведущего или игрока: да или нет. Ответ читают следующие шаги.',
+    slots: [
+      { key: 'label', label: 'Вопрос', kind: 'text', main: true, required: true, allow: [] },
+      { key: 'to', label: 'Кого', kind: 'sheet', main: true, allow: ['expr', 'empty'] },
+      { key: 'yes', label: 'Ответ «да» словами', kind: 'text', allow: [] },
+      { key: 'no', label: 'Ответ «нет» словами', kind: 'text', allow: [] },
+    ],
+    outputs: [{ path: '', label: 'да или нет: что ответили', kind: 'boolean' }],
+    reasons: {},
+    breakLines: {},
+  },
   emit: {
     label: 'Вызов',
     hint: 'Вызвать общий эффект из словаря: урон, лечение. Что с ним делать — знает правило приёма.',
@@ -266,6 +279,13 @@ export const STEP_WORDS = {
 } as const satisfies Record<string, StepWords>;
 
 export type StepType = keyof typeof STEP_WORDS;
+
+export const ASK_ONE_WORDS = 'на вопрос нужен один ответ';
+export const ASK_YES = 'да';
+export const ASK_NO = 'нет';
+export const ASK_DESK = 'ведущий';
+export const ASK_DESK_TITLE = 'Ведущий';
+export const ASK_WHOM = 'ведущего';
 
 export const stepLabel = (type: string): string => (STEP_WORDS as Record<string, StepWords>)[type]?.label ?? type;
 

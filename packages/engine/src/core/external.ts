@@ -23,6 +23,7 @@ export interface Question {
   offers: Offer[];
   results: Record<string, unknown>;
   preview: string[];
+  one?: boolean;
 }
 
 export class Pause {

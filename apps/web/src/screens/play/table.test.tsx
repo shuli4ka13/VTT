@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { screen, cleanup, fireEvent, act } from '@testing-library/react';
 import { renderOpen } from '../../testing/render-open.tsx';
 import { useRoom } from '../../store/room.ts';
@@ -158,6 +158,41 @@ describe('вопрос стола: отвечает владелец листа 
     renderOpen(<TableScreen />);
     const skip = screen.getByText('Пропустить').closest('button') as HTMLButtonElement;
     expect(skip.disabled).toBe(false);
+  });
+});
+
+describe('вопрос шага «Спросить»: один выбор кнопками', () => {
+  const one = (): RoomState => ({
+    ...room(null),
+    members: [
+      { userId: 'gm', name: 'Ведущий', role: 'gm', sheetId: null },
+      { userId: 'p1', name: 'Первый', role: 'player', sheetId: 'а' },
+    ],
+    pending: {
+      id: 'q', sheetId: 'стол', stage: 'step', one: true, question: 'Ведущий: Ничья. Кто победил?',
+      options: [{ id: 'да', label: 'Бьющий' }, { id: 'нет', label: 'Защитник' }], preview: [],
+    },
+  }) as unknown as RoomState;
+  afterEach(() => { cleanup(); vi.restoreAllMocks(); });
+
+  it('две кнопки с подписями, нажатие сразу шлёт один ответ, пропустить и применить нет', () => {
+    const sent = vi.spyOn(tableSocket, 'answer').mockImplementation(() => undefined as never);
+    useSession.setState({ userId: 'gm' });
+    useRoom.setState(state => ({ ...state, room: one(), log: [], error: null }));
+    renderOpen(<TableScreen />);
+    expect(screen.getByText('Ведущий: Ничья. Кто победил?')).toBeTruthy();
+    expect(screen.queryByText('Пропустить')).toBeNull();
+    expect(screen.queryByText('Применить')).toBeNull();
+    fireEvent.click(screen.getByText('Защитник'));
+    expect(sent).toHaveBeenCalledTimes(1);
+    expect(sent).toHaveBeenCalledWith({ roomId: 'к', pendingId: 'q', chosen: ['нет'] });
+  });
+
+  it('игроку вопрос к ведущему недоступен', () => {
+    useSession.setState({ userId: 'p1' });
+    useRoom.setState(state => ({ ...state, room: one(), log: [], error: null }));
+    renderOpen(<TableScreen />);
+    expect((screen.getByText('Бьющий').closest('button') as HTMLButtonElement).disabled).toBe(true);
   });
 });
 

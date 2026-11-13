@@ -18,7 +18,7 @@ export const launchHint = (kind: LaunchKind): string => LAUNCHES[kind].hint;
 export type EditFn = (slotIndexInGroup: number, change: (draft: Step) => void) => void;
 export type WithNumber = (change: (amount: Step, apply: Step, id: string) => void) => void;
 
-export const CARD_TITLES: Record<string, string> = { check: 'Проверка', change: 'Изменение', roll: 'Бросок', number: 'Число', table: 'Взять из таблицы', stop: 'Стоп' };
+export const CARD_TITLES: Record<string, string> = { check: 'Проверка', change: 'Изменение', roll: 'Бросок', number: 'Число', table: 'Взять из таблицы', ask: STEP_WORDS.ask.label, stop: 'Стоп' };
 
 export const STEP_TITLES = { call: 'Вызов', callFrom: 'Вызвать переданное в', put: 'Наложить', take: 'Снять', set: 'Изменить', roll: 'Бросок', number: 'Число' };
 

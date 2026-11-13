@@ -22,6 +22,7 @@ import { deskOf, hasDesk } from '@vtt/engine/events/desk';
 import { DESK_ID } from '@vtt/engine/engine/owners';
 import { idleClock } from '@vtt/engine/engine/clock';
 import { EngineError } from '@vtt/engine/engine/errors';
+import { ASK_ONE_WORDS, ASK_DESK_TITLE } from '@vtt/engine/words/steps';
 
 export type Role = 'gm' | 'player';
 
@@ -211,6 +212,7 @@ export class RoomsService {
       const offered = new Set(record.question.offers.map(o => o.id));
       const stray = intent.chosen.find(id => !offered.has(id));
       if (stray) throw new BadRequestException(`реакция «${stray}» сейчас не предлагается; можно: ${[...offered].join(', ') || '(ничего)'}`);
+      if (record.question.one && intent.chosen.length !== 1) throw new BadRequestException(`${ASK_ONE_WORDS}: ${record.question.offers.map(o => o.label).join(' / ')}`);
       const { question, id: _id, ...rest } = record;
       const journal: Journal = { ...record.journal, answers: { ...record.journal.answers, [question.key]: intent.chosen } };
       return this.play(room, { ...rest, journal }, userId, 'answer', intent, true);
@@ -388,7 +390,9 @@ export class RoomsService {
       id: String(record.id),
       sheetId: question.sheetId,
       stage: question.window,
-      question: question.window === 'moment'
+      question: question.window === 'step'
+        ? `${question.sheetId === DESK_ID ? ASK_DESK_TITLE : name}: ${question.label}`
+        : question.window === 'moment'
         ? `${name}: ${question.label} — воспользоваться?`
         : question.window === 'seen'
         ? `${name}: кости выпали — воспользоваться?`
@@ -397,6 +401,7 @@ export class RoomsService {
           : `${name}: на вас действуют${by} — ответить реакцией?`,
       options: question.offers.map(o => ({ id: o.id, label: o.label })),
       preview: question.preview,
+      ...(question.one ? { one: true } : {}),
       ...(record.hidden ? { hidden: true } : {}),
     };
   }
