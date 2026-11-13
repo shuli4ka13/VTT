@@ -748,6 +748,8 @@
 .flow-block--guard:hover .flow-block__add, .flow-block--guard:hover > .flow-block__foot, .flow-block--guard:focus-within .flow-block__add, .flow-block--guard:focus-within > .flow-block__foot { opacity: 1; }
 .cond { display: flex; flex-direction: column; gap: var(--s-2); min-width: 0; }
 .cond--bare { flex-direction: row; flex-wrap: wrap; align-items: center; }
+.row > .cond { align-self: start; }
+.row > .cond > .cond__title { font-size: 10px; letter-spacing: 0.06em; }
 .cond__title { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
 .cond__row { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
 .cond__and { font-weight: 600; color: var(--cyan); white-space: nowrap; }
