@@ -7,8 +7,8 @@ import { SEEN_LABEL, ROLLED, ROLLED_LABEL, ANY_ACTION, PHASES } from '../events/
 import { HEARD_WORDS } from '../events/lifecycle.ts';
 import type { System, Compendium, Effect, Step, Stage, Guard, Param, Table, Modifier } from './types.ts';
 import { registry, loopsAt, splitsTargets } from '../engine/steps/index.ts';
-import { numbersOf, kindOfRule, placesOf, fitsPlace, fitKinds, countUnread, rollsCounting } from './die-kinds.ts';
-import { ROLL_KIND_WORDS, NUMBER_MISFIT, EDIT_MISFIT, EDIT_SIDES_MISFIT, COUNT_UNREAD, rollNumberWord } from '../words/dice-kinds.ts';
+import { numbersOf, kindOfRule, placesOf, fitsPlace, fitKinds, countUnread, rollsCounting, placesMatching, wordFits } from './die-kinds.ts';
+import { ROLL_KIND_WORDS, NUMBER_MISFIT, EDIT_MISFIT, EDIT_SIDES_MISFIT, COUNT_UNREAD, rollNumberWord, WORD_MISFITS_ROLLS, TWO_RULES } from '../words/dice-kinds.ts';
 import { editPrimitives } from '../engine/roll-edits.ts';
 import { namingProblems } from './naming.ts';
 import type { DieConstant } from './types.ts';
@@ -910,6 +910,16 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
         else if (mod.param === 'count' && mod.op !== 'add') out.push({ where: at, level: 'error', text: `кубики к броску только прибавляются, а здесь «${String(mod.op ?? 'не задано')}»` });
         else if (mod.param === 'bonus' && mod.op !== 'add') out.push({ where: at, level: 'error', text: `прибавка к броску только прибавляет, а здесь «${String(mod.op ?? 'не задано')}»` });
         if (!tiedToHolder(mod.if as Guard | undefined)) out.push({ where: at, level: 'warn', text: ANYONE_ROLLS });
+        const ruleTags = ((mod.tags as unknown[] | undefined) ?? []).filter((tag): tag is string => typeof tag === 'string' && Boolean(system.rolls?.[tag]));
+        if (ruleTags.length > 1) out.push({ where: at, level: 'warn', text: TWO_RULES(ruleTags.map(tag => system.rolls![tag]!.label || tag)) });
+        if (mod.param === 'edits' && mod.edit && ((mod.tags as unknown[] | undefined)?.length || (mod.anyTags as unknown[] | undefined)?.length)) {
+          const word = system.roll_edits?.[String(mod.edit)];
+          const matched = placesMatching(system, { tags: mod.tags, anyTags: mod.anyTags });
+          if (word && matched.length && !wordFits(word as never, matched)) {
+            const kinds = [...new Set(matched.map(place => (place.kind ? ROLL_KIND_WORDS[place.kind] : null)).filter((kind): kind is string => Boolean(kind)))];
+            out.push({ where: at, level: 'warn', text: WORD_MISFITS_ROLLS(word.label || String(mod.edit), [...new Set(matched.map(place => place.name))].slice(0, 4), kinds) });
+          }
+        }
         if (readsAgainst(mod.if) && mod.param === 'edits' && mod.edit) {
           const word = system.roll_edits?.[String(mod.edit)];
           const bad = [...new Set((word?.ops ?? []).map(op => String(op.op)).filter(op => !FACED_OPS.has(op)))];

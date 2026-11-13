@@ -169,3 +169,44 @@ export function countUnread(system: System, dieKey: string): boolean {
   walk({ ...system, rolls: undefined });
   return !direct;
 }
+
+export interface TaggedPlace extends RollPlace { tags: readonly string[]; name: string }
+
+const stringTags = (list: unknown): string[] => (Array.isArray(list) ? list.filter((tag): tag is string => typeof tag === 'string') : []);
+
+export function taggedPlacesOf(system: System): TaggedPlace[] {
+  const out: TaggedPlace[] = [];
+  for (const [key, rule] of Object.entries(system.rolls ?? {})) {
+    const tags = new Set<string>([key, ...stringTags(rule.tags)]);
+    for (const entry of rule.fields) {
+      for (const tag of stringTags(entry.tags)) tags.add(tag);
+      for (const row of system.tables?.[entry.table]?.rows ?? []) if (typeof row.value === 'string') tags.add(row.value);
+    }
+    out.push({ ...kindOfRule(system, rule), roll: rule.label || key, die: rule.die, tags: [...tags], name: rule.label || key });
+  }
+  for (const [id, effect] of Object.entries(system.effects ?? {})) {
+    const walk = (value: unknown): void => {
+      if (Array.isArray(value)) { value.forEach(walk); return; }
+      if (!value || typeof value !== 'object') return;
+      const step = value as Record<string, unknown>;
+      if (typeof step.type === 'string' && registry.get(step.type)?.dice?.(step as never)) {
+        const place = stepPlace(system, step);
+        if (place) out.push({ ...place, tags: stringTags(step.tags), name: effect.label || id });
+      }
+      Object.values(step).forEach(walk);
+    };
+    walk(effect);
+  }
+  const first = system.initiative ? stepPlace(system, system.initiative as Record<string, unknown>) : null;
+  if (first) out.push({ ...first, tags: stringTags((system.initiative as { tags?: unknown }).tags), name: 'инициатива' });
+  return out;
+}
+
+export const placesMatching = (system: System, filter: { tags?: unknown; anyTags?: unknown }): TaggedPlace[] => {
+  const all = stringTags(filter.tags);
+  const any = stringTags(filter.anyTags);
+  return taggedPlacesOf(system).filter(place => all.every(tag => place.tags.includes(tag)) && (!any.length || any.some(tag => place.tags.includes(tag))));
+};
+
+export const wordFits = (word: { ops?: readonly Op[] }, places: readonly RollPlace[]): boolean =>
+  (word.ops ?? []).every(op => !(String(op.op) in FITS) || places.some(place => fitsPlace(op, place)));

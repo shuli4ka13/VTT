@@ -34,3 +34,9 @@ export const COUNT_UNREAD = (die: string, rolls: readonly string[]): string =>
 
 export const EDIT_SIDES_MISFIT = (edit: string, action: string): string =>
   `правка броска «${edit}»: «${action}» не подходит граням ни одной кости системы — она ничего не изменит`;
+
+export const WORD_MISFITS_ROLLS = (word: string, rolls: readonly string[], kinds: readonly string[]): string =>
+  `слово «${word}» не подходит броскам, к которым привязана правка (${rolls.map(roll => `«${roll}»`).join(', ')}: ${kinds.join(', ')}) — на них оно ничего не изменит`;
+
+export const TWO_RULES = (rules: readonly string[]): string =>
+  `правка ждёт бросок сразу двух правил (${rules.map(rule => `«${rule}»`).join(', ')}) — так не бывает; возьмите «Или хотя бы одно из»`;

@@ -13,6 +13,7 @@ import { calledOf } from '@vtt/engine/engine/effects';
 import { ROLL_CALL, CALL_WORDS } from '@vtt/engine/words/calls';
 import { TagsField } from './tags-field.tsx';
 import { RollsPick } from './rolls-pick.tsx';
+import { placesMatching, wordFits } from '@vtt/engine/model/die-kinds';
 import { callNamesOf, holderConditionOf } from '@vtt/engine/model/references';
 import { ConditionField } from './condition-field.tsx';
 import { AddendPick } from './effects/cards/die-pick.tsx';
@@ -39,6 +40,20 @@ const ROLL_PARAMS = [
   ['edits', CALL_WORDS.roll.params.edits, WORD_GROUP],
   ['tags', CALL_WORDS.roll.params.tags, MORE_GROUP],
 ] as const;
+
+const FIT_GROUP = 'подходят этим броскам';
+const MISFIT_GROUP = 'не подходят этим броскам';
+
+function wordOptions(system: System, edits: [string, { label?: string; ops?: unknown[] }][], m: Loose): (readonly [string, string] | readonly [string, string, string])[] {
+  const targeted = Boolean((m.tags as unknown[] | undefined)?.length || (m.anyTags as unknown[] | undefined)?.length);
+  const matched = targeted ? placesMatching(system, { tags: m.tags, anyTags: m.anyTags }) : [];
+  if (!matched.length) return edits.map(([key, e]) => [key, e.label || key] as const);
+  const fits = (e: { ops?: unknown[] }) => wordFits(e as never, matched);
+  return [
+    ...edits.filter(([, e]) => fits(e)).map(([key, e]) => [key, e.label || key, FIT_GROUP] as const),
+    ...edits.filter(([, e]) => !fits(e)).map(([key, e]) => [key, e.label || key, MISFIT_GROUP] as const),
+  ];
+}
 
 const ROLL_PARAM_HINTS: Record<string, string> = {
   count: 'Складывается: каждый висящий эффект и каждая его копия дают своё число.',
@@ -343,7 +358,7 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
               <Select
                 value={String(m.edit ?? '')}
                 options={[['', '— выберите слово —'],
-                  ...edits.map(([key, e]) => [key, e.label || key] as const),
+                  ...wordOptions(system, edits, m),
                   ...recipes.map(({ method, recipe }) =>
                     [`${RECIPE}${method.id}:${recipe.key}`, `+ ${recipe.label} · ${method.label}`] as const),
                 ] as never}

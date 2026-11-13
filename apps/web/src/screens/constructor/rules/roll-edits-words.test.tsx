@@ -40,6 +40,21 @@ describe('правка броска говорит, что складывает�
     expect(fieldOf(view.container, 'Какое слово')).toBeTruthy();
   });
 
+  it('«Какое слово» у правки на «Проверку» (набор успехов): сначала подходящие, «Кость выше» — в «не подходят этим броскам»', () => {
+    const pools = {
+      constants: { pool: { label: 'набор к6', kind: 'die', dice: [{ sides: 6, count: 1 }], read: { kind: 'count', atLeast: 5 } } },
+      tables: { лист: { shape: 'single', columns: [{ key: 'ловкость', label: 'Ловкость', kind: 'number' }] } },
+      rolls: { проверка: { label: 'Проверка', die: 'pool', number: 'count', fields: [{ table: 'лист', column: 'ловкость' }] } },
+      roll_edits: { step_up: { label: 'Кость выше', ops: [{ op: 'dieStep', by: 1 }] }, lucky: { label: 'Переброс', ops: [{ op: 'reroll', n: 1 }] } },
+      effects: {},
+    } as unknown as System;
+    const mods = [{ kind: 'edit', call: 'roll', param: 'edits', edit: 'lucky', tags: ['проверка'] }] as Modifier[];
+    const view = renderOpen(<ModifiersEditor system={pools} modifiers={mods} onEdit={vi.fn()} />);
+    const combo = fieldOf(view.container, 'Какое слово').querySelector<HTMLElement>('[role="combobox"]')!;
+    const lines = comboOptions(combo).filter(one => one.value).map(one => `${one.group}: ${one.label}`);
+    expect(lines).toEqual(['подходят этим броскам: Переброс', 'не подходят этим броскам: Кость выше']);
+  });
+
   it('в словаре выбор говорит «одно на бросок» и «по разу от каждого разного эффекта», подсказка — про копии', () => {
     const view = render(<RollEditsSection system={system} editSystem={vi.fn()} usage={new Map()} />);
     const combo = [...view.container.querySelectorAll<HTMLElement>('[role="combobox"]')]
