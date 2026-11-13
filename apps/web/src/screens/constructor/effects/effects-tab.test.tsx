@@ -65,7 +65,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
       .map(b => b.textContent!.trim())
       .filter(t => !CREATE_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`)
         && t !== '+ новый' && t !== '+ блок'
-        && t !== '+ ещё одно' && t !== '+ вход' && t !== '+ итог' && t !== '+ держание' && !t.startsWith('+ в «')
+        && t !== '+ ещё одно' && t !== '+ вход' && t !== '+ итог' && t !== '+ привязка к якорю' && !t.startsWith('+ в «')
         && !['+ блок', '+ метки', '+ описание для игрока', '+ занимает', '+ какие метки бывают', '+ сколько висит', '+ на основе'].includes(t));
     expect(palette).toEqual(['+ бросок', '+ проверка', '+ изменение', '+ таблица', '+ для каждого из списка', '+ если', '+ спросить', '+ стоп', '+ число']);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
@@ -650,5 +650,62 @@ describe('плашка вида у названия эффекта', () => {
     const effect = { label: 'Щит', activation: 'passive', modifiers: [{ target: '@хиты', op: 'add', value: { expr: '1' } }] } as unknown as Effect;
     open({ shield: effect }, 'shield');
     expect(document.querySelector('.effect-head__kind')!.getAttribute('title')).not.toBe(UNBOUND_HINT);
+  });
+});
+
+describe('EffectsTab: привязка к якорю', () => {
+  const ACTOR = { key: 'действующий', label: 'Кто действует', kind: 'sheet', role: 'actor' };
+  const TARGETS = { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' } };
+  const put = { type: 'status', effect: 'слеп', to: { expr: '@цель' } };
+
+  const open = (strike: Record<string, unknown>) => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...state.system,
+        effects: {
+          концентрация: { label: 'Концентрация', activation: 'passive' },
+          слеп: { label: 'Ослеплён', activation: 'passive' },
+          strike: { label: 'Взгляд', activation: 'manual', params: [ACTOR, TARGETS], ...strike },
+        } as never,
+      },
+      activeEffectId: 'strike',
+    }));
+    renderOpen(<EffectsTab />);
+  };
+  const strike = () => useWorld.getState().system.effects.strike as Effect & { steps: Record<string, unknown>[] };
+  const fieldSelect = (label: string) => [...document.querySelectorAll<HTMLElement>('.field__label')]
+    .find(el => el.textContent === label)?.closest('label')?.querySelector<HTMLSelectElement>('select') ?? null;
+  const choice = () => fieldSelect('Когда сняли якорь');
+
+  afterEach(cleanup);
+
+  it('без шага «Наложить» и без привязки кнопки «+ привязка к якорю» нет', () => {
+    open({ steps: [] });
+    expect(screen.queryByText('+ привязка к якорю')).toBeNull();
+  });
+
+  it('есть что накладывать — кнопка есть; без привязки выбора «Когда сняли якорь» нет', () => {
+    open({ steps: [{ type: 'each', of: 'цели' }, put] });
+    expect(screen.getByText('+ привязка к якорю')).toBeTruthy();
+    expect(choice()).toBeNull();
+  });
+
+  it('с привязкой: «остаётся» пишет отметку, «спадает» её снимает, «снимаем» её убирает', () => {
+    open({ steps: [{ type: 'each', of: 'цели' }, put], bond: { effect: 'концентрация', by: 'действующий' } });
+    fireEvent.change(choice()!, { target: { value: 'stays' } });
+    expect(strike().steps[1]!.unbound).toBe(true);
+    fireEvent.change(choice()!, { target: { value: 'falls' } });
+    expect('unbound' in strike().steps[1]!).toBe(false);
+    fireEvent.change(choice()!, { target: { value: 'stays' } });
+    fireEvent.change(fieldSelect('Что делаем')!, { target: { value: 'remove' } });
+    expect('unbound' in strike().steps[1]!).toBe(false);
+  });
+
+  it('сняли привязку — отметки «остаётся» уходят из шагов', () => {
+    open({ steps: [{ type: 'each', of: 'цели' }, { ...put, unbound: true }], bond: { effect: 'концентрация', by: 'действующий' } });
+    fireEvent.click(screen.getByLabelText('убрать «привязка к якорю»'));
+    expect(strike().bond).toBeUndefined();
+    expect('unbound' in strike().steps[1]!).toBe(false);
   });
 });

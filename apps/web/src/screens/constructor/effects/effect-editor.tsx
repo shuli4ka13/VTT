@@ -160,16 +160,16 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
               </Field>
             </details>
             <EffectName id={id} locked={effectUsed(system, useWorld.getState().compendium, id)} taken={Object.keys(system.effects)} onChange={rekey} />
-            {launch.kind === 'manual' ? (
+            {launch.kind === 'manual' && (effect.bond || (effect.steps ?? []).some(step => step.type === 'status' && String((step as { mode?: unknown }).mode ?? 'apply') === 'apply')) ? (
               <Extras
                 items={[{
-                  key: 'bond', label: 'держание', on: !!effect.bond,
+                  key: 'bond', label: 'привязка к якорю', on: !!effect.bond,
                   add: () => edit(draft => {
                     const holder = Object.entries(system.effects).find(([key, other]) => key !== id && (other.activation ?? 'manual') === 'passive')?.[0];
                     const by = rolesOf({ params: paramsOf(system, draft) }).actor;
                     if (holder && by) draft.bond = { effect: holder, by };
                   }),
-                  drop: () => edit(draft => { delete draft.bond; }),
+                  drop: () => edit(draft => { delete draft.bond; for (const step of draft.steps ?? []) delete (step as { unbound?: unknown }).unbound; }),
                   node: <Bond effect={effect} system={system} id={id} edit={edit} />,
                 }]}
               />
@@ -482,7 +482,7 @@ function Bond({ effect, system, id, edit }: {
   const inputNames = new Map(paramsOf(system, effect).map(param => [param.key, param.label ?? param.key] as const));
   return (
     <div className="row">
-      <Field label="Держит" hint="Наложенное этим действием держится, пока у листа есть эффект-держатель. Одно: взялся за новое — старое спало (концентрация). Каждое отдельно: у каждого действия свой держатель.">
+      <Field label="Якорь" hint="Висящий эффект, который сам ляжет на того, кто действует, — например «Концентрация». Сняли якорь — спадает всё, что это действие наложило (кроме наложений с «остаётся»).">
         <EffectPick
           value={effect.bond?.effect || null}
           system={system}
@@ -491,7 +491,7 @@ function Bond({ effect, system, id, edit }: {
           onChange={next => edit(draft => { if (typeof next === 'string') draft.bond = { effect: next, by: draft.bond?.by ?? sheets[0]?.key ?? '' }; })}
         />
       </Field>
-      <Field label="У кого">
+      <Field label="У кого якорь">
         <Select
           value={effect.bond?.by ?? ''}
           options={sheets.map(param => [param.key, `«${param.label ?? param.key}»`] as const) as never}
@@ -508,13 +508,13 @@ function Bond({ effect, system, id, edit }: {
         system={system}
         quick={paramsOf(system, effect).filter(param => param.kind === 'boolean').map(param => ({ ref: param.key, label: param.label ?? param.key, kind: 'boolean' as const }))}
         names={inputNames}
-        where="держание · только если"
-        placeholder="например: держится"
+        where="якорь · только если"
+        placeholder="например: держится концентрацией"
       />
-      <Field label="Сколько держит">
+      <Field label="Сколько якорей">
         <Select
           value={effect.bond?.many ? 'many' : 'one'}
-          options={[['one', 'одно — новое отпускает прежнее'], ['many', 'каждое отдельно']] as const}
+          options={[['one', 'один — новое действие отпускает прежнее'], ['many', 'свой на каждое действие']] as const}
           onChange={next => edit(draft => {
             if (!draft.bond) return;
             if (next === 'many') draft.bond.many = true; else { delete draft.bond.many; delete draft.bond.args; }
@@ -533,7 +533,7 @@ function Bond({ effect, system, id, edit }: {
             if (Object.keys(args).length) draft.bond.args = args; else delete draft.bond.args;
           })}
           context={{ system, effect, earlier: [], names: placeNamesAt(system, id, { part: 'steps', index: (effect.steps ?? []).length }) }}
-          where="держание · что запомнит держатель"
+          where="якорь · что запомнит"
         />
       ) : null}
     </div>

@@ -334,7 +334,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   );
 }
 
-export function ChangeBody({ group, context, edit, withNumber, system, onAddParam, onOpenEffect }: {
+export function ChangeBody({ group, context, edit, withNumber, system, onAddParam, onOpenEffect, lane }: {
   group: CardGroup;
   context: SlotContext;
   edit: EditFn;
@@ -418,7 +418,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
               options={[['apply', 'вешаем'], ['remove', 'снимаем']] as const}
               onChange={next => edit(applyIndex, draft => {
                 const d = draft as any;
-                if (next === 'apply') { delete d.mode; delete d.where; delete d.one; delete d.by; } else d.mode = next;
+                if (next === 'apply') { delete d.mode; delete d.where; delete d.one; delete d.by; } else { d.mode = next; delete d.unbound; }
               })}
             />
           </Field>
@@ -501,6 +501,15 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
                 />
               </Field>
             </>
+          ) : null}
+          {String(step.mode ?? 'apply') === 'apply' && context.effect.bond && lane !== 'cost' && (context.effect.steps ?? []).includes(step) ? (
+            <Field label="Когда сняли якорь" hint="Якорь — то, что держит действие, например «Концентрация». По умолчанию наложенное спадает вместе с ним.">
+              <Select
+                value={step.unbound ? 'stays' : 'falls'}
+                options={[['falls', 'спадает вместе с ним'], ['stays', 'остаётся']] as const}
+                onChange={next => edit(applyIndex, draft => { const d = draft as any; if (next === 'stays') d.unbound = true; else delete d.unbound; })}
+              />
+            </Field>
           ) : null}
           <StatusArgs step={step} context={context} onArg={(key, next) => edit(applyIndex, draft => {
             const d = draft as any;

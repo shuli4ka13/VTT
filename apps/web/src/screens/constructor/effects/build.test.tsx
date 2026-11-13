@@ -389,10 +389,6 @@ describe('эффекты пресетов собираются в констру
 
     ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_spell');
     let card = stepCard(/^1 · /);
-    ui.click('+ держание');
-    ui.select('Держит', 'concentration');
-    ui.select('У кого', 'действующий');
-    ui.when('=@holds');
 
     ui.click('+ изменение');
     let held = stepCard(/^3 · /);
@@ -402,6 +398,11 @@ describe('эффекты пресетов собираются в констру
     within(held).formula('На кого', '@цель');
     held = stepCard(/^3 · /);
     within(held).formula('Запомнит: Кто наложил', '@действующий');
+
+    ui.click('+ привязка к якорю');
+    ui.select('Якорь', 'concentration');
+    ui.select('У кого якорь', 'действующий');
+    ui.when('=@holds');
     dump({ got: built('spell_buff'), goal });
     expect(built('spell_buff')).toEqual(goal);
   });

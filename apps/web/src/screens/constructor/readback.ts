@@ -206,7 +206,7 @@ export function changeReadback(step: Step, amount: Step | null, system: System, 
     }
     return (s.mode ?? 'apply') === 'remove'
       ? [seg(`С ${whoOf(effect, s.to)} снимается состояние`), what]
-      : [seg(`На ${whoOf(effect, s.to)} вешается состояние`), what];
+      : [seg(`На ${whoOf(effect, s.to)} вешается состояние`), what, ...(effect.bond && s.unbound === true ? [seg('Остаётся, когда сняли якорь.')] : [])];
   }
   const field = refSegment(s.target, system, effect, 'какое поле?', names);
 

@@ -71,6 +71,10 @@
       "label": "Поддержание",
       "activation": "passive"
     },
+    "чары": {
+      "label": "Чары действуют",
+      "activation": "passive"
+    },
     "сотворить": {
       "label": "Сотворить",
       "activation": "manual",
@@ -89,7 +93,15 @@
           "optional": true
         }
       ],
-      "steps": []
+      "steps": [
+        {
+          "type": "status",
+          "effect": "чары",
+          "to": {
+            "expr": "@колдун"
+          }
+        }
+      ]
     },
     "прекращение": {
       "label": "Прекратить",
