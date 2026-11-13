@@ -1627,6 +1627,18 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
         else if (holder && !keys.has(key)) out.push({ where, level: 'error', text: `держатель «${holder.label ?? effect.bond.effect}» не знает входа «${key}»` });
       }
     }
+    const unbound = chainsOf(id, effect).flatMap(chain => chain.steps.map((step, index) => ({ step, at: chain.where(index), top: chain.steps === (effect.steps ?? null) })))
+      .filter(({ step }) => step.type === 'status' && (step as { unbound?: unknown }).unbound === true);
+    for (const { at, top } of unbound) {
+      if (!effect.bond) out.push({ where: at, level: 'error', text: 'у эффекта нет привязки к якорю — «остаётся» здесь не от чего отличать, уберите' });
+      else if (!top) out.push({ where: at, level: 'error', text: 'к якорю привязываются только наложения в шагах самого эффекта — здесь «остаётся» не действует, уберите' });
+    }
+    if (effect.bond) {
+      const applies = (effect.steps ?? []).filter(step => step.type === 'status' && String((step as { mode?: unknown }).mode ?? 'apply') === 'apply');
+      if (applies.length && applies.every(step => (step as { unbound?: unknown }).unbound === true)) {
+        out.push({ where, level: 'error', text: 'все наложения отмечены «остаётся» — к якорю привязывать нечего; уберите привязку или отметку' });
+      }
+    }
     if (effect.duration?.by && !sheets.has(effect.duration.by)) {
       out.push({ where, level: 'error', text: `срок считает ходы листа «${effect.duration.by}», а такого входа-листа у эффекта нет` });
     }

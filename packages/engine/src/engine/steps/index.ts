@@ -44,7 +44,7 @@ export interface StepContext {
   faced?(name: string, other: unknown): Faced | null;
   read(sheetId: string, tag: string): unknown;
   write(sheetId: string, tag: string, value: StoredValue): void;
-  attach(sheetId: string, effectId: string, args: Record<string, StoredValue>): void;
+  attach(sheetId: string, effectId: string, args: Record<string, StoredValue>, unbound?: boolean): void;
   detach(sheetId: string, effectId: string, pick?: { where?: unknown; one?: boolean }): void;
   edited(call: string, param: string, base: number, tags: string[], args: Record<string, unknown>): number;
   call(event: string, args: Record<string, unknown>, payload: EmittedEvent): NestedRun;

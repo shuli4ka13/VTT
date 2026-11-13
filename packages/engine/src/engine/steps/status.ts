@@ -70,7 +70,7 @@ const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
       given[key] = value;
     }
     const args = Object.fromEntries(Object.entries(given).filter(([, value]) => value !== '')) as Record<string, StoredValue>;
-    ctx.attach(to, id, args);
+    ctx.attach(to, id, args, step.unbound === true);
     return { value: id, trace: { mode, effect: id, sheet: to, ...(Object.keys(args).length ? { args } : {}) }, break: null };
   },
 };

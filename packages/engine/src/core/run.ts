@@ -463,7 +463,7 @@ export class Run {
       faced: (name, other) => this.faced(frame, name, other, rolls),
       read: (sheetId, tag) => this.read(sheetId, tag),
       write: (sheetId, tag, value) => this.write(sheetId, tag, value, sink),
-      attach: (sheetId, effectId, args) => this.attach(frame, sheetId, effectId, args, sink, path),
+      attach: (sheetId, effectId, args, unbound) => this.attach(frame, sheetId, effectId, args, sink, path, unbound === true),
       detach: (sheetId, effectId, pick) => this.detach(sheetId, effectId, frame.owner, sink, pick && {
         ...(pick.where !== undefined ? { where: (entry: WornEffect) => {
           const blank = Object.fromEntries((this.system.effects?.[effectId]?.params ?? []).map(param => [param.key, null]));
@@ -745,7 +745,8 @@ export class Run {
     this.state.put({ ...holder, effects: [...(holder.effects ?? []), { effectId: bond.effect, inst, ...(Object.keys(args).length ? { args } : {}) }] });
   }
 
-  private attach(frame: Frame, sheetId: string, effectId: string, args: Record<string, StoredValue>, sink: Sink, path: Path): void {
+  private attach(frame: Frame, sheetId: string, effectId: string, args: Record<string, StoredValue>, sink: Sink, path: Path, unbound = false): void {
+    const bond = unbound ? undefined : frame.bond;
     const effect = requireEffect(this.system, effectId, frame.owner);
     const sheet = this.sheet(sheetId)!;
     const worn: WornEffect[] = [...(sheet.effects ?? [])];
@@ -759,7 +760,7 @@ export class Run {
       effectId,
       ...(Object.keys(kept).length ? { args: kept } : {}),
       ...expiryOf(effect, this.clock, counted),
-      ...(frame.bond ? { bond: frame.bond } : {}),
+      ...(bond ? { bond } : {}),
       ...(reapplyOf(effect) === 'stack' ? { inst: this.ext.id(path.phase('inst').phase(effectId)) } : {}),
     };
     const max = usesMax(effect, counted);
@@ -772,7 +773,7 @@ export class Run {
     } else if (reapplyOf(effect) === 'stack') worn.push(fresh);
     else return;
     this.state.put({ ...sheet, effects: worn });
-    if (frame.bond) this.placeHolder(frame.bond);
+    if (bond) this.placeHolder(bond);
     if (!sink.effects.includes(effectId)) sink.effects.push(effectId);
   }
 

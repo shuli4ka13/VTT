@@ -223,6 +223,10 @@ export const STEP_WORDS = {
       { key: 'to', label: 'На кого', kind: 'sheet', main: true, required: true, allow: ['expr'] },
       { key: 'args', label: 'Что наложенное запомнит', kind: 'args', allow: [] },
       {
+        key: 'unbound', label: 'Когда сняли якорь', kind: 'flag', fallback: 'false', onlyIf: { key: 'mode', is: 'apply' },
+        choice: [['false', 'спадает вместе с ним'], ['true', 'остаётся']],
+      },
+      {
         key: 'by', label: 'Снять', kind: 'choice', options: ['effect', 'tag'], fallback: 'effect', onlyIf: { key: 'mode', is: 'remove' },
         choice: [['effect', 'этот эффект'], ['tag', 'все эффекты с меткой']],
       },
