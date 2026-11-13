@@ -1,6 +1,7 @@
 import type { System, Param, Effect } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
-import { effectBy, fieldBy, stepsOf, reads, armOf, errorsOf, same, isArm } from '../find.ts';
+import { effectBy, fieldBy, stepsOf, is, subtracts, adds, numberOf, armOf, errorsOf, same, isArm, FORMULA_DONE, barOpen, barText } from '../find.ts';
+import { armsOf } from '@vtt/engine/model/flow';
 import { problemsClean } from './first-system.ts';
 import base from '../seeds/base.json' with { type: 'json' };
 
@@ -18,14 +19,34 @@ const calls = (view: View) => callsOf(view, damage(view)?.[0]);
 const successArm = (view: View) => {
   const steps = stepsOf(strike(view)?.[1]);
   const check = steps.find(step => step.type === 'check')?.id;
-  const at = steps.findIndex(step => isArm(step) && typeof check === 'string' && reads(step.if, `@${check}.success`));
+  const at = steps.findIndex(step => isArm(step) && typeof check === 'string' && is(step.if, `@${check}.success`));
   return at < 0 ? [] : armOf(steps, at);
+};
+
+const returnsRight = (view: View, expr: unknown): boolean => {
+  const sheet = sheetParam(view)?.key;
+  const hp = fieldBy(view.system, 'Хиты')?.tag;
+  return Boolean(sheet && hp && is(expr, `@${sheet}.${hp}`));
+};
+
+const returnedRight = (view: View): boolean =>
+  (damage(view)?.[1].returns ?? []).some(column => column.kind === 'number' && same(column.label, 'Осталось') && returnsRight(view, column.expr));
+
+const failArm = (view: View) => {
+  const steps = stepsOf(strike(view)?.[1]);
+  const check = steps.find(step => step.type === 'check')?.id;
+  const head = steps.findIndex(step => isArm(step) && typeof check === 'string' && is(step.if, `@${check}.success`));
+  if (head < 0) return [];
+  const arms = armsOf(steps);
+  const tail = steps.findIndex((step, k) => k > head && step.type === 'orElse' && !step.if && arms[k]?.at(-1)?.open === head);
+  return tail < 0 ? [] : armOf(steps, tail);
 };
 
 export const links: Lesson = {
   id: 'links',
   title: 'Вызываемый эффект',
   sub: '«Урон» отдельным эффектом: «Удар» передаёт ему цель и число.',
+  start: 'у вас уже есть «Удар»: он сам отнимает у цели 5 хитов и «Урон» не вызывает. «Урон» вы заведёте отдельно и подключите к «Удару».',
   seed: base as unknown as System,
   tab: 'effects',
   chapters: [
@@ -57,7 +78,6 @@ export const links: Lesson = {
       chapter: 'Вызываемый эффект',
       tab: 'effects',
       say: 'Добавьте в «Что приходит» число «Сколько» и отметьте его «Величина»: это то, что «Урону» передают числом.',
-      hint: 'Без «Величины» «Урон» не получит числа, которое можно править. «Величина» спрятана под «ещё» у строки «Сколько».',
       at: [
         {
           at: { text: '+ ещё одно', in: 'Что приходит' },
@@ -69,10 +89,14 @@ export const links: Lesson = {
           say: 'В «Название» впишите «Сколько», в «Вид» выберите «число».',
           done: view => paramsOf(view).some(param => param.kind === 'number' && same(param.label, 'Сколько')),
         },
-        { at: { text: 'Величина', in: 'Что приходит' }, say: 'Нажмите «ещё» у «Сколько» и отметьте «Величина».' },
+        {
+          at: { text: 'Величина', in: 'Что приходит' },
+          say: 'Нажмите «ещё» у «Сколько» и отметьте «Величина».',
+          hint: 'Без «Величины» «Урон» не получит числа, которое можно править. «Величина» спрятана под «ещё» у строки «Сколько».',
+        },
       ],
       via: [{ text: 'ещё', in: 'Что приходит' }, { text: 'Сколько', in: 'Что приходит' }],
-      done: view => Boolean(amountParam(view)),
+      done: view => paramsOf(view).some(param => param.role === 'amount' && param.kind === 'number' && same(param.label, 'Сколько')),
       result: () => '«Сколько» — величина «Урона».',
     },
     {
@@ -100,7 +124,7 @@ export const links: Lesson = {
         const amount = amountParam(view)?.key;
         const hp = fieldBy(view.system, 'Хиты')?.tag;
         return Boolean(sheet && amount && hp && stepsOf(damage(view)?.[1]).some(step =>
-          step.type === 'apply' && reads(step.target, `@${sheet}.${hp}`) && reads(step.value, `@${amount}`)));
+          step.type === 'apply' && is(step.target, `@${sheet}.${hp}`) && is(step.value, `@${amount}`) && subtracts(step)));
       },
       result: () => '«Урон» отнимает «Сколько» от хитов.',
     },
@@ -113,13 +137,24 @@ export const links: Lesson = {
       at: [
         { at: { text: '+ итог' }, say: 'Нажмите «+ итог».', done: view => (damage(view)?.[1].returns ?? []).length > 0 },
         { at: { text: 'Вид', in: 'Что получит тот, кто вызвал' }, say: 'В «Название» впишите «Осталось», в «Вид» выберите «число».', done: view => (damage(view)?.[1].returns ?? []).some(column => column.kind === 'number') },
-        { at: [{ text: 'Откуда' }, { text: 'Осталось' }], say: 'В «Откуда» выберите «формулой…», наберите «@» и в группе «у «Кто действует»» выберите «Хиты». Нажмите «готово». Если итог свёрнут, щёлкните «Осталось».' },
+        {
+          at: [{ text: 'Откуда' }, { text: 'Осталось' }],
+          say: 'В «Откуда» выберите «формулой…» и щёлкните появившееся поле.',
+          hint: 'Итог свёрнут? Щёлкните «Осталось».',
+          done: view => barOpen(view) || returnedRight(view),
+        },
+        {
+          at: [{ text: 'Откуда' }, { text: 'Осталось' }],
+          say: 'Наберите «@» и в группе «у «Кто действует»» выберите «Хиты».',
+          done: view => returnsRight(view, barText(view)) || returnedRight(view),
+        },
+        { at: [FORMULA_DONE, { text: 'Откуда' }, { text: 'Осталось' }], say: 'Нажмите «готово».' },
       ],
       traps: [{
         when: view => (damage(view)?.[1].returns ?? []).some(column => column.kind !== 'number' && Boolean(column.expr)),
         say: 'У итога вид «да или нет» — выберите «число»: хитов может остаться сколько угодно.',
       }],
-      done: view => (damage(view)?.[1].returns ?? []).some(column => column.kind === 'number' && Boolean(column.expr)),
+      done: returnedRight,
       result: () => '«Осталось» — хиты цели после урона.',
     },
     {
@@ -137,9 +172,10 @@ export const links: Lesson = {
       done: view => {
         const amount = amountParam(view)?.key;
         const sheet = sheetParam(view)?.key;
+        const arm = successArm(view);
         return Boolean(amount && sheet && calls(view).some(step => {
           const args = (step.args ?? {}) as Record<string, unknown>;
-          return args[amount] !== undefined && (args[sheet] === undefined || reads(args[sheet], '@цель'));
+          return arm.includes(step) && numberOf(args[amount]) === 5 && (args[sheet] === undefined || is(args[sheet], '@цель'));
         }));
       },
       result: () => 'При успехе «Удар» вызывает «Урон»: цели — 5.',
@@ -156,7 +192,7 @@ export const links: Lesson = {
       id: 'name',
       chapter: 'Вызов',
       tab: 'effects',
-      say: 'Чтобы шаги ниже могли прочитать «Осталось», под вызовом нажмите «результат…», впишите имя «урон» и щёлкните мимо поля.',
+      say: 'Чтобы шаги ниже могли прочитать «Осталось», под вызовом нажмите «результат…» и впишите имя «урон»: оно запомнится, когда вы щёлкнете мимо поля.',
       at: { text: 'результат…' },
       done: view => calls(view).some(step => typeof step.id === 'string' && step.id.trim() !== ''),
       result: view => `Вызов называется «${String(calls(view).find(step => step.id)?.id ?? '')}»: шаги ниже видят его «Осталось».`,
@@ -183,15 +219,15 @@ export const links: Lesson = {
       alone: true,
       tab: 'effects',
       say: 'Сделайте эффект «Лечение», который прибавляет хиты, и вызовите его из «Удара» при провале.',
+      goal: '«Лечение» прибавляет хиты листу, который ему передали, «Удар» зовёт его в ветке «провал», а в «Проблемах» нет ошибок.',
       hint: '«+ кнопкой», в «Что приходит» добавьте число «Сколько», в «Изменении» «Как» — «прибавить». В «Ударе» под развилкой нажмите «+ провал» и поставьте туда вызов «Лечения».',
       done: view => {
         const heal = effectBy(view.system, 'Лечение');
         const sheet = sheetOf(heal?.[1])?.key;
         const hp = fieldBy(view.system, 'Хиты')?.tag;
-        const arm = successArm(view);
         return Boolean(heal && sheet && hp
-          && stepsOf(heal[1]).some(step => step.type === 'apply' && step.direction === 'add' && reads(step.target, `@${sheet}.${hp}`))
-          && callsOf(view, heal[0]).some(step => !arm.includes(step))
+          && stepsOf(heal[1]).some(step => step.type === 'apply' && adds(step) && is(step.target, `@${sheet}.${hp}`))
+          && callsOf(view, heal[0]).some(step => failArm(view).includes(step))
           && errorsOf(view.system) === 0);
       },
       result: () => 'При провале «Удар» зовёт «Лечение».',

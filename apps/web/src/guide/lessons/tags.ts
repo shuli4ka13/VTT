@@ -1,6 +1,6 @@
 import type { System, Effect, Handler } from '@vtt/schema';
 import type { Lesson, View, Move } from '../types.ts';
-import { effectBy, stepsOf, errorsOf } from '../find.ts';
+import { effectBy, stepsOf, errorsOf, is, numberOf, exprOf } from '../find.ts';
 import { problemsClean } from './first-system.ts';
 import seed from '../seeds/tags.json' with { type: 'json' };
 
@@ -25,9 +25,16 @@ const removesBurning = (view: View): boolean => {
   const burning = keyOf(view, 'Горение');
   return Boolean(burning) && (gainedTag(view)?.steps ?? []).some(step => {
     const raw = step as unknown as Record<string, unknown>;
-    return raw.type === 'status' && raw.mode === 'remove' && raw.effect === burning && Boolean(raw.to);
+    return raw.type === 'status' && raw.mode === 'remove' && raw.effect === burning && carrier(raw.to);
   });
 };
+
+const aboutCarrier = (handler: Handler | undefined): boolean => {
+  const text = exprOf(handler?.if).replace(/\s+/g, '');
+  return /^@[\p{L}\p{N}_]+==@носитель$/u.test(text) || /^@носитель==@[\p{L}\p{N}_]+$/u.test(text);
+};
+
+const carrier = (value: unknown): boolean => is(value, '@лист') || is(value, '@носитель');
 
 const luck = (view: View): Handler | undefined => handlers(view, 'Удача').find(handler => handler.on === 'seen');
 
@@ -47,6 +54,7 @@ export const tags: Lesson = {
   id: 'tags',
   title: 'Метки и реакции',
   sub: 'Метка на эффекте, подписка «появился с меткой» и «кроме меток» у броска.',
+  start: 'заведены эффекты «Сырость», «Горение», «Удача», «Холод», «Иней» и «Согреться», пока пустые: без меток и подписок.',
   seed: seed as unknown as System,
   tab: 'effects',
   chapters: [
@@ -62,10 +70,13 @@ export const tags: Lesson = {
       tab: 'effects',
       panel: 'Библиотека эффектов',
       say: 'Поставьте «Сырости» метку «гасит огонь».',
-      hint: 'Свойств не видно? Нажмите «свойства» рядом с названием эффекта. В «Метки» выберите «новая метка…», впишите слово и нажмите «добавить».',
       at: [
         opened('Сырость'),
-        { at: { field: 'Метки' }, say: 'В «Метки» выберите «новая метка…», впишите «гасит огонь» и нажмите «добавить».' },
+        {
+          at: { field: 'Метки' },
+          say: 'В «Метки» выберите «новая метка…» и впишите «гасит огонь»: метка встанет, когда вы нажмёте «добавить».',
+          hint: 'Свойств не видно? Нажмите «свойства» рядом с названием эффекта.',
+        },
       ],
       via: { text: 'свойства' },
       done: view => (effect(view, 'Сырость')?.tags ?? []).includes(TAG),
@@ -77,12 +88,11 @@ export const tags: Lesson = {
       tab: 'effects',
       panel: 'Библиотека эффектов',
       say: 'Подпишите «Горение» на появление эффекта с меткой «гасит огонь».',
-      hint: 'Пункта «с меткой «гасит огонь»» в «Какое» нет, пока метка не стоит ни у одного эффекта, — вернитесь к прошлому шагу.',
       at: [
         opened('Горение'),
         { at: { text: '+ когда' }, say: 'Нажмите «+ когда».', done: view => handlers(view, 'Горение').length > 0 },
         { at: { text: 'Что случилось' }, say: 'В «Что случилось» выберите «эффект появился на листе».', done: view => (fresh(view, 'Горение')?.on ?? '').startsWith('gained:') },
-        { at: { text: 'Какое' }, say: 'В «Какое» выберите «с меткой «гасит огонь»».' },
+        { at: { text: 'Какое' }, say: 'В «Какое» выберите «с меткой «гасит огонь»».', hint: 'Пункта «с меткой «гасит огонь»» в «Какое» нет, пока метка не стоит ни у одного эффекта, — вернитесь к прошлому шагу.' },
       ],
       done: view => Boolean(gainedTag(view)),
       result: () => '«Горение» слышит появление эффекта с меткой «гасит огонь».',
@@ -94,9 +104,9 @@ export const tags: Lesson = {
       say: 'В «Кого касается» выберите «Лист» — носитель: чтобы «Горение» гасло только у того, на кого попала «Сырость».',
       hint: 'Без этого подписка сработает на всех листах комнаты, где висит «Горение».',
       at: { text: 'Кого касается' },
-      done: view => (gainedTag(view)?.if?.expr ?? '').includes('@носитель'),
+      done: view => aboutCarrier(gainedTag(view)),
       traps: [{
-        when: view => Boolean(gainedTag(view)) && !(gainedTag(view)?.if?.expr ?? '').includes('@носитель') && Boolean(gainedTag(view)?.if),
+        when: view => Boolean(gainedTag(view)) && !aboutCarrier(gainedTag(view)) && Boolean(gainedTag(view)?.if),
         say: 'Условие стоит, но в нём нет «носитель». Выберите «Лист — носитель» в «Кого касается».',
       }],
       result: () => 'Подписка касается только листа-носителя.',
@@ -140,7 +150,7 @@ export const tags: Lesson = {
       say: 'Под подпиской нажмите «+ прибавить»: к подходящему броску добавится единица.',
       hint: '«+ прибавить» появляется только у подписки «кости выпали».',
       at: { text: '+ прибавить' },
-      done: view => (luck(view)?.steps ?? []).some(step => step.type === 'roll-plus'),
+      done: view => (luck(view)?.steps ?? []).some(step => step.type === 'roll-plus' && numberOf((step as unknown as { value?: unknown }).value) === 1),
       result: () => '«Удача» прибавляет к броску.',
     },
     {
@@ -157,6 +167,7 @@ export const tags: Lesson = {
       lead: 'Последнее задание — без подсказок.',
       alone: true,
       tab: 'effects',
+      goal: 'у «Холода» и «Инея» одна общая метка, «Согреться» снимает всё с этой меткой, а в «Проблемах» нет ошибок.',
       say: 'Пусть эффект «Согреться» снимает с носителя «Холод» и «Иней» разом: поставьте им одну метку и снимите все эффекты с этой меткой.',
       hint: 'Метка — в свойствах «Холода» и «Инея». В «Согреться»: «+ изменение» → «состояние» → «снимаем» → «Снять» → «все эффекты с меткой».',
       done: view => sharedTag(view).length > 0 && clearsByTag(view) && errorsOf(view.system) === 0,

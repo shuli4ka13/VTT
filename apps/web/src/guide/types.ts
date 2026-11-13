@@ -16,6 +16,7 @@ export interface View {
   block: string | null;
   field: string | null;
   opened: (name: string) => boolean;
+  bar?: string | null;
 }
 
 export interface Trap {
@@ -26,6 +27,7 @@ export interface Trap {
 export interface Move {
   at: Anchor | Anchor[];
   say?: string;
+  hint?: string;
   done?: (view: View) => boolean;
 }
 
@@ -40,6 +42,7 @@ export interface Step {
   lead?: string;
   say: string;
   alone?: boolean;
+  goal?: string;
   traps?: Trap[];
   result?: (view: View) => string;
   hint?: string;
@@ -54,6 +57,7 @@ export interface Lesson {
   id: string;
   title: string;
   sub: string;
+  start?: string;
   seed: System;
   tab: ConstructorTab;
   chapters: Chapter[];

@@ -4,6 +4,8 @@ import { flattenSystem } from '@vtt/engine/model/inherit';
 import { armsOf, flowOf } from '@vtt/engine/model/flow';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import type { Field } from '@vtt/engine/model/types';
+import { compile } from '@vtt/engine/formula';
+import type { Anchor, View } from './types.ts';
 
 export const same = (a: unknown, b: string): boolean =>
   typeof a === 'string' && a.trim().toLowerCase() === b.trim().toLowerCase();
@@ -45,6 +47,24 @@ const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\
 
 export const reads = (value: unknown, ref: string): boolean =>
   new RegExp(`${escape(ref)}(?![\\p{L}\\p{N}_])`, 'u').test(exprOf(value));
+
+const squash = (text: string): string => text.replace(/\s+/g, '');
+
+export const is = (value: unknown, ref: string): boolean => squash(exprOf(value)) === squash(ref);
+
+export const figure = (value: unknown, vars: Record<string, unknown>): unknown => {
+  try { return compile(exprOf(value)).evaluate(path => vars[path]); } catch { return undefined; }
+};
+
+export const FORMULA_DONE: Anchor = { guide: 'formula-done' };
+
+export const barOpen = (view: View): boolean => view.bar !== undefined && view.bar !== null;
+
+export const barText = (view: View): string => view.bar ?? '';
+
+export const subtracts = (step: Record<string, unknown>): boolean => step.direction === undefined || step.direction === 'subtract';
+
+export const adds = (step: Record<string, unknown>): boolean => step.direction === 'add';
 
 export const isStep = (step: EffectStep | Record<string, unknown>, type: string): boolean =>
   (step as { type?: unknown }).type === type;

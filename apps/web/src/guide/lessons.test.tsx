@@ -1,11 +1,14 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { render, cleanup, act, fireEvent, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { world as W } from '@vtt/schema';
 import type { System, Step as EffectStep } from '@vtt/schema';
 import { useWorld, emptySystem } from '../store/world.ts';
 import { useGuide } from '../store/guide.ts';
+import { useFormulaBar } from '../store/formula-bar.ts';
 import { SystemBar } from '../screens/constructor/world-bar.tsx';
 import { ConstructorScreen } from '../screens/constructor/constructor.tsx';
 import { addColumn } from '../screens/constructor/rules/character-section.tsx';
@@ -15,6 +18,8 @@ import { TABS } from '../words.ts';
 import { GuideLayer, PAUSE_MS, useView, movesOf, moveAt, pointOf } from './guide-card.tsx';
 import { LESSONS, lessonOf } from './lessons/index.ts';
 import { findAnchor, firstOf, openedDialog } from './anchor.ts';
+import { compile } from '@vtt/engine/formula';
+import { FORBIDDEN_STEMS } from '../words.ts';
 import { errorsOf } from './find.ts';
 import { bring } from '../store/fresh.ts';
 import { PIECES, bringPiece } from '@vtt/engine/model/pieces';
@@ -59,6 +64,10 @@ const problemsOf = () => lintSystem(flattenSystem(useWorld.getState().system, tr
 const toggleProblems = () => { act(() => { fireEvent.click(findAnchor({ guide: 'problems' })!.querySelector('button')!); }); };
 const openProblems = () => { if (!openedDialog('Проблемы системы')) toggleProblems(); };
 
+let bars = 0;
+const openBar = (value: string) => act(() => { useFormulaBar.getState().open({ id: `урок-${++bars}`, where: 'урок', value, system: useWorld.getState().system }); });
+const typeBar = (text: string) => act(() => { useFormulaBar.getState().write(text); });
+
 const SOLVE_READY: Record<string, (() => void) | (() => void)[]> = {
   take: () => takePiece('d20-abilities'),
   drop: [() => pick({ activeFieldTag: 'inspiration' }), () => dropField('inspiration')],
@@ -82,8 +91,9 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     'hp-start': () => act(() => { useWorld.getState().editColumn('лист', 'хиты', c => { c.default = 10; }); }),
     'hp-min': () => act(() => { useWorld.getState().editColumn('лист', 'хиты', c => { c.min = 0; }); }),
     ac: [
-      () => { edit(d => addColumn(d, { key: 'класс_брони', label: 'Новое поле', kind: 'number', default: 12 }, 'sheet', 'Бой')); pick({ activeFieldTag: 'класс_брони', activeBlock: null }); },
-      () => { act(() => { useWorld.getState().editColumn('лист', 'класс_брони', c => { c.label = 'Класс брони'; }); }); pick({ activeFieldTag: null, activeBlock: null }); },
+      () => { edit(d => addColumn(d, { key: 'класс_брони', label: 'Новое поле', kind: 'number' }, 'sheet', 'Бой')); pick({ activeFieldTag: 'класс_брони', activeBlock: null }); },
+      () => act(() => { useWorld.getState().editColumn('лист', 'класс_брони', c => { c.label = 'Класс брони'; }); }),
+      () => { act(() => { useWorld.getState().editColumn('лист', 'класс_брони', c => { c.default = 12; }); }); pick({ activeFieldTag: null, activeBlock: null }); },
     ],
     die: [
       () => edit(d => { (d.constants ??= {}).кость = { label: '', kind: 'die', dice: [{ sides: 20 }] }; }),
@@ -107,6 +117,8 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
         { id: 'бросок', type: 'roll', die: 'кость', by: { expr: '@действующий' } }])),
       () => edit(d => setSteps(d, 'удар', [...steps('удар'),
         { id: 'проверка', type: 'check', value: { expr: '@бросок' }, versus: { expr: '10' } }])),
+      () => openBar('10'),
+      () => typeBar('@цель.класс_брони'),
       () => edit(d => setSteps(d, 'удар', steps('удар').map(step => (step.type === 'check' ? { ...step, versus: { expr: '@цель.класс_брони' } } : step)))),
     ],
     branch: () => edit(d => setSteps(d, 'удар', [...steps('удар'), { type: 'branch', if: { expr: '@проверка.success' } }, { type: 'end' }])),
@@ -145,6 +157,9 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     modifier: [
       () => press(findAnchor({ guide: 'add-column' })!),
       () => labelColumn('таблица', 'колонка', 'Модификатор'),
+      () => { openBar(''); typeBar('округлить вниз(('); },
+      () => typeBar('округлить вниз((@строка.value'),
+      () => typeBar('округлить вниз((@строка.value - 10) / 2)'),
       () => edit(d => {
         const column = d.tables!.таблица!.columns!.find(c => c.key === 'колонка')!;
         delete (column as { kind?: string }).kind;
@@ -152,10 +167,11 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       }),
     ],
     sample: () => press(findAnchor({ text: 'образец листа' })!),
-    armor: () => {
-      act(() => { useWorld.getState().editColumn('лист', 'класс_брони', c => { c.expr = { expr: '10 + @таблица.ловкость.колонка' } as never; }); });
-      pick({ activeFieldTag: 'класс_брони' });
-    },
+    armor: [
+      () => { pick({ activeFieldTag: 'класс_брони' }); openBar(''); typeBar('10 + '); },
+      () => typeBar('10 + @таблица.ловкость.колонка'),
+      () => act(() => { useWorld.getState().editColumn('лист', 'класс_брони', c => { c.expr = { expr: '10 + @таблица.ловкость.колонка' } as never; }); }),
+    ],
     problems: openProblems,
     skills: [
       () => { edit(d => { d.blocks!.push({ name: 'Новый блок', parts: [] }); }); pick({ activeBlock: 'Новый блок', activeFieldTag: null, activeSheetTable: null }); },
@@ -217,6 +233,8 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     returns: [
       () => press(findAnchor({ text: '+ итог' })!),
       () => edit(d => { d.effects.урон!.returns = [{ key: 'осталось', label: 'Осталось', kind: 'number' }] as never; }),
+      () => openBar(''),
+      () => typeBar('@действующий.хиты'),
       () => edit(d => { d.effects.урон!.returns = [{ key: 'осталось', label: 'Осталось', kind: 'number', expr: { expr: '@действующий.хиты' } }] as never; }),
     ],
     call: [
@@ -243,6 +261,8 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     param: [
       () => press(findAnchor({ text: '+ ещё одно' })!),
       () => edit(d => { d.effects.удар!.params!.splice(2, 1, { key: 'урон_оружия', label: 'Урон оружия', kind: 'number' }); }),
+      () => openBar('5'),
+      () => typeBar('@урон_оружия'),
       () => edit(d => setSteps(d, 'удар', steps('удар').map(step => (step.type === 'apply' ? { ...step, value: { expr: '@урон_оружия' } } : step)))),
     ],
     given: () => edit(d => { d.grants = []; }),
@@ -347,6 +367,183 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
   },
 };
 
+type Wrong = (draft: System) => Partial<View> | void;
+
+const col = (d: System, table: string, key: string) => d.tables![table]!.columns!.find(c => c.key === key)! as unknown as Record<string, unknown>;
+const stepsIn = (d: System, effect: string) => d.effects[effect]!.steps as unknown as Record<string, unknown>[];
+const stepOf = (d: System, effect: string, type: string) => stepsIn(d, effect).find(one => one.type === type)!;
+const formula = (text: string) => ({ expr: text });
+const closed: Wrong = () => ({ opened: () => false });
+const broken: Wrong = d => { stepsIn(d, 'удар').splice(0, 0, { type: 'apply', target: formula('@фантом.поле'), value: formula('1') }); };
+const dropLabel = (d: System, label: string) => {
+  for (const table of Object.values(d.tables ?? {})) table.columns = (table.columns ?? []).filter(column => column.label !== label);
+};
+const setExpr = (table: string, key: string, text: string): Wrong => d => { col(d, table, key).expr = formula(text); };
+
+const BAD: Record<string, Record<string, Wrong[]>> = {
+  'first-system': {
+    block: [d => { d.blocks![0]!.name = 'Битва'; }],
+    hp: [d => { col(d, 'лист', 'хиты').label = 'Здоровье'; }],
+    'hp-start': [d => { col(d, 'лист', 'хиты').default = 5; }, d => { delete col(d, 'лист', 'хиты').default; }],
+    'hp-min': [d => { col(d, 'лист', 'хиты').min = 1; }, d => { delete col(d, 'лист', 'хиты').min; }],
+    ac: [d => { col(d, 'лист', 'класс_брони').default = 10; }],
+    die: [d => { d.constants!.кость!.dice![0]!.sides = 6; }, d => { d.constants!.кость!.label = 'Кубик'; }],
+    strike: [d => { d.effects.удар!.label = 'Атака'; }],
+    everyone: [d => { d.grants = []; }],
+    targets: [d => { (d.effects.удар!.params![1] as { many?: boolean }).many = false; }, d => { d.effects.удар!.params![1]!.label = 'Враги'; }],
+    each: [d => { stepOf(d, 'удар', 'each').of = 'другие'; }],
+    check: [
+      d => { stepOf(d, 'удар', 'check').versus = formula('@цель.хиты'); },
+      d => { stepOf(d, 'удар', 'check').versus = formula('@действующий.класс_брони'); },
+      d => { stepOf(d, 'удар', 'check').versus = formula('@цель.класс_брони + 1'); },
+      d => { stepOf(d, 'удар', 'check').versus = formula('10'); },
+      d => { d.constants!.кость!.label = 'Кубик'; },
+    ],
+    branch: [d => { stepOf(d, 'удар', 'branch').if = formula('не @проверка.success'); }],
+    damage: [
+      d => { stepOf(d, 'удар', 'apply').direction = 'add'; },
+      d => { stepOf(d, 'удар', 'apply').value = formula('3'); },
+      d => { stepOf(d, 'удар', 'apply').target = formula('@действующий.хиты'); },
+      d => { stepOf(d, 'удар', 'apply').target = formula('@цель.класс_брони'); },
+    ],
+    problems: [closed, broken],
+    heal: [
+      d => { delete stepOf(d, 'лечение', 'apply').direction; },
+      d => { stepOf(d, 'лечение', 'apply').value = formula('4'); },
+      d => { stepOf(d, 'лечение', 'apply').target = formula('@цель.хиты'); },
+    ],
+  },
+  tables: {
+    block: [d => { d.blocks!.find(one => one.name === 'Характеристики')!.name = 'Статы'; }],
+    table: [d => { d.tables!.таблица!.label = 'Статы'; }],
+    rows: [d => { d.tables!.таблица!.rows = [{ value: 'сила' }, { value: 'ум' }]; }],
+    modifier: [
+      setExpr('таблица', 'колонка', '@строка.value / 2'),
+      setExpr('таблица', 'колонка', '(@строка.value - 10) / 2'),
+      setExpr('таблица', 'колонка', '@строка.value - 10'),
+      setExpr('таблица', 'колонка', 'округлить вниз((@строка.value - 10) / 2) + 1'),
+    ],
+    armor: [
+      setExpr('лист', 'класс_брони', '10 + @таблица.сила.колонка'),
+      setExpr('лист', 'класс_брони', '@таблица.ловкость.колонка'),
+      setExpr('лист', 'класс_брони', '10 - @таблица.ловкость.колонка'),
+    ],
+    problems: [closed],
+    skills: [d => { d.tables!.таблица_2!.rows = [{ value: 'акробатика' }]; }, d => { d.tables!.таблица_2!.label = 'Умения'; }],
+    link: [d => { col(d, 'таблица_2', 'колонка').kind = 'number'; }, d => { col(d, 'таблица_2', 'колонка').from = 'лист'; }],
+    pick: [d => { d.tables!.таблица_2!.rows = [{ value: 'атлетика', cells: { колонка: 'ловкость' } }]; }],
+    through: [
+      setExpr('таблица_2', 'колонка_2', '@строка.колонка.колонка - @строка.value'),
+      setExpr('таблица_2', 'колонка_2', '@строка.колонка.колонка'),
+      setExpr('таблица_2', 'колонка_2', '@строка.value + @строка.value'),
+    ],
+    save: [setExpr('таблица', 'колонка_3', '@строка.колонка + 1'), setExpr('таблица', 'колонка_3', '@строка.value')],
+  },
+  links: {
+    called: [d => { d.effects.урон!.label = 'Вред'; }],
+    amount: [d => { delete d.effects.урон!.params![1]!.role; }, d => { d.effects.урон!.params![1]!.label = 'Количество'; }],
+    target: [d => { delete d.effects.урон!.params![0]!.role; }],
+    apply: [
+      d => { stepOf(d, 'урон', 'apply').direction = 'add'; },
+      d => { stepOf(d, 'урон', 'apply').value = formula('1 - @amount'); },
+      d => { stepOf(d, 'урон', 'apply').target = formula('@действующий.класс_брони'); },
+      d => { stepOf(d, 'урон', 'apply').value = formula('5'); },
+    ],
+    returns: [
+      d => { (d.effects.урон!.returns![0] as { expr?: unknown }).expr = formula('@действующий.класс_брони'); },
+      d => { d.effects.урон!.returns![0]!.kind = 'boolean'; },
+      d => { d.effects.урон!.returns![0]!.label = 'Остаток'; },
+    ],
+    call: [
+      d => { (stepOf(d, 'удар', 'emit').args as Record<string, unknown>).amount = formula('7'); },
+      d => { (stepOf(d, 'удар', 'emit').args as Record<string, unknown>).действующий = formula('@действующий'); },
+      d => { const list = stepsIn(d, 'удар'); const emit = stepOf(d, 'удар', 'emit'); list.splice(list.indexOf(emit), 1); list.unshift(emit); },
+    ],
+    drop: [
+      d => { stepsIn(d, 'удар').unshift({ type: 'apply', target: formula('@цель.хиты'), value: formula('5') }); },
+      d => { d.effects.удар!.steps = stepsIn(d, 'удар').filter(one => one.type !== 'emit') as never; },
+    ],
+    name: [d => { stepOf(d, 'удар', 'emit').id = ''; }],
+    problems: [closed],
+    heal: [
+      d => { delete stepOf(d, 'лечение', 'apply').direction; },
+      d => { d.effects.удар!.steps = stepsIn(d, 'удар').filter(one => one.type !== 'orElse') as never; },
+    ],
+  },
+  items: {
+    kind: [d => { d.tables!.kind!.label = 'Оружие2'; }],
+    param: [
+      d => { stepOf(d, 'удар', 'apply').value = formula('5'); },
+      d => { d.effects.удар!.params![2]!.label = 'Урон'; },
+    ],
+    given: [d => { d.grants = ['удар']; }],
+    button: [d => { d.tables!.kind!.bindings = []; }, d => { d.tables!.kind!.columns = []; }],
+    modifier: [
+      d => { (d.tables!.kind!.modifiers![0] as { value: unknown }).value = formula('2'); },
+      d => { (d.tables!.kind!.modifiers![0] as { op: string }).op = 'set'; },
+      d => { (d.tables!.kind!.modifiers![0] as { target: string }).target = 'хиты'; },
+    ],
+    problems: [closed],
+    armor: [d => { (d.tables!.kind_2!.modifiers![0] as { target: string }).target = 'хиты'; }],
+  },
+  tags: {
+    tag: [d => { d.effects.сырость!.tags = ['гасит воду']; }],
+    when: [d => { d.effects.горение!.on![0]!.on = 'gained:'; }, d => { d.effects.горение!.on![0]!.on = 'gained:гасит воду'; }],
+    who: [d => { d.effects.горение!.on![0]!.if = formula('@лист != @носитель'); }, d => { d.effects.горение!.on![0]!.if = formula('@лист'); }],
+    remove: [
+      d => { (d.effects.горение!.on![0]!.steps![0] as unknown as { to: unknown }).to = formula('@действующий'); },
+      d => { (d.effects.горение!.on![0]!.steps![0] as unknown as { effect: string }).effect = 'сырость'; },
+      d => { (d.effects.горение!.on![0]!.steps![0] as unknown as { mode: string }).mode = 'add'; },
+    ],
+    seen: [d => { d.effects.удача!.on![0]!.notTags = ['атака']; }, d => { d.effects.удача!.on![0]!.notTags = []; }],
+    plus: [d => { (d.effects.удача!.on![0]!.steps![0] as unknown as { value: unknown }).value = formula('2'); }],
+    problems: [closed],
+    clear: [d => { d.effects.иней!.tags = ['другая']; }, d => { delete (stepOf(d, 'согреться', 'status') as { by?: string }).by; }],
+  },
+  spells: {
+    open: [() => ({ record: null })],
+    cast: [
+      d => { (d.tables!.заклинание!.bindings![0] as unknown as { args: Record<string, unknown> }).args.срок = formula('@другое'); },
+      d => { d.tables!.заклинание!.bindings![0]!.effect = 'прекращение'; },
+    ],
+    stop: [d => { d.tables!.заклинание!.bindings![1]!.effect = 'сотворить'; }],
+    if: [d => { d.tables!.заклинание!.bindings![1]!.if = formula('не @срок.держится'); }, d => { delete d.tables!.заклинание!.bindings![1]!.if; }],
+    bond: [d => { d.effects.сотворить!.bond!.effect = 'прекращение'; }],
+    many: [d => { d.effects.сотворить!.bond!.many = false; }],
+    problems: [closed],
+    term: [d => { const row = d.tables!.сроки!.rows!.find(one => one.value === 'час')!; row.cells = { держится: false }; }],
+  },
+  templates: {
+    open: [() => ({ sheetKind: null })],
+    target: [d => { (d.sheets!.по_заготовке!.modifiers![0] as { target: string }).target = 'cell:навыки.*.другое'; }],
+    op: [d => { (d.sheets!.по_заготовке!.modifiers![0] as { op: string }).op = 'add'; }],
+    value: [
+      d => { (d.sheets!.по_заготовке!.modifiers![0] as { value: unknown }).value = formula('@заготовка'); },
+      d => { (d.sheets!.по_заготовке!.modifiers![0] as { value: unknown }).value = formula('@заготовка.[@строка] + 1'); },
+    ],
+    when: [d => { (d.sheets!.по_заготовке!.modifiers![0] as { if: unknown }).if = formula('пусто(@заготовка)'); }],
+    problems: [closed],
+    more: [d => { d.tables!.заготовки!.rows!.pop(); }],
+  },
+  combat: {
+    if: [d => { stepOf(d, 'удар', 'branch').if = formula('не @стол.бой'); }],
+    spend: [d => { stepOf(d, 'удар', 'apply').value = formula('2'); }, d => { stepOf(d, 'удар', 'apply').direction = 'add'; }],
+    problems: [closed],
+    refuse: [
+      d => { stepsIn(d, 'удар')[0]!.if = formula('@действующий.действий_осталось < 1'); },
+      d => { stepsIn(d, 'удар')[0]!.if = formula('@стол.бой'); },
+    ],
+  },
+  ready: {
+    take: [d => { const table = Object.values(d.tables!).find(one => one.label === 'Характеристики')!; table.rows = table.rows!.filter(row => row.value !== 'харизма'); }],
+    drop: [d => { d.tables!.лист!.columns!.push({ key: 'вдохновение', label: 'Вдохновение', kind: 'number' } as never); }],
+    problems: [closed],
+    effect: [d => { for (const key of Object.keys(d.effects)) if (d.effects[key]!.label === 'Отход') delete d.effects[key]; }],
+    'problems-effect': [closed],
+    other: [d => { dropLabel(d, 'Физический урон'); }],
+  },
+};
+
 const takePiece = (id: string) => {
   const piece = PIECES.find(one => one.id === id)!;
   act(() => { bring(`«${piece.label}»`, current => bringPiece(current, piece)); });
@@ -371,7 +568,8 @@ const realWorld = (): System => ({ ...emptySystem(), name: 'Моя систем�
 
 const reset = () => {
   try { localStorage.clear(); } catch { return; }
-  useGuide.setState({ lesson: null, step: 0, folded: false, note: null, started: {} });
+  useFormulaBar.getState().dismiss();
+  useGuide.setState({ lesson: null, step: 0, folded: false, note: null, finished: null, started: {} });
   useWorld.getState().replaceWorld({ system: realWorld(), compendium: { records: [] }, sheets: [] });
   useWorld.setState({ origin: { mode: 'system' }, activeTab: 'sheet' });
 };
@@ -413,6 +611,12 @@ describe('уроки конструктора', () => {
         if (typeof solve === 'function') solve();
         openAll();
         if (step.done) expect(step.done(view!), `${lesson.id}/${step.id}: решение не засчитано ${problemsOf()}`).toBe(true);
+        for (const [n, wrong] of (BAD[lesson.id]?.[step.id] ?? []).entries()) {
+          const system = structuredClone(useWorld.getState().system);
+          const extra = wrong(system) ?? {};
+          expect(Object.keys(extra).length > 0 || JSON.stringify(system) !== JSON.stringify(useWorld.getState().system), `${lesson.id}/${step.id}: неверное решение ${n + 1} ничего не меняет`).toBe(true);
+          expect(step.done!({ ...view!, ...extra, system }), `${lesson.id}/${step.id}: неверное решение ${n + 1} засчитано`).toBe(false);
+        }
       }
       expect(errorsOf(useWorld.getState().system), `${lesson.id}: итог с ошибками`).toBe(0);
     });
@@ -448,16 +652,18 @@ describe('уроки конструктора', () => {
       expect(cardText()).toContain('Глава «');
       next(id);
     };
-    const inBar = (box: HTMLElement, text: string) => {
+    const inBar = (box: HTMLElement, text: string, probes: { opened?: () => void; typed?: () => void } = {}) => {
       act(() => { fireEvent.click(box.querySelector('.formula-field') ?? box); });
+      probes.opened?.();
       const chips = document.querySelector('.formula-bar .chips')!;
       act(() => { for (const x of [...chips.querySelectorAll<HTMLElement>('.chips__x')].reverse()) fireEvent.mouseDown(x); });
       const inputs = [...document.querySelectorAll<HTMLInputElement>('.formula-bar input.chips__text')];
       act(() => {
         for (const other of inputs.slice(1)) fireEvent.change(other, { target: { value: '' } });
         fireEvent.change(inputs[0]!, { target: { value: text } });
-        fireEvent.keyDown(inputs[0]!, { key: 'Enter' });
       });
+      probes.typed?.();
+      act(() => { fireEvent.keyDown(inputs[0]!, { key: 'Enter' }); });
       openAll();
     };
     const clickAt = (anchor: Parameters<typeof findAnchor>[0]) => {
@@ -519,7 +725,11 @@ describe('уроки конструктора', () => {
     await pass('check', () => {
       ui.click('+ бросок');
       ui.click('+ проверка');
-      inBar(within(stepCard(/^3 · /)).field('С чем'), '@цель.класс_брони');
+      const checkStep = lesson.steps.find(one => one.id === 'check')!;
+      inBar(within(stepCard(/^3 · /)).field('С чем'), '@цель.класс_брони', {
+        opened: () => expect(moveAt(checkStep, view!), 'строка открылась — ход «щёлкните поле» засчитан').toBe(3),
+        typed: () => expect(moveAt(checkStep, view!), 'формула набрана — ход «наберите и выберите» засчитан').toBe(4),
+      });
     });
     await pass('branch', () => { within(stepCard(/^3 · /)).click('+ по итогу'); });
     addToArm(block(0), 0, 'change');
@@ -560,6 +770,17 @@ describe('уроки конструктора', () => {
     expect(useGuide.getState().started['first-system']).toBeUndefined();
     expect(useWorld.getState().system).toEqual(realWorld());
     expect(useWorld.getState().origin.lesson).toBeUndefined();
+  });
+
+  it('у каждого шага с условием есть неверное решение, и у каждого неверного решения есть шаг с условием', () => {
+    for (const lesson of LESSONS) {
+      for (const step of lesson.steps) {
+        expect(Boolean(step.done), `${lesson.id}/${step.id}: условие`).toBe(Boolean(BAD[lesson.id]?.[step.id]?.length));
+      }
+    }
+    for (const [lessonId, byStep] of Object.entries(BAD)) {
+      for (const stepId of Object.keys(byStep)) expect(lessonOf(lessonId)!.steps.some(one => one.id === stepId), `${lessonId}/${stepId}`).toBe(true);
+    }
   });
 
   it('урок — данные: главы по 3–5 шагов (кроме задания), последний шаг — задание без подсветки, у засчитываемых шагов итог словами', () => {
@@ -658,5 +879,193 @@ describe('уроки конструктора', () => {
     ] as never;
     const view = { system, tab: 'effects', effect: 'удар', record: null, sheetKind: null, block: null, field: null, opened: () => true } as View;
     expect(refuse.done!(view)).toBe(true);
+  });
+});
+
+describe('окошко урока', () => {
+  beforeEach(reset);
+  afterEach(() => { cleanup(); vi.useRealTimers(); });
+
+  const at = () => useGuide.getState().step;
+  const stepIndex = (lessonId: string, id: string) => lessonOf(lessonId)!.steps.findIndex(one => one.id === id);
+  const gone = async (ms: number) => { await act(async () => { vi.advanceTimersByTime(ms); }); };
+  const makeBlock = () => edit(d => { d.blocks = [{ name: 'Бой', parts: [] }]; });
+  const back = () => act(() => { fireEvent.click(within(card()).button('Назад')); });
+
+  it('«Назад» после автоперехода: окошко остаётся на шаге, даже если решение сделано заново', async () => {
+    vi.useFakeTimers();
+    mount();
+    await start('first-system');
+    makeBlock();
+    await gone(300);
+    await gone(PAUSE_MS + 100);
+    expect(at()).toBe(1);
+    back();
+    expect(at()).toBe(0);
+    await gone(PAUSE_MS * 3);
+    expect(at()).toBe(0);
+    makeBlock();
+    await gone(PAUSE_MS * 3);
+    expect(at()).toBe(0);
+    expect(cardText()).toContain('Дальше');
+  });
+
+  it('условие стало истинным и до конца паузы снова ложным — автоперехода нет', async () => {
+    vi.useFakeTimers();
+    mount();
+    await start('first-system');
+    makeBlock();
+    await gone(300);
+    await gone(PAUSE_MS / 3);
+    edit(d => { d.blocks = []; });
+    await gone(PAUSE_MS * 3);
+    expect(at()).toBe(0);
+  });
+
+  it('на первом шаге урока сказано, с чего он начинается; у шага «Сами» под заданием — «Готово, когда»', async () => {
+    mount();
+    await start('links');
+    expect(cardText()).toContain('С чего начинаем: у вас уже есть «Удар»: он сам отнимает у цели 5 хитов');
+    act(() => { useGuide.getState().go(stepIndex('links', 'amount')); });
+    expect(cardText()).not.toContain('С чего начинаем');
+    act(() => { useGuide.getState().go(stepIndex('links', 'heal')); });
+    expect(cardText()).toContain('Готово, когда: «Лечение» прибавляет');
+    cleanup();
+    await act(async () => { await useGuide.getState().exit(); });
+    mount();
+    await start('first-system');
+    expect(cardText()).not.toContain('С чего начинаем');
+  });
+
+  it('«Не получается?» показывает подсказку текущего хода, а не всего шага', async () => {
+    mount();
+    await start('first-system');
+    act(() => { useGuide.getState().go(stepIndex('first-system', 'hp')); });
+    expect(cardText()).toContain('Кнопки «+ поле» не видно?');
+    edit(d => { d.blocks = [{ name: 'Бой', parts: [] }]; addColumn(d, { key: 'хиты', label: 'Новое поле', kind: 'number' }, 'sheet', 'Бой'); });
+    expect(cardText()).not.toContain('Кнопки «+ поле» не видно?');
+  });
+
+  it('конец урока: «Урок пройден», что получилось, «Следующий урок» и «Закрыть»', async () => {
+    mount();
+    await start('items');
+    act(() => { useGuide.getState().go(lessonOf('items')!.steps.length - 1); });
+    await act(async () => { expect(await useGuide.getState().finish()).toBe(true); });
+    const done = screen.getByRole('region', { name: 'Урок пройден' });
+    const text = (done.textContent ?? '').replace(/\s+/g, ' ');
+    expect(text).toContain('Урок пройден');
+    expect(text).toContain('Вы завели тип вещи с правкой без подсказок.');
+    expect(text).toContain('Следующий урок: Метки и реакции');
+    expect(text).not.toContain('Все уроки пройдены');
+    await act(async () => { fireEvent.click(within(done).button('Следующий урок: Метки и реакции')); });
+    expect(useGuide.getState().lesson).toBe('tags');
+    expect(useGuide.getState().finished).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Урок пройден' })).toBeNull();
+  });
+
+  it('после последнего урока — «Все уроки пройдены», без «Следующий урок»; «Закрыть» убирает окошко', async () => {
+    mount();
+    const last = LESSONS.at(-1)!;
+    await start(last.id);
+    await act(async () => { await useGuide.getState().finish(); });
+    const done = screen.getByRole('region', { name: 'Урок пройден' });
+    const text = (done.textContent ?? '').replace(/\s+/g, ' ');
+    expect(text).toContain('Все уроки пройдены');
+    expect(text).not.toContain('Следующий урок');
+    act(() => { fireEvent.click(within(done).button('Закрыть')); });
+    expect(screen.queryByRole('region', { name: 'Урок пройден' })).toBeNull();
+    expect(useGuide.getState().finished).toBeNull();
+  });
+});
+
+const VERBS = ['нажмите', 'впишите', 'выберите', 'наберите', 'сотрите', 'щёлкните', 'щелкните', 'откройте', 'раскройте', 'поставьте', 'снимите', 'перетащите', 'задайте', 'добавьте', 'уберите'];
+const VERB_RE = new RegExp(`(?<![\\p{L}])(${VERBS.join('|')})(?![\\p{L}])`, 'giu');
+const PLACES = /(в шапке|на вкладке|слева|справа|под |в строке|в панели|в блоке|в виде|над листом|в разделе|в списке|в «)/iu;
+const FORMULA_LIKE = /^@\S|\S [-+] \S/;
+
+const sourceDir = join(__dirname, 'lessons');
+const sourceTexts = readdirSync(sourceDir).filter(name => name.endsWith('.ts')).flatMap(name => {
+  const code = readFileSync(join(sourceDir, name), 'utf8');
+  return [...code.matchAll(/'((?:[^'\\\n]|\\.)*)'|`((?:[^`\\]|\\.)*)`/g)]
+    .map(found => found[1] ?? found[2] ?? '')
+    .filter(text => /\p{L}/u.test(text) && /[а-яё]/iu.test(text))
+    .map(text => ({ file: name, text }));
+});
+
+const dataTexts = (lesson: (typeof LESSONS)[number]): string[] => [
+  lesson.title, lesson.sub, lesson.start ?? '',
+  ...lesson.chapters.flatMap(chapter => [chapter.title, chapter.sum]),
+  ...lesson.steps.flatMap(step => [
+    step.lead ?? '', step.say, step.hint ?? '', step.goal ?? '',
+    ...movesOf(step).flatMap(move => [move.say ?? '', move.hint ?? '']),
+    ...(step.traps ?? []).map(trap => trap.say),
+  ]),
+].filter(Boolean);
+
+const actionsOf = (text: string): number => (text.match(VERB_RE) ?? []).length;
+
+const turns = (step: (typeof LESSONS)[number]['steps'][number]): { say: string; has: boolean }[] =>
+  Array.isArray(step.at) ? step.at.map(move => ({ say: move.say ?? '', has: true })) : [{ say: step.say, has: step.at !== undefined }];
+
+describe('тексты уроков', () => {
+  it('знака «−» нет нигде: в формуле дефис-минус, в прозе слово «минус»', () => {
+    const bad = sourceTexts.filter(one => one.text.includes('\u2212')).map(one => `${one.file}: ${one.text}`);
+    expect(bad, bad.join('\n')).toEqual([]);
+    for (const lesson of LESSONS) expect(dataTexts(lesson).filter(text => text.includes('\u2212')), lesson.id).toEqual([]);
+  });
+
+  it('всё, что в «ёлочках» похоже на формулу, разбирается парсером формул', () => {
+    const bad: string[] = [];
+    for (const one of sourceTexts) {
+      for (const found of one.text.matchAll(/«([^«»]*)»/g)) {
+        const part = found[1]!;
+        if (!FORMULA_LIKE.test(part)) continue;
+        try { compile(part); } catch (error) { bad.push(`${one.file}: «${part}» — ${(error as Error).message}`); }
+      }
+    }
+    expect(bad, bad.join('\n')).toEqual([]);
+  });
+
+  it('в одном ходу не больше двух действий', () => {
+    const bad: string[] = [];
+    for (const lesson of LESSONS) {
+      for (const step of lesson.steps) {
+        for (const turn of turns(step)) if (actionsOf(turn.say) > 2) bad.push(`${lesson.id}/${step.id}: ${turn.say}`);
+      }
+    }
+    expect(bad, bad.join('\n')).toEqual([]);
+  });
+
+  it('ход, который велит нажать или щёлкнуть, показывает место рамкой или называет его словами', () => {
+    const bad: string[] = [];
+    for (const lesson of LESSONS) {
+      for (const step of lesson.steps) {
+        for (const turn of turns(step)) {
+          if (/(нажмите|щёлкните|щелкните)/iu.test(turn.say) && !turn.has && !PLACES.test(turn.say)) bad.push(`${lesson.id}/${step.id}: ${turn.say}`);
+        }
+      }
+    }
+    expect(bad, bad.join('\n')).toEqual([]);
+  });
+
+  it('запрещённые слова не встречаются в текстах уроков', () => {
+    const words = [...FORBIDDEN_STEMS, 'шаг для других'];
+    const bad: string[] = [];
+    for (const one of sourceTexts) for (const word of words) if (one.text.toLowerCase().includes(word.toLowerCase())) bad.push(`${one.file}: «${word}» в «${one.text}»`);
+    for (const lesson of LESSONS) for (const text of dataTexts(lesson)) for (const word of words) if (text.toLowerCase().includes(word.toLowerCase())) bad.push(`${lesson.id}: «${word}»`);
+    expect(bad, bad.join('\n')).toEqual([]);
+  });
+
+  it('у каждого шага «Сами» есть строка «Готово, когда», у урока с непустым началом — фраза «с чего начинаем»', () => {
+    for (const lesson of LESSONS) {
+      for (const step of lesson.steps.filter(one => one.alone)) {
+        expect(step.goal?.trim(), `${lesson.id}/${step.id}`).toBeTruthy();
+        expect(step.goal, `${lesson.id}/${step.id}`).not.toMatch(/^готово/i);
+      }
+    }
+    for (const lesson of LESSONS) {
+      const filled = Boolean(lesson.seed.tables && Object.keys(lesson.seed.tables).length > 0) || Object.keys(lesson.seed.effects ?? {}).length > 0;
+      expect(Boolean(lesson.start), `${lesson.id}: фраза «с чего начинаем»`).toBe(filled);
+    }
   });
 });

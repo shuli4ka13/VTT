@@ -151,3 +151,46 @@ describe('учебная копия', () => {
     expect(useGuide.getState().started).toEqual({ tables: 0, items: 0 });
   });
 });
+
+describe('конец и переходы урока', () => {
+  beforeEach(() => { localStorage.clear(); getSystem.mockReset(); saveSystem.mockReset(); createSystem.mockReset(); });
+  afterEach(() => { vi.restoreAllMocks(); });
+
+  it('переход между шагами закрывает строку формул, «Назад» тоже', async () => {
+    const { useGuide } = await fresh();
+    const { useFormulaBar } = await import('./formula-bar.ts');
+    await useGuide.getState().start('tables');
+    const open = () => useFormulaBar.getState().open({ id: `x${Math.random()}`, where: 'x', value: '10', system: mine() });
+    open();
+    expect(useFormulaBar.getState().target).not.toBeNull();
+    useGuide.getState().go(1);
+    expect(useFormulaBar.getState().target).toBeNull();
+    open();
+    useGuide.getState().go(0);
+    expect(useFormulaBar.getState().target).toBeNull();
+  });
+
+  it('«Завершить урок» ставит «пройден» и запоминает, какой урок закончен; новый урок и «Закрыть» это сбрасывают', async () => {
+    const { useGuide } = await fresh();
+    await useGuide.getState().start('items');
+    expect(useGuide.getState().finished).toBeNull();
+    expect(await useGuide.getState().finish()).toBe(true);
+    expect(useGuide.getState().lesson).toBeNull();
+    expect(useGuide.getState().finished).toBe('items');
+    expect(useGuide.getState().passed).toContain('items');
+    useGuide.getState().closeFinish();
+    expect(useGuide.getState().finished).toBeNull();
+    await useGuide.getState().finish();
+    await useGuide.getState().start('items');
+    expect(await useGuide.getState().finish()).toBe(true);
+    expect(await useGuide.getState().start('tags')).toBe(true);
+    expect(useGuide.getState().finished).toBeNull();
+  });
+
+  it('выход из урока «пройден» не ставит', async () => {
+    const { useGuide } = await fresh();
+    await useGuide.getState().start('items');
+    expect(await useGuide.getState().exit()).toBe(true);
+    expect(useGuide.getState().finished).toBeNull();
+  });
+});

@@ -61,6 +61,7 @@ export interface GuideState {
   folded: boolean;
   run: number;
   note: string | null;
+  finished: string | null;
   passed: string[];
   started: Record<string, number>;
   marks: Record<number, System>;
@@ -71,6 +72,7 @@ export interface GuideState {
   finish: () => Promise<boolean>;
   keep: () => Promise<boolean>;
   dismiss: () => void;
+  closeFinish: () => void;
 }
 
 const marked = (id: string | null): boolean => {
@@ -114,6 +116,7 @@ export const useGuide = create<GuideState>()(persist((set, get) => ({
   folded: false,
   run: 0,
   note: null,
+  finished: null,
   passed: readPassed(),
   started: stepsOf(),
   marks: {},
@@ -140,7 +143,7 @@ export const useGuide = create<GuideState>()(persist((set, get) => ({
       return false;
     }
     const step = Math.min(entry?.step ?? 0, lesson.steps.length - 1);
-    set({ lesson: lesson.id, step, folded: false, note: null, run: get().run + 1, started: stepsOf() });
+    set({ lesson: lesson.id, step, folded: false, note: null, finished: null, run: get().run + 1, started: stepsOf() });
     useWorld.setState({ origin: { mode: 'system', systemTitle: lesson.title, lesson: lesson.id } });
     world.replaceWorld({ system: structuredClone(entry?.system ?? lesson.seed), compendium: { records: [] }, sheets: [] });
     set({ marks: { [step]: structuredClone(useWorld.getState().system) } });
@@ -166,6 +169,8 @@ export const useGuide = create<GuideState>()(persist((set, get) => ({
   fold: folded => set({ folded }),
 
   dismiss: () => set({ note: null }),
+
+  closeFinish: () => set({ finished: null, note: null }),
 
   exit: async () => {
     const id = get().lesson;
@@ -194,6 +199,7 @@ export const useGuide = create<GuideState>()(persist((set, get) => ({
     writePassed(passed);
     set({ passed });
     close();
+    set({ finished: id });
     return true;
   },
 

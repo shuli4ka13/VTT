@@ -1,6 +1,6 @@
 import type { System, Binding, Table } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
-import { effectBy, tableBy, columnBy, reads, errorsOf } from '../find.ts';
+import { effectBy, tableBy, columnBy, is, errorsOf } from '../find.ts';
 import { problemsClean } from './first-system.ts';
 import { bindingHolds } from '@vtt/engine/events/actions';
 import type { System as EngineSystem, CompendiumRecord } from '@vtt/engine/model/types';
@@ -50,6 +50,7 @@ export const spells: Lesson = {
   id: 'spells',
   title: 'Кнопки у типа записи',
   sub: 'Тип «Заклинание»: кнопка «Сотворить», кнопка «Прекратить» только для длительных, держание.',
+  start: 'есть таблица «Сроки» (мгновенное и концентрация), тип «Заклинание» со свойством «Срок» и эффекты «Сотворить», «Прекратить», «Поддержание». Кнопок у типа ещё нет.',
   seed: seed as unknown as System,
   tab: 'records',
   chapters: [
@@ -84,7 +85,7 @@ export const spells: Lesson = {
       done: view => {
         const binding = cast(view);
         const prop = termColumn(view);
-        return Boolean(binding && prop && reads(binding.args?.[castEffect(view)?.params?.find(param => param.kind === 'choice')?.key ?? ''], `@${prop}`));
+        return Boolean(binding && prop && is(binding.args?.[castEffect(view)?.params?.find(param => param.kind === 'choice')?.key ?? ''], `@${prop}`));
       },
       result: () => 'Кнопка «Сотворить» берёт «Срок» из записи.',
     },
@@ -111,9 +112,7 @@ export const spells: Lesson = {
       at: { text: 'Только если', in: 'кнопка «Прекратить»' },
       via: { text: 'ещё', in: 'кнопка «Прекратить»' },
       done: view => {
-        const prop = termColumn(view);
-        const holds = holdsColumn(view);
-        return Boolean(prop && holds && reads(stop(view)?.if, `${prop}.${holds}`));
+        return stopFollowsTerm(view) && longTerms(view) > 0;
       },
       result: () => '«Прекратить» есть только у записей с длительным сроком.',
     },
@@ -159,6 +158,7 @@ export const spells: Lesson = {
       lead: 'Последнее задание — без подсказок.',
       alone: true,
       tab: 'dictionaries',
+      goal: 'в «Сроках» не меньше двух сроков с «Держится» — да; у каждого такого срока «Прекратить» видна, у «мгновенного» нет; в «Проблемах» нет ошибок.',
       say: 'Заведите в «Сроках» ещё один срок с «Держится» — да и убедитесь, что «Прекратить» у него есть, а у «мгновенного» нет.',
       hint: 'Таблица «Сроки» — в «Правила» → «Таблицы». Новую строку заполните как «концентрацию».',
       done: view => longTerms(view) >= 2 && stopFollowsTerm(view) && stopHolds(view, 'мгновенное') === false && errorsOf(view.system) === 0,

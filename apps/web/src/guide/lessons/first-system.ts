@@ -1,7 +1,7 @@
 import { emptySystem } from '../../store/world.ts';
 import type { Lesson, View } from '../types.ts';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
-import { fieldBy, inBlock, columnOf, effectBy, stepsOf, reads, armOf, numberOf, errorsOf, exprOf, isArm } from '../find.ts';
+import { fieldBy, inBlock, columnOf, effectBy, stepsOf, reads, is, subtracts, adds, armOf, numberOf, errorsOf, exprOf, isArm, same, FORMULA_DONE, barOpen, barText } from '../find.ts';
 
 const hp = (view: View) => fieldBy(view.system, 'Хиты');
 const ac = (view: View) => fieldBy(view.system, 'Класс брони');
@@ -9,7 +9,7 @@ const strike = (view: View) => effectBy(view.system, 'Удар');
 
 const inFight = (view: View) => fieldsOf(view.system).filter(field => !field.cell && inBlock(field, 'Бой'));
 
-const targetsOf = (view: View) => (strike(view)?.[1].params ?? []).find(param => param.kind === 'sheet' && param.many && param.item?.key === 'цель');
+const targetsOf = (view: View) => (strike(view)?.[1].params ?? []).find(param => param.kind === 'sheet' && param.many && same(param.label, 'Цели') && param.item?.key === 'цель');
 const checkAt = (view: View): number => stepsOf(strike(view)?.[1]).findIndex(step => step.type === 'check');
 const rollAt = (view: View): number => stepsOf(strike(view)?.[1]).findIndex(step => step.type === 'roll' && (step as { by?: unknown }).by !== undefined);
 
@@ -18,13 +18,28 @@ const branchAt = (view: View): number => {
   const at = checkAt(view);
   const id = steps[at]?.id;
   if (at < 0 || typeof id !== 'string') return -1;
-  return steps.findIndex((step, k) => k > at && isArm(step) && reads(step.if, `@${id}.success`));
+  return steps.findIndex((step, k) => k > at && isArm(step) && is(step.if, `@${id}.success`));
 };
 
 const applies = (view: View) => stepsOf(strike(view)?.[1]).filter(step => step.type === 'apply');
 const armApplies = (view: View) => {
   const at = branchAt(view);
   return at < 0 ? [] : armOf(stepsOf(strike(view)?.[1]), at).filter(step => step.type === 'apply');
+};
+
+const checkOf = (view: View): Record<string, unknown> | undefined => stepsOf(strike(view)?.[1])[checkAt(view)];
+
+const rollsCheckDie = (view: View): boolean => {
+  const steps = stepsOf(strike(view)?.[1]);
+  const roll = steps[rollAt(view)];
+  const check = checkOf(view);
+  const die = Object.entries(view.system.constants ?? {}).find(([key]) => key === roll?.die)?.[1];
+  return Boolean(roll && check && typeof roll.id === 'string' && is(check.value, `@${roll.id}`) && die && same(die.label, 'Кость проверки'));
+};
+
+const versusOk = (view: View): boolean => {
+  const key = ac(view)?.tag;
+  return Boolean(key && is(checkOf(view)?.versus, `@цель.${key}`));
 };
 
 export const PROBLEMS = 'Проблемы системы';
@@ -63,9 +78,8 @@ export const firstSystem: Lesson = {
       chapter: 'Лист',
       tab: 'sheet',
       say: 'Добавьте в блок «Бой» поле «Хиты».',
-      hint: 'Кнопки «+ поле» не видно? Щёлкните имя блока «Бой» — он раскроется.',
       at: [
-        { at: { text: '+ поле', in: 'Листы' }, say: 'В блоке «Бой» нажмите «+ поле».', done: view => inFight(view).length > 0 },
+        { at: { text: '+ поле', in: 'Листы' }, say: 'В блоке «Бой» нажмите «+ поле».', hint: 'Кнопки «+ поле» не видно? Щёлкните имя блока «Бой» — он раскроется.', done: view => inFight(view).length > 0 },
         { at: { input: 'как зовётся поле' }, say: 'Впишите название «Хиты» и нажмите Enter.' },
       ],
       via: [{ text: 'Бой', in: 'Листы' }, { text: 'блоки и типы листов' }],
@@ -99,10 +113,10 @@ export const firstSystem: Lesson = {
       chapter: 'Лист',
       tab: 'sheet',
       say: 'Добавьте в блок «Бой» поле «Класс брони», в новом листе 12.',
-      hint: 'Кнопки «+ поле» не видно? Щёлкните имя блока «Бой».',
       at: [
-        { at: { text: '+ поле', in: 'Листы' }, say: 'В блоке «Бой» нажмите «+ поле».', done: view => inFight(view).length > 1 },
-        { at: { input: 'как зовётся поле' }, say: 'Впишите «Класс брони», нажмите Enter, затем в «ещё» → «В новом листе» впишите 12.' },
+        { at: { text: '+ поле', in: 'Листы' }, say: 'В блоке «Бой» нажмите «+ поле».', hint: 'Кнопки «+ поле» не видно? Щёлкните имя блока «Бой».', done: view => inFight(view).length > 1 },
+        { at: { input: 'как зовётся поле' }, say: 'Впишите название «Класс брони» и нажмите Enter.', done: view => Boolean(ac(view)) },
+        { at: [{ text: 'В новом листе' }, { text: 'ещё', in: 'Лист' }, { text: 'Класс брони', in: 'Листы' }], say: 'Откройте «ещё» и в «В новом листе» впишите 12.', hint: 'Поле «Класс брони» закрылось? Щёлкните «Класс брони» в блоке «Бой».' },
       ],
       via: [{ text: 'Бой', in: 'Листы' }, { text: 'блоки и типы листов' }],
       done: view => inBlock(ac(view), 'Бой') && numberOf(columnOf(view.system, ac(view))?.default) === 12,
@@ -158,10 +172,9 @@ export const firstSystem: Lesson = {
       lead: 'Эффект похож на функцию: всё, что ему нужно, приходит входами, и у каждого входа есть вид. «Число» — урон или бонус, «да / нет» — признак, «из таблицы» — строка справочника, «лист» — один герой, «список листов» — сколько угодно героев. Кого бить, решают за столом, поэтому «Удару» нужен вход-список.',
       tab: 'effects',
       say: 'Добавьте «Удару» вход «Цели» вида «список листов».',
-      hint: 'Один лист из списка в шагах зовётся по полю «Каждый» — назовите его «Цель».',
       at: [
         { at: { text: '+ ещё одно' }, say: 'В «Что приходит» нажмите «+ ещё одно».', done: view => (strike(view)?.[1].params ?? []).length > 1 },
-        { at: { text: 'Название' }, say: 'В «Название» впишите «Цели», в «Вид» выберите «список листов», в «Каждый» — «Цель».' },
+        { at: { text: 'Название' }, say: 'В «Название» впишите «Цели», в «Вид» выберите «список листов», в «Каждый» — «Цель».', hint: 'Один лист из списка в шагах зовётся по полю «Каждый» — назовите его «Цель».' },
       ],
       done: view => Boolean(targetsOf(view)),
       result: () => 'У «Удара» два входа: «Кто действует» — лист, «Цели» — список листов, каждый из них — «Цель».',
@@ -186,16 +199,23 @@ export const firstSystem: Lesson = {
       lead: 'Бросок и проверка — два шага: сначала кто-то бросает кость, потом итог сравнивается с числом. Здесь число — класс брони цели: выпало не меньше — попадание.',
       tab: 'effects',
       say: 'Сделайте бросок и проверку: «Кость проверки» против класса брони цели.',
-      hint: 'Порог — поле «С чем». Формула открывается строкой наверху экрана. Названия полей не печатайте — выбирайте в подсказке после «@».',
       at: [
         { at: { text: '+ бросок' }, say: 'В палитре «Шаг» нажмите «+ бросок». Встанет бросок: «Кто действует» бросает «Кость проверки».', done: view => rollAt(view) >= 0 },
         { at: { text: '+ проверка' }, say: 'Теперь нажмите «+ проверка». Она сравнит этот бросок с 10.', done: view => checkAt(view) >= 0 },
-        { at: [{ guide: 'formula-done' }, { guide: 'check-formula' }], say: 'Щёлкните поле «С чем» у проверки. В строке наверху сотрите 10, наберите «@» и в группе «у «Цель»» выберите «Класс брони». Нажмите «готово».' },
+        {
+          at: { guide: 'check-formula' },
+          say: 'Щёлкните поле «С чем» у проверки: формула откроется строкой наверху, число 10 в ней выделено.',
+          hint: 'Порог — поле «С чем». Названия полей не печатайте — выбирайте в подсказке после «@».',
+          done: view => barOpen(view) || versusOk(view),
+        },
+        {
+          at: { guide: 'check-formula' },
+          say: 'Наберите «@» — число заменится — и в группе «у «Цель»» выберите «Класс брони».',
+          done: view => is(barText(view), `@цель.${ac(view)?.tag ?? ''}`) || versusOk(view),
+        },
+        { at: [FORMULA_DONE, { guide: 'check-formula' }], say: 'Нажмите «готово».' },
       ],
-      done: view => {
-        const key = ac(view)?.tag;
-        return Boolean(key && stepsOf(strike(view)?.[1]).some(step => step.type === 'check' && reads(step.versus, `@цель.${key}`)));
-      },
+      done: view => rollsCheckDie(view) && versusOk(view),
       result: () => 'Бросок кости и проверка: итог против класса брони цели.',
     },
     {
@@ -214,15 +234,15 @@ export const firstSystem: Lesson = {
       chapter: 'Проверка и урон',
       tab: 'effects',
       say: 'Сделайте урон: при успехе цель теряет 5 хитов.',
-      hint: 'Сначала в «У кого» стоит «Кто действует» — это сам герой. Для удара нужна «Цель».',
       at: [
         { at: { text: '+ шаг' }, say: 'В ветке «успех» в списке «+ шаг» выберите «изменение».', done: view => armApplies(view).length > 0 },
         {
           at: { text: 'У кого' },
           say: 'В «У кого» выберите «Цель», в «Какое поле» — «Хиты».',
+          hint: 'Сначала в «У кого» стоит «Кто действует» — это сам герой. Для удара нужна «Цель».',
           done: view => {
             const key = hp(view)?.tag;
-            return Boolean(key && armApplies(view).some(step => reads(step.target, `@цель.${key}`)));
+            return Boolean(key && armApplies(view).some(step => is(step.target, `@цель.${key}`)));
           },
         },
         { at: { text: 'Сколько' }, say: 'В «Как» оставьте «отнять», в «Сколько» впишите 5.' },
@@ -230,14 +250,14 @@ export const firstSystem: Lesson = {
       done: view => {
         const key = hp(view)?.tag;
         return Boolean(key && armApplies(view).some(step =>
-          reads(step.target, `@цель.${key}`) && step.value !== undefined && !step.direction));
+          is(step.target, `@цель.${key}`) && numberOf(step.value) === 5 && subtracts(step)));
       },
       traps: [
         { when: view => branchAt(view) >= 0 && applies(view).length > armApplies(view).length, say: '«Изменение» стоит вне развилки — урон будет при любом броске. Перенесите его в ветку «успех».' },
         { when: view => armApplies(view).some(step => reads(step.target, '@действующий') || exprOf(step.target).startsWith('@действующий.')), say: 'В «У кого» стоит «Кто действует» — удар ранит самого героя. Выберите «Цель».' },
         { when: view => armApplies(view).some(step => exprOf(step.target).startsWith('@цель.') && !reads(step.target, `@цель.${hp(view)?.tag ?? ''}`)), say: 'Урон идёт не в «Хиты». В «Какое поле» выберите «Хиты».' },
       ],
-      result: view => `При успехе у цели −${exprOf(armApplies(view)[0]?.value) || '5'} хитов.`,
+      result: view => `При успехе цель теряет ${exprOf(armApplies(view)[0]?.value) || '5'} хитов.`,
     },
     {
       id: 'problems',
@@ -264,10 +284,11 @@ export const firstSystem: Lesson = {
       tab: 'effects',
       say: 'Сделайте эффект «Лечение»: он прибавляет 3 хита тому, кто действует.',
       hint: '«+ кнопкой», затем «+ изменение»: «У кого» — «Кто действует», «Какое поле» — «Хиты», «Как» — «прибавить», «Сколько» — 3.',
+      goal: 'у эффекта «Лечение» есть изменение: «Хиты» того, кто действует, прибавляются на 3.',
       done: view => {
         const key = hp(view)?.tag;
         return Boolean(key && stepsOf(effectBy(view.system, 'Лечение')?.[1]).some(step =>
-          step.type === 'apply' && step.direction === 'add' && reads(step.target, `@действующий.${key}`) && numberOf(step.value) === 3));
+          step.type === 'apply' && adds(step) && is(step.target, `@действующий.${key}`) && numberOf(step.value) === 3));
       },
       result: () => '«Лечение»: +3 хита своему листу.',
     },

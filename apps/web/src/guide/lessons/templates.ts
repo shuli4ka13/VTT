@@ -1,6 +1,6 @@
 import type { System, Modifier, Table } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
-import { tableBy, columnBy, fieldBy, same, reads, exprOf, errorsOf } from '../find.ts';
+import { tableBy, columnBy, fieldBy, same, is, figure, errorsOf } from '../find.ts';
 import { problemsClean } from './first-system.ts';
 import { Views } from '@vtt/engine/core/view';
 import { ROW } from '@vtt/engine/model/sheet-columns';
@@ -28,12 +28,13 @@ const aimed = (view: View): Modifier | undefined => mods(view).find(modifier => 
 const fromPreset = (view: View): boolean => {
   const found = aimed(view);
   const tag = presetTag(view);
-  return Boolean(found && tag && loose(found).op === 'set' && reads(loose(found).value, `@${tag}.[@${ROW}]`));
+  return Boolean(found && tag && loose(found).op === 'set' && is(loose(found).value, `@${tag}.[@${ROW}]`));
 };
 const whenPreset = (view: View): boolean => {
   const found = aimed(view);
   const tag = presetTag(view);
-  return Boolean(found && tag && reads(loose(found).if, `@${tag}`) && exprOf(loose(found).if).includes('пусто'));
+  const asked = (value: string) => figure(loose(found!).if, { [tag!]: value });
+  return Boolean(found && tag && asked('') === false && asked('разведчик') === true && asked('громила') === true);
 };
 
 const ranksFollow = (view: View): boolean => {
@@ -65,6 +66,7 @@ export const templates: Lesson = {
   id: 'templates',
   title: 'Заготовки: правка всей колонки',
   sub: 'Тип листа «По заготовке» одной правкой заполняет колонку «Ранг» у всех навыков из выбранной заготовки.',
+  start: 'есть таблицы «Навыки» и «Заготовки» (громила и стрелок), поле «Заготовка» и тип листа «По заготовке», пока без правок.',
   seed: seed as unknown as System,
   tab: 'sheet',
   chapters: [
@@ -145,6 +147,7 @@ export const templates: Lesson = {
       lead: 'Последнее задание — без подсказок.',
       alone: true,
       tab: 'dictionaries',
+      goal: 'в «Заготовках» не меньше трёх строк, у какой-то из них ранги не равны нулю; у листа с любой заготовкой «Ранг» навыков равен клетке её строки; в «Проблемах» нет ошибок.',
       say: 'Заведите в «Заготовках» ещё одну заготовку с рангами, не равными нулю, и убедитесь, что лист с каждой заготовкой получает ранги из её строки.',
       hint: 'Таблица «Заготовки» — в «Правила» → «Таблицы». Новую строку заполните как «Громилу».',
       done: view => taught(view) && fromPreset(view) && ranksFollow(view) && errorsOf(view.system) === 0,

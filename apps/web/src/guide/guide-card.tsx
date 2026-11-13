@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useWorld } from '../store/world.ts';
 import type { ConstructorTab } from '../store/world.ts';
 import { useGuide } from '../store/guide.ts';
+import { useFormulaBar } from '../store/formula-bar.ts';
 import { Button, Card, CardHead, Drawer, Fold, Verdict } from '../ui/primitives.tsx';
 import { TABS } from '../words.ts';
 import { LESSONS, lessonOf } from './lessons/index.ts';
@@ -38,6 +39,7 @@ export const viewNow = (): View => {
   return {
     system: state.system, tab: state.activeTab, effect: state.activeEffectId, record: state.activeRecordKind, sheetKind: state.activeSheetKind,
     block: state.activeBlock, field: state.activeFieldTag, opened: (name: string) => openedDialog(name),
+    bar: useFormulaBar.getState().target?.value ?? null,
   };
 };
 
@@ -75,8 +77,9 @@ export function useView(): View {
   const sheetKind = useWorld(s => s.activeSheetKind);
   const block = useWorld(s => s.activeBlock);
   const field = useWorld(s => s.activeFieldTag);
-  return useMemo(() => ({ system, tab, effect, record, sheetKind, block, field, opened: (name: string) => openedDialog(name) }),
-    [system, tab, effect, record, sheetKind, block, field]);
+  const bar = useFormulaBar(s => s.target?.value ?? null);
+  return useMemo(() => ({ system, tab, effect, record, sheetKind, block, field, opened: (name: string) => openedDialog(name), bar }),
+    [system, tab, effect, record, sheetKind, block, field, bar]);
 }
 
 const safeDone = (step: Step | undefined, view: View): boolean => {
@@ -89,8 +92,10 @@ export function GuideLayer() {
   const note = useGuide(s => s.note);
   const dismiss = useGuide(s => s.dismiss);
   const run = useGuide(s => s.run);
+  const finished = useGuide(s => s.finished);
   const lesson = lessonOf(id);
   if (lesson) return <LessonCard key={`${lesson.id}:${run}`} />;
+  if (finished && lessonOf(finished)) return <FinishCard id={finished} />;
   if (!note) return null;
   return (
     <div className="guide">
@@ -119,6 +124,30 @@ const trapOf = (step: Step, view: View): string | null => {
 const resultOf = (step: Step, view: View): string => {
   try { return step.result?.(view) ?? 'получилось'; } catch { return 'получилось'; }
 };
+
+export const nextLesson = (id: string): Lesson | undefined => LESSONS[LESSONS.findIndex(one => one.id === id) + 1];
+
+function FinishCard({ id }: { id: string }) {
+  const lesson = lessonOf(id)!;
+  const note = useGuide(s => s.note);
+  const next = nextLesson(id);
+  const sum = lesson.chapters.at(-1)?.sum;
+  return (
+    <div className="guide" role="region" aria-label="Урок пройден">
+      <Card className="guide__card">
+        <CardHead title="Урок пройден" sub={lesson.title} />
+        {sum ? <p className="guide__say">{sum}</p> : null}
+        {next ? null : <p className="guide__sum">Все уроки пройдены.</p>}
+        {note ? <Verdict tone="bad">{note}</Verdict> : null}
+        <div className="guide__actions">
+          {next ? <Button size="sm" variant="primary" onClick={() => void useGuide.getState().start(next.id)}>Следующий урок: {next.title}</Button> : null}
+          <span className="spacer" />
+          <Button size="sm" variant={next ? 'ghost' : 'primary'} onClick={() => useGuide.getState().closeFinish()}>Закрыть</Button>
+        </div>
+      </Card>
+    </div>
+  );
+}
 
 function LessonCard() {
   const id = useGuide(s => s.lesson);
@@ -165,6 +194,7 @@ function LessonCard() {
   const already = Boolean(step.done && (current.already || revisit) && done);
   const free = !step.done || current.already || revisit || done || success;
   const trap = done || success ? null : trapOf(step, view);
+  const hint = moveOf(step, view)?.hint ?? step.hint;
   const where = `глава ${place.chapter} из ${place.chapters} · шаг ${place.step} из ${place.steps}`;
   const sum = place.closes && (done || success || !step.done) ? lesson.chapters[place.chapter - 1]?.sum : undefined;
 
@@ -194,8 +224,10 @@ function LessonCard() {
             <CardHead title={lesson.title} sub={`${where} · ${place.title}`}
               actions={<Button size="sm" variant="ghost" title="свернуть в полоску" onClick={() => fold(true)}>свернуть</Button>} />
             {step.lead ? <p className="guide__lead">{step.lead}</p> : null}
+            {index === 0 && lesson.start ? <p className="guide__lead">С чего начинаем: {lesson.start}</p> : null}
             {point.prompt ? <p className="guide__prompt">{point.prompt}</p> : null}
             <p className="guide__say">{step.alone ? <b>Сами: </b> : null}{step.say}</p>
+            {step.alone && step.goal ? <p className="guide__goal"><b>Готово, когда: </b>{step.goal}</p> : null}
             {said.length > 1 ? (
               <ol className="guide__moves">
                 {said.map((text, at) => (
@@ -206,7 +238,7 @@ function LessonCard() {
             {success || already ? <Verdict tone="ok">{already ? `уже сделано: ${resultOf(step, view)}` : resultOf(step, view)}</Verdict> : null}
             {trap ? <Verdict tone="warn">{trap}</Verdict> : null}
             {sum ? <p className="guide__sum">Глава «{place.title}»: {sum}</p> : null}
-            {step.hint ? <Fold title={step.alone ? 'подсказка' : 'не получается?'}><p className="guide__hint">{step.hint}</p></Fold> : null}
+            {hint ? <Fold key={hint} title={step.alone ? 'подсказка' : 'не получается?'}><p className="guide__hint">{hint}</p></Fold> : null}
             {note ? <Verdict tone="bad">{note}</Verdict> : null}
             <div className="guide__actions">
               <Button size="sm" variant="ghost" disabled={index === 0} onClick={() => go(index - 1)}>Назад</Button>

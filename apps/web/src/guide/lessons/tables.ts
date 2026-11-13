@@ -2,7 +2,7 @@ import { ROW } from '@vtt/engine/model/sheet-columns';
 import { compile } from '@vtt/engine/formula';
 import type { System } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
-import { tableBy, columnBy, fieldBy, columnOf, reads, same, exprOf } from '../find.ts';
+import { tableBy, columnBy, fieldBy, columnOf, figure, same, exprOf, FORMULA_DONE, barText } from '../find.ts';
 import { problemsClean } from './first-system.ts';
 import base from '../seeds/base.json' with { type: 'json' };
 
@@ -38,18 +38,44 @@ const brokenModifier = (view: View): boolean => {
   return text !== '' && !parses(text);
 };
 
+const equalsAll = (formula: unknown, vars: (sample: number) => Record<string, unknown>, wanted: (sample: number) => number): boolean =>
+  [-3, 0, 2, 7, 11].every(sample => figure(formula, vars(sample)) === wanted(sample));
+
+const modifierWanted = (sample: number): number => Math.floor((sample - 10) / 2);
+
+const modifierRight = (view: View, formula: unknown): boolean => {
+  const value = columnBy(stats(view)?.[1], 'Значение');
+  return Boolean(value && parses(exprOf(formula)) && equalsAll(formula, sample => ({ [`${ROW}.${value.key}`]: sample }), modifierWanted));
+};
+
+const valueRead = (view: View, text: string): boolean => {
+  const value = columnBy(stats(view)?.[1], 'Значение');
+  return Boolean(value && text.replace(/\s+/g, '').includes(`@${ROW}.${value.key}`));
+};
+
+const armorRight = (view: View, formula: unknown): boolean => {
+  const found = stats(view);
+  const modifier = columnBy(found?.[1], 'Модификатор');
+  return Boolean(found && modifier && equalsAll(formula, sample => ({ [`${found[0]}.ловкость.${modifier.key}`]: sample }), sample => 10 + sample));
+};
+
+const armorExpr = (view: View): unknown => columnOf(view.system, fieldBy(view.system, 'Класс брони'))?.expr;
+
+const squash = (text: string): string => text.replace(/\s+/g, '');
+
 const FORMULA_HINT = 'Формула открывается строкой наверху экрана. Названия не печатайте — наберите «@» и выберите в подсказке. «готово» или Enter сохраняет.';
 
-const readsModifier = (view: View, label: string): boolean => {
+const copiesModifier = (view: View, label: string): boolean => {
   const table = stats(view)?.[1];
   const modifier = columnBy(table, 'Модификатор');
-  return Boolean(modifier && reads(columnBy(table, label)?.expr, `@${ROW}.${modifier.key}`));
+  return Boolean(modifier && equalsAll(columnBy(table, label)?.expr, sample => ({ [`${ROW}.${modifier.key}`]: sample }), sample => sample));
 };
 
 export const tables: Lesson = {
   id: 'tables',
   title: 'Таблицы',
   sub: 'Характеристики и навыки таблицами прямо на листе, формула колонки и класс брони от ловкости.',
+  start: 'на листе в блоке «Бой» есть «Хиты» и «Класс брони», есть «Кость проверки» и эффект «Удар», который сам отнимает у цели 5 хитов. Таблиц ещё нет.',
   seed: base as unknown as System,
   tab: 'sheet',
   chapters: [
@@ -109,20 +135,31 @@ export const tables: Lesson = {
       chapter: 'Таблица на листе',
       lead: 'Формула колонки считается для каждой строки отдельно: «Значение» в ней — значение той же строки, у силы — силы, у ловкости — ловкости.',
       tab: 'sheet',
-      say: 'Добавьте колонку «Модификатор»: (значение − 10) / 2, с округлением вниз.',
-      hint: FORMULA_HINT,
+      say: 'Добавьте колонку «Модификатор»: (значение - 10) / 2, с округлением вниз.',
       at: [
         { at: { guide: 'add-column' }, say: 'В шапке таблицы нажмите «+».', done: view => (stats(view)?.[1].columns ?? []).length > 1 },
         { at: { input: 'как зовётся колонка' }, say: 'Впишите название «Модификатор» и нажмите Enter.', done: view => Boolean(columnBy(stats(view)?.[1], 'Модификатор')) },
-        { at: { text: 'Формула для всех строк' }, say: 'Щёлкните «Формула для всех строк» и наберите: округлить вниз((Значение - 10) / 2). Слово «Значение» не печатайте — наберите «@» и выберите его в подсказке. Нажмите «готово».' },
+        {
+          at: { text: 'Формула для всех строк' },
+          say: 'Щёлкните «Формула для всех строк» и наберите «округлить вниз((».',
+          hint: FORMULA_HINT,
+          done: view => barText(view).includes('округлить') || modifierRight(view, columnBy(stats(view)?.[1], 'Модификатор')?.expr),
+        },
+        {
+          at: { text: 'Формула для всех строк' },
+          say: 'Наберите «@» и выберите «Значение».',
+          hint: FORMULA_HINT,
+          done: view => valueRead(view, barText(view)) || modifierRight(view, columnBy(stats(view)?.[1], 'Модификатор')?.expr),
+        },
+        {
+          at: { text: 'Формула для всех строк' },
+          say: 'Допишите «- 10) / 2)».',
+          done: view => modifierRight(view, barText(view)) || modifierRight(view, columnBy(stats(view)?.[1], 'Модификатор')?.expr),
+        },
+        { at: [FORMULA_DONE, { text: 'Формула для всех строк' }], say: 'Нажмите «готово».' },
       ],
       via: [{ text: 'Характеристики:' }, { text: 'блоки и типы листов' }],
-      done: view => {
-        const table = stats(view)?.[1];
-        const value = columnBy(table, 'Значение');
-        const formula = columnBy(table, 'Модификатор')?.expr;
-        return Boolean(value && reads(formula, `@${ROW}.${value.key}`) && parses(exprOf(formula)));
-      },
+      done: view => modifierRight(view, columnBy(stats(view)?.[1], 'Модификатор')?.expr),
       traps: [{
         when: brokenModifier,
         say: 'В формуле ошибка: не закрыта скобка или лишний знак. Должно выйти: округлить вниз((Значение - 10) / 2).',
@@ -141,16 +178,24 @@ export const tables: Lesson = {
       chapter: 'Лист героя',
       lead: 'Поле листа может брать число из любой клетки таблицы — например, модификатор ловкости.',
       tab: 'sheet',
-      say: 'Чтобы класс брони рос с ловкостью, щёлкните поле «Класс брони», в «Формула для всех листов» наберите «10 + @» и выберите «Модификатор: ловкость». Нажмите «готово».',
-      hint: FORMULA_HINT,
-      at: { text: 'Формула для всех листов' },
+      say: 'Сделайте так, чтобы класс брони рос с ловкостью: 10 плюс модификатор ловкости.',
+      at: [
+        {
+          at: { text: 'Формула для всех листов' },
+          say: 'В поле «Класс брони» щёлкните «Формула для всех листов» и наберите «10 + ».',
+          hint: FORMULA_HINT,
+          done: view => squash(barText(view)).startsWith('10+') || armorRight(view, armorExpr(view)),
+        },
+        {
+          at: { text: 'Формула для всех листов' },
+          say: 'Наберите «@» и выберите «Модификатор: ловкость».',
+          hint: FORMULA_HINT,
+          done: view => armorRight(view, barText(view)) || armorRight(view, armorExpr(view)),
+        },
+        { at: [FORMULA_DONE, { text: 'Формула для всех листов' }], say: 'Нажмите «готово».' },
+      ],
       via: [{ text: 'Класс брони' }, { text: 'Бой', in: 'Листы' }],
-      done: view => {
-        const found = stats(view);
-        const modifier = columnBy(found?.[1], 'Модификатор');
-        const armor = columnOf(view.system, fieldBy(view.system, 'Класс брони'));
-        return Boolean(found && modifier && reads(armor?.expr, `${found[0]}.ловкость.${modifier.key}`));
-      },
+      done: view => armorRight(view, armorExpr(view)),
       result: () => 'Класс брони: 10 + модификатор ловкости.',
     },
     {
@@ -237,7 +282,9 @@ export const tables: Lesson = {
         const modifier = columnBy(stats(view)?.[1], 'Модификатор');
         const formula = columnBy(table, 'Итог')?.expr;
         return Boolean(link && value && modifier
-          && reads(formula, `@${ROW}.${link.key}.${modifier.key}`) && reads(formula, `@${ROW}.${value.key}`));
+          && [-2, 0, 3].every(first => [0, 1, 5].every(second => figure(formula, {
+            [`${ROW}.${link.key}.${modifier.key}`]: first, [`${ROW}.${value.key}`]: second,
+          }) === first + second)));
       },
       result: () => 'У атлетики «Итог» — модификатор силы плюс вложенные очки.',
     },
@@ -247,8 +294,9 @@ export const tables: Lesson = {
       alone: true,
       tab: 'sheet',
       say: 'Добавьте в таблицу «Характеристики» колонку «Спасбросок», равную модификатору.',
+      goal: 'в таблице «Характеристики» есть колонка «Спасбросок», которая в каждой строке равна «Модификатору» этой же строки.',
       hint: 'Откройте таблицу: в блоке «Характеристики» щёлкните «Характеристики:». Затем «+» в её шапке, в формуле — «@» и «Модификатор».',
-      done: view => readsModifier(view, 'Спасбросок'),
+      done: view => copiesModifier(view, 'Спасбросок'),
       traps: [{
         when: view => Boolean(fieldBy(view.system, 'Спасбросок')),
         say: '«Спасбросок» попал отдельным полем листа, а нужен колонкой таблицы «Характеристики». Удалите поле и добавьте колонку «+» в шапке таблицы.',

@@ -6,6 +6,7 @@
 .guide__card { width: 100%; box-shadow: var(--shadow-2); border-color: var(--accent); }
 .guide__prompt { margin: 0; color: var(--accent-hover); font-weight: 600; }
 .guide__say { margin: 0; line-height: var(--lh); }
+.guide__goal { margin: 0; line-height: var(--lh); }
 .guide__hint { margin: 0; color: var(--text-muted); }
 .guide__actions { display: flex; align-items: center; gap: var(--s-2); }
 .guide-spot {

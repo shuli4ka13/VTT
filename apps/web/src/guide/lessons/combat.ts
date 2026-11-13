@@ -1,7 +1,7 @@
 import type { System, Effect } from '@vtt/schema';
 import type { Lesson, View, Move } from '../types.ts';
 import { lazyPlan } from '@vtt/engine/model/flow';
-import { effectBy, fieldBy, stepsOf, reads, armOf, errorsOf, isArm } from '../find.ts';
+import { effectBy, fieldBy, stepsOf, reads, is, subtracts, numberOf, armOf, errorsOf, isArm } from '../find.ts';
 import { problemsClean } from './first-system.ts';
 import seed from '../seeds/combat.json' with { type: 'json' };
 
@@ -12,13 +12,13 @@ const steps = (view: View): Record<string, unknown>[] => stepsOf(strike(view)?.[
 const counter = (view: View): string | undefined => fieldBy(view.system, 'Действий осталось')?.tag;
 
 const inCombat = (view: View): number =>
-  steps(view).findIndex(step => isArm(step) && reads(step.if, COMBAT));
+  steps(view).findIndex(step => isArm(step) && is(step.if, COMBAT));
 
 const spends = (view: View): boolean => {
   const at = inCombat(view);
   const tag = counter(view);
   return at >= 0 && Boolean(tag) && armOf(steps(view), at).some(step =>
-    step.type === 'apply' && reads(step.target, `@действующий.${tag}`) && !step.direction && step.value !== undefined);
+    step.type === 'apply' && is(step.target, `@действующий.${tag}`) && subtracts(step) && numberOf(step.value) === 1);
 };
 
 const refuses = (view: View): boolean => {
@@ -44,6 +44,7 @@ export const combat: Lesson = {
   id: 'combat',
   title: 'Идёт ли бой',
   sub: 'Условие «идёт ли бой» в «Удар»: тратить действия только в бою, а в бою без действий — отказать.',
+  start: 'есть пустой эффект «Удар», выданный всем листам, и поле «Действий осталось» на листе.',
   seed: seed as unknown as System,
   tab: 'effects',
   chapters: [
@@ -98,6 +99,7 @@ export const combat: Lesson = {
       lead: 'Последнее задание — без подсказок.',
       alone: true,
       tab: 'effects',
+      goal: 'в «Ударе» есть «Стоп», который срабатывает, только когда идёт бой и «Действий осталось» меньше 1; в «Проблемах» нет ошибок.',
       say: 'Сделайте так, чтобы «Удар» отказывал («Стоп»), когда идёт бой и «Действий осталось» меньше 1.',
       hint: 'Отказ должен стоять до траты действия. Можно собрать одним условием через «и» или вложить второй «Если».',
       done: view => refuses(view) && errorsOf(view.system) === 0,

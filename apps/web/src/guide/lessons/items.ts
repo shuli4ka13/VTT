@@ -1,6 +1,6 @@
 import type { System } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
-import { effectBy, tableBy, fieldBy, stepsOf, reads, same } from '../find.ts';
+import { effectBy, tableBy, fieldBy, stepsOf, is, numberOf, same, FORMULA_DONE, barOpen, barText } from '../find.ts';
 import { problemsClean } from './first-system.ts';
 import base from '../seeds/base.json' with { type: 'json' };
 
@@ -10,16 +10,24 @@ const bookKind = (view: View, label: string) => {
   const found = tableBy(view.system, label);
   return found && found[1].shape === 'book' ? found : undefined;
 };
+const paramUsed = (view: View): boolean => {
+  const param = weaponParam(view);
+  return Boolean(param && param.kind === 'number' && stepsOf(strike(view)?.[1]).some(step => step.type === 'apply' && is(step.value, `@${param.key}`)));
+};
 const weapon = (view: View) => bookKind(view, 'Оружие');
-const editsArmor = (view: View, label: string): boolean => {
+const editsArmor = (view: View, label: string, by?: number): boolean => {
   const ac = fieldBy(view.system, 'Класс брони')?.tag;
-  return Boolean(ac && (bookKind(view, label)?.[1].modifiers ?? []).some(modifier => modifier.kind === 'value' && reads(modifier.target, ac)));
+  return Boolean(ac && (bookKind(view, label)?.[1].modifiers ?? []).some(modifier => {
+    const loose = modifier as unknown as { op?: string; value?: unknown };
+    return modifier.kind === 'value' && is(modifier.target, ac) && (by === undefined || ((!loose.op || loose.op === 'add') && numberOf(loose.value) === by));
+  }));
 };
 
 export const items: Lesson = {
   id: 'items',
   title: 'Вещи с эффектами',
   sub: 'Тип «Оружие»: свойство, кнопка «Удар» у владельца и правка класса брони.',
+  start: 'есть «Удар»: он выдан всем листам и сам отнимает 5 хитов. Типа вещи «Оружие» ещё нет.',
   seed: base as unknown as System,
   tab: 'records',
   chapters: [
@@ -48,18 +56,25 @@ export const items: Lesson = {
       tab: 'effects',
       panel: 'Библиотека эффектов',
       say: 'Сделайте, чтобы «Удар» снимал столько хитов, сколько «Урон оружия».',
-      hint: '«Удара» не видно? Он в группе «Без блока» — раскройте её. «Изменение» свёрнуто — щёлкните его имя. До шага с кнопкой «Проблемы» будут говорить, что «Урон оружия» никто не передаёт, — так и должно быть.',
+      hint: 'До шага с кнопкой «Проблемы» будут говорить, что «Урон оружия» никто не передаёт, — так и должно быть.',
       at: [
-        { at: { text: '+ ещё одно' }, say: 'Откройте «Удар» и в «Что приходит» нажмите «+ ещё одно».', done: view => (strike(view)?.[1].params ?? []).length > 2 },
+        { at: { text: '+ ещё одно' }, say: 'Откройте «Удар» и в «Что приходит» нажмите «+ ещё одно».', hint: '«Удара» не видно? Он в группе «Без блока» — раскройте её.', done: view => (strike(view)?.[1].params ?? []).length > 2 },
         { at: { text: 'Название' }, say: 'В «Название» впишите «Урон оружия». Вид — «число».', done: view => Boolean(weaponParam(view)) },
-        { at: { text: 'Сколько' }, say: 'В «Изменении» в «Сколько» наберите «@» и выберите «Урон оружия». Нажмите «готово».' },
+        {
+          at: { text: 'Сколько' },
+          say: 'В «Изменении» щёлкните число в «Сколько»: оно откроется строкой наверху и будет выделено.',
+          hint: '«Изменение» свёрнуто? Щёлкните его имя.',
+          done: view => barOpen(view) || paramUsed(view),
+        },
+        {
+          at: { text: 'Сколько' },
+          say: 'Наберите «@» — число заменится — и выберите «Урон оружия».',
+          done: view => is(barText(view), `@${weaponParam(view)?.key ?? ''}`) || paramUsed(view),
+        },
+        { at: [FORMULA_DONE, { text: 'Сколько' }], say: 'Нажмите «готово».' },
       ],
       via: { text: 'Удар', in: 'Библиотека эффектов' },
-      done: view => {
-        const param = weaponParam(view);
-        return Boolean(param && param.kind === 'number'
-          && stepsOf(strike(view)?.[1]).some(step => step.type === 'apply' && reads(step.value, `@${param.key}`)));
-      },
+      done: paramUsed,
       traps: [{
         when: view => !weaponParam(view)
           && (strike(view)?.[1].params ?? []).some(param => (param.label ?? '').toLowerCase().includes('урон оружия')),
@@ -113,7 +128,7 @@ export const items: Lesson = {
         { at: { text: '+ правит поле' }, say: 'В «Что правит каждая вещь этого типа» нажмите «+ правит поле».', done: view => (weapon(view)?.[1].modifiers ?? []).length > 0 },
         { at: { text: 'Что правим' }, say: 'В «Что правим» выберите «Класс брони», в «На сколько» впишите 1.' },
       ],
-      done: view => editsArmor(view, 'Оружие'),
+      done: view => editsArmor(view, 'Оружие', 1),
       result: () => 'Пока оружие у владельца, класс брони +1.',
     },
     {
@@ -131,6 +146,7 @@ export const items: Lesson = {
       alone: true,
       tab: 'records',
       say: 'Заведите тип вещи «Броня», который правит «Класс брони».',
+      goal: 'есть тип вещи «Броня», у которого есть правка «Класса брони».',
       hint: 'В панели «книги» нажмите «+ тип», затем у нового типа — «+ правит поле».',
       done: view => editsArmor(view, 'Броня'),
       result: () => '«Броня» правит класс брони.',
