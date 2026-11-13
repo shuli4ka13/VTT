@@ -164,11 +164,11 @@ describe('Словари: кости, правки броска, таблицы'
     expect('read' in (useWorld.getState().system.constants?.[key!] ?? {})).toBe(false);
   });
 
-  it('у одной кости чтение спрятано под свёрнутым «ещё», у составной — на виду', () => {
+  it('у одной кости выбора «что берём» нет — брать не из чего; у составной он на виду', () => {
     renderOpen(<RulesTab />);
     открыть('Броски');
     завести();
-    expect((screen.getByDisplayValue('сумма').closest('details') as HTMLDetailsElement | null)?.open).toBe(false);
+    expect(screen.queryByDisplayValue('сумма')).toBeNull();
 
     fireEvent.click(screen.getByText('+ ещё часть'));
     expect(screen.getByDisplayValue('сумма')).toBeTruthy();

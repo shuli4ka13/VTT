@@ -4,7 +4,7 @@ import { ROLL_KIND_WORDS, COUNT_BY_ROLL } from '@vtt/engine/words/dice-kinds';
 import { Readback } from '../effects/cards/group-card.tsx';
 import { dieReadback } from '../readback.ts';
 import { slugOf } from '../../../store/world.ts';
-import { Card, CardHead, Input, NumInput, Button, Select, Fold } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Input, NumInput, Button, Select } from '../../../ui/primitives.tsx';
 import { useState } from 'react';
 import { boundOf, boundText } from '../bound-field.tsx';
 import type { Bound } from '../bound-field.tsx';
@@ -65,7 +65,7 @@ export function DiceSection({ system, editSystem, usage }: Props) {
             const counting = rollsCounting(system, key);
             const readKind = readKindOf(constant);
             const driven = Object.values(system.rolls ?? {}).some(roll => roll.die === key && roll.number === 'count');
-            const asksReading = total !== 1 || readKind !== 'sum';
+            const asksReading = total !== 1 || readKind !== 'sum' || driven;
             const countRead = typeof constant.read === 'object' && constant.read.kind === 'count' ? constant.read : null;
 
             const editDice = (change: (list: DiceTerm[]) => void) => editSystem(draft => {
@@ -141,7 +141,7 @@ export function DiceSection({ system, editSystem, usage }: Props) {
                 <DiceComposer dice={dice} onEdit={editDice} driven={driven} />
                 {counting.length ? <span className="faint">{COUNT_BY_ROLL(counting)}</span> : null}
 
-                {asksReading ? reading : <Fold title="ещё" summary={readKind === 'sum' ? 'берём сумму' : 'чтение выпавшего'}>{reading}</Fold>}
+                {asksReading ? reading : null}
               </div>
             );
 
