@@ -4,6 +4,7 @@ import { render, screen, fireEvent, within } from '@testing-library/react';
 import { RecordsTab, SheetKindEditor } from './records-tab.tsx';
 import { useWorld } from '../../store/world.ts';
 import { optionsFor } from './value-field.tsx';
+import { pickCombo, comboOptions } from '../../testing/cards.ts';
 
 const строкаВхода = (подпись: string) => [...document.querySelectorAll('.args-row')].find(el => el.querySelector('.args-row__name')?.textContent === подпись)!;
 
@@ -68,9 +69,9 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     }));
     render(<RecordsTab />);
     expect([...document.querySelectorAll('.args-row__name')].map(el => el.textContent)).toEqual(['Кость урона', 'Новый вход']);
-    const spare = screen.getByRole('combobox', { name: 'передать ещё' }) as HTMLSelectElement;
-    expect([...spare.options].map(o => o.textContent)).toContain('Сколько костей — сейчас как у эффекта: 1');
-    fireEvent.change(spare, { target: { value: 'сколько' } });
+    const spare = screen.getByRole('combobox', { name: 'передать ещё' });
+    expect(comboOptions(spare).map(o => o.label)).toContain('Сколько костей — сейчас как у эффекта: 1');
+    pickCombo(spare, 'сколько');
     expect(строкаВхода('Новый вход').className).toContain('args-row--need');
     fireEvent.click(within(строкаВхода('Новый вход') as HTMLElement).getByRole('button', { name: '+ свойство' }));
     expect(useWorld.getState().system.tables!.weapon!.columns!.some(p => p.key === 'новый' && p.label === 'Новый вход')).toBe(true);
@@ -86,7 +87,7 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     }));
     render(<RecordsTab />);
     expect(document.querySelector('.args-row')).toBeNull();
-    fireEvent.change(screen.getByDisplayValue('— какой эффект —'), { target: { value: 'hit' } });
+    pickCombo(screen.getByPlaceholderText('— какой эффект —'), 'hit');
     const kind = useWorld.getState().system.tables!.weapon!;
     expect(kind.bindings![0]!.label).toBe('Удар');
     expect(kind.columns!.map(p => [p.key, p.kind])).toEqual([['кость', 'dice']]);
@@ -252,18 +253,18 @@ describe('RecordsTab: свойство на лист или служебное',
     render(<RecordsTab />);
     fireEvent.click(screen.getByRole('button', { name: 'Вес' }));
     fireEvent.click(screen.getByText('ещё'));
-    const where = screen.getByDisplayValue('на лист — игрок видит') as HTMLSelectElement;
-    fireEvent.change(where, { target: { value: 'service' } });
+    const where = screen.getByDisplayValue('на лист — игрок видит');
+    pickCombo(where, 'service');
     expect(useWorld.getState().system.tables!.weapon!.columns![0]!.onSheet).toBe(false);
-    fireEvent.change(where, { target: { value: 'sheet' } });
+    pickCombo(where, 'sheet');
     expect('onSheet' in useWorld.getState().system.tables!.weapon!.columns![0]!).toBe(false);
   });
 
   it('среди видов свойства есть «запись»', () => {
     render(<RecordsTab />);
     fireEvent.click(screen.getByRole('button', { name: 'Вес' }));
-    const kind = screen.getByDisplayValue('число') as HTMLSelectElement;
-    expect([...kind.options].map(o => o.textContent)).toContain('запись');
+    const kind = screen.getByDisplayValue('число');
+    expect(comboOptions(kind).map(o => o.label)).toContain('запись');
   });
 });
 
@@ -321,15 +322,15 @@ describe('слот привязки подсказывает то, чем его
 
   it('вход «строка таблицы» — список: свойство, «+ свойство», строки таблицы', () => {
     render(<RecordsTab />);
-    const список = screen.getByLabelText('«Тип урона» — чем заполняет тип') as HTMLSelectElement;
-    const варианты = [...список.options].map(o => o.textContent);
+    const список = screen.getByLabelText('«Тип урона» — чем заполняет тип');
+    const варианты = comboOptions(список).map(o => o.label);
     expect(варианты).toContain('+ свойство «Тип урона»');
     expect(варианты).toContain('рубящий');
 
-    fireEvent.change(список, { target: { value: '"рубящий"' } });
+    pickCombo(список, '"рубящий"');
     expect((useWorld.getState().system.tables!.weapon!.bindings![0] as any).args?.damage_type).toEqual({ expr: '"рубящий"' });
 
-    fireEvent.change(список, { target: { value: '+' } });
+    pickCombo(список, '+');
     const kind = useWorld.getState().system.tables!.weapon!;
     const свойство = kind.columns!.find(p => p.label === 'Тип урона')!;
     expect(свойство.kind).toBe('choice');

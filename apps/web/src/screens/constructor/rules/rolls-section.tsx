@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Card, CardHead, Button, DangerButton, Input, Select, Chip, Empty } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Button, DangerButton, Input, Select, Empty } from '../../../ui/primitives.tsx';
+import { MultiCombo } from '../../../ui/combo.tsx';
 import { NO_BLOCK } from '@vtt/engine/model/blocks';
 import { TagsField } from '../tags-field.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
@@ -19,7 +20,6 @@ import type { WorldState } from '../../../store/world.ts';
 
 type EditSystem = WorldState['editSystem'];
 
-const SERVICE = '\u0001';
 
 const ZERO_WORDS = [['', 'ничего не бросаем'], ['worst', 'бросаем две, берём худшую'], ['best', 'бросаем две, берём лучшую']] as const;
 
@@ -112,12 +112,10 @@ function RollFlow({ roll }: { roll: SystemRoll }) {
 function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRoll; system: System; editSystem: EditSystem }) {
   const edit = (change: (draft: SystemRoll) => void) => editSystem(draft => { const one = draft.rolls?.[id]; if (one) change(one); });
   const columns = columnsOf(system);
-  const nameOf = (table: string, column: string) => columns.find(([key]) => key === `${table}\u0000${column}`)?.[1] ?? column;
   const taken = new Set(Object.values(system.rolls ?? {}).flatMap(one => one.fields.map(f => `${f.table}\u0000${f.column}`)));
   const [service, setService] = useState(false);
   const untaken = columns.filter(([key]) => !taken.has(key));
   const hidden = untaken.filter(([, , group]) => group === NO_BLOCK).length;
-  const free = service ? untaken : untaken.filter(([, , group]) => group !== NO_BLOCK);
   const dice = dieEntries(system);
   const die = dice.find(([key]) => key === roll.die)?.[1] as DieConstant | undefined;
   const allowed: readonly string[] = die ? numbersOf(die, roll.pair === true) : ROLL_NUMBER_WORDS.map(([key]) => key);
@@ -147,21 +145,20 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
         <div className="dict-row roll-line">
           <span className="dict-row__label">Бросают</span>
           <div className="roll-form__body roll-form__body--wrap">
-            {roll.fields.map(one => (
-              <Chip key={`${one.table}.${one.column}`}
-                onRemove={() => edit(draft => { draft.fields = draft.fields.filter(f => !(f.table === one.table && f.column === one.column)); })}>
-                {nameOf(one.table, one.column)}
-              </Chip>
-            ))}
-            {untaken.length ? (
-              <Select value="" label="добавить поле" options={[['', '+ поле…'], ...free, ...(hidden && !service ? [[SERVICE, `служебные поля, которых нет на листе (${hidden})…`]] : [])] as never}
-                onChange={(next: string) => {
-                  if (!next) return;
-                  if (next === SERVICE) { setService(true); return; }
-                  const [table, column] = next.split('\u0000');
-                  edit(draft => { draft.fields.push({ table: table!, column: column! }); });
-                }} />
-            ) : null}
+            <MultiCombo
+              prompt="+ поле…"
+              value={roll.fields.map(one => `${one.table}\u0000${one.column}`)}
+              options={columns
+                .filter(([key]) => !taken.has(key) || roll.fields.some(one => `${one.table}\u0000${one.column}` === key))
+                .map(([key, label, group]) => ({ value: key, label, ...(group && group !== NO_BLOCK ? { group } : { group: 'служебные поля, которых нет на листе', hidden: !service && !roll.fields.some(one => `${one.table}\u0000${one.column}` === key) }) }))}
+              more={hidden && !service ? { label: `служебные поля, которых нет на листе (${hidden})…`, run: () => setService(true) } : undefined}
+              onChange={next => edit(draft => {
+                draft.fields = next.map(key => {
+                  const [table, column] = key.split('\u0000');
+                  return draft.fields.find(f => f.table === table && f.column === column) ?? { table: table!, column: column! };
+                });
+              })}
+            />
           </div>
         </div>
         <div className="dict-row roll-line">

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest';
-import { render, cleanup, fireEvent } from '@testing-library/react';
+import { render, cleanup } from '@testing-library/react';
+import { pickCombo } from '../../../testing/cards.ts';
 import { useWorld } from '../../../store/world.ts';
 import { RulesTab } from './rules-tab.tsx';
 import type { System } from '@vtt/schema';
@@ -23,12 +24,12 @@ describe('пустая клетка-выбор: «вводит игрок» у �
     } as unknown as System;
     useWorld.setState(state => ({ ...state, system, activeTableId: 'навыки' }));
     render(<RulesTab />);
-    const selects = [...document.querySelectorAll('details[open] select')] as HTMLSelectElement[];
-    const shown = selects.map(s => s.selectedOptions[0]?.textContent);
+    const selects = [...document.querySelectorAll<HTMLInputElement>('details[open] [role="combobox"]')];
+    const shown = selects.map(s => s.value);
     expect(shown).not.toContain('— выберите —');
     expect(shown.filter(t => t === 'вводит игрок').length).toBe(3);
-    const fixed = selects.find(s => s.value === '1')!;
-    fireEvent.change(fixed, { target: { value: '' } });
+    const fixed = selects.find(s => s.dataset.value === '1')!;
+    pickCombo(fixed, '');
     expect(useWorld.getState().system.tables!.навыки!.rows![0]!.cells?.владение).toBeUndefined();
   });
 
@@ -42,7 +43,7 @@ describe('пустая клетка-выбор: «вводит игрок» у �
     } as unknown as System;
     useWorld.setState(state => ({ ...state, system, activeTableId: 'классы' }));
     render(<RulesTab />);
-    const shown = [...document.querySelectorAll('details[open] select')].map(s => (s as HTMLSelectElement).selectedOptions[0]?.textContent);
+    const shown = [...document.querySelectorAll<HTMLInputElement>('details[open] [role="combobox"]')].map(s => s.value);
     expect(shown).toContain('— нет —');
     expect(shown).not.toContain('— выберите —');
   });

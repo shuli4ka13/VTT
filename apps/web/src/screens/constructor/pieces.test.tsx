@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { screen, fireEvent, cleanup, within, act } from '@testing-library/react';
 import { renderOpen } from '../../testing/render-open.tsx';
+import { pickCombo, comboOptions } from '../../testing/cards.ts';
 import { useWorld, emptySystem } from '../../store/world.ts';
 import { SheetTab } from './sheet-tab.tsx';
 import { world as W } from '@vtt/schema';
@@ -17,8 +18,8 @@ describe('куски на пустом листе', () => {
 
   it('пустой лист предлагает все куски систем', () => {
     renderOpen(<SheetTab />);
-    const donors = screen.getAllByRole('combobox').find(node => [...(node as HTMLSelectElement).options].some(option => option.value === '*'))!;
-    fireEvent.change(donors, { target: { value: '*' } });
+    const donors = screen.getAllByRole('combobox').find(node => comboOptions(node).some(option => option.value === '*'))!;
+    pickCombo(donors, '*');
     const titles = [...document.querySelectorAll('.card--pick .card__title')].map(node => node.textContent ?? '');
     for (const piece of PIECES) expect(titles, piece.label).toContain(piece.label);
   });

@@ -1,8 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { pickCombo, comboOptions } from '../../../testing/cards.ts';
 import type { System, TableColumn } from '@vtt/schema';
 import { TableColumnCard } from './tables-section.tsx';
+
+const comboWith = (test: (o: { value: string; label: string }) => boolean): HTMLInputElement =>
+  [...document.querySelectorAll<HTMLInputElement>('[role="combobox"]')].find(el => comboOptions(el).some(test))!;
 
 describe('тип колонки с формулой', () => {
   it('«по формуле» снимает тип: значение даёт сама формула', () => {
@@ -10,10 +14,10 @@ describe('тип колонки с формулой', () => {
     const system = { tables: { лист: { shape: 'single', columns: [column] } }, constants: {}, effects: {} } as unknown as System;
     render(<TableColumnCard id="лист" table={system.tables!.лист!} column={column} system={system}
       edit={change => change(system.tables!.лист!)} onClose={() => {}} />);
-    const type = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.text === 'по формуле'))!;
-    fireEvent.change(type, { target: { value: '' } });
+    const type = comboWith(o => o.label === 'по формуле');
+    pickCombo(type, '');
     expect(column.kind).toBeUndefined();
-    expect(screen.getAllByText('по формуле').length).toBeGreaterThan(0);
+    expect(comboOptions(type).find(o => o.value === '')?.label).toBe('по формуле');
   });
 });
 
@@ -33,9 +37,9 @@ describe('числовая колонка — строка таблицы', () =
     const system = make(column);
     render(<TableColumnCard id="лист" table={system.tables!.лист!} column={column} system={system}
       edit={change => change(system.tables!.лист!)} onClose={() => {}} />);
-    const select = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.text === 'нет — просто число'))!;
-    expect([...select.options].map(o => o.text)).toEqual(['нет — просто число', 'Уровень персонажа', 'Ярость']);
-    fireEvent.change(select, { target: { value: 'уровни' } });
+    const select = comboWith(o => o.label === 'нет — просто число');
+    expect(comboOptions(select).map(o => o.label)).toEqual(['нет — просто число', 'Уровень персонажа', 'Ярость']);
+    pickCombo(select, 'уровни');
     expect(column.from).toBe('уровни');
   });
 
@@ -44,8 +48,7 @@ describe('числовая колонка — строка таблицы', () =
     const system = make(column);
     render(<TableColumnCard id="лист" table={system.tables!.лист!} column={column} system={system}
       edit={change => change(system.tables!.лист!)} onClose={() => {}} />);
-    const select = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.text === 'нет — просто число'))!;
-    fireEvent.change(select, { target: { value: '' } });
+    pickCombo(comboWith(o => o.label === 'нет — просто число'), '');
     expect('from' in column).toBe(false);
   });
 
@@ -55,8 +58,7 @@ describe('числовая колонка — строка таблицы', () =
     render(<TableColumnCard id="лист" table={system.tables!.лист!} column={column} system={system}
       edit={change => change(system.tables!.лист!)} onClose={() => {}} />);
     expect(screen.getByText('Строка таблицы')).toBeTruthy();
-    const type = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'text'))!;
-    fireEvent.change(type, { target: { value: 'text' } });
+    pickCombo(comboWith(o => o.value === 'text'), 'text');
     expect(column.kind).toBe('text');
     expect('from' in column).toBe(false);
   });

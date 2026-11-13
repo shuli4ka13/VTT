@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { pickCombo } from '../../testing/cards.ts';
 import { SheetSample, sampleValues } from './sheet-sample.tsx';
 import { ThingPanel } from './thing-panel.tsx';
 import { useWorld } from '../../store/world.ts';
@@ -23,11 +24,11 @@ describe('образец листа: сумка из типов вещей и у
     useWorld.setState(state => ({ ...state, system, compendium: { records: [] }, activePage: null, activeBlock: null }));
     render(<SheetSample system={system} />);
     expect(screen.getByText('У образца пока ничего нет — добавьте образец вещи или умения.')).toBeTruthy();
-    fireEvent.change(screen.getByLabelText('добавить образец'), { target: { value: 'оружие' } });
+    pickCombo(screen.getByLabelText('добавить образец'), 'оружие');
     expect(screen.getByText('Оружие 1')).toBeTruthy();
     expect(useWorld.getState().system).toBe(system);
     expect(document.body.textContent).toMatch(/Урон: \d+/);
-    expect(screen.getByText('Оружие 1').closest('.card')!.querySelector('input')).toBeNull();
+    expect(screen.getByText('Оружие 1').closest('.inline')!.parentElement!.querySelector('input')).toBeNull();
     fireEvent.click(screen.getByText('убрать'));
     expect(screen.queryByText('Оружие 1')).toBeNull();
   });
@@ -40,7 +41,7 @@ describe('образец листа: сумка из типов вещей и у
       return <>{thing ? <ThingPanel table={thing} system={current} /> : null}<SheetSample system={current} /></>;
     }
     render(<Live />);
-    fireEvent.change(screen.getByLabelText('добавить образец'), { target: { value: 'оружие' } });
+    pickCombo(screen.getByLabelText('добавить образец'), 'оружие');
     fireEvent.click(screen.getByRole('button', { name: 'Оружие' }));
     expect(useWorld.getState().activeThing).toBe('оружие');
     expect(document.body.textContent).toMatch(/Урон: \d+/);

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { pickCombo } from '../../testing/cards.ts';
 import { act } from '@vtt/engine/core/act';
 import { emptyJournal } from '@vtt/engine/core/external';
 import type { Compendium, Sheet, System } from '@vtt/schema';
@@ -18,13 +19,13 @@ describe('новый тип с нуля: «+ кнопка» → «Атака» �
     useWorld.setState(state => ({ ...state, system, compendium: structuredClone(dnd.compendium), activeRecordKind: 'mag' }));
 
     render(<RecordsTab />);
-    fireEvent.change(screen.getByDisplayValue('— какой эффект —'), { target: { value: 'strike' } });
+    pickCombo(screen.getByPlaceholderText('— какой эффект —'), 'strike');
 
     const kind = useWorld.getState().system.tables!.mag!;
     expect(kind.bindings![0]!.label).toBe('Атака');
     expect((kind.columns ?? []).map(column => column.key)).toEqual(['attack_with', 'damage_dice', 'damage_type', 'damage_source']);
 
-    fireEvent.change(screen.getByLabelText('«Источник урона» — чем заполняет тип'), { target: { value: '"магический"' } });
+    pickCombo(screen.getByLabelText('«Источник урона» — чем заполняет тип'), '"магический"');
     expect(useWorld.getState().system.tables!.mag!.bindings![0]!.args).toEqual({
       attack_with: { expr: '@attack_with' }, damage_dice: { expr: '@damage_dice' }, damage_type: { expr: '@damage_type' },
       damage_source: { expr: '"магический"' },

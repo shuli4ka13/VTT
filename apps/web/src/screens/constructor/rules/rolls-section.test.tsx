@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest';
-import { render, cleanup, fireEvent } from '@testing-library/react';
+import { render, cleanup, fireEvent, act } from '@testing-library/react';
 import { RollsSection } from './rolls-section.tsx';
-import { within } from '../../../testing/cards.ts';
+import { within, pickCombo } from '../../../testing/cards.ts';
 import type { System } from '@vtt/schema';
 
 const make = (roll: Record<string, unknown>) => ({
@@ -83,9 +83,9 @@ describe('«Правила → Броски»: ступени таблицей',
     const box = () => row(view.container, 'Ступени');
     within(view.container).select(box(), 'outcome');
     expect(system.rolls!.r!.degrees).toEqual({ table: 'outcome' });
-    within(view.container).select(box().querySelectorAll('select')[1] as HTMLElement, 'margin');
+    within(view.container).select(box().querySelectorAll('[role="combobox"]')[1] as HTMLElement, 'margin');
     expect(system.rolls!.r!.degrees).toEqual({ table: 'outcome', of: 'margin' });
-    within(view.container).select(box().querySelectorAll('select')[1] as HTMLElement, 'total');
+    within(view.container).select(box().querySelectorAll('[role="combobox"]')[1] as HTMLElement, 'total');
     expect(system.rolls!.r!.degrees).toEqual({ table: 'outcome' });
     within(view.container).select(box(), '');
     expect(system.rolls!.r).not.toHaveProperty('degrees');
@@ -111,28 +111,38 @@ describe('«Правила → Броски»: какое поле бросаю�
     ],
     rolls: { r: { die: 'd', fields: [] } },
   }) as unknown as System;
-  const pick = (root: HTMLElement) => root.querySelector<HTMLSelectElement>('select[aria-label="добавить поле"]')!;
-  const listed = (root: HTMLElement) => [...pick(root).children].map(node => (node instanceof HTMLOptGroupElement
-    ? `${node.label}: ${[...node.children].map(option => option.textContent).join(', ')}` : node.textContent));
+  const pick = (root: HTMLElement) => root.querySelector<HTMLElement>('[role="combobox"][aria-label="+ поле…"]')!;
+  const listed = (root: HTMLElement) => {
+    const lines: { group: string; labels: string[] }[] = [];
+    for (const node of pick(root).closest('.combo')!.querySelectorAll<HTMLElement>('.combo__group, .slot__option')) {
+      if (node.classList.contains('combo__group')) { lines.push({ group: node.textContent!, labels: [] }); continue; }
+      const last = lines[lines.length - 1];
+      if (last && last.group && node.dataset.value !== '\u0000more') last.labels.push(node.textContent!); else lines.push({ group: '', labels: [node.textContent!] });
+    }
+    return lines.map(line => (line.group ? `${line.group}: ${line.labels.join(', ')}` : line.labels[0]!));
+  };
 
   it('поля идут по блокам листа в порядке листа; служебные — за отдельным пунктом', () => {
     const system = sheet();
     const view = render(<RollsSection system={system} editSystem={change => change(system as never)} />);
+    expect(pick(view.container).getAttribute('placeholder')).toBe('+ поле…');
+    act(() => { fireEvent.focus(pick(view.container)); });
     expect(listed(view.container)).toEqual([
-      '+ поле…',
       'Характеристики: Сила',
       'Наборы кубиков: Память, Навыки → Набор',
       'служебные поля, которых нет на листе (1)…',
     ]);
-    fireEvent.change(pick(view.container), { target: { value: '\u0001' } });
-    expect(listed(view.container).at(-1)).toBe('Без блока: Нельзя действовать');
+    const more = [...pick(view.container).closest('.combo')!.querySelectorAll<HTMLElement>('.slot__option')].find(o => o.dataset.value === '\u0000more')!;
+    act(() => { fireEvent.mouseDown(more); });
+    expect(listed(view.container).at(-1)).toBe('служебные поля, которых нет на листе: Нельзя действовать');
+    act(() => { fireEvent.blur(pick(view.container)); });
     expect(system.rolls!.r!.fields).toEqual([]);
   });
 
   it('выбранное поле встаёт в бросок', () => {
     const system = sheet();
     const view = render(<RollsSection system={system} editSystem={change => change(system as never)} />);
-    fireEvent.change(pick(view.container), { target: { value: 'навыки\u0000набор' } });
+    pickCombo(pick(view.container), 'навыки\u0000набор');
     expect(system.rolls!.r!.fields).toEqual([{ table: 'навыки', column: 'набор' }]);
   });
 });

@@ -9,6 +9,7 @@ import { recordKinds, sheetKinds } from '@vtt/engine/model/owned';
 import { useWorld } from '../../store/world.ts';
 import { world as W } from '@vtt/schema';
 import { openAll } from '../../testing/render-open.tsx';
+import { comboOptions, pickCombo } from '../../testing/cards.ts';
 import { SheetTab } from './sheet-tab.tsx';
 import { RulesTab } from './rules/rules-tab.tsx';
 import { EffectsTab } from './effects/effects-tab.tsx';
@@ -163,6 +164,11 @@ function setTo(el: Element, texts: string[]): void {
     if (radio && radio.getAttribute('aria-checked') !== 'true') fireEvent.click(radio);
     return;
   }
+  if (el.getAttribute('role') === 'combobox') {
+    const option = comboOptions(el as HTMLElement).find(o => texts.includes(o.value) || texts.includes(o.label));
+    if (option) pickCombo(el as HTMLElement, option.value);
+    return;
+  }
   if (el instanceof HTMLSelectElement) {
     const option = [...el.options].find(o => texts.includes(o.value) || texts.includes((o.textContent ?? '').trim()));
     if (option) fireEvent.change(el, { target: { value: option.value } });
@@ -272,6 +278,7 @@ function restores(original: World, blanked: World, view: View, value: unknown): 
     const wanted = String(value[value.length - 1]);
     fields().forEach((el, i) => {
       if (el instanceof HTMLSelectElement && [...el.options].some(o => o.value === wanted)) tries.push([i, [wanted]]);
+      if (el.getAttribute('role') === 'combobox' && comboOptions(el as HTMLElement).some(o => o.value === wanted)) tries.push([i, [wanted]]);
     });
     cleanup();
   }

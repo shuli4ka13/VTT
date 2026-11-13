@@ -2,6 +2,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { ActionForm } from './action-form.tsx';
+import { pickCombo } from '../../testing/cards.ts';
 import type { System, Compendium } from '@vtt/schema';
 
 const system = {
@@ -60,7 +61,7 @@ describe('форма действия спрашивает то, что объя
     expect(screen.getByRole('alert').textContent).toContain('не больше 50');
 
     fireEvent.change(number, { target: { value: '7' } });
-    fireEvent.change(document.querySelector('select')!, { target: { value: 'голова' } });
+    pickCombo(document.querySelector<HTMLElement>('[role="combobox"]')!, 'голова');
     fireEvent.click(screen.getByText('Выстрел'));
 
     expect(sent).toEqual([{ actionId: 'ствол:0', inputs: { дистанция: 7, куда: 'голова' } }]);
@@ -95,13 +96,13 @@ describe('вход «для каждой цели»', () => {
     rerender(<ActionForm system={system} compendium={compendium} actionId="граната:0" label="Бросить" onAct={r => sent.push(r)}
       targets={[{ id: 'а', name: 'Анна' }, { id: 'б', name: 'Борис' }]} />);
     expect(screen.getByText('Где цель · Анна')).toBeTruthy();
-    const [first, second] = [...document.querySelectorAll('select')] as HTMLSelectElement[];
-    fireEvent.change(first!, { target: { value: 'тело' } });
+    const [first, second] = [...document.querySelectorAll<HTMLElement>('[role="combobox"]')];
+    pickCombo(first!, 'тело');
     fireEvent.click(screen.getByText('Бросить'));
     expect(sent).toEqual([]);
     expect(screen.getByRole('alert').textContent).toContain('(б)');
 
-    fireEvent.change(second!, { target: { value: 'голова' } });
+    pickCombo(second!, 'голова');
     fireEvent.click(screen.getByText('Бросить'));
     expect(sent).toEqual([{ actionId: 'граната:0', inputs: { место: { а: 'тело', б: 'голова' } } }]);
   });
@@ -141,7 +142,7 @@ describe('вход, заполняемый дистанцией по полю', 
       targets={[{ id: 'б', name: 'Борис' }]} onAct={r => sent.push(r)} />);
     fireEvent.click(screen.getByText('Выстрел…'));
     expect((document.querySelector('input[type=number]') as HTMLInputElement).value).toBe('10');
-    expect((document.querySelector('select') as HTMLSelectElement).value).toBe('далеко');
+    expect(document.querySelector<HTMLElement>('[role="combobox"]')!.dataset.value).toBe('далеко');
     expect(screen.getAllByText('по полю: 10 м')).toHaveLength(2);
 
     fireEvent.change(document.querySelector('input[type=number]')!, { target: { value: '8' } });

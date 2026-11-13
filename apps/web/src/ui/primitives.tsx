@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Combo } from './combo.tsx';
 import { createPortal } from 'react-dom';
 import type { ReactNode, ChangeEvent, FocusEvent, KeyboardEvent } from 'react';
 import { useFocusNew } from './focus-new.ts';
@@ -174,20 +175,18 @@ export function Select<T extends string>({ value, options, onChange, disabled, t
   title?: string;
 }) {
 
-  const all = options.some(([key]) => key === value)
-    ? options
-    : [[value, value ? `${value} — такого в списке нет` : '— не выбрано —'] as const, ...options];
-  const parts: { group?: string; items: (readonly [T, string] | readonly [T, string, string])[] }[] = [];
-  for (const option of all) {
-    const group = option[2];
-    const last = parts[parts.length - 1];
-    if (last && last.group === group) last.items.push(option); else parts.push({ ...(group ? { group } : {}), items: [option] });
-  }
-  const render = (option: readonly [T, string] | readonly [T, string, string]) => <option key={option[0]} value={option[0]}>{option[1]}</option>;
+  const blank = options.find(([key]) => key === '')?.[1];
   return (
-    <select className="select" value={value} disabled={disabled} title={title} aria-label={label} onChange={e => { if (e.target.value !== value) onChange(e.target.value as T); }}>
-      {parts.map((part, at) => (part.group ? <optgroup key={`${part.group}:${at}`} label={part.group}>{part.items.map(render)}</optgroup> : part.items.map(render)))}
-    </select>
+    <Combo
+      look="select"
+      value={value}
+      {...(blank ? { blank } : {})}
+      {...(label ? { label } : {})}
+      {...(title ? { title } : {})}
+      {...(disabled ? { disabled } : {})}
+      options={options.map(([key, text, group]) => ({ value: key, label: text, ...(group ? { group } : {}) }))}
+      onChange={next => { if (next !== value) onChange(next as T); }}
+    />
   );
 }
 

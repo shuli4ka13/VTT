@@ -5,7 +5,7 @@ import { Chain } from './chain.tsx';
 import { EffectEditor } from './effect-editor.tsx';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import type { Effect, System, Step } from '@vtt/schema';
-import { within, stepCard, block, headOf, armOf, armWord, armLabel, addToArm, addArm, stopNote, stopStrip, isFused } from '../../../testing/cards.ts';
+import { within, stepCard, block, headOf, armOf, armWord, armLabel, addToArm, addArm, stopNote, stopStrip, isFused, pickCombo, comboOptions } from '../../../testing/cards.ts';
 import { openAll } from '../../../testing/render-open.tsx';
 
 const withCost = (): System => ({
@@ -29,22 +29,22 @@ describe('стоимость эффекта — одним выбором', () =
 
   it('выбор «+ плата» предлагает эффекты блока «Стоимость», выбранная встаёт первым шагом', () => {
     const effect = lane([{ type: 'apply', target: { tag: 'x' } }]);
-    const pick = screen.getByDisplayValue('+ плата') as HTMLSelectElement;
-    expect([...pick.options].map(o => o.textContent)).toEqual(['+ плата', 'Стоимость: действие', '+ новая плата…']);
-    fireEvent.change(pick, { target: { value: 'cost_action' } });
+    const pick = screen.getByPlaceholderText('+ плата');
+    expect(comboOptions(pick).map(o => o.label)).toEqual(['+ плата', 'Стоимость: действие', '+ новая плата…']);
+    pickCombo(pick, 'cost_action');
     expect(effect.steps![0]).toEqual({ id: 'стоимость', type: 'emit', effect: 'cost_action' });
   });
 
   it('ценой может стать и другой вызываемый эффект — не только из блока «Стоимость», но не сам эффект', () => {
     useWorld.getState().editSystem(draft => { draft.effects.spend = { label: 'Потратить', activation: 'manual', params: [], steps: [] } as never; });
     lane();
-    const pick = screen.getByDisplayValue('+ плата') as HTMLSelectElement;
-    expect([...pick.options].map(o => o.textContent)).toEqual(['+ плата', 'Стоимость: действие', 'Потратить', '+ новая плата…']);
+    const pick = screen.getByPlaceholderText('+ плата');
+    expect(comboOptions(pick).map(o => o.label)).toEqual(['+ плата', 'Стоимость: действие', 'Потратить', '+ новая плата…']);
   });
 
   it('«+ новая плата» заводит эффект в блоке «Плата» и сразу его зовёт', () => {
     const effect = lane();
-    fireEvent.change(screen.getByDisplayValue('+ плата'), { target: { value: ':новая' } });
+    pickCombo(screen.getByPlaceholderText('+ плата'), ':новая');
     const made = Object.entries(useWorld.getState().system.effects).find(([id]) => id.startsWith('стоимость'))!;
     expect(made[1]).toMatchObject({ group: 'Плата' });
     expect(effect.steps![0]).toMatchObject({ type: 'emit', effect: made[0] });
@@ -53,7 +53,7 @@ describe('стоимость эффекта — одним выбором', () =
   it('без «onAddCost» (цепочка хука или подписки без решения) выбора стоимости нет', () => {
     const effect = { label: 'Удар', steps: [] } as unknown as Effect;
     render(<Chain id="удар" placeAt={index => ({ part: 'steps', index })} effect={effect} system={withCost()} edit={() => {}} />);
-    expect(screen.queryByDisplayValue('+ плата')).toBeNull();
+    expect(screen.queryByPlaceholderText('+ плата')).toBeNull();
   });
 
   it('«+ плата» стоит рядом с остальными шагами и ставит плату первым шагом над чертой', () => {
@@ -62,7 +62,7 @@ describe('стоимость эффекта — одним выбором', () =
       return <EffectEditor id="удар" effect={system.effects.удар!} system={system} />;
     };
     const { rerender } = render(view());
-    fireEvent.change(screen.getByDisplayValue('+ плата'), { target: { value: 'cost_action' } });
+    pickCombo(screen.getByPlaceholderText('+ плата'), 'cost_action');
     expect(useWorld.getState().system.effects.удар!.cost).toEqual([{ type: 'emit', effect: 'cost_action' }]);
     rerender(view());
     expect(screen.getByText(/1 · Стоимость/)).toBeTruthy();
@@ -481,7 +481,7 @@ describe('«+ бросок» и «+ проверка»: что кладётся 
     const effect = { label: 'Удар', activation: 'manual', params: [sheet('кто'), sheet('цели', true)], steps: [{ type: 'each', of: 'цели' }, { type: 'branch' }, { type: 'end' }] } as unknown as Effect;
     cleanup();
     render(<Chain id="удар" placeAt={index => ({ part: 'steps', index })} effect={effect} system={system({ удар: effect })} edit={change => change(effect)} />);
-    fireEvent.change(screen.getAllByDisplayValue('+ шаг')[0]!, { target: { value: 'roll' } });
+    pickCombo(screen.getAllByPlaceholderText('+ шаг')[0]!, 'roll');
     const roll = effect.steps!.find(step => step.type === 'roll') as unknown as Record<string, unknown>;
     expect(roll).toMatchObject({ by: { expr: '@кто' } });
   });

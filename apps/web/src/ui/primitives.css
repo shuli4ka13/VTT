@@ -323,6 +323,15 @@
 
 .slot__group--record { opacity: 1; color: var(--from-record); }
 
+.combo--select { position: relative; display: inline-flex; align-items: center; }
+.combo--select:focus-within { border-color: var(--accent); }
+.combo--select.is-disabled { opacity: .6; cursor: default; }
+.combo__bare { flex: 1 1 auto; width: 100%; min-width: 0; height: 100%; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; line-height: inherit; outline: none; text-overflow: ellipsis; cursor: pointer; }
+.combo__bare:focus, .combo__bare:focus-visible { cursor: text; outline: none; box-shadow: none; }
+.combo__bare::placeholder { color: var(--text-faint); }
+.combo--select > .slot__menu { left: -1px; right: auto; min-width: calc(100% + 2px); width: max-content; max-width: min(480px, 90vw); }
+.combo__check { display: inline-block; width: 1em; flex: none; color: var(--accent); }
+.combo__count { flex: none; margin-left: var(--s-2); padding: 0 6px; border-radius: 999px; font-size: var(--fs-1); line-height: 18px; background: var(--accent-soft); color: var(--text-muted); }
 .combo__group { padding: 6px 10px 2px; font-size: 11px; color: var(--text-faint); }
 .combo__input {
   cursor: pointer; padding-right: 28px;
@@ -971,3 +980,4 @@
 .roll-flow__name { font-weight: 600; white-space: nowrap; width: 1%; }
 .roll-flow__kind { opacity: .6; white-space: nowrap; width: 1%; }
 .roll-flow__said { opacity: .75; }
+.roll-form__body--wrap > .combo--multi, .combo--multi { flex: 1 1 auto; width: 100%; max-width: none; }

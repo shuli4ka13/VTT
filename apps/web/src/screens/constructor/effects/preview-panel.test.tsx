@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import { PreviewPanel } from './preview-panel.tsx';
+import { pickCombo, comboOptions } from '../../../testing/cards.ts';
 import type { System } from '@vtt/schema';
 
 const system = (): System => ({
@@ -41,13 +42,13 @@ describe('проба: А применяет эффект к Б', () => {
     render(<PreviewPanel effectId="удар" />);
     fireEvent.click(screen.getByText('Проба'));
 
-    const dice = [...document.querySelectorAll('select')]
-      .find(el => [...el.options].some(o => o.value === 'max'))!;
+    const dice = [...document.querySelectorAll<HTMLElement>('[role="combobox"]')]
+      .find(el => comboOptions(el).some(o => o.value === 'max'))!;
 
-    fireEvent.change(dice, { target: { value: 'max' } });
+    pickCombo(dice, 'max');
     expect(document.body.textContent).toContain('Хиты: 20 → 14');
 
-    fireEvent.change(dice, { target: { value: 'min' } });
+    pickCombo(dice, 'min');
     expect(document.body.textContent).toContain('Хиты: 20 → 19');
   });
 

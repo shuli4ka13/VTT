@@ -28,7 +28,7 @@ describe('итоги эффекта: «Откуда» формулой', () => {
     openAll();
     const from = within(card).cell('Откуда');
     expect(from.querySelector('.chips__chip')).not.toBeNull();
-    expect(from.querySelector('select')).toBeNull();
+    expect(from.querySelector('[role="combobox"]')).toBeNull();
     expect(from.textContent).toContain('что выпало на костях');
     expect(from.querySelector('.chips')!.getAttribute('data-value')).not.toContain('что выпало');
   });

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
+import { pickCombo } from '../../../testing/cards.ts';
 import type { System, Effect } from '@vtt/schema';
 import { CombatSection } from './combat-section.tsx';
 import { TableColumnCard } from './tables-section.tsx';
@@ -21,9 +22,9 @@ describe('поле боя и дистанция', () => {
     expect(useWorld.getState().system.grid).toEqual({ step: 1 });
     fireEvent.change(screen.getByPlaceholderText('м'), { target: { value: 'фт' } });
     const diagonal = screen.getByDisplayValue('как одна клетка');
-    fireEvent.change(diagonal, { target: { value: 'line' } });
+    pickCombo(diagonal, 'line');
     expect(useWorld.getState().system.grid).toEqual({ step: 1, unit: 'фт', diagonal: 'line' });
-    fireEvent.change(screen.getByDisplayValue('по прямой'), { target: { value: 'one' } });
+    pickCombo(screen.getByDisplayValue('по прямой'), 'one');
     expect(useWorld.getState().system.grid).toEqual({ step: 1, unit: 'фт' });
     fireEvent.click(screen.getByLabelText('Есть поле с клетками'));
     expect(useWorld.getState().system.grid).toBeUndefined();
@@ -39,9 +40,9 @@ describe('поле боя и дистанция', () => {
         edit={change => useWorld.getState().editSystem(draft => change(draft.tables!.range!))} onClose={() => {}} />;
     };
     render(<Card />);
-    fireEvent.change(screen.getByDisplayValue('нет'), { target: { value: 'from' } });
+    pickCombo(screen.getByDisplayValue('нет'), 'from');
     expect(useWorld.getState().system.tables!.range!.columns![0]!.bound).toBe('from');
-    fireEvent.change(screen.getByDisplayValue('от'), { target: { value: '' } });
+    pickCombo(screen.getByDisplayValue('от'), '');
     expect(useWorld.getState().system.tables!.range!.columns![0]!.bound).toBeUndefined();
   });
 

@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest';
-import { render, fireEvent, cleanup } from '@testing-library/react';
+import { render, cleanup } from '@testing-library/react';
 import { openAll } from '../../../testing/render-open.tsx';
 import { HandlerCard } from './handler-card.tsx';
-import { within } from '../../../testing/cards.ts';
+import { within, pickCombo, comboOptions } from '../../../testing/cards.ts';
+
+const comboWith = (value: string, root: ParentNode = document): HTMLElement => [...root.querySelectorAll<HTMLElement>('[role="combobox"]')].find(el => comboOptions(el).some(o => o.value === value))!;
 import type { System, Handler } from '@vtt/schema';
 
 const system = {
@@ -72,8 +74,7 @@ describe('«когда»: исходы под момент', () => {
 
   it('«Когда именно» пишет фазу в «что случилось»', () => {
     const { view, get } = card({ on: 'before:удар', steps: [] });
-    const phase = view.getByDisplayValue('до') as HTMLSelectElement;
-    fireEvent.change(phase, { target: { value: 'after' } });
+    pickCombo(view.getByDisplayValue('до'), 'after');
     expect(get().on).toBe('after:удар');
   });
 });
@@ -83,17 +84,16 @@ describe('«увидев кости»', () => {
 
   it('«Кого касается» называет бросающего и того, против кого бросают; выбор пишется условием про носителя', () => {
     const { view, get } = card({ on: 'seen', steps: [] });
-    const whose = view.getByDisplayValue('всех — без условия') as HTMLSelectElement;
-    expect([...whose.options].map(o => o.value)).toEqual(['', '@бросающий == @носитель', '@против == @носитель']);
-    expect([...whose.options].map(o => o.textContent)).toEqual(['всех — без условия', '«кто бросает» — носитель', '«против кого бросок» — носитель']);
-    fireEvent.change(whose, { target: { value: '@против == @носитель' } });
+    const whose = view.getByDisplayValue('всех — без условия');
+    expect(comboOptions(whose).map(o => o.value)).toEqual(['', '@бросающий == @носитель', '@против == @носитель']);
+    expect(comboOptions(whose).map(o => o.label)).toEqual(['всех — без условия', '«кто бросает» — носитель', '«против кого бросок» — носитель']);
+    pickCombo(whose, '@против == @носитель');
     expect(get().if?.expr).toBe('@против == @носитель');
   });
 
   it('уход с момента стирает условие про носителя', () => {
     const { view, get } = card({ on: 'seen', if: { expr: '@бросающий == @носитель' }, steps: [] });
-    const moment = [...view.container.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'seen'))!;
-    fireEvent.change(moment, { target: { value: 'call' } });
+    pickCombo(comboWith('seen', view.container), 'call');
     expect(get().if).toBeUndefined();
     expect(get().on).toBe('before:*');
   });
@@ -104,9 +104,9 @@ describe('«бросок окончен»', () => {
 
   it('вид подписки без предмета: выбор пишет «rolled», а список называет его словами', () => {
     const { view, get } = card({ on: 'before:*', steps: [] });
-    const moment = [...view.container.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'rolled'))!;
-    expect([...moment.options].find(o => o.value === 'rolled')!.textContent).toBe('бросок окончен');
-    fireEvent.change(moment, { target: { value: 'rolled' } });
+    const moment = comboWith('rolled', view.container);
+    expect(comboOptions(moment).find(o => o.value === 'rolled')!.label).toBe('бросок окончен');
+    pickCombo(moment, 'rolled');
     expect(get().on).toBe('rolled');
   });
 
@@ -186,7 +186,7 @@ describe('«когда»: фраза по-русски', () => {
     const withHandler = { ...tagged, effects: { ...tagged.effects, r: { ...tagged.effects.r, on: [handler] } } } as System;
     render(<HandlerCard id="r" index={0} handler={handler} system={withHandler} onRemove={() => {}} edit={() => {}} />);
     openAll();
-    const subjects = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === '*'))!;
-    expect([...subjects.options].map(o => o.textContent)).toEqual(['любое действие кнопкой', 'всё с меткой «Атака»', '«Удар»']);
+    const subjects = comboWith('*');
+    expect(comboOptions(subjects).map(o => o.label)).toEqual(['любое действие кнопкой', 'всё с меткой «Атака»', '«Удар»']);
   });
 });

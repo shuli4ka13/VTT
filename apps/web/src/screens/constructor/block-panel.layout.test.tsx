@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { pickCombo, comboOptions } from '../../testing/cards.ts';
 import { BlockPanel } from './block-panel.tsx';
 import { useWorld } from '../../store/world.ts';
 import type { System } from '@vtt/schema';
@@ -35,19 +36,19 @@ describe('раскладка блока', () => {
 
   it('«Страница» пишет page, первая закладка снимает ключ', () => {
     panel('Навыки');
-    fireEvent.change(screen.getByLabelText('страница блока'), { target: { value: 'Магия' } });
+    pickCombo(screen.getByLabelText('страница блока'), 'Магия');
     expect(sys().blocks![0]!.page).toBe('Магия');
-    fireEvent.change(screen.getByLabelText('страница блока'), { target: { value: '' } });
+    pickCombo(screen.getByLabelText('страница блока'), '');
     expect(sys().blocks![0]).not.toHaveProperty('page');
   });
 
   it('«Ширина» пишет ширину ячейке, 12 снимает ключ; «Под предыдущим блоком» ставит under и снимает свою ширину', () => {
     panel('Навыки');
-    fireEvent.change(screen.getByLabelText('ширина блока'), { target: { value: '5' } });
+    pickCombo(screen.getByLabelText('ширина блока'), '5');
     expect(sys().blocks![0]!.width).toBe(5);
-    fireEvent.change(screen.getByLabelText('ширина блока'), { target: { value: '12' } });
+    pickCombo(screen.getByLabelText('ширина блока'), '12');
     expect(sys().blocks![0]).not.toHaveProperty('width');
-    fireEvent.change(screen.getByLabelText('ширина блока'), { target: { value: '6' } });
+    pickCombo(screen.getByLabelText('ширина блока'), '6');
     fireEvent.click(screen.getByLabelText('Под предыдущим блоком'));
     expect(sys().blocks![0]!.under).toBe(true);
     expect(sys().blocks![0]).not.toHaveProperty('width');
@@ -56,35 +57,35 @@ describe('раскладка блока', () => {
   it('«Строки таблицы» — у блока с таблицей, «Поля внутри блока» — у блока с полями листа', () => {
     panel('Навыки');
     expect(screen.queryByLabelText('поля внутри блока')).toBeNull();
-    fireEvent.change(screen.getByLabelText('строки таблицы'), { target: { value: '2' } });
+    pickCombo(screen.getByLabelText('строки таблицы'), '2');
     expect(sys().blocks![0]!.split).toBe(2);
-    fireEvent.change(screen.getByLabelText('строки таблицы'), { target: { value: '1' } });
+    pickCombo(screen.getByLabelText('строки таблицы'), '1');
     expect(sys().blocks![0]).not.toHaveProperty('split');
     cleanup();
     panel('Внутри');
     expect(screen.queryByLabelText('строки таблицы')).toBeNull();
-    fireEvent.change(screen.getByLabelText('поля внутри блока'), { target: { value: '2' } });
+    pickCombo(screen.getByLabelText('поля внутри блока'), '2');
     expect(sys().blocks![1]!.per).toBe(2);
-    fireEvent.change(screen.getByLabelText('поля внутри блока'), { target: { value: '' } });
+    pickCombo(screen.getByLabelText('поля внутри блока'), '');
     expect(sys().blocks![1]).not.toHaveProperty('per');
   });
 
   it('вложенный блок раскладывается как любой: своя ширина, страница по умолчанию — как у родителя', () => {
     panel('Внутри');
     expect(screen.getByLabelText('ширина блока')).toBeTruthy();
-    expect([...(screen.getByLabelText('страница блока') as HTMLSelectElement).options][0]!.textContent).toBe('как у «Навыки»');
+    expect(comboOptions(screen.getByLabelText('страница блока'))[0]!.label).toBe('как у «Навыки»');
   });
 
   it('«Список в блоке» ставит список и снимает его с другого блока', () => {
     panel('Навыки');
-    fireEvent.change(screen.getByLabelText('список в блоке'), { target: { value: 'things' } });
+    pickCombo(screen.getByLabelText('список в блоке'), 'things');
     expect(sys().blocks![0]!.list).toBe('things');
     cleanup();
     panel('Внутри');
-    fireEvent.change(screen.getByLabelText('список в блоке'), { target: { value: 'things' } });
+    pickCombo(screen.getByLabelText('список в блоке'), 'things');
     expect(sys().blocks![1]!.list).toBe('things');
     expect(sys().blocks![0]).not.toHaveProperty('list');
-    fireEvent.change(screen.getByLabelText('список в блоке'), { target: { value: '' } });
+    pickCombo(screen.getByLabelText('список в блоке'), '');
     expect(sys().blocks![1]).not.toHaveProperty('list');
   });
 

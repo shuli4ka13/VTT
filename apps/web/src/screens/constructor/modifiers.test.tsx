@@ -16,13 +16,13 @@ const system = {
 
 const rollMod = [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['атака'], edit: 'фора' }] as Modifier[];
 
-const optionsOf = (select: HTMLSelectElement) => [...select.options].map(o => o.textContent);
+const optionsOf = (combo: HTMLElement) => comboOptions(combo).map(o => o.label);
 
 describe('редактор модификаторов', () => {
   it('кого касается — бросает носитель или бросают против него, а какой именно бросок — метки из строк таблиц', () => {
     renderOpen(<ModifiersEditor system={system} modifiers={rollMod} onEdit={vi.fn()} />);
-    expect((screen.getByDisplayValue('Бросок') as HTMLSelectElement).value).toBe('roll');
-    const whose = screen.getByDisplayValue('всех — без условия') as HTMLSelectElement;
+    expect(screen.getByDisplayValue('Бросок').dataset.value).toBe('roll');
+    const whose = screen.getByDisplayValue('всех — без условия');
     expect(optionsOf(whose)).toEqual(['всех — без условия', 'бросает носитель', 'бросают против носителя']);
     expect(screen.getByText('атака', { selector: 'span' })).toBeTruthy();
     const more = screen.getAllByPlaceholderText('+ ещё…')[0]!;
@@ -34,20 +34,20 @@ describe('редактор модификаторов', () => {
     const mods = structuredClone(rollMod) as Modifier[];
     const onEdit = vi.fn((change: (d: Modifier[]) => void) => change(mods));
     const { unmount } = renderOpen(<ModifiersEditor system={system} modifiers={mods} onEdit={onEdit} />);
-    fireEvent.change(screen.getByDisplayValue('всех — без условия'), { target: { value: '@против == @носитель' } });
+    pickCombo(screen.getByDisplayValue('всех — без условия'), '@против == @носитель');
     expect((mods[0] as { if?: unknown }).if).toEqual({ expr: '@против == @носитель' });
     unmount();
 
     renderOpen(<ModifiersEditor system={system} modifiers={mods} onEdit={vi.fn()} />);
-    expect((screen.getByDisplayValue('бросают против носителя') as HTMLSelectElement).value).toBe('@против == @носитель');
+    expect(screen.getByDisplayValue('бросают против носителя').dataset.value).toBe('@против == @носитель');
   });
 
   it('условие поверх «Кого касается» хранится как все(…) и очищается вместе с выбором', () => {
     const mods = [{ ...rollMod[0], if: { expr: '@бросающий == @носитель и @носитель.ac > 1' } }] as unknown as Modifier[];
     const onEdit = vi.fn((change: (d: Modifier[]) => void) => change(mods));
     renderOpen(<ModifiersEditor system={system} modifiers={mods} onEdit={onEdit} />);
-    const whose = screen.getByDisplayValue('бросает носитель') as HTMLSelectElement;
-    fireEvent.change(whose, { target: { value: '' } });
+    const whose = screen.getByDisplayValue('бросает носитель');
+    pickCombo(whose, '');
     expect((mods[0] as { if?: { expr: string } }).if).toEqual({ expr: '@носитель.ac > 1' });
   });
 
@@ -69,7 +69,7 @@ describe('редактор модификаторов', () => {
 
   it('правки предлагаются из словаря автора, а не из зашитого списка', () => {
     renderOpen(<ModifiersEditor system={system} modifiers={rollMod} onEdit={vi.fn()} />);
-    const edit = screen.getByDisplayValue('Фора') as HTMLSelectElement;
+    const edit = screen.getByDisplayValue('Фора');
     expect(optionsOf(edit)).toEqual(['— выберите правку —', 'Фора']);
     expect(optionsOf(edit)).not.toContain('Преимущество');
   });
@@ -160,10 +160,10 @@ describe('один редактор — шесть механизмов', () => 
     const onEdit = vi.fn((change: (d: Modifier[]) => void) => change(mods));
     renderOpen(<ModifiersEditor system={draft} modifiers={mods} onEdit={onEdit} editSystem={editSystem} />);
 
-    const edit = [...document.querySelectorAll('select')]
-      .find(el => [...el.options].some(o => o.value.startsWith('recipe:'))) as HTMLSelectElement;
+    const edit = [...document.querySelectorAll<HTMLElement>('[role="combobox"]')]
+      .find(el => comboOptions(el).some(o => o.value.startsWith('recipe:')))!;
     expect(optionsOf(edit)).toContain('+ Преимущество · Переброс кости и выбор лучшего/худшего броска');
-    fireEvent.change(edit, { target: { value: 'recipe:rerollBest:advantage' } });
+    pickCombo(edit, 'recipe:rerollBest:advantage');
 
     expect(draft.roll_edits?.advantage?.cancels).toEqual(['disadvantage']);
     expect(draft.roll_edits?.disadvantage).toBeTruthy();
@@ -172,14 +172,14 @@ describe('один редактор — шесть механизмов', () => 
 
   it('без права писать в систему готовых механизмов в списке нет', () => {
     renderOpen(<ModifiersEditor system={system} modifiers={rollMod} onEdit={vi.fn()} />);
-    const edit = screen.getByDisplayValue('Фора') as HTMLSelectElement;
-    expect([...edit.options].some(o => o.value.startsWith('recipe:'))).toBe(false);
+    const edit = screen.getByDisplayValue('Фора');
+    expect(comboOptions(edit).some(o => o.value.startsWith('recipe:'))).toBe(false);
   });
 
   it('у значения есть пол и потолок', () => {
     const valueMod = [{ kind: 'value', target: 'ac', op: 'add', value: { expr: '1' } }] as Modifier[];
     renderOpen(<ModifiersEditor system={system} modifiers={valueMod} onEdit={vi.fn()} />);
-    const how = screen.getByDisplayValue('прибавить') as HTMLSelectElement;
+    const how = screen.getByDisplayValue('прибавить');
     expect(optionsOf(how)).toEqual(['прибавить', 'умножить', 'задать', 'не меньше', 'не больше']);
   });
 });
@@ -206,7 +206,7 @@ describe('правка по умолчанию касается носителя
     const mods = [{ kind: 'edit', call: 'roll', param: 'edits', edit: 'фора', if: { expr: '@бросающий == @носитель' } }] as unknown as Modifier[];
     const onEdit = vi.fn((change: (d: Modifier[]) => void) => change(mods));
     renderOpen(<ModifiersEditor system={withDamage} modifiers={mods} onEdit={onEdit} />);
-    fireEvent.change(screen.getByDisplayValue('Бросок'), { target: { value: 'урон' } });
+    pickCombo(screen.getByDisplayValue('Бросок'), 'урон');
     expect(mods[0]).toMatchObject({ call: 'урон', param: 'сколько', if: { expr: '@лист == @носитель' } });
   });
 

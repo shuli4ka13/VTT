@@ -78,8 +78,8 @@ describe('листы: блоки и типы', () => {
   it('часть «таблица навыки, группировать по характеристике»', () => {
     render(<SheetTab />);
     fireEvent.click(screen.getByText('+ блок'));
-    fireEvent.change(screen.getByLabelText('добавить поля из таблицы'), { target: { value: 'навыки' } });
-    fireEvent.change(screen.getByLabelText('группировать по'), { target: { value: 'ability' } });
+    pickCombo(screen.getByLabelText('добавить поля из таблицы'), 'навыки');
+    pickCombo(screen.getByLabelText('группировать по'), 'ability');
     const block = blocksNow().find(b => b.name === 'Новый блок')!;
     expect(block.parts[0]!.table).toBe('навыки');
     expect(block.parts[0]!.by).toBe('ability');
@@ -93,12 +93,12 @@ describe('листы: блоки и типы', () => {
     useWorld.getState().editSystem(draft => { (draft.tables ??= {})[id] = { label: 'Классы', key: 'word', rows: [{ value: 'воин' }, { value: 'маг' }] } as never; });
     render(<SheetTab />);
     fireEvent.click(screen.getByText('+ блок'));
-    fireEvent.change(screen.getByLabelText('добавить поля из таблицы'), { target: { value: id } });
+    pickCombo(screen.getByLabelText('добавить поля из таблицы'), id);
     expect(useWorld.getState().system.tables![id]!.owner).toBeUndefined();
     expect(blocksNow().find(b => b.name === 'Новый блок')!.parts).toEqual([]);
     fireEvent.click(screen.getByText('Нет'));
     expect(screen.queryByText('Да, своими у каждого листа')).toBeNull();
-    fireEvent.change(screen.getByLabelText('добавить поля из таблицы'), { target: { value: id } });
+    pickCombo(screen.getByLabelText('добавить поля из таблицы'), id);
     fireEvent.click(screen.getByText('Да, своими у каждого листа'));
     expect(useWorld.getState().system.tables![id]!.owner).toBe('sheet');
     expect(blocksNow().find(b => b.name === 'Новый блок')!.parts.map(p => p.table)).toEqual([id]);
@@ -127,7 +127,7 @@ describe('листы: блоки и типы', () => {
   it('поле без блока показано внизу, «в блок…» дописывает колонку в часть', () => {
     render(<Sheets />);
     expect(screen.getByText('Без блока')).toBeTruthy();
-    fireEvent.change(screen.getByLabelText('«Ничьё»: в блок'), { target: { value: 'Здоровье' } });
+    pickCombo(screen.getByLabelText('«Ничьё»: в блок'), 'Здоровье');
     expect(blocksNow()[0]!.parts).toEqual([{ table: 'лист', columns: ['hp', 'loose'] }]);
     expect(screen.queryByLabelText('«Ничьё»: в блок')).toBeNull();
   });
@@ -165,7 +165,7 @@ describe('раздел «Что даёт всем листам»', () => {
     const box = document.querySelector<HTMLElement>('[data-field="Что даёт всем листам"]')!;
     pickCombo(box.querySelector<HTMLElement>('[role="combobox"]')!, 'удар');
     expect(useWorld.getState().system.grants).toEqual(['удар']);
-    fireEvent.click(box.querySelector('.chip__x')!);
+    pickCombo(box.querySelector<HTMLElement>('[role="combobox"]')!, 'удар');
     expect('grants' in useWorld.getState().system).toBe(false);
   });
 

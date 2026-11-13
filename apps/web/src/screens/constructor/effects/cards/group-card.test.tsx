@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { within as cards, comboOptions } from '../../../../testing/cards.ts';
+import { within as cards, comboOptions, pickCombo } from '../../../../testing/cards.ts';
 import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { GroupCard } from './group-card.tsx';
@@ -45,7 +45,7 @@ describe('GroupCard', () => {
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
     const line = document.querySelector('.check-line')!;
     for (const label of ['Что проверяем', 'Знак', 'С чем']) expect(line.querySelector(`[data-field="${label}"]`), label).toBeTruthy();
-    expect((cards().field('Знак').querySelector('select') as HTMLSelectElement).value).toBe('atLeast');
+    expect(cards().field('Знак').querySelector<HTMLElement>('[role="combobox"]')!.dataset.value).toBe('atLeast');
     expect(document.body.textContent).not.toContain('Кто бросает');
     expect(document.body.textContent).not.toContain('Против кого');
   });
@@ -162,7 +162,7 @@ describe('GroupCard: условие и ход — не у шага', () => {
     render(<GroupCard group={group} position={2} system={system} effect={effect}
       earlier={earlier} problem={null} edit={() => {}} onDelete={() => {}} />);
     expect(screen.queryByText('Только если')).toBeNull();
-    expect([...document.querySelectorAll('select')].some(el => [...el.options].some(o => o.value === 'hit.success'))).toBe(false);
+    expect([...document.querySelectorAll<HTMLElement>('[role="combobox"]')].some(el => comboOptions(el).some(o => o.value === 'hit.success'))).toBe(false);
     expect(cards().has('в «Если»')).toBe(false);
   });
 
@@ -285,7 +285,7 @@ describe('GroupCard: изменение как вызов', () => {
     it('выбор состояния сразу пишет в args явные формулы, ничего не подставляется молча', () => {
       const step = { type: 'status', to: { expr: '@цель' } } as any;
       shown(step);
-      fireEvent.change(screen.getByDisplayValue('— какое состояние —'), { target: { value: 'blinded' } });
+      pickCombo(screen.getByPlaceholderText('— какое состояние —'), 'blinded');
       expect(step.effect).toBe('blinded');
       expect(step.args).toEqual({ кто: { expr: '@действующий' }, на_ком: { expr: '@цель' } });
     });
@@ -293,7 +293,7 @@ describe('GroupCard: изменение как вызов', () => {
     it('смена состояния оставляет вписанное руками, если такой вход есть и у нового', () => {
       const step = { type: 'status', effect: 'calm', to: { expr: '@цель' }, args: { запомнено: { expr: '7' }, лишнее: { expr: '1' } } } as any;
       shown(step);
-      fireEvent.change(screen.getByDisplayValue('«Спокоен»'), { target: { value: 'blinded' } });
+      pickCombo(screen.getByDisplayValue('«Спокоен»'), 'blinded');
       expect(step.args).toEqual({ запомнено: { expr: '7' }, кто: { expr: '@действующий' }, на_ком: { expr: '@цель' } });
     });
 
@@ -362,7 +362,7 @@ describe('GroupCard: величина из записи', () => {
     render(<GroupCard group={group} position={1} system={system} effect={withParam} sheets={sheets}
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
 
-    expect((screen.getByDisplayValue('отнять') as HTMLSelectElement).value).toBe('subtract');
+    expect(screen.getByDisplayValue('отнять').dataset.value).toBe('subtract');
     const line = screen.getByText('Сколько').closest('label')!;
     expect(line.textContent).toContain('Кость урона');
     expect(line.textContent).not.toContain('Класс брони');
@@ -501,7 +501,7 @@ describe('GroupCard: изменение само заводит число', () 
       { type: 'apply', target: { expr: '@цель.armor' }, direction: 'subtract', value: { expr: '1' } },
     ] as unknown as Step[];
     mount(steps);
-    fireEvent.change(screen.getByDisplayValue('отнять'), { target: { value: 'add' } });
+    pickCombo(screen.getByDisplayValue('отнять'), 'add');
     expect((steps[0] as any).direction).toBe('add');
     expect((steps[0] as any).value).toEqual({ expr: '1' });
   });
@@ -532,7 +532,7 @@ describe('GroupCard: взять из таблицы', () => {
     render(<GroupCard group={group} position={1} system={withTable} effect={effect} sheets={sheets}
       earlier={[]} problem={null} edit={(_, change) => change(step as never)} onDelete={() => {}} />);
     expect(screen.getByDisplayValue('Броски')).toBeTruthy();
-    fireEvent.change(screen.getByDisplayValue('по числу или формуле'), { target: { value: 'dice' } });
+    pickCombo(screen.getByDisplayValue('по числу или формуле'), 'dice');
     expect(step.table).toBe('броски');
     expect(step.value).toBeUndefined();
     expect(step.dice).toBeDefined();

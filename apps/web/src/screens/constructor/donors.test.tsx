@@ -8,8 +8,9 @@ import { bringIn, blockParts } from '@vtt/engine/model/bring';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { effectStanding, fieldsStanding, defaultDonor, ownWords } from './donor-compare.ts';
 import type { System } from '@vtt/schema';
+import { pickCombo } from '../../testing/cards.ts';
 
-const showAll = () => fireEvent.change(screen.getAllByRole('combobox')[0]!, { target: { value: '*' } });
+const showAll = () => pickCombo(screen.getAllByRole('combobox')[0]!, '*');
 
 describe('доноры-образцы', () => {
   beforeEach(() => {
@@ -123,8 +124,8 @@ describe('каталог открывается на нужном доноре',
   it('палитра показывает одного донора, а «все системы» — выбор', () => {
     useWorld.setState(state => ({ ...state, system: emptySystem(), activeEffectId: null }));
     render(<DonorPalette kind="effects" />);
-    const select = screen.getAllByRole('combobox')[0] as HTMLSelectElement;
-    expect(select.value).toBe(first.id);
+    const select = screen.getAllByRole('combobox')[0]!;
+    expect(select.dataset.value).toBe(first.id);
     expect(screen.queryByText(second.name!, { selector: 'span.field__label' })).toBeNull();
   });
 });

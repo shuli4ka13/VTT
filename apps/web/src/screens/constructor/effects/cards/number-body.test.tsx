@@ -66,7 +66,7 @@ describe('шаг «Число»', () => {
 
   it('у числа нет ни выбора бросающего, ни меток', () => {
     const view = body({ id: 'а', type: 'roll', fixed: { expr: '@damage_with + 2' } });
-    expect(view.container.querySelector('select')).toBeNull();
+    expect(view.container.querySelector('[role="combobox"]')).toBeNull();
     expect(view.container.textContent).not.toContain('Метки');
   });
 

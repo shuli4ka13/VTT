@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, cleanup, fireEvent } from '@testing-library/react';
+import { render, cleanup, fireEvent, act } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { world as W } from '@vtt/schema';
 import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
@@ -100,15 +100,18 @@ describe('конструктор не порождает систему, кот�
           load(base());
           useWorld.setState(state => ({ ...state, ...pick }));
           const view = render(tab());
-          const count = view.container.querySelectorAll('select').length;
+          const LISTS = '.combo--select:not(.combo--multi) > [role="combobox"][data-blank]';
+          const count = view.container.querySelectorAll(LISTS).length;
           for (let index = 0; index < count; index++) {
-            const select = view.container.querySelectorAll('select')[index];
-            if (!select || select.disabled) continue;
-            const blank = [...select.options].find(o => o.value === '');
-            if (!blank) continue;
+            const combo = view.container.querySelectorAll<HTMLInputElement>(LISTS)[index];
+            if (!combo || combo.disabled || combo.dataset.value === '') continue;
+            act(() => { fireEvent.focus(combo); });
+            const blank = [...combo.closest('.combo')!.querySelectorAll<HTMLElement>('.slot__option')].find(o => o.dataset.value === '');
+            if (!blank) { act(() => { fireEvent.blur(combo); }); continue; }
+            const label = blank.textContent;
             const before = structuredClone(useWorld.getState().system);
-            fireEvent.change(select, { target: { value: '' } });
-            for (const line of issues()) found.push(`${JSON.stringify(pick)} · список «${blank.textContent}»: ${line}`);
+            act(() => { fireEvent.mouseDown(blank); fireEvent.blur(combo); });
+            for (const line of issues()) found.push(`${JSON.stringify(pick)} · список «${label}»: ${line}`);
             useWorld.setState(state => ({ ...state, system: before }));
           }
           view.unmount();

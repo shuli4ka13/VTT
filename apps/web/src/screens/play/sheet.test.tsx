@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { screen, cleanup, fireEvent, within } from '@testing-library/react';
+import { screen, cleanup, fireEvent } from '@testing-library/react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { renderOpen } from '../../testing/render-open.tsx';
@@ -8,6 +8,7 @@ import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
 import { useSession } from '../../store/session.ts';
 import { SheetScreen, pairFields } from './sheet.tsx';
+import { pickCombo, comboOptions } from '../../testing/cards.ts';
 import type { RoomState } from '@vtt/schema';
 
 const room = (): RoomState => ({
@@ -50,10 +51,10 @@ describe('сумка: экземпляры вещей', () => {
     expect(calls.at(-1)).toEqual(['к', 'а', 'has', 'предатор', true, false, { add: true }]);
 
     const laser = screen.getAllByText('Лазер')[0]!.closest('div')!.parentElement!;
-    const select = [...document.querySelectorAll('select')].find(node => (node as HTMLSelectElement).value === 'п2') as HTMLSelectElement;
+    const select = [...document.querySelectorAll<HTMLElement>('[role="combobox"]')].find(node => node.dataset.value === 'п2')!;
     expect(select).toBeTruthy();
     expect(laser).toBeTruthy();
-    fireEvent.change(select, { target: { value: 'предатор' } });
+    pickCombo(select, 'предатор');
     expect(calls.at(-1)).toEqual(['к', 'а', 'has', 'лазер', true, false, { inst: 'лазер', in: 'предатор' }]);
   });
 });
@@ -128,8 +129,8 @@ describe('бросок по полю: вторая характеристика 
     const pairs = pairFields(fabula.system);
     expect(pairs.length).toBeGreaterThan(1);
     const [first, other] = [pairs[0]!, pairs[1]!];
-    const select = screen.getAllByRole('combobox').find(one => within(one).queryByText('та же')) as HTMLSelectElement;
-    fireEvent.change(select, { target: { value: other.tag } });
+    const select = screen.getAllByRole('combobox').find(one => comboOptions(one).some(o => o.label === 'та же'))!;
+    pickCombo(select, other.tag);
     fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '9' } });
     expect(first.tag).not.toBe(other.tag);
     fireEvent.click(screen.getAllByTitle(first.roll!.label ?? `Проверка: ${first.label}`)[0]!);

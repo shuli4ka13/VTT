@@ -2,14 +2,15 @@ import type { Anchor } from './types.ts';
 import { same } from './find.ts';
 
 const NAMED = [
-  'button', '[role="tab"]', '[role="button"]', 'a', 'label', 'summary', 'select',
+  'button', '[role="tab"]', '[role="button"]', 'a', 'label', 'summary', 'select', '[role="combobox"]',
   '.field__label', '.list__name', '.fold__title', '.block-fold__name', '.card__title', '.param-line__name', '.cond__title',
 ].join(', ');
 
-const CLICKABLE = 'button, [role="button"], [role="tab"], a, summary, select, label';
+const CLICKABLE = 'button, [role="button"], [role="tab"], a, summary, select, label, [role="combobox"]';
 
 const textOf = (el: Element): string => {
   if (el instanceof HTMLSelectElement) return el.options[el.selectedIndex]?.text ?? '';
+  if (el instanceof HTMLInputElement && el.getAttribute('role') === 'combobox') return el.value || el.placeholder;
   const spoken = [...el.querySelectorAll('[aria-hidden]')].reduce((text, mark) => text.replace(mark.textContent ?? '', ''), el.textContent ?? '');
   return spoken.replace(/\s+/g, ' ');
 };

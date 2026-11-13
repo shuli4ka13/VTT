@@ -139,7 +139,7 @@ describe('эффекты D&D собираются в конструкторе р
     within(card()).select('Этап', 'сопротивление');
     within(card()).select('Кроме меток', 'магический');
     within(card()).select('Где у метки', 'damage_types\u0000nature');
-    within(within(card()).field('Где у метки')).select(within(card()).field('Где у метки').querySelectorAll('select')[1] as HTMLElement, 'физический');
+    within(within(card()).field('Где у метки')).select(within(card()).field('Где у метки').querySelectorAll('[role="combobox"]')[1] as HTMLElement, 'физический');
     within(card()).select('Кого касается', '@лист == @носитель');
     dump({ got: built('stoneskin'), goal });
     expect(built('stoneskin')).toEqual(goal);
@@ -210,7 +210,7 @@ describe('эффекты D&D собираются в конструкторе р
     within(made()).formula(within(made()).arg('Кто спасается'), '@носитель');
     within(made()).formula(within(made()).arg('Чем спасается'), '"мудрость"');
     within(made()).formula(within(made()).arg('Сложность'), '@запомнено');
-    within(made()).select(within(made()).arg('Что снимается').querySelector('select')!, 'paralyzed');
+    within(made()).select(within(made()).arg('Что снимается').querySelector<HTMLElement>('[role="combobox"]')!, 'paralyzed');
 
     dump({ got: built('paralyzed'), goal });
     expect(built('paralyzed')).toEqual(goal);
@@ -296,7 +296,7 @@ describe('эффекты D&D собираются в конструкторе р
     within(handlerHead(1)).when('=@бросок.исход.hit');
     within(handlerHead(1)).select('Решение', 'ask');
 
-    ui.select(handlerAt(1).querySelector<HTMLElement>('.add-cost select')!, 'cost_reaction');
+    ui.select(handlerAt(1).querySelector<HTMLElement>('.add-cost [role="combobox"]')!, 'cost_reaction');
     let card = stepCard(/^1 · /, handlerAt(1));
     within(card).formula(within(card).arg('Лист'), '@носитель');
     within(card).formula(within(card).arg('Источник'), '@носитель');
@@ -393,8 +393,8 @@ describe('общие эффекты D&D собираются руками: ци�
 
   const rows = (root: ParentNode, table: string, name: string) => {
     const strip = () => root.querySelector<HTMLElement>('.steps__split')!;
-    within(strip()).select(strip().querySelector<HTMLElement>('select')!, `строки:${table}`);
-    within(strip()).type(strip().querySelector<HTMLElement>('input')!, name);
+    within(strip()).select(strip().querySelector<HTMLElement>('[role="combobox"]')!, `строки:${table}`);
+    within(strip()).type(strip().querySelector<HTMLElement>('input:not([role="combobox"])')!, name);
   };
 
   it('D&D «Ячейка заклинания» (spell_slot): «Потратить» клетку строки по значению — @лист.slots.[@circle]', { timeout: 90000 }, () => {

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
-import { pickCombo } from '../../testing/cards.ts';
+import { pickCombo, comboOptions } from '../../testing/cards.ts';
 import { renderOpen } from '../../testing/render-open.tsx';
 import { CompendiumScreen } from './compendium.tsx';
 import { useWorld } from '../../store/world.ts';
@@ -199,8 +199,8 @@ describe('CompendiumScreen: превью «как увидит игрок»', ()
 
   it('свойство «ссылка на запись» выбирается из записей компендиума, без самой себя', () => {
     renderOpen(<CompendiumScreen />);
-    const select = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'nine'))!;
-    expect([...select.options].map(o => o.value)).toEqual(['', 'nine']);
+    const select = [...document.querySelectorAll<HTMLElement>('[role="combobox"]')].find(el => comboOptions(el).some(o => o.value === 'nine'))!;
+    expect(comboOptions(select).map(o => o.value)).toEqual(['', 'nine']);
   });
 });
 
@@ -238,23 +238,23 @@ describe('свойство из словаря — выбор, а не ввод'
 
   it('вместо строки ввода — список значений словаря', () => {
     renderOpen(<CompendiumScreen />);
-    const select = полеУ('Тип урона').querySelector('select') as HTMLSelectElement;
+    const select = полеУ('Тип урона').querySelector<HTMLInputElement>('[role="combobox"]')!;
 
     expect(select, 'это список, а не ввод').toBeTruthy();
-    expect(select.value).toBe('рубящий');
-    expect([...select.options].map(o => o.value)).toEqual(['', 'рубящий', 'огонь']);
+    expect(select.dataset.value).toBe('рубящий');
+    expect(comboOptions(select).map(o => o.value)).toEqual(['', 'рубящий', 'огонь']);
   });
 
   it('выбранное уходит в запись', () => {
     renderOpen(<CompendiumScreen />);
-    fireEvent.change(полеУ('Тип урона').querySelector('select')!, { target: { value: 'огонь' } });
+    pickCombo(полеУ('Тип урона').querySelector<HTMLElement>('[role="combobox"]')!, 'огонь');
     expect(useWorld.getState().compendium.records[0]!.cells!.damage_type).toBe('огонь');
   });
 
   it('словарь не выбран — так и сказано, а не пустой список', () => {
     renderOpen(<CompendiumScreen />);
-    const select = полеУ('Без словаря').querySelector('select') as HTMLSelectElement;
-    expect(select.options[0]!.textContent).toBe('— таблица не выбрана —');
+    const select = полеУ('Без словаря').querySelector<HTMLInputElement>('[role="combobox"]')!;
+    expect(comboOptions(select)[0]!.label).toBe('— таблица не выбрана —');
   });
 });
 
@@ -282,8 +282,10 @@ describe('свойство «несколько значений» — фишк�
   it('выбранное стоит фишкой, добавление дописывает в список', () => {
     renderOpen(<CompendiumScreen />);
     const поле = [...document.querySelectorAll('label')].find(l => l.textContent?.includes('Свойства'))!;
-    expect(поле.textContent).toContain('лёгкое');
-    pickCombo(поле.querySelector<HTMLElement>('[role="combobox"]')!, 'тяжёлое');
+    const combo = поле.querySelector<HTMLInputElement>('[role="combobox"]')!;
+    expect(combo.value).toContain('лёгкое');
+    expect(combo.dataset.value).toBe('лёгкое');
+    pickCombo(combo, 'тяжёлое');
     expect(useWorld.getState().compendium.records[0]!.cells!.properties).toEqual(['лёгкое', 'тяжёлое']);
   });
 });

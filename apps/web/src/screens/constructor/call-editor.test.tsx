@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest';
-import { render, fireEvent, cleanup } from '@testing-library/react';
+import { render, cleanup } from '@testing-library/react';
+import { pickCombo, comboOptions } from '../../testing/cards.ts';
 import { CallEditor } from './call-editor.tsx';
 import type { System, Effect } from '@vtt/schema';
 
@@ -29,9 +30,14 @@ const shown = (value?: string) => {
   const view = render(<CallEditor system={system} effect="встречная" args={args} where="вызов"
     onArg={(key, next) => { if (next) args[key] = next; else delete args[key]; }}
     context={{ system, effect: caller, earlier: [] }} />);
-  const select = view.container.querySelector<HTMLSelectElement>('select[aria-label], select')!;
-  const groups = [...select.children].map(node => (node instanceof HTMLOptGroupElement
-    ? `${node.label}: ${[...node.children].map(option => option.textContent).join(', ')}` : node.textContent));
+  const select = view.container.querySelector<HTMLInputElement>('[role="combobox"]')!;
+  const lines: { group: string; labels: string[] }[] = [];
+  for (const item of comboOptions(select)) {
+    const last = lines[lines.length - 1];
+    if (last && item.group && last.group === item.group) last.labels.push(item.label);
+    else lines.push({ group: item.group, labels: [item.label] });
+  }
+  const groups = lines.map(line => (line.group ? `${line.group}: ${line.labels.join(', ')}` : line.labels[0]!));
   return { view, select, groups, args };
 };
 
@@ -49,17 +55,17 @@ describe('вызов: вход-строка заполняется по свое
 
   it('выбранный вход пишется ссылкой и показывается пунктом, а не формулой', () => {
     const { select, args } = shown();
-    fireEvent.change(select, { target: { value: '@защита' } });
+    pickCombo(select, '@защита');
     expect(args.навык).toEqual({ expr: '@защита' });
     cleanup();
     const again = shown('@защита');
-    expect(again.select.value).toBe('@защита');
+    expect(again.select.dataset.value).toBe('@защита');
     expect(again.view.container.textContent).not.toContain('строка таблицы «Черты»');
   });
 
   it('вход из другой таблицы, уже стоящий в данных, — красная строка с причиной', () => {
     const { view, select } = shown('@черта');
-    expect(select.value).toBe('@черта');
+    expect(select.dataset.value).toBe('@черта');
     expect(view.container.querySelector('.field__error')!.textContent)
       .toBe('вход «Черта» — строка таблицы «Черты», а сюда нужна строка «Навыки»');
   });

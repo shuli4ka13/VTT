@@ -102,11 +102,11 @@ describe('эффекты пресетов собираются в констру
     ui.select(ui.cell('Если не передали', 5), 'value');
     ui.type(ui.cell('Если не передали', 5), '1');
     ui.select(ui.cell('Если не передали', 11), 'value');
-    ui.select(ui.cell('Если не передали', 11).querySelectorAll('select')[1]!, 'cost_attack');
+    ui.select(ui.cell('Если не передали', 11).querySelectorAll('[role="combobox"]')[1]!, 'cost_attack');
     ui.select(ui.cell('Если не передали', 10), 'empty');
     ui.select(ui.cell('Если не передали', 9), 'empty');
     ui.select(ui.cell('Если не передали', 8), 'empty');
-    ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_attack');
+    ui.select(document.querySelector<HTMLElement>('.add-cost [role="combobox"]')!, 'cost_attack');
     let cost = stepCard(/^1 · /);
     within(cost).select('Какой эффект', ':вход:цена');
     cost = stepCard(/^1 · /);
@@ -179,7 +179,7 @@ describe('эффекты пресетов собираются в констру
     ui.when('=не пусто(@источник) и @источник != @носитель');
     ui.select('Решение', 'ask');
 
-    ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_reaction');
+    ui.select(document.querySelector<HTMLElement>('.add-cost [role="combobox"]')!, 'cost_reaction');
     let card = stepCard(/^1 · /);
     within(card).formula(within(card).arg('Лист'), '@носитель');
     within(card).formula(within(card).arg('Источник'), '@носитель');
@@ -256,7 +256,7 @@ describe('эффекты пресетов собираются в констру
     param(5, 'Кость урона', 'dice', 'damage_dice');
     param(6, 'Куда целишь', 'choice', 'aim', { from: 'aim_places', ask: 'actor', hint: asked('aim') });
 
-    ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_action');
+    ui.select(document.querySelector<HTMLElement>('.add-cost [role="combobox"]')!, 'cost_action');
     ui.click('+ изменение');
     let card = stepCard(/^3 · /);
     within(card).select('Какое поле', 'luck_left');
@@ -387,7 +387,7 @@ describe('эффекты пресетов собираются в констру
     param(5, 'Держится концентрацией', 'boolean', 'holds');
     ui.select(ui.cell('Если не передали', 5), 'value');
 
-    ui.select(document.querySelector<HTMLElement>('.add-cost select')!, 'cost_spell');
+    ui.select(document.querySelector<HTMLElement>('.add-cost [role="combobox"]')!, 'cost_spell');
     let card = stepCard(/^1 · /);
 
     ui.click('+ изменение');

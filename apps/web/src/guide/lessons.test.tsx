@@ -14,7 +14,7 @@ import { SystemBar } from '../screens/constructor/world-bar.tsx';
 import { ConstructorScreen } from '../screens/constructor/constructor.tsx';
 import { addColumn } from '../screens/constructor/rules/character-section.tsx';
 import { openAll } from '../testing/render-open.tsx';
-import { within, stepCard, block, addToArm, pickCombo } from '../testing/cards.ts';
+import { within, stepCard, block, addToArm, pickCombo, comboOptions } from '../testing/cards.ts';
 import { TABS } from '../words.ts';
 import { GuideLayer, PAUSE_MS, useView, movesOf, moveAt, pointOf } from './guide-card.tsx';
 import { LESSONS, lessonOf } from './lessons/index.ts';
@@ -117,8 +117,8 @@ const openBar = (value: string) => act(() => { useFormulaBar.getState().open({ i
 const typeBar = (text: string) => act(() => { useFormulaBar.getState().write(text); });
 
 const chooseDice = (mode: string) => {
-  const box = [...document.querySelectorAll<HTMLSelectElement>('select')].find(el => [...el.options].some(option => option.value === mode));
-  act(() => { fireEvent.change(box!, { target: { value: mode } }); });
+  const box = [...document.querySelectorAll<HTMLElement>('[role="combobox"]')].find(el => comboOptions(el).some(option => option.value === mode));
+  pickCombo(box!, mode);
 };
 
 const SOLVE_READY: Record<string, (() => void) | (() => void)[]> = {
@@ -326,7 +326,7 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => edit(d => { d.effects.урон!.returns = [{ key: 'осталось', label: 'Осталось', kind: 'number', expr: { expr: '@действующий.хиты' } }] as never; }),
     ],
     call: [
-      () => { act(() => { fireEvent.change(findAnchor({ text: '+ шаг' })!, { target: { value: 'call:урон' } }); }); },
+      () => { within(document).select(findAnchor({ text: '+ шаг' })!, 'call:урон'); },
       () => { openBar(''); typeBar('5'); },
       () => edit(d => setSteps(d, 'удар', steps('удар').map(step => (step.type === 'emit' ? { ...step, effect: 'урон', args: { действующий: { expr: '@цель' }, amount: { expr: '5' } } } : step)))),
     ],

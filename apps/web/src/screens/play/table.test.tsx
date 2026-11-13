@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { screen, cleanup, fireEvent, act } from '@testing-library/react';
 import { renderOpen } from '../../testing/render-open.tsx';
+import { pickCombo } from '../../testing/cards.ts';
 import { useRoom } from '../../store/room.ts';
 import { useSession } from '../../store/session.ts';
 import { tableSocket } from '../../api/socket.ts';
@@ -282,7 +283,7 @@ describe('полоса боя: начать, вступить, выйти', () =
     useRoom.setState(state => ({ ...state, room: room(null), log: [], error: null }));
     renderOpen(<TableScreen />);
     fireEvent.change(document.querySelector('.fight__span input')!, { target: { value: '2' } });
-    fireEvent.change(screen.getByLabelText('единица времени'), { target: { value: 'days' } });
+    pickCombo(screen.getByLabelText('единица времени'), 'days');
     fireEvent.click(screen.getByText('Прошло время'));
     expect(sent.at(-1)).toEqual({ roomId: 'к', op: 'time', seconds: 172800 });
   });

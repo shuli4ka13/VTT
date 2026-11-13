@@ -68,6 +68,14 @@ const idle = (el: Element): void => {
     if (on) fireEvent.click(on);
     return;
   }
+  if (el.getAttribute('role') === 'combobox') {
+    fireEvent.focus(el);
+    const value = (el as HTMLElement).dataset.value;
+    const again = value === undefined ? undefined : [...(el.closest('.combo') ?? el.parentElement!).querySelectorAll<HTMLElement>('.slot__option')].find(o => o.dataset.value === value);
+    if (again && !el.closest('.combo--multi')) fireEvent.mouseDown(again);
+    fireEvent.blur(el);
+    return;
+  }
   if (el instanceof HTMLSelectElement) {
     const value = el.value;
     const other = [...el.options].find(o => o.value !== value)?.value;

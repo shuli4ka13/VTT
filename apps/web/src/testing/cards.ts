@@ -84,7 +84,7 @@ export function within(root: ParentNode = document) {
 
   const type = (label: string | HTMLElement, text: string): void => {
     const box = typeof label === 'string' ? field(label) : label;
-    const input = (box instanceof HTMLInputElement ? box : box.querySelector('input:not([type="checkbox"]), textarea')) as HTMLInputElement | null;
+    const input = (box instanceof HTMLInputElement ? box : box.querySelector('input:not([type="checkbox"]):not([role="combobox"]), textarea') ?? box.querySelector('input:not([type="checkbox"])')) as HTMLInputElement | null;
     if (!input) throw new Error(`в «${String(label)}» нет поля ввода`);
     act(() => {
       fireEvent.focus(input);
@@ -112,6 +112,10 @@ export function within(root: ParentNode = document) {
     }
     const byList = [...box.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === ':формула'));
     if (byList && !box.querySelector('.chips')) { act(() => { fireEvent.change(byList, { target: { value: ':формула' } }); }); openAll(); }
+    if (!box.querySelector('.chips') && !box.classList.contains('chips')) {
+      const byCombo = [...box.querySelectorAll<HTMLElement>('[role="combobox"]')].find(el => comboOptions(el).some(o => o.value === ':формула'));
+      if (byCombo) { pickCombo(byCombo, ':формула', String(label)); openAll(); }
+    }
     const chips = box.classList.contains('chips') ? box : box.querySelector('.chips');
     if (!chips) throw new Error(`в «${String(label)}» нет поля формулы`);
     const inputs = [...chips.querySelectorAll<HTMLInputElement>('input.chips__text')];
@@ -270,7 +274,8 @@ export const armLabel = (flow: HTMLElement, at = 0): string => {
 };
 
 export const addToArm = (flow: HTMLElement, at: number, brick: string): void => {
-  const el = armOf(flow, at).querySelector<HTMLSelectElement>(':scope > .flow-block__arm > .flow-block__add select');
+  const slot = armOf(flow, at).querySelector<HTMLElement>(':scope > .flow-block__arm > .flow-block__add');
+  const el = slot?.querySelector<HTMLElement>('select, [role="combobox"]');
   if (!el) throw new Error('в ветке нет «+ шаг»');
   within(el.parentElement!).select(el, brick);
 };
@@ -342,7 +347,7 @@ export const wrapIf = (card: () => HTMLElement, fact: string, root: ParentNode =
   const nth = same().indexOf(card());
   const mine = () => same()[nth]!;
   const arm = card().closest<HTMLElement>('.flow-block__arm');
-  const armAdd = arm?.querySelector<HTMLSelectElement>(':scope > .flow-block__add select');
+  const armAdd = arm?.querySelector<HTMLElement>(':scope > .flow-block__add select, :scope > .flow-block__add [role="combobox"]');
   if (armAdd) within(armAdd.parentElement!).select(armAdd, 'branch');
   else within(scope).click('+ если');
   const empty = () => blocks(scope).filter(flow => !flow.querySelector('.card')).length;

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest';
-import { render, cleanup, fireEvent } from '@testing-library/react';
+import { render, cleanup } from '@testing-library/react';
+import { pickCombo, comboOptions } from '../../../testing/cards.ts';
 import { RollsSection } from './rolls-section.tsx';
 import { DiceSection } from './dice-section.tsx';
 import { RollEditsSection } from './roll-edits-section.tsx';
@@ -12,8 +13,15 @@ const d20 = { label: 'К20', kind: 'die', dice: [{ sides: 20 }] };
 const make = (constants: Record<string, unknown>, rolls: Record<string, unknown> = {}, edits: Record<string, unknown> = {}) =>
   ({ tables: {}, effects: {}, constants, rolls, roll_edits: edits }) as unknown as System;
 
-const options = (select: HTMLSelectElement) => [...select.children].map(node => (node instanceof HTMLOptGroupElement
-  ? `${node.label}: ${[...node.children].map(option => option.textContent).join(' | ')}` : node.textContent));
+const options = (combo: HTMLElement): string[] => {
+  const lines: { group: string; labels: string[] }[] = [];
+  for (const item of comboOptions(combo)) {
+    const last = lines[lines.length - 1];
+    if (last && item.group && last.group === item.group) last.labels.push(item.label);
+    else lines.push({ group: item.group, labels: [item.label] });
+  }
+  return lines.map(line => (line.group ? `${line.group}: ${line.labels.join(' | ')}` : line.labels[0]!));
+};
 
 describe('виды костей на экране правил', () => {
   afterEach(cleanup);
@@ -21,12 +29,12 @@ describe('виды костей на экране правил', () => {
   it('у набора успехов в «Число поля — это» нет граней и «не больше»; чужое значение видно с пометкой', () => {
     const system = make({ h: hits }, { r: { die: 'h', fields: [], number: 'under' } });
     const view = render(<RollsSection system={system} editSystem={change => change(system as never)} />);
-    const select = view.container.querySelector<HTMLSelectElement>('select[aria-label="Число поля — это"]')!;
+    const select = view.container.querySelector<HTMLElement>('[role="combobox"][aria-label="Число поля — это"]')!;
     expect([...options(select)].sort()).toEqual(['порог: выпало не больше — не подходит этой кости', 'порог: выпало не меньше', 'прибавка к выпавшему', 'сколько костей бросить'].sort());
     cleanup();
     const sound = make({ h: hits }, { r: { die: 'h', fields: [], number: 'count' } });
     const again = render(<RollsSection system={sound} editSystem={change => change(sound as never)} />);
-    expect(options(again.container.querySelector<HTMLSelectElement>('select[aria-label="Число поля — это"]')!)).toEqual(['прибавка к выпавшему', 'сколько костей бросить', 'порог: выпало не меньше']);
+    expect(options(again.container.querySelector<HTMLElement>('[role="combobox"][aria-label="Число поля — это"]')!)).toEqual(['прибавка к выпавшему', 'сколько костей бросить', 'порог: выпало не меньше']);
   });
 
   it('у кости, число которой задаёт бросок, есть подпись, и вид назван словом', () => {
@@ -44,20 +52,20 @@ describe('виды костей на экране правил', () => {
     expect(view.container.textContent).not.toContain('сверх');
   });
 
-  const zeroRow = (root: HTMLElement) => root.querySelector<HTMLSelectElement>('select[aria-label="Если костей ноль"]');
-  const numberSelect = (root: HTMLElement) => root.querySelector<HTMLSelectElement>('select[aria-label="Число поля — это"]')!;
+  const zeroRow = (root: HTMLElement) => root.querySelector<HTMLElement>('[role="combobox"][aria-label="Если костей ноль"]');
+  const numberSelect = (root: HTMLElement) => root.querySelector<HTMLElement>('[role="combobox"][aria-label="Число поля — это"]')!;
 
   it('у броска «сколько костей бросить» есть «Если костей ноль»: пишется и снимается', () => {
     const system = make({ h: hits }, { r: { die: 'h', fields: [], number: 'count' } });
     const view = render(<RollsSection system={system} editSystem={change => change(system as never)} />);
-    fireEvent.change(zeroRow(view.container)!, { target: { value: 'worst' } });
+    pickCombo(zeroRow(view.container)!, 'worst');
     expect(system.rolls!.r!.zero).toEqual({ count: 2 });
-    fireEvent.change(zeroRow(view.container)!, { target: { value: 'best' } });
+    pickCombo(zeroRow(view.container)!, 'best');
     expect(system.rolls!.r!.zero).toEqual({ count: 2, keep: 'best' });
     cleanup();
     const set = make({ h: hits }, { r: { die: 'h', fields: [], number: 'count', zero: { count: 2 } } });
     const again = render(<RollsSection system={set} editSystem={change => change(set as never)} />);
-    fireEvent.change(zeroRow(again.container)!, { target: { value: '' } });
+    pickCombo(zeroRow(again.container)!, '');
     expect(set.rolls!.r).not.toHaveProperty('zero');
   });
 
@@ -68,7 +76,7 @@ describe('виды костей на экране правил', () => {
     cleanup();
     const system = make({ h: hits }, { r: { die: 'h', fields: [], number: 'count', zero: { count: 2 }, keep: { expr: '2' } } });
     const view = render(<RollsSection system={system} editSystem={change => change(system as never)} />);
-    fireEvent.change(numberSelect(view.container), { target: { value: 'over' } });
+    pickCombo(numberSelect(view.container), 'over');
     expect(system.rolls!.r).not.toHaveProperty('zero');
     expect(system.rolls!.r).not.toHaveProperty('keep');
   });
@@ -76,7 +84,7 @@ describe('виды костей на экране правил', () => {
   const palette = (system: System) => {
     const system2 = system;
     const view = render(<RollEditsSection system={system2} editSystem={change => change(system2 as never)} usage={new Map()} />);
-    const select = [...view.container.querySelectorAll<HTMLSelectElement>('select')].find(one => one.textContent!.includes('+ добавить…'))!;
+    const select = [...view.container.querySelectorAll<HTMLElement>('[role="combobox"]')].find(one => (one as HTMLInputElement).placeholder === '+ добавить…')!;
     return { select, system: system2 };
   };
   const edit = { label: 'Правка', ops: [] };
@@ -99,7 +107,7 @@ describe('виды костей на экране правил', () => {
     expect(one).toContain('добавить кость в набор');
     expect(set).toContain('добавить кость в набор');
     expect(set).toContain('дикий кубик');
-    fireEvent.change(select, { target: { value: 'hits:addDie' } });
+    pickCombo(select, 'hits:addDie');
     expect((system.roll_edits as Record<string, { ops: unknown[] }>).e!.ops).toEqual([{ op: 'addDie' }]);
   });
 });

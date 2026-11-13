@@ -4,7 +4,7 @@ import { render, cleanup, fireEvent } from '@testing-library/react';
 import { EffectEditor } from './effect-editor.tsx';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import type { System, Step } from '@vtt/schema';
-import { within, stepCard, block, headOf, isFused } from '../../../testing/cards.ts';
+import { within, stepCard, block, headOf, isFused, comboOptions } from '../../../testing/cards.ts';
 import { openAll } from '../../../testing/render-open.tsx';
 
 const textOf = (el: Element): string => (el.textContent ?? '').replace(/\s+/g, ' ').trim();
@@ -99,13 +99,13 @@ describe('шапка склеенного «Если» по вызову', () =>
   afterEach(() => { cleanup(); });
 
   const fusedSteps = () => [{ id: 'атака', type: 'emit', effect: 'бросок' }, { type: 'branch', if: { expr: '@атака.попал' } }, { type: 'end' }];
-  const pick = () => headOf(block(0)).querySelector<HTMLSelectElement>('select')!;
+  const pick = () => headOf(block(0)).querySelector<HTMLInputElement>('[role="combobox"]')!;
 
   it('выпадающий список — итоги только этого вызова и «формулой…»; выбор переписывает условие', () => {
     start(fusedSteps());
     expect(isFused(block(0))).toBe(true);
-    expect([...pick().options].map(textOf)).toEqual(['— что проверяем —', 'попадание / промах', 'крит / не крит', 'формулой…']);
-    expect(pick().selectedOptions[0]!.textContent).toBe('попадание / промах');
+    expect(comboOptions(pick()).map(o => o.label)).toEqual(['— что проверяем —', 'попадание / промах', 'крит / не крит', 'формулой…']);
+    expect(pick().value).toBe('попадание / промах');
     within(headOf(block(0))).select(pick(), 'крит / не крит');
     expect(steps()[1]).toEqual({ type: 'branch', if: { expr: '@атака.крит' } });
   });

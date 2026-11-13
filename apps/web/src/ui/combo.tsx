@@ -1,14 +1,15 @@
-import { useState, type KeyboardEvent, type ReactNode } from 'react';
-import { Chip } from './primitives.tsx';
+import { useState, type KeyboardEvent } from 'react';
 
-export interface ComboOption { value: string; label: string; group?: string; hidden?: boolean }
+export interface ComboOption { value: string; label: string; group?: string; hidden?: boolean; checked?: boolean }
 export interface ComboMore { label: string; run: () => void }
 
 const MORE = '\u0000more';
 
+const SAID_UP_TO = 40;
+
 const fits = (option: ComboOption, query: string) => (query ? option.value !== '' && option.label.toLowerCase().includes(query) : !option.hidden);
 
-function useMenu(options: readonly ComboOption[], pick: (option: ComboOption) => void, more?: ComboMore) {
+function useMenu(options: readonly ComboOption[], pick: (option: ComboOption) => void, more?: ComboMore, stay = false) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState('');
   const [lit, setLit] = useState(0);
@@ -20,6 +21,7 @@ function useMenu(options: readonly ComboOption[], pick: (option: ComboOption) =>
   const choose = (option: ComboOption) => {
     if (option.value === MORE) { more?.run(); return; }
     pick(option);
+    if (stay) return;
     setText('');
     setLit(0);
     setOpen(false);
@@ -43,6 +45,7 @@ function useMenu(options: readonly ComboOption[], pick: (option: ComboOption) =>
               onMouseEnter={() => setLit(at)}
               onMouseDown={e => { e.preventDefault(); choose(option); }}
             >
+              {option.checked !== undefined ? <span className={`combo__check${option.checked ? ' is-on' : ''}`} aria-hidden>{option.checked ? '✓' : ''}</span> : null}
               {option.label}
             </button>
           </div>
@@ -53,16 +56,23 @@ function useMenu(options: readonly ComboOption[], pick: (option: ComboOption) =>
   const input = {
     value: text,
     onFocus: () => { setOpen(true); setLit(0); },
-    onBlur: () => { setOpen(false); setText(''); },
+    onBlur: (e?: { currentTarget: HTMLInputElement }) => {
+      setOpen(false);
+      setText('');
+      const el = e?.currentTarget;
+      if (el) requestAnimationFrame(() => { el.scrollLeft = 0; });
+    },
     onChange: (next: string) => { setText(next); setOpen(true); setLit(0); },
     onKeyDown,
   };
-  const said = [...options.map(option => option.label), ...(more ? [more.label] : [])].join(' | ');
+  const said = options.length > SAID_UP_TO ? undefined : [...options.map(option => option.label), ...(more ? [more.label] : [])].join(' | ');
   return { open, menu, input, said };
 }
 
-export function Combo({ value, options, onChange, blank = '— не выбрано —', label, more, className, title, onFocus }: {
+export function Combo({ value, options, onChange, blank = '— не выбрано —', label, more, className, title, onFocus, look, disabled }: {
   value: string;
+  look?: 'select';
+  disabled?: boolean;
   className?: string;
   title?: string;
   onFocus?: () => void;
@@ -76,19 +86,21 @@ export function Combo({ value, options, onChange, blank = '— не выбран
   const shownLabel = current ? current.label : value ? `${value} — такого в списке нет` : '';
   const { open, menu, input, said } = useMenu(options, option => { if (option.value !== value) onChange(option.value); }, more);
   return (
-    <div className="slot combo">
+    <div className={look ? `select combo combo--select${disabled ? ' is-disabled' : ''}${className ? ` ${className}` : ''}` : 'slot combo'} title={look ? title : undefined}>
       <input
-        className={`input combo__input${className ? ` ${className}` : ''}`}
-        title={title}
+        className={look ? 'combo__bare' : `input combo__input${className ? ` ${className}` : ''}`}
+        title={look ? undefined : title}
+        disabled={disabled}
         role="combobox"
         data-options={said}
         aria-expanded={open}
         aria-label={label}
         data-value={value}
+        data-blank={options.some(option => option.value === '') ? '' : undefined}
         value={open ? input.value : shownLabel}
         placeholder={open ? shownLabel || blank : blank}
         onFocus={() => { onFocus?.(); input.onFocus(); }}
-        onBlur={input.onBlur}
+        onBlur={e => input.onBlur(e)}
         onChange={e => input.onChange(e.target.value)}
         onKeyDown={input.onKeyDown}
       />
@@ -97,40 +109,41 @@ export function Combo({ value, options, onChange, blank = '— не выбран
   );
 }
 
-export function MultiCombo({ value, options, onChange, prompt }: {
+export function MultiCombo({ value, options, onChange, prompt, more }: {
   value: readonly string[];
+  more?: ComboMore | undefined;
   options: readonly ComboOption[];
   onChange: (next: string[]) => void;
   prompt?: string;
 }) {
   const labelOf = (key: string) => options.find(option => option.value === key)?.label ?? key;
-  const free = options.filter(option => !value.includes(option.value));
-  const { open, menu, input, said } = useMenu(free, option => onChange([...value, option.value]));
-  const chips: ReactNode = value.map(key => (
-    <Chip key={key} onRemove={() => onChange(value.filter(other => other !== key))}>{labelOf(key)}</Chip>
-  ));
+  const known = new Set(options.map(option => option.value));
+  const marked: ComboOption[] = [
+    ...value.filter(key => !known.has(key)).map(key => ({ value: key, label: `${key} — такого в списке нет`, checked: true })),
+    ...options.map(option => ({ ...option, checked: value.includes(option.value) })),
+  ];
+  const { open, menu, input, said } = useMenu(marked, option => (
+    onChange(value.includes(option.value) ? value.filter(other => other !== option.value) : [...value, option.value])
+  ), more, true);
+  const summary = value.map(labelOf).join(', ');
+  const empty = prompt ?? '+ добавить…';
   return (
-    <div className="slot combo">
-      <div className="tagbox">
-        {chips}
-        {free.length ? (
-          <input
-            className="combo__text"
-            role="combobox"
-            data-options={said}
-            aria-expanded={open}
-            value={input.value}
-            placeholder={prompt ?? (value.length ? '+ ещё…' : '+ добавить…')}
-            onFocus={input.onFocus}
-            onBlur={input.onBlur}
-            onChange={e => input.onChange(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Backspace' && !input.value && value.length) { onChange(value.slice(0, -1)); return; }
-              input.onKeyDown(e);
-            }}
-          />
-        ) : null}
-      </div>
+    <div className="select combo combo--select combo--multi" title={summary || undefined}>
+      <input
+        className="combo__bare"
+        role="combobox"
+        data-options={said}
+        data-value={value.join('\u0000')}
+        aria-expanded={open}
+        aria-label={prompt}
+        value={open ? input.value : summary}
+        placeholder={open ? 'найти…' : empty}
+        onFocus={input.onFocus}
+        onBlur={e => input.onBlur(e)}
+        onChange={e => input.onChange(e.target.value)}
+        onKeyDown={input.onKeyDown}
+      />
+      {value.length > 1 && !open ? <span className="combo__count">{value.length}</span> : null}
       {menu}
     </div>
   );
@@ -155,7 +168,7 @@ export function AddCombo({ options, onPick, prompt, label }: {
         value={input.value}
         placeholder={prompt}
         onFocus={input.onFocus}
-        onBlur={input.onBlur}
+        onBlur={e => input.onBlur(e)}
         onChange={e => input.onChange(e.target.value)}
         onKeyDown={input.onKeyDown}
       />

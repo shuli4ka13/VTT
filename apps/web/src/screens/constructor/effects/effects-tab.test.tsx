@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { renderOpen } from '../../../testing/render-open.tsx';
-import { within as within2, stepCard } from '../../../testing/cards.ts';
+import { within as within2, stepCard, pickCombo, comboOptions } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import { CREATE_KINDS } from './words.ts';
@@ -10,6 +10,9 @@ import { UNBOUND_HINT } from './roles.ts';
 import { fieldsOf, hasField } from '@vtt/engine/model/sheet-columns';
 import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import type { Effect } from '@vtt/schema';
+
+const combos = (root: ParentNode = document) => [...root.querySelectorAll<HTMLElement>('[role="combobox"]')];
+const comboWith = (value: string, root: ParentNode = document) => combos(root).find(el => comboOptions(el).some(o => o.value === value))!;
 
 describe('EffectsTab: палитра трёх понятий', () => {
   const ACTOR = { key: 'действующий', label: 'Кто действует', kind: 'sheet' };
@@ -158,13 +161,12 @@ describe('EffectsTab: палитра трёх понятий', () => {
     expect(heads.slice(-3)).toEqual(['Величина', 'Границы', 'Имя в формулах']);
     expect(screen.getByLabelText('«Новый вход» — величина')).toBeTruthy();
 
-    const ask = [...form().querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'gm'))!;
-    fireEvent.change(ask, { target: { value: 'gm' } });
+    pickCombo(comboWith('gm', form()), 'gm');
     const effect = Object.values(useWorld.getState().system.effects).find(e => e.params?.length)!;
     expect(effect.params![0]!.ask).toEqual({ by: 'gm' });
     expect(document.querySelector('.param-line__sum')!.textContent).toContain('число, если не сказано — спросить ведущего');
 
-    fireEvent.change(form().querySelectorAll('select')[0]!, { target: { value: 'dice' } });
+    pickCombo(combos(form())[0]!, 'dice');
     expect(screen.queryByLabelText('«Новый вход» — величина')).toBeNull();
   });
 
@@ -293,31 +295,28 @@ describe('три вида создания, два вида запуска', () 
     renderOpen(<EffectsTab />);
     fireEvent.click(screen.getByText('+ висит'));
     fireEvent.click(screen.getByText('+ когда'));
-    const kinds = [...document.querySelectorAll('select')]
-      .find(el => [...el.options].some(o => o.value === 'seen'))! as HTMLSelectElement;
-    expect([...kinds.options].map(o => o.value)).toEqual(['call', 'seen', 'rolled', 'moment', 'field', 'gained', 'lost']);
+    const kinds = comboWith('seen');
+    expect(comboOptions(kinds).map(o => o.value)).toEqual(['call', 'seen', 'rolled', 'moment', 'field', 'gained', 'lost']);
     const last = () => Object.values(useWorld.getState().system.effects).at(-1)!;
 
-    fireEvent.change(kinds, { target: { value: 'seen' } });
+    pickCombo(kinds, 'seen');
     expect(last().activation).toBe('passive');
     expect(last().on?.[0]).toMatchObject({ on: 'seen' });
 
-    const decision = screen.getByDisplayValue('срабатывает само') as HTMLSelectElement;
-    fireEvent.change(decision, { target: { value: 'ask' } });
+    pickCombo(screen.getByDisplayValue('срабатывает само'), 'ask');
     expect(last().on?.[0]).toMatchObject({ on: 'seen', confirm: true });
 
-    fireEvent.change(kinds, { target: { value: 'call' } });
+    pickCombo(kinds, 'call');
     expect(last().on![0]!.on).toBe('before:*');
     expect(last().on![0]!.confirm).toBe(true);
 
-    const phase = screen.getByDisplayValue('до') as HTMLSelectElement;
-    expect([...phase.options].map(o => o.value)).toEqual(['before', 'after', 'done']);
-    fireEvent.change(phase, { target: { value: 'done' } });
+    const phase = screen.getByDisplayValue('до');
+    expect(comboOptions(phase).map(o => o.value)).toEqual(['before', 'after', 'done']);
+    pickCombo(phase, 'done');
     expect(last().on![0]!.on).toBe('done:*');
 
-    fireEvent.change(kinds, { target: { value: 'moment' } });
-    const subject = screen.getByDisplayValue('— выберите —') as HTMLSelectElement;
-    fireEvent.change(subject, { target: { value: 'turn-start' } });
+    pickCombo(kinds, 'moment');
+    pickCombo(screen.getByDisplayValue('— выберите —'), 'turn-start');
     expect(last().on![0]!.on).toBe('moment:turn-start');
   });
 });
@@ -379,21 +378,18 @@ describe('эффект слушает время', () => {
     fireEvent.click(screen.getByText('+ висит'));
     fireEvent.click(screen.getByText('+ когда'));
 
-    const kinds = [...document.querySelectorAll('select')]
-      .find(el => [...el.options].some(o => o.value === 'moment'))! as HTMLSelectElement;
-    fireEvent.change(kinds, { target: { value: 'moment' } });
+    pickCombo(comboWith('moment'), 'moment');
 
-    const listens = [...document.querySelectorAll('select')]
-      .find(el => [...el.options].some(o => o.value === 'turn-start'))! as HTMLSelectElement;
-    const options = [...listens.options].map(o => o.textContent ?? '');
+    const listens = comboWith('turn-start');
+    const options = comboOptions(listens).map(o => o.label);
     expect(options.some(text => text.includes('в начале своего хода'))).toBe(true);
 
-    fireEvent.change(listens, { target: { value: 'turn-start' } });
+    pickCombo(listens, 'turn-start');
     const effect = Object.values(useWorld.getState().system.effects).at(-1)!;
     expect(effect.on?.[0]?.on).toBe('moment:turn-start');
 
     expect(document.querySelector('.cond__formula'), 'условие — поле формулы').not.toBeNull();
-    const ready = [...document.querySelectorAll('select')].find(el => el.options[0]?.textContent === '+ готовое');
+    const ready = combos().find(el => (el as HTMLInputElement).placeholder === '+ готовое');
     expect(ready, 'у времени нет исходов шага — готового нет').toBeUndefined();
   });
 });
@@ -448,7 +444,7 @@ describe('кость без бросающего — шаг «Бросок»', (
     within2(card).formula('Сколько оставить', '2');
     expect(шаг().keep).toEqual({ expr: '2' });
     expect(шаг()).not.toHaveProperty('keepWorst');
-    const which = () => card.querySelector<HTMLElement>('select[aria-label="Какие оставить"]')!;
+    const which = () => card.querySelector<HTMLElement>('[role="combobox"][aria-label="Какие оставить"]')!;
     within2(card).select(which(), 'worst');
     expect(шаг().keepWorst).toBe(true);
     within2(card).select(which(), '');
@@ -615,8 +611,8 @@ describe('одно правило «вызывается»', () => {
     const listed = [...document.querySelectorAll('.list__item')]
       .filter(item => item.textContent?.includes('вызывается'))
       .map(item => item.querySelector('.list__name')?.textContent).sort();
-    const pick = [...document.querySelectorAll<HTMLSelectElement>('.bricks select')].find(select => select.options[0]?.textContent === '+ эффект')!;
-    const offered = [...pick.options].slice(1).map(option => option.textContent!);
+    const pick = combos(document.querySelector('.bricks')!).find(el => (el as HTMLInputElement).placeholder === '+ эффект')!;
+    const offered = comboOptions(pick).slice(1).map(option => option.label);
     expect(offered).toEqual(expect.arrayContaining(['Бросок атаки', 'Костей с учётом ячейки', 'Лечение', 'Новый ход', 'Повторный спасбросок', 'Спасбросок', 'Урон']));
     for (const name of listed) expect(offered).toContain(name);
     expect(offered).not.toContain('Атака');
@@ -675,7 +671,7 @@ describe('EffectsTab: привязка к якорю', () => {
   };
   const strike = () => useWorld.getState().system.effects.strike as Effect & { steps: Record<string, unknown>[] };
   const fieldSelect = (label: string) => [...document.querySelectorAll<HTMLElement>('.field__label')]
-    .find(el => el.textContent === label)?.closest('label')?.querySelector<HTMLSelectElement>('select') ?? null;
+    .find(el => el.textContent === label)?.closest('label')?.querySelector<HTMLElement>('[role="combobox"]') ?? null;
   const choice = () => fieldSelect('Когда сняли якорь');
 
   afterEach(cleanup);
@@ -693,12 +689,12 @@ describe('EffectsTab: привязка к якорю', () => {
 
   it('с привязкой: «остаётся» пишет отметку, «спадает» её снимает, «снимаем» её убирает', () => {
     open({ steps: [{ type: 'each', of: 'цели' }, put], bond: { effect: 'концентрация', by: 'действующий' } });
-    fireEvent.change(choice()!, { target: { value: 'stays' } });
+    pickCombo(choice()!, 'stays');
     expect(strike().steps[1]!.unbound).toBe(true);
-    fireEvent.change(choice()!, { target: { value: 'falls' } });
+    pickCombo(choice()!, 'falls');
     expect('unbound' in strike().steps[1]!).toBe(false);
-    fireEvent.change(choice()!, { target: { value: 'stays' } });
-    fireEvent.change(fieldSelect('Что делаем')!, { target: { value: 'remove' } });
+    pickCombo(choice()!, 'stays');
+    pickCombo(fieldSelect('Что делаем')!, 'remove');
     expect('unbound' in strike().steps[1]!).toBe(false);
   });
 

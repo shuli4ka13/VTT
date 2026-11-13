@@ -6,10 +6,13 @@ import { RulesTab } from './rules-tab.tsx';
 import { FormulaBar } from '../../../ui/formula-bar.tsx';
 import { useFormulaBar } from '../../../store/formula-bar.ts';
 import { useWorld, emptySystem } from '../../../store/world.ts';
+import { pickCombo, comboOptions } from '../../../testing/cards.ts';
+
+const comboWith = (value: string): HTMLElement[] => ([...document.querySelectorAll<HTMLElement>('[role="combobox"]')]).filter(el => comboOptions(el).some(o => o.value === value));
 
 const открыть = (раздел: string) => fireEvent.click(screen.getAllByText(раздел)[0]!);
 
-const завести = (вид = 'one') => fireEvent.change(screen.getByLabelText('добавить кость'), { target: { value: вид } });
+const завести = (вид = 'one') => pickCombo(screen.getByLabelText('добавить кость'), вид);
 
 describe('Словари: кости, правки броска, таблицы', () => {
   beforeEach(() => {
@@ -152,15 +155,15 @@ describe('Словари: кости, правки броска, таблицы'
 
     fireEvent.click(screen.getByText('+ ещё часть'));
 
-    const select = screen.getByDisplayValue('сумма') as HTMLSelectElement;
-    fireEvent.change(select, { target: { value: 'best' } });
+    const select = screen.getByDisplayValue('сумма');
+    pickCombo(select, 'best');
     expect(useWorld.getState().system.constants?.[key!]?.read).toBe('best');
 
-    fireEvent.change(select, { target: { value: 'count' } });
+    pickCombo(select, 'count');
     expect(useWorld.getState().system.constants?.[key!]?.read)
       .toEqual({ kind: 'count', atLeast: 19 }, 'порог предлагается «почти максимум» по граням кости');
 
-    fireEvent.change(select, { target: { value: 'sum' } });
+    pickCombo(select, 'sum');
     expect('read' in (useWorld.getState().system.constants?.[key!] ?? {})).toBe(false);
   });
 
@@ -182,9 +185,8 @@ describe('Словари: кости, правки броска, таблицы'
     const name = screen.getByPlaceholderText('как это зовётся в вашем мире');
     fireEvent.change(name, { target: { value: 'Фора' } });
 
-    const [add] = screen.getAllByDisplayValue('+ добавить…') as HTMLSelectElement[];
-    fireEvent.change(add!, { target: { value: 'addDie' } });
-    fireEvent.change(screen.getAllByDisplayValue('+ добавить…')[0]!, { target: { value: 'keepBest' } });
+    pickCombo(screen.getAllByPlaceholderText('+ добавить…')[0]!, 'addDie');
+    pickCombo(screen.getAllByPlaceholderText('+ добавить…')[0]!, 'keepBest');
 
     const edits = useWorld.getState().system.roll_edits!;
     const [key] = Object.keys(edits);
@@ -229,7 +231,7 @@ describe('Словари: кости, правки броска, таблицы'
     renderOpen(<RulesTab />);
     открыть('Броски');
     fireEvent.click(screen.getByText('+ правка'));
-    fireEvent.change(screen.getAllByDisplayValue('+ добавить…')[0]!, { target: { value: 'plus' } });
+    pickCombo(screen.getAllByPlaceholderText('+ добавить…')[0]!, 'plus');
 
     const edits = useWorld.getState().system.roll_edits!;
     const [key] = Object.keys(edits);
@@ -241,8 +243,8 @@ describe('Словари: кости, правки броска, таблицы'
     renderOpen(<RulesTab />);
     открыть('Броски');
     fireEvent.click(screen.getByText('+ правка'));
-    const [add] = screen.getAllByDisplayValue('+ добавить…') as HTMLSelectElement[];
-    const options = [...add!.options].map(o => o.textContent);
+    const [add] = screen.getAllByPlaceholderText('+ добавить…');
+    const options = comboOptions(add!).map(o => o.label);
     expect(options).toContain('взрывать на максимуме');
     expect(options).toContain('взрывать на единице');
     expect(options).toContain('сдвинуть степень успеха');
@@ -311,7 +313,7 @@ describe('Словари: кости, правки броска, таблицы'
     renderOpen(<RulesTab />);
     открыть('Броски');
 
-    fireEvent.change(screen.getAllByDisplayValue('+ слово…')[0]!, { target: { value: 'down' } });
+    pickCombo(screen.getAllByPlaceholderText('+ слово…')[0]!, 'down');
 
     const edits = useWorld.getState().system.roll_edits!;
     expect(edits.up!.cancels).toEqual(['down']);
@@ -497,8 +499,7 @@ describe('Словари: кости, правки броска, таблицы'
     renderOpen(<RulesTab />);
     открыть('Таблицы');
     fireEvent.click(screen.getAllByText('Типы').at(-1)!);
-    const key = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'range'))!;
-    fireEvent.change(key, { target: { value: 'range' } });
+    pickCombo(comboWith('range')[0]!, 'range');
     expect(useWorld.getState().system.tables!.типы!.rows).toHaveLength(2);
     fireEvent.click(screen.getByText('сменить и стереть строки'));
     expect(useWorld.getState().system.tables!.типы!.key).toBe('range');
@@ -582,10 +583,8 @@ describe('Быстрые настройки: крит и броня пишутс
     useWorld.getState().editSystem(draft => { draft.effects.урон!.params = [...(draft.effects.урон!.params ?? []), { key: 'лист', kind: 'sheet' } as never]; });
     renderOpen(<RulesTab />);
     открыть('Быстрые настройки');
-    const armor = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'броня'))!;
-    fireEvent.change(armor, { target: { value: 'броня' } });
-    const hp = [...document.querySelectorAll('select')].filter(el => [...el.options].some(o => o.value === 'хиты')).at(-1)!;
-    fireEvent.change(hp, { target: { value: 'хиты' } });
+    pickCombo(comboWith('броня')[0]!, 'броня');
+    pickCombo(comboWith('хиты').at(-1)!, 'хиты');
     fireEvent.click(screen.getByText('порог'));
     fireEvent.click(screen.getByText('Записать'));
     const tail = useWorld.getState().system.effects?.урон?.steps ?? [];
