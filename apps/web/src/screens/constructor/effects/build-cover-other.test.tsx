@@ -79,8 +79,9 @@ describe('эффекты пресетов собираются руками: Sha
     const card = () => edits()[0]!;
     within(card()).select('Чей вызов', 'roll');
     within(card()).select('Что правим', 'bonus');
-    within(card()).select('С любой из меток', 'атака');
-    within(card()).select('С любой из меток', 'проверка');
+    within(card()).click('+ или / кроме');
+    within(card()).select('Или хотя бы одно из', 'атака');
+    within(card()).select('Или хотя бы одно из', 'проверка');
     within(card()).formula('Сколько', '-2');
     within(card()).select('Кого касается', '@бросающий == @носитель');
     within(card()).when('=@носитель.seriously');
@@ -96,7 +97,8 @@ describe('эффекты пресетов собираются руками: Sha
     ui.select('Что случилось', 'rolled');
     ui.select('Кого касается', '@бросающий == @носитель');
     ui.when('=@roll.atMin * 2 > @roll.rolled и @roll.natural >= 1');
-    ui.select('Кроме меток', 'инициатива');
+    ui.click('+ или / кроме');
+    ui.select('Кроме', 'инициатива');
     dump({ got: built('glitch'), goal });
     expect(built('glitch')).toEqual(goal);
   });
@@ -126,8 +128,9 @@ describe('эффекты пресетов собираются руками: Sha
     ui.click('+ когда');
     seenHead(ui);
     ui.when('=не @roll.atMin * 2 > @roll.rolled');
-    ui.select('Кроме меток', 'инициатива');
-    ui.select('Кроме меток', 'без Преимущества');
+    ui.click('+ или / кроме');
+    ui.select('Кроме', 'инициатива');
+    ui.select('Кроме', 'без Преимущества');
     spendFromHolder();
     ui.click('+ перебросить');
     const card = stepCard(/^2 · /);
@@ -142,8 +145,9 @@ describe('эффекты пресетов собираются руками: Sha
     head(ui, '+ висит', goal!.label!, 'push_edge', goal!);
     ui.click('+ когда');
     seenHead(ui);
-    ui.select('Кроме меток', 'инициатива');
-    ui.select('Кроме меток', 'без Преимущества');
+    ui.click('+ или / кроме');
+    ui.select('Кроме', 'инициатива');
+    ui.select('Кроме', 'без Преимущества');
     spendFromHolder();
     ui.click('+ докинуть');
     const card = () => stepCard(/^2 · /);

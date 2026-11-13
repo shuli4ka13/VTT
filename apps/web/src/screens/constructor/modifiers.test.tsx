@@ -51,11 +51,11 @@ describe('редактор модификаторов', () => {
     expect((mods[0] as { if?: { expr: string } }).if).toEqual({ expr: '@носитель.ac > 1' });
   });
 
-  it('«Кроме меток» у правки броска: показывает записанное, выбор пишет notTags, пустой — снимает ключ', () => {
+  it('«Кроме» у правки броска: записанное видно сразу, выбор пишет notTags', () => {
     const mods = [{ kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-2' }, notTags: ['атака'] }] as Modifier[];
     const onEdit = vi.fn((change: (d: Modifier[]) => void) => change(mods));
     renderOpen(<ModifiersEditor system={system} modifiers={mods} onEdit={onEdit} />);
-    const field = [...document.querySelectorAll('.field__label')].find(el => el.textContent === 'Кроме меток')!.closest('label')!;
+    const field = [...document.querySelectorAll('.field__label')].find(el => el.textContent === 'Кроме')!.closest('label')!;
     expect(field.textContent).toContain('атака');
     pickCombo(field.querySelector<HTMLElement>('.combo--add [role="combobox"]')!, 'спасбросок');
     expect((mods[0] as { notTags?: string[] }).notTags).toEqual(['атака', 'спасбросок']);

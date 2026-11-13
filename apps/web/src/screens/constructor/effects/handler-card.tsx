@@ -14,7 +14,7 @@ import { sheetsAt, placeNamesAt, placeTablesAt } from './names.ts';
 import { namesAt } from '@vtt/engine/model/names-at';
 import { splitsTargets } from '@vtt/engine/engine/steps/index';
 import { ConditionField } from '../condition-field.tsx';
-import { TagsField } from '../tags-field.tsx';
+import { RollsPick } from '../rolls-pick.tsx';
 import { WhileWhenRow } from './while-when.tsx';
 import { cardTitle } from './words.ts';
 import { outcomeRefs, fieldedOf } from '../slots.tsx';
@@ -220,15 +220,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove, startO
 
       {kind === 'seen' || kind === 'rolled' ? (
         <div className="row">
-          <Field label="С метками" tip="Бросок должен нести все эти метки. Пусто — любой бросок.">
-            <TagsField boxed system={system} value={handler.tags} empty="любой бросок" onChange={next => setTags('tags', next)} />
-          </Field>
-          <Field label="Любая из меток" tip="Бросок должен нести хотя бы одну из этих меток.">
-            <TagsField boxed system={system} value={handler.anyTags} empty="любая метка" onChange={next => setTags('anyTags', next)} />
-          </Field>
-          <Field label="Кроме меток" tip="Бросок с любой из этих меток не подходит.">
-            <TagsField boxed system={system} value={handler.notTags} empty="+ кроме метки…" onChange={next => setTags('notTags', next)} />
-          </Field>
+          <RollsPick boxed tips system={system} value={{ tags: handler.tags, anyTags: handler.anyTags, notTags: handler.notTags }} onChange={(key, next) => setTags(key, next)} />
         </div>
       ) : null}
 

@@ -8,6 +8,7 @@ import { formulaWords } from '../../ui/formula-words.ts';
 import { addendWords } from './readback.ts';
 import { rowNames } from './row-names.ts';
 import { ROW } from '@vtt/engine/model/sheet-columns';
+import { ruleLabelOf } from '@vtt/engine/model/roll-groups';
 
 type Loose = Record<string, unknown>;
 
@@ -82,7 +83,10 @@ export function modifierSentence(system: System, modifier: Modifier, table?: str
   }
   const call = String(mod.call ?? '');
   if (call === ROLL_CALL) {
-    const tags = tagList(mod.tags) || tagList(mod.anyTags);
+    const rolled = (list: unknown): string => ((list as string[] | undefined) ?? []).map(tag => `«${ruleLabelOf(system, tag) ?? tag}»`).join(', ');
+    const all = rolled(mod.tags);
+    const some = rolled(mod.anyTags);
+    const tags = [all, some ? `или ${some}` : ''].filter(Boolean).join(' ');
     const who = whoseWords(system, mod, { бросающий: 'бросает носитель', против: 'бросают против носителя' }, 'бросает кто угодно', names);
     const amount = (word: string): string => `${word} ${(OP_WORDS[String(mod.op ?? 'add')] ?? (value => `${String(mod.op)} ${value}`))(valueWords(system, mod.value, names))}`;
     const what = mod.param === 'bonus'
@@ -91,7 +95,7 @@ export function modifierSentence(system: System, modifier: Modifier, table?: str
       : mod.param === 'count' ? amount(CALL_WORDS.roll.params.count)
       : mod.param === 'threshold' ? amount(CALL_WORDS.roll.params.threshold)
       : system.roll_edits?.[String(mod.edit ?? '')]?.label ?? String(mod.edit ?? 'какая правка?');
-    const except = tagList(mod.notTags);
+    const except = rolled(mod.notTags);
     const lead = `${CALL_WORDS.roll.label}${tags ? ` с метками ${tags}` : ''}${except ? ` кроме ${except}` : ''}${who ? `, ${who}` : ''}`;
     return `${lead}: ${what}`;
   }

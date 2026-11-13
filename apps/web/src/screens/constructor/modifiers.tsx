@@ -12,6 +12,7 @@ import { tagsOf, tagTablesOf, listOf as rowsFrom, amountParamOf } from '@vtt/eng
 import { calledOf } from '@vtt/engine/engine/effects';
 import { ROLL_CALL, CALL_WORDS } from '@vtt/engine/words/calls';
 import { TagsField } from './tags-field.tsx';
+import { RollsPick } from './rolls-pick.tsx';
 import { callNamesOf, holderConditionOf } from '@vtt/engine/model/references';
 import { ConditionField } from './condition-field.tsx';
 import { AddendPick } from './effects/cards/die-pick.tsx';
@@ -329,30 +330,11 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
               onChange={pickParam}
             />
           </Field>
-          <Field label="С метками" hint="Бросок должен нести все метки. Пусто — любой бросок.">
-            <TagsField
-              system={system}
-              value={(m.tags as string[] | undefined)}
-              empty="любой бросок"
-              onChange={tags => onChange(d => { const list = tags.filter((t): t is string => typeof t === 'string'); if (list.length) d.tags = list; else delete d.tags; })}
-            />
-          </Field>
-          <Field label="С любой из меток" hint="Хватит одной из них. Пусто — не смотрим.">
-            <TagsField
-              system={system}
-              value={(m.anyTags as string[] | undefined)}
-              empty="не смотрим"
-              onChange={tags => onChange(d => { const list = tags.filter((t): t is string => typeof t === 'string'); if (list.length) d.anyTags = list; else delete d.anyTags; })}
-            />
-          </Field>
-          <Field label="Кроме меток" hint="Бросок с любой из этих меток правка не трогает. Пусто — не смотрим.">
-            <TagsField
-              system={system}
-              value={(m.notTags as string[] | undefined)}
-              empty="не смотрим"
-              onChange={tags => onChange(d => { const list = tags.filter((t): t is string => typeof t === 'string'); if (list.length) d.notTags = list; else delete d.notTags; })}
-            />
-          </Field>
+          <RollsPick
+            system={system}
+            value={{ tags: m.tags as string[] | undefined, anyTags: m.anyTags as string[] | undefined, notTags: m.notTags as string[] | undefined }}
+            onChange={(key, list) => onChange(d => { if (list.length) d[key] = list; else delete d[key]; })}
+          />
           {m.param === 'edits' ? (
             <Field
               label="Какое слово" needed={!m.edit}

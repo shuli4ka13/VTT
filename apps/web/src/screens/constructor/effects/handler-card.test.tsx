@@ -129,9 +129,10 @@ describe('«увидев кости»: заголовок и условие', ()
     expect(text).not.toContain('roll.rolled');
   });
 
-  it('фильтры меток стоят в одном ряду, пояснения — в подсказке при наведении', () => {
+  it('«Какие броски» — одно поле, «или» и «кроме» за кнопкой, пояснения — в подсказке при наведении', () => {
     const { view } = card({ on: 'seen', steps: [] });
-    expect(view.container.querySelectorAll('.tagbox').length).toBe(3);
+    expect(view.container.querySelectorAll('.tagbox').length).toBe(1);
+    expect(view.container.textContent).toContain('+ или / кроме');
     expect(view.container.querySelector('.field__hint')).toBeNull();
   });
 });

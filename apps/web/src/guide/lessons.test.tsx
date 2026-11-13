@@ -416,6 +416,7 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => pick({ activeEffectId: 'удача' }),
       () => edit(d => { d.effects.удача!.on = [{ on: '' }]; }),
       () => edit(d => { d.effects.удача!.on = [{ on: 'seen' }]; }),
+      () => press(findAnchor({ text: '+ или / кроме' })!),
       () => edit(d => { d.effects.удача!.on = [{ on: 'seen', notTags: ['защита'] }]; }),
     ],
     plus: () => edit(d => { d.effects.удача!.on![0]!.steps = [{ type: 'roll-plus', value: { expr: '1' } }]; }),

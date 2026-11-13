@@ -14,7 +14,9 @@ const keyOf = (tag: TagValue): string => (typeof tag === 'string' ? tag : `=${ta
 const OWN = ':своя';
 const COMPUTED = ':формула';
 
-export function TagsField({ system, value, onChange, known = [], templates = [], computed = false, empty = '+ метка…', boxed = false }: {
+export interface TagGroup { title: string; list: readonly (readonly [string, string])[] }
+
+export function TagsField({ system, value, onChange, known = [], templates = [], computed = false, empty = '+ метка…', boxed = false, lead = [], labels }: {
   system: System;
   value: readonly TagValue[] | undefined;
   onChange: (next: TagValue[]) => void;
@@ -23,6 +25,8 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
   computed?: boolean;
   empty?: string;
   boxed?: boolean;
+  lead?: readonly TagGroup[];
+  labels?: ReadonlyMap<string, string>;
 }) {
   const [typing, setTyping] = useState<'own' | 'formula' | null>(null);
   const [draft, setDraft] = useState('');
@@ -33,7 +37,10 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
 
   const contracts = Object.entries(system.tags ?? {}).map(([key, tag]) => [key, tag.label ?? key] as const);
   const rows = [...tagWords(system)];
-  const groups: [string, (readonly [string, string])[]][] = [
+  const seen = new Set<string>();
+  const once = (list: readonly (readonly [string, string])[]) => list.filter(([word]) => !seen.has(word) && Boolean(seen.add(word)));
+  const listed: [string, (readonly [string, string])[]][] = [
+    ...lead.map(group => [group.title, [...group.list]] as [string, (readonly [string, string])[]]),
     ['шаблоны строки', templates.map(t => [t.value, t.label] as const)],
     ['метки с договором', contracts],
     ['метки вызова', known.map(word => [word, word] as const)],
@@ -41,6 +48,7 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
       `метки бросков · ${table}`, rows.filter(([, t]) => t === table).map(([word]) => [word, word] as const),
     ] as [string, (readonly [string, string])[]]),
   ];
+  const groups = listed.map(([title, list]) => [title, once(list)] as [string, (readonly [string, string])[]]);
   const dictionary = new Set(groups.flatMap(([, list]) => list.map(([word]) => word)));
   const free = groups
     .map(([title, list]) => [title, list.filter(([word]) => !taken.has(word))] as const)
@@ -58,7 +66,7 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
       {picked.map(tag => (
         <Chip key={keyOf(tag)} active={typeof tag === 'string'} onRemove={() => drop(tag)}
           {...(typeof tag === 'string' ? {} : { title: 'метка вычисляется формулой при броске' })}>
-          {typeof tag === 'string' ? (templates.find(t => t.value === tag)?.label ?? tag) : `= ${tag.expr}`}
+          {typeof tag === 'string' ? (labels?.get(tag) ?? templates.find(t => t.value === tag)?.label ?? tag) : `= ${tag.expr}`}
           {typeof tag === 'string' && !dictionary.has(tag) ? <span className="faint tag-unknown" title="такой метки нет в словаре меток бросков"> · нет в словаре</span> : null}
         </Chip>
       ))}

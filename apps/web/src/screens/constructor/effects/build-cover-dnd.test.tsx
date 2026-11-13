@@ -336,7 +336,7 @@ describe('эффекты D&D собираются в конструкторе р
     const rollEdit = (edit: string, when: string) => {
       within().click('+ правка вызова');
       const card = lastModifier;
-      within(card()).select('С метками', 'атака');
+      within(card()).select('Какие броски', 'атака');
       within(card()).select('Какое слово', edit);
       within(card()).when(`=${when}`);
     };
