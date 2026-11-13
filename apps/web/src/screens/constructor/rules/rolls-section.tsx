@@ -11,6 +11,9 @@ import { blockOfColumn, byBlock } from '../field-groups.ts';
 import type { Grouped } from '../field-groups.ts';
 import { fieldsOf, onSheet, isSingle } from '@vtt/engine/model/sheet-columns';
 import { STEP_WORDS } from '@vtt/engine/words/steps';
+import { ROLL_NUMBER_WORDS, rollNumberWord } from '@vtt/engine/words/dice-kinds';
+import { numbersOf, shapeOf } from '@vtt/engine/model/die-kinds';
+import type { DieConstant } from '@vtt/engine/model/types';
 import type { System, SystemRoll } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
 
@@ -48,14 +51,6 @@ function Arrived({ words }: { words: readonly (readonly [string, string, string]
     </span>
   );
 }
-
-const NUMBER_WORDS = [
-  ['bonus', 'прибавка к выпавшему'],
-  ['count', 'сколько костей бросить'],
-  ['sides', 'сколько граней у кости'],
-  ['under', 'порог: выпало не больше'],
-  ['over', 'порог: выпало не меньше'],
-] as const;
 
 function columnsOf(system: System): Grouped[] {
   const out: Grouped[] = [];
@@ -122,6 +117,14 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
   const hidden = untaken.filter(([, , group]) => group === NO_BLOCK).length;
   const free = service ? untaken : untaken.filter(([, , group]) => group !== NO_BLOCK);
   const dice = dieEntries(system);
+  const die = dice.find(([key]) => key === roll.die)?.[1] as DieConstant | undefined;
+  const allowed: readonly string[] = die ? numbersOf(die, roll.pair === true) : ROLL_NUMBER_WORDS.map(([key]) => key);
+  const current = roll.number ?? 'bonus';
+  const numberOptions: (readonly [string, string])[] = [
+    ...ROLL_NUMBER_WORDS.filter(([key]) => allowed.includes(key)),
+    ...(allowed.includes(current) ? [] : [[current, `${rollNumberWord(current)} — не подходит этой кости`] as const]),
+  ];
+  const showPair = roll.pair === true || (die ? shapeOf(die) === 'parts' : false);
   const graded = roll.number === 'under' || roll.number === 'over' || Boolean(roll.success || roll.margin);
   const ruleNames = namesFor(RULE_WORDS, system, roll);
   const degreeNames = namesFor(DEGREE_WORDS, system, roll);
@@ -169,10 +172,11 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
         <div className="dict-row roll-line">
           <span className="dict-row__label">Число поля — это</span>
           <div className="roll-form__body">
-            <Select label="Число поля — это" value={roll.number ?? 'bonus'} options={NUMBER_WORDS as never}
+            <Select label="Число поля — это" value={current} options={numberOptions as never}
               onChange={next => edit(draft => { if (next === 'bonus') delete draft.number; else draft.number = next; if (next !== 'count') delete draft.keep; })} />
           </div>
         </div>
+        {showPair ? (
         <div className="dict-row roll-line">
           <span className="dict-row__label">Бросают два поля</span>
           <div className="roll-form__body">
@@ -181,6 +185,7 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
             <span className="faint">Кость из двух видов; грани каждой — своё поле</span>
           </div>
         </div>
+        ) : null}
         {roll.number === 'count' ? (
           <div className="dict-row roll-line">
             <span className="dict-row__label">Оставить лучшие</span>

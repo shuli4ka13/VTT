@@ -7,6 +7,10 @@ import { SEEN_LABEL, ROLLED, ROLLED_LABEL, ANY_ACTION, PHASES } from '../events/
 import { HEARD_WORDS } from '../events/lifecycle.ts';
 import type { System, Compendium, Effect, Step, Stage, Guard, Param, Table, Modifier } from './types.ts';
 import { registry, loopsAt, splitsTargets } from '../engine/steps/index.ts';
+import { numbersOf, kindOfRule, placesOf, fitsPlace, fitKinds, countUnread, rollsCounting } from './die-kinds.ts';
+import { ROLL_KIND_WORDS, NUMBER_MISFIT, EDIT_MISFIT, EDIT_SIDES_MISFIT, COUNT_UNREAD, rollNumberWord } from '../words/dice-kinds.ts';
+import { editPrimitives } from '../engine/roll-edits.ts';
+import type { DieConstant } from './types.ts';
 import { isBlank } from './blank.ts';
 import { STEP_WORDS, slotShown, type SlotGate } from '../words/steps.ts';
 import { ROLL_CALL, CALL_WORDS } from '../words/calls.ts';
@@ -459,6 +463,7 @@ function fieldRollProblems(system: System): Problem[] {
     if (die?.kind !== 'die') out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `бросок «${name}»: кости «${roll.die}» нет в «Костях»` });
     else if (roll.pair && (roll.number !== 'sides' || (die.dice ?? []).length !== 2)) out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `бросок «${name}»: два поля бросают костью из двух видов, и число поля — грани кости` });
     else if (!roll.pair && (roll.number === 'count' || roll.number === 'sides') && (die.dice ?? []).length !== 1) out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `бросок «${name}»: число поля — ${roll.number === 'count' ? 'сколько костей' : 'грани кости'}, а кость «${die.label ?? roll.die}» составная` });
+    else if (!roll.pair && !numbersOf(die as DieConstant).includes(roll.number ?? 'bonus')) out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'warn', text: NUMBER_MISFIT(name, rollNumberWord(roll.number ?? 'bonus'), ROLL_KIND_WORDS[kindOfRule(system, roll).kind ?? 'one']) });
     const where = { tab: 'rules' as const, section: 'rolls' };
     const broken = (ref: unknown): string | null => {
       if (typeof ref !== 'object' || ref === null) return null;
@@ -793,6 +798,12 @@ function checksOf(system: System): Record<string, unknown>[] {
   return out;
 }
 
+function dieCountProblems(system: System): Problem[] {
+  return Object.entries(system.constants ?? {})
+    .filter(([key]) => countUnread(system, key))
+    .map(([key, die]) => ({ where: { tab: 'rules' as const, section: 'rolls' }, level: 'warn' as const, text: COUNT_UNREAD(die.label ?? key, rollsCounting(system, key)) }));
+}
+
 function rollEditProblems(system: System): Problem[] {
   const known = new Set(editStages().map(one => one.op));
   const out: Problem[] = [];
@@ -801,6 +812,7 @@ function rollEditProblems(system: System): Problem[] {
   const graded = rules.some(rule => hasDegrees(rule.degrees)) || checks.some(check => hasDegrees(check.degrees as never));
   const compared = checks.length > 0
     || rules.some(rule => rule.number === 'under' || rule.number === 'over' || rule.fields.some(field => field.threshold !== undefined && field.threshold !== null));
+  const places = placesOf(system);
   for (const [key, edit] of Object.entries(system.roll_edits ?? {})) {
     const where = { tab: 'rules' as const, section: 'roll_edits', key };
     const name = edit.label || key;
@@ -812,6 +824,11 @@ function rollEditProblems(system: System): Problem[] {
     for (const op of edit.ops ?? []) {
       const value = (op as { value?: { expr?: unknown } }).value;
       if (!known.has(String(op.op))) out.push({ where, level: 'error', text: `у правки броска «${name}» неизвестное действие «${String(op.op)}»` });
+      if (known.has(String(op.op)) && places.length && !places.some(place => fitsPlace(op, place))) {
+        const action = editPrimitives().find(one => one.op === op.op)?.label ?? String(op.op);
+        const byKind = places.some(place => place.kind !== null && fitKinds(op).includes(place.kind));
+        out.push({ where, level: 'warn', text: byKind ? EDIT_SIDES_MISFIT(name, action) : EDIT_MISFIT(name, action, fitKinds(op).map(kind => ROLL_KIND_WORDS[kind])) });
+      }
       if (op.op === 'shiftDegree' && !graded) out.push({ where, level: 'warn', text: `правка броска «${name}» сдвигает степень успеха, а ступеней нет ни у одного броска и ни у одной «Проверки» — она ничего не изменит` });
       if (op.op === 'shiftVersus' && !compared) out.push({ where, level: 'warn', text: `правка броска «${name}» сдвигает порог, а сравнивать не с чем: ни у одного броска нет порога и нет ни одной «Проверки» — она ничего не изменит` });
       if (AGAINST_NAME.test(JSON.stringify(op))) out.push({ where, level: 'error', text: `в словаре правок броска «@против» не пишут — у «${name}» он есть; противника проверяет условие правки на листе` });
@@ -1405,6 +1422,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...sheetKindProblems(system), ...layoutProblems(system));
   out.push(...editProblems(system, compendium));
   out.push(...rollEditProblems(system));
+  out.push(...dieCountProblems(system));
   out.push(...handlerDiceProblems(system));
   const told = new Set<string>();
   out.push(...sharedRollProblems(system, told));

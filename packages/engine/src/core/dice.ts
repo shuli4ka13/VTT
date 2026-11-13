@@ -140,7 +140,7 @@ const num = (raw: unknown, fallback: number): number => {
   return Number.isFinite(n) ? n : fallback;
 };
 
-const LADDER = [4, 6, 8, 10, 12, 20];
+export const LADDER = [4, 6, 8, 10, 12, 20];
 
 const partOf = (op: RollEditOp): string | undefined => (op.part ? String(op.part) : undefined);
 

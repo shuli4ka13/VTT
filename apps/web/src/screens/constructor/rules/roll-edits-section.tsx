@@ -2,6 +2,8 @@ import { BoundField } from '../bound-field.tsx';
 import type { Bound } from '../bound-field.tsx';
 import { useState } from 'react';
 import { editPalette, paletteKeyOf } from '@vtt/engine/engine/roll-edits';
+import { fitsPlace, kindsOf, placesOf } from '@vtt/engine/model/die-kinds';
+import { ROLL_KIND_WORDS } from '@vtt/engine/words/dice-kinds';
 import { ADVANTAGE_METHODS, installMethod } from '@vtt/engine/model/advantage-methods';
 import { editNotation, editReadback, joinReadback } from '../readback.ts';
 import { Card, CardHead, Input, Button, Select } from '../../../ui/primitives.tsx';
@@ -32,6 +34,26 @@ const addFromCatalog = (editSystem: EditSystem, methodId: string) => editSystem(
 function opWord(op: { op: string; [k: string]: unknown }): string {
   const key = paletteKeyOf(op);
   return editPalette().find(p => p.key === key)?.label ?? op.op;
+}
+
+const OTHER_WORDS = 'остальные';
+
+function addOptions(system: System): (readonly [string, string] | readonly [string, string, string])[] {
+  const palette = editPalette();
+  const places = placesOf(system).filter(place => place.kind !== null);
+  const kinds = kindsOf(system);
+  if (!places.length) return palette.map(p => [p.key, p.label] as const);
+  const out: (readonly [string, string, string])[] = [];
+  const placed = new Set<string>();
+  for (const kind of kinds) {
+    for (const entry of palette) {
+      if (!places.some(place => place.kind === kind && fitsPlace(entry.op, place))) continue;
+      placed.add(entry.key);
+      out.push([`${kind}:${entry.key}`, entry.label, ROLL_KIND_WORDS[kind]] as const);
+    }
+  }
+  for (const entry of palette) if (!placed.has(entry.key)) out.push([`other:${entry.key}`, entry.label, OTHER_WORDS] as const);
+  return out;
 }
 
 function partsOf(system: System): { name: string; label: string }[] {
@@ -203,9 +225,9 @@ function WordRow({ wordKey, edit, system, editSystem, parts, used }: {
         ))}
         <Select
           value=""
-          options={[['', '+ добавить…'], ...editPalette().map(p => [p.key, p.label] as const)] as never}
+          options={[['', '+ добавить…'], ...addOptions(system)] as never}
           onChange={pick => {
-            const chosen = editPalette().find(p => p.key === pick);
+            const chosen = editPalette().find(p => p.key === pick.slice(pick.indexOf(':') + 1));
             if (!chosen) return;
             editSystem(draft => {
               const cur = draft.roll_edits?.[wordKey];

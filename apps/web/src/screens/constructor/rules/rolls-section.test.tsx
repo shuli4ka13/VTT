@@ -57,7 +57,9 @@ describe('«Правила → Броски»: два поля', () => {
   afterEach(cleanup);
 
   it('переключатель пишет pair и снимает ключ', () => {
-    const { system, view } = run({});
+    const system = make({});
+    system.constants!.d = { label: 'Кость', kind: 'die', dice: [{ sides: 6, name: 'а' }, { sides: 6, name: 'б' }] } as never;
+    const view = render(<RollsSection system={system} editSystem={change => change(system as never)} />);
     const box = () => view.container.querySelector<HTMLInputElement>('input[aria-label="Бросают два поля"]')!;
     expect(view.container.textContent).toContain('Кость из двух видов; грани каждой — своё поле');
     fireEvent.click(box());
