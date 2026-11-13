@@ -28,7 +28,8 @@
         "ops": [
           {
             "op": "explode",
-            "at": "max"
+            "at": "max",
+            "limit": 1
           }
         ]
       },
@@ -37,7 +38,8 @@
         "ops": [
           {
             "op": "explode",
-            "at": "min"
+            "at": "min",
+            "limit": 1
           }
         ]
       },

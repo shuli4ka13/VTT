@@ -139,6 +139,17 @@ function OpChip({ op, system, parts, onNumber, onCount, onPart, onChange, onRemo
       {op.op === 'addDie' ? (
         <span className="chip__count"><BoundField value={op.count ?? 1} placeholder="сколько" onChange={onCount} /></span>
       ) : null}
+      {op.op === 'explode' ? (
+        <select
+          className="chip__part"
+          aria-label="сколько раз"
+          value={Number(op.limit) === 1 ? 'once' : 'chain'}
+          onChange={e => onChange(it => { if (e.target.value === 'once') it.limit = 1; else delete it.limit; })}
+        >
+          <option value="chain">пока выпадает</option>
+          <option value="once">один раз</option>
+        </select>
+      ) : null}
       {askPart ? (
         <select
           className="chip__part"
