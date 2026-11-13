@@ -8,6 +8,7 @@ import { world as W } from '@vtt/schema';
 import type { System, Step as EffectStep } from '@vtt/schema';
 import { useWorld, emptySystem } from '../store/world.ts';
 import { useGuide } from '../store/guide.ts';
+import { useOpened } from '../store/opened.ts';
 import { useFormulaBar } from '../store/formula-bar.ts';
 import { SystemBar } from '../screens/constructor/world-bar.tsx';
 import { ConstructorScreen } from '../screens/constructor/constructor.tsx';
@@ -27,7 +28,7 @@ import { bringIn } from '@vtt/engine/model/bring';
 import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
 import { lintSystem } from '@vtt/engine/model/lint';
 import { flattenSystem } from '@vtt/engine/model/inherit';
-import type { View } from './types.ts';
+import type { View, Lesson, Step as LessonStep } from './types.ts';
 import base from './seeds/base.json' with { type: 'json' };
 
 const seed = base as unknown as System;
@@ -55,12 +56,63 @@ const beforeEnd = (list: Record<string, unknown>[], step: Record<string, unknown
 };
 const applied = (change: Record<string, unknown>) => steps('удар').map(step => (step.type === 'apply' ? { ...step, ...change } : step));
 const labelColumn = (table: string, key: string, label: string) => edit(d => { d.tables![table]!.columns!.find(c => c.key === key)!.label = label; });
+const openPanels = () => {
+  for (let pass = 0; pass < 4; pass++) {
+    const closed = [...document.querySelectorAll<HTMLElement>('[aria-label^="развернуть «"]')];
+    if (!closed.length) return;
+    closed.forEach(button => fireEvent.click(button));
+  }
+};
 const press = (el: HTMLElement) => {
   const target = el.matches('button, select, summary, [role="button"], [role="tab"]') ? el : el.querySelector<HTMLElement>('button, summary, [role="button"]') ?? el;
   act(() => { fireEvent.click(target); });
-  openAll();
+  openPanels();
 };
 const problemsOf = () => lintSystem(flattenSystem(useWorld.getState().system, true)).filter(p => p.level === 'error').map(p => p.text).join(' | ');
+const flat = (text: string): string => text.toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ').trim();
+const screenText = (): string => {
+  const root = document.body.cloneNode(true) as HTMLElement;
+  root.querySelectorAll('.guide').forEach(node => node.remove());
+  const attrs = [...root.querySelectorAll('[placeholder], [title], [aria-label]')]
+    .flatMap(el => ['placeholder', 'title', 'aria-label'].map(name => el.getAttribute(name) ?? ''));
+  const words: string[] = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) words.push(node.textContent ?? '');
+  return flat([...words, ...attrs].join(' '));
+};
+const escaped = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const stemOf = (word: string): string => (word.length >= 7 ? word.slice(0, -2) : word.length >= 4 ? word.slice(0, -1) : word);
+const said = (haystack: string, phrase: string): boolean => {
+  const pieces = flat(phrase).match(/[\p{L}\d]+|[^\p{L}\d\s]+/gu) ?? [];
+  const pattern = pieces.map(piece => (/\p{L}/u.test(piece) ? `(?<![\\p{L}\\d])${escaped(stemOf(piece))}\\p{L}*` : escaped(piece))).join('\\s*');
+  return new RegExp(pattern, 'u').test(haystack);
+};
+const typedByAuthor = (phrase: string): boolean => /^[\d\s.,+\-*/()@<>=]*$/.test(phrase) || phrase.startsWith('@') || /[()]/.test(phrase) || phrase === 'Enter';
+const phrasesIn = (...texts: (string | undefined)[]): string[] =>
+  texts.flatMap(text => [...(text ?? '').matchAll(/«([^«»]*)»/g)].map(found => found[1]!.trim())).filter(phrase => /\p{L}|\d|\+/u.test(phrase));
+const spokenPhrases = (lesson: Lesson, step: LessonStep): string[] =>
+  phrasesIn(step.say, step.lead, step.hint, step.goal, lesson.steps[0] === step ? lesson.start : undefined, ...(step.traps ?? []).map(trap => trap.say));
+
+const SCREEN_EXCEPTIONS: Record<string, string> = {
+  'first-system/problems/Открыть': 'кнопка рядом с ошибкой: в чистой системе ошибок нет',
+  'first-system/trial/Что вышло': 'блок «Что вышло» и строка «Б · Хиты: 10 → 5» возникают в панели «Рядом» после щелчка по «Проба»',
+  'first-system/trial/Б · Хиты: 10 → 5': 'то же: итог пробы виден после щелчка по «Проба»',
+  'links/trial/максимум': 'выбор кости пробы виден после щелчка по «Проба»',
+  'links/trial/Что вышло': 'блок итога пробы виден после щелчка по «Проба»',
+  'links/trial/Б · Хиты: 10 → 5': 'итог пробы виден после щелчка по «Проба»',
+  'links/heal/прибавить': 'задание «Сами»: вариант «Как» живёт в шаге нового эффекта, которого к началу ещё нет',
+  'tags/clear/снимаем': 'задание «Сами»: вариант шага «состояние» живёт в шаге, которого к началу ещё нет',
+  'tags/clear/все эффекты с меткой': 'задание «Сами»: вариант шага «состояние» живёт в шаге, которого к началу ещё нет',
+  'tables/block/сила': 'название строки, которую автор впишет на шаге «Строки»',
+  'tables/block/ловкость': 'название строки, которую автор впишет на шаге «Строки»',
+  'tables/through/Характеристика · Модификатор': 'пункт подсказки строки формул: список строится по набранному «@», тест вводит формулу мимо поля',
+  'spells/if/Срок · Держится': 'пункт выбора «Только если»: список строится по набранному «@»',
+  'templates/when/частых условиях': 'название группы подсказки строки формул, список строится по набранному «@»',
+  'items/armor/Автор книги': 'роль на экране входа: другой экран, сверено с screens/gate/gate.tsx',
+  'items/armor/Завести запись': 'кнопка экрана компендиума: другой экран, сверено с screens/compendium/compendium.tsx',
+  'ready/other/Счётчики здоровья и оглушения': 'кусок виден после раскрытия системы Shadowrun в «Готовое из образцов»',
+};
+const spoken = { total: 0 };
 const toggleProblems = () => { act(() => { fireEvent.click(findAnchor({ guide: 'problems' })!.querySelector('button')!); }); };
 const openProblems = () => { if (!openedDialog('Проблемы системы')) toggleProblems(); };
 
@@ -70,7 +122,7 @@ const typeBar = (text: string) => act(() => { useFormulaBar.getState().write(tex
 
 const SOLVE_READY: Record<string, (() => void) | (() => void)[]> = {
   take: () => takePiece('d20-abilities'),
-  drop: [() => pick({ activeFieldTag: 'inspiration' }), () => dropField('inspiration')],
+  drop: [() => pick({ activeFieldTag: 'inspiration' }), () => press(findAnchor({ text: 'Удалить' })!), () => dropField('inspiration')],
   problems: () => openProblems(),
   effect: () => takeEffect('disengage'),
   'problems-effect': () => undefined,
@@ -109,7 +161,8 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     everyone: () => edit(d => { d.grants = ['удар']; }),
     targets: [
       () => press(findAnchor({ text: '+ ещё одно' })!),
-      () => edit(d => { d.effects.удар!.params!.splice(1, 1, { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' } } as never); }),
+      () => edit(d => { Object.assign(d.effects.удар!.params![1]!, { label: 'Цели', kind: 'sheet', many: true, item: { key: 'каждый', label: 'Каждый' } }); }),
+      () => edit(d => { d.effects.удар!.params![1] = { key: 'цели', label: 'Цели', kind: 'sheet', many: true, item: { key: 'цель', label: 'Цель' } } as never; }),
     ],
     each: () => edit(d => setSteps(d, 'удар', [{ type: 'each', of: 'цели' }])),
     check: [
@@ -123,7 +176,7 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     ],
     branch: () => edit(d => setSteps(d, 'удар', [...steps('удар'), { type: 'branch', if: { expr: '@проверка.success' } }, { type: 'end' }])),
     damage: [
-      () => edit(d => setSteps(d, 'удар', beforeEnd(steps('удар'), { type: 'apply', target: { expr: '@действующий' } }))),
+      () => edit(d => setSteps(d, 'удар', beforeEnd(steps('удар'), { type: 'apply' }))),
       () => edit(d => setSteps(d, 'удар', applied({ target: { expr: '@цель.хиты' } }))),
       () => edit(d => setSteps(d, 'удар', applied({ value: { expr: '5' } }))),
     ],
@@ -242,7 +295,10 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => edit(d => setSteps(d, 'удар', steps('удар').map(step => (step.type === 'emit' ? { ...step, effect: 'урон', args: { действующий: { expr: '@цель' }, amount: { expr: '5' } } } : step)))),
     ],
     drop: () => edit(d => setSteps(d, 'удар', steps('удар').filter(step => step.type !== 'apply'))),
-    name: () => edit(d => setSteps(d, 'удар', steps('удар').map(step => (step.type === 'emit' ? { ...step, id: 'урон' } : step)))),
+    name: [
+      () => press(findAnchor({ text: '4 · Урон' })!),
+      () => edit(d => setSteps(d, 'удар', steps('удар').map(step => (step.type === 'emit' ? { ...step, id: 'урон' } : step)))),
+    ],
     problems: openProblems,
     heal: () => edit(d => {
       d.effects.лечение = {
@@ -261,6 +317,7 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     param: [
       () => press(findAnchor({ text: '+ ещё одно' })!),
       () => edit(d => { d.effects.удар!.params!.splice(2, 1, { key: 'урон_оружия', label: 'Урон оружия', kind: 'number' }); }),
+      () => press(findAnchor({ text: '4 · Изменить «Хиты»' })!),
       () => openBar('5'),
       () => typeBar('@урон_оружия'),
       () => edit(d => setSteps(d, 'удар', steps('удар').map(step => (step.type === 'apply' ? { ...step, value: { expr: '@урон_оружия' } } : step)))),
@@ -287,6 +344,7 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
   tags: {
     tag: [
       () => pick({ activeEffectId: 'сырость' }),
+      () => { const box = findAnchor({ field: 'Метки' })!.querySelector('select')!; act(() => { fireEvent.change(box, { target: { value: ':своя' } }); }); },
       () => edit(d => { d.effects.сырость!.tags = ['гасит огонь']; }),
     ],
     when: [
@@ -354,7 +412,7 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
       () => edit(d => setSteps(d, 'удар', [{ type: 'branch', if: { expr: '@стол.бой' } }, { type: 'end' }])),
     ],
     spend: [
-      () => edit(d => setSteps(d, 'удар', beforeEnd(steps('удар'), { type: 'apply', target: { expr: '@действующий' } }))),
+      () => edit(d => setSteps(d, 'удар', beforeEnd(steps('удар'), { type: 'apply' }))),
       () => edit(d => setSteps(d, 'удар', applied({ target: { expr: '@действующий.действий_осталось' }, value: { expr: '1' } }))),
     ],
     problems: openProblems,
@@ -569,6 +627,7 @@ const realWorld = (): System => ({ ...emptySystem(), name: 'Моя систем�
 const reset = () => {
   try { localStorage.clear(); } catch { return; }
   useFormulaBar.getState().dismiss();
+  useOpened.setState({ opened: {} });
   useGuide.setState({ lesson: null, step: 0, folded: false, note: null, finished: null, started: {} });
   useWorld.getState().replaceWorld({ system: realWorld(), compendium: { records: [] }, sheets: [] });
   useWorld.setState({ origin: { mode: 'system' }, activeTab: 'sheet' });
@@ -590,10 +649,19 @@ describe('уроки конструктора', () => {
     it(`${lesson.title}: на каждом шаге якорь на экране, решение шага засчитывается`, { timeout: 60000 }, async () => {
       mount();
       await start(lesson.id);
+      const wrongWords: string[] = [];
       for (const [index, step] of lesson.steps.entries()) {
         act(() => { useGuide.getState().go(index); });
         if (step.tab) pick({ activeTab: step.tab });
-        openAll();
+        openPanels();
+        let onScreen = '';
+        const lateMoves: { at: number; phrase: string }[] = [];
+        let inData = flat(JSON.stringify(lesson.seed));
+        const snap = () => {
+          onScreen += ` | ${screenText()}`;
+          inData += ` | ${flat(JSON.stringify(useWorld.getState().system))}`;
+        };
+        snap();
         const solve = SOLVE[lesson.id]?.[step.id];
         const parts = Array.isArray(solve) ? solve : [];
         for (const [at, move] of movesOf(step).entries()) {
@@ -604,13 +672,31 @@ describe('уроки конструктора', () => {
             press(via!);
           }
           expect(firstOf(move.at), `${lesson.id}/${step.id}: ход ${at + 1}, нет якоря ${JSON.stringify(move.at)}`).not.toBeNull();
+          openPanels();
+          snap();
+          const now = screenText();
+          for (const phrase of phrasesIn(move.say, move.hint)) {
+            spoken.total += 1;
+            if (typedByAuthor(phrase) || said(now, phrase) || SCREEN_EXCEPTIONS[`${lesson.id}/${step.id}/${phrase}`]) continue;
+            lateMoves.push({ at: at + 1, phrase });
+          }
           parts[at]?.();
-          openAll();
+          openPanels();
+          snap();
           if (move.done) expect(move.done(view!), `${lesson.id}/${step.id}: ход ${at + 1} не засчитан`).toBe(true);
         }
         if (typeof solve === 'function') solve();
-        openAll();
+        openPanels();
+        snap();
         if (step.done) expect(step.done(view!), `${lesson.id}/${step.id}: решение не засчитано ${problemsOf()}`).toBe(true);
+        for (const late of lateMoves) {
+          if (!said(inData, late.phrase)) wrongWords.push(`${lesson.id} / ${step.id} / ход ${late.at}: «${late.phrase}»`);
+        }
+        for (const phrase of spokenPhrases(lesson, step)) {
+          spoken.total += 1;
+          if (typedByAuthor(phrase) || said(onScreen, phrase) || said(inData, phrase) || SCREEN_EXCEPTIONS[`${lesson.id}/${step.id}/${phrase}`]) continue;
+          wrongWords.push(`${lesson.id} / ${step.id}: «${phrase}»`);
+        }
         for (const [n, wrong] of (BAD[lesson.id]?.[step.id] ?? []).entries()) {
           const system = structuredClone(useWorld.getState().system);
           const extra = wrong(system) ?? {};
@@ -618,7 +704,8 @@ describe('уроки конструктора', () => {
           expect(step.done!({ ...view!, ...extra, system }), `${lesson.id}/${step.id}: неверное решение ${n + 1} засчитано`).toBe(false);
         }
       }
-      expect(errorsOf(useWorld.getState().system), `${lesson.id}: итог с ошибками`).toBe(0);
+      expect(wrongWords, `урок говорит не словами экрана:\n${wrongWords.join('\n')}`).toEqual([]);
+      expect(problemsOf(), `${lesson.id}: после всех решений «Проблемы» не чисты`).toBe('');
     });
   }
 

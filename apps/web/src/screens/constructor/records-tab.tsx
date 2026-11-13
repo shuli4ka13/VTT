@@ -394,7 +394,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
           />
           <ModifiersEditor
             empty={{
-              title: 'своих формул у типа нет',
+              title: 'тип пока ничего не правит',
               hint: 'Правки, пока у листа есть любая вещь этого типа. Пишутся один раз здесь — каждая запись типа получает их без строчки на себе.',
             }}
             system={system}

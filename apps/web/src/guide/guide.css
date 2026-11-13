@@ -31,6 +31,11 @@
 .guide__move--now { color: var(--text); font-weight: 600; }
 .guide__move--done { color: var(--text-faint); text-decoration: line-through; }
 
+@media (min-width: 701px) {
+  body:has(.guide__card):not(:has(.guide--left)) .columns { padding-right: calc(380px + 2 * var(--s-5)); }
+  body:has(.guide--left .guide__card) .columns { padding-left: calc(380px + 2 * var(--s-5)); }
+}
+
 @media (max-width: 700px) {
   .guide, .guide--left { left: 0; right: 0; bottom: 0; width: 100%; align-items: stretch; }
   .guide__card { border-radius: var(--r-3) var(--r-3) 0 0; border-bottom: 0; max-height: 60vh; overflow-y: auto; }

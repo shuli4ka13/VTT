@@ -2,6 +2,7 @@ import type { System, Effect, Handler } from '@vtt/schema';
 import type { Lesson, View, Move } from '../types.ts';
 import { effectBy, stepsOf, errorsOf, is, numberOf, exprOf } from '../find.ts';
 import { problemsClean } from './first-system.ts';
+import { visible } from '../anchor.ts';
 import seed from '../seeds/tags.json' with { type: 'json' };
 
 const TAG = 'гасит огонь';
@@ -66,7 +67,7 @@ export const tags: Lesson = {
     {
       id: 'tag',
       chapter: 'Метка и реакция',
-      lead: 'Метка — слово на эффекте. По ней другие эффекты узнают «своего»: «Горение» должно погаснуть, когда на лист попала «Сырость». Для этого «Сырости» нужна метка.',
+      lead: 'Метка — слово на эффекте. По ней другие эффекты узнают своих: «Горение» должно погаснуть, когда на лист попала «Сырость». Для этого «Сырости» нужна метка.',
       tab: 'effects',
       panel: 'Библиотека эффектов',
       say: 'Поставьте «Сырости» метку «гасит огонь».',
@@ -74,9 +75,11 @@ export const tags: Lesson = {
         opened('Сырость'),
         {
           at: { field: 'Метки' },
-          say: 'В «Метки» выберите «новая метка…» и впишите «гасит огонь»: метка встанет, когда вы нажмёте «добавить».',
+          say: 'В «Метки» выберите «новая метка…».',
           hint: 'Свойств не видно? Нажмите «свойства» рядом с названием эффекта.',
+          done: () => visible({ input: 'как назвать метку' }),
         },
+        { at: { input: 'как назвать метку' }, say: 'Впишите «гасит огонь» и нажмите «добавить».' },
       ],
       via: { text: 'свойства' },
       done: view => (effect(view, 'Сырость')?.tags ?? []).includes(TAG),
@@ -107,7 +110,7 @@ export const tags: Lesson = {
       done: view => aboutCarrier(gainedTag(view)),
       traps: [{
         when: view => Boolean(gainedTag(view)) && !aboutCarrier(gainedTag(view)) && Boolean(gainedTag(view)?.if),
-        say: 'Условие стоит, но в нём нет «носитель». Выберите «Лист — носитель» в «Кого касается».',
+        say: 'Условие стоит, но в нём нет «носитель». Выберите «Лист» — носитель в «Кого касается».',
       }],
       result: () => 'Подписка касается только листа-носителя.',
     },
@@ -156,7 +159,7 @@ export const tags: Lesson = {
     {
       id: 'problems',
       chapter: 'Кости',
-      say: 'Нажмите «Проблемы» в шапке. Ошибок быть не должно.',
+      say: 'Нажмите в шапке кнопку «Проблем нет» (если что-то найдено, на ней «Проблемы» и число). Ошибок быть не должно.',
       at: { guide: 'problems' },
       done: problemsClean,
       result: () => 'Проблем нет.',

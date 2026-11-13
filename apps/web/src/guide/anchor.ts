@@ -62,6 +62,8 @@ export function findAnchor(anchor: Anchor | undefined, root: ParentNode = docume
   return null;
 }
 
+export const visible = (anchor: Anchor, root: ParentNode = document): boolean => findAnchor(anchor, root) !== null;
+
 export const firstOf = (anchors: Anchor | Anchor[] | undefined, root: ParentNode = document): HTMLElement | null => {
   for (const anchor of anchors === undefined ? [] : Array.isArray(anchors) ? anchors : [anchors]) {
     const found = findAnchor(anchor, root);

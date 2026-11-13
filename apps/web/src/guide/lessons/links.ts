@@ -3,6 +3,7 @@ import type { Lesson, View } from '../types.ts';
 import { effectBy, fieldBy, stepsOf, is, subtracts, adds, numberOf, armOf, errorsOf, same, isArm, FORMULA_DONE, barOpen, barText } from '../find.ts';
 import { armsOf } from '@vtt/engine/model/flow';
 import { problemsClean } from './first-system.ts';
+import { visible } from '../anchor.ts';
 import base from '../seeds/base.json' with { type: 'json' };
 
 const damage = (view: View) => effectBy(view.system, 'Урон');
@@ -192,8 +193,11 @@ export const links: Lesson = {
       id: 'name',
       chapter: 'Вызов',
       tab: 'effects',
-      say: 'Чтобы шаги ниже могли прочитать «Осталось», под вызовом нажмите «результат…» и впишите имя «урон»: оно запомнится, когда вы щёлкнете мимо поля.',
-      at: { text: 'результат…' },
+      say: 'Чтобы шаги ниже могли прочитать «Осталось», дайте вызову имя «урон».',
+      at: [
+        { at: { text: '4 · Урон' }, say: 'В ветке «успех» щёлкните свёрнутый шаг «4 · Урон»: он раскроется.', done: () => visible({ text: 'результат…' }) },
+        { at: { text: 'результат…' }, say: 'Под вызовом нажмите «результат…» и впишите имя «урон»: оно запомнится, когда вы щёлкнете мимо поля.' },
+      ],
       done: view => calls(view).some(step => typeof step.id === 'string' && step.id.trim() !== ''),
       result: view => `Вызов называется «${String(calls(view).find(step => step.id)?.id ?? '')}»: шаги ниже видят его «Осталось».`,
     },
@@ -208,7 +212,7 @@ export const links: Lesson = {
     {
       id: 'problems',
       chapter: 'Вызов',
-      say: 'Нажмите «Проблемы» в шапке. Ошибок быть не должно: если «Удар» не передаст «Урону» что-то нужное, ошибка появится здесь.',
+      say: 'Нажмите в шапке кнопку «Проблем нет» (если что-то найдено, на ней «Проблемы» и число). Ошибок быть не должно: если «Удар» не передаст «Урону» что-то нужное, ошибка появится здесь.',
       at: { guide: 'problems' },
       done: problemsClean,
       result: () => 'Проблем нет.',

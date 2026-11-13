@@ -2,6 +2,7 @@ import type { System } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
 import { effectBy, tableBy, fieldBy, stepsOf, is, numberOf, same, FORMULA_DONE, barOpen, barText } from '../find.ts';
 import { problemsClean } from './first-system.ts';
+import { visible } from '../anchor.ts';
 import base from '../seeds/base.json' with { type: 'json' };
 
 const strike = (view: View) => effectBy(view.system, 'Удар');
@@ -61,9 +62,13 @@ export const items: Lesson = {
         { at: { text: '+ ещё одно' }, say: 'Откройте «Удар» и в «Что приходит» нажмите «+ ещё одно».', hint: '«Удара» не видно? Он в группе «Без блока» — раскройте её.', done: view => (strike(view)?.[1].params ?? []).length > 2 },
         { at: { text: 'Название' }, say: 'В «Название» впишите «Урон оружия». Вид — «число».', done: view => Boolean(weaponParam(view)) },
         {
+          at: { text: '4 · Изменить «Хиты»' },
+          say: 'В ветке «успех» щёлкните свёрнутый шаг «4 · Изменить»: он раскроется.',
+          done: () => visible({ text: 'Сколько' }),
+        },
+        {
           at: { text: 'Сколько' },
-          say: 'В «Изменении» щёлкните число в «Сколько»: оно откроется строкой наверху и будет выделено.',
-          hint: '«Изменение» свёрнуто? Щёлкните его имя.',
+          say: 'В раскрытом шаге щёлкните число в «Сколько»: оно откроется строкой наверху и будет выделено.',
           done: view => barOpen(view) || paramUsed(view),
         },
         {
@@ -87,9 +92,9 @@ export const items: Lesson = {
       chapter: 'Тип вещи',
       tab: 'sheet',
       say: 'Чтобы «Удар» давало оружие, а не все подряд, на вкладке «Лист» в разделе «Что даёт всем листам» уберите «Удар» крестиком.',
-      hint: 'Раздела не видно? Выберите вид «блоки и типы листов».',
+      hint: 'Раздела не видно? Выберите вид «блоки и типы листов» и кнопку «все блоки»: раздел показан только на ней.',
       at: { field: 'Что даёт всем листам' },
-      via: { text: 'блоки и типы листов' },
+      via: [{ text: 'все блоки', in: 'Листы' }, { text: 'блоки и типы листов' }],
       done: view => {
         const found = strike(view);
         return Boolean(found && !(view.system.grants ?? []).includes(found[0]));
@@ -134,7 +139,7 @@ export const items: Lesson = {
     {
       id: 'problems',
       chapter: 'Кнопка и правка',
-      say: 'Нажмите «Проблемы» в шапке. Ошибок быть не должно.',
+      say: 'Нажмите в шапке кнопку «Проблем нет» (если что-то найдено, на ней «Проблемы» и число). Ошибок быть не должно.',
       at: { guide: 'problems' },
       done: problemsClean,
       result: () => 'Проблем нет.',
@@ -147,7 +152,7 @@ export const items: Lesson = {
       tab: 'records',
       say: 'Заведите тип вещи «Броня», который правит «Класс брони».',
       goal: 'есть тип вещи «Броня», у которого есть правка «Класса брони».',
-      hint: 'В панели «книги» нажмите «+ тип», затем у нового типа — «+ правит поле».',
+      hint: 'В панели «книги» нажмите «+ в» у любого блока: добавится новый тип. У нового типа нажмите «+ правит поле».',
       done: view => editsArmor(view, 'Броня'),
       result: () => '«Броня» правит класс брони.',
     },

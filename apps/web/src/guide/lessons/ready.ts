@@ -2,6 +2,7 @@ import { emptySystem } from '../../store/world.ts';
 import type { Lesson, View } from '../types.ts';
 import { tableBy, fieldBy, effectBy, errorsOf, same } from '../find.ts';
 import { problemsClean } from './first-system.ts';
+import { visible } from '../anchor.ts';
 
 const stats = (view: View) => tableBy(view.system, 'Характеристики');
 
@@ -37,7 +38,7 @@ export const ready: Lesson = {
       chapter: 'Кусок листа',
       tab: 'sheet',
       panel: 'Готовое из образцов',
-      say: 'На плашке «Характеристики к20 — добавлено» раскройте «что пришло». Там всё, что приехало с куском: таблицы, поля, кость. «отменить» вернёт систему как была — но только до следующей правки.',
+      say: 'На плашке «Характеристики к20» с пометкой «добавлено» раскройте «что пришло». Там всё, что приехало с куском: таблицы, поля, кость. «отменить» вернёт систему как была — но только до следующей правки.',
       at: { text: 'что пришло' },
     },
     {
@@ -48,9 +49,9 @@ export const ready: Lesson = {
       hint: 'Серая «Удалить» значит, что полем пользуются, — такое не убрать. «Вдохновение» свободно.',
       at: [
         { at: { text: 'Вдохновение' }, say: 'На листе щёлкните поле «Вдохновение».', done: view => { const tag = fieldBy(view.system, 'Вдохновение')?.tag; return Boolean(tag) && view.field === tag; } },
-        { at: { text: 'Удалить' }, say: 'Нажмите «Удалить», затем «точно убрать».' },
+        { at: { text: 'Удалить' }, say: 'Нажмите «Удалить».', done: () => visible({ text: 'точно убрать' }) },
+        { at: { text: 'точно убрать' }, say: 'Подтвердите: «точно убрать».' },
       ],
-      via: { text: 'точно убрать' },
       done: view => Boolean(stats(view)) && Boolean(fieldBy(view.system, 'Класс')) && !fieldBy(view.system, 'Вдохновение'),
       traps: [{
         when: view => Boolean(stats(view)) && !hasRow(view, 'харизма') && errorsOf(view.system) > 0,
@@ -61,10 +62,10 @@ export const ready: Lesson = {
     {
       id: 'problems',
       chapter: 'Кусок листа',
-      say: 'Нажмите «Проблемы» в шапке. После удаления ошибок быть не должно, а если что-то сломалось, там будет сказано где.',
+      say: 'Нажмите в шапке кнопку «Проблем нет» (если что-то найдено, на ней «Проблемы» и число). После удаления ошибок быть не должно, а если что-то сломалось, там будет сказано где.',
       at: { guide: 'problems' },
       done: problemsClean,
-      result: () => 'Проблем нет. Чтобы закрыть список, нажмите «Проблемы» ещё раз.',
+      result: () => 'Проблем нет. Чтобы закрыть список, нажмите ту же кнопку ещё раз.',
     },
     {
       id: 'effect',
@@ -90,7 +91,7 @@ export const ready: Lesson = {
     {
       id: 'problems-effect',
       chapter: 'Эффект',
-      say: 'Нажмите «Проблемы» в шапке. Ошибок быть не должно.',
+      say: 'Нажмите в шапке кнопку «Проблем нет» (если что-то найдено, на ней «Проблемы» и число). Ошибок быть не должно.',
       at: { guide: 'problems' },
       done: problemsClean,
       result: () => 'Проблем нет.',
