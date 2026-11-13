@@ -6,6 +6,7 @@ import { sheetKinds } from '@vtt/engine/model/owned';
 import { hasDesk } from '@vtt/engine/events/desk';
 import { DESK_ID } from '@vtt/engine/engine/owners';
 import { Card, CardHead, Button, Empty, LabelInput, DangerButton, Select } from '../../../ui/primitives.tsx';
+import { GrantsEditor } from '../grants-editor.tsx';
 import { newColumn, newTable } from '../factory.ts';
 import { readyForSheet } from '../table-field.tsx';
 import { freeBlockName, addColumnToBlock, moveBlockTo, SHEET_TABLE } from '../block-panel.tsx';
@@ -212,6 +213,13 @@ export function CharacterSection({ system, editSystem, docked }: {
           <SheetKindEditor id={of} kind={kind} system={system} />
         </>
       ) : null}
+      <Card>
+        <CardHead title="Что даёт всем листам" sub="Действует на любой лист, какого бы типа он ни был, и на лист без типа" />
+        <div data-field="Что даёт всем листам">
+          <GrantsEditor system={system} value={system.grants}
+            onChange={next => editSystem(draft => { if (next) draft.grants = next; else delete draft.grants; })} />
+        </div>
+      </Card>
       {!docked && open && openTable && openColumn ? (
         <TableColumnCard id={open.table} table={openTable} column={openColumn} system={system}
           onOpenTable={() => showTable(open.table)}

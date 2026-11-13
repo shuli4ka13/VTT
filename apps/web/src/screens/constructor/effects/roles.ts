@@ -1,15 +1,18 @@
 import type { System, Effect, Compendium } from '@vtt/schema';
 import { launchOf } from '@vtt/engine/model/effect-kinds';
-import { calledOf } from '@vtt/engine/engine/effects';
+import { calledOf, chainsOfEffect } from '@vtt/engine/engine/effects';
+import { emittedChoices } from '@vtt/engine/model/payments';
+import { recordKinds, withLibrary } from '@vtt/engine/model/owned';
 import { COST_BLOCK } from '@vtt/engine/words/glossary';
 
-export type Role = 'button' | 'auto' | 'passive' | 'pay' | 'step';
+export type Role = 'button' | 'auto' | 'passive' | 'pay' | 'step' | 'unbound';
 
 export const ROLE_GROUPS: Record<Role, string> = {
   step: 'Шаги для других', pay: 'Плата', button: 'Кнопкой', auto: 'Срабатывают сами', passive: 'Висят и правят',
+  unbound: 'Не подключены',
 };
 
-const ROLE_ORDER: Role[] = ['step', 'pay', 'button', 'auto', 'passive'];
+const ROLE_ORDER: Role[] = ['step', 'pay', 'button', 'auto', 'passive', 'unbound'];
 
 export function grouped<E>(system: System, list: readonly [string, E][]): [string, E, string][] {
   const roles = rolesOf(system, null);
@@ -19,7 +22,18 @@ export function grouped<E>(system: System, list: readonly [string, E][]): [strin
 
 export const ROLE_WORDS: Record<Role, string> = {
   button: 'кнопкой', auto: 'срабатывает сам', passive: 'висит и правит', pay: 'плата', step: 'шаг для других',
+  unbound: 'не подключён',
 };
+
+export function roleWordsOf(effect: Effect | undefined, role: Role): string {
+  if (role !== 'passive' && role !== 'auto') return ROLE_WORDS[role];
+  const edits = Boolean(effect?.modifiers?.length);
+  const listens = Boolean(effect?.on?.length);
+  if (edits && listens) return 'висит · правит и срабатывает сам';
+  if (edits) return 'висит · правит';
+  if (listens) return 'висит · срабатывает сам';
+  return 'висит';
+}
 
 type Loose = Record<string, unknown>;
 
@@ -92,17 +106,47 @@ function payIds(system: System, compendium: Compendium | null): Set<string> {
   return out;
 }
 
+function calledIds(system: System, compendium: Compendium | null): Set<string> {
+  const out = new Set(calledOf(system).map(([id]) => id));
+  const book = compendium ? withLibrary(system, compendium) : undefined;
+  for (const [id, effect] of Object.entries(system.effects ?? {})) {
+    for (const step of chainsOfEffect(effect).flat() as Loose[]) {
+      if (step.type !== 'emit' || !step.effect) continue;
+      for (const choice of emittedChoices(system, id, step.effect, book)) out.add(choice);
+    }
+  }
+  return out;
+}
+
+function buttonIds(system: System, compendium: Compendium | null): Set<string> {
+  const out = new Set<string>();
+  const grants: string[] = [...(system.grants ?? [])];
+  for (const sheet of Object.values(system.sheets ?? {})) grants.push(...(sheet.grants ?? []));
+  for (const [, table] of recordKinds(system)) {
+    for (const binding of table.bindings ?? []) out.add(binding.effect);
+    grants.push(...(table.grants ?? []));
+  }
+  for (const record of withLibrary(system, compendium).records ?? []) {
+    for (const binding of record.bindings ?? []) out.add(binding.effect);
+    grants.push(...(record.grants ?? []));
+  }
+  for (const effect of Object.values(system.effects ?? {})) grants.push(...(effect.grants ?? []));
+  for (const id of grants) out.add(id);
+  return out;
+}
+
 const CACHE = new WeakMap<System, { compendium: Compendium | null; roles: Map<string, Role> }>();
 
 export function rolesOf(system: System, compendium: Compendium | null): Map<string, Role> {
   const hit = CACHE.get(system);
   if (hit && hit.compendium === compendium) return hit.roles;
   const pay = payIds(system, compendium);
-  const called = new Set(calledOf(system).map(([id]) => id));
+  const called = calledIds(system, compendium);
+  const buttons = compendium ? buttonIds(system, compendium) : null;
   const roles = new Map<string, Role>();
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
     const kind = launchOf(effect).kind;
-    roles.set(id, kind === 'passive' ? 'passive' : kind === 'auto' ? 'auto' : pay.has(id) || (!called.has(id) && effect.group === COST_BLOCK) ? 'pay' : called.has(id) ? 'step' : 'button');
+    roles.set(id, kind === 'passive' ? 'passive' : kind === 'auto' ? 'auto' : pay.has(id) || (!called.has(id) && effect.group === COST_BLOCK) ? 'pay' : called.has(id) ? 'step' : !buttons || buttons.has(id) ? 'button' : 'unbound');
   }
   CACHE.set(system, { compendium, roles });
   return roles;
@@ -111,5 +155,10 @@ export function rolesOf(system: System, compendium: Compendium | null): Map<stri
 export const roleOf = (system: System, compendium: Compendium | null, id: string): Role =>
   rolesOf(system, compendium).get(id) ?? 'step';
 
+export const roleWords = (system: System, compendium: Compendium | null, id: string): string =>
+  roleWordsOf(system.effects?.[id], roleOf(system, compendium, id));
+
+const within = (role: Role, asked: Role): boolean => role === asked || (asked === 'button' && role === 'unbound');
+
 export const withRole = (system: System, compendium: Compendium | null, role: Role, except?: string): [string, Effect][] =>
-  Object.entries(system.effects ?? {}).filter(([id]) => id !== except && roleOf(system, compendium, id) === role);
+  Object.entries(system.effects ?? {}).filter(([id]) => id !== except && within(roleOf(system, compendium, id), role));

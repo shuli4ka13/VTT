@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, cleanup, act, fireEvent } from '@testing-library/react';
+import { render, cleanup } from '@testing-library/react';
 import { writeFileSync } from 'node:fs';
 import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import type { System, Effect } from '@vtt/schema';
@@ -52,7 +52,7 @@ describe('эффекты пресетов собираются руками: Sha
   it('Shadowrun «Электрошок» (shocked): висит 2 раунда, правит поле', { timeout: 60000 }, () => {
     const [goal] = start('shadowrun6', ['shocked']);
     const ui = within();
-    head(ui, '+ висит и правит', 'Электрошок', 'shocked', goal!);
+    head(ui, '+ висит', 'Электрошок', 'shocked', goal!);
     param(ui, 'shocked', 0, 'Раундов', 'number', 'level');
     ui.select(ui.cell('Если не передали', 0), 'value');
     ui.type(ui.cell('Если не передали', 0), '2');
@@ -73,7 +73,7 @@ describe('эффекты пресетов собираются руками: Sha
   it('Cyberpunk «Тяжёлая рана» (serious_wound_rule): одна правка броска «прибавка» на любую из двух меток, умолчание «складываются» в данные не пишется', { timeout: 60000 }, () => {
     const [goal] = start('cp-slice', ['serious_wound_rule']);
     const ui = within();
-    head(ui, '+ висит и правит', 'Тяжёлая рана', 'serious_wound_rule', goal!);
+    head(ui, '+ висит', 'Тяжёлая рана', 'serious_wound_rule', goal!);
     const edits = () => [...document.querySelectorAll<HTMLElement>('.card')].filter(c => (c.querySelector('.card__head')?.textContent ?? '').startsWith('Правка вызова'));
     ui.click('+ правка вызова');
     const card = () => edits()[0]!;
@@ -91,7 +91,8 @@ describe('эффекты пресетов собираются руками: Sha
   it('Shadowrun «Сбой» (glitch): подписка «бросок окончен», без шагов', { timeout: 60000 }, () => {
     const [goal] = start('shadowrun6', ['glitch']);
     const ui = within();
-    head(ui, '+ срабатывает сам', 'Сбой', 'glitch', goal!);
+    head(ui, '+ висит', 'Сбой', 'glitch', goal!);
+    ui.click('+ когда');
     ui.select('Что случилось', 'rolled');
     ui.select('Кого касается', '@бросающий == @носитель');
     ui.when('=@roll.atMin * 2 > @roll.rolled и @roll.natural >= 1');
@@ -121,7 +122,8 @@ describe('эффекты пресетов собираются руками: Sha
   it('Shadowrun «Перебросить все неуспехи» (reroll_failures): «увидев кости», решает игрок, цена-вызов, переброс', { timeout: 60000 }, () => {
     const [goal] = start('shadowrun6', ['reroll_failures']);
     const ui = within();
-    head(ui, '+ срабатывает сам', goal!.label!, 'reroll_failures', goal!);
+    head(ui, '+ висит', goal!.label!, 'reroll_failures', goal!);
+    ui.click('+ когда');
     seenHead(ui);
     ui.when('=не @roll.atMin * 2 > @roll.rolled');
     ui.select('Кроме меток', 'инициатива');
@@ -137,7 +139,8 @@ describe('эффекты пресетов собираются руками: Sha
   it('Shadowrun «Добавить к набору» (push_edge): докинуть со взрывом', { timeout: 60000 }, () => {
     const [goal] = start('shadowrun6', ['push_edge']);
     const ui = within();
-    head(ui, '+ срабатывает сам', goal!.label!, 'push_edge', goal!);
+    head(ui, '+ висит', goal!.label!, 'push_edge', goal!);
+    ui.click('+ когда');
     seenHead(ui);
     ui.select('Кроме меток', 'инициатива');
     ui.select('Кроме меток', 'без Преимущества');
@@ -169,7 +172,8 @@ describe('эффекты пресетов собираются руками: Sha
   it('Cyberpunk «Спасбросок от смерти» (death_save): момент хода и «поле стало верным», проверка «строго меньше»', { timeout: 90000 }, () => {
     const [goal] = start('cp-slice', ['death_save']);
     const ui = within();
-    head(ui, '+ срабатывает сам', goal!.label!, 'death_save', goal!);
+    head(ui, '+ висит', goal!.label!, 'death_save', goal!);
+    ui.click('+ когда');
 
     let h = () => stepCard(/^Когда №1/);
     ui.select('Что случилось', 'moment');
@@ -221,26 +225,15 @@ describe('эффекты пресетов собираются руками: Sha
     if (ui.cell('Имя в формулах', row).querySelector('input')) ui.type(ui.cell('Имя в формулах', row), key);
   };
 
-  const dropParam = (ui: ReturnType<typeof within>, row: number) => {
-    const drops = [...document.querySelectorAll<HTMLElement>('button[title="убрать вход"]')];
-    act(() => { fireEvent.click(drops[row]!); });
-    openAll();
-  };
-
   const calledHead = (ui: ReturnType<typeof within>, id: string, goal: Effect) => {
-    head(ui, '+ шаг для других', goal.label!, id, goal);
-    within(stepCard(/^1 · /)).click('Удалить');
-    within(stepCard(/^1 · /)).click('точно убрать');
+    head(ui, '+ кнопкой', goal.label!, id, goal);
   };
 
   it('Daggerheart «Потратить» (spend): вход-поле, текстовый вход, проверка с заметкой, вычесть из поля-входа', { timeout: 90000 }, () => {
     const [goal] = start('daggerheart', ['spend']);
     const ui = within();
     calledHead(ui, 'spend', goal!);
-    if (ui.has('ещё')) ui.click('ещё');
-    ui.check('«Сколько» — величина', false);
-    ui.select(ui.cell('Приходит сам', 0), 'actor');
-    dropParam(ui, 1);
+    param(ui, 'spend', 0, 'Лист', 'sheet', 'лист', { role: 'actor' });
     param(ui, 'spend', 1, 'Источник', 'sheet', 'источник', { ask: 'empty', role: 'actor' });
     param(ui, 'spend', 2, 'Что тратим', 'field', 'what');
     param(ui, 'spend', 3, 'Сколько', 'number', 'amount');
@@ -265,9 +258,7 @@ describe('эффекты пресетов собираются руками: Sha
     const [goal] = start('cp-slice', ['damage']);
     const ui = within();
     calledHead(ui, 'damage', goal!);
-    if (ui.has('ещё')) ui.click('ещё');
-    ui.select(ui.cell('Приходит сам', 0), 'target');
-    dropParam(ui, 1);
+    param(ui, 'damage', 0, 'Лист', 'sheet', 'лист', { role: 'target' });
     param(ui, 'damage', 1, 'Источник', 'sheet', 'источник', { ask: 'empty', role: 'actor' });
     param(ui, 'damage', 2, 'Сколько урона', 'number', 'amount', { main: true });
     param(ui, 'damage', 3, 'Тип урона', 'choice', 'damage_type', { from: 'damage_types' });

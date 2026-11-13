@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, cleanup, act, fireEvent } from '@testing-library/react';
+import { render, cleanup } from '@testing-library/react';
 import { writeFileSync } from 'node:fs';
 import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import type { System, Effect } from '@vtt/schema';
@@ -42,15 +42,13 @@ const nameStep = (card: HTMLElement, name: string): void => {
 };
 
 const calledHead = (ui: ReturnType<typeof within>, id: string, goal: Effect) => {
-  ui.click('+ шаг для других');
+  ui.click('+ кнопкой');
   ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, goal.label!);
   if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
   ui.click('имя в формулах…');
   ui.type(document.querySelector<HTMLElement>('.step-name input')!, id);
   ui.select('Папка', goal.group!);
   ui.type('Описание', goal.description!);
-  within(stepCard(/^1 · /)).click('Удалить');
-  within(stepCard(/^1 · /)).click('точно убрать');
 };
 
 const param = (ui: ReturnType<typeof within>, id: string, row: number, label: string, kind: string, key: string, more: { from?: string; optional?: boolean; value?: string; role?: string } = {}) => {
@@ -63,12 +61,6 @@ const param = (ui: ReturnType<typeof within>, id: string, row: number, label: st
   if (more.value !== undefined) { ui.select(ui.cell('Если не передали', row), 'value'); ui.type(ui.cell('Если не передали', row), more.value); }
   if (more.role) ui.select(ui.cell('Приходит сам', row), more.role);
   if (ui.cell('Имя в формулах', row).querySelector('input')) ui.type(ui.cell('Имя в формулах', row), key);
-};
-
-const dropParam = (row: number) => {
-  const drops = [...document.querySelectorAll<HTMLElement>('button[title="убрать вход"]')];
-  act(() => { fireEvent.click(drops[row]!); });
-  openAll();
 };
 
 const returns = (rows: readonly (readonly [string, string, string, string, string?, string?])[]) => {
@@ -97,7 +89,6 @@ describe('вызываемые блоки D&D собираются руками'
     const [goal] = start('dnd5e', ['attack_roll']);
     const ui = within();
     calledHead(ui, 'attack_roll', goal!);
-    dropParam(1);
     param(ui, 'attack_roll', 0, 'Кто бросает', 'sheet', 'кто', { role: 'actor' });
     param(ui, 'attack_roll', 1, 'Против кого', 'sheet', 'против', { role: 'target' });
     param(ui, 'attack_roll', 2, 'Бонус атаки', 'number', 'бонус', { value: '0' });
@@ -127,7 +118,6 @@ describe('вызываемые блоки D&D собираются руками'
     const [goal] = start('dnd5e', ['saving_throw']);
     const ui = within();
     calledHead(ui, 'saving_throw', goal!);
-    dropParam(1);
     param(ui, 'saving_throw', 0, 'Кто спасается', 'sheet', 'кто', { role: 'target' });
     param(ui, 'saving_throw', 1, 'Чем спасается', 'choice', 'характеристика', { from: 'abilities' });
     param(ui, 'saving_throw', 2, 'Сложность', 'number', 'сложность');

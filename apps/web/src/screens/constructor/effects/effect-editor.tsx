@@ -1,4 +1,4 @@
-import { roleOf, ROLE_WORDS } from './roles.ts';
+import { roleWords } from './roles.ts';
 import { useState } from 'react';
 import { paramsOf } from '@vtt/engine/model/inherit';
 import { rolesOf } from '@vtt/engine/model/buttons';
@@ -84,9 +84,9 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           <span className="effect-head__name">
             <LabelInput value={effect.label ?? ''} placeholder="как зовётся эффект" onCommit={label => relabel(label)} />
           </span>
-          <span className={`effect-head__kind effect-head__kind--${launch.kind}`} title={launchHint(launch.kind)}>{ROLE_WORDS[roleOf(system, useWorld.getState().compendium, id)]}</span>
+          <span className={`effect-head__kind effect-head__kind--${launch.kind}`} title={launchHint(launch.kind)}>{roleWords(system, useWorld.getState().compendium, id)}</span>
           <span className="spacer" />
-          <Button size="sm" variant="ghost" title="как запускается, у кого есть, папка, метки, значок, имя в формулах" ariaLabel={more ? "свернуть «свойства»" : "развернуть «свойства»"} onClick={() => setMore(!more)}>{more ? 'свернуть свойства' : 'свойства'}</Button>
+          <Button size="sm" variant="ghost" title="папка, метки, значок, имя в формулах" ariaLabel={more ? "свернуть «свойства»" : "развернуть «свойства»"} onClick={() => setMore(!more)}>{more ? 'свернуть свойства' : 'свойства'}</Button>
           <DangerButton size="sm" onConfirm={() => {
             editSystem(draft => {
               delete draft.effects[id];
@@ -109,31 +109,6 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
         {more ? (
           <div className="stack stack--tight effect-head__more">
             <div className="effect-head__row">
-              <Field label="Как запускается">
-                <span data-field="Как запускается" title={launchHint(launch.kind)}>
-                  <Select
-                    value={pipeline ? 'manual' : 'passive'}
-                    options={LAUNCH_KINDS.map(k => [k.key, k.label] as const)}
-                    onChange={next => edit(draft => {
-                      const activation = activationFor({ ...launchOf(draft), kind: next });
-                      if (activation === 'manual') delete draft.activation; else draft.activation = activation;
-                      if (next === 'manual') draft.steps ??= [];
-                    })}
-                  />
-                </span>
-              </Field>
-              <Field label="У кого есть">
-                <span data-field="У кого есть">
-                  <Select
-                    value={(system.grants ?? []).includes(id) ? 'all' : 'given'}
-                    options={[['given', pipeline ? 'даёт запись или тип' : 'на кого повесили'], ['all', 'у всех листов']] as const}
-                    onChange={next => editSystem(draft => {
-                      const rest = (draft.grants ?? []).filter(x => x !== id);
-                      draft.grants = next === 'all' ? [...rest, id] : rest;
-                    })}
-                  />
-                </span>
-              </Field>
               <Field label="Папка">
                 <span data-field="Блок">
                   <BlockPick
@@ -157,6 +132,22 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
                 <Input value={effect.icon ?? ''} placeholder="значок ⚔" onChange={next => edit(draft => { if (next.trim()) draft.icon = next.trim(); else delete draft.icon; })} />
               </span>
             </div>
+            <details className="effect-head__kind-swap">
+              <summary>сменить вид…</summary>
+              <Field label="Вид" hint="Шаги действия и правки висящего друг в друга не переносятся">
+                <span title={launchHint(launch.kind)}>
+                  <Select
+                    value={pipeline ? 'manual' : 'passive'}
+                    options={LAUNCH_KINDS.map(k => [k.key, k.label] as const)}
+                    onChange={next => edit(draft => {
+                      const activation = activationFor({ ...launchOf(draft), kind: next });
+                      if (activation === 'manual') delete draft.activation; else draft.activation = activation;
+                      if (next === 'manual') draft.steps ??= [];
+                    })}
+                  />
+                </span>
+              </Field>
+            </details>
             <EffectName id={id} locked={effectUsed(system, useWorld.getState().compendium, id)} taken={Object.keys(system.effects)} onChange={rekey} />
             {launch.kind === 'manual' ? (
               <Extras

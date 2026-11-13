@@ -8,8 +8,10 @@ import type { CardGroup } from '../cards.ts';
 export const LAUNCH_KINDS = (['manual', 'passive'] as const)
   .map(key => ({ key: key as LaunchKind, label: key === 'passive' ? 'Висит' : LAUNCHES[key].label, title: LAUNCHES[key].hint }));
 
-export const CREATE_KINDS = (['manual', 'auto', 'passive'] as const)
-  .map(key => ({ key: key as LaunchKind, label: LAUNCHES[key].label, title: LAUNCHES[key].hint }));
+export const CREATE_KINDS: { key: LaunchKind; label: string; title: string }[] = [
+  { key: 'manual', label: LAUNCHES.manual.label, title: LAUNCHES.manual.hint },
+  { key: 'passive', label: 'Висит', title: 'Лежит на листе, пока не спадёт: правит цифры, отвечает на то, что случилось, или и то и другое' },
+];
 
 export const launchHint = (kind: LaunchKind): string => LAUNCHES[kind].hint;
 

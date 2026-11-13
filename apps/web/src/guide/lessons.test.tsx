@@ -196,23 +196,32 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
         edit(d => {
           d.effects.урон = {
             label: 'Новый эффект',
-            params: [{ key: 'лист', label: 'Лист', kind: 'sheet' }, { key: 'amount', label: 'Сколько', kind: 'number', role: 'amount' }],
-            steps: [{ type: 'apply', target: { expr: '@лист.хиты' }, value: { expr: '@amount' } } as never],
+            params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }],
+            steps: [],
           };
         });
         pick({ activeEffectId: 'урон' });
       },
       () => edit(d => { d.effects.урон!.label = 'Урон'; }),
     ],
+    amount: [
+      () => press(findAnchor({ text: '+ ещё одно' })!),
+      () => edit(d => { d.effects.урон!.params!.splice(1, 1, { key: 'amount', label: 'Сколько', kind: 'number' }); }),
+      () => edit(d => { d.effects.урон!.params![1]!.role = 'amount'; }),
+    ],
     target: () => edit(d => { d.effects.урон!.params![0]!.role = 'target'; }),
+    apply: [
+      () => press(findAnchor({ text: '+ изменение' })!),
+      () => edit(d => { d.effects.урон!.steps = [{ type: 'apply', target: { expr: '@действующий.хиты' }, value: { expr: '@amount' } } as never]; }),
+    ],
     returns: [
       () => press(findAnchor({ text: '+ итог' })!),
       () => edit(d => { d.effects.урон!.returns = [{ key: 'осталось', label: 'Осталось', kind: 'number' }] as never; }),
-      () => edit(d => { d.effects.урон!.returns = [{ key: 'осталось', label: 'Осталось', kind: 'number', expr: { expr: '@лист.хиты' } }] as never; }),
+      () => edit(d => { d.effects.урон!.returns = [{ key: 'осталось', label: 'Осталось', kind: 'number', expr: { expr: '@действующий.хиты' } }] as never; }),
     ],
     call: [
       () => { act(() => { fireEvent.change(findAnchor({ text: '+ шаг' })!, { target: { value: 'call:урон' } }); }); },
-      () => edit(d => setSteps(d, 'удар', steps('удар').map(step => (step.type === 'emit' ? { ...step, effect: 'урон', args: { лист: { expr: '@цель' }, amount: { expr: '5' } } } : step)))),
+      () => edit(d => setSteps(d, 'удар', steps('удар').map(step => (step.type === 'emit' ? { ...step, effect: 'урон', args: { действующий: { expr: '@цель' }, amount: { expr: '5' } } } : step)))),
     ],
     drop: () => edit(d => setSteps(d, 'удар', steps('удар').filter(step => step.type !== 'apply'))),
     name: () => edit(d => setSteps(d, 'удар', steps('удар').map(step => (step.type === 'emit' ? { ...step, id: 'урон' } : step)))),
@@ -220,10 +229,10 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     heal: () => edit(d => {
       d.effects.лечение = {
         label: 'Лечение',
-        params: [{ key: 'лист', label: 'Лист', kind: 'sheet', role: 'target' }, { key: 'amount', label: 'Сколько', kind: 'number', role: 'amount' }],
-        steps: [{ type: 'apply', target: { expr: '@лист.хиты' }, direction: 'add', value: { expr: '@amount' } } as never],
+        params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet', role: 'target' }, { key: 'amount', label: 'Сколько', kind: 'number', role: 'amount' }],
+        steps: [{ type: 'apply', target: { expr: '@действующий.хиты' }, direction: 'add', value: { expr: '@amount' } } as never],
       };
-      setSteps(d, 'удар', beforeEnd(beforeEnd(steps('удар'), { type: 'orElse' }), { type: 'emit', effect: 'лечение', args: { лист: { expr: '@цель' }, amount: { expr: '2' } } }));
+      setSteps(d, 'удар', beforeEnd(beforeEnd(steps('удар'), { type: 'orElse' }), { type: 'emit', effect: 'лечение', args: { действующий: { expr: '@цель' }, amount: { expr: '2' } } }));
     }),
   },
   items: {
@@ -494,10 +503,13 @@ describe('уроки конструктора', () => {
       ui.type(screen.getByPlaceholderText('как зовётся эффект'), 'Удар');
     });
     await pass('everyone', () => {
-      if (!ui.has('свернуть свойства')) ui.click('свойства');
-      ui.select('У кого есть', 'all');
+      ui.click(TABS.sheet);
+      ui.click('блоки и типы листов');
+      ui.select('Что даёт всем листам', 'Удар');
     });
     await pass('targets', () => {
+      ui.click(TABS.effects);
+      openAll();
       ui.click('+ ещё одно');
       ui.type(ui.cell('Название', 1), 'Цели');
       ui.select(ui.cell('Вид', 1), 'sheet+many');

@@ -83,10 +83,6 @@ export const newTable = (system: System): Made<Table> => ({
   value: { label: '', key: 'word', rows: [{ value: '' }] },
 });
 
-export const simpleReceive = (tag: string, direction: 'subtract' | 'add'): Step => ({
-  type: 'apply', target: { expr: `@лист.${tag}` }, ...(direction === 'subtract' ? {} : { direction }), value: { expr: '@amount' },
-} as unknown as Step);
-
 export const newCost = (system: System): Made<Effect> => ({
   key: freeId(Object.keys(system.effects ?? {}), 'стоимость'),
   value: { label: `${COST_BLOCK}: новая`, group: COST_BLOCK, steps: [] },
@@ -100,18 +96,6 @@ export const costsOf = (system: System): [string, Effect][] => {
 
 export const payStep = (system: System, caller: Effect, id: string): Step =>
   filledStep(system, caller, { type: 'emit', effect: id }, []) as unknown as Step;
-
-export const newCalled = (system: System): Made<Effect> => {
-  const field = fieldsOf(system).find(f => f.value.kind === 'stored' && f.value.type === 'number');
-  return {
-    key: freeId(Object.keys(system.effects ?? {}), 'вызываемый'),
-    value: {
-      label: '',
-      params: [{ key: 'лист', label: 'Лист', kind: 'sheet' }, { key: 'amount', label: 'Сколько', kind: 'number', role: 'amount' }],
-      steps: field ? [simpleReceive(field.tag, 'subtract')] : [],
-    } as Effect,
-  };
-};
 
 export interface StepTemplate {
   key: string;

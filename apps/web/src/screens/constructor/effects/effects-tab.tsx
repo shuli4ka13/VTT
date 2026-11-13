@@ -1,4 +1,4 @@
-import { rolesOf, ROLE_WORDS, type Role } from './roles.ts';
+import { rolesOf, roleWordsOf, type Role } from './roles.ts';
 import { useOpened } from '../../../store/opened.ts';
 import { useWorld } from '../../../store/world.ts';
 import { blockTree, BlockBranches } from '../block-tree.tsx';
@@ -11,7 +11,6 @@ import { Button, Empty } from '../../../ui/primitives.tsx';
 import { PreviewPanel } from './preview-panel.tsx';
 import { CREATE_KINDS } from './words.ts';
 import { EffectEditor } from './effect-editor.tsx';
-import { newCalled } from '../factory.ts';
 import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
 import type { Effect } from '@vtt/schema';
 import { freeGroupName } from '../groups.ts';
@@ -26,13 +25,6 @@ export function EffectsTab() {
   const active = activeId ? system.effects[activeId] : undefined;
   const compendium = useWorld(s => s.compendium);
   const roles = rolesOf(system, compendium);
-
-  const addCalled = () => {
-    const made = newCalled(system);
-    editSystem(draft => { draft.effects[made.key] = made.value; });
-    useOpened.getState().setOpen([`effect-props|${made.key}`], true);
-    pick({ activeEffectId: made.key });
-  };
 
   const addTo = (block: string) => {
     const made = newEffect(system, 'manual');
@@ -94,9 +86,6 @@ export function EffectsTab() {
                   + {kind.label.toLowerCase()}
                 </Button>
               ))}
-              <Button size="sm" wide onClick={addCalled} title="Его никто не нажимает: его зовут другие эффекты и передают ему входы">
-                + шаг для других
-              </Button>
             </div>
           </>
         ),
@@ -115,7 +104,7 @@ export function EffectsTab() {
 }
 
 const metaOf = (effect: Effect, role: Role, everyone: boolean) => {
-  const kind = `${ROLE_WORDS[role]}${everyone ? ' · у всех' : ''}`;
+  const kind = `${roleWordsOf(effect, role)}${everyone ? ' · у всех' : ''}`;
   const idle = !effect.steps?.length && !effect.cost?.length && !effect.modifiers?.length
     && !effect.attach?.length && !effect.detach?.length && !effect.grants?.length
     && !(effect.on ?? []).some(handler => handler.steps?.length || handler.cost?.length);

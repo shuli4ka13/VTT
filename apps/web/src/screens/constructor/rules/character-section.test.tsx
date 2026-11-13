@@ -5,6 +5,7 @@ import { useWorld, emptySystem } from '../../../store/world.ts';
 import { CharacterSection } from './character-section.tsx';
 import { SheetTab } from '../sheet-tab.tsx';
 import type { System } from '@vtt/schema';
+import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 
 function Sheets() {
@@ -145,5 +146,37 @@ describe('блоки листа перетаскиваются, как слои'
     fireEvent.dragOver(head('Здоровье'), { dataTransfer, clientY: -10 });
     fireEvent.drop(head('Здоровье'), { dataTransfer });
     expect(useWorld.getState().system.blocks!.map(b => b.name)).toEqual(['Магия', 'Здоровье', 'Навыки']);
+  });
+});
+
+describe('раздел «Что даёт всем листам»', () => {
+  afterEach(() => { cleanup(); });
+
+  const give = () => {
+    useWorld.setState(state => ({ ...state, system: { ...system(), effects: { удар: { label: 'Удар', activation: 'manual', params: [], steps: [] } } } as System, activeFieldTag: null, activeBlock: null, activeColumn: null, activeSheetKind: null }));
+    render(<Sheets />);
+  };
+
+  it('пишет system.grants и снимает ключ, когда список пуст', () => {
+    give();
+    expect(screen.getByText('Что даёт всем листам')).toBeTruthy();
+    expect(screen.getByText('Действует на любой лист, какого бы типа он ни был, и на лист без типа')).toBeTruthy();
+    const box = document.querySelector<HTMLElement>('[data-field="Что даёт всем листам"]')!;
+    fireEvent.change(box.querySelector('select')!, { target: { value: 'удар' } });
+    expect(useWorld.getState().system.grants).toEqual(['удар']);
+    fireEvent.click(box.querySelector('.chip__x')!);
+    expect('grants' in useWorld.getState().system).toBe(false);
+  });
+
+  it('видна в системе без типов листов: Киберпанк и Blades', () => {
+    for (const name of ['Киберпанк RED', 'Blades in the Dark']) {
+      const world = SAMPLE_WORLDS.find(one => one.system.name === name);
+      expect(world, name).toBeTruthy();
+      expect(Object.keys(world!.system.sheets ?? {})).toEqual([]);
+      useWorld.setState(state => ({ ...state, system: world!.system, activeSheetKind: null }));
+      const view = render(<Sheets />);
+      expect(screen.getByText('Что даёт всем листам'), name).toBeTruthy();
+      view.unmount();
+    }
   });
 });

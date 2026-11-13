@@ -164,7 +164,8 @@ describe('эффекты пресетов собираются в констру
   it('D&D «Адское возмездие» (hellish_rebuke)', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['hellish_rebuke']);
     const ui = within();
-    ui.click('+ срабатывает сам');
+    ui.click('+ висит');
+    ui.click('+ когда');
     ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Адское возмездие');
     if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');
@@ -326,7 +327,8 @@ describe('эффекты пресетов собираются в констру
   it('D&D «Концентрация» (concentration): висящий, подписка «урон — после», снимает себя', { timeout: 60000 }, () => {
     const [goal] = start('dnd5e', ['concentration']);
     const ui = within();
-    ui.click('+ срабатывает сам');
+    ui.click('+ висит');
+    ui.click('+ когда');
     ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Концентрация');
     if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');
@@ -407,7 +409,8 @@ describe('эффекты пресетов собираются в констру
   it('Daggerheart «Двойственность» (duality): подписки «завершено», поле стола, условие на шаге', { timeout: 90000 }, () => {
     const [goal] = start('daggerheart', ['duality']);
     const ui = within();
-    ui.click('+ срабатывает сам');
+    ui.click('+ висит');
+    ui.click('+ когда');
     ui.type(document.querySelector<HTMLInputElement>('input[placeholder="как зовётся эффект"]')!, 'Двойственность');
     if (!ui.has('имя в формулах…') && ui.has('свойства')) ui.click('свойства');
     ui.click('имя в формулах…');

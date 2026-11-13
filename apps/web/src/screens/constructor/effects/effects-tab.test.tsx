@@ -29,7 +29,13 @@ describe('EffectsTab: палитра трёх понятий', () => {
   it('свойства эффекта — одной строкой; у активируемого нет «сколько висит»', () => {
     renderOpen(<EffectsTab />);
     const heads = [...document.querySelectorAll('[data-field]')].map(h => h.getAttribute('data-field'));
-    expect(heads).toEqual(expect.arrayContaining(['Как запускается', 'Блок', 'Описание']));
+    expect(heads).toEqual(expect.arrayContaining(['Блок', 'Описание']));
+    expect(heads).not.toContain('Как запускается');
+    expect(heads).not.toContain('У кого есть');
+    expect(screen.queryByText('Как запускается')).toBeNull();
+    expect(screen.queryByText('У кого есть')).toBeNull();
+    expect(screen.getByText('сменить вид…')).toBeTruthy();
+    expect(screen.getByText('Вид')).toBeTruthy();
     expect(heads).not.toContain('На основе');
     expect(screen.queryByText('+ сколько висит')).toBeNull();
   });
@@ -57,7 +63,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
       .filter(b => (b.textContent ?? '').trimStart().startsWith('+ '))
       .map(b => b.textContent!.trim())
       .filter(t => !CREATE_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`)
-        && t !== '+ шаг для других' && t !== '+ новый' && t !== '+ блок'
+        && t !== '+ новый' && t !== '+ блок'
         && t !== '+ ещё одно' && t !== '+ вход' && t !== '+ итог' && t !== '+ держание' && !t.startsWith('+ в «')
         && !['+ блок', '+ метки', '+ описание для игрока', '+ занимает', '+ какие метки бывают', '+ сколько висит', '+ на основе'].includes(t));
     expect(palette).toEqual(['+ бросок', '+ проверка', '+ изменение', '+ таблица', '+ для каждого из списка', '+ если', '+ стоп', '+ число']);
@@ -269,12 +275,12 @@ describe('три вида создания, два вида запуска', () 
     expect(state.activeEffectId).toBe('удар_мечом');
   });
 
-  it('палитра создания предлагает ровно три вида и не знает слов «реакция» и «триггерный»', () => {
+  it('палитра создания предлагает ровно два вида и не знает слов «реакция» и «триггерный»', () => {
     renderOpen(<EffectsTab />);
     const made = screen.getAllByRole('button')
       .map(b => b.textContent!.trim())
       .filter(t => CREATE_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`));
-    expect(made).toEqual(['+ кнопкой', '+ срабатывает сам', '+ висит и правит']);
+    expect(made).toEqual(['+ кнопкой', '+ висит']);
     const chrome = document.body.cloneNode(true) as HTMLElement;
     chrome.querySelectorAll('.column--right').forEach(node => node.remove());
     const data = fieldsOf(useWorld.getState().system).map(field => field.label);
@@ -284,7 +290,8 @@ describe('три вида создания, два вида запуска', () 
 
   it('«что случилось» — список видов с «Решением» отдельно: до/после — отдельное поле, вопрос — отдельный выбор', () => {
     renderOpen(<EffectsTab />);
-    fireEvent.click(screen.getByText('+ срабатывает сам'));
+    fireEvent.click(screen.getByText('+ висит'));
+    fireEvent.click(screen.getByText('+ когда'));
     const kinds = [...document.querySelectorAll('select')]
       .find(el => [...el.options].some(o => o.value === 'seen'))! as HTMLSelectElement;
     expect([...kinds.options].map(o => o.value)).toEqual(['call', 'seen', 'rolled', 'moment', 'field', 'gained', 'lost']);
@@ -327,31 +334,29 @@ describe('вызываемый эффект — обычный эффект', ()
   });
   afterEach(() => { cleanup(); });
 
-  it('«+ шаг для других» заводит обычный эффект с шагом в первое числовое поле', () => {
+  it('«+ кнопкой» заводит обычный эффект с одним входом «Кто действует» и без шагов', () => {
     renderOpen(<EffectsTab />);
-    fireEvent.click(screen.getByText('+ шаг для других'));
+    fireEvent.click(screen.getAllByText('+ кнопкой')[0]!);
     const key = useWorld.getState().activeEffectId!;
     const made = useWorld.getState().system.effects[key]!;
-    expect(made.params!.map(p => [p.key, p.kind])).toEqual([['лист', 'sheet'], ['amount', 'number']]);
-    expect(made.steps).toEqual([
-      { type: 'apply', target: { expr: '@лист.hp' }, value: { expr: '@amount' } },
-    ]);
+    expect(made.params!.map(p => [p.key, p.kind])).toEqual([['действующий', 'sheet']]);
+    expect(made.steps).toEqual([]);
     expect(key.startsWith('event:')).toBe(false);
   });
 
   it('правится тем же редактором: те же шаги, а входы заводит автор', () => {
     renderOpen(<EffectsTab />);
-    fireEvent.click(screen.getByText('+ шаг для других'));
+    fireEvent.click(screen.getAllByText('+ кнопкой')[0]!);
     expect(screen.getByText('Шаги')).toBeTruthy();
     expect(screen.getByText('Что приходит')).toBeTruthy();
 
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     const key = useWorld.getState().activeEffectId!;
-    expect(useWorld.getState().system.effects[key]!.steps).toHaveLength(2);
+    expect(useWorld.getState().system.effects[key]!.steps).toHaveLength(1);
 
     fireEvent.click(screen.getByText('+ ещё одно'));
     const params = useWorld.getState().system.effects[key]!.params ?? [];
-    expect(params.map(p => [p.kind, (p as { role?: string }).role ?? null])).toEqual([['sheet', null], ['number', 'amount'], ['number', null]]);
+    expect(params.map(p => [p.kind, (p as { role?: string }).role ?? null])).toEqual([['sheet', null], ['number', null]]);
   });
 });
 
@@ -370,7 +375,8 @@ describe('эффект слушает время', () => {
 
   it('в «что случилось» есть «время», моменты хода в списке, и выбор сохраняется', () => {
     renderOpen(<EffectsTab />);
-    fireEvent.click(screen.getByText('+ срабатывает сам'));
+    fireEvent.click(screen.getByText('+ висит'));
+    fireEvent.click(screen.getByText('+ когда'));
 
     const kinds = [...document.querySelectorAll('select')]
       .find(el => [...el.options].some(o => o.value === 'moment'))! as HTMLSelectElement;
@@ -615,5 +621,24 @@ describe('одно правило «шаг для других»', () => {
     expect(offered).not.toContain('Атака');
     const passive = Object.values(world.system.effects).filter(effect => effect.activation === 'passive').map(effect => effect.label);
     for (const name of passive) expect(offered).not.toContain(name);
+  });
+});
+
+describe('плашка вида у названия эффекта', () => {
+  afterEach(cleanup);
+
+  const open = (effects: Record<string, Effect>, id: string) => {
+    useWorld.setState(state => ({ ...state, system: { ...emptySystem(), effects }, compendium: { ...state.compendium, records: [] }, activeEffectId: id }));
+    renderOpen(<EffectsTab />);
+    return document.querySelector('.effect-head__kind')!.textContent;
+  };
+
+  it('действие без кнопки — «не подключён»', () => {
+    expect(open({ strike: { label: 'Удар', activation: 'manual', params: [], steps: [] } as Effect }, 'strike')).toBe('не подключён');
+  });
+
+  it('висящий с правкой — «висит · правит»', () => {
+    const effect = { label: 'Щит', activation: 'passive', modifiers: [{ target: '@хиты', op: 'add', value: { expr: '1' } }] } as unknown as Effect;
+    expect(open({ shield: effect }, 'shield')).toBe('висит · правит');
   });
 });

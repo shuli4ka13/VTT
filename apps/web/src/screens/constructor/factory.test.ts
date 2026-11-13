@@ -5,7 +5,7 @@ import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
 import { emptySystem } from '../../store/world.ts';
 import {
   newEffect, newColumn, newRecordKind, newBinding, newProp, newDie, newRollEdit, newTable,
-  newCalled, BRICKS,
+  BRICKS,
 } from './factory.ts';
 import type { System } from '@vtt/schema';
 import { withColumn } from '@vtt/engine/model/sheet-columns';
@@ -38,7 +38,7 @@ for (const [name, base] of BASES) {
       it(`новый эффект «${kind}» проходит схему`, check);
     }
 
-    it('новый «срабатывает сам» — висит с одной подпиской на любое действие', () => {
+    it('новый вид «auto» — висит с одной подпиской на любое действие', () => {
       const system = base();
       const made = newEffect(system, 'auto');
       expect(made.value.activation).toBe('passive');
@@ -78,7 +78,6 @@ for (const [name, base] of BASES) {
       const die = newDie(system); (system.constants ??= {})[die.key] = die.value;
       const edit = newRollEdit(system); (system.roll_edits ??= {})[edit.key] = edit.value;
       const table = newTable(system); (system.tables ??= {})[table.key] = table.value;
-      const called = newCalled(system); system.effects[called.key] = called.value;
       expect(issuesOf(system)).toEqual([]);
     });
 
