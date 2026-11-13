@@ -6,8 +6,17 @@ describe('matchTagQuery', () => {
     expect(matchTagQuery('1d20 + @бонус ат', 16)).toEqual({ at: 7, needle: 'бонус ат' });
   });
 
-  it('без собаки запроса нет — решётка тоже не считается', () => {
+  it('без собаки запрос — слово перед кареткой, с первой буквы', () => {
+    expect(matchTagQuery('1d20 + сил', 10)).toEqual({ at: 7, needle: 'сил' });
+    expect(matchTagQuery('если(', 5)).toBeNull();
     expect(matchTagQuery('1d20 + 5', 8)).toBeNull();
+  });
+
+  it('не открывается на кости, внутри текста в кавычках и после точки или решётки', () => {
+    expect(matchTagQuery('2к6', 3)).toBeNull();
+    expect(matchTagQuery('к', 1)).toBeNull();
+    expect(matchTagQuery('"сил', 4)).toBeNull();
+    expect(matchTagQuery('@сила.сил', 9)).toBeNull();
     expect(matchTagQuery('#сил', 4)).toBeNull();
   });
 });

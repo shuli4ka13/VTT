@@ -9,7 +9,7 @@ import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { typeColumns } from '@vtt/engine/model/inherit';
 import { plainLabel, pickTail } from './formula-labels.ts';
 import { tablesOf, choiceTableOf, rowLabelOf, picksOf } from './formula-words.ts';
-import { callAt, partAt, functionSpec } from '@vtt/engine/formula';
+import { callAt, partAt, functionSpec, FUNCTION_SPECS } from '@vtt/engine/formula';
 import type { FunctionSpec } from '@vtt/engine/formula';
 
 function Signature({ at }: { at: { spec: FunctionSpec; index: number } }) {
@@ -221,10 +221,13 @@ export function partsOf(value: string, known?: (tag: string) => boolean, lits?: 
   return out;
 }
 
+const KEYWORDS: string[] = [...FUNCTION_SPECS.map(spec => spec.name), 'и', 'или', 'не', 'да', 'нет'];
+
 const rankOf = (f: { tag: string; label: string }, needle: string): number => {
   if (!needle) return 0;
   const label = f.label.toLowerCase();
   const tag = f.tag.toLowerCase();
+  if (label === needle || tag === needle) return -1;
   if (label.startsWith(needle) || tag.startsWith(needle)) return 0;
   if (label.split(' → ').some((part, at) => at > 0 && part.startsWith(needle))) return 0;
   if (new RegExp(`\\b${needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'u').test(label)) return 1;
@@ -454,8 +457,16 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
         .filter(o => (!query.needle || rankOf({ tag: '', label: o.label }, query.needle) < 3) && !(o.name && hidden({ tag: o.name }, query.needle)))
         .sort((a, b) => rankOf({ tag: '', label: a.label }, query.needle) - rankOf({ tag: '', label: b.label }, query.needle))
       : [];
-  const shownMenu = !closed && (matches.length > 0 || extras.length > 0);
-  const total = extras.length + matches.length;
+  const bare = query && active !== null && 'text' in (parts[active] ?? {})
+    ? (parts[active] as { text: string }).text[query.at] !== '@'
+    : false;
+  const words = query && bare && !dotted && !through
+    ? KEYWORDS.filter(word => rankOf({ tag: '', label: word }, query.needle) < 3)
+      .sort((a, b) => rankOf({ tag: '', label: a }, query.needle) - rankOf({ tag: '', label: b }, query.needle))
+      .slice(0, 8)
+    : [];
+  const shownMenu = !closed && (words.length > 0 || matches.length > 0 || extras.length > 0);
+  const total = words.length + extras.length + matches.length;
   const lit = total ? Math.min(highlight, total - 1) : 0;
   const pickDotted = (tag: string) => {
     if (!dot) return;
@@ -489,8 +500,20 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
     if (dotted) pickDotted(tag); else pick(tag);
   };
   const pickAt = (index: number) => {
-    if (index < extras.length) chooseExtra(extras[index]!);
-    else chooseField(matches[index - extras.length]!.tag);
+    if (index < words.length) { pickWord(words[index]!); return; }
+    const at = index - words.length;
+    if (at < extras.length) chooseExtra(extras[at]!);
+    else chooseField(matches[at - extras.length]!.tag);
+  };
+
+  const pickWord = (word: string) => {
+    if (active === null || !query) return;
+    const part = parts[active] as { text: string };
+    const before = part.text.slice(0, query.at);
+    const after = part.text.slice(caret);
+    const piece = functionSpec(word) ? `${word}(` : `${word} `;
+    const text = before + piece + after;
+    commitParts(parts.map((p, i) => (i === active ? { text } : p)), { index: active, caret: before.length + piece.length });
   };
 
   const pickExtra = (onPick: (insert: (piece: string) => string) => void) => {
@@ -746,11 +769,22 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
       ) : null}
       {shownMenu ? (
         <div className="slot__menu" ref={menuRef} role="listbox">
+          {words.map((word, k) => (
+            <button
+              key={`word-${word}`} type="button" role="option" aria-selected={k === lit}
+              className={`slot__option${k === lit ? ' slot__option--lit' : ''}`}
+              onMouseEnter={() => setHighlight(k)}
+              onMouseDown={e => { e.preventDefault(); pickWord(word); }}
+            >
+              <span className="slot__group slot__group--record">формула</span>
+              {word}
+            </button>
+          ))}
           {extras.map((option, i) => (
             <button
-              key={`extra-${i}`} type="button" role="option" aria-selected={i === lit}
-              className={`slot__option${i === lit ? ' slot__option--lit' : ''}`}
-              onMouseEnter={() => setHighlight(i)}
+              key={`extra-${i}`} type="button" role="option" aria-selected={words.length + i === lit}
+              className={`slot__option${words.length + i === lit ? ' slot__option--lit' : ''}`}
+              onMouseEnter={() => setHighlight(words.length + i)}
               onMouseDown={e => { e.preventDefault(); chooseExtra(option); }}
             >
               <span className="slot__group slot__group--record">{option.group}</span>
@@ -759,9 +793,9 @@ export function FormulaChips({ value, onChange, system, table, placeholder, onKe
           ))}
           {matches.map((f, j) => (
             <button
-              key={f.tag} type="button" role="option" aria-selected={extras.length + j === lit}
-              className={`slot__option${extras.length + j === lit ? ' slot__option--lit' : ''}`}
-              onMouseEnter={() => setHighlight(extras.length + j)}
+              key={f.tag} type="button" role="option" aria-selected={words.length + extras.length + j === lit}
+              className={`slot__option${words.length + extras.length + j === lit ? ' slot__option--lit' : ''}`}
+              onMouseEnter={() => setHighlight(words.length + extras.length + j)}
               onMouseDown={e => { e.preventDefault(); chooseField(f.tag); }}
             >
               <span className="slot__group">{f.group}</span>
