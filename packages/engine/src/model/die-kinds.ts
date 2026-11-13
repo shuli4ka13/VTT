@@ -16,6 +16,7 @@ export interface RollPlace {
   kind: RollKind | null;
   sides: readonly number[];
   roll?: string;
+  die?: string;
 }
 
 type Rule = NonNullable<System['rolls']>[string];
@@ -70,7 +71,7 @@ const stepPlace = (system: System, step: Record<string, unknown>): RollPlace | n
   if (isBlank(ref)) return null;
   const counted = !isBlank(step.count) || !isBlank(step.times);
   const named = dieOf(system, ref);
-  if (named) return { kind: kindOfDie(named, counted), sides: sidesOf(named) };
+  if (named) return { kind: kindOfDie(named, counted), sides: sidesOf(named), die: String(ref) };
   const raw = typeof ref === 'string' ? ref : typeof ref === 'object' && 'expr' in (ref as object) ? String((ref as { expr: unknown }).expr) : '';
   const match = DICE_TEXT.exec(raw.trim().replace(QUOTED, '$2').trim());
   if (!match) return { kind: null, sides: [] };
@@ -78,7 +79,7 @@ const stepPlace = (system: System, step: Record<string, unknown>): RollPlace | n
 };
 
 export function placesOf(system: System): RollPlace[] {
-  const out: RollPlace[] = Object.entries(system.rolls ?? {}).map(([key, rule]) => ({ ...kindOfRule(system, rule), roll: rule.label || key }));
+  const out: RollPlace[] = Object.entries(system.rolls ?? {}).map(([key, rule]) => ({ ...kindOfRule(system, rule), roll: rule.label || key, die: rule.die }));
   const walk = (value: unknown): void => {
     if (Array.isArray(value)) { value.forEach(walk); return; }
     if (!value || typeof value !== 'object') return;
@@ -140,6 +141,14 @@ export const kindsOf = (system: System): RollKind[] => {
   const found = new Set(placesOf(system).map(place => place.kind));
   return ROLL_KINDS.filter(kind => found.has(kind));
 };
+
+export function kindsOfDie(system: System, dieKey: string): RollKind[] {
+  const die = dieOf(system, dieKey);
+  if (!die) return [];
+  const found = new Set(placesOf(system).filter(place => place.die === dieKey).map(place => place.kind));
+  if (!found.size) found.add(kindOfDie(die, false));
+  return ROLL_KINDS.filter(kind => found.has(kind));
+}
 
 export function rollsCounting(system: System, dieKey: string): string[] {
   return Object.entries(system.rolls ?? {}).filter(([, rule]) => rule.die === dieKey && rule.number === 'count').map(([key, rule]) => rule.label || key);

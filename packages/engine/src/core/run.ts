@@ -43,7 +43,7 @@ import type { Pass } from '../engine/calc.ts';
 import type { EmittedEvent, NestedRun } from '../engine/rule.ts';
 import type { System, Sheet, Compendium, Step, Param, StoredValue, WornEffect, Die, Effect } from '../model/types.ts';
 import { Pause } from './external.ts';
-import { ASK_ONE_WORDS } from '../words/steps.ts';
+import { ASK_ONE_WORDS, ASK_ROLLED } from '../words/steps.ts';
 import type { External, Question, Offer } from './external.ts';
 import type { Path, Window } from './path.ts';
 import type { Report, Entry, Stop, Change } from './log.ts';
@@ -1436,7 +1436,7 @@ export class Run {
   private question(sheetId: string, label: string, offers: readonly Offer[], path: Path, rolls: Record<string, RollResult>): string | null {
     const { chosen, skipped } = this.choose({
       key: path.key, sheetId, window: 'step', label, offers: [...offers], results: {}, one: true,
-      preview: Object.values(rolls).flatMap(roll => (roll.dice?.rolls?.length ? [`выпало: ${roll.dice.rolls.join(', ')}`] : [])),
+      preview: Object.entries(rolls).flatMap(([name, roll]) => (roll.dice?.rolls?.length ? [`${name}: ${ASK_ROLLED} ${roll.dice.rolls.join(', ')}`] : [])),
     });
     if (chosen.length > 1 || skipped) throw new EngineError(`${ASK_ONE_WORDS}: ${offers.map(offer => offer.label).join(' / ')}`);
     return chosen[0] ?? null;

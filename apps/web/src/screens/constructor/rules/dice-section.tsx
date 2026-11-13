@@ -1,8 +1,6 @@
 import { readingKinds } from '@vtt/engine/engine/readings';
-import { shapeOf, kindOfRule, rollsCounting } from '@vtt/engine/model/die-kinds';
+import { kindsOfDie, rollsCounting } from '@vtt/engine/model/die-kinds';
 import { ROLL_KIND_WORDS, COUNT_BY_ROLL } from '@vtt/engine/words/dice-kinds';
-import type { RollKind } from '@vtt/engine/words/dice-kinds';
-import type { DieConstant } from '@vtt/engine/model/types';
 import { Readback } from '../effects/cards/group-card.tsx';
 import { dieReadback } from '../readback.ts';
 import { slugOf } from '../../../store/world.ts';
@@ -35,16 +33,7 @@ function readKindOf(constant: SystemConstant): string {
 }
 
 
-function kindWords(system: System, key: string, constant: SystemConstant): string {
-  const own = Object.values(system.rolls ?? {}).filter(roll => roll.die === key).map(roll => kindOfRule(system, roll).kind);
-  const kinds = [...new Set(own)].filter((kind): kind is RollKind => kind !== null);
-  if (kinds.length) return kinds.map(kind => ROLL_KIND_WORDS[kind]).join(', ');
-  const die = constant as unknown as DieConstant;
-  const shape = shapeOf(die);
-  if (shape !== 'sum') return ROLL_KIND_WORDS[shape];
-  const count = die.dice?.[0]?.count;
-  return ROLL_KIND_WORDS[count === undefined || count === 1 ? 'one' : 'sum'];
-}
+const kindWords = (system: System, key: string): string => kindsOfDie(system, key).map(kind => ROLL_KIND_WORDS[kind]).join(', ');
 
 const ZERO_WORDS = [['', 'ничего не бросаем'], ['worst', 'бросаем две, берём худшую'], ['best', 'бросаем две, берём лучшую']] as const;
 export function DiceSection({ system, editSystem, usage }: Props) {
@@ -163,7 +152,7 @@ export function DiceSection({ system, editSystem, usage }: Props) {
                 </div>
 
                 <Readback segments={dieReadback(constant, system, driven)} />
-                <span className="faint">{kindWords(system, key, constant)}</span>
+                <span className="faint">{kindWords(system, key)}</span>
 
                 <DiceComposer dice={dice} onEdit={editDice} driven={driven} />
                 {counting.length ? <span className="faint">{COUNT_BY_ROLL(counting)}</span> : null}

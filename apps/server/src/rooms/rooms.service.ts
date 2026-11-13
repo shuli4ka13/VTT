@@ -349,7 +349,9 @@ export class RoomsService {
     const pending: PendingRecord = { ...record, id, journal: out.journal as Journal, question: out.question, logged: out.log.length };
     const view = this.pendingView(pending, out.sheets);
     const asked = out.sheets.find(s => s.id === out.question.sheetId);
-    const waiting = this.lines([`${asked?.name ?? out.question.sheetId}: стол ждёт решения — ${view.options.map(o => o.label).join(', ')}`], record.hidden);
+    const waiting = this.lines([view.one
+      ? `${view.question} — ${view.options.map(o => o.label).join(' / ')}`
+      : `${asked?.name ?? out.question.sheetId}: стол ждёт решения — ${view.options.map(o => o.label).join(', ')}`], record.hidden);
     const delta: RoomDelta = { roomId: room.id, sheets, log: [...log, ...waiting], clock: record.clock, pending: view };
     this.store.commit({
       roomId: room.id, sheets, pending: { id, data: JSON.stringify(pending) }, log: this.rows([...log, ...waiting]),
