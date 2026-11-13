@@ -209,6 +209,30 @@ export function within(root: ParentNode = document) {
   return { arg, args, button, has, click, cell, field, select, type, formula, check, when, whenOptions };
 }
 
+export interface ComboItem { value: string; label: string; group: string }
+
+export const comboOptions = (combo: HTMLElement): ComboItem[] => {
+  act(() => { fireEvent.focus(combo); });
+  const out: ComboItem[] = [];
+  let group = '';
+  for (const node of (combo.closest('.combo') ?? combo.parentElement!).querySelectorAll<HTMLElement>('.combo__group, .slot__option')) {
+    if (node.classList.contains('combo__group')) { group = textOf(node); continue; }
+    if (node.dataset.value === '\u0000more') continue;
+    out.push({ value: node.dataset.value ?? '', label: textOf(node), group });
+  }
+  act(() => { fireEvent.blur(combo); });
+  return out;
+};
+
+export const comboGroups = (combo: HTMLElement): [string, string[]][] => {
+  const out: [string, string[]][] = [];
+  for (const item of comboOptions(combo)) {
+    const last = out[out.length - 1];
+    if (last && last[0] === item.group) last[1].push(item.value); else out.push([item.group, [item.value]]);
+  }
+  return out;
+};
+
 export const pickCombo = (combo: HTMLElement, option: string, label = ''): void => {
   act(() => { fireEvent.focus(combo); });
   const menu = () => [...(combo.closest('.combo') ?? combo.parentElement!).querySelectorAll<HTMLElement>('.slot__option')];

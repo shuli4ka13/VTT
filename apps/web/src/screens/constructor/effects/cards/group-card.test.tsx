@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { within as cards } from '../../../../testing/cards.ts';
+import { within as cards, comboOptions } from '../../../../testing/cards.ts';
 import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { GroupCard } from './group-card.tsx';
@@ -29,9 +29,9 @@ describe('GroupCard', () => {
     const draft = structuredClone(steps[0]!) as any;
     render(<GroupCard group={group} position={1} system={system} effect={effect} sheets={sheets}
       earlier={[]} problem={null} edit={(at, change) => { expect(at).toBe(0); change(draft); }} onDelete={() => {}} />);
-    const chip = cards().field('Кто бросает') as HTMLSelectElement;
-    expect(chip.selectedOptions[0]!.textContent).toBe('Кто действует');
-    expect([...chip.options].map(o => o.value)).toEqual(['@цель', '@действующий', '']);
+    const chip = cards().field('Кто бросает').querySelector<HTMLInputElement>('[role="combobox"]')!;
+    expect(chip.value).toBe('Кто действует');
+    expect(comboOptions(chip).map(o => o.value)).toEqual(['@цель', '@действующий', '']);
     cards().select('Кто бросает', '@цель');
     expect(draft.type).toBe('roll');
     expect(draft.by).toEqual({ expr: '@цель' });

@@ -14,7 +14,7 @@ import { SystemBar } from '../screens/constructor/world-bar.tsx';
 import { ConstructorScreen } from '../screens/constructor/constructor.tsx';
 import { addColumn } from '../screens/constructor/rules/character-section.tsx';
 import { openAll } from '../testing/render-open.tsx';
-import { within, stepCard, block, addToArm } from '../testing/cards.ts';
+import { within, stepCard, block, addToArm, pickCombo } from '../testing/cards.ts';
 import { TABS } from '../words.ts';
 import { GuideLayer, PAUSE_MS, useView, movesOf, moveAt, pointOf } from './guide-card.tsx';
 import { LESSONS, lessonOf } from './lessons/index.ts';
@@ -73,8 +73,8 @@ const flat = (text: string): string => text.toLowerCase().replace(/ё/g, 'е').r
 const screenText = (): string => {
   const root = document.body.cloneNode(true) as HTMLElement;
   root.querySelectorAll('.guide').forEach(node => node.remove());
-  const attrs = [...root.querySelectorAll('[placeholder], [title], [aria-label]')]
-    .flatMap(el => ['placeholder', 'title', 'aria-label'].map(name => el.getAttribute(name) ?? ''));
+  const attrs = [...root.querySelectorAll('[placeholder], [title], [aria-label], [data-options]')]
+    .flatMap(el => ['placeholder', 'title', 'aria-label', 'data-options'].map(name => el.getAttribute(name) ?? ''));
   const words: string[] = [];
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   for (let node = walker.nextNode(); node; node = walker.nextNode()) words.push(node.textContent ?? '');
@@ -396,7 +396,7 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
     tag: [
       () => pick({ activeEffectId: 'сырость' }),
       () => { const el = findAnchor({ text: 'свойства' }); if (el) press(el); },
-      () => { const box = findAnchor({ field: 'Метки' })!.querySelector('select')!; act(() => { fireEvent.change(box, { target: { value: ':своя' } }); }); },
+      () => { pickCombo(findAnchor({ field: 'Метки' })!.querySelector<HTMLElement>('[role="combobox"]')!, ':своя'); },
       () => edit(d => { d.effects.сырость!.tags = ['гасит огонь']; }),
     ],
     when: [

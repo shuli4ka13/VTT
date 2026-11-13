@@ -355,8 +355,8 @@ describe('эффекты D&D собираются в конструкторе р
     render(<EffectsTab />);
     openAll();
     const roll = stepCard(/^2 · Бросок/);
-    const chip = within(roll).field('Кто бросает') as HTMLSelectElement;
-    expect(chip.selectedOptions[0]!.textContent).toBe('Кто действует');
+    const chip = within(roll).field('Кто бросает');
+    expect(chip.querySelector<HTMLInputElement>('[role="combobox"]')!.value).toBe('Кто действует');
     expect(roll.querySelector('.number-line__formula')!.firstElementChild).toBe(chip);
     expect(roll.textContent).not.toContain('Против кого');
     expect(within(roll).field('Ещё метки')).toBeTruthy();

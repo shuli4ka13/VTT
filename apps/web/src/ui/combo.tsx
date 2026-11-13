@@ -57,11 +57,15 @@ function useMenu(options: readonly ComboOption[], pick: (option: ComboOption) =>
     onChange: (next: string) => { setText(next); setOpen(true); setLit(0); },
     onKeyDown,
   };
-  return { open, menu, input };
+  const said = [...options.map(option => option.label), ...(more ? [more.label] : [])].join(' | ');
+  return { open, menu, input, said };
 }
 
-export function Combo({ value, options, onChange, blank = '— не выбрано —', label, more }: {
+export function Combo({ value, options, onChange, blank = '— не выбрано —', label, more, className, title, onFocus }: {
   value: string;
+  className?: string;
+  title?: string;
+  onFocus?: () => void;
   more?: ComboMore | undefined;
   options: readonly ComboOption[];
   onChange: (value: string) => void;
@@ -70,17 +74,20 @@ export function Combo({ value, options, onChange, blank = '— не выбран
 }) {
   const current = options.find(option => option.value === value);
   const shownLabel = current ? current.label : value ? `${value} — такого в списке нет` : '';
-  const { open, menu, input } = useMenu(options, option => { if (option.value !== value) onChange(option.value); }, more);
+  const { open, menu, input, said } = useMenu(options, option => { if (option.value !== value) onChange(option.value); }, more);
   return (
     <div className="slot combo">
       <input
-        className="input combo__input"
+        className={`input combo__input${className ? ` ${className}` : ''}`}
+        title={title}
         role="combobox"
+        data-options={said}
         aria-expanded={open}
         aria-label={label}
+        data-value={value}
         value={open ? input.value : shownLabel}
         placeholder={open ? shownLabel || blank : blank}
-        onFocus={input.onFocus}
+        onFocus={() => { onFocus?.(); input.onFocus(); }}
         onBlur={input.onBlur}
         onChange={e => input.onChange(e.target.value)}
         onKeyDown={input.onKeyDown}
@@ -98,7 +105,7 @@ export function MultiCombo({ value, options, onChange, prompt }: {
 }) {
   const labelOf = (key: string) => options.find(option => option.value === key)?.label ?? key;
   const free = options.filter(option => !value.includes(option.value));
-  const { open, menu, input } = useMenu(free, option => onChange([...value, option.value]));
+  const { open, menu, input, said } = useMenu(free, option => onChange([...value, option.value]));
   const chips: ReactNode = value.map(key => (
     <Chip key={key} onRemove={() => onChange(value.filter(other => other !== key))}>{labelOf(key)}</Chip>
   ));
@@ -110,6 +117,7 @@ export function MultiCombo({ value, options, onChange, prompt }: {
           <input
             className="combo__text"
             role="combobox"
+            data-options={said}
             aria-expanded={open}
             value={input.value}
             placeholder={prompt ?? (value.length ? '+ ещё…' : '+ добавить…')}
@@ -123,6 +131,34 @@ export function MultiCombo({ value, options, onChange, prompt }: {
           />
         ) : null}
       </div>
+      {menu}
+    </div>
+  );
+}
+
+export function AddCombo({ options, onPick, prompt, label }: {
+  options: readonly ComboOption[];
+  onPick: (value: string) => void;
+  prompt: string;
+  label?: string;
+}) {
+  const { open, menu, input, said } = useMenu(options, option => onPick(option.value));
+  return (
+    <div className="slot combo combo--add">
+      <input
+        className="input combo__input"
+        role="combobox"
+        data-options={said}
+        aria-expanded={open}
+        aria-label={label ?? prompt}
+        data-value=""
+        value={input.value}
+        placeholder={prompt}
+        onFocus={input.onFocus}
+        onBlur={input.onBlur}
+        onChange={e => input.onChange(e.target.value)}
+        onKeyDown={input.onKeyDown}
+      />
       {menu}
     </div>
   );

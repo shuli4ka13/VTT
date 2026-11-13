@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { Step } from '@vtt/schema';
 import { Select } from '../../../../ui/primitives.tsx';
+import { Combo, type ComboOption } from '../../../../ui/combo.tsx';
 import { useFormulaBar } from '../../../../store/formula-bar.ts';
 import { sheetChoices } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
@@ -33,6 +34,9 @@ function ownDieSaid(context: SlotContext, text: string): string {
   const source = param ? `кость из входа «${param.label ?? param.key}»` : `кость «${text.replace(/['"]/g, '')}»`;
   return `${source}: выпавшие грани складываются, правила успеха у неё нет`;
 }
+
+const asCombo = (options: readonly (readonly [string, string] | readonly [string, string, string])[]): ComboOption[] =>
+  options.map(([value, label, group]) => ({ value, label, ...(group ? { group } : {}) }));
 
 export function RollBody({ step, context, edit, takenNames, onRename }: {
   step: Step;
@@ -146,19 +150,20 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
         {name.input}
         <span className="number-line__eq">=</span>
         <div data-field="Бросок" className={`number-line__formula roll-formula${pairing ? ' roll-formula--pair' : ''}`}>
-          <select
-            className={`roll-by${who === '' ? ' roll-by--none' : ''}`}
-            data-field="Кто бросает"
-            aria-label="Кто бросает"
-            title="Кто бросает — на его бросок действуют правки (преимущество, «Благословение») и вопросы «увидев кости»."
-            value={who}
-            onFocus={() => useFormulaBar.getState().commit()}
-            onChange={event => { const next = event.target.value; if (next !== who) set(it => setWho(it, next)); }}
-          >
-            {people.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-          </select>
+          <span data-field="Кто бросает" className="roll-who">
+            <Combo
+              className={`roll-by${who === '' ? ' roll-by--none' : ''}`}
+              label="Кто бросает"
+              title="Кто бросает — на его бросок действуют правки (преимущество, «Благословение») и вопросы «увидев кости»."
+              value={who}
+              blank={people.find(([value]) => value === '')?.[1] ?? NOBODY}
+              options={asCombo(people)}
+              onFocus={() => useFormulaBar.getState().commit()}
+              onChange={next => { if (next !== who) set(it => setWho(it, next)); }}
+            />
+          </span>
           <span className="number-line__eq">бросает</span>
-          <span data-field="Что бросает" className="roll-what"><Select label="Что бросает" value={what} options={options} onChange={pickWhat} /></span>
+          <span data-field="Что бросает" className="roll-what"><Combo label="Что бросает" value={what} blank="— что бросает —" options={asCombo(options)} onChange={pickWhat} /></span>
           {what === OWN_DIE ? (
             <SlotFormula value={read.die && typeof read.die === 'object' ? read.die : undefined} label="Своя кость" system={context.system} where="бросок · кость" placeholder="2к6 или формула кости" context={context}
               onSet={text => { if (text) { setHand(null); set(it => setDie(it, { expr: text })); } }} />
@@ -171,7 +176,7 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
             <div className="roll-second">
               <span className="number-line__eq">и</span>
               <span data-field="Второе поле" className="roll-what">
-                <Select label="Второе поле" value={secondShown} options={[['', 'то же поле', ''], ...fieldOptions, [OWN_FIELD, 'поле своим адресом…', 'Другое']] as never} onChange={pickSecond} />
+                <Combo label="Второе поле" value={secondShown} blank="то же поле" options={asCombo([['', 'то же поле'], ...fieldOptions, [OWN_FIELD, 'поле своим адресом…', 'Другое']])} onChange={pickSecond} />
               </span>
               {secondShown === OWN_FIELD ? (
                 <SlotFormula value={read.second} label="Адрес второго поля" system={context.system} where="бросок поля · второе поле" placeholder="начните набирать название поля" context={context}
@@ -183,7 +188,7 @@ export function RollBody({ step, context, edit, takenNames, onRename }: {
       </div>
       {name.trouble}
       {read.fixed !== undefined && read.fixed !== null ? <span className="field__error">в шаге осталась формула «{exprOf(read.fixed)}» — она снимется, когда выберете, что бросают</span> : null}
-      {picked && rule ? <span className="faint">по правилу «{picked.rule}» из «Правил → Броски»: {rollSaid(context.system, rule)}</span> : null}
+      {picked && rule ? <span className="faint">по правилу «{picked.rule}»: {rollSaid(context.system, rule, `«${picked.label}»`)}</span> : null}
       {constant && die ? <span className="faint">{constant.label || String(read.die)}: {die}</span> : null}
       {!fielded && !constant && read.die && typeof read.die === 'object' ? <span className="faint">{ownDieSaid(context, exprOf(read.die))}</span> : null}
       {!fielded && who === '' ? <span className="faint">кости ничьи: правки броска и вопросы «увидев кости» на них не действуют</span> : null}

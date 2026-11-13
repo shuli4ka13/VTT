@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AddCombo } from '../../ui/combo.tsx';
 import type { System } from '@vtt/schema';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { Chip, Input, Button } from '../../ui/primitives.tsx';
@@ -73,22 +74,19 @@ export function TagsField({ system, value, onChange, known = [], templates = [],
           <Button size="sm" variant="ghost" onClick={() => { setDraft(''); setTyping(null); }}>отмена</Button>
         </>
       ) : (
-        <select className="select" value="" onChange={event => {
-          const next = event.target.value;
-          if (!next) return;
-          if (next === OWN) { focusNew(); setTyping('own'); return; }
-          if (next === COMPUTED) { focusNew(); setTyping('formula'); return; }
-          add(next);
-        }}>
-          <option value="">{picked.length ? '+ ещё…' : empty}</option>
-          {free.map(([title, list]) => (
-            <optgroup key={title} label={title}>
-              {list.map(([word, label]) => <option key={word} value={word}>{label}</option>)}
-            </optgroup>
-          ))}
-          <option value={OWN}>новая метка…</option>
-          {computed ? <option value={COMPUTED}>вычисляемая формулой…</option> : null}
-        </select>
+        <AddCombo
+          prompt={picked.length ? '+ ещё…' : empty}
+          options={[
+            ...free.flatMap(([title, list]) => list.map(([word, label]) => ({ value: word, label, group: title }))),
+            { value: OWN, label: 'новая метка…', group: 'другое' },
+            ...(computed ? [{ value: COMPUTED, label: 'вычисляемая формулой…', group: 'другое' }] : []),
+          ]}
+          onPick={next => {
+            if (next === OWN) { focusNew(); setTyping('own'); return; }
+            if (next === COMPUTED) { focusNew(); setTyping('formula'); return; }
+            add(next);
+          }}
+        />
       )}
     </div>
   );

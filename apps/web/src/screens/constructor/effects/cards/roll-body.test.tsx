@@ -2,7 +2,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { RollBody } from './roll-body.tsx';
-import { within } from '../../../../testing/cards.ts';
+import { within, comboOptions, comboGroups } from '../../../../testing/cards.ts';
 import type { System, Effect, Step } from '@vtt/schema';
 
 const system = {
@@ -35,8 +35,8 @@ const edited = (step: Record<string, unknown>) => {
   return { draft, view, calls: () => calls };
 };
 
-const by = (view: ReturnType<typeof render>) => view.container.querySelector<HTMLSelectElement>('select.roll-by')!;
-const what = (view: ReturnType<typeof render>) => view.container.querySelector<HTMLSelectElement>('[data-field="Что бросает"] select')!;
+const by = (view: ReturnType<typeof render>) => view.container.querySelector<HTMLInputElement>('[data-field="Кто бросает"] [role="combobox"]')!;
+const what = (view: ReturnType<typeof render>) => view.container.querySelector<HTMLInputElement>('[data-field="Что бросает"] [role="combobox"]')!;
 const has = (view: ReturnType<typeof render>, label: string) => view.container.querySelector(`[data-field="${label}"]`) !== null;
 
 describe('форма «Бросок»: кто бросает', () => {
@@ -44,8 +44,8 @@ describe('форма «Бросок»: кто бросает', () => {
 
   it('у броска костью выбор — листы входа и последним «никто — кости ничьи»', () => {
     const view = body({ id: 'бросок', type: 'roll', die: 'lead', by: { expr: '@действующий' } });
-    expect(by(view).selectedOptions[0]!.textContent).toBe('Кто действует');
-    expect([...by(view).options].map(o => [o.value, o.textContent])).toEqual([
+    expect(by(view).value).toBe('Кто действует');
+    expect(comboOptions(by(view)).map(o => [o.value, o.label])).toEqual([
       ['@действующий', 'Кто действует'], ['@цель', 'цель'], ['', 'никто — кости ничьи'],
     ]);
   });
@@ -62,7 +62,7 @@ describe('форма «Бросок»: кто бросает', () => {
     expect(draft).toEqual({ id: 'бросок', type: 'roll', die: 'lead' });
     cleanup();
     const nobody = body({ id: 'бросок', type: 'roll', die: 'lead' });
-    expect(by(nobody).value).toBe('');
+    expect(by(nobody).dataset.value).toBe('');
     expect(nobody.container.textContent).toContain('кости ничьи');
   });
 
@@ -76,8 +76,8 @@ describe('форма «Бросок»: кто бросает', () => {
 
   it('бросающий не из списка листов остаётся пунктом с пометкой, а не подменяется первым листом', () => {
     const view = body({ id: 'бросок', type: 'roll', die: 'lead', by: { expr: 'первый(@цели)' } });
-    expect(by(view).value).toBe('первый(@цели)');
-    expect(by(view).selectedOptions[0]!.textContent).toBe('первый(@цели) — такого листа здесь нет');
+    expect(by(view).dataset.value).toBe('первый(@цели)');
+    expect(by(view).value).toBe('первый(@цели) — такого листа здесь нет');
   });
 });
 
@@ -86,7 +86,7 @@ describe('форма «Бросок»: что бросает', () => {
 
   it('список состоит из групп: по входу эффекта, поля листа, кости, строки таблицы, другое', () => {
     const view = body({ id: 'бросок', type: 'roll', die: 'lead', by: { expr: '@действующий' } });
-    const groups = [...what(view).querySelectorAll('optgroup')].map(group => [group.label, [...group.querySelectorAll('option')].map(o => o.value)]);
+    const groups = comboGroups(what(view));
     expect(groups).toEqual([
       ['По входу эффекта', ['field:skill.total']],
       ['Поля листа', ['field:initiative']],
@@ -95,7 +95,7 @@ describe('форма «Бросок»: что бросает', () => {
       ['Навыки', ['field:skills.athletics.total']],
       ['Другое', ['own-die', 'own-field']],
     ]);
-    expect(what(view).value).toBe('die:lead');
+    expect(what(view).dataset.value).toBe('die:lead');
   });
 
   it('выбор кости пишет die', () => {
@@ -132,9 +132,9 @@ describe('форма «Бросок»: что бросает', () => {
 
   it('у броска поля бросающий — голова адреса; смена листа меняет голову, хвост остаётся', () => {
     const { draft, view } = edited({ id: 'бросок', type: 'roll', field: { expr: '@действующий.skills.athletics.total' } });
-    expect(by(view).value).toBe('@действующий');
-    expect([...by(view).options].map(o => o.value)).toEqual(['@действующий', '@цель']);
-    expect(what(view).value).toBe('field:skills.athletics.total');
+    expect(by(view).dataset.value).toBe('@действующий');
+    expect(comboOptions(by(view)).map(o => o.value)).toEqual(['@действующий', '@цель']);
+    expect(what(view).dataset.value).toBe('field:skills.athletics.total');
     within(view.container).select('Кто бросает', '@цель');
     expect(draft).toEqual({ id: 'бросок', type: 'roll', field: { expr: '@цель.skills.athletics.total' } });
   });
@@ -193,7 +193,7 @@ describe('форма «Бросок»: свои значения и сохран
   it('адрес поля не из списка — поле «Адрес поля», и холостое открытие ничего не меняет', () => {
     const step = { id: 'бросок', type: 'roll', field: { expr: '@действующий.х' } };
     const { draft, view, calls } = edited(step);
-    expect(what(view).value).toBe('own-field');
+    expect(what(view).dataset.value).toBe('own-field');
     expect(has(view, 'Адрес поля')).toBe(true);
     expect(has(view, 'Своя кость')).toBe(false);
     expect(draft).toEqual(step);
@@ -203,7 +203,7 @@ describe('форма «Бросок»: свои значения и сохран
   it('кость формулой — поле «Своя кость», и холостое открытие ничего не меняет', () => {
     const step = { id: 'бросок', type: 'roll', die: { expr: '"2к6"' }, by: { expr: '@действующий' } };
     const { draft, view, calls } = edited(step);
-    expect(what(view).value).toBe('own-die');
+    expect(what(view).dataset.value).toBe('own-die');
     expect(has(view, 'Своя кость')).toBe(true);
     expect(has(view, 'Адрес поля')).toBe(false);
     expect(draft).toEqual(step);
@@ -258,8 +258,8 @@ describe('форма «Бросок»: что это за кость — сло�
     expect(text).not.toContain('+ сколько костей');
   });
 
-  it('бросок с листа называет правило: что значит число поля и какой костью', () => {
+  it('бросок с листа называет правило: что значит выбранное поле и какой костью', () => {
     expect(shown({ id: 'б', type: 'roll', field: { expr: '@действующий.initiative' } }))
-      .toContain('по правилу «Проверка» из «Правил → Броски»: число поля — сколько бросить: набор к6 (успехи от 5)');
+      .toMatch(/по правилу «Проверка»: «[^»]+» — сколько бросить: набор к6 \(успехи от 5\)/u);
   });
 });

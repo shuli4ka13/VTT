@@ -4,6 +4,9 @@ import { render, fireEvent, cleanup, screen } from '@testing-library/react';
 import { TagsField } from './tags-field.tsx';
 import type { TagValue } from './tags-field.tsx';
 import type { System } from '@vtt/schema';
+import { comboOptions, comboGroups, pickCombo } from '../../testing/cards.ts';
+
+const add = () => document.querySelector<HTMLElement>('.combo--add [role="combobox"]')!;
 
 const system = {
   id: 's', name: 's', effects: {},
@@ -16,20 +19,20 @@ describe('одно поле меток', () => {
 
   it('предлагает метки с договором, метки вызова, метки бросков и шаблоны строки группами', () => {
     render(<TagsField system={system} value={[]} onChange={() => {}} known={['огонь']} templates={[{ value: '{value}', label: 'ключ строки' }]} />);
-    const groups = [...document.querySelectorAll('optgroup')].map(g => g.getAttribute('label'));
-    expect(groups).toEqual(['шаблоны строки', 'метки с договором', 'метки вызова', 'метки бросков · Броски']);
+    const groups = comboGroups(add()).map(([group]) => group);
+    expect(groups).toEqual(['шаблоны строки', 'метки с договором', 'метки вызова', 'метки бросков · Броски', 'другое']);
   });
 
   it('вычисляемая метка пишется формулой только там, где разрешено', () => {
     let got: TagValue[] = [];
     render(<TagsField system={system} value={[]} computed onChange={next => { got = next; }} />);
-    fireEvent.change(document.querySelector('select')!, { target: { value: ':формула' } });
+    pickCombo(add(), ':формула');
     fireEvent.change(screen.getByPlaceholderText(/если\(рейтинг/), { target: { value: 'если(@rating == 0, "нулевой", "")' } });
     fireEvent.click(screen.getByText('добавить'));
     expect(got).toEqual([{ expr: 'если(@rating == 0, "нулевой", "")' }]);
     cleanup();
     render(<TagsField system={system} value={[]} onChange={() => {}} />);
-    expect([...document.querySelectorAll('option')].some(o => o.value === ':формула')).toBe(false);
+    expect(comboOptions(add()).some(o => o.value === ':формула')).toBe(false);
   });
 
   it('метка не из словаря помечена; своя метка — только пунктом «новая метка…»', () => {
@@ -37,9 +40,9 @@ describe('одно поле меток', () => {
     render(<TagsField system={system} value={['атака', 'выдумана']} onChange={next => { got = next; }} />);
     expect(screen.getAllByText(/нет в словаре/)).toHaveLength(1);
     expect(document.querySelector('.tag-unknown')!.closest('.chip')!.textContent).toContain('выдумана');
-    const options = [...document.querySelectorAll('option')].map(o => o.textContent);
+    const options = comboOptions(add()).map(o => o.label);
     expect(options).toContain('новая метка…');
-    fireEvent.change(document.querySelector('select')!, { target: { value: ':своя' } });
+    pickCombo(add(), ':своя');
     fireEvent.change(screen.getByPlaceholderText('как назвать метку'), { target: { value: 'новая' } });
     fireEvent.click(screen.getByText('добавить'));
     expect(got).toEqual(['атака', 'выдумана', 'новая']);

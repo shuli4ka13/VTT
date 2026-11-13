@@ -1,4 +1,5 @@
 import { renderOpen } from '../../testing/render-open.tsx';
+import { comboOptions, pickCombo } from '../../testing/cards.ts';
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -24,9 +25,9 @@ describe('редактор модификаторов', () => {
     const whose = screen.getByDisplayValue('всех — без условия') as HTMLSelectElement;
     expect(optionsOf(whose)).toEqual(['всех — без условия', 'бросает носитель', 'бросают против носителя']);
     expect(screen.getByText('атака', { selector: 'span' })).toBeTruthy();
-    const more = screen.getAllByDisplayValue('+ ещё…')[0] as HTMLSelectElement;
-    expect(optionsOf(more)).toContain('спасбросок');
-    expect(more.querySelector('optgroup')?.getAttribute('label')).toBe('метки бросков · Броски');
+    const more = screen.getAllByPlaceholderText('+ ещё…')[0]!;
+    expect(comboOptions(more).map(o => o.label)).toContain('спасбросок');
+    expect(comboOptions(more)[0]?.group).toBe('метки бросков · Броски');
   });
 
   it('«Кого касается» пишет условие про носителя в if, а записанное условие показывает выбранным', () => {
@@ -56,7 +57,7 @@ describe('редактор модификаторов', () => {
     renderOpen(<ModifiersEditor system={system} modifiers={mods} onEdit={onEdit} />);
     const field = [...document.querySelectorAll('.field__label')].find(el => el.textContent === 'Кроме меток')!.closest('label')!;
     expect(field.textContent).toContain('атака');
-    fireEvent.change(field.querySelector('select')!, { target: { value: 'спасбросок' } });
+    pickCombo(field.querySelector<HTMLElement>('.combo--add [role="combobox"]')!, 'спасбросок');
     expect((mods[0] as { notTags?: string[] }).notTags).toEqual(['атака', 'спасбросок']);
   });
 
