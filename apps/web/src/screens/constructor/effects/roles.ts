@@ -8,7 +8,7 @@ import { COST_BLOCK } from '@vtt/engine/words/glossary';
 export type Role = 'button' | 'auto' | 'passive' | 'pay' | 'step' | 'unbound';
 
 export const ROLE_GROUPS: Record<Role, string> = {
-  step: 'Шаги для других', pay: 'Плата', button: 'Кнопкой', auto: 'Срабатывают сами', passive: 'Висят и правят',
+  step: 'Вызываются', pay: 'Плата', button: 'Кнопкой', auto: 'Срабатывают сами', passive: 'Висят и правят',
   unbound: 'Не подключены',
 };
 
@@ -21,9 +21,11 @@ export function grouped<E>(system: System, list: readonly [string, E][]): [strin
 }
 
 export const ROLE_WORDS: Record<Role, string> = {
-  button: 'кнопкой', auto: 'срабатывает сам', passive: 'висит и правит', pay: 'плата', step: 'шаг для других',
+  button: 'кнопкой', auto: 'срабатывает сам', passive: 'висит и правит', pay: 'плата', step: 'вызывается',
   unbound: 'не подключён',
 };
+
+export const UNBOUND_HINT = 'Никто не нажимает и не вызывает. Подключить: кнопка у типа вещей, выдача листу или вызов из другого эффекта';
 
 export function roleWordsOf(effect: Effect | undefined, role: Role): string {
   if (role !== 'passive' && role !== 'auto') return ROLE_WORDS[role];

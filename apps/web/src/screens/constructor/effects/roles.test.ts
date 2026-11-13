@@ -48,12 +48,12 @@ describe('роль эффекта-кнопки', () => {
     expect(roleWords(sys(), null, 'удар')).toBe('кнопкой');
   });
 
-  it('вызываемое другим эффектом — «шаг для других»', () => {
+  it('вызываемое другим эффектом — «вызывается»', () => {
     const system = sys({}, { атака: act({ steps: [{ type: 'emit', effect: 'удар' }] }) });
-    expect(roleWords(system, none, 'удар')).toBe('шаг для других');
+    expect(roleWords(system, none, 'удар')).toBe('вызывается');
   });
 
-  it('вызываемое через вход, который выбран в записи, — «шаг для других»', () => {
+  it('вызываемое через вход, который выбран в записи, — «вызывается»', () => {
     const атака = act({ params: [{ key: 'приём', kind: 'effect' }], steps: [{ type: 'emit', effect: { expr: '@приём' } }] } as Partial<Effect>);
     const system = sys({ tables: { оружие: book({ bindings: [{ effect: 'атака' }] }) } }, { атака });
     const compendium = { records: [{ id: 'меч', table: 'оружие', cells: { приём: { expr: '"удар"' } } }] } as Compendium;

@@ -1,4 +1,4 @@
-import { roleWords } from './roles.ts';
+import { roleOf, roleWordsOf, UNBOUND_HINT } from './roles.ts';
 import { useState } from 'react';
 import { paramsOf } from '@vtt/engine/model/inherit';
 import { rolesOf } from '@vtt/engine/model/buttons';
@@ -48,6 +48,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
   const edit = (change: (draft: Effect) => void) => editEffect(id, change);
 
   const launch = launchOf(effect);
+  const role = roleOf(system, useWorld.getState().compendium, id);
   const props = `effect-props|${id}`;
   const more = useOpened(s => Boolean(s.opened[props]));
   const setMore = (open: boolean) => useOpened.getState().setOpen([props], open);
@@ -84,7 +85,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           <span className="effect-head__name">
             <LabelInput value={effect.label ?? ''} placeholder="как зовётся эффект" onCommit={label => relabel(label)} />
           </span>
-          <span className={`effect-head__kind effect-head__kind--${launch.kind}`} title={launchHint(launch.kind)}>{roleWords(system, useWorld.getState().compendium, id)}</span>
+          <span className={`effect-head__kind effect-head__kind--${launch.kind}`} title={role === 'unbound' ? UNBOUND_HINT : launchHint(launch.kind)}>{roleWordsOf(effect, role)}</span>
           <span className="spacer" />
           <Button size="sm" variant="ghost" title="папка, метки, значок, имя в формулах" ariaLabel={more ? "свернуть «свойства»" : "развернуть «свойства»"} onClick={() => setMore(!more)}>{more ? 'свернуть свойства' : 'свойства'}</Button>
           <DangerButton size="sm" onConfirm={() => {

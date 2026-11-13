@@ -6,6 +6,7 @@ import { within as within2, stepCard } from '../../../testing/cards.ts';
 import { EffectsTab } from './effects-tab.tsx';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import { CREATE_KINDS } from './words.ts';
+import { UNBOUND_HINT } from './roles.ts';
 import { fieldsOf, hasField } from '@vtt/engine/model/sheet-columns';
 import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 import type { Effect } from '@vtt/schema';
@@ -603,16 +604,16 @@ describe('список слева: «ничего не делает» знает
   });
 });
 
-describe('одно правило «шаг для других»', () => {
+describe('одно правило «вызывается»', () => {
   afterEach(cleanup);
 
-  it('все «шаги для других» из библиотеки есть в выборе «+ эффект», висящих и самого эффекта там нет: D&D — «Урон», «Лечение», «Бросок атаки», «Спасбросок», «Повторный спасбросок», «Новый ход», «Костей с учётом ячейки»', () => {
+  it('все «вызываемые» из библиотеки есть в выборе «+ эффект», висящих и самого эффекта там нет: D&D — «Урон», «Лечение», «Бросок атаки», «Спасбросок», «Повторный спасбросок», «Новый ход», «Костей с учётом ячейки»', () => {
     const world = SAMPLE_WORLDS.find(one => one.system.name === 'D&D 5e')!;
     const strike = Object.entries(world.system.effects).find(([, effect]) => effect.label === 'Атака')![0];
     useWorld.setState(state => ({ ...state, system: world.system, compendium: world.compendium, activeEffectId: strike }));
     renderOpen(<EffectsTab />);
     const listed = [...document.querySelectorAll('.list__item')]
-      .filter(item => item.textContent?.includes('шаг для других'))
+      .filter(item => item.textContent?.includes('вызывается'))
       .map(item => item.querySelector('.list__name')?.textContent).sort();
     const pick = [...document.querySelectorAll<HTMLSelectElement>('.bricks select')].find(select => select.options[0]?.textContent === '+ эффект')!;
     const offered = [...pick.options].slice(1).map(option => option.textContent!);
@@ -640,5 +641,14 @@ describe('плашка вида у названия эффекта', () => {
   it('висящий с правкой — «висит · правит»', () => {
     const effect = { label: 'Щит', activation: 'passive', modifiers: [{ target: '@хиты', op: 'add', value: { expr: '1' } }] } as unknown as Effect;
     expect(open({ shield: effect }, 'shield')).toBe('висит · правит');
+  });
+
+  it('у «не подключён» есть подсказка, у подключённого — нет', () => {
+    open({ strike: { label: 'Удар', activation: 'manual', params: [], steps: [] } as Effect }, 'strike');
+    expect(document.querySelector('.effect-head__kind')!.getAttribute('title')).toBe(UNBOUND_HINT);
+    cleanup();
+    const effect = { label: 'Щит', activation: 'passive', modifiers: [{ target: '@хиты', op: 'add', value: { expr: '1' } }] } as unknown as Effect;
+    open({ shield: effect }, 'shield');
+    expect(document.querySelector('.effect-head__kind')!.getAttribute('title')).not.toBe(UNBOUND_HINT);
   });
 });

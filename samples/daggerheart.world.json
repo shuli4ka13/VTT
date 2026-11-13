@@ -6,7 +6,7 @@
     "groups": {
       "Действия": {},
       "Атака": {},
-      "Шаги для других": {},
+      "Что случается": {},
       "Плата": {},
       "Правила": {},
       "Состояния": {},
@@ -1395,7 +1395,9 @@
             }
           }
         ],
-        "cancels": ["disadvantage"]
+        "cancels": [
+          "disadvantage"
+        ]
       },
       "disadvantage": {
         "label": "Помеха",
@@ -1408,7 +1410,9 @@
             "minus": true
           }
         ],
-        "cancels": ["advantage"]
+        "cancels": [
+          "advantage"
+        ]
       },
       "gm_advantage": {
         "label": "Преимущество противника",
@@ -1421,7 +1425,9 @@
             "n": 1
           }
         ],
-        "cancels": ["gm_disadvantage"]
+        "cancels": [
+          "gm_disadvantage"
+        ]
       },
       "gm_disadvantage": {
         "label": "Помеха противника",
@@ -1434,7 +1440,9 @@
             "n": 1
           }
         ],
-        "cancels": ["gm_advantage"]
+        "cancels": [
+          "gm_advantage"
+        ]
       }
     },
     "effects": {
@@ -1833,7 +1841,7 @@
       },
       "damage": {
         "label": "Урон",
-        "group": "Шаги для других",
+        "group": "Что случается",
         "description": "Урон против порогов: ниже серьёзного — одна клетка хитов, от серьёзного — две, от тяжёлого — три. Бронеслот игрок отмечает сам действием «Отметить бронеслот».",
         "params": [
           {
