@@ -35,7 +35,6 @@ function readKindOf(constant: SystemConstant): string {
 
 const kindWords = (system: System, key: string): string => kindsOfDie(system, key).map(kind => ROLL_KIND_WORDS[kind]).join(', ');
 
-const ZERO_WORDS = [['', 'ничего не бросаем'], ['worst', 'бросаем две, берём худшую'], ['best', 'бросаем две, берём лучшую']] as const;
 export function DiceSection({ system, editSystem, usage }: Props) {
   const entries = dieEntries(system);
 
@@ -67,7 +66,7 @@ export function DiceSection({ system, editSystem, usage }: Props) {
             const readKind = readKindOf(constant);
             const driven = Object.values(system.rolls ?? {}).some(roll => roll.die === key && roll.number === 'count');
             const asksReading = total !== 1 || readKind !== 'sum';
-            const countRead = typeof constant.read === 'object' ? constant.read : null;
+            const countRead = typeof constant.read === 'object' && constant.read.kind === 'count' ? constant.read : null;
 
             const editDice = (change: (list: DiceTerm[]) => void) => editSystem(draft => {
               const cur = draft.constants?.[key];
@@ -76,7 +75,6 @@ export function DiceSection({ system, editSystem, usage }: Props) {
               change(cur.dice);
             });
 
-            const zero = (constant as { zero?: { count: number; keep?: 'best' | 'worst' } }).zero;
             const reading = (
               <>
                   <div className="dict-row">
@@ -91,7 +89,7 @@ export function DiceSection({ system, editSystem, usage }: Props) {
                         if (kind === 'sum') delete cur.read;
                         else if (kind === 'count') {
                           cur.read = { kind: 'count', atLeast: (dice[0]?.sides ?? 6) - 1 };
-                        } else cur.read = kind;
+                        } else cur.read = kind as 'best' | 'worst';
                       })}
                     />
                     {readKind === 'count' ? (
@@ -111,20 +109,6 @@ export function DiceSection({ system, editSystem, usage }: Props) {
                       </>
                     ) : null}
                   </div>
-                  {dice.length === 1 ? (
-                    <div className="dict-row">
-                      <span className="dict-row__label">Если костей ноль</span>
-                      <Select
-                        value={zero ? zero.keep ?? 'worst' : ''}
-                        options={ZERO_WORDS as never}
-                        onChange={(next: string) => editSystem(draft => {
-                          const cur = draft.constants?.[key] as { zero?: unknown } | undefined;
-                          if (!cur) return;
-                          if (next) cur.zero = next === 'worst' ? { count: 2 } : { count: 2, keep: 'best' }; else delete cur.zero;
-                        })}
-                      />
-                    </div>
-                  ) : null}
               </>
             );
 
@@ -206,21 +190,6 @@ function DiceComposer({ dice, onEdit, driven = false }: {
                 })}
               />
             ) : null}
-
-            <Fold title="ещё" summary={term.bonus ? 'сверх' : term.minus ? 'вычитается' : ''}>
-              <div className="inline inline--tight">
-                <Select
-                  value={term.bonus ? 'bonus' : term.minus ? 'minus' : ''}
-                  options={[['', 'обычная часть'], ['bonus', 'сверх — «оставить лучшую» её не трогает'], ['minus', 'вычитается из суммы']] as const}
-                  onChange={next => onEdit(list => {
-                    const t = list[i]!;
-                    delete t.bonus; delete t.minus;
-                    if (next === 'bonus') t.bonus = true;
-                    if (next === 'minus') t.minus = true;
-                  })}
-                />
-              </div>
-            </Fold>
 
             {many ? (
               <Button

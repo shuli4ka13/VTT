@@ -1,3 +1,4 @@
+import type { Zero } from '../core/dice.ts';
 import { EngineError } from './errors.ts';
 import type { SlotRef, System } from '../model/types.ts';
 import { fieldOf } from '../model/sheet-columns.ts';
@@ -34,6 +35,8 @@ export interface Check {
   sides?: SlotRef;
   sides2?: SlotRef;
   keep?: SlotRef;
+  zero?: Zero;
+  total?: SlotRef;
   degrees?: Degrees;
   success?: SlotRef;
   margin?: SlotRef;
@@ -49,8 +52,9 @@ export function fieldCheck(system: System, tag: string, second?: string | null):
   const constant = (field.roll as { die?: string }).die;
   if (!constant) throw new EngineError(`по полю «${field.label}» бросают, но кость не выбрана`);
   const { label, count, bonus, sides, keep, degrees, under, tags } = field.roll;
-  const { success, margin } = field.roll as { success?: SlotRef; margin?: SlotRef };
+  const { success, margin, total } = field.roll as { success?: SlotRef; margin?: SlotRef; total?: SlotRef };
   const threshold = (field.roll as { threshold?: SlotRef }).threshold;
+  const zero = (field.roll as { zero?: Zero }).zero;
   const pair = (field.roll as { pair?: boolean }).pair === true;
   const other = second === undefined || second === null ? null : fieldOf(system, second);
   if (second !== undefined && second !== null) {
@@ -68,6 +72,8 @@ export function fieldCheck(system: System, tag: string, second?: string | null):
     ...(sides ? { sides } : {}),
     ...(pair && sides ? { sides2: other?.roll?.sides ?? sides } : {}),
     ...(keep ? { keep } : {}),
+    ...(zero ? { zero } : {}),
+    ...(total ? { total } : {}),
     ...(hasDegrees(degrees) ? { degrees } : {}),
     ...(success ? { success } : {}),
     ...(margin ? { margin } : {}),

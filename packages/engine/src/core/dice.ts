@@ -4,7 +4,7 @@ import { DICE_TEXT, DIE_LETTER } from '../words/glossary.ts';
 import type { ReadSpec } from '../engine/readings.ts';
 import type { DieConstant, Die, RollEdit, RollEditOp } from '../model/types.ts';
 
-export interface Term { count: number; sides: number; part?: string; extra?: boolean; minus?: boolean }
+export interface Term { count: number; sides: number; part?: string }
 
 export interface Zero { count: number; keep?: 'best' | 'worst' }
 
@@ -20,8 +20,6 @@ export interface Rolled {
   id: number;
   sides: number;
   part?: string;
-  extra?: boolean;
-  minus?: boolean;
   face: number;
   value: number;
   from?: number;
@@ -82,12 +80,9 @@ export function parse(input: string | DieConstant, countOf?: CountOf): Spec {
     return {
       count, sides: term.sides,
       ...(term.name ? { part: String(term.name) } : {}),
-      ...(term.bonus ? { extra: true } : {}),
-      ...(term.minus ? { minus: true } : {}),
     };
   });
-  const zero = (input as { zero?: Zero }).zero;
-  return { label: input.label ?? '', terms, read: readingOf(input.read), ...(zero ? { zero } : {}) };
+  return { label: input.label ?? '', terms, read: readingOf(input.read) };
 }
 
 export function withCount(spec: Spec, count: number, owner: string): Spec {
@@ -146,7 +141,7 @@ const partOf = (op: RollEditOp): string | undefined => (op.part ? String(op.part
 
 const inPart = (part: string | undefined, wanted?: string): boolean => (wanted ? part === wanted : true);
 
-const main = (die: Rolled, wanted?: string): boolean => inPart(die.part, wanted) && (Boolean(wanted) || !die.extra);
+const main = (die: Rolled, wanted?: string): boolean => inPart(die.part, wanted);
 
 type ClaimOp = (claim: Claim, op: RollEditOp) => Claim;
 
@@ -164,7 +159,7 @@ const CLAIM: Record<string, ClaimOp> = {
       return { ...claim, terms: claim.terms.map((t, i) => (i === at ? { ...t, count: t.count + count } : t)) };
     }
     const sides = num(op.sides, first.sides);
-    const at = claim.terms.findIndex(t => t.sides === sides && !t.part && !t.extra);
+    const at = claim.terms.findIndex(t => t.sides === sides && !t.part);
     if (at < 0) return { ...claim, terms: [...claim.terms, { count, sides }] };
     return { ...claim, terms: claim.terms.map((t, i) => (i === at ? { ...t, count: t.count + count } : t)) };
   },
@@ -213,8 +208,8 @@ const RESULT: Record<string, ResultOp> = {
         if (!main(d, part) || d.value !== d.sides) continue;
         const face = roll(d.sides);
         out.push({
-          id: fresh(), sides: d.sides, face, value: d.minus ? -face : face, from: d.from ?? d.id,
-          ...(d.part ? { part: d.part } : {}), ...(d.extra ? { extra: true } : {}), ...(d.minus ? { minus: true } : {}),
+          id: fresh(), sides: d.sides, face, value: face, from: d.from ?? d.id,
+          ...(d.part ? { part: d.part } : {}),
         });
         guard += 1;
       }
@@ -249,7 +244,7 @@ const RESULT: Record<string, ResultOp> = {
     return dice.map(d => {
       if (!main(d, partOf(op)) || d.value > limit) return d;
       const face = roll(d.sides);
-      return { ...d, face, value: d.minus ? -face : face };
+      return { ...d, face, value: face };
     });
   },
 };
@@ -301,12 +296,12 @@ export function claimOf(spec: Spec, edits: readonly RollEdit[]): Claim {
 }
 
 function zeroed(claim: Claim, zero: Zero): Claim {
-  const main = claim.terms.filter(t => !t.extra && !t.part);
+  const main = claim.terms.length === 1 ? claim.terms : claim.terms.filter(t => !t.part);
   if (main.length !== 1 || main[0]!.count > 0 || zero.count < 1) return claim;
   return {
     ...claim,
     terms: claim.terms.map(t => (t === main[0] ? { ...t, count: zero.count } : t)),
-    keeps: [...claim.keeps, { n: 1, from: zero.keep ?? 'worst', scope: 'unnamed' }],
+    keeps: [...claim.keeps, { n: 1, from: zero.keep ?? 'worst', scope: main[0]!.part ? { part: main[0]!.part } : 'unnamed' }],
   };
 }
 
@@ -317,11 +312,9 @@ export function start(spec: Spec, edits: (RollEdit & { label?: string })[], die:
     for (let i = 0; i < term.count; i++) {
       const face = die(term.sides);
       dice.push({
-        id: dice.length, sides: term.sides, face, value: term.minus ? -face : face,
+        id: dice.length, sides: term.sides, face, value: face,
         ...(term.part ? { part: term.part } : {}),
-        ...(term.extra ? { extra: true } : {}),
-        ...(term.minus ? { minus: true } : {}),
-        ...((claim.read as { wild?: boolean }).wild && dice.length === 0 && !term.extra && !term.part ? { wild: true } : {}),
+        ...((claim.read as { wild?: boolean }).wild && dice.length === 0 && !term.part ? { wild: true } : {}),
       });
     }
   }
@@ -382,8 +375,7 @@ export function addendsText(addends: readonly { label: string; value: number; di
 }
 
 export function keep(dice: readonly Rolled[], n: number, from: 'best' | 'worst', scope: Scope): Rolled[] {
-  const inScope = (d: Rolled): boolean => !d.extra && (
-    scope === 'main' ? true : scope === 'unnamed' ? !d.part : d.part === scope.part);
+  const inScope = (d: Rolled): boolean => (scope === 'main' ? true : scope === 'unnamed' ? !d.part : d.part === scope.part);
   const pool = dice.filter(inScope);
   const chosen = new Set([...pool].sort((a, b) => (from === 'best' ? b.value - a.value : a.value - b.value)).slice(0, Math.max(1, Math.floor(n))));
   return dice.filter(d => !inScope(d) || chosen.has(d));
@@ -407,8 +399,8 @@ function read(dice: Rolled[], spec: ReadSpec): { total: number; single: number |
   const sum = (list: Rolled[]) => list.reduce((acc, d) => acc + d.value, 0);
   if (spec.kind === 'sum') return { total: sum(dice), single: dice.length === 1 ? dice[0]!.value : null };
   if (spec.kind === 'best' || spec.kind === 'worst') {
-    const taken = keep(dice, Number(spec.keep ?? 1), spec.kind, 'main').filter(d => !d.extra);
-    return { total: sum(taken) + sum(dice.filter(d => d.extra)), single: taken.length === 1 ? taken[0]!.value : null };
+    const taken = keep(dice, Number(spec.keep ?? 1), spec.kind, 'main');
+    return { total: sum(taken), single: taken.length === 1 ? taken[0]!.value : null };
   }
   if (spec.kind === 'count') {
     const direction = Object.keys(PER_DIE).find(key => spec[key] !== undefined);
@@ -427,13 +419,13 @@ function read(dice: Rolled[], spec: ReadSpec): { total: number; single: number |
 export function result(roll: Roll): RollResult {
   const taken = kept(roll);
   const { total, single } = read(taken, roll.claim.read);
-  const physical = (d: Rolled) => !d.extra && d.from === undefined;
+  const physical = (d: Rolled) => d.from === undefined;
   const counted = taken.filter(physical);
   const parts: Record<string, number> = {};
   for (const d of taken) if (d.part) parts[d.part] = (parts[d.part] ?? 0) + d.value;
   return {
     total: total + roll.addends.reduce((sum, one) => sum + one.value, 0),
-    natural: read(taken.filter(d => !d.extra), roll.claim.read).total,
+    natural: read(taken, roll.claim.read).total,
     rolled: roll.dice.filter(physical).length,
     atMax: counted.filter(d => d.face === d.sides).length,
     atMin: counted.filter(d => d.face === 1).length,
@@ -444,7 +436,7 @@ export function result(roll: Roll): RollResult {
   };
 }
 
-export const faces = (roll: Roll): number[] => roll.dice.map(d => (d.minus ? -d.face : d.face));
+export const faces = (roll: Roll): number[] => roll.dice.map(d => d.face);
 
 export const LOWEST = 'lowest';
 export const ALL = 'all';
@@ -459,7 +451,7 @@ export type SeenOp =
 export function lowestOf(roll: Roll): Rolled | null {
   let found: Rolled | null = null;
   for (const d of roll.dice) {
-    if (d.out || d.extra || d.part || d.minus || d.from !== undefined) continue;
+    if (d.out || d.part || d.from !== undefined) continue;
     if (!found || d.value < found.value) found = d;
   }
   return found;
@@ -470,7 +462,7 @@ const EXPLODE: RollEdit = { label: '', ops: [{ op: 'explode', apart: true }] };
 export function bumpTarget(roll: Roll, by: number): Rolled | null {
   const taken = new Set(kept(roll));
   const read = roll.claim.read as { kind: string; atLeast?: number };
-  const pool = roll.dice.filter(d => taken.has(d) && !d.extra && !d.minus && d.from === undefined && d.face < d.sides);
+  const pool = roll.dice.filter(d => taken.has(d) && d.from === undefined && d.face < d.sides);
   if (!pool.length) return null;
   const reach = typeof read.atLeast === 'number' ? pool.filter(d => d.face < read.atLeast! && d.face + by >= read.atLeast!) : [];
   if (reach.length) return reach.reduce((best, d) => (d.face > best.face ? d : best));
@@ -496,20 +488,20 @@ export function see(roll: Roll, op: SeenOp, die: Die): Roll {
     const whole = 'which' in op && op.which === ALL;
     const lowest = 'which' in op && !whole ? lowestOf(roll) : null;
     const targets = whole
-      ? roll.dice.filter(d => !d.out && !d.extra && !d.part && !d.minus && d.from === undefined)
+      ? roll.dice.filter(d => !d.out && !d.part && d.from === undefined)
       : 'which' in op
       ? (lowest ? [lowest] : [])
-      : roll.dice.filter(d => taken.has(d) && !d.extra && d.from === undefined && d.value > 0 && d.value <= op.upTo);
+      : roll.dice.filter(d => taken.has(d) && d.from === undefined && d.value > 0 && d.value <= op.upTo);
     for (const target of targets) {
       const face = die(target.sides);
-      const again = applyResults([{ ...target, face, value: target.minus ? -face : face }], roll.results, die, fresh);
+      const again = applyResults([{ ...target, face, value: face }], roll.results, die, fresh);
       const at = dice.findIndex(d => d.id === target.id);
       dice = [...dice.slice(0, at).filter(d => d.from !== target.id), ...again, ...dice.slice(at + 1).filter(d => d.from !== target.id)];
     }
     if (whole && result({ ...roll, dice }).total <= result(roll).total) return roll;
     return { ...roll, dice };
   }
-  const sides = op.sides ?? roll.dice.find(d => !d.extra)?.sides ?? 6;
+  const sides = op.sides ?? roll.dice[0]?.sides ?? 6;
   const added: Rolled[] = Array.from({ length: Math.max(0, op.count) }, () => {
     const face = die(sides);
     return { id: fresh(), sides, face, value: face };
@@ -519,7 +511,7 @@ export function see(roll: Roll, op: SeenOp, die: Die): Roll {
   const dice = !op.explode ? [...before, ...grown]
     : roll.exploded ? [...before, ...applyResults(grown, [EXPLODE], die, fresh)]
       : applyResults([...before, ...grown], [EXPLODE], die, fresh);
-  const held = [...taken].filter(d => !d.extra && !d.part).length;
+  const held = [...taken].filter(d => !d.part).length;
   const keeps: Keep[] = op.keep
     ? [...roll.claim.keeps.filter(k => typeof k.scope === 'object'), { n: Math.max(1, held), from: op.keep, scope: 'unnamed' }]
     : roll.claim.keeps;

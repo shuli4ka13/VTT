@@ -147,15 +147,6 @@ group('увидев кости: перебросить одну меньшую �
 group('перебросить одну меньшую: кого не трогает', () => {
   const lowest = { kind: 'reroll', which: 'lowest' } as const;
 
-  test('кость-вычитаемое и «кость сверх» не кандидаты — перебрасывается главная', () => {
-    const mixed = { label: 'смесь', kind: 'die', dice: [{ count: 1, sides: 20 }, { count: 1, sides: 6, minus: true }, { count: 1, sides: 4, bonus: true }] } as unknown as DieConstant;
-    const die = queue(12, 5, 1, 19);
-    const first = rollLead(mixed, die);
-    const seen = seeRoll(first, lowest, die);
-    eq(seen.raw[0], 19, 'переброшена к20, хотя вычитаемое и «сверх» меньше');
-    deepEq(seen.raw.slice(1), first.raw.slice(1));
-  });
-
   test('кость, выкинутая вторым «докинуть и взять», не кандидат', () => {
     const die = queue(3, 15, 9, 20);
     const once = seeRoll(rollLead(d20, die), { kind: 'add', count: 1, keep: 'best' }, die);

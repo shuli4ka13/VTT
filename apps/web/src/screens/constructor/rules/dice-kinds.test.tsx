@@ -36,6 +36,43 @@ describe('виды костей на экране правил', () => {
     expect(view.container.textContent).toContain('набор: считаем успехи');
   });
 
+  it('у кости нет «ещё» у части и строки «Если костей ноль»', () => {
+    const system = make({ h: hits, d: d20 });
+    const view = render(<DiceSection system={system} editSystem={() => {}} usage={new Map()} />);
+    expect(view.container.textContent).not.toContain('Если костей ноль');
+    expect(view.container.querySelector('.dice-term .fold')).toBeNull();
+    expect(view.container.textContent).not.toContain('сверх');
+  });
+
+  const zeroRow = (root: HTMLElement) => root.querySelector<HTMLSelectElement>('select[aria-label="Если костей ноль"]');
+  const numberSelect = (root: HTMLElement) => root.querySelector<HTMLSelectElement>('select[aria-label="Число поля — это"]')!;
+
+  it('у броска «сколько костей бросить» есть «Если костей ноль»: пишется и снимается', () => {
+    const system = make({ h: hits }, { r: { die: 'h', fields: [], number: 'count' } });
+    const view = render(<RollsSection system={system} editSystem={change => change(system as never)} />);
+    fireEvent.change(zeroRow(view.container)!, { target: { value: 'worst' } });
+    expect(system.rolls!.r!.zero).toEqual({ count: 2 });
+    fireEvent.change(zeroRow(view.container)!, { target: { value: 'best' } });
+    expect(system.rolls!.r!.zero).toEqual({ count: 2, keep: 'best' });
+    cleanup();
+    const set = make({ h: hits }, { r: { die: 'h', fields: [], number: 'count', zero: { count: 2 } } });
+    const again = render(<RollsSection system={set} editSystem={change => change(set as never)} />);
+    fireEvent.change(zeroRow(again.container)!, { target: { value: '' } });
+    expect(set.rolls!.r).not.toHaveProperty('zero');
+  });
+
+  it('при «прибавка к выпавшему» строки «Если костей ноль» нет; смена числа поля снимает zero и keep', () => {
+    const plain = make({ h: hits }, { r: { die: 'h', fields: [] } });
+    const first = render(<RollsSection system={plain} editSystem={change => change(plain as never)} />);
+    expect(zeroRow(first.container)).toBeNull();
+    cleanup();
+    const system = make({ h: hits }, { r: { die: 'h', fields: [], number: 'count', zero: { count: 2 }, keep: { expr: '2' } } });
+    const view = render(<RollsSection system={system} editSystem={change => change(system as never)} />);
+    fireEvent.change(numberSelect(view.container), { target: { value: 'over' } });
+    expect(system.rolls!.r).not.toHaveProperty('zero');
+    expect(system.rolls!.r).not.toHaveProperty('keep');
+  });
+
   const palette = (system: System) => {
     const system2 = system;
     const view = render(<RollEditsSection system={system2} editSystem={change => change(system2 as never)} usage={new Map()} />);

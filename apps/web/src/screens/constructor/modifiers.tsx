@@ -183,11 +183,11 @@ export function useModifierRows({ system, modifiers, onEdit, editSystem, table, 
   return { rows, add };
 }
 
-export function AddModifiers({ add, fieldsOnly = false }: { add: ModifierAdd; fieldsOnly?: boolean }) {
+export function AddModifiers({ add, fieldsOnly = false, fieldLabel = '+ правит поле' }: { add: ModifierAdd; fieldsOnly?: boolean; fieldLabel?: string }) {
   return (
     <>
       <Button size="sm" onClick={add.field}>
-        + правит поле
+        {fieldLabel}
       </Button>
       {fieldsOnly ? null : <Button
         size="sm"
@@ -200,16 +200,17 @@ export function AddModifiers({ add, fieldsOnly = false }: { add: ModifierAdd; fi
   );
 }
 
-export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editSystem, table, fieldsOnly = false }: ModifierRowsProps & {
+export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editSystem, table, fieldsOnly = false, fieldLabel }: ModifierRowsProps & {
   title?: string;
+  fieldLabel?: string;
   empty?: { title: string; hint: string };
 }) {
   const { rows, add } = useModifierRows({ system, modifiers, onEdit, editSystem, ...(table ? { table } : {}) });
   return (
     <>
       {title === ''
-        ? <div className="inline"><span className="spacer" /><AddModifiers add={add} fieldsOnly={fieldsOnly} /></div>
-        : <CardHead title={title ?? 'Что правит'} actions={<AddModifiers add={add} fieldsOnly={fieldsOnly} />} />}
+        ? <div className="inline"><span className="spacer" /><AddModifiers add={add} fieldsOnly={fieldsOnly} {...(fieldLabel ? { fieldLabel } : {})} /></div>
+        : <CardHead title={title ?? 'Что правит'} actions={<AddModifiers add={add} fieldsOnly={fieldsOnly} {...(fieldLabel ? { fieldLabel } : {})} />} />}
 
       {modifiers.length === 0 ? (
         <WhileWhenEmpty title={empty?.hint ?? 'Пассивный эффект правит цифры: даёт бонус к полю или вешает преимущество на бросок.'}>

@@ -40,7 +40,7 @@ import { editStages, PLUS_OP } from '../core/dice.ts';
 import { hasDie } from '../core/dice-addend.ts';
 import { compile } from '../formula/index.ts';
 import { hasBands } from '../engine/place.ts';
-import { ROLLED_NAME, ROLL_NAME, NUMBER_NAME, SUCCESS_NAME, MARGIN_NAME } from '../engine/check.ts';
+import { ROLLED_NAME, ROLL_NAME, NUMBER_NAME, SUCCESS_NAME, MARGIN_NAME, THRESHOLD_NAME } from '../engine/check.ts';
 import type { Node } from '../formula/index.ts';
 
 export type Level = 'error' | 'warn';
@@ -157,6 +157,28 @@ function danglingText(ref: Reference, declared: Declared): string | null {
   return declared[ref.kind].has(ref.key) ? null : NAMES[ref.kind](ref.key);
 }
 
+const isExpr = (value: unknown): boolean =>
+  Boolean(value) && typeof value === 'object' && !Array.isArray(value) && typeof (value as { expr?: unknown }).expr === 'string' && Object.keys(value as object).length === 1;
+
+const SLOT_SHAPES: Readonly<Record<string, (value: unknown) => boolean>> = {
+  field: isExpr,
+  sheet: isExpr,
+  choice: value => typeof value === 'string',
+  flag: value => typeof value === 'boolean',
+  text: value => typeof value === 'string',
+  name: value => typeof value === 'string',
+  input: value => typeof value === 'string',
+  event: value => typeof value === 'string' || isExpr(value),
+  roll: value => Array.isArray(value) && value.every(one => typeof one === 'string' || isExpr(one)),
+  args: value => Boolean(value) && typeof value === 'object' && !Array.isArray(value),
+};
+
+const slotShape = (kind: string | undefined, value: unknown): boolean => {
+  if (kind === 'ref') return typeof value === 'string' || (typeof value === 'object' && !Array.isArray(value));
+  const check = kind ? SLOT_SHAPES[kind] : undefined;
+  return check ? check(value) : true;
+};
+
 function stepProblems(steps: Step[], whereOf: (index: number) => Where): Problem[] {
   const out: Problem[] = [];
   const earlier = new Set<string>();
@@ -173,9 +195,17 @@ function stepProblems(steps: Step[], whereOf: (index: number) => Where): Problem
     const unknownChoice = new Set(slots
       .filter(slot => slot.kind === 'choice' && slot.options && valueOf(slot.key) !== null && valueOf(slot.key) !== undefined && !slot.options.includes(valueOf(slot.key)))
       .map(slot => slot.key));
+    const declared = new Set(['type', 'id', 'if', ...slots.map(slot => slot.key.split('.')[0]!)]);
+    for (const key of Object.keys(step)) {
+      if (!declared.has(key)) out.push({ where, level: 'error', text: `у ${STEP.gen} «${mod.label}» нет поля «${key}» — уберите` });
+    }
     for (const slot of slots) {
       const value = valueOf(slot.key);
       if (slot.onlyIf && unknownChoice.has(slot.onlyIf.key)) continue;
+      if (value !== null && value !== undefined && !slotShape(slot.kind, value)) {
+        out.push({ where, level: 'error', text: `${slot.label.toLowerCase()}: значение не того вида — ${JSON.stringify(value).slice(0, 60)}` });
+        continue;
+      }
       if (!slotShown(slot, step as unknown as Record<string, unknown>, slots as unknown as Record<string, unknown>[])) {
         if (value !== null && value !== undefined) out.push({ where, level: 'error', text: `«${slot.label}» здесь не действует — уберите` });
         continue;
@@ -453,17 +483,13 @@ function viewProblems(system: System): Problem[] {
 function fieldRollProblems(system: System): Problem[] {
   const out: Problem[] = [];
   const taken = new Map<string, string>();
-  for (const [key, constant] of Object.entries(system.constants ?? {})) {
-    if (constant.kind !== 'die' || !(constant as { zero?: unknown }).zero) continue;
-    if ((constant.dice ?? []).filter(term => !term.bonus && !term.name).length !== 1) out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `кость «${constant.label ?? key}»: «если костей ноль» — только у кости из одного вида` });
-  }
   for (const [key, roll] of Object.entries(system.rolls ?? {})) {
     const name = roll.label || key;
     const die = system.constants?.[roll.die];
     if (die?.kind !== 'die') out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `бросок «${name}»: кости «${roll.die}» нет в «Костях»` });
     else if (roll.pair && (roll.number !== 'sides' || (die.dice ?? []).length !== 2)) out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `бросок «${name}»: два поля бросают костью из двух видов, и число поля — грани кости` });
     else if (!roll.pair && (roll.number === 'count' || roll.number === 'sides') && (die.dice ?? []).length !== 1) out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: `бросок «${name}»: число поля — ${roll.number === 'count' ? 'сколько костей' : 'грани кости'}, а кость «${die.label ?? roll.die}» составная` });
-    else if (!roll.pair && !numbersOf(die as DieConstant).includes(roll.number ?? 'bonus')) out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'warn', text: NUMBER_MISFIT(name, rollNumberWord(roll.number ?? 'bonus'), ROLL_KIND_WORDS[kindOfRule(system, roll).kind ?? 'one']) });
+    else if (!roll.pair && !numbersOf(die as DieConstant).includes(roll.number ?? 'bonus')) out.push({ where: { tab: 'rules', section: 'rolls' }, level: 'error', text: NUMBER_MISFIT(name, rollNumberWord(roll.number ?? 'bonus'), ROLL_KIND_WORDS[kindOfRule(system, roll).kind ?? 'one']) });
     const where = { tab: 'rules' as const, section: 'rolls' };
     const broken = (ref: unknown): string | null => {
       if (typeof ref !== 'object' || ref === null) return null;
@@ -475,9 +501,14 @@ function fieldRollProblems(system: System): Problem[] {
       const expr = typeof ref === 'object' && ref !== null ? String((ref as { expr?: unknown }).expr ?? '') : '';
       return [...new Set((formulaDeps(expr) ?? []).filter(dep => dep.startsWith(`${ROLL_NAME}.`)).map(dep => dep.split('.')[1]!).filter(key => !rollKeys.has(key)))];
     };
-    for (const ref of [roll.success, roll.margin, ...(Array.isArray(roll.degrees) ? roll.degrees.map(one => one.if) : [])]) {
+    for (const ref of [roll.total, roll.success, roll.margin, ...(Array.isArray(roll.degrees) ? roll.degrees.map(one => one.if) : [])]) {
       for (const key of strays(ref)) out.push({ where, level: 'error', text: `бросок «${name}»: у броска нет итога «${key}» — после «@${ROLL_NAME}.» выберите итог из подсказки` });
     }
+    if (roll.zero && roll.number !== 'count') out.push({ where, level: 'error', text: `бросок «${name}»: «если костей ноль» — только когда число поля задаёт, сколько костей бросить` });
+    const early = [THRESHOLD_NAME, SUCCESS_NAME, MARGIN_NAME].filter(word => new RegExp(`@${word}(?![\\p{L}\\p{N}_])`, 'u').test(String(roll.total?.expr ?? '')));
+    if (early.length) out.push({ where, level: 'error', text: `бросок «${name}»: «Итог» считается раньше порога, успеха и степеней — в нём нельзя читать «${early.join('», «')}»` });
+    const totalBroken = broken(roll.total);
+    if (totalBroken) out.push({ where, level: 'error', text: `бросок «${name}»: «Итог» — ${totalBroken}` });
     const keepBroken = broken(roll.keep);
     if (keepBroken) out.push({ where, level: 'error', text: `бросок «${name}»: «сколько оставить» — ${keepBroken}` });
     if ((roll.keep !== undefined || roll.fields.some(one => one.keep !== undefined)) && roll.number !== 'count') out.push({ where, level: 'error', text: `бросок «${name}»: оставить лучшие можно, только когда число поля — сколько костей` });
@@ -491,7 +522,7 @@ function fieldRollProblems(system: System): Problem[] {
     if (scale?.of === 'margin' && !roll.margin && roll.number !== 'under' && roll.number !== 'over' && !roll.fields.some(one => one.threshold !== undefined)) {
       out.push({ where, level: 'error', text: `бросок «${name}»: ступень по степеням, а степеней правило не считает — задайте порог или «Степени числом»` });
     }
-    if (listed.length || roll.success || roll.margin) {
+    if (listed.length || roll.success || roll.margin || roll.total) {
       for (const taken of [ROLLED_NAME, ROLL_NAME, NUMBER_NAME]) {
         if (fieldsOf(system).some(field => field.tag === taken)) out.push({ where, level: 'error', text: `бросок «${name}»: имя «${taken}» в формулах броска значит сам бросок, его итог или число поля, а так зовётся и поле листа — переименуйте поле` });
       }

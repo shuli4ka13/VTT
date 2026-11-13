@@ -96,6 +96,16 @@ describe('виды костей', () => {
     expect(countUnread(system({ к6: DICE.sum[0] }, { а: rule('к6') }), 'к6')).toBe(false);
   });
 
+  it('«Проблемы»: «ноль костей» без «сколько костей» и «Итог», читающий порог, — ошибки', () => {
+    const errors = (sys: System) => lintSystem(sys).filter(one => one.level === 'error').map(one => one.text);
+    const zeroed = system({ к20: DICE.one[0] }, { а: { ...rule('к20'), zero: { count: 2 } } });
+    expect(errors(zeroed).some(text => text.includes('если костей ноль'))).toBe(true);
+    const early = system({ к20: DICE.one[0] }, { а: { ...rule('к20', 'under'), total: { expr: '@порог - @выпало' } } });
+    expect(errors(early).some(text => text.includes('«Итог» считается раньше'))).toBe(true);
+    const fine = system({ к20: DICE.one[0] }, { а: { ...rule('к20'), total: { expr: '@число - @выпало' } } });
+    expect(errors(fine)).toEqual([]);
+  });
+
   it('у образцов новых замечаний нет', () => {
     const fresh = (sys: System) => lintSystem(sys).map(one => one.text).filter(text => text.includes('ничего не изменит') || text.includes('не подходит кости') || text.includes('счётчик никто не читает'));
     for (const world of [...SAMPLE_WORLDS, ...LITE_WORLDS]) expect(fresh(flattenSystem(world.system)), world.system.name).toEqual([]);

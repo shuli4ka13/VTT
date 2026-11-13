@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { world as W, api } from '../src/index.ts';
 
 // @ts-expect-error — образцы лежат в пакете движка, деклараций не имеют.
-import { SAMPLE_SYSTEMS, SAMPLE_WORLDS } from '../../engine/src/model/systems.ts';
+import { SAMPLE_SYSTEMS, SAMPLE_WORLDS, LITE_WORLDS } from '../../engine/src/model/systems.ts';
 
 const { compendium, sheets } = SAMPLE_WORLDS[0];
 
@@ -62,10 +62,33 @@ describe('схема стережёт инварианты, а не только
     expect(W.system.safeParse(bad).success).toBe(false);
   });
 
-  it('незнакомые ключи системы сохраняются: мир из чужой версии не теряет данных', () => {
-    const withExtra = { ...SAMPLE_SYSTEMS[0], futureSection: { hello: 'world' } };
-    const parsed = W.system.parse(withExtra);
-    expect((parsed as Record<string, unknown>).futureSection).toEqual({ hello: 'world' });
+  it('незнакомый ключ системы, компендиума и мира — отказ, а не молчание', () => {
+    expect(W.system.safeParse({ ...SAMPLE_SYSTEMS[0], futureSection: { hello: 'world' } }).success).toBe(false);
+    expect(W.compendium.safeParse({ records: [], extra: 1 }).success).toBe(false);
+    expect(W.world.safeParse({ system: SAMPLE_SYSTEMS[0], compendium: { records: [] }, sheets: [], extra: 1 }).success).toBe(false);
+  });
+
+  it('во всей схеме мира нет объекта, который молча принимает или отбрасывает лишние ключи', () => {
+    const loose: string[] = [];
+    const seen = new Set<unknown>();
+    const exact = new Set(['system.constants', 'system.roll_edits.ops', 'system.effects.steps']);
+    const walk = (schema: unknown, path: string): void => {
+      if (!schema || typeof schema !== 'object' || seen.has(schema)) return;
+      seen.add(schema);
+      const def = (schema as { _zod?: { def?: Record<string, unknown> } })._zod?.def;
+      if (!def) return;
+      if (def.type === 'object') {
+        const catchall = def.catchall as { _zod?: { def?: { type?: string } } } | undefined;
+        if (catchall?._zod?.def?.type !== 'never' && !exact.has(path)) loose.push(path);
+        for (const [key, inner] of Object.entries((def.shape ?? {}) as Record<string, unknown>)) walk(inner, `${path}.${key}`);
+        return;
+      }
+      for (const key of ['innerType', 'element', 'valueType', 'left', 'right', 'in', 'out']) walk(def[key], path);
+      if (typeof def.getter === 'function') walk((def.getter as () => unknown)(), path);
+      for (const one of [...((def.options ?? []) as unknown[]), ...((def.items ?? []) as unknown[])]) walk(one, path);
+    };
+    for (const name of ['system', 'compendium', 'sheet', 'world'] as const) walk(W[name], name);
+    expect(loose).toEqual([]);
   });
 
   it('состав кости: счёт — число или формула, но не свободный текст', () => {
@@ -246,5 +269,62 @@ describe('цена эффекта', () => {
   it('старое поле self не проходит молча — цена бы потерялась', () => {
     expect(W.effect.safeParse({ label: 'Удар', cost: [] }).success).toBe(true);
     expect(W.effect.safeParse({ label: 'Удар', self: [] }).success).toBe(false);
+  });
+
+  it('лёгкие образцовые системы проходят схему', () => {
+    for (const one of LITE_WORLDS) {
+      const result = W.system.safeParse(one.system);
+      expect(result.success, `${one.title}: ${JSON.stringify(result.error?.issues?.slice(0, 3))}`).toBe(true);
+    }
+  });
+
+  it('кость: части «сверх» и «вычитается» и «ноль костей» у кости схема не принимает; «ноль костей» — у броска', () => {
+    const base = structuredClone(SAMPLE_SYSTEMS[0]);
+    const withDie = (die: unknown) => W.system.safeParse({ ...base, constants: { ...base.constants, проба: die } }).success;
+    expect(withDie({ label: 'к6', kind: 'die', dice: [{ sides: 6 }] })).toBe(true);
+    expect(withDie({ label: 'к6', kind: 'die', dice: [{ sides: 6, minus: true }] })).toBe(false);
+    expect(withDie({ label: 'к6', kind: 'die', dice: [{ sides: 6, bonus: true }] })).toBe(false);
+    expect(withDie({ label: 'к6', kind: 'die', dice: [{ sides: 6 }], zero: { count: 2 } })).toBe(false);
+    expect(W.systemRoll.safeParse({ die: 'к6', number: 'count', zero: { count: 2, keep: 'worst' }, fields: [] }).success).toBe(true);
+  });
+
+  it('правка броска: лишний ключ — отказ, а не молчание', () => {
+    expect(W.rollEdit.safeParse({ label: 'Помеха', ops: [{ op: 'flip' }], cancels: ['преимущество'] }).success).toBe(true);
+    expect(W.rollEdit.safeParse({ label: 'Помеха', ops: [{ op: 'flip' }], canceledBy: 'преимущество' }).success).toBe(false);
+  });
+
+  it('тип листа: правка вызова — отказ, формула поля — можно', () => {
+    expect(W.sheetKind.safeParse({ label: 'Машина', modifiers: [{ kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-2' } }] }).success).toBe(false);
+  });
+
+  it('действие правки броска: неизвестное действие, чужое поле и не тот тип — отказ', () => {
+    const ok = (op: unknown) => W.rollEdit.safeParse({ label: 'Правка', ops: [op] }).success;
+    expect(ok({ op: 'keepBest', n: 1 })).toBe(true);
+    expect(ok({ op: 'explode', at: 'min' })).toBe(true);
+    expect(ok({ op: 'plus', die: '1к6', minus: true })).toBe(true);
+    expect(ok({ op: 'plus', value: { expr: '@носитель.мод' } })).toBe(true);
+    expect(ok({ op: 'удвоить' })).toBe(false);
+    expect(ok({ op: 'keepBest', n: '1' })).toBe(false);
+    expect(ok({ op: 'keepBest', least: 3 })).toBe(false);
+    expect(ok({ op: 'explode', at: 'середина' })).toBe(false);
+    expect(ok({ op: 'shiftVersus' })).toBe(false);
+    expect(ok({ op: 'plus' })).toBe(false);
+    expect(ok({ op: 'plus', die: '1к6', value: { expr: '2' } })).toBe(false);
+  });
+
+  it('чтение кости: только известные виды и ровно один порог у счёта успехов', () => {
+    const ok = (read: unknown) => W.dieConstant.safeParse({ kind: 'die', dice: [{ sides: 6 }], read }).success;
+    expect(ok('best')).toBe(true);
+    expect(ok({ kind: 'count', atLeast: 5 })).toBe(true);
+    expect(ok('лучшая')).toBe(false);
+    expect(ok({ kind: 'count' })).toBe(false);
+    expect(ok({ kind: 'count', atLeast: 5, under: 2 })).toBe(false);
+    expect(ok({ kind: 'best', wild: true })).toBe(false);
+  });
+
+  it('клетка таблицы и записи: число, текст, да/нет, список, формула или пусто — и ничего другого', () => {
+    const ok = (cell: unknown) => W.compendiumRecord.safeParse({ id: 'з', cells: { к: cell } }).success;
+    for (const cell of [1, 'меч', true, ['а', 'б'], { expr: '@сила + 1' }, null]) expect(ok(cell), JSON.stringify(cell)).toBe(true);
+    for (const cell of [{ tag: 'сила' }, { expr: 1 }, [{ expr: '1' }], { expr: '1', extra: 2 }]) expect(ok(cell), JSON.stringify(cell)).toBe(false);
   });
 });

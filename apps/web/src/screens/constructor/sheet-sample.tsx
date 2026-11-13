@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import type { CellValue } from '@vtt/schema';
 import type { ReactNode } from 'react';
 import { useWorld, useBook } from '../../store/world.ts';
 import { useReader } from '../../engine/use-calc.ts';
@@ -23,8 +24,8 @@ const DICE = [[1, 4], [1, 6], [1, 8], [1, 10], [1, 12], [2, 6]].map(([count, sid
 
 const anyOf = <T,>(list: readonly T[]): T | undefined => list[Math.floor(Math.random() * list.length)];
 
-export function sampleCells(system: System, columns: readonly Column[]): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
+export function sampleCells(system: System, columns: readonly Column[]): Record<string, CellValue> {
+  const out: Record<string, CellValue> = {};
   for (const column of columns) {
     const kind = column.kind ?? 'text';
     if (kind === 'number') {
@@ -32,7 +33,7 @@ export function sampleCells(system: System, columns: readonly Column[]): Record<
       const high = typeof column.max === 'number' ? column.max : Math.max(low, 10);
       out[column.key] = low + Math.floor(Math.random() * (high - low + 1));
     } else if (kind === 'boolean') out[column.key] = Math.random() < 0.5;
-    else if (kind === 'dice') out[column.key] = anyOf(DICE);
+    else if (kind === 'dice') out[column.key] = anyOf(DICE) ?? null;
     else if (kind === 'choice') {
       const pick = anyOf(listOf(system, column.from) ?? []);
       if (pick) out[column.key] = column.many ? [pick.value] : pick.value;
@@ -70,7 +71,7 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
   const activeBlock = useWorld(s => s.activeBlock);
   const kinds = sheetKinds(system);
   const [of, setOf] = useState('');
-  const [bag, setBag] = useState<{ table: string; label?: string; cells: Record<string, unknown> }[]>([]);
+  const [bag, setBag] = useState<{ table: string; label?: string; cells: Record<string, CellValue> }[]>([]);
   const kind = of ? system.sheets?.[of] : undefined;
   const bookKinds = recordKinds(system);
   const samples = useMemo<CompendiumRecord[]>(() => bag

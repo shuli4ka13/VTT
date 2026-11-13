@@ -58,12 +58,27 @@ describe('число поля в броске: грани, не больше, н
     expect(errorsOf(lintSystem(system))).toEqual([]);
   });
 
-  it('ноль костей: две, худшая — при числе 0 кидают две и берут меньшую', () => {
-    const system = world('count', { dice: [{ count: 1, sides: 6 }], read: 'best', zero: { count: 2, keep: 'worst' } });
+  it('ноль костей — настройка броска: при числе 0 кидают две и берут меньшую', () => {
+    const system = world('count', { dice: [{ count: 1, sides: 6 }], read: 'best' }, {}, { zero: { count: 2, keep: 'worst' } });
     const out = roll(system, hero(0), [5, 2]);
     expect(out.seen).toEqual([6, 6]);
     expect(out.log).toContain('= 2');
     expect(roll(system, hero(2), [5, 2]).log).toContain('= 5');
+  });
+
+  it('ноль костей срабатывает и у кости из одной части с именем', () => {
+    const system = world('count', { dice: [{ count: 1, sides: 6, name: 'набор' }], read: 'best' }, {}, { zero: { count: 2, keep: 'worst' } });
+    expect(roll(system, hero(0), [5, 2]).log).toContain('= 2');
+  });
+
+  it('«Итог» формулой: число минус выпавшее', () => {
+    const system = world('bonus', { dice: [{ sides: 100 }] }, {}, { total: { expr: '@число - @бросок.natural' } });
+    expect(roll(system, hero(40), [13]).log).toContain('= 27');
+  });
+
+  it('«Итог» формулой: первая часть минус вторая', () => {
+    const system = world('bonus', { dice: [{ sides: 6, name: 'плюс' }, { sides: 6, name: 'минус' }] }, {}, { total: { expr: '@бросок.parts.плюс - @бросок.parts.минус + @число' } });
+    expect(roll(system, hero(3), [5, 2]).log).toContain('= 6');
   });
 
   it('степени: к100 против 50 — 9 экстремальный, 24 трудный, 40 обычный, 70 провал без степени', () => {

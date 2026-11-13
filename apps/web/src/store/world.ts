@@ -193,8 +193,8 @@ export const useWorld = create<WorldState>()(persist(set => ({
 
   merge: (saved, current) => {
     if (saved == null) return current;
-    const parsed = W.world.safeParse(saved);
-    const origin = (saved as { origin?: Origin })?.origin;
+    const { origin, ...kept } = saved as { origin?: Origin } & Record<string, unknown>;
+    const parsed = W.world.safeParse(kept);
     if (parsed.success) return { ...current, ...parsed.data, ...(origin ? { origin } : {}) };
 
     const first = parsed.error.issues[0];

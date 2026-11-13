@@ -308,7 +308,7 @@ export function renameRow(system: System, table: string, from: unknown, to: unkn
     for (const column of (other.columns ?? [])) {
       if (column.kind !== 'choice' || column.from !== table) continue;
       for (const row of rowsOf(other)) {
-        if (row.cells && holds(row.cells[column.key], from)) row.cells[column.key] = swap(row.cells[column.key], from, to);
+        if (row.cells && holds(row.cells[column.key], from)) row.cells[column.key] = swap(row.cells[column.key], from, to) as typeof row.cells[string];
       }
     }
   }
@@ -353,7 +353,7 @@ export function renameRowInBook(system: System, book: Compendium, table: string,
     if (!kindOfRecord(system, record) || !record.cells) continue;
     for (const prop of typeColumns(system, record.table)) {
       if (prop.kind !== 'choice' || prop.from !== table) continue;
-      if (holds(record.cells[prop.key], from)) record.cells[prop.key] = swap(record.cells[prop.key], from, to);
+      if (holds(record.cells[prop.key], from)) record.cells[prop.key] = swap(record.cells[prop.key], from, to) as typeof record.cells[string];
     }
   }
 }

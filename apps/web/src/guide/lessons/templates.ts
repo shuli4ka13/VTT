@@ -7,7 +7,7 @@ import { ROW } from '@vtt/engine/model/sheet-columns';
 import type { System as EngineSystem, Sheet, Compendium } from '@vtt/engine/model/types';
 import seed from '../seeds/templates.json' with { type: 'json' };
 
-const CARD = 'Что правит на каждом листе этого типа';
+const CARD = 'Как считаются поля у этого типа';
 
 const kind = (view: View): [string, { modifiers?: Modifier[] }] | undefined =>
   Object.entries(view.system.sheets ?? {}).find(([, one]) => same(one.label, 'По заготовке'));
@@ -91,7 +91,7 @@ export const templates: Lesson = {
       say: 'Добавьте правку и нацельте её на «Ранг» у каждого навыка сразу.',
       hint: 'В «Что правим» ищите «Навыки → Ранг — у каждой строки»: одна такая правка действует на все строки таблицы.',
       at: [
-        { at: { text: '+ правит поле', in: CARD }, say: `В «${CARD}» нажмите «+ правит поле».`, done: view => mods(view).length > 0 },
+        { at: { text: '+ формула поля', in: CARD }, say: `В «${CARD}» нажмите «+ формула поля».`, done: view => mods(view).length > 0 },
         { at: { text: 'Что правим', in: CARD }, say: 'В «Что правим» выберите «Навыки → Ранг — у каждой строки».' },
       ],
       via: [{ text: 'По заготовке', in: 'Листы' }, { text: 'блоки и типы листов' }],

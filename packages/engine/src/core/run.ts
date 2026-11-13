@@ -1367,7 +1367,8 @@ export class Run {
     const plus = (key: typeof slot): number => (slot === key ? extra.shift : 0);
     const count = check.count === undefined || check.count === null ? null : num(check.count, `${owner} · сколько костей`);
     const sides = check.sides === undefined || check.sides === null ? null : num(check.sides, `${owner} · грани`);
-    const counted = count === null ? spec : withCount(spec, Math.max(0, count + plus('count')), owner);
+    const sized0 = count === null ? spec : withCount(spec, Math.max(0, count + plus('count')), owner);
+    const counted = count !== null && check.zero ? { ...sized0, zero: check.zero } : sized0;
     const sides2 = check.sides2 === undefined || check.sides2 === null ? null : num(check.sides2, `${owner} · грани второй кости`);
     const sided = sides === null ? counted : withSides(counted, sides2 === null ? sides : [sides, sides2], owner);
     const sized = check.keep === undefined || check.keep === null ? sided : withKeep(sided, num(check.keep, `${owner} · сколько оставить`), owner);
@@ -1391,8 +1392,11 @@ export class Run {
       base = own ? num(check.threshold, `${owner} · порог`) : given!;
       threshold = Math.max(0, base + plus('threshold') + shift + versus);
     }
-    const total = thrown.result.total + bonus;
     const number = check.under ? base : count ?? sides ?? (check.bonus ? field : base);
+    const raw = thrown.result.total + bonus;
+    const total = check.total
+      ? judgeOf({ [ROLLED_NAME]: raw, [ROLL_NAME]: raw, [NUMBER_NAME]: number ?? 0 }, { [ROLL_NAME]: { ...thrown.result, total: raw } }).number(check.total, `${owner} · итог`)
+      : raw;
     const named: Record<string, unknown> = { [ROLLED_NAME]: total, [ROLL_NAME]: total, [NUMBER_NAME]: number ?? 0, ...(threshold === null ? {} : { [THRESHOLD_NAME]: threshold }) };
     const self = { [ROLL_NAME]: { ...thrown.result, total } };
     const judge = judgeOf(named, self);

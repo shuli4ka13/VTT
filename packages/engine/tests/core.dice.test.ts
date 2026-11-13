@@ -116,15 +116,14 @@ describe('разбор записи и отбор', () => {
     expect(times(parse('2к6'), 3).terms[0]!.count).toBe(6);
   });
 
-  it('отбор не трогает кость сверх и чужие части', () => {
+  it('отбор не трогает чужие части', () => {
     const dice = [
       { id: 0, sides: 6, face: 6, value: 6, part: 'надежда' },
       { id: 1, sides: 6, face: 2, value: 2 },
       { id: 2, sides: 6, face: 5, value: 5 },
-      { id: 3, sides: 4, face: 4, value: 4, extra: true },
     ];
-    expect(keep(dice, 1, 'best', 'unnamed').map(d => d.id)).toEqual([0, 2, 3]);
-    expect(keep(dice, 1, 'worst', 'main').map(d => d.id)).toEqual([1, 3]);
+    expect(keep(dice, 1, 'best', 'unnamed').map(d => d.id)).toEqual([0, 2]);
+    expect(keep(dice, 1, 'worst', 'main').map(d => d.id)).toEqual([1]);
   });
 });
 

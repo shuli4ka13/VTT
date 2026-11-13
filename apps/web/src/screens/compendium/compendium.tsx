@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import type { CellValue } from '@vtt/schema';
 import { ButtonEditor } from '../constructor/button-editor.tsx';
 import { newBinding } from '../constructor/factory.ts';
 import { bindingsOf } from '@vtt/engine/events/actions';
@@ -186,7 +187,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
                   onChange={next => edit(draft => {
                     if (next === undefined || next === '' || (Array.isArray(next) && !next.length)) {
                       if (draft.cells) delete draft.cells[prop.key];
-                    } else (draft.cells ??= {})[prop.key] = next;
+                    } else (draft.cells ??= {})[prop.key] = next as CellValue;
                   })}
                 />
               </Field>

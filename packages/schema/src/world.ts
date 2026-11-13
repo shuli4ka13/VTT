@@ -47,45 +47,53 @@ export const rollSpec = z.object({
   keep: z.union([formula, z.string()]).optional(),
   degrees: rollDegrees.optional(),
   under: z.literal(true).optional(),
+  threshold: formula.optional(),
   tags: z.array(z.string().min(1)).optional(),
-}).passthrough();
+}).strict();
 
 export const diceTerm = z.object({
-
   count: z.union([z.number().int().positive(), formula]).optional(),
   sides: z.number().int().positive(),
-
   name: z.string().optional(),
   label: z.string().optional(),
+}).strict();
 
-  bonus: z.boolean().optional(),
-
-  minus: z.boolean().optional(),
-});
+const perDie = z.number().int();
 
 export const diceReading = z.union([
-  z.string(),
-  z.object({ kind: z.string().min(1) }).passthrough(),
+  z.enum(['sum', 'best', 'worst']),
+  z.object({ kind: z.literal('sum') }).strict(),
+  z.object({ kind: z.enum(['best', 'worst']), keep: z.number().int().positive().optional() }).strict(),
+  z.object({ kind: z.literal('count'), atLeast: perDie.optional(), notOver: perDie.optional(), over: perDie.optional(), under: perDie.optional() }).strict()
+    .refine(read => [read.atLeast, read.notOver, read.over, read.under].filter(one => one !== undefined).length === 1, { message: 'счёту успехов нужен ровно один порог на кость' }),
 ]);
-
-export const systemConstant = z.object({
-  label: z.string().optional(),
-  kind: z.string().optional(),
-  dice: z.array(diceTerm).optional(),
-  read: diceReading.optional(),
-}).passthrough();
 
 export const dieConstant = z.object({
   label: z.string().optional(),
   kind: z.literal('die'),
   dice: z.array(diceTerm),
   read: diceReading.optional(),
-  zero: z.object({ count: z.number().int().positive(), keep: z.enum(['best', 'worst']).optional() }).strict().optional(),
-}).passthrough();
+}).strict();
+
+export const systemConstant = z.object({
+  label: z.string().optional(),
+  kind: z.string().optional(),
+  dice: z.array(diceTerm).optional(),
+  read: diceReading.optional(),
+}).passthrough().superRefine((constant, ctx) => {
+  if (constant.kind !== 'die') return;
+  const strict = dieConstant.safeParse(constant);
+  if (strict.success) return;
+  for (const issue of strict.error.issues) ctx.addIssue({ code: 'custom', message: issue.message, path: [...issue.path] });
+});
+
+export const rollZero = z.object({ count: z.number().int().positive(), keep: z.enum(['best', 'worst']).optional() }).strict();
 
 export const tableValue = z.union([z.number(), z.string(), z.boolean()]);
 
 const startValue = z.union([tableValue, z.array(tableValue)]);
+
+export const cellValue = z.union([tableValue, formula, z.array(tableValue), z.null()]);
 
 export const cellView = z.object({
   label: z.string().optional(),
@@ -93,7 +101,7 @@ export const cellView = z.object({
   default: startValue.optional(),
   min: bound.optional(),
   max: bound.optional(),
-});
+}).strict();
 
 export const stageCombine = z.object({
   set: z.enum(['last', 'min', 'max']).optional(),
@@ -170,9 +178,9 @@ export const tableRow = z.object({
   from: z.number().optional(),
   to: z.number().optional(),
 
-  cells: z.record(z.string(), z.unknown()).optional(),
+  cells: z.record(z.string(), cellValue).optional(),
   view: z.record(z.string(), cellView).optional(),
-});
+}).strict();
 
 export const tableKey = z.enum(['word', 'number', 'range']);
 
@@ -190,6 +198,8 @@ export const systemRoll = z.object({
   number: z.enum(['bonus', 'count', 'sides', 'under', 'over']).optional(),
   pair: z.literal(true).optional(),
   keep: slotRef.optional(),
+  zero: rollZero.optional(),
+  total: formula.optional(),
   degrees: rollDegrees.optional(),
   success: formula.optional(),
   margin: formula.optional(),
@@ -197,14 +207,38 @@ export const systemRoll = z.object({
   fields: z.array(rollField),
 }).strict();
 
-export const rollEditOp = z.object({ op: z.string().min(1) }).passthrough();
+const opPart = z.string().min(1).optional();
+const opNumber = z.number().optional();
+const opCount = z.number().int().positive().optional();
+
+export const rollEditShape = z.discriminatedUnion('op', [
+  z.object({ op: z.literal('addDie'), count: opCount, sides: opCount, part: opPart }).strict(),
+  z.object({ op: z.literal('wild') }).strict(),
+  z.object({ op: z.literal('keepBest'), n: opCount, part: opPart }).strict(),
+  z.object({ op: z.literal('keepWorst'), n: opCount, part: opPart }).strict(),
+  z.object({ op: z.literal('dieStep'), by: z.number().int().optional(), part: opPart, ladder: z.array(z.number().int().positive()).min(2).optional() }).strict(),
+  z.object({ op: z.literal('shiftVersus'), by: z.number() }).strict(),
+  z.object({ op: z.literal('shiftDegree'), by: z.number().int() }).strict(),
+  z.object({ op: z.literal('floorDie'), least: opNumber, part: opPart }).strict(),
+  z.object({ op: z.literal('explode'), at: z.enum(['max', 'min']).optional(), limit: opCount, apart: z.literal(true).optional(), part: opPart }).strict(),
+  z.object({ op: z.literal('flip'), prefer: z.enum(['low', 'high']).optional(), part: opPart }).strict(),
+  z.object({ op: z.literal('reroll'), n: opCount, part: opPart }).strict(),
+  z.object({ op: z.literal('plus'), value: formula.optional(), die: z.union([z.string().min(1), formula]).optional(), count: z.union([z.number().int().positive(), formula]).optional(), minus: z.literal(true).optional() }).strict()
+    .refine(op => (op.value === undefined) !== (op.die === undefined), { message: 'прибавке нужна либо формула, либо кость' }),
+]);
+
+export const rollEditOp = z.object({ op: z.string().min(1) }).passthrough().superRefine((op, ctx) => {
+  const exact = rollEditShape.safeParse(op);
+  if (exact.success) return;
+  for (const issue of exact.error.issues) ctx.addIssue({ code: 'custom', message: issue.message, path: [...issue.path] });
+});
 
 export const rollEdit = z.object({
   label: z.string().optional(),
   ops: z.array(rollEditOp),
   cancels: z.array(z.string().min(1)).optional(),
   stacks: z.literal(true).optional(),
-}).passthrough();
+}).strict();
 
 export const valueModifier = z.object({
   kind: z.literal('value'),
@@ -235,7 +269,7 @@ export const editModifier = z.object({
     table: z.string().min(1),
     column: z.string().min(1),
     is: tableValue,
-  }).optional(),
+  }).strict().optional(),
 }).strict().refine(mod => !(mod.value && mod.die), { message: 'прибавка — число или кость, не обе' });
 
 export const modifier = z.discriminatedUnion('kind', [valueModifier, editModifier]);
@@ -248,7 +282,7 @@ export const ask = z.object({
   by: z.enum(['actor', 'gm']),
   hint: z.string().optional(),
   if: formula.optional(),
-});
+}).strict();
 
 export const param = column.extend({
   ask: ask.optional(),
@@ -391,7 +425,7 @@ export const system = z.object({
   }).strict().optional(),
 
   library: z.array(z.lazy(() => compendiumRecord)).optional(),
-}).passthrough();
+}).strict();
 
 export const storedValue = z.union([z.number(), z.string(), z.boolean(), z.null(), z.array(z.union([z.number(), z.string(), z.boolean()]))]);
 
@@ -434,7 +468,7 @@ export const compendiumRecord = z.object({
   table: z.string().optional(),
   label: z.string().optional(),
   description: z.string().optional(),
-  cells: z.record(z.string(), z.unknown()).optional(),
+  cells: z.record(z.string(), cellValue).optional(),
   modifiers: z.array(modifier).optional(),
 
   bindings: z.array(binding).optional(),
@@ -444,15 +478,16 @@ export const compendiumRecord = z.object({
 
 export const compendium = z.object({
   records: z.array(compendiumRecord).optional(),
-}).passthrough();
+}).strict();
 
 export const world = z.object({
   system,
   compendium,
   sheets: z.array(sheet),
-}).passthrough();
+}).strict();
 
 export type SlotRef = z.infer<typeof slotRef>;
+export type CellValue = z.infer<typeof cellValue>;
 export type Formula = z.infer<typeof formula>;
 export type RollSpec = z.infer<typeof rollSpec>;
 export type SystemRoll = z.infer<typeof systemRoll>;

@@ -33,7 +33,7 @@ export interface Field {
   sectionBy?: string;
   order?: number;
   placements?: Placement[];
-  roll?: Partial<RollSpec> & { label?: string };
+  roll?: Partial<RollSpec> & { label?: string; pair?: true; success?: { expr: string }; margin?: { expr: string }; total?: { expr: string }; zero?: { count: number; keep?: 'best' | 'worst' } };
   value: FieldValue;
   control?: Control;
   lives?: 'group' | 'desk';

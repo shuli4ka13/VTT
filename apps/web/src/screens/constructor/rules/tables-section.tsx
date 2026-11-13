@@ -1,4 +1,5 @@
 import { ColumnSheetFields } from '../table-field.tsx';
+import type { CellValue } from '@vtt/schema';
 import { rowNames } from '../row-names.ts';
 import { renameLayoutColumn, renameLayoutTable } from '@vtt/engine/model/layout';
 export { rowNames } from '../row-names.ts';
@@ -489,7 +490,7 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
     const row = draft.rows?.[i];
     if (!row) return;
     if (value === undefined) delete row.cells?.[column];
-    else (row.cells ??= {})[column] = value;
+    else (row.cells ??= {})[column] = value as CellValue;
   });
 
   const placed = onSheet(table);

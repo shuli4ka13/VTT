@@ -13,6 +13,7 @@ import { TableColumnCard } from './rules/tables-section.tsx';
 import { useState } from 'react';
 import { BlockPick } from './block-pick.tsx';
 import { GrantsEditor } from './grants-editor.tsx';
+import { createEffect } from './effects/factory.ts';
 import { argsWithProps, propKeysOf, recordKinds, sheetKinds, recordsOf } from '@vtt/engine/model/owned';
 import { DESK_ID } from '@vtt/engine/engine/owners';
 import { kindWord } from '@vtt/engine/words/kinds';
@@ -26,27 +27,35 @@ const BASIS = [
   ['action', 'действие — учат и применяют'],
 ] as const;
 
-function SheetKindCards({ kind, system, edit }: {
+function SheetKindCards({ id, kind, system, edit }: {
+  id: string;
   kind: SheetKind;
   system: System;
   edit: (change: (draft: SheetKind) => void) => void;
 }) {
   const editSystem = useWorld(s => s.editSystem);
+  const common = (system.grants ?? []).map(key => system.effects[key]?.label || key);
   return (
     <>
       <Card>
         <CardHead
           title="Что даёт каждому листу этого типа"
-          sub="Спасброски от смерти — персонажам, рывок — всем, кто ходит."
+          sub="Кнопки и правила, которые есть у каждого листа этого типа."
         />
         <GrantsEditor system={system} value={kind.grants}
+          onCreate={() => createEffect('passive', (draft, key) => {
+            const own = draft.sheets?.[id];
+            if (own) own.grants = [...(own.grants ?? []), key];
+          })}
           onChange={next => edit(draft => { if (next) draft.grants = next; else delete draft.grants; })} />
       </Card>
+      {common.length ? <span className="faint">Ещё действует общее для всех листов: {common.map(name => `«${name}»`).join(', ')}.</span> : null}
       <Card>
-        <CardHead title="Что правит на каждом листе этого типа" />
+        <CardHead title="Как считаются поля у этого типа" />
         <ModifiersEditor
-          empty={{ title: 'тип пока ничего не правит', hint: 'Например, «+2 к классу брони» каждому противнику. Правило, которое меняет бросок или чужой эффект, — эффектом «висит · правит» из вкладки «Эффекты», выданным выше.' }}
+          empty={{ title: 'своих формул у типа нет', hint: 'Например, «+2 к классу брони» каждому противнику. Правило, которое меняет бросок или чужой эффект, — эффектом «висит · правит» из вкладки «Эффекты», выданным выше.' }}
           fieldsOnly
+          fieldLabel="+ формула поля"
           system={system}
           editSystem={editSystem}
           title=""
@@ -88,7 +97,7 @@ export function SheetKindEditor({ id, kind, system }: { id: string; kind: SheetK
           <Input value={kind.hint ?? ''} onChange={next => edit(draft => { if (next.trim()) draft.hint = next; else delete draft.hint; })} />
         </Field>
       </div>
-      <SheetKindCards kind={kind} system={system} edit={edit} />
+      <SheetKindCards id={id} kind={kind} system={system} edit={edit} />
     </>
   );
 }
@@ -385,7 +394,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
           />
           <ModifiersEditor
             empty={{
-              title: 'тип пока ничего не правит',
+              title: 'своих формул у типа нет',
               hint: 'Правки, пока у листа есть любая вещь этого типа. Пишутся один раз здесь — каждая запись типа получает их без строчки на себе.',
             }}
             system={system}

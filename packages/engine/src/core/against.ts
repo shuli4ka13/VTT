@@ -112,7 +112,7 @@ const signature = (set: RollEdits): string => JSON.stringify([
   set.addends.map(one => one.label).sort(),
 ]);
 
-const termKey = (term: Term): string => `${term.part ?? ''}|${term.sides}|${term.extra ? 'x' : ''}|${term.minus ? 'm' : ''}`;
+const termKey = (term: Term): string => `${term.part ?? ''}|${term.sides}`;
 
 const minus = <T>(from: readonly T[], away: readonly T[]): T[] => {
   const rest = [...away];
@@ -202,10 +202,8 @@ export function retarget(record: RollRecord, opponent: string, name: string, die
       const roll = die(`${termKey(term)}#${nth}`);
       const face = roll(term.sides);
       const made: Rolled = {
-        id: fresh(), sides: term.sides, face, value: term.minus ? -face : face,
+        id: fresh(), sides: term.sides, face, value: face,
         ...(term.part ? { part: term.part } : {}),
-        ...(term.extra ? { extra: true } : {}),
-        ...(term.minus ? { minus: true } : {}),
       };
       grown.push(...applyResults([made], results, roll, fresh));
     }

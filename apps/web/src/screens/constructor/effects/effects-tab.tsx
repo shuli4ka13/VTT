@@ -4,6 +4,7 @@ import { useWorld } from '../../../store/world.ts';
 import { blockTree, BlockBranches } from '../block-tree.tsx';
 import { blockOf } from '@vtt/engine/model/blocks';
 import { newEffect } from '../factory.ts';
+import { createEffect } from './factory.ts';
 import { Columns, List, ListItem } from '../../../ui/layout.tsx';
 import { useFreshKeys } from '../../../store/fresh.ts';
 import { useLookupPane } from '../lookup-panel.tsx';
@@ -33,12 +34,7 @@ export function EffectsTab() {
     pick({ activeEffectId: made.key });
   };
 
-  const add = (kind: LaunchKind) => {
-    const made = newEffect(system, kind);
-    editSystem(draft => { draft.effects[made.key] = made.value; });
-    useOpened.getState().setOpen([`effect-props|${made.key}`], true);
-    pick({ activeEffectId: made.key });
-  };
+  const add = (kind: LaunchKind) => { createEffect(kind); };
 
   const right = useLookupPane({ head: 'Рядом', body: <PreviewPanel effectId={activeId} /> });
   const freshEffects = useFreshKeys('effect');

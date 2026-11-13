@@ -153,4 +153,11 @@ group('шаг «Спросить»', () => {
     ok(errors(hung({ on: 'after:удар', if: { expr: '@цель == @носитель' }, cost: [ASK], steps: [] })).some(text => text.includes('в плате подписки')));
     ok(errors(hung({ on: 'rolled', if: { expr: '@бросающий == @носитель' }, steps: [ASK] })).some(text => text.includes('не спрашивает')));
   });
+
+  test('«Проблемы»: у шага лишнее поле или значение не того вида — ошибка', () => {
+    const errors = (steps: unknown[]) => lintSystem(world({ steps })).filter(one => one.level === 'error').map(one => one.text);
+    ok(errors([EACH, { ...ASK, options: ['а', 'б'] }, ...byAnswer]).some(text => text.includes('нет поля «options»')));
+    ok(errors([EACH, { ...ASK, to: 'цель' }, ...byAnswer]).some(text => text.includes('не того вида')));
+    ok(errors([EACH, { ...ASK, label: 5 }, ...byAnswer]).some(text => text.includes('не того вида')));
+  });
 });

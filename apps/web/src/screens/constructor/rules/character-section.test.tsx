@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import { CharacterSection } from './character-section.tsx';
 import { SheetTab } from '../sheet-tab.tsx';
@@ -166,6 +166,29 @@ describe('раздел «Что даёт всем листам»', () => {
     expect(useWorld.getState().system.grants).toEqual(['удар']);
     fireEvent.click(box.querySelector('.chip__x')!);
     expect('grants' in useWorld.getState().system).toBe(false);
+  });
+
+  it('«+ новое правило» заводит висящий эффект, выдаёт всем листам и открывает на вкладке «Эффекты»', () => {
+    useWorld.setState(state => ({ ...state, system: { ...system(), effects: {} } as System, activeTab: 'sheet' as never, activeEffectId: null, activeSheetKind: null }));
+    render(<Sheets />);
+    const box = document.querySelector<HTMLElement>('[data-field="Что даёт всем листам"]')!;
+    expect(within(box).getByText('Выдавать пока нечего.')).toBeTruthy();
+    fireEvent.click(within(box).getByText('+ новое правило'));
+    const now = useWorld.getState();
+    const [key, effect] = Object.entries(now.system.effects)[0]!;
+    expect(effect.activation).toBe('passive');
+    expect(now.system.grants).toEqual([key]);
+    expect(now.activeTab).toBe('effects');
+    expect(now.activeEffectId).toBe(key);
+  });
+
+  it('внутри типа листа раздела нет, есть тихая строка с общими эффектами', () => {
+    useWorld.setState(state => ({ ...state, system: { ...system(), grants: ['удар'], sheets: { враг: { label: 'Противник' } }, effects: { удар: { label: 'Удар', activation: 'manual', params: [], steps: [] } } } as System, activeFieldTag: null, activeBlock: null, activeColumn: null, activeSheetKind: 'враг' }));
+    render(<Sheets />);
+    expect(screen.queryByText('Что даёт всем листам')).toBeNull();
+    expect(screen.getByText('Ещё действует общее для всех листов: «Удар».')).toBeTruthy();
+    fireEvent.click(screen.getByText('все блоки'));
+    expect(screen.getByText('Что даёт всем листам')).toBeTruthy();
   });
 
   it('видна в системе без типов листов: Киберпанк и Blades', () => {

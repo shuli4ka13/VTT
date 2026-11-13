@@ -21,6 +21,8 @@ type EditSystem = WorldState['editSystem'];
 
 const SERVICE = '\u0001';
 
+const ZERO_WORDS = [['', 'ничего не бросаем'], ['worst', 'бросаем две, берём худшую'], ['best', 'бросаем две, берём лучшую']] as const;
+
 const RULE_WORDS = [
   ['бросок', 'бросок', 'сам бросок; после точки — его части, как у шага «Бросок»'],
   ['выпало', 'выпало', 'что выпало на кости этого броска'],
@@ -173,7 +175,7 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
           <span className="dict-row__label">Число поля — это</span>
           <div className="roll-form__body">
             <Select label="Число поля — это" value={current} options={numberOptions as never}
-              onChange={next => edit(draft => { if (next === 'bonus') delete draft.number; else draft.number = next; if (next !== 'count') delete draft.keep; })} />
+              onChange={next => edit(draft => { if (next === 'bonus') delete draft.number; else draft.number = next; if (next !== 'count') { delete draft.keep; delete draft.zero; } })} />
           </div>
         </div>
         {showPair ? (
@@ -186,7 +188,20 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
           </div>
         </div>
         ) : null}
-        {roll.number === 'count' ? (
+        {roll.number === 'count' || roll.zero ? (
+          <div className="dict-row roll-line">
+            <span className="dict-row__label">Если костей ноль</span>
+            <div className="roll-form__body">
+              <Select label="Если костей ноль" value={roll.zero ? roll.zero.keep ?? 'worst' : ''} options={ZERO_WORDS as never}
+                onChange={(next: string) => edit(draft => {
+                  if (next === 'worst') draft.zero = { count: 2 };
+                  else if (next === 'best') draft.zero = { count: 2, keep: 'best' };
+                  else delete draft.zero;
+                })} />
+            </div>
+          </div>
+        ) : null}
+        {roll.number === 'count' || roll.keep !== undefined ? (
           <div className="dict-row roll-line">
             <span className="dict-row__label">Оставить лучшие</span>
             <div className="roll-form__body">
@@ -202,6 +217,7 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
           </div>
         </div>
         {([
+          ['total', 'Итог', 'итог'],
           ['success', 'Успех, если', 'успех'],
           ['margin', 'Степени числом', 'степени'],
         ] as const).map(([key, label, where]) => (

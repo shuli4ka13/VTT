@@ -352,11 +352,41 @@ describe('RecordsTab: тип листа', () => {
   const empty = { ...useWorld.getState().system, effects: {}, sheets: { враг: kind } } as never;
   const withEffect = { ...(empty as object), effects: { aura: { label: 'Аура', activation: 'passive', params: [], steps: [] } } } as never;
 
-  it('у типа листа — только «+ правит поле», а выдавать без эффектов нечего', () => {
+  it('у типа листа — только «+ формула поля», а выдавать без эффектов нечего', () => {
     render(<SheetKindEditor id="враг" kind={kind} system={empty} />);
-    expect(screen.getByText('+ правит поле')).toBeTruthy();
+    expect(screen.getByText('Как считаются поля у этого типа')).toBeTruthy();
+    expect(screen.queryByText('Что правит на каждом листе этого типа')).toBeNull();
+    expect(screen.getByText('Кнопки и правила, которые есть у каждого листа этого типа.')).toBeTruthy();
+    expect(screen.getByText('+ формула поля')).toBeTruthy();
+    expect(screen.queryByText('+ правит поле')).toBeNull();
+    expect(screen.getByText('своих формул у типа нет')).toBeTruthy();
     expect(screen.queryByText('+ правка вызова')).toBeNull();
-    expect(screen.getByText(/Выдавать пока нечего/)).toBeTruthy();
+    expect(screen.getByText('Выдавать пока нечего.')).toBeTruthy();
+    expect(screen.getByText('+ новое правило')).toBeTruthy();
+  });
+
+  it('«+ новое правило» заводит висящий эффект, выдаёт его типу и открывает на вкладке «Эффекты»', () => {
+    useWorld.setState(state => ({ ...state, system: { ...empty as object, sheets: { враг: { label: 'Противник' } } } as never, activeTab: 'sheet' as never, activeEffectId: null }));
+    render(<SheetKindEditor id="враг" kind={kind} system={useWorld.getState().system} />);
+    fireEvent.click(screen.getByText('+ новое правило'));
+    const now = useWorld.getState();
+    const [key, effect] = Object.entries(now.system.effects)[0]!;
+    expect(effect.activation).toBe('passive');
+    expect(effect.label).toBe('Новый эффект');
+    expect(now.system.sheets!.враг!.grants).toEqual([key]);
+    expect(now.system.grants ?? []).toEqual([]);
+    expect(now.activeTab).toBe('effects');
+    expect(now.activeEffectId).toBe(key);
+  });
+
+  it('общая выдача системы — тихой строкой с названиями, без неё строки нет', () => {
+    const shared = { ...(withEffect as object), grants: ['aura'] } as never;
+    const view = render(<SheetKindEditor id="враг" kind={kind} system={shared} />);
+    expect(screen.getByText('Ещё действует общее для всех листов: «Аура».')).toBeTruthy();
+    expect(screen.queryByText('Что даёт всем листам')).toBeNull();
+    view.unmount();
+    render(<SheetKindEditor id="враг" kind={kind} system={withEffect} />);
+    expect(screen.queryByText(/Ещё действует общее/)).toBeNull();
   });
 
   it('с эффектами подсказки о пустой выдаче нет', () => {
