@@ -100,6 +100,16 @@ export function within(root: ParentNode = document) {
     const box = typeof label === 'string' ? field(label) : label;
     const spoken = box.classList.contains('formula-words') ? box : box.querySelector<HTMLElement>('.formula-words');
     if (spoken) { act(() => { fireEvent.click(spoken); }); }
+    const typed = box.querySelector<HTMLElement>('.typed-pick > .combo [role="combobox"]');
+    if (typed && !box.querySelector('.chips')) {
+      act(() => { fireEvent.focus(typed); });
+      const menu = [...(typed.closest('.combo')!).querySelectorAll<HTMLElement>('.slot__option')];
+      const hit = menu.find(o => o.dataset.value === text.trim());
+      act(() => { fireEvent.blur(typed); });
+      pickCombo(typed, hit ? text.trim() : ':формула', String(label));
+      openAll();
+      if (hit) return;
+    }
     const byList = [...box.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === ':формула'));
     if (byList && !box.querySelector('.chips')) { act(() => { fireEvent.change(byList, { target: { value: ':формула' } }); }); openAll(); }
     const chips = box.classList.contains('chips') ? box : box.querySelector('.chips');

@@ -41,9 +41,10 @@ describe('имена из справочной движка', () => {
 
   it('вход-выбор вызова — список строк таблицы', () => {
     open('turn_undead');
-    const select = [...within(document).arg('Чем спасается').querySelectorAll('select')][0]!;
-    expect(select.selectedOptions[0]?.textContent).toBe('Мудрость');
-    expect([...select.options].map(one => one.textContent)).toContain('формулой…');
+    const combo = within(document).arg('Чем спасается').querySelector<HTMLInputElement>('[role="combobox"]')!;
+    expect(combo.value).toBe('Мудрость');
+    fireEvent.focus(combo);
+    expect([...within(document).arg('Чем спасается').querySelectorAll('.slot__option')].map(one => one.textContent)).toContain('формулой…');
     expect(text()).not.toContain('"мудрость"');
   });
 

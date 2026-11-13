@@ -11,6 +11,7 @@ import { amountParamOf } from '@vtt/engine/model/lists';
 import { STEP } from '../../words.ts';
 import { hasField } from '@vtt/engine/model/sheet-columns';
 import { withTables, withPicks } from '../../ui/formula-words.ts';
+import type { NameAt } from '@vtt/engine/model/names-at';
 
 export interface StepOutput { path: string; label: string; kind?: string; no?: string }
 
@@ -106,6 +107,8 @@ export interface SlotContext {
   names?: ReadonlyMap<string, string>;
 
   tables?: ReadonlyMap<string, string>;
+
+  scope?: readonly NameAt[];
 }
 
 export const EVENT_NAMES: [string, string][] = [['метки', 'метки вызова: значения выборов']];

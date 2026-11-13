@@ -24,77 +24,8 @@ import { callArgs, retarget } from '../call-args.ts';
 import { CallEditor } from '../../call-editor.tsx';
 import { ConditionField } from '../../condition-field.tsx';
 import { amountParamOf } from '@vtt/engine/model/lists';
-import { fieldsOf, cellSource } from '@vtt/engine/model/sheet-columns';
-import { DESK_ID } from '@vtt/engine/engine/owners';
-import { FieldPick } from '../../../../ui/field-pick.tsx';
-
-const fieldTarget = (target: unknown): { sheet: string; tag: string } | null => {
-  const expr = target && typeof target === 'object' && 'expr' in target ? String((target as { expr: unknown }).expr) : '';
-  const found = /^\s*@([\p{L}\p{N}_]+)\.([\p{L}\p{N}_.]+)\s*$/u.exec(expr);
-  return found ? { sheet: found[1]!, tag: found[2]! } : null;
-};
-
-const rowNamesOf = (context: SlotContext): { name: string; label: string; table: string }[] => [
-  ...(context.effect.params ?? [])
-    .filter(param => param.kind === 'choice' && typeof param.from === 'string' && !param.many)
-    .map(param => ({ name: param.key, label: param.label ?? param.key, table: String(param.from) })),
-  ...context.earlier.filter(step => step.table).map(step => ({ name: step.id, label: step.id, table: step.table! })),
-];
-
-const storedColumns = (system: System, table: string) => {
-  const spec = system.tables?.[table];
-  return (spec?.columns ?? []).filter(column => (spec?.rows ?? []).some(row => cellSource(column, row).kind === 'input'));
-};
-
-function TargetPick({ target, context, onChange }: {
-  target: unknown;
-  context: SlotContext;
-  onChange: (next: { expr: string } | null) => void;
-}) {
-  const system = context.system;
-  const picked = fieldTarget(target);
-  const param = target && typeof target === 'object' && 'expr' in target && !picked ? String((target as { expr: unknown }).expr).replace(/^@/, '') : '';
-  const sheets = [...(context.sheets ?? new Map<string, string>())];
-  const desk = fieldsOf(system).some(f => f.lives === 'desk');
-  const fieldParams = (context.effect.params ?? []).filter(p => p.kind === 'field');
-  const [chosen, setChosen] = useState<string | null>(null);
-  const owner = picked?.sheet ?? (param ? `:${param}` : chosen ?? sheets[0]?.[0] ?? '');
-  const options: (readonly [string, string])[] = [
-    ...sheets.map(([name, label]) => [name, `«${label}»`] as const),
-    ...(desk ? [[DESK_ID, 'стол'] as const] : []),
-    ...fieldParams.map(p => [`:${p.key}`, `поле из входа «${p.label ?? p.key}»`] as const),
-  ];
-  const fields = fieldsOf(system).filter(f => f.value.kind === 'stored' && (owner === DESK_ID ? f.lives === 'desk' : f.lives !== 'desk'));
-  const cells = rowNamesOf(context)
-    .filter(row => (owner === DESK_ID ? system.tables?.[row.table]?.owner === 'desk' : system.tables?.[row.table]?.owner && system.tables?.[row.table]?.owner !== 'desk'))
-    .flatMap(row => storedColumns(system, row.table).map(column => [`${row.name}.${column.key}`, `${row.label} · ${column.label ?? column.key}`] as const));
-  return (
-    <div className="row">
-      <Field label="У кого" needed={!owner}>
-        <Select<string>
-          value={owner}
-          options={options.length ? options : [['', '— у эффекта нет входов-листов —']]}
-          onChange={next => {
-            if (next.startsWith(':')) { onChange({ expr: `@${next.slice(1)}` }); return; }
-            setChosen(next);
-            onChange(picked ? { expr: `@${next}.${picked.tag}` } : null);
-          }}
-        />
-      </Field>
-      {owner.startsWith(':') ? null : (
-        <Field label="Какое поле" needed={!picked}>
-          <FieldPick
-            system={system}
-            value={picked?.tag ?? ''}
-            fields={fields}
-            extra={cells}
-            onChange={next => onChange(next ? { expr: `@${owner}.${next}` } : null)}
-          />
-        </Field>
-      )}
-    </div>
-  );
-}
+import { TargetPick } from '../../field-target.tsx';
+import { TypedPick } from '../../typed-pick.tsx';
 
 function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onCreateFromRecord }: {
   amount?: Step;
@@ -354,6 +285,15 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
   const fromRecord = (label: string, kind: ValueKind) =>
     onAddParam ? (): SlotRef => ({ expr: `@${onAddParam(label, kind)}` }) : undefined;
 
+  const toSheet = (next: { expr: string } | null) => edit(applyIndex, draft => {
+    const d = draft as any;
+    const before = d.to;
+    if (next) d.to = next; else delete d.to;
+    const id = effectNameOf(d.effect);
+    if (!id) return;
+    const args = retarget(system, context.effect, id, d.args, before, next);
+    if (Object.keys(args).length) d.args = args; else delete d.args;
+  });
   return (
     <>
       {blank ? <Segmented
@@ -464,18 +404,12 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
           </Field>
           )}
           <Field label={String(step.mode ?? 'apply') === 'remove' ? 'С кого' : 'На кого'} needed={!step.to}>
-            <SheetPick
-              value={step.to} sheets={sheetChoices(context).singles} system={system} where="состояние · на кого"
-              onChange={next => edit(applyIndex, draft => {
-                const d = draft as any;
-                const before = d.to;
-                if (next) d.to = next; else delete d.to;
-                const id = effectNameOf(d.effect);
-                if (!id) return;
-                const args = retarget(system, context.effect, id, d.args, before, next);
-                if (Object.keys(args).length) d.args = args; else delete d.args;
-              })}
-            />
+            <TypedPick want={{ kind: 'sheet' }} value={step.to} context={context} blank="— какой лист —" label="На кого" onChange={toSheet}>
+              <SheetPick
+                value={step.to} sheets={sheetChoices(context).singles} system={system} where="состояние · на кого"
+                onChange={toSheet}
+              />
+            </TypedPick>
           </Field>
           {String(step.mode ?? 'apply') === 'remove' ? (
             <>

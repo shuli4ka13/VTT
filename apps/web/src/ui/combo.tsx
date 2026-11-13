@@ -6,7 +6,7 @@ export interface ComboMore { label: string; run: () => void }
 
 const MORE = '\u0000more';
 
-const fits = (option: ComboOption, query: string) => (query ? option.label.toLowerCase().includes(query) : !option.hidden);
+const fits = (option: ComboOption, query: string) => (query ? option.value !== '' && option.label.toLowerCase().includes(query) : !option.hidden);
 
 function useMenu(options: readonly ComboOption[], pick: (option: ComboOption) => void, more?: ComboMore) {
   const [open, setOpen] = useState(false);

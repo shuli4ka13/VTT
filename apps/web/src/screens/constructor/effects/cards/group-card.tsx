@@ -1,3 +1,4 @@
+import type { NameAt } from '@vtt/engine/model/names-at';
 import type { SheetNames } from '../../../../ui/formula-chips.tsx';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
@@ -46,7 +47,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, names, tables, takenNames, onRename, ifBy, byOutput, activeOutput, onUnwrap, asIf = false, outcome = '', headCond, headBy,
+  edit: editStep, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, upTitle, downTitle, folded = false, onFold, sheets, names, tables, scope, takenNames, onRename, ifBy, byOutput, activeOutput, onUnwrap, asIf = false, outcome = '', headCond, headBy,
 }: {
   group: CardGroup;
   position: number;
@@ -74,6 +75,7 @@ export function GroupCard({
   sheets?: SheetNames;
   names?: ReadonlyMap<string, string>;
   tables?: ReadonlyMap<string, string>;
+  scope?: readonly NameAt[];
   ifBy?: { label: string; run: () => void }[];
   byOutput?: Record<string, () => void>;
   activeOutput?: string;
@@ -85,7 +87,7 @@ export function GroupCard({
   takenNames?: readonly string[];
   onRename?: (from: string, to: string) => void;
 }) {
-  const context: SlotContext = { system, effect, earlier, ...(sheets ? { sheets } : {}), ...(names ? { names } : {}), ...(tables ? { tables } : {}) };
+  const context: SlotContext = { system, effect, earlier, ...(sheets ? { sheets } : {}), ...(names ? { names } : {}), ...(tables ? { tables } : {}), ...(scope ? { scope } : {}) };
   const step = group.step as any;
   const edit: typeof editStep = (at, change) => editStep(at, draft => {
     change(draft);

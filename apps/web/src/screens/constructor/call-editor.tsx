@@ -11,6 +11,10 @@ import { isBlank } from '@vtt/engine/model/blank';
 import { EffectPick } from './effect-pick.tsx';
 import { paramsOf } from '@vtt/engine/model/inherit';
 import { choiceRows, pickedRow } from './choice-rows.ts';
+import { isTyped } from '@vtt/engine/model/typed-choices';
+import { implicitOf } from '@vtt/engine/model/implicit';
+import { TypedPick } from './typed-pick.tsx';
+import { TargetPick } from './field-target.tsx';
 
 export interface CallInput {
   param: Param;
@@ -211,6 +215,12 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, onArg
       onChange={next => onArg(input.param.key, next)}
     />
   );
+  const selfOf = (input: CallInput): string | null => {
+    const auto = implicitOf(input.param, context.effect);
+    if (!auto) return null;
+    const from = context.scope?.find(one => one.name === auto.from)?.label ?? (context.effect.params ?? []).find(param => param.key === auto.from)?.label ?? auto.from;
+    return `сам: «${from}»`;
+  };
   const editor = (input: CallInput) => (
     input.param.kind === 'effect' ? (
       <Select<string>
@@ -220,6 +230,19 @@ export function CallEditor({ system, effect: raw, effects, onEffect, args, onArg
           ...Object.entries(system.effects).filter(([id]) => id !== effect).map(([id, e]) => [id, e.label || id] as const)]}
         onChange={next => onArg(input.param.key, next ? { expr: JSON.stringify(next) } : null)}
       />
+    ) : input.param.kind === 'field' && context.scope && !input.param.many ? (
+      <TargetPick target={input.value} context={context} onChange={next => onArg(input.param.key, next)} formula={valueField(input)} />
+    ) : isTyped(input.param.kind) && context.scope ? (
+      <TypedPick
+        want={{ kind: input.param.kind!, ...(input.param.from ? { from: input.param.from } : {}), ...(input.param.many ? { many: true } : {}) }}
+        value={input.value}
+        context={context}
+        label={nameOf(input.param)}
+        blank={byDefault(input) ?? selfOf(input) ?? (status(input).text || '— не передано —')}
+        onChange={next => onArg(input.param.key, next)}
+      >
+        {valueField(input)}
+      </TypedPick>
     ) : choiceRows(system, input.param).length
       ? <ChoiceArg system={system} param={input.param} value={input.value} onArg={onArg} context={context}>{valueField(input)}</ChoiceArg>
       : valueField(input)

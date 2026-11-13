@@ -292,6 +292,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
         sheets={sheetsAt(system, id, placeAt(group.indices[0]!))}
         names={placeNamesAt(system, id, placeAt(group.indices[0]!))}
         tables={placeTablesAt(system, id, placeAt(group.indices[0]!))}
+        scope={namesAt(system, id, placeAt(group.indices[0]!))}
         lane={lane}
         folded={!opened[foldKey(group)]}
         onFold={() => toggleFold(foldKey(group))}
@@ -388,6 +389,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
     ...(sheetsAt(system, id, placeAt(index)) ? { sheets: sheetsAt(system, id, placeAt(index)) } : {}),
     names: placeNamesAt(system, id, placeAt(index)),
     tables: placeTablesAt(system, id, placeAt(index)),
+    scope: namesAt(system, id, placeAt(index)),
   });
 
   const armAdd = (head: number) => (

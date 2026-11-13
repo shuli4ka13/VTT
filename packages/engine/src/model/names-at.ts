@@ -31,6 +31,7 @@ export interface NameAt {
   many?: boolean;
   optional?: boolean;
   from?: string;
+  whole?: string;
   children?: NameChild[];
 }
 
@@ -124,11 +125,13 @@ function stepsBefore(steps: readonly Step[], index: number, withLoop: boolean, p
     }
     if (!step.id) return;
     const children = [...returnsOf(system, step), ...outputsOf(step, system, inputs)];
+    const whole = resultsOf(system, inputs, step).find(output => !output.path)?.kind;
     out.push({
       name: String(step.id),
       label: stepLabel(system, step, String(step.id)),
       kind: 'result',
       group: 'step',
+      ...(whole ? { whole } : {}),
       ...(children.length ? { children } : {}),
     });
   });
