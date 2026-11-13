@@ -34,3 +34,38 @@ describe('лобби: убрать стол', () => {
     await waitFor(() => expect(closed).toEqual(['мой']));
   });
 });
+
+import { sortRooms, sortWorlds } from './lobby.tsx';
+
+const world = (id: string, title: string, systemName: string, updatedAt: string) =>
+  ({ id, title, systemName, compendiumCount: 0, authorName: 'Я', sheetCount: 0, updatedAt });
+const room = (id: string, worldId: string, createdAt: string) =>
+  ({ id, title: id, worldId, memberCount: 1, createdAt, gmName: 'Я', gm: false });
+
+describe('лобби: одна вкладка и порядок', () => {
+  afterEach(cleanup);
+
+  it('сверху три кнопки, видна одна вкладка', async () => {
+    render(<Lobby />);
+    await screen.findByText('Мой стол');
+    expect(screen.queryByText('Собранные миры')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Миры' }));
+    expect(screen.getByText('Собранные миры')).toBeTruthy();
+    expect(screen.queryByText('Мой стол')).toBeNull();
+  });
+
+  const worlds = [world('б', 'Бездна', 'Альфа', '2026-11-02'), world('а', 'Арка', 'Бета', '2026-11-01')];
+  const rooms = [room('старый в Бездне', 'б', '2026-10-01'), room('новый в Арке', 'а', '2026-11-05'), room('новый в Бездне', 'б', '2026-11-03')];
+
+  it('столы: по времени — новые сверху, по миру и по системе — группами, внутри новые сверху', () => {
+    expect(sortRooms(rooms, worlds, 'time').map(r => r.id)).toEqual(['новый в Арке', 'новый в Бездне', 'старый в Бездне']);
+    expect(sortRooms(rooms, worlds, 'world').map(r => r.id)).toEqual(['новый в Арке', 'новый в Бездне', 'старый в Бездне']);
+    expect(sortRooms(rooms, worlds, 'system').map(r => r.id)).toEqual(['новый в Бездне', 'старый в Бездне', 'новый в Арке']);
+  });
+
+  it('миры: по времени — свежие сверху, по миру — по названию, по системе — по системе', () => {
+    expect(sortWorlds(worlds, 'time').map(w => w.id)).toEqual(['б', 'а']);
+    expect(sortWorlds(worlds, 'world').map(w => w.id)).toEqual(['а', 'б']);
+    expect(sortWorlds(worlds, 'system').map(w => w.id)).toEqual(['б', 'а']);
+  });
+});
