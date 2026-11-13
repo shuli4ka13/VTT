@@ -30,16 +30,17 @@ export function addRoll(draft: System, die: string): string {
   return key;
 }
 
-export function saidOf(number: SystemRoll['number'], die: string): string {
-  if (number === 'count') return `число поля — сколько бросить: ${die}`;
-  if (number === 'sides') return `${die}, грани — число поля`;
-  if (number === 'under') return `${die}, успех — не больше числа поля`;
-  if (number === 'over') return `${die}, успех — не меньше числа поля`;
-  return `${die} + число поля`;
+export function saidOf(number: SystemRoll['number'], die: string, field = 'число поля'): string {
+  if (number === 'count') return `${field} — сколько бросить: ${die}`;
+  if (number === 'sides') return `${die}, грани — ${field}`;
+  const of = field === 'число поля' ? 'числа поля' : field;
+  if (number === 'under') return `${die}, успех — не больше ${of}`;
+  if (number === 'over') return `${die}, успех — не меньше ${of}`;
+  return `${die} + ${field}`;
 }
 
-export function rollSaid(system: System, roll: SystemRoll): string {
+export function rollSaid(system: System, roll: SystemRoll, field?: string): string {
   const name = system.constants?.[roll.die]?.label || roll.die;
   const reading = readingWord(system, roll.die);
-  return saidOf(roll.number, reading ? `${name} (${reading})` : name);
+  return saidOf(roll.number, reading ? `${name} (${reading})` : name, field);
 }
