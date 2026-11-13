@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { useWorld } from './world.ts';
-import { saveSystem, saveCompendium, ApiError } from '../api/client.ts';
+import { saveSystem, createSystem, saveCompendium, ApiError } from '../api/client.ts';
 
 const PAUSE = 1500;
 
@@ -90,7 +90,12 @@ function schedule(): void {
     useAutosave.getState().set({ kind: 'saving' });
     try {
       if (mode === 'system') {
-        const saved = await saveSystem(target, title, system, versions.system);
+        const saved = await saveSystem(target, title, system, versions.system).catch(async err => {
+          if (!(err instanceof ApiError) || err.status !== 404) throw err;
+          const fresh = await createSystem(title, system);
+          useWorld.getState().setOrigin({ systemId: fresh.id, systemMine: true, publication: 'draft' });
+          return fresh;
+        });
         versions.system = saved.updatedAt;
       } else {
         const book = await saveCompendium(

@@ -2,9 +2,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const saveSystem = vi.fn();
+const createSystem = vi.fn();
 vi.mock('../api/client.ts', async () => {
   const real = await vi.importActual<typeof import('../api/client.ts')>('../api/client.ts');
-  return { ...real, saveSystem: (...args: unknown[]) => saveSystem(...args), saveCompendium: vi.fn() };
+  return { ...real, saveSystem: (...args: unknown[]) => saveSystem(...args), createSystem: (...args: unknown[]) => createSystem(...args), saveCompendium: vi.fn() };
 });
 
 const { ApiError } = await import('../api/client.ts');
@@ -44,6 +45,18 @@ describe('автосохранение: автор всегда знает, со
     const state = useAutosave.getState().state;
     expect(state.kind).toBe('failed');
     expect(saveLabel(state, '')).toContain('effects.e1.on.0.on');
+  });
+
+  it('системы на сервере больше нет — она заводится заново из открытого окна, правки не теряются', async () => {
+    createSystem.mockReset();
+    saveSystem.mockRejectedValueOnce(new ApiError('системы «sys-1» нет', 404));
+    createSystem.mockResolvedValue({ id: 'sys-2', updatedAt: 'v1' });
+    saveSystem.mockResolvedValue({ id: 'sys-2', updatedAt: 'v2' });
+    edit('Уцелевшая');
+    expect(await settle()).toBe(true);
+    expect(createSystem).toHaveBeenCalledTimes(1);
+    expect(createSystem.mock.calls[0]![0]).toBe('Уцелевшая');
+    expect(useWorld.getState().origin.systemId).toBe('sys-2');
   });
 
   it('после отказа следующая правка сохраняется снова', async () => {
