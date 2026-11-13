@@ -59,7 +59,7 @@ const param = (ui: ReturnType<typeof within>, id: string, row: number, label: st
   if (more.from) ui.select(ui.cell('Таблица', row), more.from);
   if (more.optional) ui.select(ui.cell('Если не передали', row), 'empty');
   if (more.value !== undefined) { ui.select(ui.cell('Если не передали', row), 'value'); ui.type(ui.cell('Если не передали', row), more.value); }
-  if (more.role) ui.select(ui.cell('Приходит сам', row), more.role);
+  if (more.role) ui.select(ui.cell('Кто это', row), more.role);
   if (ui.cell('Имя в формулах', row).querySelector('input')) ui.type(ui.cell('Имя в формулах', row), key);
 };
 

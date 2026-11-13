@@ -380,7 +380,7 @@ describe('общие эффекты D&D собираются руками: ци�
     ui.select(ui.cell('Вид', row), kind);
     if (more.ask) ui.select(ui.cell('Если не передали', row), more.ask);
     if (more.main) ui.check(`«${label}» — величина`, true);
-    if (more.role) ui.select(ui.cell('Приходит сам', row), more.role);
+    if (more.role) ui.select(ui.cell('Кто это', row), more.role);
     if (ui.cell('Имя в формулах', row).querySelector('input')) ui.type(ui.cell('Имя в формулах', row), key);
   };
 

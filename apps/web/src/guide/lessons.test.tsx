@@ -308,7 +308,6 @@ const SOLVE: Record<string, Record<string, (() => void) | (() => void)[]>> = {
         act(() => { fireEvent.click(item.querySelector('.param-line__sum')!); });
         openAll();
       },
-      () => press(findAnchor({ text: 'ещё', in: 'Что приходит' })!),
       () => edit(d => { d.effects.урон!.params![0]!.role = 'target'; }),
     ],
     apply: [

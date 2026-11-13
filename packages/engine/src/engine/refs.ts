@@ -306,7 +306,7 @@ function namedValue(name: string, ctx: RefContext): unknown {
   if (isBlank(value)) {
     if (decl.default !== undefined) return decl.default;
     if (decl.optional) return null;
-    throw new EngineError(`${who(ctx)}: параметр «${name}» не заполнен`);
+    throw new EngineError(`${who(ctx)}: вход «${decl.label ?? name}» никто не заполнил`);
   }
   if (decl.kind === 'field' && typeof value === 'object' && value !== null && 'sheet' in value && 'tag' in value) {
     const field = value as { sheet: string; tag: string };

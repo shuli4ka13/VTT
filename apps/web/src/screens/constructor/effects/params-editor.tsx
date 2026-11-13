@@ -161,7 +161,7 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
   const kind = String(param.kind ?? 'number');
   const askable = (ASKABLE as readonly string[]).includes(kind);
   const tables = choiceTables(system).map(([key, list]) => [key, list.label || key] as const);
-  const rare = Boolean(param.ask?.hint) || Boolean(param.ask?.if) || (kind === 'sheet' && Boolean(param.from)) || Boolean(param.role) || param.min !== undefined || param.max !== undefined || Boolean(param.measure);
+  const rare = Boolean(param.ask?.hint) || Boolean(param.ask?.if) || (kind === 'sheet' && Boolean(param.from)) || param.role === 'amount' || param.min !== undefined || param.max !== undefined || Boolean(param.measure);
   const [more, setMore] = useState(rare);
   const full = more || rare;
   return (
@@ -213,6 +213,15 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
                 const key = followKey({ used: inUse, key: before || keyOf(label), base: 'каждый', before: t.item?.label ?? '', after: label, taken: keys.filter(k => k !== before) });
                 t.item = { key, label };
               })} />
+          </Field>
+        ) : null}
+        {kind === 'sheet' && !param.many ? (
+          <Field label="Кто это" hint="«цель» — за столом сюда встаёт выбранная цель, а когда эффект вызван из «Для каждого из» — та, по которой сейчас идёт вызвавший. «тот, кто действует» — кто нажал кнопку. Иначе лист обязан передать вызвавший">
+            <Select
+              value={param.role === 'target' || param.role === 'actor' ? param.role : ''}
+              options={[['', 'кого передадут'], ['target', 'цель — выбранная за столом или текущая'], ['actor', 'тот, кто действует']] as const}
+              onChange={next => change(t => { if (next) t.role = next as 'target' | 'actor'; else delete t.role; })}
+            />
           </Field>
         ) : null}
         <Field label="Если не передали">
@@ -279,15 +288,6 @@ function ParamForm({ param, keys, system, effect, locked, change, onLabel, onKey
                 value={String(param.from ?? '')}
                 options={[['', '— любой —'], ...Object.entries(system.sheets ?? {}).map(([key, one]) => [key, (one as { label?: string }).label || key] as const)] as never}
                 onChange={next => change(t => { if (next) t.from = next; else delete t.from; })}
-              />
-            </Field>
-          ) : null}
-          {kind === 'sheet' && !param.many ? (
-            <Field label="Приходит сам" hint="когда другой эффект вызвал этот и лист не передал. Пример: «Удар» в «Для каждого из» вызывает «Урон» — «Урон» сам получит ту цель, по которой сейчас идёт «Удар». Кнопка вещи кладёт сюда того, кто нажал, или цель со стола">
-              <Select
-                value={param.role === 'target' || param.role === 'actor' ? param.role : ''}
-                options={[['', 'нет — пусть передают'], ['target', 'цель, по которой идёт вызвавший'], ['actor', 'кто нажал кнопку']] as const}
-                onChange={next => change(t => { if (next) t.role = next as 'target' | 'actor'; else delete t.role; })}
               />
             </Field>
           ) : null}

@@ -81,7 +81,7 @@ group('вызов передаёт вызванному его входы', () =
       },
     } as unknown as System;
     const беда = throws(() => hit('шар:0', 5, дырявый));
-    ok(String(беда.message).includes('«кость»'), String(беда.message));
+    ok(String(беда.message).includes('«Кость»'), String(беда.message));
   });
 });
 

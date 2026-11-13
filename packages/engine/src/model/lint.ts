@@ -16,7 +16,7 @@ import { isBlank } from './blank.ts';
 import { STEP_WORDS, slotShown, type SlotGate } from '../words/steps.ts';
 import { ROLL_CALL, CALL_WORDS } from '../words/calls.ts';
 import { modifierLists } from './integrity.ts';
-import { calledOf, chainsOfEffect } from '../engine/effects.ts';
+import { calledOf, chainsOfEffect, isPipeline } from '../engine/effects.ts';
 import { basedOn, paramsOf, flattenSystem } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
 import { recordsOf, argsWithProps, propKeysOf, recordKinds, kindsOf, kindOf, isBook } from './owned.ts';
@@ -1694,6 +1694,22 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
     for (const param of effect.params ?? []) {
       if (!isBlank(args[param.key]) || table[param.key] || param.ask || param.optional || param.default !== undefined) continue;
       out.push({ where, level: 'error', text: `кнопка «${binding.label ?? effect.label ?? binding.effect}» не заполняет вход «${param.label ?? param.key}» эффекта «${effect.label ?? binding.effect}»${param.kind === 'sheet' ? ' — у входа-листа в эффекте выберите «Приходит сам: цель»' : ''}` });
+    }
+  }
+  const handed = new Set<string>([...(system.grants ?? []), ...Object.values(system.sheets ?? {}).flatMap(kind => (kind as { grants?: string[] }).grants ?? [])]);
+  for (const id of handed) {
+    const effect = system.effects[id];
+    if (!effect || !isPipeline(effect)) continue;
+    const table = tableOf(effect);
+    for (const param of effect.params ?? []) {
+      if (table[param.key] || param.ask || param.optional || param.default !== undefined) continue;
+      const name = param.label ?? param.key;
+      out.push({
+        where: { tab: 'effects', effect: id }, level: 'error',
+        text: param.kind === 'sheet'
+          ? `эффект «${effect.label ?? id}» выдан листам кнопкой, а лист во вход «${name}» поставить некому: у входа в «Кто это» выберите «цель»`
+          : `эффект «${effect.label ?? id}» выдан листам кнопкой, а вход «${name}» заполнить некому: у входа в «Если не передали» выберите «спросить игрока» или «по умолчанию»`,
+      });
     }
   }
   return out;
