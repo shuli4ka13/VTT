@@ -836,6 +836,30 @@ function dieCountProblems(system: System): Problem[] {
     .map(([key, die]) => ({ where: { tab: 'rules' as const, section: 'rolls' }, level: 'warn' as const, text: COUNT_UNREAD(die.label ?? key, rollsCounting(system, key)) }));
 }
 
+function anchorModeProblems(system: System): Problem[] {
+  const modes = new Map<string, { one: string[]; many: string[] }>();
+  for (const [id, effect] of Object.entries(system.effects ?? {})) {
+    if (!effect.bond?.effect) continue;
+    const slot = modes.get(effect.bond.effect) ?? { one: [], many: [] };
+    (effect.bond.many ? slot.many : slot.one).push(id);
+    modes.set(effect.bond.effect, slot);
+  }
+  const out: Problem[] = [];
+  for (const [anchor, { one, many }] of modes) {
+    if (!one.length || !many.length) continue;
+    const name = system.effects?.[anchor]?.label || anchor;
+    const label = (id: string) => `«${system.effects?.[id]?.label || id}»`;
+    for (const id of [...one, ...many]) {
+      out.push({
+        where: { tab: 'effects', effect: id },
+        level: 'warn',
+        text: `якорь «${name}» в одних эффектах один (${one.map(label).join(', ')}), в других свой на каждое действие (${many.map(label).join(', ')}): каст с «один» снимает с мага все копии якоря, и спадает всё, что на них держалось`,
+      });
+    }
+  }
+  return out;
+}
+
 function rollEditProblems(system: System): Problem[] {
   const known = new Set(editStages().map(one => one.op));
   const out: Problem[] = [];
@@ -1464,6 +1488,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...sheetKindProblems(system), ...layoutProblems(system));
   out.push(...editProblems(system, compendium));
   out.push(...rollEditProblems(system));
+  out.push(...anchorModeProblems(system));
   out.push(...namingProblems(system, compendium));
   out.push(...dieCountProblems(system));
   out.push(...handlerDiceProblems(system));

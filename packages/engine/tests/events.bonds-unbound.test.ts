@@ -123,3 +123,24 @@ group('привязка к якорю: «Проблемы» про «остаё�
     ok(lint({ только_ожог: system.effects['только_ожог'] }).some(text => text.includes('привязывать нечего')));
   });
 });
+
+group('привязка к якорю: один якорь с разным «Сколько якорей»', () => {
+  const mixed = {
+    ...system,
+    effects: {
+      ...system.effects,
+      взгляд_один: { label: 'Взгляд один', params: [who, whom], bond: { effect: 'поддержание', by: 'действующий' }, steps: [{ type: 'each', of: 'цели' }, put('слеп')] },
+    },
+    grants: [...(system.grants ?? []), 'взгляд_один'],
+  } as unknown as System;
+
+  test('«Поддержание» в одном эффекте «один», в другом «свой на каждое действие» — замечание у обоих', () => {
+    const found = lintSystem(mixed).filter(p => p.text.includes('в одних эффектах один'));
+    ok(found.some(p => (p.where as { effect?: string }).effect === 'взгляд_один'), JSON.stringify(found.map(p => p.where)));
+    ok(found.some(p => (p.where as { effect?: string }).effect === 'взгляд_много'), JSON.stringify(found.map(p => p.where)));
+  });
+
+  test('разные якоря у разных режимов — замечания нет', () => {
+    eq(lintSystem(system).some(p => p.text.includes('в одних эффектах один')), false);
+  });
+});
