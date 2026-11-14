@@ -853,7 +853,7 @@ function anchorModeProblems(system: System): Problem[] {
       out.push({
         where: { tab: 'effects', effect: id },
         level: 'warn',
-        text: `якорь «${name}» в одних эффектах один (${one.map(label).join(', ')}), в других свой на каждое действие (${many.map(label).join(', ')}): каст с «один» снимает с мага все копии якоря, и спадает всё, что на них держалось`,
+        text: `якорь «${name}» в одних эффектах один (${one.map(label).join(', ')}), в других свой на каждое действие (${many.map(label).join(', ')}): действие эффекта с «один» снимает с носителя все копии якоря, и спадает всё, что на них держалось`,
       });
     }
   }

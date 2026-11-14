@@ -14,6 +14,7 @@ import { ROLL_CALL, CALL_WORDS } from '@vtt/engine/words/calls';
 import { TagsField } from './tags-field.tsx';
 import { RollsPick } from './rolls-pick.tsx';
 import { placesMatching, wordFits } from '@vtt/engine/model/die-kinds';
+import { cancels } from '@vtt/engine/model/cancels';
 import { callNamesOf, holderConditionOf } from '@vtt/engine/model/references';
 import { ConditionField } from './condition-field.tsx';
 import { AddendPick } from './effects/cards/die-pick.tsx';
@@ -31,6 +32,7 @@ const RECIPE = 'recipe:';
 
 const NUMBER_GROUP = 'число — складывается';
 const WORD_GROUP = 'слово из «Правил» — одно на бросок';
+const WORD_GROUP_STACKS = 'слово из «Правил» — считается, как задано там';
 const MORE_GROUP = 'ещё';
 
 const ROLL_PARAMS = [
@@ -40,6 +42,25 @@ const ROLL_PARAMS = [
   ['edits', CALL_WORDS.roll.params.edits, WORD_GROUP],
   ['tags', CALL_WORDS.roll.params.tags, MORE_GROUP],
 ] as const;
+
+const rollParams = (system: System) => {
+  const words = Object.values(system.roll_edits ?? {}).some(edit => edit.stacks) ? WORD_GROUP_STACKS : WORD_GROUP;
+  return ROLL_PARAMS.map(([key, label, group]) => [key, label, group === WORD_GROUP ? words : group] as const);
+};
+
+function wordHint(system: System, key: string): string {
+  const dictionary = system.roll_edits ?? {};
+  const word = dictionary[key];
+  if (!word) return 'Как слово считается и с чем гасится — задано в «Правилах → Правки броска».';
+  const name = `«${word.label || key}»`;
+  const count = word.stacks
+    ? `${name} считается по разу от каждого разного эффекта; копии одного эффекта — один раз.`
+    : `${name} действует на бросок один раз, сколько бы эффектов его ни дали.`;
+  const rivals = Object.keys(dictionary).filter(other => cancels(dictionary, key, other));
+  if (!rivals.length) return count;
+  const byOne = word.stacks && rivals.every(other => dictionary[other]!.stacks);
+  return `${count} Встретится с ${rivals.map(other => `«${dictionary[other]!.label || other}»`).join(', ')} — погасят друг друга${byOne ? ' по одному' : ''}.`;
+}
 
 const FIT_GROUP = 'подходят этим броскам';
 const MISFIT_GROUP = 'не подходят этим броскам';
@@ -59,7 +80,6 @@ const ROLL_PARAM_HINTS: Record<string, string> = {
   count: 'Складывается: каждый висящий эффект и каждая его копия дают своё число.',
   bonus: 'Складывается: каждый висящий эффект и каждая его копия дают своё число.',
   threshold: 'Складывается: каждый висящий эффект и каждая его копия дают своё число.',
-  edits: 'Слово действует на бросок один раз, сколько бы эффектов его ни дали. Как оно гасится и считается — в «Правилах → Правки броска».',
   tags: 'Бросок получает метку один раз, сколько бы эффектов её ни дали.',
 };
 
@@ -338,10 +358,10 @@ function EditBody({ system, modifier, calls, edits, recipes, names, onChange, on
       </Field>
       {isRoll ? (
         <>
-          <Field label="Что правим" hint={ROLL_PARAM_HINTS[String(m.param ?? 'edits')]}>
+          <Field label="Что правим" hint={String(m.param ?? 'edits') === 'edits' ? wordHint(system, String(m.edit ?? '')) : ROLL_PARAM_HINTS[String(m.param)]}>
             <Select
               value={String(m.param ?? 'edits')}
-              options={ROLL_PARAMS as never}
+              options={rollParams(system) as never}
               onChange={pickParam}
             />
           </Field>

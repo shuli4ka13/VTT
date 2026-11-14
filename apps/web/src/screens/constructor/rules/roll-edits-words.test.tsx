@@ -37,8 +37,25 @@ describe('правка броска говорит, что складывает�
   it('у слова подсказка — «один раз», поле зовётся «Какое слово»', () => {
     const mods = [{ kind: 'edit', call: 'roll', param: 'edits', edit: 'фора' }] as Modifier[];
     const view = renderOpen(<ModifiersEditor system={system} modifiers={mods} onEdit={vi.fn()} />);
-    expect(fieldOf(view.container, 'Что правим').textContent).toContain('действует на бросок один раз');
+    expect(fieldOf(view.container, 'Что правим').textContent).toContain('«Фора» действует на бросок один раз');
     expect(fieldOf(view.container, 'Какое слово')).toBeTruthy();
+  });
+
+  it('слово, которое считается по разу от каждого эффекта, так и подписано, и названо, с чем гасится', () => {
+    const stacking = {
+      tables: {}, effects: {},
+      roll_edits: {
+        кураж: { label: 'Кураж', stacks: true, cancels: ['уныние'], ops: [{ op: 'addDie' }] },
+        уныние: { label: 'Уныние', stacks: true, ops: [{ op: 'removeDie' }] },
+      },
+    } as unknown as System;
+    const mods = [{ kind: 'edit', call: 'roll', param: 'edits', edit: 'кураж' }] as Modifier[];
+    const view = renderOpen(<ModifiersEditor system={stacking} modifiers={mods} onEdit={vi.fn()} />);
+    const hint = fieldOf(view.container, 'Что правим').textContent ?? '';
+    expect(hint).toContain('«Кураж» считается по разу от каждого разного эффекта; копии одного эффекта — один раз');
+    expect(hint).toContain('Встретится с «Уныние» — погасят друг друга по одному');
+    const combo = fieldOf(view.container, 'Что правим').querySelector<HTMLElement>('[role="combobox"]')!;
+    expect(comboOptions(combo).find(one => one.value === 'edits')?.group).toBe('слово из «Правил» — считается, как задано там');
   });
 
   it('«Какое слово» у правки на «Проверку» (набор успехов): сначала подходящие, «Кость выше» — в «не подходят этим броскам»', () => {
@@ -80,7 +97,7 @@ describe('правка броска говорит, что складывает�
     const view = render(<RollEditsSection system={system} editSystem={vi.fn()} usage={new Map()} />);
     const combo = [...view.container.querySelectorAll<HTMLElement>('[role="combobox"]')]
       .find(one => comboOptions(one).some(item => item.label === 'по разу от каждого разного эффекта'))!;
-    expect(comboOptions(combo).map(one => one.label)).toEqual(['одно на бросок, сколько бы эффектов ни дали', 'по разу от каждого разного эффекта']);
-    expect(combo.closest('[title]')?.getAttribute('title') ?? combo.getAttribute('title')).toContain('Копии одного и того же эффекта');
+    expect(comboOptions(combo).map(one => one.label)).toEqual(['одно на бросок', 'по разу от каждого разного эффекта']);
+    expect(combo.closest('[title]')?.getAttribute('title') ?? combo.getAttribute('title')).toContain('копии одного и того же эффекта считаются одним');
   });
 });
