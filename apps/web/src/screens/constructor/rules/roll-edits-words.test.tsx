@@ -4,6 +4,7 @@ import { render, cleanup } from '@testing-library/react';
 import { comboOptions } from '../../../testing/cards.ts';
 import { renderOpen } from '../../../testing/render-open.tsx';
 import { RollEditsSection } from './roll-edits-section.tsx';
+import { RollsSection } from './rolls-section.tsx';
 import { ModifiersEditor } from '../modifiers.tsx';
 import type { System, Modifier } from '@vtt/schema';
 
@@ -53,6 +54,24 @@ describe('правка броска говорит, что складывает�
     const combo = fieldOf(view.container, 'Какое слово').querySelector<HTMLElement>('[role="combobox"]')!;
     const lines = comboOptions(combo).filter(one => one.value).map(one => `${one.group}: ${one.label}`);
     expect(lines).toEqual(['подходят этим броскам: Переброс', 'не подходят этим броскам: Кость выше']);
+  });
+
+  it('на карточке правила — «Правят эти броски»: по его метке и на любые броски', () => {
+    const pools = {
+      constants: { pool: { label: 'набор к6', kind: 'die', dice: [{ sides: 6, count: 1 }], read: { kind: 'count', atLeast: 5 } } },
+      tables: { лист: { shape: 'single', columns: [{ key: 'ловкость', label: 'Ловкость', kind: 'number' }] } },
+      rolls: { проверка: { label: 'Проверка', die: 'pool', number: 'count', fields: [{ table: 'лист', column: 'ловкость' }] } },
+      effects: {
+        sustain: { label: 'Поддержание', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-2' }, tags: ['проверка'], if: { expr: '@бросающий == @носитель' } }] },
+        luck: { label: 'Удача', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: '@бросающий == @носитель' } }] },
+        other: { label: 'Чужое', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, tags: ['атака'] }] },
+      },
+    } as unknown as System;
+    const view = render(<RollsSection system={pools} editSystem={vi.fn()} />);
+    const row = [...view.container.querySelectorAll<HTMLElement>('.dict-row')].find(one => one.textContent?.startsWith('Правят эти броски'))!;
+    expect(row.textContent).toContain('«Поддержание» — кубики − 2');
+    expect(row.textContent).toContain('на любые броски: «Удача»');
+    expect(row.textContent).not.toContain('Чужое');
   });
 
   it('в словаре выбор говорит «одно на бросок» и «по разу от каждого разного эффекта», подсказка — про копии', () => {

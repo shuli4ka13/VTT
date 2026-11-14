@@ -114,3 +114,25 @@ export function modifierSentence(system: System, modifier: Modifier, table?: str
   const name = `«${effect?.label ?? (call || 'какой вызов?')}»${param ? ` · ${param.label ?? param.key}` : ''}`;
   return `${name}${filters ? ` ${filters}` : ''}${who ? `, ${who}` : ''}: ${op(valueWords(system, mod.value, inputs))}${stageWords(paramStages(effect?.params, String(mod.param ?? '')), mod.stage)}`;
 }
+
+export function editsOnRule(system: System, rule: string): { named: [string, string][]; all: string[] } {
+  const named: [string, string][] = [];
+  const all = new Set<string>();
+  const sources: [string, readonly Modifier[] | undefined][] = [
+    ...Object.entries(system.effects ?? {}).map(([id, effect]) => [effect.label || id, effect.modifiers] as [string, readonly Modifier[] | undefined]),
+    ...Object.entries(system.sheets ?? {}).map(([id, kind]) => [kind.label || id, kind.modifiers as readonly Modifier[] | undefined] as [string, readonly Modifier[] | undefined]),
+    ...Object.entries(system.tables ?? {}).map(([id, table]) => [table.label || id, table.modifiers] as [string, readonly Modifier[] | undefined]),
+  ];
+  for (const [label, modifiers] of sources) {
+    for (const mod of modifiers ?? []) {
+      const loose = mod as unknown as Loose;
+      if (mod.kind !== 'edit' || loose.call !== ROLL_CALL) continue;
+      const tags = [...((loose.tags as unknown[] | undefined) ?? []), ...((loose.anyTags as unknown[] | undefined) ?? [])];
+      if (tags.includes(rule)) {
+        const said = modifierSentence(system, mod);
+        named.push([label, said.slice(said.indexOf(': ') + 2)]);
+      } else if (!tags.length) all.add(label);
+    }
+  }
+  return { named, all: [...all] };
+}

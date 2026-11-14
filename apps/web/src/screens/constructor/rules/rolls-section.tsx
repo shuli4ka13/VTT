@@ -17,6 +17,7 @@ import { numbersOf, shapeOf } from '@vtt/engine/model/die-kinds';
 import type { DieConstant } from '@vtt/engine/model/types';
 import type { System, SystemRoll } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
+import { editsOnRule } from '../modifier-words.ts';
 
 type EditSystem = WorldState['editSystem'];
 
@@ -109,6 +110,24 @@ function RollFlow({ roll }: { roll: SystemRoll }) {
   );
 }
 
+const SHOWN = 6;
+
+function EditsOnRule({ system, id }: { system: System; id: string }) {
+  const { named, all } = editsOnRule(system, id);
+  if (!named.length && !all.length) return null;
+  const list = (items: string[]) => (items.length > SHOWN ? `${items.slice(0, SHOWN).join(', ')} и ещё ${items.length - SHOWN}` : items.join(', '));
+  const parts = [
+    named.length ? list(named.map(([label, what]) => `«${label}» — ${what}`)) : '',
+    all.length ? `на любые броски: ${list(all.map(label => `«${label}»`))}` : '',
+  ].filter(Boolean);
+  return (
+    <div className="dict-row roll-line">
+      <span className="dict-row__label" title="Висящие эффекты, чьи правки броска касаются бросков этого правила: по его метке или без меток (на все броски)">Правят эти броски</span>
+      <span className="faint">{parts.join('; ')}</span>
+    </div>
+  );
+}
+
 function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRoll; system: System; editSystem: EditSystem }) {
   const edit = (change: (draft: SystemRoll) => void) => editSystem(draft => { const one = draft.rolls?.[id]; if (one) change(one); });
   const columns = columnsOf(system);
@@ -140,6 +159,7 @@ function RollRow({ id, roll, system, editSystem }: { id: string; roll: SystemRol
         <span className="roll-word__said">{tags}</span>
         <DangerButton size="sm" onConfirm={() => editSystem(draft => { delete draft.rolls?.[id]; if (draft.rolls && !Object.keys(draft.rolls).length) delete draft.rolls; })}>Убрать</DangerButton>
       </div>
+      <EditsOnRule system={system} id={id} />
       <div className="roll-form">
         <RollFlow roll={roll} />
         <div className="dict-row roll-line">
