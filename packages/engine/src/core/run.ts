@@ -25,7 +25,7 @@ import { Views } from './view.ts';
 import { State } from './state.ts';
 import { limitsOf, CUT_WORDS, PROBES_WORDS } from './limits.ts';
 import { gather, stack, rollHeld, rollMarks, amountOf, THRESHOLD_PARAM } from './edits.ts';
-import { ROLL_CALL } from '../words/calls.ts';
+import { ROLL_CALL, CALL_WORDS } from '../words/calls.ts';
 import { recordOf, retarget, opponentIn, mentions } from './against.ts';
 import type { Faced, Names } from './against.ts';
 import type { Holder } from './edits.ts';
@@ -1563,7 +1563,7 @@ export class Run {
         const now = result(cell.value);
         const question: Question = {
           key: qpath.key, sheetId, window: 'seen', label: '', offers: [...byKey.values()].map(one => one.offer), results: seed(),
-          preview: [`${tags.length ? `Бросок (${rollName([...tags])})` : 'Бросок'}: [${now.dice.rolls.join(', ')}]${addendsText(cell.value.addends)}${shown ? ` + ${shown.label ? `${shown.label}: ` : ''}${shown.value}` : ''} → ${now.total + cell.bonus}`],
+          preview: [`${tags.length ? `Бросок (${rollName([...tags])})` : 'Бросок'}: [${now.dice.rolls.join(', ')}]${addendsText(cell.value.addends)}${shown ? ` + ${shown.label ? `${shown.label}: ` : ''}${shown.value}` : ''} → ${now.total + cell.bonus}${CALL_WORDS.roll.canceled(cell.value.canceled ?? [])}`],
         };
         const { chosen, skipped } = this.choose(question);
         for (const id of chosen) {

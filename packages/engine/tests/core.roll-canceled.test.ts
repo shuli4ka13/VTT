@@ -30,6 +30,18 @@ group('журнал броска говорит, какие слова пога�
     eq(line.includes('погасили'), false);
   });
 
+  test('вопрос «кости выпали» показывает бросок с тем же гашением', () => {
+    const system = structuredClone(world.system) as System;
+    const faces = [15, 4];
+    let at = 0;
+    const sheet = { ...arven, effects: [{ effectId: 'helped' }, { effectId: 'poisoned' }] } as unknown as Sheet;
+    const out = perform({ system, compendium: world.compendium as Compendium, clock: null, sheets: [sheet], die: () => faces[at++ % faces.length]! }, { op: 'roll', sheetId: 'arven', tag: 'abilities.сила.mod' } as never);
+    eq(out.kind, 'paused');
+    if (out.kind !== 'paused') return;
+    eq(out.question.window, 'seen');
+    ok(out.question.preview[0]!.includes('погасили друг друга: Преимущество, Помеха'), out.question.preview.join(' | '));
+  });
+
   test('по разу от каждого эффекта: две помехи против одного преимущества — одна помеха остаётся, гашение названо', () => {
     const line = roll(['helped', 'poisoned', 'frightened'], true);
     ok(line.includes('(Помеха)'), line);
