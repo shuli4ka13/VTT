@@ -51,6 +51,19 @@ group('слово правки броска сверяется с броскам
     ok(texts(system(['проверка', 'спас'], 'lucky')).some(text => text.includes('сразу двух правил')));
   });
 
+  test('правило, которое само несёт ключ другого правила, — пара законна, замечания нет', () => {
+    const s = system(['проверка', 'спас'], 'lucky');
+    (s.rolls as Record<string, { tags?: string[] }>).спас!.tags = ['проверка'];
+    eq(texts(s).some(text => text.includes('сразу двух правил')), false);
+  });
+
+  test('слово не подходит ни одному броску системы — только прежнее замечание словаря, без второго', () => {
+    const s = system(['проверка'], 'flip');
+    (s.roll_edits as Record<string, unknown>).flip = { label: 'Переворот', ops: [{ op: 'flip' }] };
+    (s.rolls as Record<string, unknown>).спас = { label: 'Спасбросок', die: 'pool', number: 'count', fields: [{ table: 'лист', column: 'воля' }] };
+    eq(texts(s).some(text => text.includes('не подходит броскам, к которым')), false);
+  });
+
   test('отбор мест: правило берёт свою метку-ключ, шаг — свои метки', () => {
     const s = system(['проверка']);
     (s.effects as Record<string, unknown>).удар = { label: 'Удар', steps: [{ type: 'roll', die: 'd20', tags: ['проверка'] }] };

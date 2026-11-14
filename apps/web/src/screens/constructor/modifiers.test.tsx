@@ -67,6 +67,14 @@ describe('редактор модификаторов', () => {
     expect(modifierSentence(system, { kind: 'edit', call: 'roll', param: 'threshold', op: 'add', value: { expr: '1' } } as Modifier)).toContain('порог + 1');
   });
 
+  it('строка правки броска: «с любой из меток» без лишнего «или», правило — названием', () => {
+    const ruled = { ...system, rolls: { проверка: { label: 'Проверка', die: 'd', fields: [] } } } as unknown as System;
+    expect(modifierSentence(ruled, { kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-1' }, anyTags: ['атака'], if: { expr: '@бросающий == @носитель' } } as Modifier))
+      .toBe('Бросок с любой из меток «атака», бросает носитель: кубики − 1');
+    expect(modifierSentence(ruled, { kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-1' }, tags: ['проверка'], if: { expr: '@бросающий == @носитель' } } as Modifier))
+      .toBe('Бросок с метками «Проверка», бросает носитель: кубики − 1');
+  });
+
   it('правки предлагаются из словаря автора, а не из зашитого списка', () => {
     renderOpen(<ModifiersEditor system={system} modifiers={rollMod} onEdit={vi.fn()} />);
     const edit = screen.getByDisplayValue('Фора');

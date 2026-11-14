@@ -255,10 +255,13 @@ export function retarget(record: RollRecord, opponent: string, name: string, die
     .filter(edit => !onlyPlus(edit) && (!changesFaces(edit) || record.roll.edits.includes(edit.label)))
     .map(edit => edit.label)
     .filter(Boolean);
+  const { canceled: _was, ...rest } = record.roll;
+  const gone = [...new Set(after.canceled)].map(wordLabel);
   const roll: Roll = {
-    ...record.roll,
+    ...rest,
     claim: { ...claimNow, keeps: [...claimNow.keeps, ...keeps.slice(claimWas.keeps.length)] },
     dice, addends: [...left, ...fromSeen], results, edits: shown,
+    ...(gone.length ? { canceled: gone } : {}),
   };
   return facedOf(roll, record.add, { against: name, edits, dropped, dice: thrownDice });
 }

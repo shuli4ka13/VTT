@@ -65,6 +65,7 @@ describe('правка броска говорит, что складывает�
         sustain: { label: 'Поддержание', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'count', op: 'add', value: { expr: '-2' }, tags: ['проверка'], if: { expr: '@бросающий == @носитель' } }] },
         luck: { label: 'Удача', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, if: { expr: '@бросающий == @носитель' } }] },
         other: { label: 'Чужое', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, tags: ['атака'] }] },
+        skip: { label: 'Мимо', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, notTags: ['проверка'] }] },
       },
     } as unknown as System;
     const view = render(<RollsSection system={pools} editSystem={vi.fn()} />);
@@ -72,6 +73,7 @@ describe('правка броска говорит, что складывает�
     expect(row.textContent).toContain('«Поддержание» — кубики − 2');
     expect(row.textContent).toContain('на любые броски: «Удача»');
     expect(row.textContent).not.toContain('Чужое');
+    expect(row.textContent).not.toContain('Мимо');
   });
 
   it('в словаре выбор говорит «одно на бросок» и «по разу от каждого разного эффекта», подсказка — про копии', () => {

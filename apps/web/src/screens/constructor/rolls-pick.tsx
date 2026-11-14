@@ -25,7 +25,8 @@ function mainHint(system: System, tags: readonly string[]): string {
   if (!tags.length) return 'Пусто — все броски.';
   const rules = tags.filter(tag => system.rolls?.[tag]);
   const named = rules.map(tag => `«${system.rolls![tag]!.label || tag}» — броски по полям этого правила и броски-шаги с меткой «${tag}».`);
-  const two = rules.length > 1 ? ' Два правила сразу у одного броска не бывает — возьмите «Или хотя бы одно из».' : '';
+  const together = rules.some(key => rules.every(other => other === key || (system.rolls![key]!.tags ?? []).includes(other)));
+  const two = rules.length > 1 && !together ? ' Два правила сразу у одного броска не бывает — возьмите «Или хотя бы одно из».' : '';
   return ['Бросок должен подходить под всё выбранное.', ...named].join(' ') + two;
 }
 

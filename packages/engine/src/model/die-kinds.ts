@@ -1,5 +1,6 @@
 import { DICE_TEXT } from '../words/glossary.ts';
 import { registry } from '../engine/steps/index.ts';
+import { isTagWord } from '../engine/roll-tags.ts';
 import { isBlank } from './blank.ts';
 import { LADDER } from '../core/dice.ts';
 import { ROLL_KINDS } from '../words/dice-kinds.ts';
@@ -180,7 +181,11 @@ export function taggedPlacesOf(system: System): TaggedPlace[] {
     const tags = new Set<string>([key, ...stringTags(rule.tags)]);
     for (const entry of rule.fields) {
       for (const tag of stringTags(entry.tags)) tags.add(tag);
-      for (const row of system.tables?.[entry.table]?.rows ?? []) if (typeof row.value === 'string') tags.add(row.value);
+      const table = system.tables?.[entry.table];
+      const linked = (table?.columns ?? []).filter(column => column.kind === 'choice' && column.from && !column.many).map(column => column.key);
+      for (const row of table?.rows ?? []) {
+        for (const value of [row.value, ...linked.map(key => (row.cells ?? {})[key])]) if (isTagWord(value)) tags.add(value);
+      }
     }
     out.push({ ...kindOfRule(system, rule), roll: rule.label || key, die: rule.die, tags: [...tags], name: rule.label || key });
   }

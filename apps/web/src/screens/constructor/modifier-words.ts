@@ -68,6 +68,17 @@ function targetLabel(system: System, target: string, table?: string): string {
   return labelOfTag(system, target);
 }
 
+export function rollEditWhat(system: System, modifier: Modifier, names?: Names): string {
+  const mod = modifier as unknown as Loose;
+  const amount = (word: string): string => `${word} ${(OP_WORDS[String(mod.op ?? 'add')] ?? (value => `${String(mod.op)} ${value}`))(valueWords(system, mod.value, names as Names))}`;
+  return mod.param === 'bonus'
+    ? addendWords(system, mod)
+    : mod.param === 'tags' ? `метка ${valueWords(system, mod.value, names as Names)}`
+    : mod.param === 'count' ? amount(CALL_WORDS.roll.params.count)
+    : mod.param === 'threshold' ? amount(CALL_WORDS.roll.params.threshold)
+    : system.roll_edits?.[String(mod.edit ?? '')]?.label ?? String(mod.edit ?? 'какая правка?');
+}
+
 export function modifierSentence(system: System, modifier: Modifier, table?: string): string {
   const mod = modifier as unknown as Loose;
   const anyRow = mod.kind === 'value' ? /^cell:([^.]+)\.\*\./u.exec(String(mod.target ?? ''))?.[1] : undefined;
@@ -86,18 +97,10 @@ export function modifierSentence(system: System, modifier: Modifier, table?: str
     const rolled = (list: unknown): string => ((list as string[] | undefined) ?? []).map(tag => `«${ruleLabelOf(system, tag) ?? tag}»`).join(', ');
     const all = rolled(mod.tags);
     const some = rolled(mod.anyTags);
-    const tags = [all, some ? `или ${some}` : ''].filter(Boolean).join(' ');
-    const who = whoseWords(system, mod, { бросающий: 'бросает носитель', против: 'бросают против носителя' }, 'бросает кто угодно', names);
-    const amount = (word: string): string => `${word} ${(OP_WORDS[String(mod.op ?? 'add')] ?? (value => `${String(mod.op)} ${value}`))(valueWords(system, mod.value, names))}`;
-    const what = mod.param === 'bonus'
-      ? addendWords(system, mod)
-      : mod.param === 'tags' ? `метка ${valueWords(system, mod.value, names)}`
-      : mod.param === 'count' ? amount(CALL_WORDS.roll.params.count)
-      : mod.param === 'threshold' ? amount(CALL_WORDS.roll.params.threshold)
-      : system.roll_edits?.[String(mod.edit ?? '')]?.label ?? String(mod.edit ?? 'какая правка?');
     const except = rolled(mod.notTags);
-    const lead = `${CALL_WORDS.roll.label}${tags ? ` с метками ${tags}` : ''}${except ? ` кроме ${except}` : ''}${who ? `, ${who}` : ''}`;
-    return `${lead}: ${what}`;
+    const who = whoseWords(system, mod, { бросающий: 'бросает носитель', против: 'бросают против носителя' }, 'бросает кто угодно', names);
+    const lead = `${CALL_WORDS.roll.label}${all ? ` с метками ${all}` : ''}${some ? ` с любой из меток ${some}` : ''}${except ? ` кроме ${except}` : ''}${who ? `, ${who}` : ''}`;
+    return `${lead}: ${rollEditWhat(system, modifier, names)}`;
   }
   const effect = system.effects?.[call];
   const inputs = inputNamesOf(system, call, names);
@@ -128,10 +131,9 @@ export function editsOnRule(system: System, rule: string): { named: [string, str
       const loose = mod as unknown as Loose;
       if (mod.kind !== 'edit' || loose.call !== ROLL_CALL) continue;
       const tags = [...((loose.tags as unknown[] | undefined) ?? []), ...((loose.anyTags as unknown[] | undefined) ?? [])];
-      if (tags.includes(rule)) {
-        const said = modifierSentence(system, mod);
-        named.push([label, said.slice(said.indexOf(': ') + 2)]);
-      } else if (!tags.length) all.add(label);
+      const skips = ((loose.notTags as unknown[] | undefined) ?? []).includes(rule);
+      if (tags.includes(rule)) named.push([label, rollEditWhat(system, mod)]);
+      else if (!tags.length && !skips) all.add(label);
     }
   }
   return { named, all: [...all] };
