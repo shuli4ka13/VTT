@@ -6,6 +6,7 @@ import { LADDER } from '../core/dice.ts';
 import { ROLL_KINDS } from '../words/dice-kinds.ts';
 import type { RollKind } from '../words/dice-kinds.ts';
 import type { System, DieConstant } from './types.ts';
+import { fieldsOf } from './sheet-columns.ts';
 
 export type { RollKind };
 
@@ -175,6 +176,17 @@ export interface TaggedPlace extends RollPlace { tags: readonly string[]; name: 
 
 const stringTags = (list: unknown): string[] => (Array.isArray(list) ? list.filter((tag): tag is string => typeof tag === 'string') : []);
 
+const fieldPlace = (system: System, step: Record<string, unknown>): (RollPlace & { tags: string[] }) | null => {
+  const ref = step.field;
+  const text = typeof ref === 'object' && ref !== null && 'expr' in ref ? String((ref as { expr: unknown }).expr ?? '') : '';
+  const path = /^@[\p{L}\p{N}_]+\.(.+)$/u.exec(text.trim())?.[1];
+  const roll = path ? fieldsOf(system).find(field => field.tag === path)?.roll : undefined;
+  const key = roll?.tags?.[0];
+  const rule = typeof key === 'string' ? system.rolls?.[key] : undefined;
+  if (!rule) return null;
+  return { ...kindOfRule(system, rule), roll: rule.label || key, die: rule.die, tags: stringTags(roll!.tags) };
+};
+
 export function taggedPlacesOf(system: System): TaggedPlace[] {
   const out: TaggedPlace[] = [];
   for (const [key, rule] of Object.entries(system.rolls ?? {})) {
@@ -197,6 +209,10 @@ export function taggedPlacesOf(system: System): TaggedPlace[] {
       if (typeof step.type === 'string' && registry.get(step.type)?.dice?.(step as never)) {
         const place = stepPlace(system, step);
         if (place) out.push({ ...place, tags: stringTags(step.tags), name: effect.label || id });
+        else {
+          const field = fieldPlace(system, step);
+          if (field) out.push({ ...field, tags: [...new Set([...field.tags, ...stringTags(step.tags)])], name: effect.label || id });
+        }
       }
       Object.values(step).forEach(walk);
     };

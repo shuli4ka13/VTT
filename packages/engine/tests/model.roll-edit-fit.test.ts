@@ -64,6 +64,14 @@ group('слово правки броска сверяется с броскам
     eq(texts(s).some(text => text.includes('не подходит броскам, к которым')), false);
   });
 
+  test('шаг «Бросок» по полю — место с костями правила этого поля и метками шага: «Кость выше» на «атаке» с набора к6 — замечание', () => {
+    const s = system(['атака']);
+    (s.effects as Record<string, unknown>).выстрел = { label: 'Выстрел', steps: [{ type: 'roll', field: { expr: '@действующий.ловкость' }, tags: ['атака'] }] };
+    const places = placesMatching(s, { tags: ['атака'] });
+    eq(places.map(place => `${place.name}: ${place.kind}`).join(', '), 'Выстрел: hits');
+    ok(texts(s).some(text => text.includes('слово «Кость выше» не подходит броскам, к которым привязана правка («Выстрел»')), texts(s).join(' | '));
+  });
+
   test('отбор мест: правило берёт свою метку-ключ, шаг — свои метки', () => {
     const s = system(['проверка']);
     (s.effects as Record<string, unknown>).удар = { label: 'Удар', steps: [{ type: 'roll', die: 'd20', tags: ['проверка'] }] };
