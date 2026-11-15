@@ -33,7 +33,10 @@ export function outcomeWords(system: System, tags: readonly string[]): { success
   return { success: found.success ?? OUTCOME_COLUMNS.success, fail: found.fail ?? OUTCOME_COLUMNS.fail };
 }
 
-export const rollName = (tags: readonly string[] | undefined): string => (tags ?? []).join(', ');
+export const rollTitle = (title: string, tags: readonly string[] | undefined, system?: System): string => {
+  const names = [...new Set((tags ?? []).map(tag => system?.rolls?.[tag]?.label || tag))].filter(name => name.toLowerCase() !== title.toLowerCase());
+  return names.length ? `${title} (${names.join(', ')})` : title;
+};
 
 export const tagsHold = (want: readonly string[] | undefined, tags: readonly string[]): boolean =>
   !want?.length || want.every(tag => tags.includes(tag));

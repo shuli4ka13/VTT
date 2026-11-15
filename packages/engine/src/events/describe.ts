@@ -3,7 +3,7 @@ import { recordKinds } from '../model/owned.ts';
 import { loopOf } from '../engine/steps/each.ts';
 import { effectLabelOf } from './actions.ts';
 import { breakReasonWord, registry as stepRegistry, splitsTargets } from '../engine/steps/index.ts';
-import { outcomeWords, rollName } from '../engine/roll-tags.ts';
+import { outcomeWords, rollTitle as titleOf } from '../engine/roll-tags.ts';
 import type { System, Sheet } from '../model/types.ts';
 import { hasField, valueWord } from '../model/sheet-columns.ts';
 import { walkSheet } from '../model/paths.ts';
@@ -23,7 +23,7 @@ const addedOf = (trace: Record<string, unknown>): number => addsOf(trace).reduce
 const tagsOfStep = (step: Record<string, any> | undefined, trace?: Record<string, any>): string[] =>
   (trace?.tags ?? step?.tags ?? (step?.roll?.tags ?? []).filter((t: unknown) => typeof t === 'string')) as string[];
 
-const rollTitle = (tags: string[], fallback: string): string => (tags.length ? `${fallback} (${rollName(tags)})` : fallback);
+const rollTitle = (system: System, tags: string[], fallback: string): string => titleOf(fallback, tags, system);
 
 const tagLabel = (system: System, tag: string, params: readonly { kind?: string; from?: unknown }[] = []): string | null => {
   const walked = walkSheet(system, tag);
@@ -49,7 +49,7 @@ export function previewLines(system: System, effectId: string, trace: Record<str
   for (const one of shown) {
     if (one.type !== 'roll' || !one.by) continue;
     const tags = (one.tags as string[] | undefined) ?? [];
-    const title = tags.length ? `Бросок (${rollName(tags)})` : 'Бросок';
+    const title = titleOf('Бросок', tags, system);
     lines.push(`${title}: ${rollsText(one)}${addendsText(addsOf(one))}${one.bonus ? ` + ${one.bonus}` : ''} = ${one.total}`);
   }
   for (const one of shown) {
@@ -124,7 +124,7 @@ export function describeParts(
     const param = params.find(p => p.key === name);
     if (param) return String(param.label ?? name);
     const source = (effect?.steps ?? []).find((step: any) => String(step.id) === name);
-    if (source?.type === 'roll') return rollTitle(((source.tags ?? []) as unknown[]).filter((tag): tag is string => typeof tag === 'string'), source.by || source.field ? 'бросок' : 'расчёт');
+    if (source?.type === 'roll') return rollTitle(system, ((source.tags ?? []) as unknown[]).filter((tag): tag is string => typeof tag === 'string'), source.by || source.field ? 'бросок' : 'расчёт');
     return labelOf(name);
   };
   const outputLabel = (name: string): string => {
@@ -170,7 +170,7 @@ export function describeParts(
         .join(', ');
       const rolls = trace.read === 'count' ? `[${shown}] → успехов ${trace.total - trace.bonus - addedOf(trace)}`
         : trace.kept != null && trace.rolls?.length > 1 ? `[${shown}] → ${trace.kept}` : `[${shown}]`;
-      const title = rollTitle(tagsOfStep(step, trace), 'Бросок');
+      const title = rollTitle(system, tagsOfStep(step, trace), 'Бросок');
       const edits = trace.edits?.length ? ` (${trace.edits.join(', ')})` : '';
       const gone = CALL_WORDS.roll.canceled(trace.canceled ?? []);
       const bonus = step?.bonus ? ` + ${refLabel(step.bonus, trace.within) ?? 'Бонус'}: ${trace.bonus}` : trace.bonus ? ` + ${trace.bonus}` : '';
@@ -186,7 +186,7 @@ export function describeParts(
       const forced = trace.forced != null ? ` (${forcedWords(trace.forced, Boolean(trace.success))})` : '';
       const verdict = (trace.success ? words.success : words.fail) + forced + degree;
       const tags = (trace.tags as string[] | undefined) ?? [];
-      const title = tags.length ? rollTitle(tags, 'Проверка') : refLabel(step?.value) ?? 'Проверка';
+      const title = tags.length ? rollTitle(system, tags, 'Проверка') : refLabel(step?.value) ?? 'Проверка';
       const faced = Array.isArray(trace.faced) ? (trace.faced as FacedTrace[]).map(facedText) : [];
       return [...faced, `${title}: ${trace.total} против ${versus}: ${trace.versus} — ${verdict}`].join(' · ');
     }

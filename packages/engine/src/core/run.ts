@@ -18,7 +18,7 @@ import { tagsFit } from '../engine/modifiers.ts';
 import { expiryOf, inCombat } from '../engine/clock.ts';
 import { burnsUse } from '../events/durations.ts';
 import { refusalWords } from '../events/refusal.ts';
-import { rollName } from '../engine/roll-tags.ts';
+import { rollTitle } from '../engine/roll-tags.ts';
 import { previewLines } from '../events/describe.ts';
 import { isDesk, DESK_ID } from '../engine/owners.ts';
 import { Views } from './view.ts';
@@ -1563,7 +1563,7 @@ export class Run {
         const now = result(cell.value);
         const question: Question = {
           key: qpath.key, sheetId, window: 'seen', label: '', offers: [...byKey.values()].map(one => one.offer), results: seed(),
-          preview: [`${tags.length ? `Бросок (${rollName([...tags])})` : 'Бросок'}: [${now.dice.rolls.join(', ')}]${addendsText(cell.value.addends)}${shown ? ` + ${shown.label ? `${shown.label}: ` : ''}${shown.value}` : ''} → ${now.total + cell.bonus}${CALL_WORDS.roll.canceled(cell.value.canceled ?? [])}`],
+          preview: [`${rollTitle('Бросок', [...tags], this.system)}: [${now.dice.rolls.join(', ')}]${addendsText(cell.value.addends)}${shown ? ` + ${shown.label ? `${shown.label}: ` : ''}${shown.value}` : ''} → ${now.total + cell.bonus}${CALL_WORDS.roll.canceled(cell.value.canceled ?? [])}`],
         };
         const { chosen, skipped } = this.choose(question);
         for (const id of chosen) {

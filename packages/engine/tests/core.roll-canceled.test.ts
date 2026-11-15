@@ -40,6 +40,7 @@ group('журнал броска говорит, какие слова пога�
     if (out.kind !== 'paused') return;
     eq(out.question.window, 'seen');
     ok(out.question.preview[0]!.includes('погасили друг друга: Преимущество, Помеха'), out.question.preview.join(' | '));
+    ok(out.question.preview[0]!.startsWith('Бросок (Проверка, '), out.question.preview.join(' | '));
   });
 
   test('по разу от каждого эффекта: две помехи против одного преимущества — одна помеха остаётся, гашение названо', () => {
