@@ -1,3 +1,4 @@
+import { claimMarks } from '@vtt/engine/model/roll-reach';
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useRoom } from '../../store/room.ts';
@@ -436,11 +437,5 @@ export function openRoll(field: { roll?: { threshold?: unknown; under?: unknown 
 
 export function claimWords(system: System): [string, string][] {
   const words = Object.entries(system.roll_edits ?? {}).map(([key, edit]) => [key, edit.label || key] as [string, string]);
-  const marks: [string, string][] = [];
-  for (const table of Object.values(system.tables ?? {})) {
-    for (const row of table.rows ?? []) {
-      if ((row.cells as Record<string, unknown> | undefined)?.claim === true) marks.push([String(row.value), String(row.label ?? row.value)]);
-    }
-  }
-  return [...words, ...marks];
+  return [...words, ...claimMarks(system)];
 }
