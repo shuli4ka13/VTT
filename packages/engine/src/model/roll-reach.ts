@@ -83,7 +83,7 @@ export function rollTagReach(system: System, compendium?: Compendium): TagReach 
       if (chosen) return chosen;
       if (!book) return null;
       return join(records.filter(record => isUnder(system, record.table, table))
-        .map(record => cellOf(columnOf(record.table, column), (record.cells as Loose | undefined)?.[column])));
+        .map(record => cellOf(columnOf(record.table ?? table, column), (record.cells as Loose | undefined)?.[column])));
     }
     const def = columnOf(table, column);
     if (!def) return null;

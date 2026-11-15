@@ -139,7 +139,7 @@ describe('пробный расчёт и итог бросают одни кос
       .send({ roomId, actionId: 'poison-spray:0', fromId: mirra.id, toIds: [arven.id] }).expect(201);
     expect(paused.body.pending?.sheetId).toBe(arven.id);
     const previewed = paused.body.pending.preview.join(' · ');
-    const rolled = previewed.match(/Бросок \(спасбросок\): \[([^\]]+)\]/);
+    const rolled = previewed.match(/Бросок \(Спасбросок\): \[([^\]]+)\]/);
     expect(rolled, previewed).toBeTruthy();
 
     const answered = await as(http().post(`/rooms/${roomId}/answer`))
