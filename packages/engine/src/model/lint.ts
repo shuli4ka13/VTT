@@ -8,7 +8,8 @@ import { HEARD_WORDS } from '../events/lifecycle.ts';
 import type { System, Compendium, Effect, Step, Stage, Guard, Param, Table, Modifier } from './types.ts';
 import { registry, loopsAt, splitsTargets } from '../engine/steps/index.ts';
 import { numbersOf, kindOfRule, placesOf, fitsPlace, fitKinds, countUnread, rollsCounting, placesMatching, wordFits } from './die-kinds.ts';
-import { ROLL_KIND_WORDS, NUMBER_MISFIT, EDIT_MISFIT, EDIT_SIDES_MISFIT, COUNT_UNREAD, rollNumberWord, WORD_MISFITS_ROLLS, TWO_RULES } from '../words/dice-kinds.ts';
+import { ROLL_KIND_WORDS, NUMBER_MISFIT, EDIT_MISFIT, EDIT_SIDES_MISFIT, COUNT_UNREAD, rollNumberWord, WORD_MISFITS_ROLLS, TWO_RULES, TAG_UNREACHED } from '../words/dice-kinds.ts';
+import { rollTagReach, unreachedTags } from './roll-reach.ts';
 import { editPrimitives } from '../engine/roll-edits.ts';
 import { namingProblems } from './naming.ts';
 import type { DieConstant } from './types.ts';
@@ -860,6 +861,32 @@ function anchorModeProblems(system: System): Problem[] {
   return out;
 }
 
+function tagReachProblems(system: System, compendium?: Compendium): Problem[] {
+  const reach = rollTagReach(system, compendium);
+  if (reach.open) return [];
+  const { book } = reach;
+  const out: Problem[] = [];
+  const lists = [
+    ...modifierLists(system),
+    ...recordsOf(compendium).map(record => ({ where: { tab: 'book' as const, record: record.id }, modifiers: (record.modifiers ?? []) as unknown as Record<string, unknown>[] })),
+  ];
+  for (const { where, modifiers } of lists) {
+    for (const mod of modifiers) {
+      if (mod.kind !== 'edit' || mod.call !== ROLL_CALL) continue;
+      const missing = unreachedTags(reach, { tags: mod.tags, anyTags: mod.anyTags });
+      if (missing.length) out.push({ where: { ...where, part: 'modifiers' }, level: 'warn', text: TAG_UNREACHED(missing, 'правка', book) });
+    }
+  }
+  for (const [id, effect] of Object.entries(system.effects ?? {})) {
+    (effect.on ?? []).forEach((handler, index) => {
+      if (handler.on !== 'seen' && handler.on !== ROLLED) return;
+      const missing = unreachedTags(reach, { tags: handler.tags, anyTags: handler.anyTags });
+      if (missing.length) out.push({ where: { tab: 'effects', effect: id, part: 'on', handler: index }, level: 'warn', text: TAG_UNREACHED(missing, 'подписка', book) });
+    });
+  }
+  return out;
+}
+
 function rollEditProblems(system: System): Problem[] {
   const known = new Set(editStages().map(one => one.op));
   const out: Problem[] = [];
@@ -1490,6 +1517,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...editProblems(system, compendium));
   out.push(...rollEditProblems(system));
   out.push(...anchorModeProblems(system));
+  out.push(...tagReachProblems(system, compendium));
   out.push(...namingProblems(system, compendium));
   out.push(...dieCountProblems(system));
   out.push(...handlerDiceProblems(system));

@@ -40,3 +40,6 @@ export const WORD_MISFITS_ROLLS = (word: string, rolls: readonly string[], kinds
 
 export const TWO_RULES = (rules: readonly string[]): string =>
   `правка ждёт бросок сразу двух правил (${rules.map(rule => `«${rule}»`).join(', ')}) — так не бывает; возьмите «Или хотя бы одно из»`;
+
+export const TAG_UNREACHED = (tags: readonly string[], who: string, book: boolean): string =>
+  `${tags.length === 1 ? 'метку' : 'метки'} ${tags.map(tag => `«${tag}»`).join(', ')} не ставит ни правило броска, ни шаг «Бросок», ни заявка за столом, ни правка «метка броску» — ${book ? `${who} не сработает` : `${who} сработает, только если метку поставит запись книги`}`;

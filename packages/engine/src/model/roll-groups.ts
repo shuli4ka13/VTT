@@ -1,6 +1,7 @@
 import type { System } from './types.ts';
 import { fieldsOf } from './sheet-columns.ts';
 import { isTagWord } from '../engine/roll-tags.ts';
+import { rollTagReach } from './roll-reach.ts';
 
 export interface RollGroup { value: string; label: string }
 
@@ -26,6 +27,8 @@ export function rollGroupsOf(system: System): { rules: RollGroup[]; kinds: RollG
   const carried = new Set<string>();
   for (const field of fieldsOf(system)) for (const tag of field.roll?.tags ?? []) if (isTagWord(tag)) carried.add(tag);
   for (const tag of stepTags(system)) carried.add(tag);
+  const reach = rollTagReach(system);
+  if (!reach.open) for (const tag of reach.tags) if (isTagWord(tag)) carried.add(tag);
   const kinds = [...carried]
     .filter(tag => !ruleKeys.has(tag))
     .sort((a, b) => a.localeCompare(b, 'ru'))

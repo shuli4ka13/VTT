@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { System } from '@vtt/schema';
 import { rollGroupsOf } from '@vtt/engine/model/roll-groups';
 import { Field, Button } from '../../ui/primitives.tsx';
@@ -39,7 +39,7 @@ export function RollsPick({ system, value, onChange, boxed = false, tips = false
 }) {
   const note = (text: string) => (tips ? { tip: text } : { hint: text });
   const [more, setMore] = useState(false);
-  const { lead, labels } = rollsLead(system);
+  const { lead, labels } = useMemo(() => rollsLead(system), [system]);
   const tags = [...(value.tags ?? [])];
   const any = [...(value.anyTags ?? [])];
   const not = [...(value.notTags ?? [])];

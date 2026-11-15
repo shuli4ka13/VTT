@@ -8,6 +8,7 @@ import { act } from '../src/core/act.ts';
 import { perform } from '../src/core/perform.ts';
 import { emptyJournal } from '../src/core/external.ts';
 import { isRuleError } from '../src/engine/errors.ts';
+import { rollTagReach } from '../src/model/roll-reach.ts';
 import type { ActIntent } from '../src/core/act.ts';
 import type { Journal } from '../src/core/external.ts';
 import type { Sheet, System, Compendium } from '../src/model/types.ts';
@@ -26,6 +27,17 @@ function rng(seed: number): () => number {
 }
 
 interface World { system: System; compendium: Compendium; sheets: Sheet[] }
+
+function rolledTags(entries: readonly unknown[], into: Set<string>): void {
+  const walk = (value: unknown): void => {
+    if (Array.isArray(value)) { value.forEach(walk); return; }
+    if (!value || typeof value !== 'object') return;
+    const node = value as Record<string, unknown>;
+    if (Array.isArray(node.rolls) && Array.isArray(node.tags)) for (const tag of node.tags) if (typeof tag === 'string') into.add(tag);
+    Object.values(node).forEach(walk);
+  };
+  walk(entries);
+}
 
 const finite = (sheets: Sheet[], where: string): void => {
   for (const sheet of sheets) {
@@ -47,7 +59,7 @@ function answersFor(world: World, actionId: string, to: string, seed: number): R
   return inputs;
 }
 
-function playAction(world: World, intent: ActIntent, seed: number): 'done' | 'refused' {
+function playAction(world: World, intent: ActIntent, seed: number, seen: Set<string>): 'done' | 'refused' {
   const random = rng(seed);
   const die = (sides: number) => 1 + Math.floor(random() * sides);
   let journal: Journal = emptyJournal();
@@ -56,6 +68,7 @@ function playAction(world: World, intent: ActIntent, seed: number): 'done' | 're
       const out = act({ ...world, clock: null, die, journal }, intent);
       if (out.kind === 'done') {
         finite(out.sheets, intent.actionId);
+        rolledTags(out.entries, seen);
         return 'done';
       }
       const first = out.question.offers[0];
@@ -97,18 +110,21 @@ for (const { sample, mark } of ALL) {
   const players = world.sheets.filter(sheet => sheet.id !== 'стол');
 
   describe(`образец играется: ${system.name}${mark}`, () => {
-    it('каждое действие каждого листа отрабатывает или отказывает по правилам', () => {
+    it('каждое действие каждого листа отрабатывает или отказывает по правилам, метки его бросков знает проверка «Проблем»', () => {
       let done = 0;
+      const seen = new Set<string>();
       for (const from of players) {
         const to = players.find(sheet => sheet.id !== from.id)?.id ?? from.id;
         for (const action of availableActions(from, world)) {
           for (let seed = 1; seed <= SEEDS; seed++) {
             const inputs = answersFor(world, action.id, to, seed);
-            if (playAction(world, { actionId: action.id, fromId: from.id, toIds: [to], inputs } as ActIntent, seed * 7919) === 'done') done += 1;
+            if (playAction(world, { actionId: action.id, fromId: from.id, toIds: [to], inputs } as ActIntent, seed * 7919, seen) === 'done') done += 1;
           }
         }
       }
       expect(done, 'ни одно действие не состоялось').toBeGreaterThan(0);
+      const reach = rollTagReach(system, world.compendium);
+      if (!reach.open) expect([...seen].filter(tag => !reach.tags.has(tag)), 'метки бросков, которых не знает проверка «Проблем»').toEqual([]);
     }, 300_000);
 
     it(FULL ? 'каждый бросок по полю каждого листа отрабатывает' : 'бросок по полю каждого вида отрабатывает', () => {
