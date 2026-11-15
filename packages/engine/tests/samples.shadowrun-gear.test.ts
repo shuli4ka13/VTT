@@ -3,6 +3,7 @@ import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import { exchange } from './play.ts';
 import { perform } from '../src/core/perform.ts';
+import { emptyJournal } from '../src/core/external.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const sr = PLAYABLE_WORLDS.find(w => (w.system as System).id === 'shadowrun6')!;
@@ -177,6 +178,44 @@ group('Shadowrun 6, глава «Снаряжение и импланты»: с�
     const crashed = dropEffect(withEffect(runner({}), 'dg_long_way', { dur: 30 }), 'dg_long_way');
     eq(Number(crashed.values.stun ?? 0), 0);
     eq(crashed.effects.find(e => e.effectId === 'fatigued')?.args?.level ?? 1, 1);
+  });
+});
+
+group('Shadowrun 6: заявки к броску с листа — лечение, взлом замков, чувства (стр. 158, 276, 278, 281)', () => {
+  const rollWith = (sheet: Sheet, tag: string, claims: string[] = []) => {
+    let journal = emptyJournal();
+    for (let round = 0; round < 8; round++) {
+      const out = perform({ system, compendium, clock: null, sheets: [sheet], die: () => 2, journal }, { op: 'roll', sheetId: sheet.id, tag, claims } as never);
+      if (out.kind === 'done') {
+        const pool = (/\[([^\]]*)\]/.exec(out.log.join('\n'))?.[1] ?? '').split(',').filter(Boolean).length;
+        return { pool, edge: out.sheets.find(s => s.id === sheet.id)!.values.edge_left };
+      }
+      journal = { ...out.journal, answers: { ...out.journal.answers, [out.question.key]: [] } };
+    }
+    throw new Error('вопросы без конца');
+  };
+
+  test('аптечка: +1 кубик к Биотехнологиям только с заявкой «лечение» и в беспроводном режиме; автовзломщик — к заявке «взлом замков»', () => {
+    const medic = (wireless: boolean) => runner({ 'skills.биотехнологии.rank': 2 }, [{ of: 'medkit', values: { wireless } }]);
+    const base = rollWith(medic(true), 'skills.биотехнологии.pool').pool;
+    eq(rollWith(medic(true), 'skills.биотехнологии.pool', ['лечение']).pool, base + 1);
+    eq(rollWith(medic(false), 'skills.биотехнологии.pool', ['лечение']).pool, base);
+    const picker = runner({ 'skills.инженерное_дело.rank': 2 }, [{ of: 'brk_autopick' }]);
+    eq(rollWith(picker, 'skills.инженерное_дело.pool', ['взлом замков']).pool, rollWith(picker, 'skills.инженерное_дело.pool').pool + 1);
+  });
+
+  test('пространственный распознаватель: Внимание с заявкой «слух» — +1 кубик без проводов и очко Преимущества; «слух» к другой проверке — ничего', () => {
+    const ears = runner({ 'skills.внимание.rank': 2, 'skills.атлетика.rank': 2 }, [{ of: 'aud_enh_spatial_recognizer', values: { wireless: true } }]);
+    const plain = rollWith(ears, 'skills.внимание.pool');
+    const heard = rollWith(ears, 'skills.внимание.pool', ['слух']);
+    eq(heard.pool, plain.pool + 1);
+    deepEq([plain.edge, heard.edge], [0, 1]);
+    eq(rollWith(ears, 'skills.атлетика.pool', ['слух']).edge, 0);
+  });
+
+  test('Улучшение чувства: проверка с заявкой чувства — очко Преимущества, без заявки — нет', () => {
+    const adept = runner({ 'skills.внимание.rank': 2 }, [{ of: 'adept_improved_sense' }]);
+    deepEq([rollWith(adept, 'skills.внимание.pool', ['обоняние']).edge, rollWith(adept, 'skills.внимание.pool').edge], [1, 0]);
   });
 });
 

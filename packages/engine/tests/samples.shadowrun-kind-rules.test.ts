@@ -11,8 +11,11 @@ const RULES: Record<string, string[]> = {
   'Скоростной интервал: штраф к атакам': ['vehicle'],
 };
 
+const NOT_IN_LITE = new Set(['Матрица: рана и шум']);
+
 describe('Shadowrun: правила рода листа выданы типам висящими эффектами', () => {
   for (const world of [...SAMPLE_WORLDS, ...LITE_WORLDS].filter(one => one.title.includes('Shadowrun'))) {
+    const lite = LITE_WORLDS.includes(world);
     const system = flattenSystem(world.system);
     const sources = (of: string): string[] => {
       const sheet = { id: 'л', systemId: system.id, name: 'л', of, values: {}, has: [], effects: [] } as unknown as Sheet;
@@ -23,7 +26,9 @@ describe('Shadowrun: правила рода листа выданы типам 
     it(`${world.title}: каждое правило действует на свои типы (и наследников) и не действует на чужие`, () => {
       for (const kind of Object.keys(system.sheets ?? {})) {
         const got = sources(kind);
-        for (const [rule, kinds] of Object.entries(RULES)) expect(got.includes(rule), `${rule} → ${kind}`).toBe(kinds.includes(kind));
+        for (const [rule, kinds] of Object.entries(RULES)) {
+          expect(got.includes(rule), `${rule} → ${kind}`).toBe(!(lite && NOT_IN_LITE.has(rule)) && kinds.includes(kind));
+        }
       }
     });
 

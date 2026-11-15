@@ -1845,6 +1845,11 @@
             "key": "провал",
             "label": "Провал",
             "kind": "text"
+          },
+          {
+            "key": "claim",
+            "label": "Заявляют за столом",
+            "kind": "boolean"
           }
         ],
         "rows": [
@@ -1872,13 +1877,22 @@
             "value": "инициатива"
           },
           {
-            "value": "лечение"
+            "value": "лечение",
+            "cells": {
+              "claim": true
+            }
           },
           {
-            "value": "зрение"
+            "value": "зрение",
+            "cells": {
+              "claim": true
+            }
           },
           {
-            "value": "слух"
+            "value": "слух",
+            "cells": {
+              "claim": true
+            }
           },
           {
             "value": "равновесие"
@@ -1887,7 +1901,10 @@
             "value": "физический"
           },
           {
-            "value": "обоняние"
+            "value": "обоняние",
+            "cells": {
+              "claim": true
+            }
           },
           {
             "value": "бег"
@@ -1920,7 +1937,10 @@
             "value": "голос"
           },
           {
-            "value": "вкус"
+            "value": "вкус",
+            "cells": {
+              "claim": true
+            }
           },
           {
             "value": "против цели, которой мешает слух"
@@ -1950,7 +1970,10 @@
             "value": "токсин"
           },
           {
-            "value": "осязание"
+            "value": "осязание",
+            "cells": {
+              "claim": true
+            }
           },
           {
             "value": "матрица"
@@ -1965,7 +1988,10 @@
             "value": "взломать файл"
           },
           {
-            "value": "взлом замков"
+            "value": "взлом замков",
+            "cells": {
+              "claim": true
+            }
           },
           {
             "value": "редактировать файл"
@@ -15161,29 +15187,6 @@
           }
         ]
       },
-      "sheet_matrix_noise": {
-        "label": "Матрица: рана и шум",
-        "group": "Правила листов",
-        "description": "К проверкам с меткой «матрица»: раны матричного счётчика прибавляют штраф, шум убирает кубики.",
-        "activation": "passive",
-        "modifiers": [
-          {
-            "kind": "edit",
-            "call": "roll",
-            "param": "count",
-            "op": "add",
-            "value": {
-              "expr": "@носитель.matrix_wound - @носитель.noise"
-            },
-            "if": {
-              "expr": "@бросающий == @носитель"
-            },
-            "tags": [
-              "матрица"
-            ]
-          }
-        ]
-      },
       "sheet_astral_penalty": {
         "label": "Астральное восприятие: помеха мирскому",
         "group": "Правила листов",
@@ -15358,7 +15361,6 @@
           }
         ],
         "grants": [
-          "sheet_matrix_noise",
           "sheet_astral_penalty"
         ]
       },
