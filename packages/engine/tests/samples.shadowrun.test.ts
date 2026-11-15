@@ -368,6 +368,11 @@ group('Shadowrun 6: состояния (стр. 52–54)', () => {
     eq(dicePool(roll(blind, 'skills.внимание.pool')), base);
   });
 
+  test('Ослепление, повешенное без уровня, — уровень по умолчанию: −3 кубика по заявке «зрение»', () => {
+    const base = dicePool(roll(sheetOf('razor', { edge_left: 0 }), 'skills.внимание.pool', ['зрение']));
+    eq(dicePool(roll(wearing('razor', { effectId: 'blinded' }), 'skills.внимание.pool', ['зрение'])), base - 3);
+  });
+
   test('Утомление II: −4 ко всем наборам; Электрошок: инициатива −2', () => {
     eq(computed(wearing('razor', { effectId: 'fatigued', args: { level: 2 } }), 'condition_mod'), -4);
     eq(computed(wearing('razor', { effectId: 'shocked' }), 'initiative'), computed(sheetOf('razor'), 'initiative') - 2);

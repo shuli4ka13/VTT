@@ -43,7 +43,8 @@ function inputsOf(mod: SourcedModifier): { sheets: Record<string, Bound>; values
   const sheets: Record<string, Bound> = {};
   const values: Record<string, unknown> = {};
   for (const param of mod.source.params ?? []) {
-    const value = mod.source.args?.[param.key];
+    const given = mod.source.args?.[param.key];
+    const value = given !== undefined && given !== null && given !== '' ? given : param.default;
     if (param.kind === 'sheet') sheets[param.key] = typeof value === 'string' ? value : null;
     else if (typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean') values[param.key] = value;
   }
