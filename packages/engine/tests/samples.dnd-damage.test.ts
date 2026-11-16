@@ -1,6 +1,8 @@
 import { group, test, eq, ok, deepEq } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { exchange, fight } from './play.ts';
+import { perform } from '../src/core/perform.ts';
+import { emptyJournal } from '../src/core/external.ts';
 import type { Question } from '../src/core/external.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
@@ -143,5 +145,26 @@ group('D&D: слово правки, заявленное к удару, лож�
     ok(/Бросок \(атака\): \[15\] \+/.test(log), log);
     ok(/\[3\] \(Бой большим оружием\)/.test(log), log);
     ok(/Бросок \(атака\): \[2\] \+/.test(swing(['great_weapon'], [2, 1])));
+  });
+
+  test('«Надёжный талант» — проверка навыка 3 → 10, удар не трогает: кость урона к8 остаётся 1', () => {
+    const check = (claims: string[]) => {
+      let journal = emptyJournal();
+      for (let round = 0; round < 8; round++) {
+        const out = perform({ system, compendium, clock: null, sheets: sheetsWith(['longsword']), die: () => 3, journal }, { op: 'roll', sheetId: 'arven', tag: 'skills.атлетика.total', claims });
+        if (out.kind === 'done') return out.log.join(' · ');
+        journal = { ...out.journal, answers: { ...out.journal.answers, [out.question.key]: [] } };
+      }
+      throw new Error('вопросы без конца');
+    };
+    ok(/\[10\] \(Надёжный талант\)/.test(check(['reliable'])), check(['reliable']));
+    ok(/\[3\]/.test(check([])), check([]));
+    const log = swing(['reliable'], [15, 1]);
+    ok(/урон[^\]]*\): \[1\] \+/.test(log), log);
+  });
+
+  test('«Везучий» — единица на атаке перебрасывается, на кости урона — нет', () => {
+    const log = swing(['lucky'], [1, 15, 1]);
+    ok(/урон[^\]]*\): \[1\] \+/.test(log), log);
   });
 });

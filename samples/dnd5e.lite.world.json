@@ -2741,6 +2741,10 @@
             "op": "reroll",
             "n": 1
           }
+        ],
+        "notTags": [
+          "урон",
+          "лечение"
         ]
       },
       "great_weapon": {
@@ -2764,6 +2768,9 @@
             "op": "floorDie",
             "least": 10
           }
+        ],
+        "tags": [
+          "проверка"
         ]
       },
       "auto_fail": {
