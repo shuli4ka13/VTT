@@ -562,6 +562,34 @@ describe('права за столом', () => {
     expect(answered.pending).toBeNull();
   });
 
+  it('значения вещи меняет ведущий, игрок — только с его разрешения и только у своего листа', async () => {
+    const { as, roomId, arven, mirra, rooms } = await table();
+    const gm = (await as(http().get('/auth/me'))).body.userId as string;
+    const owner = (await http().post('/auth/login').send({ name: 'Хозяйка меча' })).body;
+    await http().post(`/rooms/${roomId}/join`).set('Authorization', `Bearer ${owner.token}`).expect(201);
+    await rooms.claimSheet(owner.userId, roomId, arven.id);
+    const sword = 'вещь:longsword-item.damage_type';
+    const swordOf = (delta: { sheets: { id: string; has: { of: string; values?: unknown }[] }[] }) =>
+      delta.sheets.find(sheet => sheet.id === arven.id)?.has.find(entry => entry.of === 'longsword-item');
+
+    await expect(rooms.setValue(owner.userId, roomId, arven.id, sword, 'колющий')).rejects.toThrow('значения вещей меняет ведущий');
+    await expect(rooms.allowItems(owner.userId, roomId, owner.userId, true)).rejects.toThrow('разрешает ведущий');
+    await expect(rooms.allowItems(gm, roomId, gm, true)).rejects.toThrow('ведущему разрешать не нужно');
+
+    await rooms.allowItems(gm, roomId, owner.userId, true);
+    expect((await rooms.state(roomId)).members.find(m => m.userId === owner.userId)?.editsItems).toBe(true);
+    expect(swordOf(await rooms.setValue(owner.userId, roomId, arven.id, sword, 'колющий'))?.values).toEqual({ damage_type: 'колющий' });
+    await expect(rooms.setValue(owner.userId, roomId, mirra.id, 'вещь:poison-spray.damage_type', 'огонь')).rejects.toThrow('чужой лист');
+
+    await rooms.allowItems(gm, roomId, owner.userId, false);
+    expect((await rooms.state(roomId)).members.find(m => m.userId === owner.userId)?.editsItems).toBeUndefined();
+    await expect(rooms.setValue(owner.userId, roomId, arven.id, sword, 'рубящий')).rejects.toThrow('значения вещей меняет ведущий');
+    expect(swordOf(await rooms.setValue(gm, roomId, arven.id, sword, 'рубящий'))).toEqual({ of: 'longsword-item' });
+    expect((await rooms.journal(gm, roomId)).filter(entry => entry.op === 'items').map(entry => entry.input)).toEqual([
+      { userId: owner.userId, on: true }, { userId: owner.userId, on: false },
+    ]);
+  });
+
   it('бой, отдых и сцену ведёт только ведущий', async () => {
     const { as, roomId, arven, rooms } = await table();
     const player = (await http().post('/auth/login').send({ name: 'Игрок без боя' })).body;

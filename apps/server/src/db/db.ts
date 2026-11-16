@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS room_pending (
   id TEXT PRIMARY KEY, room_id TEXT NOT NULL, data TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS members (
   room_id TEXT NOT NULL, user_id TEXT NOT NULL, role TEXT NOT NULL,
-  sheet_id TEXT, PRIMARY KEY (room_id, user_id));
+  sheet_id TEXT, items INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (room_id, user_id));
 CREATE TABLE IF NOT EXISTS log_entries (
   id TEXT PRIMARY KEY, room_id TEXT NOT NULL, at TEXT NOT NULL,
   text TEXT NOT NULL, lines TEXT, seq INTEGER NOT NULL, hidden INTEGER NOT NULL DEFAULT 0);
@@ -77,6 +77,12 @@ function addLinesColumn(raw: DatabaseSync): void {
   raw.exec('ALTER TABLE log_entries ADD COLUMN lines TEXT');
 }
 
+function addItemsColumn(raw: DatabaseSync): void {
+  const columns = raw.prepare('PRAGMA table_info(members)').all() as { name: string }[];
+  if (columns.some(column => column.name === 'items')) return;
+  raw.exec('ALTER TABLE members ADD COLUMN items INTEGER NOT NULL DEFAULT 0');
+}
+
 export function openDatabase(file = ':memory:'): Database {
   const raw = new DatabaseSync(file);
   raw.exec('PRAGMA foreign_keys = ON');
@@ -87,6 +93,7 @@ export function openDatabase(file = ':memory:'): Database {
   addSnapshotColumn(raw, 'published_compendiums');
   addHiddenColumn(raw);
   addLinesColumn(raw);
+  addItemsColumn(raw);
 
   const db = drizzle<typeof schema>(async (sql, params, method) => {
     const statement = raw.prepare(sql);

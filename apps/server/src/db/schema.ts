@@ -91,6 +91,7 @@ export const members = sqliteTable('members', {
 
   role: text('role').notNull(),
   sheetId: text('sheet_id'),
+  items: integer('items').notNull().default(0),
 });
 
 export const logEntries = sqliteTable('log_entries', {

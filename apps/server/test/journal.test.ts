@@ -72,6 +72,7 @@ describe('журнал стола: намерение + кости = тот же
     const script = [
       act(), act(['advantage']),
       { op: 'set', userId: me, input: { sheetId: mirra.id, tag: 'hp_current', value: 3 } },
+      { op: 'set', userId: me, input: { sheetId: arven.id, tag: 'вещь:longsword-item.damage_type', value: 'колющий' } },
       act(),
       { op: 'turn', userId: me, input: { roomId: first.roomId, op: 'start', who: [arven.id] } },
       { op: 'turn', userId: me, input: { roomId: first.roomId, op: 'join', who: [mirra.id] } },

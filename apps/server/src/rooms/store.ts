@@ -13,6 +13,7 @@ export interface Commit {
   log?: { id: string; at: string; text: string; lines?: string | null; hidden: boolean }[];
   journal?: { at: string; userId: string; op: string; input: string; dice: string; result: string };
   member?: { userId: string; sheetId: string | null };
+  items?: { userId: string; on: boolean };
 }
 
 export class RoomStore {
@@ -48,8 +49,8 @@ export class RoomStore {
   }
 
   members(roomId: string): Member[] {
-    return (this.raw.prepare('SELECT user_id AS userId, role, sheet_id AS sheetId FROM members WHERE room_id = ?').all(roomId) as { userId: string; role: string; sheetId: string | null }[])
-      .map(row => ({ userId: row.userId, role: row.role === 'gm' ? 'gm' : 'player', sheetId: row.sheetId ?? null }));
+    return (this.raw.prepare('SELECT user_id AS userId, role, sheet_id AS sheetId, items FROM members WHERE room_id = ?').all(roomId) as { userId: string; role: string; sheetId: string | null; items: number }[])
+      .map(row => ({ userId: row.userId, role: row.role === 'gm' ? 'gm' : 'player', sheetId: row.sheetId ?? null, ...(row.items ? { editsItems: true } : {}) }));
   }
 
   log(roomId: string): LogEntry[] {
@@ -106,6 +107,9 @@ export class RoomStore {
       }
       if (change.member) {
         this.raw.prepare('UPDATE members SET sheet_id = ? WHERE room_id = ? AND user_id = ?').run(change.member.sheetId, roomId, change.member.userId);
+      }
+      if (change.items) {
+        this.raw.prepare('UPDATE members SET items = ? WHERE room_id = ? AND user_id = ?').run(change.items.on ? 1 : 0, roomId, change.items.userId);
       }
       if (change.journal) {
         const last = this.raw.prepare('SELECT MAX(seq) AS seq FROM room_journal WHERE room_id = ?').get(roomId) as { seq: number | null };

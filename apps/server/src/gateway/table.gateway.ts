@@ -192,6 +192,24 @@ export class TableGateway {
     }
   }
 
+  @SubscribeMessage('member:items')
+  async allowItems(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
+    const guest = this.guestOf(socket);
+    if (!guest) return this.fail(socket, 'сначала войдите в комнату');
+
+    const parsed = api.clientMessage.safeParse({ type: 'member:items', ...(raw as object) });
+    if (!parsed.success || parsed.data.type !== 'member:items') {
+      return this.fail(socket, 'разрешение не проходит схему');
+    }
+    const { roomId, userId, on } = parsed.data;
+    try {
+      await this.roomsService.allowItems(guest.userId, roomId, userId, on);
+      await this.announceMembers(roomId);
+    } catch (err) {
+      this.fail(socket, (err as Error).message);
+    }
+  }
+
   @SubscribeMessage('piece:place')
   async placePiece(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
     const guest = this.guestOf(socket);

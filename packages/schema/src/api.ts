@@ -91,6 +91,7 @@ export const member = z.object({
   name: z.string(),
   role: z.enum(['gm', 'player']).optional(),
   sheetId: z.string().nullable().optional(),
+  editsItems: z.boolean().optional(),
 });
 
 export const pendingState = z.object({
@@ -216,6 +217,8 @@ export const clientMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('sheet:roll'), roomId: z.string(), sheetId: z.string(), tag: z.string().min(1), hidden: z.boolean().optional(), claims: z.array(z.string().min(1)).optional(), second: z.string().min(1).optional(), versus: z.number().finite().optional() }),
 
   z.object({ type: z.literal('sheet:claim'), roomId: z.string(), sheetId: z.string().nullable() }),
+
+  z.object({ type: z.literal('member:items'), roomId: z.string(), userId: z.string().min(1), on: z.boolean() }),
 
   z.object({ type: z.literal('piece:place'), roomId: z.string(), sheetId: z.string().min(1), at: place.nullable() }),
 

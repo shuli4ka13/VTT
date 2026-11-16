@@ -114,10 +114,10 @@ export class RoomsService {
 
   async state(roomId: string): Promise<RoomState> {
     const room = this.requireRoom(roomId);
-    const people: { userId: string; name: string; role: Role; sheetId: string | null }[] = [];
+    const people: { userId: string; name: string; role: Role; sheetId: string | null; editsItems?: boolean }[] = [];
     for (const m of this.store.members(roomId)) {
       const found = await this.db.select().from(users).where(eq(users.id, m.userId));
-      people.push({ userId: m.userId, name: found[0]?.name ?? 'неизвестен', role: m.role, sheetId: m.sheetId });
+      people.push({ userId: m.userId, name: found[0]?.name ?? 'неизвестен', role: m.role, sheetId: m.sheetId, ...(m.editsItems ? { editsItems: true } : {}) });
     }
     const pending = this.store.pending<PendingRecord>(roomId);
     const sheets = this.store.sheets(roomId);
@@ -241,6 +241,16 @@ export class RoomsService {
       this.allow(room, userId, { kind: 'claim', sheetId }, true);
       const delta: RoomDelta = { roomId, sheets: [], log: [] };
       this.store.commit({ roomId, member: { userId, sheetId }, journal: this.journalRow(userId, 'claim', { sheetId }, [], delta) });
+      return delta;
+    });
+  }
+
+  allowItems(userId: string, roomId: string, whoId: string, on: boolean): Promise<RoomDelta> {
+    return this.inTurn(roomId, () => {
+      const room = this.requireRoom(roomId);
+      this.allow(room, userId, { kind: 'items', userId: whoId });
+      const delta: RoomDelta = { roomId, sheets: [], log: [] };
+      this.store.commit({ roomId, items: { userId: whoId, on }, journal: this.journalRow(userId, 'items', { userId: whoId, on }, [], delta) });
       return delta;
     });
   }
