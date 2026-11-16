@@ -90,20 +90,6 @@ describe('сумка: добавить вещь', () => {
   });
 });
 
-describe('заявки к броску с листа', () => {
-  it('предлагаются слова словаря правок и метки, которые заявляет игрок', async () => {
-    const { claimWords } = await import('./sheet.tsx');
-    const system = {
-      id: 'x', name: 'x', effects: {},
-      roll_edits: { wild: { label: 'Дикий кубик', ops: [{ op: 'wild' }] } },
-      tables: { rolls: { label: 'Броски', key: 'word', columns: [{ key: 'claim', label: 'Заявляет игрок', kind: 'boolean' }], rows: [
-        { value: 'проверка' }, { value: 'зрение', cells: { claim: true } }, { value: 'голос', cells: { claim: true } },
-      ] } },
-    } as never;
-    expect(claimWords(system)).toEqual([['wild', 'Дикий кубик'], ['зрение', 'зрение'], ['голос', 'голос']]);
-  });
-});
-
 describe('бросок по полю: вторая характеристика и сложность', () => {
   const fabula = JSON.parse(readFileSync(resolve(process.cwd(), '../../samples/fabula.lite.world.json'), 'utf8'));
   const calls: unknown[][] = [];

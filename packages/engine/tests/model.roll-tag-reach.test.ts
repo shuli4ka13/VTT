@@ -1,6 +1,6 @@
 import { group, test, ok, eq } from './harness.ts';
 import { lintSystem } from '../src/model/lint.ts';
-import { rollTagReach } from '../src/model/roll-reach.ts';
+import { rollTagReach, claimWords } from '../src/model/roll-reach.ts';
 import { rollGroupsOf } from '../src/model/roll-groups.ts';
 import { rollTitle } from '../src/engine/roll-tags.ts';
 import { SAMPLE_WORLDS } from '../src/model/systems.ts';
@@ -153,6 +153,11 @@ group('«Проблемы»: метку, которую ждёт правка б
     });
     const texts = lintSystem(s).filter(p => p.level === 'error').map(p => p.text);
     ok(texts.some(text => text.includes('передано «плазма» — в таблице «Стихии» такой строки нет')), texts.join(' | '));
+  });
+
+  test('за столом заявляют слова словаря правок и строки с галочкой «заявляют» — один список для листа и действий', () => {
+    const s = { ...system({}), roll_edits: { wild: { label: 'Дикий кубик', ops: [{ op: 'wild' }] } } } as unknown as System;
+    eq(JSON.stringify(claimWords(s)), JSON.stringify([['wild', 'Дикий кубик'], ['слух', 'слух']]));
   });
 });
 

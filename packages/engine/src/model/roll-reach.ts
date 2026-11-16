@@ -44,6 +44,11 @@ export function claimMarks(system: System): [string, string][] {
   return marks;
 }
 
+export function claimWords(system: System): [string, string][] {
+  const words = Object.entries(system.roll_edits ?? {}).map(([key, edit]) => [key, edit.label || key] as [string, string]);
+  return [...words, ...claimMarks(system)];
+}
+
 export function rollTagReach(system: System, compendium?: Compendium): TagReach {
   const tags = new Set<string>();
   let open = false;

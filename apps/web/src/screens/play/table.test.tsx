@@ -412,3 +412,46 @@ describe('стол: кто меняет вещи', () => {
     expect(text.querySelector('.chip')).toBeNull();
   });
 });
+
+describe('стол: правки броска у действия', () => {
+  const sent: unknown[] = [];
+  const original = tableSocket.act.bind(tableSocket);
+  const withAction = (): RoomState => ({
+    ...room(null),
+    system: {
+      id: 'x', name: 'x',
+      effects: { удар: { label: 'Удар', activation: 'manual', params: [], steps: [] } },
+      roll_edits: { wild: { label: 'Дикий кубик', ops: [{ op: 'wild' }] } },
+      tables: {
+        меч: { shape: 'book', use: 'action', label: 'Меч', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] },
+        броски: { label: 'Броски', key: 'word', columns: [{ key: 'claim', label: 'Заявляют за столом', kind: 'boolean' }], rows: [{ value: 'атака' }, { value: 'зрение', cells: { claim: true } }] },
+      },
+    },
+    compendium: { records: [{ id: 'меч', table: 'меч', label: 'Меч', cells: {} }] },
+    sheets: [
+      { id: 'а', systemId: 'x', name: 'Арвен', values: {}, has: [{ of: 'меч' }], effects: [] },
+      { id: 'б', systemId: 'x', name: 'Мирра', values: {}, has: [], effects: [] },
+    ],
+  } as unknown as RoomState);
+  beforeEach(() => {
+    sent.length = 0;
+    tableSocket.act = (intent: unknown) => { sent.push(intent); };
+    useRoom.setState(state => ({ ...state, room: withAction(), log: [], error: null }));
+    useSession.setState(state => ({ ...state, userId: 'u' }));
+  });
+  afterEach(() => { cleanup(); tableSocket.act = original; useSession.setState(state => ({ ...state, userId: '' })); });
+
+  it('те же отметки, что над листом, — и для действующего, и для целей; действие уходит с ними', () => {
+    renderOpen(<TableScreen />);
+    const token = (name: string) => screen.getAllByText(name)[0]!.closest('button')!;
+    fireEvent.click(token('Арвен'));
+    fireEvent.click(token('Мирра'));
+    fireEvent.click(screen.getByText('Правки броска'));
+    const chipsOf = (label: string) => [...screen.getByText(`${label}:`).parentElement!.querySelectorAll('.chip')] as HTMLElement[];
+    expect(chipsOf('броски Арвен').map(node => node.textContent)).toEqual(['Дикий кубик', 'зрение']);
+    fireEvent.click(chipsOf('броски Арвен').find(node => node.textContent === 'зрение')!);
+    fireEvent.click(chipsOf('броски целей').find(node => node.textContent === 'зрение')!);
+    fireEvent.click(screen.getByRole('button', { name: 'Меч' }));
+    expect(sent.at(-1)).toMatchObject({ actionId: 'меч:0', fromId: 'а', toIds: ['б'], claims: { а: ['зрение'], б: ['зрение'] } });
+  });
+});

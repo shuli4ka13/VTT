@@ -243,3 +243,15 @@ group('Shadowrun 6: действия защиты (стр. 42–43)', () => {
     eq(defenseDice(thug, 'colt_l36:0', first.target).dice, 10);
   });
 });
+
+group('Shadowrun 6: чувство заявляют и к броскам действия (стр. 53)', () => {
+  test('ослеплённый стрелок: «зрение», заявленное к «Выстрелить», снимает 3 кубика с атаки', () => {
+    const shooter = { ...fighter('стрелок', { agility: 5, 'skills.стрельба.rank': 4 }, [{ of: 'predator_vi' }]), effects: [{ effectId: 'blinded' }] } as Sheet;
+    const target = fighter('цель', { body: 4, reaction: 3, intuition: 3 });
+    const attack = (claims?: { source: string[] }) => {
+      const out = exchange({ system, compendium, die: tape(), sheets: [shooter, target], actionId: 'predator_vi:0', fromId: shooter.id, toIds: [target.id], inputs: { дистанция: 'близкая' }, ...(claims ? { claims } : {}) });
+      return (/Бросок \(атака\): \[([^\]]*)\]/.exec(out.log.join(' · '))?.[1] ?? '').split(',').filter(Boolean).length;
+    };
+    eq(attack({ source: ['зрение'] }), attack() - 3);
+  });
+});

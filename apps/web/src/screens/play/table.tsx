@@ -23,6 +23,7 @@ import { Hanging } from './hanging.tsx';
 import { QUESTION_ID } from './pending-bar.tsx';
 import './table.css';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { claimWords } from '@vtt/engine/model/roll-reach';
 
 export function TableScreen() {
   const room = useRoom(s => s.room);
@@ -379,18 +380,18 @@ function claimsOf(actorId: string, targets: Sheet[], mine: string[], theirs: str
   return Object.keys(claims).length ? { claims } : {};
 }
 
-function ClaimRow({ label, edits, picked, onToggle }: {
+function ClaimRow({ label, words, picked, onToggle }: {
   label: string;
-  edits: [string, { label?: string }][];
+  words: [string, string][];
   picked: string[];
   onToggle: (key: string) => void;
 }) {
   return (
     <div className="inline inline--tight">
       <span className="faint">{label}:</span>
-      {edits.map(([key, edit]) => (
+      {words.map(([key, word]) => (
         <Chip key={key} active={picked.includes(key)} onClick={() => onToggle(key)}>
-          {edit.label || key}
+          {word}
         </Chip>
       ))}
     </div>
@@ -412,7 +413,8 @@ function Actions({ room, sender, targets, places, onError, onClear, onSelf }: {
   const leading = room.members.some(m => m.userId === myId && m.role === 'gm');
   const secret = useRoom(s => s.secret) && leading;
   const setSecret = useRoom(s => s.setSecret);
-  const edits = Object.entries(room.system.roll_edits ?? {});
+  const claimable = claimWords(room.system as System);
+  const wordOf = (key: string) => claimable.find(([one]) => one === key)?.[1] ?? key;
   const flip = (list: string[], key: string) =>
     (list.includes(key) ? list.filter(k => k !== key) : [...list, key]);
 
@@ -439,17 +441,16 @@ function Actions({ room, sender, targets, places, onError, onClear, onSelf }: {
           <Button size="sm" variant="ghost" onClick={onClear}>сбросить выбор</Button>
         </>}
       />
-      {edits.length && available.length ? (
+      {claimable.length && available.length ? (
         <Fold
           title="Правки броска"
           summary={[...mine, ...theirs].length
-            ? [...mine.map(k => `${sender.name}: ${edits.find(([key]) => key === k)?.[1].label ?? k}`),
-              ...theirs.map(k => `цели: ${edits.find(([key]) => key === k)?.[1].label ?? k}`)].join(', ')
+            ? [...mine.map(k => `${sender.name}: ${wordOf(k)}`), ...theirs.map(k => `цели: ${wordOf(k)}`)].join(', ')
             : 'ничего не заявлено'}
         >
           <div className="stack stack--tight">
-            <ClaimRow label={`броски ${sender.name}`} edits={edits} picked={mine} onToggle={key => setMine(flip(mine, key))} />
-            {targets.length ? <ClaimRow label="броски целей" edits={edits} picked={theirs} onToggle={key => setTheirs(flip(theirs, key))} /> : null}
+            <ClaimRow label={`броски ${sender.name}`} words={claimable} picked={mine} onToggle={key => setMine(flip(mine, key))} />
+            {targets.length ? <ClaimRow label="броски целей" words={claimable} picked={theirs} onToggle={key => setTheirs(flip(theirs, key))} /> : null}
           </div>
         </Fold>
       ) : null}

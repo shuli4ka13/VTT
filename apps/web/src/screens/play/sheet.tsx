@@ -1,4 +1,4 @@
-import { claimMarks } from '@vtt/engine/model/roll-reach';
+import { claimWords } from '@vtt/engine/model/roll-reach';
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useRoom } from '../../store/room.ts';
@@ -450,9 +450,4 @@ export function pairFields(system: System) {
 
 export function openRoll(field: { roll?: { threshold?: unknown; under?: unknown } }): boolean {
   return field.roll !== undefined && field.roll.threshold === undefined && !field.roll.under;
-}
-
-export function claimWords(system: System): [string, string][] {
-  const words = Object.entries(system.roll_edits ?? {}).map(([key, edit]) => [key, edit.label || key] as [string, string]);
-  return [...words, ...claimMarks(system)];
 }
