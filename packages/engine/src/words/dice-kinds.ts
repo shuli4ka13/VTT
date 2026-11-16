@@ -26,17 +26,20 @@ export const COUNT_BY_ROLL = (rolls: readonly string[]): string =>
 export const NUMBER_MISFIT = (roll: string, number: string, kind: string): string =>
   `бросок «${roll}»: «${number}» не подходит кости «${kind}» — выберите другое «Число поля — это»`;
 
-export const EDIT_MISFIT = (edit: string, action: string, kinds: readonly string[]): string =>
-  `правка броска «${edit}»: «${action}» подходит костям ${kinds.map(kind => `«${kind}»`).join(', ')}, а в системе таких бросков нет — она ничего не изменит`;
+export const EDIT_MISFIT = (edit: string, action: string, kinds: readonly string[], own = false): string =>
+  `правка броска «${edit}»: «${action}» подходит костям ${kinds.map(kind => `«${kind}»`).join(', ')}, а ${own ? 'у бросков, к которым она относится,' : 'в системе'} таких бросков нет — она ничего не изменит`;
 
 export const COUNT_UNREAD = (die: string, rolls: readonly string[]): string =>
   `у кости «${die}» счётчик никто не читает: ${COUNT_BY_ROLL(rolls)}`;
 
-export const EDIT_SIDES_MISFIT = (edit: string, action: string): string =>
-  `правка броска «${edit}»: «${action}» не подходит граням ни одной кости системы — она ничего не изменит`;
+export const EDIT_SIDES_MISFIT = (edit: string, action: string, own = false): string =>
+  `правка броска «${edit}»: «${action}» не подходит граням ни одной кости ${own ? 'у бросков, к которым она относится' : 'системы'} — она ничего не изменит`;
 
 export const WORD_MISFITS_ROLLS = (word: string, rolls: readonly string[], kinds: readonly string[]): string =>
   `слово «${word}» не подходит броскам, к которым привязана правка (${rolls.map(roll => `«${roll}»`).join(', ')}: ${kinds.join(', ')}) — на них оно ничего не изменит`;
+
+export const WORD_OUTSIDE_ROLLS = (word: string, rolls: readonly string[]): string =>
+  `слово «${word}» не касается бросков, к которым привязана правка (${rolls.map(roll => `«${roll}»`).join(', ')}) — она ничего не изменит`;
 
 export const TWO_RULES = (rules: readonly string[]): string =>
   `правка ждёт бросок сразу двух правил (${rules.map(rule => `«${rule}»`).join(', ')}) — так не бывает; возьмите «Или хотя бы одно из»`;

@@ -63,7 +63,7 @@ describe('слово словаря прибавляет', () => {
   const roller = newPass(system, sheet);
 
   it('заявка «Преимущество» даёт прибавку к6 и не пишется словом броска', () => {
-    const { edits, addends } = rollEdits([], ['advantage'], roller);
+    const { edits, addends } = rollEdits([], ['advantage'], roller, []);
     const die = queue(9, 4);
     const roll = addTo(start(parse(к20), edits, die), addends, die);
     expect(roll.edits).toEqual([]);
@@ -72,7 +72,7 @@ describe('слово словаря прибавляет', () => {
   });
 
   it('преимущество и помеха гасят друг друга — прибавок нет', () => {
-    expect(rollEdits([], ['advantage', 'disadvantage'], roller).addends).toEqual([]);
+    expect(rollEdits([], ['advantage', 'disadvantage'], roller, []).addends).toEqual([]);
   });
 
   it('линт: неизвестное действие, «прибавить» без формулы, прибавка не «add», кинуть в условии правки', () => {

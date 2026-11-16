@@ -28,6 +28,7 @@ const ownerOf = (where: Where): Part | null => {
   if (where.tab === 'effects' && where.effect) return { kind: 'effect', key: where.effect };
   if (where.tab === 'records' && where.kind) return { kind: 'recordKind', key: where.kind };
   if (where.tab === 'book' && where.record) return { kind: 'record', key: where.record };
+  if (where.tab === 'rules' && where.section === 'roll_edits' && where.key) return { kind: 'rollEdit', key: where.key };
   return null;
 };
 

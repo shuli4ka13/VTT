@@ -40,3 +40,10 @@ export const rollTitle = (title: string, tags: readonly string[] | undefined, sy
 
 export const tagsHold = (want: readonly string[] | undefined, tags: readonly string[]): boolean =>
   !want?.length || want.every(tag => tags.includes(tag));
+
+export function tagsFit(spec: { tags?: readonly string[]; anyTags?: readonly string[]; notTags?: readonly string[] }, tags: readonly string[]): boolean {
+  if (spec.tags?.length && !tagsHold([...spec.tags], tags)) return false;
+  if (spec.anyTags?.length && !spec.anyTags.some(t => tags.includes(t))) return false;
+  if (spec.notTags?.length && spec.notTags.some(t => tags.includes(t))) return false;
+  return true;
+}

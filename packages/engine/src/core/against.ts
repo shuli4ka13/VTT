@@ -149,8 +149,8 @@ const signedDice = (count: number): string => `${count > 0 ? '+' : '−'}${Math.
 export function retarget(record: RollRecord, opponent: string, name: string, die: (key: string) => Die, system: System): Faced | null {
   const was = rollHeld(record.holders, record.by, record.against, record.tags, record.values);
   const now = rollHeld(record.holders, record.by, opponent, record.tags, record.values);
-  const before = rollEdits(was, record.claims, record.roller);
-  const after = rollEdits(now, record.claims, record.roller);
+  const before = rollEdits(was, record.claims, record.roller, record.tags);
+  const after = rollEdits(now, record.claims, record.roller, record.tags);
   if (signature(before) === signature(after)) return null;
   const dictionary = system.roll_edits ?? {};
   const wordLabel = (key: string): string => dictionary[key]?.label || key;

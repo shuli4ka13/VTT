@@ -17,9 +17,9 @@ const world = (edits: Record<string, unknown>): System => ({
 const sheet = (id: string, effects: string[]): Sheet =>
   ({ id, systemId: 'п', name: id, values: {}, has: [], effects: effects.map(effectId => ({ effectId })) } as unknown as Sheet);
 
-const words = (system: System, sheets: Sheet[], claims: string[] = []) => {
+const words = (system: System, sheets: Sheet[], claims: string[] = [], tags: string[] = []) => {
   const holders = sheets.map(one => ({ id: one.id, view: newPass(system, one, { compendium: { records: [] } }) }));
-  const out = rollEdits(rollHeld(holders, sheets[0]!.id, null, []), claims, holders[0]!.view);
+  const out = rollEdits(rollHeld(holders, sheets[0]!.id, null, tags), claims, holders[0]!.view, tags);
   return { words: out.words, canceled: out.canceled };
 };
 
@@ -80,5 +80,32 @@ describe('гашение правок броска', () => {
     expect(texts.some(t => t.includes('гасит сама себя'))).toBe(true);
     expect(texts.some(t => t.includes('гасит слово «нет»'))).toBe(true);
     expect(texts.some(t => t.includes('встречной связи нет'))).toBe(true);
+  });
+});
+
+describe('слово со своим выбором бросков', () => {
+  it('правка эффекта зовёт слово «Кроме: урон»: на уроне слова нет и оно не гасит, на атаке — есть и гасит', () => {
+    const system = world({ преимущество: { ...one(), cancels: ['помеха'] }, помеха: { ...one(), cancels: ['преимущество'], notTags: ['урон'] } });
+    const me = [sheet('я', ['преимущество', 'помеха'])];
+    expect(words(system, me, [], ['урон'])).toEqual({ words: ['преимущество'], canceled: [] });
+    const attack = words(system, me, [], ['атака']);
+    expect(attack.words).toEqual([]);
+    expect(attack.canceled.sort()).toEqual(['помеха', 'преимущество']);
+  });
+
+  it('заявка слова «Какие броски: атака» — только на броске с меткой «атака»', () => {
+    const system = world({ лучше: { ...one(), tags: ['атака'] } });
+    expect(words(system, [sheet('я', [])], ['лучше'], ['урон']).words).toEqual([]);
+    expect(words(system, [sheet('я', [])], ['лучше'], ['атака']).words).toEqual(['лучше']);
+  });
+
+  it('«по одному»: неподошедшее слово в счёт не идёт — два блага против беды, которой нет на этом броске', () => {
+    const system = world({
+      благо: { ...one(), stacks: true, cancels: ['беда'] },
+      беда: { ...one(), stacks: true, cancels: ['благо'], notTags: ['урон'] },
+    });
+    const out = words(system, [sheet('я', ['благо', 'беда'])], ['благо'], ['урон']);
+    expect(out.words).toEqual(['благо', 'благо']);
+    expect(out.canceled).toEqual([]);
   });
 });

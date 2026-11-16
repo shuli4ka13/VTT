@@ -223,11 +223,17 @@ export function taggedPlacesOf(system: System): TaggedPlace[] {
   return out;
 }
 
-export const placesMatching = (system: System, filter: { tags?: unknown; anyTags?: unknown }): TaggedPlace[] => {
+export const placesMatching = (system: System, filter: { tags?: unknown; anyTags?: unknown; notTags?: unknown }): TaggedPlace[] => {
   const all = stringTags(filter.tags);
   const any = stringTags(filter.anyTags);
-  return taggedPlacesOf(system).filter(place => all.every(tag => place.tags.includes(tag)) && (!any.length || any.some(tag => place.tags.includes(tag))));
+  const not = stringTags(filter.notTags);
+  return taggedPlacesOf(system).filter(place => all.every(tag => place.tags.includes(tag))
+    && (!any.length || any.some(tag => place.tags.includes(tag)))
+    && !not.some(tag => place.tags.includes(tag)));
 };
+
+export const hasRollFilter = (filter: { tags?: unknown; anyTags?: unknown; notTags?: unknown }): boolean =>
+  stringTags(filter.tags).length > 0 || stringTags(filter.anyTags).length > 0 || stringTags(filter.notTags).length > 0;
 
 export const wordFits = (word: { ops?: readonly Op[] }, places: readonly RollPlace[]): boolean =>
   (word.ops ?? []).every(op => !(String(op.op) in FITS) || places.some(place => fitsPlace(op, place)));

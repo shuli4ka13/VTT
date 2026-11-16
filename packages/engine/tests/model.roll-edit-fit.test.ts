@@ -80,3 +80,31 @@ group('слово правки броска сверяется с броскам
     eq(wordFits({ ops: [{ op: 'dieStep' }] }, placesMatching(s, { tags: ['проверка'] })), true);
   });
 });
+
+group('у слова свой выбор бросков: «Проблемы» сверяют его, как у правки', () => {
+  const scoped = (filter: Record<string, string[]>, key = 'step_up', tags: string[] = []) => {
+    const s = system(tags, key);
+    Object.assign((s.roll_edits as Record<string, object>)[key]!, filter);
+    return s;
+  };
+
+  test('форма костей сверяется только с бросками слова: «Кость выше» на одной «Проверке» (набор, успехи) — замечание', () => {
+    ok(texts(scoped({ tags: ['проверка'] })).some(text => text.includes('у бросков, к которым она относится, таких бросков нет')), texts(scoped({ tags: ['проверка'] })).join(' | '));
+    eq(texts(scoped({ tags: ['спас'] })).some(text => text.includes('ничего не изменит')), false);
+  });
+
+  test('правка зовёт слово на броски, которые слово исключает своим «Кроме», — замечание с именем броска', () => {
+    const found = texts(scoped({ notTags: ['проверка'] }, 'lucky', ['проверка'])).filter(text => text.includes('не касается бросков'));
+    eq(found.length, 1);
+    ok(found[0]!.includes('слово «Переброс»') && found[0]!.includes('«Проверка»'), found[0]);
+    eq(texts(scoped({ notTags: ['спас'] }, 'lucky', ['проверка'])).some(text => text.includes('не касается бросков')), false);
+  });
+
+  test('метку из «Какие броски» слова могут добавить заявка или формула — замечания нет', () => {
+    eq(texts(scoped({ tags: ['спас'] }, 'lucky', ['проверка'])).some(text => text.includes('не касается бросков')), false);
+  });
+
+  test('два правила сразу в выборе слова — замечание', () => {
+    ok(texts(scoped({ tags: ['проверка', 'спас'] }, 'lucky')).some(text => text.includes('сразу двух правил')));
+  });
+});

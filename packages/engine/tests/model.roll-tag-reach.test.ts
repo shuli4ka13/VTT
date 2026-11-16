@@ -155,6 +155,14 @@ group('«Проблемы»: метку, которую ждёт правка б
     ok(texts.some(text => text.includes('передано «плазма» — в таблице «Стихии» такой строки нет')), texts.join(' | '));
   });
 
+  test('метку из выбора слова словаря не ставит никто — замечание у слова', () => {
+    const s = { ...system({}), roll_edits: { wild: { label: 'Дикий кубик', ops: [{ op: 'wild' }], tags: ['зрение'] } } } as unknown as System;
+    const found = lintSystem(s).filter(p => p.text.includes('не ставит ни правило броска'));
+    eq(found.length, 1);
+    ok(found[0]!.text.includes('«зрение»') && found[0]!.text.includes('слово сработает, только если'), found[0]!.text);
+    eq(JSON.stringify(found[0]!.where), JSON.stringify({ tab: 'rules', section: 'roll_edits', key: 'wild' }));
+  });
+
   test('за столом заявляют слова словаря правок и строки с галочкой «заявляют» — один список для листа и действий', () => {
     const s = { ...system({}), roll_edits: { wild: { label: 'Дикий кубик', ops: [{ op: 'wild' }] } } } as unknown as System;
     eq(JSON.stringify(claimWords(s)), JSON.stringify([['wild', 'Дикий кубик'], ['слух', 'слух']]));

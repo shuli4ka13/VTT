@@ -7,8 +7,8 @@ import { SEEN_LABEL, ROLLED, ROLLED_LABEL, ANY_ACTION, PHASES } from '../events/
 import { HEARD_WORDS } from '../events/lifecycle.ts';
 import type { System, Compendium, Effect, Step, Stage, Guard, Param, Table, Modifier } from './types.ts';
 import { registry, loopsAt, splitsTargets } from '../engine/steps/index.ts';
-import { numbersOf, kindOfRule, placesOf, fitsPlace, fitKinds, countUnread, rollsCounting, placesMatching, wordFits } from './die-kinds.ts';
-import { ROLL_KIND_WORDS, NUMBER_MISFIT, EDIT_MISFIT, EDIT_SIDES_MISFIT, COUNT_UNREAD, rollNumberWord, WORD_MISFITS_ROLLS, TWO_RULES, TAG_UNREACHED } from '../words/dice-kinds.ts';
+import { numbersOf, kindOfRule, placesOf, fitsPlace, fitKinds, countUnread, rollsCounting, placesMatching, wordFits, hasRollFilter } from './die-kinds.ts';
+import { ROLL_KIND_WORDS, NUMBER_MISFIT, EDIT_MISFIT, EDIT_SIDES_MISFIT, COUNT_UNREAD, rollNumberWord, WORD_MISFITS_ROLLS, WORD_OUTSIDE_ROLLS, TWO_RULES, TAG_UNREACHED } from '../words/dice-kinds.ts';
 import { rollTagReach, unreachedTags } from './roll-reach.ts';
 import { editPrimitives } from '../engine/roll-edits.ts';
 import { namingProblems } from './naming.ts';
@@ -884,7 +884,17 @@ function tagReachProblems(system: System, compendium?: Compendium): Problem[] {
       if (missing.length) out.push({ where: { tab: 'effects', effect: id, part: 'on', handler: index }, level: 'warn', text: TAG_UNREACHED(missing, 'подписка', book) });
     });
   }
+  for (const [key, word] of Object.entries(system.roll_edits ?? {})) {
+    const missing = unreachedTags(reach, { tags: word.tags, anyTags: word.anyTags });
+    if (missing.length) out.push({ where: { tab: 'rules', section: 'roll_edits', key }, level: 'warn', text: TAG_UNREACHED(missing, 'слово', book) });
+  }
   return out;
+}
+
+function twoRules(system: System, tags: unknown): string | null {
+  const ruleTags = ((tags as unknown[] | undefined) ?? []).filter((tag): tag is string => typeof tag === 'string' && Boolean(system.rolls?.[tag]));
+  const together = ruleTags.some(key => ruleTags.every(other => other === key || (system.rolls![key]!.tags ?? []).includes(other)));
+  return ruleTags.length > 1 && !together ? TWO_RULES(ruleTags.map(tag => system.rolls![tag]!.label || tag)) : null;
 }
 
 function rollEditProblems(system: System): Problem[] {
@@ -899,6 +909,9 @@ function rollEditProblems(system: System): Problem[] {
   for (const [key, edit] of Object.entries(system.roll_edits ?? {})) {
     const where = { tab: 'rules' as const, section: 'roll_edits', key };
     const name = edit.label || key;
+    const two = twoRules(system, edit.tags);
+    if (two) out.push({ where, level: 'warn', text: two });
+    const mine = hasRollFilter(edit) ? placesMatching(system, edit) : places;
     for (const other of edit.cancels ?? []) {
       if (other === key) out.push({ where, level: 'error', text: `правка броска «${name}» гасит сама себя` });
       else if (!system.roll_edits?.[other]) out.push({ where, level: 'error', text: `правка броска «${name}» гасит слово «${other}», которого нет в словаре` });
@@ -907,10 +920,11 @@ function rollEditProblems(system: System): Problem[] {
     for (const op of edit.ops ?? []) {
       const value = (op as { value?: { expr?: unknown } }).value;
       if (!known.has(String(op.op))) out.push({ where, level: 'error', text: `у правки броска «${name}» неизвестное действие «${String(op.op)}»` });
-      if (known.has(String(op.op)) && places.length && !places.some(place => fitsPlace(op, place))) {
+      if (known.has(String(op.op)) && mine.length && !mine.some(place => fitsPlace(op, place))) {
         const action = editPrimitives().find(one => one.op === op.op)?.label ?? String(op.op);
-        const byKind = places.some(place => place.kind !== null && fitKinds(op).includes(place.kind));
-        out.push({ where, level: 'warn', text: byKind ? EDIT_SIDES_MISFIT(name, action) : EDIT_MISFIT(name, action, fitKinds(op).map(kind => ROLL_KIND_WORDS[kind])) });
+        const byKind = mine.some(place => place.kind !== null && fitKinds(op).includes(place.kind));
+        const own = mine !== places;
+        out.push({ where, level: 'warn', text: byKind ? EDIT_SIDES_MISFIT(name, action, own) : EDIT_MISFIT(name, action, fitKinds(op).map(kind => ROLL_KIND_WORDS[kind]), own) });
       }
       if (op.op === 'shiftDegree' && !graded) out.push({ where, level: 'warn', text: `правка броска «${name}» сдвигает степень успеха, а ступеней нет ни у одного броска и ни у одной «Проверки» — она ничего не изменит` });
       if (op.op === 'shiftVersus' && !compared) out.push({ where, level: 'warn', text: `правка броска «${name}» сдвигает порог, а сравнивать не с чем: ни у одного броска нет порога и нет ни одной «Проверки» — она ничего не изменит` });
@@ -961,15 +975,21 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
         else if (mod.param === 'count' && mod.op !== 'add') out.push({ where: at, level: 'error', text: `кубики к броску только прибавляются, а здесь «${String(mod.op ?? 'не задано')}»` });
         else if (mod.param === 'bonus' && mod.op !== 'add') out.push({ where: at, level: 'error', text: `прибавка к броску только прибавляет, а здесь «${String(mod.op ?? 'не задано')}»` });
         if (!tiedToHolder(mod.if as Guard | undefined)) out.push({ where: at, level: 'warn', text: ANYONE_ROLLS });
-        const ruleTags = ((mod.tags as unknown[] | undefined) ?? []).filter((tag): tag is string => typeof tag === 'string' && Boolean(system.rolls?.[tag]));
-        const together = ruleTags.some(key => ruleTags.every(other => other === key || (system.rolls![key]!.tags ?? []).includes(other)));
-        if (ruleTags.length > 1 && !together) out.push({ where: at, level: 'warn', text: TWO_RULES(ruleTags.map(tag => system.rolls![tag]!.label || tag)) });
+        const two = twoRules(system, mod.tags);
+        if (two) out.push({ where: at, level: 'warn', text: two });
         if (mod.param === 'edits' && mod.edit && ((mod.tags as unknown[] | undefined)?.length || (mod.anyTags as unknown[] | undefined)?.length)) {
           const word = system.roll_edits?.[String(mod.edit)];
           const matched = placesMatching(system, { tags: mod.tags, anyTags: mod.anyTags });
           if (word && matched.length && wordFits(word as never, placesOf(system)) && !wordFits(word as never, matched)) {
             const kinds = [...new Set(matched.map(place => (place.kind ? ROLL_KIND_WORDS[place.kind] : null)).filter((kind): kind is string => Boolean(kind)))];
             out.push({ where: at, level: 'warn', text: WORD_MISFITS_ROLLS(word.label || String(mod.edit), [...new Set(matched.map(place => place.name))].slice(0, 4), kinds) });
+          }
+        }
+        const shut = mod.param === 'edits' && mod.edit ? system.roll_edits?.[String(mod.edit)] : undefined;
+        if (shut?.notTags?.length && hasRollFilter(mod)) {
+          const theirs = placesMatching(system, { tags: mod.tags, anyTags: mod.anyTags, notTags: mod.notTags });
+          if (theirs.length && theirs.every(place => shut.notTags!.some(tag => place.tags.includes(tag)))) {
+            out.push({ where: at, level: 'warn', text: WORD_OUTSIDE_ROLLS(shut.label || String(mod.edit), [...new Set(theirs.map(place => place.name))].slice(0, 4)) });
           }
         }
         if (readsAgainst(mod.if) && mod.param === 'edits' && mod.edit) {

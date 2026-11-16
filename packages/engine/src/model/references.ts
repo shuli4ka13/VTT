@@ -723,6 +723,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
 
   for (const [key, edit] of Object.entries(system.roll_edits ?? {})) {
     const from: Where = { tab: 'rules', section: 'roll_edits', key };
+    for (const tag of [...edit.tags ?? [], ...edit.anyTags ?? [], ...edit.notTags ?? []]) out.push({ kind: 'roll', key: tag, from });
     for (const op of edit.ops ?? []) {
       for (const value of Object.values(op)) {
         if (value && typeof value === 'object' && 'expr' in value) exprRefs(String((value as { expr: unknown }).expr), from, noScope, out);

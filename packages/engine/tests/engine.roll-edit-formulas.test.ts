@@ -17,7 +17,7 @@ const sheet = { id: 'а', systemId: 'с', name: 'А', values: { грань: 3 },
 
 group('правка броска с формулой и подрыв шестёрок', () => {
   test('число добавленных костей — из листа того, кто бросает', () => {
-    const { edits } = rollEdits([], ['выжать'], newPass(system, sheet));
+    const { edits } = rollEdits([], ['выжать'], newPass(system, sheet), []);
     deepEq(edits[0]!.ops[0], { op: 'addDie', count: 3 });
   });
 

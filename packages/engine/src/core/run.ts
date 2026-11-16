@@ -14,7 +14,7 @@ import { ROLLED, ROLLED_LABEL } from '../events/happenings.ts';
 import type { MomentKey } from '../events/moments.ts';
 import { effectLabelOf } from '../events/actions.ts';
 import { requireEffect, requireCalled, reapplyOf, usesMax } from '../engine/effects.ts';
-import { tagsFit } from '../engine/modifiers.ts';
+import { tagsFit } from '../engine/roll-tags.ts';
 import { expiryOf, inCombat } from '../engine/clock.ts';
 import { burnsUse } from '../events/durations.ts';
 import { refusalWords } from '../events/refusal.ts';

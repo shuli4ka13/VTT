@@ -7,14 +7,14 @@ import { EngineError } from './errors.ts';
 import { stackStages, targetStages, VALUE_OPS } from './stages.ts';
 import { anyRowSays } from './tables.ts';
 import { findRecord, kindOfRecord, sheetKindOf, propsOf, working, keyOf } from '../model/owned.ts';
-import { tagsHold } from './roll-tags.ts';
+import { tagsFit } from './roll-tags.ts';
 import type { System, Sheet, Compendium, Modifier, RollEdit, RollEditOp, Param, CellMark, TableRow, WornEffect } from '../model/types.ts';
 import { leftOf, LEFT_NAME } from '../events/durations.ts';
 import type { Pass } from './calc.ts';
 import { withRecord, hasTargetSlot, itemTarget, hasInputSlot, inputTarget, withRow, rowKeyOf } from '../model/sheet-columns.ts';
 import { cellTagOf, columnTagOf } from './cells.ts';
 import { toolsOf } from './refs.ts';
-import { rollHeld, rollEdits } from '../core/edits.ts';
+import { rollHeld, rollEdits, wordApplies } from '../core/edits.ts';
 import { PLUS_OP } from '../core/dice.ts';
 import { average } from '../core/external.ts';
 
@@ -176,9 +176,9 @@ export function resolveRoll(
 ): RollResolution {
   const tags = [...new Set(rollTags.filter((t): t is string => Boolean(t)))];
   const held = rollHeld([{ id: pass.sheet.id, view: pass }], pass.sheet.id, null, tags);
-  const { edits, addends } = rollEdits(held, [], pass);
+  const { edits, addends } = rollEdits(held, [], pass, tags);
   const bonus = addends.reduce((sum, one) => sum + one.value(average), 0);
-  return { tags, edits, bonus, sources: held.map(m => ({ ...m.source, edit: m.edit })) };
+  return { tags, edits, bonus, sources: held.filter(m => !m.edit || wordApplies(pass.system, m.edit, tags)).map(m => ({ ...m.source, edit: m.edit })) };
 }
 
 const isFormula = (value: unknown): value is { expr: string } =>
@@ -212,12 +212,6 @@ export function claimedModifiers(system: System, keys: string[]): SourcedModifie
   });
 }
 
-export function tagsFit(spec: { tags?: readonly string[]; anyTags?: readonly string[]; notTags?: readonly string[] }, tags: readonly string[]): boolean {
-  if (spec.tags?.length && !tagsHold([...spec.tags], tags)) return false;
-  if (spec.anyTags?.length && !spec.anyTags.some(t => tags.includes(t))) return false;
-  if (spec.notTags?.length && spec.notTags.some(t => tags.includes(t))) return false;
-  return true;
-}
 
 export function editMatches(mod: SourcedModifier, tags: readonly string[], system: System): boolean {
   const where = (mod as { where?: { table: string; column: string; is: unknown } }).where;

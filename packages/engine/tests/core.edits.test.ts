@@ -33,7 +33,7 @@ describe('правки на листе-держателе', () => {
     const roller = views.of(sheets, attacker.id);
     const against = views.of(sheets, target.id);
     const held = rollHeld(holders, attacker.id, target.id, ['атака']);
-    const bonus = added(rollEdits(held, [], roller));
+    const bonus = added(rollEdits(held, [], roller, []));
     const targetAc = Number(calc(system, target, 'ac', against));
     const attackerAc = Number(calc(system, attacker, 'ac', roller));
     expect(targetAc).not.toBe(attackerAc);
@@ -42,14 +42,14 @@ describe('правки на листе-держателе', () => {
 
   it('без противника правок «по мне» нет', () => {
     const roller = views.of(sheets, attacker.id);
-    expect(added(rollEdits(rollHeld(holders, attacker.id, null, ['атака']), [], roller))).toBe(0);
+    expect(added(rollEdits(rollHeld(holders, attacker.id, null, ['атака']), [], roller, ['атака']))).toBe(0);
   });
 
   it('заявленная правка броска собирается словарём; неизвестная — ошибка словами', () => {
     const roller = views.of(sheets, attacker.id);
     const key = Object.keys(system.roll_edits ?? {})[0]!;
-    expect(rollEdits([], [key], roller).edits.map(e => e.label)).toHaveLength(1);
-    expect(() => rollEdits([], ['нет-такой'], roller)).toThrow(/нет в словаре/);
+    expect(rollEdits([], [key], roller, []).edits.map(e => e.label)).toHaveLength(1);
+    expect(() => rollEdits([], ['нет-такой'], roller, [])).toThrow(/нет в словаре/);
   });
 });
 

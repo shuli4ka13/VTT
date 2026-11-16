@@ -8,6 +8,7 @@ import type { System } from '../model/types.ts';
 import type { RefContext, Bound } from '../engine/refs.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import { editsOf, editMatches, withValues, claimedModifiers } from '../engine/modifiers.ts';
+import { tagsFit } from '../engine/roll-tags.ts';
 import { stackStages } from '../engine/stages.ts';
 import type { Stage } from '../model/types.ts';
 import type { SourcedModifier } from '../engine/modifiers.ts';
@@ -155,13 +156,19 @@ function bonusAddend(held: Held, system: System): PendingAddend {
   };
 }
 
-export function rollEdits(held: Held[], claims: readonly string[], roller: Pass): RollEdits {
+export function wordApplies(system: System, key: unknown, tags: readonly string[]): boolean {
+  const word = system.roll_edits?.[String(key)];
+  return !word || tagsFit(word, tags);
+}
+
+export function rollEdits(held: Held[], claims: readonly string[], roller: Pass, tags: readonly string[]): RollEdits {
   const system = roller.system;
-  const named = [
-    ...held.filter(mod => mod.edit),
-    ...(claimedModifiers(system, [...claims]) as EditMod[]).map((mod): Held => ({ ...mod, view: roller, ref: { pass: roller } })),
-  ];
   const dictionary = system.roll_edits || {};
+  const fits = (key: unknown): boolean => wordApplies(system, key, tags);
+  const named = [
+    ...held.filter(mod => mod.edit && fits(mod.edit)),
+    ...(claimedModifiers(system, [...claims]) as EditMod[]).filter(mod => fits(mod.edit)).map((mod): Held => ({ ...mod, view: roller, ref: { pass: roller } })),
+  ];
   const given = new Map<string, Map<string, Held>>();
   for (const mod of named) {
     const key = String(mod.edit);
