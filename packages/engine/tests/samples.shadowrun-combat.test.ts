@@ -254,4 +254,21 @@ group('Shadowrun 6: чувство заявляют и к броскам дей�
     };
     eq(attack({ source: ['зрение'] }), attack() - 3);
   });
+
+  test('«зрение» не трогает сопротивления: у мага колдовство −3, истощение прежнее; у цели защита −3, сопротивление урону прежнее', () => {
+    const pool = (out: ReturnType<typeof exchange>, part: string) =>
+      ([...out.log.join(' · ').matchAll(/Бросок \(([^)]*)\): \[([^\]]*)\]/g)].find(m => m[1]!.includes(part))?.[2] ?? '').split(',').filter(Boolean).length;
+    const mage = { ...fighter('маг', { magic: 5, willpower: 4, logic: 4, 'skills.колдовство.rank': 4 }, [{ of: 'spell_mana_bolt' }]), effects: [{ effectId: 'blinded' }] } as Sheet;
+    const victim = fighter('цель', { body: 4, willpower: 3 });
+    const cast = (claims?: { source: string[] }) => exchange({ system, compendium, die: tape(), sheets: [mage, victim], actionId: 'spell_mana_bolt:0', fromId: mage.id, toIds: [victim.id], ...(claims ? { claims } : {}) });
+    const [plain, seen] = [cast(), cast({ source: ['зрение'] })];
+    eq(pool(seen, 'колдовство'), pool(plain, 'колдовство') - 3);
+    eq(pool(seen, 'истощению'), pool(plain, 'истощению'));
+    const shooter = fighter('стрелок', { agility: 5, 'skills.стрельба.rank': 4 }, [{ of: 'predator_vi' }]);
+    const blind = { ...fighter('цель', { body: 4, reaction: 3, intuition: 3 }), effects: [{ effectId: 'blinded' }] } as Sheet;
+    const shot = (claims?: { target: string[] }) => exchange({ system, compendium, die: tape(), sheets: [shooter, blind], actionId: 'predator_vi:0', fromId: shooter.id, toIds: [blind.id], inputs: { дистанция: 'близкая' }, ...(claims ? { claims } : {}) });
+    const [open, dark] = [shot(), shot({ target: ['зрение'] })];
+    eq(pool(dark, 'защита'), pool(open, 'защита') - 3);
+    eq(pool(dark, 'физический'), pool(open, 'физический'));
+  });
 });

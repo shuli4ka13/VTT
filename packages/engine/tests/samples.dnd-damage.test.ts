@@ -126,3 +126,22 @@ group('«Свирепый атакующий»', () => {
     eq(seen(r).filter(o => o.includes('savage_attacker')).length, 0);
   });
 });
+
+group('D&D: слово правки, заявленное к удару, ложится только на свои броски', () => {
+  const swing = (claims: string[], dice: number[]) => exchange({
+    system, compendium, die: queue(...dice), sheets: sheetsWith(['longsword']), actionId: 'longsword:0', fromId: 'arven', toId: 'goblin', claims: { source: claims },
+  }).log.join(' · ');
+
+  test('«Преимущество» — две кости у атаки, урон одной костью', () => {
+    const log = swing(['advantage'], [15, 1, 1]);
+    ok(/Бросок \(атака\): \[15, 1\] → 15 \(Преимущество\)/.test(log), log);
+    ok(/урон[^\]]*\): \[1\] \+/.test(log), log);
+  });
+
+  test('«Бой большим оружием» — 1 на кости урона становится 3, кость атаки не трогает', () => {
+    const log = swing(['great_weapon'], [15, 1]);
+    ok(/Бросок \(атака\): \[15\] \+/.test(log), log);
+    ok(/\[3\] \(Бой большим оружием\)/.test(log), log);
+    ok(/Бросок \(атака\): \[2\] \+/.test(swing(['great_weapon'], [2, 1])));
+  });
+});

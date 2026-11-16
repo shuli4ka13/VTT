@@ -3283,6 +3283,10 @@
         ],
         "cancels": [
           "disadvantage"
+        ],
+        "notTags": [
+          "урон",
+          "лечение"
         ]
       },
       "disadvantage": {
@@ -3298,6 +3302,10 @@
         ],
         "cancels": [
           "advantage"
+        ],
+        "notTags": [
+          "урон",
+          "лечение"
         ]
       },
       "lucky": {
@@ -3316,6 +3324,11 @@
             "op": "floorDie",
             "least": 3
           }
+        ],
+        "tags": [
+          "урон",
+          "оружие",
+          "ближний"
         ]
       },
       "reliable": {
@@ -3334,6 +3347,10 @@
             "op": "shiftVersus",
             "by": 99
           }
+        ],
+        "notTags": [
+          "урон",
+          "лечение"
         ]
       }
     },
