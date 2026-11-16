@@ -17,6 +17,8 @@ const system = {
         { key: 'вес', label: 'Вес', kind: 'number', expr: { expr: '@строка.ёмкость * 2' } },
         { key: 'цена', label: 'Цена', kind: 'number' },
         { key: 'тайна', label: 'Тайна', kind: 'text', onSheet: false },
+        { key: 'рейтинг', label: 'Рейтинг', kind: 'number' },
+        { key: 'тёмный', label: 'Тёмный', kind: 'boolean' },
       ],
     },
   },
@@ -48,6 +50,11 @@ describe('вписать значение вещи за столом', () => {
     expect(after(spent, 'заряды', null).has[0]).toEqual({ of: 'фонарь' });
   });
 
+  it('без книжного значения и умолчания: вписал и вернул то, что экран показывал, — лист прежний', () => {
+    expect(JSON.stringify(after(after(hero, 'рейтинг', 2), 'рейтинг', 0))).toBe(JSON.stringify(hero));
+    expect(JSON.stringify(after(after(hero, 'тёмный', true), 'тёмный', false))).toBe(JSON.stringify(hero));
+  });
+
   it('границы колонки — как у поля; верхняя видит строку записи и своё значение экземпляра', () => {
     expect(() => set(hero, 'заряды', -1)).toThrow('«Заряды» не меньше 0');
     expect(() => set(hero, 'заряды', 6)).toThrow('«Заряды» не больше 5');
@@ -68,7 +75,7 @@ describe('вписать значение вещи за столом', () => {
     } as unknown as System;
     const book = { records: [{ id: 'лампа', table: 'лампа', label: 'Лампа', cells: {} }] } as unknown as Compendium;
     const keeper: Sheet = { ...hero, has: [{ of: 'лампа' }] };
-    expect(itemCells(kin, book, keeper, 'лампа').map(cell => cell.field.label)).toEqual(['Беспроводной режим', 'Заряды', 'Ёмкость', 'Цена', 'Яркость']);
+    expect(itemCells(kin, book, keeper, 'лампа').map(cell => cell.field.label)).toEqual(['Беспроводной режим', 'Заряды', 'Ёмкость', 'Цена', 'Рейтинг', 'Тёмный', 'Яркость']);
     const out = perform({ system: kin, compendium: book, clock: null, sheets: [keeper], die: () => 1 }, { op: 'set', sheetId: keeper.id, tag: itemTag('лампа', 'провода'), value: true });
     if (out.kind !== 'done') throw new Error('вписать не должно спрашивать');
     expect(out.sheets[0]!.has).toEqual([{ of: 'лампа', values: { провода: true } }]);
@@ -86,7 +93,7 @@ describe('вписать значение вещи за столом', () => {
 
   it('за столом вписываются только видные хранимые колонки, со значением экземпляра или книги', () => {
     const cells = itemCells(system, compendium, { ...hero, has: [{ of: 'фонарь', values: { заряды: 2 } }] }, 'фонарь');
-    expect(cells.map(cell => [cell.field.label, cell.value])).toEqual([['Беспроводной режим', false], ['Заряды', 2], ['Ёмкость', 5]]);
+    expect(cells.map(cell => [cell.field.label, cell.value])).toEqual([['Беспроводной режим', false], ['Заряды', 2], ['Ёмкость', 5], ['Рейтинг', 0], ['Тёмный', false]]);
     expect(cells[0]!.tag).toBe(itemTag('фонарь', 'провода'));
   });
 });

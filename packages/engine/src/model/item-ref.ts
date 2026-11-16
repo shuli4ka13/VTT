@@ -96,7 +96,7 @@ function cellOf(system: System, compendium: Compendium | null | undefined, sheet
   if (!TABLE_KINDS.has(kind)) return `«${label}» у вещи «${name}» — ${kindWord(kind)}: это правило записи, за столом его не вписывают`;
   const own = record.cells?.[column];
   if (spec.expr !== undefined || isFormulaCell(own)) return `«${label}» у вещи «${name}» считается по правилу — вписать значение нельзя`;
-  const plain = isBlank(own) ? spec.default ?? null : own;
+  const book = isBlank(own) ? spec.default ?? null : own;
   const cells = propsOf(record, system, entry) ?? {};
   const flat = flattenSystem(system, true);
   const bound = (raw: TableColumn['min']): TableColumn['min'] =>
@@ -108,7 +108,8 @@ function cellOf(system: System, compendium: Compendium | null | undefined, sheet
     if (err instanceof EngineError) return `«${label}» у вещи «${name}»: граница не считается — ${err.message}`;
     throw err;
   }
-  const value = storedValueOf({ ...spec, ...limits }, plain);
+  const value = storedValueOf({ ...spec, ...limits }, book);
+  const plain = value.kind === 'stored' ? value.default : book;
   const given = entry.values?.[column];
   const tag = itemTag(key, column);
   return { tag, field: { tag, label, home: table, value, ...(spec.hint ? { hint: spec.hint } : {}) }, value: isBlank(given) ? plain : given, plain };
