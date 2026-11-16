@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { render, cleanup } from '@testing-library/react';
-import { comboOptions } from '../../../testing/cards.ts';
+import { render, cleanup, fireEvent } from '@testing-library/react';
+import { useState } from 'react';
+import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
+import { comboOptions, pickCombo } from '../../../testing/cards.ts';
 import { renderOpen } from '../../../testing/render-open.tsx';
 import { RollEditsSection } from './roll-edits-section.tsx';
 import { RollsSection } from './rolls-section.tsx';
@@ -99,5 +101,47 @@ describe('правка броска говорит, что складывает�
       .find(one => comboOptions(one).some(item => item.label === 'по разу от каждого разного эффекта'))!;
     expect(comboOptions(combo).map(one => one.label)).toEqual(['одно на бросок', 'по разу от каждого разного эффекта']);
     expect(combo.closest('[title]')?.getAttribute('title') ?? combo.getAttribute('title')).toContain('копии одного и того же эффекта считаются одним');
+  });
+
+  it('у слова без выбора в «Какие броски» стоит «все броски»', () => {
+    const view = render(<RollEditsSection system={system} editSystem={vi.fn()} usage={new Map()} />);
+    const combo = fieldOf(view.container, 'Какие броски').querySelector<HTMLInputElement>('[role="combobox"]')!;
+    expect(combo.placeholder || combo.textContent).toBe('все броски');
+  });
+
+  it('выбор метки пишет tags слова, снятие последней метки убирает ключ', () => {
+    const pools = {
+      constants: { pool: { label: 'набор к6', kind: 'die', dice: [{ sides: 6, count: 1 }], read: { kind: 'count', atLeast: 5 } } },
+      tables: { лист: { shape: 'single', columns: [{ key: 'ловкость', label: 'Ловкость', kind: 'number' }] } },
+      rolls: { проверка: { label: 'Проверка', die: 'pool', number: 'count', fields: [{ table: 'лист', column: 'ловкость' }] } },
+      roll_edits: { фора: { label: 'Фора', ops: [{ op: 'addDie' }] } },
+      effects: {},
+    } as unknown as System;
+    let current = pools;
+    const Host = () => {
+      const [sys, setSys] = useState(pools);
+      current = sys;
+      return <RollEditsSection system={sys} usage={new Map()} editSystem={change => setSys(prev => {
+        const next = JSON.parse(JSON.stringify(prev)) as System;
+        change(next);
+        return next;
+      })} />;
+    };
+    const view = render(<Host />);
+    const combo = () => fieldOf(view.container, 'Какие броски').querySelector<HTMLElement>('[role="combobox"]')!;
+    pickCombo(combo(), 'проверка', 'Какие броски');
+    expect(current.roll_edits!.фора!.tags).toEqual(['проверка']);
+    const remove = fieldOf(view.container, 'Какие броски').querySelector<HTMLElement>('.chip__x')!;
+    fireEvent.click(remove);
+    expect(current.roll_edits!.фора).not.toHaveProperty('tags');
+  });
+
+  it('у «Бой большим оружием» в D&D выбраны «урон», «оружие», «ближний»', () => {
+    const dnd = SAMPLE_WORLDS.find(world => world.system.roll_edits?.great_weapon)!.system as System;
+    const view = render(<RollEditsSection system={dnd} editSystem={vi.fn()} usage={new Map()} />);
+    const row = [...view.container.querySelectorAll<HTMLElement>('.roll-word')]
+      .find(one => (one.querySelector('input') as HTMLInputElement | null)?.value === 'Бой большим оружием')!;
+    const text = fieldOf(row, 'Какие броски').textContent ?? '';
+    for (const word of ['урон', 'оружие', 'ближний']) expect(text).toContain(word);
   });
 });

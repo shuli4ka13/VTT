@@ -7,6 +7,7 @@ import { ROLL_KIND_WORDS } from '@vtt/engine/words/dice-kinds';
 import { ADVANTAGE_METHODS, installMethod } from '@vtt/engine/model/advantage-methods';
 import { editNotation, editReadback, joinReadback } from '../readback.ts';
 import { Card, CardHead, Input, Button, Select } from '../../../ui/primitives.tsx';
+import { RollsPick } from '../rolls-pick.tsx';
 import { AddendPick } from '../effects/cards/die-pick.tsx';
 import { newRollEdit } from '../factory.ts';
 import { inUse as isUsed } from '../usage.ts';
@@ -175,7 +176,8 @@ function WordRow({ wordKey, edit, system, editSystem, parts, used }: {
   used: boolean;
 }) {
   const ops = (edit.ops ?? []) as Record<string, unknown>[];
-  const said = ops.length ? editNotation({ ops }, system) ?? joinReadback(editReadback({ ops }, system)) : 'что она делает с броском?';
+  const narrowed = Boolean(edit.tags?.length || edit.anyTags?.length);
+  const said = ops.length ? (narrowed ? null : editNotation({ ops }, system)) ?? joinReadback(editReadback({ ops }, system)) : 'что она делает с броском?';
   const opAt = (i: number) => (draft: System) => draft.roll_edits?.[wordKey]?.ops?.[i] as Record<string, unknown> | undefined;
   return (
     <div className="dict-block roll-word">
@@ -247,6 +249,18 @@ function WordRow({ wordKey, edit, system, editSystem, parts, used }: {
               cur.ops.push(JSON.parse(JSON.stringify(chosen.op)));
             });
           }}
+        />
+      </div>
+      <div className="dict-row dict-row--wrap roll-line">
+        <RollsPick
+          system={system}
+          tips
+          value={{ tags: edit.tags, anyTags: edit.anyTags, notTags: edit.notTags }}
+          onChange={(key, list) => editSystem(draft => {
+            const cur = draft.roll_edits?.[wordKey];
+            if (!cur) return;
+            if (list.length) cur[key] = list; else delete cur[key];
+          })}
         />
       </div>
     </div>
