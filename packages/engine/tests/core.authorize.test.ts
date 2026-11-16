@@ -52,6 +52,34 @@ describe('права: стол и листы', () => {
   });
 });
 
+describe('права: значения вещи', () => {
+  const tag = 'вещь:фонарь.провода';
+  const write = (sheetId: string) => ({ kind: 'world' as const, op: { op: 'set' as const, sheetId, tag, value: true } });
+  const trusted: Room = { ...room, members: room.members.map(m => (m.userId === 'игрок-а' ? { ...m, editsItems: true } : m)) };
+
+  it('ведущий меняет значения вещей у любого листа', () => {
+    expect(authorize(room, 'ведущий', write('мирра'))).toBeNull();
+    expect(authorize(room, 'ведущий', write('стол'))).toBeNull();
+  });
+
+  it('игрок без разрешения ведущего — даже у своего листа нельзя', () => {
+    expect(authorize(room, 'игрок-а', write('арвен'))).toMatch(/значения вещей меняет ведущий — или тот, кому он разрешил/);
+  });
+
+  it('с разрешением — у своего листа можно, у чужого и у стола нельзя', () => {
+    expect(authorize(trusted, 'игрок-а', write('арвен'))).toBeNull();
+    expect(authorize(trusted, 'игрок-а', write('мирра'))).toMatch(/чужой лист/);
+    expect(authorize(trusted, 'игрок-а', write('стол'))).toMatch(/стол правит ведущий/);
+  });
+
+  it('разрешает только ведущий и только игроку за этим столом', () => {
+    expect(authorize(room, 'ведущий', { kind: 'items', userId: 'игрок-а' })).toBeNull();
+    expect(authorize(room, 'игрок-а', { kind: 'items', userId: 'игрок-м' })).toMatch(/разрешает ведущий/);
+    expect(authorize(room, 'ведущий', { kind: 'items', userId: 'ведущий' })).toMatch(/ведущему разрешать не нужно/);
+    expect(authorize(room, 'ведущий', { kind: 'items', userId: 'прохожий' })).toMatch(/такого участника за столом нет/);
+  });
+});
+
 describe('права: полная матрица', () => {
   const sys = {
     id: 'с', name: 'с', effects: {},

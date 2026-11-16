@@ -349,6 +349,8 @@ const valueOf = (column: TableColumn, start: unknown, bounds: Pick<TableColumn, 
   };
 };
 
+export const storedValueOf = (column: TableColumn, start: unknown): FieldValue => valueOf(column, start);
+
 const flatBound = (bound: unknown): number | string => (typeof bound === 'number' ? bound : String((bound as { expr?: unknown }).expr ?? ''));
 
 function boundsOf(column: Pick<TableColumn, 'min' | 'max'>): { min?: number | string; max?: number | string } {

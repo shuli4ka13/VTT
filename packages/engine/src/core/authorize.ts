@@ -1,5 +1,6 @@
 import { isDesk, DESK_ID } from '../engine/owners.ts';
 import { holderOf } from './view.ts';
+import { parseItemTag } from '../model/item-ref.ts';
 import type { Op } from './perform.ts';
 import type { Clock } from '../engine/clock.ts';
 import type { System, Sheet } from '../model/types.ts';
@@ -8,6 +9,7 @@ export interface Member {
   userId: string;
   role: 'gm' | 'player';
   sheetId: string | null;
+  editsItems?: boolean;
 }
 
 export type Want =
@@ -16,6 +18,7 @@ export type Want =
   | { kind: 'cancel' }
   | { kind: 'claim'; sheetId: string | null }
   | { kind: 'place'; sheetId: string }
+  | { kind: 'items'; userId: string }
   | { kind: 'close' };
 
 export interface Room {
@@ -51,6 +54,12 @@ function mayField(room: Room, me: Member, sheetId: string, tag: string): string 
   return 'поле группы правят её участники и ведущий';
 }
 
+function mayItem(room: Room, me: Member, sheetId: string): string | null {
+  if (me.role === 'gm') return null;
+  if (!me.editsItems) return 'значения вещей меняет ведущий — или тот, кому он разрешил';
+  return maySheet(room, me, sheetId);
+}
+
 function subjectOf(op: Op): string | null {
   switch (op.op) {
     case 'act': return op.intent.fromId;
@@ -73,6 +82,12 @@ export function authorize(room: Room, userId: string, want: Want): string | null
     if (me.role === 'gm' || me.sheetId === want.sheetId) return null;
     return me.sheetId ? 'это чужая фишка — двигает её владелец или ведущий' : 'сначала выберите своего персонажа — двигать можно только его';
   }
+  if (want.kind === 'items') {
+    if (me.role !== 'gm') return 'разрешает ведущий';
+    const who = room.members.find(member => member.userId === want.userId);
+    if (!who) return 'такого участника за столом нет';
+    return who.role === 'gm' ? 'ведущему разрешать не нужно' : null;
+  }
   if (want.kind === 'claim') {
     if (!want.sheetId) return null;
     const sheet = room.sheets.find(s => s.id === want.sheetId);
@@ -82,7 +97,9 @@ export function authorize(room: Room, userId: string, want: Want): string | null
     return null;
   }
   if (want.hidden && me.role !== 'gm') return 'втайне бросает только ведущий';
-  if (want.op.op === 'set') return mayField(room, me, want.op.sheetId, want.op.tag);
+  if (want.op.op === 'set') {
+    return parseItemTag(want.op.tag) ? mayItem(room, me, want.op.sheetId) : mayField(room, me, want.op.sheetId, want.op.tag);
+  }
   if (want.op.op === 'turn' && me.role !== 'gm') {
     if (want.op.turn !== 'next') return 'бой, отдых и сцену ведёт ведущий';
     return me.sheetId && room.clock?.active === me.sheetId ? null : 'следующий ход передаёт ведущий или тот, чей сейчас ход';

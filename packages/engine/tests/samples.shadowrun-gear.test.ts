@@ -204,6 +204,16 @@ group('Shadowrun 6: заявки к броску с листа — лечени�
     eq(rollWith(picker, 'skills.инженерное_дело.pool', ['взлом замков']).pool, rollWith(picker, 'skills.инженерное_дело.pool').pool + 1);
   });
 
+  test('беспроводной режим аптечки, вписанный за столом, включает +1 к лечению', () => {
+    const medic = runner({ 'skills.биотехнологии.rank': 2 }, [{ of: 'medkit' }]);
+    const base = rollWith(medic, 'skills.биотехнологии.pool', ['лечение']).pool;
+    const out = perform({ system, compendium, clock: null, sheets: [medic], die: () => 2 }, { op: 'set', sheetId: medic.id, tag: 'вещь:medkit.wireless', value: true });
+    if (out.kind !== 'done') throw new Error('вписать не должно спрашивать');
+    const wired = out.sheets.find(s => s.id === medic.id)!;
+    deepEq(wired.has, [{ of: 'medkit', values: { wireless: true } }]);
+    eq(rollWith(wired, 'skills.биотехнологии.pool', ['лечение']).pool, base + 1);
+  });
+
   test('пространственный распознаватель: Внимание с заявкой «слух» — +1 кубик без проводов и очко Преимущества; «слух» к другой проверке — ничего', () => {
     const ears = runner({ 'skills.внимание.rank': 2, 'skills.атлетика.rank': 2 }, [{ of: 'aud_enh_spatial_recognizer', values: { wireless: true } }]);
     const plain = rollWith(ears, 'skills.внимание.pool');

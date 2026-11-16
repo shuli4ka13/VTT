@@ -10,7 +10,9 @@ import { momentsOfTurn } from '../events/moments.ts';
 import type { MomentEvent } from '../events/moments.ts';
 import { fieldCheck } from '../engine/check.ts';
 import { newBreaches } from '../engine/limits.ts';
-import { fieldOf, misfit } from '../model/sheet-columns.ts';
+import { fieldOf, misfit, same } from '../model/sheet-columns.ts';
+import { itemCell, parseItemTag, withItemValue, withoutItemValue } from '../model/item-ref.ts';
+import { isBlank } from '../model/blank.ts';
 import { DESK_ID, isDesk } from '../engine/owners.ts';
 import { External, Pause, emptyJournal } from './external.ts';
 import { Path } from './path.ts';
@@ -97,6 +99,23 @@ function bound(run: Run, sheetId: string, raw: unknown, what: string): number | 
   return value;
 }
 
+function setItem(run: Run, sheet: Sheet, key: string, column: string, value: StoredValue): boolean {
+  const cell = itemCell(run.system, run.world.compendium, sheet, key, column);
+  const wrong = misfit(cell.field, value);
+  if (wrong) throw new EngineError(wrong);
+  const stored = cell.field.value;
+  if (stored.kind === 'stored' && typeof value === 'number') {
+    const low = bound(run, sheet.id, stored.min, 'нижняя граница поля');
+    const high = bound(run, sheet.id, stored.max, 'верхняя граница поля');
+    if (low !== null && value < low) throw new EngineError(`«${cell.field.label}» не меньше ${low}`);
+    if (high !== null && value > high) throw new EngineError(`«${cell.field.label}» не больше ${high}`);
+  }
+  const next = isBlank(value) || same(value, cell.plain) ? withoutItemValue(sheet, key, column) : withItemValue(sheet, key, column, value);
+  withinLimits(run, sheet, next);
+  run.state.put(next);
+  return true;
+}
+
 export interface InitiativeRoll { sheetId: string; rolls: number[]; total: number; edits: string[] }
 
 export function fightersOf(run: Run, who?: string[]): Sheet[] {
@@ -180,6 +199,8 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
   },
 
   set(run, { sheetId, tag, value }) {
+    const item = parseItemTag(tag);
+    if (item) return setItem(run, sheetOf(run, sheetId), item.key, item.column, value);
     const field = fieldOf(run.system, tag);
     if (!field) throw new EngineError(`система не объявляет поля «${tag}»`);
     if (field.value.kind !== 'stored') throw new EngineError(`поле «${field.label}» считает движок по правилу — вписать в него значение нельзя`);
