@@ -376,3 +376,39 @@ describe('поле боя', () => {
     expect(placed.at(-1)).toEqual(['к', 'а', null]);
   });
 });
+
+describe('стол: кто меняет вещи', () => {
+  const calls: unknown[][] = [];
+  const original = tableSocket.allowItems.bind(tableSocket);
+  const withPlayers = (): RoomState => ({
+    ...room(null),
+    members: [
+      { userId: 'g', name: 'Ведущий', role: 'gm' },
+      { userId: 'p', name: 'Аня', role: 'player', editsItems: true },
+      { userId: 'q', name: 'Боря', role: 'player' },
+    ],
+  } as unknown as RoomState);
+  beforeEach(() => {
+    calls.length = 0;
+    tableSocket.allowItems = (...args: unknown[]) => { calls.push(args); };
+    useRoom.setState(state => ({ ...state, room: withPlayers(), log: [], error: null }));
+  });
+  afterEach(() => { cleanup(); tableSocket.allowItems = original; useSession.setState(state => ({ ...state, userId: '' })); });
+
+  it('ведущий видит фишки игроков, щелчок разрешает', () => {
+    useSession.setState(state => ({ ...state, userId: 'g' }));
+    renderOpen(<TableScreen />);
+    const line = screen.getByText('вещи меняют: ведущий').parentElement!;
+    const chips = [...line.querySelectorAll('.chip')].map(node => node.textContent);
+    expect(chips).toEqual(['Аня', 'Боря']);
+    fireEvent.click([...line.querySelectorAll('.chip')].find(node => node.textContent === 'Боря')!);
+    expect(calls.at(-1)).toEqual(['к', 'q', true]);
+  });
+
+  it('игрок видит только имена', () => {
+    useSession.setState(state => ({ ...state, userId: 'q' }));
+    renderOpen(<TableScreen />);
+    const text = screen.getByText('вещи меняют: ведущий, Аня');
+    expect(text.querySelector('.chip')).toBeNull();
+  });
+});

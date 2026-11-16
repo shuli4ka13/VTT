@@ -241,3 +241,52 @@ describe('списки в блоках листа', () => {
   });
 });
 
+describe('сумка: значения вещи', () => {
+  const sets: unknown[][] = [];
+  const original = tableSocket.setValue.bind(tableSocket);
+  const withValues = (members: unknown[]): RoomState => ({
+    id: 'к', title: 'Стол', members,
+    system: {
+      id: 'x', name: 'x', effects: {},
+      tables: {
+        вещь: {
+          shape: 'book', use: 'item', label: 'Вещь',
+          columns: [
+            { key: 'провода', label: 'Беспроводной режим', kind: 'boolean', default: false },
+            { key: 'заряды', label: 'Заряды', kind: 'number' },
+          ],
+        },
+      },
+    },
+    compendium: { records: [{ id: 'фонарь', table: 'вещь', label: 'Фонарь', cells: { заряды: 3 } }] },
+    sheets: [{ id: 'а', systemId: 'x', name: 'Арвен', values: {}, effects: [], has: [{ of: 'фонарь' }] }],
+  } as unknown as RoomState);
+  const as = (userId: string, members: unknown[]) => {
+    useSession.setState(state => ({ ...state, userId }));
+    useRoom.setState(state => ({ ...state, room: withValues(members), mySheetId: 'а', log: [], error: null }));
+  };
+  beforeEach(() => {
+    sets.length = 0;
+    tableSocket.setValue = (...args: unknown[]) => { sets.push(args); };
+  });
+  afterEach(() => { cleanup(); tableSocket.setValue = original; useSession.setState(state => ({ ...state, userId: '' })); });
+
+  it('ведущий видит «Значения», правка уходит по адресу вещи', () => {
+    as('g', [{ userId: 'g', name: 'Ведущий', role: 'gm' }]);
+    renderOpen(<SheetScreen />);
+    fireEvent.click(screen.getByText('Значения'));
+    const box = screen.getByLabelText('Беспроводной режим');
+    fireEvent.click(box);
+    expect(sets.at(-1)).toEqual(['к', 'а', 'вещь:фонарь.провода', true]);
+  });
+
+  it('игрок без разрешения «Значений» не видит, с разрешением — видит', () => {
+    as('p', [{ userId: 'g', name: 'Ведущий', role: 'gm' }, { userId: 'p', name: 'Аня', role: 'player' }]);
+    renderOpen(<SheetScreen />);
+    expect(screen.queryByText('Значения')).toBeNull();
+    cleanup();
+    as('p', [{ userId: 'g', name: 'Ведущий', role: 'gm' }, { userId: 'p', name: 'Аня', role: 'player', editsItems: true }]);
+    renderOpen(<SheetScreen />);
+    expect(screen.getByText('Значения')).toBeTruthy();
+  });
+});

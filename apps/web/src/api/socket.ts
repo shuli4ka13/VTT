@@ -65,6 +65,10 @@ export class TableSocket {
     this.send('sheet:claim', { roomId, sheetId });
   }
 
+  allowItems(roomId: string, userId: string, on: boolean): void {
+    this.send('member:items', { roomId, userId, on });
+  }
+
   placePiece(roomId: string, sheetId: string, at: { x: number; y: number } | null): void {
     this.send('piece:place', { roomId, sheetId, at });
   }

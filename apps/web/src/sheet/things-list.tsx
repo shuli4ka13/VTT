@@ -31,12 +31,13 @@ export function orderedKinds<G extends { table: string }>(groups: G[], kinds: re
   return kinds.flatMap(kind => groups.filter(group => group.table === kind));
 }
 
-export function ThingLine({ label, active, onClick, actions, details }: {
+export function ThingLine({ label, active, onClick, actions, details, more }: {
   label: ReactNode;
   active?: boolean;
   onClick?: () => void;
   actions?: ReactNode;
   details?: string;
+  more?: ReactNode;
 }) {
   return (
     <div>
@@ -45,6 +46,7 @@ export function ThingLine({ label, active, onClick, actions, details }: {
         {actions}
       </div>
       {details ? <div className="faint">{details}</div> : null}
+      {more}
     </div>
   );
 }

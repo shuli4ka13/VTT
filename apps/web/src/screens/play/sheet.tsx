@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
 import { useReader } from '../../engine/use-calc.ts';
-import { maySheet } from '../../engine/rights.ts';
+import { maySheet, mayField } from '../../engine/rights.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
 import { Card, CardHead, DangerButton, Empty, Fold, Chip, Input, Button, Field, Select } from '../../ui/primitives.tsx';
 import { SheetView } from '../../sheet/sheet-view.tsx';
@@ -21,6 +21,8 @@ import { fieldsFor, livesOn } from '@vtt/engine/engine/calc';
 import { isGroup, sharedOf } from '@vtt/engine/events/desk';
 import { isDesk as atDesk } from '@vtt/engine/engine/owners';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { itemCells } from '@vtt/engine/model/item-ref';
+import { FieldCell } from '../../sheet/field-cell.tsx';
 import { blockOfList, pagesOf, SHEET_LIST_KEYS } from '@vtt/engine/model/pages';
 
 export function SheetScreen() {
@@ -345,8 +347,23 @@ function useSheetPieces(room: RoomState, sheet: Sheet): { hangingNow: ReactNode;
             <div className="stack stack--tight">
               <ThingsList system={system} kinds={thingsKinds} records={items.filter(item => copies(item.id).length)} row={item => copies(item.id).map((entry, at) => {
                 const hosts = (sheet.has ?? []).filter(one => !inside(keyOf(entry)).has(keyOf(one)));
+                const cells = itemCells(system, room.compendium, sheet, keyOf(entry));
+                const may = cells.length > 0 && mayField(room, me, sheet.id, cells[0]!.tag);
                 return (
                   <ThingLine key={keyOf(entry)} label={labelOf(keyOf(entry))} active={!entry.off} details={itemDetails(item, entry)}
+                    more={may ? (
+                      <Fold title="Значения" count={cells.length}>
+                        <div className="stack stack--tight">
+                          {cells.map(cell => (
+                            <FieldCell
+                              key={cell.tag} field={cell.field} system={system} sheet={sheet}
+                              reader={{ ...reader, storedOf: () => cell.value }}
+                              onChange={(tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value)}
+                            />
+                          ))}
+                        </div>
+                      </Fold>
+                    ) : null}
                     actions={<>
                       <Chip onClick={() => belong(item.id, entry, { on: true, off: !entry.off })}>{entry.off ? 'в сумке' : 'надето'}</Chip>
                       <Chip onClick={() => belong(item.id, entry, { on: false })}>✕ убрать</Chip>

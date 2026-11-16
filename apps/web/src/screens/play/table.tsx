@@ -1,5 +1,5 @@
 import { expectAction } from '@vtt/engine/events/trial';
-import { mayAnswer } from '../../engine/rights.ts';
+import { mayAnswer, mayAllowItems } from '../../engine/rights.ts';
 import { useState } from 'react';
 import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
@@ -76,6 +76,7 @@ function RoomTable({ room }: { room: RoomState }) {
               <div className="inline inline--tight">
                 {room.members.map(member => <Chip key={member.userId}>{member.name}</Chip>)}
               </div>
+              <ItemRights room={room} />
             </div>
           ),
         }}
@@ -510,3 +511,28 @@ function Actions({ room, sender, targets, places, onError, onClear, onSelf }: {
 
 const initialsOf = (name: string): string =>
   name.split(/[\s-]+/u).filter(Boolean).slice(0, 2).map(word => word[0]!.toUpperCase()).join('');
+
+function ItemRights({ room }: { room: RoomState }) {
+  const myId = useSession(s => s.userId);
+  const players = room.members.filter(member => member.role !== 'gm');
+  const allowers = players.filter(member => mayAllowItems(room, myId, member.userId));
+  if (allowers.length) {
+    return (
+      <div className="inline inline--tight">
+        <span className="faint">вещи меняют: ведущий</span>
+        {players.map(member => (
+          <Chip
+            key={member.userId}
+            active={Boolean(member.editsItems)}
+            title="разрешить или запретить менять значения вещей"
+            onClick={() => tableSocket.allowItems(room.id, member.userId, !member.editsItems)}
+          >
+            {member.name}
+          </Chip>
+        ))}
+      </div>
+    );
+  }
+  const names = ['ведущий', ...players.filter(member => member.editsItems).map(member => member.name)];
+  return <span className="faint">вещи меняют: {names.join(', ')}</span>;
+}
