@@ -37,6 +37,13 @@ group('куски систем: взять кусок со всем, от чег
   }
 });
 
+group('кусок везёт то, на что ссылается слово словаря', () => {
+  test('«Преимущество и помеха» — два слова и таблица меток бросков, где «урон» и «лечение» из их «Кроме»; ни правил, ни костей, ни полей', () => {
+    const piece = PIECES.find(p => p.id === 'advantage')!;
+    deepEq(bringPiece(empty(), piece).added.map(part => `${part.kind}:${part.key}`).sort(), ['rollEdit:advantage', 'rollEdit:disadvantage', 'table:rolls']);
+  });
+});
+
 group('кусок добавляется, а не заменяет', () => {
   const abilities = PIECES.find(p => p.id === 'd20-abilities')!;
   const death = PIECES.find(p => p.id === 'dnd-death')!;
