@@ -1,4 +1,4 @@
-import { group, test, eq, ok } from './harness.ts';
+import { group, test, eq, ok, deepEq } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import { exchange, fight } from './play.ts';
@@ -270,5 +270,21 @@ group('Shadowrun 6: чувство заявляют и к броскам дей�
     const [open, dark] = [shot(), shot({ target: ['зрение'] })];
     eq(pool(dark, 'защита'), pool(open, 'защита') - 3);
     eq(pool(dark, 'физический'), pool(open, 'физический'));
+  });
+
+  test('«Дикий кубик», заявленный к действию, — к одной проверке: у цели на защиту, не на сопротивление урону; у мага на колдовство, не на истощение', () => {
+    const wild = (out: ReturnType<typeof exchange>, part: string) =>
+      [...out.log.join(' · ').matchAll(/Бросок \(([^)]*)\)[^·|]*/g)].find(m => m[1]!.includes(part))?.[0].includes('Дикий кубик');
+    const shooter = fighter('стрелок', { agility: 5, 'skills.стрельба.rank': 4 }, [{ of: 'predator_vi' }]);
+    const target = fighter('цель', { body: 4, reaction: 3, intuition: 3 });
+    const shot = exchange({ system, compendium, die: tape(), sheets: [shooter, target], actionId: 'predator_vi:0', fromId: shooter.id, toIds: [target.id], inputs: { дистанция: 'близкая' }, claims: { target: ['wild_die'] } });
+    deepEq([wild(shot, 'защита'), wild(shot, 'физический')], [true, false]);
+    const lucky = fighter('цель', { body: 4, reaction: 3, intuition: 3, edge_left: 3 });
+    const asked = exchange({ system, compendium, die: tape(), sheets: [shooter, lucky], actionId: 'predator_vi:0', fromId: shooter.id, toIds: [lucky.id], inputs: { дистанция: 'близкая' }, claims: { target: ['wild_die'] }, answer: () => [] });
+    ok(asked.questions.length > 0, 'действие останавливалось на вопросах и выполнялось заново');
+    deepEq([wild(asked, 'защита'), wild(asked, 'физический')], [true, false]);
+    const mage = fighter('маг', { magic: 5, willpower: 4, logic: 4, 'skills.колдовство.rank': 4 }, [{ of: 'spell_mana_bolt' }]);
+    const cast = exchange({ system, compendium, die: tape(), sheets: [mage, fighter('цель', { body: 4, willpower: 3 })], actionId: 'spell_mana_bolt:0', fromId: mage.id, toIds: ['цель'], claims: { source: ['wild_die'] } });
+    deepEq([wild(cast, 'колдовство'), wild(cast, 'истощению')], [true, false]);
   });
 });
