@@ -104,6 +104,24 @@ describe('форма «Бросок»: что бросает', () => {
     expect(draft).toEqual({ id: 'бросок', type: 'roll', die: 'lead', by: { expr: '@действующий' } });
   });
 
+  it('кость внутри входа-записи — в «Кость из входа» словами «вход → колонка», пишется формулой с точкой и так же подписана; у входа-списка её нет', () => {
+    const armed = { ...system, tables: { ...system.tables, weapon: { shape: 'book', use: 'item', label: 'Оружие', columns: [
+      { key: 'damage_dice', label: 'Кость урона', kind: 'dice' }, { key: 'range', label: 'Дистанция', kind: 'text' },
+    ] } } } as unknown as System;
+    const holding = { params: [...effect.params!, { key: 'оружие', label: 'Оружие', kind: 'record', from: 'weapon' }, { key: 'арсенал', label: 'Арсенал', kind: 'record', from: 'weapon', many: true }] } as unknown as Effect;
+    const step = { id: 'бросок', type: 'roll', die: 'lead', by: { expr: '@действующий' } };
+    const draft = structuredClone(step);
+    const view = render(<RollBody step={step as unknown as Step} context={{ ...context, system: armed, effect: holding }} edit={(_, change) => change(draft as never)} />);
+    expect(comboGroups(what(view)).find(([group]) => group === 'Кость из входа')).toEqual(['Кость из входа', ['expr:@damage_dice', 'expr:@оружие.damage_dice']]);
+    expect(comboOptions(what(view)).find(one => one.value === 'expr:@оружие.damage_dice')?.label).toBe('Оружие → Кость урона');
+    within(view.container).select('Что бросает', 'expr:@оружие.damage_dice');
+    expect(draft).toEqual({ ...step, die: { expr: '@оружие.damage_dice' } });
+    cleanup();
+    const shown = render(<RollBody step={draft as unknown as Step} context={{ ...context, system: armed, effect: holding }} edit={() => {}} />);
+    expect(what(shown).dataset.value).toBe('expr:@оружие.damage_dice');
+    expect(shown.container.textContent).toContain('кость из входа «Оружие → Кость урона»');
+  });
+
   it('кость из входа эффекта пишется формулой', () => {
     const { draft, view } = edited({ id: 'бросок', type: 'roll', die: 'lead', by: { expr: '@действующий' } });
     within(view.container).select('Что бросает', 'expr:@damage_dice');

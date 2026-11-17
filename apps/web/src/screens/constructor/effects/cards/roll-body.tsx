@@ -17,7 +17,7 @@ import { resultsOf } from '@vtt/engine/model/names-at';
 import { ResultChips } from './result-chips.tsx';
 import { rollSaid } from '../../rules/rolls.ts';
 import {
-  DIE, EXPR, FIELD, OWN_DIE, OWN_FIELD, anyPair, headOf, isPair, rollableFields, setDie, setField, setSecond, setWho, tailOf, whatOf, whatOptions,
+  DIE, EXPR, FIELD, OWN_DIE, OWN_FIELD, anyPair, headOf, inputDice, isPair, rollableFields, setDie, setField, setSecond, setWho, tailOf, whatOf, whatOptions,
 } from './roll-what.ts';
 
 type Loose = Record<string, unknown>;
@@ -29,9 +29,8 @@ const exprOf = (value: unknown): string => String((value as { expr?: unknown } |
 const NOBODY = 'никто — кости ничьи';
 
 function ownDieSaid(context: SlotContext, text: string): string {
-  const input = /^@([\p{L}\p{N}_]+)$/u.exec(text.trim())?.[1];
-  const param = input ? (context.effect.params ?? []).find(one => one.key === input) : undefined;
-  const source = param ? `кость из входа «${param.label ?? param.key}»` : `кость «${text.replace(/['"]/g, '')}»`;
+  const named = inputDice(context.system, context.effect).find(([key]) => key === `${EXPR}${text.trim()}`);
+  const source = named ? `кость из входа «${named[1]}»` : `кость «${text.replace(/['"]/g, '')}»`;
   return `${source}: выпавшие грани складываются, правила успеха у неё нет`;
 }
 

@@ -1,4 +1,5 @@
 import { isSingle } from '@vtt/engine/model/sheet-columns';
+import { columnChoices } from '@vtt/engine/model/paths';
 import type { Effect, System } from '@vtt/schema';
 
 export interface Rollable { tail: string; label: string; group: string; rule: string; roll: string }
@@ -34,16 +35,28 @@ export const OWN_FIELD = 'own-field';
 
 export type WhatOption = readonly [string, string, string];
 
+const FROM_INPUT = 'Кость из входа';
+
+export function inputDice(system: System, effect: Effect): WhatOption[] {
+  return (effect.params ?? []).flatMap((param): WhatOption[] => {
+    const label = param.label || param.key;
+    if (param.kind === 'dice') return [[`${EXPR}@${param.key}`, label, FROM_INPUT]];
+    if ((param.kind !== 'record' && param.kind !== 'choice') || !param.from || param.many) return [];
+    return columnChoices(system, param.from)
+      .filter(one => one.kind === 'dice')
+      .map(one => [`${EXPR}@${param.key}${one.path}`, `${label} → ${one.label}`, FROM_INPUT]);
+  });
+}
+
 export function whatOptions(system: System, effect: Effect): WhatOption[] {
   const fields = rollableFields(system, effect);
   const lead = fields.filter(one => one.group === BY_INPUT || one.group === ON_SHEET);
   const rows = fields.filter(one => !lead.includes(one));
   const dice = Object.entries(system.constants ?? {}).filter(([, constant]) => constant.kind === 'die');
-  const inputs = (effect.params ?? []).filter(param => param.kind === 'dice');
   return [
     ...lead.map(one => [`${FIELD}${one.tail}`, one.label, one.group] as const),
     ...dice.map(([key, constant]) => [`${DIE}${key}`, constant.label || key, 'Кости'] as const),
-    ...inputs.map(param => [`${EXPR}@${param.key}`, param.label || param.key, 'Кость из входа'] as const),
+    ...inputDice(system, effect),
     ...rows.map(one => [`${FIELD}${one.tail}`, one.label, one.group] as const),
     [OWN_DIE, 'своя кость…', 'Другое'] as const,
     ...(fields.length ? [[OWN_FIELD, 'поле своим адресом…', 'Другое'] as const] : []),
