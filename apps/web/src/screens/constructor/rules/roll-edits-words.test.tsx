@@ -136,6 +136,25 @@ describe('правка броска говорит, что складывает�
     expect(current.roll_edits!.фора).not.toHaveProperty('tags');
   });
 
+  it('«заявка — к одной проверке» пишет once слова, «ко всем броскам действия» убирает ключ', () => {
+    let current = system;
+    const Host = () => {
+      const [sys, setSys] = useState(system);
+      current = sys;
+      return <RollEditsSection system={sys} usage={new Map()} editSystem={change => setSys(prev => {
+        const next = JSON.parse(JSON.stringify(prev)) as System;
+        change(next);
+        return next;
+      })} />;
+    };
+    const view = render(<Host />);
+    const combo = () => view.container.querySelector<HTMLElement>('[title^="Заявленное за столом"] [role="combobox"]')!;
+    pickCombo(combo(), 'заявка — к одной проверке');
+    expect(current.roll_edits!.фора!.once).toBe(true);
+    pickCombo(combo(), 'заявка — ко всем броскам действия');
+    expect(current.roll_edits!.фора).not.toHaveProperty('once');
+  });
+
   it('у «Бой большим оружием» в D&D выбраны «урон», «оружие», «ближний»', () => {
     const dnd = SAMPLE_WORLDS.find(world => world.system.roll_edits?.great_weapon)!.system as System;
     const view = render(<RollEditsSection system={dnd} editSystem={vi.fn()} usage={new Map()} />);

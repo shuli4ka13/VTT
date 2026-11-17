@@ -268,6 +268,8 @@ function WordRow({ wordKey, edit, system, editSystem, parts, used }: {
 }
 
 const STACK_WORDS = [['', 'одно на бросок'], ['yes', 'по разу от каждого разного эффекта']] as const;
+const ONCE_WORDS = [['', 'заявка — ко всем броскам действия'], ['yes', 'заявка — к одной проверке']] as const;
+const ONCE_TIP = 'Заявленное за столом к действию: ко всем броскам заявившего, к которым подходит слово, или только к первому из них. Правок эффектов и вещей это не касается.';
 const STACK_TIP = 'Одно на бросок — сколько бы эффектов ни дали слово. По разу от каждого разного эффекта — а копии одного и того же эффекта считаются одним: два «Поддержания» дадут слово один раз. «За каждую копию» — числом в самом эффекте.';
 
 function unlinkFrom(edit: RollEdit, key: string): void {
@@ -317,6 +319,12 @@ function Cancels({ wordKey, edit, system, editSystem }: { wordKey: string; edit:
           const cur = draft.roll_edits?.[wordKey];
           if (!cur) return;
           if (next) cur.stacks = true; else delete cur.stacks;
+        })} />
+      <Select value={edit.once ? 'yes' : ''} options={ONCE_WORDS as never} title={ONCE_TIP}
+        onChange={(next: string) => editSystem(draft => {
+          const cur = draft.roll_edits?.[wordKey];
+          if (!cur) return;
+          if (next) cur.once = true; else delete cur.once;
         })} />
     </div>
   );
