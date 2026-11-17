@@ -5,6 +5,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { world as W } from '@vtt/schema';
 import type { System, Compendium, Sheet, Effect, Column } from '@vtt/schema';
 import { lazyStorage } from './lazy-storage.ts';
+import { useFormulaBar } from './formula-bar.ts';
 import { useLookup } from './lookup.ts';
 import { withLibrary } from '@vtt/engine/model/owned';
 import { forgetFields } from '@vtt/engine/model/sheet-columns';
@@ -118,13 +119,16 @@ export const useWorld = create<WorldState>()(persist(set => ({
     return { system: fresh(draft) };
   }),
 
-  editEffect: (id, edit) => set(state => {
-    const current = state.system.effects[id];
-    if (!current) return {};
-    const draft = structuredClone(current);
-    edit(draft);
-    return { system: { ...state.system, effects: { ...state.system.effects, [id]: draft } } };
-  }),
+  editEffect: (id, edit) => {
+    useFormulaBar.getState().flush();
+    set(state => {
+      const current = state.system.effects[id];
+      if (!current) return {};
+      const draft = structuredClone(current);
+      edit(draft);
+      return { system: { ...state.system, effects: { ...state.system.effects, [id]: draft } } };
+    });
+  },
 
   editColumn: (table, key, edit) => set(state => {
     const home = state.system.tables?.[table];

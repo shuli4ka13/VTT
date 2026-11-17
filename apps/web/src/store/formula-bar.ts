@@ -36,11 +36,20 @@ export interface FormulaTarget {
 
 type Opened = FormulaTarget & { initial: string; final?: string };
 
+let busy = 0;
+
+const quiet = (run: () => void): void => {
+  busy++;
+  try { run(); } finally { busy--; }
+};
+
 const settle = (target: Opened | null) => {
   if (!target) return;
   const value = target.final ?? target.value;
-  if (value !== target.value) target.onChange?.(value);
-  if (value !== target.initial) target.onCommit?.(value);
+  quiet(() => {
+    if (value !== target.value) target.onChange?.(value);
+    if (value !== target.initial) target.onCommit?.(value);
+  });
 };
 
 export interface FormulaBarState {
@@ -50,6 +59,7 @@ export interface FormulaBarState {
   write: (text: string) => void;
   settleAs: (text: string) => void;
   commit: () => void;
+  flush: () => void;
   cancel: () => void;
   dismiss: () => void;
   host: () => () => void;
@@ -67,7 +77,7 @@ export const useFormulaBar = create<FormulaBarState>()((set, get) => ({
   write: text => {
     const target = get().target;
     if (!target) return;
-    target.onChange?.(text);
+    quiet(() => target.onChange?.(text));
     const { final: _final, ...rest } = target;
     set({ target: { ...rest, value: text } });
   },
@@ -80,10 +90,14 @@ export const useFormulaBar = create<FormulaBarState>()((set, get) => ({
     set({ target: null });
     settle(target);
   },
+  flush: () => {
+    if (busy) return;
+    get().commit();
+  },
   cancel: () => {
     const target = get().target;
     set({ target: null });
-    target?.onCancel?.();
+    quiet(() => target?.onCancel?.());
   },
   dismiss: () => set({ target: null }),
   host: () => {

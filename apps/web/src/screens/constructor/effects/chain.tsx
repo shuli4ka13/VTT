@@ -17,6 +17,7 @@ import { problemOf } from '../step-card.tsx';
 import type { StepOutput } from '../slots.tsx';
 import { outcomeRefs, fieldedOf } from '../slots.tsx';
 import { groupSteps, moveGroup, moveSpan, blockSpan, removeSteps, armEnd, addArm, unwrapBlock, BRICKS, SEEN_BRICKS } from '../cards.ts';
+import type { Removal } from '../cards.ts';
 import { armsOf, sees, endOf } from '@vtt/engine/model/flow';
 import { FlowHead, FlowActions, ArmLabel, OutcomePick, HeadFrame } from './cards/flow-parts.tsx';
 import { outcomeWords } from '@vtt/engine/engine/roll-tags';
@@ -325,9 +326,13 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
           change(amount, steps[amountAt + 1]!, String(amount.id));
         })}
         onDelete={() => {
-          const before = structuredClone(steps);
-          const removal = removeSteps(steps, range);
-          edit(draft => { draft.steps = removal.steps; });
+          let before: Step[] = steps;
+          let removal: Removal = { steps, cleared: [] };
+          edit(draft => {
+            before = structuredClone(draft.steps ?? []);
+            removal = removeSteps(draft.steps ?? [], range);
+            draft.steps = removal.steps;
+          });
           const kept = groupSteps(removal.steps);
           const where = (c: { step: number; slot: string }) => `${cardTitle(kept, c.step, system, effect) ?? STEP.one} · ${c.slot.replace(/ \(формула\)$/, '')}`;
           const cleared = removal.cleared.filter(c => !c.slot.endsWith('(формула)'));
