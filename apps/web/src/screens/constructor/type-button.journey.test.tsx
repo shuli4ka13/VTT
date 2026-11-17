@@ -44,4 +44,22 @@ describe('новый тип с нуля: «+ кнопка» → «Атака» �
     expect(Number.isFinite(before)).toBe(true);
     expect(after).toBeLessThan(before);
   });
+
+  it('вход «запись» этого типа или его основы заполняется «этой вещью» и свойства не заводит; запись другого типа — свойством', () => {
+    const system = structuredClone(dnd.system);
+    system.tables!.mag = { shape: 'book', use: 'item', label: 'Магическое оружие', extends: 'weapon', block: 'Снаряжение', bindings: [{ effect: '' }] } as never;
+    system.effects.взмах = { label: 'Взмах', activation: 'manual', params: [
+      { key: 'действующий', label: 'Кто действует', kind: 'sheet' },
+      { key: 'оружие', label: 'Оружие', kind: 'record', from: 'weapon' },
+      { key: 'доспех', label: 'Доспех', kind: 'record', from: 'armor' },
+    ], steps: [] } as never;
+    useWorld.setState(state => ({ ...state, system, compendium: structuredClone(dnd.compendium), activeRecordKind: 'mag' }));
+
+    render(<RecordsTab />);
+    pickCombo(screen.getByPlaceholderText('— какой эффект —'), 'взмах');
+
+    const kind = useWorld.getState().system.tables!.mag!;
+    expect(kind.bindings![0]!.args).toEqual({ оружие: { expr: '@вещь' }, доспех: { expr: '@доспех' } });
+    expect((kind.columns ?? []).map(column => column.key)).toEqual(['доспех']);
+  });
 });

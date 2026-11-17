@@ -65,6 +65,7 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
             onChange={next => {
               const chosen = system.effects[next];
               const columns = new Set((recordKind.columns ?? []).map(prop => prop.key));
+              const itself = (param: Param): boolean => param.kind === 'record' && Boolean(param.from && kindId && isUnder(system, kindId, param.from));
               onEdit(draft => {
                 draft.effect = next;
                 if (!draft.label?.trim() && system.effects[next]) draft.label = system.effects[next]!.label || next;
@@ -74,12 +75,13 @@ export function ButtonEditor({ binding, system, recordKind: ownKind, kindId, onE
                   if (param.kind === 'sheet') continue;
                   const given = draft.args?.[param.key];
                   if (given !== undefined) kept[param.key] = given;
+                  else if (itself(param)) kept[param.key] = { expr: `@${ITEM_NAME}` };
                   else if (columns.has(param.key)) kept[param.key] = { expr: `@${param.key}` };
                 }
                 if (Object.keys(kept).length) draft.args = kept as never; else delete draft.args;
               });
               const missing = chosen ? paramsOf(system, chosen)
-                .filter(param => param.kind !== 'sheet' && !freeParam(param) && !columns.has(param.key) && binding.args?.[param.key] === undefined) : [];
+                .filter(param => param.kind !== 'sheet' && !freeParam(param) && !itself(param) && !columns.has(param.key) && binding.args?.[param.key] === undefined) : [];
               if (missing.length) onFillWithProps?.(missing);
             }}
           />
