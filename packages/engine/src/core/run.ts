@@ -24,7 +24,7 @@ import { isDesk, DESK_ID } from '../engine/owners.ts';
 import { Views } from './view.ts';
 import { State } from './state.ts';
 import { limitsOf, CUT_WORDS, PROBES_WORDS } from './limits.ts';
-import { gather, stack, rollHeld, rollMarks, amountOf, THRESHOLD_PARAM } from './edits.ts';
+import { gather, stack, rollHeld, rollMarks, amountOf, wordApplies, THRESHOLD_PARAM } from './edits.ts';
 import { ROLL_CALL, CALL_WORDS } from '../words/calls.ts';
 import { recordOf, retarget, opponentIn, mentions } from './against.ts';
 import type { Faced, Names } from './against.ts';
@@ -600,10 +600,12 @@ export class Run {
       if (stray) throw new EngineError(`заявка «${stray}» — нет ни правки броска с таким именем, ни метки; правки: ${Object.keys(words).join(', ') || '(словарь пуст)'}`);
       tags = [...tags, ...marks];
     }
-    const claims = claimed.filter(claim => words[claim]);
     const holders = this.holderViews();
     const added = rollMarks(holders, by, opponent, tags, values);
     if (added.length) tags = [...tags, ...added];
+    const spent = (word: string): string => `заявка\u0000${by}\u0000${word}`;
+    const claims = claimed.filter(claim => words[claim] && !(words[claim]!.once && this.state.memo(spent(claim))));
+    for (const word of claims) if (words[word]!.once && wordApplies(this.system, word, tags)) this.state.remember(spent(word), true);
     const roller = this.view(by);
     const thrown = throwDice({
       spec, tags, claims, held: rollHeld(holders, by, opponent, tags, values), roller, die,

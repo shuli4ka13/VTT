@@ -239,6 +239,7 @@ export const rollEdit = z.object({
   ops: z.array(rollEditOp),
   cancels: z.array(z.string().min(1)).optional(),
   stacks: z.literal(true).optional(),
+  once: z.literal(true).optional(),
   tags: z.array(z.string().min(1)).optional(),
   anyTags: z.array(z.string().min(1)).optional(),
   notTags: z.array(z.string().min(1)).optional(),
