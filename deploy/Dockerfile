@@ -40,7 +40,8 @@ FROM base AS runtime
 ENV NODE_ENV=production \
     VTT_PORT=8100 \
     VTT_DB=/data/vtt.db \
-    VTT_STATIC=/app/apps/web/dist
+    VTT_STATIC=/app/apps/web/dist \
+    VTT_OPEN_TABLE=1
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json

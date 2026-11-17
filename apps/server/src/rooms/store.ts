@@ -16,6 +16,8 @@ export interface Commit {
   items?: { userId: string; on: boolean };
 }
 
+export const openTable = (): boolean => process.env.VTT_OPEN_TABLE === '1';
+
 export class RoomStore {
   constructor(private readonly raw: DatabaseSync) {}
 
@@ -50,7 +52,7 @@ export class RoomStore {
 
   members(roomId: string): Member[] {
     return (this.raw.prepare('SELECT user_id AS userId, role, sheet_id AS sheetId, items FROM members WHERE room_id = ?').all(roomId) as { userId: string; role: string; sheetId: string | null; items: number }[])
-      .map(row => ({ userId: row.userId, role: row.role === 'gm' ? 'gm' : 'player', sheetId: row.sheetId ?? null, ...(row.items ? { editsItems: true } : {}) }));
+      .map(row => ({ userId: row.userId, role: row.role === 'gm' || openTable() ? 'gm' : 'player', sheetId: row.sheetId ?? null, ...(row.items ? { editsItems: true } : {}) }));
   }
 
   log(roomId: string): LogEntry[] {

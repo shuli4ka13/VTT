@@ -167,3 +167,19 @@ describe('удаление системы, компендиума и мира', 
     expect((await author.as(http().get('/systems'))).body.map((one: { id: string }) => one.id)).not.toContain(row.systemId);
   });
 });
+
+describe('стенд: за столом все ведущие', () => {
+  it('с переключателем участник убирает стол, без него — отказ', async () => {
+    const gm = await login('Ведущий-4');
+    const player = await login('Игрок-4');
+    const worldId = await world(gm, [pc('а')]);
+    const roomId = (await gm.as(http().post('/rooms')).send({ worldId, title: 'Общий' })).body.id as string;
+    await player.as(http().post(`/rooms/${roomId}/join`)).send({}).expect(201);
+    await player.as(http().delete(`/rooms/${roomId}`)).expect(403);
+    process.env.VTT_OPEN_TABLE = '1';
+    try {
+      expect((await player.as(http().get('/rooms'))).body.find((room: { id: string }) => room.id === roomId).gm).toBe(true);
+      await player.as(http().delete(`/rooms/${roomId}`)).expect(200);
+    } finally { delete process.env.VTT_OPEN_TABLE; }
+  });
+});

@@ -6,7 +6,7 @@ import type { Db } from '../db/db.ts';
 import type { DatabaseSync } from 'node:sqlite';
 import { rooms, roomSheets, roomJournal, members, users } from '../db/schema.ts';
 import { WorldsService } from '../worlds/worlds.service.ts';
-import { RoomStore } from './store.ts';
+import { RoomStore, openTable } from './store.ts';
 import type {
   RoomState, RoomSummary, RoomDelta, JournalEntry, ActIntent, TurnIntent, AnswerIntent, CancelIntent, ClockState, PendingState,
   Sheet, System, Compendium, StoredValue, LogEntry, Place, Places,
@@ -285,7 +285,7 @@ export class RoomsService {
         const gm = at.find(m => m.role === 'gm');
         return {
           id: room.id, title: room.title, worldId: room.worldId, memberCount: at.length, createdAt: room.createdAt,
-          gmName: gm ? names.get(gm.userId) ?? 'неизвестен' : '—', gm: gm?.userId === userId,
+          gmName: gm ? names.get(gm.userId) ?? 'неизвестен' : '—', gm: openTable() ? mine.has(room.id) : gm?.userId === userId,
         };
       })
       .sort((a, b) => Number(mine.has(b.id)) - Number(mine.has(a.id)));
