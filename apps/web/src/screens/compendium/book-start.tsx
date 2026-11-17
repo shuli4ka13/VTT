@@ -3,13 +3,30 @@ import { useNavigate } from 'react-router';
 import { useWorld } from '../../store/world.ts';
 import { useSession } from '../../store/session.ts';
 import { rememberVersion } from '../../store/autosave.ts';
-import { Button, Card, CardHead, Empty, Input, Verdict } from '../../ui/primitives.tsx';
+import { Button, DangerButton, Card, CardHead, Empty, Input, Segmented, Verdict } from '../../ui/primitives.tsx';
+import { RowsTable } from '../../ui/layout.tsx';
+import { stampOf } from '../../ui/stamp.ts';
+import { copyTitle, sortSystems } from '../author/start.tsx';
 import {
-  listSystems, getSystem, listCompendiums, getCompendium, createCompendium,
+  listSystems, getSystem, listCompendiums, getCompendium, createCompendium, deleteCompendium,
 } from '../../api/client.ts';
 import type { Compendium, CompendiumSummary, SystemSummary } from '@vtt/schema';
 
-const when = (iso: string): string => new Date(iso).toLocaleDateString('ru-RU');
+type Order = 'time' | 'title' | 'author';
+
+const ORDERS = [
+  { key: 'time', label: 'по времени' },
+  { key: 'title', label: 'по названию' },
+  { key: 'author', label: 'по автору' },
+] as const;
+
+export function sortBooks(items: readonly CompendiumSummary[], order: Order): CompendiumSummary[] {
+  return [...items].sort((x, y) =>
+    (order === 'author' ? x.authorName.localeCompare(y.authorName, 'ru') : 0)
+    || (order === 'time' ? y.updatedAt.localeCompare(x.updatedAt) : 0)
+    || x.title.localeCompare(y.title, 'ru'));
+}
+
 const EMPTY: Compendium = { records: [] };
 
 export function BookStart() {
@@ -25,6 +42,8 @@ export function BookStart() {
   const [title, setTitle] = useState('');
   const [busy, setBusy] = useState(false);
   const [trouble, setTrouble] = useState<string | null>(null);
+  const [systemOrder, setSystemOrder] = useState<Order>('time');
+  const [bookOrder, setBookOrder] = useState<Order>('time');
 
   useEffect(() => {
     listSystems()
@@ -68,13 +87,22 @@ export function BookStart() {
     } finally { setBusy(false); }
   };
 
+  const remove = (summary: CompendiumSummary) => {
+    if (!chosen) return;
+    setTrouble(null);
+    deleteCompendium(summary.id)
+      .then(() => listCompendiums(chosen.id))
+      .then(setBooks)
+      .catch(err => setTrouble((err as Error).message));
+  };
+
   const open = async (summary: CompendiumSummary, copy: boolean) => {
     if (!chosen) return;
     setBusy(true);
     try {
       const saved = await getCompendium(summary.id);
       if (copy) {
-        const name = `${saved.title} — копия`;
+        const name = copyTitle(saved.title, books.map(item => item.title));
         const made = await createCompendium(name, chosen.id, saved.compendium);
         rememberVersion({ compendium: made.updatedAt });
         replaceWorld({ system: useWorld.getState().system, compendium: saved.compendium, sheets });
@@ -109,19 +137,29 @@ export function BookStart() {
         </Verdict>
       ) : (
         <Card>
-          <CardHead title="Опубликованные системы" />
+          <CardHead title="Опубликованные системы"
+            actions={<Segmented value={systemOrder} options={ORDERS} onChange={setSystemOrder} />} />
           {systems.length === 0
             ? <Empty title="Опубликованных систем нет" hint="Компендиум пишется к готовой системе — сперва её должен кто-то опубликовать." />
             : (
-              <div className="start__list">
-                {systems.map(item => (
-                  <button key={item.id} type="button" className="start__item"
-                    disabled={busy} onClick={() => void pickSystem(item)}>
-                    <span className="start__item-name">{item.title}</span>
-                    <span className="start__item-meta">{item.authorName} · {when(item.updatedAt)}</span>
-                  </button>
-                ))}
-              </div>
+              <RowsTable
+                columns={[
+                  { head: 'Система', width: 'minmax(0, 2fr)' },
+                  { head: 'Автор', width: 'minmax(0, 1fr)', minor: true },
+                  { head: 'Изменена', width: '132px', minor: true },
+                  { head: '', width: 'auto' },
+                ]}
+                rows={sortSystems(systems, systemOrder).map(item => ({
+                  key: item.id,
+                  onOpen: busy ? undefined : () => void pickSystem(item),
+                  cells: [
+                    item.title,
+                    item.authorName,
+                    stampOf(item.updatedAt),
+                    <Button size="sm" disabled={busy} onClick={() => void pickSystem(item)}>Выбрать</Button>,
+                  ],
+                }))}
+              />
             )}
         </Card>
       )}
@@ -140,30 +178,37 @@ export function BookStart() {
           </Card>
 
           <Card>
-            <CardHead title="Или продолжить существующий" />
+            <CardHead title="Или продолжить существующий"
+              actions={<Segmented value={bookOrder} options={ORDERS} onChange={setBookOrder} />} />
             {books.length === 0
               ? <Empty title="Компендиумов для этой системы нет" hint="Заведите первый — он появится здесь." />
               : (
-                <div className="start__list">
-                  {books.map(item => (
-                    <div key={item.id} className="start__item start__item--row">
-                      <span className="start__item-head">
-                        <span className="start__item-name">{item.title}</span>
-                        <span className={`tag${item.status === 'published' ? ' tag--done' : ''}`}>
-                          {item.status === 'published' ? 'опубликован' : 'черновик'}
-                        </span>
-                      </span>
-                      <span className="start__item-meta">
-                        {item.authorName} · записей: {item.itemCount} · {when(item.updatedAt)}
-                      </span>
-                      <span className="start__item-actions">
-                        <Button size="sm" disabled={busy} onClick={() => void open(item, false)}>открыть</Button>
-                        <Button size="sm" variant="ghost" disabled={busy}
-                          onClick={() => void open(item, true)}>копия</Button>
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                <RowsTable
+                  columns={[
+                    { head: 'Компендиум', width: 'minmax(0, 2fr)' },
+                    { head: 'Состояние', width: 'minmax(0, 1fr)', minor: true },
+                    { head: 'Автор', width: 'minmax(0, 1fr)', minor: true },
+                    { head: 'Записей', width: '72px', minor: true },
+                    { head: 'Изменён', width: '132px', minor: true },
+                    { head: '', width: 'auto' },
+                  ]}
+                  rows={sortBooks(books, bookOrder).map(item => ({
+                    key: item.id,
+                    onOpen: busy ? undefined : () => void open(item, false),
+                    cells: [
+                      item.title,
+                      item.status === 'published' ? 'опубликован' : 'черновик',
+                      item.authorName,
+                      item.itemCount,
+                      stampOf(item.updatedAt),
+                      <>
+                        <Button size="sm" disabled={busy} onClick={() => void open(item, false)}>Открыть</Button>
+                        <Button size="sm" disabled={busy} onClick={() => void open(item, true)}>Снять копию</Button>
+                        {item.mine ? <DangerButton size="sm" onConfirm={() => remove(item)}>Удалить</DangerButton> : null}
+                      </>,
+                    ],
+                  }))}
+                />
               )}
           </Card>
         </>

@@ -1,5 +1,5 @@
 import {
-  Body, Controller, Get, Headers, Inject, Param, Post, Put, Query, UsePipes,
+  Body, Controller, Delete, Get, Headers, Inject, Param, Post, Put, Query, UsePipes,
 } from '@nestjs/common';
 import { api } from '@vtt/schema';
 import type { PublishCompendiumRequest, PublishSystemRequest } from '@vtt/schema';
@@ -53,6 +53,20 @@ export class CatalogController {
   async publishSystem(@Param('id') id: string, @Headers('authorization') header?: string) {
     const { userId } = await this.auth.whoIs(bearer(header));
     return this.catalog.publishSystem(userId, id);
+  }
+
+  @Delete('systems/:id')
+  async removeSystem(@Param('id') id: string, @Headers('authorization') header?: string) {
+    const { userId } = await this.auth.whoIs(bearer(header));
+    await this.catalog.removeSystem(userId, id);
+    return { ok: true };
+  }
+
+  @Delete('compendiums/:id')
+  async removeCompendium(@Param('id') id: string, @Headers('authorization') header?: string) {
+    const { userId } = await this.auth.whoIs(bearer(header));
+    await this.catalog.removeCompendium(userId, id);
+    return { ok: true };
   }
 
   @Get('compendiums') async compendiums(

@@ -17,8 +17,17 @@ export class RoomsController {
   ) {}
 
   @Get('worlds')
-  worlds() {
-    return this.worldsService.list();
+  async worlds(@Headers('authorization') header?: string) {
+    let viewer: string | undefined;
+    try { viewer = (await this.auth.whoIs(bearer(header))).userId; } catch { viewer = undefined; }
+    return this.worldsService.list(viewer);
+  }
+
+  @Delete('worlds/:id')
+  async removeWorld(@Param('id') id: string, @Headers('authorization') header?: string) {
+    const { userId } = await this.auth.whoIs(bearer(header));
+    await this.worldsService.remove(userId, id);
+    return { ok: true };
   }
 
   @Post('worlds')

@@ -136,3 +136,34 @@ describe('удаление стола и листа', () => {
     ]);
   });
 });
+
+describe('удаление системы, компендиума и мира', () => {
+  it('удаляет только автор; пока есть мир или компендиум — отказ с названием; столы после удаления мира играют', async () => {
+    const author = await login('Автор-3');
+    const stranger = await login('Чужой-3');
+    const worldId = await world(author, [pc('а'), pc('б')]);
+    const mine = (await author.as(http().get('/worlds'))).body.find((one: { id: string }) => one.id === worldId);
+    expect(mine.mine).toBe(true);
+    expect((await stranger.as(http().get('/worlds'))).body.find((one: { id: string }) => one.id === worldId).mine).toBe(false);
+    const row = db.raw.prepare('SELECT system_id AS systemId, compendium_ids AS books FROM worlds WHERE id = ?').get(worldId) as { systemId: string; books: string };
+    const bookId = (JSON.parse(row.books) as string[])[0]!;
+    const roomId = (await author.as(http().post('/rooms')).send({ worldId, title: 'Идёт игра' })).body.id as string;
+
+    await stranger.as(http().delete(`/systems/${row.systemId}`)).expect(403);
+    await stranger.as(http().delete(`/compendiums/${bookId}`)).expect(403);
+    await stranger.as(http().delete(`/worlds/${worldId}`)).expect(403);
+
+    expect((await author.as(http().delete(`/systems/${row.systemId}`)).expect(409)).body.message).toContain('мир «Мир»');
+    expect((await author.as(http().delete(`/compendiums/${bookId}`)).expect(409)).body.message).toContain('мир «Мир»');
+
+    await author.as(http().delete(`/worlds/${worldId}`)).expect(200);
+    expect((await author.as(http().get('/worlds'))).body.map((one: { id: string }) => one.id)).not.toContain(worldId);
+    await author.as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'удар:0', fromId: 'а', toIds: ['б'] }).expect(201);
+
+    expect((await author.as(http().delete(`/systems/${row.systemId}`)).expect(409)).body.message).toContain('компендиум «Книга»');
+    await author.as(http().delete(`/compendiums/${bookId}`)).expect(200);
+    await author.as(http().delete(`/systems/${row.systemId}`)).expect(200);
+    await author.as(http().get(`/systems/${row.systemId}`)).expect(404);
+    expect((await author.as(http().get('/systems'))).body.map((one: { id: string }) => one.id)).not.toContain(row.systemId);
+  });
+});

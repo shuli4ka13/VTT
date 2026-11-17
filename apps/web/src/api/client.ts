@@ -66,6 +66,9 @@ const put = <S extends ZodType>(path: string, schema: S, body: unknown) =>
 export const login = (name: string): Promise<Session> =>
   post('/auth/login', api.session, { name });
 
+export const whoAmI = (): Promise<{ userId: string; name: string }> =>
+  call('/auth/me', z.object({ userId: z.string(), name: z.string() }));
+
 export const listSystems = (): Promise<SystemSummary[]> =>
   call('/systems', api.systemSummary.array());
 
@@ -117,6 +120,17 @@ export const createRoom = (worldId: string, title: string): Promise<RoomSummary>
 
 export const closeRoom = (roomId: string): Promise<{ ok: boolean }> =>
   call(`/rooms/${roomId}`, z.object({ ok: z.boolean() }), { method: 'DELETE' });
+
+const removed = z.object({ ok: z.boolean() });
+
+export const deleteSystem = (id: string): Promise<{ ok: boolean }> =>
+  call(`/systems/${id}`, removed, { method: 'DELETE' });
+
+export const deleteCompendium = (id: string): Promise<{ ok: boolean }> =>
+  call(`/compendiums/${id}`, removed, { method: 'DELETE' });
+
+export const deleteWorld = (id: string): Promise<{ ok: boolean }> =>
+  call(`/worlds/${id}`, removed, { method: 'DELETE' });
 
 export const roomState = (roomId: string): Promise<RoomState> =>
   call(`/rooms/${roomId}`, api.roomState);

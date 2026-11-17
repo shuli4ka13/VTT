@@ -2,16 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRoom } from '../../store/room.ts';
 import { Card, CardHead, Button, DangerButton, Verdict, Empty, Segmented } from '../../ui/primitives.tsx';
 import { Columns, RowsTable } from '../../ui/layout.tsx';
-import { listRooms, listWorlds, createRoom, closeRoom } from '../../api/client.ts';
+import { listRooms, listWorlds, createRoom, closeRoom, deleteWorld } from '../../api/client.ts';
 import { BuildWorld } from './build-world.tsx';
+import { stampOf } from '../../ui/stamp.ts';
 import type { RoomSummary, WorldSummary } from '@vtt/schema';
 
-const STAMP = new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-export const stampOf = (iso: string): string => {
-  const at = new Date(iso);
-  return Number.isNaN(at.getTime()) ? '' : STAMP.format(at).replace(',', '');
-};
+export { stampOf };
 
 type Tab = 'rooms' | 'worlds' | 'build';
 type Order = 'time' | 'world' | 'system';
@@ -161,15 +157,26 @@ export function Lobby() {
                       world.systemName,
                       world.authorName,
                       stampOf(world.updatedAt),
-                      <Button size="sm" onClick={async () => {
-                        try {
-                          const room = await createRoom(world.id, `Стол «${world.title}»`);
-                          void refresh();
-                          join(room.id);
-                        } catch (err) { setError((err as Error).message); }
-                      }}>
-                        Создать стол
-                      </Button>,
+                      <>
+                        <Button size="sm" onClick={async () => {
+                          try {
+                            const room = await createRoom(world.id, `Стол «${world.title}»`);
+                            void refresh();
+                            join(room.id);
+                          } catch (err) { setError((err as Error).message); }
+                        }}>
+                          Создать стол
+                        </Button>
+                        {world.mine ? (
+                          <DangerButton size="sm" onConfirm={() => {
+                            deleteWorld(world.id)
+                              .then(() => refresh())
+                              .catch(err => setError((err as Error).message));
+                          }}>
+                            Удалить
+                          </DangerButton>
+                        ) : null}
+                      </>,
                     ],
                   }))}
                 />

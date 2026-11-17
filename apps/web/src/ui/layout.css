@@ -335,26 +335,10 @@
 .start .roles__grid { max-width: none; margin-top: 0; }
 .start__title { font-family: var(--font-head); font-size: 27px; font-weight: 700; margin: 0; letter-spacing: -0.4px; }
 .start__lead { margin: 0; color: var(--text-muted); max-width: 60ch; }
-.start__list { display: flex; flex-direction: column; gap: var(--s-2); }
-.start__item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  text-align: left;
-  padding: var(--s-3) var(--s-4);
-  border: 1px solid var(--border);
-  border-radius: var(--r-2);
-  background: var(--surface);
-  cursor: pointer;
-}
-.start__item:hover { border-color: var(--accent); background: var(--surface-2); }
-.start__item-name { font-weight: 600; }
-.start__item-meta { font-size: var(--fs-2); color: var(--text-muted); }
 .worldbar__state { font-size: var(--fs-2); color: var(--text-muted); }
 .worldbar__publication { font-size: var(--fs-2); color: var(--text-muted); white-space: nowrap; flex: none; }
 .worldbar__publication--behind { color: var(--warn); }
 
-.start__item-head { display: flex; align-items: center; gap: var(--s-2); }
 .tag {
   font-size: var(--fs-1);
   text-transform: uppercase;
@@ -365,9 +349,6 @@
   color: var(--text-muted);
 }
 .tag--done { border-color: var(--ok); color: var(--ok); }
-
-.start__item--row { cursor: default; }
-.start__item-actions { display: flex; gap: var(--s-2); margin-top: var(--s-2); }
 
 .sheet-pick { border-radius: var(--r-2); padding: var(--s-1); margin: calc(-1 * var(--s-1)); cursor: pointer; }
 .sheet-pick:hover { background: var(--surface-2); }
@@ -664,7 +645,7 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 }
 
 @media (pointer: coarse) {
-  .tabs__item, .topbar__link, .list__item, .start__item { min-height: 40px; }
+  .tabs__item, .topbar__link, .list__item { min-height: 40px; }
   .topbar__link { display: inline-flex; align-items: center; }
   .step-card .card__head .btn, .step-card .step-fold__row .btn { min-height: 40px; }
   .column__fold, .list__fold, .list__group-pick { min-width: 40px; min-height: 40px; }

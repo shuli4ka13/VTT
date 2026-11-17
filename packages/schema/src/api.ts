@@ -48,6 +48,7 @@ export const compendiumSummary = z.object({
   systemName: z.string(), authorName: z.string(),
   itemCount: z.number().int().nonnegative(), updatedAt: z.string(),
   status: publishState,
+  mine: z.boolean().optional(),
 });
 
 export const publishedCompendium = z.object({
@@ -69,6 +70,7 @@ export const worldSummary = z.object({
   authorName: z.string(),
   sheetCount: z.number().int().nonnegative(),
   updatedAt: z.string(),
+  mine: z.boolean().optional(),
 });
 
 export const createRoomRequest = z.object({

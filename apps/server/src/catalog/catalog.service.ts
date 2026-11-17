@@ -11,7 +11,7 @@ import { flattenSystem } from '@vtt/engine/model/inherit';
 import type { Compendium, System } from '@vtt/schema';
 import { DB, CLOCK, IDS } from '../common/tokens.ts';
 import type { Db } from '../db/db.ts';
-import { publishedCompendiums, publishedSystems, users } from '../db/schema.ts';
+import { publishedCompendiums, publishedSystems, users, worlds } from '../db/schema.ts';
 import { recordKindOf } from '@vtt/engine/model/owned';
 
 @Injectable()
@@ -70,6 +70,23 @@ export class CatalogService {
       .set({ publishedData: row.data, status: 'published', updatedAt })
       .where(eq(publishedSystems.id, id));
     return { id, updatedAt };
+  }
+
+  async removeSystem(ownerId: string, id: string): Promise<void> {
+    await this.ownedSystem(ownerId, id);
+    const world = (await this.db.select().from(worlds).where(eq(worlds.systemId, id)))[0];
+    if (world) throw new ConflictException(`на системе собран мир «${world.title}» — сначала удалите его`);
+    const book = (await this.db.select().from(publishedCompendiums).where(eq(publishedCompendiums.systemId, id)))[0];
+    if (book) throw new ConflictException(`к системе написан компендиум «${book.title}» — сначала удалите его`);
+    await this.db.delete(publishedSystems).where(eq(publishedSystems.id, id));
+  }
+
+  async removeCompendium(ownerId: string, id: string): Promise<void> {
+    await this.ownedCompendium(ownerId, id);
+    const world = (await this.db.select().from(worlds))
+      .find(row => (JSON.parse(row.compendiumIds) as string[]).includes(id));
+    if (world) throw new ConflictException(`компендиум входит в мир «${world.title}» — сначала удалите его`);
+    await this.db.delete(publishedCompendiums).where(eq(publishedCompendiums.id, id));
   }
 
   async systemFor(id: string, viewerId?: string) {
@@ -232,7 +249,8 @@ export class CatalogService {
         systemName: system.system.name ?? system.system.id,
         authorName: await this.author(row.ownerId),
         itemCount: data.records?.length ?? 0, updatedAt: row.updatedAt,
-        status: row.status === 'published' ? 'published' as const : 'draft' as const };
+        status: row.status === 'published' ? 'published' as const : 'draft' as const,
+        mine: row.ownerId === viewerId };
     }));
   }
 

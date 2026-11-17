@@ -52,7 +52,14 @@ export class WorldsService {
     return { id };
   }
 
-  async list(): Promise<WorldSummary[]> {
+  async remove(ownerId: string, id: string): Promise<void> {
+    const row = (await this.db.select().from(worlds).where(eq(worlds.id, id)))[0];
+    if (!row) throw new NotFoundException(`мира «${id}» на сервере нет`);
+    if (row.ownerId !== ownerId) throw new ForbiddenException('мир принадлежит другому автору');
+    await this.db.delete(worlds).where(eq(worlds.id, id));
+  }
+
+  async list(viewerId?: string): Promise<WorldSummary[]> {
     const rows = await this.db.select().from(worlds).orderBy(desc(worlds.updatedAt));
     const out: WorldSummary[] = [];
 
@@ -67,6 +74,7 @@ export class WorldsService {
         authorName: owner[0]?.name ?? 'неизвестен',
         sheetCount: (JSON.parse(row.sheets) as Sheet[]).length,
         updatedAt: row.updatedAt,
+        mine: row.ownerId === viewerId,
       });
     }
     return out;
