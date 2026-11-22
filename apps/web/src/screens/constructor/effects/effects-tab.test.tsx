@@ -7,8 +7,8 @@ import { EffectsTab } from './effects-tab.tsx';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import { CREATE_KINDS } from './words.ts';
 import { UNBOUND_HINT } from './roles.ts';
-import { fieldsOf, hasField } from '@vtt/engine/model/sheet-columns';
-import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
+import { fieldsOf, hasField } from '@vtt/engine';
+import { SAMPLE_WORLDS } from '@vtt/engine/samples';
 import type { Effect } from '@vtt/schema';
 
 const combos = (root: ParentNode = document) => [...root.querySelectorAll<HTMLElement>('[role="combobox"]')];

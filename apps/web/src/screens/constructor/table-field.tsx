@@ -6,7 +6,7 @@ import { VIEWS, columnFamily, viewNeeds, takesBounds, TAKES_STEP } from '../../s
 import { BoundFormula } from './bound-field.tsx';
 import { rowNames } from './row-names.ts';
 import { Field, Input, Select, Chip, Button, NumInput, Segmented, Verdict } from '../../ui/primitives.tsx';
-import { ROW, cellSource, onSheet, isSingle, fieldsOf, rowKeyOf } from '@vtt/engine/model/sheet-columns';
+import { ROW, cellSource, onSheet, isSingle, fieldsOf, rowKeyOf } from '@vtt/engine';
 import type { System, Column, Control, SheetPart } from '@vtt/schema';
 
 export function readyForSheet(draft: System, tableId: string): void {

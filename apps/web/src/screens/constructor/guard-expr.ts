@@ -1,5 +1,5 @@
-import { compile, printFormula, andParts, andText, operandText, NOT } from '@vtt/engine/formula';
-import type { Node } from '@vtt/engine/formula';
+import { compile, printFormula, andParts, andText, operandText, NOT } from '@vtt/engine';
+import type { Node } from '@vtt/engine';
 
 export interface RowIs { table: string; column: string; is: string }
 

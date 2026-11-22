@@ -1,6 +1,6 @@
 import { useWorld } from '../../store/world.ts';
 import { Card, CardHead, Field, Button, DangerButton, LabelInput } from '../../ui/primitives.tsx';
-import { pagesOf, pageOfBlock, renamePage, removePage } from '@vtt/engine/model/pages';
+import { pagesOf, pageOfBlock, renamePage, removePage } from '@vtt/engine';
 import { moveKey } from '../../ui/pick-order.tsx';
 import { useDragList } from '../../ui/drag-list.ts';
 import { focusNew } from '../../ui/focus-new.ts';

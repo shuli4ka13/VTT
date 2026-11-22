@@ -2,10 +2,9 @@ import { useMemo } from 'react';
 import type { CellValue } from '@vtt/schema';
 import { ButtonEditor } from '../constructor/button-editor.tsx';
 import { newBinding } from '../constructor/factory.ts';
-import { bindingsOf } from '@vtt/engine/events/actions';
+import { bindingsOf, recordsOf, isItem, propsNeeded, recordKindOf, recordKinds, flattenSystem } from '@vtt/engine';
+import type { RecordKind } from '@vtt/engine';
 import { GrantsEditor } from '../constructor/grants-editor.tsx';
-import { recordsOf, isItem, propsNeeded, recordKindOf, recordKinds } from '@vtt/engine/model/owned';
-import { flattenSystem } from '@vtt/engine/model/inherit';
 import { CallSummary } from '../constructor/call-editor.tsx';
 import { namesOf } from '../constructor/button-editor.tsx';
 import { TABS } from '../../words.ts';
@@ -19,7 +18,6 @@ import { ModifiersEditor } from '../constructor/modifiers.tsx';
 import { RecordView } from '../../sheet/record-view.tsx';
 import { ValueEditor } from '../../ui/value-editor.tsx';
 import type { CompendiumRecord, System, Compendium } from '@vtt/schema';
-import type { RecordKind } from '@vtt/engine/model/owned';
 
 export function CompendiumScreen() {
   const authored = useWorld(s => s.system);

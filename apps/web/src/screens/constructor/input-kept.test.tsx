@@ -7,7 +7,7 @@ import { useWorld, emptySystem } from '../../store/world.ts';
 import { useOpened } from '../../store/opened.ts';
 import { ConstructorScreen } from './constructor.tsx';
 import { findAnchor } from '../../guide/anchor.ts';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { fieldsOf } from '@vtt/engine';
 import type { Table } from '@vtt/schema';
 
 const TAKES_FOCUS = 'button, input, textarea, select, summary, [tabindex]';

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, cleanup } from '@testing-library/react';
-import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
+import { SAMPLE_SYSTEMS } from '@vtt/engine/samples';
 import { useWorld } from '../../../store/world.ts';
 import { RulesTab } from './rules-tab.tsx';
 import { explainName } from '../lookup.ts';

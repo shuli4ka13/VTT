@@ -1,14 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { world as W } from '@vtt/schema';
-import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
-import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
+import { withColumn } from '@vtt/engine';
+import type { LaunchKind } from '@vtt/engine';
+import { SAMPLE_SYSTEMS } from '@vtt/engine/samples';
 import { emptySystem } from '../../store/world.ts';
 import {
   newEffect, newColumn, newRecordKind, newBinding, newProp, newDie, newRollEdit, newTable,
   BRICKS,
 } from './factory.ts';
 import type { System } from '@vtt/schema';
-import { withColumn } from '@vtt/engine/model/sheet-columns';
 
 const BASES: [string, () => System][] = [
   ['пустая система', emptySystem],

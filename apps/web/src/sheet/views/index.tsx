@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
 import type { ControlKind, FieldOption } from '@vtt/schema';
-import { VIEW_KINDS, VIEW_LABELS, SHOWS_ONLY } from '@vtt/engine/model/views';
+import { VIEW_KINDS, VIEW_LABELS, SHOWS_ONLY } from '@vtt/engine';
 import { Signed, Big, Stepper, Slider, Pips, Charges, Bar } from './number.tsx';
 import { Toggle, Ring, Choice, Chips, Die } from './pick.tsx';
 import type { ViewProps } from './kit.ts';
 
 export type { ViewProps } from './kit.ts';
-export { viewsFor, familyOf, columnFamily, viewNeeds, takesBounds, TAKES_BOUNDS, TAKES_STEP } from '@vtt/engine/model/views';
-export type { ValueFamily } from '@vtt/engine/model/views';
+export { viewsFor, familyOf, columnFamily, viewNeeds, takesBounds, TAKES_BOUNDS, TAKES_STEP } from '@vtt/engine';
+export type { ValueFamily } from '@vtt/engine';
 
 export interface ViewSpec {
   label: string;

@@ -3,14 +3,14 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, cleanup, fireEvent, act } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { world as W } from '@vtt/schema';
-import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
+import { SAMPLE_SYSTEMS } from '@vtt/engine/samples';
 import { useWorld, emptySystem } from '../../store/world.ts';
 import { SheetTab } from './sheet-tab.tsx';
 import { RulesTab } from './rules/rules-tab.tsx';
 import { EffectsTab } from './effects/effects-tab.tsx';
 import { RecordsTab } from './records-tab.tsx';
 import type { System } from '@vtt/schema';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { fieldsOf } from '@vtt/engine';
 
 const BASES: [string, () => System][] = [
   ['пустая система', emptySystem],

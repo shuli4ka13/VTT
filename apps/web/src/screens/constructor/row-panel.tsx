@@ -2,7 +2,7 @@ import { useWorld } from '../../store/world.ts';
 import { Card, CardHead, Field, Button, LabelInput } from '../../ui/primitives.tsx';
 import { CellEditor, spoken } from './rules/tables-section.tsx';
 import { rowNames } from './row-names.ts';
-import { onSheet, rowKeyOf } from '@vtt/engine/model/sheet-columns';
+import { onSheet, rowKeyOf } from '@vtt/engine';
 import type { System } from '@vtt/schema';
 
 export function RowPanel({ table: id, row: key, system }: { table: string; row: string; system: System }) {

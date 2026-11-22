@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { problemOf, slotsOf } from './step-card.tsx';
-import { registry } from '@vtt/engine/engine/steps/index';
+import { registry } from '@vtt/engine';
 import { emptySystem } from '../../store/world.ts';
 import type { Effect, Step, System } from '@vtt/schema';
 

@@ -1,4 +1,4 @@
-import { tagWords } from '@vtt/engine/engine/roll-tags';
+import { tagWords, hasField } from '@vtt/engine';
 import { useMemo, useState } from 'react';
 import type { Step, ValueKind } from '@vtt/schema';
 import { Button } from '../../../../ui/primitives.tsx';
@@ -7,7 +7,6 @@ import { namesOf } from '../../slots.tsx';
 import { inputBadges } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
-import { hasField } from '@vtt/engine/model/sheet-columns';
 import { useStepName } from './step-name.tsx';
 
 type Loose = Record<string, unknown>;

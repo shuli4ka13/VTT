@@ -1,7 +1,5 @@
 import type { System, Compendium, ValueKind } from '@vtt/schema';
-import { listOf } from '@vtt/engine/model/lists';
-import { rowTables } from '@vtt/engine/model/tables';
-import { recordsOf } from '@vtt/engine/model/owned';
+import { listOf, rowTables, recordsOf } from '@vtt/engine';
 import { Input, Select } from './primitives.tsx';
 import { MultiChoice } from './multi-choice.tsx';
 import { DiceProp } from './dice-prop.tsx';

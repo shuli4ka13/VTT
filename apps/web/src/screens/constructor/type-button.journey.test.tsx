@@ -2,11 +2,9 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { pickCombo } from '../../testing/cards.ts';
-import { act } from '@vtt/engine/core/act';
-import { emptyJournal } from '@vtt/engine/core/external';
+import { act, emptyJournal, flattenSystem } from '@vtt/engine';
 import type { Compendium, Sheet, System } from '@vtt/schema';
-import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
-import { flattenSystem } from '@vtt/engine/model/inherit';
+import { SAMPLE_WORLDS } from '@vtt/engine/samples';
 import { RecordsTab } from './records-tab.tsx';
 import { useWorld } from '../../store/world.ts';
 

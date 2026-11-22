@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { System } from '@vtt/schema';
-import { listOf } from '@vtt/engine/model/lists';
+import { listOf } from '@vtt/engine';
 import { formulaWords } from '../../../../ui/formula-words.ts';
 
 export interface ResultOutput { key: string; label?: string; kind?: string; from?: string; many?: boolean; no?: string }

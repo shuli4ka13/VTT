@@ -1,7 +1,6 @@
 import type { System } from '@vtt/schema';
 import { sheetPathLabel } from './paths.ts';
-import { fieldOf, fieldLinkOf, ROW } from '@vtt/engine/model/sheet-columns';
-import { typeColumn } from '@vtt/engine/model/inherit';
+import { fieldOf, fieldLinkOf, ROW, typeColumn } from '@vtt/engine';
 
 const known = (system: System, tag: string, names?: ReadonlyMap<string, string>): boolean =>
   Boolean(fieldOf(system, tag)) || sheetPathLabel(system, tag) !== null || Boolean(names?.has(tag));

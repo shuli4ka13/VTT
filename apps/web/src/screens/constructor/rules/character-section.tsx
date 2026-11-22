@@ -1,11 +1,9 @@
 import { SheetKindEditor } from '../records-tab.tsx';
-import { NO_BLOCK } from '@vtt/engine/model/blocks';
+import { NO_BLOCK, sheetKinds, hasDesk, DESK_ID, fieldsOf, withColumn, singleTableOf, isSingle } from '@vtt/engine';
+import type { Field as FieldModel, Holder } from '@vtt/engine';
 import type { ReactNode } from 'react';
 import { TableColumnCard } from './tables-section.tsx';
 import { useWorld, freeId } from '../../../store/world.ts';
-import { sheetKinds } from '@vtt/engine/model/owned';
-import { hasDesk } from '@vtt/engine/events/desk';
-import { DESK_ID } from '@vtt/engine/engine/owners';
 import { Card, CardHead, Button, Empty, LabelInput, DangerButton, Select } from '../../../ui/primitives.tsx';
 import { GrantsEditor } from '../grants-editor.tsx';
 import { createEffect } from '../effects/factory.ts';
@@ -15,9 +13,7 @@ import { freeBlockName, addColumnToBlock, moveBlockTo, SHEET_TABLE } from '../bl
 import { useDragList } from '../../../ui/drag-list.ts';
 import type { UsageIndex } from '../usage.ts';
 import type { System, Column, SheetBlock, SheetPart } from '@vtt/schema';
-import type { Field as FieldModel, Holder } from '@vtt/engine/model/types';
 import type { WorldState } from '../../../store/world.ts';
-import { fieldsOf, withColumn, singleTableOf, isSingle } from '@vtt/engine/model/sheet-columns';
 import { focusNew } from '../../../ui/focus-new.ts';
 import { instanceOf, columnAddress } from '../instance.ts';
 

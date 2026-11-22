@@ -3,8 +3,8 @@ import type { Lesson, View } from '../types.ts';
 import { effectBy, tableBy, columnBy, is, errorsOf, FORMULA_DONE, barOpen, barText } from '../find.ts';
 import { visible } from '../anchor.ts';
 import { problemsClean } from './first-system.ts';
-import { bindingHolds } from '@vtt/engine/events/actions';
-import type { System as EngineSystem, CompendiumRecord } from '@vtt/engine/model/types';
+import { bindingHolds } from '@vtt/engine';
+import type { System as EngineSystem, CompendiumRecord } from '@vtt/engine';
 import seed from '../seeds/spells.json' with { type: 'json' };
 
 const spell = (view: View): [string, Table] | undefined => {

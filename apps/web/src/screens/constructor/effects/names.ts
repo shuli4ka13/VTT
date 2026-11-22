@@ -1,5 +1,5 @@
-import { sheetNamesAt, labelsAt, labelsOf, choiceTablesAt } from '@vtt/engine/model/names-at';
-import type { Place } from '@vtt/engine/model/names-at';
+import { sheetNamesAt, labelsAt, labelsOf, choiceTablesAt } from '@vtt/engine';
+import type { NamePlace as Place } from '@vtt/engine';
 import type { SheetNames } from '../../../ui/formula-chips.tsx';
 import type { System } from '@vtt/schema';
 

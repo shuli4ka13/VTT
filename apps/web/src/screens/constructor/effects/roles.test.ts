@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { SAMPLE_WORLDS, LITE_WORLDS } from '@vtt/engine/model/systems';
-import { launchOf } from '@vtt/engine/model/effect-kinds';
+import { SAMPLE_WORLDS, LITE_WORLDS } from '@vtt/engine/samples';
+import { launchOf } from '@vtt/engine';
 import type { System, Compendium, Effect } from '@vtt/schema';
 import { rolesOf, roleOf, roleWords, withRole, ROLE_GROUPS } from './roles.ts';
 

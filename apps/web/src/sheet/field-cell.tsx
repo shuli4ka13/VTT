@@ -4,9 +4,8 @@ import { show } from '../engine/use-calc.ts';
 import { VIEWS } from './views/index.tsx';
 import type { Reader } from '../engine/use-calc.ts';
 import type { Sheet, System, StoredValue, FieldOption } from '@vtt/schema';
-import { MOST_STEPS } from '@vtt/engine/model/views';
-import type { Field as FieldModel } from '@vtt/engine/model/types';
-import { optionsOf } from '@vtt/engine/model/lists';
+import { MOST_STEPS, optionsOf } from '@vtt/engine';
+import type { Field as FieldModel } from '@vtt/engine';
 
 export function FieldCell({ field, system, sheet, reader, onChange, onRoll, bare }: {
   field: FieldModel;

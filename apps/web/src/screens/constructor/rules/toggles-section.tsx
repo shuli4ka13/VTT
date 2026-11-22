@@ -1,13 +1,9 @@
 import { useState } from 'react';
-import {
-  CRIT_OPTIONS, ARMOR_OPTIONS, critOf, armorOf, setCrit, setArmor, sheetInputOf,
-} from '@vtt/engine/model/toggles';
-import type { ArmorChoice } from '@vtt/engine/model/toggles';
+import { CRIT_OPTIONS, ARMOR_OPTIONS, critOf, armorOf, setCrit, setArmor, sheetInputOf, calledOf, fieldsOf } from '@vtt/engine';
+import type { ArmorChoice } from '@vtt/engine';
 import { Card, CardHead, Field, Segmented, Select, Verdict, Button, DangerButton } from '../../../ui/primitives.tsx';
 import type { System } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
-import { calledOf } from '@vtt/engine/engine/effects';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 
 type EditSystem = WorldState['editSystem'];
 interface Props { system: System; editSystem: EditSystem }

@@ -1,7 +1,7 @@
 import type { System } from '@vtt/schema';
 import { TagsField } from '../../tags-field.tsx';
 import type { TagValue } from '../../tags-field.tsx';
-import { ROLL_CALL } from '@vtt/engine/words/calls';
+import { ROLL_CALL } from '@vtt/engine';
 
 type Roll = Record<string, unknown>;
 

@@ -17,8 +17,8 @@ import { ThingPanel } from './thing-panel.tsx';
 import { RowPanel } from './row-panel.tsx';
 import { SheetSample } from './sheet-sample.tsx';
 import type { System } from '@vtt/schema';
-import type { Field as FieldModel } from '@vtt/engine/model/types';
-import { fieldOf, rowKeyOf, isSingle } from '@vtt/engine/model/sheet-columns';
+import { fieldOf, rowKeyOf, isSingle } from '@vtt/engine';
+import type { Field as FieldModel } from '@vtt/engine';
 import { instanceOf, columnAddress } from './instance.ts';
 import type { InstanceKind } from './instance.ts';
 

@@ -1,5 +1,5 @@
 import type { TableRow } from '@vtt/schema';
-import { isBlank } from '@vtt/engine/model/blank';
+import { isBlank } from '@vtt/engine';
 
 export type RowViewKey = 'default' | 'min' | 'max';
 

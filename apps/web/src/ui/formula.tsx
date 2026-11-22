@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
-import { compile } from '@vtt/engine/formula';
+import { compile } from '@vtt/engine';
 import { Verdict } from './primitives.tsx';
 import { FormulaField } from './formula-field.tsx';
 import { namesOf } from './formula-chips.tsx';

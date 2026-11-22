@@ -3,7 +3,7 @@ import { ListGroup } from '../../ui/layout.tsx';
 import { Button } from '../../ui/primitives.tsx';
 import { useOpened } from '../../store/opened.ts';
 import { groupChain } from './groups.ts';
-import { NO_BLOCK, blockNames } from '@vtt/engine/model/blocks';
+import { NO_BLOCK, blockNames } from '@vtt/engine';
 import type { System } from '@vtt/schema';
 
 export interface BlockNode<T> {

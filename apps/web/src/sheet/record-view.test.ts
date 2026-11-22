@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { PLAYABLE_WORLDS } from '@vtt/engine/model/systems';
-import { findRecord } from '@vtt/engine/model/owned';
+import { findRecord } from '@vtt/engine';
+import { PLAYABLE_WORLDS } from '@vtt/engine/samples';
 import { renderHook } from '@testing-library/react';
 import { useReader } from '../engine/use-calc.ts';
 import { recordDetails } from './record-view.tsx';

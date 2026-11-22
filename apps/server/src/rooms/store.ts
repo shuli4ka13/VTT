@@ -1,6 +1,6 @@
 import type { DatabaseSync } from 'node:sqlite';
 import type { Sheet, ClockState, LogEntry, Places } from '@vtt/schema';
-import type { Member } from '@vtt/engine/core/authorize';
+import type { Member } from '@vtt/engine';
 
 export interface RoomRow { id: string; title: string; worldId: string; system: string; compendium: string }
 

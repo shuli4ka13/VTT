@@ -1,6 +1,6 @@
 import { unknownWords, NO_NAME } from '../../ui/formula-resolve.ts';
 import type { System, SlotRef } from '@vtt/schema';
-import { compile } from '@vtt/engine/formula';
+import { compile } from '@vtt/engine';
 import { dieWord } from './readback.ts';
 import { asDice } from '../../words.ts';
 

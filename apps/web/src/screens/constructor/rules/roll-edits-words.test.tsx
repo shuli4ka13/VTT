@@ -2,7 +2,7 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, cleanup, fireEvent } from '@testing-library/react';
 import { useState } from 'react';
-import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
+import { SAMPLE_WORLDS } from '@vtt/engine/samples';
 import { comboOptions, pickCombo } from '../../../testing/cards.ts';
 import { renderOpen } from '../../../testing/render-open.tsx';
 import { RollEditsSection } from './roll-edits-section.tsx';

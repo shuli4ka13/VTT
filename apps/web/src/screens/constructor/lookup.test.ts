@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
+import { SAMPLE_SYSTEMS } from '@vtt/engine/samples';
 import { explainName } from './lookup.ts';
 import { usageIndex } from './usage.ts';
 

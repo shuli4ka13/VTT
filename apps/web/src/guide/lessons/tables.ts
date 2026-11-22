@@ -1,5 +1,4 @@
-import { ROW } from '@vtt/engine/model/sheet-columns';
-import { compile } from '@vtt/engine/formula';
+import { ROW, compile } from '@vtt/engine';
 import type { System } from '@vtt/schema';
 import type { Lesson, View, Move } from '../types.ts';
 import { tableBy, columnBy, fieldBy, columnOf, figure, same, exprOf, errorsOf, FORMULA_DONE, barOpen, barText } from '../find.ts';

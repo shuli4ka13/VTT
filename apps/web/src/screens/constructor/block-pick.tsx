@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { Select, Input, Button } from '../../ui/primitives.tsx';
-import { blockNames, NO_BLOCK } from '@vtt/engine/model/blocks';
+import { blockNames, NO_BLOCK, fieldsOf, kindsOf } from '@vtt/engine';
 import { groupChain } from './groups.ts';
 import type { System } from '@vtt/schema';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
-import { kindsOf } from '@vtt/engine/model/owned';
 
 const depthOf = (system: System, name: string): number => groupChain(system, name).length - 1;
 

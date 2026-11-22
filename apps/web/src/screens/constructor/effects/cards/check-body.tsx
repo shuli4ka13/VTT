@@ -9,8 +9,7 @@ import type { EditFn } from '../words.ts';
 import { badFormula } from '../../roll-expr.ts';
 import { DegreesEditor } from '../../degrees-editor.tsx';
 import { whoOf } from '../../readback.ts';
-import { tagWords } from '@vtt/engine/engine/roll-tags';
-import { splitsTargets } from '@vtt/engine/engine/steps/index';
+import { tagWords, splitsTargets } from '@vtt/engine';
 
 const loose = (draft: unknown): Record<string, any> => draft as Record<string, any>;
 

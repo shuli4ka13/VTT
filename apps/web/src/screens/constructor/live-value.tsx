@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { compile } from '@vtt/engine/formula';
+import { compile } from '@vtt/engine';
 import { Chip, Tip } from '../../ui/primitives.tsx';
 import { useReader, show } from '../../engine/use-calc.ts';
 import { mannequinsOf } from '../../engine/dry-run.ts';

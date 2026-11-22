@@ -1,7 +1,6 @@
 import type { Stage } from '@vtt/schema';
 import { Field, LabelInput, Input, Select, Button, DangerButton } from '../../ui/primitives.tsx';
-import { COMBINE_DEFAULT } from '@vtt/engine/engine/stages';
-import { STAGE_WORDS } from '@vtt/engine/words/stages';
+import { COMBINE_DEFAULT, STAGE_WORDS } from '@vtt/engine';
 
 type Op = 'set' | 'add' | 'mul';
 

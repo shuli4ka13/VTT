@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
-import { HOLDER } from '@vtt/engine/model/references';
-import { compile } from '@vtt/engine/formula';
+import { HOLDER, compile } from '@vtt/engine';
 import type { BarOption } from '../../store/formula-bar.ts';
 import { Field, Select } from '../../ui/primitives.tsx';
 import { FormulaField } from '../../ui/formula-field.tsx';

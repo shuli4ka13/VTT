@@ -1,5 +1,5 @@
-import { lex, FUNCTION_NAMES, BOOLEANS, AND, OR, NOT } from '@vtt/engine/formula';
-import type { Token } from '@vtt/engine/formula';
+import { lex, FUNCTION_NAMES, BOOLEANS, AND, OR, NOT } from '@vtt/engine';
+import type { Token } from '@vtt/engine';
 
 export interface KnownName { tag: string; label: string }
 

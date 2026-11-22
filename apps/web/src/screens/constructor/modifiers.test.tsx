@@ -5,7 +5,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ModifiersEditor } from './modifiers.tsx';
 import { modifierSentence } from './modifier-words.ts';
-import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
+import { SAMPLE_WORLDS } from '@vtt/engine/samples';
 import type { System, Modifier } from '@vtt/schema';
 
 const system = {

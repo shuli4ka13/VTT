@@ -1,7 +1,7 @@
 import type { System } from '@vtt/schema';
 import { Button } from '../../ui/primitives.tsx';
 import { MultiChoice } from '../../ui/multi-choice.tsx';
-import { calledOf, isPipeline } from '@vtt/engine/engine/effects';
+import { calledOf, isPipeline } from '@vtt/engine';
 
 export function GrantsEditor({ system, value, onChange, except, hanging = false, onCreate }: {
   system: System;

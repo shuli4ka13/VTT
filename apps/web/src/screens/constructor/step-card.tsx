@@ -1,6 +1,5 @@
 import type { System, Effect, Step } from '@vtt/schema';
-import { registry } from '@vtt/engine/engine/steps/index';
-import { lintStep } from '@vtt/engine/model/lint';
+import { registry, lintStep } from '@vtt/engine';
 import type { SlotKind, EarlierStep } from './slots.tsx';
 
 export interface SlotSpec {

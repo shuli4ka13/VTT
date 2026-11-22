@@ -2,7 +2,7 @@ import { Select } from '../../ui/primitives.tsx';
 import { DegreeList } from './degree-list.tsx';
 import type { Degree } from './degree-list.tsx';
 import type { System } from '@vtt/schema';
-import { rowTables } from '@vtt/engine/model/tables';
+import { rowTables } from '@vtt/engine';
 
 type Shared = Parameters<typeof DegreeList>[0]['shared'];
 

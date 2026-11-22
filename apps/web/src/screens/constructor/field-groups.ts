@@ -1,5 +1,4 @@
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
-import { NO_BLOCK, sheetBlockNames } from '@vtt/engine/model/blocks';
+import { fieldsOf, NO_BLOCK, sheetBlockNames } from '@vtt/engine';
 import type { System } from '@vtt/schema';
 
 export type Grouped = readonly [string, string, string];

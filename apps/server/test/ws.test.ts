@@ -9,7 +9,7 @@ import { openDatabase } from '../src/db/db.ts';
 import type { Database } from '../src/db/db.ts';
 
 import { sliceWorld } from './slice.ts';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { fieldsOf } from '@vtt/engine';
 
 const { system: dnd, compendium, sheets } = sliceWorld();
 

@@ -1,11 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { world as W } from '@vtt/schema';
-import { act } from '@vtt/engine/core/act';
-import { emptyJournal } from '@vtt/engine/core/external';
+import { act, emptyJournal, withColumn } from '@vtt/engine';
 import { emptySystem } from '../../store/world.ts';
 import { newColumn, newDie, newEffect, newRecordKind, newBinding, BRICKS } from './factory.ts';
 import type { System, Compendium, Sheet, Step, Effect } from '@vtt/schema';
-import { withColumn } from '@vtt/engine/model/sheet-columns';
 
 const bricks = (key: string, system: System, taken: string[] = [], effect?: Effect): Step[] =>
   BRICKS.find(b => b.key === key)!.make(system, taken, effect);

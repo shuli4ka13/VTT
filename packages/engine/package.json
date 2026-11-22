@@ -10,33 +10,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./formula": {
-      "types": "./dist/formula/index.d.ts",
-      "default": "./dist/formula/index.js"
-    },
-    "./model/*": {
-      "types": "./dist/model/*.d.ts",
-      "default": "./dist/model/*.js"
-    },
-    "./engine/*": {
-      "types": "./dist/engine/*.d.ts",
-      "default": "./dist/engine/*.js"
-    },
-    "./events/*": {
-      "types": "./dist/events/*.d.ts",
-      "default": "./dist/events/*.js"
-    },
-    "./words/*": {
-      "types": "./dist/words/*.d.ts",
-      "default": "./dist/words/*.js"
-    },
-    "./lang/*": {
-      "types": "./dist/lang/*.d.ts",
-      "default": "./dist/lang/*.js"
-    },
-    "./core/*": {
-      "types": "./dist/core/*.d.ts",
-      "default": "./dist/core/*.js"
+    "./samples": {
+      "types": "./dist/samples.d.ts",
+      "default": "./dist/samples.js"
     }
   },
   "scripts": {
@@ -48,5 +24,6 @@
     "@vtt/schema": "*",
     "typescript": "^5.9.3",
     "vitest": "^4.1.10"
-  }
+  },
+  "sideEffects": false
 }

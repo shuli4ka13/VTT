@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import type { System } from '@vtt/schema';
-import { rollGroupsOf } from '@vtt/engine/model/roll-groups';
+import { rollGroupsOf } from '@vtt/engine';
 import { Field, Button } from '../../ui/primitives.tsx';
 import { TagsField, type TagValue, type TagGroup } from './tags-field.tsx';
 

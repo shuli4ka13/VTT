@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { CharacterSection } from './rules/character-section.tsx';
 import { useWorld } from '../../store/world.ts';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { fieldsOf } from '@vtt/engine';
 
 function Sheets() {
   const system = useWorld(s => s.system);

@@ -1,6 +1,6 @@
 import type { System, Effect } from '@vtt/schema';
 import type { Lesson, View, Move } from '../types.ts';
-import { lazyPlan } from '@vtt/engine/model/flow';
+import { lazyPlan } from '@vtt/engine';
 import { effectBy, fieldBy, stepsOf, reads, is, subtracts, numberOf, armOf, errorsOf, isArm, FORMULA_DONE, barOpen, barText } from '../find.ts';
 import { problemsClean } from './first-system.ts';
 import seed from '../seeds/combat.json' with { type: 'json' };

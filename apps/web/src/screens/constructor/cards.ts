@@ -1,8 +1,5 @@
-import { compile } from '@vtt/engine/formula';
-import { STEP_WORDS } from '@vtt/engine/words/steps';
+import { compile, STEP_WORDS, armsOf, balance, endOf, flowOf, inBlock, loopsAt } from '@vtt/engine';
 import type { Step } from '@vtt/schema';
-import { armsOf, balance, endOf, flowOf, inBlock } from '@vtt/engine/model/flow';
-import { loopsAt } from '@vtt/engine/engine/steps/index';
 import { isThrow } from './cards-kind.ts';
 
 export { isThrow };

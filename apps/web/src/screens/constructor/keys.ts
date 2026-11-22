@@ -1,7 +1,7 @@
 import { slugOf, freeId } from '../../store/world.ts';
 import { usageIndex, inUse } from './usage.ts';
 import type { System, Compendium } from '@vtt/schema';
-import { splitsTargets } from '@vtt/engine/engine/steps/index';
+import { splitsTargets } from '@vtt/engine';
 
 const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { trial, mannequin, DICE_MODES } from '@vtt/engine/events/trial';
-import type { DiceMode } from '@vtt/engine/events/trial';
+import { trial, mannequin, DICE_MODES } from '@vtt/engine';
+import type { DiceMode } from '@vtt/engine';
 import type { System, Compendium, Sheet } from '@vtt/schema';
 
 export type { DiceMode };

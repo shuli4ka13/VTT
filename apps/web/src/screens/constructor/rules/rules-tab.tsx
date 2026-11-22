@@ -11,10 +11,8 @@ import { RollsSection } from './rolls-section.tsx';
 import { TogglesSection } from './toggles-section.tsx';
 import { TagsSection } from './tags-section.tsx';
 import { CombatSection } from './combat-section.tsx';
-import { critOf, armorOf } from '@vtt/engine/model/toggles';
+import { critOf, armorOf, calledOf, rowTables } from '@vtt/engine';
 import type { System } from '@vtt/schema';
-import { calledOf } from '@vtt/engine/engine/effects';
-import { rowTables } from '@vtt/engine/model/tables';
 
 type SectionKey = 'rolls' | 'tables' | 'tags' | 'combat' | 'toggles';
 

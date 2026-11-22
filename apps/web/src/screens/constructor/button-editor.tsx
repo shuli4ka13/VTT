@@ -1,16 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useWorld, useBook } from '../../store/world.ts';
 import type { System, Effect, Param, Binding, SlotRef } from '@vtt/schema';
-import type { RecordKind } from '@vtt/engine/model/owned';
-import { isUnder, propsOf as propsOfRecord } from '@vtt/engine/model/owned';
-import { paramsOf, typeColumns } from '@vtt/engine/model/inherit';
-import { columnChoices, type ColumnChoice } from '@vtt/engine/model/paths';
-import { ITEM_NAME } from '@vtt/engine/model/item-ref';
-import { listOf } from '@vtt/engine/model/lists';
+import { isUnder, propsOf as propsOfRecord, paramsOf, typeColumns, columnChoices, ITEM_NAME, listOf, asDice, paymentsOf } from '@vtt/engine';
+import type { RecordKind, ColumnChoice } from '@vtt/engine';
 import { Card, Field, Select, LabelInput, Button, DangerButton } from '../../ui/primitives.tsx';
-import { asDice } from '@vtt/engine/words/glossary';
 import { ValueField, asText, type SlotOption } from './value-field.tsx';
-import { paymentsOf } from '@vtt/engine/model/payments';
 import { grouped as byRole } from './effects/roles.ts';
 import { kindWords } from './effects/params-editor.tsx';
 import { ConditionField } from './condition-field.tsx';

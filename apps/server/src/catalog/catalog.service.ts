@@ -4,15 +4,11 @@ import {
 } from '@nestjs/common';
 import { and, desc, eq, or } from 'drizzle-orm';
 import { world as schemas } from '@vtt/schema';
-import { lintSystem, lintCompendium, errorsOf, describeWhere } from '@vtt/engine/model/lint';
-import { propsNeeded } from '@vtt/engine/model/owned';
-import { bindingsOf } from '@vtt/engine/events/actions';
-import { flattenSystem } from '@vtt/engine/model/inherit';
+import { lintSystem, lintCompendium, errorsOf, describeWhere, propsNeeded, bindingsOf, flattenSystem, recordKindOf } from '@vtt/engine';
 import type { Compendium, System } from '@vtt/schema';
 import { DB, CLOCK, IDS } from '../common/tokens.ts';
 import type { Db } from '../db/db.ts';
 import { publishedCompendiums, publishedSystems, users, worlds } from '../db/schema.ts';
-import { recordKindOf } from '@vtt/engine/model/owned';
 
 @Injectable()
 export class CatalogService {

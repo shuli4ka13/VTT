@@ -1,7 +1,7 @@
 import { useOpened } from '../../../store/opened.ts';
 import { useWorld } from '../../../store/world.ts';
 import { newEffect } from '../factory.ts';
-import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
+import type { LaunchKind } from '@vtt/engine';
 import type { System } from '@vtt/schema';
 import { focusNew } from '../../../ui/focus-new.ts';
 

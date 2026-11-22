@@ -73,8 +73,8 @@ describe('узнавание имён в наборе формулы', () => {
   });
 });
 
-import { SAMPLE_WORLDS, LITE_WORLDS } from '@vtt/engine/model/systems';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { SAMPLE_WORLDS, LITE_WORLDS } from '@vtt/engine/samples';
+import { fieldsOf } from '@vtt/engine';
 
 describe('разбор не трогает то, что не набирали', () => {
   it('каждая формула каждого образца выходит из разбора той же строкой', () => {

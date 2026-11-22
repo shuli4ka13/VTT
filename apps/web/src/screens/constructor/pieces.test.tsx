@@ -6,9 +6,8 @@ import { pickCombo, comboOptions } from '../../testing/cards.ts';
 import { useWorld, emptySystem } from '../../store/world.ts';
 import { SheetTab } from './sheet-tab.tsx';
 import { world as W } from '@vtt/schema';
-import { PIECES } from '@vtt/engine/model/pieces';
-import { lintSystem, errorsOf } from '@vtt/engine/model/lint';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { PIECES } from '@vtt/engine/samples';
+import { lintSystem, errorsOf, fieldsOf } from '@vtt/engine';
 
 describe('куски на пустом листе', () => {
   beforeEach(() => {

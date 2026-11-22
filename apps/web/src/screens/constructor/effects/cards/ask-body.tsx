@@ -5,7 +5,7 @@ import { TypedPick } from '../../typed-pick.tsx';
 import { sheetChoices } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
-import { ASK_YES, ASK_NO, ASK_WHOM } from '@vtt/engine/words/steps';
+import { ASK_YES, ASK_NO, ASK_WHOM } from '@vtt/engine';
 
 
 const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;

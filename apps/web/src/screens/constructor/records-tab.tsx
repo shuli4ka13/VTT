@@ -8,17 +8,13 @@ import {
   Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip, DangerButton, LabelInput, Fold,
 } from '../../ui/primitives.tsx';
 import type { System, SheetKind, Table } from '@vtt/schema';
-import type { RecordKind } from '@vtt/engine/model/owned';
+import { argsWithProps, propKeysOf, recordKinds, sheetKinds, recordsOf, DESK_ID, kindWord, blockOf } from '@vtt/engine';
+import type { RecordKind, AnyKind } from '@vtt/engine';
 import { TableColumnCard } from './rules/tables-section.tsx';
 import { useState } from 'react';
 import { BlockPick } from './block-pick.tsx';
 import { GrantsEditor } from './grants-editor.tsx';
 import { createEffect } from './effects/factory.ts';
-import { argsWithProps, propKeysOf, recordKinds, sheetKinds, recordsOf } from '@vtt/engine/model/owned';
-import { DESK_ID } from '@vtt/engine/engine/owners';
-import { kindWord } from '@vtt/engine/words/kinds';
-import type { AnyKind } from '@vtt/engine/model/owned';
-import { blockOf } from '@vtt/engine/model/blocks';
 import { blockTree, BlockBranches } from './block-tree.tsx';
 import { freeGroupName } from './groups.ts';
 import { focusNew } from '../../ui/focus-new.ts';

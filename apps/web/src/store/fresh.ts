@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { System } from '@vtt/schema';
-import type { Brought, Part } from '@vtt/engine/model/bring';
+import type { Brought, Part } from '@vtt/engine';
 import { useWorld } from './world.ts';
 
 export interface Fresh {

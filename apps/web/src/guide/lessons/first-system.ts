@@ -1,6 +1,6 @@
 import { emptySystem } from '../../store/world.ts';
 import type { Lesson, View } from '../types.ts';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { fieldsOf } from '@vtt/engine';
 import { visible } from '../anchor.ts';
 import { fieldBy, inBlock, columnOf, effectBy, stepsOf, reads, is, subtracts, adds, armOf, numberOf, errorsOf, exprOf, isArm, same, FORMULA_DONE, barOpen, barText } from '../find.ts';
 

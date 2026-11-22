@@ -1,4 +1,4 @@
-import { expectAction, costRefusal } from '@vtt/engine/events/trial';
+import { expectAction, costRefusal, availableActions, isDesk, isGroup, fieldsFor, sheetKinds, distanceOf, distanceWords, fieldsOf, claimWords } from '@vtt/engine';
 import { mayAnswer, mayAllowItems } from '../../engine/rights.ts';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRoom } from '../../store/room.ts';
@@ -10,21 +10,13 @@ import { Card, CardHead, Button, Empty, Verdict, Chip, Fold, DangerButton, Input
 import { Lobby } from './lobby.tsx';
 import { useSession } from '../../store/session.ts';
 import type { RoomState, Sheet, System } from '@vtt/schema';
-import { availableActions } from '@vtt/engine/events/actions';
-import { isDesk } from '@vtt/engine/engine/owners';
-import { isGroup } from '@vtt/engine/events/desk';
-import { fieldsFor } from '@vtt/engine/engine/calc';
-import { sheetKinds } from '@vtt/engine/model/owned';
 import { useReader } from '../../engine/use-calc.ts';
 import { FieldCell } from '../../sheet/field-cell.tsx';
 import { CombatBar } from './combat.tsx';
 import { Journal } from './journal.tsx';
-import { distanceOf, distanceWords } from '@vtt/engine/engine/place';
 import { Hanging } from './hanging.tsx';
 import { QUESTION_ID } from './pending-bar.tsx';
 import './table.css';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
-import { claimWords } from '@vtt/engine/model/roll-reach';
 
 export function TableScreen() {
   const room = useRoom(s => s.room);

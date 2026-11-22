@@ -1,6 +1,5 @@
-import { compile, AND, OR, NOT, FUNCTION_SPECS } from '@vtt/engine/formula';
-import type { Node } from '@vtt/engine/formula';
-import { DICE_BY_STEP } from '@vtt/engine/words/glossary';
+import { compile, AND, OR, NOT, FUNCTION_SPECS, DICE_BY_STEP } from '@vtt/engine';
+import type { Node } from '@vtt/engine';
 
 export type Shape = 'number' | 'text' | 'bool' | 'any';
 

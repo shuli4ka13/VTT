@@ -6,8 +6,8 @@ import { pickCombo } from '../../../testing/cards.ts';
 import { CharacterSection } from './character-section.tsx';
 import { SheetTab } from '../sheet-tab.tsx';
 import type { System } from '@vtt/schema';
-import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { SAMPLE_WORLDS } from '@vtt/engine/samples';
+import { fieldsOf } from '@vtt/engine';
 
 function Sheets() {
   const system = useWorld(s => s.system);

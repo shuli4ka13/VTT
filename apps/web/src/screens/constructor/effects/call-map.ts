@@ -1,6 +1,4 @@
-import { chainsOfEffect } from '@vtt/engine/engine/effects';
-import { emittedChoices } from '@vtt/engine/model/payments';
-import { listenerOf } from '@vtt/engine/model/references';
+import { chainsOfEffect, emittedChoices, listenerOf } from '@vtt/engine';
 import type { System, Effect } from '@vtt/schema';
 
 export interface CallMap {

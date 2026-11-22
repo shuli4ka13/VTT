@@ -1,9 +1,8 @@
 import { useRef, useState } from 'react';
 import type { CSSProperties, ReactNode, PointerEvent as ReactPointerEvent } from 'react';
 import type { System } from '@vtt/schema';
-import { cellsOf, pageOfBlock, pagesOf, GRID, HEIGHT_STEP } from '@vtt/engine/model/pages';
-import type { Place } from '@vtt/engine/model/pages';
-import { widthWords } from '@vtt/engine/words/glossary';
+import { cellsOf, pageOfBlock, pagesOf, GRID, HEIGHT_STEP, widthWords } from '@vtt/engine';
+import type { BlockPlace as Place } from '@vtt/engine';
 
 export interface GridEdit {
   onPlace: (name: string, target: string, where: Place) => void;

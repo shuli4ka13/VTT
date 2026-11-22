@@ -1,8 +1,7 @@
 import { createHash } from 'node:crypto';
-import { SAMPLE_WORLDS, LITE_WORLDS } from '@vtt/engine/model/systems';
-import { lintSystem, errorsOf } from '@vtt/engine/model/lint';
-import { flattenSystem } from '@vtt/engine/model/inherit';
-import type { SampleWorld } from '@vtt/engine/model/systems';
+import { lintSystem, errorsOf, flattenSystem } from '@vtt/engine';
+import { SAMPLE_WORLDS, LITE_WORLDS } from '@vtt/engine/samples';
+import type { SampleWorld } from '@vtt/engine/samples';
 
 export function blankOf(world: SampleWorld): SampleWorld {
   const system = structuredClone(world.system) as unknown as Record<string, unknown> & { tables?: Record<string, Record<string, unknown>>; sheets?: Record<string, Record<string, unknown>> };

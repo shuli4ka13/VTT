@@ -1,5 +1,5 @@
 import type { System } from '@vtt/schema';
-import { ROW, slugOf } from '@vtt/engine/model/sheet-columns';
+import { ROW, slugOf } from '@vtt/engine';
 import type { BarOption } from '../../store/formula-bar.ts';
 import type { Phrase } from './condition-field.tsx';
 import { rowNames } from './row-names.ts';

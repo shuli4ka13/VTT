@@ -1,7 +1,7 @@
 import { roleOf, roleWordsOf, UNBOUND_HINT } from './roles.ts';
 import { useState } from 'react';
-import { paramsOf } from '@vtt/engine/model/inherit';
-import { rolesOf } from '@vtt/engine/model/buttons';
+import { paramsOf, rolesOf, launchOf, activationFor, DURATIONS, REAPPLY } from '@vtt/engine';
+import type { NamePlace as Place } from '@vtt/engine';
 import { EffectPick } from '../effect-pick.tsx';
 import { ConditionField } from '../condition-field.tsx';
 import { CallEditor } from '../call-editor.tsx';
@@ -14,7 +14,6 @@ import { useModifierRows, AddModifiers } from '../modifiers.tsx';
 import { LAUNCH_KINDS, launchHint } from './words.ts';
 import { HandlerCard } from './handler-card.tsx';
 import { WhileWhenRow, WhileWhenEmpty } from './while-when.tsx';
-import type { Place } from '@vtt/engine/model/names-at';
 import { followKey, effectUsed } from '../keys.ts';
 import { KeyField } from '../../../ui/key-field.tsx';
 import { Chain, PayDivider, type Lane } from './chain.tsx';
@@ -25,7 +24,6 @@ import { Extras } from './cards/extras.tsx';
 import { ParamsEditor } from './params-editor.tsx';
 import { BoundFormula } from '../bound-field.tsx';
 import { ReturnsEditor } from './returns-editor.tsx';
-import { launchOf, activationFor, DURATIONS, REAPPLY } from '@vtt/engine/model/effect-kinds';
 import type { System, Effect, Step } from '@vtt/schema';
 import { placeNamesAt } from './names.ts';
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { LITE_WORLDS } from '@vtt/engine/model/systems';
+import { LITE_WORLDS } from '@vtt/engine/samples';
 import type { System } from '@vtt/schema';
 import { fieldedOf, outputRefs } from './slots.tsx';
 

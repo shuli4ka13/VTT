@@ -1,5 +1,4 @@
-import { isSingle } from '@vtt/engine/model/sheet-columns';
-import { columnChoices } from '@vtt/engine/model/paths';
+import { isSingle, columnChoices } from '@vtt/engine';
 import type { Effect, System } from '@vtt/schema';
 
 export interface Rollable { tail: string; label: string; group: string; rule: string; roll: string }

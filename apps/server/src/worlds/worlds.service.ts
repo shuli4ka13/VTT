@@ -6,7 +6,7 @@ import { worlds, users } from '../db/schema.ts';
 import { world as W } from '@vtt/schema';
 import type { Compendium, Sheet, World, WorldSummary } from '@vtt/schema';
 import { CatalogService } from '../catalog/catalog.service.ts';
-import { withLibrary } from '@vtt/engine/model/owned';
+import { withLibrary } from '@vtt/engine';
 
 @Injectable()
 export class WorldsService {

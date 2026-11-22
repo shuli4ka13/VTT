@@ -1,14 +1,10 @@
 import { useMemo } from 'react';
-import { lintSystem, describeWhere } from '@vtt/engine/model/lint';
-import type { Problem } from '@vtt/engine/model/lint';
-import type { Where } from '@vtt/engine/model/references';
+import { lintSystem, describeWhere, flattenSystem, isSingle, isBook } from '@vtt/engine';
+import type { Problem, Where } from '@vtt/engine';
 import type { System } from '@vtt/schema';
 import { useWorld, useBook } from '../../store/world.ts';
 import type { WorldState } from '../../store/world.ts';
 import { STEP } from '../../words.ts';
-import { flattenSystem } from '@vtt/engine/model/inherit';
-import { isSingle } from '@vtt/engine/model/sheet-columns';
-import { isBook } from '@vtt/engine/model/owned';
 
 export type { Problem };
 

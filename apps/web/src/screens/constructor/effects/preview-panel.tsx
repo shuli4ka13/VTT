@@ -7,7 +7,7 @@ import { useDryRun, mannequinsOf, DICE_MODES } from '../../../engine/dry-run.ts'
 import type { DiceMode } from '../../../engine/dry-run.ts';
 import type { Sheet, StoredValue } from '@vtt/schema';
 import { DonorPalette } from '../donors.tsx';
-import { fieldOf } from '@vtt/engine/model/sheet-columns';
+import { fieldOf } from '@vtt/engine';
 
 const DICE_OPTIONS = (Object.keys(DICE_MODES) as DiceMode[]).map(key => [key, DICE_MODES[key].label] as const);
 

@@ -1,6 +1,6 @@
 import type { System } from '@vtt/schema';
-import { DEFAULT_LIMITS } from '@vtt/engine/core/limits';
-import type { Limits } from '@vtt/engine/core/limits';
+import { DEFAULT_LIMITS } from '@vtt/engine';
+import type { Limits } from '@vtt/engine';
 import { Card, CardHead, Field, Fold, Select, NumInput, Button, Input } from '../../../ui/primitives.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { TagsField } from '../tags-field.tsx';

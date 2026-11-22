@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { referencesOf } from '@vtt/engine/model/references';
-import type { Where, RefKind } from '@vtt/engine/model/references';
+import { referencesOf } from '@vtt/engine';
+import type { Where, RefKind } from '@vtt/engine';
 import type { System, Compendium } from '@vtt/schema';
 import { useWorld, useBook } from '../../store/world.ts';
 import { whereLabel } from './problems.ts';

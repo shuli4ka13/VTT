@@ -1,5 +1,5 @@
 import type { System } from '@vtt/schema';
-import { columnChoices, sheetChoices, walkSheet } from '@vtt/engine/model/paths';
+import { columnChoices, sheetChoices, walkSheet } from '@vtt/engine';
 
 export function columnPaths(
   system: System, heads: { key: string; label: string; from?: string }[],

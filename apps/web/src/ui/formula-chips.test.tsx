@@ -5,7 +5,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { FormulaChips, partsOf, joinParts } from './formula-chips.tsx';
 import { withPicks } from './formula-words.ts';
 import type { System } from '@vtt/schema';
-import { withColumn } from '@vtt/engine/model/sheet-columns';
+import { withColumn } from '@vtt/engine';
 
 const system = {
   tables: { лист: { shape: 'single', columns: [

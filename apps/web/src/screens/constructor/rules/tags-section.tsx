@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { System, TagContract } from '@vtt/schema';
-import { tagWords } from '@vtt/engine/engine/roll-tags';
+import { tagWords } from '@vtt/engine';
 import { Card, CardHead, Field, Fold, Input, Select, Button, DangerButton, Chip, LabelInput } from '../../../ui/primitives.tsx';
 import { freeId } from '../../../store/world.ts';
 import { TagsField } from '../tags-field.tsx';

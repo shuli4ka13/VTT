@@ -1,5 +1,5 @@
 import type { System, Param, FieldOption } from '@vtt/schema';
-import { listOf } from '@vtt/engine/model/lists';
+import { listOf } from '@vtt/engine';
 
 const textOf = (value: unknown): string =>
   (typeof value === 'string' ? value : String((value as { expr?: unknown } | null | undefined)?.expr ?? '')).trim();

@@ -4,10 +4,7 @@ import { FormulaField } from '../../ui/formula-field.tsx';
 import type { BarOption } from '../../store/formula-bar.ts';
 import { outputRefs, inputBadges } from './slots.tsx';
 import type { SlotContext, SlotKind } from './slots.tsx';
-import { writeTableCall } from '@vtt/engine/model/amounts';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
-import { rowTables } from '@vtt/engine/model/tables';
-import { walkColumns } from '@vtt/engine/model/paths';
+import { writeTableCall, fieldsOf, rowTables, walkColumns } from '@vtt/engine';
 
 export function asText(value: unknown): string | null {
   if (value === null || value === undefined) return null;

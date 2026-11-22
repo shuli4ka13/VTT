@@ -1,5 +1,4 @@
-import { CALL_TAGS } from '@vtt/engine/model/references';
-import { tagsOf } from '@vtt/engine/model/lists';
+import { CALL_TAGS, tagsOf } from '@vtt/engine';
 import type { SlotContext, EarlierStep } from '../../slots.tsx';
 import { outcomeRefs, isCalled } from '../../slots.tsx';
 import type { QuickRef, QuickKind } from '../../condition-field.tsx';

@@ -10,7 +10,7 @@ import { Select } from '../../../../ui/primitives.tsx';
 import { readGuard, writeGuard } from '../../guard-expr.ts';
 import { yesNo } from '../../condition-field.tsx';
 import type { QuickRef } from '../../condition-field.tsx';
-import { functionSpec } from '@vtt/engine/formula';
+import { functionSpec } from '@vtt/engine';
 
 const quoted = (text: string): string => (text.includes('"') ? `'${text}'` : `"${text}"`);
 

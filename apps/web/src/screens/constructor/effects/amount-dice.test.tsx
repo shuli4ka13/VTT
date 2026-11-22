@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { DICE_BY_STEP } from '@vtt/engine/words/glossary';
+import { DICE_BY_STEP } from '@vtt/engine';
 import { cleanup, act, fireEvent } from '@testing-library/react';
 import { renderOpen } from '../../../testing/render-open.tsx';
 import { within, stepCard } from '../../../testing/cards.ts';

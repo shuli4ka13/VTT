@@ -1,8 +1,5 @@
 import { useState } from 'react';
-import { recordKinds } from '@vtt/engine/model/owned';
-import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
-import { choiceTables } from '@vtt/engine/model/tables';
-import { ASKABLE } from '@vtt/engine/model/asks';
+import { recordKinds, kindsFor, kindWord, choiceTables, ASKABLE } from '@vtt/engine';
 import { freeId, useWorld } from '../../../store/world.ts';
 import { followKey, paramUsed, keyOf, referenced } from '../keys.ts';
 import { KeyField } from '../../../ui/key-field.tsx';

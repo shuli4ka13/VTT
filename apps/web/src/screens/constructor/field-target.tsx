@@ -3,8 +3,7 @@ import { BY_FORMULA } from './typed-pick.tsx';
 import type { System } from '@vtt/schema';
 import { Field, Select } from '../../ui/primitives.tsx';
 import { FieldPick } from '../../ui/field-pick.tsx';
-import { fieldsOf, cellSource } from '@vtt/engine/model/sheet-columns';
-import { DESK_ID } from '@vtt/engine/engine/owners';
+import { fieldsOf, cellSource, DESK_ID } from '@vtt/engine';
 import type { SlotContext } from './slots.tsx';
 
 const fieldTarget = (target: unknown): { sheet: string; tag: string } | null => {

@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { useWorld, emptySystem } from './world.ts';
 import { useLookup } from './lookup.ts';
 import type { System } from '@vtt/schema';
-import { fieldOf, fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { fieldOf, fieldsOf } from '@vtt/engine';
 
 const seed = (): System => {
   const system = emptySystem();

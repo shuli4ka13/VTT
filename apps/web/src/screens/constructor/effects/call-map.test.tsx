@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
+import { SAMPLE_SYSTEMS } from '@vtt/engine/samples';
 import type { System } from '@vtt/schema';
 import { callMap, bookEntriesOf } from './call-map.ts';
 import { UsageRow } from './call-map.tsx';

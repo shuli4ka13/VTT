@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { usageIndex, inUse, usersOf } from './usage.ts';
-import { SAMPLE_SYSTEMS, SAMPLE_WORLDS } from '@vtt/engine/model/systems';
+import { SAMPLE_SYSTEMS, SAMPLE_WORLDS } from '@vtt/engine/samples';
 import type { System, Compendium } from '@vtt/schema';
 
 const dnd = SAMPLE_SYSTEMS[0] as System;

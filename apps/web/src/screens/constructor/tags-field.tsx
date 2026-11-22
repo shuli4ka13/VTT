@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AddCombo } from '../../ui/combo.tsx';
 import type { System } from '@vtt/schema';
-import { tagWords } from '@vtt/engine/engine/roll-tags';
+import { tagWords } from '@vtt/engine';
 import { Chip, Input, Button } from '../../ui/primitives.tsx';
 import { focusNew } from '../../ui/focus-new.ts';
 

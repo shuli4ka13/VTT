@@ -1,5 +1,5 @@
 import type { System } from '@vtt/schema';
-import { rowTables } from '@vtt/engine/model/tables';
+import { rowTables } from '@vtt/engine';
 import { useState } from 'react';
 import { Field, Select, Input } from '../../../../ui/primitives.tsx';
 import { normalizeDice } from '../../value-field.tsx';

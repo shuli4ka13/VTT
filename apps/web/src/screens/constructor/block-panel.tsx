@@ -5,11 +5,7 @@ import { PickOrder } from '../../ui/pick-order.tsx';
 import { Card, CardHead, Field, Select, Button, DangerButton, LabelInput, Verdict } from '../../ui/primitives.tsx';
 import { readyForSheet } from './table-field.tsx';
 import { followInstance } from './instance.ts';
-import { onSheet, rowKeyOf, fieldsOf, isSingle } from '@vtt/engine/model/sheet-columns';
-import { recordKinds } from '@vtt/engine/model/owned';
-import { pagesOf, cellHead, setWidth, setHeight, GRID, SHEET_LIST_KEYS } from '@vtt/engine/model/pages';
-import { SHEET_LISTS, widthWords, splitWords, perRowWords } from '@vtt/engine/words/glossary';
-import { isRange } from '@vtt/engine/model/tables';
+import { onSheet, rowKeyOf, fieldsOf, isSingle, recordKinds, pagesOf, cellHead, setWidth, setHeight, GRID, SHEET_LIST_KEYS, SHEET_LISTS, widthWords, splitWords, perRowWords, isRange } from '@vtt/engine';
 import type { System, SheetBlock, SheetPart, SheetList } from '@vtt/schema';
 
 export const SHEET_TABLE = 'лист';

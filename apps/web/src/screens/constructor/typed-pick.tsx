@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { typedChoices, type Want } from '@vtt/engine/model/typed-choices';
+import { typedChoices, type ChoiceWant as Want } from '@vtt/engine';
 import { Combo, type ComboOption } from '../../ui/combo.tsx';
 import type { SlotContext } from './slots.tsx';
 

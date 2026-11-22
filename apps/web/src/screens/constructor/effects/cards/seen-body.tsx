@@ -1,5 +1,5 @@
 import type { Step } from '@vtt/schema';
-import { STEP_WORDS, slotShown } from '@vtt/engine/words/steps';
+import { STEP_WORDS, slotShown } from '@vtt/engine';
 import { Field, Select } from '../../../../ui/primitives.tsx';
 import { ValueField } from '../../value-field.tsx';
 import { AddendPick } from './die-pick.tsx';

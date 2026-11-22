@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import type { RoomState, TurnIntent } from '@vtt/schema';
-import { heardMoments } from '@vtt/engine/events/moments';
-import { isDesk } from '@vtt/engine/engine/owners';
-import { isGroup } from '@vtt/engine/events/desk';
+import { heardMoments, isDesk, isGroup } from '@vtt/engine';
 import { tableSocket } from '../../api/socket.ts';
 import { mayTurn } from '../../engine/rights.ts';
 import { useSession } from '../../store/session.ts';

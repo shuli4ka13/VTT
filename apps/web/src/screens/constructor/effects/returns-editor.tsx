@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { STEP_WORDS } from '@vtt/engine/words/steps';
-import type { StepWords } from '@vtt/engine/words/steps';
-import { kindWord } from '@vtt/engine/words/kinds';
-import { choiceTables } from '@vtt/engine/model/tables';
+import { STEP_WORDS, kindWord, choiceTables, resultsOf } from '@vtt/engine';
+import type { StepWords } from '@vtt/engine';
 import { freeId, useWorld } from '../../../store/world.ts';
 import { followKey } from '../keys.ts';
 import { Card, CardHead, Field, Input, Select, Button, LabelInput } from '../../../ui/primitives.tsx';
@@ -11,7 +9,6 @@ import { FormulaField } from '../../../ui/formula-field.tsx';
 import { formulaAsLabels } from '../../../ui/formula.tsx';
 import { ColumnList } from './column-list.tsx';
 import { namesOf, inputBadges, fieldedOf } from '../slots.tsx';
-import { resultsOf } from '@vtt/engine/model/names-at';
 import type { SlotContext, EarlierStep } from '../slots.tsx';
 import { sheetsAt } from './names.ts';
 import type { Effect, Step, System, ValueKind } from '@vtt/schema';

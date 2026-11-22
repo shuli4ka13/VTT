@@ -13,7 +13,7 @@ import type { Extra } from './extras.tsx';
 import { RollTags } from './roll-line.tsx';
 import { useStepName } from './step-name.tsx';
 import { dieSaid } from '../../readback.ts';
-import { resultsOf } from '@vtt/engine/model/names-at';
+import { resultsOf } from '@vtt/engine';
 import { ResultChips } from './result-chips.tsx';
 import { rollSaid } from '../../rules/rolls.ts';
 import {

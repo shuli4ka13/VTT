@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import type { System } from '@vtt/schema';
-import type { Field } from '@vtt/engine/model/types';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
-import { NO_BLOCK } from '@vtt/engine/model/blocks';
+import { fieldsOf, NO_BLOCK } from '@vtt/engine';
+import type { Field } from '@vtt/engine';
 import { byBlock } from '../screens/constructor/field-groups.ts';
 import { Combo, type ComboOption } from './combo.tsx';
 

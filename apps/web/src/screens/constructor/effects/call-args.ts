@@ -1,7 +1,5 @@
 import type { System, Effect } from '@vtt/schema';
-import { implicitOf, appliedOf } from '@vtt/engine/model/implicit';
-import { paramsOf } from '@vtt/engine/model/inherit';
-import { splitsTargets } from '@vtt/engine/engine/steps/index';
+import { implicitOf, appliedOf, paramsOf, splitsTargets } from '@vtt/engine';
 
 type Args = Record<string, unknown>;
 

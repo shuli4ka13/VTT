@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, cleanup, fireEvent, act } from '@testing-library/react';
 import type { ReactElement } from 'react';
-import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
-import type { SampleWorld } from '@vtt/engine/model/systems';
-import { recordKinds, sheetKinds } from '@vtt/engine/model/owned';
+import { recordKinds, sheetKinds } from '@vtt/engine';
+import { SAMPLE_WORLDS } from '@vtt/engine/samples';
+import type { SampleWorld } from '@vtt/engine/samples';
 import type { System, Compendium } from '@vtt/schema';
 import { useWorld } from '../store/world.ts';
 import { openAll } from './render-open.tsx';

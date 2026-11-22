@@ -19,15 +19,11 @@ import { TABS } from '../words.ts';
 import { GuideLayer, PAUSE_MS, useView, movesOf, moveAt, pointOf } from './guide-card.tsx';
 import { LESSONS, lessonOf } from './lessons/index.ts';
 import { findAnchor, firstOf, openedDialog } from './anchor.ts';
-import { compile } from '@vtt/engine/formula';
+import { compile, bringIn, lintSystem, flattenSystem } from '@vtt/engine';
 import { FORBIDDEN_STEMS } from '../words.ts';
 import { errorsOf } from './find.ts';
 import { bring } from '../store/fresh.ts';
-import { PIECES, bringPiece } from '@vtt/engine/model/pieces';
-import { bringIn } from '@vtt/engine/model/bring';
-import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
-import { lintSystem } from '@vtt/engine/model/lint';
-import { flattenSystem } from '@vtt/engine/model/inherit';
+import { PIECES, bringPiece, SAMPLE_SYSTEMS } from '@vtt/engine/samples';
 import type { View, Lesson, Step as LessonStep } from './types.ts';
 import base from './seeds/base.json' with { type: 'json' };
 

@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import { readyForSheet } from '../table-field.tsx';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { fieldsOf } from '@vtt/engine';
 import type { System } from '@vtt/schema';
 
 const withTable = (): System => ({

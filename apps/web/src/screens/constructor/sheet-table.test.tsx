@@ -4,7 +4,7 @@ import { cleanup, fireEvent, screen } from '@testing-library/react';
 import { renderOpen, openAll } from '../../testing/render-open.tsx';
 import { SheetTab } from './sheet-tab.tsx';
 import { useWorld, emptySystem } from '../../store/world.ts';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { fieldsOf } from '@vtt/engine';
 
 const press = (name: string | RegExp) => { fireEvent.click(screen.getAllByRole('button', { name })[0]!); openAll(); };
 

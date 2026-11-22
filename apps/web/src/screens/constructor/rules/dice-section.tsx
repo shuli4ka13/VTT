@@ -1,6 +1,4 @@
-import { readingKinds } from '@vtt/engine/engine/readings';
-import { kindsOfDie, rollsCounting } from '@vtt/engine/model/die-kinds';
-import { ROLL_KIND_WORDS, COUNT_BY_ROLL } from '@vtt/engine/words/dice-kinds';
+import { readingKinds, kindsOfDie, rollsCounting, ROLL_KIND_WORDS, COUNT_BY_ROLL } from '@vtt/engine';
 import { Readback } from '../effects/cards/group-card.tsx';
 import { dieReadback } from '../readback.ts';
 import { slugOf } from '../../../store/world.ts';

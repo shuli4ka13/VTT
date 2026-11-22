@@ -2,9 +2,8 @@ import type { System, Modifier, Table } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
 import { tableBy, columnBy, fieldBy, same, is, figure, errorsOf, FORMULA_DONE, barOpen, barText } from '../find.ts';
 import { problemsClean } from './first-system.ts';
-import { Views } from '@vtt/engine/core/view';
-import { ROW } from '@vtt/engine/model/sheet-columns';
-import type { System as EngineSystem, Sheet, Compendium } from '@vtt/engine/model/types';
+import { Views, ROW } from '@vtt/engine';
+import type { System as EngineSystem, Sheet, Compendium } from '@vtt/engine';
 import seed from '../seeds/templates.json' with { type: 'json' };
 
 const CARD = 'Как считаются поля у этого типа';

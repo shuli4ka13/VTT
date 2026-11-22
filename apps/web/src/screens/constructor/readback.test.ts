@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { checkReadback, rollReadback, changeReadback, numberReadback, joinReadback, editReadback, dieReadback, dieSaid, editNotation, seenReadback } from './readback.ts';
 import type { System, Effect, Step } from '@vtt/schema';
-import { withColumn } from '@vtt/engine/model/sheet-columns';
+import { withColumn } from '@vtt/engine';
 
 const system = {
   tables: { лист: { shape: 'single', columns: [

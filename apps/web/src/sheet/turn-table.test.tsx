@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, cleanup } from '@testing-library/react';
-import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
-import { fieldsOf, fieldOf } from '@vtt/engine/model/sheet-columns';
-import { newPass, calc } from '@vtt/engine/engine/calc';
+import { fieldsOf, fieldOf, newPass, calc } from '@vtt/engine';
+import { SAMPLE_WORLDS } from '@vtt/engine/samples';
 import { SheetView } from './sheet-view.tsx';
 import type { Reader } from '../engine/use-calc.ts';
 

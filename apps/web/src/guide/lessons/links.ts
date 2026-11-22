@@ -1,7 +1,7 @@
 import type { System, Param, Effect } from '@vtt/schema';
 import type { Lesson, View } from '../types.ts';
 import { effectBy, fieldBy, stepsOf, is, subtracts, adds, numberOf, armOf, errorsOf, same, isArm, FORMULA_DONE, barOpen, barText } from '../find.ts';
-import { armsOf } from '@vtt/engine/model/flow';
+import { armsOf } from '@vtt/engine';
 import { problemsClean, trialShown } from './first-system.ts';
 import { visible } from '../anchor.ts';
 import base from '../seeds/base.json' with { type: 'json' };

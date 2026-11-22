@@ -1,6 +1,5 @@
-import { authorize } from '@vtt/engine/core/authorize';
-import type { Room } from '@vtt/engine/core/authorize';
-import type { TurnOp } from '@vtt/engine/events/moments';
+import { authorize } from '@vtt/engine';
+import type { Room, TurnOp } from '@vtt/engine';
 import type { RoomState, System } from '@vtt/schema';
 
 const roomOf = (room: RoomState): Room => ({

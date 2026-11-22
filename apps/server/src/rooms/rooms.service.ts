@@ -11,18 +11,8 @@ import type {
   RoomState, RoomSummary, RoomDelta, JournalEntry, ActIntent, TurnIntent, AnswerIntent, CancelIntent, ClockState, PendingState,
   Sheet, System, Compendium, StoredValue, LogEntry, Place, Places,
 } from '@vtt/schema';
-import { flattenSystem } from '@vtt/engine/model/inherit';
-import { perform } from '@vtt/engine/core/perform';
-import { authorize } from '@vtt/engine/core/authorize';
-import { emptyJournal } from '@vtt/engine/core/external';
-import type { Op, Performed } from '@vtt/engine/core/perform';
-import type { Want } from '@vtt/engine/core/authorize';
-import type { Journal, Question } from '@vtt/engine/core/external';
-import { deskOf, hasDesk } from '@vtt/engine/events/desk';
-import { DESK_ID } from '@vtt/engine/engine/owners';
-import { idleClock } from '@vtt/engine/engine/clock';
-import { EngineError } from '@vtt/engine/engine/errors';
-import { ASK_ONE_WORDS, ASK_DESK_TITLE } from '@vtt/engine/words/steps';
+import { flattenSystem, perform, authorize, emptyJournal, deskOf, hasDesk, DESK_ID, idleClock, EngineError, ASK_ONE_WORDS, ASK_DESK_TITLE } from '@vtt/engine';
+import type { Op, Performed, Want, Journal, Question } from '@vtt/engine';
 
 export type Role = 'gm' | 'player';
 

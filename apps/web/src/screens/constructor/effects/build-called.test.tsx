@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, cleanup } from '@testing-library/react';
 import { writeFileSync } from 'node:fs';
-import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
+import { SAMPLE_WORLDS } from '@vtt/engine/samples';
 import type { System, Effect } from '@vtt/schema';
 import { useWorld } from '../../../store/world.ts';
 import { openAll } from '../../../testing/render-open.tsx';

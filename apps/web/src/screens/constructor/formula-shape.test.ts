@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DICE_BY_STEP } from '@vtt/engine/words/glossary';
+import { DICE_BY_STEP } from '@vtt/engine';
 import { shapeProblem, type Shape } from './formula-shape.ts';
 
 const named = (shapes: Record<string, Shape>) => (tag: string): Shape => shapes[tag] ?? 'any';

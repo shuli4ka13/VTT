@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { newPart, homesOf, moveBlockTo, moveColumnTo } from './block-panel.tsx';
-import { fieldsByBlock } from '@vtt/engine/model/blocks';
+import { fieldsByBlock } from '@vtt/engine';
 import type { System } from '@vtt/schema';
 
 const system = (): System => ({
