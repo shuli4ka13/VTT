@@ -5,7 +5,7 @@ import { Button, Empty, DangerButton, Card } from '../../ui/primitives.tsx';
 import { takesBounds } from '../../sheet/views/index.tsx';
 import { DonorPalette } from './donors.tsx';
 import { CharacterSection } from './rules/character-section.tsx';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, Fragment } from 'react';
 import type { ReactNode } from 'react';
 import { useUsage } from './usage.ts';
 import { Segmented } from '../../ui/primitives.tsx';
@@ -18,7 +18,9 @@ import { RowPanel } from './row-panel.tsx';
 import { SheetSample } from './sheet-sample.tsx';
 import type { System } from '@vtt/schema';
 import type { Field as FieldModel } from '@vtt/engine/model/types';
-import { fieldOf, rowKeyOf } from '@vtt/engine/model/sheet-columns';
+import { fieldOf, rowKeyOf, isSingle } from '@vtt/engine/model/sheet-columns';
+import { instanceOf, columnAddress } from './instance.ts';
+import type { InstanceKind } from './instance.ts';
 
 export function SheetTab() {
   const system = useWorld(s => s.system);
@@ -50,17 +52,17 @@ export function SheetTab() {
         head: 'Лист',
         ...(docked ? { pinned: true } : {}),
         body: active
-          ? <Docked at={active.tag}><ViewPanel field={active} system={system} /></Docked>
+          ? <Docked kind={active.cell ? 'клетка' : 'колонка'} id={active.tag}><ViewPanel field={active} system={system} /></Docked>
           : rowOpen
-            ? <Docked at={`строка|${activeRow!.table}|${activeRow!.row}`}><RowPanel table={activeRow!.table} row={activeRow!.row} system={system} /></Docked>
+            ? <Docked kind="строка" id={`${activeRow!.table}|${activeRow!.row}`}><RowPanel table={activeRow!.table} row={activeRow!.row} system={system} /></Docked>
             : columnOpen
-              ? <Docked at={`${activeColumn!.table}.${activeColumn!.column}`}><ColumnPanel key={`${activeColumn!.table}.${activeColumn!.column}`} table={activeColumn!.table} column={activeColumn!.column} system={system} /></Docked>
+              ? <Docked kind="колонка" id={columnAddress(activeColumn!.table, activeColumn!.column, isSingle(system.tables?.[activeColumn!.table]))}><ColumnPanel table={activeColumn!.table} column={activeColumn!.column} system={system} /></Docked>
               : blockOpen
-                ? <Docked at={`блок|${activeBlock}`}><BlockPanel key={activeBlock!} name={activeBlock!} system={system} /></Docked>
+                ? <Docked kind="блок" id={activeBlock!}><BlockPanel name={activeBlock!} system={system} /></Docked>
                 : thingOpen
-                ? <Docked at={`тип|${activeThing}`}><ThingPanel table={activeThing!} system={system} /></Docked>
+                ? <Docked kind="тип" id={activeThing!}><ThingPanel table={activeThing!} system={system} /></Docked>
                 : pageOpen
-                  ? <Docked at={`страница|${activePage}`}><PagePanel name={activePage!} system={system} /></Docked>
+                  ? <Docked kind="страница" id={activePage!}><PagePanel name={activePage!} system={system} /></Docked>
                   : (system.blocks ?? []).length
                     ? <Empty title="Щёлкните поле на листе" hint="Его колонка, вид и формула откроются здесь." />
                     : <Empty title="Лист пока пуст" hint="Возьмите готовые куски из «Готового из образцов» или заведите блок: в нём «+ поле» — одно значение, «+ таблица» — строки и колонки." />,
@@ -73,7 +75,7 @@ export function SheetTab() {
               options={[{ key: 'sample', label: 'образец листа' }, { key: 'kinds', label: 'блоки и типы листов' }]}
               onChange={next => setView(next as 'sample' | 'kinds')}
             />
-            {tableOpen ? <Docked at={`таблица|${activeSheetTable}`}><TablePanel key={activeSheetTable!} id={activeSheetTable!} system={system} /></Docked> : null}
+            {tableOpen ? <Docked kind="таблица" id={activeSheetTable!}><TablePanel id={activeSheetTable!} system={system} /></Docked> : null}
             {view === 'sample' ? <PageBar system={system} /> : null}
             {view === 'sample'
               ? <SheetSample system={system} picked={activeTag}
@@ -164,8 +166,9 @@ function ColumnPanel({ table: id, column: key, system }: { table: string; column
   );
 }
 
-function Docked({ at, children }: { at: string; children: ReactNode }) {
+function Docked({ kind, id, children }: { kind: InstanceKind; id: string; children: ReactNode }) {
+  const instance = instanceOf(kind, id);
   const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => { ref.current?.scrollIntoView?.({ block: 'start', behavior: 'smooth' }); }, [at]);
-  return <div ref={ref} className="stack">{children}</div>;
+  useEffect(() => { ref.current?.scrollIntoView?.({ block: 'start', behavior: 'smooth' }); }, [instance]);
+  return <div ref={ref} className="stack"><Fragment key={instance}>{children}</Fragment></div>;
 }

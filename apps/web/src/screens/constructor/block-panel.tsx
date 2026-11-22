@@ -4,6 +4,7 @@ import { useDragList } from '../../ui/drag-list.ts';
 import { PickOrder } from '../../ui/pick-order.tsx';
 import { Card, CardHead, Field, Select, Button, DangerButton, LabelInput, Verdict } from '../../ui/primitives.tsx';
 import { readyForSheet } from './table-field.tsx';
+import { followInstance } from './instance.ts';
 import { onSheet, rowKeyOf, fieldsOf, isSingle } from '@vtt/engine/model/sheet-columns';
 import { recordKinds } from '@vtt/engine/model/owned';
 import { pagesOf, cellHead, setWidth, setHeight, GRID, SHEET_LIST_KEYS } from '@vtt/engine/model/pages';
@@ -175,6 +176,7 @@ export function BlockPanel({ name, system }: { name: string; system: System }) {
             const clean = next.trim();
             if (!clean || clean === name || (system.blocks ?? []).some(other => other.name === clean)) return;
             editSystem(draft => renameBlock(draft, name, clean));
+            followInstance('блок', name, clean);
             pick({ activeBlock: clean });
           }} />}
         actions={<Button size="sm" variant="ghost" onClick={() => pick({ activeBlock: null })}>×</Button>} />

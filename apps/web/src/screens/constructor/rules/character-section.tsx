@@ -17,8 +17,9 @@ import type { UsageIndex } from '../usage.ts';
 import type { System, Column, SheetBlock, SheetPart } from '@vtt/schema';
 import type { Field as FieldModel, Holder } from '@vtt/engine/model/types';
 import type { WorldState } from '../../../store/world.ts';
-import { fieldsOf, withColumn, singleTableOf } from '@vtt/engine/model/sheet-columns';
+import { fieldsOf, withColumn, singleTableOf, isSingle } from '@vtt/engine/model/sheet-columns';
 import { focusNew } from '../../../ui/focus-new.ts';
+import { instanceOf, columnAddress } from '../instance.ts';
 
 export const isCharacterColumn = (field: FieldModel): boolean => !field.cell;
 
@@ -161,7 +162,7 @@ export function CharacterSection({ system, editSystem, docked }: {
     const on = shown(block.name);
     const count = fieldCount(block);
     return (
-      <details key={block.name} className={`block-fold${depth ? ' block-fold--nested' : ''}${on ? '' : ' faint'}${drag.mark(block.name)}`} open={block.name === activeBlock || undefined}>
+      <details key={instanceOf('блок', block.name)} className={`block-fold${depth ? ' block-fold--nested' : ''}${on ? '' : ' faint'}${drag.mark(block.name)}`} open={block.name === activeBlock || undefined}>
         <summary className="block-fold__head" {...drag.props(block.name)} title="перетащите выше или ниже — так блок встанет на листе">
           <span className="drag-grip" aria-hidden>⋮⋮</span>
           {kind ? (
@@ -231,7 +232,7 @@ export function CharacterSection({ system, editSystem, docked }: {
         </Card>
       )}
       {!docked && open && openTable && openColumn ? (
-        <TableColumnCard id={open.table} table={openTable} column={openColumn} system={system}
+        <TableColumnCard key={instanceOf('колонка', columnAddress(open.table, open.column, isSingle(openTable)))} id={open.table} table={openTable} column={openColumn} system={system}
           onOpenTable={() => showTable(open.table)}
           edit={change => editSystem(draft => { const target = draft.tables?.[open.table]; if (target) change(target); })}
           onClose={() => { setCell(null); pick({ activeFieldTag: null }); }} />

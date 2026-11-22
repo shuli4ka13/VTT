@@ -33,6 +33,7 @@ import type { WorldState } from '../../../store/world.ts';
 import { setRowView } from '../row-view.ts';
 import type { RowViewKey } from '../row-view.ts';
 import { focusNew } from '../../../ui/focus-new.ts';
+import { instanceOf, followInstance, columnAddress } from '../instance.ts';
 
 type EditSystem = WorldState['editSystem'];
 interface Props { system: System; editSystem: EditSystem; usage: UsageIndex }
@@ -163,7 +164,7 @@ export function TablesSection({ system, editSystem, usage }: Props) {
             ...folders.flatMap(([folder, items]) => [
               ...(foldered ? [<span key={`папка|${title}|${folder}`} className="table-folder__title">{folder || 'без папки'}</span>] : []),
               ...items.map(([key, table]) => (
-                <TableCard key={key} id={key} table={table} system={system} editSystem={editSystem} usage={usage} />
+                <TableCard key={instanceOf('таблица', key)} id={key} table={table} system={system} editSystem={editSystem} usage={usage} />
               )),
             ]),
           ];
@@ -215,6 +216,8 @@ export function TableCard({ id, table, system, editSystem, usage, opened, onReke
       moveTable(draft, id, fresh);
     });
     if (fresh === id) return;
+    followInstance('таблица', id, fresh);
+    for (const column of columns) followInstance('колонка', columnAddress(id, column.key, false), columnAddress(fresh, column.key, false));
     if (onRekey) onRekey(fresh); else state.pick({ activeTableId: fresh });
   };
 
@@ -320,10 +323,10 @@ export function TableCard({ id, table, system, editSystem, usage, opened, onReke
       {broken ? <Verdict tone="warn">диапазоны перекрываются или дырявы</Verdict> : null}
 
       {picked && columns.some(c => c.key === picked) ? (
-        <TableColumnCard key={`${picked}:${general}`} id={id} table={table} column={columns.find(c => c.key === picked)!} system={system} edit={edit} more={general} onClose={() => pick(null)} onRekey={key => pick(key)} />
+        <TableColumnCard key={`${instanceOf('колонка', columnAddress(id, picked, false))}:${general}`} id={id} table={table} column={columns.find(c => c.key === picked)!} system={system} edit={edit} more={general} onClose={() => pick(null)} onRekey={key => pick(key)} />
       ) : null}
 
-      <Rows key={id} id={id} table={table} system={system} edit={edit} editSystem={editSystem} picked={picked} onPick={pick} />
+      <Rows id={id} table={table} system={system} edit={edit} editSystem={editSystem} picked={picked} onPick={pick} />
     </Fold>
     </div>
   );
@@ -409,6 +412,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, onRe
     const fresh = virgin && slugOf(label) ? freeId(taken, label) : key;
     editSystem(draft => renameColumn(draft, id, key, label, fresh));
     if (fresh === key) return;
+    followInstance('колонка', columnAddress(id, key, single), columnAddress(id, fresh, single));
     if (single) pick({ activeFieldTag: fresh });
     if (state.activeColumn?.table === id && state.activeColumn.column === key) pick({ activeColumn: { table: id, column: fresh } });
     onRekey?.(fresh);

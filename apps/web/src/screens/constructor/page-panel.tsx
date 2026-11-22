@@ -3,6 +3,8 @@ import { Card, CardHead, Field, Button, DangerButton, LabelInput } from '../../u
 import { pagesOf, pageOfBlock, renamePage, removePage } from '@vtt/engine/model/pages';
 import { moveKey } from '../../ui/pick-order.tsx';
 import { useDragList } from '../../ui/drag-list.ts';
+import { focusNew } from '../../ui/focus-new.ts';
+import { followInstance } from './instance.ts';
 import type { System } from '@vtt/schema';
 
 export const FIRST_PAGE = 'Основное';
@@ -46,6 +48,7 @@ export function PagePanel({ name, system }: { name: string; system: System }) {
             const clean = next.trim();
             if (!clean || clean === name || pages.some(other => other.name === clean)) return;
             editSystem(draft => renamePage(draft, name, clean));
+            followInstance('страница', name, clean);
             pick({ activePage: clean });
           }} />}
         actions={<Button size="sm" variant="ghost" onClick={() => pick({ activePage: null })}>×</Button>} />
@@ -91,6 +94,7 @@ export function PageBar({ system }: { system: System }) {
         </Button>
       ))}
       <Button size="sm" onClick={() => {
+        focusNew('как зовётся страница');
         const name = freePageName(useWorld.getState().system);
         editSystem(draft => addPage(draft, name));
         pick({ ...OPEN_PAGE, activePage: name });
