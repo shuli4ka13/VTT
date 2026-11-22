@@ -516,7 +516,7 @@ describe('стол: отказ действия виден у действия',
     expect(button.closest('.actions-off')).toBeNull();
   });
 
-  it('отказ сервера после нажатия показан в карточке действий, один раз', () => {
+  it('отказ сервера после нажатия показан у действий, один раз', () => {
     useRoom.setState(state => ({ ...state, room: paid(1), log: [], error: null }));
     renderOpen(<TableScreen />);
     fireEvent.click(token('Арвен'));
