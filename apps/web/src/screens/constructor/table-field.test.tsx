@@ -62,7 +62,7 @@ describe('«В новом листе»: число или формула', () =>
   });
 });
 
-describe('поле вида «текст» в карточке поля', () => {
+describe('поле вида «текст» в настройках поля', () => {
   const noted = {
     id: 'x', name: 'x', effects: {},
     tables: { лист: { shape: 'single', columns: [

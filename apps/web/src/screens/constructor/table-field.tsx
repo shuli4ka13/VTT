@@ -61,7 +61,7 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
                 <TextArea rows={3} max={NOTE_LIMIT} value={typeof column.default === 'string' ? column.default : ''} placeholder="текст, с которым лист заводят"
                   onChange={text => edit(draft => { if (!text.trim()) delete draft.default; else draft.default = text; })} />
               ) : byFormula ? (
-                <BoundFormula value={column.default} system={system} placeholder="формула: посчитается один раз, когда лист заводят"
+                <BoundFormula value={column.default} system={system} placeholder="формула: поле равно ей, пока его не тронули"
                   where={`${table.label || tableId} · ${column.label || column.key} · в новом листе`}
                   {...(single ? {} : { table: tableId, names: rowNames(system, tableId) })}
                   onChange={next => edit(draft => { if (next === null) delete draft.default; else draft.default = next; })} />
@@ -74,7 +74,7 @@ export function ColumnSheetFields({ tableId, column, system }: { tableId: string
               <Button size="sm" variant="ghost" title="вписать само число"
                 onClick={() => { setAsFormula(false); if (isFormulaCell(column.default)) edit(draft => { delete draft.default; }); }}>число</Button>
             ) : numeric ? (
-              <Button size="sm" variant="ghost" title="посчитать, когда лист заводят: например, хиты равны максимуму"
+              <Button size="sm" variant="ghost" title="поле равно формуле, пока его не тронули: например, хиты равны максимуму"
                 onClick={() => setAsFormula(true)}>формула</Button>
             ) : null}
           </div>

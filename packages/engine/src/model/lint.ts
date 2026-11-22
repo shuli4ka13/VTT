@@ -35,7 +35,7 @@ import {
   LISTEN, contractsOf, HOLDER, DESK_NAME, holderNameOf, tiedToHolder,
 } from './references.ts';
 import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, holderOf, rowKeyOf, hasField, rollEntryOf, ROW, isFormulaCell, misfit, isNoteField } from './sheet-columns.ts';
-import { newPass, startOf } from '../engine/calc.ts';
+import { newPass, calc } from '../engine/calc.ts';
 import { CycleError } from '../engine/errors.ts';
 import { hasDesk } from '../events/desk.ts';
 import { DESK_ID } from '../engine/owners.ts';
@@ -422,19 +422,20 @@ function startProblems(system: System): Problem[] {
   const blank = (id: string): Sheet => ({ id, systemId: system.id ?? '', name: id, values: {}, has: [], effects: [] } as Sheet);
   const desk = hasDesk(system) ? blank(DESK_ID) : null;
   const passes = {
-    sheet: newPass(system, blank('новый'), { shared: desk ? [desk] : null, fresh: true }),
-    desk: newPass(system, desk ?? blank(DESK_ID), { only: 'desk', fresh: true }),
+    sheet: newPass(system, blank('новый'), { shared: desk ? [desk] : null }),
+    desk: newPass(system, desk ?? blank(DESK_ID), { only: 'desk' }),
   };
   const told = new Set<string>();
   for (const field of started) {
-    try { startOf(field, field.lives === 'desk' ? passes.desk : passes.sheet); } catch (err) {
+    const pass = field.lives === 'desk' ? passes.desk : passes.sheet;
+    try { calc(system, pass.sheet, field.tag, pass); } catch (err) {
       if (!(err instanceof CycleError)) continue;
       const ring = err.path.slice(err.path.indexOf(err.path[err.path.length - 1]!));
       const key = [...new Set(ring)].sort().join('|');
       if (told.has(key)) continue;
       told.add(key);
       const names = ring.map(tag => `«${fieldOf(system, tag)?.label ?? tag}»`).join(' → ');
-      out.push({ where: fieldWhere(system, field.home, field.cell?.column ?? field.tag), level: 'error', text: `значения при создании считаются друг из друга по кругу: ${names} — у одного из полей впишите число` });
+      out.push({ where: fieldWhere(system, field.home, field.cell?.column ?? field.tag), level: 'error', text: `значения «в новом листе» считаются друг из друга по кругу: ${names} — у одного из полей впишите число` });
     }
   }
   return out;

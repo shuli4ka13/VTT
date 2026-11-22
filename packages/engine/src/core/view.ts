@@ -1,4 +1,4 @@
-import { newPass, findField, holderIdOf } from '../engine/calc.ts';
+import { newPass, findField, holderIdOf, baseOf } from '../engine/calc.ts';
 import { sharedOf } from '../events/desk.ts';
 import type { Pass } from '../engine/calc.ts';
 import type { System, Sheet, Compendium } from '../model/types.ts';
@@ -36,6 +36,14 @@ export class Views {
 
 export const viewOf = (system: System, compendium: Compendium, sheets: readonly Sheet[], id: string): Pass =>
   new Views(system, compendium).of(sheets, id);
+
+export function baseValue(system: System, compendium: Compendium, sheets: readonly Sheet[], sheetId: string, tag: string): unknown {
+  const field = findField(system, tag);
+  const views = new Views(system, compendium);
+  const holder = views.sheet(sheets, holderOf(system, sheets, sheetId, tag)) ?? views.sheet(sheets, sheetId);
+  if (!field || !holder) return undefined;
+  return baseOf(views.of(sheets, holder.id), field);
+}
 
 export function holderOf(system: System, sheets: readonly Sheet[], sheetId: string, tag: string): string {
   const sheet = sheets.find(s => s.id === sheetId);

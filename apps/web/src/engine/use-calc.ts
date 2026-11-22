@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { System, Sheet, Compendium, FieldOption } from '@vtt/schema';
-import { compile, newPass, calc, findField, livesOn, hasDesk, blankDesk, resolveRoll, toolsOf, HOLDER } from '@vtt/engine';
+import { compile, newPass, calc, baseOf, findField, livesOn, hasDesk, blankDesk, resolveRoll, toolsOf, HOLDER } from '@vtt/engine';
 import type { Pass, Scope, RollResolution } from '@vtt/engine';
 
 export type Computed =
@@ -57,9 +57,10 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
       },
       storedOf: tag => {
         const field = findField(system, tag);
-        const holder = livesOn(field) === 'group' && pass.group ? pass.group.sheet : livesOn(field) === 'desk' && pass.desk ? pass.desk.sheet : sheet;
-        const value = holder.values[tag];
-        return value !== undefined ? value : field?.value.kind === 'stored' ? field.value.default : undefined;
+        const holder = livesOn(field) === 'group' && pass.group ? pass.group : livesOn(field) === 'desk' && pass.desk ? pass.desk : pass;
+        const own = holder.sheet.values[tag];
+        if (own !== undefined || !field) return own;
+        try { return baseOf(holder, field); } catch { return undefined; }
       },
       measure: expr => {
         const resolve = (name: string) => pass.resolve(name.startsWith(`${HOLDER}.`) ? name.slice(HOLDER.length + 1) : name);

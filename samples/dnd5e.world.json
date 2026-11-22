@@ -311,14 +311,14 @@
             "key": "down",
             "label": "Без сил",
             "expr": {
-              "expr": "@hp_current <= 0"
+              "expr": "@hp_max > 0 и @hp_current <= 0"
             }
           },
           {
             "key": "up",
             "label": "На ногах",
             "expr": {
-              "expr": "@hp_current > 0"
+              "expr": "не @down"
             }
           },
           {

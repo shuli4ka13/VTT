@@ -7,10 +7,10 @@ import { SheetView } from '../../sheet/sheet-view.tsx';
 import { Card, Chip, Field, Select, Button, Fold } from '../../ui/primitives.tsx';
 import { recordDetails } from '../../sheet/record-view.tsx';
 import { ThingsList, ThingLine } from '../../sheet/things-list.tsx';
-import { sheetKinds, shownOn, recordKinds, recordKindOf, availableActions, pageOfBlock, placeBlock, setWidth, setHeight, SHEET_LISTS, dice, fieldsOf, fieldOf, listOf, optionsOf, freshSheet, hasDesk, blankDesk } from '@vtt/engine';
+import { sheetKinds, shownOn, recordKinds, recordKindOf, availableActions, pageOfBlock, placeBlock, setWidth, setHeight, SHEET_LISTS, dice, fieldsOf, fieldOf, listOf, optionsOf, freshSheet } from '@vtt/engine';
 import { OPEN_PAGE } from './page-panel.tsx';
 import type { SheetList } from '@vtt/schema';
-import type { Sheet, StoredValue, System, Compendium, CompendiumRecord, Column } from '@vtt/schema';
+import type { Sheet, StoredValue, System, CompendiumRecord, Column } from '@vtt/schema';
 
 const DICE = [[1, 4], [1, 6], [1, 8], [1, 10], [1, 12], [2, 6]].map(([count, sides]) => dice(count, sides!));
 
@@ -57,10 +57,8 @@ export function setSample(draft: System, tag: string, value: StoredValue, base?:
   if (Object.keys(sample).length) draft.sample = sample; else delete draft.sample;
 }
 
-export function sampleBase(system: System, of: string, book: Compendium): Record<string, StoredValue> {
-  const fresh = freshSheet(system, { id: 'образец', name: 'Образец листа', ...(of ? { of } : {}) },
-    { compendium: book, shared: hasDesk(system) ? [blankDesk(system)] : null });
-  return { ...sampleValues(system), ...fresh.values };
+export function sampleBase(system: System, of: string): Record<string, StoredValue> {
+  return { ...sampleValues(system), ...freshSheet(system, { id: 'образец', name: 'Образец листа', ...(of ? { of } : {}) }).values };
 }
 
 export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: {
@@ -82,7 +80,7 @@ export function SheetSample({ system, picked, onPick, onPickBlock, onPickRow }: 
     .map((item, at) => ({ id: `образец-${at + 1}`, table: item.table, label: item.label || `${system.tables![item.table]!.label || item.table} ${at + 1}`, cells: item.cells })), [bag, system.tables]);
   const change = (at: number, next: (item: (typeof bag)[number]) => (typeof bag)[number]) => setBag(bag.map((item, other) => (other === at ? next(item) : item)));
   const book = useMemo(() => ({ ...compendium, records: [...(compendium.records ?? []), ...samples] }), [compendium, samples]);
-  const base = useMemo(() => sampleBase(system, of, book), [system, of, book]);
+  const base = useMemo(() => sampleBase(system, of), [system, of]);
   const sample = useMemo<Sheet>(() => ({
     id: 'образец', systemId: system.id ?? '', name: kind?.label ?? 'Образец листа',
     ...(of ? { of } : {}), values: { ...base, ...(system.sample ?? {}) }, has: samples.map(record => ({ of: record.id })), effects: [],

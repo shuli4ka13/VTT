@@ -24,7 +24,6 @@ export interface Pass {
   round?: () => number | null;
   only?: Scope;
   compendium?: Compendium;
-  fresh?: true;
 }
 
 export interface PassOptions {
@@ -35,7 +34,6 @@ export interface PassOptions {
   combat?: () => boolean;
   round?: () => number | null;
   peer?: (id: string) => Pass | null;
-  fresh?: boolean;
 }
 
 export const livesOn = (field: Pick<Field, 'lives'> | null | undefined): 'sheet' | 'desk' | 'group' => field?.lives ?? 'sheet';
@@ -71,7 +69,6 @@ export function newPass(system: System, sheet: Sheet, options: PassOptions = {})
     ...(options.only ? { only: options.only } : {}),
     ...(options.compendium ? { compendium: options.compendium } : {}),
     ...(options.round ? { round: options.round } : {}),
-    ...(options.fresh ? { fresh: true as const } : {}),
   };
 
   const deskSheet = options.shared?.find(s => s.id === DESK_ID);
@@ -150,7 +147,7 @@ export function dependenciesOf(system: System, tag: string): string[] {
   if (!field) throw new UnknownTagError(tag);
   const source = field.value;
   if (source.kind === 'formula') return [...compile(source.expr).deps];
-  return [];
+  return source.start ? [...compile(source.start).deps] : [];
 }
 
 function computeBase(field: Field, pass: Pass): unknown {
@@ -159,7 +156,7 @@ function computeBase(field: Field, pass: Pass): unknown {
 
   switch (source.kind) {
     case 'stored':
-      return readStored(pass, field);
+      return baseOf(pass, field);
 
     case 'formula':
       return compile(source.expr).evaluate(resolve, toolsOf(pass.system, pass, field.tag));
@@ -170,14 +167,10 @@ function computeBase(field: Field, pass: Pass): unknown {
   }
 }
 
-function readStored(pass: Pass, field: Field): unknown {
+export function baseOf(pass: Pass, field: Field): unknown {
   const values = pass.sheet.values || {};
   if (Object.prototype.hasOwnProperty.call(values, field.tag)) return values[field.tag];
   if (field.value.kind !== 'stored') return undefined;
-  return pass.fresh && field.value.start ? startOf(field, pass) : field.value.default;
-}
-
-export function startOf(field: Field, pass: Pass): unknown {
-  if (field.value.kind !== 'stored' || !field.value.start) return undefined;
+  if (!field.value.start) return field.value.default;
   return compile(field.value.start).evaluate(tag => pass.resolve(tag), toolsOf(pass.system, pass, field.tag));
 }

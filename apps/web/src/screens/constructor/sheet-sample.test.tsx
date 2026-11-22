@@ -106,10 +106,20 @@ describe('образец листа: свои значения, в настоя�
     render(<Live />);
   };
 
-  it('образец показывает то, с чем заводится новый лист: число и формулу при создании', () => {
+  it('образец показывает то, с чем заводится новый лист: число и формулу', () => {
     open();
     expect(fieldOf('Сила').value).toBe('10');
     expect(fieldOf('Запас').value).toBe('20');
+  });
+
+  it('поле с формулой идёт за ней, пока в него не вписали своё', () => {
+    open();
+    fireEvent.change(fieldOf('Сила'), { target: { value: '15' } });
+    expect(fieldOf('Запас').value).toBe('30');
+    fireEvent.change(fieldOf('Запас'), { target: { value: '7' } });
+    fireEvent.change(fieldOf('Сила'), { target: { value: '18' } });
+    expect(fieldOf('Запас').value).toBe('7');
+    expect(useWorld.getState().system.sample).toEqual({ сила: 18, запас: 7 });
   });
 
   it('ввод в образец пишет значения образца и не трогает «в новом листе» колонки', () => {

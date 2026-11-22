@@ -5,7 +5,7 @@ import { EngineError, isRuleError } from '../engine/errors.ts';
 import { resolveRef, resolveNumber, resolveOptionalNumber, holdsNow, sheetHead } from '../engine/refs.ts';
 import type { RefContext, Bound } from '../engine/refs.ts';
 import { splitPath, referencedTable, reach } from '../engine/navigate.ts';
-import { findField, calc } from '../engine/calc.ts';
+import { findField, calc, baseOf } from '../engine/calc.ts';
 import { lapse, leftOf, LEFT_NAME } from '../events/durations.ts';
 import { sweepBonds, freeHolders } from '../events/bonds.ts';
 import { lifecycleChanges, HOOK_WORDS, HEARD_WORDS } from '../events/lifecycle.ts';
@@ -722,7 +722,7 @@ export class Run {
     if (Object.prototype.hasOwnProperty.call(sheet.values, tag)) return sheet.values[tag];
     const field = findField(this.system, tag);
     if (!field) throw new EngineError(`система не объявляет поля «${tag}» — читать нечего`);
-    return field.value.kind === 'stored' ? field.value.default : undefined;
+    return baseOf(this.view(sheet.id), field);
   }
 
   private write(sheetId: string, tag: string, value: StoredValue, sink: Sink): void {

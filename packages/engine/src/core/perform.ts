@@ -1,5 +1,5 @@
 import { compile } from '../formula/index.ts';
-import { calc } from '../engine/calc.ts';
+import { calc, baseOf } from '../engine/calc.ts';
 import { EngineError } from '../engine/errors.ts';
 import { availableActions, actionOf } from '../events/actions.ts';
 import { asksOf, checkInputs, normalizeInputs } from '../model/asks.ts';
@@ -232,7 +232,7 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
   shift(run, { sheetId, tag, by }) {
     if (parseItemTag(tag)) throw new EngineError('значению вещи прибавить и отнять нельзя — впишите его целиком');
     const { field, stored, holder } = storedField(run, sheetId, tag);
-    const was = holder.values?.[tag] ?? stored.default;
+    const was = baseOf(run.view(holder.id), field) ?? stored.default;
     if (stored.type !== 'number' || typeof was !== 'number' || !Number.isFinite(by)) throw new EngineError(`«${field.label}» — не число: прибавить и отнять нечего`);
     const low = bound(run, holder.id, stored.min, 'нижняя граница поля');
     const high = bound(run, holder.id, stored.max, 'верхняя граница поля');
@@ -426,8 +426,7 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
 
   sheet(run, { name, of }, root) {
     if (of && !sheetKindOf(run.system, { of } as Sheet)) throw new EngineError(`в системе нет типа листа «${of}»`);
-    const sheet = freshSheet(run.system, { id: run.ext.id(root.phase('id')), name, ...(of ? { of } : {}) },
-      { compendium: run.world.compendium, shared: run.views.shared(run.state.sheets) });
+    const sheet = freshSheet(run.system, { id: run.ext.id(root.phase('id')), name, ...(of ? { of } : {}) });
     run.state.put(sheet);
     run.state.write({ text: `Лист «${name}» заведён` });
     return false;

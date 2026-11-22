@@ -1,4 +1,4 @@
-import { expectAction, costRefusal, availableActions, isDesk, isGroup, fieldsFor, sheetKinds, distanceOf, distanceWords, fieldsOf, claimWords } from '@vtt/engine';
+import { expectAction, costRefusal, availableActions, isDesk, isGroup, fieldsFor, sheetKinds, distanceOf, distanceWords, fieldsOf, claimWords, baseValue } from '@vtt/engine';
 import { mayAnswer, mayAllowItems } from '../../engine/rights.ts';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRoom } from '../../store/room.ts';
@@ -166,6 +166,10 @@ function Piece({ sheet, room, pick, pinned, field, fixed }: {
 }) {
   const { from, to, turn, party } = pick;
   const name = sheet.name ?? sheet.id;
+  const shown = useMemo(() => {
+    if (field || !pinned) return undefined;
+    try { return baseValue(room.system, room.compendium, room.sheets, sheet.id, pinned); } catch { return undefined; }
+  }, [field, pinned, room.system, room.compendium, room.sheets, sheet.id]);
   return (
     <button
       type="button"
@@ -183,7 +187,7 @@ function Piece({ sheet, room, pick, pinned, field, fixed }: {
       </span>
       {field ? null : <span className="token__name">{name}</span>}
       {field ? null : sheet.id === turn ? <span className="token__turn">ходит</span> : null}
-      {field || !pinned ? null : <span className="token__hp num">{String(sheet.values[pinned] ?? '—')}</span>}
+      {field || !pinned ? null : <span className="token__hp num">{String(shown ?? '—')}</span>}
       {field ? null : <Hanging room={room} sheet={sheet} compact />}
     </button>
   );
