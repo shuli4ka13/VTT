@@ -13,10 +13,19 @@ let lost: (() => void) | null = null;
 
 export const onSessionLost = (listener: () => void): void => { lost = listener; };
 
+const changed = new Set<() => void>();
+
+export const onTokenChange = (listener: () => void): (() => void) => {
+  changed.add(listener);
+  return () => { changed.delete(listener); };
+};
+
 export function setToken(next: string | null): void {
+  const was = token;
   token = next;
   if (next) localStorage.setItem('vtt.token', next);
   else localStorage.removeItem('vtt.token');
+  if (was !== next) for (const listener of [...changed]) listener();
 }
 
 export class ApiError extends Error {

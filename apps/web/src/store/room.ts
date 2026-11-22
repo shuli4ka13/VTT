@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { tableSocket } from '../api/socket.ts';
-import { currentToken } from '../api/client.ts';
+import { currentToken, onTokenChange } from '../api/client.ts';
 import type { RoomState, Sheet, LogEntry } from '@vtt/schema';
 
 export interface RoomStore {
@@ -44,6 +44,12 @@ export const useRoom = create<RoomStore>(set => ({
   pickSheet: sheetId => set({ mySheetId: sheetId }),
   setError: message => set({ error: message }),
 }));
+
+onTokenChange(() => {
+  tableSocket.close();
+  localStorage.removeItem(LAST_ROOM);
+  useRoom.setState({ room: null, log: [], mySheetId: null, secret: false, error: null });
+});
 
 export function mergeLog(known: LogEntry[], fresh: LogEntry[]): LogEntry[] {
   const at = new Map(known.map((entry, index) => [entry.id, index]));

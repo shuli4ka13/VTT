@@ -6,6 +6,7 @@ import { render } from '@testing-library/react';
 const closed: string[] = [];
 
 vi.mock('../../api/client.ts', () => ({
+  onTokenChange: () => () => {},
   listWorlds: async () => [],
   listSystems: async () => [],
   listCompendiums: async () => [],

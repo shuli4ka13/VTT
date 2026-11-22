@@ -7,6 +7,7 @@ export class TableSocket {
   private socket: WebSocket | null = null;
   private readonly listeners = new Set<Listener>();
   private queue: string[] = [];
+  private joined: { roomId: string; token: string } | null = null;
 
   connect(): void {
     if (this.socket && this.socket.readyState <= WebSocket.OPEN) return;
@@ -16,6 +17,8 @@ export class TableSocket {
     this.socket = socket;
 
     socket.addEventListener('open', () => {
+      if (this.socket !== socket) return;
+      if (this.joined) socket.send(JSON.stringify({ event: 'room:join', data: this.joined }));
       for (const message of this.queue) socket.send(message);
       this.queue = [];
     });
@@ -38,7 +41,9 @@ export class TableSocket {
   }
 
   join(roomId: string, token: string): void {
-    this.send('room:join', { roomId, token });
+    this.joined = { roomId, token };
+    if (this.socket?.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify({ event: 'room:join', data: this.joined }));
+    else this.connect();
   }
 
   act(intent: ActIntent): void {
@@ -105,8 +110,11 @@ export class TableSocket {
   }
 
   close(): void {
-    this.socket?.close();
+    const socket = this.socket;
     this.socket = null;
+    this.joined = null;
+    this.queue = [];
+    socket?.close();
   }
 
   private send(event: string, data: object): void {
