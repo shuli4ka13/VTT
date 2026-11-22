@@ -252,5 +252,15 @@ describe('таблица блока в несколько столбцов', () 
     render(<SheetView system={make({})} sheet={sheet} reader={reader} onChange={() => {}} />);
     expect(document.querySelectorAll('.sheet-table')).toHaveLength(1);
   });
+
+  it('ширины колонок задаёт вёрстка: сетка несёт только число колонок, жёсткой ширины в разметке нет', () => {
+    render(<SheetView system={make({}, 2)} sheet={sheet} reader={reader} onChange={() => {}} />);
+    for (const grid of document.querySelectorAll<HTMLElement>('.sheet-table')) {
+      const columns = grid.querySelectorAll(':scope > .field__label').length;
+      expect(columns).toBeGreaterThan(0);
+      expect(grid.style.getPropertyValue('--cols')).toBe(String(columns));
+      expect(grid.style.gridTemplateColumns).toBe('');
+    }
+  });
 });
 

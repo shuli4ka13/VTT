@@ -1,5 +1,5 @@
 import { Fragment } from 'react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { Card, CardHead, Chip } from '../ui/primitives.tsx';
 import { FieldCell } from './field-cell.tsx';
 import type { Reader } from '../engine/use-calc.ts';
@@ -201,7 +201,7 @@ function TableBlock({ system, tableId, sections, cell, onPickRow, split }: {
   };
   const at = new Map(fields.map(f => [`${f.cell!.row}.${f.cell!.column}`, f]));
   const grid = (parts: { title: string | null; rows: string[] }[], key?: number) => (
-    <div key={key} className="sheet-table" style={{ gridTemplateColumns: `minmax(110px, max-content) repeat(${columns.length}, minmax(80px, max-content))` }}>
+    <div key={key} className="sheet-table" style={{ '--cols': columns.length } as CSSProperties}>
       <span />
       {columns.map(column => <span key={column} className="field__label">{columnLabel(column)}</span>)}
       {parts.map(part => (

@@ -353,7 +353,7 @@
 .sheet-pick { border-radius: var(--r-2); padding: var(--s-1); margin: calc(-1 * var(--s-1)); cursor: pointer; }
 .sheet-pick:hover { background: var(--surface-2); }
 .sheet-pick--on { box-shadow: inset 0 0 0 1px var(--accent); background: var(--accent-soft); }
-.sheet-table { display: grid; gap: var(--s-2) var(--s-3); align-items: center; }
+.sheet-table { display: grid; gap: var(--s-2) var(--s-3); align-items: center; grid-template-columns: minmax(110px, max-content) repeat(var(--cols, 1), minmax(80px, max-content)); }
 .sheet-table .field__label:empty { display: none; }
 .sheet-table__row { color: var(--text); font-size: var(--fs-3); }
 .block-name { background: transparent; border: 1px solid transparent; border-radius: var(--r-1); padding: var(--s-1) var(--s-2); font-weight: 600; font-size: var(--fs-4); min-width: 6ch; max-width: 100%; }
@@ -639,7 +639,8 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
   .when-body { margin-left: 0; }
   .mod-row { flex-wrap: wrap; }
   .sheet .card:has(> .sheet-table) { overflow-x: auto; }
-  .sheet-table { width: max-content; min-width: 100%; }
+  .sheet-table { width: 100%; column-gap: var(--s-2); grid-template-columns: minmax(84px, 1fr) repeat(var(--cols, 1), minmax(min-content, max-content)); }
+  .sheet-table > .field__label, .sheet-table__row { white-space: normal; overflow-wrap: anywhere; hyphens: auto; }
   .number-line { flex-wrap: wrap; }
   .number-line__formula { flex: 1 1 100%; }
 }
@@ -656,6 +657,7 @@ button.origin:hover { border-color: var(--accent); color: var(--text); }
 .sheet--paged .tabs { flex-wrap: wrap; max-width: 100%; height: auto; min-height: var(--tabs-h); padding-block: var(--s-1); }
 .sheet-split { display: flex; flex-wrap: wrap; gap: var(--s-3) var(--s-4); align-items: flex-start; }
 .sheet-split__col { flex: 1 1 260px; min-width: 0; overflow-x: auto; }
+@media (max-width: 700px) { .sheet-split__col { overflow-x: visible; } }
 .sheet { container-type: inline-size; }
 .sheet-layout { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--s-3); align-items: start; }
 .sheet-cell { grid-column: span var(--w, 12); display: flex; flex-direction: column; gap: var(--s-3); min-width: 0; position: relative; }
